@@ -1,0 +1,32 @@
+{
+  "name": "flight-dashboard",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "crawl:ttang": "tsx scripts/crawl-ttang.ts",
+    "crawl:ybtour": "tsx scripts/crawl-ybtour.ts",
+    "crawl:hanatour": "tsx scripts/crawl-hanatour.ts",
+    "crawl:modetour": "tsx scripts/crawl-modetour.ts",
+    "crawl:all": "tsx scripts/crawl-all.ts"
+  },
+  "dependencies": {
+    "next": "14.2.0",
+    "node-fetch": "^3.3.2",
+    "playwright": "^1.58.2",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
+    "react": "^18",
+    "react-dom": "^18"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "tsx": "^4.7.0",
+    "typescript": "^5"
+  }
+}
