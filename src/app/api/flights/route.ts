@@ -1,7 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { scrapeTtang } from '@/lib/scrapers/ttang';
-import { scrapeYbtour } from '@/lib/scrapers/ybtour';
-import { scrapeModetour } from '@/lib/scrapers/modetour';
 import { Flight, FlightSearchParams } from '@/types/flight';
 
 export async function GET(request: NextRequest) {
