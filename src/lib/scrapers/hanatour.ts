@@ -569,7 +569,7 @@ async function scrapeHanatourRegular(browser: any): Promise<Flight[]> {
                     continue;
                 }
 
-                const tabFlights = await page.evaluate((tabName) => {
+                const tabFlights = await page.evaluate((tabName: string) => {
                     const cards = document.querySelectorAll('.flight_list.special > ul > li');
                     const results: any[] = [];
 
