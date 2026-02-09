@@ -2,6 +2,9 @@
 
 모두투어, 땡처리닷컴, 노랑풍선의 특가 항공권을 한눈에 볼 수 있는 대시보드입니다.
 
+
+- **배포 주소**: [https://flight-beta-ten.vercel.app/](https://flight-beta-ten.vercel.app/)
+
 ## 기능
 
 - 🔍 **통합 검색**: 여러 여행사의 땡처리 항공권을 한 곳에서 조회
@@ -18,6 +21,8 @@
   - 땡처리닷컴
   - 노랑풍선
   - 모두투어
+  - 하나투어
+  - 온라인투어
 
 ## 시작하기
 
@@ -32,9 +37,19 @@
 # 의존성 설치
 npm install
 
+# 데이터 크롤링 (모든 소스)
+npm run crawl:all
+
 # 개발 서버 실행
 npm run dev
 ```
+
+### 배포 시 주의사항 (Vercel)
+이 프로젝트는 항공권 데이터를 `data/all-flights-cache.json` 파일에서 읽어옵니다.
+따라서 최신 데이터를 배포 사이트에 반영하려면:
+1. 로컬에서 `npm run crawl:all` 실행
+2. 변경된 `data/all-flights-cache.json` 파일을 git에 커밋 및 푸시
+3. Vercel이 자동으로 재배포 진행
 
 브라우저에서 [http://localhost:3000](http://localhost:3000)을 열어 확인하세요.
 
