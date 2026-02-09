@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Flight } from '@/types/flight';
 import styles from './Dashboard.module.css';
+
+const ITEMS_PER_PAGE = 20;
 
 export default function Dashboard() {
     const [flights, setFlights] = useState<Flight[]>([]);
@@ -13,15 +15,47 @@ export default function Dashboard() {
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
     const [sourceFilter, setSourceFilter] = useState<string>('all');
     const [regionFilter, setRegionFilter] = useState<string>('all');
-    const [startDate, setStartDate] = useState<string>('');
-    const [endDate, setEndDate] = useState<string>('');
+    const [startDate, setStartDate] = useState<string>('2026-02-09');
+    const [endDate, setEndDate] = useState<string>('2026-03-09');
     const [departureFilter, setDepartureFilter] = useState<string>('all');
-
     const [airlineFilter, setAirlineFilter] = useState<string>('all');
+    const [displayCount, setDisplayCount] = useState(ITEMS_PER_PAGE);
+    const [showScrollTop, setShowScrollTop] = useState(false);
+    const observerRef = useRef<IntersectionObserver | null>(null);
+    const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
         fetchFlights();
     }, []);
+
+    // 필터 변경 시 displayCount 리셋
+    useEffect(() => {
+        setDisplayCount(ITEMS_PER_PAGE);
+    }, [searchTerm, sourceFilter, regionFilter, airlineFilter, startDate, endDate, departureFilter, sortBy]);
+
+    // 스크롤 감지 (맨위로 버튼 표시)
+    useEffect(() => {
+        const handleScroll = () => {
+            setShowScrollTop(window.scrollY > 400);
+        };
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
+    // IntersectionObserver 설정
+    const lastElementRef = useCallback((node: HTMLDivElement | null) => {
+        if (observerRef.current) observerRef.current.disconnect();
+        observerRef.current = new IntersectionObserver(entries => {
+            if (entries[0].isIntersecting) {
+                setDisplayCount(prev => prev + ITEMS_PER_PAGE);
+            }
+        });
+        if (node) observerRef.current.observe(node);
+    }, []);
+
+    const scrollToTop = () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
 
     const fetchFlights = async () => {
         setLoading(true);
@@ -70,6 +104,34 @@ export default function Dashboard() {
         return averages;
     }, [flights]);
 
+    // 각 노선별 최저가 계산
+    const lowestPrices = useMemo(() => {
+        const lowest: Record<string, number> = {};
+        flights.forEach(flight => {
+            const route = `${flight.departure.city}-${flight.arrival.city}`;
+            if (!lowest[route] || flight.price < lowest[route]) {
+                lowest[route] = flight.price;
+            }
+        });
+        return lowest;
+    }, [flights]);
+
+    // 필터 초기화
+    const resetAllFilters = () => {
+        setSearchTerm('');
+        setSourceFilter('all');
+        setRegionFilter('all');
+        setAirlineFilter('all');
+        setDepartureFilter('all');
+        setStartDate('2026-02-09');
+        setEndDate('2026-03-09');
+        setSortBy('price');
+    };
+
+    // 활성 필터 여부
+    const hasActiveFilters = searchTerm || sourceFilter !== 'all' || regionFilter !== 'all' ||
+        airlineFilter !== 'all' || departureFilter !== 'all' || startDate || endDate;
+
     const filteredFlights = flights.filter(flight => {
         const matchesSearch =
             flight.departure.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -79,9 +141,15 @@ export default function Dashboard() {
         const matchesSource = sourceFilter === 'all' || flight.source === sourceFilter;
         const matchesRegion = regionFilter === 'all' || flight.region === regionFilter;
         const matchesAirline = airlineFilter === 'all' || flight.airline === airlineFilter;
+        const normalizeDate = (d: string) => {
+            if (!d) return '';
+            const m = d.match(/^(\d{4})[.\-](\d{2})[.\-](\d{2})/);
+            return m ? `${m[1]}-${m[2]}-${m[3]}` : d;
+        };
+        const flightDate = normalizeDate(flight.departure.date);
         const matchesDate =
-            (!startDate || flight.departure.date >= startDate) &&
-            (!endDate || flight.departure.date <= endDate);
+            (!startDate || flightDate >= startDate) &&
+            (!endDate || flightDate <= endDate);
 
         const matchesDeparture = departureFilter === 'all' || (() => {
             if (departureFilter === '인천') return /인천|김포|서울|ICN|GMP|SEL/.test(flight.departure.city);
@@ -121,6 +189,10 @@ export default function Dashboard() {
         return sortOrder === 'asc' ? comparison : -comparison;
     });
 
+    // 표시할 항공권 (무한 스크롤용)
+    const displayedFlights = filteredFlights.slice(0, displayCount);
+    const hasMore = displayCount < filteredFlights.length;
+
     const formatPrice = (price: number) => {
         return new Intl.NumberFormat('ko-KR', {
             style: 'currency',
@@ -129,9 +201,27 @@ export default function Dashboard() {
     };
 
     const formatDate = (dateStr: string) => {
-        if (!dateStr) return '-';
+        if (!dateStr) return '날짜 확인';
         try {
-            const date = new Date(dateStr);
+            // 한국식 날짜 형식 처리: "2026.02.22(일)" -> "2026-02-22"
+            let normalizedDate = dateStr;
+
+            // "YYYY.MM.DD(요일)" 형식 처리
+            const koreanDateMatch = dateStr.match(/^(\d{4})\.(\d{2})\.(\d{2})/);
+            if (koreanDateMatch) {
+                normalizedDate = `${koreanDateMatch[1]}-${koreanDateMatch[2]}-${koreanDateMatch[3]}`;
+            }
+
+            // "YY.MM.DD" 형식 처리 (2자리 연도)
+            const shortYearMatch = dateStr.match(/^(\d{2})\.(\d{2})\.(\d{2})/);
+            if (shortYearMatch && !koreanDateMatch) {
+                normalizedDate = `20${shortYearMatch[1]}-${shortYearMatch[2]}-${shortYearMatch[3]}`;
+            }
+
+            const date = new Date(normalizedDate);
+            if (isNaN(date.getTime())) {
+                return dateStr; // 파싱 실패시 원본 반환
+            }
             return date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
         } catch {
             return dateStr;
@@ -173,6 +263,7 @@ export default function Dashboard() {
 
             <div className="container">
                 <div className={styles.controls}>
+                    {/* 1. 검색창 맨 위 */}
                     <div className={styles.searchBox}>
                         <input
                             type="text"
@@ -183,123 +274,117 @@ export default function Dashboard() {
                         />
                     </div>
 
-                    <div className={styles.filters}>
+                    {/* 2. 날짜 + 여행사 + 항공사 한 줄 */}
+                    <div className={styles.secondaryRow}>
                         <div className={styles.dateRange}>
                             <input
                                 type="date"
                                 value={startDate}
                                 onChange={(e) => setStartDate(e.target.value)}
-                                className={styles.select}
+                                className={styles.dateInput}
                                 aria-label="출발일 시작"
                             />
-                            <span style={{ display: 'flex', alignItems: 'center', color: '#666' }}>~</span>
+                            <span className={styles.dateSeparator}>~</span>
                             <input
                                 type="date"
                                 value={endDate}
                                 onChange={(e) => setEndDate(e.target.value)}
-                                className={styles.select}
+                                className={styles.dateInput}
                                 aria-label="출발일 종료"
                             />
-                            {(startDate || endDate) && (
-                                <button
-                                    onClick={() => {
-                                        setStartDate('');
-                                        setEndDate('');
-                                    }}
-                                    className={`btn btn-secondary`}
-                                    style={{ padding: 'var(--spacing-sm) var(--spacing-md)' }}
-                                >
-                                    ✕
-                                </button>
-                            )}
                         </div>
-                        <select
-                            value={departureFilter}
-                            onChange={(e) => setDepartureFilter(e.target.value)}
-                            className={styles.select}
-                        >
-                            <option value="all">모든 출발지</option>
-                            <option value="인천">인천/김포</option>
-                            <option value="부산">부산/김해</option>
-                            <option value="대구">대구</option>
-                            <option value="청주">청주</option>
-                            <option value="무안">무안</option>
-                            <option value="제주">제주</option>
-                        </select>
-
-
-                        <select
-                            value={regionFilter}
-                            onChange={(e) => setRegionFilter(e.target.value)}
-                            className={styles.select}
-                        >
-                            <option value="all">모든 지역</option>
-                            <option value="동남아">동남아</option>
-                            <option value="일본">일본</option>
-                            <option value="중국">중국</option>
-                            <option value="미주">미주</option>
-                            <option value="유럽">유럽</option>
-                            <option value="남태평양">남태평양</option>
-                            <option value="기타">기타</option>
-                        </select>
-
-                        <select
-                            value={airlineFilter}
-                            onChange={(e) => setAirlineFilter(e.target.value)}
-                            className={styles.select}
-                        >
-                            <option value="all">모든 항공사</option>
-                            {uniqueAirlines.map(airline => (
-                                <option key={airline} value={airline}>
-                                    {airline}
-                                </option>
-                            ))}
-                        </select>
-
-                        <select
-                            value={sortBy}
-                            onChange={(e) => setSortBy(e.target.value as any)}
-                            className={styles.select}
-                        >
-                            <option value="price">가격순</option>
-                            <option value="discount">할인율순</option>
-                            <option value="date">날짜순</option>
-                            <option value="airline">항공사순</option>
-                        </select>
-
                         <select
                             value={sourceFilter}
                             onChange={(e) => setSourceFilter(e.target.value)}
-                            className={styles.select}
+                            className={styles.compactSelect}
                         >
-                            <option value="all">모든 사이트</option>
+                            <option value="all">전체 여행사</option>
                             <option value="ttang">땡처리닷컴</option>
                             <option value="ybtour">노랑풍선</option>
                             <option value="modetour">모두투어</option>
                             <option value="hanatour">하나투어</option>
                             <option value="onlinetour">온라인투어</option>
                         </select>
-
-                        <button
-                            onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                            className={`btn btn-secondary ${styles.sortBtn}`}
+                        <select
+                            value={airlineFilter}
+                            onChange={(e) => setAirlineFilter(e.target.value)}
+                            className={styles.compactSelect}
                         >
-                            {sortOrder === 'asc' ? '↑ 오름차순' : '↓ 내림차순'}
-                        </button>
-
-                        <button
-                            onClick={fetchFlights}
-                            className="btn btn-primary"
-                        >
-                            🔄 새로고침
-                        </button>
+                            <option value="all">전체 항공사</option>
+                            {uniqueAirlines.map(airline => (
+                                <option key={airline} value={airline}>
+                                    {airline}
+                                </option>
+                            ))}
+                        </select>
                     </div>
+
+                    {/* 3. 출발지 + 도착지역 칩 필터 */}
+                    <div className={styles.filterRow}>
+                        {/* 출발지 칩 필터 */}
+                        <div className={styles.filterGroup}>
+                            <span className={styles.filterLabel}>출발지</span>
+                            <div className={styles.chipGroup}>
+                                {[
+                                    { value: 'all', label: '전체' },
+                                    { value: '인천', label: '인천/김포' },
+                                    { value: '부산', label: '부산/김해' },
+                                    { value: '대구', label: '대구' },
+                                    { value: '청주', label: '청주' },
+                                    { value: '무안', label: '무안' },
+                                    { value: '제주', label: '제주' },
+                                ].map((option) => (
+                                    <button
+                                        key={option.value}
+                                        onClick={() => setDepartureFilter(option.value)}
+                                        className={`${styles.chip} ${departureFilter === option.value ? styles.chipActive : ''}`}
+                                    >
+                                        {option.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* 지역 칩 필터 */}
+                        <div className={styles.filterGroup}>
+                            <span className={styles.filterLabel}>도착 지역</span>
+                            <div className={styles.chipGroup}>
+                                {[
+                                    { value: 'all', label: '전체' },
+                                    { value: '동남아', label: '동남아' },
+                                    { value: '일본', label: '일본' },
+                                    { value: '중국', label: '중국' },
+                                    { value: '미주', label: '미주' },
+                                    { value: '유럽', label: '유럽' },
+                                    { value: '남태평양', label: '남태평양' },
+                                    { value: '기타', label: '기타' },
+                                ].map((option) => (
+                                    <button
+                                        key={option.value}
+                                        onClick={() => setRegionFilter(option.value)}
+                                        className={`${styles.chip} ${regionFilter === option.value ? styles.chipActive : ''}`}
+                                    >
+                                        {option.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
 
+
                 {loading && (
-                    <div className={styles.loading}>
-                        <div className={styles.spinner}></div>
-                        <p>항공권 정보를 불러오는 중...</p>
+                    <div className={styles.skeletonGrid}>
+                        {[...Array(6)].map((_, i) => (
+                            <div key={i} className={styles.skeletonCard}>
+                                <div className={styles.skeletonBar}></div>
+                                <div className={`${styles.skeletonLine} ${styles.short}`}></div>
+                                <div className={`${styles.skeletonLine} ${styles.medium}`}></div>
+                                <div className={`${styles.skeletonLine} ${styles.long}`}></div>
+                                <div className={`${styles.skeletonLine} ${styles.tall} ${styles.short}`}></div>
+                            </div>
+                        ))}
                     </div>
                 )}
 
@@ -314,83 +399,182 @@ export default function Dashboard() {
 
                 {!loading && !error && (
                     <>
+                        {/* 적용된 필터 요약 */}
+                        {hasActiveFilters && (
+                            <div className={styles.filterSummary}>
+                                {searchTerm && (
+                                    <span className={styles.filterTag}>
+                                        검색: {searchTerm}
+                                        <button onClick={() => setSearchTerm('')}>×</button>
+                                    </span>
+                                )}
+                                {departureFilter !== 'all' && (
+                                    <span className={styles.filterTag}>
+                                        출발: {departureFilter}
+                                        <button onClick={() => setDepartureFilter('all')}>×</button>
+                                    </span>
+                                )}
+                                {regionFilter !== 'all' && (
+                                    <span className={styles.filterTag}>
+                                        지역: {regionFilter}
+                                        <button onClick={() => setRegionFilter('all')}>×</button>
+                                    </span>
+                                )}
+                                {sourceFilter !== 'all' && (
+                                    <span className={styles.filterTag}>
+                                        여행사: {getSourceName(sourceFilter)}
+                                        <button onClick={() => setSourceFilter('all')}>×</button>
+                                    </span>
+                                )}
+                                {airlineFilter !== 'all' && (
+                                    <span className={styles.filterTag}>
+                                        항공사: {airlineFilter}
+                                        <button onClick={() => setAirlineFilter('all')}>×</button>
+                                    </span>
+                                )}
+                                {(startDate || endDate) && (
+                                    <span className={styles.filterTag}>
+                                        기간: {startDate || '시작'} ~ {endDate || '종료'}
+                                        <button onClick={() => { setStartDate(''); setEndDate(''); }}>×</button>
+                                    </span>
+                                )}
+                                <button onClick={resetAllFilters} className={`btn ${styles.resetAllBtn}`}>
+                                    전체 초기화
+                                </button>
+                            </div>
+                        )}
+
                         <div className={styles.stats}>
                             <span>총 <strong>{filteredFlights.length}</strong>개의 항공권</span>
+                            <select
+                                value={sortBy}
+                                onChange={(e) => setSortBy(e.target.value as any)}
+                                className={styles.select}
+                            >
+                                <option value="price">가격순</option>
+                                <option value="discount">할인율순</option>
+                                <option value="date">날짜순</option>
+                            </select>
                         </div>
 
                         <div className={styles.flightGrid}>
-                            {filteredFlights.map((flight) => (
-                                <div key={flight.id} className={`card ${styles.flightCard} fade-in`}>
+                            {displayedFlights.map((flight) => {
+                                const route = `${flight.departure.city}-${flight.arrival.city}`;
+                                const isLowestPrice = lowestPrices[route] === flight.price;
 
-                                    <div className={styles.cardHeader}>
-                                        <span className={`badge ${getSourceBadgeClass(flight.source)}`}>
-                                            {getSourceName(flight.source)}
-                                        </span>
-                                        <span className={styles.airline}>{flight.airline}</span>
-                                    </div>
+                                return (
+                                    <div key={flight.id} className={`card ${styles.flightCard} fade-in`}>
 
-                                    <div className={styles.route}>
-                                        <div className={styles.location}>
-                                            <div className={styles.city}>{flight.departure.city}</div>
-                                            <div className={styles.date}>{formatDate(flight.departure.date)}</div>
-                                            <div className={styles.time}>{flight.departure.time}</div>
+                                        <div className={styles.cardHeader}>
+                                            <span className={`badge ${getSourceBadgeClass(flight.source)}`}>
+                                                {getSourceName(flight.source)}
+                                            </span>
+                                            <span className={styles.airline}>{flight.airline}</span>
                                         </div>
 
-                                        <div className={styles.arrow}>→</div>
+                                        <div className={styles.route}>
+                                            <div className={styles.location}>
+                                                <div className={styles.city}>{flight.departure.city}</div>
+                                                <div className={styles.date}>{formatDate(flight.departure.date)}</div>
+                                                <div className={styles.time}>{flight.departure.time}</div>
+                                            </div>
 
-                                        <div className={styles.location}>
-                                            <div className={styles.city}>{flight.arrival.city}</div>
-                                            <div className={styles.date}>{formatDate(flight.arrival.date)}</div>
-                                            <div className={styles.time}>{flight.arrival.time}</div>
+                                            <div className={styles.arrow}>→</div>
+
+                                            <div className={styles.location}>
+                                                <div className={styles.city}>{flight.arrival.city}</div>
+                                                <div className={styles.date}>{formatDate(flight.arrival.date)}</div>
+                                                <div className={styles.time}>{flight.arrival.time}</div>
+                                            </div>
                                         </div>
-                                    </div>
 
-                                    <div className={styles.cardFooter}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <div className={styles.price}>{formatPrice(flight.price)}</div>
-                                            {(() => {
-                                                const avgPrice = averagePrices[flight.arrival.city];
-                                                if (avgPrice && flight.price > 0) {
-                                                    const discount = avgPrice - flight.price;
-                                                    const percent = (discount / avgPrice) * 100;
-                                                    if (percent >= 5) {
-                                                        return (
-                                                            <span className={styles.discountBadge}>
-                                                                (-{Math.round(percent)}%)
-                                                            </span>
-                                                        );
+                                        <div className={styles.cardFooter}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                                <div className={styles.price}>{formatPrice(flight.price)}</div>
+                                                {(() => {
+                                                    const avgPrice = averagePrices[flight.arrival.city];
+                                                    if (avgPrice && flight.price > 0) {
+                                                        const discount = avgPrice - flight.price;
+                                                        const percent = (discount / avgPrice) * 100;
+                                                        if (percent >= 5) {
+                                                            return (
+                                                                <span className={styles.discountBadge}>
+                                                                    -{Math.round(percent)}%
+                                                                </span>
+                                                            );
+                                                        }
                                                     }
-                                                }
-                                                return null;
-                                            })()}
+                                                    return null;
+                                                })()}
+                                                {isLowestPrice && (
+                                                    <span className={styles.lowestPriceBadge}>최저가</span>
+                                                )}
+                                            </div>
+                                            <a
+                                                href={flight.link}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="btn btn-primary"
+                                            >
+                                                예약하기 →
+                                            </a>
                                         </div>
-                                        <a
-                                            href={flight.link}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="btn btn-primary"
-                                        >
-                                            예약하기 →
-                                        </a>
-                                    </div>
 
-                                    {flight.availableSeats && (
-                                        <div className={styles.seats}>
-                                            남은 좌석: {flight.availableSeats}석
-                                        </div>
-                                    )}
-                                </div>
-                            ))}
+                                        {flight.availableSeats && (
+                                            <div className={styles.seats}>
+                                                남은 좌석: {flight.availableSeats}석
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
                         </div>
 
+                        {/* 무한 스크롤 감지 요소 */}
+                        {hasMore && (
+                            <div ref={lastElementRef} className={styles.loadMore}>
+                                <div className={styles.spinner}></div>
+                                <span>더 불러오는 중...</span>
+                            </div>
+                        )}
+
+                        {!hasMore && filteredFlights.length > ITEMS_PER_PAGE && (
+                            <div className={styles.endMessage}>
+                                모든 항공권을 불러왔습니다
+                            </div>
+                        )}
+
                         {filteredFlights.length === 0 && (
-                            <div className={styles.empty}>
-                                <p>검색 결과가 없습니다.</p>
+                            <div className={styles.emptyState}>
+                                <div className={styles.emptyIcon}>✈️</div>
+                                <p>검색 결과가 없습니다</p>
+                                <p style={{ fontSize: '0.9rem', opacity: 0.7 }}>
+                                    필터를 조정하거나 다른 조건으로 검색해보세요
+                                </p>
+                                {hasActiveFilters && (
+                                    <button
+                                        onClick={resetAllFilters}
+                                        className="btn btn-secondary"
+                                    >
+                                        필터 초기화
+                                    </button>
+                                )}
                             </div>
                         )}
                     </>
                 )}
             </div>
+
+            {/* 맨위로 버튼 */}
+            {showScrollTop && (
+                <button
+                    onClick={scrollToTop}
+                    className={styles.scrollTopBtn}
+                    aria-label="맨 위로"
+                >
+                    ↑
+                </button>
+            )}
         </div>
     );
 }

@@ -1,369 +1,231 @@
 import { Flight } from '@/types/flight';
 import { chromium } from 'playwright';
 import { getRegionByCity } from '@/lib/utils/region-mapper';
+import { logCrawlResults } from '@/lib/utils/crawl-logger';
 
 /**
- * 땡처리닷컴 스크래퍼 (Playwright 기반)
- * 동적 로딩 페이지를 브라우저 자동화로 크롤링
+ * 땡처리닷컴 스크래퍼 (www.ttang.com 기반)
+ * 9개 지역 카테고리별 전체 항공권 수집
+ * 페이지네이션: 숫자 클릭(2~6) → 화살표 → 숫자 클릭(7~12) → 화살표 → 반복
  */
 
-// 주요 도시 코드 목록
-// 주요 도시 코드 목록
-const CITY_CODES = [
-    { code: 'NRT', name: '도쿄(나리타)' },
-    { code: 'KIX', name: '오사카' },
-    { code: 'FUK', name: '후쿠오카' },
-    { code: 'BKK', name: '방콕' },
-    { code: 'SIN', name: '싱가포르' },
-    { code: 'CEB', name: '세부' },
-    { code: 'DAD', name: '다낭' },
-    { code: 'HAN', name: '하노이' },
-    { code: 'GUM', name: '괌' },
-    { code: 'HKG', name: '홍콩' },
-    { code: 'TPE', name: '대만(타이페이)' },
-    { code: 'OKA', name: '오키나와' },
-    { code: 'CTS', name: '삿포로' },
+// 지역 코드 목록
+const REGIONS = [
+    { code: 'A2ALL', name: '동남아', region: '동남아' },
+    { code: 'A7ALL', name: '일본', region: '일본' },
+    { code: 'A8ALL', name: '중국', region: '중국' },
+    { code: 'A1ALL', name: '남태평양', region: '남태평양' },
+    { code: 'A5ALL', name: '호주/뉴질랜드', region: '남태평양' },
+    { code: 'A3ALL', name: '미주/중남미', region: '미주' },
+    { code: 'A6ALL', name: '유럽/러시아', region: '유럽' },
+    { code: 'B1ALL', name: '아프리카/중동', region: '기타' },
+    { code: 'A4ALL', name: '서남(중앙)아시아', region: '동남아' },
 ];
 
-// 랜덤 대기 함수 (봇 감지 회피)
 function randomDelay(min: number, max: number): Promise<void> {
     const delay = Math.floor(Math.random() * (max - min + 1)) + min;
     return new Promise(resolve => setTimeout(resolve, delay * 1000));
 }
 
 /**
- * "오늘 오픈 땡처리" 탭 크롤링
+ * 현재 페이지의 모든 항공권 수집
  */
-async function scrapeTodayOpen(): Promise<Flight[]> {
-    const browser = await chromium.launch({
-        headless: false,
-    });
-    const context = await browser.newContext({
-        userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-    });
-    const page = await context.newPage();
+async function scrapeCurrentPage(
+    page: any,
+    regionCode: string,
+    pageNum: number,
+    defaultRegion: string,
+    url: string
+): Promise<Flight[]> {
     const flights: Flight[] = [];
+    const rows = await page.$$('table.tblListB tbody tr');
 
-    try {
-        console.log('오늘 오픈 땡처리 페이지 접속 중...');
-        await page.goto('https://mm.ttang.com/ttangair/search/discount/today.do?trip=RT&gubun=T', {
-            waitUntil: 'networkidle',
-        });
+    for (let i = 0; i < rows.length; i++) {
+        try {
+            const row = rows[i];
+            const airline = await row.$eval('td.airlogo p', (el: Element) => el.textContent?.trim() || '').catch(() => '');
+            const departure = await row.$eval('td:nth-child(1) p.shortCut', (el: Element) => el.textContent?.trim() || '').catch(() => '인천');
+            const arrival = await row.$eval('td:nth-child(2) p.shortCut', (el: Element) => el.textContent?.trim() || '').catch(() => '');
+            const priceText = await row.$eval('td.price a.js_tooltip_btn', (el: Element) => el.textContent?.trim() || '0').catch(() => '0');
+            const price = parseInt(priceText.replace(/[^0-9]/g, '')) || 0;
 
-        // 페이지 로딩 대기 (5~7초 랜덤)
-        await randomDelay(5, 7);
-
-        // 항공권 리스트가 로딩될 때까지 대기
-        await page.waitForSelector('li.exair1', { timeout: 10000 }).catch(() => {
-            console.log('오늘 오픈 땡처리: 항공권 데이터 없음');
-        });
-
-        // 항공권 정보 추출
-        const items = await page.$$('li.exair1');
-        console.log(`오늘 오픈 땡처리: ${items.length}개 항목 발견`);
-
-        for (let i = 0; i < items.length; i++) {
-            try {
-                const item = items[i];
-                const productNo = await item.getAttribute('data-productno') || `ttang-today-${i}`;
-                const tktCarDesc = await item.getAttribute('data-tktcardesc') || '항공사 미정';
-                const depCityDesc = await item.getAttribute('data-depcitydesc') || '';
-                const arrCityDesc = await item.getAttribute('data-arrcitydesc') || '';
-                const depDate = await item.getAttribute('data-fromsupplydate') || '';
-                const arrDate = await item.getAttribute('data-tosupplydate') || '';
-                const depTime = await item.getAttribute('data-deptime') || '';
-                const arrTime = await item.getAttribute('data-arrtime') || '';
-                const fare = await item.getAttribute('data-fare') || '0';
-                const remainSeat = await item.getAttribute('data-remainseat');
-
-                const price = parseInt(fare.replace(/,/g, '')) || 0;
-
-                if (depCityDesc && arrCityDesc && price > 0) {
-                    // Link to "Today Open" discount page instead of product detail
-                    const link = 'https://mm.ttang.com/ttangair/search/discount/today.do?trip=RT&gubun=T';
-
-                    flights.push({
-                        id: `ttang-today-${productNo}`,
-                        source: 'ttang',
-                        airline: tktCarDesc,
-                        departure: {
-                            city: depCityDesc,
-                            airport: '',
-                            date: depDate,
-                            time: depTime,
-                        },
-                        arrival: {
-                            city: arrCityDesc,
-                            airport: '',
-                            date: arrDate,
-                            time: arrTime,
-                        },
-                        price: price,
-                        currency: 'KRW',
-                        link: link,
-                        availableSeats: remainSeat ? parseInt(remainSeat) : undefined,
-                        region: getRegionByCity(arrCityDesc),
-                    });
+            const dateText = await row.$eval('td:nth-child(5)', (el: Element) => el.textContent?.trim() || '').catch(() => '');
+            let depDate = '';
+            let startDateParam = '';
+            if (dateText) {
+                const dateMatch = dateText.match(/(\d{4})\.(\d{2})\.(\d{2})/);
+                if (dateMatch) {
+                    depDate = `${dateMatch[1]}-${dateMatch[2]}-${dateMatch[3]}`;
+                    startDateParam = `${dateMatch[1]}${dateMatch[2]}${dateMatch[3]}`;
                 }
-            } catch (itemError) {
-                console.error(`오늘 오픈 땡처리 항목 ${i} 파싱 오류:`, itemError);
             }
-        }
-    } catch (error) {
-        console.error('오늘 오픈 땡처리 크롤링 오류:', error);
-    } finally {
-        await browser.close();
-    }
 
-    console.log(`오늘 오픈 땡처리: ${flights.length}개 항공권 수집 완료`);
-    return flights;
-}
-
-/**
- * "전세계 땡처리" 탭 크롤링
- */
-async function scrapeWorldwide(): Promise<Flight[]> {
-    const browser = await chromium.launch({
-        headless: false,
-    });
-    const context = await browser.newContext({
-        userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-    });
-    const page = await context.newPage();
-    const flights: Flight[] = [];
-
-    try {
-        console.log('전세계 땡처리 페이지 접속 중...');
-        await page.goto('https://mm.ttang.com/ttangair/search/discount/today.do?trip=RT&gubun=A', {
-            waitUntil: 'networkidle',
-        });
-
-        await randomDelay(5, 7);
-
-        await page.waitForSelector('li.exair1', { timeout: 10000 }).catch(() => {
-            console.log('전세계 땡처리: 항공권 데이터 없음');
-        });
-
-        const items = await page.$$('li.exair1');
-        console.log(`전세계 땡처리: ${items.length}개 항목 발견`);
-
-        for (let i = 0; i < items.length; i++) {
-            try {
-                const item = items[i];
-                const productNo = await item.getAttribute('data-productno') || `ttang-world-${i}`;
-                const tktCarDesc = await item.getAttribute('data-tktcardesc') || '항공사 미정';
-                const depCityDesc = await item.getAttribute('data-depcitydesc') || '';
-                const arrCityDesc = await item.getAttribute('data-arrcitydesc') || '';
-                const depDate = await item.getAttribute('data-fromsupplydate') || '';
-                const arrDate = await item.getAttribute('data-tosupplydate') || '';
-                const depTime = await item.getAttribute('data-deptime') || '';
-                const arrTime = await item.getAttribute('data-arrtime') || '';
-                const fare = await item.getAttribute('data-fare') || '0';
-                const remainSeat = await item.getAttribute('data-remainseat');
-
-                const price = parseInt(fare.replace(/,/g, '')) || 0;
-
-                if (depCityDesc && arrCityDesc && price > 0) {
-                    // Link to "Worldwide" discount page instead of product detail
-                    const link = 'https://mm.ttang.com/ttangair/search/discount/today.do?trip=RT&gubun=A';
-
-                    flights.push({
-                        id: `ttang-world-${productNo}`,
-                        source: 'ttang',
-                        airline: tktCarDesc,
-                        departure: {
-                            city: depCityDesc,
-                            airport: '',
-                            date: depDate,
-                            time: depTime,
-                        },
-                        arrival: {
-                            city: arrCityDesc,
-                            airport: '',
-                            date: arrDate,
-                            time: arrTime,
-                        },
-                        price: price,
-                        currency: 'KRW',
-                        link: link,
-                        availableSeats: remainSeat ? parseInt(remainSeat) : undefined,
-                        region: getRegionByCity(arrCityDesc),
-                    });
+            // 예약 버튼에서 data 속성 추출하여 개별 링크 생성
+            const bookBtn = await row.$('.btnSty1.cRed, a[data-masterid]');
+            let productLink = url;
+            if (bookBtn) {
+                const masterId = await bookBtn.getAttribute('data-masterid') || '';
+                const gubun = await bookBtn.getAttribute('data-gubun') || 'VM';
+                const minimumCnt = await bookBtn.getAttribute('data-minimumcnt') || '1';
+                if (masterId) {
+                    productLink = `https://www.ttang.com/ttangair/search/ttang/fare_detail.do?masterId=${encodeURIComponent(masterId)}&gubun=${gubun}&adt=1&chd=0&inf=0&exAirAvailStartDate=${startDateParam}`;
                 }
-            } catch (itemError) {
-                console.error(`전세계 땡처리 항목 ${i} 파싱 오류:`, itemError);
             }
-        }
-    } catch (error) {
-        console.error('전세계 땡처리 크롤링 오류:', error);
-    } finally {
-        await browser.close();
-    }
 
-    console.log(`전세계 땡처리: ${flights.length}개 항공권 수집 완료`);
-    return flights;
-}
-
-/**
- * 주요 도시별 검색 크롤링
- */
-async function scrapeCitySearch(): Promise<Flight[]> {
-    const browser = await chromium.launch({
-        headless: false,
-    });
-    const context = await browser.newContext({
-        userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-    });
-    const page = await context.newPage();
-    const flights: Flight[] = [];
-
-    try {
-        for (const city of CITY_CODES) {
-            try {
-                console.log(`${city.name} (${city.code}) 검색 중...`);
-                const url = `https://mm.ttang.com/ttangair/search/city/list.do?trip=RT&dep0=ICN&arr0=${city.code}&adt=1&chd=0&inf=0&comp=Y&viaType=2&fareType=A`;
-
-
-                await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
-                await page.waitForTimeout(2000); // Add small buffer for JS
-                await randomDelay(5, 10); // 도시 간 5~10초 랜덤 대기
-
-                await page.waitForSelector('li.exair1', { timeout: 10000 }).catch(() => {
-                    console.log(`${city.name}: 항공권 데이터 없음`);
+            if (arrival && price > 0) {
+                flights.push({
+                    id: `ttang-${regionCode}-p${pageNum}-${i}`,
+                    source: 'ttang',
+                    airline: airline || '항공사 미정',
+                    departure: { city: departure || '인천', airport: '', date: depDate, time: '' },
+                    arrival: { city: arrival, airport: '', date: '', time: '' },
+                    price: price,
+                    currency: 'KRW',
+                    link: productLink,
+                    region: getRegionByCity(arrival) || defaultRegion,
                 });
+            }
+        } catch { }
+    }
 
-                const items = await page.$$('li.exair1');
-                console.log(`${city.name}: ${items.length}개 항목 발견`);
+    return flights;
+}
 
-                for (let i = 0; i < items.length; i++) {
-                    try {
-                        const item = items[i];
-                        const productNo = await item.getAttribute('data-productno') || `ttang-${city.code}-${i}`;
-                        const tktCarDesc = await item.getAttribute('data-tktcardesc') || '항공사 미정';
-                        const depCityDesc = await item.getAttribute('data-depcitydesc') || '';
-                        const arrCityDesc = await item.getAttribute('data-arrcitydesc') || '';
-                        const depDate = await item.getAttribute('data-fromsupplydate') || '';
-                        const arrDate = await item.getAttribute('data-tosupplydate') || '';
-                        const depTime = await item.getAttribute('data-deptime') || '';
-                        const arrTime = await item.getAttribute('data-arrtime') || '';
+/**
+ * 단일 지역의 항공권 수집
+ */
+async function scrapeRegion(
+    page: any,
+    regionCode: string,
+    regionName: string,
+    defaultRegion: string
+): Promise<Flight[]> {
+    const flights: Flight[] = [];
 
-                        // data-fare 대신 HTML 텍스트에서 가격 추출
-                        let fare = await item.getAttribute('data-fare') || '0';
+    try {
+        const url = `https://www.ttang.com/ttangair/search/ttang/list.do?arr0=${regionCode}`;
+        console.log(`📍 ${regionName} 수집 중... (${url})`);
 
-                        // data-fare가 0이면 HTML에서 가격 찾기
-                        if (fare === '0' || !fare) {
-                            const priceElement = await item.$('.price, .fare, .won, [class*="price"], [class*="fare"]');
-                            if (priceElement) {
-                                const priceText = await priceElement.textContent();
-                                // 숫자만 추출 (예: "300,000원" -> "300000")
-                                fare = (priceText || '').replace(/[^0-9]/g, '');
-                            }
-                        }
+        await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
+        await randomDelay(2, 3);
 
-                        const remainSeat = await item.getAttribute('data-remainseat');
+        await page.waitForSelector('table.tblListB tbody tr', { timeout: 15000 }).catch(() => {
+            console.log(`  ⚠️ ${regionName}: 테이블 로딩 실패`);
+        });
 
+        // 첫 페이지 수집
+        const firstPageFlights = await scrapeCurrentPage(page, regionCode, 1, defaultRegion, url);
+        flights.push(...firstPageFlights);
+        console.log(`  🔍 ${regionName} 페이지 1: ${firstPageFlights.length}개 수집`);
 
-                        // Extract more data attributes for link construction
-                        const masterId = await item.getAttribute('data-masterid');
-                        const gubun = await item.getAttribute('data-gubun');
-                        const tripType = await item.getAttribute('data-triptype') || 'RT';
-                        // Use consistent param names based on verification
-                        const depCityParam = await item.getAttribute('data-depcitycode') || 'ICN';
-                        const arrCityParam = await item.getAttribute('data-arrcitycode') || city.code;
+        // 페이지네이션: 숫자 클릭 → 화살표 → 반복
+        let currentPage = 1;
+        const maxPages = 50;
+        let consecutiveEmptyPages = 0;
 
-                        // Construct Link: Use search list page instead of detail page
-                        // Detail pages often show "no results" error, so we link to the search list
-                        // where users can see all available flights for the destination
-                        const params = new URLSearchParams();
-                        params.append('trip', tripType);
-                        params.append('dep0', depCityParam);
-                        params.append('arr0', arrCityParam);
-                        params.append('adt', '1');
-                        params.append('chd', '0');
-                        params.append('inf', '0');
-                        params.append('comp', 'Y');
-                        params.append('viaType', '2');
-                        params.append('fareType', 'A');
+        while (currentPage < maxPages && consecutiveEmptyPages < 3) {
+            try {
+                const nextPageNum = currentPage + 1;
 
-                        // Link to search list page for the destination city
-                        const linkUrl = `https://mm.ttang.com/ttangair/search/city/list.do?${params.toString()}`;
+                // 다음 페이지 번호(currentPage + 1)가 표시되어 있는지 확인
+                const pageLinks = await page.$$('.pageSty1 a.num');
+                let nextPageElement = null;
 
-                        // 디버깅: 첫 번째 항목의 데이터 출력
-                        if (i === 0) {
-                            const htmlSnippet = await item.innerHTML();
-                            console.log(`[DEBUG] ${city.name} 첫 항목:`, {
-                                productNo,
-                                masterId,
-                                tktCarDesc,
-                                depCityDesc,
-                                arrCityDesc,
-                                fare,
-                                linkUrl,
-                                htmlLength: htmlSnippet.length
-                            });
-                        }
-
-                        const price = parseInt(fare.replace(/,/g, '')) || 0;
-
-                        // 조건 완화: 가격이 0이어도 일단 수집 (디버깅용)
-                        if (depCityDesc && arrCityDesc) {
-                            flights.push({
-                                id: `ttang-${city.code}-${productNo}`,
-                                source: 'ttang',
-                                airline: tktCarDesc,
-                                departure: {
-                                    city: depCityDesc,
-                                    airport: '',
-                                    date: depDate,
-                                    time: depTime,
-                                },
-                                arrival: {
-                                    city: arrCityDesc,
-                                    airport: '',
-                                    date: arrDate,
-                                    time: arrTime,
-                                },
-                                price: price || 1, // 가격이 0이면 1로 설정 (임시)
-                                currency: 'KRW',
-                                link: linkUrl,
-                                availableSeats: remainSeat ? parseInt(remainSeat) : undefined,
-                                region: getRegionByCity(arrCityDesc),
-                            });
-                        }
-                    } catch (itemError) {
-                        console.error(`${city.name} 항목 ${i} 파싱 오류:`, itemError);
+                for (const link of pageLinks) {
+                    const text = await link.textContent();
+                    const num = parseInt(text?.trim());
+                    if (num === nextPageNum) {
+                        nextPageElement = link;
+                        break;
                     }
                 }
-            } catch (cityError) {
-                console.error(`${city.name} 검색 오류:`, cityError);
-                // 에러 발생 시 다음 도시로 계속 진행
-                continue;
+
+                if (nextPageElement) {
+                    // 다음 페이지 번호가 있으면 클릭
+                    await nextPageElement.click();
+                    await randomDelay(1, 2);
+
+                    currentPage = nextPageNum;
+                    const pageFlights = await scrapeCurrentPage(page, regionCode, currentPage, defaultRegion, url);
+                    flights.push(...pageFlights);
+                    console.log(`    페이지 ${currentPage}: ${pageFlights.length}개 수집`);
+
+                    if (pageFlights.length === 0) {
+                        consecutiveEmptyPages++;
+                    } else {
+                        consecutiveEmptyPages = 0;
+                    }
+                } else {
+                    // 현재 그룹에 더 이상 페이지가 없으면 "다음" 화살표 클릭
+                    const nextBtn = await page.$('.pageSty1 a.btn_next');
+                    if (nextBtn) {
+                        console.log(`    → 다음 그룹으로 이동`);
+                        await nextBtn.click();
+                        await randomDelay(1, 2);
+                        // 화살표 클릭 후 다시 루프 시작 (새 페이지 번호들이 표시됨)
+                    } else {
+                        // 다음 버튼도 없으면 종료
+                        console.log(`    마지막 페이지 도달`);
+                        break;
+                    }
+                }
+            } catch (pageError) {
+                console.log(`    페이지 ${currentPage + 1} 오류, 종료`);
+                break;
             }
         }
+
+        console.log(`  ✅ ${regionName}: ${flights.length}개 항공권 수집 완료`);
     } catch (error) {
-        console.error('도시별 검색 크롤링 오류:', error);
-    } finally {
-        await browser.close();
+        console.error(`  ❌ ${regionName} 수집 오류:`, error);
     }
 
-    console.log(`도시별 검색: 총 ${flights.length}개 항공권 수집 완료`);
     return flights;
 }
 
 /**
- * 메인 스크래퍼 함수 - 모든 탭 크롤링
+ * 메인 스크래퍼 함수
  */
 export async function scrapeTtang(): Promise<Flight[]> {
-    console.log('땡처리닷컴 크롤링 시작...');
+    console.log('🚀 땡처리닷컴 크롤링 시작 (www.ttang.com)...');
+    console.log(`📋 수집 대상: ${REGIONS.length}개 지역`);
+
+    const browser = await chromium.launch({ headless: false });
+    const context = await browser.newContext({
+        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    });
+    const page = await context.newPage();
+    const allFlights: Flight[] = [];
 
     try {
-        // 일단 도시별 검색만 활성화 (오늘오픈/전세계땡처리는 타임아웃 문제로 비활성화)
-        const cityFlights = await scrapeCitySearch();
-
-        console.log(`땡처리닷컴 크롤링 완료: 총 ${cityFlights.length}개 항공권`);
-        return cityFlights;
+        for (const region of REGIONS) {
+            const regionFlights = await scrapeRegion(page, region.code, region.name, region.region);
+            allFlights.push(...regionFlights);
+            await randomDelay(2, 4);
+        }
     } catch (error) {
-        console.error('땡처리닷컴 크롤링 실패:', error);
-        return [];
+        console.error('땡처리닷컴 크롤링 오류:', error);
+    } finally {
+        await browser.close();
     }
+
+    // 중복 제거
+    const uniqueFlights = allFlights.filter((flight, index, self) =>
+        index === self.findIndex(f =>
+            f.airline === flight.airline &&
+            f.departure.city === flight.departure.city &&
+            f.arrival.city === flight.arrival.city &&
+            f.price === flight.price
+        )
+    );
+
+    console.log(`\n🎉 땡처리닷컴 크롤링 완료!`);
+    console.log(`   총 수집: ${allFlights.length}개`);
+    console.log(`   중복 제거 후: ${uniqueFlights.length}개`);
+
+    const cityStats: { [city: string]: number } = {};
+    uniqueFlights.forEach(f => { cityStats[f.arrival.city] = (cityStats[f.arrival.city] || 0) + 1; });
+    logCrawlResults('ttang', uniqueFlights.length, undefined, cityStats);
+
+    return uniqueFlights;
 }
