@@ -184,33 +184,35 @@ export default function Dashboard() {
                     </div>
 
                     <div className={styles.filters}>
-                        <input
-                            type="date"
-                            value={startDate}
-                            onChange={(e) => setStartDate(e.target.value)}
-                            className={styles.select}
-                            aria-label="출발일 시작"
-                        />
-                        <span style={{ display: 'flex', alignItems: 'center', color: '#666' }}>~</span>
-                        <input
-                            type="date"
-                            value={endDate}
-                            onChange={(e) => setEndDate(e.target.value)}
-                            className={styles.select}
-                            aria-label="출발일 종료"
-                        />
-                        {(startDate || endDate) && (
-                            <button
-                                onClick={() => {
-                                    setStartDate('');
-                                    setEndDate('');
-                                }}
-                                className={`btn btn-secondary`}
-                                style={{ padding: 'var(--spacing-sm) var(--spacing-md)' }}
-                            >
-                                ✕ 날짜 초기화
-                            </button>
-                        )}
+                        <div className={styles.dateRange}>
+                            <input
+                                type="date"
+                                value={startDate}
+                                onChange={(e) => setStartDate(e.target.value)}
+                                className={styles.select}
+                                aria-label="출발일 시작"
+                            />
+                            <span style={{ display: 'flex', alignItems: 'center', color: '#666' }}>~</span>
+                            <input
+                                type="date"
+                                value={endDate}
+                                onChange={(e) => setEndDate(e.target.value)}
+                                className={styles.select}
+                                aria-label="출발일 종료"
+                            />
+                            {(startDate || endDate) && (
+                                <button
+                                    onClick={() => {
+                                        setStartDate('');
+                                        setEndDate('');
+                                    }}
+                                    className={`btn btn-secondary`}
+                                    style={{ padding: 'var(--spacing-sm) var(--spacing-md)' }}
+                                >
+                                    ✕
+                                </button>
+                            )}
+                        </div>
                         <select
                             value={departureFilter}
                             onChange={(e) => setDepartureFilter(e.target.value)}
