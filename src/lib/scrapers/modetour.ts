@@ -1,5 +1,6 @@
 import { Flight } from '@/types/flight';
 import { getRegionByCity } from '@/lib/utils/region-mapper';
+import { logCrawlResults } from '@/lib/utils/crawl-logger';
 
 /**
  * 모두투어 스크래퍼
@@ -149,6 +150,11 @@ export async function scrapeModetour(): Promise<Flight[]> {
         }
 
         console.log(`모두투어에서 총 ${allFlights.length}개의 항공권을 가져왔습니다.`);
+
+        const cityStats: { [city: string]: number } = {};
+        allFlights.forEach(f => { cityStats[f.arrival.city] = (cityStats[f.arrival.city] || 0) + 1; });
+        logCrawlResults('modetour', allFlights.length, undefined, cityStats);
+
         return allFlights;
     } catch (error) {
         console.error('모두투어 스크래핑 오류:', error);
