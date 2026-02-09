@@ -88,7 +88,7 @@ async function scrapeHanatourPromotion(browser: any): Promise<Flight[]> {
     });
 
     const page = await context.newPage();
-    page.on('console', msg => console.log(`[PROMO] ${msg.text()}`));
+    page.on('console', (msg: any) => console.log(`[PROMO] ${msg.text()}`));
 
     const flights: Flight[] = [];
 
@@ -533,7 +533,7 @@ async function scrapeHanatourRegular(browser: any): Promise<Flight[]> {
     });
 
     const page = await context.newPage();
-    page.on('console', msg => console.log(`[REGULAR] ${msg.text()}`));
+    page.on('console', (msg: any) => console.log(`[REGULAR] ${msg.text()}`));
 
     const flights: Flight[] = [];
     let totalFlights = 0;
