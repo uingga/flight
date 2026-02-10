@@ -6,21 +6,43 @@
 .header {
     padding: var(--spacing-2xl) 0;
     text-align: center;
-    background: linear-gradient(180deg, var(--color-bg-secondary) 0%, var(--color-bg-primary) 100%);
+    background:
+        radial-gradient(circle at 20% 30%, hsla(220, 90%, 56%, 0.05) 0%, transparent 20%),
+        radial-gradient(circle at 80% 70%, hsla(280, 70%, 60%, 0.05) 0%, transparent 20%),
+        linear-gradient(180deg, var(--color-bg-secondary) 0%, var(--color-bg-primary) 100%);
     border-bottom: 1px solid var(--color-border);
     margin-bottom: var(--spacing-xl);
+    position: relative;
+    overflow: hidden;
 }
 
 .title {
-    font-size: 2.5rem;
+    font-size: 3rem;
     font-weight: 800;
     margin-bottom: var(--spacing-sm);
     letter-spacing: -0.02em;
 }
 
+.titleSuffix {
+    font-size: 0.5em;
+    font-weight: 500;
+    opacity: 0.8;
+    color: var(--color-text-primary);
+    vertical-align: middle;
+    margin-left: var(--spacing-sm);
+}
+
 .subtitle {
-    font-size: 1.125rem;
+    font-size: 1.15rem;
     color: var(--color-text-secondary);
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.6;
+}
+
+.highlight {
+    color: var(--color-primary);
+    font-weight: 700;
 }
 
 .controls {
