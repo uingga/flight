@@ -54,9 +54,9 @@ const getMobileUrl = (url: string, isMobile: boolean): string => {
     if (url.includes('www.modetour.com')) {
         return url.replace('www.modetour.com', 'm.modetour.com');
     }
-    // 하나투어: www.hanatour.com → m.hanatour.com
-    if (url.includes('www.hanatour.com')) {
-        return url.replace('www.hanatour.com', 'm.hanatour.com');
+    // 하나투어: hope.hanatour.com / www.hanatour.com → 모바일 항공 검색 페이지
+    if (url.includes('hanatour.com')) {
+        return 'https://m.hanatour.com/mma/smn/EX00000021';
     }
     // 노랑풍선: 모바일 딥링크 미지원 → 모바일 땡처리 항공 페이지로 이동
     if (url.includes('fly.ybtour.co.kr')) {
