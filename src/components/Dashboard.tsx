@@ -58,10 +58,7 @@ const getMobileUrl = (url: string, isMobile: boolean): string => {
     if (url.includes('www.hanatour.com')) {
         return url.replace('www.hanatour.com', 'm.hanatour.com');
     }
-    // 노랑풍선: fly.ybtour.co.kr → mfly.ybtour.co.kr
-    if (url.includes('fly.ybtour.co.kr')) {
-        return url.replace('fly.ybtour.co.kr', 'mfly.ybtour.co.kr');
-    }
+    // 노랑풍선: 모바일 딥링크 미지원 → PC URL 유지
     return url;
 };
 
