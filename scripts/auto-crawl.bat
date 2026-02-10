@@ -1,7 +1,8 @@
 @echo off
 REM ============================================
 REM 🛫 항공권 자동 크롤링 + Vercel 배포 스크립트
-REM 매일 오전 11시 Windows 작업 스케줄러에서 실행
+REM 하루 3회 실행 (오전 8시, 오후 2시, 저녁 8시)
+REM Windows 작업 스케줄러에서 실행
 REM ============================================
 
 set PROJECT_DIR=c:\Users\ynal\Dropbox\Projects\Personal Projects\Anti_gravity\260207_Test
