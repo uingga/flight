@@ -3,7 +3,32 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Flight } from '@/types/flight';
 import Logo from './Logo';
+import Sparkline from './Sparkline';
+import dynamic from 'next/dynamic';
+import { ko } from 'date-fns/locale';
+import 'react-datepicker/dist/react-datepicker.css';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const DatePicker = dynamic(() => import('react-datepicker').then((mod: any) => mod.default), { ssr: false });
 import styles from './Dashboard.module.css';
+
+// Helper: string(YYYY-MM-DD) <-> Date
+const toDate = (s: string) => s ? new Date(s + 'T00:00:00') : null;
+const toStr = (d: Date | null) => d ? d.toISOString().slice(0, 10) : '';
+const fmtDate = (s: string) => s ? s.slice(5).replace(/-/g, '.') : '';
+
+// 도시명 정규화: "서울(ICN)" → "인천", "서울(GMP)" → "김포"
+const normalizeCity = (city: string): string => {
+    const match = city.match(/^(.+?)\(([A-Z]{3})\)$/);
+    if (match) {
+        const code = match[2];
+        if (code === 'ICN') return '인천';
+        if (code === 'GMP') return '김포';
+        if (code === 'PUS') return '부산';
+        return match[1]; // 기타: 괄호만 제거
+    }
+    return city;
+};
 
 const ITEMS_PER_PAGE = 20;
 
@@ -11,6 +36,8 @@ export default function Dashboard() {
     const [flights, setFlights] = useState<Flight[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+    const [priceHistory, setPriceHistory] = useState<Record<string, Array<{ date: string; minPrice: number }>>>({});
     const [searchTerm, setSearchTerm] = useState('');
     const [sortBy, setSortBy] = useState<'price' | 'date' | 'airline' | 'discount'>('price');
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
@@ -71,6 +98,8 @@ export default function Dashboard() {
 
             const data = await response.json();
             setFlights(data.flights || []);
+            setLastUpdated(data.lastUpdated || null);
+            setPriceHistory(data.priceHistory || {});
         } catch (err) {
             setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.');
         } finally {
@@ -257,7 +286,7 @@ export default function Dashboard() {
                 <div className="container">
                     <h1 className={styles.title} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <Logo size={1.2} />
-                        <span className={styles.titleSuffix}> | 땡처리 항공권</span>
+
                     </h1>
                     <p className={styles.subtitle}>
                         전국 여행사의 <strong className={styles.highlight}>땡처리 항공권</strong>을 한눈에 비교하고 떠나보세요! 🚀
@@ -267,35 +296,41 @@ export default function Dashboard() {
 
             <div className="container">
                 <div className={styles.controls}>
-                    {/* 1. 검색창 맨 위 */}
-                    <div className={styles.searchBox}>
-                        <span className={styles.searchIcon}>🔍</span>
-                        <input
-                            type="text"
-                            placeholder="어디로 떠나볼까요?"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className={styles.searchInput}
-                        />
-                    </div>
-
-                    {/* 2. 날짜 + 여행사 + 항공사 한 줄 */}
+                    {/* 1. 날짜 + 검색 한 줄 */}
                     <div className={styles.secondaryRow}>
                         <div className={styles.dateRange}>
-                            <input
-                                type="date"
-                                value={startDate}
-                                onChange={(e) => setStartDate(e.target.value)}
+                            <DatePicker
+                                selected={toDate(startDate)}
+                                onChange={(date: Date | null) => setStartDate(toStr(date))}
+                                dateFormat="yy.MM.dd"
+                                locale={ko}
                                 className={styles.dateInput}
-                                aria-label="출발일 시작"
+                                placeholderText="시작일"
+                                popperClassName={styles.datePickerPopper}
+                                calendarClassName={styles.datePickerCalendar}
+                                minDate={new Date()}
                             />
                             <span className={styles.dateSeparator}>~</span>
-                            <input
-                                type="date"
-                                value={endDate}
-                                onChange={(e) => setEndDate(e.target.value)}
+                            <DatePicker
+                                selected={toDate(endDate)}
+                                onChange={(date: Date | null) => setEndDate(toStr(date))}
+                                dateFormat="yy.MM.dd"
+                                locale={ko}
                                 className={styles.dateInput}
-                                aria-label="출발일 종료"
+                                placeholderText="종료일"
+                                popperClassName={styles.datePickerPopper}
+                                calendarClassName={styles.datePickerCalendar}
+                                minDate={toDate(startDate) || new Date()}
+                            />
+                        </div>
+                        <div className={styles.searchBox} style={{ flex: 1, minWidth: '150px' }}>
+                            <span className={styles.searchIcon}>🔍</span>
+                            <input
+                                type="text"
+                                placeholder="도시, 항공사 검색"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className={styles.searchInput}
                             />
                         </div>
                     </div>
@@ -312,7 +347,6 @@ export default function Dashboard() {
                                     { value: '부산', label: '부산/김해' },
                                     { value: '대구', label: '대구' },
                                     { value: '청주', label: '청주' },
-                                    { value: '무안', label: '무안' },
                                     { value: '제주', label: '제주' },
                                 ].map((option) => (
                                     <button
@@ -360,10 +394,28 @@ export default function Dashboard() {
                         {[...Array(6)].map((_, i) => (
                             <div key={i} className={styles.skeletonCard}>
                                 <div className={styles.skeletonBar}></div>
-                                <div className={`${styles.skeletonLine} ${styles.short}`}></div>
-                                <div className={`${styles.skeletonLine} ${styles.medium}`}></div>
-                                <div className={`${styles.skeletonLine} ${styles.long}`}></div>
-                                <div className={`${styles.skeletonLine} ${styles.tall} ${styles.short}`}></div>
+                                {/* 헤더: 여행사 + 항공사 */}
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+                                    <div className={`${styles.skeletonLine} ${styles.short}`} style={{ marginBottom: 0 }}></div>
+                                    <div className={`${styles.skeletonLine}`} style={{ width: '20%', marginBottom: 0 }}></div>
+                                </div>
+                                {/* 노선: 출발 → 도착 */}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px 0' }}>
+                                    <div style={{ flex: 1, textAlign: 'center' }}>
+                                        <div className={styles.skeletonLine} style={{ width: '60%', height: '20px', margin: '0 auto 6px' }}></div>
+                                        <div className={styles.skeletonLine} style={{ width: '80%', height: '12px', margin: '0 auto' }}></div>
+                                    </div>
+                                    <div className={styles.skeletonLine} style={{ width: '30px', height: '20px', flexShrink: 0, marginBottom: 0 }}></div>
+                                    <div style={{ flex: 1, textAlign: 'center' }}>
+                                        <div className={styles.skeletonLine} style={{ width: '60%', height: '20px', margin: '0 auto 6px' }}></div>
+                                        <div className={styles.skeletonLine} style={{ width: '80%', height: '12px', margin: '0 auto' }}></div>
+                                    </div>
+                                </div>
+                                {/* 푸터: 가격 + 버튼 */}
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '12px', borderTop: '1px solid var(--color-border)' }}>
+                                    <div className={`${styles.skeletonLine} ${styles.tall}`} style={{ width: '35%', marginBottom: 0 }}></div>
+                                    <div className={styles.skeletonLine} style={{ width: '80px', height: '36px', borderRadius: '8px', marginBottom: 0 }}></div>
+                                </div>
                             </div>
                         ))}
                     </div>
@@ -391,31 +443,31 @@ export default function Dashboard() {
                                 )}
                                 {departureFilter !== 'all' && (
                                     <span className={styles.filterTag}>
-                                        출발: {departureFilter}
+                                        {departureFilter}
                                         <button onClick={() => setDepartureFilter('all')}>×</button>
                                     </span>
                                 )}
                                 {regionFilter !== 'all' && (
                                     <span className={styles.filterTag}>
-                                        지역: {regionFilter}
+                                        {regionFilter}
                                         <button onClick={() => setRegionFilter('all')}>×</button>
                                     </span>
                                 )}
                                 {sourceFilter !== 'all' && (
                                     <span className={styles.filterTag}>
-                                        여행사: {getSourceName(sourceFilter)}
+                                        {getSourceName(sourceFilter)}
                                         <button onClick={() => setSourceFilter('all')}>×</button>
                                     </span>
                                 )}
                                 {airlineFilter !== 'all' && (
                                     <span className={styles.filterTag}>
-                                        항공사: {airlineFilter}
+                                        {airlineFilter}
                                         <button onClick={() => setAirlineFilter('all')}>×</button>
                                     </span>
                                 )}
                                 {(startDate || endDate) && (
                                     <span className={styles.filterTag}>
-                                        기간: {startDate || '시작'} ~ {endDate || '종료'}
+                                        {fmtDate(startDate) || '시작'} ~ {fmtDate(endDate) || '종료'}
                                         <button onClick={() => { setStartDate(''); setEndDate(''); }}>×</button>
                                     </span>
                                 )}
@@ -425,8 +477,9 @@ export default function Dashboard() {
                             </div>
                         )}
 
+                        {/* 항공권 수 + 여행사/항공사/정렬 드롭다운 */}
                         <div className={styles.stats}>
-                            <span>총 <strong>{filteredFlights.length}</strong>개의 항공권</span>
+                            <span className={styles.resultCount}>총 <strong>{filteredFlights.length}</strong>개의 항공권</span>
                             <div className={styles.statsFilters}>
                                 <select
                                     value={sourceFilter}
@@ -478,7 +531,9 @@ export default function Dashboard() {
                                                     {getSourceName(flight.source)}
                                                 </span>
                                                 {flight.availableSeats && (
-                                                    <span className={styles.seatsBadge}>{flight.availableSeats}석</span>
+                                                    <span className={(flight.availableSeats || 0) <= 9 ? styles.seatsBadgeCritical : styles.seatsBadge}>
+                                                        {(flight.availableSeats || 0) <= 5 && '🔥 '}{flight.availableSeats}석
+                                                    </span>
                                                 )}
                                             </div>
                                             <span className={styles.airline}>{flight.airline}</span>
@@ -486,7 +541,7 @@ export default function Dashboard() {
 
                                         <div className={styles.route}>
                                             <div className={styles.location}>
-                                                <div className={styles.city}>{flight.departure.city}</div>
+                                                <div className={styles.city}>{normalizeCity(flight.departure.city)}</div>
                                                 <div className={styles.date}>{formatDate(flight.departure.date)}</div>
                                             </div>
 
@@ -500,14 +555,16 @@ export default function Dashboard() {
                                             </div>
 
                                             <div className={styles.location}>
-                                                <div className={styles.city}>{flight.arrival.city}</div>
+                                                <div className={styles.city}>{normalizeCity(flight.arrival.city)}</div>
                                                 <div className={styles.date}>{formatDate(flight.arrival.date)}</div>
                                             </div>
                                         </div>
 
-                                        <div className={styles.cardFooter}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                                                <div className={styles.price}>{formatPrice(flight.price)}</div>
+                                        <div className={styles.cardFooterWrapper}>
+                                            <div className={styles.badgesRow}>
+                                                {isLowestPrice && (
+                                                    <span className={styles.lowestPriceBadge}>최저가</span>
+                                                )}
                                                 {(() => {
                                                     const avgPrice = averagePrices[flight.arrival.city];
                                                     if (avgPrice && flight.price > 0) {
@@ -523,18 +580,33 @@ export default function Dashboard() {
                                                     }
                                                     return null;
                                                 })()}
-                                                {isLowestPrice && (
-                                                    <span className={styles.lowestPriceBadge}>최저가</span>
-                                                )}
                                             </div>
-                                            <a
-                                                href={flight.link}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="btn btn-primary"
-                                            >
-                                                예약하기 →
-                                            </a>
+                                            <div className={styles.cardFooter}>
+                                                <div className={styles.priceSection}>
+                                                    <div className={styles.price}>{formatPrice(flight.price)}</div>
+                                                    {(() => {
+                                                        const key = `${flight.departure.city}-${flight.arrival.city}`;
+                                                        const history = priceHistory[key];
+                                                        if (history && history.length > 1) {
+                                                            const prices = history.map(h => h.minPrice);
+                                                            return (
+                                                                <div className={styles.sparkline}>
+                                                                    <Sparkline data={prices} width={60} height={20} />
+                                                                </div>
+                                                            );
+                                                        }
+                                                        return null;
+                                                    })()}
+                                                </div>
+                                                <a
+                                                    href={flight.link}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="btn btn-primary"
+                                                >
+                                                    예약하기 →
+                                                </a>
+                                            </div>
                                         </div>
 
 
@@ -588,6 +660,31 @@ export default function Dashboard() {
                     ↑
                 </button>
             )}
+
+            {/* 푸터 */}
+            <footer className={styles.footer}>
+                <div className="container">
+                    <div className={styles.footerContent}>
+                        <div className={styles.footerLeft}>
+                            <span className={styles.footerBrand}>✈️ 플리토</span>
+                            <span className={styles.footerDesc}>여행사 땡처리 항공권을 한 곳에서</span>
+                        </div>
+                        <div className={styles.footerRight}>
+                            <div className={styles.footerSources}>
+                                데이터 소스: 땡처리닷컴 · 노랑풍선 · 하나투어 · 모두투어 · 온라인투어
+                            </div>
+                            {lastUpdated && (
+                                <div className={styles.footerUpdated}>
+                                    마지막 업데이트: {new Date(lastUpdated).toLocaleString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                    <div className={styles.footerBottom}>
+                        <span>© 2026 플리토. 항공권 정보는 각 여행사에서 제공됩니다.</span>
+                    </div>
+                </div>
+            </footer>
         </div>
     );
 }
