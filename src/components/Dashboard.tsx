@@ -42,9 +42,9 @@ const checkIsMobile = () => {
 const getMobileUrl = (url: string, isMobile: boolean): string => {
     if (!isMobile || !url) return url;
 
-    // 땡처리닷컴: www.ttang.com → m.ttang.com
+    // 땡처리닷컴: 모바일 딥링크 미지원 → mm.ttang.com 모바일 할인 페이지로 이동
     if (url.includes('www.ttang.com')) {
-        return url.replace('www.ttang.com', 'm.ttang.com');
+        return 'https://mm.ttang.com/ttangair/search/discount/today.do?trip=RT&gubun=T';
     }
     // 온라인투어: www.onlinetour.co.kr → m.onlinetour.co.kr + /flight/w/ → /flight/m/
     if (url.includes('www.onlinetour.co.kr')) {
