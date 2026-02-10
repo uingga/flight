@@ -9,7 +9,7 @@ import { ko } from 'date-fns/locale';
 import 'react-datepicker/dist/react-datepicker.css';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const DatePicker = dynamic(() => import('react-datepicker').then((mod: any) => mod.default), { ssr: false });
+const DatePicker: any = dynamic(() => import('react-datepicker').then((mod: any) => mod.default), { ssr: false });
 import styles from './Dashboard.module.css';
 
 // Helper: string(YYYY-MM-DD) <-> Date
