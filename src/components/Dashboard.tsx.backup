@@ -265,7 +265,6 @@ export default function Dashboard() {
                 <div className={styles.controls}>
                     {/* 1. 검색창 맨 위 */}
                     <div className={styles.searchBox}>
-                        <span className={styles.searchIcon}>🔍</span>
                         <input
                             type="text"
                             placeholder="어디로 떠나볼까요?"
@@ -484,20 +483,15 @@ export default function Dashboard() {
                                             <div className={styles.location}>
                                                 <div className={styles.city}>{flight.departure.city}</div>
                                                 <div className={styles.date}>{formatDate(flight.departure.date)}</div>
+                                                <div className={styles.time}>{flight.departure.time}</div>
                                             </div>
 
-                                            <div className={styles.arrowSection}>
-                                                <div className={styles.arrow}>✈</div>
-                                                <div className={styles.flightTimes}>
-                                                    {flight.departure.time && flight.arrival.time
-                                                        ? `${flight.departure.time} → ${flight.arrival.time}`
-                                                        : ''}
-                                                </div>
-                                            </div>
+                                            <div className={styles.arrow}>→</div>
 
                                             <div className={styles.location}>
                                                 <div className={styles.city}>{flight.arrival.city}</div>
                                                 <div className={styles.date}>{formatDate(flight.arrival.date)}</div>
+                                                <div className={styles.time}>{flight.arrival.time}</div>
                                             </div>
                                         </div>
 

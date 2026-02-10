@@ -36,22 +36,11 @@
 
 .searchBox {
     width: 100%;
-    position: relative;
-}
-
-.searchIcon {
-    position: absolute;
-    left: var(--spacing-md);
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 1.1rem;
-    z-index: 1;
-    pointer-events: none;
 }
 
 .searchInput {
     width: 100%;
-    padding: var(--spacing-md) var(--spacing-md) var(--spacing-md) 2.8rem;
+    padding: var(--spacing-md);
     background: var(--color-bg-primary);
     border: 2px solid var(--color-border);
     border-radius: var(--radius-md);
@@ -428,20 +417,6 @@
     font-size: 1.5rem;
     color: var(--color-primary);
     flex-shrink: 0;
-}
-
-.arrowSection {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    flex-shrink: 0;
-    gap: 2px;
-}
-
-.flightTimes {
-    font-size: 0.7rem;
-    color: var(--color-text-muted);
-    white-space: nowrap;
 }
 
 .cardFooter {
