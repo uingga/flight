@@ -4,22 +4,15 @@ import { getRegionByCity } from '@/lib/utils/region-mapper';
 import { logCrawlResults } from '@/lib/utils/crawl-logger';
 
 /**
- * 땡처리닷컴 스크래퍼 (www.ttang.com 기반)
- * 9개 지역 카테고리별 전체 항공권 수집
- * 페이지네이션: 숫자 클릭(2~6) → 화살표 → 숫자 클릭(7~12) → 화살표 → 반복
+ * 땡처리닷컴 스크래퍼 (www.ttang.com 할인항공권 페이지)
+ * 2개 페이지에서 항공권 수집:
+ * 1. 오늘오픈 땡처리 항공권: /discount/index.do
+ * 2. 3일이내 출발 한정특가: /discount/limit.do
  */
 
-// 지역 코드 목록
-const REGIONS = [
-    { code: 'A2ALL', name: '동남아', region: '동남아' },
-    { code: 'A7ALL', name: '일본', region: '일본' },
-    { code: 'A8ALL', name: '중국', region: '중국' },
-    { code: 'A1ALL', name: '남태평양', region: '남태평양' },
-    { code: 'A5ALL', name: '호주/뉴질랜드', region: '남태평양' },
-    { code: 'A3ALL', name: '미주/중남미', region: '미주' },
-    { code: 'A6ALL', name: '유럽/러시아', region: '유럽' },
-    { code: 'B1ALL', name: '아프리카/중동', region: '기타' },
-    { code: 'A4ALL', name: '서남(중앙)아시아', region: '동남아' },
+const DISCOUNT_PAGES = [
+    { url: 'https://www.ttang.com/ttangair/search/discount/index.do', name: '오늘오픈 땡처리 항공권' },
+    { url: 'https://www.ttang.com/ttangair/search/discount/limit.do?trip=RT&gubun=L', name: '3일이내 출발 한정특가' },
 ];
 
 function randomDelay(min: number, max: number): Promise<void> {
@@ -32,10 +25,8 @@ function randomDelay(min: number, max: number): Promise<void> {
  */
 async function scrapeCurrentPage(
     page: any,
-    regionCode: string,
     pageNum: number,
-    defaultRegion: string,
-    url: string
+    pageUrl: string
 ): Promise<Flight[]> {
     const flights: Flight[] = [];
     const rows = await page.$$('table.tblListB tbody tr');
@@ -46,7 +37,7 @@ async function scrapeCurrentPage(
             const airline = await row.$eval('td.airlogo p', (el: Element) => el.textContent?.trim() || '').catch(() => '');
             const departure = await row.$eval('td:nth-child(1) p.shortCut', (el: Element) => el.textContent?.trim() || '').catch(() => '인천');
             const arrival = await row.$eval('td:nth-child(2) p.shortCut', (el: Element) => el.textContent?.trim() || '').catch(() => '');
-            const priceText = await row.$eval('td.price a.js_tooltip_btn', (el: Element) => el.textContent?.trim() || '0').catch(() => '0');
+            const priceText = await row.$eval('td.price', (el: Element) => el.textContent?.trim() || '0').catch(() => '0');
             const price = parseInt(priceText.replace(/[^0-9]/g, '')) || 0;
 
             const dateText = await row.$eval('td:nth-child(5)', (el: Element) => el.textContent?.trim() || '').catch(() => '');
@@ -62,11 +53,10 @@ async function scrapeCurrentPage(
 
             // 예약 버튼에서 data 속성 추출하여 개별 링크 생성
             const bookBtn = await row.$('.btnSty1.cRed, a[data-masterid]');
-            let productLink = url;
+            let productLink = pageUrl;
             if (bookBtn) {
                 const masterId = await bookBtn.getAttribute('data-masterid') || '';
                 const gubun = await bookBtn.getAttribute('data-gubun') || 'VM';
-                const minimumCnt = await bookBtn.getAttribute('data-minimumcnt') || '1';
                 if (masterId) {
                     productLink = `https://www.ttang.com/ttangair/search/ttang/fare_detail.do?masterId=${encodeURIComponent(masterId)}&gubun=${gubun}&adt=1&chd=0&inf=0&exAirAvailStartDate=${startDateParam}`;
                 }
@@ -74,7 +64,7 @@ async function scrapeCurrentPage(
 
             if (arrival && price > 0) {
                 flights.push({
-                    id: `ttang-${regionCode}-p${pageNum}-${i}`,
+                    id: `ttang-discount-p${pageNum}-${i}`,
                     source: 'ttang',
                     airline: airline || '항공사 미정',
                     departure: { city: departure || '인천', airport: '', date: depDate, time: '' },
@@ -82,7 +72,7 @@ async function scrapeCurrentPage(
                     price: price,
                     currency: 'KRW',
                     link: productLink,
-                    region: getRegionByCity(arrival) || defaultRegion,
+                    region: getRegionByCity(arrival) || '기타',
                 });
             }
         } catch { }
@@ -92,103 +82,11 @@ async function scrapeCurrentPage(
 }
 
 /**
- * 단일 지역의 항공권 수집
- */
-async function scrapeRegion(
-    page: any,
-    regionCode: string,
-    regionName: string,
-    defaultRegion: string
-): Promise<Flight[]> {
-    const flights: Flight[] = [];
-
-    try {
-        const url = `https://www.ttang.com/ttangair/search/ttang/list.do?arr0=${regionCode}`;
-        console.log(`📍 ${regionName} 수집 중... (${url})`);
-
-        await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
-        await randomDelay(2, 3);
-
-        await page.waitForSelector('table.tblListB tbody tr', { timeout: 15000 }).catch(() => {
-            console.log(`  ⚠️ ${regionName}: 테이블 로딩 실패`);
-        });
-
-        // 첫 페이지 수집
-        const firstPageFlights = await scrapeCurrentPage(page, regionCode, 1, defaultRegion, url);
-        flights.push(...firstPageFlights);
-        console.log(`  🔍 ${regionName} 페이지 1: ${firstPageFlights.length}개 수집`);
-
-        // 페이지네이션: 숫자 클릭 → 화살표 → 반복
-        let currentPage = 1;
-        const maxPages = 50;
-        let consecutiveEmptyPages = 0;
-
-        while (currentPage < maxPages && consecutiveEmptyPages < 3) {
-            try {
-                const nextPageNum = currentPage + 1;
-
-                // 다음 페이지 번호(currentPage + 1)가 표시되어 있는지 확인
-                const pageLinks = await page.$$('.pageSty1 a.num');
-                let nextPageElement = null;
-
-                for (const link of pageLinks) {
-                    const text = await link.textContent();
-                    const num = parseInt(text?.trim());
-                    if (num === nextPageNum) {
-                        nextPageElement = link;
-                        break;
-                    }
-                }
-
-                if (nextPageElement) {
-                    // 다음 페이지 번호가 있으면 클릭
-                    await nextPageElement.click();
-                    await randomDelay(1, 2);
-
-                    currentPage = nextPageNum;
-                    const pageFlights = await scrapeCurrentPage(page, regionCode, currentPage, defaultRegion, url);
-                    flights.push(...pageFlights);
-                    console.log(`    페이지 ${currentPage}: ${pageFlights.length}개 수집`);
-
-                    if (pageFlights.length === 0) {
-                        consecutiveEmptyPages++;
-                    } else {
-                        consecutiveEmptyPages = 0;
-                    }
-                } else {
-                    // 현재 그룹에 더 이상 페이지가 없으면 "다음" 화살표 클릭
-                    const nextBtn = await page.$('.pageSty1 a.btn_next');
-                    if (nextBtn) {
-                        console.log(`    → 다음 그룹으로 이동`);
-                        await nextBtn.click();
-                        await randomDelay(1, 2);
-                        // 화살표 클릭 후 다시 루프 시작 (새 페이지 번호들이 표시됨)
-                    } else {
-                        // 다음 버튼도 없으면 종료
-                        console.log(`    마지막 페이지 도달`);
-                        break;
-                    }
-                }
-            } catch (pageError) {
-                console.log(`    페이지 ${currentPage + 1} 오류, 종료`);
-                break;
-            }
-        }
-
-        console.log(`  ✅ ${regionName}: ${flights.length}개 항공권 수집 완료`);
-    } catch (error) {
-        console.error(`  ❌ ${regionName} 수집 오류:`, error);
-    }
-
-    return flights;
-}
-
-/**
  * 메인 스크래퍼 함수
  */
 export async function scrapeTtang(): Promise<Flight[]> {
-    console.log('🚀 땡처리닷컴 크롤링 시작 (www.ttang.com)...');
-    console.log(`📋 수집 대상: ${REGIONS.length}개 지역`);
+    console.log('🚀 땡처리닷컴 크롤링 시작 (할인항공권 페이지)...');
+    console.log(`📋 수집 대상: ${DISCOUNT_PAGES.length}개 페이지`);
 
     const browser = await chromium.launch({ headless: false });
     const context = await browser.newContext({
@@ -198,9 +96,79 @@ export async function scrapeTtang(): Promise<Flight[]> {
     const allFlights: Flight[] = [];
 
     try {
-        for (const region of REGIONS) {
-            const regionFlights = await scrapeRegion(page, region.code, region.name, region.region);
-            allFlights.push(...regionFlights);
+        for (const discountPage of DISCOUNT_PAGES) {
+            console.log(`\n📍 ${discountPage.name} 수집 중... (${discountPage.url})`);
+
+            await page.goto(discountPage.url, { waitUntil: 'networkidle', timeout: 30000 });
+            await randomDelay(2, 3);
+
+            await page.waitForSelector('table.tblListB tbody tr', { timeout: 15000 }).catch(() => {
+                console.log(`  ⚠️ ${discountPage.name}: 테이블 로딩 실패`);
+            });
+
+            // 첫 페이지 수집
+            const firstPageFlights = await scrapeCurrentPage(page, 1, discountPage.url);
+            allFlights.push(...firstPageFlights);
+            console.log(`  🔍 페이지 1: ${firstPageFlights.length}개 수집`);
+
+            // 페이지네이션 처리
+            let currentPage = 1;
+            const maxPages = 20;
+            let consecutiveEmptyPages = 0;
+
+            while (currentPage < maxPages && consecutiveEmptyPages < 3) {
+                try {
+                    const nextPageNum = currentPage + 1;
+
+                    // 다음 페이지 번호가 표시되어 있는지 확인
+                    const pageLinks = await page.$$('.pageSty1 a.num');
+                    let nextPageElement = null;
+
+                    for (const link of pageLinks) {
+                        const pageAttr = await link.getAttribute('page');
+                        const text = await link.textContent();
+                        const num = parseInt(pageAttr || text?.trim() || '');
+                        if (num === nextPageNum) {
+                            nextPageElement = link;
+                            break;
+                        }
+                    }
+
+                    if (nextPageElement) {
+                        await nextPageElement.click();
+                        await randomDelay(1, 2);
+
+                        // 페이지가 로드될 때까지 대기
+                        await page.waitForSelector('table.tblListB tbody tr', { timeout: 10000 }).catch(() => { });
+
+                        currentPage = nextPageNum;
+                        const pageFlights = await scrapeCurrentPage(page, currentPage, discountPage.url);
+                        allFlights.push(...pageFlights);
+                        console.log(`    페이지 ${currentPage}: ${pageFlights.length}개 수집`);
+
+                        if (pageFlights.length === 0) {
+                            consecutiveEmptyPages++;
+                        } else {
+                            consecutiveEmptyPages = 0;
+                        }
+                    } else {
+                        // 현재 그룹에 더 이상 페이지가 없으면 "다음" 화살표 클릭
+                        const nextBtn = await page.$('.pageSty1 a.btn_next');
+                        if (nextBtn) {
+                            console.log('    → 다음 그룹으로 이동');
+                            await nextBtn.click();
+                            await randomDelay(1, 2);
+                        } else {
+                            console.log(`  ✅ ${discountPage.name}: 마지막 페이지 도달`);
+                            break;
+                        }
+                    }
+                } catch (pageError) {
+                    console.log(`    페이지 ${currentPage + 1} 오류, 종료`);
+                    break;
+                }
+            }
+
             await randomDelay(2, 4);
         }
     } catch (error) {

@@ -32,6 +32,39 @@ const normalizeCity = (city: string): string => {
 
 const ITEMS_PER_PAGE = 20;
 
+// 모바일 여부 체크
+const checkIsMobile = () => {
+    if (typeof navigator === 'undefined') return false;
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+};
+
+// PC URL → 모바일 URL 변환
+const getMobileUrl = (url: string, isMobile: boolean): string => {
+    if (!isMobile || !url) return url;
+
+    // 땡처리닷컴: www.ttang.com → mm.ttang.com
+    if (url.includes('www.ttang.com')) {
+        return url.replace('www.ttang.com', 'mm.ttang.com');
+    }
+    // 온라인투어: www.onlinetour.co.kr → m.onlinetour.co.kr
+    if (url.includes('www.onlinetour.co.kr')) {
+        return url.replace('www.onlinetour.co.kr', 'm.onlinetour.co.kr');
+    }
+    // 모두투어: www.modetour.com → m.modetour.com
+    if (url.includes('www.modetour.com')) {
+        return url.replace('www.modetour.com', 'm.modetour.com');
+    }
+    // 하나투어: www.hanatour.com → m.hanatour.com
+    if (url.includes('www.hanatour.com')) {
+        return url.replace('www.hanatour.com', 'm.hanatour.com');
+    }
+    // 노랑풍선: www.ybtour.co.kr → m.ybtour.co.kr
+    if (url.includes('www.ybtour.co.kr')) {
+        return url.replace('www.ybtour.co.kr', 'm.ybtour.co.kr');
+    }
+    return url;
+};
+
 export default function Dashboard() {
     const [flights, setFlights] = useState<Flight[]>([]);
     const [loading, setLoading] = useState(true);
@@ -49,11 +82,13 @@ export default function Dashboard() {
     const [airlineFilter, setAirlineFilter] = useState<string>('all');
     const [displayCount, setDisplayCount] = useState(ITEMS_PER_PAGE);
     const [showScrollTop, setShowScrollTop] = useState(false);
+    const [isMobile, setIsMobile] = useState(false);
     const observerRef = useRef<IntersectionObserver | null>(null);
     const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
         fetchFlights();
+        setIsMobile(checkIsMobile());
     }, []);
 
     // 필터 변경 시 displayCount 리셋
@@ -599,7 +634,7 @@ export default function Dashboard() {
                                                     })()}
                                                 </div>
                                                 <a
-                                                    href={flight.link}
+                                                    href={getMobileUrl(flight.link, isMobile)}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     className="btn btn-primary"
