@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Flight } from '@/types/flight';
+import Logo from './Logo';
 import styles from './Dashboard.module.css';
 
 const ITEMS_PER_PAGE = 20;
@@ -254,12 +255,12 @@ export default function Dashboard() {
         <div className={styles.dashboard}>
             <header className={styles.header}>
                 <div className="container">
-                    <h1 className={styles.title}>
-                        ✈️ <span className="gradient-text">플리토</span>
-                        <span className={styles.titleSuffix}> | 최저가 항공권</span>
+                    <h1 className={styles.title} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Logo size={1.2} />
+                        <span className={styles.titleSuffix}> | 땡처리 항공권</span>
                     </h1>
                     <p className={styles.subtitle}>
-                        전 세계 모든 항공편을 한눈에 비교하고 <strong className={styles.highlight}>최저가</strong>로 떠나보세요! 🚀
+                        전국 여행사의 <strong className={styles.highlight}>땡처리 항공권</strong>을 한눈에 비교하고 떠나보세요! 🚀
                     </p>
                 </div>
             </header>
