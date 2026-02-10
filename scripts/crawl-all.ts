@@ -105,6 +105,48 @@ async function main() {
         const cachePath = path.join(dataDir, 'all-flights-cache.json');
         fs.writeFileSync(cachePath, JSON.stringify(cacheData, null, 2), 'utf-8');
 
+        // 가격 히스토리 기록 (노선별 최저가/평균가)
+        const historyPath = path.join(dataDir, 'price-history.json');
+        let history: Record<string, Array<{ date: string; minPrice: number; avgPrice: number; count: number }>> = {};
+        try {
+            if (fs.existsSync(historyPath)) {
+                history = JSON.parse(fs.readFileSync(historyPath, 'utf-8'));
+            }
+        } catch (e) {
+            console.log('가격 히스토리 파일 초기화');
+        }
+
+        // 오늘 날짜
+        const today = new Date().toISOString().split('T')[0];
+
+        // 노선별 가격 집계
+        const routePrices: Record<string, number[]> = {};
+        allFlights.forEach((f: any) => {
+            const route = `${f.departure?.city || ''}-${f.arrival?.city || ''}`;
+            if (f.price > 0) {
+                if (!routePrices[route]) routePrices[route] = [];
+                routePrices[route].push(f.price);
+            }
+        });
+
+        // 히스토리에 오늘 데이터 추가 (같은 날이면 덮어쓰기)
+        Object.entries(routePrices).forEach(([route, prices]) => {
+            if (!history[route]) history[route] = [];
+            // 오늘 데이터가 이미 있으면 제거
+            history[route] = history[route].filter(h => h.date !== today);
+            history[route].push({
+                date: today,
+                minPrice: Math.min(...prices),
+                avgPrice: Math.round(prices.reduce((a, b) => a + b, 0) / prices.length),
+                count: prices.length,
+            });
+            // 최근 14일만 유지
+            history[route] = history[route].slice(-14);
+        });
+
+        fs.writeFileSync(historyPath, JSON.stringify(history, null, 2), 'utf-8');
+        console.log(`📈 가격 히스토리 기록: ${Object.keys(routePrices).length}개 노선`);
+
         console.log('\n\n✅ 전체 크롤링 완료!');
         console.log('='.repeat(50));
         console.log(`📊 총 수집된 항공권: ${allFlights.length}개`);

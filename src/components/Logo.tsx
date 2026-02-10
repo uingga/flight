@@ -42,12 +42,8 @@ export default function Logo({ className = '', size = 1.0 }: { className?: strin
                 fontWeight: 900,
                 fontSize: `${2.2 * scale}rem`,
                 letterSpacing: '-0.03em',
-                background: 'linear-gradient(135deg, #ffffff 0%, #93c5fd 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                WebkitTextStroke: '0.5px rgba(255,255,255,0.3)',
-                backgroundClip: 'text',
-                color: '#ffffff'
+                color: '#111827',
+                lineHeight: 1
             }}>
                 플리토
             </span>
