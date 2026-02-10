@@ -16,20 +16,32 @@ const DEPARTURE_TABS = [
     { name: '대구/제주', index: 3 },
 ];
 
-// 도시명 -> 공항코드 매핑
-const CITY_TO_AIRPORT: Record<string, string> = {
-    '서울': 'ICN', '인천': 'ICN', '김포': 'GMP',
+// 도시명 -> 하나투어 도시코드 매핑 (공항코드가 아닌 도시코드 사용: SEL, TYO 등)
+const CITY_TO_HANATOUR: Record<string, string> = {
+    // 한국 출발지
+    '서울': 'SEL', '인천': 'SEL', '김포': 'SEL',
     '부산': 'PUS', '김해': 'PUS',
-    '대구': 'TAE', '청주': 'CJJ', '제주': 'CJU', '무안': 'MWX',
+    '대구': 'TAE', '청주': 'CJJ', '제주': 'CJU', '제주시': 'CJU', '무안': 'MWX',
+    // 일본
     '도쿄': 'TYO', '오사카': 'OSA', '후쿠오카': 'FUK', '삿포로': 'CTS', '나고야': 'NGO',
-    '방콕': 'BKK', '치앙마이': 'CNX', '푸켓': 'HKT',
+    '오키나와': 'OKA', '고베': 'UKB', '나가사키': 'NGS', '가고시마': 'KOJ',
+    '구마모토': 'KMJ', '오이타': 'OIT', '마츠야마': 'MYJ', '히로시마': 'HIJ',
+    '요나고': 'YGJ', '다카마쓰': 'TAK',
+    // 동남아
+    '방콕': 'BKK', '치앙마이': 'CNX', '푸켓': 'HKT', '푸껫': 'HKT',
     '다낭': 'DAD', '나트랑': 'NHA', '하노이': 'HAN', '호치민': 'SGN', '푸꾸옥': 'PQC',
-    '마닐라': 'MNL', '세부': 'CEB', '보라카이': 'KLO',
-    '싱가포르': 'SIN', '쿠알라룸푸르': 'KUL', '발리': 'DPS', '자카르타': 'CGK',
-    '타이베이': 'TPE', '홍콩': 'HKG', '마카오': 'MFM',
-    '상하이': 'PVG', '베이징': 'PEK', '칭다오': 'TAO', '하얼빈': 'HRB',
-    '괌': 'GUM', '사이판': 'SPN', '하와이': 'HNL', '호놀룰루': 'HNL',
+    '마닐라': 'MNL', '세부': 'CEB', '보라카이': 'KLO', '보홀': 'TAG',
+    '싱가포르': 'SIN', '쿠알라룸푸르': 'KUL', '코타키나발루': 'BKI',
+    '발리': 'DPS', '자카르타': 'CGK',
+    // 대만/중화권
+    '타이베이': 'TPE', '타이중': 'RMQ', '가오슝': 'KHH', '홍콩': 'HKG', '마카오': 'MFM',
+    // 중국
+    '상하이': 'SHA', '베이징': 'BJS', '칭다오': 'TAO', '하얼빈': 'HRB', '싼야': 'SYX',
+    // 태평양/미주
+    '괌': 'GUM', '사이판': 'SPN', '하와이': 'HNL', '호놀룰루': 'HNL', '밴쿠버': 'YVR',
+    // 호주
     '시드니': 'SYD', '멜버른': 'MEL',
+    // 유럽
     '파리': 'PAR', '런던': 'LON', '로마': 'ROM', '바르셀로나': 'BCN',
 };
 
@@ -42,34 +54,48 @@ function formatDateForUrl(dateStr: string): string {
         return `20${shortMatch[1]}${shortMatch[2]}${shortMatch[3]}`;
     }
     // YYYY-MM-DD 또는 YYYY.MM.DD 형식
-    const longMatch = dateStr.match(/^(\d{4})[-.](\d{2})[-.](\d{2})/);
+    const longMatch = dateStr.match(/^(\d{4})[-.](\\d{2})[-.](\\d{2})/);
     if (longMatch) {
         return `${longMatch[1]}${longMatch[2]}${longMatch[3]}`;
     }
     return dateStr.replace(/[-./]/g, '');
 }
 
-// 하나투어 예약 URL 생성
+// 하나투어 예약 URL 생성 (도시코드 + depPlcDvCd='C' 사용)
 function generateHanatourBookingUrl(flight: { departureCity: string; arrivalCity: string; departureDate: string }): string {
-    const depCode = CITY_TO_AIRPORT[flight.departureCity] || 'ICN';
-    const arrCode = CITY_TO_AIRPORT[flight.arrivalCity] || '';
+    // 도시명에서 공항코드 제거: "서울(ICN)" -> "서울", 공항코드 추출: "ICN"
+    const extractCity = (cityStr: string) => {
+        const match = cityStr.match(/^(.+?)\(([A-Z]{3})\)$/);
+        if (match) return { name: match[1], code: match[2] };
+        return { name: cityStr, code: '' };
+    };
+
+    const dep = extractCity(flight.departureCity);
+    const arr = extractCity(flight.arrivalCity);
+
+    // 도시명 매핑 우선, 없으면 공항코드를 그대로 사용
+    const depCode = CITY_TO_HANATOUR[dep.name] || dep.code || 'SEL';
+    const arrCode = CITY_TO_HANATOUR[arr.name] || arr.code || '';
     const depDate = formatDateForUrl(flight.departureDate);
 
     if (!arrCode || !depDate) {
-        // 공항 코드를 찾지 못하면 프로모션 페이지로 폴백
+        // 도시 코드를 찾지 못하면 프로모션 페이지로 폴백
         return 'https://hope.hanatour.com/promotion/plan/PM006698DD56';
     }
 
-    // 하나투어 실제 URL 형식: itnrLst 구조 사용 (psngrCntLst 제거 - 기본값 사용)
+    // 하나투어 URL: 도시코드(C) 사용 필수 — 공항코드(A)는 0건 반환
     const searchCond = {
         itnrLst: [
             {
+                depPlcDvCd: 'C',
                 depPlcCd: depCode,
+                arrPlcDvCd: 'C',
                 arrPlcCd: arrCode,
                 depDt: depDate
             }
         ],
-        tripType: 'OW'  // One Way (편도)
+        psngrCntLst: [{ ageDvCd: 'A', psngrCnt: 1 }],
+        itnrTypeCd: 'OW'  // One Way (편도)
     };
 
     return `https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=${encodeURIComponent(JSON.stringify(searchCond))}`;
