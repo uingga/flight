@@ -42,13 +42,13 @@ const checkIsMobile = () => {
 const getMobileUrl = (url: string, isMobile: boolean): string => {
     if (!isMobile || !url) return url;
 
-    // 땡처리닷컴: www.ttang.com → mm.ttang.com
+    // 땡처리닷컴: www.ttang.com → m.ttang.com
     if (url.includes('www.ttang.com')) {
-        return url.replace('www.ttang.com', 'mm.ttang.com');
+        return url.replace('www.ttang.com', 'm.ttang.com');
     }
-    // 온라인투어: www.onlinetour.co.kr → m.onlinetour.co.kr
+    // 온라인투어: www.onlinetour.co.kr → m.onlinetour.co.kr + /flight/w/ → /flight/m/
     if (url.includes('www.onlinetour.co.kr')) {
-        return url.replace('www.onlinetour.co.kr', 'm.onlinetour.co.kr');
+        return url.replace('www.onlinetour.co.kr', 'm.onlinetour.co.kr').replace('/flight/w/', '/flight/m/');
     }
     // 모두투어: www.modetour.com → m.modetour.com
     if (url.includes('www.modetour.com')) {
@@ -58,9 +58,9 @@ const getMobileUrl = (url: string, isMobile: boolean): string => {
     if (url.includes('www.hanatour.com')) {
         return url.replace('www.hanatour.com', 'm.hanatour.com');
     }
-    // 노랑풍선: www.ybtour.co.kr → m.ybtour.co.kr
-    if (url.includes('www.ybtour.co.kr')) {
-        return url.replace('www.ybtour.co.kr', 'm.ybtour.co.kr');
+    // 노랑풍선: fly.ybtour.co.kr → mfly.ybtour.co.kr
+    if (url.includes('fly.ybtour.co.kr')) {
+        return url.replace('fly.ybtour.co.kr', 'mfly.ybtour.co.kr');
     }
     return url;
 };
