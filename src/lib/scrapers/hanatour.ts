@@ -45,20 +45,23 @@ const CITY_TO_HANATOUR: Record<string, string> = {
     '파리': 'PAR', '런던': 'LON', '로마': 'ROM', '바르셀로나': 'BCN',
 };
 
-// 날짜 포맷 변환 (YY.MM.DD 또는 YYYY-MM-DD -> YYYYMMDD)
+// 날짜 포맷 변환 (YYYY.MM.DD(요일) 또는 YYYY-MM-DD -> YYYYMMDD)
 function formatDateForUrl(dateStr: string): string {
     if (!dateStr) return '';
-    // YY.MM.DD 형식
-    const shortMatch = dateStr.match(/^(\d{2})\.(\d{2})\.(\d{2})/);
-    if (shortMatch) {
-        return `20${shortMatch[1]}${shortMatch[2]}${shortMatch[3]}`;
-    }
-    // YYYY-MM-DD 또는 YYYY.MM.DD 형식
-    const longMatch = dateStr.match(/^(\d{4})[-.](\\d{2})[-.](\\d{2})/);
+    // 먼저 괄호 안 요일 제거: "2026.02.11(수)" -> "2026.02.11"
+    const cleaned = dateStr.replace(/\([^)]*\)/g, '').trim();
+    // YYYY.MM.DD 또는 YYYY-MM-DD 형식
+    const longMatch = cleaned.match(/^(\d{4})[.-](\d{2})[.-](\d{2})/);
     if (longMatch) {
         return `${longMatch[1]}${longMatch[2]}${longMatch[3]}`;
     }
-    return dateStr.replace(/[-./]/g, '');
+    // YY.MM.DD 형식
+    const shortMatch = cleaned.match(/^(\d{2})\.(\d{2})\.(\d{2})/);
+    if (shortMatch) {
+        return `20${shortMatch[1]}${shortMatch[2]}${shortMatch[3]}`;
+    }
+    // 그 외: 숫자만 추출
+    return cleaned.replace(/\D/g, '').slice(0, 8);
 }
 
 // 하나투어 예약 URL 생성 (도시코드 + depPlcDvCd='C' 사용)
