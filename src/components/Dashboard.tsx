@@ -58,9 +58,9 @@ const getMobileUrl = (url: string, isMobile: boolean): string => {
     if (url.includes('www.hanatour.com')) {
         return url.replace('www.hanatour.com', 'm.hanatour.com');
     }
-    // 노랑풍선: 모바일 딥링크 미지원 → 모바일 항공 검색 페이지로 이동
+    // 노랑풍선: 모바일 딥링크 미지원 → 모바일 땡처리 항공 페이지로 이동
     if (url.includes('fly.ybtour.co.kr')) {
-        return 'https://mfly.ybtour.co.kr/mobile/fr/airSearchMobile.lts';
+        return 'https://mfly.ybtour.co.kr/mobile/fr/booking/findDiscountAirMobile.lts?efcTpCode=INV&efcCode=INV';
     }
     return url;
 };
