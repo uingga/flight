@@ -54,10 +54,7 @@ const checkIsMobile = () => {
 const getMobileUrl = (url: string, isMobile: boolean): string => {
     if (!isMobile || !url) return url;
 
-    // 땡처리닷컴: 모바일 딥링크 미지원 → mm.ttang.com 모바일 할인 페이지로 이동
-    if (url.includes('www.ttang.com')) {
-        return 'https://mm.ttang.com/ttangair/search/discount/today.do?trip=RT&gubun=T';
-    }
+
     // 온라인투어: www.onlinetour.co.kr → m.onlinetour.co.kr + /flight/w/ → /flight/m/
     if (url.includes('www.onlinetour.co.kr')) {
         return url.replace('www.onlinetour.co.kr', 'm.onlinetour.co.kr').replace('/flight/w/', '/flight/m/');
@@ -365,7 +362,7 @@ export default function Dashboard() {
 
     const getSourceBadgeClass = (source: string) => {
         switch (source) {
-            case 'ttang': return styles.badgeTtang;
+
             case 'ybtour': return styles.badgeYbtour;
             case 'modetour': return styles.badgeModetour;
             case 'hanatour': return styles.badgeHanatour;
@@ -376,7 +373,7 @@ export default function Dashboard() {
 
     const getSourceName = (source: string) => {
         switch (source) {
-            case 'ttang': return '땡처리닷컴';
+
             case 'ybtour': return '노랑풍선';
             case 'modetour': return '모두투어';
             case 'hanatour': return '하나투어';
@@ -633,7 +630,7 @@ export default function Dashboard() {
                                     className={styles.statsSelect}
                                 >
                                     <option value="all">{isMobile ? '여행사' : '전체 여행사'}</option>
-                                    <option value="ttang">땡처리닷컴</option>
+
                                     <option value="ybtour">노랑풍선</option>
                                     <option value="modetour">모두투어</option>
                                     <option value="hanatour">하나투어</option>

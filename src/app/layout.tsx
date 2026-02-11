@@ -97,7 +97,7 @@ export default function RootLayout({
                 <link rel="preconnect" href="https://m.hanatour.com" />
                 <link rel="preconnect" href="https://m.modetour.com" />
                 <link rel="preconnect" href="https://m.onlinetour.co.kr" />
-                <link rel="preconnect" href="https://mm.ttang.com" />
+
                 <link rel="preconnect" href="https://mfly.ybtour.co.kr" />
             </head>
             <body className="antialiased">

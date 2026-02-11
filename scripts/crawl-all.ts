@@ -1,4 +1,4 @@
-import { scrapeTtang } from '../src/lib/scrapers/ttang';
+
 import { scrapeYbtour } from '../src/lib/scrapers/ybtour';
 import { scrapeHanatour } from '../src/lib/scrapers/hanatour';
 import { scrapeModetour } from '../src/lib/scrapers/modetour';
@@ -11,7 +11,7 @@ interface CacheData {
     count: number;
     flights: any[];
     sources: {
-        ttang: number;
+
         ybtour: number;
         hanatour: number;
         modetour: number;
@@ -24,7 +24,7 @@ async function main() {
 
     const allFlights: any[] = [];
     const sources = {
-        ttang: 0,
+
         ybtour: 0,
         hanatour: 0,
         modetour: 0,
@@ -32,16 +32,7 @@ async function main() {
     };
 
     try {
-        // 1. 땡처리닷컴
-        console.log('\n=== 땡처리닷컴 크롤링 ===');
-        try {
-            const ttangFlights = await scrapeTtang();
-            allFlights.push(...ttangFlights);
-            sources.ttang = ttangFlights.length;
-            console.log(`✅ 땡처리닷컴: ${ttangFlights.length}개`);
-        } catch (error) {
-            console.error('❌ 땡처리닷컴 실패:', error);
-        }
+
 
         // 2. 노랑풍선
         console.log('\n=== 노랑풍선 크롤링 ===');
@@ -150,7 +141,7 @@ async function main() {
         console.log('\n\n✅ 전체 크롤링 완료!');
         console.log('='.repeat(50));
         console.log(`📊 총 수집된 항공권: ${allFlights.length}개`);
-        console.log(`   - 땡처리닷컴: ${sources.ttang}개`);
+
         console.log(`   - 노랑풍선: ${sources.ybtour}개`);
         console.log(`   - 하나투어: ${sources.hanatour}개`);
         console.log(`   - 모두투어: ${sources.modetour}개`);
