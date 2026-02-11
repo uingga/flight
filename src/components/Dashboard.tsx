@@ -14,8 +14,20 @@ import styles from './Dashboard.module.css';
 
 // Helper: string(YYYY-MM-DD) <-> Date
 const toDate = (s: string) => s ? new Date(s + 'T00:00:00') : null;
-const toStr = (d: Date | null) => d ? d.toISOString().slice(0, 10) : '';
+const toStr = (d: Date | null) => {
+    if (!d) return '';
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
 const fmtDate = (s: string) => s ? s.slice(5).replace(/-/g, '.') : '';
+const getDefaultStartDate = () => toStr(new Date());
+const getDefaultEndDate = () => {
+    const d = new Date();
+    d.setMonth(d.getMonth() + 1);
+    return toStr(d);
+};
 
 // 도시명 정규화: "서울(ICN)" → "인천", "서울(GMP)" → "김포"
 const normalizeCity = (city: string): string => {
@@ -76,15 +88,21 @@ export default function Dashboard() {
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
     const [sourceFilter, setSourceFilter] = useState<string>('all');
     const [regionFilter, setRegionFilter] = useState<string>('all');
-    const [startDate, setStartDate] = useState<string>('2026-02-09');
-    const [endDate, setEndDate] = useState<string>('2026-03-09');
+    const [startDate, setStartDate] = useState<string>(getDefaultStartDate());
+    const [endDate, setEndDate] = useState<string>(getDefaultEndDate());
     const [departureFilter, setDepartureFilter] = useState<string>('all');
     const [airlineFilter, setAirlineFilter] = useState<string>('all');
     const [displayCount, setDisplayCount] = useState(ITEMS_PER_PAGE);
     const [showScrollTop, setShowScrollTop] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+    const [showFilters, setShowFilters] = useState(false);
     const observerRef = useRef<IntersectionObserver | null>(null);
     const loadMoreRef = useRef<HTMLDivElement | null>(null);
+    const [headerHidden, setHeaderHidden] = useState(false);
+    const [headerScrolled, setHeaderScrolled] = useState(false);
+    const lastScrollY = useRef(0);
 
     useEffect(() => {
         fetchFlights();
@@ -96,12 +114,20 @@ export default function Dashboard() {
         setDisplayCount(ITEMS_PER_PAGE);
     }, [searchTerm, sourceFilter, regionFilter, airlineFilter, startDate, endDate, departureFilter, sortBy]);
 
-    // 스크롤 감지 (맨위로 버튼 표시)
+    // 스크롤 감지 (맨위로 버튼 + 헤더 숨김)
     useEffect(() => {
         const handleScroll = () => {
-            setShowScrollTop(window.scrollY > 400);
+            const currentY = window.scrollY;
+            setShowScrollTop(currentY > 400);
+            setHeaderScrolled(currentY > 10);
+            if (currentY > lastScrollY.current && currentY > 60) {
+                setHeaderHidden(true);
+            } else {
+                setHeaderHidden(false);
+            }
+            lastScrollY.current = currentY;
         };
-        window.addEventListener('scroll', handleScroll);
+        window.addEventListener('scroll', handleScroll, { passive: true });
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
@@ -181,6 +207,19 @@ export default function Dashboard() {
         return lowest;
     }, [flights]);
 
+    // 인기 도시 목록 (검색 추천용)
+    const popularCities = useMemo(() => {
+        const counts: Record<string, number> = {};
+        flights.forEach(f => {
+            const city = f.arrival.city;
+            counts[city] = (counts[city] || 0) + 1;
+        });
+        return Object.entries(counts)
+            .sort(([, a], [, b]) => b - a)
+            .slice(0, 8)
+            .map(([city]) => city);
+    }, [flights]);
+
     // 필터 초기화
     const resetAllFilters = () => {
         setSearchTerm('');
@@ -188,8 +227,8 @@ export default function Dashboard() {
         setRegionFilter('all');
         setAirlineFilter('all');
         setDepartureFilter('all');
-        setStartDate('2026-02-09');
-        setEndDate('2026-03-09');
+        setStartDate(getDefaultStartDate());
+        setEndDate(getDefaultEndDate());
         setSortBy('price');
     };
 
@@ -317,15 +356,18 @@ export default function Dashboard() {
 
     return (
         <div className={styles.dashboard}>
-            <header className={styles.header}>
-                <div className="container">
-                    <h1 className={styles.title} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <Logo size={1.2} />
-
-                    </h1>
-                    <p className={styles.subtitle}>
-                        전국 여행사의 <strong className={styles.highlight}>땡처리 항공권</strong>을 한눈에 비교하고 떠나보세요! 🚀
-                    </p>
+            <header className={`${styles.header} ${headerHidden ? styles.headerHidden : ''} ${headerScrolled ? styles.headerScrolled : ''}`}>
+                <div className={styles.headerContainer}>
+                    <div className={styles.headerLeft}>
+                        <h1 className={styles.title}>
+                            <Logo size={isMobile ? 0.8 : 0.9} />
+                        </h1>
+                    </div>
+                    <div className={styles.headerRight}>
+                        <p className={styles.subtitle}>
+                            전국 여행사의 <strong className={styles.highlight}>땡처리 항공권</strong>을 한눈에! 🚀
+                        </p>
+                    </div>
                 </div>
             </header>
 
@@ -334,44 +376,81 @@ export default function Dashboard() {
                     {/* 1. 날짜 + 검색 한 줄 */}
                     <div className={styles.secondaryRow}>
                         <div className={styles.dateRange}>
+                            <span className={styles.dateIcon}>📅</span>
                             <DatePicker
-                                selected={toDate(startDate)}
-                                onChange={(date: Date | null) => setStartDate(toStr(date))}
+                                selectsRange={true}
+                                startDate={toDate(startDate)}
+                                endDate={toDate(endDate)}
+                                onChange={(update: [Date | null, Date | null]) => {
+                                    const [start, end] = update;
+                                    setStartDate(toStr(start));
+                                    setEndDate(toStr(end));
+                                    if (end) {
+                                        setTimeout(() => setIsCalendarOpen(false), 500);
+                                    }
+                                }}
+                                open={isCalendarOpen}
+                                onInputClick={() => setIsCalendarOpen(true)}
+                                onClickOutside={() => setIsCalendarOpen(false)}
+                                shouldCloseOnSelect={false}
                                 dateFormat="yy.MM.dd"
                                 locale={ko}
                                 className={styles.dateInput}
-                                placeholderText="시작일"
+                                placeholderText="날짜 선택"
                                 popperClassName={styles.datePickerPopper}
                                 calendarClassName={styles.datePickerCalendar}
                                 minDate={new Date()}
-                            />
-                            <span className={styles.dateSeparator}>~</span>
-                            <DatePicker
-                                selected={toDate(endDate)}
-                                onChange={(date: Date | null) => setEndDate(toStr(date))}
-                                dateFormat="yy.MM.dd"
-                                locale={ko}
-                                className={styles.dateInput}
-                                placeholderText="종료일"
-                                popperClassName={styles.datePickerPopper}
-                                calendarClassName={styles.datePickerCalendar}
-                                minDate={toDate(startDate) || new Date()}
+                                isClearable={true}
                             />
                         </div>
-                        <div className={styles.searchBox} style={{ flex: 1, minWidth: '150px' }}>
+                        <div className={styles.searchBox} style={{ flex: 1, minWidth: '150px', position: 'relative' }}>
                             <span className={styles.searchIcon}>🔍</span>
                             <input
                                 type="text"
-                                placeholder="도시, 항공사 검색"
+                                placeholder="도시명으로 검색 (예: 다낭, 오사카)"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
+                                onFocus={() => setShowSuggestions(true)}
+                                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                                 className={styles.searchInput}
                             />
+                            {showSuggestions && !searchTerm && (
+                                <ul className={styles.suggestionsDropdown}>
+                                    <li className={styles.suggestionHeader}>인기 도시</li>
+                                    {popularCities.map((city) => (
+                                        <li
+                                            key={city}
+                                            className={styles.suggestionItem}
+                                            onMouseDown={(e) => {
+                                                e.preventDefault(); // Prevent blur
+                                                setSearchTerm(city);
+                                                setShowSuggestions(false);
+                                            }}
+                                        >
+                                            {city}
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
                         </div>
                     </div>
 
-                    {/* 3. 출발지 + 도착지역 칩 필터 */}
-                    <div className={styles.filterRow}>
+                    {/* 3. 필터 토글 버튼 (모바일) + 출발지 + 도착지역 칩 필터 */}
+                    <button
+                        className={styles.filterToggleBtn}
+                        onClick={() => setShowFilters(!showFilters)}
+                    >
+                        <span>
+                            {departureFilter !== 'all' || regionFilter !== 'all'
+                                ? [
+                                    departureFilter !== 'all' && (departureFilter === '인천' ? '인천/김포' : departureFilter === '부산' ? '부산/김해' : departureFilter),
+                                    regionFilter !== 'all' && regionFilter,
+                                ].filter(Boolean).join(' · ')
+                                : '출발지 · 지역 선택'}
+                        </span>
+                        <span className={`${styles.filterToggleArrow} ${showFilters ? styles.filterToggleArrowOpen : ''}`}>▾</span>
+                    </button>
+                    <div className={`${styles.filterRow} ${showFilters ? styles.filterRowOpen : ''}`}>
                         {/* 출발지 칩 필터 */}
                         <div className={styles.filterGroup}>
                             <span className={styles.filterLabel}>출발지</span>
@@ -701,7 +780,7 @@ export default function Dashboard() {
                 <div className="container">
                     <div className={styles.footerContent}>
                         <div className={styles.footerLeft}>
-                            <span className={styles.footerBrand}>✈️ 플리토</span>
+                            <span className={styles.footerBrand}>✈️ 티킷</span>
                             <span className={styles.footerDesc}>여행사 땡처리 항공권을 한 곳에서</span>
                         </div>
                         <div className={styles.footerRight}>
@@ -716,7 +795,7 @@ export default function Dashboard() {
                         </div>
                     </div>
                     <div className={styles.footerBottom}>
-                        <span>© 2026 플리토. 항공권 정보는 각 여행사에서 제공됩니다.</span>
+                        <span>© 2026 티킷. 항공권 정보는 각 여행사에서 제공됩니다.</span>
                     </div>
                 </div>
             </footer>

@@ -4,49 +4,36 @@ export default function Logo({ className = '', size = 1.0 }: { className?: strin
     const scale = size;
 
     return (
-        <span className={`logo-container ${className}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+        <span className={`logo-container ${className}`} style={{ display: 'inline-flex', alignItems: 'center', gap: `${6 * scale}px` }}>
             <svg
-                width={40 * scale}
-                height={40 * scale}
-                viewBox="0 0 40 40"
+                width={32 * scale}
+                height={32 * scale}
+                viewBox="0 0 24 24"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
+                style={{ flexShrink: 0 }}
             >
                 <path
-                    d="M36.5 4.5L20.5 14L4.5 9L36.5 4.5Z"
+                    d="M3.8 11.1 L20.2 2.9 Q22 2 21.2 3.8 L13.8 20.2 Q13 22 12.0 20.3 L9.5 15.7 Q8.5 14 6.6 13.4 L3.9 12.6 Q2 12 3.8 11.1Z"
                     fill="url(#logo_gradient)"
-                    opacity="0.9"
-                />
-                <path
-                    d="M36.5 4.5L20.5 14L25 35L36.5 4.5Z"
-                    fill="url(#logo_gradient_dark)"
-                />
-                <path
-                    d="M20.5 14L18 20L25 35L20.5 14Z"
-                    fill="url(#logo_gradient)"
-                    opacity="0.8"
+                    transform="rotate(8 12 12)"
                 />
                 <defs>
-                    <linearGradient id="logo_gradient" x1="4.5" y1="9" x2="36.5" y2="35" gradientUnits="userSpaceOnUse">
-                        <stop stopColor="#3B82F6" />
-                        <stop offset="1" stopColor="#8B5CF6" />
-                    </linearGradient>
-                    <linearGradient id="logo_gradient_dark" x1="36.5" y1="4.5" x2="25" y2="35" gradientUnits="userSpaceOnUse">
+                    <linearGradient id="logo_gradient" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
                         <stop stopColor="#2563EB" />
                         <stop offset="1" stopColor="#7C3AED" />
                     </linearGradient>
                 </defs>
             </svg>
             <span style={{
-                fontFamily: 'var(--font-pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif)',
+                fontFamily: "'Playwrite NZ Basic', sans-serif",
                 fontWeight: 900,
-                fontSize: `${2.2 * scale}rem`,
-                letterSpacing: '-0.03em',
+                fontSize: `${2.0 * scale}rem`,
                 color: '#111827',
                 lineHeight: 1
             }}>
-                플리토
+                Tikit
             </span>
-        </span>
+        </span >
     );
 }
