@@ -4,7 +4,6 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { Flight } from '@/types/flight';
 import Logo from './Logo';
 import Sparkline from './Sparkline';
-import { useNotification } from '@/hooks/useNotification';
 import dynamic from 'next/dynamic';
 import { ko } from 'date-fns/locale';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -104,7 +103,6 @@ export default function Dashboard() {
     const [headerHidden, setHeaderHidden] = useState(false);
     const [headerScrolled, setHeaderScrolled] = useState(false);
     const lastScrollY = useRef(0);
-    const notification = useNotification();
 
     useEffect(() => {
         fetchFlights();
@@ -160,15 +158,9 @@ export default function Dashboard() {
             }
 
             const data = await response.json();
-            const loadedFlights = data.flights || [];
-            setFlights(loadedFlights);
+            setFlights(data.flights || []);
             setLastUpdated(data.lastUpdated || null);
             setPriceHistory(data.priceHistory || {});
-
-            // 알림이 켜져 있으면 새 특가 체크
-            if (notification.settings.enabled) {
-                notification.checkForNewDeals(loadedFlights);
-            }
         } catch (err) {
             setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.');
         } finally {
@@ -391,16 +383,6 @@ export default function Dashboard() {
                         <p className={styles.subtitle}>
                             전국 여행사의 <strong className={styles.highlight}>땡처리 항공권</strong>을 한눈에! 🚀
                         </p>
-                        {notification.isSupported && (
-                            <button
-                                className={`${styles.notificationBtn} ${notification.settings.enabled ? styles.notificationActive : ''}`}
-                                onClick={notification.toggleNotification}
-                                title={notification.settings.enabled ? '알림 끄기' : '특가 알림 받기'}
-                                aria-label="알림 설정"
-                            >
-                                {notification.settings.enabled ? '🔔' : '🔕'}
-                            </button>
-                        )}
                     </div>
                 </div>
             </header>
