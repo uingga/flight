@@ -91,56 +91,6 @@
     border-radius: 4px;
 }
 
-/* 알림 벨 버튼 */
-.notificationBtn {
-    background: none;
-    border: none;
-    font-size: 1.3rem;
-    cursor: pointer;
-    padding: 6px;
-    border-radius: 50%;
-    transition: all 0.2s ease;
-    line-height: 1;
-    opacity: 0.6;
-}
-
-.notificationBtn:hover {
-    background: rgba(0, 0, 0, 0.05);
-    opacity: 1;
-    transform: scale(1.1);
-}
-
-.notificationActive {
-    opacity: 1;
-    animation: bellRing 0.5s ease;
-}
-
-@keyframes bellRing {
-    0% {
-        transform: rotate(0);
-    }
-
-    20% {
-        transform: rotate(15deg);
-    }
-
-    40% {
-        transform: rotate(-10deg);
-    }
-
-    60% {
-        transform: rotate(5deg);
-    }
-
-    80% {
-        transform: rotate(-3deg);
-    }
-
-    100% {
-        transform: rotate(0);
-    }
-}
-
 
 @media (max-width: 768px) {
     .header {
