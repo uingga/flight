@@ -1,10 +1,10 @@
 :root {
   /* 색상 시스템 - Modern Soft Theme */
-  --color-primary: #2563eb;
-  /* 부드러운 블루 */
-  --color-primary-dark: #1d4ed8;
-  --color-secondary: #4f46e5;
-  /* 인디고 */
+  --color-primary: #22d3ee;
+  /* 스카이 시안 (Sky Cyan) */
+  --color-primary-dark: #06b6d4;
+  --color-secondary: #0891b2;
+  /* 다크 시안 */
 
   /* 배경 */
   --color-bg-body: #f3f4f6;
@@ -13,8 +13,8 @@
   /* 카드 배경 (흰색) */
   --color-bg-secondary: #f9fafb;
   /* 호버/보조 배경 */
-  --color-bg-tertiary: #eff6ff;
-  /* 강조 배경 (아주 연한 블루) */
+  --color-bg-tertiary: #ecfeff;
+  /* 강조 배경 (아주 연한 시안) */
 
   /* 텍스트 */
   --color-text-primary: #111827;
@@ -95,8 +95,8 @@ body::before {
   bottom: 0;
   z-index: -1;
   background:
-    radial-gradient(circle at 15% 50%, rgba(235, 240, 255, 0.8), transparent 25%),
-    radial-gradient(circle at 85% 30%, rgba(240, 235, 255, 0.8), transparent 25%);
+    radial-gradient(circle at 15% 50%, rgba(224, 251, 252, 0.8), transparent 25%),
+    radial-gradient(circle at 85% 30%, rgba(207, 250, 254, 0.8), transparent 25%);
   pointer-events: none;
 }
 
@@ -181,15 +181,17 @@ select {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+  background: linear-gradient(135deg, #22d3ee 0%, #06b6d4 100%);
   color: white;
-  box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);
+  border: none;
+  box-shadow: 0 4px 6px -1px rgba(6, 182, 212, 0.2);
 }
 
 .btn-primary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 8px -1px rgba(79, 70, 229, 0.3);
+  box-shadow: 0 6px 8px -1px rgba(6, 182, 212, 0.3);
   filter: brightness(1.05);
+  color: white !important;
 }
 
 .btn-secondary {
@@ -274,15 +276,33 @@ select {
 
 /* Range Selection Styling - Critical Order */
 .react-datepicker__day--in-range {
-  background-color: #eff6ff !important;
+  background-color: #ecfeff !important;
   /* Very light blue */
   color: var(--color-text-primary) !important;
   border-radius: 0 !important;
 }
 
-.react-datepicker__day--in-selecting-range {
-  background-color: #eff6ff !important;
+.react-datepicker__day--in-selecting-range:not(.react-datepicker__day--selecting-range-start) {
+  background-color: #ecfeff !important;
   color: var(--color-text-primary) !important;
+}
+
+/* Selecting Start - 첫 번째 날짜 선택 시 동그라미 */
+.react-datepicker__day--selecting-range-start {
+  background-color: transparent !important;
+  color: #fff !important;
+  border-radius: 0 !important;
+  position: relative;
+  z-index: 1;
+}
+
+.react-datepicker__day--selecting-range-start::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background-color: var(--color-primary);
+  z-index: -1;
 }
 
 /* Start & End - Advanced Layering 
@@ -319,7 +339,7 @@ select {
   bottom: 0;
   right: 0;
   left: 50%;
-  background-color: #eff6ff;
+  background-color: #ecfeff;
   z-index: -2;
 }
 
@@ -331,7 +351,7 @@ select {
   bottom: 0;
   left: 0;
   right: 50%;
-  background-color: #eff6ff;
+  background-color: #ecfeff;
   z-index: -2;
 }
 
@@ -367,7 +387,7 @@ select {
 /* Hover - 레인지 안 날짜: 하늘색 배경 유지 + 보라색 원 */
 .react-datepicker__day--in-range:hover:not(.react-datepicker__day--range-start):not(.react-datepicker__day--range-end),
 .react-datepicker__day--in-selecting-range:hover:not(.react-datepicker__day--range-start):not(.react-datepicker__day--range-end) {
-  background-color: #eff6ff !important;
+  background-color: #ecfeff !important;
   color: white !important;
   border-radius: 0 !important;
   position: relative;
