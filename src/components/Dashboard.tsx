@@ -70,9 +70,21 @@ const getMobileUrl = (url: string, isMobile: boolean): string => {
     if (url.includes('hanatour.com')) {
         return 'https://m.hanatour.com/trp/air/CHPC0AIR0233M100';
     }
-    // 노랑풍선: 모바일 딥링크 미지원 → 모바일 땡처리 항공 페이지로 이동
+    // 노랑풍선: PC URL 파라미터를 모바일 URL에 전달 (도시 탭 선택)
     if (url.includes('fly.ybtour.co.kr')) {
-        return 'https://mfly.ybtour.co.kr/mobile/fr/booking/findDiscountAirMobile.lts?efcTpCode=INV&efcCode=INV';
+        try {
+            const parsed = new URL(url);
+            const mobileUrl = new URL('https://mfly.ybtour.co.kr/mobile/fr/booking/findDiscountAirMobile.lts');
+            mobileUrl.searchParams.set('efcTpCode', 'INV');
+            mobileUrl.searchParams.set('efcCode', 'INV');
+            for (const key of ['efcBannerCode', 'inhId', 'depDate', 'efcCityCode']) {
+                const val = parsed.searchParams.get(key);
+                if (val) mobileUrl.searchParams.set(key, val);
+            }
+            return mobileUrl.toString();
+        } catch {
+            return 'https://mfly.ybtour.co.kr/mobile/fr/booking/findDiscountAirMobile.lts?efcTpCode=INV&efcCode=INV';
+        }
     }
     return url;
 };
