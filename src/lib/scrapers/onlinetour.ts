@@ -16,7 +16,7 @@ const REGIONS = [
 
 export async function scrapeOnlineTour(): Promise<Flight[]> {
     console.log('온라인투어 크롤링 시작...');
-    const browser = await chromium.launch({ headless: false });
+    const browser = await chromium.launch({ headless: !!process.env.CI });
     const flights: Flight[] = [];
 
     try {

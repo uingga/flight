@@ -506,7 +506,7 @@ export async function scrapeHanatour(): Promise<Flight[]> {
     console.log('하나투어 크롤링 시작...');
 
     const browser = await chromium.launch({
-        headless: false,
+        headless: !!process.env.CI,
     });
 
     let allFlights: Flight[] = [];
