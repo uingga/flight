@@ -816,38 +816,13 @@ export default function Dashboard() {
             <footer className={styles.footer}>
                 <div className="container">
                     <div className={styles.footerContent}>
-                        {/* 왼쪽: 서비스 소개 */}
+                        {/* 서비스 소개 */}
                         <div className={styles.footerSection}>
                             <span className={styles.footerBrand}>✈️ 티킷</span>
                             <p className={styles.footerDesc}>
                                 여행사 땡처리 항공권을 한 곳에서 비교하세요.<br />
                                 여러 여행사의 특가 항공권을 실시간으로 모아 가장 저렴한 항공편을 쉽게 찾을 수 있습니다.
                             </p>
-                        </div>
-
-                        {/* 가운데: 제휴 여행사 */}
-                        <div className={styles.footerSection}>
-                            <span className={styles.footerSectionTitle}>제휴 여행사</span>
-                            <div className={styles.footerAgencies}>
-                                <a href="https://www.hanatour.com/trp/air/CHPC0AIR0233M200" target="_blank" rel="noopener noreferrer">하나투어</a>
-                                <a href="https://www.modetour.com" target="_blank" rel="noopener noreferrer">모두투어</a>
-                                <a href="https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV" target="_blank" rel="noopener noreferrer">노랑풍선</a>
-                                <a href="https://www.ttang.com/ttangair/search/discount/index.do" target="_blank" rel="noopener noreferrer">땡처리닷컴</a>
-                                <a href="https://www.onlinetour.co.kr/flight/w/discount/index" target="_blank" rel="noopener noreferrer">온라인투어</a>
-                            </div>
-                        </div>
-
-                        {/* 오른쪽: 데이터 정보 */}
-                        <div className={styles.footerSection}>
-                            <span className={styles.footerSectionTitle}>데이터 안내</span>
-                            <p className={styles.footerDesc}>
-                                매일 오전 7시, 오후 12시, 오후 8시에 자동 업데이트됩니다.
-                            </p>
-                            {lastUpdated && (
-                                <p className={styles.footerUpdated}>
-                                    마지막 업데이트: {new Date(lastUpdated).toLocaleString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                                </p>
-                            )}
                         </div>
                     </div>
 
