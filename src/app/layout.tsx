@@ -16,14 +16,14 @@ export const metadata: Metadata = {
         address: false,
         telephone: false,
     },
-    metadataBase: new URL('https://tikit.vercel.app'),
+    metadataBase: new URL('https://mytikit.vercel.app'),
     alternates: {
         canonical: '/',
     },
     openGraph: {
         title: '티킷 - 5대 여행사 땡처리 항공권 모음',
         description: '놓치면 손해! 여행사가 숨겨둔 땡처리 항공권을 실시간으로 모아 보여드립니다.',
-        url: 'https://tikit.vercel.app',
+        url: 'https://mytikit.vercel.app',
         siteName: '티킷 (Tikit)',
         images: [
             {
@@ -98,11 +98,11 @@ export default function RootLayout({
                                 {
                                     '@type': 'WebSite',
                                     name: '티킷 (Tikit)',
-                                    url: 'https://tikit.vercel.app',
+                                    url: 'https://mytikit.vercel.app',
                                     description: '여행사 땡처리 항공권을 한 곳에서',
                                     potentialAction: {
                                         '@type': 'SearchAction',
-                                        target: 'https://tikit.vercel.app/?q={search_term_string}',
+                                        target: 'https://mytikit.vercel.app/?q={search_term_string}',
                                         'query-input': 'required name=search_term_string',
                                     },
                                 },
