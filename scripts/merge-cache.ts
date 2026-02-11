@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 
 const dataDir = path.join(process.cwd(), 'data');
-const sources = ['ttang', 'ybtour', 'hanatour', 'modetour', 'onlinetour'];
+const sources = ['ybtour', 'hanatour', 'modetour', 'onlinetour'];
 let allFlights: any[] = [];
 
 console.log('🔄 캐시 파일 병합 시작...');
