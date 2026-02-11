@@ -1,5 +1,13 @@
 import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
 import './globals.css';
+
+const inter = Inter({
+    subsets: ['latin'],
+    weight: ['400', '600', '700', '800'],
+    display: 'swap',
+    variable: '--font-inter',
+});
 
 export const metadata: Metadata = {
     title: {
@@ -78,14 +86,8 @@ export default function RootLayout({
     children: React.ReactNode;
 }) {
     return (
-        <html lang="ko">
+        <html lang="ko" className={inter.variable}>
             <head>
-                <link rel="preconnect" href="https://fonts.googleapis.com" />
-                <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-                <link
-                    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Playwrite+NZ+Basic:wght@100..400&display=swap"
-                    rel="stylesheet"
-                />
                 {/* Preconnect to travel agency mobile domains for faster booking */}
                 <link rel="preconnect" href="https://m.hanatour.com" />
                 <link rel="preconnect" href="https://m.modetour.com" />

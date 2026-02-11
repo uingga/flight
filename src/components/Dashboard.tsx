@@ -805,9 +805,7 @@ export default function Dashboard() {
                             <span className={styles.footerDesc}>여행사 땡처리 항공권을 한 곳에서</span>
                         </div>
                         <div className={styles.footerRight}>
-                            <div className={styles.footerSources}>
-                                데이터 소스: 땡처리닷컴 · 노랑풍선 · 하나투어 · 모두투어 · 온라인투어
-                            </div>
+
                             {lastUpdated && (
                                 <div className={styles.footerUpdated}>
                                     마지막 업데이트: {new Date(lastUpdated).toLocaleString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
@@ -816,7 +814,7 @@ export default function Dashboard() {
                         </div>
                     </div>
                     <div className={styles.footerBottom}>
-                        <span>© 2026 티킷. 항공권 정보는 각 여행사에서 제공됩니다.</span>
+                        <span>© 2026 티킷</span>
                     </div>
                 </div>
             </footer>
