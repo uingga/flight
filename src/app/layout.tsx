@@ -53,12 +53,12 @@ export const metadata: Metadata = {
             'max-snippet': -1,
         },
     },
-    // verification: {
-    //     google: 'YOUR_GOOGLE_VERIFICATION_CODE',
-    //     other: {
-    //         'naver-site-verification': 'YOUR_NAVER_VERIFICATION_CODE',
-    //     },
-    // },
+    verification: {
+        google: 'BqpMXwAA76B0uKfqUjO-8ypKw_j0WHqBtuVdDk3jxvk',
+        // other: {
+        //     'naver-site-verification': 'YOUR_NAVER_VERIFICATION_CODE',
+        // },
+    },
     icons: {
         icon: '/icon.svg',
         apple: '/apple-icon.svg',
@@ -86,6 +86,12 @@ export default function RootLayout({
                     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Playwrite+NZ+Basic:wght@100..400&display=swap"
                     rel="stylesheet"
                 />
+                {/* Preconnect to travel agency mobile domains for faster booking */}
+                <link rel="preconnect" href="https://m.hanatour.com" />
+                <link rel="preconnect" href="https://m.modetour.com" />
+                <link rel="preconnect" href="https://m.onlinetour.co.kr" />
+                <link rel="preconnect" href="https://mm.ttang.com" />
+                <link rel="preconnect" href="https://mfly.ybtour.co.kr" />
             </head>
             <body className="antialiased">
                 {children}
