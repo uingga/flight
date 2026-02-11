@@ -516,9 +516,9 @@ export async function scrapeHanatour(): Promise<Flight[]> {
         const regularFlights = await scrapeHanatourRegular(browser);
         allFlights.push(...regularFlights);
 
-        // 2. 땡처리 항공 프로모션 페이지 크롤링 (날짜 정보 있음)
-        const promoFlights = await scrapeHanatourLastMinutePromo(browser);
-        allFlights.push(...promoFlights);
+        // 2. 프로모션 페이지 제외 (데이터 과다 — 일반 페이지만 사용)
+        // const promoFlights = await scrapeHanatourLastMinutePromo(browser);
+        // allFlights.push(...promoFlights);
 
         // 중복 제거 (같은 출발지-도착지-날짜-가격 조합)
         const uniqueFlights = allFlights.filter((flight, index, self) =>
