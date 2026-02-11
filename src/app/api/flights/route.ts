@@ -74,7 +74,11 @@ export async function GET(request: NextRequest) {
         const beforeCount = allFlights.length;
         allFlights = allFlights.filter(f => {
             if (!f.departure?.date) return true; // 날짜 없으면 유지
-            const depDate = new Date(f.departure.date + 'T00:00:00');
+            // 다양한 날짜 형식 처리: "2026-02-17", "2026.02.17(화)" 등
+            const dateStr = f.departure.date.replace(/[^0-9\-\.]/g, '').replace(/\./g, '-').replace(/-+$/, '');
+            const match = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
+            if (!match) return true; // 파싱 불가하면 유지
+            const depDate = new Date(parseInt(match[1]), parseInt(match[2]) - 1, parseInt(match[3]));
             return depDate >= today;
         });
         const removedCount = beforeCount - allFlights.length;

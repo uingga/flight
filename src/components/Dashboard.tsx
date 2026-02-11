@@ -376,7 +376,7 @@ export default function Dashboard() {
                 <div className={styles.headerContainer}>
                     <div className={styles.headerLeft}>
                         <h1 className={styles.title} onClick={() => { resetAllFilters(); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ cursor: 'pointer' }}>
-                            <Logo size={isMobile ? 0.8 : 0.9} />
+                            <Logo size={isMobile ? 0.95 : 1.05} />
                         </h1>
                     </div>
                     <div className={styles.headerRight}>
