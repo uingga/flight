@@ -68,6 +68,20 @@ export async function GET(request: NextRequest) {
             airline: normalizeAirline(f.airline),
         }));
 
+        // 만료 항공권 제거 (출발일이 오늘 이전)
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const beforeCount = allFlights.length;
+        allFlights = allFlights.filter(f => {
+            if (!f.departure?.date) return true; // 날짜 없으면 유지
+            const depDate = new Date(f.departure.date + 'T00:00:00');
+            return depDate >= today;
+        });
+        const removedCount = beforeCount - allFlights.length;
+        if (removedCount > 0) {
+            console.log(`만료 항공권 ${removedCount}개 제거됨 (${beforeCount} → ${allFlights.length})`);
+        }
+
         // 필터링
         if (params.departureCity) {
             allFlights = allFlights.filter(f =>
