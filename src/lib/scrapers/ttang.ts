@@ -88,7 +88,7 @@ export async function scrapeTtang(): Promise<Flight[]> {
     console.log('🚀 땡처리닷컴 크롤링 시작 (할인항공권 페이지)...');
     console.log(`📋 수집 대상: ${DISCOUNT_PAGES.length}개 페이지`);
 
-    const browser = await chromium.launch({ headless: false });
+    const browser = await chromium.launch({ headless: !!process.env.CI });
     const context = await browser.newContext({
         userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
     });

@@ -78,7 +78,7 @@ export async function scrapeYbtour(): Promise<Flight[]> {
     console.log('노랑풍선 크롤링 시작...');
 
     const browser = await chromium.launch({
-        headless: false,
+        headless: !!process.env.CI,
     });
 
     const context = await browser.newContext({
