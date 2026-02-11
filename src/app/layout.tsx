@@ -88,6 +88,11 @@ export default function RootLayout({
     return (
         <html lang="ko" className={inter.variable}>
             <head>
+                {/* 로고 폰트 (Balsamiq Sans) */}
+                <link
+                    href="https://fonts.googleapis.com/css2?family=Balsamiq+Sans:ital,wght@1,700&display=swap"
+                    rel="stylesheet"
+                />
                 {/* Preconnect to travel agency mobile domains for faster booking */}
                 <link rel="preconnect" href="https://m.hanatour.com" />
                 <link rel="preconnect" href="https://m.modetour.com" />

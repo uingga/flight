@@ -417,6 +417,7 @@ export default function Dashboard() {
                                 calendarClassName={styles.datePickerCalendar}
                                 minDate={new Date()}
                                 isClearable={true}
+                                onFocus={(e: React.FocusEvent<HTMLInputElement>) => e.target.blur()}
                             />
                         </div>
                         <div className={styles.searchBox} style={{ flex: 1, minWidth: '150px', position: 'relative' }}>
