@@ -66,8 +66,11 @@ const getMobileUrl = (url: string, isMobile: boolean): string => {
     if (url.includes('www.modetour.com')) {
         return url.replace('www.modetour.com', 'm.modetour.com');
     }
-    // 하나투어: hope.hanatour.com / www.hanatour.com → 모바일 해외땡처리 항공권 페이지
+    // 하나투어: fareId 링크는 모바일 도메인으로 변환, 그 외는 모바일 땡처리 페이지
     if (url.includes('hanatour.com')) {
+        if (url.includes('fareId=')) {
+            return url.replace('www.hanatour.com', 'm.hanatour.com');
+        }
         return 'https://m.hanatour.com/trp/air/CHPC0AIR0233M100';
     }
     // 노랑풍선: PC URL 파라미터를 모바일 URL에 전달 (도시 탭 선택)

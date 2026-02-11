@@ -602,6 +602,21 @@ async function scrapeHanatourRegular(browser: any): Promise<Flight[]> {
                     const cards = document.querySelectorAll('.flight_list.special > ul > li');
                     const results: any[] = [];
 
+                    // Vue.js farLst에서 fareId 추출 시도
+                    let fareLst: any[] = [];
+                    try {
+                        const allElements = Array.from(document.querySelectorAll('*'));
+                        for (const el of allElements) {
+                            const vue = (el as any).__vue__;
+                            if (vue && vue.$data && Array.isArray(vue.$data.farLst) && vue.$data.farLst.length > 0) {
+                                fareLst = vue.$data.farLst;
+                                break;
+                            }
+                        }
+                    } catch (e) {
+                        console.log('fareId 추출 실패:', e);
+                    }
+
                     cards.forEach((card, index) => {
                         try {
                             const rows = card.querySelectorAll('.fl .row');
@@ -632,15 +647,13 @@ async function scrapeHanatourRegular(browser: any): Promise<Flight[]> {
                                 arrTime = arrTimeMatch ? arrTimeMatch[1] : '';
                             }
 
-                            const linkElement = card.querySelector('a.link_detail') || card.querySelector('a');
-                            const href = linkElement?.getAttribute('href') || '';
-                            let fullLink = '';
-
-                            if (href && href !== '#none' && href !== '#') {
-                                fullLink = href.startsWith('http') ? href : `https://www.hanatour.com${href}`;
-                            } else {
-                                // 동적 URL 생성을 위해 도시 정보 포함
-                                fullLink = `https://www.hanatour.com/trp/air/CHPC0AIR0233M200#${encodeURIComponent(arrivalCity)}`;
+                            // fareId로 다이렉트 예약 링크 생성
+                            let fullLink = 'https://www.hanatour.com/trp/air/CHPC0AIR0233M200';
+                            if (fareLst[index] && fareLst[index].fareId) {
+                                const fareId = encodeURIComponent(fareLst[index].fareId);
+                                const psngrCntLst = encodeURIComponent(JSON.stringify([{ ageDvCd: 'A', psngrCnt: 1 }]));
+                                const selectedCard = encodeURIComponent('{}');
+                                fullLink = `https://www.hanatour.com/com/pmt/CHPC0PMT0011M200?fareId=${fareId}&psngrCntLst=${psngrCntLst}&selectedCard=${selectedCard}`;
                             }
 
                             if (price > 0 && arrivalCity) {
@@ -679,11 +692,8 @@ async function scrapeHanatourRegular(browser: any): Promise<Flight[]> {
                     const depCity = cleanCity(f.departure.city);
                     const arrCity = cleanCity(f.arrival.city);
 
-                    // 기본 링크 → 땡처리 페이지로 통일 (검색 URL은 정가가 나와서 혼란 유발)
-                    let link = f.link;
-                    if (!link || link.includes('CHPC0AIR0233M200') || link === '#') {
-                        link = 'https://www.hanatour.com/trp/air/CHPC0AIR0233M200';
-                    }
+                    // 링크는 page.evaluate에서 fareId 기반으로 생성됨
+                    const link = f.link;
 
                     return {
                         ...f,
