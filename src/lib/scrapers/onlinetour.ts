@@ -226,8 +226,8 @@ export async function scrapeOnlineTour(): Promise<Flight[]> {
                                             arrival: {
                                                 city: arrCity,
                                                 airport: '',
-                                                date: inArr.date || outArr.date,
-                                                time: inArr.time || outArr.time
+                                                date: outArr.date,
+                                                time: outArr.time
                                             },
                                             price,
                                             currency: 'KRW',

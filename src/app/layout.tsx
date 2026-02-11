@@ -27,7 +27,7 @@ export const metadata: Metadata = {
         siteName: '티킷 (Tikit)',
         images: [
             {
-                url: '/og-image.png', // 추후 생성 필요
+                url: '/opengraph-image',
                 width: 1200,
                 height: 630,
                 alt: '티킷 - 여행사 땡처리 항공권 모음',
@@ -40,7 +40,7 @@ export const metadata: Metadata = {
         card: 'summary_large_image',
         title: '티킷 - 5대 여행사 땡처리 항공권 모음',
         description: '여행사가 숨겨둔 땡처리 항공권을 실시간으로 모아 보여드립니다.',
-        // images: ['/og-image.png'],
+        images: ['/opengraph-image'],
     },
     robots: {
         index: true,
@@ -104,22 +104,6 @@ export default function RootLayout({
                                         '@type': 'SearchAction',
                                         target: 'https://tikit.vercel.app/?q={search_term_string}',
                                         'query-input': 'required name=search_term_string',
-                                    },
-                                },
-                                {
-                                    '@type': 'SoftwareApplication',
-                                    name: '티킷 (Tikit)',
-                                    applicationCategory: 'TravelApplication',
-                                    operatingSystem: 'Web',
-                                    offers: {
-                                        '@type': 'Offer',
-                                        price: '0',
-                                        priceCurrency: 'KRW',
-                                    },
-                                    aggregateRating: {
-                                        '@type': 'AggregateRating',
-                                        ratingValue: '4.8',
-                                        ratingCount: '1250',
                                     },
                                 },
                             ],
