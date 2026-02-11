@@ -696,10 +696,6 @@ export default function Dashboard() {
 
                                             <div className={styles.arrowSection}>
                                                 <div className={styles.arrow}>✈</div>
-                                                {(() => {
-                                                    const dur = calcDuration(flight.departure.time, flight.arrival.time, flight.departure.date, flight.arrival.date);
-                                                    return dur ? <div className={styles.flightDuration}>{dur}</div> : null;
-                                                })()}
                                             </div>
 
                                             <div className={styles.location}>
