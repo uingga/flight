@@ -387,28 +387,29 @@
     margin-top: var(--spacing-md);
     margin-bottom: var(--spacing-lg);
     display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
     align-items: center;
     gap: var(--spacing-sm);
     color: var(--color-text-secondary);
     font-size: 0.95rem;
 }
 
+.resultCount {
+    flex: 1;
+    text-align: left;
+}
+
 @media (max-width: 768px) {
     .stats {
         flex-direction: column;
-        align-items: stretch;
-        gap: var(--spacing-sm);
+        align-items: center;
     }
 
-    .stats>span {
+    .resultCount {
         text-align: center;
     }
 
     .statsFilters {
-        flex-wrap: wrap;
-        justify-content: center;
+        width: 100%;
     }
 
     .statsSelect {
@@ -422,11 +423,6 @@
     font-weight: 700;
 }
 
-.resultCount {
-    color: var(--color-text-secondary);
-    font-size: 0.95rem;
-}
-
 .statsFilters {
     display: flex;
     gap: var(--spacing-sm);
@@ -434,12 +430,32 @@
 
 .statsSelect {
     border: 1px solid var(--color-border);
-    background: transparent;
-    padding: 4px 8px;
+    background: var(--color-bg-primary);
+    padding: 8px 28px 8px 12px;
     border-radius: var(--radius-md);
     font-size: 0.85rem;
+    font-weight: 500;
     color: var(--color-text-secondary);
     cursor: pointer;
+    transition: all var(--transition-fast);
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    box-shadow: var(--shadow-sm);
+}
+
+.statsSelect:hover {
+    border-color: #d1d5db;
+    background-color: var(--color-bg-secondary);
+}
+
+.statsSelect:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
 /* Flight Grid */
@@ -517,12 +533,12 @@
 }
 
 .badgeOnlinetour {
-    color: #2563eb;
+    color: var(--color-primary-dark);
     background: #eff6ff;
 }
 
 .seatsBadge {
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     font-weight: 600;
     color: var(--color-text-secondary);
     /* Darker than muted */
@@ -532,7 +548,7 @@
 }
 
 .seatsBadgeCritical {
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     font-weight: 700;
     color: #ef4444;
     /* Red */
@@ -572,16 +588,26 @@
 
 .city {
     font-size: 1.3rem;
-    font-weight: 800;
+    font-weight: 700;
     color: var(--color-text-primary);
     line-height: 1.2;
     margin-bottom: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .date {
     font-size: 0.85rem;
     color: var(--color-text-secondary);
     font-weight: 500;
+}
+
+.time {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    font-weight: 500;
+    margin-top: 2px;
 }
 
 .arrowSection {
@@ -594,6 +620,13 @@
 .arrow {
     font-size: 1.2rem;
     color: var(--color-border);
+}
+
+.flightDuration {
+    font-size: 0.72rem;
+    color: var(--color-text-muted);
+    white-space: nowrap;
+    font-weight: 500;
 }
 
 .flightTimes {
@@ -642,10 +675,17 @@
 
 .price {
     font-size: 1.5rem;
-    font-weight: 800;
+    font-weight: 700;
     color: var(--color-text-primary);
     letter-spacing: -0.02em;
     white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+    .price {
+        font-size: 1.35rem;
+        font-weight: 600;
+    }
 }
 
 .btn-primary {
@@ -668,7 +708,8 @@
 .btn-primary:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
-    background: black;
+    background: #1e293b;
+    color: white;
 }
 
 .discountBadge {
@@ -838,7 +879,7 @@
         justify-content: center;
         gap: 6px;
         width: 100%;
-        padding: 8px 0;
+        padding: 14px 0 4px;
         background: transparent;
         border: none;
         border-top: 1px solid rgba(0, 0, 0, 0.05);

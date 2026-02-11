@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Flight } from '@/types/flight';
 import Logo from './Logo';
 import Sparkline from './Sparkline';
@@ -332,6 +332,22 @@ export default function Dashboard() {
         }
     };
 
+    const calcDuration = (depTime: string | undefined, arrTime: string | undefined, depDate: string | undefined, arrDate: string | undefined) => {
+        if (!depTime || !arrTime) return null;
+        const [dh, dm] = depTime.split(':').map(Number);
+        const [ah, am] = arrTime.split(':').map(Number);
+        if (isNaN(dh) || isNaN(dm) || isNaN(ah) || isNaN(am)) return null;
+        let diffMin = (ah * 60 + am) - (dh * 60 + dm);
+        // If arrival is earlier in the day, assume next day (overnight flight)
+        if (diffMin <= 0 && depDate !== arrDate) {
+            diffMin += 24 * 60;
+        }
+        if (diffMin <= 0) return null;
+        const hours = Math.floor(diffMin / 60);
+        const mins = diffMin % 60;
+        return `${hours}시간${mins > 0 ? ` ${mins}분` : ''}`;
+    };
+
     const getSourceBadgeClass = (source: string) => {
         switch (source) {
             case 'ttang': return styles.badgeTtang;
@@ -359,7 +375,7 @@ export default function Dashboard() {
             <header className={`${styles.header} ${headerHidden ? styles.headerHidden : ''} ${headerScrolled ? styles.headerScrolled : ''}`}>
                 <div className={styles.headerContainer}>
                     <div className={styles.headerLeft}>
-                        <h1 className={styles.title}>
+                        <h1 className={styles.title} onClick={() => { resetAllFilters(); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ cursor: 'pointer' }}>
                             <Logo size={isMobile ? 0.8 : 0.9} />
                         </h1>
                     </div>
@@ -600,7 +616,7 @@ export default function Dashboard() {
                                     onChange={(e) => setSourceFilter(e.target.value)}
                                     className={styles.statsSelect}
                                 >
-                                    <option value="all">전체 여행사</option>
+                                    <option value="all">{isMobile ? '여행사' : '전체 여행사'}</option>
                                     <option value="ttang">땡처리닷컴</option>
                                     <option value="ybtour">노랑풍선</option>
                                     <option value="modetour">모두투어</option>
@@ -612,7 +628,7 @@ export default function Dashboard() {
                                     onChange={(e) => setAirlineFilter(e.target.value)}
                                     className={styles.statsSelect}
                                 >
-                                    <option value="all">전체 항공사</option>
+                                    <option value="all">{isMobile ? '항공사' : '전체 항공사'}</option>
                                     {uniqueAirlines.map(airline => (
                                         <option key={airline} value={airline}>
                                             {airline}
@@ -657,20 +673,25 @@ export default function Dashboard() {
                                             <div className={styles.location}>
                                                 <div className={styles.city}>{normalizeCity(flight.departure.city)}</div>
                                                 <div className={styles.date}>{formatDate(flight.departure.date)}</div>
+                                                {flight.departure.time && (
+                                                    <div className={styles.time}>{flight.departure.time}</div>
+                                                )}
                                             </div>
 
                                             <div className={styles.arrowSection}>
                                                 <div className={styles.arrow}>✈</div>
-                                                <div className={styles.flightTimes}>
-                                                    {flight.departure.time && flight.arrival.time
-                                                        ? `${flight.departure.time} → ${flight.arrival.time}`
-                                                        : ''}
-                                                </div>
+                                                {(() => {
+                                                    const dur = calcDuration(flight.departure.time, flight.arrival.time, flight.departure.date, flight.arrival.date);
+                                                    return dur ? <div className={styles.flightDuration}>{dur}</div> : null;
+                                                })()}
                                             </div>
 
                                             <div className={styles.location}>
                                                 <div className={styles.city}>{normalizeCity(flight.arrival.city)}</div>
                                                 <div className={styles.date}>{formatDate(flight.arrival.date)}</div>
+                                                {flight.arrival.time && (
+                                                    <div className={styles.time}>{flight.arrival.time}</div>
+                                                )}
                                             </div>
                                         </div>
 
