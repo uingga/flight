@@ -679,14 +679,10 @@ async function scrapeHanatourRegular(browser: any): Promise<Flight[]> {
                     const depCity = cleanCity(f.departure.city);
                     const arrCity = cleanCity(f.arrival.city);
 
-                    // 링크가 기본 페이지URL만 있으면 동적 URL 생성
+                    // 기본 링크 → 땡처리 페이지로 통일 (검색 URL은 정가가 나와서 혼란 유발)
                     let link = f.link;
-                    if (link.includes('CHPC0AIR0233M200#') || link === 'https://www.hanatour.com/trp/air/CHPC0AIR0233M200') {
-                        link = generateHanatourBookingUrl({
-                            departureCity: depCity,
-                            arrivalCity: arrCity,
-                            departureDate: f.departure.date
-                        });
+                    if (!link || link.includes('CHPC0AIR0233M200') || link === '#') {
+                        link = 'https://www.hanatour.com/trp/air/CHPC0AIR0233M200';
                     }
 
                     return {
