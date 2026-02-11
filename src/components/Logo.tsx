@@ -6,8 +6,8 @@ export default function Logo({ className = '', size = 1.0 }: { className?: strin
     return (
         <span className={`logo-container ${className}`} style={{ display: 'inline-flex', alignItems: 'center', gap: `${4 * scale}px` }}>
             <svg
-                width={28 * scale}
-                height={28 * scale}
+                width={32 * scale}
+                height={32 * scale}
                 viewBox="0 0 24 24"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
@@ -29,7 +29,7 @@ export default function Logo({ className = '', size = 1.0 }: { className?: strin
                 fontFamily: "'Balsamiq Sans', sans-serif",
                 fontWeight: 700,
                 fontStyle: 'italic' as const,
-                fontSize: `${2.2 * scale}rem`,
+                fontSize: `${2.4 * scale}rem`,
                 color: '#111827',
                 lineHeight: 1,
                 letterSpacing: '0.03em'
