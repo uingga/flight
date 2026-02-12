@@ -164,9 +164,9 @@ const getMobileUrl = (url: string, isMobile: boolean): string => {
     if (url.includes('www.modetour.com')) {
         return url.replace('www.modetour.com', 'm.modetour.com');
     }
-    // 하나투어: 모바일에서는 땡처리 목록 페이지로 이동 (개별 fareId 링크가 빠르게 만료됨)
+    // 하나투어: PC URL을 그대로 사용 (모바일 리다이렉트 시 fareId 파라미터 유실됨)
     if (url.includes('hanatour.com')) {
-        return 'https://m.hanatour.com/trp/air/CHPC0AIR0233M100';
+        return url;
     }
     // 노랑풍선: PC URL 파라미터를 모바일 URL에 전달 (도시 탭 선택)
     if (url.includes('fly.ybtour.co.kr')) {
