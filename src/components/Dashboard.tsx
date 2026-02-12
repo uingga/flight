@@ -156,9 +156,9 @@ const getMobileUrl = (url: string, isMobile: boolean): string => {
     if (!isMobile || !url) return url;
 
 
-    // 온라인투어: PC URL 그대로 사용 (모바일 경로에서 dcairReservation 404 발생)
-    if (url.includes('onlinetour.co.kr')) {
-        return url;
+    // 온라인투어: www.onlinetour.co.kr → m.onlinetour.co.kr + /flight/w/ → /flight/m/
+    if (url.includes('www.onlinetour.co.kr')) {
+        return url.replace('www.onlinetour.co.kr', 'm.onlinetour.co.kr').replace('/flight/w/', '/flight/m/');
     }
     // 모두투어: www.modetour.com → m.modetour.com
     if (url.includes('www.modetour.com')) {
