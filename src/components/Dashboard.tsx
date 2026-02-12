@@ -164,18 +164,8 @@ const getMobileUrl = (url: string, isMobile: boolean): string => {
     if (url.includes('www.modetour.com')) {
         return url.replace('www.modetour.com', 'm.modetour.com');
     }
-    // 하나투어: fareId 링크는 모바일 전용 경로로 변환, 그 외는 모바일 땡처리 페이지
+    // 하나투어: 모바일에서는 땡처리 목록 페이지로 이동 (개별 fareId 링크가 빠르게 만료됨)
     if (url.includes('hanatour.com')) {
-        if (url.includes('fareId=')) {
-            try {
-                const parsed = new URL(url);
-                const fareId = parsed.searchParams.get('fareId') || '';
-                const searchParam = JSON.stringify({ fareId });
-                return `https://m.hanatour.com/trp/air/CHPC0AIR0212M100?searchParam=${encodeURIComponent(searchParam)}`;
-            } catch {
-                return 'https://m.hanatour.com/trp/air/CHPC0AIR0233M100';
-            }
-        }
         return 'https://m.hanatour.com/trp/air/CHPC0AIR0233M100';
     }
     // 노랑풍선: PC URL 파라미터를 모바일 URL에 전달 (도시 탭 선택)
