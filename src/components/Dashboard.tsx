@@ -25,7 +25,7 @@ const fmtDate = (s: string) => s ? s.slice(5).replace(/-/g, '.') : '';
 const getDefaultStartDate = () => toStr(new Date());
 const getDefaultEndDate = () => {
     const d = new Date();
-    d.setMonth(d.getMonth() + 1);
+    d.setDate(d.getDate() + 14);
     return toStr(d);
 };
 
@@ -198,8 +198,8 @@ export default function Dashboard() {
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
     const [sourceFilter, setSourceFilter] = useState<string>('all');
     const [regionFilter, setRegionFilter] = useState<string>('all');
-    const [startDate, setStartDate] = useState<string>('');
-    const [endDate, setEndDate] = useState<string>('');
+    const [startDate, setStartDate] = useState<string>(getDefaultStartDate());
+    const [endDate, setEndDate] = useState<string>(getDefaultEndDate());
     const [departureFilter, setDepartureFilter] = useState<string>('all');
     const [airlineFilter, setAirlineFilter] = useState<string>('all');
     const [displayCount, setDisplayCount] = useState(ITEMS_PER_PAGE);
