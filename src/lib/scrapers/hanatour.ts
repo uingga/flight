@@ -3,6 +3,9 @@ import { Flight } from '@/types/flight';
 import { getRegionByCity } from '@/lib/utils/region-mapper';
 import { logCrawlResults } from '@/lib/utils/crawl-logger';
 
+const randomDelay = (min: number, max: number) =>
+    new Promise(r => setTimeout(r, (Math.random() * (max - min) + min) * 1000));
+
 /**
  * 하나투어 땡처리 항공권 크롤링
  * URL: https://www.hanatour.com/trp/air/CHPC0AIR0233M200
@@ -65,7 +68,7 @@ function formatDateForUrl(dateStr: string): string {
 }
 
 // 하나투어 예약 URL 생성 (도시코드 + depPlcDvCd='C' 사용)
-function generateHanatourBookingUrl(flight: { departureCity: string; arrivalCity: string; departureDate: string }): string {
+function generateHanatourBookingUrl(flight: { departureCity: string; arrivalCity: string; departureDate: string; arrivalDate?: string }): string {
     // 도시명에서 공항코드 제거: "서울(ICN)" -> "서울", 공항코드 추출: "ICN"
     const extractCity = (cityStr: string) => {
         const match = cityStr.match(/^(.+?)\(([A-Z]{3})\)$/);
@@ -80,14 +83,18 @@ function generateHanatourBookingUrl(flight: { departureCity: string; arrivalCity
     const depCode = CITY_TO_HANATOUR[dep.name] || dep.code || 'SEL';
     const arrCode = CITY_TO_HANATOUR[arr.name] || arr.code || '';
     const depDate = formatDateForUrl(flight.departureDate);
+    const retDate = flight.arrivalDate ? formatDateForUrl(flight.arrivalDate) : '';
 
     if (!arrCode || !depDate) {
         // 도시 코드를 찾지 못하면 프로모션 페이지로 폴백
         return 'https://hope.hanatour.com/promotion/plan/PM006698DD56';
     }
 
+    // 왕복 (RT) 또는 편도 (OW) 결정
+    const isRoundTrip = !!retDate && retDate !== depDate;
+
     // 하나투어 URL: 도시코드(C) 사용 필수 — 공항코드(A)는 0건 반환
-    const searchCond = {
+    const searchCond: any = {
         itnrLst: [
             {
                 depPlcDvCd: 'C',
@@ -98,185 +105,71 @@ function generateHanatourBookingUrl(flight: { departureCity: string; arrivalCity
             }
         ],
         psngrCntLst: [{ ageDvCd: 'A', psngrCnt: 1 }],
-        itnrTypeCd: 'OW'  // One Way (편도)
+        itnrTypeCd: isRoundTrip ? 'RT' : 'OW'
     };
+
+    // 왕복이면 복귀 구간 추가
+    if (isRoundTrip) {
+        searchCond.itnrLst.push({
+            depPlcDvCd: 'C',
+            depPlcCd: arrCode,
+            arrPlcDvCd: 'C',
+            arrPlcCd: depCode,
+            depDt: retDate
+        });
+    }
 
     return `https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=${encodeURIComponent(JSON.stringify(searchCond))}`;
 }
 
 
 /**
- * 하나투어 프로모션 페이지 크롤링
- * URL: https://hope.hanatour.com/promotion/plan/PM0000113828
+ * 하나투어 프로모션 페이지 크롤링 (PM0000113828)
+ * PM006698DD56과 동일한 DOM 구조 (지역 탭 → 도시 탭 → card-wrap)
  */
 async function scrapeHanatourPromotion(browser: any): Promise<Flight[]> {
-    console.log('\n하나투어 프로모션 페이지 크롤링 시작...');
-
-    const context = await browser.newContext({
-        userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-    });
-
-    const page = await context.newPage();
-    page.on('console', (msg: any) => console.log(`[PROMO] ${msg.text()}`));
-
-    const flights: Flight[] = [];
-
-    try {
-        await page.goto('https://hope.hanatour.com/promotion/plan/PM0000113828', {
-            waitUntil: 'domcontentloaded',
-            timeout: 30000,
-        });
-
-        await page.waitForTimeout(3000);
-        console.log('프로모션 페이지 로드 완료');
-
-        // 페이지를 충분히 스크롤하여 모든 항공권 카드 로드
-        for (let i = 0; i < 10; i++) {
-            await page.mouse.wheel(0, 1000);
-            await page.waitForTimeout(500);
-        }
-
-        console.log('페이지 스크롤 완료, 데이터 추출 시작');
-
-        // 항공권 데이터 추출
-        const promoFlights = await page.evaluate(() => {
-            const results: any[] = [];
-
-            // 모든 텍스트 요소에서 항공권 정보 찾기
-            const allElements = document.querySelectorAll('p, div');
-
-            allElements.forEach((element, index) => {
-                const text = element.textContent?.trim() || '';
-
-                // "도시 ↔ 도시 항공권" 패턴 찾기
-                const routeMatch = text.match(/^(.+?)\s*↔\s*(.+?)\s*항공권$/);
-                if (routeMatch) {
-                    const departureCity = routeMatch[1].trim();
-                    const arrivalCity = routeMatch[2].trim();
-
-                    // 날짜 정보 찾기 (형제 요소나 부모 요소에서)
-                    let departureDate = '';
-                    let returnDate = '';
-
-                    // 같은 카드 내에서 날짜 패턴 찾기 (예: "25.03.03(월) ~ 25.03.06(목)")
-                    let dateElement = element.parentElement;
-                    for (let i = 0; i < 10 && dateElement; i++) {
-                        const dateText = dateElement.textContent || '';
-                        // 날짜 패턴: YY.MM.DD(요일) ~ YY.MM.DD(요일)
-                        const dateMatch = dateText.match(/(\d{2}\.\d{2}\.\d{2})\([^)]+\)\s*~\s*(\d{2}\.\d{2}\.\d{2})\([^)]+\)/);
-                        if (dateMatch) {
-                            departureDate = dateMatch[1]; // 출발 날짜
-                            returnDate = dateMatch[2];    // 복귀 날짜
-                            break;
-                        }
-                        dateElement = dateElement.parentElement;
-                    }
-
-                    // 형제 요소에서도 찾기
-                    if (!departureDate) {
-                        let sibling = element.nextElementSibling;
-                        for (let i = 0; i < 10 && sibling; i++) {
-                            const dateText = sibling.textContent || '';
-                            const dateMatch = dateText.match(/(\d{2}\.\d{2}\.\d{2})\([^)]+\)\s*~\s*(\d{2}\.\d{2}\.\d{2})\([^)]+\)/);
-                            if (dateMatch) {
-                                departureDate = dateMatch[1];
-                                returnDate = dateMatch[2];
-                                break;
-                            }
-                            sibling = sibling.nextElementSibling;
-                        }
-                    }
-
-                    // 가격 정보 찾기 (같은 카드 내의 strong 태그)
-                    let priceElement = element.parentElement?.querySelector('strong');
-                    if (!priceElement) {
-                        // 형제 요소에서 찾기
-                        let sibling = element.nextElementSibling;
-                        for (let i = 0; i < 5 && sibling; i++) {
-                            const strong = sibling.querySelector('strong');
-                            if (strong && strong.textContent?.includes('원')) {
-                                priceElement = strong;
-                                break;
-                            }
-                            sibling = sibling.nextElementSibling;
-                        }
-                    }
-
-                    if (priceElement) {
-                        const priceText = priceElement.textContent?.trim() || '';
-                        const priceMatch = priceText.match(/(\d+)만원/);
-                        const price = priceMatch ? parseInt(priceMatch[1]) * 10000 : 0;
-
-                        if (price > 0) {
-                            results.push({
-                                id: `hanatour-promo-${index}`,
-                                source: 'hanatour',
-                                airline: '',
-                                departure: {
-                                    city: departureCity,
-                                    airport: '',
-                                    date: departureDate,
-                                    time: '',
-                                },
-                                arrival: {
-                                    city: arrivalCity,
-                                    airport: '',
-                                    date: returnDate,
-                                    time: '',
-                                },
-                                price: price,
-                                currency: 'KRW',
-                                link: generateHanatourBookingUrl({ departureCity, arrivalCity, departureDate }),
-                            });
-                        }
-                    }
-                }
-            });
-
-            return results;
-        });
-
-        const processedFlights = promoFlights.map((f: any) => ({
-            ...f,
-            region: getRegionByCity(f.arrival.city)
-        }));
-
-        flights.push(...processedFlights);
-        console.log(`프로모션 페이지: ${flights.length}개 항공권 발견`);
-
-    } catch (error) {
-        console.error('프로모션 페이지 크롤링 실패:', error);
-    }
-
-    return flights;
+    return scrapeHanatourPromoPage(browser, 'https://hope.hanatour.com/promotion/plan/PM0000113828', 'PROMO1');
 }
 
 /**
- * 하나투어 땡처리 항공 프로모션 페이지 크롤링
- * URL: https://hope.hanatour.com/promotion/plan/PM006698DD56
- * 모든 지역 탭과 도시 탭을 순회하며 항공권 수집
+ * 하나투어 땡처리 항공 프로모션 페이지 크롤링 (PM006698DD56)
  */
 async function scrapeHanatourLastMinutePromo(browser: any): Promise<Flight[]> {
-    console.log('\n하나투어 땡처리 프로모션 페이지 크롤링 시작...');
+    return scrapeHanatourPromoPage(browser, 'https://hope.hanatour.com/promotion/plan/PM006698DD56', 'PROMO2');
+}
+
+/**
+ * 하나투어 프로모션 페이지 공통 크롤링 함수
+ * 지역 탭(동남아, 일본 등) → 도시 탭(오사카, 후쿠오카 등) → card-wrap 개별 항공편 추출
+ */
+async function scrapeHanatourPromoPage(browser: any, url: string, label: string): Promise<Flight[]> {
+    console.log(`\n하나투어 프로모션 [${label}] 크롤링 시작... (${url})`);
 
     const context = await browser.newContext({
         userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        extraHTTPHeaders: {
+            'Referer': 'https://www.google.com/',
+            'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
+        },
     });
 
     const page = await context.newPage();
-    page.on('console', (msg: any) => console.log(`[PROMO-NEW] ${msg.text()}`));
+    await page.addInitScript(() => {
+        Object.defineProperty(navigator, 'webdriver', { get: () => false });
+    });
+    page.on('console', (msg: any) => console.log(`[${label}] ${msg.text()}`));
 
     const allFlights: Flight[] = [];
     const seenFlightKeys = new Set<string>();
 
     try {
-        await page.goto('https://hope.hanatour.com/promotion/plan/PM006698DD56', {
+        await page.goto(url, {
             waitUntil: 'domcontentloaded',
             timeout: 30000,
         });
 
         await page.waitForTimeout(3000);
-        console.log('땡처리 프로모션 페이지 로드 완료');
+        console.log(`[${label}] 프로모션 페이지 로드 완료`);
 
         // 땡처리 항공 섹션으로 스크롤
         await page.evaluate(() => {
@@ -285,7 +178,7 @@ async function scrapeHanatourLastMinutePromo(browser: any): Promise<Flight[]> {
                 (promoMenu[3] as HTMLElement).click();
             }
         });
-        await page.waitForTimeout(1000);
+        await randomDelay(1, 3);
 
         // "더보기" 버튼 클릭하여 모든 도시 표시
         try {
@@ -307,7 +200,7 @@ async function scrapeHanatourLastMinutePromo(browser: any): Promise<Flight[]> {
                 const regionButtons = await page.$$('.promo_tabmenu_base.slide_type_swipe button');
                 if (regionButtons[regionIdx]) {
                     await regionButtons[regionIdx].click();
-                    await page.waitForTimeout(800);
+                    await randomDelay(1, 3);
 
                     const regionName = await regionButtons[regionIdx].innerText();
                     console.log(`\n${regionName} 지역 크롤링 중...`);
@@ -422,10 +315,12 @@ async function scrapeHanatourLastMinutePromo(browser: any): Promise<Flight[]> {
                                             }
 
                                             // 출발지 추출 (서울, 부산, 대구 등)
+                                            // 항공사명 제거 후 출발지 찾기 (제주항공의 '제주'가 출발지로 잡히는 버그 방지)
                                             let departureCity = '서울';
-                                            const deptMatch = text.match(/(서울|부산|대구|인천|청주|제주)/);
+                                            const textWithoutAirline = text.replace(/(이스타항공|제주항공|진에어|티웨이항공|에어부산|대한항공|아시아나항공|피치항공|에어서울|에어로케이)/g, '');
+                                            const deptMatch = textWithoutAirline.match(/(서울|인천|부산|대구|청주|청주시|제주)/);
                                             if (deptMatch) {
-                                                departureCity = deptMatch[1];
+                                                departureCity = deptMatch[1] === '청주시' ? '청주' : deptMatch[1];
                                             }
 
                                             // 도착지는 파라미터로 전달된 도시명 사용
@@ -471,7 +366,7 @@ async function scrapeHanatourLastMinutePromo(browser: any): Promise<Flight[]> {
                                             },
                                             price: f.price,
                                             currency: 'KRW',
-                                            link: generateHanatourBookingUrl({ departureCity: f.departureCity, arrivalCity: f.arrivalCity, departureDate: f.departureDate }),
+                                            link: generateHanatourBookingUrl({ departureCity: f.departureCity, arrivalCity: f.arrivalCity, departureDate: f.departureDate, arrivalDate: f.arrivalDate }),
                                             region: getRegionByCity(f.arrivalCity),
                                         });
                                     }
@@ -489,10 +384,10 @@ async function scrapeHanatourLastMinutePromo(browser: any): Promise<Flight[]> {
             }
         }
 
-        console.log(`\n땡처리 프로모션 페이지 총: ${allFlights.length}개 항공권 발견`);
+        console.log(`\n[${label}] 프로모션 페이지 총: ${allFlights.length}개 항공권 발견`);
 
     } catch (error) {
-        console.error('땡처리 프로모션 페이지 크롤링 실패:', error);
+        console.error(`[${label}] 프로모션 페이지 크롤링 실패:`, error);
     }
 
     await context.close();
@@ -516,9 +411,13 @@ export async function scrapeHanatour(): Promise<Flight[]> {
         const regularFlights = await scrapeHanatourRegular(browser);
         allFlights.push(...regularFlights);
 
-        // 2. 프로모션 페이지 제외 (데이터 과다 — 일반 페이지만 사용)
-        // const promoFlights = await scrapeHanatourLastMinutePromo(browser);
-        // allFlights.push(...promoFlights);
+        // 2. 프로모션 페이지 (PM0000113828)
+        const promoFlights1 = await scrapeHanatourPromotion(browser);
+        allFlights.push(...promoFlights1);
+
+        // 3. 땡처리 프로모션 페이지 (PM006698DD56)
+        const promoFlights2 = await scrapeHanatourLastMinutePromo(browser);
+        allFlights.push(...promoFlights2);
 
         // 중복 제거 (같은 출발지-도착지-날짜-가격 조합)
         const uniqueFlights = allFlights.filter((flight, index, self) =>
@@ -559,10 +458,17 @@ async function scrapeHanatourRegular(browser: any): Promise<Flight[]> {
 
     const context = await browser.newContext({
         userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        extraHTTPHeaders: {
+            'Referer': 'https://www.google.com/',
+            'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
+        },
     });
 
     const page = await context.newPage();
     page.on('console', (msg: any) => console.log(`[REGULAR] ${msg.text()}`));
+    await page.addInitScript(() => {
+        Object.defineProperty(navigator, 'webdriver', { get: () => false });
+    });
 
     const flights: Flight[] = [];
     let totalFlights = 0;
@@ -589,7 +495,7 @@ async function scrapeHanatourRegular(browser: any): Promise<Flight[]> {
                     continue;
                 }
 
-                await page.waitForTimeout(3000);
+                await randomDelay(3, 5);
 
                 try {
                     await page.waitForSelector('.flight_list.special > ul > li', { timeout: 5000 });

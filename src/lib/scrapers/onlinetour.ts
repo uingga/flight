@@ -4,6 +4,9 @@ import { Flight } from '@/types/flight';
 import { getRegionByCity } from '@/lib/utils/region-mapper';
 import { logCrawlResults } from '@/lib/utils/crawl-logger';
 
+const randomDelay = (min: number, max: number) =>
+    new Promise(r => setTimeout(r, (Math.random() * (max - min) + min) * 1000));
+
 const REGIONS = [
     { code: 'AS', name: '아시아' },
     { code: 'JA', name: '일본' },
@@ -16,11 +19,21 @@ const REGIONS = [
 
 export async function scrapeOnlineTour(): Promise<Flight[]> {
     console.log('온라인투어 크롤링 시작...');
-    const browser = await chromium.launch({ headless: !!process.env.CI });
+    const browser = await chromium.launch({ headless: true });
     const flights: Flight[] = [];
 
     try {
-        const page = await browser.newPage();
+        const context = await browser.newContext({
+            userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            extraHTTPHeaders: {
+                'Referer': 'https://www.google.com/',
+                'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
+            },
+        });
+        const page = await context.newPage();
+        await page.addInitScript(() => {
+            Object.defineProperty(navigator, 'webdriver', { get: () => false });
+        });
 
         page.on('console', msg => console.log(`[BROWSER] ${msg.text()}`));
 
@@ -37,7 +50,7 @@ export async function scrapeOnlineTour(): Promise<Flight[]> {
                 await page.goto(`https://www.onlinetour.co.kr/flight/w/international/dcair/dcairList?TabGubun=${region.code}`, { timeout: 30000 });
 
                 // 도시 목록이 로드될 때까지 대기
-                await page.waitForTimeout(2000);
+                await randomDelay(2, 4);
                 try {
                     await page.waitForSelector('input[name="city"]', { timeout: 5000 });
                 } catch (e) {
@@ -72,7 +85,7 @@ export async function scrapeOnlineTour(): Promise<Flight[]> {
                         await page.goto(cityUrl, { timeout: 30000 });
 
                         // Explicit wait for data loading (AJAX) - 증가된 대기 시간
-                        await page.waitForTimeout(3000);
+                        await randomDelay(3, 5);
 
                         // Wait for list with retry logic
                         let listLoaded = false;
@@ -110,7 +123,7 @@ export async function scrapeOnlineTour(): Promise<Flight[]> {
                             const moreBtn = await page.$('#btn_more');
                             if (moreBtn && await moreBtn.isVisible()) {
                                 await moreBtn.click();
-                                await page.waitForTimeout(1000);
+                                await randomDelay(1, 3);
                             }
                         } catch(e) {} 
                         */
@@ -226,8 +239,8 @@ export async function scrapeOnlineTour(): Promise<Flight[]> {
                                             arrival: {
                                                 city: arrCity,
                                                 airport: '',
-                                                date: outArr.date,
-                                                time: outArr.time
+                                                date: inDep.date,
+                                                time: inDep.time
                                             },
                                             price,
                                             currency: 'KRW',
@@ -246,10 +259,22 @@ export async function scrapeOnlineTour(): Promise<Flight[]> {
 
                         console.log(`    ${city.name}: ${Array.isArray(items) ? items.length : 0}건 수집`);
                         if (Array.isArray(items)) {
-                            const processed = items.map((f: any) => ({
-                                ...f,
-                                region: getRegionByCity(city.name)
-                            }));
+                            const processed = items.map((f: any) => {
+                                // 검색 링크 생성 (eventCode 만료 시 폴백용)
+                                const depCode = (departureAirportInfo.airport === 'GMP' || departureAirportInfo.airport === 'ICN') ? 'SEL' : departureAirportInfo.airport;
+                                const arrCode = city.code;
+                                const startDt = (f.departure?.date || '').replace(/[-\.]/g, '').slice(0, 8);
+                                const endDt = (f.arrival?.date || '').replace(/[-\.]/g, '').slice(0, 8);
+                                let searchLink = 'https://www.onlinetour.co.kr/flight/w/international/dcair/dcairList';
+                                if (startDt.length === 8 && endDt.length === 8 && arrCode) {
+                                    searchLink = `https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=${depCode}&eCity1=${arrCode}&sCity2=${arrCode}&eCity2=${depCode}&startDt=${startDt}&endDt=${endDt}&adt=1`;
+                                }
+                                return {
+                                    ...f,
+                                    searchLink,
+                                    region: getRegionByCity(city.name)
+                                };
+                            });
                             flights.push(...processed);
                         }
 

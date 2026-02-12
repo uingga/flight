@@ -78,11 +78,53 @@ async function main() {
             console.error('❌ 온라인투어 실패:', error);
         }
 
+        // 노선별 최저가 필터링 (각 업체별 같은 노선에서 최저가만 유지)
+        console.log('\n=== 최저가 필터링 ===');
+        console.log(`필터 전: ${allFlights.length}개`);
+
+        const routeMinPrices: Record<string, number> = {};
+        allFlights.forEach((f: any) => {
+            const key = `${f.source}|${f.departure?.city || ''}|${f.arrival?.city || ''}`;
+            if (f.price > 0) {
+                if (!routeMinPrices[key] || f.price < routeMinPrices[key]) {
+                    routeMinPrices[key] = f.price;
+                }
+            }
+        });
+
+        const filteredFlights = allFlights.filter((f: any) => {
+            if (f.price <= 0) return false;
+            const key = `${f.source}|${f.departure?.city || ''}|${f.arrival?.city || ''}`;
+            return f.price === routeMinPrices[key];
+        });
+
+        console.log(`필터 후: ${filteredFlights.length}개 (${allFlights.length - filteredFlights.length}개 제거)`);
+
+        // 만료 항공권 제거 (출발일이 오늘 이전)
+        console.log('\n=== 만료 항공권 정리 ===');
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const beforeExpiry = filteredFlights.length;
+        const activeFlights = filteredFlights.filter((f: any) => {
+            if (!f.departure?.date) return true; // 날짜 없으면 유지
+            const dateStr = f.departure.date.replace(/[^0-9\-\.]/g, '').replace(/\./g, '-').replace(/-+$/, '');
+            const match = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
+            if (!match) return true; // 파싱 불가하면 유지
+            const depDate = new Date(parseInt(match[1]), parseInt(match[2]) - 1, parseInt(match[3]));
+            return depDate >= today;
+        });
+        const expiredCount = beforeExpiry - activeFlights.length;
+        if (expiredCount > 0) {
+            console.log(`🗑️ 만료 항공권 ${expiredCount}개 제거 (${beforeExpiry} → ${activeFlights.length})`);
+        } else {
+            console.log('✅ 만료 항공권 없음');
+        }
+
         // 캐시 데이터 구조 생성
         const cacheData: CacheData = {
             timestamp: new Date().toISOString(),
-            count: allFlights.length,
-            flights: allFlights,
+            count: activeFlights.length,
+            flights: activeFlights,
             sources: sources,
         };
 
@@ -108,7 +150,7 @@ async function main() {
         }
 
         // 오늘 날짜
-        const today = new Date().toISOString().split('T')[0];
+        const todayStr = new Date().toISOString().split('T')[0];
 
         // 노선별 가격 집계
         const routePrices: Record<string, number[]> = {};
@@ -124,9 +166,9 @@ async function main() {
         Object.entries(routePrices).forEach(([route, prices]) => {
             if (!history[route]) history[route] = [];
             // 오늘 데이터가 이미 있으면 제거
-            history[route] = history[route].filter(h => h.date !== today);
+            history[route] = history[route].filter(h => h.date !== todayStr);
             history[route].push({
-                date: today,
+                date: todayStr,
                 minPrice: Math.min(...prices),
                 avgPrice: Math.round(prices.reduce((a, b) => a + b, 0) / prices.length),
                 count: prices.length,
