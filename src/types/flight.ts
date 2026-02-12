@@ -1,6 +1,6 @@
 export interface Flight {
     id: string;
-    source: 'ybtour' | 'modetour' | 'hanatour' | 'onlinetour';
+    source: 'ybtour' | 'modetour' | 'hanatour' | 'onlinetour' | 'ttang';
     airline: string;
     departure: {
         city: string;
@@ -20,6 +20,7 @@ export interface Flight {
     availableSeats?: number;
     flightNumber?: string;
     region?: string;
+    searchLink?: string;
 }
 
 export interface FlightSearchParams {
