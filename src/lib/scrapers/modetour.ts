@@ -93,7 +93,8 @@ export async function scrapeModetour(): Promise<Flight[]> {
                 headers: {
                     'Accept': 'application/json, text/plain, */*',
                     'Origin': 'https://www.modetour.com',
-                    'Referer': 'https://www.modetour.com/flights/discount-flight',
+                    'Referer': 'https://www.google.com/',
+                    'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
                 },
             });
 
