@@ -164,9 +164,9 @@ const getMobileUrl = (url: string, isMobile: boolean): string => {
     if (url.includes('www.modetour.com')) {
         return url.replace('www.modetour.com', 'm.modetour.com');
     }
-    // 하나투어: 모바일 땡처리 목록 페이지 (PC URL은 모바일에서 로딩 안됨, 딥링크 미지원)
+    // 하나투어: PC URL 그대로 (모바일 fallback은 href에서 /api/redirect로 처리)
     if (url.includes('hanatour.com')) {
-        return 'https://m.hanatour.com/trp/air/CHPC0AIR0233M100';
+        return url;
     }
     // 노랑풍선: PC URL 파라미터를 모바일 URL에 전달 (도시 탭 선택)
     if (url.includes('fly.ybtour.co.kr')) {
@@ -866,9 +866,11 @@ export default function Dashboard() {
                                                 </div>
                                                 <a
                                                     href={
-                                                        flight.source === 'onlinetour' && flight.searchLink
+                                                        (flight.source === 'onlinetour' && flight.searchLink)
                                                             ? `/api/redirect?url=${encodeURIComponent(getMobileUrl(flight.link, isMobile))}&fallback=${encodeURIComponent(getMobileUrl(flight.searchLink, isMobile))}`
-                                                            : getMobileUrl(flight.link, isMobile)
+                                                            : (flight.source === 'hanatour' && isMobile)
+                                                                ? `/api/redirect?url=${encodeURIComponent(flight.link)}&fallback=${encodeURIComponent('https://m.hanatour.com/trp/air/CHPC0AIR0233M100')}`
+                                                                : getMobileUrl(flight.link, isMobile)
                                                     }
                                                     target="_blank"
                                                     rel="noopener noreferrer"
