@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-02-12T16:29:31.481Z",
-  "count": 866,
+  "timestamp": "2026-02-12T20:02:08.128Z",
+  "count": 867,
   "flights": [
     {
       "id": "ybtour-마츠야마-20260330-0",
@@ -17536,6 +17536,29 @@
       "region": "남태평양"
     },
     {
+      "id": "modetour-SOPA-19327972",
+      "source": "modetour",
+      "airline": "진에어",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-02-24",
+        "time": "19:45"
+      },
+      "arrival": {
+        "city": "괌",
+        "airport": "GUM",
+        "date": "2026-02-28",
+        "time": "02:40"
+      },
+      "price": 199000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19327972&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 1,
+      "flightNumber": "LJ917 / LJ918",
+      "region": "남태평양"
+    },
+    {
       "id": "modetour-SOPA-19657092",
       "source": "modetour",
       "airline": "에어부산",
@@ -18987,8 +19010,8 @@
   ],
   "sources": {
     "ybtour": 336,
-    "hanatour": 1441,
-    "modetour": 629,
+    "hanatour": 1447,
+    "modetour": 630,
     "onlinetour": 146
   }
 }
