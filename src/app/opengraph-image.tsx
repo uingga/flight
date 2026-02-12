@@ -16,7 +16,7 @@ export default async function Image() {
                     flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    background: 'linear-gradient(135deg, #ecfeff 0%, #cffafe 30%, #a5f3fc 60%, #22d3ee 100%)',
+                    background: 'linear-gradient(135deg, #eef2ff 0%, #e0e7ff 30%, #c7d2fe 60%, #6366f1 100%)',
                     fontFamily: 'sans-serif',
                 }}
             >
@@ -38,8 +38,8 @@ export default async function Image() {
                     >
                         <defs>
                             <linearGradient id="g" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
-                                <stop stopColor="#22d3ee" />
-                                <stop offset="1" stopColor="#0891b2" />
+                                <stop stopColor="#6366f1" />
+                                <stop offset="1" stopColor="#4338ca" />
                             </linearGradient>
                         </defs>
                         <path
@@ -97,7 +97,7 @@ export default async function Image() {
                         borderRadius: '999px',
                         fontSize: '18px',
                         fontWeight: 600,
-                        color: '#0891b2',
+                        color: '#4338ca',
                     }}
                 >
                     ✈️ 실시간 특가 항공권 비교
