@@ -88,6 +88,7 @@ const CITY_TO_AIRPORT: Record<string, string> = {
     '밴쿠버': 'YVR', '비엔티안': 'VTE',
     '푸껫': 'HKT', '쿠알라룸푸르': 'KUL',
     '서울': 'ICN', '청주시': 'CJJ',
+    '상해(푸동)': 'PVG', '오사카': 'KIX', '도쿄': 'NRT', '삿포로': 'CTS',
 };
 
 // 도시명에서 공항코드 추출
