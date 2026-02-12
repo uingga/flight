@@ -164,20 +164,9 @@ const getMobileUrl = (url: string, isMobile: boolean): string => {
     if (url.includes('www.modetour.com')) {
         return url.replace('www.modetour.com', 'm.modetour.com');
     }
-    // 하나투어: fareId를 모바일 예약 페이지용 searchParam으로 변환
+    // 하나투어: PC URL 그대로 사용 (모바일 사이트는 개별 예약 딥링크 미지원)
     if (url.includes('hanatour.com')) {
-        if (url.includes('fareId=')) {
-            try {
-                const parsed = new URL(url);
-                const fareId = parsed.searchParams.get('fareId') || '';
-                const psngrCntLst = parsed.searchParams.get('psngrCntLst') || '[{"ageDvCd":"A","psngrCnt":1}]';
-                const searchParam = JSON.stringify({ fareId, psngrCntLst: JSON.parse(psngrCntLst) });
-                return `https://m.hanatour.com/trp/air/CHPC0AIR0212M100?searchParam=${encodeURIComponent(searchParam)}`;
-            } catch {
-                return url; // 파싱 실패 시 PC URL 그대로
-            }
-        }
-        return 'https://m.hanatour.com/trp/air/CHPC0AIR0233M100';
+        return url;
     }
     // 노랑풍선: PC URL 파라미터를 모바일 URL에 전달 (도시 탭 선택)
     if (url.includes('fly.ybtour.co.kr')) {
