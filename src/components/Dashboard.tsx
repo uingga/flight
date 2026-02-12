@@ -42,6 +42,107 @@ const normalizeCity = (city: string): string => {
     return city;
 };
 
+// 도시명 → IATA 공항/도시 코드 매핑
+const CITY_TO_AIRPORT: Record<string, string> = {
+    // 출발지
+    '인천': 'ICN', '김포': 'GMP', '부산': 'PUS', '부산(PUS)': 'PUS',
+    '대구': 'TAE', '대구(TAE)': 'TAE', '제주': 'CJU', '제주시(CJU)': 'CJU',
+    '청주': 'CJJ', '청주시(CJJ)': 'CJJ', '서울(ICN)': 'ICN',
+    // 일본
+    '도쿄(나리타)': 'NRT', '도쿄(NRT)': 'NRT', '도쿄(하네다)': 'HND',
+    '오사카(간사이)': 'KIX', '오사카(KIX)': 'KIX',
+    '후쿠오카': 'FUK', '삿포로(치토세)': 'CTS', '삿포로(CTS)': 'CTS', '치토세': 'CTS',
+    '나고야': 'NGO', '오키나와': 'OKA', '오키나와(OKA)': 'OKA',
+    '나가사키': 'NGS', '가고시마': 'KOJ', '가고시마(KOJ)': 'KOJ',
+    '구마모토': 'KMJ', '마츠야마': 'MYJ', '다카마쓰': 'TAK',
+    '시즈오카': 'FSZ',
+    // 동남아
+    '방콕': 'BKK', '방콕(BKK)': 'BKK', '방콕(수완나폼)': 'BKK', '방콕(돈무앙)': 'DMK',
+    '다낭': 'DAD', '다낭(DAD)': 'DAD',
+    '하노이': 'HAN', '하노이(HAN)': 'HAN',
+    '나트랑': 'CXR', '나트랑(CXR)': 'CXR', '나트랑(깜랑)': 'CXR',
+    '푸켓': 'HKT', '푸껫(HKT)': 'HKT',
+    '세부': 'CEB', '세부(CEB)': 'CEB',
+    '마닐라': 'MNL', '보홀': 'TAG', '보홀(TAG)': 'TAG', '보홀팡라오': 'TAG',
+    '칼리보(보라카이)': 'KLO', '클락': 'CRK',
+    '싱가포르': 'SIN', '싱가포르(SIN)': 'SIN', '싱가포르(창이공항)': 'SIN',
+    '코타키나발루': 'BKI', '코타키나발루(BKI)': 'BKI',
+    '치앙마이': 'CNX', '치앙마이(CNX)': 'CNX',
+    '비엔티엔': 'VTE', '바탐': 'BTH', '바탐(인도네시아)': 'BTH',
+    '발리': 'DPS', '발리(덴파사)': 'DPS', '마나도': 'MDC',
+    '푸꾸옥': 'PQC', '푸꾸옥(PQC)': 'PQC',
+    // 중화권
+    '홍콩': 'HKG', '홍콩(HKG)': 'HKG',
+    '대만(타이페이)': 'TPE', '타이페이': 'TPE', '타이베이': 'TPE', '타이베이(TPE)': 'TPE',
+    '타이중': 'RMQ', '가오슝': 'KHH', '송산': 'TSA',
+    '마카오': 'MFM', '싼야(SYX)': 'SYX',
+    // 기타
+    '괌': 'GUM', '사이판': 'SPN', '사이판(SPN)': 'SPN',
+    '시드니': 'SYD', '브리즈번': 'BNE',
+    '두바이': 'DXB', '아부다비': 'AUH',
+    '로마': 'FCO', '이스탄불': 'IST', '트라브존': 'TZX',
+    // 추가 누락 도시
+    '보라카이': 'KLO', '호치민': 'SGN', '호치민(SGN)': 'SGN',
+    '상해': 'PVG', '상하이': 'PVG', '칭다오': 'TAO',
+    '사가': 'HSG', '요나고': 'YGJ', '히로시마': 'HIJ', '오이타': 'OIT',
+    '밴쿠버': 'YVR', '비엔티안': 'VTE',
+    '푸껫': 'HKT', '쿠알라룸푸르': 'KUL',
+    '서울': 'ICN', '청주시': 'CJJ',
+};
+
+// 도시명에서 공항코드 추출
+const getAirportCode = (city: string): string | null => {
+    // 직접 매핑 확인
+    if (CITY_TO_AIRPORT[city]) return CITY_TO_AIRPORT[city];
+    // 괄호 안 코드 추출: "서울(ICN)" → ICN
+    const match = city.match(/\(([A-Z]{3})\)/);
+    if (match) return match[1];
+    return null;
+};
+
+// 네이버 항공권 비교 URL 생성 (왕복)
+const getNaverFlightUrl = (depCity: string, arrCity: string, depDate: string, retDate?: string): string | null => {
+    const depCode = getAirportCode(depCity);
+    const arrCode = getAirportCode(arrCity);
+    if (!depCode || !arrCode) return null;
+    const fmtDate = (d: string) => d.replace(/[\-\.]/g, '').slice(0, 8);
+    const depStr = fmtDate(depDate);
+    if (depStr.length !== 8) return null;
+    // 왕복: 귀국 날짜가 있고, 출발일과 다르면 왕복 URL
+    if (retDate) {
+        const retStr = fmtDate(retDate);
+        if (retStr.length === 8 && retStr !== depStr) {
+            return `https://flight.naver.com/flights/international/${depCode}-${arrCode}-${depStr}/${arrCode}-${depCode}-${retStr}?adult=1&fareType=Y`;
+        }
+    }
+    // 편도
+    return `https://flight.naver.com/flights/international/${depCode}-${arrCode}-${depStr}?adult=1&fareType=Y`;
+};
+
+// 스카이스캐너 비교 URL 생성 (왕복)
+const getSkyscannerUrl = (depCity: string, arrCity: string, depDate: string, retDate?: string): string | null => {
+    const depCode = getAirportCode(depCity);
+    const arrCode = getAirportCode(arrCity);
+    if (!depCode || !arrCode) return null;
+    const fmtDate = (d: string) => {
+        const clean = d.replace(/[\-\.]/g, '').slice(0, 8);
+        return clean.length === 8 ? clean.slice(2) : null; // YYMMDD
+    };
+    const depStr = fmtDate(depDate);
+    if (!depStr) return null;
+    const dep = depCode.toLowerCase();
+    const arr = arrCode.toLowerCase();
+    // 왕복: 귀국 날짜가 있고, 출발일과 다르면 왕복 URL
+    if (retDate) {
+        const retStr = fmtDate(retDate);
+        if (retStr && retStr !== depStr) {
+            return `https://www.skyscanner.co.kr/transport/flights/${dep}/${arr}/${depStr}/${retStr}/?adults=1`;
+        }
+    }
+    // 편도
+    return `https://www.skyscanner.co.kr/transport/flights/${dep}/${arr}/${depStr}/?adults=1`;
+};
+
 const ITEMS_PER_PAGE = 20;
 
 // 모바일 여부 체크
@@ -117,6 +218,8 @@ export default function Dashboard() {
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [isCalendarOpen, setIsCalendarOpen] = useState(false);
     const [showFilters, setShowFilters] = useState(false);
+    const [favorites, setFavorites] = useState<Set<string>>(new Set());
+    const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
     const observerRef = useRef<IntersectionObserver | null>(null);
     const loadMoreRef = useRef<HTMLDivElement | null>(null);
     const [headerHidden, setHeaderHidden] = useState(false);
@@ -126,6 +229,11 @@ export default function Dashboard() {
     useEffect(() => {
         fetchFlights();
         setIsMobile(checkIsMobile());
+        // localStorage에서 즐겨찾기 불러오기
+        try {
+            const saved = localStorage.getItem('flight-favorites');
+            if (saved) setFavorites(new Set(JSON.parse(saved)));
+        } catch { }
     }, []);
 
     // 필터 변경 시 displayCount 리셋
@@ -226,18 +334,34 @@ export default function Dashboard() {
         return lowest;
     }, [flights]);
 
-    // 인기 도시 목록 (검색 추천용)
+    // 인기 도시 목록 (한국인 인기 여행지 기준, 데이터에 있는 도시만 표시)
     const popularCities = useMemo(() => {
-        const counts: Record<string, number> = {};
-        flights.forEach(f => {
-            const city = f.arrival.city;
-            counts[city] = (counts[city] || 0) + 1;
-        });
-        return Object.entries(counts)
-            .sort(([, a], [, b]) => b - a)
-            .slice(0, 8)
-            .map(([city]) => city);
+        const topDestinations = [
+            '오사카(간사이)', '도쿄(나리타)', '도쿄(하네다)', '후쿠오카',
+            '다낭', '방콕', '세부', '나트랑',
+            '타이베이', '홍콩', '괌', '사이판',
+            '하노이', '호치민', '푸켓', '발리',
+            '싱가포르', '코타키나발루', '오키나와', '삿포로'
+        ];
+        const availableCities = new Set(flights.map(f => f.arrival.city));
+        return topDestinations.filter(city => availableCities.has(city)).slice(0, 8);
     }, [flights]);
+
+    // 즐겨찾기 토글
+    const getFlightKey = (f: Flight) =>
+        `${f.source}|${f.departure.city}|${f.arrival.city}|${f.airline}|${f.departure.date}|${f.price}`;
+
+    const toggleFavorite = (flight: Flight) => {
+        setFavorites(prev => {
+            const next = new Set(prev);
+            const key = getFlightKey(flight);
+            if (next.has(key)) next.delete(key);
+            else next.add(key);
+            localStorage.setItem('flight-favorites', JSON.stringify(Array.from(next)));
+            if (next.size === 0) setShowFavoritesOnly(false);
+            return next;
+        });
+    };
 
     // 필터 초기화
     const resetAllFilters = () => {
@@ -249,6 +373,7 @@ export default function Dashboard() {
         setStartDate('');
         setEndDate('');
         setSortBy('price');
+        setShowFavoritesOnly(false);
     };
 
     // 활성 필터 여부
@@ -282,7 +407,9 @@ export default function Dashboard() {
 
 
 
-        return matchesSearch && matchesSource && matchesRegion && matchesAirline && matchesDate && matchesDeparture;
+        const matchesFavorites = !showFavoritesOnly || favorites.has(getFlightKey(flight));
+
+        return matchesSearch && matchesSource && matchesRegion && matchesAirline && matchesDate && matchesDeparture && matchesFavorites;
     }).sort((a, b) => {
         let comparison = 0;
 
@@ -431,7 +558,7 @@ export default function Dashboard() {
                                 dateFormat="yy.MM.dd"
                                 locale={ko}
                                 className={styles.dateInput}
-                                placeholderText="날짜 선택"
+                                placeholderText="출발 기간 선택"
                                 popperClassName={styles.datePickerPopper}
                                 calendarClassName={styles.datePickerCalendar}
                                 minDate={new Date()}
@@ -629,7 +756,16 @@ export default function Dashboard() {
 
                         {/* 항공권 수 + 여행사/항공사/정렬 드롭다운 */}
                         <div className={styles.stats}>
-                            <span className={styles.resultCount}>총 <strong>{filteredFlights.length}</strong>개의 항공권</span>
+                            <div className={styles.statsHeader}>
+                                <span className={styles.resultCount}>총 <strong>{filteredFlights.length}</strong>개의 항공권</span>
+                                <button
+                                    onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+                                    className={`${styles.favFilterBtn} ${showFavoritesOnly ? styles.favFilterActive : ''}`}
+                                    title={showFavoritesOnly ? '전체 보기' : '즐겨찾기만 보기'}
+                                >
+                                    {showFavoritesOnly ? '❤️' : '🤍'} {favorites.size > 0 ? favorites.size : ''}
+                                </button>
+                            </div>
                             <div className={styles.statsFilters}>
                                 <select
                                     value={sourceFilter}
@@ -680,13 +816,20 @@ export default function Dashboard() {
                                                 <span className={`badge ${getSourceBadgeClass(flight.source)}`}>
                                                     {getSourceName(flight.source)}
                                                 </span>
+                                                <span className={styles.airline}>{flight.airline}</span>
                                                 {flight.availableSeats && (
                                                     <span className={(flight.availableSeats || 0) <= 9 ? styles.seatsBadgeCritical : styles.seatsBadge}>
                                                         {(flight.availableSeats || 0) <= 5 && '🔥 '}{flight.availableSeats}석
                                                     </span>
                                                 )}
                                             </div>
-                                            <span className={styles.airline}>{flight.airline}</span>
+                                            <button
+                                                className={`${styles.favBtn} ${favorites.has(getFlightKey(flight)) ? styles.favBtnActive : ''}`}
+                                                onClick={(e) => { e.stopPropagation(); toggleFavorite(flight); }}
+                                                title={favorites.has(getFlightKey(flight)) ? '즐겨찾기 해제' : '즐겨찾기 추가'}
+                                            >
+                                                {favorites.has(getFlightKey(flight)) ? '❤️' : '🤍'}
+                                            </button>
                                         </div>
 
                                         <div className={styles.route}>
@@ -712,45 +855,31 @@ export default function Dashboard() {
                                         </div>
 
                                         <div className={styles.cardFooterWrapper}>
-                                            <div className={styles.badgesRow}>
-                                                {isLowestPrice && (
-                                                    <span className={styles.lowestPriceBadge}>최저가</span>
-                                                )}
-                                                {(() => {
-                                                    const avgPrice = averagePrices[flight.arrival.city];
-                                                    if (avgPrice && flight.price > 0) {
-                                                        const discount = avgPrice - flight.price;
-                                                        const percent = (discount / avgPrice) * 100;
-                                                        if (percent >= 5) {
-                                                            return (
-                                                                <span className={styles.discountBadge}>
-                                                                    -{Math.round(percent)}%
-                                                                </span>
-                                                            );
-                                                        }
-                                                    }
-                                                    return null;
-                                                })()}
-                                            </div>
                                             <div className={styles.cardFooter}>
                                                 <div className={styles.priceSection}>
                                                     <div className={styles.price}>{formatPrice(flight.price)}</div>
-                                                    {(() => {
-                                                        const key = `${flight.departure.city}-${flight.arrival.city}`;
-                                                        const history = priceHistory[key];
-                                                        if (history && history.length > 1) {
-                                                            const prices = history.map(h => h.minPrice);
-                                                            return (
-                                                                <div className={styles.sparkline}>
-                                                                    <Sparkline data={prices} width={60} height={20} />
-                                                                </div>
-                                                            );
+                                                    {!isMobile && (() => {
+                                                        const avgPrice = averagePrices[flight.arrival.city];
+                                                        if (avgPrice && flight.price > 0) {
+                                                            const discount = avgPrice - flight.price;
+                                                            const percent = (discount / avgPrice) * 100;
+                                                            if (percent >= 5) {
+                                                                return (
+                                                                    <span className={styles.discountBadge}>
+                                                                        -{Math.round(percent)}%
+                                                                    </span>
+                                                                );
+                                                            }
                                                         }
                                                         return null;
                                                     })()}
                                                 </div>
                                                 <a
-                                                    href={getMobileUrl(flight.link, isMobile)}
+                                                    href={
+                                                        flight.source === 'onlinetour' && flight.searchLink
+                                                            ? `/api/redirect?url=${encodeURIComponent(getMobileUrl(flight.link, isMobile))}&fallback=${encodeURIComponent(getMobileUrl(flight.searchLink, isMobile))}`
+                                                            : getMobileUrl(flight.link, isMobile)
+                                                    }
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     className="btn btn-primary"
@@ -758,6 +887,28 @@ export default function Dashboard() {
                                                     예약하기 →
                                                 </a>
                                             </div>
+                                            {/* 가격 비교 링크 */}
+                                            {(() => {
+                                                const naverUrl = getNaverFlightUrl(flight.departure.city, flight.arrival.city, flight.departure.date, flight.arrival.date);
+                                                const skyscannerUrl = getSkyscannerUrl(flight.departure.city, flight.arrival.city, flight.departure.date, flight.arrival.date);
+                                                if (!naverUrl && !skyscannerUrl) return null;
+                                                return (
+                                                    <div className={styles.compareLinks}>
+                                                        <span className={styles.compareLinkLabel}>가격비교</span>
+                                                        {naverUrl && (
+                                                            <a href={naverUrl} target="_blank" rel="noopener noreferrer" className={styles.compareLink} title="네이버 항공권에서 비교">
+                                                                네이버
+                                                            </a>
+                                                        )}
+                                                        {skyscannerUrl && (
+                                                            <a href={skyscannerUrl} target="_blank" rel="noopener noreferrer" className={styles.compareLink} title="스카이스캐너에서 비교">
+                                                                스카이스캐너
+                                                            </a>
+                                                        )}
+                                                        <span className={styles.compareLinkNote}>💡 위탁수하물 미포함 요금일 수 있음</span>
+                                                    </div>
+                                                );
+                                            })()}
                                         </div>
 
 
@@ -818,11 +969,37 @@ export default function Dashboard() {
                     <div className={styles.footerContent}>
                         {/* 서비스 소개 */}
                         <div className={styles.footerSection}>
-                            <span className={styles.footerBrand}>✈️ 티킷</span>
+                            <Logo size={0.7} />
                             <p className={styles.footerDesc}>
                                 여행사 땡처리 항공권을 한 곳에서 비교하세요.<br />
                                 여러 여행사의 특가 항공권을 실시간으로 모아 가장 저렴한 항공편을 쉽게 찾을 수 있습니다.
                             </p>
+                        </div>
+
+                        {/* 데이터 소스 */}
+                        <div className={styles.footerSection}>
+                            <h4 className={styles.footerTitle}>여행사 바로가기</h4>
+                            <div className={styles.footerLinks}>
+                                <a href="https://www.hanatour.com" target="_blank" rel="noopener noreferrer">하나투어</a>
+                                <a href="https://www.onlinetour.co.kr" target="_blank" rel="noopener noreferrer">온라인투어</a>
+                                <a href="https://www.ybtour.co.kr" target="_blank" rel="noopener noreferrer">노랑풍선</a>
+                                <a href="https://www.modetour.com" target="_blank" rel="noopener noreferrer">모두투어</a>
+                            </div>
+                        </div>
+
+                        {/* 인기 여행지 */}
+                        <div className={styles.footerSection}>
+                            <h4 className={styles.footerTitle}>인기 여행지</h4>
+                            <div className={styles.footerTags}>
+                                {['오사카', '도쿄', '후쿠오카', '다낭', '방콕', '세부', '괌', '타이베이'].map(city => (
+                                    <span
+                                        key={city}
+                                        className={styles.footerTag}
+                                        onClick={() => { setSearchTerm(city); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                                        style={{ cursor: 'pointer' }}
+                                    >{city}</span>
+                                ))}
+                            </div>
                         </div>
                     </div>
 

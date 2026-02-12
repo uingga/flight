@@ -2,8 +2,12 @@ name: Daily Flight Crawl
 
 on:
   schedule:
-    # 하루 3회: 오전 7시, 정오 12시, 저녁 8시 (KST)
-    - cron: '0 22,3,11 * * *'
+    # 하루 5회 (KST): 00:30 자정취소표, 08:00 출근전, 11:00 오전, 14:00 오후, 17:00 퇴근전
+    - cron: '30 15 * * *'   # 00:30 KST
+    - cron: '0 23 * * *'    # 08:00 KST
+    - cron: '0 2 * * *'     # 11:00 KST
+    - cron: '0 5 * * *'     # 14:00 KST
+    - cron: '0 8 * * *'     # 17:00 KST
   workflow_dispatch: # 수동 실행 가능
 
 jobs:
@@ -29,13 +33,21 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
+      - name: Random delay (0~5분)
+        run: |
+          DELAY=$((RANDOM % 300))
+          echo "⏳ ${DELAY}초 대기 후 크롤링 시작..."
+          sleep $DELAY
+
       - name: Run crawler
+        id: crawl
+        continue-on-error: true
         run: npm run crawl:all
         env:
-          # 필요한 경우 API 키나 환경변수 추가
           CI: true
 
       - name: Commit and push changes
+        if: steps.crawl.outcome == 'success'
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
@@ -43,6 +55,7 @@ jobs:
           # 변경된 파일이 있는지 확인
           if [[ -n $(git status --porcelain data/all-flights-cache.json) ]]; then
             git add data/all-flights-cache.json
+            git add data/price-history.json 2>/dev/null || true
             git commit -m "chore(data): update flight data [skip ci]"
             git pull --rebase origin main
             git push
@@ -50,3 +63,27 @@ jobs:
           else
             echo "ℹ️ No changes to commit."
           fi
+
+      - name: Alert on failure
+        if: steps.crawl.outcome == 'failure'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = `🚨 크롤링 실패 - ${new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })}`;
+            const body = [
+              '## 크롤링 실패 알림',
+              '',
+              `- **시간**: ${new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })}`,
+              `- **Workflow**: ${context.workflow}`,
+              `- **Run**: [${context.runId}](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})`,
+              '',
+              '수동으로 확인해주세요: `npm run crawl:all`',
+            ].join('\n');
+            
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title,
+              body,
+              labels: ['bug', 'automated']
+            });
