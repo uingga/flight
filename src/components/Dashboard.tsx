@@ -157,9 +157,15 @@ const getMobileUrl = (url: string, isMobile: boolean): string => {
     if (!isMobile || !url) return url;
 
 
-    // 온라인투어: www.onlinetour.co.kr → m.onlinetour.co.kr + /flight/w/ → /flight/m/
-    if (url.includes('www.onlinetour.co.kr')) {
-        return url.replace('www.onlinetour.co.kr', 'm.onlinetour.co.kr').replace('/flight/w/', '/flight/m/');
+    // 온라인투어: m.onlinetour.co.kr은 www로 리다이렉트됨 (반응형 사이트)
+    // /flight/w/ → /flight/m/ 경로 변환 + 모바일 경로명 변환
+    if (url.includes('onlinetour.co.kr')) {
+        let mobileUrl = url.replace('m.onlinetour.co.kr', 'www.onlinetour.co.kr');
+        mobileUrl = mobileUrl.replace('/flight/w/', '/flight/m/');
+        // 모바일 경로명 변환 (dcairReservation → reservation, dcairList → list)
+        mobileUrl = mobileUrl.replace('/dcair/dcairReservation', '/dcair/reservation');
+        mobileUrl = mobileUrl.replace('/dcair/dcairList', '/dcair/list');
+        return mobileUrl;
     }
     // 모두투어: www.modetour.com → m.modetour.com
     if (url.includes('www.modetour.com')) {
@@ -869,8 +875,12 @@ export default function Dashboard() {
                                                     href={
                                                         (flight.source === 'onlinetour' && flight.searchLink)
                                                             ? `/api/redirect?url=${encodeURIComponent(getMobileUrl(flight.link, isMobile))}&fallback=${encodeURIComponent(getMobileUrl(flight.searchLink, isMobile))}`
-                                                            : (flight.source === 'hanatour' && isMobile)
-                                                                ? `/api/redirect?url=${encodeURIComponent(flight.link)}&fallback=${encodeURIComponent('https://m.hanatour.com/trp/air/CHPC0AIR0233M100')}`
+                                                            : (flight.source === 'hanatour')
+                                                                ? `/api/redirect?url=${encodeURIComponent(getMobileUrl(flight.link, isMobile))}&fallback=${encodeURIComponent(
+                                                                    isMobile
+                                                                        ? 'https://m.hanatour.com/trp/air/CHPC0AIR0233M100'
+                                                                        : (flight.searchLink || 'https://www.hanatour.com/trp/air/CHPC0AIR0233M200')
+                                                                )}`
                                                                 : getMobileUrl(flight.link, isMobile)
                                                     }
                                                     target="_blank"
