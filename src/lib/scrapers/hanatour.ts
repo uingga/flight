@@ -601,9 +601,18 @@ async function scrapeHanatourRegular(browser: any): Promise<Flight[]> {
                     // 링크는 page.evaluate에서 fareId 기반으로 생성됨
                     const link = f.link;
 
+                    // fareId 만료 시 대비 검색 URL 생성 (searchLink)
+                    const searchLink = generateHanatourBookingUrl({
+                        departureCity: f.departure.city,
+                        arrivalCity: f.arrival.city,
+                        departureDate: f.departure.date,
+                        arrivalDate: f.arrival.date,
+                    });
+
                     return {
                         ...f,
                         link: link,
+                        searchLink: searchLink,
                         region: getRegionByCity(arrCity)
                     };
                 });
