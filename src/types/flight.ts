@@ -1,6 +1,6 @@
 export interface Flight {
     id: string;
-    source: 'ybtour' | 'modetour' | 'hanatour' | 'onlinetour' | 'ttang' | 'interpark';
+    source: 'ybtour' | 'modetour' | 'hanatour' | 'onlinetour' | 'ttang';
     airline: string;
     departure: {
         city: string;
