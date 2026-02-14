@@ -157,9 +157,13 @@ const getMobileUrl = (url: string, isMobile: boolean): string => {
     if (!isMobile || !url) return url;
 
 
-    // 온라인투어: 반응형 사이트이므로 PC URL 그대로 사용
+    // 온라인투어: m.onlinetour.co.kr + /flight/m/ 경로 사용
     if (url.includes('onlinetour.co.kr')) {
-        return url;
+        let mobileUrl = url.replace('www.onlinetour.co.kr', 'm.onlinetour.co.kr');
+        mobileUrl = mobileUrl.replace('/flight/w/', '/flight/m/');
+        mobileUrl = mobileUrl.replace('/dcair/dcairReservation', '/dcair/dcairReservationGuest');
+        mobileUrl = mobileUrl.replace('/dcair/dcairList', '/dcair/list');
+        return mobileUrl;
     }
     // 모두투어: www.modetour.com → m.modetour.com
     if (url.includes('www.modetour.com')) {
