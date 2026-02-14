@@ -875,18 +875,9 @@ export default function Dashboard() {
                                                             ? getMobileUrl(flight.link, isMobile)
                                                             : (flight.source === 'hanatour')
                                                                 ? (isMobile
-                                                                    ? (() => {
-                                                                        // PC link에서 fareId 추출하여 모바일 예약 상세 페이지 URL 생성
-                                                                        const fareIdMatch = flight.link.match(/fareId=([^&]+)/);
-                                                                        if (fareIdMatch) {
-                                                                            const fareId = decodeURIComponent(fareIdMatch[1]);
-                                                                            return `https://m.hanatour.com/com/pmt/CHPC0PMT0011M100?searchCond=${encodeURIComponent(JSON.stringify({ fareId, psngrCntLst: [{ ageDvCd: 'A', psngrCnt: 1 }] }))}`;
-                                                                        }
-                                                                        // fareId가 없는 경우 searchLink 폴백
-                                                                        return flight.searchLink
-                                                                            ? flight.searchLink.replace('hope.hanatour.com', 'm.hanatour.com').replace('M200', 'M100')
-                                                                            : 'https://m.hanatour.com/trp/air/CHPC0AIR0233M100';
-                                                                    })()
+                                                                    ? (flight.searchLink
+                                                                        ? flight.searchLink.replace('hope.hanatour.com', 'm.hanatour.com').replace('M200', 'M100')
+                                                                        : 'https://m.hanatour.com/trp/air/CHPC0AIR0233M100')
                                                                     : `/api/redirect?url=${encodeURIComponent(flight.link)}&fallback=${encodeURIComponent(flight.searchLink || 'https://www.hanatour.com/trp/air/CHPC0AIR0233M200')}`
                                                                 )
                                                                 : getMobileUrl(flight.link, isMobile)
