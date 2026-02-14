@@ -875,7 +875,9 @@ export default function Dashboard() {
                                                             ? getMobileUrl(flight.link, isMobile)
                                                             : (flight.source === 'hanatour')
                                                                 ? (isMobile
-                                                                    ? 'https://m.hanatour.com/trp/air/CHPC0AIR0233M100'
+                                                                    ? (flight.searchLink
+                                                                        ? flight.searchLink.replace('hope.hanatour.com', 'm.hanatour.com').replace('M200', 'M100')
+                                                                        : 'https://m.hanatour.com/trp/air/CHPC0AIR0233M100')
                                                                     : `/api/redirect?url=${encodeURIComponent(flight.link)}&fallback=${encodeURIComponent(flight.searchLink || 'https://www.hanatour.com/trp/air/CHPC0AIR0233M200')}`
                                                                 )
                                                                 : getMobileUrl(flight.link, isMobile)
