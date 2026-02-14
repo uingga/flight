@@ -3,6 +3,7 @@ import { scrapeYbtour } from '../src/lib/scrapers/ybtour';
 import { scrapeHanatour } from '../src/lib/scrapers/hanatour';
 import { scrapeModetour } from '../src/lib/scrapers/modetour';
 import { scrapeOnlineTour } from '../src/lib/scrapers/onlinetour';
+import { scrapeInterparkBenchmark, resolveCityCode } from '../src/lib/scrapers/interpark';
 import fs from 'fs';
 import path from 'path';
 
@@ -143,16 +144,71 @@ async function main() {
             console.log('✅ 만료 항공권 없음');
         }
 
+        // 인터파크 벤치마크 기반 필터링
+        console.log('\n=== 인터파크 가격 벤치마크 ===');
+        let benchmarkedFlights = activeFlights;
+        try {
+            // 현재 항공편의 도착 도시코드 수집
+            const arrCityCodes = new Set<string>();
+            activeFlights.forEach((f: any) => {
+                const code = resolveCityCode(f.arrival?.city || '');
+                if (code) arrCityCodes.add(code);
+            });
+
+            const benchmark = await scrapeInterparkBenchmark(Array.from(arrCityCodes));
+
+            // 벤치마크 저장
+            const dataDir = path.join(process.cwd(), 'data');
+            const benchmarkPath = path.join(dataDir, 'interpark-prices.json');
+            fs.writeFileSync(benchmarkPath, JSON.stringify(benchmark, null, 2), 'utf-8');
+            console.log(`💾 인터파크 벤치마크 저장: ${benchmarkPath}`);
+
+            // 인터파크 월 평균가보다 비싼 항공편 필터링
+            const beforeBenchmark = activeFlights.length;
+            benchmarkedFlights = activeFlights.filter((f: any) => {
+                // 도착 도시 코드 추출 (resolveCityCode로 모든 형식 지원)
+                const cityCode = resolveCityCode(f.arrival?.city || '');
+                if (!cityCode) return true; // 코드 없으면 유지
+
+                // 출발월 추출
+                const depDate = f.departure?.date || '';
+                const dateStr = depDate.replace(/[^0-9\-\.]/g, '').replace(/\./g, '-').replace(/-+$/, '');
+                const dateMatch = dateStr.match(/^(\d{4})-(\d{2})/);
+                if (!dateMatch) return true; // 날짜 파싱 불가하면 유지
+
+                const yearMonth = `${dateMatch[1]}-${dateMatch[2]}`;
+
+                // 인터파크 월 평균가 조회
+                const cityPrices = benchmark.prices[cityCode];
+                if (!cityPrices || !cityPrices[yearMonth]) return true; // 비교 데이터 없으면 유지
+
+                const interparkAvg = cityPrices[yearMonth].avg;
+
+                // 인터파크 월 평균가보다 비싸면 제거
+                if (f.price > interparkAvg) {
+                    console.log(`  ❌ 필터: ${f.arrival?.city} ${yearMonth} ${f.price.toLocaleString()}원 > 인터파크 평균 ${interparkAvg.toLocaleString()}원 (${f.source})`);
+                    return false;
+                }
+                return true;
+            });
+
+            const benchmarkFiltered = beforeBenchmark - benchmarkedFlights.length;
+            console.log(`📊 인터파크 기준 필터: ${benchmarkFiltered}개 제거 (${beforeBenchmark} → ${benchmarkedFlights.length})`);
+
+        } catch (error) {
+            console.error('⚠️ 인터파크 벤치마크 실패 (필터링 건너뜀):', error);
+        }
+
         // 전체 결과가 이전 캐시의 50% 미만이면 이전 캐시 유지
-        if (prevCache && prevCache.count > 0 && activeFlights.length < prevCache.count * 0.5) {
-            console.log(`\n⚠️ 결과가 이전 캐시(${prevCache.count}개)의 50% 미만(${activeFlights.length}개) → 이전 캐시 유지`);
+        if (prevCache && prevCache.count > 0 && benchmarkedFlights.length < prevCache.count * 0.5) {
+            console.log(`\n⚠️ 결과가 이전 캐시(${prevCache.count}개)의 50% 미만(${benchmarkedFlights.length}개) → 이전 캐시 유지`);
             console.log('크롤링 결과를 저장하지 않습니다.');
         } else {
             // 캐시 데이터 구조 생성
             const cacheData: CacheData = {
                 timestamp: new Date().toISOString(),
-                count: activeFlights.length,
-                flights: activeFlights,
+                count: benchmarkedFlights.length,
+                flights: benchmarkedFlights,
                 sources: sources,
             };
 
@@ -208,7 +264,7 @@ async function main() {
 
             console.log('\n\n✅ 전체 크롤링 완료!');
             console.log('='.repeat(50));
-            console.log(`📊 총 수집된 항공권: ${allFlights.length}개`);
+            console.log(`📊 총 수집된 항공권: ${allFlights.length}개 → 필터 후: ${benchmarkedFlights.length}개`);
 
             console.log(`   - 노랑풍선: ${sources.ybtour}개`);
             console.log(`   - 하나투어: ${sources.hanatour}개`);
