@@ -21,7 +21,7 @@ export interface Flight {
     flightNumber?: string;
     region?: string;
     searchLink?: string;
-    mobileFareId?: string;  // 모바일 전용 fareId (UUID 형식, 하나투어)
+
 }
 
 export interface FlightSearchParams {
