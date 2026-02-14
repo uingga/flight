@@ -148,20 +148,35 @@ async function main() {
         console.log('\n=== 인터파크 가격 벤치마크 ===');
         let benchmarkedFlights = activeFlights;
         try {
-            // 현재 항공편의 도착 도시코드 수집
-            const arrCityCodes = new Set<string>();
-            activeFlights.forEach((f: any) => {
-                const code = resolveCityCode(f.arrival?.city || '');
-                if (code) arrCityCodes.add(code);
-            });
-
-            const benchmark = await scrapeInterparkBenchmark(Array.from(arrCityCodes));
-
-            // 벤치마크 저장
             const dataDir = path.join(process.cwd(), 'data');
             const benchmarkPath = path.join(dataDir, 'interpark-prices.json');
-            fs.writeFileSync(benchmarkPath, JSON.stringify(benchmark, null, 2), 'utf-8');
-            console.log(`💾 인터파크 벤치마크 저장: ${benchmarkPath}`);
+
+            // 기존 벤치마크가 24시간 이내면 재사용 (API 호출 최소화)
+            let benchmark: any = null;
+            try {
+                if (fs.existsSync(benchmarkPath)) {
+                    const cached = JSON.parse(fs.readFileSync(benchmarkPath, 'utf-8'));
+                    const cacheAge = Date.now() - new Date(cached.timestamp).getTime();
+                    const maxAge = 24 * 60 * 60 * 1000; // 24시간
+                    if (cacheAge < maxAge && Object.keys(cached.prices || {}).length > 0) {
+                        benchmark = cached;
+                        console.log(`♻️ 인터파크 캐시 재사용 (${Math.round(cacheAge / 3600000)}시간 전 수집)`);
+                    }
+                }
+            } catch { }
+
+            // 캐시가 없거나 오래되었으면 새로 수집
+            if (!benchmark) {
+                const arrCityCodes = new Set<string>();
+                activeFlights.forEach((f: any) => {
+                    const code = resolveCityCode(f.arrival?.city || '');
+                    if (code) arrCityCodes.add(code);
+                });
+
+                benchmark = await scrapeInterparkBenchmark(Array.from(arrCityCodes));
+                fs.writeFileSync(benchmarkPath, JSON.stringify(benchmark, null, 2), 'utf-8');
+                console.log(`💾 인터파크 벤치마크 저장: ${benchmarkPath}`);
+            }
 
             // 인터파크 월 평균가보다 비싼 항공편 필터링
             const beforeBenchmark = activeFlights.length;
