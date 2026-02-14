@@ -495,6 +495,7 @@
 .flightCard:hover {
     transform: translateY(-4px);
     box-shadow: var(--shadow-xl);
+    border-color: rgba(99, 102, 241, 0.3);
 }
 
 .cardHeader {
@@ -1271,28 +1272,82 @@
     }
 }
 
-/* 공유 버튼 */
-.shareButton {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 5px 12px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--color-text-muted);
+/* 스켈레톤 로딩 */
+.skeletonGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: var(--spacing-lg);
+    max-width: 1500px;
+}
+
+.skeletonCard {
+    background: var(--color-bg-primary);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-lg);
+    box-shadow: var(--shadow-sm);
+    position: relative;
+    overflow: hidden;
+}
+
+.skeletonCard::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 200%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent 0%, rgba(99, 102, 241, 0.04) 50%, transparent 100%);
+    animation: skeletonSweep 1.8s infinite;
+}
+
+.skeletonLine {
+    height: 14px;
     background: var(--color-bg-secondary);
-    border: 1px solid var(--color-border);
     border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.2s;
+    margin-bottom: 10px;
 }
 
-.shareButton:hover {
-    color: var(--color-primary);
-    border-color: var(--color-primary);
-    background: rgba(99, 102, 241, 0.05);
+.skeletonLine.short {
+    width: 40%;
 }
 
-.shareButton:active {
-    transform: scale(0.95);
+.skeletonLine.tall {
+    height: 24px;
+}
+
+.skeletonBar {
+    height: 4px;
+    background: linear-gradient(90deg, var(--color-primary), #818cf8);
+    border-radius: 2px;
+    margin-bottom: 16px;
+    opacity: 0.3;
+    animation: skeletonPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes skeletonSweep {
+    0% {
+        transform: translateX(-50%);
+    }
+
+    100% {
+        transform: translateX(50%);
+    }
+}
+
+@keyframes skeletonPulse {
+
+    0%,
+    100% {
+        opacity: 0.3;
+    }
+
+    50% {
+        opacity: 0.6;
+    }
+}
+
+@media (max-width: 768px) {
+    .skeletonGrid {
+        grid-template-columns: 1fr;
+    }
 }
