@@ -16,7 +16,7 @@ export default async function Image() {
                     flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    background: 'linear-gradient(135deg, #eef2ff 0%, #e0e7ff 30%, #c7d2fe 60%, #6366f1 100%)',
+                    background: 'linear-gradient(135deg, #f5f7ff 0%, #eef2ff 30%, #e0e7ff 60%, #818cf8 100%)',
                     fontFamily: 'sans-serif',
                 }}
             >
@@ -63,7 +63,7 @@ export default async function Image() {
                 {/* Tagline */}
                 <div
                     style={{
-                        fontSize: '28px',
+                        fontSize: '36px',
                         fontWeight: 700,
                         color: '#0e7490',
                         marginBottom: '16px',
@@ -75,14 +75,14 @@ export default async function Image() {
                 {/* Description */}
                 <div
                     style={{
-                        fontSize: '20px',
+                        fontSize: '24px',
                         color: '#475569',
                         maxWidth: '600px',
                         textAlign: 'center',
                         lineHeight: 1.5,
                     }}
                 >
-                    모두투어 · 땡처리닷컴 · 노랑풍선 · 하나투어 · 온라인투어
+                    하나투어 · 모두투어 · 노랑풍선 · 온라인투어
                 </div>
 
                 {/* Bottom badge */}
