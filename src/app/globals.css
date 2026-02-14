@@ -359,6 +359,15 @@ select {
 .react-datepicker__day--today {
   font-weight: 800 !important;
   color: var(--color-primary) !important;
+  border: none !important;
+  outline: none !important;
+  background-color: transparent !important;
+}
+
+.react-datepicker__day--keyboard-selected {
+  background-color: transparent !important;
+  border: none !important;
+  outline: none !important;
 }
 
 /* When today is in range, text is dark */

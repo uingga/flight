@@ -205,8 +205,8 @@ export default function Dashboard() {
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
     const [sourceFilter, setSourceFilter] = useState<string>('all');
     const [regionFilter, setRegionFilter] = useState<string>('all');
-    const [startDate, setStartDate] = useState<string>(getDefaultStartDate());
-    const [endDate, setEndDate] = useState<string>(getDefaultEndDate());
+    const [startDate, setStartDate] = useState<string>('');
+    const [endDate, setEndDate] = useState<string>('');
     const [departureFilter, setDepartureFilter] = useState<string>('all');
     const [airlineFilter, setAirlineFilter] = useState<string>('all');
     const [displayCount, setDisplayCount] = useState(ITEMS_PER_PAGE);
