@@ -395,7 +395,138 @@ async function scrapeHanatourPromoPage(browser: any, url: string, label: string)
 }
 
 /**
- * 하나투어 땡처리 항공권 크롤링 (일반 페이지 + 프로모션 페이지)
+ * 하나투어 모바일 땡처리 페이지에서 fareId(UUID) 추출
+ * API 응답을 인터셉트하여 PC 항공편과 노선+날짜+가격으로 매칭
+ */
+async function scrapeHanatourMobileFareIds(browser: any, flights: Flight[]): Promise<Flight[]> {
+    if (flights.length === 0) return flights;
+
+    console.log('\n=== 하나투어 모바일 fareId 수집 시작 ===');
+
+    const context = await browser.newContext({
+        userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
+        viewport: { width: 375, height: 812 },
+        extraHTTPHeaders: {
+            'Accept-Language': 'ko-KR,ko;q=0.9',
+        },
+    });
+
+    const page = await context.newPage();
+    let mobileFareData: any[] = [];
+
+    try {
+        // API 응답 인터셉트 — fareId 데이터 캡처
+        page.on('response', async (response: any) => {
+            try {
+                const url = response.url();
+                if (url.includes('api.hanatour.com') && (url.includes('schLstChnc') || url.includes('air'))) {
+                    const contentType = response.headers()['content-type'] || '';
+                    if (contentType.includes('json')) {
+                        const json = await response.json();
+                        // API 응답에서 항공편 리스트 추출 (다양한 응답 구조 대응)
+                        const extractFlights = (obj: any): any[] => {
+                            if (!obj || typeof obj !== 'object') return [];
+                            if (Array.isArray(obj)) {
+                                return obj.filter((item: any) => item && item.fareId);
+                            }
+                            let results: any[] = [];
+                            for (const key of Object.keys(obj)) {
+                                if (key === 'list' || key === 'farLst' || key === 'data' || key === 'result' || key === 'items') {
+                                    results = results.concat(extractFlights(obj[key]));
+                                }
+                            }
+                            return results;
+                        };
+                        const extracted = extractFlights(json);
+                        if (extracted.length > 0) {
+                            mobileFareData.push(...extracted);
+                            console.log(`[모바일] API 응답에서 ${extracted.length}개 fareId 추출 (누적: ${mobileFareData.length}개)`);
+                        }
+                    }
+                }
+            } catch (e) {
+                // 응답 파싱 실패는 무시
+            }
+        });
+
+        // 모바일 땡처리 페이지 로드
+        await page.goto('https://m.hanatour.com/trp/air/CHPC0AIR0233M100', {
+            waitUntil: 'domcontentloaded',
+            timeout: 30000,
+        });
+        await page.waitForTimeout(5000);
+
+        // Vuex 스토어에서도 fareId 추출 시도
+        const vuexFareData = await page.evaluate(() => {
+            try {
+                const layout = document.querySelector('#__layout');
+                const vue = (layout as any)?.__vue__;
+                if (vue && vue.$store && vue.$store.state) {
+                    const findFareIds = (obj: any, depth = 0): any[] => {
+                        if (!obj || typeof obj !== 'object' || depth > 4) return [];
+                        let results: any[] = [];
+                        if (Array.isArray(obj)) {
+                            for (const item of obj) {
+                                if (item && item.fareId) results.push(item);
+                            }
+                        } else {
+                            for (const key in obj) {
+                                if (key.startsWith('$') || key.startsWith('_')) continue;
+                                results = results.concat(findFareIds(obj[key], depth + 1));
+                            }
+                        }
+                        return results;
+                    };
+                    return findFareIds(vue.$store.state);
+                }
+            } catch (e) { }
+            return [];
+        });
+
+        if (vuexFareData.length > 0) {
+            mobileFareData.push(...vuexFareData);
+            console.log(`[모바일] Vuex에서 ${vuexFareData.length}개 fareId 추출 (누적: ${mobileFareData.length}개)`);
+        }
+
+        console.log(`[모바일] 총 ${mobileFareData.length}개 모바일 fareId 수집 완료`);
+
+        // 모바일 fareId Set 생성 (빠른 조회용)
+        const mobileFareIdSet = new Set(mobileFareData.map((f: any) => f.fareId).filter(Boolean));
+        console.log(`[모바일] 유효한 fareId: ${mobileFareIdSet.size}개`);
+
+        // PC 항공편의 link URL에서 fareId 추출 → 모바일에서도 동일 fareId 확인
+        let matchCount = 0;
+        for (const flight of flights) {
+            if (flight.source !== 'hanatour') continue;
+
+            try {
+                // PC link URL에서 fareId 추출
+                const fareIdMatch = flight.link.match(/fareId=([^&]+)/);
+                if (fareIdMatch) {
+                    const pcFareId = decodeURIComponent(fareIdMatch[1]);
+                    if (mobileFareIdSet.has(pcFareId)) {
+                        flight.mobileFareId = pcFareId;
+                        matchCount++;
+                    }
+                }
+            } catch (e) {
+                // 매칭 오류는 무시
+            }
+        }
+
+        console.log(`[모바일] ${matchCount}/${flights.filter(f => f.source === 'hanatour').length}개 항공편에 모바일 fareId 매칭 완료`);
+
+    } catch (error) {
+        console.error('[모바일] fareId 수집 실패:', error);
+    } finally {
+        await context.close();
+    }
+
+    return flights;
+}
+
+/**
+ * 하나투어 땡처리 항공권 크롤링 (일반 페이지 + 프로모션 페이지 + 모바일 fareId)
  */
 export async function scrapeHanatour(): Promise<Flight[]> {
     console.log('하나투어 크롤링 시작...');
@@ -429,6 +560,9 @@ export async function scrapeHanatour(): Promise<Flight[]> {
             ))
         );
 
+        // 4. 모바일 fareId 수집 및 매칭
+        await scrapeHanatourMobileFareIds(browser, uniqueFlights);
+
         console.log(`\n하나투어 전체 크롤링 완료: 총 ${uniqueFlights.length}개 항공권 (중복 제거 전: ${allFlights.length}개)`);
 
         // 도시별 통계 생성 및 로깅
@@ -437,6 +571,8 @@ export async function scrapeHanatour(): Promise<Flight[]> {
             const city = flight.arrival.city;
             cityStats[city] = (cityStats[city] || 0) + 1;
         });
+        const mobileMatchCount = uniqueFlights.filter(f => f.mobileFareId).length;
+        console.log(`  → 모바일 fareId 매칭: ${mobileMatchCount}/${uniqueFlights.length}개`);
         logCrawlResults('hanatour', uniqueFlights.length, undefined, cityStats);
 
         return uniqueFlights;
