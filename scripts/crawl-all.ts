@@ -3,7 +3,6 @@ import { scrapeYbtour } from '../src/lib/scrapers/ybtour';
 import { scrapeHanatour } from '../src/lib/scrapers/hanatour';
 import { scrapeModetour } from '../src/lib/scrapers/modetour';
 import { scrapeOnlineTour } from '../src/lib/scrapers/onlinetour';
-import { scrapeInterpark } from '../src/lib/scrapers/interpark';
 import fs from 'fs';
 import path from 'path';
 
@@ -17,7 +16,6 @@ interface CacheData {
         hanatour: number;
         modetour: number;
         onlinetour: number;
-        interpark: number;
     };
 }
 
@@ -31,7 +29,6 @@ async function main() {
         hanatour: 0,
         modetour: 0,
         onlinetour: 0,
-        interpark: 0,
     };
 
     try {
@@ -79,17 +76,6 @@ async function main() {
             console.log(`✅ 온라인투어: ${onlinetourFlights.length}개`);
         } catch (error) {
             console.error('❌ 온라인투어 실패:', error);
-        }
-
-        // 6. 인터파크
-        console.log('\n=== 인터파크 크롤링 ===');
-        try {
-            const interparkFlights = await scrapeInterpark();
-            allFlights.push(...interparkFlights);
-            sources.interpark = interparkFlights.length;
-            console.log(`✅ 인터파크: ${interparkFlights.length}개`);
-        } catch (error) {
-            console.error('❌ 인터파크 실패:', error);
         }
 
         // 노선별 최저가 필터링 (각 업체별 같은 노선에서 최저가만 유지)
@@ -202,7 +188,6 @@ async function main() {
         console.log(`   - 하나투어: ${sources.hanatour}개`);
         console.log(`   - 모두투어: ${sources.modetour}개`);
         console.log(`   - 온라인투어: ${sources.onlinetour}개`);
-        console.log(`   - 인터파크: ${sources.interpark}개`);
         console.log(`💾 저장 위치: ${cachePath}`);
         console.log(`🕐 타임스탬프: ${cacheData.timestamp}`);
         console.log('='.repeat(50));
