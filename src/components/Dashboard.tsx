@@ -507,6 +507,7 @@ export default function Dashboard() {
             case 'modetour': return '모두투어';
             case 'hanatour': return '하나투어';
             case 'onlinetour': return '온라인투어';
+            case 'interpark': return '인터파크';
             default: return source;
         }
     };
@@ -773,6 +774,7 @@ export default function Dashboard() {
                                     <option value="modetour">모두투어</option>
                                     <option value="hanatour">하나투어</option>
                                     <option value="onlinetour">온라인투어</option>
+                                    <option value="interpark">인터파크</option>
                                 </select>
                                 <select
                                     value={airlineFilter}
@@ -994,6 +996,7 @@ export default function Dashboard() {
                                 <a href="https://www.onlinetour.co.kr" target="_blank" rel="noopener noreferrer">온라인투어</a>
                                 <a href="https://www.ybtour.co.kr" target="_blank" rel="noopener noreferrer">노랑풍선</a>
                                 <a href="https://www.modetour.com" target="_blank" rel="noopener noreferrer">모두투어</a>
+                                <a href="https://air.interpark.com" target="_blank" rel="noopener noreferrer">인터파크</a>
                             </div>
                         </div>
 
