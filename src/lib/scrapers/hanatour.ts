@@ -411,13 +411,13 @@ export async function scrapeHanatour(): Promise<Flight[]> {
         const regularFlights = await scrapeHanatourRegular(browser);
         allFlights.push(...regularFlights);
 
-        // 2. 프로모션 페이지 (PM0000113828)
-        const promoFlights1 = await scrapeHanatourPromotion(browser);
-        allFlights.push(...promoFlights1);
+        // 2. 프로모션 페이지 (PM0000113828) - 비활성화
+        // const promoFlights1 = await scrapeHanatourPromotion(browser);
+        // allFlights.push(...promoFlights1);
 
-        // 3. 땡처리 프로모션 페이지 (PM006698DD56)
-        const promoFlights2 = await scrapeHanatourLastMinutePromo(browser);
-        allFlights.push(...promoFlights2);
+        // 3. 땡처리 프로모션 페이지 (PM006698DD56) - 비활성화
+        // const promoFlights2 = await scrapeHanatourLastMinutePromo(browser);
+        // allFlights.push(...promoFlights2);
 
         // 중복 제거 (같은 출발지-도착지-날짜-가격 조합)
         const uniqueFlights = allFlights.filter((flight, index, self) =>
