@@ -78,6 +78,29 @@ async function main() {
             console.error('❌ 온라인투어 실패:', error);
         }
 
+        // 기존 캐시 로드 (실패 대비)
+        const dataDir = path.join(process.cwd(), 'data');
+        const cachePath = path.join(dataDir, 'all-flights-cache.json');
+        let prevCache: CacheData | null = null;
+        try {
+            if (fs.existsSync(cachePath)) {
+                prevCache = JSON.parse(fs.readFileSync(cachePath, 'utf-8'));
+            }
+        } catch { }
+
+        // 소스별 실패 시 이전 데이터 복구
+        const sourceNames = ['ybtour', 'hanatour', 'modetour', 'onlinetour'] as const;
+        for (const src of sourceNames) {
+            if (sources[src] === 0 && prevCache?.flights) {
+                const prevFlights = prevCache.flights.filter((f: any) => f.source === src);
+                if (prevFlights.length > 0) {
+                    console.log(`⚠️ ${src} 실패 → 이전 캐시 ${prevFlights.length}개 유지`);
+                    allFlights.push(...prevFlights);
+                    sources[src] = prevFlights.length;
+                }
+            }
+        }
+
         // 노선별 최저가 필터링 (각 업체별 같은 노선에서 최저가만 유지)
         console.log('\n=== 최저가 필터링 ===');
         console.log(`필터 전: ${allFlights.length}개`);
@@ -120,77 +143,82 @@ async function main() {
             console.log('✅ 만료 항공권 없음');
         }
 
-        // 캐시 데이터 구조 생성
-        const cacheData: CacheData = {
-            timestamp: new Date().toISOString(),
-            count: activeFlights.length,
-            flights: activeFlights,
-            sources: sources,
-        };
+        // 전체 결과가 이전 캐시의 50% 미만이면 이전 캐시 유지
+        if (prevCache && prevCache.count > 0 && activeFlights.length < prevCache.count * 0.5) {
+            console.log(`\n⚠️ 결과가 이전 캐시(${prevCache.count}개)의 50% 미만(${activeFlights.length}개) → 이전 캐시 유지`);
+            console.log('크롤링 결과를 저장하지 않습니다.');
+        } else {
+            // 캐시 데이터 구조 생성
+            const cacheData: CacheData = {
+                timestamp: new Date().toISOString(),
+                count: activeFlights.length,
+                flights: activeFlights,
+                sources: sources,
+            };
 
-        // data 디렉토리 확인 및 생성
-        const dataDir = path.join(process.cwd(), 'data');
-        if (!fs.existsSync(dataDir)) {
-            fs.mkdirSync(dataDir, { recursive: true });
-        }
-
-        // 통합 캐시 파일 저장
-        const cachePath = path.join(dataDir, 'all-flights-cache.json');
-        fs.writeFileSync(cachePath, JSON.stringify(cacheData, null, 2), 'utf-8');
-
-        // 가격 히스토리 기록 (노선별 최저가/평균가)
-        const historyPath = path.join(dataDir, 'price-history.json');
-        let history: Record<string, Array<{ date: string; minPrice: number; avgPrice: number; count: number }>> = {};
-        try {
-            if (fs.existsSync(historyPath)) {
-                history = JSON.parse(fs.readFileSync(historyPath, 'utf-8'));
+            // data 디렉토리 확인 및 생성
+            if (!fs.existsSync(dataDir)) {
+                fs.mkdirSync(dataDir, { recursive: true });
             }
-        } catch (e) {
-            console.log('가격 히스토리 파일 초기화');
-        }
 
-        // 오늘 날짜
-        const todayStr = new Date().toISOString().split('T')[0];
+            // 통합 캐시 파일 저장
+            fs.writeFileSync(cachePath, JSON.stringify(cacheData, null, 2), 'utf-8');
 
-        // 노선별 가격 집계
-        const routePrices: Record<string, number[]> = {};
-        allFlights.forEach((f: any) => {
-            const route = `${f.departure?.city || ''}-${f.arrival?.city || ''}`;
-            if (f.price > 0) {
-                if (!routePrices[route]) routePrices[route] = [];
-                routePrices[route].push(f.price);
+            // 가격 히스토리 기록 (노선별 최저가/평균가)
+            const historyPath = path.join(dataDir, 'price-history.json');
+            let history: Record<string, Array<{ date: string; minPrice: number; avgPrice: number; count: number }>> = {};
+            try {
+                if (fs.existsSync(historyPath)) {
+                    history = JSON.parse(fs.readFileSync(historyPath, 'utf-8'));
+                }
+            } catch (e) {
+                console.log('가격 히스토리 파일 초기화');
             }
-        });
 
-        // 히스토리에 오늘 데이터 추가 (같은 날이면 덮어쓰기)
-        Object.entries(routePrices).forEach(([route, prices]) => {
-            if (!history[route]) history[route] = [];
-            // 오늘 데이터가 이미 있으면 제거
-            history[route] = history[route].filter(h => h.date !== todayStr);
-            history[route].push({
-                date: todayStr,
-                minPrice: Math.min(...prices),
-                avgPrice: Math.round(prices.reduce((a, b) => a + b, 0) / prices.length),
-                count: prices.length,
+            // 오늘 날짜
+            const todayStr = new Date().toISOString().split('T')[0];
+
+            // 노선별 가격 집계
+            const routePrices: Record<string, number[]> = {};
+            allFlights.forEach((f: any) => {
+                const route = `${f.departure?.city || ''}-${f.arrival?.city || ''}`;
+                if (f.price > 0) {
+                    if (!routePrices[route]) routePrices[route] = [];
+                    routePrices[route].push(f.price);
+                }
             });
-            // 최근 14일만 유지
-            history[route] = history[route].slice(-14);
-        });
 
-        fs.writeFileSync(historyPath, JSON.stringify(history, null, 2), 'utf-8');
-        console.log(`📈 가격 히스토리 기록: ${Object.keys(routePrices).length}개 노선`);
+            // 히스토리에 오늘 데이터 추가 (같은 날이면 덮어쓰기)
+            Object.entries(routePrices).forEach(([route, prices]) => {
+                if (!history[route]) history[route] = [];
+                // 오늘 데이터가 이미 있으면 제거
+                history[route] = history[route].filter(h => h.date !== todayStr);
+                history[route].push({
+                    date: todayStr,
+                    minPrice: Math.min(...prices),
+                    avgPrice: Math.round(prices.reduce((a, b) => a + b, 0) / prices.length),
+                    count: prices.length,
+                });
+                // 최근 14일만 유지
+                history[route] = history[route].slice(-14);
+            });
 
-        console.log('\n\n✅ 전체 크롤링 완료!');
-        console.log('='.repeat(50));
-        console.log(`📊 총 수집된 항공권: ${allFlights.length}개`);
+            fs.writeFileSync(historyPath, JSON.stringify(history, null, 2), 'utf-8');
+            console.log(`📈 가격 히스토리 기록: ${Object.keys(routePrices).length}개 노선`);
 
-        console.log(`   - 노랑풍선: ${sources.ybtour}개`);
-        console.log(`   - 하나투어: ${sources.hanatour}개`);
-        console.log(`   - 모두투어: ${sources.modetour}개`);
-        console.log(`   - 온라인투어: ${sources.onlinetour}개`);
-        console.log(`💾 저장 위치: ${cachePath}`);
-        console.log(`🕐 타임스탬프: ${cacheData.timestamp}`);
-        console.log('='.repeat(50));
+            console.log('\n\n✅ 전체 크롤링 완료!');
+            console.log('='.repeat(50));
+            console.log(`📊 총 수집된 항공권: ${allFlights.length}개`);
+
+            console.log(`   - 노랑풍선: ${sources.ybtour}개`);
+            console.log(`   - 하나투어: ${sources.hanatour}개`);
+            console.log(`   - 모두투어: ${sources.modetour}개`);
+            console.log(`   - 온라인투어: ${sources.onlinetour}개`);
+            console.log(`💾 저장 위치: ${cachePath}`);
+            console.log(`🕐 타임스탬프: ${cacheData.timestamp}`);
+            console.log('='.repeat(50));
+
+        }
 
     } catch (error) {
         console.error('\n❌ 크롤링 실패:', error);
