@@ -874,11 +874,10 @@ export default function Dashboard() {
                                                         (flight.source === 'onlinetour')
                                                             ? getMobileUrl(flight.link, isMobile)
                                                             : (flight.source === 'hanatour')
-                                                                ? `/api/redirect?url=${encodeURIComponent(getMobileUrl(flight.link, isMobile))}&fallback=${encodeURIComponent(
-                                                                    isMobile
-                                                                        ? 'https://m.hanatour.com/trp/air/CHPC0AIR0233M100'
-                                                                        : (flight.searchLink || 'https://www.hanatour.com/trp/air/CHPC0AIR0233M200')
-                                                                )}`
+                                                                ? (isMobile
+                                                                    ? 'https://m.hanatour.com/trp/air/CHPC0AIR0233M100'
+                                                                    : `/api/redirect?url=${encodeURIComponent(flight.link)}&fallback=${encodeURIComponent(flight.searchLink || 'https://www.hanatour.com/trp/air/CHPC0AIR0233M200')}`
+                                                                )
                                                                 : getMobileUrl(flight.link, isMobile)
                                                     }
                                                     target="_blank"
