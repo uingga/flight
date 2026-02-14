@@ -68,6 +68,21 @@ export async function GET(request: NextRequest) {
             airline: normalizeAirline(f.airline),
         }));
 
+        // 중복 항공편 합치기: 같은 노선+날짜+항공사 → 최저가만 유지
+        const dedupMap = new Map<string, typeof allFlights[0]>();
+        for (const f of allFlights) {
+            const key = `${f.departure?.city}|${f.arrival?.city}|${f.departure?.date}|${f.airline}`;
+            const existing = dedupMap.get(key);
+            if (!existing || f.price < existing.price) {
+                dedupMap.set(key, f);
+            }
+        }
+        const beforeDedup = allFlights.length;
+        allFlights = Array.from(dedupMap.values());
+        if (beforeDedup > allFlights.length) {
+            console.log(`중복 항공편 ${beforeDedup - allFlights.length}개 제거 (${beforeDedup} → ${allFlights.length})`);
+        }
+
         // 만료 항공권 제거 (출발일이 오늘 이전)
         const today = new Date();
         today.setHours(0, 0, 0, 0);

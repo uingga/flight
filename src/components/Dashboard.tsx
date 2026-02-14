@@ -229,6 +229,27 @@ export default function Dashboard() {
             const saved = localStorage.getItem('flight-favorites');
             if (saved) setFavorites(new Set(JSON.parse(saved)));
         } catch { }
+
+        // 30분마다 자동 새로고침
+        const interval = setInterval(() => {
+            fetchFlights();
+        }, 30 * 60 * 1000);
+
+        // 탭 다시 활성화 시 새로고침 (5분 이상 경과 시)
+        let lastFetch = Date.now();
+        const origFetch = fetchFlights;
+        const handleVisibility = () => {
+            if (document.visibilityState === 'visible' && Date.now() - lastFetch > 5 * 60 * 1000) {
+                lastFetch = Date.now();
+                origFetch();
+            }
+        };
+        document.addEventListener('visibilitychange', handleVisibility);
+
+        return () => {
+            clearInterval(interval);
+            document.removeEventListener('visibilitychange', handleVisibility);
+        };
     }, []);
 
     // 필터 변경 시 displayCount 리셋
