@@ -934,31 +934,11 @@ export default function Dashboard() {
                                                                 스카이스캐너
                                                             </a>
                                                         )}
-                                                        <span className={styles.compareLinkNote}>💡 위탁수하물 미포함 요금일 수 있음</span>
+
                                                     </div>
                                                 );
                                             })()}
-                                            {/* 공유 버튼 */}
-                                            <button
-                                                className={styles.shareButton}
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    const text = `✈️ ${flight.departure.city}→${flight.arrival.city} ${formatPrice(flight.price)} (${flight.airline}, ${flight.departure.date}) - 티킷에서 확인`;
-                                                    const url = 'https://mytikit.vercel.app';
-                                                    if (navigator.share) {
-                                                        navigator.share({ title: '티킷 - 땡처리 항공권', text, url }).catch(() => { });
-                                                    } else {
-                                                        navigator.clipboard.writeText(`${text}\n${url}`).then(() => {
-                                                            const btn = e.currentTarget;
-                                                            btn.textContent = '✅ 복사됨';
-                                                            setTimeout(() => { btn.textContent = '공유'; }, 1500);
-                                                        });
-                                                    }
-                                                }}
-                                                title="이 항공편 공유하기"
-                                            >
-                                                공유
-                                            </button>
+
                                         </div>
 
 
