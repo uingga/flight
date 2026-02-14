@@ -1230,4 +1230,69 @@
         height: 48px;
         font-size: 1.1rem;
     }
+
+    .shareButton {
+        font-size: 0.7rem;
+        padding: 4px 10px;
+    }
+}
+
+/* 가격 변동 뱃지 */
+.priceDown {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #16a34a;
+    background: #dcfce7;
+    padding: 2px 6px;
+    border-radius: 4px;
+    vertical-align: middle;
+    animation: pricePulse 2s ease-in-out infinite;
+}
+
+.priceUp {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #dc2626;
+    background: #fef2f2;
+    padding: 2px 6px;
+    border-radius: 4px;
+    vertical-align: middle;
+}
+
+@keyframes pricePulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* 공유 버튼 */
+.shareButton {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.shareButton:hover {
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+    background: rgba(99, 102, 241, 0.05);
+}
+
+.shareButton:active {
+    transform: scale(0.95);
 }

@@ -868,6 +868,25 @@ export default function Dashboard() {
                                                         }
                                                         return null;
                                                     })()}
+                                                    {(() => {
+                                                        const route = `${flight.departure.city}-${flight.arrival.city}`;
+                                                        const history = priceHistory[route];
+                                                        if (history && history.length >= 2) {
+                                                            const prev = history[history.length - 2].minPrice;
+                                                            const curr = history[history.length - 1].minPrice;
+                                                            const diff = curr - prev;
+                                                            const pct = Math.round(Math.abs(diff) / prev * 100);
+                                                            if (pct >= 3 && Math.abs(diff) >= 5000) {
+                                                                return (
+                                                                    <span className={diff < 0 ? styles.priceDown : styles.priceUp}
+                                                                        title={`어제 최저가: ${prev.toLocaleString()}원`}>
+                                                                        {diff < 0 ? '↓' : '↑'}{pct}%
+                                                                    </span>
+                                                                );
+                                                            }
+                                                        }
+                                                        return null;
+                                                    })()}
                                                 </div>
                                                 <a
                                                     href={
@@ -919,6 +938,27 @@ export default function Dashboard() {
                                                     </div>
                                                 );
                                             })()}
+                                            {/* 공유 버튼 */}
+                                            <button
+                                                className={styles.shareButton}
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    const text = `✈️ ${flight.departure.city}→${flight.arrival.city} ${formatPrice(flight.price)} (${flight.airline}, ${flight.departure.date}) - 티킷에서 확인`;
+                                                    const url = 'https://mytikit.vercel.app';
+                                                    if (navigator.share) {
+                                                        navigator.share({ title: '티킷 - 땡처리 항공권', text, url }).catch(() => { });
+                                                    } else {
+                                                        navigator.clipboard.writeText(`${text}\n${url}`).then(() => {
+                                                            const btn = e.currentTarget;
+                                                            btn.textContent = '✅ 복사됨';
+                                                            setTimeout(() => { btn.textContent = '공유'; }, 1500);
+                                                        });
+                                                    }
+                                                }}
+                                                title="이 항공편 공유하기"
+                                            >
+                                                공유
+                                            </button>
                                         </div>
 
 
