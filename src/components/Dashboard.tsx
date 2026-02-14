@@ -873,8 +873,8 @@ export default function Dashboard() {
                                                 </div>
                                                 <a
                                                     href={
-                                                        (flight.source === 'onlinetour' && flight.searchLink)
-                                                            ? `/api/redirect?url=${encodeURIComponent(getMobileUrl(flight.link, isMobile))}&fallback=${encodeURIComponent(getMobileUrl(flight.searchLink, isMobile))}`
+                                                        (flight.source === 'onlinetour')
+                                                            ? getMobileUrl(flight.link, isMobile)
                                                             : (flight.source === 'hanatour')
                                                                 ? `/api/redirect?url=${encodeURIComponent(getMobileUrl(flight.link, isMobile))}&fallback=${encodeURIComponent(
                                                                     isMobile
