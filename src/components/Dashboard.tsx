@@ -660,55 +660,6 @@ export default function Dashboard() {
 
                 </div>
 
-                {/* 날짜 빠른 필터 프리셋 */}
-                <div className={styles.datePresets}>
-                    <span className={styles.filterLabel}>출발일</span>
-                    <div className={styles.chipList}>
-                        {[
-                            { label: '전체', start: '', end: '' },
-                            (() => {
-                                const now = new Date();
-                                const day = now.getDay();
-                                const satOffset = day === 0 ? -1 : (6 - day);
-                                const sat = new Date(now);
-                                sat.setDate(now.getDate() + satOffset);
-                                const sun = new Date(sat);
-                                sun.setDate(sat.getDate() + 1);
-                                return { label: '이번 주말', start: sat.toISOString().split('T')[0], end: sun.toISOString().split('T')[0] };
-                            })(),
-                            (() => {
-                                const now = new Date();
-                                const day = now.getDay();
-                                const nextMon = new Date(now);
-                                nextMon.setDate(now.getDate() + (day === 0 ? 1 : (8 - day)));
-                                const nextSun = new Date(nextMon);
-                                nextSun.setDate(nextMon.getDate() + 6);
-                                return { label: '다음 주', start: nextMon.toISOString().split('T')[0], end: nextSun.toISOString().split('T')[0] };
-                            })(),
-                            (() => {
-                                const now = new Date();
-                                const start = new Date(now.getFullYear(), now.getMonth(), 1);
-                                const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-                                return { label: '이번 달', start: start.toISOString().split('T')[0], end: end.toISOString().split('T')[0] };
-                            })(),
-                            (() => {
-                                const now = new Date();
-                                const start = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-                                const end = new Date(now.getFullYear(), now.getMonth() + 2, 0);
-                                return { label: '다음 달', start: start.toISOString().split('T')[0], end: end.toISOString().split('T')[0] };
-                            })(),
-                        ].map((preset) => (
-                            <button
-                                key={preset.label}
-                                onClick={() => { setStartDate(preset.start); setEndDate(preset.end); }}
-                                className={`${styles.chip} ${startDate === preset.start && endDate === preset.end ? styles.chipActive : ''}`}
-                            >
-                                {preset.label}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
 
                 {loading && (
                     <div className={styles.skeletonGrid}>
@@ -753,18 +704,6 @@ export default function Dashboard() {
 
                 {!loading && !error && (
                     <>
-                        {/* 최저가 배너 */}
-                        {!hasActiveFilters && flights.length > 0 && (() => {
-                            const best = flights.reduce((a, b) => a.price < b.price ? a : b);
-                            return (
-                                <div className={styles.bestDealBanner}>
-                                    <span className={styles.bestDealLabel}>🔥 지금 최저가</span>
-                                    <span className={styles.bestDealRoute}>{best.departure.city} → {best.arrival.city}</span>
-                                    <span className={styles.bestDealPrice}>{formatPrice(best.price)}</span>
-                                    <span className={styles.bestDealInfo}>{best.airline} · {fmtDate(best.departure.date)}</span>
-                                </div>
-                            );
-                        })()}
                         {/* 적용된 필터 요약 */}
                         {hasActiveFilters && (
                             <div className={styles.filterSummary}>
