@@ -102,10 +102,13 @@ export async function scrapeTtang(): Promise<Flight[]> {
                                 ? parseInt(priceMatch[1].replace(/,/g, ''))
                                 : 0;
 
-                            // 날짜 파싱 (시작일)
-                            const dateMatch = dateRange.match(/(\d{4})\.(\d{2})\.(\d{2})/);
-                            const depDate = dateMatch
-                                ? `${dateMatch[1]}-${dateMatch[2]}-${dateMatch[3]}`
+                            // 날짜 파싱 (시작일 + 종료일)
+                            const allDates = dateRange.match(/(\d{4})\.(\d{2})\.(\d{2})/g) || [];
+                            const depDate = allDates[0]
+                                ? allDates[0].replace(/\./g, '-')
+                                : '';
+                            const endDate = allDates[1]
+                                ? allDates[1].replace(/\./g, '-')
                                 : '';
 
                             results.push({
@@ -119,6 +122,7 @@ export async function scrapeTtang(): Promise<Flight[]> {
                                 airlineName,
                                 price,
                                 depDate,
+                                endDate,
                                 dateRange,
                                 flightType,
                             });
@@ -145,8 +149,9 @@ export async function scrapeTtang(): Promise<Flight[]> {
                         // 도착 도시 (한글 도시명 그대로 사용)
                         const arrCity = f.arrCityName || f.arrCityCode;
 
-                        // 딥링크 생성
-                        const link = `https://www.ttang.com/ttangair/search/ttang/fare_detail.do?masterId=${encodeURIComponent(f.masterId)}&gubun=${f.gubun}&adt=1&chd=0&inf=0`;
+                        // 딥링크 생성 (exAirAvailStartDate로 날짜 힌트 추가)
+                        const dateParam = f.depDate ? `&exAirAvailStartDate=${f.depDate.replace(/-/g, '')}` : '';
+                        const link = `https://www.ttang.com/ttangair/search/ttang/fare_detail.do?masterId=${encodeURIComponent(f.masterId)}&gubun=${f.gubun}&adt=1&chd=0&inf=0${dateParam}`;
 
                         // 리스트 페이지 링크 (폴백용)
                         const searchLink = `https://www.ttang.com/ttangair/search/ttang/list.do?arr0=${region.code}`;
@@ -164,7 +169,7 @@ export async function scrapeTtang(): Promise<Flight[]> {
                             arrival: {
                                 city: arrCity,
                                 airport: f.arrCityCode || '',
-                                date: '',
+                                date: f.endDate || '',
                                 time: '',
                             },
                             price: f.price,
