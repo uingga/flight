@@ -223,8 +223,7 @@ export default function Dashboard() {
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [isCalendarOpen, setIsCalendarOpen] = useState(false);
     const [showFilters, setShowFilters] = useState(false);
-    const [favorites, setFavorites] = useState<Set<string>>(new Set());
-    const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+    const [shareToast, setShareToast] = useState<string | null>(null);
     const observerRef = useRef<IntersectionObserver | null>(null);
     const loadMoreRef = useRef<HTMLDivElement | null>(null);
     const [headerHidden, setHeaderHidden] = useState(false);
@@ -234,11 +233,7 @@ export default function Dashboard() {
     useEffect(() => {
         fetchFlights();
         setIsMobile(checkIsMobile());
-        // localStorage에서 즐겨찾기 불러오기
-        try {
-            const saved = localStorage.getItem('flight-favorites');
-            if (saved) setFavorites(new Set(JSON.parse(saved)));
-        } catch { }
+
 
         // 30분마다 자동 새로고침
         const interval = setInterval(() => {
@@ -373,20 +368,32 @@ export default function Dashboard() {
         return topDestinations.filter(city => availableCities.has(city)).slice(0, 8);
     }, [flights]);
 
-    // 즐겨찾기 토글
-    const getFlightKey = (f: Flight) =>
-        `${f.source}|${f.departure.city}|${f.arrival.city}|${f.airline}|${f.departure.date}|${f.price}`;
+    // 공유 기능
+    const shareFlightText = (flight: Flight) => {
+        const price = `${Math.floor(flight.price / 10000)}만원`;
+        const depDate = formatDate(flight.departure.date);
+        const arrDate = flight.arrival.date ? ` ~ ${formatDate(flight.arrival.date)}` : '';
+        return `✈️ ${normalizeCity(flight.departure.city)} → ${normalizeCity(flight.arrival.city)} ${price} | ${depDate}${arrDate} | ${flight.airline} | ${getSourceName(flight.source)}\n🔗 ${flight.link}`;
+    };
 
-    const toggleFavorite = (flight: Flight) => {
-        setFavorites(prev => {
-            const next = new Set(prev);
-            const key = getFlightKey(flight);
-            if (next.has(key)) next.delete(key);
-            else next.add(key);
-            localStorage.setItem('flight-favorites', JSON.stringify(Array.from(next)));
-            if (next.size === 0) setShowFavoritesOnly(false);
-            return next;
-        });
+    const shareFlight = async (flight: Flight) => {
+        const text = shareFlightText(flight);
+        const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+        try {
+            if (isTouchDevice && navigator.share) {
+                await navigator.share({ text });
+            } else {
+                await navigator.clipboard.writeText(text);
+                setShareToast('복사됨!');
+                setTimeout(() => setShareToast(null), 2000);
+            }
+        } catch {
+            try {
+                await navigator.clipboard.writeText(text);
+                setShareToast('복사됨!');
+                setTimeout(() => setShareToast(null), 2000);
+            } catch { }
+        }
     };
 
     // 필터 초기화
@@ -399,7 +406,6 @@ export default function Dashboard() {
         setStartDate('');
         setEndDate('');
         setSortBy('price');
-        setShowFavoritesOnly(false);
     };
 
     // 활성 필터 여부
@@ -432,10 +438,7 @@ export default function Dashboard() {
         })();
 
 
-
-        const matchesFavorites = !showFavoritesOnly || favorites.has(getFlightKey(flight));
-
-        return matchesSearch && matchesSource && matchesRegion && matchesAirline && matchesDate && matchesDeparture && matchesFavorites;
+        return matchesSearch && matchesSource && matchesRegion && matchesAirline && matchesDate && matchesDeparture;
     }).sort((a, b) => {
         let comparison = 0;
 
@@ -786,13 +789,6 @@ export default function Dashboard() {
                         <div className={styles.stats}>
                             <div className={styles.statsHeader}>
                                 <span className={styles.resultCount}>총 <strong>{filteredFlights.length}</strong>개의 항공권</span>
-                                <button
-                                    onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
-                                    className={`${styles.favFilterBtn} ${showFavoritesOnly ? styles.favFilterActive : ''}`}
-                                    title={showFavoritesOnly ? '전체 보기' : '즐겨찾기만 보기'}
-                                >
-                                    {showFavoritesOnly ? '❤️' : '🤍'} {favorites.size > 0 ? favorites.size : ''}
-                                </button>
                             </div>
                             <div className={styles.statsFilters}>
                                 <select
@@ -857,11 +853,16 @@ export default function Dashboard() {
                                                 })()}
                                             </div>
                                             <button
-                                                className={`${styles.favBtn} ${favorites.has(getFlightKey(flight)) ? styles.favBtnActive : ''}`}
-                                                onClick={(e) => { e.stopPropagation(); toggleFavorite(flight); }}
-                                                title={favorites.has(getFlightKey(flight)) ? '즐겨찾기 해제' : '즐겨찾기 추가'}
+                                                type="button"
+                                                className={styles.shareBtn}
+                                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); shareFlight(flight); }}
+                                                title="공유하기"
                                             >
-                                                {favorites.has(getFlightKey(flight)) ? '❤️' : '🤍'}
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ pointerEvents: 'none' }}>
+                                                    <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                                                    <polyline points="16 6 12 2 8 6" />
+                                                    <line x1="12" y1="2" x2="12" y2="15" />
+                                                </svg>
                                             </button>
                                         </div>
 
@@ -1064,6 +1065,11 @@ export default function Dashboard() {
                     </div>
                 </div>
             </footer>
+
+            {/* 공유 복사 토스트 */}
+            {shareToast && (
+                <div className={styles.shareToast}>{shareToast}</div>
+            )}
         </div>
     );
 }
