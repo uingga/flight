@@ -44,6 +44,15 @@ const AIRPORT_TO_CITY: Record<string, string> = {
     // 중국/기타
     'SYX': 'SYX',  // 싼야 (하이난)
     'SPN': 'SPN',  // 사이판
+    // 땡처리닷컴 추가
+    'TAO': 'TAO',  // 칭다오
+    'YNT': 'YNT',  // 옌타이
+    'WEH': 'WEH',  // 웨이하이
+    'HKD': 'HKD',  // 하코다테
+    'PVG': 'PVG',  // 상해 푸동
+    'KKJ': 'KKJ',  // 기타큐슈
+    'UKB': 'UKB',  // 고베
+    'KHH': 'KHH',  // 카오슝
 };
 
 // 한국어 도시명 → 인터파크 도시코드 매핑 (공항코드 없는 경우 대응)
@@ -100,6 +109,16 @@ const CITY_NAME_TO_CODE: Record<string, string> = {
     '로마': 'ROM', '레오나르도다빈치': 'ROM',
     '이스탄불': 'IST',
     '트라브존': 'TZX',
+    // 땡처리닷컴 추가 도시
+    '칭다오': 'TAO', '청도': 'TAO',
+    '옌타이': 'YNT', '연태': 'YNT',
+    '웨이하이': 'WEH', '위해': 'WEH',
+    '하코다테': 'HKD',
+    '상해': 'PVG', '푸동': 'PVG',
+    '기타큐슈': 'KKJ',
+    '고베': 'UKB',
+    '카오슝': 'KHH',
+    '삼아': 'SYX',
 };
 
 /**
@@ -240,8 +259,8 @@ export async function scrapeInterparkBenchmark(destinationCityCodes?: string[]):
  * 항공편 도시명에서 인터파크 도시코드를 추출
  * "오사카(KIX)", "오사카(간사이)", "나트랑", "도쿄(NRT)" 등 모든 형식 지원
  */
-export function resolveCityCode(cityString: string): string | null {
-    if (!cityString) return null;
+export function resolveCityCode(cityString: string, airportCode?: string): string | null {
+    if (!cityString && !airportCode) return null;
 
     // 1. 괄호 안에 영문 공항코드가 있는 경우: "삿포로(CTS)" → CTS → SPK
     const airportMatch = cityString.match(/\(([A-Z]{3})\)/);
@@ -267,6 +286,11 @@ export function resolveCityCode(cityString: string): string | null {
     // 4. 전체 문자열로 매칭 시도
     if (CITY_NAME_TO_CODE[cityString]) {
         return CITY_NAME_TO_CODE[cityString];
+    }
+
+    // 5. fallback: 항공편 데이터의 공항코드를 직접 사용
+    if (airportCode) {
+        return AIRPORT_TO_CITY[airportCode] || airportCode;
     }
 
     return null;
