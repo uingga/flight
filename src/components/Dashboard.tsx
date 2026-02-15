@@ -89,6 +89,12 @@ const CITY_TO_AIRPORT: Record<string, string> = {
     '푸껫': 'HKT', '쿠알라룸푸르': 'KUL',
     '서울': 'ICN', '청주시': 'CJJ',
     '상해(푸동)': 'PVG', '오사카': 'KIX', '도쿄': 'NRT', '삿포로': 'CTS',
+    // 땡처리닷컴 추가 매핑
+    '보홀(필리핀)': 'TAG', '산야(삼아)': 'SYX', '카오슝(대만)': 'KHH', '카오슝': 'KHH',
+    '나트랑(깜란)': 'CXR', '연태(옌타이)': 'YNT', '위해(웨이하이)': 'WEH',
+    '클락(앙헬레스)': 'CRK', '하코다테(북해도)': 'HKD', '하코다테': 'HKD',
+    '고베': 'UKB', '기타큐슈': 'KKJ', '청도(칭다오)': 'TAO',
+    '보라카이(깔리보)': 'KLO', '서울(김포)': 'GMP', '타이페이(송산)': 'TSA',
 };
 
 // 도시명에서 공항코드 추출
@@ -840,11 +846,15 @@ export default function Dashboard() {
                                                     {getSourceName(flight.source)}
                                                 </span>
                                                 <span className={styles.airline}>{flight.airline}</span>
-                                                {flight.availableSeats && (
-                                                    <span className={(flight.availableSeats || 0) <= 9 ? styles.seatsBadgeCritical : styles.seatsBadge}>
-                                                        {(flight.availableSeats || 0) <= 5 && '🔥 '}{flight.availableSeats}석
-                                                    </span>
-                                                )}
+                                                {(() => {
+                                                    const seatNum = flight.availableSeats || (flight.seats ? parseInt(flight.seats) : 0);
+                                                    if (!seatNum) return null;
+                                                    return (
+                                                        <span className={seatNum <= 9 ? styles.seatsBadgeCritical : styles.seatsBadge}>
+                                                            {seatNum <= 5 && '🔥 '}{seatNum}석
+                                                        </span>
+                                                    );
+                                                })()}
                                             </div>
                                             <button
                                                 className={`${styles.favBtn} ${favorites.has(getFlightKey(flight)) ? styles.favBtnActive : ''}`}
@@ -896,25 +906,7 @@ export default function Dashboard() {
                                                         }
                                                         return null;
                                                     })()}
-                                                    {(() => {
-                                                        const route = `${flight.departure.city}-${flight.arrival.city}`;
-                                                        const history = priceHistory[route];
-                                                        if (history && history.length >= 2) {
-                                                            const prev = history[history.length - 2].minPrice;
-                                                            const curr = history[history.length - 1].minPrice;
-                                                            const diff = curr - prev;
-                                                            const pct = Math.round(Math.abs(diff) / prev * 100);
-                                                            if (pct >= 3 && Math.abs(diff) >= 5000) {
-                                                                return (
-                                                                    <span className={diff < 0 ? styles.priceDown : styles.priceUp}
-                                                                        title={`어제 최저가: ${prev.toLocaleString()}원`}>
-                                                                        {diff < 0 ? '↓' : '↑'}{pct}%
-                                                                    </span>
-                                                                );
-                                                            }
-                                                        }
-                                                        return null;
-                                                    })()}
+
                                                 </div>
                                                 <a
                                                     href={

@@ -183,7 +183,7 @@ async function main() {
             if (!benchmark) {
                 const arrCityCodes = new Set<string>();
                 activeFlights.forEach((f: any) => {
-                    const code = resolveCityCode(f.arrival?.city || '');
+                    const code = resolveCityCode(f.arrival?.city || '', f.arrival?.airport);
                     if (code) arrCityCodes.add(code);
                 });
 
@@ -196,7 +196,7 @@ async function main() {
             const beforeBenchmark = activeFlights.length;
             benchmarkedFlights = activeFlights.filter((f: any) => {
                 // 도착 도시 코드 추출 (resolveCityCode로 모든 형식 지원)
-                const cityCode = resolveCityCode(f.arrival?.city || '');
+                const cityCode = resolveCityCode(f.arrival?.city || '', f.arrival?.airport);
                 if (!cityCode) return true; // 코드 없으면 유지
 
                 // 출발월 추출

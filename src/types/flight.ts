@@ -18,6 +18,7 @@ export interface Flight {
     currency: string;
     link: string;
     availableSeats?: number;
+    seats?: string;
     flightNumber?: string;
     region?: string;
     searchLink?: string;

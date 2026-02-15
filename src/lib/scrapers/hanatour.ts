@@ -566,6 +566,12 @@ async function scrapeHanatourRegular(browser: any): Promise<Flight[]> {
                             }
 
                             if (price > 0 && arrivalCity) {
+                                // fareId에서 availCnt 추출
+                                let availCnt = 0;
+                                if (fareLst[index] && fareLst[index].availCnt) {
+                                    availCnt = parseInt(fareLst[index].availCnt) || 0;
+                                }
+
                                 results.push({
                                     id: `hanatour-regular-${tabName}-${index}`,
                                     source: 'hanatour',
@@ -585,6 +591,7 @@ async function scrapeHanatourRegular(browser: any): Promise<Flight[]> {
                                     price: price,
                                     currency: 'KRW',
                                     link: fullLink,
+                                    availableSeats: availCnt || undefined,
                                 });
                             }
                         } catch (error) {
