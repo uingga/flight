@@ -16,30 +16,73 @@ export default async function Image() {
                     flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    background: 'linear-gradient(135deg, #f5f7ff 0%, #eef2ff 30%, #e0e7ff 60%, #818cf8 100%)',
+                    background: 'linear-gradient(145deg, #0f172a 0%, #1e1b4b 35%, #312e81 60%, #4f46e5 85%, #06b6d4 100%)',
                     fontFamily: 'sans-serif',
+                    position: 'relative',
+                    overflow: 'hidden',
                 }}
             >
+                {/* Decorative glow circles */}
+                <div style={{
+                    position: 'absolute',
+                    width: '500px',
+                    height: '500px',
+                    borderRadius: '50%',
+                    background: 'radial-gradient(circle, rgba(99, 102, 241, 0.3) 0%, transparent 70%)',
+                    top: '-100px',
+                    right: '-100px',
+                    display: 'flex',
+                }} />
+                <div style={{
+                    position: 'absolute',
+                    width: '400px',
+                    height: '400px',
+                    borderRadius: '50%',
+                    background: 'radial-gradient(circle, rgba(6, 182, 212, 0.25) 0%, transparent 70%)',
+                    bottom: '-80px',
+                    left: '-60px',
+                    display: 'flex',
+                }} />
+
+                {/* Top badge */}
+                <div
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        padding: '10px 28px',
+                        background: 'rgba(255, 255, 255, 0.12)',
+                        borderRadius: '999px',
+                        fontSize: '22px',
+                        fontWeight: 600,
+                        color: 'rgba(255, 255, 255, 0.85)',
+                        marginBottom: '36px',
+                        border: '1px solid rgba(255, 255, 255, 0.15)',
+                    }}
+                >
+                    ✈️ 실시간 특가 항공권 비교
+                </div>
+
                 {/* Logo area */}
                 <div
                     style={{
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '16px',
-                        marginBottom: '32px',
+                        gap: '20px',
+                        marginBottom: '28px',
                     }}
                 >
                     {/* Paper airplane icon */}
                     <svg
-                        width="64"
-                        height="64"
+                        width="88"
+                        height="88"
                         viewBox="0 0 24 24"
                         fill="none"
                     >
                         <defs>
                             <linearGradient id="g" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
-                                <stop stopColor="#6366f1" />
-                                <stop offset="1" stopColor="#4338ca" />
+                                <stop stopColor="#818cf8" />
+                                <stop offset="1" stopColor="#06b6d4" />
                             </linearGradient>
                         </defs>
                         <path
@@ -50,10 +93,10 @@ export default async function Image() {
                     </svg>
                     <span
                         style={{
-                            fontSize: '72px',
+                            fontSize: '96px',
                             fontWeight: 900,
-                            color: '#111827',
-                            letterSpacing: '-0.02em',
+                            color: '#ffffff',
+                            letterSpacing: '-0.03em',
                         }}
                     >
                         Tikit
@@ -63,45 +106,16 @@ export default async function Image() {
                 {/* Tagline */}
                 <div
                     style={{
-                        fontSize: '36px',
-                        fontWeight: 700,
-                        color: '#0e7490',
-                        marginBottom: '16px',
+                        fontSize: '44px',
+                        fontWeight: 800,
+                        color: '#e0e7ff',
+                        marginBottom: '40px',
+                        letterSpacing: '-0.01em',
                     }}
                 >
                     여행사 땡처리 항공권을 한 곳에서
                 </div>
 
-                {/* Description */}
-                <div
-                    style={{
-                        fontSize: '24px',
-                        color: '#475569',
-                        maxWidth: '600px',
-                        textAlign: 'center',
-                        lineHeight: 1.5,
-                    }}
-                >
-                    하나투어 · 모두투어 · 노랑풍선 · 온라인투어
-                </div>
-
-                {/* Bottom badge */}
-                <div
-                    style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        marginTop: '40px',
-                        padding: '12px 24px',
-                        background: 'rgba(255, 255, 255, 0.7)',
-                        borderRadius: '999px',
-                        fontSize: '18px',
-                        fontWeight: 600,
-                        color: '#4338ca',
-                    }}
-                >
-                    ✈️ 실시간 특가 항공권 비교
-                </div>
             </div>
         ),
         { ...size }
