@@ -3,6 +3,7 @@ import { scrapeYbtour } from '../src/lib/scrapers/ybtour';
 import { scrapeHanatour } from '../src/lib/scrapers/hanatour';
 import { scrapeModetour } from '../src/lib/scrapers/modetour';
 import { scrapeOnlineTour } from '../src/lib/scrapers/onlinetour';
+import { scrapeTtang } from '../src/lib/scrapers/ttang';
 import { scrapeInterparkBenchmark, resolveCityCode } from '../src/lib/scrapers/interpark';
 import fs from 'fs';
 import path from 'path';
@@ -17,6 +18,7 @@ interface CacheData {
         hanatour: number;
         modetour: number;
         onlinetour: number;
+        ttang: number;
     };
 }
 
@@ -30,6 +32,7 @@ async function main() {
         hanatour: 0,
         modetour: 0,
         onlinetour: 0,
+        ttang: 0,
     };
 
     try {
@@ -79,6 +82,17 @@ async function main() {
             console.error('❌ 온라인투어 실패:', error);
         }
 
+        // 6. 땡처리닷컴
+        console.log('\n=== 땡처리닷컴 크롤링 ===');
+        try {
+            const ttangFlights = await scrapeTtang();
+            allFlights.push(...ttangFlights);
+            sources.ttang = ttangFlights.length;
+            console.log(`✅ 땡처리닷컴: ${ttangFlights.length}개`);
+        } catch (error) {
+            console.error('❌ 땡처리닷컴 실패:', error);
+        }
+
         // 기존 캐시 로드 (실패 대비)
         const dataDir = path.join(process.cwd(), 'data');
         const cachePath = path.join(dataDir, 'all-flights-cache.json');
@@ -90,7 +104,7 @@ async function main() {
         } catch { }
 
         // 소스별 실패 시 이전 데이터 복구
-        const sourceNames = ['ybtour', 'hanatour', 'modetour', 'onlinetour'] as const;
+        const sourceNames = ['ybtour', 'hanatour', 'modetour', 'onlinetour', 'ttang'] as const;
         for (const src of sourceNames) {
             if (sources[src] === 0 && prevCache?.flights) {
                 const prevFlights = prevCache.flights.filter((f: any) => f.source === src);
