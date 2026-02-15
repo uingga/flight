@@ -189,6 +189,10 @@ const getMobileUrl = (url: string, isMobile: boolean): string => {
             return 'https://mfly.ybtour.co.kr/mobile/fr/booking/findDiscountAirMobile.lts?efcTpCode=INV&efcCode=INV';
         }
     }
+    // 땡처리닷컴: www.ttang.com → m.ttang.com
+    if (url.includes('www.ttang.com')) {
+        return url.replace('www.ttang.com', 'm.ttang.com');
+    }
     return url;
 };
 
