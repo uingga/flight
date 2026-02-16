@@ -226,11 +226,75 @@ export default function Dashboard() {
     const [shareToast, setShareToast] = useState<string | null>(null);
     const [bookingFlight, setBookingFlight] = useState<Flight | null>(null);
     const [passengers, setPassengers] = useState({ adult: 1, child: 0, infant: 0 });
+    const [alertFlight, setAlertFlight] = useState<Flight | null>(null);
+    const [alertPrice, setAlertPrice] = useState('');
+    const [pushSubscription, setPushSubscription] = useState<PushSubscription | null>(null);
+    const [alertToast, setAlertToast] = useState<string | null>(null);
     const observerRef = useRef<IntersectionObserver | null>(null);
     const loadMoreRef = useRef<HTMLDivElement | null>(null);
     const [headerHidden, setHeaderHidden] = useState(false);
     const [headerScrolled, setHeaderScrolled] = useState(false);
     const lastScrollY = useRef(0);
+
+    // 서비스 워커 등록
+    useEffect(() => {
+        if ('serviceWorker' in navigator && 'PushManager' in window) {
+            navigator.serviceWorker.register('/sw.js').then(reg => {
+                reg.pushManager.getSubscription().then(sub => {
+                    if (sub) setPushSubscription(sub);
+                });
+            }).catch(() => { });
+        }
+    }, []);
+
+    const subscribePush = async (): Promise<PushSubscription | null> => {
+        try {
+            const permission = await Notification.requestPermission();
+            if (permission !== 'granted') return null;
+            const reg = await navigator.serviceWorker.ready;
+            const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+            if (!vapidKey) return null;
+            const sub = await reg.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: vapidKey,
+            });
+            setPushSubscription(sub);
+            return sub;
+        } catch {
+            return null;
+        }
+    };
+
+    const setupAlert = async () => {
+        if (!alertFlight) return;
+        let sub = pushSubscription;
+        if (!sub) {
+            sub = await subscribePush();
+            if (!sub) {
+                setAlertToast('알림 권한이 필요합니다');
+                setTimeout(() => setAlertToast(null), 3000);
+                return;
+            }
+        }
+        const maxPrice = alertPrice ? parseInt(alertPrice.replace(/[^0-9]/g, '')) : undefined;
+        const arrCity = normalizeCity(alertFlight.arrival.city);
+        const res = await fetch('/api/alerts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                subscription: sub.toJSON(),
+                conditions: { route: arrCity, maxPrice },
+            }),
+        });
+        if (res.ok) {
+            setAlertToast(`🔔 ${arrCity} ${maxPrice ? formatPrice(maxPrice) + ' 이하' : ''} 알림 설정 완료!`);
+        } else {
+            setAlertToast('알림 설정에 실패했습니다');
+        }
+        setTimeout(() => setAlertToast(null), 3000);
+        setAlertFlight(null);
+        setAlertPrice('');
+    };
 
     useEffect(() => {
         fetchFlights();
@@ -938,6 +1002,18 @@ export default function Dashboard() {
                                                     <line x1="12" y1="2" x2="12" y2="15" />
                                                 </svg>
                                             </button>
+                                            <button
+                                                type="button"
+                                                className={styles.alertBtn}
+                                                onClick={(e) => {
+                                                    e.preventDefault(); e.stopPropagation();
+                                                    setAlertFlight(flight);
+                                                    setAlertPrice(String(flight.price));
+                                                }}
+                                                title="가격 알림 설정"
+                                            >
+                                                🔔
+                                            </button>
                                         </div>
 
                                         <div className={styles.route}>
@@ -1191,9 +1267,45 @@ export default function Dashboard() {
                 </div>
             )}
 
-            {/* 공유 복사 토스트 */}
+            {/* 알림 설정 모달 */}
+            {alertFlight && (
+                <div className={styles.modalOverlay} onClick={() => setAlertFlight(null)}>
+                    <div className={styles.modalSheet} onClick={(e) => e.stopPropagation()}>
+                        <div className={styles.modalHeader}>
+                            <h3 className={styles.modalTitle}>🔔 가격 알림 설정</h3>
+                            <button className={styles.modalClose} onClick={() => setAlertFlight(null)}>×</button>
+                        </div>
+                        <div className={styles.modalFlightInfo}>
+                            <span>{normalizeCity(alertFlight.departure.city)} → {normalizeCity(alertFlight.arrival.city)}</span>
+                            <span className={styles.modalPrice}>현재 {formatPrice(alertFlight.price)}</span>
+                        </div>
+                        <div className={styles.alertFormGroup}>
+                            <label className={styles.alertLabel}>목표 가격 (이 가격 이하일 때 알림)</label>
+                            <input
+                                type="text"
+                                className={styles.alertInput}
+                                value={alertPrice ? Number(alertPrice).toLocaleString() + '원' : ''}
+                                onChange={(e) => setAlertPrice(e.target.value.replace(/[^0-9]/g, ''))}
+                                placeholder="예: 200000"
+                            />
+                        </div>
+                        <p className={styles.alertDesc}>
+                            {normalizeCity(alertFlight.arrival.city)} 행 항공편이 목표 가격 이하로 발견되면<br />
+                            브라우저 푸시 알림으로 알려드립니다.
+                        </p>
+                        <button className={styles.modalConfirm} onClick={setupAlert}>
+                            알림 설정하기 🔔
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* 공유/알림 토스트 */}
             {shareToast && (
                 <div className={styles.shareToast}>{shareToast}</div>
+            )}
+            {alertToast && (
+                <div className={styles.shareToast}>{alertToast}</div>
             )}
         </div>
     );
