@@ -1517,6 +1517,28 @@
     text-align: center;
 }
 
+.modalTotal {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    background: #f0f0ff;
+    border-radius: 12px;
+    margin-bottom: 16px;
+}
+
+.modalTotalLabel {
+    font-size: 15px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.modalTotalPrice {
+    font-size: 20px;
+    font-weight: 800;
+    color: #4f46e5;
+}
+
 .modalConfirm {
     width: 100%;
     padding: 14px;
