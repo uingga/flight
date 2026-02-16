@@ -213,8 +213,8 @@ export default function Dashboard() {
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
     const [sourceFilter, setSourceFilter] = useState<string>('all');
     const [regionFilter, setRegionFilter] = useState<string>('all');
-    const [startDate, setStartDate] = useState<string>('');
-    const [endDate, setEndDate] = useState<string>('');
+    const [startDate, setStartDate] = useState<string>(getDefaultStartDate());
+    const [endDate, setEndDate] = useState<string>(getDefaultEndDate());
     const [departureFilter, setDepartureFilter] = useState<string>('all');
     const [airlineFilter, setAirlineFilter] = useState<string>('all');
     const [displayCount, setDisplayCount] = useState(ITEMS_PER_PAGE);
@@ -589,7 +589,7 @@ export default function Dashboard() {
                                 dateFormat="yy.MM.dd"
                                 locale={ko}
                                 className={styles.dateInput}
-                                placeholderText="출발 기간 선택"
+                                placeholderText="언제 떠나세요?"
                                 popperClassName={styles.datePickerPopper}
                                 calendarClassName={styles.datePickerCalendar}
                                 minDate={new Date()}
