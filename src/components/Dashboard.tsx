@@ -1167,6 +1167,12 @@ export default function Dashboard() {
                                 </div>
                             </div>
                         </div>
+                        <div className={styles.modalTotal}>
+                            <span className={styles.modalTotalLabel}>총 {passengers.adult + passengers.child + passengers.infant}명</span>
+                            <span className={styles.modalTotalPrice}>
+                                {formatPrice(bookingFlight.price * (passengers.adult + passengers.child + passengers.infant))}
+                            </span>
+                        </div>
                         <button className={styles.modalConfirm} onClick={confirmBooking}>
                             {getSourceName(bookingFlight.source)}에서 예약하기 →
                         </button>
