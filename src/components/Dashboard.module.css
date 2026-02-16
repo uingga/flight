@@ -920,21 +920,6 @@
     transform: scale(1.15);
 }
 
-.alertBtn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 4px;
-    font-size: 14px;
-    line-height: 1;
-    transition: all 0.2s ease;
-    opacity: 0.5;
-}
-
-.alertBtn:hover {
-    transform: scale(1.2);
-    opacity: 1;
-}
 
 .alertFormGroup {
     margin-bottom: 12px;
