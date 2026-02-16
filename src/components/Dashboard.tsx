@@ -400,24 +400,6 @@ export default function Dashboard() {
 
     // 인원수 반영 예약 URL 생성
     const getBookingUrl = (flight: Flight, pax: { adult: number; child: number; infant: number }) => {
-        const buildUrl = (url: string) => {
-            // 땡처리닷컴: adt, chd, inf 파라미터
-            if (flight.source === 'ttang' && url.includes('ttang.com')) {
-                return url
-                    .replace(/adt=\d+/, `adt=${pax.adult}`)
-                    .replace(/chd=\d+/, `chd=${pax.child}`)
-                    .replace(/inf=\d+/, `inf=${pax.infant}`);
-            }
-            // 온라인투어: adt 파라미터
-            if (flight.source === 'onlinetour' && url.includes('onlinetour.co.kr')) {
-                let newUrl = url.replace(/adt=\d+/, `adt=${pax.adult}`);
-                if (pax.child > 0 && !newUrl.includes('chd=')) newUrl += `&chd=${pax.child}`;
-                if (pax.infant > 0 && !newUrl.includes('inf=')) newUrl += `&inf=${pax.infant}`;
-                return newUrl;
-            }
-            return url;
-        };
-
         // 하나투어: psngrCntLst JSON
         if (flight.source === 'hanatour') {
             const psngrCntLst: Array<{ ageDvCd: string; psngrCnt: number }> = [];
@@ -436,18 +418,44 @@ export default function Dashboard() {
                 }
                 return mobileSearchUrl;
             }
-            // PC: psngrCntLst 교체
             let pcUrl = flight.link.replace(/psngrCntLst=[^&]+/, `psngrCntLst=${encodeURIComponent(JSON.stringify(psngrCntLst))}`);
             return `/api/redirect?url=${encodeURIComponent(pcUrl)}&fallback=${encodeURIComponent(flight.searchLink || 'https://www.hanatour.com/trp/air/CHPC0AIR0233M200')}`;
         }
 
-        // 온라인투어
-        if (flight.source === 'onlinetour') {
-            return getMobileUrl(buildUrl(flight.link), isMobile);
+        // 모두투어: adult, child, infant 파라미터
+        if (flight.source === 'modetour') {
+            let url = flight.link
+                .replace(/adult=\d+/, `adult=${pax.adult}`)
+                .replace(/child=\d+/, `child=${pax.child}`)
+                .replace(/infant=\d+/, `infant=${pax.infant}`);
+            return getMobileUrl(url, isMobile);
         }
 
-        // 나머지 (ttang, ybtour, modetour)
-        return getMobileUrl(buildUrl(flight.link), isMobile);
+        // 땡처리닷컴: adt, chd, inf 파라미터
+        if (flight.source === 'ttang') {
+            let url = flight.link
+                .replace(/adt=\d+/, `adt=${pax.adult}`)
+                .replace(/chd=\d+/, `chd=${pax.child}`)
+                .replace(/inf=\d+/, `inf=${pax.infant}`);
+            return getMobileUrl(url, isMobile);
+        }
+
+        // 온라인투어: eventCode URL에 인원 파라미터 추가
+        if (flight.source === 'onlinetour') {
+            let url = flight.link;
+            // 기존 파라미터가 있으면 교체, 없으면 추가
+            if (url.includes('adt=')) {
+                url = url.replace(/adt=\d+/, `adt=${pax.adult}`);
+            } else {
+                url += `&adt=${pax.adult}`;
+            }
+            if (pax.child > 0) url += `&chd=${pax.child}`;
+            if (pax.infant > 0) url += `&inf=${pax.infant}`;
+            return getMobileUrl(url, isMobile);
+        }
+
+        // 나머지 (ybtour 등): 인원 파라미터 없음
+        return getMobileUrl(flight.link, isMobile);
     };
 
     const openBookingModal = (flight: Flight) => {
