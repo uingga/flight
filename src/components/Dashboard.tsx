@@ -983,13 +983,24 @@ export default function Dashboard() {
                                                     })()}
 
                                                 </div>
-                                                <button
-                                                    type="button"
-                                                    className="btn btn-primary"
-                                                    onClick={(e) => { e.stopPropagation(); openBookingModal(flight); }}
-                                                >
-                                                    예약하기 →
-                                                </button>
+                                                {['hanatour', 'modetour'].includes(flight.source) ? (
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-primary"
+                                                        onClick={(e) => { e.stopPropagation(); openBookingModal(flight); }}
+                                                    >
+                                                        예약하기 →
+                                                    </button>
+                                                ) : (
+                                                    <a
+                                                        href={getMobileUrl(flight.link, isMobile)}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="btn btn-primary"
+                                                    >
+                                                        예약하기 →
+                                                    </a>
+                                                )}
                                             </div>
                                             {/* 가격 비교 링크 */}
                                             {(() => {
