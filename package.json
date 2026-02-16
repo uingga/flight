@@ -12,7 +12,8 @@
     "crawl:hanatour": "tsx scripts/crawl-hanatour.ts",
     "crawl:modetour": "tsx scripts/crawl-modetour.ts",
     "crawl:onlinetour": "tsx scripts/crawl-onlinetour.ts",
-    "crawl:all": "tsx scripts/crawl-all.ts"
+    "crawl:all": "tsx scripts/crawl-all.ts",
+    "send:alerts": "tsx scripts/send-alerts.ts"
   },
   "dependencies": {
     "@types/react-datepicker": "^6.2.0",
@@ -22,7 +23,8 @@
     "nodemailer": "^8.0.1",
     "react": "^18",
     "react-datepicker": "^9.1.0",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "web-push": "^3.6.7"
   },
   "devDependencies": {
     "@types/node": "^20",
