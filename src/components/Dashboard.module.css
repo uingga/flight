@@ -1363,3 +1363,225 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* Passenger Count Modal */
+.modalOverlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.2s ease;
+}
+
+.modalSheet {
+    background: #fff;
+    border-radius: 20px;
+    width: min(400px, calc(100vw - 32px));
+    padding: 24px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    animation: slideUp 0.3s ease;
+}
+
+.modalHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.modalTitle {
+    font-size: 18px;
+    font-weight: 700;
+    color: #111827;
+    margin: 0;
+}
+
+.modalClose {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: #f3f4f6;
+    font-size: 20px;
+    color: #6b7280;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+}
+
+.modalClose:hover {
+    background: #e5e7eb;
+}
+
+.modalFlightInfo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: #f8fafc;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.modalPrice {
+    color: #4f46e5;
+    font-weight: 700;
+}
+
+.paxRows {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 20px;
+}
+
+.paxRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 0;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.paxRow:last-child {
+    border-bottom: none;
+}
+
+.paxLabel {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.paxType {
+    font-size: 15px;
+    font-weight: 600;
+    color: #111827;
+}
+
+.paxAge {
+    font-size: 12px;
+    color: #9ca3af;
+}
+
+.paxCounter {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.paxBtn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1.5px solid #d1d5db;
+    background: #fff;
+    font-size: 18px;
+    font-weight: 500;
+    color: #374151;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    line-height: 1;
+}
+
+.paxBtn:hover:not(:disabled) {
+    border-color: #4f46e5;
+    color: #4f46e5;
+    background: #eef2ff;
+}
+
+.paxBtn:disabled {
+    border-color: #e5e7eb;
+    color: #d1d5db;
+    cursor: not-allowed;
+}
+
+.paxCount {
+    font-size: 18px;
+    font-weight: 700;
+    color: #111827;
+    min-width: 24px;
+    text-align: center;
+}
+
+.modalConfirm {
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+    border: none;
+    background: linear-gradient(135deg, #4f46e5, #6366f1);
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+}
+
+.modalConfirm:hover {
+    opacity: 0.92;
+}
+
+.modalConfirm:active {
+    transform: scale(0.98);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@media (max-width: 768px) {
+    .modalSheet {
+        border-radius: 20px 20px 0 0;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        animation: slideUpMobile 0.3s ease;
+    }
+
+    .modalOverlay {
+        align-items: flex-end;
+    }
+}
+
+@keyframes slideUpMobile {
+    from {
+        transform: translateY(100%);
+    }
+
+    to {
+        transform: translateY(0);
+    }
+}

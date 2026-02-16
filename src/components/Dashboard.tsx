@@ -224,6 +224,8 @@ export default function Dashboard() {
     const [isCalendarOpen, setIsCalendarOpen] = useState(false);
     const [showFilters, setShowFilters] = useState(false);
     const [shareToast, setShareToast] = useState<string | null>(null);
+    const [bookingFlight, setBookingFlight] = useState<Flight | null>(null);
+    const [passengers, setPassengers] = useState({ adult: 1, child: 0, infant: 0 });
     const observerRef = useRef<IntersectionObserver | null>(null);
     const loadMoreRef = useRef<HTMLDivElement | null>(null);
     const [headerHidden, setHeaderHidden] = useState(false);
@@ -394,6 +396,70 @@ export default function Dashboard() {
                 setTimeout(() => setShareToast(null), 2000);
             } catch { }
         }
+    };
+
+    // 인원수 반영 예약 URL 생성
+    const getBookingUrl = (flight: Flight, pax: { adult: number; child: number; infant: number }) => {
+        const buildUrl = (url: string) => {
+            // 땡처리닷컴: adt, chd, inf 파라미터
+            if (flight.source === 'ttang' && url.includes('ttang.com')) {
+                return url
+                    .replace(/adt=\d+/, `adt=${pax.adult}`)
+                    .replace(/chd=\d+/, `chd=${pax.child}`)
+                    .replace(/inf=\d+/, `inf=${pax.infant}`);
+            }
+            // 온라인투어: adt 파라미터
+            if (flight.source === 'onlinetour' && url.includes('onlinetour.co.kr')) {
+                let newUrl = url.replace(/adt=\d+/, `adt=${pax.adult}`);
+                if (pax.child > 0 && !newUrl.includes('chd=')) newUrl += `&chd=${pax.child}`;
+                if (pax.infant > 0 && !newUrl.includes('inf=')) newUrl += `&inf=${pax.infant}`;
+                return newUrl;
+            }
+            return url;
+        };
+
+        // 하나투어: psngrCntLst JSON
+        if (flight.source === 'hanatour') {
+            const psngrCntLst: Array<{ ageDvCd: string; psngrCnt: number }> = [];
+            if (pax.adult > 0) psngrCntLst.push({ ageDvCd: 'A', psngrCnt: pax.adult });
+            if (pax.child > 0) psngrCntLst.push({ ageDvCd: 'C', psngrCnt: pax.child });
+            if (pax.infant > 0) psngrCntLst.push({ ageDvCd: 'I', psngrCnt: pax.infant });
+
+            const fareIdMatch = flight.link.match(/fareId=([^&]+)/);
+            const mobileSearchUrl = flight.searchLink
+                ? flight.searchLink.replace('hope.hanatour.com', 'm.hanatour.com').replace('M200', 'M100')
+                : 'https://m.hanatour.com/trp/air/CHPC0AIR0233M100';
+            if (isMobile) {
+                if (fareIdMatch) {
+                    const mobileBookingUrl = `https://m.hanatour.com/com/pmt/CHPC0PMT0011M100?searchCond=${encodeURIComponent(JSON.stringify({ fareId: decodeURIComponent(fareIdMatch[1]), psngrCntLst }))}`;
+                    return `/api/redirect?url=${encodeURIComponent(mobileBookingUrl)}&fallback=${encodeURIComponent(mobileSearchUrl)}`;
+                }
+                return mobileSearchUrl;
+            }
+            // PC: psngrCntLst 교체
+            let pcUrl = flight.link.replace(/psngrCntLst=[^&]+/, `psngrCntLst=${encodeURIComponent(JSON.stringify(psngrCntLst))}`);
+            return `/api/redirect?url=${encodeURIComponent(pcUrl)}&fallback=${encodeURIComponent(flight.searchLink || 'https://www.hanatour.com/trp/air/CHPC0AIR0233M200')}`;
+        }
+
+        // 온라인투어
+        if (flight.source === 'onlinetour') {
+            return getMobileUrl(buildUrl(flight.link), isMobile);
+        }
+
+        // 나머지 (ttang, ybtour, modetour)
+        return getMobileUrl(buildUrl(flight.link), isMobile);
+    };
+
+    const openBookingModal = (flight: Flight) => {
+        setPassengers({ adult: 1, child: 0, infant: 0 });
+        setBookingFlight(flight);
+    };
+
+    const confirmBooking = () => {
+        if (!bookingFlight) return;
+        const url = getBookingUrl(bookingFlight, passengers);
+        window.open(url, '_blank', 'noopener,noreferrer');
+        setBookingFlight(null);
     };
 
     // 필터 초기화
@@ -909,33 +975,13 @@ export default function Dashboard() {
                                                     })()}
 
                                                 </div>
-                                                <a
-                                                    href={
-                                                        (flight.source === 'onlinetour')
-                                                            ? getMobileUrl(flight.link, isMobile)
-                                                            : (flight.source === 'hanatour')
-                                                                ? (() => {
-                                                                    const fareIdMatch = flight.link.match(/fareId=([^&]+)/);
-                                                                    const mobileSearchUrl = flight.searchLink
-                                                                        ? flight.searchLink.replace('hope.hanatour.com', 'm.hanatour.com').replace('M200', 'M100')
-                                                                        : 'https://m.hanatour.com/trp/air/CHPC0AIR0233M100';
-                                                                    if (isMobile) {
-                                                                        if (fareIdMatch) {
-                                                                            const mobileBookingUrl = `https://m.hanatour.com/com/pmt/CHPC0PMT0011M100?searchCond=${encodeURIComponent(JSON.stringify({ fareId: decodeURIComponent(fareIdMatch[1]), psngrCntLst: [{ ageDvCd: 'A', psngrCnt: 1 }] }))}`;
-                                                                            return `/api/redirect?url=${encodeURIComponent(mobileBookingUrl)}&fallback=${encodeURIComponent(mobileSearchUrl)}`;
-                                                                        }
-                                                                        return mobileSearchUrl;
-                                                                    }
-                                                                    return `/api/redirect?url=${encodeURIComponent(flight.link)}&fallback=${encodeURIComponent(flight.searchLink || 'https://www.hanatour.com/trp/air/CHPC0AIR0233M200')}`;
-                                                                })()
-                                                                : getMobileUrl(flight.link, isMobile)
-                                                    }
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
+                                                <button
+                                                    type="button"
                                                     className="btn btn-primary"
+                                                    onClick={(e) => { e.stopPropagation(); openBookingModal(flight); }}
                                                 >
                                                     예약하기 →
-                                                </a>
+                                                </button>
                                             </div>
                                             {/* 가격 비교 링크 */}
                                             {(() => {
@@ -1065,6 +1111,60 @@ export default function Dashboard() {
                     </div>
                 </div>
             </footer>
+
+            {/* 인원 선택 모달 */}
+            {bookingFlight && (
+                <div className={styles.modalOverlay} onClick={() => setBookingFlight(null)}>
+                    <div className={styles.modalSheet} onClick={(e) => e.stopPropagation()}>
+                        <div className={styles.modalHeader}>
+                            <h3 className={styles.modalTitle}>탑승 인원 선택</h3>
+                            <button className={styles.modalClose} onClick={() => setBookingFlight(null)}>×</button>
+                        </div>
+                        <div className={styles.modalFlightInfo}>
+                            <span>{normalizeCity(bookingFlight.departure.city)} → {normalizeCity(bookingFlight.arrival.city)}</span>
+                            <span className={styles.modalPrice}>{formatPrice(bookingFlight.price)}/1인</span>
+                        </div>
+                        <div className={styles.paxRows}>
+                            <div className={styles.paxRow}>
+                                <div className={styles.paxLabel}>
+                                    <span className={styles.paxType}>성인</span>
+                                    <span className={styles.paxAge}>만 12세 이상</span>
+                                </div>
+                                <div className={styles.paxCounter}>
+                                    <button className={styles.paxBtn} disabled={passengers.adult <= 1} onClick={() => setPassengers(p => ({ ...p, adult: p.adult - 1 }))}>−</button>
+                                    <span className={styles.paxCount}>{passengers.adult}</span>
+                                    <button className={styles.paxBtn} disabled={passengers.adult >= 9} onClick={() => setPassengers(p => ({ ...p, adult: p.adult + 1 }))}>+</button>
+                                </div>
+                            </div>
+                            <div className={styles.paxRow}>
+                                <div className={styles.paxLabel}>
+                                    <span className={styles.paxType}>소아</span>
+                                    <span className={styles.paxAge}>만 2~11세</span>
+                                </div>
+                                <div className={styles.paxCounter}>
+                                    <button className={styles.paxBtn} disabled={passengers.child <= 0} onClick={() => setPassengers(p => ({ ...p, child: p.child - 1 }))}>−</button>
+                                    <span className={styles.paxCount}>{passengers.child}</span>
+                                    <button className={styles.paxBtn} disabled={passengers.child >= 9} onClick={() => setPassengers(p => ({ ...p, child: p.child + 1 }))}>+</button>
+                                </div>
+                            </div>
+                            <div className={styles.paxRow}>
+                                <div className={styles.paxLabel}>
+                                    <span className={styles.paxType}>유아</span>
+                                    <span className={styles.paxAge}>만 2세 미만</span>
+                                </div>
+                                <div className={styles.paxCounter}>
+                                    <button className={styles.paxBtn} disabled={passengers.infant <= 0} onClick={() => setPassengers(p => ({ ...p, infant: p.infant - 1 }))}>−</button>
+                                    <span className={styles.paxCount}>{passengers.infant}</span>
+                                    <button className={styles.paxBtn} disabled={passengers.infant >= 4} onClick={() => setPassengers(p => ({ ...p, infant: p.infant + 1 }))}>+</button>
+                                </div>
+                            </div>
+                        </div>
+                        <button className={styles.modalConfirm} onClick={confirmBooking}>
+                            {getSourceName(bookingFlight.source)}에서 예약하기 →
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {/* 공유 복사 토스트 */}
             {shareToast && (
