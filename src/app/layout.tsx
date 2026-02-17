@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
+import Script from 'next/script';
 import './globals.css';
 
 const inter = Inter({
@@ -80,6 +81,8 @@ export const metadata: Metadata = {
     },
 };
 
+const GA_ID = process.env.NEXT_PUBLIC_GA_ID || '';
+
 export default function RootLayout({
     children,
 }: {
@@ -101,6 +104,25 @@ export default function RootLayout({
                 <link rel="preconnect" href="https://mfly.ybtour.co.kr" />
             </head>
             <body className="antialiased">
+                {/* GA4 Analytics */}
+                {GA_ID && !GA_ID.startsWith('G-XXXX') && (
+                    <>
+                        <Script
+                            src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
+                            strategy="afterInteractive"
+                        />
+                        <Script id="ga4-init" strategy="afterInteractive">
+                            {`
+                                window.dataLayer = window.dataLayer || [];
+                                function gtag(){dataLayer.push(arguments);}
+                                gtag('js', new Date());
+                                gtag('config', '${GA_ID}', {
+                                    send_page_view: true
+                                });
+                            `}
+                        </Script>
+                    </>
+                )}
                 {children}
                 <script
                     type="application/ld+json"

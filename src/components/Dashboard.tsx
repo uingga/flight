@@ -7,6 +7,7 @@ import Sparkline from './Sparkline';
 import dynamic from 'next/dynamic';
 import { ko } from 'date-fns/locale';
 import 'react-datepicker/dist/react-datepicker.css';
+import * as gtag from '@/lib/analytics';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const DatePicker: any = dynamic(() => import('react-datepicker').then((mod: any) => mod.default), { ssr: false });
@@ -287,6 +288,7 @@ export default function Dashboard() {
             }),
         });
         if (res.ok) {
+            gtag.trackAlertSetup(arrCity, maxPrice);
             setAlertToast(`🔔 ${arrCity} ${maxPrice ? formatPrice(maxPrice) + ' 이하' : ''} 알림 설정 완료!`);
         } else {
             setAlertToast('알림 설정에 실패했습니다');
@@ -444,18 +446,22 @@ export default function Dashboard() {
 
     const shareFlight = async (flight: Flight) => {
         const text = shareFlightText(flight);
+        const route = `${normalizeCity(flight.departure.city)}-${normalizeCity(flight.arrival.city)}`;
         const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
         try {
             if (isTouchDevice && navigator.share) {
                 await navigator.share({ text });
+                gtag.trackShare(route, 'native_share');
             } else {
                 await navigator.clipboard.writeText(text);
+                gtag.trackShare(route, 'clipboard');
                 setShareToast('복사됨!');
                 setTimeout(() => setShareToast(null), 2000);
             }
         } catch {
             try {
                 await navigator.clipboard.writeText(text);
+                gtag.trackShare(route, 'clipboard');
                 setShareToast('복사됨!');
                 setTimeout(() => setShareToast(null), 2000);
             } catch { }
@@ -530,6 +536,8 @@ export default function Dashboard() {
     const confirmBooking = () => {
         if (!bookingFlight) return;
         const url = getBookingUrl(bookingFlight, passengers);
+        const route = `${normalizeCity(bookingFlight.departure.city)}-${normalizeCity(bookingFlight.arrival.city)}`;
+        gtag.trackBookingClick(bookingFlight.source, route, bookingFlight.price);
         window.open(url, '_blank', 'noopener,noreferrer');
         setBookingFlight(null);
     };
@@ -1078,6 +1086,10 @@ export default function Dashboard() {
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                         className="btn btn-primary"
+                                                        onClick={() => {
+                                                            const r = `${normalizeCity(flight.departure.city)}-${normalizeCity(flight.arrival.city)}`;
+                                                            gtag.trackBookingClick(flight.source, r, flight.price);
+                                                        }}
                                                     >
                                                         예약하기 →
                                                     </a>
@@ -1092,12 +1104,16 @@ export default function Dashboard() {
                                                     <div className={styles.compareLinks}>
                                                         <span className={styles.compareLinkLabel}>가격비교</span>
                                                         {naverUrl && (
-                                                            <a href={naverUrl} target="_blank" rel="noopener noreferrer" className={styles.compareLink} title="네이버 항공권에서 비교">
+                                                            <a href={naverUrl} target="_blank" rel="noopener noreferrer" className={styles.compareLink} title="네이버 항공권에서 비교"
+                                                                onClick={() => gtag.trackCompareClick('naver', `${normalizeCity(flight.departure.city)}-${normalizeCity(flight.arrival.city)}`, flight.price)}
+                                                            >
                                                                 네이버
                                                             </a>
                                                         )}
                                                         {skyscannerUrl && (
-                                                            <a href={skyscannerUrl} target="_blank" rel="noopener noreferrer" className={styles.compareLink} title="스카이스캐너에서 비교">
+                                                            <a href={skyscannerUrl} target="_blank" rel="noopener noreferrer" className={styles.compareLink} title="스카이스캐너에서 비교"
+                                                                onClick={() => gtag.trackCompareClick('skyscanner', `${normalizeCity(flight.departure.city)}-${normalizeCity(flight.arrival.city)}`, flight.price)}
+                                                            >
                                                                 스카이스캐너
                                                             </a>
                                                         )}
