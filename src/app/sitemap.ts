@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-    const baseUrl = 'https://mitikit.com';
+    const baseUrl = 'https://mytikit.vercel.app';
 
     return [
         {

@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next';
 
 export default function robots(): MetadataRoute.Robots {
-    const baseUrl = 'https://mitikit.com';
+    const baseUrl = 'https://mytikit.vercel.app';
 
     return {
         rules: {
