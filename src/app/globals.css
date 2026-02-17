@@ -1,21 +1,14 @@
-/* SB 어그로 폰트 */
+/* 넥슨 메이플스토리 폰트 */
 @font-face {
-  font-family: 'Aggravo';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2108@1.1/SBAggroL.woff') format('woff');
+  font-family: 'NexonMaplestory';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_20-04@2.1/MaplestoryOTFLight.woff') format('woff');
   font-weight: 300;
   font-display: swap;
 }
 
 @font-face {
-  font-family: 'Aggravo';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2108@1.1/SBAggroM.woff') format('woff');
-  font-weight: 500;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Aggravo';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2108@1.1/SBAggroB.woff') format('woff');
+  font-family: 'NexonMaplestory';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_20-04@2.1/MaplestoryOTFBold.woff') format('woff');
   font-weight: 700;
   font-display: swap;
 }
