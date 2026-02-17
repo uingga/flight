@@ -26,7 +26,7 @@ const fmtDate = (s: string) => s ? s.slice(5).replace(/-/g, '.') : '';
 const getDefaultStartDate = () => toStr(new Date());
 const getDefaultEndDate = () => {
     const d = new Date();
-    d.setDate(d.getDate() + 14);
+    d.setMonth(d.getMonth() + 1);
     return toStr(d);
 };
 
