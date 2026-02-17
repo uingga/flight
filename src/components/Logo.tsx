@@ -34,7 +34,7 @@ export default function Logo({ className = '', size = 1.0 }: { className?: strin
                 lineHeight: 1,
                 letterSpacing: '0.02em'
             }}>
-                <span style={{ marginRight: '0.4px' }}>T</span>ikit
+                <span style={{ marginRight: '0.4px' }}>M</span>yTikit
             </span>
         </span>
     );

@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og';
 
 export const runtime = 'edge';
-export const alt = '티킷 - 여행사 땡처리 항공권을 한 곳에서';
+export const alt = '마이티킷 - 여행사 땡처리 항공권을 한 곳에서';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
@@ -99,7 +99,7 @@ export default async function Image() {
                             letterSpacing: '-0.03em',
                         }}
                     >
-                        Tikit
+                        MyTikit
                     </span>
                 </div>
 

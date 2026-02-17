@@ -1223,7 +1223,7 @@ export default function Dashboard() {
                     </div>
 
                     <div className={styles.footerBottom}>
-                        <span>© 2026 티킷 · 여행을 더 쉽게</span>
+                        <span>© 2026 마이티킷 · 여행을 더 쉽게</span>
                     </div>
                 </div>
             </footer>
