@@ -99,7 +99,7 @@ export default async function Image() {
                             letterSpacing: '-0.03em',
                         }}
                     >
-                        mitikit
+                        MYTIKIT
                     </span>
                 </div>
 

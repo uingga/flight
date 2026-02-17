@@ -16,10 +16,10 @@ export const metadata: Metadata = {
         default: '마이티킷 - 여행사 땡처리 항공권을 한 곳에서',
     },
     description: '하나투어, 모두투어, 노랑풍선, 온라인투어의 실시간 땡처리 항공권을 한눈에 비교하고 최저가로 예약하세요. 지금 바로 떠나는 여행, 마이티킷과 함께하세요.',
-    keywords: ['땡처리항공권', '특가항공권', '해외여행', '패키지여행', '마이티킷', 'mitikit', '저가항공', '항공권비교', '일본여행', '동남아여행'],
-    authors: [{ name: 'mitikit' }],
-    creator: 'mitikit',
-    publisher: 'mitikit',
+    keywords: ['땡처리항공권', '특가항공권', '해외여행', '패키지여행', '마이티킷', 'MYTIKIT', '저가항공', '항공권비교', '일본여행', '동남아여행'],
+    authors: [{ name: 'MYTIKIT' }],
+    creator: 'MYTIKIT',
+    publisher: 'MYTIKIT',
     formatDetection: {
         email: false,
         address: false,
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
         title: '마이티킷 - 4대 여행사 땡처리 항공권 모음',
         description: '하나투어, 모두투어, 노랑풍선, 온라인투어의 실시간 땡처리 항공권을 한눈에 비교하고 최저가로 예약하세요.',
         url: 'https://mitikit.com',
-        siteName: '마이티킷 (mitikit)',
+        siteName: '마이티킷 (MYTIKIT)',
         images: [
             {
                 url: '/opengraph-image',
@@ -132,7 +132,7 @@ export default function RootLayout({
                             '@graph': [
                                 {
                                     '@type': 'WebSite',
-                                    name: '마이티킷 (mitikit)',
+                                    name: '마이티킷 (MYTIKIT)',
                                     url: 'https://mitikit.com',
                                     description: '여행사 땡처리 항공권을 한 곳에서',
                                     potentialAction: {
