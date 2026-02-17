@@ -26,9 +26,8 @@ export default function Logo({ className = '', size = 1.0 }: { className?: strin
                 </defs>
             </svg>
             <span style={{
-                fontFamily: "'Balsamiq Sans', sans-serif",
-                fontWeight: 400,
-                fontStyle: 'italic' as const,
+                fontFamily: "'Aggravo', sans-serif",
+                fontWeight: 700,
                 fontSize: `${2.4 * scale}rem`,
                 color: '#111827',
                 lineHeight: 1,
