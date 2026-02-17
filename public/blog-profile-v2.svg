@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <!-- Rich background gradient -->
+    <linearGradient id="bg_grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4f46e5" /> <!-- Indigo 600 -->
+      <stop offset="50%" stop-color="#7c3aed" /> <!-- Violet 600 -->
+      <stop offset="100%" stop-color="#db2777" /> <!-- Pink 600 -->
+    </linearGradient>
+
+    <!-- Glassy surface gradients -->
+    <linearGradient id="glass_surface" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="rgba(255, 255, 255, 0.4)" />
+      <stop offset="100%" stop-color="rgba(255, 255, 255, 0.1)" />
+    </linearGradient>
+
+    <linearGradient id="glass_border" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="rgba(255, 255, 255, 0.6)" />
+      <stop offset="100%" stop-color="rgba(255, 255, 255, 0.1)" />
+    </linearGradient>
+
+    <!-- Detailed Plane Shadows -->
+    <filter id="plane_shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="12" result="blur" />
+      <feOffset dx="8" dy="16" result="offsetBlur" />
+      <feFlood flood-color="#2e1065" flood-opacity="0.4" result="colorBlur" />
+      <feComposite in="colorBlur" in2="offsetBlur" operator="in" />
+      <feMerge>
+        <feMergeNode />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+
+    <!-- Inner glow/reflection -->
+    <filter id="inner_glow">
+      <feGaussianBlur stdDeviation="4" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="arithmetic" k2="1" k3="1" />
+    </filter>
+  </defs>
+
+  <!-- Background container with rounded corners -->
+  <rect width="512" height="512" rx="120" fill="url(#bg_grad)" />
+
+  <!-- Abstract decorative circles for depth -->
+  <circle cx="100" cy="100" r="150" fill="url(#glass_surface)" opacity="0.2" />
+  <circle cx="450" cy="400" r="180" fill="#4338ca" opacity="0.3" />
+
+  <!-- 3D Paper Plane Construction -->
+  <g transform="translate(256, 266) scale(11) rotate(-10)" filter="url(#plane_shadow)">
+    <!-- Left Wing (Darker side) -->
+    <path d="M0 -10 L-8 6 L0 3 Z" fill="#e0e7ff" opacity="0.9" />
+    
+    <!-- Right Wing (Brighter side) -->
+    <path d="M0 -10 L8 6 L0 3 Z" fill="#ffffff" />
+    
+    <!-- Fuselage shadow/crease -->
+    <path d="M0 -10 L0 8 L-1 5 Z" fill="#c7d2fe" opacity="0.6" />
+    
+    <!-- Bottom body -->
+    <path d="M0 3 L0 8 L-1.5 5 Z" fill="#a5b4fc" />
+  </g>
+
+  <!-- Overlay sheen -->
+  <rect width="512" height="512" rx="120" fill="url(#glass_surface)" style="mix-blend-mode: overlay; pointer-events: none;" />
+
+</svg>
