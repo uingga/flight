@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog Profile Render</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            overflow: hidden;
+        }
+
+        #canvas {
+            width: 512px;
+            height: 512px;
+            background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%);
+            border-radius: 48px; /* Slightly rounded for the profile image itself */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        /* Abstract Background Elements */
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.1), rgba(255,255,255,0));
+            filter: blur(20px);
+        }
+        .orb-1 { width: 300px; height: 300px; top: -50px; left: -50px; }
+        .orb-2 { width: 400px; height: 400px; bottom: -100px; right: -100px; background: radial-gradient(circle at 70% 70%, rgba(99, 102, 241, 0.4), rgba(67, 56, 202, 0)); }
+
+        /* 3D Container */
+        .scene {
+            perspective: 1000px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transform-style: preserve-3d;
+        }
+
+        /* Paper Airplane Styled as 3D Object */
+        .plane {
+            width: 180px;
+            height: 180px;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 20px 30px rgba(0,0,0,0.4));
+            transform: rotate(-10deg) translateZ(50px);
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: rotate(-10deg) translateZ(50px) translateY(0); }
+            50% { transform: rotate(-8deg) translateZ(50px) translateY(-15px); }
+        }
+
+        .plane path {
+            fill: url(#planeGradient);
+        }
+
+        /* 3D Text Styling */
+        .text {
+            font-family: 'Noto Sans KR', sans-serif;
+            font-size: 84px;
+            font-weight: 900;
+            color: white;
+            letter-spacing: -0.02em;
+            text-align: center;
+            line-height: 1;
+            
+            /* Powerful 3D Text Shadow Effect */
+            text-shadow: 
+                0 1px 0 #ccc,
+                0 2px 0 #c9c9c9,
+                0 3px 0 #bbb,
+                0 4px 0 #b9b9b9,
+                0 5px 0 #aaa,
+                0 6px 1px rgba(0,0,0,.1),
+                0 0 5px rgba(0,0,0,.1),
+                0 1px 3px rgba(0,0,0,.3),
+                0 3px 5px rgba(0,0,0,.2),
+                0 5px 10px rgba(0,0,0,.25),
+                0 10px 10px rgba(0,0,0,.2),
+                0 20px 20px rgba(0,0,0,.15);
+            
+            transform: translateZ(30px);
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="canvas">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+
+        <div class="scene">
+            <!-- High quality paper airplane SVG used as a texture/object -->
+            <svg class="plane" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="planeGradient" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+                        <stop offset="0%" stop-color="#ffffff" />
+                        <stop offset="100%" stop-color="#e0e7ff" />
+                    </linearGradient>
+                </defs>
+                <path d="M3.8 11.1 L20.2 2.9 Q22 2 21.2 3.8 L13.8 20.2 Q13 22 12.0 20.3 L9.5 15.7 Q8.5 14 6.6 13.4 L3.9 12.6 Q2 12 3.8 11.1Z" />
+            </svg>
+
+            <div class="text">티키티킷</div>
+        </div>
+    </div>
+
+</body>
+</html>

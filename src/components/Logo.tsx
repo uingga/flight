@@ -33,7 +33,7 @@ export default function Logo({ className = '', size = 1.0 }: { className?: strin
                 lineHeight: 1,
                 letterSpacing: '0.02em'
             }}>
-                마이티킷
+                티키티킷
             </span>
         </span>
     );
