@@ -25,14 +25,14 @@ export const metadata: Metadata = {
         address: false,
         telephone: false,
     },
-    metadataBase: new URL('https://mytikit.vercel.app'),
+    metadataBase: new URL('https://mitikit.com'),
     alternates: {
         canonical: '/',
     },
     openGraph: {
         title: '마이티킷 - 4대 여행사 땡처리 항공권 모음',
         description: '하나투어, 모두투어, 노랑풍선, 온라인투어의 실시간 땡처리 항공권을 한눈에 비교하고 최저가로 예약하세요.',
-        url: 'https://mytikit.vercel.app',
+        url: 'https://mitikit.com',
         siteName: '마이티킷 (MyTikit)',
         images: [
             {
@@ -133,11 +133,11 @@ export default function RootLayout({
                                 {
                                     '@type': 'WebSite',
                                     name: '마이티킷 (MyTikit)',
-                                    url: 'https://mytikit.vercel.app',
+                                    url: 'https://mitikit.com',
                                     description: '여행사 땡처리 항공권을 한 곳에서',
                                     potentialAction: {
                                         '@type': 'SearchAction',
-                                        target: 'https://mytikit.vercel.app/?q={search_term_string}',
+                                        target: 'https://mitikit.com/?q={search_term_string}',
                                         'query-input': 'required name=search_term_string',
                                     },
                                 },
