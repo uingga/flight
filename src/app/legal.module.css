@@ -1,0 +1,145 @@
+.legalPage {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 80px 20px 60px;
+}
+
+.backLink {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--color-primary);
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-bottom: 24px;
+    text-decoration: none;
+    transition: opacity var(--transition-fast);
+}
+
+.backLink:hover {
+    opacity: 0.8;
+    color: var(--color-primary);
+}
+
+.pageTitle {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--color-text-primary);
+    margin-bottom: 8px;
+    letter-spacing: -0.02em;
+}
+
+.lastUpdated {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    margin-bottom: 40px;
+}
+
+.section {
+    margin-bottom: 36px;
+}
+
+.sectionTitle {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--color-primary);
+    display: inline-block;
+}
+
+.sectionContent {
+    font-size: 0.95rem;
+    line-height: 1.8;
+    color: var(--color-text-secondary);
+}
+
+.sectionContent p {
+    margin-bottom: 12px;
+}
+
+.sectionContent ul {
+    margin: 8px 0 12px 20px;
+    list-style: disc;
+}
+
+.sectionContent ul li {
+    margin-bottom: 6px;
+}
+
+.sectionContent strong {
+    color: var(--color-text-primary);
+    font-weight: 600;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 0.9rem;
+}
+
+.table th,
+.table td {
+    border: 1px solid var(--color-border);
+    padding: 10px 14px;
+    text-align: left;
+}
+
+.table th {
+    background: var(--color-bg-secondary);
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.table td {
+    color: var(--color-text-secondary);
+}
+
+.contactInfo {
+    background: var(--color-bg-secondary);
+    border-radius: var(--radius-lg);
+    padding: 20px 24px;
+    margin-top: 16px;
+}
+
+.contactInfo p {
+    margin-bottom: 4px;
+    font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+    .legalPage {
+        padding: 60px 16px 40px;
+    }
+
+    .pageTitle {
+        font-size: 1.6rem;
+    }
+
+    .table {
+        font-size: 0.8rem;
+    }
+
+    .table th,
+    .table td {
+        padding: 8px 10px;
+    }
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+    .contactInfo {
+        background: #1e293b;
+    }
+
+    .table th {
+        background: #1e293b;
+    }
+
+    .table th,
+    .table td {
+        border-color: #334155;
+    }
+}

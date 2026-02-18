@@ -1224,6 +1224,10 @@ export default function Dashboard() {
 
                     <div className={styles.footerBottom}>
                         <span>© 2026 티키티킷 · 여행을 더 쉽게</span>
+                        <span style={{ display: 'flex', gap: '12px', fontSize: '0.8rem' }}>
+                            <a href="/terms" style={{ color: 'var(--color-text-muted)' }}>이용약관</a>
+                            <a href="/privacy" style={{ color: 'var(--color-text-muted)' }}>개인정보처리방침</a>
+                        </span>
                     </div>
                 </div>
             </footer>
