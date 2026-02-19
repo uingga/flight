@@ -3,6 +3,8 @@ import { Inter } from 'next/font/google';
 import Script from 'next/script';
 import './globals.css';
 
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://mytikit.vercel.app';
+
 const inter = Inter({
     subsets: ['latin'],
     weight: ['400', '600', '700', '800'],
@@ -15,8 +17,15 @@ export const metadata: Metadata = {
         template: '%s | 티키티킷 - 여행사 땡처리 항공권을 한 곳에서',
         default: '티키티킷 - 여행사 땡처리 항공권을 한 곳에서',
     },
-    description: '하나투어, 모두투어, 노랑풍선, 온라인투어의 실시간 땡처리 항공권을 한눈에 비교하고 최저가로 예약하세요. 지금 바로 떠나는 여행, 티키티킷과 함께하세요.',
-    keywords: ['땡처리항공권', '특가항공권', '해외여행', '패키지여행', '티키티킷', 'tikitkit', '저가항공', '항공권비교', '일본여행', '동남아여행'],
+    description: '하나투어, 모두투어, 노랑풍선, 온라인투어, 땡처리닷컴의 실시간 땡처리 항공권을 한눈에 비교하고 최저가로 예약하세요. 지금 바로 떠나는 여행, 티키티킷과 함께하세요.',
+    keywords: [
+        '땡처리항공권', '특가항공권', '해외여행', '항공권비교', '티키티킷', 'tikitikit',
+        '항공권특가', '해외항공권', '항공권최저가', '저가항공',
+        '하나투어특가', '모두투어특가', '노랑풍선특가', '온라인투어특가', '땡처리닷컴',
+        '일본항공권', '오사카항공권', '도쿄항공권', '후쿠오카항공권',
+        '동남아항공권', '다낭항공권', '방콕항공권', '세부항공권', '나트랑항공권',
+        '대만항공권', '홍콩항공권', '괌항공권',
+    ],
     authors: [{ name: '티키티킷' }],
     creator: '티키티킷',
     publisher: '티키티킷',
@@ -25,14 +34,14 @@ export const metadata: Metadata = {
         address: false,
         telephone: false,
     },
-    metadataBase: new URL('https://mytikit.vercel.app'),
+    metadataBase: new URL(BASE_URL),
     alternates: {
         canonical: '/',
     },
     openGraph: {
-        title: '티키티킷 - 4대 여행사 땡처리 항공권 모음',
-        description: '하나투어, 모두투어, 노랑풍선, 온라인투어의 실시간 땡처리 항공권을 한눈에 비교하고 최저가로 예약하세요.',
-        url: 'https://mytikit.vercel.app',
+        title: '티키티킷 - 5대 여행사 땡처리 항공권 모음',
+        description: '하나투어, 모두투어, 노랑풍선, 온라인투어, 땡처리닷컴의 실시간 땡처리 항공권을 한눈에 비교하고 최저가로 예약하세요.',
+        url: BASE_URL,
         siteName: '티키티킷',
         images: [
             {
@@ -47,7 +56,7 @@ export const metadata: Metadata = {
     },
     twitter: {
         card: 'summary_large_image',
-        title: '티키티킷 - 4대 여행사 땡처리 항공권 모음',
+        title: '티키티킷 - 5대 여행사 땡처리 항공권 모음',
         description: '여행사가 숨겨둔 땡처리 항공권을 실시간으로 모아 보여드립니다.',
         images: ['/opengraph-image'],
     },
@@ -133,11 +142,12 @@ export default function RootLayout({
                                 {
                                     '@type': 'WebSite',
                                     name: '티키티킷',
-                                    url: 'https://mytikit.vercel.app',
+                                    url: BASE_URL,
                                     description: '여행사 땡처리 항공권을 한 곳에서',
+                                    inLanguage: 'ko',
                                     potentialAction: {
                                         '@type': 'SearchAction',
-                                        target: 'https://mytikit.vercel.app/?q={search_term_string}',
+                                        target: `${BASE_URL}/?q={search_term_string}`,
                                         'query-input': 'required name=search_term_string',
                                     },
                                 },
@@ -145,10 +155,33 @@ export default function RootLayout({
                                     '@type': 'Organization',
                                     name: '티키티킷',
                                     alternateName: 'TikiTikit',
-                                    url: 'https://mytikit.vercel.app',
-                                    logo: 'https://mytikit.vercel.app/icon.svg',
+                                    url: BASE_URL,
+                                    logo: `${BASE_URL}/icon.svg`,
                                     description: '하나투어, 모두투어, 노랑풍선, 온라인투어, 땡처리닷컴의 실시간 특가 항공권을 한눈에 비교하는 서비스',
                                     sameAs: [],
+                                },
+                                {
+                                    '@type': 'BreadcrumbList',
+                                    itemListElement: [
+                                        {
+                                            '@type': 'ListItem',
+                                            position: 1,
+                                            name: '홈',
+                                            item: BASE_URL,
+                                        },
+                                    ],
+                                },
+                                {
+                                    '@type': 'SoftwareApplication',
+                                    name: '티키티킷',
+                                    applicationCategory: 'TravelApplication',
+                                    operatingSystem: 'Web',
+                                    offers: {
+                                        '@type': 'Offer',
+                                        price: '0',
+                                        priceCurrency: 'KRW',
+                                    },
+                                    description: '하나투어, 모두투어, 노랑풍선, 온라인투어, 땡처리닷컴의 땡처리 항공권을 한눈에 비교하는 무료 웹 서비스',
                                 },
                                 {
                                     '@type': 'FAQPage',
@@ -183,6 +216,14 @@ export default function RootLayout({
                                             acceptedAnswer: {
                                                 '@type': 'Answer',
                                                 text: '항공권 가격은 매일 7회 자동으로 업데이트됩니다. 각 여행사의 최신 땡처리 특가 정보를 실시간으로 반영합니다.',
+                                            },
+                                        },
+                                        {
+                                            '@type': 'Question',
+                                            name: '땡처리 항공권이란 무엇인가요?',
+                                            acceptedAnswer: {
+                                                '@type': 'Answer',
+                                                text: '땡처리 항공권은 여행사가 보유한 좌석 중 출발일이 임박하여 할인 판매하는 특가 항공권입니다. 정상가 대비 최대 50% 이상 저렴하게 구매할 수 있습니다.',
                                             },
                                         },
                                     ],

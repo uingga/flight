@@ -160,7 +160,7 @@ export default function PrivacyPage() {
                 <div className={styles.sectionContent}>
                     <div className={styles.contactInfo}>
                         <p><strong>서비스명:</strong> 티키티킷 (TikiTikit)</p>
-                        <p><strong>이메일:</strong> tikitikitkr@gmail.com</p>
+                        <p><strong>이메일:</strong> tikitikit.official@gmail.com</p>
                     </div>
                     <p style={{ marginTop: '12px' }}>
                         개인정보 관련 문의사항은 위 이메일로 연락해 주시기 바랍니다.
