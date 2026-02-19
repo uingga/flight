@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og';
 
 export const runtime = 'edge';
-export const alt = '티키티킷 - 여행사 땡처리 항공권을 한 곳에서';
+export const alt = '티키트릿 - 여행사 땡처리 항공권을 한 곳에서';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
@@ -16,7 +16,7 @@ export default async function Image() {
                     flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    background: 'linear-gradient(145deg, #0f172a 0%, #1e1b4b 35%, #312e81 60%, #4f46e5 85%, #06b6d4 100%)',
+                    background: 'linear-gradient(145deg, #f8fafc 0%, #eef2ff 30%, #e0e7ff 55%, #c7d2fe 80%, #a5b4fc 100%)',
                     fontFamily: 'sans-serif',
                     position: 'relative',
                     overflow: 'hidden',
@@ -28,7 +28,7 @@ export default async function Image() {
                     width: '500px',
                     height: '500px',
                     borderRadius: '50%',
-                    background: 'radial-gradient(circle, rgba(99, 102, 241, 0.3) 0%, transparent 70%)',
+                    background: 'radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%)',
                     top: '-100px',
                     right: '-100px',
                     display: 'flex',
@@ -38,7 +38,7 @@ export default async function Image() {
                     width: '400px',
                     height: '400px',
                     borderRadius: '50%',
-                    background: 'radial-gradient(circle, rgba(6, 182, 212, 0.25) 0%, transparent 70%)',
+                    background: 'radial-gradient(circle, rgba(79, 70, 229, 0.12) 0%, transparent 70%)',
                     bottom: '-80px',
                     left: '-60px',
                     display: 'flex',
@@ -51,13 +51,13 @@ export default async function Image() {
                         alignItems: 'center',
                         gap: '8px',
                         padding: '10px 28px',
-                        background: 'rgba(255, 255, 255, 0.12)',
+                        background: 'rgba(79, 70, 229, 0.1)',
                         borderRadius: '999px',
                         fontSize: '22px',
                         fontWeight: 600,
-                        color: 'rgba(255, 255, 255, 0.85)',
+                        color: '#4f46e5',
                         marginBottom: '36px',
-                        border: '1px solid rgba(255, 255, 255, 0.15)',
+                        border: '1px solid rgba(79, 70, 229, 0.2)',
                     }}
                 >
                     ✈️ 실시간 특가 항공권 비교
@@ -81,8 +81,8 @@ export default async function Image() {
                     >
                         <defs>
                             <linearGradient id="g" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
-                                <stop stopColor="#818cf8" />
-                                <stop offset="1" stopColor="#06b6d4" />
+                                <stop stopColor="#6366f1" />
+                                <stop offset="1" stopColor="#4f46e5" />
                             </linearGradient>
                         </defs>
                         <path
@@ -95,11 +95,11 @@ export default async function Image() {
                         style={{
                             fontSize: '96px',
                             fontWeight: 900,
-                            color: '#ffffff',
+                            color: '#1e1b4b',
                             letterSpacing: '-0.03em',
                         }}
                     >
-                        티키티킷
+                        티키트릿
                     </span>
                 </div>
 
@@ -108,7 +108,7 @@ export default async function Image() {
                     style={{
                         fontSize: '44px',
                         fontWeight: 800,
-                        color: '#e0e7ff',
+                        color: '#4338ca',
                         marginBottom: '40px',
                         letterSpacing: '-0.01em',
                     }}
