@@ -12,14 +12,14 @@ const inter = Inter({
 
 export const metadata: Metadata = {
     title: {
-        template: '%s | 티키트릿 - 여행사 땡처리 항공권을 한 곳에서',
-        default: '티키트릿 - 여행사 땡처리 항공권을 한 곳에서',
+        template: '%s | 티키티킷 - 여행사 땡처리 항공권을 한 곳에서',
+        default: '티키티킷 - 여행사 땡처리 항공권을 한 곳에서',
     },
-    description: '하나투어, 모두투어, 노랑풍선, 온라인투어의 실시간 땡처리 항공권을 한눈에 비교하고 최저가로 예약하세요. 지금 바로 떠나는 여행, 티키트릿과 함께하세요.',
-    keywords: ['땡처리항공권', '특가항공권', '해외여행', '패키지여행', '티키트릿', 'tikitkit', '저가항공', '항공권비교', '일본여행', '동남아여행'],
-    authors: [{ name: '티키트릿' }],
-    creator: '티키트릿',
-    publisher: '티키트릿',
+    description: '하나투어, 모두투어, 노랑풍선, 온라인투어의 실시간 땡처리 항공권을 한눈에 비교하고 최저가로 예약하세요. 지금 바로 떠나는 여행, 티키티킷과 함께하세요.',
+    keywords: ['땡처리항공권', '특가항공권', '해외여행', '패키지여행', '티키티킷', 'tikitkit', '저가항공', '항공권비교', '일본여행', '동남아여행'],
+    authors: [{ name: '티키티킷' }],
+    creator: '티키티킷',
+    publisher: '티키티킷',
     formatDetection: {
         email: false,
         address: false,
@@ -30,16 +30,16 @@ export const metadata: Metadata = {
         canonical: '/',
     },
     openGraph: {
-        title: '티키트릿 - 4대 여행사 땡처리 항공권 모음',
+        title: '티키티킷 - 4대 여행사 땡처리 항공권 모음',
         description: '하나투어, 모두투어, 노랑풍선, 온라인투어의 실시간 땡처리 항공권을 한눈에 비교하고 최저가로 예약하세요.',
         url: 'https://mytikit.vercel.app',
-        siteName: '티키트릿',
+        siteName: '티키티킷',
         images: [
             {
                 url: '/opengraph-image',
                 width: 1200,
                 height: 630,
-                alt: '티키트릿 - 여행사 땡처리 항공권 모음',
+                alt: '티키티킷 - 여행사 땡처리 항공권 모음',
             },
         ],
         locale: 'ko_KR',
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
     },
     twitter: {
         card: 'summary_large_image',
-        title: '티키트릿 - 4대 여행사 땡처리 항공권 모음',
+        title: '티키티킷 - 4대 여행사 땡처리 항공권 모음',
         description: '여행사가 숨겨둔 땡처리 항공권을 실시간으로 모아 보여드립니다.',
         images: ['/opengraph-image'],
     },
@@ -77,7 +77,7 @@ export const metadata: Metadata = {
         'theme-color': '#6366f1',
         'apple-mobile-web-app-capable': 'yes',
         'apple-mobile-web-app-status-bar-style': 'default',
-        'apple-mobile-web-app-title': '티키트릿',
+        'apple-mobile-web-app-title': '티키티킷',
     },
 };
 
@@ -132,7 +132,7 @@ export default function RootLayout({
                             '@graph': [
                                 {
                                     '@type': 'WebSite',
-                                    name: '티키트릿',
+                                    name: '티키티킷',
                                     url: 'https://mytikit.vercel.app',
                                     description: '여행사 땡처리 항공권을 한 곳에서',
                                     potentialAction: {
@@ -143,7 +143,7 @@ export default function RootLayout({
                                 },
                                 {
                                     '@type': 'Organization',
-                                    name: '티키트릿',
+                                    name: '티키티킷',
                                     alternateName: 'TikiTikit',
                                     url: 'https://mytikit.vercel.app',
                                     logo: 'https://mytikit.vercel.app/icon.svg',
@@ -155,18 +155,18 @@ export default function RootLayout({
                                     mainEntity: [
                                         {
                                             '@type': 'Question',
-                                            name: '티키트릿은 어떤 서비스인가요?',
+                                            name: '티키티킷은 어떤 서비스인가요?',
                                             acceptedAnswer: {
                                                 '@type': 'Answer',
-                                                text: '티키트릿은 하나투어, 모두투어, 노랑풍선, 온라인투어, 땡처리닷컴 등 주요 여행사의 땡처리 항공권을 실시간으로 모아 한눈에 비교할 수 있는 무료 서비스입니다.',
+                                                text: '티키티킷은 하나투어, 모두투어, 노랑풍선, 온라인투어, 땡처리닷컴 등 주요 여행사의 땡처리 항공권을 실시간으로 모아 한눈에 비교할 수 있는 무료 서비스입니다.',
                                             },
                                         },
                                         {
                                             '@type': 'Question',
-                                            name: '티키트릿은 무료인가요?',
+                                            name: '티키티킷은 무료인가요?',
                                             acceptedAnswer: {
                                                 '@type': 'Answer',
-                                                text: '네, 티키트릿은 완전히 무료로 이용하실 수 있습니다. 별도의 회원가입이나 결제 없이 바로 항공권 가격을 비교하실 수 있습니다.',
+                                                text: '네, 티키티킷은 완전히 무료로 이용하실 수 있습니다. 별도의 회원가입이나 결제 없이 바로 항공권 가격을 비교하실 수 있습니다.',
                                             },
                                         },
                                         {
