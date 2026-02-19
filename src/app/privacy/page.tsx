@@ -4,7 +4,7 @@ import styles from '../legal.module.css';
 
 export const metadata: Metadata = {
     title: '개인정보처리방침',
-    description: '티키티킷 개인정보처리방침',
+    description: '티키트릿 개인정보처리방침',
 };
 
 export default function PrivacyPage() {
@@ -21,7 +21,7 @@ export default function PrivacyPage() {
                 <h2 className={styles.sectionTitle}>1. 개인정보 처리 목적</h2>
                 <div className={styles.sectionContent}>
                     <p>
-                        티키티킷(이하 &quot;서비스&quot;)은 항공권 가격 비교 정보를 제공하는 서비스로,
+                        티키트릿(이하 &quot;서비스&quot;)은 항공권 가격 비교 정보를 제공하는 서비스로,
                         별도의 회원가입이나 로그인 없이 이용할 수 있습니다.
                     </p>
                     <p>서비스 운영 및 개선을 위해 다음의 목적으로 최소한의 정보를 처리합니다:</p>
@@ -159,7 +159,7 @@ export default function PrivacyPage() {
                 <h2 className={styles.sectionTitle}>9. 개인정보 보호책임자</h2>
                 <div className={styles.sectionContent}>
                     <div className={styles.contactInfo}>
-                        <p><strong>서비스명:</strong> 티키티킷 (TikiTikit)</p>
+                        <p><strong>서비스명:</strong> 티키트릿 (TikiTikit)</p>
                         <p><strong>이메일:</strong> tikitikitkr@gmail.com</p>
                     </div>
                     <p style={{ marginTop: '12px' }}>
