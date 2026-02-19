@@ -127,19 +127,3 @@
         padding: 8px 10px;
     }
 }
-
-/* Dark mode */
-@media (prefers-color-scheme: dark) {
-    .contactInfo {
-        background: #1e293b;
-    }
-
-    .table th {
-        background: #1e293b;
-    }
-
-    .table th,
-    .table td {
-        border-color: #334155;
-    }
-}
