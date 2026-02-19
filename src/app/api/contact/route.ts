@@ -25,11 +25,13 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: '서버 설정 오류입니다.' }, { status: 500 });
         }
 
+        const emailPass = process.env.EMAIL_PASS!.replace(/\s/g, '');
+
         const transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
                 user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS,
+                pass: emailPass,
             },
         });
 
