@@ -4,10 +4,10 @@ export default function Logo({ className = '', size = 1.0 }: { className?: strin
     const scale = size;
 
     return (
-        <span className={`logo-container ${className}`} style={{ display: 'inline-flex', alignItems: 'center', gap: `${4 * scale}px` }}>
+        <span className={`logo-container ${className}`} style={{ display: 'inline-flex', alignItems: 'center', gap: `${3 * scale}px` }}>
             <svg
-                width={28 * scale}
-                height={28 * scale}
+                width={22 * scale}
+                height={22 * scale}
                 viewBox="0 0 24 24"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
@@ -28,7 +28,7 @@ export default function Logo({ className = '', size = 1.0 }: { className?: strin
             <span style={{
                 fontFamily: "'YeogiOttaeJalnan', sans-serif",
                 fontWeight: 'normal',
-                fontSize: `${2.0 * scale}rem`,
+                fontSize: `${1.6 * scale}rem`,
                 color: '#111827',
                 lineHeight: 1,
                 letterSpacing: '0.02em'
