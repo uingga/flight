@@ -26,8 +26,8 @@ export default function Logo({ className = '', size = 1.0 }: { className?: strin
                 </defs>
             </svg>
             <span style={{
-                fontFamily: "'Pretendard', sans-serif",
-                fontWeight: 800,
+                fontFamily: "'Moneygraphy', sans-serif",
+                fontWeight: 'normal',
                 fontSize: `${2.0 * scale}rem`,
                 color: '#111827',
                 lineHeight: 1,
