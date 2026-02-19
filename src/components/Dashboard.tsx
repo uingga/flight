@@ -209,6 +209,7 @@ export default function Dashboard() {
     const [error, setError] = useState<string | null>(null);
     const [lastUpdated, setLastUpdated] = useState<string | null>(null);
     const [priceHistory, setPriceHistory] = useState<Record<string, Array<{ date: string; minPrice: number }>>>({});
+    const [interparkPrices, setInterparkPrices] = useState<Record<string, Record<string, { avg: number; lowest: number }>>>({});
     const [searchTerm, setSearchTerm] = useState('');
     const [sortBy, setSortBy] = useState<'price' | 'date' | 'airline' | 'discount'>('price');
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
@@ -377,6 +378,7 @@ export default function Dashboard() {
             setFlights(data.flights || []);
             setLastUpdated(data.lastUpdated || null);
             setPriceHistory(data.priceHistory || {});
+            setInterparkPrices(data.interparkPrices || {});
         } catch (err) {
             setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.');
         } finally {
@@ -608,9 +610,11 @@ export default function Dashboard() {
                 break;
             case 'discount':
                 const getDiscount = (f: Flight) => {
-                    const avg = averagePrices[f.arrival.city];
-                    if (!avg || f.price <= 0) return 0;
-                    return ((avg - f.price) / avg) * 100;
+                    const city = f.arrival.city?.replace(/\([^)]+\)/, '').trim();
+                    const depMonth = f.departure.date?.substring(0, 7);
+                    const ipAvg = interparkPrices[city]?.[depMonth]?.avg;
+                    if (!ipAvg || f.price <= 0) return 0;
+                    return ((ipAvg - f.price) / ipAvg) * 100;
                 };
                 comparison = getDiscount(b) - getDiscount(a);
                 break;
@@ -1060,11 +1064,14 @@ export default function Dashboard() {
                                             <div className={styles.cardFooter}>
                                                 <div className={styles.priceSection}>
                                                     <div className={styles.price}>{formatPrice(flight.price)}</div>
-                                                    {!isMobile && (() => {
-                                                        const avgPrice = averagePrices[flight.arrival.city];
-                                                        if (avgPrice && flight.price > 0) {
-                                                            const discount = avgPrice - flight.price;
-                                                            const percent = (discount / avgPrice) * 100;
+                                                    {(() => {
+                                                        const city = flight.arrival.city?.replace(/\([^)]+\)/, '').trim();
+                                                        const depMonth = flight.departure.date?.substring(0, 7); // "2026-02"
+                                                        const ipCityData = interparkPrices[city];
+                                                        const ipMonthData = ipCityData?.[depMonth];
+                                                        if (ipMonthData?.avg && flight.price > 0) {
+                                                            const discount = ipMonthData.avg - flight.price;
+                                                            const percent = (discount / ipMonthData.avg) * 100;
                                                             if (percent >= 5) {
                                                                 return (
                                                                     <span className={styles.discountBadge}>

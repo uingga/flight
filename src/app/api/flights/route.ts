@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Flight, FlightSearchParams } from '@/types/flight';
+import { resolveCityCode } from '@/lib/scrapers/interpark';
 
 // 항공사명 정규화 맵
 const AIRLINE_NAME_MAP: Record<string, string> = {
@@ -149,10 +150,43 @@ export async function GET(request: NextRequest) {
             }
         } catch (e) { }
 
+        // 인터파크 벤치마크 가격 로드 (도시명 기준으로 변환)
+        let interparkPrices: Record<string, Record<string, { avg: number; lowest: number }>> = {};
+        try {
+            const fs3 = require('fs');
+            const path3 = require('path');
+            const ipPath = path3.join(process.cwd(), 'data', 'interpark-prices.json');
+            if (fs3.existsSync(ipPath)) {
+                const ipData = JSON.parse(fs3.readFileSync(ipPath, 'utf-8'));
+                // 도시코드 → 도시명 역매핑 생성
+                const codeToCityName: Record<string, string> = {};
+                const allCityNames = new Set<string>();
+                allFlights.forEach(f => {
+                    if (f.arrival?.city) {
+                        const code = resolveCityCode(f.arrival.city, f.arrival.airport);
+                        if (code && !codeToCityName[code]) {
+                            codeToCityName[code] = f.arrival.city.replace(/\([^)]+\)/, '').trim();
+                        }
+                    }
+                });
+                // 인터파크 가격을 도시명 기준으로 변환
+                if (ipData.prices) {
+                    for (const [cityCode, months] of Object.entries(ipData.prices)) {
+                        const cityName = codeToCityName[cityCode];
+                        if (cityName && typeof months === 'object') {
+                            interparkPrices[cityName] = months as Record<string, { avg: number; lowest: number }>;
+                        }
+                    }
+                }
+                console.log(`인터파크 벤치마크: ${Object.keys(interparkPrices).length}개 도시 로드`);
+            }
+        } catch (e) { }
+
         return NextResponse.json({
             success: true,
             count: allFlights.length,
             flights: allFlights,
+            interparkPrices,
             sources: {
 
                 ybtour: allFlights.filter(f => f.source === 'ybtour').length,
