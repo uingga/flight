@@ -1,4 +1,3 @@
-// v2 - force rebuild
 import { NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
 
@@ -14,23 +13,19 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: '문의 내용은 2000자 이내로 작성해주세요.' }, { status: 400 });
         }
 
-        // 디버그 로그
-        console.log('EMAIL_USER:', process.env.EMAIL_USER);
-        console.log('EMAIL_PASS length:', process.env.EMAIL_PASS?.length);
-        console.log('EMAIL_PASS first 4:', process.env.EMAIL_PASS?.substring(0, 4));
+        // 이메일 설정 - GMAIL_APP_PASS 우선, EMAIL_PASS 폴백
+        const emailUser = process.env.GMAIL_USER || process.env.EMAIL_USER;
+        const emailPass = (process.env.GMAIL_APP_PASS || process.env.EMAIL_PASS || '').replace(/\s/g, '');
 
-        // 이메일 설정 확인
-        if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+        if (!emailUser || !emailPass) {
             console.error('이메일 환경변수가 설정되지 않았습니다.');
             return NextResponse.json({ error: '서버 설정 오류입니다.' }, { status: 500 });
         }
 
-        const emailPass = process.env.EMAIL_PASS!.replace(/\s/g, '');
-
         const transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
-                user: process.env.EMAIL_USER,
+                user: emailUser,
                 pass: emailPass,
             },
         });
@@ -50,7 +45,7 @@ export async function POST(request: Request) {
         `;
 
         await transporter.sendMail({
-            from: `"티키티킷 문의" <${process.env.EMAIL_USER}>`,
+            from: `"티키티킷 문의" <${emailUser}>`,
             to: 'tikitikit.official@gmail.com',
             replyTo: email || undefined,
             subject: `[티키티킷 문의] ${name || '익명'}: ${message.substring(0, 50)}`,
@@ -60,13 +55,16 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: true });
     } catch (error: unknown) {
         const errMsg = error instanceof Error ? error.message : String(error);
+        const emailUser = process.env.GMAIL_USER || process.env.EMAIL_USER;
+        const emailPass = (process.env.GMAIL_APP_PASS || process.env.EMAIL_PASS || '').replace(/\s/g, '');
         console.error('문의 이메일 발송 실패:', error);
         return NextResponse.json({
             error: '전송에 실패했습니다. 잠시 후 다시 시도해주세요.',
             debug: {
-                user: process.env.EMAIL_USER,
-                passLen: process.env.EMAIL_PASS?.length,
-                passFirst4: process.env.EMAIL_PASS?.substring(0, 4),
+                user: emailUser,
+                passLen: emailPass.length,
+                passFirst4: emailPass.substring(0, 4),
+                source: process.env.GMAIL_APP_PASS ? 'GMAIL_APP_PASS' : 'EMAIL_PASS',
                 errMsg,
             }
         }, { status: 500 });
