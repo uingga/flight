@@ -386,6 +386,36 @@ export default function Dashboard() {
         }
     };
 
+    // 공유 링크에서 특정 항공편으로 스크롤
+    useEffect(() => {
+        if (loading || flights.length === 0) return;
+        const params = new URLSearchParams(window.location.search);
+        const sharedFlightId = params.get('flight');
+        if (!sharedFlightId) return;
+
+        // 필터 초기화하여 공유된 항공편이 보이도록
+        setSearchTerm('');
+        setSourceFilter('all');
+        setRegionFilter('all');
+        setDepartureFilter('all');
+        setAirlineFilter('all');
+        setStartDate('');
+        setEndDate('');
+        setDisplayCount(flights.length); // 모든 항공편 표시
+
+        // DOM 업데이트 후 스크롤
+        setTimeout(() => {
+            const el = document.querySelector(`[data-flight-id="${CSS.escape(sharedFlightId)}"]`);
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                el.classList.add('shared-highlight');
+                setTimeout(() => el.classList.remove('shared-highlight'), 3000);
+            }
+            // URL에서 파라미터 제거 (뒤로가기 방지)
+            window.history.replaceState({}, '', window.location.pathname);
+        }, 300);
+    }, [loading, flights]);
+
     const uniqueAirlines = useMemo(() => {
         const airlines = new Set(flights.map(f => f.airline).filter(Boolean));
         return Array.from(airlines).sort((a, b) => a.localeCompare(b));
@@ -443,7 +473,8 @@ export default function Dashboard() {
         const price = `${Math.floor(flight.price / 10000)}만원`;
         const depDate = formatDate(flight.departure.date);
         const arrDate = flight.arrival.date ? ` ~ ${formatDate(flight.arrival.date)}` : '';
-        return `✈️ ${normalizeCity(flight.departure.city)} → ${normalizeCity(flight.arrival.city)} ${price} | ${depDate}${arrDate} | ${flight.airline} | ${getSourceName(flight.source)}\n🔗 ${flight.link}`;
+        const siteUrl = `${window.location.origin}?flight=${encodeURIComponent(flight.id)}`;
+        return `✈️ ${normalizeCity(flight.departure.city)} → ${normalizeCity(flight.arrival.city)} ${price} | ${depDate}${arrDate} | ${flight.airline} | ${getSourceName(flight.source)}\n🔗 ${siteUrl}`;
     };
 
     const shareFlight = async (flight: Flight) => {
@@ -989,7 +1020,7 @@ export default function Dashboard() {
                                 const isLowestPrice = lowestPrices[route] === flight.price;
 
                                 return (
-                                    <div key={flight.id} className={`card ${styles.flightCard} fade-in`}>
+                                    <div key={flight.id} data-flight-id={flight.id} className={`card ${styles.flightCard} fade-in`}>
 
                                         <div className={styles.cardHeader}>
                                             <div className={styles.cardHeaderLeft}>
