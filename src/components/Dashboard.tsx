@@ -488,9 +488,8 @@ export default function Dashboard() {
                 }
                 return mobileSearchUrl;
             }
-            // PC: fareId 유효 시 바로 예약, 만료(0원) 시 자동 검색 페이지 폴백
-            let pcUrl = flight.link.replace(/psngrCntLst=[^&]+/, `psngrCntLst=${encodeURIComponent(JSON.stringify(psngrCntLst))}`);
-            return `/api/redirect?url=${encodeURIComponent(pcUrl)}&fallback=${encodeURIComponent(flight.searchLink || 'https://www.hanatour.com/trp/air/CHPC0AIR0233M200')}`;
+            // PC: fareId는 SPA 렌더링이라 서버에서 0원 감지 불가 → searchLink 직접 사용
+            return flight.searchLink || 'https://www.hanatour.com/trp/air/CHPC0AIR0233M200';
         }
 
         // 모두투어: adult, child, infant 파라미터
