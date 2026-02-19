@@ -13,6 +13,11 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: '문의 내용은 2000자 이내로 작성해주세요.' }, { status: 400 });
         }
 
+        // 디버그 로그
+        console.log('EMAIL_USER:', process.env.EMAIL_USER);
+        console.log('EMAIL_PASS length:', process.env.EMAIL_PASS?.length);
+        console.log('EMAIL_PASS first 4:', process.env.EMAIL_PASS?.substring(0, 4));
+
         // 이메일 설정 확인
         if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
             console.error('이메일 환경변수가 설정되지 않았습니다.');
