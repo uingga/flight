@@ -128,8 +128,8 @@ export async function scrapeTtang(): Promise<Flight[]> {
                     const textFragment = f.arrCity
                         ? `#:~:text=${encodeURIComponent(f.arrCity)}`
                         : '';
-                    const link = `https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=${depDateParam}&adt=1&chd=0&inf=0&page=1&scale=20${textFragment}`;
-                    const searchLink = `https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=${depDateParam}&adt=1&chd=0&inf=0&page=1&scale=20`;
+                    const link = `https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=${depDateParam}&adt=1&chd=0&inf=0&page=1&scale=200${textFragment}`;
+                    const searchLink = `https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=${depDateParam}&adt=1&chd=0&inf=0&page=1&scale=200`;
 
                     const flight: Flight = {
                         id: `ttang-${f.masterId}-${f.depDate}`,
