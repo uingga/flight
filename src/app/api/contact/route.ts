@@ -14,7 +14,7 @@ export async function POST(request: Request) {
         }
 
         // 이메일 설정 확인
-        if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS || !process.env.EMAIL_TO) {
+        if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
             console.error('이메일 환경변수가 설정되지 않았습니다.');
             return NextResponse.json({ error: '서버 설정 오류입니다.' }, { status: 500 });
         }
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
 
         await transporter.sendMail({
             from: `"티키티킷 문의" <${process.env.EMAIL_USER}>`,
-            to: process.env.EMAIL_TO,
+            to: 'tikitikit.official@gmail.com',
             replyTo: email || undefined,
             subject: `[티키티킷 문의] ${name || '익명'}: ${message.substring(0, 50)}`,
             html,
