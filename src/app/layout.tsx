@@ -101,6 +101,8 @@ export default function RootLayout({
     return (
         <html lang="ko" className={inter.variable}>
             <head>
+                {/* 아고다 파트너스 도메인 인증 */}
+                <meta name="agd-partner-manual-verification" />
                 {/* 로고 폰트 (Balsamiq Sans) */}
                 <link
                     href="https://fonts.googleapis.com/css2?family=Balsamiq+Sans:ital,wght@1,700&display=swap"
