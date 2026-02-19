@@ -4,7 +4,7 @@ import styles from '../legal.module.css';
 
 export const metadata: Metadata = {
     title: '이용약관',
-    description: '티키티킷 서비스 이용약관',
+    description: '티키트릿 서비스 이용약관',
 };
 
 export default function TermsPage() {
@@ -21,7 +21,7 @@ export default function TermsPage() {
                 <h2 className={styles.sectionTitle}>제1조 (목적)</h2>
                 <div className={styles.sectionContent}>
                     <p>
-                        본 약관은 티키티킷(이하 &quot;서비스&quot;)이 제공하는 항공권 가격 비교 정보 서비스의
+                        본 약관은 티키트릿(이하 &quot;서비스&quot;)이 제공하는 항공권 가격 비교 정보 서비스의
                         이용 조건 및 절차에 관한 사항을 규정함을 목적으로 합니다.
                     </p>
                 </div>
@@ -30,7 +30,7 @@ export default function TermsPage() {
             <div className={styles.section}>
                 <h2 className={styles.sectionTitle}>제2조 (서비스의 내용)</h2>
                 <div className={styles.sectionContent}>
-                    <p>티키티킷은 다음과 같은 서비스를 제공합니다:</p>
+                    <p>티키트릿은 다음과 같은 서비스를 제공합니다:</p>
                     <ul>
                         <li>하나투어, 모두투어, 노랑풍선, 온라인투어, 땡처리닷컴 등 여행사의 땡처리 항공권 정보 수집 및 비교</li>
                         <li>항공권 가격 변동 추적 및 알림</li>
@@ -58,7 +58,7 @@ export default function TermsPage() {
                     </p>
                     <p>
                         <strong>2.</strong> 실제 예약 시점의 가격, 좌석 수, 운항 여부 등은 해당 여행사의 정보와
-                        다를 수 있으며, 이로 인해 발생하는 차이에 대해 티키티킷은 책임을 지지 않습니다.
+                        다를 수 있으며, 이로 인해 발생하는 차이에 대해 티키트릿은 책임을 지지 않습니다.
                     </p>
                     <p>
                         <strong>3.</strong> 항공권 예약 및 결제는 각 여행사 사이트에서 직접 이루어지며,
@@ -76,7 +76,7 @@ export default function TermsPage() {
                 <div className={styles.sectionContent}>
                     <p>
                         본 서비스의 디자인, 로고, 소프트웨어, 콘텐츠 등에 대한 저작권 및 지적재산권은
-                        티키티킷에 귀속됩니다. 무단 복제, 배포, 수정을 금지합니다.
+                        티키트릿에 귀속됩니다. 무단 복제, 배포, 수정을 금지합니다.
                     </p>
                 </div>
             </div>
@@ -85,7 +85,7 @@ export default function TermsPage() {
                 <h2 className={styles.sectionTitle}>제6조 (서비스 변경 및 중단)</h2>
                 <div className={styles.sectionContent}>
                     <p>
-                        티키티킷은 서비스 개선, 기술적 이유 등으로 서비스의 전부 또는 일부를
+                        티키트릿은 서비스 개선, 기술적 이유 등으로 서비스의 전부 또는 일부를
                         변경하거나 중단할 수 있으며, 이에 대해 별도의 보상을 하지 않습니다.
                     </p>
                 </div>
@@ -105,7 +105,7 @@ export default function TermsPage() {
                 <h2 className={styles.sectionTitle}>문의</h2>
                 <div className={styles.sectionContent}>
                     <div className={styles.contactInfo}>
-                        <p><strong>서비스명:</strong> 티키티킷 (TikiTikit)</p>
+                        <p><strong>서비스명:</strong> 티키트릿 (TikiTikit)</p>
                         <p><strong>이메일:</strong> tikitikitkr@gmail.com</p>
                     </div>
                 </div>
