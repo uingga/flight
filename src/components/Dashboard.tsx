@@ -226,6 +226,7 @@ export default function Dashboard() {
     const [isCalendarOpen, setIsCalendarOpen] = useState(false);
     const [showFilters, setShowFilters] = useState(false);
     const [shareToast, setShareToast] = useState<string | null>(null);
+    const [sharedFlightId, setSharedFlightId] = useState<string | null>(null);
     const [bookingFlight, setBookingFlight] = useState<Flight | null>(null);
     const [passengers, setPassengers] = useState({ adult: 1, child: 0, infant: 0 });
     const [alertFlight, setAlertFlight] = useState<Flight | null>(null);
@@ -386,35 +387,16 @@ export default function Dashboard() {
         }
     };
 
-    // 공유 링크에서 특정 항공편으로 스크롤
+    // 공유 링크에서 특정 항공편 필터링
     useEffect(() => {
-        if (loading || flights.length === 0) return;
         const params = new URLSearchParams(window.location.search);
-        const sharedFlightId = params.get('flight');
-        if (!sharedFlightId) return;
-
-        // 필터 초기화하여 공유된 항공편이 보이도록
-        setSearchTerm('');
-        setSourceFilter('all');
-        setRegionFilter('all');
-        setDepartureFilter('all');
-        setAirlineFilter('all');
-        setStartDate('');
-        setEndDate('');
-        setDisplayCount(flights.length); // 모든 항공편 표시
-
-        // DOM 업데이트 후 스크롤
-        setTimeout(() => {
-            const el = document.querySelector(`[data-flight-id="${CSS.escape(sharedFlightId)}"]`);
-            if (el) {
-                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                el.classList.add('shared-highlight');
-                setTimeout(() => el.classList.remove('shared-highlight'), 3000);
-            }
-            // URL에서 파라미터 제거 (뒤로가기 방지)
+        const flightId = params.get('flight');
+        if (flightId) {
+            setSharedFlightId(flightId);
+            // URL 정리
             window.history.replaceState({}, '', window.location.pathname);
-        }, 300);
-    }, [loading, flights]);
+        }
+    }, []);
 
     const uniqueAirlines = useMemo(() => {
         const airlines = new Set(flights.map(f => f.airline).filter(Boolean));
@@ -621,6 +603,9 @@ export default function Dashboard() {
             return flight.departure.city.includes(departureFilter);
         })();
 
+
+        // 공유 링크로 접근 시 해당 항공편만 표시
+        if (sharedFlightId) return flight.id === sharedFlightId;
 
         return matchesSearch && matchesSource && matchesRegion && matchesAirline && matchesDate && matchesDeparture;
     }).sort((a, b) => {
@@ -1014,13 +999,31 @@ export default function Dashboard() {
                             </div>
                         </div>
 
+                        {sharedFlightId && (
+                            <div style={{
+                                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                padding: '12px 16px', marginBottom: '12px',
+                                background: 'var(--color-bg-secondary)', borderRadius: 'var(--radius-lg)',
+                                border: '1px solid var(--color-border)', fontSize: '0.9rem'
+                            }}>
+                                <span>✈️ 공유된 항공편</span>
+                                <button
+                                    onClick={() => setSharedFlightId(null)}
+                                    className="btn btn-primary"
+                                    style={{ fontSize: '0.8rem', padding: '6px 14px' }}
+                                >
+                                    전체 항공편 보기
+                                </button>
+                            </div>
+                        )}
+
                         <div className={styles.flightGrid}>
                             {displayedFlights.map((flight) => {
                                 const route = `${flight.departure.city}-${flight.arrival.city}`;
                                 const isLowestPrice = lowestPrices[route] === flight.price;
 
                                 return (
-                                    <div key={flight.id} data-flight-id={flight.id} className={`card ${styles.flightCard} fade-in`}>
+                                    <div key={flight.id} className={`card ${styles.flightCard} fade-in`}>
 
                                         <div className={styles.cardHeader}>
                                             <div className={styles.cardHeaderLeft}>
