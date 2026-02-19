@@ -46,7 +46,7 @@ export async function POST(request: Request) {
 
         await transporter.sendMail({
             from: `"티키티킷 문의" <${emailUser}>`,
-            to: 'tikitikit.official@gmail.com',
+            to: 'uingga@gmail.com',
             replyTo: email || undefined,
             subject: `[티키티킷 문의] ${name || '익명'}: ${message.substring(0, 50)}`,
             html,
