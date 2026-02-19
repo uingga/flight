@@ -569,8 +569,8 @@ export default function Dashboard() {
         setRegionFilter('all');
         setAirlineFilter('all');
         setDepartureFilter('all');
-        setStartDate('');
-        setEndDate('');
+        setStartDate(getDefaultStartDate());
+        setEndDate(getDefaultEndDate());
         setSortBy('price');
     };
 
@@ -735,6 +735,33 @@ export default function Dashboard() {
                 </div>
             </header>
 
+            {/* SEO: 검색엔진 크롤러용 콘텐츠 (JavaScript 미지원 시 표시) */}
+            <noscript>
+                <div style={{ padding: '40px 20px', maxWidth: '800px', margin: '0 auto', lineHeight: 1.8 }}>
+                    <h2>티키티킷 - 5대 여행사 땡처리 항공권 비교</h2>
+                    <p>
+                        티키티킷은 하나투어, 모두투어, 노랑풍선, 온라인투어, 땡처리닷컴의
+                        실시간 땡처리 항공권을 한눈에 비교할 수 있는 무료 서비스입니다.
+                    </p>
+                    <h3>인기 여행지 땡처리 항공권</h3>
+                    <ul>
+                        <li>일본 항공권: 오사카, 도쿄, 후쿠오카, 삿포로, 오키나와</li>
+                        <li>동남아 항공권: 다낭, 방콕, 세부, 나트랑, 푸켓, 발리, 호치민, 하노이</li>
+                        <li>중화권 항공권: 대만(타이페이), 홍콩, 마카오</li>
+                        <li>기타: 괌, 사이판, 싱가포르, 코타키나발루</li>
+                    </ul>
+                    <h3>서비스 특징</h3>
+                    <ul>
+                        <li>매일 7회 자동 업데이트로 최신 특가 정보 제공</li>
+                        <li>5대 여행사 가격 한눈에 비교</li>
+                        <li>출발일, 도착지, 항공사별 필터링</li>
+                        <li>가격 알림 설정 가능</li>
+                        <li>회원가입 없이 무료 이용</li>
+                    </ul>
+                    <p>이 페이지를 정상적으로 이용하려면 JavaScript를 활성화해주세요.</p>
+                </div>
+            </noscript>
+
             <div className="container">
                 <div className={styles.controls}>
                     {/* 1. 날짜 + 검색 한 줄 */}
@@ -757,7 +784,7 @@ export default function Dashboard() {
                                 onInputClick={() => setIsCalendarOpen(true)}
                                 onClickOutside={() => setIsCalendarOpen(false)}
                                 shouldCloseOnSelect={false}
-                                dateFormat="yy.MM.dd"
+                                dateFormat="MM.dd"
                                 locale={ko}
                                 className={styles.dateInput}
                                 placeholderText="언제 떠나세요?"
@@ -1273,6 +1300,7 @@ export default function Dashboard() {
                         <span style={{ display: 'flex', gap: '12px', fontSize: '0.8rem' }}>
                             <a href="/terms" style={{ color: 'var(--color-text-muted)' }}>이용약관</a>
                             <a href="/privacy" style={{ color: 'var(--color-text-muted)' }}>개인정보처리방침</a>
+                            <a href="mailto:tikitikit.official@gmail.com" style={{ color: 'var(--color-text-muted)' }}>문의하기</a>
                         </span>
                     </div>
                 </div>

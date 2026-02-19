@@ -106,7 +106,7 @@ export default function TermsPage() {
                 <div className={styles.sectionContent}>
                     <div className={styles.contactInfo}>
                         <p><strong>서비스명:</strong> 티키티킷 (TikiTikit)</p>
-                        <p><strong>이메일:</strong> tikitikitkr@gmail.com</p>
+                        <p><strong>이메일:</strong> tikitikit.official@gmail.com</p>
                     </div>
                 </div>
             </div>
