@@ -56,8 +56,17 @@ export async function POST(request: Request) {
         });
 
         return NextResponse.json({ success: true });
-    } catch (error) {
+    } catch (error: unknown) {
+        const errMsg = error instanceof Error ? error.message : String(error);
         console.error('문의 이메일 발송 실패:', error);
-        return NextResponse.json({ error: '전송에 실패했습니다. 잠시 후 다시 시도해주세요.' }, { status: 500 });
+        return NextResponse.json({
+            error: '전송에 실패했습니다. 잠시 후 다시 시도해주세요.',
+            debug: {
+                user: process.env.EMAIL_USER,
+                passLen: process.env.EMAIL_PASS?.length,
+                passFirst4: process.env.EMAIL_PASS?.substring(0, 4),
+                errMsg,
+            }
+        }, { status: 500 });
     }
 }
