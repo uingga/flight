@@ -233,6 +233,9 @@ export default function Dashboard() {
     const [alertPrice, setAlertPrice] = useState('');
     const [pushSubscription, setPushSubscription] = useState<PushSubscription | null>(null);
     const [alertToast, setAlertToast] = useState<string | null>(null);
+    const [showContactModal, setShowContactModal] = useState(false);
+    const [contactForm, setContactForm] = useState({ name: '', email: '', message: '' });
+    const [contactSending, setContactSending] = useState(false);
     const observerRef = useRef<IntersectionObserver | null>(null);
     const loadMoreRef = useRef<HTMLDivElement | null>(null);
     const [headerHidden, setHeaderHidden] = useState(false);
@@ -1300,7 +1303,7 @@ export default function Dashboard() {
                         <span style={{ display: 'flex', gap: '12px', fontSize: '0.8rem' }}>
                             <a href="/terms" style={{ color: 'var(--color-text-muted)' }}>이용약관</a>
                             <a href="/privacy" style={{ color: 'var(--color-text-muted)' }}>개인정보처리방침</a>
-                            <a href="mailto:tikitikit.official@gmail.com" style={{ color: 'var(--color-text-muted)' }}>문의하기</a>
+                            <a href="#" onClick={(e) => { e.preventDefault(); setShowContactModal(true); }} style={{ color: 'var(--color-text-muted)' }}>문의하기</a>
                         </span>
                     </div>
                 </div>
@@ -1395,6 +1398,81 @@ export default function Dashboard() {
                         <button className={styles.modalConfirm} onClick={setupAlert}>
                             알림 설정하기 🔔
                         </button>
+                    </div>
+                </div>
+            )}
+
+            {/* 문의하기 모달 */}
+            {showContactModal && (
+                <div className={styles.modalOverlay} onClick={() => setShowContactModal(false)}>
+                    <div className={styles.modalSheet} onClick={(e) => e.stopPropagation()}>
+                        <div className={styles.modalHeader}>
+                            <h3 className={styles.modalTitle}>📬 문의하기</h3>
+                            <button className={styles.modalClose} onClick={() => setShowContactModal(false)}>×</button>
+                        </div>
+                        <div style={{ padding: '0 20px 20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            <div>
+                                <label style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)', marginBottom: '4px', display: 'block' }}>이름 (선택)</label>
+                                <input
+                                    type="text"
+                                    value={contactForm.name}
+                                    onChange={(e) => setContactForm(f => ({ ...f, name: e.target.value }))}
+                                    placeholder="홍길동"
+                                    style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', fontSize: '0.95rem' }}
+                                />
+                            </div>
+                            <div>
+                                <label style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)', marginBottom: '4px', display: 'block' }}>이메일 (선택)</label>
+                                <input
+                                    type="email"
+                                    value={contactForm.email}
+                                    onChange={(e) => setContactForm(f => ({ ...f, email: e.target.value }))}
+                                    placeholder="reply@example.com"
+                                    style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', fontSize: '0.95rem' }}
+                                />
+                            </div>
+                            <div>
+                                <label style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)', marginBottom: '4px', display: 'block' }}>문의 내용 *</label>
+                                <textarea
+                                    value={contactForm.message}
+                                    onChange={(e) => setContactForm(f => ({ ...f, message: e.target.value }))}
+                                    placeholder="문의 내용을 입력해주세요."
+                                    rows={4}
+                                    style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', fontSize: '0.95rem', resize: 'vertical', fontFamily: 'inherit' }}
+                                />
+                            </div>
+                            <button
+                                className={styles.modalConfirm}
+                                disabled={!contactForm.message.trim() || contactSending}
+                                onClick={async () => {
+                                    setContactSending(true);
+                                    try {
+                                        const res = await fetch('/api/contact', {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify(contactForm),
+                                        });
+                                        if (res.ok) {
+                                            setShowContactModal(false);
+                                            setContactForm({ name: '', email: '', message: '' });
+                                            setShareToast('✅ 문의가 전송되었습니다. 감사합니다!');
+                                            setTimeout(() => setShareToast(''), 3000);
+                                        } else {
+                                            const data = await res.json();
+                                            setShareToast(`❌ ${data.error || '전송에 실패했습니다.'}`);
+                                            setTimeout(() => setShareToast(''), 3000);
+                                        }
+                                    } catch {
+                                        setShareToast('❌ 네트워크 오류가 발생했습니다.');
+                                        setTimeout(() => setShareToast(''), 3000);
+                                    } finally {
+                                        setContactSending(false);
+                                    }
+                                }}
+                            >
+                                {contactSending ? '전송 중...' : '문의 보내기 ✉️'}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
