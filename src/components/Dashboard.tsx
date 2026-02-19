@@ -488,7 +488,12 @@ export default function Dashboard() {
                 }
                 return mobileSearchUrl;
             }
-            // PC: fareId는 SPA 렌더링이라 서버에서 0원 감지 불가 → searchLink 직접 사용
+            // PC: 모바일과 동일한 searchCond JSON 방식 사용 (fareId 만료 방지)
+            if (fareIdMatch) {
+                const pcSearchLink = flight.searchLink || 'https://www.hanatour.com/trp/air/CHPC0AIR0233M200';
+                const pcBookingUrl = `https://www.hanatour.com/com/pmt/CHPC0PMT0011M200?searchCond=${encodeURIComponent(JSON.stringify({ fareId: decodeURIComponent(fareIdMatch[1]), psngrCntLst }))}`;
+                return `/api/redirect?url=${encodeURIComponent(pcBookingUrl)}&fallback=${encodeURIComponent(pcSearchLink)}`;
+            }
             return flight.searchLink || 'https://www.hanatour.com/trp/air/CHPC0AIR0233M200';
         }
 
