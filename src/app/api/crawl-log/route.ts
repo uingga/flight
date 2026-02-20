@@ -96,6 +96,20 @@ export async function GET(request: NextRequest) {
                 source: f.source,
             }));
 
+        // 크롤링 히스토리 로드
+        let crawlHistory: Array<{
+            timestamp: string;
+            sites: Record<string, { total: number }>;
+            alerts: string[];
+        }> = [];
+        try {
+            const logPath = path.join(process.cwd(), 'data', 'crawl-log.json');
+            if (fs.existsSync(logPath)) {
+                const logData = JSON.parse(fs.readFileSync(logPath, 'utf-8'));
+                crawlHistory = (logData.entries || []).slice(-50); // 최근 50개
+            }
+        } catch { }
+
         return NextResponse.json({
             timestamp,
             totalFlights: flights.length,
@@ -107,6 +121,7 @@ export async function GET(request: NextRequest) {
             avgPriceBySource,
             priceByRegion,
             cheapest,
+            crawlHistory,
         });
     } catch (error) {
         return NextResponse.json({ error: 'Failed to read cache data' }, { status: 500 });

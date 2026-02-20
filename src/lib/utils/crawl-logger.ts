@@ -116,14 +116,17 @@ export function logCrawlResults(
 ): void {
     const history = loadLogHistory();
 
-    // 현재 엔트리 생성 또는 업데이트
-    let currentEntry = history.entries.find(
-        e => e.timestamp.startsWith(new Date().toISOString().split('T')[0])
-    );
+    // 현재 실행의 타임스탬프를 기준으로 새 엔트리 생성 또는
+    // 같은 크롤 세션(5분 이내)에서 이미 만들어진 엔트리 업데이트
+    const now = new Date();
+    let currentEntry = history.entries.find(e => {
+        const entryTime = new Date(e.timestamp);
+        return (now.getTime() - entryTime.getTime()) < 5 * 60 * 1000; // 5분 이내
+    });
 
     if (!currentEntry) {
         currentEntry = {
-            timestamp: new Date().toISOString(),
+            timestamp: now.toISOString(),
             sites: {},
             alerts: []
         };

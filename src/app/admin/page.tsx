@@ -3,6 +3,12 @@
 import { useState, useEffect } from 'react';
 import styles from './admin.module.css';
 
+interface CrawlHistoryEntry {
+    timestamp: string;
+    sites: Record<string, { total: number }>;
+    alerts: string[];
+}
+
 interface AdminData {
     timestamp: string;
     totalFlights: number;
@@ -14,6 +20,7 @@ interface AdminData {
     avgPriceBySource: Record<string, number>;
     priceByRegion: Record<string, { min: number; max: number; avg: number; count: number }>;
     cheapest: { route: string; airline: string; price: number; date: string; source: string }[];
+    crawlHistory?: CrawlHistoryEntry[];
 }
 
 const SOURCE_NAMES: Record<string, string> = {
@@ -221,6 +228,94 @@ export default function AdminPage() {
                     })}
                 </div>
             </section>
+
+            {/* 크롤링 히스토리 */}
+            {data.crawlHistory && data.crawlHistory.length > 0 && (
+                <section className={styles.section}>
+                    <h2>📈 크롤링 히스토리</h2>
+                    <div className={styles.cityDetail}>
+                        <table className={styles.cityTable}>
+                            <thead>
+                                <tr>
+                                    <th>시간</th>
+                                    {allSources.map(s => (
+                                        <th key={s} style={{ color: SOURCE_COLORS[s] }}>
+                                            {SOURCE_NAMES[s] || s}
+                                        </th>
+                                    ))}
+                                    <th>합계</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {[...data.crawlHistory].reverse().map((entry, idx, arr) => {
+                                    const prev = arr[idx + 1];
+                                    const total = Object.values(entry.sites).reduce((a, s) => a + s.total, 0);
+                                    const prevTotal = prev ? Object.values(prev.sites).reduce((a, s) => a + s.total, 0) : null;
+                                    const totalDiff = prevTotal !== null ? total - prevTotal : null;
+
+                                    return (
+                                        <tr key={entry.timestamp}>
+                                            <td style={{ whiteSpace: 'nowrap', fontSize: '0.85rem' }}>
+                                                {formatKST(entry.timestamp).replace(/\d{4}. /, '')}
+                                            </td>
+                                            {allSources.map(source => {
+                                                const count = entry.sites[source]?.total ?? 0;
+                                                const prevCount = prev?.sites[source]?.total ?? null;
+                                                const diff = prevCount !== null ? count - prevCount : null;
+                                                return (
+                                                    <td key={source} style={{ textAlign: 'center' }}>
+                                                        <span>{count}</span>
+                                                        {diff !== null && diff !== 0 && (
+                                                            <span style={{
+                                                                fontSize: '0.75rem',
+                                                                marginLeft: '4px',
+                                                                color: diff > 0 ? '#10b981' : '#ef4444',
+                                                                fontWeight: 600,
+                                                            }}>
+                                                                {diff > 0 ? `+${diff}` : diff}
+                                                            </span>
+                                                        )}
+                                                    </td>
+                                                );
+                                            })}
+                                            <td style={{ textAlign: 'center', fontWeight: 600 }}>
+                                                <span>{total}</span>
+                                                {totalDiff !== null && totalDiff !== 0 && (
+                                                    <span style={{
+                                                        fontSize: '0.75rem',
+                                                        marginLeft: '4px',
+                                                        color: totalDiff > 0 ? '#10b981' : '#ef4444',
+                                                    }}>
+                                                        {totalDiff > 0 ? `+${totalDiff}` : totalDiff}
+                                                    </span>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* 경고 목록 */}
+                    {data.crawlHistory.some(e => e.alerts.length > 0) && (
+                        <div style={{
+                            marginTop: '12px',
+                            padding: '12px 16px',
+                            background: 'rgba(239, 68, 68, 0.1)',
+                            borderRadius: '8px',
+                            border: '1px solid rgba(239, 68, 68, 0.2)',
+                        }}>
+                            <strong>⚠️ 최근 경고</strong>
+                            {data.crawlHistory.filter(e => e.alerts.length > 0).slice(-3).map((e, i) => (
+                                <div key={i} style={{ marginTop: '6px', fontSize: '0.85rem' }}>
+                                    {e.alerts.map((a, j) => <div key={j}>{a}</div>)}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </section>
+            )}
 
             {/* 지역별 가격 현황 */}
             <section className={styles.section}>
