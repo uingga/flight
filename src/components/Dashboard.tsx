@@ -211,7 +211,7 @@ export default function Dashboard() {
     const [priceHistory, setPriceHistory] = useState<Record<string, Array<{ date: string; minPrice: number }>>>({});
     const [interparkPrices, setInterparkPrices] = useState<Record<string, Record<string, { avg: number; lowest: number }>>>({});
     const [searchTerm, setSearchTerm] = useState('');
-    const [sortBy, setSortBy] = useState<'price' | 'date' | 'airline' | 'discount'>('price');
+    const [sortBy, setSortBy] = useState<'price' | 'date' | 'airline' | 'discount'>('discount');
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
     const [sourceFilter, setSourceFilter] = useState<string>('all');
     const [regionFilter, setRegionFilter] = useState<string>('all');
@@ -575,7 +575,7 @@ export default function Dashboard() {
         setDepartureFilter('all');
         setStartDate(getDefaultStartDate());
         setEndDate(getDefaultEndDate());
-        setSortBy('price');
+        setSortBy('discount');
     };
 
     // 활성 필터 여부
@@ -629,14 +629,10 @@ export default function Dashboard() {
                 comparison = a.airline.localeCompare(b.airline);
                 break;
             case 'discount':
-                const getDiscount = (f: Flight) => {
-                    const city = f.arrival.city?.replace(/\([^)]+\)/, '').trim();
-                    const depMonth = f.departure.date?.substring(0, 7);
-                    const ipAvg = interparkPrices[city]?.[depMonth]?.avg;
-                    if (!ipAvg || f.price <= 0) return 0;
-                    return ((ipAvg - f.price) / ipAvg) * 100;
-                };
-                comparison = getDiscount(b) - getDiscount(a);
+                const da = a.discountRate ?? 0;
+                const db = b.discountRate ?? 0;
+                comparison = db - da; // 할인율 높은 순
+                if (comparison === 0) comparison = a.price - b.price; // 같으면 가격순
                 break;
         }
 
@@ -1023,8 +1019,8 @@ export default function Dashboard() {
                                     onChange={(e) => setSortBy(e.target.value as any)}
                                     className={styles.statsSelect}
                                 >
+                                    <option value="discount">추천순</option>
                                     <option value="price">가격순</option>
-                                    <option value="discount">할인율순</option>
                                     <option value="date">날짜순</option>
                                 </select>
                             </div>
