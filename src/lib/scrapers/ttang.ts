@@ -117,7 +117,7 @@ export async function scrapeTtang(): Promise<Flight[]> {
 
                 let dayCount = 0;
                 for (const f of flights) {
-                    if (!f.depDate || f.price <= 0) continue;
+                    if (!f.depDate || !f.arrDate || f.price <= 0) continue;
 
                     const key = `${f.airline}|${f.depDate}|${f.arrDate}|${f.price}|${f.depCity}|${f.arrCity}`;
                     if (processedKeys.has(key)) continue;

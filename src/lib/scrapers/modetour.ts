@@ -113,6 +113,8 @@ export async function scrapeModetour(): Promise<Flight[]> {
                     const tax2 = parseInt(item.adult?.tax2 || '0');
                     const price = basePrice + tax1 + tax2; // 최종 가격 = 항공료 + 세금
 
+                    if (!item.sDate?.value || !item.eDate?.value) return;
+
                     const destination = item.arrival?.value || '';
                     const maxPrice = getMaxPriceForDestination(destination);
 

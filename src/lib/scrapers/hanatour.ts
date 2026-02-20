@@ -565,7 +565,7 @@ async function scrapeHanatourRegular(browser: any): Promise<Flight[]> {
                                 fullLink = `https://www.hanatour.com/com/pmt/CHPC0PMT0011M200?fareId=${fareId}&psngrCntLst=${psngrCntLst}&selectedCard=${selectedCard}`;
                             }
 
-                            if (price > 0 && arrivalCity) {
+                            if (price > 0 && arrivalCity && departureDate && returnDate) {
                                 // fareId에서 availCnt 추출
                                 let availCnt = 0;
                                 if (fareLst[index] && fareLst[index].availCnt) {
