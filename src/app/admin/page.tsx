@@ -188,45 +188,88 @@ export default function AdminPage() {
                 </div>
             </div>
 
-            {/* 소스별 현황 - 바 차트 */}
+            {/* 소스별 현황 - 도넛 차트 */}
             <section className={styles.section}>
                 <h2>여행사별 현황</h2>
-                <div className={styles.sourceGrid}>
-                    {allSources.map(source => {
-                        const count = data.bySource[source];
-                        const pct = Math.round((count / data.totalFlights) * 100);
-                        const barWidth = (count / maxSourceCount) * 100;
-                        const avgPrice = data.avgPriceBySource[source];
+                {(() => {
+                    // conic-gradient 계산
+                    let cumPct = 0;
+                    const gradientParts = allSources.map(source => {
+                        const pct = (data.bySource[source] / data.totalFlights) * 100;
+                        const start = cumPct;
+                        cumPct += pct;
+                        return `${SOURCE_COLORS[source] || '#6b7280'} ${start}% ${cumPct}%`;
+                    });
+                    const gradient = `conic-gradient(${gradientParts.join(', ')})`;
 
-                        return (
-                            <div
-                                key={source}
-                                className={styles.sourceCard}
-                                style={{ borderLeft: `4px solid ${SOURCE_COLORS[source] || '#6b7280'}` }}
-                            >
-                                <div className={styles.sourceHeader}>
-                                    <span className={styles.sourceName}>{SOURCE_NAMES[source] || source}</span>
-                                    <span className={styles.sourceTotal}>{count.toLocaleString()}건</span>
-                                </div>
-                                <div className={styles.barContainer}>
-                                    <div
-                                        className={styles.bar}
-                                        style={{
-                                            width: `${barWidth}%`,
-                                            background: SOURCE_COLORS[source] || '#6b7280',
-                                        }}
-                                    />
-                                </div>
-                                <div className={styles.sourceFooter}>
-                                    <span className={styles.sourceCityCount}>비율: {pct}%</span>
-                                    <span className={styles.sourceCityCount}>
-                                        평균가: {formatPrice(avgPrice)}
-                                    </span>
+                    return (
+                        <div style={{ display: 'flex', gap: '32px', alignItems: 'center', flexWrap: 'wrap' }}>
+                            {/* 도넛 차트 */}
+                            <div style={{
+                                width: '200px',
+                                height: '200px',
+                                borderRadius: '50%',
+                                background: gradient,
+                                position: 'relative',
+                                flexShrink: 0,
+                                margin: '0 auto',
+                            }}>
+                                <div style={{
+                                    position: 'absolute',
+                                    top: '50%',
+                                    left: '50%',
+                                    transform: 'translate(-50%, -50%)',
+                                    width: '110px',
+                                    height: '110px',
+                                    borderRadius: '50%',
+                                    background: '#1a1a2e',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                }}>
+                                    <span style={{ fontSize: '1.4rem', fontWeight: 700 }}>{data.totalFlights.toLocaleString()}</span>
+                                    <span style={{ fontSize: '0.75rem', color: '#9ca3af' }}>전체</span>
                                 </div>
                             </div>
-                        );
-                    })}
-                </div>
+
+                            {/* 범례 테이블 */}
+                            <div className={styles.cityDetail} style={{ flex: 1, minWidth: '280px' }}>
+                                <table className={styles.cityTable}>
+                                    <thead>
+                                        <tr><th>여행사</th><th>항공편</th><th>비율</th><th>평균가</th></tr>
+                                    </thead>
+                                    <tbody>
+                                        {allSources.map(source => {
+                                            const count = data.bySource[source];
+                                            const pct = Math.round((count / data.totalFlights) * 100);
+                                            const avgPrice = data.avgPriceBySource[source];
+                                            return (
+                                                <tr key={source}>
+                                                    <td>
+                                                        <span style={{
+                                                            display: 'inline-block',
+                                                            width: '10px',
+                                                            height: '10px',
+                                                            borderRadius: '50%',
+                                                            background: SOURCE_COLORS[source] || '#6b7280',
+                                                            marginRight: '8px',
+                                                            verticalAlign: 'middle',
+                                                        }} />
+                                                        {SOURCE_NAMES[source] || source}
+                                                    </td>
+                                                    <td>{count.toLocaleString()}건</td>
+                                                    <td>{pct}%</td>
+                                                    <td>{formatPrice(avgPrice)}</td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    );
+                })()}
             </section>
 
             {/* 크롤링 히스토리 */}
