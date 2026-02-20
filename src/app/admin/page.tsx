@@ -299,22 +299,31 @@ export default function AdminPage() {
 
                     {/* 경고 목록 */}
                     {data.crawlHistory.some(e => e.alerts.length > 0) && (
-                        <div style={{
-                            marginTop: '12px',
-                            padding: '12px 16px',
-                            background: 'rgba(239, 68, 68, 0.1)',
-                            borderRadius: '8px',
-                            border: '1px solid rgba(239, 68, 68, 0.2)',
-                        }}>
-                            <strong>⚠️ 최근 경고</strong>
-                            {data.crawlHistory.filter(e => e.alerts.length > 0).slice(-3).map((e, i) => (
-                                <div key={i} style={{ marginTop: '8px', fontSize: '0.85rem' }}>
-                                    <div style={{ color: '#9ca3af', fontSize: '0.8rem', marginBottom: '2px' }}>
-                                        🕐 {formatKST(e.timestamp)}
-                                    </div>
-                                    {e.alerts.map((a, j) => <div key={j}>{a}</div>)}
-                                </div>
-                            ))}
+                        <div className={styles.cityDetail} style={{ marginTop: '16px' }}>
+                            <h3 style={{ marginBottom: '8px' }}>⚠️ 최근 경고</h3>
+                            <table className={styles.cityTable}>
+                                <thead>
+                                    <tr><th>시간</th><th>내용</th></tr>
+                                </thead>
+                                <tbody>
+                                    {data.crawlHistory
+                                        .filter(e => e.alerts.length > 0)
+                                        .slice(-5)
+                                        .reverse()
+                                        .flatMap((e) =>
+                                            e.alerts.map((a, j) => (
+                                                <tr key={`${e.timestamp}-${j}`}>
+                                                    {j === 0 ? (
+                                                        <td rowSpan={e.alerts.length} style={{ whiteSpace: 'nowrap', verticalAlign: 'top', fontSize: '0.85rem' }}>
+                                                            {formatKST(e.timestamp).replace(/\d{4}\. /, '')}
+                                                        </td>
+                                                    ) : null}
+                                                    <td style={{ color: '#ef4444', fontSize: '0.85rem' }}>{a}</td>
+                                                </tr>
+                                            ))
+                                        )}
+                                </tbody>
+                            </table>
                         </div>
                     )}
                 </section>
