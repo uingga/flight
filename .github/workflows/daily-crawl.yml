@@ -55,9 +55,10 @@ jobs:
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           
           # 변경된 파일이 있는지 확인
-          if [[ -n $(git status --porcelain data/all-flights-cache.json) ]]; then
+          if [[ -n $(git status --porcelain data/) ]]; then
             git add data/all-flights-cache.json
             git add data/price-history.json 2>/dev/null || true
+            git add data/crawl-log.json 2>/dev/null || true
             git commit -m "chore(data): update flight data [skip ci]"
             git pull --rebase origin main
             git push
