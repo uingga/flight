@@ -87,7 +87,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     if (dateRange) ogParams.set('date', dateRange);
     if (flight.airline) ogParams.set('airline', flight.airline);
     if (flight.source) ogParams.set('source', flight.source);
-    const ogImageUrl = `/api/og?${ogParams.toString()}`;
+
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://mytikit.vercel.app';
+    const ogImageUrl = `${baseUrl}/api/og?${ogParams.toString()}`;
 
     return {
         title,
