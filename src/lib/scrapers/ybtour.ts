@@ -299,7 +299,7 @@ export async function scrapeYbtour(): Promise<Flight[]> {
 
                                 const validFlights = scheduleData
                                     .filter((f: any) => {
-                                        if (f.price <= 0) return false;
+                                        if (f.price <= 0 || !f.arrival.date) return false;
                                         const key = f.airline + '|' + f.departure.date + '|' + f.arrival.date + '|' + f.price;
                                         if (processedKeys.has(key)) return false;
                                         processedKeys.add(key);

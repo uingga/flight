@@ -225,7 +225,7 @@ export async function scrapeOnlineTour(): Promise<Flight[]> {
                                         link = 'https://www.onlinetour.co.kr/flight/w/international/dcair/dcairList';
                                     }
 
-                                    if (price > 0 && eventCode) {
+                                    if (price > 0 && eventCode && outDep.date && inDep.date) {
                                         results.push({
                                             id: `online-${eventCode}`,
                                             source: 'onlinetour',

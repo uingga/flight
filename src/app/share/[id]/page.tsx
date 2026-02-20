@@ -8,13 +8,14 @@ type Props = {
 // 캐시에서 항공편 조회
 async function getFlightById(id: string) {
     try {
-        const fs = require('fs');
-        const path = require('path');
-        const cachePath = path.join(process.cwd(), 'data', 'all-flights-cache.json');
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://tikitikit.kr';
+        const res = await fetch(`${baseUrl}/api/flights`, {
+            next: { revalidate: 3600 } // 캐싱을 통해 불필요한 요청 방지
+        });
 
-        if (fs.existsSync(cachePath)) {
-            const cacheData = JSON.parse(fs.readFileSync(cachePath, 'utf-8'));
-            const flights = cacheData.flights || [];
+        if (res.ok) {
+            const data = await res.json();
+            const flights = data.flights || [];
             return flights.find((f: { id: string }) => f.id === id) || null;
         }
     } catch (e) {
@@ -88,7 +89,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     if (flight.airline) ogParams.set('airline', flight.airline);
     if (flight.source) ogParams.set('source', flight.source);
 
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://mytikit.vercel.app';
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://tikitikit.kr';
     const ogImageUrl = `${baseUrl}/api/og?${ogParams.toString()}`;
 
     return {
