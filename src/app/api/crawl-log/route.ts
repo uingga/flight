@@ -17,6 +17,32 @@ interface Flight {
     region: string;
 }
 
+// 항공사명 정규화 맵 (flights/route.ts와 동일)
+const AIRLINE_NAME_MAP: Record<string, string> = {
+    '베트남 항공': '베트남항공',
+    '비엣젯 항공': '비엣젯항공',
+    '아시아나 항공': '아시아나항공',
+    '에미레이트 항공': '에미레이트항공',
+    '에어로케이항공': '에어로케이',
+    '중화 항공': '중화항공',
+    '타이 비엣젯 항공': '타이비엣젯항공',
+    '타이 비엣젯항공': '타이비엣젯항공',
+    '터키 항공': '터키항공',
+    '티웨이 항공': '티웨이항공',
+    '필리핀 항공': '필리핀항공',
+    '에티하드 항공': '에티하드항공',
+    '투르크메니스탄 항공': '투르크메니스탄항공',
+    'Airasia': '에어아시아',
+    'ANA항공': 'ANA',
+    '홍콩에어': '홍콩항공',
+};
+
+function normalizeAirline(name: string): string {
+    if (!name) return name;
+    const trimmed = name.trim();
+    return AIRLINE_NAME_MAP[trimmed] || trimmed;
+}
+
 export async function GET(request: NextRequest) {
     const key = request.nextUrl.searchParams.get('key');
 
@@ -56,7 +82,7 @@ export async function GET(request: NextRequest) {
             byCity[city] = (byCity[city] || 0) + 1;
 
             // 항공사별
-            const airline = f.airline || '알 수 없음';
+            const airline = normalizeAirline(f.airline || '알 수 없음');
             byAirline[airline] = (byAirline[airline] || 0) + 1;
 
             // 출발 도시별
