@@ -158,9 +158,22 @@ async function main() {
             console.log('✅ 만료 항공권 없음');
         }
 
+        // 편도 항공권 제거 (귀국일 없는 항공편)
+        console.log('\n=== 편도 항공권 제거 ===');
+        const beforeOneWay = activeFlights.length;
+        const roundTripFlights = activeFlights.filter((f: any) => {
+            return f.arrival?.date && f.arrival.date.trim() !== '';
+        });
+        const oneWayCount = beforeOneWay - roundTripFlights.length;
+        if (oneWayCount > 0) {
+            console.log(`✈️ 편도 항공권 ${oneWayCount}개 제거 (${beforeOneWay} → ${roundTripFlights.length})`);
+        } else {
+            console.log('✅ 편도 항공권 없음');
+        }
+
         // 인터파크 벤치마크 기반 필터링
         console.log('\n=== 인터파크 가격 벤치마크 ===');
-        let benchmarkedFlights = activeFlights;
+        let benchmarkedFlights = roundTripFlights;
         try {
             const dataDir = path.join(process.cwd(), 'data');
             const benchmarkPath = path.join(dataDir, 'interpark-prices.json');
@@ -182,7 +195,7 @@ async function main() {
             // 캐시가 없거나 오래되었으면 새로 수집
             if (!benchmark) {
                 const arrCityCodes = new Set<string>();
-                activeFlights.forEach((f: any) => {
+                roundTripFlights.forEach((f: any) => {
                     const code = resolveCityCode(f.arrival?.city || '', f.arrival?.airport);
                     if (code) arrCityCodes.add(code);
                 });
@@ -193,8 +206,8 @@ async function main() {
             }
 
             // 인터파크 월 평균가보다 비싼 항공편 필터링
-            const beforeBenchmark = activeFlights.length;
-            benchmarkedFlights = activeFlights.filter((f: any) => {
+            const beforeBenchmark = roundTripFlights.length;
+            benchmarkedFlights = roundTripFlights.filter((f: any) => {
                 // 도착 도시 코드 추출 (resolveCityCode로 모든 형식 지원)
                 const cityCode = resolveCityCode(f.arrival?.city || '', f.arrival?.airport);
                 if (!cityCode) return true; // 코드 없으면 유지
