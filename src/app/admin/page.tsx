@@ -32,11 +32,11 @@ const SOURCE_NAMES: Record<string, string> = {
 };
 
 const SOURCE_COLORS: Record<string, string> = {
-    hanatour: '#6366f1',
-    modetour: '#10b981',
-    ttang: '#f59e0b',
-    ybtour: '#ef4444',
-    onlinetour: '#8b5cf6',
+    hanatour: '#7c3aed',
+    modetour: '#059669',
+    ttang: '#dc2626',
+    ybtour: '#d97706',
+    onlinetour: '#1e40af',
 };
 
 function formatKST(iso: string): string {
