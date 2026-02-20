@@ -308,7 +308,10 @@ export default function AdminPage() {
                         }}>
                             <strong>⚠️ 최근 경고</strong>
                             {data.crawlHistory.filter(e => e.alerts.length > 0).slice(-3).map((e, i) => (
-                                <div key={i} style={{ marginTop: '6px', fontSize: '0.85rem' }}>
+                                <div key={i} style={{ marginTop: '8px', fontSize: '0.85rem' }}>
+                                    <div style={{ color: '#9ca3af', fontSize: '0.8rem', marginBottom: '2px' }}>
+                                        🕐 {formatKST(e.timestamp)}
+                                    </div>
                                     {e.alerts.map((a, j) => <div key={j}>{a}</div>)}
                                 </div>
                             ))}
