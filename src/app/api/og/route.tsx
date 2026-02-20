@@ -3,6 +3,35 @@ import { NextRequest } from 'next/server';
 
 export const runtime = 'edge';
 
+// We fetch the font dynamically from Google Fonts to avoid bundling large font files,
+// and to ensure Satori can render Korean characters correctly.
+async function getFontData() {
+    // Satori needs TTF/OTF. By providing a User-Agent that doesn't support woff2,
+    // Google Fonts returns the TTF URL.
+    const css = await (
+        await fetch('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@700&display=swap', {
+            headers: {
+                // Mock user agent to force TTF format response
+                'User-Agent':
+                    'Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_8; de-at) AppleWebKit/533.21.1 (KHTML, like Gecko) Version/5.0.5 Safari/533.21.1',
+            },
+        })
+    ).text();
+
+    const resource = css.match(/src: url\((.+)\) format\('(truetype|opentype)'\)/);
+
+    if (!resource) {
+        throw new Error('Failed to extract font URL from Google Fonts CSS');
+    }
+
+    const res = await fetch(resource[1]);
+    if (!res.ok) {
+        throw new Error('Failed to fetch font data');
+    }
+
+    return await res.arrayBuffer();
+}
+
 export async function GET(request: NextRequest) {
     const { searchParams } = request.nextUrl;
     const dep = searchParams.get('dep') || '서울';
@@ -31,6 +60,12 @@ export async function GET(request: NextRequest) {
     };
     const sourceName = sourceNames[source] || source;
 
+    // Load font data
+    const fontData = await getFontData().catch((err) => {
+        console.error('Font load error:', err);
+        return null;
+    });
+
     return new ImageResponse(
         (
             <div
@@ -40,7 +75,7 @@ export async function GET(request: NextRequest) {
                     display: 'flex',
                     flexDirection: 'column',
                     background: 'linear-gradient(145deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%)',
-                    fontFamily: 'sans-serif',
+                    fontFamily: '"Noto Sans KR", sans-serif',
                     position: 'relative',
                     overflow: 'hidden',
                     padding: '60px 80px',
@@ -202,6 +237,19 @@ export async function GET(request: NextRequest) {
                 </div>
             </div>
         ),
-        { width: 1200, height: 630 }
+        {
+            width: 1200,
+            height: 630,
+            ...(fontData ? {
+                fonts: [
+                    {
+                        name: 'Noto Sans KR',
+                        data: fontData,
+                        style: 'normal',
+                        weight: 700,
+                    }
+                ]
+            } : {})
+        }
     );
 }

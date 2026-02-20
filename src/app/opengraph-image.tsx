@@ -5,7 +5,42 @@ export const alt = '티키티킷 - 여행사 땡처리 항공권을 한 곳에�
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
+// We fetch the font dynamically from Google Fonts to avoid bundling large font files,
+// and to ensure Satori can render Korean characters correctly.
+async function getFontData() {
+    // Satori needs TTF/OTF. By providing a User-Agent that doesn't support woff2,
+    // Google Fonts returns the TTF URL.
+    const css = await (
+        await fetch('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@700;800;900&display=swap', {
+            headers: {
+                // Mock user agent to force TTF format response
+                'User-Agent':
+                    'Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_8; de-at) AppleWebKit/533.21.1 (KHTML, like Gecko) Version/5.0.5 Safari/533.21.1',
+            },
+        })
+    ).text();
+
+    const resource = css.match(/src: url\((.+)\) format\('(truetype|opentype)'\)/);
+
+    if (!resource) {
+        throw new Error('Failed to extract font URL from Google Fonts CSS');
+    }
+
+    const res = await fetch(resource[1]);
+    if (!res.ok) {
+        throw new Error('Failed to fetch font data');
+    }
+
+    return await res.arrayBuffer();
+}
+
 export default async function Image() {
+    // Load font data
+    const fontData = await getFontData().catch((err) => {
+        console.error('Font load error:', err);
+        return null;
+    });
+
     return new ImageResponse(
         (
             <div
@@ -17,7 +52,7 @@ export default async function Image() {
                     alignItems: 'center',
                     justifyContent: 'center',
                     background: 'linear-gradient(145deg, #f8fafc 0%, #eef2ff 30%, #e0e7ff 55%, #c7d2fe 80%, #a5b4fc 100%)',
-                    fontFamily: 'sans-serif',
+                    fontFamily: '"Noto Sans KR", sans-serif',
                     position: 'relative',
                     overflow: 'hidden',
                 }}
@@ -118,6 +153,18 @@ export default async function Image() {
 
             </div>
         ),
-        { ...size }
+        {
+            ...size,
+            ...(fontData ? {
+                fonts: [
+                    {
+                        name: 'Noto Sans KR',
+                        data: fontData,
+                        style: 'normal',
+                        weight: 800,
+                    }
+                ]
+            } : {})
+        }
     );
 }
