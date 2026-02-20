@@ -655,7 +655,7 @@ export default function Dashboard() {
     };
 
     const formatDate = (dateStr: string) => {
-        if (!dateStr) return '날짜 확인';
+        if (!dateStr) return '편도';
         try {
             // 한국식 날짜 형식 처리: "2026.02.22(일)" -> "2026-02-22"
             let normalizedDate = dateStr;
