@@ -458,17 +458,8 @@ export default function Dashboard() {
         const price = `${Math.floor(flight.price / 10000)}만원`;
         const depDate = formatDate(flight.departure.date);
         const arrDate = flight.arrival.date ? ` ~ ${formatDate(flight.arrival.date)}` : '';
-        // /share 페이지를 통해 동적 OG 이미지 제공
-        const shareParams = new URLSearchParams({
-            dep: normalizeCity(flight.departure.city),
-            arr: normalizeCity(flight.arrival.city),
-            price: String(flight.price),
-            date: `${depDate}${arrDate}`,
-            airline: flight.airline,
-            source: flight.source,
-            flight: flight.id,
-        });
-        const siteUrl = `${window.location.origin}/share?${shareParams.toString()}`;
+        // 짧은 공유 URL: /share/항공편ID → 서버에서 OG 이미지 생성 → 메인 페이지로 리다이렉트
+        const siteUrl = `${window.location.origin}/share/${encodeURIComponent(flight.id)}`;
         return `✈️ ${normalizeCity(flight.departure.city)} → ${normalizeCity(flight.arrival.city)} ${price} | ${depDate}${arrDate} | ${flight.airline} | ${getSourceName(flight.source)}\n🔗 ${siteUrl}`;
     };
 
