@@ -210,19 +210,28 @@ async function main() {
             benchmarkedFlights = roundTripFlights.filter((f: any) => {
                 // 도착 도시 코드 추출 (resolveCityCode로 모든 형식 지원)
                 const cityCode = resolveCityCode(f.arrival?.city || '', f.arrival?.airport);
-                if (!cityCode) return true; // 코드 없으면 유지
+                if (!cityCode) {
+                    f.discountRate = 0;
+                    return true; // 코드 없으면 유지
+                }
 
                 // 출발월 추출
                 const depDate = f.departure?.date || '';
                 const dateStr = depDate.replace(/[^0-9\-\.]/g, '').replace(/\./g, '-').replace(/-+$/, '');
                 const dateMatch = dateStr.match(/^(\d{4})-(\d{2})/);
-                if (!dateMatch) return true; // 날짜 파싱 불가하면 유지
+                if (!dateMatch) {
+                    f.discountRate = 0;
+                    return true; // 날짜 파싱 불가하면 유지
+                }
 
                 const yearMonth = `${dateMatch[1]}-${dateMatch[2]}`;
 
                 // 인터파크 월 평균가 조회
                 const cityPrices = benchmark.prices[cityCode];
-                if (!cityPrices || !cityPrices[yearMonth]) return true; // 비교 데이터 없으면 유지
+                if (!cityPrices || !cityPrices[yearMonth]) {
+                    f.discountRate = 0;
+                    return true; // 비교 데이터 없으면 유지
+                }
 
                 const interparkAvg = cityPrices[yearMonth].avg;
 
@@ -231,6 +240,13 @@ async function main() {
                     console.log(`  ❌ 필터: ${f.arrival?.city} ${yearMonth} ${f.price.toLocaleString()}원 > 인터파크 평균 ${interparkAvg.toLocaleString()}원 (${f.source})`);
                     return false;
                 }
+
+                // 인터파크 최저가 대비 할인율 계산
+                const interparkLowest = cityPrices[yearMonth].lowest;
+                f.discountRate = interparkLowest > 0
+                    ? Math.round((1 - f.price / interparkLowest) * 100)
+                    : 0;
+
                 return true;
             });
 
