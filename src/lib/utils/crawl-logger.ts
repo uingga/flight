@@ -121,7 +121,7 @@ export function logCrawlResults(
     const now = new Date();
     let currentEntry = history.entries.find(e => {
         const entryTime = new Date(e.timestamp);
-        return (now.getTime() - entryTime.getTime()) < 5 * 60 * 1000; // 5분 이내
+        return (now.getTime() - entryTime.getTime()) < 30 * 60 * 1000; // 30분 이내
     });
 
     if (!currentEntry) {
