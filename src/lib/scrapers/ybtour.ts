@@ -26,41 +26,43 @@ const REGIONS = [
         name: '일본',
         tabId: 'bannerCode_J1',
         cities: [
-            { name: '마츠야마', code: 'MYJ' },
-            { name: '나가사키', code: 'NGS' },
-            { name: '오사카(간사이)', code: 'KIX' },
             { name: '다카마쓰', code: 'TAK' },
             { name: '후쿠오카', code: 'FUK' },
+            { name: '마츠야마', code: 'MYJ' },
             { name: '삿포로(치토세)', code: 'CTS' },
+            { name: '오사카(간사이)', code: 'KIX' },
             { name: '나고야', code: 'NGO' },
             { name: '도쿄(나리타)', code: 'NRT' },
             { name: '오키나와', code: 'OKA' },
-            { name: '시즈오카', code: 'FSZ' },
+            { name: '시모지시마', code: 'SHI' },
         ]
     },
     {
         name: '아시아',
         tabId: 'bannerCode_A0/A3',
         cities: [
-            { name: '대만(타이페이)', code: 'TPE' },
-            { name: '방콕', code: 'BKK' },
+            { name: '나트랑(깜랑)', code: 'CXR' },
             { name: '세부', code: 'CEB' },
+            { name: '방콕', code: 'BKK' },
             { name: '방콕(돈무앙)', code: 'DMK' },
             { name: '다낭', code: 'DAD' },
             { name: '칼리보(보라카이)', code: 'KLO' },
             { name: '바탐(인도네시아)', code: 'BTH' },
-            { name: '보홀', code: 'TAG' },
-            { name: '푸꾸옥', code: 'PQC' },
+            { name: '대만(타이페이)', code: 'TPE' },
             { name: '치앙마이', code: 'CNX' },
+            { name: '보홀', code: 'TAG' },
+            { name: '가오슝', code: 'KHH' },
             { name: '코타키나발루', code: 'BKI' },
-            { name: '하노이', code: 'HAN' },
-            { name: '마닐라', code: 'MNL' },
-            { name: '발리(덴파사)', code: 'DPS' },
-            { name: '나트랑(깜랑)', code: 'CXR' },
-            { name: '마나도', code: 'MDC' },
-            { name: '싱가포르', code: 'SIN' },
             { name: '클락', code: 'CRK' },
+            { name: '푸꾸옥', code: 'PQC' },
+            { name: '마닐라', code: 'MNL' },
+            { name: '마나도', code: 'MDC' },
+            { name: '타이중', code: 'RMQ' },
+            { name: '싱가포르', code: 'SIN' },
             { name: '푸켓', code: 'HKT' },
+            { name: '발리(덴파사)', code: 'DPS' },
+            { name: '하노이', code: 'HAN' },
+            { name: '쿠알라룸푸르', code: 'KUL' },
             { name: '마카오', code: 'MFM' },
         ]
     },
@@ -78,6 +80,13 @@ const REGIONS = [
         cities: [
             { name: '시드니', code: 'SYD' },
             { name: '브리즈번', code: 'BNE' },
+        ]
+    },
+    {
+        name: '유럽',
+        tabId: 'bannerCode_E0/B1/F0',
+        cities: [
+            { name: '바르셀로나', code: 'BCN' },
         ]
     }
 ];
