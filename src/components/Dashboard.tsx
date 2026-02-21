@@ -1188,7 +1188,7 @@ export default function Dashboard() {
                                                     })()}
 
                                                 </div>
-                                                {['hanatour', 'modetour', 'ttang'].includes(flight.source) ? (
+                                                {['hanatour', 'modetour'].includes(flight.source) ? (
                                                     <button
                                                         type="button"
                                                         className="btn btn-primary"
@@ -1198,7 +1198,14 @@ export default function Dashboard() {
                                                     </button>
                                                 ) : (
                                                     <a
-                                                        href={getMobileUrl(flight.link, isMobile)}
+                                                        href={flight.source === 'ttang'
+                                                            ? (() => {
+                                                                const depDate = flight.departure.date?.replace(/[-\.]/g, '').substring(0, 8) || '';
+                                                                const arrCity = flight.arrival.city?.replace(/\([^)]+\)/g, '').trim() || '';
+                                                                const textFragment = arrCity ? `#:~:text=${encodeURIComponent(arrCity)}` : '';
+                                                                return `https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=${depDate}&adt=1&chd=0&inf=0&page=1&scale=200${textFragment}`;
+                                                            })()
+                                                            : getMobileUrl(flight.link, isMobile)}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                         className="btn btn-primary"
