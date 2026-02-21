@@ -302,8 +302,8 @@ export default function AdminPage() {
             {data.crawlHistory && data.crawlHistory.length > 0 && (
                 <section className={styles.section}>
                     <h2>📈 크롤링 히스토리</h2>
-                    <div className={styles.cityDetail}>
-                        <table className={styles.cityTable}>
+                    <div className={styles.cityDetail} style={{ overflowX: 'auto' }}>
+                        <table className={styles.cityTable} style={{ minWidth: '500px' }}>
                             <thead>
                                 <tr>
                                     <th>시간</th>
@@ -316,7 +316,7 @@ export default function AdminPage() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {[...data.crawlHistory].reverse().map((entry, idx, arr) => {
+                                {[...data.crawlHistory].reverse().slice(0, 14).map((entry, idx, arr) => {
                                     const prev = arr[idx + 1];
                                     const total = Object.values(entry.sites).reduce((a, s) => a + s.total, 0);
                                     const prevTotal = prev ? Object.values(prev.sites).reduce((a, s) => a + s.total, 0) : null;
