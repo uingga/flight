@@ -517,23 +517,37 @@ export default function Dashboard() {
             if (pax.infant > 0) psngrCntLst.push({ ageDvCd: 'I', psngrCnt: pax.infant });
 
             const fareIdMatch = flight.link.match(/fareId=([^&]+)/);
-            const mobileSearchUrl = flight.searchLink
-                ? flight.searchLink.replace('hope.hanatour.com', 'm.hanatour.com').replace('M200', 'M100')
-                : 'https://m.hanatour.com/trp/air/CHPC0AIR0233M100';
-            if (isMobile) {
-                if (fareIdMatch) {
+
+            if (fareIdMatch) {
+                // fareId가 있으면 상세 예약 페이지로 직접 이동
+                if (isMobile) {
                     const mobileBookingUrl = `https://m.hanatour.com/com/pmt/CHPC0PMT0011M100?searchCond=${encodeURIComponent(JSON.stringify({ fareId: decodeURIComponent(fareIdMatch[1]), psngrCntLst }))}`;
+                    const mobileSearchUrl = flight.searchLink
+                        ? flight.searchLink.replace('hope.hanatour.com', 'm.hanatour.com').replace('M200', 'M100')
+                        : 'https://m.hanatour.com/trp/air/CHPC0AIR0233M100';
                     return `/api/redirect?url=${encodeURIComponent(mobileBookingUrl)}&fallback=${encodeURIComponent(mobileSearchUrl)}`;
                 }
-                return mobileSearchUrl;
-            }
-            // PC: 모바일과 동일한 searchCond JSON 방식 사용 (fareId 만료 방지)
-            if (fareIdMatch) {
-                const pcSearchLink = flight.searchLink || 'https://www.hanatour.com/trp/air/CHPC0AIR0233M200';
                 const pcBookingUrl = `https://www.hanatour.com/com/pmt/CHPC0PMT0011M200?searchCond=${encodeURIComponent(JSON.stringify({ fareId: decodeURIComponent(fareIdMatch[1]), psngrCntLst }))}`;
+                const pcSearchLink = flight.searchLink || 'https://www.hanatour.com/trp/air/CHPC0AIR0233M200';
                 return `/api/redirect?url=${encodeURIComponent(pcBookingUrl)}&fallback=${encodeURIComponent(pcSearchLink)}`;
             }
-            return flight.searchLink || 'https://www.hanatour.com/trp/air/CHPC0AIR0233M200';
+
+            // fareId가 없으면 searchCond URL의 인원수를 업데이트하여 검색 페이지로 이동
+            let url = flight.link || flight.searchLink || '';
+            if (url.includes('searchCond=')) {
+                try {
+                    const scMatch = url.match(/searchCond=([^&]+)/);
+                    if (scMatch) {
+                        const sc = JSON.parse(decodeURIComponent(scMatch[1]));
+                        sc.psngrCntLst = psngrCntLst;
+                        url = url.replace(/searchCond=[^&]+/, `searchCond=${encodeURIComponent(JSON.stringify(sc))}`);
+                    }
+                } catch { }
+            }
+            if (isMobile) {
+                return url.replace('hope.hanatour.com', 'm.hanatour.com').replace('www.hanatour.com', 'm.hanatour.com').replace('M200', 'M100');
+            }
+            return url.replace('hope.hanatour.com', 'www.hanatour.com');
         }
 
         // 모두투어: adult, child, infant 파라미터
