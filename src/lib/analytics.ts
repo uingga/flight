@@ -1,5 +1,6 @@
-// GA4 Analytics 유틸리티
-// 참고: NEXT_PUBLIC_GA_ID 환경변수가 설정되지 않으면 이벤트가 발송되지 않습니다.
+// GA4 Analytics 유틸리티 + 자체 이벤트 로깅
+// GA4: NEXT_PUBLIC_GA_ID 환경변수 필요
+// 자체 로깅: /api/analytics로 이벤트 전송
 
 declare global {
     interface Window {
@@ -8,6 +9,17 @@ declare global {
 }
 
 export const GA_ID = process.env.NEXT_PUBLIC_GA_ID || '';
+
+/** 서버로 이벤트 전송 (비동기, 실패 무시) */
+const logToServer = (data: Record<string, string | number | undefined>) => {
+    try {
+        fetch('/api/analytics', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        }).catch(() => { });
+    } catch { }
+};
 
 /** GA4 페이지뷰 */
 export const pageview = (url: string) => {
@@ -25,36 +37,24 @@ export const event = (action: string, params?: Record<string, string | number | 
 
 /** 예약 클릭 */
 export const trackBookingClick = (source: string, route: string, price: number) => {
-    event('booking_click', {
-        travel_agency: source,
-        route,
-        price,
-        currency: 'KRW',
-    });
+    event('booking_click', { travel_agency: source, route, price, currency: 'KRW' });
+    logToServer({ type: 'booking_click', source, route, price });
 };
 
 /** 항공권 공유 */
 export const trackShare = (route: string, method: string) => {
-    event('share_flight', {
-        route,
-        share_method: method, // 'native_share' | 'clipboard'
-    });
+    event('share_flight', { route, share_method: method });
+    logToServer({ type: 'share', route, method });
 };
 
 /** 가격 알림 설정 */
 export const trackAlertSetup = (route: string, maxPrice?: number) => {
-    event('alert_setup', {
-        route,
-        ...(maxPrice ? { target_price: maxPrice } : {}),
-    });
+    event('alert_setup', { route, ...(maxPrice ? { target_price: maxPrice } : {}) });
+    logToServer({ type: 'alert_setup', route, price: maxPrice });
 };
 
 /** 가격 비교 링크 클릭 (네이버/스카이스캐너) */
 export const trackCompareClick = (provider: 'naver' | 'skyscanner', route: string, price: number) => {
-    event('compare_click', {
-        provider,
-        route,
-        price,
-        currency: 'KRW',
-    });
+    event('compare_click', { provider, route, price, currency: 'KRW' });
+    logToServer({ type: 'compare_click', provider, route, price });
 };
