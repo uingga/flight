@@ -708,9 +708,7 @@ export default function Dashboard() {
             if (isNaN(date.getTime())) {
                 return dateStr; // 파싱 실패시 원본 반환
             }
-            const formatted = date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
-            const weekday = date.toLocaleDateString('ko-KR', { weekday: 'short' });
-            return `${formatted} ${weekday}`;
+            return date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
         } catch {
             return dateStr;
         }
