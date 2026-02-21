@@ -93,15 +93,15 @@ async function main() {
             console.error('❌ 땡처리닷컴 프로모션 실패:', error);
         }
 
-        // 6-2. 땡처리닷컴 할인 페이지
-        try {
-            const ttangDiscountFlights = await scrapeTtangDiscount();
-            allFlights.push(...ttangDiscountFlights);
-            sources.ttang += ttangDiscountFlights.length;
-            console.log(`✅ 땡처리닷컴 할인: ${ttangDiscountFlights.length}개`);
-        } catch (error) {
-            console.error('❌ 땡처리닷컴 할인 실패:', error);
-        }
+        // 6-2. 땡처리닷컴 할인 페이지 (일시 비활성화)
+        // try {
+        //     const ttangDiscountFlights = await scrapeTtangDiscount();
+        //     allFlights.push(...ttangDiscountFlights);
+        //     sources.ttang += ttangDiscountFlights.length;
+        //     console.log(`✅ 땡처리닷컴 할인: ${ttangDiscountFlights.length}개`);
+        // } catch (error) {
+        //     console.error('❌ 땡처리닷컴 할인 실패:', error);
+        // }
 
         // 기존 캐시 로드 (실패 대비)
         const dataDir = path.join(process.cwd(), 'data');
