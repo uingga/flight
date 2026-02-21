@@ -1192,7 +1192,6 @@ export default function Dashboard() {
                                                     <button
                                                         type="button"
                                                         className="btn btn-primary"
-                                                        style={{ fontSize: 'inherit', padding: 'inherit', lineHeight: 'inherit' }}
                                                         onClick={(e) => { e.stopPropagation(); openBookingModal(flight); }}
                                                     >
                                                         예약하기 →
