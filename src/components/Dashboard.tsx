@@ -30,17 +30,34 @@ const getDefaultEndDate = () => {
     return toStr(d);
 };
 
-// 도시명 정규화: "서울(ICN)" → "인천", "서울(GMP)" → "김포"
+// 도시명 정규화: "서울(ICN)" → "인천", "서울(GMP)" → "김포", "서울" → "인천"
 const normalizeCity = (city: string): string => {
-    const match = city.match(/^(.+?)\(([A-Z]{3})\)$/);
-    if (match) {
-        const code = match[2];
+    const trimmed = city.trim();
+    // 괄호 포함 형태: "서울(ICN)", "부산(PUS)", "대구(TAE)"
+    const codeMatch = trimmed.match(/^(.+?)\(([A-Z]{3})\)$/);
+    if (codeMatch) {
+        const code = codeMatch[2];
         if (code === 'ICN') return '인천';
         if (code === 'GMP') return '김포';
         if (code === 'PUS') return '부산';
-        return match[1]; // 기타: 괄호만 제거
+        if (code === 'TAE') return '대구';
+        if (code === 'CJJ') return '청주';
+        if (code === 'CJU') return '제주';
+        return codeMatch[1]; // 기타: 괄호만 제거
     }
-    return city;
+    // 한글 괄호 형태: "서울(김포)", "서울(인천)"
+    const krMatch = trimmed.match(/^(.+?)\((.+?)\)$/);
+    if (krMatch) {
+        if (krMatch[2] === '김포') return '김포';
+        if (krMatch[2] === '인천') return '인천';
+        return krMatch[2]; // 괄호 안의 이름 사용
+    }
+    // 그냥 "서울" → "인천" (김포가 아닌 서울은 인천공항)
+    if (trimmed === '서울') return '인천';
+    // "청주시" → "청주", "제주시" → "제주"
+    if (trimmed === '청주시') return '청주';
+    if (trimmed === '제주시') return '제주';
+    return trimmed;
 };
 
 // 도시명 → IATA 공항/도시 코드 매핑
