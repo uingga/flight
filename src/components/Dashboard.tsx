@@ -30,17 +30,34 @@ const getDefaultEndDate = () => {
     return toStr(d);
 };
 
-// 도시명 정규화: "서울(ICN)" → "인천", "서울(GMP)" → "김포"
+// 도시명 정규화: "서울(ICN)" → "인천", "서울(GMP)" → "김포", "서울" → "인천"
 const normalizeCity = (city: string): string => {
-    const match = city.match(/^(.+?)\(([A-Z]{3})\)$/);
-    if (match) {
-        const code = match[2];
+    const trimmed = city.trim();
+    // 괄호 포함 형태: "서울(ICN)", "부산(PUS)", "대구(TAE)"
+    const codeMatch = trimmed.match(/^(.+?)\(([A-Z]{3})\)$/);
+    if (codeMatch) {
+        const code = codeMatch[2];
         if (code === 'ICN') return '인천';
         if (code === 'GMP') return '김포';
         if (code === 'PUS') return '부산';
-        return match[1]; // 기타: 괄호만 제거
+        if (code === 'TAE') return '대구';
+        if (code === 'CJJ') return '청주';
+        if (code === 'CJU') return '제주';
+        return codeMatch[1]; // 기타: 괄호만 제거
     }
-    return city;
+    // 한글 괄호 형태: "서울(김포)", "서울(인천)"
+    const krMatch = trimmed.match(/^(.+?)\((.+?)\)$/);
+    if (krMatch) {
+        if (krMatch[2] === '김포') return '김포';
+        if (krMatch[2] === '인천') return '인천';
+        return krMatch[2]; // 괄호 안의 이름 사용
+    }
+    // 그냥 "서울" → "인천" (김포가 아닌 서울은 인천공항)
+    if (trimmed === '서울') return '인천';
+    // "청주시" → "청주", "제주시" → "제주"
+    if (trimmed === '청주시') return '청주';
+    if (trimmed === '제주시') return '제주';
+    return trimmed;
 };
 
 // 도시명 → IATA 공항/도시 코드 매핑
@@ -96,6 +113,9 @@ const CITY_TO_AIRPORT: Record<string, string> = {
     '클락(앙헬레스)': 'CRK', '하코다테(북해도)': 'HKD', '하코다테': 'HKD',
     '고베': 'UKB', '기타큐슈': 'KKJ', '청도(칭다오)': 'TAO',
     '보라카이(깔리보)': 'KLO', '서울(김포)': 'GMP', '타이페이(송산)': 'TSA',
+    // 땡처리닷컴 추가 매핑 2
+    '도쿄(나리타공항)': 'NRT', '로마 (FCO)': 'FCO', '이스탄불(IST)': 'IST',
+    '상해(푸동공항)': 'PVG', '타이중(대만)': 'RMQ', '마나도(인도네시아)': 'MDC',
 };
 
 // 도시명에서 공항코드 추출
@@ -211,7 +231,7 @@ export default function Dashboard() {
     const [priceHistory, setPriceHistory] = useState<Record<string, Array<{ date: string; minPrice: number }>>>({});
     const [interparkPrices, setInterparkPrices] = useState<Record<string, Record<string, { avg: number; lowest: number }>>>({});
     const [searchTerm, setSearchTerm] = useState('');
-    const [sortBy, setSortBy] = useState<'price' | 'date' | 'airline' | 'discount'>('price');
+    const [sortBy, setSortBy] = useState<'price' | 'date' | 'airline' | 'discount'>('discount');
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
     const [sourceFilter, setSourceFilter] = useState<string>('all');
     const [regionFilter, setRegionFilter] = useState<string>('all');
@@ -575,7 +595,7 @@ export default function Dashboard() {
         setDepartureFilter('all');
         setStartDate(getDefaultStartDate());
         setEndDate(getDefaultEndDate());
-        setSortBy('price');
+        setSortBy('discount');
     };
 
     // 활성 필터 여부
@@ -629,14 +649,13 @@ export default function Dashboard() {
                 comparison = a.airline.localeCompare(b.airline);
                 break;
             case 'discount':
-                const getDiscount = (f: Flight) => {
-                    const city = f.arrival.city?.replace(/\([^)]+\)/, '').trim();
-                    const depMonth = f.departure.date?.substring(0, 7);
-                    const ipAvg = interparkPrices[city]?.[depMonth]?.avg;
-                    if (!ipAvg || f.price <= 0) return 0;
-                    return ((ipAvg - f.price) / ipAvg) * 100;
-                };
-                comparison = getDiscount(b) - getDiscount(a);
+                const da = a.discountRate ?? 0;
+                const db = b.discountRate ?? 0;
+                // 인터파크보다 싼 것(discountRate > 0)을 먼저, 그 안에서 가격 낮은 순
+                const aBeats = da > 0 ? 1 : 0;
+                const bBeats = db > 0 ? 1 : 0;
+                if (aBeats !== bBeats) { comparison = bBeats - aBeats; }
+                else { comparison = a.price - b.price; }
                 break;
         }
 
@@ -810,24 +829,45 @@ export default function Dashboard() {
                                 onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                                 className={styles.searchInput}
                             />
-                            {showSuggestions && !searchTerm && (
-                                <ul className={styles.suggestionsDropdown}>
-                                    <li className={styles.suggestionHeader}>인기 도시</li>
-                                    {popularCities.map((city) => (
-                                        <li
-                                            key={city}
-                                            className={styles.suggestionItem}
-                                            onMouseDown={(e) => {
-                                                e.preventDefault(); // Prevent blur
-                                                setSearchTerm(city);
-                                                setShowSuggestions(false);
-                                            }}
-                                        >
-                                            {city}
-                                        </li>
-                                    ))}
-                                </ul>
-                            )}
+                            {showSuggestions && (() => {
+                                // 검색어 입력 중이면 데이터에서 매칭되는 도시 제안
+                                if (searchTerm) {
+                                    const term = searchTerm.toLowerCase();
+                                    const matchCities = new Set<string>();
+                                    flights.forEach(f => {
+                                        const dep = normalizeCity(f.departure.city);
+                                        const arr = normalizeCity(f.arrival.city);
+                                        if (dep.toLowerCase().includes(term)) matchCities.add(dep);
+                                        if (arr.toLowerCase().includes(term)) matchCities.add(arr);
+                                        if (f.airline.toLowerCase().includes(term)) matchCities.add(f.airline);
+                                    });
+                                    const matches = Array.from(matchCities).slice(0, 8);
+                                    if (matches.length === 0) return null;
+                                    return (
+                                        <ul className={styles.suggestionsDropdown}>
+                                            <li className={styles.suggestionHeader}>검색 결과</li>
+                                            {matches.map((item) => (
+                                                <li key={item} className={styles.suggestionItem}
+                                                    onMouseDown={(e) => { e.preventDefault(); setSearchTerm(item); setShowSuggestions(false); }}>
+                                                    {item}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    );
+                                }
+                                // 빈 칸이면 인기 도시 표시
+                                return (
+                                    <ul className={styles.suggestionsDropdown}>
+                                        <li className={styles.suggestionHeader}>인기 도시</li>
+                                        {popularCities.map((city) => (
+                                            <li key={city} className={styles.suggestionItem}
+                                                onMouseDown={(e) => { e.preventDefault(); setSearchTerm(city); setShowSuggestions(false); }}>
+                                                {city}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                );
+                            })()}
                         </div>
                     </div>
 
@@ -1023,8 +1063,8 @@ export default function Dashboard() {
                                     onChange={(e) => setSortBy(e.target.value as any)}
                                     className={styles.statsSelect}
                                 >
+                                    <option value="discount">추천순</option>
                                     <option value="price">가격순</option>
-                                    <option value="discount">할인율순</option>
                                     <option value="date">날짜순</option>
                                 </select>
                             </div>

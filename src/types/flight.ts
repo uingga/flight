@@ -22,6 +22,7 @@ export interface Flight {
     flightNumber?: string;
     region?: string;
     searchLink?: string;
+    discountRate?: number; // 인터파크 최저가 대비 할인율 (%)
 
 }
 
