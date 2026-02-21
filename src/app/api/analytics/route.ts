@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
 // GET: 통계 조회
 export async function GET(request: NextRequest) {
     const authKey = request.nextUrl.searchParams.get('key');
-    if (authKey !== (process.env.ADMIN_KEY || 'tikitikit2026')) {
+    if (authKey !== (process.env.ADMIN_KEY || 'tikit2026')) {
         return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
     }
 
