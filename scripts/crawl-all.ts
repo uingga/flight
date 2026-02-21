@@ -3,7 +3,7 @@ import { scrapeYbtour } from '../src/lib/scrapers/ybtour';
 import { scrapeHanatour } from '../src/lib/scrapers/hanatour';
 import { scrapeModetour } from '../src/lib/scrapers/modetour';
 import { scrapeOnlineTour } from '../src/lib/scrapers/onlinetour';
-import { scrapeTtang } from '../src/lib/scrapers/ttang';
+import { scrapeTtang, scrapeTtangDiscount } from '../src/lib/scrapers/ttang';
 import { scrapeInterparkBenchmark, resolveCityCode } from '../src/lib/scrapers/interpark';
 import fs from 'fs';
 import path from 'path';
@@ -82,15 +82,25 @@ async function main() {
             console.error('❌ 온라인투어 실패:', error);
         }
 
-        // 6. 땡처리닷컴
+        // 6. 땡처리닷컴 (프로모션 + 할인)
         console.log('\n=== 땡처리닷컴 크롤링 ===');
         try {
             const ttangFlights = await scrapeTtang();
             allFlights.push(...ttangFlights);
             sources.ttang = ttangFlights.length;
-            console.log(`✅ 땡처리닷컴: ${ttangFlights.length}개`);
+            console.log(`✅ 땡처리닷컴 프로모션: ${ttangFlights.length}개`);
         } catch (error) {
-            console.error('❌ 땡처리닷컴 실패:', error);
+            console.error('❌ 땡처리닷컴 프로모션 실패:', error);
+        }
+
+        // 6-2. 땡처리닷컴 할인 페이지
+        try {
+            const ttangDiscountFlights = await scrapeTtangDiscount();
+            allFlights.push(...ttangDiscountFlights);
+            sources.ttang += ttangDiscountFlights.length;
+            console.log(`✅ 땡처리닷컴 할인: ${ttangDiscountFlights.length}개`);
+        } catch (error) {
+            console.error('❌ 땡처리닷컴 할인 실패:', error);
         }
 
         // 기존 캐시 로드 (실패 대비)
