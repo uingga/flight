@@ -3,7 +3,7 @@ import { scrapeYbtour } from '../src/lib/scrapers/ybtour';
 import { scrapeHanatour } from '../src/lib/scrapers/hanatour';
 import { scrapeModetour } from '../src/lib/scrapers/modetour';
 import { scrapeOnlineTour } from '../src/lib/scrapers/onlinetour';
-import { scrapeTtang, scrapeTtangDiscount } from '../src/lib/scrapers/ttang';
+import { scrapeTtang } from '../src/lib/scrapers/ttang';
 import { scrapeInterparkBenchmark, resolveCityCode } from '../src/lib/scrapers/interpark';
 import fs from 'fs';
 import path from 'path';
@@ -82,26 +82,16 @@ async function main() {
             console.error('❌ 온라인투어 실패:', error);
         }
 
-        // 6. 땡처리닷컴 (프로모션 + 할인)
+        // 6. 땡처리닷컴
         console.log('\n=== 땡처리닷컴 크롤링 ===');
         try {
             const ttangFlights = await scrapeTtang();
             allFlights.push(...ttangFlights);
             sources.ttang = ttangFlights.length;
-            console.log(`✅ 땡처리닷컴 프로모션: ${ttangFlights.length}개`);
+            console.log(`✅ 땡처리닷컴: ${ttangFlights.length}개`);
         } catch (error) {
-            console.error('❌ 땡처리닷컴 프로모션 실패:', error);
+            console.error('❌ 땡처리닷컴 실패:', error);
         }
-
-        // 6-2. 땡처리닷컴 할인 페이지 (일시 비활성화)
-        // try {
-        //     const ttangDiscountFlights = await scrapeTtangDiscount();
-        //     allFlights.push(...ttangDiscountFlights);
-        //     sources.ttang += ttangDiscountFlights.length;
-        //     console.log(`✅ 땡처리닷컴 할인: ${ttangDiscountFlights.length}개`);
-        // } catch (error) {
-        //     console.error('❌ 땡처리닷컴 할인 실패:', error);
-        // }
 
         // 기존 캐시 로드 (실패 대비)
         const dataDir = path.join(process.cwd(), 'data');
@@ -220,28 +210,19 @@ async function main() {
             benchmarkedFlights = roundTripFlights.filter((f: any) => {
                 // 도착 도시 코드 추출 (resolveCityCode로 모든 형식 지원)
                 const cityCode = resolveCityCode(f.arrival?.city || '', f.arrival?.airport);
-                if (!cityCode) {
-                    f.discountRate = 0;
-                    return true; // 코드 없으면 유지
-                }
+                if (!cityCode) return true; // 코드 없으면 유지
 
                 // 출발월 추출
                 const depDate = f.departure?.date || '';
                 const dateStr = depDate.replace(/[^0-9\-\.]/g, '').replace(/\./g, '-').replace(/-+$/, '');
                 const dateMatch = dateStr.match(/^(\d{4})-(\d{2})/);
-                if (!dateMatch) {
-                    f.discountRate = 0;
-                    return true; // 날짜 파싱 불가하면 유지
-                }
+                if (!dateMatch) return true; // 날짜 파싱 불가하면 유지
 
                 const yearMonth = `${dateMatch[1]}-${dateMatch[2]}`;
 
                 // 인터파크 월 평균가 조회
                 const cityPrices = benchmark.prices[cityCode];
-                if (!cityPrices || !cityPrices[yearMonth]) {
-                    f.discountRate = 0;
-                    return true; // 비교 데이터 없으면 유지
-                }
+                if (!cityPrices || !cityPrices[yearMonth]) return true; // 비교 데이터 없으면 유지
 
                 const interparkAvg = cityPrices[yearMonth].avg;
 
@@ -250,13 +231,6 @@ async function main() {
                     console.log(`  ❌ 필터: ${f.arrival?.city} ${yearMonth} ${f.price.toLocaleString()}원 > 인터파크 평균 ${interparkAvg.toLocaleString()}원 (${f.source})`);
                     return false;
                 }
-
-                // 인터파크 최저가 대비 할인율 계산
-                const interparkLowest = cityPrices[yearMonth].lowest;
-                f.discountRate = interparkLowest > 0
-                    ? Math.round((1 - f.price / interparkLowest) * 100)
-                    : 0;
-
                 return true;
             });
 
