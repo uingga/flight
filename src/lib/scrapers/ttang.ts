@@ -36,7 +36,7 @@ function formatDateParam(date: Date): string {
 
 /** 프로모션 페이지 URL 생성 (필수 파라미터만) */
 function buildPromotionUrl(depdate: string): string {
-    return `https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=${depdate}&adt=1&chd=0&inf=0&page=1&scale=20`;
+    return `https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=${depdate}&adt=1&chd=0&inf=0&page=1&scale=200`;
 }
 
 export async function scrapeTtang(): Promise<Flight[]> {
