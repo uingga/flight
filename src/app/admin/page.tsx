@@ -62,12 +62,30 @@ function formatPrice(price: number): string {
     return `${price.toLocaleString()}원`;
 }
 
+interface AnalyticsStats {
+    today: {
+        total: number;
+        byType: Record<string, number>;
+        bookingBySource: [string, number][];
+        bookingByRoute: [string, number][];
+    };
+    week: {
+        total: number;
+        byType: Record<string, number>;
+        bookingBySource: [string, number][];
+        bookingByRoute: [string, number][];
+    };
+    dailyTrend: Record<string, number>;
+    totalEvents: number;
+}
+
 export default function AdminPage() {
     const [data, setData] = useState<AdminData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [key, setKey] = useState('');
     const [authed, setAuthed] = useState(false);
+    const [analytics, setAnalytics] = useState<AnalyticsStats | null>(null);
 
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
@@ -84,14 +102,17 @@ export default function AdminPage() {
     async function fetchData(authKey: string) {
         setLoading(true);
         try {
-            const res = await fetch(`/api/crawl-log?key=${encodeURIComponent(authKey)}`);
-            if (res.status === 401) {
+            const [crawlRes, analyticsRes] = await Promise.all([
+                fetch(`/api/crawl-log?key=${encodeURIComponent(authKey)}`),
+                fetch(`/api/analytics?key=${encodeURIComponent(authKey)}`).catch(() => null),
+            ]);
+            if (crawlRes.status === 401) {
                 setError('인증 실패: 올바른 키를 입력해주세요.');
                 setAuthed(false);
                 setLoading(false);
                 return;
             }
-            const json = await res.json();
+            const json = await crawlRes.json();
             if (json.error) {
                 setError(json.error);
                 setLoading(false);
@@ -100,6 +121,11 @@ export default function AdminPage() {
             setData(json);
             setAuthed(true);
             setError(null);
+
+            if (analyticsRes?.ok) {
+                const aData = await analyticsRes.json();
+                setAnalytics(aData);
+            }
         } catch {
             setError('데이터를 불러오는데 실패했습니다.');
         }
@@ -505,6 +531,121 @@ export default function AdminPage() {
                     </table>
                 </div>
             </section>
+
+            {/* 📈 사용자 이벤트 분석 */}
+            {analytics && (
+                <section className={styles.section}>
+                    <h2>📈 사용자 이벤트 분석</h2>
+
+                    {/* 오늘 요약 카드 */}
+                    <div className={styles.summaryCards}>
+                        <div className={styles.summaryCard}>
+                            <span className={styles.summaryLabel}>오늘 전체 이벤트</span>
+                            <span className={styles.summaryValue}>{analytics.today.total}</span>
+                        </div>
+                        <div className={styles.summaryCard}>
+                            <span className={styles.summaryLabel}>오늘 예약 클릭</span>
+                            <span className={styles.summaryValue} style={{ color: '#7c3aed' }}>
+                                {analytics.today.byType.booking_click || 0}
+                            </span>
+                        </div>
+                        <div className={styles.summaryCard}>
+                            <span className={styles.summaryLabel}>이번 주 예약 클릭</span>
+                            <span className={styles.summaryValue} style={{ color: '#059669' }}>
+                                {analytics.week.byType.booking_click || 0}
+                            </span>
+                        </div>
+                        <div className={styles.summaryCard}>
+                            <span className={styles.summaryLabel}>이번 주 공유</span>
+                            <span className={styles.summaryValue} style={{ color: '#d97706' }}>
+                                {analytics.week.byType.share || 0}
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* 일별 추이 */}
+                    <div className={styles.card} style={{ marginTop: '16px' }}>
+                        <h3 style={{ marginBottom: '12px', fontSize: '0.95rem' }}>📊 일별 이벤트 추이 (최근 7일)</h3>
+                        <div style={{ display: 'flex', alignItems: 'flex-end', gap: '6px', height: '100px' }}>
+                            {Object.entries(analytics.dailyTrend).map(([date, count]) => {
+                                const max = Math.max(...Object.values(analytics.dailyTrend), 1);
+                                const height = Math.max((count / max) * 80, 2);
+                                const dateLabel = date.slice(5); // MM-DD
+                                return (
+                                    <div key={date} style={{ flex: 1, textAlign: 'center' }}>
+                                        <div style={{ fontSize: '0.7rem', color: '#6b7280', marginBottom: '4px' }}>
+                                            {count > 0 ? count : ''}
+                                        </div>
+                                        <div style={{
+                                            height: `${height}px`,
+                                            background: 'linear-gradient(180deg, #7c3aed, #a78bfa)',
+                                            borderRadius: '4px 4px 0 0',
+                                            minWidth: '20px',
+                                        }} />
+                                        <div style={{ fontSize: '0.65rem', color: '#9ca3af', marginTop: '4px' }}>
+                                            {dateLabel}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {/* 예약 클릭: 여행사별 + 노선별 */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '16px' }}>
+                        <div className={styles.card}>
+                            <h3 style={{ marginBottom: '8px', fontSize: '0.95rem' }}>🏢 여행사별 예약 클릭 (이번 주)</h3>
+                            {analytics.week.bookingBySource.length === 0 ? (
+                                <p style={{ color: '#9ca3af', fontSize: '0.85rem' }}>아직 데이터 없음</p>
+                            ) : (
+                                analytics.week.bookingBySource.map(([src, cnt]) => (
+                                    <div key={src} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '0.85rem' }}>
+                                        <span style={{
+                                            background: SOURCE_COLORS[src] || '#6b7280',
+                                            color: '#fff',
+                                            padding: '1px 8px',
+                                            borderRadius: '4px',
+                                            fontSize: '0.8rem',
+                                        }}>{SOURCE_NAMES[src] || src}</span>
+                                        <span style={{ fontWeight: 600 }}>{cnt}회</span>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                        <div className={styles.card}>
+                            <h3 style={{ marginBottom: '8px', fontSize: '0.95rem' }}>✈️ 인기 노선 TOP 10 (이번 주)</h3>
+                            {analytics.week.bookingByRoute.length === 0 ? (
+                                <p style={{ color: '#9ca3af', fontSize: '0.85rem' }}>아직 데이터 없음</p>
+                            ) : (
+                                analytics.week.bookingByRoute.map(([route, cnt], i) => (
+                                    <div key={route} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '0.85rem' }}>
+                                        <span>{i + 1}. {route}</span>
+                                        <span style={{ fontWeight: 600 }}>{cnt}회</span>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+
+                    {/* 이벤트 타입별 */}
+                    <div className={styles.card} style={{ marginTop: '16px' }}>
+                        <h3 style={{ marginBottom: '8px', fontSize: '0.95rem' }}>🔢 이벤트 타입별 (이번 주)</h3>
+                        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+                            {Object.entries(analytics.week.byType).map(([type, cnt]) => (
+                                <div key={type} style={{
+                                    background: '#f3f4f6',
+                                    padding: '8px 16px',
+                                    borderRadius: '8px',
+                                    fontSize: '0.85rem',
+                                }}>
+                                    <span style={{ color: '#6b7280' }}>{type}: </span>
+                                    <span style={{ fontWeight: 700 }}>{cnt}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            )}
         </div>
     );
 }
