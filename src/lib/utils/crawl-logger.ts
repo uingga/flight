@@ -154,11 +154,11 @@ export function logCrawlResults(
         alerts.forEach(alert => console.log(`  ${alert}`));
     }
 
-    // 최근 30일 로그만 유지
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    // 최근 7일 로그만 유지 (하루 7회 × 7일 = 최대 49개)
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     history.entries = history.entries.filter(
-        e => new Date(e.timestamp) > thirtyDaysAgo
+        e => new Date(e.timestamp) > sevenDaysAgo
     );
 
     history.lastEntry = currentEntry;
