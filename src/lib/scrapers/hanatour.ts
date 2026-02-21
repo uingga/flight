@@ -482,7 +482,7 @@ async function scrapeHanatourRegular(browser: any): Promise<Flight[]> {
             timeout: 30000,
         });
 
-        await page.waitForTimeout(3000);
+        await page.waitForTimeout(8000);
         console.log('일반 페이지 로드 완료');
 
         // 각 출발 도시 탭별로 크롤링
@@ -525,6 +525,7 @@ async function scrapeHanatourRegular(browser: any): Promise<Flight[]> {
                     } catch (e) {
                         console.log('fareId 추출 실패:', e);
                     }
+                    console.log(`fareLst 수: ${fareLst.length}, fareId 유무: ${fareLst.length > 0 && !!fareLst[0].fareId}`);
 
                     cards.forEach((card, index) => {
                         try {
