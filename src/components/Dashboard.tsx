@@ -829,24 +829,45 @@ export default function Dashboard() {
                                 onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                                 className={styles.searchInput}
                             />
-                            {showSuggestions && !searchTerm && (
-                                <ul className={styles.suggestionsDropdown}>
-                                    <li className={styles.suggestionHeader}>인기 도시</li>
-                                    {popularCities.map((city) => (
-                                        <li
-                                            key={city}
-                                            className={styles.suggestionItem}
-                                            onMouseDown={(e) => {
-                                                e.preventDefault(); // Prevent blur
-                                                setSearchTerm(city);
-                                                setShowSuggestions(false);
-                                            }}
-                                        >
-                                            {city}
-                                        </li>
-                                    ))}
-                                </ul>
-                            )}
+                            {showSuggestions && (() => {
+                                // 검색어 입력 중이면 데이터에서 매칭되는 도시 제안
+                                if (searchTerm) {
+                                    const term = searchTerm.toLowerCase();
+                                    const matchCities = new Set<string>();
+                                    flights.forEach(f => {
+                                        const dep = normalizeCity(f.departure.city);
+                                        const arr = normalizeCity(f.arrival.city);
+                                        if (dep.toLowerCase().includes(term)) matchCities.add(dep);
+                                        if (arr.toLowerCase().includes(term)) matchCities.add(arr);
+                                        if (f.airline.toLowerCase().includes(term)) matchCities.add(f.airline);
+                                    });
+                                    const matches = Array.from(matchCities).slice(0, 8);
+                                    if (matches.length === 0) return null;
+                                    return (
+                                        <ul className={styles.suggestionsDropdown}>
+                                            <li className={styles.suggestionHeader}>검색 결과</li>
+                                            {matches.map((item) => (
+                                                <li key={item} className={styles.suggestionItem}
+                                                    onMouseDown={(e) => { e.preventDefault(); setSearchTerm(item); setShowSuggestions(false); }}>
+                                                    {item}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    );
+                                }
+                                // 빈 칸이면 인기 도시 표시
+                                return (
+                                    <ul className={styles.suggestionsDropdown}>
+                                        <li className={styles.suggestionHeader}>인기 도시</li>
+                                        {popularCities.map((city) => (
+                                            <li key={city} className={styles.suggestionItem}
+                                                onMouseDown={(e) => { e.preventDefault(); setSearchTerm(city); setShowSuggestions(false); }}>
+                                                {city}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                );
+                            })()}
                         </div>
                     </div>
 
