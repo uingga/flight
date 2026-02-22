@@ -664,10 +664,8 @@ export default function Dashboard() {
             case 'discount':
                 const da = a.discountRate ?? 0;
                 const db = b.discountRate ?? 0;
-                // 인터파크보다 싼 것(discountRate > 0)을 먼저, 그 안에서 가격 낮은 순
-                const aBeats = da > 0 ? 1 : 0;
-                const bBeats = db > 0 ? 1 : 0;
-                if (aBeats !== bBeats) { comparison = bBeats - aBeats; }
+                // 할인율 높은 순, 같으면 가격 낮은 순
+                if (da !== db) { comparison = db - da; }
                 else { comparison = a.price - b.price; }
                 break;
         }
