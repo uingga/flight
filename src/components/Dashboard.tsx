@@ -45,12 +45,16 @@ const normalizeCity = (city: string): string => {
         if (code === 'CJU') return '제주';
         return codeMatch[1]; // 기타: 괄호만 제거
     }
-    // 한글 괄호 형태: "서울(김포)", "서울(인천)"
+    // 한글 괄호 형태: "서울(김포)", "서울(인천)", "마나도(인도네시아)"
     const krMatch = trimmed.match(/^(.+?)\((.+?)\)$/);
     if (krMatch) {
         if (krMatch[2] === '김포') return '김포';
         if (krMatch[2] === '인천') return '인천';
-        return krMatch[2]; // 괄호 안의 이름 사용
+        // 괄호 안이 공항/지역명이면 괄호 안 사용 (간사이, 나리타, 치토세 등)
+        const airportNames = ['간사이', '나리타', '하네다', '치토세', '돈무앙', '수완나폼', '깜랑', '보라카이', '덴파사', '창이공항'];
+        if (airportNames.includes(krMatch[2])) return trimmed; // 원본 유지
+        // 그 외 (인도네시아, SHI 등)는 괄호 앞의 도시명 사용
+        return krMatch[1];
     }
     // 그냥 "서울" → "인천" (김포가 아닌 서울은 인천공항)
     if (trimmed === '서울') return '인천';
@@ -105,6 +109,8 @@ const CITY_TO_AIRPORT: Record<string, string> = {
     '사가': 'HSG', '요나고': 'YGJ', '히로시마': 'HIJ', '오이타': 'OIT',
     '밴쿠버': 'YVR', '비엔티안': 'VTE',
     '푸껫': 'HKT', '쿠알라룸푸르': 'KUL',
+    '시모지시마': 'SHI', '아오모리': 'AOJ',
+    '바르셀로나': 'BCN', '하이퐁': 'HPH',
     '서울': 'ICN', '청주시': 'CJJ',
     '상해(푸동)': 'PVG', '오사카': 'KIX', '도쿄': 'NRT', '삿포로': 'CTS',
     // 땡처리닷컴 추가 매핑
