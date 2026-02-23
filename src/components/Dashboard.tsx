@@ -105,7 +105,7 @@ const CITY_TO_AIRPORT: Record<string, string> = {
     '로마': 'FCO', '이스탄불': 'IST', '트라브존': 'TZX',
     // 추가 누락 도시
     '보라카이': 'KLO', '호치민': 'SGN', '호치민(SGN)': 'SGN',
-    '상해': 'PVG', '상하이': 'PVG', '칭다오': 'TAO',
+    '상해': 'PVG', '상하이': 'PVG', '칭다오': 'TAO', '청도': 'TAO',
     '사가': 'HSG', '요나고': 'YGJ', '히로시마': 'HIJ', '오이타': 'OIT',
     '밴쿠버': 'YVR', '비엔티안': 'VTE',
     '푸껫': 'HKT', '쿠알라룸푸르': 'KUL',
