@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-02-23T16:30:58.820Z",
-  "count": 669,
+  "timestamp": "2026-02-23T23:39:06.359Z",
+  "count": 668,
   "flights": [
     {
       "id": "ybtour-다카마쓰-20260331-0",
@@ -1148,7 +1148,7 @@
       "price": 250000,
       "currency": "KRW",
       "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=A0%2FA3&inhId=TW0029TAEDAD-T2&depDate=20260621&efcCityCode=DAD",
-      "seats": "4석",
+      "seats": "2석",
       "region": "동남아",
       "discountRate": -5
     },
@@ -6336,52 +6336,196 @@
       "discountRate": -51
     },
     {
-      "id": "modetour-ASIA-19537600",
+      "id": "modetour-ASIA-19399453",
+      "source": "modetour",
+      "airline": "에어아시아",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-13",
+        "time": "10:15"
+      },
+      "arrival": {
+        "city": "코타키나발루",
+        "airport": "BKI",
+        "date": "2026-03-17",
+        "time": "02:20"
+      },
+      "price": 349000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19399453&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 1,
+      "flightNumber": "AK1624 / AK1623",
+      "region": "동남아",
+      "discountRate": -32
+    },
+    {
+      "id": "modetour-ASIA-19932799",
       "source": "modetour",
       "airline": "티웨이 항공",
       "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-01",
-        "time": "20:10"
+        "city": "대구",
+        "airport": "TAE",
+        "date": "2026-03-22",
+        "time": "21:25"
       },
       "arrival": {
-        "city": "나트랑",
-        "airport": "CXR",
-        "date": "2026-03-05",
-        "time": "00:55"
+        "city": "방콕(수완나폼)",
+        "airport": "BKK",
+        "date": "2026-03-27",
+        "time": "02:30"
       },
-      "price": 299000,
+      "price": 284000,
       "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19537600&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 1,
-      "flightNumber": "TW033 / TW034",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19932799&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 4,
+      "flightNumber": "TW105 / TW106",
       "region": "동남아",
-      "discountRate": 6
+      "discountRate": -20
     },
     {
-      "id": "modetour-ASIA-19630082",
+      "id": "modetour-ASIA-19932798",
       "source": "modetour",
-      "airline": "아시아나 항공",
+      "airline": "티웨이 항공",
+      "departure": {
+        "city": "대구",
+        "airport": "TAE",
+        "date": "2026-03-21",
+        "time": "21:25"
+      },
+      "arrival": {
+        "city": "방콕(수완나폼)",
+        "airport": "BKK",
+        "date": "2026-03-26",
+        "time": "02:30"
+      },
+      "price": 284000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19932798&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 4,
+      "flightNumber": "TW105 / TW106",
+      "region": "동남아",
+      "discountRate": -20
+    },
+    {
+      "id": "modetour-ASIA-19536694",
+      "source": "modetour",
+      "airline": "이스타항공",
       "departure": {
         "city": "인천",
         "airport": "ICN",
-        "date": "2026-03-01",
-        "time": "17:00"
+        "date": "2026-03-17",
+        "time": "17:05"
       },
       "arrival": {
-        "city": "푸켓",
-        "airport": "HKT",
-        "date": "2026-03-04",
-        "time": "22:55"
+        "city": "방콕(수완나폼)",
+        "airport": "BKK",
+        "date": "2026-03-20",
+        "time": "22:25"
       },
-      "price": 358500,
+      "price": 264000,
       "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19630082&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 1,
-      "flightNumber": "OZ747 / OZ748",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19536694&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 6,
+      "flightNumber": "ZE511 / ZE512",
       "region": "동남아",
-      "discountRate": 10
+      "discountRate": -11
+    },
+    {
+      "id": "modetour-ASIA-19932797",
+      "source": "modetour",
+      "airline": "티웨이 항공",
+      "departure": {
+        "city": "대구",
+        "airport": "TAE",
+        "date": "2026-03-15",
+        "time": "21:25"
+      },
+      "arrival": {
+        "city": "방콕(수완나폼)",
+        "airport": "BKK",
+        "date": "2026-03-20",
+        "time": "02:30"
+      },
+      "price": 284000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19932797&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 4,
+      "flightNumber": "TW105 / TW106",
+      "region": "동남아",
+      "discountRate": -20
+    },
+    {
+      "id": "modetour-ASIA-19932796",
+      "source": "modetour",
+      "airline": "티웨이 항공",
+      "departure": {
+        "city": "대구",
+        "airport": "TAE",
+        "date": "2026-03-14",
+        "time": "21:25"
+      },
+      "arrival": {
+        "city": "방콕(수완나폼)",
+        "airport": "BKK",
+        "date": "2026-03-19",
+        "time": "02:30"
+      },
+      "price": 284000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19932796&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 4,
+      "flightNumber": "TW105 / TW106",
+      "region": "동남아",
+      "discountRate": -20
+    },
+    {
+      "id": "modetour-ASIA-19494820",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-03-07",
+        "time": "19:30"
+      },
+      "arrival": {
+        "city": "방콕(수완나폼)",
+        "airport": "BKK",
+        "date": "2026-03-11",
+        "time": "00:40"
+      },
+      "price": 272000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19494820&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 16,
+      "flightNumber": "7C2551 / 7C2552",
+      "region": "동남아",
+      "discountRate": -15
+    },
+    {
+      "id": "modetour-ASIA-19395183",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-07",
+        "time": "17:45"
+      },
+      "arrival": {
+        "city": "바탐",
+        "airport": "BTH",
+        "date": "2026-03-11",
+        "time": "23:45"
+      },
+      "price": 256000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19395183&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 12,
+      "flightNumber": "7C2701 / 7C2702",
+      "region": "동남아",
+      "discountRate": 18
     },
     {
       "id": "modetour-ASIA-19394267",
@@ -6406,6 +6550,1230 @@
       "flightNumber": "7C2113 / 7C2114",
       "region": "동남아",
       "discountRate": 12
+    },
+    {
+      "id": "modetour-ASIA-19493304",
+      "source": "modetour",
+      "airline": "에어부산",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-03-23",
+        "time": "21:10"
+      },
+      "arrival": {
+        "city": "세부",
+        "airport": "CEB",
+        "date": "2026-03-27",
+        "time": "01:30"
+      },
+      "price": 186000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19493304&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 20,
+      "flightNumber": "BX711 / BX712",
+      "region": "동남아",
+      "discountRate": 24
+    },
+    {
+      "id": "modetour-ASIA-19493303",
+      "source": "modetour",
+      "airline": "에어부산",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-03-22",
+        "time": "21:10"
+      },
+      "arrival": {
+        "city": "세부",
+        "airport": "CEB",
+        "date": "2026-03-26",
+        "time": "01:30"
+      },
+      "price": 186000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19493303&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 14,
+      "flightNumber": "BX711 / BX712",
+      "region": "동남아",
+      "discountRate": 24
+    },
+    {
+      "id": "modetour-ASIA-19493296",
+      "source": "modetour",
+      "airline": "에어부산",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-03-15",
+        "time": "21:10"
+      },
+      "arrival": {
+        "city": "세부",
+        "airport": "CEB",
+        "date": "2026-03-19",
+        "time": "01:30"
+      },
+      "price": 186000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19493296&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 9,
+      "flightNumber": "BX711 / BX712",
+      "region": "동남아",
+      "discountRate": 24
+    },
+    {
+      "id": "modetour-ASIA-19493297",
+      "source": "modetour",
+      "airline": "에어부산",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-03-16",
+        "time": "21:10"
+      },
+      "arrival": {
+        "city": "세부",
+        "airport": "CEB",
+        "date": "2026-03-20",
+        "time": "01:30"
+      },
+      "price": 186000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19493297&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 17,
+      "flightNumber": "BX711 / BX712",
+      "region": "동남아",
+      "discountRate": 24
+    },
+    {
+      "id": "modetour-ASIA-19493298",
+      "source": "modetour",
+      "airline": "에어부산",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-03-17",
+        "time": "21:10"
+      },
+      "arrival": {
+        "city": "세부",
+        "airport": "CEB",
+        "date": "2026-03-21",
+        "time": "01:30"
+      },
+      "price": 186000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19493298&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 4,
+      "flightNumber": "BX711 / BX712",
+      "region": "동남아",
+      "discountRate": 24
+    },
+    {
+      "id": "modetour-ASIA-19493295",
+      "source": "modetour",
+      "airline": "에어부산",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-03-14",
+        "time": "21:10"
+      },
+      "arrival": {
+        "city": "세부",
+        "airport": "CEB",
+        "date": "2026-03-18",
+        "time": "01:30"
+      },
+      "price": 186000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19493295&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 6,
+      "flightNumber": "BX711 / BX712",
+      "region": "동남아",
+      "discountRate": 24
+    },
+    {
+      "id": "modetour-ASIA-19554658",
+      "source": "modetour",
+      "airline": "이스타항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-23",
+        "time": "17:25"
+      },
+      "arrival": {
+        "city": "치앙마이",
+        "airport": "CNX",
+        "date": "2026-03-26",
+        "time": "22:05"
+      },
+      "price": 359000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19554658&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 10,
+      "flightNumber": "ZE517 / ZE518",
+      "region": "동남아",
+      "discountRate": -17
+    },
+    {
+      "id": "modetour-ASIA-19388384",
+      "source": "modetour",
+      "airline": "진에어",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-21",
+        "time": "21:35"
+      },
+      "arrival": {
+        "city": "클락",
+        "airport": "CRK",
+        "date": "2026-03-25",
+        "time": "01:50"
+      },
+      "price": 371000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19388384&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 4,
+      "flightNumber": "LJ037 / LJ038",
+      "region": "동남아",
+      "discountRate": 0
+    },
+    {
+      "id": "modetour-ASIA-19388385",
+      "source": "modetour",
+      "airline": "진에어",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-22",
+        "time": "21:35"
+      },
+      "arrival": {
+        "city": "클락",
+        "airport": "CRK",
+        "date": "2026-03-26",
+        "time": "01:50"
+      },
+      "price": 371000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19388385&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 4,
+      "flightNumber": "LJ037 / LJ038",
+      "region": "동남아",
+      "discountRate": 0
+    },
+    {
+      "id": "modetour-ASIA-19388386",
+      "source": "modetour",
+      "airline": "진에어",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-23",
+        "time": "21:35"
+      },
+      "arrival": {
+        "city": "클락",
+        "airport": "CRK",
+        "date": "2026-03-27",
+        "time": "01:50"
+      },
+      "price": 371000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19388386&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 4,
+      "flightNumber": "LJ037 / LJ038",
+      "region": "동남아",
+      "discountRate": 0
+    },
+    {
+      "id": "modetour-ASIA-19537600",
+      "source": "modetour",
+      "airline": "티웨이 항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-01",
+        "time": "20:10"
+      },
+      "arrival": {
+        "city": "나트랑",
+        "airport": "CXR",
+        "date": "2026-03-05",
+        "time": "00:55"
+      },
+      "price": 299000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19537600&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 1,
+      "flightNumber": "TW033 / TW034",
+      "region": "동남아",
+      "discountRate": 6
+    },
+    {
+      "id": "modetour-ASIA-19492306",
+      "source": "modetour",
+      "airline": "비엣젯 항공",
+      "departure": {
+        "city": "대구",
+        "airport": "TAE",
+        "date": "2026-03-08",
+        "time": "07:50"
+      },
+      "arrival": {
+        "city": "나트랑",
+        "airport": "CXR",
+        "date": "2026-03-12",
+        "time": "00:20"
+      },
+      "price": 340000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19492306&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 8,
+      "flightNumber": "VJ871 / VJ870",
+      "region": "동남아",
+      "discountRate": -7
+    },
+    {
+      "id": "modetour-ASIA-19868444",
+      "source": "modetour",
+      "airline": "에어로케이",
+      "departure": {
+        "city": "청주",
+        "airport": "CJJ",
+        "date": "2026-03-22",
+        "time": "19:30"
+      },
+      "arrival": {
+        "city": "나트랑",
+        "airport": "CXR",
+        "date": "2026-03-26",
+        "time": "23:30"
+      },
+      "price": 323100,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19868444&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 18,
+      "flightNumber": "RF557 / RF558",
+      "region": "동남아",
+      "discountRate": -1
+    },
+    {
+      "id": "modetour-ASIA-19492326",
+      "source": "modetour",
+      "airline": "비엣젯 항공",
+      "departure": {
+        "city": "대구",
+        "airport": "TAE",
+        "date": "2026-03-23",
+        "time": "07:50"
+      },
+      "arrival": {
+        "city": "나트랑",
+        "airport": "CXR",
+        "date": "2026-03-27",
+        "time": "00:20"
+      },
+      "price": 340000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19492326&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 6,
+      "flightNumber": "VJ871 / VJ870",
+      "region": "동남아",
+      "discountRate": -7
+    },
+    {
+      "id": "modetour-ASIA-19868443",
+      "source": "modetour",
+      "airline": "에어로케이",
+      "departure": {
+        "city": "청주",
+        "airport": "CJJ",
+        "date": "2026-03-21",
+        "time": "19:30"
+      },
+      "arrival": {
+        "city": "나트랑",
+        "airport": "CXR",
+        "date": "2026-03-25",
+        "time": "23:30"
+      },
+      "price": 323100,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19868443&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 20,
+      "flightNumber": "RF557 / RF558",
+      "region": "동남아",
+      "discountRate": -1
+    },
+    {
+      "id": "modetour-ASIA-19378012",
+      "source": "modetour",
+      "airline": "비엣젯 항공",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-03-15",
+        "time": "07:35"
+      },
+      "arrival": {
+        "city": "나트랑",
+        "airport": "CXR",
+        "date": "2026-03-19",
+        "time": "00:05"
+      },
+      "price": 340000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19378012&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 4,
+      "flightNumber": "VJ991 / VJ990",
+      "region": "동남아",
+      "discountRate": -7
+    },
+    {
+      "id": "modetour-ASIA-19492315",
+      "source": "modetour",
+      "airline": "비엣젯 항공",
+      "departure": {
+        "city": "대구",
+        "airport": "TAE",
+        "date": "2026-03-15",
+        "time": "07:50"
+      },
+      "arrival": {
+        "city": "나트랑",
+        "airport": "CXR",
+        "date": "2026-03-19",
+        "time": "00:20"
+      },
+      "price": 340000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19492315&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 21,
+      "flightNumber": "VJ871 / VJ870",
+      "region": "동남아",
+      "discountRate": -7
+    },
+    {
+      "id": "modetour-ASIA-19492317",
+      "source": "modetour",
+      "airline": "비엣젯 항공",
+      "departure": {
+        "city": "대구",
+        "airport": "TAE",
+        "date": "2026-03-16",
+        "time": "07:50"
+      },
+      "arrival": {
+        "city": "나트랑",
+        "airport": "CXR",
+        "date": "2026-03-20",
+        "time": "00:20"
+      },
+      "price": 340000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19492317&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 23,
+      "flightNumber": "VJ871 / VJ870",
+      "region": "동남아",
+      "discountRate": -7
+    },
+    {
+      "id": "modetour-ASIA-19492307",
+      "source": "modetour",
+      "airline": "비엣젯 항공",
+      "departure": {
+        "city": "대구",
+        "airport": "TAE",
+        "date": "2026-03-09",
+        "time": "07:50"
+      },
+      "arrival": {
+        "city": "나트랑",
+        "airport": "CXR",
+        "date": "2026-03-13",
+        "time": "00:20"
+      },
+      "price": 340000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19492307&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 8,
+      "flightNumber": "VJ871 / VJ870",
+      "region": "동남아",
+      "discountRate": -7
+    },
+    {
+      "id": "modetour-ASIA-19377850",
+      "source": "modetour",
+      "airline": "비엣젯 항공",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-03-08",
+        "time": "08:30"
+      },
+      "arrival": {
+        "city": "다낭",
+        "airport": "DAD",
+        "date": "2026-03-12",
+        "time": "00:30"
+      },
+      "price": 340000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19377850&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 9,
+      "flightNumber": "VJ989 / VJ988",
+      "region": "동남아",
+      "discountRate": -30
+    },
+    {
+      "id": "modetour-ASIA-19377851",
+      "source": "modetour",
+      "airline": "비엣젯 항공",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-03-09",
+        "time": "08:30"
+      },
+      "arrival": {
+        "city": "다낭",
+        "airport": "DAD",
+        "date": "2026-03-13",
+        "time": "00:30"
+      },
+      "price": 340000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19377851&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 20,
+      "flightNumber": "VJ989 / VJ988",
+      "region": "동남아",
+      "discountRate": -30
+    },
+    {
+      "id": "modetour-ASIA-19377852",
+      "source": "modetour",
+      "airline": "비엣젯 항공",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-03-10",
+        "time": "08:30"
+      },
+      "arrival": {
+        "city": "다낭",
+        "airport": "DAD",
+        "date": "2026-03-14",
+        "time": "00:30"
+      },
+      "price": 340000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19377852&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 22,
+      "flightNumber": "VJ989 / VJ988",
+      "region": "동남아",
+      "discountRate": -30
+    },
+    {
+      "id": "modetour-ASIA-19377865",
+      "source": "modetour",
+      "airline": "비엣젯 항공",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-03-23",
+        "time": "08:30"
+      },
+      "arrival": {
+        "city": "다낭",
+        "airport": "DAD",
+        "date": "2026-03-27",
+        "time": "00:30"
+      },
+      "price": 340000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19377865&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 22,
+      "flightNumber": "VJ989 / VJ988",
+      "region": "동남아",
+      "discountRate": -30
+    },
+    {
+      "id": "modetour-ASIA-19377864",
+      "source": "modetour",
+      "airline": "비엣젯 항공",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-03-22",
+        "time": "08:30"
+      },
+      "arrival": {
+        "city": "다낭",
+        "airport": "DAD",
+        "date": "2026-03-26",
+        "time": "00:30"
+      },
+      "price": 340000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19377864&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 22,
+      "flightNumber": "VJ989 / VJ988",
+      "region": "동남아",
+      "discountRate": -30
+    },
+    {
+      "id": "modetour-ASIA-19534891",
+      "source": "modetour",
+      "airline": "에어서울",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-22",
+        "time": "20:55"
+      },
+      "arrival": {
+        "city": "다낭",
+        "airport": "DAD",
+        "date": "2026-03-26",
+        "time": "00:40"
+      },
+      "price": 301800,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19534891&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 3,
+      "flightNumber": "RS511 / RS512",
+      "region": "동남아",
+      "discountRate": -15
+    },
+    {
+      "id": "modetour-ASIA-19377859",
+      "source": "modetour",
+      "airline": "비엣젯 항공",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-03-17",
+        "time": "08:30"
+      },
+      "arrival": {
+        "city": "다낭",
+        "airport": "DAD",
+        "date": "2026-03-21",
+        "time": "00:30"
+      },
+      "price": 340000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19377859&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 15,
+      "flightNumber": "VJ989 / VJ988",
+      "region": "동남아",
+      "discountRate": -30
+    },
+    {
+      "id": "modetour-ASIA-19377858",
+      "source": "modetour",
+      "airline": "비엣젯 항공",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-03-16",
+        "time": "08:30"
+      },
+      "arrival": {
+        "city": "다낭",
+        "airport": "DAD",
+        "date": "2026-03-20",
+        "time": "00:30"
+      },
+      "price": 340000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19377858&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 20,
+      "flightNumber": "VJ989 / VJ988",
+      "region": "동남아",
+      "discountRate": -30
+    },
+    {
+      "id": "modetour-ASIA-19377857",
+      "source": "modetour",
+      "airline": "비엣젯 항공",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-03-15",
+        "time": "08:30"
+      },
+      "arrival": {
+        "city": "다낭",
+        "airport": "DAD",
+        "date": "2026-03-19",
+        "time": "00:30"
+      },
+      "price": 340000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19377857&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 13,
+      "flightNumber": "VJ989 / VJ988",
+      "region": "동남아",
+      "discountRate": -30
+    },
+    {
+      "id": "modetour-ASIA-19391400",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-09",
+        "time": "15:35"
+      },
+      "arrival": {
+        "city": "발리",
+        "airport": "DPS",
+        "date": "2026-03-13",
+        "time": "23:05"
+      },
+      "price": 464000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19391400&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 2,
+      "flightNumber": "7C2711 / 7C2712",
+      "region": "동남아",
+      "discountRate": -9
+    },
+    {
+      "id": "modetour-ASIA-19670147",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-09",
+        "time": "15:35"
+      },
+      "arrival": {
+        "city": "발리",
+        "airport": "DPS",
+        "date": "2026-03-12",
+        "time": "23:05"
+      },
+      "price": 464000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19670147&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 4,
+      "flightNumber": "7C2711 / 7C2712",
+      "region": "동남아",
+      "discountRate": -9
+    },
+    {
+      "id": "modetour-ASIA-19391402",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-11",
+        "time": "15:35"
+      },
+      "arrival": {
+        "city": "발리",
+        "airport": "DPS",
+        "date": "2026-03-15",
+        "time": "23:05"
+      },
+      "price": 464000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19391402&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 1,
+      "flightNumber": "7C2711 / 7C2712",
+      "region": "동남아",
+      "discountRate": -9
+    },
+    {
+      "id": "modetour-ASIA-19670161",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-23",
+        "time": "15:35"
+      },
+      "arrival": {
+        "city": "발리",
+        "airport": "DPS",
+        "date": "2026-03-26",
+        "time": "23:05"
+      },
+      "price": 464000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19670161&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 4,
+      "flightNumber": "7C2711 / 7C2712",
+      "region": "동남아",
+      "discountRate": -9
+    },
+    {
+      "id": "modetour-ASIA-19670158",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-20",
+        "time": "15:35"
+      },
+      "arrival": {
+        "city": "발리",
+        "airport": "DPS",
+        "date": "2026-03-23",
+        "time": "23:05"
+      },
+      "price": 464000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19670158&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 4,
+      "flightNumber": "7C2711 / 7C2712",
+      "region": "동남아",
+      "discountRate": -9
+    },
+    {
+      "id": "modetour-ASIA-19391412",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-21",
+        "time": "15:35"
+      },
+      "arrival": {
+        "city": "발리",
+        "airport": "DPS",
+        "date": "2026-03-25",
+        "time": "23:05"
+      },
+      "price": 464000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19391412&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 4,
+      "flightNumber": "7C2711 / 7C2712",
+      "region": "동남아",
+      "discountRate": -9
+    },
+    {
+      "id": "modetour-ASIA-19670159",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-21",
+        "time": "15:35"
+      },
+      "arrival": {
+        "city": "발리",
+        "airport": "DPS",
+        "date": "2026-03-24",
+        "time": "23:05"
+      },
+      "price": 464000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19670159&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 4,
+      "flightNumber": "7C2711 / 7C2712",
+      "region": "동남아",
+      "discountRate": -9
+    },
+    {
+      "id": "modetour-ASIA-19391413",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-22",
+        "time": "15:35"
+      },
+      "arrival": {
+        "city": "발리",
+        "airport": "DPS",
+        "date": "2026-03-26",
+        "time": "23:05"
+      },
+      "price": 464000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19391413&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 4,
+      "flightNumber": "7C2711 / 7C2712",
+      "region": "동남아",
+      "discountRate": -9
+    },
+    {
+      "id": "modetour-ASIA-19670160",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-22",
+        "time": "15:35"
+      },
+      "arrival": {
+        "city": "발리",
+        "airport": "DPS",
+        "date": "2026-03-25",
+        "time": "23:05"
+      },
+      "price": 464000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19670160&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 4,
+      "flightNumber": "7C2711 / 7C2712",
+      "region": "동남아",
+      "discountRate": -9
+    },
+    {
+      "id": "modetour-ASIA-19391414",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-23",
+        "time": "15:35"
+      },
+      "arrival": {
+        "city": "발리",
+        "airport": "DPS",
+        "date": "2026-03-27",
+        "time": "23:05"
+      },
+      "price": 464000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19391414&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 4,
+      "flightNumber": "7C2711 / 7C2712",
+      "region": "동남아",
+      "discountRate": -9
+    },
+    {
+      "id": "modetour-ASIA-19391407",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-16",
+        "time": "15:35"
+      },
+      "arrival": {
+        "city": "발리",
+        "airport": "DPS",
+        "date": "2026-03-20",
+        "time": "23:05"
+      },
+      "price": 464000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19391407&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 4,
+      "flightNumber": "7C2711 / 7C2712",
+      "region": "동남아",
+      "discountRate": -9
+    },
+    {
+      "id": "modetour-ASIA-19391408",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-17",
+        "time": "15:35"
+      },
+      "arrival": {
+        "city": "발리",
+        "airport": "DPS",
+        "date": "2026-03-21",
+        "time": "23:05"
+      },
+      "price": 464000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19391408&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 4,
+      "flightNumber": "7C2711 / 7C2712",
+      "region": "동남아",
+      "discountRate": -9
+    },
+    {
+      "id": "modetour-ASIA-19670155",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-17",
+        "time": "15:35"
+      },
+      "arrival": {
+        "city": "발리",
+        "airport": "DPS",
+        "date": "2026-03-20",
+        "time": "23:05"
+      },
+      "price": 464000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19670155&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 4,
+      "flightNumber": "7C2711 / 7C2712",
+      "region": "동남아",
+      "discountRate": -9
+    },
+    {
+      "id": "modetour-ASIA-19391409",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-18",
+        "time": "15:35"
+      },
+      "arrival": {
+        "city": "발리",
+        "airport": "DPS",
+        "date": "2026-03-22",
+        "time": "23:05"
+      },
+      "price": 464000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19391409&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 4,
+      "flightNumber": "7C2711 / 7C2712",
+      "region": "동남아",
+      "discountRate": -9
+    },
+    {
+      "id": "modetour-ASIA-19670156",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-18",
+        "time": "15:35"
+      },
+      "arrival": {
+        "city": "발리",
+        "airport": "DPS",
+        "date": "2026-03-21",
+        "time": "23:05"
+      },
+      "price": 464000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19670156&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 4,
+      "flightNumber": "7C2711 / 7C2712",
+      "region": "동남아",
+      "discountRate": -9
+    },
+    {
+      "id": "modetour-ASIA-19391403",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-12",
+        "time": "15:35"
+      },
+      "arrival": {
+        "city": "발리",
+        "airport": "DPS",
+        "date": "2026-03-16",
+        "time": "23:05"
+      },
+      "price": 464000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19391403&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 4,
+      "flightNumber": "7C2711 / 7C2712",
+      "region": "동남아",
+      "discountRate": -9
+    },
+    {
+      "id": "modetour-ASIA-19670150",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-12",
+        "time": "15:35"
+      },
+      "arrival": {
+        "city": "발리",
+        "airport": "DPS",
+        "date": "2026-03-15",
+        "time": "23:05"
+      },
+      "price": 464000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19670150&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 4,
+      "flightNumber": "7C2711 / 7C2712",
+      "region": "동남아",
+      "discountRate": -9
+    },
+    {
+      "id": "modetour-ASIA-19391404",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-13",
+        "time": "15:35"
+      },
+      "arrival": {
+        "city": "발리",
+        "airport": "DPS",
+        "date": "2026-03-17",
+        "time": "23:05"
+      },
+      "price": 464000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19391404&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 4,
+      "flightNumber": "7C2711 / 7C2712",
+      "region": "동남아",
+      "discountRate": -9
+    },
+    {
+      "id": "modetour-ASIA-19670151",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-13",
+        "time": "15:35"
+      },
+      "arrival": {
+        "city": "발리",
+        "airport": "DPS",
+        "date": "2026-03-16",
+        "time": "23:05"
+      },
+      "price": 464000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19670151&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 4,
+      "flightNumber": "7C2711 / 7C2712",
+      "region": "동남아",
+      "discountRate": -9
+    },
+    {
+      "id": "modetour-ASIA-19391405",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-14",
+        "time": "15:35"
+      },
+      "arrival": {
+        "city": "발리",
+        "airport": "DPS",
+        "date": "2026-03-18",
+        "time": "23:05"
+      },
+      "price": 464000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19391405&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 4,
+      "flightNumber": "7C2711 / 7C2712",
+      "region": "동남아",
+      "discountRate": -9
+    },
+    {
+      "id": "modetour-ASIA-19670152",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-14",
+        "time": "15:35"
+      },
+      "arrival": {
+        "city": "발리",
+        "airport": "DPS",
+        "date": "2026-03-17",
+        "time": "23:05"
+      },
+      "price": 464000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19670152&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 4,
+      "flightNumber": "7C2711 / 7C2712",
+      "region": "동남아",
+      "discountRate": -9
+    },
+    {
+      "id": "modetour-ASIA-19670316",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-21",
+        "time": "21:20"
+      },
+      "arrival": {
+        "city": "하노이",
+        "airport": "HAN",
+        "date": "2026-03-26",
+        "time": "01:40"
+      },
+      "price": 333300,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19670316&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 21,
+      "flightNumber": "7C2201 / 7C2202",
+      "region": "동남아",
+      "discountRate": -11
+    },
+    {
+      "id": "modetour-ASIA-19630082",
+      "source": "modetour",
+      "airline": "아시아나 항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-01",
+        "time": "17:00"
+      },
+      "arrival": {
+        "city": "푸켓",
+        "airport": "HKT",
+        "date": "2026-03-04",
+        "time": "22:55"
+      },
+      "price": 358500,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19630082&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 1,
+      "flightNumber": "OZ747 / OZ748",
+      "region": "동남아",
+      "discountRate": 10
     },
     {
       "id": "modetour-ASIA-19630083",
@@ -6480,1278 +7848,6 @@
       "discountRate": 10
     },
     {
-      "id": "modetour-ASIA-19630087",
-      "source": "modetour",
-      "airline": "아시아나 항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-06",
-        "time": "17:00"
-      },
-      "arrival": {
-        "city": "푸켓",
-        "airport": "HKT",
-        "date": "2026-03-09",
-        "time": "22:55"
-      },
-      "price": 358500,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19630087&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 1,
-      "flightNumber": "OZ747 / OZ748",
-      "region": "동남아",
-      "discountRate": 10
-    },
-    {
-      "id": "modetour-ASIA-19395183",
-      "source": "modetour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-07",
-        "time": "17:45"
-      },
-      "arrival": {
-        "city": "바탐",
-        "airport": "BTH",
-        "date": "2026-03-11",
-        "time": "23:45"
-      },
-      "price": 256000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19395183&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 12,
-      "flightNumber": "7C2701 / 7C2702",
-      "region": "동남아",
-      "discountRate": 18
-    },
-    {
-      "id": "modetour-ASIA-19494820",
-      "source": "modetour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "부산",
-        "airport": "PUS",
-        "date": "2026-03-07",
-        "time": "19:30"
-      },
-      "arrival": {
-        "city": "방콕(수완나폼)",
-        "airport": "BKK",
-        "date": "2026-03-11",
-        "time": "00:40"
-      },
-      "price": 272000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19494820&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 16,
-      "flightNumber": "7C2551 / 7C2552",
-      "region": "동남아",
-      "discountRate": -15
-    },
-    {
-      "id": "modetour-ASIA-19377850",
-      "source": "modetour",
-      "airline": "비엣젯 항공",
-      "departure": {
-        "city": "부산",
-        "airport": "PUS",
-        "date": "2026-03-08",
-        "time": "08:30"
-      },
-      "arrival": {
-        "city": "다낭",
-        "airport": "DAD",
-        "date": "2026-03-12",
-        "time": "00:30"
-      },
-      "price": 340000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19377850&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 9,
-      "flightNumber": "VJ989 / VJ988",
-      "region": "동남아",
-      "discountRate": -30
-    },
-    {
-      "id": "modetour-ASIA-19389744",
-      "source": "modetour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-08",
-        "time": "07:15"
-      },
-      "arrival": {
-        "city": "보홀팡라오",
-        "airport": "TAG",
-        "date": "2026-03-11",
-        "time": "12:30"
-      },
-      "price": 389500,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19389744&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 8,
-      "flightNumber": "7C2121 / 7C2122",
-      "region": "동남아",
-      "discountRate": -69
-    },
-    {
-      "id": "modetour-ASIA-19492306",
-      "source": "modetour",
-      "airline": "비엣젯 항공",
-      "departure": {
-        "city": "대구",
-        "airport": "TAE",
-        "date": "2026-03-08",
-        "time": "07:50"
-      },
-      "arrival": {
-        "city": "나트랑",
-        "airport": "CXR",
-        "date": "2026-03-12",
-        "time": "00:20"
-      },
-      "price": 340000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19492306&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 8,
-      "flightNumber": "VJ871 / VJ870",
-      "region": "동남아",
-      "discountRate": -7
-    },
-    {
-      "id": "modetour-ASIA-19638181",
-      "source": "modetour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-08",
-        "time": "18:00"
-      },
-      "arrival": {
-        "city": "푸꾸옥",
-        "airport": "PQC",
-        "date": "2026-03-11",
-        "time": "23:15"
-      },
-      "price": 352000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19638181&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 1,
-      "flightNumber": "7C2315 / 7C2316",
-      "region": "동남아",
-      "discountRate": -5
-    },
-    {
-      "id": "modetour-ASIA-19377851",
-      "source": "modetour",
-      "airline": "비엣젯 항공",
-      "departure": {
-        "city": "부산",
-        "airport": "PUS",
-        "date": "2026-03-09",
-        "time": "08:30"
-      },
-      "arrival": {
-        "city": "다낭",
-        "airport": "DAD",
-        "date": "2026-03-13",
-        "time": "00:30"
-      },
-      "price": 340000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19377851&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 20,
-      "flightNumber": "VJ989 / VJ988",
-      "region": "동남아",
-      "discountRate": -30
-    },
-    {
-      "id": "modetour-ASIA-19391400",
-      "source": "modetour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-09",
-        "time": "15:35"
-      },
-      "arrival": {
-        "city": "발리",
-        "airport": "DPS",
-        "date": "2026-03-13",
-        "time": "23:05"
-      },
-      "price": 464000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19391400&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 1,
-      "flightNumber": "7C2711 / 7C2712",
-      "region": "동남아",
-      "discountRate": -9
-    },
-    {
-      "id": "modetour-ASIA-19492307",
-      "source": "modetour",
-      "airline": "비엣젯 항공",
-      "departure": {
-        "city": "대구",
-        "airport": "TAE",
-        "date": "2026-03-09",
-        "time": "07:50"
-      },
-      "arrival": {
-        "city": "나트랑",
-        "airport": "CXR",
-        "date": "2026-03-13",
-        "time": "00:20"
-      },
-      "price": 340000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19492307&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 8,
-      "flightNumber": "VJ871 / VJ870",
-      "region": "동남아",
-      "discountRate": -7
-    },
-    {
-      "id": "modetour-ASIA-19630090",
-      "source": "modetour",
-      "airline": "아시아나 항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-09",
-        "time": "17:00"
-      },
-      "arrival": {
-        "city": "푸켓",
-        "airport": "HKT",
-        "date": "2026-03-12",
-        "time": "22:55"
-      },
-      "price": 358500,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19630090&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 1,
-      "flightNumber": "OZ747 / OZ748",
-      "region": "동남아",
-      "discountRate": 10
-    },
-    {
-      "id": "modetour-ASIA-19670147",
-      "source": "modetour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-09",
-        "time": "15:35"
-      },
-      "arrival": {
-        "city": "발리",
-        "airport": "DPS",
-        "date": "2026-03-12",
-        "time": "23:05"
-      },
-      "price": 464000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19670147&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 4,
-      "flightNumber": "7C2711 / 7C2712",
-      "region": "동남아",
-      "discountRate": -9
-    },
-    {
-      "id": "modetour-ASIA-19377852",
-      "source": "modetour",
-      "airline": "비엣젯 항공",
-      "departure": {
-        "city": "부산",
-        "airport": "PUS",
-        "date": "2026-03-10",
-        "time": "08:30"
-      },
-      "arrival": {
-        "city": "다낭",
-        "airport": "DAD",
-        "date": "2026-03-14",
-        "time": "00:30"
-      },
-      "price": 340000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19377852&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 22,
-      "flightNumber": "VJ989 / VJ988",
-      "region": "동남아",
-      "discountRate": -30
-    },
-    {
-      "id": "modetour-ASIA-19389746",
-      "source": "modetour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-10",
-        "time": "07:15"
-      },
-      "arrival": {
-        "city": "보홀팡라오",
-        "airport": "TAG",
-        "date": "2026-03-13",
-        "time": "12:30"
-      },
-      "price": 389500,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19389746&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 8,
-      "flightNumber": "7C2121 / 7C2122",
-      "region": "동남아",
-      "discountRate": -69
-    },
-    {
-      "id": "modetour-ASIA-19630091",
-      "source": "modetour",
-      "airline": "아시아나 항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-10",
-        "time": "17:00"
-      },
-      "arrival": {
-        "city": "푸켓",
-        "airport": "HKT",
-        "date": "2026-03-13",
-        "time": "22:55"
-      },
-      "price": 358500,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19630091&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 6,
-      "flightNumber": "OZ747 / OZ748",
-      "region": "동남아",
-      "discountRate": 10
-    },
-    {
-      "id": "modetour-ASIA-19391402",
-      "source": "modetour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-11",
-        "time": "15:35"
-      },
-      "arrival": {
-        "city": "발리",
-        "airport": "DPS",
-        "date": "2026-03-15",
-        "time": "23:05"
-      },
-      "price": 464000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19391402&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 1,
-      "flightNumber": "7C2711 / 7C2712",
-      "region": "동남아",
-      "discountRate": -9
-    },
-    {
-      "id": "modetour-ASIA-19423084",
-      "source": "modetour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-11",
-        "time": "18:20"
-      },
-      "arrival": {
-        "city": "싱가포르(창이공항)",
-        "airport": "SIN",
-        "date": "2026-03-15",
-        "time": "01:10"
-      },
-      "price": 310000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19423084&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 5,
-      "flightNumber": "7C2623 / 7C2624",
-      "region": "동남아",
-      "discountRate": -12
-    },
-    {
-      "id": "modetour-ASIA-19391403",
-      "source": "modetour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-12",
-        "time": "15:35"
-      },
-      "arrival": {
-        "city": "발리",
-        "airport": "DPS",
-        "date": "2026-03-16",
-        "time": "23:05"
-      },
-      "price": 464000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19391403&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 4,
-      "flightNumber": "7C2711 / 7C2712",
-      "region": "동남아",
-      "discountRate": -9
-    },
-    {
-      "id": "modetour-ASIA-19423085",
-      "source": "modetour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-12",
-        "time": "18:20"
-      },
-      "arrival": {
-        "city": "싱가포르(창이공항)",
-        "airport": "SIN",
-        "date": "2026-03-16",
-        "time": "01:10"
-      },
-      "price": 310000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19423085&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 10,
-      "flightNumber": "7C2623 / 7C2624",
-      "region": "동남아",
-      "discountRate": -12
-    },
-    {
-      "id": "modetour-ASIA-19670150",
-      "source": "modetour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-12",
-        "time": "15:35"
-      },
-      "arrival": {
-        "city": "발리",
-        "airport": "DPS",
-        "date": "2026-03-15",
-        "time": "23:05"
-      },
-      "price": 464000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19670150&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 4,
-      "flightNumber": "7C2711 / 7C2712",
-      "region": "동남아",
-      "discountRate": -9
-    },
-    {
-      "id": "modetour-ASIA-19391404",
-      "source": "modetour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-13",
-        "time": "15:35"
-      },
-      "arrival": {
-        "city": "발리",
-        "airport": "DPS",
-        "date": "2026-03-17",
-        "time": "23:05"
-      },
-      "price": 464000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19391404&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 4,
-      "flightNumber": "7C2711 / 7C2712",
-      "region": "동남아",
-      "discountRate": -9
-    },
-    {
-      "id": "modetour-ASIA-19399453",
-      "source": "modetour",
-      "airline": "에어아시아",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-13",
-        "time": "10:15"
-      },
-      "arrival": {
-        "city": "코타키나발루",
-        "airport": "BKI",
-        "date": "2026-03-17",
-        "time": "02:20"
-      },
-      "price": 349000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19399453&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 1,
-      "flightNumber": "AK1624 / AK1623",
-      "region": "동남아",
-      "discountRate": -32
-    },
-    {
-      "id": "modetour-ASIA-19670151",
-      "source": "modetour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-13",
-        "time": "15:35"
-      },
-      "arrival": {
-        "city": "발리",
-        "airport": "DPS",
-        "date": "2026-03-16",
-        "time": "23:05"
-      },
-      "price": 464000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19670151&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 4,
-      "flightNumber": "7C2711 / 7C2712",
-      "region": "동남아",
-      "discountRate": -9
-    },
-    {
-      "id": "modetour-ASIA-19391405",
-      "source": "modetour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-14",
-        "time": "15:35"
-      },
-      "arrival": {
-        "city": "발리",
-        "airport": "DPS",
-        "date": "2026-03-18",
-        "time": "23:05"
-      },
-      "price": 464000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19391405&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 4,
-      "flightNumber": "7C2711 / 7C2712",
-      "region": "동남아",
-      "discountRate": -9
-    },
-    {
-      "id": "modetour-ASIA-19423087",
-      "source": "modetour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-14",
-        "time": "18:20"
-      },
-      "arrival": {
-        "city": "싱가포르(창이공항)",
-        "airport": "SIN",
-        "date": "2026-03-18",
-        "time": "01:10"
-      },
-      "price": 310000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19423087&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 10,
-      "flightNumber": "7C2623 / 7C2624",
-      "region": "동남아",
-      "discountRate": -12
-    },
-    {
-      "id": "modetour-ASIA-19493295",
-      "source": "modetour",
-      "airline": "에어부산",
-      "departure": {
-        "city": "부산",
-        "airport": "PUS",
-        "date": "2026-03-14",
-        "time": "21:10"
-      },
-      "arrival": {
-        "city": "세부",
-        "airport": "CEB",
-        "date": "2026-03-18",
-        "time": "01:30"
-      },
-      "price": 186000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19493295&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 6,
-      "flightNumber": "BX711 / BX712",
-      "region": "동남아",
-      "discountRate": 24
-    },
-    {
-      "id": "modetour-ASIA-19611353",
-      "source": "modetour",
-      "airline": "이스타항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-14",
-        "time": "20:25"
-      },
-      "arrival": {
-        "city": "마나도",
-        "airport": "MDC",
-        "date": "2026-03-18",
-        "time": "02:20"
-      },
-      "price": 361000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19611353&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 5,
-      "flightNumber": "ZE535 / ZE536",
-      "region": "동남아",
-      "discountRate": 43
-    },
-    {
-      "id": "modetour-ASIA-19630095",
-      "source": "modetour",
-      "airline": "아시아나 항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-14",
-        "time": "17:00"
-      },
-      "arrival": {
-        "city": "푸켓",
-        "airport": "HKT",
-        "date": "2026-03-17",
-        "time": "22:55"
-      },
-      "price": 358500,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19630095&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 3,
-      "flightNumber": "OZ747 / OZ748",
-      "region": "동남아",
-      "discountRate": 10
-    },
-    {
-      "id": "modetour-ASIA-19670152",
-      "source": "modetour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-14",
-        "time": "15:35"
-      },
-      "arrival": {
-        "city": "발리",
-        "airport": "DPS",
-        "date": "2026-03-17",
-        "time": "23:05"
-      },
-      "price": 464000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19670152&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 4,
-      "flightNumber": "7C2711 / 7C2712",
-      "region": "동남아",
-      "discountRate": -9
-    },
-    {
-      "id": "modetour-ASIA-19932796",
-      "source": "modetour",
-      "airline": "티웨이 항공",
-      "departure": {
-        "city": "대구",
-        "airport": "TAE",
-        "date": "2026-03-14",
-        "time": "21:25"
-      },
-      "arrival": {
-        "city": "방콕(수완나폼)",
-        "airport": "BKK",
-        "date": "2026-03-19",
-        "time": "02:30"
-      },
-      "price": 284000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19932796&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 4,
-      "flightNumber": "TW105 / TW106",
-      "region": "동남아",
-      "discountRate": -20
-    },
-    {
-      "id": "modetour-ASIA-19377857",
-      "source": "modetour",
-      "airline": "비엣젯 항공",
-      "departure": {
-        "city": "부산",
-        "airport": "PUS",
-        "date": "2026-03-15",
-        "time": "08:30"
-      },
-      "arrival": {
-        "city": "다낭",
-        "airport": "DAD",
-        "date": "2026-03-19",
-        "time": "00:30"
-      },
-      "price": 340000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19377857&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 13,
-      "flightNumber": "VJ989 / VJ988",
-      "region": "동남아",
-      "discountRate": -30
-    },
-    {
-      "id": "modetour-ASIA-19378012",
-      "source": "modetour",
-      "airline": "비엣젯 항공",
-      "departure": {
-        "city": "부산",
-        "airport": "PUS",
-        "date": "2026-03-15",
-        "time": "07:35"
-      },
-      "arrival": {
-        "city": "나트랑",
-        "airport": "CXR",
-        "date": "2026-03-19",
-        "time": "00:05"
-      },
-      "price": 340000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19378012&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 4,
-      "flightNumber": "VJ991 / VJ990",
-      "region": "동남아",
-      "discountRate": -7
-    },
-    {
-      "id": "modetour-ASIA-19389751",
-      "source": "modetour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-15",
-        "time": "07:15"
-      },
-      "arrival": {
-        "city": "보홀팡라오",
-        "airport": "TAG",
-        "date": "2026-03-18",
-        "time": "12:30"
-      },
-      "price": 389500,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19389751&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 6,
-      "flightNumber": "7C2121 / 7C2122",
-      "region": "동남아",
-      "discountRate": -69
-    },
-    {
-      "id": "modetour-ASIA-19423088",
-      "source": "modetour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-15",
-        "time": "18:20"
-      },
-      "arrival": {
-        "city": "싱가포르(창이공항)",
-        "airport": "SIN",
-        "date": "2026-03-19",
-        "time": "01:10"
-      },
-      "price": 310000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19423088&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 6,
-      "flightNumber": "7C2623 / 7C2624",
-      "region": "동남아",
-      "discountRate": -12
-    },
-    {
-      "id": "modetour-ASIA-19429144",
-      "source": "modetour",
-      "airline": "비엣젯 항공",
-      "departure": {
-        "city": "부산",
-        "airport": "PUS",
-        "date": "2026-03-15",
-        "time": "07:35"
-      },
-      "arrival": {
-        "city": "푸꾸옥",
-        "airport": "PQC",
-        "date": "2026-03-18",
-        "time": "23:00"
-      },
-      "price": 380000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19429144&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 6,
-      "flightNumber": "VJ969 / VJ968",
-      "region": "동남아",
-      "discountRate": -13
-    },
-    {
-      "id": "modetour-ASIA-19492315",
-      "source": "modetour",
-      "airline": "비엣젯 항공",
-      "departure": {
-        "city": "대구",
-        "airport": "TAE",
-        "date": "2026-03-15",
-        "time": "07:50"
-      },
-      "arrival": {
-        "city": "나트랑",
-        "airport": "CXR",
-        "date": "2026-03-19",
-        "time": "00:20"
-      },
-      "price": 340000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19492315&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 21,
-      "flightNumber": "VJ871 / VJ870",
-      "region": "동남아",
-      "discountRate": -7
-    },
-    {
-      "id": "modetour-ASIA-19493296",
-      "source": "modetour",
-      "airline": "에어부산",
-      "departure": {
-        "city": "부산",
-        "airport": "PUS",
-        "date": "2026-03-15",
-        "time": "21:10"
-      },
-      "arrival": {
-        "city": "세부",
-        "airport": "CEB",
-        "date": "2026-03-19",
-        "time": "01:30"
-      },
-      "price": 186000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19493296&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 9,
-      "flightNumber": "BX711 / BX712",
-      "region": "동남아",
-      "discountRate": 24
-    },
-    {
-      "id": "modetour-ASIA-19630096",
-      "source": "modetour",
-      "airline": "아시아나 항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-15",
-        "time": "17:00"
-      },
-      "arrival": {
-        "city": "푸켓",
-        "airport": "HKT",
-        "date": "2026-03-18",
-        "time": "22:55"
-      },
-      "price": 358500,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19630096&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 8,
-      "flightNumber": "OZ747 / OZ748",
-      "region": "동남아",
-      "discountRate": 10
-    },
-    {
-      "id": "modetour-ASIA-19932797",
-      "source": "modetour",
-      "airline": "티웨이 항공",
-      "departure": {
-        "city": "대구",
-        "airport": "TAE",
-        "date": "2026-03-15",
-        "time": "21:25"
-      },
-      "arrival": {
-        "city": "방콕(수완나폼)",
-        "airport": "BKK",
-        "date": "2026-03-20",
-        "time": "02:30"
-      },
-      "price": 284000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19932797&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 4,
-      "flightNumber": "TW105 / TW106",
-      "region": "동남아",
-      "discountRate": -20
-    },
-    {
-      "id": "modetour-ASIA-19377858",
-      "source": "modetour",
-      "airline": "비엣젯 항공",
-      "departure": {
-        "city": "부산",
-        "airport": "PUS",
-        "date": "2026-03-16",
-        "time": "08:30"
-      },
-      "arrival": {
-        "city": "다낭",
-        "airport": "DAD",
-        "date": "2026-03-20",
-        "time": "00:30"
-      },
-      "price": 340000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19377858&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 20,
-      "flightNumber": "VJ989 / VJ988",
-      "region": "동남아",
-      "discountRate": -30
-    },
-    {
-      "id": "modetour-ASIA-19389752",
-      "source": "modetour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-16",
-        "time": "07:15"
-      },
-      "arrival": {
-        "city": "보홀팡라오",
-        "airport": "TAG",
-        "date": "2026-03-19",
-        "time": "12:30"
-      },
-      "price": 389500,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19389752&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 8,
-      "flightNumber": "7C2121 / 7C2122",
-      "region": "동남아",
-      "discountRate": -69
-    },
-    {
-      "id": "modetour-ASIA-19391407",
-      "source": "modetour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-16",
-        "time": "15:35"
-      },
-      "arrival": {
-        "city": "발리",
-        "airport": "DPS",
-        "date": "2026-03-20",
-        "time": "23:05"
-      },
-      "price": 464000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19391407&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 4,
-      "flightNumber": "7C2711 / 7C2712",
-      "region": "동남아",
-      "discountRate": -9
-    },
-    {
-      "id": "modetour-ASIA-19429145",
-      "source": "modetour",
-      "airline": "비엣젯 항공",
-      "departure": {
-        "city": "부산",
-        "airport": "PUS",
-        "date": "2026-03-16",
-        "time": "07:35"
-      },
-      "arrival": {
-        "city": "푸꾸옥",
-        "airport": "PQC",
-        "date": "2026-03-19",
-        "time": "23:00"
-      },
-      "price": 380000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19429145&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 6,
-      "flightNumber": "VJ969 / VJ968",
-      "region": "동남아",
-      "discountRate": -13
-    },
-    {
-      "id": "modetour-ASIA-19492317",
-      "source": "modetour",
-      "airline": "비엣젯 항공",
-      "departure": {
-        "city": "대구",
-        "airport": "TAE",
-        "date": "2026-03-16",
-        "time": "07:50"
-      },
-      "arrival": {
-        "city": "나트랑",
-        "airport": "CXR",
-        "date": "2026-03-20",
-        "time": "00:20"
-      },
-      "price": 340000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19492317&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 23,
-      "flightNumber": "VJ871 / VJ870",
-      "region": "동남아",
-      "discountRate": -7
-    },
-    {
-      "id": "modetour-ASIA-19493297",
-      "source": "modetour",
-      "airline": "에어부산",
-      "departure": {
-        "city": "부산",
-        "airport": "PUS",
-        "date": "2026-03-16",
-        "time": "21:10"
-      },
-      "arrival": {
-        "city": "세부",
-        "airport": "CEB",
-        "date": "2026-03-20",
-        "time": "01:30"
-      },
-      "price": 186000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19493297&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 17,
-      "flightNumber": "BX711 / BX712",
-      "region": "동남아",
-      "discountRate": 24
-    },
-    {
-      "id": "modetour-ASIA-19377859",
-      "source": "modetour",
-      "airline": "비엣젯 항공",
-      "departure": {
-        "city": "부산",
-        "airport": "PUS",
-        "date": "2026-03-17",
-        "time": "08:30"
-      },
-      "arrival": {
-        "city": "다낭",
-        "airport": "DAD",
-        "date": "2026-03-21",
-        "time": "00:30"
-      },
-      "price": 340000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19377859&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 15,
-      "flightNumber": "VJ989 / VJ988",
-      "region": "동남아",
-      "discountRate": -30
-    },
-    {
-      "id": "modetour-ASIA-19389753",
-      "source": "modetour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-17",
-        "time": "07:15"
-      },
-      "arrival": {
-        "city": "보홀팡라오",
-        "airport": "TAG",
-        "date": "2026-03-20",
-        "time": "12:30"
-      },
-      "price": 389500,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19389753&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 8,
-      "flightNumber": "7C2121 / 7C2122",
-      "region": "동남아",
-      "discountRate": -69
-    },
-    {
-      "id": "modetour-ASIA-19391408",
-      "source": "modetour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-17",
-        "time": "15:35"
-      },
-      "arrival": {
-        "city": "발리",
-        "airport": "DPS",
-        "date": "2026-03-21",
-        "time": "23:05"
-      },
-      "price": 464000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19391408&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 4,
-      "flightNumber": "7C2711 / 7C2712",
-      "region": "동남아",
-      "discountRate": -9
-    },
-    {
-      "id": "modetour-ASIA-19423090",
-      "source": "modetour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-17",
-        "time": "18:20"
-      },
-      "arrival": {
-        "city": "싱가포르(창이공항)",
-        "airport": "SIN",
-        "date": "2026-03-21",
-        "time": "01:10"
-      },
-      "price": 310000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19423090&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 10,
-      "flightNumber": "7C2623 / 7C2624",
-      "region": "동남아",
-      "discountRate": -12
-    },
-    {
-      "id": "modetour-ASIA-19429146",
-      "source": "modetour",
-      "airline": "비엣젯 항공",
-      "departure": {
-        "city": "부산",
-        "airport": "PUS",
-        "date": "2026-03-17",
-        "time": "07:35"
-      },
-      "arrival": {
-        "city": "푸꾸옥",
-        "airport": "PQC",
-        "date": "2026-03-20",
-        "time": "23:00"
-      },
-      "price": 380000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19429146&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 6,
-      "flightNumber": "VJ969 / VJ968",
-      "region": "동남아",
-      "discountRate": -13
-    },
-    {
-      "id": "modetour-ASIA-19493298",
-      "source": "modetour",
-      "airline": "에어부산",
-      "departure": {
-        "city": "부산",
-        "airport": "PUS",
-        "date": "2026-03-17",
-        "time": "21:10"
-      },
-      "arrival": {
-        "city": "세부",
-        "airport": "CEB",
-        "date": "2026-03-21",
-        "time": "01:30"
-      },
-      "price": 186000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19493298&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 4,
-      "flightNumber": "BX711 / BX712",
-      "region": "동남아",
-      "discountRate": 24
-    },
-    {
-      "id": "modetour-ASIA-19536694",
-      "source": "modetour",
-      "airline": "이스타항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-17",
-        "time": "17:05"
-      },
-      "arrival": {
-        "city": "방콕(수완나폼)",
-        "airport": "BKK",
-        "date": "2026-03-20",
-        "time": "22:25"
-      },
-      "price": 264000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19536694&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 6,
-      "flightNumber": "ZE511 / ZE512",
-      "region": "동남아",
-      "discountRate": -11
-    },
-    {
-      "id": "modetour-ASIA-19611356",
-      "source": "modetour",
-      "airline": "이스타항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-17",
-        "time": "20:25"
-      },
-      "arrival": {
-        "city": "마나도",
-        "airport": "MDC",
-        "date": "2026-03-21",
-        "time": "02:20"
-      },
-      "price": 361000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19611356&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 10,
-      "flightNumber": "ZE535 / ZE536",
-      "region": "동남아",
-      "discountRate": 43
-    },
-    {
       "id": "modetour-ASIA-19630098",
       "source": "modetour",
       "airline": "아시아나 항공",
@@ -7774,102 +7870,6 @@
       "flightNumber": "OZ747 / OZ748",
       "region": "동남아",
       "discountRate": 10
-    },
-    {
-      "id": "modetour-ASIA-19670155",
-      "source": "modetour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-17",
-        "time": "15:35"
-      },
-      "arrival": {
-        "city": "발리",
-        "airport": "DPS",
-        "date": "2026-03-20",
-        "time": "23:05"
-      },
-      "price": 464000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19670155&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 4,
-      "flightNumber": "7C2711 / 7C2712",
-      "region": "동남아",
-      "discountRate": -9
-    },
-    {
-      "id": "modetour-ASIA-19391409",
-      "source": "modetour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-18",
-        "time": "15:35"
-      },
-      "arrival": {
-        "city": "발리",
-        "airport": "DPS",
-        "date": "2026-03-22",
-        "time": "23:05"
-      },
-      "price": 464000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19391409&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 4,
-      "flightNumber": "7C2711 / 7C2712",
-      "region": "동남아",
-      "discountRate": -9
-    },
-    {
-      "id": "modetour-ASIA-19423091",
-      "source": "modetour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-18",
-        "time": "18:20"
-      },
-      "arrival": {
-        "city": "싱가포르(창이공항)",
-        "airport": "SIN",
-        "date": "2026-03-22",
-        "time": "01:10"
-      },
-      "price": 310000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19423091&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 10,
-      "flightNumber": "7C2623 / 7C2624",
-      "region": "동남아",
-      "discountRate": -12
-    },
-    {
-      "id": "modetour-ASIA-19535953",
-      "source": "modetour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-18",
-        "time": "20:35"
-      },
-      "arrival": {
-        "city": "비엔티엔",
-        "airport": "VTE",
-        "date": "2026-03-22",
-        "time": "01:25"
-      },
-      "price": 407600,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19535953&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 6,
-      "flightNumber": "7C2401 / 7C2402",
-      "region": "기타",
-      "discountRate": -13
     },
     {
       "id": "modetour-ASIA-19630099",
@@ -7896,78 +7896,6 @@
       "discountRate": 10
     },
     {
-      "id": "modetour-ASIA-19670156",
-      "source": "modetour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-18",
-        "time": "15:35"
-      },
-      "arrival": {
-        "city": "발리",
-        "airport": "DPS",
-        "date": "2026-03-21",
-        "time": "23:05"
-      },
-      "price": 464000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19670156&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 4,
-      "flightNumber": "7C2711 / 7C2712",
-      "region": "동남아",
-      "discountRate": -9
-    },
-    {
-      "id": "modetour-ASIA-19423092",
-      "source": "modetour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-19",
-        "time": "18:20"
-      },
-      "arrival": {
-        "city": "싱가포르(창이공항)",
-        "airport": "SIN",
-        "date": "2026-03-23",
-        "time": "01:10"
-      },
-      "price": 310000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19423092&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 10,
-      "flightNumber": "7C2623 / 7C2624",
-      "region": "동남아",
-      "discountRate": -12
-    },
-    {
-      "id": "modetour-ASIA-19535954",
-      "source": "modetour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-19",
-        "time": "20:35"
-      },
-      "arrival": {
-        "city": "비엔티엔",
-        "airport": "VTE",
-        "date": "2026-03-23",
-        "time": "01:25"
-      },
-      "price": 407600,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19535954&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 2,
-      "flightNumber": "7C2401 / 7C2402",
-      "region": "기타",
-      "discountRate": -13
-    },
-    {
       "id": "modetour-ASIA-19630100",
       "source": "modetour",
       "airline": "아시아나 항공",
@@ -7990,126 +7918,6 @@
       "flightNumber": "OZ747 / OZ748",
       "region": "동남아",
       "discountRate": 10
-    },
-    {
-      "id": "modetour-ASIA-19423093",
-      "source": "modetour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-20",
-        "time": "18:20"
-      },
-      "arrival": {
-        "city": "싱가포르(창이공항)",
-        "airport": "SIN",
-        "date": "2026-03-24",
-        "time": "01:10"
-      },
-      "price": 310000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19423093&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 10,
-      "flightNumber": "7C2623 / 7C2624",
-      "region": "동남아",
-      "discountRate": -12
-    },
-    {
-      "id": "modetour-ASIA-19670158",
-      "source": "modetour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-20",
-        "time": "15:35"
-      },
-      "arrival": {
-        "city": "발리",
-        "airport": "DPS",
-        "date": "2026-03-23",
-        "time": "23:05"
-      },
-      "price": 464000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19670158&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 4,
-      "flightNumber": "7C2711 / 7C2712",
-      "region": "동남아",
-      "discountRate": -9
-    },
-    {
-      "id": "modetour-ASIA-19388384",
-      "source": "modetour",
-      "airline": "진에어",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-21",
-        "time": "21:35"
-      },
-      "arrival": {
-        "city": "클락",
-        "airport": "CRK",
-        "date": "2026-03-25",
-        "time": "01:50"
-      },
-      "price": 371000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19388384&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 4,
-      "flightNumber": "LJ037 / LJ038",
-      "region": "동남아",
-      "discountRate": 0
-    },
-    {
-      "id": "modetour-ASIA-19391412",
-      "source": "modetour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-21",
-        "time": "15:35"
-      },
-      "arrival": {
-        "city": "발리",
-        "airport": "DPS",
-        "date": "2026-03-25",
-        "time": "23:05"
-      },
-      "price": 464000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19391412&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 4,
-      "flightNumber": "7C2711 / 7C2712",
-      "region": "동남아",
-      "discountRate": -9
-    },
-    {
-      "id": "modetour-ASIA-19423094",
-      "source": "modetour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-21",
-        "time": "18:20"
-      },
-      "arrival": {
-        "city": "싱가포르(창이공항)",
-        "airport": "SIN",
-        "date": "2026-03-25",
-        "time": "01:10"
-      },
-      "price": 310000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19423094&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 6,
-      "flightNumber": "7C2623 / 7C2624",
-      "region": "동남아",
-      "discountRate": -12
     },
     {
       "id": "modetour-ASIA-19630102",
@@ -8136,342 +7944,6 @@
       "discountRate": 10
     },
     {
-      "id": "modetour-ASIA-19670159",
-      "source": "modetour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-21",
-        "time": "15:35"
-      },
-      "arrival": {
-        "city": "발리",
-        "airport": "DPS",
-        "date": "2026-03-24",
-        "time": "23:05"
-      },
-      "price": 464000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19670159&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 4,
-      "flightNumber": "7C2711 / 7C2712",
-      "region": "동남아",
-      "discountRate": -9
-    },
-    {
-      "id": "modetour-ASIA-19670316",
-      "source": "modetour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-21",
-        "time": "21:20"
-      },
-      "arrival": {
-        "city": "하노이",
-        "airport": "HAN",
-        "date": "2026-03-26",
-        "time": "01:40"
-      },
-      "price": 333300,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19670316&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 21,
-      "flightNumber": "7C2201 / 7C2202",
-      "region": "동남아",
-      "discountRate": -11
-    },
-    {
-      "id": "modetour-ASIA-19868443",
-      "source": "modetour",
-      "airline": "에어로케이",
-      "departure": {
-        "city": "청주",
-        "airport": "CJJ",
-        "date": "2026-03-21",
-        "time": "19:30"
-      },
-      "arrival": {
-        "city": "나트랑",
-        "airport": "CXR",
-        "date": "2026-03-25",
-        "time": "23:30"
-      },
-      "price": 323100,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19868443&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 20,
-      "flightNumber": "RF557 / RF558",
-      "region": "동남아",
-      "discountRate": -1
-    },
-    {
-      "id": "modetour-ASIA-19932798",
-      "source": "modetour",
-      "airline": "티웨이 항공",
-      "departure": {
-        "city": "대구",
-        "airport": "TAE",
-        "date": "2026-03-21",
-        "time": "21:25"
-      },
-      "arrival": {
-        "city": "방콕(수완나폼)",
-        "airport": "BKK",
-        "date": "2026-03-26",
-        "time": "02:30"
-      },
-      "price": 284000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19932798&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 4,
-      "flightNumber": "TW105 / TW106",
-      "region": "동남아",
-      "discountRate": -20
-    },
-    {
-      "id": "modetour-ASIA-19377864",
-      "source": "modetour",
-      "airline": "비엣젯 항공",
-      "departure": {
-        "city": "부산",
-        "airport": "PUS",
-        "date": "2026-03-22",
-        "time": "08:30"
-      },
-      "arrival": {
-        "city": "다낭",
-        "airport": "DAD",
-        "date": "2026-03-26",
-        "time": "00:30"
-      },
-      "price": 340000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19377864&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 22,
-      "flightNumber": "VJ989 / VJ988",
-      "region": "동남아",
-      "discountRate": -30
-    },
-    {
-      "id": "modetour-ASIA-19388385",
-      "source": "modetour",
-      "airline": "진에어",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-22",
-        "time": "21:35"
-      },
-      "arrival": {
-        "city": "클락",
-        "airport": "CRK",
-        "date": "2026-03-26",
-        "time": "01:50"
-      },
-      "price": 371000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19388385&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 4,
-      "flightNumber": "LJ037 / LJ038",
-      "region": "동남아",
-      "discountRate": 0
-    },
-    {
-      "id": "modetour-ASIA-19389758",
-      "source": "modetour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-22",
-        "time": "07:15"
-      },
-      "arrival": {
-        "city": "보홀팡라오",
-        "airport": "TAG",
-        "date": "2026-03-25",
-        "time": "12:30"
-      },
-      "price": 389500,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19389758&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 8,
-      "flightNumber": "7C2121 / 7C2122",
-      "region": "동남아",
-      "discountRate": -69
-    },
-    {
-      "id": "modetour-ASIA-19391413",
-      "source": "modetour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-22",
-        "time": "15:35"
-      },
-      "arrival": {
-        "city": "발리",
-        "airport": "DPS",
-        "date": "2026-03-26",
-        "time": "23:05"
-      },
-      "price": 464000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19391413&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 4,
-      "flightNumber": "7C2711 / 7C2712",
-      "region": "동남아",
-      "discountRate": -9
-    },
-    {
-      "id": "modetour-ASIA-19401959",
-      "source": "modetour",
-      "airline": "티웨이 항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-22",
-        "time": "09:20"
-      },
-      "arrival": {
-        "city": "보라카이(칼리보)",
-        "airport": "KLO",
-        "date": "2026-03-25",
-        "time": "13:55"
-      },
-      "price": 362200,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19401959&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 2,
-      "flightNumber": "TW125 / TW126",
-      "region": "동남아",
-      "discountRate": -18
-    },
-    {
-      "id": "modetour-ASIA-19423095",
-      "source": "modetour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-22",
-        "time": "18:20"
-      },
-      "arrival": {
-        "city": "싱가포르(창이공항)",
-        "airport": "SIN",
-        "date": "2026-03-26",
-        "time": "01:10"
-      },
-      "price": 310000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19423095&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 5,
-      "flightNumber": "7C2623 / 7C2624",
-      "region": "동남아",
-      "discountRate": -12
-    },
-    {
-      "id": "modetour-ASIA-19493303",
-      "source": "modetour",
-      "airline": "에어부산",
-      "departure": {
-        "city": "부산",
-        "airport": "PUS",
-        "date": "2026-03-22",
-        "time": "21:10"
-      },
-      "arrival": {
-        "city": "세부",
-        "airport": "CEB",
-        "date": "2026-03-26",
-        "time": "01:30"
-      },
-      "price": 186000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19493303&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 14,
-      "flightNumber": "BX711 / BX712",
-      "region": "동남아",
-      "discountRate": 24
-    },
-    {
-      "id": "modetour-ASIA-19534891",
-      "source": "modetour",
-      "airline": "에어서울",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-22",
-        "time": "20:55"
-      },
-      "arrival": {
-        "city": "다낭",
-        "airport": "DAD",
-        "date": "2026-03-26",
-        "time": "00:40"
-      },
-      "price": 301800,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19534891&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 3,
-      "flightNumber": "RS511 / RS512",
-      "region": "동남아",
-      "discountRate": -15
-    },
-    {
-      "id": "modetour-ASIA-19535957",
-      "source": "modetour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-22",
-        "time": "20:35"
-      },
-      "arrival": {
-        "city": "비엔티엔",
-        "airport": "VTE",
-        "date": "2026-03-26",
-        "time": "01:25"
-      },
-      "price": 407600,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19535957&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 6,
-      "flightNumber": "7C2401 / 7C2402",
-      "region": "기타",
-      "discountRate": -13
-    },
-    {
-      "id": "modetour-ASIA-19611361",
-      "source": "modetour",
-      "airline": "이스타항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-22",
-        "time": "20:25"
-      },
-      "arrival": {
-        "city": "마나도",
-        "airport": "MDC",
-        "date": "2026-03-26",
-        "time": "02:20"
-      },
-      "price": 361000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19611361&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 10,
-      "flightNumber": "ZE535 / ZE536",
-      "region": "동남아",
-      "discountRate": 43
-    },
-    {
       "id": "modetour-ASIA-19630103",
       "source": "modetour",
       "airline": "아시아나 항공",
@@ -8494,318 +7966,6 @@
       "flightNumber": "OZ747 / OZ748",
       "region": "동남아",
       "discountRate": 10
-    },
-    {
-      "id": "modetour-ASIA-19670160",
-      "source": "modetour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-22",
-        "time": "15:35"
-      },
-      "arrival": {
-        "city": "발리",
-        "airport": "DPS",
-        "date": "2026-03-25",
-        "time": "23:05"
-      },
-      "price": 464000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19670160&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 4,
-      "flightNumber": "7C2711 / 7C2712",
-      "region": "동남아",
-      "discountRate": -9
-    },
-    {
-      "id": "modetour-ASIA-19868444",
-      "source": "modetour",
-      "airline": "에어로케이",
-      "departure": {
-        "city": "청주",
-        "airport": "CJJ",
-        "date": "2026-03-22",
-        "time": "19:30"
-      },
-      "arrival": {
-        "city": "나트랑",
-        "airport": "CXR",
-        "date": "2026-03-26",
-        "time": "23:30"
-      },
-      "price": 323100,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19868444&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 18,
-      "flightNumber": "RF557 / RF558",
-      "region": "동남아",
-      "discountRate": -1
-    },
-    {
-      "id": "modetour-ASIA-19932799",
-      "source": "modetour",
-      "airline": "티웨이 항공",
-      "departure": {
-        "city": "대구",
-        "airport": "TAE",
-        "date": "2026-03-22",
-        "time": "21:25"
-      },
-      "arrival": {
-        "city": "방콕(수완나폼)",
-        "airport": "BKK",
-        "date": "2026-03-27",
-        "time": "02:30"
-      },
-      "price": 284000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19932799&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 4,
-      "flightNumber": "TW105 / TW106",
-      "region": "동남아",
-      "discountRate": -20
-    },
-    {
-      "id": "modetour-ASIA-19377865",
-      "source": "modetour",
-      "airline": "비엣젯 항공",
-      "departure": {
-        "city": "부산",
-        "airport": "PUS",
-        "date": "2026-03-23",
-        "time": "08:30"
-      },
-      "arrival": {
-        "city": "다낭",
-        "airport": "DAD",
-        "date": "2026-03-27",
-        "time": "00:30"
-      },
-      "price": 340000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19377865&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 22,
-      "flightNumber": "VJ989 / VJ988",
-      "region": "동남아",
-      "discountRate": -30
-    },
-    {
-      "id": "modetour-ASIA-19388386",
-      "source": "modetour",
-      "airline": "진에어",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-23",
-        "time": "21:35"
-      },
-      "arrival": {
-        "city": "클락",
-        "airport": "CRK",
-        "date": "2026-03-27",
-        "time": "01:50"
-      },
-      "price": 371000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19388386&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 4,
-      "flightNumber": "LJ037 / LJ038",
-      "region": "동남아",
-      "discountRate": 0
-    },
-    {
-      "id": "modetour-ASIA-19389759",
-      "source": "modetour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-23",
-        "time": "07:15"
-      },
-      "arrival": {
-        "city": "보홀팡라오",
-        "airport": "TAG",
-        "date": "2026-03-26",
-        "time": "12:30"
-      },
-      "price": 389500,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19389759&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 8,
-      "flightNumber": "7C2121 / 7C2122",
-      "region": "동남아",
-      "discountRate": -69
-    },
-    {
-      "id": "modetour-ASIA-19391414",
-      "source": "modetour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-23",
-        "time": "15:35"
-      },
-      "arrival": {
-        "city": "발리",
-        "airport": "DPS",
-        "date": "2026-03-27",
-        "time": "23:05"
-      },
-      "price": 464000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19391414&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 4,
-      "flightNumber": "7C2711 / 7C2712",
-      "region": "동남아",
-      "discountRate": -9
-    },
-    {
-      "id": "modetour-ASIA-19401960",
-      "source": "modetour",
-      "airline": "티웨이 항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-23",
-        "time": "09:20"
-      },
-      "arrival": {
-        "city": "보라카이(칼리보)",
-        "airport": "KLO",
-        "date": "2026-03-26",
-        "time": "13:55"
-      },
-      "price": 362200,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19401960&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 4,
-      "flightNumber": "TW125 / TW126",
-      "region": "동남아",
-      "discountRate": -18
-    },
-    {
-      "id": "modetour-ASIA-19423096",
-      "source": "modetour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-23",
-        "time": "18:20"
-      },
-      "arrival": {
-        "city": "싱가포르(창이공항)",
-        "airport": "SIN",
-        "date": "2026-03-27",
-        "time": "01:10"
-      },
-      "price": 310000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19423096&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 10,
-      "flightNumber": "7C2623 / 7C2624",
-      "region": "동남아",
-      "discountRate": -12
-    },
-    {
-      "id": "modetour-ASIA-19429152",
-      "source": "modetour",
-      "airline": "비엣젯 항공",
-      "departure": {
-        "city": "부산",
-        "airport": "PUS",
-        "date": "2026-03-23",
-        "time": "07:35"
-      },
-      "arrival": {
-        "city": "푸꾸옥",
-        "airport": "PQC",
-        "date": "2026-03-26",
-        "time": "23:00"
-      },
-      "price": 380000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19429152&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 1,
-      "flightNumber": "VJ969 / VJ968",
-      "region": "동남아",
-      "discountRate": -13
-    },
-    {
-      "id": "modetour-ASIA-19492326",
-      "source": "modetour",
-      "airline": "비엣젯 항공",
-      "departure": {
-        "city": "대구",
-        "airport": "TAE",
-        "date": "2026-03-23",
-        "time": "07:50"
-      },
-      "arrival": {
-        "city": "나트랑",
-        "airport": "CXR",
-        "date": "2026-03-27",
-        "time": "00:20"
-      },
-      "price": 340000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19492326&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 6,
-      "flightNumber": "VJ871 / VJ870",
-      "region": "동남아",
-      "discountRate": -7
-    },
-    {
-      "id": "modetour-ASIA-19493304",
-      "source": "modetour",
-      "airline": "에어부산",
-      "departure": {
-        "city": "부산",
-        "airport": "PUS",
-        "date": "2026-03-23",
-        "time": "21:10"
-      },
-      "arrival": {
-        "city": "세부",
-        "airport": "CEB",
-        "date": "2026-03-27",
-        "time": "01:30"
-      },
-      "price": 186000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19493304&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 20,
-      "flightNumber": "BX711 / BX712",
-      "region": "동남아",
-      "discountRate": 24
-    },
-    {
-      "id": "modetour-ASIA-19554658",
-      "source": "modetour",
-      "airline": "이스타항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-23",
-        "time": "17:25"
-      },
-      "arrival": {
-        "city": "치앙마이",
-        "airport": "CNX",
-        "date": "2026-03-26",
-        "time": "22:05"
-      },
-      "price": 359000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19554658&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 10,
-      "flightNumber": "ZE517 / ZE518",
-      "region": "동남아",
-      "discountRate": -17
     },
     {
       "id": "modetour-ASIA-19630104",
@@ -8832,28 +7992,868 @@
       "discountRate": 10
     },
     {
-      "id": "modetour-ASIA-19670161",
+      "id": "modetour-ASIA-19630087",
+      "source": "modetour",
+      "airline": "아시아나 항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-06",
+        "time": "17:00"
+      },
+      "arrival": {
+        "city": "푸켓",
+        "airport": "HKT",
+        "date": "2026-03-09",
+        "time": "22:55"
+      },
+      "price": 358500,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19630087&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 1,
+      "flightNumber": "OZ747 / OZ748",
+      "region": "동남아",
+      "discountRate": 10
+    },
+    {
+      "id": "modetour-ASIA-19630090",
+      "source": "modetour",
+      "airline": "아시아나 항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-09",
+        "time": "17:00"
+      },
+      "arrival": {
+        "city": "푸켓",
+        "airport": "HKT",
+        "date": "2026-03-12",
+        "time": "22:55"
+      },
+      "price": 358500,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19630090&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 1,
+      "flightNumber": "OZ747 / OZ748",
+      "region": "동남아",
+      "discountRate": 10
+    },
+    {
+      "id": "modetour-ASIA-19630091",
+      "source": "modetour",
+      "airline": "아시아나 항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-10",
+        "time": "17:00"
+      },
+      "arrival": {
+        "city": "푸켓",
+        "airport": "HKT",
+        "date": "2026-03-13",
+        "time": "22:55"
+      },
+      "price": 358500,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19630091&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 6,
+      "flightNumber": "OZ747 / OZ748",
+      "region": "동남아",
+      "discountRate": 10
+    },
+    {
+      "id": "modetour-ASIA-19630095",
+      "source": "modetour",
+      "airline": "아시아나 항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-14",
+        "time": "17:00"
+      },
+      "arrival": {
+        "city": "푸켓",
+        "airport": "HKT",
+        "date": "2026-03-17",
+        "time": "22:55"
+      },
+      "price": 358500,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19630095&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 3,
+      "flightNumber": "OZ747 / OZ748",
+      "region": "동남아",
+      "discountRate": 10
+    },
+    {
+      "id": "modetour-ASIA-19630096",
+      "source": "modetour",
+      "airline": "아시아나 항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-15",
+        "time": "17:00"
+      },
+      "arrival": {
+        "city": "푸켓",
+        "airport": "HKT",
+        "date": "2026-03-18",
+        "time": "22:55"
+      },
+      "price": 358500,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19630096&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 8,
+      "flightNumber": "OZ747 / OZ748",
+      "region": "동남아",
+      "discountRate": 10
+    },
+    {
+      "id": "modetour-ASIA-19401959",
+      "source": "modetour",
+      "airline": "티웨이 항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-22",
+        "time": "09:20"
+      },
+      "arrival": {
+        "city": "보라카이(칼리보)",
+        "airport": "KLO",
+        "date": "2026-03-25",
+        "time": "13:55"
+      },
+      "price": 362200,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19401959&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 2,
+      "flightNumber": "TW125 / TW126",
+      "region": "동남아",
+      "discountRate": -18
+    },
+    {
+      "id": "modetour-ASIA-19401960",
+      "source": "modetour",
+      "airline": "티웨이 항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-23",
+        "time": "09:20"
+      },
+      "arrival": {
+        "city": "보라카이(칼리보)",
+        "airport": "KLO",
+        "date": "2026-03-26",
+        "time": "13:55"
+      },
+      "price": 362200,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19401960&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 4,
+      "flightNumber": "TW125 / TW126",
+      "region": "동남아",
+      "discountRate": -18
+    },
+    {
+      "id": "modetour-ASIA-19611361",
+      "source": "modetour",
+      "airline": "이스타항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-22",
+        "time": "20:25"
+      },
+      "arrival": {
+        "city": "마나도",
+        "airport": "MDC",
+        "date": "2026-03-26",
+        "time": "02:20"
+      },
+      "price": 361000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19611361&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 10,
+      "flightNumber": "ZE535 / ZE536",
+      "region": "동남아",
+      "discountRate": 43
+    },
+    {
+      "id": "modetour-ASIA-19611353",
+      "source": "modetour",
+      "airline": "이스타항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-14",
+        "time": "20:25"
+      },
+      "arrival": {
+        "city": "마나도",
+        "airport": "MDC",
+        "date": "2026-03-18",
+        "time": "02:20"
+      },
+      "price": 361000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19611353&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 5,
+      "flightNumber": "ZE535 / ZE536",
+      "region": "동남아",
+      "discountRate": 43
+    },
+    {
+      "id": "modetour-ASIA-19611356",
+      "source": "modetour",
+      "airline": "이스타항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-17",
+        "time": "20:25"
+      },
+      "arrival": {
+        "city": "마나도",
+        "airport": "MDC",
+        "date": "2026-03-21",
+        "time": "02:20"
+      },
+      "price": 361000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19611356&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 10,
+      "flightNumber": "ZE535 / ZE536",
+      "region": "동남아",
+      "discountRate": 43
+    },
+    {
+      "id": "modetour-ASIA-19638181",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-08",
+        "time": "18:00"
+      },
+      "arrival": {
+        "city": "푸꾸옥",
+        "airport": "PQC",
+        "date": "2026-03-11",
+        "time": "23:15"
+      },
+      "price": 352000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19638181&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 1,
+      "flightNumber": "7C2315 / 7C2316",
+      "region": "동남아",
+      "discountRate": -5
+    },
+    {
+      "id": "modetour-ASIA-19429152",
+      "source": "modetour",
+      "airline": "비엣젯 항공",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-03-23",
+        "time": "07:35"
+      },
+      "arrival": {
+        "city": "푸꾸옥",
+        "airport": "PQC",
+        "date": "2026-03-26",
+        "time": "23:00"
+      },
+      "price": 380000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19429152&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 1,
+      "flightNumber": "VJ969 / VJ968",
+      "region": "동남아",
+      "discountRate": -13
+    },
+    {
+      "id": "modetour-ASIA-19429146",
+      "source": "modetour",
+      "airline": "비엣젯 항공",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-03-17",
+        "time": "07:35"
+      },
+      "arrival": {
+        "city": "푸꾸옥",
+        "airport": "PQC",
+        "date": "2026-03-20",
+        "time": "23:00"
+      },
+      "price": 380000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19429146&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 6,
+      "flightNumber": "VJ969 / VJ968",
+      "region": "동남아",
+      "discountRate": -13
+    },
+    {
+      "id": "modetour-ASIA-19429144",
+      "source": "modetour",
+      "airline": "비엣젯 항공",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-03-15",
+        "time": "07:35"
+      },
+      "arrival": {
+        "city": "푸꾸옥",
+        "airport": "PQC",
+        "date": "2026-03-18",
+        "time": "23:00"
+      },
+      "price": 380000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19429144&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 6,
+      "flightNumber": "VJ969 / VJ968",
+      "region": "동남아",
+      "discountRate": -13
+    },
+    {
+      "id": "modetour-ASIA-19429145",
+      "source": "modetour",
+      "airline": "비엣젯 항공",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-03-16",
+        "time": "07:35"
+      },
+      "arrival": {
+        "city": "푸꾸옥",
+        "airport": "PQC",
+        "date": "2026-03-19",
+        "time": "23:00"
+      },
+      "price": 380000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19429145&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 6,
+      "flightNumber": "VJ969 / VJ968",
+      "region": "동남아",
+      "discountRate": -13
+    },
+    {
+      "id": "modetour-ASIA-19423096",
       "source": "modetour",
       "airline": "제주항공",
       "departure": {
         "city": "인천",
         "airport": "ICN",
         "date": "2026-03-23",
-        "time": "15:35"
+        "time": "18:20"
       },
       "arrival": {
-        "city": "발리",
-        "airport": "DPS",
-        "date": "2026-03-26",
-        "time": "23:05"
+        "city": "싱가포르(창이공항)",
+        "airport": "SIN",
+        "date": "2026-03-27",
+        "time": "01:10"
       },
-      "price": 464000,
+      "price": 310000,
       "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19670161&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 4,
-      "flightNumber": "7C2711 / 7C2712",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19423096&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 10,
+      "flightNumber": "7C2623 / 7C2624",
       "region": "동남아",
-      "discountRate": -9
+      "discountRate": -12
+    },
+    {
+      "id": "modetour-ASIA-19423095",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-22",
+        "time": "18:20"
+      },
+      "arrival": {
+        "city": "싱가포르(창이공항)",
+        "airport": "SIN",
+        "date": "2026-03-26",
+        "time": "01:10"
+      },
+      "price": 310000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19423095&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 5,
+      "flightNumber": "7C2623 / 7C2624",
+      "region": "동남아",
+      "discountRate": -12
+    },
+    {
+      "id": "modetour-ASIA-19423093",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-20",
+        "time": "18:20"
+      },
+      "arrival": {
+        "city": "싱가포르(창이공항)",
+        "airport": "SIN",
+        "date": "2026-03-24",
+        "time": "01:10"
+      },
+      "price": 310000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19423093&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 10,
+      "flightNumber": "7C2623 / 7C2624",
+      "region": "동남아",
+      "discountRate": -12
+    },
+    {
+      "id": "modetour-ASIA-19423094",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-21",
+        "time": "18:20"
+      },
+      "arrival": {
+        "city": "싱가포르(창이공항)",
+        "airport": "SIN",
+        "date": "2026-03-25",
+        "time": "01:10"
+      },
+      "price": 310000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19423094&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 6,
+      "flightNumber": "7C2623 / 7C2624",
+      "region": "동남아",
+      "discountRate": -12
+    },
+    {
+      "id": "modetour-ASIA-19423091",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-18",
+        "time": "18:20"
+      },
+      "arrival": {
+        "city": "싱가포르(창이공항)",
+        "airport": "SIN",
+        "date": "2026-03-22",
+        "time": "01:10"
+      },
+      "price": 310000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19423091&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 10,
+      "flightNumber": "7C2623 / 7C2624",
+      "region": "동남아",
+      "discountRate": -12
+    },
+    {
+      "id": "modetour-ASIA-19423092",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-19",
+        "time": "18:20"
+      },
+      "arrival": {
+        "city": "싱가포르(창이공항)",
+        "airport": "SIN",
+        "date": "2026-03-23",
+        "time": "01:10"
+      },
+      "price": 310000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19423092&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 10,
+      "flightNumber": "7C2623 / 7C2624",
+      "region": "동남아",
+      "discountRate": -12
+    },
+    {
+      "id": "modetour-ASIA-19423090",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-17",
+        "time": "18:20"
+      },
+      "arrival": {
+        "city": "싱가포르(창이공항)",
+        "airport": "SIN",
+        "date": "2026-03-21",
+        "time": "01:10"
+      },
+      "price": 310000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19423090&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 10,
+      "flightNumber": "7C2623 / 7C2624",
+      "region": "동남아",
+      "discountRate": -12
+    },
+    {
+      "id": "modetour-ASIA-19423087",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-14",
+        "time": "18:20"
+      },
+      "arrival": {
+        "city": "싱가포르(창이공항)",
+        "airport": "SIN",
+        "date": "2026-03-18",
+        "time": "01:10"
+      },
+      "price": 310000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19423087&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 10,
+      "flightNumber": "7C2623 / 7C2624",
+      "region": "동남아",
+      "discountRate": -12
+    },
+    {
+      "id": "modetour-ASIA-19423088",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-15",
+        "time": "18:20"
+      },
+      "arrival": {
+        "city": "싱가포르(창이공항)",
+        "airport": "SIN",
+        "date": "2026-03-19",
+        "time": "01:10"
+      },
+      "price": 310000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19423088&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 6,
+      "flightNumber": "7C2623 / 7C2624",
+      "region": "동남아",
+      "discountRate": -12
+    },
+    {
+      "id": "modetour-ASIA-19423085",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-12",
+        "time": "18:20"
+      },
+      "arrival": {
+        "city": "싱가포르(창이공항)",
+        "airport": "SIN",
+        "date": "2026-03-16",
+        "time": "01:10"
+      },
+      "price": 310000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19423085&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 10,
+      "flightNumber": "7C2623 / 7C2624",
+      "region": "동남아",
+      "discountRate": -12
+    },
+    {
+      "id": "modetour-ASIA-19423084",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-11",
+        "time": "18:20"
+      },
+      "arrival": {
+        "city": "싱가포르(창이공항)",
+        "airport": "SIN",
+        "date": "2026-03-15",
+        "time": "01:10"
+      },
+      "price": 310000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19423084&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 5,
+      "flightNumber": "7C2623 / 7C2624",
+      "region": "동남아",
+      "discountRate": -12
+    },
+    {
+      "id": "modetour-ASIA-19389744",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-08",
+        "time": "07:15"
+      },
+      "arrival": {
+        "city": "보홀팡라오",
+        "airport": "TAG",
+        "date": "2026-03-11",
+        "time": "12:30"
+      },
+      "price": 389500,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19389744&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 8,
+      "flightNumber": "7C2121 / 7C2122",
+      "region": "동남아",
+      "discountRate": -69
+    },
+    {
+      "id": "modetour-ASIA-19389758",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-22",
+        "time": "07:15"
+      },
+      "arrival": {
+        "city": "보홀팡라오",
+        "airport": "TAG",
+        "date": "2026-03-25",
+        "time": "12:30"
+      },
+      "price": 389500,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19389758&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 8,
+      "flightNumber": "7C2121 / 7C2122",
+      "region": "동남아",
+      "discountRate": -69
+    },
+    {
+      "id": "modetour-ASIA-19389759",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-23",
+        "time": "07:15"
+      },
+      "arrival": {
+        "city": "보홀팡라오",
+        "airport": "TAG",
+        "date": "2026-03-26",
+        "time": "12:30"
+      },
+      "price": 389500,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19389759&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 8,
+      "flightNumber": "7C2121 / 7C2122",
+      "region": "동남아",
+      "discountRate": -69
+    },
+    {
+      "id": "modetour-ASIA-19389753",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-17",
+        "time": "07:15"
+      },
+      "arrival": {
+        "city": "보홀팡라오",
+        "airport": "TAG",
+        "date": "2026-03-20",
+        "time": "12:30"
+      },
+      "price": 389500,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19389753&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 8,
+      "flightNumber": "7C2121 / 7C2122",
+      "region": "동남아",
+      "discountRate": -69
+    },
+    {
+      "id": "modetour-ASIA-19389746",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-10",
+        "time": "07:15"
+      },
+      "arrival": {
+        "city": "보홀팡라오",
+        "airport": "TAG",
+        "date": "2026-03-13",
+        "time": "12:30"
+      },
+      "price": 389500,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19389746&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 8,
+      "flightNumber": "7C2121 / 7C2122",
+      "region": "동남아",
+      "discountRate": -69
+    },
+    {
+      "id": "modetour-ASIA-19389751",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-15",
+        "time": "07:15"
+      },
+      "arrival": {
+        "city": "보홀팡라오",
+        "airport": "TAG",
+        "date": "2026-03-18",
+        "time": "12:30"
+      },
+      "price": 389500,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19389751&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 6,
+      "flightNumber": "7C2121 / 7C2122",
+      "region": "동남아",
+      "discountRate": -69
+    },
+    {
+      "id": "modetour-ASIA-19389752",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-16",
+        "time": "07:15"
+      },
+      "arrival": {
+        "city": "보홀팡라오",
+        "airport": "TAG",
+        "date": "2026-03-19",
+        "time": "12:30"
+      },
+      "price": 389500,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19389752&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 8,
+      "flightNumber": "7C2121 / 7C2122",
+      "region": "동남아",
+      "discountRate": -69
+    },
+    {
+      "id": "modetour-ASIA-19535953",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-18",
+        "time": "20:35"
+      },
+      "arrival": {
+        "city": "비엔티엔",
+        "airport": "VTE",
+        "date": "2026-03-22",
+        "time": "01:25"
+      },
+      "price": 407600,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19535953&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 6,
+      "flightNumber": "7C2401 / 7C2402",
+      "region": "기타",
+      "discountRate": -13
+    },
+    {
+      "id": "modetour-ASIA-19535954",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-19",
+        "time": "20:35"
+      },
+      "arrival": {
+        "city": "비엔티엔",
+        "airport": "VTE",
+        "date": "2026-03-23",
+        "time": "01:25"
+      },
+      "price": 407600,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19535954&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 2,
+      "flightNumber": "7C2401 / 7C2402",
+      "region": "기타",
+      "discountRate": -13
+    },
+    {
+      "id": "modetour-ASIA-19535957",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-22",
+        "time": "20:35"
+      },
+      "arrival": {
+        "city": "비엔티엔",
+        "airport": "VTE",
+        "date": "2026-03-26",
+        "time": "01:25"
+      },
+      "price": 407600,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19535957&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 6,
+      "flightNumber": "7C2401 / 7C2402",
+      "region": "기타",
+      "discountRate": -13
     },
     {
       "id": "modetour-JPN-19559853",
@@ -8880,220 +8880,52 @@
       "discountRate": 19
     },
     {
-      "id": "modetour-JPN-19501262",
-      "source": "modetour",
-      "airline": "티웨이 항공",
-      "departure": {
-        "city": "대구",
-        "airport": "TAE",
-        "date": "2026-03-01",
-        "time": "14:25"
-      },
-      "arrival": {
-        "city": "오사카(간사이)",
-        "airport": "KIX",
-        "date": "2026-03-04",
-        "time": "16:55"
-      },
-      "price": 225000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19501262&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 28,
-      "flightNumber": "TW313 / TW314",
-      "region": "일본",
-      "discountRate": 11
-    },
-    {
-      "id": "modetour-JPN-19650849",
-      "source": "modetour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-02",
-        "time": "10:35"
-      },
-      "arrival": {
-        "city": "후쿠오카",
-        "airport": "FUK",
-        "date": "2026-03-04",
-        "time": "18:45"
-      },
-      "price": 279000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19650849&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 1,
-      "flightNumber": "7C1403 / 7C1408",
-      "region": "일본",
-      "discountRate": -26
-    },
-    {
-      "id": "modetour-JPN-19719329",
-      "source": "modetour",
-      "airline": "에어부산",
-      "departure": {
-        "city": "부산",
-        "airport": "PUS",
-        "date": "2026-03-03",
-        "time": "15:55"
-      },
-      "arrival": {
-        "city": "나가사키",
-        "airport": "NGS",
-        "date": "2026-03-06",
-        "time": "18:10"
-      },
-      "price": 255000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19719329&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 9,
-      "flightNumber": "BX1385 / BX1375",
-      "region": "일본",
-      "discountRate": 11
-    },
-    {
-      "id": "modetour-JPN-19512052",
-      "source": "modetour",
-      "airline": "에어부산",
-      "departure": {
-        "city": "부산",
-        "airport": "PUS",
-        "date": "2026-03-04",
-        "time": "16:30"
-      },
-      "arrival": {
-        "city": "마츠야마",
-        "airport": "MYJ",
-        "date": "2026-03-06",
-        "time": "18:35"
-      },
-      "price": 279900,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19512052&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 8,
-      "flightNumber": "BX134 / BX133",
-      "region": "일본",
-      "discountRate": 15
-    },
-    {
-      "id": "modetour-JPN-19417235",
-      "source": "modetour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "부산",
-        "airport": "PUS",
-        "date": "2026-03-09",
-        "time": "11:05"
-      },
-      "arrival": {
-        "city": "도쿄(나리타)",
-        "airport": "NRT",
-        "date": "2026-03-11",
-        "time": "14:05"
-      },
-      "price": 297000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19417235&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 7,
-      "flightNumber": "7C1153 / 7C1154",
-      "region": "일본",
-      "discountRate": 11
-    },
-    {
-      "id": "modetour-JPN-19493453",
+      "id": "modetour-JPN-19645202",
       "source": "modetour",
       "airline": "이스타항공",
       "departure": {
         "city": "부산",
         "airport": "PUS",
-        "date": "2026-03-10",
-        "time": "11:55"
-      },
-      "arrival": {
-        "city": "구마모토",
-        "airport": "KMJ",
-        "date": "2026-03-13",
+        "date": "2026-03-22",
         "time": "14:30"
       },
-      "price": 203000,
+      "arrival": {
+        "city": "삿포로(치토세)",
+        "airport": "CTS",
+        "date": "2026-03-25",
+        "time": "18:00"
+      },
+      "price": 221000,
       "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19493453&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 9,
-      "flightNumber": "ZE967 / ZE968",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19645202&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 6,
+      "flightNumber": "ZE951 / ZE952",
       "region": "일본",
-      "discountRate": 33
+      "discountRate": 11
     },
     {
-      "id": "modetour-JPN-19650857",
+      "id": "modetour-JPN-19645197",
       "source": "modetour",
-      "airline": "제주항공",
+      "airline": "이스타항공",
       "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-10",
-        "time": "10:35"
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-03-17",
+        "time": "14:30"
       },
       "arrival": {
-        "city": "후쿠오카",
-        "airport": "FUK",
-        "date": "2026-03-12",
-        "time": "18:45"
+        "city": "삿포로(치토세)",
+        "airport": "CTS",
+        "date": "2026-03-20",
+        "time": "18:00"
       },
-      "price": 279000,
+      "price": 221000,
       "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19650857&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 1,
-      "flightNumber": "7C1403 / 7C1408",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19645197&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 8,
+      "flightNumber": "ZE951 / ZE952",
       "region": "일본",
-      "discountRate": -26
-    },
-    {
-      "id": "modetour-JPN-19871468",
-      "source": "modetour",
-      "airline": "에어프레미아",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-10",
-        "time": "12:15"
-      },
-      "arrival": {
-        "city": "도쿄(나리타)",
-        "airport": "NRT",
-        "date": "2026-03-12",
-        "time": "12:30"
-      },
-      "price": 375000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19871468&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 4,
-      "flightNumber": "YP733 / YP732",
-      "region": "일본",
-      "discountRate": -13
-    },
-    {
-      "id": "modetour-JPN-19497412",
-      "source": "modetour",
-      "airline": "티웨이 항공",
-      "departure": {
-        "city": "제주",
-        "airport": "CJU",
-        "date": "2026-03-11",
-        "time": "16:05"
-      },
-      "arrival": {
-        "city": "오사카(간사이)",
-        "airport": "KIX",
-        "date": "2026-03-14",
-        "time": "12:00"
-      },
-      "price": 318000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19497412&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 20,
-      "flightNumber": "TW331 / TW332",
-      "region": "일본",
-      "discountRate": -26
+      "discountRate": 11
     },
     {
       "id": "modetour-JPN-19664046",
@@ -9120,6 +8952,78 @@
       "discountRate": -13
     },
     {
+      "id": "modetour-JPN-19664048",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-16",
+        "time": "07:10"
+      },
+      "arrival": {
+        "city": "시즈오카",
+        "airport": "FSZ",
+        "date": "2026-03-19",
+        "time": "10:10"
+      },
+      "price": 367200,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19664048&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 6,
+      "flightNumber": "7C1601 / 7C1602",
+      "region": "일본",
+      "discountRate": -13
+    },
+    {
+      "id": "modetour-JPN-19664050",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-18",
+        "time": "07:10"
+      },
+      "arrival": {
+        "city": "시즈오카",
+        "airport": "FSZ",
+        "date": "2026-03-21",
+        "time": "10:10"
+      },
+      "price": 367200,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19664050&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 6,
+      "flightNumber": "7C1601 / 7C1602",
+      "region": "일본",
+      "discountRate": -13
+    },
+    {
+      "id": "modetour-JPN-19650849",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-02",
+        "time": "10:35"
+      },
+      "arrival": {
+        "city": "후쿠오카",
+        "airport": "FUK",
+        "date": "2026-03-04",
+        "time": "18:45"
+      },
+      "price": 279000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19650849&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 2,
+      "flightNumber": "7C1403 / 7C1408",
+      "region": "일본",
+      "discountRate": -26
+    },
+    {
       "id": "modetour-JPN-19417548",
       "source": "modetour",
       "airline": "제주항공",
@@ -9142,102 +9046,6 @@
       "flightNumber": "7C1453 / 7C1452",
       "region": "일본",
       "discountRate": 13
-    },
-    {
-      "id": "modetour-JPN-19497416",
-      "source": "modetour",
-      "airline": "티웨이 항공",
-      "departure": {
-        "city": "제주",
-        "airport": "CJU",
-        "date": "2026-03-15",
-        "time": "16:00"
-      },
-      "arrival": {
-        "city": "오사카(간사이)",
-        "airport": "KIX",
-        "date": "2026-03-18",
-        "time": "12:00"
-      },
-      "price": 318000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19497416&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 20,
-      "flightNumber": "TW331 / TW332",
-      "region": "일본",
-      "discountRate": -26
-    },
-    {
-      "id": "modetour-JPN-19653044",
-      "source": "modetour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "부산",
-        "airport": "PUS",
-        "date": "2026-03-15",
-        "time": "07:20"
-      },
-      "arrival": {
-        "city": "도쿄(나리타)",
-        "airport": "NRT",
-        "date": "2026-03-18",
-        "time": "10:15"
-      },
-      "price": 297000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19653044&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 6,
-      "flightNumber": "7C1151 / 7C1152",
-      "region": "일본",
-      "discountRate": 11
-    },
-    {
-      "id": "modetour-JPN-19756762",
-      "source": "modetour",
-      "airline": "파라타항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-15",
-        "time": "11:10"
-      },
-      "arrival": {
-        "city": "오사카(간사이)",
-        "airport": "KIX",
-        "date": "2026-03-17",
-        "time": "14:30"
-      },
-      "price": 304000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19756762&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 2,
-      "flightNumber": "WE511 / WE512",
-      "region": "일본",
-      "discountRate": -20
-    },
-    {
-      "id": "modetour-JPN-19417242",
-      "source": "modetour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "부산",
-        "airport": "PUS",
-        "date": "2026-03-16",
-        "time": "11:05"
-      },
-      "arrival": {
-        "city": "도쿄(나리타)",
-        "airport": "NRT",
-        "date": "2026-03-18",
-        "time": "14:05"
-      },
-      "price": 297000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19417242&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 8,
-      "flightNumber": "7C1153 / 7C1154",
-      "region": "일본",
-      "discountRate": 11
     },
     {
       "id": "modetour-JPN-19417549",
@@ -9264,124 +9072,100 @@
       "discountRate": 13
     },
     {
-      "id": "modetour-JPN-19497417",
-      "source": "modetour",
-      "airline": "티웨이 항공",
-      "departure": {
-        "city": "제주",
-        "airport": "CJU",
-        "date": "2026-03-16",
-        "time": "16:05"
-      },
-      "arrival": {
-        "city": "오사카(간사이)",
-        "airport": "KIX",
-        "date": "2026-03-19",
-        "time": "12:00"
-      },
-      "price": 318000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19497417&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 20,
-      "flightNumber": "TW331 / TW332",
-      "region": "일본",
-      "discountRate": -26
-    },
-    {
-      "id": "modetour-JPN-19664048",
+      "id": "modetour-JPN-19650857",
       "source": "modetour",
       "airline": "제주항공",
       "departure": {
         "city": "인천",
         "airport": "ICN",
-        "date": "2026-03-16",
-        "time": "07:10"
+        "date": "2026-03-10",
+        "time": "10:35"
       },
       "arrival": {
-        "city": "시즈오카",
-        "airport": "FSZ",
-        "date": "2026-03-19",
-        "time": "10:10"
+        "city": "후쿠오카",
+        "airport": "FUK",
+        "date": "2026-03-12",
+        "time": "18:45"
       },
-      "price": 367200,
+      "price": 279000,
       "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19664048&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 6,
-      "flightNumber": "7C1601 / 7C1602",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19650857&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 1,
+      "flightNumber": "7C1403 / 7C1408",
       "region": "일본",
-      "discountRate": -13
+      "discountRate": -26
     },
     {
-      "id": "modetour-JPN-19756763",
+      "id": "modetour-JPN-19501262",
+      "source": "modetour",
+      "airline": "티웨이 항공",
+      "departure": {
+        "city": "대구",
+        "airport": "TAE",
+        "date": "2026-03-01",
+        "time": "14:25"
+      },
+      "arrival": {
+        "city": "오사카(간사이)",
+        "airport": "KIX",
+        "date": "2026-03-04",
+        "time": "16:55"
+      },
+      "price": 225000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19501262&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 28,
+      "flightNumber": "TW313 / TW314",
+      "region": "일본",
+      "discountRate": 11
+    },
+    {
+      "id": "modetour-JPN-19633655",
+      "source": "modetour",
+      "airline": "에어로케이",
+      "departure": {
+        "city": "청주",
+        "airport": "CJJ",
+        "date": "2026-03-22",
+        "time": "08:15"
+      },
+      "arrival": {
+        "city": "오사카(간사이)",
+        "airport": "KIX",
+        "date": "2026-03-24",
+        "time": "19:20"
+      },
+      "price": 292400,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19633655&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 1,
+      "flightNumber": "RF312 / RF317",
+      "region": "일본",
+      "discountRate": -16
+    },
+    {
+      "id": "modetour-JPN-19756765",
       "source": "modetour",
       "airline": "파라타항공",
       "departure": {
         "city": "인천",
         "airport": "ICN",
-        "date": "2026-03-16",
+        "date": "2026-03-18",
         "time": "11:10"
       },
       "arrival": {
         "city": "오사카(간사이)",
         "airport": "KIX",
-        "date": "2026-03-18",
+        "date": "2026-03-20",
         "time": "14:30"
       },
       "price": 304000,
       "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19756763&adult=1&child=0&infant=0&step=1",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19756765&adult=1&child=0&infant=0&step=1",
       "availableSeats": 4,
       "flightNumber": "WE511 / WE512",
       "region": "일본",
       "discountRate": -20
-    },
-    {
-      "id": "modetour-JPN-19493460",
-      "source": "modetour",
-      "airline": "이스타항공",
-      "departure": {
-        "city": "부산",
-        "airport": "PUS",
-        "date": "2026-03-17",
-        "time": "11:55"
-      },
-      "arrival": {
-        "city": "구마모토",
-        "airport": "KMJ",
-        "date": "2026-03-20",
-        "time": "14:30"
-      },
-      "price": 203000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19493460&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 10,
-      "flightNumber": "ZE967 / ZE968",
-      "region": "일본",
-      "discountRate": 33
-    },
-    {
-      "id": "modetour-JPN-19645197",
-      "source": "modetour",
-      "airline": "이스타항공",
-      "departure": {
-        "city": "부산",
-        "airport": "PUS",
-        "date": "2026-03-17",
-        "time": "14:30"
-      },
-      "arrival": {
-        "city": "삿포로(치토세)",
-        "airport": "CTS",
-        "date": "2026-03-20",
-        "time": "18:00"
-      },
-      "price": 221000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19645197&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 8,
-      "flightNumber": "ZE951 / ZE952",
-      "region": "일본",
-      "discountRate": 11
     },
     {
       "id": "modetour-JPN-19653791",
@@ -9432,30 +9216,6 @@
       "discountRate": -20
     },
     {
-      "id": "modetour-JPN-19871469",
-      "source": "modetour",
-      "airline": "에어프레미아",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-17",
-        "time": "12:15"
-      },
-      "arrival": {
-        "city": "도쿄(나리타)",
-        "airport": "NRT",
-        "date": "2026-03-19",
-        "time": "12:30"
-      },
-      "price": 375000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19871469&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 4,
-      "flightNumber": "YP733 / YP732",
-      "region": "일본",
-      "discountRate": -13
-    },
-    {
       "id": "modetour-JPN-19497419",
       "source": "modetour",
       "airline": "티웨이 항공",
@@ -9478,6 +9238,174 @@
       "flightNumber": "TW331 / TW332",
       "region": "일본",
       "discountRate": -26
+    },
+    {
+      "id": "modetour-JPN-19756763",
+      "source": "modetour",
+      "airline": "파라타항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-16",
+        "time": "11:10"
+      },
+      "arrival": {
+        "city": "오사카(간사이)",
+        "airport": "KIX",
+        "date": "2026-03-18",
+        "time": "14:30"
+      },
+      "price": 304000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19756763&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 4,
+      "flightNumber": "WE511 / WE512",
+      "region": "일본",
+      "discountRate": -20
+    },
+    {
+      "id": "modetour-JPN-19497417",
+      "source": "modetour",
+      "airline": "티웨이 항공",
+      "departure": {
+        "city": "제주",
+        "airport": "CJU",
+        "date": "2026-03-16",
+        "time": "16:05"
+      },
+      "arrival": {
+        "city": "오사카(간사이)",
+        "airport": "KIX",
+        "date": "2026-03-19",
+        "time": "12:00"
+      },
+      "price": 318000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19497417&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 20,
+      "flightNumber": "TW331 / TW332",
+      "region": "일본",
+      "discountRate": -26
+    },
+    {
+      "id": "modetour-JPN-19756762",
+      "source": "modetour",
+      "airline": "파라타항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-15",
+        "time": "11:10"
+      },
+      "arrival": {
+        "city": "오사카(간사이)",
+        "airport": "KIX",
+        "date": "2026-03-17",
+        "time": "14:30"
+      },
+      "price": 304000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19756762&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 2,
+      "flightNumber": "WE511 / WE512",
+      "region": "일본",
+      "discountRate": -20
+    },
+    {
+      "id": "modetour-JPN-19497416",
+      "source": "modetour",
+      "airline": "티웨이 항공",
+      "departure": {
+        "city": "제주",
+        "airport": "CJU",
+        "date": "2026-03-15",
+        "time": "16:00"
+      },
+      "arrival": {
+        "city": "오사카(간사이)",
+        "airport": "KIX",
+        "date": "2026-03-18",
+        "time": "12:00"
+      },
+      "price": 318000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19497416&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 20,
+      "flightNumber": "TW331 / TW332",
+      "region": "일본",
+      "discountRate": -26
+    },
+    {
+      "id": "modetour-JPN-19497412",
+      "source": "modetour",
+      "airline": "티웨이 항공",
+      "departure": {
+        "city": "제주",
+        "airport": "CJU",
+        "date": "2026-03-11",
+        "time": "16:05"
+      },
+      "arrival": {
+        "city": "오사카(간사이)",
+        "airport": "KIX",
+        "date": "2026-03-14",
+        "time": "12:00"
+      },
+      "price": 318000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19497412&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 20,
+      "flightNumber": "TW331 / TW332",
+      "region": "일본",
+      "discountRate": -26
+    },
+    {
+      "id": "modetour-JPN-19493453",
+      "source": "modetour",
+      "airline": "이스타항공",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-03-10",
+        "time": "11:55"
+      },
+      "arrival": {
+        "city": "구마모토",
+        "airport": "KMJ",
+        "date": "2026-03-13",
+        "time": "14:30"
+      },
+      "price": 203000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19493453&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 9,
+      "flightNumber": "ZE967 / ZE968",
+      "region": "일본",
+      "discountRate": 33
+    },
+    {
+      "id": "modetour-JPN-19493460",
+      "source": "modetour",
+      "airline": "이스타항공",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-03-17",
+        "time": "11:55"
+      },
+      "arrival": {
+        "city": "구마모토",
+        "airport": "KMJ",
+        "date": "2026-03-20",
+        "time": "14:30"
+      },
+      "price": 203000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19493460&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 10,
+      "flightNumber": "ZE967 / ZE968",
+      "region": "일본",
+      "discountRate": 33
     },
     {
       "id": "modetour-JPN-19570402",
@@ -9504,6 +9432,174 @@
       "discountRate": -13
     },
     {
+      "id": "modetour-JPN-19512052",
+      "source": "modetour",
+      "airline": "에어부산",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-03-04",
+        "time": "16:30"
+      },
+      "arrival": {
+        "city": "마츠야마",
+        "airport": "MYJ",
+        "date": "2026-03-06",
+        "time": "18:35"
+      },
+      "price": 279900,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19512052&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 8,
+      "flightNumber": "BX134 / BX133",
+      "region": "일본",
+      "discountRate": 15
+    },
+    {
+      "id": "modetour-JPN-19719329",
+      "source": "modetour",
+      "airline": "에어부산",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-03-03",
+        "time": "15:55"
+      },
+      "arrival": {
+        "city": "나가사키",
+        "airport": "NGS",
+        "date": "2026-03-06",
+        "time": "18:10"
+      },
+      "price": 255000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19719329&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 9,
+      "flightNumber": "BX1385 / BX1375",
+      "region": "일본",
+      "discountRate": 11
+    },
+    {
+      "id": "modetour-JPN-19417235",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-03-09",
+        "time": "11:05"
+      },
+      "arrival": {
+        "city": "도쿄(나리타)",
+        "airport": "NRT",
+        "date": "2026-03-11",
+        "time": "14:05"
+      },
+      "price": 297000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19417235&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 7,
+      "flightNumber": "7C1153 / 7C1154",
+      "region": "일본",
+      "discountRate": 11
+    },
+    {
+      "id": "modetour-JPN-19871468",
+      "source": "modetour",
+      "airline": "에어프레미아",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-10",
+        "time": "12:15"
+      },
+      "arrival": {
+        "city": "도쿄(나리타)",
+        "airport": "NRT",
+        "date": "2026-03-12",
+        "time": "12:30"
+      },
+      "price": 375000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19871468&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 4,
+      "flightNumber": "YP733 / YP732",
+      "region": "일본",
+      "discountRate": -13
+    },
+    {
+      "id": "modetour-JPN-19417242",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-03-16",
+        "time": "11:05"
+      },
+      "arrival": {
+        "city": "도쿄(나리타)",
+        "airport": "NRT",
+        "date": "2026-03-18",
+        "time": "14:05"
+      },
+      "price": 297000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19417242&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 8,
+      "flightNumber": "7C1153 / 7C1154",
+      "region": "일본",
+      "discountRate": 11
+    },
+    {
+      "id": "modetour-JPN-19871469",
+      "source": "modetour",
+      "airline": "에어프레미아",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-17",
+        "time": "12:15"
+      },
+      "arrival": {
+        "city": "도쿄(나리타)",
+        "airport": "NRT",
+        "date": "2026-03-19",
+        "time": "12:30"
+      },
+      "price": 375000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19871469&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 4,
+      "flightNumber": "YP733 / YP732",
+      "region": "일본",
+      "discountRate": -13
+    },
+    {
+      "id": "modetour-JPN-19653044",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-03-15",
+        "time": "07:20"
+      },
+      "arrival": {
+        "city": "도쿄(나리타)",
+        "airport": "NRT",
+        "date": "2026-03-18",
+        "time": "10:15"
+      },
+      "price": 297000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19653044&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 6,
+      "flightNumber": "7C1151 / 7C1152",
+      "region": "일본",
+      "discountRate": 11
+    },
+    {
       "id": "modetour-JPN-19608545",
       "source": "modetour",
       "airline": "이스타항공",
@@ -9526,270 +9622,6 @@
       "flightNumber": "ZE963 / ZE964",
       "region": "일본",
       "discountRate": 7
-    },
-    {
-      "id": "modetour-JPN-19664050",
-      "source": "modetour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-18",
-        "time": "07:10"
-      },
-      "arrival": {
-        "city": "시즈오카",
-        "airport": "FSZ",
-        "date": "2026-03-21",
-        "time": "10:10"
-      },
-      "price": 367200,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19664050&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 6,
-      "flightNumber": "7C1601 / 7C1602",
-      "region": "일본",
-      "discountRate": -13
-    },
-    {
-      "id": "modetour-JPN-19756765",
-      "source": "modetour",
-      "airline": "파라타항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-18",
-        "time": "11:10"
-      },
-      "arrival": {
-        "city": "오사카(간사이)",
-        "airport": "KIX",
-        "date": "2026-03-20",
-        "time": "14:30"
-      },
-      "price": 304000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19756765&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 4,
-      "flightNumber": "WE511 / WE512",
-      "region": "일본",
-      "discountRate": -20
-    },
-    {
-      "id": "modetour-JPN-19633655",
-      "source": "modetour",
-      "airline": "에어로케이",
-      "departure": {
-        "city": "청주",
-        "airport": "CJJ",
-        "date": "2026-03-22",
-        "time": "08:15"
-      },
-      "arrival": {
-        "city": "오사카(간사이)",
-        "airport": "KIX",
-        "date": "2026-03-24",
-        "time": "19:20"
-      },
-      "price": 292400,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19633655&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 1,
-      "flightNumber": "RF312 / RF317",
-      "region": "일본",
-      "discountRate": -16
-    },
-    {
-      "id": "modetour-JPN-19645202",
-      "source": "modetour",
-      "airline": "이스타항공",
-      "departure": {
-        "city": "부산",
-        "airport": "PUS",
-        "date": "2026-03-22",
-        "time": "14:30"
-      },
-      "arrival": {
-        "city": "삿포로(치토세)",
-        "airport": "CTS",
-        "date": "2026-03-25",
-        "time": "18:00"
-      },
-      "price": 221000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19645202&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 6,
-      "flightNumber": "ZE951 / ZE952",
-      "region": "일본",
-      "discountRate": 11
-    },
-    {
-      "id": "modetour-CHI-19490912",
-      "source": "modetour",
-      "airline": "진에어",
-      "departure": {
-        "city": "부산",
-        "airport": "PUS",
-        "date": "2026-03-03",
-        "time": "21:50"
-      },
-      "arrival": {
-        "city": "타이페이",
-        "airport": "TPE",
-        "date": "2026-03-07",
-        "time": "02:40"
-      },
-      "price": 255000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19490912&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 7,
-      "flightNumber": "LJ751 / LJ752",
-      "region": "중국",
-      "discountRate": 11
-    },
-    {
-      "id": "modetour-CHI-19702272",
-      "source": "modetour",
-      "airline": "중국 남방항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-04",
-        "time": "21:05"
-      },
-      "arrival": {
-        "city": "상해(푸동)",
-        "airport": "PVG",
-        "date": "2026-03-07",
-        "time": "08:00"
-      },
-      "price": 214700,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19702272&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 10,
-      "flightNumber": "CZ370 / CZ313",
-      "region": "중국",
-      "discountRate": 0
-    },
-    {
-      "id": "modetour-CHI-19702273",
-      "source": "modetour",
-      "airline": "중국 남방항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-05",
-        "time": "21:05"
-      },
-      "arrival": {
-        "city": "상해(푸동)",
-        "airport": "PVG",
-        "date": "2026-03-08",
-        "time": "08:00"
-      },
-      "price": 214700,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19702273&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 10,
-      "flightNumber": "CZ370 / CZ313",
-      "region": "중국",
-      "discountRate": 0
-    },
-    {
-      "id": "modetour-CHI-19492617",
-      "source": "modetour",
-      "airline": "티웨이 항공",
-      "departure": {
-        "city": "대구",
-        "airport": "TAE",
-        "date": "2026-03-07",
-        "time": "22:40"
-      },
-      "arrival": {
-        "city": "타이페이",
-        "airport": "TPE",
-        "date": "2026-03-11",
-        "time": "01:55"
-      },
-      "price": 265000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19492617&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 8,
-      "flightNumber": "TW663 / TW664",
-      "region": "중국",
-      "discountRate": 8
-    },
-    {
-      "id": "modetour-CHI-19780243",
-      "source": "modetour",
-      "airline": "산동항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-08",
-        "time": "15:25"
-      },
-      "arrival": {
-        "city": "청도",
-        "airport": "TAO",
-        "date": "2026-03-10",
-        "time": "15:30"
-      },
-      "price": 184300,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19780243&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 2,
-      "flightNumber": "SC4614 / SC4615",
-      "region": "중국",
-      "discountRate": -3
-    },
-    {
-      "id": "modetour-CHI-19700924",
-      "source": "modetour",
-      "airline": "진에어",
-      "departure": {
-        "city": "제주",
-        "airport": "CJU",
-        "date": "2026-03-10",
-        "time": "22:15"
-      },
-      "arrival": {
-        "city": "타이페이",
-        "airport": "TPE",
-        "date": "2026-03-14",
-        "time": "02:50"
-      },
-      "price": 257000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19700924&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 8,
-      "flightNumber": "LJ763 / LJ764",
-      "region": "중국",
-      "discountRate": 11
-    },
-    {
-      "id": "modetour-CHI-19399513",
-      "source": "modetour",
-      "airline": "이스타항공",
-      "departure": {
-        "city": "김포",
-        "airport": "GMP",
-        "date": "2026-03-17",
-        "time": "11:25"
-      },
-      "arrival": {
-        "city": "송산",
-        "airport": "TSA",
-        "date": "2026-03-19",
-        "time": "13:50"
-      },
-      "price": 327000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19399513&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 4,
-      "flightNumber": "ZE887 / ZE888",
-      "region": "기타",
-      "discountRate": 0
     },
     {
       "id": "modetour-CHI-19658500",
@@ -9840,30 +9672,6 @@
       "discountRate": -39
     },
     {
-      "id": "modetour-CHI-19399559",
-      "source": "modetour",
-      "airline": "이스타항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-18",
-        "time": "08:00"
-      },
-      "arrival": {
-        "city": "타이페이",
-        "airport": "TPE",
-        "date": "2026-03-20",
-        "time": "10:45"
-      },
-      "price": 327000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19399559&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 4,
-      "flightNumber": "ZE881 / ZE882",
-      "region": "중국",
-      "discountRate": -14
-    },
-    {
       "id": "modetour-CHI-19398550",
       "source": "modetour",
       "airline": "티웨이 항공",
@@ -9886,6 +9694,126 @@
       "flightNumber": "TW671 / TW672",
       "region": "중국",
       "discountRate": -39
+    },
+    {
+      "id": "modetour-CHI-19398551",
+      "source": "modetour",
+      "airline": "티웨이 항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-23",
+        "time": "13:45"
+      },
+      "arrival": {
+        "city": "가오슝",
+        "airport": "KHH",
+        "date": "2026-03-26",
+        "time": "17:05"
+      },
+      "price": 359400,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19398551&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 4,
+      "flightNumber": "TW671 / TW672",
+      "region": "중국",
+      "discountRate": -39
+    },
+    {
+      "id": "modetour-CHI-19702272",
+      "source": "modetour",
+      "airline": "중국 남방항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-04",
+        "time": "21:05"
+      },
+      "arrival": {
+        "city": "상해(푸동)",
+        "airport": "PVG",
+        "date": "2026-03-07",
+        "time": "08:00"
+      },
+      "price": 214700,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19702272&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 10,
+      "flightNumber": "CZ370 / CZ313",
+      "region": "중국",
+      "discountRate": 0
+    },
+    {
+      "id": "modetour-CHI-19702273",
+      "source": "modetour",
+      "airline": "중국 남방항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-05",
+        "time": "21:05"
+      },
+      "arrival": {
+        "city": "상해(푸동)",
+        "airport": "PVG",
+        "date": "2026-03-08",
+        "time": "08:00"
+      },
+      "price": 214700,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19702273&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 10,
+      "flightNumber": "CZ370 / CZ313",
+      "region": "중국",
+      "discountRate": 0
+    },
+    {
+      "id": "modetour-CHI-19780243",
+      "source": "modetour",
+      "airline": "산동항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-08",
+        "time": "15:25"
+      },
+      "arrival": {
+        "city": "청도",
+        "airport": "TAO",
+        "date": "2026-03-10",
+        "time": "15:30"
+      },
+      "price": 184300,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19780243&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 2,
+      "flightNumber": "SC4614 / SC4615",
+      "region": "중국",
+      "discountRate": -3
+    },
+    {
+      "id": "modetour-CHI-19490912",
+      "source": "modetour",
+      "airline": "진에어",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-03-03",
+        "time": "21:50"
+      },
+      "arrival": {
+        "city": "타이페이",
+        "airport": "TPE",
+        "date": "2026-03-07",
+        "time": "02:40"
+      },
+      "price": 255000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19490912&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 7,
+      "flightNumber": "LJ751 / LJ752",
+      "region": "중국",
+      "discountRate": 11
     },
     {
       "id": "modetour-CHI-19618271",
@@ -9912,28 +9840,124 @@
       "discountRate": 27
     },
     {
-      "id": "modetour-CHI-19398551",
+      "id": "modetour-CHI-19399559",
       "source": "modetour",
-      "airline": "티웨이 항공",
+      "airline": "이스타항공",
       "departure": {
         "city": "인천",
         "airport": "ICN",
-        "date": "2026-03-23",
-        "time": "13:45"
+        "date": "2026-03-18",
+        "time": "08:00"
       },
       "arrival": {
-        "city": "가오슝",
-        "airport": "KHH",
-        "date": "2026-03-26",
-        "time": "17:05"
+        "city": "타이페이",
+        "airport": "TPE",
+        "date": "2026-03-20",
+        "time": "10:45"
       },
-      "price": 359400,
+      "price": 327000,
       "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19398551&adult=1&child=0&infant=0&step=1",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19399559&adult=1&child=0&infant=0&step=1",
       "availableSeats": 4,
-      "flightNumber": "TW671 / TW672",
+      "flightNumber": "ZE881 / ZE882",
       "region": "중국",
-      "discountRate": -39
+      "discountRate": -14
+    },
+    {
+      "id": "modetour-CHI-19700924",
+      "source": "modetour",
+      "airline": "진에어",
+      "departure": {
+        "city": "제주",
+        "airport": "CJU",
+        "date": "2026-03-10",
+        "time": "22:15"
+      },
+      "arrival": {
+        "city": "타이페이",
+        "airport": "TPE",
+        "date": "2026-03-14",
+        "time": "02:50"
+      },
+      "price": 257000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19700924&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 8,
+      "flightNumber": "LJ763 / LJ764",
+      "region": "중국",
+      "discountRate": 11
+    },
+    {
+      "id": "modetour-CHI-19492617",
+      "source": "modetour",
+      "airline": "티웨이 항공",
+      "departure": {
+        "city": "대구",
+        "airport": "TAE",
+        "date": "2026-03-07",
+        "time": "22:40"
+      },
+      "arrival": {
+        "city": "타이페이",
+        "airport": "TPE",
+        "date": "2026-03-11",
+        "time": "01:55"
+      },
+      "price": 265000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19492617&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 8,
+      "flightNumber": "TW663 / TW664",
+      "region": "중국",
+      "discountRate": 8
+    },
+    {
+      "id": "modetour-CHI-19399513",
+      "source": "modetour",
+      "airline": "이스타항공",
+      "departure": {
+        "city": "김포",
+        "airport": "GMP",
+        "date": "2026-03-17",
+        "time": "11:25"
+      },
+      "arrival": {
+        "city": "송산",
+        "airport": "TSA",
+        "date": "2026-03-19",
+        "time": "13:50"
+      },
+      "price": 327000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19399513&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 4,
+      "flightNumber": "ZE887 / ZE888",
+      "region": "기타",
+      "discountRate": 0
+    },
+    {
+      "id": "modetour-EUR-19627604",
+      "source": "modetour",
+      "airline": "에티하드 항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-18",
+        "time": "23:45"
+      },
+      "arrival": {
+        "city": "아부다비",
+        "airport": "AUH",
+        "date": "2026-03-22",
+        "time": "21:20"
+      },
+      "price": 559900,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19627604&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 2,
+      "flightNumber": "EY827 / EY822",
+      "region": "기타",
+      "discountRate": 0
     },
     {
       "id": "modetour-EUR-19961604",
@@ -10006,30 +10030,6 @@
       "flightNumber": "TK021 / TK020",
       "region": "유럽",
       "discountRate": 25
-    },
-    {
-      "id": "modetour-EUR-19627604",
-      "source": "modetour",
-      "airline": "에티하드 항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-18",
-        "time": "23:45"
-      },
-      "arrival": {
-        "city": "아부다비",
-        "airport": "AUH",
-        "date": "2026-03-22",
-        "time": "21:20"
-      },
-      "price": 559900,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=19627604&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 2,
-      "flightNumber": "EY827 / EY822",
-      "region": "기타",
-      "discountRate": 0
     },
     {
       "id": "modetour-EUR-19600422",
@@ -13007,29 +13007,6 @@
       "discountRate": 43
     },
     {
-      "id": "ttang-ICN-DPS-RT-0-6-7C-2026-03-14",
-      "source": "ttang",
-      "airline": "제주항공",
-      "departure": {
-        "city": "서울",
-        "airport": "ICN",
-        "date": "2026-03-14",
-        "time": ""
-      },
-      "arrival": {
-        "city": "발리(덴파사)",
-        "airport": "DPS",
-        "date": "2026-03-19",
-        "time": ""
-      },
-      "price": 464000,
-      "currency": "KRW",
-      "link": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260314&adt=1&chd=0&inf=0&page=1&scale=200#:~:text=%EB%B0%9C%EB%A6%AC(%EB%8D%B4%ED%8C%8C%EC%82%AC)",
-      "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260314&adt=1&chd=0&inf=0&page=1&scale=200",
-      "region": "동남아",
-      "discountRate": -9
-    },
-    {
       "id": "ttang-ICN-DPS-RT-0-5-7C-2026-03-14",
       "source": "ttang",
       "airline": "제주항공",
@@ -15632,8 +15609,8 @@
   "sources": {
     "ybtour": 357,
     "hanatour": 70,
-    "modetour": 939,
+    "modetour": 940,
     "onlinetour": 167,
-    "ttang": 1345
+    "ttang": 1342
   }
 }
