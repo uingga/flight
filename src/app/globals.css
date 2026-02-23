@@ -8,11 +8,11 @@
 
 
 :root {
-  /* 색상 시스템 - Electric Indigo Theme */
-  --color-primary: #6366f1;
-  /* 일렉트릭 인디고 (Electric Indigo) */
-  --color-primary-dark: #4f46e5;
-  --color-secondary: #4338ca;
+  /* 색상 시스템 - Blue Indigo Theme */
+  --color-primary: #4F46E5;
+  /* 블루 인디고 */
+  --color-primary-dark: #4338CA;
+  --color-secondary: #3730A3;
   /* 딥 인디고 */
 
   /* 배경 */
@@ -22,8 +22,8 @@
   /* 카드 배경 (흰색) */
   --color-bg-secondary: #f9fafb;
   /* 호버/보조 배경 */
-  --color-bg-tertiary: #eef2ff;
-  /* 강조 배경 (아주 연한 인디고) */
+  --color-bg-tertiary: #EEF2FF;
+  /* 강조 배경 (아주 연한 코럴) */
 
   /* 텍스트 */
   --color-text-primary: #111827;
@@ -104,9 +104,7 @@ body::before {
   right: 0;
   bottom: 0;
   z-index: -1;
-  background:
-    radial-gradient(circle at 15% 50%, rgba(224, 231, 255, 0.8), transparent 25%),
-    radial-gradient(circle at 85% 30%, rgba(199, 210, 254, 0.6), transparent 25%);
+  background: none;
   pointer-events: none;
 }
 
@@ -191,10 +189,10 @@ select {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  background: linear-gradient(135deg, #4F46E5 0%, #4338CA 100%);
   color: white;
   border: none;
-  box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);
   font-size: inherit;
   font-family: inherit;
   line-height: 1.6;
@@ -289,7 +287,7 @@ select {
 
 /* Range Selection Styling - Critical Order */
 .react-datepicker__day--in-range {
-  background-color: #eef2ff !important;
+  background-color: #EEF2FF !important;
   /* Very light teal */
   color: var(--color-text-primary) !important;
   border-radius: 0 !important;
@@ -352,7 +350,7 @@ select {
   bottom: 0;
   right: 0;
   left: 50%;
-  background-color: #eef2ff;
+  background-color: #EEF2FF;
   z-index: -2;
 }
 

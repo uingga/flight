@@ -945,7 +945,7 @@
     border-radius: 12px;
     font-size: 18px;
     font-weight: 700;
-    color: #4f46e5;
+    color: #4338CA;
     text-align: center;
     outline: none;
     transition: border-color 0.2s;
@@ -953,7 +953,7 @@
 }
 
 .alertInput:focus {
-    border-color: #6366f1;
+    border-color: #FF6B6B;
 }
 
 .alertDesc {
@@ -1378,7 +1378,7 @@
 
 .skeletonBar {
     height: 4px;
-    background: linear-gradient(90deg, var(--color-primary), #818cf8);
+    background: linear-gradient(90deg, var(--color-primary), #818CF8);
     border-radius: 2px;
     margin-bottom: 16px;
     opacity: 0.3;
@@ -1479,11 +1479,11 @@
     margin-bottom: 20px;
     font-size: 15px;
     font-weight: 600;
-    color: #374151;
+    color: #4338CA;
 }
 
 .modalPrice {
-    color: #4f46e5;
+    color: #4338CA;
     font-weight: 700;
 }
 
@@ -1537,7 +1537,7 @@
     background: #fff;
     font-size: 18px;
     font-weight: 500;
-    color: #374151;
+    color: #4338CA;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -1547,9 +1547,9 @@
 }
 
 .paxBtn:hover:not(:disabled) {
-    border-color: #4f46e5;
-    color: #4f46e5;
-    background: #eef2ff;
+    border-color: #4338CA;
+    color: #4338CA;
+    background: #F3F4F6;
 }
 
 .paxBtn:disabled {
@@ -1579,13 +1579,13 @@
 .modalTotalLabel {
     font-size: 15px;
     font-weight: 600;
-    color: #374151;
+    color: #4338CA;
 }
 
 .modalTotalPrice {
     font-size: 20px;
     font-weight: 800;
-    color: #4f46e5;
+    color: #4338CA;
 }
 
 .modalConfirm {
@@ -1593,7 +1593,7 @@
     padding: 14px;
     border-radius: 12px;
     border: none;
-    background: linear-gradient(135deg, #4f46e5, #6366f1);
+    background: linear-gradient(135deg, #4338CA, #4F46E5);
     color: #fff;
     font-size: 16px;
     font-weight: 700;
