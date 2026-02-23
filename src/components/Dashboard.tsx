@@ -691,12 +691,12 @@ export default function Dashboard() {
 
                     // 2. 최저가 초과 ~ ×1.2 이내 — 살짝 페널티
                     if (flight.price <= ipMonthData.lowest * 1.2) {
-                        return score * 1.1;
+                        return score * 1.15;
                     }
 
-                    // 3. 최저가의 120% 초과 ~ 평균가 미만 -> 약간 페널티
+                    // 3. 최저가의 120% 초과 ~ 평균가 미만 -> 페널티
                     if (flight.price < ipMonthData.avg) {
-                        return score * 1.15;
+                        return score * 1.3;
                     }
 
                     // 4. 평균가보다 비싼 경우 (창렬) -> 맨 밑으로 유배
