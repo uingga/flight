@@ -691,9 +691,9 @@ export default function Dashboard() {
 
                     let score = flight.price;
 
-                    // 인터파크 도시 데이터 자체가 없는 경우 — 페널티 없이 가격 그대로
+                    // 인터파크 도시 데이터 자체가 없는 경우 — 약간 페널티 (검증 불가)
                     if (!ipMonthData) {
-                        return score;
+                        return score * 1.1;
                     }
 
                     // 1. 월간 최저가 이하 — 페널티 없음
