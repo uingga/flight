@@ -673,7 +673,7 @@ export default function Dashboard() {
                 // 기본적으로 가격순(최저가)으로 정렬하되, 네이버 최저가나 평균가를 넘으면 페널티 가중치를 부여합니다.
                 const getSortScore = (flight: Flight) => {
                     const city = flight.arrival.city?.replace(/\([^)]+\)/, '').trim();
-                    const depMonth = flight.departure.date?.substring(0, 7);
+                    const depMonth = flight.departure.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 7);
                     const ipCityData = interparkPrices[city];
                     const ipMonthData = ipCityData?.[depMonth];
 
