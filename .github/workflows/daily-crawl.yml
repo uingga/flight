@@ -48,6 +48,20 @@ jobs:
         env:
           CI: true
 
+      - name: Crawl Naver prices (3회/일)
+        if: steps.crawl.outcome == 'success'
+        continue-on-error: true
+        run: |
+          HOUR=$(date -u +%H)
+          if [[ "$HOUR" == "23" || "$HOUR" == "06" || "$HOUR" == "12" ]]; then
+            echo "🔍 네이버 항공권 최저가 크롤링 시작..."
+            npm install playwright-extra puppeteer-extra-plugin-stealth
+            npx ts-node scripts/crawl-naver.ts
+          else
+            echo "⏭️ 네이버 크롤링 스킵 (08/15/21시 KST에만 실행)"
+          fi
+        env:
+          CI: true
       - name: Commit and push changes
         if: steps.crawl.outcome == 'success'
         run: |
@@ -61,6 +75,7 @@ jobs:
             cp data/price-history.json /tmp/price-history.json 2>/dev/null || true
             cp data/crawl-log.json /tmp/crawl-log.json 2>/dev/null || true
             cp data/interpark-prices.json /tmp/interpark-prices.json 2>/dev/null || true
+            cp data/naver-prices.json /tmp/naver-prices.json 2>/dev/null || true
             
             # 원격 최신 코드를 강제로 가져와서 로컬을 동기화 (충돌 원천 차단)
             git fetch origin main
@@ -71,11 +86,13 @@ jobs:
             cp /tmp/price-history.json data/price-history.json 2>/dev/null || true
             cp /tmp/crawl-log.json data/crawl-log.json 2>/dev/null || true
             cp /tmp/interpark-prices.json data/interpark-prices.json 2>/dev/null || true
+            cp /tmp/naver-prices.json data/naver-prices.json 2>/dev/null || true
             
             git add data/all-flights-cache.json
             git add data/price-history.json 2>/dev/null || true
             git add data/crawl-log.json 2>/dev/null || true
             git add data/interpark-prices.json 2>/dev/null || true
+            git add data/naver-prices.json 2>/dev/null || true
             git commit -m "chore(data): update flight data"
             git push
             echo "✅ Data updated and pushed."
