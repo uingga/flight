@@ -668,13 +668,52 @@ export default function Dashboard() {
             case 'airline':
                 comparison = a.airline.localeCompare(b.airline);
                 break;
-            case 'discount':
-                const da = a.discountRate ?? 0;
-                const db = b.discountRate ?? 0;
-                // 할인율 높은 순, 같으면 가격 낮은 순
-                if (da !== db) { comparison = db - da; }
-                else { comparison = a.price - b.price; }
+            case 'discount': {
+                // 스마트 정렬 (Penalty Score Sorting)
+                // 기본적으로 가격순(최저가)으로 정렬하되, 네이버 최저가나 평균가를 넘으면 페널티 가중치를 부여합니다.
+                const getSortScore = (flight: Flight) => {
+                    const city = flight.arrival.city?.replace(/\([^)]+\)/, '').trim();
+                    const depMonth = flight.departure.date?.substring(0, 7);
+                    const ipCityData = interparkPrices[city];
+                    const ipMonthData = ipCityData?.[depMonth];
+
+                    let score = flight.price;
+
+                    // 인터파크 데이터가 없는 경우 (알 수 없음) - 페널티 부여하여 약간 뒤로 보냄
+                    if (!ipMonthData) {
+                        return score * 2;
+                    }
+
+                    // 1. 네이버 최저가보다 싼 경우 (완벽한 특가) 
+                    if (flight.price <= ipMonthData.lowest) {
+                        // 할인율 기반 보너스 (너무 과도하게 깎이지 않도록 1.5배수, 최대 50% 할인으로 제한)
+                        // 이렇게 하면 60만원짜리 바르셀로나 특가(50% 할인)가 심사점수 30만점이 되어, 
+                        // 맨 위 10만원대 표들이 다 끝나고 난 뒤에 적절한 타이밍에 나타납니다.
+                        const discountRate = (ipMonthData.avg - flight.price) / ipMonthData.avg;
+                        const scoreBonus = Math.max(0, discountRate * 1.5);
+                        return score * (1 - Math.min(0.5, scoreBonus));
+                    }
+
+                    // 2. 최저가보단 비싸지만 평균가보단 싼 경우 (적당한 딜) -> 페널티 부여 
+                    // (예: 20만원짜리면 30만원짜리 특가들과 비슷한 순서에 뜨게 함)
+                    if (flight.price < ipMonthData.avg) {
+                        return score * 1.5;
+                    }
+
+                    // 3. 평균가보다 비싼 경우 (창렬) -> 맨 밑으로 유배
+                    return score * 10;
+                };
+
+                const scoreA = getSortScore(a);
+                const scoreB = getSortScore(b);
+
+                comparison = scoreA - scoreB;
+
+                // 기존 할인율 정렬은 내림차순(desc) 효과를 주기 위해 여기서 반전시켰지만,
+                // 이제는 낮을수록 좋은 값(티어, 가격)이므로 기본 오름차순이 맞습니다.
+                // 아래 sortOrder 처리와 맞물려 정상 작동합니다.
                 break;
+            }
         }
 
         return sortOrder === 'asc' ? comparison : -comparison;
