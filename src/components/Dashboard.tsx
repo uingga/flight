@@ -679,9 +679,9 @@ export default function Dashboard() {
 
                     let score = flight.price;
 
-                    // 인터파크 데이터가 없는 경우 (알 수 없음) - 페널티 부여하여 약간 뒤로 보냄
+                    // 인터파크 데이터가 없는 경우 — 페널티 없이 가격 그대로
                     if (!ipMonthData) {
-                        return score * 2;
+                        return score;
                     }
 
                     // 1. 월간 최저가보다 싼 경우 (완벽한 특가) 
@@ -697,9 +697,9 @@ export default function Dashboard() {
                         return score;
                     }
 
-                    // 3. 최저가의 120% 초과 ~ 평균가 미만 -> 페널티 부여
+                    // 3. 최저가의 120% 초과 ~ 평균가 미만 -> 약간 페널티
                     if (flight.price < ipMonthData.avg) {
-                        return score * 1.5;
+                        return score * 1.15;
                     }
 
                     // 4. 평균가보다 비싼 경우 (창렬) -> 맨 밑으로 유배
