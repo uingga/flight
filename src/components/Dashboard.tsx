@@ -1151,7 +1151,34 @@ export default function Dashboard() {
                                 const isLowestPrice = lowestPrices[route] === flight.price;
 
                                 return (
-                                    <div key={flight.id} className={`card ${styles.flightCard} fade-in`}>
+                                    <div
+                                        key={flight.id}
+                                        className={`card ${styles.flightCard} fade-in`}
+                                        onClick={() => {
+                                            const destination = normalizeCity(flight.arrival.city);
+                                            const agency = getSourceName(flight.source);
+
+                                            const formatD = (d: string) => d ? d.slice(5).replace('-', '.') : '';
+                                            const arrStr = flight.arrival.date ? formatD(flight.arrival.date) : '';
+                                            const depStr = flight.departure.date ? formatD(flight.departure.date) : '';
+                                            const flight_date = arrStr ? `${depStr}~${arrStr}` : (flight.departure.date || '');
+
+                                            console.log("GA Event Fired: click_ticket", {
+                                                destination,
+                                                price: flight.price,
+                                                agency,
+                                                flight_date
+                                            });
+
+                                            gtag.event('click_ticket', {
+                                                destination,
+                                                price: flight.price,
+                                                agency,
+                                                flight_date
+                                            });
+                                        }}
+                                        style={{ cursor: 'pointer' }}
+                                    >
 
                                         <div className={styles.cardHeader}>
                                             <div className={styles.cardHeaderLeft}>
