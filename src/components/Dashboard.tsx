@@ -238,7 +238,7 @@ export default function Dashboard() {
     const [priceHistory, setPriceHistory] = useState<Record<string, Array<{ date: string; minPrice: number }>>>({});
     const [interparkPrices, setInterparkPrices] = useState<Record<string, Record<string, { avg: number; lowest: number }>>>({});
     const [searchTerm, setSearchTerm] = useState('');
-    const [sortBy, setSortBy] = useState<'price' | 'date' | 'airline' | 'discount'>('price');
+    const [sortBy, setSortBy] = useState<'price' | 'date' | 'airline' | 'discount'>('discount');
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
     const [sourceFilter, setSourceFilter] = useState<string>('all');
     const [regionFilter, setRegionFilter] = useState<string>('all');
