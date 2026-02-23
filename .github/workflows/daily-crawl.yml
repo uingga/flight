@@ -60,7 +60,7 @@ jobs:
             git add data/price-history.json 2>/dev/null || true
             git add data/crawl-log.json 2>/dev/null || true
             git commit -m "chore(data): update flight data"
-            git pull --rebase origin main
+            git pull --rebase origin main -X theirs
             git push
             echo "✅ Data updated and pushed."
           else
