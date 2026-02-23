@@ -29,9 +29,6 @@ export const metadata: Metadata = {
     authors: [{ name: '티키티킷' }],
     creator: '티키티킷',
     publisher: '티키티킷',
-    other: {
-        'agd-partner-manual-verification': '',
-    },
     formatDetection: {
         email: false,
         address: false,
