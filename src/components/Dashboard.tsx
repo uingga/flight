@@ -677,11 +677,21 @@ export default function Dashboard() {
                     const city = flight.arrival.city?.replace(/\([^)]+\)/, '').trim();
                     const depMonth = flight.departure.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 7);
                     const ipCityData = interparkPrices[city];
-                    const ipMonthData = ipCityData?.[depMonth];
+                    // 당월 데이터가 없으면 가장 가까운 월 데이터 사용
+                    let ipMonthData = ipCityData?.[depMonth];
+                    if (!ipMonthData && ipCityData && depMonth) {
+                        const months = Object.keys(ipCityData).sort();
+                        const closest = months.reduce((best, m) => {
+                            const diff = Math.abs(m.localeCompare(depMonth));
+                            const bestDiff = best ? Math.abs(best.localeCompare(depMonth)) : Infinity;
+                            return diff < bestDiff ? m : best;
+                        }, '' as string);
+                        if (closest) ipMonthData = ipCityData[closest];
+                    }
 
                     let score = flight.price;
 
-                    // 인터파크 데이터가 없는 경우 — 페널티 없이 가격 그대로
+                    // 인터파크 도시 데이터 자체가 없는 경우 — 페널티 없이 가격 그대로
                     if (!ipMonthData) {
                         return score;
                     }
