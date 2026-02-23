@@ -88,6 +88,7 @@ export const metadata: Metadata = {
         'apple-mobile-web-app-capable': 'yes',
         'apple-mobile-web-app-status-bar-style': 'default',
         'apple-mobile-web-app-title': '티키티킷',
+        'agd-partner-manual-verification': '',
     },
 };
 
