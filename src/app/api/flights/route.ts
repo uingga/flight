@@ -164,9 +164,11 @@ export async function GET(request: NextRequest) {
                 allFlights.forEach(f => {
                     if (f.arrival?.city) {
                         const code = resolveCityCode(f.arrival.city, f.arrival.airport);
+                        const cityName = f.arrival.city.replace(/\([^)]+\)/, '').trim();
                         if (code && !codeToCityName[code]) {
-                            codeToCityName[code] = f.arrival.city.replace(/\([^)]+\)/, '').trim();
+                            codeToCityName[code] = cityName;
                         }
+                        allCityNames.add(cityName);
                     }
                 });
                 // 인터파크 가격을 도시명 기준으로 변환
@@ -175,6 +177,27 @@ export async function GET(request: NextRequest) {
                         const cityName = codeToCityName[cityCode];
                         if (cityName && typeof months === 'object') {
                             interparkPrices[cityName] = months as Record<string, { avg: number; lowest: number }>;
+                        }
+                    }
+                }
+                // 도시명 별칭 매핑: 같은 공항코드를 공유하는 별칭들에도 동일 데이터 적용
+                const cityAliases: Record<string, string[]> = {
+                    'HKT': ['푸켓', '푸껫'],
+                    'TAG': ['보홀', '보홀팡라오'],
+                    'TPE': ['타이페이', '타이베이', '대만'],
+                    'RMQ': ['타이중'],
+                    'SPK': ['삿포로', '치토세'],
+                    'KHH': ['가오슝', '카오슝'],
+                    'KLO': ['칼리보', '보라카이'],
+                    'HIJ': ['히로시마'],
+                };
+                for (const [code, aliases] of Object.entries(cityAliases)) {
+                    const data = ipData.prices?.[code];
+                    if (data && typeof data === 'object') {
+                        for (const alias of aliases) {
+                            if (allCityNames.has(alias) && !interparkPrices[alias]) {
+                                interparkPrices[alias] = data as Record<string, { avg: number; lowest: number }>;
+                            }
                         }
                     }
                 }
