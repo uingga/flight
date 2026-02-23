@@ -56,11 +56,27 @@ jobs:
           
           # 변경된 파일이 있는지 확인
           if [[ -n $(git status --porcelain data/) ]]; then
+            # 크롤링 결과 데이터 파일을 임시 보관
+            cp data/all-flights-cache.json /tmp/all-flights-cache.json
+            cp data/price-history.json /tmp/price-history.json 2>/dev/null || true
+            cp data/crawl-log.json /tmp/crawl-log.json 2>/dev/null || true
+            cp data/interpark-prices.json /tmp/interpark-prices.json 2>/dev/null || true
+            
+            # 원격 최신 코드를 강제로 가져와서 로컬을 동기화 (충돌 원천 차단)
+            git fetch origin main
+            git reset --hard origin/main
+            
+            # 임시 보관해둔 최신 크롤링 데이터를 다시 덮어쓰기
+            cp /tmp/all-flights-cache.json data/all-flights-cache.json
+            cp /tmp/price-history.json data/price-history.json 2>/dev/null || true
+            cp /tmp/crawl-log.json data/crawl-log.json 2>/dev/null || true
+            cp /tmp/interpark-prices.json data/interpark-prices.json 2>/dev/null || true
+            
             git add data/all-flights-cache.json
             git add data/price-history.json 2>/dev/null || true
             git add data/crawl-log.json 2>/dev/null || true
+            git add data/interpark-prices.json 2>/dev/null || true
             git commit -m "chore(data): update flight data"
-            git pull --rebase origin main -X theirs
             git push
             echo "✅ Data updated and pushed."
           else
