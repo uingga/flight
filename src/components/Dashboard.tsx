@@ -566,11 +566,13 @@ export default function Dashboard() {
             return getMobileUrl(url, isMobile);
         }
 
-        // 땡처리닷컴: 항상 프로모션 페이지로 이동 + 도착도시 하이라이트
+        // 땡처리닷컴: 항상 프로모션 페이지로 이동 + 출발-도착도시 하이라이트
         if (flight.source === 'ttang') {
             const depDate = flight.departure.date?.replace(/[-\.]/g, '').substring(0, 8) || '';
+            const depCity = flight.departure.city?.replace(/\([^)]+\)/g, '').trim() || '';
             const arrCity = flight.arrival.city?.replace(/\([^)]+\)/g, '').trim() || '';
-            const textFragment = arrCity ? `#:~:text=${encodeURIComponent(arrCity)}` : '';
+            const highlightText = depCity && arrCity ? `${depCity}-${arrCity}` : arrCity;
+            const textFragment = highlightText ? `#:~:text=${encodeURIComponent(highlightText)}` : '';
             return `https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=${depDate}&adt=${pax.adult}&chd=${pax.child}&inf=${pax.infant}&page=1&scale=200${textFragment}`;
         }
 
