@@ -684,15 +684,7 @@ export default function Dashboard() {
                         return score;
                     }
 
-                    // 1. 월간 최저가보다 싼 경우 (완벽한 특가) 
-                    if (flight.price <= ipMonthData.lowest) {
-                        // 할인율 기반 보너스 (너무 과도하게 깎이지 않도록 1.5배수, 최대 50% 할인으로 제한)
-                        const discountRate = (ipMonthData.avg - flight.price) / ipMonthData.avg;
-                        const scoreBonus = Math.max(0, discountRate * 1.5);
-                        return score * (1 - Math.min(0.5, scoreBonus));
-                    }
-
-                    // 2. 최저가의 120% 이내 (날짜별 가격 차이 감안) -> 페널티 없이 통과
+                    // 1. 월간 최저가 × 1.2 이하 — 페널티 없이 가격 그대로
                     if (flight.price <= ipMonthData.lowest * 1.2) {
                         return score;
                     }
