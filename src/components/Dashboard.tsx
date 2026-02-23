@@ -244,7 +244,7 @@ export default function Dashboard() {
     const [regionFilter, setRegionFilter] = useState<string>('all');
     const [startDate, setStartDate] = useState<string>(getDefaultStartDate());
     const [endDate, setEndDate] = useState<string>(getDefaultEndDate());
-    const [departureFilter, setDepartureFilter] = useState<string>('all');
+    const [departureFilter, setDepartureFilter] = useState<string>('인천');
     const [airlineFilter, setAirlineFilter] = useState<string>('all');
     const [displayCount, setDisplayCount] = useState(ITEMS_PER_PAGE);
     const [showScrollTop, setShowScrollTop] = useState(false);
@@ -947,7 +947,7 @@ export default function Dashboard() {
                         <span>
                             {departureFilter !== 'all' || regionFilter !== 'all'
                                 ? [
-                                    departureFilter !== 'all' && (departureFilter === '인천' ? '인천/김포' : departureFilter === '부산' ? '부산/김해' : departureFilter),
+                                    departureFilter !== 'all' && ('출발지 : ' + (departureFilter === '인천' ? '인천/김포' : departureFilter === '부산' ? '부산/김해' : departureFilter)),
                                     regionFilter !== 'all' && regionFilter,
                                 ].filter(Boolean).join(' · ')
                                 : '출발지 · 지역 선택'}
@@ -1061,7 +1061,7 @@ export default function Dashboard() {
                                 )}
                                 {departureFilter !== 'all' && (
                                     <span className={styles.filterTag}>
-                                        {departureFilter}
+                                        출발지 : {departureFilter}
                                         <button onClick={() => setDepartureFilter('all')}>×</button>
                                     </span>
                                 )}
