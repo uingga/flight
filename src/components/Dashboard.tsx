@@ -684,9 +684,14 @@ export default function Dashboard() {
                         return score;
                     }
 
-                    // 1. 월간 최저가 × 1.2 이하 — 페널티 없이 가격 그대로
-                    if (flight.price <= ipMonthData.lowest * 1.2) {
+                    // 1. 월간 최저가 이하 — 페널티 없음
+                    if (flight.price <= ipMonthData.lowest) {
                         return score;
+                    }
+
+                    // 2. 최저가 초과 ~ ×1.2 이내 — 살짝 페널티
+                    if (flight.price <= ipMonthData.lowest * 1.2) {
+                        return score * 1.1;
                     }
 
                     // 3. 최저가의 120% 초과 ~ 평균가 미만 -> 약간 페널티
