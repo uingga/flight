@@ -656,20 +656,9 @@ export default function Dashboard() {
         let comparison = 0;
 
         switch (sortBy) {
-            case 'price': {
-                // 인터파크 최저가보다 비싼 항공권에 약간의 페널티 부여
-                const getAdjustedPrice = (f: Flight) => {
-                    const city = f.arrival.city?.replace(/\([^)]+\)/, '').trim();
-                    const depMonth = f.departure.date?.substring(0, 7);
-                    const ipData = interparkPrices[city]?.[depMonth];
-                    if (ipData && f.price > ipData.lowest) {
-                        return f.price * 1.3; // 30% 페널티
-                    }
-                    return f.price;
-                };
-                comparison = getAdjustedPrice(a) - getAdjustedPrice(b);
+            case 'price':
+                comparison = a.price - b.price;
                 break;
-            }
             case 'date':
                 comparison = new Date(a.departure.date).getTime() - new Date(b.departure.date).getTime();
                 if (comparison === 0) {
@@ -695,23 +684,25 @@ export default function Dashboard() {
                         return score * 2;
                     }
 
-                    // 1. 네이버 최저가보다 싼 경우 (완벽한 특가) 
+                    // 1. 월간 최저가보다 싼 경우 (완벽한 특가) 
                     if (flight.price <= ipMonthData.lowest) {
                         // 할인율 기반 보너스 (너무 과도하게 깎이지 않도록 1.5배수, 최대 50% 할인으로 제한)
-                        // 이렇게 하면 60만원짜리 바르셀로나 특가(50% 할인)가 심사점수 30만점이 되어, 
-                        // 맨 위 10만원대 표들이 다 끝나고 난 뒤에 적절한 타이밍에 나타납니다.
                         const discountRate = (ipMonthData.avg - flight.price) / ipMonthData.avg;
                         const scoreBonus = Math.max(0, discountRate * 1.5);
                         return score * (1 - Math.min(0.5, scoreBonus));
                     }
 
-                    // 2. 최저가보단 비싸지만 평균가보단 싼 경우 (적당한 딜) -> 페널티 부여 
-                    // (예: 20만원짜리면 30만원짜리 특가들과 비슷한 순서에 뜨게 함)
+                    // 2. 최저가의 120% 이내 (날짜별 가격 차이 감안) -> 페널티 없이 통과
+                    if (flight.price <= ipMonthData.lowest * 1.2) {
+                        return score;
+                    }
+
+                    // 3. 최저가의 120% 초과 ~ 평균가 미만 -> 페널티 부여
                     if (flight.price < ipMonthData.avg) {
                         return score * 1.5;
                     }
 
-                    // 3. 평균가보다 비싼 경우 (창렬) -> 맨 밑으로 유배
+                    // 4. 평균가보다 비싼 경우 (창렬) -> 맨 밑으로 유배
                     return score * 10;
                 };
 
