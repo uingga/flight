@@ -6,10 +6,10 @@ const PADDING = 24; // px of whitespace around the card
 
 const allFlights = [
     {
-        id: "mock-1", source: "ttang", airline: "에어부산",
-        departure: { airport: "PUS", city: "부산", date: "2026-02-22" },
-        arrival: { airport: "NGS", city: "나가사키", date: "2026-02-24" },
-        price: 120000, bookingLink: "#", seatStatus: "2석"
+        id: "mock-1", source: "ttang", airline: "에어로케이",
+        departure: { airport: "CJJ", city: "청주", date: "2026-03-03" },
+        arrival: { airport: "TAO", city: "칭다오", date: "2026-03-05" },
+        price: 143000, bookingLink: "#", seatStatus: "5석"
     },
     {
         id: "mock-2", source: "ttang", airline: "제주항공",
@@ -18,26 +18,26 @@ const allFlights = [
         price: 151500, bookingLink: "#", seatStatus: "4석"
     },
     {
-        id: "mock-3", source: "modetour", airline: "필리핀항공",
-        departure: { airport: "ICN", city: "인천", date: "2026-03-04" },
-        arrival: { airport: "MNL", city: "마닐라", date: "2026-03-08" },
-        price: 155000, bookingLink: "#"
+        id: "mock-3", source: "ybtour", airline: "에어부산",
+        departure: { airport: "PUS", city: "부산", date: "2026-02-27" },
+        arrival: { airport: "TAK", city: "다카마쓰", date: "2026-03-02" },
+        price: 179000, bookingLink: "#", seatStatus: "3석"
     },
     {
-        id: "mock-4", source: "ybtour", airline: "이스타항공",
-        departure: { airport: "ICN", city: "인천", date: "2026-03-24" },
-        arrival: { airport: "BKK", city: "방콕", date: "2026-03-28" },
-        price: 249000, bookingLink: "#"
+        id: "mock-4", source: "ybtour", airline: "진에어",
+        departure: { airport: "ICN", city: "인천", date: "2026-03-02" },
+        arrival: { airport: "GUM", city: "괌", date: "2026-03-06" },
+        price: 189000, bookingLink: "#", seatStatus: "2석"
     },
     {
-        id: "mock-5", source: "ybtour", airline: "진에어",
-        departure: { airport: "PUS", city: "부산", date: "2026-03-03" },
-        arrival: { airport: "FUK", city: "후쿠오카", date: "2026-03-06" },
-        price: 182900, bookingLink: "#", seatStatus: "3석"
+        id: "mock-5", source: "ybtour", airline: "제주항공",
+        departure: { airport: "ICN", city: "인천", date: "2026-02-27" },
+        arrival: { airport: "MYJ", city: "마츠야마", date: "2026-03-01" },
+        price: 189000, bookingLink: "#", seatStatus: "2석"
     }
 ];
 
-const flightsFileNames = ['1_nagasaki', '2_cebu', '3_manila', '4_bangkok', '5_fukuoka'];
+const flightsFileNames = ['1_qingdao', '2_cebu', '3_takamatsu', '4_guam', '5_matsuyama'];
 
 (async () => {
     try {
@@ -61,7 +61,7 @@ const flightsFileNames = ['1_nagasaki', '2_cebu', '3_manila', '4_bangkok', '5_fu
                 });
             });
 
-            await page.goto(`https://tikitikit.kr`, { waitUntil: 'networkidle' });
+            await page.goto(`http://localhost:3000`, { waitUntil: 'networkidle' });
             await page.waitForTimeout(1000);
 
             const cardLocator = page.locator('.card').first();
