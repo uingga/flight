@@ -656,9 +656,20 @@ export default function Dashboard() {
         let comparison = 0;
 
         switch (sortBy) {
-            case 'price':
-                comparison = a.price - b.price;
+            case 'price': {
+                // 인터파크 최저가보다 비싼 항공권에 약간의 페널티 부여
+                const getAdjustedPrice = (f: Flight) => {
+                    const city = f.arrival.city?.replace(/\([^)]+\)/, '').trim();
+                    const depMonth = f.departure.date?.substring(0, 7);
+                    const ipData = interparkPrices[city]?.[depMonth];
+                    if (ipData && f.price > ipData.lowest) {
+                        return f.price * 1.3; // 30% 페널티
+                    }
+                    return f.price;
+                };
+                comparison = getAdjustedPrice(a) - getAdjustedPrice(b);
                 break;
+            }
             case 'date':
                 comparison = new Date(a.departure.date).getTime() - new Date(b.departure.date).getTime();
                 if (comparison === 0) {
