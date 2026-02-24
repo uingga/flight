@@ -724,6 +724,11 @@
         font-size: 0.7rem;
         padding: 1px 4px;
     }
+
+    .jjinBadge {
+        font-size: 0.65rem;
+        padding: 1px 5px;
+    }
 }
 
 .btn-primary {
@@ -759,6 +764,17 @@
     padding: 2px 6px;
     border-radius: 4px;
     vertical-align: middle;
+}
+
+.jjinBadge {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #15803d;
+    background: #dcfce7;
+    padding: 2px 6px;
+    border-radius: 4px;
+    vertical-align: middle;
+    cursor: help;
 }
 
 .lowestPriceBadge {
