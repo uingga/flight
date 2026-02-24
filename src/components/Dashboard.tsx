@@ -423,6 +423,14 @@ export default function Dashboard() {
         const flightId = params.get('flight');
         if (flightId) {
             setSharedFlightId(flightId);
+            // 공유 링크 접근 시 모든 필터 해제 (날짜/출발지 등이 매칭을 방해하지 않도록)
+            setStartDate('');
+            setEndDate('');
+            setDepartureFilter('all');
+            setRegionFilter('all');
+            setSourceFilter('all');
+            setAirlineFilter('all');
+            setSearchTerm('');
             // URL 정리
             window.history.replaceState({}, '', window.location.pathname);
         }
@@ -650,8 +658,20 @@ export default function Dashboard() {
         })();
 
 
-        // 공유 링크로 접근 시 해당 항공편만 표시
-        if (sharedFlightId) return flight.id === sharedFlightId;
+        // 공유 링크로 접근 시 해당 항공편만 표시 (fuzzy matching)
+        if (sharedFlightId) {
+            // 1. 정확한 ID 매칭
+            if (flight.id === sharedFlightId) return true;
+            // 2. fuzzy 매칭: ID에서 도착지+출발일 추출 → 같은 노선 매칭
+            //    ID 형식: "source-도시-YYYYMMDD-index" (예: ybtour-오사카-20260301-5)
+            const parts = sharedFlightId.match(/^[^-]+-(.+)-(\d{8})-\d+$/);
+            if (parts) {
+                const [, city, dateStr] = parts;
+                const flightDate = flight.departure?.date?.replace(/[-\.]/g, '').substring(0, 8);
+                return flight.arrival?.city?.includes(city) && flightDate === dateStr;
+            }
+            return false;
+        }
 
         return matchesSearch && matchesSource && matchesRegion && matchesAirline && matchesDate && matchesDeparture;
     }).sort((a, b) => {
@@ -1375,17 +1395,34 @@ export default function Dashboard() {
                         {filteredFlights.length === 0 && (
                             <div className={styles.emptyState}>
                                 <div className={styles.emptyIcon}>✈️</div>
-                                <p>검색 결과가 없습니다</p>
-                                <p style={{ fontSize: '0.9rem', opacity: 0.7 }}>
-                                    필터를 조정하거나 다른 조건으로 검색해보세요
-                                </p>
-                                {hasActiveFilters && (
-                                    <button
-                                        onClick={resetAllFilters}
-                                        className="btn btn-secondary"
-                                    >
-                                        필터 초기화
-                                    </button>
+                                {sharedFlightId ? (
+                                    <>
+                                        <p>공유된 항공편이 만료되었거나 찾을 수 없습니다</p>
+                                        <p style={{ fontSize: '0.9rem', opacity: 0.7 }}>
+                                            해당 특가 항공권이 종료되었을 수 있습니다
+                                        </p>
+                                        <button
+                                            onClick={() => { setSharedFlightId(null); resetAllFilters(); }}
+                                            className="btn btn-primary"
+                                        >
+                                            전체 항공편 보기
+                                        </button>
+                                    </>
+                                ) : (
+                                    <>
+                                        <p>검색 결과가 없습니다</p>
+                                        <p style={{ fontSize: '0.9rem', opacity: 0.7 }}>
+                                            필터를 조정하거나 다른 조건으로 검색해보세요
+                                        </p>
+                                        {hasActiveFilters && (
+                                            <button
+                                                onClick={resetAllFilters}
+                                                className="btn btn-secondary"
+                                            >
+                                                필터 초기화
+                                            </button>
+                                        )}
+                                    </>
                                 )}
                             </div>
                         )}
