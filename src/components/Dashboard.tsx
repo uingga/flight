@@ -238,7 +238,7 @@ export default function Dashboard() {
     const [priceHistory, setPriceHistory] = useState<Record<string, Array<{ date: string; minPrice: number }>>>({});
     const [interparkPrices, setInterparkPrices] = useState<Record<string, Record<string, { avg: number; lowest: number }>>>({});
     const [searchTerm, setSearchTerm] = useState('');
-    const [sortBy, setSortBy] = useState<'price' | 'date' | 'airline' | 'discount'>('discount');
+    const [sortBy, setSortBy] = useState<'price' | 'date' | 'airline' | 'discount' | 'discountRate'>('discount');
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
     const [sourceFilter, setSourceFilter] = useState<string>('all');
     const [regionFilter, setRegionFilter] = useState<string>('all');
@@ -670,6 +670,19 @@ export default function Dashboard() {
             case 'airline':
                 comparison = a.airline.localeCompare(b.airline);
                 break;
+            case 'discountRate': {
+                const getDiscountRate = (f: Flight) => {
+                    const city = f.arrival.city?.replace(/\([^)]+\)/, '').trim();
+                    const depMonth = f.departure.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 7);
+                    const ipMonthData = interparkPrices[city]?.[depMonth];
+                    if (ipMonthData?.avg && f.price > 0) {
+                        return ((ipMonthData.avg - f.price) / ipMonthData.avg) * 100;
+                    }
+                    return -999;
+                };
+                comparison = getDiscountRate(b) - getDiscountRate(a);
+                break;
+            }
             case 'discount': {
                 // 스마트 정렬 (Penalty Score Sorting)
                 // 기본적으로 가격순(최저가)으로 정렬하되, 네이버 최저가나 평균가를 넘으면 페널티 가중치를 부여합니다.
@@ -1133,6 +1146,7 @@ export default function Dashboard() {
                                 >
                                     <option value="discount">추천순</option>
                                     <option value="price">가격순</option>
+                                    <option value="discountRate">할인율순</option>
                                     <option value="date">날짜순</option>
                                 </select>
                             </div>
