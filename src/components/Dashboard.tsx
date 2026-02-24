@@ -1448,6 +1448,8 @@ export default function Dashboard() {
                     {/* 면책 조항 */}
                     <div className={styles.footerDisclaimer}>
                         본 서비스는 각 여행사의 특가 항공권 정보를 수집하여 제공하며, 실제 예약 시점의 가격 및 좌석 상태는 해당 여행사와 다를 수 있습니다. 예약은 각 여행사 사이트에서 직접 진행됩니다.
+                        <br /><br />
+                        티키티킷은 통신판매중개자로서 통신판매의 당사자가 아닙니다. 따라서 항공권의 예약, 결제, 취소, 환불 및 운항 스케줄 등에 대한 모든 의무와 법적 책임은 해당 상품을 판매하는 여행사 및 항공사에 있습니다.
                     </div>
 
                     <div className={styles.footerBottom}>

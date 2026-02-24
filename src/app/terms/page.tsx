@@ -18,7 +18,7 @@ export default function TermsPage() {
             </Link>
 
             <h1 className={styles.pageTitle}>이용약관</h1>
-            <p className={styles.lastUpdated}>최종 수정일: 2026년 2월 18일</p>
+            <p className={styles.lastUpdated}>최종 수정일: 2026년 2월 24일</p>
 
             <div className={styles.section}>
                 <h2 className={styles.sectionTitle}>제1조 (목적)</h2>
@@ -65,11 +65,17 @@ export default function TermsPage() {
                     </p>
                     <p>
                         <strong>3.</strong> 항공권 예약 및 결제는 각 여행사 사이트에서 직접 이루어지며,
-                        예약 관련 문의는 해당 여행사로 직접 연락하시기 바랍니다.
+                        예약 변경, 취소, 환불 등 관련 문의는 해당 예약이 진행된 여행사로 직접 연락하셔야 합니다.
                     </p>
                     <p>
-                        <strong>4.</strong> 본 서비스는 항공권 판매 또는 예약 대행을 하지 않으며,
-                        정보 제공만을 목적으로 합니다.
+                        <strong>4.</strong> 티키티킷은 항공권 판매의 당사자가 아니며, 정보 제공 및
+                        통신판매중개를 목적으로 합니다. 따라서 항공권의 운항, 결항, 지연 등에 대한
+                        법적 책임은 실제 서비스를 제공하는 해당 여행사 및 항공사에 있습니다.
+                    </p>
+                    <p>
+                        <strong>5.</strong> 천재지변, 기상 악화, 항공사 사정(파업, 파산, 운항 스케줄 변경 등) 및
+                        여행사의 귀책사유로 인해 발생하는 항공권 취소, 지연 및 고객의 직·간접적인 피해(여행자 보험사 등
+                        제3자의 구상권 청구 포함)에 대하여 티키티킷은 어떠한 책임도 지지 않습니다.
                     </p>
                 </div>
             </div>
@@ -109,7 +115,7 @@ export default function TermsPage() {
                 <div className={styles.sectionContent}>
                     <div className={styles.contactInfo}>
                         <p><strong>서비스명:</strong> 티키티킷 (TikiTikit)</p>
-                        <p><strong>이메일:</strong> tikitikit.official@gmail.com</p>
+                        <p><strong>이메일:</strong> uingga@gmail.com</p>
                     </div>
                 </div>
             </div>
