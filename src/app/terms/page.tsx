@@ -5,6 +5,9 @@ import styles from '../legal.module.css';
 export const metadata: Metadata = {
     title: '이용약관',
     description: '티키티킷 서비스 이용약관',
+    alternates: {
+        canonical: '/terms',
+    },
 };
 
 export default function TermsPage() {
