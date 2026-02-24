@@ -1270,9 +1270,6 @@ export default function Dashboard() {
                                                         const ipCityData = interparkPrices[city];
                                                         const ipMonthData = ipCityData?.[depMonth];
                                                         if (ipMonthData?.avg && flight.price > 0) {
-                                                            if (flight.price <= ipMonthData.lowest) {
-                                                                return <span className={styles.jjinBadge} title="시중 월 최저가보다 저렴한 찐 땡처리!">찐</span>;
-                                                            }
                                                             const percent = ((ipMonthData.avg - flight.price) / ipMonthData.avg) * 100;
                                                             if (percent >= 5) {
                                                                 return <span className={styles.discountBadge}>-{Math.round(percent)}%</span>;
