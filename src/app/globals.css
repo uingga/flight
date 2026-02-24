@@ -7,6 +7,13 @@
 }
 
 
+
+html,
+body {
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+
 :root {
   /* 색상 시스템 - Blue Indigo Theme */
   --color-primary: #4F46E5;
