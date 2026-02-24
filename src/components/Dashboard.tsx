@@ -1266,18 +1266,16 @@ export default function Dashboard() {
                                                     <div className={styles.price}>{formatPrice(flight.price)}</div>
                                                     {(() => {
                                                         const city = flight.arrival.city?.replace(/\([^)]+\)/, '').trim();
-                                                        const depMonth = flight.departure.date?.substring(0, 7); // "2026-02"
+                                                        const depMonth = flight.departure.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 7);
                                                         const ipCityData = interparkPrices[city];
                                                         const ipMonthData = ipCityData?.[depMonth];
                                                         if (ipMonthData?.avg && flight.price > 0) {
-                                                            const discount = ipMonthData.avg - flight.price;
-                                                            const percent = (discount / ipMonthData.avg) * 100;
+                                                            if (flight.price <= ipMonthData.lowest) {
+                                                                return <span className={styles.jjinBadge} title="시중 월 최저가보다 저렴한 찐 땡처리!">찐</span>;
+                                                            }
+                                                            const percent = ((ipMonthData.avg - flight.price) / ipMonthData.avg) * 100;
                                                             if (percent >= 5) {
-                                                                return (
-                                                                    <span className={styles.discountBadge}>
-                                                                        -{Math.round(percent)}%
-                                                                    </span>
-                                                                );
+                                                                return <span className={styles.discountBadge}>-{Math.round(percent)}%</span>;
                                                             }
                                                         }
                                                         return null;
