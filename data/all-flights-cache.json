@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-02-24T03:51:47.146Z",
-  "count": 658,
+  "timestamp": "2026-02-24T03:58:54.347Z",
+  "count": 659,
   "flights": [
     {
       "id": "ybtour-다카마쓰-20260331-0",
@@ -10764,6 +10764,30 @@
       "discountRate": 1
     },
     {
+      "id": "online-260318325210",
+      "source": "onlinetour",
+      "airline": "파라타항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-18",
+        "time": "09:40"
+      },
+      "arrival": {
+        "city": "도쿄(나리타)",
+        "airport": "",
+        "date": "2026-03-21",
+        "time": "13:35"
+      },
+      "price": 329000,
+      "currency": "KRW",
+      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260318325210",
+      "seats": "2석",
+      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=NRT&sCity2=NRT&eCity2=SEL&startDt=20260318&endDt=20260321&adt=1",
+      "region": "일본",
+      "discountRate": 1
+    },
+    {
       "id": "online-260319219677",
       "source": "onlinetour",
       "airline": "ANA항공",
@@ -15385,7 +15409,7 @@
     "ybtour": 340,
     "hanatour": 67,
     "modetour": 979,
-    "onlinetour": 167,
+    "onlinetour": 168,
     "ttang": 1380
   }
 }
