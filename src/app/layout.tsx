@@ -21,10 +21,10 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
     title: {
-        template: '%s | 티키티킷 - 여행사 땡처리 항공권을 한 곳에서',
-        default: '티키티킷 - 여행사 땡처리 항공권을 한 곳에서',
+        template: '%s | 티키티킷',
+        default: '여행사 땡처리 항공권을 한 곳에서 | 티키티킷',
     },
-    description: '하나투어, 모두투어, 노랑풍선, 온라인투어, 땡처리닷컴의 실시간 땡처리 항공권을 한눈에 비교하고 최저가로 예약하세요. 지금 바로 떠나는 여행, 티키티킷과 함께하세요.',
+    description: '여행사마다 숨어있는 땡처리 항공권, 직접 찾아다닐 필요 없이 한 화면에서 비교하세요.',
     keywords: [
         '땡처리항공권', '특가항공권', '해외여행', '항공권비교', '티키티킷', 'tikitikit',
         '항공권특가', '해외항공권', '항공권최저가', '저가항공',
@@ -46,8 +46,8 @@ export const metadata: Metadata = {
         canonical: '/',
     },
     openGraph: {
-        title: '티키티킷 - 5대 여행사 땡처리 항공권 모음',
-        description: '하나투어, 모두투어, 노랑풍선, 온라인투어, 땡처리닷컴의 실시간 땡처리 항공권을 한눈에 비교하고 최저가로 예약하세요.',
+        title: '여행사 땡처리 항공권을 한 곳에서 | 티키티킷',
+        description: '여행사마다 숨어있는 땡처리 항공권, 직접 찾아다닐 필요 없이 한 화면에서 비교하세요.',
         url: BASE_URL,
         siteName: '티키티킷',
         images: [
@@ -55,7 +55,7 @@ export const metadata: Metadata = {
                 url: '/opengraph-image',
                 width: 1200,
                 height: 630,
-                alt: '티키티킷 - 여행사 땡처리 항공권 모음',
+                alt: '여행사 땡처리 항공권을 한 곳에서 | 티키티킷',
             },
         ],
         locale: 'ko_KR',
@@ -63,8 +63,8 @@ export const metadata: Metadata = {
     },
     twitter: {
         card: 'summary_large_image',
-        title: '티키티킷 - 5대 여행사 땡처리 항공권 모음',
-        description: '여행사가 숨겨둔 땡처리 항공권을 실시간으로 모아 보여드립니다.',
+        title: '여행사 땡처리 항공권을 한 곳에서 | 티키티킷',
+        description: '흩어진 특가를 한 화면에 모았습니다.',
         images: ['/opengraph-image'],
     },
     robots: {
