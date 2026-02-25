@@ -147,7 +147,7 @@ export async function scrapeTtang(): Promise<Flight[]> {
                             date: f.arrDate,
                             time: '',
                         },
-                        price: f.price,
+                        price: f.price + 20000, // 땡처리닷컴 발권수수료(TASF) 반영
                         currency: 'KRW',
                         link,
                         searchLink,
