@@ -1,5 +1,4 @@
 import { Metadata } from 'next';
-import { redirect } from 'next/navigation';
 
 type Props = {
     params: Promise<{ id: string }>;
@@ -116,5 +115,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function SharePage({ params }: Props) {
     const { id } = await params;
-    redirect(`/?flight=${encodeURIComponent(id)}`);
+    const redirectUrl = `/?flight=${encodeURIComponent(id)}`;
+
+    return (
+        <html>
+            <head>
+                <meta httpEquiv="refresh" content={`0;url=${redirectUrl}`} />
+                <script dangerouslySetInnerHTML={{
+                    __html: `window.location.replace("${redirectUrl}");`
+                }} />
+            </head>
+            <body>
+                <p>이동 중입니다...</p>
+            </body>
+        </html>
+    );
 }
