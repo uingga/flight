@@ -616,16 +616,29 @@ export default function Dashboard() {
         setBookingFlight(null);
     };
 
-    // 필터 초기화
+    // 필터 전체 초기화 (출발지·날짜 모두 해제)
     const resetAllFilters = () => {
         setSearchTerm('');
         setSourceFilter('all');
         setRegionFilter('all');
         setAirlineFilter('all');
         setDepartureFilter('all');
+        setStartDate('');
+        setEndDate('');
+        setSortBy('discount');
+    };
+
+    // 홈으로 (인천/김포 + 기본 날짜 복원)
+    const goHome = () => {
+        setSearchTerm('');
+        setSourceFilter('all');
+        setRegionFilter('all');
+        setAirlineFilter('all');
+        setDepartureFilter('인천');
         setStartDate(getDefaultStartDate());
         setEndDate(getDefaultEndDate());
         setSortBy('discount');
+        setSharedFlightId(null);
     };
 
     // 활성 필터 여부
@@ -847,7 +860,7 @@ export default function Dashboard() {
             <header className={`${styles.header} ${headerHidden ? styles.headerHidden : ''} ${headerScrolled ? styles.headerScrolled : ''}`}>
                 <div className={styles.headerContainer}>
                     <div className={styles.headerLeft}>
-                        <h1 className={styles.title} onClick={() => { resetAllFilters(); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ cursor: 'pointer' }}>
+                        <h1 className={styles.title} onClick={() => { goHome(); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ cursor: 'pointer' }}>
                             <Logo size={isMobile ? 0.95 : 1.05} />
                         </h1>
                     </div>
