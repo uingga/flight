@@ -67,6 +67,14 @@ const CITY_DESCRIPTIONS = {
         ],
         closing: '치맥 값으로 해외여행이죠.'
     },
+    '청도': {
+        emoji: '🍺',
+        lines: [
+            '칭다오 맥주의 본고장에서 생맥주 한 잔 🍺',
+            '잔교에서 야경 보며 해산물 한 상!',
+        ],
+        closing: '비행 1시간 반이면 도착하는 가까운 해외.'
+    },
     '후쿠오카': {
         emoji: '🍜',
         lines: [
@@ -689,7 +697,13 @@ function generateEditorPick(flight) {
         if (duration) lines.push(`<p>${duration} 알찬 일정입니다.</p>`);
         lines.push(`<p>&nbsp;</p>`);
         lines.push(`<p>왕복 <b>${priceText}</b>이면</p>`);
-        lines.push(`<p>가성비 끝판왕 여행이죠.</p>`);
+        if (flight.price < 200000) {
+            lines.push(`<p>KTX 왕복보다 싼 해외여행이에요.</p>`);
+        } else if (flight.price < 300000) {
+            lines.push(`<p>커피 몇 잔 값 아끼면 되는 여행이에요.</p>`);
+        } else {
+            lines.push(`<p>이 가격이면 꽤 괜찮은 딜이에요.</p>`);
+        }
     }
 
     lines.push(`<p>&nbsp;</p>`);
@@ -793,16 +807,17 @@ function generateHTML(topFlights, allIcnFlights) {
     const titlePrefix = `[${dateLabel}] 땡처리 항공권 특가 Top 5 🔥`;
 
     // 데이터 기반 서브타이틀 후보 풀
+    // 만원대 표기 (예: 15만원대, 20만원대)
+    const priceRange = `${Math.floor(first.price / 10000)}만원대`;
     const subtitleCandidates = [
-        `${titleCity} ${titlePrice}부터!`,
-        `${titlePrice} ${titleCity} 실화?`,
-        `오늘의 최저가 ${titlePrice}`,
-        `${titleCity} 왕복 ${titlePrice} 🤯`,
+        `${titleCity} ${priceRange}!`,
+        `오늘 최저가 ${priceRange} ${titleCity}`,
+        `${titleCity} 왕복 ${priceRange} ✈️`,
     ];
     // 10만원대면 추가 후보
     if (first.price < 200000) {
         subtitleCandidates.push(`10만원대 해외여행 가능?!`);
-        subtitleCandidates.push(`${titleCity} ${titlePrice}이면 KTX보다 싸네`);
+        subtitleCandidates.push(`${titleCity} ${priceRange}이면 KTX보다 싸네`);
     }
     // 일본 도시 2개 이상이면
     const japanCount = topFlights.filter(f => ['일본'].includes(categorizeRegion(f.arrival?.city || ''))).length;
@@ -837,6 +852,15 @@ function generateHTML(topFlights, allIcnFlights) {
         // 1위는 빨간 가격
         const priceColor = rank === 1 ? 'color: #e53e3e;' : '';
 
+        // 4~5위도 한 줄 코멘트 추가 (시즌 코멘트가 없는 경우)
+        let extraComment = '';
+        if (!seasonCtx) {
+            const desc = matchCityDescription(arrCity);
+            if (desc) {
+                extraComment = `\n        <p>&nbsp;</p>\n        <p>${desc.lines[0]}</p>`;
+            }
+        }
+
         return `
         <p>&nbsp;</p>
         <p>${getRankLabel(rank)}</p>
@@ -844,7 +868,7 @@ function generateHTML(topFlights, allIcnFlights) {
         <p>${f.airline} · ${depDate}~${arrDate}${durationText}</p>
         <p style="font-size: 20px; font-weight: 800; ${priceColor}"><b>${formatPrice(f.price)}원</b></p>
         <p>&nbsp;</p>
-        <p><img src="blog-cards/rank_${rank}.png" alt="${depCity}-${arrCity} 항공권" style="max-width: 100%; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"></p>${seasonText}`;
+        <p><img src="blog-cards/rank_${rank}.png" alt="${depCity}-${arrCity} 항공권" style="max-width: 100%; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"></p>${seasonText}${extraComment}`;
     }).join('\n');
 
     // 에디터 픽 (날짜별 로테이션 — 매일 다른 항공편 픽)
@@ -1096,7 +1120,7 @@ ${rankSections}
 
         <p>&nbsp;</p>
         <p style="font-size: 13px; color: #888;">※ 유류할증료/텍스 포함 왕복 총액 기준</p>
-        <p style="font-size: 13px; color: #e53e3e; font-weight: bold;">※ 땡처리 특성상 실시간으로 마감될 수 있습니다.</p>
+        <p style="font-size: 13px; color: #e53e3e; font-weight: bold;">※ 좌석이 빠지면 가격이 바뀌거나 사라질 수 있어요.</p>
 
         <hr class="divider">
 
@@ -1115,7 +1139,7 @@ ${tipSection}
         <p>혹시 원하는 날짜나 목적지가 따로 있다면</p>
         <p>한번 들러서 확인해보세요 😊</p>
         <p>&nbsp;</p>
-        <p><a href="https://tikitikit.kr" class="cta-link">👉 티키티킷에서 특가 구경하기</a></p>
+        <p><a href="https://tikitikit.kr" class="cta-link">tikitikit.kr</a></p>
 
         <p class="note">${hashtags}</p>
 
