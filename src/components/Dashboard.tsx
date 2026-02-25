@@ -255,6 +255,7 @@ export default function Dashboard() {
     const [shareToast, setShareToast] = useState<string | null>(null);
     const [sharedFlightId, setSharedFlightId] = useState<string | null>(null);
     const [bookingFlight, setBookingFlight] = useState<Flight | null>(null);
+    const [ttangConfirmFlight, setTtangConfirmFlight] = useState<Flight | null>(null);
     const [passengers, setPassengers] = useState({ adult: 1, child: 0, infant: 0 });
     const [alertFlight, setAlertFlight] = useState<Flight | null>(null);
     const [alertPrice, setAlertPrice] = useState('');
@@ -1334,16 +1335,20 @@ export default function Dashboard() {
                                                     >
                                                         예약하기 →
                                                     </button>
+                                                ) : flight.source === 'ttang' ? (
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-primary"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setTtangConfirmFlight(flight);
+                                                        }}
+                                                    >
+                                                        예약하기 →
+                                                    </button>
                                                 ) : (
                                                     <a
-                                                        href={flight.source === 'ttang'
-                                                            ? (() => {
-                                                                const depDate = flight.departure.date?.replace(/[-\.]/g, '').substring(0, 8) || '';
-                                                                const arrCity = flight.arrival.city?.replace(/\([^)]+\)/g, '').trim() || '';
-                                                                const textFragment = arrCity ? `#:~:text=${encodeURIComponent(arrCity)}` : '';
-                                                                return `https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=${depDate}&adt=1&chd=0&inf=0&page=1&scale=200${textFragment}`;
-                                                            })()
-                                                            : getMobileUrl(flight.link, isMobile)}
+                                                        href={getMobileUrl(flight.link, isMobile)}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                         className="btn btn-primary"
@@ -1601,6 +1606,35 @@ export default function Dashboard() {
                         </p>
                         <button className={styles.modalConfirm} onClick={setupAlert}>
                             알림 설정하기 🔔
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* 땡처리닷컴 수수료 안내 모달 */}
+            {ttangConfirmFlight && (
+                <div className={styles.modalOverlay} onClick={() => setTtangConfirmFlight(null)}>
+                    <div className={styles.modalSheet} onClick={(e) => e.stopPropagation()}>
+                        <div className={styles.modalHeader}>
+                            <h3 className={styles.modalTitle}>안내</h3>
+                            <button className={styles.modalClose} onClick={() => setTtangConfirmFlight(null)}>×</button>
+                        </div>
+                        <div style={{ padding: '12px 20px 24px', fontSize: '15px', color: '#333', lineHeight: 1.8, textAlign: 'center' }}>
+                            땡처리닷컴은 표시된 가격 외에<br />
+                            <b>발권수수료(TASF)</b>가 별도 부과됩니다.
+                        </div>
+                        <button className={styles.modalConfirm} onClick={() => {
+                            const f = ttangConfirmFlight;
+                            const r = `${normalizeCity(f.departure.city)}-${normalizeCity(f.arrival.city)}`;
+                            gtag.trackBookingClick(f.source, r, f.price);
+                            const depDate = f.departure.date?.replace(/[-\.]/g, '').substring(0, 8) || '';
+                            const arrCity = f.arrival.city?.replace(/\([^)]+\)/g, '').trim() || '';
+                            const textFragment = arrCity ? `#:~:text=${encodeURIComponent(arrCity)}` : '';
+                            const url = `https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=${depDate}&adt=1&chd=0&inf=0&page=1&scale=200${textFragment}`;
+                            window.open(url, '_blank', 'noopener,noreferrer');
+                            setTtangConfirmFlight(null);
+                        }}>
+                            땡처리닷컴에서 예약하기 →
                         </button>
                     </div>
                 </div>
