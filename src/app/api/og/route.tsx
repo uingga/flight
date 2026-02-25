@@ -74,7 +74,9 @@ export async function GET(request: NextRequest) {
                     height: '100%',
                     display: 'flex',
                     flexDirection: 'column',
-                    background: 'linear-gradient(145deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%)',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: 'linear-gradient(145deg, #f8fafc 0%, #eef2ff 30%, #e0e7ff 55%, #c7d2fe 80%, #a5b4fc 100%)',
                     fontFamily: '"Noto Sans KR", sans-serif',
                     position: 'relative',
                     overflow: 'hidden',
@@ -97,7 +99,7 @@ export async function GET(request: NextRequest) {
                     width: '400px',
                     height: '400px',
                     borderRadius: '50%',
-                    background: 'radial-gradient(circle, rgba(139, 92, 246, 0.12) 0%, transparent 70%)',
+                    background: 'radial-gradient(circle, rgba(79, 70, 229, 0.12) 0%, transparent 70%)',
                     bottom: '-100px',
                     left: '-80px',
                     display: 'flex',
@@ -108,45 +110,38 @@ export async function GET(request: NextRequest) {
                     display: 'flex',
                     alignItems: 'center',
                     gap: '12px',
-                    marginBottom: '40px',
+                    marginBottom: '24px',
                 }}>
                     <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
                         <path
                             d="M3.8 11.1 L20.2 2.9 Q22 2 21.2 3.8 L13.8 20.2 Q13 22 12.0 20.3 L9.5 15.7 Q8.5 14 6.6 13.4 L3.9 12.6 Q2 12 3.8 11.1Z"
-                            fill="#818cf8"
+                            fill="#6366f1"
                             transform="rotate(8 12 12)"
                         />
                     </svg>
                     <span style={{
-                        fontSize: '28px',
+                        fontSize: '32px',
                         fontWeight: 700,
-                        color: '#a5b4fc',
+                        color: '#4338ca',
                         letterSpacing: '-0.02em',
                     }}>
                         티키티킷
                     </span>
-                    {sourceName && (
-                        <span style={{
-                            fontSize: '20px',
-                            color: '#6366f1',
-                            marginLeft: '8px',
-                        }}>
-                            via {sourceName}
-                        </span>
-                    )}
                 </div>
 
-                {/* Route */}
+                {/* Route — spread left and right */}
                 <div style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '24px',
-                    marginBottom: '32px',
+                    justifyContent: 'center',
+                    gap: '40px',
+                    marginBottom: '24px',
+                    width: '100%',
                 }}>
                     <span style={{
-                        fontSize: '72px',
+                        fontSize: '84px',
                         fontWeight: 900,
-                        color: '#ffffff',
+                        color: '#1e1b4b',
                         letterSpacing: '-0.02em',
                     }}>
                         {dep}
@@ -157,18 +152,18 @@ export async function GET(request: NextRequest) {
                         alignItems: 'center',
                         gap: '4px',
                     }}>
-                        <span style={{ fontSize: '40px', color: '#818cf8' }}>✈️</span>
+                        <span style={{ fontSize: '48px', color: '#6366f1' }}>✈️</span>
                         <div style={{
-                            width: '100px',
+                            width: '120px',
                             height: '2px',
                             background: 'linear-gradient(90deg, transparent, #6366f1, transparent)',
                             display: 'flex',
                         }} />
                     </div>
                     <span style={{
-                        fontSize: '72px',
+                        fontSize: '84px',
                         fontWeight: 900,
-                        color: '#ffffff',
+                        color: '#1e1b4b',
                         letterSpacing: '-0.02em',
                     }}>
                         {arr}
@@ -180,22 +175,17 @@ export async function GET(request: NextRequest) {
                     <div style={{
                         display: 'flex',
                         alignItems: 'baseline',
-                        gap: '12px',
-                        marginBottom: '24px',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        marginBottom: '28px',
                     }}>
                         <span style={{
-                            fontSize: '64px',
+                            fontSize: '72px',
                             fontWeight: 900,
-                            color: '#fbbf24',
+                            color: '#dc2626',
                             letterSpacing: '-0.02em',
                         }}>
-                            {priceText}
-                        </span>
-                        <span style={{
-                            fontSize: '24px',
-                            color: '#94a3b8',
-                        }}>
-                            ~
+                            {priceText}~
                         </span>
                     </div>
                 )}
@@ -204,21 +194,21 @@ export async function GET(request: NextRequest) {
                 <div style={{
                     display: 'flex',
                     alignItems: 'center',
+                    justifyContent: 'center',
                     gap: '20px',
-                    marginTop: 'auto',
                 }}>
                     {date && (
                         <div style={{
                             display: 'flex',
                             alignItems: 'center',
                             gap: '8px',
-                            padding: '8px 20px',
-                            background: 'rgba(255,255,255,0.08)',
+                            padding: '10px 24px',
+                            background: 'rgba(79, 70, 229, 0.08)',
                             borderRadius: '12px',
-                            border: '1px solid rgba(255,255,255,0.1)',
+                            border: '1px solid rgba(79, 70, 229, 0.15)',
                         }}>
-                            <span style={{ fontSize: '22px', color: '#94a3b8' }}>📅</span>
-                            <span style={{ fontSize: '22px', color: '#e2e8f0', fontWeight: 600 }}>{date}</span>
+                            <span style={{ fontSize: '26px', color: '#6366f1' }}>📅</span>
+                            <span style={{ fontSize: '26px', color: '#3730a3', fontWeight: 600 }}>{date}</span>
                         </div>
                     )}
                     {airline && (
@@ -226,12 +216,25 @@ export async function GET(request: NextRequest) {
                             display: 'flex',
                             alignItems: 'center',
                             gap: '8px',
-                            padding: '8px 20px',
-                            background: 'rgba(255,255,255,0.08)',
+                            padding: '10px 24px',
+                            background: 'rgba(79, 70, 229, 0.08)',
                             borderRadius: '12px',
-                            border: '1px solid rgba(255,255,255,0.1)',
+                            border: '1px solid rgba(79, 70, 229, 0.15)',
                         }}>
-                            <span style={{ fontSize: '22px', color: '#e2e8f0', fontWeight: 600 }}>{airline}</span>
+                            <span style={{ fontSize: '26px', color: '#3730a3', fontWeight: 600 }}>{airline}</span>
+                        </div>
+                    )}
+                    {sourceName && (
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            padding: '10px 24px',
+                            background: 'rgba(79, 70, 229, 0.08)',
+                            borderRadius: '12px',
+                            border: '1px solid rgba(79, 70, 229, 0.15)',
+                        }}>
+                            <span style={{ fontSize: '26px', color: '#3730a3', fontWeight: 600 }}>{sourceName}</span>
                         </div>
                     )}
                 </div>
@@ -245,7 +248,7 @@ export async function GET(request: NextRequest) {
                     {
                         name: 'Noto Sans KR',
                         data: fontData,
-                        style: 'normal',
+                        style: 'normal' as const,
                         weight: 700,
                     }
                 ]
