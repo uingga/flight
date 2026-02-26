@@ -1205,195 +1205,439 @@ export default function Dashboard() {
                         )}
 
                         <div className={styles.flightGrid}>
-                            {displayedFlights.map((flight) => {
-                                const route = `${flight.departure.city}-${flight.arrival.city}`;
-                                const isLowestPrice = lowestPrices[route] === flight.price;
+                            {(() => {
+                                const INSIGHT_INTERVAL = 12; // 매 12개 카드마다 인사이트 바 삽입
 
-                                return (
-                                    <div
-                                        key={flight.id}
-                                        className={`card ${styles.flightCard} fade-in`}
-                                        onClick={() => {
-                                            const destination = normalizeCity(flight.arrival.city);
-                                            const agency = getSourceName(flight.source);
+                                // 인사이트 바 생성 함수
+                                const generateInsightBar = (position: number, flightsSoFar: Flight[]) => {
+                                    const barType = position % 6; // 0~5 로테이션
 
-                                            const formatD = (d: string) => d ? d.slice(5).replace('-', '.') : '';
-                                            const arrStr = flight.arrival.date ? formatD(flight.arrival.date) : '';
-                                            const depStr = flight.departure.date ? formatD(flight.departure.date) : '';
-                                            const flight_date = arrStr ? `${depStr}~${arrStr}` : (flight.departure.date || '');
+                                    if (barType === 0) {
+                                        // ── 💡 가격 인사이트: 평균가 대비 할인율 높은 도시
+                                        const cityDeals: { city: string; discount: number }[] = [];
+                                        const seen = new Set<string>();
+                                        flightsSoFar.forEach(f => {
+                                            const city = normalizeCity(f.arrival.city);
+                                            if (seen.has(city)) return;
+                                            seen.add(city);
+                                            const rawCity = f.arrival.city?.replace(/\([^)]+\)/, '').trim();
+                                            const depMonth = f.departure.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 7);
+                                            const ipData = interparkPrices[rawCity]?.[depMonth];
+                                            if (ipData?.avg && f.price > 0) {
+                                                const pct = Math.round(((ipData.avg - f.price) / ipData.avg) * 100);
+                                                if (pct >= 10) cityDeals.push({ city, discount: pct });
+                                            }
+                                        });
+                                        cityDeals.sort((a, b) => b.discount - a.discount);
+                                        const top = cityDeals.slice(0, 3);
 
-                                            console.log("GA Event Fired: click_ticket", {
-                                                destination,
-                                                price: flight.price,
-                                                agency,
-                                                flight_date
-                                            });
-
-                                            gtag.event('click_ticket', {
-                                                destination,
-                                                price: flight.price,
-                                                agency,
-                                                flight_date
-                                            });
-                                        }}
-                                        style={{ cursor: 'pointer' }}
-                                    >
-
-                                        <div className={styles.cardHeader}>
-                                            <div className={styles.cardHeaderLeft}>
-                                                <span className={`badge ${getSourceBadgeClass(flight.source)}`}>
-                                                    {getSourceName(flight.source)}
-                                                </span>
-                                                <span className={styles.airline}>{flight.airline}</span>
-                                                {(() => {
-                                                    const seatNum = flight.availableSeats || (flight.seats ? parseInt(flight.seats) : 0);
-                                                    if (!seatNum) return null;
-                                                    return (
-                                                        <span className={seatNum <= 9 ? styles.seatsBadgeCritical : styles.seatsBadge}>
-                                                            {seatNum <= 5 && '🔥 '}{seatNum}석
+                                        if (top.length === 0) return null;
+                                        return (
+                                            <div key={`insight-${position}`} className={styles.insightBar}>
+                                                <span className={styles.insightIcon}>💡</span>
+                                                <div className={styles.insightContent}>
+                                                    <span>평균가 대비 할인율이 높은 도시 →</span>
+                                                    {top.map(d => (
+                                                        <span
+                                                            key={d.city}
+                                                            className={styles.insightChip}
+                                                            onClick={() => setSearchTerm(d.city)}
+                                                        >
+                                                            {d.city} <span className={styles.insightHighlight}>-{d.discount}%</span>
                                                         </span>
-                                                    );
-                                                })()}
-                                            </div>
-                                            <div className={styles.cardHeaderRight}>
-                                                <button
-                                                    type="button"
-                                                    className={styles.shareBtn}
-                                                    onClick={(e) => {
-                                                        e.preventDefault(); e.stopPropagation();
-                                                        setAlertFlight(flight);
-                                                        setAlertPrice(String(flight.price));
-                                                    }}
-                                                    title="가격 알림 설정"
-                                                >
-                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ pointerEvents: 'none' }}>
-                                                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                                                        <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-                                                    </svg>
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    className={styles.shareBtn}
-                                                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); shareFlight(flight); }}
-                                                    title="공유하기"
-                                                >
-                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ pointerEvents: 'none' }}>
-                                                        <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
-                                                        <polyline points="16 6 12 2 8 6" />
-                                                        <line x1="12" y1="2" x2="12" y2="15" />
-                                                    </svg>
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        <div className={styles.route}>
-                                            <div className={styles.location}>
-                                                <div className={styles.city}>{normalizeCity(flight.departure.city)}</div>
-                                                <div className={styles.date}>{formatDate(flight.departure.date)}</div>
-                                                {flight.departure.time && (
-                                                    <div className={styles.time}>{flight.departure.time}</div>
-                                                )}
-                                            </div>
-
-                                            <div className={styles.arrowSection}>
-                                                <div className={styles.arrow}>✈</div>
-                                            </div>
-
-                                            <div className={styles.location}>
-                                                <div className={styles.city}>{normalizeCity(flight.arrival.city)}</div>
-                                                <div className={styles.date}>{formatDate(flight.arrival.date)}</div>
-                                                {flight.arrival.time && (
-                                                    <div className={styles.time}>{flight.arrival.time}</div>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        <div className={styles.cardFooterWrapper}>
-                                            <div className={styles.cardFooter}>
-                                                <div className={styles.priceSection}>
-                                                    <div className={styles.price}>{formatPrice(flight.price)}</div>
-                                                    {(() => {
-                                                        const city = flight.arrival.city?.replace(/\([^)]+\)/, '').trim();
-                                                        const depMonth = flight.departure.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 7);
-                                                        const ipCityData = interparkPrices[city];
-                                                        const ipMonthData = ipCityData?.[depMonth];
-                                                        if (ipMonthData?.avg && flight.price > 0) {
-                                                            const percent = ((ipMonthData.avg - flight.price) / ipMonthData.avg) * 100;
-                                                            if (percent >= 5) {
-                                                                return <span className={styles.discountBadge}>-{Math.round(percent)}%</span>;
-                                                            }
-                                                        }
-                                                        return null;
-                                                    })()}
-
+                                                    ))}
                                                 </div>
-                                                {['hanatour', 'modetour'].includes(flight.source) ? (
-                                                    <button
-                                                        type="button"
-                                                        className="btn btn-primary"
-                                                        onClick={(e) => { e.stopPropagation(); openBookingModal(flight); }}
-                                                    >
-                                                        예약하기 →
-                                                    </button>
-                                                ) : flight.source === 'ttang' ? (
-                                                    <button
-                                                        type="button"
-                                                        className="btn btn-primary"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setTtangConfirmFlight(flight);
-                                                        }}
-                                                    >
-                                                        예약하기 →
-                                                    </button>
-                                                ) : (
-                                                    <a
-                                                        href={getMobileUrl(flight.link, isMobile)}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="btn btn-primary"
-                                                        onClick={() => {
-                                                            const r = `${normalizeCity(flight.departure.city)}-${normalizeCity(flight.arrival.city)}`;
-                                                            gtag.trackBookingClick(flight.source, r, flight.price);
-                                                        }}
-                                                    >
-                                                        예약하기 →
-                                                    </a>
-                                                )}
                                             </div>
-                                            {/* 가격 비교 링크 */}
-                                            {(() => {
-                                                const naverUrl = getNaverFlightUrl(flight.departure.city, flight.arrival.city, flight.departure.date, flight.arrival.date);
-                                                const skyscannerUrl = getSkyscannerUrl(flight.departure.city, flight.arrival.city, flight.departure.date, flight.arrival.date);
-                                                if (!naverUrl && !skyscannerUrl) return null;
-                                                return (
-                                                    <div className={styles.compareLinks}>
-                                                        <span className={styles.compareLinkLabel}>가격비교</span>
-                                                        {naverUrl && (
-                                                            <a href={naverUrl} target="_blank" rel="noopener noreferrer" className={styles.compareLink} title="네이버 항공권에서 비교"
-                                                                onClick={() => gtag.trackCompareClick('naver', `${normalizeCity(flight.departure.city)}-${normalizeCity(flight.arrival.city)}`, flight.price)}
-                                                            >
-                                                                네이버
-                                                            </a>
-                                                        )}
-                                                        {skyscannerUrl && (
-                                                            <a href={skyscannerUrl} target="_blank" rel="noopener noreferrer" className={styles.compareLink} title="스카이스캐너에서 비교"
-                                                                onClick={() => gtag.trackCompareClick('skyscanner', `${normalizeCity(flight.departure.city)}-${normalizeCity(flight.arrival.city)}`, flight.price)}
-                                                            >
-                                                                스카이스캐너
-                                                            </a>
-                                                        )}
+                                        );
+                                    }
+
+                                    if (barType === 1) {
+                                        // ── 🌏 지역별 현황: 전체 항공권의 지역 분포
+                                        const regionCounts = new Map<string, { count: number; lowest: number }>();
+                                        filteredFlights.forEach(f => {
+                                            const region = f.region || '기타';
+                                            const existing = regionCounts.get(region);
+                                            if (existing) {
+                                                existing.count++;
+                                                if (f.price < existing.lowest) existing.lowest = f.price;
+                                            } else {
+                                                regionCounts.set(region, { count: 1, lowest: f.price });
+                                            }
+                                        });
+                                        const regions = Array.from(regionCounts.entries())
+                                            .sort((a, b) => b[1].count - a[1].count)
+                                            .filter(([r]) => r !== '기타')
+                                            .slice(0, 5);
+
+                                        if (regions.length === 0) return null;
+                                        return (
+                                            <div key={`insight-${position}`} className={styles.insightBar}>
+                                                <span className={styles.insightIcon}>🌏</span>
+                                                <div className={styles.insightContent}>
+                                                    <span>지역별 항공권 →</span>
+                                                    {regions.map(([region, data]) => (
+                                                        <span
+                                                            key={region}
+                                                            className={styles.insightChip}
+                                                            onClick={() => setRegionFilter(region)}
+                                                        >
+                                                            {region} <span className={styles.insightChipCount}>{data.count}건 · {formatPrice(data.lowest)}~</span>
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        );
+                                    }
+
+                                    if (barType === 2) {
+                                        // ── 🗺️ 도시별 바로가기: 아직 안 본 항공편들의 도시 분포
+                                        const remaining = filteredFlights.slice(flightsSoFar.length);
+                                        const cityCounts = new Map<string, number>();
+                                        remaining.forEach(f => {
+                                            const city = normalizeCity(f.arrival.city);
+                                            cityCounts.set(city, (cityCounts.get(city) || 0) + 1);
+                                        });
+                                        const cities = Array.from(cityCounts.entries())
+                                            .sort((a, b) => b[1] - a[1])
+                                            .slice(0, 5);
+
+                                        if (cities.length === 0) return null;
+                                        return (
+                                            <div key={`insight-${position}`} className={styles.insightBar}>
+                                                <span className={styles.insightIcon}>🗺️</span>
+                                                <div className={styles.insightContent}>
+                                                    <span>더 많은 항공권이 있는 도시 →</span>
+                                                    {cities.map(([city, count]) => (
+                                                        <span
+                                                            key={city}
+                                                            className={styles.insightChip}
+                                                            onClick={() => setSearchTerm(city)}
+                                                        >
+                                                            {city} <span className={styles.insightChipCount}>{count}건</span>
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        );
+                                    }
+
+                                    if (barType === 3) {
+                                        // ── ✈️ 항공사별 현황: 어떤 항공사가 가장 저렴한지
+                                        const airlineData = new Map<string, { count: number; lowest: number }>();
+                                        filteredFlights.forEach(f => {
+                                            const airline = f.airline;
+                                            if (!airline) return;
+                                            const existing = airlineData.get(airline);
+                                            if (existing) {
+                                                existing.count++;
+                                                if (f.price < existing.lowest) existing.lowest = f.price;
+                                            } else {
+                                                airlineData.set(airline, { count: 1, lowest: f.price });
+                                            }
+                                        });
+                                        const airlines = Array.from(airlineData.entries())
+                                            .sort((a, b) => a[1].lowest - b[1].lowest)
+                                            .slice(0, 4);
+
+                                        if (airlines.length === 0) return null;
+                                        return (
+                                            <div key={`insight-${position}`} className={styles.insightBar}>
+                                                <span className={styles.insightIcon}>✈️</span>
+                                                <div className={styles.insightContent}>
+                                                    <span>항공사별 최저가 →</span>
+                                                    {airlines.map(([airline, data]) => (
+                                                        <span
+                                                            key={airline}
+                                                            className={styles.insightChip}
+                                                            onClick={() => setSearchTerm(airline)}
+                                                        >
+                                                            {airline} <span className={styles.insightHighlight}>{formatPrice(data.lowest)}</span>
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        );
+                                    }
+
+                                    if (barType === 4) {
+                                        // ── 📊 딜 요약: 전체 중 평균가 이하 비율
+                                        let belowAvg = 0;
+                                        let total = 0;
+                                        filteredFlights.forEach(f => {
+                                            const rawCity = f.arrival.city?.replace(/\([^)]+\)/, '').trim();
+                                            const depMonth = f.departure.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 7);
+                                            const ipData = interparkPrices[rawCity]?.[depMonth];
+                                            if (ipData?.avg && f.price > 0) {
+                                                total++;
+                                                if (f.price < ipData.avg) belowAvg++;
+                                            }
+                                        });
+
+                                        if (total === 0) return null;
+                                        const pct = Math.round((belowAvg / total) * 100);
+                                        return (
+                                            <div key={`insight-${position}`} className={styles.insightBar}>
+                                                <span className={styles.insightIcon}>📊</span>
+                                                <div className={styles.insightContent}>
+                                                    <span>
+                                                        현재 검색된 항공권 중 <strong className={styles.insightHighlight}>{pct}%</strong>가 평균가보다 저렴합니다
+                                                        <span style={{ marginLeft: 6, color: 'var(--color-text-muted)', fontSize: '0.8rem' }}>
+                                                            ({belowAvg}/{total}건)
+                                                        </span>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        );
+                                    }
+
+                                    // barType === 5
+                                    // ── 📅 출발 시기별 현황: 어느 주에 가장 저렴한지
+                                    const weekData = new Map<string, { count: number; lowest: number }>();
+                                    filteredFlights.forEach(f => {
+                                        const d = f.departure.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim();
+                                        if (!d) return;
+                                        const day = parseInt(d.substring(8, 10));
+                                        const monthPart = d.substring(5, 7);
+                                        let weekLabel: string;
+                                        if (day <= 10) weekLabel = `${monthPart}월 상순`;
+                                        else if (day <= 20) weekLabel = `${monthPart}월 중순`;
+                                        else weekLabel = `${monthPart}월 하순`;
+
+                                        const existing = weekData.get(weekLabel);
+                                        if (existing) {
+                                            existing.count++;
+                                            if (f.price < existing.lowest) existing.lowest = f.price;
+                                        } else {
+                                            weekData.set(weekLabel, { count: 1, lowest: f.price });
+                                        }
+                                    });
+                                    const weeks = Array.from(weekData.entries())
+                                        .sort((a, b) => a[1].lowest - b[1].lowest)
+                                        .slice(0, 4);
+
+                                    if (weeks.length === 0) return null;
+                                    return (
+                                        <div key={`insight-${position}`} className={styles.insightBar}>
+                                            <span className={styles.insightIcon}>📅</span>
+                                            <div className={styles.insightContent}>
+                                                <span>출발 시기별 최저가 →</span>
+                                                {weeks.map(([week, data]) => (
+                                                    <span key={week} className={styles.insightChip} style={{ cursor: 'default' }}>
+                                                        {week} <span className={styles.insightHighlight}>{formatPrice(data.lowest)}</span>
+                                                        <span className={styles.insightChipCount}> · {data.count}건</span>
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    );
+                                };
+
+                                // 카드 + 인사이트 바 합성
+                                const elements: React.ReactNode[] = [];
+                                displayedFlights.forEach((flight, idx) => {
+                                    // 인사이트 바 삽입 (6개마다, 단 공유모드 아닐 때 & 충분한 결과 있을 때)
+                                    if (
+                                        idx > 0 &&
+                                        idx % INSIGHT_INTERVAL === 0 &&
+                                        !sharedFlightId &&
+                                        filteredFlights.length > INSIGHT_INTERVAL
+                                    ) {
+                                        const bar = generateInsightBar(
+                                            Math.floor(idx / INSIGHT_INTERVAL) - 1,
+                                            displayedFlights.slice(0, idx)
+                                        );
+                                        if (bar) elements.push(bar);
+                                    }
+
+                                    const route = `${flight.departure.city}-${flight.arrival.city}`;
+                                    const isLowestPrice = lowestPrices[route] === flight.price;
+
+                                    elements.push(
+                                        <div
+                                            key={flight.id}
+                                            className={`card ${styles.flightCard} fade-in`}
+                                            onClick={() => {
+                                                const destination = normalizeCity(flight.arrival.city);
+                                                const agency = getSourceName(flight.source);
+
+                                                const formatD = (d: string) => d ? d.slice(5).replace('-', '.') : '';
+                                                const arrStr = flight.arrival.date ? formatD(flight.arrival.date) : '';
+                                                const depStr = flight.departure.date ? formatD(flight.departure.date) : '';
+                                                const flight_date = arrStr ? `${depStr}~${arrStr}` : (flight.departure.date || '');
+
+                                                gtag.event('click_ticket', {
+                                                    destination,
+                                                    price: flight.price,
+                                                    agency,
+                                                    flight_date
+                                                });
+                                            }}
+                                            style={{ cursor: 'pointer' }}
+                                        >
+
+                                            <div className={styles.cardHeader}>
+                                                <div className={styles.cardHeaderLeft}>
+                                                    <span className={`badge ${getSourceBadgeClass(flight.source)}`}>
+                                                        {getSourceName(flight.source)}
+                                                    </span>
+                                                    <span className={styles.airline}>{flight.airline}</span>
+                                                    {(() => {
+                                                        const seatNum = flight.availableSeats || (flight.seats ? parseInt(flight.seats) : 0);
+                                                        if (!seatNum) return null;
+                                                        return (
+                                                            <span className={seatNum <= 9 ? styles.seatsBadgeCritical : styles.seatsBadge}>
+                                                                {seatNum <= 5 && '🔥 '}{seatNum}석
+                                                            </span>
+                                                        );
+                                                    })()}
+                                                </div>
+                                                <div className={styles.cardHeaderRight}>
+                                                    <button
+                                                        type="button"
+                                                        className={styles.shareBtn}
+                                                        onTouchEnd={(e) => {
+                                                            e.preventDefault(); e.stopPropagation();
+                                                            setAlertFlight(flight);
+                                                            setAlertPrice(String(flight.price));
+                                                        }}
+                                                        onClick={(e) => {
+                                                            e.preventDefault(); e.stopPropagation();
+                                                            setAlertFlight(flight);
+                                                            setAlertPrice(String(flight.price));
+                                                        }}
+                                                        title="가격 알림 설정"
+                                                    >
+                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ pointerEvents: 'none' }}>
+                                                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                                                            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                                                        </svg>
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        className={styles.shareBtn}
+                                                        onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); shareFlight(flight); }}
+                                                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); shareFlight(flight); }}
+                                                        title="공유하기"
+                                                    >
+                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ pointerEvents: 'none' }}>
+                                                            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                                                            <polyline points="16 6 12 2 8 6" />
+                                                            <line x1="12" y1="2" x2="12" y2="15" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div className={styles.route}>
+                                                <div className={styles.location}>
+                                                    <div className={styles.city}>{normalizeCity(flight.departure.city)}</div>
+                                                    <div className={styles.date}>{formatDate(flight.departure.date)}</div>
+                                                    {flight.departure.time && (
+                                                        <div className={styles.time}>{flight.departure.time}</div>
+                                                    )}
+                                                </div>
+
+                                                <div className={styles.arrowSection}>
+                                                    <div className={styles.arrow}>✈</div>
+                                                </div>
+
+                                                <div className={styles.location}>
+                                                    <div className={styles.city}>{normalizeCity(flight.arrival.city)}</div>
+                                                    <div className={styles.date}>{formatDate(flight.arrival.date)}</div>
+                                                    {flight.arrival.time && (
+                                                        <div className={styles.time}>{flight.arrival.time}</div>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            <div className={styles.cardFooterWrapper}>
+                                                <div className={styles.cardFooter}>
+                                                    <div className={styles.priceSection}>
+                                                        <div className={styles.price}>{formatPrice(flight.price)}</div>
+                                                        {(() => {
+                                                            const city = flight.arrival.city?.replace(/\([^)]+\)/, '').trim();
+                                                            const depMonth = flight.departure.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 7);
+                                                            const ipCityData = interparkPrices[city];
+                                                            const ipMonthData = ipCityData?.[depMonth];
+                                                            if (ipMonthData?.avg && flight.price > 0) {
+                                                                const percent = ((ipMonthData.avg - flight.price) / ipMonthData.avg) * 100;
+                                                                if (percent >= 5) {
+                                                                    return <span className={styles.discountBadge}>-{Math.round(percent)}%</span>;
+                                                                }
+                                                            }
+                                                            return null;
+                                                        })()}
 
                                                     </div>
-                                                );
-                                            })()}
+                                                    {['hanatour', 'modetour'].includes(flight.source) ? (
+                                                        <button
+                                                            type="button"
+                                                            className="btn btn-primary"
+                                                            onClick={(e) => { e.stopPropagation(); openBookingModal(flight); }}
+                                                        >
+                                                            예약하기 →
+                                                        </button>
+                                                    ) : flight.source === 'ttang' ? (
+                                                        <button
+                                                            type="button"
+                                                            className="btn btn-primary"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setTtangConfirmFlight(flight);
+                                                            }}
+                                                        >
+                                                            예약하기 →
+                                                        </button>
+                                                    ) : (
+                                                        <a
+                                                            href={getMobileUrl(flight.link, isMobile)}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="btn btn-primary"
+                                                            onClick={() => {
+                                                                const r = `${normalizeCity(flight.departure.city)}-${normalizeCity(flight.arrival.city)}`;
+                                                                gtag.trackBookingClick(flight.source, r, flight.price);
+                                                            }}
+                                                        >
+                                                            예약하기 →
+                                                        </a>
+                                                    )}
+                                                </div>
+                                                {/* 가격 비교 링크 */}
+                                                {(() => {
+                                                    const naverUrl = getNaverFlightUrl(flight.departure.city, flight.arrival.city, flight.departure.date, flight.arrival.date);
+                                                    const skyscannerUrl = getSkyscannerUrl(flight.departure.city, flight.arrival.city, flight.departure.date, flight.arrival.date);
+                                                    if (!naverUrl && !skyscannerUrl) return null;
+                                                    return (
+                                                        <div className={styles.compareLinks}>
+                                                            <span className={styles.compareLinkLabel}>가격비교</span>
+                                                            {naverUrl && (
+                                                                <a href={naverUrl} target="_blank" rel="noopener noreferrer" className={styles.compareLink} title="네이버 항공권에서 비교"
+                                                                    onClick={() => gtag.trackCompareClick('naver', `${normalizeCity(flight.departure.city)}-${normalizeCity(flight.arrival.city)}`, flight.price)}
+                                                                >
+                                                                    네이버
+                                                                </a>
+                                                            )}
+                                                            {skyscannerUrl && (
+                                                                <a href={skyscannerUrl} target="_blank" rel="noopener noreferrer" className={styles.compareLink} title="스카이스캐너에서 비교"
+                                                                    onClick={() => gtag.trackCompareClick('skyscanner', `${normalizeCity(flight.departure.city)}-${normalizeCity(flight.arrival.city)}`, flight.price)}
+                                                                >
+                                                                    스카이스캐너
+                                                                </a>
+                                                            )}
+
+                                                        </div>
+                                                    );
+                                                })()}
+
+                                            </div>
+
 
                                         </div>
-
-
-                                    </div>
-                                );
-                            })}
+                                    );
+                                });
+                                return elements;
+                            })()}
                         </div>
 
                         {/* 무한 스크롤 감지 요소 */}
@@ -1580,8 +1824,8 @@ export default function Dashboard() {
 
             {/* 알림 설정 모달 */}
             {alertFlight && (
-                <div className={styles.modalOverlay} onClick={() => setAlertFlight(null)}>
-                    <div className={styles.modalSheet} onClick={(e) => e.stopPropagation()}>
+                <div className={styles.modalOverlay} onClick={() => setAlertFlight(null)} onTouchEnd={(e) => { if (e.target === e.currentTarget) { setAlertFlight(null); } }}>
+                    <div className={styles.modalSheet} onClick={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
                         <div className={styles.modalHeader}>
                             <h3 className={styles.modalTitle}>🔔 가격 알림 설정</h3>
                             <button className={styles.modalClose} onClick={() => setAlertFlight(null)}>×</button>
@@ -1593,18 +1837,25 @@ export default function Dashboard() {
                         <div className={styles.alertFormGroup}>
                             <label className={styles.alertLabel}>목표 가격 (이 가격 이하일 때 알림)</label>
                             <input
-                                type="text"
+                                type="number"
+                                inputMode="numeric"
+                                pattern="[0-9]*"
                                 className={styles.alertInput}
-                                value={alertPrice ? Number(alertPrice).toLocaleString() + '원' : ''}
+                                value={alertPrice}
                                 onChange={(e) => setAlertPrice(e.target.value.replace(/[^0-9]/g, ''))}
                                 placeholder="예: 200000"
                             />
+                            {alertPrice && (
+                                <div style={{ textAlign: 'center', fontSize: '0.85rem', color: '#6b7280', marginTop: '6px' }}>
+                                    {Number(alertPrice).toLocaleString()}원
+                                </div>
+                            )}
                         </div>
                         <p className={styles.alertDesc}>
                             {normalizeCity(alertFlight.arrival.city)} 행 항공편이 목표 가격 이하로 발견되면<br />
                             브라우저 푸시 알림으로 알려드립니다.
                         </p>
-                        <button className={styles.modalConfirm} onClick={setupAlert}>
+                        <button className={styles.modalConfirm} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setupAlert(); }} onClick={setupAlert}>
                             알림 설정하기 🔔
                         </button>
                     </div>
