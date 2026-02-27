@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>썸네일</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;800;900&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 40px;
+            padding: 40px;
+            background: #222;
+        }
+
+        label {
+            color: #aaa;
+            font-family: sans-serif;
+            font-size: 14px;
+        }
+
+        .thumbnail {
+            position: relative;
+            background-image: url('./sakura.png');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        .wide {
+            width: 960px;
+            height: 504px;
+        }
+
+        .square {
+            width: 800px;
+            height: 800px;
+        }
+
+        .thumbnail::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.25) 100%);
+        }
+
+        .text-wrap {
+            position: relative;
+            z-index: 1;
+            padding: 40px;
+        }
+
+        .text-wrap h1 {
+            font-family: 'Noto Sans KR', sans-serif;
+            color: white;
+            font-size: 44px;
+            font-weight: 900;
+            line-height: 1.35;
+            text-shadow: 0 3px 12px rgba(0, 0, 0, 0.7);
+            margin-bottom: 20px;
+        }
+
+        .badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 30px;
+            padding: 8px 20px;
+            font-family: 'Noto Sans KR', sans-serif;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .square .text-wrap {
+            padding: 10px;
+        }
+
+        .square .text-wrap h1 {
+            font-size: 125px;
+            line-height: 1.05;
+            margin-bottom: 0;
+        }
+
+        .square .badge {
+            display: none;
+        }
+
+        .square .badge {
+            font-size: 18px;
+            margin-top: 12px;
+        }
+    </style>
+</head>
+
+<body>
+    <label>가로형 (16:9) — 블로그 본문 상단용</label>
+    <div id="wide" class="thumbnail wide">
+        <div class="text-wrap">
+            <h1>2026 일본 벚꽃 개화 시기 총정리<br>항공권 특가 + 도시별 추천 코스 🌸</h1>
+            <div class="badge">티키티킷 tikitikit.kr</div>
+        </div>
+    </div>
+
+    <label>정사각형 (1:1) — 네이버 블로그 썸네일용</label>
+    <div id="square" class="thumbnail square">
+        <div class="text-wrap">
+            <h1>2026 일본<br>벚꽃 여행<br>총정리<br>🌸</h1>
+            <div class="badge">티키티킷 tikitikit.kr</div>
+        </div>
+    </div>
+</body>
+
+</html>

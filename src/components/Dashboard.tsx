@@ -936,6 +936,7 @@ export default function Dashboard() {
                                     setStartDate(toStr(start));
                                     setEndDate(toStr(end));
                                     if (end) {
+                                        gtag.trackDateFilter(toStr(start), toStr(end));
                                         setTimeout(() => setIsCalendarOpen(false), 500);
                                     }
                                 }}
@@ -1037,7 +1038,7 @@ export default function Dashboard() {
                                 ].map((option) => (
                                     <button
                                         key={option.value}
-                                        onClick={() => setDepartureFilter(option.value)}
+                                        onClick={() => { setDepartureFilter(option.value); gtag.trackFilterChange('departure', option.value); }}
                                         className={`${styles.chip} ${departureFilter === option.value ? styles.chipActive : ''}`}
                                     >
                                         {option.label}
@@ -1243,12 +1244,12 @@ export default function Dashboard() {
                                             const depStr = flight.departure.date ? formatD(flight.departure.date) : '';
                                             const flight_date = arrStr ? `${depStr}~${arrStr}` : (flight.departure.date || '');
 
-                                            gtag.event('click_ticket', {
-                                                destination,
-                                                price: flight.price,
+                                            gtag.trackCardClick(
+                                                `${normalizeCity(flight.departure.city)}-${destination}`,
+                                                flight.price,
                                                 agency,
-                                                flight_date
-                                            });
+                                                flight.source
+                                            );
                                         }}
                                         style={{ cursor: 'pointer' }}
                                     >

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000;
+        }
+
+        .wide-banner {
+            width: 960px;
+            height: 480px;
+            position: relative;
+            overflow: hidden;
+            font-family: 'Noto Sans KR', sans-serif;
+            background: #000;
+        }
+
+        .panels {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        .panel {
+            flex: 1;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .panel-1 {
+            background-image: url('https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=600');
+        }
+
+        .panel-2 {
+            background-image: url('https://images.unsplash.com/photo-1551218808-94e220e084d2?w=600');
+        }
+
+        .panel-3 {
+            background-image: url('https://images.unsplash.com/photo-1552465011-b4e21bf6e79a?w=600');
+        }
+
+        .text-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 55%;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.6) 60%, transparent 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            padding-bottom: 40px;
+        }
+
+        .line1 {
+            color: white;
+            font-size: 42px;
+            font-weight: 900;
+            text-shadow: 3px 3px 10px rgba(0, 0, 0, 0.7);
+            letter-spacing: -1px;
+        }
+
+        .line2 {
+            color: white;
+            font-size: 36px;
+            font-weight: 800;
+            text-shadow: 3px 3px 10px rgba(0, 0, 0, 0.7);
+            letter-spacing: -1px;
+            margin-top: 6px;
+        }
+
+        .site-badge {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            padding: 6px 20px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            margin-top: 16px;
+            backdrop-filter: blur(4px);
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@700;800;900&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="wide-banner" id="wide-banner">
+        <div class="panels">
+            <div class="panel panel-1"></div>
+            <div class="panel panel-2"></div>
+            <div class="panel panel-3"></div>
+        </div>
+        <div class="text-overlay">
+            <div class="line1">[2/27] 땡처리 항공권 특가 Top 5 🔥</div>
+            <div class="line2">다카마쓰 왕복 18만원대 ✈️</div>
+            <div class="site-badge">티키티킷 tikitikit.kr</div>
+        </div>
+    </div>
+</body>
+
+</html>

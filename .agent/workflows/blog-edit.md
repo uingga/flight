@@ -2,54 +2,131 @@
 description: 블로그 포스트 내용 수정 가이드
 ---
 
-# 블로그 포스트 수정
+# 블로그 포스트 가이드
 
 > ⚠️ **쓰레드 글** 수정은 이 파일이 아닙니다! `/threads` 워크플로우를 참고하세요.
-> - **블로그** = `scripts/generate-blog.js` → 네이버 블로그용 HTML 포스트
-> - **쓰레드** = `docs/threads-guide.md` → 인스타 쓰레드 게시물
 
-블로그 포스트는 `scripts/generate-blog.js` 하나의 파일에서 생성됩니다.
+블로그 포스트는 **두 종류**로 나뉩니다:
+- **A. 일일 특가 포스트** — `generate-blog.js`로 자동 생성, 매일 발행
+- **B. 정보성 포스트** — 수동 작성, 에버그린 콘텐츠
 
-사용자가 블로그 내용을 수정하고 싶다고 하면, 아래 섹션을 참고해서 해당 파일을 수정하세요.
+---
 
-## 수정 가능 영역
+## A. 일일 특가 포스트 (땡처리 Top 5)
 
-### 1. 인사말 / 도입부
-`generateBlogHTML()` 함수 안에 `intro` 관련 HTML 문자열이 있음.
-"안녕하세요! 여행사 땡처리..." 로 시작하는 부분.
-
-### 2. 도시별 여행 설명
-`CITY_DESCRIPTIONS` 객체에 도시명을 키로, 설명 텍스트를 값으로 저장.
-새 도시 추가하거나 기존 설명 수정 가능.
-
-### 3. 벚꽃/시즌 관련 텍스트
-`getSeasonContext()` 함수에서 도시별 시즌 문구 생성.
-CHERRY_BLOSSOM_CITIES 배열에 벚꽃 도시 목록 있음.
-
-### 4. 항공권 꿀팁
-`TIP_POOLS` 배열에 여행/예약 팁 목록이 있음.
-매번 랜덤으로 선택되어 포스트에 들어감.
-
-### 5. 에디터 추천 (Editor's Pick) 
-`generateEditorPick()` 함수에서 생성.
-추천 대상 선정 로직과 설명 텍스트 포함.
-
-### 6. CTA (하단 유도 문구)
-`generateBlogHTML()` 함수 하단에 "실시간 땡처리 티켓 보러 가기" 링크와 마무리 문구.
-
-### 7. 해시태그
-`generateBlogHTML()` 함수 마지막에 해시태그 목록.
-
-### 8. Top 5 선정 기준
-`selectTop5WithIncheon()` 함수. 가격순 정렬, 도착지 중복 제거, 인천 2개 이상 보장.
-
-## 수정 후 확인
+### 생성 방법
 
 // turbo
 1. `node scripts/generate-blog.js` 실행
-2. 생성된 `public/blog-post-YYMMDD.html`을 브라우저에서 확인
+2. 스크립트가 자동으로 수행:
+   - `all-flights-cache.json`에서 Top 5 특가 추출
+   - 카드 이미지(rank_1~5.png, icn_1~3.png) 스크린샷 캡처
+   - 네이버 블로그용 HTML 파일 생성 (`blog-post-YYMMDD.html`)
+3. 썸네일 이미지 2종 생성 (아래 참고)
+4. 생성된 `public/blog-post-YYMMDD.html`을 브라우저에서 확인
+5. Ctrl+A → Ctrl+C → 네이버 에디터에 Ctrl+V
 
-## 콘텐츠 기획
+### 썸네일 / 헤더 이미지 생성
 
-정보성 포스트 기획 목록은 `docs/blog-content-calendar.md`를 참고하세요.
-새 정보성 포스트를 작성할 때는 기존 01, 02번 포스트 스타일(`public/blog-post-01.html`)을 참고합니다.
+매 포스트마다 **2종**의 이미지를 생성:
+
+#### 1. 정사각형 썸네일 (1:1) — 네이버 대표이미지용
+- `generate_image` 도구로 AI 생성
+- 3분할 세로 패널 배경 (TOP 5 중 대표 3개 도시)
+- 텍스트 3줄: "오늘의 땡처리 항공권" / "특가 TOP 5" / "18만원대~"
+- 저장: `public/thumbnail-YYMMDD-square.png`
+
+#### 2. 와이드 헤더 (2:1, 960x480) — 포스트 상단 배너용
+- `public/blog-thumbnail-template.html`을 수정 후 Playwright로 캡처
+- 3분할 세로 패널 배경 (경계선 없이 자연스럽게 붙인다)
+- 텍스트: 포스트 제목 (예: "[2/27] 땡처리 항공권 특가 Top 5 🔥 / 다카마쓰 왕복 18만원대 ✈️")
+- 하단에 "티키티킷 tikitikit.kr" 뱃지
+- 캡처 명령:
+```
+node -e "const {chromium}=require('playwright'); (async()=>{const browser=await chromium.launch(); const page=await browser.newPage({viewport:{width:960,height:480}}); await page.goto('http://localhost:3000/blog-thumbnail-template.html'); await page.waitForTimeout(2000); await page.locator('#wide-banner').screenshot({path:'./public/thumbnail-YYMMDD-wide.png'}); await browser.close();})();"
+```
+- 저장: `public/thumbnail-YYMMDD-wide.png`
+
+### ⚠️ 실행 전 주의사항
+
+- **로컬 dev 서버가 실행 중이어야 합니다** (`npm run dev`)
+  - 카드 스크린샷을 localhost에서 캡처하기 때문
+- **캐시 데이터가 최신인지 확인** — 매진·편도 항공권이 남아있을 수 있음
+  - 편도 확인: `sDate === eDate`면 편도
+  - 사이트에서 실제 존재하는지 확인 권장
+
+### 수정 가능 영역
+
+| 영역 | 위치 |
+|------|------|
+| 도시별 여행 설명 | `CITY_DESCRIPTIONS` 객체 |
+| 시즌 관련 텍스트 | `SEASON_CONTEXT` 객체 |
+| 항공권 꿀팁 | `TIP_POOLS` 배열 |
+| Top 5 선정 기준 | `selectTop5WithIncheon()` 함수 |
+| 인사말/도입부 | `generateBlogHTML()` 내 intro 영역 |
+| 에디터 추천 | `generateEditorPick()` 함수 |
+| 해시태그 | `generateBlogHTML()` 하단 |
+
+### 수정 후 확인
+
+// turbo
+1. `node scripts/generate-blog.js` 실행
+2. 생성된 HTML을 브라우저에서 확인
+
+---
+
+## B. 정보성 포스트 (에버그린 콘텐츠)
+
+수동으로 작성하는 검색 유입용 포스트. 한번 쓰면 오래 효과 지속.
+
+- 기획 목록: `docs/blog-content-calendar.md` 참고
+- 파일명: `public/blog-post-{번호}.html`
+- 스타일: 기존 01, 02번 포스트 형식 참고
+
+---
+
+## CTA 전략 (필수 준수)
+
+> ⚠️ **광고 느낌 나는 CTA 절대 금지!** 보라색 버튼, "👉 확인하기" 스타일 링크 사용하지 않음.
+
+### 원칙
+- CTA 버튼/배너 **0개**
+- 사이트 노출은 **자연스러운 문맥 안에서만**
+- 독자가 "이건 광고다"라고 느끼는 순간 실패
+
+### 허용되는 노출 방식
+1. **데이터 출처 표기** — 표/가격 아래에 작은 글씨로 `*데이터 출처: 티키티킷(tikitikit.kr) 2026년 X월 기준`
+2. **P.S. 한 줄** — 글 마지막에 `P.S. 여행사 땡처리 특가 비교는 tikitikit.kr에서 하고 있습니다.`
+3. **팁 안에 실행 방법으로 녹이기** — "~하려면 tikitikit.kr이 편합니다" (단, 과하면 삭제)
+
+### 마무리 스타일
+- 댓글 유도형 ("실패담/성공담 공유해주세요")
+- A/B 선택형 ("어떤 스타일이신가요? 댓글로")
+- 거짓 경험 금지 — 직접 경험 없으면 "주변에서 들었다" 식으로
+
+---
+
+## 저장 유발 콘텐츠 점검 (발행 전 체크)
+
+> 발행 전에 아래 항목으로 글을 점검한다. 5개 이상 ✅이면 저장 잘 되는 글.
+
+### 구조
+- [ ] **표/인포그래픽** 1개 이상 (→ "나중에 다시 볼 거")
+- [ ] **구체적 숫자** 포함 (가격, 날짜, 기간)
+- [ ] 제목에 **"총정리", "완벽 가이드"** 같은 저장 트리거 워드
+- [ ] 카드 3개 이상 연속 시 중간 환기 요소
+
+### 정보 신뢰도
+- [ ] **시즌/가격이 정확** — 비수기 최저가를 성수기에 쓰지 않기
+- [ ] **주제와 안 맞는 정보 과감히 삭제**
+- [ ] 사실이 아닌 경험 쓰지 않기
+
+### 감성/참여
+- [ ] **"이거 나인데?"** 포인트 1개 이상
+- [ ] 마지막에 **댓글 유도**
+- [ ] 사진 3장 이상 (메인 + 감성 + 사이트 캡처)
+
+### SEO
+- [ ] 제목에 핵심 키워드 앞배치
+- [ ] 해시태그 12개 이상
+- [ ] 발행 시간: **오전 7~8시** 또는 **점심 12~13시**

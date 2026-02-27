@@ -58,3 +58,19 @@ export const trackCompareClick = (provider: 'naver' | 'skyscanner', route: strin
     event('compare_click', { provider, route, price, currency: 'KRW' });
     logToServer({ type: 'compare_click', provider, route, price });
 };
+
+/** 항공권 카드 클릭 */
+export const trackCardClick = (route: string, price: number, airline: string, source: string) => {
+    event('card_click', { route, price, airline, source, currency: 'KRW' });
+    logToServer({ type: 'card_click', route, price, airline, source });
+};
+
+/** 출발지 필터 변경 */
+export const trackFilterChange = (filterType: string, value: string) => {
+    event('filter_change', { filter_type: filterType, filter_value: value });
+};
+
+/** 날짜 필터 변경 */
+export const trackDateFilter = (startDate: string, endDate: string) => {
+    event('date_filter', { start_date: startDate, end_date: endDate });
+};

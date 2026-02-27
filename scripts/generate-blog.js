@@ -51,10 +51,25 @@ function normalizeAirline(name) {
     return AIRLINE_NAME_MAP[trimmed] || trimmed;
 }
 
-// ===== 도착지 정규화 (괄호 제거) =====
+// ===== 도시명 정규화 (괄호 제거 + 이름 통일) =====
+const CITY_NAME_MAP = {
+    '서울': '인천',
+    '푸껫': '푸켓',
+    '청도': '칭다오',
+    '오사카(간사이)': '오사카',
+    '방콕(수완나폼)': '방콕',
+    '나트랑(깜랑)': '나트랑',
+    '하코다테(북해도)': '하코다테',
+};
+
 function normalizeCity(city) {
     if (!city) return '';
-    return city.replace(/\([^)]*\)/g, '').trim();
+    // 먼저 원본 그대로 매핑 체크
+    if (CITY_NAME_MAP[city]) return CITY_NAME_MAP[city];
+    // 괄호 제거
+    const stripped = city.replace(/\([^)]*\)/g, '').trim();
+    // 괄호 제거 후 매핑 체크
+    return CITY_NAME_MAP[stripped] || stripped;
 }
 
 // ===== 도시별 에디터 픽 텍스트 =====
@@ -290,10 +305,12 @@ async function main() {
     });
     console.log(`✅ 유효 항공편: ${flights.length}개`);
 
-    // 4. 중복 제거 (같은 노선+날짜+항공사 → 최저가만)
+    // 4. 중복 제거 (같은 노선+날짜+항공사 → 최저가만, 정규화된 도시명 기준)
     const dedupMap = new Map();
     for (const f of flights) {
-        const key = `${f.departure?.city}|${f.arrival?.city}|${f.departure?.date}|${f.airline}`;
+        const depCity = normalizeCity(f.departure?.city);
+        const arrCity = normalizeCity(f.arrival?.city);
+        const key = `${depCity}|${arrCity}|${f.departure?.date}|${f.airline}`;
         const existing = dedupMap.get(key);
         if (!existing || f.price < existing.price) {
             dedupMap.set(key, f);
@@ -313,7 +330,7 @@ async function main() {
 
     console.log('\n🏆 Top 5 특가:');
     topFlights.forEach((f, i) => {
-        const isICN = f.departure?.city === '인천' ? ' [인천]' : '';
+        const isICN = normalizeCity(f.departure?.city) === '인천' ? ' [인천]' : '';
         console.log(`  ${i + 1}위: ${f.departure?.city} → ${f.arrival?.city} | ${f.airline} | ${f.price.toLocaleString()}원${isICN}`);
     });
 
@@ -324,7 +341,7 @@ async function main() {
     }
 
     // 인천 출발 중 Top 5에 포함되지 않은 것도 따로 수집
-    const icnInTop5 = topFlights.filter(f => f.departure?.city === '인천');
+    const icnInTop5 = topFlights.filter(f => normalizeCity(f.departure?.city) === '인천');
     // 인천 출발 중 Top 5에 포함 안 된 추가 항공편 (최대 3개 더)
     const icnExtra = getExtraIncheonFlights(flights, topFlights, 3);
     const allIcnFlights = [...icnInTop5, ...icnExtra];
@@ -350,8 +367,8 @@ function selectTop5WithIncheon(sortedFlights) {
     const topFlights = [];
     const seenDests = new Set();
 
-    // 1단계: 인천 출발 중 도착지 다양하게 2개 확보
-    const icnFlights = sortedFlights.filter(f => f.departure?.city === '인천');
+    // 1단계: 인천 출발 중 도착지 다양하게 2개 확보 (서울(ICN)도 인천으로 인식)
+    const icnFlights = sortedFlights.filter(f => normalizeCity(f.departure?.city) === '인천');
     let icnCount = 0;
     for (const f of icnFlights) {
         const dest = normalizeCity(f.arrival?.city);
@@ -379,13 +396,13 @@ function selectTop5WithIncheon(sortedFlights) {
 // ===== 인천 추가 항공편 (Top 5 밖) =====
 function getExtraIncheonFlights(allFlights, topFlights, maxExtra) {
     const topIds = new Set(topFlights.map(f => `${f.departure?.city}|${f.arrival?.city}|${f.departure?.date}|${f.airline}`));
-    const topDests = new Set(topFlights.filter(f => f.departure?.city === '인천').map(f => normalizeCity(f.arrival?.city)));
+    const topDests = new Set(topFlights.filter(f => normalizeCity(f.departure?.city) === '인천').map(f => normalizeCity(f.arrival?.city)));
     const extras = [];
     const seenDests = new Set(topDests);
 
     for (const f of allFlights) {
         if (extras.length >= maxExtra) break;
-        if (f.departure?.city !== '인천') continue;
+        if (normalizeCity(f.departure?.city) !== '인천') continue;
         const key = `${f.departure?.city}|${f.arrival?.city}|${f.departure?.date}|${f.airline}`;
         if (topIds.has(key)) continue;
         const dest = normalizeCity(f.arrival?.city);
