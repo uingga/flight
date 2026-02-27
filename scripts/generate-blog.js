@@ -726,6 +726,8 @@ function generateEditorPick(flight) {
     lines.push(`<p>&nbsp;</p>`);
     lines.push(`<p>다양한 일정이 열려 있으니</p>`);
     lines.push(`<p>마음에 드는 날짜를 골라보세요!</p>`);
+    lines.push(`<p>&nbsp;</p>`);
+    lines.push(`<p style="font-size: 14px; color: #999;">👉 다른 날짜도 궁금하다면 <a href="https://tikitikit.kr" style="color: #4f46e5;">tikitikit.kr</a>에서 확인해보세요.</p>`);
 
     return lines.join('\n            ');
 }
@@ -939,6 +941,7 @@ function generateHTML(topFlights, allIcnFlights) {
 
         <p>&nbsp;</p>
         <p>이번 인천 출발 최저가 라인업!</p>
+        <p style="font-size: 13px; color: #999;">(<a href="https://tikitikit.kr" style="color: #999;">tikitikit.kr</a> 기준 실시간 최저가)</p>
 ${icnItems}`;
     }
 
@@ -1138,6 +1141,7 @@ ${rankSections}
         <p>&nbsp;</p>
         <p style="font-size: 13px; color: #888;">※ 유류할증료/텍스 포함 왕복 총액 기준</p>
         <p style="font-size: 13px; color: #e53e3e; font-weight: bold;">※ 좌석이 빠지면 가격이 바뀌거나 사라질 수 있어요.</p>
+        <p style="font-size: 13px; color: #999; margin-top: 8px;">*가격 데이터 출처: <a href="https://tikitikit.kr" style="color: #999;">티키티킷(tikitikit.kr)</a></p>
 
         <hr class="divider">
 

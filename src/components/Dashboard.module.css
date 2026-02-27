@@ -911,6 +911,17 @@
     color: white;
 }
 
+.compareLinkHotel {
+    composes: compareLink;
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+.compareLinkHotel:hover {
+    background: #cbd5e1;
+    color: #475569;
+}
+
 .compareLinkNote {
     width: 100%;
     text-align: center;
