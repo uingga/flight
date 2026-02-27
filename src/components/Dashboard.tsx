@@ -61,6 +61,12 @@ const normalizeCity = (city: string): string => {
     // "청주시" → "청주", "제주시" → "제주"
     if (trimmed === '청주시') return '청주';
     if (trimmed === '제주시') return '제주';
+    // 도시명 표기 통일
+    const cityNameMap: Record<string, string> = {
+        '푸껫': '푸켓',
+        '청도': '칭다오',
+    };
+    if (cityNameMap[trimmed]) return cityNameMap[trimmed];
     return trimmed;
 };
 
