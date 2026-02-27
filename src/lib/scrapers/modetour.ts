@@ -115,6 +115,9 @@ export async function scrapeModetour(): Promise<Flight[]> {
 
                     if (!item.sDate?.value || !item.eDate?.value) return;
 
+                    // 편도 항공권 필터링 (출발일 = 귀국일이면 편도)
+                    if (item.sDate.value === item.eDate.value) return;
+
                     const destination = item.arrival?.value || '';
                     const maxPrice = getMaxPriceForDestination(destination);
 
