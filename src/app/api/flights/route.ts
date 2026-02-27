@@ -102,6 +102,19 @@ export async function GET(request: NextRequest) {
             console.log(`만료 항공권 ${removedCount}개 제거됨 (${beforeCount} → ${allFlights.length})`);
         }
 
+        // 편도 항공권 필터링 (출발일 = 귀국일이면 편도)
+        const beforeOneWay = allFlights.length;
+        allFlights = allFlights.filter(f => {
+            if (!f.departure?.date || !f.arrival?.date) return true;
+            const depClean = f.departure.date.replace(/[^0-9\-\.]/g, '').replace(/\./g, '-').replace(/-+$/, '');
+            const arrClean = f.arrival.date.replace(/[^0-9\-\.]/g, '').replace(/\./g, '-').replace(/-+$/, '');
+            return depClean !== arrClean;
+        });
+        const oneWayRemoved = beforeOneWay - allFlights.length;
+        if (oneWayRemoved > 0) {
+            console.log(`편도 항공권 ${oneWayRemoved}개 제거됨 (${beforeOneWay} → ${allFlights.length})`);
+        }
+
         // 필터링
         if (params.departureCity) {
             allFlights = allFlights.filter(f =>

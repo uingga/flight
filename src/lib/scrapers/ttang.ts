@@ -119,6 +119,9 @@ export async function scrapeTtang(): Promise<Flight[]> {
                 for (const f of flights) {
                     if (!f.depDate || !f.arrDate || f.price <= 0) continue;
 
+                    // 편도 항공권 필터링 (출발일 = 귀국일이면 편도)
+                    if (f.depDate === f.arrDate) continue;
+
                     const key = `${f.airline}|${f.depDate}|${f.arrDate}|${f.price}|${f.depCity}|${f.arrCity}`;
                     if (processedKeys.has(key)) continue;
                     processedKeys.add(key);
