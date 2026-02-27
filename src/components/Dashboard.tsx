@@ -1394,14 +1394,14 @@ export default function Dashboard() {
                                                             <a href={naverUrl} target="_blank" rel="noopener noreferrer" className={styles.compareLink} title="네이버 항공권에서 비교"
                                                                 onClick={() => gtag.trackCompareClick('naver', `${normalizeCity(flight.departure.city)}-${normalizeCity(flight.arrival.city)}`, flight.price)}
                                                             >
-                                                                네이버
+                                                                네이버 ›
                                                             </a>
                                                         )}
                                                         {skyscannerUrl && (
                                                             <a href={skyscannerUrl} target="_blank" rel="noopener noreferrer" className={styles.compareLink} title="스카이스캐너에서 비교"
                                                                 onClick={() => gtag.trackCompareClick('skyscanner', `${normalizeCity(flight.departure.city)}-${normalizeCity(flight.arrival.city)}`, flight.price)}
                                                             >
-                                                                스카이스캐너
+                                                                스카이스캐너 ›
                                                             </a>
                                                         )}
 
