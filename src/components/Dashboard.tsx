@@ -283,6 +283,10 @@ export default function Dashboard() {
 
     const subscribePush = async (): Promise<PushSubscription | null> => {
         try {
+            // iOS Safari(비PWA)에서는 Notification/PushManager가 없음
+            if (typeof Notification === 'undefined' || !('PushManager' in window)) {
+                return null;
+            }
             const permission = await Notification.requestPermission();
             if (permission !== 'granted') return null;
             const reg = await navigator.serviceWorker.ready;
@@ -301,12 +305,29 @@ export default function Dashboard() {
 
     const setupAlert = async () => {
         if (!alertFlight) return;
+
+        // iOS Safari(비PWA) 등 Web Push 미지원 환경 감지
+        const isPushSupported = typeof Notification !== 'undefined' && 'PushManager' in window && 'serviceWorker' in navigator;
+        if (!isPushSupported) {
+            // iOS Safari인지 체크
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            if (isIOS) {
+                setAlertToast('📱 iPhone에서 알림을 받으려면:\n홈 화면에 추가(공유 → 홈 화면에 추가) 후 다시 시도해주세요');
+            } else {
+                setAlertToast('이 브라우저에서는 알림 기능을 지원하지 않습니다');
+            }
+            setAlertFlight(null);
+            setTimeout(() => setAlertToast(null), 5000);
+            return;
+        }
+
         let sub = pushSubscription;
         if (!sub) {
             sub = await subscribePush();
             if (!sub) {
-                setAlertToast('알림 권한이 필요합니다');
-                setTimeout(() => setAlertToast(null), 3000);
+                setAlertToast('알림 권한이 필요합니다. 브라우저 설정에서 알림을 허용해주세요.');
+                setAlertFlight(null);
+                setTimeout(() => setAlertToast(null), 4000);
                 return;
             }
         }
