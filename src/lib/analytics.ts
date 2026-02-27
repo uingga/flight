@@ -54,7 +54,7 @@ export const trackAlertSetup = (route: string, maxPrice?: number) => {
 };
 
 /** 가격 비교 링크 클릭 (네이버/스카이스캐너) */
-export const trackCompareClick = (provider: 'naver' | 'skyscanner', route: string, price: number) => {
+export const trackCompareClick = (provider: 'naver' | 'skyscanner' | 'tripcom', route: string, price: number) => {
     event('compare_click', { provider, route, price, currency: 'KRW' });
     logToServer({ type: 'compare_click', provider, route, price });
 };

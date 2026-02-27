@@ -184,6 +184,77 @@ const getSkyscannerUrl = (depCity: string, arrCity: string, depDate: string, ret
     return `https://www.skyscanner.co.kr/transport/flights/${dep}/${arr}/${depStr}/?adults=1`;
 };
 
+// Trip.com 어필리에이트 링크 생성
+const TRIPCOM_ALLIANCE_ID = '7878543';
+const TRIPCOM_SID = '295785953';
+const TRIPCOM_SUB3 = 'D13108097';
+
+// IATA 공항코드 → Trip.com 도시코드 매핑
+const AIRPORT_TO_TRIPCOM_CITY: Record<string, string> = {
+    'ICN': 'SEL', 'GMP': 'SEL', 'PUS': 'PUS', 'TAE': 'TAE', 'CJU': 'CJU', 'CJJ': 'CJJ',
+    'NRT': 'TYO', 'HND': 'TYO', 'KIX': 'OSA', 'FUK': 'FUK', 'CTS': 'SPK', 'NGO': 'NGO',
+    'OKA': 'OKA', 'TAK': 'TAK', 'KOJ': 'KOJ', 'MYJ': 'MYJ', 'KMJ': 'KMJ',
+    'BKK': 'BKK', 'DMK': 'BKK', 'SGN': 'SGN', 'HAN': 'HAN', 'DAD': 'DAD', 'CXR': 'NHA',
+    'MNL': 'MNL', 'CEB': 'CEB', 'DPS': 'DPS',
+    'HKG': 'HKG', 'TPE': 'TPE', 'PVG': 'SHA', 'PEK': 'BJS',
+    'SPN': 'SPN', 'GUM': 'GUM', 'HKT': 'HKT', 'CNX': 'CNX',
+};
+
+// Trip.com 도시명 → { id, name(한국어) } 매핑 (모두 브라우저/유저 확인됨 ✅)
+const TRIPCOM_CITY_DATA: Record<string, { id: number; name: string }> = {
+    // 일본
+    '도쿄': { id: 228, name: '도쿄' }, '오사카': { id: 219, name: '오사카' },
+    '후쿠오카': { id: 248, name: '후쿠오카' }, '삿포로': { id: 641, name: '삿포로' },
+    '나고야': { id: 360, name: '나고야' }, '오키나와': { id: 207, name: '오키나와' },
+    '교토': { id: 734, name: '교토' }, '하코다테': { id: 800, name: '하코다테' },
+    '나가사키': { id: 205, name: '나가사키' }, '구마모토': { id: 4009, name: '구마모토' },
+    '가고시마': { id: 735, name: '가고시마' }, '다카마쓰': { id: 5999, name: '다카마쓰' },
+    '히로시마': { id: 262, name: '히로시마' }, '마츠야마': { id: 1698, name: '마츠야마' },
+    '시즈오카': { id: 1176, name: '시즈오카' }, '사가': { id: 4252, name: '사가' },
+    '요나고': { id: 6383, name: '요나고' }, '아오모리': { id: 4351, name: '아오모리' },
+    '고베': { id: 423, name: '고베' }, '기타큐슈': { id: 3234, name: '기타큐슈' },
+    '오이타': { id: 1286, name: '오이타' },
+    // 동남아
+    '방콕': { id: 359, name: '방콕' }, '치앙마이': { id: 623, name: '치앙마이' },
+    '푸켓': { id: 725, name: '푸켓' }, '다낭': { id: 1356, name: '다낭' },
+    '호치민': { id: 301, name: '호치민' }, '하노이': { id: 286, name: '하노이' },
+    '나트랑': { id: 1777, name: '나트랑' }, '세부': { id: 1239, name: '세부' },
+    '마닐라': { id: 364, name: '마닐라' }, '발리': { id: 723, name: '발리' },
+    '싱가포르': { id: 73, name: '싱가포르' }, '코타키나발루': { id: 1393, name: '코타키나발루' },
+    '쿠알라룸푸르': { id: 315, name: '쿠알라룸푸르' }, '푸꾸옥': { id: 5649, name: '푸꾸옥 섬' },
+    '보라카이': { id: 1391, name: '보라카이' }, '보홀': { id: 4257, name: '보홀' },
+    '클락': { id: 77787, name: '클락' }, '하이퐁': { id: 6942, name: '하이퐁' },
+    '비엔티안': { id: 486, name: '비엔티안' }, '바탐': { id: 3590, name: '바탐' },
+    '마나도': { id: 1379, name: '마나도' },
+    // 중화권
+    '홍콩': { id: 58, name: '홍콩' }, '마카오': { id: 59, name: '마카오' },
+    '타이페이': { id: 617, name: '타이베이' }, '타이베이': { id: 617, name: '타이베이' },
+    '타이중': { id: 3849, name: '타이중' }, '가오슝': { id: 720, name: '가오슝' },
+    '상하이': { id: 2, name: '상하이' }, '베이징': { id: 1, name: '베이징' },
+    '칭다오': { id: 7, name: '칭다오' },
+    // 기타
+    '사이판': { id: 4081, name: '사이판' }, '괌': { id: 753, name: '괌' },
+    '시드니': { id: 501, name: '시드니' }, '브리즈번': { id: 680, name: '브리즈번' },
+    '두바이': { id: 220, name: '두바이' }, '아부다비': { id: 766, name: '아부다비' },
+    '로마': { id: 343, name: '로마' }, '이스탄불': { id: 532, name: '이스탄불' },
+    '트라브존': { id: 1760, name: '트라브존' }, '싼야': { id: 43, name: '싼야' },
+    '바르셀로나': { id: 40795, name: '바르셀로나' }, '밴쿠버': { id: 476, name: '밴쿠버' },
+    '시모지시마': { id: 50334, name: '미야코지마' },
+};
+
+const TRIPCOM_HOTEL_SUB3 = 'D13108706';
+
+const getTripcomHotelUrl = (arrCity: string): string | null => {
+    const cityName = normalizeCity(arrCity);
+    const cityData = TRIPCOM_CITY_DATA[cityName];
+    if (cityData) {
+        const encodedName = encodeURIComponent(cityData.name);
+        return `https://kr.trip.com/hotels/list?city=${cityData.id}&cityName=${encodedName}&searchType=CT&searchWord=${encodedName}&locale=ko-KR&curr=KRW&Allianceid=${TRIPCOM_ALLIANCE_ID}&SID=${TRIPCOM_SID}&trip_sub1=&trip_sub3=${TRIPCOM_HOTEL_SUB3}`;
+    }
+    // 매핑에 없는 도시: 호텔 홈으로 연결
+    return `https://kr.trip.com/hotels/w/home?Allianceid=${TRIPCOM_ALLIANCE_ID}&SID=${TRIPCOM_SID}&trip_sub1=&trip_sub3=${TRIPCOM_HOTEL_SUB3}`;
+};
+
 const ITEMS_PER_PAGE = 20;
 
 // 모바일 여부 체크
@@ -1388,29 +1459,26 @@ export default function Dashboard() {
                                                     </a>
                                                 )}
                                             </div>
-                                            {/* 가격 비교 링크 */}
                                             {(() => {
                                                 const naverUrl = getNaverFlightUrl(flight.departure.city, flight.arrival.city, flight.departure.date, flight.arrival.date);
-                                                const skyscannerUrl = getSkyscannerUrl(flight.departure.city, flight.arrival.city, flight.departure.date, flight.arrival.date);
-                                                if (!naverUrl && !skyscannerUrl) return null;
+                                                const tripcomHotelUrl = getTripcomHotelUrl(flight.arrival.city);
+                                                if (!naverUrl && !tripcomHotelUrl) return null;
                                                 return (
                                                     <div className={styles.compareLinks}>
-                                                        <span className={styles.compareLinkLabel}>가격비교</span>
                                                         {naverUrl && (
                                                             <a href={naverUrl} target="_blank" rel="noopener noreferrer" className={styles.compareLink} title="네이버 항공권에서 비교"
                                                                 onClick={() => gtag.trackCompareClick('naver', `${normalizeCity(flight.departure.city)}-${normalizeCity(flight.arrival.city)}`, flight.price)}
                                                             >
-                                                                네이버 ›
+                                                                네이버 가격비교 ›
                                                             </a>
                                                         )}
-                                                        {skyscannerUrl && (
-                                                            <a href={skyscannerUrl} target="_blank" rel="noopener noreferrer" className={styles.compareLink} title="스카이스캐너에서 비교"
-                                                                onClick={() => gtag.trackCompareClick('skyscanner', `${normalizeCity(flight.departure.city)}-${normalizeCity(flight.arrival.city)}`, flight.price)}
+                                                        {tripcomHotelUrl && (
+                                                            <a href={tripcomHotelUrl} target="_blank" rel="noopener noreferrer" className={styles.compareLinkHotel} title="트립닷컴에서 호텔 검색"
+                                                                onClick={() => gtag.trackCompareClick('tripcom', `${normalizeCity(flight.arrival.city)}-hotel`, flight.price)}
                                                             >
-                                                                스카이스캐너 ›
+                                                                🏨 {normalizeCity(flight.arrival.city)} 호텔도 비교 ›
                                                             </a>
                                                         )}
-
                                                     </div>
                                                 );
                                             })()}
