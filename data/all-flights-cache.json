@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-02-28T12:37:02.256Z",
-  "count": 513,
+  "timestamp": "2026-02-28T15:53:51.373Z",
+  "count": 511,
   "flights": [
     {
       "id": "ybtour-다카마쓰-20260331-0",
@@ -302,30 +302,7 @@
       "discountRate": 21
     },
     {
-      "id": "ybtour-삿포로(치토세)-20260317-0",
-      "source": "ybtour",
-      "airline": "이스타항공",
-      "departure": {
-        "city": "부산",
-        "airport": "PUS",
-        "date": "2026-03-17",
-        "time": ""
-      },
-      "arrival": {
-        "city": "삿포로(치토세)",
-        "airport": "CTS",
-        "date": "2026-03-20",
-        "time": ""
-      },
-      "price": 353500,
-      "currency": "KRW",
-      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=J1&inhId=ZE0951PUSCTS-T1&depDate=20260317&efcCityCode=CTS",
-      "seats": "10석",
-      "region": "일본",
-      "discountRate": -75
-    },
-    {
-      "id": "ybtour-삿포로(치토세)-20260322-5",
+      "id": "ybtour-삿포로(치토세)-20260322-4",
       "source": "ybtour",
       "airline": "이스타항공",
       "departure": {
@@ -3172,7 +3149,7 @@
       "price": 290000,
       "currency": "KRW",
       "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=A0%2FA3&inhId=TW0025CJJDAD-T4&depDate=20260525&efcCityCode=DAD",
-      "seats": "1석",
+      "seats": "0석",
       "region": "동남아",
       "discountRate": -15
     },
@@ -4575,7 +4552,7 @@
       "price": 355000,
       "currency": "KRW",
       "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=A0%2FA3&inhId=TW0055ICNPQC-T2&depDate=20260330&efcCityCode=PQC",
-      "seats": "7석",
+      "seats": "10석",
       "region": "동남아",
       "discountRate": -14
     },
@@ -5573,30 +5550,6 @@
     },
     {
       "id": "hanatour-regular-인천/김포-3",
-      "source": "hanatour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "서울(ICN)",
-        "airport": "",
-        "date": "2026.03.10(화)",
-        "time": "20:20"
-      },
-      "arrival": {
-        "city": "세부(CEB)",
-        "airport": "",
-        "date": "2026.03.14(토)",
-        "time": "00:10"
-      },
-      "price": 259000,
-      "currency": "KRW",
-      "link": "https://www.hanatour.com/com/pmt/CHPC0PMT0011M200?fareId=RTF%5E2955292%5E7C2113ICNCEB-H4%5E7C2113ICNCEB-7%5E20260310%5ET%5EKRW%5E6289873%5E5028357%5E%5E1%5E0%5E0&psngrCntLst=%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D&selectedCard=%7B%7D",
-      "availableSeats": 1,
-      "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22SEL%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22CEB%22%2C%22depDt%22%3A%2220260310%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22CEB%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22SEL%22%2C%22depDt%22%3A%2220260314%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
-      "region": "동남아",
-      "discountRate": 6
-    },
-    {
-      "id": "hanatour-regular-인천/김포-4",
       "source": "hanatour",
       "airline": "진에어",
       "departure": {
@@ -11966,10 +11919,10 @@
     }
   ],
   "sources": {
-    "ybtour": 334,
+    "ybtour": 333,
     "hanatour": 34,
     "modetour": 104,
-    "onlinetour": 185,
+    "onlinetour": 183,
     "ttang": 301
   }
 }
