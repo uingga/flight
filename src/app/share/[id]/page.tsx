@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 
 type Props = {
     params: Promise<{ id: string }>;
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
 // 캐시에서 항공편 조회
@@ -113,9 +114,25 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
 }
 
-export default async function SharePage({ params }: Props) {
+export default async function SharePage({ params, searchParams }: Props) {
     const { id } = await params;
-    const redirectUrl = `/?flight=${encodeURIComponent(id)}`;
+    const sp = await searchParams;
+    const flight = await getFlightById(decodeURIComponent(id));
+
+    // Fallback 파라미터: flight ID가 변경되어도 같은 노선 항공편을 찾을 수 있도록
+    // 소스 우선순위: 1) URL 쿼리 파라미터 (공유 시 삽입됨) 2) API에서 조회한 flight 데이터
+    const fallbackParams = new URLSearchParams();
+    fallbackParams.set('flight', id);
+
+    const dep = (sp.dep as string) || flight?.departure?.city?.replace(/\([^)]+\)/g, '').trim();
+    const arr = (sp.arr as string) || flight?.arrival?.city?.replace(/\([^)]+\)/g, '').trim();
+    const date = (sp.date as string) || flight?.departure?.date?.replace(/[^0-9\-\.]/g, '').replace(/\./g, '-').replace(/-+$/, '');
+
+    if (dep) fallbackParams.set('dep', dep);
+    if (arr) fallbackParams.set('arr', arr);
+    if (date) fallbackParams.set('date', date);
+
+    const redirectUrl = `/?${fallbackParams.toString()}`;
 
     return (
         <html>
