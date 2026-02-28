@@ -201,7 +201,7 @@ const AIRPORT_TO_TRIPCOM_CITY: Record<string, string> = {
 };
 
 // Trip.com 도시명 → { id, name(한국어) } 매핑 (모두 브라우저/유저 확인됨 ✅)
-const TRIPCOM_CITY_DATA: Record<string, { id: number; name: string }> = {
+const TRIPCOM_CITY_DATA: Record<string, { id: number; name: string; provinceId?: number }> = {
     // 일본
     '도쿄': { id: 228, name: '도쿄' }, '오사카': { id: 219, name: '오사카' },
     '후쿠오카': { id: 248, name: '후쿠오카' }, '삿포로': { id: 641, name: '삿포로' },
@@ -216,7 +216,7 @@ const TRIPCOM_CITY_DATA: Record<string, { id: number; name: string }> = {
     '오이타': { id: 1286, name: '오이타' },
     // 동남아
     '방콕': { id: 359, name: '방콕' }, '치앙마이': { id: 623, name: '치앙마이' },
-    '푸켓': { id: 725, name: '푸켓' }, '다낭': { id: 1356, name: '다낭' },
+    '푸켓': { id: 725, name: '푸켓', provinceId: 11032 }, '다낭': { id: 1356, name: '다낭' },
     '호치민': { id: 301, name: '호치민' }, '하노이': { id: 286, name: '하노이' },
     '나트랑': { id: 1777, name: '나트랑' }, '세부': { id: 1239, name: '세부' },
     '마닐라': { id: 364, name: '마닐라' }, '발리': { id: 723, name: '발리' },
@@ -249,7 +249,8 @@ const getTripcomHotelUrl = (arrCity: string): string | null => {
     const cityData = TRIPCOM_CITY_DATA[cityName];
     if (cityData) {
         const encodedName = encodeURIComponent(cityData.name);
-        return `https://kr.trip.com/hotels/list?city=${cityData.id}&cityName=${encodedName}&searchType=CT&searchWord=${encodedName}&locale=ko-KR&curr=KRW&Allianceid=${TRIPCOM_ALLIANCE_ID}&SID=${TRIPCOM_SID}&trip_sub1=&trip_sub3=${TRIPCOM_HOTEL_SUB3}`;
+        const provinceParam = cityData.provinceId ? `&provinceId=${cityData.provinceId}` : '';
+        return `https://kr.trip.com/hotels/list?city=${cityData.id}&cityName=${encodedName}&searchType=CT&searchWord=${encodedName}${provinceParam}&locale=ko-KR&curr=KRW&Allianceid=${TRIPCOM_ALLIANCE_ID}&SID=${TRIPCOM_SID}&trip_sub1=&trip_sub3=${TRIPCOM_HOTEL_SUB3}`;
     }
     // 매핑에 없는 도시: 호텔 홈으로 연결
     return `https://kr.trip.com/hotels/w/home?Allianceid=${TRIPCOM_ALLIANCE_ID}&SID=${TRIPCOM_SID}&trip_sub1=&trip_sub3=${TRIPCOM_HOTEL_SUB3}`;
