@@ -331,6 +331,7 @@ export default function Dashboard() {
     const [showFilters, setShowFilters] = useState(false);
     const [shareToast, setShareToast] = useState<string | null>(null);
     const [sharedFlightId, setSharedFlightId] = useState<string | null>(null);
+    const sharedRouteFallback = useRef<{ dep: string | null; arr: string | null; date: string | null } | null>(null);
     const [bookingFlight, setBookingFlight] = useState<Flight | null>(null);
     const [ttangConfirmFlight, setTtangConfirmFlight] = useState<Flight | null>(null);
     const [passengers, setPassengers] = useState({ adult: 1, child: 0, infant: 0 });
@@ -522,6 +523,13 @@ export default function Dashboard() {
         const flightId = params.get('flight');
         if (flightId) {
             setSharedFlightId(flightId);
+            // Fallback 노선 정보 저장 (share 페이지에서 전달)
+            const dep = params.get('dep');
+            const arr = params.get('arr');
+            const date = params.get('date');
+            if (dep || arr || date) {
+                sharedRouteFallback.current = { dep, arr, date };
+            }
             // 공유 링크 접근 시 모든 필터 해제 (날짜/출발지 등이 매칭을 방해하지 않도록)
             setStartDate('');
             setEndDate('');
@@ -593,8 +601,17 @@ export default function Dashboard() {
         const depDate = formatDate(flight.departure.date);
         const arrDate = flight.arrival.date ? ` ~ ${formatDate(flight.arrival.date)}` : '';
         // 짧은 공유 URL: /share/항공편ID → 서버에서 OG 이미지 생성 → 메인 페이지로 리다이렉트
-        const siteUrl = `${window.location.origin}/share/${encodeURIComponent(flight.id)}`;
-        return `✈️ ${normalizeCity(flight.departure.city)} → ${normalizeCity(flight.arrival.city)} ${price} | ${depDate}${arrDate} | ${flight.airline} | ${getSourceName(flight.source)}\n🔗 ${siteUrl}`;
+        // dep/arr/date 파라미터: ID 변경 시 노선 기반 fallback 매칭용
+        const dep = normalizeCity(flight.departure.city);
+        const arr = normalizeCity(flight.arrival.city);
+        const dateRaw = flight.departure.date?.replace(/[^0-9\-\.]/g, '').replace(/\./g, '-').replace(/-+$/, '');
+        const shareParams = new URLSearchParams();
+        if (dep) shareParams.set('dep', dep);
+        if (arr) shareParams.set('arr', arr);
+        if (dateRaw) shareParams.set('date', dateRaw);
+        const queryStr = shareParams.toString() ? `?${shareParams.toString()}` : '';
+        const siteUrl = `${window.location.origin}/share/${encodeURIComponent(flight.id)}${queryStr}`;
+        return `✈️ ${dep} → ${arr} ${price} | ${depDate}${arrDate} | ${flight.airline} | ${getSourceName(flight.source)}\n🔗 ${siteUrl}`;
     };
 
     const shareFlight = async (flight: Flight) => {
@@ -738,6 +755,7 @@ export default function Dashboard() {
         setEndDate(getDefaultEndDate());
         setSortBy('discount');
         setSharedFlightId(null);
+        sharedRouteFallback.current = null;
     };
 
     // 활성 필터 여부
@@ -770,17 +788,25 @@ export default function Dashboard() {
         })();
 
 
-        // 공유 링크로 접근 시 해당 항공편만 표시 (fuzzy matching)
+        // 공유 링크로 접근 시 해당 항공편만 표시
         if (sharedFlightId) {
             // 1. 정확한 ID 매칭
             if (flight.id === sharedFlightId) return true;
-            // 2. fuzzy 매칭: ID에서 도착지+출발일 추출 → 같은 노선 매칭
-            //    ID 형식: "source-도시-YYYYMMDD-index" (예: ybtour-오사카-20260301-5)
+            // 2. fuzzy 매칭: ybtour ID에서 도착지+출발일 추출 → 같은 노선 매칭
             const parts = sharedFlightId.match(/^[^-]+-(.+)-(\d{8})-\d+$/);
             if (parts) {
                 const [, city, dateStr] = parts;
-                const flightDate = flight.departure?.date?.replace(/[-\.]/g, '').substring(0, 8);
-                return flight.arrival?.city?.includes(city) && flightDate === dateStr;
+                const flDate = flight.departure?.date?.replace(/[-\.]/g, '').substring(0, 8);
+                if (flight.arrival?.city?.includes(city) && flDate === dateStr) return true;
+            }
+            // 3. Fallback: share 페이지에서 전달받은 노선 정보(dep/arr/date)로 매칭
+            const fb = sharedRouteFallback.current;
+            if (fb) {
+                const flCity = flight.arrival?.city?.replace(/\([^)]+\)/g, '').trim();
+                const flDate = flight.departure?.date?.replace(/[^0-9\-\.]/g, '').replace(/\./g, '-').replace(/-+$/, '');
+                const matchArr = fb.arr && flCity && flCity.includes(fb.arr);
+                const matchDate = fb.date && flDate && flDate.startsWith(fb.date.substring(0, 10));
+                if (matchArr && matchDate) return true;
             }
             return false;
         }
@@ -1515,7 +1541,7 @@ export default function Dashboard() {
                                             해당 특가 항공권이 종료되었을 수 있습니다
                                         </p>
                                         <button
-                                            onClick={() => { setSharedFlightId(null); resetAllFilters(); }}
+                                            onClick={() => { setSharedFlightId(null); sharedRouteFallback.current = null; resetAllFilters(); }}
                                             className="btn btn-primary"
                                         >
                                             전체 항공편 보기
