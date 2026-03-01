@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-03-01T15:59:33.591Z",
-  "count": 521,
+  "timestamp": "2026-03-01T23:25:06.121Z",
+  "count": 522,
   "flights": [
     {
       "id": "ybtour-다카마쓰-20260331-0",
@@ -5480,7 +5480,31 @@
       "discountRate": 21
     },
     {
-      "id": "hanatour-regular-인천/김포-4",
+      "id": "hanatour-regular-인천/김포-3",
+      "source": "hanatour",
+      "airline": "진에어",
+      "departure": {
+        "city": "서울(ICN)",
+        "airport": "",
+        "date": "2026.03.10(화)",
+        "time": "16:45"
+      },
+      "arrival": {
+        "city": "방콕(BKK)",
+        "airport": "",
+        "date": "2026.03.13(금)",
+        "time": "21:10"
+      },
+      "price": 259000,
+      "currency": "KRW",
+      "link": "https://www.hanatour.com/com/pmt/CHPC0PMT0011M200?fareId=RTF%5E2978309%5ELJ0001ICNBKK-H64%5ELJ0001ICNBKK-264%5E20260310%5ET%5EKRW%5E6323997%5E5068545%5E%5E1%5E0%5E0&psngrCntLst=%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D&selectedCard=%7B%7D",
+      "availableSeats": 1,
+      "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22SEL%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22BKK%22%2C%22depDt%22%3A%2220260310%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22BKK%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22SEL%22%2C%22depDt%22%3A%2220260313%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
+      "region": "동남아",
+      "discountRate": 0
+    },
+    {
+      "id": "hanatour-regular-인천/김포-6",
       "source": "hanatour",
       "airline": "아시아나항공",
       "departure": {
@@ -5504,7 +5528,7 @@
       "discountRate": 23
     },
     {
-      "id": "hanatour-regular-인천/김포-5",
+      "id": "hanatour-regular-인천/김포-7",
       "source": "hanatour",
       "airline": "아시아나항공",
       "departure": {
@@ -12148,7 +12172,7 @@
   ],
   "sources": {
     "ybtour": 331,
-    "hanatour": 30,
+    "hanatour": 32,
     "modetour": 104,
     "onlinetour": 181,
     "ttang": 370
