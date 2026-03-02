@@ -37,6 +37,8 @@ const normalizeCity = (city: string): string => {
     const cityNameMap: Record<string, string> = {
         '푸껫': '푸켓',
         '청도': '칭다오',
+        '연태': '옌타이',
+        '상해': '상하이',
     };
     let result = trimmed;
     // 괄호 포함 형태: "서울(ICN)", "부산(PUS)", "대구(TAE)"
