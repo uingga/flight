@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-02T10:05:00.536Z",
+  "timestamp": "2026-03-02T12:48:21.029Z",
   "count": 568,
   "flights": [
     {
@@ -5058,7 +5058,7 @@
       "price": 429000,
       "currency": "KRW",
       "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=A0%2FA3&inhId=7C5303ICNDPS-T2&depDate=20260422&efcCityCode=DPS",
-      "seats": "4석",
+      "seats": "2석",
       "region": "동남아",
       "discountRate": -17
     },
@@ -5409,30 +5409,6 @@
       "link": "https://www.hanatour.com/com/pmt/CHPC0PMT0011M200?fareId=RTF%5E2967526%5EOZ0747ICNHKT-H229%5EOZ0747ICNHKT-755%5E20260308%5ET%5EKRW%5E6320941%5E5065122%5E%5E1%5E0%5E0&psngrCntLst=%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D&selectedCard=%7B%7D",
       "availableSeats": 3,
       "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22SEL%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22HKT%22%2C%22depDt%22%3A%2220260308%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22HKT%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22SEL%22%2C%22depDt%22%3A%2220260311%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
-      "region": "동남아",
-      "discountRate": 26
-    },
-    {
-      "id": "hanatour-regular-인천/김포-7",
-      "source": "hanatour",
-      "airline": "아시아나항공",
-      "departure": {
-        "city": "서울(ICN)",
-        "airport": "",
-        "date": "2026.03.09(월)",
-        "time": "17:00"
-      },
-      "arrival": {
-        "city": "푸껫(HKT)",
-        "airport": "",
-        "date": "2026.03.12(목)",
-        "time": "21:35"
-      },
-      "price": 299000,
-      "currency": "KRW",
-      "link": "https://www.hanatour.com/com/pmt/CHPC0PMT0011M200?fareId=RTF%5E2967527%5EOZ0747ICNHKT-H229%5EOZ0747ICNHKT-755%5E20260309%5ET%5EKRW%5E6320943%5E5065123%5E%5E1%5E0%5E0&psngrCntLst=%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D&selectedCard=%7B%7D",
-      "availableSeats": 1,
-      "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22SEL%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22HKT%22%2C%22depDt%22%3A%2220260309%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22HKT%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22SEL%22%2C%22depDt%22%3A%2220260312%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
       "region": "동남아",
       "discountRate": 26
     },
@@ -6679,7 +6655,7 @@
       "price": 333300,
       "currency": "KRW",
       "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=undefined&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 24,
+      "availableSeats": 21,
       "flightNumber": "7C2201 / 7C2202",
       "region": "동남아",
       "discountRate": -11
@@ -10453,6 +10429,30 @@
       "discountRate": -21
     },
     {
+      "id": "online-260304962241",
+      "source": "onlinetour",
+      "airline": "티웨이항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-04",
+        "time": "11:00"
+      },
+      "arrival": {
+        "city": "로마",
+        "airport": "",
+        "date": "2026-03-11",
+        "time": "19:00"
+      },
+      "price": 900000,
+      "currency": "KRW",
+      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260304962241",
+      "seats": "2석",
+      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=ROM&sCity2=ROM&eCity2=SEL&startDt=20260304&endDt=20260311&adt=1",
+      "region": "유럽",
+      "discountRate": -29
+    },
+    {
       "id": "ttang-OZ0747ICNHKT-G2-2026-03-04",
       "source": "ttang",
       "airline": "아시아나항공",
@@ -13284,9 +13284,9 @@
   ],
   "sources": {
     "ybtour": 316,
-    "hanatour": 32,
+    "hanatour": 31,
     "modetour": 768,
-    "onlinetour": 180,
+    "onlinetour": 181,
     "ttang": 378
   }
 }
