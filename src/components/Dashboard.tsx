@@ -33,41 +33,44 @@ const getDefaultEndDate = () => {
 // 도시명 정규화: "서울(ICN)" → "인천", "서울(GMP)" → "김포", "서울" → "인천"
 const normalizeCity = (city: string): string => {
     const trimmed = city.trim();
-    // 괄호 포함 형태: "서울(ICN)", "부산(PUS)", "대구(TAE)"
-    const codeMatch = trimmed.match(/^(.+?)\(([A-Z]{3})\)$/);
-    if (codeMatch) {
-        const code = codeMatch[2];
-        if (code === 'ICN') return '인천';
-        if (code === 'GMP') return '김포';
-        if (code === 'PUS') return '부산';
-        if (code === 'TAE') return '대구';
-        if (code === 'CJJ') return '청주';
-        if (code === 'CJU') return '제주';
-        return codeMatch[1]; // 기타: 괄호만 제거
-    }
-    // 한글 괄호 형태: "서울(김포)", "서울(인천)", "마나도(인도네시아)"
-    const krMatch = trimmed.match(/^(.+?)\((.+?)\)$/);
-    if (krMatch) {
-        if (krMatch[2] === '김포') return '김포';
-        if (krMatch[2] === '인천') return '인천';
-        // 괄호 안이 공항/지역명이면 괄호 안 사용 (간사이, 나리타, 치토세 등)
-        const airportNames = ['간사이', '나리타', '하네다', '치토세', '돈무앙', '수완나폼', '깜랑', '보라카이', '덴파사', '창이공항'];
-        if (airportNames.includes(krMatch[2])) return trimmed; // 원본 유지
-        // 그 외 (인도네시아, SHI 등)는 괄호 앞의 도시명 사용
-        return krMatch[1];
-    }
-    // 그냥 "서울" → "인천" (김포가 아닌 서울은 인천공항)
-    if (trimmed === '서울') return '인천';
-    // "청주시" → "청주", "제주시" → "제주"
-    if (trimmed === '청주시') return '청주';
-    if (trimmed === '제주시') return '제주';
-    // 도시명 표기 통일
+    // 도시명 표기 통일 매핑
     const cityNameMap: Record<string, string> = {
         '푸껫': '푸켓',
         '청도': '칭다오',
     };
-    if (cityNameMap[trimmed]) return cityNameMap[trimmed];
-    return trimmed;
+    let result = trimmed;
+    // 괄호 포함 형태: "서울(ICN)", "부산(PUS)", "대구(TAE)"
+    const codeMatch = trimmed.match(/^(.+?)\(([A-Z]{3})\)$/);
+    if (codeMatch) {
+        const code = codeMatch[2];
+        if (code === 'ICN') result = '인천';
+        else if (code === 'GMP') result = '김포';
+        else if (code === 'PUS') result = '부산';
+        else if (code === 'TAE') result = '대구';
+        else if (code === 'CJJ') result = '청주';
+        else if (code === 'CJU') result = '제주';
+        else result = codeMatch[1]; // 기타: 괄호만 제거
+    } else {
+        // 한글 괄호 형태: "서울(김포)", "서울(인천)", "마나도(인도네시아)"
+        const krMatch = trimmed.match(/^(.+?)\((.+?)\)$/);
+        if (krMatch) {
+            if (krMatch[2] === '김포') result = '김포';
+            else if (krMatch[2] === '인천') result = '인천';
+            else {
+                // 괄호 안이 공항/지역명이면 괄호 안 사용 (간사이, 나리타, 치토세 등)
+                const airportNames = ['간사이', '나리타', '하네다', '치토세', '돈무앙', '수완나폼', '깜랑', '보라카이', '덴파사', '창이공항'];
+                if (airportNames.includes(krMatch[2])) result = trimmed; // 원본 유지
+                else result = krMatch[1]; // 그 외는 괄호 앞의 도시명
+            }
+        } else {
+            // 그냥 "서울" → "인천" (김포가 아닌 서울은 인천공항)
+            if (trimmed === '서울') result = '인천';
+            else if (trimmed === '청주시') result = '청주';
+            else if (trimmed === '제주시') result = '제주';
+        }
+    }
+    // 최종 매핑 적용 (푸껫→푸켓 등)
+    return cityNameMap[result] || result;
 };
 
 // 도시명 → IATA 공항/도시 코드 매핑
