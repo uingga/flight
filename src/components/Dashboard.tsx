@@ -341,6 +341,7 @@ export default function Dashboard() {
     const [bookingFlight, setBookingFlight] = useState<Flight | null>(null);
     const [ttangConfirmFlight, setTtangConfirmFlight] = useState<Flight | null>(null);
     const [passengers, setPassengers] = useState({ adult: 1, child: 0, infant: 0 });
+    const [hanatourLoading, setHanatourLoading] = useState(false);
     const [alertFlight, setAlertFlight] = useState<Flight | null>(null);
     const [alertPrice, setAlertPrice] = useState('');
     const [pushSubscription, setPushSubscription] = useState<PushSubscription | null>(null);
@@ -734,8 +735,17 @@ export default function Dashboard() {
         const url = getBookingUrl(bookingFlight, passengers);
         const route = `${normalizeCity(bookingFlight.departure.city)}-${normalizeCity(bookingFlight.arrival.city)}`;
         gtag.trackBookingClick(bookingFlight.source, route, bookingFlight.price);
-        window.open(url, '_blank', 'noopener,noreferrer');
-        setBookingFlight(null);
+
+        if (bookingFlight.source === 'hanatour') {
+            // 하나투어는 연결 시간이 오래 걸리므로 안내 팝업 표시
+            setBookingFlight(null);
+            setHanatourLoading(true);
+            window.open(url, '_blank', 'noopener,noreferrer');
+            setTimeout(() => setHanatourLoading(false), 4000);
+        } else {
+            window.open(url, '_blank', 'noopener,noreferrer');
+            setBookingFlight(null);
+        }
     };
 
     // 필터 전체 초기화 (출발지·날짜 모두 해제)
@@ -1700,6 +1710,30 @@ export default function Dashboard() {
                         </div>
                         <button className={styles.modalConfirm} onClick={confirmBooking}>
                             {getSourceName(bookingFlight.source)}에서 예약하기 →
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* 하나투어 로딩 안내 팝업 */}
+            {hanatourLoading && (
+                <div className={styles.modalOverlay} onClick={() => setHanatourLoading(false)}>
+                    <div className={styles.modalSheet} onClick={(e) => e.stopPropagation()} style={{ textAlign: 'center' }}>
+                        <div className={styles.modalHeader}>
+                            <h3 className={styles.modalTitle}>하나투어 연결 중</h3>
+                            <button className={styles.modalClose} onClick={() => setHanatourLoading(false)}>×</button>
+                        </div>
+                        <div style={{ padding: '20px 16px 24px', lineHeight: 1.7 }}>
+                            <div style={{ fontSize: '40px', marginBottom: '12px' }}>⏳</div>
+                            <p style={{ fontSize: '15px', color: '#333', margin: '0 0 8px', fontWeight: 500 }}>
+                                하나투어 페이지 연결에 시간이 걸릴 수 있어요
+                            </p>
+                            <p style={{ fontSize: '13px', color: '#888', margin: 0 }}>
+                                새 탭에서 페이지가 열리고 있습니다.<br />잠시만 기다려주세요!
+                            </p>
+                        </div>
+                        <button className={styles.modalConfirm} onClick={() => setHanatourLoading(false)}>
+                            확인
                         </button>
                     </div>
                 </div>
