@@ -342,6 +342,7 @@ export default function Dashboard() {
     const [ttangConfirmFlight, setTtangConfirmFlight] = useState<Flight | null>(null);
     const [passengers, setPassengers] = useState({ adult: 1, child: 0, infant: 0 });
     const [bookingDisclaimer, setBookingDisclaimer] = useState<{ source: string; url: string } | null>(null);
+    const disclaimerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const [alertFlight, setAlertFlight] = useState<Flight | null>(null);
     const [alertPrice, setAlertPrice] = useState('');
     const [pushSubscription, setPushSubscription] = useState<PushSubscription | null>(null);
@@ -742,10 +743,22 @@ export default function Dashboard() {
 
         // 일정 시간 후 자동으로 여행사 페이지 열고 팝업 닫기
         const delay = source === 'hanatour' ? 3000 : 2000;
-        setTimeout(() => {
+        disclaimerTimerRef.current = setTimeout(() => {
             window.open(url, '_blank', 'noopener,noreferrer');
             setBookingDisclaimer(null);
         }, delay);
+    };
+
+    // 노랑풍선/온라인투어용: 인원선택 없이 면책조항 팝업 후 자동 이동
+    const disclaimerThenRedirect = (flight: Flight) => {
+        const url = getMobileUrl(flight.link, isMobile);
+        const route = `${normalizeCity(flight.departure.city)}-${normalizeCity(flight.arrival.city)}`;
+        gtag.trackBookingClick(flight.source, route, flight.price);
+        setBookingDisclaimer({ source: flight.source, url });
+        disclaimerTimerRef.current = setTimeout(() => {
+            window.open(url, '_blank', 'noopener,noreferrer');
+            setBookingDisclaimer(null);
+        }, 2000);
     };
 
     // 필터 전체 초기화 (출발지·날짜 모두 해제)
@@ -1467,7 +1480,7 @@ export default function Dashboard() {
                                                     })()}
 
                                                 </div>
-                                                {['hanatour', 'modetour', 'ybtour', 'onlinetour', 'ttang'].includes(flight.source) ? (
+                                                {['hanatour', 'modetour'].includes(flight.source) ? (
                                                     <button
                                                         type="button"
                                                         className="btn btn-primary"
@@ -1475,19 +1488,28 @@ export default function Dashboard() {
                                                     >
                                                         예약하기 →
                                                     </button>
-                                                ) : (
-                                                    <a
-                                                        href={getMobileUrl(flight.link, isMobile)}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
+                                                ) : flight.source === 'ttang' ? (
+                                                    <button
+                                                        type="button"
                                                         className="btn btn-primary"
-                                                        onClick={() => {
-                                                            const r = `${normalizeCity(flight.departure.city)}-${normalizeCity(flight.arrival.city)}`;
-                                                            gtag.trackBookingClick(flight.source, r, flight.price);
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setTtangConfirmFlight(flight);
                                                         }}
                                                     >
                                                         예약하기 →
-                                                    </a>
+                                                    </button>
+                                                ) : (
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-primary"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            disclaimerThenRedirect(flight);
+                                                        }}
+                                                    >
+                                                        예약하기 →
+                                                    </button>
                                                 )}
                                             </div>
                                             {(() => {
@@ -1788,9 +1810,18 @@ export default function Dashboard() {
                             <h3 className={styles.modalTitle}>안내</h3>
                             <button className={styles.modalClose} onClick={() => setTtangConfirmFlight(null)}>×</button>
                         </div>
-                        <div style={{ padding: '12px 20px 24px', fontSize: '15px', color: '#333', lineHeight: 1.8, textAlign: 'center' }}>
+                        <div style={{ padding: '12px 20px 16px', fontSize: '15px', color: '#333', lineHeight: 1.8, textAlign: 'center' }}>
                             땡처리닷컴은 표시된 가격 외에<br />
                             <b>발권수수료(TASF)</b>가 별도 부과됩니다.
+                        </div>
+                        <div style={{ padding: '0 16px 16px', fontSize: '12px', color: '#999', lineHeight: 1.6, textAlign: 'left' }}>
+                            <p style={{ margin: '0 0 6px', fontWeight: 600, color: '#aaa', fontSize: '11px' }}>안내사항</p>
+                            <p style={{ margin: 0 }}>
+                                표시된 가격 및 좌석은 실시간 변동될 수 있으며,
+                                실제 예약은 해당 여행사에서 직접 이루어집니다.
+                                티키티킷은 가격 비교 정보를 제공하며,
+                                예약·결제·환불 등에 대한 책임은 해당 여행사에 있습니다.
+                            </p>
                         </div>
                         <button className={styles.modalConfirm} onClick={() => {
                             const f = ttangConfirmFlight;
