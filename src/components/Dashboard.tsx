@@ -736,16 +736,16 @@ export default function Dashboard() {
         const route = `${normalizeCity(bookingFlight.departure.city)}-${normalizeCity(bookingFlight.arrival.city)}`;
         gtag.trackBookingClick(bookingFlight.source, route, bookingFlight.price);
 
-        // 면책조항 팝업을 먼저 표시, URL은 확인 버튼 클릭 시 열림
         const source = bookingFlight.source;
         setBookingFlight(null);
         setBookingDisclaimer({ source, url });
-    };
 
-    const confirmDisclaimer = () => {
-        if (!bookingDisclaimer) return;
-        window.open(bookingDisclaimer.url, '_blank', 'noopener,noreferrer');
-        setBookingDisclaimer(null);
+        // 일정 시간 후 자동으로 여행사 페이지 열고 팝업 닫기
+        const delay = source === 'hanatour' ? 3000 : 2000;
+        setTimeout(() => {
+            window.open(url, '_blank', 'noopener,noreferrer');
+            setBookingDisclaimer(null);
+        }, delay);
     };
 
     // 필터 전체 초기화 (출발지·날짜 모두 해제)
@@ -1724,16 +1724,18 @@ export default function Dashboard() {
                             <button className={styles.modalClose} onClick={() => setBookingDisclaimer(null)}>×</button>
                         </div>
                         <div style={{ padding: '20px 16px 8px', lineHeight: 1.7 }}>
-                            {bookingDisclaimer.source === 'hanatour' && (
-                                <>
-                                    <div style={{ fontSize: '36px', marginBottom: '8px' }}>⏳</div>
-                                    <p style={{ fontSize: '15px', color: '#333', margin: '0 0 12px', fontWeight: 500 }}>
-                                        하나투어 페이지 연결에 시간이 걸릴 수 있어요
-                                    </p>
-                                </>
-                            )}
-                            {bookingDisclaimer.source !== 'hanatour' && (
+                            {bookingDisclaimer.source === 'hanatour' ? (
+                                <div style={{ fontSize: '36px', marginBottom: '8px' }}>⏳</div>
+                            ) : (
                                 <div style={{ fontSize: '36px', marginBottom: '8px' }}>✈️</div>
+                            )}
+                            <p style={{ fontSize: '14px', color: '#555', margin: '0 0 4px' }}>
+                                잠시 후 자동으로 이동합니다
+                            </p>
+                            {bookingDisclaimer.source === 'hanatour' && (
+                                <p style={{ fontSize: '13px', color: '#888', margin: '0 0 4px' }}>
+                                    하나투어 페이지 연결에 시간이 걸릴 수 있어요
+                                </p>
                             )}
                         </div>
                         <div style={{ padding: '0 16px 20px', fontSize: '12px', color: '#999', lineHeight: 1.6, textAlign: 'left' }}>
@@ -1745,9 +1747,6 @@ export default function Dashboard() {
                                 예약·결제·환불 등에 대한 책임은 해당 여행사에 있습니다.
                             </p>
                         </div>
-                        <button className={styles.modalConfirm} onClick={confirmDisclaimer}>
-                            {bookingDisclaimer.source === 'hanatour' ? '하나투어로 이동 →' : '여행사로 이동 →'}
-                        </button>
                     </div>
                 </div>
             )}
