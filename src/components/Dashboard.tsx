@@ -1467,22 +1467,11 @@ export default function Dashboard() {
                                                     })()}
 
                                                 </div>
-                                                {['hanatour', 'modetour'].includes(flight.source) ? (
+                                                {['hanatour', 'modetour', 'ybtour', 'onlinetour', 'ttang'].includes(flight.source) ? (
                                                     <button
                                                         type="button"
                                                         className="btn btn-primary"
                                                         onClick={(e) => { e.stopPropagation(); openBookingModal(flight); }}
-                                                    >
-                                                        예약하기 →
-                                                    </button>
-                                                ) : flight.source === 'ttang' ? (
-                                                    <button
-                                                        type="button"
-                                                        className="btn btn-primary"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setTtangConfirmFlight(flight);
-                                                        }}
                                                     >
                                                         예약하기 →
                                                     </button>
