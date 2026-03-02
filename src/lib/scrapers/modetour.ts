@@ -4,10 +4,69 @@ import { logCrawlResults } from '@/lib/utils/crawl-logger';
 
 /**
  * 모두투어 스크래퍼
- * URL: https://b2c-api.modetour.com/CheapTicket/GetList
+ * URL: https://b2c-api.modetour.com/DiscountFlight/GetList
+ * 인증: ModeEcommerceContext 쿠키에서 ApiKey 추출 → modewebapireqheader 헤더로 전달
  */
 export async function scrapeModetour(): Promise<Flight[]> {
     try {
+        // 1단계: 모두투어 웹사이트에서 ApiKey 획득
+        console.log('모두투어 ApiKey 획득 중...');
+        let apiKey = '';
+        try {
+            const initRes = await fetch('https://www.modetour.com/flights/discount-flight', {
+                method: 'GET',
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                    'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
+                },
+                redirect: 'follow',
+            });
+
+            // Set-Cookie 헤더에서 ModeEcommerceContext 추출
+            const setCookies = initRes.headers.getSetCookie?.() || [];
+            for (const cookie of setCookies) {
+                if (cookie.includes('ModeEcommerceContext')) {
+                    // 쿠키 값에서 apiKey 추출
+                    const match = cookie.match(/ModeEcommerceContext=([^;]+)/);
+                    if (match) {
+                        try {
+                            const decoded = decodeURIComponent(match[1]);
+                            const parsed = JSON.parse(decoded);
+                            apiKey = parsed.apiKey || parsed.ApiKey || '';
+                        } catch {
+                            // URL 인코딩이 아닌 경우 직접 파싱 시도
+                            const keyMatch = match[1].match(/[Aa]pi[Kk]ey["\s:]+["']?([^"',}]+)/);
+                            if (keyMatch) apiKey = keyMatch[1];
+                        }
+                    }
+                }
+            }
+
+            if (!apiKey) {
+                // HTML에서 apiKey 추출 시도 (fallback)
+                const html = await initRes.text();
+                const keyMatch = html.match(/[Aa]pi[Kk]ey["\s:]+["']([^"']+)/);
+                if (keyMatch) apiKey = keyMatch[1];
+            }
+        } catch (e) {
+            console.error('모두투어 ApiKey 획득 실패:', e);
+        }
+
+        if (!apiKey) {
+            console.error('모두투어 ApiKey를 찾을 수 없습니다. 기본값으로 시도합니다.');
+        } else {
+            console.log(`모두투어 ApiKey 획득 완료: ${apiKey.substring(0, 8)}...`);
+        }
+
+        // modewebapireqheader 값 생성
+        const reqHeader = JSON.stringify({
+            WebSiteNo: 2,
+            CompanyNo: 81202,
+            DeviceType: 'DVTPC',
+            ApiKey: apiKey,
+        });
+
         // 현재 날짜와 한 달 후 날짜 계산
         const today = new Date();
         const oneMonthLater = new Date(today);
@@ -79,7 +138,7 @@ export async function scrapeModetour(): Promise<Flight[]> {
         for (const continentCode of continentCodes) {
             console.log(`모두투어 ${continentCode} 지역 크롤링 중...`);
 
-            const url = new URL('https://b2c-api.modetour.com/CheapTicket/GetList');
+            const url = new URL('https://b2c-api.modetour.com/DiscountFlight/GetList');
             url.searchParams.append('Page', '1');
             url.searchParams.append('ItemCount', '500');
             url.searchParams.append('DepartureCity', '');
@@ -93,8 +152,13 @@ export async function scrapeModetour(): Promise<Flight[]> {
                 headers: {
                     'Accept': 'application/json, text/plain, */*',
                     'Origin': 'https://www.modetour.com',
-                    'Referer': 'https://www.google.com/',
+                    'Referer': 'https://www.modetour.com/',
                     'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+                    'modewebapireqheader': reqHeader,
+                    'x-platform': 'ModeEcommerce',
+                    'x-salespartner': '2',
+                    'x-userdepartment': 'ModeEcommerce',
                 },
             });
 
