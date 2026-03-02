@@ -341,7 +341,7 @@ export default function Dashboard() {
     const [bookingFlight, setBookingFlight] = useState<Flight | null>(null);
     const [ttangConfirmFlight, setTtangConfirmFlight] = useState<Flight | null>(null);
     const [passengers, setPassengers] = useState({ adult: 1, child: 0, infant: 0 });
-    const [bookingDisclaimer, setBookingDisclaimer] = useState<{ source: string } | null>(null);
+    const [bookingDisclaimer, setBookingDisclaimer] = useState<{ source: string; url: string } | null>(null);
     const [alertFlight, setAlertFlight] = useState<Flight | null>(null);
     const [alertPrice, setAlertPrice] = useState('');
     const [pushSubscription, setPushSubscription] = useState<PushSubscription | null>(null);
@@ -736,11 +736,16 @@ export default function Dashboard() {
         const route = `${normalizeCity(bookingFlight.departure.city)}-${normalizeCity(bookingFlight.arrival.city)}`;
         gtag.trackBookingClick(bookingFlight.source, route, bookingFlight.price);
 
+        // 면책조항 팝업을 먼저 표시, URL은 확인 버튼 클릭 시 열림
         const source = bookingFlight.source;
         setBookingFlight(null);
-        setBookingDisclaimer({ source });
-        window.open(url, '_blank', 'noopener,noreferrer');
-        setTimeout(() => setBookingDisclaimer(null), source === 'hanatour' ? 5000 : 3500);
+        setBookingDisclaimer({ source, url });
+    };
+
+    const confirmDisclaimer = () => {
+        if (!bookingDisclaimer) return;
+        window.open(bookingDisclaimer.url, '_blank', 'noopener,noreferrer');
+        setBookingDisclaimer(null);
     };
 
     // 필터 전체 초기화 (출발지·날짜 모두 해제)
@@ -1740,8 +1745,8 @@ export default function Dashboard() {
                                 예약·결제·환불 등에 대한 책임은 해당 여행사에 있습니다.
                             </p>
                         </div>
-                        <button className={styles.modalConfirm} onClick={() => setBookingDisclaimer(null)}>
-                            확인
+                        <button className={styles.modalConfirm} onClick={confirmDisclaimer}>
+                            {bookingDisclaimer.source === 'hanatour' ? '하나투어로 이동 →' : '여행사로 이동 →'}
                         </button>
                     </div>
                 </div>
