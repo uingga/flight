@@ -58,7 +58,7 @@ const normalizeCity = (city: string): string => {
             else if (krMatch[2] === '인천') result = '인천';
             else {
                 // 괄호 안이 공항/지역명이면 괄호 안 사용 (간사이, 나리타, 치토세 등)
-                const airportNames = ['간사이', '나리타', '하네다', '치토세', '돈무앙', '수완나폼', '깜랑', '보라카이', '덴파사', '창이공항'];
+                const airportNames = ['간사이', '나리타', '하네다', '치토세', '돈무앙', '수완나폼', '깜랑', '보라카이', '덴파사'];
                 if (airportNames.includes(krMatch[2])) result = trimmed; // 원본 유지
                 else result = krMatch[1]; // 그 외는 괄호 앞의 도시명
             }
