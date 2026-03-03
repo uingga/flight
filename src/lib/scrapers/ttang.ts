@@ -50,6 +50,10 @@ export async function scrapeTtang(): Promise<Flight[]> {
     const context = await browser.newContext({
         userAgent: 'Mozilla/5.0 (Linux; Android 13; SM-S908B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36',
         viewport: { width: 390, height: 844 },
+        extraHTTPHeaders: {
+            'Referer': 'https://www.google.com/',
+            'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
+        },
     });
 
     const page = await context.newPage();
