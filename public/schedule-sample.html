@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>후쿠오카 2박3일 원형 시간표</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: linear-gradient(135deg, #f8f9ff 0%, #e8ecff 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+            color: #333;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 900;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #6366f1, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 40px;
+        }
+
+        .days-container {
+            display: flex;
+            gap: 40px;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 1200px;
+        }
+
+        .day-card {
+            background: white;
+            border-radius: 24px;
+            padding: 32px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+            width: 360px;
+            text-align: center;
+        }
+
+        .day-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .day-subtitle {
+            font-size: 13px;
+            color: #aaa;
+            margin-bottom: 24px;
+        }
+
+        .clock-container {
+            position: relative;
+            width: 280px;
+            height: 280px;
+            margin: 0 auto 24px;
+        }
+
+        .clock-svg {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+
+        .segment {
+            fill: none;
+            stroke-width: 40;
+            stroke-linecap: butt;
+            transition: opacity 0.3s;
+            cursor: pointer;
+        }
+
+        .segment:hover {
+            opacity: 0.8;
+            stroke-width: 44;
+        }
+
+        .clock-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+        }
+
+        .clock-emoji {
+            font-size: 32px;
+            margin-bottom: 4px;
+        }
+
+        .clock-label {
+            font-size: 11px;
+            color: #aaa;
+            font-weight: 500;
+        }
+
+        /* Hour markers */
+        .hour-markers {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .hour-mark {
+            position: absolute;
+            font-size: 9px;
+            font-weight: 700;
+            color: #ccc;
+            transform: translate(-50%, -50%);
+        }
+
+        .legend {
+            text-align: left;
+            width: 100%;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 6px 0;
+            font-size: 13px;
+            border-bottom: 1px solid #f5f5f5;
+        }
+
+        .legend-item:last-child {
+            border-bottom: none;
+        }
+
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
+
+        .legend-time {
+            font-size: 11px;
+            color: #aaa;
+            min-width: 85px;
+            font-weight: 500;
+        }
+
+        .legend-text {
+            font-weight: 500;
+            flex: 1;
+        }
+
+        .legend-emoji {
+            font-size: 16px;
+        }
+
+        .cta-box {
+            margin-top: 40px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            border-radius: 16px;
+            padding: 20px 32px;
+            text-align: center;
+            max-width: 500px;
+        }
+
+        .cta-box p {
+            font-size: 14px;
+            margin-bottom: 12px;
+            opacity: 0.9;
+        }
+
+        .cta-box a {
+            display: inline-block;
+            background: white;
+            color: #6366f1;
+            padding: 10px 24px;
+            border-radius: 99px;
+            font-weight: 700;
+            text-decoration: none;
+            font-size: 14px;
+            transition: transform 0.2s;
+        }
+
+        .cta-box a:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>🇯🇵 후쿠오카 2박3일 알짜 코스</h1>
+    <p class="subtitle">원형 시간표로 한눈에 보는 일정</p>
+
+    <div class="days-container">
+
+        <!-- DAY 1 -->
+        <div class="day-card">
+            <div class="day-title">DAY 1</div>
+            <div class="day-subtitle">도착 + 하카타역 주변</div>
+            <div class="clock-container">
+                <svg class="clock-svg" viewBox="0 0 200 200">
+                    <!-- segments: center 100,100 radius 80 -->
+                    <!-- 7:00-9:30 이동 (출발~도착) -->
+                    <circle class="segment" cx="100" cy="100" r="80" stroke="#93c5fd" stroke-dasharray="41.9 460"
+                        stroke-dashoffset="-146.6" />
+                    <!-- 9:30-11:00 호텔 체크인/짐보관 -->
+                    <circle class="segment" cx="100" cy="100" r="80" stroke="#a5b4fc" stroke-dasharray="25.1 476.8"
+                        stroke-dashoffset="-188.5" />
+                    <!-- 11:00-12:30 라멘 투어 -->
+                    <circle class="segment" cx="100" cy="100" r="80" stroke="#fb923c" stroke-dasharray="25.1 476.8"
+                        stroke-dashoffset="-213.6" />
+                    <!-- 12:30-14:30 캐널시티 -->
+                    <circle class="segment" cx="100" cy="100" r="80" stroke="#86efac" stroke-dasharray="33.5 468.4"
+                        stroke-dashoffset="-238.8" />
+                    <!-- 14:30-16:30 오호리공원 -->
+                    <circle class="segment" cx="100" cy="100" r="80" stroke="#c4b5fd" stroke-dasharray="33.5 468.4"
+                        stroke-dashoffset="-272.3" />
+                    <!-- 16:30-18:00 텐진 쇼핑 -->
+                    <circle class="segment" cx="100" cy="100" r="80" stroke="#f9a8d4" stroke-dasharray="25.1 476.8"
+                        stroke-dashoffset="-305.8" />
+                    <!-- 18:00-20:00 나카스 포장마차 -->
+                    <circle class="segment" cx="100" cy="100" r="80" stroke="#fca5a5" stroke-dasharray="33.5 468.4"
+                        stroke-dashoffset="-330.9" />
+                    <!-- 20:00-23:00 야경/자유시간 -->
+                    <circle class="segment" cx="100" cy="100" r="80" stroke="#7dd3fc" stroke-dasharray="50.3 451.6"
+                        stroke-dashoffset="-364.4" />
+                    <!-- 23:00-7:00 수면 -->
+                    <circle class="segment" cx="100" cy="100" r="80" stroke="#e2e8f0" stroke-dasharray="134.0 367.9"
+                        stroke-dashoffset="-414.7" />
+                </svg>
+                <div class="hour-markers">
+                    <span class="hour-mark" style="top:8%;left:50%">0</span>
+                    <span class="hour-mark" style="top:15%;left:79%">3</span>
+                    <span class="hour-mark" style="top:50%;left:95%">6</span>
+                    <span class="hour-mark" style="top:85%;left:79%">9</span>
+                    <span class="hour-mark" style="top:93%;left:50%">12</span>
+                    <span class="hour-mark" style="top:85%;left:21%">15</span>
+                    <span class="hour-mark" style="top:50%;left:5%">18</span>
+                    <span class="hour-mark" style="top:15%;left:21%">21</span>
+                </div>
+                <div class="clock-center">
+                    <span class="clock-emoji">🍜</span>
+                    <span class="clock-label">하카타 탐방</span>
+                </div>
+            </div>
+            <div class="legend">
+                <div class="legend-item"><span class="legend-dot" style="background:#93c5fd"></span><span
+                        class="legend-time">07:00~09:30</span><span class="legend-text">인천→후쿠오카</span><span
+                        class="legend-emoji">✈️</span></div>
+                <div class="legend-item"><span class="legend-dot" style="background:#a5b4fc"></span><span
+                        class="legend-time">09:30~11:00</span><span class="legend-text">숙소 짐 보관</span><span
+                        class="legend-emoji">🏨</span></div>
+                <div class="legend-item"><span class="legend-dot" style="background:#fb923c"></span><span
+                        class="legend-time">11:00~12:30</span><span class="legend-text">하카타역 라멘 투어</span><span
+                        class="legend-emoji">🍜</span></div>
+                <div class="legend-item"><span class="legend-dot" style="background:#86efac"></span><span
+                        class="legend-time">12:30~14:30</span><span class="legend-text">캐널시티 쇼핑</span><span
+                        class="legend-emoji">🛍️</span></div>
+                <div class="legend-item"><span class="legend-dot" style="background:#c4b5fd"></span><span
+                        class="legend-time">14:30~16:30</span><span class="legend-text">오호리공원 산책</span><span
+                        class="legend-emoji">🌳</span></div>
+                <div class="legend-item"><span class="legend-dot" style="background:#f9a8d4"></span><span
+                        class="legend-time">16:30~18:00</span><span class="legend-text">텐진 거리 쇼핑</span><span
+                        class="legend-emoji">🛒</span></div>
+                <div class="legend-item"><span class="legend-dot" style="background:#fca5a5"></span><span
+                        class="legend-time">18:00~20:00</span><span class="legend-text">나카스 포장마차</span><span
+                        class="legend-emoji">🏮</span></div>
+                <div class="legend-item"><span class="legend-dot" style="background:#7dd3fc"></span><span
+                        class="legend-time">20:00~23:00</span><span class="legend-text">야경 & 자유시간</span><span
+                        class="legend-emoji">🌃</span></div>
+            </div>
+        </div>
+
+        <!-- DAY 2 -->
+        <div class="day-card">
+            <div class="day-title">DAY 2</div>
+            <div class="day-subtitle">유후인 당일치기 + 온천</div>
+            <div class="clock-container">
+                <svg class="clock-svg" viewBox="0 0 200 200">
+                    <!-- 7:00-8:00 기상/아침 -->
+                    <circle class="segment" cx="100" cy="100" r="80" stroke="#fde68a" stroke-dasharray="16.8 485.1"
+                        stroke-dashoffset="-146.6" />
+                    <!-- 8:00-10:00 유후인 이동 -->
+                    <circle class="segment" cx="100" cy="100" r="80" stroke="#93c5fd" stroke-dasharray="33.5 468.4"
+                        stroke-dashoffset="-163.4" />
+                    <!-- 10:00-12:00 유후인 산책 -->
+                    <circle class="segment" cx="100" cy="100" r="80" stroke="#86efac" stroke-dasharray="33.5 468.4"
+                        stroke-dashoffset="-196.9" />
+                    <!-- 12:00-13:30 유후인 점심 -->
+                    <circle class="segment" cx="100" cy="100" r="80" stroke="#fb923c" stroke-dasharray="25.1 476.8"
+                        stroke-dashoffset="-230.4" />
+                    <!-- 13:30-15:00 긴린코 호수 -->
+                    <circle class="segment" cx="100" cy="100" r="80" stroke="#c4b5fd" stroke-dasharray="25.1 476.8"
+                        stroke-dashoffset="-255.5" />
+                    <!-- 15:00-17:00 복귀 이동 -->
+                    <circle class="segment" cx="100" cy="100" r="80" stroke="#a5b4fc" stroke-dasharray="33.5 468.4"
+                        stroke-dashoffset="-280.6" />
+                    <!-- 17:00-19:00 온천/힐링 -->
+                    <circle class="segment" cx="100" cy="100" r="80" stroke="#67e8f9" stroke-dasharray="33.5 468.4"
+                        stroke-dashoffset="-314.2" />
+                    <!-- 19:00-21:00 저녁 (모츠나베) -->
+                    <circle class="segment" cx="100" cy="100" r="80" stroke="#fca5a5" stroke-dasharray="33.5 468.4"
+                        stroke-dashoffset="-347.7" />
+                    <!-- 21:00-7:00 수면 -->
+                    <circle class="segment" cx="100" cy="100" r="80" stroke="#e2e8f0" stroke-dasharray="167.6 334.3"
+                        stroke-dashoffset="-381.2" />
+                </svg>
+                <div class="hour-markers">
+                    <span class="hour-mark" style="top:8%;left:50%">0</span>
+                    <span class="hour-mark" style="top:15%;left:79%">3</span>
+                    <span class="hour-mark" style="top:50%;left:95%">6</span>
+                    <span class="hour-mark" style="top:85%;left:79%">9</span>
+                    <span class="hour-mark" style="top:93%;left:50%">12</span>
+                    <span class="hour-mark" style="top:85%;left:21%">15</span>
+                    <span class="hour-mark" style="top:50%;left:5%">18</span>
+                    <span class="hour-mark" style="top:15%;left:21%">21</span>
+                </div>
+                <div class="clock-center">
+                    <span class="clock-emoji">♨️</span>
+                    <span class="clock-label">유후인 힐링</span>
+                </div>
+            </div>
+            <div class="legend">
+                <div class="legend-item"><span class="legend-dot" style="background:#fde68a"></span><span
+                        class="legend-time">07:00~08:00</span><span class="legend-text">기상 & 조식</span><span
+                        class="legend-emoji">🥐</span></div>
+                <div class="legend-item"><span class="legend-dot" style="background:#93c5fd"></span><span
+                        class="legend-time">08:00~10:00</span><span class="legend-text">유후인 이동 (버스)</span><span
+                        class="legend-emoji">🚌</span></div>
+                <div class="legend-item"><span class="legend-dot" style="background:#86efac"></span><span
+                        class="legend-time">10:00~12:00</span><span class="legend-text">유후인 거리 산책</span><span
+                        class="legend-emoji">🌿</span></div>
+                <div class="legend-item"><span class="legend-dot" style="background:#fb923c"></span><span
+                        class="legend-time">12:00~13:30</span><span class="legend-text">유후인 맛집 점심</span><span
+                        class="legend-emoji">🍱</span></div>
+                <div class="legend-item"><span class="legend-dot" style="background:#c4b5fd"></span><span
+                        class="legend-time">13:30~15:00</span><span class="legend-text">긴린코 호수</span><span
+                        class="legend-emoji">🏞️</span></div>
+                <div class="legend-item"><span class="legend-dot" style="background:#a5b4fc"></span><span
+                        class="legend-time">15:00~17:00</span><span class="legend-text">하카타 복귀</span><span
+                        class="legend-emoji">🚌</span></div>
+                <div class="legend-item"><span class="legend-dot" style="background:#67e8f9"></span><span
+                        class="legend-time">17:00~19:00</span><span class="legend-text">온천 & 힐링</span><span
+                        class="legend-emoji">♨️</span></div>
+                <div class="legend-item"><span class="legend-dot" style="background:#fca5a5"></span><span
+                        class="legend-time">19:00~21:00</span><span class="legend-text">모츠나베 저녁</span><span
+                        class="legend-emoji">🍲</span></div>
+            </div>
+        </div>
+
+        <!-- DAY 3 -->
+        <div class="day-card">
+            <div class="day-title">DAY 3</div>
+            <div class="day-subtitle">마지막 쇼핑 + 귀국</div>
+            <div class="clock-container">
+                <svg class="clock-svg" viewBox="0 0 200 200">
+                    <!-- 7:00-8:30 기상/체크아웃 -->
+                    <circle class="segment" cx="100" cy="100" r="80" stroke="#fde68a" stroke-dasharray="25.1 476.8"
+                        stroke-dashoffset="-146.6" />
+                    <!-- 8:30-10:00 아침 먹기 -->
+                    <circle class="segment" cx="100" cy="100" r="80" stroke="#fb923c" stroke-dasharray="25.1 476.8"
+                        stroke-dashoffset="-171.7" />
+                    <!-- 10:00-12:30 텐진/하카타 쇼핑 -->
+                    <circle class="segment" cx="100" cy="100" r="80" stroke="#f9a8d4" stroke-dasharray="41.9 460"
+                        stroke-dashoffset="-196.9" />
+                    <!-- 12:30-13:30 마지막 라멘 -->
+                    <circle class="segment" cx="100" cy="100" r="80" stroke="#fca5a5" stroke-dasharray="16.8 485.1"
+                        stroke-dashoffset="-238.8" />
+                    <!-- 13:30-15:00 공항 이동 -->
+                    <circle class="segment" cx="100" cy="100" r="80" stroke="#a5b4fc" stroke-dasharray="25.1 476.8"
+                        stroke-dashoffset="-255.5" />
+                    <!-- 15:00-16:30 면세점 -->
+                    <circle class="segment" cx="100" cy="100" r="80" stroke="#c4b5fd" stroke-dasharray="25.1 476.8"
+                        stroke-dashoffset="-280.6" />
+                    <!-- 16:30-18:30 비행 -->
+                    <circle class="segment" cx="100" cy="100" r="80" stroke="#93c5fd" stroke-dasharray="33.5 468.4"
+                        stroke-dashoffset="-305.8" />
+                    <!-- 18:30-20:00 인천 도착/귀가 -->
+                    <circle class="segment" cx="100" cy="100" r="80" stroke="#86efac" stroke-dasharray="25.1 476.8"
+                        stroke-dashoffset="-339.3" />
+                    <!-- 20:00-7:00 집 -->
+                    <circle class="segment" cx="100" cy="100" r="80" stroke="#e2e8f0" stroke-dasharray="184.3 317.6"
+                        stroke-dashoffset="-364.4" />
+                </svg>
+                <div class="hour-markers">
+                    <span class="hour-mark" style="top:8%;left:50%">0</span>
+                    <span class="hour-mark" style="top:15%;left:79%">3</span>
+                    <span class="hour-mark" style="top:50%;left:95%">6</span>
+                    <span class="hour-mark" style="top:85%;left:79%">9</span>
+                    <span class="hour-mark" style="top:93%;left:50%">12</span>
+                    <span class="hour-mark" style="top:85%;left:21%">15</span>
+                    <span class="hour-mark" style="top:50%;left:5%">18</span>
+                    <span class="hour-mark" style="top:15%;left:21%">21</span>
+                </div>
+                <div class="clock-center">
+                    <span class="clock-emoji">🛫</span>
+                    <span class="clock-label">쇼핑 & 귀국</span>
+                </div>
+            </div>
+            <div class="legend">
+                <div class="legend-item"><span class="legend-dot" style="background:#fde68a"></span><span
+                        class="legend-time">07:00~08:30</span><span class="legend-text">기상 & 체크아웃</span><span
+                        class="legend-emoji">🧳</span></div>
+                <div class="legend-item"><span class="legend-dot" style="background:#fb923c"></span><span
+                        class="legend-time">08:30~10:00</span><span class="legend-text">우동 아침식사</span><span
+                        class="legend-emoji">🍲</span></div>
+                <div class="legend-item"><span class="legend-dot" style="background:#f9a8d4"></span><span
+                        class="legend-time">10:00~12:30</span><span class="legend-text">텐진 드럭스토어</span><span
+                        class="legend-emoji">💊</span></div>
+                <div class="legend-item"><span class="legend-dot" style="background:#fca5a5"></span><span
+                        class="legend-time">12:30~13:30</span><span class="legend-text">마지막 라멘!</span><span
+                        class="legend-emoji">🍜</span></div>
+                <div class="legend-item"><span class="legend-dot" style="background:#a5b4fc"></span><span
+                        class="legend-time">13:30~15:00</span><span class="legend-text">공항 이동</span><span
+                        class="legend-emoji">🚇</span></div>
+                <div class="legend-item"><span class="legend-dot" style="background:#c4b5fd"></span><span
+                        class="legend-time">15:00~16:30</span><span class="legend-text">면세점 쇼핑</span><span
+                        class="legend-emoji">🛍️</span></div>
+                <div class="legend-item"><span class="legend-dot" style="background:#93c5fd"></span><span
+                        class="legend-time">16:30~18:30</span><span class="legend-text">후쿠오카→인천</span><span
+                        class="legend-emoji">✈️</span></div>
+                <div class="legend-item"><span class="legend-dot" style="background:#86efac"></span><span
+                        class="legend-time">18:30~20:00</span><span class="legend-text">입국 & 귀가</span><span
+                        class="legend-emoji">🏠</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="cta-box">
+        <p>인천-후쿠오카 최저가 항공권을 찾고 계신가요?</p>
+        <a href="https://tikitikit.kr" target="_blank">✈️ 티키티킷에서 특가 확인하기</a>
+    </div>
+
+</body>
+
+</html>
