@@ -972,8 +972,8 @@ export default function Dashboard() {
     // Insight Bars — 카드 사이에 삽입되는 정보 바
     // ============================================
     const generateInsightBar = (barIndex: number) => {
-        // 순서: 할인Top5 → 팁 → 인기도시 → 출발시기 → 지역현황 → 항공사최저가
-        const barOrder = [6, 5, 2, 4, 1, 3];
+        // 순서: 할인Top5 → 팁 → 금요밤 → 인기도시 → 이번주말 → 20만원이하 → 내일출발 → 지역현황 → 항공사최저가
+        const barOrder = [6, 5, 8, 2, 9, 10, 7, 1, 3];
         const barType = barOrder[barIndex % barOrder.length];
 
         switch (barType) {
@@ -1142,6 +1142,179 @@ export default function Dashboard() {
                                         onClick={(e) => { e.stopPropagation(); setSearchTerm(city); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                                     >
                                         {city} <strong>-{Math.round(percent)}%</strong> <span className={styles.insightChipCount}>{Math.floor(flight.price / 10000)}만원</span>
+                                    </span>
+                                );
+                            })}
+                        </div>
+                    </div>
+                );
+            }
+            case 7: { // 💨 내일 출발
+                const now7 = new Date();
+                const tomorrow7 = new Date(now7);
+                tomorrow7.setDate(now7.getDate() + 1);
+                const toDateStr7 = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                const tomorrowStr7 = toDateStr7(tomorrow7);
+
+                const tomorrowFlights: Flight[] = [];
+                filteredFlights.forEach(f => {
+                    const fd = f.departure.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 10);
+                    if (fd === tomorrowStr7) tomorrowFlights.push(f);
+                });
+                if (tomorrowFlights.length === 0) return null;
+                // 도시별 중복 제거, 가격 낮은 순
+                tomorrowFlights.sort((a, b) => a.price - b.price);
+                const seen7 = new Set<string>();
+                const unique7 = tomorrowFlights.filter(f => {
+                    const city = normalizeCity(f.arrival.city);
+                    if (seen7.has(city)) return false;
+                    seen7.add(city);
+                    return true;
+                }).slice(0, 4);
+                return (
+                    <div key={`insight-${barIndex}`} className={`${styles.insightBar} ${styles.insightBarTomorrow}`}>
+                        <span className={styles.insightIcon}>💨</span>
+                        <div className={styles.insightContent}>
+                            <span>내일 비행기가 있다. 고민은 사치다. —</span>
+                            {unique7.map(f => {
+                                const city = normalizeCity(f.arrival.city);
+                                return (
+                                    <span
+                                        key={f.id}
+                                        className={`${styles.insightChip} ${styles.insightChipTomorrow}`}
+                                        onClick={(e) => { e.stopPropagation(); setSearchTerm(city); setStartDate(tomorrowStr7); setEndDate(tomorrowStr7); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                                    >
+                                        {city} <strong>{Math.floor(f.price / 10000)}만원~</strong>
+                                    </span>
+                                );
+                            })}
+                        </div>
+                    </div>
+                );
+            }
+            case 9: { // ☀️ 이번 주말
+                const now9 = new Date();
+                const dayOfWeek9 = now9.getDay();
+                const satOffset9 = dayOfWeek9 === 6 ? 0 : (6 - dayOfWeek9);
+                if (satOffset9 === 0) return null; // 이미 토요일이면 의미 없음
+                const thisSat9 = new Date(now9);
+                thisSat9.setDate(now9.getDate() + satOffset9);
+                const thisSun9 = new Date(thisSat9);
+                thisSun9.setDate(thisSat9.getDate() + 1);
+                const toDateStr9 = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                const satStr9 = toDateStr9(thisSat9);
+                const sunStr9 = toDateStr9(thisSun9);
+
+                const weekendFlights: Flight[] = [];
+                filteredFlights.forEach(f => {
+                    const fd = f.departure.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 10);
+                    if (fd === satStr9 || fd === sunStr9) weekendFlights.push(f);
+                });
+                if (weekendFlights.length === 0) return null;
+                weekendFlights.sort((a, b) => a.price - b.price);
+                const seen9 = new Set<string>();
+                const unique9 = weekendFlights.filter(f => {
+                    const city = normalizeCity(f.arrival.city);
+                    if (seen9.has(city)) return false;
+                    seen9.add(city);
+                    return true;
+                }).slice(0, 4);
+                return (
+                    <div key={`insight-${barIndex}`} className={`${styles.insightBar} ${styles.insightBarWeekend}`}>
+                        <span className={styles.insightIcon}>☀️</span>
+                        <div className={styles.insightContent}>
+                            <span>이번 주말, 아직 비어 있다면. —</span>
+                            {unique9.map(f => {
+                                const city = normalizeCity(f.arrival.city);
+                                return (
+                                    <span
+                                        key={f.id}
+                                        className={`${styles.insightChip} ${styles.insightChipWeekend}`}
+                                        onClick={(e) => { e.stopPropagation(); setSearchTerm(city); setStartDate(satStr9); setEndDate(sunStr9); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                                    >
+                                        {city} <strong>{Math.floor(f.price / 10000)}만원~</strong>
+                                    </span>
+                                );
+                            })}
+                        </div>
+                    </div>
+                );
+            }
+            case 10: { // 💸 20만원 이하
+                const cheapFlights: Flight[] = [];
+                filteredFlights.forEach(f => {
+                    if (f.price > 0 && f.price < 200000) cheapFlights.push(f);
+                });
+                if (cheapFlights.length === 0) return null;
+                cheapFlights.sort((a, b) => a.price - b.price);
+                const seen10 = new Set<string>();
+                const unique10 = cheapFlights.filter(f => {
+                    const city = normalizeCity(f.arrival.city);
+                    if (seen10.has(city)) return false;
+                    seen10.add(city);
+                    return true;
+                }).slice(0, 5);
+                return (
+                    <div key={`insight-${barIndex}`} className={`${styles.insightBar} ${styles.insightBarCheap}`}>
+                        <span className={styles.insightIcon}>💸</span>
+                        <div className={styles.insightContent}>
+                            <span>20만원이면 된다. 왕복으로. —</span>
+                            {unique10.map(f => {
+                                const city = normalizeCity(f.arrival.city);
+                                return (
+                                    <span
+                                        key={f.id}
+                                        className={`${styles.insightChip} ${styles.insightChipCheap}`}
+                                        onClick={(e) => { e.stopPropagation(); setSearchTerm(city); setSortBy('price'); setSortOrder('asc'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                                    >
+                                        {city} <strong>{Math.floor(f.price / 10000)}만원</strong>
+                                    </span>
+                                );
+                            })}
+                        </div>
+                    </div>
+                );
+            }
+            case 8: { // 🌙 금요일 밤 비행기
+                // 금요일 17시 이후 출발 항공편
+                const friFlights: Array<{ flight: Flight; time: string }> = [];
+                filteredFlights.forEach(f => {
+                    const dateStr = f.departure.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 10);
+                    const time = f.departure?.time;
+                    if (!dateStr || !time) return;
+                    const d = new Date(dateStr);
+                    if (isNaN(d.getTime())) return;
+                    if (d.getDay() === 5) { // Friday
+                        const hour = parseInt(time.split(':')[0]);
+                        if (hour >= 17) {
+                            friFlights.push({ flight: f, time });
+                        }
+                    }
+                });
+                if (friFlights.length === 0) return null;
+                // 도시별 중복 제거, 가격 낮은 순
+                friFlights.sort((a, b) => a.flight.price - b.flight.price);
+                const seenCities = new Set<string>();
+                const uniqueFri = friFlights.filter(({ flight }) => {
+                    const city = normalizeCity(flight.arrival.city);
+                    if (seenCities.has(city)) return false;
+                    seenCities.add(city);
+                    return true;
+                }).slice(0, 4);
+                return (
+                    <div key={`insight-${barIndex}`} className={`${styles.insightBar} ${styles.insightBarFriday}`}>
+                        <span className={styles.insightIcon}>🌙</span>
+                        <div className={styles.insightContent}>
+                            <span>금요일 밤 비행기. 토요일 아침은 거기서. —</span>
+                            {uniqueFri.map(({ flight }) => {
+                                const city = normalizeCity(flight.arrival.city);
+                                return (
+                                    <span
+                                        key={flight.id}
+                                        className={`${styles.insightChip} ${styles.insightChipFriday}`}
+                                        onClick={(e) => { e.stopPropagation(); setSearchTerm(city); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                                    >
+                                        {city} <strong>{Math.floor(flight.price / 10000)}만원~</strong>
                                     </span>
                                 );
                             })}
