@@ -972,8 +972,8 @@ export default function Dashboard() {
     // Insight Bars — 카드 사이에 삽입되는 정보 바
     // ============================================
     const generateInsightBar = (barIndex: number) => {
-        // 순서: 팁 → 인기도시 → 출발시기 → 지역현황 → 항공사최저가
-        const barOrder = [5, 2, 4, 1, 3];
+        // 순서: 할인Top5 → 팁 → 인기도시 → 출발시기 → 지역현황 → 항공사최저가
+        const barOrder = [6, 5, 2, 4, 1, 3];
         const barType = barOrder[barIndex % barOrder.length];
 
         switch (barType) {
@@ -1103,6 +1103,50 @@ export default function Dashboard() {
                             <span className={styles.insightChip}>읽어보기 →</span>
                         </div>
                     </a>
+                );
+            }
+            case 6: { // 🔥 역대급 할인 Top 5
+                const discountFlights: Array<{ flight: Flight; percent: number }> = [];
+                filteredFlights.forEach(f => {
+                    const city = f.arrival.city?.replace(/\([^)]+\)/, '').trim();
+                    const depMonth = f.departure.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 7);
+                    const ipMonthData = interparkPrices[city]?.[depMonth];
+                    if (ipMonthData?.avg && f.price > 0) {
+                        const percent = ((ipMonthData.avg - f.price) / ipMonthData.avg) * 100;
+                        if (percent >= 10) {
+                            discountFlights.push({ flight: f, percent });
+                        }
+                    }
+                });
+                // 할인율 내림차순 → 같은 도시 중복 제거 → Top 5
+                discountFlights.sort((a, b) => b.percent - a.percent);
+                const seenCities = new Set<string>();
+                const top5 = discountFlights.filter(({ flight }) => {
+                    const city = normalizeCity(flight.arrival.city);
+                    if (seenCities.has(city)) return false;
+                    seenCities.add(city);
+                    return true;
+                }).slice(0, 5);
+                if (top5.length === 0) return null;
+                return (
+                    <div key={`insight-${barIndex}`} className={`${styles.insightBar} ${styles.insightBarDiscount}`}>
+                        <span className={styles.insightIcon}>🔥</span>
+                        <div className={styles.insightContent}>
+                            <span>지금 주울 수 있는 할인 —</span>
+                            {top5.map(({ flight, percent }) => {
+                                const city = normalizeCity(flight.arrival.city);
+                                return (
+                                    <span
+                                        key={flight.id}
+                                        className={`${styles.insightChip} ${styles.insightChipDiscount}`}
+                                        onClick={(e) => { e.stopPropagation(); setSearchTerm(city); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                                    >
+                                        {city} <strong>-{Math.round(percent)}%</strong> <span className={styles.insightChipCount}>{Math.floor(flight.price / 10000)}만원</span>
+                                    </span>
+                                );
+                            })}
+                        </div>
+                    </div>
                 );
             }
             default:
