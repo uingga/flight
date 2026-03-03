@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-03-03T12:45:20.334Z",
-  "count": 582,
+  "timestamp": "2026-03-03T16:16:54.186Z",
+  "count": 575,
   "flights": [
     {
       "id": "ybtour-다카마쓰-20260414-2",
@@ -279,7 +279,7 @@
       "discountRate": 24
     },
     {
-      "id": "ybtour-삿포로(치토세)-20260322-2",
+      "id": "ybtour-삿포로(치토세)-20260322-1",
       "source": "ybtour",
       "airline": "이스타항공",
       "departure": {
@@ -2459,7 +2459,7 @@
       "price": 259000,
       "currency": "KRW",
       "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=A0%2FA3&inhId=XJ0701ICNDMK-T4&depDate=20260306&efcCityCode=DMK",
-      "seats": "1석",
+      "seats": "0석",
       "region": "동남아",
       "discountRate": 1
     },
@@ -5633,7 +5633,7 @@
       "price": 429000,
       "currency": "KRW",
       "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=A0%2FA3&inhId=7C5303ICNDPS-T2&depDate=20260410&efcCityCode=DPS",
-      "seats": "4석",
+      "seats": "2석",
       "region": "동남아",
       "discountRate": -17
     },
@@ -6047,7 +6047,7 @@
       "price": 199000,
       "currency": "KRW",
       "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=P1&inhId=LJ0917ICNGUM-T2&depDate=20260331&efcCityCode=GUM",
-      "seats": "22석",
+      "seats": "18석",
       "region": "남태평양",
       "discountRate": -10
     },
@@ -6217,30 +6217,6 @@
     {
       "id": "hanatour-regular-인천/김포-2",
       "source": "hanatour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "서울(ICN)",
-        "airport": "",
-        "date": "2026.03.10(화)",
-        "time": "10:10"
-      },
-      "arrival": {
-        "city": "사이판(SPN)",
-        "airport": "",
-        "date": "2026.03.13(금)",
-        "time": "15:30"
-      },
-      "price": 199000,
-      "currency": "KRW",
-      "link": "https://www.hanatour.com/com/pmt/CHPC0PMT0011M200?fareId=RTF%5E2998986%5E7C3211ICNSPN-H11%5E7C3211ICNSPN-1%5E20260310%5ET%5EKRW%5E6351663%5E5103089%5E%5E1%5E0%5E0&psngrCntLst=%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D&selectedCard=%7B%7D",
-      "availableSeats": 4,
-      "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22SEL%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22SPN%22%2C%22depDt%22%3A%2220260310%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22SPN%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22SEL%22%2C%22depDt%22%3A%2220260313%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
-      "region": "남태평양",
-      "discountRate": 20
-    },
-    {
-      "id": "hanatour-regular-인천/김포-3",
-      "source": "hanatour",
       "airline": "아시아나항공",
       "departure": {
         "city": "서울(ICN)",
@@ -6257,13 +6233,13 @@
       "price": 199000,
       "currency": "KRW",
       "link": "https://www.hanatour.com/com/pmt/CHPC0PMT0011M200?fareId=RTF%5E2967528%5EOZ0747ICNHKT-H229%5EOZ0747ICNHKT-755%5E20260310%5ET%5EKRW%5E6320945%5E5065124%5E%5E1%5E0%5E0&psngrCntLst=%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D&selectedCard=%7B%7D",
-      "availableSeats": 2,
+      "availableSeats": 1,
       "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22SEL%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22HKT%22%2C%22depDt%22%3A%2220260310%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22HKT%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22SEL%22%2C%22depDt%22%3A%2220260313%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
       "region": "동남아",
       "discountRate": 51
     },
     {
-      "id": "hanatour-regular-인천/김포-4",
+      "id": "hanatour-regular-인천/김포-3",
       "source": "hanatour",
       "airline": "진에어",
       "departure": {
@@ -6287,31 +6263,7 @@
       "discountRate": 1
     },
     {
-      "id": "hanatour-regular-인천/김포-5",
-      "source": "hanatour",
-      "airline": "진에어",
-      "departure": {
-        "city": "서울(ICN)",
-        "airport": "",
-        "date": "2026.03.15(일)",
-        "time": "16:45"
-      },
-      "arrival": {
-        "city": "방콕(BKK)",
-        "airport": "",
-        "date": "2026.03.18(수)",
-        "time": "21:10"
-      },
-      "price": 261000,
-      "currency": "KRW",
-      "link": "https://www.hanatour.com/com/pmt/CHPC0PMT0011M200?fareId=RTF%5E2978314%5ELJ0001ICNBKK-H64%5ELJ0001ICNBKK-264%5E20260315%5ET%5EKRW%5E6324007%5E5068555%5E%5E1%5E0%5E0&psngrCntLst=%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D&selectedCard=%7B%7D",
-      "availableSeats": 2,
-      "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22SEL%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22BKK%22%2C%22depDt%22%3A%2220260315%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22BKK%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22SEL%22%2C%22depDt%22%3A%2220260318%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
-      "region": "동남아",
-      "discountRate": 1
-    },
-    {
-      "id": "hanatour-regular-인천/김포-6",
+      "id": "hanatour-regular-인천/김포-4",
       "source": "hanatour",
       "airline": "진에어",
       "departure": {
@@ -6335,7 +6287,7 @@
       "discountRate": 1
     },
     {
-      "id": "hanatour-regular-인천/김포-7",
+      "id": "hanatour-regular-인천/김포-5",
       "source": "hanatour",
       "airline": "진에어",
       "departure": {
@@ -6359,7 +6311,7 @@
       "discountRate": 1
     },
     {
-      "id": "hanatour-regular-인천/김포-12",
+      "id": "hanatour-regular-인천/김포-10",
       "source": "hanatour",
       "airline": "파라타 항공",
       "departure": {
@@ -6377,13 +6329,13 @@
       "price": 287200,
       "currency": "KRW",
       "link": "https://www.hanatour.com/com/pmt/CHPC0PMT0011M200?fareId=RTF%5E3016245%5EWE0511ICNKIX-H1%5EWE0511ICNKIX-1%5E20260309%5ET%5EKRW%5E6367983%5E5141319%5E%5E1%5E0%5E0&psngrCntLst=%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D&selectedCard=%7B%7D",
-      "availableSeats": 9,
+      "availableSeats": 2,
       "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22SEL%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22OSA%22%2C%22depDt%22%3A%2220260309%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22OSA%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22SEL%22%2C%22depDt%22%3A%2220260312%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
       "region": "일본",
       "discountRate": 0
     },
     {
-      "id": "hanatour-regular-인천/김포-22",
+      "id": "hanatour-regular-인천/김포-20",
       "source": "hanatour",
       "airline": "제주항공",
       "departure": {
@@ -6407,7 +6359,7 @@
       "discountRate": -10
     },
     {
-      "id": "hanatour-regular-인천/김포-34",
+      "id": "hanatour-regular-인천/김포-32",
       "source": "hanatour",
       "airline": "티웨이항공",
       "departure": {
@@ -6431,7 +6383,7 @@
       "discountRate": -20
     },
     {
-      "id": "hanatour-regular-인천/김포-35",
+      "id": "hanatour-regular-인천/김포-33",
       "source": "hanatour",
       "airline": "티웨이항공",
       "departure": {
@@ -6455,7 +6407,7 @@
       "discountRate": -20
     },
     {
-      "id": "hanatour-regular-인천/김포-36",
+      "id": "hanatour-regular-인천/김포-34",
       "source": "hanatour",
       "airline": "티웨이항공",
       "departure": {
@@ -6479,7 +6431,7 @@
       "discountRate": -20
     },
     {
-      "id": "hanatour-regular-인천/김포-37",
+      "id": "hanatour-regular-인천/김포-35",
       "source": "hanatour",
       "airline": "티웨이항공",
       "departure": {
@@ -6497,13 +6449,13 @@
       "price": 394900,
       "currency": "KRW",
       "link": "https://www.hanatour.com/com/pmt/CHPC0PMT0011M200?fareId=RTF%5E2954755%5ETW0161ICNSIN-H3%5ETW0161ICNSIN-9%5E20260319%5ET%5EKRW%5E6286955%5E5026361%5E%5E1%5E0%5E0&psngrCntLst=%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D&selectedCard=%7B%7D",
-      "availableSeats": 3,
+      "availableSeats": 1,
       "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22SEL%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22SIN%22%2C%22depDt%22%3A%2220260319%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22SIN%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22SEL%22%2C%22depDt%22%3A%2220260322%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
       "region": "동남아",
       "discountRate": -20
     },
     {
-      "id": "hanatour-regular-인천/김포-38",
+      "id": "hanatour-regular-인천/김포-36",
       "source": "hanatour",
       "airline": "티웨이항공",
       "departure": {
@@ -6545,7 +6497,7 @@
       "price": 249600,
       "currency": "KRW",
       "link": "https://www.hanatour.com/com/pmt/CHPC0PMT0011M200?fareId=RTF%5E2949642%5ERF0306CJJKIX-H1%5ERF0306CJJKIX-1%5E20260321%5ET%5EKRW%5E6303285%5E5043652%5E%5E1%5E0%5E0&psngrCntLst=%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D&selectedCard=%7B%7D",
-      "availableSeats": 8,
+      "availableSeats": 6,
       "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22CJJ%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22OSA%22%2C%22depDt%22%3A%2220260321%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22OSA%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22CJJ%22%2C%22depDt%22%3A%2220260324%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
       "region": "일본",
       "discountRate": 13
@@ -7007,7 +6959,7 @@
       "discountRate": 9
     },
     {
-      "id": "modetour-ASIA-6",
+      "id": "modetour-ASIA-5",
       "source": "modetour",
       "airline": "제주항공",
       "departure": {
@@ -7031,7 +6983,7 @@
       "discountRate": -10
     },
     {
-      "id": "modetour-ASIA-7",
+      "id": "modetour-ASIA-6",
       "source": "modetour",
       "airline": "제주항공",
       "departure": {
@@ -7055,7 +7007,7 @@
       "discountRate": 9
     },
     {
-      "id": "modetour-ASIA-8",
+      "id": "modetour-ASIA-7",
       "source": "modetour",
       "airline": "티웨이항공",
       "departure": {
@@ -7079,31 +7031,7 @@
       "discountRate": 12
     },
     {
-      "id": "modetour-ASIA-12",
-      "source": "modetour",
-      "airline": "이스타항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-09",
-        "time": "17:05"
-      },
-      "arrival": {
-        "city": "방콕",
-        "airport": "BKK",
-        "date": "2026-03-12",
-        "time": "22:25"
-      },
-      "price": 276000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=undefined&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 6,
-      "flightNumber": "ZE511 / ZE512",
-      "region": "동남아",
-      "discountRate": -5
-    },
-    {
-      "id": "modetour-ASIA-33",
+      "id": "modetour-ASIA-26",
       "source": "modetour",
       "airline": "제주항공",
       "departure": {
@@ -7127,7 +7055,7 @@
       "discountRate": 0
     },
     {
-      "id": "modetour-ASIA-34",
+      "id": "modetour-ASIA-27",
       "source": "modetour",
       "airline": "제주항공",
       "departure": {
@@ -7151,7 +7079,7 @@
       "discountRate": -5
     },
     {
-      "id": "modetour-ASIA-39",
+      "id": "modetour-ASIA-32",
       "source": "modetour",
       "airline": "이스타항공",
       "departure": {
@@ -7175,7 +7103,7 @@
       "discountRate": -5
     },
     {
-      "id": "modetour-ASIA-41",
+      "id": "modetour-ASIA-34",
       "source": "modetour",
       "airline": "제주항공",
       "departure": {
@@ -7199,7 +7127,7 @@
       "discountRate": -10
     },
     {
-      "id": "modetour-ASIA-43",
+      "id": "modetour-ASIA-36",
       "source": "modetour",
       "airline": "제주항공",
       "departure": {
@@ -7223,7 +7151,7 @@
       "discountRate": -5
     },
     {
-      "id": "modetour-ASIA-44",
+      "id": "modetour-ASIA-37",
       "source": "modetour",
       "airline": "비엣젯항공",
       "departure": {
@@ -7247,7 +7175,7 @@
       "discountRate": -19
     },
     {
-      "id": "modetour-ASIA-46",
+      "id": "modetour-ASIA-39",
       "source": "modetour",
       "airline": "비엣젯항공",
       "departure": {
@@ -7271,7 +7199,7 @@
       "discountRate": 0
     },
     {
-      "id": "modetour-ASIA-53",
+      "id": "modetour-ASIA-46",
       "source": "modetour",
       "airline": "제주항공",
       "departure": {
@@ -7295,7 +7223,7 @@
       "discountRate": -5
     },
     {
-      "id": "modetour-ASIA-56",
+      "id": "modetour-ASIA-49",
       "source": "modetour",
       "airline": "비엣젯항공",
       "departure": {
@@ -7319,7 +7247,7 @@
       "discountRate": -19
     },
     {
-      "id": "modetour-ASIA-59",
+      "id": "modetour-ASIA-52",
       "source": "modetour",
       "airline": "비엣젯항공",
       "departure": {
@@ -7343,7 +7271,7 @@
       "discountRate": 0
     },
     {
-      "id": "modetour-ASIA-60",
+      "id": "modetour-ASIA-53",
       "source": "modetour",
       "airline": "이스타항공",
       "departure": {
@@ -7367,7 +7295,7 @@
       "discountRate": -5
     },
     {
-      "id": "modetour-ASIA-65",
+      "id": "modetour-ASIA-58",
       "source": "modetour",
       "airline": "제주항공",
       "departure": {
@@ -7391,7 +7319,7 @@
       "discountRate": -55
     },
     {
-      "id": "modetour-ASIA-73",
+      "id": "modetour-ASIA-65",
       "source": "modetour",
       "airline": "제주항공",
       "departure": {
@@ -7415,7 +7343,7 @@
       "discountRate": -10
     },
     {
-      "id": "modetour-ASIA-77",
+      "id": "modetour-ASIA-69",
       "source": "modetour",
       "airline": "제주항공",
       "departure": {
@@ -7439,7 +7367,7 @@
       "discountRate": 0
     },
     {
-      "id": "modetour-ASIA-89",
+      "id": "modetour-ASIA-78",
       "source": "modetour",
       "airline": "제주항공",
       "departure": {
@@ -7463,7 +7391,7 @@
       "discountRate": 0
     },
     {
-      "id": "modetour-ASIA-125",
+      "id": "modetour-ASIA-114",
       "source": "modetour",
       "airline": "제주항공",
       "departure": {
@@ -7487,7 +7415,7 @@
       "discountRate": 0
     },
     {
-      "id": "modetour-ASIA-128",
+      "id": "modetour-ASIA-117",
       "source": "modetour",
       "airline": "제주항공",
       "departure": {
@@ -7511,7 +7439,7 @@
       "discountRate": 2
     },
     {
-      "id": "modetour-ASIA-133",
+      "id": "modetour-ASIA-122",
       "source": "modetour",
       "airline": "제주항공",
       "departure": {
@@ -7535,7 +7463,7 @@
       "discountRate": -22
     },
     {
-      "id": "modetour-ASIA-134",
+      "id": "modetour-ASIA-123",
       "source": "modetour",
       "airline": "이스타항공",
       "departure": {
@@ -7559,7 +7487,7 @@
       "discountRate": -5
     },
     {
-      "id": "modetour-ASIA-140",
+      "id": "modetour-ASIA-129",
       "source": "modetour",
       "airline": "제주항공",
       "departure": {
@@ -7583,7 +7511,7 @@
       "discountRate": -11
     },
     {
-      "id": "modetour-ASIA-141",
+      "id": "modetour-ASIA-130",
       "source": "modetour",
       "airline": "티웨이항공",
       "departure": {
@@ -7607,7 +7535,7 @@
       "discountRate": -8
     },
     {
-      "id": "modetour-ASIA-142",
+      "id": "modetour-ASIA-131",
       "source": "modetour",
       "airline": "필리핀 항공",
       "departure": {
@@ -7631,7 +7559,7 @@
       "discountRate": -28
     },
     {
-      "id": "modetour-ASIA-146",
+      "id": "modetour-ASIA-135",
       "source": "modetour",
       "airline": "제주항공",
       "departure": {
@@ -7655,7 +7583,7 @@
       "discountRate": 0
     },
     {
-      "id": "modetour-ASIA-148",
+      "id": "modetour-ASIA-137",
       "source": "modetour",
       "airline": "제주항공",
       "departure": {
@@ -7679,7 +7607,7 @@
       "discountRate": 2
     },
     {
-      "id": "modetour-ASIA-154",
+      "id": "modetour-ASIA-143",
       "source": "modetour",
       "airline": "제주항공",
       "departure": {
@@ -7703,7 +7631,7 @@
       "discountRate": -22
     },
     {
-      "id": "modetour-ASIA-155",
+      "id": "modetour-ASIA-144",
       "source": "modetour",
       "airline": "이스타항공",
       "departure": {
@@ -7727,7 +7655,7 @@
       "discountRate": -5
     },
     {
-      "id": "modetour-ASIA-160",
+      "id": "modetour-ASIA-149",
       "source": "modetour",
       "airline": "필리핀 항공",
       "departure": {
@@ -7751,7 +7679,7 @@
       "discountRate": -28
     },
     {
-      "id": "modetour-ASIA-166",
+      "id": "modetour-ASIA-155",
       "source": "modetour",
       "airline": "필리핀 항공",
       "departure": {
@@ -7775,7 +7703,7 @@
       "discountRate": -28
     },
     {
-      "id": "modetour-ASIA-171",
+      "id": "modetour-ASIA-160",
       "source": "modetour",
       "airline": "제주항공",
       "departure": {
@@ -7799,7 +7727,7 @@
       "discountRate": 0
     },
     {
-      "id": "modetour-ASIA-173",
+      "id": "modetour-ASIA-162",
       "source": "modetour",
       "airline": "제주항공",
       "departure": {
@@ -7823,7 +7751,7 @@
       "discountRate": 2
     },
     {
-      "id": "modetour-ASIA-174",
+      "id": "modetour-ASIA-163",
       "source": "modetour",
       "airline": "비엣젯항공",
       "departure": {
@@ -7847,7 +7775,7 @@
       "discountRate": -19
     },
     {
-      "id": "modetour-ASIA-177",
+      "id": "modetour-ASIA-166",
       "source": "modetour",
       "airline": "비엣젯항공",
       "departure": {
@@ -7871,7 +7799,7 @@
       "discountRate": 0
     },
     {
-      "id": "modetour-ASIA-181",
+      "id": "modetour-ASIA-170",
       "source": "modetour",
       "airline": "이스타항공",
       "departure": {
@@ -7895,7 +7823,7 @@
       "discountRate": -5
     },
     {
-      "id": "modetour-ASIA-186",
+      "id": "modetour-ASIA-174",
       "source": "modetour",
       "airline": "제주항공",
       "departure": {
@@ -7919,7 +7847,7 @@
       "discountRate": -10
     },
     {
-      "id": "modetour-ASIA-187",
+      "id": "modetour-ASIA-175",
       "source": "modetour",
       "airline": "필리핀 항공",
       "departure": {
@@ -7943,7 +7871,7 @@
       "discountRate": -28
     },
     {
-      "id": "modetour-ASIA-190",
+      "id": "modetour-ASIA-178",
       "source": "modetour",
       "airline": "필리핀 항공",
       "departure": {
@@ -7967,7 +7895,7 @@
       "discountRate": -28
     },
     {
-      "id": "modetour-ASIA-194",
+      "id": "modetour-ASIA-182",
       "source": "modetour",
       "airline": "제주항공",
       "departure": {
@@ -7991,7 +7919,7 @@
       "discountRate": 0
     },
     {
-      "id": "modetour-ASIA-196",
+      "id": "modetour-ASIA-184",
       "source": "modetour",
       "airline": "제주항공",
       "departure": {
@@ -8015,7 +7943,7 @@
       "discountRate": 2
     },
     {
-      "id": "modetour-ASIA-197",
+      "id": "modetour-ASIA-185",
       "source": "modetour",
       "airline": "비엣젯항공",
       "departure": {
@@ -8039,7 +7967,7 @@
       "discountRate": -19
     },
     {
-      "id": "modetour-ASIA-209",
+      "id": "modetour-ASIA-195",
       "source": "modetour",
       "airline": "제주항공",
       "departure": {
@@ -8063,7 +7991,7 @@
       "discountRate": -10
     },
     {
-      "id": "modetour-ASIA-211",
+      "id": "modetour-ASIA-197",
       "source": "modetour",
       "airline": "필리핀 항공",
       "departure": {
@@ -8087,7 +8015,7 @@
       "discountRate": -28
     },
     {
-      "id": "modetour-ASIA-263",
+      "id": "modetour-ASIA-249",
       "source": "modetour",
       "airline": "제주항공",
       "departure": {
@@ -8111,7 +8039,7 @@
       "discountRate": 6
     },
     {
-      "id": "modetour-ASIA-272",
+      "id": "modetour-ASIA-258",
       "source": "modetour",
       "airline": "필리핀 항공",
       "departure": {
@@ -8135,7 +8063,7 @@
       "discountRate": -28
     },
     {
-      "id": "modetour-ASIA-275",
+      "id": "modetour-ASIA-261",
       "source": "modetour",
       "airline": "에어로케이",
       "departure": {
@@ -8159,7 +8087,7 @@
       "discountRate": -1
     },
     {
-      "id": "modetour-ASIA-276",
+      "id": "modetour-ASIA-262",
       "source": "modetour",
       "airline": "티웨이항공",
       "departure": {
@@ -8183,7 +8111,7 @@
       "discountRate": 31
     },
     {
-      "id": "modetour-ASIA-284",
+      "id": "modetour-ASIA-270",
       "source": "modetour",
       "airline": "에어서울",
       "departure": {
@@ -8207,7 +8135,7 @@
       "discountRate": 2
     },
     {
-      "id": "modetour-ASIA-293",
+      "id": "modetour-ASIA-279",
       "source": "modetour",
       "airline": "제주항공",
       "departure": {
@@ -8231,7 +8159,7 @@
       "discountRate": -22
     },
     {
-      "id": "modetour-ASIA-294",
+      "id": "modetour-ASIA-280",
       "source": "modetour",
       "airline": "비엣젯항공",
       "departure": {
@@ -8255,7 +8183,7 @@
       "discountRate": 11
     },
     {
-      "id": "modetour-ASIA-303",
+      "id": "modetour-ASIA-289",
       "source": "modetour",
       "airline": "에어서울",
       "departure": {
@@ -8279,7 +8207,7 @@
       "discountRate": 2
     },
     {
-      "id": "modetour-ASIA-305",
+      "id": "modetour-ASIA-291",
       "source": "modetour",
       "airline": "제주항공",
       "departure": {
@@ -8303,7 +8231,7 @@
       "discountRate": -6
     },
     {
-      "id": "modetour-ASIA-315",
+      "id": "modetour-ASIA-301",
       "source": "modetour",
       "airline": "비엣젯항공",
       "departure": {
@@ -8327,7 +8255,7 @@
       "discountRate": 6
     },
     {
-      "id": "modetour-ASIA-321",
+      "id": "modetour-ASIA-307",
       "source": "modetour",
       "airline": "에어서울",
       "departure": {
@@ -8351,7 +8279,7 @@
       "discountRate": 2
     },
     {
-      "id": "modetour-ASIA-323",
+      "id": "modetour-ASIA-309",
       "source": "modetour",
       "airline": "제주항공",
       "departure": {
@@ -8373,30 +8301,6 @@
       "flightNumber": "7C2401 / 7C2402",
       "region": "기타",
       "discountRate": -6
-    },
-    {
-      "id": "modetour-JPN-0",
-      "source": "modetour",
-      "airline": "에어부산",
-      "departure": {
-        "city": "부산",
-        "airport": "PUS",
-        "date": "2026-03-11",
-        "time": "07:30"
-      },
-      "arrival": {
-        "city": "후쿠오카",
-        "airport": "FUK",
-        "date": "2026-03-13",
-        "time": "11:55"
-      },
-      "price": 212900,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=undefined&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 24,
-      "flightNumber": "BX148 / BX141",
-      "region": "일본",
-      "discountRate": 18
     },
     {
       "id": "modetour-JPN-8",
@@ -8495,7 +8399,7 @@
       "discountRate": -12
     },
     {
-      "id": "modetour-JPN-24",
+      "id": "modetour-JPN-23",
       "source": "modetour",
       "airline": "에어부산",
       "departure": {
@@ -8519,7 +8423,31 @@
       "discountRate": 18
     },
     {
-      "id": "modetour-JPN-41",
+      "id": "modetour-JPN-26",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-18",
+        "time": "13:20"
+      },
+      "arrival": {
+        "city": "오키나와",
+        "airport": "OKA",
+        "date": "2026-03-21",
+        "time": "16:50"
+      },
+      "price": 320200,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=undefined&adult=1&child=0&infant=0&step=1",
+      "availableSeats": 12,
+      "flightNumber": "7C1801 / 7C1802",
+      "region": "일본",
+      "discountRate": -29
+    },
+    {
+      "id": "modetour-JPN-40",
       "source": "modetour",
       "airline": "이스타항공",
       "departure": {
@@ -8735,30 +8663,6 @@
       "discountRate": -12
     },
     {
-      "id": "modetour-JPN-78",
-      "source": "modetour",
-      "airline": "이스타항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-24",
-        "time": "11:25"
-      },
-      "arrival": {
-        "city": "오키나와",
-        "airport": "OKA",
-        "date": "2026-03-27",
-        "time": "15:00"
-      },
-      "price": 361000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=undefined&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 4,
-      "flightNumber": "ZE631 / ZE632",
-      "region": "일본",
-      "discountRate": -46
-    },
-    {
       "id": "modetour-JPN-88",
       "source": "modetour",
       "airline": "에어부산",
@@ -8783,7 +8687,7 @@
       "discountRate": 18
     },
     {
-      "id": "modetour-JPN-122",
+      "id": "modetour-JPN-121",
       "source": "modetour",
       "airline": "티웨이항공",
       "departure": {
@@ -8807,7 +8711,7 @@
       "discountRate": -16
     },
     {
-      "id": "modetour-JPN-124",
+      "id": "modetour-JPN-123",
       "source": "modetour",
       "airline": "진에어",
       "departure": {
@@ -8831,7 +8735,7 @@
       "discountRate": 17
     },
     {
-      "id": "modetour-JPN-125",
+      "id": "modetour-JPN-124",
       "source": "modetour",
       "airline": "제주항공",
       "departure": {
@@ -8855,7 +8759,7 @@
       "discountRate": 22
     },
     {
-      "id": "modetour-JPN-134",
+      "id": "modetour-JPN-133",
       "source": "modetour",
       "airline": "이스타항공",
       "departure": {
@@ -8879,7 +8783,7 @@
       "discountRate": 15
     },
     {
-      "id": "modetour-JPN-135",
+      "id": "modetour-JPN-134",
       "source": "modetour",
       "airline": "이스타항공",
       "departure": {
@@ -8903,7 +8807,7 @@
       "discountRate": 1
     },
     {
-      "id": "modetour-JPN-136",
+      "id": "modetour-JPN-135",
       "source": "modetour",
       "airline": "이스타항공",
       "departure": {
@@ -8927,7 +8831,7 @@
       "discountRate": 1
     },
     {
-      "id": "modetour-JPN-137",
+      "id": "modetour-JPN-136",
       "source": "modetour",
       "airline": "에어부산",
       "departure": {
@@ -8951,7 +8855,7 @@
       "discountRate": 2
     },
     {
-      "id": "modetour-JPN-139",
+      "id": "modetour-JPN-138",
       "source": "modetour",
       "airline": "진에어",
       "departure": {
@@ -8975,7 +8879,7 @@
       "discountRate": 17
     },
     {
-      "id": "modetour-JPN-151",
+      "id": "modetour-JPN-150",
       "source": "modetour",
       "airline": "이스타항공",
       "departure": {
@@ -8999,7 +8903,7 @@
       "discountRate": 15
     },
     {
-      "id": "modetour-JPN-154",
+      "id": "modetour-JPN-153",
       "source": "modetour",
       "airline": "에어부산",
       "departure": {
@@ -9023,7 +8927,7 @@
       "discountRate": 2
     },
     {
-      "id": "modetour-JPN-155",
+      "id": "modetour-JPN-154",
       "source": "modetour",
       "airline": "진에어",
       "departure": {
@@ -9047,7 +8951,7 @@
       "discountRate": 17
     },
     {
-      "id": "modetour-JPN-162",
+      "id": "modetour-JPN-161",
       "source": "modetour",
       "airline": "이스타항공",
       "departure": {
@@ -9071,7 +8975,7 @@
       "discountRate": 18
     },
     {
-      "id": "modetour-JPN-168",
+      "id": "modetour-JPN-167",
       "source": "modetour",
       "airline": "에어부산",
       "departure": {
@@ -9095,7 +8999,7 @@
       "discountRate": -1
     },
     {
-      "id": "modetour-JPN-169",
+      "id": "modetour-JPN-168",
       "source": "modetour",
       "airline": "진에어",
       "departure": {
@@ -9119,7 +9023,7 @@
       "discountRate": -18
     },
     {
-      "id": "modetour-JPN-170",
+      "id": "modetour-JPN-169",
       "source": "modetour",
       "airline": "제주항공",
       "departure": {
@@ -9143,7 +9047,7 @@
       "discountRate": -10
     },
     {
-      "id": "modetour-JPN-199",
+      "id": "modetour-JPN-198",
       "source": "modetour",
       "airline": "에어부산",
       "departure": {
@@ -9287,7 +9191,7 @@
       "discountRate": -2
     },
     {
-      "id": "modetour-CHI-30",
+      "id": "modetour-CHI-29",
       "source": "modetour",
       "airline": "티웨이항공",
       "departure": {
@@ -9311,7 +9215,7 @@
       "discountRate": -26
     },
     {
-      "id": "modetour-CHI-32",
+      "id": "modetour-CHI-31",
       "source": "modetour",
       "airline": "이스타항공",
       "departure": {
@@ -9335,7 +9239,7 @@
       "discountRate": -25
     },
     {
-      "id": "modetour-CHI-35",
+      "id": "modetour-CHI-33",
       "source": "modetour",
       "airline": "에어부산",
       "departure": {
@@ -9359,31 +9263,7 @@
       "discountRate": -4
     },
     {
-      "id": "modetour-CHI-36",
-      "source": "modetour",
-      "airline": "홍콩 항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-25",
-        "time": "02:30"
-      },
-      "arrival": {
-        "city": "홍콩",
-        "airport": "HKG",
-        "date": "2026-03-28",
-        "time": "20:45"
-      },
-      "price": 268600,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=undefined&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 10,
-      "flightNumber": "HX627 / HX626",
-      "region": "중국",
-      "discountRate": -25
-    },
-    {
-      "id": "modetour-CHI-38",
+      "id": "modetour-CHI-35",
       "source": "modetour",
       "airline": "홍콩 항공",
       "departure": {
@@ -9407,7 +9287,7 @@
       "discountRate": -25
     },
     {
-      "id": "modetour-CHI-41",
+      "id": "modetour-CHI-38",
       "source": "modetour",
       "airline": "홍콩 항공",
       "departure": {
@@ -9431,7 +9311,7 @@
       "discountRate": -25
     },
     {
-      "id": "modetour-CHI-43",
+      "id": "modetour-CHI-40",
       "source": "modetour",
       "airline": "티웨이항공",
       "departure": {
@@ -9455,7 +9335,7 @@
       "discountRate": -2
     },
     {
-      "id": "modetour-CHI-45",
+      "id": "modetour-CHI-41",
       "source": "modetour",
       "airline": "에어로케이",
       "departure": {
@@ -9479,7 +9359,7 @@
       "discountRate": 22
     },
     {
-      "id": "modetour-CHI-48",
+      "id": "modetour-CHI-44",
       "source": "modetour",
       "airline": "티웨이항공",
       "departure": {
@@ -9503,7 +9383,7 @@
       "discountRate": -24
     },
     {
-      "id": "modetour-CHI-51",
+      "id": "modetour-CHI-47",
       "source": "modetour",
       "airline": "이스타항공",
       "departure": {
@@ -9527,7 +9407,7 @@
       "discountRate": -4
     },
     {
-      "id": "modetour-CHI-55",
+      "id": "modetour-CHI-51",
       "source": "modetour",
       "airline": "이스타항공",
       "departure": {
@@ -9551,31 +9431,7 @@
       "discountRate": -4
     },
     {
-      "id": "modetour-EUR-7",
-      "source": "modetour",
-      "airline": "터키항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-18",
-        "time": "10:45"
-      },
-      "arrival": {
-        "city": "Trabzon",
-        "airport": "TZX",
-        "date": "2026-03-26",
-        "time": "18:00"
-      },
-      "price": 970000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=undefined&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 9,
-      "flightNumber": "TK021 / TK020",
-      "region": "기타",
-      "discountRate": 25
-    },
-    {
-      "id": "modetour-EUR-8",
+      "id": "modetour-EUR-2",
       "source": "modetour",
       "airline": "에티하드 항공",
       "departure": {
@@ -9599,7 +9455,7 @@
       "discountRate": 0
     },
     {
-      "id": "modetour-EUR-9",
+      "id": "modetour-EUR-3",
       "source": "modetour",
       "airline": "에미레이트 항공",
       "departure": {
@@ -9623,7 +9479,7 @@
       "discountRate": -49
     },
     {
-      "id": "modetour-EUR-13",
+      "id": "modetour-EUR-7",
       "source": "modetour",
       "airline": "터키항공",
       "departure": {
@@ -9647,7 +9503,7 @@
       "discountRate": 25
     },
     {
-      "id": "modetour-EUR-17",
+      "id": "modetour-EUR-11",
       "source": "modetour",
       "airline": "에미레이트 항공",
       "departure": {
@@ -9671,31 +9527,7 @@
       "discountRate": -64
     },
     {
-      "id": "modetour-SOPA-2",
-      "source": "modetour",
-      "airline": "에어부산",
-      "departure": {
-        "city": "부산",
-        "airport": "PUS",
-        "date": "2026-03-09",
-        "time": "21:30"
-      },
-      "arrival": {
-        "city": "괌",
-        "airport": "GUM",
-        "date": "2026-03-13",
-        "time": "03:30"
-      },
-      "price": 208900,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight/reservation-page?id=undefined&adult=1&child=0&infant=0&step=1",
-      "availableSeats": 22,
-      "flightNumber": "BX614 / BX613",
-      "region": "남태평양",
-      "discountRate": -16
-    },
-    {
-      "id": "modetour-SOPA-9",
+      "id": "modetour-SOPA-6",
       "source": "modetour",
       "airline": "에어부산",
       "departure": {
@@ -9719,7 +9551,7 @@
       "discountRate": -16
     },
     {
-      "id": "modetour-SOPA-16",
+      "id": "modetour-SOPA-13",
       "source": "modetour",
       "airline": "에어부산",
       "departure": {
@@ -10295,30 +10127,6 @@
       "discountRate": -12
     },
     {
-      "id": "online-260304462086",
-      "source": "onlinetour",
-      "airline": "아시아나항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-03-04",
-        "time": "17:00"
-      },
-      "arrival": {
-        "city": "푸켓",
-        "airport": "",
-        "date": "2026-03-07",
-        "time": "22:55"
-      },
-      "price": 438000,
-      "currency": "KRW",
-      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260304462086",
-      "seats": "10석",
-      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=HKT&sCity2=HKT&eCity2=SEL&startDt=20260304&endDt=20260307&adt=1",
-      "region": "동남아",
-      "discountRate": -8
-    },
-    {
       "id": "online-260305462087",
       "source": "onlinetour",
       "airline": "아시아나항공",
@@ -10771,6 +10579,30 @@
       "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260323462105",
       "seats": "10석",
       "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=HKT&sCity2=HKT&eCity2=SEL&startDt=20260323&endDt=20260326&adt=1",
+      "region": "동남아",
+      "discountRate": -8
+    },
+    {
+      "id": "online-260324462106",
+      "source": "onlinetour",
+      "airline": "아시아나항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-03-24",
+        "time": "17:00"
+      },
+      "arrival": {
+        "city": "푸켓",
+        "airport": "",
+        "date": "2026-03-27",
+        "time": "22:55"
+      },
+      "price": 438000,
+      "currency": "KRW",
+      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260324462106",
+      "seats": "10석",
+      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=HKT&sCity2=HKT&eCity2=SEL&startDt=20260324&endDt=20260327&adt=1",
       "region": "동남아",
       "discountRate": -8
     },
@@ -13596,9 +13428,9 @@
   ],
   "sources": {
     "ybtour": 352,
-    "hanatour": 76,
-    "modetour": 678,
-    "onlinetour": 167,
+    "hanatour": 73,
+    "modetour": 655,
+    "onlinetour": 166,
     "ttang": 327
   }
 }
