@@ -39,6 +39,13 @@ const normalizeCity = (city: string): string => {
         '청도': '칭다오',
         '연태': '옌타이',
         '상해': '상하이',
+        '다카마츠': '다카마쓰',
+        '비엔티엔': '비엔티안',
+        '대만': '타이페이',
+        'Trabzon': '트라브존',
+        '치토세': '삿포로',
+        '칼리보': '보라카이',
+        '화리엔': '화롄',
     };
     let result = trimmed;
     // 괄호 포함 형태: "서울(ICN)", "부산(PUS)", "대구(TAE)"
@@ -51,6 +58,8 @@ const normalizeCity = (city: string): string => {
         else if (code === 'TAE') result = '대구';
         else if (code === 'CJJ') result = '청주';
         else if (code === 'CJU') result = '제주';
+        else if (code === 'NRT') result = '도쿄(나리타)';
+        else if (code === 'BKK') result = '방콕(수완나폼)';
         else result = codeMatch[1]; // 기타: 괄호만 제거
     } else {
         // 한글 괄호 형태: "서울(김포)", "서울(인천)", "마나도(인도네시아)"
@@ -61,7 +70,7 @@ const normalizeCity = (city: string): string => {
             else {
                 // 괄호 안이 공항/지역명이면 괄호 안 사용 (간사이, 나리타, 치토세 등)
                 const airportNames = ['간사이', '나리타', '하네다', '치토세', '돈무앙', '수완나폼', '깜랑', '보라카이', '덴파사'];
-                if (airportNames.includes(krMatch[2])) result = trimmed; // 원본 유지
+                if (airportNames.includes(krMatch[2])) result = trimmed; // 공항명 포함 원본 유지
                 else result = krMatch[1]; // 그 외는 괄호 앞의 도시명
             }
         } else {
@@ -69,6 +78,9 @@ const normalizeCity = (city: string): string => {
             if (trimmed === '서울') result = '인천';
             else if (trimmed === '청주시') result = '청주';
             else if (trimmed === '제주시') result = '제주';
+            else if (trimmed === '도쿄') result = '도쿄(하네다)';
+            else if (trimmed === '오사카') result = '오사카(간사이)';
+            else if (trimmed === '방콕') result = '방콕(수완나폼)';
         }
     }
     // 최종 매핑 적용 (푸껫→푸켓 등)
@@ -236,7 +248,8 @@ const TRIPCOM_CITY_DATA: Record<string, { id: number; name: string; provinceId?:
     '타이페이': { id: 617, name: '타이베이' }, '타이베이': { id: 617, name: '타이베이' },
     '타이중': { id: 3849, name: '타이중' }, '가오슝': { id: 720, name: '가오슝' },
     '상하이': { id: 2, name: '상하이' }, '베이징': { id: 1, name: '베이징' },
-    '칭다오': { id: 7, name: '칭다오' },
+    '칭다오': { id: 7, name: '칭다오' }, '옌타이': { id: 533, name: '옌타이' },
+    '화롄': { id: 6954, name: '화롄' },
     // 기타
     '사이판': { id: 4081, name: '사이판' }, '괌': { id: 753, name: '괌' },
     '시드니': { id: 501, name: '시드니' }, '브리즈번': { id: 680, name: '브리즈번' },
@@ -249,16 +262,28 @@ const TRIPCOM_CITY_DATA: Record<string, { id: number; name: string; provinceId?:
 
 const TRIPCOM_HOTEL_SUB3 = 'D13108706';
 
-const getTripcomHotelUrl = (arrCity: string): string | null => {
-    const cityName = normalizeCity(arrCity);
+const getTripcomHotelUrl = (arrCity: string, depDate?: string, arrDate?: string): string | null => {
+    // 공항명 괄호 제거하여 도시명만 추출 (e.g. '오사카(간사이)' → '오사카')
+    let cityName = normalizeCity(arrCity);
+    const bracketMatch = cityName.match(/^(.+?)\(.+?\)$/);
+    if (bracketMatch) cityName = bracketMatch[1];
     const cityData = TRIPCOM_CITY_DATA[cityName];
+    // 날짜 파라미터: 체크인=출발일, 체크아웃=출발일+1일 (1박 기준)
+    let dateParams = '';
+    if (depDate) {
+        const checkin = new Date(depDate);
+        const checkout = new Date(checkin);
+        checkout.setDate(checkout.getDate() + 1);
+        const fmt = (d: Date) => `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`;
+        dateParams = `&checkin=${fmt(checkin)}&checkout=${fmt(checkout)}`;
+    }
     if (cityData) {
         const encodedName = encodeURIComponent(cityData.name);
         const provinceParam = cityData.provinceId ? `&provinceId=${cityData.provinceId}` : '';
-        return `https://kr.trip.com/hotels/list?city=${cityData.id}&cityName=${encodedName}&searchType=CT&searchWord=${encodedName}${provinceParam}&locale=ko-KR&curr=KRW&Allianceid=${TRIPCOM_ALLIANCE_ID}&SID=${TRIPCOM_SID}&trip_sub1=&trip_sub3=${TRIPCOM_HOTEL_SUB3}`;
+        return `https://kr.trip.com/hotels/list?city=${cityData.id}&cityName=${encodedName}&searchType=CT&searchWord=${encodedName}${provinceParam}${dateParams}&locale=ko-KR&curr=KRW&Allianceid=${TRIPCOM_ALLIANCE_ID}&SID=${TRIPCOM_SID}&trip_sub1=&trip_sub3=${TRIPCOM_HOTEL_SUB3}`;
     }
     // 매핑에 없는 도시: 호텔 홈으로 연결
-    return `https://kr.trip.com/hotels/w/home?Allianceid=${TRIPCOM_ALLIANCE_ID}&SID=${TRIPCOM_SID}&trip_sub1=&trip_sub3=${TRIPCOM_HOTEL_SUB3}`;
+    return `https://kr.trip.com/hotels/w/home?${dateParams ? dateParams.substring(1) + '&' : ''}Allianceid=${TRIPCOM_ALLIANCE_ID}&SID=${TRIPCOM_SID}&trip_sub1=&trip_sub3=${TRIPCOM_HOTEL_SUB3}`;
 };
 
 const ITEMS_PER_PAGE = 20;
@@ -1514,7 +1539,7 @@ export default function Dashboard() {
                                             </div>
                                             {(() => {
                                                 const naverUrl = getNaverFlightUrl(flight.departure.city, flight.arrival.city, flight.departure.date, flight.arrival.date);
-                                                const tripcomHotelUrl = getTripcomHotelUrl(flight.arrival.city);
+                                                const tripcomHotelUrl = getTripcomHotelUrl(flight.arrival.city, flight.departure.date, flight.arrival.date);
                                                 if (!naverUrl && !tripcomHotelUrl) return null;
                                                 return (
                                                     <div className={styles.compareLinks}>
