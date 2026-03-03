@@ -76,139 +76,126 @@ function normalizeCity(city) {
 const CITY_DESCRIPTIONS = {
     '칭다오': {
         emoji: '🍺',
-        lines: [
-            '칭다오 맥주의 본고장에서 생맥주 한 잔 🍺',
-            '잔교(잔치아오)에서 야경 보며 해산물 한 상!',
+        variants: [
+            { lines: ['칭다오 맥주의 본고장에서 생맥주 한 잔 🍺', '잔교(잔치아오)에서 야경 보며 해산물 한 상!'], closing: '치맥 값으로 해외여행이죠.' },
+            { lines: ['해변 따라 독일풍 건물 산책 🍺', '칭다오 맥주 박물관에서 시음까지!'], closing: '비행 1시간 반이면 도착하는 가까운 해외.' },
+            { lines: ['바다 앞 노천 맥주집에서 건배 🍻', '라오산 절벽 위 풍경은 덤!'], closing: '주말 여행으로도 딱이에요.' },
         ],
-        closing: '치맥 값으로 해외여행이죠.'
     },
     '청도': {
         emoji: '🍺',
-        lines: [
-            '칭다오 맥주의 본고장에서 생맥주 한 잔 🍺',
-            '잔교에서 야경 보며 해산물 한 상!',
+        variants: [
+            { lines: ['칭다오 맥주의 본고장에서 생맥주 한 잔 🍺', '잔교에서 야경 보며 해산물 한 상!'], closing: '비행 1시간 반이면 도착하는 가까운 해외.' },
+            { lines: ['독일풍 거리를 거닐며 맥주 한 모금 🍻', '팔대관 이국풍 건축물 산책까지!'], closing: '주말 여행으로도 딱이에요.' },
         ],
-        closing: '비행 1시간 반이면 도착하는 가까운 해외.'
     },
     '후쿠오카': {
         emoji: '🍜',
-        lines: [
-            '하카타 라멘의 본고장에서 진짜 돈코츠 한 그릇 🍜',
-            '텐진 거리에서 쇼핑하고 모츠나베까지!',
+        variants: [
+            { lines: ['하카타 라멘의 본고장에서 진짜 돈코츠 한 그릇 🍜', '텐진 거리에서 쇼핑하고 모츠나베까지!'], closing: '라멘 값으로 일본 여행이죠.' },
+            { lines: ['나카스 야타이 거리에서 현지인처럼 한 잔 🍶', '오호리 공원 산책하며 여유로운 하루!'], closing: '가까운 일본, 부담 없이 다녀오세요.' },
+            { lines: ['캐널시티에서 쇼핑하고 🛍️', '야나가와 뱃놀이로 소도시 감성까지!'], closing: '당일치기도 가능한 가까운 일본.' },
         ],
-        closing: '라멘 값으로 일본 여행이죠.'
     },
     '오사카': {
         emoji: '🏯',
-        lines: [
-            '도톤보리에서 타코야끼 한 입 🏯',
-            '오사카성 산책하고 신세카이에서 쿠시카츠까지!',
+        variants: [
+            { lines: ['도톤보리에서 타코야끼 한 입 🏯', '오사카성 산책하고 신세카이에서 쿠시카츠까지!'], closing: '먹방 여행의 성지, 놓치면 후회합니다.' },
+            { lines: ['구로몬 시장에서 해산물 폭격 🦀', '난바에서 쇼핑하고 츠텐카쿠 야경까지!'], closing: '오사카는 먹을수록 빠져드는 도시.' },
+            { lines: ['유니버설 스튜디오에서 하루 종일 🎢', '우메다 스카이빌딩 전망도 놓치지 마세요!'], closing: '맛+놀이 다 되는 도시입니다.' },
         ],
-        closing: '먹방 여행의 성지, 놓치면 후회합니다.'
     },
     '도쿄': {
         emoji: '🗼',
-        lines: [
-            '시부야 스크램블에서 도쿄 감성 만끽 🗼',
-            '아사쿠사 센소지부터 아키하바라까지!',
+        variants: [
+            { lines: ['시부야 스크램블에서 도쿄 감성 만끽 🗼', '아사쿠사 센소지부터 아키하바라까지!'], closing: '도쿄의 모든 것을 이 가격에.' },
+            { lines: ['츠키지 외시장에서 초밥 한 접시 🍣', '하라주쿠에서 트렌디한 도쿄 만끽!'], closing: '도쿄는 갈 때마다 새로운 도시.' },
+            { lines: ['신주쿠 고엔에서 도심 속 힐링 🌳', '오모테산도에서 카페 투어까지!'], closing: '이 가격에 도쿄라니, 놓칠 수 없죠.' },
         ],
-        closing: '도쿄의 모든 것을 이 가격에.'
     },
     '나가사키': {
         emoji: '⛪',
-        lines: [
-            '이국적인 나가사키 야경에 취하고 ⛪',
-            '짬뽕의 원조를 맛보는 미식 여행!',
+        variants: [
+            { lines: ['이국적인 나가사키 야경에 취하고 ⛪', '짬뽕의 원조를 맛보는 미식 여행!'], closing: '숨은 보석 같은 도시를 만나보세요.' },
+            { lines: ['이나사야마 전망대에서 세계 3대 야경 감상 🌃', '히라도에서 역사 산책까지!'], closing: '관광객 적은 숨은 명소.' },
         ],
-        closing: '숨은 보석 같은 도시를 만나보세요.'
     },
     '세부': {
         emoji: '🏝️',
-        lines: [
-            '에메랄드빛 바다에서 아일랜드 호핑 🏝️',
-            '오슬롭 고래상어 투어까지 완벽 코스!',
+        variants: [
+            { lines: ['에메랄드빛 바다에서 아일랜드 호핑 🏝️', '오슬롭 고래상어 투어까지 완벽 코스!'], closing: '동남아 휴양의 정석이죠.' },
+            { lines: ['막탄 해변에서 다이빙 입문 🤿', '세부 시내 망고스트리트에서 BBQ까지!'], closing: '바다+맛집 조합 최고.' },
         ],
-        closing: '동남아 휴양의 정석이죠.'
     },
     '다낭': {
         emoji: '🌊',
-        lines: [
-            '미케 비치에서 여유롭게 🌊',
-            '호이안 야시장에서 반미와 쌀국수 한 그릇!',
+        variants: [
+            { lines: ['미케 비치에서 여유롭게 🌊', '호이안 야시장에서 반미와 쌀국수 한 그릇!'], closing: '가성비 최고의 휴양지입니다.' },
+            { lines: ['바나힐 골든브릿지에서 인생샷 📸', '한시장에서 현지 해산물 실컷!'], closing: '가성비 끝판왕 여행지.' },
         ],
-        closing: '가성비 최고의 휴양지입니다.'
     },
     '방콕': {
         emoji: '🛕',
-        lines: [
-            '왓아룬의 황금빛 야경에 감탄하고 🛕',
-            '카오산 로드에서 패드타이 한 접시!',
+        variants: [
+            { lines: ['왓아룬의 황금빛 야경에 감탄하고 🛕', '카오산 로드에서 패드타이 한 접시!'], closing: '풍성한 먹거리와 문화가 기다립니다.' },
+            { lines: ['짜뚜짝 주말시장에서 쇼핑 대폭발 🛍️', '루프탑 바에서 방콕 야경 한 잔!'], closing: '가격 대비 만족도 최고.' },
         ],
-        closing: '풍성한 먹거리와 문화가 기다립니다.'
     },
     '괌': {
         emoji: '🏖️',
-        lines: [
-            '투몬 비치에서 스노클링 🏖️',
-            '차모로 빌리지 야시장에서 현지 음식 탐험!',
+        variants: [
+            { lines: ['투몬 비치에서 스노클링 🏖️', '차모로 빌리지 야시장에서 현지 음식 탐험!'], closing: '비행 4시간이면 리조트 파라다이스.' },
+            { lines: ['투몬 베이에서 선셋 카약 🌅', '마이크로네시아 몰에서 면세 쇼핑까지!'], closing: '짧은 비행, 긴 휴식.' },
         ],
-        closing: '비행 4시간이면 리조트 파라다이스.'
     },
     '사이판': {
         emoji: '🐠',
-        lines: [
-            '마나가하 섬에서 투명한 바다 속으로 🐠',
-            '그로토 다이빙 포인트는 세계 TOP 급!',
+        variants: [
+            { lines: ['마나가하 섬에서 투명한 바다 속으로 🐠', '그로토 다이빙 포인트는 세계 TOP 급!'], closing: '가족 여행으로도 최고의 선택.' },
+            { lines: ['버드 아일랜드에서 일출 감상 🌄', '마이크로 비치에서 한가로운 오후!'], closing: '3시간 반이면 천국 도착.' },
         ],
-        closing: '가족 여행으로도 최고의 선택.'
     },
     '보라카이': {
         emoji: '🌅',
-        lines: [
-            '화이트 비치에서 세계 최고의 석양을 🌅',
-            '디몰에서 망고 스무디 한 잔이면 천국!',
+        variants: [
+            { lines: ['화이트 비치에서 세계 최고의 석양을 🌅', '디몰에서 망고 스무디 한 잔이면 천국!'], closing: '가성비 최강 동남아 휴양지.' },
+            { lines: ['풀라 비치에서 고요한 바다 만끽 🐚', '아리엘스 포인트에서 클리프 다이빙 도전!'], closing: '인생 비치를 만나보세요.' },
         ],
-        closing: '가성비 최강 동남아 휴양지.'
     },
     '타이페이': {
         emoji: '🧋',
-        lines: [
-            '스린 야시장에서 지파이 한 조각 🧋',
-            '지우펀 골목에서 홍차 한 잔의 여유!',
+        variants: [
+            { lines: ['스린 야시장에서 지파이 한 조각 🧋', '지우펀 골목에서 홍차 한 잔의 여유!'], closing: '가까운 곳에서 만나는 미식 천국.' },
+            { lines: ['용산사에서 소원 빌고 🏮', '시먼딩 거리에서 대만 로컬 간식 탐험!'], closing: '2시간 반이면 미식의 나라.' },
         ],
-        closing: '가까운 곳에서 만나는 미식 천국.'
     },
     '다카마쓰': {
         emoji: '🍡',
-        lines: [
-            '리쓰린 공원에서 일본 정원의 진수를 🍡',
-            '사누키 우동의 본고장, 한 그릇에 감동!',
+        variants: [
+            { lines: ['리쓰린 공원에서 일본 정원의 진수를 🍡', '사누키 우동의 본고장, 한 그릇에 감동!'], closing: '숨겨진 일본 소도시 여행의 매력.' },
+            { lines: ['나오시마 섬에서 예술 산책 🎨', '세토내해 바다를 바라보며 우동 한 그릇!'], closing: '조용한 힐링 여행의 정석.' },
         ],
-        closing: '숨겨진 일본 소도시 여행의 매력.'
     },
     '마츠야마': {
         emoji: '♨️',
-        lines: [
-            '도고 온천에서 3000년 역사의 힐링 ♨️',
-            '미카와시마 전망대에서 세토내해 파노라마!',
+        variants: [
+            { lines: ['도고 온천에서 3000년 역사의 힐링 ♨️', '미카와시마 전망대에서 세토내해 파노라마!'], closing: '온천 여행의 끝판왕.' },
+            { lines: ['마츠야마성에서 시코쿠 풍경 한눈에 🏯', '도고 상점가에서 감귤 디저트까지!'], closing: '온천+역사+맛집 풀코스.' },
         ],
-        closing: '온천 여행의 끝판왕.'
     },
     '삿포로': {
         emoji: '⛷️',
-        lines: [
-            '파우더 스노우에서 겨울 스포츠를 ⛷️',
-            '미소 라멘과 징기스칸 바비큐의 본고장!',
+        variants: [
+            { lines: ['파우더 스노우에서 겨울 스포츠를 ⛷️', '미소 라멘과 징기스칸 바비큐의 본고장!'], closing: '겨울 여행의 로망이 이 가격에.' },
+            { lines: ['오도리 공원에서 여유로운 산책 🌲', '니조 시장에서 신선한 해산물 덮밥 한 그릇!'], closing: '사계절 매력 있는 도시.' },
         ],
-        closing: '겨울 여행의 로망이 이 가격에.'
     },
     '마닐라': {
         emoji: '🌆',
-        lines: [
-            '인트라무로스에서 스페인 식민지 역사 탐방 🌆',
-            '말라떼 거리에서 필리핀 로컬 음식 도전!',
+        variants: [
+            { lines: ['인트라무로스에서 스페인 식민지 역사 탐방 🌆', '말라떼 거리에서 필리핀 로컬 음식 도전!'], closing: '세부/보라카이 경유지로도 최적.' },
+            { lines: ['마닐라 베이에서 황금빛 선셋 🌅', 'SM 몰에서 가성비 쇼핑까지!'], closing: '동남아 허브 도시의 매력.' },
         ],
-        closing: '세부/보라카이 경유지로도 최적.'
     },
 };
 
@@ -634,11 +621,22 @@ function getRankLabel(rank) {
 // ===== 도시명 매칭 (괄호 포함 이름 처리) =====
 function matchCityDescription(cityName) {
     if (!cityName) return null;
-    if (CITY_DESCRIPTIONS[cityName]) return CITY_DESCRIPTIONS[cityName];
-    for (const [key, desc] of Object.entries(CITY_DESCRIPTIONS)) {
-        if (cityName.includes(key)) return desc;
+    let cityDesc = null;
+    if (CITY_DESCRIPTIONS[cityName]) {
+        cityDesc = CITY_DESCRIPTIONS[cityName];
+    } else {
+        for (const [key, desc] of Object.entries(CITY_DESCRIPTIONS)) {
+            if (cityName.includes(key)) { cityDesc = desc; break; }
+        }
     }
-    return null;
+    if (!cityDesc) return null;
+    // variants 배열에서 랜덤 선택
+    if (cityDesc.variants && cityDesc.variants.length > 0) {
+        const variant = pickRandom(cityDesc.variants);
+        return { emoji: cityDesc.emoji, lines: variant.lines, closing: variant.closing };
+    }
+    // 하위 호환: lines/closing 직접 있는 경우
+    return cityDesc;
 }
 
 // ===== 지역 분류 =====
@@ -820,35 +818,19 @@ function generateHTML(topFlights, allIcnFlights) {
     const first = topFlights[0];
     const second = topFlights[1];
 
-    // 제목 생성 — 고정 앞부분 + 매번 바뀌는 후킹 서브타이틀
-    const titleCity = (first.arrival?.city || '').replace(/\([^)]*\)/g, '').trim();
-    const titlePrice = formatPriceShort(first.price);
-    const titlePrefix = `[${dateLabel}] 땡처리 항공권 특가 Top 5 🔥`;
-
-    // 데이터 기반 서브타이틀 후보 풀
-    // 만원대 표기 (예: 15만원대, 20만원대)
-    const priceRange = `${Math.floor(first.price / 10000)}만원대`;
-    const subtitleCandidates = [
-        `${titleCity} ${priceRange}!`,
-        `오늘 최저가 ${priceRange} ${titleCity}`,
-        `${titleCity} 왕복 ${priceRange} ✈️`,
-    ];
-    // 10만원대면 추가 후보
-    if (first.price < 200000) {
-        subtitleCandidates.push(`10만원대 해외여행 가능?!`);
-        subtitleCandidates.push(`${titleCity} ${priceRange}이면 KTX보다 싸네`);
-    }
-    // 일본 도시 2개 이상이면
-    const japanCount = topFlights.filter(f => ['일본'].includes(categorizeRegion(f.arrival?.city || ''))).length;
-    if (japanCount >= 2) subtitleCandidates.push(`일본 특가 쏟아진다 ✈️`);
-    // 동남아 있으면
-    const seaCount = topFlights.filter(f => ['동남아'].includes(categorizeRegion(f.arrival?.city || ''))).length;
-    if (seaCount >= 1) subtitleCandidates.push(`동남아 특가 터졌다 🌴`);
-
-    // 날짜 기반 랜덤 선택 (같은 날이면 같은 결과)
+    // 제목 생성 — SEO 최적화 패턴 (2026-03-03~)
+    // 형식: [M월 D일] 땡처리 항공권 특가 TOP 5 | {1위 목적지} {가격}, {2위 목적지} {가격} ✈️
     const dayHash = now.getDate() + now.getMonth() * 31;
-    const subtitle = subtitleCandidates[dayHash % subtitleCandidates.length];
-    const pageTitle = `${titlePrefix} ${subtitle}`;
+    const month = now.getMonth() + 1;
+    const day = now.getDate();
+    const firstCity = normalizeCity(first.arrival?.city || '');
+    const firstPrice = `${Math.floor(first.price / 10000)}만원`;
+    const secondCity = second ? normalizeCity(second.arrival?.city || '') : '';
+    const secondPrice = second ? `${Math.floor(second.price / 10000)}만원` : '';
+    const pricePart = second
+        ? `${firstCity} ${firstPrice}, ${secondCity} ${secondPrice}`
+        : `${firstCity} ${firstPrice}`;
+    const pageTitle = `[${month}월 ${day}일] 땡처리 항공권 특가 TOP 5 | ${pricePart} ✈️`;
 
     // 각 순위별 HTML 생성 (텍스트 + 이미지 + 시즌 코멘트)
     const rankSections = topFlights.map((f, i) => {
@@ -960,17 +942,20 @@ ${tipLines}
         </div>`;
     }
 
-    // 해시태그
+    // 해시태그 — SEO 최적화 (고정 + 월별 + 목적지별)
     const cities = [...new Set(topFlights.map(f => f.arrival?.city).filter(Boolean))];
+    const hashMonth = now.getMonth() + 1;
     const hashtags = [
-        '#티키티킷', '#땡처리항공권', '#특가항공권',
+        // ① 고정 (매일 동일)
+        '#땡처리항공권', '#특가항공권', '#항공권싸게사는법', '#항공권최저가', '#해외여행꿀팁', '#티키티킷',
+        // ② 월별
+        `#${hashMonth}월항공권`, `#${hashMonth}월해외여행`,
+        // ③ 목적지별
         ...cities.map(c => `#${normalizeCity(c)}여행`),
-        '#해외여행꿀팁'
     ].join(' ');
 
     // 인트로 스몰톡 (매일 바뀌는 자연스러운 인사)
     const dayOfWeek = now.getDay(); // 0=일 ~ 6=토
-    const month = now.getMonth() + 1;
     const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
 
     const introPool = [
@@ -988,9 +973,8 @@ ${tipLines}
 
         `<p>안녕하세요, 티키티킷입니다.</p>
         <p>&nbsp;</p>
-        <p>매일 여행사 특가를 모아보는데</p>
-        <p>오늘은 좀 괜찮은 것들이 보여서</p>
-        <p>공유드려요 😊</p>`,
+        <p>오늘도 특가 알림이 왔는데</p>
+        <p>가격이 꽤 괜찮아서 바로 가져왔어요 😊</p>`,
 
         `<p>혹시 다음 여행지 고민 중이신가요?</p>
         <p>&nbsp;</p>
