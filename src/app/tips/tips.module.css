@@ -1,0 +1,338 @@
+.tipsPage {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 40px 20px 80px;
+}
+
+.backLink {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.9rem;
+    color: var(--color-text-secondary);
+    margin-bottom: 24px;
+    transition: color var(--transition-fast);
+}
+
+.backLink:hover {
+    color: var(--color-primary);
+}
+
+.pageTitle {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--color-text-primary);
+    margin-bottom: 8px;
+    line-height: 1.3;
+}
+
+.pageSubtitle {
+    font-size: 0.95rem;
+    color: var(--color-text-secondary);
+    margin-bottom: 32px;
+}
+
+/* Tips List */
+.tipsList {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.tipCard {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px;
+    background: var(--color-bg-primary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: all var(--transition-base);
+}
+
+.tipCard:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: #c7d2fe;
+}
+
+.tipEmoji {
+    font-size: 2rem;
+    flex-shrink: 0;
+}
+
+.tipInfo {
+    flex: 1;
+    min-width: 0;
+}
+
+.tipTitle {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: 4px;
+    line-height: 1.4;
+}
+
+.tipDesc {
+    font-size: 0.85rem;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+}
+
+.tipArrow {
+    color: var(--color-text-muted);
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+/* Article Page */
+.article {
+    background: var(--color-bg-primary);
+    border-radius: var(--radius-xl);
+    padding: 40px 32px;
+    border: 1px solid var(--color-border);
+    box-shadow: var(--shadow-sm);
+}
+
+.articleTitle {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--color-text-primary);
+    margin-bottom: 24px;
+    line-height: 1.4;
+    text-align: center;
+}
+
+.articleBody {
+    font-size: 1rem;
+    line-height: 2;
+    color: #333;
+}
+
+.articleBody p {
+    margin-bottom: 8px;
+}
+
+.articleBody h2 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin: 32px 0 16px;
+}
+
+.divider {
+    border: none;
+    border-top: 1px solid var(--color-border);
+    margin: 32px 0;
+}
+
+.highlight {
+    color: #e53e3e;
+    font-weight: bold;
+}
+
+.infoBox {
+    background: #eef2ff;
+    border-radius: var(--radius-md);
+    padding: 20px 24px;
+    margin: 20px 0;
+    border-left: 3px solid var(--color-primary);
+    line-height: 1.8;
+}
+
+.tipBox {
+    background: #fffbeb;
+    border-radius: var(--radius-md);
+    padding: 20px 24px;
+    margin: 20px 0;
+    border-left: 3px solid #f59e0b;
+    line-height: 1.8;
+}
+
+.warningBox {
+    background: #fff7ed;
+    border-radius: var(--radius-md);
+    padding: 20px 24px;
+    margin: 20px 0;
+    border-left: 3px solid #ea580c;
+    line-height: 1.8;
+}
+
+.qaBlock {
+    margin: 24px 0;
+}
+
+.question {
+    font-weight: 700;
+    font-size: 1rem;
+    color: #2d3748;
+    margin-bottom: 8px;
+}
+
+.question b {
+    color: var(--color-primary);
+}
+
+.answer {
+    padding: 0 8px;
+    line-height: 1.9;
+}
+
+.answer b {
+    color: var(--color-text-primary);
+}
+
+.cityCard {
+    background: var(--color-bg-secondary);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    margin: 20px 0;
+    border: 1px solid var(--color-border);
+}
+
+.cityCard h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: var(--color-text-primary);
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 0.9rem;
+}
+
+.table th,
+.table td {
+    padding: 10px 8px;
+    border-bottom: 1px solid var(--color-border);
+    text-align: center;
+}
+
+.table th {
+    background: var(--color-bg-secondary);
+    font-weight: 700;
+    color: var(--color-text-secondary);
+    font-size: 0.8rem;
+}
+
+.table td:first-child {
+    font-weight: 600;
+}
+
+.regionTag {
+    display: inline-block;
+    background: var(--color-primary);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.regionTag.busan {
+    background: #2563eb;
+}
+
+.regionTag.cheongju {
+    background: #7c3aed;
+}
+
+.regionTag.daegu {
+    background: #059669;
+}
+
+.sakura {
+    color: #d63384;
+    font-weight: bold;
+}
+
+/* CTA */
+.ctaSection {
+    text-align: center;
+    margin-top: 40px;
+    padding: 32px 20px;
+    background: #eef2ff;
+    border-radius: var(--radius-lg);
+}
+
+.ctaSection p {
+    margin-bottom: 8px;
+    color: var(--color-text-secondary);
+}
+
+.ctaButton {
+    display: inline-block;
+    background: linear-gradient(135deg, #4F46E5 0%, #4338CA 100%);
+    color: white;
+    padding: 14px 28px;
+    border-radius: 30px;
+    font-weight: 700;
+    font-size: 1rem;
+    margin-top: 12px;
+    text-decoration: none;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.ctaButton:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(79, 70, 229, 0.4);
+    color: white;
+}
+
+/* More Tips */
+.moreTips {
+    margin-top: 40px;
+}
+
+.moreTipsTitle {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: 12px;
+}
+
+.moreTipsList {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.moreTipLink {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font-size: 0.9rem;
+    color: var(--color-text-primary);
+    transition: all var(--transition-fast);
+}
+
+.moreTipLink:hover {
+    background: #eef2ff;
+    border-color: #c7d2fe;
+    color: var(--color-primary);
+}
+
+@media (max-width: 768px) {
+    .article {
+        padding: 28px 20px;
+    }
+
+    .articleTitle {
+        font-size: 1.25rem;
+    }
+
+    .pageTitle {
+        font-size: 1.4rem;
+    }
+}

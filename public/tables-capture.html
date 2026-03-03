@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', -apple-system, sans-serif;
+            background: white;
+            padding: 16px;
+            font-size: 15px;
+            color: #333;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 15px;
+        }
+
+        th,
+        td {
+            padding: 12px 8px;
+            border-bottom: 1px solid #eee;
+            text-align: center;
+        }
+
+        th {
+            background: #f8f8f8;
+            font-weight: 700;
+            color: #555;
+            font-size: 13px;
+        }
+
+        td:first-child {
+            font-weight: 600;
+        }
+
+        .highlight {
+            color: #e53e3e;
+            font-weight: bold;
+        }
+
+        .blue {
+            color: #2563eb;
+            font-weight: bold;
+        }
+
+        h3 {
+            font-size: 16px;
+            margin-bottom: 8px;
+            color: #1a1a1a;
+        }
+
+        .note {
+            font-size: 12px;
+            color: #999;
+            text-align: right;
+            margin-top: 8px;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div id="table1">
+        <h3>🔵 부산 출발 vs 인천 출발</h3>
+        <table>
+            <tr>
+                <th>목적지</th>
+                <th>부산</th>
+                <th>인천</th>
+                <th>절약</th>
+            </tr>
+            <tr>
+                <td>🇯🇵 후쿠오카</td>
+                <td class="blue">19만</td>
+                <td>31만</td>
+                <td class="highlight">-12만</td>
+            </tr>
+            <tr>
+                <td>🇯🇵 오키나와</td>
+                <td class="blue">25만</td>
+                <td>35만</td>
+                <td class="highlight">-10만</td>
+            </tr>
+            <tr>
+                <td>🇵🇭 세부</td>
+                <td class="blue">20만</td>
+                <td>29만</td>
+                <td class="highlight">-9만</td>
+            </tr>
+            <tr>
+                <td>🇯🇵 오사카</td>
+                <td class="blue">22만</td>
+                <td>29만</td>
+                <td class="highlight">-7만</td>
+            </tr>
+            <tr>
+                <td>🇯🇵 도쿄</td>
+                <td class="blue">26만</td>
+                <td>33만</td>
+                <td class="highlight">-7만</td>
+            </tr>
+            <tr>
+                <td>🇻🇳 나트랑</td>
+                <td class="blue">26만</td>
+                <td>32만</td>
+                <td class="highlight">-6만</td>
+            </tr>
+        </table>
+        <p class="note">*최저가 기준</p>
+    </div>
+
+    <hr style="margin: 24px 0; border: none; border-top: 1px solid #eee;">
+
+    <div id="table2">
+        <h3>🟣 청주 출발 vs 인천 출발</h3>
+        <table>
+            <tr>
+                <th>목적지</th>
+                <th>청주</th>
+                <th>인천</th>
+                <th>절약</th>
+            </tr>
+            <tr>
+                <td>🇯🇵 후쿠오카</td>
+                <td class="blue">20만</td>
+                <td>31만</td>
+                <td class="highlight">-11만</td>
+            </tr>
+            <tr>
+                <td>🇹🇼 타이페이</td>
+                <td class="blue">24만</td>
+                <td>33만</td>
+                <td class="highlight">-9만</td>
+            </tr>
+        </table>
+        <p class="note">*최저가 기준</p>
+    </div>
+
+    <hr style="margin: 24px 0; border: none; border-top: 1px solid #eee;">
+
+    <div id="table3">
+        <h3>🟢 대구 출발 vs 인천 출발</h3>
+        <table>
+            <tr>
+                <th>목적지</th>
+                <th>대구</th>
+                <th>인천</th>
+                <th>절약</th>
+            </tr>
+            <tr>
+                <td>🇯🇵 도쿄</td>
+                <td class="blue">27만</td>
+                <td>33만</td>
+                <td class="highlight">-6만</td>
+            </tr>
+            <tr>
+                <td>🇹🇼 타이페이</td>
+                <td class="blue">27만</td>
+                <td>33만</td>
+                <td class="highlight">-6만</td>
+            </tr>
+        </table>
+        <p class="note">*최저가 기준</p>
+    </div>
+
+    <hr style="margin: 24px 0; border: none; border-top: 1px solid #eee;">
+
+    <div id="table4">
+        <h3>📋 지역별 추천 노선 요약</h3>
+        <table>
+            <tr>
+                <th>거주 지역</th>
+                <th>더 싼 노선</th>
+                <th>최대 절약</th>
+            </tr>
+            <tr>
+                <td>부산·경남</td>
+                <td style="font-size:13px">후쿠오카, 오키나와, 세부, 오사카, 도쿄, 나트랑</td>
+                <td class="highlight">12만</td>
+            </tr>
+            <tr>
+                <td>충청도</td>
+                <td style="font-size:13px">후쿠오카, 타이페이</td>
+                <td class="highlight">11만</td>
+            </tr>
+            <tr>
+                <td>대구·경북</td>
+                <td style="font-size:13px">도쿄, 타이페이</td>
+                <td class="highlight">6만</td>
+            </tr>
+        </table>
+        <p class="note">*최저가 기준, 2026년 3월 tikitikit.kr 실제 수집 데이터</p>
+    </div>
+</body>
+
+</html>

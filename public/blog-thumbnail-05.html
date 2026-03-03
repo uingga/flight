@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #111;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 40px;
+            padding: 40px;
+        }
+
+        /* 와이드 배너 (960x480) - 블로그 헤더 */
+        .wide-banner {
+            width: 960px;
+            height: 480px;
+            position: relative;
+            overflow: hidden;
+            font-family: 'Noto Sans KR', sans-serif;
+            background: #000;
+        }
+
+        .square-thumb {
+            width: 800px;
+            height: 800px;
+            position: relative;
+            overflow: hidden;
+            font-family: 'Noto Sans KR', sans-serif;
+            background: #000;
+        }
+
+        .panels {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        .panel {
+            flex: 1;
+            background-size: cover;
+            background-position: center;
+        }
+
+        /* 공항 관련 이미지 */
+        .panel-airport {
+            background-image: url('https://images.unsplash.com/photo-1436491865332-7a61a109db05?w=600');
+        }
+
+        .panel-plane {
+            background-image: url('https://images.unsplash.com/photo-1569154941061-e231b4725ef1?w=600');
+        }
+
+        .panel-runway {
+            background-image: url('https://images.unsplash.com/photo-1474302770737-173ee21bab63?w=600');
+        }
+
+        .text-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60%;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.88) 0%, rgba(0, 0, 0, 0.65) 60%, transparent 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            padding-bottom: 40px;
+        }
+
+        .text-overlay-full {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.7) 50%, rgba(0, 0, 0, 0.4) 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+        }
+
+        .line1 {
+            color: white;
+            font-size: 42px;
+            font-weight: 900;
+            text-shadow: 3px 3px 10px rgba(0, 0, 0, 0.7);
+            letter-spacing: -1px;
+        }
+
+        .line2 {
+            color: white;
+            font-size: 36px;
+            font-weight: 800;
+            text-shadow: 3px 3px 10px rgba(0, 0, 0, 0.7);
+            letter-spacing: -1px;
+            margin-top: 6px;
+        }
+
+        .line-accent {
+            color: #ff6b6b;
+            font-size: 28px;
+            font-weight: 800;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
+            margin-top: 12px;
+        }
+
+        .site-badge {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            padding: 6px 20px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            margin-top: 16px;
+            backdrop-filter: blur(4px);
+        }
+
+        /* 정사각 텍스트 크기 - blog-thumbnail-04 참고 */
+        .square-thumb .line1 {
+            font-size: 100px;
+            line-height: 1.1;
+        }
+
+        .square-thumb .line2 {
+            font-size: 52px;
+            line-height: 1.2;
+        }
+
+        .square-thumb .line-accent {
+            font-size: 36px;
+        }
+
+        label {
+            color: #888;
+            font-size: 14px;
+            font-family: sans-serif;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@700;800;900&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <label>와이드 배너 (960×480) - 블로그 헤더용</label>
+    <div class="wide-banner" id="wide-banner">
+        <div class="panel panel-plane" style="width:100%;height:100%;"></div>
+        <div class="text-overlay">
+            <div class="line1">인천만 고집하지 마세요 ✈️</div>
+            <div class="line2">지방공항이 더 싼 노선 총정리</div>
+            <div class="site-badge">티키티킷 tikitikit.kr</div>
+        </div>
+    </div>
+
+    <label>정사각 썸네일 (600×600)</label>
+    <div class="square-thumb" id="square-thumb">
+        <div class="panels">
+            <div class="panel panel-plane" style="background-position: center center;"></div>
+        </div>
+        <div class="text-overlay-full">
+            <div class="line1" style="font-size:125px; line-height:1.05;">인천만<br>고집하지<br>마세요<br>✈️</div>
+        </div>
+    </div>
+</body>
+
+</html>

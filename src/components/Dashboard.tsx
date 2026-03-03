@@ -381,6 +381,15 @@ export default function Dashboard() {
     const [headerScrolled, setHeaderScrolled] = useState(false);
     const lastScrollY = useRef(0);
 
+    // 팁 페이지 데이터
+    const tipPosts = useMemo(() => [
+        { title: '땡처리 항공권, 이렇게 싸도 되나요?', slug: 'cheap-flights-101', emoji: '✈️' },
+        { title: '지방공항이 인천보다 싼 노선 총정리', slug: 'regional-airports', emoji: '🗺️' },
+        { title: '땡처리 항공권 Q&A 10가지', slug: 'faq-10', emoji: '❓' },
+        { title: '일본 벚꽃 시즌 항공권 특가 가이드 🌸', slug: 'japan-cherry-blossom', emoji: '🌸' },
+        { title: '동남아 우기·건기 따져서 싸게 가는 법', slug: 'southeast-asia-seasons', emoji: '🌏' },
+    ], []);
+
     // 서비스 워커 등록
     useEffect(() => {
         if ('serviceWorker' in navigator && 'PushManager' in window) {
@@ -959,6 +968,148 @@ export default function Dashboard() {
     const displayedFlights = filteredFlights.slice(0, displayCount);
     const hasMore = displayCount < filteredFlights.length;
 
+    // ============================================
+    // Insight Bars — 카드 사이에 삽입되는 정보 바
+    // ============================================
+    const generateInsightBar = (barIndex: number) => {
+        // 순서: 팁 → 인기도시 → 출발시기 → 지역현황 → 항공사최저가
+        const barOrder = [5, 2, 4, 1, 3];
+        const barType = barOrder[barIndex % barOrder.length];
+
+        switch (barType) {
+            case 1: { // 🌏 지역별 현황
+                const regionCounts: Record<string, number> = {};
+                filteredFlights.forEach(f => {
+                    if (f.region) {
+                        regionCounts[f.region] = (regionCounts[f.region] || 0) + 1;
+                    }
+                });
+                const regions = Object.entries(regionCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+                if (regions.length === 0) return null;
+                return (
+                    <div key={`insight-${barIndex}`} className={`${styles.insightBar} ${styles.insightBarRegion}`}>
+                        <span className={styles.insightIcon}>🌏</span>
+                        <div className={styles.insightContent}>
+                            {regions.map(([region, count]) => (
+                                <span
+                                    key={region}
+                                    className={styles.insightChip}
+                                    onClick={(e) => { e.stopPropagation(); setRegionFilter(region); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                                >
+                                    {region} <span className={styles.insightChipCount}>{count}건</span>
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                );
+            }
+            case 2: { // 🗺️ 도시 바로가기
+                if (popularCities.length === 0) return null;
+                return (
+                    <div key={`insight-${barIndex}`} className={`${styles.insightBar} ${styles.insightBarCity}`}>
+                        <span className={styles.insightIcon}>🗺️</span>
+                        <div className={styles.insightContent}>
+                            <span>인기 도시</span>
+                            {popularCities.map(city => (
+                                <span
+                                    key={city}
+                                    className={styles.insightChip}
+                                    onClick={(e) => { e.stopPropagation(); setSearchTerm(city); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                                >
+                                    {normalizeCity(city)}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                );
+            }
+            case 3: { // ✈️ 항공사별 최저가
+                const airlinePrices: Record<string, number> = {};
+                filteredFlights.forEach(f => {
+                    if (f.airline && f.price > 0 && (!airlinePrices[f.airline] || f.price < airlinePrices[f.airline])) {
+                        airlinePrices[f.airline] = f.price;
+                    }
+                });
+                const topAirlines = Object.entries(airlinePrices).sort((a, b) => a[1] - b[1]).slice(0, 4);
+                if (topAirlines.length === 0) return null;
+                return (
+                    <div key={`insight-${barIndex}`} className={`${styles.insightBar} ${styles.insightBarAirline}`}>
+                        <span className={styles.insightIcon}>✈️</span>
+                        <div className={styles.insightContent}>
+                            <span>항공사별 최저가 —</span>
+                            {topAirlines.map(([airline, price]) => (
+                                <span
+                                    key={airline}
+                                    className={styles.insightChip}
+                                    onClick={(e) => { e.stopPropagation(); setAirlineFilter(airline); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                                >
+                                    {airline} <strong>{Math.floor(price / 10000)}만원~</strong>
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                );
+            }
+            case 4: { // 📅 출발 시기별
+                const now = new Date();
+                const thisWeekEnd = new Date(now);
+                thisWeekEnd.setDate(now.getDate() + (7 - now.getDay()));
+                const nextWeekEnd = new Date(thisWeekEnd);
+                nextWeekEnd.setDate(thisWeekEnd.getDate() + 7);
+                const thisMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                const nextMonthEnd = new Date(now.getFullYear(), now.getMonth() + 2, 0);
+
+                let thisWeek = 0, nextWeek = 0, thisMonth = 0, nextMonth = 0;
+                filteredFlights.forEach(f => {
+                    const d = new Date(f.departure.date?.replace(/\./g, '-') || '');
+                    if (isNaN(d.getTime())) return;
+                    if (d <= thisWeekEnd) thisWeek++;
+                    else if (d <= nextWeekEnd) nextWeek++;
+                    if (d <= thisMonthEnd) thisMonth++;
+                    else if (d <= nextMonthEnd) nextMonth++;
+                });
+
+                const chips: Array<{ label: string; count: number; start: string; end: string }> = [];
+                if (thisWeek > 0) chips.push({ label: '이번 주 출발', count: thisWeek, start: toStr(now), end: toStr(thisWeekEnd) });
+                if (nextWeek > 0) chips.push({ label: '다음 주 출발', count: nextWeek, start: toStr(thisWeekEnd), end: toStr(nextWeekEnd) });
+                if (thisMonth > 0) chips.push({ label: '이번 달', count: thisMonth, start: toStr(now), end: toStr(thisMonthEnd) });
+                if (nextMonth > 0) chips.push({ label: '다음 달', count: nextMonth, start: toStr(thisMonthEnd), end: toStr(nextMonthEnd) });
+
+                if (chips.length === 0) return null;
+                return (
+                    <div key={`insight-${barIndex}`} className={`${styles.insightBar} ${styles.insightBarTiming}`}>
+                        <span className={styles.insightIcon}>📅</span>
+                        <div className={styles.insightContent}>
+                            {chips.slice(0, 4).map(chip => (
+                                <span
+                                    key={chip.label}
+                                    className={styles.insightChip}
+                                    onClick={(e) => { e.stopPropagation(); setStartDate(chip.start); setEndDate(chip.end); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                                >
+                                    {chip.label} <span className={styles.insightChipCount}>{chip.count}건</span>
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                );
+            }
+            case 5: { // 📝 여행 팁
+                const post = tipPosts[barIndex % tipPosts.length];
+                return (
+                    <a key={`insight-${barIndex}`} href={`/tips/${post.slug}`} className={styles.insightBar} style={{ cursor: 'pointer', textDecoration: 'none', color: 'inherit' }}>
+                        <span className={styles.insightIcon}>📝</span>
+                        <div className={styles.insightContent}>
+                            <span>{post.emoji} <strong>{post.title}</strong></span>
+                            <span className={styles.insightChip}>읽어보기 →</span>
+                        </div>
+                    </a>
+                );
+            }
+            default:
+                return null;
+        }
+    };
+
     const formatPrice = (price: number) => {
         return new Intl.NumberFormat('ko-KR', {
             style: 'currency',
@@ -1384,11 +1535,18 @@ export default function Dashboard() {
                         )}
 
                         <div className={styles.flightGrid}>
-                            {displayedFlights.map((flight) => {
+                            {displayedFlights.flatMap((flight, index) => {
                                 const route = `${flight.departure.city}-${flight.arrival.city}`;
                                 const isLowestPrice = lowestPrices[route] === flight.price;
+                                const items: React.ReactNode[] = [];
 
-                                return (
+                                // 12개 카드마다 인사이트 바 삽입
+                                if (index > 0 && index % 12 === 0) {
+                                    const bar = generateInsightBar(index / 12 - 1);
+                                    if (bar) items.push(bar);
+                                }
+
+                                items.push(
                                     <div
                                         key={flight.id}
                                         className={`card ${styles.flightCard} fade-in`}
@@ -1566,6 +1724,7 @@ export default function Dashboard() {
 
                                     </div>
                                 );
+                                return items;
                             })}
                         </div>
 
