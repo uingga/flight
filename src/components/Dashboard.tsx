@@ -1341,8 +1341,8 @@ export default function Dashboard() {
                     if (!todayEntry || !yesterdayEntry) continue;
                     const drop = yesterdayEntry.minPrice - todayEntry.minPrice;
                     if (drop > 0) {
-                        // 노선명에서 도시 추출: "부산-세부" → "세부"
-                        const city = route.split('-')[1] || route;
+                        // 노선명에서 도시 추출: "부산-세부" → "세부", normalizeCity로 통일
+                        const city = normalizeCity(route.split('-')[1] || route);
                         drops.push({ route, city, todayPrice: todayEntry.minPrice, yesterdayPrice: yesterdayEntry.minPrice, drop });
                     }
                 }
@@ -1352,8 +1352,9 @@ export default function Dashboard() {
                 drops.sort((a, b) => b.drop - a.drop);
                 const seenCities11 = new Set<string>();
                 const topDrops = drops.filter(d => {
-                    if (seenCities11.has(d.city)) return false;
-                    seenCities11.add(d.city);
+                    const nc = normalizeCity(d.city);
+                    if (seenCities11.has(nc)) return false;
+                    seenCities11.add(nc);
                     return true;
                 }).slice(0, 5);
 
@@ -1361,7 +1362,7 @@ export default function Dashboard() {
                     <div key={`insight-${barIndex}`} className={styles.insightBar}>
                         <span className={styles.insightIcon}>📉</span>
                         <div className={styles.insightContent}>
-                            <span>가격이 살짝 내려온 노선들. —</span>
+                            <span>가격이 살짝 내려온 노선들 —</span>
                             {topDrops.map(d => (
                                 <span
                                     key={d.route}
