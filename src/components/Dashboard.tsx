@@ -979,7 +979,7 @@ export default function Dashboard() {
         switch (barType) {
             case 1: { // 🌏 지역별 현황
                 const regionCounts: Record<string, number> = {};
-                filteredFlights.forEach(f => {
+                flights.forEach(f => {
                     if (f.region) {
                         regionCounts[f.region] = (regionCounts[f.region] || 0) + 1;
                     }
@@ -1025,7 +1025,7 @@ export default function Dashboard() {
             }
             case 3: { // ✈️ 항공사별 최저가
                 const airlinePrices: Record<string, number> = {};
-                filteredFlights.forEach(f => {
+                flights.forEach(f => {
                     if (f.airline && f.price > 0 && (!airlinePrices[f.airline] || f.price < airlinePrices[f.airline])) {
                         airlinePrices[f.airline] = f.price;
                     }
@@ -1060,7 +1060,7 @@ export default function Dashboard() {
                 const nextMonthEnd = new Date(now.getFullYear(), now.getMonth() + 2, 0);
 
                 let thisWeek = 0, nextWeek = 0, thisMonth = 0, nextMonth = 0;
-                filteredFlights.forEach(f => {
+                flights.forEach(f => {
                     const d = new Date(f.departure.date?.replace(/\./g, '-') || '');
                     if (isNaN(d.getTime())) return;
                     if (d <= thisWeekEnd) thisWeek++;
@@ -1107,7 +1107,7 @@ export default function Dashboard() {
             }
             case 6: { // 🔥 역대급 할인 Top 5
                 const discountFlights: Array<{ flight: Flight; percent: number }> = [];
-                filteredFlights.forEach(f => {
+                flights.forEach(f => {
                     const city = f.arrival.city?.replace(/\([^)]+\)/, '').trim();
                     const depMonth = f.departure.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 7);
                     const ipMonthData = interparkPrices[city]?.[depMonth];
@@ -1158,7 +1158,7 @@ export default function Dashboard() {
                 const tomorrowStr7 = toDateStr7(tomorrow7);
 
                 const tomorrowFlights: Flight[] = [];
-                filteredFlights.forEach(f => {
+                flights.forEach(f => {
                     const fd = f.departure.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 10);
                     if (fd === tomorrowStr7) tomorrowFlights.push(f);
                 });
@@ -1207,7 +1207,7 @@ export default function Dashboard() {
                 const sunStr9 = toDateStr9(thisSun9);
 
                 const weekendFlights: Flight[] = [];
-                filteredFlights.forEach(f => {
+                flights.forEach(f => {
                     const fd = f.departure.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 10);
                     if (fd === satStr9 || fd === sunStr9) weekendFlights.push(f);
                 });
@@ -1243,7 +1243,7 @@ export default function Dashboard() {
             }
             case 10: { // 💸 20만원 이하
                 const cheapFlights: Flight[] = [];
-                filteredFlights.forEach(f => {
+                flights.forEach(f => {
                     if (f.price > 0 && f.price < 200000) cheapFlights.push(f);
                 });
                 if (cheapFlights.length === 0) return null;
@@ -1279,7 +1279,7 @@ export default function Dashboard() {
             case 8: { // 🌙 금요일 밤 비행기
                 // 금요일 17시 이후 출발 항공편
                 const friFlights: Array<{ flight: Flight; time: string }> = [];
-                filteredFlights.forEach(f => {
+                flights.forEach(f => {
                     const dateStr = f.departure.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 10);
                     const time = f.departure?.time;
                     if (!dateStr || !time) return;
