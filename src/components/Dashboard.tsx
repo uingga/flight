@@ -972,8 +972,8 @@ export default function Dashboard() {
     // Insight Bars — 카드 사이에 삽입되는 정보 바
     // ============================================
     const generateInsightBar = (barIndex: number) => {
-        // 순서: 금요밤 → 팁 → 가격하락 → 인기도시 → 할인Top5 → 이번주말 → 20만원이하 → 내일출발 → 지역현황 → 항공사최저가
-        const barOrder = [8, 5, 11, 2, 6, 9, 10, 7, 1, 3];
+        // 순서: 금요밤 → 팁 → 계절추천 → 인기도시 → 할인Top5 → 이번주말 → 가격하락 → 20만원이하 → 내일출발 → 지역현황
+        const barOrder = [8, 5, 14, 2, 6, 9, 11, 10, 7, 1];
         const barType = barOrder[barIndex % barOrder.length];
 
         switch (barType) {
@@ -1132,7 +1132,7 @@ export default function Dashboard() {
                     <div key={`insight-${barIndex}`} className={styles.insightBar}>
                         <span className={styles.insightIcon}>🔥</span>
                         <div className={styles.insightContent}>
-                            <span>지금 주울 수 있는 할인 —</span>
+                            <span>할인율 높은 항공권 Top 5 —</span>
                             {top5.map(({ flight, percent }) => {
                                 const city = normalizeCity(flight.arrival.city);
                                 const depDate = flight.departure.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 10) || '';
@@ -1176,7 +1176,7 @@ export default function Dashboard() {
                     <div key={`insight-${barIndex}`} className={styles.insightBar}>
                         <span className={styles.insightIcon}>💨</span>
                         <div className={styles.insightContent}>
-                            <span>내일 비행기가 있다. 고민은 사치다. —</span>
+                            <span>내일 바로 떠날 수 있는 곳 —</span>
                             {unique7.map(f => {
                                 const city = normalizeCity(f.arrival.city);
                                 return (
@@ -1259,7 +1259,7 @@ export default function Dashboard() {
                     <div key={`insight-${barIndex}`} className={styles.insightBar}>
                         <span className={styles.insightIcon}>💸</span>
                         <div className={styles.insightContent}>
-                            <span>20만원이면 된다. 왕복으로. —</span>
+                            <span>20만원 이하로 갈 수 있는 곳 —</span>
                             {unique10.map(f => {
                                 const city = normalizeCity(f.arrival.city);
                                 return (
@@ -1306,7 +1306,7 @@ export default function Dashboard() {
                     <div key={`insight-${barIndex}`} className={styles.insightBar}>
                         <span className={styles.insightIcon}>🌙</span>
                         <div className={styles.insightContent}>
-                            <span>금요일 밤 비행기. 토요일 아침은 거기서. —</span>
+                            <span>이번 주 금요일, 퇴근 후 출발 —</span>
                             {uniqueFri.map(({ flight }) => {
                                 const city = normalizeCity(flight.arrival.city);
                                 const friDate = flight.departure.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 10) || '';
@@ -1362,7 +1362,7 @@ export default function Dashboard() {
                     <div key={`insight-${barIndex}`} className={styles.insightBar}>
                         <span className={styles.insightIcon}>📉</span>
                         <div className={styles.insightContent}>
-                            <span>가격이 살짝 내려온 노선들 —</span>
+                            <span>어제보다 가격 내린 항공권 —</span>
                             {topDrops.map(d => (
                                 <span
                                     key={d.route}
@@ -1370,6 +1370,157 @@ export default function Dashboard() {
                                     onClick={(e) => { e.stopPropagation(); setSearchTerm(d.city); setSortBy('price'); setSortOrder('asc'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                                 >
                                     {d.city} <strong>↓{Math.floor(d.drop / 10000)}만원</strong> <span className={styles.insightChipCount}>{Math.floor(d.todayPrice / 10000)}만원</span>
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                );
+            }
+            case 12: { // 👀 인기 항공권 (목적지별 항공편 수 기준)
+                const destCounts: Record<string, { count: number; minPrice: number }> = {};
+                flights.forEach(f => {
+                    const city = normalizeCity(f.arrival.city);
+                    if (!destCounts[city]) destCounts[city] = { count: 0, minPrice: f.price };
+                    destCounts[city].count++;
+                    if (f.price < destCounts[city].minPrice) destCounts[city].minPrice = f.price;
+                });
+                const popular = Object.entries(destCounts)
+                    .sort((a, b) => b[1].count - a[1].count)
+                    .slice(0, 5);
+                if (popular.length === 0) return null;
+                return (
+                    <div key={`insight-${barIndex}`} className={styles.insightBar}>
+                        <span className={styles.insightIcon}>👀</span>
+                        <div className={styles.insightContent}>
+                            <span>오늘 항공권 많은 도시 —</span>
+                            {popular.map(([city, data]) => (
+                                <span
+                                    key={city}
+                                    className={styles.insightChip}
+                                    onClick={(e) => { e.stopPropagation(); setSearchTerm(city); setSortBy('price'); setSortOrder('asc'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                                >
+                                    {city} <span className={styles.insightChipCount}>{data.count}건</span>
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                );
+            }
+            case 14: { // 🌸 계절 추천
+                const month = new Date().getMonth() + 1;
+                type SeasonRec = { emoji: string; city: string; reason: string };
+                const seasonMap: Record<number, { title: string; recs: SeasonRec[] }> = {
+                    1: {
+                        title: '1월 여행 추천', recs: [
+                            { emoji: '❄️', city: '삿포로', reason: '눈축제' },
+                            { emoji: '🏖️', city: '다낭', reason: '건기 시작' },
+                            { emoji: '🌴', city: '방콕', reason: '건기 여행' },
+                            { emoji: '⛷️', city: '나세라', reason: '강설 코스' },
+                        ]
+                    },
+                    2: {
+                        title: '2월 여행 추천', recs: [
+                            { emoji: '🌺', city: '다낭', reason: '꽃 시즌' },
+                            { emoji: '🌴', city: '세부', reason: '건기 여행' },
+                            { emoji: '🌞', city: '푸켓', reason: '건기 성수기' },
+                            { emoji: '🌴', city: '방콕', reason: '베스트 시즌' },
+                        ]
+                    },
+                    3: {
+                        title: '3월 여행 추천', recs: [
+                            { emoji: '🌸', city: '후쿠오카', reason: '벚꽃 시작' },
+                            { emoji: '🏖️', city: '다낭', reason: '건기 여행' },
+                            { emoji: '🌺', city: '타이페이', reason: '벚꽃 시즌' },
+                            { emoji: '🌴', city: '세부', reason: '건기 끝무렵' },
+                        ]
+                    },
+                    4: {
+                        title: '4월 여행 추천', recs: [
+                            { emoji: '🌸', city: '도쿄', reason: '벚꽃 절정' },
+                            { emoji: '🌸', city: '오사카', reason: '벚꽃 절정' },
+                            { emoji: '🌿', city: '다낭', reason: '건기 여행' },
+                            { emoji: '🏖️', city: '보라카이', reason: '바다 시즌' },
+                        ]
+                    },
+                    5: {
+                        title: '5월 여행 추천', recs: [
+                            { emoji: '🌿', city: '오키나와', reason: '우기 전 바다' },
+                            { emoji: '🌺', city: '다낭', reason: '건기 마지막' },
+                            { emoji: '🏖️', city: '발리', reason: '건기 여행' },
+                            { emoji: '🌞', city: '타이페이', reason: '망고 시즌' },
+                        ]
+                    },
+                    6: {
+                        title: '6월 여행 추천', recs: [
+                            { emoji: '🏖️', city: '오키나와', reason: '우기 전 마지막' },
+                            { emoji: '🌿', city: '후쿠오카', reason: '매실 전 여유' },
+                            { emoji: '🏖️', city: '괌', reason: '건기 여행' },
+                            { emoji: '🌞', city: '런던', reason: '여름 시작' },
+                        ]
+                    },
+                    7: {
+                        title: '7월 여행 추천', recs: [
+                            { emoji: '🏖️', city: '세부', reason: '우기 피한 해변' },
+                            { emoji: '🌊', city: '괌', reason: '투명 바다' },
+                            { emoji: '🌞', city: '런던', reason: '여름 여행' },
+                            { emoji: '🏔️', city: '울란바토르', reason: '초원 여행' },
+                        ]
+                    },
+                    8: {
+                        title: '8월 여행 추천', recs: [
+                            { emoji: '🏖️', city: '사이판', reason: '투명 바다' },
+                            { emoji: '🌊', city: '발리', reason: '건기 여행' },
+                            { emoji: '🏖️', city: '다낭', reason: '우기지만 저렴' },
+                            { emoji: '🌞', city: '로마', reason: '유럽 여행' },
+                        ]
+                    },
+                    9: {
+                        title: '9월 여행 추천', recs: [
+                            { emoji: '🍁', city: '오사카', reason: '가을 여행' },
+                            { emoji: '🌿', city: '다낭', reason: '우기 끝무렵' },
+                            { emoji: '🏖️', city: '세부', reason: '비수기 특가' },
+                            { emoji: '🌞', city: '방콕', reason: '비수기 특가' },
+                        ]
+                    },
+                    10: {
+                        title: '10월 여행 추천', recs: [
+                            { emoji: '🍁', city: '도쿄', reason: '단풍 여행' },
+                            { emoji: '🌿', city: '다낭', reason: '건기 시작' },
+                            { emoji: '🏖️', city: '푸켓', reason: '건기 시작' },
+                            { emoji: '🌞', city: '발리', reason: '건기 여행' },
+                        ]
+                    },
+                    11: {
+                        title: '11월 여행 추천', recs: [
+                            { emoji: '🍁', city: '나라', reason: '단풍 마지막' },
+                            { emoji: '🌴', city: '다낭', reason: '건기 여행' },
+                            { emoji: '🏖️', city: '세부', reason: '건기 여행' },
+                            { emoji: '🌞', city: '방콕', reason: '건기 시작' },
+                        ]
+                    },
+                    12: {
+                        title: '12월 여행 추천', recs: [
+                            { emoji: '❄️', city: '삿포로', reason: '눈축제 여행' },
+                            { emoji: '🌴', city: '세부', reason: '건기 여행' },
+                            { emoji: '🏖️', city: '푸켓', reason: '건기 성수기' },
+                            { emoji: '🌞', city: '방콕', reason: '베스트 시즌' },
+                        ]
+                    },
+                };
+                const season = seasonMap[month];
+                if (!season) return null;
+                return (
+                    <div key={`insight-${barIndex}`} className={styles.insightBar}>
+                        <span className={styles.insightIcon}>🌸</span>
+                        <div className={styles.insightContent}>
+                            <span>{season.title} —</span>
+                            {season.recs.map(r => (
+                                <span
+                                    key={r.city}
+                                    className={styles.insightChip}
+                                    onClick={(e) => { e.stopPropagation(); setSearchTerm(r.city); setSortBy('price'); setSortOrder('asc'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                                >
+                                    {r.emoji} {r.city} <span className={styles.insightChipCount}>{r.reason}</span>
                                 </span>
                             ))}
                         </div>
