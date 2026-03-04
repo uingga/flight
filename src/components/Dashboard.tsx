@@ -972,8 +972,8 @@ export default function Dashboard() {
     // Insight Bars — 카드 사이에 삽입되는 정보 바
     // ============================================
     const generateInsightBar = (barIndex: number) => {
-        // 순서: 할인Top5 → 팁 → 금요밤 → 인기도시 → 이번주말 → 20만원이하 → 내일출발 → 지역현황 → 항공사최저가
-        const barOrder = [6, 5, 8, 2, 9, 10, 7, 1, 3];
+        // 순서: 금요밤 → 팁 → 가격하락 → 인기도시 → 할인Top5 → 이번주말 → 20만원이하 → 내일출발 → 지역현황 → 항공사최저가
+        const barOrder = [8, 5, 11, 2, 6, 9, 10, 7, 1, 3];
         const barType = barOrder[barIndex % barOrder.length];
 
         switch (barType) {
@@ -1320,6 +1320,57 @@ export default function Dashboard() {
                                     </span>
                                 );
                             })}
+                        </div>
+                    </div>
+                );
+            }
+            case 11: { // 📉 가격 하락 노선
+                const today11 = new Date();
+                const todayStr11 = `${today11.getFullYear()}-${String(today11.getMonth() + 1).padStart(2, '0')}-${String(today11.getDate()).padStart(2, '0')}`;
+                const yesterday11 = new Date(today11);
+                yesterday11.setDate(today11.getDate() - 1);
+                const yesterdayStr11 = `${yesterday11.getFullYear()}-${String(yesterday11.getMonth() + 1).padStart(2, '0')}-${String(yesterday11.getDate()).padStart(2, '0')}`;
+
+                type PriceDrop = { route: string; city: string; todayPrice: number; yesterdayPrice: number; drop: number };
+                const drops: PriceDrop[] = [];
+
+                for (const [route, history] of Object.entries(priceHistory)) {
+                    if (!history || history.length < 2) continue;
+                    const todayEntry = history.find(h => h.date === todayStr11);
+                    const yesterdayEntry = history.find(h => h.date === yesterdayStr11);
+                    if (!todayEntry || !yesterdayEntry) continue;
+                    const drop = yesterdayEntry.minPrice - todayEntry.minPrice;
+                    if (drop > 0) {
+                        // 노선명에서 도시 추출: "부산-세부" → "세부"
+                        const city = route.split('-')[1] || route;
+                        drops.push({ route, city, todayPrice: todayEntry.minPrice, yesterdayPrice: yesterdayEntry.minPrice, drop });
+                    }
+                }
+
+                if (drops.length === 0) return null;
+                // 하락폭 큰 순, 도시 중복 제거
+                drops.sort((a, b) => b.drop - a.drop);
+                const seenCities11 = new Set<string>();
+                const topDrops = drops.filter(d => {
+                    if (seenCities11.has(d.city)) return false;
+                    seenCities11.add(d.city);
+                    return true;
+                }).slice(0, 5);
+
+                return (
+                    <div key={`insight-${barIndex}`} className={styles.insightBar}>
+                        <span className={styles.insightIcon}>📉</span>
+                        <div className={styles.insightContent}>
+                            <span>가격이 살짝 내려온 노선들. —</span>
+                            {topDrops.map(d => (
+                                <span
+                                    key={d.route}
+                                    className={styles.insightChip}
+                                    onClick={(e) => { e.stopPropagation(); setSearchTerm(d.city); setSortBy('price'); setSortOrder('asc'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                                >
+                                    {d.city} <strong>↓{Math.floor(d.drop / 10000)}만원</strong> <span className={styles.insightChipCount}>{Math.floor(d.todayPrice / 10000)}만원</span>
+                                </span>
+                            ))}
                         </div>
                     </div>
                 );
