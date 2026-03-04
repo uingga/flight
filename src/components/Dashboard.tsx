@@ -987,7 +987,7 @@ export default function Dashboard() {
                 const regions = Object.entries(regionCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
                 if (regions.length === 0) return null;
                 return (
-                    <div key={`insight-${barIndex}`} className={`${styles.insightBar} ${styles.insightBarRegion}`}>
+                    <div key={`insight-${barIndex}`} className={styles.insightBar}>
                         <span className={styles.insightIcon}>🌏</span>
                         <div className={styles.insightContent}>
                             {regions.map(([region, count]) => (
@@ -1006,7 +1006,7 @@ export default function Dashboard() {
             case 2: { // 🗺️ 도시 바로가기
                 if (popularCities.length === 0) return null;
                 return (
-                    <div key={`insight-${barIndex}`} className={`${styles.insightBar} ${styles.insightBarCity}`}>
+                    <div key={`insight-${barIndex}`} className={styles.insightBar}>
                         <span className={styles.insightIcon}>🗺️</span>
                         <div className={styles.insightContent}>
                             <span>인기 도시</span>
@@ -1033,7 +1033,7 @@ export default function Dashboard() {
                 const topAirlines = Object.entries(airlinePrices).sort((a, b) => a[1] - b[1]).slice(0, 4);
                 if (topAirlines.length === 0) return null;
                 return (
-                    <div key={`insight-${barIndex}`} className={`${styles.insightBar} ${styles.insightBarAirline}`}>
+                    <div key={`insight-${barIndex}`} className={styles.insightBar}>
                         <span className={styles.insightIcon}>✈️</span>
                         <div className={styles.insightContent}>
                             <span>항공사별 최저가 —</span>
@@ -1077,7 +1077,7 @@ export default function Dashboard() {
 
                 if (chips.length === 0) return null;
                 return (
-                    <div key={`insight-${barIndex}`} className={`${styles.insightBar} ${styles.insightBarTiming}`}>
+                    <div key={`insight-${barIndex}`} className={styles.insightBar}>
                         <span className={styles.insightIcon}>📅</span>
                         <div className={styles.insightContent}>
                             {chips.slice(0, 4).map(chip => (
@@ -1129,17 +1129,18 @@ export default function Dashboard() {
                 }).slice(0, 5);
                 if (top5.length === 0) return null;
                 return (
-                    <div key={`insight-${barIndex}`} className={`${styles.insightBar} ${styles.insightBarDiscount}`}>
+                    <div key={`insight-${barIndex}`} className={styles.insightBar}>
                         <span className={styles.insightIcon}>🔥</span>
                         <div className={styles.insightContent}>
                             <span>지금 주울 수 있는 할인 —</span>
                             {top5.map(({ flight, percent }) => {
                                 const city = normalizeCity(flight.arrival.city);
+                                const depDate = flight.departure.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 10) || '';
                                 return (
                                     <span
                                         key={flight.id}
-                                        className={`${styles.insightChip} ${styles.insightChipDiscount}`}
-                                        onClick={(e) => { e.stopPropagation(); setSearchTerm(city); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                                        className={styles.insightChip}
+                                        onClick={(e) => { e.stopPropagation(); setSearchTerm(city); if (depDate) { setStartDate(depDate); setEndDate(depDate); } window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                                     >
                                         {city} <strong>-{Math.round(percent)}%</strong> <span className={styles.insightChipCount}>{Math.floor(flight.price / 10000)}만원</span>
                                     </span>
@@ -1172,7 +1173,7 @@ export default function Dashboard() {
                     return true;
                 }).slice(0, 4);
                 return (
-                    <div key={`insight-${barIndex}`} className={`${styles.insightBar} ${styles.insightBarTomorrow}`}>
+                    <div key={`insight-${barIndex}`} className={styles.insightBar}>
                         <span className={styles.insightIcon}>💨</span>
                         <div className={styles.insightContent}>
                             <span>내일 비행기가 있다. 고민은 사치다. —</span>
@@ -1181,7 +1182,7 @@ export default function Dashboard() {
                                 return (
                                     <span
                                         key={f.id}
-                                        className={`${styles.insightChip} ${styles.insightChipTomorrow}`}
+                                        className={styles.insightChip}
                                         onClick={(e) => { e.stopPropagation(); setSearchTerm(city); setStartDate(tomorrowStr7); setEndDate(tomorrowStr7); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                                     >
                                         {city} <strong>{Math.floor(f.price / 10000)}만원~</strong>
@@ -1220,7 +1221,7 @@ export default function Dashboard() {
                     return true;
                 }).slice(0, 4);
                 return (
-                    <div key={`insight-${barIndex}`} className={`${styles.insightBar} ${styles.insightBarWeekend}`}>
+                    <div key={`insight-${barIndex}`} className={styles.insightBar}>
                         <span className={styles.insightIcon}>☀️</span>
                         <div className={styles.insightContent}>
                             <span>이번 주말, 아직 비어 있다면. —</span>
@@ -1229,7 +1230,7 @@ export default function Dashboard() {
                                 return (
                                     <span
                                         key={f.id}
-                                        className={`${styles.insightChip} ${styles.insightChipWeekend}`}
+                                        className={styles.insightChip}
                                         onClick={(e) => { e.stopPropagation(); setSearchTerm(city); setStartDate(satStr9); setEndDate(sunStr9); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                                     >
                                         {city} <strong>{Math.floor(f.price / 10000)}만원~</strong>
@@ -1255,7 +1256,7 @@ export default function Dashboard() {
                     return true;
                 }).slice(0, 5);
                 return (
-                    <div key={`insight-${barIndex}`} className={`${styles.insightBar} ${styles.insightBarCheap}`}>
+                    <div key={`insight-${barIndex}`} className={styles.insightBar}>
                         <span className={styles.insightIcon}>💸</span>
                         <div className={styles.insightContent}>
                             <span>20만원이면 된다. 왕복으로. —</span>
@@ -1264,7 +1265,7 @@ export default function Dashboard() {
                                 return (
                                     <span
                                         key={f.id}
-                                        className={`${styles.insightChip} ${styles.insightChipCheap}`}
+                                        className={styles.insightChip}
                                         onClick={(e) => { e.stopPropagation(); setSearchTerm(city); setSortBy('price'); setSortOrder('asc'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                                     >
                                         {city} <strong>{Math.floor(f.price / 10000)}만원</strong>
@@ -1302,17 +1303,18 @@ export default function Dashboard() {
                     return true;
                 }).slice(0, 4);
                 return (
-                    <div key={`insight-${barIndex}`} className={`${styles.insightBar} ${styles.insightBarFriday}`}>
+                    <div key={`insight-${barIndex}`} className={styles.insightBar}>
                         <span className={styles.insightIcon}>🌙</span>
                         <div className={styles.insightContent}>
                             <span>금요일 밤 비행기. 토요일 아침은 거기서. —</span>
                             {uniqueFri.map(({ flight }) => {
                                 const city = normalizeCity(flight.arrival.city);
+                                const friDate = flight.departure.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 10) || '';
                                 return (
                                     <span
                                         key={flight.id}
-                                        className={`${styles.insightChip} ${styles.insightChipFriday}`}
-                                        onClick={(e) => { e.stopPropagation(); setSearchTerm(city); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                                        className={styles.insightChip}
+                                        onClick={(e) => { e.stopPropagation(); setSearchTerm(city); if (friDate) { setStartDate(friDate); setEndDate(friDate); } window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                                     >
                                         {city} <strong>{Math.floor(flight.price / 10000)}만원~</strong>
                                     </span>
