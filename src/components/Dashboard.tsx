@@ -69,7 +69,7 @@ const normalizeCity = (city: string): string => {
             else if (krMatch[2] === '인천') result = '인천';
             else {
                 // 괄호 안이 공항/지역명이면 괄호 안 사용 (간사이, 나리타, 치토세 등)
-                const airportNames = ['간사이', '나리타', '하네다', '치토세', '돈무앙', '수완나폼', '깜랑', '보라카이', '덴파사'];
+                const airportNames = ['나리타', '하네다', '치토세', '돈무앙', '수완나폼', '깜랑', '보라카이', '덴파사'];
                 if (airportNames.includes(krMatch[2])) result = trimmed; // 공항명 포함 원본 유지
                 else result = krMatch[1]; // 그 외는 괄호 앞의 도시명
             }
@@ -78,15 +78,41 @@ const normalizeCity = (city: string): string => {
             if (trimmed === '서울') result = '인천';
             else if (trimmed === '청주시') result = '청주';
             else if (trimmed === '제주시') result = '제주';
-            else if (trimmed === '도쿄') result = '도쿄(하네다)';
-            else if (trimmed === '오사카') result = '오사카(간사이)';
-            else if (trimmed === '방콕') result = '방콕(수완나폼)';
+            else if (trimmed === '도쿄') result = '도쿄';
+            else if (trimmed === '오사카') result = '오사카';
+            else if (trimmed === '방콕') result = '방콕';
         }
     }
     // 최종 매핑 적용 (푸껫→푸켓 등)
     return cityNameMap[result] || result;
 };
 
+// 항공사명 표기 통일 (띄어쓰기 차이 등)
+const normalizeAirline = (airline: string): string => {
+    const trimmed = airline.trim();
+    const airlineMap: Record<string, string> = {
+        '진 에어': '진에어',
+        '에어 서울': '에어서울',
+        '에어 부산': '에어부산',
+        '에어 프레미아': '에어프레미아',
+        '이스타 항공': '이스타항공',
+        '제주 항공': '제주항공',
+        '티웨이 항공': '티웨이항공',
+        't way항공': '티웨이항공',
+        'T Way항공': '티웨이항공',
+        'T\'way항공': '티웨이항공',
+        '타이 비엣젯항공': '타이비엣젯항공',
+        '타이비엣젯 항공': '타이비엣젯항공',
+        '비엣젯 항공': '비엣젯항공',
+        '피치항공': '피치항공',
+        '피치 항공': '피치항공',
+        '스프링항공': '스프링항공',
+        '스프링 항공': '스프링항공',
+        '에어아시아': '에어아시아',
+        '에어 아시아': '에어아시아',
+    };
+    return airlineMap[trimmed] || trimmed;
+};
 // 도시명 → IATA 공항/도시 코드 매핑
 const CITY_TO_AIRPORT: Record<string, string> = {
     // 출발지
@@ -586,7 +612,7 @@ export default function Dashboard() {
     }, []);
 
     const uniqueAirlines = useMemo(() => {
-        const airlines = new Set(flights.map(f => f.airline).filter(Boolean));
+        const airlines = new Set(flights.map(f => normalizeAirline(f.airline)).filter(Boolean));
         return Array.from(airlines).sort((a, b) => a.localeCompare(b));
     }, [flights]);
 
@@ -833,7 +859,7 @@ export default function Dashboard() {
 
         const matchesSource = sourceFilter === 'all' || flight.source === sourceFilter;
         const matchesRegion = regionFilter === 'all' || flight.region === regionFilter;
-        const matchesAirline = airlineFilter === 'all' || flight.airline === airlineFilter;
+        const matchesAirline = airlineFilter === 'all' || normalizeAirline(flight.airline) === airlineFilter;
         const normalizeDate = (d: string) => {
             if (!d) return '';
             const m = d.match(/^(\d{4})[.\-](\d{2})[.\-](\d{2})/);
@@ -1996,7 +2022,7 @@ export default function Dashboard() {
                                                 <span className={`badge ${getSourceBadgeClass(flight.source)}`}>
                                                     {getSourceName(flight.source)}
                                                 </span>
-                                                <span className={styles.airline}>{flight.airline}</span>
+                                                <span className={styles.airline}>{normalizeAirline(flight.airline)}</span>
                                                 {(() => {
                                                     const seatNum = flight.availableSeats || (flight.seats ? parseInt(flight.seats) : 0);
                                                     if (!seatNum) return null;
