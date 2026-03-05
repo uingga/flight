@@ -213,6 +213,13 @@ select {
   color: white !important;
 }
 
+@media (max-width: 768px) {
+  .btn {
+    font-size: 0.88rem;
+    padding: 6px 12px;
+  }
+}
+
 .btn-secondary {
   background: white;
   color: var(--color-text-secondary);
@@ -235,6 +242,13 @@ select {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.025em;
+}
+
+@media (max-width: 768px) {
+  .badge {
+    font-size: 0.65rem;
+    padding: 3px 8px;
+  }
 }
 
 /* ============================================
