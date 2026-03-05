@@ -654,10 +654,10 @@ export default function Dashboard() {
     const popularCities = useMemo(() => {
         const topDestinations = [
             '오사카(간사이)', '도쿄(나리타)', '도쿄(하네다)', '후쿠오카',
-            '다낭', '방콕', '세부', '나트랑',
-            '타이베이', '홍콩', '괌', '사이판',
-            '하노이', '호치민', '푸켓', '발리',
-            '싱가포르', '코타키나발루', '오키나와', '삿포로'
+            '다낭', '세부', '나트랑', '타이베이',
+            '홍콩', '괌', '사이판', '하노이',
+            '호치민', '푸켓', '발리', '싱가포르',
+            '코타키나발루', '오키나와', '삿포로', '방콕'
         ];
         const availableCities = new Set(flights.map(f => f.arrival.city));
         return topDestinations.filter(city => availableCities.has(city)).slice(0, 8);
@@ -1988,9 +1988,10 @@ export default function Dashboard() {
                                 const isLowestPrice = lowestPrices[route] === flight.price;
                                 const items: React.ReactNode[] = [];
 
-                                // 12개 카드마다 인사이트 바 삽입
-                                if (index > 0 && index % 12 === 0) {
-                                    const bar = generateInsightBar(index / 12 - 1);
+                                // 모바일 9개, 데스크탑 12개 카드마다 인사이트 바 삽입
+                                const insightInterval = isMobile ? 9 : 12;
+                                if (index > 0 && index % insightInterval === 0) {
+                                    const bar = generateInsightBar(index / insightInterval - 1);
                                     if (bar) items.push(bar);
                                 }
 

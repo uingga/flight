@@ -95,8 +95,8 @@
 
 @media (max-width: 768px) {
     .header {
-        margin-bottom: var(--spacing-md);
-        padding: 10px 0;
+        margin-bottom: var(--spacing-sm);
+        padding: 8px 0;
         backdrop-filter: blur(16px);
     }
 
@@ -106,9 +106,13 @@
 
     .headerContainer {
         justify-content: center;
-        height: 40px;
+        height: 36px;
         padding-right: 48px;
         /* 시각적 보정 (심볼[40px] + 간격[8px] 만큼 우측 여백 추가하여 완전한 중앙 정렬) */
+    }
+
+    .dashboard {
+        padding-top: 56px;
     }
 }
 
@@ -409,6 +413,7 @@
     .stats {
         flex-direction: column;
         align-items: center;
+        font-size: 0.75rem;
     }
 
     .statsHeader {
@@ -422,6 +427,8 @@
     .statsSelect {
         flex: 1;
         min-width: 0;
+        font-size: 0.75rem !important;
+        padding: 6px 24px 6px 10px;
     }
 }
 
@@ -539,6 +546,7 @@
         padding: 12px 14px;
         gap: 10px;
         font-size: 0.82rem;
+        border-radius: 12px;
     }
 
     .insightContent {
@@ -600,7 +608,7 @@
 
 /* Match font size for Airline and Travel Agency */
 .airline {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     font-weight: 600;
     color: var(--color-text-primary);
 }
@@ -797,10 +805,31 @@
     white-space: nowrap;
 }
 
+.discountBadge {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--color-error);
+    background: #fef2f2;
+    padding: 2px 8px;
+    border-radius: 999px;
+    vertical-align: middle;
+}
+
+.jjinBadge {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #15803d;
+    background: #dcfce7;
+    padding: 2px 8px;
+    border-radius: 999px;
+    vertical-align: middle;
+    cursor: help;
+}
+
 @media (max-width: 768px) {
     .price {
-        font-size: 1.35rem;
-        font-weight: 650;
+        font-size: 1.05rem;
+        font-weight: 700;
     }
 
     .priceSection {
@@ -809,7 +838,9 @@
     }
 
     .discountBadge {
-        display: none;
+        font-size: 0.65rem;
+        font-weight: 600;
+        padding: 1px 6px;
     }
 
     .jjinBadge {
@@ -843,26 +874,6 @@
     color: white;
 }
 
-.discountBadge {
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: var(--color-error);
-    background: #fef2f2;
-    padding: 2px 8px;
-    border-radius: 999px;
-    vertical-align: middle;
-}
-
-.jjinBadge {
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: #15803d;
-    background: #dcfce7;
-    padding: 2px 8px;
-    border-radius: 999px;
-    vertical-align: middle;
-    cursor: help;
-}
 
 .lowestPriceBadge {
     display: inline-flex;
@@ -1112,16 +1123,69 @@
 @media (max-width: 768px) {
     .flightGrid {
         grid-template-columns: 1fr;
+        gap: var(--spacing-md);
     }
 
     .controls {
-        padding: var(--spacing-md);
+        padding: 16px 18px;
         background: rgba(255, 255, 255, 0.9);
         border: 1px solid rgba(255, 255, 255, 0.5);
         box-shadow: var(--shadow-md);
         backdrop-filter: blur(12px);
         gap: 8px;
-        border-radius: var(--radius-xl);
+        border-radius: 14px;
+    }
+
+    .flightCard {
+        padding: 16px 18px;
+        gap: 10px;
+        border-radius: 14px;
+    }
+
+    .flightCard:hover {
+        transform: none;
+    }
+
+    .cardHeader {
+        padding-bottom: 8px;
+    }
+
+    .airline {
+        font-size: 0.7rem;
+    }
+
+    .seatsBadge,
+    .seatsBadgeCritical {
+        font-size: 0.65rem;
+    }
+
+    .route {
+        padding: 8px 0;
+        gap: var(--spacing-sm);
+    }
+
+    .city {
+        font-size: 1.05rem;
+        margin-bottom: 3px;
+    }
+
+    .date {
+        font-size: 0.78rem;
+    }
+
+
+    .cardFooterWrapper {
+        padding-top: 8px;
+    }
+
+    .cardFooter {
+        margin-bottom: 6px;
+    }
+
+    .compareLinks {
+        padding-top: 8px;
+        margin-top: 6px;
+        gap: 6px;
     }
 
     .filterToggleBtn {
@@ -1187,27 +1251,26 @@
 
     .searchInput {
         border-radius: 999px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        /* Soft floating shadow */
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
         border: 1px solid rgba(0, 0, 0, 0.05);
-        padding-top: 14px;
-        padding-bottom: 14px;
-        font-size: 0.95rem;
-        /* Slightly larger for touch */
+        padding-top: 10px;
+        padding-bottom: 10px;
+        font-size: 0.9rem;
     }
 
     .dateRange {
         border-radius: 999px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
         border: 1px solid rgba(0, 0, 0, 0.05);
         background: white;
         justify-content: flex-start;
-        padding: 8px 16px 8px 40px;
+        padding: 6px 14px 6px 36px;
     }
 
     .dateInput {
         width: 100%;
-        font-size: 0.95rem;
+        font-size: 0.88rem;
+        padding: 4px 6px;
     }
 
     .filterGroup {
@@ -1232,6 +1295,7 @@
     .resultCount {
         width: 100%;
         text-align: center;
+        font-size: 0.75rem;
     }
 
     .cardFooter {
@@ -1243,8 +1307,8 @@
     }
 
     .btn-primary {
-        font-size: 0.8rem;
-        padding: 8px 12px !important;
+        font-size: 0.85rem;
+        padding: 7px 12px !important;
         white-space: nowrap;
     }
 
@@ -1413,9 +1477,9 @@
     }
 
     .shareBtn {
-        padding: 10px;
-        min-width: 44px;
-        min-height: 44px;
+        padding: 6px;
+        min-width: unset;
+        min-height: unset;
         -webkit-tap-highlight-color: transparent;
     }
 
