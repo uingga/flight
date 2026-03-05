@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3박 4일 해외여행, 어디가 가장 싸게 먹힐까? — 다낭 vs 오사카 vs 세부 총비용 비교</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', -apple-system, sans-serif;
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 2;
+            font-size: 16px;
+        }
+
+        .post {
+            background: white;
+            padding: 40px 32px;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .left {
+            text-align: left;
+        }
+
+        h2 {
+            font-size: 20px;
+            font-weight: 700;
+            margin: 32px 0 16px;
+            color: #1a1a1a;
+        }
+
+        .divider {
+            border: none;
+            border-top: 1px solid #e0e0e0;
+            margin: 32px 0;
+        }
+
+        p {
+            margin-bottom: 8px;
+        }
+
+        .highlight {
+            color: #e53e3e;
+            font-weight: bold;
+        }
+
+        .tip-box {
+            background: #fffbeb;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 16px 0;
+            border-left: 4px solid #f59e0b;
+        }
+
+        .city-card {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 24px;
+            margin: 20px 0;
+            border: 1px solid #e2e8f0;
+        }
+
+        .city-card.danang {
+            border-left: 5px solid #10b981;
+        }
+
+        .city-card.osaka {
+            border-left: 5px solid #f43f5e;
+        }
+
+        .city-card.cebu {
+            border-left: 5px solid #3b82f6;
+        }
+
+        .city-card .city-name {
+            font-size: 20px;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+
+        .city-card .city-flag {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 16px;
+        }
+
+        .cost-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #f1f1f1;
+            font-size: 15px;
+        }
+
+        .cost-row:last-child {
+            border-bottom: none;
+        }
+
+        .cost-row .label {
+            color: #666;
+        }
+
+        .cost-row .value {
+            font-weight: 700;
+            color: #1a1a1a;
+        }
+
+        .cost-total {
+            display: flex;
+            justify-content: space-between;
+            padding: 14px 0;
+            margin-top: 8px;
+            border-top: 2px solid #1a1a1a;
+            font-size: 17px;
+            font-weight: 800;
+        }
+
+        .cost-total .value {
+            color: #e53e3e;
+        }
+
+        .winner-box {
+            background: linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%);
+            border: 2px solid #f59e0b;
+            border-radius: 12px;
+            padding: 24px;
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        .winner-box .crown {
+            font-size: 36px;
+        }
+
+        .winner-box .winner-text {
+            font-size: 20px;
+            font-weight: 800;
+            color: #92400e;
+            margin-top: 8px;
+        }
+
+        .vs-badge {
+            display: inline-block;
+            background: #1a1a1a;
+            color: #fff;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+            margin: 20px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+            font-size: 14px;
+        }
+
+        th {
+            background: #1a1a1a;
+            color: white;
+            padding: 10px 8px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        th.danang-th {
+            background: #10b981;
+        }
+
+        th.osaka-th {
+            background: #f43f5e;
+        }
+
+        th.cebu-th {
+            background: #3b82f6;
+        }
+
+        td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #eee;
+            text-align: center;
+        }
+
+        tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .note {
+            font-size: 13px;
+            color: #888;
+            line-height: 1.8;
+            margin-top: 30px;
+        }
+
+        .copy-guide {
+            position: fixed;
+            top: 12px;
+            right: 12px;
+            background: #1a1a1a;
+            color: white;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .food-tag {
+            display: inline-block;
+            background: #fef3c7;
+            color: #92400e;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 500;
+            margin: 3px 2px;
+        }
+
+        .cheap-tag {
+            display: inline-block;
+            background: #dcfce7;
+            color: #166534;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 600;
+            margin: 3px 2px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 800;
+            color: #1a1a1a;
+            margin: 32px 0 16px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="copy-guide">Ctrl+A → Ctrl+C → 네이버에 붙여넣기</div>
+    <div class="post center">
+
+        <p>&nbsp;</p>
+        <p style="font-size: 24px; font-weight: 800; line-height: 1.4;">
+            3박 4일 해외여행<br>
+            어디가 가장 싸게 먹힐까?
+        </p>
+        <p>&nbsp;</p>
+        <p style="font-size: 16px; color: #888;">다낭 vs 오사카 vs 세부 — 1인 총비용 비교</p>
+        <p>&nbsp;</p>
+        <p>💰 ✈️ 🍜</p>
+        <p>&nbsp;</p>
+
+        <hr class="divider">
+
+        <div class="left">
+            <p>"이번에 3박 4일로 다녀올 건데,</p>
+            <p>어디가 가장 가성비가 좋을까?"</p>
+            <p>&nbsp;</p>
+            <p>이 질문, 누구나 한 번쯤 해봤을 거예요.</p>
+            <p>&nbsp;</p>
+            <p>그래서 직접 비교해봤습니다.</p>
+            <p>&nbsp;</p>
+            <p><b>다낭, 오사카, 세부</b> —</p>
+            <p>가장 인기 있는 세 도시를</p>
+            <p><b>항공권 · 숙소 · 식비 · 교통 · 액티비티</b></p>
+            <p>항목별로 하나하나 뜯어봤어요.</p>
+            <p>&nbsp;</p>
+            <p style="font-size: 14px; color: #999;">※ 1인 기준, 2026년 3~5월 비수기 평균가 기준</p>
+            <p style="font-size: 14px; color: #999;">※ 다낭·세부는 리조트 숙박 기준, 오사카는 비즈니스호텔 기준</p>
+            <p style="font-size: 14px; color: #999;">※ 항공권은 LCC 땡처리 기준 + 일반 예매가 병기</p>
+        </div>
+
+        <hr class="divider">
+
+        <!-- ====== 비교 테이블 ====== -->
+        <h2 class="center">📊 항목별 비교표</h2>
+        <p>&nbsp;</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>항목</th>
+                    <th class="danang-th">🇻🇳 다낭</th>
+                    <th class="osaka-th">🇯🇵 오사카</th>
+                    <th class="cebu-th">🇵🇭 세부</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><b>✈️ 항공권</b><br><span style="font-size:12px;color:#999">왕복</span></td>
+                    <td>20~35만원</td>
+                    <td>25~45만원</td>
+                    <td>20~40만원</td>
+                </tr>
+                <tr>
+                    <td><b>🏨 숙소</b><br><span style="font-size:12px;color:#999">3박</span></td>
+                    <td>18~36만원</td>
+                    <td>24~36만원</td>
+                    <td>30~60만원</td>
+                </tr>
+                <tr>
+                    <td><b>🍜 식비</b><br><span style="font-size:12px;color:#999">4일</span></td>
+                    <td>4~8만원</td>
+                    <td>12~20만원</td>
+                    <td>6~12만원</td>
+                </tr>
+                <tr>
+                    <td><b>🚕 교통</b><br><span style="font-size:12px;color:#999">4일</span></td>
+                    <td>2~3만원</td>
+                    <td>3~5만원</td>
+                    <td>3~5만원</td>
+                </tr>
+                <tr>
+                    <td><b>🎡 액티비티</b><br><span style="font-size:12px;color:#999">주요 1~2개</span></td>
+                    <td>3~5만원</td>
+                    <td>3~5만원</td>
+                    <td>5~8만원</td>
+                </tr>
+                <tr>
+                    <td><b>🎢 USJ</b><br><span style="font-size:12px;color:#999">선택</span></td>
+                    <td>-</td>
+                    <td>+7~10만원</td>
+                    <td>-</td>
+                </tr>
+                <tr>
+                    <td><b>📱 유심/eSIM</b></td>
+                    <td>0.5~1만원</td>
+                    <td>0.5~1만원</td>
+                    <td>0.5~1만원</td>
+                </tr>
+                <tr style="background: #fef3c7;">
+                    <td><b>💰 합계</b></td>
+                    <td><b style="color:#10b981;font-size:16px;">48~88만원</b></td>
+                    <td><b style="color:#f43f5e;font-size:16px;">70~117만원</b></td>
+                    <td><b style="color:#3b82f6;font-size:16px;">65~126만원</b></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <p>&nbsp;</p>
+        <p class="center" style="font-size: 14px; color: #888;">※ 땡처리 항공권 기준, 일반 예매 시 5~15만원 추가</p>
+
+        <hr class="divider">
+
+        <!-- ====== 다낭 ====== -->
+        <div class="city-card danang">
+            <p class="city-name">🇻🇳 다낭</p>
+            <p class="city-flag">물가의 신이 내린 도시</p>
+
+            <div class="cost-row">
+                <span class="label">✈️ 항공권 (왕복)</span>
+                <span class="value">약 20~35만원</span>
+            </div>
+            <div class="cost-row">
+                <span class="label">🏨 숙소 (3박, 리조트)</span>
+                <span class="value">약 18~36만원</span>
+            </div>
+            <div class="cost-row">
+                <span class="label">🍜 식비 (4일)</span>
+                <span class="value">약 4~8만원</span>
+            </div>
+            <div class="cost-row">
+                <span class="label">🚕 교통 (그랩)</span>
+                <span class="value">약 2~3만원</span>
+            </div>
+            <div class="cost-row">
+                <span class="label">🎡 바나힐+마사지</span>
+                <span class="value">약 3~5만원</span>
+            </div>
+            <div class="cost-total">
+                <span>💰 예상 합계</span>
+                <span class="value">약 48~88만원</span>
+            </div>
+        </div>
+
+        <div class="left">
+            <p>다낭은 리조트를 잡아도 <b>가성비가 좋습니다.</b></p>
+            <p>&nbsp;</p>
+            <p>쌀국수 한 그릇 <b>2,000~3,000원</b>,</p>
+            <p>반미 하나 <b>1,500원</b>,</p>
+            <p>해산물 뷔페가 <b>1만원대</b>.</p>
+            <p>&nbsp;</p>
+            <p>4성급 리조트가 <b>1박 6~12만원</b>이면</p>
+            <p>오사카 비즈니스 호텔 가격에</p>
+            <p>풀빌라급 시설을 쓸 수 있어요.</p>
+            <p>&nbsp;</p>
+            <p>여기서만 먹을 수 있는 것:</p>
+            <p>
+                <span class="food-tag">🍜 쌀국수 3천원</span>
+                <span class="food-tag">🥖 반미 1,500원</span>
+                <span class="food-tag">🦐 해산물 뷔페 1.5만원</span>
+                <span class="food-tag">💆 마사지 1.5만원/1h</span>
+            </p>
+            <p>&nbsp;</p>
+            <p><span class="cheap-tag">가성비 킹</span> 돈이 제일 중요하다면, 다낭이 정답.</p>
+        </div>
+
+        <hr class="divider">
+
+        <!-- ====== 오사카 ====== -->
+        <div class="city-card osaka">
+            <p class="city-name">🇯🇵 오사카</p>
+            <p class="city-flag">먹거리 천국, 지갑은 살짝 아픔</p>
+
+            <div class="cost-row">
+                <span class="label">✈️ 항공권 (왕복)</span>
+                <span class="value">약 25~45만원</span>
+            </div>
+            <div class="cost-row">
+                <span class="label">🏨 숙소 (3박, 비즈니스호텔)</span>
+                <span class="value">약 24~36만원</span>
+            </div>
+            <div class="cost-row">
+                <span class="label">🍜 식비 (4일)</span>
+                <span class="value">약 12~20만원</span>
+            </div>
+            <div class="cost-row">
+                <span class="label">🚃 교통 (지하철 패스)</span>
+                <span class="value">약 3~5만원</span>
+            </div>
+            <div class="cost-row">
+                <span class="label">🎡 오사카성+도톤보리</span>
+                <span class="value">약 3~5만원</span>
+            </div>
+            <div class="cost-row" style="background:#fff7ed;border-radius:6px;padding:10px;">
+                <span class="label">🎢 USJ 1일권 (선택)</span>
+                <span class="value" style="color:#f59e0b;">+약 7~10만원</span>
+            </div>
+            <div class="cost-total">
+                <span>💰 예상 합계</span>
+                <span class="value">약 70~117만원</span>
+            </div>
+        </div>
+
+        <div class="left">
+            <p>오사카는 세 도시 중 <b>가장 비쌉니다.</b></p>
+            <p>&nbsp;</p>
+            <p>하지만 그만큼 <b>먹는 재미</b>가 압도적이에요.</p>
+            <p>&nbsp;</p>
+            <p>타코야키 500원부터</p>
+            <p>스시 오마카세 10만원까지 —</p>
+            <p>가격 폭이 넓어서 예산 조절이 가능합니다.</p>
+            <p>&nbsp;</p>
+            <p>USJ를 가면 <b>항공권+숙소 외에 7~10만원</b>이 더 들지만,</p>
+            <p>안 가면 오사카성+도톤보리로 <b>3~5만원</b>이면 색다른 하루.</p>
+            <p>&nbsp;</p>
+            <p>숙소가 비싼 편이지만</p>
+            <p>비즈니스 호텔(도미인, APA)은</p>
+            <p><b>1박 8~12만원</b>에 온천까지 포함!</p>
+            <p>&nbsp;</p>
+            <p>여기서만 먹을 수 있는 것:</p>
+            <p>
+                <span class="food-tag">🐙 타코야키 500원</span>
+                <span class="food-tag">🍣 회전초밥 5천원~</span>
+                <span class="food-tag">🍜 라멘 8천원</span>
+                <span class="food-tag">🥩 규카츠 1.2만원</span>
+            </p>
+            <p>&nbsp;</p>
+            <p><span class="cheap-tag">맛 여행 최강</span> "먹으러 간다"면 오사카가 정답.</p>
+        </div>
+
+        <hr class="divider">
+
+        <!-- ====== 세부 ====== -->
+        <div class="city-card cebu">
+            <p class="city-name">🇵🇭 세부</p>
+            <p class="city-flag">바다가 부르면 가야 하는 곳</p>
+
+            <div class="cost-row">
+                <span class="label">✈️ 항공권 (왕복)</span>
+                <span class="value">약 20~40만원</span>
+            </div>
+            <div class="cost-row">
+                <span class="label">🏨 숙소 (3박, 막탄 리조트)</span>
+                <span class="value">약 30~60만원</span>
+            </div>
+            <div class="cost-row">
+                <span class="label">🍜 식비 (4일)</span>
+                <span class="value">약 6~12만원</span>
+            </div>
+            <div class="cost-row">
+                <span class="label">🚕 교통 (그랩)</span>
+                <span class="value">약 3~5만원</span>
+            </div>
+            <div class="cost-row">
+                <span class="label">🎡 호핑투어+고래상어</span>
+                <span class="value">약 5~8만원</span>
+            </div>
+            <div class="cost-total">
+                <span>💰 예상 합계</span>
+                <span class="value">약 65~126만원</span>
+            </div>
+        </div>
+
+        <div class="left">
+            <p>세부는 <b>리조트가 핵심</b>입니다.</p>
+            <p>&nbsp;</p>
+            <p>막탄섬 리조트 <b>1박 10~20만원</b> —</p>
+            <p>숙소에 돈이 들지만</p>
+            <p>그게 세부 여행의 본질이에요.</p>
+            <p>&nbsp;</p>
+            <p>현지 식당 이용하면 <b>1끼 3,000~5,000원</b>.</p>
+            <p>식비와 교통비는 생각보다 저렴합니다.</p>
+            <p>&nbsp;</p>
+            <p>호핑투어 <b>3만원</b>,</p>
+            <p>오슬롭 고래상어 투어 <b>4만원</b> —</p>
+            <p>이건 다른 도시에서는 불가능한 경험이죠.</p>
+            <p>&nbsp;</p>
+            <p>여기서만 할 수 있는 것:</p>
+            <p>
+                <span class="food-tag">🐋 고래상어 투어 4만원</span>
+                <span class="food-tag">🏝️ 호핑투어 3만원</span>
+                <span class="food-tag">🥭 망고 한 봉지 2천원</span>
+                <span class="food-tag">🐷 레촌 5천원</span>
+            </p>
+            <p>&nbsp;</p>
+            <p><span class="cheap-tag">바다 여행 최강</span> 해변+액티비티라면 세부가 정답.</p>
+        </div>
+
+        <hr class="divider">
+
+        <!-- ====== 결론 ====== -->
+        <div class="winner-box">
+            <p class="crown">👑</p>
+            <p class="winner-text">가성비 1위: 다낭 (약 48~88만원)</p>
+            <p style="font-size: 14px; color: #92400e; margin-top: 8px;">리조트도 잡고 가장 저렴! · 맛집: 오사카 · 바다: 세부</p>
+        </div>
+
+        <div class="left">
+            <p class="section-title">🎯 결론 — 나한테 맞는 도시는?</p>
+            <p>&nbsp;</p>
+            <p>✅ <b>리조트 가성비 최고</b> → 다낭 (48~88만원)</p>
+            <p>✅ <b>먹는 게 여행이다</b> → 오사카 (70~117만원)</p>
+            <p>✅ <b>제대로 된 바다 휴양</b> → 세부 (65~126만원)</p>
+            <p>&nbsp;</p>
+            <p>세 도시 모두 3박 4일에</p>
+            <p>딱 맞는 크기의 여행지입니다.</p>
+            <p>&nbsp;</p>
+            <p>당장 언제 갈지 정하고</p>
+            <p>항공권 가격부터 체크해보세요.</p>
+            <p>&nbsp;</p>
+            <p>생각보다 싼 노선이 지금도 열려 있습니다.</p>
+            <p>&nbsp;</p>
+            <p>좋은 여행 되세요 ✈️</p>
+        </div>
+
+        <hr class="divider">
+
+        <div class="tip-box">
+            <p><b>✨ 비용 아끼는 꿀팁 3가지</b></p>
+            <p>&nbsp;</p>
+            <p>1️⃣ <b>항공권은 화~목 출발</b>이 20~30% 저렴</p>
+            <p>2️⃣ <b>숙소는 시내 중심보다 한 블록 뒤</b>가 반값</p>
+            <p>3️⃣ <b>점심은 현지식, 저녁은 맛집</b> — 식비 40% 절약</p>
+        </div>
+
+        <p>&nbsp;</p>
+        <p style="font-size: 13px; color: #999;">※ 모든 가격은 2026년 3~5월 비수기 기준 대략적 예산이며, 환율·시즌에 따라 달라질 수 있습니다.</p>
+        <p style="font-size: 13px; color: #999; margin-top: 8px;">*가격 데이터 출처: 티키티킷(tikitikit.kr)</p>
+
+        <p>&nbsp;</p>
+        <p class="note">#해외여행비용 #여행경비비교 #다낭여행 #오사카여행 #세부여행 #3박4일해외여행 #가성비여행 #해외여행예산 #1인여행비용 #여행비용총정리 #항공권특가 #땡처리항공권
+            #여행꿀팁 #티키티킷</p>
+    </div>
+</body>
+
+</html>
