@@ -394,6 +394,7 @@ export default function Dashboard() {
     const [passengers, setPassengers] = useState({ adult: 1, child: 0, infant: 0 });
     const [bookingDisclaimer, setBookingDisclaimer] = useState<{ source: string; url: string } | null>(null);
     const disclaimerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const disclaimerWindowRef = useRef<Window | null>(null);
     const [alertFlight, setAlertFlight] = useState<Flight | null>(null);
     const [alertPrice, setAlertPrice] = useState('');
     const [pushSubscription, setPushSubscription] = useState<PushSubscription | null>(null);
@@ -791,6 +792,19 @@ export default function Dashboard() {
         setBookingFlight(flight);
     };
 
+    // 면책 팝업 닫기 (타이머 취소 + 미리 열린 빈 창 닫기)
+    const dismissDisclaimer = () => {
+        if (disclaimerTimerRef.current) {
+            clearTimeout(disclaimerTimerRef.current);
+            disclaimerTimerRef.current = null;
+        }
+        if (disclaimerWindowRef.current && !disclaimerWindowRef.current.closed) {
+            disclaimerWindowRef.current.close();
+            disclaimerWindowRef.current = null;
+        }
+        setBookingDisclaimer(null);
+    };
+
     const confirmBooking = () => {
         if (!bookingFlight) return;
         const url = getBookingUrl(bookingFlight, passengers);
@@ -799,12 +813,21 @@ export default function Dashboard() {
 
         const source = bookingFlight.source;
         setBookingFlight(null);
+
+        // 모바일 팝업 차단 방지: 사용자 제스처 내에서 즉시 빈 창을 열고,
+        // 면책 팝업 표시 후 해당 창에 URL을 할당
+        const newWindow = window.open('about:blank', '_blank');
+        disclaimerWindowRef.current = newWindow;
         setBookingDisclaimer({ source, url });
 
-        // 일정 시간 후 자동으로 여행사 페이지 열고 팝업 닫기
         const delay = source === 'hanatour' ? 3000 : 2000;
         disclaimerTimerRef.current = setTimeout(() => {
-            window.open(url, '_blank', 'noopener,noreferrer');
+            if (newWindow && !newWindow.closed) {
+                newWindow.location.href = url;
+            } else {
+                window.open(url, '_blank', 'noopener,noreferrer');
+            }
+            disclaimerWindowRef.current = null;
             setBookingDisclaimer(null);
         }, delay);
     };
@@ -814,9 +837,19 @@ export default function Dashboard() {
         const url = getMobileUrl(flight.link, isMobile);
         const route = `${normalizeCity(flight.departure.city)}-${normalizeCity(flight.arrival.city)}`;
         gtag.trackBookingClick(flight.source, route, flight.price);
+
+        // 모바일 팝업 차단 방지: 사용자 제스처 내에서 즉시 빈 창 열기
+        const newWindow = window.open('about:blank', '_blank');
+        disclaimerWindowRef.current = newWindow;
         setBookingDisclaimer({ source: flight.source, url });
+
         disclaimerTimerRef.current = setTimeout(() => {
-            window.open(url, '_blank', 'noopener,noreferrer');
+            if (newWindow && !newWindow.closed) {
+                newWindow.location.href = url;
+            } else {
+                window.open(url, '_blank', 'noopener,noreferrer');
+            }
+            disclaimerWindowRef.current = null;
             setBookingDisclaimer(null);
         }, 2000);
     };
@@ -2361,11 +2394,11 @@ export default function Dashboard() {
 
             {/* 예약 면책조항 팝업 */}
             {bookingDisclaimer && (
-                <div className={styles.modalOverlay} onClick={() => setBookingDisclaimer(null)}>
+                <div className={styles.modalOverlay} onClick={dismissDisclaimer}>
                     <div className={styles.modalSheet} onClick={(e) => e.stopPropagation()} style={{ textAlign: 'center' }}>
                         <div className={styles.modalHeader}>
                             <h3 className={styles.modalTitle}>{bookingDisclaimer.source === 'hanatour' ? '하나투어 연결 중' : '여행사로 이동 중'}</h3>
-                            <button className={styles.modalClose} onClick={() => setBookingDisclaimer(null)}>×</button>
+                            <button className={styles.modalClose} onClick={dismissDisclaimer}>×</button>
                         </div>
                         <div style={{ padding: '20px 16px 8px', lineHeight: 1.7 }}>
                             {bookingDisclaimer.source === 'hanatour' ? (
