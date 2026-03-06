@@ -2408,6 +2408,12 @@ export default function Dashboard() {
                                 </>
                             )}
                         </div>
+                        {isMobile && (
+                            <p style={{ padding: '0 16px', margin: '0 0 12px', fontSize: '13px', color: '#666', lineHeight: 1.6, textAlign: 'center' }}>
+                                특가 항공권은 좌석이 한정되어 있어<br />
+                                예약 시점에 이미 매진되었을 수 있습니다.
+                            </p>
+                        )}
                         <div style={{ padding: '0 16px 20px', fontSize: '12px', color: '#999', lineHeight: 1.6, textAlign: 'left' }}>
                             <p style={{ margin: '0 0 6px', fontWeight: 600, color: '#aaa', fontSize: '11px' }}>안내사항</p>
                             <p style={{ margin: 0 }}>
@@ -2427,7 +2433,7 @@ export default function Dashboard() {
                                     style={{ display: 'block', textDecoration: 'none', textAlign: 'center' }}
                                     onClick={() => setBookingDisclaimer(null)}
                                 >
-                                    여행사로 이동 →
+                                    {getSourceName(bookingDisclaimer.source)}에서 예약하기 →
                                 </a>
                             </div>
                         )}
