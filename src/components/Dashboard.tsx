@@ -2386,22 +2386,26 @@ export default function Dashboard() {
                 <div className={styles.modalOverlay} onClick={dismissDisclaimer}>
                     <div className={styles.modalSheet} onClick={(e) => e.stopPropagation()} style={{ textAlign: 'center' }}>
                         <div className={styles.modalHeader}>
-                            <h3 className={styles.modalTitle}>{bookingDisclaimer.source === 'hanatour' ? '하나투어 연결 중' : '여행사로 이동 중'}</h3>
+                            <h3 className={styles.modalTitle}>안내</h3>
                             <button className={styles.modalClose} onClick={dismissDisclaimer}>×</button>
                         </div>
                         <div style={{ padding: '20px 16px 8px', lineHeight: 1.7 }}>
-                            {bookingDisclaimer.source === 'hanatour' ? (
-                                <div style={{ fontSize: '36px', marginBottom: '8px' }}>⏳</div>
-                            ) : (
-                                <div style={{ fontSize: '36px', marginBottom: '8px' }}>✈️</div>
-                            )}
-                            <p style={{ fontSize: '14px', color: '#555', margin: '0 0 4px' }}>
-                                {isMobile ? '아래 버튼을 눌러 이동하세요' : '잠시 후 자동으로 이동합니다'}
-                            </p>
-                            {bookingDisclaimer.source === 'hanatour' && (
-                                <p style={{ fontSize: '13px', color: '#888', margin: '0 0 4px' }}>
-                                    하나투어 페이지 연결에 시간이 걸릴 수 있어요
-                                </p>
+                            {!isMobile && (
+                                <>
+                                    {bookingDisclaimer.source === 'hanatour' ? (
+                                        <div style={{ fontSize: '36px', marginBottom: '8px' }}>⏳</div>
+                                    ) : (
+                                        <div style={{ fontSize: '36px', marginBottom: '8px' }}>✈️</div>
+                                    )}
+                                    <p style={{ fontSize: '14px', color: '#555', margin: '0 0 4px' }}>
+                                        잠시 후 자동으로 이동합니다
+                                    </p>
+                                    {bookingDisclaimer.source === 'hanatour' && (
+                                        <p style={{ fontSize: '13px', color: '#888', margin: '0 0 4px' }}>
+                                            하나투어 페이지 연결에 시간이 걸릴 수 있어요
+                                        </p>
+                                    )}
+                                </>
                             )}
                         </div>
                         <div style={{ padding: '0 16px 20px', fontSize: '12px', color: '#999', lineHeight: 1.6, textAlign: 'left' }}>
