@@ -687,22 +687,22 @@ export default function Dashboard() {
     const shareFlight = async (flight: Flight) => {
         const text = shareFlightText(flight);
         const route = `${normalizeCity(flight.departure.city)}-${normalizeCity(flight.arrival.city)}`;
-        const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+        const isMobile = checkIsMobile();
         try {
-            if (isTouchDevice && navigator.share) {
+            if (isMobile && navigator.share) {
                 await navigator.share({ text });
                 gtag.trackShare(route, 'native_share');
             } else {
                 await navigator.clipboard.writeText(text);
                 gtag.trackShare(route, 'clipboard');
-                setShareToast('복사됨!');
+                setShareToast('✅ 링크가 복사되었습니다!');
                 setTimeout(() => setShareToast(null), 2000);
             }
         } catch {
             try {
                 await navigator.clipboard.writeText(text);
                 gtag.trackShare(route, 'clipboard');
-                setShareToast('복사됨!');
+                setShareToast('✅ 링크가 복사되었습니다!');
                 setTimeout(() => setShareToast(null), 2000);
             } catch { }
         }
