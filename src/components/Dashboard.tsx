@@ -813,23 +813,22 @@ export default function Dashboard() {
 
         const source = bookingFlight.source;
         setBookingFlight(null);
-
-        // 모바일 팝업 차단 방지: 사용자 제스처 내에서 즉시 빈 창을 열고,
-        // 면책 팝업 표시 후 해당 창에 URL을 할당
-        const newWindow = window.open('about:blank', '_blank');
-        disclaimerWindowRef.current = newWindow;
         setBookingDisclaimer({ source, url });
 
         const delay = source === 'hanatour' ? 3000 : 2000;
-        disclaimerTimerRef.current = setTimeout(() => {
-            if (newWindow && !newWindow.closed) {
-                newWindow.location.href = url;
-            } else {
+        if (isMobile) {
+            // 모바일: 면책 팝업 보여준 뒤 같은 탭에서 이동
+            disclaimerTimerRef.current = setTimeout(() => {
+                setBookingDisclaimer(null);
+                window.location.href = url;
+            }, delay);
+        } else {
+            // 데스크탑: 면책 팝업 보여준 뒤 새 탭에서 열기
+            disclaimerTimerRef.current = setTimeout(() => {
                 window.open(url, '_blank', 'noopener,noreferrer');
-            }
-            disclaimerWindowRef.current = null;
-            setBookingDisclaimer(null);
-        }, delay);
+                setBookingDisclaimer(null);
+            }, delay);
+        }
     };
 
     // 노랑풍선/온라인투어용: 인원선택 없이 면책조항 팝업 후 자동 이동
@@ -837,21 +836,21 @@ export default function Dashboard() {
         const url = getMobileUrl(flight.link, isMobile);
         const route = `${normalizeCity(flight.departure.city)}-${normalizeCity(flight.arrival.city)}`;
         gtag.trackBookingClick(flight.source, route, flight.price);
-
-        // 모바일 팝업 차단 방지: 사용자 제스처 내에서 즉시 빈 창 열기
-        const newWindow = window.open('about:blank', '_blank');
-        disclaimerWindowRef.current = newWindow;
         setBookingDisclaimer({ source: flight.source, url });
 
-        disclaimerTimerRef.current = setTimeout(() => {
-            if (newWindow && !newWindow.closed) {
-                newWindow.location.href = url;
-            } else {
+        if (isMobile) {
+            // 모바일: 면책 팝업 보여준 뒤 같은 탭에서 이동
+            disclaimerTimerRef.current = setTimeout(() => {
+                setBookingDisclaimer(null);
+                window.location.href = url;
+            }, 2000);
+        } else {
+            // 데스크탑: 면책 팝업 보여준 뒤 새 탭에서 열기
+            disclaimerTimerRef.current = setTimeout(() => {
                 window.open(url, '_blank', 'noopener,noreferrer');
-            }
-            disclaimerWindowRef.current = null;
-            setBookingDisclaimer(null);
-        }, 2000);
+                setBookingDisclaimer(null);
+            }, 2000);
+        }
     };
 
     // 필터 전체 초기화 (출발지·날짜 모두 해제)
