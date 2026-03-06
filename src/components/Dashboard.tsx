@@ -46,6 +46,7 @@ const normalizeCity = (city: string): string => {
         '치토세': '삿포로',
         '칼리보': '보라카이',
         '화리엔': '화롄',
+        '제남': '지난',
     };
     let result = trimmed;
     // 괄호 포함 형태: "서울(ICN)", "부산(PUS)", "대구(TAE)"
@@ -156,7 +157,7 @@ const CITY_TO_AIRPORT: Record<string, string> = {
     '보라카이': 'KLO', '호치민': 'SGN', '호치민(SGN)': 'SGN',
     '상해': 'PVG', '상하이': 'PVG', '칭다오': 'TAO', '청도': 'TAO',
     '사가': 'HSG', '요나고': 'YGJ', '히로시마': 'HIJ', '오이타': 'OIT',
-    '밴쿠버': 'YVR', '비엔티안': 'VTE',
+    '밴쿠버': 'YVR', '비엔티안': 'VTE', '지난': 'TNA',
     '푸껫': 'HKT', '쿠알라룸푸르': 'KUL',
     '시모지시마': 'SHI', '아오모리': 'AOJ',
     '바르셀로나': 'BCN', '하이퐁': 'HPH',
@@ -275,7 +276,7 @@ const TRIPCOM_CITY_DATA: Record<string, { id: number; name: string; provinceId?:
     '타이중': { id: 3849, name: '타이중' }, '가오슝': { id: 720, name: '가오슝' },
     '상하이': { id: 2, name: '상하이' }, '베이징': { id: 1, name: '베이징' },
     '칭다오': { id: 7, name: '칭다오' }, '옌타이': { id: 533, name: '옌타이' },
-    '화롄': { id: 6954, name: '화롄' },
+    '화롄': { id: 6954, name: '화롄' }, '지난': { id: 5, name: '지난' },
     // 기타
     '사이판': { id: 4081, name: '사이판' }, '괌': { id: 753, name: '괌' },
     '시드니': { id: 501, name: '시드니' }, '브리즈번': { id: 680, name: '브리즈번' },
