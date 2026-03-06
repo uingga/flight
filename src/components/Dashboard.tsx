@@ -2060,11 +2060,6 @@ export default function Dashboard() {
                                                 <button
                                                     type="button"
                                                     className={styles.shareBtn}
-                                                    onTouchEnd={(e) => {
-                                                        e.preventDefault(); e.stopPropagation();
-                                                        setAlertFlight(flight);
-                                                        setAlertPrice(String(flight.price));
-                                                    }}
                                                     onClick={(e) => {
                                                         e.preventDefault(); e.stopPropagation();
                                                         setAlertFlight(flight);
@@ -2080,7 +2075,6 @@ export default function Dashboard() {
                                                 <button
                                                     type="button"
                                                     className={styles.shareBtn}
-                                                    onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); shareFlight(flight); }}
                                                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); shareFlight(flight); }}
                                                     title="공유하기"
                                                 >
@@ -2409,10 +2403,7 @@ export default function Dashboard() {
                             )}
                         </div>
                         {isMobile && (
-                            <p style={{ padding: '0 16px', margin: '0 0 12px', fontSize: '13px', color: '#666', lineHeight: 1.6, textAlign: 'center' }}>
-                                특가 항공권은 좌석이 한정되어 있어<br />
-                                예약 시점에 이미 매진되었을 수 있습니다.
-                            </p>
+                            <div style={{ fontSize: '36px', textAlign: 'center', margin: '0 0 8px' }}>✈️</div>
                         )}
                         <div style={{ padding: '0 16px 20px', fontSize: '12px', color: '#999', lineHeight: 1.6, textAlign: 'left' }}>
                             <p style={{ margin: '0 0 6px', fontWeight: 600, color: '#aaa', fontSize: '11px' }}>안내사항</p>
