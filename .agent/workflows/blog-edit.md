@@ -67,6 +67,12 @@ node -e "const {chromium}=require('playwright'); (async()=>{const browser=await 
 | 에디터 추천 | `generateEditorPick()` 함수 |
 | 해시태그 | `generateBlogHTML()` 하단 |
 
+### 인천 출발 섹션 규칙
+
+- **총 3개만** 표시
+- Top 5에 포함된 인천 출발 **1개** + Top 5에 없는 비중복 **2개**
+- Top 5와 같은 도착지가 겹치지 않도록 선별
+
 ### 수정 후 확인
 
 // turbo
@@ -97,8 +103,9 @@ node -e "const {chromium}=require('playwright'); (async()=>{const browser=await 
 - **"5곳" 같은 구체적 숫자 쓰지 않음** — "여러 여행사"로 표현
 
 ### 허용되는 노출 방식
-- **글 하단에 데이터 출처 1줄만**: `*가격 데이터 출처: 티키티킷(tikitikit.kr)` (13px, #999)
-- 본문 중간에 "tikitikit.kr" 텍스트 언급은 가능하나 **클릭 가능한 링크는 금지**
+- **글 마지막 CTA 링크 1개만**: `tikitikit.kr` (클릭 가능)
+- **본문 중간에 tikitikit.kr 출처 표기 금지** — "가격 데이터 출처: 티키티킷" 같은 문구도 넣지 않음
+- 본문 중간에 텍스트로 언급은 가능하나 **클릭 가능한 링크는 금지**
 
 ### 마무리 스타일
 - 자연스러운 마무리 문장 (예: "좋은 여행 되세요 ✈️")
