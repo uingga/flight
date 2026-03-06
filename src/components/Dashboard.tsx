@@ -816,19 +816,14 @@ export default function Dashboard() {
         setBookingDisclaimer({ source, url });
 
         const delay = source === 'hanatour' ? 3000 : 2000;
-        if (isMobile) {
-            // 모바일: 면책 팝업 보여준 뒤 같은 탭에서 이동
-            disclaimerTimerRef.current = setTimeout(() => {
-                setBookingDisclaimer(null);
-                window.location.href = url;
-            }, delay);
-        } else {
+        if (!isMobile) {
             // 데스크탑: 면책 팝업 보여준 뒤 새 탭에서 열기
             disclaimerTimerRef.current = setTimeout(() => {
                 window.open(url, '_blank', 'noopener,noreferrer');
                 setBookingDisclaimer(null);
             }, delay);
         }
+        // 모바일: 면책 팝업 + 수동 이동 버튼 (자동 이동 없음)
     };
 
     // 노랑풍선/온라인투어용: 인원선택 없이 면책조항 팝업 후 자동 이동
@@ -838,19 +833,14 @@ export default function Dashboard() {
         gtag.trackBookingClick(flight.source, route, flight.price);
         setBookingDisclaimer({ source: flight.source, url });
 
-        if (isMobile) {
-            // 모바일: 면책 팝업 보여준 뒤 같은 탭에서 이동
-            disclaimerTimerRef.current = setTimeout(() => {
-                setBookingDisclaimer(null);
-                window.location.href = url;
-            }, 2000);
-        } else {
+        if (!isMobile) {
             // 데스크탑: 면책 팝업 보여준 뒤 새 탭에서 열기
             disclaimerTimerRef.current = setTimeout(() => {
                 window.open(url, '_blank', 'noopener,noreferrer');
                 setBookingDisclaimer(null);
             }, 2000);
         }
+        // 모바일: 면책 팝업 + 수동 이동 버튼 (자동 이동 없음)
     };
 
     // 필터 전체 초기화 (출발지·날짜 모두 해제)
@@ -2406,7 +2396,7 @@ export default function Dashboard() {
                                 <div style={{ fontSize: '36px', marginBottom: '8px' }}>✈️</div>
                             )}
                             <p style={{ fontSize: '14px', color: '#555', margin: '0 0 4px' }}>
-                                잠시 후 자동으로 이동합니다
+                                {isMobile ? '아래 버튼을 눌러 이동하세요' : '잠시 후 자동으로 이동합니다'}
                             </p>
                             {bookingDisclaimer.source === 'hanatour' && (
                                 <p style={{ fontSize: '13px', color: '#888', margin: '0 0 4px' }}>
@@ -2423,6 +2413,20 @@ export default function Dashboard() {
                                 예약·결제·환불 등에 대한 책임은 해당 여행사에 있습니다.
                             </p>
                         </div>
+                        {isMobile && (
+                            <div style={{ padding: '0 16px 16px' }}>
+                                <a
+                                    href={bookingDisclaimer.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className={styles.modalConfirm}
+                                    style={{ display: 'block', textDecoration: 'none', textAlign: 'center' }}
+                                    onClick={() => setBookingDisclaimer(null)}
+                                >
+                                    여행사로 이동 →
+                                </a>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
