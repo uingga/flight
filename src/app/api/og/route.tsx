@@ -182,7 +182,7 @@ export async function GET(request: NextRequest) {
                         <span style={{
                             fontSize: '72px',
                             fontWeight: 900,
-                            color: '#dc2626',
+                            color: '#4F46E5',
                             letterSpacing: '-0.02em',
                         }}>
                             {priceText}~
