@@ -230,7 +230,7 @@ const TIP_POOLS = {
     // 조건: 중국 노선이 있을 때
     china: [
         '🇨🇳 중국 여행 TIP: 칭다오·상하이 등은 3~5월이 여행 적기! 날씨도 좋고 성수기 전이라 저렴합니다.',
-        '🇨🇳 중국 단거리 꿀팁: 비행 2시간 이내, 1박 2일도 가능한 가성비 목적지입니다.',
+        '🇨🇳 중국 단거리 꿀팁: 비행 2시간 이내, 물가도 저렴해서 현지 맛집 투어하기 딱 좋은 목적지입니다.',
     ],
     // 조건: 지방 출발이 있을 때
     regional: [
@@ -329,9 +329,11 @@ async function main() {
 
     // 인천 출발 중 Top 5에 포함되지 않은 것도 따로 수집
     const icnInTop5 = topFlights.filter(f => normalizeCity(f.departure?.city) === '인천');
-    // 인천 출발 중 Top 5에 포함 안 된 추가 항공편 (최대 3개 더)
-    const icnExtra = getExtraIncheonFlights(flights, topFlights, 3);
-    const allIcnFlights = [...icnInTop5, ...icnExtra];
+    // 인천 출발 섹션: 총 3개 (Top 5 중 인천 1개 + 비중복 2개)
+    const ICN_SECTION_TOTAL = 3;
+    const ICN_EXTRA_COUNT = 2; // Top 5와 겹치지 않는 인천 출발 항공편
+    const icnExtra = getExtraIncheonFlights(flights, topFlights, ICN_EXTRA_COUNT);
+    const allIcnFlights = [...icnInTop5.slice(0, 1), ...icnExtra].slice(0, ICN_SECTION_TOTAL);
 
     const allScreenshotFlights = [...topFlights, ...icnExtra];
     await captureCardScreenshots(allScreenshotFlights, topFlights.length);
