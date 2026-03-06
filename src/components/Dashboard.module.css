@@ -1177,6 +1177,10 @@
         gap: 6px;
     }
 
+    .compareLink {
+        border-radius: 8px;
+    }
+
     .filterToggleBtn {
         display: flex;
         align-items: center;
@@ -1295,8 +1299,8 @@
     }
 
     .btn-primary {
-        font-size: 0.85rem;
-        padding: 7px 12px !important;
+        font-size: 0.88rem;
+        padding: 9px 16px !important;
         white-space: nowrap;
     }
 
