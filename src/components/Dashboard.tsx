@@ -47,6 +47,7 @@ const normalizeCity = (city: string): string => {
         '칼리보': '보라카이',
         '화리엔': '화롄',
         '제남': '지난',
+        '계림': '구이린',
     };
     let result = trimmed;
     // 괄호 포함 형태: "서울(ICN)", "부산(PUS)", "대구(TAE)"
@@ -173,6 +174,7 @@ const CITY_TO_AIRPORT: Record<string, string> = {
     '도쿄(나리타공항)': 'NRT', '로마 (FCO)': 'FCO', '이스탄불(IST)': 'IST',
     '상해(푸동공항)': 'PVG', '타이중(대만)': 'RMQ', '마나도(인도네시아)': 'MDC',
     '하이퐁(베트남)': 'HPH',
+    '구이린': 'KWL',
 };
 
 // 도시명에서 공항코드 추출
@@ -280,6 +282,7 @@ const TRIPCOM_CITY_DATA: Record<string, { id: number; name: string; provinceId?:
     '상하이': { id: 2, name: '상하이' }, '베이징': { id: 1, name: '베이징' },
     '칭다오': { id: 7, name: '칭다오' }, '옌타이': { id: 533, name: '옌타이' },
     '화롄': { id: 6954, name: '화롄' }, '지난': { id: 144, name: '지난' },
+    '구이린': { id: 33, name: '구이린' },
     // 기타
     '사이판': { id: 4081, name: '사이판' }, '괌': { id: 753, name: '괌' },
     '시드니': { id: 501, name: '시드니' }, '브리즈번': { id: 680, name: '브리즈번' },
