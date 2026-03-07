@@ -818,19 +818,14 @@ export default function Dashboard() {
         const route = `${normalizeCity(bookingFlight.departure.city)}-${normalizeCity(bookingFlight.arrival.city)}`;
         gtag.trackBookingClick(bookingFlight.source, route, bookingFlight.price);
 
-        const source = bookingFlight.source;
         setBookingFlight(null);
-        setBookingDisclaimer({ source, url });
 
-        const delay = source === 'hanatour' ? 3000 : 2000;
         if (!isMobile) {
-            // 데스크탑: 면책 팝업 보여준 뒤 새 탭에서 열기
-            disclaimerTimerRef.current = setTimeout(() => {
-                window.open(url, '_blank', 'noopener,noreferrer');
-                setBookingDisclaimer(null);
-            }, delay);
+            window.open(url, '_blank', 'noopener,noreferrer');
+        } else {
+            // 모바일: 새 탭으로 열기
+            window.open(url, '_blank', 'noopener,noreferrer');
         }
-        // 모바일: 면책 팝업 + 수동 이동 버튼 (자동 이동 없음)
     };
 
     // 노랑풍선/온라인투어용: 인원선택 없이 면책조항 팝업 후 자동 이동
@@ -2374,6 +2369,14 @@ export default function Dashboard() {
                             <span className={styles.modalTotalPrice}>
                                 {formatPrice(bookingFlight.price * (passengers.adult + passengers.child + passengers.infant))}
                             </span>
+                        </div>
+                        <div style={{ padding: '0 0 12px', fontSize: '11px', color: '#aaa', lineHeight: 1.6 }}>
+                            <p style={{ margin: 0 }}>
+                                표시된 가격 및 좌석은 실시간 변동될 수 있으며,
+                                실제 예약은 해당 여행사에서 직접 이루어집니다.
+                                티키티킷은 가격 비교 정보를 제공하며,
+                                예약·결제·환불 등에 대한 책임은 해당 여행사에 있습니다.
+                            </p>
                         </div>
                         <button className={styles.modalConfirm} onClick={confirmBooking}>
                             {getSourceName(bookingFlight.source)}에서 예약하기 →
