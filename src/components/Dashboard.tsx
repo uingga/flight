@@ -179,6 +179,9 @@ const CITY_TO_AIRPORT: Record<string, string> = {
 const getAirportCode = (city: string): string | null => {
     // 직접 매핑 확인
     if (CITY_TO_AIRPORT[city]) return CITY_TO_AIRPORT[city];
+    // normalizeCity로 정규화 후 매핑 확인 (예: '제남(지난)' → '지난' → TNA)
+    const normalized = normalizeCity(city);
+    if (normalized !== city && CITY_TO_AIRPORT[normalized]) return CITY_TO_AIRPORT[normalized];
     // 괄호 안 코드 추출: "서울(ICN)" → ICN
     const match = city.match(/\(([A-Z]{3})\)/);
     if (match) return match[1];
@@ -276,7 +279,7 @@ const TRIPCOM_CITY_DATA: Record<string, { id: number; name: string; provinceId?:
     '타이중': { id: 3849, name: '타이중' }, '가오슝': { id: 720, name: '가오슝' },
     '상하이': { id: 2, name: '상하이' }, '베이징': { id: 1, name: '베이징' },
     '칭다오': { id: 7, name: '칭다오' }, '옌타이': { id: 533, name: '옌타이' },
-    '화롄': { id: 6954, name: '화롄' }, '지난': { id: 5, name: '지난' },
+    '화롄': { id: 6954, name: '화롄' }, '지난': { id: 144, name: '지난' },
     // 기타
     '사이판': { id: 4081, name: '사이판' }, '괌': { id: 753, name: '괌' },
     '시드니': { id: 501, name: '시드니' }, '브리즈번': { id: 680, name: '브리즈번' },
