@@ -291,6 +291,20 @@
 /* react-datepicker wrapper styling */
 .dateRange :global(.react-datepicker-wrapper) {
     position: relative;
+    flex: 1;
+}
+
+.dateRange :global(.react-datepicker__close-icon) {
+    right: 4px;
+    padding: 0 6px 0 0;
+}
+
+.dateRange :global(.react-datepicker__close-icon::after) {
+    background-color: transparent;
+    color: var(--color-text-muted);
+    font-size: 18px;
+    padding: 0;
+    line-height: 1;
 }
 
 .dateSeparator {
