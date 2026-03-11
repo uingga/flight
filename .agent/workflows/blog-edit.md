@@ -12,40 +12,76 @@ description: 블로그 포스트 내용 수정 가이드
 
 ---
 
-## A. 일일 특가 포스트 (땡처리 Top 5)
+## A. 일일 특가 포스트 (땡처리 Top 3)
 
 ### 생성 방법
 
 // turbo
 1. `node scripts/generate-blog.js` 실행
 2. 스크립트가 자동으로 수행:
-   - `all-flights-cache.json`에서 Top 5 특가 추출
-   - 카드 이미지(rank_1~5.png, icn_1~3.png) 스크린샷 캡처
+   - `all-flights-cache.json`에서 Top 3 특가 추출
+   - 카드 이미지(rank_1~3.png, icn_1~2.png) 스크린샷 캡처 (Playwright API mock 방식)
    - 네이버 블로그용 HTML 파일 생성 (`blog-post-YYMMDD.html`)
+
+> ⚠️ **카드 스크린샷은 반드시 Playwright 스크립트로 캡처!**
+> `browser_subagent`로 직접 캡처하지 않는다. API mock으로 1개 항공편만 표시 후 `.card` 요소를 캡처하는 방식.
+
+#### 수동 큐레이션 시 (Top 3를 직접 선택할 때)
+- `scripts/capture-cards-manual.js`의 `MANUAL_CARDS` 배열을 수정
+- `node scripts/capture-cards-manual.js` 실행 → 카드 이미지 캡처
+- `blog-post-YYMMDD.html`을 직접 작성/수정
+
 3. 썸네일 이미지 2종 생성 (아래 참고)
 4. 생성된 `public/blog-post-YYMMDD.html`을 브라우저에서 확인
 5. Ctrl+A → Ctrl+C → 네이버 에디터에 Ctrl+V
 
 ### 썸네일 / 헤더 이미지 생성
 
+> ⚠️ **`generate_image` AI 도구로 직접 생성하지 않는다!**
+> 한글 렌더링이 깨지므로 반드시 **HTML 템플릿 + Puppeteer 캡처** 방식 사용.
+
 매 포스트마다 **2종**의 이미지를 생성:
 
-#### 1. 정사각형 썸네일 (1:1) — 네이버 대표이미지용
-- `generate_image` 도구로 AI 생성
-- 3분할 세로 패널 배경 (TOP 5 중 대표 3개 도시)
-- 텍스트 3줄: "오늘의 땡처리 항공권" / "특가 TOP 5" / "18만원대~"
-- 저장: `public/thumbnail-YYMMDD-square.png`
+#### 생성 절차
 
-#### 2. 와이드 헤더 (2:1, 960x480) — 포스트 상단 배너용
-- `public/blog-thumbnail-template.html`을 수정 후 Playwright로 캡처
-- 3분할 세로 패널 배경 (경계선 없이 자연스럽게 붙인다)
-- 텍스트: 포스트 제목 (예: "[2/27] 땡처리 항공권 특가 Top 5 🔥 / 다카마쓰 왕복 18만원대 ✈️")
-- 하단에 "티키티킷 tikitikit.kr" 뱃지
-- 캡처 명령:
-```
-node -e "const {chromium}=require('playwright'); (async()=>{const browser=await chromium.launch(); const page=await browser.newPage({viewport:{width:960,height:480}}); await page.goto('http://localhost:3000/blog-thumbnail-template.html'); await page.waitForTimeout(2000); await page.locator('#wide-banner').screenshot({path:'./public/thumbnail-YYMMDD-wide.png'}); await browser.close();})();"
-```
-- 저장: `public/thumbnail-YYMMDD-wide.png`
+1. **배경 이미지 준비** — TOP 3 도시 사진 3장
+   - `generate_image`로 도시별 여행 사진 생성 (텍스트 없이 배경만)
+   - `public/images/thumb_{도시명}.png`로 저장 (예: `thumb_shizuoka.png`)
+   - 기존에 있는 이미지 재활용 가능
+
+2. **HTML 템플릿 작성** — `public/blog-thumbnail-YYMMDD.html`
+   - 기존 템플릿 복사 후 수정 (참고: `blog-thumbnail-260310.html`)
+   - 사선(clip-path) 3분할 패널 배경 + 텍스트 오버레이
+   - 와이드(960×480) + 정사각(800×800) 두 버전 포함
+   - 수정할 부분:
+     - `.panel-1/2/3`의 `background-image` URL → 새 도시 이미지
+     - `.line1` / `.line2` / `.line-accent` → 날짜, TOP 3, 가격 텍스트
+
+3. **Puppeteer로 캡처** — `scripts/capture-thumb-YYMMDD.js`
+   - 기존 캡처 스크립트 복사 후 날짜만 수정 (참고: `capture-thumb-260310.js`)
+   - 실행: `node scripts/capture-thumb-YYMMDD.js`
+   - 출력:
+     - `public/images/blog-thumb-YYMMDD-wide.png` (와이드 배너)
+     - `public/images/blog-thumb-YYMMDD-square.png` (정사각 썸네일)
+
+#### 정사각형 썸네일 (800×800) — 네이버 대표이미지용
+- 텍스트 3줄: `[M/D]` / `땡처리 항공권` / `특가 Top 3 🔥`
+- 금색 악센트: `{1위 도시} {가격} · {2위 도시} {가격}`
+- 하단 뱃지: `티키티킷 tikitikit.kr`
+
+#### 와이드 헤더 (960×480) — 포스트 상단 배너용
+- 텍스트: `[M/D] 땡처리 항공권 특가 Top 3 🔥`
+- 서브: `{1위 도시} 왕복 {가격}만원대 ✈️`
+- 하단 뱃지: `티키티킷 tikitikit.kr`
+
+4. **블로그 포스트에 삽입** — 캡처 완료 후 자동으로 포스트 HTML 상단에 삽입
+   - `blog-post-YYMMDD.html`의 `<h1>` 태그 **바로 위**에 정사각형 + 와이드 이미지 순서로 추가:
+   ```html
+   <p><img src="images/blog-thumb-YYMMDD-square.png" alt="썸네일" style="max-width: 100%; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"></p>
+   <p>&nbsp;</p>
+   <p><img src="images/blog-thumb-YYMMDD-wide.png" alt="헤더" style="max-width: 100%; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"></p>
+   <p>&nbsp;</p>
+   ```
 
 ### ⚠️ 실행 전 주의사항
 
@@ -62,7 +98,7 @@ node -e "const {chromium}=require('playwright'); (async()=>{const browser=await 
 | 도시별 여행 설명 | `CITY_DESCRIPTIONS` 객체 |
 | 시즌 관련 텍스트 | `SEASON_CONTEXT` 객체 |
 | 항공권 꿀팁 | `TIP_POOLS` 배열 |
-| Top 5 선정 기준 | `selectTop5WithIncheon()` 함수 |
+| Top 3 선정 기준 | `selectTopWithIncheon()` 함수 |
 | 인사말/도입부 | `generateBlogHTML()` 내 intro 영역 |
 | 에디터 추천 | `generateEditorPick()` 함수 |
 | 해시태그 | `generateBlogHTML()` 하단 |
@@ -70,8 +106,8 @@ node -e "const {chromium}=require('playwright'); (async()=>{const browser=await 
 ### 인천 출발 섹션 규칙
 
 - **총 3개만** 표시
-- Top 5에 포함된 인천 출발 **1개** + Top 5에 없는 비중복 **2개**
-- Top 5와 같은 도착지가 겹치지 않도록 선별
+- Top 3에 포함된 인천 출발 **1개** + Top 3에 없는 비중복 **2개**
+- Top 3와 같은 도착지가 겹치지 않도록 선별
 
 ### 수정 후 확인
 
@@ -89,6 +125,29 @@ node -e "const {chromium}=require('playwright'); (async()=>{const browser=await 
 - 파일명: `public/blog-post-{번호}.html`
 - 스타일: 기존 01, 02번 포스트 형식 참고
 
+### 썸네일 / 헤더 이미지 생성
+
+매 포스트마다 **2종**의 이미지를 생성:
+
+#### 1. 정사각형 썸네일 (1:1) — 네이버 대표이미지용
+- `generate_image` 도구로 AI 생성
+- 주제를 시각적으로 표현하는 배경 이미지 (여행 사진 스타일)
+- 텍스트 2~3줄: 포스트 핵심 키워드 (예: "땡처리 항공권" / "Q&A 10가지")
+- 하단에 "티키티킷" 로고/텍스트
+- 저장: `public/images/blog-thumb-{번호}-square.png`
+
+#### 2. 와이드 헤더 (2:1, 960x480) — 포스트 상단 배너용
+- HTML 템플릿 또는 `generate_image`로 생성
+- 포스트 제목을 담은 배너 이미지
+- 하단에 "티키티킷 tikitikit.kr" 뱃지
+- 저장: `public/images/blog-thumb-{번호}-wide.png`
+
+#### 스타일 가이드
+- 브랜드 컬러: 인디고(#4F46E5) 계열 유지
+- 배경: 여행 관련 사진 또는 그라데이션 (주제에 맞게)
+- 텍스트: Noto Sans KR Bold, 고대비 (흰색 + 반투명 오버레이)
+- 땡처리 썸네일과 구분: 3분할 패널 대신 **단일 배경** 사용
+
 ---
 
 ## CTA 전략 (필수 준수)
@@ -105,7 +164,13 @@ node -e "const {chromium}=require('playwright'); (async()=>{const browser=await 
 ### 허용되는 노출 방식
 - **글 마지막 CTA 링크 1개만**: `tikitikit.kr` (클릭 가능)
 - **본문 중간에 tikitikit.kr 출처 표기 금지** — "가격 데이터 출처: 티키티킷" 같은 문구도 넣지 않음
+- **"(tikitikit.kr 기준 실시간 최저가)" 문구 사용 금지** — 광고처럼 보임
 - 본문 중간에 텍스트로 언급은 가능하나 **클릭 가능한 링크는 금지**
+
+### 인천 출발 섹션 코멘트
+- 매 포스트마다 **같은 멘트를 반복하지 않는다**
+- `generate-blog.js`의 `getIcnComment()` 함수 로테이션 활용
+- 수동 작성 시에도 이전 포스트와 다른 표현 사용
 
 ### 마무리 스타일
 - 자연스러운 마무리 문장 (예: "좋은 여행 되세요 ✈️")

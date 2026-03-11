@@ -1,7 +1,7 @@
 /**
  * generate-blog.js (v2)
  * 
- * all-flights-cache.json에서 Top 5 특가를 추출하여
+ * all-flights-cache.json에서 Top 3 특가를 추출하여
  * 네이버 블로그에 복붙 가능한 HTML 파일을 자동 생성합니다.
  * 
  * v2 변경사항:
@@ -21,8 +21,8 @@ const path = require('path');
 const DATA_PATH = path.join(__dirname, '..', 'data', 'all-flights-cache.json');
 const OUTPUT_DIR = path.join(__dirname, '..', 'public');
 const CARDS_DIR = path.join(OUTPUT_DIR, 'blog-cards');
-const TOP_N = 5;
-const MIN_INCHEON = 2;
+const TOP_N = 3;
+const MIN_INCHEON = 1;
 const SITE_URL = 'https://tikitikit.kr';
 
 // ===== 항공사명 정규화 =====
@@ -51,25 +51,40 @@ function normalizeAirline(name) {
     return AIRLINE_NAME_MAP[trimmed] || trimmed;
 }
 
-// ===== 도시명 정규화 (괄호 제거 + 이름 통일) =====
+// ===== 도시명 정규화 (이름 통일 + 복수공항 도시 보존) =====
 const CITY_NAME_MAP = {
     '서울': '인천',
     '푸껫': '푸켓',
     '청도': '칭다오',
-    '오사카(간사이)': '오사카',
     '방콕(수완나폼)': '방콕',
     '나트랑(깜랑)': '나트랑',
     '하코다테(북해도)': '하코다테',
+    '위해': '웨이하이',
+    '타이페이': '타이베이',
+    '대만': '타이베이',
+    '상해': '상하이',
 };
+
+// 복수 공항 도시: 괄호를 제거하지 않고 원본 유지
+const MULTI_AIRPORT_CITIES = ['도쿄', '오사카', '상하이'];
 
 function normalizeCity(city) {
     if (!city) return '';
     // 먼저 원본 그대로 매핑 체크
     if (CITY_NAME_MAP[city]) return CITY_NAME_MAP[city];
-    // 괄호 제거
-    const stripped = city.replace(/\([^)]*\)/g, '').trim();
-    // 괄호 제거 후 매핑 체크
-    return CITY_NAME_MAP[stripped] || stripped;
+    // 괄호가 있는 경우
+    const match = city.match(/^(.+?)\((.+?)\)$/);
+    if (match) {
+        const baseName = match[1].trim();
+        const mapped = CITY_NAME_MAP[baseName] || baseName;
+        // 복수 공항 도시면 괄호 포함 원본 유지
+        if (MULTI_AIRPORT_CITIES.includes(mapped)) {
+            return `${mapped}(${match[2]})`;
+        }
+        // 그 외는 괄호 제거 후 매핑
+        return CITY_NAME_MAP[baseName] || baseName;
+    }
+    return CITY_NAME_MAP[city] || city;
 }
 
 // ===== 도시별 에디터 픽 텍스트 =====
@@ -197,6 +212,20 @@ const CITY_DESCRIPTIONS = {
             { lines: ['마닐라 베이에서 황금빛 선셋 🌅', 'SM 몰에서 가성비 쇼핑까지!'], closing: '동남아 허브 도시의 매력.' },
         ],
     },
+    '시즈오카': {
+        emoji: '♨️',
+        variants: [
+            { lines: ['후지산이 보이는 온천의 도시 ♨️', '녹차 산지에서 말차 디저트까지!'], closing: '후지산을 가장 가까이서 보는 여행.' },
+            { lines: ['미호노마쓰바라 해변에서 후지산 한 눈에 🗻', '시즈오카 오뎅으로 현지인 맛집 투어!'], closing: '관광객 적은 일본 소도시 힐링.' },
+        ],
+    },
+    '지난': {
+        emoji: '⛲',
+        variants: [
+            { lines: ['천하제일의 샘, 바오투취안 공원 ⛲', '대명호 산책하며 여유로운 하루!'], closing: '중국 역사와 자연이 어우러진 도시.' },
+            { lines: ['제남 구시가지에서 거리 음식 탐방 🍜', '천포 광장에서 현지 문화 체험!'], closing: '가성비 좋은 중국 소도시 여행.' },
+        ],
+    },
 };
 
 // ===== 시즌/문맥 텍스트 (벚꽃 시즌 등) =====
@@ -319,16 +348,16 @@ async function main() {
     flights = Array.from(dedupMap.values());
     console.log(`🔄 중복 제거 후: ${flights.length}개`);
 
-    // 5. Top 5 선발 (인천 출발 2개+ 보장)
+    // 5. Top 3 선발 (인천 출발 보장)
     flights.sort((a, b) => a.price - b.price);
-    const topFlights = selectTop5WithIncheon(flights);
+    const topFlights = selectTopWithIncheon(flights);
 
     if (topFlights.length === 0) {
         console.error('❌ 유효한 항공편이 없습니다.');
         process.exit(1);
     }
 
-    console.log('\n🏆 Top 5 특가:');
+    console.log('\n🏆 Top 3 특가:');
     topFlights.forEach((f, i) => {
         const isICN = normalizeCity(f.departure?.city) === '인천' ? ' [인천]' : '';
         console.log(`  ${i + 1}위: ${f.departure?.city} → ${f.arrival?.city} | ${f.airline} | ${f.price.toLocaleString()}원${isICN}`);
@@ -340,13 +369,13 @@ async function main() {
         fs.mkdirSync(CARDS_DIR, { recursive: true });
     }
 
-    // 인천 출발 중 Top 5에 포함되지 않은 것도 따로 수집
-    const icnInTop5 = topFlights.filter(f => normalizeCity(f.departure?.city) === '인천');
-    // 인천 출발 섹션: 총 3개 (Top 5 중 인천 1개 + 비중복 2개)
+    // 인천 출발 중 Top 3에 포함되지 않은 것도 따로 수집
+    const icnInTop = topFlights.filter(f => normalizeCity(f.departure?.city) === '인천');
+    // 인천 출발 섹션: 총 3개 (Top 3 중 인천 1개 + 비중복 2개)
     const ICN_SECTION_TOTAL = 3;
-    const ICN_EXTRA_COUNT = 2; // Top 5와 겹치지 않는 인천 출발 항공편
+    const ICN_EXTRA_COUNT = 2; // Top 3와 겹치지 않는 인천 출발 항공편
     const icnExtra = getExtraIncheonFlights(flights, topFlights, ICN_EXTRA_COUNT);
-    const allIcnFlights = [...icnInTop5.slice(0, 1), ...icnExtra].slice(0, ICN_SECTION_TOTAL);
+    const allIcnFlights = [...icnInTop.slice(0, 1), ...icnExtra].slice(0, ICN_SECTION_TOTAL);
 
     const allScreenshotFlights = [...topFlights, ...icnExtra];
     await captureCardScreenshots(allScreenshotFlights, topFlights.length);
@@ -364,8 +393,8 @@ async function main() {
     console.log(`🌐 http://localhost:3000/${filename}`);
 }
 
-// ===== Top 5 선발 (인천 2개+ 보장) =====
-function selectTop5WithIncheon(sortedFlights) {
+// ===== Top N 선발 (인천 보장) =====
+function selectTopWithIncheon(sortedFlights) {
     const topFlights = [];
     const seenDests = new Set();
 
@@ -395,7 +424,7 @@ function selectTop5WithIncheon(sortedFlights) {
     return topFlights;
 }
 
-// ===== 인천 추가 항공편 (Top 5 밖) =====
+// ===== 인천 추가 항공편 (Top N 밖) =====
 function getExtraIncheonFlights(allFlights, topFlights, maxExtra) {
     const topIds = new Set(topFlights.map(f => `${f.departure?.city}|${f.arrival?.city}|${f.departure?.date}|${f.airline}`));
     const topDests = new Set(topFlights.filter(f => normalizeCity(f.departure?.city) === '인천').map(f => normalizeCity(f.arrival?.city)));
@@ -840,7 +869,7 @@ function generateHTML(topFlights, allIcnFlights) {
     const second = topFlights[1];
 
     // 제목 생성 — SEO 최적화 패턴 (2026-03-03~)
-    // 형식: [M월 D일] 땡처리 항공권 특가 TOP 5 | {1위 목적지} {가격}, {2위 목적지} {가격} ✈️
+    // 형식: [M/D] 땡처리 항공권 특가 TOP 3 | {1위 목적지} {가격}, {2위 목적지} {가격} ✈️
     const dayHash = now.getDate() + now.getMonth() * 31;
     const month = now.getMonth() + 1;
     const day = now.getDate();
@@ -851,7 +880,7 @@ function generateHTML(topFlights, allIcnFlights) {
     const pricePart = second
         ? `${firstCity} ${firstPrice}, ${secondCity} ${secondPrice}`
         : `${firstCity} ${firstPrice}`;
-    const pageTitle = `[${month}월 ${day}일] 땡처리 항공권 특가 TOP 5 | ${pricePart} ✈️`;
+    const pageTitle = `[${month}/${day}] 땡처리 항공권 특가 TOP 3 | ${pricePart} ✈️`;
 
     // 각 순위별 HTML 생성 (텍스트 + 이미지 + 시즌 코멘트)
     const rankSections = topFlights.map((f, i) => {
@@ -905,7 +934,7 @@ function generateHTML(topFlights, allIcnFlights) {
             const city = f.arrival?.city || '';
             const dateRange = formatDateRange(f.departure?.date || '', f.arrival?.date || '');
             const comment = getIcnComment(f);
-            // 카드 이미지: Top 5에 포함된 인천 항공편은 rank_N.png, 추가분은 icn_N.png
+            // 카드 이미지: Top 3에 포함된 인천 항공편은 rank_N.png, 추가분은 icn_N.png
             const topIdx = topFlights.indexOf(f);
             const imgName = topIdx >= 0 ? `rank_${topIdx + 1}` : `icn_${i - topFlights.filter(tf => tf.departure?.city === '인천').length + 1}`;
             // 간단히: allIcnFlights 중에서의 인덱스 기반
@@ -943,7 +972,7 @@ function generateHTML(topFlights, allIcnFlights) {
         <p class="section-title">📌 인천 출발은 뭐가 있을까?</p>
 
         <p>&nbsp;</p>
-        <p>이번 인천 출발 최저가 라인업!</p>
+        <p>이번 인천 출발 추천 라인업!</p>
 
 ${icnItems}`;
     }
@@ -984,7 +1013,7 @@ ${tipLines}
         `<p>${dayNames[dayOfWeek]}요일이네요.</p>
         <p>이번 주 여행 계획 세우셨나요?</p>
         <p>&nbsp;</p>
-        <p>오늘의 땡처리 특가 Top 5,</p>
+        <p>오늘의 땡처리 특가 Top 3,</p>
         <p>같이 보시죠 👇</p>`,
 
         `<p>요새 항공권 보는 재미가 쏠쏠하네요 ✈️</p>
@@ -1140,7 +1169,7 @@ ${introSmallTalk}
 
         <hr class="divider">
 
-        <p class="section-title">🏆 ${dateLabel} 기준 특가 Top 5</p>
+        <p class="section-title">🏆 ${dateLabel} 추천 특가 TOP3</p>
 ${rankSections}
 
         <p>&nbsp;</p>
