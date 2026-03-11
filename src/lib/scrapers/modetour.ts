@@ -191,7 +191,7 @@ export async function scrapeModetour(): Promise<Flight[]> {
                     }
 
                     allFlights.push({
-                        id: `modetour-${continentCode}-${item.id || index}`,
+                        id: `modetour-${continentCode}-${item.stockPackageNo || index}`,
                         source: 'modetour',
                         airline: item.air?.value || '항공사 미정',
                         departure: {
@@ -208,7 +208,7 @@ export async function scrapeModetour(): Promise<Flight[]> {
                         },
                         price: price,
                         currency: 'KRW',
-                        link: `https://www.modetour.com/flights/discount-flight/reservation-page?id=${item.id}&adult=1&child=0&infant=0&step=1`,
+                        link: `https://www.modetour.com/flights/discount-flight/reservation-page?id=${item.stockPackageNo}&adult=1&child=0&infant=0&step=1`,
                         availableSeats: item.rSeat?.value,
                         flightNumber: `${item.air?.dfln || ''} / ${item.air?.afln || ''}`.trim(),
                         region: getRegionByCity(destination),
