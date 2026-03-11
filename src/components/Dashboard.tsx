@@ -387,7 +387,7 @@ export default function Dashboard() {
     const [regionFilter, setRegionFilter] = useState<string>('all');
     const [startDate, setStartDate] = useState<string>(getDefaultStartDate());
     const [endDate, setEndDate] = useState<string>(getDefaultEndDate());
-    const [departureFilter, setDepartureFilter] = useState<string>('인천');
+    const [departureFilter, setDepartureFilter] = useState<string>('all');
     const [airlineFilter, setAirlineFilter] = useState<string>('all');
     const [displayCount, setDisplayCount] = useState(ITEMS_PER_PAGE);
     const [showScrollTop, setShowScrollTop] = useState(false);
@@ -808,7 +808,7 @@ export default function Dashboard() {
         setSourceFilter('all');
         setRegionFilter('all');
         setAirlineFilter('all');
-        setDepartureFilter('인천');
+        setDepartureFilter('all');
         setStartDate(getDefaultStartDate());
         setEndDate(getDefaultEndDate());
         setSortBy('discount');
