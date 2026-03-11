@@ -1062,42 +1062,86 @@
 }
 
 
-.alertFormGroup {
-    margin-bottom: 12px;
+/* 관심 노선 즐겨찾기 버튼 (활성 상태) */
+.favBtnActive {
+    composes: shareBtn;
+    color: #f59e0b !important;
 }
 
-.alertLabel {
-    display: block;
-    font-size: 13px;
-    font-weight: 600;
-    color: #374151;
-    margin-bottom: 8px;
+.favBtnActive:hover {
+    color: #d97706 !important;
 }
 
-.alertInput {
-    width: 100%;
-    padding: 12px 14px;
-    border: 2px solid #e5e7eb;
-    border-radius: 12px;
-    font-size: 18px;
+/* 카드 내 관심 노선 뱃지 */
+.favBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 0.7rem;
     font-weight: 700;
-    color: #4338CA;
-    text-align: center;
-    outline: none;
-    transition: border-color 0.2s;
-    box-sizing: border-box;
+    color: #d97706;
+    background: #fffbeb;
+    padding: 2px 8px;
+    border-radius: 999px;
+    border: 1px solid #fde68a;
+    white-space: nowrap;
 }
 
-.alertInput:focus {
-    border-color: #FF6B6B;
+/* 즐겨찾기 필터 버튼 */
+.favFilterBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 12px;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
 }
 
-.alertDesc {
-    font-size: 13px;
-    color: #6b7280;
-    text-align: center;
-    line-height: 1.6;
-    margin: 12px 0 16px;
+.favFilterBtn:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
+
+.favFilterBtnActive {
+    composes: favFilterBtn;
+    background: #1e293b;
+    border-color: #1e293b;
+    color: #fff;
+}
+
+.favFilterBtnActive:hover {
+    background: #334155;
+}
+
+/* 관심 노선 특가 배너 */
+.favBanner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+    border: 1px solid #fde68a;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #92400e;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.favBanner:hover {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
 }
 
 .shareToast {
@@ -1144,13 +1188,13 @@
         box-shadow: var(--shadow-md);
         backdrop-filter: blur(12px);
         gap: 8px;
-        border-radius: 14px;
+        border-radius: 18px;
     }
 
     .flightCard {
         padding: 20px;
         gap: 10px;
-        border-radius: 14px;
+        border-radius: 18px;
     }
 
     .flightCard:hover {
@@ -1192,7 +1236,7 @@
     }
 
     .compareLink {
-        border-radius: 8px;
+        border-radius: 999px;
     }
 
     .filterToggleBtn {
@@ -1314,7 +1358,7 @@
 
     .btn-primary {
         font-size: 0.92rem;
-        padding: 10px 20px !important;
+        padding: 12px 24px !important;
         white-space: nowrap;
     }
 

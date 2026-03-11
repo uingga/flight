@@ -166,7 +166,7 @@ const CITY_TO_AIRPORT: Record<string, string> = {
     '상해(푸동)': 'PVG', '오사카': 'KIX', '도쿄': 'NRT', '삿포로': 'CTS',
     // 땡처리닷컴 추가 매핑
     '보홀(필리핀)': 'TAG', '산야(삼아)': 'SYX', '카오슝(대만)': 'KHH', '카오슝': 'KHH',
-    '나트랑(깜란)': 'CXR', '연태(옌타이)': 'YNT', '위해(웨이하이)': 'WEH',
+    '나트랑(깜란)': 'CXR', '연태(옌타이)': 'YNT', '웨이하이': 'WEH',
     '클락(앙헬레스)': 'CRK', '하코다테(북해도)': 'HKD', '하코다테': 'HKD',
     '고베': 'UKB', '기타큐슈': 'KKJ', '청도(칭다오)': 'TAO',
     '보라카이(깔리보)': 'KLO', '서울(김포)': 'GMP', '타이페이(송산)': 'TSA',
@@ -402,10 +402,9 @@ export default function Dashboard() {
     const [bookingDisclaimer, setBookingDisclaimer] = useState<{ source: string; url: string } | null>(null);
     const disclaimerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const disclaimerWindowRef = useRef<Window | null>(null);
-    const [alertFlight, setAlertFlight] = useState<Flight | null>(null);
-    const [alertPrice, setAlertPrice] = useState('');
-    const [pushSubscription, setPushSubscription] = useState<PushSubscription | null>(null);
-    const [alertToast, setAlertToast] = useState<string | null>(null);
+    const [favoriteFlights, setFavoriteFlights] = useState<string[]>([]);
+    const [favFilter, setFavFilter] = useState(false);
+    const [favToast, setFavToast] = useState<string | null>(null);
     const [showContactModal, setShowContactModal] = useState(false);
     const [contactForm, setContactForm] = useState({ name: '', email: '', message: '' });
     const [contactSending, setContactSending] = useState(false);
@@ -424,87 +423,31 @@ export default function Dashboard() {
         { title: '동남아 우기·건기 따져서 싸게 가는 법', slug: 'southeast-asia-seasons', emoji: '🌏' },
     ], []);
 
-    // 서비스 워커 등록
+    // 즐겨찾기 localStorage 로드
     useEffect(() => {
-        if ('serviceWorker' in navigator && 'PushManager' in window) {
-            navigator.serviceWorker.register('/sw.js').then(reg => {
-                reg.pushManager.getSubscription().then(sub => {
-                    if (sub) setPushSubscription(sub);
-                });
-            }).catch(() => { });
-        }
+        try {
+            const saved = localStorage.getItem('favoriteFlights');
+            if (saved) setFavoriteFlights(JSON.parse(saved));
+        } catch { }
     }, []);
 
-    const subscribePush = async (): Promise<PushSubscription | null> => {
-        try {
-            // iOS Safari(비PWA)에서는 Notification/PushManager가 없음
-            if (typeof Notification === 'undefined' || !('PushManager' in window)) {
-                return null;
-            }
-            const permission = await Notification.requestPermission();
-            if (permission !== 'granted') return null;
-            const reg = await navigator.serviceWorker.ready;
-            const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-            if (!vapidKey) return null;
-            const sub = await reg.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey: vapidKey,
-            });
-            setPushSubscription(sub);
-            return sub;
-        } catch {
-            return null;
-        }
-    };
-
-    const setupAlert = async () => {
-        if (!alertFlight) return;
-
-        // iOS Safari(비PWA) 등 Web Push 미지원 환경 감지
-        const isPushSupported = typeof Notification !== 'undefined' && 'PushManager' in window && 'serviceWorker' in navigator;
-        if (!isPushSupported) {
-            // iOS Safari인지 체크
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-            if (isIOS) {
-                setAlertToast('📱 iPhone에서 알림을 받으려면:\n홈 화면에 추가(공유 → 홈 화면에 추가) 후 다시 시도해주세요');
+    const toggleFavorite = (flightId: string, cityName: string) => {
+        setFavoriteFlights(prev => {
+            const next = prev.includes(flightId)
+                ? prev.filter(id => id !== flightId)
+                : [...prev, flightId];
+            localStorage.setItem('favoriteFlights', JSON.stringify(next));
+            if (next.includes(flightId)) {
+                setFavToast(`⭐ ${cityName} 항공권 즐겨찾기 등록!`);
             } else {
-                setAlertToast('이 브라우저에서는 알림 기능을 지원하지 않습니다');
+                setFavToast(`${cityName} 항공권 즐겨찾기 해제`);
             }
-            setAlertFlight(null);
-            setTimeout(() => setAlertToast(null), 5000);
-            return;
-        }
-
-        let sub = pushSubscription;
-        if (!sub) {
-            sub = await subscribePush();
-            if (!sub) {
-                setAlertToast('알림 권한이 필요합니다. 브라우저 설정에서 알림을 허용해주세요.');
-                setAlertFlight(null);
-                setTimeout(() => setAlertToast(null), 4000);
-                return;
-            }
-        }
-        const maxPrice = alertPrice ? parseInt(alertPrice.replace(/[^0-9]/g, '')) : undefined;
-        const arrCity = normalizeCity(alertFlight.arrival.city);
-        const res = await fetch('/api/alerts', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                subscription: sub.toJSON(),
-                conditions: { route: arrCity, maxPrice },
-            }),
+            setTimeout(() => setFavToast(null), 2000);
+            return next;
         });
-        if (res.ok) {
-            gtag.trackAlertSetup(arrCity, maxPrice);
-            setAlertToast(`🔔 ${arrCity} ${maxPrice ? formatPrice(maxPrice) + ' 이하' : ''} 알림 설정 완료!`);
-        } else {
-            setAlertToast('알림 설정에 실패했습니다');
-        }
-        setTimeout(() => setAlertToast(null), 3000);
-        setAlertFlight(null);
-        setAlertPrice('');
     };
+
+    const isFavoriteFlight = (flightId: string) => favoriteFlights.includes(flightId);
 
     useEffect(() => {
         fetchFlights();
@@ -536,7 +479,7 @@ export default function Dashboard() {
     // 필터 변경 시 displayCount 리셋
     useEffect(() => {
         setDisplayCount(ITEMS_PER_PAGE);
-    }, [searchTerm, sourceFilter, regionFilter, airlineFilter, startDate, endDate, departureFilter, sortBy]);
+    }, [searchTerm, sourceFilter, regionFilter, airlineFilter, startDate, endDate, departureFilter, sortBy, favFilter]);
 
     // 스크롤 감지 (맨위로 버튼 + 헤더 숨김)
     useEffect(() => {
@@ -924,7 +867,9 @@ export default function Dashboard() {
             return false;
         }
 
-        return matchesSearch && matchesSource && matchesRegion && matchesAirline && matchesDate && matchesDeparture;
+        const matchesFav = !favFilter || isFavoriteFlight(flight.id);
+
+        return matchesSearch && matchesSource && matchesRegion && matchesAirline && matchesDate && matchesDeparture && matchesFav;
     }).sort((a, b) => {
         let comparison = 0;
 
@@ -1694,7 +1639,7 @@ export default function Dashboard() {
                         <li>매일 7회 자동 업데이트로 최신 특가 정보 제공</li>
                         <li>5대 여행사 가격 한눈에 비교</li>
                         <li>출발일, 도착지, 항공사별 필터링</li>
-                        <li>가격 알림 설정 가능</li>
+                        <li>관심 노선 즐겨찾기</li>
                         <li>회원가입 없이 무료 이용</li>
                     </ul>
                     <p>이 페이지를 정상적으로 이용하려면 JavaScript를 활성화해주세요.</p>
@@ -1948,6 +1893,14 @@ export default function Dashboard() {
                         <div className={styles.stats}>
                             <div className={styles.statsHeader}>
                                 <span className={styles.resultCount}>총 <strong>{filteredFlights.length}</strong>개의 항공권</span>
+                                {favoriteFlights.length > 0 && (
+                                    <button
+                                        className={favFilter ? styles.favFilterBtnActive : styles.favFilterBtn}
+                                        onClick={() => setFavFilter(!favFilter)}
+                                    >
+                                        ⭐ 즐겨찾기{favFilter ? ' ON' : ''}
+                                    </button>
+                                )}
                             </div>
                             <div className={styles.statsFilters}>
                                 <select
@@ -2061,17 +2014,15 @@ export default function Dashboard() {
                                             <div className={styles.cardHeaderRight}>
                                                 <button
                                                     type="button"
-                                                    className={styles.shareBtn}
+                                                    className={isFavoriteFlight(flight.id) ? styles.favBtnActive : styles.shareBtn}
                                                     onClick={(e) => {
                                                         e.preventDefault(); e.stopPropagation();
-                                                        setAlertFlight(flight);
-                                                        setAlertPrice(String(flight.price));
+                                                        toggleFavorite(flight.id, normalizeCity(flight.arrival.city));
                                                     }}
-                                                    title="가격 알림 설정"
+                                                    title={isFavoriteFlight(flight.id) ? '즐겨찾기 해제' : '즐겨찾기'}
                                                 >
-                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ pointerEvents: 'none' }}>
-                                                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                                                        <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill={isFavoriteFlight(flight.id) ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ pointerEvents: 'none' }}>
+                                                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                                                     </svg>
                                                 </button>
                                                 <button
@@ -2442,45 +2393,7 @@ export default function Dashboard() {
                 </div>
             )}
 
-            {/* 알림 설정 모달 */}
-            {alertFlight && (
-                <div className={styles.modalOverlay} onClick={() => setAlertFlight(null)} onTouchEnd={(e) => { if (e.target === e.currentTarget) { setAlertFlight(null); } }}>
-                    <div className={styles.modalSheet} onClick={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
-                        <div className={styles.modalHeader}>
-                            <h3 className={styles.modalTitle}>🔔 가격 알림 설정</h3>
-                            <button className={styles.modalClose} onClick={() => setAlertFlight(null)}>×</button>
-                        </div>
-                        <div className={styles.modalFlightInfo}>
-                            <span>{normalizeCity(alertFlight.departure.city)} → {normalizeCity(alertFlight.arrival.city)}</span>
-                            <span className={styles.modalPrice}>현재 {formatPrice(alertFlight.price)}</span>
-                        </div>
-                        <div className={styles.alertFormGroup}>
-                            <label className={styles.alertLabel}>목표 가격 (이 가격 이하일 때 알림)</label>
-                            <input
-                                type="number"
-                                inputMode="numeric"
-                                pattern="[0-9]*"
-                                className={styles.alertInput}
-                                value={alertPrice}
-                                onChange={(e) => setAlertPrice(e.target.value.replace(/[^0-9]/g, ''))}
-                                placeholder="예: 200000"
-                            />
-                            {alertPrice && (
-                                <div style={{ textAlign: 'center', fontSize: '0.85rem', color: '#6b7280', marginTop: '6px' }}>
-                                    {Number(alertPrice).toLocaleString()}원
-                                </div>
-                            )}
-                        </div>
-                        <p className={styles.alertDesc}>
-                            {normalizeCity(alertFlight.arrival.city)} 행 항공편이 목표 가격 이하로 발견되면<br />
-                            브라우저 푸시 알림으로 알려드립니다.
-                        </p>
-                        <button className={styles.modalConfirm} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setupAlert(); }} onClick={setupAlert}>
-                            알림 설정하기 🔔
-                        </button>
-                    </div>
-                </div>
-            )}
+
 
             {/* 땡처리닷컴 수수료 안내 모달 */}
             {ttangConfirmFlight && (
@@ -2599,8 +2512,8 @@ export default function Dashboard() {
             {shareToast && (
                 <div className={styles.shareToast}>{shareToast}</div>
             )}
-            {alertToast && (
-                <div className={styles.shareToast}>{alertToast}</div>
+            {favToast && (
+                <div className={styles.shareToast}>{favToast}</div>
             )}
         </div>
     );

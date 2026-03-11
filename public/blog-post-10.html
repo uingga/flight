@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>땡처리 항공권이 오히려 더 비쌀 수도 있다? — 비교 안 하면 손해 보는 이유</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', -apple-system, sans-serif;
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 2;
+            font-size: 16px;
+        }
+
+        .post {
+            background: white;
+            padding: 40px 32px;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .left {
+            text-align: left;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 22px;
+            font-weight: 800;
+            color: #1a1a1a;
+            margin: 16px 0 24px;
+            line-height: 1.5;
+        }
+
+        h2 {
+            font-size: 20px;
+            font-weight: 700;
+            margin: 32px 0 16px;
+            color: #1a1a1a;
+        }
+
+        .divider {
+            border: none;
+            border-top: 1px solid #e0e0e0;
+            margin: 32px 0;
+        }
+
+        p {
+            margin-bottom: 8px;
+        }
+
+        .highlight {
+            color: #e53e3e;
+            font-weight: bold;
+        }
+
+        .highlight-blue {
+            color: #4f46e5;
+            font-weight: bold;
+        }
+
+        .info-box {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 24px;
+            margin: 20px 0;
+            border-left: 4px solid #4f46e5;
+        }
+
+        .warn-box {
+            background: #fffbeb;
+            border-radius: 8px;
+            padding: 24px;
+            margin: 20px 0;
+            border-left: 4px solid #f59e0b;
+        }
+
+        .case-box {
+            background: #fafafa;
+            border-radius: 12px;
+            padding: 24px;
+            margin: 20px 0;
+            border: 1px solid #eee;
+        }
+
+        .case-box h3 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #1a1a1a;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin: 2px 2px 8px 0;
+        }
+
+        .tag.red {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        .tag.blue {
+            background: #eef2ff;
+            color: #4f46e5;
+        }
+
+        .tag.green {
+            background: #f0fdf4;
+            color: #16a34a;
+        }
+
+        .cta-link {
+            display: inline-block;
+            background: #4f46e5;
+            color: white;
+            text-decoration: none;
+            padding: 14px 28px;
+            border-radius: 30px;
+            font-weight: bold;
+            font-size: 16px;
+            margin-top: 16px;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+
+        .note {
+            font-size: 13px;
+            color: #888;
+            line-height: 1.8;
+            margin-top: 30px;
+        }
+
+        .copy-guide {
+            position: fixed;
+            top: 12px;
+            right: 12px;
+            background: #1a1a1a;
+            color: white;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+            font-size: 14px;
+        }
+
+        th,
+        td {
+            padding: 12px 8px;
+            border-bottom: 1px solid #eee;
+            text-align: center;
+        }
+
+        th {
+            background: #f8f8f8;
+            font-weight: 700;
+            color: #555;
+            font-size: 12px;
+        }
+
+        td:first-child {
+            font-weight: 600;
+        }
+
+        .checklist {
+            list-style: none;
+            padding: 0;
+            margin: 12px 0;
+        }
+
+        .checklist li {
+            padding: 8px 0;
+            padding-left: 28px;
+            position: relative;
+            line-height: 1.8;
+        }
+
+        .checklist li::before {
+            content: '✅';
+            position: absolute;
+            left: 0;
+        }
+
+        .vs-table td {
+            padding: 14px 8px;
+        }
+
+        .vs-table .win {
+            color: #16a34a;
+            font-weight: 700;
+        }
+
+        .vs-table .lose {
+            color: #dc2626;
+            font-weight: 700;
+        }
+
+        .number-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            background: #4f46e5;
+            color: white;
+            border-radius: 50%;
+            font-size: 14px;
+            font-weight: 700;
+            margin-right: 8px;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <div class="copy-guide">💡 Ctrl+A → Ctrl+C → 네이버 에디터에 Ctrl+V</div>
+
+    <div class="post">
+
+        <p><img src="images/blog-thumb-10-wide.png" alt="땡처리 항공권이 오히려 더 비쌀 수도 있다?"
+                style="max-width: 100%; border-radius: 12px;"></p>
+        <p>&nbsp;</p>
+        <p><img src="images/blog-thumb-10-square.png" alt="땡처리 항공권 가격 비교 썸네일"
+                style="max-width: 100%; border-radius: 12px;"></p>
+        <p>&nbsp;</p>
+
+        <h1>땡처리 항공권이<br>오히려 더 비쌀 수도 있다? ✈️</h1>
+
+        <p>&nbsp;</p>
+
+        <div class="center">
+            <p>안녕하세요, <b>티키티킷</b>입니다.</p>
+            <p>&nbsp;</p>
+            <p>"땡처리 항공권 = 무조건 싼 항공권"</p>
+            <p>이렇게 생각하시는 분, 꽤 많으시죠?</p>
+            <p>&nbsp;</p>
+            <p>결론부터 말씀드리면,</p>
+            <p><b>아닙니다.</b></p>
+            <p>&nbsp;</p>
+            <p>땡처리도 <span class="highlight">비싼 땡처리가 있습니다.</span></p>
+        </div>
+
+        <hr class="divider">
+
+        <h2 class="left">🤔 먼저, 땡처리 항공권이란?</h2>
+
+        <div class="left">
+            <p>여행사가 패키지 상품용으로 대량 구매한 좌석 중</p>
+            <p>출발 임박까지 <b>팔리지 않은 잔여석</b>을 할인해서 푸는 겁니다.</p>
+            <p>&nbsp;</p>
+            <p>비행기가 뜨는 순간 그 좌석은 사라지니까,</p>
+            <p>여행사 입장에서는 <b>싸게라도 파는 게 이득</b>이죠.</p>
+            <p>&nbsp;</p>
+            <p>그래서 일반 예매보다 훨씬 싸게 나오는 경우가 <b>분명히</b> 있습니다.</p>
+            <p>&nbsp;</p>
+            <p>근데 항상 그렇진 않습니다.</p>
+        </div>
+
+        <hr class="divider">
+
+        <h2 class="left">⚠️ 땡처리가 오히려 비싼 3가지 경우</h2>
+
+        <!-- Case 1 -->
+        <div class="left">
+            <h3>1️⃣ "땡처리"라는 이름만 붙인 경우</h3>
+            <span class="tag red">가장 흔함</span>
+            <p>&nbsp;</p>
+            <p>솔직히 말하면, <b>"땡처리"라는 단어 자체가 마케팅 용어</b>에 가깝습니다.</p>
+            <p>&nbsp;</p>
+            <p>여행사 입장에서 "땡처리"라고 써놓으면 클릭률이 올라가니까,</p>
+            <p>실질적 할인 없이 이름만 붙이는 경우가 있습니다.</p>
+            <p>&nbsp;</p>
+            <p>실제로 같은 날짜, 같은 노선을 비교해보면 이렇습니다.</p>
+        </div>
+
+        <p><img src="images/blog10-table.png" alt="땡처리 vs 일반 최저가 비교표"
+                style="width: 100%; border-radius: 8px; margin: 12px 0;"></p>
+        <p style="font-size: 12px; color: #999;">*가격은 조회 시점에 따라 달라집니다</p>
+
+        <div class="left">
+            <p>&nbsp;</p>
+            <p>이름은 "땡처리"인데, <b>비교해보면 더 비싼 경우</b>가 있습니다.</p>
+        </div>
+
+        <hr class="divider">
+
+        <!-- Case 2 -->
+        <div class="left">
+            <h3>2️⃣ 성수기에 올라온 땡처리</h3>
+            <span class="tag red">시즌 함정</span>
+            <p>&nbsp;</p>
+            <p>벚꽃 시즌, 여름 휴가철, 추석·설 연휴 —</p>
+            <p>이런 <b>성수기에는 정상가 자체가 높습니다.</b></p>
+            <p>&nbsp;</p>
+            <p>여기서 30% 할인해봤자,</p>
+            <p>비수기 정상가보다 비싼 경우가 많아요.</p>
+        </div>
+
+        <div class="warn-box">
+            <p><b>💡 예시</b></p>
+            <p>&nbsp;</p>
+            <p>오사카 왕복 정상가</p>
+            <p>· 비수기(1월): <b>18만원</b></p>
+            <p>· 성수기(벚꽃 4월 초): <b>45만원</b></p>
+            <p>&nbsp;</p>
+            <p>성수기 "땡처리" 30% 할인 → <span class="highlight">약 32만원</span></p>
+            <p>비수기 정상가보다 <b>14만원이나 더 비쌉니다.</b></p>
+        </div>
+
+        <hr class="divider">
+
+        <!-- Case 3 -->
+        <div class="left">
+            <h3>3️⃣ 출발일이 아직 멀어서 가격을 안 내린 경우</h3>
+            <span class="tag red">임박 전 함정</span>
+            <p>&nbsp;</p>
+            <p>땡처리는 원래 <b>출발일이 임박해야</b> 가격이 내려갑니다.</p>
+            <p>&nbsp;</p>
+            <p>그런데 출발일이 2~3주 이상 남은 항공권도</p>
+            <p>"땡처리"라는 이름으로 올라오는 경우가 있습니다.</p>
+            <p>&nbsp;</p>
+            <p>날짜가 남아 있으면 <b>정상가로 팔릴 가능성</b>이 있으니까,</p>
+            <p>여행사 입장에서는 굳이 가격을 내릴 이유가 없습니다.</p>
+            <p>&nbsp;</p>
+            <p><b>진짜 땡처리다운 가격</b>은</p>
+            <p>보통 <b>출발 1~2주 전</b>에 나옵니다.</p>
+        </div>
+
+
+
+
+
+        <hr class="divider">
+
+        <h2 class="left">✅ 이렇게 비교하면 됩니다</h2>
+
+        <div class="left">
+            <p>티키티킷은 국내 여행사들의 땡처리 항공권을 모아서 보여줍니다.</p>
+            <p>각 항공권 옆에 <b>"네이버 최저가 비교" 버튼</b>이 있어서,</p>
+            <p>진짜 싼 건지 <b>한 번에</b> 확인됩니다.</p>
+        </div>
+
+        <p>&nbsp;</p>
+
+        <div class="center">
+            <p>땡처리 항공권 검색하기 전에</p>
+            <p>한번 비교해보세요.</p>
+            <p>&nbsp;</p>
+            <p>같은 노선인데 더 싸게 살 수 있을지도 모릅니다 😊</p>
+            <p>&nbsp;</p>
+            <p><a href="https://tikitikit.kr" class="cta-link">👉 실시간 땡처리 항공권 비교하기</a></p>
+        </div>
+
+        <p class="note">#땡처리항공권 #특가항공권 #항공권싸게사는법 #항공권가격비교 #항공권최저가 #해외여행꿀팁 #땡처리주의사항 #항공권팁 #여행준비 #티키티킷</p>
+
+    </div>
+</body>
+
+</html>
