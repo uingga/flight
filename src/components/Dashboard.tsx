@@ -41,7 +41,8 @@ const normalizeCity = (city: string): string => {
         '상해': '상하이',
         '다카마츠': '다카마쓰',
         '비엔티엔': '비엔티안',
-        '대만': '타이페이',
+        '대만': '타이베이',
+        '타이페이': '타이베이',
         'Trabzon': '트라브존',
         '치토세': '삿포로',
         '칼리보': '보라카이',
@@ -62,6 +63,10 @@ const normalizeCity = (city: string): string => {
         else if (code === 'CJJ') result = '청주';
         else if (code === 'CJU') result = '제주';
         else if (code === 'NRT') result = '도쿄(나리타)';
+        else if (code === 'HND') result = '도쿄(하네다)';
+        else if (code === 'KIX') result = '오사카(간사이)';
+        else if (code === 'PVG') result = '상하이(푸동)';
+        else if (code === 'SHA') result = '상하이(홍차오)';
         else if (code === 'BKK') result = '방콕(수완나폼)';
         else result = codeMatch[1]; // 기타: 괄호만 제거
     } else {
@@ -72,7 +77,7 @@ const normalizeCity = (city: string): string => {
             else if (krMatch[2] === '인천') result = '인천';
             else {
                 // 괄호 안이 공항/지역명이면 괄호 안 사용 (간사이, 나리타, 치토세 등)
-                const airportNames = ['나리타', '하네다', '치토세', '돈무앙', '수완나폼', '깜랑', '보라카이', '덴파사'];
+                const airportNames = ['나리타', '하네다', '간사이', '이타미', '푸동', '홍차오', '치토세', '돈무앙', '수완나폼', '깜랑', '보라카이', '덴파사'];
                 if (airportNames.includes(krMatch[2])) result = trimmed; // 공항명 포함 원본 유지
                 else result = krMatch[1]; // 그 외는 괄호 앞의 도시명
             }
