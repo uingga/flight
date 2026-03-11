@@ -48,6 +48,7 @@ const normalizeCity = (city: string): string => {
         '화리엔': '화롄',
         '제남': '지난',
         '계림': '구이린',
+        '위해': '웨이하이',
     };
     let result = trimmed;
     // 괄호 포함 형태: "서울(ICN)", "부산(PUS)", "대구(TAE)"
@@ -283,6 +284,7 @@ const TRIPCOM_CITY_DATA: Record<string, { id: number; name: string; provinceId?:
     '칭다오': { id: 7, name: '칭다오' }, '옌타이': { id: 533, name: '옌타이' },
     '화롄': { id: 6954, name: '화롄' }, '지난': { id: 144, name: '지난' },
     '구이린': { id: 33, name: '구이린' },
+    '웨이하이': { id: 386, name: '웨이하이' },
     // 기타
     '사이판': { id: 4081, name: '사이판' }, '괌': { id: 753, name: '괌' },
     '시드니': { id: 501, name: '시드니' }, '브리즈번': { id: 680, name: '브리즈번' },
