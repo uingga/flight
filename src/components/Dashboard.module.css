@@ -491,14 +491,15 @@
     display: flex;
     align-items: center;
     gap: 14px;
-    padding: 14px 20px;
-    background: #eef2ff;
-    border: 1px solid #c7d2fe;
+    padding: 8px 0;
+    background: transparent;
+    border: none;
     border-radius: var(--radius-lg);
-    font-size: 0.88rem;
+    font-size: 1.1rem;
     color: var(--color-text-secondary);
+    font-weight: 700;
     line-height: 1.5;
-    box-shadow: var(--shadow-sm);
+    box-shadow: none;
 }
 
 .insightBar strong {
@@ -567,6 +568,173 @@
     .insightChip {
         padding: 3px 8px;
         font-size: 0.75rem;
+    }
+}
+
+/* New Flights Insight Bar */
+.insightBarNew {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    min-width: 0;
+}
+
+.newFlightHeader {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    white-space: nowrap;
+}
+
+.newFlightScroller {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    width: 100%;
+    padding: 4px 0;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+
+}
+
+.newFlightScroller::-webkit-scrollbar {
+    display: none;
+}
+
+.scrollerWrap {
+    position: relative;
+    width: calc(100% + 32px);
+    margin-left: -16px;
+    padding: 0 16px;
+}
+
+.scrollBtn {
+    display: none;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 5;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid #d1d5db;
+    background: rgba(255, 255, 255, 0.95);
+    font-size: 1.2rem;
+    color: #374151;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    transition: all 0.15s ease;
+    line-height: 1;
+    padding: 0;
+}
+
+.scrollBtn:hover {
+    background: white;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.scrollBtnLeft {
+    left: 0;
+}
+
+.scrollBtnRight {
+    right: 0;
+}
+
+@media (min-width: 640px) {
+    .scrollBtn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+}
+
+.newFlightMiniCard {
+    flex-shrink: 0;
+    min-width: 140px;
+    padding: 10px 14px;
+    background: white;
+    border: 1px solid #e0e7ff;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.newFlightMiniCard:hover {
+    border-color: var(--color-primary);
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.15);
+    transform: translateY(-1px);
+}
+
+.newFlightMiniCardImg {
+    position: relative;
+    overflow: hidden;
+    background-size: cover;
+    background-position: center;
+    border: none;
+    min-width: 180px;
+    min-height: 110px;
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
+.newFlightMiniCardImg:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.newFlightOverlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.45) 60%, rgba(0,0,0,0.25) 100%);
+    border-radius: inherit;
+}
+
+.newFlightRoute {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    white-space: nowrap;
+    margin-bottom: 8px;
+}
+
+.newFlightPrice {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--color-primary);
+    margin-bottom: 2px;
+}
+
+.newFlightAirline {
+    font-size: 0.72rem;
+    color: var(--color-text-muted);
+    white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+    .insightBarNew {
+        gap: 8px;
+    }
+    
+    .newFlightMiniCard {
+        min-width: 120px;
+        padding: 8px 12px;
+    }
+
+    .newFlightRoute {
+        font-size: 0.78rem;
+    }
+
+    .newFlightPrice {
+        font-size: 0.82rem;
     }
 }
 

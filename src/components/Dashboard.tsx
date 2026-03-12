@@ -77,7 +77,7 @@ const normalizeCity = (city: string): string => {
             else if (krMatch[2] === '인천') result = '인천';
             else {
                 // 괄호 안이 공항/지역명이면 괄호 안 사용 (간사이, 나리타, 치토세 등)
-                const airportNames = ['나리타', '하네다', '간사이', '이타미', '푸동', '홍차오', '치토세', '돈무앙', '수완나폼', '깜랑', '보라카이', '덴파사'];
+                const airportNames = ['나리타', '하네다', '간사이', '이타미', '푸동', '홍차오', '돈무앙', '수완나폼', '깜랑', '보라카이', '덴파사'];
                 if (airportNames.includes(krMatch[2])) result = trimmed; // 공항명 포함 원본 유지
                 else result = krMatch[1]; // 그 외는 괄호 앞의 도시명
             }
@@ -87,7 +87,7 @@ const normalizeCity = (city: string): string => {
             else if (trimmed === '청주시') result = '청주';
             else if (trimmed === '제주시') result = '제주';
             else if (trimmed === '도쿄') result = '도쿄';
-            else if (trimmed === '오사카') result = '오사카';
+            else if (trimmed === '오사카') result = '오사카(간사이)';
             else if (trimmed === '방콕') result = '방콕';
         }
     }
@@ -428,6 +428,8 @@ export default function Dashboard() {
         { title: '땡처리 항공권 Q&A 10가지', slug: 'faq-10', emoji: '❓' },
         { title: '일본 벚꽃 시즌 항공권 특가 가이드 🌸', slug: 'japan-cherry-blossom', emoji: '🌸' },
         { title: '동남아 우기·건기 따져서 싸게 가는 법', slug: 'southeast-asia-seasons', emoji: '🌏' },
+        { title: '비행기 표 싸게 사는 법 2026 총정리', slug: 'cheap-tickets-2026', emoji: '💰' },
+        { title: '땡처리, 무조건 싸다고요? 진짜 싼 건지 확인하는 법', slug: 'is-it-really-cheap', emoji: '🔍' },
     ], []);
 
     // 즐겨찾기 localStorage 로드
@@ -975,8 +977,159 @@ export default function Dashboard() {
     // ============================================
     const generateInsightBar = (barIndex: number) => {
         // 순서: 금요밤 → 팁 → 계절추천 → 인기도시 → 할인Top5 → 이번주말 → 가격하락 → 20만원이하 → 내일출발 → 지역현황
-        const barOrder = [8, 5, 14, 2, 6, 9, 11, 10, 7, 1];
+        const barOrder = [15, 6, 11, 9, 7, 10, 14, 2, 8, 5];
         const barType = barOrder[barIndex % barOrder.length];
+
+        // 공유 도시 이미지맵 & 카드 렌더러
+        const cityImageMap: Record<string, string> = {
+            // Japan
+            '오사카': 'osaka', '도쿄': 'tokyo', '후쿠오카': 'fukuoka', '삿포로': 'sapporo',
+            '나고야': 'nagoya', '나가사키': 'nagasaki', '구마모토': 'kumamoto',
+            '다카마쓰': 'takamatsu', '다카마츠': 'takamatsu', '마츠야마': 'matsuyama',
+            '오키나와': 'okinawa', '미야코지마': 'miyakojima', '이시가키': 'ishigaki',
+            '시모지시마': 'shimojishima', '시즈오카': 'shizuoka', '나라': 'nara',
+            // Vietnam
+            '다낭': 'danang', '나트랑': 'nhatrang', '하노이': 'hanoi', '호치민': 'hochiminh',
+            '푸꾸옥': 'phuquoc', '하이퐁': 'haiphong',
+            // Thailand
+            '방콕': 'bangkok', '푸켓': 'phuket', '치앙마이': 'chiangmai',
+            // Philippines
+            '세부': 'cebu', '보라카이': 'boracay', '보홀': 'bohol', '클락': 'clark', '칼리보': 'kalibo',
+            // Taiwan
+            '타이베이': 'taipei', '타이페이': 'taipei', '가오슝': 'kaohsiung', '대만': 'taipei',
+            // China
+            '상하이': 'shanghai', '상해': 'shanghai', '청도': 'qingdao', '칭다오': 'qingdao',
+            '계림': 'guilin', '구이린': 'guilin',
+            '위해': 'weihai', '웨이하이': 'weihai', '연태': 'yantai', '옌타이': 'yantai',
+            '제남': 'jinan', '지난': 'jinan',
+            // Southeast Asia & Others
+            '싱가포르': 'singapore', '홍콩': 'hongkong', '마카오': 'macau',
+            '코타키나발루': 'kotakinabalu', '마나도': 'manado', '바탐': 'batam',
+            '발리': 'bali', '비엔티엔': 'vientiane',
+            // Pacific
+            '괌': 'guam', '사이판': 'saipan',
+            // Others
+            '두바이': 'dubai', '이스탄불': 'istanbul', '로마': 'rome',
+            '브리즈번': 'brisbane', '시드니': 'sydney', '런던': 'london', '울란바토르': 'ulaanbaatar',
+            // Aliases with chitose
+            '치토세': 'sapporo',
+            // Seasonal / domestic
+            '교토': 'kyoto', '하코네': 'hakone', '유후인': 'yufuin',
+            '히로시마': 'hiroshima', '나하': 'naha', '부산': 'busan', '제주': 'jeju',
+        };
+        const getCityImage = (city: string) => {
+            const base = city.replace(/\(.+\)/, '').trim();
+            return cityImageMap[base] || null;
+        };
+        const renderCityCard = (key: string, city: string, line1: string, line2: string, onClick: (e: React.MouseEvent) => void) => {
+            const imgKey = getCityImage(city);
+            const hasImage = !!imgKey;
+            return (
+                <div
+                    key={key}
+                    className={`${styles.newFlightMiniCard} ${hasImage ? styles.newFlightMiniCardImg : ''}`}
+                    style={hasImage ? { backgroundImage: `url(/images/cities/${imgKey}.png)` } : undefined}
+                    onClick={onClick}
+                >
+                    {hasImage && <div className={styles.newFlightOverlay} />}
+                    <div className={styles.newFlightRoute} style={hasImage ? { color: 'white', position: 'relative', zIndex: 1, textShadow: '0 1px 4px rgba(0,0,0,0.6)' } : undefined}>{city}</div>
+                    <div className={styles.newFlightPrice} style={hasImage ? { color: 'white', position: 'relative', zIndex: 1, textShadow: '0 1px 4px rgba(0,0,0,0.6)' } : undefined}>{line1}</div>
+                    <div className={styles.newFlightAirline} style={hasImage ? { color: 'rgba(255,255,255,0.85)', position: 'relative', zIndex: 1, textShadow: '0 1px 3px rgba(0,0,0,0.5)' } : undefined}>{line2}</div>
+                </div>
+            );
+        };
+        const renderCardBar = (barIdx: number, icon: string, title: string, cards: React.ReactNode) => {
+            const scrollerId = `scroller-${barIdx}`;
+            const scrollBy = (dir: number) => {
+                const el = document.getElementById(scrollerId);
+                if (el) el.scrollBy({ left: dir * 200, behavior: 'smooth' });
+            };
+            return (
+                <div key={`insight-${barIdx}`} className={`${styles.insightBar} ${styles.insightBarNew}`}>
+                    <div className={styles.newFlightHeader}>
+                        <span>{icon} {title}</span>
+                    </div>
+                    <div className={styles.scrollerWrap}>
+                        <button className={`${styles.scrollBtn} ${styles.scrollBtnLeft}`} onClick={(e) => { e.stopPropagation(); scrollBy(-1); }} aria-label="이전">‹</button>
+                        <div id={scrollerId} className={styles.newFlightScroller}
+                            onMouseDown={(e) => {
+                                const el = e.currentTarget;
+                                el.dataset.dragging = 'true';
+                                el.dataset.dragged = 'false';
+                                el.dataset.startX = String(e.pageX);
+                                el.dataset.scrollLeft = String(el.scrollLeft);
+                                el.dataset.prevX = String(e.pageX);
+                                el.dataset.prevTime = String(Date.now());
+                                el.dataset.velocity = '0';
+                                el.style.cursor = 'grabbing';
+                                el.style.userSelect = 'none';
+                            }}
+                            onMouseMove={(e) => {
+                                const el = e.currentTarget;
+                                if (el.dataset.dragging !== 'true') return;
+                                const dx = e.pageX - Number(el.dataset.startX);
+                                el.scrollLeft = Number(el.dataset.scrollLeft) - dx;
+                                if (Math.abs(dx) > 5) {
+                                    el.dataset.dragged = 'true';
+                                    el.style.pointerEvents = 'auto';
+                                    el.querySelectorAll<HTMLElement>(':scope > *').forEach(c => c.style.pointerEvents = 'none');
+                                }
+                                const now = Date.now();
+                                const dt = now - Number(el.dataset.prevTime);
+                                if (dt > 0) {
+                                    el.dataset.velocity = String((e.pageX - Number(el.dataset.prevX)) / dt);
+                                }
+                                el.dataset.prevX = String(e.pageX);
+                                el.dataset.prevTime = String(now);
+                            }}
+                            onMouseUp={(e) => {
+                                const el = e.currentTarget;
+                                el.dataset.dragging = 'false';
+                                el.style.cursor = '';
+                                el.style.userSelect = '';
+                                let v = Number(el.dataset.velocity) * 15;
+                                const glide = () => {
+                                    if (Math.abs(v) < 0.5) {
+                                        el.querySelectorAll<HTMLElement>(':scope > *').forEach(c => c.style.pointerEvents = '');
+                                        return;
+                                    }
+                                    el.scrollLeft -= v;
+                                    v *= 0.92;
+                                    requestAnimationFrame(glide);
+                                };
+                                if (el.dataset.dragged === 'true') {
+                                    requestAnimationFrame(glide);
+                                } else {
+                                    el.querySelectorAll<HTMLElement>(':scope > *').forEach(c => c.style.pointerEvents = '');
+                                }
+                            }}
+                            onMouseLeave={(e) => {
+                                const el = e.currentTarget;
+                                if (el.dataset.dragging === 'true') {
+                                    el.dataset.dragging = 'false';
+                                    el.style.cursor = '';
+                                    el.style.userSelect = '';
+                                    let v = Number(el.dataset.velocity) * 15;
+                                    const glide = () => {
+                                        if (Math.abs(v) < 0.5) {
+                                            el.querySelectorAll<HTMLElement>(':scope > *').forEach(c => c.style.pointerEvents = '');
+                                            return;
+                                        }
+                                        el.scrollLeft -= v;
+                                        v *= 0.92;
+                                        requestAnimationFrame(glide);
+                                    };
+                                    requestAnimationFrame(glide);
+                                }
+                            }}
+                        >
+                            {cards}
+                        </div>
+                        <button className={`${styles.scrollBtn} ${styles.scrollBtnRight}`} onClick={(e) => { e.stopPropagation(); scrollBy(1); }} aria-label="다음">›</button>
+                    </div>
+                </div>
+            );
+        };
 
         switch (barType) {
             case 1: { // 🌏 지역별 현황
@@ -1007,23 +1160,12 @@ export default function Dashboard() {
             }
             case 2: { // 🗺️ 도시 바로가기
                 if (popularCities.length === 0) return null;
-                return (
-                    <div key={`insight-${barIndex}`} className={styles.insightBar}>
-                        <span className={styles.insightIcon}>🗺️</span>
-                        <div className={styles.insightContent}>
-                            <span>인기 도시</span>
-                            {popularCities.map(city => (
-                                <span
-                                    key={city}
-                                    className={styles.insightChip}
-                                    onClick={(e) => { e.stopPropagation(); setSearchTerm(city); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                                >
-                                    {normalizeCity(city)}
-                                </span>
-                            ))}
-                        </div>
-                    </div>
-                );
+                return renderCardBar(barIndex, '🗺️', '인기 도시', popularCities.map(city => {
+                    const nc = normalizeCity(city);
+                    const cityFlights = flights.filter(f => normalizeCity(f.arrival.city) === nc);
+                    const minP = cityFlights.length > 0 ? Math.min(...cityFlights.map(f => f.price)) : 0;
+                    return renderCityCard(city, nc, minP > 0 ? `${Math.floor(minP / 10000)}만원~` : '', `${cityFlights.length}건`, (e) => { e.stopPropagation(); setSearchTerm(city); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+                }));
             }
             case 3: { // ✈️ 항공사별 최저가
                 const airlinePrices: Record<string, number> = {};
@@ -1096,16 +1238,18 @@ export default function Dashboard() {
                 );
             }
             case 5: { // 📝 여행 팁
-                const post = tipPosts[barIndex % tipPosts.length];
-                return (
-                    <a key={`insight-${barIndex}`} href={`/tips/${post.slug}`} className={styles.insightBar} style={{ cursor: 'pointer', textDecoration: 'none', color: 'inherit' }}>
-                        <span className={styles.insightIcon}>📝</span>
-                        <div className={styles.insightContent}>
-                            <span>{post.emoji} <strong>{post.title}</strong></span>
-                            <span className={styles.insightChip}>읽어보기 →</span>
-                        </div>
+                return renderCardBar(barIndex, '📝', '여행 꿀팁', tipPosts.map((post, i) => (
+                    <a
+                        key={`tip-${i}`}
+                        href={`/tips/${post.slug}`}
+                        className={styles.newFlightMiniCard}
+                        style={{ textDecoration: 'none', color: 'inherit', padding: '14px 18px', maxWidth: '180px' }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className={styles.newFlightRoute} style={{ fontSize: '0.93rem', whiteSpace: 'normal' }}>{post.emoji} {post.title}</div>
+                        <div className={styles.newFlightAirline}>읽어보기 →</div>
                     </a>
-                );
+                )));
             }
             case 6: { // 🔥 역대급 할인 Top 5
                 const discountFlights: Array<{ flight: Flight; percent: number }> = [];
@@ -1128,120 +1272,66 @@ export default function Dashboard() {
                     if (seenCities.has(city)) return false;
                     seenCities.add(city);
                     return true;
-                }).slice(0, 5);
+                }).slice(0, 7);
                 if (top5.length === 0) return null;
-                return (
-                    <div key={`insight-${barIndex}`} className={styles.insightBar}>
-                        <span className={styles.insightIcon}>🔥</span>
-                        <div className={styles.insightContent}>
-                            <span>할인율 높은 항공권 Top 5 —</span>
-                            {top5.map(({ flight, percent }) => {
-                                const city = normalizeCity(flight.arrival.city);
-                                const depDate = flight.departure.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 10) || '';
-                                return (
-                                    <span
-                                        key={flight.id}
-                                        className={styles.insightChip}
-                                        onClick={(e) => { e.stopPropagation(); setSearchTerm(city); if (depDate) { setStartDate(depDate); setEndDate(depDate); } window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                                    >
-                                        {city} <strong>-{Math.round(percent)}%</strong> <span className={styles.insightChipCount}>{Math.floor(flight.price / 10000)}만원</span>
-                                    </span>
-                                );
-                            })}
-                        </div>
-                    </div>
-                );
+                return renderCardBar(barIndex, '🔥', '할인율 높은 항공권 Top 7', top5.map(({ flight, percent }) => {
+                    const city = normalizeCity(flight.arrival.city);
+                    const depDate = flight.departure.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 10) || '';
+                    return renderCityCard(flight.id, city, `${Math.floor(flight.price / 10000)}만원`, `-${Math.round(percent)}%`, (e) => { e.stopPropagation(); setSearchTerm(city); setStartDate(''); setEndDate(''); setSortBy('price'); setSortOrder('asc'); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+                }));
             }
-            case 7: { // 💨 내일 출발
+            case 7: { // 💨 곧 출발
                 const now7 = new Date();
-                const tomorrow7 = new Date(now7);
-                tomorrow7.setDate(now7.getDate() + 1);
                 const toDateStr7 = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                const tomorrow7 = new Date(now7); tomorrow7.setDate(now7.getDate() + 1);
+                const day3 = new Date(now7); day3.setDate(now7.getDate() + 3);
                 const tomorrowStr7 = toDateStr7(tomorrow7);
+                const day3Str7 = toDateStr7(day3);
 
-                const tomorrowFlights: Flight[] = [];
+                const soonFlights: Flight[] = [];
                 flights.forEach(f => {
                     const fd = f.departure.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 10);
-                    if (fd === tomorrowStr7) tomorrowFlights.push(f);
+                    if (!fd) return;
+                    if (fd >= tomorrowStr7 && fd <= day3Str7) soonFlights.push(f);
                 });
-                if (tomorrowFlights.length === 0) return null;
-                // 도시별 중복 제거, 가격 낮은 순
-                tomorrowFlights.sort((a, b) => a.price - b.price);
+                if (soonFlights.length === 0) return null;
+                soonFlights.sort((a, b) => a.price - b.price);
                 const seen7 = new Set<string>();
-                const unique7 = tomorrowFlights.filter(f => {
+                const unique7 = soonFlights.filter(f => {
                     const city = normalizeCity(f.arrival.city);
                     if (seen7.has(city)) return false;
                     seen7.add(city);
                     return true;
-                }).slice(0, 4);
-                return (
-                    <div key={`insight-${barIndex}`} className={styles.insightBar}>
-                        <span className={styles.insightIcon}>💨</span>
-                        <div className={styles.insightContent}>
-                            <span>내일 바로 떠날 수 있는 곳 —</span>
-                            {unique7.map(f => {
-                                const city = normalizeCity(f.arrival.city);
-                                return (
-                                    <span
-                                        key={f.id}
-                                        className={styles.insightChip}
-                                        onClick={(e) => { e.stopPropagation(); setSearchTerm(city); setStartDate(tomorrowStr7); setEndDate(tomorrowStr7); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                                    >
-                                        {city} <strong>{Math.floor(f.price / 10000)}만원~</strong>
-                                    </span>
-                                );
-                            })}
-                        </div>
-                    </div>
-                );
+                }).slice(0, 10);
+                return renderCardBar(barIndex, '💨', '3일 이내 바로 떠날 수 있는 곳', unique7.map(f => {
+                    const city = normalizeCity(f.arrival.city);
+                    const fd = f.departure.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 10) || '';
+                    return renderCityCard(f.id, city, `${Math.floor(f.price / 10000)}만원~`, '곧 출발', (e) => { e.stopPropagation(); setSearchTerm(city); setStartDate(''); setEndDate(''); setSortBy('price'); setSortOrder('asc'); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+                }));
             }
-            case 9: { // ☀️ 이번 주말
-                const now9 = new Date();
-                const dayOfWeek9 = now9.getDay();
-                const satOffset9 = dayOfWeek9 === 6 ? 0 : (6 - dayOfWeek9);
-                if (satOffset9 === 0) return null; // 이미 토요일이면 의미 없음
-                const thisSat9 = new Date(now9);
-                thisSat9.setDate(now9.getDate() + satOffset9);
-                const thisSun9 = new Date(thisSat9);
-                thisSun9.setDate(thisSat9.getDate() + 1);
-                const toDateStr9 = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-                const satStr9 = toDateStr9(thisSat9);
-                const sunStr9 = toDateStr9(thisSun9);
-
-                const weekendFlights: Flight[] = [];
+            case 9: { // ☀️ 주말 출발
+                const weekendFlights9: Flight[] = [];
                 flights.forEach(f => {
                     const fd = f.departure.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 10);
-                    if (fd === satStr9 || fd === sunStr9) weekendFlights.push(f);
+                    if (!fd) return;
+                    const dt = new Date(fd);
+                    if (isNaN(dt.getTime())) return;
+                    const day = dt.getDay();
+                    if (day === 0 || day === 6) weekendFlights9.push(f);
                 });
-                if (weekendFlights.length === 0) return null;
-                weekendFlights.sort((a, b) => a.price - b.price);
+                if (weekendFlights9.length === 0) return null;
+                weekendFlights9.sort((a, b) => a.price - b.price);
                 const seen9 = new Set<string>();
-                const unique9 = weekendFlights.filter(f => {
+                const unique9 = weekendFlights9.filter(f => {
                     const city = normalizeCity(f.arrival.city);
                     if (seen9.has(city)) return false;
                     seen9.add(city);
                     return true;
-                }).slice(0, 4);
-                return (
-                    <div key={`insight-${barIndex}`} className={styles.insightBar}>
-                        <span className={styles.insightIcon}>☀️</span>
-                        <div className={styles.insightContent}>
-                            <span>이번 주말, 아직 비어 있다면. —</span>
-                            {unique9.map(f => {
-                                const city = normalizeCity(f.arrival.city);
-                                return (
-                                    <span
-                                        key={f.id}
-                                        className={styles.insightChip}
-                                        onClick={(e) => { e.stopPropagation(); setSearchTerm(city); setStartDate(satStr9); setEndDate(sunStr9); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                                    >
-                                        {city} <strong>{Math.floor(f.price / 10000)}만원~</strong>
-                                    </span>
-                                );
-                            })}
-                        </div>
-                    </div>
-                );
+                }).slice(0, 10);
+                return renderCardBar(barIndex, '☀️', '주말 출발 특가', unique9.map(f => {
+                    const city = normalizeCity(f.arrival.city);
+                    return renderCityCard(f.id, city, `${Math.floor(f.price / 10000)}만원~`, '주말 출발', (e) => { e.stopPropagation(); setSearchTerm(city); setSortBy('price'); setSortOrder('asc'); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+                }));
             }
             case 10: { // 💸 20만원 이하
                 const cheapFlights: Flight[] = [];
@@ -1257,74 +1347,36 @@ export default function Dashboard() {
                     seen10.add(city);
                     return true;
                 }).slice(0, 5);
-                return (
-                    <div key={`insight-${barIndex}`} className={styles.insightBar}>
-                        <span className={styles.insightIcon}>💸</span>
-                        <div className={styles.insightContent}>
-                            <span>20만원 이하로 갈 수 있는 곳 —</span>
-                            {unique10.map(f => {
-                                const city = normalizeCity(f.arrival.city);
-                                return (
-                                    <span
-                                        key={f.id}
-                                        className={styles.insightChip}
-                                        onClick={(e) => { e.stopPropagation(); setSearchTerm(city); setSortBy('price'); setSortOrder('asc'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                                    >
-                                        {city} <strong>{Math.floor(f.price / 10000)}만원</strong>
-                                    </span>
-                                );
-                            })}
-                        </div>
-                    </div>
-                );
+                return renderCardBar(barIndex, '💸', '20만원 이하로 갈 수 있는 곳', unique10.map(f => {
+                    const city = normalizeCity(f.arrival.city);
+                    return renderCityCard(f.id, city, `${Math.floor(f.price / 10000)}만원`, '20만원 이하', (e) => { e.stopPropagation(); setSearchTerm(city); setSortBy('price'); setSortOrder('asc'); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+                }));
             }
-            case 8: { // 🌙 금요일 밤 비행기
-                // 금요일 17시 이후 출발 항공편
-                const friFlights: Array<{ flight: Flight; time: string }> = [];
+            case 8: { // 🌙 금요일 출발
+                const friFlights8: Array<{ flight: Flight; time: string }> = [];
                 flights.forEach(f => {
                     const dateStr = f.departure.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 10);
-                    const time = f.departure?.time;
-                    if (!dateStr || !time) return;
+                    if (!dateStr) return;
                     const d = new Date(dateStr);
                     if (isNaN(d.getTime())) return;
-                    if (d.getDay() === 5) { // Friday
-                        const hour = parseInt(time.split(':')[0]);
-                        if (hour >= 17) {
-                            friFlights.push({ flight: f, time });
-                        }
+                    if (d.getDay() === 5 && f.price > 0) {
+                        friFlights8.push({ flight: f, time: f.departure?.time || '' });
                     }
                 });
-                if (friFlights.length === 0) return null;
-                // 도시별 중복 제거, 가격 낮은 순
-                friFlights.sort((a, b) => a.flight.price - b.flight.price);
-                const seenCities = new Set<string>();
-                const uniqueFri = friFlights.filter(({ flight }) => {
+                if (friFlights8.length === 0) return null;
+                friFlights8.sort((a, b) => a.flight.price - b.flight.price);
+                const seenCities8 = new Set<string>();
+                const uniqueFri8 = friFlights8.filter(({ flight }) => {
                     const city = normalizeCity(flight.arrival.city);
-                    if (seenCities.has(city)) return false;
-                    seenCities.add(city);
+                    if (seenCities8.has(city)) return false;
+                    seenCities8.add(city);
                     return true;
-                }).slice(0, 4);
-                return (
-                    <div key={`insight-${barIndex}`} className={styles.insightBar}>
-                        <span className={styles.insightIcon}>🌙</span>
-                        <div className={styles.insightContent}>
-                            <span>이번 주 금요일, 퇴근 후 출발 —</span>
-                            {uniqueFri.map(({ flight }) => {
-                                const city = normalizeCity(flight.arrival.city);
-                                const friDate = flight.departure.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 10) || '';
-                                return (
-                                    <span
-                                        key={flight.id}
-                                        className={styles.insightChip}
-                                        onClick={(e) => { e.stopPropagation(); setSearchTerm(city); if (friDate) { setStartDate(friDate); setEndDate(friDate); } window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                                    >
-                                        {city} <strong>{Math.floor(flight.price / 10000)}만원~</strong>
-                                    </span>
-                                );
-                            })}
-                        </div>
-                    </div>
-                );
+                }).slice(0, 10);
+                return renderCardBar(barIndex, '🌙', '금요일 출발 특가', uniqueFri8.map(({ flight }) => {
+                    const city = normalizeCity(flight.arrival.city);
+                    const friDate = flight.departure.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 10) || '';
+                    return renderCityCard(flight.id, city, `${Math.floor(flight.price / 10000)}만원~`, '금요일 밤', (e) => { e.stopPropagation(); setSearchTerm(city); setStartDate(''); setEndDate(''); setSortBy('price'); setSortOrder('asc'); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+                }));
             }
             case 11: { // 📉 가격 하락 노선
                 const today11 = new Date();
@@ -1360,23 +1412,9 @@ export default function Dashboard() {
                     return true;
                 }).slice(0, 5);
 
-                return (
-                    <div key={`insight-${barIndex}`} className={styles.insightBar}>
-                        <span className={styles.insightIcon}>📉</span>
-                        <div className={styles.insightContent}>
-                            <span>어제보다 가격 내린 항공권 —</span>
-                            {topDrops.map(d => (
-                                <span
-                                    key={d.route}
-                                    className={styles.insightChip}
-                                    onClick={(e) => { e.stopPropagation(); setSearchTerm(d.city); setSortBy('price'); setSortOrder('asc'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                                >
-                                    {d.city} <strong>↓{Math.floor(d.drop / 10000)}만원</strong> <span className={styles.insightChipCount}>{Math.floor(d.todayPrice / 10000)}만원</span>
-                                </span>
-                            ))}
-                        </div>
-                    </div>
-                );
+                return renderCardBar(barIndex, '📉', '어제보다 가격 내린 항공권', topDrops.map(d =>
+                    renderCityCard(d.route, d.city, `${Math.floor(d.todayPrice / 10000)}만원`, `↓${Math.floor(d.drop / 10000)}만원`, (e) => { e.stopPropagation(); setSearchTerm(d.city); setSortBy('price'); setSortOrder('asc'); window.scrollTo({ top: 0, behavior: 'smooth' }); })
+                ));
             }
             case 12: { // 👀 인기 항공권 (목적지별 항공편 수 기준)
                 const destCounts: Record<string, { count: number; minPrice: number }> = {};
@@ -1511,23 +1549,62 @@ export default function Dashboard() {
                 };
                 const season = seasonMap[month];
                 if (!season) return null;
-                return (
-                    <div key={`insight-${barIndex}`} className={styles.insightBar}>
-                        <span className={styles.insightIcon}>🌸</span>
-                        <div className={styles.insightContent}>
-                            <span>{season.title} —</span>
-                            {season.recs.map(r => (
-                                <span
-                                    key={r.city}
-                                    className={styles.insightChip}
-                                    onClick={(e) => { e.stopPropagation(); setSearchTerm(r.city); setSortBy('price'); setSortOrder('asc'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                                >
-                                    {r.emoji} {r.city} <span className={styles.insightChipCount}>{r.reason}</span>
-                                </span>
-                            ))}
-                        </div>
-                    </div>
-                );
+                return renderCardBar(barIndex, '🌸', season.title, season.recs.map(r =>
+                    renderCityCard(r.city, r.city, r.reason, r.emoji, (e) => { e.stopPropagation(); setSearchTerm(r.city); setSortBy('price'); setSortOrder('asc'); window.scrollTo({ top: 0, behavior: 'smooth' }); })
+                ));
+            }
+            case 15: { // ✨ 새로 올라온 항공권
+                const todayStr15 = new Date().toISOString().split('T')[0];
+                let titlePrefix = '오늘';
+
+                // 그룹핑 함수
+                const groupFlights = (list: Flight[]) => {
+                    const rm = new Map<string, { dep: string; arr: string; minPrice: number; count: number; depDate: string; arrDate: string }>();
+                    list.forEach((f: any) => {
+                        const dep = normalizeCity(f.departure.city);
+                        const arr = normalizeCity(f.arrival.city);
+                        const existing = rm.get(arr);
+                        if (!existing) {
+                            rm.set(arr, { dep, arr, minPrice: f.price, count: 1, depDate: f.departure.date, arrDate: f.arrival.date });
+                        } else {
+                            existing.count++;
+                            if (f.price < existing.minPrice) {
+                                existing.minPrice = f.price;
+                                existing.dep = dep;
+                                existing.depDate = f.departure.date;
+                                existing.arrDate = f.arrival.date;
+                            }
+                        }
+                    });
+                    return Array.from(rm.values()).sort((a, b) => a.minPrice - b.minPrice);
+                };
+
+                // 오늘 것 먼저
+                let newFlights15 = flights.filter((f: any) => f.firstSeen === todayStr15 && f.price > 0);
+                let groupedRoutes = groupFlights(newFlights15);
+
+                // 노선이 7개 미만이면 최근 3일까지 확장
+                if (groupedRoutes.length < 7) {
+                    const d3 = new Date();
+                    d3.setDate(d3.getDate() - 3);
+                    const d3Str = d3.toISOString().split('T')[0];
+                    newFlights15 = flights.filter((f: any) => f.firstSeen && f.firstSeen >= d3Str && f.price > 0);
+                    groupedRoutes = groupFlights(newFlights15);
+                    titlePrefix = '최근';
+                }
+                if (groupedRoutes.length === 0) return null;
+
+                const routeLabel = groupedRoutes.length <= 10 ? ` ${groupedRoutes.length}개 노선` : '';
+                return renderCardBar(barIndex, '✨', `${titlePrefix} 올라온 특가${routeLabel}`, groupedRoutes.slice(0, 20).map((r, i) => {
+                    const depDate = r.depDate ? new Date(r.depDate.replace(/\./g, '-')) : null;
+                    const arrDate = r.arrDate ? new Date(r.arrDate.replace(/\./g, '-')) : null;
+                    const dateStr = depDate && arrDate && !isNaN(depDate.getTime()) && !isNaN(arrDate.getTime())
+                        ? `${depDate.getMonth() + 1}/${depDate.getDate()}~${arrDate.getMonth() + 1}/${arrDate.getDate()}`
+                        : '';
+                    const priceStr = `${Math.floor(r.minPrice / 10000)}만${r.minPrice % 10000 > 0 ? Math.floor((r.minPrice % 10000) / 1000) + '천' : ''}원~`;
+                    const dateInfo = `${dateStr}${r.count > 1 ? ` 외 ${r.count - 1}건` : ''}`;
+                    return renderCityCard(`new-${i}`, r.arr, priceStr, dateInfo, (e) => { e.stopPropagation(); setSearchTerm(r.arr); setSortBy('price'); setSortOrder('asc'); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+                }));
             }
             default:
                 return null;
@@ -1972,9 +2049,9 @@ export default function Dashboard() {
                                 const isLowestPrice = lowestPrices[route] === flight.price;
                                 const items: React.ReactNode[] = [];
 
-                                // 모바일 9개, 데스크탑 12개 카드마다 인사이트 바 삽입
-                                const insightInterval = isMobile ? 9 : 12;
-                                if (index > 0 && index % insightInterval === 0) {
+                                // 9개 카드마다 인사이트 바 삽입 (검색 필터 활성화시 제외)
+                                const insightInterval = 9;
+                                if (index > 0 && index % insightInterval === 0 && !searchTerm) {
                                     const bar = generateInsightBar(index / insightInterval - 1);
                                     if (bar) items.push(bar);
                                 }

@@ -20,6 +20,7 @@ interface CacheData {
         onlinetour: number;
         ttang: number;
     };
+    priceHistory?: Record<string, Array<{ date: string; minPrice: number; avgPrice: number; count: number }>>;
 }
 
 async function main() {
@@ -262,23 +263,30 @@ async function main() {
             console.log(`\n⚠️ 결과가 이전 캐시(${prevCache.count}개)의 50% 미만(${benchmarkedFlights.length}개) → 이전 캐시 유지`);
             console.log('크롤링 결과를 저장하지 않습니다.');
         } else {
-            // 캐시 데이터 구조 생성
-            const cacheData: CacheData = {
-                timestamp: new Date().toISOString(),
-                count: benchmarkedFlights.length,
-                flights: benchmarkedFlights,
-                sources: sources,
-            };
-
-            // data 디렉토리 확인 및 생성
-            if (!fs.existsSync(dataDir)) {
-                fs.mkdirSync(dataDir, { recursive: true });
+            // firstSeen 필드 추가: 이전 캐시와 비교하여 새 항공편 감지
+            const prevFlightMap = new Map<string, string>();
+            if (prevCache?.flights) {
+                prevCache.flights.forEach((f: any) => {
+                    if (f.id && f.firstSeen) {
+                        prevFlightMap.set(f.id, f.firstSeen);
+                    }
+                });
             }
+            const todayDate = new Date().toISOString().split('T')[0];
+            let newFlightCount = 0;
+            benchmarkedFlights.forEach((f: any) => {
+                const prevFirstSeen = prevFlightMap.get(f.id);
+                if (prevFirstSeen) {
+                    f.firstSeen = prevFirstSeen; // 기존 항공편: firstSeen 이어받기
+                } else {
+                    f.firstSeen = todayDate; // 새 항공편
+                    newFlightCount++;
+                }
+            });
+            console.log(`🆕 오늘 새로 추가된 항공편: ${newFlightCount}개 / 전체 ${benchmarkedFlights.length}개`);
 
-            // 통합 캐시 파일 저장
-            fs.writeFileSync(cachePath, JSON.stringify(cacheData, null, 2), 'utf-8');
-
-            // 가격 히스토리 기록 (노선별 최저가/평균가)
+            // 캐시 데이터 구조 생성 (가격 히스토리 포함)
+            // 먼저 기존 히스토리를 로드하여 cacheData에 포함
             const historyPath = path.join(dataDir, 'price-history.json');
             let history: Record<string, Array<{ date: string; minPrice: number; avgPrice: number; count: number }>> = {};
             try {
@@ -289,10 +297,21 @@ async function main() {
                 console.log('가격 히스토리 파일 초기화');
             }
 
-            // 오늘 날짜
-            const todayStr = new Date().toISOString().split('T')[0];
+            const cacheData: CacheData = {
+                timestamp: new Date().toISOString(),
+                count: benchmarkedFlights.length,
+                flights: benchmarkedFlights,
+                sources: sources,
+                priceHistory: history,
+            };
 
-            // 노선별 가격 집계
+            // data 디렉토리 확인 및 생성
+            if (!fs.existsSync(dataDir)) {
+                fs.mkdirSync(dataDir, { recursive: true });
+            }
+
+            // 가격 히스토리에 오늘 데이터 추가 (history는 위에서 이미 로드됨)
+            const todayStr = new Date().toISOString().split('T')[0];
             const routePrices: Record<string, number[]> = {};
             allFlights.forEach((f: any) => {
                 const route = `${f.departure?.city || ''}-${f.arrival?.city || ''}`;
@@ -305,7 +324,6 @@ async function main() {
             // 히스토리에 오늘 데이터 추가 (같은 날이면 덮어쓰기)
             Object.entries(routePrices).forEach(([route, prices]) => {
                 if (!history[route]) history[route] = [];
-                // 오늘 데이터가 이미 있으면 제거
                 history[route] = history[route].filter(h => h.date !== todayStr);
                 history[route].push({
                     date: todayStr,
@@ -317,6 +335,13 @@ async function main() {
                 history[route] = history[route].slice(-14);
             });
 
+            // cacheData에 최신 히스토리 반영
+            cacheData.priceHistory = history;
+
+            // 통합 캐시 파일 저장
+            fs.writeFileSync(cachePath, JSON.stringify(cacheData, null, 2), 'utf-8');
+
+            // 히스토리 별도 파일도 저장
             fs.writeFileSync(historyPath, JSON.stringify(history, null, 2), 'utf-8');
             console.log(`📈 가격 히스토리 기록: ${Object.keys(routePrices).length}개 노선`);
 
