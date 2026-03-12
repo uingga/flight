@@ -3,7 +3,7 @@ import { Inter } from 'next/font/google';
 import Script from 'next/script';
 import './globals.css';
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://mytikit.vercel.app';
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.tikitikit.kr';
 
 const inter = Inter({
     subsets: ['latin'],
