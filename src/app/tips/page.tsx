@@ -16,6 +16,8 @@ const tips = [
     { slug: 'faq-10', emoji: '❓', title: '땡처리 항공권 Q&A 10가지', desc: '환불, 수하물, 유아 동반 등 자주 묻는 질문' },
     { slug: 'japan-cherry-blossom', emoji: '🌸', title: '일본 벚꽃 시즌 항공권 특가 가이드', desc: '도시별 개화 시기 + 추천 코스 + 특가 노선' },
     { slug: 'southeast-asia-seasons', emoji: '🌏', title: '동남아 우기·건기 따져서 싸게 가는 법', desc: '시기별 가격 차이와 추천 여행지' },
+    { slug: 'cheap-tickets-2026', emoji: '💰', title: '비행기 표 싸게 사는 법 2026 총정리', desc: '시기, 출발지, 비교 전략까지 한 번에' },
+    { slug: 'is-it-really-cheap', emoji: '🔍', title: '땡처리, 무조건 싸다고요? 진짜 싼 건지 확인하는 법', desc: '땡처리 함정을 피하는 3가지 체크포인트' },
 ];
 
 export default function TipsPage() {
