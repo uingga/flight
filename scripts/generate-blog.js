@@ -19,11 +19,34 @@ const path = require('path');
 
 // ===== 설정 =====
 const DATA_PATH = path.join(__dirname, '..', 'data', 'all-flights-cache.json');
+const HISTORY_PATH = path.join(__dirname, '..', 'data', 'blog-history.json');
 const OUTPUT_DIR = path.join(__dirname, '..', 'public');
 const CARDS_DIR = path.join(OUTPUT_DIR, 'blog-cards');
 const TOP_N = 3;
-const MIN_INCHEON = 1;
+const MIN_INCHEON = 2;
 const SITE_URL = 'https://tikitikit.kr';
+const HISTORY_POSTS = 1; // 최근 N개 포스트의 도시 중복 방지
+
+// ===== CLI 인자 파싱 (수동 오버라이드) =====
+// 사용법:
+//   node scripts/generate-blog.js --include 후쿠오카,세부   (강제 포함, 중복 제외 무시)
+//   node scripts/generate-blog.js --exclude 칭다오          (강제 제외)
+//   node scripts/generate-blog.js --include 후쿠오카 --exclude 칭다오
+function parseCliArgs() {
+    const args = process.argv.slice(2);
+    const result = { include: [], exclude: [] };
+    for (let i = 0; i < args.length; i++) {
+        if (args[i] === '--include' && args[i + 1]) {
+            result.include = args[i + 1].split(',').map(s => s.trim());
+            i++;
+        } else if (args[i] === '--exclude' && args[i + 1]) {
+            result.exclude = args[i + 1].split(',').map(s => s.trim());
+            i++;
+        }
+    }
+    return result;
+}
+const CLI_OVERRIDES = parseCliArgs();
 
 // ===== 항공사명 정규화 =====
 const AIRLINE_NAME_MAP = {
@@ -56,13 +79,22 @@ const CITY_NAME_MAP = {
     '서울': '인천',
     '푸껫': '푸켓',
     '청도': '칭다오',
+    '청도(칭다오)': '칭다오',
+    '제남': '지난',
+    '제남(지난)': '지난',
+    '연태': '옌타이',
+    '연태(옌타이)': '옌타이',
     '방콕(수완나폼)': '방콕',
     '나트랑(깜랑)': '나트랑',
     '하코다테(북해도)': '하코다테',
     '위해': '웨이하이',
+    '위해(웨이하이)': '웨이하이',
     '타이페이': '타이베이',
     '대만': '타이베이',
     '상해': '상하이',
+    '다카마츠': '다카마쓰',
+    '삿포로(치토세)': '삿포로',
+    '보라카이(KLO)': '보라카이',
     '오사카': '오사카(간사이)',
     '오사카(KIX)': '오사카(간사이)',
 };
@@ -87,6 +119,20 @@ function normalizeCity(city) {
         return CITY_NAME_MAP[baseName] || baseName;
     }
     return CITY_NAME_MAP[city] || city;
+}
+
+// ===== 표시용 도시명 (블로그 출력용) =====
+const DISPLAY_NAME_MAP = {
+    '연태(옌타이)': '옌타이',
+    '제남(지난)': '지난',
+    '청도(칭다오)': '칭다오',
+    '위해(웨이하이)': '웨이하이',
+};
+
+function displayCity(rawCity) {
+    if (!rawCity) return '';
+    if (DISPLAY_NAME_MAP[rawCity]) return DISPLAY_NAME_MAP[rawCity];
+    return normalizeCity(rawCity);
 }
 
 // ===== 도시별 에디터 픽 텍스트 =====
@@ -201,10 +247,11 @@ const CITY_DESCRIPTIONS = {
         ],
     },
     '삿포로': {
-        emoji: '⛷️',
+        emoji: '🍜',
         variants: [
-            { lines: ['파우더 스노우에서 겨울 스포츠를 ⛷️', '미소 라멘과 징기스칸 바비큐의 본고장!'], closing: '겨울 여행의 로망이 이 가격에.' },
-            { lines: ['오도리 공원에서 여유로운 산책 🌲', '니조 시장에서 신선한 해산물 덮밥 한 그릇!'], closing: '사계절 매력 있는 도시.' },
+            { lines: ['오도리 공원에서 여유로운 산책 🌲', '니조 시장에서 신선한 해산물 덮밥 한 그릇!'], closing: '사계절 매력 있는 홋카이도의 수도.' },
+            { lines: ['미소 라멘과 스프카레의 본고장 🍜', '다누키코지 상점가에서 현지 먹거리 탐방!'], closing: '먹방 여행으로 삿포로만 한 곳이 없어요.' },
+            { lines: ['삿포로 맥주 박물관에서 시음 한 잔 🍺', '오타루 운하에서 감성 산책까지!'], closing: '도시+소도시 조합으로 알찬 여행.' },
         ],
     },
     '마닐라': {
@@ -226,6 +273,33 @@ const CITY_DESCRIPTIONS = {
         variants: [
             { lines: ['천하제일의 샘, 바오투취안 공원 ⛲', '대명호 산책하며 여유로운 하루!'], closing: '중국 역사와 자연이 어우러진 도시.' },
             { lines: ['제남 구시가지에서 거리 음식 탐방 🍜', '천포 광장에서 현지 문화 체험!'], closing: '가성비 좋은 중국 소도시 여행.' },
+        ],
+    },
+    '옌타이': {
+        emoji: '🌊',
+        variants: [
+            { lines: ['옌타이 해변에서 해풍 맞으며 산책 🌊', '봉래각에서 신선의 전설을 만나보세요!'], closing: '비행 1시간 반, 가까운 중국 바닷가.' },
+            { lines: ['장위포 해수욕장에서 여유로운 시간 🏖️', '현지 해산물 시장에서 해물 잔치!'], closing: '가성비 좋은 중국 해안 도시.' },
+        ],
+    },
+    '푸꾸옥': {
+        emoji: '🏝️',
+        variants: [
+            { lines: ['베트남의 몰디브, 푸꾸옥 🏝️', '에메랄드빛 바다에서 스노클링하고 야시장에서 해산물 폭격!'], closing: '동남아 숨은 보석 같은 섬.' },
+            { lines: ['롱비치에서 선셋 보며 칵테일 한 잔 🌅', '사오 비치의 하얀 모래밭은 인생샷 명소!'], closing: '리조트+자연이 완벽 조화.' },
+        ],
+    },
+    '웨이하이': {
+        emoji: '🏖️',
+        variants: [
+            { lines: ['한국에서 가장 가까운 중국 해변 도시 🏖️', '류공다오 섬에서 바다 뷰 감상하고 해산물 한 상!'], closing: '비행 1시간, 당일치기도 가능한 거리.' },
+            { lines: ['웨이하이 국제해수욕장에서 여유로운 오후 🌊', '해선루에서 현지식 해물 요리 도전!'], closing: '가성비 갑 중국 해안 소도시.' },
+        ],
+    },
+    '위해': {
+        emoji: '🏖️',
+        variants: [
+            { lines: ['한국에서 가장 가까운 중국 해변 도시 🏖️', '류공다오 섬에서 바다 뷰 감상하고 해산물 한 상!'], closing: '비행 1시간, 당일치기도 가능한 거리.' },
         ],
     },
 };
@@ -273,7 +347,7 @@ const TIP_POOLS = {
     // 조건: 지방 출발이 있을 때
     regional: [
         '✈️ 지방 출발 TIP: 부산·청주·대구는 공항 접근성이 좋고 주차도 저렴해서 총비용이 더 싸요.',
-        '✈️ 청주공항은 무료 주차장이 있어서 장기 주차 부담 없이 여행 가능!',
+        '✈️ 청주공항 장기주차장은 하루 6천원! 인천공항 대비 절반 수준이에요.',
         '✈️ 김해공항 국제선은 KTX 부산역에서 경전철 30분! 서울에서 접근도 의외로 괜찮아요.',
         '✈️ 지방 출발은 공항 인파도 적어서 체크인·보안검색이 훨씬 빠릅니다.',
     ],
@@ -350,9 +424,33 @@ async function main() {
     flights = Array.from(dedupMap.values());
     console.log(`🔄 중복 제거 후: ${flights.length}개`);
 
-    // 5. Top 3 선발 (인천 출발 보장)
+    // 5. 이전 글 히스토리 로드
+    let recentDests = loadRecentDests();
+
+    // CLI 수동 오버라이드 적용
+    if (CLI_OVERRIDES.exclude.length > 0) {
+        recentDests = [...new Set([...recentDests, ...CLI_OVERRIDES.exclude])];
+        console.log(`🚫 수동 제외: ${CLI_OVERRIDES.exclude.join(', ')}`);
+    }
+    if (CLI_OVERRIDES.include.length > 0) {
+        recentDests = recentDests.filter(d => !CLI_OVERRIDES.include.includes(d));
+        console.log(`✅ 수동 포함 (중복 제외 면제): ${CLI_OVERRIDES.include.join(', ')}`);
+    }
+
+    if (recentDests.length > 0) {
+        console.log(`🔄 최근 ${HISTORY_POSTS}개 포스트 도시 (제외 대상): ${recentDests.join(', ')}`);
+    }
+
+    // 5.5 가격 하락 감지 — 이전 포스트 대비 가격이 떨어진 노선은 중복 제외에서 면제
+    const priceDropDests = findPriceDropFlights(flights);
+    if (priceDropDests.length > 0) {
+        console.log(`📉 가격 하락 감지 (중복 제외 면제): ${priceDropDests.map(d => `${d.dest} ${d.prevPrice.toLocaleString()}→${d.currPrice.toLocaleString()}원`).join(', ')}`);
+    }
+    const priceDropDestNames = priceDropDests.map(d => d.dest);
+
+    // 6. Top 3 선발 (인천 출발 보장 + 중복 방지 + 가격 하락 우선)
     flights.sort((a, b) => a.price - b.price);
-    const topFlights = selectTopWithIncheon(flights);
+    const topFlights = selectTopWithIncheon(flights, recentDests, priceDropDestNames);
 
     if (topFlights.length === 0) {
         console.error('❌ 유효한 항공편이 없습니다.');
@@ -361,8 +459,9 @@ async function main() {
 
     console.log('\n🏆 Top 3 특가:');
     topFlights.forEach((f, i) => {
-        const isICN = normalizeCity(f.departure?.city) === '인천' ? ' [인천]' : '';
-        console.log(`  ${i + 1}위: ${f.departure?.city} → ${f.arrival?.city} | ${f.airline} | ${f.price.toLocaleString()}원${isICN}`);
+        const isICN = (normalizeCity(f.departure?.city) === '인천' || normalizeCity(f.departure?.city) === '김포') ? ' [수도권]' : '';
+        const dropInfo = priceDropDestNames.includes(normalizeCity(f.arrival?.city)) ? ' 📉하락' : '';
+        console.log(`  ${i + 1}위: ${f.departure?.city} → ${f.arrival?.city} | ${f.airline} | ${f.price.toLocaleString()}원${isICN}${dropInfo}`);
     });
 
     // 6. 카드 스크린샷 촬영
@@ -372,11 +471,11 @@ async function main() {
     }
 
     // 인천 출발 중 Top 3에 포함되지 않은 것도 따로 수집
-    const icnInTop = topFlights.filter(f => normalizeCity(f.departure?.city) === '인천');
+    const icnInTop = topFlights.filter(f => normalizeCity(f.departure?.city) === '인천' || normalizeCity(f.departure?.city) === '김포');
     // 인천 출발 섹션: 총 3개 (Top 3 중 인천 1개 + 비중복 2개)
     const ICN_SECTION_TOTAL = 3;
     const ICN_EXTRA_COUNT = 2; // Top 3와 겹치지 않는 인천 출발 항공편
-    const icnExtra = getExtraIncheonFlights(flights, topFlights, ICN_EXTRA_COUNT);
+    const icnExtra = getExtraIncheonFlights(flights, topFlights, ICN_EXTRA_COUNT, recentDests, priceDropDestNames);
     const allIcnFlights = [...icnInTop.slice(0, 1), ...icnExtra].slice(0, ICN_SECTION_TOTAL);
 
     const allScreenshotFlights = [...topFlights, ...icnExtra];
@@ -393,53 +492,179 @@ async function main() {
     fs.writeFileSync(outputPath, html, 'utf-8');
     console.log(`\n✅ 블로그 포스트 생성 완료: ${outputPath}`);
     console.log(`🌐 http://localhost:3000/${filename}`);
+
+    // 9. 히스토리 저장 (Top 3 + 인천 섹션 + 가격 정보)
+    const allUsedFlights = [...topFlights, ...icnExtra];
+    const allDests = allUsedFlights.map(f => normalizeCity(f.arrival?.city));
+    const uniqueDests = [...new Set(allDests)];
+    const prices = {};
+    allUsedFlights.forEach(f => {
+        const dest = normalizeCity(f.arrival?.city);
+        if (!prices[dest] || f.price < prices[dest]) prices[dest] = f.price;
+    });
+    saveHistory(uniqueDests, prices);
+    console.log(`📝 히스토리 저장: ${uniqueDests.join(', ')}`);
 }
 
-// ===== Top N 선발 (인천 보장) =====
-function selectTopWithIncheon(sortedFlights) {
+// ===== 블로그 히스토리 (최근 N개 포스트 도시 중복 방지 + 가격 추적) =====
+function loadRecentDests() {
+    try {
+        if (!fs.existsSync(HISTORY_PATH)) return [];
+        const history = JSON.parse(fs.readFileSync(HISTORY_PATH, 'utf-8'));
+        const entries = history.entries || [];
+        const recentEntries = entries.slice(-HISTORY_POSTS);
+        const dests = new Set();
+        recentEntries.forEach(e => (e.destinations || []).forEach(d => dests.add(d)));
+        return Array.from(dests);
+    } catch (e) {
+        console.warn('⚠️ 히스토리 로드 실패:', e.message);
+        return [];
+    }
+}
+
+function loadRecentPrices() {
+    try {
+        if (!fs.existsSync(HISTORY_PATH)) return {};
+        const history = JSON.parse(fs.readFileSync(HISTORY_PATH, 'utf-8'));
+        const entries = history.entries || [];
+        // 최근 포스트들의 가격 정보 합산 (같은 도시면 가장 최근 가격)
+        const prices = {};
+        entries.forEach(e => {
+            if (e.prices) {
+                Object.entries(e.prices).forEach(([dest, price]) => {
+                    prices[dest] = price;
+                });
+            }
+        });
+        return prices;
+    } catch (e) {
+        return {};
+    }
+}
+
+// 가격 하락 감지: 이전 포스트 대비 현재 가격이 5% 이상 하락한 도시
+function findPriceDropFlights(allFlights) {
+    const prevPrices = loadRecentPrices();
+    if (Object.keys(prevPrices).length === 0) return [];
+
+    // 현재 각 도시별 최저가
+    const currPrices = {};
+    for (const f of allFlights) {
+        const dest = normalizeCity(f.arrival?.city);
+        if (!currPrices[dest] || f.price < currPrices[dest]) {
+            currPrices[dest] = f.price;
+        }
+    }
+
+    const drops = [];
+    for (const [dest, prevPrice] of Object.entries(prevPrices)) {
+        if (currPrices[dest] && currPrices[dest] < prevPrice * 0.95) {
+            drops.push({
+                dest,
+                prevPrice,
+                currPrice: currPrices[dest],
+                dropPercent: Math.round((1 - currPrices[dest] / prevPrice) * 100),
+            });
+        }
+    }
+    return drops.sort((a, b) => b.dropPercent - a.dropPercent);
+}
+
+function saveHistory(destinations, prices = {}) {
+    let history = { entries: [] };
+    try {
+        if (fs.existsSync(HISTORY_PATH)) {
+            history = JSON.parse(fs.readFileSync(HISTORY_PATH, 'utf-8'));
+        }
+    } catch (e) { /* ignore */ }
+    
+    const todayStr = new Date().toISOString().split('T')[0];
+    history.entries = (history.entries || []).filter(e => e.date !== todayStr);
+    history.entries.push({ date: todayStr, destinations, prices });
+    if (history.entries.length > 10) {
+        history.entries = history.entries.slice(-10);
+    }
+    
+    fs.writeFileSync(HISTORY_PATH, JSON.stringify(history, null, 2), 'utf-8');
+}
+
+// ===== Top N 선발 (인천 보장 + 최근 중복 방지 + 가격 하락 면제) =====
+function selectTopWithIncheon(sortedFlights, recentDests = [], priceDropDests = []) {
     const topFlights = [];
     const seenDests = new Set();
+    const priceDropSet = new Set(priceDropDests);
+    // 가격 하락 도시는 recent에서 제외
+    const recentSet = new Set(recentDests.filter(d => !priceDropSet.has(d)));
 
-    // 1단계: 인천 출발 중 도착지 다양하게 2개 확보 (서울(ICN)도 인천으로 인식)
-    const icnFlights = sortedFlights.filter(f => normalizeCity(f.departure?.city) === '인천');
-    let icnCount = 0;
+    // 0단계: --include 강제 포함 (최우선)
+    if (CLI_OVERRIDES.include.length > 0) {
+        for (const includeDest of CLI_OVERRIDES.include) {
+            const bestFlight = sortedFlights.find(f => normalizeCity(f.arrival?.city) === includeDest);
+            if (bestFlight) {
+                seenDests.add(includeDest);
+                topFlights.push(bestFlight);
+                console.log(`  📌 강제 포함: ${bestFlight.departure?.city} → ${bestFlight.arrival?.city} | ${bestFlight.price.toLocaleString()}원`);
+            } else {
+                console.warn(`  ⚠️ --include ${includeDest}: 데이터에서 찾을 수 없음`);
+            }
+        }
+    }
+
+    // 1단계: 인천 출발 중 도착지 다양하게 확보 (최근 중복 제외, 가격 하락 면제)
+    const icnFlights = sortedFlights.filter(f => normalizeCity(f.departure?.city) === '인천' || normalizeCity(f.departure?.city) === '김포');
+    let icnCount = topFlights.filter(f => normalizeCity(f.departure?.city) === '인천' || normalizeCity(f.departure?.city) === '김포').length;
     for (const f of icnFlights) {
+        if (topFlights.length >= TOP_N) break;
         const dest = normalizeCity(f.arrival?.city);
-        if (seenDests.has(dest)) continue;
+        if (seenDests.has(dest) || recentSet.has(dest)) continue;
         seenDests.add(dest);
         topFlights.push(f);
         icnCount++;
         if (icnCount >= MIN_INCHEON) break;
     }
 
-    // 2단계: 나머지 (TOP_N - icnCount)개를 전체에서 채움
+    // 2단계: 나머지를 전체에서 채움 (최근 중복 제외, 가격 하락 면제)
     for (const f of sortedFlights) {
         if (topFlights.length >= TOP_N) break;
         const dest = normalizeCity(f.arrival?.city);
-        if (seenDests.has(dest)) continue;
+        if (seenDests.has(dest) || recentSet.has(dest)) continue;
         seenDests.add(dest);
         topFlights.push(f);
     }
 
-    // 3단계: 가격순 재정렬 
+    // 3단계: 만약 중복 제외로 TOP_N을 못 채웠으면 중복 허용하여 채움
+    if (topFlights.length < TOP_N) {
+        console.warn(`⚠️ 중복 제외 후 ${topFlights.length}개만 선발됨, 중복 허용하여 채움`);
+        for (const f of sortedFlights) {
+            if (topFlights.length >= TOP_N) break;
+            const dest = normalizeCity(f.arrival?.city);
+            if (seenDests.has(dest)) continue;
+            seenDests.add(dest);
+            topFlights.push(f);
+        }
+    }
+
+    // 4단계: 가격순 재정렬 
     topFlights.sort((a, b) => a.price - b.price);
     return topFlights;
 }
 
-// ===== 인천 추가 항공편 (Top N 밖) =====
-function getExtraIncheonFlights(allFlights, topFlights, maxExtra) {
+// ===== 인천 추가 항공편 (Top N 밖, 최근 중복 제외, 가격 하락 면제) =====
+function getExtraIncheonFlights(allFlights, topFlights, maxExtra, recentDests = [], priceDropDests = []) {
     const topIds = new Set(topFlights.map(f => `${f.departure?.city}|${f.arrival?.city}|${f.departure?.date}|${f.airline}`));
-    const topDests = new Set(topFlights.filter(f => normalizeCity(f.departure?.city) === '인천').map(f => normalizeCity(f.arrival?.city)));
+    const topDests = new Set(topFlights.filter(f => normalizeCity(f.departure?.city) === '인천' || normalizeCity(f.departure?.city) === '김포').map(f => normalizeCity(f.arrival?.city)));
+    const priceDropSet = new Set(priceDropDests);
+    const recentSet = new Set(recentDests.filter(d => !priceDropSet.has(d)));
     const extras = [];
     const seenDests = new Set(topDests);
 
     for (const f of allFlights) {
         if (extras.length >= maxExtra) break;
-        if (normalizeCity(f.departure?.city) !== '인천') continue;
+        if (normalizeCity(f.departure?.city) !== '인천' && normalizeCity(f.departure?.city) !== '김포') continue;
         const key = `${f.departure?.city}|${f.arrival?.city}|${f.departure?.date}|${f.airline}`;
         if (topIds.has(key)) continue;
         const dest = normalizeCity(f.arrival?.city);
-        if (seenDests.has(dest)) continue;
+        if (seenDests.has(dest) || recentSet.has(dest)) continue;
         seenDests.add(dest);
         extras.push(f);
     }
@@ -735,14 +960,15 @@ function getSeasonContext(flight) {
 
 // ===== 에디터 픽 생성 =====
 function generateEditorPick(flight) {
-    const city = flight.arrival?.city || '';
-    const desc = matchCityDescription(city);
+    const city = displayCity(flight.arrival?.city || '');
+    const depCityDisplay = displayCity(flight.departure?.city || '');
+    const desc = matchCityDescription(flight.arrival?.city || '');
     const duration = calculateTripDuration(flight.departure?.date, flight.arrival?.date);
     const priceText = formatPriceShort(flight.price);
 
     let lines = [];
     lines.push(`<p>&nbsp;</p>`);
-    lines.push(`<p><b>${flight.departure?.city}-${city} 왕복 ${formatPrice(flight.price)}원!</b></p>`);
+    lines.push(`<p><b>${depCityDisplay}-${city} 왕복 ${formatPrice(flight.price)}원!</b></p>`);
     lines.push(`<p>&nbsp;</p>`);
 
     if (desc) {
@@ -863,6 +1089,118 @@ function getIcnComment(flight) {
     return `${duration} 가성비 여행!`;
 }
 
+// ===== 스마트 인트로 생성 (Top 3 내용 기반) =====
+function generateSmartIntro(topFlights, now) {
+    const month = now.getMonth() + 1;
+    const dayOfWeek = now.getDay();
+    const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+    const regions = topFlights.map(f => categorizeRegion(f.arrival?.city || ''));
+    const cities = topFlights.map(f => displayCity(f.arrival?.city || ''));
+    const lowestPrice = Math.min(...topFlights.map(f => f.price));
+    const priceMan = Math.floor(lowestPrice / 10000);
+
+    // 지배적 지역 파악
+    const regionCount = {};
+    regions.forEach(r => { regionCount[r] = (regionCount[r] || 0) + 1; });
+    const dominantRegion = Object.entries(regionCount).sort((a, b) => b[1] - a[1])[0]?.[0] || '기타';
+    const uniqueRegions = [...new Set(regions.filter(r => r !== '기타'))];
+
+    // 지역 맵핑
+    const regionEmoji = {
+        '일본': '🇯🇵', '중국': '🇨🇳', '동남아': '🌴', '대만': '🇹🇼', '괌/사이판': '🏝️',
+    };
+
+    let lines = [];
+
+    // 1) 가격이 매우 저렴한 경우 (15만원 이하)
+    if (priceMan <= 15) {
+        lines = [
+            `<p>오늘 진짜 괜찮은 가격이 떴어요 🔥</p>`,
+            `<p>&nbsp;</p>`,
+            `<p>${cities[0]} 왕복 ${priceMan}만원대,</p>`,
+            `<p>이 가격이면 고민하면 늦어요!</p>`,
+        ];
+    }
+    // 2) 하나의 지역에 집중된 경우
+    else if (dominantRegion !== '기타' && regionCount[dominantRegion] >= 2) {
+        const emoji = regionEmoji[dominantRegion] || '✈️';
+        if (dominantRegion === '중국') {
+            lines = [
+                `<p>오늘은 중국 쪽 특가가 많이 풀렸어요 ${emoji}</p>`,
+                `<p>&nbsp;</p>`,
+                `<p>가성비 좋은 근거리 여행지로</p>`,
+                `<p>가볍게 다녀올 수 있는 곳들이에요.</p>`,
+            ];
+        } else if (dominantRegion === '일본') {
+            if (month >= 3 && month <= 4) {
+                lines = [
+                    `<p>벚꽃 시즌이 다가오고 있네요 🌸</p>`,
+                    `<p>&nbsp;</p>`,
+                    `<p>일본 쪽 특가가 많이 풀리는 시기라</p>`,
+                    `<p>눈여겨볼 만한 것들이 있어요.</p>`,
+                ];
+            } else {
+                lines = [
+                    `<p>일본 쪽 특가가 많이 올라왔어요 ${emoji}</p>`,
+                    `<p>&nbsp;</p>`,
+                    `<p>소도시부터 대도시까지</p>`,
+                    `<p>다양한 옵션이 있으니 확인해보세요.</p>`,
+                ];
+            }
+        } else if (dominantRegion === '동남아') {
+            lines = [
+                `<p>동남아 특가가 쏟아지고 있어요 ${emoji}</p>`,
+                `<p>&nbsp;</p>`,
+                `<p>따뜻한 곳에서 힐링하고 싶다면</p>`,
+                `<p>오늘 라인업 한번 보세요!</p>`,
+            ];
+        } else {
+            lines = [
+                `<p>${dominantRegion} 쪽 특가가 많이 풀렸어요 ${emoji}</p>`,
+                `<p>&nbsp;</p>`,
+                `<p>오늘의 라인업 정리해봤습니다.</p>`,
+            ];
+        }
+    }
+    // 3) 다양한 지역이 섞인 경우
+    else if (uniqueRegions.length >= 2) {
+        const regionText = uniqueRegions.slice(0, 2).join(', ');
+        lines = [
+            `<p>오늘은 ${regionText} 등</p>`,
+            `<p>다양한 지역의 특가가 올라왔어요 ✈️</p>`,
+            `<p>&nbsp;</p>`,
+            `<p>취향에 맞는 여행지가 있을지도!</p>`,
+        ];
+    }
+    // 4) 요일 기반 폴백
+    else {
+        if (dayOfWeek === 5) { // 금요일
+            lines = [
+                `<p>금요일이에요! 주말 앞두고</p>`,
+                `<p>갑자기 떠나고 싶어질 때 있잖아요 ✈️</p>`,
+                `<p>&nbsp;</p>`,
+                `<p>오늘의 특가 라인업 정리해봤어요.</p>`,
+            ];
+        } else if (dayOfWeek === 1) { // 월요일
+            lines = [
+                `<p>월요일부터 여행 얘기하면</p>`,
+                `<p>한 주가 좀 더 기대되지 않나요? 😊</p>`,
+                `<p>&nbsp;</p>`,
+                `<p>오늘의 땡처리 특가 정리해봤어요.</p>`,
+            ];
+        } else {
+            lines = [
+                `<p>오늘도 괜찮은 특가가 올라왔어요.</p>`,
+                `<p>&nbsp;</p>`,
+                `<p>항공권은 타이밍이 중요하니까</p>`,
+                `<p>한번 확인해보세요 👇</p>`,
+            ];
+        }
+    }
+
+    return lines.join('\n        ');
+}
+
 // ===== HTML 생성 =====
 function generateHTML(topFlights, allIcnFlights) {
     const now = new Date();
@@ -875,9 +1213,9 @@ function generateHTML(topFlights, allIcnFlights) {
     const dayHash = now.getDate() + now.getMonth() * 31;
     const month = now.getMonth() + 1;
     const day = now.getDate();
-    const firstCity = normalizeCity(first.arrival?.city || '');
+    const firstCity = displayCity(first.arrival?.city || '');
     const firstPrice = `${Math.floor(first.price / 10000)}만원`;
-    const secondCity = second ? normalizeCity(second.arrival?.city || '') : '';
+    const secondCity = second ? displayCity(second.arrival?.city || '') : '';
     const secondPrice = second ? `${Math.floor(second.price / 10000)}만원` : '';
     const pricePart = second
         ? `${firstCity} ${firstPrice}, ${secondCity} ${secondPrice}`
@@ -887,8 +1225,8 @@ function generateHTML(topFlights, allIcnFlights) {
     // 각 순위별 HTML 생성 (텍스트 + 이미지 + 시즌 코멘트)
     const rankSections = topFlights.map((f, i) => {
         const rank = i + 1;
-        const depCity = f.departure?.city || '';
-        const arrCity = f.arrival?.city || '';
+        const depCity = displayCity(f.departure?.city || '');
+        const arrCity = displayCity(f.arrival?.city || '');
         const country = categorizeRegion(arrCity);
         const countryLabel = country !== '기타' ? ` (${country})` : '';
         const depDate = formatDateShort(f.departure?.date || '');
@@ -933,7 +1271,7 @@ function generateHTML(topFlights, allIcnFlights) {
     let icnSection = '';
     if (allIcnFlights.length > 0) {
         const icnItems = allIcnFlights.map((f, i) => {
-            const city = f.arrival?.city || '';
+            const city = displayCity(f.arrival?.city || '');
             const dateRange = formatDateRange(f.departure?.date || '', f.arrival?.date || '');
             const comment = getIcnComment(f);
             // 카드 이미지: Top 3에 포함된 인천 항공편은 rank_N.png, 추가분은 icn_N.png
@@ -1006,59 +1344,8 @@ ${tipLines}
         ...cities.map(c => `#${normalizeCity(c)}여행`),
     ].join(' ');
 
-    // 인트로 스몰톡 (매일 바뀌는 자연스러운 인사)
-    const dayOfWeek = now.getDay(); // 0=일 ~ 6=토
-    const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
-
-    const introPool = [
-        // 요일별
-        `<p>${dayNames[dayOfWeek]}요일이네요.</p>
-        <p>이번 주 여행 계획 세우셨나요?</p>
-        <p>&nbsp;</p>
-        <p>오늘의 땡처리 특가 Top 3,</p>
-        <p>같이 보시죠 👇</p>`,
-
-        `<p>요새 항공권 보는 재미가 쏠쏠하네요 ✈️</p>
-        <p>&nbsp;</p>
-        <p>오늘도 괜찮은 가격이 꽤 있어서</p>
-        <p>바로 정리해봤어요.</p>`,
-
-        `<p>안녕하세요, 티키티킷입니다.</p>
-        <p>&nbsp;</p>
-        <p>오늘도 특가 알림이 왔는데</p>
-        <p>가격이 꽤 괜찮아서 바로 가져왔어요 😊</p>`,
-
-        `<p>혹시 다음 여행지 고민 중이신가요?</p>
-        <p>&nbsp;</p>
-        <p>오늘 올라온 특가 중에</p>
-        <p>끌리는 게 있을지도 몰라요.</p>
-        <p>한번 볼까요? 👇</p>`,
-
-        `<p>항공권은 타이밍이더라고요.</p>
-        <p>어제까지 없던 가격이 오늘 뜨기도 하고요.</p>
-        <p>&nbsp;</p>
-        <p>오늘의 특가 라인업 정리해봤습니다.</p>`,
-    ];
-
-    // 계절별 추가 후보
-    if (month >= 3 && month <= 4) {
-        introPool.push(`<p>벚꽃 시즌이 다가오고 있네요 🌸</p>
-        <p>일본 쪽 특가가 많이 풀리는 시기라</p>
-        <p>눈여겨볼 만한 것들이 있어요.</p>`);
-    }
-    if (month >= 6 && month <= 8) {
-        introPool.push(`<p>여름 휴가 시즌!</p>
-        <p>아직 항공권 안 잡으셨다면</p>
-        <p>오늘 특가 한번 확인해보세요 🏖️</p>`);
-    }
-    if (month >= 11 || month <= 1) {
-        introPool.push(`<p>연말 여행 생각만 해도 설레네요.</p>
-        <p>따뜻한 곳으로 떠나고 싶은 계절이죠 ☀️</p>
-        <p>&nbsp;</p>
-        <p>오늘의 특가 정리해봤어요.</p>`);
-    }
-
-    const introSmallTalk = introPool[(dayHash + 3) % introPool.length];
+    // 인트로 스몰톡 — 오늘의 Top 3 내용 기반 동적 생성
+    const introSmallTalk = generateSmartIntro(topFlights, now);
 
     return `<!DOCTYPE html>
 <html lang="ko">
@@ -1164,7 +1451,11 @@ ${tipLines}
 
     <div class="post">
 
+        <img src="images/blog-thumb-${formatDateForFilename(now)}-wide.png" alt="${pageTitle}" style="width: 100%; border-radius: 12px; margin-bottom: 16px;" />
+
         <h1 style="text-align: center; font-size: 22px; font-weight: 800; color: #1a1a1a; margin: 16px 0 24px; line-height: 1.5;">${pageTitle}</h1>
+
+        <img src="images/blog-thumb-${formatDateForFilename(now)}-square.png" alt="${pageTitle} 썸네일" style="width: 100%; max-width: 600px; display: block; margin: 0 auto 16px; border-radius: 12px;" />
 
         <p>&nbsp;</p>
 ${introSmallTalk}
@@ -1181,7 +1472,7 @@ ${rankSections}
 
         <hr class="divider">
 
-        <p class="section-title">💡 에디터 픽 : ${pickIndex + 1}위 ${pickedFlight.departure?.city}-${pickedFlight.arrival?.city}</p>
+        <p class="section-title">💡 에디터 픽 : ${pickIndex + 1}위 ${displayCity(pickedFlight.departure?.city)}-${displayCity(pickedFlight.arrival?.city)}</p>
 
             ${editorPick}
 ${icnSection}

@@ -1,28 +1,24 @@
 .dashboard {
     min-height: 100vh;
-    padding-top: 72px;
+    padding-top: 0;
     padding-bottom: var(--spacing-2xl);
     background: transparent;
 }
 
 /* Modern Header Redesign */
 .header {
-    position: fixed;
+    position: relative;
     top: 0;
     left: 0;
     width: 100%;
     z-index: 100;
     padding: 12px 0;
-    /* Slightly increased padding */
     background: transparent;
-    /* More transparent */
     backdrop-filter: none;
-    /* Stronger blur */
     -webkit-backdrop-filter: none;
     border-bottom: none;
     box-shadow: none;
     margin-bottom: var(--spacing-lg);
-    transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease, backdrop-filter 0.3s ease;
 }
 
 .headerScrolled {
@@ -95,9 +91,11 @@
 
 @media (max-width: 768px) {
     .header {
+        position: relative;
         margin-bottom: var(--spacing-sm);
         padding: 8px 0;
-        backdrop-filter: blur(16px);
+        backdrop-filter: none;
+        transform: none !important;
     }
 
     .subtitle {
@@ -112,7 +110,7 @@
     }
 
     .dashboard {
-        padding-top: 56px;
+        padding-top: 0;
     }
 }
 
@@ -2097,5 +2095,46 @@
         left: 0;
         right: 0;
         animation: slideUpMobile 0.3s ease;
+    }
+}
+
+/* ===== 모바일 고정 필터 바 ===== */
+.stickyFilterBar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: white;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    padding: 10px 16px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    cursor: pointer;
+    text-align: center;
+    transform: translateY(-100%);
+    opacity: 0;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.stickyFilterBarVisible {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.stickyLine {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-text, #333);
+    line-height: 1.7;
+}
+
+/* 다크모드 */
+@media (prefers-color-scheme: dark) {
+    .stickyFilterBar {
+        background: #1a1a1a;
+        border-bottom-color: rgba(255, 255, 255, 0.08);
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
     }
 }

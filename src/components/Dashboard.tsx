@@ -400,6 +400,8 @@ export default function Dashboard() {
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [isCalendarOpen, setIsCalendarOpen] = useState(false);
     const [showFilters, setShowFilters] = useState(false);
+    const [isScrolled, setIsScrolled] = useState(false);
+    const [showStickyPopup, setShowStickyPopup] = useState(false);
     const [shareToast, setShareToast] = useState<string | null>(null);
     const [sharedFlightId, setSharedFlightId] = useState<string | null>(null);
     const sharedRouteFallback = useRef<{ dep: string | null; arr: string | null; date: string | null } | null>(null);
@@ -495,6 +497,7 @@ export default function Dashboard() {
         const handleScroll = () => {
             const currentY = window.scrollY;
             setShowScrollTop(currentY > 400);
+            setIsScrolled(currentY > 300);
             setHeaderScrolled(currentY > 10);
             if (currentY > lastScrollY.current && currentY > 60) {
                 setHeaderHidden(true);
@@ -976,8 +979,8 @@ export default function Dashboard() {
     // Insight Bars — 카드 사이에 삽입되는 정보 바
     // ============================================
     const generateInsightBar = (barIndex: number) => {
-        // 순서: 금요밤 → 팁 → 계절추천 → 인기도시 → 할인Top5 → 이번주말 → 가격하락 → 20만원이하 → 내일출발 → 지역현황
-        const barOrder = [15, 6, 11, 9, 7, 10, 14, 2, 8, 5];
+        // 순서: 인기도시 → 최근특가 → 할인Top5 → 계절추천 → 금요밤 → 주말출발 → 가격하락 → 20만원이하 → 내일출발 → 팁 → 지역현황
+        const barOrder = [2, 15, 7, 11, 6, 9, 14, 10, 8, 5];
         const barType = barOrder[barIndex % barOrder.length];
 
         // 공유 도시 이미지맵 & 카드 렌더러
@@ -1559,15 +1562,17 @@ export default function Dashboard() {
 
                 // 그룹핑 함수
                 const groupFlights = (list: Flight[]) => {
-                    const rm = new Map<string, { dep: string; arr: string; minPrice: number; count: number; depDate: string; arrDate: string }>();
+                    const rm = new Map<string, { dep: string; arr: string; minPrice: number; count: number; depDate: string; arrDate: string; latestSeen: string }>();
                     list.forEach((f: any) => {
                         const dep = normalizeCity(f.departure.city);
                         const arr = normalizeCity(f.arrival.city);
+                        const seen = f.firstSeen || '';
                         const existing = rm.get(arr);
                         if (!existing) {
-                            rm.set(arr, { dep, arr, minPrice: f.price, count: 1, depDate: f.departure.date, arrDate: f.arrival.date });
+                            rm.set(arr, { dep, arr, minPrice: f.price, count: 1, depDate: f.departure.date, arrDate: f.arrival.date, latestSeen: seen });
                         } else {
                             existing.count++;
+                            if (seen > existing.latestSeen) existing.latestSeen = seen;
                             if (f.price < existing.minPrice) {
                                 existing.minPrice = f.price;
                                 existing.dep = dep;
@@ -1576,7 +1581,8 @@ export default function Dashboard() {
                             }
                         }
                     });
-                    return Array.from(rm.values()).sort((a, b) => a.minPrice - b.minPrice);
+                    // 최근 등록순 (내림차순) → 같은 날이면 가격순
+                    return Array.from(rm.values()).sort((a, b) => a.latestSeen > b.latestSeen ? -1 : a.latestSeen < b.latestSeen ? 1 : a.minPrice - b.minPrice);
                 };
 
                 // 오늘 것 먼저
@@ -1688,7 +1694,7 @@ export default function Dashboard() {
 
     return (
         <div className={styles.dashboard}>
-            <header className={`${styles.header} ${headerHidden ? styles.headerHidden : ''} ${headerScrolled ? styles.headerScrolled : ''}`}>
+            <header className={`${styles.header} ${(headerHidden || (isMobile && isScrolled)) ? styles.headerHidden : ''} ${headerScrolled ? styles.headerScrolled : ''}`}>
                 <div className={styles.headerContainer}>
                     <div className={styles.headerLeft}>
                         <h1 className={styles.title} onClick={() => { goHome(); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ cursor: 'pointer' }}>
@@ -1702,6 +1708,19 @@ export default function Dashboard() {
                     </div>
                 </div>
             </header>
+
+            {/* 스크롤 시 고정 필터 바 */}
+            <div className={`${styles.stickyFilterBar} ${isScrolled ? styles.stickyFilterBarVisible : ''}`} onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+                    <div className={styles.stickyLine}>
+                        📅 {startDate ? `${startDate.slice(5).replace('-', '.')}` : '전체 날짜'}
+                        {endDate ? ` ~ ${endDate.slice(5).replace('-', '.')}` : ''}
+                    </div>
+                    <div className={styles.stickyLine}>
+                        출발지: {departureFilter === 'all' ? '전체' : departureFilter === '인천' ? '인천/김포' : departureFilter === '부산' ? '부산/김해' : departureFilter}
+                        {'  ·  '}
+                        도착지: {regionFilter === 'all' ? '전체' : regionFilter}
+                    </div>
+                </div>
 
             {/* SEO: 검색엔진 크롤러용 콘텐츠 (JavaScript 미지원 시 표시) */}
             <noscript>
@@ -1973,6 +1992,9 @@ export default function Dashboard() {
                             </div>
                         )}
 
+                        {/* 첫 번째 인사이트 바 (카드 목록 최상단) */}
+                        {!searchTerm && (() => { const bar = generateInsightBar(0); return bar; })()}
+
                         {/* 항공권 수 + 여행사/항공사/정렬 드롭다운 */}
                         <div className={styles.stats}>
                             <div className={styles.statsHeader}>
@@ -2049,10 +2071,10 @@ export default function Dashboard() {
                                 const isLowestPrice = lowestPrices[route] === flight.price;
                                 const items: React.ReactNode[] = [];
 
-                                // 9개 카드마다 인사이트 바 삽입 (검색 필터 활성화시 제외)
-                                const insightInterval = 9;
+                                // 9개 카드마다 인사이트 바 삽입 (검색 필터 활성화시 제외, 첫 바는 상단에 별도 표시)
+                                const insightInterval = isMobile ? 9 : 12;
                                 if (index > 0 && index % insightInterval === 0 && !searchTerm) {
-                                    const bar = generateInsightBar(index / insightInterval - 1);
+                                    const bar = generateInsightBar(Math.floor(index / insightInterval));
                                     if (bar) items.push(bar);
                                 }
 
