@@ -2071,10 +2071,11 @@ export default function Dashboard() {
                                 const isLowestPrice = lowestPrices[route] === flight.price;
                                 const items: React.ReactNode[] = [];
 
-                                // 9개 카드마다 인사이트 바 삽입 (검색 필터 활성화시 제외, 첫 바는 상단에 별도 표시)
+                                // 인사이트 바 삽입: 모바일 3개 후 시작(9개 간격), PC 6개 후 시작(12개 간격)
+                                const insightOffset = isMobile ? 3 : 6;
                                 const insightInterval = isMobile ? 9 : 12;
-                                if (index > 0 && index % insightInterval === 0 && !searchTerm) {
-                                    const bar = generateInsightBar(Math.floor(index / insightInterval));
+                                if (index > 0 && index >= insightOffset && (index - insightOffset) % insightInterval === 0 && !searchTerm) {
+                                    const bar = generateInsightBar(Math.floor((index - insightOffset) / insightInterval));
                                     if (bar) items.push(bar);
                                 }
 
