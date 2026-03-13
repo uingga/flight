@@ -1992,8 +1992,8 @@ export default function Dashboard() {
                             </div>
                         )}
 
-                        {/* 첫 번째 인사이트 바 (카드 목록 최상단) */}
-                        {!searchTerm && (() => { const bar = generateInsightBar(0); return bar; })()}
+
+
 
                         {/* 항공권 수 + 여행사/항공사/정렬 드롭다운 */}
                         <div className={styles.stats}>
