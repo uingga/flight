@@ -2133,8 +2133,12 @@
 /* 다크모드 */
 @media (prefers-color-scheme: dark) {
     .stickyFilterBar {
-        background: #1a1a1a;
+        background: rgba(30, 30, 30, 0.95);
         border-bottom-color: rgba(255, 255, 255, 0.08);
         box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .stickyLine {
+        color: #e0e0e0;
     }
 }
