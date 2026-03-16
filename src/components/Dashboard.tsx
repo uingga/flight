@@ -1152,7 +1152,7 @@ export default function Dashboard() {
                                 <span
                                     key={region}
                                     className={styles.insightChip}
-                                    onClick={(e) => { e.stopPropagation(); setRegionFilter(region); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                                    onClick={(e) => { e.stopPropagation(); setRegionFilter(region); setDepartureFilter('all'); setStartDate(''); setEndDate(''); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                                 >
                                     {region} <span className={styles.insightChipCount}>{count}건</span>
                                 </span>
@@ -1231,7 +1231,7 @@ export default function Dashboard() {
                                 <span
                                     key={chip.label}
                                     className={styles.insightChip}
-                                    onClick={(e) => { e.stopPropagation(); setStartDate(chip.start); setEndDate(chip.end); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                                    onClick={(e) => { e.stopPropagation(); setStartDate(chip.start); setEndDate(chip.end); setDepartureFilter('all'); setRegionFilter('all'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                                 >
                                     {chip.label} <span className={styles.insightChipCount}>{chip.count}건</span>
                                 </span>
