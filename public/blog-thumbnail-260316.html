@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #111;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 40px;
+            padding: 40px;
+        }
+
+        label {
+            color: #888;
+            font-size: 14px;
+            font-family: sans-serif;
+        }
+
+        .wide-banner {
+            width: 960px;
+            height: 480px;
+            position: relative;
+            overflow: hidden;
+            font-family: 'Noto Sans KR', sans-serif;
+            background: #000;
+        }
+
+        .square-thumb {
+            width: 800px;
+            height: 800px;
+            position: relative;
+            overflow: hidden;
+            font-family: 'Noto Sans KR', sans-serif;
+            background: #000;
+        }
+
+        .panels {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .panel {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .wide-banner .panel-1 {
+            left: 0;
+            width: 38%;
+            clip-path: polygon(0 0, 100% 0, 90% 100%, 0 100%);
+            background-image: url('images/thumb_jinan.png');
+        }
+
+        .wide-banner .panel-2 {
+            left: 30%;
+            width: 40%;
+            clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%);
+            background-image: url('images/thumb_qingdao.png');
+        }
+
+        .wide-banner .panel-3 {
+            right: 0;
+            width: 38%;
+            clip-path: polygon(10% 0, 100% 0, 100% 100%, 0 100%);
+            background-image: url('images/thumb_fukuoka.png');
+        }
+
+        .square-thumb .panel-1 {
+            left: 0;
+            width: 38%;
+            clip-path: polygon(0 0, 100% 0, 88% 100%, 0 100%);
+            background-image: url('images/thumb_jinan.png');
+        }
+
+        .square-thumb .panel-2 {
+            left: 30%;
+            width: 40%;
+            clip-path: polygon(12% 0, 100% 0, 88% 100%, 0 100%);
+            background-image: url('images/thumb_qingdao.png');
+        }
+
+        .square-thumb .panel-3 {
+            right: 0;
+            width: 38%;
+            clip-path: polygon(12% 0, 100% 0, 100% 100%, 0 100%);
+            background-image: url('images/thumb_fukuoka.png');
+        }
+
+        .text-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 55%;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.65) 60%, transparent 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            padding-bottom: 36px;
+            z-index: 10;
+        }
+
+        .text-overlay-full {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.92) 0%, rgba(0, 0, 0, 0.6) 50%, rgba(0, 0, 0, 0.25) 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .line1 {
+            color: white;
+            font-size: 42px;
+            font-weight: 900;
+            text-shadow: 3px 3px 10px rgba(0, 0, 0, 0.7);
+            letter-spacing: -1px;
+        }
+
+        .line2 {
+            color: white;
+            font-size: 36px;
+            font-weight: 800;
+            text-shadow: 3px 3px 10px rgba(0, 0, 0, 0.7);
+            letter-spacing: -1px;
+            margin-top: 6px;
+        }
+
+        .line-accent {
+            color: #ffd700;
+            font-size: 28px;
+            font-weight: 800;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
+            margin-top: 12px;
+        }
+
+        .site-badge {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            padding: 6px 20px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            margin-top: 16px;
+            backdrop-filter: blur(4px);
+        }
+
+        .square-thumb .line1 {
+            font-size: 100px;
+            line-height: 1.1;
+        }
+
+        .square-thumb .line-accent {
+            font-size: 42px;
+            margin-top: 24px;
+        }
+
+        .square-thumb .site-badge {
+            font-size: 24px;
+            margin-top: 24px;
+            padding: 8px 24px;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@700;800;900&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <label>와이드 배너 (960×480) - 블로그 헤더용</label>
+    <div class="wide-banner" id="wide-banner">
+        <div class="panels">
+            <div class="panel panel-1"></div>
+            <div class="panel panel-2"></div>
+            <div class="panel panel-3"></div>
+        </div>
+        <div class="text-overlay">
+            <div class="line1">[3/16] 땡처리 항공권 특가 Top 3 🔥</div>
+            <div class="line2">지난 왕복 14만원 ✈️</div>
+            <div class="site-badge">티키티킷 tikitikit.kr</div>
+        </div>
+    </div>
+
+    <label>정사각 썸네일 (800×800) - 네이버 블로그 썸네일용</label>
+    <div class="square-thumb" id="square-thumb">
+        <div class="panels">
+            <div class="panel panel-1"></div>
+            <div class="panel panel-2"></div>
+            <div class="panel panel-3"></div>
+        </div>
+        <div class="text-overlay-full">
+            <div class="line1" style="font-size: 90px; line-height: 1.15;">[3/16]<br>땡처리 항공권<br>특가 Top 3 🔥</div>
+            <div class="line-accent">지난 14만 · 칭다오 14만</div>
+            <div class="site-badge">티키티킷 tikitikit.kr</div>
+        </div>
+    </div>
+</body>
+
+</html>
