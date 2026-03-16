@@ -142,7 +142,10 @@ const CITY_DESCRIPTIONS = {
         variants: [
             { lines: ['칭다오 맥주의 본고장에서 생맥주 한 잔 🍺', '잔교(잔치아오)에서 야경 보며 해산물 한 상!'], closing: '치맥 값으로 해외여행이죠.' },
             { lines: ['해변 따라 독일풍 건물 산책 🍺', '칭다오 맥주 박물관에서 시음까지!'], closing: '비행 1시간 반이면 도착하는 가까운 해외.' },
-            { lines: ['바다 앞 노천 맥주집에서 건배 🍻', '라오산 절벽 위 풍경은 덤!'], closing: '주말 여행으로도 딱이에요.' },
+            { lines: ['뚱카롱만한 조개구이에 칭다오 생맥주 한 잔 🍺', '라오산 절벽 위 풍경은 덤!'], closing: '주말 여행으로도 딱이에요.' },
+            { lines: ['팔대관 이국풍 거리에서 산책하고 🏛️', '피칭루 바에서 칭다오 생맥주 한 모금!'], closing: '가까운 중국 해변 도시의 매력.' },
+            { lines: ['잔교 야경 아래 해산물 한 상 🦀', '맥주 박물관에서 A·B라인 비교 시음까지!'], closing: '맥주 좋아하면 무조건 칭다오.' },
+            { lines: ['중산루 거리에서 현지 간식 투어 🍢', '올림픽 요트센터에서 바다 뷰 감상!'], closing: '비행 짧고 물가 착한 근거리 여행.' },
         ],
     },
     '청도': {
@@ -158,6 +161,9 @@ const CITY_DESCRIPTIONS = {
             { lines: ['하카타 라멘의 본고장에서 진짜 돈코츠 한 그릇 🍜', '텐진 거리에서 쇼핑하고 모츠나베까지!'], closing: '라멘 값으로 일본 여행이죠.' },
             { lines: ['나카스 야타이 거리에서 현지인처럼 한 잔 🍶', '오호리 공원 산책하며 여유로운 하루!'], closing: '가까운 일본, 부담 없이 다녀오세요.' },
             { lines: ['캐널시티에서 쇼핑하고 🛍️', '야나가와 뱃놀이로 소도시 감성까지!'], closing: '당일치기도 가능한 가까운 일본.' },
+            { lines: ['텐진 야타이에서 라멘 한 그릇 🍜', '다자이후 텐만구 산책은 필수 코스!'], closing: '먹방+감성 두 마리 토끼.' },
+            { lines: ['모츠나베 한 냄비에 소주 한 잔 🍶', '하카타 리버레인에서 강변 산책까지!'], closing: '편한 일본 여행의 정석.' },
+            { lines: ['이치란 본점에서 원조 라멘 도전 🍜', '마린월드에서 해양생물 구경까지!'], closing: '미식+관광 조합 최고.' },
         ],
     },
     '오사카': {
@@ -273,6 +279,9 @@ const CITY_DESCRIPTIONS = {
         variants: [
             { lines: ['천하제일의 샘, 바오투취안 공원 ⛲', '대명호 산책하며 여유로운 하루!'], closing: '중국 역사와 자연이 어우러진 도시.' },
             { lines: ['제남 구시가지에서 거리 음식 탐방 🍜', '천포 광장에서 현지 문화 체험!'], closing: '가성비 좋은 중국 소도시 여행.' },
+            { lines: ['대명호 야경 산책에 산동 만두까지 🥟', '여유롭게 즐기는 소도시 감성!'], closing: '비행 짧고 물가 착한 최적의 여행지.' },
+            { lines: ['취안청 광장에서 분수 쇼 감상 ⛲', '산동 가정식 한 상으로 현지 맛 체험!'], closing: '관광객 적은 중국 소도시의 매력.' },
+            { lines: ['흑호천 야시장에서 산동 간식 투어 🍡', '천불산 하이킹으로 도시 전경 감상!'], closing: '먹거리와 자연 둘 다 만족.' },
         ],
     },
     '옌타이': {
@@ -365,6 +374,15 @@ const TIP_POOLS = {
         '💡 여행자보험은 출발 당일까지 가입 가능! 카드사 무료 보험도 꼭 확인해보세요.',
         '💡 환전 TIP: 공항보다 시중은행 온라인 환전이 평균 1~2% 더 유리합니다.',
         '💡 공항 면세점보다 시내 면세점이 더 저렴한 경우가 많아요. 미리 온라인 주문하면 공항 픽업도 가능!',
+        '💡 항공권 알림 TIP: 원하는 노선과 가격을 설정해두면 알림을 받을 수 있어요.',
+        '💡 출발 3일 전 체크인 오픈! 미리 좌석 선택하면 좋은 자리 선점 가능.',
+        '💡 공항 라운지 TIP: PP카드 없어도 네이버페이로 5천원대 라운지 이용 가능한 곳도 있어요.',
+        '💡 해외 데이터 TIP: 공항 로밍보다 이심(eSIM)이 평균 30~50% 저렴합니다.',
+        '💡 좌석 TIP: 비상구 좌석은 사전 구매가 유료지만, 체크인 때 남아있으면 무료로 배정되기도 해요.',
+        '💡 환율 TIP: 트래블월렛·트래블로그 같은 선불카드를 쓰면 수수료 없이 현지 결제 가능!',
+        '💡 짐 꿀팁: 압축팩 쓰면 기내용 캐리어에 3박치 옷 거뜬히 들어갑니다.',
+        '💡 현지 교통 TIP: 구글맵으로 대중교통 검색하면 현지 버스·지하철 노선까지 한눈에!',
+        '💡 출입국 TIP: 자동출입국 등록하면 공항에서 줄 안 서고 바로 통과!',
     ],
     // 태평양 리조트
     pacific: [
@@ -470,13 +488,10 @@ async function main() {
         fs.mkdirSync(CARDS_DIR, { recursive: true });
     }
 
-    // 인천 출발 중 Top 3에 포함되지 않은 것도 따로 수집
-    const icnInTop = topFlights.filter(f => normalizeCity(f.departure?.city) === '인천' || normalizeCity(f.departure?.city) === '김포');
-    // 인천 출발 섹션: 총 3개 (Top 3 중 인천 1개 + 비중복 2개)
+    // 인천 출발 섹션: Top 3와 중복 없이 3개 (최저가 1 + 할인율순 2)
     const ICN_SECTION_TOTAL = 3;
-    const ICN_EXTRA_COUNT = 2; // Top 3와 겹치지 않는 인천 출발 항공편
-    const icnExtra = getExtraIncheonFlights(flights, topFlights, ICN_EXTRA_COUNT, recentDests, priceDropDestNames);
-    const allIcnFlights = [...icnInTop.slice(0, 1), ...icnExtra].slice(0, ICN_SECTION_TOTAL);
+    const icnExtra = getExtraIncheonFlights(flights, topFlights, ICN_SECTION_TOTAL, recentDests, priceDropDestNames);
+    const allIcnFlights = icnExtra;
 
     const allScreenshotFlights = [...topFlights, ...icnExtra];
     await captureCardScreenshots(allScreenshotFlights, topFlights.length);
@@ -649,25 +664,62 @@ function selectTopWithIncheon(sortedFlights, recentDests = [], priceDropDests = 
     return topFlights;
 }
 
-// ===== 인천 추가 항공편 (Top N 밖, 최근 중복 제외, 가격 하락 면제) =====
+// ===== 인천 추가 항공편 (1개 최저가 + 2개 할인율순, Top 3 중복·최근 중복 제외) =====
 function getExtraIncheonFlights(allFlights, topFlights, maxExtra, recentDests = [], priceDropDests = []) {
     const topIds = new Set(topFlights.map(f => `${f.departure?.city}|${f.arrival?.city}|${f.departure?.date}|${f.airline}`));
-    const topDests = new Set(topFlights.filter(f => normalizeCity(f.departure?.city) === '인천' || normalizeCity(f.departure?.city) === '김포').map(f => normalizeCity(f.arrival?.city)));
+    const topDests = new Set(topFlights.map(f => normalizeCity(f.arrival?.city)));
     const priceDropSet = new Set(priceDropDests);
     const recentSet = new Set(recentDests.filter(d => !priceDropSet.has(d)));
-    const extras = [];
-    const seenDests = new Set(topDests);
 
+    // 인천/김포 출발만 필터 + Top3 중복·최근 중복 제외
+    const candidates = [];
+    const seenDests = new Set();
     for (const f of allFlights) {
-        if (extras.length >= maxExtra) break;
-        if (normalizeCity(f.departure?.city) !== '인천' && normalizeCity(f.departure?.city) !== '김포') continue;
+        const depCity = normalizeCity(f.departure?.city);
+        if (depCity !== '인천' && depCity !== '김포') continue;
         const key = `${f.departure?.city}|${f.arrival?.city}|${f.departure?.date}|${f.airline}`;
         if (topIds.has(key)) continue;
         const dest = normalizeCity(f.arrival?.city);
-        if (seenDests.has(dest) || recentSet.has(dest)) continue;
+        if (topDests.has(dest) || recentSet.has(dest)) continue;
+        if (seenDests.has(dest)) continue;
         seenDests.add(dest);
+        candidates.push(f);
+    }
+
+    const extras = [];
+    const usedDests = new Set();
+
+    // 1단계: 가격 최저 1개
+    const byPrice = [...candidates].sort((a, b) => a.price - b.price);
+    if (byPrice.length > 0) {
+        extras.push(byPrice[0]);
+        usedDests.add(normalizeCity(byPrice[0].arrival?.city));
+    }
+
+    // 2단계: 할인율 높은 순 2개 (1단계와 도시 중복 제외)
+    const byDiscount = [...candidates]
+        .filter(f => (f.discountRate || 0) > 0 && !usedDests.has(normalizeCity(f.arrival?.city)))
+        .sort((a, b) => (b.discountRate || 0) - (a.discountRate || 0));
+
+    for (const f of byDiscount) {
+        if (extras.length >= maxExtra) break;
+        const dest = normalizeCity(f.arrival?.city);
+        if (usedDests.has(dest)) continue;
+        usedDests.add(dest);
         extras.push(f);
     }
+
+    // 3단계: 할인율 있는 게 부족하면 가격순으로 보충
+    if (extras.length < maxExtra) {
+        for (const f of byPrice) {
+            if (extras.length >= maxExtra) break;
+            const dest = normalizeCity(f.arrival?.city);
+            if (usedDests.has(dest)) continue;
+            usedDests.add(dest);
+            extras.push(f);
+        }
+    }
+
     return extras;
 }
 
@@ -1110,94 +1162,72 @@ function generateSmartIntro(topFlights, now) {
         '일본': '🇯🇵', '중국': '🇨🇳', '동남아': '🌴', '대만': '🇹🇼', '괌/사이판': '🏝️',
     };
 
-    let lines = [];
+    // 인트로 로테이션 풀 — 조건별 다양한 멘트 (네이버 저품질 방지)
+    const INTRO_POOLS = {
+        budget: [
+            [`<p>오늘 진짜 괜찮은 가격이 떴어요 🔥</p>`, `<p>&nbsp;</p>`, `<p>${cities[0]} 왕복 ${priceMan}만원대,</p>`, `<p>이 가격이면 고민하면 늦어요!</p>`],
+            [`<p>${priceMan}만원대 해외여행, 실화인가요? ✈️</p>`, `<p>&nbsp;</p>`, `<p>${cities[0]} 왕복이 이 가격이면</p>`, `<p>좌석 빠지기 전에 확인해보세요!</p>`],
+            [`<p>KTX 왕복보다 싼 항공권 발견 💰</p>`, `<p>&nbsp;</p>`, `<p>${cities[0]} ${priceMan}만원대,</p>`, `<p>이런 가격은 오래 안 가요!</p>`],
+            [`<p>오늘의 특가, 가격 보고 깜짝 놀랐어요 😲</p>`, `<p>&nbsp;</p>`, `<p>${cities[0]} 왕복 ${priceMan}만원대!</p>`, `<p>망설이면 놓칩니다.</p>`],
+            [`<p>${cities[0]} ${priceMan}만원이면 커피값 수준 ☕</p>`, `<p>&nbsp;</p>`, `<p>이 정도 가격의 항공권은</p>`, `<p>자주 나오지 않아요!</p>`],
+        ],
+        china: [
+            [`<p>오늘은 중국 쪽 특가가 많이 풀렸어요 🇨🇳</p>`, `<p>&nbsp;</p>`, `<p>가성비 좋은 근거리 여행지로</p>`, `<p>가볍게 다녀올 수 있는 곳들이에요.</p>`],
+            [`<p>중국 근거리 특가가 쏟아졌어요 🇨🇳</p>`, `<p>&nbsp;</p>`, `<p>비행 2시간 이내,</p>`, `<p>주말 여행으로도 충분해요!</p>`],
+            [`<p>가까운 중국 여행, 오늘 가격 괜찮네요 🇨🇳</p>`, `<p>&nbsp;</p>`, `<p>물가도 저렴하고 비행도 짧아서</p>`, `<p>부담 없이 다녀올 수 있어요.</p>`],
+        ],
+        japanCherry: [
+            [`<p>벚꽃 시즌이 다가오고 있네요 🌸</p>`, `<p>&nbsp;</p>`, `<p>일본 쪽 특가가 많이 풀리는 시기라</p>`, `<p>눈여겨볼 만한 것들이 있어요.</p>`],
+            [`<p>벚꽃 구경 갈 타이밍이에요 🌸</p>`, `<p>&nbsp;</p>`, `<p>일본행 특가가 속속 올라오고 있어요.</p>`, `<p>지금이 예약 적기!</p>`],
+            [`<p>일본 벚꽃 시즌, 항공권도 활짝 🌸</p>`, `<p>&nbsp;</p>`, `<p>꽃 구경 가기 좋은 가격의</p>`, `<p>항공권들이 나왔어요.</p>`],
+        ],
+        japan: [
+            [`<p>일본 쪽 특가가 많이 올라왔어요 🇯🇵</p>`, `<p>&nbsp;</p>`, `<p>소도시부터 대도시까지</p>`, `<p>다양한 옵션이 있으니 확인해보세요.</p>`],
+            [`<p>일본 여행 계획 있다면 주목! 🇯🇵</p>`, `<p>&nbsp;</p>`, `<p>오늘 괜찮은 가격들이 풀렸어요.</p>`, `<p>라인업 한번 보세요.</p>`],
+            [`<p>일본행 항공권, 오늘 가격 좋아요 🇯🇵</p>`, `<p>&nbsp;</p>`, `<p>가까운 일본이라 부담도 적고</p>`, `<p>가성비도 좋은 옵션들이에요.</p>`],
+        ],
+        seAsia: [
+            [`<p>동남아 특가가 쏟아지고 있어요 🌴</p>`, `<p>&nbsp;</p>`, `<p>따뜻한 곳에서 힐링하고 싶다면</p>`, `<p>오늘 라인업 한번 보세요!</p>`],
+            [`<p>따뜻한 곳으로 떠나고 싶은 날이에요 🌴</p>`, `<p>&nbsp;</p>`, `<p>동남아 특가가 여러 개 올라왔어요.</p>`, `<p>비치에서 쉬고 싶다면 지금!</p>`],
+            [`<p>동남아 항공권, 오늘 가격이 착해요 🏖️</p>`, `<p>&nbsp;</p>`, `<p>리조트 힐링부터 맛집 투어까지</p>`, `<p>선택지가 다양합니다.</p>`],
+        ],
+        mixed: [
+            [`<p>오늘은 ${uniqueRegions.slice(0, 2).join(', ')} 등</p>`, `<p>다양한 지역의 특가가 올라왔어요 ✈️</p>`, `<p>&nbsp;</p>`, `<p>취향에 맞는 여행지가 있을지도!</p>`],
+            [`<p>${uniqueRegions.slice(0, 2).join('부터 ')}까지</p>`, `<p>오늘 특가 라인업이 다채로워요 ✈️</p>`, `<p>&nbsp;</p>`, `<p>어디로 떠날지 골라보세요!</p>`],
+            [`<p>여러 지역에서 동시에 특가가! 🌏</p>`, `<p>&nbsp;</p>`, `<p>${uniqueRegions.slice(0, 2).join(', ')} 쪽으로</p>`, `<p>괜찮은 가격들이 올라왔어요.</p>`],
+        ],
+        friday: [
+            [`<p>금요일이에요! 주말 앞두고</p>`, `<p>갑자기 떠나고 싶어질 때 있잖아요 ✈️</p>`, `<p>&nbsp;</p>`, `<p>오늘의 특가 라인업 정리해봤어요.</p>`],
+            [`<p>금요일 특가 정리해왔어요 🎉</p>`, `<p>&nbsp;</p>`, `<p>주말에 뭐 할지 고민된다면</p>`, `<p>항공권부터 확인해보세요!</p>`],
+            [`<p>불금이니까 여행 얘기 해야죠 ✈️</p>`, `<p>&nbsp;</p>`, `<p>오늘의 땡처리 특가,</p>`, `<p>주말 계획에 참고하세요!</p>`],
+        ],
+        monday: [
+            [`<p>월요일부터 여행 얘기하면</p>`, `<p>한 주가 좀 더 기대되지 않나요? 😊</p>`, `<p>&nbsp;</p>`, `<p>오늘의 땡처리 특가 정리해봤어요.</p>`],
+            [`<p>월요일부터 이런 가격이라니 ✈️</p>`, `<p>&nbsp;</p>`, `<p>한 주의 시작,</p>`, `<p>여행 계획으로 힘내봐요!</p>`],
+            [`<p>월요병 치료제는 항공권 특가 💊</p>`, `<p>&nbsp;</p>`, `<p>오늘 올라온 것들 중에</p>`, `<p>눈에 띄는 것들 모아봤어요.</p>`],
+        ],
+        default: [
+            [`<p>오늘도 괜찮은 특가가 올라왔어요.</p>`, `<p>&nbsp;</p>`, `<p>항공권은 타이밍이 중요하니까</p>`, `<p>한번 확인해보세요 👇</p>`],
+            [`<p>오늘의 항공권 특가 정리해봤어요 ✈️</p>`, `<p>&nbsp;</p>`, `<p>매일 가격이 바뀌니까</p>`, `<p>눈에 띄는 게 있으면 바로!</p>`],
+            [`<p>새로운 땡처리 항공권이 올라왔어요 🔥</p>`, `<p>&nbsp;</p>`, `<p>오늘의 라인업,</p>`, `<p>한번 살펴보세요!</p>`],
+            [`<p>항공권 가격은 매일 달라져요 📉</p>`, `<p>&nbsp;</p>`, `<p>오늘은 어떤 특가가 있는지</p>`, `<p>정리해봤습니다!</p>`],
+        ],
+    };
 
-    // 1) 가격이 매우 저렴한 경우 (15만원 이하)
-    if (priceMan <= 15) {
-        lines = [
-            `<p>오늘 진짜 괜찮은 가격이 떴어요 🔥</p>`,
-            `<p>&nbsp;</p>`,
-            `<p>${cities[0]} 왕복 ${priceMan}만원대,</p>`,
-            `<p>이 가격이면 고민하면 늦어요!</p>`,
-        ];
-    }
-    // 2) 하나의 지역에 집중된 경우
+    let pool;
+    if (priceMan <= 15) pool = INTRO_POOLS.budget;
     else if (dominantRegion !== '기타' && regionCount[dominantRegion] >= 2) {
-        const emoji = regionEmoji[dominantRegion] || '✈️';
-        if (dominantRegion === '중국') {
-            lines = [
-                `<p>오늘은 중국 쪽 특가가 많이 풀렸어요 ${emoji}</p>`,
-                `<p>&nbsp;</p>`,
-                `<p>가성비 좋은 근거리 여행지로</p>`,
-                `<p>가볍게 다녀올 수 있는 곳들이에요.</p>`,
-            ];
-        } else if (dominantRegion === '일본') {
-            if (month >= 3 && month <= 4) {
-                lines = [
-                    `<p>벚꽃 시즌이 다가오고 있네요 🌸</p>`,
-                    `<p>&nbsp;</p>`,
-                    `<p>일본 쪽 특가가 많이 풀리는 시기라</p>`,
-                    `<p>눈여겨볼 만한 것들이 있어요.</p>`,
-                ];
-            } else {
-                lines = [
-                    `<p>일본 쪽 특가가 많이 올라왔어요 ${emoji}</p>`,
-                    `<p>&nbsp;</p>`,
-                    `<p>소도시부터 대도시까지</p>`,
-                    `<p>다양한 옵션이 있으니 확인해보세요.</p>`,
-                ];
-            }
-        } else if (dominantRegion === '동남아') {
-            lines = [
-                `<p>동남아 특가가 쏟아지고 있어요 ${emoji}</p>`,
-                `<p>&nbsp;</p>`,
-                `<p>따뜻한 곳에서 힐링하고 싶다면</p>`,
-                `<p>오늘 라인업 한번 보세요!</p>`,
-            ];
-        } else {
-            lines = [
-                `<p>${dominantRegion} 쪽 특가가 많이 풀렸어요 ${emoji}</p>`,
-                `<p>&nbsp;</p>`,
-                `<p>오늘의 라인업 정리해봤습니다.</p>`,
-            ];
-        }
+        if (dominantRegion === '중국') pool = INTRO_POOLS.china;
+        else if (dominantRegion === '일본') pool = (month >= 3 && month <= 4) ? INTRO_POOLS.japanCherry : INTRO_POOLS.japan;
+        else if (dominantRegion === '동남아') pool = INTRO_POOLS.seAsia;
+        else pool = INTRO_POOLS.default;
     }
-    // 3) 다양한 지역이 섞인 경우
-    else if (uniqueRegions.length >= 2) {
-        const regionText = uniqueRegions.slice(0, 2).join(', ');
-        lines = [
-            `<p>오늘은 ${regionText} 등</p>`,
-            `<p>다양한 지역의 특가가 올라왔어요 ✈️</p>`,
-            `<p>&nbsp;</p>`,
-            `<p>취향에 맞는 여행지가 있을지도!</p>`,
-        ];
-    }
-    // 4) 요일 기반 폴백
-    else {
-        if (dayOfWeek === 5) { // 금요일
-            lines = [
-                `<p>금요일이에요! 주말 앞두고</p>`,
-                `<p>갑자기 떠나고 싶어질 때 있잖아요 ✈️</p>`,
-                `<p>&nbsp;</p>`,
-                `<p>오늘의 특가 라인업 정리해봤어요.</p>`,
-            ];
-        } else if (dayOfWeek === 1) { // 월요일
-            lines = [
-                `<p>월요일부터 여행 얘기하면</p>`,
-                `<p>한 주가 좀 더 기대되지 않나요? 😊</p>`,
-                `<p>&nbsp;</p>`,
-                `<p>오늘의 땡처리 특가 정리해봤어요.</p>`,
-            ];
-        } else {
-            lines = [
-                `<p>오늘도 괜찮은 특가가 올라왔어요.</p>`,
-                `<p>&nbsp;</p>`,
-                `<p>항공권은 타이밍이 중요하니까</p>`,
-                `<p>한번 확인해보세요 👇</p>`,
-            ];
-        }
-    }
+    else if (uniqueRegions.length >= 2) pool = INTRO_POOLS.mixed;
+    else if (dayOfWeek === 5) pool = INTRO_POOLS.friday;
+    else if (dayOfWeek === 1) pool = INTRO_POOLS.monday;
+    else pool = INTRO_POOLS.default;
 
+    const lines = pickRandom(pool);
     return lines.join('\n        ');
 }
 
@@ -1481,11 +1511,16 @@ ${tipSection}
         <hr class="divider">
 
         <p>&nbsp;</p>
-        <p>오늘 소개한 특가 외에도</p>
-        <p>매일 새로운 땡처리 항공권이 올라오고 있어요.</p>
-        <p>&nbsp;</p>
-        <p>혹시 원하는 날짜나 목적지가 따로 있다면</p>
-        <p>한번 들러서 확인해보세요 😊</p>
+        ${pickRandom([
+            `<p>오늘 소개한 특가 외에도</p>\n        <p>매일 새로운 땡처리 항공권이 올라오고 있어요.</p>\n        <p>&nbsp;</p>\n        <p>혹시 원하는 날짜나 목적지가 따로 있다면</p>\n        <p>한번 들러서 확인해보세요 😊</p>`,
+            `<p>특가는 매일 바뀌니까,</p>\n        <p>출발 전에 한번 비교해보는 것도 좋아요.</p>\n        <p>&nbsp;</p>\n        <p>내가 원하는 날짜에 더 싼 게 있을 수도! 😊</p>`,
+            `<p>항공권은 타이밍이에요 ⏰</p>\n        <p>좋은 가격은 빨리 사라지니까</p>\n        <p>&nbsp;</p>\n        <p>마음에 드는 게 있다면 바로 확인!</p>`,
+            `<p>매일 새로운 특가가 올라오고 있어요.</p>\n        <p>&nbsp;</p>\n        <p>다음 여행지를 고민 중이라면</p>\n        <p>한번 구경해보세요 ✈️</p>`,
+            `<p>오늘 본 가격이 내일은 없을 수도 있어요.</p>\n        <p>&nbsp;</p>\n        <p>여행 계획이 있다면</p>\n        <p>지금 한번 확인해보세요 😊</p>`,
+            `<p>좋은 항공권은 금방 사라져요 💨</p>\n        <p>&nbsp;</p>\n        <p>관심 있는 노선이 있다면</p>\n        <p>가격 비교해보는 걸 추천해요!</p>`,
+            `<p>땡처리 항공권은 매일 업데이트돼요.</p>\n        <p>&nbsp;</p>\n        <p>아직 원하는 게 없었다면</p>\n        <p>내일 다시 한번 확인해보세요 🙂</p>`,
+            `<p>여행은 가격이 맞을 때가 타이밍이에요.</p>\n        <p>&nbsp;</p>\n        <p>오늘의 특가 중 마음에 드는 게 있다면</p>\n        <p>놓치지 마세요! ✈️</p>`,
+        ])}
         <p>&nbsp;</p>
         <p><a href="https://tikitikit.kr" class="cta-link">tikitikit.kr</a></p>
 
