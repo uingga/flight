@@ -2135,12 +2135,32 @@
 @media (max-width: 640px) {
     .stickyChips {
         flex-wrap: wrap;
+        gap: 2px 10px;
     }
 
     .stickyChipWrap:first-child {
         flex: 1 1 100%;
         display: flex;
         justify-content: center;
+    }
+
+    .stickyChip {
+        padding: 3px 4px;
+        border: none;
+        background: transparent;
+        font-size: 0.75rem;
+        border-radius: 0;
+    }
+
+    .stickyChipActive {
+        background: transparent;
+        border: none;
+        color: #4f46e5;
+    }
+
+    .stickyChipOpen {
+        background: transparent;
+        border: none;
     }
 }
 
