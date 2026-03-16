@@ -2145,22 +2145,22 @@
     }
 
     .stickyChip {
-        padding: 3px 4px;
-        border: none;
-        background: transparent;
-        font-size: 0.75rem;
-        border-radius: 0;
+        padding: 3px 4px !important;
+        border: none !important;
+        background: transparent !important;
+        font-size: 0.75rem !important;
+        border-radius: 0 !important;
     }
 
     .stickyChipActive {
-        background: transparent;
-        border: none;
-        color: #4f46e5;
+        background: transparent !important;
+        border: none !important;
+        color: inherit !important;
     }
 
     .stickyChipOpen {
-        background: transparent;
-        border: none;
+        background: transparent !important;
+        border: none !important;
     }
 }
 
