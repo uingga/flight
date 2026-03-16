@@ -979,8 +979,8 @@ export default function Dashboard() {
     // Insight Bars — 카드 사이에 삽입되는 정보 바
     // ============================================
     const generateInsightBar = (barIndex: number) => {
-        // 순서: 인기도시 → 최근특가 → 할인Top5 → 계절추천 → 금요밤 → 주말출발 → 가격하락 → 20만원이하 → 내일출발 → 팁 → 지역현황
-        const barOrder = [2, 15, 7, 11, 6, 9, 14, 10, 8, 5];
+        // 순서: 인기도시 → 최근특가 → 가격하락 → 20만원이하 → 내일출발 → 3일이내 → 금요밤 → 주말출발 → 계절추천 → 지역현황
+        const barOrder = [2, 15, 14, 10, 8, 7, 6, 9, 11, 5];
         const barType = barOrder[barIndex % barOrder.length];
 
         // 공유 도시 이미지맵 & 카드 렌더러
