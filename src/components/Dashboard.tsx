@@ -1710,17 +1710,125 @@ export default function Dashboard() {
             </header>
 
             {/* 스크롤 시 고정 필터 바 */}
-            <div className={`${styles.stickyFilterBar} ${isScrolled ? styles.stickyFilterBarVisible : ''}`} onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
-                    <div className={styles.stickyLine}>
-                        📅 {startDate ? `${startDate.slice(5).replace('-', '.')}` : '전체 날짜'}
-                        {endDate ? ` ~ ${endDate.slice(5).replace('-', '.')}` : ''}
-                    </div>
-                    <div className={styles.stickyLine}>
-                        출발지: {departureFilter === 'all' ? '전체' : departureFilter === '인천' ? '인천/김포' : departureFilter === '부산' ? '부산/김해' : departureFilter}
-                        {'  ·  '}
-                        도착지: {regionFilter === 'all' ? '전체' : regionFilter}
+            {(() => {
+                const [stickyDrop, setStickyDrop] = React.useState<'date' | 'departure' | 'region' | null>(null);
+                return (
+                <div className={`${styles.stickyFilterBar} ${isScrolled ? styles.stickyFilterBarVisible : ''}`}>
+                    {stickyDrop && <div className={styles.stickyBackdrop} onClick={() => setStickyDrop(null)} />}
+                    <div className={styles.stickyChips}>
+                        {/* 날짜 칩 */}
+                        <div className={styles.stickyChipWrap}>
+                            <button
+                                className={`${styles.stickyChip} ${startDate ? styles.stickyChipActive : ''} ${stickyDrop === 'date' ? styles.stickyChipOpen : ''}`}
+                                onClick={(e) => { e.stopPropagation(); setStickyDrop(stickyDrop === 'date' ? null : 'date'); }}
+                            >
+                                📅 {startDate ? `${startDate.slice(5).replace('-', '.')}` : '전체'}
+                                {endDate ? ` ~ ${endDate.slice(5).replace('-', '.')}` : ''}
+                                <span className={styles.stickyChevron}>{stickyDrop === 'date' ? '▲' : '▼'}</span>
+                            </button>
+                            {stickyDrop === 'date' && (
+                                <div className={`${styles.stickyMiniDrop} ${styles.stickyMiniDropLeft}`}>
+                                    <DatePicker
+                                        selectsRange={true}
+                                        startDate={toDate(startDate)}
+                                        endDate={toDate(endDate)}
+                                        onChange={(update: [Date | null, Date | null]) => {
+                                            const [start, end] = update;
+                                            setStartDate(toStr(start));
+                                            setEndDate(toStr(end));
+                                            if (end) {
+                                                gtag.trackDateFilter(toStr(start), toStr(end));
+                                                setStickyDrop(null);
+                                            }
+                                        }}
+                                        locale={ko}
+                                        inline
+                                        minDate={new Date()}
+                                        calendarClassName={styles.stickyCalendar}
+                                    />
+                                    {(startDate || endDate) && (
+                                        <button
+                                            className={styles.stickyResetBtn}
+                                            onClick={() => { setStartDate(''); setEndDate(''); setStickyDrop(null); }}
+                                        >
+                                            날짜 초기화
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* 출발 칩 */}
+                        <div className={styles.stickyChipWrap}>
+                            <button
+                                className={`${styles.stickyChip} ${departureFilter !== 'all' ? styles.stickyChipActive : ''} ${stickyDrop === 'departure' ? styles.stickyChipOpen : ''}`}
+                                onClick={(e) => { e.stopPropagation(); setStickyDrop(stickyDrop === 'departure' ? null : 'departure'); }}
+                            >
+                                ✈️ 출발 {departureFilter === 'all' ? '전체' : departureFilter === '인천' ? '인천/김포' : departureFilter === '부산' ? '부산/김해' : departureFilter}
+                                <span className={styles.stickyChevron}>{stickyDrop === 'departure' ? '▲' : '▼'}</span>
+                            </button>
+                            {stickyDrop === 'departure' && (
+                                <div className={styles.stickyMiniDrop}>
+                                    <div className={styles.stickyMiniList}>
+                                        {[
+                                            { value: 'all', label: '전체' },
+                                            { value: '인천', label: '인천/김포' },
+                                            { value: '부산', label: '부산/김해' },
+                                            { value: '대구', label: '대구' },
+                                            { value: '청주', label: '청주' },
+                                            { value: '제주', label: '제주' },
+                                        ].map((opt) => (
+                                            <button
+                                                key={opt.value}
+                                                className={`${styles.stickyOptionChip} ${departureFilter === opt.value ? styles.stickyOptionActive : ''}`}
+                                                onClick={() => { setDepartureFilter(opt.value); gtag.trackFilterChange('departure', opt.value); setStickyDrop(null); }}
+                                            >
+                                                {opt.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* 도착 칩 */}
+                        <div className={styles.stickyChipWrap}>
+                            <button
+                                className={`${styles.stickyChip} ${regionFilter !== 'all' ? styles.stickyChipActive : ''} ${stickyDrop === 'region' ? styles.stickyChipOpen : ''}`}
+                                onClick={(e) => { e.stopPropagation(); setStickyDrop(stickyDrop === 'region' ? null : 'region'); }}
+                            >
+                                📍 도착 {regionFilter === 'all' ? '전체' : regionFilter}
+                                <span className={styles.stickyChevron}>{stickyDrop === 'region' ? '▲' : '▼'}</span>
+                            </button>
+                            {stickyDrop === 'region' && (
+                                <div className={`${styles.stickyMiniDrop} ${styles.stickyMiniDropRight}`}>
+                                    <div className={styles.stickyMiniList}>
+                                        {[
+                                            { value: 'all', label: '전체' },
+                                            { value: '동남아', label: '동남아' },
+                                            { value: '일본', label: '일본' },
+                                            { value: '중국', label: '중국' },
+                                            { value: '미주', label: '미주' },
+                                            { value: '유럽', label: '유럽' },
+                                            { value: '남태평양', label: '남태평양' },
+                                            { value: '기타', label: '기타' },
+                                        ].map((opt) => (
+                                            <button
+                                                key={opt.value}
+                                                className={`${styles.stickyOptionChip} ${regionFilter === opt.value ? styles.stickyOptionActive : ''}`}
+                                                onClick={() => { setRegionFilter(opt.value); setStickyDrop(null); }}
+                                            >
+                                                {opt.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
+                );
+            })()}
 
             {/* SEO: 검색엔진 크롤러용 콘텐츠 (JavaScript 미지원 시 표시) */}
             <noscript>

@@ -2105,40 +2105,241 @@
     left: 0;
     right: 0;
     z-index: 1000;
-    background: white;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     padding: 10px 16px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-    cursor: pointer;
-    text-align: center;
-    transform: translateY(-100%);
     opacity: 0;
-    transition: transform 0.3s ease, opacity 0.3s ease;
+    transform: translateY(-100%);
     pointer-events: none;
+    transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
 .stickyFilterBarVisible {
-    transform: translateY(0);
     opacity: 1;
+    transform: translateY(0);
     pointer-events: auto;
 }
 
-.stickyLine {
-    font-size: 0.85rem;
+.stickyChips {
+    display: flex;
+    gap: 6px;
+    flex-wrap: nowrap;
+    justify-content: center;
+    position: relative;
+    z-index: 1002;
+}
+
+@media (max-width: 640px) {
+    .stickyChips {
+        flex-wrap: wrap;
+    }
+
+    .stickyChipWrap:first-child {
+        flex: 1 1 100%;
+        display: flex;
+        justify-content: center;
+    }
+}
+
+.stickyChip {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    border-radius: 20px;
+    border: 1px solid #ddd;
+    background: #f8f8f8;
+    font-size: 0.78rem;
     font-weight: 600;
-    color: var(--color-text, #333);
-    line-height: 1.7;
+    color: #444;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    outline: none;
+}
+
+.stickyChip:focus {
+    outline: none;
+}
+
+.stickyChip:hover {
+    border-color: #4f46e5;
+    color: #4f46e5;
+}
+
+.stickyChipActive {
+    background: #eef2ff;
+    border-color: #4f46e5;
+    color: #4f46e5;
+}
+
+.stickyBackdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 999;
+}
+
+.stickyChipWrap {
+    position: relative;
+}
+
+.stickyChipOpen {
+    background: #eef2ff;
+    border-color: #4f46e5;
+    color: #4f46e5;
+}
+
+.stickyChevron {
+    font-size: 0.55rem;
+    margin-left: 4px;
+    opacity: 0.5;
+}
+
+.stickyMiniDrop {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1001;
+    background: white;
+    border: 1px solid #eee;
+    border-radius: 14px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    padding: 12px;
+    animation: stickySlideDown 0.15s ease;
+    min-width: 200px;
+}
+
+@media (max-width: 640px) {
+    .stickyMiniDropLeft {
+        left: 0;
+        transform: none;
+    }
+
+    .stickyMiniDropRight {
+        left: auto;
+        right: 0;
+        transform: none;
+    }
+}
+
+@keyframes stickySlideDown {
+    from {
+        opacity: 0;
+        margin-top: -6px;
+    }
+    to {
+        opacity: 1;
+        margin-top: 0;
+    }
+}
+
+.stickyMiniList {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.stickyOptionChip {
+    padding: 9px 16px;
+    border-radius: 10px;
+    border: none;
+    background: transparent;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #444;
+    cursor: pointer;
+    transition: all 0.12s ease;
+    white-space: nowrap;
+    text-align: left;
+}
+
+.stickyOptionChip:hover {
+    background: #f5f3ff;
+    color: #4f46e5;
+}
+
+.stickyOptionActive {
+    background: #eef2ff !important;
+    color: #4f46e5 !important;
+    font-weight: 700;
+}
+
+.stickyCalendar {
+    font-size: 0.85rem !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.stickyResetBtn {
+    display: block;
+    width: 100%;
+    padding: 8px;
+    margin-top: 8px;
+    border-radius: 8px;
+    border: 1px solid #eee;
+    background: white;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #888;
+    cursor: pointer;
+    text-align: center;
+}
+
+.stickyResetBtn:hover {
+    color: #e53e3e;
+    border-color: #e53e3e;
 }
 
 /* 다크모드 */
 @media (prefers-color-scheme: dark) {
     .stickyFilterBar {
-        background: rgba(30, 30, 30, 0.95);
+        background: rgba(30, 30, 30, 0.98);
         border-bottom-color: rgba(255, 255, 255, 0.08);
         box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
     }
 
-    .stickyLine {
-        color: #e0e0e0;
+    .stickyChip {
+        background: #2a2a2a;
+        border-color: #444;
+        color: #ccc;
+    }
+
+    .stickyChipActive,
+    .stickyChipOpen {
+        background: #312e81;
+        border-color: #6366f1;
+        color: #a5b4fc;
+    }
+
+    .stickyMiniDrop {
+        background: #1e1e1e;
+        border-color: #333;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    }
+
+    .stickyOptionChip {
+        color: #ccc;
+    }
+
+    .stickyOptionChip:hover {
+        background: #312e81;
+        color: #a5b4fc;
+    }
+
+    .stickyOptionActive {
+        background: #312e81 !important;
+        color: #a5b4fc !important;
+    }
+
+    .stickyResetBtn {
+        background: #2a2a2a;
+        border-color: #444;
+        color: #888;
     }
 }
