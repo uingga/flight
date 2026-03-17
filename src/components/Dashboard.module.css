@@ -2364,3 +2364,243 @@
         color: #888;
     }
 }
+
+/* ===== Flight Detail Popup ===== */
+.detailModal {
+    background: #fff;
+    border-radius: 20px;
+    width: min(440px, calc(100vw - 32px));
+    max-height: calc(100vh - 80px);
+    overflow-y: auto;
+    padding: 24px;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.25);
+    animation: slideUp 0.3s ease;
+}
+
+.detailHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.detailRoute {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.detailCity {
+    font-size: 22px;
+    font-weight: 800;
+    color: #111827;
+}
+
+.detailArrow {
+    font-size: 18px;
+    color: #6366f1;
+}
+
+.detailPriceRow {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.detailPrice {
+    font-size: 28px;
+    font-weight: 900;
+    color: #111827;
+}
+
+.detailDiscount {
+    background: #fef2f2;
+    color: #e53e3e;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 6px;
+}
+
+.detailDuration {
+    font-size: 14px;
+    font-weight: 600;
+    color: #6b7280;
+    background: #f3f4f6;
+    padding: 3px 10px;
+    border-radius: 6px;
+}
+
+.detailGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding: 16px;
+    background: #f9fafb;
+    border-radius: 12px;
+}
+
+.detailItem {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.detailLabel {
+    font-size: 11px;
+    color: #9ca3af;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.detailValue {
+    font-size: 14px;
+    color: #111827;
+    font-weight: 600;
+}
+
+.detailAlt {
+    margin-bottom: 20px;
+}
+
+.detailAltTitle {
+    font-size: 13px;
+    font-weight: 700;
+    color: #374151;
+    margin-bottom: 8px;
+}
+
+.detailAltItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    background: #f9fafb;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    cursor: pointer;
+    transition: background 0.15s;
+    font-size: 13px;
+    color: #374151;
+}
+
+.detailAltItem:hover {
+    background: #eef2ff;
+}
+
+.detailActions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.detailBookBtn {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: opacity 0.15s;
+}
+
+.detailBookBtn:hover {
+    opacity: 0.9;
+}
+
+.detailSubActions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.detailSubBtn {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #4b5563;
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    transition: background 0.15s;
+    white-space: nowrap;
+}
+
+.detailSubBtn:hover {
+    background: #e5e7eb;
+}
+
+.detailSubBtnActive {
+    color: #f59e0b;
+    background: #fffbeb;
+    border-color: #fde68a;
+}
+
+/* Mobile */
+@media (max-width: 767px) {
+    .detailModal {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        max-height: 85vh;
+        border-radius: 20px 20px 0 0;
+        padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
+        animation: slideUpSheet 0.3s ease;
+    }
+
+    .detailCity {
+        font-size: 20px;
+    }
+
+    .detailPrice {
+        font-size: 24px;
+    }
+
+    .detailGrid {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        padding: 12px;
+    }
+}
+
+@keyframes slideUpSheet {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+    .detailModal {
+        background: #1f2937;
+        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
+    }
+
+    .detailCity { color: #f9fafb; }
+    .detailPrice { color: #f9fafb; }
+    .detailDiscount { background: #451a1a; }
+    .detailDuration { background: #374151; color: #d1d5db; }
+    .detailGrid { background: #111827; }
+    .detailLabel { color: #6b7280; }
+    .detailValue { color: #e5e7eb; }
+    .detailAltTitle { color: #d1d5db; }
+    .detailAltItem { background: #111827; color: #d1d5db; }
+    .detailAltItem:hover { background: #1e1b4b; }
+    .detailBookBtn { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
+    .detailSubBtn { background: #374151; border-color: #4b5563; color: #d1d5db; }
+    .detailSubBtn:hover { background: #4b5563; }
+    .detailSubBtnActive { background: #422006; border-color: #92400e; color: #fbbf24; }
+}

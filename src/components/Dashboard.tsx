@@ -1184,7 +1184,7 @@ export default function Dashboard() {
                     const nc = normalizeCity(city);
                     const cityFlights = flights.filter(f => normalizeCity(f.arrival.city) === nc);
                     const minP = cityFlights.length > 0 ? Math.min(...cityFlights.map(f => f.price)) : 0;
-                    return renderCityCard(city, nc, minP > 0 ? `${Math.floor(minP / 10000)}만원~` : '', `${cityFlights.length}건`, (e) => { e.stopPropagation(); setSearchTerm(city); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+                    return renderCityCard(city, nc, minP > 0 ? `${Math.floor(minP / 10000)}만원~` : '', `${cityFlights.length}건`, (e) => { e.stopPropagation(); setSearchTerm(city); setStartDate(''); setEndDate(''); window.scrollTo({ top: 0, behavior: 'smooth' }); });
                 }));
             }
             case 3: { // ✈️ 항공사별 최저가
@@ -1205,7 +1205,7 @@ export default function Dashboard() {
                                 <span
                                     key={airline}
                                     className={styles.insightChip}
-                                    onClick={(e) => { e.stopPropagation(); setAirlineFilter(airline); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                                    onClick={(e) => { e.stopPropagation(); setAirlineFilter(airline); setStartDate(''); setEndDate(''); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                                 >
                                     {airline} <strong>{Math.floor(price / 10000)}만원~</strong>
                                 </span>
@@ -1457,7 +1457,7 @@ export default function Dashboard() {
                                 <span
                                     key={city}
                                     className={styles.insightChip}
-                                    onClick={(e) => { e.stopPropagation(); setSearchTerm(city); setSortBy('price'); setSortOrder('asc'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                                    onClick={(e) => { e.stopPropagation(); setSearchTerm(city); setSortBy('price'); setSortOrder('asc'); setStartDate(''); setEndDate(''); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                                 >
                                     {city} <span className={styles.insightChipCount}>{data.count}건</span>
                                 </span>
@@ -2503,6 +2503,7 @@ export default function Dashboard() {
                     </div>
                 </div>
             </footer>
+
 
             {/* 인원 선택 모달 */}
             {bookingFlight && (
