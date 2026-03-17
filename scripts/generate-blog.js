@@ -23,9 +23,40 @@ const HISTORY_PATH = path.join(__dirname, '..', 'data', 'blog-history.json');
 const OUTPUT_DIR = path.join(__dirname, '..', 'public');
 const CARDS_DIR = path.join(OUTPUT_DIR, 'blog-cards');
 const TOP_N = 3;
-const MIN_INCHEON = 2;
+const MIN_INCHEON = 1;
+const MIN_REGIONAL = 2;
 const SITE_URL = 'https://tikitikit.kr';
+const PROD_API_URL = `${SITE_URL}/api/flights`;
 const HISTORY_POSTS = 1; // 최근 N개 포스트의 도시 중복 방지
+
+// ===== 프로덕션 API에서 항공편 가져오기 =====
+function fetchProductionFlights() {
+    return new Promise((resolve, reject) => {
+        const https = require('https');
+        const fetch = (url, redirects = 0) => {
+            if (redirects > 3) return reject(new Error('리다이렉트 횟수 초과'));
+            const req = https.get(url, { timeout: 15000 }, (res) => {
+                // 리다이렉트 처리
+                if ([301, 302, 307, 308].includes(res.statusCode) && res.headers.location) {
+                    const redirectUrl = new URL(res.headers.location, url).href;
+                    return fetch(redirectUrl, redirects + 1);
+                }
+                let data = '';
+                res.on('data', chunk => data += chunk);
+                res.on('end', () => {
+                    try {
+                        resolve(JSON.parse(data));
+                    } catch (e) {
+                        reject(new Error(`JSON 파싱 실패 (status: ${res.statusCode})`));
+                    }
+                });
+            });
+            req.on('error', reject);
+            req.on('timeout', () => { req.destroy(); reject(new Error('타임아웃 (15초)')); });
+        };
+        fetch(PROD_API_URL);
+    });
+}
 
 // ===== CLI 인자 파싱 (수동 오버라이드) =====
 // 사용법:
@@ -397,16 +428,39 @@ const DAY_NAMES = ['일', '월', '화', '수', '목', '금', '토'];
 
 // ===== 메인 로직 =====
 async function main() {
-    // 1. 데이터 로드
-    if (!fs.existsSync(DATA_PATH)) {
-        console.error('❌ 캐시 파일을 찾을 수 없습니다:', DATA_PATH);
-        console.error('   npm run crawl:all 을 먼저 실행하세요.');
-        process.exit(1);
+    // 1. 데이터 로드 (프로덕션 API 우선 → 로컬 캐시 폴백)
+    let flights = [];
+    let dataSource = '';
+
+    // --local 플래그가 있으면 로컬 캐시 강제 사용
+    const forceLocal = process.argv.includes('--local');
+
+    if (!forceLocal) {
+        try {
+            console.log('🌐 프로덕션 API에서 데이터 가져오는 중...');
+            const prodData = await fetchProductionFlights();
+            flights = prodData.flights || [];
+            dataSource = '프로덕션 API';
+            console.log(`✅ 프로덕션 API에서 ${flights.length}개 항공편 로드`);
+        } catch (e) {
+            console.warn(`⚠️ 프로덕션 API 실패: ${e.message}`);
+        }
     }
 
-    const cacheData = JSON.parse(fs.readFileSync(DATA_PATH, 'utf-8'));
-    let flights = cacheData.flights || [];
-    console.log(`📦 총 ${flights.length}개 항공편 로드`);
+    // 프로덕션 실패 시 로컬 캐시 폴백
+    if (flights.length === 0) {
+        if (!fs.existsSync(DATA_PATH)) {
+            console.error('❌ 캐시 파일을 찾을 수 없습니다:', DATA_PATH);
+            console.error('   npm run crawl:all 을 먼저 실행하세요.');
+            process.exit(1);
+        }
+        const cacheData = JSON.parse(fs.readFileSync(DATA_PATH, 'utf-8'));
+        flights = cacheData.flights || [];
+        dataSource = '로컬 캐시';
+        console.log(`📦 로컬 캐시에서 ${flights.length}개 항공편 로드`);
+    }
+
+    console.log(`📊 데이터 소스: ${dataSource}`);
 
     // 2. 항공사명 정규화
     flights = flights.map(f => ({
@@ -600,16 +654,25 @@ function saveHistory(destinations, prices = {}) {
         history.entries = history.entries.slice(-10);
     }
     
+    // variant 인덱스 저장 (라운드로빈용)
+    const mergedVariants = { ...(history.variantIndexes || {}), ...usedVariantIndexes };
+    history.variantIndexes = mergedVariants;
+    
     fs.writeFileSync(HISTORY_PATH, JSON.stringify(history, null, 2), 'utf-8');
 }
 
-// ===== Top N 선발 (인천 보장 + 최근 중복 방지 + 가격 하락 면제) =====
+// ===== Top N 선발 (지방 2 + 인천 1 보장 + 최근 중복 방지 + 가격 하락 면제) =====
 function selectTopWithIncheon(sortedFlights, recentDests = [], priceDropDests = []) {
     const topFlights = [];
     const seenDests = new Set();
     const priceDropSet = new Set(priceDropDests);
     // 가격 하락 도시는 recent에서 제외
     const recentSet = new Set(recentDests.filter(d => !priceDropSet.has(d)));
+
+    const isCapital = (f) => {
+        const dep = normalizeCity(f.departure?.city);
+        return dep === '인천' || dep === '김포';
+    };
 
     // 0단계: --include 강제 포함 (최우선)
     if (CLI_OVERRIDES.include.length > 0) {
@@ -625,20 +688,33 @@ function selectTopWithIncheon(sortedFlights, recentDests = [], priceDropDests = 
         }
     }
 
-    // 1단계: 인천 출발 중 도착지 다양하게 확보 (최근 중복 제외, 가격 하락 면제)
-    const icnFlights = sortedFlights.filter(f => normalizeCity(f.departure?.city) === '인천' || normalizeCity(f.departure?.city) === '김포');
-    let icnCount = topFlights.filter(f => normalizeCity(f.departure?.city) === '인천' || normalizeCity(f.departure?.city) === '김포').length;
+    // 1단계: 지방 출발 먼저 확보 (최소 MIN_REGIONAL개)
+    const regionalFlights = sortedFlights.filter(f => !isCapital(f));
+    let regionalCount = topFlights.filter(f => !isCapital(f)).length;
+    for (const f of regionalFlights) {
+        if (topFlights.length >= TOP_N) break;
+        if (regionalCount >= MIN_REGIONAL) break;
+        const dest = normalizeCity(f.arrival?.city);
+        if (seenDests.has(dest) || recentSet.has(dest)) continue;
+        seenDests.add(dest);
+        topFlights.push(f);
+        regionalCount++;
+    }
+
+    // 2단계: 인천/김포 출발 확보 (최소 MIN_INCHEON개)
+    const icnFlights = sortedFlights.filter(f => isCapital(f));
+    let icnCount = topFlights.filter(f => isCapital(f)).length;
     for (const f of icnFlights) {
         if (topFlights.length >= TOP_N) break;
+        if (icnCount >= MIN_INCHEON) break;
         const dest = normalizeCity(f.arrival?.city);
         if (seenDests.has(dest) || recentSet.has(dest)) continue;
         seenDests.add(dest);
         topFlights.push(f);
         icnCount++;
-        if (icnCount >= MIN_INCHEON) break;
     }
 
-    // 2단계: 나머지를 전체에서 채움 (최근 중복 제외, 가격 하락 면제)
+    // 3단계: 나머지를 전체에서 채움 (최근 중복 제외, 가격 하락 면제)
     for (const f of sortedFlights) {
         if (topFlights.length >= TOP_N) break;
         const dest = normalizeCity(f.arrival?.city);
@@ -647,7 +723,7 @@ function selectTopWithIncheon(sortedFlights, recentDests = [], priceDropDests = 
         topFlights.push(f);
     }
 
-    // 3단계: 만약 중복 제외로 TOP_N을 못 채웠으면 중복 허용하여 채움
+    // 4단계: 만약 중복 제외로 TOP_N을 못 채웠으면 중복 허용하여 채움
     if (topFlights.length < TOP_N) {
         console.warn(`⚠️ 중복 제외 후 ${topFlights.length}개만 선발됨, 중복 허용하여 채움`);
         for (const f of sortedFlights) {
@@ -659,7 +735,7 @@ function selectTopWithIncheon(sortedFlights, recentDests = [], priceDropDests = 
         }
     }
 
-    // 4단계: 가격순 재정렬 
+    // 5단계: 가격순 재정렬 
     topFlights.sort((a, b) => a.price - b.price);
     return topFlights;
 }
@@ -941,21 +1017,38 @@ function getRankLabel(rank) {
     }
 }
 
-// ===== 도시명 매칭 (괄호 포함 이름 처리) =====
+// ===== 도시별 variant 사용 히스토리 (라운드로빈) =====
+const usedVariantIndexes = {};
+function loadVariantHistory() {
+    try {
+        if (!fs.existsSync(HISTORY_PATH)) return {};
+        const history = JSON.parse(fs.readFileSync(HISTORY_PATH, 'utf-8'));
+        return history.variantIndexes || {};
+    } catch { return {}; }
+}
+const variantHistory = loadVariantHistory();
+
 function matchCityDescription(cityName) {
     if (!cityName) return null;
     let cityDesc = null;
+    let cityKey = null;
     if (CITY_DESCRIPTIONS[cityName]) {
         cityDesc = CITY_DESCRIPTIONS[cityName];
+        cityKey = cityName;
     } else {
         for (const [key, desc] of Object.entries(CITY_DESCRIPTIONS)) {
-            if (cityName.includes(key)) { cityDesc = desc; break; }
+            if (cityName.includes(key)) { cityDesc = desc; cityKey = key; break; }
         }
     }
     if (!cityDesc) return null;
-    // variants 배열에서 랜덤 선택
+    // variants 배열에서 라운드로빈 선택 (이전에 안 쓴 것 우선)
     if (cityDesc.variants && cityDesc.variants.length > 0) {
-        const variant = pickRandom(cityDesc.variants);
+        const lastIdx = variantHistory[cityKey] ?? -1;
+        const nextIdx = (lastIdx + 1) % cityDesc.variants.length;
+        // 현재 실행에서 사용한 인덱스 기록
+        usedVariantIndexes[cityKey] = nextIdx;
+        variantHistory[cityKey] = nextIdx;
+        const variant = cityDesc.variants[nextIdx];
         return { emoji: cityDesc.emoji, lines: variant.lines, closing: variant.closing };
     }
     // 하위 호환: lines/closing 직접 있는 경우
@@ -1029,7 +1122,7 @@ function generateEditorPick(flight) {
         lines.push(`<p>&nbsp;</p>`);
         desc.lines.forEach(l => lines.push(`<p>${l}</p>`));
         lines.push(`<p>&nbsp;</p>`);
-        lines.push(`<p>왕복 <b>${priceText}</b>에 이 정도면</p>`);
+        lines.push(`<p>왕복 <b>${priceText}</b>이면</p>`);
         lines.push(`<p>${desc.closing}</p>`);
     } else {
         lines.push(`<p>${flight.airline} 직항으로</p>`);
@@ -1045,9 +1138,7 @@ function generateEditorPick(flight) {
         }
     }
 
-    lines.push(`<p>&nbsp;</p>`);
-    lines.push(`<p>다양한 일정이 열려 있으니</p>`);
-    lines.push(`<p>마음에 드는 날짜를 골라보세요!</p>`);
+
 
 
     return lines.join('\n            ');
@@ -1138,7 +1229,12 @@ function getIcnComment(flight) {
     if (region === '일본') return `${duration} 일본 소도시 여행!`;
     if (region === '중국') return `${duration} 근거리 맛집 투어!`;
     if (region === '동남아') return `${duration} 휴양지 힐링!`;
-    return `${duration} 가성비 여행!`;
+    const defaultComments = [
+        `${duration} 새로운 여행지 탐험!`,
+        `${duration} 특가로 떠나볼까요?`,
+        `${duration} 알찬 일정 가능!`,
+    ];
+    return pickRandom(defaultComments);
 }
 
 // ===== 스마트 인트로 생성 (Top 3 내용 기반) =====
@@ -1169,7 +1265,7 @@ function generateSmartIntro(topFlights, now) {
             [`<p>${priceMan}만원대 해외여행, 실화인가요? ✈️</p>`, `<p>&nbsp;</p>`, `<p>${cities[0]} 왕복이 이 가격이면</p>`, `<p>좌석 빠지기 전에 확인해보세요!</p>`],
             [`<p>KTX 왕복보다 싼 항공권 발견 💰</p>`, `<p>&nbsp;</p>`, `<p>${cities[0]} ${priceMan}만원대,</p>`, `<p>이런 가격은 오래 안 가요!</p>`],
             [`<p>오늘의 특가, 가격 보고 깜짝 놀랐어요 😲</p>`, `<p>&nbsp;</p>`, `<p>${cities[0]} 왕복 ${priceMan}만원대!</p>`, `<p>망설이면 놓칩니다.</p>`],
-            [`<p>${cities[0]} ${priceMan}만원이면 커피값 수준 ☕</p>`, `<p>&nbsp;</p>`, `<p>이 정도 가격의 항공권은</p>`, `<p>자주 나오지 않아요!</p>`],
+            [`<p>${cities[0]} 왕복 ${priceMan}만원대, KTX보다 싸네요 🚄</p>`, `<p>&nbsp;</p>`, `<p>이 정도 가격의 항공권은</p>`, `<p>자주 나오지 않아요!</p>`],
         ],
         china: [
             [`<p>오늘은 중국 쪽 특가가 많이 풀렸어요 🇨🇳</p>`, `<p>&nbsp;</p>`, `<p>가성비 좋은 근거리 여행지로</p>`, `<p>가볍게 다녀올 수 있는 곳들이에요.</p>`],
