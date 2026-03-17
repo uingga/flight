@@ -1730,8 +1730,9 @@ export default function Dashboard() {
             {(() => {
                 const [stickyDrop, setStickyDrop] = React.useState<'date' | 'departure' | 'region' | null>(null);
                 return (
+                <>
+                {stickyDrop && <div className={styles.stickyBackdrop} onClick={() => setStickyDrop(null)} />}
                 <div className={`${styles.stickyFilterBar} ${isScrolled ? styles.stickyFilterBarVisible : ''}`}>
-                    {stickyDrop && <div className={styles.stickyBackdrop} onClick={() => setStickyDrop(null)} />}
                     <div className={styles.stickyChips}>
                         {/* 날짜 칩 */}
                         <div className={styles.stickyChipWrap}>
@@ -1844,6 +1845,7 @@ export default function Dashboard() {
                         </div>
                     </div>
                 </div>
+                </>
                 );
             })()}
 
