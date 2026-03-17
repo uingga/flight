@@ -422,6 +422,7 @@ export default function Dashboard() {
     const [headerHidden, setHeaderHidden] = useState(false);
     const [headerScrolled, setHeaderScrolled] = useState(false);
     const lastScrollY = useRef(0);
+    const filterAreaRef = useRef<HTMLDivElement>(null);
 
     // 팁 페이지 데이터
     const tipPosts = useMemo(() => [
@@ -441,6 +442,22 @@ export default function Dashboard() {
             if (saved) setFavoriteFlights(JSON.parse(saved));
         } catch { }
     }, []);
+
+    // 필터 바깥 클릭 시 닫기
+    useEffect(() => {
+        if (!showFilters) return;
+        const handleOutsideClick = (e: MouseEvent) => {
+            if (filterAreaRef.current && !filterAreaRef.current.contains(e.target as Node)) {
+                setShowFilters(false);
+            }
+        };
+        document.addEventListener('mousedown', handleOutsideClick);
+        document.addEventListener('touchstart', handleOutsideClick as any);
+        return () => {
+            document.removeEventListener('mousedown', handleOutsideClick);
+            document.removeEventListener('touchstart', handleOutsideClick as any);
+        };
+    }, [showFilters]);
 
     const toggleFavorite = (flightId: string, cityName: string) => {
         setFavoriteFlights(prev => {
@@ -1945,6 +1962,7 @@ export default function Dashboard() {
                     </div>
 
                     {/* 3. 필터 토글 버튼 (모바일) + 출발지 + 도착지역 칩 필터 */}
+                    <div ref={filterAreaRef}>
                     <button
                         className={styles.filterToggleBtn}
                         onClick={() => setShowFilters(!showFilters)}
@@ -2007,6 +2025,7 @@ export default function Dashboard() {
                                 ))}
                             </div>
                         </div>
+                    </div>
                     </div>
 
                 </div>
