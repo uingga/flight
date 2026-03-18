@@ -111,6 +111,7 @@ export default function RootLayout({
             <head>
                 {/* 아고다 파트너스 도메인 인증 */}
                 <meta name="agd-partner-manual-verification" />
+                <meta name="google-adsense-account" content="ca-pub-8329497855024061" />
                 {/* 로고 폰트 (Balsamiq Sans) */}
                 <link
                     href="https://fonts.googleapis.com/css2?family=Balsamiq+Sans:ital,wght@1,700&display=swap"
