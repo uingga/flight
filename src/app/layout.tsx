@@ -122,6 +122,12 @@ export default function RootLayout({
                 <link rel="preconnect" href="https://m.onlinetour.co.kr" />
 
                 <link rel="preconnect" href="https://mfly.ybtour.co.kr" />
+                {/* Google AdSense */}
+                <script
+                    async
+                    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8329497855024061"
+                    crossOrigin="anonymous"
+                ></script>
             </head>
             <body className="antialiased">
                 {/* GA4 Analytics */}
@@ -143,12 +149,6 @@ export default function RootLayout({
                         </Script>
                     </>
                 )}
-                {/* Google AdSense */}
-                <Script
-                    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8329497855024061"
-                    crossOrigin="anonymous"
-                    strategy="afterInteractive"
-                />
                 {children}
                 <script
                     type="application/ld+json"
