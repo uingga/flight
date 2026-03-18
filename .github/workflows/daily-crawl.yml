@@ -102,24 +102,6 @@ jobs:
             git push
           fi
 
-      # 블로그 포스트 자동 생성 (하루 1회, 12:00 KST 크롤 시만)
-      - name: Generate blog post
-        if: steps.crawl.outcome == 'success' && github.event.schedule == '0 3 * * *'
-        continue-on-error: true
-        id: blog
-        run: node scripts/generate-blog.js
-
-      - name: Commit blog post
-        if: steps.blog.outcome == 'success'
-        run: |
-          if [[ -n $(git status --porcelain public/blog-post-*.html public/blog-cards/) ]]; then
-            git add public/blog-post-*.html public/blog-cards/
-            git commit -m "chore(blog): auto-generate daily blog post [skip ci]"
-            git pull --rebase origin main
-            git push
-            echo "✅ Blog post generated and pushed."
-          fi
-
       - name: Alert on failure
         if: steps.crawl.outcome == 'failure'
         uses: actions/github-script@v7

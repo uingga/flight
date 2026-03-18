@@ -107,7 +107,7 @@ export default function RootLayout({
     children: React.ReactNode;
 }) {
     return (
-        <html lang="ko" className={inter.variable}>
+        <html lang="ko" className={inter.variable} style={{ colorScheme: 'light only' }}>
             <head>
                 {/* 아고다 파트너스 도메인 인증 */}
                 <meta name="agd-partner-manual-verification" />

@@ -1350,7 +1350,7 @@ export default function Dashboard() {
                 }).slice(0, 10);
                 return renderCardBar(barIndex, '☀️', '주말 출발 특가', unique9.map(f => {
                     const city = normalizeCity(f.arrival.city);
-                    return renderCityCard(f.id, city, `${Math.floor(f.price / 10000)}만원~`, '주말 출발', (e) => { e.stopPropagation(); setSearchTerm(city); setSortBy('price'); setSortOrder('asc'); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+                    return renderCityCard(f.id, city, `${Math.floor(f.price / 10000)}만원~`, '주말 출발', (e) => { e.stopPropagation(); setSearchTerm(city); setStartDate(''); setEndDate(''); setSortBy('price'); setSortOrder('asc'); window.scrollTo({ top: 0, behavior: 'smooth' }); });
                 }));
             }
             case 10: { // 💸 20만원 이하
@@ -1369,7 +1369,7 @@ export default function Dashboard() {
                 }).slice(0, 5);
                 return renderCardBar(barIndex, '💸', '20만원 이하로 갈 수 있는 곳', unique10.map(f => {
                     const city = normalizeCity(f.arrival.city);
-                    return renderCityCard(f.id, city, `${Math.floor(f.price / 10000)}만원`, '20만원 이하', (e) => { e.stopPropagation(); setSearchTerm(city); setSortBy('price'); setSortOrder('asc'); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+                    return renderCityCard(f.id, city, `${Math.floor(f.price / 10000)}만원`, '20만원 이하', (e) => { e.stopPropagation(); setSearchTerm(city); setStartDate(''); setEndDate(''); setSortBy('price'); setSortOrder('asc'); window.scrollTo({ top: 0, behavior: 'smooth' }); });
                 }));
             }
             case 8: { // 🌙 금요일 출발
@@ -1433,7 +1433,7 @@ export default function Dashboard() {
                 }).slice(0, 5);
 
                 return renderCardBar(barIndex, '📉', '어제보다 가격 내린 항공권', topDrops.map(d =>
-                    renderCityCard(d.route, d.city, `${Math.floor(d.todayPrice / 10000)}만원`, `↓${Math.floor(d.drop / 10000)}만원`, (e) => { e.stopPropagation(); setSearchTerm(d.city); setSortBy('price'); setSortOrder('asc'); window.scrollTo({ top: 0, behavior: 'smooth' }); })
+                    renderCityCard(d.route, d.city, `${Math.floor(d.todayPrice / 10000)}만원`, `↓${Math.floor(d.drop / 10000)}만원`, (e) => { e.stopPropagation(); setSearchTerm(d.city); setStartDate(''); setEndDate(''); setSortBy('price'); setSortOrder('asc'); window.scrollTo({ top: 0, behavior: 'smooth' }); })
                 ));
             }
             case 12: { // 👀 인기 항공권 (목적지별 항공편 수 기준)
@@ -1570,7 +1570,7 @@ export default function Dashboard() {
                 const season = seasonMap[month];
                 if (!season) return null;
                 return renderCardBar(barIndex, '🌸', season.title, season.recs.map(r =>
-                    renderCityCard(r.city, r.city, r.reason, r.emoji, (e) => { e.stopPropagation(); setSearchTerm(r.city); setSortBy('price'); setSortOrder('asc'); window.scrollTo({ top: 0, behavior: 'smooth' }); })
+                    renderCityCard(r.city, r.city, r.reason, r.emoji, (e) => { e.stopPropagation(); setSearchTerm(r.city); setStartDate(''); setEndDate(''); setSortBy('price'); setSortOrder('asc'); window.scrollTo({ top: 0, behavior: 'smooth' }); })
                 ));
             }
             case 15: { // ✨ 새로 올라온 항공권
@@ -1626,7 +1626,7 @@ export default function Dashboard() {
                         : '';
                     const priceStr = `${Math.floor(r.minPrice / 10000)}만${r.minPrice % 10000 > 0 ? Math.floor((r.minPrice % 10000) / 1000) + '천' : ''}원~`;
                     const dateInfo = `${dateStr}${r.count > 1 ? ` 외 ${r.count - 1}건` : ''}`;
-                    return renderCityCard(`new-${i}`, r.arr, priceStr, dateInfo, (e) => { e.stopPropagation(); setSearchTerm(r.arr); setSortBy('price'); setSortOrder('asc'); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+                    return renderCityCard(`new-${i}`, r.arr, priceStr, dateInfo, (e) => { e.stopPropagation(); setSearchTerm(r.arr); setStartDate(''); setEndDate(''); setSortBy('price'); setSortOrder('asc'); window.scrollTo({ top: 0, behavior: 'smooth' }); });
                 }));
             }
             default:
