@@ -15,16 +15,18 @@ const DATA_PATH = path.join(__dirname, '..', 'data', 'all-flights-cache.json');
 
 // ===== 수동 선택 항공편 (여기를 수정) =====
 const MANUAL_CARDS = [
-    // rank_1: 부산 → 시즈오카
-    { label: 'rank_1', departure: '부산', arrival: '시즈오카', airline: '에어부산' },
-    // rank_2: 부산 → 후쿠오카
-    { label: 'rank_2', departure: '부산', arrival: '후쿠오카', airline: '제주항공' },
-    // rank_3: 인천/서울 → 상해(상하이)
-    { label: 'rank_3', departure: ['인천', '서울'], arrival: ['상해', '상하이'], airline: '중국남방항공' },
-    // icn_1: 인천 → 괌
-    { label: 'icn_1', departure: ['인천', '서울'], arrival: '괌' },
+    // rank_1: 서울 → 옌타이 13만
+    { label: 'rank_1', departure: '서울', arrival: ['연태', '옌타이'], airline: '이스타항공' },
+    // rank_2: 부산 → 구마모토 16만
+    { label: 'rank_2', departure: '부산', arrival: '구마모토', airline: '이스타항공' },
+    // rank_3: 제주 → 타이페이 16만
+    { label: 'rank_3', departure: '제주', arrival: ['타이페이', '대만', '타이베이'], airline: '이스타항공' },
+    // icn_1: 인천 → 사이판
+    { label: 'icn_1', departure: ['인천', '서울'], arrival: '사이판' },
     // icn_2: 인천 → 푸켓
     { label: 'icn_2', departure: ['인천', '서울'], arrival: '푸켓' },
+    // icn_3: 인천 → 괌
+    { label: 'icn_3', departure: ['인천', '서울'], arrival: '괌' },
 ];
 
 function findFlight(flights, spec) {

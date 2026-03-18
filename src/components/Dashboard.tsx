@@ -851,6 +851,8 @@ export default function Dashboard() {
         const matchesSearch =
             flight.departure.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
             flight.arrival.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            normalizeCity(flight.departure.city).toLowerCase().includes(searchTerm.toLowerCase()) ||
+            normalizeCity(flight.arrival.city).toLowerCase().includes(searchTerm.toLowerCase()) ||
             flight.airline.toLowerCase().includes(searchTerm.toLowerCase());
 
         const matchesSource = sourceFilter === 'all' || flight.source === sourceFilter;
