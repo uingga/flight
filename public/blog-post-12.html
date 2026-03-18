@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>항공권 가격이 매일 바뀌는 진짜 이유 — 알면 더 싸게 삽니다 ✈️</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', -apple-system, sans-serif;
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 2;
+            font-size: 16px;
+        }
+
+        .post {
+            background: white;
+            padding: 40px 32px;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .left {
+            text-align: left;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 22px;
+            font-weight: 800;
+            color: #1a1a1a;
+            margin: 16px 0 24px;
+            line-height: 1.5;
+        }
+
+        h2 {
+            font-size: 20px;
+            font-weight: 700;
+            margin: 32px 0 16px;
+            color: #1a1a1a;
+        }
+
+        .divider {
+            border: none;
+            border-top: 1px solid #e0e0e0;
+            margin: 32px 0;
+        }
+
+        p {
+            margin-bottom: 8px;
+        }
+
+        .highlight {
+            color: #e53e3e;
+            font-weight: bold;
+        }
+
+        .highlight-blue {
+            color: #4f46e5;
+            font-weight: bold;
+        }
+
+        .info-box {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 24px;
+            margin: 20px 0;
+            border-left: 4px solid #4f46e5;
+        }
+
+        .warn-box {
+            background: #fffbeb;
+            border-radius: 8px;
+            padding: 24px;
+            margin: 20px 0;
+            border-left: 4px solid #f59e0b;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin: 2px 2px 8px 0;
+        }
+
+        .tag.red {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        .tag.blue {
+            background: #eef2ff;
+            color: #4f46e5;
+        }
+
+        .tag.green {
+            background: #f0fdf4;
+            color: #16a34a;
+        }
+
+        .note {
+            font-size: 13px;
+            color: #888;
+            line-height: 1.8;
+            margin-top: 30px;
+        }
+
+        .copy-guide {
+            position: fixed;
+            top: 12px;
+            right: 12px;
+            background: #1a1a1a;
+            color: white;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+            font-size: 14px;
+        }
+
+        th,
+        td {
+            padding: 12px 8px;
+            border-bottom: 1px solid #eee;
+            text-align: center;
+        }
+
+        th {
+            background: #f8f8f8;
+            font-weight: 700;
+            color: #555;
+            font-size: 12px;
+        }
+
+        td:first-child {
+            font-weight: 600;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <div class="copy-guide">💡 Ctrl+A → Ctrl+C → 네이버 에디터에 Ctrl+V</div>
+
+    <div class="post">
+
+        <p><img src="images/blog-thumb-12-wide.png" alt="항공권 가격은 왜 매일 바뀔까?" style="max-width: 100%; border-radius: 12px;"></p>
+        <p>&nbsp;</p>
+        <p><img src="images/blog-thumb-12-square.png" alt="항공권 가격 전략 해부 썸네일" style="max-width: 100%; border-radius: 12px;"></p>
+        <p>&nbsp;</p>
+
+        <h1>항공권 가격이 매일 바뀌는<br>진짜 이유 ✈️</h1>
+
+        <p>&nbsp;</p>
+
+        <div class="center">
+            <p>어제 25만원이었던 항공권이</p>
+            <p>오늘 보니까 <span class="highlight">32만원</span>.</p>
+            <p>&nbsp;</p>
+            <p>내일은 또 22만원.</p>
+            <p>&nbsp;</p>
+            <p>도대체 <b>기준이 뭔지</b></p>
+            <p>궁금했던 적 있으시죠?</p>
+        </div>
+
+        <hr class="divider">
+
+        <h2 class="left">📊 핵심은 '수요-공급 가격 조절'</h2>
+
+        <div class="left">
+            <p>항공사는 <b>좌석을 등급별로 나눠서</b> 관리합니다.</p>
+            <p>&nbsp;</p>
+            <p>같은 이코노미석이라도 내부적으로</p>
+            <p><b>6~20개의 좌석 가격 등급</b>이 존재해요.</p>
+            <p>&nbsp;</p>
+            <p>업계에서는 이걸 "Booking Class"라고 부르는데,</p>
+            <p>쉽게 말하면 <b>같은 좌석인데 가격표가 여러 장</b>인 거예요.</p>
+        </div>
+
+        <div class="info-box">
+            <p><b>💡 예시: 서울→오사카 이코노미</b></p>
+            <p>&nbsp;</p>
+            <p>Y클래스 (정상가): <b>45만원</b></p>
+            <p>M클래스 (일반 할인): <b>32만원</b></p>
+            <p>H클래스 (특가): <b>22만원</b></p>
+            <p>V클래스 (초특가): <b>15만원</b></p>
+            <p>&nbsp;</p>
+            <p>같은 비행기, 같은 좌석인데</p>
+            <p><b>구매 시점에 따라 가격이 다릅니다.</b></p>
+        </div>
+
+        <div class="left">
+            <p>V클래스 좌석이 다 팔리면 → H클래스로 올라가고</p>
+            <p>H클래스도 다 팔리면 → M클래스로 올라갑니다.</p>
+            <p>&nbsp;</p>
+            <p>그래서 <b>"어제 싸던 항공권이 오늘 비싸진"</b> 거예요.</p>
+            <p>가격이 올랐다고 바가지가 아니라,</p>
+            <p>싼 좌석이 먼저 나간 겁니다.</p>
+        </div>
+
+        <hr class="divider">
+
+        <h2 class="left">🧠 항공사가 가격을 바꾸는 5가지 기준</h2>
+
+        <div class="left">
+            <p>&nbsp;</p>
+            <p>1️⃣ <b>잔여 좌석 수</b></p>
+            <p>남은 좌석이 적을수록 → 가격 올라감</p>
+            <p>좌석이 안 팔리면 → 가격 내림</p>
+            <p>&nbsp;</p>
+            <p>2️⃣ <b>출발일까지 남은 기간</b></p>
+            <p>2~3개월 전: 특가 많음 (싼 클래스 열려있음)</p>
+            <p>1~2개월 전: 싼 클래스 소진 → 가격 올라가는 구간</p>
+            <p>1~2주 전: 비싸거나, 땡처리로 급락</p>
+            <p>&nbsp;</p>
+            <p>3️⃣ <b>요일과 시간대</b></p>
+            <p>금요일 저녁 출발 → 비쌈</p>
+            <p>화·수요일 출발 → 상대적으로 저렴</p>
+            <p>&nbsp;</p>
+            <p>4️⃣ <b>시즌 (성수기/비수기)</b></p>
+            <p>벚꽃·여름·추석 → 정상가 자체가 높음</p>
+            <p>1월·11월 → 가격 낮음</p>
+            <p>&nbsp;</p>
+            <p>5️⃣ <b>경쟁 항공사 가격</b></p>
+            <p>같은 노선에 저가항공이 특가 내면</p>
+            <p>다른 항공사도 따라서 내리는 경우가 많습니다.</p>
+        </div>
+
+        <div class="warn-box">
+            <p><b>💡 쉽게 비유하면</b></p>
+            <p>&nbsp;</p>
+            <p>항공권 가격은 <b>콘서트 티켓</b>이랑 비슷합니다.</p>
+            <p>앞자리(싼 클래스)부터 팔리고,</p>
+            <p>남은 자리는 점점 비싸지고,</p>
+            <p>공연 전날 안 팔린 자리는 급할인.</p>
+        </div>
+
+        <hr class="divider">
+
+        <h2 class="left">📈 가격 변동 타임라인</h2>
+
+        <div class="left">
+            <p>출발일까지 가격이 어떻게 움직이는지</p>
+            <p>한눈에 정리하면 이렇습니다.</p>
+        </div>
+
+        <p>&nbsp;</p>
+
+        <p><img src="images/blog12-timeline.png" alt="항공권 가격 변동 타임라인" style="max-width: 100%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);"></p>
+
+        <p style="font-size: 13px; color: #888;">※ 노선·시즌에 따라 다를 수 있습니다</p>
+
+        <hr class="divider">
+
+        <h2 class="left">💸 그럼 언제 사야 제일 싼가?</h2>
+
+        <div class="left">
+            <p>정답은 "<b>정해져 있지 않다</b>"입니다.</p>
+            <p>&nbsp;</p>
+            <p>하지만 <b>통계적으로 유리한 타이밍</b>은 있어요.</p>
+        </div>
+
+        <p>&nbsp;</p>
+
+        <p><img src="images/blog12-timing.png" alt="항공권 구매 타이밍 표" style="max-width: 100%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);"></p>
+
+        <hr class="divider">
+
+        <h2 class="left">📉 그럼 가격이 다시 떨어지는 건 언제?</h2>
+
+        <div class="left">
+            <p>올라가기만 하진 않아요.</p>
+            <p>&nbsp;</p>
+            <p>이런 상황에서 가격이 다시 떨어집니다:</p>
+            <p>&nbsp;</p>
+            <p>📉 <b>예약이 예상보다 안 들어올 때</b></p>
+            <p>→ 항공사가 낮은 클래스를 다시 열어요</p>
+            <p>&nbsp;</p>
+            <p>📉 <b>경쟁사가 프로모션을 시작했을 때</b></p>
+            <p>→ 따라서 가격을 내리는 경우</p>
+            <p>&nbsp;</p>
+            <p>📉 <b>출발 임박인데 빈 좌석이 많을 때</b></p>
+            <p>→ 여행사 땡처리 (이게 진짜 특가!)</p>
+            <p>&nbsp;</p>
+            <p>그래서 <b>한 번 검색하고 끝내지 말고</b>,</p>
+            <p>며칠 간격으로 확인하는 게 좋습니다.</p>
+        </div>
+
+        <hr class="divider">
+
+        <h2 class="left">⚠️ "가격 추적" 할 때 주의할 점</h2>
+
+        <div class="warn-box">
+            <p><b>❌ 흔한 오해</b></p>
+            <p>&nbsp;</p>
+            <p>"자주 검색하면 항공사가 가격을 올린다"</p>
+            <p>&nbsp;</p>
+            <p>→ <b>대부분 사실이 아닙니다.</b></p>
+            <p>쿠키 기반 가격 조작은 과거에 일부 있었지만,</p>
+            <p>지금은 거의 사라졌어요.</p>
+            <p>&nbsp;</p>
+            <p>가격이 올랐다면</p>
+            <p><b>싼 클래스 좌석이 팔렸기 때문</b>입니다.</p>
+        </div>
+
+        <div class="left">
+            <p>&nbsp;</p>
+            <p>진짜 주의할 건 이겁니다:</p>
+            <p>&nbsp;</p>
+            <p>✅ <b>가격은 "실시간"</b>이라 캡처 시점이 중요</p>
+            <p>✅ <b>여행사마다 같은 노선도 가격이 다름</b></p>
+            <p>✅ <b>왕복 총액</b> 기준으로 비교해야 함 (유류할증·텍스 포함)</p>
+        </div>
+
+        <hr class="divider">
+
+        <h2 class="left">📝 정리하면</h2>
+
+        <div class="left">
+            <p>&nbsp;</p>
+            <p>1️⃣ 항공권 가격은 <b>좌석 등급(클래스)</b> 때문에 바뀐다</p>
+            <p>2️⃣ 싼 클래스가 먼저 팔리면 <b>자동으로 올라간다</b></p>
+            <p>3️⃣ 반대로 안 팔리면 <b>다시 내릴 수도</b> 있다</p>
+            <p>4️⃣ <b>주중 출발</b>이 주말보다 저렴한 경향</p>
+            <p>5️⃣ 정기적으로 비교하는 게 <b>가장 확실한 절약법</b></p>
+        </div>
+
+        <hr class="divider">
+
+        <div class="center">
+            <p>결국 항공권은</p>
+            <p><b>"언제 사느냐"가 곧 가격</b>입니다.</p>
+            <p>&nbsp;</p>
+            <p>원리를 알면</p>
+            <p>같은 비행기를 더 싸게 탈 수 있어요 ✈️</p>
+            <p>&nbsp;</p>
+            <p style="font-size: 13px; color: #888;">✈️ 땡처리 항공권을 한눈에 | <a href="https://tikitikit.kr" style="color: #4f46e5; font-weight: bold;">티키티킷 tikitikit.kr</a></p>
+        </div>
+
+        <p class="note">#항공권가격 #항공사가격전략 #항공권싸게사는법 #BookingClass #항공권최저가 #땡처리항공권 #항공권타이밍 #항공권꿀팁 #해외여행준비 #항공권비교 #티키티킷 #항공권가격변동</p>
+
+    </div>
+</body>
+
+</html>
