@@ -2344,53 +2344,7 @@
     border-color: #e53e3e;
 }
 
-/* 다크모드 */
-@media (prefers-color-scheme: dark) {
-    .stickyFilterBar {
-        background: rgba(40, 40, 45, 0.98);
-        border-bottom-color: rgba(255, 255, 255, 0.1);
-        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
-    }
 
-    .stickyChip {
-        background: #2a2a2a;
-        border-color: #444;
-        color: #ccc;
-    }
-
-    .stickyChipActive,
-    .stickyChipOpen {
-        background: #312e81;
-        border-color: #6366f1;
-        color: #a5b4fc;
-    }
-
-    .stickyMiniDrop {
-        background: #1e1e1e;
-        border-color: #333;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-    }
-
-    .stickyOptionChip {
-        color: #ccc;
-    }
-
-    .stickyOptionChip:hover {
-        background: #312e81;
-        color: #a5b4fc;
-    }
-
-    .stickyOptionActive {
-        background: #312e81 !important;
-        color: #a5b4fc !important;
-    }
-
-    .stickyResetBtn {
-        background: #2a2a2a;
-        border-color: #444;
-        color: #888;
-    }
-}
 
 /* ===== Flight Detail Popup ===== */
 .detailModal {
@@ -2608,26 +2562,4 @@
     from { transform: translateY(100%); }
     to { transform: translateY(0); }
 }
-
-/* Dark mode */
-@media (prefers-color-scheme: dark) {
-    .detailModal {
-        background: #1f2937;
-        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
-    }
-
-    .detailCity { color: #f9fafb; }
-    .detailPrice { color: #f9fafb; }
-    .detailDiscount { background: #451a1a; }
-    .detailDuration { background: #374151; color: #d1d5db; }
-    .detailGrid { background: #111827; }
-    .detailLabel { color: #6b7280; }
-    .detailValue { color: #e5e7eb; }
-    .detailAltTitle { color: #d1d5db; }
-    .detailAltItem { background: #111827; color: #d1d5db; }
-    .detailAltItem:hover { background: #1e1b4b; }
-    .detailBookBtn { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
-    .detailSubBtn { background: #374151; border-color: #4b5563; color: #d1d5db; }
-    .detailSubBtn:hover { background: #4b5563; }
-    .detailSubBtnActive { background: #422006; border-color: #92400e; color: #fbbf24; }
-}
+
