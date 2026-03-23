@@ -770,6 +770,32 @@
     border-color: rgba(99, 102, 241, 0.3);
 }
 
+.adCard {
+    position: relative;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+    cursor: default;
+    border: 1px dashed rgba(99, 102, 241, 0.2);
+    background: var(--color-bg-primary);
+}
+
+.adCard:hover {
+    transform: none;
+    box-shadow: var(--shadow-md);
+    border-color: rgba(99, 102, 241, 0.2);
+}
+
+.adLabel {
+    position: absolute;
+    top: 8px;
+    left: 12px;
+    font-size: 11px;
+    color: #999;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
 .cardHeader {
     display: flex;
     justify-content: space-between;
