@@ -2213,9 +2213,9 @@ export default function Dashboard() {
                                     if (bar) items.push(bar);
                                 }
 
-                                // 광고 카드 대체: 모바일/PC 모두 9번째부터 16개마다
-                                const adOffset = isMobile ? 4 : 8;
-                                const adInterval = 16;
+                                // 광고 카드 대체: 모바일 4번째부터 16개마다, PC 10번째부터 20개마다
+                                const adOffset = isMobile ? 4 : 10;
+                                const adInterval = isMobile ? 16 : 20;
                                 const isAdSlot = index > 0 && index >= adOffset && (index - adOffset) % adInterval === 0 && !searchTerm;
                                 if (isAdSlot) {
                                     items.push(<AdCard key={`ad-${index}`} />);
