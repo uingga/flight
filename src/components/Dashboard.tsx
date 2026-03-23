@@ -12,6 +12,7 @@ import * as gtag from '@/lib/analytics';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const DatePicker: any = dynamic(() => import('react-datepicker').then((mod: any) => mod.default), { ssr: false });
 import styles from './Dashboard.module.css';
+import AdCard from './AdCard';
 
 // Helper: string(YYYY-MM-DD) <-> Date
 const toDate = (s: string) => s ? new Date(s + 'T00:00:00') : null;
@@ -2210,6 +2211,13 @@ export default function Dashboard() {
                                 if (index > 0 && index >= insightOffset && (index - insightOffset) % insightInterval === 0 && !searchTerm) {
                                     const bar = generateInsightBar(Math.floor((index - insightOffset) / insightInterval));
                                     if (bar) items.push(bar);
+                                }
+
+                                // 광고 카드 삽입: 모바일 5개마다, PC 8개마다 1개
+                                const adOffset = isMobile ? 4 : 7;
+                                const adInterval = isMobile ? 5 : 8;
+                                if (index > 0 && index >= adOffset && (index - adOffset) % adInterval === 0 && !searchTerm) {
+                                    items.push(<AdCard key={`ad-${index}`} />);
                                 }
 
                                 items.push(
