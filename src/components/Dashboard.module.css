@@ -772,26 +772,27 @@
 
 .adCard {
     position: relative;
+    min-height: 200px;
+    display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 200px;
     cursor: default;
-    border: 1px dashed rgba(99, 102, 241, 0.2);
+    border: 1px solid rgba(99, 102, 241, 0.1);
     background: var(--color-bg-primary);
 }
 
 .adCard:hover {
     transform: none;
     box-shadow: var(--shadow-md);
-    border-color: rgba(99, 102, 241, 0.2);
+    border-color: rgba(99, 102, 241, 0.1);
 }
 
 .adLabel {
     position: absolute;
-    top: 8px;
-    left: 12px;
-    font-size: 11px;
-    color: #999;
+    top: 6px;
+    left: 10px;
+    font-size: 10px;
+    color: #bbb;
     font-weight: 500;
     letter-spacing: 0.5px;
 }

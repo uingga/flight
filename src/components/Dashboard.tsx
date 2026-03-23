@@ -2213,11 +2213,13 @@ export default function Dashboard() {
                                     if (bar) items.push(bar);
                                 }
 
-                                // 광고 카드 삽입: 모바일 5개마다, PC 8개마다 1개
-                                const adOffset = isMobile ? 4 : 7;
-                                const adInterval = isMobile ? 5 : 8;
-                                if (index > 0 && index >= adOffset && (index - adOffset) % adInterval === 0 && !searchTerm) {
+                                // 광고 카드 대체: 모바일 5번째부터 10개마다, PC 9번째부터 16개마다
+                                const adOffset = isMobile ? 4 : 8;
+                                const adInterval = isMobile ? 10 : 16;
+                                const isAdSlot = index > 0 && index >= adOffset && (index - adOffset) % adInterval === 0 && !searchTerm;
+                                if (isAdSlot) {
                                     items.push(<AdCard key={`ad-${index}`} />);
+                                    return items;
                                 }
 
                                 items.push(
