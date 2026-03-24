@@ -167,7 +167,7 @@ const CITY_TO_AIRPORT: Record<string, string> = {
     '사가': 'HSG', '요나고': 'YGJ', '히로시마': 'HIJ', '오이타': 'OIT',
     '밴쿠버': 'YVR', '비엔티안': 'VTE', '지난': 'TNA',
     '푸껫': 'HKT', '쿠알라룸푸르': 'KUL',
-    '시모지시마': 'SHI', '아오모리': 'AOJ',
+    '시모지시마': 'SHI', '미야코지마': 'SHI', '미야코': 'SHI', '아오모리': 'AOJ',
     '바르셀로나': 'BCN', '하이퐁': 'HPH',
     '서울': 'ICN', '청주시': 'CJJ',
     '상해(푸동)': 'PVG', '오사카': 'KIX', '도쿄': 'NRT', '삿포로': 'CTS',
@@ -253,7 +253,7 @@ const AIRPORT_TO_TRIPCOM_CITY: Record<string, string> = {
     'BKK': 'BKK', 'DMK': 'BKK', 'SGN': 'SGN', 'HAN': 'HAN', 'DAD': 'DAD', 'CXR': 'NHA',
     'MNL': 'MNL', 'CEB': 'CEB', 'DPS': 'DPS',
     'HKG': 'HKG', 'TPE': 'TPE', 'PVG': 'SHA', 'PEK': 'BJS',
-    'SPN': 'SPN', 'GUM': 'GUM', 'HKT': 'HKT', 'CNX': 'CNX',
+    'SPN': 'SPN', 'GUM': 'GUM', 'HKT': 'HKT', 'CNX': 'CNX', 'SHI': 'SHI',
 };
 
 // Trip.com 도시명 → { id, name(한국어) } 매핑 (모두 브라우저/유저 확인됨 ✅)
@@ -299,6 +299,7 @@ const TRIPCOM_CITY_DATA: Record<string, { id: number; name: string; provinceId?:
     '트라브존': { id: 1760, name: '트라브존' }, '싼야': { id: 43, name: '싼야' },
     '바르셀로나': { id: 40795, name: '바르셀로나' }, '밴쿠버': { id: 476, name: '밴쿠버' },
     '시모지시마': { id: 50334, name: '미야코지마' },
+    '미야코지마': { id: 50334, name: '미야코지마' }, '미야코': { id: 50334, name: '미야코지마' },
 };
 
 const TRIPCOM_HOTEL_SUB3 = 'D13108706';
