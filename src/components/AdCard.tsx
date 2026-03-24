@@ -58,7 +58,7 @@ export default function AdCard({ adSlot = '6919960351', className }: AdCardProps
 
     return (
         <div
-            className={`${styles.flightCard} ${styles.adCard} ${className || ''}`}
+            className={`${styles.adCard} ${className || ''}`}
             style={{ display: filled ? '' : 'none' }}
         >
             <div className={styles.adLabel}>광고</div>
