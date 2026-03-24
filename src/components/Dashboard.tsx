@@ -1302,7 +1302,7 @@ export default function Dashboard() {
                 return renderCardBar(barIndex, '🔥', '할인율 높은 항공권 Top 7', top5.map(({ flight, percent }) => {
                     const city = normalizeCity(flight.arrival.city);
                     const depDate = flight.departure.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 10) || '';
-                    return renderCityCard(flight.id, city, `${Math.floor(flight.price / 10000)}만원`, `-${Math.round(percent)}%`, (e) => { e.stopPropagation(); setSearchTerm(city); setStartDate(''); setEndDate(''); setSortBy('price'); setSortOrder('asc'); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+                    return renderCityCard(flight.id, city, `${Math.floor(flight.price / 10000)}만원`, `-${Math.round(percent)}%`, (e) => { e.stopPropagation(); setSearchTerm(city); setStartDate(''); setEndDate(''); setSortBy('price'); setSortOrder('asc'); setDepartureFilter('all'); setRegionFilter('all'); window.scrollTo({ top: 0, behavior: 'smooth' }); });
                 }));
             }
             case 7: { // 💨 곧 출발
@@ -1331,7 +1331,7 @@ export default function Dashboard() {
                 return renderCardBar(barIndex, '💨', '3일 이내 바로 떠날 수 있는 곳', unique7.map(f => {
                     const city = normalizeCity(f.arrival.city);
                     const fd = f.departure.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 10) || '';
-                    return renderCityCard(f.id, city, `${Math.floor(f.price / 10000)}만원~`, '곧 출발', (e) => { e.stopPropagation(); setSearchTerm(city); setStartDate(''); setEndDate(''); setSortBy('price'); setSortOrder('asc'); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+                    return renderCityCard(f.id, city, `${Math.floor(f.price / 10000)}만원~`, '곧 출발', (e) => { e.stopPropagation(); setSearchTerm(city); setStartDate(''); setEndDate(''); setSortBy('price'); setSortOrder('asc'); setDepartureFilter('all'); setRegionFilter('all'); window.scrollTo({ top: 0, behavior: 'smooth' }); });
                 }));
             }
             case 9: { // ☀️ 주말 출발
@@ -1355,7 +1355,7 @@ export default function Dashboard() {
                 }).slice(0, 10);
                 return renderCardBar(barIndex, '☀️', '주말 출발 특가', unique9.map(f => {
                     const city = normalizeCity(f.arrival.city);
-                    return renderCityCard(f.id, city, `${Math.floor(f.price / 10000)}만원~`, '주말 출발', (e) => { e.stopPropagation(); setSearchTerm(city); setStartDate(''); setEndDate(''); setSortBy('price'); setSortOrder('asc'); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+                    return renderCityCard(f.id, city, `${Math.floor(f.price / 10000)}만원~`, '주말 출발', (e) => { e.stopPropagation(); setSearchTerm(city); setStartDate(''); setEndDate(''); setSortBy('price'); setSortOrder('asc'); setDepartureFilter('all'); setRegionFilter('all'); window.scrollTo({ top: 0, behavior: 'smooth' }); });
                 }));
             }
             case 10: { // 💸 20만원 이하
@@ -1374,7 +1374,7 @@ export default function Dashboard() {
                 }).slice(0, 5);
                 return renderCardBar(barIndex, '💸', '20만원 이하로 갈 수 있는 곳', unique10.map(f => {
                     const city = normalizeCity(f.arrival.city);
-                    return renderCityCard(f.id, city, `${Math.floor(f.price / 10000)}만원`, '20만원 이하', (e) => { e.stopPropagation(); setSearchTerm(city); setStartDate(''); setEndDate(''); setSortBy('price'); setSortOrder('asc'); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+                    return renderCityCard(f.id, city, `${Math.floor(f.price / 10000)}만원`, '20만원 이하', (e) => { e.stopPropagation(); setSearchTerm(city); setStartDate(''); setEndDate(''); setSortBy('price'); setSortOrder('asc'); setDepartureFilter('all'); setRegionFilter('all'); window.scrollTo({ top: 0, behavior: 'smooth' }); });
                 }));
             }
             case 8: { // 🌙 금요일 출발
@@ -1400,7 +1400,7 @@ export default function Dashboard() {
                 return renderCardBar(barIndex, '🌙', '금요일 출발 특가', uniqueFri8.map(({ flight }) => {
                     const city = normalizeCity(flight.arrival.city);
                     const friDate = flight.departure.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 10) || '';
-                    return renderCityCard(flight.id, city, `${Math.floor(flight.price / 10000)}만원~`, '금요일 밤', (e) => { e.stopPropagation(); setSearchTerm(city); setStartDate(''); setEndDate(''); setSortBy('price'); setSortOrder('asc'); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+                    return renderCityCard(flight.id, city, `${Math.floor(flight.price / 10000)}만원~`, '금요일 밤', (e) => { e.stopPropagation(); setSearchTerm(city); setStartDate(''); setEndDate(''); setSortBy('price'); setSortOrder('asc'); setDepartureFilter('all'); setRegionFilter('all'); window.scrollTo({ top: 0, behavior: 'smooth' }); });
                 }));
             }
             case 11: { // 📉 가격 하락 노선
@@ -1438,7 +1438,7 @@ export default function Dashboard() {
                 }).slice(0, 5);
 
                 return renderCardBar(barIndex, '📉', '어제보다 가격 내린 항공권', topDrops.map(d =>
-                    renderCityCard(d.route, d.city, `${Math.floor(d.todayPrice / 10000)}만원`, `↓${Math.floor(d.drop / 10000)}만원`, (e) => { e.stopPropagation(); setSearchTerm(d.city); setStartDate(''); setEndDate(''); setSortBy('price'); setSortOrder('asc'); window.scrollTo({ top: 0, behavior: 'smooth' }); })
+                    renderCityCard(d.route, d.city, `${Math.floor(d.todayPrice / 10000)}만원`, `↓${Math.floor(d.drop / 10000)}만원`, (e) => { e.stopPropagation(); setSearchTerm(d.city); setStartDate(''); setEndDate(''); setSortBy('price'); setSortOrder('asc'); setDepartureFilter('all'); setRegionFilter('all'); window.scrollTo({ top: 0, behavior: 'smooth' }); })
                 ));
             }
             case 12: { // 👀 인기 항공권 (목적지별 항공편 수 기준)
