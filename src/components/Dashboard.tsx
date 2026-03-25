@@ -1286,7 +1286,7 @@ export default function Dashboard() {
                     const nc = normalizeCity(city);
                     const cityFlights = flights.filter(f => normalizeCity(f.arrival.city) === nc);
                     const minP = cityFlights.length > 0 ? Math.min(...cityFlights.map(f => f.price)) : 0;
-                    return renderCityCard(city, nc, minP > 0 ? `${Math.floor(minP / 10000)}만원~` : '', `${cityFlights.length}건`, (e) => { e.stopPropagation(); setSearchTerm(city); setStartDate(''); setEndDate(''); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+                    return renderCityCard(city, nc, minP > 0 ? `${Math.floor(minP / 10000)}만원~` : '', `${cityFlights.length}건`, (e) => { e.stopPropagation(); setSearchTerm(city); setStartDate(''); setEndDate(''); setDepartureFilter('all'); setRegionFilter('all'); setSortBy('price'); setSortOrder('asc'); window.scrollTo({ top: 0, behavior: 'smooth' }); });
                 }));
             }
             case 3: { // ✈️ 항공사별 최저가
@@ -1559,7 +1559,7 @@ export default function Dashboard() {
                                 <span
                                     key={city}
                                     className={styles.insightChip}
-                                    onClick={(e) => { e.stopPropagation(); setSearchTerm(city); setSortBy('price'); setSortOrder('asc'); setStartDate(''); setEndDate(''); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                                    onClick={(e) => { e.stopPropagation(); setSearchTerm(city); setSortBy('price'); setSortOrder('asc'); setStartDate(''); setEndDate(''); setDepartureFilter('all'); setRegionFilter('all'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                                 >
                                     {city} <span className={styles.insightChipCount}>{data.count}건</span>
                                 </span>
@@ -1672,7 +1672,7 @@ export default function Dashboard() {
                 const season = seasonMap[month];
                 if (!season) return null;
                 return renderCardBar(barIndex, '🌸', season.title, season.recs.map(r =>
-                    renderCityCard(r.city, r.city, r.reason, r.emoji, (e) => { e.stopPropagation(); setSearchTerm(r.city); setStartDate(''); setEndDate(''); setSortBy('price'); setSortOrder('asc'); window.scrollTo({ top: 0, behavior: 'smooth' }); })
+                    renderCityCard(r.city, r.city, r.reason, r.emoji, (e) => { e.stopPropagation(); setSearchTerm(r.city); setStartDate(''); setEndDate(''); setSortBy('price'); setSortOrder('asc'); setDepartureFilter('all'); setRegionFilter('all'); window.scrollTo({ top: 0, behavior: 'smooth' }); })
                 ));
             }
             case 15: { // ✨ 새로 올라온 항공권
@@ -1728,7 +1728,7 @@ export default function Dashboard() {
                         : '';
                     const priceStr = `${Math.floor(r.minPrice / 10000)}만${r.minPrice % 10000 > 0 ? Math.floor((r.minPrice % 10000) / 1000) + '천' : ''}원~`;
                     const dateInfo = `${dateStr}${r.count > 1 ? ` 외 ${r.count - 1}건` : ''}`;
-                    return renderCityCard(`new-${i}`, r.arr, priceStr, dateInfo, (e) => { e.stopPropagation(); setSearchTerm(r.arr); setStartDate(''); setEndDate(''); setSortBy('price'); setSortOrder('asc'); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+                    return renderCityCard(`new-${i}`, r.arr, priceStr, dateInfo, (e) => { e.stopPropagation(); setSearchTerm(r.arr); setStartDate(''); setEndDate(''); setSortBy('price'); setSortOrder('asc'); setDepartureFilter('all'); setRegionFilter('all'); window.scrollTo({ top: 0, behavior: 'smooth' }); });
                 }));
             }
             default:
