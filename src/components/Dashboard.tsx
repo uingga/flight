@@ -2214,18 +2214,18 @@ export default function Dashboard() {
                                     if (bar) items.push(bar);
                                 }
 
-                                // 광고 카드 삽입: 모바일 4번째부터 16개마다, PC 10번째부터 20개마다
-                                // 항공편 카드를 대체하지 않고 풀 너비 행으로 삽입 (광고 미노출 시 레이아웃 영향 없음)
-                                const adOffset = isMobile ? 4 : 10;
-                                const adInterval = isMobile ? 16 : 20;
-                                const isAdSlot = index > 0 && index >= adOffset && (index - adOffset) % adInterval === 0 && !searchTerm;
-                                if (isAdSlot) {
-                                    items.push(
-                                        <div key={`ad-row-${index}`} className={styles.adRow}>
-                                            <AdCard />
-                                        </div>
-                                    );
-                                }
+                                // 광고 카드 삽입 (현재 비활성화 — 트래픽 증가 후 재활성화)
+                                // TODO: 일 방문자 100명+ 달성 시 아래 주석 해제
+                                // const adOffset = isMobile ? 4 : 10;
+                                // const adInterval = isMobile ? 16 : 20;
+                                // const isAdSlot = index > 0 && index >= adOffset && (index - adOffset) % adInterval === 0 && !searchTerm;
+                                // if (isAdSlot) {
+                                //     items.push(
+                                //         <div key={`ad-row-${index}`} className={styles.adRow}>
+                                //             <AdCard />
+                                //         </div>
+                                //     );
+                                // }
 
                                 items.push(
                                     <div
