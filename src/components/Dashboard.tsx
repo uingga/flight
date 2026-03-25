@@ -593,6 +593,102 @@ export default function Dashboard() {
         }
     }, []);
 
+    // ─── 필터 ↔ 브라우저 히스토리 동기화 ───
+    const isRestoringFromHistory = useRef(false);
+    const historyInitialized = useRef(false);
+    const defaultStartDate = useMemo(() => getDefaultStartDate(), []);
+    const defaultEndDate = useMemo(() => getDefaultEndDate(), []);
+
+    // 필터 상태 → URL 쿼리 파라미터 직렬화
+    type FilterState = { q: string; dep: string; region: string; source: string; airline: string; sort: string; order: string; from: string; to: string };
+    const buildFilterState = useCallback((): FilterState => ({
+        q: searchTerm, dep: departureFilter, region: regionFilter,
+        source: sourceFilter, airline: airlineFilter, sort: sortBy,
+        order: sortOrder, from: startDate, to: endDate,
+    }), [searchTerm, departureFilter, regionFilter, sourceFilter, airlineFilter, sortBy, sortOrder, startDate, endDate]);
+
+    const filterStateToUrl = useCallback((state: FilterState): string => {
+        const params = new URLSearchParams();
+        if (state.q) params.set('q', state.q);
+        if (state.dep !== 'all') params.set('dep', state.dep);
+        if (state.region !== 'all') params.set('region', state.region);
+        if (state.source !== 'all') params.set('source', state.source);
+        if (state.airline !== 'all') params.set('airline', state.airline);
+        if (state.sort !== 'discount') params.set('sort', state.sort);
+        if (state.order !== 'asc') params.set('order', state.order);
+        if (state.from && state.from !== defaultStartDate) params.set('from', state.from);
+        if (state.to && state.to !== defaultEndDate) params.set('to', state.to);
+        const qs = params.toString();
+        return qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
+    }, [defaultStartDate, defaultEndDate]);
+
+    const restoreFilterState = useCallback((state: FilterState | null) => {
+        isRestoringFromHistory.current = true;
+        if (!state) {
+            // null state = 최초 진입 상태 (기본 필터)
+            setSearchTerm(''); setDepartureFilter('all'); setRegionFilter('all');
+            setSourceFilter('all'); setAirlineFilter('all');
+            setSortBy('discount'); setSortOrder('asc');
+            setStartDate(defaultStartDate); setEndDate(defaultEndDate);
+        } else {
+            setSearchTerm(state.q || '');
+            setDepartureFilter(state.dep || 'all');
+            setRegionFilter(state.region || 'all');
+            setSourceFilter(state.source || 'all');
+            setAirlineFilter(state.airline || 'all');
+            setSortBy((state.sort as typeof sortBy) || 'discount');
+            setSortOrder((state.order as typeof sortOrder) || 'asc');
+            setStartDate(state.from || '');
+            setEndDate(state.to || '');
+        }
+        // 다음 렌더에서 플래그 해제 (useEffect가 pushState를 skip하게)
+        requestAnimationFrame(() => { isRestoringFromHistory.current = false; });
+    }, [defaultStartDate, defaultEndDate]);
+
+    // 초기 로드 시 URL 파라미터에서 필터 복원
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('flight')) return; // 공유 링크는 위에서 처리
+        const hasFilterParams = params.has('q') || params.has('dep') || params.has('region') || params.has('source') || params.has('airline') || params.has('sort') || params.has('from') || params.has('to');
+        if (hasFilterParams) {
+            const state: FilterState = {
+                q: params.get('q') || '', dep: params.get('dep') || 'all',
+                region: params.get('region') || 'all', source: params.get('source') || 'all',
+                airline: params.get('airline') || 'all', sort: params.get('sort') || 'discount',
+                order: params.get('order') || 'asc',
+                from: params.get('from') || defaultStartDate, to: params.get('to') || defaultEndDate,
+            };
+            restoreFilterState(state);
+            window.history.replaceState(state, '', filterStateToUrl(state));
+        } else {
+            // 초기 상태를 히스토리에 기록 (뒤로가기 시 돌아올 기준점)
+            const state = buildFilterState();
+            window.history.replaceState(state, '', window.location.pathname);
+        }
+        historyInitialized.current = true;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    // 필터 변경 시 pushState
+    useEffect(() => {
+        if (!historyInitialized.current) return;
+        if (isRestoringFromHistory.current) return;
+        const state = buildFilterState();
+        const url = filterStateToUrl(state);
+        window.history.pushState(state, '', url);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchTerm, departureFilter, regionFilter, sourceFilter, airlineFilter, sortBy, sortOrder, startDate, endDate]);
+
+    // popstate 이벤트: 뒤로가기/앞으로가기 감지
+    useEffect(() => {
+        const handler = (e: PopStateEvent) => {
+            restoreFilterState(e.state as FilterState | null);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+        window.addEventListener('popstate', handler);
+        return () => window.removeEventListener('popstate', handler);
+    }, [restoreFilterState]);
+
     const uniqueAirlines = useMemo(() => {
         const airlines = new Set(flights.map(f => normalizeAirline(f.airline)).filter(Boolean));
         return Array.from(airlines).sort((a, b) => a.localeCompare(b));
