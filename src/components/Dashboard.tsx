@@ -69,6 +69,7 @@ const normalizeCity = (city: string): string => {
         else if (code === 'PVG') result = '상하이(푸동)';
         else if (code === 'SHA') result = '상하이(홍차오)';
         else if (code === 'BKK') result = '방콕(수완나폼)';
+        else if (code === 'DPS') result = '발리';
         else result = codeMatch[1]; // 기타: 괄호만 제거
     } else {
         // 한글 괄호 형태: "서울(김포)", "서울(인천)", "마나도(인도네시아)"
@@ -78,7 +79,7 @@ const normalizeCity = (city: string): string => {
             else if (krMatch[2] === '인천') result = '인천';
             else {
                 // 괄호 안이 공항/지역명이면 괄호 안 사용 (간사이, 나리타, 치토세 등)
-                const airportNames = ['나리타', '하네다', '간사이', '이타미', '푸동', '홍차오', '돈무앙', '수완나폼', '깜랑', '보라카이', '덴파사'];
+                const airportNames = ['나리타', '하네다', '간사이', '이타미', '푸동', '홍차오', '돈무앙', '수완나폼', '깜랑', '보라카이'];
                 if (airportNames.includes(krMatch[2])) result = trimmed; // 공항명 포함 원본 유지
                 else result = krMatch[1]; // 그 외는 괄호 앞의 도시명
             }
