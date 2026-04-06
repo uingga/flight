@@ -407,12 +407,14 @@ export default function Dashboard() {
     const [showStickyPopup, setShowStickyPopup] = useState(false);
     const [shareToast, setShareToast] = useState<string | null>(null);
     const [sharedFlightId, setSharedFlightId] = useState<string | null>(null);
+    const [showFuelBanner, setShowFuelBanner] = useState(false);
     const sharedRouteFallback = useRef<{ dep: string | null; arr: string | null; date: string | null } | null>(null);
     const [bookingFlight, setBookingFlight] = useState<Flight | null>(null);
     const [ttangConfirmFlight, setTtangConfirmFlight] = useState<Flight | null>(null);
     const [passengers, setPassengers] = useState({ adult: 1, child: 0, infant: 0 });
     const [bookingDisclaimer, setBookingDisclaimer] = useState<{ source: string; url: string } | null>(null);
     const disclaimerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const [modetourGuide, setModetourGuide] = useState<Flight | null>(null);
     const disclaimerWindowRef = useRef<Window | null>(null);
     const [favoriteFlights, setFavoriteFlights] = useState<string[]>([]);
     const [favFilter, setFavFilter] = useState(false);
@@ -437,6 +439,19 @@ export default function Dashboard() {
         { title: '비행기 표 싸게 사는 법 2026 총정리', slug: 'cheap-tickets-2026', emoji: '💰' },
         { title: '땡처리, 무조건 싸다고요? 진짜 싼 건지 확인하는 법', slug: 'is-it-really-cheap', emoji: '🔍' },
     ], []);
+
+    // 유류할증료 배너 표시 여부 (localStorage 체크)
+    useEffect(() => {
+        try {
+            const dismissed = localStorage.getItem('fuelBannerDismissed');
+            if (!dismissed) setShowFuelBanner(true);
+        } catch { }
+    }, []);
+
+    const dismissFuelBanner = () => {
+        setShowFuelBanner(false);
+        try { localStorage.setItem('fuelBannerDismissed', 'true'); } catch { }
+    };
 
     // 즐겨찾기 localStorage 로드
     useEffect(() => {
@@ -828,13 +843,9 @@ export default function Dashboard() {
             return url.replace('hope.hanatour.com', 'www.hanatour.com');
         }
 
-        // 모두투어: adult, child, infant 파라미터
+        // 모두투어: 검색 페이지로 이동 (deep link 미지원)
         if (flight.source === 'modetour') {
-            let url = flight.link
-                .replace(/adult=\d+/, `adult=${pax.adult}`)
-                .replace(/child=\d+/, `child=${pax.child}`)
-                .replace(/infant=\d+/, `infant=${pax.infant}`);
-            return getMobileUrl(url, isMobile);
+            return getMobileUrl(flight.link, isMobile);
         }
 
         // 땡처리닷컴: 항상 프로모션 페이지로 이동 + 출발-도착도시 하이라이트
@@ -1829,6 +1840,20 @@ export default function Dashboard() {
                 </div>
             </header>
 
+            {/* 유류할증료 인상 공지 배너 */}
+            {showFuelBanner && (
+                <div className={styles.fuelBanner}>
+                    <div className={styles.fuelBannerContent}>
+                        <span className={styles.fuelBannerIcon}>⛽</span>
+                        <div className={styles.fuelBannerText}>
+                            <strong>4월 유류할증료 인상 안내</strong>
+                            <p>국제 유가 상승으로 4월부터 유류할증료가 대폭 인상되었습니다. 표시 가격에는 인상된 유류할증료가 반영되어 있습니다.</p>
+                        </div>
+                        <button className={styles.fuelBannerClose} onClick={dismissFuelBanner} aria-label="닫기">✕</button>
+                    </div>
+                </div>
+            )}
+
             {/* 스크롤 시 고정 필터 바 */}
             {(() => {
                 const [stickyDrop, setStickyDrop] = React.useState<'date' | 'departure' | 'region' | null>(null);
@@ -2433,32 +2458,13 @@ export default function Dashboard() {
                                                     })()}
 
                                                 </div>
-                                                {['hanatour', 'modetour'].includes(flight.source) ? (
-                                                    <button
-                                                        type="button"
-                                                        className="btn btn-primary"
-                                                        onClick={(e) => { e.stopPropagation(); openBookingModal(flight); }}
-                                                    >
-                                                        예약하기 →
-                                                    </button>
-                                                ) : flight.source === 'ttang' ? (
+                                                {(
                                                     <button
                                                         type="button"
                                                         className="btn btn-primary"
                                                         onClick={(e) => {
                                                             e.stopPropagation();
-                                                            setTtangConfirmFlight(flight);
-                                                        }}
-                                                    >
-                                                        예약하기 →
-                                                    </button>
-                                                ) : (
-                                                    <button
-                                                        type="button"
-                                                        className="btn btn-primary"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            disclaimerThenRedirect(flight);
+                                                            setModetourGuide(flight);
                                                         }}
                                                     >
                                                         예약하기 →
@@ -2688,6 +2694,369 @@ export default function Dashboard() {
                     </div>
                 </div>
             )}
+
+            {/* 항공편 상세 뷰 팝업 (전체 여행사 공용) */}
+            {modetourGuide && (() => {
+                const mdt = modetourGuide.modetourDetail;
+                const depCity = normalizeCity(modetourGuide.departure.city);
+                const arrCity = normalizeCity(modetourGuide.arrival.city);
+                const depAirport = modetourGuide.departure.airport || '';
+                const arrAirport = modetourGuide.arrival.airport || '';
+                const depDate = modetourGuide.departure.date || '';
+                const arrDate = modetourGuide.arrival.date || '';
+                const depTime = modetourGuide.departure.time || '';
+                // 가는편 도착시간
+                const depArrTime = mdt?.departureArrivalTime || '';
+                // 오는편 출발/도착시간
+                const retDepTime = mdt?.returnDepartureTime || modetourGuide.arrival.time || '';
+                const retArrTime = mdt?.returnArrivalTime || '';
+                // 비행시간
+                const flyTime = mdt?.flyingTime
+                    ? `${mdt.flyingTime.replace(':', '시간 ')}분`.replace(' 00분', '')
+                    : calcDuration(depTime, depArrTime, depDate, depDate) || '';
+                const retFlyTime = mdt?.returnFlyingTime
+                    ? `${mdt.returnFlyingTime.replace(':', '시간 ')}분`.replace(' 00분', '')
+                    : calcDuration(retDepTime, retArrTime, arrDate, arrDate) || '';
+                // 총 여행시간 (출발~귀국)
+                const totalDuration = calcDuration(depTime, retDepTime, depDate, arrDate) || '';
+                // 직항
+                const isDirect = mdt?.isDirect ?? true;
+                const isRetDirect = mdt?.isReturnDirect ?? isDirect;
+                // 편명
+                const depFlightNo = mdt?.departureFlightNo || modetourGuide.flightNumber?.split('/')[0]?.trim() || '';
+                const retFlightNo = mdt?.returnFlightNo || modetourGuide.flightNumber?.split('/')[1]?.trim() || '';
+                // 귀국편 공항
+                const retDepAirport = mdt?.returnDepartureAirport || arrAirport;
+                const retArrAirport = mdt?.returnArrivalAirport || depAirport;
+                // 가격
+                const normalPrice = mdt?.normalPrice || 0;
+                const discountRate = mdt?.sourceDiscountRate || 0;
+                const baseFare = mdt?.baseFare || 0;
+                const tax = (mdt?.tax || 0) + (mdt?.tax2 || 0);
+                const totalPrice = modetourGuide.price;
+                // 요일
+                const getDayName = (d: string) => {
+                    if (!d) return '';
+                    try {
+                        const dt = new Date(d + 'T00:00:00');
+                        return ['일', '월', '화', '수', '목', '금', '토'][dt.getDay()];
+                    } catch { return ''; }
+                };
+                const depDay = getDayName(depDate);
+                const arrDay = getDayName(arrDate);
+                // 날짜 짧은 형식
+                const shortDate = (d: string, day: string) => {
+                    if (!d) return '';
+                    return `${d.slice(5).replace('-', '/')}(${day})`;
+                };
+
+                return (
+                    <div className={styles.modalOverlay} onClick={() => setModetourGuide(null)}>
+                        <div className={styles.mdtDetailSheet} onClick={(e) => e.stopPropagation()} style={{ position: 'relative' }}>
+                            <button className={styles.mdtCloseBtn} onClick={() => setModetourGuide(null)}>×</button>
+
+                            {/* 여행사 + 항공사 + 좌석 */}
+                            <div className={styles.mdtSummaryBar}>
+                                <div className={styles.mdtAirlineInfo}>
+                                    <span className={`source-badge source-${modetourGuide.source}`} style={{ fontSize: '11px', marginRight: '6px' }}>{getSourceName(modetourGuide.source)}</span>
+                                    <span className={styles.mdtAirlineLogo}>✈</span>
+                                    <span>{modetourGuide.airline}</span>
+                                </div>
+                                <div className={styles.mdtSeatInfo}>
+                                    {modetourGuide.availableSeats != null && `잔여 ${modetourGuide.availableSeats}석`}
+                                </div>
+                            </div>
+
+                            {/* 타임라인 요약 */}
+                            <div className={styles.mdtTimeline}>
+                                <div className={styles.mdtTimePoint}>
+                                    <div className={styles.mdtTimeValue}>{depTime || '--:--'}</div>
+                                    <div className={styles.mdtTimeCity}>{depCity}<br />{shortDate(depDate, depDay)}</div>
+                                </div>
+                                <div className={styles.mdtTimeConnector}>
+                                    {totalDuration && <span className={styles.mdtDuration}>{totalDuration}</span>}
+                                    {isDirect && <span className={styles.mdtDirectBadgeSm}>직항</span>}
+                                    <div className={styles.mdtLine} />
+                                </div>
+                                <div className={styles.mdtTimePoint}>
+                                    <div className={styles.mdtTimeValue}>{retDepTime || '--:--'}</div>
+                                    <div className={styles.mdtTimeCity}>{arrCity}<br />{shortDate(arrDate, arrDay)}</div>
+                                </div>
+                            </div>
+
+                            {/* 가격 요약 바 */}
+                            {(normalPrice > 0 || discountRate > 0) && (
+                                <div className={styles.mdtPriceBar}>
+                                    {normalPrice > 0 && <span className={styles.mdtNormalPrice}>{formatPrice(normalPrice)}</span>}
+                                    <div className={styles.mdtDiscountGroup}>
+                                        {discountRate > 0 && <span className={styles.mdtDiscountRate}>{discountRate}%</span>}
+                                        <span className={styles.mdtFinalPrice}>{formatPrice(totalPrice)}</span>
+                                        <span className={styles.mdtPriceSuffix}>~</span>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* 상세 항공편 섹션 */}
+                            <div className={styles.mdtFlightSections}>
+                                {/* 가는 항공편 */}
+                                <div className={styles.mdtFlightSection}>
+                                    <div className={styles.mdtSectionHeader}>
+                                        <div className={styles.mdtSectionTitle}>
+                                            <span>가는 항공편</span>
+                                            {isDirect && <span className={styles.mdtDirectBadge}>직항</span>}
+                                        </div>
+                                        {flyTime && <span className={styles.mdtFlyTime}>비행시간: {flyTime}</span>}
+                                    </div>
+                                    <div className={styles.mdtDetailTimeline}>
+                                        <div className={styles.mdtDetailDots}>
+                                            <div className={styles.mdtDot} />
+                                            <div className={styles.mdtDotLine} />
+                                            <div className={styles.mdtDot} />
+                                        </div>
+                                        <div className={styles.mdtDetailStops}>
+                                            <div className={styles.mdtStop}>
+                                                <div>
+                                                    <span className={styles.mdtStopTime}>{depTime}</span>
+                                                    <span className={styles.mdtStopDate}> {shortDate(depDate, depDay)}</span>
+                                                </div>
+                                                <span className={styles.mdtStopCity}>{depCity}({depAirport})</span>
+                                            </div>
+                                            <div className={styles.mdtStop}>
+                                                <div>
+                                                    <span className={styles.mdtStopTime}>{depArrTime || '--:--'}</span>
+                                                    <span className={styles.mdtStopDate}> {shortDate(depDate, depDay)}</span>
+                                                </div>
+                                                <span className={styles.mdtStopCity}>{arrCity}({arrAirport})</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {depFlightNo && (
+                                        <div className={styles.mdtFlightNo}>
+                                            <span className={styles.mdtFlightNoIcon}>✈️</span>
+                                            <span>{modetourGuide.airline} {depFlightNo}편</span>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* 오는 항공편 */}
+                                <div className={styles.mdtFlightSection}>
+                                    <div className={styles.mdtSectionHeader}>
+                                        <div className={styles.mdtSectionTitle}>
+                                            <span>오는 항공편</span>
+                                            {isRetDirect && <span className={styles.mdtDirectBadge}>직항</span>}
+                                        </div>
+                                        {retFlyTime && <span className={styles.mdtFlyTime}>비행시간: {retFlyTime}</span>}
+                                    </div>
+                                    <div className={styles.mdtDetailTimeline}>
+                                        <div className={styles.mdtDetailDots}>
+                                            <div className={styles.mdtDot} />
+                                            <div className={styles.mdtDotLine} />
+                                            <div className={styles.mdtDot} />
+                                        </div>
+                                        <div className={styles.mdtDetailStops}>
+                                            <div className={styles.mdtStop}>
+                                                <div>
+                                                    <span className={styles.mdtStopTime}>{retDepTime || '--:--'}</span>
+                                                    <span className={styles.mdtStopDate}> {shortDate(arrDate, arrDay)}</span>
+                                                </div>
+                                                <span className={styles.mdtStopCity}>{arrCity}({retDepAirport})</span>
+                                            </div>
+                                            <div className={styles.mdtStop}>
+                                                <div>
+                                                    <span className={styles.mdtStopTime}>{retArrTime || '--:--'}</span>
+                                                    <span className={styles.mdtStopDate}> {shortDate(arrDate, arrDay)}</span>
+                                                </div>
+                                                <span className={styles.mdtStopCity}>{depCity}({retArrAirport})</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {retFlightNo && (
+                                        <div className={styles.mdtFlightNo}>
+                                            <span className={styles.mdtFlightNoIcon}>✈️</span>
+                                            <span>{modetourGuide.airline} {retFlightNo}편</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* 가격 상세 */}
+                            {baseFare > 0 && (
+                                <div className={styles.mdtPriceDetail}>
+                                    <div className={styles.mdtPriceRow}>
+                                        <span>항공료</span>
+                                        <strong>{formatPrice(baseFare)}</strong>
+                                    </div>
+                                    {tax > 0 && (
+                                        <div className={styles.mdtPriceRow}>
+                                            <span>유류/제세공과금</span>
+                                            <strong>{formatPrice(tax)}</strong>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* 총 예상금액 */}
+                            <div className={styles.mdtPriceTotal}>
+                                <div>
+                                    <div className={styles.mdtPriceTotalLabel}>총 예상금액</div>
+                                    <div className={styles.mdtPriceTotalSub}>(유류/제세공과금 포함)</div>
+                                </div>
+                                <div className={styles.mdtPriceTotalValue}>{formatPrice(totalPrice)}</div>
+                            </div>
+
+                            {/* 하단 */}
+                            <div className={styles.mdtFooter}>
+                                {/* 모두투어: 검색 가이드 */}
+                                {modetourGuide.source === 'modetour' && (
+                                    <div className={styles.mdtSearchGuide}>
+                                        <div className={styles.mdtSearchGuideTitle}>📌 모두투어에서 이렇게 검색하세요</div>
+                                        <div className={styles.mdtSearchGuideSteps}>
+                                            <span>① 지역: <b>{modetourGuide.region || '해당 지역'}</b> 선택</span>
+                                            <span>② 도시: <b>{arrCity}</b> 검색</span>
+                                            <span>③ 항공사: <b>{modetourGuide.airline}</b> / 날짜: <b>{depDate?.slice(5).replace('-', '/')}</b></span>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* 하나투어 / 온라인투어: 인원 선택 */}
+                                {(modetourGuide.source === 'hanatour' || modetourGuide.source === 'onlinetour') && (
+                                    <>
+                                        <div className={styles.mdtPaxSection}>
+                                            <div className={styles.mdtPaxTitle}>탑승 인원</div>
+                                            <div className={styles.mdtPaxRows}>
+                                                <div className={styles.mdtPaxRow}>
+                                                    <div className={styles.mdtPaxLabel}>
+                                                        <span>성인</span>
+                                                        <span className={styles.mdtPaxAge}>만 12세 이상</span>
+                                                    </div>
+                                                    <div className={styles.mdtPaxCounter}>
+                                                        <button className={styles.mdtPaxBtn} disabled={passengers.adult <= 1} onClick={() => setPassengers(p => ({ ...p, adult: p.adult - 1 }))}>−</button>
+                                                        <span className={styles.mdtPaxCount}>{passengers.adult}</span>
+                                                        <button className={styles.mdtPaxBtn} disabled={passengers.adult >= 9} onClick={() => setPassengers(p => ({ ...p, adult: p.adult + 1 }))}>+</button>
+                                                    </div>
+                                                </div>
+                                                <div className={styles.mdtPaxRow}>
+                                                    <div className={styles.mdtPaxLabel}>
+                                                        <span>소아</span>
+                                                        <span className={styles.mdtPaxAge}>만 2~11세</span>
+                                                    </div>
+                                                    <div className={styles.mdtPaxCounter}>
+                                                        <button className={styles.mdtPaxBtn} disabled={passengers.child <= 0} onClick={() => setPassengers(p => ({ ...p, child: p.child - 1 }))}>−</button>
+                                                        <span className={styles.mdtPaxCount}>{passengers.child}</span>
+                                                        <button className={styles.mdtPaxBtn} disabled={passengers.child >= 9} onClick={() => setPassengers(p => ({ ...p, child: p.child + 1 }))}>+</button>
+                                                    </div>
+                                                </div>
+                                                <div className={styles.mdtPaxRow}>
+                                                    <div className={styles.mdtPaxLabel}>
+                                                        <span>유아</span>
+                                                        <span className={styles.mdtPaxAge}>만 2세 미만</span>
+                                                    </div>
+                                                    <div className={styles.mdtPaxCounter}>
+                                                        <button className={styles.mdtPaxBtn} disabled={passengers.infant <= 0} onClick={() => setPassengers(p => ({ ...p, infant: p.infant - 1 }))}>−</button>
+                                                        <span className={styles.mdtPaxCount}>{passengers.infant}</span>
+                                                        <button className={styles.mdtPaxBtn} disabled={passengers.infant >= 4} onClick={() => setPassengers(p => ({ ...p, infant: p.infant + 1 }))}>+</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {(passengers.adult + passengers.child + passengers.infant) > 1 && (
+                                                <div className={styles.mdtPaxTotal}>
+                                                    총 {passengers.adult + passengers.child + passengers.infant}명 · 예상 {formatPrice(totalPrice * (passengers.adult + passengers.child + passengers.infant))}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className={styles.mdtDisclaimer}>
+                                            표시된 가격 및 좌석은 실시간 변동될 수 있으며,
+                                            실제 예약은 {getSourceName(modetourGuide.source)}에서 직접 이루어집니다.
+                                        </div>
+                                    </>
+                                )}
+
+                                {/* 땡처리닷컴: TASF 수수료 안내 + 인원 선택 */}
+                                {modetourGuide.source === 'ttang' && (
+                                    <>
+                                        <div className={styles.mdtTtangNotice}>
+                                            <span className={styles.mdtTtangNoticeIcon}>💡</span>
+                                            <span>땡처리닷컴은 표시된 가격 외에 <b>발권수수료(TASF)</b>가 별도 부과됩니다.</span>
+                                        </div>
+                                        <div className={styles.mdtPaxSection}>
+                                            <div className={styles.mdtPaxTitle}>탑승 인원</div>
+                                            <div className={styles.mdtPaxRows}>
+                                                <div className={styles.mdtPaxRow}>
+                                                    <div className={styles.mdtPaxLabel}>
+                                                        <span>성인</span>
+                                                        <span className={styles.mdtPaxAge}>만 12세 이상</span>
+                                                    </div>
+                                                    <div className={styles.mdtPaxCounter}>
+                                                        <button className={styles.mdtPaxBtn} disabled={passengers.adult <= 1} onClick={() => setPassengers(p => ({ ...p, adult: p.adult - 1 }))}>−</button>
+                                                        <span className={styles.mdtPaxCount}>{passengers.adult}</span>
+                                                        <button className={styles.mdtPaxBtn} disabled={passengers.adult >= 9} onClick={() => setPassengers(p => ({ ...p, adult: p.adult + 1 }))}>+</button>
+                                                    </div>
+                                                </div>
+                                                <div className={styles.mdtPaxRow}>
+                                                    <div className={styles.mdtPaxLabel}>
+                                                        <span>소아</span>
+                                                        <span className={styles.mdtPaxAge}>만 2~11세</span>
+                                                    </div>
+                                                    <div className={styles.mdtPaxCounter}>
+                                                        <button className={styles.mdtPaxBtn} disabled={passengers.child <= 0} onClick={() => setPassengers(p => ({ ...p, child: p.child - 1 }))}>−</button>
+                                                        <span className={styles.mdtPaxCount}>{passengers.child}</span>
+                                                        <button className={styles.mdtPaxBtn} disabled={passengers.child >= 9} onClick={() => setPassengers(p => ({ ...p, child: p.child + 1 }))}>+</button>
+                                                    </div>
+                                                </div>
+                                                <div className={styles.mdtPaxRow}>
+                                                    <div className={styles.mdtPaxLabel}>
+                                                        <span>유아</span>
+                                                        <span className={styles.mdtPaxAge}>만 2세 미만</span>
+                                                    </div>
+                                                    <div className={styles.mdtPaxCounter}>
+                                                        <button className={styles.mdtPaxBtn} disabled={passengers.infant <= 0} onClick={() => setPassengers(p => ({ ...p, infant: p.infant - 1 }))}>−</button>
+                                                        <span className={styles.mdtPaxCount}>{passengers.infant}</span>
+                                                        <button className={styles.mdtPaxBtn} disabled={passengers.infant >= 4} onClick={() => setPassengers(p => ({ ...p, infant: p.infant + 1 }))}>+</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className={styles.mdtDisclaimer}>
+                                            표시된 가격 및 좌석은 실시간 변동될 수 있으며,
+                                            실제 예약은 땡처리닷컴에서 직접 이루어집니다.
+                                        </div>
+                                    </>
+                                )}
+
+                                {/* 노랑풍선: 면책조항만 */}
+                                {modetourGuide.source === 'ybtour' && (
+                                    <div className={styles.mdtDisclaimer}>
+                                        표시된 가격 및 좌석은 실시간 변동될 수 있으며,
+                                        실제 예약은 {getSourceName(modetourGuide.source)}에서 직접 이루어집니다.
+                                    </div>
+                                )}
+
+                                <button className={styles.mdtBookBtn} onClick={() => {
+                                    gtag.trackBookingClick(modetourGuide.source, `${depCity}-${arrCity}`, totalPrice);
+                                    if (modetourGuide.source === 'modetour') {
+                                        window.open('https://www.modetour.com/flights/discount-flight', '_blank', 'noopener,noreferrer');
+                                    } else if (modetourGuide.source === 'hanatour' || modetourGuide.source === 'onlinetour') {
+                                        const url = getBookingUrl(modetourGuide, passengers);
+                                        window.open(url, '_blank', 'noopener,noreferrer');
+                                    } else if (modetourGuide.source === 'ttang') {
+                                        const ttangDepDate = modetourGuide.departure.date?.replace(/[-\.]/g, '').substring(0, 8) || '';
+                                        const ttangArrCity = modetourGuide.arrival.city?.replace(/\([^)]+\)/g, '').trim() || '';
+                                        const textFragment = ttangArrCity ? `#:~:text=${encodeURIComponent(ttangArrCity)}` : '';
+                                        const url = `https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=${ttangDepDate}&adt=${passengers.adult}&chd=${passengers.child}&inf=${passengers.infant}&page=1&scale=200${textFragment}`;
+                                        window.open(url, '_blank', 'noopener,noreferrer');
+                                    } else {
+                                        const url = getMobileUrl(modetourGuide.link, isMobile);
+                                        window.open(url, '_blank', 'noopener,noreferrer');
+                                    }
+                                    setModetourGuide(null);
+                                }}>
+                                    {getSourceName(modetourGuide.source)}에서 예약하기 →
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                );
+            })()}
 
             {/* 예약 면책조항 팝업 */}
             {bookingDisclaimer && (
