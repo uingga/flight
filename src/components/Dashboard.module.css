@@ -2101,6 +2101,583 @@
     }
 }
 
+/* ============================================
+   모두투어 상세 뷰 팝업
+   ============================================ */
+.mdtDetailSheet {
+    background: #fff;
+    border-radius: 20px;
+    width: min(460px, calc(100vw - 24px));
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    animation: slideUp 0.3s ease;
+}
+
+.mdtDetailSheet::-webkit-scrollbar {
+    width: 4px;
+}
+.mdtDetailSheet::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 4px;
+}
+
+/* 상단 요약 바 */
+.mdtSummaryBar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.mdtAirlineInfo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.mdtAirlineLogo {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    background: #f3f4f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+}
+
+.mdtSeatInfo {
+    font-size: 12px;
+    color: #9ca3af;
+    white-space: nowrap;
+}
+
+/* 타임라인 요약 */
+.mdtTimeline {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 16px 24px 20px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.mdtTimePoint {
+    text-align: center;
+}
+
+.mdtTimeValue {
+    font-size: 24px;
+    font-weight: 700;
+    color: #111827;
+    line-height: 1.2;
+}
+
+.mdtTimeCity {
+    font-size: 12px;
+    color: #9ca3af;
+    margin-top: 2px;
+}
+
+.mdtTimeConnector {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    max-width: 160px;
+}
+
+.mdtDuration {
+    font-size: 12px;
+    font-weight: 600;
+    color: #10b981;
+    background: #ecfdf5;
+    padding: 2px 10px;
+    border-radius: 999px;
+}
+
+.mdtDirectBadgeSm {
+    font-size: 11px;
+    font-weight: 600;
+    color: #fff;
+    background: #10b981;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.mdtLine {
+    width: 100%;
+    height: 2px;
+    background: #e5e7eb;
+    border-radius: 999px;
+    position: relative;
+}
+
+.mdtLine::before,
+.mdtLine::after {
+    content: '';
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: #d1d5db;
+    border-radius: 50%;
+    top: 50%;
+    transform: translateY(-50%);
+}
+.mdtLine::before { left: 0; }
+.mdtLine::after { right: 0; }
+
+/* 가격 요약 바 */
+.mdtPriceBar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 24px;
+    background: #fafafa;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.mdtNormalPrice {
+    font-size: 13px;
+    color: #9ca3af;
+    text-decoration: line-through;
+}
+
+.mdtDiscountGroup {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+}
+
+.mdtDiscountRate {
+    font-size: 18px;
+    font-weight: 800;
+    color: #ef4444;
+}
+
+.mdtFinalPrice {
+    font-size: 20px;
+    font-weight: 800;
+    color: #111827;
+}
+
+.mdtPriceSuffix {
+    font-size: 13px;
+    font-weight: 500;
+    color: #6b7280;
+}
+
+/* 상세 항공편 섹션 */
+.mdtFlightSections {
+    padding: 0 24px;
+}
+
+.mdtFlightSection {
+    padding: 18px 0;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.mdtFlightSection:last-child {
+    border-bottom: none;
+}
+
+.mdtSectionHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}
+
+.mdtSectionTitle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #111827;
+}
+
+.mdtDirectBadge {
+    font-size: 11px;
+    font-weight: 600;
+    color: #10b981;
+    background: #ecfdf5;
+    padding: 3px 8px;
+    border-radius: 6px;
+    border: 1px solid #d1fae5;
+}
+
+.mdtFlyTime {
+    font-size: 12px;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+/* 타임라인 상세 (가는편/오는편) */
+.mdtDetailTimeline {
+    display: flex;
+    align-items: stretch;
+    gap: 12px;
+    padding: 0 4px;
+}
+
+.mdtDetailDots {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 12px;
+    padding: 4px 0;
+}
+
+.mdtDot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid #d1d5db;
+    background: #fff;
+    flex-shrink: 0;
+}
+
+.mdtDotLine {
+    width: 2px;
+    flex: 1;
+    background: #e5e7eb;
+    min-height: 30px;
+}
+
+.mdtDetailStops {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    flex: 1;
+    gap: 8px;
+}
+
+.mdtStop {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.mdtStopTime {
+    font-size: 16px;
+    font-weight: 700;
+    color: #111827;
+}
+
+.mdtStopDate {
+    font-size: 12px;
+    color: #9ca3af;
+}
+
+.mdtStopCity {
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+}
+
+.mdtFlightNo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    padding: 8px 12px;
+    background: #f9fafb;
+    border-radius: 8px;
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.mdtFlightNoIcon {
+    font-size: 14px;
+}
+
+/* 가격 상세 */
+.mdtPriceDetail {
+    padding: 16px 24px 8px;
+    border-top: 1px solid #f3f4f6;
+}
+
+.mdtPriceRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+    font-size: 13px;
+    color: #6b7280;
+}
+
+.mdtPriceRow strong {
+    color: #374151;
+    font-weight: 600;
+}
+
+.mdtPriceTotal {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 24px;
+    background: #f0f0ff;
+    margin: 0;
+}
+
+.mdtPriceTotalLabel {
+    font-size: 14px;
+    font-weight: 600;
+    color: #4338CA;
+}
+
+.mdtPriceTotalValue {
+    font-size: 22px;
+    font-weight: 800;
+    color: #4338CA;
+}
+
+.mdtPriceTotalSub {
+    font-size: 11px;
+    color: #9ca3af;
+    margin-top: 2px;
+}
+
+/* 하단 버튼/면책 */
+.mdtFooter {
+    padding: 16px 24px 24px;
+}
+
+.mdtDisclaimer {
+    padding: 10px 0;
+    font-size: 11px;
+    color: #aaa;
+    line-height: 1.6;
+}
+
+.mdtSearchGuide {
+    padding: 12px 14px;
+    background: #f5f3ff;
+    border: 1px solid #e0e7ff;
+    border-radius: 10px;
+    margin-bottom: 14px;
+}
+
+.mdtSearchGuideTitle {
+    font-size: 13px;
+    font-weight: 700;
+    color: #4338CA;
+    margin-bottom: 8px;
+}
+
+.mdtSearchGuideSteps {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 12px;
+    color: #374151;
+    line-height: 1.6;
+}
+
+.mdtSearchGuideSteps b {
+    color: #4338CA;
+    font-weight: 700;
+}
+
+.mdtBookBtn {
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+    border: none;
+    background: linear-gradient(135deg, #4338CA, #4F46E5);
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+}
+
+.mdtBookBtn:hover {
+    opacity: 0.92;
+}
+
+.mdtBookBtn:active {
+    transform: scale(0.98);
+}
+
+/* 인원 선택 섹션 (하나투어/온라인투어/땡처리닷컴) */
+.mdtPaxSection {
+    margin-bottom: 12px;
+}
+
+.mdtPaxTitle {
+    font-size: 13px;
+    font-weight: 700;
+    color: #374151;
+    margin-bottom: 10px;
+}
+
+.mdtPaxRows {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.mdtPaxRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.mdtPaxRow:last-child {
+    border-bottom: none;
+}
+
+.mdtPaxLabel {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.mdtPaxAge {
+    font-size: 11px;
+    font-weight: 400;
+    color: #9ca3af;
+}
+
+.mdtPaxCounter {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    background: #f9fafb;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+}
+
+.mdtPaxBtn {
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: transparent;
+    font-size: 18px;
+    font-weight: 500;
+    color: #4338CA;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.12s;
+}
+
+.mdtPaxBtn:hover:not(:disabled) {
+    background: #eef2ff;
+}
+
+.mdtPaxBtn:disabled {
+    color: #d1d5db;
+    cursor: not-allowed;
+}
+
+.mdtPaxCount {
+    width: 32px;
+    text-align: center;
+    font-size: 16px;
+    font-weight: 700;
+    color: #111827;
+}
+
+.mdtPaxTotal {
+    margin-top: 10px;
+    padding: 10px 14px;
+    background: #f0f0ff;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #4338CA;
+    text-align: center;
+}
+
+/* 땡처리닷컴 TASF 수수료 안내 */
+.mdtTtangNotice {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 12px 14px;
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 10px;
+    margin-bottom: 14px;
+    font-size: 13px;
+    color: #92400e;
+    line-height: 1.6;
+}
+
+.mdtTtangNoticeIcon {
+    font-size: 16px;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.mdtTtangNotice b {
+    color: #b45309;
+    font-weight: 700;
+}
+
+.mdtCloseBtn {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0,0,0,0.05);
+    font-size: 18px;
+    color: #6b7280;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+    transition: background 0.15s;
+}
+
+.mdtCloseBtn:hover {
+    background: rgba(0,0,0,0.1);
+}
+
+@media (max-width: 768px) {
+    .mdtDetailSheet {
+        border-radius: 20px 20px 0 0;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        max-height: 85vh;
+        animation: slideUpMobile 0.3s ease;
+    }
+
+    .mdtTimeValue {
+        font-size: 20px;
+    }
+
+    .mdtFinalPrice {
+        font-size: 18px;
+    }
+
+    .mdtPriceTotalValue {
+        font-size: 20px;
+    }
+}
+
 /* Blog Post Modal */
 .blogModal {
     background: white;
@@ -2568,5 +3145,100 @@
 @keyframes slideUpSheet {
     from { transform: translateY(100%); }
     to { transform: translateY(0); }
+}
+
+/* ============================================
+   Fuel Surcharge Banner
+   ============================================ */
+@keyframes slideDownBanner {
+    from { transform: translateY(-100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.fuelBanner {
+    max-width: 1300px;
+    margin: 0 auto var(--spacing-md);
+    padding: 0 var(--spacing-lg);
+    animation: slideDownBanner 0.4s ease-out;
+}
+
+.fuelBannerContent {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 20px;
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border: 1px solid #f59e0b;
+    border-radius: var(--radius-lg);
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.15);
+}
+
+.fuelBannerIcon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.fuelBannerText {
+    flex: 1;
+    min-width: 0;
+}
+
+.fuelBannerText strong {
+    display: block;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #92400e;
+    margin-bottom: 2px;
+}
+
+.fuelBannerText p {
+    font-size: 0.85rem;
+    color: #78350f;
+    margin: 0;
+    line-height: 1.5;
+}
+
+.fuelBannerClose {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: rgba(146, 64, 14, 0.1);
+    color: #92400e;
+    border-radius: 50%;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.fuelBannerClose:hover {
+    background: rgba(146, 64, 14, 0.2);
+}
+
+@media (max-width: 768px) {
+    .fuelBanner {
+        padding: 0 var(--spacing-sm);
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .fuelBannerContent {
+        padding: 12px 14px;
+        gap: 10px;
+    }
+
+    .fuelBannerIcon {
+        font-size: 1.2rem;
+    }
+
+    .fuelBannerText strong {
+        font-size: 0.85rem;
+    }
+
+    .fuelBannerText p {
+        font-size: 0.78rem;
+    }
 }
 

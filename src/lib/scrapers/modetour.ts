@@ -3,6 +3,32 @@ import { getRegionByCity } from '@/lib/utils/region-mapper';
 import { logCrawlResults } from '@/lib/utils/crawl-logger';
 
 /**
+ * 도착 공항코드 → 모두투어 대륙코드 매핑
+ * 모두투어 API가 잘못된 대륙 카테고리에서 항공편을 반환할 수 있으므로,
+ * 공항코드 기반으로 정확한 대륙코드를 결정
+ */
+const getContinentByArrivalCode = (code: string): string | null => {
+    const JPN_CODES = [
+        'NRT', 'HND', 'KIX', 'FUK', 'CTS', 'NGO', 'OKA', 'NGS', 'KOJ', 'KMJ',
+        'MYJ', 'TAK', 'FSZ', 'HSG', 'YGJ', 'HIJ', 'OIT', 'UKB', 'KKJ', 'SHI', 'AOJ', 'HKD',
+    ];
+    const CHI_CODES = [
+        'PEK', 'PVG', 'SHA', 'CAN', 'HKG', 'MFM', 'TPE', 'TSA', 'RMQ', 'KHH',
+        'TAO', 'YNT', 'WEH', 'TNA', 'SYX', 'KWL',
+    ];
+    const SOPA_CODES = ['GUM', 'SPN', 'SYD', 'BNE', 'AKL'];
+    const EUR_CODES = ['CDG', 'LHR', 'FCO', 'FRA', 'BCN', 'IST', 'TZX'];
+    const AMCA_CODES = ['JFK', 'LAX', 'SEA', 'YVR', 'YYZ', 'HNL'];
+
+    if (JPN_CODES.includes(code)) return 'JPN';
+    if (CHI_CODES.includes(code)) return 'CHI';
+    if (SOPA_CODES.includes(code)) return 'SOPA';
+    if (EUR_CODES.includes(code)) return 'EUR';
+    if (AMCA_CODES.includes(code)) return 'AMCA';
+    return null; // fallback: 루프의 continentCode 사용
+};
+
+/**
  * 모두투어 스크래퍼
  * URL: https://b2c-api.modetour.com/DiscountFlight/GetList
  * 인증: ModeEcommerceContext 쿠키에서 ApiKey 추출 → modewebapireqheader 헤더로 전달
@@ -208,10 +234,55 @@ export async function scrapeModetour(): Promise<Flight[]> {
                         },
                         price: price,
                         currency: 'KRW',
-                        link: `https://www.modetour.com/flights/discount-flight/reservation-page?id=${item.stockPackageNo}&adult=1&child=0&infant=0&step=1`,
+                        link: (() => {
+                            // 모두투어 SPA는 query 파라미터(JSON)로 필터를 전달할 수 있음
+                            const depCode = item.departure?.code || '';
+                            const arrCode = item.arrival?.code || '';
+                            // 공항코드 → 도시코드 매핑 (모두투어 query는 도시코드 사용)
+                            const airportToCityCode: Record<string, string> = {
+                                'ICN': 'SEL', 'GMP': 'SEL', 'PUS': 'PUS', 'CJU': 'CJU',
+                                'CJJ': 'CJJ', 'TAE': 'TAE', 'KWJ': 'KWJ', 'MWX': 'MWX',
+                            };
+                            const depCityCode = airportToCityCode[depCode] || depCode;
+                            // 대륙 코드 결정
+                            const resolvedContinent = getContinentByArrivalCode(arrCode) || continentCode;
+                            const query = JSON.stringify({
+                                departureCity: depCityCode,
+                                continentCode: resolvedContinent,
+                                arrivalCity: arrCode,
+                                departureDate: item.sDate?.value || '',
+                                arrivalDate: item.eDate?.value || '',
+                                page: 1,
+                                itemCount: 200,
+                                sort: '',
+                            });
+                            return `https://www.modetour.com/flights/discount-flight?query=${encodeURIComponent(query)}`;
+                        })(),
                         availableSeats: item.rSeat?.value,
                         flightNumber: `${item.air?.dfln || ''} / ${item.air?.afln || ''}`.trim(),
                         region: getRegionByCity(destination),
+                        modetourDetail: {
+                            flyingTime: item.start?.flyingTime || item.start?.eft || undefined,
+                            returnFlyingTime: item.eDate?.flyingTime || item.eDate?.eft || undefined,
+                            isDirect: item.start?.via === 'N',
+                            isReturnDirect: item.eDate?.via === 'N' || item.start?.via === 'N', // fallback
+                            departureArrivalTime: item.sDate?.eTime || undefined,
+                            returnDepartureTime: item.eDate?.sTime || undefined,
+                            returnArrivalTime: item.eDate?.eTime || undefined,
+                            normalPrice: item.adult?.normal || undefined,
+                            sourceDiscountRate: item.adult?.discountRate || undefined,
+                            baseFare: item.adult?.value || undefined,
+                            tax: item.adult?.tax || undefined,
+                            tax2: item.adult?.tax2 || undefined,
+                            childBaseFare: item.child?.value || undefined,
+                            childTax: item.child?.tax || undefined,
+                            childTax2: item.child?.tax2 || undefined,
+                            infantFare: item.infant?.value || undefined,
+                            departureFlightNo: item.air?.dfln || undefined,
+                            returnFlightNo: item.air?.afln || undefined,
+                            returnDepartureAirport: item.localDeparture?.code || item.arrival?.code || undefined,
+                            returnArrivalAirport: item.koreanArrival?.code || item.departure?.code || undefined,
+                        },
                     });
                 });
             }

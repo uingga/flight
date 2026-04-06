@@ -292,6 +292,7 @@ export async function scrapeYbtour(): Promise<Flight[]> {
                                                 currency: 'KRW',
                                                 link: flightLink,
                                                 seats: seats ? seats + '석' : '',
+                                                availableSeats: seats ? parseInt(seats) || undefined : undefined,
                                             });
                                         }
 
