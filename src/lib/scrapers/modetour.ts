@@ -247,9 +247,9 @@ export async function scrapeModetour(): Promise<Flight[]> {
                             // 대륙 코드 결정
                             const resolvedContinent = getContinentByArrivalCode(arrCode) || continentCode;
                             const query = JSON.stringify({
-                                departureCity: depCityCode,
+                                departureCity: '',
                                 continentCode: resolvedContinent,
-                                arrivalCity: arrCode,
+                                arrivalCity: '',
                                 departureDate: item.sDate?.value || '',
                                 arrivalDate: item.eDate?.value || '',
                                 page: 1,
