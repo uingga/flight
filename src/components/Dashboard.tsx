@@ -2911,15 +2911,17 @@ export default function Dashboard() {
                                     <div className={styles.mdtSearchGuide}>
                                         <div className={styles.mdtSearchGuideTitle}>📌 모두투어에서 이렇게 검색하세요</div>
                                         <div className={styles.mdtSearchGuideSteps}>
-                                            <span>① 지역: <b>{modetourGuide.region || '해당 지역'}</b> 선택</span>
+                                            <span>① 지역: <b>{
+                                                ({'동남아': '동남아시아', '일본': '일본', '중국': '중국/홍콩/대만', '유럽': '유럽', '미주': '미주/하와이', '남태평양': '남태평양/괌/사이판'} as Record<string, string>)[modetourGuide.region || ''] || '해당 지역'
+                                            }</b> 선택</span>
                                             <span>② 도시: <b>{arrCity}</b> 검색</span>
                                             <span>③ 항공사: <b>{modetourGuide.airline}</b> / 날짜: <b>{depDate?.slice(5).replace('-', '/')}</b></span>
                                         </div>
                                     </div>
                                 )}
 
-                                {/* 하나투어 / 온라인투어: 인원 선택 */}
-                                {(modetourGuide.source === 'hanatour' || modetourGuide.source === 'onlinetour') && (
+                                {/* 하나투어: 인원 선택 */}
+                                {modetourGuide.source === 'hanatour' && (
                                     <>
                                         <div className={styles.mdtPaxSection}>
                                             <div className={styles.mdtPaxTitle}>탑승 인원</div>
@@ -2971,50 +2973,20 @@ export default function Dashboard() {
                                     </>
                                 )}
 
-                                {/* 땡처리닷컴: TASF 수수료 안내 + 인원 선택 */}
+                                {/* 온라인투어 / 노랑풍선: 면책조항만 */}
+                                {(modetourGuide.source === 'onlinetour' || modetourGuide.source === 'ybtour') && (
+                                    <div className={styles.mdtDisclaimer}>
+                                        표시된 가격 및 좌석은 실시간 변동될 수 있으며,
+                                        실제 예약은 {getSourceName(modetourGuide.source)}에서 직접 이루어집니다.
+                                    </div>
+                                )}
+
+                                {/* 땡처리닷컴: TASF 수수료 안내 */}
                                 {modetourGuide.source === 'ttang' && (
                                     <>
                                         <div className={styles.mdtTtangNotice}>
                                             <span className={styles.mdtTtangNoticeIcon}>💡</span>
                                             <span>땡처리닷컴은 표시된 가격 외에 <b>발권수수료(TASF)</b>가 별도 부과됩니다.</span>
-                                        </div>
-                                        <div className={styles.mdtPaxSection}>
-                                            <div className={styles.mdtPaxTitle}>탑승 인원</div>
-                                            <div className={styles.mdtPaxRows}>
-                                                <div className={styles.mdtPaxRow}>
-                                                    <div className={styles.mdtPaxLabel}>
-                                                        <span>성인</span>
-                                                        <span className={styles.mdtPaxAge}>만 12세 이상</span>
-                                                    </div>
-                                                    <div className={styles.mdtPaxCounter}>
-                                                        <button className={styles.mdtPaxBtn} disabled={passengers.adult <= 1} onClick={() => setPassengers(p => ({ ...p, adult: p.adult - 1 }))}>−</button>
-                                                        <span className={styles.mdtPaxCount}>{passengers.adult}</span>
-                                                        <button className={styles.mdtPaxBtn} disabled={passengers.adult >= 9} onClick={() => setPassengers(p => ({ ...p, adult: p.adult + 1 }))}>+</button>
-                                                    </div>
-                                                </div>
-                                                <div className={styles.mdtPaxRow}>
-                                                    <div className={styles.mdtPaxLabel}>
-                                                        <span>소아</span>
-                                                        <span className={styles.mdtPaxAge}>만 2~11세</span>
-                                                    </div>
-                                                    <div className={styles.mdtPaxCounter}>
-                                                        <button className={styles.mdtPaxBtn} disabled={passengers.child <= 0} onClick={() => setPassengers(p => ({ ...p, child: p.child - 1 }))}>−</button>
-                                                        <span className={styles.mdtPaxCount}>{passengers.child}</span>
-                                                        <button className={styles.mdtPaxBtn} disabled={passengers.child >= 9} onClick={() => setPassengers(p => ({ ...p, child: p.child + 1 }))}>+</button>
-                                                    </div>
-                                                </div>
-                                                <div className={styles.mdtPaxRow}>
-                                                    <div className={styles.mdtPaxLabel}>
-                                                        <span>유아</span>
-                                                        <span className={styles.mdtPaxAge}>만 2세 미만</span>
-                                                    </div>
-                                                    <div className={styles.mdtPaxCounter}>
-                                                        <button className={styles.mdtPaxBtn} disabled={passengers.infant <= 0} onClick={() => setPassengers(p => ({ ...p, infant: p.infant - 1 }))}>−</button>
-                                                        <span className={styles.mdtPaxCount}>{passengers.infant}</span>
-                                                        <button className={styles.mdtPaxBtn} disabled={passengers.infant >= 4} onClick={() => setPassengers(p => ({ ...p, infant: p.infant + 1 }))}>+</button>
-                                                    </div>
-                                                </div>
-                                            </div>
                                         </div>
                                         <div className={styles.mdtDisclaimer}>
                                             표시된 가격 및 좌석은 실시간 변동될 수 있으며,
@@ -3023,13 +2995,6 @@ export default function Dashboard() {
                                     </>
                                 )}
 
-                                {/* 노랑풍선: 면책조항만 */}
-                                {modetourGuide.source === 'ybtour' && (
-                                    <div className={styles.mdtDisclaimer}>
-                                        표시된 가격 및 좌석은 실시간 변동될 수 있으며,
-                                        실제 예약은 {getSourceName(modetourGuide.source)}에서 직접 이루어집니다.
-                                    </div>
-                                )}
 
                                 <button className={styles.mdtBookBtn} onClick={() => {
                                     gtag.trackBookingClick(modetourGuide.source, `${depCity}-${arrCity}`, totalPrice);
