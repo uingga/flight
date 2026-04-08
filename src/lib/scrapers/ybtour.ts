@@ -2,6 +2,7 @@ import { chromium } from 'playwright';
 import { Flight } from '@/types/flight';
 import { getRegionByCity } from '@/lib/utils/region-mapper';
 import { logCrawlResults } from '@/lib/utils/crawl-logger';
+import { enrichWithRealtimeData, applyEnrichData, RouteKey } from '@/lib/utils/realtime-enrich';
 
 const randomDelay = (min: number, max: number) =>
     new Promise(r => setTimeout(r, (Math.random() * (max - min) + min) * 1000));
@@ -116,6 +117,7 @@ export async function scrapeYbtour(): Promise<Flight[]> {
     // page.on('console', msg => console.log(`[BROWSER] ${msg.text()}`));
 
     const flights: Flight[] = [];
+    const routeKeys: RouteKey[] = [];
     let totalFlights = 0;
 
     try {
@@ -327,6 +329,15 @@ export async function scrapeYbtour(): Promise<Flight[]> {
                                 const cheapestFlights = validFlights.filter((f: any) => f.price === minPrice);
 
                                 flights.push(...cheapestFlights);
+                                // RouteKey 수집 (Phase 2 보강용)
+                                for (const cf of cheapestFlights) {
+                                    routeKeys.push({
+                                        depCode: cf.departure.airport || 'ICN',
+                                        arrCode: cf.arrival.airport || '',
+                                        depDate: (cf.departure.date || '').replace(/-/g, ''),
+                                        arrDate: (cf.arrival.date || '').replace(/-/g, ''),
+                                    });
+                                }
                                 totalFlights += cheapestFlights.length;
 
                                 if (cheapestFlights.length > 0) {
@@ -349,6 +360,24 @@ export async function scrapeYbtour(): Promise<Flight[]> {
             } catch (error) {
                 console.error(`${region.name} 지역 오류:`, error);
             }
+        }
+
+        console.log(`\n노랑풍선 Phase 1 완료: 총 ${flights.length}개 항공권`);
+
+        // ===== Phase 2: realtime_V2로 시간/좌석 보강 =====
+        if (flights.length > 0) {
+            // 떙처리닷컴 realtime_V2 세션 확보
+            const enrichPage = await context.newPage();
+            await enrichPage.goto('https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=NRT&depdate0=2026-04-20&dep1=NRT&arr1=ICN&depdate1=2026-04-23&adt=1&chd=0&inf=0&comp=Y', {
+                waitUntil: 'domcontentloaded', timeout: 15000,
+            }).catch(() => {});
+            await enrichPage.waitForTimeout(3000);
+
+            const enrichMap = await enrichWithRealtimeData(enrichPage, routeKeys, '노랑풍선');
+            const enrichedCount = applyEnrichData(flights, routeKeys, enrichMap);
+            console.log(`[노랑풍선] 시간 보강: ${enrichedCount}/${flights.length}개`);
+
+            await enrichPage.close();
         }
 
         console.log(`\n노랑풍선 크롤링 완료: 총 ${flights.length}개 항공권`);

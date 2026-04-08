@@ -2,20 +2,21 @@ import { chromium } from 'playwright';
 import { Flight } from '@/types/flight';
 import { getRegionByCity } from '@/lib/utils/region-mapper';
 import { logCrawlResults } from '@/lib/utils/crawl-logger';
+import { enrichWithRealtimeData, applyEnrichData, toHyphenDate, RouteKey } from '@/lib/utils/realtime-enrich';
 
 const randomDelay = (min: number, max: number) =>
     new Promise(r => setTimeout(r, (Math.random() * (max - min) + min) * 1000));
 
 /**
- * 땡처리닷컴 프로모션 페이지 크롤링
- * URL: https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?depdate0={YYYYMMDD}
+ * 땡처리닷컴 크롤링 (2단계)
  *
- * 2026-02-15: promotion/ttangIndex.do 페이지에서 날짜별 순회
- * - li.exair1 data 속성으로 항공편 정보 직접 추출
- * - 오늘부터 1개월간 크롤링
+ * Phase 1: 프로모션 API (allTtangListAct.do) → 기본 노선/가격 수집
+ * Phase 2: realtime_V2 페이지 로드 → 시간/좌석 데이터 보강
+ *
+ * skdset1Info: "20260415||0905||20260415||1050||PUS||FSZ||..." → 출발시간/도착시간
+ * skdset1Detail: "BX||에어부산||1645||PUS||FSZ||...||G||4||..." → 좌석수
  */
 
-// 출발 도시 코드 매핑
 const DEP_CITY_MAP: Record<string, { city: string; airport: string }> = {
     'ICN': { city: '서울', airport: 'ICN' },
     'GMP': { city: '서울(김포)', airport: 'GMP' },
@@ -26,7 +27,6 @@ const DEP_CITY_MAP: Record<string, { city: string; airport: string }> = {
     'MWX': { city: '무안', airport: 'MWX' },
 };
 
-/** YYYYMMDD 형식 문자열 생성 */
 function formatDateParam(date: Date): string {
     const y = date.getFullYear();
     const m = String(date.getMonth() + 1).padStart(2, '0');
@@ -34,13 +34,17 @@ function formatDateParam(date: Date): string {
     return `${y}${m}${d}`;
 }
 
-/** 프로모션 페이지 URL 생성 (필수 파라미터만) */
-function buildPromotionUrl(depdate: string): string {
-    return `https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=${depdate}&adt=1&chd=0&inf=0&page=1&scale=200`;
+/** YYYYMMDD → YYYY-MM-DD */
+function formatDate(raw: string): string {
+    if (!raw || raw.length < 8) return raw;
+    const clean = raw.replace(/\D/g, '').slice(0, 8);
+    return `${clean.slice(0, 4)}-${clean.slice(4, 6)}-${clean.slice(6, 8)}`;
 }
 
+
+
 export async function scrapeTtang(): Promise<Flight[]> {
-    console.log('\n=== 땡처리닷컴 프로모션 크롤링 시작 ===');
+    console.log('\n=== 땡처리닷컴 크롤링 시작 ===');
 
     const browser = await chromium.launch({
         headless: true,
@@ -48,10 +52,10 @@ export async function scrapeTtang(): Promise<Flight[]> {
     });
 
     const context = await browser.newContext({
-        userAgent: 'Mozilla/5.0 (Linux; Android 13; SM-S908B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36',
-        viewport: { width: 390, height: 844 },
+        userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        viewport: { width: 1200, height: 800 },
         extraHTTPHeaders: {
-            'Referer': 'https://www.google.com/',
+            'Referer': 'https://mm.ttang.com/',
             'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
         },
     });
@@ -59,15 +63,24 @@ export async function scrapeTtang(): Promise<Flight[]> {
     const page = await context.newPage();
     const allFlights: Flight[] = [];
     const processedKeys = new Set<string>();
+    const routeKeys: RouteKey[] = [];
 
     try {
-        // 오늘부터 1개월간 크롤링
+        // ===== Phase 1: 프로모션 API로 기본 데이터 수집 =====
+        console.log('[땡처리] Phase 1: 프로모션 API 수집');
+
         const today = new Date();
         const endDate = new Date(today);
         endDate.setMonth(endDate.getMonth() + 1);
-        console.log(`[땡처리] 크롤링 범위: ${formatDateParam(today)} ~ ${formatDateParam(endDate)}`);
 
-        // 날짜별 순회
+        // 세션 확보
+        const firstDate = formatDateParam(today);
+        await page.goto(`https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=${firstDate}&adt=1&chd=0&inf=0&page=1&scale=5`, {
+            waitUntil: 'domcontentloaded',
+            timeout: 30000,
+        });
+        await page.waitForTimeout(2000);
+
         const currentDate = new Date(today);
         let totalDays = 0;
 
@@ -76,108 +89,110 @@ export async function scrapeTtang(): Promise<Flight[]> {
             totalDays++;
 
             try {
-                const url = buildPromotionUrl(dateParam);
-                await page.goto(url, {
-                    waitUntil: 'domcontentloaded',
-                    timeout: 30000,
-                });
-                // li.exair1 요소가 렌더링될 때까지 대기 (최대 8초)
-                await page.waitForSelector('li.exair1', { timeout: 8000 }).catch(() => { });
-                await randomDelay(0.3, 0.8);
+                const apiData = await page.evaluate(async (dp: string) => {
+                    const body = new URLSearchParams({
+                        trip: 'RT', depdate0: dp, adt: '1', chd: '0', inf: '0',
+                        page: '1', scale: '200', totalCnt: '0',
+                        dep0: '', arr0: '', dep1: '', arr1: '', dep2: '', arr2: '',
+                        dep0Name: '', arr0Name: '', dep1Name: '', arr1Name: '', dep2Name: '', arr2Name: '',
+                        depdate1: '', depdate2: '', comp: '', car: '', groupId: '',
+                        gubun: '', seq: '', requestData: '',
+                        skdset1: '', skdset2: '', skdset3: '',
+                    });
+                    const r = await fetch('/ttangair/search/promotion/allTtangListAct.do', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: body.toString(),
+                    });
+                    const text = await r.text();
+                    const match = text.match(/\{.*\}/s);
+                    if (match) {
+                        try { return JSON.parse(match[0]); } catch { return null; }
+                    }
+                    return null;
+                }, dateParam);
 
-                // 더보기 버튼 반복 클릭
-                let moreClicks = 0;
-                while (moreClicks < 10) {
-                    const moreBtn = await page.$('#allttang_more_data_001_btn');
-                    if (!moreBtn) break;
-
-                    const isVisible = await moreBtn.isVisible();
-                    if (!isVisible) break;
-
-                    await moreBtn.click();
-                    await randomDelay(0.8, 1.5);
-                    moreClicks++;
+                if (!apiData?.response || !Array.isArray(apiData.response)) {
+                    currentDate.setDate(currentDate.getDate() + 1);
+                    continue;
                 }
 
-                // li.exair1 에서 데이터 추출
-                const flights = await page.evaluate(() => {
-                    const items = document.querySelectorAll('li.exair1');
-                    return Array.from(items).map(li => {
-                        const el = li as HTMLElement;
-                        return {
-                            airline: el.dataset.tktcardesc || '',
-                            depCity: el.dataset.depcitydesc || '',
-                            depAirport: el.dataset.depcitycode || '',
-                            arrCity: el.dataset.arrcitydesc || '',
-                            arrAirport: el.dataset.arrcitycode || '',
-                            depDate: el.dataset.fromsupplydate || '',
-                            arrDate: el.dataset.tosupplydate || '',
-                            price: parseInt(el.dataset.totalprice || '0') || 0,
-                            masterId: el.dataset.masterid || '',
-                            gubun: el.dataset.gubun || '',
-                        };
-                    });
-                });
-
                 let dayCount = 0;
-                for (const f of flights) {
-                    if (!f.depDate || !f.arrDate || f.price <= 0) continue;
+                for (const item of apiData.response) {
+                    const depDate = formatDate(item.departureDate || '');
+                    const arrDate = formatDate(item.arrivalDate || '');
+                    const price = item.totalPrice || 0;
 
-                    // 편도 항공권 필터링 (출발일 = 귀국일이면 편도)
-                    if (f.depDate === f.arrDate) continue;
+                    if (!depDate || !arrDate || price <= 0) continue;
+                    if (depDate === arrDate) continue;
 
-                    const key = `${f.airline}|${f.depDate}|${f.arrDate}|${f.price}|${f.depCity}|${f.arrCity}`;
+                    const key = `${item.tktCarDesc}|${depDate}|${arrDate}|${price}|${item.depCityDesc}|${item.arrCityDesc}`;
                     if (processedKeys.has(key)) continue;
                     processedKeys.add(key);
 
-                    const depInfo = DEP_CITY_MAP[f.depAirport] || { city: f.depCity || '서울', airport: f.depAirport || 'ICN' };
-                    const depDateParam = f.depDate ? f.depDate.replace(/-/g, '') : '';
-                    const textFragment = f.arrCity
-                        ? `#:~:text=${encodeURIComponent(f.arrCity)}`
-                        : '';
-                    const link = `https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=${depDateParam}&adt=1&chd=0&inf=0&page=1&scale=200${textFragment}`;
-                    const searchLink = `https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=${depDateParam}&adt=1&chd=0&inf=0&page=1&scale=200`;
+                    const depInfo = DEP_CITY_MAP[item.depCityCode] || { city: item.depCityDesc || '서울', airport: item.depCityCode || 'ICN' };
+                    const depDateRaw = (item.departureDate || '').replace(/-/g, '');
+                    const arrDateRaw = (item.arrivalDate || '').replace(/-/g, '');
+                    const depDateHyphen = toHyphenDate(depDateRaw);
+                    const arrDateHyphen = toHyphenDate(arrDateRaw);
+
+                    // realtime_V2 링크 (시간/좌석 데이터가 있는 페이지)
+                    const link = `https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=${item.depCityCode}&arr0=${item.arrCityCode}&depdate0=${depDateHyphen}&dep1=${item.arrCityCode}&arr1=${item.depCityCode}&depdate1=${arrDateHyphen}&adt=1&chd=0&inf=0&comp=Y`;
+                    const searchLink = link;
 
                     const flight: Flight = {
-                        id: `ttang-${f.masterId}-${f.depDate}`,
+                        id: `ttang-${item.masterId}-${depDate}`,
                         source: 'ttang',
-                        airline: f.airline || '알 수 없음',
+                        airline: item.tktCarDesc || '알 수 없음',
                         departure: {
                             city: depInfo.city,
-                            airport: f.depAirport || depInfo.airport,
-                            date: f.depDate,
-                            time: '',
+                            airport: item.depCityCode || depInfo.airport,
+                            date: depDate,
+                            time: '', // Phase 2에서 보강
                         },
                         arrival: {
-                            city: f.arrCity,
-                            airport: f.arrAirport || '',
-                            date: f.arrDate,
-                            time: '',
+                            city: item.arrCityDesc || '',
+                            airport: item.arrCityCode || '',
+                            date: arrDate,
+                            time: '', // Phase 2에서 보강
                         },
-                        price: f.price,
+                        price,
                         currency: 'KRW',
                         link,
                         searchLink,
-                        region: getRegionByCity(f.arrCity) || '',
+                        region: getRegionByCity(item.arrCityDesc || '') || '',
                     };
 
                     allFlights.push(flight);
+                    routeKeys.push({
+                        depCode: item.depCityCode,
+                        arrCode: item.arrCityCode,
+                        depDate: depDateRaw,
+                        arrDate: arrDateRaw,
+                    });
                     dayCount++;
                 }
 
                 if (dayCount > 0) {
-                    console.log(`[땡처리] ${dateParam}: ${dayCount}개 항공편${moreClicks > 0 ? ` (더보기 ${moreClicks}회)` : ''}`);
+                    console.log(`[땡처리] ${dateParam}: ${dayCount}개 항공편`);
                 }
-
             } catch (error) {
                 console.error(`[땡처리] ${dateParam} 실패:`, error instanceof Error ? error.message : error);
             }
 
-            // 다음 날짜
             currentDate.setDate(currentDate.getDate() + 1);
+            if (totalDays % 5 === 0) await randomDelay(0.3, 0.8);
         }
 
-        console.log(`\n[땡처리] ${totalDays}일 순회, 총 ${allFlights.length}개 항공편 수집 완료`);
+        console.log(`[땡처리] Phase 1 완료: ${totalDays}일 순회, ${allFlights.length}개 수집`);
+
+        // ===== Phase 2: realtime_V2로 시간/좌석 보강 =====
+        if (allFlights.length > 0) {
+            const enrichMap = await enrichWithRealtimeData(page, routeKeys, '땡처리');
+            const enrichedCount = applyEnrichData(allFlights, routeKeys, enrichMap);
+            console.log(`[땡처리] 시간/좌석 보강: ${enrichedCount}/${allFlights.length}개`);
+        }
+
         logCrawlResults('ttang', allFlights.length);
 
     } catch (error) {
