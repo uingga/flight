@@ -186,7 +186,11 @@ export function applyEnrichData(
         if (data) {
             if (data.depTime) {
                 flights[i].departure.time = data.depTime;
-                flights[i].arrival.time = data.arrTime;
+                flights[i].departure.arrivalTime = data.arrTime; // 가는편 도착시간
+            }
+            if (data.retDepTime) {
+                flights[i].arrival.time = data.retDepTime;       // 오는편 출발시간
+                flights[i].arrival.arrivalTime = data.retArrTime; // 오는편 도착시간
             }
             if (data.seats > 0 && !flights[i].availableSeats) {
                 flights[i].availableSeats = data.seats;

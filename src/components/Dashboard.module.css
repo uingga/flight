@@ -2127,8 +2127,19 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 20px 48px 16px 24px;
+    padding: 20px 56px 16px 24px;
     border-bottom: 1px solid #f3f4f6;
+}
+
+.mdtSeatInfo {
+    font-size: 12px;
+    font-weight: 600;
+    color: #059669;
+    background: #ecfdf5;
+    padding: 4px 10px;
+    border-radius: 12px;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .mdtAirlineInfo {
