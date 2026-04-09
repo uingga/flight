@@ -1120,7 +1120,7 @@ export default function Dashboard() {
             '다카마쓰': 'takamatsu', '다카마츠': 'takamatsu', '마츠야마': 'matsuyama',
             '오키나와': 'okinawa', '미야코지마': 'miyakojima', '이시가키': 'ishigaki',
             '시모지시마': 'shimojishima', '시즈오카': 'shizuoka', '나라': 'nara',
-            '도야마': 'toyama',
+            '도야마': 'toyama', '하나마키': 'hanamaki',
             // Vietnam
             '다낭': 'danang', '나트랑': 'nhatrang', '하노이': 'hanoi', '호치민': 'hochiminh',
             '푸꾸옥': 'phuquoc', '하이퐁': 'haiphong',
@@ -1133,7 +1133,7 @@ export default function Dashboard() {
             '타이중': 'taichung',
             // China
             '상하이': 'shanghai', '상해': 'shanghai', '청도': 'qingdao', '칭다오': 'qingdao',
-            '계림': 'guilin', '구이린': 'guilin',
+            '계림': 'guilin', '구이린': 'guilin', '장가계': 'zhangjiajie',
             '위해': 'weihai', '웨이하이': 'weihai', '연태': 'yantai', '옌타이': 'yantai',
             '제남': 'jinan', '지난': 'jinan',
             // Southeast Asia & Others
@@ -2706,10 +2706,10 @@ export default function Dashboard() {
                 const arrDate = modetourGuide.arrival.date || '';
                 const depTime = modetourGuide.departure.time || '';
                 // 가는편 도착시간
-                const depArrTime = mdt?.departureArrivalTime || '';
+                const depArrTime = mdt?.departureArrivalTime || (modetourGuide.departure as any)?.arrivalTime || '';
                 // 오는편 출발/도착시간
                 const retDepTime = mdt?.returnDepartureTime || modetourGuide.arrival.time || '';
-                const retArrTime = mdt?.returnArrivalTime || '';
+                const retArrTime = mdt?.returnArrivalTime || (modetourGuide.arrival as any)?.arrivalTime || '';
                 // 비행시간
                 const flyTime = mdt?.flyingTime
                     ? `${mdt.flyingTime.replace(':', '시간 ')}분`.replace(' 00분', '')
@@ -2911,8 +2911,23 @@ export default function Dashboard() {
                                     <div className={styles.mdtSearchGuide}>
                                         <div className={styles.mdtSearchGuideTitle}>📌 모두투어에서 이렇게 검색하세요</div>
                                         <div className={styles.mdtSearchGuideSteps}>
-                                            <span>① 지역: <b>{({'동남아': '동남아시아', '일본': '일본', '중국': '중국/홍콩/대만', '유럽': '유럽', '미주': '미주/하와이', '남태평양': '남태평양/괌/사이판'} as Record<string, string>)[modetourGuide.region || ''] || '해당 지역'}</b> 선택</span>
-                                            <span>② 도시: <b>{arrCity}</b> 선택</span>
+                                            <span>① 지역: <b>{(() => {
+                                                const regionNames: Record<string, string> = {'동남아': '동남아시아', '일본': '일본', '중국': '중국/홍콩/대만', '유럽': '유럽', '미주': '미주/하와이', '남태평양': '남태평양/괌/사이판'};
+                                                const r = modetourGuide.region || '';
+                                                if (regionNames[r]) return regionNames[r];
+                                                // '기타' 등 매핑 안 되는 경우 공항코드로 추정
+                                                const ap = modetourGuide.arrival?.airport || '';
+                                                if (['TPE','TSA','RMQ','KHH','HUN'].includes(ap)) return '중국/홍콩/대만';
+                                                if (['DLC','HRB','SHE','CGQ','XMN','CTU','CKG','PEK','PVG','SHA','CAN','HKG','MFM','TAO','YNT','WEH','TNA','SYX','KWL','YNJ'].includes(ap)) return '중국';
+                                                if (['NRT','HND','KIX','FUK','CTS','NGO','OKA','NGS','KOJ','KMJ','MYJ','TAK','FSZ','HSG','YGJ','HIJ','OIT','UKB','KKJ','SHI','HNA'].includes(ap)) return '일본';
+                                                if (['JFK','LAX','SEA','YVR','YYZ','HNL','SFO','LAS'].includes(ap)) return '미주/하와이';
+                                                if (['GUM','SPN','SYD','BNE','AKL','MEL'].includes(ap)) return '남태평양/괌/사이판';
+                                                if (['CDG','LHR','FCO','FRA','BCN','IST','TZX','AMS','PRG','VIE','ZRH','MAD'].includes(ap)) return '유럽';
+                                                return '동남아시아';
+                                            })()}</b> 선택</span>
+                                            <span>② 도시: <b>{arrCity}{
+                                                modetourGuide.arrival?.airport && ({'TPE': '-타오위안(TPE)', 'TSA': '-쑹산(TSA)'} as Record<string, string>)[modetourGuide.arrival.airport] || ''
+                                            }</b> 선택</span>
                                             <span>③ 항공사: <b>{modetourGuide.airline}</b> / 날짜: <b>{depDate?.slice(5).replace('-', '/')}</b> 확인</span>
                                         </div>
                                     </div>
