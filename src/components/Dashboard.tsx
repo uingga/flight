@@ -51,6 +51,7 @@ const normalizeCity = (city: string): string => {
         '제남': '지난',
         '계림': '구이린',
         '위해': '웨이하이',
+        '로마 ': '로마',
     };
     let result = trimmed;
     // 괄호 포함 형태: "서울(ICN)", "부산(PUS)", "대구(TAE)"
@@ -263,6 +264,8 @@ const AIRPORT_TO_TRIPCOM_CITY: Record<string, string> = {
     'MNL': 'MNL', 'CEB': 'CEB', 'DPS': 'DPS',
     'HKG': 'HKG', 'TPE': 'TPE', 'PVG': 'SHA', 'PEK': 'BJS',
     'SPN': 'SPN', 'GUM': 'GUM', 'HKT': 'HKT', 'CNX': 'CNX', 'SHI': 'SHI',
+    'TOY': 'TOY', 'DLC': 'DLC', 'DYG': 'DYG', 'HNA': 'HNA', 'MMJ': 'MMJ',
+    'IBR': 'IBR', 'ISG': 'ISG', 'HUN': 'HUN',
 };
 
 // Trip.com 도시명 → { id, name(한국어) } 매핑 (모두 브라우저/유저 확인됨 ✅)
@@ -309,6 +312,14 @@ const TRIPCOM_CITY_DATA: Record<string, { id: number; name: string; provinceId?:
     '바르셀로나': { id: 40795, name: '바르셀로나' }, '밴쿠버': { id: 476, name: '밴쿠버' },
     '시모지시마': { id: 50334, name: '미야코지마' },
     '미야코지마': { id: 50334, name: '미야코지마' }, '미야코': { id: 50334, name: '미야코지마' },
+    // 누락 도시 일괄 추가
+    '도야마': { id: 570, name: '도야마' },
+    '대련': { id: 6, name: '대련' },
+    '장가계': { id: 27, name: '장가계' },
+    '하나마키': { id: 50117, name: '하나마키' },
+    '마츠모토': { id: 62496, name: '마츠모토' },
+    '이바라키': { id: 20748, name: '이바라키' },
+    '이시가키': { id: 1174, name: '이시가키' },
 };
 
 const TRIPCOM_HOTEL_SUB3 = 'D13108706';
