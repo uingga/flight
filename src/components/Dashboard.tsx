@@ -183,6 +183,7 @@ const CITY_TO_AIRPORT: Record<string, string> = {
     '상해(푸동공항)': 'PVG', '타이중(대만)': 'RMQ', '마나도(인도네시아)': 'MDC',
     '하이퐁(베트남)': 'HPH',
     '구이린': 'KWL',
+    '도야마': 'TOY', '도야마(TOY)': 'TOY',
 };
 
 // 도시명에서 공항코드 추출
