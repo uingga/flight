@@ -43,7 +43,7 @@ function formatDate(raw: string): string {
 
 
 
-export async function scrapeTtang(): Promise<Flight[]> {
+export async function scrapeTtang(prevFlights: any[] = []): Promise<Flight[]> {
     console.log('\n=== 땡처리닷컴 크롤링 시작 ===');
 
     const browser = await chromium.launch({
@@ -186,11 +186,49 @@ export async function scrapeTtang(): Promise<Flight[]> {
 
         console.log(`[땡처리] Phase 1 완료: ${totalDays}일 순회, ${allFlights.length}개 수집`);
 
-        // ===== Phase 2: realtime_V2로 시간/좌석 보강 =====
+        // ===== Phase 2: 이전 캐시에서 시간 복사 + 신규만 realtime_V2 보강 =====
         if (allFlights.length > 0) {
-            const enrichMap = await enrichWithRealtimeData(page, routeKeys, '땡처리');
-            const enrichedCount = applyEnrichData(allFlights, routeKeys, enrichMap);
-            console.log(`[땡처리] 시간/좌석 보강: ${enrichedCount}/${allFlights.length}개`);
+            // 이전 캐시에서 시간 데이터 복사
+            const prevTimeMap = new Map<string, any>();
+            prevFlights.filter((f: any) => f.source === 'ttang' && f.departure?.time).forEach((f: any) => {
+                const key = `${f.departure?.airport || ''}|${f.arrival?.airport || ''}|${f.departure?.date || ''}|${f.arrival?.date || ''}`;
+                prevTimeMap.set(key, f);
+            });
+
+            let carriedOver = 0;
+            const newRouteKeys: RouteKey[] = [];
+            const newRouteIndices: number[] = [];
+
+            for (let i = 0; i < allFlights.length; i++) {
+                const f = allFlights[i];
+                const key = `${f.departure?.airport || ''}|${f.arrival?.airport || ''}|${f.departure?.date || ''}|${f.arrival?.date || ''}`;
+                const prev = prevTimeMap.get(key);
+
+                if (prev?.departure?.time) {
+                    f.departure.time = prev.departure.time;
+                    if ((prev.departure as any).arrivalTime) (f.departure as any).arrivalTime = (prev.departure as any).arrivalTime;
+                    if (prev.arrival?.time) f.arrival.time = prev.arrival.time;
+                    if ((prev.arrival as any)?.arrivalTime) (f.arrival as any).arrivalTime = (prev.arrival as any).arrivalTime;
+                    if (prev.availableSeats && !f.availableSeats) {
+                        f.availableSeats = prev.availableSeats;
+                        f.seats = prev.seats;
+                    }
+                    carriedOver++;
+                } else if (routeKeys[i]) {
+                    newRouteKeys.push(routeKeys[i]);
+                    newRouteIndices.push(i);
+                }
+            }
+
+            console.log(`[땅처리] 이전 시간 복사: ${carriedOver}/${allFlights.length}개, 신규 enrich 대상: ${newRouteKeys.length}개`);
+
+            // 신규 노선만 realtime_V2로 보강
+            if (newRouteKeys.length > 0) {
+                const enrichMap = await enrichWithRealtimeData(page, newRouteKeys, '땅처리');
+                const newFlights = newRouteIndices.map(i => allFlights[i]);
+                const enrichedCount = applyEnrichData(newFlights, newRouteKeys, enrichMap);
+                console.log(`[땅처리] 신규 시간 보강: ${enrichedCount}/${newRouteKeys.length}개`);
+            }
         }
 
         logCrawlResults('ttang', allFlights.length);
