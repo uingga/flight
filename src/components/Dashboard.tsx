@@ -2777,7 +2777,7 @@ export default function Dashboard() {
                             {/* 여행사 + 항공사 + 좌석 */}
                             <div className={styles.mdtSummaryBar}>
                                 <div className={styles.mdtAirlineInfo}>
-                                    <span className={`source-badge source-${modetourGuide.source}`} style={{ fontSize: '11px', marginRight: '6px' }}>{getSourceName(modetourGuide.source)}</span>
+                                    <span className={`source-badge source-${modetourGuide.source}`} style={{ fontSize: '13px', padding: '3px 8px', marginRight: '8px' }}>{getSourceName(modetourGuide.source)}</span>
                                     <span className={styles.mdtAirlineLogo}>✈</span>
                                     <span>{modetourGuide.airline}</span>
                                 </div>
