@@ -1,7 +1,7 @@
 import { chromium } from 'playwright';
 import { Flight } from '@/types/flight';
 import { getRegionByCity } from '@/lib/utils/region-mapper';
-import { logCrawlResults } from '@/lib/utils/crawl-logger';
+// logCrawlResults moved to crawl-all.ts
 
 const randomDelay = (min: number, max: number) =>
     new Promise(r => setTimeout(r, (Math.random() * (max - min) + min) * 1000));
@@ -440,7 +440,7 @@ export async function scrapeHanatour(): Promise<Flight[]> {
             cityStats[city] = (cityStats[city] || 0) + 1;
         });
 
-        logCrawlResults('hanatour', uniqueFlights.length, undefined, cityStats);
+        // logCrawlResults moved to crawl-all.ts
 
         return uniqueFlights;
 
