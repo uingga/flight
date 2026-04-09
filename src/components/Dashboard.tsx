@@ -2777,12 +2777,17 @@ export default function Dashboard() {
                             {/* 여행사 + 항공사 + 좌석 */}
                             <div className={styles.mdtSummaryBar}>
                                 <div className={styles.mdtAirlineInfo}>
-                                    <span className={`source-badge source-${modetourGuide.source}`} style={{ fontSize: '13px', padding: '3px 8px', marginRight: '8px' }}>{getSourceName(modetourGuide.source)}</span>
-                                    <span className={styles.mdtAirlineLogo}>✈</span>
-                                    <span>{modetourGuide.airline}</span>
-                                </div>
-                                <div className={styles.mdtSeatInfo}>
-                                    {modetourGuide.availableSeats != null && `잔여 ${modetourGuide.availableSeats}석`}
+                                    <span className={`badge ${getSourceBadgeClass(modetourGuide.source)}`}>{getSourceName(modetourGuide.source)}</span>
+                                    <span className={styles.airline} style={{ marginLeft: '6px' }}>{modetourGuide.airline}</span>
+                                    {(() => {
+                                        const seatNum = modetourGuide.availableSeats || (modetourGuide.seats ? parseInt(modetourGuide.seats) : 0);
+                                        if (!seatNum) return null;
+                                        return (
+                                            <span className={seatNum <= 9 ? styles.seatsBadgeCritical : styles.seatsBadge}>
+                                                {seatNum <= 5 && '🔥 '}{seatNum}석
+                                            </span>
+                                        );
+                                    })()}
                                 </div>
                             </div>
 
