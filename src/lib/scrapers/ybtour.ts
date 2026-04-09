@@ -160,9 +160,24 @@ export async function scrapeYbtour(prevFlights: any[] = []): Promise<Flight[]> {
                 await page.waitForSelector('ul.ctab_list', { state: 'visible', timeout: 5000 }).catch(() => { });
                 await randomDelay(1, 3);
 
+                // 페이지에서 도시 버튼을 동적으로 감지 (하드코딩 불필요)
+                const dynamicCities = await page.$$eval('ul.ctab_list li[id^="cityCode_"]', (items) =>
+                    items.map(li => ({
+                        code: li.id.replace('cityCode_', ''),
+                        name: (li.querySelector('a')?.textContent?.trim() || li.id.replace('cityCode_', '')),
+                    })).filter(c => c.code)
+                ).catch(() => [] as { code: string; name: string }[]);
+
+                if (dynamicCities.length === 0) {
+                    console.log(`[SKIP] ${region.name} 지역 도시 버튼을 찾을 수 없음`);
+                    continue;
+                }
+
+                console.log(`${region.name}: ${dynamicCities.length}개 도시 감지 (${dynamicCities.map(c => c.code).join(', ')})`);
+
                 // 각 도시별로 크롤링
-                for (const city of region.cities) {
-                    console.log(`${city.name} 검색 중...`);
+                for (const city of dynamicCities) {
+                    console.log(`${city.name}(${city.code}) 검색 중...`);
 
                     try {
                         const citySelector = `#cityCode_${city.code} a`;
