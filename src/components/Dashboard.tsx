@@ -2931,18 +2931,17 @@ export default function Dashboard() {
                                         <div className={styles.mdtSearchGuideTitle}>📌 모두투어에서 이렇게 검색하세요</div>
                                         <div className={styles.mdtSearchGuideSteps}>
                                             <span>① 지역: <b>{(() => {
-                                                const regionNames: Record<string, string> = {'동남아': '동남아시아', '일본': '일본', '중국': '중국/홍콩/대만', '유럽': '유럽', '미주': '미주/하와이', '남태평양': '남태평양/괌/사이판'};
+                                                const regionNames: Record<string, string> = {'동남아': '동남아', '일본': '일본', '중국': '중국', '유럽': '유럽', '미주': '미주', '남태평양': '남태평양'};
                                                 const r = modetourGuide.region || '';
                                                 if (regionNames[r]) return regionNames[r];
                                                 // '기타' 등 매핑 안 되는 경우 공항코드로 추정
                                                 const ap = modetourGuide.arrival?.airport || '';
-                                                if (['TPE','TSA','RMQ','KHH','HUN'].includes(ap)) return '중국/홍콩/대만';
-                                                if (['DLC','HRB','SHE','CGQ','XMN','CTU','CKG','PEK','PVG','SHA','CAN','HKG','MFM','TAO','YNT','WEH','TNA','SYX','KWL','YNJ'].includes(ap)) return '중국';
-                                                if (['NRT','HND','KIX','FUK','CTS','NGO','OKA','NGS','KOJ','KMJ','MYJ','TAK','FSZ','HSG','YGJ','HIJ','OIT','UKB','KKJ','SHI','HNA'].includes(ap)) return '일본';
-                                                if (['JFK','LAX','SEA','YVR','YYZ','HNL','SFO','LAS'].includes(ap)) return '미주/하와이';
-                                                if (['GUM','SPN','SYD','BNE','AKL','MEL'].includes(ap)) return '남태평양/괌/사이판';
+                                                if (['TPE','TSA','RMQ','KHH','HUN','DLC','HRB','SHE','CGQ','XMN','CTU','CKG','PEK','PVG','SHA','CAN','HKG','MFM','TAO','YNT','WEH','TNA','SYX','KWL','YNJ','DYG'].includes(ap)) return '중국';
+                                                if (['NRT','HND','KIX','FUK','CTS','NGO','OKA','NGS','KOJ','KMJ','MYJ','TAK','FSZ','HSG','YGJ','HIJ','OIT','UKB','KKJ','SHI','HNA','TOY','IBR','ISG','MMJ','AOJ'].includes(ap)) return '일본';
+                                                if (['JFK','LAX','SEA','YVR','YYZ','HNL','SFO','LAS'].includes(ap)) return '미주';
+                                                if (['GUM','SPN','SYD','BNE','AKL','MEL'].includes(ap)) return '남태평양';
                                                 if (['CDG','LHR','FCO','FRA','BCN','IST','TZX','AMS','PRG','VIE','ZRH','MAD'].includes(ap)) return '유럽';
-                                                return '동남아시아';
+                                                return '동남아';
                                             })()}</b> 선택</span>
                                             <span>② 도시: <b>{arrCity}{
                                                 modetourGuide.arrival?.airport && ({'TPE': '-타오위안(TPE)', 'TSA': '-쑹산(TSA)'} as Record<string, string>)[modetourGuide.arrival.airport] || ''
