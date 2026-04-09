@@ -48,62 +48,29 @@ async function main() {
     const prevFlights = prevCache?.flights || [];
 
     try {
+        // 전체 사이트 병렬 크롤링
+        console.log('🔄 5개 사이트 병렬 크롤링 시작...\n');
 
+        const scraperTasks = [
+            { name: '노랑풍선', key: 'ybtour' as const, fn: () => scrapeYbtour(prevFlights) },
+            { name: '하나투어', key: 'hanatour' as const, fn: () => scrapeHanatour() },
+            { name: '모두투어', key: 'modetour' as const, fn: () => scrapeModetour() },
+            { name: '온라인투어', key: 'onlinetour' as const, fn: () => scrapeOnlineTour() },
+            { name: '땡처리닷컴', key: 'ttang' as const, fn: () => scrapeTtang(prevFlights) },
+        ];
 
-        // 2. 노랑풍선
-        console.log('\n=== 노랑풍선 크롤링 ===');
-        try {
-            const ybtourFlights = await scrapeYbtour(prevFlights);
-            allFlights.push(...ybtourFlights);
-            sources.ybtour = ybtourFlights.length;
-            console.log(`✅ 노랑풍선: ${ybtourFlights.length}개`);
-        } catch (error) {
-            console.error('❌ 노랑풍선 실패:', error);
-        }
+        const results = await Promise.allSettled(scraperTasks.map(t => t.fn()));
 
-        // 3. 하나투어
-        console.log('\n=== 하나투어 크롤링 ===');
-        try {
-            const hanatourFlights = await scrapeHanatour();
-            allFlights.push(...hanatourFlights);
-            sources.hanatour = hanatourFlights.length;
-            console.log(`✅ 하나투어: ${hanatourFlights.length}개`);
-        } catch (error) {
-            console.error('❌ 하나투어 실패:', error);
-        }
-
-        // 4. 모두투어
-        console.log('\n=== 모두투어 크롤링 ===');
-        try {
-            const modetourFlights = await scrapeModetour();
-            allFlights.push(...modetourFlights);
-            sources.modetour = modetourFlights.length;
-            console.log(`✅ 모두투어: ${modetourFlights.length}개`);
-        } catch (error) {
-            console.error('❌ 모두투어 실패:', error);
-        }
-
-        // 5. 온라인투어
-        console.log('\n=== 온라인투어 크롤링 ===');
-        try {
-            const onlinetourFlights = await scrapeOnlineTour();
-            allFlights.push(...onlinetourFlights);
-            sources.onlinetour = onlinetourFlights.length;
-            console.log(`✅ 온라인투어: ${onlinetourFlights.length}개`);
-        } catch (error) {
-            console.error('❌ 온라인투어 실패:', error);
-        }
-
-        // 6. 땡처리닷컴
-        console.log('\n=== 땡처리닷컴 크롤링 ===');
-        try {
-            const ttangFlights = await scrapeTtang(prevFlights);
-            allFlights.push(...ttangFlights);
-            sources.ttang = ttangFlights.length;
-            console.log(`✅ 땡처리닷컴: ${ttangFlights.length}개`);
-        } catch (error) {
-            console.error('❌ 땡처리닷컴 실패:', error);
-        }
+        results.forEach((result, i) => {
+            const task = scraperTasks[i];
+            if (result.status === 'fulfilled') {
+                allFlights.push(...result.value);
+                sources[task.key] = result.value.length;
+                console.log(`✅ ${task.name}: ${result.value.length}개`);
+            } else {
+                console.error(`❌ ${task.name} 실패:`, result.reason);
+            }
+        });
 
 
         // 소스별 실패 시 이전 데이터 복구
