@@ -101,7 +101,7 @@ export async function enrichWithRealtimeData(
     let failed = 0;
     let idx = 0;
 
-    for (const [key, route] of uniqueRoutes) {
+    for (const [key, route] of Array.from(uniqueRoutes.entries())) {
         idx++;
         try {
             const depDateHyphen = toHyphenDate(route.depDate);
@@ -130,7 +130,7 @@ export async function enrichWithRealtimeData(
 
             if (!apiResponse) { failed++; continue; }
 
-            const jsonMatch = apiResponse.match(/\{.*\}/s);
+            const jsonMatch = apiResponse.match(/\{[\s\S]*\}/);
             if (!jsonMatch) { failed++; continue; }
 
             const data = JSON.parse(jsonMatch[0]);

@@ -2911,8 +2911,9 @@ export default function Dashboard() {
                                     <div className={styles.mdtSearchGuide}>
                                         <div className={styles.mdtSearchGuideTitle}>📌 모두투어에서 이렇게 검색하세요</div>
                                         <div className={styles.mdtSearchGuideSteps}>
-                                            <span>① 도착 도시에서 <b>{arrCity}</b> 선택</span>
-                                            <span>② <b>{modetourGuide.airline}</b> / <b>{depDate?.slice(5).replace('-', '/')}</b> 출발 확인</span>
+                                            <span>① 지역: <b>{({'동남아': '동남아시아', '일본': '일본', '중국': '중국/홍콩/대만', '유럽': '유럽', '미주': '미주/하와이', '남태평양': '남태평양/괌/사이판'} as Record<string, string>)[modetourGuide.region || ''] || '해당 지역'}</b> 선택</span>
+                                            <span>② 도시: <b>{arrCity}</b> 선택</span>
+                                            <span>③ 항공사: <b>{modetourGuide.airline}</b> / 날짜: <b>{depDate?.slice(5).replace('-', '/')}</b> 확인</span>
                                         </div>
                                     </div>
                                 )}
@@ -2996,8 +2997,7 @@ export default function Dashboard() {
                                 <button className={styles.mdtBookBtn} onClick={() => {
                                     gtag.trackBookingClick(modetourGuide.source, `${depCity}-${arrCity}`, totalPrice);
                                     if (modetourGuide.source === 'modetour') {
-                                        const url = modetourGuide.link || 'https://www.modetour.com/flights/discount-flight';
-                                        window.open(url, '_blank', 'noopener,noreferrer');
+                                        window.open('https://www.modetour.com/flights/discount-flight', '_blank', 'noopener,noreferrer');
                                     } else if (modetourGuide.source === 'hanatour' || modetourGuide.source === 'onlinetour') {
                                         const url = getBookingUrl(modetourGuide, passengers);
                                         window.open(url, '_blank', 'noopener,noreferrer');

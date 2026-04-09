@@ -14,7 +14,8 @@ const getContinentByArrivalCode = (code: string): string | null => {
     ];
     const CHI_CODES = [
         'PEK', 'PVG', 'SHA', 'CAN', 'HKG', 'MFM', 'TPE', 'TSA', 'RMQ', 'KHH',
-        'TAO', 'YNT', 'WEH', 'TNA', 'SYX', 'KWL',
+        'TAO', 'YNT', 'WEH', 'TNA', 'SYX', 'KWL', 'DLC', 'HRB', 'SHE', 'HGH',
+        'CGQ', 'XMN', 'YNJ', 'CTU', 'CKG',
     ];
     const SOPA_CODES = ['GUM', 'SPN', 'SYD', 'BNE', 'AKL'];
     const EUR_CODES = ['CDG', 'LHR', 'FCO', 'FRA', 'BCN', 'IST', 'TZX'];
@@ -249,12 +250,12 @@ export async function scrapeModetour(): Promise<Flight[]> {
                             const query = JSON.stringify({
                                 departureCity: '',
                                 continentCode: resolvedContinent,
-                                arrivalCity: '',
+                                arrivalCity: arrCode,
                                 departureDate: item.sDate?.value || '',
                                 arrivalDate: item.eDate?.value || '',
                                 page: 1,
                                 itemCount: 200,
-                                sort: '',
+                                sort: 'Lowest',
                             });
                             return `https://www.modetour.com/flights/discount-flight?query=${encodeURIComponent(query)}`;
                         })(),

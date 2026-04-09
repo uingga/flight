@@ -105,7 +105,7 @@ export async function scrapeTtang(): Promise<Flight[]> {
                         body: body.toString(),
                     });
                     const text = await r.text();
-                    const match = text.match(/\{.*\}/s);
+                    const match = text.match(/\{[\s\S]*\}/);
                     if (match) {
                         try { return JSON.parse(match[0]); } catch { return null; }
                     }
