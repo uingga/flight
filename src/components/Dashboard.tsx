@@ -2754,10 +2754,13 @@ export default function Dashboard() {
                 const tax = (mdt?.tax || 0) + (mdt?.tax2 || 0);
                 const totalPrice = modetourGuide.price;
                 // 요일
+                const cleanDate = (d: string) => d ? d.replace(/\(.*/g, '').replace(/\./g, '-') : '';
                 const getDayName = (d: string) => {
                     if (!d) return '';
                     try {
-                        const dt = new Date(d + 'T00:00:00');
+                        const clean = cleanDate(d);
+                        const dt = new Date(clean + 'T00:00:00');
+                        if (isNaN(dt.getTime())) return '';
                         return ['일', '월', '화', '수', '목', '금', '토'][dt.getDay()];
                     } catch { return ''; }
                 };
@@ -2766,8 +2769,12 @@ export default function Dashboard() {
                 // 날짜 짧은 형식
                 const shortDate = (d: string, day: string) => {
                     if (!d) return '';
-                    return `${d.slice(5).replace('-', '/')}(${day})`;
+                    const clean = cleanDate(d);
+                    const short = clean.slice(5).replace('-', '.');
+                    return day ? `${short}(${day})` : short;
                 };
+                // 공항코드 표시 (빈 값이면 괄호 생략)
+                const fmtAirport = (city: string, airport: string) => airport ? `${city}(${airport})` : city;
 
                 return (
                     <div className={styles.modalOverlay} onClick={() => setModetourGuide(null)}>
@@ -2843,14 +2850,14 @@ export default function Dashboard() {
                                                     <span className={styles.mdtStopTime}>{depTime}</span>
                                                     <span className={styles.mdtStopDate}> {shortDate(depDate, depDay)}</span>
                                                 </div>
-                                                <span className={styles.mdtStopCity}>{depCity}({depAirport})</span>
+                                                <span className={styles.mdtStopCity}>{fmtAirport(depCity, depAirport)}</span>
                                             </div>
                                             <div className={styles.mdtStop}>
                                                 <div>
                                                     <span className={styles.mdtStopTime}>{depArrTime || '--:--'}</span>
                                                     <span className={styles.mdtStopDate}> {shortDate(depDate, depDay)}</span>
                                                 </div>
-                                                <span className={styles.mdtStopCity}>{arrCity}({arrAirport})</span>
+                                                <span className={styles.mdtStopCity}>{fmtAirport(arrCity, arrAirport)}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -2883,14 +2890,14 @@ export default function Dashboard() {
                                                     <span className={styles.mdtStopTime}>{retDepTime || '--:--'}</span>
                                                     <span className={styles.mdtStopDate}> {shortDate(arrDate, arrDay)}</span>
                                                 </div>
-                                                <span className={styles.mdtStopCity}>{arrCity}({retDepAirport})</span>
+                                                <span className={styles.mdtStopCity}>{fmtAirport(arrCity, retDepAirport)}</span>
                                             </div>
                                             <div className={styles.mdtStop}>
                                                 <div>
                                                     <span className={styles.mdtStopTime}>{retArrTime || '--:--'}</span>
                                                     <span className={styles.mdtStopDate}> {shortDate(arrDate, arrDay)}</span>
                                                 </div>
-                                                <span className={styles.mdtStopCity}>{depCity}({retArrAirport})</span>
+                                                <span className={styles.mdtStopCity}>{fmtAirport(depCity, retArrAirport)}</span>
                                             </div>
                                         </div>
                                     </div>
