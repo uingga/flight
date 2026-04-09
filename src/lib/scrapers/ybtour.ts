@@ -27,6 +27,7 @@ const REGIONS = [
         name: '일본',
         tabId: 'bannerCode_J1',
         cities: [
+            { name: '도야마', code: 'TOY' },
             { name: '다카마쓰', code: 'TAK' },
             { name: '후쿠오카', code: 'FUK' },
             { name: '마츠야마', code: 'MYJ' },
@@ -36,6 +37,8 @@ const REGIONS = [
             { name: '도쿄(나리타)', code: 'NRT' },
             { name: '오키나와', code: 'OKA' },
             { name: '시모지시마', code: 'SHI' },
+            { name: '시즈오카', code: 'FSZ' },
+            { name: '요나고', code: 'YGJ' },
         ]
     },
     {
