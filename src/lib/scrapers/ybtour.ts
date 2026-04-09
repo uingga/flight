@@ -92,7 +92,7 @@ const REGIONS = [
     }
 ];
 
-export async function scrapeYbtour(): Promise<Flight[]> {
+export async function scrapeYbtour(prevFlights: any[] = []): Promise<Flight[]> {
     console.log('노랑풍선 크롤링 시작...');
 
     const browser = await chromium.launch({
@@ -364,20 +364,57 @@ export async function scrapeYbtour(): Promise<Flight[]> {
 
         console.log(`\n노랑풍선 Phase 1 완료: 총 ${flights.length}개 항공권`);
 
-        // ===== Phase 2: realtime_V2로 시간/좌석 보강 =====
+        // ===== Phase 2: 이전 캐시에서 시간 복사 + 신규만 realtime_V2 보강 =====
         if (flights.length > 0) {
-            // 떙처리닷컴 realtime_V2 세션 확보
-            const enrichPage = await context.newPage();
-            await enrichPage.goto('https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=NRT&depdate0=2026-04-20&dep1=NRT&arr1=ICN&depdate1=2026-04-23&adt=1&chd=0&inf=0&comp=Y', {
-                waitUntil: 'domcontentloaded', timeout: 15000,
-            }).catch(() => {});
-            await enrichPage.waitForTimeout(3000);
+            // 이전 캐시에서 시간 데이터 복사
+            const prevTimeMap = new Map<string, any>();
+            prevFlights.filter((f: any) => f.source === 'ybtour' && f.departure?.time).forEach((f: any) => {
+                const key = `${f.departure?.airport || ''}|${f.arrival?.airport || ''}|${f.departure?.date || ''}|${f.arrival?.date || ''}`;
+                prevTimeMap.set(key, f);
+            });
 
-            const enrichMap = await enrichWithRealtimeData(enrichPage, routeKeys, '노랑풍선');
-            const enrichedCount = applyEnrichData(flights, routeKeys, enrichMap);
-            console.log(`[노랑풍선] 시간 보강: ${enrichedCount}/${flights.length}개`);
+            let carriedOver = 0;
+            const newRouteKeys: RouteKey[] = [];
+            const newRouteIndices: number[] = [];
 
-            await enrichPage.close();
+            for (let i = 0; i < flights.length; i++) {
+                const f = flights[i];
+                const key = `${f.departure?.airport || ''}|${f.arrival?.airport || ''}|${f.departure?.date || ''}|${f.arrival?.date || ''}`;
+                const prev = prevTimeMap.get(key);
+
+                if (prev?.departure?.time) {
+                    // 이전 시간 데이터 복사
+                    f.departure.time = prev.departure.time;
+                    if (prev.departure.arrivalTime) (f.departure as any).arrivalTime = prev.departure.arrivalTime;
+                    if (prev.arrival?.time) f.arrival.time = prev.arrival.time;
+                    if (prev.arrival?.arrivalTime) (f.arrival as any).arrivalTime = prev.arrival.arrivalTime;
+                    carriedOver++;
+                } else if (routeKeys[i]) {
+                    // 시간 없음 → enrich 대상
+                    newRouteKeys.push(routeKeys[i]);
+                    newRouteIndices.push(i);
+                }
+            }
+
+            console.log(`[노랑풍선] 이전 시간 복사: ${carriedOver}/${flights.length}개, 신규 enrich 대상: ${newRouteKeys.length}개`);
+
+            // 신규 노선만 realtime_V2로 보강
+            if (newRouteKeys.length > 0) {
+                const enrichPage = await context.newPage();
+                await enrichPage.goto('https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=NRT&depdate0=2026-04-20&dep1=NRT&arr1=ICN&depdate1=2026-04-23&adt=1&chd=0&inf=0&comp=Y', {
+                    waitUntil: 'domcontentloaded', timeout: 15000,
+                }).catch(() => {});
+                await enrichPage.waitForTimeout(3000);
+
+                const enrichMap = await enrichWithRealtimeData(enrichPage, newRouteKeys, '노랑풍선');
+
+                // 신규 노선에만 적용
+                const newFlights = newRouteIndices.map(i => flights[i]);
+                const enrichedCount = applyEnrichData(newFlights, newRouteKeys, enrichMap);
+                console.log(`[노랑풍선] 신규 시간 보강: ${enrichedCount}/${newRouteKeys.length}개`);
+
+                await enrichPage.close();
+            }
         }
 
         console.log(`\n노랑풍선 크롤링 완료: 총 ${flights.length}개 항공권`);

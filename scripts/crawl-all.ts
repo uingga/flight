@@ -36,13 +36,24 @@ async function main() {
         ttang: 0,
     };
 
+    // 이전 캐시 로드 (시간 데이터 이어받기 위해)
+    const dataDir = path.join(process.cwd(), 'data');
+    const cachePath = path.join(dataDir, 'all-flights-cache.json');
+    let prevCache: CacheData | null = null;
+    try {
+        if (fs.existsSync(cachePath)) {
+            prevCache = JSON.parse(fs.readFileSync(cachePath, 'utf-8'));
+        }
+    } catch { }
+    const prevFlights = prevCache?.flights || [];
+
     try {
 
 
         // 2. 노랑풍선
         console.log('\n=== 노랑풍선 크롤링 ===');
         try {
-            const ybtourFlights = await scrapeYbtour();
+            const ybtourFlights = await scrapeYbtour(prevFlights);
             allFlights.push(...ybtourFlights);
             sources.ybtour = ybtourFlights.length;
             console.log(`✅ 노랑풍선: ${ybtourFlights.length}개`);
@@ -86,7 +97,7 @@ async function main() {
         // 6. 땡처리닷컴
         console.log('\n=== 땡처리닷컴 크롤링 ===');
         try {
-            const ttangFlights = await scrapeTtang();
+            const ttangFlights = await scrapeTtang(prevFlights);
             allFlights.push(...ttangFlights);
             sources.ttang = ttangFlights.length;
             console.log(`✅ 땡처리닷컴: ${ttangFlights.length}개`);
@@ -94,25 +105,16 @@ async function main() {
             console.error('❌ 땡처리닷컴 실패:', error);
         }
 
-        // 기존 캐시 로드 (실패 대비)
-        const dataDir = path.join(process.cwd(), 'data');
-        const cachePath = path.join(dataDir, 'all-flights-cache.json');
-        let prevCache: CacheData | null = null;
-        try {
-            if (fs.existsSync(cachePath)) {
-                prevCache = JSON.parse(fs.readFileSync(cachePath, 'utf-8'));
-            }
-        } catch { }
 
         // 소스별 실패 시 이전 데이터 복구
         const sourceNames = ['ybtour', 'hanatour', 'modetour', 'onlinetour', 'ttang'] as const;
         for (const src of sourceNames) {
             if (sources[src] === 0 && prevCache?.flights) {
-                const prevFlights = prevCache.flights.filter((f: any) => f.source === src);
-                if (prevFlights.length > 0) {
-                    console.log(`⚠️ ${src} 실패 → 이전 캐시 ${prevFlights.length}개 유지`);
-                    allFlights.push(...prevFlights);
-                    sources[src] = prevFlights.length;
+                const srcPrevFlights = prevCache.flights.filter((f: any) => f.source === src);
+                if (srcPrevFlights.length > 0) {
+                    console.log(`⚠️ ${src} 실패 → 이전 캐시 ${srcPrevFlights.length}개 유지`);
+                    allFlights.push(...srcPrevFlights);
+                    sources[src] = srcPrevFlights.length;
                 }
             }
         }
