@@ -1,7 +1,7 @@
 import { chromium } from 'playwright';
 import { Flight } from '@/types/flight';
 import { getRegionByCity } from '@/lib/utils/region-mapper';
-import { logCrawlResults } from '@/lib/utils/crawl-logger';
+// logCrawlResults moved to crawl-all.ts
 import { enrichWithRealtimeData, applyEnrichData, RouteKey } from '@/lib/utils/realtime-enrich';
 
 const randomDelay = (min: number, max: number) =>
@@ -427,7 +427,7 @@ export async function scrapeYbtour(prevFlights: any[] = []): Promise<Flight[]> {
 
     const cityStats: { [city: string]: number } = {};
     flights.forEach(f => { cityStats[f.arrival.city] = (cityStats[f.arrival.city] || 0) + 1; });
-    logCrawlResults('ybtour', flights.length, undefined, cityStats);
+    // logCrawlResults moved to crawl-all.ts
 
     return flights;
 }

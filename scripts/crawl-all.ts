@@ -5,6 +5,7 @@ import { scrapeModetour } from '../src/lib/scrapers/modetour';
 import { scrapeOnlineTour } from '../src/lib/scrapers/onlinetour';
 import { scrapeTtang } from '../src/lib/scrapers/ttang';
 import { scrapeInterparkBenchmark, resolveCityCode } from '../src/lib/scrapers/interpark';
+import { logCrawlResults } from '../src/lib/utils/crawl-logger';
 import fs from 'fs';
 import path from 'path';
 
@@ -83,6 +84,19 @@ async function main() {
                     allFlights.push(...srcPrevFlights);
                     sources[src] = srcPrevFlights.length;
                 }
+            }
+        }
+
+        // 통합 크롤링 로그 기록 (병렬 실행 후 한 번에)
+        for (const src of sourceNames) {
+            if (sources[src] > 0) {
+                const srcFlights = allFlights.filter((f: any) => f.source === src);
+                const cityStats: { [city: string]: number } = {};
+                srcFlights.forEach((f: any) => {
+                    const city = f.arrival?.city || '기타';
+                    cityStats[city] = (cityStats[city] || 0) + 1;
+                });
+                logCrawlResults(src, sources[src], undefined, cityStats);
             }
         }
 

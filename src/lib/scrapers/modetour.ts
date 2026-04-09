@@ -1,6 +1,6 @@
 import { Flight } from '@/types/flight';
 import { getRegionByCity } from '@/lib/utils/region-mapper';
-import { logCrawlResults } from '@/lib/utils/crawl-logger';
+// logCrawlResults moved to crawl-all.ts
 
 /**
  * 도착 공항코드 → 모두투어 대륙코드 매핑
@@ -295,7 +295,7 @@ export async function scrapeModetour(): Promise<Flight[]> {
 
         const cityStats: { [city: string]: number } = {};
         allFlights.forEach(f => { cityStats[f.arrival.city] = (cityStats[f.arrival.city] || 0) + 1; });
-        logCrawlResults('modetour', allFlights.length, undefined, cityStats);
+        // logCrawlResults moved to crawl-all.ts
 
         return allFlights;
     } catch (error) {

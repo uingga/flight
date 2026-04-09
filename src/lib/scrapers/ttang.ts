@@ -1,7 +1,7 @@
 import { chromium } from 'playwright';
 import { Flight } from '@/types/flight';
 import { getRegionByCity } from '@/lib/utils/region-mapper';
-import { logCrawlResults } from '@/lib/utils/crawl-logger';
+// logCrawlResults moved to crawl-all.ts
 import { enrichWithRealtimeData, applyEnrichData, toHyphenDate, RouteKey } from '@/lib/utils/realtime-enrich';
 
 const randomDelay = (min: number, max: number) =>
@@ -231,7 +231,7 @@ export async function scrapeTtang(prevFlights: any[] = []): Promise<Flight[]> {
             }
         }
 
-        logCrawlResults('ttang', allFlights.length);
+        // logCrawlResults moved to crawl-all.ts
 
     } catch (error) {
         console.error('[땡처리] 크롤링 오류:', error);
