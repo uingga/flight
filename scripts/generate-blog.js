@@ -27,7 +27,7 @@ const MIN_INCHEON = 1;
 const MIN_REGIONAL = 2;
 const SITE_URL = 'https://tikitikit.kr';
 const PROD_API_URL = `${SITE_URL}/api/flights`;
-const HISTORY_POSTS = 1; // 최근 N개 포스트의 도시 중복 방지
+const HISTORY_DAYS = 3; // 최근 N일 이내 포스트의 도시 중복 방지
 
 // ===== 프로덕션 API에서 항공편 가져오기 =====
 function fetchProductionFlights() {
@@ -126,6 +126,8 @@ const CITY_NAME_MAP = {
     '다카마츠': '다카마쓰',
     '삿포로(치토세)': '삿포로',
     '보라카이(KLO)': '보라카이',
+    '칼리보': '보라카이',
+    '칼리보(보라카이)': '보라카이',
     '오사카': '오사카(간사이)',
     '오사카(KIX)': '오사카(간사이)',
 };
@@ -510,7 +512,7 @@ async function main() {
     }
 
     if (recentDests.length > 0) {
-        console.log(`🔄 최근 ${HISTORY_POSTS}개 포스트 도시 (제외 대상): ${recentDests.join(', ')}`);
+        console.log(`🔄 최근 ${HISTORY_DAYS}일 이내 포스트 도시 (제외 대상): ${recentDests.join(', ')}`);
     }
 
     // 5.5 가격 하락 감지 — 이전 포스트 대비 가격이 떨어진 노선은 중복 제외에서 면제
@@ -575,13 +577,21 @@ async function main() {
     console.log(`📝 히스토리 저장: ${uniqueDests.join(', ')}`);
 }
 
-// ===== 블로그 히스토리 (최근 N개 포스트 도시 중복 방지 + 가격 추적) =====
+// ===== 블로그 히스토리 (최근 N일 이내 포스트 도시 중복 방지 + 가격 추적) =====
 function loadRecentDests() {
     try {
         if (!fs.existsSync(HISTORY_PATH)) return [];
         const history = JSON.parse(fs.readFileSync(HISTORY_PATH, 'utf-8'));
         const entries = history.entries || [];
-        const recentEntries = entries.slice(-HISTORY_POSTS);
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
+        const cutoff = new Date(now);
+        cutoff.setDate(cutoff.getDate() - HISTORY_DAYS);
+        const recentEntries = entries.filter(e => {
+            if (!e.date) return false;
+            const entryDate = new Date(e.date + 'T00:00:00');
+            return entryDate >= cutoff;
+        });
         const dests = new Set();
         recentEntries.forEach(e => (e.destinations || []).forEach(d => dests.add(d)));
         return Array.from(dests);
@@ -677,9 +687,17 @@ function selectTopWithIncheon(sortedFlights, recentDests = [], priceDropDests = 
     // 0단계: --include 강제 포함 (최우선)
     if (CLI_OVERRIDES.include.length > 0) {
         for (const includeDest of CLI_OVERRIDES.include) {
-            const bestFlight = sortedFlights.find(f => normalizeCity(f.arrival?.city) === includeDest);
+            // 정확 매칭 → 부분 매칭(includes) fallback
+            let bestFlight = sortedFlights.find(f => normalizeCity(f.arrival?.city) === includeDest);
+            if (!bestFlight) {
+                bestFlight = sortedFlights.find(f => {
+                    const nc = normalizeCity(f.arrival?.city);
+                    return nc.includes(includeDest) || includeDest.includes(nc);
+                });
+            }
             if (bestFlight) {
-                seenDests.add(includeDest);
+                const nc = normalizeCity(bestFlight.arrival?.city);
+                seenDests.add(nc);
                 topFlights.push(bestFlight);
                 console.log(`  📌 강제 포함: ${bestFlight.departure?.city} → ${bestFlight.arrival?.city} | ${bestFlight.price.toLocaleString()}원`);
             } else {
