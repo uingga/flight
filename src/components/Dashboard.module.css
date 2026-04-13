@@ -1108,8 +1108,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    flex-wrap: wrap;
-    gap: 8px;
+    flex-wrap: nowrap;
+    gap: 6px;
     padding-top: 14px;
     margin-top: 10px;
     border-top: 1px dashed var(--color-border);
@@ -1122,14 +1122,15 @@
 }
 
 .compareLink {
-    font-size: 0.78rem;
+    font-size: 0.72rem;
     color: var(--color-primary);
     text-decoration: none;
     font-weight: 600;
-    padding: 6px 16px;
+    padding: 6px 12px;
     border-radius: 999px;
     transition: all var(--transition-fast);
     background: var(--color-bg-tertiary);
+    white-space: nowrap;
 }
 
 .compareLink:hover {

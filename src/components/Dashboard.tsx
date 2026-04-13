@@ -47,6 +47,7 @@ const normalizeCity = (city: string): string => {
         'Trabzon': '트라브존',
         '치토세': '삿포로',
         '칼리보': '보라카이',
+        '칼리보(보라카이)': '보라카이',
         '화리엔': '화롄',
         '제남': '지난',
         '계림': '구이린',
@@ -2736,8 +2737,16 @@ export default function Dashboard() {
                 const retFlyTime = mdt?.returnFlyingTime
                     ? `${mdt.returnFlyingTime.replace(':', '시간 ')}분`.replace(' 00분', '')
                     : calcDuration(retDepTime, retArrTime, arrDate, arrDate) || '';
-                // 총 여행시간 (출발~귀국)
-                const totalDuration = calcDuration(depTime, retDepTime, depDate, arrDate) || '';
+                // 총 체류기간 (N박 M일)
+                const stayDuration = (() => {
+                    if (!depDate || !arrDate) return '';
+                    const d1 = new Date(normalizeDate(depDate));
+                    const d2 = new Date(normalizeDate(arrDate));
+                    if (isNaN(d1.getTime()) || isNaN(d2.getTime())) return '';
+                    const nights = Math.round((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24));
+                    if (nights <= 0) return '';
+                    return `${nights}박 ${nights + 1}일`;
+                })();
                 // 직항
                 const isDirect = mdt?.isDirect ?? true;
                 const isRetDirect = mdt?.isReturnDirect ?? isDirect;
@@ -2805,7 +2814,7 @@ export default function Dashboard() {
                                     <div className={styles.mdtTimeCity}>{depCity}<br />{shortDate(depDate, depDay)}</div>
                                 </div>
                                 <div className={styles.mdtTimeConnector}>
-                                    {totalDuration && <span className={styles.mdtDuration}>{totalDuration}</span>}
+                                    {stayDuration && <span className={styles.mdtDuration}>{stayDuration}</span>}
                                     {isDirect && <span className={styles.mdtDirectBadgeSm}>직항</span>}
                                     <div className={styles.mdtLine} />
                                 </div>
