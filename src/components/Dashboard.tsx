@@ -2740,8 +2740,9 @@ export default function Dashboard() {
                 // 총 체류기간 (N박 M일)
                 const stayDuration = (() => {
                     if (!depDate || !arrDate) return '';
-                    const d1 = new Date(normalizeDate(depDate));
-                    const d2 = new Date(normalizeDate(arrDate));
+                    const parse = (d: string) => { const m = d.match(/^(\d{4})[.\-](\d{2})[.\-](\d{2})/); return m ? new Date(`${m[1]}-${m[2]}-${m[3]}`) : new Date(d); };
+                    const d1 = parse(depDate);
+                    const d2 = parse(arrDate);
                     if (isNaN(d1.getTime()) || isNaN(d2.getTime())) return '';
                     const nights = Math.round((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24));
                     if (nights <= 0) return '';
