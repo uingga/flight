@@ -1140,7 +1140,8 @@ export default function Dashboard() {
             '다카마쓰': 'takamatsu', '다카마츠': 'takamatsu', '마츠야마': 'matsuyama',
             '오키나와': 'okinawa', '미야코지마': 'miyakojima', '이시가키': 'ishigaki',
             '시모지시마': 'shimojishima', '시즈오카': 'shizuoka', '나라': 'nara',
-            '도야마': 'toyama', '하나마키': 'hanamaki',
+            '도야마': 'toyama', '하나마키': 'hanamaki', '하코다테': 'hakodate',
+            '쿠마모토': 'kumamoto',
             // Vietnam
             '다낭': 'danang', '나트랑': 'nhatrang', '하노이': 'hanoi', '호치민': 'hochiminh',
             '푸꾸옥': 'phuquoc', '하이퐁': 'haiphong',
@@ -1150,7 +1151,7 @@ export default function Dashboard() {
             '세부': 'cebu', '보라카이': 'boracay', '보홀': 'bohol', '클락': 'clark', '칼리보': 'kalibo',
             // Taiwan
             '타이베이': 'taipei', '타이페이': 'taipei', '가오슝': 'kaohsiung', '대만': 'taipei',
-            '타이중': 'taichung',
+            '타이중': 'taichung', '화련': 'hualien', '화롄': 'hualien',
             // China
             '상하이': 'shanghai', '상해': 'shanghai', '청도': 'qingdao', '칭다오': 'qingdao',
             '계림': 'guilin', '구이린': 'guilin', '장가계': 'zhangjiajie',
