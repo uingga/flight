@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-04-14T17:14:39.520Z",
-  "count": 687,
+  "timestamp": "2026-04-15T00:14:51.129Z",
+  "count": 690,
   "flights": [
     {
       "id": "ybtour-시즈오카-20260417-0",
@@ -6216,8 +6216,7 @@
       "price": 399000,
       "currency": "KRW",
       "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=A0%2FA3&inhId=XJ0701ICNDMK-T4&depDate=20260421&efcCityCode=DMK",
-      "seats": "1석",
-      "availableSeats": 1,
+      "seats": "0석",
       "region": "동남아",
       "discountRate": 12,
       "firstSeen": "2026-04-14"
@@ -6377,8 +6376,8 @@
       "price": 399000,
       "currency": "KRW",
       "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=A0%2FA3&inhId=VZ0851ICNBKK-T6&depDate=20260617&efcCityCode=BKK",
-      "seats": "1석",
-      "availableSeats": 1,
+      "seats": "2석",
+      "availableSeats": 2,
       "region": "동남아",
       "discountRate": -3,
       "firstSeen": "2026-04-14"
@@ -6445,13 +6444,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-06-28",
-        "time": ""
+        "time": "20:05",
+        "arrivalTime": "00:10"
       },
       "arrival": {
         "city": "방콕",
         "airport": "BKK",
         "date": "2026-07-02",
-        "time": ""
+        "time": "01:10",
+        "arrivalTime": "08:55"
       },
       "price": 399000,
       "currency": "KRW",
@@ -10045,18 +10046,18 @@
         "city": "청주시(CJJ)",
         "airport": "",
         "date": "2026.05.03(일)",
-        "time": "16:00"
+        "time": "13:50"
       },
       "arrival": {
         "city": "후쿠오카(FUK)",
         "airport": "",
         "date": "2026.05.06(수)",
-        "time": "17:30"
+        "time": "15:00"
       },
       "price": 252000,
       "currency": "KRW",
-      "link": "https://www.hanatour.com/com/pmt/CHPC0PMT0011M200?fareId=RTF%5E3116345%5ERF0336CJJFUK-H1%5ERF0336CJJFUK-1%5E20260503%5ET%5EKRW%5E6460125%5E5274405%5E%5E1%5E0%5E0&psngrCntLst=%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D&selectedCard=%7B%7D",
-      "availableSeats": 6,
+      "link": "https://www.hanatour.com/com/pmt/CHPC0PMT0011M200?fareId=RTF%5E3116345%5ERF0336CJJFUK-H1%5ERF0336CJJFUK-3%5E20260503%5ET%5EKRW%5E6460125%5E5274405%5E%5E1%5E0%5E0&psngrCntLst=%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D&selectedCard=%7B%7D",
+      "availableSeats": 9,
       "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22CJJ%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22FUK%22%2C%22depDt%22%3A%2220260503%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22FUK%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22CJJ%22%2C%22depDt%22%3A%2220260506%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
       "region": "일본",
       "discountRate": -26,
@@ -14712,58 +14713,6 @@
       "firstSeen": "2026-04-13"
     },
     {
-      "id": "ttang-ICN-FUK-RT-0-3-7C-2026-04-20",
-      "source": "ttang",
-      "airline": "제주항공",
-      "departure": {
-        "city": "서울",
-        "airport": "ICN",
-        "date": "2026-04-20",
-        "time": ""
-      },
-      "arrival": {
-        "city": "후쿠오카",
-        "airport": "FUK",
-        "date": "2026-04-22",
-        "time": ""
-      },
-      "price": 199000,
-      "currency": "KRW",
-      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-04-20&dep1=FUK&arr1=ICN&depdate1=2026-04-22&adt=1&chd=0&inf=0&comp=Y",
-      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-04-20&dep1=FUK&arr1=ICN&depdate1=2026-04-22&adt=1&chd=0&inf=0&comp=Y",
-      "region": "일본",
-      "discountRate": 13,
-      "firstSeen": "2026-04-14"
-    },
-    {
-      "id": "ttang-ZE0781CJJTPE-D5-2026-04-20",
-      "source": "ttang",
-      "airline": "이스타항공",
-      "departure": {
-        "city": "청주",
-        "airport": "CJJ",
-        "date": "2026-04-20",
-        "time": "23:40",
-        "arrivalTime": "01:10"
-      },
-      "arrival": {
-        "city": "타이페이",
-        "airport": "TPE",
-        "date": "2026-04-24",
-        "time": "02:40",
-        "arrivalTime": "06:05"
-      },
-      "price": 219200,
-      "currency": "KRW",
-      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=CJJ&arr0=TPE&depdate0=2026-04-20&dep1=TPE&arr1=CJJ&depdate1=2026-04-24&adt=1&chd=0&inf=0&comp=Y",
-      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=CJJ&arr0=TPE&depdate0=2026-04-20&dep1=TPE&arr1=CJJ&depdate1=2026-04-24&adt=1&chd=0&inf=0&comp=Y",
-      "region": "중국",
-      "availableSeats": 4,
-      "seats": "4석",
-      "discountRate": 22,
-      "firstSeen": "2026-04-10"
-    },
-    {
       "id": "ttang-PUS-NGS-RT-0-4-BX-2026-04-20",
       "source": "ttang",
       "airline": "에어부산",
@@ -14816,34 +14765,6 @@
       "firstSeen": "2026-04-14"
     },
     {
-      "id": "ttang-ZE0593ICNDAD-D12-2026-04-20",
-      "source": "ttang",
-      "airline": "이스타항공",
-      "departure": {
-        "city": "서울",
-        "airport": "ICN",
-        "date": "2026-04-20",
-        "time": "09:10",
-        "arrivalTime": "12:10"
-      },
-      "arrival": {
-        "city": "다낭",
-        "airport": "DAD",
-        "date": "2026-04-24",
-        "time": "13:10",
-        "arrivalTime": "19:55"
-      },
-      "price": 381200,
-      "currency": "KRW",
-      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=DAD&depdate0=2026-04-20&dep1=DAD&arr1=ICN&depdate1=2026-04-24&adt=1&chd=0&inf=0&comp=Y",
-      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=DAD&depdate0=2026-04-20&dep1=DAD&arr1=ICN&depdate1=2026-04-24&adt=1&chd=0&inf=0&comp=Y",
-      "region": "동남아",
-      "availableSeats": 8,
-      "seats": "8석",
-      "discountRate": -1,
-      "firstSeen": "2026-04-10"
-    },
-    {
       "id": "ttang-TW0351TAETOY-G2-2026-04-21",
       "source": "ttang",
       "airline": "티웨이항공",
@@ -14892,6 +14813,58 @@
       "region": "일본",
       "discountRate": 13,
       "firstSeen": "2026-04-14"
+    },
+    {
+      "id": "ttang-ZE0781CJJTPE-D5-2026-04-21",
+      "source": "ttang",
+      "airline": "이스타항공",
+      "departure": {
+        "city": "청주",
+        "airport": "CJJ",
+        "date": "2026-04-21",
+        "time": "23:40",
+        "arrivalTime": "01:10"
+      },
+      "arrival": {
+        "city": "타이페이",
+        "airport": "TPE",
+        "date": "2026-04-25",
+        "time": "02:40",
+        "arrivalTime": "06:05"
+      },
+      "price": 249200,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=CJJ&arr0=TPE&depdate0=2026-04-21&dep1=TPE&arr1=CJJ&depdate1=2026-04-25&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=CJJ&arr0=TPE&depdate0=2026-04-21&dep1=TPE&arr1=CJJ&depdate1=2026-04-25&adt=1&chd=0&inf=0&comp=Y",
+      "region": "중국",
+      "availableSeats": 9,
+      "seats": "9석",
+      "discountRate": 11,
+      "firstSeen": "2026-04-15"
+    },
+    {
+      "id": "ttang-ZE0611ICNKIX-G32-2026-04-21",
+      "source": "ttang",
+      "airline": "이스타항공",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-04-21",
+        "time": ""
+      },
+      "arrival": {
+        "city": "오사카(간사이)",
+        "airport": "KIX",
+        "date": "2026-04-23",
+        "time": ""
+      },
+      "price": 250000,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=KIX&depdate0=2026-04-21&dep1=KIX&arr1=ICN&depdate1=2026-04-23&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=KIX&depdate0=2026-04-21&dep1=KIX&arr1=ICN&depdate1=2026-04-23&adt=1&chd=0&inf=0&comp=Y",
+      "region": "일본",
+      "discountRate": -15,
+      "firstSeen": "2026-04-15"
     },
     {
       "id": "ttang-ZE0861ICNHKG-D1-2026-04-21",
@@ -15002,32 +14975,6 @@
       "seats": "9석",
       "discountRate": -28,
       "firstSeen": "2026-04-07"
-    },
-    {
-      "id": "ttang-ICN-OKA-RT-0-3-ZE-2026-04-22",
-      "source": "ttang",
-      "airline": "이스타항공",
-      "departure": {
-        "city": "서울",
-        "airport": "ICN",
-        "date": "2026-04-22",
-        "time": "11:30",
-        "arrivalTime": "14:00"
-      },
-      "arrival": {
-        "city": "오키나와",
-        "airport": "OKA",
-        "date": "2026-04-24",
-        "time": "15:00",
-        "arrivalTime": "17:35"
-      },
-      "price": 249000,
-      "currency": "KRW",
-      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=OKA&depdate0=2026-04-22&dep1=OKA&arr1=ICN&depdate1=2026-04-24&adt=1&chd=0&inf=0&comp=Y",
-      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=OKA&depdate0=2026-04-22&dep1=OKA&arr1=ICN&depdate1=2026-04-24&adt=1&chd=0&inf=0&comp=Y",
-      "region": "일본",
-      "discountRate": 24,
-      "firstSeen": "2026-04-14"
     },
     {
       "id": "ttang-TR0843ICNSIN-G16-2026-04-22",
@@ -15408,6 +15355,34 @@
       "firstSeen": "2026-04-07"
     },
     {
+      "id": "ttang-ZE0593ICNDAD-D13-2026-04-25",
+      "source": "ttang",
+      "airline": "이스타항공",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-04-25",
+        "time": "21:30",
+        "arrivalTime": "00:30"
+      },
+      "arrival": {
+        "city": "다낭",
+        "airport": "DAD",
+        "date": "2026-04-30",
+        "time": "01:30",
+        "arrivalTime": "08:15"
+      },
+      "price": 436200,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=DAD&depdate0=2026-04-25&dep1=DAD&arr1=ICN&depdate1=2026-04-30&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=DAD&depdate0=2026-04-25&dep1=DAD&arr1=ICN&depdate1=2026-04-30&adt=1&chd=0&inf=0&comp=Y",
+      "region": "동남아",
+      "availableSeats": 9,
+      "seats": "9석",
+      "discountRate": -15,
+      "firstSeen": "2026-04-15"
+    },
+    {
       "id": "ttang-7C2661PUSSIN-G6-2026-04-25",
       "source": "ttang",
       "airline": "제주항공",
@@ -15678,32 +15653,6 @@
       "firstSeen": "2026-04-14"
     },
     {
-      "id": "ttang-PUS-FSZ-RT-0-3-BX-2026-04-27",
-      "source": "ttang",
-      "airline": "에어부산",
-      "departure": {
-        "city": "부산",
-        "airport": "PUS",
-        "date": "2026-04-27",
-        "time": "09:05",
-        "arrivalTime": "10:50"
-      },
-      "arrival": {
-        "city": "시즈오카",
-        "airport": "FSZ",
-        "date": "2026-04-29",
-        "time": "11:50",
-        "arrivalTime": "14:00"
-      },
-      "price": 160000,
-      "currency": "KRW",
-      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=PUS&arr0=FSZ&depdate0=2026-04-27&dep1=FSZ&arr1=PUS&depdate1=2026-04-29&adt=1&chd=0&inf=0&comp=Y",
-      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=PUS&arr0=FSZ&depdate0=2026-04-27&dep1=FSZ&arr1=PUS&depdate1=2026-04-29&adt=1&chd=0&inf=0&comp=Y",
-      "region": "일본",
-      "discountRate": 49,
-      "firstSeen": "2026-04-13"
-    },
-    {
       "id": "ttang-ZE0967PUSKMJ-G18-2026-04-27",
       "source": "ttang",
       "airline": "이스타항공",
@@ -15784,6 +15733,34 @@
       "seats": "9석",
       "discountRate": 1,
       "firstSeen": "2026-04-14"
+    },
+    {
+      "id": "ttang-ZE0593ICNDAD-D13-2026-04-27",
+      "source": "ttang",
+      "airline": "이스타항공",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-04-27",
+        "time": "20:35",
+        "arrivalTime": "23:25"
+      },
+      "arrival": {
+        "city": "다낭",
+        "airport": "DAD",
+        "date": "2026-05-02",
+        "time": "00:25",
+        "arrivalTime": "06:55"
+      },
+      "price": 436200,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=DAD&depdate0=2026-04-27&dep1=DAD&arr1=ICN&depdate1=2026-05-02&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=DAD&depdate0=2026-04-27&dep1=DAD&arr1=ICN&depdate1=2026-05-02&adt=1&chd=0&inf=0&comp=Y",
+      "region": "동남아",
+      "availableSeats": 6,
+      "seats": "6석",
+      "discountRate": -15,
+      "firstSeen": "2026-04-15"
     },
     {
       "id": "ttang-ZE0561ICNCXR-D12-2026-04-27",
@@ -15892,34 +15869,6 @@
       "seats": "9석",
       "discountRate": 0,
       "firstSeen": "2026-04-10"
-    },
-    {
-      "id": "ttang-ICN-KIX-RT-0-3-7C-2026-04-28",
-      "source": "ttang",
-      "airline": "제주항공",
-      "departure": {
-        "city": "서울",
-        "airport": "ICN",
-        "date": "2026-04-28",
-        "time": "12:15",
-        "arrivalTime": "14:15"
-      },
-      "arrival": {
-        "city": "오사카(간사이)",
-        "airport": "KIX",
-        "date": "2026-04-30",
-        "time": "18:00",
-        "arrivalTime": "19:55"
-      },
-      "price": 240400,
-      "currency": "KRW",
-      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=KIX&depdate0=2026-04-28&dep1=KIX&arr1=ICN&depdate1=2026-04-30&adt=1&chd=0&inf=0&comp=Y",
-      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=KIX&depdate0=2026-04-28&dep1=KIX&arr1=ICN&depdate1=2026-04-30&adt=1&chd=0&inf=0&comp=Y",
-      "region": "일본",
-      "availableSeats": 9,
-      "seats": "9석",
-      "discountRate": -10,
-      "firstSeen": "2026-04-14"
     },
     {
       "id": "ttang-ZE0951PUSCTS-G4-2026-04-28",
@@ -16244,34 +16193,6 @@
       "firstSeen": "2026-04-07"
     },
     {
-      "id": "ttang-PUS-GUM-RT-0-6-BX-2026-05-03",
-      "source": "ttang",
-      "airline": "에어부산",
-      "departure": {
-        "city": "부산",
-        "airport": "PUS",
-        "date": "2026-05-03",
-        "time": "19:50",
-        "arrivalTime": "01:10"
-      },
-      "arrival": {
-        "city": "괌",
-        "airport": "GUM",
-        "date": "2026-05-08",
-        "time": "02:40",
-        "arrivalTime": "06:20"
-      },
-      "price": 399900,
-      "currency": "KRW",
-      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=PUS&arr0=GUM&depdate0=2026-05-03&dep1=GUM&arr1=PUS&depdate1=2026-05-08&adt=1&chd=0&inf=0&comp=Y",
-      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=PUS&arr0=GUM&depdate0=2026-05-03&dep1=GUM&arr1=PUS&depdate1=2026-05-08&adt=1&chd=0&inf=0&comp=Y",
-      "region": "남태평양",
-      "availableSeats": 9,
-      "seats": "9석",
-      "discountRate": -4,
-      "firstSeen": "2026-04-09"
-    },
-    {
       "id": "ttang-PUS-GUM-RT-0-5-BX-2026-05-03",
       "source": "ttang",
       "airline": "에어부산",
@@ -16293,6 +16214,34 @@
       "currency": "KRW",
       "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=PUS&arr0=GUM&depdate0=2026-05-03&dep1=GUM&arr1=PUS&depdate1=2026-05-07&adt=1&chd=0&inf=0&comp=Y",
       "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=PUS&arr0=GUM&depdate0=2026-05-03&dep1=GUM&arr1=PUS&depdate1=2026-05-07&adt=1&chd=0&inf=0&comp=Y",
+      "region": "남태평양",
+      "availableSeats": 9,
+      "seats": "9석",
+      "discountRate": -4,
+      "firstSeen": "2026-04-09"
+    },
+    {
+      "id": "ttang-PUS-GUM-RT-0-6-BX-2026-05-03",
+      "source": "ttang",
+      "airline": "에어부산",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-05-03",
+        "time": "19:50",
+        "arrivalTime": "01:10"
+      },
+      "arrival": {
+        "city": "괌",
+        "airport": "GUM",
+        "date": "2026-05-08",
+        "time": "02:40",
+        "arrivalTime": "06:20"
+      },
+      "price": 399900,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=PUS&arr0=GUM&depdate0=2026-05-03&dep1=GUM&arr1=PUS&depdate1=2026-05-08&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=PUS&arr0=GUM&depdate0=2026-05-03&dep1=GUM&arr1=PUS&depdate1=2026-05-08&adt=1&chd=0&inf=0&comp=Y",
       "region": "남태평양",
       "availableSeats": 9,
       "seats": "9석",
@@ -16352,6 +16301,34 @@
       "region": "일본",
       "discountRate": 39,
       "firstSeen": "2026-04-13"
+    },
+    {
+      "id": "ttang-ZE0781CJJTPE-D5-2026-05-04",
+      "source": "ttang",
+      "airline": "이스타항공",
+      "departure": {
+        "city": "청주",
+        "airport": "CJJ",
+        "date": "2026-05-04",
+        "time": "23:40",
+        "arrivalTime": "01:10"
+      },
+      "arrival": {
+        "city": "타이페이",
+        "airport": "TPE",
+        "date": "2026-05-08",
+        "time": "02:40",
+        "arrivalTime": "06:05"
+      },
+      "price": 249200,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=CJJ&arr0=TPE&depdate0=2026-05-04&dep1=TPE&arr1=CJJ&depdate1=2026-05-08&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=CJJ&arr0=TPE&depdate0=2026-05-04&dep1=TPE&arr1=CJJ&depdate1=2026-05-08&adt=1&chd=0&inf=0&comp=Y",
+      "region": "중국",
+      "availableSeats": 4,
+      "seats": "4석",
+      "discountRate": 17,
+      "firstSeen": "2026-04-15"
     },
     {
       "id": "ttang-ICN-RMQ-RT-0-4-LJ-2026-05-04",
@@ -16488,6 +16465,34 @@
       "seats": "1석",
       "discountRate": -12,
       "firstSeen": "2026-04-13"
+    },
+    {
+      "id": "ttang-ZE0781CJJTPE-D5-2026-05-05",
+      "source": "ttang",
+      "airline": "이스타항공",
+      "departure": {
+        "city": "청주",
+        "airport": "CJJ",
+        "date": "2026-05-05",
+        "time": "23:40",
+        "arrivalTime": "01:10"
+      },
+      "arrival": {
+        "city": "타이페이",
+        "airport": "TPE",
+        "date": "2026-05-09",
+        "time": "02:40",
+        "arrivalTime": "06:05"
+      },
+      "price": 249200,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=CJJ&arr0=TPE&depdate0=2026-05-05&dep1=TPE&arr1=CJJ&depdate1=2026-05-09&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=CJJ&arr0=TPE&depdate0=2026-05-05&dep1=TPE&arr1=CJJ&depdate1=2026-05-09&adt=1&chd=0&inf=0&comp=Y",
+      "region": "중국",
+      "availableSeats": 9,
+      "seats": "9석",
+      "discountRate": 17,
+      "firstSeen": "2026-04-15"
     },
     {
       "id": "ttang-9G0451ICNPQC-G2-2026-05-05",
@@ -17210,6 +17215,34 @@
       "firstSeen": "2026-04-10"
     },
     {
+      "id": "ttang-ZE0781CJJTPE-D5-2026-05-09",
+      "source": "ttang",
+      "airline": "이스타항공",
+      "departure": {
+        "city": "청주",
+        "airport": "CJJ",
+        "date": "2026-05-09",
+        "time": "23:40",
+        "arrivalTime": "01:10"
+      },
+      "arrival": {
+        "city": "타이페이",
+        "airport": "TPE",
+        "date": "2026-05-13",
+        "time": "02:40",
+        "arrivalTime": "06:05"
+      },
+      "price": 249200,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=CJJ&arr0=TPE&depdate0=2026-05-09&dep1=TPE&arr1=CJJ&depdate1=2026-05-13&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=CJJ&arr0=TPE&depdate0=2026-05-09&dep1=TPE&arr1=CJJ&depdate1=2026-05-13&adt=1&chd=0&inf=0&comp=Y",
+      "region": "중국",
+      "availableSeats": 9,
+      "seats": "9석",
+      "discountRate": 17,
+      "firstSeen": "2026-04-15"
+    },
+    {
       "id": "ttang-7C8501ICNWEH-G5-2026-05-09",
       "source": "ttang",
       "airline": "제주항공",
@@ -17656,6 +17689,34 @@
       "seats": "9석",
       "discountRate": 3,
       "firstSeen": "2026-04-10"
+    },
+    {
+      "id": "ttang-ZE0781CJJTPE-D5-2026-05-10",
+      "source": "ttang",
+      "airline": "이스타항공",
+      "departure": {
+        "city": "청주",
+        "airport": "CJJ",
+        "date": "2026-05-10",
+        "time": "23:40",
+        "arrivalTime": "01:10"
+      },
+      "arrival": {
+        "city": "타이페이",
+        "airport": "TPE",
+        "date": "2026-05-14",
+        "time": "02:40",
+        "arrivalTime": "07:05"
+      },
+      "price": 249200,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=CJJ&arr0=TPE&depdate0=2026-05-10&dep1=TPE&arr1=CJJ&depdate1=2026-05-14&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=CJJ&arr0=TPE&depdate0=2026-05-10&dep1=TPE&arr1=CJJ&depdate1=2026-05-14&adt=1&chd=0&inf=0&comp=Y",
+      "region": "중국",
+      "availableSeats": 9,
+      "seats": "9석",
+      "discountRate": 17,
+      "firstSeen": "2026-04-15"
     },
     {
       "id": "ttang-7C8501ICNWEH-G4-2026-05-10",
@@ -18184,6 +18245,34 @@
       "seats": "4석",
       "discountRate": -12,
       "firstSeen": "2026-04-13"
+    },
+    {
+      "id": "ttang-ZE0781CJJTPE-D5-2026-05-11",
+      "source": "ttang",
+      "airline": "이스타항공",
+      "departure": {
+        "city": "청주",
+        "airport": "CJJ",
+        "date": "2026-05-11",
+        "time": "23:40",
+        "arrivalTime": "01:10"
+      },
+      "arrival": {
+        "city": "타이페이",
+        "airport": "TPE",
+        "date": "2026-05-15",
+        "time": "02:40",
+        "arrivalTime": "06:05"
+      },
+      "price": 249200,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=CJJ&arr0=TPE&depdate0=2026-05-11&dep1=TPE&arr1=CJJ&depdate1=2026-05-15&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=CJJ&arr0=TPE&depdate0=2026-05-11&dep1=TPE&arr1=CJJ&depdate1=2026-05-15&adt=1&chd=0&inf=0&comp=Y",
+      "region": "중국",
+      "availableSeats": 9,
+      "seats": "9석",
+      "discountRate": 17,
+      "firstSeen": "2026-04-15"
     },
     {
       "id": "ttang-7C8501ICNWEH-G5-2026-05-11",
@@ -19477,16 +19566,10 @@
     "hanatour": 86,
     "modetour": 254,
     "onlinetour": 128,
-    "ttang": 987
+    "ttang": 975
   },
   "priceHistory": {
     "부산-세부": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 179000,
-        "avgPrice": 229304,
-        "count": 23
-      },
       {
         "date": "2026-03-23",
         "minPrice": 179000,
@@ -19561,6 +19644,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 359000,
+        "avgPrice": 413500,
+        "count": 8
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 359000,
         "avgPrice": 413500,
         "count": 8
@@ -19654,12 +19743,6 @@
     ],
     "부산-푸꾸옥": [
       {
-        "date": "2026-03-22",
-        "minPrice": 199000,
-        "avgPrice": 314725,
-        "count": 4
-      },
-      {
         "date": "2026-03-23",
         "minPrice": 199000,
         "avgPrice": 314725,
@@ -19736,15 +19819,15 @@
         "minPrice": 414800,
         "avgPrice": 524808,
         "count": 26
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 414800,
+        "avgPrice": 524808,
+        "count": 26
       }
     ],
     "부산-타이페이": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 194600,
-        "avgPrice": 263653,
-        "count": 53
-      },
       {
         "date": "2026-03-23",
         "minPrice": 194600,
@@ -19822,15 +19905,15 @@
         "minPrice": 282200,
         "avgPrice": 340617,
         "count": 24
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 282200,
+        "avgPrice": 340617,
+        "count": 24
       }
     ],
     "대구-다낭": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 260000,
-        "avgPrice": 260000,
-        "count": 12
-      },
       {
         "date": "2026-03-23",
         "minPrice": 260000,
@@ -19908,15 +19991,15 @@
         "minPrice": 481000,
         "avgPrice": 523000,
         "count": 5
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 481000,
+        "avgPrice": 523000,
+        "count": 5
       }
     ],
     "인천-방콕": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 249000,
-        "avgPrice": 348731,
-        "count": 26
-      },
       {
         "date": "2026-03-23",
         "minPrice": 249000,
@@ -19991,6 +20074,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 399000,
+        "avgPrice": 454467,
+        "count": 15
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 399000,
         "avgPrice": 454467,
         "count": 15
@@ -20084,12 +20173,6 @@
     ],
     "청주-타이페이": [
       {
-        "date": "2026-03-22",
-        "minPrice": 164600,
-        "avgPrice": 234794,
-        "count": 35
-      },
-      {
         "date": "2026-03-23",
         "minPrice": 164600,
         "avgPrice": 234252,
@@ -20166,15 +20249,15 @@
         "minPrice": 219200,
         "avgPrice": 340513,
         "count": 32
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 249200,
+        "avgPrice": 344426,
+        "count": 31
       }
     ],
     "인천-타이페이": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 283000,
-        "avgPrice": 324212,
-        "count": 33
-      },
       {
         "date": "2026-03-23",
         "minPrice": 283000,
@@ -20249,6 +20332,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 271000,
+        "avgPrice": 401208,
+        "count": 24
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 271000,
         "avgPrice": 401208,
         "count": 24
@@ -20342,12 +20431,6 @@
     ],
     "부산-후쿠오카": [
       {
-        "date": "2026-03-22",
-        "minPrice": 163700,
-        "avgPrice": 280062,
-        "count": 174
-      },
-      {
         "date": "2026-03-23",
         "minPrice": 163700,
         "avgPrice": 293273,
@@ -20424,15 +20507,15 @@
         "minPrice": 223000,
         "avgPrice": 298012,
         "count": 69
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 223000,
+        "avgPrice": 298012,
+        "count": 69
       }
     ],
     "청주-후쿠오카": [
-      {
-        "date": "2026-03-21",
-        "minPrice": 306000,
-        "avgPrice": 308222,
-        "count": 9
-      },
       {
         "date": "2026-03-22",
         "minPrice": 306000,
@@ -20510,15 +20593,15 @@
         "minPrice": 299000,
         "avgPrice": 346111,
         "count": 18
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 299000,
+        "avgPrice": 346111,
+        "count": 18
       }
     ],
     "청주-오사카(간사이)": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 299000,
-        "avgPrice": 306308,
-        "count": 26
-      },
       {
         "date": "2026-03-23",
         "minPrice": 299000,
@@ -20596,6 +20679,12 @@
         "minPrice": 354000,
         "avgPrice": 422571,
         "count": 14
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 354000,
+        "avgPrice": 422571,
+        "count": 14
       }
     ],
     "인천-사가": [
@@ -20643,12 +20732,6 @@
       }
     ],
     "부산-오사카(간사이)": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 153700,
-        "avgPrice": 228534,
-        "count": 107
-      },
       {
         "date": "2026-03-23",
         "minPrice": 153700,
@@ -20726,15 +20809,15 @@
         "minPrice": 210600,
         "avgPrice": 317545,
         "count": 104
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 210600,
+        "avgPrice": 317545,
+        "count": 104
       }
     ],
     "인천-마츠야마": [
-      {
-        "date": "2026-03-11",
-        "minPrice": 265000,
-        "avgPrice": 265000,
-        "count": 27
-      },
       {
         "date": "2026-03-12",
         "minPrice": 265000,
@@ -20812,15 +20895,15 @@
         "minPrice": 299000,
         "avgPrice": 299000,
         "count": 2
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 299000,
+        "avgPrice": 299000,
+        "count": 2
       }
     ],
     "인천-후쿠오카": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 259000,
-        "avgPrice": 303375,
-        "count": 32
-      },
       {
         "date": "2026-03-23",
         "minPrice": 259000,
@@ -20898,15 +20981,15 @@
         "minPrice": 319000,
         "avgPrice": 319000,
         "count": 4
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 319000,
+        "avgPrice": 319000,
+        "count": 4
       }
     ],
     "부산-삿포로(치토세)": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 273300,
-        "avgPrice": 333986,
-        "count": 7
-      },
       {
         "date": "2026-03-23",
         "minPrice": 273300,
@@ -20984,15 +21067,15 @@
         "minPrice": 264700,
         "avgPrice": 326944,
         "count": 9
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 264700,
+        "avgPrice": 326944,
+        "count": 9
       }
     ],
     "부산-나가사키": [
-      {
-        "date": "2026-03-03",
-        "minPrice": 200000,
-        "avgPrice": 234000,
-        "count": 3
-      },
       {
         "date": "2026-03-04",
         "minPrice": 200000,
@@ -21067,6 +21150,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 225000,
+        "avgPrice": 225000,
+        "count": 1
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 225000,
         "avgPrice": 225000,
         "count": 1
@@ -21246,12 +21335,6 @@
     ],
     "부산-구마모토": [
       {
-        "date": "2026-03-22",
-        "minPrice": 162600,
-        "avgPrice": 243052,
-        "count": 31
-      },
-      {
         "date": "2026-03-23",
         "minPrice": 162600,
         "avgPrice": 247814,
@@ -21328,15 +21411,15 @@
         "minPrice": 223700,
         "avgPrice": 294729,
         "count": 21
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 223700,
+        "avgPrice": 294729,
+        "count": 21
       }
     ],
     "부산-오키나와": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 232200,
-        "avgPrice": 340965,
-        "count": 57
-      },
       {
         "date": "2026-03-23",
         "minPrice": 232200,
@@ -21414,6 +21497,12 @@
         "minPrice": 341600,
         "avgPrice": 408709,
         "count": 22
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 341600,
+        "avgPrice": 408709,
+        "count": 22
       }
     ],
     "인천-히로시마": [
@@ -21467,12 +21556,6 @@
       }
     ],
     "인천-오사카(간사이)": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 229000,
-        "avgPrice": 287826,
-        "count": 23
-      },
       {
         "date": "2026-03-23",
         "minPrice": 229000,
@@ -21547,6 +21630,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 259000,
+        "avgPrice": 515667,
+        "count": 3
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 259000,
         "avgPrice": 515667,
         "count": 3
@@ -21926,12 +22015,6 @@
     ],
     "부산-상해(푸동공항)": [
       {
-        "date": "2026-03-21",
-        "minPrice": 251300,
-        "avgPrice": 255467,
-        "count": 6
-      },
-      {
         "date": "2026-03-22",
         "minPrice": 251300,
         "avgPrice": 257729,
@@ -22005,6 +22088,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 311800,
+        "avgPrice": 318467,
+        "count": 3
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 311800,
         "avgPrice": 318467,
         "count": 3
@@ -22238,12 +22327,6 @@
     ],
     "대구-장가계(다융)": [
       {
-        "date": "2026-02-05",
-        "minPrice": 309904,
-        "avgPrice": 309904,
-        "count": 1
-      },
-      {
         "date": "2026-02-06",
         "minPrice": 307685,
         "avgPrice": 307685,
@@ -22320,6 +22403,12 @@
         "minPrice": 380000,
         "avgPrice": 380000,
         "count": 3
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 380000,
+        "avgPrice": 380000,
+        "count": 3
       }
     ],
     "인천-산야": [
@@ -22367,12 +22456,6 @@
       }
     ],
     "부산-괌": [
-      {
-        "date": "2026-03-13",
-        "minPrice": 208900,
-        "avgPrice": 246789,
-        "count": 18
-      },
       {
         "date": "2026-03-14",
         "minPrice": 208900,
@@ -22450,15 +22533,15 @@
         "minPrice": 399900,
         "avgPrice": 441011,
         "count": 18
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 399900,
+        "avgPrice": 441011,
+        "count": 18
       }
     ],
     "인천-괌": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 259000,
-        "avgPrice": 259000,
-        "count": 41
-      },
       {
         "date": "2026-03-23",
         "minPrice": 259000,
@@ -22536,15 +22619,15 @@
         "minPrice": 379000,
         "avgPrice": 379000,
         "count": 29
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 379000,
+        "avgPrice": 379000,
+        "count": 29
       }
     ],
     "인천-사이판": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 219000,
-        "avgPrice": 219000,
-        "count": 4
-      },
       {
         "date": "2026-03-23",
         "minPrice": 219000,
@@ -22622,15 +22705,15 @@
         "minPrice": 329000,
         "avgPrice": 329000,
         "count": 1
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 329000,
+        "avgPrice": 329000,
+        "count": 1
       }
     ],
     "인천-시드니": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 869000,
-        "avgPrice": 869000,
-        "count": 2
-      },
       {
         "date": "2026-03-23",
         "minPrice": 869000,
@@ -22705,6 +22788,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 849000,
+        "avgPrice": 849000,
+        "count": 1
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 849000,
         "avgPrice": 849000,
         "count": 1
@@ -23234,12 +23323,6 @@
     ],
     "부산-다카마쓰": [
       {
-        "date": "2026-03-22",
-        "minPrice": 222500,
-        "avgPrice": 222500,
-        "count": 1
-      },
-      {
         "date": "2026-03-23",
         "minPrice": 222500,
         "avgPrice": 222500,
@@ -23313,6 +23396,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 241800,
+        "avgPrice": 241800,
+        "count": 1
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 241800,
         "avgPrice": 241800,
         "count": 1
@@ -23406,12 +23495,6 @@
     ],
     "인천-나고야": [
       {
-        "date": "2026-03-22",
-        "minPrice": 304000,
-        "avgPrice": 304000,
-        "count": 2
-      },
-      {
         "date": "2026-03-23",
         "minPrice": 304000,
         "avgPrice": 304000,
@@ -23488,15 +23571,15 @@
         "minPrice": 439000,
         "avgPrice": 439000,
         "count": 17
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 439000,
+        "avgPrice": 439000,
+        "count": 17
       }
     ],
     "부산-도쿄(나리타)": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 235000,
-        "avgPrice": 235000,
-        "count": 9
-      },
       {
         "date": "2026-03-23",
         "minPrice": 235000,
@@ -23571,6 +23654,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 360800,
+        "avgPrice": 360800,
+        "count": 1
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 360800,
         "avgPrice": 360800,
         "count": 1
@@ -23578,12 +23667,6 @@
     ],
     "인천-도쿄(나리타)": [
       {
-        "date": "2026-03-22",
-        "minPrice": 329000,
-        "avgPrice": 329000,
-        "count": 4
-      },
-      {
         "date": "2026-03-23",
         "minPrice": 329000,
         "avgPrice": 329000,
@@ -23660,15 +23743,15 @@
         "minPrice": 360000,
         "avgPrice": 360000,
         "count": 4
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 360000,
+        "avgPrice": 360000,
+        "count": 4
       }
     ],
     "인천-오키나와": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 279000,
-        "avgPrice": 399311,
-        "count": 18
-      },
       {
         "date": "2026-03-23",
         "minPrice": 249000,
@@ -23746,15 +23829,15 @@
         "minPrice": 479000,
         "avgPrice": 479000,
         "count": 6
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 479000,
+        "avgPrice": 479000,
+        "count": 6
       }
     ],
     "인천-시즈오카": [
-      {
-        "date": "2026-03-18",
-        "minPrice": 327200,
-        "avgPrice": 327200,
-        "count": 1
-      },
       {
         "date": "2026-03-19",
         "minPrice": 327200,
@@ -23832,15 +23915,15 @@
         "minPrice": 369000,
         "avgPrice": 369000,
         "count": 5
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 369000,
+        "avgPrice": 369000,
+        "count": 5
       }
     ],
     "부산-대만(타이페이)": [
-      {
-        "date": "2026-03-15",
-        "minPrice": 240000,
-        "avgPrice": 240000,
-        "count": 1
-      },
       {
         "date": "2026-03-16",
         "minPrice": 240000,
@@ -23918,15 +24001,15 @@
         "minPrice": 320000,
         "avgPrice": 320000,
         "count": 12
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 320000,
+        "avgPrice": 320000,
+        "count": 12
       }
     ],
     "청주-대만(타이페이)": [
-      {
-        "date": "2026-03-05",
-        "minPrice": 270000,
-        "avgPrice": 270000,
-        "count": 1
-      },
       {
         "date": "2026-03-06",
         "minPrice": 270000,
@@ -24001,6 +24084,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 339900,
+        "avgPrice": 339900,
+        "count": 16
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 339900,
         "avgPrice": 339900,
         "count": 16
@@ -24094,12 +24183,6 @@
     ],
     "인천-세부": [
       {
-        "date": "2026-03-22",
-        "minPrice": 279900,
-        "avgPrice": 297070,
-        "count": 46
-      },
-      {
         "date": "2026-03-23",
         "minPrice": 279900,
         "avgPrice": 294710,
@@ -24173,6 +24256,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 349900,
+        "avgPrice": 420833,
+        "count": 3
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 349900,
         "avgPrice": 420833,
         "count": 3
@@ -24266,12 +24355,6 @@
     ],
     "인천-방콕(돈무앙)": [
       {
-        "date": "2026-03-22",
-        "minPrice": 279000,
-        "avgPrice": 279000,
-        "count": 1
-      },
-      {
         "date": "2026-03-23",
         "minPrice": 319000,
         "avgPrice": 319000,
@@ -24348,15 +24431,15 @@
         "minPrice": 399000,
         "avgPrice": 399000,
         "count": 2
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 399000,
+        "avgPrice": 399000,
+        "count": 2
       }
     ],
     "인천-다낭": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 259900,
-        "avgPrice": 392581,
-        "count": 26
-      },
       {
         "date": "2026-03-23",
         "minPrice": 280000,
@@ -24434,15 +24517,15 @@
         "minPrice": 381800,
         "avgPrice": 452252,
         "count": 54
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 381800,
+        "avgPrice": 452252,
+        "count": 54
       }
     ],
     "인천-칼리보(보라카이)": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 273000,
-        "avgPrice": 273000,
-        "count": 6
-      },
       {
         "date": "2026-03-23",
         "minPrice": 273000,
@@ -24517,6 +24600,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 363800,
+        "avgPrice": 363800,
+        "count": 2
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 363800,
         "avgPrice": 363800,
         "count": 2
@@ -24524,12 +24613,6 @@
     ],
     "인천-바탐(인도네시아)": [
       {
-        "date": "2026-03-22",
-        "minPrice": 261000,
-        "avgPrice": 261000,
-        "count": 3
-      },
-      {
         "date": "2026-03-23",
         "minPrice": 261000,
         "avgPrice": 261000,
@@ -24606,15 +24689,15 @@
         "minPrice": 404000,
         "avgPrice": 404000,
         "count": 1
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 404000,
+        "avgPrice": 404000,
+        "count": 1
       }
     ],
     "인천-보홀": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 265000,
-        "avgPrice": 309889,
-        "count": 27
-      },
       {
         "date": "2026-03-23",
         "minPrice": 280000,
@@ -24692,15 +24775,15 @@
         "minPrice": 371800,
         "avgPrice": 406022,
         "count": 50
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 371800,
+        "avgPrice": 406022,
+        "count": 50
       }
     ],
     "인천-푸꾸옥": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 295000,
-        "avgPrice": 410244,
-        "count": 64
-      },
       {
         "date": "2026-03-23",
         "minPrice": 300000,
@@ -24778,15 +24861,15 @@
         "minPrice": 365000,
         "avgPrice": 532823,
         "count": 43
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 365000,
+        "avgPrice": 532823,
+        "count": 43
       }
     ],
     "인천-치앙마이": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 299000,
-        "avgPrice": 423000,
-        "count": 12
-      },
       {
         "date": "2026-03-23",
         "minPrice": 299000,
@@ -24864,15 +24947,15 @@
         "minPrice": 419000,
         "avgPrice": 523500,
         "count": 8
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 419000,
+        "avgPrice": 523500,
+        "count": 8
       }
     ],
     "인천-코타키나발루": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 259000,
-        "avgPrice": 357636,
-        "count": 11
-      },
       {
         "date": "2026-03-23",
         "minPrice": 259000,
@@ -24950,15 +25033,15 @@
         "minPrice": 349000,
         "avgPrice": 356125,
         "count": 32
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 349000,
+        "avgPrice": 356125,
+        "count": 32
       }
     ],
     "인천-하노이": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 299000,
-        "avgPrice": 381333,
-        "count": 15
-      },
       {
         "date": "2026-03-23",
         "minPrice": 299000,
@@ -25036,15 +25119,15 @@
         "minPrice": 419900,
         "avgPrice": 512657,
         "count": 7
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 419900,
+        "avgPrice": 512657,
+        "count": 7
       }
     ],
     "인천-마닐라": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 282000,
-        "avgPrice": 313700,
-        "count": 30
-      },
       {
         "date": "2026-03-23",
         "minPrice": 282000,
@@ -25122,15 +25205,15 @@
         "minPrice": 382000,
         "avgPrice": 401646,
         "count": 24
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 382000,
+        "avgPrice": 401646,
+        "count": 24
       }
     ],
     "청주-발리(덴파사)": [
-      {
-        "date": "2026-03-18",
-        "minPrice": 390000,
-        "avgPrice": 390000,
-        "count": 1
-      },
       {
         "date": "2026-03-23",
         "minPrice": 390000,
@@ -25208,15 +25291,15 @@
         "minPrice": 529900,
         "avgPrice": 529900,
         "count": 9
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 529900,
+        "avgPrice": 529900,
+        "count": 9
       }
     ],
     "인천-발리(덴파사)": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 379000,
-        "avgPrice": 379000,
-        "count": 14
-      },
       {
         "date": "2026-03-23",
         "minPrice": 379000,
@@ -25294,15 +25377,15 @@
         "minPrice": 639900,
         "avgPrice": 639900,
         "count": 1
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 639900,
+        "avgPrice": 639900,
+        "count": 1
       }
     ],
     "인천-나트랑(깜랑)": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 305000,
-        "avgPrice": 305000,
-        "count": 10
-      },
       {
         "date": "2026-03-23",
         "minPrice": 325000,
@@ -25380,15 +25463,15 @@
         "minPrice": 380000,
         "avgPrice": 380000,
         "count": 9
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 380000,
+        "avgPrice": 380000,
+        "count": 9
       }
     ],
     "청주-나트랑(깜랑)": [
-      {
-        "date": "2026-03-20",
-        "minPrice": 330000,
-        "avgPrice": 330000,
-        "count": 7
-      },
       {
         "date": "2026-03-23",
         "minPrice": 320000,
@@ -25463,6 +25546,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 385000,
+        "avgPrice": 385000,
+        "count": 1
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 385000,
         "avgPrice": 385000,
         "count": 1
@@ -25556,12 +25645,6 @@
     ],
     "인천-마나도": [
       {
-        "date": "2026-03-22",
-        "minPrice": 369000,
-        "avgPrice": 394773,
-        "count": 44
-      },
-      {
         "date": "2026-03-23",
         "minPrice": 369000,
         "avgPrice": 394773,
@@ -25638,15 +25721,15 @@
         "minPrice": 299000,
         "avgPrice": 437435,
         "count": 23
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 299000,
+        "avgPrice": 437435,
+        "count": 23
       }
     ],
     "인천-싱가포르": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 362000,
-        "avgPrice": 393693,
-        "count": 29
-      },
       {
         "date": "2026-03-23",
         "minPrice": 362000,
@@ -25724,15 +25807,15 @@
         "minPrice": 429000,
         "avgPrice": 435500,
         "count": 6
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 429000,
+        "avgPrice": 435500,
+        "count": 6
       }
     ],
     "부산-싱가포르": [
-      {
-        "date": "2026-03-20",
-        "minPrice": 411000,
-        "avgPrice": 463414,
-        "count": 29
-      },
       {
         "date": "2026-03-21",
         "minPrice": 411000,
@@ -25810,15 +25893,15 @@
         "minPrice": 512000,
         "avgPrice": 571641,
         "count": 39
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 512000,
+        "avgPrice": 571641,
+        "count": 39
       }
     ],
     "인천-클락": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 371000,
-        "avgPrice": 382680,
-        "count": 25
-      },
       {
         "date": "2026-03-23",
         "minPrice": 371000,
@@ -25896,15 +25979,15 @@
         "minPrice": 475800,
         "avgPrice": 505377,
         "count": 13
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 475800,
+        "avgPrice": 505377,
+        "count": 13
       }
     ],
     "청주-클락": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 496000,
-        "avgPrice": 496000,
-        "count": 3
-      },
       {
         "date": "2026-03-23",
         "minPrice": 496000,
@@ -25982,15 +26065,15 @@
         "minPrice": 685500,
         "avgPrice": 685500,
         "count": 7
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 685500,
+        "avgPrice": 685500,
+        "count": 7
       }
     ],
     "인천-푸켓": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 318000,
-        "avgPrice": 504341,
-        "count": 41
-      },
       {
         "date": "2026-03-23",
         "minPrice": 509000,
@@ -26065,6 +26148,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 629000,
+        "avgPrice": 629000,
+        "count": 17
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 629000,
         "avgPrice": 629000,
         "count": 17
@@ -26330,12 +26419,6 @@
     ],
     "서울(ICN)-치앙마이(CNX)": [
       {
-        "date": "2026-03-21",
-        "minPrice": 535000,
-        "avgPrice": 535000,
-        "count": 1
-      },
-      {
         "date": "2026-03-22",
         "minPrice": 535000,
         "avgPrice": 535000,
@@ -26412,15 +26495,15 @@
         "minPrice": 595000,
         "avgPrice": 595000,
         "count": 1
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 595000,
+        "avgPrice": 595000,
+        "count": 1
       }
     ],
     "서울(ICN)-푸꾸옥(PQC)": [
-      {
-        "date": "2026-02-17",
-        "minPrice": 349000,
-        "avgPrice": 374000,
-        "count": 2
-      },
       {
         "date": "2026-02-18",
         "minPrice": 349000,
@@ -26495,6 +26578,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 419000,
+        "avgPrice": 419000,
+        "count": 1
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 419000,
         "avgPrice": 419000,
         "count": 1
@@ -26718,12 +26807,6 @@
     ],
     "서울(ICN)-방콕(BKK)": [
       {
-        "date": "2026-03-22",
-        "minPrice": 535000,
-        "avgPrice": 535000,
-        "count": 1
-      },
-      {
         "date": "2026-03-23",
         "minPrice": 535000,
         "avgPrice": 535000,
@@ -26797,6 +26880,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 522900,
+        "avgPrice": 522900,
+        "count": 1
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 522900,
         "avgPrice": 522900,
         "count": 1
@@ -27158,12 +27247,6 @@
     ],
     "부산(PUS)-나가사키(NGS)": [
       {
-        "date": "2026-03-08",
-        "minPrice": 199200,
-        "avgPrice": 219200,
-        "count": 2
-      },
-      {
         "date": "2026-03-09",
         "minPrice": 199200,
         "avgPrice": 219200,
@@ -27237,6 +27320,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 246800,
+        "avgPrice": 246800,
+        "count": 1
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 246800,
         "avgPrice": 246800,
         "count": 1
@@ -27436,12 +27525,6 @@
     ],
     "부산(PUS)-오사카(KIX)": [
       {
-        "date": "2026-03-22",
-        "minPrice": 224500,
-        "avgPrice": 258833,
-        "count": 3
-      },
-      {
         "date": "2026-03-23",
         "minPrice": 224500,
         "avgPrice": 258833,
@@ -27518,15 +27601,15 @@
         "minPrice": 267600,
         "avgPrice": 267600,
         "count": 2
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 267600,
+        "avgPrice": 267600,
+        "count": 2
       }
     ],
     "부산(PUS)-도쿄(NRT)": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 293000,
-        "avgPrice": 294429,
-        "count": 7
-      },
       {
         "date": "2026-03-23",
         "minPrice": 293000,
@@ -27601,6 +27684,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 334800,
+        "avgPrice": 353667,
+        "count": 3
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 334800,
         "avgPrice": 353667,
         "count": 3
@@ -27694,12 +27783,6 @@
     ],
     "부산(PUS)-보홀(TAG)": [
       {
-        "date": "2026-03-22",
-        "minPrice": 342100,
-        "avgPrice": 356600,
-        "count": 2
-      },
-      {
         "date": "2026-03-23",
         "minPrice": 342100,
         "avgPrice": 356600,
@@ -27773,6 +27856,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 391100,
+        "avgPrice": 391100,
+        "count": 3
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 391100,
         "avgPrice": 391100,
         "count": 3
@@ -27866,12 +27955,6 @@
     ],
     "부산(PUS)-치앙마이(CNX)": [
       {
-        "date": "2026-02-12",
-        "minPrice": 399900,
-        "avgPrice": 399900,
-        "count": 1
-      },
-      {
         "date": "2026-02-20",
         "minPrice": 449000,
         "avgPrice": 449000,
@@ -27948,15 +28031,15 @@
         "minPrice": 473700,
         "avgPrice": 473700,
         "count": 1
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 473700,
+        "avgPrice": 473700,
+        "count": 1
       }
     ],
     "부산(PUS)-오키나와(OKA)": [
-      {
-        "date": "2026-03-16",
-        "minPrice": 310300,
-        "avgPrice": 310300,
-        "count": 1
-      },
       {
         "date": "2026-03-17",
         "minPrice": 310300,
@@ -28034,15 +28117,15 @@
         "minPrice": 417000,
         "avgPrice": 417000,
         "count": 1
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 417000,
+        "avgPrice": 417000,
+        "count": 1
       }
     ],
     "부산(PUS)-삿포로(CTS)": [
-      {
-        "date": "2026-03-17",
-        "minPrice": 235000,
-        "avgPrice": 235000,
-        "count": 1
-      },
       {
         "date": "2026-03-18",
         "minPrice": 235000,
@@ -28120,6 +28203,12 @@
         "minPrice": 343500,
         "avgPrice": 346833,
         "count": 3
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 343500,
+        "avgPrice": 346833,
+        "count": 3
       }
     ],
     "부산(PUS)-싱가포르(SIN)": [
@@ -28173,12 +28262,6 @@
       }
     ],
     "제주시(CJU)-후쿠오카(FUK)": [
-      {
-        "date": "2026-02-22",
-        "minPrice": 328600,
-        "avgPrice": 328600,
-        "count": 1
-      },
       {
         "date": "2026-02-23",
         "minPrice": 334600,
@@ -28253,6 +28336,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 305600,
+        "avgPrice": 312267,
+        "count": 3
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 305600,
         "avgPrice": 312267,
         "count": 3
@@ -28346,12 +28435,6 @@
     ],
     "대구(TAE)-도쿄(NRT)": [
       {
-        "date": "2026-03-13",
-        "minPrice": 303200,
-        "avgPrice": 303200,
-        "count": 1
-      },
-      {
         "date": "2026-03-14",
         "minPrice": 303200,
         "avgPrice": 303200,
@@ -28425,6 +28508,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 396400,
+        "avgPrice": 396400,
+        "count": 3
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 396400,
         "avgPrice": 396400,
         "count": 3
@@ -28538,12 +28627,6 @@
     ],
     "부산-치앙마이": [
       {
-        "date": "2026-02-06",
-        "minPrice": 331054,
-        "avgPrice": 392561,
-        "count": 10
-      },
-      {
         "date": "2026-02-07",
         "minPrice": 323996,
         "avgPrice": 384192,
@@ -28620,15 +28703,15 @@
         "minPrice": 478900,
         "avgPrice": 478900,
         "count": 1
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 478900,
+        "avgPrice": 478900,
+        "count": 1
       }
     ],
     "서울-치앙마이": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 471000,
-        "avgPrice": 511571,
-        "count": 7
-      },
       {
         "date": "2026-03-23",
         "minPrice": 471000,
@@ -28706,15 +28789,15 @@
         "minPrice": 465000,
         "avgPrice": 614913,
         "count": 8
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 465000,
+        "avgPrice": 614913,
+        "count": 8
       }
     ],
     "서울-방콕": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 240000,
-        "avgPrice": 461919,
-        "count": 37
-      },
       {
         "date": "2026-03-23",
         "minPrice": 260000,
@@ -28789,6 +28872,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 380000,
+        "avgPrice": 442000,
+        "count": 5
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 380000,
         "avgPrice": 442000,
         "count": 5
@@ -28982,12 +29071,6 @@
     ],
     "서울-코타키나발루": [
       {
-        "date": "2026-03-22",
-        "minPrice": 324000,
-        "avgPrice": 379556,
-        "count": 9
-      },
-      {
         "date": "2026-03-23",
         "minPrice": 324000,
         "avgPrice": 379556,
@@ -29061,6 +29144,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 443000,
+        "avgPrice": 463000,
+        "count": 2
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 443000,
         "avgPrice": 463000,
         "count": 2
@@ -29316,12 +29405,6 @@
     ],
     "부산-가오슝": [
       {
-        "date": "2026-03-22",
-        "minPrice": 240000,
-        "avgPrice": 240000,
-        "count": 6
-      },
-      {
         "date": "2026-03-23",
         "minPrice": 240000,
         "avgPrice": 240000,
@@ -29395,6 +29478,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 310000,
+        "avgPrice": 319000,
+        "count": 20
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 310000,
         "avgPrice": 319000,
         "count": 20
@@ -29686,12 +29775,6 @@
     ],
     "부산-나트랑": [
       {
-        "date": "2026-03-14",
-        "minPrice": 390000,
-        "avgPrice": 390000,
-        "count": 1
-      },
-      {
         "date": "2026-03-15",
         "minPrice": 390000,
         "avgPrice": 390000,
@@ -29768,15 +29851,15 @@
         "minPrice": 470000,
         "avgPrice": 523333,
         "count": 6
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 470000,
+        "avgPrice": 523333,
+        "count": 6
       }
     ],
     "서울-다낭": [
-      {
-        "date": "2026-03-15",
-        "minPrice": 486900,
-        "avgPrice": 550900,
-        "count": 30
-      },
       {
         "date": "2026-03-16",
         "minPrice": 486900,
@@ -29854,15 +29937,15 @@
         "minPrice": 381200,
         "avgPrice": 522613,
         "count": 15
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 436200,
+        "avgPrice": 532714,
+        "count": 14
       }
     ],
     "청주-다낭": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 300000,
-        "avgPrice": 331164,
-        "count": 22
-      },
       {
         "date": "2026-03-23",
         "minPrice": 300000,
@@ -29940,15 +30023,15 @@
         "minPrice": 360100,
         "avgPrice": 526320,
         "count": 10
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 360100,
+        "avgPrice": 526320,
+        "count": 10
       }
     ],
     "부산-다낭": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 320000,
-        "avgPrice": 337556,
-        "count": 9
-      },
       {
         "date": "2026-03-23",
         "minPrice": 320000,
@@ -30026,15 +30109,15 @@
         "minPrice": 480000,
         "avgPrice": 670714,
         "count": 7
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 480000,
+        "avgPrice": 670714,
+        "count": 7
       }
     ],
     "서울-푸꾸옥": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 299000,
-        "avgPrice": 400215,
-        "count": 41
-      },
       {
         "date": "2026-03-23",
         "minPrice": 300000,
@@ -30112,6 +30195,12 @@
         "minPrice": 319000,
         "avgPrice": 465232,
         "count": 38
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 319000,
+        "avgPrice": 459206,
+        "count": 36
       }
     ],
     "제주-푸꾸옥": [
@@ -30165,12 +30254,6 @@
       }
     ],
     "서울-하노이": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 320000,
-        "avgPrice": 412000,
-        "count": 23
-      },
       {
         "date": "2026-03-23",
         "minPrice": 400000,
@@ -30245,6 +30328,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 463000,
+        "avgPrice": 636333,
+        "count": 3
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 463000,
         "avgPrice": 636333,
         "count": 3
@@ -30576,12 +30665,6 @@
     ],
     "서울-싱가포르": [
       {
-        "date": "2026-03-22",
-        "minPrice": 259000,
-        "avgPrice": 392647,
-        "count": 17
-      },
-      {
         "date": "2026-03-23",
         "minPrice": 362000,
         "avgPrice": 418727,
@@ -30658,6 +30741,12 @@
         "minPrice": 279000,
         "avgPrice": 490133,
         "count": 6
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 279000,
+        "avgPrice": 494560,
+        "count": 5
       }
     ],
     "제주-후쿠오카": [
@@ -31416,12 +31505,6 @@
     ],
     "부산-마츠야마": [
       {
-        "date": "2026-03-22",
-        "minPrice": 302900,
-        "avgPrice": 306800,
-        "count": 19
-      },
-      {
         "date": "2026-03-23",
         "minPrice": 302900,
         "avgPrice": 308600,
@@ -31498,6 +31581,12 @@
         "minPrice": 276500,
         "avgPrice": 338880,
         "count": 20
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 276500,
+        "avgPrice": 327774,
+        "count": 19
       }
     ],
     "제주-나고야": [
@@ -31738,12 +31827,6 @@
     ],
     "서울-오키나와": [
       {
-        "date": "2026-03-22",
-        "minPrice": 279000,
-        "avgPrice": 389890,
-        "count": 20
-      },
-      {
         "date": "2026-03-23",
         "minPrice": 249000,
         "avgPrice": 397011,
@@ -31820,6 +31903,12 @@
         "minPrice": 249000,
         "avgPrice": 436695,
         "count": 21
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 249000,
+        "avgPrice": 446080,
+        "count": 20
       }
     ],
     "서울-요나고": [
@@ -32184,12 +32273,6 @@
     ],
     "서울-괌": [
       {
-        "date": "2026-03-21",
-        "minPrice": 199900,
-        "avgPrice": 246300,
-        "count": 25
-      },
-      {
         "date": "2026-03-22",
         "minPrice": 199900,
         "avgPrice": 247592,
@@ -32263,6 +32346,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 334900,
+        "avgPrice": 378900,
+        "count": 5
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 334900,
         "avgPrice": 378900,
         "count": 5
@@ -32522,12 +32611,6 @@
     ],
     "인천-바탐": [
       {
-        "date": "2026-03-22",
-        "minPrice": 258000,
-        "avgPrice": 268000,
-        "count": 6
-      },
-      {
         "date": "2026-03-23",
         "minPrice": 258000,
         "avgPrice": 268000,
@@ -32604,15 +32687,15 @@
         "minPrice": 402800,
         "avgPrice": 490800,
         "count": 5
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 402800,
+        "avgPrice": 490800,
+        "count": 5
       }
     ],
     "인천-나트랑": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 309000,
-        "avgPrice": 398946,
-        "count": 59
-      },
       {
         "date": "2026-03-23",
         "minPrice": 309000,
@@ -32690,15 +32773,15 @@
         "minPrice": 418000,
         "avgPrice": 658819,
         "count": 42
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 418000,
+        "avgPrice": 658819,
+        "count": 42
       }
     ],
     "청주-나트랑": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 303700,
-        "avgPrice": 381520,
-        "count": 10
-      },
       {
         "date": "2026-03-23",
         "minPrice": 303700,
@@ -32776,15 +32859,15 @@
         "minPrice": 582600,
         "avgPrice": 599333,
         "count": 3
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 582600,
+        "avgPrice": 599333,
+        "count": 3
       }
     ],
     "인천-발리": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 316000,
-        "avgPrice": 371409,
-        "count": 22
-      },
       {
         "date": "2026-03-23",
         "minPrice": 349000,
@@ -32859,6 +32942,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 509000,
+        "avgPrice": 702333,
+        "count": 12
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 509000,
         "avgPrice": 702333,
         "count": 12
@@ -33414,12 +33503,6 @@
     ],
     "인천-홍콩": [
       {
-        "date": "2026-03-21",
-        "minPrice": 278600,
-        "avgPrice": 278600,
-        "count": 8
-      },
-      {
         "date": "2026-03-22",
         "minPrice": 278600,
         "avgPrice": 278600,
@@ -33493,6 +33576,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 350000,
+        "avgPrice": 402333,
+        "count": 30
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 350000,
         "avgPrice": 402333,
         "count": 30
@@ -33672,12 +33761,6 @@
     ],
     "인천-타이중": [
       {
-        "date": "2026-03-22",
-        "minPrice": 263000,
-        "avgPrice": 285667,
-        "count": 15
-      },
-      {
         "date": "2026-03-23",
         "minPrice": 263000,
         "avgPrice": 288000,
@@ -33754,15 +33837,15 @@
         "minPrice": 335000,
         "avgPrice": 380333,
         "count": 15
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 335000,
+        "avgPrice": 380333,
+        "count": 15
       }
     ],
     "제주-타이페이": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 164600,
-        "avgPrice": 251103,
-        "count": 29
-      },
       {
         "date": "2026-03-23",
         "minPrice": 163800,
@@ -33840,15 +33923,15 @@
         "minPrice": 360000,
         "avgPrice": 360000,
         "count": 6
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 360000,
+        "avgPrice": 360000,
+        "count": 6
       }
     ],
     "대구-타이페이": [
-      {
-        "date": "2026-03-10",
-        "minPrice": 271000,
-        "avgPrice": 284333,
-        "count": 3
-      },
       {
         "date": "2026-03-11",
         "minPrice": 271000,
@@ -33923,6 +34006,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 344000,
+        "avgPrice": 419000,
+        "count": 26
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 344000,
         "avgPrice": 419000,
         "count": 26
@@ -34188,12 +34277,6 @@
     ],
     "인천-타이베이": [
       {
-        "date": "2026-03-22",
-        "minPrice": 279000,
-        "avgPrice": 295000,
-        "count": 5
-      },
-      {
         "date": "2026-03-23",
         "minPrice": 279000,
         "avgPrice": 292333,
@@ -34270,15 +34353,15 @@
         "minPrice": 289000,
         "avgPrice": 309000,
         "count": 2
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 289000,
+        "avgPrice": 309000,
+        "count": 2
       }
     ],
     "김포-도쿄(하네다)": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 389000,
-        "avgPrice": 507000,
-        "count": 5
-      },
       {
         "date": "2026-03-23",
         "minPrice": 389000,
@@ -34356,15 +34439,15 @@
         "minPrice": 399000,
         "avgPrice": 459000,
         "count": 10
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 399000,
+        "avgPrice": 459000,
+        "count": 10
       }
     ],
     "부산-치토세": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 319000,
-        "avgPrice": 413000,
-        "count": 10
-      },
       {
         "date": "2026-03-23",
         "minPrice": 439000,
@@ -34442,15 +34525,15 @@
         "minPrice": 949000,
         "avgPrice": 949000,
         "count": 1
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 949000,
+        "avgPrice": 949000,
+        "count": 1
       }
     ],
     "인천-로마": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 1390000,
-        "avgPrice": 1390000,
-        "count": 1
-      },
       {
         "date": "2026-03-23",
         "minPrice": 1390000,
@@ -34525,6 +34608,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 1690000,
+        "avgPrice": 1790000,
+        "count": 2
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 1690000,
         "avgPrice": 1790000,
         "count": 2
@@ -34688,12 +34777,6 @@
     ],
     "청주-나트랑(깜란)": [
       {
-        "date": "2026-03-22",
-        "minPrice": 303700,
-        "avgPrice": 381291,
-        "count": 11
-      },
-      {
         "date": "2026-03-23",
         "minPrice": 303700,
         "avgPrice": 383475,
@@ -34770,6 +34853,12 @@
         "minPrice": 380000,
         "avgPrice": 503000,
         "count": 6
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 380000,
+        "avgPrice": 503000,
+        "count": 6
       }
     ],
     "인천-도쿄(나리타공항)": [
@@ -34781,12 +34870,6 @@
       }
     ],
     "부산-보홀(필리핀)": [
-      {
-        "date": "2026-03-21",
-        "minPrice": 292800,
-        "avgPrice": 366800,
-        "count": 5
-      },
       {
         "date": "2026-03-22",
         "minPrice": 292800,
@@ -34861,6 +34944,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 388000,
+        "avgPrice": 473625,
+        "count": 8
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 388000,
         "avgPrice": 473625,
         "count": 8
@@ -34954,12 +35043,6 @@
     ],
     "부산-나트랑(깜란)": [
       {
-        "date": "2026-03-15",
-        "minPrice": 390000,
-        "avgPrice": 390000,
-        "count": 1
-      },
-      {
         "date": "2026-03-16",
         "minPrice": 457000,
         "avgPrice": 457000,
@@ -35036,6 +35119,12 @@
         "minPrice": 470000,
         "avgPrice": 523333,
         "count": 6
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 470000,
+        "avgPrice": 523333,
+        "count": 6
       }
     ],
     "인천-다카마쓰": [
@@ -35092,15 +35181,15 @@
         "minPrice": 329000,
         "avgPrice": 329000,
         "count": 7
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 329000,
+        "avgPrice": 329000,
+        "count": 7
       }
     ],
     "부산-보홀": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 270000,
-        "avgPrice": 270000,
-        "count": 4
-      },
       {
         "date": "2026-03-23",
         "minPrice": 270000,
@@ -35178,15 +35267,15 @@
         "minPrice": 435000,
         "avgPrice": 435000,
         "count": 3
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 435000,
+        "avgPrice": 435000,
+        "count": 3
       }
     ],
     "서울(ICN)-보홀(TAG)": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 316400,
-        "avgPrice": 336800,
-        "count": 2
-      },
       {
         "date": "2026-03-23",
         "minPrice": 316400,
@@ -35261,6 +35350,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 445900,
+        "avgPrice": 445900,
+        "count": 1
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 445900,
         "avgPrice": 445900,
         "count": 1
@@ -36014,12 +36109,6 @@
     ],
     "청주시(CJJ)-타이베이(TPE)": [
       {
-        "date": "2026-03-21",
-        "minPrice": 299000,
-        "avgPrice": 299000,
-        "count": 1
-      },
-      {
         "date": "2026-03-22",
         "minPrice": 299000,
         "avgPrice": 299000,
@@ -36096,15 +36185,15 @@
         "minPrice": 441800,
         "avgPrice": 471800,
         "count": 3
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 441800,
+        "avgPrice": 471800,
+        "count": 3
       }
     ],
     "인천-비엔티엔": [
-      {
-        "date": "2026-03-20",
-        "minPrice": 356300,
-        "avgPrice": 524060,
-        "count": 15
-      },
       {
         "date": "2026-03-21",
         "minPrice": 356300,
@@ -36182,15 +36271,15 @@
         "minPrice": 649900,
         "avgPrice": 649900,
         "count": 18
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 649900,
+        "avgPrice": 649900,
+        "count": 18
       }
     ],
     "인천-상해(푸동)": [
-      {
-        "date": "2026-02-25",
-        "minPrice": 214700,
-        "avgPrice": 214700,
-        "count": 2
-      },
       {
         "date": "2026-02-26",
         "minPrice": 213700,
@@ -36268,6 +36357,12 @@
         "minPrice": 519000,
         "avgPrice": 519000,
         "count": 1
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 519000,
+        "avgPrice": 519000,
+        "count": 1
       }
     ],
     "서울(ICN)-괌(GUM)": [
@@ -36313,12 +36408,6 @@
       }
     ],
     "서울-세부": [
-      {
-        "date": "2026-03-21",
-        "minPrice": 303000,
-        "avgPrice": 336333,
-        "count": 6
-      },
       {
         "date": "2026-03-22",
         "minPrice": 303000,
@@ -36393,6 +36482,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 369000,
+        "avgPrice": 437120,
+        "count": 10
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 369000,
         "avgPrice": 437120,
         "count": 10
@@ -36556,12 +36651,6 @@
     ],
     "서울-홍콩": [
       {
-        "date": "2026-03-22",
-        "minPrice": 278600,
-        "avgPrice": 318800,
-        "count": 18
-      },
-      {
         "date": "2026-03-23",
         "minPrice": 278600,
         "avgPrice": 320916,
@@ -36638,6 +36727,12 @@
         "minPrice": 294900,
         "avgPrice": 300525,
         "count": 16
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 294900,
+        "avgPrice": 300525,
+        "count": 16
       }
     ],
     "부산-홍콩": [
@@ -36685,6 +36780,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 440000,
+        "avgPrice": 444407,
+        "count": 27
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 440000,
         "avgPrice": 444407,
         "count": 27
@@ -36924,6 +37025,12 @@
         "minPrice": 564000,
         "avgPrice": 564000,
         "count": 26
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 564000,
+        "avgPrice": 564000,
+        "count": 26
       }
     ],
     "청주-히로시마": [
@@ -37029,6 +37136,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 343900,
+        "avgPrice": 376400,
+        "count": 8
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 343900,
         "avgPrice": 376400,
         "count": 8
@@ -37596,12 +37709,6 @@
     ],
     "서울-후쿠오카": [
       {
-        "date": "2026-03-22",
-        "minPrice": 259000,
-        "avgPrice": 314556,
-        "count": 9
-      },
-      {
         "date": "2026-03-23",
         "minPrice": 259000,
         "avgPrice": 314556,
@@ -37678,6 +37785,12 @@
         "minPrice": 199000,
         "avgPrice": 335825,
         "count": 40
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 199000,
+        "avgPrice": 339333,
+        "count": 39
       }
     ],
     "서울-다카마츠": [
@@ -37692,15 +37805,15 @@
         "minPrice": 315000,
         "avgPrice": 315000,
         "count": 2
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 315000,
+        "avgPrice": 315000,
+        "count": 2
       }
     ],
     "서울-하코다테(북해도)": [
-      {
-        "date": "2026-03-01",
-        "minPrice": 199000,
-        "avgPrice": 199000,
-        "count": 2
-      },
       {
         "date": "2026-03-02",
         "minPrice": 199000,
@@ -37778,15 +37891,15 @@
         "minPrice": 350000,
         "avgPrice": 350000,
         "count": 6
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 350000,
+        "avgPrice": 350000,
+        "count": 6
       }
     ],
     "서울-오사카(간사이)": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 325000,
-        "avgPrice": 364109,
-        "count": 11
-      },
       {
         "date": "2026-03-23",
         "minPrice": 325000,
@@ -37864,6 +37977,12 @@
         "minPrice": 240400,
         "avgPrice": 384374,
         "count": 19
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 250000,
+        "avgPrice": 392372,
+        "count": 18
       }
     ],
     "청주-도쿄(나리타공항)": [
@@ -38134,12 +38253,6 @@
     ],
     "부산-도쿄(나리타공항)": [
       {
-        "date": "2026-03-22",
-        "minPrice": 273000,
-        "avgPrice": 372075,
-        "count": 52
-      },
-      {
         "date": "2026-03-23",
         "minPrice": 273000,
         "avgPrice": 376914,
@@ -38213,6 +38326,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 333000,
+        "avgPrice": 454815,
+        "count": 41
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 333000,
         "avgPrice": 454815,
         "count": 41
@@ -38338,12 +38457,6 @@
     ],
     "부산-시즈오카": [
       {
-        "date": "2026-03-22",
-        "minPrice": 160000,
-        "avgPrice": 233294,
-        "count": 17
-      },
-      {
         "date": "2026-03-23",
         "minPrice": 160000,
         "avgPrice": 242238,
@@ -38420,6 +38533,12 @@
         "minPrice": 160000,
         "avgPrice": 277037,
         "count": 27
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 160000,
+        "avgPrice": 281538,
+        "count": 26
       }
     ],
     "서울-아오모리": [
@@ -38461,12 +38580,6 @@
       }
     ],
     "서울-클락(앙헬레스)": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 383000,
-        "avgPrice": 397545,
-        "count": 11
-      },
       {
         "date": "2026-03-23",
         "minPrice": 383000,
@@ -38544,6 +38657,12 @@
         "minPrice": 496300,
         "avgPrice": 518522,
         "count": 9
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 496300,
+        "avgPrice": 518522,
+        "count": 9
       }
     ],
     "부산-마카오": [
@@ -38563,12 +38682,6 @@
       }
     ],
     "서울-타이중(대만)": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 263000,
-        "avgPrice": 285667,
-        "count": 15
-      },
       {
         "date": "2026-03-23",
         "minPrice": 263000,
@@ -38646,15 +38759,15 @@
         "minPrice": 335000,
         "avgPrice": 380333,
         "count": 15
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 335000,
+        "avgPrice": 380714,
+        "count": 14
       }
     ],
     "부산-방콕": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 373000,
-        "avgPrice": 398000,
-        "count": 8
-      },
       {
         "date": "2026-03-23",
         "minPrice": 373000,
@@ -38729,6 +38842,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 418600,
+        "avgPrice": 489492,
+        "count": 26
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 418600,
         "avgPrice": 489492,
         "count": 26
@@ -38810,12 +38929,6 @@
     ],
     "서울-나트랑(깜란)": [
       {
-        "date": "2026-03-16",
-        "minPrice": 320000,
-        "avgPrice": 347143,
-        "count": 7
-      },
-      {
         "date": "2026-03-17",
         "minPrice": 320000,
         "avgPrice": 345556,
@@ -38889,6 +39002,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 437400,
+        "avgPrice": 551400,
+        "count": 5
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 437400,
         "avgPrice": 551400,
         "count": 5
@@ -38970,12 +39089,6 @@
     ],
     "서울(김포)-타이페이(송산)": [
       {
-        "date": "2026-03-22",
-        "minPrice": 273000,
-        "avgPrice": 379000,
-        "count": 8
-      },
-      {
         "date": "2026-03-23",
         "minPrice": 293000,
         "avgPrice": 353000,
@@ -39052,15 +39165,15 @@
         "minPrice": 311000,
         "avgPrice": 351000,
         "count": 3
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 311000,
+        "avgPrice": 351000,
+        "count": 3
       }
     ],
     "서울-타이페이": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 239000,
-        "avgPrice": 323678,
-        "count": 46
-      },
       {
         "date": "2026-03-23",
         "minPrice": 249600,
@@ -39138,6 +39251,12 @@
         "minPrice": 259000,
         "avgPrice": 371606,
         "count": 35
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 259000,
+        "avgPrice": 365926,
+        "count": 34
       }
     ],
     "서울-보라카이(깔리보)": [
@@ -39228,12 +39347,6 @@
     ],
     "서울-보홀(필리핀)": [
       {
-        "date": "2026-03-22",
-        "minPrice": 270000,
-        "avgPrice": 304476,
-        "count": 42
-      },
-      {
         "date": "2026-03-23",
         "minPrice": 290000,
         "avgPrice": 305688,
@@ -39310,6 +39423,12 @@
         "minPrice": 360000,
         "avgPrice": 444633,
         "count": 27
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 360000,
+        "avgPrice": 444633,
+        "count": 27
       }
     ],
     "부산-클락(앙헬레스)": [
@@ -39369,12 +39488,6 @@
       }
     ],
     "부산-발리(덴파사)": [
-      {
-        "date": "2026-02-25",
-        "minPrice": 419000,
-        "avgPrice": 492333,
-        "count": 12
-      },
       {
         "date": "2026-03-19",
         "minPrice": 469000,
@@ -39449,6 +39562,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 579000,
+        "avgPrice": 584385,
+        "count": 13
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 579000,
         "avgPrice": 584385,
         "count": 13
@@ -39620,12 +39739,6 @@
     ],
     "서울-연태(옌타이)": [
       {
-        "date": "2026-03-19",
-        "minPrice": 135600,
-        "avgPrice": 153019,
-        "count": 31
-      },
-      {
         "date": "2026-03-20",
         "minPrice": 135600,
         "avgPrice": 153600,
@@ -39702,15 +39815,15 @@
         "minPrice": 147800,
         "avgPrice": 192400,
         "count": 30
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 147800,
+        "avgPrice": 192400,
+        "count": 30
       }
     ],
     "서울-제남(지난)": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 133000,
-        "avgPrice": 177800,
-        "count": 5
-      },
       {
         "date": "2026-03-23",
         "minPrice": 129000,
@@ -39785,6 +39898,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 139000,
+        "avgPrice": 177000,
+        "count": 5
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 139000,
         "avgPrice": 177000,
         "count": 5
@@ -40204,12 +40323,6 @@
     ],
     "서울-마나도(인도네시아)": [
       {
-        "date": "2026-03-22",
-        "minPrice": 371000,
-        "avgPrice": 414243,
-        "count": 37
-      },
-      {
         "date": "2026-03-23",
         "minPrice": 371000,
         "avgPrice": 415595,
@@ -40286,15 +40399,15 @@
         "minPrice": 371000,
         "avgPrice": 443258,
         "count": 31
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 371000,
+        "avgPrice": 443258,
+        "count": 31
       }
     ],
     "서울-로마 (FCO)": [
-      {
-        "date": "2026-03-19",
-        "minPrice": 1120200,
-        "avgPrice": 1220200,
-        "count": 2
-      },
       {
         "date": "2026-03-20",
         "minPrice": 1020200,
@@ -40369,6 +40482,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 1812800,
+        "avgPrice": 1812800,
+        "count": 1
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 1812800,
         "avgPrice": 1812800,
         "count": 1
@@ -40462,12 +40581,6 @@
     ],
     "서울-바탐": [
       {
-        "date": "2026-03-22",
-        "minPrice": 258000,
-        "avgPrice": 268000,
-        "count": 6
-      },
-      {
         "date": "2026-03-23",
         "minPrice": 258000,
         "avgPrice": 268000,
@@ -40541,6 +40654,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 402800,
+        "avgPrice": 490800,
+        "count": 5
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 402800,
         "avgPrice": 490800,
         "count": 5
@@ -40684,12 +40803,6 @@
     ],
     "서울-마닐라": [
       {
-        "date": "2026-03-22",
-        "minPrice": 343000,
-        "avgPrice": 368455,
-        "count": 11
-      },
-      {
         "date": "2026-03-23",
         "minPrice": 343000,
         "avgPrice": 367000,
@@ -40763,6 +40876,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 476300,
+        "avgPrice": 546300,
+        "count": 14
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 476300,
         "avgPrice": 546300,
         "count": 14
@@ -41076,15 +41195,15 @@
         "minPrice": 419000,
         "avgPrice": 456500,
         "count": 4
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 419000,
+        "avgPrice": 456500,
+        "count": 4
       }
     ],
     "서울(ICN)-발리(DPS)": [
-      {
-        "date": "2026-03-19",
-        "minPrice": 448300,
-        "avgPrice": 448300,
-        "count": 5
-      },
       {
         "date": "2026-03-20",
         "minPrice": 378300,
@@ -41162,15 +41281,15 @@
         "minPrice": 598700,
         "avgPrice": 741700,
         "count": 5
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 598700,
+        "avgPrice": 741700,
+        "count": 5
       }
     ],
     "부산(PUS)-후쿠오카(FUK)": [
-      {
-        "date": "2026-02-23",
-        "minPrice": 207900,
-        "avgPrice": 207900,
-        "count": 1
-      },
       {
         "date": "2026-03-06",
         "minPrice": 204600,
@@ -41248,15 +41367,15 @@
         "minPrice": 269500,
         "avgPrice": 269500,
         "count": 2
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 269500,
+        "avgPrice": 269500,
+        "count": 2
       }
     ],
     "부산(PUS)-괌(GUM)": [
-      {
-        "date": "2026-03-09",
-        "minPrice": 220500,
-        "avgPrice": 228500,
-        "count": 5
-      },
       {
         "date": "2026-03-10",
         "minPrice": 220500,
@@ -41331,6 +41450,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 378400,
+        "avgPrice": 378400,
+        "count": 2
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 378400,
         "avgPrice": 378400,
         "count": 2
@@ -41424,12 +41549,6 @@
     ],
     "부산(PUS)-마카오(MFM)": [
       {
-        "date": "2026-03-15",
-        "minPrice": 242900,
-        "avgPrice": 278900,
-        "count": 5
-      },
-      {
         "date": "2026-03-16",
         "minPrice": 242900,
         "avgPrice": 272900,
@@ -41506,15 +41625,15 @@
         "minPrice": 324300,
         "avgPrice": 324300,
         "count": 3
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 324300,
+        "avgPrice": 324300,
+        "count": 3
       }
     ],
     "부산(PUS)-방콕(BKK)": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 410200,
-        "avgPrice": 410200,
-        "count": 2
-      },
       {
         "date": "2026-03-23",
         "minPrice": 410200,
@@ -41589,6 +41708,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 421200,
+        "avgPrice": 421200,
+        "count": 3
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 421200,
         "avgPrice": 421200,
         "count": 3
@@ -41682,12 +41807,6 @@
     ],
     "부산(PUS)-푸꾸옥(PQC)": [
       {
-        "date": "2026-03-14",
-        "minPrice": 396800,
-        "avgPrice": 436133,
-        "count": 3
-      },
-      {
         "date": "2026-03-15",
         "minPrice": 396800,
         "avgPrice": 436133,
@@ -41764,15 +41883,15 @@
         "minPrice": 437000,
         "avgPrice": 452000,
         "count": 2
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 437000,
+        "avgPrice": 452000,
+        "count": 2
       }
     ],
     "대구(TAE)-다낭(DAD)": [
-      {
-        "date": "2026-03-02",
-        "minPrice": 450300,
-        "avgPrice": 453633,
-        "count": 3
-      },
       {
         "date": "2026-03-03",
         "minPrice": 450300,
@@ -41847,6 +41966,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 465300,
+        "avgPrice": 465300,
+        "count": 1
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 465300,
         "avgPrice": 465300,
         "count": 1
@@ -41940,12 +42065,6 @@
     ],
     "서울(ICN)-마나도(MDC)": [
       {
-        "date": "2026-03-21",
-        "minPrice": 391000,
-        "avgPrice": 417375,
-        "count": 8
-      },
-      {
         "date": "2026-03-22",
         "minPrice": 391000,
         "avgPrice": 417375,
@@ -42022,15 +42141,15 @@
         "minPrice": 411000,
         "avgPrice": 411000,
         "count": 1
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 411000,
+        "avgPrice": 411000,
+        "count": 1
       }
     ],
     "서울(ICN)-오사카(KIX)": [
-      {
-        "date": "2026-03-04",
-        "minPrice": 287200,
-        "avgPrice": 297200,
-        "count": 2
-      },
       {
         "date": "2026-03-05",
         "minPrice": 287200,
@@ -42108,15 +42227,15 @@
         "minPrice": 515000,
         "avgPrice": 614900,
         "count": 2
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 515000,
+        "avgPrice": 614900,
+        "count": 2
       }
     ],
     "청주시(CJJ)-나고야(NGO)": [
-      {
-        "date": "2026-03-10",
-        "minPrice": 405700,
-        "avgPrice": 405700,
-        "count": 3
-      },
       {
         "date": "2026-03-11",
         "minPrice": 405700,
@@ -42191,6 +42310,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 468400,
+        "avgPrice": 468400,
+        "count": 1
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 468400,
         "avgPrice": 468400,
         "count": 1
@@ -42284,12 +42409,6 @@
     ],
     "부산-시모지시마(SHI)": [
       {
-        "date": "2026-03-22",
-        "minPrice": 240000,
-        "avgPrice": 240000,
-        "count": 1
-      },
-      {
         "date": "2026-03-23",
         "minPrice": 240000,
         "avgPrice": 240000,
@@ -42363,6 +42482,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 317900,
+        "avgPrice": 317900,
+        "count": 5
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 317900,
         "avgPrice": 317900,
         "count": 5
@@ -42370,12 +42495,6 @@
     ],
     "부산-타이중(대중)": [
       {
-        "date": "2026-03-22",
-        "minPrice": 390000,
-        "avgPrice": 390000,
-        "count": 5
-      },
-      {
         "date": "2026-03-23",
         "minPrice": 390000,
         "avgPrice": 390000,
@@ -42452,15 +42571,15 @@
         "minPrice": 340000,
         "avgPrice": 340000,
         "count": 1
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 340000,
+        "avgPrice": 340000,
+        "count": 1
       }
     ],
     "인천-쿠알라룸푸르": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 479000,
-        "avgPrice": 479000,
-        "count": 13
-      },
       {
         "date": "2026-03-23",
         "minPrice": 479000,
@@ -42538,15 +42657,15 @@
         "minPrice": 479000,
         "avgPrice": 479000,
         "count": 1
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 479000,
+        "avgPrice": 479000,
+        "count": 1
       }
     ],
     "인천-청도": [
-      {
-        "date": "2026-03-13",
-        "minPrice": 187300,
-        "avgPrice": 187300,
-        "count": 1
-      },
       {
         "date": "2026-03-14",
         "minPrice": 187300,
@@ -42624,15 +42743,15 @@
         "minPrice": 408300,
         "avgPrice": 408300,
         "count": 1
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 408300,
+        "avgPrice": 408300,
+        "count": 1
       }
     ],
     "부산-나트랑(깜랑)": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 246680,
-        "avgPrice": 246680,
-        "count": 7
-      },
       {
         "date": "2026-03-23",
         "minPrice": 262000,
@@ -42710,6 +42829,12 @@
         "minPrice": 384690,
         "avgPrice": 384690,
         "count": 1
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 384690,
+        "avgPrice": 384690,
+        "count": 1
       }
     ],
     "인천-밴쿠버": [
@@ -42721,12 +42846,6 @@
       }
     ],
     "부산-다카마츠": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 220000,
-        "avgPrice": 298037,
-        "count": 27
-      },
       {
         "date": "2026-03-23",
         "minPrice": 220000,
@@ -42801,6 +42920,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 245000,
+        "avgPrice": 380085,
+        "count": 26
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 245000,
         "avgPrice": 380085,
         "count": 26
@@ -43070,12 +43195,6 @@
     ],
     "김포-타이페이": [
       {
-        "date": "2026-03-22",
-        "minPrice": 273000,
-        "avgPrice": 328000,
-        "count": 4
-      },
-      {
         "date": "2026-03-23",
         "minPrice": 293000,
         "avgPrice": 353000,
@@ -43152,15 +43271,15 @@
         "minPrice": 311000,
         "avgPrice": 351000,
         "count": 3
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 311000,
+        "avgPrice": 351000,
+        "count": 3
       }
     ],
     "인천-화리엔": [
-      {
-        "date": "2026-03-06",
-        "minPrice": 366000,
-        "avgPrice": 379333,
-        "count": 3
-      },
       {
         "date": "2026-03-07",
         "minPrice": 366000,
@@ -43235,6 +43354,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 424400,
+        "avgPrice": 424400,
+        "count": 1
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 424400,
         "avgPrice": 424400,
         "count": 1
@@ -43570,12 +43695,6 @@
     ],
     "서울-화련(대만)": [
       {
-        "date": "2026-03-06",
-        "minPrice": 366000,
-        "avgPrice": 379333,
-        "count": 3
-      },
-      {
         "date": "2026-03-07",
         "minPrice": 366000,
         "avgPrice": 379333,
@@ -43652,15 +43771,15 @@
         "minPrice": 417000,
         "avgPrice": 468233,
         "count": 6
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 417000,
+        "avgPrice": 468233,
+        "count": 6
       }
     ],
     "부산(PUS)-미야코지마(SHI)": [
-      {
-        "date": "2026-03-16",
-        "minPrice": 376400,
-        "avgPrice": 376400,
-        "count": 1
-      },
       {
         "date": "2026-03-17",
         "minPrice": 376400,
@@ -43738,15 +43857,15 @@
         "minPrice": 334100,
         "avgPrice": 347433,
         "count": 3
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 334100,
+        "avgPrice": 347433,
+        "count": 3
       }
     ],
     "인천-이시가키": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 399000,
-        "avgPrice": 399000,
-        "count": 20
-      },
       {
         "date": "2026-03-23",
         "minPrice": 399000,
@@ -43824,15 +43943,15 @@
         "minPrice": 500000,
         "avgPrice": 500000,
         "count": 14
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 500000,
+        "avgPrice": 500000,
+        "count": 14
       }
     ],
     "청주-삿포로(치토세)": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 292000,
-        "avgPrice": 381240,
-        "count": 25
-      },
       {
         "date": "2026-03-23",
         "minPrice": 292000,
@@ -43910,6 +44029,12 @@
         "minPrice": 549000,
         "avgPrice": 549000,
         "count": 9
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 549000,
+        "avgPrice": 549000,
+        "count": 9
       }
     ],
     "서울-장가계(다융)": [
@@ -43966,15 +44091,15 @@
         "minPrice": 300000,
         "avgPrice": 300000,
         "count": 2
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 300000,
+        "avgPrice": 300000,
+        "count": 2
       }
     ],
     "서울-계림(구이린)": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 299000,
-        "avgPrice": 352846,
-        "count": 13
-      },
       {
         "date": "2026-03-23",
         "minPrice": 299000,
@@ -44052,15 +44177,15 @@
         "minPrice": 289000,
         "avgPrice": 339769,
         "count": 13
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 289000,
+        "avgPrice": 339769,
+        "count": 13
       }
     ],
     "부산(PUS)-나트랑(CXR)": [
-      {
-        "date": "2026-03-22",
-        "minPrice": 376300,
-        "avgPrice": 401300,
-        "count": 2
-      },
       {
         "date": "2026-03-23",
         "minPrice": 436300,
@@ -44135,6 +44260,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 386300,
+        "avgPrice": 391300,
+        "count": 2
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 386300,
         "avgPrice": 391300,
         "count": 2
@@ -44216,12 +44347,6 @@
     ],
     "서울(ICN)-보라카이(KLO)": [
       {
-        "date": "2026-03-21",
-        "minPrice": 389800,
-        "avgPrice": 389800,
-        "count": 1
-      },
-      {
         "date": "2026-03-22",
         "minPrice": 389800,
         "avgPrice": 389800,
@@ -44298,6 +44423,12 @@
         "minPrice": 389800,
         "avgPrice": 389800,
         "count": 1
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 389800,
+        "avgPrice": 389800,
+        "count": 1
       }
     ],
     "인천-상해": [
@@ -44312,15 +44443,15 @@
         "minPrice": 347600,
         "avgPrice": 347600,
         "count": 1
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 347600,
+        "avgPrice": 347600,
+        "count": 1
       }
     ],
     "서울-위해(웨이하이)": [
-      {
-        "date": "2026-03-21",
-        "minPrice": 245000,
-        "avgPrice": 254444,
-        "count": 54
-      },
       {
         "date": "2026-03-22",
         "minPrice": 245000,
@@ -44395,6 +44526,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 290000,
+        "avgPrice": 292813,
+        "count": 16
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 290000,
         "avgPrice": 292813,
         "count": 16
@@ -44508,12 +44645,6 @@
     ],
     "대구-도야마": [
       {
-        "date": "2026-03-22",
-        "minPrice": 445000,
-        "avgPrice": 445000,
-        "count": 2
-      },
-      {
         "date": "2026-03-23",
         "minPrice": 445000,
         "avgPrice": 445000,
@@ -44587,6 +44718,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 160000,
+        "avgPrice": 257667,
+        "count": 9
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 160000,
         "avgPrice": 257667,
         "count": 9
@@ -44708,6 +44845,12 @@
         "minPrice": 329000,
         "avgPrice": 329000,
         "count": 1
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 329000,
+        "avgPrice": 329000,
+        "count": 1
       }
     ],
     "부산(PUS)-시즈오카(FSZ)": [
@@ -44767,6 +44910,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 299900,
+        "avgPrice": 321950,
+        "count": 2
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 299900,
         "avgPrice": 321950,
         "count": 2
@@ -44832,6 +44981,12 @@
         "minPrice": 309600,
         "avgPrice": 309600,
         "count": 2
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 309600,
+        "avgPrice": 309600,
+        "count": 2
       }
     ],
     "대구(TAE)-후쿠오카(FUK)": [
@@ -44894,6 +45049,12 @@
         "minPrice": 259600,
         "avgPrice": 259600,
         "count": 2
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 259600,
+        "avgPrice": 259600,
+        "count": 2
       }
     ],
     "대구(TAE)-타이베이(TPE)": [
@@ -44935,6 +45096,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 349400,
+        "avgPrice": 349400,
+        "count": 2
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 349400,
         "avgPrice": 349400,
         "count": 2
@@ -45000,6 +45167,12 @@
         "minPrice": 369000,
         "avgPrice": 431500,
         "count": 4
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 369000,
+        "avgPrice": 431500,
+        "count": 4
       }
     ],
     "서울(ICN)-도야마(TOY)": [
@@ -45053,6 +45226,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 299000,
+        "avgPrice": 470200,
+        "count": 9
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 299000,
         "avgPrice": 470200,
         "count": 9
@@ -45112,6 +45291,12 @@
         "minPrice": 562800,
         "avgPrice": 632800,
         "count": 2
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 562800,
+        "avgPrice": 632800,
+        "count": 2
       }
     ],
     "인천-도야마": [
@@ -45153,6 +45338,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 299000,
+        "avgPrice": 299000,
+        "count": 1
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 299000,
         "avgPrice": 299000,
         "count": 1
@@ -45220,6 +45411,12 @@
         "minPrice": 489000,
         "avgPrice": 550750,
         "count": 4
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 489000,
+        "avgPrice": 550750,
+        "count": 4
       }
     ],
     "인천-타이중(대중)": [
@@ -45267,6 +45464,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 320000,
+        "avgPrice": 320000,
+        "count": 15
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 320000,
         "avgPrice": 320000,
         "count": 15
@@ -45320,6 +45523,12 @@
         "minPrice": 273600,
         "avgPrice": 273600,
         "count": 1
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 273600,
+        "avgPrice": 273600,
+        "count": 1
       }
     ],
     "서울-도야마": [
@@ -45367,6 +45576,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 180000,
+        "avgPrice": 348544,
+        "count": 9
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 180000,
         "avgPrice": 348544,
         "count": 9
@@ -45440,6 +45655,12 @@
         "minPrice": 609000,
         "avgPrice": 609000,
         "count": 1
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 609000,
+        "avgPrice": 609000,
+        "count": 1
       }
     ],
     "청주-마츠모토": [
@@ -45487,6 +45708,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 354900,
+        "avgPrice": 354900,
+        "count": 1
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 354900,
         "avgPrice": 354900,
         "count": 1
@@ -45542,6 +45769,12 @@
         "minPrice": 450000,
         "avgPrice": 450000,
         "count": 1
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 450000,
+        "avgPrice": 450000,
+        "count": 1
       }
     ],
     "인천-반다르세리베가완(브루나이)": [
@@ -45577,6 +45810,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 432900,
+        "avgPrice": 432900,
+        "count": 2
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 432900,
         "avgPrice": 432900,
         "count": 2
@@ -45618,6 +45857,12 @@
         "minPrice": 280000,
         "avgPrice": 280000,
         "count": 9
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 280000,
+        "avgPrice": 280000,
+        "count": 9
       }
     ],
     "서울-아테네": [
@@ -45656,6 +45901,12 @@
         "minPrice": 1230000,
         "avgPrice": 1230000,
         "count": 1
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 1230000,
+        "avgPrice": 1230000,
+        "count": 1
       }
     ],
     "청주시(CJJ)-후쿠오카(FUK)": [
@@ -45685,6 +45936,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 252000,
+        "avgPrice": 270000,
+        "count": 5
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 252000,
         "avgPrice": 270000,
         "count": 5
@@ -45720,6 +45977,12 @@
         "minPrice": 339000,
         "avgPrice": 339000,
         "count": 3
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 339000,
+        "avgPrice": 339000,
+        "count": 3
       }
     ],
     "부산-타이중": [
@@ -45749,6 +46012,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 338000,
+        "avgPrice": 366000,
+        "count": 3
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 338000,
         "avgPrice": 366000,
         "count": 3
@@ -45784,6 +46053,12 @@
         "minPrice": 399000,
         "avgPrice": 403000,
         "count": 4
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 399000,
+        "avgPrice": 403000,
+        "count": 4
       }
     ],
     "부산-알마티": [
@@ -45816,6 +46091,12 @@
         "minPrice": 671000,
         "avgPrice": 671000,
         "count": 2
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 671000,
+        "avgPrice": 671000,
+        "count": 2
       }
     ],
     "대구(TAE)-도야마(TOY)": [
@@ -45830,6 +46111,12 @@
         "minPrice": 299900,
         "avgPrice": 339150,
         "count": 2
+      },
+      {
+        "date": "2026-04-15",
+        "minPrice": 299900,
+        "avgPrice": 339150,
+        "count": 2
       }
     ],
     "대구(TAE)-울란바토르(UBN)": [
@@ -45841,6 +46128,12 @@
       },
       {
         "date": "2026-04-14",
+        "minPrice": 385300,
+        "avgPrice": 385300,
+        "count": 2
+      },
+      {
+        "date": "2026-04-15",
         "minPrice": 385300,
         "avgPrice": 385300,
         "count": 2
