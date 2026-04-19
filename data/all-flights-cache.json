@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-04-19T10:31:20.849Z",
-  "count": 547,
+  "timestamp": "2026-04-19T13:13:49.815Z",
+  "count": 548,
   "flights": [
     {
       "id": "ybtour-오사카(간사이)-20260428-0",
@@ -5378,6 +5378,33 @@
       "firstSeen": "2026-04-15"
     },
     {
+      "id": "ybtour-시드니-20260524-2",
+      "source": "ybtour",
+      "airline": "젯스타항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-05-24",
+        "time": "21:50",
+        "arrivalTime": "09:05"
+      },
+      "arrival": {
+        "city": "시드니",
+        "airport": "SYD",
+        "date": "2026-05-30",
+        "time": "10:45",
+        "arrivalTime": "20:15"
+      },
+      "price": 899000,
+      "currency": "KRW",
+      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=P0&inhId=JQ0048ICNSYD-T8&depDate=20260524&efcCityCode=SYD",
+      "seats": "6석",
+      "availableSeats": 6,
+      "region": "남태평양",
+      "discountRate": -19,
+      "firstSeen": "2026-04-19"
+    },
+    {
       "id": "hanatour-regular-인천/김포-0",
       "source": "hanatour",
       "airline": "제주항공",
@@ -8746,7 +8773,7 @@
       "price": 219300,
       "currency": "KRW",
       "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22%22%2C%22continentCode%22%3A%22CHI%22%2C%22arrivalCity%22%3A%22TAO%22%2C%22departureDate%22%3A%222026-04-27%22%2C%22arrivalDate%22%3A%222026-04-30%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
-      "availableSeats": 0,
+      "availableSeats": 1,
       "flightNumber": "SC4614 / SC4617",
       "region": "중국",
       "modetourDetail": {
@@ -16180,7 +16207,7 @@
     }
   ],
   "sources": {
-    "ybtour": 336,
+    "ybtour": 337,
     "hanatour": 89,
     "modetour": 313,
     "onlinetour": 115,
