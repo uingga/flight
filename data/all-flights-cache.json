@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-04-30T17:12:15.902Z",
-  "count": 270,
+  "timestamp": "2026-04-30T23:59:30.203Z",
+  "count": 271,
   "flights": [
     {
       "id": "ybtour-오사카(간사이)-20260512-0",
@@ -3087,8 +3087,7 @@
       "price": 399900,
       "currency": "KRW",
       "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=A0%2FA3&inhId=5J0131ICNCEB-T7&depDate=20260518&efcCityCode=CEB",
-      "seats": "1석",
-      "availableSeats": 1,
+      "seats": "0석",
       "region": "동남아",
       "discountRate": 15,
       "firstSeen": "2026-04-28"
@@ -4556,6 +4555,31 @@
       "departure": {
         "city": "서울(ICN)",
         "airport": "",
+        "date": "2026.05.07(목)",
+        "time": "15:05"
+      },
+      "arrival": {
+        "city": "도야마(TOY)",
+        "airport": "",
+        "date": "2026.05.10(일)",
+        "time": "17:00"
+      },
+      "price": 209900,
+      "currency": "KRW",
+      "link": "https://www.hanatour.com/com/pmt/CHPC0PMT0011M200?fareId=RTF%5E3084238%5ETW0353ICNTOY-H3%5ETW0353ICNTOY-10%5E20260507%5ET%5EKRW%5E6426345%5E5225586%5E%5E1%5E0%5E0&psngrCntLst=%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D&selectedCard=%7B%7D",
+      "availableSeats": 1,
+      "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22SEL%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22TOY%22%2C%22depDt%22%3A%2220260507%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22TOY%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22SEL%22%2C%22depDt%22%3A%2220260510%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
+      "region": "기타",
+      "discountRate": 56,
+      "firstSeen": "2026-04-30"
+    },
+    {
+      "id": "hanatour-regular-인천/김포-1",
+      "source": "hanatour",
+      "airline": "트리니티 항공",
+      "departure": {
+        "city": "서울(ICN)",
+        "airport": "",
         "date": "2026.05.10(일)",
         "time": "15:05"
       },
@@ -4575,7 +4599,7 @@
       "firstSeen": "2026-04-30"
     },
     {
-      "id": "hanatour-regular-인천/김포-6",
+      "id": "hanatour-regular-인천/김포-7",
       "source": "hanatour",
       "airline": "싱가포르항공",
       "departure": {
@@ -4600,7 +4624,7 @@
       "firstSeen": "2026-04-30"
     },
     {
-      "id": "hanatour-regular-인천/김포-7",
+      "id": "hanatour-regular-인천/김포-8",
       "source": "hanatour",
       "airline": "싱가포르항공",
       "departure": {
@@ -4625,7 +4649,7 @@
       "firstSeen": "2026-04-30"
     },
     {
-      "id": "hanatour-regular-인천/김포-18",
+      "id": "hanatour-regular-인천/김포-19",
       "source": "hanatour",
       "airline": "이스타항공",
       "departure": {
@@ -4650,7 +4674,7 @@
       "firstSeen": "2026-04-30"
     },
     {
-      "id": "hanatour-regular-인천/김포-36",
+      "id": "hanatour-regular-인천/김포-37",
       "source": "hanatour",
       "airline": "트리니티 항공",
       "departure": {
@@ -7470,7 +7494,7 @@
   ],
   "sources": {
     "ybtour": 323,
-    "hanatour": 94,
+    "hanatour": 95,
     "modetour": 167,
     "onlinetour": 157,
     "ttang": 139
@@ -33884,8 +33908,8 @@
       {
         "date": "2026-04-30",
         "minPrice": 209900,
-        "avgPrice": 416725,
-        "count": 8
+        "avgPrice": 393744,
+        "count": 9
       }
     ],
     "서울(GMP)-오사카(KIX)": [
