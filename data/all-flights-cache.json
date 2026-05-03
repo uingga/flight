@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-05-03T08:20:49.970Z",
-  "count": 378,
+  "timestamp": "2026-05-03T10:23:01.958Z",
+  "count": 379,
   "flights": [
     {
       "id": "ybtour-오사카(간사이)-20260512-0",
@@ -29,7 +29,7 @@
       "firstSeen": "2026-04-30"
     },
     {
-      "id": "ybtour-오사카(간사이)-20260519-9",
+      "id": "ybtour-오사카(간사이)-20260519-8",
       "source": "ybtour",
       "airline": "진에어",
       "departure": {
@@ -53,10 +53,10 @@
       "availableSeats": 4,
       "region": "일본",
       "discountRate": -34,
-      "firstSeen": "2026-05-02"
+      "firstSeen": "2026-05-03"
     },
     {
-      "id": "ybtour-오사카(간사이)-20260525-12",
+      "id": "ybtour-오사카(간사이)-20260525-11",
       "source": "ybtour",
       "airline": "진에어",
       "departure": {
@@ -80,7 +80,7 @@
       "availableSeats": 4,
       "region": "일본",
       "discountRate": -34,
-      "firstSeen": "2026-05-02"
+      "firstSeen": "2026-05-03"
     },
     {
       "id": "ybtour-도야마-20260510-0",
@@ -189,6 +189,33 @@
       "region": "일본",
       "discountRate": -18,
       "firstSeen": "2026-05-02"
+    },
+    {
+      "id": "ybtour-다카마쓰-20260607-7",
+      "source": "ybtour",
+      "airline": "에어부산",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-06-07",
+        "time": "17:20",
+        "arrivalTime": "18:40"
+      },
+      "arrival": {
+        "city": "다카마쓰",
+        "airport": "TAK",
+        "date": "2026-06-09",
+        "time": "19:35",
+        "arrivalTime": "20:55"
+      },
+      "price": 311900,
+      "currency": "KRW",
+      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=J1&inhId=BX1325PUSTAK-T2&depDate=20260607&efcCityCode=TAK",
+      "seats": "10석",
+      "availableSeats": 10,
+      "region": "일본",
+      "discountRate": -2,
+      "firstSeen": "2026-05-03"
     },
     {
       "id": "ybtour-시즈오카-20260601-2",
@@ -5990,7 +6017,7 @@
       "price": 299000,
       "currency": "KRW",
       "link": "https://www.hanatour.com/com/pmt/CHPC0PMT0011M200?fareId=RTF%5E3115853%5ERF3854CJJMYJ-H1%5ERF3854CJJMYJ-5%5E20260604%5ET%5EKRW%5E6459913%5E5273810%5E%5E1%5E0%5E0&psngrCntLst=%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D&selectedCard=%7B%7D",
-      "availableSeats": 10,
+      "availableSeats": 6,
       "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22CJJ%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22MYJ%22%2C%22depDt%22%3A%2220260604%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22MYJ%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22CJJ%22%2C%22depDt%22%3A%2220260606%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
       "region": "일본",
       "discountRate": -4,
@@ -10776,7 +10803,7 @@
     }
   ],
   "sources": {
-    "ybtour": 333,
+    "ybtour": 334,
     "hanatour": 89,
     "modetour": 229,
     "onlinetour": 157,
