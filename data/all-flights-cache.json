@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-05-04T11:23:42.682Z",
+  "timestamp": "2026-05-04T13:38:43.419Z",
   "count": 393,
   "flights": [
     {
@@ -2675,8 +2675,7 @@
       "price": 389000,
       "currency": "KRW",
       "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=A0%2FA3&inhId=VZ0851ICNBKK-T6&depDate=20260601&efcCityCode=BKK",
-      "seats": "1석",
-      "availableSeats": 1,
+      "seats": "0석",
       "region": "동남아",
       "discountRate": 0,
       "firstSeen": "2026-04-30"
@@ -6003,7 +6002,7 @@
       "firstSeen": "2026-05-04"
     },
     {
-      "id": "hanatour-regular-인천/김포-31",
+      "id": "hanatour-regular-인천/김포-30",
       "source": "hanatour",
       "airline": "트리니티 항공",
       "departure": {
@@ -6046,7 +6045,7 @@
       "price": 199000,
       "currency": "KRW",
       "link": "https://www.hanatour.com/com/pmt/CHPC0PMT0011M200?fareId=RTF%5E3115852%5ERF3854CJJMYJ-H1%5ERF3854CJJMYJ-6%5E20260602%5ET%5EKRW%5E6459911%5E5273808%5E%5E1%5E0%5E0&psngrCntLst=%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D&selectedCard=%7B%7D",
-      "availableSeats": 10,
+      "availableSeats": 9,
       "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22CJJ%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22MYJ%22%2C%22depDt%22%3A%2220260602%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22MYJ%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22CJJ%22%2C%22depDt%22%3A%2220260604%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
       "region": "일본",
       "discountRate": 36,
@@ -9748,19 +9747,23 @@
         "city": "서울",
         "airport": "ICN",
         "date": "2026-05-14",
-        "time": ""
+        "time": "22:40",
+        "arrivalTime": "00:10"
       },
       "arrival": {
         "city": "타이페이",
         "airport": "TPE",
         "date": "2026-05-17",
-        "time": ""
+        "time": "01:25",
+        "arrivalTime": "05:00"
       },
       "price": 249000,
       "currency": "KRW",
       "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=TPE&depdate0=2026-05-14&dep1=TPE&arr1=ICN&depdate1=2026-05-17&adt=1&chd=0&inf=0&comp=Y",
       "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=TPE&depdate0=2026-05-14&dep1=TPE&arr1=ICN&depdate1=2026-05-17&adt=1&chd=0&inf=0&comp=Y",
       "region": "중국",
+      "availableSeats": 5,
+      "seats": "5석",
       "discountRate": 24,
       "firstSeen": "2026-05-04"
     },
@@ -11139,7 +11142,7 @@
   ],
   "sources": {
     "ybtour": 347,
-    "hanatour": 96,
+    "hanatour": 95,
     "modetour": 243,
     "onlinetour": 141,
     "ttang": 195
@@ -34335,8 +34338,8 @@
       {
         "date": "2026-05-04",
         "minPrice": 437800,
-        "avgPrice": 587700,
-        "count": 6
+        "avgPrice": 565680,
+        "count": 5
       }
     ],
     "청주시(CJJ)-나고야(NGO)": [
