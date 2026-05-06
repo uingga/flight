@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-05-06T11:34:10.380Z",
-  "count": 313,
+  "timestamp": "2026-05-06T13:56:27.462Z",
+  "count": 312,
   "flights": [
     {
       "id": "ybtour-도야마-20260516-0",
@@ -752,8 +752,7 @@
       "price": 406900,
       "currency": "KRW",
       "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=J1&inhId=LJ0363PUSSHI-T3&depDate=20260524&efcCityCode=SHI",
-      "seats": "9석",
-      "availableSeats": 9,
+      "seats": "0석",
       "region": "일본",
       "discountRate": 0,
       "firstSeen": "2026-05-06"
@@ -4165,7 +4164,7 @@
       "price": 199000,
       "currency": "KRW",
       "link": "https://www.hanatour.com/com/pmt/CHPC0PMT0011M200?fareId=RTF%5E3115852%5ERF3854CJJMYJ-H1%5ERF3854CJJMYJ-6%5E20260602%5ET%5EKRW%5E6459911%5E5273808%5E%5E1%5E0%5E0&psngrCntLst=%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D&selectedCard=%7B%7D",
-      "availableSeats": 8,
+      "availableSeats": 6,
       "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22CJJ%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22MYJ%22%2C%22depDt%22%3A%2220260602%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22MYJ%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22CJJ%22%2C%22depDt%22%3A%2220260604%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
       "region": "일본",
       "discountRate": 37,
@@ -6332,31 +6331,6 @@
       "firstSeen": "2026-04-21"
     },
     {
-      "id": "online-260628851816",
-      "source": "onlinetour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-06-28",
-        "time": "13:30"
-      },
-      "arrival": {
-        "city": "고베",
-        "airport": "",
-        "date": "2026-06-30",
-        "time": "16:30"
-      },
-      "price": 379000,
-      "currency": "KRW",
-      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260628851816",
-      "seats": "4석",
-      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=UKB&sCity2=UKB&eCity2=SEL&startDt=20260628&endDt=20260630&adt=1",
-      "region": "일본",
-      "discountRate": 0,
-      "firstSeen": "2026-04-21"
-    },
-    {
       "id": "online-260511763329",
       "source": "onlinetour",
       "airline": "에어부산",
@@ -6888,19 +6862,23 @@
         "city": "서울",
         "airport": "ICN",
         "date": "2026-05-13",
-        "time": ""
+        "time": "14:25",
+        "arrivalTime": "16:00"
       },
       "arrival": {
         "city": "후쿠오카",
         "airport": "FUK",
         "date": "2026-05-15",
-        "time": ""
+        "time": "10:30",
+        "arrivalTime": "12:05"
       },
       "price": 249000,
       "currency": "KRW",
       "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-05-13&dep1=FUK&arr1=ICN&depdate1=2026-05-15&adt=1&chd=0&inf=0&comp=Y",
       "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-05-13&dep1=FUK&arr1=ICN&depdate1=2026-05-15&adt=1&chd=0&inf=0&comp=Y",
       "region": "일본",
+      "availableSeats": 5,
+      "seats": "5석",
       "discountRate": -11,
       "firstSeen": "2026-05-06"
     },
@@ -7571,7 +7549,7 @@
       "firstSeen": "2026-04-23"
     },
     {
-      "id": "ttang-7C1403ICNFUK-G7-2026-05-19",
+      "id": "ttang-ICN-FUK-RT-0-3-7C-2026-05-19",
       "source": "ttang",
       "airline": "제주항공",
       "departure": {
@@ -8901,8 +8879,8 @@
     "ybtour": 305,
     "hanatour": 78,
     "modetour": 252,
-    "onlinetour": 138,
-    "ttang": 687
+    "onlinetour": 137,
+    "ttang": 686
   },
   "priceHistory": {
     "부산-세부": [
@@ -9847,8 +9825,8 @@
       {
         "date": "2026-05-06",
         "minPrice": 273000,
-        "avgPrice": 377827,
-        "count": 139
+        "avgPrice": 375152,
+        "count": 138
       }
     ],
     "청주-후쿠오카": [
@@ -37867,8 +37845,8 @@
       {
         "date": "2026-05-06",
         "minPrice": 379000,
-        "avgPrice": 386273,
-        "count": 11
+        "avgPrice": 387000,
+        "count": 10
       }
     ],
     "대구-장가계": [
