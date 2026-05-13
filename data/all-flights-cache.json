@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-05-13T05:31:31.639Z",
-  "count": 558,
+  "timestamp": "2026-05-13T06:47:51.726Z",
+  "count": 560,
   "flights": [
     {
       "id": "ybtour-오사카(간사이)-20260522-0",
@@ -315,12 +315,13 @@
         "time": "09:40",
         "arrivalTime": "11:15"
       },
-      "price": 249000,
+      "price": 279000,
       "currency": "KRW",
       "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=J1&inhId=7C1403ICNFUK-T7&depDate=20260519&efcCityCode=FUK",
-      "seats": "0석",
+      "seats": "2석",
+      "availableSeats": 2,
       "region": "일본",
-      "discountRate": -11,
+      "discountRate": -24,
       "firstSeen": "2026-05-11"
     },
     {
@@ -3813,6 +3814,60 @@
       "firstSeen": "2026-05-12"
     },
     {
+      "id": "ybtour-코타키나발루-20260627-0",
+      "source": "ybtour",
+      "airline": "에어부산",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-06-27",
+        "time": "19:25",
+        "arrivalTime": "23:25"
+      },
+      "arrival": {
+        "city": "코타키나발루",
+        "airport": "BKI",
+        "date": "2026-07-02",
+        "time": "00:25",
+        "arrivalTime": "06:30"
+      },
+      "price": 482000,
+      "currency": "KRW",
+      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=A0%2FA3&inhId=BX0761PUSBKI-T2&depDate=20260627&efcCityCode=BKI",
+      "seats": "4석",
+      "availableSeats": 4,
+      "region": "동남아",
+      "discountRate": -8,
+      "firstSeen": "2026-05-13"
+    },
+    {
+      "id": "ybtour-코타키나발루-20260704-1",
+      "source": "ybtour",
+      "airline": "에어부산",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-07-04",
+        "time": "19:25",
+        "arrivalTime": "23:25"
+      },
+      "arrival": {
+        "city": "코타키나발루",
+        "airport": "BKI",
+        "date": "2026-07-09",
+        "time": "00:25",
+        "arrivalTime": "06:30"
+      },
+      "price": 482000,
+      "currency": "KRW",
+      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=A0%2FA3&inhId=BX0761PUSBKI-T2&depDate=20260704&efcCityCode=BKI",
+      "seats": "4석",
+      "availableSeats": 4,
+      "region": "동남아",
+      "discountRate": 1,
+      "firstSeen": "2026-05-13"
+    },
+    {
       "id": "ybtour-홍콩-20260607-4",
       "source": "ybtour",
       "airline": "에어부산",
@@ -4729,33 +4784,6 @@
       "firstSeen": "2026-05-13"
     },
     {
-      "id": "ybtour-다낭-20260617-9",
-      "source": "ybtour",
-      "airline": "비엣젯항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-06-17",
-        "time": "18:30",
-        "arrivalTime": "21:10"
-      },
-      "arrival": {
-        "city": "다낭",
-        "airport": "DAD",
-        "date": "2026-06-21",
-        "time": "22:40",
-        "arrivalTime": "05:05"
-      },
-      "price": 420000,
-      "currency": "KRW",
-      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=A0%2FA3&inhId=VJ0879ICNDAD-T11&depDate=20260617&efcCityCode=DAD",
-      "seats": "2석",
-      "availableSeats": 2,
-      "region": "동남아",
-      "discountRate": -30,
-      "firstSeen": "2026-05-13"
-    },
-    {
       "id": "ybtour-다낭-20260707-27",
       "source": "ybtour",
       "airline": "비엣젯항공",
@@ -5186,7 +5214,7 @@
     {
       "id": "ybtour-치앙마이-20260524-0",
       "source": "ybtour",
-      "airline": "이스타항공",
+      "airline": "제주항공",
       "departure": {
         "city": "인천",
         "airport": "ICN",
@@ -5201,13 +5229,13 @@
         "time": "00:50",
         "arrivalTime": "08:15"
       },
-      "price": 489000,
+      "price": 469000,
       "currency": "KRW",
-      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=A0%2FA3&inhId=ZE0518CNXICN-T18&depDate=20260524&efcCityCode=CNX",
-      "seats": "8석",
-      "availableSeats": 8,
+      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=A0%2FA3&inhId=7C2515ICNCNX-T6&depDate=20260524&efcCityCode=CNX",
+      "seats": "9석",
+      "availableSeats": 9,
       "region": "동남아",
-      "discountRate": -6,
+      "discountRate": -2,
       "firstSeen": "2026-05-08"
     },
     {
@@ -6676,7 +6704,7 @@
       "price": 399000,
       "currency": "KRW",
       "link": "https://www.hanatour.com/com/pmt/CHPC0PMT0011M200?fareId=RTF%5E3101821%5EOZ1163ICNUKB-H1%5EOZ1163ICNUKB-2%5E20260524%5ET%5EKRW%5E6454167%5E5259073%5E%5E1%5E0%5E0&psngrCntLst=%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D&selectedCard=%7B%7D",
-      "availableSeats": 9,
+      "availableSeats": 7,
       "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22SEL%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22UKB%22%2C%22depDt%22%3A%2220260524%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22UKB%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22SEL%22%2C%22depDt%22%3A%2220260527%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
       "region": "일본",
       "discountRate": 0,
@@ -7376,7 +7404,7 @@
       "price": 149900,
       "currency": "KRW",
       "link": "https://www.hanatour.com/com/pmt/CHPC0PMT0011M200?fareId=RTF%5E3068555%5ETW0351TAETOY-H2%5ETW0351TAETOY-5%5E20260517%5ET%5EKRW%5E6457537%5E5264696%5E%5E1%5E0%5E0&psngrCntLst=%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D&selectedCard=%7B%7D",
-      "availableSeats": 1,
+      "availableSeats": 2,
       "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22TAE%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22TOY%22%2C%22depDt%22%3A%2220260517%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22TOY%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22TAE%22%2C%22depDt%22%3A%2220260520%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
       "region": "기타",
       "discountRate": 71,
@@ -7648,48 +7676,50 @@
       "firstSeen": "2026-04-24"
     },
     {
-      "id": "modetour-ASIA-19767047",
+      "id": "modetour-ASIA-19901328",
       "source": "modetour",
-      "airline": "비엣젯항공",
+      "airline": "진에어",
       "departure": {
         "city": "부산",
         "airport": "PUS",
         "date": "2026-05-25",
-        "time": "10:55"
+        "time": "20:05"
       },
       "arrival": {
         "city": "나트랑",
         "airport": "CXR",
         "date": "2026-05-29",
-        "time": "03:10"
+        "time": "23:55"
       },
-      "price": 460000,
+      "price": 450000,
       "currency": "KRW",
       "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22%22%2C%22continentCode%22%3A%22ASIA%22%2C%22arrivalCity%22%3A%22CXR%22%2C%22departureDate%22%3A%222026-05-25%22%2C%22arrivalDate%22%3A%222026-05-29%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
-      "availableSeats": 12,
-      "flightNumber": "VJ919 / VJ918",
+      "availableSeats": 1,
+      "flightNumber": "LJ115 / LJ116",
       "region": "동남아",
       "modetourDetail": {
-        "flyingTime": "04:40",
+        "flyingTime": "04:50",
         "isDirect": true,
         "isReturnDirect": true,
-        "departureArrivalTime": "13:35",
-        "returnDepartureTime": "03:10",
-        "returnArrivalTime": "09:50",
-        "normalPrice": 990000,
-        "sourceDiscountRate": 68,
-        "baseFare": 310000,
-        "tax": 150000,
-        "childBaseFare": 310000,
-        "childTax": 150000,
-        "infantFare": 50000,
-        "departureFlightNo": "VJ919",
-        "returnFlightNo": "VJ918",
+        "departureArrivalTime": "22:55",
+        "returnDepartureTime": "23:55",
+        "returnArrivalTime": "06:40",
+        "normalPrice": 700000,
+        "sourceDiscountRate": 94,
+        "baseFare": 40000,
+        "tax": 350000,
+        "tax2": 60000,
+        "childBaseFare": 40000,
+        "childTax": 350000,
+        "childTax2": 60000,
+        "infantFare": 150000,
+        "departureFlightNo": "LJ115",
+        "returnFlightNo": "LJ116",
         "returnDepartureAirport": "CXR",
         "returnArrivalAirport": "PUS"
       },
-      "discountRate": -22,
-      "firstSeen": "2026-05-01"
+      "discountRate": -19,
+      "firstSeen": "2026-05-13"
     },
     {
       "id": "modetour-ASIA-19731481",
@@ -7734,50 +7764,6 @@
       },
       "discountRate": -41,
       "firstSeen": "2026-05-07"
-    },
-    {
-      "id": "modetour-ASIA-19767048",
-      "source": "modetour",
-      "airline": "비엣젯항공",
-      "departure": {
-        "city": "부산",
-        "airport": "PUS",
-        "date": "2026-05-26",
-        "time": "10:55"
-      },
-      "arrival": {
-        "city": "나트랑",
-        "airport": "CXR",
-        "date": "2026-05-30",
-        "time": "03:10"
-      },
-      "price": 460000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22%22%2C%22continentCode%22%3A%22ASIA%22%2C%22arrivalCity%22%3A%22CXR%22%2C%22departureDate%22%3A%222026-05-26%22%2C%22arrivalDate%22%3A%222026-05-30%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
-      "availableSeats": 11,
-      "flightNumber": "VJ919 / VJ918",
-      "region": "동남아",
-      "modetourDetail": {
-        "flyingTime": "04:40",
-        "isDirect": true,
-        "isReturnDirect": true,
-        "departureArrivalTime": "13:35",
-        "returnDepartureTime": "03:10",
-        "returnArrivalTime": "09:50",
-        "normalPrice": 990000,
-        "sourceDiscountRate": 68,
-        "baseFare": 310000,
-        "tax": 150000,
-        "childBaseFare": 310000,
-        "childTax": 150000,
-        "infantFare": 50000,
-        "departureFlightNo": "VJ919",
-        "returnFlightNo": "VJ918",
-        "returnDepartureAirport": "CXR",
-        "returnArrivalAirport": "PUS"
-      },
-      "discountRate": -22,
-      "firstSeen": "2026-05-01"
     },
     {
       "id": "modetour-ASIA-19723099",
@@ -7911,6 +7897,52 @@
         "returnArrivalAirport": "ICN"
       },
       "discountRate": -32,
+      "firstSeen": "2026-05-13"
+    },
+    {
+      "id": "modetour-ASIA-19901329",
+      "source": "modetour",
+      "airline": "진에어",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-05-30",
+        "time": "20:05"
+      },
+      "arrival": {
+        "city": "나트랑",
+        "airport": "CXR",
+        "date": "2026-06-03",
+        "time": "23:55"
+      },
+      "price": 450000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22%22%2C%22continentCode%22%3A%22ASIA%22%2C%22arrivalCity%22%3A%22CXR%22%2C%22departureDate%22%3A%222026-05-30%22%2C%22arrivalDate%22%3A%222026-06-03%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
+      "availableSeats": 2,
+      "flightNumber": "LJ115 / LJ116",
+      "region": "동남아",
+      "modetourDetail": {
+        "flyingTime": "04:50",
+        "isDirect": true,
+        "isReturnDirect": true,
+        "departureArrivalTime": "22:55",
+        "returnDepartureTime": "23:55",
+        "returnArrivalTime": "06:40",
+        "normalPrice": 700000,
+        "sourceDiscountRate": 94,
+        "baseFare": 40000,
+        "tax": 350000,
+        "tax2": 60000,
+        "childBaseFare": 40000,
+        "childTax": 350000,
+        "childTax2": 60000,
+        "infantFare": 150000,
+        "departureFlightNo": "LJ115",
+        "returnFlightNo": "LJ116",
+        "returnDepartureAirport": "CXR",
+        "returnArrivalAirport": "PUS"
+      },
+      "discountRate": -19,
       "firstSeen": "2026-05-13"
     },
     {
@@ -8248,7 +8280,7 @@
       "price": 431000,
       "currency": "KRW",
       "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22%22%2C%22continentCode%22%3A%22ASIA%22%2C%22arrivalCity%22%3A%22MDC%22%2C%22departureDate%22%3A%222026-06-07%22%2C%22arrivalDate%22%3A%222026-06-12%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
-      "availableSeats": 10,
+      "availableSeats": 7,
       "flightNumber": "ZE535 / ZE536",
       "region": "동남아",
       "modetourDetail": {
@@ -8516,7 +8548,7 @@
       "price": 430000,
       "currency": "KRW",
       "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22%22%2C%22continentCode%22%3A%22ASIA%22%2C%22arrivalCity%22%3A%22HAN%22%2C%22departureDate%22%3A%222026-06-08%22%2C%22arrivalDate%22%3A%222026-06-12%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
-      "availableSeats": 2,
+      "availableSeats": 4,
       "flightNumber": "VJ981 / VJ982",
       "region": "동남아",
       "modetourDetail": {
@@ -8539,50 +8571,6 @@
         "returnArrivalAirport": "PUS"
       },
       "discountRate": -8,
-      "firstSeen": "2026-05-08"
-    },
-    {
-      "id": "modetour-ASIA-19767061",
-      "source": "modetour",
-      "airline": "비엣젯항공",
-      "departure": {
-        "city": "부산",
-        "airport": "PUS",
-        "date": "2026-06-08",
-        "time": "10:55"
-      },
-      "arrival": {
-        "city": "나트랑",
-        "airport": "CXR",
-        "date": "2026-06-12",
-        "time": "03:10"
-      },
-      "price": 460000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22%22%2C%22continentCode%22%3A%22ASIA%22%2C%22arrivalCity%22%3A%22CXR%22%2C%22departureDate%22%3A%222026-06-08%22%2C%22arrivalDate%22%3A%222026-06-12%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
-      "availableSeats": 16,
-      "flightNumber": "VJ919 / VJ918",
-      "region": "동남아",
-      "modetourDetail": {
-        "flyingTime": "04:40",
-        "isDirect": true,
-        "isReturnDirect": true,
-        "departureArrivalTime": "13:35",
-        "returnDepartureTime": "03:10",
-        "returnArrivalTime": "09:50",
-        "normalPrice": 990000,
-        "sourceDiscountRate": 68,
-        "baseFare": 310000,
-        "tax": 150000,
-        "childBaseFare": 310000,
-        "childTax": 150000,
-        "infantFare": 50000,
-        "departureFlightNo": "VJ919",
-        "returnFlightNo": "VJ918",
-        "returnDepartureAirport": "CXR",
-        "returnArrivalAirport": "PUS"
-      },
-      "discountRate": -26,
       "firstSeen": "2026-05-08"
     },
     {
@@ -8812,6 +8800,52 @@
       "firstSeen": "2026-05-13"
     },
     {
+      "id": "modetour-ASIA-19901333",
+      "source": "modetour",
+      "airline": "진에어",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-06-13",
+        "time": "20:05"
+      },
+      "arrival": {
+        "city": "나트랑",
+        "airport": "CXR",
+        "date": "2026-06-17",
+        "time": "23:55"
+      },
+      "price": 450000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22%22%2C%22continentCode%22%3A%22ASIA%22%2C%22arrivalCity%22%3A%22CXR%22%2C%22departureDate%22%3A%222026-06-13%22%2C%22arrivalDate%22%3A%222026-06-17%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
+      "availableSeats": 8,
+      "flightNumber": "LJ115 / LJ116",
+      "region": "동남아",
+      "modetourDetail": {
+        "flyingTime": "04:50",
+        "isDirect": true,
+        "isReturnDirect": true,
+        "departureArrivalTime": "22:55",
+        "returnDepartureTime": "23:55",
+        "returnArrivalTime": "06:40",
+        "normalPrice": 700000,
+        "sourceDiscountRate": 94,
+        "baseFare": 40000,
+        "tax": 350000,
+        "tax2": 60000,
+        "childBaseFare": 40000,
+        "childTax": 350000,
+        "childTax2": 60000,
+        "infantFare": 150000,
+        "departureFlightNo": "LJ115",
+        "returnFlightNo": "LJ116",
+        "returnDepartureAirport": "CXR",
+        "returnArrivalAirport": "PUS"
+      },
+      "discountRate": -24,
+      "firstSeen": "2026-05-13"
+    },
+    {
       "id": "modetour-ASIA-19913864",
       "source": "modetour",
       "airline": "진에어",
@@ -8920,7 +8954,7 @@
       "price": 357000,
       "currency": "KRW",
       "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22%22%2C%22continentCode%22%3A%22CHI%22%2C%22arrivalCity%22%3A%22DYG%22%2C%22departureDate%22%3A%222026-05-25%22%2C%22arrivalDate%22%3A%222026-05-29%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
-      "availableSeats": 15,
+      "availableSeats": 13,
       "flightNumber": "TW681 / TW682",
       "region": "중국",
       "modetourDetail": {
@@ -9906,52 +9940,6 @@
       "firstSeen": "2026-05-09"
     },
     {
-      "id": "modetour-CHI-19714064",
-      "source": "modetour",
-      "airline": "에어로케이",
-      "departure": {
-        "city": "청주",
-        "airport": "CJJ",
-        "date": "2026-06-10",
-        "time": "10:30"
-      },
-      "arrival": {
-        "city": "타이페이",
-        "airport": "TPE",
-        "date": "2026-06-13",
-        "time": "13:15"
-      },
-      "price": 421600,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22%22%2C%22continentCode%22%3A%22CHI%22%2C%22arrivalCity%22%3A%22TPE%22%2C%22departureDate%22%3A%222026-06-10%22%2C%22arrivalDate%22%3A%222026-06-13%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
-      "availableSeats": 4,
-      "flightNumber": "RF511 / RF512",
-      "region": "중국",
-      "modetourDetail": {
-        "flyingTime": "02:30",
-        "isDirect": true,
-        "isReturnDirect": true,
-        "departureArrivalTime": "12:20",
-        "returnDepartureTime": "13:15",
-        "returnArrivalTime": "16:40",
-        "normalPrice": 740000,
-        "sourceDiscountRate": 87,
-        "baseFare": 90000,
-        "tax": 281600,
-        "tax2": 50000,
-        "childBaseFare": 90000,
-        "childTax": 281600,
-        "childTax2": 43000,
-        "infantFare": 30000,
-        "departureFlightNo": "RF511",
-        "returnFlightNo": "RF512",
-        "returnDepartureAirport": "TPE",
-        "returnArrivalAirport": "CJJ"
-      },
-      "discountRate": -20,
-      "firstSeen": "2026-05-10"
-    },
-    {
       "id": "modetour-CHI-19723598",
       "source": "modetour",
       "airline": "이스타항공",
@@ -10594,7 +10582,7 @@
       "price": 379000,
       "currency": "KRW",
       "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260621851813",
-      "seats": "6석",
+      "seats": "12석",
       "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=UKB&sCity2=UKB&eCity2=SEL&startDt=20260621&endDt=20260623&adt=1",
       "region": "일본",
       "discountRate": 0,
@@ -10932,34 +10920,6 @@
       "firstSeen": "2026-05-04"
     },
     {
-      "id": "ttang-7C8631TAEKWL-G1-2026-05-17",
-      "source": "ttang",
-      "airline": "제주항공",
-      "departure": {
-        "city": "대구",
-        "airport": "TAE",
-        "date": "2026-05-17",
-        "time": "19:55",
-        "arrivalTime": "22:45"
-      },
-      "arrival": {
-        "city": "계림(구이린)",
-        "airport": "KWL",
-        "date": "2026-05-22",
-        "time": "00:30",
-        "arrivalTime": "05:05"
-      },
-      "price": 390000,
-      "currency": "KRW",
-      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=TAE&arr0=KWL&depdate0=2026-05-17&dep1=KWL&arr1=TAE&depdate1=2026-05-22&adt=1&chd=0&inf=0&comp=Y",
-      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=TAE&arr0=KWL&depdate0=2026-05-17&dep1=KWL&arr1=TAE&depdate1=2026-05-22&adt=1&chd=0&inf=0&comp=Y",
-      "region": "중국",
-      "availableSeats": 4,
-      "seats": "4석",
-      "discountRate": -47,
-      "firstSeen": "2026-04-28"
-    },
-    {
       "id": "ttang-7C1513ICNHKD-G2-2026-05-17",
       "source": "ttang",
       "airline": "제주항공",
@@ -11264,32 +11224,32 @@
       "firstSeen": "2026-05-12"
     },
     {
-      "id": "ttang-7C8501ICNWEH-G4-2026-05-19",
+      "id": "ttang-LJ0779PUSKWL-G1-2026-05-19",
       "source": "ttang",
-      "airline": "제주항공",
+      "airline": "진에어",
       "departure": {
-        "city": "서울",
-        "airport": "ICN",
+        "city": "부산",
+        "airport": "PUS",
         "date": "2026-05-19",
-        "time": "10:30",
-        "arrivalTime": "10:50"
+        "time": "22:00",
+        "arrivalTime": "00:55"
       },
       "arrival": {
-        "city": "위해(웨이하이)",
-        "airport": "WEH",
-        "date": "2026-05-21",
-        "time": "11:50",
-        "arrivalTime": "14:00"
+        "city": "계림(구이린)",
+        "airport": "KWL",
+        "date": "2026-05-23",
+        "time": "01:55",
+        "arrivalTime": "06:10"
       },
-      "price": 260000,
+      "price": 250000,
       "currency": "KRW",
-      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=WEH&depdate0=2026-05-19&dep1=WEH&arr1=ICN&depdate1=2026-05-21&adt=1&chd=0&inf=0&comp=Y",
-      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=WEH&depdate0=2026-05-19&dep1=WEH&arr1=ICN&depdate1=2026-05-21&adt=1&chd=0&inf=0&comp=Y",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=PUS&arr0=KWL&depdate0=2026-05-19&dep1=KWL&arr1=PUS&depdate1=2026-05-23&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=PUS&arr0=KWL&depdate0=2026-05-19&dep1=KWL&arr1=PUS&depdate1=2026-05-23&adt=1&chd=0&inf=0&comp=Y",
       "region": "중국",
-      "availableSeats": 9,
-      "seats": "9석",
-      "discountRate": -2,
-      "firstSeen": "2026-05-11"
+      "availableSeats": 4,
+      "seats": "4석",
+      "discountRate": 5,
+      "firstSeen": "2026-05-13"
     },
     {
       "id": "ttang-7C8501ICNWEH-G5-2026-05-19",
@@ -11313,6 +11273,34 @@
       "currency": "KRW",
       "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=WEH&depdate0=2026-05-19&dep1=WEH&arr1=ICN&depdate1=2026-05-22&adt=1&chd=0&inf=0&comp=Y",
       "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=WEH&depdate0=2026-05-19&dep1=WEH&arr1=ICN&depdate1=2026-05-22&adt=1&chd=0&inf=0&comp=Y",
+      "region": "중국",
+      "availableSeats": 9,
+      "seats": "9석",
+      "discountRate": -2,
+      "firstSeen": "2026-05-11"
+    },
+    {
+      "id": "ttang-7C8501ICNWEH-G4-2026-05-19",
+      "source": "ttang",
+      "airline": "제주항공",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-05-19",
+        "time": "10:30",
+        "arrivalTime": "10:50"
+      },
+      "arrival": {
+        "city": "위해(웨이하이)",
+        "airport": "WEH",
+        "date": "2026-05-21",
+        "time": "11:50",
+        "arrivalTime": "14:00"
+      },
+      "price": 260000,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=WEH&depdate0=2026-05-19&dep1=WEH&arr1=ICN&depdate1=2026-05-21&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=WEH&depdate0=2026-05-19&dep1=WEH&arr1=ICN&depdate1=2026-05-21&adt=1&chd=0&inf=0&comp=Y",
       "region": "중국",
       "availableSeats": 9,
       "seats": "9석",
@@ -11850,6 +11838,62 @@
       "firstSeen": "2026-05-04"
     },
     {
+      "id": "ttang-ZE0917PUSCNX-G7-2026-05-21",
+      "source": "ttang",
+      "airline": "이스타항공",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-05-21",
+        "time": "18:55",
+        "arrivalTime": "22:10"
+      },
+      "arrival": {
+        "city": "치앙마이",
+        "airport": "CNX",
+        "date": "2026-05-24",
+        "time": "23:10",
+        "arrivalTime": "06:15"
+      },
+      "price": 545700,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=PUS&arr0=CNX&depdate0=2026-05-21&dep1=CNX&arr1=PUS&depdate1=2026-05-24&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=PUS&arr0=CNX&depdate0=2026-05-21&dep1=CNX&arr1=PUS&depdate1=2026-05-24&adt=1&chd=0&inf=0&comp=Y",
+      "region": "동남아",
+      "availableSeats": 6,
+      "seats": "6석",
+      "discountRate": -18,
+      "firstSeen": "2026-05-13"
+    },
+    {
+      "id": "ttang-LJ0779PUSKWL-G1-2026-05-22",
+      "source": "ttang",
+      "airline": "진에어",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-05-22",
+        "time": "22:00",
+        "arrivalTime": "00:55"
+      },
+      "arrival": {
+        "city": "계림(구이린)",
+        "airport": "KWL",
+        "date": "2026-05-26",
+        "time": "01:55",
+        "arrivalTime": "06:10"
+      },
+      "price": 250000,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=PUS&arr0=KWL&depdate0=2026-05-22&dep1=KWL&arr1=PUS&depdate1=2026-05-26&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=PUS&arr0=KWL&depdate0=2026-05-22&dep1=KWL&arr1=PUS&depdate1=2026-05-26&adt=1&chd=0&inf=0&comp=Y",
+      "region": "중국",
+      "availableSeats": 4,
+      "seats": "4석",
+      "discountRate": 5,
+      "firstSeen": "2026-05-13"
+    },
+    {
       "id": "ttang-TW0351TAETOY-G5-2026-05-23",
       "source": "ttang",
       "airline": "티웨이항공",
@@ -12296,34 +12340,6 @@
       "firstSeen": "2026-05-12"
     },
     {
-      "id": "ttang-ZE0817ICNYNT-D5-2026-05-25",
-      "source": "ttang",
-      "airline": "이스타항공",
-      "departure": {
-        "city": "서울",
-        "airport": "ICN",
-        "date": "2026-05-25",
-        "time": "15:55",
-        "arrivalTime": "16:20"
-      },
-      "arrival": {
-        "city": "연태(옌타이)",
-        "airport": "YNT",
-        "date": "2026-05-27",
-        "time": "18:50",
-        "arrivalTime": "21:05"
-      },
-      "price": 199900,
-      "currency": "KRW",
-      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=YNT&depdate0=2026-05-25&dep1=YNT&arr1=ICN&depdate1=2026-05-27&adt=1&chd=0&inf=0&comp=Y",
-      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=YNT&depdate0=2026-05-25&dep1=YNT&arr1=ICN&depdate1=2026-05-27&adt=1&chd=0&inf=0&comp=Y",
-      "region": "중국",
-      "availableSeats": 9,
-      "seats": "9석",
-      "discountRate": 22,
-      "firstSeen": "2026-05-13"
-    },
-    {
       "id": "ttang-ZE0817ICNYNT-D6-2026-05-25",
       "source": "ttang",
       "airline": "이스타항공",
@@ -12345,6 +12361,34 @@
       "currency": "KRW",
       "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=YNT&depdate0=2026-05-25&dep1=YNT&arr1=ICN&depdate1=2026-05-28&adt=1&chd=0&inf=0&comp=Y",
       "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=YNT&depdate0=2026-05-25&dep1=YNT&arr1=ICN&depdate1=2026-05-28&adt=1&chd=0&inf=0&comp=Y",
+      "region": "중국",
+      "availableSeats": 9,
+      "seats": "9석",
+      "discountRate": 22,
+      "firstSeen": "2026-05-13"
+    },
+    {
+      "id": "ttang-ZE0817ICNYNT-D5-2026-05-25",
+      "source": "ttang",
+      "airline": "이스타항공",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-05-25",
+        "time": "15:55",
+        "arrivalTime": "16:20"
+      },
+      "arrival": {
+        "city": "연태(옌타이)",
+        "airport": "YNT",
+        "date": "2026-05-27",
+        "time": "18:50",
+        "arrivalTime": "21:05"
+      },
+      "price": 199900,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=YNT&depdate0=2026-05-25&dep1=YNT&arr1=ICN&depdate1=2026-05-27&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=YNT&depdate0=2026-05-25&dep1=YNT&arr1=ICN&depdate1=2026-05-27&adt=1&chd=0&inf=0&comp=Y",
       "region": "중국",
       "availableSeats": 9,
       "seats": "9석",
@@ -12548,34 +12592,6 @@
       "firstSeen": "2026-05-12"
     },
     {
-      "id": "ttang-ZE0817ICNYNT-D5-2026-05-26",
-      "source": "ttang",
-      "airline": "이스타항공",
-      "departure": {
-        "city": "서울",
-        "airport": "ICN",
-        "date": "2026-05-26",
-        "time": "08:55",
-        "arrivalTime": "09:25"
-      },
-      "arrival": {
-        "city": "연태(옌타이)",
-        "airport": "YNT",
-        "date": "2026-05-28",
-        "time": "10:25",
-        "arrivalTime": "12:50"
-      },
-      "price": 199900,
-      "currency": "KRW",
-      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=YNT&depdate0=2026-05-26&dep1=YNT&arr1=ICN&depdate1=2026-05-28&adt=1&chd=0&inf=0&comp=Y",
-      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=YNT&depdate0=2026-05-26&dep1=YNT&arr1=ICN&depdate1=2026-05-28&adt=1&chd=0&inf=0&comp=Y",
-      "region": "중국",
-      "availableSeats": 4,
-      "seats": "4석",
-      "discountRate": 22,
-      "firstSeen": "2026-05-13"
-    },
-    {
       "id": "ttang-ZE0817ICNYNT-D6-2026-05-26",
       "source": "ttang",
       "airline": "이스타항공",
@@ -12604,6 +12620,34 @@
       "firstSeen": "2026-05-13"
     },
     {
+      "id": "ttang-ZE0817ICNYNT-D5-2026-05-26",
+      "source": "ttang",
+      "airline": "이스타항공",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-05-26",
+        "time": "08:55",
+        "arrivalTime": "09:25"
+      },
+      "arrival": {
+        "city": "연태(옌타이)",
+        "airport": "YNT",
+        "date": "2026-05-28",
+        "time": "10:25",
+        "arrivalTime": "12:50"
+      },
+      "price": 199900,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=YNT&depdate0=2026-05-26&dep1=YNT&arr1=ICN&depdate1=2026-05-28&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=YNT&depdate0=2026-05-26&dep1=YNT&arr1=ICN&depdate1=2026-05-28&adt=1&chd=0&inf=0&comp=Y",
+      "region": "중국",
+      "availableSeats": 4,
+      "seats": "4석",
+      "discountRate": 22,
+      "firstSeen": "2026-05-13"
+    },
+    {
       "id": "ttang-ZE0645ICNFUK-G6-2026-05-26",
       "source": "ttang",
       "airline": "이스타항공",
@@ -12625,6 +12669,34 @@
       "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-05-26&dep1=FUK&arr1=ICN&depdate1=2026-05-28&adt=1&chd=0&inf=0&comp=Y",
       "region": "일본",
       "discountRate": -7,
+      "firstSeen": "2026-05-13"
+    },
+    {
+      "id": "ttang-LJ0779PUSKWL-G1-2026-05-26",
+      "source": "ttang",
+      "airline": "진에어",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-05-26",
+        "time": "22:00",
+        "arrivalTime": "00:55"
+      },
+      "arrival": {
+        "city": "계림(구이린)",
+        "airport": "KWL",
+        "date": "2026-05-30",
+        "time": "01:55",
+        "arrivalTime": "06:10"
+      },
+      "price": 250000,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=PUS&arr0=KWL&depdate0=2026-05-26&dep1=KWL&arr1=PUS&depdate1=2026-05-30&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=PUS&arr0=KWL&depdate0=2026-05-26&dep1=KWL&arr1=PUS&depdate1=2026-05-30&adt=1&chd=0&inf=0&comp=Y",
+      "region": "중국",
+      "availableSeats": 4,
+      "seats": "4석",
+      "discountRate": 5,
       "firstSeen": "2026-05-13"
     },
     {
@@ -12796,34 +12868,6 @@
       "firstSeen": "2026-05-12"
     },
     {
-      "id": "ttang-PUS-PQC-RT-0-4-VJ-2026-05-26",
-      "source": "ttang",
-      "airline": "비엣젯항공",
-      "departure": {
-        "city": "부산",
-        "airport": "PUS",
-        "date": "2026-05-26",
-        "time": "07:45",
-        "arrivalTime": "11:10"
-      },
-      "arrival": {
-        "city": "푸꾸옥",
-        "airport": "PQC",
-        "date": "2026-05-29",
-        "time": "23:10",
-        "arrivalTime": "06:40"
-      },
-      "price": 470000,
-      "currency": "KRW",
-      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=PUS&arr0=PQC&depdate0=2026-05-26&dep1=PQC&arr1=PUS&depdate1=2026-05-29&adt=1&chd=0&inf=0&comp=Y",
-      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=PUS&arr0=PQC&depdate0=2026-05-26&dep1=PQC&arr1=PUS&depdate1=2026-05-29&adt=1&chd=0&inf=0&comp=Y",
-      "region": "동남아",
-      "availableSeats": 4,
-      "seats": "4석",
-      "discountRate": -41,
-      "firstSeen": "2026-05-12"
-    },
-    {
       "id": "ttang-7C1513ICNHKD-G2-2026-05-26",
       "source": "ttang",
       "airline": "제주항공",
@@ -12852,34 +12896,6 @@
       "firstSeen": "2026-05-07"
     },
     {
-      "id": "ttang-ZE0817ICNYNT-D5-2026-05-27",
-      "source": "ttang",
-      "airline": "이스타항공",
-      "departure": {
-        "city": "서울",
-        "airport": "ICN",
-        "date": "2026-05-27",
-        "time": "08:55",
-        "arrivalTime": "09:25"
-      },
-      "arrival": {
-        "city": "연태(옌타이)",
-        "airport": "YNT",
-        "date": "2026-05-29",
-        "time": "10:25",
-        "arrivalTime": "12:50"
-      },
-      "price": 199900,
-      "currency": "KRW",
-      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=YNT&depdate0=2026-05-27&dep1=YNT&arr1=ICN&depdate1=2026-05-29&adt=1&chd=0&inf=0&comp=Y",
-      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=YNT&depdate0=2026-05-27&dep1=YNT&arr1=ICN&depdate1=2026-05-29&adt=1&chd=0&inf=0&comp=Y",
-      "region": "중국",
-      "availableSeats": 4,
-      "seats": "4석",
-      "discountRate": 22,
-      "firstSeen": "2026-05-13"
-    },
-    {
       "id": "ttang-ZE0817ICNYNT-D6-2026-05-27",
       "source": "ttang",
       "airline": "이스타항공",
@@ -12904,6 +12920,34 @@
       "region": "중국",
       "availableSeats": 9,
       "seats": "9석",
+      "discountRate": 22,
+      "firstSeen": "2026-05-13"
+    },
+    {
+      "id": "ttang-ZE0817ICNYNT-D5-2026-05-27",
+      "source": "ttang",
+      "airline": "이스타항공",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-05-27",
+        "time": "08:55",
+        "arrivalTime": "09:25"
+      },
+      "arrival": {
+        "city": "연태(옌타이)",
+        "airport": "YNT",
+        "date": "2026-05-29",
+        "time": "10:25",
+        "arrivalTime": "12:50"
+      },
+      "price": 199900,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=YNT&depdate0=2026-05-27&dep1=YNT&arr1=ICN&depdate1=2026-05-29&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=YNT&depdate0=2026-05-27&dep1=YNT&arr1=ICN&depdate1=2026-05-29&adt=1&chd=0&inf=0&comp=Y",
+      "region": "중국",
+      "availableSeats": 4,
+      "seats": "4석",
       "discountRate": 22,
       "firstSeen": "2026-05-13"
     },
@@ -12992,6 +13036,34 @@
       "firstSeen": "2026-05-12"
     },
     {
+      "id": "ttang-ZE0963PUSOKA-G16-2026-05-27",
+      "source": "ttang",
+      "airline": "이스타항공",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-05-27",
+        "time": "09:00",
+        "arrivalTime": "11:00"
+      },
+      "arrival": {
+        "city": "오키나와",
+        "airport": "OKA",
+        "date": "2026-05-30",
+        "time": "11:00",
+        "arrivalTime": "13:00"
+      },
+      "price": 316000,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=PUS&arr0=OKA&depdate0=2026-05-27&dep1=OKA&arr1=PUS&depdate1=2026-05-30&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=PUS&arr0=OKA&depdate0=2026-05-27&dep1=OKA&arr1=PUS&depdate1=2026-05-30&adt=1&chd=0&inf=0&comp=Y",
+      "region": "일본",
+      "availableSeats": 9,
+      "seats": "9석",
+      "discountRate": -7,
+      "firstSeen": "2026-05-13"
+    },
+    {
       "id": "ttang-OZ1163ICNUKB-G1-2026-05-27",
       "source": "ttang",
       "airline": "아시아나항공",
@@ -13076,32 +13148,32 @@
       "firstSeen": "2026-05-13"
     },
     {
-      "id": "ttang-ZE0517ICNCNX-G32-2026-05-27",
+      "id": "ttang-ICN-BTH-RT-0-4-7C-2026-05-27",
       "source": "ttang",
-      "airline": "이스타항공",
+      "airline": "제주항공",
       "departure": {
         "city": "서울",
         "airport": "ICN",
         "date": "2026-05-27",
-        "time": "18:30",
-        "arrivalTime": "22:40"
+        "time": "17:45",
+        "arrivalTime": "22:05"
       },
       "arrival": {
-        "city": "치앙마이",
-        "airport": "CNX",
+        "city": "바탐",
+        "airport": "BTH",
         "date": "2026-05-30",
-        "time": "23:55",
-        "arrivalTime": "07:10"
+        "time": "23:20",
+        "arrivalTime": "08:05"
       },
-      "price": 460600,
+      "price": 480000,
       "currency": "KRW",
-      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=CNX&depdate0=2026-05-27&dep1=CNX&arr1=ICN&depdate1=2026-05-30&adt=1&chd=0&inf=0&comp=Y",
-      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=CNX&depdate0=2026-05-27&dep1=CNX&arr1=ICN&depdate1=2026-05-30&adt=1&chd=0&inf=0&comp=Y",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=BTH&depdate0=2026-05-27&dep1=BTH&arr1=ICN&depdate1=2026-05-30&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=BTH&depdate0=2026-05-27&dep1=BTH&arr1=ICN&depdate1=2026-05-30&adt=1&chd=0&inf=0&comp=Y",
       "region": "동남아",
-      "availableSeats": 2,
-      "seats": "2석",
-      "discountRate": 0,
-      "firstSeen": "2026-05-13"
+      "availableSeats": 9,
+      "seats": "9석",
+      "discountRate": 4,
+      "firstSeen": "2026-05-12"
     },
     {
       "id": "ttang-PUS-DAD-RT-0-5-VJ-2026-05-27",
@@ -13129,34 +13201,6 @@
       "availableSeats": 9,
       "seats": "9석",
       "discountRate": -49,
-      "firstSeen": "2026-05-12"
-    },
-    {
-      "id": "ttang-ICN-BTH-RT-0-4-7C-2026-05-27",
-      "source": "ttang",
-      "airline": "제주항공",
-      "departure": {
-        "city": "서울",
-        "airport": "ICN",
-        "date": "2026-05-27",
-        "time": "17:45",
-        "arrivalTime": "22:05"
-      },
-      "arrival": {
-        "city": "바탐",
-        "airport": "BTH",
-        "date": "2026-05-30",
-        "time": "23:20",
-        "arrivalTime": "08:05"
-      },
-      "price": 480000,
-      "currency": "KRW",
-      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=BTH&depdate0=2026-05-27&dep1=BTH&arr1=ICN&depdate1=2026-05-30&adt=1&chd=0&inf=0&comp=Y",
-      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=BTH&depdate0=2026-05-27&dep1=BTH&arr1=ICN&depdate1=2026-05-30&adt=1&chd=0&inf=0&comp=Y",
-      "region": "동남아",
-      "availableSeats": 9,
-      "seats": "9석",
-      "discountRate": 4,
       "firstSeen": "2026-05-12"
     },
     {
@@ -13580,34 +13624,6 @@
       "firstSeen": "2026-05-12"
     },
     {
-      "id": "ttang-PUS-PQC-RT-0-5-VJ-2026-05-30",
-      "source": "ttang",
-      "airline": "비엣젯항공",
-      "departure": {
-        "city": "부산",
-        "airport": "PUS",
-        "date": "2026-05-30",
-        "time": "07:45",
-        "arrivalTime": "11:10"
-      },
-      "arrival": {
-        "city": "푸꾸옥",
-        "airport": "PQC",
-        "date": "2026-06-03",
-        "time": "23:10",
-        "arrivalTime": "06:40"
-      },
-      "price": 470000,
-      "currency": "KRW",
-      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=PUS&arr0=PQC&depdate0=2026-05-30&dep1=PQC&arr1=PUS&depdate1=2026-06-03&adt=1&chd=0&inf=0&comp=Y",
-      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=PUS&arr0=PQC&depdate0=2026-05-30&dep1=PQC&arr1=PUS&depdate1=2026-06-03&adt=1&chd=0&inf=0&comp=Y",
-      "region": "동남아",
-      "availableSeats": 4,
-      "seats": "4석",
-      "discountRate": -41,
-      "firstSeen": "2026-05-12"
-    },
-    {
       "id": "ttang-FD0678ICNDMK-G1-2026-05-30",
       "source": "ttang",
       "airline": "타이에어아시아",
@@ -13857,6 +13873,34 @@
       "availableSeats": 8,
       "seats": "8석",
       "discountRate": -29,
+      "firstSeen": "2026-05-13"
+    },
+    {
+      "id": "ttang-ZE0981PUSPQC-G12-2026-05-31",
+      "source": "ttang",
+      "airline": "이스타항공",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-05-31",
+        "time": "18:55",
+        "arrivalTime": "22:25"
+      },
+      "arrival": {
+        "city": "푸꾸옥",
+        "airport": "PQC",
+        "date": "2026-06-03",
+        "time": "23:25",
+        "arrivalTime": "06:55"
+      },
+      "price": 436900,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=PUS&arr0=PQC&depdate0=2026-05-31&dep1=PQC&arr1=PUS&depdate1=2026-06-03&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=PUS&arr0=PQC&depdate0=2026-05-31&dep1=PQC&arr1=PUS&depdate1=2026-06-03&adt=1&chd=0&inf=0&comp=Y",
+      "region": "동남아",
+      "availableSeats": 5,
+      "seats": "5석",
+      "discountRate": -31,
       "firstSeen": "2026-05-13"
     },
     {
@@ -16002,34 +16046,6 @@
       "firstSeen": "2026-05-12"
     },
     {
-      "id": "ttang-ZE0817ICNYNT-D5-2026-06-13",
-      "source": "ttang",
-      "airline": "이스타항공",
-      "departure": {
-        "city": "서울",
-        "airport": "ICN",
-        "date": "2026-06-13",
-        "time": "15:55",
-        "arrivalTime": "16:20"
-      },
-      "arrival": {
-        "city": "연태(옌타이)",
-        "airport": "YNT",
-        "date": "2026-06-15",
-        "time": "08:30",
-        "arrivalTime": "10:55"
-      },
-      "price": 199900,
-      "currency": "KRW",
-      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=YNT&depdate0=2026-06-13&dep1=YNT&arr1=ICN&depdate1=2026-06-15&adt=1&chd=0&inf=0&comp=Y",
-      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=YNT&depdate0=2026-06-13&dep1=YNT&arr1=ICN&depdate1=2026-06-15&adt=1&chd=0&inf=0&comp=Y",
-      "region": "중국",
-      "availableSeats": 9,
-      "seats": "9석",
-      "discountRate": 22,
-      "firstSeen": "2026-05-13"
-    },
-    {
       "id": "ttang-ZE0817ICNYNT-D6-2026-06-13",
       "source": "ttang",
       "airline": "이스타항공",
@@ -16051,6 +16067,34 @@
       "currency": "KRW",
       "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=YNT&depdate0=2026-06-13&dep1=YNT&arr1=ICN&depdate1=2026-06-16&adt=1&chd=0&inf=0&comp=Y",
       "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=YNT&depdate0=2026-06-13&dep1=YNT&arr1=ICN&depdate1=2026-06-16&adt=1&chd=0&inf=0&comp=Y",
+      "region": "중국",
+      "availableSeats": 9,
+      "seats": "9석",
+      "discountRate": 22,
+      "firstSeen": "2026-05-13"
+    },
+    {
+      "id": "ttang-ZE0817ICNYNT-D5-2026-06-13",
+      "source": "ttang",
+      "airline": "이스타항공",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-06-13",
+        "time": "15:55",
+        "arrivalTime": "16:20"
+      },
+      "arrival": {
+        "city": "연태(옌타이)",
+        "airport": "YNT",
+        "date": "2026-06-15",
+        "time": "08:30",
+        "arrivalTime": "10:55"
+      },
+      "price": 199900,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=YNT&depdate0=2026-06-13&dep1=YNT&arr1=ICN&depdate1=2026-06-15&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=YNT&depdate0=2026-06-13&dep1=YNT&arr1=ICN&depdate1=2026-06-15&adt=1&chd=0&inf=0&comp=Y",
       "region": "중국",
       "availableSeats": 9,
       "seats": "9석",
@@ -16197,11 +16241,11 @@
     }
   ],
   "sources": {
-    "ybtour": 343,
+    "ybtour": 344,
     "hanatour": 97,
     "modetour": 291,
-    "onlinetour": 131,
-    "ttang": 1171
+    "onlinetour": 132,
+    "ttang": 1180
   },
   "priceHistory": {
     "부산-세부": [
@@ -16372,8 +16416,8 @@
       {
         "date": "2026-05-13",
         "minPrice": 430000,
-        "avgPrice": 511980,
-        "count": 10
+        "avgPrice": 460000,
+        "count": 7
       }
     ],
     "부산-푸꾸옥": [
@@ -16457,9 +16501,9 @@
       },
       {
         "date": "2026-05-13",
-        "minPrice": 470000,
-        "avgPrice": 512944,
-        "count": 9
+        "minPrice": 436900,
+        "avgPrice": 504855,
+        "count": 11
       }
     ],
     "부산-타이페이": [
@@ -16722,12 +16766,6 @@
     ],
     "부산-코타키나발루": [
       {
-        "date": "2026-02-19",
-        "minPrice": 599000,
-        "avgPrice": 599000,
-        "count": 2
-      },
-      {
         "date": "2026-04-17",
         "minPrice": 415000,
         "avgPrice": 415000,
@@ -16804,6 +16842,12 @@
         "minPrice": 415000,
         "avgPrice": 415000,
         "count": 1
+      },
+      {
+        "date": "2026-05-13",
+        "minPrice": 482000,
+        "avgPrice": 482000,
+        "count": 2
       }
     ],
     "청주-타이페이": [
@@ -16888,8 +16932,8 @@
       {
         "date": "2026-05-13",
         "minPrice": 278500,
-        "avgPrice": 377900,
-        "count": 32
+        "avgPrice": 376490,
+        "count": 31
       }
     ],
     "인천-타이페이": [
@@ -16974,8 +17018,8 @@
       {
         "date": "2026-05-13",
         "minPrice": 338000,
-        "avgPrice": 436182,
-        "count": 33
+        "avgPrice": 437063,
+        "count": 32
       }
     ],
     "청주-기타큐슈": [
@@ -17637,8 +17681,8 @@
       },
       {
         "date": "2026-05-13",
-        "minPrice": 249000,
-        "avgPrice": 249000,
+        "minPrice": 279000,
+        "avgPrice": 279000,
         "count": 1
       }
     ],
@@ -18153,9 +18197,9 @@
       },
       {
         "date": "2026-05-13",
-        "minPrice": 412000,
-        "avgPrice": 486250,
-        "count": 18
+        "minPrice": 316000,
+        "avgPrice": 469475,
+        "count": 20
       }
     ],
     "인천-히로시마": [
@@ -21174,8 +21218,8 @@
       {
         "date": "2026-05-13",
         "minPrice": 420000,
-        "avgPrice": 608818,
-        "count": 33
+        "avgPrice": 614719,
+        "count": 32
       }
     ],
     "인천-칼리보(보라카이)": [
@@ -21518,7 +21562,7 @@
       {
         "date": "2026-05-13",
         "minPrice": 290000,
-        "avgPrice": 496409,
+        "avgPrice": 497614,
         "count": 44
       }
     ],
@@ -21603,8 +21647,8 @@
       },
       {
         "date": "2026-05-13",
-        "minPrice": 489000,
-        "avgPrice": 633538,
+        "minPrice": 469000,
+        "avgPrice": 632000,
         "count": 13
       }
     ],
@@ -25316,12 +25360,6 @@
     ],
     "부산-치앙마이": [
       {
-        "date": "2026-02-07",
-        "minPrice": 323996,
-        "avgPrice": 384192,
-        "count": 10
-      },
-      {
         "date": "2026-02-08",
         "minPrice": 339622,
         "avgPrice": 402721,
@@ -25398,6 +25436,12 @@
         "minPrice": 478900,
         "avgPrice": 478900,
         "count": 1
+      },
+      {
+        "date": "2026-05-13",
+        "minPrice": 545700,
+        "avgPrice": 565700,
+        "count": 2
       }
     ],
     "서울-치앙마이": [
@@ -25481,9 +25525,9 @@
       },
       {
         "date": "2026-05-13",
-        "minPrice": 460600,
-        "avgPrice": 689640,
-        "count": 15
+        "minPrice": 593000,
+        "avgPrice": 706000,
+        "count": 14
       }
     ],
     "서울-방콕": [
@@ -26543,9 +26587,9 @@
       },
       {
         "date": "2026-05-13",
-        "minPrice": 460000,
-        "avgPrice": 492000,
-        "count": 5
+        "minPrice": 450000,
+        "avgPrice": 478889,
+        "count": 9
       }
     ],
     "서울-다낭": [
@@ -26888,8 +26932,8 @@
       {
         "date": "2026-05-13",
         "minPrice": 429000,
-        "avgPrice": 488360,
-        "count": 68
+        "avgPrice": 488560,
+        "count": 67
       }
     ],
     "제주-푸꾸옥": [
@@ -34772,8 +34816,8 @@
       {
         "date": "2026-05-13",
         "minPrice": 239300,
-        "avgPrice": 321008,
-        "count": 48
+        "avgPrice": 322600,
+        "count": 49
       }
     ],
     "서울-다카마츠": [
@@ -35382,8 +35426,8 @@
       {
         "date": "2026-05-13",
         "minPrice": 409900,
-        "avgPrice": 497426,
-        "count": 53
+        "avgPrice": 499108,
+        "count": 52
       }
     ],
     "청주-고베": [
@@ -35866,8 +35910,8 @@
       {
         "date": "2026-05-13",
         "minPrice": 298000,
-        "avgPrice": 342091,
-        "count": 33
+        "avgPrice": 339406,
+        "count": 32
       }
     ],
     "부산-방콕": [
@@ -37108,6 +37152,12 @@
         "minPrice": 200000,
         "avgPrice": 206667,
         "count": 3
+      },
+      {
+        "date": "2026-05-13",
+        "minPrice": 344900,
+        "avgPrice": 344900,
+        "count": 1
       }
     ],
     "서울-웨이하이": [
@@ -44763,7 +44813,7 @@
         "date": "2026-05-13",
         "minPrice": 390000,
         "avgPrice": 390000,
-        "count": 2
+        "count": 1
       }
     ],
     "부산-장가계(다융)": [
@@ -44848,8 +44898,8 @@
       {
         "date": "2026-05-13",
         "minPrice": 230000,
-        "avgPrice": 256667,
-        "count": 3
+        "avgPrice": 283750,
+        "count": 8
       }
     ],
     "부산(PUS)-구마모토(KMJ)": [
@@ -45734,6 +45784,12 @@
         "minPrice": 200000,
         "avgPrice": 200000,
         "count": 1
+      },
+      {
+        "date": "2026-05-13",
+        "minPrice": 250000,
+        "avgPrice": 250000,
+        "count": 3
       }
     ],
     "부산-울란바타르": [
