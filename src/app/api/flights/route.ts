@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
                 allFlights = cacheData.flights || [];
                 lastUpdated = cacheData.lastUpdated || null;
                 console.log(`통합 캐시에서 ${allFlights.length}개 항공권 로드`);
-                console.log(`소스별: 노랑풍선=${cacheData.sources?.ybtour || 0}, 하나투어=${cacheData.sources?.hanatour || 0}, 모두투어=${cacheData.sources?.modetour || 0}, 온라인투어=${cacheData.sources?.onlinetour || 0}`);
+                console.log(`소스별: 노랑풍선=${cacheData.sources?.ybtour || 0}, 하나투어=${cacheData.sources?.hanatour || 0}, 모두투어=${cacheData.sources?.modetour || 0}, 온라인투어=${cacheData.sources?.onlinetour || 0}, 마이리얼트립=${cacheData.sources?.myrealtrip || 0}`);
             } else {
                 console.log('통합 캐시 파일 없음. npm run crawl:all을 실행하세요.');
             }
@@ -229,6 +229,7 @@ export async function GET(request: NextRequest) {
                 hanatour: allFlights.filter(f => f.source === 'hanatour').length,
                 modetour: allFlights.filter(f => f.source === 'modetour').length,
                 onlinetour: allFlights.filter(f => f.source === 'onlinetour').length,
+                myrealtrip: allFlights.filter(f => f.source === 'myrealtrip').length,
             },
             lastUpdated,
             priceHistory,
