@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-05-21T10:20:02.644Z",
-  "count": 685,
+  "timestamp": "2026-05-21T12:59:24.028Z",
+  "count": 687,
   "flights": [
     {
       "id": "ybtour-오사카(간사이)-20260616-2",
@@ -8644,31 +8644,6 @@
       "firstSeen": "2026-05-21"
     },
     {
-      "id": "hanatour-regular-인천/김포-19",
-      "source": "hanatour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "서울(ICN)",
-        "airport": "",
-        "date": "2026.05.31(일)",
-        "time": "15:40"
-      },
-      "arrival": {
-        "city": "발리(DPS)",
-        "airport": "",
-        "date": "2026.06.04(목)",
-        "time": "21:45"
-      },
-      "price": 766800,
-      "currency": "KRW",
-      "link": "https://www.hanatour.com/com/pmt/CHPC0PMT0011M200?fareId=RTF%5E3046857%5E7C5303ICNDPS-H4%5E7C5303ICNDPS-7%5E20260531%5ET%5EKRW%5E6376321%5E5176784%5E%5E1%5E0%5E0&psngrCntLst=%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D&selectedCard=%7B%7D",
-      "availableSeats": 2,
-      "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22SEL%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22DPS%22%2C%22depDt%22%3A%2220260531%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22DPS%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22SEL%22%2C%22depDt%22%3A%2220260604%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
-      "region": "동남아",
-      "discountRate": -6,
-      "firstSeen": "2026-05-21"
-    },
-    {
       "id": "hanatour-regular-청주-0",
       "source": "hanatour",
       "airline": "에어로케이",
@@ -10743,52 +10718,6 @@
       "firstSeen": "2026-05-21"
     },
     {
-      "id": "modetour-JPN-20064004",
-      "source": "modetour",
-      "airline": "에어부산",
-      "departure": {
-        "city": "부산",
-        "airport": "PUS",
-        "date": "2026-05-28",
-        "time": "07:30"
-      },
-      "arrival": {
-        "city": "후쿠오카",
-        "airport": "FUK",
-        "date": "2026-05-29",
-        "time": "16:00"
-      },
-      "price": 240000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22PUS%22%2C%22continentCode%22%3A%22JPN%22%2C%22arrivalCity%22%3A%22FUK%22%2C%22departureDate%22%3A%222026-05-28%22%2C%22arrivalDate%22%3A%222026-05-29%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
-      "availableSeats": 10,
-      "flightNumber": "BX148 / BX145",
-      "region": "일본",
-      "modetourDetail": {
-        "flyingTime": "01:00",
-        "isDirect": true,
-        "isReturnDirect": true,
-        "departureArrivalTime": "08:30",
-        "returnDepartureTime": "16:00",
-        "returnArrivalTime": "16:55",
-        "normalPrice": 600000,
-        "sourceDiscountRate": 95,
-        "baseFare": 29000,
-        "tax": 156000,
-        "tax2": 55000,
-        "childBaseFare": 29000,
-        "childTax": 156000,
-        "childTax2": 55000,
-        "infantFare": 50000,
-        "departureFlightNo": "BX148",
-        "returnFlightNo": "BX145",
-        "returnDepartureAirport": "FUK",
-        "returnArrivalAirport": "PUS"
-      },
-      "discountRate": -8,
-      "firstSeen": "2026-05-21"
-    },
-    {
       "id": "modetour-JPN-19918496",
       "source": "modetour",
       "airline": "에어부산",
@@ -10830,6 +10759,94 @@
         "returnArrivalAirport": "PUS"
       },
       "discountRate": -3,
+      "firstSeen": "2026-05-21"
+    },
+    {
+      "id": "modetour-JPN-19907206",
+      "source": "modetour",
+      "airline": "이스타항공",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-06-04",
+        "time": "14:50"
+      },
+      "arrival": {
+        "city": "후쿠오카",
+        "airport": "FUK",
+        "date": "2026-06-07",
+        "time": "10:55"
+      },
+      "price": 224000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22PUS%22%2C%22continentCode%22%3A%22JPN%22%2C%22arrivalCity%22%3A%22FUK%22%2C%22departureDate%22%3A%222026-06-04%22%2C%22arrivalDate%22%3A%222026-06-05%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
+      "availableSeats": 8,
+      "flightNumber": "ZE943 / ZE942",
+      "region": "일본",
+      "modetourDetail": {
+        "flyingTime": "01:10",
+        "isDirect": true,
+        "isReturnDirect": true,
+        "departureArrivalTime": "16:00",
+        "returnDepartureTime": "10:55",
+        "returnArrivalTime": "12:10",
+        "baseFare": 14000,
+        "tax": 156000,
+        "tax2": 54000,
+        "childBaseFare": 14000,
+        "childTax": 156000,
+        "childTax2": 54000,
+        "infantFare": 100000,
+        "departureFlightNo": "ZE943",
+        "returnFlightNo": "ZE942",
+        "returnDepartureAirport": "FUK",
+        "returnArrivalAirport": "PUS"
+      },
+      "discountRate": -1,
+      "firstSeen": "2026-05-21"
+    },
+    {
+      "id": "modetour-JPN-19907209",
+      "source": "modetour",
+      "airline": "이스타항공",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-06-07",
+        "time": "14:50"
+      },
+      "arrival": {
+        "city": "후쿠오카",
+        "airport": "FUK",
+        "date": "2026-06-10",
+        "time": "10:55"
+      },
+      "price": 224000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22PUS%22%2C%22continentCode%22%3A%22JPN%22%2C%22arrivalCity%22%3A%22FUK%22%2C%22departureDate%22%3A%222026-06-07%22%2C%22arrivalDate%22%3A%222026-06-08%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
+      "availableSeats": 8,
+      "flightNumber": "ZE943 / ZE942",
+      "region": "일본",
+      "modetourDetail": {
+        "flyingTime": "01:10",
+        "isDirect": true,
+        "isReturnDirect": true,
+        "departureArrivalTime": "16:00",
+        "returnDepartureTime": "10:55",
+        "returnArrivalTime": "12:10",
+        "baseFare": 14000,
+        "tax": 156000,
+        "tax2": 54000,
+        "childBaseFare": 14000,
+        "childTax": 156000,
+        "childTax2": 54000,
+        "infantFare": 100000,
+        "departureFlightNo": "ZE943",
+        "returnFlightNo": "ZE942",
+        "returnDepartureAirport": "FUK",
+        "returnArrivalAirport": "PUS"
+      },
+      "discountRate": -1,
       "firstSeen": "2026-05-21"
     },
     {
@@ -10920,6 +10937,50 @@
         "returnArrivalAirport": "PUS"
       },
       "discountRate": 13,
+      "firstSeen": "2026-05-21"
+    },
+    {
+      "id": "modetour-JPN-19907210",
+      "source": "modetour",
+      "airline": "이스타항공",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-06-08",
+        "time": "14:50"
+      },
+      "arrival": {
+        "city": "후쿠오카",
+        "airport": "FUK",
+        "date": "2026-06-11",
+        "time": "10:55"
+      },
+      "price": 224000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22PUS%22%2C%22continentCode%22%3A%22JPN%22%2C%22arrivalCity%22%3A%22FUK%22%2C%22departureDate%22%3A%222026-06-08%22%2C%22arrivalDate%22%3A%222026-06-09%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
+      "availableSeats": 8,
+      "flightNumber": "ZE943 / ZE942",
+      "region": "일본",
+      "modetourDetail": {
+        "flyingTime": "01:10",
+        "isDirect": true,
+        "isReturnDirect": true,
+        "departureArrivalTime": "16:00",
+        "returnDepartureTime": "10:55",
+        "returnArrivalTime": "12:10",
+        "baseFare": 14000,
+        "tax": 156000,
+        "tax2": 54000,
+        "childBaseFare": 14000,
+        "childTax": 156000,
+        "childTax2": 54000,
+        "infantFare": 100000,
+        "departureFlightNo": "ZE943",
+        "returnFlightNo": "ZE942",
+        "returnDepartureAirport": "FUK",
+        "returnArrivalAirport": "PUS"
+      },
+      "discountRate": -1,
       "firstSeen": "2026-05-21"
     },
     {
@@ -11058,6 +11119,94 @@
         "returnArrivalAirport": "PUS"
       },
       "discountRate": 4,
+      "firstSeen": "2026-05-21"
+    },
+    {
+      "id": "modetour-JPN-19907212",
+      "source": "modetour",
+      "airline": "이스타항공",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-06-10",
+        "time": "14:50"
+      },
+      "arrival": {
+        "city": "후쿠오카",
+        "airport": "FUK",
+        "date": "2026-06-13",
+        "time": "10:55"
+      },
+      "price": 224000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22PUS%22%2C%22continentCode%22%3A%22JPN%22%2C%22arrivalCity%22%3A%22FUK%22%2C%22departureDate%22%3A%222026-06-10%22%2C%22arrivalDate%22%3A%222026-06-11%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
+      "availableSeats": 8,
+      "flightNumber": "ZE943 / ZE942",
+      "region": "일본",
+      "modetourDetail": {
+        "flyingTime": "01:10",
+        "isDirect": true,
+        "isReturnDirect": true,
+        "departureArrivalTime": "16:00",
+        "returnDepartureTime": "10:55",
+        "returnArrivalTime": "12:10",
+        "baseFare": 14000,
+        "tax": 156000,
+        "tax2": 54000,
+        "childBaseFare": 14000,
+        "childTax": 156000,
+        "childTax2": 54000,
+        "infantFare": 100000,
+        "departureFlightNo": "ZE943",
+        "returnFlightNo": "ZE942",
+        "returnDepartureAirport": "FUK",
+        "returnArrivalAirport": "PUS"
+      },
+      "discountRate": -1,
+      "firstSeen": "2026-05-21"
+    },
+    {
+      "id": "modetour-JPN-19907213",
+      "source": "modetour",
+      "airline": "이스타항공",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-06-11",
+        "time": "14:50"
+      },
+      "arrival": {
+        "city": "후쿠오카",
+        "airport": "FUK",
+        "date": "2026-06-14",
+        "time": "10:55"
+      },
+      "price": 224000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22PUS%22%2C%22continentCode%22%3A%22JPN%22%2C%22arrivalCity%22%3A%22FUK%22%2C%22departureDate%22%3A%222026-06-11%22%2C%22arrivalDate%22%3A%222026-06-12%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
+      "availableSeats": 8,
+      "flightNumber": "ZE943 / ZE942",
+      "region": "일본",
+      "modetourDetail": {
+        "flyingTime": "01:10",
+        "isDirect": true,
+        "isReturnDirect": true,
+        "departureArrivalTime": "16:00",
+        "returnDepartureTime": "10:55",
+        "returnArrivalTime": "12:10",
+        "baseFare": 14000,
+        "tax": 156000,
+        "tax2": 54000,
+        "childBaseFare": 14000,
+        "childTax": 156000,
+        "childTax2": 54000,
+        "infantFare": 100000,
+        "departureFlightNo": "ZE943",
+        "returnFlightNo": "ZE942",
+        "returnDepartureAirport": "FUK",
+        "returnArrivalAirport": "PUS"
+      },
+      "discountRate": -1,
       "firstSeen": "2026-05-21"
     },
     {
@@ -11355,7 +11504,7 @@
       "price": 201000,
       "currency": "KRW",
       "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22PUS%22%2C%22continentCode%22%3A%22JPN%22%2C%22arrivalCity%22%3A%22KIX%22%2C%22departureDate%22%3A%222026-06-12%22%2C%22arrivalDate%22%3A%222026-06-13%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
-      "availableSeats": 10,
+      "availableSeats": 7,
       "flightNumber": "LJ253 / LJ256",
       "region": "일본",
       "modetourDetail": {
@@ -18145,32 +18294,6 @@
       "firstSeen": "2026-05-21"
     },
     {
-      "id": "ttang-CJJ-TPE-RT-0-5-ZE-2026-06-11",
-      "source": "ttang",
-      "airline": "이스타항공",
-      "departure": {
-        "city": "청주",
-        "airport": "CJJ",
-        "date": "2026-06-11",
-        "time": "23:40",
-        "arrivalTime": "01:10"
-      },
-      "arrival": {
-        "city": "타이페이",
-        "airport": "TPE",
-        "date": "2026-06-15",
-        "time": "02:40",
-        "arrivalTime": "06:05"
-      },
-      "price": 304000,
-      "currency": "KRW",
-      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=CJJ&arr0=TPE&depdate0=2026-06-11&dep1=TPE&arr1=CJJ&depdate1=2026-06-15&adt=1&chd=0&inf=0&comp=Y",
-      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=CJJ&arr0=TPE&depdate0=2026-06-11&dep1=TPE&arr1=CJJ&depdate1=2026-06-15&adt=1&chd=0&inf=0&comp=Y",
-      "region": "중국",
-      "discountRate": 14,
-      "firstSeen": "2026-05-21"
-    },
-    {
       "id": "ttang-RF5193ICNHUN-G1-2026-06-11",
       "source": "ttang",
       "airline": "에어로케이",
@@ -19641,32 +19764,6 @@
       "firstSeen": "2026-05-21"
     },
     {
-      "id": "ttang-ICN-TPE-RT-0-3-ZE-2026-06-17",
-      "source": "ttang",
-      "airline": "이스타항공",
-      "departure": {
-        "city": "서울",
-        "airport": "ICN",
-        "date": "2026-06-17",
-        "time": "07:45",
-        "arrivalTime": "09:30"
-      },
-      "arrival": {
-        "city": "타이페이",
-        "airport": "TPE",
-        "date": "2026-06-19",
-        "time": "10:30",
-        "arrivalTime": "13:55"
-      },
-      "price": 338000,
-      "currency": "KRW",
-      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=TPE&depdate0=2026-06-17&dep1=TPE&arr1=ICN&depdate1=2026-06-19&adt=1&chd=0&inf=0&comp=Y",
-      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=TPE&depdate0=2026-06-17&dep1=TPE&arr1=ICN&depdate1=2026-06-19&adt=1&chd=0&inf=0&comp=Y",
-      "region": "중국",
-      "discountRate": 4,
-      "firstSeen": "2026-05-21"
-    },
-    {
       "id": "ttang-RF0342CJJNGO-G13-2026-06-17",
       "source": "ttang",
       "airline": "에어로케이",
@@ -20467,6 +20564,32 @@
       "firstSeen": "2026-05-21"
     },
     {
+      "id": "ttang-ICN-TPE-RT-0-4-ZE-2026-06-21",
+      "source": "ttang",
+      "airline": "이스타항공",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-06-21",
+        "time": "07:45",
+        "arrivalTime": "09:30"
+      },
+      "arrival": {
+        "city": "타이페이",
+        "airport": "TPE",
+        "date": "2026-06-24",
+        "time": "10:30",
+        "arrivalTime": "13:55"
+      },
+      "price": 358000,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=TPE&depdate0=2026-06-21&dep1=TPE&arr1=ICN&depdate1=2026-06-24&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=TPE&depdate0=2026-06-21&dep1=TPE&arr1=ICN&depdate1=2026-06-24&adt=1&chd=0&inf=0&comp=Y",
+      "region": "중국",
+      "discountRate": -1,
+      "firstSeen": "2026-05-21"
+    },
+    {
       "id": "ttang-VJ0961ICNHAN-G38-2026-06-21",
       "source": "ttang",
       "airline": "비엣젯항공",
@@ -20609,10 +20732,10 @@
   ],
   "sources": {
     "ybtour": 420,
-    "hanatour": 89,
-    "modetour": 709,
+    "hanatour": 88,
+    "modetour": 716,
     "onlinetour": 187,
-    "ttang": 1071,
+    "ttang": 1066,
     "myrealtrip": 0
   },
   "priceHistory": {
@@ -21300,8 +21423,8 @@
       {
         "date": "2026-05-21",
         "minPrice": 304000,
-        "avgPrice": 380348,
-        "count": 31
+        "avgPrice": 382893,
+        "count": 30
       }
     ],
     "인천-타이페이": [
@@ -21558,8 +21681,8 @@
       {
         "date": "2026-05-21",
         "minPrice": 222500,
-        "avgPrice": 323103,
-        "count": 230
+        "avgPrice": 319848,
+        "count": 238
       }
     ],
     "청주-후쿠오카": [
@@ -24886,8 +25009,8 @@
       {
         "date": "2026-05-21",
         "minPrice": 249000,
-        "avgPrice": 451619,
-        "count": 21
+        "avgPrice": 460250,
+        "count": 20
       }
     ],
     "인천-시즈오카": [
@@ -39834,8 +39957,8 @@
       {
         "date": "2026-05-21",
         "minPrice": 288000,
-        "avgPrice": 340333,
-        "count": 24
+        "avgPrice": 338730,
+        "count": 23
       }
     ],
     "부산-방콕": [
@@ -40331,9 +40454,9 @@
       },
       {
         "date": "2026-05-21",
-        "minPrice": 338000,
-        "avgPrice": 415273,
-        "count": 22
+        "minPrice": 358000,
+        "avgPrice": 419500,
+        "count": 20
       }
     ],
     "서울-보라카이(깔리보)": [
@@ -41498,8 +41621,8 @@
       {
         "date": "2026-05-21",
         "minPrice": 481000,
-        "avgPrice": 516556,
-        "count": 9
+        "avgPrice": 514750,
+        "count": 8
       }
     ],
     "서울-로마 (FCO)": [
@@ -42373,9 +42496,9 @@
       },
       {
         "date": "2026-05-21",
-        "minPrice": 766800,
-        "avgPrice": 800133,
-        "count": 3
+        "minPrice": 806800,
+        "avgPrice": 816800,
+        "count": 2
       }
     ],
     "부산(PUS)-후쿠오카(FUK)": [
