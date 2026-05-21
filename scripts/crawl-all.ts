@@ -4,6 +4,7 @@ import { scrapeHanatour } from '../src/lib/scrapers/hanatour';
 import { scrapeModetour } from '../src/lib/scrapers/modetour';
 import { scrapeOnlineTour } from '../src/lib/scrapers/onlinetour';
 import { scrapeTtang } from '../src/lib/scrapers/ttang';
+import { scrapeMyrealtrip } from '../src/lib/scrapers/myrealtrip';
 import { scrapeInterparkBenchmark, resolveCityCode } from '../src/lib/scrapers/interpark';
 import { logCrawlResults } from '../src/lib/utils/crawl-logger';
 import fs from 'fs';
@@ -20,6 +21,7 @@ interface CacheData {
         modetour: number;
         onlinetour: number;
         ttang: number;
+        myrealtrip: number;
     };
     priceHistory?: Record<string, Array<{ date: string; minPrice: number; avgPrice: number; count: number }>>;
 }
@@ -35,6 +37,7 @@ async function main() {
         modetour: 0,
         onlinetour: 0,
         ttang: 0,
+        myrealtrip: 0,
     };
 
     // 이전 캐시 로드 (시간 데이터 이어받기 위해)
@@ -50,7 +53,7 @@ async function main() {
 
     try {
         // 전체 사이트 병렬 크롤링
-        console.log('🔄 5개 사이트 병렬 크롤링 시작...\n');
+        console.log('🔄 6개 사이트 병렬 크롤링 시작...\n');
 
         const scraperTasks = [
             { name: '노랑풍선', key: 'ybtour' as const, fn: () => scrapeYbtour(prevFlights) },
@@ -58,6 +61,7 @@ async function main() {
             { name: '모두투어', key: 'modetour' as const, fn: () => scrapeModetour() },
             { name: '온라인투어', key: 'onlinetour' as const, fn: () => scrapeOnlineTour() },
             { name: '땡처리닷컴', key: 'ttang' as const, fn: () => scrapeTtang(prevFlights) },
+            { name: '마이리얼트립', key: 'myrealtrip' as const, fn: () => scrapeMyrealtrip() },
         ];
 
         const results = await Promise.allSettled(scraperTasks.map(t => t.fn()));
@@ -75,7 +79,7 @@ async function main() {
 
 
         // 소스별 실패 시 이전 데이터 복구
-        const sourceNames = ['ybtour', 'hanatour', 'modetour', 'onlinetour', 'ttang'] as const;
+        const sourceNames = ['ybtour', 'hanatour', 'modetour', 'onlinetour', 'ttang', 'myrealtrip'] as const;
         for (const src of sourceNames) {
             if (sources[src] === 0 && prevCache?.flights) {
                 const srcPrevFlights = prevCache.flights.filter((f: any) => f.source === src);
@@ -336,6 +340,7 @@ async function main() {
             console.log(`   - 하나투어: ${sources.hanatour}개`);
             console.log(`   - 모두투어: ${sources.modetour}개`);
             console.log(`   - 온라인투어: ${sources.onlinetour}개`);
+            console.log(`   - 마이리얼트립: ${sources.myrealtrip}개`);
             console.log(`💾 저장 위치: ${cachePath}`);
             console.log(`🕐 타임스탬프: ${cacheData.timestamp}`);
             console.log('='.repeat(50));

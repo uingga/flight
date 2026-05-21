@@ -49,6 +49,7 @@ const normalizeCity = (city: string): string => {
         '칼리보': '보라카이',
         '칼리보(보라카이)': '보라카이',
         '화리엔': '화롄',
+        '화련': '화롄',
         '제남': '지난',
         '계림': '구이린',
         '위해': '웨이하이',
@@ -188,7 +189,7 @@ const CITY_TO_AIRPORT: Record<string, string> = {
     '도야마': 'TOY', '도야마(TOY)': 'TOY',
     // 누락 도시 일괄 추가
     '대련': 'DLC', '장가계': 'DYG', '장가계(다융)': 'DYG',
-    '하나마키': 'HNA', '화리엔': 'HUN', '마츠모토': 'MMJ',
+    '하나마키': 'HNA', '화리엔': 'HUN', '화롄': 'HUN', '화련(대만)': 'HUN', '마츠모토': 'MMJ',
     '이바라키': 'IBR', '이시가키': 'ISG',
     '계림(구이린)': 'KWL', '다카마츠': 'TAK',
     '위해(웨이하이)': 'WEH', '제남(지난)': 'TNA',
@@ -301,7 +302,7 @@ const TRIPCOM_CITY_DATA: Record<string, { id: number; name: string; provinceId?:
     '타이중': { id: 3849, name: '타이중' }, '가오슝': { id: 720, name: '가오슝' },
     '상하이': { id: 2, name: '상하이' }, '베이징': { id: 1, name: '베이징' },
     '칭다오': { id: 7, name: '칭다오' }, '옌타이': { id: 533, name: '옌타이' },
-    '화롄': { id: 6954, name: '화롄' }, '지난': { id: 144, name: '지난' },
+    '화롄': { id: 6954, name: '화롄' }, '화련': { id: 6954, name: '화롄' }, '지난': { id: 144, name: '지난' },
     '구이린': { id: 33, name: '구이린' },
     '웨이하이': { id: 386, name: '웨이하이' },
     // 기타
@@ -892,6 +893,14 @@ export default function Dashboard() {
             return getMobileUrl(url, isMobile);
         }
 
+        // 마이리얼트립: 검색 페이지로 이동 (인원수 URL 파라미터 치환)
+        if (flight.source === 'myrealtrip') {
+            let url = flight.link;
+            // /1/0/0/ 패턴을 인원수로 치환
+            url = url.replace(/\/\d+\/\d+\/\d+\/economy/, `/${pax.adult}/${pax.child}/${pax.infant}/economy`);
+            return url;
+        }
+
         // 나머지 (ybtour 등): 인원 파라미터 없음
         return getMobileUrl(flight.link, isMobile);
     };
@@ -1171,6 +1180,7 @@ export default function Dashboard() {
             // Seasonal / domestic
             '교토': 'kyoto', '하코네': 'hakone', '유후인': 'yufuin',
             '히로시마': 'hiroshima', '나하': 'naha', '부산': 'busan', '제주': 'jeju',
+            '기타큐슈': 'kitakyushu', '고베': 'kobe', '마닐라': 'manila', '울란바타르': 'ulaanbaatar',
         };
         const getCityImage = (city: string) => {
             const base = city.replace(/\(.+\)/, '').trim();
@@ -1828,6 +1838,7 @@ export default function Dashboard() {
             case 'hanatour': return styles.badgeHanatour;
             case 'onlinetour': return styles.badgeOnlinetour;
             case 'ttang': return styles.badgeTtang;
+            case 'myrealtrip': return styles.badgeMyrealtrip;
             default: return '';
         }
     };
@@ -1840,6 +1851,7 @@ export default function Dashboard() {
             case 'hanatour': return '하나투어';
             case 'onlinetour': return '온라인투어';
             case 'ttang': return '땡처리닷컴';
+            case 'myrealtrip': return '마이리얼트립';
             default: return source;
         }
     };
@@ -2299,6 +2311,7 @@ export default function Dashboard() {
                                     <option value="hanatour">하나투어</option>
                                     <option value="onlinetour">온라인투어</option>
                                     <option value="ttang">땡처리닷컴</option>
+                                    <option value="myrealtrip">마이리얼트립</option>
                                 </select>
                                 <select
                                     value={airlineFilter}
@@ -2948,31 +2961,8 @@ export default function Dashboard() {
 
                             {/* 하단 */}
                             <div className={styles.mdtFooter}>
-                                {/* 모두투어: 검색 가이드 */}
-                                {modetourGuide.source === 'modetour' && (
-                                    <div className={styles.mdtSearchGuide}>
-                                        <div className={styles.mdtSearchGuideTitle}>📌 모두투어에서 이렇게 검색하세요</div>
-                                        <div className={styles.mdtSearchGuideSteps}>
-                                            <span>① 지역: <b>{(() => {
-                                                const regionNames: Record<string, string> = {'동남아': '동남아', '일본': '일본', '중국': '중국', '유럽': '유럽', '미주': '미주', '남태평양': '남태평양'};
-                                                const r = modetourGuide.region || '';
-                                                if (regionNames[r]) return regionNames[r];
-                                                // '기타' 등 매핑 안 되는 경우 공항코드로 추정
-                                                const ap = modetourGuide.arrival?.airport || '';
-                                                if (['TPE','TSA','RMQ','KHH','HUN','DLC','HRB','SHE','CGQ','XMN','CTU','CKG','PEK','PVG','SHA','CAN','HKG','MFM','TAO','YNT','WEH','TNA','SYX','KWL','YNJ','DYG'].includes(ap)) return '중국';
-                                                if (['NRT','HND','KIX','FUK','CTS','NGO','OKA','NGS','KOJ','KMJ','MYJ','TAK','FSZ','HSG','YGJ','HIJ','OIT','UKB','KKJ','SHI','HNA','TOY','IBR','ISG','MMJ','AOJ'].includes(ap)) return '일본';
-                                                if (['JFK','LAX','SEA','YVR','YYZ','HNL','SFO','LAS'].includes(ap)) return '미주';
-                                                if (['GUM','SPN','SYD','BNE','AKL','MEL'].includes(ap)) return '남태평양';
-                                                if (['CDG','LHR','FCO','FRA','BCN','IST','TZX','AMS','PRG','VIE','ZRH','MAD'].includes(ap)) return '유럽';
-                                                return '동남아';
-                                            })()}</b> 선택</span>
-                                            <span>② 도시: <b>{arrCity}{
-                                                modetourGuide.arrival?.airport && ({'TPE': '-타오위안(TPE)', 'TSA': '-쑹산(TSA)'} as Record<string, string>)[modetourGuide.arrival.airport] || ''
-                                            }</b> 선택</span>
-                                            <span>③ 항공사: <b>{modetourGuide.airline}</b> / 날짜: <b>{depDate?.slice(5).replace('-', '/')}</b> 확인</span>
-                                        </div>
-                                    </div>
-                                )}
+
+
 
                                 {/* 하나투어: 인원 선택 */}
                                 {modetourGuide.source === 'hanatour' && (
@@ -3053,7 +3043,8 @@ export default function Dashboard() {
                                 <button className={styles.mdtBookBtn} onClick={() => {
                                     gtag.trackBookingClick(modetourGuide.source, `${depCity}-${arrCity}`, totalPrice);
                                     if (modetourGuide.source === 'modetour') {
-                                        window.open('https://www.modetour.com/flights/discount-flight', '_blank', 'noopener,noreferrer');
+                                        const url = getMobileUrl(modetourGuide.link, isMobile);
+                                        window.open(url, '_blank', 'noopener,noreferrer');
                                     } else if (modetourGuide.source === 'hanatour' || modetourGuide.source === 'onlinetour') {
                                         const url = getBookingUrl(modetourGuide, passengers);
                                         window.open(url, '_blank', 'noopener,noreferrer');

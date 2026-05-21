@@ -247,12 +247,20 @@ export async function scrapeModetour(): Promise<Flight[]> {
                             const depCityCode = airportToCityCode[depCode] || depCode;
                             // 대륙 코드 결정
                             const resolvedContinent = getContinentByArrivalCode(arrCode) || continentCode;
+                            const depDateStr = item.sDate?.value || '';
+                            // arrivalDate를 출발일 다음날로 설정 (검색 범위 최소화)
+                            let nextDay = depDateStr;
+                            try {
+                                const d = new Date(depDateStr);
+                                d.setDate(d.getDate() + 1);
+                                nextDay = d.toISOString().split('T')[0];
+                            } catch {}
                             const query = JSON.stringify({
-                                departureCity: '',
+                                departureCity: depCityCode,
                                 continentCode: resolvedContinent,
                                 arrivalCity: arrCode,
-                                departureDate: item.sDate?.value || '',
-                                arrivalDate: item.eDate?.value || '',
+                                departureDate: depDateStr,
+                                arrivalDate: nextDay,
                                 page: 1,
                                 itemCount: 200,
                                 sort: 'Lowest',
