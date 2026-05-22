@@ -1170,12 +1170,25 @@ export default function Dashboard() {
             // Southeast Asia & Others
             '싱가포르': 'singapore', '홍콩': 'hongkong', '마카오': 'macau',
             '코타키나발루': 'kotakinabalu', '마나도': 'manado', '바탐': 'batam',
-            '발리': 'bali', '비엔티엔': 'vientiane',
+            '발리': 'bali', '비엔티엔': 'vientiane', '끄라비': 'krabi',
+            '자카르타': 'jakarta', '쿠알라룸푸르': 'kualalumpur', '양곤': 'yangon',
+            '시엠립': 'siemreap', '프놈펜': 'phnompenh', '코사무이': 'kosamui',
             // Pacific
-            '괌': 'guam', '사이판': 'saipan',
-            // Others
+            '괌': 'guam', '사이판': 'saipan', '호놀룰루': 'honolulu',
+            // Europe
             '두바이': 'dubai', '이스탄불': 'istanbul', '로마': 'rome',
             '브리즈번': 'brisbane', '시드니': 'sydney', '런던': 'london', '울란바토르': 'ulaanbaatar',
+            '파리': 'paris', '바르셀로나': 'barcelona', '암스테르담': 'amsterdam',
+            '프라하': 'prague', '밀라노': 'milan', '아테네': 'athens',
+            '부다페스트': 'budapest', '빈': 'vienna', '비엔나': 'vienna',
+            '헬싱키': 'helsinki', '코펜하겐': 'copenhagen', '프랑크푸르트': 'frankfurt',
+            '리스본': 'lisbon', '블라디보스토크': 'vladivostok',
+            // Americas
+            '뉴욕': 'newyork',
+            // Central Asia
+            '알마티': 'almaty',
+            // India
+            '델리': 'delhi',
             // Aliases with chitose
             '치토세': 'sapporo',
             // Seasonal / domestic
@@ -1184,18 +1197,18 @@ export default function Dashboard() {
             '기타큐슈': 'kitakyushu', '고베': 'kobe', '마닐라': 'manila', '울란바타르': 'ulaanbaatar',
         };
         const regionGradients: Record<string, string> = {
-            '일본': 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)',
-            '동남아': 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-            '중국': 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
-            '대만': 'linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)',
-            '유럽': 'linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)',
-            '대양주': 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
-            '미주': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            '중동': 'linear-gradient(135deg, #f6d365 0%, #fda085 100%)',
-            '중앙아시아': 'linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%)',
-            '아프리카': 'linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%)',
-            '남태평양': 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-            '기타': 'linear-gradient(135deg, #c3cfe2 0%, #f5f7fa 100%)',
+            '일본': 'linear-gradient(135deg, #e84393 0%, #a855f7 100%)',
+            '동남아': 'linear-gradient(135deg, #0891b2 0%, #059669 100%)',
+            '중국': 'linear-gradient(135deg, #dc2626 0%, #f59e0b 100%)',
+            '대만': 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)',
+            '유럽': 'linear-gradient(135deg, #7c3aed 0%, #db2777 100%)',
+            '대양주': 'linear-gradient(135deg, #ea580c 0%, #d97706 100%)',
+            '미주': 'linear-gradient(135deg, #4338ca 0%, #7c3aed 100%)',
+            '중동': 'linear-gradient(135deg, #b45309 0%, #dc2626 100%)',
+            '중앙아시아': 'linear-gradient(135deg, #0e7490 0%, #2563eb 100%)',
+            '아프리카': 'linear-gradient(135deg, #9333ea 0%, #4f46e5 100%)',
+            '남태평양': 'linear-gradient(135deg, #0d9488 0%, #0284c7 100%)',
+            '기타': 'linear-gradient(135deg, #475569 0%, #6366f1 100%)',
         };
         const cityRegionMap: Record<string, string> = {};
         flights.forEach(f => {
@@ -1212,7 +1225,6 @@ export default function Dashboard() {
         };
         const renderCityCard = (key: string, city: string, line1: string, line2: string, onClick: (e: React.MouseEvent) => void) => {
             const { bg, hasVisual } = getCityBackground(city);
-            const isPhoto = bg.startsWith('url(');
             return (
                 <div
                     key={key}
@@ -1221,9 +1233,9 @@ export default function Dashboard() {
                     onClick={onClick}
                 >
                     {hasVisual && <div className={styles.newFlightOverlay} />}
-                    <div className={styles.newFlightRoute} style={hasVisual ? { color: isPhoto ? 'white' : '#1e293b', position: 'relative', zIndex: 1, textShadow: isPhoto ? '0 1px 4px rgba(0,0,0,0.6)' : 'none' } : undefined}>{city}</div>
-                    <div className={styles.newFlightPrice} style={hasVisual ? { color: isPhoto ? 'white' : '#1e293b', position: 'relative', zIndex: 1, textShadow: isPhoto ? '0 1px 4px rgba(0,0,0,0.6)' : 'none', fontWeight: 800 } : undefined}>{line1}</div>
-                    <div className={styles.newFlightAirline} style={hasVisual ? { color: isPhoto ? 'rgba(255,255,255,0.85)' : '#64748b', position: 'relative', zIndex: 1, textShadow: isPhoto ? '0 1px 3px rgba(0,0,0,0.5)' : 'none' } : undefined}>{line2}</div>
+                    <div className={styles.newFlightRoute} style={hasVisual ? { color: 'white', position: 'relative', zIndex: 1, textShadow: '0 1px 4px rgba(0,0,0,0.5)' } : undefined}>{city}</div>
+                    <div className={styles.newFlightPrice} style={hasVisual ? { color: 'white', position: 'relative', zIndex: 1, textShadow: '0 1px 4px rgba(0,0,0,0.5)', fontWeight: 800 } : undefined}>{line1}</div>
+                    <div className={styles.newFlightAirline} style={hasVisual ? { color: 'rgba(255,255,255,0.9)', position: 'relative', zIndex: 1, textShadow: '0 1px 3px rgba(0,0,0,0.4)' } : undefined}>{line2}</div>
                 </div>
             );
         };
