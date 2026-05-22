@@ -1189,6 +1189,21 @@ export default function Dashboard() {
             '알마티': 'almaty',
             // India
             '델리': 'delhi',
+            // Americas (more)
+            '라스베이거스': 'lasvegas', '샌프란시스코': 'sanfrancisco',
+            '시카고': 'chicago', '캔쿤': 'cancun',
+            // Europe (more)
+            '뮌헨': 'munich', '베를린': 'berlin', '두브로브니크': 'dubrovnik',
+            '산토리니': 'santorini', '스톡홀름': 'stockholm', '취리히': 'zurich',
+            // China (more)
+            '베이징': 'beijing', '청두': 'chengdu', '싼야': 'sanya', '쿤밍': 'kunming',
+            // Japan (more)
+            '가고시마': 'kagoshima', '센다이': 'sendai', '미야자키': 'miyazaki',
+            // Southeast Asia (more)
+            '달랏': 'dalat', '랑카위': 'langkawi', '페낭': 'penang',
+            '카트만두': 'kathmandu', '루앙프라방': 'luangprabang', '후에': 'hue',
+            // Resort
+            '몰디브': 'maldives',
             // Aliases with chitose
             '치토세': 'sapporo',
             // Seasonal / domestic
