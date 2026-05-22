@@ -13,6 +13,7 @@
     "crawl:modetour": "tsx scripts/crawl-modetour.ts",
     "crawl:onlinetour": "tsx scripts/crawl-onlinetour.ts",
     "crawl:all": "tsx scripts/crawl-all.ts",
+    "scrape:myrealtrip": "tsx scripts/scrape-myrealtrip-prices.ts",
     "send:alerts": "tsx scripts/send-alerts.ts"
   },
   "dependencies": {

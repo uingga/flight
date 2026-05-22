@@ -1,68 +1,54 @@
-// 마이리얼트립 API 테스트 v3 - period 추가
-const API_KEY = 'gRA9zPs6zdXf-tapAa6PTukmZzNYZ87G21sw-7_X7EienGgsbYxQ4SPX4h8_pL1P';
-const BASE_URL = 'https://partner-ext-api.myrealtrip.com';
+/**
+ * 마이리얼트립 스크래퍼 테스트
+ * 공개 Bulk API를 통한 최저가 수집 + 파트너 광고 링크 생성 테스트
+ *
+ * 실행: npx tsx scripts/test-myrealtrip.ts
+ */
 
-async function test() {
-    console.log('=== 마이리얼트립 캘린더 API 테스트 (period 포함) ===\n');
+import { scrapeMyrealtrip } from '../src/lib/scrapers/myrealtrip';
 
-    const today = new Date();
-    const endDate = new Date(today);
-    endDate.setDate(endDate.getDate() + 30);
+async function main() {
+    console.log('=== 마이리얼트립 스크래퍼 테스트 시작 ===\n');
 
-    const startDateStr = today.toISOString().split('T')[0];
-    const endDateStr = endDate.toISOString().split('T')[0];
+    const startTime = Date.now();
+    const flights = await scrapeMyrealtrip();
+    const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
 
-    console.log(`기간: ${startDateStr} ~ ${endDateStr}`);
+    console.log(`\n=== 결과 요약 ===`);
+    console.log(`총 수집: ${flights.length}개 항공편`);
+    console.log(`소요 시간: ${elapsed}초`);
 
-    // ICN → NRT 테스트
-    const routes = [
-        { dep: 'SEL', arr: 'TYO', name: '서울→도쿄' },
-        { dep: 'SEL', arr: 'OSA', name: '서울→오사카' },
-    ];
+    if (flights.length > 0) {
+        // 가격순 상위 20개 출력
+        const sorted = [...flights].sort((a, b) => a.price - b.price);
+        console.log(`\n--- 최저가 TOP 20 ---`);
+        sorted.slice(0, 20).forEach((f, i) => {
+            console.log(
+                `${(i + 1).toString().padStart(2)}. ` +
+                `${f.departure.city} → ${f.arrival.city} | ` +
+                `${f.price.toLocaleString()}원 | ` +
+                `${f.departure.date} ~ ${f.arrival.date} | ` +
+                `${f.region || '지역없음'}`
+            );
+        });
 
-    for (const route of routes) {
-        console.log(`\n--- ${route.name} (${route.dep}→${route.arr}) ---`);
-        try {
-            const res = await fetch(`${BASE_URL}/v1/products/flight/calendar`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${API_KEY}`,
-                    'Accept': 'application/json',
-                },
-                body: JSON.stringify({
-                    depCityCd: route.dep,
-                    arrCityCd: route.arr,
-                    startDate: startDateStr,
-                    endDate: endDateStr,
-                    period: 3,
-                }),
+        // 파트너 링크 샘플
+        console.log(`\n--- 파트너 링크 샘플 (첫 번째 항공편) ---`);
+        console.log(`링크: ${sorted[0].link}`);
+        console.log(`\n--- 지역별 통계 ---`);
+        const regionStats: Record<string, { count: number; minPrice: number }> = {};
+        flights.forEach(f => {
+            const region = f.region || '기타';
+            if (!regionStats[region]) regionStats[region] = { count: 0, minPrice: Infinity };
+            regionStats[region].count++;
+            regionStats[region].minPrice = Math.min(regionStats[region].minPrice, f.price);
+        });
+        Object.entries(regionStats)
+            .sort((a, b) => b[1].count - a[1].count)
+            .forEach(([region, stats]) => {
+                console.log(`  ${region}: ${stats.count}개 (최저 ${stats.minPrice.toLocaleString()}원)`);
             });
-
-            console.log(`Status: ${res.status}`);
-            const data = await res.json();
-            
-            if (data?.result?.status === 200 && data?.data) {
-                // data가 날짜 → 가격 맵인지 배열인지 확인
-                if (Array.isArray(data.data)) {
-                    console.log(`배열 형태: ${data.data.length}개`);
-                    data.data.slice(0, 3).forEach((item: any, i: number) => {
-                        console.log(`  [${i+1}]`, JSON.stringify(item));
-                    });
-                } else if (typeof data.data === 'object') {
-                    const keys = Object.keys(data.data);
-                    console.log(`객체 형태: ${keys.length}개 키`);
-                    keys.slice(0, 5).forEach(k => {
-                        console.log(`  ${k}:`, JSON.stringify(data.data[k]));
-                    });
-                }
-            } else {
-                console.log('응답:', JSON.stringify(data, null, 2).slice(0, 800));
-            }
-        } catch (e) {
-            console.error('실패:', e);
-        }
     }
 }
 
-test();
+main().catch(console.error);
