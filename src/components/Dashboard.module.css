@@ -2089,7 +2089,76 @@
         left: 0;
         right: 0;
         width: 100%;
+        padding: 18px 16px 16px;
         animation: slideUpMobile 0.3s ease;
+    }
+
+    .modalHeader {
+        margin-bottom: 10px;
+    }
+
+    .modalTitle {
+        font-size: 16px;
+    }
+
+    .modalClose {
+        width: 28px;
+        height: 28px;
+        font-size: 18px;
+    }
+
+    .modalFlightInfo {
+        padding: 8px 12px;
+        margin-bottom: 10px;
+        font-size: 13px;
+        border-radius: 10px;
+    }
+
+    .paxRows {
+        margin-bottom: 10px;
+        gap: 0;
+    }
+
+    .paxRow {
+        padding: 10px 0;
+    }
+
+    .paxType {
+        font-size: 14px;
+    }
+
+    .paxAge {
+        font-size: 11px;
+    }
+
+    .paxBtn {
+        width: 32px;
+        height: 32px;
+        font-size: 16px;
+    }
+
+    .paxCount {
+        font-size: 16px;
+    }
+
+    .modalTotal {
+        padding: 10px 12px;
+        margin-bottom: 10px;
+        border-radius: 10px;
+    }
+
+    .modalTotalLabel {
+        font-size: 13px;
+    }
+
+    .modalTotalPrice {
+        font-size: 17px;
+    }
+
+    .modalConfirm {
+        padding: 12px;
+        font-size: 15px;
+        border-radius: 10px;
     }
 
     .modalOverlay {
