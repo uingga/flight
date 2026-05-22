@@ -74,28 +74,23 @@ async function getSearchPrice(page: Page, gid: number, depDate: string, arrDate:
         await page.goto(url, { waitUntil: 'networkidle', timeout: 45000 });
         await page.waitForTimeout(10000 + Math.random() * 4000); // 10~14초 대기
 
-        // 검색 결과 카드에서 직항 항공편만 추출
+        // 검색 결과 카드에서 항공편 추출 (직항 우선, 없으면 경유 포함)
         const results: FlightResult[] = await page.evaluate(() => {
-            const flights: { price: number; airline: string; depTime: string; arrTime: string; duration: string }[] = [];
+            const directFlights: { price: number; airline: string; depTime: string; arrTime: string; duration: string; retDepTime: string; retArrTime: string; retDuration: string }[] = [];
+            const allFlights: typeof directFlights = [];
 
             document.querySelectorAll('*').forEach(el => {
                 const t = (el as HTMLElement).innerText || '';
 
-                // 검색 결과 카드: "석 남음" + "원" + "직항" 포함
-                if (t.includes('석 남음') && t.includes('원') && t.includes('직항') && t.length > 50 && t.length < 500) {
-                    // 이미 추출한 카드의 하위요소 스킵
-                    if (flights.some(f => t.includes(f.airline) && t.includes(f.price.toLocaleString()))) return;
-
+                // 검색 결과 카드: "석 남음" + "원" 포함
+                if (t.includes('석 남음') && t.includes('원') && t.length > 50 && t.length < 500) {
                     // 가격 추출
                     const priceMatch = t.match(/([\d,]+)원/);
                     if (!priceMatch) return;
                     const price = parseInt(priceMatch[1].replace(/,/g, ''));
                     if (price < 100000 || price > 5000000) return;
 
-                    // 경유 포함 시 스킵 (직항만)
-                    if (t.includes('경유') || t.includes('1회') || t.includes('2회')) return;
-
-                    // 항공사 추출 (첫 줄 또는 "항공" 포함)
+                    // 항공사 추출
                     const lines = t.split('\n').map(l => l.trim()).filter(l => l.length > 0);
                     let airline = '';
                     for (const line of lines) {
@@ -105,7 +100,6 @@ async function getSearchPrice(page: Page, gid: number, depDate: string, arrDate:
                         }
                     }
                     if (!airline) {
-                        // 첫 줄에서 추출 시도
                         for (const line of lines) {
                             if (line.length >= 2 && line.length <= 20 && !line.includes('원') && !line.includes('남음') && !line.includes('카드')) {
                                 airline = line;
@@ -114,30 +108,33 @@ async function getSearchPrice(page: Page, gid: number, depDate: string, arrDate:
                         }
                     }
 
-                    // 시간 추출 (HH:MM 패턴: 가는편 출발, 도착, 오는편 출발, 도착)
+                    // 시간 추출 (HH:MM 패턴)
                     const timeMatches = t.match(/(\d{2}:\d{2})/g) || [];
-                    const depTime = timeMatches[0] || '';     // 가는편 출발
-                    const arrTime = timeMatches[1] || '';     // 가는편 도착
-                    const retDepTime = timeMatches[2] || '';  // 오는편 출발
-                    const retArrTime = timeMatches[3] || '';  // 오는편 도착
+                    const depTime = timeMatches[0] || '';
+                    const arrTime = timeMatches[1] || '';
+                    const retDepTime = timeMatches[2] || '';
+                    const retArrTime = timeMatches[3] || '';
 
-                    // 비행시간 추출 (가는편, 오는편)
+                    // 비행시간 추출
                     const durMatches = t.match(/(\d+시간\s*\d+분)/g) || [];
-                    const duration = durMatches[0] || '';     // 가는편
-                    const retDuration = durMatches[1] || '';  // 오는편
+                    const duration = durMatches[0] || '';
+                    const retDuration = durMatches[1] || '';
 
-                    flights.push({ price, airline, depTime, arrTime, duration, retDepTime, retArrTime, retDuration });
+                    const flight = { price, airline, depTime, arrTime, duration, retDepTime, retArrTime, retDuration };
+
+                    // 직항/경유 분류
+                    const isDirect = t.includes('직항') && !t.includes('경유') && !t.includes('1회') && !t.includes('2회');
+                    if (isDirect) {
+                        if (!directFlights.some(f => f.price === price)) directFlights.push(flight);
+                    }
+                    if (!allFlights.some(f => f.price === price)) allFlights.push(flight);
                 }
             });
 
-            // 가격순 정렬, 중복 제거
-            flights.sort((a, b) => a.price - b.price);
-            const seen = new Set<number>();
-            return flights.filter(f => {
-                if (seen.has(f.price)) return false;
-                seen.add(f.price);
-                return true;
-            });
+            // 직항 우선, 없으면 전체에서 최저가
+            const target = directFlights.length > 0 ? directFlights : allFlights;
+            target.sort((a, b) => a.price - b.price);
+            return target.slice(0, 3);
         });
 
         if (results.length === 0) return null;
