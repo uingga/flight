@@ -893,11 +893,12 @@ export default function Dashboard() {
             return getMobileUrl(url, isMobile);
         }
 
-        // 마이리얼트립: 검색 페이지로 이동 (인원수 URL 파라미터 치환)
+        // 마이리얼트립: offers.k1 검색 URL (bridge/marketing return_url 내부, URL-인코딩됨)
         if (flight.source === 'myrealtrip') {
             let url = flight.link;
-            // /1/0/0/ 패턴을 인원수로 치환
-            url = url.replace(/\/\d+\/\d+\/\d+\/economy/, `/${pax.adult}/${pax.child}/${pax.infant}/economy`);
+            url = url.replace(/adult%3D\d+/, `adult%3D${pax.adult}`);
+            url = url.replace(/child%3D\d+/, `child%3D${pax.child}`);
+            url = url.replace(/infant%3D\d+/, `infant%3D${pax.infant}`);
             return url;
         }
 
@@ -2963,6 +2964,14 @@ export default function Dashboard() {
                             <div className={styles.mdtFooter}>
 
 
+
+                                {/* 모두투어: 면책조항 */}
+                                {modetourGuide.source === 'modetour' && (
+                                    <div className={styles.mdtDisclaimer}>
+                                        표시된 가격 및 좌석은 실시간 변동될 수 있으며,
+                                        실제 예약은 모두투어에서 직접 이루어집니다.
+                                    </div>
+                                )}
 
                                 {/* 하나투어: 인원 선택 */}
                                 {modetourGuide.source === 'hanatour' && (
