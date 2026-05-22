@@ -1183,24 +1183,47 @@ export default function Dashboard() {
             '히로시마': 'hiroshima', '나하': 'naha', '부산': 'busan', '제주': 'jeju',
             '기타큐슈': 'kitakyushu', '고베': 'kobe', '마닐라': 'manila', '울란바타르': 'ulaanbaatar',
         };
-        const getCityImage = (city: string) => {
+        const regionGradients: Record<string, string> = {
+            '일본': 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)',
+            '동남아': 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+            '중국': 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+            '대만': 'linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)',
+            '유럽': 'linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)',
+            '대양주': 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
+            '미주': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            '중동': 'linear-gradient(135deg, #f6d365 0%, #fda085 100%)',
+            '중앙아시아': 'linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%)',
+            '아프리카': 'linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%)',
+            '남태평양': 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+            '기타': 'linear-gradient(135deg, #c3cfe2 0%, #f5f7fa 100%)',
+        };
+        const cityRegionMap: Record<string, string> = {};
+        flights.forEach(f => {
+            const base = (f.arrival?.city || '').replace(/\(.+\)/, '').trim();
+            if (base && f.region) cityRegionMap[base] = f.region;
+        });
+        const getCityBackground = (city: string): { bg: string; hasVisual: boolean } => {
             const base = city.replace(/\(.+\)/, '').trim();
-            return cityImageMap[base] || null;
+            const imgKey = cityImageMap[base];
+            if (imgKey) return { bg: `url(/images/cities/${imgKey}.png)`, hasVisual: true };
+            const region = cityRegionMap[base];
+            const gradient = regionGradients[region] || regionGradients['기타'];
+            return { bg: gradient, hasVisual: true };
         };
         const renderCityCard = (key: string, city: string, line1: string, line2: string, onClick: (e: React.MouseEvent) => void) => {
-            const imgKey = getCityImage(city);
-            const hasImage = !!imgKey;
+            const { bg, hasVisual } = getCityBackground(city);
+            const isPhoto = bg.startsWith('url(');
             return (
                 <div
                     key={key}
-                    className={`${styles.newFlightMiniCard} ${hasImage ? styles.newFlightMiniCardImg : ''}`}
-                    style={hasImage ? { backgroundImage: `url(/images/cities/${imgKey}.png)` } : undefined}
+                    className={`${styles.newFlightMiniCard} ${hasVisual ? styles.newFlightMiniCardImg : ''}`}
+                    style={hasVisual ? { backgroundImage: bg } : undefined}
                     onClick={onClick}
                 >
-                    {hasImage && <div className={styles.newFlightOverlay} />}
-                    <div className={styles.newFlightRoute} style={hasImage ? { color: 'white', position: 'relative', zIndex: 1, textShadow: '0 1px 4px rgba(0,0,0,0.6)' } : undefined}>{city}</div>
-                    <div className={styles.newFlightPrice} style={hasImage ? { color: 'white', position: 'relative', zIndex: 1, textShadow: '0 1px 4px rgba(0,0,0,0.6)' } : undefined}>{line1}</div>
-                    <div className={styles.newFlightAirline} style={hasImage ? { color: 'rgba(255,255,255,0.85)', position: 'relative', zIndex: 1, textShadow: '0 1px 3px rgba(0,0,0,0.5)' } : undefined}>{line2}</div>
+                    {hasVisual && <div className={styles.newFlightOverlay} />}
+                    <div className={styles.newFlightRoute} style={hasVisual ? { color: isPhoto ? 'white' : '#1e293b', position: 'relative', zIndex: 1, textShadow: isPhoto ? '0 1px 4px rgba(0,0,0,0.6)' : 'none' } : undefined}>{city}</div>
+                    <div className={styles.newFlightPrice} style={hasVisual ? { color: isPhoto ? 'white' : '#1e293b', position: 'relative', zIndex: 1, textShadow: isPhoto ? '0 1px 4px rgba(0,0,0,0.6)' : 'none', fontWeight: 800 } : undefined}>{line1}</div>
+                    <div className={styles.newFlightAirline} style={hasVisual ? { color: isPhoto ? 'rgba(255,255,255,0.85)' : '#64748b', position: 'relative', zIndex: 1, textShadow: isPhoto ? '0 1px 3px rgba(0,0,0,0.5)' : 'none' } : undefined}>{line2}</div>
                 </div>
             );
         };
