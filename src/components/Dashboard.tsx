@@ -196,8 +196,8 @@ const CITY_TO_AIRPORT: Record<string, string> = {
     '타이중(대중)': 'RMQ', '미야코지마(시모지시마공항)': 'SHI',
 };
 
-// 도시명에서 공항코드 추출
-const getAirportCode = (city: string): string | null => {
+// 도시명에서 공항코드 추출 (airport: 데이터에 이미 있는 공항코드 fallback)
+const getAirportCode = (city: string, airport?: string): string | null => {
     // 직접 매핑 확인
     if (CITY_TO_AIRPORT[city]) return CITY_TO_AIRPORT[city];
     // normalizeCity로 정규화 후 매핑 확인 (예: '제남(지난)' → '지난' → TNA)
@@ -206,13 +206,15 @@ const getAirportCode = (city: string): string | null => {
     // 괄호 안 코드 추출: "서울(ICN)" → ICN
     const match = city.match(/\(([A-Z]{3})\)/);
     if (match) return match[1];
+    // 데이터의 airport 필드 사용 (마이리얼트립 등)
+    if (airport && /^[A-Z]{3}$/.test(airport)) return airport;
     return null;
 };
 
 // 네이버 항공권 비교 URL 생성 (왕복)
-const getNaverFlightUrl = (depCity: string, arrCity: string, depDate: string, retDate?: string): string | null => {
-    const depCode = getAirportCode(depCity);
-    const arrCode = getAirportCode(arrCity);
+const getNaverFlightUrl = (depCity: string, arrCity: string, depDate: string, retDate?: string, depAirport?: string, arrAirport?: string): string | null => {
+    const depCode = getAirportCode(depCity, depAirport);
+    const arrCode = getAirportCode(arrCity, arrAirport);
     if (!depCode || !arrCode) return null;
     const fmtDate = (d: string) => d.replace(/[\-\.]/g, '').slice(0, 8);
     const depStr = fmtDate(depDate);
@@ -229,9 +231,9 @@ const getNaverFlightUrl = (depCity: string, arrCity: string, depDate: string, re
 };
 
 // 스카이스캐너 비교 URL 생성 (왕복)
-const getSkyscannerUrl = (depCity: string, arrCity: string, depDate: string, retDate?: string): string | null => {
-    const depCode = getAirportCode(depCity);
-    const arrCode = getAirportCode(arrCity);
+const getSkyscannerUrl = (depCity: string, arrCity: string, depDate: string, retDate?: string, depAirport?: string, arrAirport?: string): string | null => {
+    const depCode = getAirportCode(depCity, depAirport);
+    const arrCode = getAirportCode(arrCity, arrAirport);
     if (!depCode || !arrCode) return null;
     const fmtDate = (d: string) => {
         const clean = d.replace(/[\-\.]/g, '').slice(0, 8);
@@ -2557,7 +2559,7 @@ export default function Dashboard() {
                                                 )}
                                             </div>
                                             {(() => {
-                                                const naverUrl = getNaverFlightUrl(flight.departure.city, flight.arrival.city, flight.departure.date, flight.arrival.date);
+                                                const naverUrl = getNaverFlightUrl(flight.departure.city, flight.arrival.city, flight.departure.date, flight.arrival.date, flight.departure.airport, flight.arrival.airport);
                                                 const tripcomHotelUrl = getTripcomHotelUrl(flight.arrival.city, flight.departure.date, flight.arrival.date);
                                                 if (!naverUrl && !tripcomHotelUrl) return null;
                                                 return (
