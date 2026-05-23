@@ -358,7 +358,7 @@ const TRIPCOM_CITY_DATA: Record<string, { id: number; name: string; provinceId?:
     // 기타
     '블라디보스토크': { id: 1907, name: '블라디보스토크' }, '울란바토르': { id: 635, name: '울란바토르' },
     '알마티': { id: 2268, name: '알마티' }, '델리': { id: 397, name: '델리' },
-    '카트만두': { id: 570, name: '카트만두' }, '몰디브': { id: 927, name: '몰디브' },
+    '카트만두': { id: 712, name: '카트만두' }, '몰디브': { id: 927, name: '몰디브' },
     '센다이': { id: 631, name: '센다이' }, '미야자키': { id: 3693, name: '미야자키' },
     // 일본 추가
     '니가타': { id: 698, name: '니가타' }, '오카야마': { id: 1095, name: '오카야마' },
@@ -367,7 +367,39 @@ const TRIPCOM_CITY_DATA: Record<string, { id: number; name: string; provinceId?:
 
 const TRIPCOM_HOTEL_SUB3 = 'D13108706';
 
-const getTripcomHotelUrl = (arrCity: string, depDate?: string, arrDate?: string): string | null => {
+// IATA 공항코드 → 영문 도시명 (Trip.com 키워드 검색용, 한국어보다 정확)
+const IATA_TO_ENGLISH: Record<string, string> = {
+    'AMS': 'Amsterdam', 'ATH': 'Athens', 'BCN': 'Barcelona', 'BER': 'Berlin',
+    'BKK': 'Bangkok', 'BNE': 'Brisbane', 'BOM': 'Mumbai', 'BOS': 'Boston',
+    'BRU': 'Brussels', 'BUD': 'Budapest', 'CAI': 'Cairo', 'CAN': 'Guangzhou',
+    'CDG': 'Paris', 'CGK': 'Jakarta', 'CHC': 'Christchurch', 'CMB': 'Colombo',
+    'CNX': 'Chiang Mai', 'CPH': 'Copenhagen', 'CTU': 'Chengdu', 'CUN': 'Cancun',
+    'DAD': 'Da Nang', 'DBV': 'Dubrovnik', 'DEL': 'Delhi', 'DLI': 'Da Lat',
+    'DOH': 'Doha', 'DPS': 'Bali', 'DUB': 'Dublin', 'DUS': 'Dusseldorf',
+    'DXB': 'Dubai', 'EDI': 'Edinburgh', 'FCO': 'Rome', 'FRA': 'Frankfurt',
+    'GUM': 'Guam', 'GVA': 'Geneva', 'HAM': 'Hamburg', 'HAN': 'Hanoi',
+    'HEL': 'Helsinki', 'HKG': 'Hong Kong', 'HKT': 'Phuket', 'HNL': 'Honolulu',
+    'HUI': 'Hue', 'IST': 'Istanbul', 'JFK': 'New York', 'JTR': 'Santorini',
+    'KBV': 'Krabi', 'KMG': 'Kunming', 'KTM': 'Kathmandu', 'KUL': 'Kuala Lumpur',
+    'LAS': 'Las Vegas', 'LGK': 'Langkawi', 'LIS': 'Lisbon', 'LON': 'London',
+    'LPQ': 'Luang Prabang', 'MAD': 'Madrid', 'MEL': 'Melbourne', 'MEX': 'Mexico City',
+    'MIL': 'Milan', 'MLE': 'Maldives', 'MNL': 'Manila', 'MUC': 'Munich',
+    'MXP': 'Milan', 'NAN': 'Fiji', 'NCE': 'Nice', 'NRT': 'Tokyo',
+    'OKA': 'Okinawa', 'ORD': 'Chicago', 'OSA': 'Osaka', 'OSL': 'Oslo',
+    'PAR': 'Paris', 'PEN': 'Penang', 'PER': 'Perth', 'PNH': 'Phnom Penh',
+    'PRG': 'Prague', 'REP': 'Siem Reap', 'RGN': 'Yangon', 'ROR': 'Palau',
+    'SAI': 'Siem Reap', 'SDJ': 'Sendai', 'SEA': 'Seattle', 'SFO': 'San Francisco',
+    'SGN': 'Ho Chi Minh', 'SIN': 'Singapore', 'SPN': 'Saipan', 'SPK': 'Sapporo',
+    'ARN': 'Stockholm', 'SYD': 'Sydney', 'TBS': 'Tbilisi', 'TLV': 'Tel Aviv',
+    'TPE': 'Taipei', 'TYO': 'Tokyo', 'UBN': 'Ulaanbaatar', 'VCE': 'Venice',
+    'VIE': 'Vienna', 'VVO': 'Vladivostok', 'WAW': 'Warsaw', 'XIY': 'Xian',
+    'YVR': 'Vancouver', 'YTO': 'Toronto', 'ZRH': 'Zurich', 'ZQN': 'Queenstown',
+    'AKL': 'Auckland', 'ALA': 'Almaty', 'EVN': 'Yerevan', 'CKG': 'Chongqing',
+    'NKG': 'Nanjing', 'HGH': 'Hangzhou', 'SZX': 'Shenzhen', 'CEB': 'Cebu',
+    'BKI': 'Kota Kinabalu', 'KMI': 'Miyazaki', 'KOJ': 'Kagoshima',
+};
+
+const getTripcomHotelUrl = (arrCity: string, depDate?: string, arrDate?: string, arrAirport?: string): string | null => {
     // 공항명 괄호 제거하여 도시명만 추출 (e.g. '오사카(간사이)' → '오사카')
     let cityName = normalizeCity(arrCity);
     const bracketMatch = cityName.match(/^(.+?)\(.+?\)$/);
@@ -387,8 +419,9 @@ const getTripcomHotelUrl = (arrCity: string, depDate?: string, arrDate?: string)
         const provinceParam = cityData.provinceId ? `&provinceId=${cityData.provinceId}` : '';
         return `https://kr.trip.com/hotels/list?city=${cityData.id}&cityName=${encodedName}&searchType=CT&searchWord=${encodedName}${provinceParam}${dateParams}&locale=ko-KR&curr=KRW&Allianceid=${TRIPCOM_ALLIANCE_ID}&SID=${TRIPCOM_SID}&trip_sub1=&trip_sub3=${TRIPCOM_HOTEL_SUB3}`;
     }
-    // 매핑에 없는 도시: 도시명으로 키워드 검색
-    const searchWord = encodeURIComponent(cityName);
+    // 매핑에 없는 도시: 영문 도시명으로 키워드 검색 (한국어보다 정확)
+    const englishName = arrAirport ? IATA_TO_ENGLISH[arrAirport] : null;
+    const searchWord = encodeURIComponent(englishName || cityName);
     return `https://kr.trip.com/hotels/list?searchType=CT&searchWord=${searchWord}${dateParams}&locale=ko-KR&curr=KRW&Allianceid=${TRIPCOM_ALLIANCE_ID}&SID=${TRIPCOM_SID}&trip_sub1=&trip_sub3=${TRIPCOM_HOTEL_SUB3}`;
 };
 
@@ -2600,7 +2633,7 @@ export default function Dashboard() {
                                             </div>
                                             {(() => {
                                                 const naverUrl = getNaverFlightUrl(flight.departure.city, flight.arrival.city, flight.departure.date, flight.arrival.date, flight.departure.airport, flight.arrival.airport);
-                                                const tripcomHotelUrl = getTripcomHotelUrl(flight.arrival.city, flight.departure.date, flight.arrival.date);
+                                                const tripcomHotelUrl = getTripcomHotelUrl(flight.arrival.city, flight.departure.date, flight.arrival.date, flight.arrival.airport);
                                                 if (!naverUrl && !tripcomHotelUrl) return null;
                                                 return (
                                                     <div className={styles.compareLinks}>
