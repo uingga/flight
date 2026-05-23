@@ -324,6 +324,45 @@ const TRIPCOM_CITY_DATA: Record<string, { id: number; name: string; provinceId?:
     '마츠모토': { id: 62496, name: '마츠모토' },
     '이바라키': { id: 20748, name: '이바라키' },
     '이시가키': { id: 1174, name: '이시가키' },
+    // 마이리얼트립 인기 도시 추가
+    // 유럽
+    '파리': { id: 418, name: '파리' }, '런던': { id: 181, name: '런던' },
+    '암스테르담': { id: 250, name: '암스테르담' }, '프라하': { id: 332, name: '프라하' },
+    '밀라노': { id: 454, name: '밀라노' }, '빈': { id: 469, name: '빈' }, '비엔나': { id: 469, name: '빈' },
+    '부다페스트': { id: 365, name: '부다페스트' }, '아테네': { id: 245, name: '아테네' },
+    '헬싱키': { id: 432, name: '헬싱키' }, '코펜하겐': { id: 405, name: '코펜하겐' },
+    '프랑크푸르트': { id: 258, name: '프랑크푸르트' }, '리스본': { id: 539, name: '리스본' },
+    '뮌헨': { id: 447, name: '뮌헨' }, '베를린': { id: 466, name: '베를린' },
+    '두브로브니크': { id: 5279, name: '두브로브니크' }, '산토리니': { id: 4165, name: '산토리니' },
+    '스톡홀름': { id: 308, name: '스톡홀름' }, '취리히': { id: 527, name: '취리히' },
+    '마드리드': { id: 216, name: '마드리드' }, '베네치아': { id: 549, name: '베네치아' },
+    '브뤼셀': { id: 337, name: '브뤼셀' }, '바르샤바': { id: 431, name: '바르샤바' },
+    '더블린': { id: 401, name: '더블린' }, '에든버러': { id: 524, name: '에든버러' },
+    '니스': { id: 580, name: '니스' }, '피렌체': { id: 478, name: '피렌체' },
+    // 미주
+    '뉴욕': { id: 561, name: '뉴욕' }, '라스베이거스': { id: 445, name: '라스베이거스' },
+    '샌프란시스코': { id: 369, name: '샌프란시스코' }, '시카고': { id: 298, name: '시카고' },
+    '호놀룰루': { id: 378, name: '호놀룰루' }, '캔쿤': { id: 1430, name: '칸쿤' },
+    // 동남아 추가
+    '끄라비': { id: 1327, name: '크라비' }, '자카르타': { id: 710, name: '자카르타' },
+    '양곤': { id: 481, name: '양곤' }, '시엠립': { id: 1069, name: '시엠립' },
+    '프놈펜': { id: 498, name: '프놈펜' }, '코사무이': { id: 1048, name: '코사무이' },
+    '랑카위': { id: 1330, name: '랑카위' }, '페낭': { id: 1049, name: '페낭' },
+    '루앙프라방': { id: 1497, name: '루앙프라방' }, '달랏': { id: 1529, name: '달랏' },
+    '후에': { id: 3013, name: '후에' },
+    // 중국 추가
+    '광저우': { id: 30, name: '광저우' }, '선전': { id: 26, name: '선전' },
+    '청두': { id: 104, name: '청두' }, '충칭': { id: 147, name: '충칭' },
+    '쿤밍': { id: 36, name: '쿤밍' }, '시안': { id: 14, name: '시안' },
+    '난징': { id: 9, name: '난징' }, '항저우': { id: 15, name: '항저우' },
+    // 기타
+    '블라디보스토크': { id: 1907, name: '블라디보스토크' }, '울란바토르': { id: 635, name: '울란바토르' },
+    '알마티': { id: 2268, name: '알마티' }, '델리': { id: 397, name: '델리' },
+    '카트만두': { id: 570, name: '카트만두' }, '몰디브': { id: 927, name: '몰디브' },
+    '센다이': { id: 631, name: '센다이' }, '미야자키': { id: 3693, name: '미야자키' },
+    // 일본 추가
+    '니가타': { id: 698, name: '니가타' }, '오카야마': { id: 1095, name: '오카야마' },
+    '도쿠시마': { id: 7447, name: '도쿠시마' }, '아키타': { id: 4303, name: '아키타' },
 };
 
 const TRIPCOM_HOTEL_SUB3 = 'D13108706';
@@ -348,8 +387,8 @@ const getTripcomHotelUrl = (arrCity: string, depDate?: string, arrDate?: string)
         const provinceParam = cityData.provinceId ? `&provinceId=${cityData.provinceId}` : '';
         return `https://kr.trip.com/hotels/list?city=${cityData.id}&cityName=${encodedName}&searchType=CT&searchWord=${encodedName}${provinceParam}${dateParams}&locale=ko-KR&curr=KRW&Allianceid=${TRIPCOM_ALLIANCE_ID}&SID=${TRIPCOM_SID}&trip_sub1=&trip_sub3=${TRIPCOM_HOTEL_SUB3}`;
     }
-    // 매핑에 없는 도시: 호텔 홈으로 연결
-    return `https://kr.trip.com/hotels/w/home?${dateParams ? dateParams.substring(1) + '&' : ''}Allianceid=${TRIPCOM_ALLIANCE_ID}&SID=${TRIPCOM_SID}&trip_sub1=&trip_sub3=${TRIPCOM_HOTEL_SUB3}`;
+    // 매핑에 없는 도시: 링크 표시하지 않음
+    return null;
 };
 
 const ITEMS_PER_PAGE = 20;
