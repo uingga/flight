@@ -259,18 +259,17 @@ async function main() {
         }
     }
 
-    // 직항 없는 노선 제거 (Playwright에서 결과 없음 = 직항 없음)
-    const beforeCount = cache.flights.length;
+    // 가격 못 불러온 노선 = 현재 항공권 없음 → 캐시에서 제거
     const failedIds = new Set<string>();
     for (const task of tasks) {
         if (!results.has(task.flight.id)) {
             failedIds.add(task.flight.id);
         }
     }
-    // 3번 이상 연속 실패한 노선만 제거 (일시적 오류 방지)
-    // → 첫 실행이므로 일단 유지, 로그만 남김
-    removed = failedIds.size;
-    console.log(`\n직항 없는(또는 추출 실패) 노선: ${removed}개 (캐시 유지, 로그만)`);
+    if (failedIds.size > 0) {
+        cache.flights = cache.flights.filter((f: any) => !failedIds.has(f.id));
+        removed = failedIds.size;
+        console.log(`\n❌ 항공권 없는 노선 ${removed}개 제거 (Playwright 가격 조회 실패 = 현재 판매 없음)`);\n    }
 
     // ── 인터파크 벤치마크 필터링 ──────────────────────────────
     console.log(`\n=== 인터파크 가격 벤치마크 ===`);
