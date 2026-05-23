@@ -387,8 +387,9 @@ const getTripcomHotelUrl = (arrCity: string, depDate?: string, arrDate?: string)
         const provinceParam = cityData.provinceId ? `&provinceId=${cityData.provinceId}` : '';
         return `https://kr.trip.com/hotels/list?city=${cityData.id}&cityName=${encodedName}&searchType=CT&searchWord=${encodedName}${provinceParam}${dateParams}&locale=ko-KR&curr=KRW&Allianceid=${TRIPCOM_ALLIANCE_ID}&SID=${TRIPCOM_SID}&trip_sub1=&trip_sub3=${TRIPCOM_HOTEL_SUB3}`;
     }
-    // 매핑에 없는 도시: 링크 표시하지 않음
-    return null;
+    // 매핑에 없는 도시: 도시명으로 키워드 검색
+    const searchWord = encodeURIComponent(cityName);
+    return `https://kr.trip.com/hotels/list?searchType=CT&searchWord=${searchWord}${dateParams}&locale=ko-KR&curr=KRW&Allianceid=${TRIPCOM_ALLIANCE_ID}&SID=${TRIPCOM_SID}&trip_sub1=&trip_sub3=${TRIPCOM_HOTEL_SUB3}`;
 };
 
 const ITEMS_PER_PAGE = 20;
