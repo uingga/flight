@@ -272,7 +272,60 @@ async function main() {
     removed = failedIds.size;
     console.log(`\n직항 없는(또는 추출 실패) 노선: ${removed}개 (캐시 유지, 로그만)`);
 
+    // ── 인터파크 벤치마크 필터링 ──────────────────────────────
+    console.log(`\n=== 인터파크 가격 벤치마크 ===`);
+    const benchmarkPath = path.resolve(process.cwd(), 'data/interpark-prices.json');
+    let benchmarkFiltered = 0;
+    try {
+        if (fs.existsSync(benchmarkPath)) {
+            const benchmark = JSON.parse(fs.readFileSync(benchmarkPath, 'utf8'));
+            const cacheAge = Date.now() - new Date(benchmark.timestamp).getTime();
+            console.log(`♻️ 인터파크 캐시 사용 (${Math.round(cacheAge / 3600000)}시간 전)`);
+
+            // CITY_TO_AIRPORT 간단 매핑 (resolveCityCode 대용)
+            const { resolveCityCode } = await import('../src/lib/scrapers/interpark');
+
+            const beforeFilter = cache.flights.length;
+            cache.flights = cache.flights.filter((f: any) => {
+                if (f.source !== 'myrealtrip') return true; // 다른 소스는 건드리지 않음
+
+                const cityCode = resolveCityCode(f.arrival?.city || '', f.arrival?.airport);
+                if (!cityCode) return true;
+
+                const depDate = f.departure?.date || '';
+                const dateStr = depDate.replace(/[^0-9\-\.]/g, '').replace(/\./g, '-').replace(/-+$/, '');
+                const dateMatch = dateStr.match(/^(\d{4})-(\d{2})/);
+                if (!dateMatch) return true;
+
+                const yearMonth = `${dateMatch[1]}-${dateMatch[2]}`;
+                const cityPrices = benchmark.prices?.[cityCode];
+                if (!cityPrices || !cityPrices[yearMonth]) return true;
+
+                const interparkAvg = cityPrices[yearMonth].avg;
+                if (f.price > interparkAvg) {
+                    console.log(`  ❌ 필터: ${f.arrival?.city} ${yearMonth} ${f.price.toLocaleString()}원 > 인터파크 평균 ${interparkAvg.toLocaleString()}원`);
+                    return false;
+                }
+
+                // 할인율 계산
+                const interparkLowest = cityPrices[yearMonth].lowest;
+                f.discountRate = interparkLowest > 0
+                    ? Math.round((1 - f.price / interparkLowest) * 100)
+                    : 0;
+
+                return true;
+            });
+            benchmarkFiltered = beforeFilter - cache.flights.length;
+            console.log(`📊 인터파크 기준 필터: ${benchmarkFiltered}개 제거 (${beforeFilter} → ${cache.flights.length})`);
+        } else {
+            console.log('⚠️ interpark-prices.json 없음 → 필터링 건너뜀');
+        }
+    } catch (e) {
+        console.error('⚠️ 인터파크 벤치마크 실패:', e);
+    }
+
     // 저장
+    cache.count = cache.flights.length;
     cache.lastUpdated = new Date().toISOString();
     fs.writeFileSync(cachePath, JSON.stringify(cache));
 
@@ -282,6 +335,7 @@ async function main() {
     console.log(`검증: ${results.size}/${tasks.length}개 성공`);
     console.log(`보정: ${updated}개 (↑${priceUp} ↓${priceDown})`);
     console.log(`실패: ${tasks.length - results.size}개`);
+    if (benchmarkFiltered > 0) console.log(`인터파크 필터: ${benchmarkFiltered}개 제거`);
 }
 
 main().catch(console.error);
