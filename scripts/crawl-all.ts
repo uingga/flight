@@ -61,7 +61,8 @@ async function main() {
             { name: '모두투어', key: 'modetour' as const, fn: () => scrapeModetour() },
             { name: '온라인투어', key: 'onlinetour' as const, fn: () => scrapeOnlineTour() },
             { name: '땡처리닷컴', key: 'ttang' as const, fn: () => scrapeTtang(prevFlights) },
-            { name: '마이리얼트립', key: 'myrealtrip' as const, fn: () => scrapeMyrealtrip() },
+            // 마이리얼트립은 별도 Playwright 워크플로우(myrealtrip-scrape.yml)에서 처리
+            // Bulk API는 시간/가격 정보가 부정확하므로 여기서 실행하지 않음
         ];
 
         const results = await Promise.allSettled(scraperTasks.map(t => t.fn()));
