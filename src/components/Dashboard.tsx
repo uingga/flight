@@ -388,29 +388,21 @@ const IATA_TO_ENGLISH: Record<string, string> = {
 };
 
 const getTripcomHotelUrl = (arrCity: string, depDate?: string, arrDate?: string, arrAirport?: string): string | null => {
-    // 공항명 괄호 제거하여 도시명만 추출 (e.g. '오사카(간사이)' → '오사카')
     let cityName = normalizeCity(arrCity);
-    const bracketMatch = cityName.match(/^(.+?)\(.+?\)$/);
-    if (bracketMatch) cityName = bracketMatch[1];
-    const cityData = TRIPCOM_CITY_DATA[cityName];
-    // 날짜 파라미터: 체크인=출발일, 체크아웃=출발일+1일 (1박 기준)
+    const bm = cityName.match(/^(.+?)\((.+?)\)$/);
+    if (bm) cityName = bm[1];
     let dateParams = '';
     if (depDate) {
-        const checkin = new Date(depDate);
-        const checkout = new Date(checkin);
-        checkout.setDate(checkout.getDate() + 1);
-        const fmt = (d: Date) => `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`;
-        dateParams = `&checkin=${fmt(checkin)}&checkout=${fmt(checkout)}`;
+        const ci = new Date(depDate);
+        const co = new Date(ci);
+        co.setDate(co.getDate() + 1);
+        const fmt = (d: Date) => d.getFullYear() + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + String(d.getDate()).padStart(2, '0');
+        dateParams = 'checkin=' + fmt(ci) + '&checkout=' + fmt(co) + '&';
     }
-    if (cityData) {
-        const encodedName = encodeURIComponent(cityData.name);
-        const provinceParam = cityData.provinceId ? `&provinceId=${cityData.provinceId}` : '';
-        return `https://kr.trip.com/hotels/list?city=${cityData.id}&cityName=${encodedName}&searchType=CT&searchWord=${encodedName}${provinceParam}${dateParams}&locale=ko-KR&curr=KRW&Allianceid=${TRIPCOM_ALLIANCE_ID}&SID=${TRIPCOM_SID}&trip_sub1=&trip_sub3=${TRIPCOM_HOTEL_SUB3}`;
-    }
-    // 매핑에 없는 도시: 영문 도시명으로 키워드 검색 (한국어보다 정확)
-    const englishName = arrAirport ? IATA_TO_ENGLISH[arrAirport] : null;
-    const searchWord = encodeURIComponent(englishName || cityName);
-    return `https://kr.trip.com/hotels/list?searchType=CT&searchWord=${searchWord}${dateParams}&locale=ko-KR&curr=KRW&Allianceid=${TRIPCOM_ALLIANCE_ID}&SID=${TRIPCOM_SID}&trip_sub1=&trip_sub3=${TRIPCOM_HOTEL_SUB3}`;
+    // Trip.com SEO slug URL: /hotels/{slug}-hotels-list/
+    const en = arrAirport ? IATA_TO_ENGLISH[arrAirport] : null;
+    const slug = (en || cityName).toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '').replace(/-+/g, '-');
+    return 'https://kr.trip.com/hotels/' + slug + '-hotels-list/?' + dateParams + 'Allianceid=' + TRIPCOM_ALLIANCE_ID + '&SID=' + TRIPCOM_SID + '&trip_sub1=&trip_sub3=' + TRIPCOM_HOTEL_SUB3;
 };
 
 const ITEMS_PER_PAGE = 20;
