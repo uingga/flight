@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-05-24T08:47:20.366Z",
-  "count": 876,
+  "timestamp": "2026-05-24T11:01:38.264Z",
+  "count": 875,
   "flights": [
     {
       "id": "ybtour-오사카(간사이)-20260617-2",
@@ -7760,31 +7760,6 @@
       "firstSeen": "2026-05-23"
     },
     {
-      "id": "hanatour-regular-인천/김포-14",
-      "source": "hanatour",
-      "airline": "티웨이항공",
-      "departure": {
-        "city": "서울(ICN)",
-        "airport": "",
-        "date": "2026.06.12(금)",
-        "time": "11:05"
-      },
-      "arrival": {
-        "city": "바르셀로나(BCN)",
-        "airport": "",
-        "date": "2026.06.19(금)",
-        "time": "19:00"
-      },
-      "price": 999000,
-      "currency": "KRW",
-      "link": "https://www.hanatour.com/com/pmt/CHPC0PMT0011M200?fareId=RTF%5E3051508%5ETW0407ICNBCN-H14%5ETW0407ICNBCN-5%5E20260612%5ET%5EKRW%5E6468935%5E5294602%5E%5E1%5E0%5E0&psngrCntLst=%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D&selectedCard=%7B%7D",
-      "availableSeats": 1,
-      "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22SEL%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22BCN%22%2C%22depDt%22%3A%2220260612%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22BCN%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22SEL%22%2C%22depDt%22%3A%2220260619%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
-      "region": "유럽",
-      "discountRate": -26,
-      "firstSeen": "2026-05-22"
-    },
-    {
       "id": "hanatour-regular-청주-0",
       "source": "hanatour",
       "airline": "에어로케이",
@@ -8553,7 +8528,7 @@
       "price": 482000,
       "currency": "KRW",
       "link": "https://www.hanatour.com/com/pmt/CHPC0PMT0011M200?fareId=RTF%5E2984133%5E7C2551PUSBKK-H3%5E7C2551PUSBKK-17%5E20260607%5ET%5EKRW%5E6336043%5E5080446%5E%5E1%5E0%5E0&psngrCntLst=%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D&selectedCard=%7B%7D",
-      "availableSeats": 5,
+      "availableSeats": 2,
       "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22PUS%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22BKK%22%2C%22depDt%22%3A%2220260607%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22BKK%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22PUS%22%2C%22depDt%22%3A%2220260612%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
       "region": "동남아",
       "discountRate": -24,
@@ -11204,7 +11179,7 @@
       "price": 224000,
       "currency": "KRW",
       "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22PUS%22%2C%22continentCode%22%3A%22JPN%22%2C%22arrivalCity%22%3A%22FUK%22%2C%22departureDate%22%3A%222026-06-11%22%2C%22arrivalDate%22%3A%222026-06-12%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
-      "availableSeats": 8,
+      "availableSeats": 6,
       "flightNumber": "ZE943 / ZE942",
       "region": "일본",
       "modetourDetail": {
@@ -26345,7 +26320,7 @@
   ],
   "sources": {
     "ybtour": 407,
-    "hanatour": 74,
+    "hanatour": 73,
     "modetour": 795,
     "onlinetour": 176,
     "ttang": 522,
@@ -53441,9 +53416,9 @@
       },
       {
         "date": "2026-05-24",
-        "minPrice": 999000,
-        "avgPrice": 1124500,
-        "count": 2
+        "minPrice": 1250000,
+        "avgPrice": 1250000,
+        "count": 1
       }
     ],
     "청주시(CJJ)-도쿄(HND)": [
