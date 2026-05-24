@@ -306,6 +306,7 @@ const TRIPCOM_CITY_DATA: Record<string, { id: number; name: string; provinceId?:
     '칭다오': { id: 7, name: '칭다오' }, '옌타이': { id: 533, name: '옌타이' },
     '화롄': { id: 6954, name: '화롄' }, '화련': { id: 6954, name: '화롄' }, '지난': { id: 144, name: '지난' },
     '구이린': { id: 33, name: '구이린' },
+    '웨이하이': { id: 479, name: '웨이하이' },
 
     // 기타
     '사이판': { id: 4081, name: '사이판' }, '괌': { id: 753, name: '괌' },
