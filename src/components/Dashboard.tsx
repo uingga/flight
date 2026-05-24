@@ -306,7 +306,7 @@ const TRIPCOM_CITY_DATA: Record<string, { id: number; name: string; provinceId?:
     '칭다오': { id: 7, name: '칭다오' }, '옌타이': { id: 533, name: '옌타이' },
     '화롄': { id: 6954, name: '화롄' }, '화련': { id: 6954, name: '화롄' }, '지난': { id: 144, name: '지난' },
     '구이린': { id: 33, name: '구이린' },
-    '웨이하이': { id: 386, name: '웨이하이' },
+
     // 기타
     '사이판': { id: 4081, name: '사이판' }, '괌': { id: 753, name: '괌' },
     '시드니': { id: 501, name: '시드니' }, '브리즈번': { id: 680, name: '브리즈번' },
@@ -326,12 +326,9 @@ const TRIPCOM_CITY_DATA: Record<string, { id: number; name: string; provinceId?:
     '이시가키': { id: 1174, name: '이시가키' },
     // 마이리얼트립 인기 도시 추가
     // 유럽
-    '파리': { id: 418, name: '파리' }, '런던': { id: 181, name: '런던' },
-    '암스테르담': { id: 250, name: '암스테르담' }, '프라하': { id: 332, name: '프라하' },
-    '밀라노': { id: 454, name: '밀라노' }, '빈': { id: 469, name: '빈' }, '비엔나': { id: 469, name: '빈' },
+    // 파리, 런던, 암스테르담, 프라하, 밀라노, 빈 — ID 틀림 확인 (브라우저 테스트), searchWord 폴백 사용
     // 일본 추가
-    '니가타': { id: 698, name: '니가타' }, '오카야마': { id: 1095, name: '오카야마' },
-    '도쿠시마': { id: 7447, name: '도쿠시마' }, '아키타': { id: 4303, name: '아키타' },
+    // 니가타, 오카야마, 도쿠시마, 아키타 — ID 틀림 확인 (브라우저 테스트), searchWord 폴백 사용
 };
 
 const TRIPCOM_HOTEL_SUB3 = 'D13108706';
