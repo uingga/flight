@@ -389,20 +389,37 @@ const IATA_TO_ENGLISH: Record<string, string> = {
 
 const getTripcomHotelUrl = (arrCity: string, depDate?: string, arrDate?: string, arrAirport?: string): string | null => {
     let cityName = normalizeCity(arrCity);
-    const bm = cityName.match(/^(.+?)\((.+?)\)$/);
+    const bm = cityName.match(/^(.+?)\\((.+?)\\)$/);
     if (bm) cityName = bm[1];
-    let dateParams = '';
+    // 날짜: 체크인=출발일, 체크아웃=출발일+1 (1박)
+    let checkinStr = '';
+    let checkoutStr = '';
     if (depDate) {
         const ci = new Date(depDate);
         const co = new Date(ci);
         co.setDate(co.getDate() + 1);
         const fmt = (d: Date) => d.getFullYear() + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + String(d.getDate()).padStart(2, '0');
-        dateParams = 'checkin=' + fmt(ci) + '&checkout=' + fmt(co) + '&';
+        checkinStr = fmt(ci);
+        checkoutStr = fmt(co);
     }
-    // Trip.com SEO slug URL: /hotels/{slug}-hotels-list/
+    const dateQs = checkinStr ? '&checkin=' + checkinStr + '&checkout=' + checkoutStr : '';
+    const affQs = '&Allianceid=' + TRIPCOM_ALLIANCE_ID + '&SID=' + TRIPCOM_SID + '&trip_sub1=&trip_sub3=' + TRIPCOM_HOTEL_SUB3;
+    // 1순위: TRIPCOM_CITY_DATA에 있으면 검증된 city ID 사용
+    const cityData = TRIPCOM_CITY_DATA[cityName];
+    if (cityData) {
+        const n = encodeURIComponent(cityData.name);
+        const prov = cityData.provinceId ? '&provinceId=' + cityData.provinceId : '';
+        return 'https://kr.trip.com/hotels/list?city=' + cityData.id + '&cityName=' + n + '&searchType=CT&searchWord=' + n + prov + dateQs + '&locale=ko-KR&curr=KRW' + affQs;
+    }
+    // 2순위: IATA 영문 도시명으로 SEO slug URL
     const en = arrAirport ? IATA_TO_ENGLISH[arrAirport] : null;
-    const slug = (en || cityName).toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '').replace(/-+/g, '-');
-    return 'https://kr.trip.com/hotels/' + slug + '-hotels-list/?' + dateParams + 'Allianceid=' + TRIPCOM_ALLIANCE_ID + '&SID=' + TRIPCOM_SID + '&trip_sub1=&trip_sub3=' + TRIPCOM_HOTEL_SUB3;
+    if (en) {
+        const slug = en.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '').replace(/-+/g, '-');
+        const dateSlug = checkinStr ? '?checkin=' + checkinStr + '&checkout=' + checkoutStr + affQs : '?' + affQs.substring(1);
+        return 'https://kr.trip.com/hotels/' + slug + '-hotels-list/' + dateSlug;
+    }
+    // 매핑 없으면 링크 안 표시
+    return null;
 };
 
 const ITEMS_PER_PAGE = 20;
