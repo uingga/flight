@@ -2844,8 +2844,8 @@ export default function Dashboard() {
                                 <div className={styles.naverDisclaimerItem}>
                                     <span className={styles.naverDisclaimerIcon}>🧳</span>
                                     <div>
-                                        <strong>위탁수하물 미포함 가능</strong>
-                                        <p>최저가 항공권에는 위탁수하물이 포함되어 있지 않을 수 있습니다</p>
+                                        <strong>위탁수하물 포함 여부 확인</strong>
+                                        <p>최저가 항공권은 위탁수하물이 별도일 수 있으니 포함 여부를 확인하세요</p>
                                     </div>
                                 </div>
                                 <div className={styles.naverDisclaimerItem}>
