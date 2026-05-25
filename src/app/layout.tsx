@@ -123,12 +123,10 @@ export default function RootLayout({
                 <link rel="preconnect" href="https://m.onlinetour.co.kr" />
 
                 <link rel="preconnect" href="https://mfly.ybtour.co.kr" />
-                {/* Google AdSense */}
-                <script
-                    async
-                    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8329497855024061"
-                    crossOrigin="anonymous"
-                ></script>
+                {/* Google Fonts preconnect */}
+                <link rel="preconnect" href="https://fonts.googleapis.com" />
+                <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+                {/* AdSense meta only - script loaded lazily in body */}
             </head>
             <body className="antialiased">
                 {/* GA4 Analytics */}
@@ -150,6 +148,12 @@ export default function RootLayout({
                         </Script>
                     </>
                 )}
+                {/* Google AdSense — lazy loaded for performance */}
+                <Script
+                    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8329497855024061"
+                    strategy="lazyOnload"
+                    crossOrigin="anonymous"
+                />
                 {children}
                 <script
                     type="application/ld+json"
