@@ -104,31 +104,55 @@ const normalizeCity = (city: string): string => {
     return cityNameMap[result] || result;
 };
 
-// 항공사명 표기 통일 (띄어쓰기 차이 등)
+// 항공사명 표기 통일 (슬로건, 괄호, 띄어쓰기, 영문코드 등)
 const normalizeAirline = (airline: string): string => {
-    const trimmed = airline.trim();
-    const airlineMap: Record<string, string> = {
-        '진 에어': '진에어',
-        '에어 서울': '에어서울',
-        '에어 부산': '에어부산',
-        '에어 프레미아': '에어프레미아',
-        '이스타 항공': '이스타항공',
-        '제주 항공': '제주항공',
-        '티웨이 항공': '티웨이항공',
-        't way항공': '티웨이항공',
-        'T Way항공': '티웨이항공',
-        'T\'way항공': '티웨이항공',
-        '타이 비엣젯항공': '타이비엣젯항공',
-        '타이비엣젯 항공': '타이비엣젯항공',
-        '비엣젯 항공': '비엣젯항공',
-        '피치항공': '피치항공',
-        '피치 항공': '피치항공',
-        '스프링항공': '스프링항공',
-        '스프링 항공': '스프링항공',
-        '에어아시아': '에어아시아',
-        '에어 아시아': '에어아시아',
+    let name = airline.trim();
+    
+    // 괄호 제거: (대한항공) → 대한항공
+    name = name.replace(/^\((.+)\)$/, '$1');
+    
+    // 슬로건 제거: "품격 있는 선택, 아시아나항공" → "아시아나항공"
+    if (name.includes(',')) {
+        const parts = name.split(',');
+        const last = parts[parts.length - 1].trim();
+        if (last.includes('항공') || last.includes('에어')) name = last;
+    }
+    
+    // 의미없는 텍스트 필터링
+    const invalidNames = ['항공사 제공요금', '항공사 미정', '더 저렴한 항공권', '공동운항', ''];
+    if (invalidNames.includes(name) || name.length > 20) return '';
+    
+    // IATA 코드 → 한글명 변환
+    const iataMap: Record<string, string> = {
+        '7C': '제주항공', 'LJ': '진에어', 'TW': '티웨이항공', 'BX': '에어부산',
+        'RS': '에어서울', 'ZE': '이스타항공', 'RF': '에어로케이', 'OZ': '아시아나항공',
+        'KE': '대한항공', 'AC': '에어캐나다', 'AI': '에어인디아', 'VN': '베트남항공',
+        'CA': '중국국제항공', 'CZ': '중국남방항공', 'MU': '중국동방항공',
+        'SL': '타이라이온에어', 'NH': 'ANA항공',
     };
-    return airlineMap[trimmed] || trimmed;
+    if (iataMap[name]) return iataMap[name];
+    
+    // 영문 항공사명 통일
+    const enMap: Record<string, string> = {
+        'Airasia': '에어아시아', 'AirAsia': '에어아시아', 'airasia': '에어아시아',
+    };
+    if (enMap[name]) return enMap[name];
+    
+    // 띄어쓰기 & 표기 통일
+    const nameMap: Record<string, string> = {
+        '진 에어': '진에어', '에어 서울': '에어서울', '에어 부산': '에어부산',
+        '에어 프레미아': '에어프레미아', '이스타 항공': '이스타항공',
+        '제주 항공': '제주항공', '티웨이 항공': '티웨이항공',
+        't way항공': '티웨이항공', 'T Way항공': '티웨이항공', "T'way항공": '티웨이항공',
+        '타이 비엣젯항공': '타이비엣젯항공', '타이비엣젯 항공': '타이비엣젯항공',
+        '비엣젯 항공': '비엣젯항공', '피치 항공': '피치항공',
+        '스프링 항공': '스프링항공', '에어 아시아': '에어아시아',
+        '에어로케이항공': '에어로케이', '스쿠트 타이거항공': '스쿠트항공',
+        '젯스타 항공': '젯스타항공', '투르크메니스탄 항공': '투르크메니스탄항공',
+        '루프트한자 시티항공': '루프트한자',
+        '썬푸꾸옥 항공': '썬푸꾸옥항공', '타이에어아시아': '타이에어아시아',
+    };
+    return nameMap[name] || name;
 };
 // 도시명 → IATA 공항/도시 코드 매핑
 const CITY_TO_AIRPORT: Record<string, string> = {
