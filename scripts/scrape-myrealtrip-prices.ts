@@ -252,12 +252,30 @@ async function main() {
 
     const results = new Map<string, { price: number; airline: string }>();
 
-    // 병렬 실행
+    // 1차 실행
     await Promise.all(
         chunks.map((chunk, i) => worker(browser, chunk, results, i + 1))
     );
 
     await browser.close();
+
+    // 2차 재시도: 실패한 노선만
+    const failedTasks = tasks.filter(t => !results.has(t.flight.id));
+    if (failedTasks.length > 0 && failedTasks.length < tasks.length) {
+        console.log(`\n🔄 ${failedTasks.length}개 실패 노선 재시도 중...\n`);
+        const retryBrowser = await chromium.launch({
+            headless: true,
+            args: ['--disable-blink-features=AutomationControlled'],
+        });
+        const retryChunks: typeof tasks[] = Array.from({ length: WORKERS }, () => []);
+        shuffle(failedTasks).forEach((task, i) => retryChunks[i % WORKERS].push(task));
+        await Promise.all(
+            retryChunks.map((chunk, i) => worker(retryBrowser, chunk, results, i + 10))
+        );
+        await retryBrowser.close();
+        const recovered = failedTasks.length - tasks.filter(t => !results.has(t.flight.id)).length;
+        console.log(`✅ 재시도 결과: ${recovered}개 복구 성공`);
+    }
 
     // 캐시 업데이트
     let updated = 0;
@@ -287,17 +305,15 @@ async function main() {
         }
     }
 
-    // 가격 못 불러온 노선 = 현재 항공권 없음 → 캐시에서 제거
-    const failedIds = new Set<string>();
+    // Playwright 가격 조회 실패한 노선 = Calendar API 가격 유지
+    let skipped = 0;
     for (const task of tasks) {
         if (!results.has(task.flight.id)) {
-            failedIds.add(task.flight.id);
+            skipped++;
         }
     }
-    if (failedIds.size > 0) {
-        cache.flights = cache.flights.filter((f: any) => !failedIds.has(f.id));
-        removed = failedIds.size;
-        console.log(`\n❌ 항공권 없는 노선 ${removed}개 제거 (Playwright 가격 조회 실패 = 현재 판매 없음)`);
+    if (skipped > 0) {
+        console.log(`\n⚠️ ${skipped}개 노선 Playwright 조회 실패 → Calendar API 가격 유지 (삭제하지 않음)`);
     }
 
     // ── 인터파크 벤치마크 필터링 ──────────────────────────────
