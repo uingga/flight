@@ -205,9 +205,15 @@ async function main() {
     const cache = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
 
     const prevMrtCount = cache.flights.filter((f: any) => f.source === 'myrealtrip').length;
-    cache.flights = cache.flights.filter((f: any) => f.source !== 'myrealtrip');
-    cache.flights.push(...freshFlights);
-    console.log(`♻️ MRT 캐시 교체: ${prevMrtCount}개 → ${freshFlights.length}개`);
+
+    // 안전장치: Calendar API 결과가 기존 대비 50% 미만이면 교체하지 않음
+    if (freshFlights.length > 0 && (prevMrtCount === 0 || freshFlights.length >= prevMrtCount * 0.5)) {
+        cache.flights = cache.flights.filter((f: any) => f.source !== 'myrealtrip');
+        cache.flights.push(...freshFlights);
+        console.log(`♻️ MRT 캐시 교체: ${prevMrtCount}개 → ${freshFlights.length}개`);
+    } else {
+        console.log(`⚠️ Calendar API 결과(${freshFlights.length}개)가 기존(${prevMrtCount}개)의 50% 미만 → 교체 건너뜀, 기존 데이터 유지`);
+    }
 
     // 중간 저장 (Playwright 실패해도 최소한 Calendar 가격은 반영)
     cache.count = cache.flights.length;
