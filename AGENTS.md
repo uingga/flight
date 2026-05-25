@@ -55,56 +55,26 @@ src/components/Dashboard.tsx (client component)
 | `.github/workflows/daily-crawl.yml` | GH Actions cron | 7 runs/day, auto-commit to `data/` |
 | `data/all-flights-cache.json` | Core data file (~1MB) | Must be in git for Vercel deploy |
 
-## Current WIP: MyRealTrip Integration
+## MyRealTrip Integration
 
-### Status: Code written, NOT committed, needs testing
-
-### Uncommitted Changes (8 files)
-
-**Modified:**
-1. `src/types/flight.ts` — Added `'myrealtrip'` to `source` union
-2. `scripts/crawl-all.ts` — Import + task array + source tracking for myrealtrip
-3. `src/app/api/flights/route.ts` — myrealtrip count in API response
-4. `src/components/Dashboard.tsx` — Filter option, badge style/name mapping, booking URL passenger substitution, city normalization (화련→화롄)
-5. `src/components/Dashboard.module.css` — `.badgeMyrealtrip` style (blue #2563eb)
-6. `.github/workflows/daily-crawl.yml` — Workflow changes
-
-**New:**
-7. `src/lib/scrapers/myrealtrip.ts` — MyRealTrip Partner API scraper (344 lines)
-8. `scripts/test-myrealtrip.ts` — API test script
+### Status: ✅ 완료 — 운영 중
 
 ### MyRealTrip Scraper Details
 
-- **API Base**: `https://partner-ext-api.myrealtrip.com`
-- **Auth**: `Authorization: Bearer {MYREALTRIP_API_KEY}`
-- **Calendar API**: `POST /v1/products/flight/calendar` — lowest fares per route
-- **Landing URL API**: `POST /v1/products/flight/fare-query-landing-url` — booking deeplinks
-- **Fallback URL**: `https://www.myrealtrip.com/flights/search/{dep}/{arr}/{depDate}/{retDate}/1/0/0/economy`
-- **Coverage**: ICN/PUS → 26 destinations, today+60 days, 3-day trips
+- **Public Bulk API**: `https://api3.myrealtrip.com/flight/api/price/calendar/bulk-lowest` — 전체 도시 최저가
+- **Public Calendar API**: `https://api3.myrealtrip.com/flight/api/price/calendar` — 노선별 일별 최저가
+- **인증**: 불필요 (공개 API)
+- **Coverage**: ICN/PUS → 전체 도시, today+60 days
 - **Rate limiting**: 300ms delay between requests, 3s retry on 429
+- **파트너 딥링크**: `gid-map.json` 기반 생성, 파트너 링크 ID `1849392`
 
-### Remaining Tasks
+### Notes
 
-- [ ] Test MyRealTrip API call: `npx tsx scripts/test-myrealtrip.ts`
-- [ ] Test full crawl with myrealtrip: `npm run crawl:all`
-- [ ] Verify dashboard displays myrealtrip flights correctly
-- [ ] Verify booking link passenger substitution works
-- [ ] Add `MYREALTRIP_API_KEY` to GitHub Repository Secrets
-- [ ] Add env var to `daily-crawl.yml` Run crawler step:
-  ```yaml
-  env:
-    CI: true
-    MYREALTRIP_API_KEY: ${{ secrets.MYREALTRIP_API_KEY }}
-  ```
-- [ ] Remove hardcoded API key from `scripts/test-myrealtrip.ts` before commit
+- `MYREALTRIP_API_KEY`는 `.env.local`에 보관 중이나 현재 스크래퍼에서 사용하지 않음 (공개 API만 사용)
+- GitHub Secrets 추가 불필요
+- 향후 파트너 전용 API 연동 시 필요할 수 있음
 
 ## Environment Variables
-
-Required in `.env.local` (local) or GitHub Secrets (CI):
-
-```
-MYREALTRIP_API_KEY=<partner API key>
-```
 
 Other existing env vars: `EMAIL_USER`, `EMAIL_PASS`, `GH_PAT`, `NEXT_PUBLIC_BASE_URL`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY`
 
