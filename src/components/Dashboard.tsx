@@ -64,6 +64,7 @@ export default function Dashboard() {
     const [bookingDisclaimer, setBookingDisclaimer] = useState<{ source: string; url: string } | null>(null);
     const disclaimerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const [modetourGuide, setModetourGuide] = useState<Flight | null>(null);
+    const [naverDisclaimer, setNaverDisclaimer] = useState<{ url: string; route: string } | null>(null);
     const disclaimerWindowRef = useRef<Window | null>(null);
     const [favoriteFlights, setFavoriteFlights] = useState<string[]>([]);
     const [favFilter, setFavFilter] = useState(false);
@@ -2191,11 +2192,14 @@ export default function Dashboard() {
                                                 return (
                                                     <div className={styles.compareLinks}>
                                                         {naverUrl && (
-                                                            <a href={naverUrl} target="_blank" rel="noopener noreferrer" className={styles.compareLink} title="네이버 항공권에서 비교"
-                                                                onClick={() => gtag.trackCompareClick('naver', `${normalizeCity(flight.departure.city)}-${normalizeCity(flight.arrival.city)}`, flight.price)}
+                                                            <button className={styles.compareLink} title="네이버 항공권에서 비교"
+                                                                onClick={() => {
+                                                                    gtag.trackCompareClick('naver', `${normalizeCity(flight.departure.city)}-${normalizeCity(flight.arrival.city)}`, flight.price);
+                                                                    setNaverDisclaimer({ url: naverUrl, route: `${normalizeCity(flight.departure.city)} → ${normalizeCity(flight.arrival.city)}` });
+                                                                }}
                                                             >
                                                                 네이버 가격비교 ›
-                                                            </a>
+                                                            </button>
                                                         )}
                                                         {tripcomHotelUrl && (
                                                             <a href={tripcomHotelUrl} target="_blank" rel="noopener noreferrer" className={styles.compareLinkHotel} title="트립닷컴에서 호텔 검색"
@@ -2813,6 +2817,75 @@ export default function Dashboard() {
             )}
 
 
+
+            {/* 네이버 가격비교 주의사항 안내 모달 */}
+            {naverDisclaimer && (
+                <div className={styles.modalOverlay} onClick={() => setNaverDisclaimer(null)}>
+                    <div className={styles.modalSheet} onClick={(e) => e.stopPropagation()} style={{ maxWidth: '420px' }}>
+                        <div className={styles.modalHeader}>
+                            <h3 className={styles.modalTitle}>네이버 가격비교 안내</h3>
+                            <button className={styles.modalClose} onClick={() => setNaverDisclaimer(null)}>×</button>
+                        </div>
+                        <div style={{ padding: '16px 20px 0', textAlign: 'center' }}>
+                            <div style={{ fontSize: '32px', marginBottom: '8px' }}>🔍</div>
+                            <p style={{ fontSize: '14px', fontWeight: 600, color: '#333', margin: '0 0 16px' }}>
+                                {naverDisclaimer.route} 노선을 네이버에서 비교합니다
+                            </p>
+                        </div>
+                        <div style={{ padding: '0 20px 16px' }}>
+                            <div className={styles.naverDisclaimerList}>
+                                <div className={styles.naverDisclaimerItem}>
+                                    <span className={styles.naverDisclaimerIcon}>💰</span>
+                                    <div>
+                                        <strong>표시 가격 ≠ 실제 결제 가격</strong>
+                                        <p>검색 결과의 최저가를 클릭하면 실제 가격이 다를 수 있습니다 (세금·수수료 별도 등)</p>
+                                    </div>
+                                </div>
+                                <div className={styles.naverDisclaimerItem}>
+                                    <span className={styles.naverDisclaimerIcon}>🧳</span>
+                                    <div>
+                                        <strong>위탁수하물 미포함 가능</strong>
+                                        <p>최저가 항공권에는 위탁수하물이 포함되어 있지 않을 수 있습니다</p>
+                                    </div>
+                                </div>
+                                <div className={styles.naverDisclaimerItem}>
+                                    <span className={styles.naverDisclaimerIcon}>🌐</span>
+                                    <div>
+                                        <strong>해외 업체 주의</strong>
+                                        <p>해외 OTA(온라인 여행사)는 CS(고객센터) 대응이 어렵고, 환불·변경이 까다로울 수 있습니다</p>
+                                    </div>
+                                </div>
+                                <div className={styles.naverDisclaimerItem}>
+                                    <span className={styles.naverDisclaimerIcon}>🕐</span>
+                                    <div>
+                                        <strong>시간대 확인 필수</strong>
+                                        <p>새벽·심야 출도착 편이라 저렴한 경우가 있으니 시간을 꼭 확인하세요</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div style={{ padding: '0 20px 20px', display: 'flex', gap: '8px' }}>
+                            <button
+                                className={styles.modalCancel}
+                                onClick={() => setNaverDisclaimer(null)}
+                                style={{ flex: 1 }}
+                            >
+                                닫기
+                            </button>
+                            <a
+                                href={naverDisclaimer.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={styles.modalConfirm}
+                                style={{ flex: 2, display: 'block', textDecoration: 'none', textAlign: 'center' }}
+                                onClick={() => setNaverDisclaimer(null)}
+                            >
+                                네이버에서 비교하기 →
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* 땡처리닷컴 수수료 안내 모달 */}
             {ttangConfirmFlight && (
