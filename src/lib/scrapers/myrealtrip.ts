@@ -247,38 +247,47 @@ export async function scrapeMyrealtrip(): Promise<Flight[]> {
             const cityName = getCityName(fare);
             const region = getRegion(fare, cityName);
 
-            // Calendar API 호출 (출발일 기준 30일 캘린더)
+            // Calendar API 호출 (Bulk 출발일의 실제 가격 조회)
+            const bulkDepDate = fare.departureDate || '';
+            const bulkArrDate = fare.arrivalDate || '';
+            if (!bulkDepDate) continue;
+
             const calPrices = await fetchCalendarPrices(dep.calendarFrom, fare.arrivalCity, today);
 
             let price: number;
-            let depDate: string;
             let airline: string;
 
-            if (calPrices.length > 0) {
-                // 캘린더 최저가 사용 (실시간 가격)
+            // Calendar API에서 Bulk 출발일과 같은 날짜의 가격 찾기
+            const matchingCal = calPrices.find(p => p.date === bulkDepDate);
+            if (matchingCal) {
+                price = matchingCal.price;
+                const rawAirline = matchingCal.airline || '';
+                airline = (rawAirline.length > 20 || rawAirline.includes('스케줄') || rawAirline.includes('기착')) 
+                    ? '항공사 미정' : (rawAirline || '항공사 미정');
+                calendarUsed++;
+            } else if (calPrices.length > 0) {
+                // 같은 날짜가 없으면 Calendar 최저가 사용 (날짜는 여전히 Bulk 기준)
                 const cheapest = calPrices.reduce((a, b) => a.price < b.price ? a : b);
                 price = cheapest.price;
-                depDate = cheapest.date;
                 const rawAirline = cheapest.airline || '';
-                // API가 항공사명 대신 안내문구를 반환하는 경우 필터링
                 airline = (rawAirline.length > 20 || rawAirline.includes('스케줄') || rawAirline.includes('기착')) 
                     ? '항공사 미정' : (rawAirline || '항공사 미정');
                 calendarUsed++;
             } else {
                 // Calendar API 데이터 없으면 Bulk API 가격 사용 (폴백)
                 price = fare.totalPrice || 0;
-                depDate = fare.departureDate || '';
                 airline = '항공사 미정';
                 bulkFallback++;
             }
 
-            if (!depDate || price <= 0) continue;
+            const depDate = bulkDepDate;
+            if (price <= 0) continue;
             if (price > MAX_PRICE) { filtered++; continue; }
 
-            // 귀국일: Bulk API의 arrivalDate 우선 사용, 없으면 period로 계산
+            // 귀국일: Bulk API의 arrivalDate 사용
             let arrDate: string;
-            if (fare.arrivalDate) {
-                arrDate = fare.arrivalDate;
+            if (bulkArrDate) {
+                arrDate = bulkArrDate;
             } else {
                 const period = fare.period || 3;
                 const depD = new Date(depDate);
