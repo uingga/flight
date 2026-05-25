@@ -2858,8 +2858,8 @@ export default function Dashboard() {
                                 <div className={styles.naverDisclaimerItem}>
                                     <span className={styles.naverDisclaimerIcon}>🕐</span>
                                     <div>
-                                        <strong>시간대 확인 필수</strong>
-                                        <p>새벽·심야 출도착 편이라 저렴한 경우가 있으니 시간을 꼭 확인하세요</p>
+                                        <strong>출도착 시간 확인</strong>
+                                        <p>비선호 시간대라 저렴한 경우가 있으니 출도착 시간을 확인하세요</p>
                                     </div>
                                 </div>
                             </div>
