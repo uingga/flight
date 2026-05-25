@@ -56,6 +56,7 @@ const normalizeCity = (city: string): string => {
         '울란바타르': '울란바토르',
         '쿠마모토': '구마모토',
         '카오슝': '가오슝',
+        '클라크': '클락',
         '로마 ': '로마',
     };
     let result = trimmed;
@@ -455,6 +456,7 @@ const TRIPCOM_CITY_DATA: Record<string, { id: number; name: string; provinceId?:
     '폰티아낙': { id: 1388, name: '폰티아낙' }, '푸에르토프린세사': { id: 7515, name: '푸에르토프린세사' },
     '술탄압둘아지즈샤': { id: 35937, name: '술탄압둘아지즈샤' },
     '도단': { id: 221, name: '도단' }, '락자': { id: 384625, name: '락자' },
+    '제네바': { id: 666, name: '제네바' },
 };
 
 const TRIPCOM_HOTEL_SUB3 = 'D13108706';
