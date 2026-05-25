@@ -259,7 +259,10 @@ export async function scrapeMyrealtrip(): Promise<Flight[]> {
                 const cheapest = calPrices.reduce((a, b) => a.price < b.price ? a : b);
                 price = cheapest.price;
                 depDate = cheapest.date;
-                airline = cheapest.airline || '항공사 미정';
+                const rawAirline = cheapest.airline || '';
+                // API가 항공사명 대신 안내문구를 반환하는 경우 필터링
+                airline = (rawAirline.length > 20 || rawAirline.includes('스케줄') || rawAirline.includes('기착')) 
+                    ? '항공사 미정' : (rawAirline || '항공사 미정');
                 calendarUsed++;
             } else {
                 // Calendar API 데이터 없으면 Bulk API 가격 사용 (폴백)

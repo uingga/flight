@@ -918,7 +918,7 @@ export default function Dashboard() {
     }, [restoreFilterState]);
 
     const uniqueAirlines = useMemo(() => {
-        const airlines = new Set(flights.map(f => normalizeAirline(f.airline)).filter(Boolean));
+        const airlines = new Set(flights.map(f => normalizeAirline(f.airline)).filter(a => a && a.length <= 15));
         return Array.from(airlines).sort((a, b) => a.localeCompare(b));
     }, [flights]);
 
