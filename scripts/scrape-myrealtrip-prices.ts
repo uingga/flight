@@ -1,11 +1,13 @@
 import { chromium, Browser, Page } from 'playwright';
 import fs from 'fs';
 import path from 'path';
+import { scrapeMyrealtrip } from '../src/lib/scrapers/myrealtrip';
 
 /**
  * 마이리얼트립 실제 가격 스크래핑 (Playwright)
  *
- * - offers.k1 페이지에서 검색 결과의 실제 최저가를 추출
+ * 1단계: Calendar API로 항공편 목록 갱신 (새 항공편 추가 + 없어진 항공편 제거)
+ * 2단계: offers.k1 페이지에서 검색 결과의 실제 최저가를 추출
  * - "석 남음" 텍스트 근처의 가격 = 유저가 보는 실제 가격
  * - 2개 병렬 실행, 랜덤 딜레이 + 셔플로 감지 회피
  * - 하루 1회 새벽 3시 실행 권장
@@ -190,12 +192,32 @@ async function worker(
 
 async function main() {
     const startTime = Date.now();
-    console.log('=== 마이리얼트립 실제 가격 스크래핑 시작 ===');
+    console.log('=== 마이리얼트립 크롤링 시작 ===');
     console.log(`시작: ${new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })}\n`);
 
-    // 캐시 & GID 로드
+    // ── 1단계: Calendar API로 항공편 목록 갱신 ──────────────────
+    console.log('📡 1단계: Calendar API로 최신 항공편 목록 수집...\n');
+    const freshFlights = await scrapeMyrealtrip();
+    console.log(`\n📡 Calendar API 결과: ${freshFlights.length}개 항공편 수집`);
+
+    // 캐시 로드 & MRT 데이터 교체
     const cachePath = path.resolve(process.cwd(), 'data/all-flights-cache.json');
     const cache = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
+
+    const prevMrtCount = cache.flights.filter((f: any) => f.source === 'myrealtrip').length;
+    cache.flights = cache.flights.filter((f: any) => f.source !== 'myrealtrip');
+    cache.flights.push(...freshFlights);
+    console.log(`♻️ MRT 캐시 교체: ${prevMrtCount}개 → ${freshFlights.length}개`);
+
+    // 중간 저장 (Playwright 실패해도 최소한 Calendar 가격은 반영)
+    cache.count = cache.flights.length;
+    cache.lastUpdated = new Date().toISOString();
+    fs.writeFileSync(cachePath, JSON.stringify(cache));
+    console.log('💾 Calendar API 가격으로 중간 저장 완료\n');
+
+    // ── 2단계: Playwright로 실제 가격 보정 ──────────────────
+    console.log('🎭 2단계: Playwright로 실제 가격 보정 시작...\n');
+
     const mrtFlights: CachedFlight[] = cache.flights.filter((f: any) => f.source === 'myrealtrip');
     const gidMap = loadGidMap();
 
