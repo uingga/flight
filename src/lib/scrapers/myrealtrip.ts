@@ -275,11 +275,16 @@ export async function scrapeMyrealtrip(): Promise<Flight[]> {
             if (!depDate || price <= 0) continue;
             if (price > MAX_PRICE) { filtered++; continue; }
 
-            // 귀국일 계산 (출발일 + period)
-            const period = fare.period || 3;
-            const depD = new Date(depDate);
-            depD.setDate(depD.getDate() + period);
-            const arrDate = depD.toISOString().split('T')[0];
+            // 귀국일: Bulk API의 arrivalDate 우선 사용, 없으면 period로 계산
+            let arrDate: string;
+            if (fare.arrivalDate) {
+                arrDate = fare.arrivalDate;
+            } else {
+                const period = fare.period || 3;
+                const depD = new Date(depDate);
+                depD.setDate(depD.getDate() + period);
+                arrDate = depD.toISOString().split('T')[0];
+            }
 
             const key = `mrt|${dep.cityCd}|${fare.arrivalCity}`;
             if (processedKeys.has(key)) continue;
