@@ -269,7 +269,8 @@ async function main() {
     if (failedIds.size > 0) {
         cache.flights = cache.flights.filter((f: any) => !failedIds.has(f.id));
         removed = failedIds.size;
-        console.log(`\n❌ 항공권 없는 노선 ${removed}개 제거 (Playwright 가격 조회 실패 = 현재 판매 없음)`);\n    }
+        console.log(`\n❌ 항공권 없는 노선 ${removed}개 제거 (Playwright 가격 조회 실패 = 현재 판매 없음)`);
+    }
 
     // ── 인터파크 벤치마크 필터링 ──────────────────────────────
     console.log(`\n=== 인터파크 가격 벤치마크 ===`);
