@@ -2505,10 +2505,21 @@ export default function Dashboard() {
                                 </div>
                             </div>
 
-                            {/* 여행 요약 (일수 + 직항) */}
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', margin: '4px 0 8px' }}>
-                                {stayDuration && <span className={styles.mdtDuration}>{stayDuration}</span>}
-                                {isDirect && <span className={styles.mdtDirectBadgeSm}>직항</span>}
+                            {/* 타임라인 요약 */}
+                            <div className={styles.mdtTimeline}>
+                                <div className={styles.mdtTimePoint}>
+                                    <div className={styles.mdtTimeValue}>{depTime || '--:--'}</div>
+                                    <div className={styles.mdtTimeCity}>{depCity}<br />{shortDate(depDate, depDay)}</div>
+                                </div>
+                                <div className={styles.mdtTimeConnector}>
+                                    {stayDuration && <span className={styles.mdtDuration}>{stayDuration}</span>}
+                                    {isDirect && <span className={styles.mdtDirectBadgeSm}>직항</span>}
+                                    <div className={styles.mdtLine} />
+                                </div>
+                                <div className={styles.mdtTimePoint}>
+                                    <div className={styles.mdtTimeValue}>{retDepTime || '--:--'}</div>
+                                    <div className={styles.mdtTimeCity}>{arrCity}<br />{shortDate(arrDate, arrDay)}</div>
+                                </div>
                             </div>
 
                             {/* 가격 요약 바 */}
