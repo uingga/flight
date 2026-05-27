@@ -88,14 +88,15 @@ interface NaverPriceEntry {
         console.log(`🎯 소스 필터: ${SOURCE_FILTER} (${rawData.length}/${before}건)`);
     }
 
-    // 이미 지난 항공편만 제외
+    // 출발일 필터링 (기본: 60일 이내)
     const now = new Date();
+    const cutoffDate = new Date(now.getTime() + MAX_DAYS_AHEAD * 24 * 60 * 60 * 1000);
     const beforeDate = rawData.length;
     rawData = rawData.filter(f => {
         const dep = new Date(normalizeDate(f.departure.date));
-        return dep >= now;
+        return dep >= now && dep <= cutoffDate;
     });
-    console.log(`📅 출발일 필터: 미래 출발만 (${rawData.length}/${beforeDate}건)`);
+    console.log(`📅 출발일 필터: ${MAX_DAYS_AHEAD}일 이내 (${rawData.length}/${beforeDate}건)`);
 
     const uniqueFlights = getUniqueTopFlights(rawData, MAX_FLIGHTS);
     console.log(`📋 검색할 항공권: ${uniqueFlights.length}건\n`);

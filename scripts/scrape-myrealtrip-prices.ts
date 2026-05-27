@@ -215,17 +215,19 @@ async function main() {
         console.log(`⚠️ Calendar API 결과(${freshFlights.length}개)가 기존(${prevMrtCount}개)의 50% 미만 → 교체 건너뜀, 기존 데이터 유지`);
     }
 
-    // 이미 출발일이 지난 항공편만 제거
+    // 출발일 60일 초과 마이리얼트립 항공편 제거 (티키티킷에 표시하지 않음)
+    const MAX_DAYS = parseInt(process.env.MAX_DAYS_AHEAD || '60', 10);
     const nowDate = new Date();
+    const cutoff = new Date(nowDate.getTime() + MAX_DAYS * 24 * 60 * 60 * 1000);
     const beforeCutoff = cache.flights.length;
     cache.flights = cache.flights.filter((f: any) => {
         if (f.source !== 'myrealtrip') return true;
         const dep = new Date(f.departure?.date);
-        return dep >= nowDate;
+        return dep >= nowDate && dep <= cutoff;
     });
     const removedByDate = beforeCutoff - cache.flights.length;
     if (removedByDate > 0) {
-        console.log(`📅 출발일 지난 항공편 제거: ${removedByDate}개 (${beforeCutoff} → ${cache.flights.length})`);
+        console.log(`📅 출발 ${MAX_DAYS}일 초과 항공편 제거: ${removedByDate}개 (${beforeCutoff} → ${cache.flights.length})`);
     }
 
     // 중간 저장 (Playwright 실패해도 최소한 Calendar 가격은 반영)
@@ -240,19 +242,23 @@ async function main() {
     const mrtFlights: CachedFlight[] = cache.flights.filter((f: any) => f.source === 'myrealtrip');
     const gidMap = loadGidMap();
 
-    // gid 있는 노선만 (링크가 정확한 노선)
+    // gid 있는 노선만 (링크가 정확한 노선) + 출발일 60일 이내만
+    const MAX_DAYS_AHEAD = parseInt(process.env.MAX_DAYS_AHEAD || '60', 10);
     const now = new Date();
+    const cutoffDate = new Date(now.getTime() + MAX_DAYS_AHEAD * 24 * 60 * 60 * 1000);
 
     const tasks = mrtFlights
         .filter(f => {
             if (!gidMap[f.arrival.airport] || !f.departure.date || !f.arrival.date) return false;
             const depDate = new Date(f.departure.date);
             if (depDate < now) return false;       // 이미 지난 항공편 제외
+            if (depDate > cutoffDate) return false; // 60일 이후 제외
             return true;
         })
         .map(f => ({ flight: f, gid: gidMap[f.arrival.airport] }));
 
-    console.log(`대상: ${tasks.length}개 노선 (미래 출발, gid 있는 마이리얼트립 항공편)`);
+    const skippedByDate = mrtFlights.filter(f => gidMap[f.arrival.airport] && f.departure.date).length - tasks.length;
+    console.log(`대상: ${tasks.length}개 노선 (출발 ${MAX_DAYS_AHEAD}일 이내, ${skippedByDate}개 제외)`);
     // 셔플 (순서 랜덤화)
     const shuffled = shuffle(tasks);
 
