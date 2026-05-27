@@ -147,7 +147,7 @@ select {
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: var(--color-bg-body);
 }
 
 ::-webkit-scrollbar-thumb {
