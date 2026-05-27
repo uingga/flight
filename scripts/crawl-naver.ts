@@ -92,7 +92,7 @@ interface NaverPriceEntry {
 
     // 3. 브라우저 실행
     const browser = await chromium.launch({
-        headless: true,
+        headless: false,
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
 
@@ -134,10 +134,10 @@ interface NaverPriceEntry {
             // GraphQL 응답 캡처를 위한 변수
             let lowestPrice: number | null = null;
 
-            // airline-api 응답 가로채기
+            // flight-api 응답 가로채기
             page.on('response', async (response) => {
                 const url = response.url();
-                if (url.includes('airline-api.naver.com/graphql')) {
+                if (url.includes('flight-api.naver.com/graphql')) {
                     try {
                         const json = await response.json();
                         // 응답에서 최저가 추출
@@ -275,9 +275,11 @@ function extractPricesFromGraphQL(json: any): number[] {
 async function extractPriceFromDOM(page: any): Promise<number | null> {
     try {
         const priceText = await page.evaluate(() => {
-            // 네이버 항공권의 가격 셀렉터들
+            // 네이버 항공권의 가격 셀렉터들 (2026년 기준)
             const selectors = [
+                '[class*="item_num"]',     // 메인 가격: <I class="item_num__aKbk4">
                 '[class*="price"]',
+                '[class*="Price"]',
                 '[class*="fare"]',
                 '[data-testid*="price"]',
             ];
@@ -287,11 +289,13 @@ async function extractPriceFromDOM(page: any): Promise<number | null> {
                 const prices: number[] = [];
                 els.forEach(el => {
                     const text = (el as HTMLElement).innerText || '';
-                    const match = text.replace(/,/g, '').match(/(\d{4,})/);
+                    // "373,600" 또는 "373,600원" 형태 처리
+                    const match = text.replace(/,/g, '').replace(/원/g, '').match(/(\d{4,})/);
                     if (match) prices.push(parseInt(match[1]));
                 });
-                if (prices.length > 0) {
-                    return Math.min(...prices.filter(p => p > 10000));
+                const validPrices = prices.filter(p => p > 10000);
+                if (validPrices.length > 0) {
+                    return Math.min(...validPrices);
                 }
             }
             return null;
