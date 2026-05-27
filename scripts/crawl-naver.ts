@@ -15,6 +15,7 @@ chromium.use(stealth());
 
 // ─── 설정 ───
 const MAX_FLIGHTS = parseInt(process.env.MAX_FLIGHTS || '30', 10);  // 환경변수로 조절 가능
+const SOURCE_FILTER = process.env.SOURCE_FILTER || 'myrealtrip';    // 비교 대상 소스 (빈 문자열이면 전체)
 const NAVER_WAIT_MS = 25000;        // 네이버 검색 결과 로딩 대기 (25초)
 const MIN_DELAY = 1000;             // 최소 랜덤 딜레이 (ms)
 const MAX_DELAY = 3000;             // 최대 랜덤 딜레이 (ms)
@@ -70,16 +71,23 @@ interface NaverPriceEntry {
 (async () => {
     console.log('🔍 네이버 항공권 최저가 크롤러 시작...\n');
 
-    // 1. all-flights-cache.json에서 상위 30개 추출
+    // 1. all-flights-cache.json에서 마이리얼트립 항공권 추출
     if (!fs.existsSync(ALL_FLIGHTS_FILE)) {
         console.error('❌ all-flights-cache.json 파일이 없습니다.');
         process.exit(1);
     }
 
     const rawFile = JSON.parse(fs.readFileSync(ALL_FLIGHTS_FILE, 'utf-8'));
-    const rawData: FlightData[] = Array.isArray(rawFile) ? rawFile : (rawFile.flights || Object.values(rawFile).flat());
-    const uniqueFlights = getUniqueTopFlights(rawData, MAX_FLIGHTS);
+    let rawData: FlightData[] = Array.isArray(rawFile) ? rawFile : (rawFile.flights || Object.values(rawFile).flat());
 
+    // 소스 필터링 (기본: myrealtrip)
+    if (SOURCE_FILTER) {
+        const before = rawData.length;
+        rawData = rawData.filter(f => f.source === SOURCE_FILTER);
+        console.log(`🎯 소스 필터: ${SOURCE_FILTER} (${rawData.length}/${before}건)`);
+    }
+
+    const uniqueFlights = getUniqueTopFlights(rawData, MAX_FLIGHTS);
     console.log(`📋 검색할 항공권: ${uniqueFlights.length}건\n`);
 
     // 2. 기존 결과 불러오기
