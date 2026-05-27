@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
     inputs:
       max_flights:
-        description: '검색할 최대 항공권 수 (테스트: 3, 전체: 30)'
+        description: '검색할 최대 항공권 수 (테스트: 3, 전체: 비워두면 제한없음)'
         required: false
-        default: '30'
+        default: '9999'
 
 jobs:
   naver-crawl:
