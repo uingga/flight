@@ -147,8 +147,8 @@ interface NaverPriceEntry {
         }
 
         try {
-            // 네이버 항공권 왕복 검색 URL
-            const naverUrl = `https://flight.naver.com/flights/international/${depCode}-${arrCode}-${depDateCompact}/${arrCode}-${depCode}-${retDateCompact}?adult=1&isDirect&fareType=Y`;
+            // 네이버 항공권 왕복 검색 URL (직항+경유 모두 포함)
+            const naverUrl = `https://flight.naver.com/flights/international/${depCode}-${arrCode}-${depDateCompact}/${arrCode}-${depCode}-${retDateCompact}?adult=1&fareType=Y`;
 
             // GraphQL 응답 캡처를 위한 변수
             let lowestPrice: number | null = null;
