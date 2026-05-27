@@ -379,6 +379,49 @@ async function main() {
         console.error('⚠️ 인터파크 벤치마크 실패:', e);
     }
 
+    // ── 네이버 최저가 비교 필터링 ──────────────────────────────
+    console.log(`\n=== 네이버 최저가 비교 ===`);
+    const naverPath = path.resolve(process.cwd(), 'data/naver-prices.json');
+    let naverFiltered = 0;
+    try {
+        if (fs.existsSync(naverPath)) {
+            const naverPrices = JSON.parse(fs.readFileSync(naverPath, 'utf8'));
+            const naverKeys = Object.keys(naverPrices);
+            console.log(`📡 네이버 가격 데이터: ${naverKeys.length}건`);
+
+            const beforeFilter = cache.flights.length;
+            cache.flights = cache.flights.filter((f: any) => {
+                if (f.source !== 'myrealtrip') return true;
+
+                const depAirport = f.departure?.airport;
+                const arrAirport = f.arrival?.airport;
+                const depDate = f.departure?.date?.substring(0, 10);
+                const retDate = f.arrival?.date?.substring(0, 10);
+                if (!depAirport || !arrAirport || !depDate || !retDate) return true;
+
+                // 네이버 키 형식: DEP-ARR_depDate_retDate
+                const naverKey = `${depAirport}-${arrAirport}_${depDate}_${retDate}`;
+                const naverData = naverPrices[naverKey];
+                if (!naverData || !naverData.naverLowest) return true; // 비교 데이터 없으면 유지
+
+                if (f.price > naverData.naverLowest) {
+                    console.log(`  ❌ 필터: ${f.arrival?.city} ${depDate} MRT ${f.price.toLocaleString()}원 > 네이버 ${naverData.naverLowest.toLocaleString()}원`);
+                    return false;
+                }
+
+                // 네이버 대비 할인율 저장
+                f.naverDiscount = Math.round((1 - f.price / naverData.naverLowest) * 100);
+                return true;
+            });
+            naverFiltered = beforeFilter - cache.flights.length;
+            console.log(`📊 네이버 기준 필터: ${naverFiltered}개 제거 (${beforeFilter} → ${cache.flights.length})`);
+        } else {
+            console.log('⚠️ naver-prices.json 없음 → 네이버 필터링 건너뜀');
+        }
+    } catch (e) {
+        console.error('⚠️ 네이버 비교 실패:', e);
+    }
+
     // 저장
     cache.count = cache.flights.length;
     cache.lastUpdated = new Date().toISOString();
@@ -391,6 +434,7 @@ async function main() {
     console.log(`보정: ${updated}개 (↑${priceUp} ↓${priceDown})`);
     console.log(`실패: ${tasks.length - results.size}개`);
     if (benchmarkFiltered > 0) console.log(`인터파크 필터: ${benchmarkFiltered}개 제거`);
+    if (naverFiltered > 0) console.log(`네이버 필터: ${naverFiltered}개 제거`);
 }
 
 main().catch(console.error);

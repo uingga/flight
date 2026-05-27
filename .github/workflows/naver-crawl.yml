@@ -2,8 +2,8 @@ name: Naver Price Crawl
 
 on:
   schedule:
-    # 매일 한국 시간 오전 7시 (UTC 22:00) — 1일 1회
-    - cron: '0 22 * * *'
+    # 매일 한국 시간 새벽 1시 (UTC 16:00) — MRT 스크래핑(3시) 전에 실행
+    - cron: '0 16 * * *'
   workflow_dispatch:
     inputs:
       max_flights:
