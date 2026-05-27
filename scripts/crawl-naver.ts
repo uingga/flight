@@ -14,7 +14,7 @@ import * as path from 'path';
 chromium.use(stealth());
 
 // ─── 설정 ───
-const MAX_FLIGHTS = 30;             // 상위 N개 항공권만 검색
+const MAX_FLIGHTS = parseInt(process.env.MAX_FLIGHTS || '30', 10);  // 환경변수로 조절 가능
 const NAVER_WAIT_MS = 25000;        // 네이버 검색 결과 로딩 대기 (25초)
 const MIN_DELAY = 1000;             // 최소 랜덤 딜레이 (ms)
 const MAX_DELAY = 3000;             // 최대 랜덤 딜레이 (ms)
