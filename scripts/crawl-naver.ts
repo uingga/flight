@@ -14,7 +14,8 @@ import * as path from 'path';
 chromium.use(stealth());
 
 // ─── 설정 ───
-const MAX_FLIGHTS = parseInt(process.env.MAX_FLIGHTS || '30', 10);  // 환경변수로 조절 가능
+const MAX_FLIGHTS = parseInt(process.env.MAX_FLIGHTS || '9999', 10); // 기본: 제한 없음
+const MAX_DAYS_AHEAD = parseInt(process.env.MAX_DAYS_AHEAD || '60', 10); // 출발일 N일 이내만
 const SOURCE_FILTER = process.env.SOURCE_FILTER || 'myrealtrip';    // 비교 대상 소스 (빈 문자열이면 전체)
 const NAVER_WAIT_MS = 25000;        // 네이버 검색 결과 로딩 대기 (25초)
 const MIN_DELAY = 1000;             // 최소 랜덤 딜레이 (ms)
@@ -86,6 +87,16 @@ interface NaverPriceEntry {
         rawData = rawData.filter(f => f.source === SOURCE_FILTER);
         console.log(`🎯 소스 필터: ${SOURCE_FILTER} (${rawData.length}/${before}건)`);
     }
+
+    // 출발일 필터링 (기본: 60일 이내)
+    const now = new Date();
+    const cutoffDate = new Date(now.getTime() + MAX_DAYS_AHEAD * 24 * 60 * 60 * 1000);
+    const beforeDate = rawData.length;
+    rawData = rawData.filter(f => {
+        const dep = new Date(normalizeDate(f.departure.date));
+        return dep >= now && dep <= cutoffDate;
+    });
+    console.log(`📅 출발일 필터: ${MAX_DAYS_AHEAD}일 이내 (${rawData.length}/${beforeDate}건)`);
 
     const uniqueFlights = getUniqueTopFlights(rawData, MAX_FLIGHTS);
     console.log(`📋 검색할 항공권: ${uniqueFlights.length}건\n`);
