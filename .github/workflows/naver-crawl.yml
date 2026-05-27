@@ -40,8 +40,12 @@ jobs:
         run: xvfb-run --auto-servernum --server-args='-screen 0 1280x900x24' npx tsx scripts/crawl-naver.ts
         env:
           CI: true
-          MAX_FLIGHTS: ${{ github.event.inputs.max_flights || '30' }}
+          MAX_FLIGHTS: ${{ github.event.inputs.max_flights || '9999' }}
           SOURCE_FILTER: myrealtrip
+
+      - name: Filter flights by Naver prices
+        if: steps.naver.outcome == 'success'
+        run: npx tsx scripts/filter-by-naver.ts
 
       - name: Commit and push
         if: steps.naver.outcome == 'success'
@@ -49,18 +53,20 @@ jobs:
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
 
-          if [[ -n $(git status --porcelain data/naver-prices.json) ]]; then
+          if [[ -n $(git status --porcelain data/) ]]; then
             cp data/naver-prices.json /tmp/naver-prices.json
+            cp data/all-flights-cache.json /tmp/all-flights-cache.json
 
             git fetch origin main
             git reset --hard origin/main
 
             cp /tmp/naver-prices.json data/naver-prices.json
+            cp /tmp/all-flights-cache.json data/all-flights-cache.json
 
-            git add data/naver-prices.json
-            git commit -m "chore(data): update naver prices"
+            git add data/naver-prices.json data/all-flights-cache.json
+            git commit -m "chore(data): update naver prices + filter flights"
             git push
-            echo "✅ Naver prices updated."
+            echo "✅ Naver prices + filtered flights updated."
           else
             echo "ℹ️ No changes."
           fi
