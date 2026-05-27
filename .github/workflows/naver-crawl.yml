@@ -41,6 +41,7 @@ jobs:
         env:
           CI: true
           MAX_FLIGHTS: ${{ github.event.inputs.max_flights || '30' }}
+          SOURCE_FILTER: myrealtrip
 
       - name: Commit and push
         if: steps.naver.outcome == 'success'
