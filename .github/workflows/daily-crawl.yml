@@ -2,14 +2,9 @@ name: Daily Flight Crawl
 
 on:
   schedule:
-    # 하루 7회 (KST): 오전 2시간, 오후~저녁 3시간 간격, 자정 00:30
-    - cron: '0 23 * * *'     # 08:00 KST
-    - cron: '0 1 * * *'      # 10:00 KST
+    # 하루 2회 (KST): 오전 11시, 오후 6시
     - cron: '0 2 * * *'       # 11:00 KST
-    - cron: '0 6 * * *'      # 15:00 KST
-    - cron: '0 9 * * *'      # 18:00 KST
-    - cron: '0 12 * * *'     # 21:00 KST
-    - cron: '30 15 * * *'    # 00:30 KST
+    - cron: '0 9 * * *'       # 18:00 KST
   workflow_dispatch: # 수동 실행 가능
 
 jobs:
