@@ -242,23 +242,19 @@ async function main() {
     const mrtFlights: CachedFlight[] = cache.flights.filter((f: any) => f.source === 'myrealtrip');
     const gidMap = loadGidMap();
 
-    // gid 있는 노선만 (링크가 정확한 노선) + 출발일 60일 이내만
-    const MAX_DAYS_AHEAD = parseInt(process.env.MAX_DAYS_AHEAD || '60', 10);
+    // gid 있는 노선만 (링크가 정확한 노선)
     const now = new Date();
-    const cutoffDate = new Date(now.getTime() + MAX_DAYS_AHEAD * 24 * 60 * 60 * 1000);
 
     const tasks = mrtFlights
         .filter(f => {
             if (!gidMap[f.arrival.airport] || !f.departure.date || !f.arrival.date) return false;
             const depDate = new Date(f.departure.date);
             if (depDate < now) return false;       // 이미 지난 항공편 제외
-            if (depDate > cutoffDate) return false; // 60일 이후 제외
             return true;
         })
         .map(f => ({ flight: f, gid: gidMap[f.arrival.airport] }));
 
-    const skippedByDate = mrtFlights.filter(f => gidMap[f.arrival.airport] && f.departure.date).length - tasks.length;
-    console.log(`대상: ${tasks.length}개 노선 (출발 ${MAX_DAYS_AHEAD}일 이내, ${skippedByDate}개 제외)`);
+    console.log(`대상: ${tasks.length}개 노선 (gid 있는 마이리얼트립 항공편)`);
     // 셔플 (순서 랜덤화)
     const shuffled = shuffle(tasks);
 
