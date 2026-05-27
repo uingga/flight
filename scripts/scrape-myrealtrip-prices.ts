@@ -215,6 +215,21 @@ async function main() {
         console.log(`⚠️ Calendar API 결과(${freshFlights.length}개)가 기존(${prevMrtCount}개)의 50% 미만 → 교체 건너뜀, 기존 데이터 유지`);
     }
 
+    // 출발일 60일 초과 마이리얼트립 항공편 제거 (티키티킷에 표시하지 않음)
+    const MAX_DAYS = parseInt(process.env.MAX_DAYS_AHEAD || '60', 10);
+    const nowDate = new Date();
+    const cutoff = new Date(nowDate.getTime() + MAX_DAYS * 24 * 60 * 60 * 1000);
+    const beforeCutoff = cache.flights.length;
+    cache.flights = cache.flights.filter((f: any) => {
+        if (f.source !== 'myrealtrip') return true;
+        const dep = new Date(f.departure?.date);
+        return dep >= nowDate && dep <= cutoff;
+    });
+    const removedByDate = beforeCutoff - cache.flights.length;
+    if (removedByDate > 0) {
+        console.log(`📅 출발 ${MAX_DAYS}일 초과 항공편 제거: ${removedByDate}개 (${beforeCutoff} → ${cache.flights.length})`);
+    }
+
     // 중간 저장 (Playwright 실패해도 최소한 Calendar 가격은 반영)
     cache.count = cache.flights.length;
     cache.lastUpdated = new Date().toISOString();
