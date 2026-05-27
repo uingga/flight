@@ -1553,19 +1553,8 @@ export default function Dashboard() {
                 </div>
             </header>
 
-            {/* 유류할증료 인상 공지 배너 */}
-            {showFuelBanner && (
-                <div className={styles.fuelBanner}>
-                    <div className={styles.fuelBannerContent}>
-                        <span className={styles.fuelBannerIcon}>⛽</span>
-                        <div className={styles.fuelBannerText}>
-                            <strong>4월 유류할증료 인상 안내</strong>
-                            <p>국제 유가 상승으로 4월부터 유류할증료가 대폭 인상되었습니다. 표시 가격에는 인상된 유류할증료가 반영되어 있습니다.</p>
-                        </div>
-                        <button className={styles.fuelBannerClose} onClick={dismissFuelBanner} aria-label="닫기">✕</button>
-                    </div>
-                </div>
-            )}
+
+
 
             {/* 스크롤 시 고정 필터 바 */}
             {(() => {
