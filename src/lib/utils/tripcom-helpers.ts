@@ -130,7 +130,7 @@ export const TRIPCOM_CITY_DATA: Record<string, { id: number; name: string; provi
     '우루무치': { id: 39, name: '우루무치' }, '징훙': { id: 309, name: '징훙' },
     '창춘': { id: 158, name: '창춘' }, '친황다오': { id: 147, name: '친황다오' },
     '타이위안': { id: 105, name: '타이위안' }, '톈진': { id: 3, name: '톈진' },
-    '장자제': { id: 27, name: '장자제' },
+    '장자제': { id: 27, name: '장자제' }, '후허하오터': { id: 156, name: '후허하오터' },
     // 동남아 추가
     '동호이': { id: 7804, name: '동호이' }, '두마게테': { id: 5184, name: '두마게테' },
     '라부안바조': { id: 7291, name: '라부안바조' }, '롬복': { id: 1392, name: '롬복' },
@@ -247,7 +247,7 @@ export const IATA_TO_ENGLISH: Record<string, string> = {
     'KMG': 'Kunming', 'XIY': 'Xian', 'NKG': 'Nanjing', 'HGH': 'Hangzhou',
     'TAO': 'Qingdao', 'DLC': 'Dalian', 'WEH': 'Weihai', 'YNT': 'Yantai',
     'KWL': 'Guilin', 'SYX': 'Sanya', 'TNA': 'Jinan', 'DYG': 'Zhangjiajie',
-    'XMN': 'Xiamen', 'CSX': 'Changsha', 'CGO': 'Zhengzhou',
+    'XMN': 'Xiamen', 'CSX': 'Changsha', 'CGO': 'Zhengzhou', 'HET': 'Hohhot',
     // 대만
     'TPE': 'Taipei', 'KHH': 'Kaohsiung', 'RMQ': 'Taichung', 'HUN': 'Hualien',
     // 기타

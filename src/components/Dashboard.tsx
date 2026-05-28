@@ -701,7 +701,7 @@ export default function Dashboard() {
             }
             case 'discount': {
                 // 스마트 정렬 (Penalty Score Sorting)
-                // 기본적으로 가격순(최저가)으로 정렬하되, 네이버 최저가나 평균가를 넘으면 페널티 가중치를 부여합니다.
+                // 기본적으로 가격순(최저가)으로 정렬하되, 인터파크 벤치마크와 네이버 최저가를 활용하여 페널티/보너스를 부여합니다.
                 const getSortScore = (flight: Flight) => {
                     const city = flight.arrival.city?.replace(/\([^)]+\)/, '').trim();
                     const depMonth = flight.departure.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 7);
@@ -722,26 +722,45 @@ export default function Dashboard() {
 
                     // 인터파크 도시 데이터 자체가 없는 경우 — 약간 페널티 (검증 불가)
                     if (!ipMonthData) {
-                        return score * 1.1;
+                        score = score * 1.1;
+                    } else if (flight.price <= ipMonthData.lowest) {
+                        // 1. 월간 최저가 이하 — 페널티 없음
+                    } else if (flight.price <= ipMonthData.lowest * 1.2) {
+                        // 2. 최저가 초과 ~ ×1.2 이내 — 살짝 페널티
+                        score = score * 1.15;
+                    } else if (flight.price < ipMonthData.avg) {
+                        // 3. 최저가의 120% 초과 ~ 평균가 미만 -> 페널티
+                        score = score * 1.3;
+                    } else {
+                        // 4. 평균가보다 비싼 경우 (창렬) -> 맨 밑으로 유배
+                        score = score * 10;
                     }
 
-                    // 1. 월간 최저가 이하 — 페널티 없음
-                    if (flight.price <= ipMonthData.lowest) {
-                        return score;
+                    // 네이버 최저가 보정 (데이터가 있을 때만 적용)
+                    if (flight.naverLowest && flight.naverLowest > 0) {
+                        const ratio = (flight.price - flight.naverLowest) / flight.naverLowest;
+                        if (ratio <= 0) {
+                            // 네이버보다 싸다 → 대폭 상향
+                            score *= 0.6;
+                        } else if (ratio <= 0.05) {
+                            // 0~5% 비싸다 → 약한 보너스
+                            score *= 0.8;
+                        } else if (ratio <= 0.10) {
+                            // 5~10% 비싸다 → 중립
+                            // score *= 1.0;
+                        } else if (ratio <= 0.15) {
+                            // 10~15% 비싸다 → 약간 페널티
+                            score *= 1.3;
+                        } else if (ratio <= 0.20) {
+                            // 15~20% 비싸다 → 페널티
+                            score *= 1.6;
+                        } else {
+                            // 20% 이상 비싸다 → 큰 페널티
+                            score *= 2.0;
+                        }
                     }
 
-                    // 2. 최저가 초과 ~ ×1.2 이내 — 살짝 페널티
-                    if (flight.price <= ipMonthData.lowest * 1.2) {
-                        return score * 1.15;
-                    }
-
-                    // 3. 최저가의 120% 초과 ~ 평균가 미만 -> 페널티
-                    if (flight.price < ipMonthData.avg) {
-                        return score * 1.3;
-                    }
-
-                    // 4. 평균가보다 비싼 경우 (창렬) -> 맨 밑으로 유배
-                    return score * 10;
+                    return score;
                 };
 
                 const scoreA = getSortScore(a);
@@ -759,9 +778,69 @@ export default function Dashboard() {
         return sortOrder === 'asc' ? comparison : -comparison;
     });
 
+    // 노선 분산 정렬: 같은 출발지-목적지가 연속 3개 이상 나오지 않도록 재배치
+    // 추천순에서만 적용 (가격순/날짜순/검색 시 비활성화)
+    const interleaveRoutes = (flights: Flight[], maxConsecutive: number = 2): Flight[] => {
+        if (flights.length <= maxConsecutive) return flights;
+
+        const result: Flight[] = [];
+        const pending: Flight[] = [];
+
+        for (const flight of flights) {
+            const route = `${normalizeCity(flight.departure.city)}-${normalizeCity(flight.arrival.city)}`;
+
+            // 현재 result 끝에서 같은 노선이 maxConsecutive개 연속인지 확인
+            let streak = 0;
+            for (let i = result.length - 1; i >= 0 && i >= result.length - maxConsecutive; i--) {
+                const r = `${normalizeCity(result[i].departure.city)}-${normalizeCity(result[i].arrival.city)}`;
+                if (r === route) streak++;
+                else break;
+            }
+
+            if (streak >= maxConsecutive) {
+                // 연속 한도 초과 → pending으로 보류
+                pending.push(flight);
+            } else {
+                // pending에서 삽입 가능한 항목 먼저 확인 (다른 노선이면 끼워넣기)
+                if (pending.length > 0 && streak === 0) {
+                    // 현재 노선과 다른 pending 항목을 최대한 삽입
+                    const insertable: number[] = [];
+                    for (let pi = 0; pi < pending.length; pi++) {
+                        const pr = `${normalizeCity(pending[pi].departure.city)}-${normalizeCity(pending[pi].arrival.city)}`;
+                        if (pr !== route) {
+                            // 이 pending 항목이 result 끝과도 연속되지 않는지 확인
+                            let pStreak = 0;
+                            for (let ri = result.length - 1; ri >= 0 && ri >= result.length - maxConsecutive; ri--) {
+                                const rr = `${normalizeCity(result[ri].departure.city)}-${normalizeCity(result[ri].arrival.city)}`;
+                                if (rr === pr) pStreak++;
+                                else break;
+                            }
+                            if (pStreak < maxConsecutive) {
+                                insertable.push(pi);
+                                break; // 한 번에 하나만 삽입
+                            }
+                        }
+                    }
+                    for (const idx of insertable) {
+                        result.push(pending.splice(idx, 1)[0]);
+                    }
+                }
+                result.push(flight);
+            }
+        }
+
+        // 남은 pending 항목 추가 (순서 유지)
+        result.push(...pending);
+        return result;
+    };
+
+    const diversifiedFlights = (sortBy === 'discount' && !searchTerm)
+        ? interleaveRoutes(filteredFlights)
+        : filteredFlights;
+
     // 표시할 항공권 (무한 스크롤용)
-    const displayedFlights = filteredFlights.slice(0, displayCount);
-    const hasMore = displayCount < filteredFlights.length;
+    const displayedFlights = diversifiedFlights.slice(0, displayCount);
+    const hasMore = displayCount < diversifiedFlights.length;
 
     // ============================================
     // Insight Bars — 카드 사이에 삽입되는 정보 바
