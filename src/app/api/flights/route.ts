@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Flight, FlightSearchParams } from '@/types/flight';
 import { resolveCityCode } from '@/lib/scrapers/interpark';
+import { normalizeCity } from '@/lib/utils/flight-helpers';
 
 // 항공사명 정규화 맵
 const AIRLINE_NAME_MAP: Record<string, string> = {
@@ -67,15 +68,39 @@ export async function GET(request: NextRequest) {
         allFlights = allFlights.map(f => ({
             ...f,
             airline: normalizeAirline(f.airline),
+            // 모두투어 예약 링크에서 departureCity SEL → ICN 보정 (SEL은 모두투어 웹에서 미인식)
+            link: (f.source === 'modetour' && f.link?.includes('%22SEL%22'))
+                ? f.link.replace('%22SEL%22', '%22ICN%22')
+                : f.link,
         }));
 
-        // 중복 항공편 합치기: 같은 노선+날짜+항공사 → 최저가만 유지
+        // 중복 항공편 합치기: 같은 노선+날짜+항공사 → 1개만 유지
+        // - 도시명 정규화 적용 (서울=인천, 타이중(대중)=타이중(대만)=타이중 등)
+        // - 땡처리닷컴은 발권수수료 미포함 가격이므로 타 여행사 우선 선택
+        const normDate = (d: string) => {
+            if (!d) return '';
+            const m = d.match(/^(\d{4})[-\.](\d{2})[-\.](\d{2})/);
+            return m ? `${m[1]}-${m[2]}-${m[3]}` : d;
+        };
         const dedupMap = new Map<string, typeof allFlights[0]>();
         for (const f of allFlights) {
-            const key = `${f.departure?.city}|${f.arrival?.city}|${f.departure?.date}|${f.airline}`;
+            const key = `${normalizeCity(f.departure?.city || '')}|${normalizeCity(f.arrival?.city || '')}|${normDate(f.departure?.date || '')}|${f.airline}`;
             const existing = dedupMap.get(key);
-            if (!existing || f.price < existing.price) {
+            if (!existing) {
                 dedupMap.set(key, f);
+            } else {
+                // 선택 우선순위: 1) 땡처리닷컴이 아닌 쪽 우선, 2) 같으면 최저가
+                const existingIsTtang = existing.source === 'ttang';
+                const newIsTtang = f.source === 'ttang';
+                if (existingIsTtang && !newIsTtang) {
+                    // 기존이 땡처리, 새 것이 타사 → 타사로 교체
+                    dedupMap.set(key, f);
+                } else if (!existingIsTtang && newIsTtang) {
+                    // 기존이 타사, 새 것이 땡처리 → 유지
+                } else if (f.price < existing.price) {
+                    // 둘 다 땡처리이거나 둘 다 타사 → 최저가
+                    dedupMap.set(key, f);
+                }
             }
         }
         const beforeDedup = allFlights.length;
@@ -83,6 +108,31 @@ export async function GET(request: NextRequest) {
         if (beforeDedup > allFlights.length) {
             console.log(`중복 항공편 ${beforeDedup - allFlights.length}개 제거 (${beforeDedup} → ${allFlights.length})`);
         }
+
+        // 네이버 최저가 매칭
+        try {
+            const fs4 = require('fs');
+            const path4 = require('path');
+            const naverPath = path4.join(process.cwd(), 'data', 'naver-prices.json');
+            if (fs4.existsSync(naverPath)) {
+                const naverPrices = JSON.parse(fs4.readFileSync(naverPath, 'utf-8'));
+                let matched = 0;
+                for (const f of allFlights) {
+                    const depAirport = f.departure?.airport;
+                    const arrAirport = f.arrival?.airport;
+                    const depDate = f.departure?.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 10);
+                    const retDate = f.arrival?.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 10);
+                    if (depAirport && arrAirport && depDate && retDate) {
+                        const key = `${depAirport}-${arrAirport}_${depDate}_${retDate}`;
+                        if (naverPrices[key]?.naverLowest) {
+                            f.naverLowest = naverPrices[key].naverLowest;
+                            matched++;
+                        }
+                    }
+                }
+                if (matched > 0) console.log(`네이버 최저가 매칭: ${matched}/${allFlights.length}건`);
+            }
+        } catch (e) { }
 
         // 만료 항공권 제거 (출발일이 오늘 이전)
         const today = new Date();

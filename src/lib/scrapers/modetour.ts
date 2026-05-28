@@ -241,7 +241,7 @@ export async function scrapeModetour(): Promise<Flight[]> {
                             const arrCode = item.arrival?.code || '';
                             // 공항코드 → 도시코드 매핑 (모두투어 query는 도시코드 사용)
                             const airportToCityCode: Record<string, string> = {
-                                'ICN': 'SEL', 'GMP': 'SEL', 'PUS': 'PUS', 'CJU': 'CJU',
+                                'ICN': 'ICN', 'GMP': 'GMP', 'PUS': 'PUS', 'CJU': 'CJU',
                                 'CJJ': 'CJJ', 'TAE': 'TAE', 'KWJ': 'KWJ', 'MWX': 'MWX',
                             };
                             const depCityCode = airportToCityCode[depCode] || depCode;

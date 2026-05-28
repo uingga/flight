@@ -23,6 +23,7 @@ export interface Flight {
     region?: string;
     searchLink?: string;
     discountRate?: number; // 인터파크 최저가 대비 할인율 (%)
+    naverLowest?: number;  // 네이버 항공권 최저가 (동일 구간+날짜)
 
     // 모두투어 상세 정보 (선택적 — 모두투어 소스에서만 사용)
     modetourDetail?: {

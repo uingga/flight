@@ -212,6 +212,7 @@ export const CITY_TO_AIRPORT: Record<string, string> = {
     '계림(구이린)': 'KWL', '다카마츠': 'TAK',
     '위해(웨이하이)': 'WEH', '제남(지난)': 'TNA',
     '타이중(대중)': 'RMQ', '미야코지마(시모지시마공항)': 'SHI',
+    '알마티': 'ALA', '후허하오터': 'HET',
 };
 
 // 도시명에서 공항코드 추출 (airport: 데이터에 이미 있는 공항코드 fallback)
