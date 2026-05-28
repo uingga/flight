@@ -1,14 +1,14 @@
 name: Naver Price Crawl
 
 on:
-  # schedule:
-  #   - cron: '0 22 * * *'  # 일시 중단
+  schedule:
+    - cron: '0 18 * * *'  # 매일 새벽 3시 (KST)
   workflow_dispatch:
     inputs:
       max_flights:
-        description: '검색할 최대 항공권 수 (테스트: 3, 전체: 비워두면 제한없음)'
+        description: '검색할 최대 항공권 수 (테스트: 3, 전체: 200 권장)'
         required: false
-        default: '9999'
+        default: '200'
 
 jobs:
   naver-crawl:
@@ -39,7 +39,7 @@ jobs:
         run: xvfb-run --auto-servernum --server-args='-screen 0 1280x900x24' npx tsx scripts/crawl-naver.ts
         env:
           CI: true
-          MAX_FLIGHTS: ${{ github.event.inputs.max_flights || '9999' }}
+          MAX_FLIGHTS: ${{ github.event.inputs.max_flights || '200' }}
           SOURCE_FILTER: myrealtrip
 
       - name: Filter flights by Naver prices
