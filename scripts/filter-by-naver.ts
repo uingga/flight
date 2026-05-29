@@ -45,15 +45,19 @@ cache.flights = cache.flights.filter((f: any) => {
         return true; // 비교 데이터 없으면 유지
     }
 
-    if (f.price > naverData.naverLowest) {
-        console.log(`  ❌ ${f.arrival?.city} ${depDate} 마이리얼트립 ${f.price.toLocaleString()}원 > 네이버 ${naverData.naverLowest.toLocaleString()}원`);
+    // 네이버 최저가 저장 (추천순 정렬에서 사용)
+    f.naverLowest = naverData.naverLowest;
+
+    const diff = f.price - naverData.naverLowest;
+    if (diff >= 100000) {
+        console.log(`  ❌ ${f.arrival?.city} ${depDate} 마이리얼트립 ${f.price.toLocaleString()}원 > 네이버 ${naverData.naverLowest.toLocaleString()}원 (+${diff.toLocaleString()}원)`);
         filtered++;
         return false;
     }
 
     // 네이버 대비 할인율 저장
     f.naverDiscount = Math.round((1 - f.price / naverData.naverLowest) * 100);
-    cheaper++;
+    if (diff <= 0) cheaper++;
     return true;
 });
 
