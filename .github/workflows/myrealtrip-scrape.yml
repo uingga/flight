@@ -4,6 +4,8 @@ on:
   schedule:
     # 매일 새벽 1시 KST (16:00 UTC 전날)
     - cron: '0 16 * * *'
+    # 매일 오전 11시 KST (02:00 UTC)
+    - cron: '0 2 * * *'
   workflow_dispatch: # 수동 실행 가능
 
 jobs:

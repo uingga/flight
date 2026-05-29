@@ -1,8 +1,9 @@
 name: Naver Price Crawl
 
 on:
-  schedule:
-    - cron: '0 19 * * *'  # 매일 새벽 4시 (KST) — 마이리얼트립(1시) 완료 후
+  workflow_run:
+    workflows: ["MyRealTrip Price Scraping"]
+    types: [completed]
   workflow_dispatch:
     inputs:
       max_flights:
@@ -13,6 +14,7 @@ on:
 jobs:
   naver-crawl:
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
 
     permissions:
       contents: write
