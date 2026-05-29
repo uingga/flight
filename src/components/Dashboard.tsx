@@ -746,11 +746,11 @@ export default function Dashboard() {
                             // 네이버보다 싸다 → 상향
                             score *= 0.6;
                         } else if (ratio <= 0.05) {
-                            // 0~5% 비싸다 → 약한 보너스
-                            score *= 0.8;
+                            // 0~5% 비싸다 → 약한 페널티
+                            score *= 1.2;
                         } else if (ratio <= 0.10) {
-                            // 5~10% 비싸다 → 중립
-                            // score *= 1.0;
+                            // 5~10% 비싸다 → 페널티
+                            score *= 1.5;
                         } else if (ratio <= 0.15) {
                             // 10~15% 비싸다 → 페널티
                             score *= 2.0;
