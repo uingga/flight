@@ -752,14 +752,14 @@ export default function Dashboard() {
                             // 5~10% 비싸다 → 중립
                             // score *= 1.0;
                         } else if (ratio <= 0.15) {
-                            // 10~15% 비싸다 → 약간 페널티
-                            score *= 1.3;
-                        } else if (ratio <= 0.20) {
-                            // 15~20% 비싸다 → 페널티
-                            score *= 1.6;
-                        } else {
-                            // 20% 이상 비싸다 → 큰 페널티
+                            // 10~15% 비싸다 → 페널티
                             score *= 2.0;
+                        } else if (ratio <= 0.20) {
+                            // 15~20% 비싸다 → 큰 페널티
+                            score *= 3.0;
+                        } else {
+                            // 20% 이상 비싸다 → 최대 페널티
+                            score *= 5.0;
                         }
                     }
 
