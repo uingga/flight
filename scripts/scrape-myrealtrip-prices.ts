@@ -326,15 +326,18 @@ async function main() {
         }
     }
 
-    // Playwright 가격 조회 실패한 노선 = Calendar API 가격 유지
+    // Playwright 가격 조회 실패한 노선 = 실제 항공권 없을 가능성 높으므로 삭제
     let skipped = 0;
+    const failedIds = new Set<string>();
     for (const task of tasks) {
         if (!results.has(task.flight.id)) {
             skipped++;
+            failedIds.add(task.flight.id);
         }
     }
     if (skipped > 0) {
-        console.log(`\n⚠️ ${skipped}개 노선 Playwright 조회 실패 → Calendar API 가격 유지 (삭제하지 않음)`);
+        cache.flights = cache.flights.filter((f: any) => !failedIds.has(f.id));
+        console.log(`\n🗑️ ${skipped}개 노선 Playwright 조회 실패 → 캐시에서 삭제 (예약 불가 가능성 높음)`);
     }
 
     // ── 인터파크 벤치마크 필터링 ──────────────────────────────
