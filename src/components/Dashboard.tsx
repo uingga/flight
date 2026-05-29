@@ -740,11 +740,11 @@ export default function Dashboard() {
                     if (flight.source === 'myrealtrip' && flight.naverLowest && flight.naverLowest > 0) {
                         const ratio = (flight.price - flight.naverLowest) / flight.naverLowest;
                         if (ratio <= -0.10) {
-                            // 네이버보다 10% 이상 싸다 → 최대 상향
-                            score *= 0.25;
+                            // 네이버보다 10% 이상 싸다 → 상향
+                            score *= 0.5;
                         } else if (ratio <= 0) {
-                            // 네이버보다 싸다 → 대폭 상향
-                            score *= 0.35;
+                            // 네이버보다 싸다 → 상향
+                            score *= 0.6;
                         } else if (ratio <= 0.05) {
                             // 0~5% 비싸다 → 약한 보너스
                             score *= 0.8;
