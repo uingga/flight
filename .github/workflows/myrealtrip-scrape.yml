@@ -2,8 +2,8 @@ name: MyRealTrip Price Scraping
 
 on:
   schedule:
-    # 매일 새벽 3시 KST (18:00 UTC 전날)
-    - cron: '0 18 * * *'
+    # 매일 새벽 1시 KST (16:00 UTC 전날)
+    - cron: '0 16 * * *'
   workflow_dispatch: # 수동 실행 가능
 
 jobs:
