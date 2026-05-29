@@ -254,101 +254,76 @@ export async function scrapeMyrealtrip(): Promise<Flight[]> {
 
             const calPrices = await fetchCalendarPrices(dep.calendarFrom, fare.arrivalCity, today);
 
-            // Calendar API에서 모든 날짜의 항공편 수집
-            if (calPrices.length > 0) {
-                for (const cal of calPrices) {
-                    const calPrice = cal.price;
-                    if (calPrice <= 0) continue;
-                    if (calPrice > MAX_PRICE) { filtered++; continue; }
+            let price: number;
+            let airline: string;
 
-                    const rawAirline = cal.airline || '';
-                    const calAirline = (rawAirline.length > 20 || rawAirline.includes('스케줄') || rawAirline.includes('기착'))
-                        ? '항공사 미정' : (rawAirline || '항공사 미정');
-
-                    const calDepDate = cal.date;
-                    const period = fare.period || 3;
-                    const calDepD = new Date(calDepDate);
-                    calDepD.setDate(calDepD.getDate() + period);
-                    const calArrDate = calDepD.toISOString().split('T')[0];
-
-                    const key = `mrt|${dep.cityCd}|${fare.arrivalCity}|${calDepDate}`;
-                    if (processedKeys.has(key)) continue;
-                    processedKeys.add(key);
-
-                    const flight: Flight = {
-                        id: `mrt-${dep.cityCd}-${fare.arrivalCity}-${calDepDate.replace(/-/g, '')}-${calPrice}`,
-                        source: 'myrealtrip',
-                        airline: calAirline,
-                        departure: {
-                            city: dep.city === '서울' ? '서울(인천)' : dep.city,
-                            airport: dep.cityCd,
-                            date: calDepDate,
-                            time: '',
-                        },
-                        arrival: {
-                            city: cityName,
-                            airport: fare.arrivalCity,
-                            date: calArrDate,
-                            time: '',
-                        },
-                        price: calPrice,
-                        currency: 'KRW',
-                        link: buildPartnerLink(fare.arrivalCity, calDepDate, calArrDate),
-                        searchLink: buildPartnerLink(fare.arrivalCity, calDepDate, calArrDate),
-                        region,
-                    };
-
-                    allFlights.push(flight);
-                    collected++;
-                }
+            // Calendar API에서 Bulk 출발일과 같은 날짜의 가격 찾기
+            const matchingCal = calPrices.find(p => p.date === bulkDepDate);
+            if (matchingCal) {
+                price = matchingCal.price;
+                const rawAirline = matchingCal.airline || '';
+                airline = (rawAirline.length > 20 || rawAirline.includes('스케줄') || rawAirline.includes('기착')) 
+                    ? '항공사 미정' : (rawAirline || '항공사 미정');
+                calendarUsed++;
+            } else if (calPrices.length > 0) {
+                // 같은 날짜가 없으면 Calendar 최저가 사용 (날짜는 여전히 Bulk 기준)
+                const cheapest = calPrices.reduce((a, b) => a.price < b.price ? a : b);
+                price = cheapest.price;
+                const rawAirline = cheapest.airline || '';
+                airline = (rawAirline.length > 20 || rawAirline.includes('스케줄') || rawAirline.includes('기착')) 
+                    ? '항공사 미정' : (rawAirline || '항공사 미정');
                 calendarUsed++;
             } else {
-                // Calendar API 데이터 없으면 Bulk API 가격으로 1개만 생성 (폴백)
-                const price = fare.totalPrice || 0;
-                if (price <= 0 || price > MAX_PRICE) { filtered++; continue; }
-
-                const depDate = bulkDepDate;
-                let arrDate: string;
-                if (bulkArrDate) {
-                    arrDate = bulkArrDate;
-                } else {
-                    const period = fare.period || 3;
-                    const depD = new Date(depDate);
-                    depD.setDate(depD.getDate() + period);
-                    arrDate = depD.toISOString().split('T')[0];
-                }
-
-                const key = `mrt|${dep.cityCd}|${fare.arrivalCity}|${depDate}`;
-                if (processedKeys.has(key)) continue;
-                processedKeys.add(key);
-
-                const flight: Flight = {
-                    id: `mrt-${dep.cityCd}-${fare.arrivalCity}-${depDate.replace(/-/g, '')}-${price}`,
-                    source: 'myrealtrip',
-                    airline: '항공사 미정',
-                    departure: {
-                        city: dep.city === '서울' ? '서울(인천)' : dep.city,
-                        airport: dep.cityCd,
-                        date: depDate,
-                        time: '',
-                    },
-                    arrival: {
-                        city: cityName,
-                        airport: fare.arrivalCity,
-                        date: arrDate,
-                        time: '',
-                    },
-                    price,
-                    currency: 'KRW',
-                    link: buildPartnerLink(fare.arrivalCity, depDate, arrDate),
-                    searchLink: buildPartnerLink(fare.arrivalCity, depDate, arrDate),
-                    region,
-                };
-
-                allFlights.push(flight);
-                collected++;
+                // Calendar API 데이터 없으면 Bulk API 가격 사용 (폴백)
+                price = fare.totalPrice || 0;
+                airline = '항공사 미정';
                 bulkFallback++;
             }
+
+            const depDate = bulkDepDate;
+            if (price <= 0) continue;
+            if (price > MAX_PRICE) { filtered++; continue; }
+
+            // 귀국일: Bulk API의 arrivalDate 사용
+            let arrDate: string;
+            if (bulkArrDate) {
+                arrDate = bulkArrDate;
+            } else {
+                const period = fare.period || 3;
+                const depD = new Date(depDate);
+                depD.setDate(depD.getDate() + period);
+                arrDate = depD.toISOString().split('T')[0];
+            }
+
+            const key = `mrt|${dep.cityCd}|${fare.arrivalCity}`;
+            if (processedKeys.has(key)) continue;
+            processedKeys.add(key);
+
+            const flight: Flight = {
+                id: `mrt-${dep.cityCd}-${fare.arrivalCity}-${depDate.replace(/-/g, '')}-${price}`,
+                source: 'myrealtrip',
+                airline,
+                departure: {
+                    city: dep.city === '서울' ? '서울(인천)' : dep.city,
+                    airport: dep.cityCd,
+                    date: depDate,
+                    time: '',
+                },
+                arrival: {
+                    city: cityName,
+                    airport: fare.arrivalCity,
+                    date: arrDate,
+                    time: '',
+                },
+                price,
+                currency: 'KRW',
+                link: buildPartnerLink(fare.arrivalCity, depDate, arrDate),
+                searchLink: buildPartnerLink(fare.arrivalCity, depDate, arrDate),
+                region,
+            };
+
+            allFlights.push(flight);
+            collected++;
 
             // API 호출 간 딜레이
             await delay(300);
