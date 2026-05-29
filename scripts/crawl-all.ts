@@ -121,6 +121,8 @@ async function main() {
 
         const filteredFlights = allFlights.filter((f: any) => {
             if (f.price <= 0) return false;
+            // 마이리얼트립은 별도 워크플로우에서 자체 필터링하므로 여기서 제외
+            if (f.source === 'myrealtrip') return true;
             const key = `${f.source}|${f.departure?.city || ''}|${f.arrival?.city || ''}`;
             return f.price === routeMinPrices[key];
         });
