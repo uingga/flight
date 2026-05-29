@@ -2,7 +2,7 @@ name: Naver Price Crawl
 
 on:
   schedule:
-    - cron: '0 21 * * *'  # 매일 새벽 6시 (KST) — 마이리얼트립(3시) 완료 후
+    - cron: '0 19 * * *'  # 매일 새벽 4시 (KST) — 마이리얼트립(1시) 완료 후
   workflow_dispatch:
     inputs:
       max_flights:
