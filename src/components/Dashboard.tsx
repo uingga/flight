@@ -739,9 +739,12 @@ export default function Dashboard() {
                     // 네이버 최저가 보정 (마이리얼트립만 — 같은 구간+날짜 최저가라 비교가 공정)
                     if (flight.source === 'myrealtrip' && flight.naverLowest && flight.naverLowest > 0) {
                         const ratio = (flight.price - flight.naverLowest) / flight.naverLowest;
-                        if (ratio <= 0) {
+                        if (ratio <= -0.10) {
+                            // 네이버보다 10% 이상 싸다 → 최대 상향
+                            score *= 0.25;
+                        } else if (ratio <= 0) {
                             // 네이버보다 싸다 → 대폭 상향
-                            score *= 0.6;
+                            score *= 0.35;
                         } else if (ratio <= 0.05) {
                             // 0~5% 비싸다 → 약한 보너스
                             score *= 0.8;
