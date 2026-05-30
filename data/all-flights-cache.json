@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-05-30T05:25:24.522Z",
-  "count": 621,
+  "timestamp": "2026-05-30T06:26:33.566Z",
+  "count": 619,
   "flights": [
     {
       "id": "ybtour-오사카(간사이)-20260616-0",
@@ -3554,32 +3554,7 @@
       "firstSeen": "2026-05-30"
     },
     {
-      "id": "ybtour-나트랑(깜랑)-20260601-0",
-      "source": "ybtour",
-      "airline": "진에어",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-06-01",
-        "time": ""
-      },
-      "arrival": {
-        "city": "나트랑(깜랑)",
-        "airport": "CXR",
-        "date": "2026-06-05",
-        "time": ""
-      },
-      "price": 380000,
-      "currency": "KRW",
-      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=A0%2FA3&inhId=LJ0087ICNCXR-T6&depDate=20260601&efcCityCode=CXR",
-      "seats": "8석",
-      "availableSeats": 8,
-      "region": "동남아",
-      "discountRate": 5,
-      "firstSeen": "2026-05-28"
-    },
-    {
-      "id": "ybtour-나트랑(깜랑)-20260606-1",
+      "id": "ybtour-나트랑(깜랑)-20260606-0",
       "source": "ybtour",
       "airline": "진에어",
       "departure": {
@@ -3603,7 +3578,7 @@
       "availableSeats": 8,
       "region": "동남아",
       "discountRate": 5,
-      "firstSeen": "2026-05-28"
+      "firstSeen": "2026-05-30"
     },
     {
       "id": "ybtour-나트랑(깜랑)-20260720-3",
@@ -5893,7 +5868,7 @@
       "price": 246000,
       "currency": "KRW",
       "link": "https://www.hanatour.com/com/pmt/CHPC0PMT0011M200?fareId=RTF%5E2983285%5E7C1151PUSNRT-H2%5E7C1151PUSNRT-16%5E20260620%5ET%5EKRW%5E6334355%5E5078754%5E%5E1%5E0%5E0&psngrCntLst=%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D&selectedCard=%7B%7D",
-      "availableSeats": 4,
+      "availableSeats": 2,
       "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22PUS%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22TYO%22%2C%22depDt%22%3A%2220260620%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22TYO%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22PUS%22%2C%22depDt%22%3A%2220260623%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
       "region": "일본",
       "discountRate": 11,
@@ -15434,34 +15409,6 @@
       "firstSeen": "2026-05-28"
     },
     {
-      "id": "ttang-ICN-DPS-RT-0-4-7C-2026-06-24",
-      "source": "ttang",
-      "airline": "제주항공",
-      "departure": {
-        "city": "서울",
-        "airport": "ICN",
-        "date": "2026-06-24",
-        "time": "15:40",
-        "arrivalTime": "21:45"
-      },
-      "arrival": {
-        "city": "발리(덴파사)",
-        "airport": "DPS",
-        "date": "2026-06-27",
-        "time": "22:45",
-        "arrivalTime": "07:15"
-      },
-      "price": 739000,
-      "currency": "KRW",
-      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=DPS&depdate0=2026-06-24&dep1=DPS&arr1=ICN&depdate1=2026-06-27&adt=1&chd=0&inf=0&comp=Y",
-      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=DPS&depdate0=2026-06-24&dep1=DPS&arr1=ICN&depdate1=2026-06-27&adt=1&chd=0&inf=0&comp=Y",
-      "region": "동남아",
-      "availableSeats": 2,
-      "seats": "2석",
-      "discountRate": -21,
-      "firstSeen": "2026-05-30"
-    },
-    {
       "id": "ttang-ICN-DPS-RT-0-5-7C-2026-06-24",
       "source": "ttang",
       "airline": "제주항공",
@@ -18979,11 +18926,11 @@
     }
   ],
   "sources": {
-    "ybtour": 291,
+    "ybtour": 290,
     "hanatour": 64,
     "modetour": 782,
     "onlinetour": 178,
-    "ttang": 928,
+    "ttang": 926,
     "myrealtrip": 60
   },
   "priceHistory": {
@@ -24928,7 +24875,7 @@
         "date": "2026-05-30",
         "minPrice": 380000,
         "avgPrice": 380000,
-        "count": 2
+        "count": 1
       }
     ],
     "청주-나트랑(깜랑)": [
@@ -37489,8 +37436,8 @@
       {
         "date": "2026-05-30",
         "minPrice": 249000,
-        "avgPrice": 317750,
-        "count": 24
+        "avgPrice": 316391,
+        "count": 23
       }
     ],
     "서울-다카마츠": [
@@ -39461,8 +39408,8 @@
       {
         "date": "2026-05-30",
         "minPrice": 739000,
-        "avgPrice": 755000,
-        "count": 15
+        "avgPrice": 756143,
+        "count": 14
       }
     ],
     "대구-비엔티엔": [
