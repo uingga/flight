@@ -97,7 +97,7 @@ async function getSearchPrice(page: Page, gid: number, depDate: string, arrDate:
                     let airline = '';
                     for (const line of lines) {
                         if (line.includes('항공') || line.includes('에어') || line.includes('진에어') || line.includes('이스타')) {
-                            airline = line.replace(/브랜드관.*/, '').trim();
+                            airline = line.replace(/브랜드관.*/, '').replace(/\s*(초특가|특가|라이브|세일|프로모션|이벤트|할인|기획전).*$/g, '').trim();
                             break;
                         }
                     }
