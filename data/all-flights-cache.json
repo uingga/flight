@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-06-02T10:37:01.402Z",
+  "timestamp": "2026-06-02T12:58:30.006Z",
   "count": 490,
   "flights": [
     {
@@ -91,13 +91,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-06-10",
-        "time": ""
+        "time": "15:15",
+        "arrivalTime": "17:00"
       },
       "arrival": {
         "city": "오사카(간사이)",
         "airport": "KIX",
         "date": "2026-06-12",
-        "time": ""
+        "time": "18:00",
+        "arrivalTime": "19:55"
       },
       "price": 250000,
       "currency": "KRW",
@@ -116,18 +118,21 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-06-13",
-        "time": ""
+        "time": "15:15",
+        "arrivalTime": "17:00"
       },
       "arrival": {
         "city": "오사카(간사이)",
         "airport": "KIX",
         "date": "2026-06-15",
-        "time": ""
+        "time": "12:10",
+        "arrivalTime": "14:00"
       },
       "price": 250000,
       "currency": "KRW",
       "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=J1&inhId=ZE0611ICNKIX-T2&depDate=20260613&efcCityCode=KIX",
-      "seats": "0석",
+      "seats": "8석",
+      "availableSeats": 8,
       "region": "일본",
       "discountRate": -15,
       "firstSeen": "2026-06-02"
@@ -2659,8 +2664,7 @@
       "price": 379000,
       "currency": "KRW",
       "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=A0%2FA3&inhId=7C2125ICNTAG-T3&depDate=20260628&efcCityCode=TAG",
-      "seats": "8석",
-      "availableSeats": 8,
+      "seats": "0석",
       "region": "동남아",
       "discountRate": -4,
       "firstSeen": "2026-06-02"
@@ -3479,13 +3483,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-14",
-        "time": ""
+        "time": "12:10",
+        "arrivalTime": "16:00"
       },
       "arrival": {
         "city": "방콕",
         "airport": "BKK",
         "date": "2026-09-18",
-        "time": ""
+        "time": "02:25",
+        "arrivalTime": "10:00"
       },
       "price": 509000,
       "currency": "KRW",
@@ -3504,13 +3510,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-20",
-        "time": ""
+        "time": "20:05",
+        "arrivalTime": "00:10"
       },
       "arrival": {
         "city": "방콕",
         "airport": "BKK",
         "date": "2026-09-24",
-        "time": ""
+        "time": "01:10",
+        "arrivalTime": "08:55"
       },
       "price": 509000,
       "currency": "KRW",
