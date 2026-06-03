@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-06-03T17:15:22.147Z",
+  "timestamp": "2026-06-03T19:45:56.261Z",
   "count": 611,
   "flights": [
     {
@@ -2599,8 +2599,7 @@
       "price": 349000,
       "currency": "KRW",
       "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=A0%2FA3&inhId=AK1624ICNBKI-T8&depDate=20260911&efcCityCode=BKI",
-      "seats": "9석",
-      "availableSeats": 9,
+      "seats": "0석",
       "region": "동남아",
       "discountRate": 27,
       "firstSeen": "2026-06-03"
@@ -3160,8 +3159,7 @@
       "price": 379000,
       "currency": "KRW",
       "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=A0%2FA3&inhId=7C2125ICNTAG-T3&depDate=20260628&efcCityCode=TAG",
-      "seats": "8석",
-      "availableSeats": 8,
+      "seats": "0석",
       "region": "동남아",
       "discountRate": -14,
       "firstSeen": "2026-06-03"
@@ -3880,8 +3878,7 @@
       "price": 469000,
       "currency": "KRW",
       "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=A0%2FA3&inhId=TR0843ICNSIN-T1&depDate=20260715&efcCityCode=SIN",
-      "seats": "9석",
-      "availableSeats": 9,
+      "seats": "0석",
       "region": "동남아",
       "discountRate": -4,
       "firstSeen": "2026-06-03"
@@ -14814,19 +14811,23 @@
         "city": "서울",
         "airport": "ICN",
         "date": "2026-06-27",
-        "time": ""
+        "time": "07:35",
+        "arrivalTime": "10:55"
       },
       "arrival": {
         "city": "마닐라",
         "airport": "MNL",
         "date": "2026-06-30",
-        "time": ""
+        "time": "12:05",
+        "arrivalTime": "16:55"
       },
       "price": 449000,
       "currency": "KRW",
       "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=MNL&depdate0=2026-06-27&dep1=MNL&arr1=ICN&depdate1=2026-06-30&adt=1&chd=0&inf=0&comp=Y",
       "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=MNL&depdate0=2026-06-27&dep1=MNL&arr1=ICN&depdate1=2026-06-30&adt=1&chd=0&inf=0&comp=Y",
       "region": "동남아",
+      "availableSeats": 9,
+      "seats": "9석",
       "discountRate": -2,
       "firstSeen": "2026-06-03"
     },
@@ -16300,13 +16301,15 @@
         "city": "청주",
         "airport": "CJJ",
         "date": "2026-07-02",
-        "time": ""
+        "time": "23:40",
+        "arrivalTime": "01:10"
       },
       "arrival": {
         "city": "타이페이",
         "airport": "TPE",
         "date": "2026-07-06",
-        "time": ""
+        "time": "02:40",
+        "arrivalTime": "06:05"
       },
       "price": 269000,
       "currency": "KRW",
@@ -18785,7 +18788,7 @@
     "modetour": 781,
     "onlinetour": 192,
     "ttang": 943,
-    "myrealtrip": 76
+    "myrealtrip": 73
   },
   "priceHistory": {
     "부산-세부": [
@@ -24126,7 +24129,7 @@
       {
         "date": "2026-06-03",
         "minPrice": 320000,
-        "avgPrice": 511823,
+        "avgPrice": 515182,
         "count": 39
       }
     ],
