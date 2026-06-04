@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-06-04T12:27:09.868Z",
+  "timestamp": "2026-06-04T15:22:58.595Z",
   "count": 616,
   "flights": [
     {
@@ -1288,8 +1288,8 @@
       "price": 387100,
       "currency": "KRW",
       "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=J1&inhId=ZE0951PUSCTS-T2&depDate=20260713&efcCityCode=CTS",
-      "seats": "8석",
-      "availableSeats": 8,
+      "seats": "5석",
+      "availableSeats": 5,
       "region": "일본",
       "discountRate": 19,
       "firstSeen": "2026-06-04"
@@ -6623,7 +6623,7 @@
       "price": 344000,
       "currency": "KRW",
       "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22ICN%22%2C%22continentCode%22%3A%22ASIA%22%2C%22arrivalCity%22%3A%22DAD%22%2C%22departureDate%22%3A%222026-06-24%22%2C%22arrivalDate%22%3A%222026-06-25%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
-      "availableSeats": 4,
+      "availableSeats": 2,
       "flightNumber": "RS511 / RS512",
       "region": "동남아",
       "modetourDetail": {
@@ -8090,52 +8090,6 @@
       "firstSeen": "2026-06-02"
     },
     {
-      "id": "modetour-JPN-19864706",
-      "source": "modetour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-06-09",
-        "time": "09:45"
-      },
-      "arrival": {
-        "city": "후쿠오카",
-        "airport": "FUK",
-        "date": "2026-06-11",
-        "time": "19:50"
-      },
-      "price": 209000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22ICN%22%2C%22continentCode%22%3A%22JPN%22%2C%22arrivalCity%22%3A%22FUK%22%2C%22departureDate%22%3A%222026-06-09%22%2C%22arrivalDate%22%3A%222026-06-10%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
-      "availableSeats": 1,
-      "flightNumber": "7C1403 / 7C1408",
-      "region": "일본",
-      "modetourDetail": {
-        "flyingTime": "01:30",
-        "isDirect": true,
-        "isReturnDirect": true,
-        "departureArrivalTime": "11:15",
-        "returnDepartureTime": "19:50",
-        "returnArrivalTime": "21:20",
-        "normalPrice": 399000,
-        "sourceDiscountRate": 96,
-        "baseFare": 12400,
-        "tax": 137600,
-        "tax2": 59000,
-        "childBaseFare": 12400,
-        "childTax": 137600,
-        "childTax2": 40000,
-        "infantFare": 100000,
-        "departureFlightNo": "7C1403",
-        "returnFlightNo": "7C1408",
-        "returnDepartureAirport": "FUK",
-        "returnArrivalAirport": "ICN"
-      },
-      "discountRate": -7,
-      "firstSeen": "2026-06-04"
-    },
-    {
       "id": "modetour-JPN-19918522",
       "source": "modetour",
       "airline": "에어부산",
@@ -8316,6 +8270,52 @@
       },
       "discountRate": -30,
       "firstSeen": "2026-06-02"
+    },
+    {
+      "id": "modetour-JPN-19864713",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-06-16",
+        "time": "09:45"
+      },
+      "arrival": {
+        "city": "후쿠오카",
+        "airport": "FUK",
+        "date": "2026-06-18",
+        "time": "19:50"
+      },
+      "price": 219000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22ICN%22%2C%22continentCode%22%3A%22JPN%22%2C%22arrivalCity%22%3A%22FUK%22%2C%22departureDate%22%3A%222026-06-16%22%2C%22arrivalDate%22%3A%222026-06-17%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
+      "availableSeats": 4,
+      "flightNumber": "7C1403 / 7C1408",
+      "region": "일본",
+      "modetourDetail": {
+        "flyingTime": "01:30",
+        "isDirect": true,
+        "isReturnDirect": true,
+        "departureArrivalTime": "11:15",
+        "returnDepartureTime": "19:50",
+        "returnArrivalTime": "21:20",
+        "normalPrice": 399000,
+        "sourceDiscountRate": 94,
+        "baseFare": 22400,
+        "tax": 137600,
+        "tax2": 59000,
+        "childBaseFare": 22400,
+        "childTax": 137600,
+        "childTax2": 40000,
+        "infantFare": 100000,
+        "departureFlightNo": "7C1403",
+        "returnFlightNo": "7C1408",
+        "returnDepartureAirport": "FUK",
+        "returnArrivalAirport": "ICN"
+      },
+      "discountRate": -12,
+      "firstSeen": "2026-06-04"
     },
     {
       "id": "modetour-JPN-19918498",
@@ -15112,19 +15112,23 @@
         "city": "서울",
         "airport": "ICN",
         "date": "2026-06-30",
-        "time": ""
+        "time": "07:20",
+        "arrivalTime": "08:40"
       },
       "arrival": {
         "city": "후쿠오카",
         "airport": "FUK",
         "date": "2026-07-02",
-        "time": ""
+        "time": "09:40",
+        "arrivalTime": "11:15"
       },
       "price": 239000,
       "currency": "KRW",
       "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-06-30&dep1=FUK&arr1=ICN&depdate1=2026-07-02&adt=1&chd=0&inf=0&comp=Y",
       "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-06-30&dep1=FUK&arr1=ICN&depdate1=2026-07-02&adt=1&chd=0&inf=0&comp=Y",
       "region": "일본",
+      "availableSeats": 9,
+      "seats": "9석",
       "discountRate": -23,
       "firstSeen": "2026-06-04"
     },
@@ -18502,9 +18506,9 @@
   "sources": {
     "ybtour": 234,
     "hanatour": 61,
-    "modetour": 785,
+    "modetour": 784,
     "onlinetour": 187,
-    "ttang": 954,
+    "ttang": 953,
     "myrealtrip": 87
   },
   "priceHistory": {
@@ -19965,9 +19969,9 @@
       },
       {
         "date": "2026-06-04",
-        "minPrice": 209000,
-        "avgPrice": 289833,
-        "count": 24
+        "minPrice": 219000,
+        "avgPrice": 293348,
+        "count": 23
       }
     ],
     "부산-삿포로(치토세)": [
@@ -23846,7 +23850,7 @@
       {
         "date": "2026-06-04",
         "minPrice": 300000,
-        "avgPrice": 522730,
+        "avgPrice": 526255,
         "count": 40
       }
     ],
@@ -37268,8 +37272,8 @@
       {
         "date": "2026-06-04",
         "minPrice": 253000,
-        "avgPrice": 341275,
-        "count": 51
+        "avgPrice": 342840,
+        "count": 50
       }
     ],
     "청주-도쿄(나리타공항)": [
