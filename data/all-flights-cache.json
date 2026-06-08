@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-06-08T11:24:47.967Z",
+  "timestamp": "2026-06-08T13:51:41.012Z",
   "count": 561,
   "flights": [
     {
@@ -399,8 +399,8 @@
       "price": 222300,
       "currency": "KRW",
       "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=J1&inhId=7C1403ICNFUK-T8&depDate=20260614&efcCityCode=FUK",
-      "seats": "4석",
-      "availableSeats": 4,
+      "seats": "2석",
+      "availableSeats": 2,
       "region": "일본",
       "discountRate": -14,
       "firstSeen": "2026-06-08"
@@ -426,8 +426,7 @@
       "price": 222900,
       "currency": "KRW",
       "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=J1&inhId=7C1451PUSFUK-T2&depDate=20260623&efcCityCode=FUK",
-      "seats": "7석",
-      "availableSeats": 7,
+      "seats": "0석",
       "region": "일본",
       "discountRate": -14,
       "firstSeen": "2026-06-08"
@@ -11469,20 +11468,50 @@
         "city": "대구",
         "airport": "TAE",
         "date": "2026-06-11",
-        "time": ""
+        "time": "17:05",
+        "arrivalTime": "19:20"
       },
       "arrival": {
         "city": "장가계(다융)",
         "airport": "DYG",
         "date": "2026-06-14",
-        "time": ""
+        "time": "13:10",
+        "arrivalTime": "17:15"
       },
       "price": 310000,
       "currency": "KRW",
       "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=TAE&arr0=DYG&depdate0=2026-06-11&dep1=DYG&arr1=TAE&depdate1=2026-06-14&adt=1&chd=0&inf=0&comp=Y",
       "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=TAE&arr0=DYG&depdate0=2026-06-11&dep1=DYG&arr1=TAE&depdate1=2026-06-14&adt=1&chd=0&inf=0&comp=Y",
       "region": "중국",
+      "availableSeats": 6,
+      "seats": "6석",
       "discountRate": 36,
+      "firstSeen": "2026-06-08"
+    },
+    {
+      "id": "ttang-ICN-OKA-RT-0-3-ZE-2026-06-12",
+      "source": "ttang",
+      "airline": "이스타항공",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-06-12",
+        "time": "11:30",
+        "arrivalTime": "14:00"
+      },
+      "arrival": {
+        "city": "오키나와",
+        "airport": "OKA",
+        "date": "2026-06-14",
+        "time": "15:00",
+        "arrivalTime": "17:35"
+      },
+      "price": 299000,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=OKA&depdate0=2026-06-12&dep1=OKA&arr1=ICN&depdate1=2026-06-14&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=OKA&depdate0=2026-06-12&dep1=OKA&arr1=ICN&depdate1=2026-06-14&adt=1&chd=0&inf=0&comp=Y",
+      "region": "일본",
+      "discountRate": -17,
       "firstSeen": "2026-06-08"
     },
     {
@@ -11676,32 +11705,6 @@
       "seats": "4석",
       "discountRate": -8,
       "firstSeen": "2026-06-04"
-    },
-    {
-      "id": "ttang-ICN-OKA-RT-0-3-ZE-2026-06-16",
-      "source": "ttang",
-      "airline": "이스타항공",
-      "departure": {
-        "city": "서울",
-        "airport": "ICN",
-        "date": "2026-06-16",
-        "time": "11:30",
-        "arrivalTime": "14:00"
-      },
-      "arrival": {
-        "city": "오키나와",
-        "airport": "OKA",
-        "date": "2026-06-18",
-        "time": "15:00",
-        "arrivalTime": "17:35"
-      },
-      "price": 219000,
-      "currency": "KRW",
-      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=OKA&depdate0=2026-06-16&dep1=OKA&arr1=ICN&depdate1=2026-06-18&adt=1&chd=0&inf=0&comp=Y",
-      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=OKA&depdate0=2026-06-16&dep1=OKA&arr1=ICN&depdate1=2026-06-18&adt=1&chd=0&inf=0&comp=Y",
-      "region": "일본",
-      "discountRate": 15,
-      "firstSeen": "2026-06-08"
     },
     {
       "id": "ttang-PUS-TAK-RT-0-4-BX-2026-06-16",
@@ -17083,7 +17086,7 @@
     "hanatour": 66,
     "modetour": 865,
     "onlinetour": 165,
-    "ttang": 1029,
+    "ttang": 1025,
     "myrealtrip": 56
   },
   "priceHistory": {
@@ -29466,9 +29469,9 @@
       },
       {
         "date": "2026-06-08",
-        "minPrice": 219000,
-        "avgPrice": 416000,
-        "count": 10
+        "minPrice": 299000,
+        "avgPrice": 449000,
+        "count": 6
       }
     ],
     "서울-요나고": [
