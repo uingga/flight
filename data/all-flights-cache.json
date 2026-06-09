@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-06-09T10:16:01.035Z",
+  "timestamp": "2026-06-09T12:46:23.112Z",
   "count": 539,
   "flights": [
     {
@@ -2936,18 +2936,21 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-06-27",
-        "time": ""
+        "time": "21:00",
+        "arrivalTime": "00:45"
       },
       "arrival": {
         "city": "보홀",
         "airport": "TAG",
         "date": "2026-07-01",
-        "time": ""
+        "time": "01:45",
+        "arrivalTime": "07:25"
       },
       "price": 409000,
       "currency": "KRW",
       "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=A0%2FA3&inhId=LJ0043ICNTAG-T6&depDate=20260627&efcCityCode=TAG",
-      "seats": "0석",
+      "seats": "6석",
+      "availableSeats": 6,
       "region": "동남아",
       "discountRate": 7,
       "firstSeen": "2026-06-09"
@@ -9543,32 +9546,6 @@
       "firstSeen": "2026-06-08"
     },
     {
-      "id": "ttang-ICN-OKA-RT-0-3-ZE-2026-06-12",
-      "source": "ttang",
-      "airline": "이스타항공",
-      "departure": {
-        "city": "서울",
-        "airport": "ICN",
-        "date": "2026-06-12",
-        "time": "11:30",
-        "arrivalTime": "14:00"
-      },
-      "arrival": {
-        "city": "오키나와",
-        "airport": "OKA",
-        "date": "2026-06-14",
-        "time": "15:00",
-        "arrivalTime": "17:35"
-      },
-      "price": 299000,
-      "currency": "KRW",
-      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=OKA&depdate0=2026-06-12&dep1=OKA&arr1=ICN&depdate1=2026-06-14&adt=1&chd=0&inf=0&comp=Y",
-      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=OKA&depdate0=2026-06-12&dep1=OKA&arr1=ICN&depdate1=2026-06-14&adt=1&chd=0&inf=0&comp=Y",
-      "region": "일본",
-      "discountRate": -19,
-      "firstSeen": "2026-06-09"
-    },
-    {
       "id": "ttang-3U3704CJJDYG-G5-2026-06-13",
       "source": "ttang",
       "airline": "사천항공",
@@ -9768,19 +9745,23 @@
         "city": "서울",
         "airport": "ICN",
         "date": "2026-06-16",
-        "time": ""
+        "time": "14:25",
+        "arrivalTime": "16:00"
       },
       "arrival": {
         "city": "후쿠오카",
         "airport": "FUK",
         "date": "2026-06-18",
-        "time": ""
+        "time": "09:40",
+        "arrivalTime": "11:15"
       },
       "price": 210000,
       "currency": "KRW",
       "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-06-16&dep1=FUK&arr1=ICN&depdate1=2026-06-18&adt=1&chd=0&inf=0&comp=Y",
       "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-06-16&dep1=FUK&arr1=ICN&depdate1=2026-06-18&adt=1&chd=0&inf=0&comp=Y",
       "region": "일본",
+      "availableSeats": 9,
+      "seats": "9석",
       "discountRate": -7,
       "firstSeen": "2026-06-09"
     },
@@ -10537,34 +10518,6 @@
       "firstSeen": "2026-06-02"
     },
     {
-      "id": "ttang-ZE0817ICNYNT-G8-2026-06-23",
-      "source": "ttang",
-      "airline": "이스타항공",
-      "departure": {
-        "city": "서울",
-        "airport": "ICN",
-        "date": "2026-06-23",
-        "time": "15:55",
-        "arrivalTime": "16:20"
-      },
-      "arrival": {
-        "city": "연태(옌타이)",
-        "airport": "YNT",
-        "date": "2026-06-26",
-        "time": "12:45",
-        "arrivalTime": "14:55"
-      },
-      "price": 270000,
-      "currency": "KRW",
-      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=YNT&depdate0=2026-06-23&dep1=YNT&arr1=ICN&depdate1=2026-06-26&adt=1&chd=0&inf=0&comp=Y",
-      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=YNT&depdate0=2026-06-23&dep1=YNT&arr1=ICN&depdate1=2026-06-26&adt=1&chd=0&inf=0&comp=Y",
-      "region": "중국",
-      "availableSeats": 9,
-      "seats": "9석",
-      "discountRate": -10,
-      "firstSeen": "2026-06-09"
-    },
-    {
       "id": "ttang-ZE0817ICNYNT-G7-2026-06-23",
       "source": "ttang",
       "airline": "이스타항공",
@@ -10586,6 +10539,34 @@
       "currency": "KRW",
       "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=YNT&depdate0=2026-06-23&dep1=YNT&arr1=ICN&depdate1=2026-06-25&adt=1&chd=0&inf=0&comp=Y",
       "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=YNT&depdate0=2026-06-23&dep1=YNT&arr1=ICN&depdate1=2026-06-25&adt=1&chd=0&inf=0&comp=Y",
+      "region": "중국",
+      "availableSeats": 9,
+      "seats": "9석",
+      "discountRate": -10,
+      "firstSeen": "2026-06-09"
+    },
+    {
+      "id": "ttang-ZE0817ICNYNT-G8-2026-06-23",
+      "source": "ttang",
+      "airline": "이스타항공",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-06-23",
+        "time": "15:55",
+        "arrivalTime": "16:20"
+      },
+      "arrival": {
+        "city": "연태(옌타이)",
+        "airport": "YNT",
+        "date": "2026-06-26",
+        "time": "12:45",
+        "arrivalTime": "14:55"
+      },
+      "price": 270000,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=YNT&depdate0=2026-06-23&dep1=YNT&arr1=ICN&depdate1=2026-06-26&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=YNT&depdate0=2026-06-23&dep1=YNT&arr1=ICN&depdate1=2026-06-26&adt=1&chd=0&inf=0&comp=Y",
       "region": "중국",
       "availableSeats": 9,
       "seats": "9석",
@@ -10621,7 +10602,7 @@
       "firstSeen": "2026-06-09"
     },
     {
-      "id": "ttang-7C8501ICNWEH-G4-2026-06-23",
+      "id": "ttang-7C8501ICNWEH-G7-2026-06-23",
       "source": "ttang",
       "airline": "제주항공",
       "departure": {
@@ -10845,34 +10826,6 @@
       "firstSeen": "2026-06-02"
     },
     {
-      "id": "ttang-ZE0817ICNYNT-G7-2026-06-24",
-      "source": "ttang",
-      "airline": "이스타항공",
-      "departure": {
-        "city": "서울",
-        "airport": "ICN",
-        "date": "2026-06-24",
-        "time": "08:55",
-        "arrivalTime": "09:25"
-      },
-      "arrival": {
-        "city": "연태(옌타이)",
-        "airport": "YNT",
-        "date": "2026-06-26",
-        "time": "10:25",
-        "arrivalTime": "12:50"
-      },
-      "price": 270000,
-      "currency": "KRW",
-      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=YNT&depdate0=2026-06-24&dep1=YNT&arr1=ICN&depdate1=2026-06-26&adt=1&chd=0&inf=0&comp=Y",
-      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=YNT&depdate0=2026-06-24&dep1=YNT&arr1=ICN&depdate1=2026-06-26&adt=1&chd=0&inf=0&comp=Y",
-      "region": "중국",
-      "availableSeats": 4,
-      "seats": "4석",
-      "discountRate": -10,
-      "firstSeen": "2026-06-09"
-    },
-    {
       "id": "ttang-ZE0817ICNYNT-G8-2026-06-24",
       "source": "ttang",
       "airline": "이스타항공",
@@ -10897,6 +10850,34 @@
       "region": "중국",
       "availableSeats": 9,
       "seats": "9석",
+      "discountRate": -10,
+      "firstSeen": "2026-06-09"
+    },
+    {
+      "id": "ttang-ZE0817ICNYNT-G7-2026-06-24",
+      "source": "ttang",
+      "airline": "이스타항공",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-06-24",
+        "time": "08:55",
+        "arrivalTime": "09:25"
+      },
+      "arrival": {
+        "city": "연태(옌타이)",
+        "airport": "YNT",
+        "date": "2026-06-26",
+        "time": "10:25",
+        "arrivalTime": "12:50"
+      },
+      "price": 270000,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=YNT&depdate0=2026-06-24&dep1=YNT&arr1=ICN&depdate1=2026-06-26&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=YNT&depdate0=2026-06-24&dep1=YNT&arr1=ICN&depdate1=2026-06-26&adt=1&chd=0&inf=0&comp=Y",
+      "region": "중국",
+      "availableSeats": 4,
+      "seats": "4석",
       "discountRate": -10,
       "firstSeen": "2026-06-09"
     },
@@ -10929,6 +10910,34 @@
       "firstSeen": "2026-06-08"
     },
     {
+      "id": "ttang-7C8501ICNWEH-G7-2026-06-24",
+      "source": "ttang",
+      "airline": "제주항공",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-06-24",
+        "time": "16:10",
+        "arrivalTime": "16:20"
+      },
+      "arrival": {
+        "city": "위해(웨이하이)",
+        "airport": "WEH",
+        "date": "2026-06-26",
+        "time": "17:20",
+        "arrivalTime": "19:30"
+      },
+      "price": 280000,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=WEH&depdate0=2026-06-24&dep1=WEH&arr1=ICN&depdate1=2026-06-26&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=WEH&depdate0=2026-06-24&dep1=WEH&arr1=ICN&depdate1=2026-06-26&adt=1&chd=0&inf=0&comp=Y",
+      "region": "중국",
+      "availableSeats": 9,
+      "seats": "9석",
+      "discountRate": -13,
+      "firstSeen": "2026-06-09"
+    },
+    {
       "id": "ttang-7C8501ICNWEH-G5-2026-06-24",
       "source": "ttang",
       "airline": "제주항공",
@@ -10950,34 +10959,6 @@
       "currency": "KRW",
       "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=WEH&depdate0=2026-06-24&dep1=WEH&arr1=ICN&depdate1=2026-06-27&adt=1&chd=0&inf=0&comp=Y",
       "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=WEH&depdate0=2026-06-24&dep1=WEH&arr1=ICN&depdate1=2026-06-27&adt=1&chd=0&inf=0&comp=Y",
-      "region": "중국",
-      "availableSeats": 9,
-      "seats": "9석",
-      "discountRate": -13,
-      "firstSeen": "2026-06-09"
-    },
-    {
-      "id": "ttang-7C8501ICNWEH-G4-2026-06-24",
-      "source": "ttang",
-      "airline": "제주항공",
-      "departure": {
-        "city": "서울",
-        "airport": "ICN",
-        "date": "2026-06-24",
-        "time": "16:10",
-        "arrivalTime": "16:20"
-      },
-      "arrival": {
-        "city": "위해(웨이하이)",
-        "airport": "WEH",
-        "date": "2026-06-26",
-        "time": "17:20",
-        "arrivalTime": "19:30"
-      },
-      "price": 280000,
-      "currency": "KRW",
-      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=WEH&depdate0=2026-06-24&dep1=WEH&arr1=ICN&depdate1=2026-06-26&adt=1&chd=0&inf=0&comp=Y",
-      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=WEH&depdate0=2026-06-24&dep1=WEH&arr1=ICN&depdate1=2026-06-26&adt=1&chd=0&inf=0&comp=Y",
       "region": "중국",
       "availableSeats": 9,
       "seats": "9석",
@@ -11041,7 +11022,7 @@
       "firstSeen": "2026-06-09"
     },
     {
-      "id": "ttang-7C8501ICNWEH-G7-2026-06-25",
+      "id": "ttang-7C8501ICNWEH-G4-2026-06-25",
       "source": "ttang",
       "airline": "제주항공",
       "departure": {
@@ -11321,34 +11302,6 @@
       "firstSeen": "2026-06-08"
     },
     {
-      "id": "ttang-7C8501ICNWEH-G8-2026-06-27",
-      "source": "ttang",
-      "airline": "제주항공",
-      "departure": {
-        "city": "서울",
-        "airport": "ICN",
-        "date": "2026-06-27",
-        "time": "16:10",
-        "arrivalTime": "16:20"
-      },
-      "arrival": {
-        "city": "위해(웨이하이)",
-        "airport": "WEH",
-        "date": "2026-06-30",
-        "time": "11:50",
-        "arrivalTime": "14:00"
-      },
-      "price": 280000,
-      "currency": "KRW",
-      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=WEH&depdate0=2026-06-27&dep1=WEH&arr1=ICN&depdate1=2026-06-30&adt=1&chd=0&inf=0&comp=Y",
-      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=WEH&depdate0=2026-06-27&dep1=WEH&arr1=ICN&depdate1=2026-06-30&adt=1&chd=0&inf=0&comp=Y",
-      "region": "중국",
-      "availableSeats": 7,
-      "seats": "7석",
-      "discountRate": -13,
-      "firstSeen": "2026-06-09"
-    },
-    {
       "id": "ttang-7C8501ICNWEH-G4-2026-06-27",
       "source": "ttang",
       "airline": "제주항공",
@@ -11370,6 +11323,34 @@
       "currency": "KRW",
       "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=WEH&depdate0=2026-06-27&dep1=WEH&arr1=ICN&depdate1=2026-06-29&adt=1&chd=0&inf=0&comp=Y",
       "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=WEH&depdate0=2026-06-27&dep1=WEH&arr1=ICN&depdate1=2026-06-29&adt=1&chd=0&inf=0&comp=Y",
+      "region": "중국",
+      "availableSeats": 7,
+      "seats": "7석",
+      "discountRate": -13,
+      "firstSeen": "2026-06-09"
+    },
+    {
+      "id": "ttang-7C8501ICNWEH-G5-2026-06-27",
+      "source": "ttang",
+      "airline": "제주항공",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-06-27",
+        "time": "16:10",
+        "arrivalTime": "16:20"
+      },
+      "arrival": {
+        "city": "위해(웨이하이)",
+        "airport": "WEH",
+        "date": "2026-06-30",
+        "time": "11:50",
+        "arrivalTime": "14:00"
+      },
+      "price": 280000,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=WEH&depdate0=2026-06-27&dep1=WEH&arr1=ICN&depdate1=2026-06-30&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=WEH&depdate0=2026-06-27&dep1=WEH&arr1=ICN&depdate1=2026-06-30&adt=1&chd=0&inf=0&comp=Y",
       "region": "중국",
       "availableSeats": 7,
       "seats": "7석",
@@ -11713,6 +11694,34 @@
       "firstSeen": "2026-06-09"
     },
     {
+      "id": "ttang-7C8501ICNWEH-G8-2026-06-28",
+      "source": "ttang",
+      "airline": "제주항공",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-06-28",
+        "time": "16:10",
+        "arrivalTime": "16:20"
+      },
+      "arrival": {
+        "city": "위해(웨이하이)",
+        "airport": "WEH",
+        "date": "2026-07-01",
+        "time": "11:50",
+        "arrivalTime": "14:00"
+      },
+      "price": 280000,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=WEH&depdate0=2026-06-28&dep1=WEH&arr1=ICN&depdate1=2026-07-01&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=WEH&depdate0=2026-06-28&dep1=WEH&arr1=ICN&depdate1=2026-07-01&adt=1&chd=0&inf=0&comp=Y",
+      "region": "중국",
+      "availableSeats": 9,
+      "seats": "9석",
+      "discountRate": -13,
+      "firstSeen": "2026-06-09"
+    },
+    {
       "id": "ttang-7C8501ICNWEH-G7-2026-06-28",
       "source": "ttang",
       "airline": "제주항공",
@@ -11734,34 +11743,6 @@
       "currency": "KRW",
       "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=WEH&depdate0=2026-06-28&dep1=WEH&arr1=ICN&depdate1=2026-06-30&adt=1&chd=0&inf=0&comp=Y",
       "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=WEH&depdate0=2026-06-28&dep1=WEH&arr1=ICN&depdate1=2026-06-30&adt=1&chd=0&inf=0&comp=Y",
-      "region": "중국",
-      "availableSeats": 9,
-      "seats": "9석",
-      "discountRate": -13,
-      "firstSeen": "2026-06-09"
-    },
-    {
-      "id": "ttang-7C8501ICNWEH-G5-2026-06-28",
-      "source": "ttang",
-      "airline": "제주항공",
-      "departure": {
-        "city": "서울",
-        "airport": "ICN",
-        "date": "2026-06-28",
-        "time": "16:10",
-        "arrivalTime": "16:20"
-      },
-      "arrival": {
-        "city": "위해(웨이하이)",
-        "airport": "WEH",
-        "date": "2026-07-01",
-        "time": "11:50",
-        "arrivalTime": "14:00"
-      },
-      "price": 280000,
-      "currency": "KRW",
-      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=WEH&depdate0=2026-06-28&dep1=WEH&arr1=ICN&depdate1=2026-07-01&adt=1&chd=0&inf=0&comp=Y",
-      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=WEH&depdate0=2026-06-28&dep1=WEH&arr1=ICN&depdate1=2026-07-01&adt=1&chd=0&inf=0&comp=Y",
       "region": "중국",
       "availableSeats": 9,
       "seats": "9석",
@@ -12077,7 +12058,7 @@
       "firstSeen": "2026-06-09"
     },
     {
-      "id": "ttang-7C8501ICNWEH-G5-2026-06-29",
+      "id": "ttang-7C8501ICNWEH-G8-2026-06-29",
       "source": "ttang",
       "airline": "제주항공",
       "departure": {
@@ -12551,34 +12532,6 @@
       "firstSeen": "2026-06-09"
     },
     {
-      "id": "ttang-ZE0817ICNYNT-G8-2026-06-30",
-      "source": "ttang",
-      "airline": "이스타항공",
-      "departure": {
-        "city": "서울",
-        "airport": "ICN",
-        "date": "2026-06-30",
-        "time": "15:55",
-        "arrivalTime": "16:20"
-      },
-      "arrival": {
-        "city": "연태(옌타이)",
-        "airport": "YNT",
-        "date": "2026-07-03",
-        "time": "12:45",
-        "arrivalTime": "14:55"
-      },
-      "price": 270000,
-      "currency": "KRW",
-      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=YNT&depdate0=2026-06-30&dep1=YNT&arr1=ICN&depdate1=2026-07-03&adt=1&chd=0&inf=0&comp=Y",
-      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=YNT&depdate0=2026-06-30&dep1=YNT&arr1=ICN&depdate1=2026-07-03&adt=1&chd=0&inf=0&comp=Y",
-      "region": "중국",
-      "availableSeats": 9,
-      "seats": "9석",
-      "discountRate": -10,
-      "firstSeen": "2026-06-09"
-    },
-    {
       "id": "ttang-ZE0817ICNYNT-G7-2026-06-30",
       "source": "ttang",
       "airline": "이스타항공",
@@ -12607,6 +12560,62 @@
       "firstSeen": "2026-06-09"
     },
     {
+      "id": "ttang-ZE0817ICNYNT-G8-2026-06-30",
+      "source": "ttang",
+      "airline": "이스타항공",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-06-30",
+        "time": "15:55",
+        "arrivalTime": "16:20"
+      },
+      "arrival": {
+        "city": "연태(옌타이)",
+        "airport": "YNT",
+        "date": "2026-07-03",
+        "time": "12:45",
+        "arrivalTime": "14:55"
+      },
+      "price": 270000,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=YNT&depdate0=2026-06-30&dep1=YNT&arr1=ICN&depdate1=2026-07-03&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=YNT&depdate0=2026-06-30&dep1=YNT&arr1=ICN&depdate1=2026-07-03&adt=1&chd=0&inf=0&comp=Y",
+      "region": "중국",
+      "availableSeats": 9,
+      "seats": "9석",
+      "discountRate": -10,
+      "firstSeen": "2026-06-09"
+    },
+    {
+      "id": "ttang-7C8501ICNWEH-G4-2026-06-30",
+      "source": "ttang",
+      "airline": "제주항공",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-06-30",
+        "time": "16:10",
+        "arrivalTime": "16:20"
+      },
+      "arrival": {
+        "city": "위해(웨이하이)",
+        "airport": "WEH",
+        "date": "2026-07-02",
+        "time": "11:50",
+        "arrivalTime": "14:00"
+      },
+      "price": 280000,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=WEH&depdate0=2026-06-30&dep1=WEH&arr1=ICN&depdate1=2026-07-02&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=WEH&depdate0=2026-06-30&dep1=WEH&arr1=ICN&depdate1=2026-07-02&adt=1&chd=0&inf=0&comp=Y",
+      "region": "중국",
+      "availableSeats": 9,
+      "seats": "9석",
+      "discountRate": -13,
+      "firstSeen": "2026-06-09"
+    },
+    {
       "id": "ttang-7C8501ICNWEH-G5-2026-06-30",
       "source": "ttang",
       "airline": "제주항공",
@@ -12628,34 +12637,6 @@
       "currency": "KRW",
       "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=WEH&depdate0=2026-06-30&dep1=WEH&arr1=ICN&depdate1=2026-07-03&adt=1&chd=0&inf=0&comp=Y",
       "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=WEH&depdate0=2026-06-30&dep1=WEH&arr1=ICN&depdate1=2026-07-03&adt=1&chd=0&inf=0&comp=Y",
-      "region": "중국",
-      "availableSeats": 9,
-      "seats": "9석",
-      "discountRate": -13,
-      "firstSeen": "2026-06-09"
-    },
-    {
-      "id": "ttang-7C8501ICNWEH-G7-2026-06-30",
-      "source": "ttang",
-      "airline": "제주항공",
-      "departure": {
-        "city": "서울",
-        "airport": "ICN",
-        "date": "2026-06-30",
-        "time": "16:10",
-        "arrivalTime": "16:20"
-      },
-      "arrival": {
-        "city": "위해(웨이하이)",
-        "airport": "WEH",
-        "date": "2026-07-02",
-        "time": "11:50",
-        "arrivalTime": "14:00"
-      },
-      "price": 280000,
-      "currency": "KRW",
-      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=WEH&depdate0=2026-06-30&dep1=WEH&arr1=ICN&depdate1=2026-07-02&adt=1&chd=0&inf=0&comp=Y",
-      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=WEH&depdate0=2026-06-30&dep1=WEH&arr1=ICN&depdate1=2026-07-02&adt=1&chd=0&inf=0&comp=Y",
       "region": "중국",
       "availableSeats": 9,
       "seats": "9석",
@@ -12717,6 +12698,34 @@
       "firstSeen": "2026-06-03"
     },
     {
+      "id": "ttang-ICN-OKA-RT-0-3-ZE-2026-06-30",
+      "source": "ttang",
+      "airline": "이스타항공",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-06-30",
+        "time": "11:30",
+        "arrivalTime": "14:00"
+      },
+      "arrival": {
+        "city": "오키나와",
+        "airport": "OKA",
+        "date": "2026-07-02",
+        "time": "15:00",
+        "arrivalTime": "17:35"
+      },
+      "price": 349000,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=OKA&depdate0=2026-06-30&dep1=OKA&arr1=ICN&depdate1=2026-07-02&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=OKA&depdate0=2026-06-30&dep1=OKA&arr1=ICN&depdate1=2026-07-02&adt=1&chd=0&inf=0&comp=Y",
+      "region": "일본",
+      "availableSeats": 2,
+      "seats": "2석",
+      "discountRate": -39,
+      "firstSeen": "2026-06-09"
+    },
+    {
       "id": "ttang-RF0394CJJOKA-G5-2026-06-30",
       "source": "ttang",
       "airline": "에어로케이",
@@ -12742,34 +12751,6 @@
       "availableSeats": 2,
       "seats": "2석",
       "discountRate": -55,
-      "firstSeen": "2026-06-09"
-    },
-    {
-      "id": "ttang-ICN-TAG-RT-0-5-LJ-2026-06-30",
-      "source": "ttang",
-      "airline": "진에어",
-      "departure": {
-        "city": "서울",
-        "airport": "ICN",
-        "date": "2026-06-30",
-        "time": "21:00",
-        "arrivalTime": "00:45"
-      },
-      "arrival": {
-        "city": "보홀(필리핀)",
-        "airport": "TAG",
-        "date": "2026-07-04",
-        "time": "01:45",
-        "arrivalTime": "07:25"
-      },
-      "price": 407500,
-      "currency": "KRW",
-      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=TAG&depdate0=2026-06-30&dep1=TAG&arr1=ICN&depdate1=2026-07-04&adt=1&chd=0&inf=0&comp=Y",
-      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=TAG&depdate0=2026-06-30&dep1=TAG&arr1=ICN&depdate1=2026-07-04&adt=1&chd=0&inf=0&comp=Y",
-      "region": "동남아",
-      "availableSeats": 1,
-      "seats": "1석",
-      "discountRate": 8,
       "firstSeen": "2026-06-09"
     },
     {
@@ -13271,6 +13252,34 @@
       "seats": "4석",
       "discountRate": -4,
       "firstSeen": "2026-06-05"
+    },
+    {
+      "id": "ttang-7C2125ICNTAG-G17-2026-07-04",
+      "source": "ttang",
+      "airline": "제주항공",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-07-04",
+        "time": "21:00",
+        "arrivalTime": "00:45"
+      },
+      "arrival": {
+        "city": "보홀(필리핀)",
+        "airport": "TAG",
+        "date": "2026-07-09",
+        "time": "01:45",
+        "arrivalTime": "07:25"
+      },
+      "price": 440000,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=TAG&depdate0=2026-07-04&dep1=TAG&arr1=ICN&depdate1=2026-07-09&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=TAG&depdate0=2026-07-04&dep1=TAG&arr1=ICN&depdate1=2026-07-09&adt=1&chd=0&inf=0&comp=Y",
+      "region": "동남아",
+      "availableSeats": 9,
+      "seats": "9석",
+      "discountRate": 0,
+      "firstSeen": "2026-06-09"
     },
     {
       "id": "ttang-ICN-CRK-RT-0-6-LJ-2026-07-04",
@@ -15912,7 +15921,7 @@
     "hanatour": 64,
     "modetour": 729,
     "onlinetour": 117,
-    "ttang": 1101,
+    "ttang": 1096,
     "myrealtrip": 49
   },
   "priceHistory": {
@@ -26588,8 +26597,8 @@
       {
         "date": "2026-06-09",
         "minPrice": 375100,
-        "avgPrice": 427538,
-        "count": 32
+        "avgPrice": 427803,
+        "count": 29
       }
     ],
     "제주-푸꾸옥": [
@@ -28295,9 +28304,9 @@
       },
       {
         "date": "2026-06-09",
-        "minPrice": 299000,
-        "avgPrice": 430250,
-        "count": 8
+        "minPrice": 349000,
+        "avgPrice": 449000,
+        "count": 7
       }
     ],
     "서울-요나고": [
@@ -36235,9 +36244,9 @@
       },
       {
         "date": "2026-06-09",
-        "minPrice": 407500,
-        "avgPrice": 466045,
-        "count": 11
+        "minPrice": 440000,
+        "avgPrice": 471900,
+        "count": 10
       }
     ],
     "부산-클락(앙헬레스)": [
