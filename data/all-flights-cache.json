@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-06-12T13:05:05.052Z",
+  "timestamp": "2026-06-12T15:30:20.827Z",
   "count": 588,
   "flights": [
     {
@@ -6050,7 +6050,7 @@
       "price": 446400,
       "currency": "KRW",
       "link": "https://www.hanatour.com/com/pmt/CHPC0PMT0011M200?fareId=RTF%5E3142453%5ELJ0043ICNTAG-H7%5ELJ0043ICNTAG-27%5E20260704%5ET%5EKRW%5E6474925%5E5308009%5E%5E1%5E0%5E0&psngrCntLst=%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D&selectedCard=%7B%7D",
-      "availableSeats": 4,
+      "availableSeats": 2,
       "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22SEL%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22TAG%22%2C%22depDt%22%3A%2220260704%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22TAG%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22SEL%22%2C%22depDt%22%3A%2220260709%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
       "region": "동남아",
       "discountRate": -2,
@@ -6600,7 +6600,7 @@
       "price": 365200,
       "currency": "KRW",
       "link": "https://www.hanatour.com/com/pmt/CHPC0PMT0011M200?fareId=RTF%5E2931951%5EZE0963PUSOKA-H4%5EZE0963PUSOKA-4%5E20260630%5ET%5EKRW%5E6258205%5E4989373%5E%5E1%5E0%5E0&psngrCntLst=%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D&selectedCard=%7B%7D",
-      "availableSeats": 6,
+      "availableSeats": 8,
       "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22PUS%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22OKA%22%2C%22depDt%22%3A%2220260630%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22OKA%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22PUS%22%2C%22depDt%22%3A%2220260702%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
       "region": "일본",
       "discountRate": -22,
@@ -10614,19 +10614,23 @@
         "city": "서울",
         "airport": "ICN",
         "date": "2026-06-16",
-        "time": ""
+        "time": "14:25",
+        "arrivalTime": "16:00"
       },
       "arrival": {
         "city": "후쿠오카",
         "airport": "FUK",
         "date": "2026-06-19",
-        "time": ""
+        "time": "10:30",
+        "arrivalTime": "12:05"
       },
       "price": 199900,
       "currency": "KRW",
       "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-06-16&dep1=FUK&arr1=ICN&depdate1=2026-06-19&adt=1&chd=0&inf=0&comp=Y",
       "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-06-16&dep1=FUK&arr1=ICN&depdate1=2026-06-19&adt=1&chd=0&inf=0&comp=Y",
       "region": "일본",
+      "availableSeats": 5,
+      "seats": "5석",
       "discountRate": -2,
       "firstSeen": "2026-06-10"
     },
@@ -17332,9 +17336,9 @@
   "sources": {
     "ybtour": 354,
     "hanatour": 104,
-    "modetour": 701,
+    "modetour": 700,
     "onlinetour": 99,
-    "ttang": 1108,
+    "ttang": 1107,
     "myrealtrip": 52
   },
   "priceHistory": {
@@ -30588,8 +30592,8 @@
       {
         "date": "2026-06-12",
         "minPrice": 379600,
-        "avgPrice": 453511,
-        "count": 28
+        "avgPrice": 456030,
+        "count": 27
       }
     ],
     "청주-나트랑": [
@@ -35984,8 +35988,8 @@
       {
         "date": "2026-06-12",
         "minPrice": 199900,
-        "avgPrice": 239509,
-        "count": 35
+        "avgPrice": 237171,
+        "count": 34
       }
     ],
     "서울-다카마츠": [
