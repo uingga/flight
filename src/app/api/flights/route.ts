@@ -109,13 +109,39 @@ export async function GET(request: NextRequest) {
             console.log(`중복 항공편 ${beforeDedup - allFlights.length}개 제거 (${beforeDedup} → ${allFlights.length})`);
         }
 
-        // 네이버 최저가 매칭
+        // 네이버 최저가 매칭 (도시 수준: 같은 도시의 모든 공항 최저가 반영)
         try {
             const fs4 = require('fs');
             const path4 = require('path');
             const naverPath = path4.join(process.cwd(), 'data', 'naver-prices.json');
             if (fs4.existsSync(naverPath)) {
                 const naverPrices = JSON.parse(fs4.readFileSync(naverPath, 'utf-8'));
+
+                // 같은 도시를 서비스하는 공항 그룹 (TSA/TPE는 둘 다 타이베이)
+                const AIRPORT_CITY_GROUP: Record<string, string> = {
+                    'TPE': 'TAIPEI', 'TSA': 'TAIPEI',
+                    'NRT': 'TOKYO', 'HND': 'TOKYO',
+                    'KIX': 'OSAKA', 'ITM': 'OSAKA',
+                    'ICN': 'SEOUL', 'GMP': 'SEOUL',
+                    'PVG': 'SHANGHAI', 'SHA': 'SHANGHAI',
+                };
+
+                // 도시+월 기준 네이버 최저가 인덱스 구축
+                // Key: "{출발공항}_{도시그룹}_{출발월}" → 해당 월의 최저 네이버 가격
+                const naverCityMonthMin = new Map<string, number>();
+                for (const [key, entry] of Object.entries(naverPrices)) {
+                    const m = key.match(/^([A-Z]{3})-([A-Z]{3})_(\d{4}-\d{2})/);
+                    const nl = (entry as any)?.naverLowest;
+                    if (!m || !nl) continue;
+                    const [, depAp, arrAp, depMonth] = m;
+                    const cityGroup = AIRPORT_CITY_GROUP[arrAp] || arrAp;
+                    const idxKey = `${depAp}_${cityGroup}_${depMonth}`;
+                    const existing = naverCityMonthMin.get(idxKey);
+                    if (!existing || nl < existing) {
+                        naverCityMonthMin.set(idxKey, nl);
+                    }
+                }
+
                 let matched = 0;
                 for (const f of allFlights) {
                     const depAirport = f.departure?.airport;
@@ -123,9 +149,22 @@ export async function GET(request: NextRequest) {
                     const depDate = f.departure?.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 10);
                     const retDate = f.arrival?.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 10);
                     if (depAirport && arrAirport && depDate && retDate) {
-                        const key = `${depAirport}-${arrAirport}_${depDate}_${retDate}`;
-                        if (naverPrices[key]?.naverLowest) {
-                            f.naverLowest = naverPrices[key].naverLowest;
+                        // 1. 정확한 공항+날짜 매칭
+                        const exactKey = `${depAirport}-${arrAirport}_${depDate}_${retDate}`;
+                        let bestPrice: number | null = naverPrices[exactKey]?.naverLowest || null;
+
+                        // 2. 도시 수준 월간 최저가 (같은 도시 다른 공항 포함)
+                        //    예: TSA 항공편도 TPE 네이버 최저가와 비교
+                        const cityGroup = AIRPORT_CITY_GROUP[arrAirport] || arrAirport;
+                        const depMonth = depDate.substring(0, 7);
+                        const cityMonthKey = `${depAirport}_${cityGroup}_${depMonth}`;
+                        const cityMin = naverCityMonthMin.get(cityMonthKey);
+                        if (cityMin && (!bestPrice || cityMin < bestPrice)) {
+                            bestPrice = cityMin;
+                        }
+
+                        if (bestPrice) {
+                            f.naverLowest = bestPrice;
                             matched++;
                         }
                     }

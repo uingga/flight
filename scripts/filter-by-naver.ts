@@ -20,6 +20,30 @@ if (!fs.existsSync(naverPath)) {
 const cache = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
 const naverPrices = JSON.parse(fs.readFileSync(naverPath, 'utf8'));
 
+// 같은 도시를 서비스하는 공항 그룹 (TSA/TPE는 둘 다 타이베이)
+const AIRPORT_CITY_GROUP: Record<string, string> = {
+    'TPE': 'TAIPEI', 'TSA': 'TAIPEI',
+    'NRT': 'TOKYO', 'HND': 'TOKYO',
+    'KIX': 'OSAKA', 'ITM': 'OSAKA',
+    'ICN': 'SEOUL', 'GMP': 'SEOUL',
+    'PVG': 'SHANGHAI', 'SHA': 'SHANGHAI',
+};
+
+// 도시+월 기준 네이버 최저가 인덱스 구축
+const naverCityMonthMin = new Map<string, number>();
+for (const [key, entry] of Object.entries(naverPrices)) {
+    const m = key.match(/^([A-Z]{3})-([A-Z]{3})_(\d{4}-\d{2})/);
+    const nl = (entry as any)?.naverLowest;
+    if (!m || !nl) continue;
+    const [, depAp, arrAp, depMonth] = m;
+    const cityGroup = AIRPORT_CITY_GROUP[arrAp] || arrAp;
+    const idxKey = `${depAp}_${cityGroup}_${depMonth}`;
+    const existing = naverCityMonthMin.get(idxKey);
+    if (!existing || nl < existing) {
+        naverCityMonthMin.set(idxKey, nl);
+    }
+}
+
 console.log(`📡 네이버 가격 데이터: ${Object.keys(naverPrices).length}건`);
 console.log(`📋 전체 항공권: ${cache.flights.length}건\n`);
 
@@ -37,26 +61,36 @@ cache.flights = cache.flights.filter((f: any) => {
     const retDate = f.arrival?.date?.substring(0, 10);
     if (!depAirport || !arrAirport || !depDate || !retDate) return true;
 
+    // 1. 정확한 공항+날짜 매칭
     const naverKey = `${depAirport}-${arrAirport}_${depDate}_${retDate}`;
-    const naverData = naverPrices[naverKey];
+    let bestNaverPrice: number | null = naverPrices[naverKey]?.naverLowest || null;
 
-    if (!naverData || !naverData.naverLowest) {
+    // 2. 도시 수준 월간 최저가 (같은 도시 다른 공항 포함)
+    const cityGroup = AIRPORT_CITY_GROUP[arrAirport] || arrAirport;
+    const depMonth = depDate.substring(0, 7);
+    const cityMonthKey = `${depAirport}_${cityGroup}_${depMonth}`;
+    const cityMin = naverCityMonthMin.get(cityMonthKey);
+    if (cityMin && (!bestNaverPrice || cityMin < bestNaverPrice)) {
+        bestNaverPrice = cityMin;
+    }
+
+    if (!bestNaverPrice) {
         noData++;
         return true; // 비교 데이터 없으면 유지
     }
 
     // 네이버 최저가 저장 (추천순 정렬에서 사용)
-    f.naverLowest = naverData.naverLowest;
+    f.naverLowest = bestNaverPrice;
 
-    const diff = f.price - naverData.naverLowest;
+    const diff = f.price - bestNaverPrice;
     if (diff >= 100000) {
-        console.log(`  ❌ ${f.arrival?.city} ${depDate} 마이리얼트립 ${f.price.toLocaleString()}원 > 네이버 ${naverData.naverLowest.toLocaleString()}원 (+${diff.toLocaleString()}원)`);
+        console.log(`  ❌ ${f.arrival?.city} ${depDate} 마이리얼트립 ${f.price.toLocaleString()}원 > 네이버 ${bestNaverPrice.toLocaleString()}원 (+${diff.toLocaleString()}원)`);
         filtered++;
         return false;
     }
 
     // 네이버 대비 할인율 저장
-    f.naverDiscount = Math.round((1 - f.price / naverData.naverLowest) * 100);
+    f.naverDiscount = Math.round((1 - f.price / bestNaverPrice) * 100);
     if (diff <= 0) cheaper++;
     return true;
 });
