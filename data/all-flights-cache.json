@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-06-21T12:32:47.425Z",
-  "count": 566,
+  "timestamp": "2026-06-21T14:47:07.696Z",
+  "count": 568,
   "flights": [
     {
       "id": "ybtour-쿠마모토-20260714-6",
@@ -995,8 +995,7 @@
       "price": 275000,
       "currency": "KRW",
       "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=J1&inhId=LJ0221PUSNRT-T6&depDate=20260713&efcCityCode=NRT",
-      "seats": "2석",
-      "availableSeats": 2,
+      "seats": "0석",
       "region": "일본",
       "discountRate": -9,
       "firstSeen": "2026-06-21"
@@ -1373,8 +1372,7 @@
       "price": 270000,
       "currency": "KRW",
       "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=A0%2FA3&inhId=ZE0983PUSTPE-T2&depDate=20260731&efcCityCode=TPE",
-      "seats": "4석",
-      "availableSeats": 4,
+      "seats": "0석",
       "region": "중국",
       "discountRate": 21,
       "firstSeen": "2026-06-19"
@@ -2126,6 +2124,60 @@
       "region": "동남아",
       "discountRate": -10,
       "firstSeen": "2026-06-13"
+    },
+    {
+      "id": "ybtour-칼리보(보라카이)-20260830-49",
+      "source": "ybtour",
+      "airline": "티웨이항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-08-30",
+        "time": "08:30",
+        "arrivalTime": "12:00"
+      },
+      "arrival": {
+        "city": "칼리보(보라카이)",
+        "airport": "KLO",
+        "date": "2026-09-02",
+        "time": "13:00",
+        "arrivalTime": "18:20"
+      },
+      "price": 356200,
+      "currency": "KRW",
+      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=A0%2FA3&inhId=TW0125ICNKLO-T5&depDate=20260830&efcCityCode=KLO",
+      "seats": "9석",
+      "availableSeats": 9,
+      "region": "동남아",
+      "discountRate": 5,
+      "firstSeen": "2026-06-21"
+    },
+    {
+      "id": "ybtour-칼리보(보라카이)-20260831-50",
+      "source": "ybtour",
+      "airline": "티웨이항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-08-31",
+        "time": "08:30",
+        "arrivalTime": "12:00"
+      },
+      "arrival": {
+        "city": "칼리보(보라카이)",
+        "airport": "KLO",
+        "date": "2026-09-03",
+        "time": "13:00",
+        "arrivalTime": "18:20"
+      },
+      "price": 356200,
+      "currency": "KRW",
+      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=A0%2FA3&inhId=TW0125ICNKLO-T5&depDate=20260831&efcCityCode=KLO",
+      "seats": "9석",
+      "availableSeats": 9,
+      "region": "동남아",
+      "discountRate": 5,
+      "firstSeen": "2026-06-21"
     },
     {
       "id": "ybtour-세부-20260907-54",
@@ -16036,7 +16088,7 @@
     }
   ],
   "sources": {
-    "ybtour": 329,
+    "ybtour": 331,
     "hanatour": 83,
     "modetour": 479,
     "onlinetour": 49,
