@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-07-10T12:34:33.906Z",
-  "count": 592,
+  "timestamp": "2026-07-10T14:57:44.444Z",
+  "count": 593,
   "flights": [
     {
       "id": "ybtour-쿠마모토-20260811-7",
@@ -9682,6 +9682,52 @@
       "firstSeen": "2026-06-30"
     },
     {
+      "id": "modetour-ASIA-19722617",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-07-27",
+        "time": "21:30"
+      },
+      "arrival": {
+        "city": "보홀",
+        "airport": "TAG",
+        "date": "2026-07-31",
+        "time": "02:15"
+      },
+      "price": 528000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22ICN%22%2C%22continentCode%22%3A%22ASIA%22%2C%22arrivalCity%22%3A%22TAG%22%2C%22departureDate%22%3A%222026-07-27%22%2C%22arrivalDate%22%3A%222026-07-28%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
+      "availableSeats": 1,
+      "flightNumber": "7C2125 / 7C2126",
+      "region": "동남아",
+      "modetourDetail": {
+        "flyingTime": "04:45",
+        "isDirect": true,
+        "isReturnDirect": true,
+        "departureArrivalTime": "01:15",
+        "returnDepartureTime": "02:15",
+        "returnArrivalTime": "07:50",
+        "normalPrice": 1000000,
+        "sourceDiscountRate": 69,
+        "baseFare": 310000,
+        "tax": 170500,
+        "tax2": 47500,
+        "childBaseFare": 310000,
+        "childTax": 170500,
+        "childTax2": 40500,
+        "infantFare": 100000,
+        "departureFlightNo": "7C2125",
+        "returnFlightNo": "7C2126",
+        "returnDepartureAirport": "TAG",
+        "returnArrivalAirport": "ICN"
+      },
+      "discountRate": -5,
+      "firstSeen": "2026-07-10"
+    },
+    {
       "id": "modetour-ASIA-19725509",
       "source": "modetour",
       "airline": "제주항공",
@@ -9772,52 +9818,6 @@
       },
       "discountRate": 0,
       "firstSeen": "2026-06-30"
-    },
-    {
-      "id": "modetour-ASIA-19722618",
-      "source": "modetour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-07-28",
-        "time": "21:30"
-      },
-      "arrival": {
-        "city": "보홀",
-        "airport": "TAG",
-        "date": "2026-08-01",
-        "time": "02:15"
-      },
-      "price": 478000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22ICN%22%2C%22continentCode%22%3A%22ASIA%22%2C%22arrivalCity%22%3A%22TAG%22%2C%22departureDate%22%3A%222026-07-28%22%2C%22arrivalDate%22%3A%222026-07-29%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
-      "availableSeats": 2,
-      "flightNumber": "7C2125 / 7C2126",
-      "region": "동남아",
-      "modetourDetail": {
-        "flyingTime": "04:45",
-        "isDirect": true,
-        "isReturnDirect": true,
-        "departureArrivalTime": "01:15",
-        "returnDepartureTime": "02:15",
-        "returnArrivalTime": "07:50",
-        "normalPrice": 1000000,
-        "sourceDiscountRate": 74,
-        "baseFare": 260000,
-        "tax": 170500,
-        "tax2": 47500,
-        "childBaseFare": 260000,
-        "childTax": 170500,
-        "childTax2": 40500,
-        "infantFare": 100000,
-        "departureFlightNo": "7C2125",
-        "returnFlightNo": "7C2126",
-        "returnDepartureAirport": "TAG",
-        "returnArrivalAirport": "ICN"
-      },
-      "discountRate": 5,
-      "firstSeen": "2026-07-07"
     },
     {
       "id": "modetour-ASIA-19725510",
@@ -11263,6 +11263,52 @@
         "returnArrivalAirport": "ICN"
       },
       "discountRate": -5,
+      "firstSeen": "2026-07-10"
+    },
+    {
+      "id": "modetour-ASIA-20083346",
+      "source": "modetour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-08-10",
+        "time": "20:20"
+      },
+      "arrival": {
+        "city": "클락",
+        "airport": "CRK",
+        "date": "2026-08-14",
+        "time": "00:20"
+      },
+      "price": 442500,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22ICN%22%2C%22continentCode%22%3A%22ASIA%22%2C%22arrivalCity%22%3A%22CRK%22%2C%22departureDate%22%3A%222026-08-10%22%2C%22arrivalDate%22%3A%222026-08-11%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
+      "availableSeats": 4,
+      "flightNumber": "7C2173 / 7C2174",
+      "region": "동남아",
+      "modetourDetail": {
+        "flyingTime": "04:00",
+        "isDirect": true,
+        "isReturnDirect": true,
+        "departureArrivalTime": "23:20",
+        "returnDepartureTime": "00:20",
+        "returnArrivalTime": "05:20",
+        "normalPrice": 1000000,
+        "sourceDiscountRate": 78,
+        "baseFare": 220000,
+        "tax": 170500,
+        "tax2": 52000,
+        "childBaseFare": 220000,
+        "childTax": 170500,
+        "childTax2": 45000,
+        "infantFare": 100000,
+        "departureFlightNo": "7C2173",
+        "returnFlightNo": "7C2174",
+        "returnDepartureAirport": "CRK",
+        "returnArrivalAirport": "ICN"
+      },
+      "discountRate": 0,
       "firstSeen": "2026-07-10"
     },
     {
@@ -13566,19 +13612,23 @@
         "city": "서울",
         "airport": "ICN",
         "date": "2026-07-23",
-        "time": ""
+        "time": "15:20",
+        "arrivalTime": "17:00"
       },
       "arrival": {
         "city": "오사카(간사이)",
         "airport": "KIX",
         "date": "2026-07-25",
-        "time": ""
+        "time": "16:15",
+        "arrivalTime": "18:25"
       },
       "price": 239000,
       "currency": "KRW",
       "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=KIX&depdate0=2026-07-23&dep1=KIX&arr1=ICN&depdate1=2026-07-25&adt=1&chd=0&inf=0&comp=Y",
       "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=KIX&depdate0=2026-07-23&dep1=KIX&arr1=ICN&depdate1=2026-07-25&adt=1&chd=0&inf=0&comp=Y",
       "region": "일본",
+      "availableSeats": 3,
+      "seats": "3석",
       "discountRate": -29,
       "firstSeen": "2026-07-08"
     },
@@ -17224,7 +17274,7 @@
   "sources": {
     "ybtour": 459,
     "hanatour": 86,
-    "modetour": 669,
+    "modetour": 668,
     "onlinetour": 104,
     "ttang": 1145,
     "myrealtrip": 46
@@ -22500,8 +22550,8 @@
       {
         "date": "2026-07-10",
         "minPrice": 399000,
-        "avgPrice": 577782,
-        "count": 22
+        "avgPrice": 582533,
+        "count": 21
       }
     ],
     "인천-푸꾸옥": [
@@ -23704,8 +23754,8 @@
       {
         "date": "2026-07-10",
         "minPrice": 442500,
-        "avgPrice": 521943,
-        "count": 44
+        "avgPrice": 520178,
+        "count": 45
       }
     ],
     "청주-클락": [
@@ -33034,8 +33084,8 @@
       {
         "date": "2026-07-10",
         "minPrice": 395000,
-        "avgPrice": 473800,
-        "count": 20
+        "avgPrice": 467211,
+        "count": 19
       }
     ],
     "서울(ICN)-보홀(TAG)": [
