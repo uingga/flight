@@ -702,6 +702,13 @@ export default function Dashboard() {
             case 'discount': {
                 // 스마트 정렬 (Penalty Score Sorting)
                 // 기본적으로 가격순(최저가)으로 정렬하되, 인터파크 벤치마크와 네이버 최저가를 활용하여 페널티/보너스를 부여합니다.
+                // 같은 노선(출발지-도착지)이면 벤치마크 월별 차이에 관계없이 절대 가격순으로 정렬합니다.
+                const routeA = `${normalizeCity(a.departure.city)}-${normalizeCity(a.arrival.city)}`;
+                const routeB = `${normalizeCity(b.departure.city)}-${normalizeCity(b.arrival.city)}`;
+                if (routeA === routeB) {
+                    comparison = a.price - b.price;
+                    break;
+                }
                 const getSortScore = (flight: Flight) => {
                     const city = flight.arrival.city?.replace(/\([^)]+\)/, '').trim();
                     const depMonth = flight.departure.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 7);
@@ -783,56 +790,64 @@ export default function Dashboard() {
 
     // 노선 분산 정렬: 같은 출발지-목적지가 연속 3개 이상 나오지 않도록 재배치
     // 추천순에서만 적용 (가격순/날짜순/검색 시 비활성화)
+    // 개선: pending 항목을 적극적으로 drain하여 저렴한 항공편이 비싼 항공편 뒤로 밀리는 역전 방지
     const interleaveRoutes = (flights: Flight[], maxConsecutive: number = 2): Flight[] => {
         if (flights.length <= maxConsecutive) return flights;
 
         const result: Flight[] = [];
         const pending: Flight[] = [];
 
-        for (const flight of flights) {
-            const route = `${normalizeCity(flight.departure.city)}-${normalizeCity(flight.arrival.city)}`;
+        const getRoute = (f: Flight) => `${normalizeCity(f.departure.city)}-${normalizeCity(f.arrival.city)}`;
 
-            // 현재 result 끝에서 같은 노선이 maxConsecutive개 연속인지 확인
+        // result 끝에서 해당 노선의 연속 streak 확인
+        const getStreak = (route: string) => {
             let streak = 0;
             for (let i = result.length - 1; i >= 0 && i >= result.length - maxConsecutive; i--) {
-                const r = `${normalizeCity(result[i].departure.city)}-${normalizeCity(result[i].arrival.city)}`;
-                if (r === route) streak++;
+                if (getRoute(result[i]) === route) streak++;
                 else break;
             }
+            return streak;
+        };
 
-            if (streak >= maxConsecutive) {
+        // pending에서 배치 가능한 항목을 최대한 drain (스코어순 유지)
+        const drainPending = () => {
+            let drained = true;
+            while (drained && pending.length > 0) {
+                drained = false;
+                for (let pi = 0; pi < pending.length; pi++) {
+                    if (getStreak(getRoute(pending[pi])) < maxConsecutive) {
+                        result.push(pending.splice(pi, 1)[0]);
+                        drained = true;
+                        break; // pending 앞쪽(저렴한)부터 다시 시도
+                    }
+                }
+            }
+        };
+
+        for (const flight of flights) {
+            const route = getRoute(flight);
+
+            if (getStreak(route) >= maxConsecutive) {
                 // 연속 한도 초과 → pending으로 보류
                 pending.push(flight);
             } else {
-                // pending에서 삽입 가능한 항목 먼저 확인 (다른 노선이면 끼워넣기)
-                if (pending.length > 0 && streak === 0) {
-                    // 현재 노선과 다른 pending 항목을 최대한 삽입
-                    const insertable: number[] = [];
-                    for (let pi = 0; pi < pending.length; pi++) {
-                        const pr = `${normalizeCity(pending[pi].departure.city)}-${normalizeCity(pending[pi].arrival.city)}`;
-                        if (pr !== route) {
-                            // 이 pending 항목이 result 끝과도 연속되지 않는지 확인
-                            let pStreak = 0;
-                            for (let ri = result.length - 1; ri >= 0 && ri >= result.length - maxConsecutive; ri--) {
-                                const rr = `${normalizeCity(result[ri].departure.city)}-${normalizeCity(result[ri].arrival.city)}`;
-                                if (rr === pr) pStreak++;
-                                else break;
-                            }
-                            if (pStreak < maxConsecutive) {
-                                insertable.push(pi);
-                                break; // 한 번에 하나만 삽입
-                            }
-                        }
-                    }
-                    for (const idx of insertable) {
-                        result.push(pending.splice(idx, 1)[0]);
-                    }
+                // 현재 항공편 배치 전에 pending 항목을 먼저 drain
+                // (pending은 스코어순으로 쌓이므로, 먼저 배치하면 저렴한 것이 우선)
+                if (pending.length > 0) {
+                    drainPending();
                 }
-                result.push(flight);
+                // drain 후에도 현재 항공편이 배치 가능한지 재확인
+                if (getStreak(route) < maxConsecutive) {
+                    result.push(flight);
+                } else {
+                    pending.push(flight);
+                }
             }
         }
 
-        // 남은 pending 항목 추가 (순서 유지)
+        // 남은 pending 항목을 유효한 위치에 배치 시도
+        drainPending();
+        // 그래도 남은 항목은 마지막에 추가 (극단적 edge case)
         result.push(...pending);
         return result;
     };
