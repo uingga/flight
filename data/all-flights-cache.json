@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-07-13T12:55:24.257Z",
-  "count": 604,
+  "timestamp": "2026-07-13T15:14:15.237Z",
+  "count": 603,
   "flights": [
     {
       "id": "ybtour-쿠마모토-20260811-7",
@@ -1630,13 +1630,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-13",
-        "time": ""
+        "time": "14:25",
+        "arrivalTime": "16:00"
       },
       "arrival": {
         "city": "후쿠오카",
         "airport": "FUK",
         "date": "2026-09-15",
-        "time": ""
+        "time": "09:40",
+        "arrivalTime": "11:15"
       },
       "price": 263540,
       "currency": "KRW",
@@ -3177,8 +3179,7 @@
       "price": 315000,
       "currency": "KRW",
       "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=A0%2FA3&inhId=TW0013ICNDAD-T2&depDate=20260818&efcCityCode=DAD",
-      "seats": "1석",
-      "availableSeats": 1,
+      "seats": "0석",
       "region": "동남아",
       "discountRate": -10,
       "firstSeen": "2026-07-13"
@@ -8367,7 +8368,7 @@
       "firstSeen": "2026-07-13"
     },
     {
-      "id": "hanatour-regular-인천/김포-17",
+      "id": "hanatour-regular-인천/김포-16",
       "source": "hanatour",
       "airline": "에어부산",
       "departure": {
@@ -8392,7 +8393,7 @@
       "firstSeen": "2026-07-13"
     },
     {
-      "id": "hanatour-regular-인천/김포-29",
+      "id": "hanatour-regular-인천/김포-27",
       "source": "hanatour",
       "airline": "대한항공",
       "departure": {
@@ -9464,7 +9465,7 @@
       "price": 416700,
       "currency": "KRW",
       "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22ICN%22%2C%22continentCode%22%3A%22ASIA%22%2C%22arrivalCity%22%3A%22BKI%22%2C%22departureDate%22%3A%222026-08-07%22%2C%22arrivalDate%22%3A%222026-08-08%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
-      "availableSeats": 20,
+      "availableSeats": 17,
       "flightNumber": "LJ131 / LJ132",
       "region": "동남아",
       "modetourDetail": {
@@ -14487,34 +14488,6 @@
       "firstSeen": "2026-07-13"
     },
     {
-      "id": "ttang-ICN-RMQ-RT-0-4-LJ-2026-08-04",
-      "source": "ttang",
-      "airline": "진에어",
-      "departure": {
-        "city": "서울",
-        "airport": "ICN",
-        "date": "2026-08-04",
-        "time": "07:55",
-        "arrivalTime": "09:40"
-      },
-      "arrival": {
-        "city": "타이중(대만)",
-        "airport": "RMQ",
-        "date": "2026-08-07",
-        "time": "17:30",
-        "arrivalTime": "21:15"
-      },
-      "price": 254700,
-      "currency": "KRW",
-      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=RMQ&depdate0=2026-08-04&dep1=RMQ&arr1=ICN&depdate1=2026-08-07&adt=1&chd=0&inf=0&comp=Y",
-      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=RMQ&depdate0=2026-08-04&dep1=RMQ&arr1=ICN&depdate1=2026-08-07&adt=1&chd=0&inf=0&comp=Y",
-      "region": "중국",
-      "availableSeats": 9,
-      "seats": "9석",
-      "discountRate": 16,
-      "firstSeen": "2026-07-04"
-    },
-    {
       "id": "ttang-TAE-TPE-RT-0-5-TW-2026-08-04",
       "source": "ttang",
       "airline": "티웨이항공",
@@ -17811,10 +17784,10 @@
   ],
   "sources": {
     "ybtour": 435,
-    "hanatour": 76,
-    "modetour": 726,
+    "hanatour": 74,
+    "modetour": 725,
     "onlinetour": 85,
-    "ttang": 1489,
+    "ttang": 1487,
     "myrealtrip": 27
   },
   "priceHistory": {
@@ -24808,8 +24781,8 @@
       {
         "date": "2026-07-13",
         "minPrice": 470900,
-        "avgPrice": 540100,
-        "count": 5
+        "avgPrice": 547400,
+        "count": 4
       }
     ],
     "서울(ICN)-푸꾸옥(PQC)": [
@@ -25326,8 +25299,8 @@
       {
         "date": "2026-07-13",
         "minPrice": 436700,
-        "avgPrice": 474882,
-        "count": 11
+        "avgPrice": 476700,
+        "count": 10
       }
     ],
     "서울(ICN)-하노이(HAN)": [
@@ -28250,8 +28223,8 @@
       {
         "date": "2026-07-13",
         "minPrice": 413100,
-        "avgPrice": 544189,
-        "count": 100
+        "avgPrice": 543262,
+        "count": 99
       }
     ],
     "청주-다낭": [
@@ -29720,8 +29693,8 @@
       {
         "date": "2026-07-13",
         "minPrice": 242000,
-        "avgPrice": 295646,
-        "count": 109
+        "avgPrice": 295726,
+        "count": 108
       }
     ],
     "서울-오사카": [
@@ -37636,8 +37609,8 @@
       {
         "date": "2026-07-13",
         "minPrice": 254700,
-        "avgPrice": 314459,
-        "count": 17
+        "avgPrice": 318194,
+        "count": 16
       }
     ],
     "부산-방콕": [
