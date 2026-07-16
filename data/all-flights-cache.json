@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-07-16T14:04:44.586Z",
-  "count": 557,
+  "timestamp": "2026-07-16T17:17:59.240Z",
+  "count": 559,
   "flights": [
     {
       "id": "ybtour-쿠마모토-20260811-6",
@@ -2233,6 +2233,60 @@
       "firstSeen": "2026-07-14"
     },
     {
+      "id": "ybtour-시모지시마(SHI)-20260830-3",
+      "source": "ybtour",
+      "airline": "진에어",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-08-30",
+        "time": "14:45",
+        "arrivalTime": "17:00"
+      },
+      "arrival": {
+        "city": "시모지시마(SHI)",
+        "airport": "SHI",
+        "date": "2026-09-03",
+        "time": "18:00",
+        "arrivalTime": "20:20"
+      },
+      "price": 384900,
+      "currency": "KRW",
+      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=J1&inhId=LJ0363PUSSHI-T3&depDate=20260830&efcCityCode=SHI",
+      "seats": "4석",
+      "availableSeats": 4,
+      "region": "일본",
+      "discountRate": 0,
+      "firstSeen": "2026-07-16"
+    },
+    {
+      "id": "ybtour-시모지시마(SHI)-20260906-4",
+      "source": "ybtour",
+      "airline": "진에어",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-09-06",
+        "time": "14:45",
+        "arrivalTime": "17:00"
+      },
+      "arrival": {
+        "city": "시모지시마(SHI)",
+        "airport": "SHI",
+        "date": "2026-09-10",
+        "time": "18:00",
+        "arrivalTime": "20:20"
+      },
+      "price": 384900,
+      "currency": "KRW",
+      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=J1&inhId=LJ0363PUSSHI-T3&depDate=20260906&efcCityCode=SHI",
+      "seats": "8석",
+      "availableSeats": 8,
+      "region": "일본",
+      "discountRate": 0,
+      "firstSeen": "2026-07-16"
+    },
+    {
       "id": "ybtour-대만(타이페이)-20260826-0",
       "source": "ybtour",
       "airline": "이스타항공",
@@ -3817,8 +3871,7 @@
       "price": 329000,
       "currency": "KRW",
       "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=A0%2FA3&inhId=TW0101ICNBKK-T3&depDate=20260817&efcCityCode=BKK",
-      "seats": "4석",
-      "availableSeats": 4,
+      "seats": "0석",
       "region": "동남아",
       "discountRate": -5,
       "firstSeen": "2026-07-15"
@@ -16193,9 +16246,9 @@
     }
   ],
   "sources": {
-    "ybtour": 378,
+    "ybtour": 380,
     "hanatour": 89,
-    "modetour": 616,
+    "modetour": 615,
     "onlinetour": 87,
     "ttang": 471,
     "myrealtrip": 94
@@ -29517,8 +29570,8 @@
       {
         "date": "2026-07-16",
         "minPrice": 410000,
-        "avgPrice": 559774,
-        "count": 16
+        "avgPrice": 562525,
+        "count": 15
       }
     ],
     "청주-나트랑": [
