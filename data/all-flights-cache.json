@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-07-19T11:18:36.637Z",
+  "timestamp": "2026-07-19T13:55:54.208Z",
   "count": 644,
   "flights": [
     {
@@ -4156,8 +4156,8 @@
       "price": 329000,
       "currency": "KRW",
       "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=A0%2FA3&inhId=TW0101ICNBKK-T3&depDate=20260820&efcCityCode=BKK",
-      "seats": "3석",
-      "availableSeats": 3,
+      "seats": "1석",
+      "availableSeats": 1,
       "region": "동남아",
       "discountRate": -2,
       "firstSeen": "2026-07-19"
@@ -10942,7 +10942,7 @@
       "price": 450000,
       "currency": "KRW",
       "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22PUS%22%2C%22continentCode%22%3A%22ASIA%22%2C%22arrivalCity%22%3A%22SIN%22%2C%22departureDate%22%3A%222026-08-17%22%2C%22arrivalDate%22%3A%222026-08-18%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
-      "availableSeats": 26,
+      "availableSeats": 22,
       "flightNumber": "7C2661 / 7C2662",
       "region": "동남아",
       "modetourDetail": {
@@ -16508,34 +16508,6 @@
       "firstSeen": "2026-07-17"
     },
     {
-      "id": "ttang-7C1451PUSFUK-G14-2026-08-18",
-      "source": "ttang",
-      "airline": "제주항공",
-      "departure": {
-        "city": "부산",
-        "airport": "PUS",
-        "date": "2026-08-18",
-        "time": "14:50",
-        "arrivalTime": "16:00"
-      },
-      "arrival": {
-        "city": "후쿠오카",
-        "airport": "FUK",
-        "date": "2026-08-20",
-        "time": "10:55",
-        "arrivalTime": "12:10"
-      },
-      "price": 199900,
-      "currency": "KRW",
-      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=PUS&arr0=FUK&depdate0=2026-08-18&dep1=FUK&arr1=PUS&depdate1=2026-08-20&adt=1&chd=0&inf=0&comp=Y",
-      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=PUS&arr0=FUK&depdate0=2026-08-18&dep1=FUK&arr1=PUS&depdate1=2026-08-20&adt=1&chd=0&inf=0&comp=Y",
-      "region": "일본",
-      "availableSeats": 5,
-      "seats": "5석",
-      "discountRate": -3,
-      "firstSeen": "2026-07-18"
-    },
-    {
       "id": "ttang-RS0713ICNKIX-G10-2026-08-18",
       "source": "ttang",
       "airline": "에어서울",
@@ -16561,6 +16533,34 @@
       "availableSeats": 7,
       "seats": "7석",
       "discountRate": -6,
+      "firstSeen": "2026-07-18"
+    },
+    {
+      "id": "ttang-7C1451PUSFUK-G14-2026-08-18",
+      "source": "ttang",
+      "airline": "제주항공",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-08-18",
+        "time": "14:50",
+        "arrivalTime": "16:00"
+      },
+      "arrival": {
+        "city": "후쿠오카",
+        "airport": "FUK",
+        "date": "2026-08-20",
+        "time": "10:55",
+        "arrivalTime": "12:10"
+      },
+      "price": 199900,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=PUS&arr0=FUK&depdate0=2026-08-18&dep1=FUK&arr1=PUS&depdate1=2026-08-20&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=PUS&arr0=FUK&depdate0=2026-08-18&dep1=FUK&arr1=PUS&depdate1=2026-08-20&adt=1&chd=0&inf=0&comp=Y",
+      "region": "일본",
+      "availableSeats": 5,
+      "seats": "5석",
+      "discountRate": -3,
       "firstSeen": "2026-07-18"
     },
     {
@@ -16648,34 +16648,6 @@
       "firstSeen": "2026-07-19"
     },
     {
-      "id": "ttang-RF0374CJJKKJ-G3-2026-08-18",
-      "source": "ttang",
-      "airline": "에어로케이",
-      "departure": {
-        "city": "청주",
-        "airport": "CJJ",
-        "date": "2026-08-18",
-        "time": "08:10",
-        "arrivalTime": "09:15"
-      },
-      "arrival": {
-        "city": "기타큐슈",
-        "airport": "KKJ",
-        "date": "2026-08-20",
-        "time": "11:55",
-        "arrivalTime": "13:10"
-      },
-      "price": 225000,
-      "currency": "KRW",
-      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=CJJ&arr0=KKJ&depdate0=2026-08-18&dep1=KKJ&arr1=CJJ&depdate1=2026-08-20&adt=1&chd=0&inf=0&comp=Y",
-      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=CJJ&arr0=KKJ&depdate0=2026-08-18&dep1=KKJ&arr1=CJJ&depdate1=2026-08-20&adt=1&chd=0&inf=0&comp=Y",
-      "region": "일본",
-      "availableSeats": 4,
-      "seats": "4석",
-      "discountRate": -6,
-      "firstSeen": "2026-07-18"
-    },
-    {
       "id": "ttang-RF0372CJJKKJ-G9-2026-08-18",
       "source": "ttang",
       "airline": "에어로케이",
@@ -16697,6 +16669,34 @@
       "currency": "KRW",
       "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=CJJ&arr0=KKJ&depdate0=2026-08-18&dep1=KKJ&arr1=CJJ&depdate1=2026-08-21&adt=1&chd=0&inf=0&comp=Y",
       "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=CJJ&arr0=KKJ&depdate0=2026-08-18&dep1=KKJ&arr1=CJJ&depdate1=2026-08-21&adt=1&chd=0&inf=0&comp=Y",
+      "region": "일본",
+      "availableSeats": 4,
+      "seats": "4석",
+      "discountRate": -6,
+      "firstSeen": "2026-07-18"
+    },
+    {
+      "id": "ttang-RF0374CJJKKJ-G3-2026-08-18",
+      "source": "ttang",
+      "airline": "에어로케이",
+      "departure": {
+        "city": "청주",
+        "airport": "CJJ",
+        "date": "2026-08-18",
+        "time": "08:10",
+        "arrivalTime": "09:15"
+      },
+      "arrival": {
+        "city": "기타큐슈",
+        "airport": "KKJ",
+        "date": "2026-08-20",
+        "time": "11:55",
+        "arrivalTime": "13:10"
+      },
+      "price": 225000,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=CJJ&arr0=KKJ&depdate0=2026-08-18&dep1=KKJ&arr1=CJJ&depdate1=2026-08-20&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=CJJ&arr0=KKJ&depdate0=2026-08-18&dep1=KKJ&arr1=CJJ&depdate1=2026-08-20&adt=1&chd=0&inf=0&comp=Y",
       "region": "일본",
       "availableSeats": 4,
       "seats": "4석",
