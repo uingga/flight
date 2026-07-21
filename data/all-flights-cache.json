@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-07-21T12:05:20.770Z",
+  "timestamp": "2026-07-21T14:21:27.817Z",
   "count": 572,
   "flights": [
     {
@@ -1942,13 +1942,15 @@
         "city": "부산",
         "airport": "PUS",
         "date": "2026-09-01",
-        "time": ""
+        "time": "14:10",
+        "arrivalTime": "16:40"
       },
       "arrival": {
         "city": "삿포로(치토세)",
         "airport": "CTS",
         "date": "2026-09-04",
-        "time": ""
+        "time": "18:20",
+        "arrivalTime": "21:00"
       },
       "price": 379900,
       "currency": "KRW",
@@ -3452,13 +3454,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-14",
-        "time": ""
+        "time": "18:05",
+        "arrivalTime": "20:35"
       },
       "arrival": {
         "city": "하노이",
         "airport": "HAN",
         "date": "2026-09-18",
-        "time": ""
+        "time": "10:20",
+        "arrivalTime": "16:35"
       },
       "price": 319900,
       "currency": "KRW",
@@ -3477,13 +3481,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-15",
-        "time": ""
+        "time": "18:05",
+        "arrivalTime": "20:35"
       },
       "arrival": {
         "city": "하노이",
         "airport": "HAN",
         "date": "2026-09-19",
-        "time": ""
+        "time": "10:20",
+        "arrivalTime": "16:35"
       },
       "price": 319900,
       "currency": "KRW",
@@ -3502,13 +3508,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-10-19",
-        "time": ""
+        "time": "19:55",
+        "arrivalTime": "22:50"
       },
       "arrival": {
         "city": "하노이",
         "airport": "HAN",
         "date": "2026-10-23",
-        "time": ""
+        "time": "00:20",
+        "arrivalTime": "06:40"
       },
       "price": 319900,
       "currency": "KRW",
@@ -3903,13 +3911,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-08-17",
-        "time": ""
+        "time": "20:05",
+        "arrivalTime": "00:10"
       },
       "arrival": {
         "city": "방콕",
         "airport": "BKK",
         "date": "2026-08-21",
-        "time": ""
+        "time": "01:10",
+        "arrivalTime": "08:55"
       },
       "price": 329000,
       "currency": "KRW",
@@ -4209,8 +4219,8 @@
       "price": 379000,
       "currency": "KRW",
       "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=A0%2FA3&inhId=TW0105TAEBKK-T8&depDate=20260810&efcCityCode=BKK",
-      "seats": "4석",
-      "availableSeats": 4,
+      "seats": "3석",
+      "availableSeats": 3,
       "region": "동남아",
       "discountRate": -24,
       "firstSeen": "2026-07-21"
@@ -4776,8 +4786,8 @@
       "price": 359000,
       "currency": "KRW",
       "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=A0%2FA3&inhId=TW0055ICNPQC-T2&depDate=20260825&efcCityCode=PQC",
-      "seats": "6석",
-      "availableSeats": 6,
+      "seats": "2석",
+      "availableSeats": 2,
       "region": "동남아",
       "discountRate": -4,
       "firstSeen": "2026-07-20"
@@ -14068,19 +14078,23 @@
         "city": "부산",
         "airport": "PUS",
         "date": "2026-08-18",
-        "time": ""
+        "time": "16:30",
+        "arrivalTime": "17:55"
       },
       "arrival": {
         "city": "오사카(간사이)",
         "airport": "KIX",
         "date": "2026-08-20",
-        "time": ""
+        "time": "14:00",
+        "arrivalTime": "15:30"
       },
       "price": 216500,
       "currency": "KRW",
       "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=PUS&arr0=KIX&depdate0=2026-08-18&dep1=KIX&arr1=PUS&depdate1=2026-08-20&adt=1&chd=0&inf=0&comp=Y",
       "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=PUS&arr0=KIX&depdate0=2026-08-18&dep1=KIX&arr1=PUS&depdate1=2026-08-20&adt=1&chd=0&inf=0&comp=Y",
       "region": "일본",
+      "availableSeats": 9,
+      "seats": "9석",
       "discountRate": -13,
       "firstSeen": "2026-07-21"
     },
@@ -16692,7 +16706,7 @@
     "hanatour": 76,
     "modetour": 804,
     "onlinetour": 74,
-    "ttang": 1577,
+    "ttang": 1575,
     "myrealtrip": 38
   },
   "priceHistory": {
@@ -26338,8 +26352,8 @@
       {
         "date": "2026-07-21",
         "minPrice": 486200,
-        "avgPrice": 574543,
-        "count": 35
+        "avgPrice": 571391,
+        "count": 34
       }
     ],
     "부산-타이베이": [
@@ -36250,8 +36264,8 @@
       {
         "date": "2026-07-21",
         "minPrice": 286600,
-        "avgPrice": 304933,
-        "count": 12
+        "avgPrice": 304782,
+        "count": 11
       }
     ],
     "부산-시즈오카": [
