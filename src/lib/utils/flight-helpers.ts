@@ -213,6 +213,8 @@ export const CITY_TO_AIRPORT: Record<string, string> = {
     '위해(웨이하이)': 'WEH', '제남(지난)': 'TNA',
     '타이중(대중)': 'RMQ', '미야코지마(시모지시마공항)': 'SHI',
     '알마티': 'ALA', '후허하오터': 'HET',
+    // 추가 누락 도시 (썸네일 작업 시 확인)
+    '도쿠시마': 'TKS', '오카야마': 'OKJ', '인촨': 'INC', '부지': 'FSZ', '오비히로': 'OBO',
 };
 
 // 도시명에서 공항코드 추출 (airport: 데이터에 이미 있는 공항코드 fallback)

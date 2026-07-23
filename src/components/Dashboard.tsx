@@ -936,6 +936,9 @@ export default function Dashboard() {
             '교토': 'kyoto', '하코네': 'hakone', '유후인': 'yufuin',
             '히로시마': 'hiroshima', '나하': 'naha', '부산': 'busan', '제주': 'jeju',
             '기타큐슈': 'kitakyushu', '고베': 'kobe', '마닐라': 'manila', '울란바타르': 'ulaanbaatar',
+            // 추가 도시 썸네일
+            '도쿠시마': 'tokushima', '오이타': 'oita', '오카야마': 'okayama',
+            '후허하오터': 'hohhot', '인촨': 'yinchuan', '부지': 'fuji', '오비히로': 'obihiro',
         };
         const regionGradients: Record<string, string> = {
             '일본': 'linear-gradient(135deg, #e84393 0%, #a855f7 100%)',
