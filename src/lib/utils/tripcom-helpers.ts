@@ -205,6 +205,8 @@ export const TRIPCOM_CITY_DATA: Record<string, { id: number; name: string; provi
     '술탄압둘아지즈샤': { id: 35937, name: '술탄압둘아지즈샤' },
     '도단': { id: 221, name: '도단' }, '락자': { id: 384625, name: '락자' },
     '제네바': { id: 666, name: '제네바' },
+    // 추가 누락 도시
+    '인촨': { id: 855, name: '인촨' },
 };
 
 export const TRIPCOM_HOTEL_SUB3 = 'D13108706';
@@ -258,6 +260,8 @@ export const IATA_TO_ENGLISH: Record<string, string> = {
     'NAN': 'Fiji', 'PER': 'Perth', 'ROR': 'Palau', 'SPN': 'Saipan',
     'SYD': 'Sydney', 'TBS': 'Tbilisi', 'TLV': 'Tel Aviv', 'TYO': 'Tokyo',
     'UBN': 'Ulaanbaatar', 'VVO': 'Vladivostok', 'ZQN': 'Queenstown',
+    // 추가 누락 매핑
+    'INC': 'Yinchuan', 'OBO': 'Obihiro',
 };
 
 export const getTripcomHotelUrl = (arrCity: string, depDate?: string, arrDate?: string, arrAirport?: string): string | null => {
