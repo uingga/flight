@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-07-24T11:55:00.849Z",
-  "count": 606,
+  "timestamp": "2026-07-24T14:22:42.676Z",
+  "count": 605,
   "flights": [
     {
       "id": "ybtour-후쿠오카-20260809-0",
@@ -112,13 +112,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-08-26",
-        "time": ""
+        "time": "14:25",
+        "arrivalTime": "16:00"
       },
       "arrival": {
         "city": "후쿠오카",
         "airport": "FUK",
         "date": "2026-08-29",
-        "time": ""
+        "time": "09:40",
+        "arrivalTime": "11:15"
       },
       "price": 229000,
       "currency": "KRW",
@@ -1958,13 +1960,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-08-29",
-        "time": ""
+        "time": "20:55",
+        "arrivalTime": "23:40"
       },
       "arrival": {
         "city": "다낭",
         "airport": "DAD",
         "date": "2026-09-03",
-        "time": ""
+        "time": "00:40",
+        "arrivalTime": "07:15"
       },
       "price": 259900,
       "currency": "KRW",
@@ -2050,8 +2054,7 @@
       "price": 325000,
       "currency": "KRW",
       "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=A0%2FA3&inhId=TW0025CJJDAD-T4&depDate=20260831&efcCityCode=DAD",
-      "seats": "9석",
-      "availableSeats": 9,
+      "seats": "0석",
       "region": "동남아",
       "discountRate": -9,
       "firstSeen": "2026-07-24"
@@ -4611,8 +4614,7 @@
       "price": 360000,
       "currency": "KRW",
       "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=A0%2FA3&inhId=TW0033ICNCXR-T3&depDate=20260831&efcCityCode=CXR",
-      "seats": "4석",
-      "availableSeats": 4,
+      "seats": "0석",
       "region": "동남아",
       "discountRate": -3,
       "firstSeen": "2026-07-24"
@@ -7429,7 +7431,7 @@
       "price": 286100,
       "currency": "KRW",
       "link": "https://www.hanatour.com/com/pmt/CHPC0PMT0011M200?fareId=RTF%5E3093038%5EBX1645PUSFSZ-H2%5EBX1645PUSFSZ-5%5E20260810%5ET%5EKRW%5E6438445%5E5242569%5E%5E1%5E0%5E0&psngrCntLst=%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D&selectedCard=%7B%7D",
-      "availableSeats": 7,
+      "availableSeats": 5,
       "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22PUS%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22FSZ%22%2C%22depDt%22%3A%2220260810%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22FSZ%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22PUS%22%2C%22depDt%22%3A%2220260812%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
       "region": "일본",
       "discountRate": -33,
@@ -8307,52 +8309,6 @@
       },
       "discountRate": -7,
       "firstSeen": "2026-07-24"
-    },
-    {
-      "id": "modetour-ASIA-19731013",
-      "source": "modetour",
-      "airline": "티웨이항공",
-      "departure": {
-        "city": "대구",
-        "airport": "TAE",
-        "date": "2026-08-16",
-        "time": "21:10"
-      },
-      "arrival": {
-        "city": "다낭",
-        "airport": "DAD",
-        "date": "2026-08-20",
-        "time": "01:30"
-      },
-      "price": 366000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22TAE%22%2C%22continentCode%22%3A%22ASIA%22%2C%22arrivalCity%22%3A%22DAD%22%2C%22departureDate%22%3A%222026-08-16%22%2C%22arrivalDate%22%3A%222026-08-17%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
-      "availableSeats": 2,
-      "flightNumber": "TW029 / TW030",
-      "region": "동남아",
-      "modetourDetail": {
-        "flyingTime": "05:10",
-        "isDirect": true,
-        "isReturnDirect": true,
-        "departureArrivalTime": "23:55",
-        "returnDepartureTime": "01:30",
-        "returnArrivalTime": "08:15",
-        "normalPrice": 620000,
-        "sourceDiscountRate": 72,
-        "baseFare": 170000,
-        "tax": 141000,
-        "tax2": 55000,
-        "childBaseFare": 170000,
-        "childTax": 141000,
-        "childTax2": 55000,
-        "infantFare": 100000,
-        "departureFlightNo": "TW029",
-        "returnFlightNo": "TW030",
-        "returnDepartureAirport": "DAD",
-        "returnArrivalAirport": "TAE"
-      },
-      "discountRate": -23,
-      "firstSeen": "2026-07-23"
     },
     {
       "id": "modetour-ASIA-19734232",
@@ -18200,9 +18156,9 @@
   "sources": {
     "ybtour": 336,
     "hanatour": 89,
-    "modetour": 798,
+    "modetour": 797,
     "onlinetour": 82,
-    "ttang": 1525,
+    "ttang": 1522,
     "myrealtrip": 56
   },
   "priceHistory": {
@@ -18632,8 +18588,8 @@
       {
         "date": "2026-07-24",
         "minPrice": 366000,
-        "avgPrice": 452375,
-        "count": 16
+        "avgPrice": 458133,
+        "count": 15
       }
     ],
     "인천-방콕": [
@@ -38372,8 +38328,8 @@
       {
         "date": "2026-07-24",
         "minPrice": 360000,
-        "avgPrice": 527342,
-        "count": 40
+        "avgPrice": 534978,
+        "count": 37
       }
     ],
     "서울-카오슝(대만)": [
