@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-07-28T12:06:41.811Z",
+  "timestamp": "2026-07-28T14:55:02.057Z",
   "count": 711,
   "flights": [
     {
@@ -23,8 +23,8 @@
       "price": 199000,
       "currency": "KRW",
       "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=J1&inhId=TW0203ICNFUK-T3&depDate=20260922&efcCityCode=FUK",
-      "seats": "6석",
-      "availableSeats": 6,
+      "seats": "3석",
+      "availableSeats": 3,
       "region": "일본",
       "discountRate": -17,
       "firstSeen": "2026-07-28"
@@ -2962,8 +2962,7 @@
       "price": 339000,
       "currency": "KRW",
       "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=A0%2FA3&inhId=TW0101ICNBKK-T3&depDate=20260918&efcCityCode=BKK",
-      "seats": "1석",
-      "availableSeats": 1,
+      "seats": "0석",
       "region": "동남아",
       "discountRate": 0,
       "firstSeen": "2026-07-28"
@@ -8380,7 +8379,7 @@
       "firstSeen": "2026-07-15"
     },
     {
-      "id": "hanatour-regular-인천/김포-31",
+      "id": "hanatour-regular-인천/김포-29",
       "source": "hanatour",
       "airline": "에어부산",
       "departure": {
@@ -8405,7 +8404,7 @@
       "firstSeen": "2026-07-28"
     },
     {
-      "id": "hanatour-regular-인천/김포-32",
+      "id": "hanatour-regular-인천/김포-30",
       "source": "hanatour",
       "airline": "에어부산",
       "departure": {
@@ -8430,7 +8429,7 @@
       "firstSeen": "2026-07-28"
     },
     {
-      "id": "hanatour-regular-인천/김포-33",
+      "id": "hanatour-regular-인천/김포-31",
       "source": "hanatour",
       "airline": "진에어",
       "departure": {
@@ -8455,7 +8454,7 @@
       "firstSeen": "2026-07-28"
     },
     {
-      "id": "hanatour-regular-인천/김포-42",
+      "id": "hanatour-regular-인천/김포-40",
       "source": "hanatour",
       "airline": "이스타항공",
       "departure": {
@@ -8480,7 +8479,7 @@
       "firstSeen": "2026-07-28"
     },
     {
-      "id": "hanatour-regular-인천/김포-43",
+      "id": "hanatour-regular-인천/김포-41",
       "source": "hanatour",
       "airline": "대한항공",
       "departure": {
@@ -8505,7 +8504,7 @@
       "firstSeen": "2026-07-28"
     },
     {
-      "id": "hanatour-regular-인천/김포-44",
+      "id": "hanatour-regular-인천/김포-42",
       "source": "hanatour",
       "airline": "대한항공",
       "departure": {
@@ -10616,7 +10615,7 @@
       "price": 298100,
       "currency": "KRW",
       "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22CJJ%22%2C%22continentCode%22%3A%22ASIA%22%2C%22arrivalCity%22%3A%22DAD%22%2C%22departureDate%22%3A%222026-08-21%22%2C%22arrivalDate%22%3A%222026-08-22%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
-      "availableSeats": 6,
+      "availableSeats": 4,
       "flightNumber": "RF531 / RF532",
       "region": "동남아",
       "modetourDetail": {
@@ -11788,7 +11787,7 @@
       "price": 299000,
       "currency": "KRW",
       "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22ICN%22%2C%22continentCode%22%3A%22ASIA%22%2C%22arrivalCity%22%3A%22DAD%22%2C%22departureDate%22%3A%222026-08-25%22%2C%22arrivalDate%22%3A%222026-08-26%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
-      "availableSeats": 4,
+      "availableSeats": 2,
       "flightNumber": "TW013 / TW014",
       "region": "동남아",
       "modetourDetail": {
@@ -19595,13 +19594,15 @@
         "city": "서울",
         "airport": "ICN",
         "date": "2026-08-26",
-        "time": ""
+        "time": "20:25",
+        "arrivalTime": "01:15"
       },
       "arrival": {
         "city": "마나도(인도네시아)",
         "airport": "MDC",
         "date": "2026-08-30",
-        "time": ""
+        "time": "02:20",
+        "arrivalTime": "08:40"
       },
       "price": 615000,
       "currency": "KRW",
@@ -21200,10 +21201,10 @@
   ],
   "sources": {
     "ybtour": 381,
-    "hanatour": 96,
-    "modetour": 855,
+    "hanatour": 94,
+    "modetour": 854,
     "onlinetour": 110,
-    "ttang": 1690,
+    "ttang": 1688,
     "myrealtrip": 39
   },
   "priceHistory": {
@@ -22149,8 +22150,8 @@
       {
         "date": "2026-07-28",
         "minPrice": 168000,
-        "avgPrice": 255947,
-        "count": 291
+        "avgPrice": 255564,
+        "count": 290
       }
     ],
     "청주-후쿠오카": [
@@ -34609,8 +34610,8 @@
       {
         "date": "2026-07-28",
         "minPrice": 288100,
-        "avgPrice": 345540,
-        "count": 10
+        "avgPrice": 343689,
+        "count": 9
       }
     ],
     "인천-발리": [
@@ -36869,8 +36870,8 @@
       {
         "date": "2026-07-28",
         "minPrice": 470000,
-        "avgPrice": 526364,
-        "count": 11
+        "avgPrice": 526000,
+        "count": 10
       }
     ],
     "인천-다카마쓰": [
@@ -79041,8 +79042,8 @@
       {
         "date": "2026-07-28",
         "minPrice": 187000,
-        "avgPrice": 224370,
-        "count": 27
+        "avgPrice": 223760,
+        "count": 25
       }
     ],
     "서울-콜롬보(스리랑카)": [
