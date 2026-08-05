@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-08-05T00:58:21.580Z",
-  "count": 697,
+  "timestamp": "2026-08-05T04:55:21.258Z",
+  "count": 729,
   "flights": [
     {
       "id": "ybtour-후쿠오카-20260902-11",
@@ -48,7 +48,8 @@
       "price": 199000,
       "currency": "KRW",
       "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=J1&inhId=TW0203ICNFUK-T4&depDate=20260922&efcCityCode=FUK",
-      "seats": "0석",
+      "seats": "6석",
+      "availableSeats": 6,
       "region": "일본",
       "discountRate": -30,
       "firstSeen": "2026-08-03"
@@ -1099,34 +1100,7 @@
       "firstSeen": "2026-08-05"
     },
     {
-      "id": "ybtour-요나고-20260819-0",
-      "source": "ybtour",
-      "airline": "에어서울",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-08-19",
-        "time": "13:25",
-        "arrivalTime": "14:50"
-      },
-      "arrival": {
-        "city": "요나고",
-        "airport": "YGJ",
-        "date": "2026-08-21",
-        "time": "15:50",
-        "arrivalTime": "17:45"
-      },
-      "price": 294000,
-      "currency": "KRW",
-      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=J1&inhId=RS0745ICNYGJ-T10&depDate=20260819&efcCityCode=YGJ",
-      "seats": "4석",
-      "availableSeats": 4,
-      "region": "일본",
-      "discountRate": -83,
-      "firstSeen": "2026-08-03"
-    },
-    {
-      "id": "ybtour-요나고-20260824-1",
+      "id": "ybtour-요나고-20260824-0",
       "source": "ybtour",
       "airline": "에어서울",
       "departure": {
@@ -1150,10 +1124,10 @@
       "availableSeats": 4,
       "region": "일본",
       "discountRate": -83,
-      "firstSeen": "2026-08-03"
+      "firstSeen": "2026-08-05"
     },
     {
-      "id": "ybtour-요나고-20260826-2",
+      "id": "ybtour-요나고-20260826-1",
       "source": "ybtour",
       "airline": "에어서울",
       "departure": {
@@ -1177,10 +1151,10 @@
       "availableSeats": 4,
       "region": "일본",
       "discountRate": -83,
-      "firstSeen": "2026-08-03"
+      "firstSeen": "2026-08-05"
     },
     {
-      "id": "ybtour-요나고-20260831-3",
+      "id": "ybtour-요나고-20260831-2",
       "source": "ybtour",
       "airline": "에어서울",
       "departure": {
@@ -1204,7 +1178,7 @@
       "availableSeats": 4,
       "region": "일본",
       "discountRate": -83,
-      "firstSeen": "2026-08-03"
+      "firstSeen": "2026-08-05"
     },
     {
       "id": "ybtour-시모지시마(SHI)-20260830-2",
@@ -1308,8 +1282,8 @@
       "price": 304900,
       "currency": "KRW",
       "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=J1&inhId=LJ0363PUSSHI-T3&depDate=20260920&efcCityCode=SHI",
-      "seats": "3석",
-      "availableSeats": 3,
+      "seats": "5석",
+      "availableSeats": 5,
       "region": "일본",
       "discountRate": 0,
       "firstSeen": "2026-08-02"
@@ -2103,13 +2077,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-13",
-        "time": ""
+        "time": "07:45",
+        "arrivalTime": "09:30"
       },
       "arrival": {
         "city": "대만(타이페이)",
         "airport": "TPE",
         "date": "2026-09-16",
-        "time": ""
+        "time": "10:30",
+        "arrivalTime": "14:40"
       },
       "price": 265000,
       "currency": "KRW",
@@ -3840,8 +3816,7 @@
       "price": 320000,
       "currency": "KRW",
       "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=A0%2FA3&inhId=WE0205ICNCXR-T4&depDate=20260919&efcCityCode=CXR",
-      "seats": "4석",
-      "availableSeats": 4,
+      "seats": "0석",
       "region": "동남아",
       "discountRate": -21,
       "firstSeen": "2026-08-05"
@@ -3874,7 +3849,7 @@
       "firstSeen": "2026-08-05"
     },
     {
-      "id": "ybtour-보홀-20260926-16",
+      "id": "ybtour-보홀-20260926-15",
       "source": "ybtour",
       "airline": "제주항공",
       "departure": {
@@ -3901,7 +3876,7 @@
       "firstSeen": "2026-08-05"
     },
     {
-      "id": "ybtour-보홀-20260927-17",
+      "id": "ybtour-보홀-20260927-16",
       "source": "ybtour",
       "airline": "제주항공",
       "departure": {
@@ -3928,7 +3903,7 @@
       "firstSeen": "2026-08-05"
     },
     {
-      "id": "ybtour-보홀-20260928-18",
+      "id": "ybtour-보홀-20260928-17",
       "source": "ybtour",
       "airline": "제주항공",
       "departure": {
@@ -3955,7 +3930,7 @@
       "firstSeen": "2026-08-05"
     },
     {
-      "id": "ybtour-보홀-20260929-19",
+      "id": "ybtour-보홀-20260929-18",
       "source": "ybtour",
       "airline": "제주항공",
       "departure": {
@@ -3982,7 +3957,7 @@
       "firstSeen": "2026-08-05"
     },
     {
-      "id": "ybtour-보홀-20260824-11",
+      "id": "ybtour-보홀-20260824-10",
       "source": "ybtour",
       "airline": "제주항공",
       "departure": {
@@ -4333,26 +4308,53 @@
       "firstSeen": "2026-08-05"
     },
     {
-      "id": "ybtour-치앙마이-20260916-6",
+      "id": "ybtour-치앙마이-20260830-2",
       "source": "ybtour",
       "airline": "제주항공",
       "departure": {
         "city": "인천",
         "airport": "ICN",
-        "date": "2026-09-16",
-        "time": "18:10",
-        "arrivalTime": "22:00"
+        "date": "2026-08-30",
+        "time": "19:55",
+        "arrivalTime": "23:50"
       },
       "arrival": {
         "city": "치앙마이",
         "airport": "CNX",
-        "date": "2026-09-20",
-        "time": "23:00",
-        "arrivalTime": "06:30"
+        "date": "2026-09-04",
+        "time": "00:50",
+        "arrivalTime": "08:15"
       },
       "price": 349000,
       "currency": "KRW",
-      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=A0%2FA3&inhId=7C2515ICNCNX-T4&depDate=20260916&efcCityCode=CNX",
+      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=A0%2FA3&inhId=7C2515ICNCNX-T6&depDate=20260830&efcCityCode=CNX",
+      "seats": "9석",
+      "availableSeats": 9,
+      "region": "동남아",
+      "discountRate": -20,
+      "firstSeen": "2026-08-05"
+    },
+    {
+      "id": "ybtour-치앙마이-20260905-3",
+      "source": "ybtour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-09-05",
+        "time": "17:20",
+        "arrivalTime": "20:45"
+      },
+      "arrival": {
+        "city": "치앙마이",
+        "airport": "CNX",
+        "date": "2026-09-10",
+        "time": "21:45",
+        "arrivalTime": "05:05"
+      },
+      "price": 349000,
+      "currency": "KRW",
+      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=A0%2FA3&inhId=7C2515ICNCNX-T6&depDate=20260905&efcCityCode=CNX",
       "seats": "9석",
       "availableSeats": 9,
       "region": "동남아",
@@ -4360,26 +4362,80 @@
       "firstSeen": "2026-08-05"
     },
     {
-      "id": "ybtour-치앙마이-20260917-7",
+      "id": "ybtour-치앙마이-20260906-4",
       "source": "ybtour",
       "airline": "제주항공",
       "departure": {
         "city": "인천",
         "airport": "ICN",
-        "date": "2026-09-17",
+        "date": "2026-09-06",
         "time": "19:55",
         "arrivalTime": "23:50"
       },
       "arrival": {
         "city": "치앙마이",
         "airport": "CNX",
-        "date": "2026-09-21",
+        "date": "2026-09-11",
         "time": "00:50",
         "arrivalTime": "08:15"
       },
       "price": 349000,
       "currency": "KRW",
-      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=A0%2FA3&inhId=7C2515ICNCNX-T4&depDate=20260917&efcCityCode=CNX",
+      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=A0%2FA3&inhId=7C2515ICNCNX-T6&depDate=20260906&efcCityCode=CNX",
+      "seats": "9석",
+      "availableSeats": 9,
+      "region": "동남아",
+      "discountRate": -25,
+      "firstSeen": "2026-08-05"
+    },
+    {
+      "id": "ybtour-치앙마이-20260912-5",
+      "source": "ybtour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-09-12",
+        "time": "18:30",
+        "arrivalTime": "22:40"
+      },
+      "arrival": {
+        "city": "치앙마이",
+        "airport": "CNX",
+        "date": "2026-09-17",
+        "time": "23:55",
+        "arrivalTime": "07:10"
+      },
+      "price": 349000,
+      "currency": "KRW",
+      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=A0%2FA3&inhId=7C2515ICNCNX-T6&depDate=20260912&efcCityCode=CNX",
+      "seats": "9석",
+      "availableSeats": 9,
+      "region": "동남아",
+      "discountRate": -25,
+      "firstSeen": "2026-08-05"
+    },
+    {
+      "id": "ybtour-치앙마이-20260913-6",
+      "source": "ybtour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-09-13",
+        "time": "19:55",
+        "arrivalTime": "23:50"
+      },
+      "arrival": {
+        "city": "치앙마이",
+        "airport": "CNX",
+        "date": "2026-09-18",
+        "time": "00:50",
+        "arrivalTime": "08:15"
+      },
+      "price": 349000,
+      "currency": "KRW",
+      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=A0%2FA3&inhId=7C2515ICNCNX-T6&depDate=20260913&efcCityCode=CNX",
       "seats": "9석",
       "availableSeats": 9,
       "region": "동남아",
@@ -4738,7 +4794,7 @@
       "firstSeen": "2026-08-05"
     },
     {
-      "id": "ybtour-푸켓-20260829-5",
+      "id": "ybtour-푸켓-20260829-4",
       "source": "ybtour",
       "airline": "아시아나항공",
       "departure": {
@@ -4765,7 +4821,7 @@
       "firstSeen": "2026-08-05"
     },
     {
-      "id": "ybtour-푸켓-20260830-6",
+      "id": "ybtour-푸켓-20260830-5",
       "source": "ybtour",
       "airline": "아시아나항공",
       "departure": {
@@ -4792,7 +4848,7 @@
       "firstSeen": "2026-08-05"
     },
     {
-      "id": "ybtour-푸켓-20260901-7",
+      "id": "ybtour-푸켓-20260901-6",
       "source": "ybtour",
       "airline": "아시아나항공",
       "departure": {
@@ -4819,7 +4875,7 @@
       "firstSeen": "2026-08-05"
     },
     {
-      "id": "ybtour-푸켓-20260904-10",
+      "id": "ybtour-푸켓-20260904-9",
       "source": "ybtour",
       "airline": "아시아나항공",
       "departure": {
@@ -4846,7 +4902,7 @@
       "firstSeen": "2026-08-05"
     },
     {
-      "id": "ybtour-푸켓-20260905-11",
+      "id": "ybtour-푸켓-20260905-10",
       "source": "ybtour",
       "airline": "아시아나항공",
       "departure": {
@@ -4873,7 +4929,7 @@
       "firstSeen": "2026-08-05"
     },
     {
-      "id": "ybtour-푸켓-20260906-12",
+      "id": "ybtour-푸켓-20260906-11",
       "source": "ybtour",
       "airline": "아시아나항공",
       "departure": {
@@ -4900,7 +4956,7 @@
       "firstSeen": "2026-08-05"
     },
     {
-      "id": "ybtour-푸켓-20260907-13",
+      "id": "ybtour-푸켓-20260907-12",
       "source": "ybtour",
       "airline": "아시아나항공",
       "departure": {
@@ -4927,7 +4983,7 @@
       "firstSeen": "2026-08-05"
     },
     {
-      "id": "ybtour-푸켓-20260908-14",
+      "id": "ybtour-푸켓-20260908-13",
       "source": "ybtour",
       "airline": "아시아나항공",
       "departure": {
@@ -4954,7 +5010,7 @@
       "firstSeen": "2026-08-05"
     },
     {
-      "id": "ybtour-푸켓-20260911-17",
+      "id": "ybtour-푸켓-20260911-16",
       "source": "ybtour",
       "airline": "아시아나항공",
       "departure": {
@@ -4981,7 +5037,7 @@
       "firstSeen": "2026-08-05"
     },
     {
-      "id": "ybtour-푸켓-20260912-18",
+      "id": "ybtour-푸켓-20260912-17",
       "source": "ybtour",
       "airline": "아시아나항공",
       "departure": {
@@ -5008,7 +5064,7 @@
       "firstSeen": "2026-08-05"
     },
     {
-      "id": "ybtour-푸켓-20260913-19",
+      "id": "ybtour-푸켓-20260913-18",
       "source": "ybtour",
       "airline": "아시아나항공",
       "departure": {
@@ -5035,7 +5091,7 @@
       "firstSeen": "2026-08-05"
     },
     {
-      "id": "ybtour-푸켓-20260914-20",
+      "id": "ybtour-푸켓-20260914-19",
       "source": "ybtour",
       "airline": "아시아나항공",
       "departure": {
@@ -5062,7 +5118,7 @@
       "firstSeen": "2026-08-05"
     },
     {
-      "id": "ybtour-푸켓-20260915-21",
+      "id": "ybtour-푸켓-20260915-20",
       "source": "ybtour",
       "airline": "아시아나항공",
       "departure": {
@@ -5089,7 +5145,7 @@
       "firstSeen": "2026-08-05"
     },
     {
-      "id": "ybtour-푸켓-20261004-40",
+      "id": "ybtour-푸켓-20261004-39",
       "source": "ybtour",
       "airline": "아시아나항공",
       "departure": {
@@ -5109,14 +5165,13 @@
       "price": 449000,
       "currency": "KRW",
       "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=A0%2FA3&inhId=OZ0747ICNHKT-T3&depDate=20261004&efcCityCode=HKT",
-      "seats": "2석",
-      "availableSeats": 2,
+      "seats": "0석",
       "region": "동남아",
       "discountRate": -20,
       "firstSeen": "2026-08-05"
     },
     {
-      "id": "ybtour-푸켓-20261005-41",
+      "id": "ybtour-푸켓-20261005-40",
       "source": "ybtour",
       "airline": "아시아나항공",
       "departure": {
@@ -5143,7 +5198,7 @@
       "firstSeen": "2026-08-05"
     },
     {
-      "id": "ybtour-푸켓-20261006-42",
+      "id": "ybtour-푸켓-20261006-41",
       "source": "ybtour",
       "airline": "아시아나항공",
       "departure": {
@@ -5170,7 +5225,7 @@
       "firstSeen": "2026-08-05"
     },
     {
-      "id": "ybtour-푸켓-20261010-46",
+      "id": "ybtour-푸켓-20261010-45",
       "source": "ybtour",
       "airline": "아시아나항공",
       "departure": {
@@ -5197,7 +5252,7 @@
       "firstSeen": "2026-08-05"
     },
     {
-      "id": "ybtour-푸켓-20261011-47",
+      "id": "ybtour-푸켓-20261011-46",
       "source": "ybtour",
       "airline": "아시아나항공",
       "departure": {
@@ -5224,7 +5279,7 @@
       "firstSeen": "2026-08-05"
     },
     {
-      "id": "ybtour-푸켓-20261012-48",
+      "id": "ybtour-푸켓-20261012-47",
       "source": "ybtour",
       "airline": "아시아나항공",
       "departure": {
@@ -5251,7 +5306,7 @@
       "firstSeen": "2026-08-05"
     },
     {
-      "id": "ybtour-푸켓-20261013-49",
+      "id": "ybtour-푸켓-20261013-48",
       "source": "ybtour",
       "airline": "아시아나항공",
       "departure": {
@@ -5278,7 +5333,7 @@
       "firstSeen": "2026-08-05"
     },
     {
-      "id": "ybtour-푸켓-20261016-52",
+      "id": "ybtour-푸켓-20261016-51",
       "source": "ybtour",
       "airline": "아시아나항공",
       "departure": {
@@ -5305,7 +5360,7 @@
       "firstSeen": "2026-08-05"
     },
     {
-      "id": "ybtour-푸켓-20261017-53",
+      "id": "ybtour-푸켓-20261017-52",
       "source": "ybtour",
       "airline": "아시아나항공",
       "departure": {
@@ -5332,7 +5387,7 @@
       "firstSeen": "2026-08-05"
     },
     {
-      "id": "ybtour-푸켓-20261018-54",
+      "id": "ybtour-푸켓-20261018-53",
       "source": "ybtour",
       "airline": "아시아나항공",
       "departure": {
@@ -5359,7 +5414,7 @@
       "firstSeen": "2026-08-05"
     },
     {
-      "id": "ybtour-푸켓-20261019-55",
+      "id": "ybtour-푸켓-20261019-54",
       "source": "ybtour",
       "airline": "아시아나항공",
       "departure": {
@@ -5386,7 +5441,7 @@
       "firstSeen": "2026-08-05"
     },
     {
-      "id": "ybtour-푸켓-20261020-56",
+      "id": "ybtour-푸켓-20261020-55",
       "source": "ybtour",
       "airline": "아시아나항공",
       "departure": {
@@ -5420,13 +5475,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-08-25",
-        "time": ""
+        "time": "11:35",
+        "arrivalTime": "15:55"
       },
       "arrival": {
         "city": "반다르세리베가완(브루나이)",
         "airport": "BWN",
         "date": "2026-08-29",
-        "time": ""
+        "time": "15:35",
+        "arrivalTime": "22:05"
       },
       "price": 469900,
       "currency": "KRW",
@@ -5470,13 +5527,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-08",
-        "time": ""
+        "time": "11:35",
+        "arrivalTime": "15:55"
       },
       "arrival": {
         "city": "반다르세리베가완(브루나이)",
         "airport": "BWN",
         "date": "2026-09-12",
-        "time": ""
+        "time": "15:35",
+        "arrivalTime": "22:05"
       },
       "price": 469900,
       "currency": "KRW",
@@ -6079,13 +6138,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-08-24",
-        "time": ""
+        "time": "15:40",
+        "arrivalTime": "20:45"
       },
       "arrival": {
         "city": "자카르타",
         "airport": "CGK",
         "date": "2026-08-29",
-        "time": ""
+        "time": "21:30",
+        "arrivalTime": "07:00"
       },
       "price": 605000,
       "currency": "KRW",
@@ -7060,7 +7121,7 @@
       "price": 178000,
       "currency": "KRW",
       "link": "https://www.hanatour.com/com/pmt/CHPC0PMT0011M200?fareId=RTF%5E3055254%5E7C1701ICNMYJ-H4%5E7C1701ICNMYJ-7%5E20260810%5ET%5EKRW%5E6450641%5E5256372%5E%5E1%5E0%5E0&psngrCntLst=%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D&selectedCard=%7B%7D",
-      "availableSeats": 26,
+      "availableSeats": 25,
       "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22SEL%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22MYJ%22%2C%22depDt%22%3A%2220260810%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22MYJ%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22SEL%22%2C%22depDt%22%3A%2220260812%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
       "region": "일본",
       "discountRate": -35,
@@ -7117,7 +7178,7 @@
       "firstSeen": "2026-08-04"
     },
     {
-      "id": "hanatour-regular-인천/김포-14",
+      "id": "hanatour-regular-인천/김포-11",
       "source": "hanatour",
       "airline": "진에어",
       "departure": {
@@ -7139,10 +7200,10 @@
       "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22SEL%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22GUM%22%2C%22depDt%22%3A%2220260817%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22GUM%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22SEL%22%2C%22depDt%22%3A%2220260821%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
       "region": "남태평양",
       "discountRate": -9,
-      "firstSeen": "2026-08-04"
+      "firstSeen": "2026-08-05"
     },
     {
-      "id": "hanatour-regular-인천/김포-16",
+      "id": "hanatour-regular-인천/김포-13",
       "source": "hanatour",
       "airline": "진에어",
       "departure": {
@@ -7164,10 +7225,10 @@
       "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22SEL%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22GUM%22%2C%22depDt%22%3A%2220260818%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22GUM%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22SEL%22%2C%22depDt%22%3A%2220260822%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
       "region": "남태평양",
       "discountRate": -9,
-      "firstSeen": "2026-08-04"
+      "firstSeen": "2026-08-05"
     },
     {
-      "id": "hanatour-regular-인천/김포-18",
+      "id": "hanatour-regular-인천/김포-15",
       "source": "hanatour",
       "airline": "진에어",
       "departure": {
@@ -7189,10 +7250,10 @@
       "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22SEL%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22GUM%22%2C%22depDt%22%3A%2220260822%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22GUM%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22SEL%22%2C%22depDt%22%3A%2220260826%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
       "region": "남태평양",
       "discountRate": -9,
-      "firstSeen": "2026-08-04"
+      "firstSeen": "2026-08-05"
     },
     {
-      "id": "hanatour-regular-인천/김포-22",
+      "id": "hanatour-regular-인천/김포-19",
       "source": "hanatour",
       "airline": "이스타항공",
       "departure": {
@@ -7214,10 +7275,10 @@
       "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22SEL%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22DAD%22%2C%22depDt%22%3A%2220260829%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22DAD%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22SEL%22%2C%22depDt%22%3A%2220260902%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
       "region": "동남아",
       "discountRate": -13,
-      "firstSeen": "2026-08-04"
+      "firstSeen": "2026-08-05"
     },
     {
-      "id": "hanatour-regular-인천/김포-23",
+      "id": "hanatour-regular-인천/김포-20",
       "source": "hanatour",
       "airline": "이스타항공",
       "departure": {
@@ -7239,85 +7300,60 @@
       "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22SEL%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22DAD%22%2C%22depDt%22%3A%2220260830%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22DAD%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22SEL%22%2C%22depDt%22%3A%2220260903%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
       "region": "동남아",
       "discountRate": -13,
-      "firstSeen": "2026-08-04"
+      "firstSeen": "2026-08-05"
     },
     {
-      "id": "hanatour-regular-인천/김포-24",
+      "id": "hanatour-regular-인천/김포-21",
       "source": "hanatour",
-      "airline": "에어부산",
+      "airline": "파라타 항공",
       "departure": {
         "city": "서울(ICN)",
         "airport": "",
-        "date": "2026.08.18(화)",
-        "time": "07:10"
+        "date": "2026.08.23(일)",
+        "time": "11:20"
       },
       "arrival": {
         "city": "도쿄(NRT)",
         "airport": "",
-        "date": "2026.08.20(목)",
-        "time": "10:00"
+        "date": "2026.08.25(화)",
+        "time": "13:50"
       },
-      "price": 306000,
+      "price": 284700,
       "currency": "KRW",
-      "link": "https://www.hanatour.com/com/pmt/CHPC0PMT0011M200?fareId=RTF%5E3067104%5EBX0164ICNNRT-H15%5EBX0164ICNNRT-56%5E20260818%5ET%5EKRW%5E6397681%5E5194139%5E%5E1%5E0%5E0&psngrCntLst=%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D&selectedCard=%7B%7D",
-      "availableSeats": 6,
-      "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22SEL%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22TYO%22%2C%22depDt%22%3A%2220260818%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22TYO%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22SEL%22%2C%22depDt%22%3A%2220260820%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
+      "link": "https://www.hanatour.com/com/pmt/CHPC0PMT0011M200?fareId=RTF%5E3188459%5EWE0503ICNNRT-H2%5EWE0503ICNNRT-5%5E20260823%5ET%5EKRW%5E6511967%5E5372594%5E%5E1%5E0%5E0&psngrCntLst=%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D&selectedCard=%7B%7D",
+      "availableSeats": 5,
+      "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22SEL%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22TYO%22%2C%22depDt%22%3A%2220260823%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22TYO%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22SEL%22%2C%22depDt%22%3A%2220260825%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
       "region": "일본",
-      "discountRate": -23,
-      "firstSeen": "2026-08-04"
+      "discountRate": -15,
+      "firstSeen": "2026-08-05"
     },
     {
-      "id": "hanatour-regular-인천/김포-25",
+      "id": "hanatour-regular-인천/김포-22",
       "source": "hanatour",
-      "airline": "에어부산",
+      "airline": "파라타 항공",
       "departure": {
         "city": "서울(ICN)",
         "airport": "",
-        "date": "2026.08.19(수)",
-        "time": "07:10"
+        "date": "2026.08.30(일)",
+        "time": "11:20"
       },
       "arrival": {
         "city": "도쿄(NRT)",
         "airport": "",
-        "date": "2026.08.21(금)",
-        "time": "10:00"
+        "date": "2026.09.01(화)",
+        "time": "13:50"
       },
-      "price": 306000,
+      "price": 284700,
       "currency": "KRW",
-      "link": "https://www.hanatour.com/com/pmt/CHPC0PMT0011M200?fareId=RTF%5E3067105%5EBX0164ICNNRT-H15%5EBX0164ICNNRT-56%5E20260819%5ET%5EKRW%5E6397683%5E5194141%5E%5E1%5E0%5E0&psngrCntLst=%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D&selectedCard=%7B%7D",
-      "availableSeats": 6,
-      "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22SEL%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22TYO%22%2C%22depDt%22%3A%2220260819%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22TYO%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22SEL%22%2C%22depDt%22%3A%2220260821%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
+      "link": "https://www.hanatour.com/com/pmt/CHPC0PMT0011M200?fareId=RTF%5E3188460%5EWE0503ICNNRT-H2%5EWE0503ICNNRT-5%5E20260830%5ET%5EKRW%5E6511969%5E5372596%5E%5E1%5E0%5E0&psngrCntLst=%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D&selectedCard=%7B%7D",
+      "availableSeats": 10,
+      "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22SEL%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22TYO%22%2C%22depDt%22%3A%2220260830%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22TYO%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22SEL%22%2C%22depDt%22%3A%2220260901%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
       "region": "일본",
-      "discountRate": -23,
+      "discountRate": -15,
       "firstSeen": "2026-08-04"
     },
     {
-      "id": "hanatour-regular-인천/김포-26",
-      "source": "hanatour",
-      "airline": "에어부산",
-      "departure": {
-        "city": "서울(ICN)",
-        "airport": "",
-        "date": "2026.08.20(목)",
-        "time": "07:10"
-      },
-      "arrival": {
-        "city": "도쿄(NRT)",
-        "airport": "",
-        "date": "2026.08.22(토)",
-        "time": "10:00"
-      },
-      "price": 306000,
-      "currency": "KRW",
-      "link": "https://www.hanatour.com/com/pmt/CHPC0PMT0011M200?fareId=RTF%5E3067106%5EBX0164ICNNRT-H15%5EBX0164ICNNRT-56%5E20260820%5ET%5EKRW%5E6397685%5E5194143%5E%5E1%5E0%5E0&psngrCntLst=%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D&selectedCard=%7B%7D",
-      "availableSeats": 6,
-      "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22SEL%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22TYO%22%2C%22depDt%22%3A%2220260820%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22TYO%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22SEL%22%2C%22depDt%22%3A%2220260822%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
-      "region": "일본",
-      "discountRate": -23,
-      "firstSeen": "2026-08-04"
-    },
-    {
-      "id": "hanatour-regular-인천/김포-31",
+      "id": "hanatour-regular-인천/김포-30",
       "source": "hanatour",
       "airline": "티웨이항공",
       "departure": {
@@ -7339,10 +7375,10 @@
       "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22SEL%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22KLO%22%2C%22depDt%22%3A%2220260831%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22KLO%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22SEL%22%2C%22depDt%22%3A%2220260903%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
       "region": "동남아",
       "discountRate": 4,
-      "firstSeen": "2026-08-04"
+      "firstSeen": "2026-08-05"
     },
     {
-      "id": "hanatour-regular-인천/김포-36",
+      "id": "hanatour-regular-인천/김포-33",
       "source": "hanatour",
       "airline": "에어부산",
       "departure": {
@@ -7364,10 +7400,10 @@
       "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22SEL%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22NHA%22%2C%22depDt%22%3A%2220260830%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22NHA%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22SEL%22%2C%22depDt%22%3A%2220260902%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
       "region": "동남아",
       "discountRate": -24,
-      "firstSeen": "2026-08-04"
+      "firstSeen": "2026-08-05"
     },
     {
-      "id": "hanatour-regular-인천/김포-37",
+      "id": "hanatour-regular-인천/김포-34",
       "source": "hanatour",
       "airline": "에어부산",
       "departure": {
@@ -7389,10 +7425,10 @@
       "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22SEL%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22NHA%22%2C%22depDt%22%3A%2220260831%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22NHA%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22SEL%22%2C%22depDt%22%3A%2220260903%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
       "region": "동남아",
       "discountRate": -24,
-      "firstSeen": "2026-08-04"
+      "firstSeen": "2026-08-05"
     },
     {
-      "id": "hanatour-regular-인천/김포-44",
+      "id": "hanatour-regular-인천/김포-41",
       "source": "hanatour",
       "airline": "이스타항공",
       "departure": {
@@ -7417,7 +7453,7 @@
       "firstSeen": "2026-08-05"
     },
     {
-      "id": "hanatour-regular-인천/김포-45",
+      "id": "hanatour-regular-인천/김포-42",
       "source": "hanatour",
       "airline": "대한항공",
       "departure": {
@@ -7439,7 +7475,32 @@
       "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22SEL%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22MRS%22%2C%22depDt%22%3A%2220260902%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22MRS%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22SEL%22%2C%22depDt%22%3A%2220260909%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
       "region": "기타",
       "discountRate": -51,
-      "firstSeen": "2026-08-04"
+      "firstSeen": "2026-08-05"
+    },
+    {
+      "id": "hanatour-regular-인천/김포-43",
+      "source": "hanatour",
+      "airline": "대한항공",
+      "departure": {
+        "city": "서울(ICN)",
+        "airport": "",
+        "date": "2026.09.16(수)",
+        "time": "12:10"
+      },
+      "arrival": {
+        "city": "마르세유(MRS)",
+        "airport": "",
+        "date": "2026.09.23(수)",
+        "time": "19:05"
+      },
+      "price": 1290000,
+      "currency": "KRW",
+      "link": "https://www.hanatour.com/com/pmt/CHPC0PMT0011M200?fareId=RTF%5E3050357%5EKE9971ICNMRS-H1%5EKE9971ICNMRS-13%5E20260916%5ET%5EKRW%5E6506909%5E5366860%5E%5E1%5E0%5E0&psngrCntLst=%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D&selectedCard=%7B%7D",
+      "availableSeats": 2,
+      "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22SEL%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22MRS%22%2C%22depDt%22%3A%2220260916%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22MRS%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22SEL%22%2C%22depDt%22%3A%2220260923%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
+      "region": "기타",
+      "discountRate": -51,
+      "firstSeen": "2026-08-05"
     },
     {
       "id": "hanatour-regular-청주-0",
@@ -7492,32 +7553,7 @@
       "firstSeen": "2026-07-31"
     },
     {
-      "id": "hanatour-regular-청주-4",
-      "source": "hanatour",
-      "airline": "에어로케이",
-      "departure": {
-        "city": "청주시(CJJ)",
-        "airport": "",
-        "date": "2026.08.21(금)",
-        "time": "19:30"
-      },
-      "arrival": {
-        "city": "나트랑(CXR)",
-        "airport": "",
-        "date": "2026.08.24(월)",
-        "time": "22:30"
-      },
-      "price": 322100,
-      "currency": "KRW",
-      "link": "https://www.hanatour.com/com/pmt/CHPC0PMT0011M200?fareId=RTF%5E3086736%5ERF0557CJJCXR-H1%5ERF0557CJJCXR-1%5E20260821%5ET%5EKRW%5E6456261%5E5261899%5E%5E1%5E0%5E0&psngrCntLst=%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D&selectedCard=%7B%7D",
-      "availableSeats": 4,
-      "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22CJJ%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22NHA%22%2C%22depDt%22%3A%2220260821%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22NHA%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22CJJ%22%2C%22depDt%22%3A%2220260824%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
-      "region": "동남아",
-      "discountRate": -10,
-      "firstSeen": "2026-08-04"
-    },
-    {
-      "id": "hanatour-regular-청주-5",
+      "id": "hanatour-regular-청주-3",
       "source": "hanatour",
       "airline": "에어로케이",
       "departure": {
@@ -7539,7 +7575,7 @@
       "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22CJJ%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22NHA%22%2C%22depDt%22%3A%2220260824%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22NHA%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22CJJ%22%2C%22depDt%22%3A%2220260827%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
       "region": "동남아",
       "discountRate": -10,
-      "firstSeen": "2026-08-03"
+      "firstSeen": "2026-08-05"
     },
     {
       "id": "hanatour-regular-부산-0",
@@ -7642,7 +7678,7 @@
       "firstSeen": "2026-07-31"
     },
     {
-      "id": "hanatour-regular-부산-6",
+      "id": "hanatour-regular-부산-5",
       "source": "hanatour",
       "airline": "이스타항공",
       "departure": {
@@ -7664,10 +7700,10 @@
       "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22PUS%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22TPE%22%2C%22depDt%22%3A%2220260907%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22TPE%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22PUS%22%2C%22depDt%22%3A%2220260910%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
       "region": "중국",
       "discountRate": 9,
-      "firstSeen": "2026-08-03"
+      "firstSeen": "2026-08-05"
     },
     {
-      "id": "hanatour-regular-부산-7",
+      "id": "hanatour-regular-부산-6",
       "source": "hanatour",
       "airline": "이스타항공",
       "departure": {
@@ -7692,7 +7728,7 @@
       "firstSeen": "2026-08-03"
     },
     {
-      "id": "hanatour-regular-부산-9",
+      "id": "hanatour-regular-부산-8",
       "source": "hanatour",
       "airline": "에어부산",
       "departure": {
@@ -7714,10 +7750,10 @@
       "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22PUS%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22TAK%22%2C%22depDt%22%3A%2220260818%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22TAK%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22PUS%22%2C%22depDt%22%3A%2220260821%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
       "region": "일본",
       "discountRate": -30,
-      "firstSeen": "2026-07-31"
+      "firstSeen": "2026-08-05"
     },
     {
-      "id": "hanatour-regular-부산-10",
+      "id": "hanatour-regular-부산-9",
       "source": "hanatour",
       "airline": "에어부산",
       "departure": {
@@ -7739,10 +7775,10 @@
       "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22PUS%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22MYJ%22%2C%22depDt%22%3A%2220260819%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22MYJ%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22PUS%22%2C%22depDt%22%3A%2220260821%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
       "region": "일본",
       "discountRate": -87,
-      "firstSeen": "2026-07-22"
+      "firstSeen": "2026-07-31"
     },
     {
-      "id": "hanatour-regular-부산-11",
+      "id": "hanatour-regular-부산-10",
       "source": "hanatour",
       "airline": "에어부산",
       "departure": {
@@ -7764,10 +7800,10 @@
       "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22PUS%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22MYJ%22%2C%22depDt%22%3A%2220260831%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22MYJ%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22PUS%22%2C%22depDt%22%3A%2220260902%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
       "region": "일본",
       "discountRate": -87,
-      "firstSeen": "2026-07-31"
+      "firstSeen": "2026-07-22"
     },
     {
-      "id": "hanatour-regular-부산-12",
+      "id": "hanatour-regular-부산-11",
       "source": "hanatour",
       "airline": "에어부산",
       "departure": {
@@ -7789,10 +7825,10 @@
       "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22PUS%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22MYJ%22%2C%22depDt%22%3A%2220260901%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22MYJ%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22PUS%22%2C%22depDt%22%3A%2220260903%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
       "region": "일본",
       "discountRate": -37,
-      "firstSeen": "2026-07-22"
+      "firstSeen": "2026-07-31"
     },
     {
-      "id": "hanatour-regular-부산-13",
+      "id": "hanatour-regular-부산-12",
       "source": "hanatour",
       "airline": "에어부산",
       "departure": {
@@ -7814,10 +7850,10 @@
       "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22PUS%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22FSZ%22%2C%22depDt%22%3A%2220260907%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22FSZ%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22PUS%22%2C%22depDt%22%3A%2220260909%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
       "region": "일본",
       "discountRate": -16,
-      "firstSeen": "2026-08-03"
+      "firstSeen": "2026-07-22"
     },
     {
-      "id": "hanatour-regular-부산-14",
+      "id": "hanatour-regular-부산-13",
       "source": "hanatour",
       "airline": "에어부산",
       "departure": {
@@ -7839,10 +7875,10 @@
       "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22PUS%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22FSZ%22%2C%22depDt%22%3A%2220260909%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22FSZ%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22PUS%22%2C%22depDt%22%3A%2220260911%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
       "region": "일본",
       "discountRate": -16,
-      "firstSeen": "2026-07-31"
+      "firstSeen": "2026-08-03"
     },
     {
-      "id": "hanatour-regular-부산-15",
+      "id": "hanatour-regular-부산-14",
       "source": "hanatour",
       "airline": "에어부산",
       "departure": {
@@ -7864,10 +7900,10 @@
       "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22PUS%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22FSZ%22%2C%22depDt%22%3A%2220260914%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22FSZ%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22PUS%22%2C%22depDt%22%3A%2220260916%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
       "region": "일본",
       "discountRate": -16,
-      "firstSeen": "2026-08-03"
+      "firstSeen": "2026-07-31"
     },
     {
-      "id": "hanatour-regular-부산-16",
+      "id": "hanatour-regular-부산-15",
       "source": "hanatour",
       "airline": "에어부산",
       "departure": {
@@ -7892,7 +7928,7 @@
       "firstSeen": "2026-08-03"
     },
     {
-      "id": "hanatour-regular-부산-17",
+      "id": "hanatour-regular-부산-16",
       "source": "hanatour",
       "airline": "에어부산",
       "departure": {
@@ -7914,10 +7950,10 @@
       "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22PUS%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22TYO%22%2C%22depDt%22%3A%2220260919%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22TYO%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22PUS%22%2C%22depDt%22%3A%2220260922%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
       "region": "일본",
       "discountRate": -28,
-      "firstSeen": "2026-07-31"
+      "firstSeen": "2026-08-03"
     },
     {
-      "id": "hanatour-regular-부산-19",
+      "id": "hanatour-regular-부산-18",
       "source": "hanatour",
       "airline": "진에어",
       "departure": {
@@ -7939,10 +7975,10 @@
       "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22PUS%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22OKA%22%2C%22depDt%22%3A%2220260901%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22OKA%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22PUS%22%2C%22depDt%22%3A%2220260903%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
       "region": "일본",
       "discountRate": -40,
-      "firstSeen": "2026-08-04"
+      "firstSeen": "2026-08-05"
     },
     {
-      "id": "hanatour-regular-부산-20",
+      "id": "hanatour-regular-부산-19",
       "source": "hanatour",
       "airline": "진에어",
       "departure": {
@@ -7964,10 +8000,10 @@
       "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22PUS%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22OKA%22%2C%22depDt%22%3A%2220260908%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22OKA%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22PUS%22%2C%22depDt%22%3A%2220260910%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
       "region": "일본",
       "discountRate": -40,
-      "firstSeen": "2026-07-31"
+      "firstSeen": "2026-08-04"
     },
     {
-      "id": "hanatour-regular-부산-21",
+      "id": "hanatour-regular-부산-20",
       "source": "hanatour",
       "airline": "진에어",
       "departure": {
@@ -7989,10 +8025,10 @@
       "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22PUS%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22OKA%22%2C%22depDt%22%3A%2220260915%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22OKA%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22PUS%22%2C%22depDt%22%3A%2220260917%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
       "region": "일본",
       "discountRate": -40,
-      "firstSeen": "2026-08-03"
+      "firstSeen": "2026-07-31"
     },
     {
-      "id": "hanatour-regular-부산-22",
+      "id": "hanatour-regular-부산-21",
       "source": "hanatour",
       "airline": "제주항공",
       "departure": {
@@ -8017,7 +8053,7 @@
       "firstSeen": "2026-08-03"
     },
     {
-      "id": "hanatour-regular-부산-23",
+      "id": "hanatour-regular-부산-22",
       "source": "hanatour",
       "airline": "제주항공",
       "departure": {
@@ -8042,7 +8078,7 @@
       "firstSeen": "2026-08-03"
     },
     {
-      "id": "hanatour-regular-부산-24",
+      "id": "hanatour-regular-부산-23",
       "source": "hanatour",
       "airline": "제주항공",
       "departure": {
@@ -8067,7 +8103,7 @@
       "firstSeen": "2026-08-03"
     },
     {
-      "id": "hanatour-regular-부산-25",
+      "id": "hanatour-regular-부산-24",
       "source": "hanatour",
       "airline": "진에어",
       "departure": {
@@ -8092,7 +8128,7 @@
       "firstSeen": "2026-08-03"
     },
     {
-      "id": "hanatour-regular-부산-26",
+      "id": "hanatour-regular-부산-25",
       "source": "hanatour",
       "airline": "진에어",
       "departure": {
@@ -8117,7 +8153,7 @@
       "firstSeen": "2026-08-03"
     },
     {
-      "id": "hanatour-regular-부산-27",
+      "id": "hanatour-regular-부산-26",
       "source": "hanatour",
       "airline": "진에어",
       "departure": {
@@ -8142,7 +8178,7 @@
       "firstSeen": "2026-08-03"
     },
     {
-      "id": "hanatour-regular-부산-28",
+      "id": "hanatour-regular-부산-27",
       "source": "hanatour",
       "airline": "진에어",
       "departure": {
@@ -8167,7 +8203,7 @@
       "firstSeen": "2026-08-03"
     },
     {
-      "id": "hanatour-regular-부산-29",
+      "id": "hanatour-regular-부산-28",
       "source": "hanatour",
       "airline": "진에어",
       "departure": {
@@ -8192,7 +8228,7 @@
       "firstSeen": "2026-08-03"
     },
     {
-      "id": "hanatour-regular-부산-30",
+      "id": "hanatour-regular-부산-29",
       "source": "hanatour",
       "airline": "진에어",
       "departure": {
@@ -8217,7 +8253,7 @@
       "firstSeen": "2026-08-03"
     },
     {
-      "id": "hanatour-regular-부산-31",
+      "id": "hanatour-regular-부산-30",
       "source": "hanatour",
       "airline": "진에어",
       "departure": {
@@ -8242,7 +8278,7 @@
       "firstSeen": "2026-08-03"
     },
     {
-      "id": "hanatour-regular-부산-32",
+      "id": "hanatour-regular-부산-31",
       "source": "hanatour",
       "airline": "이스타항공",
       "departure": {
@@ -8267,7 +8303,7 @@
       "firstSeen": "2026-08-03"
     },
     {
-      "id": "hanatour-regular-부산-33",
+      "id": "hanatour-regular-부산-32",
       "source": "hanatour",
       "airline": "이스타항공",
       "departure": {
@@ -8292,7 +8328,7 @@
       "firstSeen": "2026-08-03"
     },
     {
-      "id": "hanatour-regular-부산-34",
+      "id": "hanatour-regular-부산-33",
       "source": "hanatour",
       "airline": "에어부산",
       "departure": {
@@ -8317,7 +8353,7 @@
       "firstSeen": "2026-08-03"
     },
     {
-      "id": "hanatour-regular-부산-35",
+      "id": "hanatour-regular-부산-34",
       "source": "hanatour",
       "airline": "에어부산",
       "departure": {
@@ -8342,7 +8378,7 @@
       "firstSeen": "2026-08-03"
     },
     {
-      "id": "hanatour-regular-부산-36",
+      "id": "hanatour-regular-부산-35",
       "source": "hanatour",
       "airline": "에어부산",
       "departure": {
@@ -8367,7 +8403,7 @@
       "firstSeen": "2026-08-03"
     },
     {
-      "id": "hanatour-regular-부산-38",
+      "id": "hanatour-regular-부산-37",
       "source": "hanatour",
       "airline": "이스타항공",
       "departure": {
@@ -8385,11 +8421,11 @@
       "price": 448700,
       "currency": "KRW",
       "link": "https://www.hanatour.com/com/pmt/CHPC0PMT0011M200?fareId=RTF%5E2986146%5EZE0917PUSCNX-H1%5EZE0917PUSCNX-13%5E20260830%5ET%5EKRW%5E6339935%5E5084405%5E%5E1%5E0%5E0&psngrCntLst=%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D&selectedCard=%7B%7D",
-      "availableSeats": 2,
+      "availableSeats": 6,
       "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22PUS%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22CNX%22%2C%22depDt%22%3A%2220260830%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22CNX%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22PUS%22%2C%22depDt%22%3A%2220260903%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
       "region": "동남아",
       "discountRate": -54,
-      "firstSeen": "2026-08-04"
+      "firstSeen": "2026-08-05"
     },
     {
       "id": "hanatour-regular-대구/제주-0",
@@ -8490,6 +8526,52 @@
       "region": "동남아",
       "discountRate": -13,
       "firstSeen": "2026-08-03"
+    },
+    {
+      "id": "modetour-ASIA-19731016",
+      "source": "modetour",
+      "airline": "티웨이항공",
+      "departure": {
+        "city": "대구",
+        "airport": "TAE",
+        "date": "2026-08-17",
+        "time": "21:10"
+      },
+      "arrival": {
+        "city": "다낭",
+        "airport": "DAD",
+        "date": "2026-08-21",
+        "time": "01:30"
+      },
+      "price": 386000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22TAE%22%2C%22continentCode%22%3A%22ASIA%22%2C%22arrivalCity%22%3A%22DAD%22%2C%22departureDate%22%3A%222026-08-17%22%2C%22arrivalDate%22%3A%222026-08-18%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
+      "availableSeats": 4,
+      "flightNumber": "TW029 / TW030",
+      "region": "동남아",
+      "modetourDetail": {
+        "flyingTime": "05:10",
+        "isDirect": true,
+        "isReturnDirect": true,
+        "departureArrivalTime": "23:55",
+        "returnDepartureTime": "01:30",
+        "returnArrivalTime": "08:15",
+        "normalPrice": 620000,
+        "sourceDiscountRate": 69,
+        "baseFare": 190000,
+        "tax": 141000,
+        "tax2": 55000,
+        "childBaseFare": 190000,
+        "childTax": 141000,
+        "childTax2": 55000,
+        "infantFare": 100000,
+        "departureFlightNo": "TW029",
+        "returnFlightNo": "TW030",
+        "returnDepartureAirport": "DAD",
+        "returnArrivalAirport": "TAE"
+      },
+      "discountRate": -55,
+      "firstSeen": "2026-08-05"
     },
     {
       "id": "modetour-ASIA-19730183",
@@ -8943,52 +9025,6 @@
         "returnArrivalAirport": "PUS"
       },
       "discountRate": -16,
-      "firstSeen": "2026-07-24"
-    },
-    {
-      "id": "modetour-ASIA-19803924",
-      "source": "modetour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-08-24",
-        "time": "17:20"
-      },
-      "arrival": {
-        "city": "푸꾸옥",
-        "airport": "PQC",
-        "date": "2026-08-27",
-        "time": "22:25"
-      },
-      "price": 329000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22ICN%22%2C%22continentCode%22%3A%22ASIA%22%2C%22arrivalCity%22%3A%22PQC%22%2C%22departureDate%22%3A%222026-08-24%22%2C%22arrivalDate%22%3A%222026-08-25%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
-      "availableSeats": 6,
-      "flightNumber": "7C2315 / 7C2316",
-      "region": "동남아",
-      "modetourDetail": {
-        "flyingTime": "06:05",
-        "isDirect": true,
-        "isReturnDirect": true,
-        "departureArrivalTime": "21:25",
-        "returnDepartureTime": "22:25",
-        "returnArrivalTime": "06:05",
-        "normalPrice": 700000,
-        "sourceDiscountRate": 80,
-        "baseFare": 140000,
-        "tax": 135000,
-        "tax2": 54000,
-        "childBaseFare": 140000,
-        "childTax": 135000,
-        "childTax2": 47000,
-        "infantFare": 150000,
-        "departureFlightNo": "7C2315",
-        "returnFlightNo": "7C2316",
-        "returnDepartureAirport": "PQC",
-        "returnArrivalAirport": "ICN"
-      },
-      "discountRate": -8,
       "firstSeen": "2026-07-24"
     },
     {
@@ -10779,7 +10815,7 @@
         "date": "2026-09-05",
         "time": "02:20"
       },
-      "price": 495000,
+      "price": 575000,
       "currency": "KRW",
       "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22ICN%22%2C%22continentCode%22%3A%22ASIA%22%2C%22arrivalCity%22%3A%22MDC%22%2C%22departureDate%22%3A%222026-09-01%22%2C%22arrivalDate%22%3A%222026-09-02%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
       "availableSeats": 1,
@@ -10792,9 +10828,9 @@
         "departureArrivalTime": "01:15",
         "returnDepartureTime": "02:20",
         "returnArrivalTime": "08:40",
-        "baseFare": 450000,
+        "baseFare": 530000,
         "tax2": 45000,
-        "childBaseFare": 450000,
+        "childBaseFare": 530000,
         "childTax2": 45000,
         "infantFare": 100000,
         "departureFlightNo": "ZE535",
@@ -10802,7 +10838,7 @@
         "returnDepartureAirport": "MDC",
         "returnArrivalAirport": "ICN"
       },
-      "discountRate": 24,
+      "discountRate": 12,
       "firstSeen": "2026-08-01"
     },
     {
@@ -11482,6 +11518,94 @@
       "firstSeen": "2026-08-05"
     },
     {
+      "id": "modetour-ASIA-19719094",
+      "source": "modetour",
+      "airline": "이스타항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-09-04",
+        "time": "20:25"
+      },
+      "arrival": {
+        "city": "마나도",
+        "airport": "MDC",
+        "date": "2026-09-08",
+        "time": "02:20"
+      },
+      "price": 575000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22ICN%22%2C%22continentCode%22%3A%22ASIA%22%2C%22arrivalCity%22%3A%22MDC%22%2C%22departureDate%22%3A%222026-09-04%22%2C%22arrivalDate%22%3A%222026-09-05%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
+      "availableSeats": 1,
+      "flightNumber": "ZE535 / ZE536",
+      "region": "동남아",
+      "modetourDetail": {
+        "flyingTime": "05:20",
+        "isDirect": true,
+        "isReturnDirect": true,
+        "departureArrivalTime": "01:15",
+        "returnDepartureTime": "02:20",
+        "returnArrivalTime": "08:40",
+        "baseFare": 530000,
+        "tax2": 45000,
+        "childBaseFare": 530000,
+        "childTax2": 45000,
+        "infantFare": 100000,
+        "departureFlightNo": "ZE535",
+        "returnFlightNo": "ZE536",
+        "returnDepartureAirport": "MDC",
+        "returnArrivalAirport": "ICN"
+      },
+      "discountRate": 12,
+      "firstSeen": "2026-08-05"
+    },
+    {
+      "id": "modetour-JPN-19961806",
+      "source": "modetour",
+      "airline": "에어부산",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-08-11",
+        "time": "16:35"
+      },
+      "arrival": {
+        "city": "마츠야마",
+        "airport": "MYJ",
+        "date": "2026-08-13",
+        "time": "18:35"
+      },
+      "price": 239900,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22PUS%22%2C%22continentCode%22%3A%22JPN%22%2C%22arrivalCity%22%3A%22MYJ%22%2C%22departureDate%22%3A%222026-08-11%22%2C%22arrivalDate%22%3A%222026-08-12%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
+      "availableSeats": 7,
+      "flightNumber": "BX134 / BX133",
+      "region": "일본",
+      "modetourDetail": {
+        "flyingTime": "01:05",
+        "isDirect": true,
+        "isReturnDirect": true,
+        "departureArrivalTime": "17:40",
+        "returnDepartureTime": "18:35",
+        "returnArrivalTime": "19:50",
+        "normalPrice": 220000,
+        "sourceDiscountRate": 45,
+        "baseFare": 120900,
+        "tax": 67000,
+        "tax2": 52000,
+        "childBaseFare": 120900,
+        "childTax": 67000,
+        "childTax2": 52000,
+        "infantFare": 100000,
+        "departureFlightNo": "BX134",
+        "returnFlightNo": "BX133",
+        "returnDepartureAirport": "MYJ",
+        "returnArrivalAirport": "PUS"
+      },
+      "discountRate": -82,
+      "firstSeen": "2026-08-05"
+    },
+    {
       "id": "modetour-JPN-19798013",
       "source": "modetour",
       "airline": "티웨이항공",
@@ -11571,52 +11695,6 @@
         "returnArrivalAirport": "ICN"
       },
       "discountRate": -19,
-      "firstSeen": "2026-08-03"
-    },
-    {
-      "id": "modetour-JPN-19644247",
-      "source": "modetour",
-      "airline": "진에어",
-      "departure": {
-        "city": "부산",
-        "airport": "PUS",
-        "date": "2026-08-19",
-        "time": "08:05"
-      },
-      "arrival": {
-        "city": "오키나와",
-        "airport": "OKA",
-        "date": "2026-08-21",
-        "time": "11:05"
-      },
-      "price": 386000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22PUS%22%2C%22continentCode%22%3A%22JPN%22%2C%22arrivalCity%22%3A%22OKA%22%2C%22departureDate%22%3A%222026-08-19%22%2C%22arrivalDate%22%3A%222026-08-20%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
-      "availableSeats": 10,
-      "flightNumber": "LJ371 / LJ372",
-      "region": "일본",
-      "modetourDetail": {
-        "flyingTime": "02:00",
-        "isDirect": true,
-        "isReturnDirect": true,
-        "departureArrivalTime": "10:05",
-        "returnDepartureTime": "11:05",
-        "returnArrivalTime": "13:05",
-        "normalPrice": 700000,
-        "sourceDiscountRate": 65,
-        "baseFare": 240000,
-        "tax": 81000,
-        "tax2": 65000,
-        "childBaseFare": 180000,
-        "childTax": 81000,
-        "childTax2": 55000,
-        "infantFare": 30000,
-        "departureFlightNo": "LJ371",
-        "returnFlightNo": "LJ372",
-        "returnDepartureAirport": "OKA",
-        "returnArrivalAirport": "PUS"
-      },
-      "discountRate": -59,
       "firstSeen": "2026-08-03"
     },
     {
@@ -11850,50 +11928,50 @@
       "firstSeen": "2026-08-03"
     },
     {
-      "id": "modetour-JPN-19644251",
+      "id": "modetour-JPN-19646150",
       "source": "modetour",
-      "airline": "진에어",
+      "airline": "이스타항공",
       "departure": {
         "city": "부산",
         "airport": "PUS",
         "date": "2026-08-23",
-        "time": "08:05"
+        "time": "08:00"
       },
       "arrival": {
         "city": "오키나와",
         "airport": "OKA",
         "date": "2026-08-25",
-        "time": "11:05"
+        "time": "11:00"
       },
-      "price": 386000,
+      "price": 369000,
       "currency": "KRW",
       "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22PUS%22%2C%22continentCode%22%3A%22JPN%22%2C%22arrivalCity%22%3A%22OKA%22%2C%22departureDate%22%3A%222026-08-23%22%2C%22arrivalDate%22%3A%222026-08-24%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
       "availableSeats": 10,
-      "flightNumber": "LJ371 / LJ372",
+      "flightNumber": "ZE963 / ZE964",
       "region": "일본",
       "modetourDetail": {
         "flyingTime": "02:00",
         "isDirect": true,
         "isReturnDirect": true,
-        "departureArrivalTime": "10:05",
-        "returnDepartureTime": "11:05",
-        "returnArrivalTime": "13:05",
+        "departureArrivalTime": "10:00",
+        "returnDepartureTime": "11:00",
+        "returnArrivalTime": "13:00",
         "normalPrice": 700000,
-        "sourceDiscountRate": 65,
-        "baseFare": 240000,
-        "tax": 81000,
+        "sourceDiscountRate": 68,
+        "baseFare": 220000,
+        "tax": 84000,
         "tax2": 65000,
-        "childBaseFare": 180000,
-        "childTax": 81000,
+        "childBaseFare": 220000,
+        "childTax": 84000,
         "childTax2": 55000,
-        "infantFare": 30000,
-        "departureFlightNo": "LJ371",
-        "returnFlightNo": "LJ372",
+        "infantFare": 50000,
+        "departureFlightNo": "ZE963",
+        "returnFlightNo": "ZE964",
         "returnDepartureAirport": "OKA",
         "returnArrivalAirport": "PUS"
       },
-      "discountRate": -59,
-      "firstSeen": "2026-08-03"
+      "discountRate": -52,
+      "firstSeen": "2026-08-05"
     },
     {
       "id": "modetour-JPN-19830208",
@@ -11988,50 +12066,48 @@
       "firstSeen": "2026-08-03"
     },
     {
-      "id": "modetour-JPN-19644252",
+      "id": "modetour-JPN-19972597",
       "source": "modetour",
-      "airline": "진에어",
+      "airline": "에어부산",
       "departure": {
         "city": "부산",
         "airport": "PUS",
-        "date": "2026-08-24",
-        "time": "08:05"
+        "date": "2026-08-23",
+        "time": "17:20"
       },
       "arrival": {
-        "city": "오키나와",
-        "airport": "OKA",
-        "date": "2026-08-26",
-        "time": "11:05"
+        "city": "다카마츠",
+        "airport": "TAK",
+        "date": "2026-08-25",
+        "time": "19:35"
       },
-      "price": 386000,
+      "price": 219900,
       "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22PUS%22%2C%22continentCode%22%3A%22JPN%22%2C%22arrivalCity%22%3A%22OKA%22%2C%22departureDate%22%3A%222026-08-24%22%2C%22arrivalDate%22%3A%222026-08-25%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
-      "availableSeats": 10,
-      "flightNumber": "LJ371 / LJ372",
+      "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22PUS%22%2C%22continentCode%22%3A%22JPN%22%2C%22arrivalCity%22%3A%22TAK%22%2C%22departureDate%22%3A%222026-08-23%22%2C%22arrivalDate%22%3A%222026-08-24%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
+      "availableSeats": 16,
+      "flightNumber": "BX1325 / BX1315",
       "region": "일본",
       "modetourDetail": {
-        "flyingTime": "02:00",
+        "flyingTime": "01:20",
         "isDirect": true,
         "isReturnDirect": true,
-        "departureArrivalTime": "10:05",
-        "returnDepartureTime": "11:05",
-        "returnArrivalTime": "13:05",
-        "normalPrice": 700000,
-        "sourceDiscountRate": 65,
-        "baseFare": 240000,
-        "tax": 81000,
-        "tax2": 65000,
-        "childBaseFare": 180000,
-        "childTax": 81000,
-        "childTax2": 55000,
-        "infantFare": 30000,
-        "departureFlightNo": "LJ371",
-        "returnFlightNo": "LJ372",
-        "returnDepartureAirport": "OKA",
+        "departureArrivalTime": "18:40",
+        "returnDepartureTime": "19:35",
+        "returnArrivalTime": "20:55",
+        "baseFare": 92900,
+        "tax": 67000,
+        "tax2": 60000,
+        "childBaseFare": 92900,
+        "childTax": 67000,
+        "childTax2": 60000,
+        "infantFare": 90000,
+        "departureFlightNo": "BX1325",
+        "returnFlightNo": "BX1315",
+        "returnDepartureAirport": "TAK",
         "returnArrivalAirport": "PUS"
       },
-      "discountRate": -59,
-      "firstSeen": "2026-08-03"
+      "discountRate": -22,
+      "firstSeen": "2026-08-05"
     },
     {
       "id": "modetour-JPN-19830209",
@@ -12169,52 +12245,6 @@
         "returnArrivalAirport": "PUS"
       },
       "discountRate": -16,
-      "firstSeen": "2026-08-03"
-    },
-    {
-      "id": "modetour-JPN-19644253",
-      "source": "modetour",
-      "airline": "진에어",
-      "departure": {
-        "city": "부산",
-        "airport": "PUS",
-        "date": "2026-08-25",
-        "time": "08:05"
-      },
-      "arrival": {
-        "city": "오키나와",
-        "airport": "OKA",
-        "date": "2026-08-27",
-        "time": "11:05"
-      },
-      "price": 386000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22PUS%22%2C%22continentCode%22%3A%22JPN%22%2C%22arrivalCity%22%3A%22OKA%22%2C%22departureDate%22%3A%222026-08-25%22%2C%22arrivalDate%22%3A%222026-08-26%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
-      "availableSeats": 10,
-      "flightNumber": "LJ371 / LJ372",
-      "region": "일본",
-      "modetourDetail": {
-        "flyingTime": "02:00",
-        "isDirect": true,
-        "isReturnDirect": true,
-        "departureArrivalTime": "10:05",
-        "returnDepartureTime": "11:05",
-        "returnArrivalTime": "13:05",
-        "normalPrice": 700000,
-        "sourceDiscountRate": 65,
-        "baseFare": 240000,
-        "tax": 81000,
-        "tax2": 65000,
-        "childBaseFare": 180000,
-        "childTax": 81000,
-        "childTax2": 55000,
-        "infantFare": 30000,
-        "departureFlightNo": "LJ371",
-        "returnFlightNo": "LJ372",
-        "returnDepartureAirport": "OKA",
-        "returnArrivalAirport": "PUS"
-      },
-      "discountRate": -59,
       "firstSeen": "2026-08-03"
     },
     {
@@ -12540,50 +12570,50 @@
       "firstSeen": "2026-08-04"
     },
     {
-      "id": "modetour-JPN-19644258",
+      "id": "modetour-JPN-19646157",
       "source": "modetour",
-      "airline": "진에어",
+      "airline": "이스타항공",
       "departure": {
         "city": "부산",
         "airport": "PUS",
         "date": "2026-08-30",
-        "time": "08:05"
+        "time": "08:00"
       },
       "arrival": {
         "city": "오키나와",
         "airport": "OKA",
         "date": "2026-09-01",
-        "time": "11:05"
+        "time": "11:00"
       },
-      "price": 386000,
+      "price": 369000,
       "currency": "KRW",
       "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22PUS%22%2C%22continentCode%22%3A%22JPN%22%2C%22arrivalCity%22%3A%22OKA%22%2C%22departureDate%22%3A%222026-08-30%22%2C%22arrivalDate%22%3A%222026-08-31%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
       "availableSeats": 10,
-      "flightNumber": "LJ371 / LJ372",
+      "flightNumber": "ZE963 / ZE964",
       "region": "일본",
       "modetourDetail": {
         "flyingTime": "02:00",
         "isDirect": true,
         "isReturnDirect": true,
-        "departureArrivalTime": "10:05",
-        "returnDepartureTime": "11:05",
-        "returnArrivalTime": "13:05",
+        "departureArrivalTime": "10:00",
+        "returnDepartureTime": "11:00",
+        "returnArrivalTime": "13:00",
         "normalPrice": 700000,
-        "sourceDiscountRate": 65,
-        "baseFare": 240000,
-        "tax": 81000,
+        "sourceDiscountRate": 68,
+        "baseFare": 220000,
+        "tax": 84000,
         "tax2": 65000,
-        "childBaseFare": 180000,
-        "childTax": 81000,
+        "childBaseFare": 220000,
+        "childTax": 84000,
         "childTax2": 55000,
-        "infantFare": 30000,
-        "departureFlightNo": "LJ371",
-        "returnFlightNo": "LJ372",
+        "infantFare": 50000,
+        "departureFlightNo": "ZE963",
+        "returnFlightNo": "ZE964",
         "returnDepartureAirport": "OKA",
         "returnArrivalAirport": "PUS"
       },
-      "discountRate": -59,
-      "firstSeen": "2026-08-03"
+      "discountRate": -52,
+      "firstSeen": "2026-08-05"
     },
     {
       "id": "modetour-JPN-19737092",
@@ -12739,7 +12769,7 @@
         "date": "2026-09-01",
         "time": "19:35"
       },
-      "price": 263900,
+      "price": 219900,
       "currency": "KRW",
       "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22PUS%22%2C%22continentCode%22%3A%22JPN%22%2C%22arrivalCity%22%3A%22TAK%22%2C%22departureDate%22%3A%222026-08-30%22%2C%22arrivalDate%22%3A%222026-08-31%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
       "availableSeats": 16,
@@ -12752,10 +12782,10 @@
         "departureArrivalTime": "18:40",
         "returnDepartureTime": "19:35",
         "returnArrivalTime": "20:55",
-        "baseFare": 136900,
+        "baseFare": 92900,
         "tax": 67000,
         "tax2": 60000,
-        "childBaseFare": 136900,
+        "childBaseFare": 92900,
         "childTax": 67000,
         "childTax2": 60000,
         "infantFare": 90000,
@@ -12764,7 +12794,7 @@
         "returnDepartureAirport": "TAK",
         "returnArrivalAirport": "PUS"
       },
-      "discountRate": -47,
+      "discountRate": -22,
       "firstSeen": "2026-08-03"
     },
     {
@@ -12855,52 +12885,6 @@
         "returnArrivalAirport": "PUS"
       },
       "discountRate": -16,
-      "firstSeen": "2026-08-03"
-    },
-    {
-      "id": "modetour-JPN-19644259",
-      "source": "modetour",
-      "airline": "진에어",
-      "departure": {
-        "city": "부산",
-        "airport": "PUS",
-        "date": "2026-08-31",
-        "time": "08:05"
-      },
-      "arrival": {
-        "city": "오키나와",
-        "airport": "OKA",
-        "date": "2026-09-02",
-        "time": "11:05"
-      },
-      "price": 386000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22PUS%22%2C%22continentCode%22%3A%22JPN%22%2C%22arrivalCity%22%3A%22OKA%22%2C%22departureDate%22%3A%222026-08-31%22%2C%22arrivalDate%22%3A%222026-09-01%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
-      "availableSeats": 10,
-      "flightNumber": "LJ371 / LJ372",
-      "region": "일본",
-      "modetourDetail": {
-        "flyingTime": "02:00",
-        "isDirect": true,
-        "isReturnDirect": true,
-        "departureArrivalTime": "10:05",
-        "returnDepartureTime": "11:05",
-        "returnArrivalTime": "13:05",
-        "normalPrice": 700000,
-        "sourceDiscountRate": 65,
-        "baseFare": 240000,
-        "tax": 81000,
-        "tax2": 65000,
-        "childBaseFare": 180000,
-        "childTax": 81000,
-        "childTax2": 55000,
-        "infantFare": 30000,
-        "departureFlightNo": "LJ371",
-        "returnFlightNo": "LJ372",
-        "returnDepartureAirport": "OKA",
-        "returnArrivalAirport": "PUS"
-      },
-      "discountRate": -59,
       "firstSeen": "2026-08-03"
     },
     {
@@ -13379,7 +13363,7 @@
         "date": "2026-09-06",
         "time": "16:05"
       },
-      "price": 255000,
+      "price": 240000,
       "currency": "KRW",
       "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22GMP%22%2C%22continentCode%22%3A%22JPN%22%2C%22arrivalCity%22%3A%22KIX%22%2C%22departureDate%22%3A%222026-09-04%22%2C%22arrivalDate%22%3A%222026-09-05%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
       "availableSeats": 10,
@@ -13393,16 +13377,16 @@
         "returnDepartureTime": "16:05",
         "returnArrivalTime": "18:00",
         "normalPrice": 540000,
-        "sourceDiscountRate": 52,
-        "baseFare": 255000,
-        "childBaseFare": 255000,
+        "sourceDiscountRate": 55,
+        "baseFare": 240000,
+        "childBaseFare": 240000,
         "infantFare": 20000,
         "departureFlightNo": "MM736",
         "returnFlightNo": "MM743",
         "returnDepartureAirport": "KIX",
         "returnArrivalAirport": "GMP"
       },
-      "discountRate": -50,
+      "discountRate": -42,
       "firstSeen": "2026-08-05"
     },
     {
@@ -14363,6 +14347,102 @@
       "firstSeen": "2026-08-04"
     },
     {
+      "id": "ttang-RS0727ICNFUK-G11-2026-08-06",
+      "source": "ttang",
+      "airline": "에어서울",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-08-06",
+        "time": ""
+      },
+      "arrival": {
+        "city": "후쿠오카",
+        "airport": "FUK",
+        "date": "2026-08-09",
+        "time": ""
+      },
+      "price": 163900,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-06&dep1=FUK&arr1=ICN&depdate1=2026-08-09&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-06&dep1=FUK&arr1=ICN&depdate1=2026-08-09&adt=1&chd=0&inf=0&comp=Y",
+      "region": "일본",
+      "discountRate": -8,
+      "firstSeen": "2026-08-05"
+    },
+    {
+      "id": "ttang-RS0727ICNFUK-G10-2026-08-06",
+      "source": "ttang",
+      "airline": "에어서울",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-08-06",
+        "time": ""
+      },
+      "arrival": {
+        "city": "후쿠오카",
+        "airport": "FUK",
+        "date": "2026-08-11",
+        "time": ""
+      },
+      "price": 163900,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-06&dep1=FUK&arr1=ICN&depdate1=2026-08-11&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-06&dep1=FUK&arr1=ICN&depdate1=2026-08-11&adt=1&chd=0&inf=0&comp=Y",
+      "region": "일본",
+      "discountRate": -8,
+      "firstSeen": "2026-08-05"
+    },
+    {
+      "id": "ttang-RS0727ICNFUK-G9-2026-08-07",
+      "source": "ttang",
+      "airline": "에어서울",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-08-07",
+        "time": ""
+      },
+      "arrival": {
+        "city": "후쿠오카",
+        "airport": "FUK",
+        "date": "2026-08-11",
+        "time": ""
+      },
+      "price": 163900,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-07&dep1=FUK&arr1=ICN&depdate1=2026-08-11&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-07&dep1=FUK&arr1=ICN&depdate1=2026-08-11&adt=1&chd=0&inf=0&comp=Y",
+      "region": "일본",
+      "discountRate": -8,
+      "firstSeen": "2026-08-05"
+    },
+    {
+      "id": "ttang-RS0727ICNFUK-G11-2026-08-07",
+      "source": "ttang",
+      "airline": "에어서울",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-08-07",
+        "time": ""
+      },
+      "arrival": {
+        "city": "후쿠오카",
+        "airport": "FUK",
+        "date": "2026-08-10",
+        "time": ""
+      },
+      "price": 163900,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-07&dep1=FUK&arr1=ICN&depdate1=2026-08-10&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-07&dep1=FUK&arr1=ICN&depdate1=2026-08-10&adt=1&chd=0&inf=0&comp=Y",
+      "region": "일본",
+      "discountRate": -8,
+      "firstSeen": "2026-08-05"
+    },
+    {
       "id": "ttang-ZE0623ICNCTS-G26-2026-08-07",
       "source": "ttang",
       "airline": "이스타항공",
@@ -14387,6 +14467,150 @@
       "region": "일본",
       "discountRate": -21,
       "firstSeen": "2026-08-03"
+    },
+    {
+      "id": "ttang-RS0727ICNFUK-G9-2026-08-08",
+      "source": "ttang",
+      "airline": "에어서울",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-08-08",
+        "time": ""
+      },
+      "arrival": {
+        "city": "후쿠오카",
+        "airport": "FUK",
+        "date": "2026-08-12",
+        "time": ""
+      },
+      "price": 163900,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-08&dep1=FUK&arr1=ICN&depdate1=2026-08-12&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-08&dep1=FUK&arr1=ICN&depdate1=2026-08-12&adt=1&chd=0&inf=0&comp=Y",
+      "region": "일본",
+      "discountRate": -8,
+      "firstSeen": "2026-08-05"
+    },
+    {
+      "id": "ttang-RS0727ICNFUK-G11-2026-08-08",
+      "source": "ttang",
+      "airline": "에어서울",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-08-08",
+        "time": ""
+      },
+      "arrival": {
+        "city": "후쿠오카",
+        "airport": "FUK",
+        "date": "2026-08-11",
+        "time": ""
+      },
+      "price": 163900,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-08&dep1=FUK&arr1=ICN&depdate1=2026-08-11&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-08&dep1=FUK&arr1=ICN&depdate1=2026-08-11&adt=1&chd=0&inf=0&comp=Y",
+      "region": "일본",
+      "discountRate": -8,
+      "firstSeen": "2026-08-05"
+    },
+    {
+      "id": "ttang-RS0727ICNFUK-G9-2026-08-09",
+      "source": "ttang",
+      "airline": "에어서울",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-08-09",
+        "time": ""
+      },
+      "arrival": {
+        "city": "후쿠오카",
+        "airport": "FUK",
+        "date": "2026-08-13",
+        "time": ""
+      },
+      "price": 163900,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-09&dep1=FUK&arr1=ICN&depdate1=2026-08-13&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-09&dep1=FUK&arr1=ICN&depdate1=2026-08-13&adt=1&chd=0&inf=0&comp=Y",
+      "region": "일본",
+      "discountRate": -8,
+      "firstSeen": "2026-08-05"
+    },
+    {
+      "id": "ttang-RS0727ICNFUK-G11-2026-08-09",
+      "source": "ttang",
+      "airline": "에어서울",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-08-09",
+        "time": ""
+      },
+      "arrival": {
+        "city": "후쿠오카",
+        "airport": "FUK",
+        "date": "2026-08-12",
+        "time": ""
+      },
+      "price": 163900,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-09&dep1=FUK&arr1=ICN&depdate1=2026-08-12&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-09&dep1=FUK&arr1=ICN&depdate1=2026-08-12&adt=1&chd=0&inf=0&comp=Y",
+      "region": "일본",
+      "discountRate": -8,
+      "firstSeen": "2026-08-05"
+    },
+    {
+      "id": "ttang-RS0727ICNFUK-G9-2026-08-10",
+      "source": "ttang",
+      "airline": "에어서울",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-08-10",
+        "time": ""
+      },
+      "arrival": {
+        "city": "후쿠오카",
+        "airport": "FUK",
+        "date": "2026-08-14",
+        "time": ""
+      },
+      "price": 163900,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-10&dep1=FUK&arr1=ICN&depdate1=2026-08-14&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-10&dep1=FUK&arr1=ICN&depdate1=2026-08-14&adt=1&chd=0&inf=0&comp=Y",
+      "region": "일본",
+      "discountRate": -8,
+      "firstSeen": "2026-08-05"
+    },
+    {
+      "id": "ttang-RS0727ICNFUK-G9-2026-08-11",
+      "source": "ttang",
+      "airline": "에어서울",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-08-11",
+        "time": ""
+      },
+      "arrival": {
+        "city": "후쿠오카",
+        "airport": "FUK",
+        "date": "2026-08-15",
+        "time": ""
+      },
+      "price": 163900,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-11&dep1=FUK&arr1=ICN&depdate1=2026-08-15&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-11&dep1=FUK&arr1=ICN&depdate1=2026-08-15&adt=1&chd=0&inf=0&comp=Y",
+      "region": "일본",
+      "discountRate": -8,
+      "firstSeen": "2026-08-05"
     },
     {
       "id": "ttang-KN0872CJJDSN-G1-2026-08-12",
@@ -14473,6 +14697,34 @@
       "firstSeen": "2026-07-15"
     },
     {
+      "id": "ttang-RS0101ICNGUM-G7-2026-08-16",
+      "source": "ttang",
+      "airline": "에어서울",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-08-16",
+        "time": "19:25",
+        "arrivalTime": "01:00"
+      },
+      "arrival": {
+        "city": "괌",
+        "airport": "GUM",
+        "date": "2026-08-20",
+        "time": "02:00",
+        "arrivalTime": "05:50"
+      },
+      "price": 224900,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=GUM&depdate0=2026-08-16&dep1=GUM&arr1=ICN&depdate1=2026-08-20&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=GUM&depdate0=2026-08-16&dep1=GUM&arr1=ICN&depdate1=2026-08-20&adt=1&chd=0&inf=0&comp=Y",
+      "region": "남태평양",
+      "availableSeats": 6,
+      "seats": "6석",
+      "discountRate": 2,
+      "firstSeen": "2026-08-05"
+    },
+    {
       "id": "ttang-TAE-DYG-RT-0-5-3U-2026-08-16",
       "source": "ttang",
       "airline": "사천항공",
@@ -14525,6 +14777,34 @@
       "seats": "2석",
       "discountRate": -11,
       "firstSeen": "2026-08-03"
+    },
+    {
+      "id": "ttang-RS0101ICNGUM-G7-2026-08-17",
+      "source": "ttang",
+      "airline": "에어서울",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-08-17",
+        "time": "19:25",
+        "arrivalTime": "01:00"
+      },
+      "arrival": {
+        "city": "괌",
+        "airport": "GUM",
+        "date": "2026-08-21",
+        "time": "02:00",
+        "arrivalTime": "05:50"
+      },
+      "price": 224900,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=GUM&depdate0=2026-08-17&dep1=GUM&arr1=ICN&depdate1=2026-08-21&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=GUM&depdate0=2026-08-17&dep1=GUM&arr1=ICN&depdate1=2026-08-21&adt=1&chd=0&inf=0&comp=Y",
+      "region": "남태평양",
+      "availableSeats": 4,
+      "seats": "4석",
+      "discountRate": 2,
+      "firstSeen": "2026-08-05"
     },
     {
       "id": "ttang-ICN-RMQ-RT-0-4-LJ-2026-08-17",
@@ -14583,6 +14863,54 @@
       "firstSeen": "2026-08-04"
     },
     {
+      "id": "ttang-RS0727ICNFUK-G9-2026-08-18",
+      "source": "ttang",
+      "airline": "에어서울",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-08-18",
+        "time": ""
+      },
+      "arrival": {
+        "city": "후쿠오카",
+        "airport": "FUK",
+        "date": "2026-08-22",
+        "time": ""
+      },
+      "price": 163900,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-18&dep1=FUK&arr1=ICN&depdate1=2026-08-22&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-18&dep1=FUK&arr1=ICN&depdate1=2026-08-22&adt=1&chd=0&inf=0&comp=Y",
+      "region": "일본",
+      "discountRate": -8,
+      "firstSeen": "2026-08-05"
+    },
+    {
+      "id": "ttang-RS0727ICNFUK-G11-2026-08-18",
+      "source": "ttang",
+      "airline": "에어서울",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-08-18",
+        "time": ""
+      },
+      "arrival": {
+        "city": "후쿠오카",
+        "airport": "FUK",
+        "date": "2026-08-21",
+        "time": ""
+      },
+      "price": 163900,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-18&dep1=FUK&arr1=ICN&depdate1=2026-08-21&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-18&dep1=FUK&arr1=ICN&depdate1=2026-08-21&adt=1&chd=0&inf=0&comp=Y",
+      "region": "일본",
+      "discountRate": -8,
+      "firstSeen": "2026-08-05"
+    },
+    {
       "id": "ttang-7C1451PUSFUK-G14-2026-08-18",
       "source": "ttang",
       "airline": "제주항공",
@@ -14609,6 +14937,34 @@
       "seats": "7석",
       "discountRate": -11,
       "firstSeen": "2026-07-28"
+    },
+    {
+      "id": "ttang-RS0101ICNGUM-G7-2026-08-18",
+      "source": "ttang",
+      "airline": "에어서울",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-08-18",
+        "time": "19:25",
+        "arrivalTime": "01:00"
+      },
+      "arrival": {
+        "city": "괌",
+        "airport": "GUM",
+        "date": "2026-08-22",
+        "time": "02:00",
+        "arrivalTime": "05:50"
+      },
+      "price": 224900,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=GUM&depdate0=2026-08-18&dep1=GUM&arr1=ICN&depdate1=2026-08-22&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=GUM&depdate0=2026-08-18&dep1=GUM&arr1=ICN&depdate1=2026-08-22&adt=1&chd=0&inf=0&comp=Y",
+      "region": "남태평양",
+      "availableSeats": 4,
+      "seats": "4석",
+      "discountRate": 2,
+      "firstSeen": "2026-08-05"
     },
     {
       "id": "ttang-ICN-NRT-RT-0-3-BX-2026-08-18",
@@ -14691,6 +15047,54 @@
       "firstSeen": "2026-07-24"
     },
     {
+      "id": "ttang-RS0727ICNFUK-G11-2026-08-19",
+      "source": "ttang",
+      "airline": "에어서울",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-08-19",
+        "time": ""
+      },
+      "arrival": {
+        "city": "후쿠오카",
+        "airport": "FUK",
+        "date": "2026-08-22",
+        "time": ""
+      },
+      "price": 163900,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-19&dep1=FUK&arr1=ICN&depdate1=2026-08-22&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-19&dep1=FUK&arr1=ICN&depdate1=2026-08-22&adt=1&chd=0&inf=0&comp=Y",
+      "region": "일본",
+      "discountRate": -8,
+      "firstSeen": "2026-08-05"
+    },
+    {
+      "id": "ttang-RS0727ICNFUK-G9-2026-08-19",
+      "source": "ttang",
+      "airline": "에어서울",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-08-19",
+        "time": ""
+      },
+      "arrival": {
+        "city": "후쿠오카",
+        "airport": "FUK",
+        "date": "2026-08-23",
+        "time": ""
+      },
+      "price": 163900,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-19&dep1=FUK&arr1=ICN&depdate1=2026-08-23&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-19&dep1=FUK&arr1=ICN&depdate1=2026-08-23&adt=1&chd=0&inf=0&comp=Y",
+      "region": "일본",
+      "discountRate": -8,
+      "firstSeen": "2026-08-05"
+    },
+    {
       "id": "ttang-7C1451PUSFUK-G14-2026-08-19",
       "source": "ttang",
       "airline": "제주항공",
@@ -14717,30 +15121,6 @@
       "seats": "9석",
       "discountRate": -11,
       "firstSeen": "2026-07-28"
-    },
-    {
-      "id": "ttang-ZE0645ICNFUK-G7-2026-08-19",
-      "source": "ttang",
-      "airline": "이스타항공",
-      "departure": {
-        "city": "서울",
-        "airport": "ICN",
-        "date": "2026-08-19",
-        "time": ""
-      },
-      "arrival": {
-        "city": "후쿠오카",
-        "airport": "FUK",
-        "date": "2026-08-21",
-        "time": ""
-      },
-      "price": 189000,
-      "currency": "KRW",
-      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-19&dep1=FUK&arr1=ICN&depdate1=2026-08-21&adt=1&chd=0&inf=0&comp=Y",
-      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-19&dep1=FUK&arr1=ICN&depdate1=2026-08-21&adt=1&chd=0&inf=0&comp=Y",
-      "region": "일본",
-      "discountRate": -25,
-      "firstSeen": "2026-07-27"
     },
     {
       "id": "ttang-ZE0821CJJPVG-G13-2026-08-19",
@@ -14812,14 +15192,14 @@
         "time": "19:30",
         "arrivalTime": "21:55"
       },
-      "price": 261900,
+      "price": 257900,
       "currency": "KRW",
       "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=TAO&depdate0=2026-08-19&dep1=TAO&arr1=ICN&depdate1=2026-08-21&adt=1&chd=0&inf=0&comp=Y",
       "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=TAO&depdate0=2026-08-19&dep1=TAO&arr1=ICN&depdate1=2026-08-21&adt=1&chd=0&inf=0&comp=Y",
       "region": "중국",
       "availableSeats": 4,
       "seats": "4석",
-      "discountRate": -25,
+      "discountRate": -23,
       "firstSeen": "2026-07-23"
     },
     {
@@ -14873,34 +15253,6 @@
       "seats": "4석",
       "discountRate": -23,
       "firstSeen": "2026-07-31"
-    },
-    {
-      "id": "ttang-PUS-OKA-RT-0-3-LJ-2026-08-19",
-      "source": "ttang",
-      "airline": "진에어",
-      "departure": {
-        "city": "부산",
-        "airport": "PUS",
-        "date": "2026-08-19",
-        "time": "08:05",
-        "arrivalTime": "10:05"
-      },
-      "arrival": {
-        "city": "오키나와",
-        "airport": "OKA",
-        "date": "2026-08-21",
-        "time": "11:05",
-        "arrivalTime": "13:05"
-      },
-      "price": 386000,
-      "currency": "KRW",
-      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=PUS&arr0=OKA&depdate0=2026-08-19&dep1=OKA&arr1=PUS&depdate1=2026-08-21&adt=1&chd=0&inf=0&comp=Y",
-      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=PUS&arr0=OKA&depdate0=2026-08-19&dep1=OKA&arr1=PUS&depdate1=2026-08-21&adt=1&chd=0&inf=0&comp=Y",
-      "region": "일본",
-      "availableSeats": 1,
-      "seats": "1석",
-      "discountRate": -59,
-      "firstSeen": "2026-07-29"
     },
     {
       "id": "ttang-LJ0065PUSCRK-G8-2026-08-19",
@@ -14959,9 +15311,9 @@
       "firstSeen": "2026-07-19"
     },
     {
-      "id": "ttang-ZE0645ICNFUK-G7-2026-08-20",
+      "id": "ttang-RS0727ICNFUK-G11-2026-08-20",
       "source": "ttang",
-      "airline": "이스타항공",
+      "airline": "에어서울",
       "departure": {
         "city": "서울",
         "airport": "ICN",
@@ -14971,16 +15323,16 @@
       "arrival": {
         "city": "후쿠오카",
         "airport": "FUK",
-        "date": "2026-08-22",
+        "date": "2026-08-23",
         "time": ""
       },
-      "price": 189000,
+      "price": 163900,
       "currency": "KRW",
-      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-20&dep1=FUK&arr1=ICN&depdate1=2026-08-22&adt=1&chd=0&inf=0&comp=Y",
-      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-20&dep1=FUK&arr1=ICN&depdate1=2026-08-22&adt=1&chd=0&inf=0&comp=Y",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-20&dep1=FUK&arr1=ICN&depdate1=2026-08-23&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-20&dep1=FUK&arr1=ICN&depdate1=2026-08-23&adt=1&chd=0&inf=0&comp=Y",
       "region": "일본",
-      "discountRate": -25,
-      "firstSeen": "2026-07-27"
+      "discountRate": -8,
+      "firstSeen": "2026-08-05"
     },
     {
       "id": "ttang-CJJ-TPE-RT-0-3-RF-2026-08-20",
@@ -15173,6 +15525,34 @@
       "firstSeen": "2026-07-28"
     },
     {
+      "id": "ttang-RS0101ICNGUM-G7-2026-08-22",
+      "source": "ttang",
+      "airline": "에어서울",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-08-22",
+        "time": "19:25",
+        "arrivalTime": "01:00"
+      },
+      "arrival": {
+        "city": "괌",
+        "airport": "GUM",
+        "date": "2026-08-26",
+        "time": "02:00",
+        "arrivalTime": "05:50"
+      },
+      "price": 224900,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=GUM&depdate0=2026-08-22&dep1=GUM&arr1=ICN&depdate1=2026-08-26&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=GUM&depdate0=2026-08-22&dep1=GUM&arr1=ICN&depdate1=2026-08-26&adt=1&chd=0&inf=0&comp=Y",
+      "region": "남태평양",
+      "availableSeats": 4,
+      "seats": "4석",
+      "discountRate": 2,
+      "firstSeen": "2026-08-05"
+    },
+    {
       "id": "ttang-HX0627ICNHKG-G1-2026-08-22",
       "source": "ttang",
       "airline": "홍콩항공",
@@ -15339,6 +15719,34 @@
       "seats": "9석",
       "discountRate": 15,
       "firstSeen": "2026-07-28"
+    },
+    {
+      "id": "ttang-RS0101ICNGUM-G7-2026-08-23",
+      "source": "ttang",
+      "airline": "에어서울",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-08-23",
+        "time": "19:25",
+        "arrivalTime": "01:00"
+      },
+      "arrival": {
+        "city": "괌",
+        "airport": "GUM",
+        "date": "2026-08-27",
+        "time": "02:00",
+        "arrivalTime": "05:50"
+      },
+      "price": 224900,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=GUM&depdate0=2026-08-23&dep1=GUM&arr1=ICN&depdate1=2026-08-27&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=GUM&depdate0=2026-08-23&dep1=GUM&arr1=ICN&depdate1=2026-08-27&adt=1&chd=0&inf=0&comp=Y",
+      "region": "남태평양",
+      "availableSeats": 4,
+      "seats": "4석",
+      "discountRate": 2,
+      "firstSeen": "2026-08-05"
     },
     {
       "id": "ttang-ICN-RMQ-RT-0-4-LJ-2026-08-23",
@@ -15671,6 +16079,34 @@
       "firstSeen": "2026-08-01"
     },
     {
+      "id": "ttang-RS0101ICNGUM-G7-2026-08-24",
+      "source": "ttang",
+      "airline": "에어서울",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-08-24",
+        "time": "19:25",
+        "arrivalTime": "01:00"
+      },
+      "arrival": {
+        "city": "괌",
+        "airport": "GUM",
+        "date": "2026-08-28",
+        "time": "02:00",
+        "arrivalTime": "05:50"
+      },
+      "price": 224900,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=GUM&depdate0=2026-08-24&dep1=GUM&arr1=ICN&depdate1=2026-08-28&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=GUM&depdate0=2026-08-24&dep1=GUM&arr1=ICN&depdate1=2026-08-28&adt=1&chd=0&inf=0&comp=Y",
+      "region": "남태평양",
+      "availableSeats": 4,
+      "seats": "4석",
+      "discountRate": 2,
+      "firstSeen": "2026-08-05"
+    },
+    {
       "id": "ttang-ICN-KIX-RT-0-3-7C-2026-08-24",
       "source": "ttang",
       "airline": "제주항공",
@@ -15863,6 +16299,54 @@
       "firstSeen": "2026-07-27"
     },
     {
+      "id": "ttang-RS0727ICNFUK-G11-2026-08-25",
+      "source": "ttang",
+      "airline": "에어서울",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-08-25",
+        "time": ""
+      },
+      "arrival": {
+        "city": "후쿠오카",
+        "airport": "FUK",
+        "date": "2026-08-28",
+        "time": ""
+      },
+      "price": 163900,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-25&dep1=FUK&arr1=ICN&depdate1=2026-08-28&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-25&dep1=FUK&arr1=ICN&depdate1=2026-08-28&adt=1&chd=0&inf=0&comp=Y",
+      "region": "일본",
+      "discountRate": -8,
+      "firstSeen": "2026-08-05"
+    },
+    {
+      "id": "ttang-RS0727ICNFUK-G9-2026-08-25",
+      "source": "ttang",
+      "airline": "에어서울",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-08-25",
+        "time": ""
+      },
+      "arrival": {
+        "city": "후쿠오카",
+        "airport": "FUK",
+        "date": "2026-08-29",
+        "time": ""
+      },
+      "price": 163900,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-25&dep1=FUK&arr1=ICN&depdate1=2026-08-29&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-25&dep1=FUK&arr1=ICN&depdate1=2026-08-29&adt=1&chd=0&inf=0&comp=Y",
+      "region": "일본",
+      "discountRate": -8,
+      "firstSeen": "2026-08-05"
+    },
+    {
       "id": "ttang-7C1451PUSFUK-G14-2026-08-25",
       "source": "ttang",
       "airline": "제주항공",
@@ -15917,6 +16401,34 @@
       "seats": "9석",
       "discountRate": 15,
       "firstSeen": "2026-07-28"
+    },
+    {
+      "id": "ttang-RS0101ICNGUM-G7-2026-08-25",
+      "source": "ttang",
+      "airline": "에어서울",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-08-25",
+        "time": "19:25",
+        "arrivalTime": "01:00"
+      },
+      "arrival": {
+        "city": "괌",
+        "airport": "GUM",
+        "date": "2026-08-29",
+        "time": "02:00",
+        "arrivalTime": "05:50"
+      },
+      "price": 224900,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=GUM&depdate0=2026-08-25&dep1=GUM&arr1=ICN&depdate1=2026-08-29&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=GUM&depdate0=2026-08-25&dep1=GUM&arr1=ICN&depdate1=2026-08-29&adt=1&chd=0&inf=0&comp=Y",
+      "region": "남태평양",
+      "availableSeats": 4,
+      "seats": "4석",
+      "discountRate": 2,
+      "firstSeen": "2026-08-05"
     },
     {
       "id": "ttang-ICN-KIX-RT-0-3-7C-2026-08-25",
@@ -16111,6 +16623,54 @@
       "firstSeen": "2026-07-27"
     },
     {
+      "id": "ttang-RS0727ICNFUK-G9-2026-08-26",
+      "source": "ttang",
+      "airline": "에어서울",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-08-26",
+        "time": ""
+      },
+      "arrival": {
+        "city": "후쿠오카",
+        "airport": "FUK",
+        "date": "2026-08-30",
+        "time": ""
+      },
+      "price": 163900,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-26&dep1=FUK&arr1=ICN&depdate1=2026-08-30&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-26&dep1=FUK&arr1=ICN&depdate1=2026-08-30&adt=1&chd=0&inf=0&comp=Y",
+      "region": "일본",
+      "discountRate": -8,
+      "firstSeen": "2026-08-05"
+    },
+    {
+      "id": "ttang-RS0727ICNFUK-G11-2026-08-26",
+      "source": "ttang",
+      "airline": "에어서울",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-08-26",
+        "time": ""
+      },
+      "arrival": {
+        "city": "후쿠오카",
+        "airport": "FUK",
+        "date": "2026-08-29",
+        "time": ""
+      },
+      "price": 163900,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-26&dep1=FUK&arr1=ICN&depdate1=2026-08-29&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-26&dep1=FUK&arr1=ICN&depdate1=2026-08-29&adt=1&chd=0&inf=0&comp=Y",
+      "region": "일본",
+      "discountRate": -8,
+      "firstSeen": "2026-08-05"
+    },
+    {
       "id": "ttang-7C1451PUSFUK-G14-2026-08-26",
       "source": "ttang",
       "airline": "제주항공",
@@ -16137,34 +16697,6 @@
       "seats": "9석",
       "discountRate": -11,
       "firstSeen": "2026-07-28"
-    },
-    {
-      "id": "ttang-ZE0645ICNFUK-G7-2026-08-26",
-      "source": "ttang",
-      "airline": "이스타항공",
-      "departure": {
-        "city": "서울",
-        "airport": "ICN",
-        "date": "2026-08-26",
-        "time": "11:30",
-        "arrivalTime": "13:00"
-      },
-      "arrival": {
-        "city": "후쿠오카",
-        "airport": "FUK",
-        "date": "2026-08-28",
-        "time": "10:00",
-        "arrivalTime": "11:35"
-      },
-      "price": 189000,
-      "currency": "KRW",
-      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-26&dep1=FUK&arr1=ICN&depdate1=2026-08-28&adt=1&chd=0&inf=0&comp=Y",
-      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-26&dep1=FUK&arr1=ICN&depdate1=2026-08-28&adt=1&chd=0&inf=0&comp=Y",
-      "region": "일본",
-      "availableSeats": 9,
-      "seats": "9석",
-      "discountRate": -25,
-      "firstSeen": "2026-07-27"
     },
     {
       "id": "ttang-ZE0821CJJPVG-G13-2026-08-26",
@@ -16292,14 +16824,14 @@
         "time": "19:30",
         "arrivalTime": "21:55"
       },
-      "price": 261900,
+      "price": 257900,
       "currency": "KRW",
       "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=TAO&depdate0=2026-08-26&dep1=TAO&arr1=ICN&depdate1=2026-08-28&adt=1&chd=0&inf=0&comp=Y",
       "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=TAO&depdate0=2026-08-26&dep1=TAO&arr1=ICN&depdate1=2026-08-28&adt=1&chd=0&inf=0&comp=Y",
       "region": "중국",
       "availableSeats": 9,
       "seats": "9석",
-      "discountRate": -25,
+      "discountRate": -23,
       "firstSeen": "2026-07-26"
     },
     {
@@ -16385,6 +16917,30 @@
       "seats": "8석",
       "discountRate": -9,
       "firstSeen": "2026-07-26"
+    },
+    {
+      "id": "ttang-RS0727ICNFUK-G11-2026-08-27",
+      "source": "ttang",
+      "airline": "에어서울",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-08-27",
+        "time": ""
+      },
+      "arrival": {
+        "city": "후쿠오카",
+        "airport": "FUK",
+        "date": "2026-08-30",
+        "time": ""
+      },
+      "price": 163900,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-27&dep1=FUK&arr1=ICN&depdate1=2026-08-30&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-27&dep1=FUK&arr1=ICN&depdate1=2026-08-30&adt=1&chd=0&inf=0&comp=Y",
+      "region": "일본",
+      "discountRate": -8,
+      "firstSeen": "2026-08-05"
     },
     {
       "id": "ttang-CJJ-TPE-RT-0-3-RF-2026-08-27",
@@ -16581,34 +17137,6 @@
       "firstSeen": "2026-07-31"
     },
     {
-      "id": "ttang-7C6255PUSKHH-G3-2026-08-28",
-      "source": "ttang",
-      "airline": "제주항공",
-      "departure": {
-        "city": "부산",
-        "airport": "PUS",
-        "date": "2026-08-28",
-        "time": "11:25",
-        "arrivalTime": "13:20"
-      },
-      "arrival": {
-        "city": "카오슝(대만)",
-        "airport": "KHH",
-        "date": "2026-08-31",
-        "time": "14:15",
-        "arrivalTime": "17:55"
-      },
-      "price": 345000,
-      "currency": "KRW",
-      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=PUS&arr0=KHH&depdate0=2026-08-28&dep1=KHH&arr1=PUS&depdate1=2026-08-31&adt=1&chd=0&inf=0&comp=Y",
-      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=PUS&arr0=KHH&depdate0=2026-08-28&dep1=KHH&arr1=PUS&depdate1=2026-08-31&adt=1&chd=0&inf=0&comp=Y",
-      "region": "중국",
-      "availableSeats": 9,
-      "seats": "9석",
-      "discountRate": -45,
-      "firstSeen": "2026-08-02"
-    },
-    {
       "id": "ttang-CZ0370ICNPVG-G1-2026-08-28",
       "source": "ttang",
       "airline": "중국남방항공",
@@ -16635,6 +17163,30 @@
       "seats": "9석",
       "discountRate": 0,
       "firstSeen": "2026-07-28"
+    },
+    {
+      "id": "ttang-RS0727ICNFUK-G9-2026-08-29",
+      "source": "ttang",
+      "airline": "에어서울",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-08-29",
+        "time": ""
+      },
+      "arrival": {
+        "city": "후쿠오카",
+        "airport": "FUK",
+        "date": "2026-09-02",
+        "time": ""
+      },
+      "price": 163900,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-29&dep1=FUK&arr1=ICN&depdate1=2026-09-02&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-29&dep1=FUK&arr1=ICN&depdate1=2026-09-02&adt=1&chd=0&inf=0&comp=Y",
+      "region": "일본",
+      "discountRate": -8,
+      "firstSeen": "2026-08-05"
     },
     {
       "id": "ttang-ZE0821CJJPVG-G13-2026-08-29",
@@ -17083,6 +17635,82 @@
       "seats": "8석",
       "discountRate": -9,
       "firstSeen": "2026-07-29"
+    },
+    {
+      "id": "ttang-JQ0048ICNSYD-G7-2026-08-29",
+      "source": "ttang",
+      "airline": "젯스타",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-08-29",
+        "time": "21:50",
+        "arrivalTime": "09:05"
+      },
+      "arrival": {
+        "city": "시드니",
+        "airport": "SYD",
+        "date": "2026-09-03",
+        "time": "10:45",
+        "arrivalTime": "20:15"
+      },
+      "price": 850000,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=SYD&depdate0=2026-08-29&dep1=SYD&arr1=ICN&depdate1=2026-09-03&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=SYD&depdate0=2026-08-29&dep1=SYD&arr1=ICN&depdate1=2026-09-03&adt=1&chd=0&inf=0&comp=Y",
+      "region": "남태평양",
+      "availableSeats": 2,
+      "seats": "2석",
+      "discountRate": 1,
+      "firstSeen": "2026-08-05"
+    },
+    {
+      "id": "ttang-RS0727ICNFUK-G11-2026-08-30",
+      "source": "ttang",
+      "airline": "에어서울",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-08-30",
+        "time": ""
+      },
+      "arrival": {
+        "city": "후쿠오카",
+        "airport": "FUK",
+        "date": "2026-09-02",
+        "time": ""
+      },
+      "price": 163900,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-30&dep1=FUK&arr1=ICN&depdate1=2026-09-02&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-30&dep1=FUK&arr1=ICN&depdate1=2026-09-02&adt=1&chd=0&inf=0&comp=Y",
+      "region": "일본",
+      "discountRate": -8,
+      "firstSeen": "2026-08-05"
+    },
+    {
+      "id": "ttang-RS0727ICNFUK-G9-2026-08-30",
+      "source": "ttang",
+      "airline": "에어서울",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-08-30",
+        "time": ""
+      },
+      "arrival": {
+        "city": "후쿠오카",
+        "airport": "FUK",
+        "date": "2026-09-03",
+        "time": ""
+      },
+      "price": 163900,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-30&dep1=FUK&arr1=ICN&depdate1=2026-09-03&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-30&dep1=FUK&arr1=ICN&depdate1=2026-09-03&adt=1&chd=0&inf=0&comp=Y",
+      "region": "일본",
+      "discountRate": -8,
+      "firstSeen": "2026-08-05"
     },
     {
       "id": "ttang-7C1451PUSFUK-G14-2026-08-30",
@@ -17581,6 +18209,30 @@
       "firstSeen": "2026-07-30"
     },
     {
+      "id": "ttang-RS0727ICNFUK-G7-2026-08-31",
+      "source": "ttang",
+      "airline": "에어서울",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-08-31",
+        "time": ""
+      },
+      "arrival": {
+        "city": "후쿠오카",
+        "airport": "FUK",
+        "date": "2026-09-03",
+        "time": ""
+      },
+      "price": 163900,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-31&dep1=FUK&arr1=ICN&depdate1=2026-09-03&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-31&dep1=FUK&arr1=ICN&depdate1=2026-09-03&adt=1&chd=0&inf=0&comp=Y",
+      "region": "일본",
+      "discountRate": -8,
+      "firstSeen": "2026-08-05"
+    },
+    {
       "id": "ttang-7C1451PUSFUK-G14-2026-08-31",
       "source": "ttang",
       "airline": "제주항공",
@@ -17633,6 +18285,34 @@
       "region": "일본",
       "discountRate": 15,
       "firstSeen": "2026-07-31"
+    },
+    {
+      "id": "ttang-RS0101ICNGUM-G7-2026-08-31",
+      "source": "ttang",
+      "airline": "에어서울",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-08-31",
+        "time": "19:25",
+        "arrivalTime": "01:00"
+      },
+      "arrival": {
+        "city": "괌",
+        "airport": "GUM",
+        "date": "2026-09-04",
+        "time": "02:00",
+        "arrivalTime": "05:50"
+      },
+      "price": 224900,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=GUM&depdate0=2026-08-31&dep1=GUM&arr1=ICN&depdate1=2026-09-04&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=GUM&depdate0=2026-08-31&dep1=GUM&arr1=ICN&depdate1=2026-09-04&adt=1&chd=0&inf=0&comp=Y",
+      "region": "남태평양",
+      "availableSeats": 4,
+      "seats": "4석",
+      "discountRate": 2,
+      "firstSeen": "2026-08-05"
     },
     {
       "id": "ttang-TAE-TPE-RT-0-5-TW-2026-08-31",
@@ -18051,6 +18731,54 @@
       "firstSeen": "2026-07-31"
     },
     {
+      "id": "ttang-RS0727ICNFUK-G9-2026-09-01",
+      "source": "ttang",
+      "airline": "에어서울",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-09-01",
+        "time": ""
+      },
+      "arrival": {
+        "city": "후쿠오카",
+        "airport": "FUK",
+        "date": "2026-09-05",
+        "time": ""
+      },
+      "price": 163900,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-09-01&dep1=FUK&arr1=ICN&depdate1=2026-09-05&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-09-01&dep1=FUK&arr1=ICN&depdate1=2026-09-05&adt=1&chd=0&inf=0&comp=Y",
+      "region": "일본",
+      "discountRate": -7,
+      "firstSeen": "2026-08-05"
+    },
+    {
+      "id": "ttang-RS0727ICNFUK-G11-2026-09-01",
+      "source": "ttang",
+      "airline": "에어서울",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-09-01",
+        "time": ""
+      },
+      "arrival": {
+        "city": "후쿠오카",
+        "airport": "FUK",
+        "date": "2026-09-03",
+        "time": ""
+      },
+      "price": 163900,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-09-01&dep1=FUK&arr1=ICN&depdate1=2026-09-03&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-09-01&dep1=FUK&arr1=ICN&depdate1=2026-09-03&adt=1&chd=0&inf=0&comp=Y",
+      "region": "일본",
+      "discountRate": -7,
+      "firstSeen": "2026-08-05"
+    },
+    {
       "id": "ttang-PUS-KIX-RT-0-3-BX-2026-09-01",
       "source": "ttang",
       "airline": "에어부산",
@@ -18461,6 +19189,54 @@
       "firstSeen": "2026-08-01"
     },
     {
+      "id": "ttang-RS0727ICNFUK-G7-2026-09-02",
+      "source": "ttang",
+      "airline": "에어서울",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-09-02",
+        "time": ""
+      },
+      "arrival": {
+        "city": "후쿠오카",
+        "airport": "FUK",
+        "date": "2026-09-05",
+        "time": ""
+      },
+      "price": 163900,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-09-02&dep1=FUK&arr1=ICN&depdate1=2026-09-05&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-09-02&dep1=FUK&arr1=ICN&depdate1=2026-09-05&adt=1&chd=0&inf=0&comp=Y",
+      "region": "일본",
+      "discountRate": -7,
+      "firstSeen": "2026-08-05"
+    },
+    {
+      "id": "ttang-RS0727ICNFUK-G9-2026-09-02",
+      "source": "ttang",
+      "airline": "에어서울",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-09-02",
+        "time": ""
+      },
+      "arrival": {
+        "city": "후쿠오카",
+        "airport": "FUK",
+        "date": "2026-09-06",
+        "time": ""
+      },
+      "price": 163900,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-09-02&dep1=FUK&arr1=ICN&depdate1=2026-09-06&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-09-02&dep1=FUK&arr1=ICN&depdate1=2026-09-06&adt=1&chd=0&inf=0&comp=Y",
+      "region": "일본",
+      "discountRate": -7,
+      "firstSeen": "2026-08-05"
+    },
+    {
       "id": "ttang-PUS-TPE-RT-0-5-LJ-2026-09-02",
       "source": "ttang",
       "airline": "진에어",
@@ -18856,19 +19632,23 @@
         "city": "서울(김포)",
         "airport": "GMP",
         "date": "2026-09-04",
-        "time": ""
+        "time": "17:40",
+        "arrivalTime": "19:20"
       },
       "arrival": {
         "city": "오사카(간사이)",
         "airport": "KIX",
         "date": "2026-09-06",
-        "time": ""
+        "time": "11:10",
+        "arrivalTime": "13:10"
       },
       "price": 255000,
       "currency": "KRW",
       "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=GMP&arr0=KIX&depdate0=2026-09-04&dep1=KIX&arr1=GMP&depdate1=2026-09-06&adt=1&chd=0&inf=0&comp=Y",
       "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=GMP&arr0=KIX&depdate0=2026-09-04&dep1=KIX&arr1=GMP&depdate1=2026-09-06&adt=1&chd=0&inf=0&comp=Y",
       "region": "일본",
+      "availableSeats": 4,
+      "seats": "4석",
       "discountRate": -50,
       "firstSeen": "2026-08-05"
     },
@@ -19013,7 +19793,7 @@
       "firstSeen": "2026-08-05"
     },
     {
-      "id": "ttang-LJ0091ICNPQC-G5-2026-09-05",
+      "id": "ttang-ICN-PQC-RT-0-5-LJ-2026-09-05",
       "source": "ttang",
       "airline": "진에어",
       "departure": {
@@ -19030,7 +19810,7 @@
         "time": "20:35",
         "arrivalTime": "04:00"
       },
-      "price": 280000,
+      "price": 281000,
       "currency": "KRW",
       "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=PQC&depdate0=2026-09-05&dep1=PQC&arr1=ICN&depdate1=2026-09-09&adt=1&chd=0&inf=0&comp=Y",
       "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=PQC&depdate0=2026-09-05&dep1=PQC&arr1=ICN&depdate1=2026-09-09&adt=1&chd=0&inf=0&comp=Y",
@@ -20884,10 +21664,10 @@
     }
   ],
   "sources": {
-    "ybtour": 342,
-    "hanatour": 104,
-    "modetour": 1020,
-    "onlinetour": 130,
+    "ybtour": 347,
+    "hanatour": 100,
+    "modetour": 1008,
+    "onlinetour": 118,
     "ttang": 1792,
     "myrealtrip": 55
   },
@@ -20974,8 +21754,8 @@
       {
         "date": "2026-08-05",
         "minPrice": 239000,
-        "avgPrice": 295667,
-        "count": 27
+        "avgPrice": 296286,
+        "count": 28
       }
     ],
     "부산-하노이": [
@@ -21060,7 +21840,7 @@
       {
         "date": "2026-08-05",
         "minPrice": 459900,
-        "avgPrice": 586567,
+        "avgPrice": 579900,
         "count": 3
       }
     ],
@@ -21317,9 +22097,9 @@
       },
       {
         "date": "2026-08-05",
-        "minPrice": 676000,
-        "avgPrice": 676000,
-        "count": 1
+        "minPrice": 386000,
+        "avgPrice": 531000,
+        "count": 2
       }
     ],
     "인천-방콕": [
@@ -21404,8 +22184,8 @@
       {
         "date": "2026-08-05",
         "minPrice": 328400,
-        "avgPrice": 367903,
-        "count": 37
+        "avgPrice": 368289,
+        "count": 36
       }
     ],
     "부산-코타키나발루": [
@@ -21834,8 +22614,8 @@
       {
         "date": "2026-08-05",
         "minPrice": 166900,
-        "avgPrice": 254967,
-        "count": 378
+        "avgPrice": 255382,
+        "count": 371
       }
     ],
     "청주-후쿠오카": [
@@ -22178,8 +22958,8 @@
       {
         "date": "2026-08-05",
         "minPrice": 180000,
-        "avgPrice": 255568,
-        "count": 220
+        "avgPrice": 255591,
+        "count": 215
       }
     ],
     "인천-마츠야마": [
@@ -22436,8 +23216,8 @@
       {
         "date": "2026-08-05",
         "minPrice": 280000,
-        "avgPrice": 350919,
-        "count": 16
+        "avgPrice": 352647,
+        "count": 15
       }
     ],
     "부산-나가사키": [
@@ -22780,8 +23560,8 @@
       {
         "date": "2026-08-05",
         "minPrice": 213000,
-        "avgPrice": 260400,
-        "count": 51
+        "avgPrice": 259763,
+        "count": 49
       }
     ],
     "부산-오키나와": [
@@ -22865,9 +23645,9 @@
       },
       {
         "date": "2026-08-05",
-        "minPrice": 386000,
-        "avgPrice": 417241,
-        "count": 41
+        "minPrice": 369000,
+        "avgPrice": 416792,
+        "count": 39
       }
     ],
     "인천-히로시마": [
@@ -25216,8 +25996,8 @@
       {
         "date": "2026-08-05",
         "minPrice": 352600,
-        "avgPrice": 508933,
-        "count": 3
+        "avgPrice": 476267,
+        "count": 6
       }
     ],
     "인천-시즈오카": [
@@ -25646,8 +26426,8 @@
       {
         "date": "2026-08-05",
         "minPrice": 312000,
-        "avgPrice": 383079,
-        "count": 19
+        "avgPrice": 374971,
+        "count": 17
       }
     ],
     "청주-세부": [
@@ -25904,8 +26684,8 @@
       {
         "date": "2026-08-05",
         "minPrice": 281000,
-        "avgPrice": 352509,
-        "count": 56
+        "avgPrice": 352396,
+        "count": 57
       }
     ],
     "인천-칼리보(보라카이)": [
@@ -26162,8 +26942,8 @@
       {
         "date": "2026-08-05",
         "minPrice": 329000,
-        "avgPrice": 392563,
-        "count": 24
+        "avgPrice": 392705,
+        "count": 22
       }
     ],
     "인천-푸꾸옥": [
@@ -26248,8 +27028,8 @@
       {
         "date": "2026-08-05",
         "minPrice": 329000,
-        "avgPrice": 406517,
-        "count": 67
+        "avgPrice": 405618,
+        "count": 68
       }
     ],
     "인천-치앙마이": [
@@ -26334,8 +27114,8 @@
       {
         "date": "2026-08-05",
         "minPrice": 300280,
-        "avgPrice": 406993,
-        "count": 27
+        "avgPrice": 401194,
+        "count": 30
       }
     ],
     "인천-코타키나발루": [
@@ -26420,8 +27200,8 @@
       {
         "date": "2026-08-05",
         "minPrice": 345000,
-        "avgPrice": 412355,
-        "count": 31
+        "avgPrice": 412133,
+        "count": 30
       }
     ],
     "인천-하노이": [
@@ -26506,8 +27286,8 @@
       {
         "date": "2026-08-05",
         "minPrice": 285100,
-        "avgPrice": 347268,
-        "count": 22
+        "avgPrice": 337329,
+        "count": 21
       }
     ],
     "인천-마닐라": [
@@ -27107,8 +27887,8 @@
       },
       {
         "date": "2026-08-05",
-        "minPrice": 495000,
-        "avgPrice": 513369,
+        "minPrice": 499900,
+        "avgPrice": 530869,
         "count": 16
       }
     ],
@@ -27280,8 +28060,8 @@
       {
         "date": "2026-08-05",
         "minPrice": 386000,
-        "avgPrice": 431250,
-        "count": 40
+        "avgPrice": 428895,
+        "count": 38
       }
     ],
     "인천-클락": [
@@ -30262,8 +31042,8 @@
       {
         "date": "2026-08-05",
         "minPrice": 328400,
-        "avgPrice": 473742,
-        "count": 65
+        "avgPrice": 474725,
+        "count": 61
       }
     ],
     "제주-방콕": [
@@ -30534,8 +31314,8 @@
       {
         "date": "2026-08-05",
         "minPrice": 345000,
-        "avgPrice": 453021,
-        "count": 52
+        "avgPrice": 449164,
+        "count": 50
       }
     ],
     "부산-타이베이": [
@@ -31324,8 +32104,8 @@
       {
         "date": "2026-08-05",
         "minPrice": 265000,
-        "avgPrice": 364682,
-        "count": 99
+        "avgPrice": 359256,
+        "count": 90
       }
     ],
     "청주-다낭": [
@@ -31410,8 +32190,8 @@
       {
         "date": "2026-08-05",
         "minPrice": 245400,
-        "avgPrice": 321564,
-        "count": 39
+        "avgPrice": 319550,
+        "count": 38
       }
     ],
     "부산-다낭": [
@@ -31496,8 +32276,8 @@
       {
         "date": "2026-08-05",
         "minPrice": 293000,
-        "avgPrice": 462111,
-        "count": 36
+        "avgPrice": 460457,
+        "count": 35
       }
     ],
     "서울-푸꾸옥": [
@@ -31581,9 +32361,9 @@
       },
       {
         "date": "2026-08-05",
-        "minPrice": 280000,
-        "avgPrice": 404756,
-        "count": 107
+        "minPrice": 281000,
+        "avgPrice": 403106,
+        "count": 103
       }
     ],
     "제주-푸꾸옥": [
@@ -31718,8 +32498,8 @@
       {
         "date": "2026-08-05",
         "minPrice": 285100,
-        "avgPrice": 411909,
-        "count": 44
+        "avgPrice": 405463,
+        "count": 41
       }
     ],
     "제주-하노이": [
@@ -32128,8 +32908,8 @@
       {
         "date": "2026-08-05",
         "minPrice": 368600,
-        "avgPrice": 742968,
-        "count": 25
+        "avgPrice": 762357,
+        "count": 23
       }
     ],
     "제주-후쿠오카": [
@@ -32436,8 +33216,8 @@
       {
         "date": "2026-08-05",
         "minPrice": 273900,
-        "avgPrice": 339565,
-        "count": 17
+        "avgPrice": 342307,
+        "count": 15
       }
     ],
     "제주-도쿄": [
@@ -32794,8 +33574,8 @@
       {
         "date": "2026-08-05",
         "minPrice": 199900,
-        "avgPrice": 234648,
-        "count": 165
+        "avgPrice": 234658,
+        "count": 161
       }
     ],
     "서울-오사카": [
@@ -32912,12 +33692,6 @@
     ],
     "부산-마츠야마": [
       {
-        "date": "2026-06-22",
-        "minPrice": 246900,
-        "avgPrice": 266233,
-        "count": 15
-      },
-      {
         "date": "2026-06-23",
         "minPrice": 246900,
         "avgPrice": 267208,
@@ -32993,6 +33767,12 @@
         "date": "2026-07-09",
         "minPrice": 549900,
         "avgPrice": 549900,
+        "count": 1
+      },
+      {
+        "date": "2026-08-05",
+        "minPrice": 239900,
+        "avgPrice": 239900,
         "count": 1
       }
     ],
@@ -33698,12 +34478,6 @@
     ],
     "서울-괌": [
       {
-        "date": "2026-07-18",
-        "minPrice": 342000,
-        "avgPrice": 470125,
-        "count": 16
-      },
-      {
         "date": "2026-07-19",
         "minPrice": 342000,
         "avgPrice": 464941,
@@ -33780,15 +34554,15 @@
         "minPrice": 292000,
         "avgPrice": 387714,
         "count": 21
+      },
+      {
+        "date": "2026-08-05",
+        "minPrice": 224900,
+        "avgPrice": 240194,
+        "count": 17
       }
     ],
     "서울-시드니": [
-      {
-        "date": "2026-02-20",
-        "minPrice": 769000,
-        "avgPrice": 769000,
-        "count": 2
-      },
       {
         "date": "2026-06-22",
         "minPrice": 890000,
@@ -33865,6 +34639,12 @@
         "date": "2026-07-09",
         "minPrice": 2020000,
         "avgPrice": 2020000,
+        "count": 1
+      },
+      {
+        "date": "2026-08-05",
+        "minPrice": 850000,
+        "avgPrice": 850000,
         "count": 1
       }
     ],
@@ -34208,8 +34988,8 @@
       {
         "date": "2026-08-05",
         "minPrice": 284400,
-        "avgPrice": 372401,
-        "count": 41
+        "avgPrice": 372450,
+        "count": 44
       }
     ],
     "청주-나트랑": [
@@ -34294,8 +35074,8 @@
       {
         "date": "2026-08-05",
         "minPrice": 288100,
-        "avgPrice": 303762,
-        "count": 13
+        "avgPrice": 307593,
+        "count": 14
       }
     ],
     "인천-발리": [
@@ -34380,8 +35160,8 @@
       {
         "date": "2026-08-05",
         "minPrice": 666000,
-        "avgPrice": 703571,
-        "count": 7
+        "avgPrice": 701375,
+        "count": 8
       }
     ],
     "부산-발리": [
@@ -35014,8 +35794,8 @@
       {
         "date": "2026-08-05",
         "minPrice": 331000,
-        "avgPrice": 490529,
-        "count": 17
+        "avgPrice": 374200,
+        "count": 5
       }
     ],
     "김포-가오슝": [
@@ -36288,8 +37068,8 @@
       {
         "date": "2026-08-05",
         "minPrice": 263900,
-        "avgPrice": 296654,
-        "count": 26
+        "avgPrice": 295396,
+        "count": 25
       }
     ],
     "인천-도쿄(나리타공항)": [
@@ -37620,7 +38400,7 @@
       {
         "date": "2026-08-05",
         "minPrice": 281200,
-        "avgPrice": 296225,
+        "avgPrice": 292475,
         "count": 4
       }
     ],
@@ -37904,8 +38684,8 @@
       {
         "date": "2026-08-05",
         "minPrice": 379900,
-        "avgPrice": 405870,
-        "count": 10
+        "avgPrice": 408700,
+        "count": 11
       }
     ],
     "인천-상해(푸동)": [
@@ -38369,7 +39149,7 @@
         "date": "2026-08-05",
         "minPrice": 419900,
         "avgPrice": 419900,
-        "count": 2
+        "count": 1
       }
     ],
     "서울-비엔티안": [
@@ -39530,7 +40310,7 @@
       {
         "date": "2026-08-05",
         "minPrice": 322100,
-        "avgPrice": 377100,
+        "avgPrice": 382100,
         "count": 4
       }
     ],
@@ -39873,9 +40653,9 @@
       },
       {
         "date": "2026-08-05",
-        "minPrice": 189000,
-        "avgPrice": 210578,
-        "count": 9
+        "minPrice": 163900,
+        "avgPrice": 174558,
+        "count": 38
       }
     ],
     "서울-다카마츠": [
@@ -40108,8 +40888,8 @@
       {
         "date": "2026-08-05",
         "minPrice": 254600,
-        "avgPrice": 308170,
-        "count": 27
+        "avgPrice": 307923,
+        "count": 26
       }
     ],
     "청주-도쿄(나리타공항)": [
@@ -40998,8 +41778,8 @@
       {
         "date": "2026-08-05",
         "minPrice": 231000,
-        "avgPrice": 281612,
-        "count": 17
+        "avgPrice": 283525,
+        "count": 16
       }
     ],
     "부산-방콕": [
@@ -41170,8 +41950,8 @@
       {
         "date": "2026-08-05",
         "minPrice": 345000,
-        "avgPrice": 355000,
-        "count": 7
+        "avgPrice": 356667,
+        "count": 6
       }
     ],
     "서울-나트랑(깜란)": [
@@ -41256,8 +42036,8 @@
       {
         "date": "2026-08-05",
         "minPrice": 284400,
-        "avgPrice": 399423,
-        "count": 96
+        "avgPrice": 398985,
+        "count": 94
       }
     ],
     "서울-카오슝(대만)": [
@@ -41428,8 +42208,8 @@
       {
         "date": "2026-08-05",
         "minPrice": 244000,
-        "avgPrice": 299615,
-        "count": 13
+        "avgPrice": 300917,
+        "count": 12
       }
     ],
     "서울-타이페이": [
@@ -41600,8 +42380,8 @@
       {
         "date": "2026-08-05",
         "minPrice": 297000,
-        "avgPrice": 378364,
-        "count": 11
+        "avgPrice": 369200,
+        "count": 10
       }
     ],
     "서울-보홀(필리핀)": [
@@ -42279,8 +43059,8 @@
       },
       {
         "date": "2026-08-05",
-        "minPrice": 261900,
-        "avgPrice": 269900,
+        "minPrice": 257900,
+        "avgPrice": 265900,
         "count": 5
       }
     ],
@@ -43846,8 +44626,8 @@
       {
         "date": "2026-08-05",
         "minPrice": 204000,
-        "avgPrice": 208133,
-        "count": 3
+        "avgPrice": 207100,
+        "count": 2
       }
     ],
     "부산(PUS)-괌(GUM)": [
@@ -45401,8 +46181,8 @@
       },
       {
         "date": "2026-08-05",
-        "minPrice": 263900,
-        "avgPrice": 314029,
+        "minPrice": 219900,
+        "avgPrice": 308886,
         "count": 21
       }
     ],
@@ -45574,8 +46354,8 @@
       {
         "date": "2026-08-05",
         "minPrice": 254600,
-        "avgPrice": 296392,
-        "count": 26
+        "avgPrice": 295664,
+        "count": 25
       }
     ],
     "김포-오사카": [
@@ -45659,8 +46439,8 @@
       },
       {
         "date": "2026-08-05",
-        "minPrice": 255000,
-        "avgPrice": 303200,
+        "minPrice": 240000,
+        "avgPrice": 302129,
         "count": 14
       }
     ],
@@ -47648,8 +48428,8 @@
       {
         "date": "2026-08-05",
         "minPrice": 292000,
-        "avgPrice": 296000,
-        "count": 7
+        "avgPrice": 296333,
+        "count": 6
       }
     ],
     "부산(PUS)-시즈오카(FSZ)": [
@@ -49464,8 +50244,8 @@
       {
         "date": "2026-08-05",
         "minPrice": 190500,
-        "avgPrice": 301247,
-        "count": 19
+        "avgPrice": 286441,
+        "count": 17
       }
     ],
     "서울(ICN)-고베(UKB)": [
@@ -79437,8 +80217,8 @@
       },
       {
         "date": "2026-08-05",
-        "minPrice": 306000,
-        "avgPrice": 318000,
+        "minPrice": 284700,
+        "avgPrice": 296686,
         "count": 7
       }
     ],
@@ -79524,8 +80304,8 @@
       {
         "date": "2026-08-05",
         "minPrice": 178000,
-        "avgPrice": 205214,
-        "count": 14
+        "avgPrice": 205273,
+        "count": 11
       }
     ],
     "서울-콜롬보(스리랑카)": [
@@ -79853,7 +80633,7 @@
         "date": "2026-08-05",
         "minPrice": 1290000,
         "avgPrice": 1290000,
-        "count": 1
+        "count": 2
       }
     ],
     "인천-호치민": [
