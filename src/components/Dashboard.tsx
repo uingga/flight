@@ -727,6 +727,11 @@ export default function Dashboard() {
 
                     let score = flight.price;
 
+                    // 네이버보다 싼 마이리얼트립 항공권인지 먼저 확인
+                    const isNaverCheaper = flight.source === 'myrealtrip'
+                        && flight.naverLowest && flight.naverLowest > 0
+                        && flight.price <= flight.naverLowest;
+
                     // 인터파크 도시 데이터 자체가 없는 경우 — 약간 페널티 (검증 불가)
                     if (!ipMonthData) {
                         score = score * 1.1;
@@ -739,8 +744,8 @@ export default function Dashboard() {
                         // 3. 최저가의 120% 초과 ~ 평균가 미만 -> 페널티
                         score = score * 1.3;
                     } else {
-                        // 4. 평균가보다 비싼 경우 (창렬) -> 맨 밑으로 유배
-                        score = score * 10;
+                        // 4. 평균가보다 비싼 경우 → 단, 네이버보다 싸면 가벼운 페널티만
+                        score = isNaverCheaper ? score * 1.3 : score * 10;
                     }
 
                     // 네이버 최저가 보정 (마이리얼트립만 — 같은 구간+날짜 최저가라 비교가 공정)
