@@ -727,9 +727,8 @@ export default function Dashboard() {
 
                     let score = flight.price;
 
-                    // 네이버보다 싼 마이리얼트립 항공권인지 먼저 확인
-                    const isNaverCheaper = flight.source === 'myrealtrip'
-                        && flight.naverLowest && flight.naverLowest > 0
+                    // 네이버보다 싼 항공권인지 먼저 확인 (전 여행사 공통)
+                    const isNaverCheaper = flight.naverLowest && flight.naverLowest > 0
                         && flight.price <= flight.naverLowest;
 
                     // 인터파크 도시 데이터 자체가 없는 경우 — 약간 페널티 (검증 불가)
@@ -748,30 +747,30 @@ export default function Dashboard() {
                         score = isNaverCheaper ? score * 1.3 : score * 10;
                     }
 
-                    // 네이버 최저가 보정 (마이리얼트립만 — 같은 구간+날짜 최저가라 비교가 공정)
-                    if (flight.source === 'myrealtrip' && flight.naverLowest && flight.naverLowest > 0) {
+                    // 네이버 최저가 보정 (전 여행사 공통)
+                    if (flight.naverLowest && flight.naverLowest > 0) {
                         const ratio = (flight.price - flight.naverLowest) / flight.naverLowest;
                         if (ratio <= -0.10) {
                             // 네이버보다 10% 이상 싸다 → 상향
-                            score *= 0.5;
+                            score *= 0.55;
                         } else if (ratio <= 0) {
                             // 네이버보다 싸다 → 상향
-                            score *= 0.6;
+                            score *= 0.7;
                         } else if (ratio <= 0.05) {
-                            // 0~5% 비싸다 → 약한 페널티
-                            score *= 1.2;
+                            // 0~5% 비싸다 → 거의 동일, 미세 페널티
+                            score *= 1.05;
                         } else if (ratio <= 0.10) {
-                            // 5~10% 비싸다 → 페널티
-                            score *= 1.5;
+                            // 5~10% 비싸다 → 약한 페널티
+                            score *= 1.15;
                         } else if (ratio <= 0.15) {
                             // 10~15% 비싸다 → 페널티
-                            score *= 2.0;
+                            score *= 1.3;
                         } else if (ratio <= 0.20) {
-                            // 15~20% 비싸다 → 큰 페널티
-                            score *= 3.0;
+                            // 15~20% 비싸다 → 페널티
+                            score *= 1.5;
                         } else {
                             // 20% 이상 비싸다 → 최대 페널티
-                            score *= 5.0;
+                            score *= 2.0;
                         }
                     }
 
