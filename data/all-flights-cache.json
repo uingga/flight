@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-08-08T10:33:49.518Z",
+  "timestamp": "2026-08-08T13:35:39.961Z",
   "count": 729,
   "flights": [
     {
@@ -8829,7 +8829,7 @@
       "price": 200000,
       "currency": "KRW",
       "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22ICN%22%2C%22continentCode%22%3A%22ASIA%22%2C%22arrivalCity%22%3A%22HAN%22%2C%22departureDate%22%3A%222026-08-26%22%2C%22arrivalDate%22%3A%222026-08-27%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
-      "availableSeats": 4,
+      "availableSeats": 2,
       "flightNumber": "9G411 / 9G410",
       "region": "동남아",
       "modetourDetail": {
@@ -15409,30 +15409,6 @@
       "firstSeen": "2026-08-08"
     },
     {
-      "id": "ttang-RS0727ICNFUK-G9-2026-08-25",
-      "source": "ttang",
-      "airline": "에어서울",
-      "departure": {
-        "city": "서울",
-        "airport": "ICN",
-        "date": "2026-08-25",
-        "time": ""
-      },
-      "arrival": {
-        "city": "후쿠오카",
-        "airport": "FUK",
-        "date": "2026-08-29",
-        "time": ""
-      },
-      "price": 163900,
-      "currency": "KRW",
-      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-25&dep1=FUK&arr1=ICN&depdate1=2026-08-29&adt=1&chd=0&inf=0&comp=Y",
-      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-25&dep1=FUK&arr1=ICN&depdate1=2026-08-29&adt=1&chd=0&inf=0&comp=Y",
-      "region": "일본",
-      "discountRate": -6,
-      "firstSeen": "2026-08-05"
-    },
-    {
       "id": "ttang-RS0727ICNFUK-G11-2026-08-25",
       "source": "ttang",
       "airline": "에어서울",
@@ -15452,6 +15428,30 @@
       "currency": "KRW",
       "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-25&dep1=FUK&arr1=ICN&depdate1=2026-08-28&adt=1&chd=0&inf=0&comp=Y",
       "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-25&dep1=FUK&arr1=ICN&depdate1=2026-08-28&adt=1&chd=0&inf=0&comp=Y",
+      "region": "일본",
+      "discountRate": -6,
+      "firstSeen": "2026-08-05"
+    },
+    {
+      "id": "ttang-RS0727ICNFUK-G9-2026-08-25",
+      "source": "ttang",
+      "airline": "에어서울",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-08-25",
+        "time": ""
+      },
+      "arrival": {
+        "city": "후쿠오카",
+        "airport": "FUK",
+        "date": "2026-08-29",
+        "time": ""
+      },
+      "price": 163900,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-25&dep1=FUK&arr1=ICN&depdate1=2026-08-29&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-25&dep1=FUK&arr1=ICN&depdate1=2026-08-29&adt=1&chd=0&inf=0&comp=Y",
       "region": "일본",
       "discountRate": -6,
       "firstSeen": "2026-08-05"
@@ -16809,34 +16809,6 @@
       "firstSeen": "2026-07-30"
     },
     {
-      "id": "ttang-PUS-TAK-RT-0-3-BX-2026-08-30",
-      "source": "ttang",
-      "airline": "에어부산",
-      "departure": {
-        "city": "부산",
-        "airport": "PUS",
-        "date": "2026-08-30",
-        "time": "17:20",
-        "arrivalTime": "18:40"
-      },
-      "arrival": {
-        "city": "다카마츠",
-        "airport": "TAK",
-        "date": "2026-09-01",
-        "time": "19:35",
-        "arrivalTime": "20:55"
-      },
-      "price": 219900,
-      "currency": "KRW",
-      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=PUS&arr0=TAK&depdate0=2026-08-30&dep1=TAK&arr1=PUS&depdate1=2026-09-01&adt=1&chd=0&inf=0&comp=Y",
-      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=PUS&arr0=TAK&depdate0=2026-08-30&dep1=TAK&arr1=PUS&depdate1=2026-09-01&adt=1&chd=0&inf=0&comp=Y",
-      "region": "일본",
-      "availableSeats": 9,
-      "seats": "9석",
-      "discountRate": -33,
-      "firstSeen": "2026-07-30"
-    },
-    {
       "id": "ttang-RS0511ICNDAD-G27-2026-08-30",
       "source": "ttang",
       "airline": "에어서울",
@@ -16863,6 +16835,34 @@
       "seats": "8석",
       "discountRate": 1,
       "firstSeen": "2026-08-05"
+    },
+    {
+      "id": "ttang-PUS-TAK-RT-0-3-BX-2026-08-30",
+      "source": "ttang",
+      "airline": "에어부산",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-08-30",
+        "time": "17:20",
+        "arrivalTime": "18:40"
+      },
+      "arrival": {
+        "city": "다카마츠",
+        "airport": "TAK",
+        "date": "2026-09-01",
+        "time": "19:35",
+        "arrivalTime": "20:55"
+      },
+      "price": 219900,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=PUS&arr0=TAK&depdate0=2026-08-30&dep1=TAK&arr1=PUS&depdate1=2026-09-01&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=PUS&arr0=TAK&depdate0=2026-08-30&dep1=TAK&arr1=PUS&depdate1=2026-09-01&adt=1&chd=0&inf=0&comp=Y",
+      "region": "일본",
+      "availableSeats": 9,
+      "seats": "9석",
+      "discountRate": -33,
+      "firstSeen": "2026-07-30"
     },
     {
       "id": "ttang-RS0527ICNCXR-G6-2026-08-30",
@@ -18443,34 +18443,6 @@
       "firstSeen": "2026-08-03"
     },
     {
-      "id": "ttang-ICN-DPS-RT-0-4-7C-2026-09-03",
-      "source": "ttang",
-      "airline": "제주항공",
-      "departure": {
-        "city": "서울",
-        "airport": "ICN",
-        "date": "2026-09-03",
-        "time": "15:40",
-        "arrivalTime": "21:45"
-      },
-      "arrival": {
-        "city": "발리(덴파사)",
-        "airport": "DPS",
-        "date": "2026-09-06",
-        "time": "22:45",
-        "arrivalTime": "07:15"
-      },
-      "price": 666000,
-      "currency": "KRW",
-      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=DPS&depdate0=2026-09-03&dep1=DPS&arr1=ICN&depdate1=2026-09-06&adt=1&chd=0&inf=0&comp=Y",
-      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=DPS&depdate0=2026-09-03&dep1=DPS&arr1=ICN&depdate1=2026-09-06&adt=1&chd=0&inf=0&comp=Y",
-      "region": "동남아",
-      "availableSeats": 2,
-      "seats": "2석",
-      "discountRate": -13,
-      "firstSeen": "2026-08-03"
-    },
-    {
       "id": "ttang-ICN-DPS-RT-0-5-7C-2026-09-03",
       "source": "ttang",
       "airline": "제주항공",
@@ -18495,6 +18467,34 @@
       "region": "동남아",
       "availableSeats": 4,
       "seats": "4석",
+      "discountRate": -13,
+      "firstSeen": "2026-08-03"
+    },
+    {
+      "id": "ttang-ICN-DPS-RT-0-4-7C-2026-09-03",
+      "source": "ttang",
+      "airline": "제주항공",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-09-03",
+        "time": "15:40",
+        "arrivalTime": "21:45"
+      },
+      "arrival": {
+        "city": "발리(덴파사)",
+        "airport": "DPS",
+        "date": "2026-09-06",
+        "time": "22:45",
+        "arrivalTime": "07:15"
+      },
+      "price": 666000,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=DPS&depdate0=2026-09-03&dep1=DPS&arr1=ICN&depdate1=2026-09-06&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=DPS&depdate0=2026-09-03&dep1=DPS&arr1=ICN&depdate1=2026-09-06&adt=1&chd=0&inf=0&comp=Y",
+      "region": "동남아",
+      "availableSeats": 2,
+      "seats": "2석",
       "discountRate": -13,
       "firstSeen": "2026-08-03"
     },
@@ -19200,19 +19200,23 @@
         "city": "서울",
         "airport": "ICN",
         "date": "2026-09-07",
-        "time": ""
+        "time": "15:15",
+        "arrivalTime": "17:00"
       },
       "arrival": {
         "city": "오사카(간사이)",
         "airport": "KIX",
         "date": "2026-09-09",
-        "time": ""
+        "time": "12:10",
+        "arrivalTime": "14:00"
       },
       "price": 173900,
       "currency": "KRW",
       "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=KIX&depdate0=2026-09-07&dep1=KIX&arr1=ICN&depdate1=2026-09-09&adt=1&chd=0&inf=0&comp=Y",
       "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=KIX&depdate0=2026-09-07&dep1=KIX&arr1=ICN&depdate1=2026-09-09&adt=1&chd=0&inf=0&comp=Y",
       "region": "일본",
+      "availableSeats": 2,
+      "seats": "2석",
       "discountRate": -10,
       "firstSeen": "2026-08-07"
     },
@@ -19498,19 +19502,23 @@
         "city": "서울",
         "airport": "ICN",
         "date": "2026-09-08",
-        "time": ""
+        "time": "14:25",
+        "arrivalTime": "16:00"
       },
       "arrival": {
         "city": "후쿠오카",
         "airport": "FUK",
         "date": "2026-09-12",
-        "time": ""
+        "time": "09:40",
+        "arrivalTime": "11:15"
       },
       "price": 163900,
       "currency": "KRW",
       "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-09-08&dep1=FUK&arr1=ICN&depdate1=2026-09-12&adt=1&chd=0&inf=0&comp=Y",
       "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-09-08&dep1=FUK&arr1=ICN&depdate1=2026-09-12&adt=1&chd=0&inf=0&comp=Y",
       "region": "일본",
+      "availableSeats": 8,
+      "seats": "8석",
       "discountRate": -7,
       "firstSeen": "2026-08-08"
     },
@@ -19522,19 +19530,23 @@
         "city": "서울",
         "airport": "ICN",
         "date": "2026-09-08",
-        "time": ""
+        "time": "13:15",
+        "arrivalTime": "15:15"
       },
       "arrival": {
         "city": "오사카(간사이)",
         "airport": "KIX",
         "date": "2026-09-11",
-        "time": ""
+        "time": "16:15",
+        "arrivalTime": "18:25"
       },
       "price": 173900,
       "currency": "KRW",
       "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=KIX&depdate0=2026-09-08&dep1=KIX&arr1=ICN&depdate1=2026-09-11&adt=1&chd=0&inf=0&comp=Y",
       "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=KIX&depdate0=2026-09-08&dep1=KIX&arr1=ICN&depdate1=2026-09-11&adt=1&chd=0&inf=0&comp=Y",
       "region": "일본",
+      "availableSeats": 6,
+      "seats": "6석",
       "discountRate": -10,
       "firstSeen": "2026-08-08"
     },
@@ -19624,19 +19636,23 @@
         "city": "청주",
         "airport": "CJJ",
         "date": "2026-09-08",
-        "time": ""
+        "time": "19:30",
+        "arrivalTime": "22:30"
       },
       "arrival": {
         "city": "나트랑(깜란)",
         "airport": "CXR",
         "date": "2026-09-11",
-        "time": ""
+        "time": "23:30",
+        "arrivalTime": "06:20"
       },
       "price": 250000,
       "currency": "KRW",
       "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=CJJ&arr0=CXR&depdate0=2026-09-08&dep1=CXR&arr1=CJJ&depdate1=2026-09-11&adt=1&chd=0&inf=0&comp=Y",
       "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=CJJ&arr0=CXR&depdate0=2026-09-08&dep1=CXR&arr1=CJJ&depdate1=2026-09-11&adt=1&chd=0&inf=0&comp=Y",
       "region": "동남아",
+      "availableSeats": 4,
+      "seats": "4석",
       "discountRate": 1,
       "firstSeen": "2026-08-08"
     },
@@ -21698,7 +21714,7 @@
     "hanatour": 101,
     "modetour": 1013,
     "onlinetour": 114,
-    "ttang": 1765,
+    "ttang": 1763,
     "myrealtrip": 63
   },
   "priceHistory": {
@@ -22644,8 +22660,8 @@
       {
         "date": "2026-08-08",
         "minPrice": 166900,
-        "avgPrice": 259558,
-        "count": 359
+        "avgPrice": 259550,
+        "count": 357
       }
     ],
     "청주-후쿠오카": [
