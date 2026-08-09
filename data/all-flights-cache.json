@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-08-09T07:45:47.455Z",
-  "count": 536,
+  "timestamp": "2026-08-09T10:33:18.735Z",
+  "count": 557,
   "flights": [
     {
       "id": "ybtour-후쿠오카-20260902-7",
@@ -276,19 +276,21 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-13",
-        "time": ""
+        "time": "07:15",
+        "arrivalTime": "09:05"
       },
       "arrival": {
         "city": "오사카(간사이)",
         "airport": "KIX",
         "date": "2026-09-15",
-        "time": ""
+        "time": "10:05",
+        "arrivalTime": "12:05"
       },
       "price": 199000,
       "currency": "KRW",
       "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=J1&inhId=ZE0611ICNKIX-T4&depDate=20260913&efcCityCode=KIX",
-      "seats": "6석",
-      "availableSeats": 6,
+      "seats": "3석",
+      "availableSeats": 3,
       "region": "일본",
       "discountRate": -26,
       "firstSeen": "2026-08-07"
@@ -1586,6 +1588,114 @@
       "firstSeen": "2026-08-09"
     },
     {
+      "id": "ybtour-시즈오카-20260927-25",
+      "source": "ybtour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-09-27",
+        "time": "07:05",
+        "arrivalTime": "09:00"
+      },
+      "arrival": {
+        "city": "시즈오카",
+        "airport": "FSZ",
+        "date": "2026-09-30",
+        "time": "10:00",
+        "arrivalTime": "12:15"
+      },
+      "price": 326000,
+      "currency": "KRW",
+      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=J1&inhId=7C1601ICNFSZ-T8&depDate=20260927&efcCityCode=FSZ",
+      "seats": "10석",
+      "availableSeats": 10,
+      "region": "일본",
+      "discountRate": -76,
+      "firstSeen": "2026-08-09"
+    },
+    {
+      "id": "ybtour-시즈오카-20260928-26",
+      "source": "ybtour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-09-28",
+        "time": "14:55",
+        "arrivalTime": "17:10"
+      },
+      "arrival": {
+        "city": "시즈오카",
+        "airport": "FSZ",
+        "date": "2026-10-01",
+        "time": "10:00",
+        "arrivalTime": "12:15"
+      },
+      "price": 326000,
+      "currency": "KRW",
+      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=J1&inhId=7C1601ICNFSZ-T8&depDate=20260928&efcCityCode=FSZ",
+      "seats": "10석",
+      "availableSeats": 10,
+      "region": "일본",
+      "discountRate": -76,
+      "firstSeen": "2026-08-09"
+    },
+    {
+      "id": "ybtour-시즈오카-20260929-27",
+      "source": "ybtour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-09-29",
+        "time": "07:05",
+        "arrivalTime": "09:00"
+      },
+      "arrival": {
+        "city": "시즈오카",
+        "airport": "FSZ",
+        "date": "2026-10-02",
+        "time": "10:00",
+        "arrivalTime": "12:15"
+      },
+      "price": 326000,
+      "currency": "KRW",
+      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=J1&inhId=7C1601ICNFSZ-T8&depDate=20260929&efcCityCode=FSZ",
+      "seats": "10석",
+      "availableSeats": 10,
+      "region": "일본",
+      "discountRate": -76,
+      "firstSeen": "2026-08-09"
+    },
+    {
+      "id": "ybtour-시즈오카-20260930-28",
+      "source": "ybtour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-09-30",
+        "time": "07:05",
+        "arrivalTime": "09:00"
+      },
+      "arrival": {
+        "city": "시즈오카",
+        "airport": "FSZ",
+        "date": "2026-10-03",
+        "time": "10:00",
+        "arrivalTime": "12:15"
+      },
+      "price": 326000,
+      "currency": "KRW",
+      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=J1&inhId=7C1601ICNFSZ-T8&depDate=20260930&efcCityCode=FSZ",
+      "seats": "10석",
+      "availableSeats": 10,
+      "region": "일본",
+      "discountRate": -76,
+      "firstSeen": "2026-08-09"
+    },
+    {
       "id": "ybtour-오키나와-20260829-1",
       "source": "ybtour",
       "airline": "이스타항공",
@@ -1692,6 +1802,492 @@
       "region": "일본",
       "discountRate": -287,
       "firstSeen": "2026-08-06"
+    },
+    {
+      "id": "ybtour-괌-20260903-18",
+      "source": "ybtour",
+      "airline": "진에어",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-09-03",
+        "time": "19:50",
+        "arrivalTime": "01:10"
+      },
+      "arrival": {
+        "city": "괌",
+        "airport": "GUM",
+        "date": "2026-09-07",
+        "time": "02:55",
+        "arrivalTime": "06:20"
+      },
+      "price": 230800,
+      "currency": "KRW",
+      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=P1&inhId=LJ0921PUSGUM-T5&depDate=20260903&efcCityCode=GUM",
+      "seats": "4석",
+      "availableSeats": 4,
+      "region": "남태평양",
+      "discountRate": -1,
+      "firstSeen": "2026-08-09"
+    },
+    {
+      "id": "ybtour-괌-20260926-24",
+      "source": "ybtour",
+      "airline": "진에어",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-09-26",
+        "time": "21:30",
+        "arrivalTime": "02:30"
+      },
+      "arrival": {
+        "city": "괌",
+        "airport": "GUM",
+        "date": "2026-09-30",
+        "time": "02:55",
+        "arrivalTime": "07:00"
+      },
+      "price": 230800,
+      "currency": "KRW",
+      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=P1&inhId=LJ0921PUSGUM-T5&depDate=20260926&efcCityCode=GUM",
+      "seats": "8석",
+      "availableSeats": 8,
+      "region": "남태평양",
+      "discountRate": -1,
+      "firstSeen": "2026-08-09"
+    },
+    {
+      "id": "ybtour-괌-20260928-26",
+      "source": "ybtour",
+      "airline": "진에어",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-09-28",
+        "time": "18:55",
+        "arrivalTime": "00:10"
+      },
+      "arrival": {
+        "city": "괌",
+        "airport": "GUM",
+        "date": "2026-10-02",
+        "time": "02:55",
+        "arrivalTime": "06:20"
+      },
+      "price": 230800,
+      "currency": "KRW",
+      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=P1&inhId=LJ0921PUSGUM-T5&depDate=20260928&efcCityCode=GUM",
+      "seats": "8석",
+      "availableSeats": 8,
+      "region": "남태평양",
+      "discountRate": -1,
+      "firstSeen": "2026-08-09"
+    },
+    {
+      "id": "ybtour-괌-20260817-3",
+      "source": "ybtour",
+      "airline": "에어서울",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-08-17",
+        "time": "18:15",
+        "arrivalTime": "23:45"
+      },
+      "arrival": {
+        "city": "괌",
+        "airport": "GUM",
+        "date": "2026-08-21",
+        "time": "00:50",
+        "arrivalTime": "04:30"
+      },
+      "price": 254900,
+      "currency": "KRW",
+      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=P1&inhId=RS0101ICNGUM-T8&depDate=20260817&efcCityCode=GUM",
+      "seats": "24석",
+      "availableSeats": 24,
+      "region": "남태평양",
+      "discountRate": -12,
+      "firstSeen": "2026-08-09"
+    },
+    {
+      "id": "ybtour-괌-20260818-4",
+      "source": "ybtour",
+      "airline": "에어서울",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-08-18",
+        "time": "19:25",
+        "arrivalTime": "01:00"
+      },
+      "arrival": {
+        "city": "괌",
+        "airport": "GUM",
+        "date": "2026-08-22",
+        "time": "02:00",
+        "arrivalTime": "05:50"
+      },
+      "price": 254900,
+      "currency": "KRW",
+      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=P1&inhId=RS0101ICNGUM-T8&depDate=20260818&efcCityCode=GUM",
+      "seats": "24석",
+      "availableSeats": 24,
+      "region": "남태평양",
+      "discountRate": -12,
+      "firstSeen": "2026-08-09"
+    },
+    {
+      "id": "ybtour-괌-20260822-8",
+      "source": "ybtour",
+      "airline": "에어서울",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-08-22",
+        "time": "19:25",
+        "arrivalTime": "01:00"
+      },
+      "arrival": {
+        "city": "괌",
+        "airport": "GUM",
+        "date": "2026-08-26",
+        "time": "02:00",
+        "arrivalTime": "05:50"
+      },
+      "price": 254900,
+      "currency": "KRW",
+      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=P1&inhId=RS0101ICNGUM-T8&depDate=20260822&efcCityCode=GUM",
+      "seats": "24석",
+      "availableSeats": 24,
+      "region": "남태평양",
+      "discountRate": -12,
+      "firstSeen": "2026-08-09"
+    },
+    {
+      "id": "ybtour-괌-20260823-9",
+      "source": "ybtour",
+      "airline": "에어서울",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-08-23",
+        "time": "19:25",
+        "arrivalTime": "01:00"
+      },
+      "arrival": {
+        "city": "괌",
+        "airport": "GUM",
+        "date": "2026-08-27",
+        "time": "02:00",
+        "arrivalTime": "05:50"
+      },
+      "price": 254900,
+      "currency": "KRW",
+      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=P1&inhId=RS0101ICNGUM-T8&depDate=20260823&efcCityCode=GUM",
+      "seats": "24석",
+      "availableSeats": 24,
+      "region": "남태평양",
+      "discountRate": -12,
+      "firstSeen": "2026-08-09"
+    },
+    {
+      "id": "ybtour-괌-20260824-10",
+      "source": "ybtour",
+      "airline": "에어서울",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-08-24",
+        "time": "19:25",
+        "arrivalTime": "01:00"
+      },
+      "arrival": {
+        "city": "괌",
+        "airport": "GUM",
+        "date": "2026-08-28",
+        "time": "02:00",
+        "arrivalTime": "05:50"
+      },
+      "price": 254900,
+      "currency": "KRW",
+      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=P1&inhId=RS0101ICNGUM-T8&depDate=20260824&efcCityCode=GUM",
+      "seats": "24석",
+      "availableSeats": 24,
+      "region": "남태평양",
+      "discountRate": -12,
+      "firstSeen": "2026-08-09"
+    },
+    {
+      "id": "ybtour-괌-20260825-11",
+      "source": "ybtour",
+      "airline": "에어서울",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-08-25",
+        "time": "19:25",
+        "arrivalTime": "01:00"
+      },
+      "arrival": {
+        "city": "괌",
+        "airport": "GUM",
+        "date": "2026-08-29",
+        "time": "02:00",
+        "arrivalTime": "05:50"
+      },
+      "price": 254900,
+      "currency": "KRW",
+      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=P1&inhId=RS0101ICNGUM-T8&depDate=20260825&efcCityCode=GUM",
+      "seats": "24석",
+      "availableSeats": 24,
+      "region": "남태평양",
+      "discountRate": -12,
+      "firstSeen": "2026-08-09"
+    },
+    {
+      "id": "ybtour-괌-20260831-15",
+      "source": "ybtour",
+      "airline": "에어서울",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-08-31",
+        "time": "19:25",
+        "arrivalTime": "01:00"
+      },
+      "arrival": {
+        "city": "괌",
+        "airport": "GUM",
+        "date": "2026-09-04",
+        "time": "02:00",
+        "arrivalTime": "05:50"
+      },
+      "price": 254900,
+      "currency": "KRW",
+      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=P1&inhId=RS0101ICNGUM-T8&depDate=20260831&efcCityCode=GUM",
+      "seats": "24석",
+      "availableSeats": 24,
+      "region": "남태평양",
+      "discountRate": -12,
+      "firstSeen": "2026-08-09"
+    },
+    {
+      "id": "ybtour-사이판-20260822-2",
+      "source": "ybtour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-08-22",
+        "time": "20:20",
+        "arrivalTime": "02:00"
+      },
+      "arrival": {
+        "city": "사이판",
+        "airport": "SPN",
+        "date": "2026-08-27",
+        "time": "03:05",
+        "arrivalTime": "06:50"
+      },
+      "price": 312700,
+      "currency": "KRW",
+      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=P1&inhId=7C3211ICNSPN-T6&depDate=20260822&efcCityCode=SPN",
+      "seats": "24석",
+      "availableSeats": 24,
+      "region": "남태평양",
+      "discountRate": -29,
+      "firstSeen": "2026-08-09"
+    },
+    {
+      "id": "ybtour-사이판-20260823-3",
+      "source": "ybtour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-08-23",
+        "time": "20:20",
+        "arrivalTime": "02:00"
+      },
+      "arrival": {
+        "city": "사이판",
+        "airport": "SPN",
+        "date": "2026-08-28",
+        "time": "03:05",
+        "arrivalTime": "06:50"
+      },
+      "price": 312700,
+      "currency": "KRW",
+      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=P1&inhId=7C3211ICNSPN-T6&depDate=20260823&efcCityCode=SPN",
+      "seats": "24석",
+      "availableSeats": 24,
+      "region": "남태평양",
+      "discountRate": -29,
+      "firstSeen": "2026-08-09"
+    },
+    {
+      "id": "ybtour-사이판-20260829-4",
+      "source": "ybtour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-08-29",
+        "time": "20:20",
+        "arrivalTime": "02:00"
+      },
+      "arrival": {
+        "city": "사이판",
+        "airport": "SPN",
+        "date": "2026-09-03",
+        "time": "03:05",
+        "arrivalTime": "06:50"
+      },
+      "price": 312700,
+      "currency": "KRW",
+      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=P1&inhId=7C3211ICNSPN-T6&depDate=20260829&efcCityCode=SPN",
+      "seats": "24석",
+      "availableSeats": 24,
+      "region": "남태평양",
+      "discountRate": -29,
+      "firstSeen": "2026-08-09"
+    },
+    {
+      "id": "ybtour-사이판-20260830-5",
+      "source": "ybtour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-08-30",
+        "time": "20:20",
+        "arrivalTime": "02:00"
+      },
+      "arrival": {
+        "city": "사이판",
+        "airport": "SPN",
+        "date": "2026-09-04",
+        "time": "03:05",
+        "arrivalTime": "06:50"
+      },
+      "price": 312700,
+      "currency": "KRW",
+      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=P1&inhId=7C3211ICNSPN-T6&depDate=20260830&efcCityCode=SPN",
+      "seats": "24석",
+      "availableSeats": 24,
+      "region": "남태평양",
+      "discountRate": -29,
+      "firstSeen": "2026-08-09"
+    },
+    {
+      "id": "ybtour-사이판-20260905-6",
+      "source": "ybtour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-09-05",
+        "time": "20:20",
+        "arrivalTime": "02:00"
+      },
+      "arrival": {
+        "city": "사이판",
+        "airport": "SPN",
+        "date": "2026-09-10",
+        "time": "03:05",
+        "arrivalTime": "06:50"
+      },
+      "price": 312700,
+      "currency": "KRW",
+      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=P1&inhId=7C3211ICNSPN-T6&depDate=20260905&efcCityCode=SPN",
+      "seats": "24석",
+      "availableSeats": 24,
+      "region": "남태평양",
+      "discountRate": -33,
+      "firstSeen": "2026-08-09"
+    },
+    {
+      "id": "ybtour-사이판-20260906-7",
+      "source": "ybtour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-09-06",
+        "time": "20:20",
+        "arrivalTime": "02:00"
+      },
+      "arrival": {
+        "city": "사이판",
+        "airport": "SPN",
+        "date": "2026-09-11",
+        "time": "03:05",
+        "arrivalTime": "06:50"
+      },
+      "price": 312700,
+      "currency": "KRW",
+      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=P1&inhId=7C3211ICNSPN-T6&depDate=20260906&efcCityCode=SPN",
+      "seats": "24석",
+      "availableSeats": 24,
+      "region": "남태평양",
+      "discountRate": -33,
+      "firstSeen": "2026-08-09"
+    },
+    {
+      "id": "ybtour-사이판-20260912-8",
+      "source": "ybtour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-09-12",
+        "time": "20:20",
+        "arrivalTime": "02:00"
+      },
+      "arrival": {
+        "city": "사이판",
+        "airport": "SPN",
+        "date": "2026-09-17",
+        "time": "03:05",
+        "arrivalTime": "06:50"
+      },
+      "price": 312700,
+      "currency": "KRW",
+      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=P1&inhId=7C3211ICNSPN-T6&depDate=20260912&efcCityCode=SPN",
+      "seats": "24석",
+      "availableSeats": 24,
+      "region": "남태평양",
+      "discountRate": -33,
+      "firstSeen": "2026-08-09"
+    },
+    {
+      "id": "ybtour-사이판-20260913-9",
+      "source": "ybtour",
+      "airline": "제주항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-09-13",
+        "time": "20:20",
+        "arrivalTime": "02:00"
+      },
+      "arrival": {
+        "city": "사이판",
+        "airport": "SPN",
+        "date": "2026-09-18",
+        "time": "03:05",
+        "arrivalTime": "06:50"
+      },
+      "price": 312700,
+      "currency": "KRW",
+      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=P1&inhId=7C3211ICNSPN-T6&depDate=20260913&efcCityCode=SPN",
+      "seats": "24석",
+      "availableSeats": 24,
+      "region": "남태평양",
+      "discountRate": -33,
+      "firstSeen": "2026-08-09"
     },
     {
       "id": "ybtour-시드니-20260908-2",
@@ -3305,7 +3901,7 @@
       "price": 288100,
       "currency": "KRW",
       "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22CJJ%22%2C%22continentCode%22%3A%22ASIA%22%2C%22arrivalCity%22%3A%22CXR%22%2C%22departureDate%22%3A%222026-08-18%22%2C%22arrivalDate%22%3A%222026-08-19%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
-      "availableSeats": 8,
+      "availableSeats": 6,
       "flightNumber": "RF557 / RF558",
       "region": "동남아",
       "modetourDetail": {
@@ -3469,48 +4065,6 @@
       "firstSeen": "2026-07-29"
     },
     {
-      "id": "modetour-ASIA-20135762",
-      "source": "modetour",
-      "airline": "썬푸꾸옥항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-08-26",
-        "time": "00:15"
-      },
-      "arrival": {
-        "city": "하노이",
-        "airport": "HAN",
-        "date": "2026-08-29",
-        "time": "16:20"
-      },
-      "price": 200000,
-      "currency": "KRW",
-      "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22ICN%22%2C%22continentCode%22%3A%22ASIA%22%2C%22arrivalCity%22%3A%22HAN%22%2C%22departureDate%22%3A%222026-08-26%22%2C%22arrivalDate%22%3A%222026-08-27%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
-      "availableSeats": 2,
-      "flightNumber": "9G411 / 9G410",
-      "region": "동남아",
-      "modetourDetail": {
-        "flyingTime": "04:55",
-        "isDirect": true,
-        "isReturnDirect": true,
-        "departureArrivalTime": "03:10",
-        "returnDepartureTime": "16:20",
-        "returnArrivalTime": "22:45",
-        "normalPrice": 840000,
-        "sourceDiscountRate": 76,
-        "baseFare": 200000,
-        "childBaseFare": 200000,
-        "infantFare": 100000,
-        "departureFlightNo": "9G411",
-        "returnFlightNo": "9G410",
-        "returnDepartureAirport": "HAN",
-        "returnArrivalAirport": "ICN"
-      },
-      "discountRate": -8,
-      "firstSeen": "2026-08-07"
-    },
-    {
       "id": "modetour-ASIA-20136312",
       "source": "modetour",
       "airline": "썬푸꾸옥항공",
@@ -3663,7 +4217,7 @@
       "price": 200000,
       "currency": "KRW",
       "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22ICN%22%2C%22continentCode%22%3A%22ASIA%22%2C%22arrivalCity%22%3A%22HAN%22%2C%22departureDate%22%3A%222026-08-27%22%2C%22arrivalDate%22%3A%222026-08-28%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
-      "availableSeats": 4,
+      "availableSeats": 2,
       "flightNumber": "9G401 / 9G400",
       "region": "동남아",
       "modetourDetail": {
@@ -4285,7 +4839,7 @@
       "price": 284400,
       "currency": "KRW",
       "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22ICN%22%2C%22continentCode%22%3A%22ASIA%22%2C%22arrivalCity%22%3A%22CXR%22%2C%22departureDate%22%3A%222026-08-30%22%2C%22arrivalDate%22%3A%222026-08-31%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
-      "availableSeats": 17,
+      "availableSeats": 15,
       "flightNumber": "TW033 / TW034",
       "region": "동남아",
       "modetourDetail": {
@@ -7437,7 +7991,7 @@
       "price": 240000,
       "currency": "KRW",
       "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22GMP%22%2C%22continentCode%22%3A%22JPN%22%2C%22arrivalCity%22%3A%22KIX%22%2C%22departureDate%22%3A%222026-09-04%22%2C%22arrivalDate%22%3A%222026-09-05%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
-      "availableSeats": 10,
+      "availableSeats": 8,
       "flightNumber": "MM736 / MM743",
       "region": "일본",
       "modetourDetail": {
@@ -7953,806 +8507,6 @@
       },
       "discountRate": 3,
       "firstSeen": "2026-08-06"
-    },
-    {
-      "id": "online-260831912882",
-      "source": "onlinetour",
-      "airline": "티웨이항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-08-31",
-        "time": "08:30"
-      },
-      "arrival": {
-        "city": "칼리보",
-        "airport": "",
-        "date": "2026-09-03",
-        "time": "13:00"
-      },
-      "price": 309000,
-      "currency": "KRW",
-      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260831912882",
-      "seats": "10석",
-      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=BOR&sCity2=BOR&eCity2=SEL&startDt=20260831&endDt=20260903&adt=1",
-      "region": "동남아",
-      "discountRate": 7,
-      "firstSeen": "2026-07-31"
-    },
-    {
-      "id": "online-260829866155",
-      "source": "onlinetour",
-      "airline": "이스타항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-08-29",
-        "time": "19:25"
-      },
-      "arrival": {
-        "city": "알마티",
-        "airport": "",
-        "date": "2026-09-01",
-        "time": "23:40"
-      },
-      "price": 888000,
-      "currency": "KRW",
-      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260829866155",
-      "seats": "16석",
-      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=ALA&sCity2=ALA&eCity2=SEL&startDt=20260829&endDt=20260901&adt=1",
-      "region": "기타",
-      "discountRate": 0,
-      "firstSeen": "2026-07-16"
-    },
-    {
-      "id": "online-260823116861",
-      "source": "onlinetour",
-      "airline": "썬푸꾸옥",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-08-23",
-        "time": "01:45"
-      },
-      "arrival": {
-        "city": "푸꾸옥",
-        "airport": "",
-        "date": "2026-08-26",
-        "time": "16:45"
-      },
-      "price": 369000,
-      "currency": "KRW",
-      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260823116861",
-      "seats": "20석",
-      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=PQC&sCity2=PQC&eCity2=SEL&startDt=20260823&endDt=20260826&adt=1",
-      "region": "동남아",
-      "discountRate": -19,
-      "firstSeen": "2026-07-31"
-    },
-    {
-      "id": "online-260824116862",
-      "source": "onlinetour",
-      "airline": "썬푸꾸옥",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-08-24",
-        "time": "01:45"
-      },
-      "arrival": {
-        "city": "푸꾸옥",
-        "airport": "",
-        "date": "2026-08-27",
-        "time": "16:45"
-      },
-      "price": 369000,
-      "currency": "KRW",
-      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260824116862",
-      "seats": "16석",
-      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=PQC&sCity2=PQC&eCity2=SEL&startDt=20260824&endDt=20260827&adt=1",
-      "region": "동남아",
-      "discountRate": -19,
-      "firstSeen": "2026-07-31"
-    },
-    {
-      "id": "online-260825116863",
-      "source": "onlinetour",
-      "airline": "썬푸꾸옥",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-08-25",
-        "time": "01:45"
-      },
-      "arrival": {
-        "city": "푸꾸옥",
-        "airport": "",
-        "date": "2026-08-28",
-        "time": "16:45"
-      },
-      "price": 369000,
-      "currency": "KRW",
-      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260825116863",
-      "seats": "20석",
-      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=PQC&sCity2=PQC&eCity2=SEL&startDt=20260825&endDt=20260828&adt=1",
-      "region": "동남아",
-      "discountRate": -19,
-      "firstSeen": "2026-07-31"
-    },
-    {
-      "id": "online-260826116864",
-      "source": "onlinetour",
-      "airline": "썬푸꾸옥",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-08-26",
-        "time": "01:45"
-      },
-      "arrival": {
-        "city": "푸꾸옥",
-        "airport": "",
-        "date": "2026-08-29",
-        "time": "16:45"
-      },
-      "price": 369000,
-      "currency": "KRW",
-      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260826116864",
-      "seats": "18석",
-      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=PQC&sCity2=PQC&eCity2=SEL&startDt=20260826&endDt=20260829&adt=1",
-      "region": "동남아",
-      "discountRate": -19,
-      "firstSeen": "2026-07-31"
-    },
-    {
-      "id": "online-260827116865",
-      "source": "onlinetour",
-      "airline": "썬푸꾸옥",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-08-27",
-        "time": "01:45"
-      },
-      "arrival": {
-        "city": "푸꾸옥",
-        "airport": "",
-        "date": "2026-08-30",
-        "time": "16:45"
-      },
-      "price": 369000,
-      "currency": "KRW",
-      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260827116865",
-      "seats": "20석",
-      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=PQC&sCity2=PQC&eCity2=SEL&startDt=20260827&endDt=20260830&adt=1",
-      "region": "동남아",
-      "discountRate": -19,
-      "firstSeen": "2026-07-31"
-    },
-    {
-      "id": "online-260828116866",
-      "source": "onlinetour",
-      "airline": "썬푸꾸옥",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-08-28",
-        "time": "01:45"
-      },
-      "arrival": {
-        "city": "푸꾸옥",
-        "airport": "",
-        "date": "2026-08-31",
-        "time": "16:45"
-      },
-      "price": 369000,
-      "currency": "KRW",
-      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260828116866",
-      "seats": "20석",
-      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=PQC&sCity2=PQC&eCity2=SEL&startDt=20260828&endDt=20260831&adt=1",
-      "region": "동남아",
-      "discountRate": -19,
-      "firstSeen": "2026-07-31"
-    },
-    {
-      "id": "online-260829116867",
-      "source": "onlinetour",
-      "airline": "썬푸꾸옥",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-08-29",
-        "time": "01:45"
-      },
-      "arrival": {
-        "city": "푸꾸옥",
-        "airport": "",
-        "date": "2026-09-01",
-        "time": "16:45"
-      },
-      "price": 369000,
-      "currency": "KRW",
-      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260829116867",
-      "seats": "20석",
-      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=PQC&sCity2=PQC&eCity2=SEL&startDt=20260829&endDt=20260901&adt=1",
-      "region": "동남아",
-      "discountRate": -19,
-      "firstSeen": "2026-07-31"
-    },
-    {
-      "id": "online-260830116868",
-      "source": "onlinetour",
-      "airline": "썬푸꾸옥",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-08-30",
-        "time": "01:45"
-      },
-      "arrival": {
-        "city": "푸꾸옥",
-        "airport": "",
-        "date": "2026-09-02",
-        "time": "16:45"
-      },
-      "price": 369000,
-      "currency": "KRW",
-      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260830116868",
-      "seats": "20석",
-      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=PQC&sCity2=PQC&eCity2=SEL&startDt=20260830&endDt=20260902&adt=1",
-      "region": "동남아",
-      "discountRate": -19,
-      "firstSeen": "2026-07-31"
-    },
-    {
-      "id": "online-260831116869",
-      "source": "onlinetour",
-      "airline": "썬푸꾸옥",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-08-31",
-        "time": "01:45"
-      },
-      "arrival": {
-        "city": "푸꾸옥",
-        "airport": "",
-        "date": "2026-09-03",
-        "time": "16:45"
-      },
-      "price": 369000,
-      "currency": "KRW",
-      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260831116869",
-      "seats": "20석",
-      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=PQC&sCity2=PQC&eCity2=SEL&startDt=20260831&endDt=20260903&adt=1",
-      "region": "동남아",
-      "discountRate": -19,
-      "firstSeen": "2026-07-31"
-    },
-    {
-      "id": "online-260816117511",
-      "source": "onlinetour",
-      "airline": "대한항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-08-16",
-        "time": "09:10"
-      },
-      "arrival": {
-        "city": "서안",
-        "airport": "",
-        "date": "2026-08-19",
-        "time": "12:40"
-      },
-      "price": 580000,
-      "currency": "KRW",
-      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260816117511",
-      "seats": "16석",
-      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=SIA&sCity2=SIA&eCity2=SEL&startDt=20260816&endDt=20260819&adt=1",
-      "region": "기타",
-      "discountRate": 0,
-      "firstSeen": "2026-07-27"
-    },
-    {
-      "id": "online-260817117512",
-      "source": "onlinetour",
-      "airline": "대한항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-08-17",
-        "time": "09:10"
-      },
-      "arrival": {
-        "city": "서안",
-        "airport": "",
-        "date": "2026-08-20",
-        "time": "12:40"
-      },
-      "price": 580000,
-      "currency": "KRW",
-      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260817117512",
-      "seats": "16석",
-      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=SIA&sCity2=SIA&eCity2=SEL&startDt=20260817&endDt=20260820&adt=1",
-      "region": "기타",
-      "discountRate": 0,
-      "firstSeen": "2026-07-27"
-    },
-    {
-      "id": "online-260818117513",
-      "source": "onlinetour",
-      "airline": "대한항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-08-18",
-        "time": "09:10"
-      },
-      "arrival": {
-        "city": "서안",
-        "airport": "",
-        "date": "2026-08-21",
-        "time": "12:40"
-      },
-      "price": 580000,
-      "currency": "KRW",
-      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260818117513",
-      "seats": "16석",
-      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=SIA&sCity2=SIA&eCity2=SEL&startDt=20260818&endDt=20260821&adt=1",
-      "region": "기타",
-      "discountRate": 0,
-      "firstSeen": "2026-07-27"
-    },
-    {
-      "id": "online-260819117514",
-      "source": "onlinetour",
-      "airline": "대한항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-08-19",
-        "time": "09:10"
-      },
-      "arrival": {
-        "city": "서안",
-        "airport": "",
-        "date": "2026-08-22",
-        "time": "12:40"
-      },
-      "price": 580000,
-      "currency": "KRW",
-      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260819117514",
-      "seats": "16석",
-      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=SIA&sCity2=SIA&eCity2=SEL&startDt=20260819&endDt=20260822&adt=1",
-      "region": "기타",
-      "discountRate": 0,
-      "firstSeen": "2026-07-27"
-    },
-    {
-      "id": "online-260821117515",
-      "source": "onlinetour",
-      "airline": "대한항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-08-21",
-        "time": "09:10"
-      },
-      "arrival": {
-        "city": "서안",
-        "airport": "",
-        "date": "2026-08-24",
-        "time": "12:40"
-      },
-      "price": 580000,
-      "currency": "KRW",
-      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260821117515",
-      "seats": "16석",
-      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=SIA&sCity2=SIA&eCity2=SEL&startDt=20260821&endDt=20260824&adt=1",
-      "region": "기타",
-      "discountRate": 0,
-      "firstSeen": "2026-07-27"
-    },
-    {
-      "id": "online-260822117516",
-      "source": "onlinetour",
-      "airline": "대한항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-08-22",
-        "time": "09:10"
-      },
-      "arrival": {
-        "city": "서안",
-        "airport": "",
-        "date": "2026-08-25",
-        "time": "12:40"
-      },
-      "price": 580000,
-      "currency": "KRW",
-      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260822117516",
-      "seats": "16석",
-      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=SIA&sCity2=SIA&eCity2=SEL&startDt=20260822&endDt=20260825&adt=1",
-      "region": "기타",
-      "discountRate": 0,
-      "firstSeen": "2026-07-27"
-    },
-    {
-      "id": "online-260823117517",
-      "source": "onlinetour",
-      "airline": "대한항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-08-23",
-        "time": "09:10"
-      },
-      "arrival": {
-        "city": "서안",
-        "airport": "",
-        "date": "2026-08-26",
-        "time": "12:40"
-      },
-      "price": 580000,
-      "currency": "KRW",
-      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260823117517",
-      "seats": "16석",
-      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=SIA&sCity2=SIA&eCity2=SEL&startDt=20260823&endDt=20260826&adt=1",
-      "region": "기타",
-      "discountRate": 0,
-      "firstSeen": "2026-07-27"
-    },
-    {
-      "id": "online-260824117518",
-      "source": "onlinetour",
-      "airline": "대한항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-08-24",
-        "time": "09:10"
-      },
-      "arrival": {
-        "city": "서안",
-        "airport": "",
-        "date": "2026-08-27",
-        "time": "12:40"
-      },
-      "price": 580000,
-      "currency": "KRW",
-      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260824117518",
-      "seats": "16석",
-      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=SIA&sCity2=SIA&eCity2=SEL&startDt=20260824&endDt=20260827&adt=1",
-      "region": "기타",
-      "discountRate": 0,
-      "firstSeen": "2026-07-27"
-    },
-    {
-      "id": "online-260825117519",
-      "source": "onlinetour",
-      "airline": "대한항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-08-25",
-        "time": "09:10"
-      },
-      "arrival": {
-        "city": "서안",
-        "airport": "",
-        "date": "2026-08-28",
-        "time": "12:40"
-      },
-      "price": 580000,
-      "currency": "KRW",
-      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260825117519",
-      "seats": "16석",
-      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=SIA&sCity2=SIA&eCity2=SEL&startDt=20260825&endDt=20260828&adt=1",
-      "region": "기타",
-      "discountRate": 0,
-      "firstSeen": "2026-07-27"
-    },
-    {
-      "id": "online-260826117520",
-      "source": "onlinetour",
-      "airline": "대한항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-08-26",
-        "time": "09:10"
-      },
-      "arrival": {
-        "city": "서안",
-        "airport": "",
-        "date": "2026-08-29",
-        "time": "12:40"
-      },
-      "price": 580000,
-      "currency": "KRW",
-      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260826117520",
-      "seats": "16석",
-      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=SIA&sCity2=SIA&eCity2=SEL&startDt=20260826&endDt=20260829&adt=1",
-      "region": "기타",
-      "discountRate": 0,
-      "firstSeen": "2026-07-27"
-    },
-    {
-      "id": "online-260828117522",
-      "source": "onlinetour",
-      "airline": "대한항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-08-28",
-        "time": "09:10"
-      },
-      "arrival": {
-        "city": "서안",
-        "airport": "",
-        "date": "2026-08-31",
-        "time": "12:40"
-      },
-      "price": 580000,
-      "currency": "KRW",
-      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260828117522",
-      "seats": "16석",
-      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=SIA&sCity2=SIA&eCity2=SEL&startDt=20260828&endDt=20260831&adt=1",
-      "region": "기타",
-      "discountRate": 0,
-      "firstSeen": "2026-07-27"
-    },
-    {
-      "id": "online-260829117523",
-      "source": "onlinetour",
-      "airline": "대한항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-08-29",
-        "time": "09:10"
-      },
-      "arrival": {
-        "city": "서안",
-        "airport": "",
-        "date": "2026-09-01",
-        "time": "12:40"
-      },
-      "price": 580000,
-      "currency": "KRW",
-      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260829117523",
-      "seats": "16석",
-      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=SIA&sCity2=SIA&eCity2=SEL&startDt=20260829&endDt=20260901&adt=1",
-      "region": "기타",
-      "discountRate": 0,
-      "firstSeen": "2026-07-27"
-    },
-    {
-      "id": "online-260830117524",
-      "source": "onlinetour",
-      "airline": "대한항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-08-30",
-        "time": "09:10"
-      },
-      "arrival": {
-        "city": "서안",
-        "airport": "",
-        "date": "2026-09-02",
-        "time": "12:40"
-      },
-      "price": 580000,
-      "currency": "KRW",
-      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260830117524",
-      "seats": "16석",
-      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=SIA&sCity2=SIA&eCity2=SEL&startDt=20260830&endDt=20260902&adt=1",
-      "region": "기타",
-      "discountRate": 0,
-      "firstSeen": "2026-07-27"
-    },
-    {
-      "id": "online-260831117525",
-      "source": "onlinetour",
-      "airline": "대한항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-08-31",
-        "time": "09:10"
-      },
-      "arrival": {
-        "city": "서안",
-        "airport": "",
-        "date": "2026-09-03",
-        "time": "12:40"
-      },
-      "price": 580000,
-      "currency": "KRW",
-      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260831117525",
-      "seats": "16석",
-      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=SIA&sCity2=SIA&eCity2=SEL&startDt=20260831&endDt=20260903&adt=1",
-      "region": "기타",
-      "discountRate": 0,
-      "firstSeen": "2026-07-27"
-    },
-    {
-      "id": "online-260819117009",
-      "source": "onlinetour",
-      "airline": "사천항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-08-19",
-        "time": "21:50"
-      },
-      "arrival": {
-        "city": "장가계",
-        "airport": "",
-        "date": "2026-08-22",
-        "time": "16:20"
-      },
-      "price": 480000,
-      "currency": "KRW",
-      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260819117009",
-      "seats": "24석",
-      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=DYG&sCity2=DYG&eCity2=SEL&startDt=20260819&endDt=20260822&adt=1",
-      "region": "중국",
-      "discountRate": 0,
-      "firstSeen": "2026-07-27"
-    },
-    {
-      "id": "online-260820117010",
-      "source": "onlinetour",
-      "airline": "사천항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-08-20",
-        "time": "21:50"
-      },
-      "arrival": {
-        "city": "장가계",
-        "airport": "",
-        "date": "2026-08-23",
-        "time": "16:20"
-      },
-      "price": 480000,
-      "currency": "KRW",
-      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260820117010",
-      "seats": "1석",
-      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=DYG&sCity2=DYG&eCity2=SEL&startDt=20260820&endDt=20260823&adt=1",
-      "region": "중국",
-      "discountRate": 0,
-      "firstSeen": "2026-07-27"
-    },
-    {
-      "id": "online-260831116511",
-      "source": "onlinetour",
-      "airline": "사천항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-08-31",
-        "time": "21:50"
-      },
-      "arrival": {
-        "city": "장가계",
-        "airport": "",
-        "date": "2026-09-04",
-        "time": "16:20"
-      },
-      "price": 480000,
-      "currency": "KRW",
-      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260831116511",
-      "seats": "2석",
-      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=DYG&sCity2=DYG&eCity2=SEL&startDt=20260831&endDt=20260904&adt=1",
-      "region": "중국",
-      "discountRate": 0,
-      "firstSeen": "2026-07-27"
-    },
-    {
-      "id": "online-260819117664",
-      "source": "onlinetour",
-      "airline": "대한항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-08-19",
-        "time": "21:40"
-      },
-      "arrival": {
-        "city": "장사",
-        "airport": "",
-        "date": "2026-08-24",
-        "time": "01:05"
-      },
-      "price": 510000,
-      "currency": "KRW",
-      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260819117664",
-      "seats": "4석",
-      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=DYG&sCity2=DYG&eCity2=SEL&startDt=20260819&endDt=20260824&adt=1",
-      "region": "중국",
-      "discountRate": 0,
-      "firstSeen": "2026-07-27"
-    },
-    {
-      "id": "online-260820117568",
-      "source": "onlinetour",
-      "airline": "대한항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-08-20",
-        "time": "21:40"
-      },
-      "arrival": {
-        "city": "장사",
-        "airport": "",
-        "date": "2026-08-25",
-        "time": "02:00"
-      },
-      "price": 510000,
-      "currency": "KRW",
-      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260820117568",
-      "seats": "7석",
-      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=DYG&sCity2=DYG&eCity2=SEL&startDt=20260820&endDt=20260825&adt=1",
-      "region": "중국",
-      "discountRate": 0,
-      "firstSeen": "2026-07-27"
-    },
-    {
-      "id": "online-260824117635",
-      "source": "onlinetour",
-      "airline": "대한항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-08-24",
-        "time": "22:40"
-      },
-      "arrival": {
-        "city": "인천",
-        "airport": "",
-        "date": "2026-08-29",
-        "time": "01:05"
-      },
-      "price": 550000,
-      "currency": "KRW",
-      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260824117635",
-      "seats": "7석",
-      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=DYG&sCity2=DYG&eCity2=SEL&startDt=20260824&endDt=20260829&adt=1",
-      "region": "중국",
-      "discountRate": 0,
-      "firstSeen": "2026-08-04"
-    },
-    {
-      "id": "online-260831117636",
-      "source": "onlinetour",
-      "airline": "대한항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-08-31",
-        "time": "22:40"
-      },
-      "arrival": {
-        "city": "인천",
-        "airport": "",
-        "date": "2026-09-05",
-        "time": "01:05"
-      },
-      "price": 550000,
-      "currency": "KRW",
-      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260831117636",
-      "seats": "10석",
-      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=DYG&sCity2=DYG&eCity2=SEL&startDt=20260831&endDt=20260905&adt=1",
-      "region": "중국",
-      "discountRate": 0,
-      "firstSeen": "2026-08-04"
     },
     {
       "id": "ttang-KN0872CJJDSN-G1-2026-08-15",
@@ -14561,6 +14315,806 @@
       "firstSeen": "2026-08-09"
     },
     {
+      "id": "online-260831912882",
+      "source": "onlinetour",
+      "airline": "티웨이항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-08-31",
+        "time": "08:30"
+      },
+      "arrival": {
+        "city": "칼리보",
+        "airport": "",
+        "date": "2026-09-03",
+        "time": "13:00"
+      },
+      "price": 309000,
+      "currency": "KRW",
+      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260831912882",
+      "seats": "10석",
+      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=BOR&sCity2=BOR&eCity2=SEL&startDt=20260831&endDt=20260903&adt=1",
+      "region": "동남아",
+      "discountRate": 7,
+      "firstSeen": "2026-07-31"
+    },
+    {
+      "id": "online-260829866155",
+      "source": "onlinetour",
+      "airline": "이스타항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-08-29",
+        "time": "19:25"
+      },
+      "arrival": {
+        "city": "알마티",
+        "airport": "",
+        "date": "2026-09-01",
+        "time": "23:40"
+      },
+      "price": 888000,
+      "currency": "KRW",
+      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260829866155",
+      "seats": "16석",
+      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=ALA&sCity2=ALA&eCity2=SEL&startDt=20260829&endDt=20260901&adt=1",
+      "region": "기타",
+      "discountRate": 0,
+      "firstSeen": "2026-07-16"
+    },
+    {
+      "id": "online-260823116861",
+      "source": "onlinetour",
+      "airline": "썬푸꾸옥",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-08-23",
+        "time": "01:45"
+      },
+      "arrival": {
+        "city": "푸꾸옥",
+        "airport": "",
+        "date": "2026-08-26",
+        "time": "16:45"
+      },
+      "price": 369000,
+      "currency": "KRW",
+      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260823116861",
+      "seats": "20석",
+      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=PQC&sCity2=PQC&eCity2=SEL&startDt=20260823&endDt=20260826&adt=1",
+      "region": "동남아",
+      "discountRate": -19,
+      "firstSeen": "2026-07-31"
+    },
+    {
+      "id": "online-260824116862",
+      "source": "onlinetour",
+      "airline": "썬푸꾸옥",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-08-24",
+        "time": "01:45"
+      },
+      "arrival": {
+        "city": "푸꾸옥",
+        "airport": "",
+        "date": "2026-08-27",
+        "time": "16:45"
+      },
+      "price": 369000,
+      "currency": "KRW",
+      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260824116862",
+      "seats": "16석",
+      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=PQC&sCity2=PQC&eCity2=SEL&startDt=20260824&endDt=20260827&adt=1",
+      "region": "동남아",
+      "discountRate": -19,
+      "firstSeen": "2026-07-31"
+    },
+    {
+      "id": "online-260825116863",
+      "source": "onlinetour",
+      "airline": "썬푸꾸옥",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-08-25",
+        "time": "01:45"
+      },
+      "arrival": {
+        "city": "푸꾸옥",
+        "airport": "",
+        "date": "2026-08-28",
+        "time": "16:45"
+      },
+      "price": 369000,
+      "currency": "KRW",
+      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260825116863",
+      "seats": "20석",
+      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=PQC&sCity2=PQC&eCity2=SEL&startDt=20260825&endDt=20260828&adt=1",
+      "region": "동남아",
+      "discountRate": -19,
+      "firstSeen": "2026-07-31"
+    },
+    {
+      "id": "online-260826116864",
+      "source": "onlinetour",
+      "airline": "썬푸꾸옥",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-08-26",
+        "time": "01:45"
+      },
+      "arrival": {
+        "city": "푸꾸옥",
+        "airport": "",
+        "date": "2026-08-29",
+        "time": "16:45"
+      },
+      "price": 369000,
+      "currency": "KRW",
+      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260826116864",
+      "seats": "18석",
+      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=PQC&sCity2=PQC&eCity2=SEL&startDt=20260826&endDt=20260829&adt=1",
+      "region": "동남아",
+      "discountRate": -19,
+      "firstSeen": "2026-07-31"
+    },
+    {
+      "id": "online-260827116865",
+      "source": "onlinetour",
+      "airline": "썬푸꾸옥",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-08-27",
+        "time": "01:45"
+      },
+      "arrival": {
+        "city": "푸꾸옥",
+        "airport": "",
+        "date": "2026-08-30",
+        "time": "16:45"
+      },
+      "price": 369000,
+      "currency": "KRW",
+      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260827116865",
+      "seats": "20석",
+      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=PQC&sCity2=PQC&eCity2=SEL&startDt=20260827&endDt=20260830&adt=1",
+      "region": "동남아",
+      "discountRate": -19,
+      "firstSeen": "2026-07-31"
+    },
+    {
+      "id": "online-260828116866",
+      "source": "onlinetour",
+      "airline": "썬푸꾸옥",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-08-28",
+        "time": "01:45"
+      },
+      "arrival": {
+        "city": "푸꾸옥",
+        "airport": "",
+        "date": "2026-08-31",
+        "time": "16:45"
+      },
+      "price": 369000,
+      "currency": "KRW",
+      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260828116866",
+      "seats": "20석",
+      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=PQC&sCity2=PQC&eCity2=SEL&startDt=20260828&endDt=20260831&adt=1",
+      "region": "동남아",
+      "discountRate": -19,
+      "firstSeen": "2026-07-31"
+    },
+    {
+      "id": "online-260829116867",
+      "source": "onlinetour",
+      "airline": "썬푸꾸옥",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-08-29",
+        "time": "01:45"
+      },
+      "arrival": {
+        "city": "푸꾸옥",
+        "airport": "",
+        "date": "2026-09-01",
+        "time": "16:45"
+      },
+      "price": 369000,
+      "currency": "KRW",
+      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260829116867",
+      "seats": "20석",
+      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=PQC&sCity2=PQC&eCity2=SEL&startDt=20260829&endDt=20260901&adt=1",
+      "region": "동남아",
+      "discountRate": -19,
+      "firstSeen": "2026-07-31"
+    },
+    {
+      "id": "online-260830116868",
+      "source": "onlinetour",
+      "airline": "썬푸꾸옥",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-08-30",
+        "time": "01:45"
+      },
+      "arrival": {
+        "city": "푸꾸옥",
+        "airport": "",
+        "date": "2026-09-02",
+        "time": "16:45"
+      },
+      "price": 369000,
+      "currency": "KRW",
+      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260830116868",
+      "seats": "20석",
+      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=PQC&sCity2=PQC&eCity2=SEL&startDt=20260830&endDt=20260902&adt=1",
+      "region": "동남아",
+      "discountRate": -19,
+      "firstSeen": "2026-07-31"
+    },
+    {
+      "id": "online-260831116869",
+      "source": "onlinetour",
+      "airline": "썬푸꾸옥",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-08-31",
+        "time": "01:45"
+      },
+      "arrival": {
+        "city": "푸꾸옥",
+        "airport": "",
+        "date": "2026-09-03",
+        "time": "16:45"
+      },
+      "price": 369000,
+      "currency": "KRW",
+      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260831116869",
+      "seats": "20석",
+      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=PQC&sCity2=PQC&eCity2=SEL&startDt=20260831&endDt=20260903&adt=1",
+      "region": "동남아",
+      "discountRate": -19,
+      "firstSeen": "2026-07-31"
+    },
+    {
+      "id": "online-260816117511",
+      "source": "onlinetour",
+      "airline": "대한항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-08-16",
+        "time": "09:10"
+      },
+      "arrival": {
+        "city": "서안",
+        "airport": "",
+        "date": "2026-08-19",
+        "time": "12:40"
+      },
+      "price": 580000,
+      "currency": "KRW",
+      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260816117511",
+      "seats": "16석",
+      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=SIA&sCity2=SIA&eCity2=SEL&startDt=20260816&endDt=20260819&adt=1",
+      "region": "기타",
+      "discountRate": 0,
+      "firstSeen": "2026-07-27"
+    },
+    {
+      "id": "online-260817117512",
+      "source": "onlinetour",
+      "airline": "대한항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-08-17",
+        "time": "09:10"
+      },
+      "arrival": {
+        "city": "서안",
+        "airport": "",
+        "date": "2026-08-20",
+        "time": "12:40"
+      },
+      "price": 580000,
+      "currency": "KRW",
+      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260817117512",
+      "seats": "16석",
+      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=SIA&sCity2=SIA&eCity2=SEL&startDt=20260817&endDt=20260820&adt=1",
+      "region": "기타",
+      "discountRate": 0,
+      "firstSeen": "2026-07-27"
+    },
+    {
+      "id": "online-260818117513",
+      "source": "onlinetour",
+      "airline": "대한항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-08-18",
+        "time": "09:10"
+      },
+      "arrival": {
+        "city": "서안",
+        "airport": "",
+        "date": "2026-08-21",
+        "time": "12:40"
+      },
+      "price": 580000,
+      "currency": "KRW",
+      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260818117513",
+      "seats": "16석",
+      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=SIA&sCity2=SIA&eCity2=SEL&startDt=20260818&endDt=20260821&adt=1",
+      "region": "기타",
+      "discountRate": 0,
+      "firstSeen": "2026-07-27"
+    },
+    {
+      "id": "online-260819117514",
+      "source": "onlinetour",
+      "airline": "대한항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-08-19",
+        "time": "09:10"
+      },
+      "arrival": {
+        "city": "서안",
+        "airport": "",
+        "date": "2026-08-22",
+        "time": "12:40"
+      },
+      "price": 580000,
+      "currency": "KRW",
+      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260819117514",
+      "seats": "16석",
+      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=SIA&sCity2=SIA&eCity2=SEL&startDt=20260819&endDt=20260822&adt=1",
+      "region": "기타",
+      "discountRate": 0,
+      "firstSeen": "2026-07-27"
+    },
+    {
+      "id": "online-260821117515",
+      "source": "onlinetour",
+      "airline": "대한항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-08-21",
+        "time": "09:10"
+      },
+      "arrival": {
+        "city": "서안",
+        "airport": "",
+        "date": "2026-08-24",
+        "time": "12:40"
+      },
+      "price": 580000,
+      "currency": "KRW",
+      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260821117515",
+      "seats": "16석",
+      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=SIA&sCity2=SIA&eCity2=SEL&startDt=20260821&endDt=20260824&adt=1",
+      "region": "기타",
+      "discountRate": 0,
+      "firstSeen": "2026-07-27"
+    },
+    {
+      "id": "online-260822117516",
+      "source": "onlinetour",
+      "airline": "대한항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-08-22",
+        "time": "09:10"
+      },
+      "arrival": {
+        "city": "서안",
+        "airport": "",
+        "date": "2026-08-25",
+        "time": "12:40"
+      },
+      "price": 580000,
+      "currency": "KRW",
+      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260822117516",
+      "seats": "16석",
+      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=SIA&sCity2=SIA&eCity2=SEL&startDt=20260822&endDt=20260825&adt=1",
+      "region": "기타",
+      "discountRate": 0,
+      "firstSeen": "2026-07-27"
+    },
+    {
+      "id": "online-260823117517",
+      "source": "onlinetour",
+      "airline": "대한항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-08-23",
+        "time": "09:10"
+      },
+      "arrival": {
+        "city": "서안",
+        "airport": "",
+        "date": "2026-08-26",
+        "time": "12:40"
+      },
+      "price": 580000,
+      "currency": "KRW",
+      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260823117517",
+      "seats": "16석",
+      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=SIA&sCity2=SIA&eCity2=SEL&startDt=20260823&endDt=20260826&adt=1",
+      "region": "기타",
+      "discountRate": 0,
+      "firstSeen": "2026-07-27"
+    },
+    {
+      "id": "online-260824117518",
+      "source": "onlinetour",
+      "airline": "대한항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-08-24",
+        "time": "09:10"
+      },
+      "arrival": {
+        "city": "서안",
+        "airport": "",
+        "date": "2026-08-27",
+        "time": "12:40"
+      },
+      "price": 580000,
+      "currency": "KRW",
+      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260824117518",
+      "seats": "16석",
+      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=SIA&sCity2=SIA&eCity2=SEL&startDt=20260824&endDt=20260827&adt=1",
+      "region": "기타",
+      "discountRate": 0,
+      "firstSeen": "2026-07-27"
+    },
+    {
+      "id": "online-260825117519",
+      "source": "onlinetour",
+      "airline": "대한항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-08-25",
+        "time": "09:10"
+      },
+      "arrival": {
+        "city": "서안",
+        "airport": "",
+        "date": "2026-08-28",
+        "time": "12:40"
+      },
+      "price": 580000,
+      "currency": "KRW",
+      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260825117519",
+      "seats": "16석",
+      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=SIA&sCity2=SIA&eCity2=SEL&startDt=20260825&endDt=20260828&adt=1",
+      "region": "기타",
+      "discountRate": 0,
+      "firstSeen": "2026-07-27"
+    },
+    {
+      "id": "online-260826117520",
+      "source": "onlinetour",
+      "airline": "대한항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-08-26",
+        "time": "09:10"
+      },
+      "arrival": {
+        "city": "서안",
+        "airport": "",
+        "date": "2026-08-29",
+        "time": "12:40"
+      },
+      "price": 580000,
+      "currency": "KRW",
+      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260826117520",
+      "seats": "16석",
+      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=SIA&sCity2=SIA&eCity2=SEL&startDt=20260826&endDt=20260829&adt=1",
+      "region": "기타",
+      "discountRate": 0,
+      "firstSeen": "2026-07-27"
+    },
+    {
+      "id": "online-260828117522",
+      "source": "onlinetour",
+      "airline": "대한항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-08-28",
+        "time": "09:10"
+      },
+      "arrival": {
+        "city": "서안",
+        "airport": "",
+        "date": "2026-08-31",
+        "time": "12:40"
+      },
+      "price": 580000,
+      "currency": "KRW",
+      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260828117522",
+      "seats": "16석",
+      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=SIA&sCity2=SIA&eCity2=SEL&startDt=20260828&endDt=20260831&adt=1",
+      "region": "기타",
+      "discountRate": 0,
+      "firstSeen": "2026-07-27"
+    },
+    {
+      "id": "online-260829117523",
+      "source": "onlinetour",
+      "airline": "대한항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-08-29",
+        "time": "09:10"
+      },
+      "arrival": {
+        "city": "서안",
+        "airport": "",
+        "date": "2026-09-01",
+        "time": "12:40"
+      },
+      "price": 580000,
+      "currency": "KRW",
+      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260829117523",
+      "seats": "16석",
+      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=SIA&sCity2=SIA&eCity2=SEL&startDt=20260829&endDt=20260901&adt=1",
+      "region": "기타",
+      "discountRate": 0,
+      "firstSeen": "2026-07-27"
+    },
+    {
+      "id": "online-260830117524",
+      "source": "onlinetour",
+      "airline": "대한항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-08-30",
+        "time": "09:10"
+      },
+      "arrival": {
+        "city": "서안",
+        "airport": "",
+        "date": "2026-09-02",
+        "time": "12:40"
+      },
+      "price": 580000,
+      "currency": "KRW",
+      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260830117524",
+      "seats": "16석",
+      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=SIA&sCity2=SIA&eCity2=SEL&startDt=20260830&endDt=20260902&adt=1",
+      "region": "기타",
+      "discountRate": 0,
+      "firstSeen": "2026-07-27"
+    },
+    {
+      "id": "online-260831117525",
+      "source": "onlinetour",
+      "airline": "대한항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-08-31",
+        "time": "09:10"
+      },
+      "arrival": {
+        "city": "서안",
+        "airport": "",
+        "date": "2026-09-03",
+        "time": "12:40"
+      },
+      "price": 580000,
+      "currency": "KRW",
+      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260831117525",
+      "seats": "16석",
+      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=SIA&sCity2=SIA&eCity2=SEL&startDt=20260831&endDt=20260903&adt=1",
+      "region": "기타",
+      "discountRate": 0,
+      "firstSeen": "2026-07-27"
+    },
+    {
+      "id": "online-260819117009",
+      "source": "onlinetour",
+      "airline": "사천항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-08-19",
+        "time": "21:50"
+      },
+      "arrival": {
+        "city": "장가계",
+        "airport": "",
+        "date": "2026-08-22",
+        "time": "16:20"
+      },
+      "price": 480000,
+      "currency": "KRW",
+      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260819117009",
+      "seats": "24석",
+      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=DYG&sCity2=DYG&eCity2=SEL&startDt=20260819&endDt=20260822&adt=1",
+      "region": "중국",
+      "discountRate": 0,
+      "firstSeen": "2026-07-27"
+    },
+    {
+      "id": "online-260820117010",
+      "source": "onlinetour",
+      "airline": "사천항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-08-20",
+        "time": "21:50"
+      },
+      "arrival": {
+        "city": "장가계",
+        "airport": "",
+        "date": "2026-08-23",
+        "time": "16:20"
+      },
+      "price": 480000,
+      "currency": "KRW",
+      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260820117010",
+      "seats": "1석",
+      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=DYG&sCity2=DYG&eCity2=SEL&startDt=20260820&endDt=20260823&adt=1",
+      "region": "중국",
+      "discountRate": 0,
+      "firstSeen": "2026-07-27"
+    },
+    {
+      "id": "online-260831116511",
+      "source": "onlinetour",
+      "airline": "사천항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-08-31",
+        "time": "21:50"
+      },
+      "arrival": {
+        "city": "장가계",
+        "airport": "",
+        "date": "2026-09-04",
+        "time": "16:20"
+      },
+      "price": 480000,
+      "currency": "KRW",
+      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260831116511",
+      "seats": "2석",
+      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=DYG&sCity2=DYG&eCity2=SEL&startDt=20260831&endDt=20260904&adt=1",
+      "region": "중국",
+      "discountRate": 0,
+      "firstSeen": "2026-07-27"
+    },
+    {
+      "id": "online-260819117664",
+      "source": "onlinetour",
+      "airline": "대한항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-08-19",
+        "time": "21:40"
+      },
+      "arrival": {
+        "city": "장사",
+        "airport": "",
+        "date": "2026-08-24",
+        "time": "01:05"
+      },
+      "price": 510000,
+      "currency": "KRW",
+      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260819117664",
+      "seats": "4석",
+      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=DYG&sCity2=DYG&eCity2=SEL&startDt=20260819&endDt=20260824&adt=1",
+      "region": "중국",
+      "discountRate": 0,
+      "firstSeen": "2026-07-27"
+    },
+    {
+      "id": "online-260820117568",
+      "source": "onlinetour",
+      "airline": "대한항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-08-20",
+        "time": "21:40"
+      },
+      "arrival": {
+        "city": "장사",
+        "airport": "",
+        "date": "2026-08-25",
+        "time": "02:00"
+      },
+      "price": 510000,
+      "currency": "KRW",
+      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260820117568",
+      "seats": "7석",
+      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=DYG&sCity2=DYG&eCity2=SEL&startDt=20260820&endDt=20260825&adt=1",
+      "region": "중국",
+      "discountRate": 0,
+      "firstSeen": "2026-07-27"
+    },
+    {
+      "id": "online-260824117635",
+      "source": "onlinetour",
+      "airline": "대한항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-08-24",
+        "time": "22:40"
+      },
+      "arrival": {
+        "city": "인천",
+        "airport": "",
+        "date": "2026-08-29",
+        "time": "01:05"
+      },
+      "price": 550000,
+      "currency": "KRW",
+      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260824117635",
+      "seats": "7석",
+      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=DYG&sCity2=DYG&eCity2=SEL&startDt=20260824&endDt=20260829&adt=1",
+      "region": "중국",
+      "discountRate": 0,
+      "firstSeen": "2026-08-04"
+    },
+    {
+      "id": "online-260831117636",
+      "source": "onlinetour",
+      "airline": "대한항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-08-31",
+        "time": "22:40"
+      },
+      "arrival": {
+        "city": "인천",
+        "airport": "",
+        "date": "2026-09-05",
+        "time": "01:05"
+      },
+      "price": 550000,
+      "currency": "KRW",
+      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260831117636",
+      "seats": "10석",
+      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=DYG&sCity2=DYG&eCity2=SEL&startDt=20260831&endDt=20260905&adt=1",
+      "region": "중국",
+      "discountRate": 0,
+      "firstSeen": "2026-08-04"
+    },
+    {
       "id": "mrt-ICN-AMS-20260911-1145900",
       "source": "myrealtrip",
       "airline": "중국남방항공",
@@ -16566,11 +17120,11 @@
     }
   ],
   "sources": {
-    "ybtour": 97,
+    "ybtour": 119,
     "hanatour": 101,
-    "modetour": 1045,
-    "onlinetour": 113,
-    "ttang": 1883,
+    "modetour": 1042,
+    "onlinetour": 32,
+    "ttang": 1881,
     "myrealtrip": 67
   },
   "priceHistory": {
@@ -18684,8 +19238,8 @@
       {
         "date": "2026-08-09",
         "minPrice": 199000,
-        "avgPrice": 270500,
-        "count": 4
+        "avgPrice": 199000,
+        "count": 3
       }
     ],
     "부산-나고야": [
@@ -19602,8 +20156,8 @@
       {
         "date": "2026-08-09",
         "minPrice": 220000,
-        "avgPrice": 304319,
-        "count": 94
+        "avgPrice": 301144,
+        "count": 93
       }
     ],
     "인천-괌": [
@@ -19687,9 +20241,9 @@
       },
       {
         "date": "2026-08-09",
-        "minPrice": 281000,
-        "avgPrice": 328391,
-        "count": 46
+        "minPrice": 254900,
+        "avgPrice": 318685,
+        "count": 53
       }
     ],
     "인천-사이판": [
@@ -21328,8 +21882,8 @@
       {
         "date": "2026-08-09",
         "minPrice": 312000,
-        "avgPrice": 391700,
-        "count": 10
+        "avgPrice": 362111,
+        "count": 9
       }
     ],
     "청주-세부": [
@@ -21930,8 +22484,8 @@
       {
         "date": "2026-08-09",
         "minPrice": 281000,
-        "avgPrice": 378323,
-        "count": 71
+        "avgPrice": 356115,
+        "count": 60
       }
     ],
     "인천-치앙마이": [
@@ -22188,8 +22742,8 @@
       {
         "date": "2026-08-09",
         "minPrice": 200000,
-        "avgPrice": 292377,
-        "count": 26
+        "avgPrice": 296072,
+        "count": 25
       }
     ],
     "인천-마닐라": [
@@ -31746,8 +32300,8 @@
       {
         "date": "2026-08-09",
         "minPrice": 950000,
-        "avgPrice": 1603586,
-        "count": 7
+        "avgPrice": 1213775,
+        "count": 4
       }
     ],
     "인천-나트랑(깜란)": [
@@ -46290,8 +46844,8 @@
       {
         "date": "2026-08-09",
         "minPrice": 309000,
-        "avgPrice": 649000,
-        "count": 19
+        "avgPrice": 309000,
+        "count": 1
       }
     ],
     "인천-알마티": [
@@ -46376,8 +46930,8 @@
       {
         "date": "2026-08-09",
         "minPrice": 888000,
-        "avgPrice": 1048000,
-        "count": 6
+        "avgPrice": 888000,
+        "count": 1
       }
     ],
     "청주-의창(YIH)": [
@@ -74870,8 +75424,8 @@
       {
         "date": "2026-08-09",
         "minPrice": 480000,
-        "avgPrice": 633600,
-        "count": 10
+        "avgPrice": 480000,
+        "count": 3
       }
     ],
     "인천-서안": [
@@ -74956,8 +75510,8 @@
       {
         "date": "2026-08-09",
         "minPrice": 580000,
-        "avgPrice": 600000,
-        "count": 18
+        "avgPrice": 580000,
+        "count": 14
       }
     ],
     "서울-오슬로": [
@@ -75128,8 +75682,8 @@
       {
         "date": "2026-08-09",
         "minPrice": 510000,
-        "avgPrice": 545000,
-        "count": 8
+        "avgPrice": 510000,
+        "count": 2
       }
     ],
     "인천-인천": [
