@@ -258,41 +258,44 @@ try {
         await naver.keyboard.press('Control+V');
         await naver.waitForTimeout(4000);
 
-        // 각 마커 자리에 사진 업로드 → 마커 제거
+        // 각 마커 자리에 사진 업로드
+        // 업로드가 문단을 커서 위치에서 쪼개 마커 잔해가 남지 않도록,
+        // 마커 텍스트를 먼저 지워 빈 문단으로 만든 뒤 그 자리에 업로드한다.
         let imgOk = 0;
         for (let k = 0; k < imgSrcs.length; k++) {
             const marker = `⟦사진${k + 1}⟧`;
             const mLoc = frame.locator('.se-text-paragraph', { hasText: marker }).first();
             try {
                 await mLoc.click({ timeout: 5000 });
-            } catch {
-                console.warn(`   \u26A0\uFE0F 마커 ${marker} 미발견 — 해당 이미지 생략`);
-                continue;
-            }
-            if (await uploadImage(imgSrcs[k])) imgOk++;
-            // 마커 텍스트 제거 (빈 문단은 간격 역할로 남긴다)
-            try {
-                const m2 = frame.locator('.se-text-paragraph', { hasText: marker }).first();
-                await m2.click({ timeout: 5000 });
                 await naver.keyboard.press('Home');
                 await naver.keyboard.press('Shift+End');
                 await naver.keyboard.press('Backspace');
                 await naver.waitForTimeout(300);
-            } catch { /* 마커 정리 실패는 치명적이지 않음 */ }
+            } catch {
+                console.warn(`   ⚠️ 마커 ${marker} 미발견 — 해당 이미지 생략`);
+                continue;
+            }
+            if (await uploadImage(imgSrcs[k])) imgOk++;
         }
 
-        // 모든 이미지 가운데 정렬 (이미지 클릭 → "가운데 정렬" 버튼)
+        // 모든 이미지 가운데 정렬 (이미지 클릭 → "가운데 정렬" 버튼 → 클래스로 검증)
         const imgCount = await frame.locator('.se-component.se-image').count();
+        let centered = 0;
         for (let i = 0; i < imgCount; i++) {
             try {
-                await frame.locator('.se-component.se-image').nth(i).click({ timeout: 3000 });
+                const comp = frame.locator('.se-component.se-image').nth(i);
+                if (await comp.evaluate(c => !!c.querySelector('.se-section-align-center'))) { centered++; continue; }
+                await comp.click({ timeout: 3000 });
+                await naver.waitForTimeout(400);
+                await frame.locator('button.se-align-group-toggle-toolbar-button', { hasText: '가운데' })
+                    .first().click({ timeout: 3000 });
                 await naver.waitForTimeout(300);
-                await frame.locator('button.se-align-group-toggle-button:has-text("가운데"), button[aria-label*="가운데 정렬"]')
-                    .first().click({ timeout: 2500 });
+                if (await comp.evaluate(c => !!c.querySelector('.se-section-align-center'))) centered++;
                 await naver.keyboard.press('Escape');
                 await naver.waitForTimeout(200);
             } catch { /* 개별 정렬 실패 무시 */ }
         }
+        console.log(`   가운데 정렬: ${centered}/${imgCount}장`);
 
         pasted = true;
         console.log(`\u270D\uFE0F 제목 + 본문 입력 완료 (이미지 ${imgOk}/${imgSrcs.length}장 첨부, 가운데 정렬 적용)`);

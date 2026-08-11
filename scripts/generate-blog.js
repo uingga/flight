@@ -996,19 +996,6 @@ async function generateThumbnails(topFlights) {
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@700;800;900&display=swap" rel="stylesheet">
 </head>
 <body>
-    <label>와이드 배너 (960×480)</label>
-    <div class="wide-banner" id="wide-banner">
-        <div class="panels">
-            <div class="panel panel-1"></div>
-            <div class="panel panel-2"></div>
-            <div class="panel panel-3"></div>
-        </div>
-        <div class="text-overlay">
-            <div class="line1">[${md}] 땡처리 항공권 특가 Top 3 🔥</div>
-            <div class="line2">${priceLine} ✈️</div>
-            <div class="site-badge">티키티킷 tikitikit.kr</div>
-        </div>
-    </div>
     <label>정사각 썸네일 (800×800)</label>
     <div class="square-thumb" id="square-thumb">
         <div class="panels">
@@ -1034,9 +1021,8 @@ async function generateThumbnails(topFlights) {
         const pg = await browser.newPage({ viewport: { width: 1200, height: 1700 } });
         await pg.goto('file:///' + thumbHtmlPath.replace(/\\/g, '/'), { waitUntil: 'networkidle', timeout: 30000 });
         await pg.waitForTimeout(2000); // 웹폰트 렌더링 대기
-        await pg.locator('#wide-banner').screenshot({ path: path.join(IMAGES_DIR, `blog-thumb-${dateStr}-wide.png`) });
         await pg.locator('#square-thumb').screenshot({ path: path.join(IMAGES_DIR, `blog-thumb-${dateStr}-square.png`) });
-        console.log(`✅ 대표 썸네일 생성: images/blog-thumb-${dateStr}-wide.png / -square.png`);
+        console.log(`✅ 대표 썸네일 생성: images/blog-thumb-${dateStr}-square.png (1:1)`);
     } finally {
         await browser.close();
     }
@@ -1813,11 +1799,9 @@ ${tipLines}
 
     <div class="post">
 
-        <img src="images/blog-thumb-${formatDateForFilename(now)}-wide.png" alt="${pageTitle}" style="width: 100%; border-radius: 12px; margin-bottom: 16px;" />
+        <img src="images/blog-thumb-${formatDateForFilename(now)}-square.png" alt="${pageTitle}" style="width: 100%; max-width: 600px; display: block; margin: 0 auto 16px; border-radius: 12px;" />
 
         <h1 style="text-align: center; font-size: 22px; font-weight: 800; color: #1a1a1a; margin: 16px 0 24px; line-height: 1.5;">${pageTitle}</h1>
-
-        <img src="images/blog-thumb-${formatDateForFilename(now)}-square.png" alt="${pageTitle} 썸네일" style="width: 100%; max-width: 600px; display: block; margin: 0 auto 16px; border-radius: 12px;" />
 
         <p>&nbsp;</p>
 ${introSmallTalk}
