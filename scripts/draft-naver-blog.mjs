@@ -164,18 +164,48 @@ try {
         return window.__blocks.map(b => (b.matches('img') ? b : b.querySelector('img')).getAttribute('src'));
     });
 
-    // i번째 이미지 블록 뒤 ~ j번째 이미지 블록 앞 구간을 복사 (내용 없으면 false)
-    const copyBetween = (i, j) => src.evaluate(([i, j]) => {
+    // i번째 이미지 블록 뒤 ~ j번째 이미지 블록 앞 구간을 클립보드에 복사 (내용 없으면 false)
+    // 브라우저 선택-복사를 쓰면 컨테이너의 박스 스타일(테두리/그림자)까지 딸려 들어가
+    // 에디터에 가로줄이 생기므로, 핵심 텍스트 스타일만 인라인한 정제 HTML을 직접 쓴다.
+    const copyBetween = (i, j) => src.evaluate(async ([i, j]) => {
         const root = window.__root, blocks = window.__blocks;
-        const range = document.createRange();
-        if (i < 0) range.setStart(root, 0); else range.setStartAfter(blocks[i]);
-        if (j >= blocks.length) range.setEnd(root, root.childNodes.length); else range.setEndBefore(blocks[j]);
-        const hasText = range.toString().replace(/ /g, ' ').trim().length > 0;
+        const kids = [...root.children];
+        // 블록이 root 직속이 아니면 직속 조상 기준으로 경계를 잡는다
+        const topIndex = (el) => {
+            let n = el;
+            while (n.parentElement && n.parentElement !== root) n = n.parentElement;
+            return kids.indexOf(n);
+        };
+        const startIdx = i < 0 ? 0 : topIndex(blocks[i]) + 1;
+        const endIdx = j >= blocks.length ? kids.length : topIndex(blocks[j]);
+        const seg = kids.slice(startIdx, Math.max(startIdx, endIdx));
+        if (!seg.length) return false;
+
+        const inlineStyles = (srcEl, dstEl) => {
+            const cs = getComputedStyle(srcEl);
+            let style = '';
+            for (const p of ['font-size', 'font-weight', 'color', 'text-align']) {
+                style += `${p}:${cs.getPropertyValue(p)};`;
+            }
+            dstEl.setAttribute('style', style);
+            dstEl.removeAttribute('class');
+            [...srcEl.children].forEach((c, idx) => {
+                if (dstEl.children[idx]) inlineStyles(c, dstEl.children[idx]);
+            });
+        };
+
+        const container = document.createElement('div');
+        for (const el of seg) {
+            const clone = el.cloneNode(true);
+            inlineStyles(el, clone);
+            container.appendChild(clone);
+        }
+        const hasText = container.innerText.replace(/ /g, ' ').trim().length > 0;
         if (!hasText) return false;
-        const sel = getSelection();
-        sel.removeAllRanges();
-        sel.addRange(range);
-        document.execCommand('copy');
+        await navigator.clipboard.write([new ClipboardItem({
+            'text/html': new Blob([container.innerHTML], { type: 'text/html' }),
+            'text/plain': new Blob([container.innerText], { type: 'text/plain' }),
+        })]);
         return true;
     }, [i, j]);
 
@@ -204,6 +234,23 @@ try {
             await naver.waitForTimeout(500);
         }
         await naver.waitForTimeout(800);
+
+        // 방금 넣은 이미지를 중앙 정렬
+        try {
+            const newImg = frame.locator('.se-component.se-image').last();
+            await newImg.click({ timeout: 3000 });
+            await naver.waitForTimeout(400);
+            let aligned = false;
+            for (const sel of [
+                'button[data-name="align-center"]', 'button[data-value="center"]',
+                '.se-toolbar-icon-align-center', 'button[title*="가운데"]', 'button[aria-label*="가운데"]',
+            ]) {
+                try { await frame.locator(sel).first().click({ timeout: 1200 }); aligned = true; break; } catch { /* 다음 후보 */ }
+            }
+            if (!aligned) await naver.keyboard.press('Control+Shift+E'); // SE 가운데 정렬 단축키
+            await naver.keyboard.press('Escape');
+            await naver.waitForTimeout(300);
+        } catch { /* 정렬 실패는 치명적이지 않음 */ }
         return true;
     };
 
