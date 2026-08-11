@@ -71,7 +71,8 @@ const context = await chromium.launchPersistentContext(PROFILE_DIR, {
     headless: false,
     viewport: { width: 1280, height: 860 },
     locale: 'ko-KR',
-    args: ['--no-sandbox'],
+    // 프로필에 저장된 창 위치가 화면 밖일 수 있어 항상 화면 안 위치를 강제한다
+    args: ['--no-sandbox', '--window-position=80,40'],
 });
 await context.grantPermissions(['clipboard-read', 'clipboard-write']);
 
