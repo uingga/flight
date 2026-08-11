@@ -152,7 +152,7 @@ export async function scrapeOnlineTour(): Promise<Flight[]> {
 
                         // Extract Data
                         const items = await page.evaluate((args) => {
-                            const { regionName, cityName, depAirport, depCity } = args as { regionName: string, cityName: string, depAirport: string, depCity: string };
+                            const { regionName, cityName, cityCode, depAirport, depCity } = args as { regionName: string, cityName: string, cityCode: string, depAirport: string, depCity: string };
                             const results: any[] = [];
                             const listItems = document.querySelectorAll('#data_list > li.item');
 
@@ -174,8 +174,15 @@ export async function scrapeOnlineTour(): Promise<Flight[]> {
                                     const inboundRow = rows[1];
 
                                     // 페이지에서 추출한 도시명 (참고용)
-                                    const pageDepCity = outboundRow.querySelector('.city:first-child em')?.textContent?.trim() || depCity;
-                                    const arrCity = outboundRow.querySelector('.city:last-child em')?.textContent?.trim() || cityName;
+                                    // :first-child/:last-child는 .city 뒤에 다른 요소가 붙는 레이아웃에서
+                                    // 출발지를 도착지로 잘못 집어내므로 인덱스로 직접 고른다.
+                                    const outboundCities = outboundRow.querySelectorAll('.city');
+                                    const pageDepCity = outboundCities[0]?.querySelector('em')?.textContent?.trim() || depCity;
+                                    const pageArrCity = outboundCities.length > 1
+                                        ? outboundCities[outboundCities.length - 1]?.querySelector('em')?.textContent?.trim()
+                                        : '';
+                                    // 도착지가 출발지와 같거나 비어 있으면 탭에서 선택한 도시명을 신뢰한다.
+                                    const arrCity = (pageArrCity && pageArrCity !== pageDepCity) ? pageArrCity : cityName;
 
                                     // Inline all datetimes to avoid ReferenceError with helpers
                                     const t1 = outboundRow.querySelectorAll('.city')[0]?.querySelector('time')?.textContent || '';
@@ -238,7 +245,7 @@ export async function scrapeOnlineTour(): Promise<Flight[]> {
                                             },
                                             arrival: {
                                                 city: arrCity,
-                                                airport: '',
+                                                airport: cityCode || '',
                                                 date: inDep.date,
                                                 time: inDep.time
                                             },
@@ -255,7 +262,7 @@ export async function scrapeOnlineTour(): Promise<Flight[]> {
                                 }
                             });
                             return results;
-                        }, { regionName: region.name, cityName: city.name, depAirport: departureAirportInfo.airport, depCity: departureAirportInfo.city });
+                        }, { regionName: region.name, cityName: city.name, cityCode: city.code, depAirport: departureAirportInfo.airport, depCity: departureAirportInfo.city });
 
                         console.log(`    ${city.name}: ${Array.isArray(items) ? items.length : 0}건 수집`);
                         if (Array.isArray(items)) {

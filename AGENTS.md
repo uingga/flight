@@ -88,6 +88,20 @@ npm run build                        # Production build
 npx tsx scripts/test-myrealtrip.ts   # Test MyRealTrip API
 ```
 
+## Deploy & Rollback
+
+`main`에 푸시하면 Vercel이 자동 재배포한다. **코드를 푸시하기 전에 반드시 안전 지점을 남긴다.**
+
+```bash
+git pull                             # 자동 크롤링 데이터까지 최신화
+npm run build                        # 빌드 통과 확인
+npm run deploy:mark                  # ★ 되돌아갈 지점 표시 (safe/YYYYMMDD-HHMM 태그)
+git push
+npm run deploy:rollback              # 문제 시: 코드만 되돌림 (data/ 는 최신 유지)
+```
+
+자세한 절차와 Vercel 즉시 롤백은 `docs/DEPLOY.md` 참고.
+
 ## Important Conventions
 
 1. **City normalization**: `normalizeCity()` in Dashboard.tsx maps variant names to canonical form (e.g., 화련→화롄, 칼리보→보라카이)

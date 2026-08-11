@@ -1,5 +1,5 @@
 import { Flight } from '@/types/flight';
-import { getRegionByCity } from '@/lib/utils/region-mapper';
+import { lookupRegionByCity } from '@/lib/utils/region-mapper';
 import fs from 'fs';
 import path from 'path';
 
@@ -67,7 +67,25 @@ const CITY_NAME_MAP: Record<string, string> = {
     'CMB': '콜롬보', 'MLE': '몰디브',
 };
 
+// 국가 코드 → 대시보드 지역명 (API의 arrivalRegion보다 정확)
+// API의 '동아시아'에는 일본·인도·카자흐스탄·러시아까지 섞여 있어 그대로 쓸 수 없다.
+const COUNTRY_REGION_MAP: Record<string, string> = {
+    'JP': '일본',
+    'CN': '중국', 'TW': '중국', 'HK': '중국', 'MO': '중국',
+    'TH': '동남아', 'VN': '동남아', 'PH': '동남아', 'SG': '동남아',
+    'MY': '동남아', 'ID': '동남아', 'KH': '동남아', 'LA': '동남아',
+    'MM': '동남아', 'BN': '동남아',
+    'US': '미주', 'CA': '미주', 'MX': '미주', 'BR': '미주',
+    // 괌/북마리아나(사이판)는 API가 '미주'로 분류하므로 반드시 덮어써야 한다.
+    'GU': '남태평양', 'MP': '남태평양',
+    'AU': '남태평양', 'NZ': '남태평양', 'FJ': '남태평양',
+    // API가 '동아시아'로 묶어버리는 남아시아·중앙아시아 국가들
+    'IN': '기타', 'KZ': '기타', 'PK': '기타', 'BD': '기타', 'KG': '기타',
+    'LK': '기타', 'MN': '기타', 'NP': '기타', 'UZ': '기타',
+};
+
 // API 지역명 → 대시보드 지역명
+// 주의: '동아시아'는 일본·중국·대만을 모두 포함하므로 최후의 폴백으로만 사용한다.
 const API_REGION_MAP: Record<string, string> = {
     '동아시아': '중국', '동남아시아': '동남아', '아시아': '동남아',
     '대양주': '남태평양', '유럽': '유럽', '미주': '미주',
@@ -213,11 +231,21 @@ function getCityName(fare: BulkLowestFare): string {
 }
 
 function getRegion(fare: BulkLowestFare, cityName: string): string {
+    // 국가 코드가 가장 신뢰할 수 있는 신호다. (100% 채워져 있고, 대시보드 지역은
+    // 국가 내에서 나뉘지 않는다.) 한글 도시명 충돌(예: 인도 코치 vs 일본 고치)을
+    // 국가 코드로 원천 차단하기 위해 이름 매핑보다 먼저 적용한다.
+    const byCountry = COUNTRY_REGION_MAP[fare.arrivalCountryCode];
+    if (byCountry) return byCountry;
+
+    // 국가 코드 매핑에 없는 나라(유럽·아프리카 등)는 도시명 매핑으로 보완한다.
+    // '기타'로 매핑된 도시도 유효한 결과이므로 폴백하지 않는다.
     const baseCity = cityName.replace(/\([^)]+\)/g, '').trim();
-    const regionByCity = getRegionByCity(baseCity);
-    if (regionByCity && regionByCity !== '기타') return regionByCity;
+    const regionByCity = lookupRegionByCity(baseCity) ?? lookupRegionByCity(cityName);
+    if (regionByCity) return regionByCity;
+
+    // 최후 폴백 — API의 arrivalRegion('동아시아')은 일본/중국을 구분하지 못하므로 마지막에만 쓴다.
     if (fare.arrivalRegion && API_REGION_MAP[fare.arrivalRegion]) return API_REGION_MAP[fare.arrivalRegion];
-    return fare.arrivalRegion || '기타';
+    return '기타';
 }
 
 // ── 메인 크롤링 ──────────────────────────────────────────
