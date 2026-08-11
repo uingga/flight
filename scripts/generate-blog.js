@@ -564,6 +564,13 @@ async function main() {
         console.warn(`⚠️ Unsplash 이미지 다운로드 실패 (${e.message}) — 글에는 생략됩니다`);
     }
 
+    // 6.6. 대표 썸네일 생성 (글 상단 와이드/정사각)
+    try {
+        await generateThumbnails(topFlights);
+    } catch (e) {
+        console.warn(`⚠️ 대표 썸네일 생성 실패 (${e.message}) — 글에는 생략됩니다`);
+    }
+
     // 7. HTML 생성
     const html = generateHTML(topFlights, allIcnFlights);
 
@@ -875,23 +882,25 @@ const CITY_EN = {
     '울란바토르': 'ulaanbaatar', '타슈켄트': 'tashkent', '알마티': 'almaty',
 };
 
-async function fetchUnsplashPickImage(cityKorean) {
-    // 지난 실행의 파일이 남아 엉뚱한 도시 사진이 들어가지 않도록 먼저 제거
-    if (fs.existsSync(UNSPLASH_PHOTO)) fs.unlinkSync(UNSPLASH_PHOTO);
+function cityQueryAndSlug(cityKorean) {
+    const base = cityKorean.replace(/\([^)]*\)/g, '').trim(); // "오사카(간사이)" → "오사카"
+    const query = CITY_EN[base] || base;
+    const slug = query.split(' ')[0].replace(/[^a-z0-9가-힣]/gi, '').toLowerCase() || 'city';
+    return { base, query, slug };
+}
 
-    // Unsplash도 봇 방어(Anubis)가 일반 헤드리스를 403으로 차단 → 스텔스 + 화면 밖 창
+// Unsplash 검색 첫 사진을 outPath에 저장
+// (봇 방어(Anubis)가 일반 헤드리스를 403으로 차단 → 스텔스 + 화면 밖 창)
+async function downloadUnsplashTo(query, outPath) {
     let chromium;
     try {
         const extra = require('playwright-extra');
         const stealth = require('puppeteer-extra-plugin-stealth');
         extra.chromium.use(stealth());
         chromium = extra.chromium;
-    } catch { return; }
+    } catch { throw new Error('playwright-extra 미설치'); }
 
-    const base = cityKorean.replace(/\([^)]*\)/g, '').trim(); // "오사카(간사이)" → "오사카"
-    const query = CITY_EN[base] || base;
     console.log(`🖼️ Unsplash에서 "${query}" 이미지 검색 중...`);
-
     const browser = await chromium.launch({ headless: false, args: ['--no-sandbox', '--window-position=-2400,-100'] });
     try {
         const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
@@ -910,8 +919,124 @@ async function fetchUnsplashPickImage(cityKorean) {
         if (!imgUrl) throw new Error('검색 결과 없음');
         const resp = await page.request.get(imgUrl);
         if (!resp.ok()) throw new Error(`다운로드 실패 (${resp.status()})`);
-        fs.writeFileSync(UNSPLASH_PHOTO, await resp.body());
-        console.log(`✅ 에디터 픽 이미지 저장: blog-cards/pick_photo.jpg ("${query}")`);
+        fs.writeFileSync(outPath, await resp.body());
+        console.log(`✅ Unsplash 이미지 저장: ${require('path').basename(outPath)} ("${query}")`);
+    } finally {
+        await browser.close();
+    }
+}
+
+async function fetchUnsplashPickImage(cityKorean) {
+    // 지난 실행의 파일이 남아 엉뚱한 도시 사진이 들어가지 않도록 먼저 제거
+    if (fs.existsSync(UNSPLASH_PHOTO)) fs.unlinkSync(UNSPLASH_PHOTO);
+    const { query } = cityQueryAndSlug(cityKorean);
+    await downloadUnsplashTo(query, UNSPLASH_PHOTO);
+}
+
+// ===== 대표 썸네일 (와이드 960×480 + 정사각 800×800) 자동 생성 =====
+const IMAGES_DIR = path.join(OUTPUT_DIR, 'images');
+
+// 도시 패널 이미지: 기존 수제 썸네일 → 자동 다운로드 캐시 → Unsplash → 공항 기본 이미지
+async function ensurePanelImage(cityKorean) {
+    const { query, slug } = cityQueryAndSlug(cityKorean);
+    const named = `thumb_${slug}.png`;
+    if (fs.existsSync(path.join(IMAGES_DIR, named))) return `images/${named}`;
+    const auto = `thumb_auto_${slug}.jpg`;
+    if (!fs.existsSync(path.join(IMAGES_DIR, auto))) {
+        try {
+            await downloadUnsplashTo(query, path.join(IMAGES_DIR, auto));
+        } catch (e) {
+            console.warn(`⚠️ 패널 이미지 다운로드 실패 (${query}): ${e.message} — 기본 이미지 사용`);
+            return 'images/thumb_airport.png';
+        }
+    }
+    return `images/${auto}`;
+}
+
+async function generateThumbnails(topFlights) {
+    const now = new Date();
+    const dateStr = formatDateForFilename(now);
+    const md = `${now.getMonth() + 1}/${now.getDate()}`;
+    const cities = topFlights.slice(0, 3).map(f => displayCity(f.arrival?.city || ''));
+    const panels = [];
+    for (const c of cities) panels.push(await ensurePanelImage(c));
+    while (panels.length < 3) panels.push('images/thumb_airport.png');
+
+    const priceLine = topFlights.slice(0, 2)
+        .map(f => `${displayCity(f.arrival?.city || '').replace(/\([^)]*\)/g, '')} ${Math.round(f.price / 10000)}만`)
+        .join(' · ');
+
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #111; display: flex; flex-direction: column; align-items: center; gap: 40px; padding: 40px; }
+        label { color: #888; font-size: 14px; font-family: sans-serif; }
+        .wide-banner { width: 960px; height: 480px; position: relative; overflow: hidden; font-family: 'Noto Sans KR', sans-serif; background: #000; }
+        .square-thumb { width: 800px; height: 800px; position: relative; overflow: hidden; font-family: 'Noto Sans KR', sans-serif; background: #000; }
+        .panels { display: flex; width: 100%; height: 100%; position: relative; }
+        .panel { position: absolute; top: 0; bottom: 0; background-size: cover; background-position: center; }
+        .wide-banner .panel-1 { left: 0; width: 38%; clip-path: polygon(0 0, 100% 0, 90% 100%, 0 100%); background-image: url('${panels[0]}'); }
+        .wide-banner .panel-2 { left: 30%; width: 40%; clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%); background-image: url('${panels[1]}'); }
+        .wide-banner .panel-3 { right: 0; width: 38%; clip-path: polygon(10% 0, 100% 0, 100% 100%, 0 100%); background-image: url('${panels[2]}'); }
+        .square-thumb .panel-1 { left: 0; width: 38%; clip-path: polygon(0 0, 100% 0, 88% 100%, 0 100%); background-image: url('${panels[0]}'); }
+        .square-thumb .panel-2 { left: 30%; width: 40%; clip-path: polygon(12% 0, 100% 0, 88% 100%, 0 100%); background-image: url('${panels[1]}'); }
+        .square-thumb .panel-3 { right: 0; width: 38%; clip-path: polygon(12% 0, 100% 0, 100% 100%, 0 100%); background-image: url('${panels[2]}'); }
+        .text-overlay { position: absolute; bottom: 0; left: 0; right: 0; height: 55%; background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.65) 60%, transparent 100%); display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding-bottom: 36px; z-index: 10; }
+        .text-overlay-full { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.6) 50%, rgba(0,0,0,0.25) 100%); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10; }
+        .line1 { color: white; font-size: 42px; font-weight: 900; text-shadow: 3px 3px 10px rgba(0,0,0,0.7); letter-spacing: -1px; }
+        .line2 { color: white; font-size: 36px; font-weight: 800; text-shadow: 3px 3px 10px rgba(0,0,0,0.7); letter-spacing: -1px; margin-top: 6px; }
+        .line-accent { color: #ffd700; font-size: 28px; font-weight: 800; text-shadow: 2px 2px 8px rgba(0,0,0,0.7); margin-top: 12px; }
+        .site-badge { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 20px; padding: 6px 20px; color: white; font-size: 16px; font-weight: 600; margin-top: 16px; backdrop-filter: blur(4px); }
+        .square-thumb .line-accent { font-size: 42px; margin-top: 24px; }
+        .square-thumb .site-badge { font-size: 24px; margin-top: 24px; padding: 8px 24px; }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <label>와이드 배너 (960×480)</label>
+    <div class="wide-banner" id="wide-banner">
+        <div class="panels">
+            <div class="panel panel-1"></div>
+            <div class="panel panel-2"></div>
+            <div class="panel panel-3"></div>
+        </div>
+        <div class="text-overlay">
+            <div class="line1">[${md}] 땡처리 항공권 특가 Top 3 🔥</div>
+            <div class="line2">${priceLine} ✈️</div>
+            <div class="site-badge">티키티킷 tikitikit.kr</div>
+        </div>
+    </div>
+    <label>정사각 썸네일 (800×800)</label>
+    <div class="square-thumb" id="square-thumb">
+        <div class="panels">
+            <div class="panel panel-1"></div>
+            <div class="panel panel-2"></div>
+            <div class="panel panel-3"></div>
+        </div>
+        <div class="text-overlay-full">
+            <div class="line1" style="font-size: 90px; line-height: 1.15;">[${md}]<br>땡처리 항공권<br>특가 Top 3 🔥</div>
+            <div class="line-accent">${priceLine}</div>
+            <div class="site-badge">티키티킷 tikitikit.kr</div>
+        </div>
+    </div>
+</body>
+</html>`;
+
+    const thumbHtmlPath = path.join(OUTPUT_DIR, `blog-thumbnail-${dateStr}.html`);
+    fs.writeFileSync(thumbHtmlPath, html, 'utf-8');
+
+    const { chromium: pw } = require('playwright');
+    const browser = await pw.launch();
+    try {
+        const pg = await browser.newPage({ viewport: { width: 1200, height: 1700 } });
+        await pg.goto('file:///' + thumbHtmlPath.replace(/\\/g, '/'), { waitUntil: 'networkidle', timeout: 30000 });
+        await pg.waitForTimeout(2000); // 웹폰트 렌더링 대기
+        await pg.locator('#wide-banner').screenshot({ path: path.join(IMAGES_DIR, `blog-thumb-${dateStr}-wide.png`) });
+        await pg.locator('#square-thumb').screenshot({ path: path.join(IMAGES_DIR, `blog-thumb-${dateStr}-square.png`) });
+        console.log(`✅ 대표 썸네일 생성: images/blog-thumb-${dateStr}-wide.png / -square.png`);
     } finally {
         await browser.close();
     }

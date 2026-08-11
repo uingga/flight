@@ -143,11 +143,11 @@ try {
         try { await frame.locator(sel).first().click({ timeout: 2500 }); } catch { /* 팝업 없음 */ }
     }
 
-    // ── 6. 글을 이미지 경계로 조각내기 ──
-    // 네이버 에디터는 붙여넣기 시 <img>를 버리므로, 이미지 위치마다 끊어서
-    // [텍스트 조각 붙여넣기 → 사진 업로드] 를 반복해 원래 자리에 이미지를 넣는다.
-    // 글 전체가 래퍼 div 하나에 싸여 있으므로, 이미지들을 문서 순서로 찾고
-    // "이미지를 단독으로 감싼 블록"(예: <p><img></p>)을 경계로 삼는다.
+    // ── 6. 본문 입력 (마커 기반) ──
+    // 네이버 에디터는 붙여넣기 시 <img>를 버리므로:
+    //   ① 이미지 자리를 ⟦사진N⟧ 마커 문단으로 바꾼 전체 글을 한 번에 붙여넣고
+    //   ② 각 마커를 클릭해 그 자리에 사진을 업로드한 뒤 마커 텍스트를 지운다
+    // 커서 위치 추적이 필요 없어 캡션이 엉뚱한 문단에 붙는 문제가 없다.
     const imgSrcs = await src.evaluate(() => {
         let root = document.body;
         while (root.children.length === 1) root = root.children[0];
@@ -156,7 +156,7 @@ try {
             let b = img;
             while (b.parentElement && b.parentElement !== root
                 && b.parentElement.querySelectorAll('img').length === 1
-                && (b.parentElement.textContent || '').replace(/ /g, ' ').trim().length < 5) {
+                && (b.parentElement.textContent || '').replace(/\u00a0/g, ' ').trim().length < 5) {
                 b = b.parentElement;
             }
             return b;
@@ -164,23 +164,9 @@ try {
         return window.__blocks.map(b => (b.matches('img') ? b : b.querySelector('img')).getAttribute('src'));
     });
 
-    // i번째 이미지 블록 뒤 ~ j번째 이미지 블록 앞 구간을 클립보드에 복사 (내용 없으면 false)
-    // 브라우저 선택-복사를 쓰면 컨테이너의 박스 스타일(테두리/그림자)까지 딸려 들어가
-    // 에디터에 가로줄이 생기므로, 핵심 텍스트 스타일만 인라인한 정제 HTML을 직접 쓴다.
-    const copyBetween = (i, j) => src.evaluate(async ([i, j]) => {
+    // 마커 포함 전체 본문을 클립보드에 (컨테이너 박스 스타일 유입 방지를 위해 정제 HTML 직접 쓰기)
+    const buildClipboard = () => src.evaluate(async () => {
         const root = window.__root, blocks = window.__blocks;
-        const kids = [...root.children];
-        // 블록이 root 직속이 아니면 직속 조상 기준으로 경계를 잡는다
-        const topIndex = (el) => {
-            let n = el;
-            while (n.parentElement && n.parentElement !== root) n = n.parentElement;
-            return kids.indexOf(n);
-        };
-        const startIdx = i < 0 ? 0 : topIndex(blocks[i]) + 1;
-        const endIdx = j >= blocks.length ? kids.length : topIndex(blocks[j]);
-        const seg = kids.slice(startIdx, Math.max(startIdx, endIdx));
-        if (!seg.length) return false;
-
         const inlineStyles = (srcEl, dstEl) => {
             const cs = getComputedStyle(srcEl);
             let style = '';
@@ -193,32 +179,52 @@ try {
                 if (dstEl.children[idx]) inlineStyles(c, dstEl.children[idx]);
             });
         };
-
         const container = document.createElement('div');
-        for (const el of seg) {
-            const clone = el.cloneNode(true);
-            inlineStyles(el, clone);
-            container.appendChild(clone);
+        for (const el of root.children) {
+            if (el.tagName === 'H1') continue; // 제목은 제목칸에 따로 입력 (중복 방지)
+            const bi = blocks.indexOf(el) !== -1 ? blocks.indexOf(el) : blocks.findIndex(b => el.contains(b));
+            if (bi !== -1) {
+                const marker = document.createElement('p');
+                marker.textContent = `⟦사진${bi + 1}⟧`;
+                container.appendChild(marker);
+            } else {
+                const clone = el.cloneNode(true);
+                inlineStyles(el, clone);
+                container.appendChild(clone);
+            }
         }
-        const hasText = container.innerText.replace(/ /g, ' ').trim().length > 0;
-        if (!hasText) return false;
         await navigator.clipboard.write([new ClipboardItem({
             'text/html': new Blob([container.innerHTML], { type: 'text/html' }),
             'text/plain': new Blob([container.innerText], { type: 'text/plain' }),
         })]);
         return true;
-    }, [i, j]);
+    });
 
-    // 커서를 본문 맨 끝으로
-    const focusEnd = async () => {
-        await frame.locator('.se-component.se-text .se-text-paragraph').last().click({ timeout: 8000 });
-        await naver.keyboard.press('Control+End');
+    // 이전 자동화 사고로 계정에 남은 서식 상태(취소선 등)를 감지해 해제
+    const clearPoisonedFormat = async () => {
+        await frame.locator('.se-component.se-text .se-text-paragraph').first().click({ timeout: 8000 });
+        await naver.keyboard.type('가');
+        await naver.waitForTimeout(500);
+        const poisoned = await frame.locator('.se-component.se-text').first().evaluate(c => ({
+            strike: !!c.querySelector('strike, s, del'),
+            underline: !!c.querySelector('u'),
+        }));
+        await naver.keyboard.press('Shift+ArrowLeft'); // 방금 친 글자 선택
+        for (const [key, dataName] of [['strike', 'strikethrough'], ['underline', 'underline']]) {
+            if (poisoned[key]) {
+                console.log(`   \u{1F9F9} 남아있던 ${key === 'strike' ? '취소선' : '밑줄'} 서식 해제`);
+                try { await frame.locator(`button[data-name="${dataName}"]`).first().click({ timeout: 2500 }); } catch { /* 무시 */ }
+                await naver.waitForTimeout(300);
+            }
+        }
+        await naver.keyboard.press('Backspace'); // 실험 글자 제거
+        await naver.waitForTimeout(300);
     };
 
     const uploadImage = async (relSrc) => {
         const file = path.join(PUBLIC_DIR, relSrc.replace(/\//g, path.sep));
         if (/^https?:/.test(relSrc) || !fs.existsSync(file)) {
-            console.warn(`   ⏭️ 이미지 건너뜀 (파일 없음): ${relSrc}`);
+            console.warn(`   \u23ED\uFE0F 이미지 건너뜀 (파일 없음): ${relSrc}`);
             return false;
         }
         const before = await frame.locator('.se-component.se-image').count();
@@ -228,60 +234,70 @@ try {
             photoBtn.click(),
         ]);
         await chooser.setFiles(file);
-        // 업로드 완료(이미지 컴포넌트 증가) 대기
         for (let w = 0; w < 30; w++) {
             if (await frame.locator('.se-component.se-image').count() > before) break;
             await naver.waitForTimeout(500);
         }
         await naver.waitForTimeout(800);
-
-        // 방금 넣은 이미지를 중앙 정렬
-        try {
-            const newImg = frame.locator('.se-component.se-image').last();
-            await newImg.click({ timeout: 3000 });
-            await naver.waitForTimeout(400);
-            let aligned = false;
-            for (const sel of [
-                'button[data-name="align-center"]', 'button[data-value="center"]',
-                '.se-toolbar-icon-align-center', 'button[title*="가운데"]', 'button[aria-label*="가운데"]',
-            ]) {
-                try { await frame.locator(sel).first().click({ timeout: 1200 }); aligned = true; break; } catch { /* 다음 후보 */ }
-            }
-            if (!aligned) await naver.keyboard.press('Control+Shift+E'); // SE 가운데 정렬 단축키
-            await naver.keyboard.press('Escape');
-            await naver.waitForTimeout(300);
-        } catch { /* 정렬 실패는 치명적이지 않음 */ }
         return true;
     };
 
     let pasted = false;
     try {
+        await clearPoisonedFormat();
+
         await frame.locator('.se-section-documentTitle').first().click({ timeout: 8000 });
         await naver.keyboard.type(title, { delay: 25 });
 
+        // 본문 전체(마커 포함)를 한 번에 붙여넣기
+        await src.bringToFront(); // 클립보드 쓰기는 포커스된 탭에서만 동작
+        await buildClipboard();
+        await naver.bringToFront();
         await frame.locator('.se-component.se-text .se-text-paragraph').first().click({ timeout: 8000 });
+        await naver.keyboard.press('Control+V');
+        await naver.waitForTimeout(4000);
+
+        // 각 마커 자리에 사진 업로드 → 마커 제거
         let imgOk = 0;
-        // 조각 k = 이미지(k-1)와 이미지(k) 사이 텍스트 → 붙여넣고, 이어서 이미지(k) 업로드
-        for (let k = 0; k <= imgSrcs.length; k++) {
-            await src.bringToFront(); // 복사는 포커스된 탭에서만 동작
-            const hasText = await copyBetween(k - 1, k);
-            if (hasText) {
-                await naver.bringToFront();
-                await focusEnd();
-                await naver.keyboard.press('Control+V');
-                await naver.waitForTimeout(1500);
+        for (let k = 0; k < imgSrcs.length; k++) {
+            const marker = `⟦사진${k + 1}⟧`;
+            const mLoc = frame.locator('.se-text-paragraph', { hasText: marker }).first();
+            try {
+                await mLoc.click({ timeout: 5000 });
+            } catch {
+                console.warn(`   \u26A0\uFE0F 마커 ${marker} 미발견 — 해당 이미지 생략`);
+                continue;
             }
-            if (k < imgSrcs.length) {
-                await naver.bringToFront();
-                await focusEnd();
-                if (await uploadImage(imgSrcs[k])) imgOk++;
-            }
+            if (await uploadImage(imgSrcs[k])) imgOk++;
+            // 마커 텍스트 제거 (빈 문단은 간격 역할로 남긴다)
+            try {
+                const m2 = frame.locator('.se-text-paragraph', { hasText: marker }).first();
+                await m2.click({ timeout: 5000 });
+                await naver.keyboard.press('Home');
+                await naver.keyboard.press('Shift+End');
+                await naver.keyboard.press('Backspace');
+                await naver.waitForTimeout(300);
+            } catch { /* 마커 정리 실패는 치명적이지 않음 */ }
         }
+
+        // 모든 이미지 가운데 정렬 (이미지 클릭 → "가운데 정렬" 버튼)
+        const imgCount = await frame.locator('.se-component.se-image').count();
+        for (let i = 0; i < imgCount; i++) {
+            try {
+                await frame.locator('.se-component.se-image').nth(i).click({ timeout: 3000 });
+                await naver.waitForTimeout(300);
+                await frame.locator('button.se-align-group-toggle-button:has-text("가운데"), button[aria-label*="가운데 정렬"]')
+                    .first().click({ timeout: 2500 });
+                await naver.keyboard.press('Escape');
+                await naver.waitForTimeout(200);
+            } catch { /* 개별 정렬 실패 무시 */ }
+        }
+
         pasted = true;
-        console.log(`✍️ 제목 + 본문 입력 완료 (이미지 ${imgOk}/${imgSrcs.length}장 첨부)`);
-        if (imgOk < imgSrcs.length) console.log('   (건너뛴 이미지는 파일이 없는 항목입니다 — 보통 별도 제작하는 썸네일)');
+        console.log(`\u270D\uFE0F 제목 + 본문 입력 완료 (이미지 ${imgOk}/${imgSrcs.length}장 첨부, 가운데 정렬 적용)`);
+        if (imgOk < imgSrcs.length) console.log('   (건너뛴 이미지는 파일이 없는 항목입니다)');
     } catch (e) {
-        console.warn(`⚠️ 자동 입력 실패 (${e.message.split('\n')[0]})`);
+        console.warn(`\u26A0\uFE0F 자동 입력 실패 (${e.message.split('\n')[0]})`);
         console.warn('   에디터 본문을 클릭해 Ctrl+V로 마저 붙여넣거나, 다시 실행해주세요.');
         console.warn(`   카드 이미지 폴더: ${path.join(PUBLIC_DIR, 'blog-cards')}`);
     }
@@ -294,6 +310,13 @@ try {
         } catch {
             console.warn('⚠️ 임시저장 버튼을 찾지 못했습니다 — 에디터 우측 상단 "저장"을 눌러주세요.');
         }
+    }
+
+    if (process.env.AUTO_CLOSE) {
+        // 예약 실행 모드: 초안은 네이버 서버(임시저장)에 있으니 창을 닫고 종료
+        console.log('🕓 예약 실행 완료 — 임시저장 글은 블로그 글쓰기 화면의 저장 목록에서 확인하세요.');
+        await naver.waitForTimeout(2000);
+        await finish(pasted ? 0 : 1);
     }
 
     console.log('');
