@@ -162,9 +162,25 @@ async function main() {
             console.log('✅ 편도 항공권 없음');
         }
 
+        // 출발지 = 도착지인 깨진 항공권 제거 (스크래퍼 파싱 오류 방어)
+        console.log('\n=== 출발지/도착지 검증 ===');
+        const beforeSameCity = roundTripFlights.length;
+        const validRouteFlights = roundTripFlights.filter((f: any) => {
+            const dep = (f.departure?.city || '').trim();
+            const arr = (f.arrival?.city || '').trim();
+            if (!arr) return false;
+            return dep !== arr;
+        });
+        const sameCityCount = beforeSameCity - validRouteFlights.length;
+        if (sameCityCount > 0) {
+            console.warn(`⚠️ 출발지=도착지 항공권 ${sameCityCount}개 제거 (${beforeSameCity} → ${validRouteFlights.length}) — 스크래퍼 파싱 점검 필요`);
+        } else {
+            console.log('✅ 출발지/도착지 이상 없음');
+        }
+
         // 인터파크 벤치마크 기반 필터링
         console.log('\n=== 인터파크 가격 벤치마크 ===');
-        let benchmarkedFlights = roundTripFlights;
+        let benchmarkedFlights = validRouteFlights;
         try {
             const dataDir = path.join(process.cwd(), 'data');
             const benchmarkPath = path.join(dataDir, 'interpark-prices.json');
@@ -186,7 +202,7 @@ async function main() {
             // 캐시가 없거나 오래되었으면 새로 수집
             if (!benchmark) {
                 const arrCityCodes = new Set<string>();
-                roundTripFlights.forEach((f: any) => {
+                validRouteFlights.forEach((f: any) => {
                     const code = resolveCityCode(f.arrival?.city || '', f.arrival?.airport);
                     if (code) arrCityCodes.add(code);
                 });
@@ -197,8 +213,8 @@ async function main() {
             }
 
             // 인터파크 월 평균가보다 비싼 항공편 필터링
-            const beforeBenchmark = roundTripFlights.length;
-            benchmarkedFlights = roundTripFlights.filter((f: any) => {
+            const beforeBenchmark = validRouteFlights.length;
+            benchmarkedFlights = validRouteFlights.filter((f: any) => {
                 // 도착 도시 코드 추출 (resolveCityCode로 모든 형식 지원)
                 const cityCode = resolveCityCode(f.arrival?.city || '', f.arrival?.airport);
                 if (!cityCode) {

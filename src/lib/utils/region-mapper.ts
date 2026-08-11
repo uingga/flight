@@ -22,6 +22,11 @@ const CITY_REGION_MAP: Record<string, string> = {
     '오이타': REGION_KOREAN.JAPAN, '시즈오카': REGION_KOREAN.JAPAN,
     '기타큐슈': REGION_KOREAN.JAPAN, '사가': REGION_KOREAN.JAPAN, '고베': REGION_KOREAN.JAPAN,
     '시모지시마': REGION_KOREAN.JAPAN, '미야코지마': REGION_KOREAN.JAPAN,
+    '미야자키': REGION_KOREAN.JAPAN, '니가타': REGION_KOREAN.JAPAN, '오카야마': REGION_KOREAN.JAPAN,
+    '후쿠에': REGION_KOREAN.JAPAN, '쿠마모토': REGION_KOREAN.JAPAN, '도야마': REGION_KOREAN.JAPAN,
+    '이바라키': REGION_KOREAN.JAPAN, '아키타': REGION_KOREAN.JAPAN, '고치': REGION_KOREAN.JAPAN,
+    '이즈모': REGION_KOREAN.JAPAN, '우베': REGION_KOREAN.JAPAN, '오비히로': REGION_KOREAN.JAPAN,
+    '아사히카와': REGION_KOREAN.JAPAN, '쓰시마': REGION_KOREAN.JAPAN, '대마도': REGION_KOREAN.JAPAN,
 
     // 중국/홍콩/대만
     '베이징': REGION_KOREAN.CHINA, '상하이': REGION_KOREAN.CHINA, '상해': REGION_KOREAN.CHINA,
@@ -38,6 +43,18 @@ const CITY_REGION_MAP: Record<string, string> = {
     '하얼빈': REGION_KOREAN.CHINA, '대련': REGION_KOREAN.CHINA, '다롄': REGION_KOREAN.CHINA,
     '구이린': REGION_KOREAN.CHINA, '계림': REGION_KOREAN.CHINA,
     '화리엔': REGION_KOREAN.CHINA, '하나마키': REGION_KOREAN.JAPAN,
+    '시안': REGION_KOREAN.CHINA, '서안': REGION_KOREAN.CHINA,
+    '창사': REGION_KOREAN.CHINA, '장사': REGION_KOREAN.CHINA,
+    '청두': REGION_KOREAN.CHINA, '충칭': REGION_KOREAN.CHINA, '쿤밍': REGION_KOREAN.CHINA,
+    '선양': REGION_KOREAN.CHINA, '선전': REGION_KOREAN.CHINA, '톈진': REGION_KOREAN.CHINA,
+    '난창': REGION_KOREAN.CHINA, '리장': REGION_KOREAN.CHINA, '시닝': REGION_KOREAN.CHINA,
+    '둔황': REGION_KOREAN.CHINA, '인촨': REGION_KOREAN.CHINA, '타이위안': REGION_KOREAN.CHINA,
+    '자위관': REGION_KOREAN.CHINA, '자이위관': REGION_KOREAN.CHINA,
+    '친황다오': REGION_KOREAN.CHINA, '잔장': REGION_KOREAN.CHINA, '후허하오터': REGION_KOREAN.CHINA,
+    '장자제': REGION_KOREAN.CHINA, '오르도스': REGION_KOREAN.CHINA, '우한': REGION_KOREAN.CHINA,
+    '정저우': REGION_KOREAN.CHINA, '창춘': REGION_KOREAN.CHINA, '무단장': REGION_KOREAN.CHINA,
+    '하이커우': REGION_KOREAN.CHINA, '구이양': REGION_KOREAN.CHINA,
+    '난징': REGION_KOREAN.CHINA, '항저우': REGION_KOREAN.CHINA,
 
     // 동남아
     '방콕': REGION_KOREAN.SOUTHEAST_ASIA, '돈무앙': REGION_KOREAN.SOUTHEAST_ASIA, '수완나품': REGION_KOREAN.SOUTHEAST_ASIA,
@@ -52,6 +69,7 @@ const CITY_REGION_MAP: Record<string, string> = {
     '쿠알라룸푸르': REGION_KOREAN.SOUTHEAST_ASIA, '자카르타': REGION_KOREAN.SOUTHEAST_ASIA,
     '하이퐁': REGION_KOREAN.SOUTHEAST_ASIA, '양곤': REGION_KOREAN.SOUTHEAST_ASIA,
     '프놈펜': REGION_KOREAN.SOUTHEAST_ASIA, '씨엠립': REGION_KOREAN.SOUTHEAST_ASIA,
+    '반다르세리베가완': REGION_KOREAN.SOUTHEAST_ASIA, '브루나이': REGION_KOREAN.SOUTHEAST_ASIA,
 
     // 미주 (하와이 포함)
     'LA': REGION_KOREAN.AMERICAS, '로스앤젤레스': REGION_KOREAN.AMERICAS,
@@ -65,7 +83,7 @@ const CITY_REGION_MAP: Record<string, string> = {
     '프랑크푸르트': REGION_KOREAN.EUROPE, '바르셀로나': REGION_KOREAN.EUROPE, '마드리드': REGION_KOREAN.EUROPE,
     '프라하': REGION_KOREAN.EUROPE, '비엔나': REGION_KOREAN.EUROPE, '취리히': REGION_KOREAN.EUROPE,
     '암스테르담': REGION_KOREAN.EUROPE, '이스탄불': REGION_KOREAN.EUROPE,
-    '트라브존': REGION_KOREAN.EUROPE,
+    '트라브존': REGION_KOREAN.EUROPE, '마르세유': REGION_KOREAN.EUROPE,
 
     // 일본 (누락분 추가)
     '센다이': REGION_KOREAN.JAPAN, '하코다테': REGION_KOREAN.JAPAN, '도쿠시마': REGION_KOREAN.JAPAN,
@@ -79,6 +97,11 @@ const CITY_REGION_MAP: Record<string, string> = {
     '푸네': REGION_KOREAN.OTHERS, '스리나가르': REGION_KOREAN.OTHERS,
     '바라나시': REGION_KOREAN.OTHERS, '델리': REGION_KOREAN.OTHERS,
     '뭄바이': REGION_KOREAN.OTHERS, '몰디브': REGION_KOREAN.OTHERS,
+    '고아': REGION_KOREAN.OTHERS, '코치': REGION_KOREAN.OTHERS, '보팔': REGION_KOREAN.OTHERS,
+    '부지': REGION_KOREAN.OTHERS, '이슬라마바드': REGION_KOREAN.OTHERS,
+    '타슈켄트': REGION_KOREAN.OTHERS, '오랄': REGION_KOREAN.OTHERS, '알마티': REGION_KOREAN.OTHERS,
+    '블라디보스토크': REGION_KOREAN.OTHERS, '아디스아바바': REGION_KOREAN.OTHERS,
+    '울란바토르': REGION_KOREAN.OTHERS,
     '라싸': REGION_KOREAN.CHINA, '우루무치': REGION_KOREAN.CHINA,
 
     // 남태평양 (괌/사이판 포함)
@@ -88,8 +111,12 @@ const CITY_REGION_MAP: Record<string, string> = {
     '오클랜드': REGION_KOREAN.SOUTH_PACIFIC
 };
 
-export function getRegionByCity(city: string): string {
-    if (!city) return REGION_KOREAN.OTHERS;
+/**
+ * 도시명으로 지역을 조회한다. 매핑에 없으면 null을 반환한다.
+ * "매핑 결과가 기타"와 "매핑에 아예 없음"을 구분해야 하는 호출부에서 사용한다.
+ */
+export function lookupRegionByCity(city: string): string | null {
+    if (!city) return null;
 
     // 정확한 매칭
     if (CITY_REGION_MAP[city]) {
@@ -103,5 +130,9 @@ export function getRegionByCity(city: string): string {
         }
     }
 
-    return REGION_KOREAN.OTHERS;
+    return null;
+}
+
+export function getRegionByCity(city: string): string {
+    return lookupRegionByCity(city) ?? REGION_KOREAN.OTHERS;
 }
