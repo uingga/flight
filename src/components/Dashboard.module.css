@@ -2246,6 +2246,7 @@
     border-radius: 20px;
     width: min(460px, calc(100vw - 24px));
     max-height: 90vh;
+    max-height: 90dvh; /* 모바일 브라우저 주소창 영역 보정 (미지원 브라우저는 위 vh 사용) */
     overflow-y: auto;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
     animation: slideUp 0.3s ease;
@@ -2655,6 +2656,17 @@
     transform: scale(0.98);
 }
 
+/* 예약 버튼 고정 래퍼 — 시트 내부 스크롤과 무관하게 항상 하단에 보임.
+   위로 지나가는 내용이 그림자에 비쳐 "스크롤 가능" 신호 역할도 한다. */
+.mdtBookBtnWrap {
+    position: sticky;
+    bottom: 0;
+    margin: 12px -24px -24px; /* .mdtFooter 패딩(16px 24px 24px) 상쇄 */
+    padding: 10px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+    background: #fff;
+    box-shadow: 0 -10px 18px -12px rgba(0, 0, 0, 0.22);
+}
+
 /* 인원 선택 섹션 (하나투어/온라인투어/땡처리닷컴) */
 .mdtPaxSection {
     margin-bottom: 12px;
@@ -2810,6 +2822,7 @@
         right: 0;
         width: 100%;
         max-height: 85vh;
+        max-height: 88dvh; /* 실제 보이는 영역 기준 (iOS 주소창 보정) */
         animation: slideUpMobile 0.3s ease;
     }
 
@@ -2823,6 +2836,58 @@
 
     .mdtPriceTotalValue {
         font-size: 20px;
+    }
+
+    /* 세로 여백 압축 — 내용이 최대한 한 화면에 들어오도록 */
+    .mdtSummaryBar {
+        padding: 14px 48px 10px 16px;
+    }
+
+    .mdtTimeline {
+        padding: 10px 16px 12px;
+    }
+
+    .mdtPriceBar {
+        padding: 8px 16px;
+    }
+
+    .mdtFlightSections {
+        padding: 0 16px;
+    }
+
+    .mdtFlightSection {
+        padding: 11px 0;
+    }
+
+    .mdtSectionHeader {
+        margin-bottom: 8px;
+    }
+
+    .mdtPriceDetail {
+        padding: 10px 16px 4px;
+    }
+
+    .mdtPriceRow {
+        padding: 5px 0;
+    }
+
+    .mdtPriceTotal {
+        padding: 10px 16px;
+    }
+
+    .mdtFooter {
+        padding: 10px 16px 16px;
+    }
+
+    .mdtDisclaimer {
+        padding: 6px 0;
+        line-height: 1.5;
+    }
+
+    /* 래퍼 네거티브 마진을 모바일 footer 패딩(10px 16px 16px)에 맞춤 */
+    .mdtBookBtnWrap {
+        margin: 10px -16px -16px;
+        padding: 8px 12px calc(10px + env(safe-area-inset-bottom, 0px));
     }
 }
 

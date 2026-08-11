@@ -2824,28 +2824,31 @@ export default function Dashboard() {
                                 )}
 
 
-                                <button className={styles.mdtBookBtn} onClick={() => {
-                                    gtag.trackBookingClick(modetourGuide.source, `${depCity}-${arrCity}`, totalPrice);
-                                    if (modetourGuide.source === 'modetour') {
-                                        const url = getMobileUrl(modetourGuide.link, isMobile);
-                                        window.open(url, '_blank', 'noopener,noreferrer');
-                                    } else if (modetourGuide.source === 'hanatour' || modetourGuide.source === 'onlinetour') {
-                                        const url = getBookingUrl(modetourGuide, passengers);
-                                        window.open(url, '_blank', 'noopener,noreferrer');
-                                    } else if (modetourGuide.source === 'ttang') {
-                                        const ttangDepDate = modetourGuide.departure.date?.replace(/[-\.]/g, '').substring(0, 8) || '';
-                                        const ttangArrCity = modetourGuide.arrival.city?.replace(/\([^)]+\)/g, '').trim() || '';
-                                        const textFragment = ttangArrCity ? `#:~:text=${encodeURIComponent(ttangArrCity)}` : '';
-                                        const url = `https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=${ttangDepDate}&adt=${passengers.adult}&chd=${passengers.child}&inf=${passengers.infant}&page=1&scale=200${textFragment}`;
-                                        window.open(url, '_blank', 'noopener,noreferrer');
-                                    } else {
-                                        const url = getMobileUrl(modetourGuide.link, isMobile);
-                                        window.open(url, '_blank', 'noopener,noreferrer');
-                                    }
-                                    setModetourGuide(null);
-                                }}>
-                                    {getSourceName(modetourGuide.source)}에서 예약하기 →
-                                </button>
+                                {/* 예약 버튼: 시트 하단에 고정되어 스크롤과 무관하게 항상 보임 */}
+                                <div className={styles.mdtBookBtnWrap}>
+                                    <button className={styles.mdtBookBtn} onClick={() => {
+                                        gtag.trackBookingClick(modetourGuide.source, `${depCity}-${arrCity}`, totalPrice);
+                                        if (modetourGuide.source === 'modetour') {
+                                            const url = getMobileUrl(modetourGuide.link, isMobile);
+                                            window.open(url, '_blank', 'noopener,noreferrer');
+                                        } else if (modetourGuide.source === 'hanatour' || modetourGuide.source === 'onlinetour') {
+                                            const url = getBookingUrl(modetourGuide, passengers);
+                                            window.open(url, '_blank', 'noopener,noreferrer');
+                                        } else if (modetourGuide.source === 'ttang') {
+                                            const ttangDepDate = modetourGuide.departure.date?.replace(/[-\.]/g, '').substring(0, 8) || '';
+                                            const ttangArrCity = modetourGuide.arrival.city?.replace(/\([^)]+\)/g, '').trim() || '';
+                                            const textFragment = ttangArrCity ? `#:~:text=${encodeURIComponent(ttangArrCity)}` : '';
+                                            const url = `https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=${ttangDepDate}&adt=${passengers.adult}&chd=${passengers.child}&inf=${passengers.infant}&page=1&scale=200${textFragment}`;
+                                            window.open(url, '_blank', 'noopener,noreferrer');
+                                        } else {
+                                            const url = getMobileUrl(modetourGuide.link, isMobile);
+                                            window.open(url, '_blank', 'noopener,noreferrer');
+                                        }
+                                        setModetourGuide(null);
+                                    }}>
+                                        {getSourceName(modetourGuide.source)}에서 예약하기 →
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
