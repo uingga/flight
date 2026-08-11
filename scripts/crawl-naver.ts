@@ -20,6 +20,7 @@ const SOURCE_FILTER = process.env.SOURCE_FILTER || 'myrealtrip';    // 비교 �
 const FRESH_HOURS = parseInt(process.env.FRESH_HOURS || '48', 10);  // N시간 내 검색한 노선은 스킵
 const ABORT_AFTER_MISSES = parseInt(process.env.ABORT_AFTER_MISSES || '3', 10); // 연속 N건 결과 없으면 차단으로 보고 조기 철수
 const DRY_RUN = process.env.DRY_RUN === '1';                        // 검색 계획만 출력하고 종료
+const MIN_VALID_PRICE = parseInt(process.env.MIN_VALID_PRICE || '60000', 10); // 국제선 왕복 최저 방어선 — 미만이면 오염 데이터로 보고 폐기
 const HIDE_WINDOW = process.env.HIDE_WINDOW === '1';                // 브라우저 창을 화면 밖에 배치 (로컬 스케줄 실행용)
 const NAVER_WAIT_MS = 25000;        // 네이버 검색 결과 로딩 대기 (25초)
 const MIN_DELAY = 1000;             // 최소 랜덤 딜레이 (ms)
@@ -204,10 +205,17 @@ interface NaverPriceEntry {
             console.log(`  ⏳ 네이버 검색 결과 대기 중 (${NAVER_WAIT_MS / 1000}초)...`);
             await page.waitForTimeout(NAVER_WAIT_MS);
 
-            // 추가로 DOM에서도 가격을 읽어 보기 (보험)
+            // DOM에서 가격 읽기 — 2026-07 네이버 개편 후 운임이 GraphQL로 오지 않아
+            // 실질적으로 이쪽이 주 소스다 (사용자가 화면에서 보는 가격과 동일)
             const domPrice = await extractPriceFromDOM(page);
             if (domPrice && (lowestPrice === null || domPrice < lowestPrice)) {
                 lowestPrice = domPrice;
+            }
+
+            // 오염 방어선: 국제선 왕복이 이 값보다 쌀 수 없다 (호텔 가격 등 혼입 차단)
+            if (lowestPrice !== null && lowestPrice < MIN_VALID_PRICE) {
+                console.log(`  🚫 비정상 저가 ${lowestPrice.toLocaleString()}원 (< ${MIN_VALID_PRICE.toLocaleString()}) — 오염 데이터로 보고 폐기`);
+                lowestPrice = null;
             }
 
             // GraphQL 리스너 제거
@@ -334,6 +342,11 @@ function selectFlightsByPriority(
 }
 
 // ─── GraphQL 응답에서 가격 추출 ───
+// 2026-07-03경 네이버가 항공권 검색 응답에 "추천 호텔" 섹션을 추가하면서
+// 호텔 1박 가격(예: 나고야 5.1만원)이 항공권 최저가로 잘못 수집되는 사고가 있었다.
+// 항공권 운임과 무관한 섹션은 서브트리째 제외한다. (진단: 2026-08-11)
+const EXCLUDED_SECTIONS = /hotel|priceGraph|banner|flightsCards|airportDetail/i;
+
 function extractPricesFromGraphQL(json: any): number[] {
     const prices: number[] = [];
 
@@ -358,11 +371,14 @@ function extractPricesFromGraphQL(json: any): number[] {
             if (totalFare > 0) prices.push(totalFare);
         }
 
-        // 배열이면 각 요소 순회
+        // 배열이면 각 요소 순회, 객체면 운임 무관 섹션을 제외하고 순회
         if (Array.isArray(obj)) {
             obj.forEach(walk);
         } else {
-            Object.values(obj).forEach(walk);
+            for (const [key, value] of Object.entries(obj)) {
+                if (EXCLUDED_SECTIONS.test(key)) continue;
+                walk(value);
+            }
         }
     };
 
