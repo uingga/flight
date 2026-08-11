@@ -79,6 +79,30 @@ export default function Dashboard() {
     const lastScrollY = useRef(0);
     const filterAreaRef = useRef<HTMLDivElement>(null);
 
+    // 팝업이 열려 있는 동안 배경(body) 스크롤 잠금
+    // (iOS Safari는 overflow:hidden만으로 안 막혀서 position:fixed 방식 사용)
+    const anyModalOpen = !!(bookingFlight || modetourGuide || bookingDisclaimer || naverDisclaimer || ttangConfirmFlight || showContactModal);
+    useEffect(() => {
+        if (!anyModalOpen) return;
+        const scrollY = window.scrollY;
+        const body = document.body;
+        body.style.position = 'fixed';
+        body.style.top = `-${scrollY}px`;
+        body.style.left = '0';
+        body.style.right = '0';
+        body.style.width = '100%';
+        body.style.overflow = 'hidden';
+        return () => {
+            body.style.position = '';
+            body.style.top = '';
+            body.style.left = '';
+            body.style.right = '';
+            body.style.width = '';
+            body.style.overflow = '';
+            window.scrollTo(0, scrollY);
+        };
+    }, [anyModalOpen]);
+
     // 팁 페이지 데이터
     const tipPosts = useMemo(() => [
         { title: '땡처리 항공권, 이렇게 싸도 되나요?', slug: 'cheap-flights-101', emoji: '✈️' },
@@ -2824,9 +2848,11 @@ export default function Dashboard() {
                                 )}
 
 
-                                {/* 예약 버튼: 시트 하단에 고정되어 스크롤과 무관하게 항상 보임 */}
-                                <div className={styles.mdtBookBtnWrap}>
-                                    <button className={styles.mdtBookBtn} onClick={() => {
+                            </div>
+
+                            {/* 예약 버튼: 시트 직속 자식이라 내용 길이와 무관하게 항상 하단에 고정 표시 */}
+                            <div className={styles.mdtBookBtnWrap}>
+                                <button className={styles.mdtBookBtn} onClick={() => {
                                         gtag.trackBookingClick(modetourGuide.source, `${depCity}-${arrCity}`, totalPrice);
                                         if (modetourGuide.source === 'modetour') {
                                             const url = getMobileUrl(modetourGuide.link, isMobile);
@@ -2848,7 +2874,6 @@ export default function Dashboard() {
                                     }}>
                                         {getSourceName(modetourGuide.source)}에서 예약하기 →
                                     </button>
-                                </div>
                             </div>
                         </div>
                     </div>
