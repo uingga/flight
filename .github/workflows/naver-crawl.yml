@@ -61,9 +61,9 @@ jobs:
             git fetch origin main
             git reset --hard origin/main
 
-            # 네이버 가격만 복원하고, 캐시 필터는 원격 최신 캐시 기준으로 다시 계산한다.
-            # (크롤링 ~1시간 동안 다른 워크플로우가 커밋한 최신 항공권을 덮어쓰지 않기 위함)
-            cp /tmp/naver-prices.json data/naver-prices.json
+            # 네이버 가격은 노선 항목 단위로 병합 (로컬 PC 크롤링과 동시 실행 대비 — 최신 수집분이 이김)
+            # 캐시 필터는 원격 최신 캐시 기준으로 다시 계산한다.
+            node scripts/merge-naver-prices.mjs data/naver-prices.json /tmp/naver-prices.json
             npx tsx scripts/filter-by-naver.ts
 
             if [[ -n $(git status --porcelain data/) ]]; then

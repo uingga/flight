@@ -17,6 +17,10 @@ chromium.use(stealth());
 const MAX_FLIGHTS = parseInt(process.env.MAX_FLIGHTS || '9999', 10); // 기본: 제한 없음
 const MAX_DAYS_AHEAD = parseInt(process.env.MAX_DAYS_AHEAD || '60', 10); // 출발일 N일 이내만
 const SOURCE_FILTER = process.env.SOURCE_FILTER || 'myrealtrip';    // 비교 대상 소스 (빈 문자열이면 전체)
+const FRESH_HOURS = parseInt(process.env.FRESH_HOURS || '48', 10);  // N시간 내 검색한 노선은 스킵
+const ABORT_AFTER_MISSES = parseInt(process.env.ABORT_AFTER_MISSES || '3', 10); // 연속 N건 결과 없으면 차단으로 보고 조기 철수
+const DRY_RUN = process.env.DRY_RUN === '1';                        // 검색 계획만 출력하고 종료
+const HIDE_WINDOW = process.env.HIDE_WINDOW === '1';                // 브라우저 창을 화면 밖에 배치 (로컬 스케줄 실행용)
 const NAVER_WAIT_MS = 25000;        // 네이버 검색 결과 로딩 대기 (25초)
 const MIN_DELAY = 1000;             // 최소 랜덤 딜레이 (ms)
 const MAX_DELAY = 3000;             // 최대 랜덤 딜레이 (ms)
@@ -58,6 +62,7 @@ interface FlightData {
     price: number;
     airline: string;
     source: string;
+    discountRate?: number;
 }
 
 interface NaverPriceEntry {
@@ -97,10 +102,7 @@ interface NaverPriceEntry {
     });
     console.log(`📅 출발일 필터: 미래 출발만 (${rawData.length}/${beforeDate}건)`);
 
-    const uniqueFlights = getUniqueTopFlights(rawData, MAX_FLIGHTS);
-    console.log(`📋 검색할 항공권: ${uniqueFlights.length}건\n`);
-
-    // 2. 기존 결과 불러오기
+    // 2. 기존 결과 불러오기 (우선순위 계산에 필요하므로 선별 전에 로드)
     let naverPrices: Record<string, NaverPriceEntry> = {};
     if (fs.existsSync(OUTPUT_FILE)) {
         try {
@@ -108,10 +110,33 @@ interface NaverPriceEntry {
         } catch { /* 새로 시작 */ }
     }
 
+    // 노선 중복 제거 + 신선한 항목 제외 + 우선순위 정렬
+    const { selected: uniqueFlights, skippedFresh } = selectFlightsByPriority(rawData, naverPrices, MAX_FLIGHTS);
+    console.log(`⏭️ ${FRESH_HOURS}시간 내 검색된 노선 스킵: ${skippedFresh}건`);
+    console.log(`📋 검색할 항공권: ${uniqueFlights.length}건 (신규 노선 우선 → 오래된 순)\n`);
+
+    if (DRY_RUN) {
+        console.log('=== DRY RUN: 검색 계획 (상위 20건) ===');
+        uniqueFlights.slice(0, 20).forEach((f, i) => {
+            const key = flightKey(f);
+            const entry = naverPrices[key];
+            const reason = !entry
+                ? `신규 (할인율 ${f.discountRate ?? 0}%)`
+                : `마지막 검색 ${Math.round((Date.now() - new Date(entry.crawledAt).getTime()) / 3600000)}시간 전`;
+            console.log(`  ${String(i + 1).padStart(2)}. ${f.departure.city}→${f.arrival.city} ${normalizeDate(f.departure.date)} — ${reason}`);
+        });
+        process.exit(0);
+    }
+
     // 3. 브라우저 실행
     const browser = await chromium.launch({
         headless: false,
-        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+        args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            // 로컬 스케줄 실행 시 브라우저 창을 화면 밖으로 (작업 방해 방지)
+            ...(HIDE_WINDOW ? ['--window-position=-2400,-100'] : []),
+        ],
     });
 
     const context = await browser.newContext({
@@ -124,6 +149,8 @@ interface NaverPriceEntry {
 
     let successCount = 0;
     let failCount = 0;
+    let consecutiveMisses = 0; // 연속 실패 (차단 감지용)
+    let abortedEarly = false;
 
     for (let i = 0; i < uniqueFlights.length; i++) {
         const flight = uniqueFlights[i];
@@ -139,9 +166,10 @@ interface NaverPriceEntry {
 
         console.log(`[${i + 1}/${uniqueFlights.length}] ${routeLabel} — 현재가: ${flight.price.toLocaleString()}원`);
 
-        // 이미 오늘 크롤링한 건 스킵
-        if (naverPrices[key]?.crawledAt?.startsWith(new Date().toISOString().substring(0, 10))) {
-            console.log(`  ⏭️ 오늘 이미 검색함 (${naverPrices[key].naverLowest.toLocaleString()}원)\n`);
+        // 신선한 데이터가 있으면 스킵 (선별 단계에서 걸러지지만 안전망으로 유지)
+        const existingEntry = naverPrices[key];
+        if (existingEntry?.crawledAt && (Date.now() - new Date(existingEntry.crawledAt).getTime()) < FRESH_HOURS * 3600000) {
+            console.log(`  ⏭️ ${FRESH_HOURS}시간 내 검색됨 (${existingEntry.naverLowest.toLocaleString()}원)\n`);
             continue;
         }
 
@@ -198,14 +226,26 @@ interface NaverPriceEntry {
                 const emoji = diff <= 0 ? '✅' : '⚠️';
                 console.log(`  ${emoji} 네이버 최저가: ${lowestPrice.toLocaleString()}원 (차이: ${diff >= 0 ? '+' : ''}${diff.toLocaleString()}원)`);
                 successCount++;
+                consecutiveMisses = 0;
             } else {
                 console.log(`  ❓ 네이버 최저가를 찾을 수 없음`);
                 failCount++;
+                consecutiveMisses++;
             }
         } catch (err: any) {
             console.log(`  ❌ 에러: ${err.message}`);
             failCount++;
+            consecutiveMisses++;
             page.removeAllListeners('response');
+        }
+
+        // 차단 감지: 연속 N건 결과 없음 → 수집분 저장하고 조기 철수
+        // (차단 상태에서 계속 두드리면 빈손 + 차단 연장 위험만 커짐)
+        if (consecutiveMisses >= ABORT_AFTER_MISSES) {
+            console.log(`\n🛑 연속 ${consecutiveMisses}건 결과 없음 — 차단으로 판단하고 조기 철수합니다.`);
+            console.log(`   (지금까지 수집한 ${successCount}건은 저장됨)`);
+            abortedEarly = true;
+            break;
         }
 
         // 랜덤 딜레이 (사람처럼)
@@ -230,26 +270,67 @@ interface NaverPriceEntry {
     fs.writeFileSync(OUTPUT_FILE, JSON.stringify(naverPrices, null, 2), 'utf-8');
 
     console.log('─'.repeat(50));
-    console.log(`✅ 완료! 성공: ${successCount}건, 실패: ${failCount}건`);
+    console.log(`${abortedEarly ? '🛑 조기 철수' : '✅ 완료'}! 성공: ${successCount}건, 실패: ${failCount}건`);
     console.log(`📁 저장: ${OUTPUT_FILE}`);
 })();
 
-// ─── 상위 N개 고유 항공권 추출 ───
-function getUniqueTopFlights(flights: FlightData[], limit: number): FlightData[] {
-    const seen = new Set<string>();
+// ─── 검색 키 ───
+function flightKey(f: FlightData): string {
+    return `${f.departure.airport}-${f.arrival.airport}_${normalizeDate(f.departure.date)}_${normalizeDate(f.arrival.date)}`;
+}
 
-    return flights
+/**
+ * 노선 중복 제거(같은 노선+날짜는 최저가 1건) 후,
+ * 신선한(FRESH_HOURS 이내) 노선을 제외하고 우선순위로 정렬한다.
+ *
+ * 우선순위: ① 네이버 데이터가 없는 신규 노선 (할인율 높은 순)
+ *          ② 데이터가 있는 노선은 마지막 검색이 오래된 순
+ *
+ * 차단으로 조기 철수하더라도 가치 있는 노선부터 커버되도록 하기 위함.
+ */
+function selectFlightsByPriority(
+    flights: FlightData[],
+    naverPrices: Record<string, NaverPriceEntry>,
+    limit: number
+): { selected: FlightData[]; skippedFresh: number } {
+    const seen = new Set<string>();
+    const unique = flights
         .filter(f => f.price > 0 && f.departure?.airport && f.arrival?.airport)
-        .sort((a, b) => a.price - b.price)
+        .sort((a, b) => a.price - b.price) // 같은 노선+날짜 중복 시 최저가 유지
         .filter(f => {
-            const depDate = normalizeDate(f.departure.date);
-            const retDate = normalizeDate(f.arrival.date);
-            const key = `${f.departure.airport}-${f.arrival.airport}_${depDate}_${retDate}`;
+            const key = flightKey(f);
             if (seen.has(key)) return false;
             seen.add(key);
             return true;
+        });
+
+    const freshMs = FRESH_HOURS * 3600000;
+    const now = Date.now();
+    let skippedFresh = 0;
+
+    const stale = unique.filter(f => {
+        const entry = naverPrices[flightKey(f)];
+        if (entry?.crawledAt && now - new Date(entry.crawledAt).getTime() < freshMs) {
+            skippedFresh++;
+            return false;
+        }
+        return true;
+    });
+
+    const selected = stale
+        .sort((a, b) => {
+            const ea = naverPrices[flightKey(a)];
+            const eb = naverPrices[flightKey(b)];
+            // 신규 노선 먼저
+            if (!ea !== !eb) return ea ? 1 : -1;
+            // 신규끼리는 할인율 높은 순
+            if (!ea && !eb) return (b.discountRate ?? 0) - (a.discountRate ?? 0);
+            // 기존 노선끼리는 오래된 순
+            return new Date(ea!.crawledAt).getTime() - new Date(eb!.crawledAt).getTime();
         })
         .slice(0, limit);
+
+    return { selected, skippedFresh };
 }
 
 // ─── GraphQL 응답에서 가격 추출 ───
