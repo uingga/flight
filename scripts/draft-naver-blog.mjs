@@ -116,31 +116,127 @@ try {
         console.log('🔑 네이버 로그인이 필요합니다 — 열린 창에서 로그인해주세요 (최대 5분 대기)');
         console.log('   로그인하면 자동으로 이어서 진행됩니다. 세션은 저장되어 다음부터는 묻지 않습니다.');
         await naver.waitForURL(/blog\.naver\.com/, { timeout: LOGIN_WAIT_MS });
+        // 로그인 후 어디로 돌아왔든 글쓰기 화면으로 확실히 이동
+        await naver.goto(EDITOR_URL, { waitUntil: 'domcontentloaded', timeout: 60000 });
     }
-    await naver.waitForTimeout(4000);
 
-    // 에디터는 mainFrame iframe 안에 있을 수도, 페이지 직속일 수도 있다
-    const frame = (await naver.$('iframe#mainFrame')) ? naver.frameLocator('#mainFrame') : naver;
+    // 에디터 준비 대기 — mainFrame iframe 안일 수도, 페이지 직속일 수도 있다
+    let frame = null;
+    for (let w = 0; w < 30 && !frame; w++) {
+        for (const cand of [naver.frameLocator('#mainFrame'), naver]) {
+            try {
+                if (await cand.locator('.se-section-documentTitle').count() > 0) { frame = cand; break; }
+            } catch { /* iframe 미존재 */ }
+        }
+        if (!frame) await naver.waitForTimeout(1000);
+    }
+    if (!frame) {
+        const shot = path.join(ROOT, 'debug-naver-editor.png');
+        await naver.screenshot({ path: shot }).catch(() => {});
+        console.warn(`⚠️ 에디터 화면을 찾지 못했습니다 (현재 URL: ${naver.url()})`);
+        console.warn(`   화면 캡처: ${shot} — 글은 클립보드에 있으니 수동으로 Ctrl+V 가능합니다.`);
+        throw new Error('editor not found');
+    }
 
     // "작성 중인 글 이어쓰기" 팝업 등은 취소하고 새 글로 시작
     for (const sel of ['.se-popup-button-cancel', 'button:has-text("취소")', '.se-help-panel-close-button']) {
         try { await frame.locator(sel).first().click({ timeout: 2500 }); } catch { /* 팝업 없음 */ }
     }
 
-    // ── 6. 제목 입력 + 본문 붙여넣기 ──
+    // ── 6. 글을 이미지 경계로 조각내기 ──
+    // 네이버 에디터는 붙여넣기 시 <img>를 버리므로, 이미지 위치마다 끊어서
+    // [텍스트 조각 붙여넣기 → 사진 업로드] 를 반복해 원래 자리에 이미지를 넣는다.
+    // 글 전체가 래퍼 div 하나에 싸여 있으므로, 이미지들을 문서 순서로 찾고
+    // "이미지를 단독으로 감싼 블록"(예: <p><img></p>)을 경계로 삼는다.
+    const imgSrcs = await src.evaluate(() => {
+        let root = document.body;
+        while (root.children.length === 1) root = root.children[0];
+        window.__root = root;
+        window.__blocks = [...root.querySelectorAll('img')].map(img => {
+            let b = img;
+            while (b.parentElement && b.parentElement !== root
+                && b.parentElement.querySelectorAll('img').length === 1
+                && (b.parentElement.textContent || '').replace(/ /g, ' ').trim().length < 5) {
+                b = b.parentElement;
+            }
+            return b;
+        });
+        return window.__blocks.map(b => (b.matches('img') ? b : b.querySelector('img')).getAttribute('src'));
+    });
+
+    // i번째 이미지 블록 뒤 ~ j번째 이미지 블록 앞 구간을 복사 (내용 없으면 false)
+    const copyBetween = (i, j) => src.evaluate(([i, j]) => {
+        const root = window.__root, blocks = window.__blocks;
+        const range = document.createRange();
+        if (i < 0) range.setStart(root, 0); else range.setStartAfter(blocks[i]);
+        if (j >= blocks.length) range.setEnd(root, root.childNodes.length); else range.setEndBefore(blocks[j]);
+        const hasText = range.toString().replace(/ /g, ' ').trim().length > 0;
+        if (!hasText) return false;
+        const sel = getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+        document.execCommand('copy');
+        return true;
+    }, [i, j]);
+
+    // 커서를 본문 맨 끝으로
+    const focusEnd = async () => {
+        await frame.locator('.se-component.se-text .se-text-paragraph').last().click({ timeout: 8000 });
+        await naver.keyboard.press('Control+End');
+    };
+
+    const uploadImage = async (relSrc) => {
+        const file = path.join(PUBLIC_DIR, relSrc.replace(/\//g, path.sep));
+        if (/^https?:/.test(relSrc) || !fs.existsSync(file)) {
+            console.warn(`   ⏭️ 이미지 건너뜀 (파일 없음): ${relSrc}`);
+            return false;
+        }
+        const before = await frame.locator('.se-component.se-image').count();
+        const photoBtn = frame.locator('button[data-name="image"], .se-image-toolbar-button, button:has-text("사진")').first();
+        const [chooser] = await Promise.all([
+            naver.waitForEvent('filechooser', { timeout: 10000 }),
+            photoBtn.click(),
+        ]);
+        await chooser.setFiles(file);
+        // 업로드 완료(이미지 컴포넌트 증가) 대기
+        for (let w = 0; w < 30; w++) {
+            if (await frame.locator('.se-component.se-image').count() > before) break;
+            await naver.waitForTimeout(500);
+        }
+        await naver.waitForTimeout(800);
+        return true;
+    };
+
     let pasted = false;
     try {
         await frame.locator('.se-section-documentTitle').first().click({ timeout: 8000 });
         await naver.keyboard.type(title, { delay: 25 });
 
         await frame.locator('.se-component.se-text .se-text-paragraph').first().click({ timeout: 8000 });
-        await naver.keyboard.press('Control+V');
-        await naver.waitForTimeout(6000); // 이미지 처리 대기
+        let imgOk = 0;
+        // 조각 k = 이미지(k-1)와 이미지(k) 사이 텍스트 → 붙여넣고, 이어서 이미지(k) 업로드
+        for (let k = 0; k <= imgSrcs.length; k++) {
+            await src.bringToFront(); // 복사는 포커스된 탭에서만 동작
+            const hasText = await copyBetween(k - 1, k);
+            if (hasText) {
+                await naver.bringToFront();
+                await focusEnd();
+                await naver.keyboard.press('Control+V');
+                await naver.waitForTimeout(1500);
+            }
+            if (k < imgSrcs.length) {
+                await naver.bringToFront();
+                await focusEnd();
+                if (await uploadImage(imgSrcs[k])) imgOk++;
+            }
+        }
         pasted = true;
-        console.log('✍️ 제목 + 본문 입력 완료');
+        console.log(`✍️ 제목 + 본문 입력 완료 (이미지 ${imgOk}/${imgSrcs.length}장 첨부)`);
+        if (imgOk < imgSrcs.length) console.log('   (건너뛴 이미지는 파일이 없는 항목입니다 — 보통 별도 제작하는 썸네일)');
     } catch (e) {
         console.warn(`⚠️ 자동 입력 실패 (${e.message.split('\n')[0]})`);
-        console.warn('   글이 클립보드에 있으니 에디터 본문을 클릭하고 Ctrl+V 해주세요.');
+        console.warn('   에디터 본문을 클릭해 Ctrl+V로 마저 붙여넣거나, 다시 실행해주세요.');
+        console.warn(`   카드 이미지 폴더: ${path.join(PUBLIC_DIR, 'blog-cards')}`);
     }
 
     // ── 7. 임시저장 (발행 아님) ──
