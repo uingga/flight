@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-08-11T11:21:30.259Z",
-  "count": 780,
+  "timestamp": "2026-08-11T13:58:36.414Z",
+  "count": 776,
   "flights": [
     {
       "id": "ybtour-후쿠오카-20260902-5",
@@ -224,13 +224,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-01",
-        "time": ""
+        "time": "10:00",
+        "arrivalTime": "11:45"
       },
       "arrival": {
         "city": "오이타",
         "airport": "OIT",
         "date": "2026-09-03",
-        "time": ""
+        "time": "12:45",
+        "arrivalTime": "14:35"
       },
       "price": 199000,
       "currency": "KRW",
@@ -249,13 +251,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-08",
-        "time": ""
+        "time": "10:00",
+        "arrivalTime": "11:45"
       },
       "arrival": {
         "city": "오이타",
         "airport": "OIT",
         "date": "2026-09-10",
-        "time": ""
+        "time": "12:45",
+        "arrivalTime": "14:35"
       },
       "price": 199000,
       "currency": "KRW",
@@ -274,13 +278,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-02",
-        "time": ""
+        "time": "13:20",
+        "arrivalTime": "15:00"
       },
       "arrival": {
         "city": "고베",
         "airport": "UKB",
         "date": "2026-09-04",
-        "time": ""
+        "time": "16:00",
+        "arrivalTime": "18:00"
       },
       "price": 199900,
       "currency": "KRW",
@@ -324,18 +330,21 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-13",
-        "time": ""
+        "time": "13:35",
+        "arrivalTime": "15:30"
       },
       "arrival": {
         "city": "고베",
         "airport": "UKB",
         "date": "2026-09-15",
-        "time": ""
+        "time": "16:30",
+        "arrivalTime": "18:30"
       },
       "price": 199900,
       "currency": "KRW",
       "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=J1&inhId=7C1621ICNUKB-T2&depDate=20260913&efcCityCode=UKB",
-      "seats": "0석",
+      "seats": "9석",
+      "availableSeats": 9,
       "region": "일본",
       "discountRate": 0,
       "firstSeen": "2026-08-11"
@@ -348,13 +357,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-20",
-        "time": ""
+        "time": "13:35",
+        "arrivalTime": "15:30"
       },
       "arrival": {
         "city": "고베",
         "airport": "UKB",
         "date": "2026-09-22",
-        "time": ""
+        "time": "16:30",
+        "arrivalTime": "18:30"
       },
       "price": 199900,
       "currency": "KRW",
@@ -1528,13 +1539,15 @@
         "city": "부산",
         "airport": "PUS",
         "date": "2026-08-30",
-        "time": ""
+        "time": "08:00",
+        "arrivalTime": "10:00"
       },
       "arrival": {
         "city": "오키나와",
         "airport": "OKA",
         "date": "2026-09-01",
-        "time": ""
+        "time": "11:00",
+        "arrivalTime": "13:00"
       },
       "price": 284300,
       "currency": "KRW",
@@ -1823,13 +1836,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-23",
-        "time": ""
+        "time": "08:10",
+        "arrivalTime": "09:40"
       },
       "arrival": {
         "city": "사가",
         "airport": "HSG",
         "date": "2026-09-25",
-        "time": ""
+        "time": "10:40",
+        "arrivalTime": "12:15"
       },
       "price": 529000,
       "currency": "KRW",
@@ -1848,13 +1863,15 @@
         "city": "청주",
         "airport": "CJJ",
         "date": "2026-09-19",
-        "time": ""
+        "time": "23:15",
+        "arrivalTime": "01:35"
       },
       "arrival": {
         "city": "클락",
         "airport": "CRK",
         "date": "2026-09-24",
-        "time": ""
+        "time": "02:25",
+        "arrivalTime": "07:25"
       },
       "price": 222000,
       "currency": "KRW",
@@ -1873,13 +1890,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-08-30",
-        "time": ""
+        "time": "21:35",
+        "arrivalTime": "00:40"
       },
       "arrival": {
         "city": "클락",
         "airport": "CRK",
         "date": "2026-09-03",
-        "time": ""
+        "time": "01:40",
+        "arrivalTime": "06:30"
       },
       "price": 409000,
       "currency": "KRW",
@@ -1898,13 +1917,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-08-31",
-        "time": ""
+        "time": "21:35",
+        "arrivalTime": "00:40"
       },
       "arrival": {
         "city": "클락",
         "airport": "CRK",
         "date": "2026-09-04",
-        "time": ""
+        "time": "01:40",
+        "arrivalTime": "06:30"
       },
       "price": 409000,
       "currency": "KRW",
@@ -1923,13 +1944,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-05",
-        "time": ""
+        "time": "21:35",
+        "arrivalTime": "00:40"
       },
       "arrival": {
         "city": "클락",
         "airport": "CRK",
         "date": "2026-09-09",
-        "time": ""
+        "time": "01:40",
+        "arrivalTime": "06:30"
       },
       "price": 409000,
       "currency": "KRW",
@@ -1948,13 +1971,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-06",
-        "time": ""
+        "time": "21:35",
+        "arrivalTime": "00:40"
       },
       "arrival": {
         "city": "클락",
         "airport": "CRK",
         "date": "2026-09-10",
-        "time": ""
+        "time": "01:40",
+        "arrivalTime": "06:30"
       },
       "price": 409000,
       "currency": "KRW",
@@ -1973,13 +1998,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-07",
-        "time": ""
+        "time": "21:35",
+        "arrivalTime": "00:40"
       },
       "arrival": {
         "city": "클락",
         "airport": "CRK",
         "date": "2026-09-11",
-        "time": ""
+        "time": "01:40",
+        "arrivalTime": "06:30"
       },
       "price": 409000,
       "currency": "KRW",
@@ -1998,13 +2025,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-08",
-        "time": ""
+        "time": "21:35",
+        "arrivalTime": "00:40"
       },
       "arrival": {
         "city": "클락",
         "airport": "CRK",
         "date": "2026-09-12",
-        "time": ""
+        "time": "01:40",
+        "arrivalTime": "06:30"
       },
       "price": 409000,
       "currency": "KRW",
@@ -2023,13 +2052,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-12",
-        "time": ""
+        "time": "21:35",
+        "arrivalTime": "00:40"
       },
       "arrival": {
         "city": "클락",
         "airport": "CRK",
         "date": "2026-09-16",
-        "time": ""
+        "time": "01:40",
+        "arrivalTime": "06:30"
       },
       "price": 409000,
       "currency": "KRW",
@@ -2048,13 +2079,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-13",
-        "time": ""
+        "time": "21:35",
+        "arrivalTime": "00:40"
       },
       "arrival": {
         "city": "클락",
         "airport": "CRK",
         "date": "2026-09-17",
-        "time": ""
+        "time": "01:40",
+        "arrivalTime": "06:30"
       },
       "price": 409000,
       "currency": "KRW",
@@ -2073,13 +2106,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-14",
-        "time": ""
+        "time": "21:35",
+        "arrivalTime": "00:40"
       },
       "arrival": {
         "city": "클락",
         "airport": "CRK",
         "date": "2026-09-18",
-        "time": ""
+        "time": "01:40",
+        "arrivalTime": "06:30"
       },
       "price": 409000,
       "currency": "KRW",
@@ -2098,13 +2133,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-15",
-        "time": ""
+        "time": "21:35",
+        "arrivalTime": "00:40"
       },
       "arrival": {
         "city": "클락",
         "airport": "CRK",
         "date": "2026-09-19",
-        "time": ""
+        "time": "01:40",
+        "arrivalTime": "06:30"
       },
       "price": 409000,
       "currency": "KRW",
@@ -2123,13 +2160,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-17",
-        "time": ""
+        "time": "21:35",
+        "arrivalTime": "00:40"
       },
       "arrival": {
         "city": "클락",
         "airport": "CRK",
         "date": "2026-09-21",
-        "time": ""
+        "time": "01:40",
+        "arrivalTime": "06:30"
       },
       "price": 409000,
       "currency": "KRW",
@@ -2148,13 +2187,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-10-10",
-        "time": ""
+        "time": "21:35",
+        "arrivalTime": "00:40"
       },
       "arrival": {
         "city": "클락",
         "airport": "CRK",
         "date": "2026-10-14",
-        "time": ""
+        "time": "01:40",
+        "arrivalTime": "06:30"
       },
       "price": 409000,
       "currency": "KRW",
@@ -2173,13 +2214,15 @@
         "city": "부산",
         "airport": "PUS",
         "date": "2026-09-02",
-        "time": ""
+        "time": "09:55",
+        "arrivalTime": "11:20"
       },
       "arrival": {
         "city": "대만(타이페이)",
         "airport": "TPE",
         "date": "2026-09-06",
-        "time": ""
+        "time": "02:40",
+        "arrivalTime": "06:10"
       },
       "price": 230000,
       "currency": "KRW",
@@ -2198,13 +2241,15 @@
         "city": "부산",
         "airport": "PUS",
         "date": "2026-09-12",
-        "time": ""
+        "time": "10:50",
+        "arrivalTime": "12:35"
       },
       "arrival": {
         "city": "대만(타이페이)",
         "airport": "TPE",
         "date": "2026-09-16",
-        "time": ""
+        "time": "16:35",
+        "arrivalTime": "19:55"
       },
       "price": 230000,
       "currency": "KRW",
@@ -2223,13 +2268,15 @@
         "city": "부산",
         "airport": "PUS",
         "date": "2026-09-17",
-        "time": ""
+        "time": "10:50",
+        "arrivalTime": "12:35"
       },
       "arrival": {
         "city": "대만(타이페이)",
         "airport": "TPE",
         "date": "2026-09-21",
-        "time": ""
+        "time": "16:40",
+        "arrivalTime": "19:55"
       },
       "price": 230000,
       "currency": "KRW",
@@ -2273,13 +2320,15 @@
         "city": "부산",
         "airport": "PUS",
         "date": "2026-09-19",
-        "time": ""
+        "time": "22:25",
+        "arrivalTime": "00:15"
       },
       "arrival": {
         "city": "대만(타이페이)",
         "airport": "TPE",
         "date": "2026-09-23",
-        "time": ""
+        "time": "02:35",
+        "arrivalTime": "06:05"
       },
       "price": 230000,
       "currency": "KRW",
@@ -2298,13 +2347,15 @@
         "city": "부산",
         "airport": "PUS",
         "date": "2026-09-30",
-        "time": ""
+        "time": "09:55",
+        "arrivalTime": "11:20"
       },
       "arrival": {
         "city": "대만(타이페이)",
         "airport": "TPE",
         "date": "2026-10-04",
-        "time": ""
+        "time": "02:35",
+        "arrivalTime": "06:05"
       },
       "price": 230000,
       "currency": "KRW",
@@ -2373,13 +2424,15 @@
         "city": "청주",
         "airport": "CJJ",
         "date": "2026-09-01",
-        "time": ""
+        "time": "23:40",
+        "arrivalTime": "01:10"
       },
       "arrival": {
         "city": "대만(타이페이)",
         "airport": "TPE",
         "date": "2026-09-05",
-        "time": ""
+        "time": "02:40",
+        "arrivalTime": "06:05"
       },
       "price": 265000,
       "currency": "KRW",
@@ -2398,13 +2451,15 @@
         "city": "청주",
         "airport": "CJJ",
         "date": "2026-09-07",
-        "time": ""
+        "time": "23:40",
+        "arrivalTime": "01:10"
       },
       "arrival": {
         "city": "대만(타이페이)",
         "airport": "TPE",
         "date": "2026-09-11",
-        "time": ""
+        "time": "02:40",
+        "arrivalTime": "06:05"
       },
       "price": 265000,
       "currency": "KRW",
@@ -2423,13 +2478,15 @@
         "city": "청주",
         "airport": "CJJ",
         "date": "2026-09-08",
-        "time": ""
+        "time": "23:40",
+        "arrivalTime": "01:10"
       },
       "arrival": {
         "city": "대만(타이페이)",
         "airport": "TPE",
         "date": "2026-09-12",
-        "time": ""
+        "time": "02:40",
+        "arrivalTime": "06:05"
       },
       "price": 265000,
       "currency": "KRW",
@@ -2448,13 +2505,15 @@
         "city": "청주",
         "airport": "CJJ",
         "date": "2026-09-07",
-        "time": ""
+        "time": "21:00",
+        "arrivalTime": "23:50"
       },
       "arrival": {
         "city": "다낭",
         "airport": "DAD",
         "date": "2026-09-12",
-        "time": ""
+        "time": "00:50",
+        "arrivalTime": "07:35"
       },
       "price": 255000,
       "currency": "KRW",
@@ -2473,13 +2532,15 @@
         "city": "청주",
         "airport": "CJJ",
         "date": "2026-09-14",
-        "time": ""
+        "time": "21:00",
+        "arrivalTime": "23:50"
       },
       "arrival": {
         "city": "다낭",
         "airport": "DAD",
         "date": "2026-09-19",
-        "time": ""
+        "time": "00:50",
+        "arrivalTime": "07:35"
       },
       "price": 255000,
       "currency": "KRW",
@@ -2498,13 +2559,15 @@
         "city": "청주",
         "airport": "CJJ",
         "date": "2026-09-18",
-        "time": ""
+        "time": "20:55",
+        "arrivalTime": "23:55"
       },
       "arrival": {
         "city": "다낭",
         "airport": "DAD",
         "date": "2026-09-22",
-        "time": ""
+        "time": "00:55",
+        "arrivalTime": "07:10"
       },
       "price": 255000,
       "currency": "KRW",
@@ -2523,13 +2586,15 @@
         "city": "청주",
         "airport": "CJJ",
         "date": "2026-09-28",
-        "time": ""
+        "time": "21:00",
+        "arrivalTime": "23:50"
       },
       "arrival": {
         "city": "다낭",
         "airport": "DAD",
         "date": "2026-10-03",
-        "time": ""
+        "time": "00:50",
+        "arrivalTime": "07:35"
       },
       "price": 255000,
       "currency": "KRW",
@@ -2598,13 +2663,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-01",
-        "time": ""
+        "time": "13:55",
+        "arrivalTime": "16:00"
       },
       "arrival": {
         "city": "타이중(대중)",
         "airport": "RMQ",
         "date": "2026-09-04",
-        "time": ""
+        "time": "17:00",
+        "arrivalTime": "20:45"
       },
       "price": 258600,
       "currency": "KRW",
@@ -2623,13 +2690,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-07",
-        "time": ""
+        "time": "13:55",
+        "arrivalTime": "16:00"
       },
       "arrival": {
         "city": "타이중(대중)",
         "airport": "RMQ",
         "date": "2026-09-10",
-        "time": ""
+        "time": "17:00",
+        "arrivalTime": "20:45"
       },
       "price": 258600,
       "currency": "KRW",
@@ -2648,13 +2717,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-09",
-        "time": ""
+        "time": "07:55",
+        "arrivalTime": "09:40"
       },
       "arrival": {
         "city": "타이중(대중)",
         "airport": "RMQ",
         "date": "2026-09-12",
-        "time": ""
+        "time": "17:30",
+        "arrivalTime": "21:15"
       },
       "price": 258600,
       "currency": "KRW",
@@ -2673,13 +2744,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-14",
-        "time": ""
+        "time": "13:55",
+        "arrivalTime": "16:00"
       },
       "arrival": {
         "city": "타이중(대중)",
         "airport": "RMQ",
         "date": "2026-09-17",
-        "time": ""
+        "time": "17:00",
+        "arrivalTime": "20:45"
       },
       "price": 258600,
       "currency": "KRW",
@@ -2698,13 +2771,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-15",
-        "time": ""
+        "time": "13:55",
+        "arrivalTime": "16:00"
       },
       "arrival": {
         "city": "타이중(대중)",
         "airport": "RMQ",
         "date": "2026-09-18",
-        "time": ""
+        "time": "17:00",
+        "arrivalTime": "20:45"
       },
       "price": 258600,
       "currency": "KRW",
@@ -2723,13 +2798,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-16",
-        "time": ""
+        "time": "07:55",
+        "arrivalTime": "09:40"
       },
       "arrival": {
         "city": "타이중(대중)",
         "airport": "RMQ",
         "date": "2026-09-19",
-        "time": ""
+        "time": "17:30",
+        "arrivalTime": "21:15"
       },
       "price": 258600,
       "currency": "KRW",
@@ -2748,13 +2825,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-29",
-        "time": ""
+        "time": "13:55",
+        "arrivalTime": "16:00"
       },
       "arrival": {
         "city": "타이중(대중)",
         "airport": "RMQ",
         "date": "2026-10-02",
-        "time": ""
+        "time": "17:00",
+        "arrivalTime": "20:45"
       },
       "price": 258600,
       "currency": "KRW",
@@ -2773,13 +2852,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-30",
-        "time": ""
+        "time": "07:55",
+        "arrivalTime": "09:40"
       },
       "arrival": {
         "city": "타이중(대중)",
         "airport": "RMQ",
         "date": "2026-10-03",
-        "time": ""
+        "time": "17:30",
+        "arrivalTime": "21:15"
       },
       "price": 258600,
       "currency": "KRW",
@@ -2798,13 +2879,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-08-19",
-        "time": ""
+        "time": "09:50",
+        "arrivalTime": "12:50"
       },
       "arrival": {
         "city": "마카오",
         "airport": "MFM",
         "date": "2026-08-21",
-        "time": ""
+        "time": "13:50",
+        "arrivalTime": "18:40"
       },
       "price": 274900,
       "currency": "KRW",
@@ -2823,13 +2906,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-08-20",
-        "time": ""
+        "time": "09:50",
+        "arrivalTime": "12:50"
       },
       "arrival": {
         "city": "마카오",
         "airport": "MFM",
         "date": "2026-08-22",
-        "time": ""
+        "time": "13:50",
+        "arrivalTime": "18:40"
       },
       "price": 274900,
       "currency": "KRW",
@@ -2848,13 +2933,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-15",
-        "time": ""
+        "time": "08:30",
+        "arrivalTime": "12:00"
       },
       "arrival": {
         "city": "칼리보(보라카이)",
         "airport": "KLO",
         "date": "2026-09-18",
-        "time": ""
+        "time": "13:00",
+        "arrivalTime": "18:20"
       },
       "price": 289000,
       "currency": "KRW",
@@ -2873,13 +2960,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-08-31",
-        "time": ""
+        "time": "19:50",
+        "arrivalTime": "22:55"
       },
       "arrival": {
         "city": "나트랑(깜랑)",
         "airport": "CXR",
         "date": "2026-09-04",
-        "time": ""
+        "time": "00:05",
+        "arrivalTime": "07:10"
       },
       "price": 290000,
       "currency": "KRW",
@@ -2898,13 +2987,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-07",
-        "time": ""
+        "time": "19:50",
+        "arrivalTime": "22:55"
       },
       "arrival": {
         "city": "나트랑(깜랑)",
         "airport": "CXR",
         "date": "2026-09-11",
-        "time": ""
+        "time": "00:05",
+        "arrivalTime": "07:10"
       },
       "price": 290000,
       "currency": "KRW",
@@ -2923,13 +3014,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-19",
-        "time": ""
+        "time": "20:40",
+        "arrivalTime": "23:45"
       },
       "arrival": {
         "city": "나트랑(깜랑)",
         "airport": "CXR",
         "date": "2026-09-23",
-        "time": ""
+        "time": "00:55",
+        "arrivalTime": "08:00"
       },
       "price": 290000,
       "currency": "KRW",
@@ -2948,13 +3041,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-20",
-        "time": ""
+        "time": "19:50",
+        "arrivalTime": "22:55"
       },
       "arrival": {
         "city": "나트랑(깜랑)",
         "airport": "CXR",
         "date": "2026-09-24",
-        "time": ""
+        "time": "00:05",
+        "arrivalTime": "07:10"
       },
       "price": 290000,
       "currency": "KRW",
@@ -2973,13 +3068,15 @@
         "city": "청주",
         "airport": "CJJ",
         "date": "2026-09-29",
-        "time": ""
+        "time": "21:40",
+        "arrivalTime": "00:45"
       },
       "arrival": {
         "city": "나트랑(깜랑)",
         "airport": "CXR",
         "date": "2026-10-03",
-        "time": ""
+        "time": "01:45",
+        "arrivalTime": "09:05"
       },
       "price": 320000,
       "currency": "KRW",
@@ -2998,13 +3095,15 @@
         "city": "부산",
         "airport": "PUS",
         "date": "2026-09-14",
-        "time": ""
+        "time": "19:20",
+        "arrivalTime": "22:20"
       },
       "arrival": {
         "city": "나트랑(깜랑)",
         "airport": "CXR",
         "date": "2026-09-19",
-        "time": ""
+        "time": "23:20",
+        "arrivalTime": "06:20"
       },
       "price": 323000,
       "currency": "KRW",
@@ -3023,13 +3122,15 @@
         "city": "부산",
         "airport": "PUS",
         "date": "2026-09-19",
-        "time": ""
+        "time": "19:20",
+        "arrivalTime": "22:20"
       },
       "arrival": {
         "city": "나트랑(깜랑)",
         "airport": "CXR",
         "date": "2026-09-24",
-        "time": ""
+        "time": "23:20",
+        "arrivalTime": "06:20"
       },
       "price": 323000,
       "currency": "KRW",
@@ -3048,13 +3149,15 @@
         "city": "부산",
         "airport": "PUS",
         "date": "2026-09-26",
-        "time": ""
+        "time": "21:10",
+        "arrivalTime": "00:10"
       },
       "arrival": {
         "city": "나트랑(깜랑)",
         "airport": "CXR",
         "date": "2026-10-01",
-        "time": ""
+        "time": "01:10",
+        "arrivalTime": "08:05"
       },
       "price": 323000,
       "currency": "KRW",
@@ -3073,13 +3176,15 @@
         "city": "부산",
         "airport": "PUS",
         "date": "2026-09-28",
-        "time": ""
+        "time": "19:20",
+        "arrivalTime": "22:20"
       },
       "arrival": {
         "city": "나트랑(깜랑)",
         "airport": "CXR",
         "date": "2026-10-03",
-        "time": ""
+        "time": "23:20",
+        "arrivalTime": "06:20"
       },
       "price": 323000,
       "currency": "KRW",
@@ -3098,13 +3203,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-07",
-        "time": ""
+        "time": "13:05",
+        "arrivalTime": "15:10"
       },
       "arrival": {
         "city": "가오슝",
         "airport": "KHH",
         "date": "2026-09-10",
-        "time": ""
+        "time": "16:10",
+        "arrivalTime": "20:00"
       },
       "price": 298500,
       "currency": "KRW",
@@ -3123,13 +3230,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-08",
-        "time": ""
+        "time": "13:05",
+        "arrivalTime": "15:10"
       },
       "arrival": {
         "city": "가오슝",
         "airport": "KHH",
         "date": "2026-09-11",
-        "time": ""
+        "time": "16:10",
+        "arrivalTime": "20:00"
       },
       "price": 298500,
       "currency": "KRW",
@@ -3148,13 +3257,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-09",
-        "time": ""
+        "time": "13:05",
+        "arrivalTime": "15:10"
       },
       "arrival": {
         "city": "가오슝",
         "airport": "KHH",
         "date": "2026-09-12",
-        "time": ""
+        "time": "16:10",
+        "arrivalTime": "20:00"
       },
       "price": 298500,
       "currency": "KRW",
@@ -3173,13 +3284,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-13",
-        "time": ""
+        "time": "12:05",
+        "arrivalTime": "14:05"
       },
       "arrival": {
         "city": "가오슝",
         "airport": "KHH",
         "date": "2026-09-16",
-        "time": ""
+        "time": "07:05",
+        "arrivalTime": "11:00"
       },
       "price": 298500,
       "currency": "KRW",
@@ -3198,13 +3311,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-14",
-        "time": ""
+        "time": "20:45",
+        "arrivalTime": "22:40"
       },
       "arrival": {
         "city": "가오슝",
         "airport": "KHH",
         "date": "2026-09-17",
-        "time": ""
+        "time": "15:50",
+        "arrivalTime": "19:45"
       },
       "price": 298500,
       "currency": "KRW",
@@ -3223,13 +3338,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-15",
-        "time": ""
+        "time": "12:05",
+        "arrivalTime": "14:05"
       },
       "arrival": {
         "city": "가오슝",
         "airport": "KHH",
         "date": "2026-09-18",
-        "time": ""
+        "time": "07:05",
+        "arrivalTime": "11:00"
       },
       "price": 298500,
       "currency": "KRW",
@@ -3248,13 +3365,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-16",
-        "time": ""
+        "time": "13:05",
+        "arrivalTime": "15:10"
       },
       "arrival": {
         "city": "가오슝",
         "airport": "KHH",
         "date": "2026-09-19",
-        "time": ""
+        "time": "16:10",
+        "arrivalTime": "20:00"
       },
       "price": 298500,
       "currency": "KRW",
@@ -3273,13 +3392,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-20",
-        "time": ""
+        "time": "12:05",
+        "arrivalTime": "14:05"
       },
       "arrival": {
         "city": "가오슝",
         "airport": "KHH",
         "date": "2026-09-23",
-        "time": ""
+        "time": "07:05",
+        "arrivalTime": "11:00"
       },
       "price": 298500,
       "currency": "KRW",
@@ -3298,13 +3419,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-21",
-        "time": ""
+        "time": "20:45",
+        "arrivalTime": "22:40"
       },
       "arrival": {
         "city": "가오슝",
         "airport": "KHH",
         "date": "2026-09-24",
-        "time": ""
+        "time": "15:50",
+        "arrivalTime": "19:45"
       },
       "price": 298500,
       "currency": "KRW",
@@ -3323,13 +3446,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-22",
-        "time": ""
+        "time": "12:05",
+        "arrivalTime": "14:00"
       },
       "arrival": {
         "city": "가오슝",
         "airport": "KHH",
         "date": "2026-09-25",
-        "time": ""
+        "time": "06:55",
+        "arrivalTime": "10:45"
       },
       "price": 298500,
       "currency": "KRW",
@@ -3348,13 +3473,15 @@
         "city": "부산",
         "airport": "PUS",
         "date": "2026-09-02",
-        "time": ""
+        "time": "14:15",
+        "arrivalTime": "16:00"
       },
       "arrival": {
         "city": "가오슝",
         "airport": "KHH",
         "date": "2026-09-05",
-        "time": ""
+        "time": "17:00",
+        "arrivalTime": "20:30"
       },
       "price": 350000,
       "currency": "KRW",
@@ -3373,13 +3500,15 @@
         "city": "부산",
         "airport": "PUS",
         "date": "2026-09-07",
-        "time": ""
+        "time": "14:15",
+        "arrivalTime": "16:00"
       },
       "arrival": {
         "city": "가오슝",
         "airport": "KHH",
         "date": "2026-09-10",
-        "time": ""
+        "time": "17:00",
+        "arrivalTime": "20:30"
       },
       "price": 350000,
       "currency": "KRW",
@@ -3398,13 +3527,15 @@
         "city": "부산",
         "airport": "PUS",
         "date": "2026-09-08",
-        "time": ""
+        "time": "14:15",
+        "arrivalTime": "16:00"
       },
       "arrival": {
         "city": "가오슝",
         "airport": "KHH",
         "date": "2026-09-11",
-        "time": ""
+        "time": "17:00",
+        "arrivalTime": "20:30"
       },
       "price": 350000,
       "currency": "KRW",
@@ -3423,13 +3554,15 @@
         "city": "부산",
         "airport": "PUS",
         "date": "2026-09-09",
-        "time": ""
+        "time": "15:00",
+        "arrivalTime": "16:50"
       },
       "arrival": {
         "city": "가오슝",
         "airport": "KHH",
         "date": "2026-09-12",
-        "time": ""
+        "time": "17:55",
+        "arrivalTime": "22:05"
       },
       "price": 350000,
       "currency": "KRW",
@@ -3448,13 +3581,15 @@
         "city": "부산",
         "airport": "PUS",
         "date": "2026-09-13",
-        "time": ""
+        "time": "14:15",
+        "arrivalTime": "16:00"
       },
       "arrival": {
         "city": "가오슝",
         "airport": "KHH",
         "date": "2026-09-16",
-        "time": ""
+        "time": "17:00",
+        "arrivalTime": "20:30"
       },
       "price": 350000,
       "currency": "KRW",
@@ -3473,13 +3608,15 @@
         "city": "부산",
         "airport": "PUS",
         "date": "2026-09-14",
-        "time": ""
+        "time": "14:15",
+        "arrivalTime": "16:00"
       },
       "arrival": {
         "city": "가오슝",
         "airport": "KHH",
         "date": "2026-09-17",
-        "time": ""
+        "time": "17:00",
+        "arrivalTime": "20:30"
       },
       "price": 350000,
       "currency": "KRW",
@@ -3498,13 +3635,15 @@
         "city": "부산",
         "airport": "PUS",
         "date": "2026-09-15",
-        "time": ""
+        "time": "14:15",
+        "arrivalTime": "16:00"
       },
       "arrival": {
         "city": "가오슝",
         "airport": "KHH",
         "date": "2026-09-18",
-        "time": ""
+        "time": "17:00",
+        "arrivalTime": "20:30"
       },
       "price": 350000,
       "currency": "KRW",
@@ -3523,13 +3662,15 @@
         "city": "부산",
         "airport": "PUS",
         "date": "2026-09-20",
-        "time": ""
+        "time": "14:15",
+        "arrivalTime": "16:00"
       },
       "arrival": {
         "city": "가오슝",
         "airport": "KHH",
         "date": "2026-09-23",
-        "time": ""
+        "time": "17:00",
+        "arrivalTime": "20:30"
       },
       "price": 350000,
       "currency": "KRW",
@@ -3548,13 +3689,15 @@
         "city": "부산",
         "airport": "PUS",
         "date": "2026-09-21",
-        "time": ""
+        "time": "14:15",
+        "arrivalTime": "16:00"
       },
       "arrival": {
         "city": "가오슝",
         "airport": "KHH",
         "date": "2026-09-24",
-        "time": ""
+        "time": "17:00",
+        "arrivalTime": "20:30"
       },
       "price": 350000,
       "currency": "KRW",
@@ -3573,13 +3716,15 @@
         "city": "부산",
         "airport": "PUS",
         "date": "2026-10-11",
-        "time": ""
+        "time": "14:15",
+        "arrivalTime": "16:00"
       },
       "arrival": {
         "city": "가오슝",
         "airport": "KHH",
         "date": "2026-10-13",
-        "time": ""
+        "time": "17:00",
+        "arrivalTime": "20:30"
       },
       "price": 350000,
       "currency": "KRW",
@@ -3598,13 +3743,15 @@
         "city": "부산",
         "airport": "PUS",
         "date": "2026-10-12",
-        "time": ""
+        "time": "14:15",
+        "arrivalTime": "16:00"
       },
       "arrival": {
         "city": "가오슝",
         "airport": "KHH",
         "date": "2026-10-14",
-        "time": ""
+        "time": "17:00",
+        "arrivalTime": "20:30"
       },
       "price": 350000,
       "currency": "KRW",
@@ -3623,13 +3770,15 @@
         "city": "부산",
         "airport": "PUS",
         "date": "2026-10-13",
-        "time": ""
+        "time": "14:15",
+        "arrivalTime": "16:00"
       },
       "arrival": {
         "city": "가오슝",
         "airport": "KHH",
         "date": "2026-10-15",
-        "time": ""
+        "time": "17:00",
+        "arrivalTime": "20:30"
       },
       "price": 350000,
       "currency": "KRW",
@@ -3648,13 +3797,15 @@
         "city": "부산",
         "airport": "PUS",
         "date": "2026-10-14",
-        "time": ""
+        "time": "14:15",
+        "arrivalTime": "16:00"
       },
       "arrival": {
         "city": "가오슝",
         "airport": "KHH",
         "date": "2026-10-16",
-        "time": ""
+        "time": "17:00",
+        "arrivalTime": "20:30"
       },
       "price": 350000,
       "currency": "KRW",
@@ -3673,13 +3824,15 @@
         "city": "부산",
         "airport": "PUS",
         "date": "2026-10-18",
-        "time": ""
+        "time": "15:00",
+        "arrivalTime": "16:50"
       },
       "arrival": {
         "city": "가오슝",
         "airport": "KHH",
         "date": "2026-10-20",
-        "time": ""
+        "time": "17:55",
+        "arrivalTime": "22:05"
       },
       "price": 350000,
       "currency": "KRW",
@@ -3698,13 +3851,15 @@
         "city": "부산",
         "airport": "PUS",
         "date": "2026-10-19",
-        "time": ""
+        "time": "14:15",
+        "arrivalTime": "16:00"
       },
       "arrival": {
         "city": "가오슝",
         "airport": "KHH",
         "date": "2026-10-21",
-        "time": ""
+        "time": "17:00",
+        "arrivalTime": "20:30"
       },
       "price": 350000,
       "currency": "KRW",
@@ -3723,13 +3878,15 @@
         "city": "부산",
         "airport": "PUS",
         "date": "2026-10-20",
-        "time": ""
+        "time": "14:15",
+        "arrivalTime": "16:00"
       },
       "arrival": {
         "city": "가오슝",
         "airport": "KHH",
         "date": "2026-10-22",
-        "time": ""
+        "time": "17:00",
+        "arrivalTime": "20:30"
       },
       "price": 350000,
       "currency": "KRW",
@@ -3748,13 +3905,15 @@
         "city": "부산",
         "airport": "PUS",
         "date": "2026-10-21",
-        "time": ""
+        "time": "14:15",
+        "arrivalTime": "16:00"
       },
       "arrival": {
         "city": "가오슝",
         "airport": "KHH",
         "date": "2026-10-23",
-        "time": ""
+        "time": "17:00",
+        "arrivalTime": "20:30"
       },
       "price": 350000,
       "currency": "KRW",
@@ -3773,13 +3932,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-08-29",
-        "time": ""
+        "time": "19:55",
+        "arrivalTime": "22:50"
       },
       "arrival": {
         "city": "하노이",
         "airport": "HAN",
         "date": "2026-09-02",
-        "time": ""
+        "time": "00:20",
+        "arrivalTime": "06:40"
       },
       "price": 299000,
       "currency": "KRW",
@@ -3798,19 +3959,21 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-08-29",
-        "time": ""
+        "time": "19:55",
+        "arrivalTime": "23:50"
       },
       "arrival": {
         "city": "치앙마이",
         "airport": "CNX",
         "date": "2026-09-03",
-        "time": ""
+        "time": "00:50",
+        "arrivalTime": "08:15"
       },
       "price": 319000,
       "currency": "KRW",
       "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=A0%2FA3&inhId=ZE0517ICNCNX-T26&depDate=20260829&efcCityCode=CNX",
-      "seats": "10석",
-      "availableSeats": 10,
+      "seats": "9석",
+      "availableSeats": 9,
       "region": "동남아",
       "discountRate": -9,
       "firstSeen": "2026-08-11"
@@ -3823,13 +3986,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-08-30",
-        "time": ""
+        "time": "19:55",
+        "arrivalTime": "23:50"
       },
       "arrival": {
         "city": "치앙마이",
         "airport": "CNX",
         "date": "2026-09-04",
-        "time": ""
+        "time": "00:50",
+        "arrivalTime": "08:15"
       },
       "price": 319000,
       "currency": "KRW",
@@ -3848,13 +4013,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-08-30",
-        "time": ""
+        "time": "20:55",
+        "arrivalTime": "00:45"
       },
       "arrival": {
         "city": "세부",
         "airport": "CEB",
         "date": "2026-09-04",
-        "time": ""
+        "time": "01:45",
+        "arrivalTime": "07:30"
       },
       "price": 319900,
       "currency": "KRW",
@@ -3873,13 +4040,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-05",
-        "time": ""
+        "time": "20:55",
+        "arrivalTime": "00:45"
       },
       "arrival": {
         "city": "세부",
         "airport": "CEB",
         "date": "2026-09-10",
-        "time": ""
+        "time": "01:45",
+        "arrivalTime": "07:30"
       },
       "price": 319900,
       "currency": "KRW",
@@ -3898,13 +4067,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-06",
-        "time": ""
+        "time": "20:55",
+        "arrivalTime": "00:45"
       },
       "arrival": {
         "city": "세부",
         "airport": "CEB",
         "date": "2026-09-11",
-        "time": ""
+        "time": "01:45",
+        "arrivalTime": "07:30"
       },
       "price": 319900,
       "currency": "KRW",
@@ -3923,13 +4094,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-12",
-        "time": ""
+        "time": "20:55",
+        "arrivalTime": "00:45"
       },
       "arrival": {
         "city": "세부",
         "airport": "CEB",
         "date": "2026-09-17",
-        "time": ""
+        "time": "01:45",
+        "arrivalTime": "07:30"
       },
       "price": 319900,
       "currency": "KRW",
@@ -3948,13 +4121,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-13",
-        "time": ""
+        "time": "20:55",
+        "arrivalTime": "00:45"
       },
       "arrival": {
         "city": "세부",
         "airport": "CEB",
         "date": "2026-09-18",
-        "time": ""
+        "time": "01:45",
+        "arrivalTime": "07:30"
       },
       "price": 319900,
       "currency": "KRW",
@@ -3973,13 +4148,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-08-24",
-        "time": ""
+        "time": "21:00",
+        "arrivalTime": "00:45"
       },
       "arrival": {
         "city": "보홀",
         "airport": "TAG",
         "date": "2026-08-28",
-        "time": ""
+        "time": "01:45",
+        "arrivalTime": "07:25"
       },
       "price": 329000,
       "currency": "KRW",
@@ -4073,13 +4250,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-10",
-        "time": ""
+        "time": "20:05",
+        "arrivalTime": "00:10"
       },
       "arrival": {
         "city": "방콕",
         "airport": "BKK",
         "date": "2026-09-14",
-        "time": ""
+        "time": "01:10",
+        "arrivalTime": "08:55"
       },
       "price": 339000,
       "currency": "KRW",
@@ -4173,13 +4352,15 @@
         "city": "대구",
         "airport": "TAE",
         "date": "2026-10-10",
-        "time": ""
+        "time": "21:25",
+        "arrivalTime": "01:05"
       },
       "arrival": {
         "city": "방콕",
         "airport": "BKK",
         "date": "2026-10-15",
-        "time": ""
+        "time": "02:05",
+        "arrivalTime": "09:40"
       },
       "price": 339000,
       "currency": "KRW",
@@ -4198,13 +4379,15 @@
         "city": "대구",
         "airport": "TAE",
         "date": "2026-10-11",
-        "time": ""
+        "time": "21:25",
+        "arrivalTime": "01:05"
       },
       "arrival": {
         "city": "방콕",
         "airport": "BKK",
         "date": "2026-10-16",
-        "time": ""
+        "time": "02:05",
+        "arrivalTime": "09:40"
       },
       "price": 339000,
       "currency": "KRW",
@@ -4223,13 +4406,15 @@
         "city": "대구",
         "airport": "TAE",
         "date": "2026-10-17",
-        "time": ""
+        "time": "21:25",
+        "arrivalTime": "01:05"
       },
       "arrival": {
         "city": "방콕",
         "airport": "BKK",
         "date": "2026-10-22",
-        "time": ""
+        "time": "02:05",
+        "arrivalTime": "09:40"
       },
       "price": 339000,
       "currency": "KRW",
@@ -4248,13 +4433,15 @@
         "city": "대구",
         "airport": "TAE",
         "date": "2026-10-18",
-        "time": ""
+        "time": "21:25",
+        "arrivalTime": "01:05"
       },
       "arrival": {
         "city": "방콕",
         "airport": "BKK",
         "date": "2026-10-23",
-        "time": ""
+        "time": "02:05",
+        "arrivalTime": "09:40"
       },
       "price": 339000,
       "currency": "KRW",
@@ -4273,13 +4460,15 @@
         "city": "대구",
         "airport": "TAE",
         "date": "2026-10-24",
-        "time": ""
+        "time": "21:25",
+        "arrivalTime": "01:05"
       },
       "arrival": {
         "city": "방콕",
         "airport": "BKK",
         "date": "2026-10-29",
-        "time": ""
+        "time": "02:30",
+        "arrivalTime": "09:40"
       },
       "price": 339000,
       "currency": "KRW",
@@ -4298,13 +4487,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-05",
-        "time": ""
+        "time": "15:50",
+        "arrivalTime": "21:30"
       },
       "arrival": {
         "city": "싱가포르",
         "airport": "SIN",
         "date": "2026-09-10",
-        "time": ""
+        "time": "23:00",
+        "arrivalTime": "06:45"
       },
       "price": 367800,
       "currency": "KRW",
@@ -4323,13 +4514,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-06",
-        "time": ""
+        "time": "18:10",
+        "arrivalTime": "23:40"
       },
       "arrival": {
         "city": "싱가포르",
         "airport": "SIN",
         "date": "2026-09-11",
-        "time": ""
+        "time": "00:50",
+        "arrivalTime": "08:40"
       },
       "price": 367800,
       "currency": "KRW",
@@ -4348,13 +4541,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-08-29",
-        "time": ""
+        "time": "20:20",
+        "arrivalTime": "23:50"
       },
       "arrival": {
         "city": "비엔티엔",
         "airport": "VTE",
         "date": "2026-09-02",
-        "time": ""
+        "time": "00:50",
+        "arrivalTime": "08:10"
       },
       "price": 379900,
       "currency": "KRW",
@@ -4373,13 +4568,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-08-30",
-        "time": ""
+        "time": "20:20",
+        "arrivalTime": "23:50"
       },
       "arrival": {
         "city": "비엔티엔",
         "airport": "VTE",
         "date": "2026-09-03",
-        "time": ""
+        "time": "00:50",
+        "arrivalTime": "08:10"
       },
       "price": 379900,
       "currency": "KRW",
@@ -4848,13 +5045,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-01",
-        "time": ""
+        "time": "17:20",
+        "arrivalTime": "21:35"
       },
       "arrival": {
         "city": "푸켓",
         "airport": "HKT",
         "date": "2026-09-05",
-        "time": ""
+        "time": "23:00",
+        "arrivalTime": "07:10"
       },
       "price": 449000,
       "currency": "KRW",
@@ -4873,13 +5072,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-04",
-        "time": ""
+        "time": "17:20",
+        "arrivalTime": "21:45"
       },
       "arrival": {
         "city": "푸켓",
         "airport": "HKT",
         "date": "2026-09-08",
-        "time": ""
+        "time": "22:45",
+        "arrivalTime": "07:05"
       },
       "price": 449000,
       "currency": "KRW",
@@ -4898,13 +5099,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-05",
-        "time": ""
+        "time": "17:20",
+        "arrivalTime": "21:45"
       },
       "arrival": {
         "city": "푸켓",
         "airport": "HKT",
         "date": "2026-09-09",
-        "time": ""
+        "time": "22:45",
+        "arrivalTime": "07:05"
       },
       "price": 449000,
       "currency": "KRW",
@@ -4923,13 +5126,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-06",
-        "time": ""
+        "time": "17:20",
+        "arrivalTime": "21:35"
       },
       "arrival": {
         "city": "푸켓",
         "airport": "HKT",
         "date": "2026-09-10",
-        "time": ""
+        "time": "23:00",
+        "arrivalTime": "07:10"
       },
       "price": 449000,
       "currency": "KRW",
@@ -4948,13 +5153,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-07",
-        "time": ""
+        "time": "17:20",
+        "arrivalTime": "21:35"
       },
       "arrival": {
         "city": "푸켓",
         "airport": "HKT",
         "date": "2026-09-11",
-        "time": ""
+        "time": "23:00",
+        "arrivalTime": "07:10"
       },
       "price": 449000,
       "currency": "KRW",
@@ -4973,13 +5180,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-08",
-        "time": ""
+        "time": "17:20",
+        "arrivalTime": "21:35"
       },
       "arrival": {
         "city": "푸켓",
         "airport": "HKT",
         "date": "2026-09-12",
-        "time": ""
+        "time": "23:00",
+        "arrivalTime": "07:10"
       },
       "price": 449000,
       "currency": "KRW",
@@ -4998,13 +5207,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-11",
-        "time": ""
+        "time": "17:20",
+        "arrivalTime": "21:45"
       },
       "arrival": {
         "city": "푸켓",
         "airport": "HKT",
         "date": "2026-09-15",
-        "time": ""
+        "time": "22:45",
+        "arrivalTime": "07:05"
       },
       "price": 449000,
       "currency": "KRW",
@@ -5023,13 +5234,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-12",
-        "time": ""
+        "time": "17:20",
+        "arrivalTime": "21:45"
       },
       "arrival": {
         "city": "푸켓",
         "airport": "HKT",
         "date": "2026-09-16",
-        "time": ""
+        "time": "22:45",
+        "arrivalTime": "07:05"
       },
       "price": 449000,
       "currency": "KRW",
@@ -5048,13 +5261,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-13",
-        "time": ""
+        "time": "17:20",
+        "arrivalTime": "21:35"
       },
       "arrival": {
         "city": "푸켓",
         "airport": "HKT",
         "date": "2026-09-17",
-        "time": ""
+        "time": "23:00",
+        "arrivalTime": "07:10"
       },
       "price": 449000,
       "currency": "KRW",
@@ -5073,13 +5288,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-14",
-        "time": ""
+        "time": "17:20",
+        "arrivalTime": "21:35"
       },
       "arrival": {
         "city": "푸켓",
         "airport": "HKT",
         "date": "2026-09-18",
-        "time": ""
+        "time": "23:00",
+        "arrivalTime": "07:10"
       },
       "price": 449000,
       "currency": "KRW",
@@ -5098,13 +5315,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-15",
-        "time": ""
+        "time": "17:20",
+        "arrivalTime": "21:35"
       },
       "arrival": {
         "city": "푸켓",
         "airport": "HKT",
         "date": "2026-09-19",
-        "time": ""
+        "time": "23:00",
+        "arrivalTime": "07:10"
       },
       "price": 449000,
       "currency": "KRW",
@@ -5123,18 +5342,21 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-10-04",
-        "time": ""
+        "time": "17:50",
+        "arrivalTime": "22:10"
       },
       "arrival": {
         "city": "푸켓",
         "airport": "HKT",
         "date": "2026-10-08",
-        "time": ""
+        "time": "23:25",
+        "arrivalTime": "07:35"
       },
       "price": 449000,
       "currency": "KRW",
       "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=A0%2FA3&inhId=OZ0747ICNHKT-T3&depDate=20261004&efcCityCode=HKT",
-      "seats": "0석",
+      "seats": "9석",
+      "availableSeats": 9,
       "region": "동남아",
       "discountRate": -22,
       "firstSeen": "2026-08-11"
@@ -5147,13 +5369,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-10-05",
-        "time": ""
+        "time": "17:20",
+        "arrivalTime": "21:35"
       },
       "arrival": {
         "city": "푸켓",
         "airport": "HKT",
         "date": "2026-10-09",
-        "time": ""
+        "time": "23:00",
+        "arrivalTime": "07:10"
       },
       "price": 449000,
       "currency": "KRW",
@@ -5172,13 +5396,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-10-06",
-        "time": ""
+        "time": "17:20",
+        "arrivalTime": "21:35"
       },
       "arrival": {
         "city": "푸켓",
         "airport": "HKT",
         "date": "2026-10-10",
-        "time": ""
+        "time": "23:00",
+        "arrivalTime": "07:10"
       },
       "price": 449000,
       "currency": "KRW",
@@ -5197,13 +5423,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-10-10",
-        "time": ""
+        "time": "17:20",
+        "arrivalTime": "21:45"
       },
       "arrival": {
         "city": "푸켓",
         "airport": "HKT",
         "date": "2026-10-14",
-        "time": ""
+        "time": "22:45",
+        "arrivalTime": "07:05"
       },
       "price": 449000,
       "currency": "KRW",
@@ -5222,13 +5450,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-10-11",
-        "time": ""
+        "time": "17:20",
+        "arrivalTime": "21:35"
       },
       "arrival": {
         "city": "푸켓",
         "airport": "HKT",
         "date": "2026-10-15",
-        "time": ""
+        "time": "23:00",
+        "arrivalTime": "07:10"
       },
       "price": 449000,
       "currency": "KRW",
@@ -5247,13 +5477,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-10-12",
-        "time": ""
+        "time": "17:20",
+        "arrivalTime": "21:35"
       },
       "arrival": {
         "city": "푸켓",
         "airport": "HKT",
         "date": "2026-10-16",
-        "time": ""
+        "time": "23:00",
+        "arrivalTime": "07:10"
       },
       "price": 449000,
       "currency": "KRW",
@@ -5272,13 +5504,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-10-13",
-        "time": ""
+        "time": "17:20",
+        "arrivalTime": "21:35"
       },
       "arrival": {
         "city": "푸켓",
         "airport": "HKT",
         "date": "2026-10-17",
-        "time": ""
+        "time": "23:00",
+        "arrivalTime": "07:10"
       },
       "price": 449000,
       "currency": "KRW",
@@ -5297,13 +5531,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-10-16",
-        "time": ""
+        "time": "17:20",
+        "arrivalTime": "21:45"
       },
       "arrival": {
         "city": "푸켓",
         "airport": "HKT",
         "date": "2026-10-20",
-        "time": ""
+        "time": "22:45",
+        "arrivalTime": "07:05"
       },
       "price": 449000,
       "currency": "KRW",
@@ -5322,13 +5558,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-10-17",
-        "time": ""
+        "time": "17:20",
+        "arrivalTime": "21:45"
       },
       "arrival": {
         "city": "푸켓",
         "airport": "HKT",
         "date": "2026-10-21",
-        "time": ""
+        "time": "22:45",
+        "arrivalTime": "07:05"
       },
       "price": 449000,
       "currency": "KRW",
@@ -5347,13 +5585,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-10-18",
-        "time": ""
+        "time": "17:20",
+        "arrivalTime": "21:35"
       },
       "arrival": {
         "city": "푸켓",
         "airport": "HKT",
         "date": "2026-10-22",
-        "time": ""
+        "time": "23:00",
+        "arrivalTime": "07:10"
       },
       "price": 449000,
       "currency": "KRW",
@@ -5372,13 +5612,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-10-19",
-        "time": ""
+        "time": "17:20",
+        "arrivalTime": "21:35"
       },
       "arrival": {
         "city": "푸켓",
         "airport": "HKT",
         "date": "2026-10-23",
-        "time": ""
+        "time": "23:00",
+        "arrivalTime": "07:10"
       },
       "price": 449000,
       "currency": "KRW",
@@ -5397,13 +5639,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-10-20",
-        "time": ""
+        "time": "17:20",
+        "arrivalTime": "21:35"
       },
       "arrival": {
         "city": "푸켓",
         "airport": "HKT",
         "date": "2026-10-24",
-        "time": ""
+        "time": "23:00",
+        "arrivalTime": "07:10"
       },
       "price": 449000,
       "currency": "KRW",
@@ -5422,13 +5666,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-08-25",
-        "time": ""
+        "time": "11:35",
+        "arrivalTime": "15:55"
       },
       "arrival": {
         "city": "반다르세리베가완(브루나이)",
         "airport": "BWN",
         "date": "2026-08-29",
-        "time": ""
+        "time": "15:35",
+        "arrivalTime": "22:05"
       },
       "price": 469900,
       "currency": "KRW",
@@ -5472,13 +5718,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-08",
-        "time": ""
+        "time": "11:35",
+        "arrivalTime": "15:55"
       },
       "arrival": {
         "city": "반다르세리베가완(브루나이)",
         "airport": "BWN",
         "date": "2026-09-12",
-        "time": ""
+        "time": "15:35",
+        "arrivalTime": "22:05"
       },
       "price": 469900,
       "currency": "KRW",
@@ -5622,13 +5870,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-11-03",
-        "time": ""
+        "time": "11:35",
+        "arrivalTime": "16:10"
       },
       "arrival": {
         "city": "반다르세리베가완(브루나이)",
         "airport": "BWN",
         "date": "2026-11-07",
-        "time": ""
+        "time": "15:20",
+        "arrivalTime": "21:45"
       },
       "price": 469900,
       "currency": "KRW",
@@ -5647,13 +5897,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-11-10",
-        "time": ""
+        "time": "11:35",
+        "arrivalTime": "16:10"
       },
       "arrival": {
         "city": "반다르세리베가완(브루나이)",
         "airport": "BWN",
         "date": "2026-11-14",
-        "time": ""
+        "time": "15:20",
+        "arrivalTime": "21:45"
       },
       "price": 469900,
       "currency": "KRW",
@@ -5672,13 +5924,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-11-17",
-        "time": ""
+        "time": "11:35",
+        "arrivalTime": "16:10"
       },
       "arrival": {
         "city": "반다르세리베가완(브루나이)",
         "airport": "BWN",
         "date": "2026-11-21",
-        "time": ""
+        "time": "15:20",
+        "arrivalTime": "21:45"
       },
       "price": 469900,
       "currency": "KRW",
@@ -5697,13 +5951,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-11-24",
-        "time": ""
+        "time": "11:35",
+        "arrivalTime": "16:10"
       },
       "arrival": {
         "city": "반다르세리베가완(브루나이)",
         "airport": "BWN",
         "date": "2026-11-28",
-        "time": ""
+        "time": "15:20",
+        "arrivalTime": "21:45"
       },
       "price": 469900,
       "currency": "KRW",
@@ -5722,13 +5978,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2027-03-02",
-        "time": ""
+        "time": "11:35",
+        "arrivalTime": "16:10"
       },
       "arrival": {
         "city": "반다르세리베가완(브루나이)",
         "airport": "BWN",
         "date": "2027-03-06",
-        "time": ""
+        "time": "15:20",
+        "arrivalTime": "21:45"
       },
       "price": 469900,
       "currency": "KRW",
@@ -5747,13 +6005,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2027-03-09",
-        "time": ""
+        "time": "11:35",
+        "arrivalTime": "16:10"
       },
       "arrival": {
         "city": "반다르세리베가완(브루나이)",
         "airport": "BWN",
         "date": "2027-03-13",
-        "time": ""
+        "time": "15:20",
+        "arrivalTime": "21:45"
       },
       "price": 469900,
       "currency": "KRW",
@@ -5772,13 +6032,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-10-21",
-        "time": ""
+        "time": "20:25",
+        "arrivalTime": "01:15"
       },
       "arrival": {
         "city": "마나도",
         "airport": "MDC",
         "date": "2026-10-25",
-        "time": ""
+        "time": "02:20",
+        "arrivalTime": "08:40"
       },
       "price": 499900,
       "currency": "KRW",
@@ -5797,13 +6059,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-10-22",
-        "time": ""
+        "time": "20:25",
+        "arrivalTime": "01:15"
       },
       "arrival": {
         "city": "마나도",
         "airport": "MDC",
         "date": "2026-10-26",
-        "time": ""
+        "time": "02:20",
+        "arrivalTime": "08:40"
       },
       "price": 499900,
       "currency": "KRW",
@@ -5822,13 +6086,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-10-23",
-        "time": ""
+        "time": "20:25",
+        "arrivalTime": "01:15"
       },
       "arrival": {
         "city": "마나도",
         "airport": "MDC",
         "date": "2026-10-27",
-        "time": ""
+        "time": "02:20",
+        "arrivalTime": "08:40"
       },
       "price": 499900,
       "currency": "KRW",
@@ -5847,13 +6113,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-10-25",
-        "time": ""
+        "time": "20:25",
+        "arrivalTime": "01:15"
       },
       "arrival": {
         "city": "마나도",
         "airport": "MDC",
         "date": "2026-10-29",
-        "time": ""
+        "time": "02:20",
+        "arrivalTime": "08:40"
       },
       "price": 499900,
       "currency": "KRW",
@@ -5872,13 +6140,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-10-26",
-        "time": ""
+        "time": "20:25",
+        "arrivalTime": "01:15"
       },
       "arrival": {
         "city": "마나도",
         "airport": "MDC",
         "date": "2026-10-30",
-        "time": ""
+        "time": "02:20",
+        "arrivalTime": "08:40"
       },
       "price": 499900,
       "currency": "KRW",
@@ -5922,13 +6192,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-11-15",
-        "time": ""
+        "time": "20:25",
+        "arrivalTime": "01:15"
       },
       "arrival": {
         "city": "마나도",
         "airport": "MDC",
         "date": "2026-11-19",
-        "time": ""
+        "time": "02:20",
+        "arrivalTime": "08:40"
       },
       "price": 499900,
       "currency": "KRW",
@@ -5947,13 +6219,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-11-16",
-        "time": ""
+        "time": "20:25",
+        "arrivalTime": "01:15"
       },
       "arrival": {
         "city": "마나도",
         "airport": "MDC",
         "date": "2026-11-20",
-        "time": ""
+        "time": "02:20",
+        "arrivalTime": "08:40"
       },
       "price": 499900,
       "currency": "KRW",
@@ -5972,13 +6246,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-11-17",
-        "time": ""
+        "time": "20:25",
+        "arrivalTime": "01:15"
       },
       "arrival": {
         "city": "마나도",
         "airport": "MDC",
         "date": "2026-11-21",
-        "time": ""
+        "time": "02:20",
+        "arrivalTime": "08:40"
       },
       "price": 499900,
       "currency": "KRW",
@@ -5997,13 +6273,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-11-22",
-        "time": ""
+        "time": "20:25",
+        "arrivalTime": "01:15"
       },
       "arrival": {
         "city": "마나도",
         "airport": "MDC",
         "date": "2026-11-26",
-        "time": ""
+        "time": "02:20",
+        "arrivalTime": "08:40"
       },
       "price": 499900,
       "currency": "KRW",
@@ -6022,13 +6300,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-11-29",
-        "time": ""
+        "time": "20:25",
+        "arrivalTime": "01:15"
       },
       "arrival": {
         "city": "마나도",
         "airport": "MDC",
         "date": "2026-12-03",
-        "time": ""
+        "time": "02:20",
+        "arrivalTime": "08:40"
       },
       "price": 499900,
       "currency": "KRW",
@@ -6047,13 +6327,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-08-29",
-        "time": ""
+        "time": "15:05",
+        "arrivalTime": "20:10"
       },
       "arrival": {
         "city": "자카르타",
         "airport": "CGK",
         "date": "2026-09-03",
-        "time": ""
+        "time": "21:30",
+        "arrivalTime": "07:00"
       },
       "price": 605000,
       "currency": "KRW",
@@ -6072,13 +6354,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-08-31",
-        "time": ""
+        "time": "15:05",
+        "arrivalTime": "20:10"
       },
       "arrival": {
         "city": "자카르타",
         "airport": "CGK",
         "date": "2026-09-05",
-        "time": ""
+        "time": "21:30",
+        "arrivalTime": "07:00"
       },
       "price": 605000,
       "currency": "KRW",
@@ -6097,13 +6381,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-05",
-        "time": ""
+        "time": "15:05",
+        "arrivalTime": "20:10"
       },
       "arrival": {
         "city": "자카르타",
         "airport": "CGK",
         "date": "2026-09-10",
-        "time": ""
+        "time": "21:30",
+        "arrivalTime": "07:00"
       },
       "price": 605000,
       "currency": "KRW",
@@ -6122,13 +6408,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-07",
-        "time": ""
+        "time": "15:05",
+        "arrivalTime": "20:10"
       },
       "arrival": {
         "city": "자카르타",
         "airport": "CGK",
         "date": "2026-09-12",
-        "time": ""
+        "time": "21:30",
+        "arrivalTime": "07:00"
       },
       "price": 605000,
       "currency": "KRW",
@@ -6147,13 +6435,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-12",
-        "time": ""
+        "time": "15:05",
+        "arrivalTime": "20:10"
       },
       "arrival": {
         "city": "자카르타",
         "airport": "CGK",
         "date": "2026-09-17",
-        "time": ""
+        "time": "21:30",
+        "arrivalTime": "07:00"
       },
       "price": 605000,
       "currency": "KRW",
@@ -6172,13 +6462,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-14",
-        "time": ""
+        "time": "15:05",
+        "arrivalTime": "20:10"
       },
       "arrival": {
         "city": "자카르타",
         "airport": "CGK",
         "date": "2026-09-19",
-        "time": ""
+        "time": "21:30",
+        "arrivalTime": "07:00"
       },
       "price": 605000,
       "currency": "KRW",
@@ -6197,13 +6489,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-08-21",
-        "time": ""
+        "time": "16:20",
+        "arrivalTime": "21:50"
       },
       "arrival": {
         "city": "쿠알라룸푸르",
         "airport": "KUL",
         "date": "2026-08-25",
-        "time": ""
+        "time": "23:20",
+        "arrivalTime": "07:00"
       },
       "price": 629900,
       "currency": "KRW",
@@ -6222,13 +6516,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-08-23",
-        "time": ""
+        "time": "11:00",
+        "arrivalTime": "16:35"
       },
       "arrival": {
         "city": "쿠알라룸푸르",
         "airport": "KUL",
         "date": "2026-08-27",
-        "time": ""
+        "time": "12:55",
+        "arrivalTime": "21:15"
       },
       "price": 629900,
       "currency": "KRW",
@@ -6247,13 +6543,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-08-30",
-        "time": ""
+        "time": "11:00",
+        "arrivalTime": "16:35"
       },
       "arrival": {
         "city": "쿠알라룸푸르",
         "airport": "KUL",
         "date": "2026-09-03",
-        "time": ""
+        "time": "12:55",
+        "arrivalTime": "21:15"
       },
       "price": 629900,
       "currency": "KRW",
@@ -6758,13 +7056,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-11",
-        "time": ""
+        "time": "19:10",
+        "arrivalTime": "06:20"
       },
       "arrival": {
         "city": "시드니",
         "airport": "SYD",
         "date": "2026-09-16",
-        "time": ""
+        "time": "21:00",
+        "arrivalTime": "06:30"
       },
       "price": 999000,
       "currency": "KRW",
@@ -6783,13 +7083,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-15",
-        "time": ""
+        "time": "08:00",
+        "arrivalTime": "19:25"
       },
       "arrival": {
         "city": "시드니",
         "airport": "SYD",
         "date": "2026-09-20",
-        "time": ""
+        "time": "07:55",
+        "arrivalTime": "17:35"
       },
       "price": 999000,
       "currency": "KRW",
@@ -6808,13 +7110,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-09-17",
-        "time": ""
+        "time": "19:10",
+        "arrivalTime": "06:20"
       },
       "arrival": {
         "city": "시드니",
         "airport": "SYD",
         "date": "2026-09-22",
-        "time": ""
+        "time": "07:55",
+        "arrivalTime": "17:35"
       },
       "price": 999000,
       "currency": "KRW",
@@ -6833,13 +7137,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-10-13",
-        "time": ""
+        "time": "21:50",
+        "arrivalTime": "10:05"
       },
       "arrival": {
         "city": "시드니",
         "airport": "SYD",
         "date": "2026-10-18",
-        "time": ""
+        "time": "11:45",
+        "arrivalTime": "20:15"
       },
       "price": 999000,
       "currency": "KRW",
@@ -6858,13 +7164,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-10-16",
-        "time": ""
+        "time": "22:10",
+        "arrivalTime": "10:55"
       },
       "arrival": {
         "city": "시드니",
         "airport": "SYD",
         "date": "2026-10-21",
-        "time": ""
+        "time": "12:40",
+        "arrivalTime": "21:30"
       },
       "price": 999000,
       "currency": "KRW",
@@ -6883,13 +7191,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-10-20",
-        "time": ""
+        "time": "22:10",
+        "arrivalTime": "10:55"
       },
       "arrival": {
         "city": "시드니",
         "airport": "SYD",
         "date": "2026-10-25",
-        "time": ""
+        "time": "12:40",
+        "arrivalTime": "21:30"
       },
       "price": 999000,
       "currency": "KRW",
@@ -6908,13 +7218,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-10-27",
-        "time": ""
+        "time": "21:40",
+        "arrivalTime": "10:15"
       },
       "arrival": {
         "city": "시드니",
         "airport": "SYD",
         "date": "2026-11-01",
-        "time": ""
+        "time": "12:15",
+        "arrivalTime": "21:15"
       },
       "price": 999000,
       "currency": "KRW",
@@ -6933,13 +7245,15 @@
         "city": "인천",
         "airport": "ICN",
         "date": "2026-10-30",
-        "time": ""
+        "time": "21:40",
+        "arrivalTime": "10:15"
       },
       "arrival": {
         "city": "시드니",
         "airport": "SYD",
         "date": "2026-11-04",
-        "time": ""
+        "time": "12:15",
+        "arrivalTime": "21:15"
       },
       "price": 999000,
       "currency": "KRW",
@@ -6948,106 +7262,6 @@
       "availableSeats": 16,
       "region": "남태평양",
       "discountRate": -15,
-      "firstSeen": "2026-08-11"
-    },
-    {
-      "id": "ybtour-파리(CDG)-20261030-0",
-      "source": "ybtour",
-      "airline": "티웨이항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-10-30",
-        "time": ""
-      },
-      "arrival": {
-        "city": "파리(CDG)",
-        "airport": "CDG",
-        "date": "2026-11-06",
-        "time": ""
-      },
-      "price": 1301700,
-      "currency": "KRW",
-      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=E0%2FB1%2FF0&inhId=TW0401ICNCDG-T4&depDate=20261030&efcCityCode=CDG",
-      "seats": "4석",
-      "availableSeats": 4,
-      "region": "유럽",
-      "discountRate": 0,
-      "firstSeen": "2026-08-11"
-    },
-    {
-      "id": "ybtour-파리(CDG)-20261127-1",
-      "source": "ybtour",
-      "airline": "티웨이항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-11-27",
-        "time": ""
-      },
-      "arrival": {
-        "city": "파리(CDG)",
-        "airport": "CDG",
-        "date": "2026-12-04",
-        "time": ""
-      },
-      "price": 1301700,
-      "currency": "KRW",
-      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=E0%2FB1%2FF0&inhId=TW0401ICNCDG-T4&depDate=20261127&efcCityCode=CDG",
-      "seats": "4석",
-      "availableSeats": 4,
-      "region": "유럽",
-      "discountRate": 0,
-      "firstSeen": "2026-08-11"
-    },
-    {
-      "id": "ybtour-파리(CDG)-20261204-2",
-      "source": "ybtour",
-      "airline": "티웨이항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-12-04",
-        "time": ""
-      },
-      "arrival": {
-        "city": "파리(CDG)",
-        "airport": "CDG",
-        "date": "2026-12-11",
-        "time": ""
-      },
-      "price": 1301700,
-      "currency": "KRW",
-      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=E0%2FB1%2FF0&inhId=TW0401ICNCDG-T4&depDate=20261204&efcCityCode=CDG",
-      "seats": "4석",
-      "availableSeats": 4,
-      "region": "유럽",
-      "discountRate": 0,
-      "firstSeen": "2026-08-11"
-    },
-    {
-      "id": "ybtour-파리(CDG)-20261211-3",
-      "source": "ybtour",
-      "airline": "티웨이항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-12-11",
-        "time": ""
-      },
-      "arrival": {
-        "city": "파리(CDG)",
-        "airport": "CDG",
-        "date": "2026-12-18",
-        "time": ""
-      },
-      "price": 1301700,
-      "currency": "KRW",
-      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=E0%2FB1%2FF0&inhId=TW0401ICNCDG-T4&depDate=20261211&efcCityCode=CDG",
-      "seats": "4석",
-      "availableSeats": 4,
-      "region": "유럽",
-      "discountRate": 0,
       "firstSeen": "2026-08-11"
     },
     {
@@ -7101,7 +7315,7 @@
       "firstSeen": "2026-08-11"
     },
     {
-      "id": "hanatour-regular-인천/김포-17",
+      "id": "hanatour-regular-인천/김포-16",
       "source": "hanatour",
       "airline": "진에어",
       "departure": {
@@ -7126,7 +7340,7 @@
       "firstSeen": "2026-08-11"
     },
     {
-      "id": "hanatour-regular-인천/김포-22",
+      "id": "hanatour-regular-인천/김포-21",
       "source": "hanatour",
       "airline": "파라타 항공",
       "departure": {
@@ -7151,7 +7365,7 @@
       "firstSeen": "2026-08-11"
     },
     {
-      "id": "hanatour-regular-인천/김포-24",
+      "id": "hanatour-regular-인천/김포-23",
       "source": "hanatour",
       "airline": "에어서울",
       "departure": {
@@ -7176,7 +7390,7 @@
       "firstSeen": "2026-08-11"
     },
     {
-      "id": "hanatour-regular-인천/김포-27",
+      "id": "hanatour-regular-인천/김포-26",
       "source": "hanatour",
       "airline": "티웨이항공",
       "departure": {
@@ -7201,7 +7415,7 @@
       "firstSeen": "2026-08-11"
     },
     {
-      "id": "hanatour-regular-인천/김포-28",
+      "id": "hanatour-regular-인천/김포-27",
       "source": "hanatour",
       "airline": "에어부산",
       "departure": {
@@ -7226,7 +7440,7 @@
       "firstSeen": "2026-08-11"
     },
     {
-      "id": "hanatour-regular-인천/김포-32",
+      "id": "hanatour-regular-인천/김포-31",
       "source": "hanatour",
       "airline": "싱가포르항공",
       "departure": {
@@ -7251,7 +7465,7 @@
       "firstSeen": "2026-08-11"
     },
     {
-      "id": "hanatour-regular-인천/김포-39",
+      "id": "hanatour-regular-인천/김포-38",
       "source": "hanatour",
       "airline": "대한항공",
       "departure": {
@@ -7276,7 +7490,7 @@
       "firstSeen": "2026-08-11"
     },
     {
-      "id": "hanatour-regular-인천/김포-41",
+      "id": "hanatour-regular-인천/김포-40",
       "source": "hanatour",
       "airline": "대한항공",
       "departure": {
@@ -14574,6 +14788,30 @@
       "firstSeen": "2026-08-08"
     },
     {
+      "id": "ttang-RS0727ICNFUK-G9-2026-08-25",
+      "source": "ttang",
+      "airline": "에어서울",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-08-25",
+        "time": ""
+      },
+      "arrival": {
+        "city": "후쿠오카",
+        "airport": "FUK",
+        "date": "2026-08-29",
+        "time": ""
+      },
+      "price": 163900,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-25&dep1=FUK&arr1=ICN&depdate1=2026-08-29&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-25&dep1=FUK&arr1=ICN&depdate1=2026-08-29&adt=1&chd=0&inf=0&comp=Y",
+      "region": "일본",
+      "discountRate": 0,
+      "firstSeen": "2026-08-05"
+    },
+    {
       "id": "ttang-RS0727ICNFUK-G11-2026-08-25",
       "source": "ttang",
       "airline": "에어서울",
@@ -14598,30 +14836,6 @@
       "region": "일본",
       "availableSeats": 8,
       "seats": "8석",
-      "discountRate": 0,
-      "firstSeen": "2026-08-05"
-    },
-    {
-      "id": "ttang-RS0727ICNFUK-G9-2026-08-25",
-      "source": "ttang",
-      "airline": "에어서울",
-      "departure": {
-        "city": "서울",
-        "airport": "ICN",
-        "date": "2026-08-25",
-        "time": ""
-      },
-      "arrival": {
-        "city": "후쿠오카",
-        "airport": "FUK",
-        "date": "2026-08-29",
-        "time": ""
-      },
-      "price": 163900,
-      "currency": "KRW",
-      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-25&dep1=FUK&arr1=ICN&depdate1=2026-08-29&adt=1&chd=0&inf=0&comp=Y",
-      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-25&dep1=FUK&arr1=ICN&depdate1=2026-08-29&adt=1&chd=0&inf=0&comp=Y",
-      "region": "일본",
       "discountRate": 0,
       "firstSeen": "2026-08-05"
     },
@@ -14794,34 +15008,6 @@
       "firstSeen": "2026-08-07"
     },
     {
-      "id": "ttang-RS0727ICNFUK-G9-2026-08-26",
-      "source": "ttang",
-      "airline": "에어서울",
-      "departure": {
-        "city": "서울",
-        "airport": "ICN",
-        "date": "2026-08-26",
-        "time": "14:25",
-        "arrivalTime": "16:00"
-      },
-      "arrival": {
-        "city": "후쿠오카",
-        "airport": "FUK",
-        "date": "2026-08-30",
-        "time": "10:30",
-        "arrivalTime": "12:05"
-      },
-      "price": 163900,
-      "currency": "KRW",
-      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-26&dep1=FUK&arr1=ICN&depdate1=2026-08-30&adt=1&chd=0&inf=0&comp=Y",
-      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-26&dep1=FUK&arr1=ICN&depdate1=2026-08-30&adt=1&chd=0&inf=0&comp=Y",
-      "region": "일본",
-      "availableSeats": 5,
-      "seats": "5석",
-      "discountRate": 0,
-      "firstSeen": "2026-08-05"
-    },
-    {
       "id": "ttang-RS0727ICNFUK-G11-2026-08-26",
       "source": "ttang",
       "airline": "에어서울",
@@ -14846,6 +15032,34 @@
       "region": "일본",
       "availableSeats": 8,
       "seats": "8석",
+      "discountRate": 0,
+      "firstSeen": "2026-08-05"
+    },
+    {
+      "id": "ttang-RS0727ICNFUK-G9-2026-08-26",
+      "source": "ttang",
+      "airline": "에어서울",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-08-26",
+        "time": "14:25",
+        "arrivalTime": "16:00"
+      },
+      "arrival": {
+        "city": "후쿠오카",
+        "airport": "FUK",
+        "date": "2026-08-30",
+        "time": "10:30",
+        "arrivalTime": "12:05"
+      },
+      "price": 163900,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-26&dep1=FUK&arr1=ICN&depdate1=2026-08-30&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-08-26&dep1=FUK&arr1=ICN&depdate1=2026-08-30&adt=1&chd=0&inf=0&comp=Y",
+      "region": "일본",
+      "availableSeats": 5,
+      "seats": "5석",
       "discountRate": 0,
       "firstSeen": "2026-08-05"
     },
@@ -15790,34 +16004,6 @@
       "firstSeen": "2026-07-30"
     },
     {
-      "id": "ttang-RS0511ICNDAD-G27-2026-08-30",
-      "source": "ttang",
-      "airline": "에어서울",
-      "departure": {
-        "city": "서울",
-        "airport": "ICN",
-        "date": "2026-08-30",
-        "time": "20:55",
-        "arrivalTime": "23:40"
-      },
-      "arrival": {
-        "city": "다낭",
-        "airport": "DAD",
-        "date": "2026-09-03",
-        "time": "00:40",
-        "arrivalTime": "07:15"
-      },
-      "price": 219900,
-      "currency": "KRW",
-      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=DAD&depdate0=2026-08-30&dep1=DAD&arr1=ICN&depdate1=2026-09-03&adt=1&chd=0&inf=0&comp=Y",
-      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=DAD&depdate0=2026-08-30&dep1=DAD&arr1=ICN&depdate1=2026-09-03&adt=1&chd=0&inf=0&comp=Y",
-      "region": "동남아",
-      "availableSeats": 8,
-      "seats": "8석",
-      "discountRate": 3,
-      "firstSeen": "2026-08-05"
-    },
-    {
       "id": "ttang-PUS-TAK-RT-0-3-BX-2026-08-30",
       "source": "ttang",
       "airline": "에어부산",
@@ -15844,6 +16030,34 @@
       "seats": "9석",
       "discountRate": -28,
       "firstSeen": "2026-07-30"
+    },
+    {
+      "id": "ttang-RS0511ICNDAD-G27-2026-08-30",
+      "source": "ttang",
+      "airline": "에어서울",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-08-30",
+        "time": "20:55",
+        "arrivalTime": "23:40"
+      },
+      "arrival": {
+        "city": "다낭",
+        "airport": "DAD",
+        "date": "2026-09-03",
+        "time": "00:40",
+        "arrivalTime": "07:15"
+      },
+      "price": 219900,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=DAD&depdate0=2026-08-30&dep1=DAD&arr1=ICN&depdate1=2026-09-03&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=DAD&depdate0=2026-08-30&dep1=DAD&arr1=ICN&depdate1=2026-09-03&adt=1&chd=0&inf=0&comp=Y",
+      "region": "동남아",
+      "availableSeats": 8,
+      "seats": "8석",
+      "discountRate": 3,
+      "firstSeen": "2026-08-05"
     },
     {
       "id": "ttang-RS0527ICNCXR-G6-2026-08-30",
@@ -16568,34 +16782,6 @@
       "firstSeen": "2026-08-07"
     },
     {
-      "id": "ttang-RS0727ICNFUK-G11-2026-09-01",
-      "source": "ttang",
-      "airline": "에어서울",
-      "departure": {
-        "city": "서울",
-        "airport": "ICN",
-        "date": "2026-09-01",
-        "time": "14:25",
-        "arrivalTime": "16:00"
-      },
-      "arrival": {
-        "city": "후쿠오카",
-        "airport": "FUK",
-        "date": "2026-09-03",
-        "time": "09:40",
-        "arrivalTime": "11:15"
-      },
-      "price": 163900,
-      "currency": "KRW",
-      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-09-01&dep1=FUK&arr1=ICN&depdate1=2026-09-03&adt=1&chd=0&inf=0&comp=Y",
-      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-09-01&dep1=FUK&arr1=ICN&depdate1=2026-09-03&adt=1&chd=0&inf=0&comp=Y",
-      "region": "일본",
-      "availableSeats": 8,
-      "seats": "8석",
-      "discountRate": -5,
-      "firstSeen": "2026-08-05"
-    },
-    {
       "id": "ttang-RS0727ICNFUK-G9-2026-09-01",
       "source": "ttang",
       "airline": "에어서울",
@@ -16617,6 +16803,34 @@
       "currency": "KRW",
       "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-09-01&dep1=FUK&arr1=ICN&depdate1=2026-09-05&adt=1&chd=0&inf=0&comp=Y",
       "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-09-01&dep1=FUK&arr1=ICN&depdate1=2026-09-05&adt=1&chd=0&inf=0&comp=Y",
+      "region": "일본",
+      "availableSeats": 8,
+      "seats": "8석",
+      "discountRate": -5,
+      "firstSeen": "2026-08-05"
+    },
+    {
+      "id": "ttang-RS0727ICNFUK-G11-2026-09-01",
+      "source": "ttang",
+      "airline": "에어서울",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-09-01",
+        "time": "14:25",
+        "arrivalTime": "16:00"
+      },
+      "arrival": {
+        "city": "후쿠오카",
+        "airport": "FUK",
+        "date": "2026-09-03",
+        "time": "09:40",
+        "arrivalTime": "11:15"
+      },
+      "price": 163900,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-09-01&dep1=FUK&arr1=ICN&depdate1=2026-09-03&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=FUK&depdate0=2026-09-01&dep1=FUK&arr1=ICN&depdate1=2026-09-03&adt=1&chd=0&inf=0&comp=Y",
       "region": "일본",
       "availableSeats": 8,
       "seats": "8석",
@@ -17002,34 +17216,6 @@
       "firstSeen": "2026-08-10"
     },
     {
-      "id": "ttang-PUS-TPE-RT-0-5-LJ-2026-09-02",
-      "source": "ttang",
-      "airline": "진에어",
-      "departure": {
-        "city": "부산",
-        "airport": "PUS",
-        "date": "2026-09-02",
-        "time": "10:50",
-        "arrivalTime": "12:35"
-      },
-      "arrival": {
-        "city": "타이페이",
-        "airport": "TPE",
-        "date": "2026-09-06",
-        "time": "16:35",
-        "arrivalTime": "19:55"
-      },
-      "price": 191000,
-      "currency": "KRW",
-      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=PUS&arr0=TPE&depdate0=2026-09-02&dep1=TPE&arr1=PUS&depdate1=2026-09-06&adt=1&chd=0&inf=0&comp=Y",
-      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=PUS&arr0=TPE&depdate0=2026-09-02&dep1=TPE&arr1=PUS&depdate1=2026-09-06&adt=1&chd=0&inf=0&comp=Y",
-      "region": "중국",
-      "availableSeats": 9,
-      "seats": "9석",
-      "discountRate": 14,
-      "firstSeen": "2026-08-02"
-    },
-    {
       "id": "ttang-PUS-KMJ-RT-0-4-ZE-2026-09-02",
       "source": "ttang",
       "airline": "이스타항공",
@@ -17056,6 +17242,34 @@
       "seats": "6석",
       "discountRate": 20,
       "firstSeen": "2026-08-11"
+    },
+    {
+      "id": "ttang-PUS-TPE-RT-0-5-LJ-2026-09-02",
+      "source": "ttang",
+      "airline": "진에어",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-09-02",
+        "time": "10:50",
+        "arrivalTime": "12:35"
+      },
+      "arrival": {
+        "city": "타이페이",
+        "airport": "TPE",
+        "date": "2026-09-06",
+        "time": "16:35",
+        "arrivalTime": "19:55"
+      },
+      "price": 191000,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=PUS&arr0=TPE&depdate0=2026-09-02&dep1=TPE&arr1=PUS&depdate1=2026-09-06&adt=1&chd=0&inf=0&comp=Y",
+      "searchLink": "https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=PUS&arr0=TPE&depdate0=2026-09-02&dep1=TPE&arr1=PUS&depdate1=2026-09-06&adt=1&chd=0&inf=0&comp=Y",
+      "region": "중국",
+      "availableSeats": 9,
+      "seats": "9석",
+      "discountRate": 14,
+      "firstSeen": "2026-08-02"
     },
     {
       "id": "ttang-TAE-TPE-RT-0-5-TW-2026-09-02",
@@ -22711,7 +22925,7 @@
     }
   ],
   "sources": {
-    "ybtour": 276,
+    "ybtour": 272,
     "hanatour": 50,
     "modetour": 104,
     "onlinetour": 25,
@@ -82287,8 +82501,8 @@
       {
         "date": "2026-08-11",
         "minPrice": 188000,
-        "avgPrice": 221200,
-        "count": 15
+        "avgPrice": 220000,
+        "count": 14
       }
     ],
     "서울-콜롬보(스리랑카)": [
