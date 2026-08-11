@@ -552,6 +552,18 @@ async function main() {
     const allScreenshotFlights = [...topFlights, ...icnExtra];
     await captureCardScreenshots(allScreenshotFlights, topFlights.length);
 
+    // 6.5. 에디터 픽 도시의 무료 이미지 다운로드 (Unsplash)
+    // generateHTML의 pickIndex(dayHash % length)와 동일한 계산으로 도시를 미리 알아낸다.
+    const nowForPick = new Date();
+    const pickCity = displayCity(
+        topFlights[(nowForPick.getDate() + nowForPick.getMonth() * 31) % topFlights.length]?.arrival?.city || ''
+    );
+    try {
+        await fetchUnsplashPickImage(pickCity);
+    } catch (e) {
+        console.warn(`⚠️ Unsplash 이미지 다운로드 실패 (${e.message}) — 글에는 생략됩니다`);
+    }
+
     // 7. HTML 생성
     const html = generateHTML(topFlights, allIcnFlights);
 
@@ -590,7 +602,8 @@ function loadRecentDests() {
         const recentEntries = entries.filter(e => {
             if (!e.date) return false;
             const entryDate = new Date(e.date + 'T00:00:00');
-            return entryDate >= cutoff;
+            // 오늘 항목은 제외 — 같은 날 재생성 시 자기 자신의 도시를 중복으로 오인하지 않도록
+            return entryDate >= cutoff && entryDate < now;
         });
         const dests = new Set();
         recentEntries.forEach(e => (e.destinations || []).forEach(d => dests.add(d)));
@@ -836,15 +849,94 @@ async function waitForServer(url, timeoutMs = 60000) {
     return false;
 }
 
-// ===== 카드 스크린샷 (Playwright) =====
-async function captureCardScreenshots(flights, top5Count) {
+// ===== 에디터 픽 도시 무료 이미지 (Unsplash, 무료 라이선스) =====
+const UNSPLASH_PHOTO = path.join(CARDS_DIR, 'pick_photo.jpg');
+
+// 검색 품질을 위한 한→영 도시명 (없으면 한글명으로 검색)
+const CITY_EN = {
+    '도쿄': 'tokyo', '오사카': 'osaka', '후쿠오카': 'fukuoka', '삿포로': 'sapporo',
+    '오키나와': 'okinawa', '나하': 'okinawa', '나고야': 'nagoya', '히로시마': 'hiroshima',
+    '다카마쓰': 'takamatsu japan', '마쓰야마': 'matsuyama japan', '오이타': 'oita japan',
+    '가고시마': 'kagoshima', '구마모토': 'kumamoto', '미야자키': 'miyazaki japan',
+    '니가타': 'niigata', '센다이': 'sendai', '시즈오카': 'shizuoka', '요나고': 'yonago',
+    '오카야마': 'okayama', '고마쓰': 'komatsu japan', '도야마': 'toyama', '아사히카와': 'asahikawa',
+    '하코다테': 'hakodate', '기타큐슈': 'kitakyushu', '사가': 'saga japan', '나가사키': 'nagasaki',
+    '도쿠시마': 'tokushima', '미야코지마': 'miyakojima', '이시가키': 'ishigaki', '오비히로': 'obihiro',
+    '베이징': 'beijing', '상하이': 'shanghai', '칭다오': 'qingdao', '웨이하이': 'weihai',
+    '옌지': 'yanji', '다롄': 'dalian', '선양': 'shenyang china', '장자제': 'zhangjiajie',
+    '시안': 'xian china', '청두': 'chengdu', '충칭': 'chongqing', '광저우': 'guangzhou',
+    '홍콩': 'hong kong', '마카오': 'macau', '타이베이': 'taipei', '가오슝': 'kaohsiung',
+    '다낭': 'da nang', '나트랑': 'nha trang', '호치민': 'ho chi minh city', '하노이': 'hanoi',
+    '푸꾸옥': 'phu quoc', '방콕': 'bangkok', '치앙마이': 'chiang mai', '푸껫': 'phuket',
+    '세부': 'cebu', '마닐라': 'manila', '보라카이': 'boracay', '칼리보': 'boracay',
+    '발리': 'bali', '덴파사르': 'bali', '자카르타': 'jakarta', '코타키나발루': 'kota kinabalu',
+    '쿠알라룸푸르': 'kuala lumpur', '싱가포르': 'singapore', '프놈펜': 'phnom penh',
+    '씨엠립': 'siem reap', '비엔티안': 'vientiane', '괌': 'guam', '사이판': 'saipan',
+    '울란바토르': 'ulaanbaatar', '타슈켄트': 'tashkent', '알마티': 'almaty',
+};
+
+async function fetchUnsplashPickImage(cityKorean) {
+    // 지난 실행의 파일이 남아 엉뚱한 도시 사진이 들어가지 않도록 먼저 제거
+    if (fs.existsSync(UNSPLASH_PHOTO)) fs.unlinkSync(UNSPLASH_PHOTO);
+
+    // Unsplash도 봇 방어(Anubis)가 일반 헤드리스를 403으로 차단 → 스텔스 + 화면 밖 창
     let chromium;
     try {
-        chromium = require('playwright').chromium;
+        const extra = require('playwright-extra');
+        const stealth = require('puppeteer-extra-plugin-stealth');
+        extra.chromium.use(stealth());
+        chromium = extra.chromium;
+    } catch { return; }
+
+    const base = cityKorean.replace(/\([^)]*\)/g, '').trim(); // "오사카(간사이)" → "오사카"
+    const query = CITY_EN[base] || base;
+    console.log(`🖼️ Unsplash에서 "${query}" 이미지 검색 중...`);
+
+    const browser = await chromium.launch({ headless: false, args: ['--no-sandbox', '--window-position=-2400,-100'] });
+    try {
+        const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+        await page.goto(`https://unsplash.com/ko/s/%EC%82%AC%EC%A7%84/${encodeURIComponent(query)}`,
+            { waitUntil: 'domcontentloaded', timeout: 30000 });
+        // 사진 URL은 images.unsplash.com/photo-… 패턴 (작가 아바타는 /profile-…, 유료는 plus.unsplash.com이라 제외됨)
+        await page.waitForSelector('img[src*="images.unsplash.com/photo-"]', { timeout: 20000 });
+        const imgUrl = await page.evaluate(() => {
+            const img = document.querySelector('img[src*="images.unsplash.com/photo-"]');
+            if (!img) return null;
+            const u = new URL(img.src);
+            u.searchParams.set('w', '1080');
+            u.searchParams.set('q', '80');
+            return u.toString();
+        });
+        if (!imgUrl) throw new Error('검색 결과 없음');
+        const resp = await page.request.get(imgUrl);
+        if (!resp.ok()) throw new Error(`다운로드 실패 (${resp.status()})`);
+        fs.writeFileSync(UNSPLASH_PHOTO, await resp.body());
+        console.log(`✅ 에디터 픽 이미지 저장: blog-cards/pick_photo.jpg ("${query}")`);
+    } finally {
+        await browser.close();
+    }
+}
+
+// ===== 카드 스크린샷 (Playwright) =====
+async function captureCardScreenshots(flights, top5Count) {
+    // 프로덕션은 Vercel 보안 검문이 일반 헤드리스를 차단하므로
+    // 네이버 크롤러와 같은 스텔스 + 화면 밖 창 방식을 쓴다.
+    let chromium;
+    let stealthMode = false;
+    try {
+        const extra = require('playwright-extra');
+        const stealth = require('puppeteer-extra-plugin-stealth');
+        extra.chromium.use(stealth());
+        chromium = extra.chromium;
+        stealthMode = true;
     } catch (e) {
-        console.warn('⚠️ Playwright가 설치되어 있지 않습니다. 카드 스크린샷을 건너뜁니다.');
-        console.warn('   npm install playwright 로 설치하세요.');
-        return;
+        try {
+            chromium = require('playwright').chromium;
+        } catch (e2) {
+            console.warn('⚠️ Playwright가 설치되어 있지 않습니다. 카드 스크린샷을 건너뜁니다.');
+            console.warn('   npm install playwright 로 설치하세요.');
+            return;
+        }
     }
 
     // 서버가 실행 중인지 확인, 아니면 자동으로 시작
@@ -877,7 +969,9 @@ async function captureCardScreenshots(flights, top5Count) {
         screenshotUrl = localUrl;
     }
 
-    const browser = await chromium.launch();
+    const browser = await chromium.launch(stealthMode
+        ? { headless: false, args: ['--no-sandbox', '--window-position=-2400,-100'] }
+        : {});
     const MAX_RETRIES = 2;
 
     for (let i = 0; i < flights.length; i++) {
@@ -1451,7 +1545,7 @@ function generateHTML(topFlights, allIcnFlights) {
         }).join('\n');
 
         icnSection = `
-        <hr class="divider">
+        <p>&nbsp;</p>
 
         <p class="section-title">📌 인천 출발은 뭐가 있을까?</p>
 
@@ -1467,7 +1561,7 @@ ${icnItems}`;
     if (tips.length > 0) {
         const tipLines = tips.map(t => `            <p>${t}</p>`).join('\n');
         tipSection = `
-        <hr class="divider">
+        <p>&nbsp;</p>
 
         <div class="tip-box">
             <p><b>✨ 이번 주 항공권 꿀팁</b></p>
@@ -1591,7 +1685,6 @@ ${tipLines}
 
 <body>
 
-    <div class="copy-guide">💡 Ctrl+A → Ctrl+C → 네이버 에디터에 Ctrl+V</div>
 
     <div class="post">
 
@@ -1604,7 +1697,7 @@ ${tipLines}
         <p>&nbsp;</p>
 ${introSmallTalk}
 
-        <hr class="divider">
+        <p>&nbsp;</p>
 
         <p class="section-title">🏆 ${dateLabel} 추천 특가 TOP3</p>
 ${rankSections}
@@ -1614,15 +1707,18 @@ ${rankSections}
         <p style="font-size: 13px; color: #e53e3e; font-weight: bold;">※ 좌석이 빠지면 가격이 바뀌거나 사라질 수 있어요.</p>
 
 
-        <hr class="divider">
+        <p>&nbsp;</p>
 
         <p class="section-title">💡 에디터 픽 : ${pickIndex + 1}위 ${displayCity(pickedFlight.departure?.city)}-${displayCity(pickedFlight.arrival?.city)}</p>
-
+${fs.existsSync(UNSPLASH_PHOTO) ? `
+        <p><img src="blog-cards/pick_photo.jpg" alt="${displayCity(pickedFlight.arrival?.city)} 여행" style="max-width: 100%; border-radius: 12px;"></p>
+        <p style="font-size: 11px; color: #aaa;">사진: Unsplash</p>
+` : ''}
             ${editorPick}
 ${icnSection}
 ${tipSection}
 
-        <hr class="divider">
+        <p>&nbsp;</p>
 
         <p>&nbsp;</p>
         ${pickRandom([
@@ -1636,8 +1732,12 @@ ${tipSection}
             `<p>여행은 가격이 맞을 때가 타이밍이에요.</p>\n        <p>&nbsp;</p>\n        <p>오늘의 특가 중 마음에 드는 게 있다면</p>\n        <p>놓치지 마세요! ✈️</p>`,
         ])}
         <p>&nbsp;</p>
+        <p><b>전국 여행사의 땡처리 항공권을 한눈에!</b></p>
         <p><a href="https://tikitikit.kr" class="cta-link">tikitikit.kr</a></p>
 
+        <p>&nbsp;</p>
+        <p>&nbsp;</p>
+        <p>&nbsp;</p>
         <p class="note">${hashtags}</p>
 
     </div>
