@@ -1,0 +1,64 @@
+#!/usr/bin/env node
+/**
+ * 항공권 캐시를 "소스 단위"로 병합한다.
+ *
+ *   node scripts/merge-cache-source.mjs <target.json> <overlay.json> <source>
+ *
+ * target의 flights 중 해당 source 항목을 overlay의 같은 source 항목으로 교체하고,
+ * count/sources를 다시 계산해 target에 저장한다. 나머지 소스의 항공권은 건드리지 않는다.
+ *
+ * 용도: GitHub Actions에서 여러 크롤링 워크플로우가 동시에 돌 때,
+ * 파일 통째 덮어쓰기로 서로의 최신 데이터를 지우는 경쟁 조건을 막는다.
+ * (예: 마이리얼트립 워크플로우는 원격 최신 캐시를 base로 자기 소스 항목만 반영)
+ */
+
+import fs from 'node:fs';
+
+const [, , targetPath, overlayPath, sourceKey] = process.argv;
+
+if (!targetPath || !overlayPath || !sourceKey) {
+    console.error('사용법: node merge-cache-source.mjs <target.json> <overlay.json> <source>');
+    process.exit(1);
+}
+
+if (!fs.existsSync(targetPath)) {
+    console.error(`❌ target 없음: ${targetPath}`);
+    process.exit(1);
+}
+if (!fs.existsSync(overlayPath)) {
+    console.error(`❌ overlay 없음: ${overlayPath}`);
+    process.exit(1);
+}
+
+const target = JSON.parse(fs.readFileSync(targetPath, 'utf8'));
+const overlay = JSON.parse(fs.readFileSync(overlayPath, 'utf8'));
+
+if (!Array.isArray(target.flights) || !Array.isArray(overlay.flights)) {
+    console.error('❌ flights 배열이 없는 캐시 파일');
+    process.exit(1);
+}
+
+const overlayFlights = overlay.flights.filter((f) => f?.source === sourceKey);
+const keptFlights = target.flights.filter((f) => f?.source !== sourceKey);
+const beforeCount = target.flights.length;
+const replacedCount = beforeCount - keptFlights.length;
+
+target.flights = [...keptFlights, ...overlayFlights];
+target.count = target.flights.length;
+
+// sources 카운트 재계산 (기존 키 유지)
+if (target.sources && typeof target.sources === 'object') {
+    for (const key of Object.keys(target.sources)) {
+        target.sources[key] = target.flights.filter((f) => f?.source === key).length;
+    }
+}
+
+// timestamp는 둘 중 최신값 유지
+if (overlay.timestamp && (!target.timestamp || overlay.timestamp > target.timestamp)) {
+    target.timestamp = overlay.timestamp;
+}
+
+fs.writeFileSync(targetPath, JSON.stringify(target, null, 2));
+console.log(
+    `✅ ${sourceKey} 병합: target ${beforeCount}건(${sourceKey} ${replacedCount}) → ${target.count}건(${sourceKey} ${overlayFlights.length})`
+);

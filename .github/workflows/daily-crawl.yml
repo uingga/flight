@@ -62,24 +62,29 @@ jobs:
             cp data/price-history.json /tmp/price-history.json 2>/dev/null || true
             cp data/crawl-log.json /tmp/crawl-log.json 2>/dev/null || true
             cp data/interpark-prices.json /tmp/interpark-prices.json 2>/dev/null || true
-            cp data/naver-prices.json /tmp/naver-prices.json 2>/dev/null || true
+            # 주의: naver-prices.json은 네이버 워크플로우 소유 파일이므로 보관/복원하지 않는다.
+            # (여기서 복원하면 크롤링 도중 커밋된 최신 네이버 데이터를 낡은 사본으로 덮어씀)
             
             # 원격 최신 코드를 강제로 가져와서 로컬을 동기화 (충돌 원천 차단)
             git fetch origin main
             git reset --hard origin/main
             
+            # 원격의 캐시를 백업 (크롤링 사이에 커밋된 최신 마이리얼트립 데이터가 있을 수 있음)
+            cp data/all-flights-cache.json /tmp/origin-cache.json 2>/dev/null || true
+
             # 임시 보관해둔 최신 크롤링 데이터를 다시 덮어쓰기
             cp /tmp/all-flights-cache.json data/all-flights-cache.json
             cp /tmp/price-history.json data/price-history.json 2>/dev/null || true
             cp /tmp/crawl-log.json data/crawl-log.json 2>/dev/null || true
             cp /tmp/interpark-prices.json data/interpark-prices.json 2>/dev/null || true
-            cp /tmp/naver-prices.json data/naver-prices.json 2>/dev/null || true
+
+            # 마이리얼트립 항목만 원격 최신본으로 오버레이 (별도 워크플로우가 갱신하는 소스)
+            node scripts/merge-cache-source.mjs data/all-flights-cache.json /tmp/origin-cache.json myrealtrip || echo "⚠️ MRT 오버레이 실패 — 이번 크롤링 캐시 그대로 사용"
             
             git add data/all-flights-cache.json
             git add data/price-history.json 2>/dev/null || true
             git add data/crawl-log.json 2>/dev/null || true
             git add data/interpark-prices.json 2>/dev/null || true
-            git add data/naver-prices.json 2>/dev/null || true
             git commit -m "chore(data): update flight data"
             git push
             echo "✅ Data updated and pushed."

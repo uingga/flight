@@ -55,19 +55,25 @@ jobs:
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
 
           if [[ -n $(git status --porcelain data/) ]]; then
+            # 이 워크플로우의 산출물은 naver-prices.json 하나만 보관한다.
             cp data/naver-prices.json /tmp/naver-prices.json
-            cp data/all-flights-cache.json /tmp/all-flights-cache.json
 
             git fetch origin main
             git reset --hard origin/main
 
+            # 네이버 가격만 복원하고, 캐시 필터는 원격 최신 캐시 기준으로 다시 계산한다.
+            # (크롤링 ~1시간 동안 다른 워크플로우가 커밋한 최신 항공권을 덮어쓰지 않기 위함)
             cp /tmp/naver-prices.json data/naver-prices.json
-            cp /tmp/all-flights-cache.json data/all-flights-cache.json
+            npx tsx scripts/filter-by-naver.ts
 
-            git add data/naver-prices.json data/all-flights-cache.json
-            git commit -m "chore(data): update naver prices + filter flights"
-            git push
-            echo "✅ Naver prices + filtered flights updated."
+            if [[ -n $(git status --porcelain data/) ]]; then
+              git add data/naver-prices.json data/all-flights-cache.json
+              git commit -m "chore(data): update naver prices + filter flights"
+              git push
+              echo "✅ Naver prices + filtered flights updated."
+            else
+              echo "ℹ️ 재필터 후 변경 없음"
+            fi
           else
             echo "ℹ️ No changes."
           fi
