@@ -5,6 +5,8 @@ import './globals.css';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://tikitikit.kr';
 
+// 주의: 이 설정을 바꾸면 next/font 해시가 바뀐다. HTML과 CSS가 같은 빌드에서 나와야
+// --font-inter 변수가 연결된다 (2026-08-11 빌드 캐시로 인한 불일치 사고 있었음).
 const inter = Inter({
     subsets: ['latin'],
     weight: ['400', '600', '700', '800'],
