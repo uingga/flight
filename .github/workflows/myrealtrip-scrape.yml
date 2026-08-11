@@ -53,17 +53,24 @@ jobs:
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           
           if [[ -n $(git status --porcelain data/) ]]; then
-            cp data/all-flights-cache.json /tmp/all-flights-cache.json
-            
+            cp data/all-flights-cache.json /tmp/mrt-session-cache.json
+
             git fetch origin main
             git reset --hard origin/main
-            
-            cp /tmp/all-flights-cache.json data/all-flights-cache.json
-            
-            git add data/all-flights-cache.json
-            git commit -m "chore(data): update myrealtrip prices (Playwright)"
-            git push
-            echo "✅ 마이리얼트립 가격 업데이트 완료"
+
+            # 원격 최신 캐시를 베이스로, 이번 스크래핑의 마이리얼트립 항목만 반영한다.
+            # (스크래핑에 최대 3시간 걸리는 동안 다른 워크플로우가 커밋한
+            #  최신 항공권 데이터를 파일 통째 덮어쓰기로 지우지 않기 위함)
+            node scripts/merge-cache-source.mjs data/all-flights-cache.json /tmp/mrt-session-cache.json myrealtrip
+
+            if [[ -n $(git status --porcelain data/all-flights-cache.json) ]]; then
+              git add data/all-flights-cache.json
+              git commit -m "chore(data): update myrealtrip prices (Playwright)"
+              git push
+              echo "✅ 마이리얼트립 가격 업데이트 완료"
+            else
+              echo "ℹ️ 병합 후 변경 없음"
+            fi
           else
             echo "ℹ️ 변경 없음"
           fi
