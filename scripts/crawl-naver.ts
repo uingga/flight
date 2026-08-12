@@ -16,7 +16,8 @@ chromium.use(stealth());
 // ─── 설정 ───
 const MAX_FLIGHTS = parseInt(process.env.MAX_FLIGHTS || '9999', 10); // 기본: 제한 없음
 const MAX_DAYS_AHEAD = parseInt(process.env.MAX_DAYS_AHEAD || '60', 10); // 출발일 N일 이내만
-const SOURCE_FILTER = process.env.SOURCE_FILTER || 'myrealtrip';    // 비교 대상 소스 (빈 문자열이면 전체)
+const SOURCE_FILTER_RAW = process.env.SOURCE_FILTER ?? 'myrealtrip';
+const SOURCE_FILTER = SOURCE_FILTER_RAW.toLowerCase() === 'all' ? '' : SOURCE_FILTER_RAW; // all이면 전체 소스
 const FRESH_HOURS = parseInt(process.env.FRESH_HOURS || '48', 10);  // N시간 내 검색한 노선은 스킵
 const ABORT_AFTER_MISSES = parseInt(process.env.ABORT_AFTER_MISSES || '3', 10); // 연속 N건 결과 없으면 차단으로 보고 조기 철수
 const DRY_RUN = process.env.DRY_RUN === '1';                        // 검색 계획만 출력하고 종료
@@ -94,14 +95,16 @@ interface NaverPriceEntry {
         console.log(`🎯 소스 필터: ${SOURCE_FILTER} (${rawData.length}/${before}건)`);
     }
 
-    // 이미 지난 항공편만 제외
+    // 이미 지난 항공편과 지나치게 먼 출발일은 제외
     const now = new Date();
+    const maxDepartureDate = new Date(now);
+    maxDepartureDate.setDate(maxDepartureDate.getDate() + MAX_DAYS_AHEAD);
     const beforeDate = rawData.length;
     rawData = rawData.filter(f => {
         const dep = new Date(normalizeDate(f.departure.date));
-        return dep >= now;
+        return dep >= now && dep <= maxDepartureDate;
     });
-    console.log(`📅 출발일 필터: 미래 출발만 (${rawData.length}/${beforeDate}건)`);
+    console.log(`📅 출발일 필터: 미래 ${MAX_DAYS_AHEAD}일 이내 (${rawData.length}/${beforeDate}건)`);
 
     // 2. 기존 결과 불러오기 (우선순위 계산에 필요하므로 선별 전에 로드)
     let naverPrices: Record<string, NaverPriceEntry> = {};
