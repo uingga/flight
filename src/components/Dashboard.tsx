@@ -29,6 +29,7 @@ import {
 } from '@/lib/utils/tripcom-helpers';
 import { checkIsMobile, getMobileUrl } from '@/lib/utils/mobile-url';
 import { getTtangBookingUrl } from '@/lib/utils/ttang-url';
+import { getYbtourBookingUrl } from '@/lib/utils/ybtour-url';
 
 const ITEMS_PER_PAGE = 20;
 
@@ -527,6 +528,11 @@ export default function Dashboard() {
         // 땡처리닷컴: 해당 노선·왕복 날짜의 실시간 검색 결과로 이동
         if (flight.source === 'ttang') {
             return getTtangBookingUrl(flight, pax);
+        }
+
+        // 노랑풍선: 해당 노선·왕복 날짜·항공사의 모바일 실시간 검색 결과로 이동
+        if (flight.source === 'ybtour') {
+            return getYbtourBookingUrl(flight, pax);
         }
 
         // 온라인투어: eventCode URL에 인원 파라미터 추가
@@ -2854,7 +2860,7 @@ export default function Dashboard() {
                                         if (modetourGuide.source === 'modetour') {
                                             const url = getMobileUrl(modetourGuide.link, isMobile);
                                             window.open(url, '_blank', 'noopener,noreferrer');
-                                        } else if (modetourGuide.source === 'hanatour' || modetourGuide.source === 'onlinetour') {
+                                        } else if (modetourGuide.source === 'hanatour' || modetourGuide.source === 'onlinetour' || modetourGuide.source === 'ybtour') {
                                             const url = getBookingUrl(modetourGuide, passengers);
                                             window.open(url, '_blank', 'noopener,noreferrer');
                                         } else if (modetourGuide.source === 'ttang') {
