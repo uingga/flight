@@ -1,10 +1,10 @@
 # 네이버 항공권 크롤러 — Windows 로컬 실행 스크립트 (작업 스케줄러용)
 #
 # 주거용 IP에서 크롤링하므로 GitHub Actions(데이터센터 IP)보다 차단 확률이 낮다.
-# GitHub 결과를 먼저 받은 뒤 전체 여행사의 누락·오래된 노선만 하루 100건씩 보충한다.
-# 같은 노선+날짜는 하나로 합치며, 7일 이내 조회한 노선은 다시 조회하지 않는다.
+# GitHub 결과를 먼저 받은 뒤 전체 여행사의 누락·오래된 노선만 하루 280건씩 보충한다.
+# 같은 노선+날짜는 하나로 합치며, 48시간 이내 조회한 노선은 다시 조회하지 않는다.
 #
-# 등록:   schtasks /create /tn TikitikitNaverCrawl /tr "powershell -NoProfile -ExecutionPolicy Bypass -File \"<이 파일 경로>\"" /sc daily /st 03:00
+# 등록:   schtasks /create /tn TikitikitNaverCrawl /tr "powershell -NoProfile -ExecutionPolicy Bypass -File \"<이 파일 경로>\"" /sc daily /st 04:00
 # 해제:   schtasks /delete /tn TikitikitNaverCrawl /f
 # 수동:   powershell -File scripts\run-naver-crawl.ps1
 
@@ -29,8 +29,8 @@ git pull --rebase --autostash 2>&1 | Add-Content -Encoding utf8 $LogFile
 # 2. 크롤링 (브라우저 창은 화면 밖에 배치)
 $env:HIDE_WINDOW = '1'
 $env:SOURCE_FILTER = 'all'
-$env:MAX_FLIGHTS = '100'
-$env:FRESH_HOURS = '168'
+$env:MAX_FLIGHTS = '280'
+$env:FRESH_HOURS = '48'
 npx --no-install tsx scripts/crawl-naver.ts 2>&1 | Add-Content -Encoding utf8 $LogFile
 if ($LASTEXITCODE -ne 0) {
     Log "크롤러 비정상 종료 (exit $LASTEXITCODE) — 이번 실행 중단"
