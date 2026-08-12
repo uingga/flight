@@ -28,8 +28,10 @@ import {
     getTripcomHotelUrl,
 } from '@/lib/utils/tripcom-helpers';
 import { checkIsMobile, getMobileUrl } from '@/lib/utils/mobile-url';
+import { getTtangBookingUrl } from '@/lib/utils/ttang-url';
 
 const ITEMS_PER_PAGE = 20;
+
 export default function Dashboard() {
     const [flights, setFlights] = useState<Flight[]>([]);
     const [loading, setLoading] = useState(true);
@@ -522,14 +524,9 @@ export default function Dashboard() {
             return getMobileUrl(flight.link, isMobile);
         }
 
-        // 땡처리닷컴: 항상 프로모션 페이지로 이동 + 출발-도착도시 하이라이트
+        // 땡처리닷컴: 해당 노선·왕복 날짜의 실시간 검색 결과로 이동
         if (flight.source === 'ttang') {
-            const depDate = flight.departure.date?.replace(/[-\.]/g, '').substring(0, 8) || '';
-            const depCity = flight.departure.city?.replace(/\([^)]+\)/g, '').trim() || '';
-            const arrCity = flight.arrival.city?.replace(/\([^)]+\)/g, '').trim() || '';
-            const highlightText = depCity && arrCity ? `${depCity}-${arrCity}` : arrCity;
-            const textFragment = highlightText ? `#:~:text=${encodeURIComponent(highlightText)}` : '';
-            return `https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=${depDate}&adt=${pax.adult}&chd=${pax.child}&inf=${pax.infant}&page=1&scale=200${textFragment}`;
+            return getTtangBookingUrl(flight, pax);
         }
 
         // 온라인투어: eventCode URL에 인원 파라미터 추가
@@ -2861,10 +2858,7 @@ export default function Dashboard() {
                                             const url = getBookingUrl(modetourGuide, passengers);
                                             window.open(url, '_blank', 'noopener,noreferrer');
                                         } else if (modetourGuide.source === 'ttang') {
-                                            const ttangDepDate = modetourGuide.departure.date?.replace(/[-\.]/g, '').substring(0, 8) || '';
-                                            const ttangArrCity = modetourGuide.arrival.city?.replace(/\([^)]+\)/g, '').trim() || '';
-                                            const textFragment = ttangArrCity ? `#:~:text=${encodeURIComponent(ttangArrCity)}` : '';
-                                            const url = `https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=${ttangDepDate}&adt=${passengers.adult}&chd=${passengers.child}&inf=${passengers.infant}&page=1&scale=200${textFragment}`;
+                                            const url = getTtangBookingUrl(modetourGuide, passengers);
                                             window.open(url, '_blank', 'noopener,noreferrer');
                                         } else {
                                             const url = getMobileUrl(modetourGuide.link, isMobile);
@@ -3033,10 +3027,7 @@ export default function Dashboard() {
                             const f = ttangConfirmFlight;
                             const r = `${normalizeCity(f.departure.city)}-${normalizeCity(f.arrival.city)}`;
                             gtag.trackBookingClick(f.source, r, f.price);
-                            const depDate = f.departure.date?.replace(/[-\.]/g, '').substring(0, 8) || '';
-                            const arrCity = f.arrival.city?.replace(/\([^)]+\)/g, '').trim() || '';
-                            const textFragment = arrCity ? `#:~:text=${encodeURIComponent(arrCity)}` : '';
-                            const url = `https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=${depDate}&adt=1&chd=0&inf=0&page=1&scale=200${textFragment}`;
+                            const url = getTtangBookingUrl(f, { adult: 1, child: 0, infant: 0 });
                             window.open(url, '_blank', 'noopener,noreferrer');
                             setTtangConfirmFlight(null);
                         }}>
