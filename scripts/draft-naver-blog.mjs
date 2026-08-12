@@ -298,6 +298,22 @@ try {
         }
         console.log(`   가운데 정렬: ${centered}/${imgCount}장`);
 
+        // 인용구(꿀팁)를 박스형(포스트잇) 스타일로 변경
+        const quoteCount = await frame.locator('.se-component.se-quotation').count();
+        for (let i = 0; i < quoteCount; i++) {
+            try {
+                const q = frame.locator('.se-component.se-quotation').nth(i);
+                if (await q.evaluate(c => c.className.includes('postit'))) continue;
+                await q.click({ timeout: 3000 });
+                await naver.waitForTimeout(400);
+                await frame.locator('button[data-name="quotation-layout"][data-value="quotation_postit"]')
+                    .first().click({ timeout: 3000 });
+                await naver.waitForTimeout(300);
+                await naver.keyboard.press('Escape');
+            } catch { /* 인용구 스타일 실패는 치명적이지 않음 */ }
+        }
+        if (quoteCount > 0) console.log(`   인용구 박스형 적용: ${quoteCount}개`);
+
         pasted = true;
         console.log(`\u270D\uFE0F 제목 + 본문 입력 완료 (이미지 ${imgOk}/${imgSrcs.length}장 첨부, 가운데 정렬 적용)`);
         if (imgOk < imgSrcs.length) console.log('   (건너뛴 이미지는 파일이 없는 항목입니다)');
