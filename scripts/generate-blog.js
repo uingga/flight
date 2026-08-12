@@ -1334,6 +1334,13 @@ function generateEditorPick(flight) {
     const desc = matchCityDescription(flight.arrival?.city || '');
     const duration = calculateTripDuration(flight.departure?.date, flight.arrival?.date);
     const priceText = formatPriceShort(flight.price);
+    const durationLine = pickRandom([
+        '알찬 일정입니다.',
+        '부담 없이 다녀오기 좋은 일정이에요.',
+        '짧지만 꽉 채운 일정이에요.',
+        '리프레시하기 딱 좋은 일정이에요.',
+        '여행 감각 깨우기 좋은 일정이에요.',
+    ]);
 
     let lines = [];
     lines.push(`<p>&nbsp;</p>`);
@@ -1342,7 +1349,7 @@ function generateEditorPick(flight) {
 
     if (desc) {
         lines.push(`<p>${flight.airline} 직항으로</p>`);
-        if (duration) lines.push(`<p>${duration} 알찬 일정입니다.</p>`);
+        if (duration) lines.push(`<p>${duration} ${durationLine}</p>`);
         lines.push(`<p>&nbsp;</p>`);
         desc.lines.forEach(l => lines.push(`<p>${l}</p>`));
         lines.push(`<p>&nbsp;</p>`);
@@ -1350,7 +1357,7 @@ function generateEditorPick(flight) {
         lines.push(`<p>${desc.closing}</p>`);
     } else {
         lines.push(`<p>${flight.airline} 직항으로</p>`);
-        if (duration) lines.push(`<p>${duration} 알찬 일정입니다.</p>`);
+        if (duration) lines.push(`<p>${duration} ${durationLine}</p>`);
         lines.push(`<p>&nbsp;</p>`);
         lines.push(`<p>왕복 <b>${priceText}</b>이면</p>`);
         if (flight.price < 200000) {
@@ -1450,13 +1457,41 @@ function getIcnComment(flight) {
     const matched = Object.entries(comments).find(([key]) => city.includes(key));
     if (matched) return `${duration} ${matched[1]}`;
 
-    if (region === '일본') return `${duration} 일본 소도시 여행!`;
-    if (region === '중국') return `${duration} 근거리 맛집 투어!`;
-    if (region === '동남아') return `${duration} 휴양지 힐링!`;
+    if (region === '일본') {
+        return `${duration} ` + pickRandom([
+            '일본 소도시 여행!',
+            '온천에 몸 담그러 가볼까요?',
+            '가까운 일본, 가볍게 다녀오기!',
+            '현지 라멘 한 그릇 하러 출발!',
+            '편의점 털이 + 미식 여행!',
+        ]);
+    }
+    if (region === '중국') {
+        return `${duration} ` + pickRandom([
+            '근거리 맛집 투어!',
+            '가성비 미식 여행!',
+            '이색 도시 탐방 어때요?',
+            '현지 음식에 도전해볼까요?',
+        ]);
+    }
+    if (region === '동남아') {
+        return `${duration} ` + pickRandom([
+            '휴양지 힐링!',
+            '수영장에서 뒹굴뒹굴 힐링!',
+            '따뜻한 나라로 잠깐 도피!',
+            '마사지 + 맛집 힐링 코스!',
+            '한 손엔 코코넛, 한 손엔 선크림!',
+        ]);
+    }
     const defaultComments = [
         `${duration} 새로운 여행지 탐험!`,
         `${duration} 특가로 떠나볼까요?`,
         `${duration} 알찬 일정 가능!`,
+        `${duration} 짧고 굵게 리프레시!`,
+        `${duration} 주말 붙이면 딱 좋은 일정!`,
+        `${duration} 숨은 여행지 개척해볼까요?`,
+        `${duration} 이 가격이면 일단 찜!`,
+        `${duration} 연차 하루면 충분해요!`,
     ];
     return pickRandom(defaultComments);
 }
