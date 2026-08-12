@@ -24,7 +24,8 @@ git pull --rebase --autostash 2>&1 | Add-Content -Encoding utf8 $LogFile
 
 $env:FORCE_GEN = '1'
 $env:AUTO_CLOSE = '1'
-node scripts/draft-naver-blog.mjs 2>&1 | Add-Content -Encoding utf8 $LogFile
+# 예약 실행 환경에서 node 직접 호출이 실패한 사례가 있어 npx tsx 사용 (2026-08-12)
+npx --no-install tsx scripts/draft-naver-blog.mjs 2>&1 | Add-Content -Encoding utf8 $LogFile
 
 if ($LASTEXITCODE -eq 0) {
     Log '초안 작성 완료 (네이버 임시저장)'

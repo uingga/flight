@@ -43,8 +43,11 @@ for ($attempt = 1; $attempt -le 2; $attempt++) {
     git pull --rebase --autostash 2>&1 | Add-Content -Encoding utf8 $LogFile
 
     # 원격 최신본에 이번 수집분을 노선 단위로 병합 + 필터 재계산
-    node scripts/merge-naver-prices.mjs data/naver-prices.json $SessionCopy 2>&1 | Add-Content -Encoding utf8 $LogFile
+    # (예약 실행 환경에서 node 직접 호출이 실패한 사례가 있어 npx tsx로 통일 — 2026-08-12)
+    npx --no-install tsx scripts/merge-naver-prices.mjs data/naver-prices.json $SessionCopy 2>&1 | Add-Content -Encoding utf8 $LogFile
+    Log "병합 exit=$LASTEXITCODE"
     npx --no-install tsx scripts/filter-by-naver.ts 2>&1 | Add-Content -Encoding utf8 $LogFile
+    Log "필터 exit=$LASTEXITCODE"
 
     $dirty = git status --porcelain data/naver-prices.json data/all-flights-cache.json
     if (-not $dirty) {
