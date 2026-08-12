@@ -1671,14 +1671,15 @@ ${icnItems}`;
     let tipSection = '';
     if (tips.length > 0) {
         const tipLines = tips.map(t => `            <p>${t}</p>`).join('\n');
+        // blockquote는 네이버 에디터 붙여넣기 시 인용구(박스) 컴포넌트로 변환된다
         tipSection = `
         <p>&nbsp;</p>
 
-        <div class="tip-box">
+        <blockquote class="tip-box">
             <p><b>✨ 이번 주 항공권 꿀팁</b></p>
             <p>&nbsp;</p>
 ${tipLines}
-        </div>`;
+        </blockquote>`;
     }
 
     // 해시태그 — SEO 최적화 (고정 + 월별 + 목적지별)

@@ -116,7 +116,8 @@ try {
     if (naver.url().includes('nid.naver.com')) {
         console.log('🔑 네이버 로그인이 필요합니다 — 열린 창에서 로그인해주세요 (최대 5분 대기)');
         console.log('   로그인하면 자동으로 이어서 진행됩니다. 세션은 저장되어 다음부터는 묻지 않습니다.');
-        await naver.waitForURL(/blog\.naver\.com/, { timeout: LOGIN_WAIT_MS });
+        // 로그인 페이지 URL의 쿼리에도 blog.naver.com이 들어 있으므로 반드시 호스트 기준으로 판별
+        await naver.waitForURL(/^https:\/\/blog\.naver\.com\//, { timeout: LOGIN_WAIT_MS });
         // 로그인 후 어디로 돌아왔든 글쓰기 화면으로 확실히 이동
         await naver.goto(EDITOR_URL, { waitUntil: 'domcontentloaded', timeout: 60000 });
     }
