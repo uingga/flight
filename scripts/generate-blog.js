@@ -863,7 +863,8 @@ const UNSPLASH_PHOTO = path.join(CARDS_DIR, 'pick_photo.jpg');
 const CITY_EN = {
     '도쿄': 'tokyo', '오사카': 'osaka', '후쿠오카': 'fukuoka', '삿포로': 'sapporo',
     '오키나와': 'okinawa', '나하': 'okinawa', '나고야': 'nagoya', '히로시마': 'hiroshima',
-    '다카마쓰': 'takamatsu japan', '마쓰야마': 'matsuyama japan', '오이타': 'oita japan',
+    '다카마쓰': 'takamatsu japan', '다카마츠': 'takamatsu japan',
+    '마쓰야마': 'matsuyama japan', '마츠야마': 'matsuyama japan', '오이타': 'oita japan',
     '가고시마': 'kagoshima', '구마모토': 'kumamoto', '미야자키': 'miyazaki japan',
     '니가타': 'niigata', '센다이': 'sendai', '시즈오카': 'shizuoka', '요나고': 'yonago',
     '오카야마': 'okayama', '고마쓰': 'komatsu japan', '도야마': 'toyama', '아사히카와': 'asahikawa',
