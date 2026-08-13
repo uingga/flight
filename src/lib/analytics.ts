@@ -1,6 +1,5 @@
-// GA4 Analytics 유틸리티 + 자체 이벤트 로깅
-// GA4: NEXT_PUBLIC_GA_ID 환경변수 필요
-// 자체 로깅: /api/analytics로 이벤트 전송
+// GA4 Analytics utilities
+// Revenue-related clicks are measured in GA4 and reconciled with partner dashboards.
 
 declare global {
     interface Window {
@@ -10,67 +9,103 @@ declare global {
 
 export const GA_ID = process.env.NEXT_PUBLIC_GA_ID || '';
 
-/** 서버로 이벤트 전송 (비동기, 실패 무시) */
-const logToServer = (data: Record<string, string | number | undefined>) => {
-    try {
-        fetch('/api/analytics', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data),
-        }).catch(() => { });
-    } catch { }
-};
+export interface RevenueClickDetails {
+    departureDate?: string;
+    returnDate?: string;
+    departureAirport?: string;
+    arrivalAirport?: string;
+    airline?: string;
+    destination?: string;
+    trackingId?: string;
+}
 
-/** GA4 페이지뷰 */
+const defined = (params: Record<string, string | number | boolean | undefined>) =>
+    Object.fromEntries(Object.entries(params).filter(([, value]) => value !== undefined && value !== '')) as Record<string, string | number | boolean>;
+
+/** GA4 page view */
 export const pageview = (url: string) => {
     if (!GA_ID || !window.gtag) return;
     window.gtag('config', GA_ID, { page_path: url });
 };
 
-/** GA4 커스텀 이벤트 */
+/** GA4 custom event */
 export const event = (action: string, params?: Record<string, string | number | boolean>) => {
     if (!GA_ID || !window.gtag) return;
     window.gtag('event', action, params);
 };
 
-// ── 사전 정의 이벤트 헬퍼 ──
+const revenueParams = (details: RevenueClickDetails) => defined({
+    departure_date: details.departureDate,
+    return_date: details.returnDate,
+    departure_airport: details.departureAirport,
+    arrival_airport: details.arrivalAirport,
+    airline: details.airline,
+    destination: details.destination,
+    tracking_id: details.trackingId,
+});
 
-/** 예약 클릭 */
-export const trackBookingClick = (source: string, route: string, price: number) => {
-    event('booking_click', { travel_agency: source, route, price, currency: 'KRW' });
-    logToServer({ type: 'booking_click', source, route, price });
+/** Booking click for every agency; MyRealTrip also emits an affiliate_click event. */
+export const trackBookingClick = (
+    source: string,
+    route: string,
+    price: number,
+    details: RevenueClickDetails = {},
+) => {
+    const common = {
+        partner: source,
+        product_type: 'flight',
+        route,
+        price,
+        currency: 'KRW',
+        is_affiliate: source === 'myrealtrip',
+        transport_type: 'beacon',
+        ...revenueParams(details),
+    };
+    event('booking_click', { travel_agency: source, ...common });
+    if (source === 'myrealtrip') event('affiliate_click', common);
 };
 
-/** 항공권 공유 */
+/** Hotel affiliate click; trackingId is also sent to Trip.com as trip_sub1. */
+export const trackHotelAffiliateClick = (
+    route: string,
+    price: number,
+    details: RevenueClickDetails,
+) => {
+    event('affiliate_click', {
+        partner: 'tripcom',
+        product_type: 'hotel',
+        route,
+        price,
+        currency: 'KRW',
+        transport_type: 'beacon',
+        ...revenueParams(details),
+    });
+};
+
+/** Flight share */
 export const trackShare = (route: string, method: string) => {
     event('share_flight', { route, share_method: method });
-    logToServer({ type: 'share', route, method });
 };
 
-/** 가격 알림 설정 */
+/** Price alert */
 export const trackAlertSetup = (route: string, maxPrice?: number) => {
     event('alert_setup', { route, ...(maxPrice ? { target_price: maxPrice } : {}) });
-    logToServer({ type: 'alert_setup', route, price: maxPrice });
 };
 
-/** 가격 비교 링크 클릭 (네이버/스카이스캐너) */
+/** Price-comparison link (Naver/Skyscanner) */
 export const trackCompareClick = (provider: 'naver' | 'skyscanner' | 'tripcom', route: string, price: number) => {
-    event('compare_click', { provider, route, price, currency: 'KRW' });
-    logToServer({ type: 'compare_click', provider, route, price });
+    event('compare_click', { provider, route, price, currency: 'KRW', transport_type: 'beacon' });
 };
 
-/** 항공권 카드 클릭 */
+/** Flight card click */
 export const trackCardClick = (route: string, price: number, airline: string, source: string) => {
     event('card_click', { route, price, airline, source, currency: 'KRW' });
-    logToServer({ type: 'card_click', route, price, airline, source });
 };
 
-/** 출발지 필터 변경 */
 export const trackFilterChange = (filterType: string, value: string) => {
     event('filter_change', { filter_type: filterType, filter_value: value });
 };
 
-/** 날짜 필터 변경 */
 export const trackDateFilter = (startDate: string, endDate: string) => {
     event('date_filter', { start_date: startDate, end_date: endDate });
 };

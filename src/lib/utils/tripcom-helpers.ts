@@ -264,7 +264,24 @@ export const IATA_TO_ENGLISH: Record<string, string> = {
     'INC': 'Yinchuan', 'OBO': 'Obihiro',
 };
 
-export const getTripcomHotelUrl = (arrCity: string, depDate?: string, arrDate?: string, arrAirport?: string): string | null => {
+export const getTripcomTrackingId = (
+    arrCity: string, depDate?: string, arrDate?: string, arrAirport?: string,
+    depCity?: string, depAirport?: string,
+): string => {
+    const parts = [
+        'hotel',
+        depAirport || (depCity ? normalizeCity(depCity) : ''),
+        arrAirport || normalizeCity(arrCity),
+        depDate?.replace(/\D/g, ''),
+        arrDate?.replace(/\D/g, ''),
+    ].filter(Boolean);
+    return parts.join('_').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 100);
+};
+
+export const getTripcomHotelUrl = (
+    arrCity: string, depDate?: string, arrDate?: string, arrAirport?: string,
+    depCity?: string, depAirport?: string,
+): string | null => {
     let cityName = normalizeCity(arrCity);
     const bm = cityName.match(/^(.+?)[(](.+?)[)]$/);
     if (bm) cityName = bm[1];
@@ -279,7 +296,8 @@ export const getTripcomHotelUrl = (arrCity: string, depDate?: string, arrDate?: 
         checkoutStr = fmt(co);
     }
     const dateQs = checkinStr ? '&checkin=' + checkinStr + '&checkout=' + checkoutStr : '';
-    const affQs = '&Allianceid=' + TRIPCOM_ALLIANCE_ID + '&SID=' + TRIPCOM_SID + '&trip_sub1=&trip_sub3=' + TRIPCOM_HOTEL_SUB3;
+    const trackingId = getTripcomTrackingId(arrCity, depDate, arrDate, arrAirport, depCity, depAirport);
+    const affQs = '&Allianceid=' + TRIPCOM_ALLIANCE_ID + '&SID=' + TRIPCOM_SID + '&trip_sub1=' + encodeURIComponent(trackingId) + '&trip_sub3=' + TRIPCOM_HOTEL_SUB3;
     // 1순위: TRIPCOM_CITY_DATA (검증된 city ID)
     const cityData = TRIPCOM_CITY_DATA[cityName];
     if (cityData) {
