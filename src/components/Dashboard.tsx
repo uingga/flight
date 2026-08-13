@@ -2848,7 +2848,6 @@ export default function Dashboard() {
                                         실제 예약은 마이리얼트립에서 직접 이루어집니다.
                                     </div>
                                 )}
-
                                 {/* 땡처리닷컴: TASF 수수료 안내 */}
                                 {modetourGuide.source === 'ttang' && (
                                     <>
