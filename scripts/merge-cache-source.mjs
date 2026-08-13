@@ -58,6 +58,14 @@ if (overlay.timestamp && (!target.timestamp || overlay.timestamp > target.timest
     target.timestamp = overlay.timestamp;
 }
 
+// 교체한 소스의 실제 확인 시각도 overlay에서 함께 가져온다.
+if (overlay.sourceUpdatedAt?.[sourceKey]) {
+    target.sourceUpdatedAt = {
+        ...(target.sourceUpdatedAt || {}),
+        [sourceKey]: overlay.sourceUpdatedAt[sourceKey],
+    };
+}
+
 fs.writeFileSync(targetPath, JSON.stringify(target, null, 2));
 console.log(
     `✅ ${sourceKey} 병합: target ${beforeCount}건(${sourceKey} ${replacedCount}) → ${target.count}건(${sourceKey} ${overlayFlights.length})`

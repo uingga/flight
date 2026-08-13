@@ -45,6 +45,7 @@ export async function GET(request: NextRequest) {
         // 통합 캐시 파일에서 모든 항공권 데이터 읽기
         let allFlights: Flight[] = [];
         let lastUpdated: string | null = null;
+        let sourceUpdatedAt: Record<string, string> = {};
 
         try {
             const fs = require('fs');
@@ -54,7 +55,8 @@ export async function GET(request: NextRequest) {
             if (fs.existsSync(cachePath)) {
                 const cacheData = JSON.parse(fs.readFileSync(cachePath, 'utf-8'));
                 allFlights = cacheData.flights || [];
-                lastUpdated = cacheData.lastUpdated || null;
+                lastUpdated = cacheData.lastUpdated || cacheData.timestamp || null;
+                sourceUpdatedAt = cacheData.sourceUpdatedAt || {};
                 console.log(`통합 캐시에서 ${allFlights.length}개 항공권 로드`);
                 console.log(`소스별: 노랑풍선=${cacheData.sources?.ybtour || 0}, 하나투어=${cacheData.sources?.hanatour || 0}, 모두투어=${cacheData.sources?.modetour || 0}, 온라인투어=${cacheData.sources?.onlinetour || 0}, 마이리얼트립=${cacheData.sources?.myrealtrip || 0}`);
             } else {
@@ -67,6 +69,7 @@ export async function GET(request: NextRequest) {
         // 항공사명 정규화
         allFlights = allFlights.map(f => ({
             ...f,
+            priceCheckedAt: sourceUpdatedAt[f.source] || lastUpdated || undefined,
             airline: normalizeAirline(f.airline),
             // 모두투어 예약 링크에서 departureCity SEL → ICN 보정 (SEL은 모두투어 웹에서 미인식)
             link: (f.source === 'modetour' && f.link?.includes('%22SEL%22'))

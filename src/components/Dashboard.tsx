@@ -33,6 +33,19 @@ import { getYbtourBookingUrl } from '@/lib/utils/ybtour-url';
 
 const ITEMS_PER_PAGE = 20;
 
+function getFreshnessInfo(checkedAt?: string) {
+    if (!checkedAt) return { multiplier: 1.12, label: '확인 시각 미기록' };
+    const checkedTime = new Date(checkedAt).getTime();
+    if (!Number.isFinite(checkedTime)) return { multiplier: 1.12, label: '확인 시각 미기록' };
+
+    const ageHours = Math.max(0, (Date.now() - checkedTime) / 3_600_000);
+    if (ageHours < 24) return { multiplier: 1, label: `${Math.max(1, Math.floor(ageHours))}시간 전 확인` };
+    if (ageHours < 48) return { multiplier: 1.03, label: '1일 전 확인' };
+    if (ageHours < 72) return { multiplier: 1.08, label: '2일 전 확인' };
+    if (ageHours < 120) return { multiplier: 1.18, label: `${Math.floor(ageHours / 24)}일 전 확인` };
+    return { multiplier: 1.35, label: `${Math.floor(ageHours / 24)}일 이상 전 확인` };
+}
+
 export default function Dashboard() {
     const [flights, setFlights] = useState<Flight[]>([]);
     const [loading, setLoading] = useState(true);
@@ -76,6 +89,7 @@ export default function Dashboard() {
     const [showContactModal, setShowContactModal] = useState(false);
     const [contactForm, setContactForm] = useState({ name: '', email: '', message: '' });
     const [contactSending, setContactSending] = useState(false);
+    const [flightReport, setFlightReport] = useState<{ flightId: string; status: 'sending' | 'sent' | 'error' } | null>(null);
     const observerRef = useRef<IntersectionObserver | null>(null);
     const loadMoreRef = useRef<HTMLDivElement | null>(null);
     const [headerHidden, setHeaderHidden] = useState(false);
@@ -472,6 +486,41 @@ export default function Dashboard() {
         setTimeout(() => setShareToast(null), 2000);
     };
 
+    const reportFlightIssue = async (flight: Flight, reportType: 'price_changed' | 'unavailable') => {
+        if (flightReport?.status === 'sending') return;
+        setFlightReport({ flightId: flight.id, status: 'sending' });
+
+        try {
+            const response = await fetch('/api/flight-report', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    reportType,
+                    flight: {
+                        id: flight.id,
+                        source: flight.source,
+                        sourceName: getSourceName(flight.source),
+                        departureCity: normalizeCity(flight.departure.city),
+                        arrivalCity: normalizeCity(flight.arrival.city),
+                        departureDate: flight.departure.date,
+                        arrivalDate: flight.arrival.date,
+                        airline: flight.airline,
+                        price: flight.price,
+                        priceCheckedAt: flight.priceCheckedAt,
+                    },
+                }),
+            });
+            if (!response.ok) throw new Error('report failed');
+
+            setFlightReport({ flightId: flight.id, status: 'sent' });
+            setShareToast('신고가 접수되었습니다. 확인해볼게요.');
+        } catch {
+            setFlightReport({ flightId: flight.id, status: 'error' });
+            setShareToast('신고 접수에 실패했습니다. 잠시 후 다시 시도해주세요.');
+        }
+        setTimeout(() => setShareToast(null), 2500);
+    };
+
     // 인원수 반영 예약 URL 생성
     const getBookingUrl = (flight: Flight, pax: { adult: number; child: number; infant: number }) => {
         // 하나투어: psngrCntLst JSON
@@ -821,6 +870,10 @@ export default function Dashboard() {
                             score *= 2.0;
                         }
                     }
+
+                    // 오래된 가격일수록 추천순에서 단계적으로 낮춘다.
+                    // 가격·시간대 등 기존 장점은 유지하되 5일 이상 미확인 데이터만 크게 감점한다.
+                    score *= getFreshnessInfo(flight.priceCheckedAt).multiplier;
 
                     return score;
                 };
@@ -2910,6 +2963,33 @@ export default function Dashboard() {
                                         </div>
                                     </>
                                 )}
+
+                                <div className={styles.mdtFreshnessReport}>
+                                    <span className={styles.mdtFreshnessText}>
+                                        가격 정보 · {getFreshnessInfo(modetourGuide.priceCheckedAt).label}
+                                    </span>
+                                    {flightReport?.flightId === modetourGuide.id && flightReport.status === 'sent' ? (
+                                        <span className={styles.mdtReportDone}>✓ 신고 접수 완료</span>
+                                    ) : (
+                                        <div className={styles.mdtReportActions} aria-label="항공권 정보 신고">
+                                            <span>정보가 다른가요?</span>
+                                            <button
+                                                type="button"
+                                                onClick={() => reportFlightIssue(modetourGuide, 'price_changed')}
+                                                disabled={flightReport?.status === 'sending'}
+                                            >
+                                                가격이 달라요
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => reportFlightIssue(modetourGuide, 'unavailable')}
+                                                disabled={flightReport?.status === 'sending'}
+                                            >
+                                                예약이 안 돼요
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
 
 
                             </div>
