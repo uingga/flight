@@ -1333,21 +1333,6 @@
     transform: scale(1.15);
 }
 
-.trueDealBadge {
-    display: inline-flex;
-    align-items: center;
-    padding: 3px 8px;
-    border: 1px solid #ddd6fe;
-    border-radius: 999px;
-    background: #f5f3ff;
-    color: #6d28d9;
-    font-size: 11px;
-    font-weight: 800;
-    line-height: 1.2;
-    white-space: nowrap;
-}
-
-
 /* 관심 노선 즐겨찾기 버튼 (활성 상태) */
 .favBtnActive {
     composes: shareBtn;
