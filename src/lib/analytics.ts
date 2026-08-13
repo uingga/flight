@@ -8,6 +8,33 @@ declare global {
 }
 
 export const GA_ID = process.env.NEXT_PUBLIC_GA_ID || '';
+export const ANALYTICS_EXCLUSION_KEY = 'tikitikit_analytics_excluded';
+
+export const isAnalyticsExcluded = () => {
+    if (typeof window === 'undefined') return false;
+    try {
+        return window.localStorage.getItem(ANALYTICS_EXCLUSION_KEY) === 'true';
+    } catch {
+        return false;
+    }
+};
+
+/** Exclude the current browser from GA4 (intended for the site owner). */
+export const setAnalyticsExcluded = (excluded: boolean) => {
+    if (typeof window === 'undefined') return;
+    try {
+        if (excluded) {
+            window.localStorage.setItem(ANALYTICS_EXCLUSION_KEY, 'true');
+        } else {
+            window.localStorage.removeItem(ANALYTICS_EXCLUSION_KEY);
+        }
+    } catch {
+        // GA's disable flag still works for the current page if storage is unavailable.
+    }
+    if (GA_ID) {
+        (window as unknown as Record<string, unknown>)[`ga-disable-${GA_ID}`] = excluded;
+    }
+};
 
 export interface RevenueClickDetails {
     departureDate?: string;
@@ -24,13 +51,13 @@ const defined = (params: Record<string, string | number | boolean | undefined>) 
 
 /** GA4 page view */
 export const pageview = (url: string) => {
-    if (!GA_ID || !window.gtag) return;
+    if (!GA_ID || !window.gtag || isAnalyticsExcluded()) return;
     window.gtag('config', GA_ID, { page_path: url });
 };
 
 /** GA4 custom event */
 export const event = (action: string, params?: Record<string, string | number | boolean>) => {
-    if (!GA_ID || !window.gtag) return;
+    if (!GA_ID || !window.gtag || isAnalyticsExcluded()) return;
     window.gtag('event', action, params);
 };
 
