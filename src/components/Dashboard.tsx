@@ -773,11 +773,17 @@ export default function Dashboard() {
                         if (ratio <= -0.20) {
                             // 네이버보다 20% 이상 싸다 → 최우선 상향
                             score *= 0.3;
+                        } else if (ratio <= -0.15) {
+                            // 네이버보다 15~20% 싸다
+                            score *= 0.375;
                         } else if (ratio <= -0.10) {
-                            // 네이버보다 10~20% 싸다 → 강하게 상향
+                            // 네이버보다 10~15% 싸다
                             score *= 0.45;
+                        } else if (ratio <= -0.05) {
+                            // 네이버보다 5~10% 싸다
+                            score *= 0.55;
                         } else if (ratio <= 0) {
-                            // 네이버보다 싸다 → 상향
+                            // 네이버보다 0~5% 싸다
                             score *= 0.65;
                         } else if (ratio <= 0.05) {
                             // 0~5% 비싸다 → 거의 동일, 미세 페널티
