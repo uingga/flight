@@ -1333,6 +1333,20 @@
     transform: scale(1.15);
 }
 
+.trueDealBadge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    border: 1px solid #ddd6fe;
+    border-radius: 999px;
+    background: #f5f3ff;
+    color: #6d28d9;
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
 
 /* 관심 노선 즐겨찾기 버튼 (활성 상태) */
 .favBtnActive {
@@ -2671,6 +2685,42 @@
     padding: 10px 24px calc(14px + env(safe-area-inset-bottom, 0px));
     background: #fff;
     box-shadow: 0 -10px 18px -12px rgba(0, 0, 0, 0.22);
+}
+
+.mdtActionRow {
+    display: flex;
+    align-items: stretch;
+    gap: 8px;
+}
+
+.mdtShareBtn {
+    flex: 0 0 72px;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
+    background: #fff;
+    color: #4b5563;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, transform 0.1s;
+}
+
+.mdtShareBtn:hover {
+    background: #f9fafb;
+    border-color: #9ca3af;
+}
+
+.mdtShareBtn:active {
+    transform: scale(0.97);
+}
+
+.mdtActionRow .mdtBookBtn {
+    flex: 1;
 }
 
 .affiliateDisclosure {
