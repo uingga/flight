@@ -103,6 +103,7 @@ export default function Dashboard() {
         status: 'idle' | 'saving' | 'sent' | 'error';
         message?: string;
     } | null>(null);
+    const priceAlertAreaRef = useRef<HTMLDivElement>(null);
     const observerRef = useRef<IntersectionObserver | null>(null);
     const loadMoreRef = useRef<HTMLDivElement | null>(null);
     const [headerHidden, setHeaderHidden] = useState(false);
@@ -593,8 +594,6 @@ export default function Dashboard() {
                     conditions: {
                         departureCity: normalizeCity(flight.departure.city),
                         arrivalCity: normalizeCity(flight.arrival.city),
-                        departureDateFrom: flight.departure.date,
-                        departureDateTo: flight.departure.date,
                         maxPrice,
                     },
                     baseline: {
@@ -618,6 +617,14 @@ export default function Dashboard() {
             } : current);
         }
     };
+
+    useEffect(() => {
+        if (!priceAlertSetup?.flightId) return;
+        const frame = window.requestAnimationFrame(() => {
+            priceAlertAreaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        });
+        return () => window.cancelAnimationFrame(frame);
+    }, [priceAlertSetup?.flightId]);
 
     // 인원수 반영 예약 URL 생성
     const getBookingUrl = (flight: Flight, pax: { adult: number; child: number; infant: number }) => {
@@ -2967,6 +2974,83 @@ export default function Dashboard() {
                                 <div className={styles.mdtPriceTotalValue}>{formatPrice(totalPrice)}</div>
                             </div>
 
+                            <div ref={priceAlertAreaRef} className={styles.priceAlertArea}>
+                                {priceAlertSetup?.flightId !== modetourGuide.id ? (
+                                    <button
+                                        type="button"
+                                        className={styles.priceAlertOpenBtn}
+                                        onClick={() => setPriceAlertSetup({
+                                            flightId: modetourGuide.id,
+                                            maxPrice: String(modetourGuide.price),
+                                            status: 'idle',
+                                        })}
+                                    >
+                                        <span aria-hidden="true">🔔</span>
+                                        이 노선 가격 알림 받기
+                                    </button>
+                                ) : (
+                                    <div className={styles.priceAlertPanel} aria-live="polite">
+                                        <div className={styles.priceAlertPanelHeader}>
+                                            <div>
+                                                <strong>{depCity} → {arrCity}</strong>
+                                                <span>출발일이 달라도 알려드려요</span>
+                                            </div>
+                                            {priceAlertSetup.status !== 'sent' && (
+                                                <button
+                                                    type="button"
+                                                    className={styles.priceAlertCloseBtn}
+                                                    onClick={() => setPriceAlertSetup(null)}
+                                                    aria-label="가격 알림 설정 닫기"
+                                                >
+                                                    ×
+                                                </button>
+                                            )}
+                                        </div>
+                                        {priceAlertSetup.status === 'sent' ? (
+                                            <p className={styles.priceAlertSuccess}>✓ {priceAlertSetup.message}</p>
+                                        ) : (
+                                            <>
+                                                <label className={styles.priceAlertPriceField}>
+                                                    <span>목표 가격</span>
+                                                    <span className={styles.priceAlertInputWrap}>
+                                                        <input
+                                                            type="number"
+                                                            min="10000"
+                                                            max="10000000"
+                                                            step="1000"
+                                                            inputMode="numeric"
+                                                            value={priceAlertSetup.maxPrice}
+                                                            onChange={event => setPriceAlertSetup(current => current ? {
+                                                                ...current,
+                                                                maxPrice: event.target.value,
+                                                                status: 'idle',
+                                                                message: undefined,
+                                                            } : current)}
+                                                            aria-label="목표 가격"
+                                                        />
+                                                        <span>원 이하</span>
+                                                    </span>
+                                                </label>
+                                                <p className={styles.priceAlertHelp}>
+                                                    같은 노선이면 출발일과 일정이 달라도 목표가 이하의 새 특가를 알려드립니다.
+                                                </p>
+                                                {priceAlertSetup.message && (
+                                                    <p className={styles.priceAlertError}>{priceAlertSetup.message}</p>
+                                                )}
+                                                <button
+                                                    type="button"
+                                                    className={styles.priceAlertSaveBtn}
+                                                    disabled={priceAlertSetup.status === 'saving'}
+                                                    onClick={() => savePriceAlert(modetourGuide)}
+                                                >
+                                                    {priceAlertSetup.status === 'saving' ? '등록 중…' : '알림 등록'}
+                                                </button>
+                                            </>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+
                             {/* 하단 */}
                             <div className={styles.mdtFooter}>
 
@@ -3088,83 +3172,6 @@ export default function Dashboard() {
                                         </div>
                                     )}
                                 </div>
-
-                                <div className={styles.priceAlertArea}>
-                                    {priceAlertSetup?.flightId !== modetourGuide.id ? (
-                                        <button
-                                            type="button"
-                                            className={styles.priceAlertOpenBtn}
-                                            onClick={() => setPriceAlertSetup({
-                                                flightId: modetourGuide.id,
-                                                maxPrice: String(modetourGuide.price),
-                                                status: 'idle',
-                                            })}
-                                        >
-                                            <span aria-hidden="true">🔔</span>
-                                            이 노선·일정 가격 알림 받기
-                                        </button>
-                                    ) : (
-                                        <div className={styles.priceAlertPanel} aria-live="polite">
-                                            <div className={styles.priceAlertPanelHeader}>
-                                                <div>
-                                                    <strong>{depCity} → {arrCity}</strong>
-                                                    <span>{formatDate(depDate)} 출발</span>
-                                                </div>
-                                                {priceAlertSetup.status !== 'sent' && (
-                                                    <button
-                                                        type="button"
-                                                        className={styles.priceAlertCloseBtn}
-                                                        onClick={() => setPriceAlertSetup(null)}
-                                                        aria-label="가격 알림 설정 닫기"
-                                                    >
-                                                        ×
-                                                    </button>
-                                                )}
-                                            </div>
-                                            {priceAlertSetup.status === 'sent' ? (
-                                                <p className={styles.priceAlertSuccess}>✓ {priceAlertSetup.message}</p>
-                                            ) : (
-                                                <>
-                                                    <label className={styles.priceAlertPriceField}>
-                                                        <span>목표 가격</span>
-                                                        <span className={styles.priceAlertInputWrap}>
-                                                            <input
-                                                                type="number"
-                                                                min="10000"
-                                                                max="10000000"
-                                                                step="1000"
-                                                                inputMode="numeric"
-                                                                value={priceAlertSetup.maxPrice}
-                                                                onChange={event => setPriceAlertSetup(current => current ? {
-                                                                    ...current,
-                                                                    maxPrice: event.target.value,
-                                                                    status: 'idle',
-                                                                    message: undefined,
-                                                                } : current)}
-                                                            />
-                                                            <span>원 이하</span>
-                                                        </span>
-                                                    </label>
-                                                    <p className={styles.priceAlertHelp}>
-                                                        같은 노선·출발일의 새 특가 또는 5천원·3% 이상 가격 하락만 알려드립니다.
-                                                    </p>
-                                                    {priceAlertSetup.message && (
-                                                        <p className={styles.priceAlertError}>{priceAlertSetup.message}</p>
-                                                    )}
-                                                    <button
-                                                        type="button"
-                                                        className={styles.priceAlertSaveBtn}
-                                                        disabled={priceAlertSetup.status === 'saving'}
-                                                        onClick={() => savePriceAlert(modetourGuide)}
-                                                    >
-                                                        {priceAlertSetup.status === 'saving' ? '등록 중…' : '알림 등록'}
-                                                    </button>
-                                                </>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-
 
                             </div>
 

@@ -6,8 +6,6 @@ interface AlertConditions {
     region?: string;
     departureCity?: string;
     arrivalCity?: string;
-    departureDateFrom?: string;
-    departureDateTo?: string;
     maxPrice?: number;
 }
 
@@ -42,8 +40,6 @@ function normalizeConditions(input: Record<string, unknown> = {}): AlertConditio
         region: cleanText(input.region),
         departureCity: cleanText(input.departureCity),
         arrivalCity: cleanText(input.arrivalCity),
-        departureDateFrom: cleanText(input.departureDateFrom, 20),
-        departureDateTo: cleanText(input.departureDateTo, 20),
         maxPrice: Number.isFinite(rawMaxPrice) && rawMaxPrice >= 10000 && rawMaxPrice <= 10000000
             ? Math.round(rawMaxPrice)
             : undefined,
@@ -183,8 +179,8 @@ export async function POST(request: NextRequest) {
             subscription,
             departure_city: conditions.departureCity,
             arrival_city: conditions.arrivalCity,
-            departure_date_from: conditions.departureDateFrom || null,
-            departure_date_to: conditions.departureDateTo || null,
+            departure_date_from: null,
+            departure_date_to: null,
             max_price: conditions.maxPrice,
             request_hash: requestHash(request),
             active: true,

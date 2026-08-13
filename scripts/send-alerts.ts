@@ -90,9 +90,6 @@ async function main() {
             if (normalizeCity(flight.departure.city) !== normalizeCity(alert.departure_city)) return false;
             if (normalizeCity(flight.arrival.city) !== normalizeCity(alert.arrival_city)) return false;
             if (flight.price > alert.max_price) return false;
-            const date = normalizeDate(flight.departure.date);
-            if (alert.departure_date_from && date < alert.departure_date_from) return false;
-            if (alert.departure_date_to && date > alert.departure_date_to) return false;
             return true;
         }).sort((a, b) => a.price - b.price);
 
