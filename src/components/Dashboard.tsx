@@ -61,6 +61,7 @@ export default function Dashboard() {
     const [sharedFlightId, setSharedFlightId] = useState<string | null>(null);
     const [showFuelBanner, setShowFuelBanner] = useState(false);
     const sharedRouteFallback = useRef<{ dep: string | null; arr: string | null; date: string | null } | null>(null);
+    const openedSharedFlightId = useRef<string | null>(null);
     const [bookingFlight, setBookingFlight] = useState<Flight | null>(null);
     const [ttangConfirmFlight, setTtangConfirmFlight] = useState<Flight | null>(null);
     const [passengers, setPassengers] = useState({ adult: 1, child: 0, infant: 0 });
@@ -910,6 +911,29 @@ export default function Dashboard() {
     // 표시할 항공권 (무한 스크롤용)
     const displayedFlights = diversifiedFlights.slice(0, displayCount);
     const hasMore = displayCount < diversifiedFlights.length;
+
+    // 공유 링크로 들어오면 해당 항공권의 상세 팝업을 바로 연다.
+    useEffect(() => {
+        if (!sharedFlightId || loading || openedSharedFlightId.current === sharedFlightId) return;
+
+        let sharedFlight = flights.find((flight) => flight.id === sharedFlightId);
+
+        if (!sharedFlight) {
+            const fallback = sharedRouteFallback.current;
+            sharedFlight = flights.find((flight) => {
+                const arrivalCity = flight.arrival?.city?.replace(/\([^)]+\)/g, '').trim();
+                const departureDate = flight.departure?.date?.replace(/[^0-9\-\.]/g, '').replace(/\./g, '-').replace(/-+$/, '');
+                return Boolean(
+                    fallback?.arr && arrivalCity?.includes(fallback.arr)
+                    && fallback.date && departureDate?.startsWith(fallback.date.substring(0, 10))
+                );
+            });
+        }
+
+        if (!sharedFlight) return;
+        openedSharedFlightId.current = sharedFlightId;
+        setModetourGuide(sharedFlight);
+    }, [sharedFlightId, loading, flights]);
 
     // ============================================
     // Insight Bars — 카드 사이에 삽입되는 정보 바
@@ -2254,6 +2278,23 @@ export default function Dashboard() {
                                                 >
                                                     <svg width="16" height="16" viewBox="0 0 24 24" fill={isFavoriteFlight(flight.id) ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ pointerEvents: 'none' }}>
                                                         <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                                                    </svg>
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className={styles.shareBtn}
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
+                                                        shareFlight(flight);
+                                                    }}
+                                                    aria-label="이 항공권 공유하기"
+                                                    title="공유하기"
+                                                >
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ pointerEvents: 'none' }}>
+                                                        <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                                                        <polyline points="16 6 12 2 8 6" />
+                                                        <line x1="12" y1="2" x2="12" y2="15" />
                                                     </svg>
                                                 </button>
                                             </div>
