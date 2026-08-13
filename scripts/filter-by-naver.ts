@@ -2,9 +2,10 @@ import fs from 'fs';
 import path from 'path';
 
 /**
- * 네이버 최저가 기준으로 마이리얼트립 항공권 필터링
+ * 네이버 최저가 기준으로 전체 여행사 항공권 필터링
  * - naver-prices.json과 all-flights-cache.json을 비교
- * - 마이리얼트립 가격이 네이버보다 비싸면 제거
+ * - 동일 공항·동일 왕복 날짜를 정확히 비교
+ * - 네이버보다 10만원 이상이면서 20% 이상 비싼 항공권만 제거
  * 
  * 사용법: npx tsx scripts/filter-by-naver.ts
  */
@@ -28,13 +29,17 @@ let filtered = 0;
 let cheaper = 0;
 let noData = 0;
 
-cache.flights = cache.flights.filter((f: any) => {
-    if (f.source !== 'myrealtrip') return true;
+const normalizeDate = (value: unknown): string => String(value || '')
+    .replace(/\(.*\)/g, '')
+    .replace(/\./g, '-')
+    .trim()
+    .substring(0, 10);
 
+cache.flights = cache.flights.filter((f: any) => {
     const depAirport = f.departure?.airport;
     const arrAirport = f.arrival?.airport;
-    const depDate = f.departure?.date?.substring(0, 10);
-    const retDate = f.arrival?.date?.substring(0, 10);
+    const depDate = normalizeDate(f.departure?.date);
+    const retDate = normalizeDate(f.arrival?.date);
     if (!depAirport || !arrAirport || !depDate || !retDate) return true;
 
     // 정확한 공항+날짜 매칭만 사용 (도시+월 폴백은 오매칭 위험이 커서 제거)
@@ -50,8 +55,9 @@ cache.flights = cache.flights.filter((f: any) => {
     f.naverLowest = bestNaverPrice;
 
     const diff = f.price - bestNaverPrice;
-    if (diff >= 100000) {
-        console.log(`  ❌ ${f.arrival?.city} ${depDate} 마이리얼트립 ${f.price.toLocaleString()}원 > 네이버 ${bestNaverPrice.toLocaleString()}원 (+${diff.toLocaleString()}원)`);
+    const moreExpensiveRatio = diff / bestNaverPrice;
+    if (diff >= 100000 && moreExpensiveRatio >= 0.2) {
+        console.log(`  ❌ ${f.arrival?.city} ${depDate} ${f.source} ${f.price.toLocaleString()}원 > 네이버 ${bestNaverPrice.toLocaleString()}원 (+${diff.toLocaleString()}원, +${Math.round(moreExpensiveRatio * 100)}%)`);
         filtered++;
         return false;
     }
@@ -67,7 +73,7 @@ cache.lastUpdated = new Date().toISOString();
 fs.writeFileSync(cachePath, JSON.stringify(cache));
 
 console.log(`\n=== 필터링 결과 ===`);
-console.log(`✅ 마이리얼트립이 더 저렴: ${cheaper}건 (유지)`);
-console.log(`❌ 네이버가 더 저렴: ${filtered}건 (제거)`);
+console.log(`✅ 여행사 가격이 네이버 이하: ${cheaper}건 (유지)`);
+console.log(`❌ 네이버보다 10만원·20% 이상 비쌈: ${filtered}건 (제거)`);
 console.log(`❓ 비교 데이터 없음: ${noData}건 (유지)`);
 console.log(`📊 ${beforeCount}건 → ${cache.flights.length}건`);

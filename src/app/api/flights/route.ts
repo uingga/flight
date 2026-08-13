@@ -134,7 +134,16 @@ export async function GET(request: NextRequest) {
                         }
                     }
                 }
+                const beforeNaverFilter = allFlights.length;
+                allFlights = allFlights.filter(f => {
+                    if (!f.naverLowest || f.naverLowest <= 0) return true;
+                    const difference = f.price - f.naverLowest;
+                    const moreExpensiveRatio = difference / f.naverLowest;
+                    return difference < 100000 || moreExpensiveRatio < 0.2;
+                });
+                const removed = beforeNaverFilter - allFlights.length;
                 if (matched > 0) console.log(`네이버 최저가 매칭: ${matched}/${allFlights.length}건`);
+                if (removed > 0) console.log(`네이버보다 10만원·20% 이상 비싼 항공권 제거: ${removed}건`);
             }
         } catch (e) { }
 
