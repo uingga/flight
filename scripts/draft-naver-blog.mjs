@@ -147,7 +147,7 @@ try {
 
     // ── 6. 본문 입력 (마커 기반) ──
     // 네이버 에디터는 붙여넣기 시 <img>를 버리므로:
-    //   ① 이미지 자리를 ⟦사진N⟧ 마커 문단으로 바꾼 전체 글을 한 번에 붙여넣고
+    //   ① 이미지 자리를 영문 마커 문단으로 바꾼 전체 글을 한 번에 붙여넣고
     //   ② 각 마커를 클릭해 그 자리에 사진을 업로드한 뒤 마커 텍스트를 지운다
     // 커서 위치 추적이 필요 없어 캡션이 엉뚱한 문단에 붙는 문제가 없다.
     const imgSrcs = await src.evaluate(() => {
@@ -187,7 +187,7 @@ try {
             const bi = blocks.indexOf(el) !== -1 ? blocks.indexOf(el) : blocks.findIndex(b => el.contains(b));
             if (bi !== -1) {
                 const marker = document.createElement('p');
-                marker.textContent = `⟦사진${bi + 1}⟧`;
+                marker.textContent = `이미지자리번호${String(bi + 1).padStart(3, '0')}끝`;
                 container.appendChild(marker);
             } else {
                 const clone = el.cloneNode(true);
@@ -244,6 +244,23 @@ try {
         return true;
     };
 
+    const clearParagraphContents = async (paragraph) => {
+        await paragraph.evaluate((element) => {
+            const selection = element.ownerDocument.getSelection();
+            const range = element.ownerDocument.createRange();
+            range.selectNodeContents(element);
+            selection.removeAllRanges();
+            selection.addRange(range);
+            const deleted = element.ownerDocument.execCommand('delete');
+            if (!deleted || (element.textContent || '').trim()) element.textContent = '';
+            element.dispatchEvent(new InputEvent('input', {
+                bubbles: true,
+                inputType: 'deleteContentBackward',
+                data: null,
+            }));
+        });
+    };
+
     let pasted = false;
     try {
         await clearPoisonedFormat();
@@ -259,24 +276,66 @@ try {
         await naver.keyboard.press('Control+V');
         await naver.waitForTimeout(4000);
 
+        // SmartEditor의 HTML→문단 변환이 늦게 끝나는 경우가 있어 이미지 표식 8개가
+        // 실제 문단으로 나타날 때까지 기다린다.
+        let readyMarkerCount = 0;
+        for (let wait = 0; wait < 22; wait++) {
+            const texts = await frame.locator('.se-text-paragraph').allTextContents();
+            readyMarkerCount = texts.filter(text => /이미지자리번호\d+끝/.test(text || '')).length;
+            if (readyMarkerCount === imgSrcs.length) break;
+            await naver.waitForTimeout(500);
+        }
+        if (readyMarkerCount !== imgSrcs.length) {
+            throw new Error(`이미지 자리표시 준비 실패: ${readyMarkerCount}/${imgSrcs.length}`);
+        }
+        console.log(`   이미지 자리표시 준비: ${readyMarkerCount}/${imgSrcs.length}개`);
+
         // 각 마커 자리에 사진 업로드
         // 업로드가 문단을 커서 위치에서 쪼개 마커 잔해가 남지 않도록,
         // 마커 텍스트를 먼저 지워 빈 문단으로 만든 뒤 그 자리에 업로드한다.
         let imgOk = 0;
         for (let k = 0; k < imgSrcs.length; k++) {
-            const marker = `⟦사진${k + 1}⟧`;
-            const mLoc = frame.locator('.se-text-paragraph', { hasText: marker }).first();
+            const marker = `이미지자리번호${String(k + 1).padStart(3, '0')}끝`;
+            const paragraphs = frame.locator('.se-text-paragraph');
+            const paragraphTexts = await paragraphs.allTextContents();
+            const markerIndex = paragraphTexts.findIndex(text => (text || '').includes(marker));
+            const mLoc = markerIndex >= 0 ? paragraphs.nth(markerIndex) : null;
             try {
+                if (!mLoc) throw new Error('marker not found');
                 await mLoc.click({ timeout: 5000 });
-                await naver.keyboard.press('Home');
-                await naver.keyboard.press('Shift+End');
-                await naver.keyboard.press('Backspace');
+                await clearParagraphContents(mLoc);
                 await naver.waitForTimeout(300);
-            } catch {
-                console.warn(`   ⚠️ 마커 ${marker} 미발견 — 해당 이미지 생략`);
+            } catch (error) {
+                console.warn(`   ⚠️ 마커 ${marker} 처리 실패 (${String(error.message || error).split('\n')[0]}) — 해당 이미지 생략`);
                 continue;
             }
             if (await uploadImage(imgSrcs[k])) imgOk++;
+        }
+
+        // 네이버가 과거 특수괄호 마커를 [[사진N 형태로 바꾼 경우까지 포함해 잔여 문구를 제거한다.
+        const markerPattern = /(?:이미지자리번호\d+끝|TTKIMG\d+END|TTK_IMAGE_\d+|(?:\[\[|⟦)\s*사진\s*\d+\s*(?:\]\]|⟧)?)/i;
+        const markerParagraphs = frame.locator('.se-text-paragraph');
+        const markerCount = await markerParagraphs.count();
+        let removedMarkers = 0;
+        for (let i = markerCount - 1; i >= 0; i--) {
+            const paragraph = markerParagraphs.nth(i);
+            const text = await paragraph.textContent().catch(() => '');
+            if (!markerPattern.test(text || '')) continue;
+            try {
+                await paragraph.click({ timeout: 2500 });
+                await clearParagraphContents(paragraph);
+                removedMarkers++;
+            } catch { /* 잔여 마커 개별 삭제 실패는 아래 검증에서 확인 */ }
+        }
+        const remainingMarkerTexts = await frame.locator('.se-text-paragraph').allTextContents();
+        const remainingMarkers = remainingMarkerTexts.filter(text => markerPattern.test(text));
+        if (remainingMarkers.length > 0) {
+            throw new Error(`이미지 자리표시 ${remainingMarkers.length}개가 남아 있습니다.`);
+        }
+        if (removedMarkers > 0) console.log(`   🧹 남은 이미지 자리표시 ${removedMarkers}개 제거`);
+
+        if (imgOk !== imgSrcs.length) {
+            throw new Error(`이미지 첨부가 ${imgOk}/${imgSrcs.length}장만 완료되었습니다.`);
         }
 
         // 모든 이미지 가운데 정렬 (이미지 클릭 → "가운데 정렬" 버튼 → 클래스로 검증)
@@ -297,6 +356,9 @@ try {
             } catch { /* 개별 정렬 실패 무시 */ }
         }
         console.log(`   가운데 정렬: ${centered}/${imgCount}장`);
+        if (imgCount !== imgSrcs.length || centered !== imgCount) {
+            throw new Error(`이미지 검증 실패: 첨부 ${imgCount}/${imgSrcs.length}, 가운데 정렬 ${centered}/${imgCount}`);
+        }
 
         // 인용구(꿀팁)를 박스형(포스트잇) 스타일로 변경
         const quoteCount = await frame.locator('.se-component.se-quotation').count();

@@ -1733,7 +1733,8 @@ function generateHTML(topFlights, allIcnFlights) {
         <p>${f.airline} · ${depDate}~${arrDate}${durationText}</p>
         <p style="font-size: 20px; font-weight: 800; ${priceColor}"><b>${formatPrice(f.price)}원</b></p>
         <p>&nbsp;</p>
-        <p><img src="blog-cards/rank_${rank}.png" alt="${depCity}-${arrCity} 항공권" style="max-width: 100%; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"></p>${seasonText}${extraComment}`;
+        <p><img src="blog-cards/rank_${rank}.png" alt="${depCity}-${arrCity} 항공권" style="max-width: 100%; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"></p>${seasonText}${extraComment}
+        <p>&nbsp;</p>`;
     }).join('\n');
 
     // 에디터 픽 (날짜별 로테이션 — 매일 다른 항공편 픽)
