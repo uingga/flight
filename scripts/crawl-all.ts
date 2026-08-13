@@ -14,6 +14,7 @@ interface CacheData {
     timestamp: string;
     count: number;
     flights: any[];
+    sourceUpdatedAt?: Record<string, string>;
     sources: {
 
         ybtour: number;
@@ -50,6 +51,7 @@ async function main() {
         }
     } catch { }
     const prevFlights = prevCache?.flights || [];
+    const sourceUpdatedAt: Record<string, string> = { ...(prevCache?.sourceUpdatedAt || {}) };
 
     try {
         // 전체 사이트 병렬 크롤링
@@ -72,6 +74,7 @@ async function main() {
             if (result.status === 'fulfilled') {
                 allFlights.push(...result.value);
                 sources[task.key] = result.value.length;
+                if (result.value.length > 0) sourceUpdatedAt[task.key] = new Date().toISOString();
                 console.log(`✅ ${task.name}: ${result.value.length}개`);
             } else {
                 console.error(`❌ ${task.name} 실패:`, result.reason);
@@ -308,6 +311,7 @@ async function main() {
                 count: benchmarkedFlights.length,
                 flights: benchmarkedFlights,
                 sources: sources,
+                sourceUpdatedAt,
                 priceHistory: history,
             };
 

@@ -399,6 +399,10 @@ async function main() {
     // 저장
     cache.count = cache.flights.length;
     cache.lastUpdated = new Date().toISOString();
+    cache.sourceUpdatedAt = {
+        ...(cache.sourceUpdatedAt || {}),
+        myrealtrip: cache.lastUpdated,
+    };
     fs.writeFileSync(cachePath, JSON.stringify(cache));
 
     const elapsed = ((Date.now() - startTime) / 60000).toFixed(1);

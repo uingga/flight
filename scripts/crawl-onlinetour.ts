@@ -55,6 +55,10 @@ async function main() {
         timestamp: new Date().toISOString(),
         count: filteredFlights.length,
         flights: filteredFlights,
+        sourceUpdatedAt: {
+            ...(existing.sourceUpdatedAt || {}),
+            onlinetour: new Date().toISOString(),
+        },
         sources: {
             ...existing.sources,
             onlinetour: onlinetourFlights.length,
