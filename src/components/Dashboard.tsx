@@ -2841,6 +2841,14 @@ export default function Dashboard() {
                                     </div>
                                 )}
 
+                                {/* 마이리얼트립: 예약 주체 안내 */}
+                                {modetourGuide.source === 'myrealtrip' && (
+                                    <div className={styles.mdtDisclaimer}>
+                                        표시된 가격 및 좌석은 실시간 변동될 수 있으며,
+                                        실제 예약은 마이리얼트립에서 직접 이루어집니다.
+                                    </div>
+                                )}
+
                                 {/* 땡처리닷컴: TASF 수수료 안내 */}
                                 {modetourGuide.source === 'ttang' && (
                                     <>
@@ -2879,6 +2887,11 @@ export default function Dashboard() {
                                     }}>
                                         {getSourceName(modetourGuide.source)}에서 예약하기 →
                                     </button>
+                                {modetourGuide.source === 'myrealtrip' && (
+                                    <p className={styles.affiliateDisclosure}>
+                                        제휴 링크 안내: 이 링크를 통해 예약이 완료되면 티키티킷이 수수료를 받을 수 있습니다.
+                                    </p>
+                                )}
                             </div>
                         </div>
                     </div>
