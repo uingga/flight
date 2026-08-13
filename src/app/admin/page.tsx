@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import styles from './admin.module.css';
+import { isAnalyticsExcluded, setAnalyticsExcluded } from '@/lib/analytics';
 
 interface CrawlHistoryEntry {
     timestamp: string;
@@ -68,8 +69,10 @@ export default function AdminPage() {
     const [error, setError] = useState<string | null>(null);
     const [key, setKey] = useState('');
     const [authed, setAuthed] = useState(false);
+    const [analyticsExcluded, setAnalyticsExcludedState] = useState(false);
 
     useEffect(() => {
+        setAnalyticsExcludedState(isAnalyticsExcluded());
         const params = new URLSearchParams(window.location.search);
         const urlKey = params.get('key');
         if (urlKey) {
@@ -100,6 +103,8 @@ export default function AdminPage() {
             setData(json);
             setAuthed(true);
             setError(null);
+            setAnalyticsExcluded(true);
+            setAnalyticsExcludedState(true);
 
         } catch {
             setError('데이터를 불러오는데 실패했습니다.');
@@ -516,6 +521,25 @@ export default function AdminPage() {
                     <a href="https://analytics.google.com/" target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', marginTop: '10px', color: '#7c3aed', fontWeight: 700 }}>
                         Google Analytics 열기 →
                     </a>
+                    <div style={{ marginTop: '18px', paddingTop: '16px', borderTop: '1px solid #334155' }}>
+                        <p style={{ margin: '0 0 10px', color: analyticsExcluded ? '#86efac' : '#fbbf24', fontWeight: 700 }}>
+                            내 방문 통계: {analyticsExcluded ? '제외 중' : '포함 중'}
+                        </p>
+                        <p style={{ margin: '0 0 12px', color: '#94a3b8', fontSize: '0.85rem', lineHeight: 1.6 }}>
+                            이 브라우저에서 발생하는 방문과 예약 클릭을 GA4에서 제외합니다. 다른 기기나 브라우저는 각각 설정해야 합니다.
+                        </p>
+                        <button
+                            type="button"
+                            className={styles.analyticsToggle}
+                            onClick={() => {
+                                const next = !analyticsExcluded;
+                                setAnalyticsExcluded(next);
+                                setAnalyticsExcludedState(next);
+                            }}
+                        >
+                            {analyticsExcluded ? '내 방문 다시 포함하기' : '내 방문 제외하기'}
+                        </button>
+                    </div>
                 </div>
             </section>
         </div>

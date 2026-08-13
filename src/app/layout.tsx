@@ -143,9 +143,16 @@ export default function RootLayout({
                                 window.dataLayer = window.dataLayer || [];
                                 function gtag(){dataLayer.push(arguments);}
                                 gtag('js', new Date());
-                                gtag('config', '${GA_ID}', {
-                                    send_page_view: true
-                                });
+                                var tikitikitAnalyticsExcluded = false;
+                                try {
+                                    tikitikitAnalyticsExcluded = localStorage.getItem('tikitikit_analytics_excluded') === 'true';
+                                } catch (error) {}
+                                window['ga-disable-${GA_ID}'] = tikitikitAnalyticsExcluded;
+                                if (!tikitikitAnalyticsExcluded) {
+                                    gtag('config', '${GA_ID}', {
+                                        send_page_view: true
+                                    });
+                                }
                             `}
                         </Script>
                     </>
