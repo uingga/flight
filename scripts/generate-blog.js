@@ -23,12 +23,18 @@ const HISTORY_PATH = path.join(__dirname, '..', 'data', 'blog-history.json');
 const OUTPUT_DIR = path.join(__dirname, '..', 'public');
 const CARDS_DIR = path.join(OUTPUT_DIR, 'blog-cards');
 const TOP_N = 3;
-const MIN_INCHEON = 1;
-const MIN_REGIONAL = 2;
+const MIN_INCHEON = 2;
+const MIN_REGIONAL = 1;
 const SITE_URL = 'https://tikitikit.kr';
 const PROD_API_URL = `${SITE_URL}/api/flights`;
 const HISTORY_DAYS = 3; // 최근 N일 이내 포스트의 도시 중복 방지
-const ICN_SCORE_WEIGHTS = { price: 0.4, discount: 0.3, popularity: 0.3 };
+const BLOG_SCORE_WEIGHTS = {
+    price: 0.25,
+    discount: 0.15,
+    popularity: 0.20,
+    convenience: 0.10,
+    naver: 0.30,
+};
 
 // ===== 프로덕션 API에서 항공편 가져오기 =====
 function fetchProductionFlights() {
@@ -515,18 +521,16 @@ async function main() {
     if (recentDests.length > 0) {
         console.log(`🔄 최근 ${HISTORY_DAYS}일 이내 포스트 도시 (제외 대상): ${recentDests.join(', ')}`);
     }
-    const previousDayDests = loadPreviousDayDests();
-
-    // 5.5 가격 하락 감지 — 전날을 제외한 최근 노선은 가격이 크게 내리면 중복 제외에서 면제
+    // 5.5 가격 하락 감지 — 최근 노선도 가격이 크게 내리면 중복 제외에서 면제
     const priceDropDests = findPriceDropFlights(flights);
     if (priceDropDests.length > 0) {
-        console.log(`📉 가격 하락 감지 (전날 제외 유지): ${priceDropDests.map(d => `${d.dest} ${d.prevPrice.toLocaleString()}→${d.currPrice.toLocaleString()}원`).join(', ')}`);
+        console.log(`📉 가격 하락 감지 (최근 중복 제외 면제): ${priceDropDests.map(d => `${d.dest} ${d.prevPrice.toLocaleString()}→${d.currPrice.toLocaleString()}원`).join(', ')}`);
     }
     const priceDropDestNames = priceDropDests.map(d => d.dest);
 
-    // 6. Top 3 선발 (인천 출발 보장 + 중복 방지 + 가격 하락 우선)
-    flights.sort((a, b) => a.price - b.price);
-    const topFlights = selectTopWithIncheon(flights, recentDests, priceDropDestNames, previousDayDests);
+    // 6. Top 3 선발 (종합점수 + 지방/수도권 출발 보장 + 중복 방지)
+    const rankedFlights = rankBlogFlights(flights);
+    const topFlights = selectTopWithIncheon(rankedFlights, recentDests, priceDropDestNames);
 
     if (topFlights.length === 0) {
         console.error('❌ 유효한 항공편이 없습니다.');
@@ -537,8 +541,18 @@ async function main() {
     topFlights.forEach((f, i) => {
         const isICN = (normalizeCity(f.departure?.city) === '인천' || normalizeCity(f.departure?.city) === '김포') ? ' [수도권]' : '';
         const dropInfo = priceDropDestNames.includes(normalizeCity(f.arrival?.city)) ? ' 📉하락' : '';
-        console.log(`  ${i + 1}위: ${f.departure?.city} → ${f.arrival?.city} | ${f.airline} | ${f.price.toLocaleString()}원${isICN}${dropInfo}`);
+        const score = f.blogScore;
+        console.log(
+            `  ${i + 1}위: ${f.departure?.city} → ${f.arrival?.city} | ${f.airline} | ${f.price.toLocaleString()}원${isICN}${dropInfo}`
+            + (score ? ` | ${score.totalScore.toFixed(1)}점 (가격 ${score.priceScore.toFixed(0)} · 할인 ${score.discountScore.toFixed(0)}`
+                + ` · 인기 ${score.popularityScore.toFixed(0)} · 편의 ${score.convenienceScore.toFixed(0)} · 네이버 ${score.naverScore.toFixed(0)})` : '')
+        );
     });
+
+    if (process.env.BLOG_SELECTION_DRY_RUN === '1') {
+        console.log('\n✅ BLOG_SELECTION_DRY_RUN: 선정 검증만 완료');
+        return;
+    }
 
     // 6. 카드 스크린샷 촬영
     console.log('\n📸 카드 스크린샷 촬영 시작...');
@@ -623,27 +637,6 @@ function loadRecentDests() {
     }
 }
 
-// 전날 목적지는 가격이 내려갔더라도 이틀 연속 노출하지 않는다.
-function loadPreviousDayDests() {
-    try {
-        if (!fs.existsSync(HISTORY_PATH)) return [];
-        const history = JSON.parse(fs.readFileSync(HISTORY_PATH, 'utf-8'));
-        const yesterday = new Date();
-        yesterday.setHours(0, 0, 0, 0);
-        yesterday.setDate(yesterday.getDate() - 1);
-        const dateKey = [
-            yesterday.getFullYear(),
-            String(yesterday.getMonth() + 1).padStart(2, '0'),
-            String(yesterday.getDate()).padStart(2, '0'),
-        ].join('-');
-        const entry = (history.entries || []).find(e => e.date === dateKey);
-        return entry?.destinations || [];
-    } catch (e) {
-        console.warn('⚠️ 전날 히스토리 로드 실패:', e.message);
-        return [];
-    }
-}
-
 function loadRecentPrices() {
     try {
         if (!fs.existsSync(HISTORY_PATH)) return {};
@@ -714,16 +707,106 @@ function saveHistory(destinations, prices = {}) {
     fs.writeFileSync(HISTORY_PATH, JSON.stringify(history, null, 2), 'utf-8');
 }
 
-// ===== Top N 선발 (지방 2 + 인천 1 보장 + 최근 중복 방지 + 가격 하락 면제) =====
-function selectTopWithIncheon(sortedFlights, recentDests = [], priceDropDests = [], previousDayDests = []) {
+// 땡처리닷컴은 결제 단계에서 성인 1인 기준 발권수수료 2만원이 추가된다.
+function getEffectiveBlogPrice(flight) {
+    return flight.price + (flight.source === 'ttang' ? 20000 : 0);
+}
+
+function parseHour(time) {
+    const match = String(time || '').match(/^(\d{1,2}):/);
+    return match ? Number(match[1]) : null;
+}
+
+function getTripDays(flight) {
+    const dep = new Date(`${flight.departure?.date}T00:00:00`);
+    const ret = new Date(`${flight.arrival?.date}T00:00:00`);
+    if (Number.isNaN(dep.getTime()) || Number.isNaN(ret.getTime())) return null;
+    return Math.round((ret - dep) / 86400000) + 1;
+}
+
+// 출발·귀국 시간이 지나치게 이르거나 늦지 않고, 3~6일 일정이면 높은 점수.
+// 직항 정보가 명시된 모두투어 항공편은 직항 여부도 반영한다.
+function getConvenienceScore(flight) {
+    let score = 40;
+    const depHour = parseHour(flight.departure?.time);
+    const returnHour = parseHour(flight.arrival?.time);
+    const tripDays = getTripDays(flight);
+
+    if (depHour !== null) score += depHour >= 7 && depHour <= 20 ? 20 : (depHour >= 5 && depHour <= 22 ? 10 : 0);
+    if (returnHour !== null) score += returnHour >= 9 && returnHour <= 21 ? 15 : (returnHour >= 6 && returnHour <= 23 ? 8 : 0);
+    if (tripDays !== null) score += tripDays >= 3 && tripDays <= 6 ? 15 : (tripDays >= 2 && tripDays <= 8 ? 8 : 0);
+
+    const detail = flight.modetourDetail;
+    if (detail?.isDirect === true && detail?.isReturnDirect !== false) score += 10;
+    if (detail?.isDirect === false || detail?.isReturnDirect === false) score -= 10;
+    return Math.max(0, Math.min(100, score));
+}
+
+// 네이버 동일 노선·날짜 최저가와 비교. 미조회는 35점으로 두어
+// 검증된 동일가(60점)나 실제 특가보다 위로 쉽게 올라오지 않게 한다.
+function getNaverScore(flight) {
+    if (!flight.naverLowest || flight.naverLowest <= 0) return 35;
+    const savingRatio = (flight.naverLowest - getEffectiveBlogPrice(flight)) / flight.naverLowest;
+    if (savingRatio >= 0.20) return 100;
+    if (savingRatio >= 0.15) return 90;
+    if (savingRatio >= 0.10) return 80;
+    if (savingRatio >= 0.05) return 70;
+    if (savingRatio >= 0) return 60;
+    if (savingRatio >= -0.05) return 45;
+    if (savingRatio >= -0.10) return 30;
+    if (savingRatio >= -0.15) return 15;
+    return 0;
+}
+
+function rankBlogFlights(candidates, statsFlights = candidates) {
+    if (candidates.length === 0) return [];
+
+    const destinationStats = new Map();
+    for (const flight of statsFlights) {
+        const dest = normalizeCity(flight.arrival?.city);
+        const stats = destinationStats.get(dest) || { flightCount: 0, sources: new Set() };
+        stats.flightCount++;
+        if (flight.source) stats.sources.add(flight.source);
+        destinationStats.set(dest, stats);
+    }
+
+    const byPrice = [...candidates].sort((a, b) => getEffectiveBlogPrice(a) - getEffectiveBlogPrice(b));
+    const priceRanks = new Map(byPrice.map((flight, index) => [flight.id, index]));
+    const maxDiscount = Math.max(1, ...candidates.map(flight => Math.max(0, flight.discountRate || 0)));
+    const maxFlightCount = Math.max(1, ...Array.from(destinationStats.values()).map(stats => stats.flightCount));
+    const maxSourceCount = Math.max(1, ...Array.from(destinationStats.values()).map(stats => stats.sources.size));
+
+    return candidates.map(flight => {
+        const dest = normalizeCity(flight.arrival?.city);
+        const stats = destinationStats.get(dest) || { flightCount: 0, sources: new Set() };
+        const rank = priceRanks.get(flight.id) || 0;
+        const priceScore = candidates.length === 1 ? 100 : 100 * (1 - rank / (candidates.length - 1));
+        const discountScore = 100 * Math.max(0, flight.discountRate || 0) / maxDiscount;
+        const volumeScore = 100 * Math.log1p(stats.flightCount) / Math.log1p(maxFlightCount);
+        const sourceScore = 100 * stats.sources.size / maxSourceCount;
+        const popularityScore = volumeScore * 0.6 + sourceScore * 0.4;
+        const convenienceScore = getConvenienceScore(flight);
+        const naverScore = getNaverScore(flight);
+        const totalScore =
+            priceScore * BLOG_SCORE_WEIGHTS.price
+            + discountScore * BLOG_SCORE_WEIGHTS.discount
+            + popularityScore * BLOG_SCORE_WEIGHTS.popularity
+            + convenienceScore * BLOG_SCORE_WEIGHTS.convenience
+            + naverScore * BLOG_SCORE_WEIGHTS.naver;
+        return {
+            ...flight,
+            blogScore: { totalScore, priceScore, discountScore, popularityScore, convenienceScore, naverScore },
+        };
+    }).sort((a, b) => b.blogScore.totalScore - a.blogScore.totalScore || getEffectiveBlogPrice(a) - getEffectiveBlogPrice(b));
+}
+
+// ===== Top N 선발 (지방 1 + 인천/김포 2 기본 + 최근 중복 방지 + 가격 하락 면제) =====
+function selectTopWithIncheon(sortedFlights, recentDests = [], priceDropDests = []) {
     const topFlights = [];
     const seenDests = new Set();
     const priceDropSet = new Set(priceDropDests);
     // 가격 하락 도시는 recent에서 제외
     const recentSet = new Set(recentDests.filter(d => !priceDropSet.has(d)));
-    // 단, 전날 나온 도시는 가격 하락 여부와 관계없이 다시 제외
-    previousDayDests.forEach(dest => recentSet.add(dest));
-
     const isCapital = (f) => {
         const dep = normalizeCity(f.departure?.city);
         return dep === '인천' || dep === '김포';
@@ -798,13 +881,12 @@ function selectTopWithIncheon(sortedFlights, recentDests = [], priceDropDests = 
         }
     }
 
-    // 5단계: 가격순 재정렬 
-    topFlights.sort((a, b) => a.price - b.price);
+    // 5단계: 종합점수순 유지
+    topFlights.sort((a, b) => (b.blogScore?.totalScore || 0) - (a.blogScore?.totalScore || 0));
     return topFlights;
 }
 
-// ===== 인천 추가 항공편 (최저가 40% + 할인율 30% + 인기도 30%) =====
-// 인기도는 현재 노선의 항공편 수(60%)와 취급 여행사 수(40%)로 계산한다.
+// ===== 인천 추가 항공편 (TOP 3와 같은 종합점수) =====
 function getExtraIncheonFlights(allFlights, topFlights, maxExtra, recentDests = []) {
     const topIds = new Set(topFlights.map(f => `${f.departure?.city}|${f.arrival?.city}|${f.departure?.date}|${f.airline}`));
     const topDests = new Set(topFlights.map(f => normalizeCity(f.arrival?.city)));
@@ -815,15 +897,6 @@ function getExtraIncheonFlights(allFlights, topFlights, maxExtra, recentDests = 
         const depCity = normalizeCity(f.departure?.city);
         return depCity === '인천' || depCity === '김포';
     });
-
-    const destinationStats = new Map();
-    for (const f of capitalFlights) {
-        const dest = normalizeCity(f.arrival?.city);
-        const stats = destinationStats.get(dest) || { flightCount: 0, sources: new Set() };
-        stats.flightCount++;
-        if (f.source) stats.sources.add(f.source);
-        destinationStats.set(dest, stats);
-    }
 
     // 목적지별 가장 저렴한 항공편 하나를 대표 후보로 사용한다.
     const candidateByDest = new Map();
@@ -838,40 +911,19 @@ function getExtraIncheonFlights(allFlights, topFlights, maxExtra, recentDests = 
     const candidates = Array.from(candidateByDest.values());
     if (candidates.length === 0) return [];
 
-    // 가격은 후보 내 순위 점수, 할인율은 후보 중 최고 할인율 대비 점수로 환산한다.
-    const byPrice = [...candidates].sort((a, b) => a.price - b.price);
-    const priceRanks = new Map(byPrice.map((f, i) => [normalizeCity(f.arrival?.city), i]));
-    const maxDiscount = Math.max(1, ...candidates.map(f => Math.max(0, f.discountRate || 0)));
-    const maxFlightCount = Math.max(1, ...candidates.map(f => destinationStats.get(normalizeCity(f.arrival?.city))?.flightCount || 0));
-    const maxSourceCount = Math.max(1, ...candidates.map(f => destinationStats.get(normalizeCity(f.arrival?.city))?.sources.size || 0));
-
-    const scored = candidates.map(f => {
-        const dest = normalizeCity(f.arrival?.city);
-        const stats = destinationStats.get(dest) || { flightCount: 0, sources: new Set() };
-        const priceRank = priceRanks.get(dest) || 0;
-        const priceScore = candidates.length === 1 ? 100 : 100 * (1 - priceRank / (candidates.length - 1));
-        const discountScore = 100 * Math.max(0, f.discountRate || 0) / maxDiscount;
-        const volumeScore = 100 * Math.log1p(stats.flightCount) / Math.log1p(maxFlightCount);
-        const sourceScore = 100 * stats.sources.size / maxSourceCount;
-        const popularityScore = volumeScore * 0.6 + sourceScore * 0.4;
-        const totalScore =
-            priceScore * ICN_SCORE_WEIGHTS.price
-            + discountScore * ICN_SCORE_WEIGHTS.discount
-            + popularityScore * ICN_SCORE_WEIGHTS.popularity;
-        return { flight: f, totalScore, priceScore, discountScore, popularityScore };
-    }).sort((a, b) => b.totalScore - a.totalScore || a.flight.price - b.flight.price);
-
-    const selected = scored.slice(0, maxExtra);
+    const selected = rankBlogFlights(candidates, capitalFlights).slice(0, maxExtra);
     if (selected.length > 0) {
-        console.log('📊 인천 추천 종합점수 (가격 40% · 할인율 30% · 인기도 30%):');
-        selected.forEach(({ flight, totalScore, priceScore, discountScore, popularityScore }) => {
+        console.log('📊 인천 추천 종합점수 (가격 25% · 할인율 15% · 인기 20% · 편의 10% · 네이버 30%):');
+        selected.forEach(flight => {
+            const { totalScore, priceScore, discountScore, popularityScore, convenienceScore, naverScore } = flight.blogScore;
             console.log(
                 `  ${normalizeCity(flight.arrival?.city)} ${totalScore.toFixed(1)}점`
-                + ` (가격 ${priceScore.toFixed(0)} · 할인 ${discountScore.toFixed(0)} · 인기 ${popularityScore.toFixed(0)})`
+                + ` (가격 ${priceScore.toFixed(0)} · 할인 ${discountScore.toFixed(0)} · 인기 ${popularityScore.toFixed(0)}`
+                + ` · 편의 ${convenienceScore.toFixed(0)} · 네이버 ${naverScore.toFixed(0)})`
             );
         });
     }
-    return selected.map(item => item.flight);
+    return selected;
 }
 
 // ===== 서버 상태 확인 =====
