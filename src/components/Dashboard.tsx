@@ -434,9 +434,24 @@ export default function Dashboard() {
         return topDestinations.filter(city => availableCities.has(city)).slice(0, 8);
     }, [flights]);
 
+    // 외부 비교 정보는 공개하지 않고 가격·일정 조건을 종합해 엄격하게 판정한다.
+    const isTrueDeal = (flight: Flight) => {
+        const benchmark = flight.naverLowest || 0;
+        if (benchmark <= 0) return false;
+
+        // 땡처리닷컴은 결제 단계에서 발권수수료 2만원이 추가된다.
+        const effectivePrice = flight.price + (flight.source === 'ttang' ? 20000 : 0);
+        const priceAdvantage = (benchmark - effectivePrice) / benchmark;
+        if (priceAdvantage < 0.05) return false;
+
+        const explicitlyConnecting = flight.modetourDetail?.isDirect === false
+            || flight.modetourDetail?.isReturnDirect === false;
+        return !explicitlyConnecting;
+    };
+
     // 공유 기능
-    const shareFlightText = (flight: Flight) => {
-        const price = `${Math.floor(flight.price / 10000)}만원`;
+    const getFlightShareContent = (flight: Flight) => {
+        const price = formatPrice(flight.price);
         const depDate = formatDate(flight.departure.date);
         const arrDate = flight.arrival.date ? ` ~ ${formatDate(flight.arrival.date)}` : '';
         // 짧은 공유 URL: /share/항공편ID → 서버에서 OG 이미지 생성 → 메인 페이지로 리다이렉트
@@ -450,26 +465,33 @@ export default function Dashboard() {
         if (dateRaw) shareParams.set('date', dateRaw);
         const queryStr = shareParams.toString() ? `?${shareParams.toString()}` : '';
         const siteUrl = `${window.location.origin}/share/${encodeURIComponent(flight.id)}${queryStr}`;
-        return `✈️ ${dep} → ${arr} ${price} | ${depDate}${arrDate} | ${flight.airline} | ${getSourceName(flight.source)}\n🔗 ${siteUrl}`;
+        const dealLabel = isTrueDeal(flight) ? '💎 진짜 특가\n' : '';
+        return {
+            title: `${dep} → ${arr} ${price}`,
+            text: `${dealLabel}✈️ ${dep} → ${arr}\n💰 ${price}/1인\n📅 ${depDate}${arrDate}\n🛫 ${flight.airline} · ${getSourceName(flight.source)}`,
+            url: siteUrl,
+        };
     };
 
     const shareFlight = async (flight: Flight) => {
-        const text = shareFlightText(flight);
+        const content = getFlightShareContent(flight);
+        const clipboardText = `${content.text}\n🔗 ${content.url}`;
         const route = `${normalizeCity(flight.departure.city)}-${normalizeCity(flight.arrival.city)}`;
-        const isMobile = checkIsMobile();
         try {
-            if (isMobile && navigator.share) {
-                await navigator.share({ text });
+            if (navigator.share) {
+                await navigator.share(content);
                 gtag.trackShare(route, 'native_share');
             } else {
-                await navigator.clipboard.writeText(text);
+                await navigator.clipboard.writeText(clipboardText);
                 gtag.trackShare(route, 'clipboard');
                 setShareToast('✅ 링크가 복사되었습니다!');
                 setTimeout(() => setShareToast(null), 2000);
             }
-        } catch {
+        } catch (error) {
+            // 사용자가 공유 창을 닫은 경우에는 링크를 임의로 복사하지 않는다.
+            if (error instanceof DOMException && error.name === 'AbortError') return;
             try {
-                await navigator.clipboard.writeText(text);
+                await navigator.clipboard.writeText(clipboardText);
                 gtag.trackShare(route, 'clipboard');
                 setShareToast('✅ 링크가 복사되었습니다!');
                 setTimeout(() => setShareToast(null), 2000);
@@ -2262,18 +2284,6 @@ export default function Dashboard() {
                                                         <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                                                     </svg>
                                                 </button>
-                                                <button
-                                                    type="button"
-                                                    className={styles.shareBtn}
-                                                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); shareFlight(flight); }}
-                                                    title="공유하기"
-                                                >
-                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ pointerEvents: 'none' }}>
-                                                        <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
-                                                        <polyline points="16 6 12 2 8 6" />
-                                                        <line x1="12" y1="2" x2="12" y2="15" />
-                                                    </svg>
-                                                </button>
                                             </div>
                                         </div>
 
@@ -2304,6 +2314,9 @@ export default function Dashboard() {
                                                 <div className={styles.priceSection}>
                                                     <div className={styles.price}>{formatPrice(flight.price)}</div>
                                                     {(() => {
+                                                        if (isTrueDeal(flight)) {
+                                                            return <span className={styles.trueDealBadge}>💎 진짜 특가</span>;
+                                                        }
                                                         const city = flight.arrival.city?.replace(/\([^)]+\)/, '').trim();
                                                         const depMonth = flight.departure.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 7);
                                                         const ipCityData = interparkPrices[city];
@@ -2644,6 +2657,9 @@ export default function Dashboard() {
                                 <div className={styles.mdtAirlineInfo}>
                                     <span className={`badge ${getSourceBadgeClass(modetourGuide.source)}`}>{getSourceName(modetourGuide.source)}</span>
                                     <span className={styles.airline} style={{ marginLeft: '6px' }}>{modetourGuide.airline}</span>
+                                    {isTrueDeal(modetourGuide) && (
+                                        <span className={styles.trueDealBadge}>💎 진짜 특가</span>
+                                    )}
                                     {(() => {
                                         const seatNum = modetourGuide.availableSeats || (modetourGuide.seats ? parseInt(modetourGuide.seats) : 0);
                                         if (!seatNum) return null;
@@ -2893,7 +2909,21 @@ export default function Dashboard() {
 
                             {/* 예약 버튼: 시트 직속 자식이라 내용 길이와 무관하게 항상 하단에 고정 표시 */}
                             <div className={styles.mdtBookBtnWrap}>
-                                <button className={styles.mdtBookBtn} onClick={() => {
+                                <div className={styles.mdtActionRow}>
+                                    <button
+                                        type="button"
+                                        className={styles.mdtShareBtn}
+                                        onClick={() => shareFlight(modetourGuide)}
+                                        aria-label="이 항공권 공유하기"
+                                    >
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                                            <polyline points="16 6 12 2 8 6" />
+                                            <line x1="12" y1="2" x2="12" y2="15" />
+                                        </svg>
+                                        <span>공유</span>
+                                    </button>
+                                    <button className={styles.mdtBookBtn} onClick={() => {
                                         gtag.trackBookingClick(modetourGuide.source, `${depCity}-${arrCity}`, totalPrice, revenueClickDetails(modetourGuide));
                                         if (modetourGuide.source === 'modetour') {
                                             const url = getMobileUrl(modetourGuide.link, isMobile);
@@ -2912,6 +2942,7 @@ export default function Dashboard() {
                                     }}>
                                         {getSourceName(modetourGuide.source)}에서 예약하기 →
                                     </button>
+                                </div>
                                 {modetourGuide.source === 'myrealtrip' && (
                                     <p className={styles.affiliateDisclosure}>
                                         제휴 링크 안내: 이 링크를 통해 예약이 완료되면 티키티킷이 수수료를 받을 수 있습니다.
