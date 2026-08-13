@@ -1,7 +1,8 @@
 # Naver flight crawler - Windows Task Scheduler entry point
 #
 # Pull GitHub data first, then fill up to 280 missing or stale routes across
-# every agency. A route/date pair crawled within 48 hours is skipped.
+# every agency. MyRealTrip prices refresh daily; other successful prices refresh
+# every 48 hours. Failed searches retry after 6 hours.
 #
 # Schedule: daily at 04:00
 # Manual:   powershell -File scripts\run-naver-crawl.ps1
@@ -28,6 +29,7 @@ $env:HIDE_WINDOW = '1'
 $env:SOURCE_FILTER = 'all'
 $env:MAX_FLIGHTS = '280'
 $env:FRESH_HOURS = '48'
+$env:MYREALTRIP_FRESH_HOURS = '24'
 $env:MISS_RETRY_HOURS = '6'
 npx --no-install tsx scripts/crawl-naver.ts 2>&1 | Add-Content -Encoding utf8 $LogFile
 if ($LASTEXITCODE -ne 0) {

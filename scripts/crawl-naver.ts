@@ -19,6 +19,7 @@ const MAX_DAYS_AHEAD = parseInt(process.env.MAX_DAYS_AHEAD || '60', 10); // 출�
 const SOURCE_FILTER_RAW = process.env.SOURCE_FILTER ?? 'myrealtrip';
 const SOURCE_FILTER = SOURCE_FILTER_RAW.toLowerCase() === 'all' ? '' : SOURCE_FILTER_RAW; // all이면 전체 소스
 const FRESH_HOURS = parseInt(process.env.FRESH_HOURS || '48', 10);  // N시간 내 검색한 노선은 스킵
+const MYREALTRIP_FRESH_HOURS = parseInt(process.env.MYREALTRIP_FRESH_HOURS || '24', 10); // 마이리얼트립은 매일 갱신
 const MISS_RETRY_HOURS = parseInt(process.env.MISS_RETRY_HOURS || '6', 10); // 검색 실패 노선은 잠시 뒤 재시도
 const ABORT_AFTER_MISSES = parseInt(process.env.ABORT_AFTER_MISSES || '3', 10); // 연속 N건 결과 없으면 차단으로 보고 조기 철수
 const DRY_RUN = process.env.DRY_RUN === '1';                        // 검색 계획만 출력하고 종료
@@ -78,12 +79,17 @@ interface NaverPriceEntry {
     lastAttemptStatus?: 'success' | 'miss';
 }
 
-const isAttemptFresh = (entry: NaverPriceEntry | undefined, now = Date.now()): boolean => {
+const freshnessHoursFor = (entry: NaverPriceEntry, source: string): number => {
+    if (entry.lastAttemptStatus === 'miss') return MISS_RETRY_HOURS;
+    return source === 'myrealtrip' ? MYREALTRIP_FRESH_HOURS : FRESH_HOURS;
+};
+
+const isAttemptFresh = (entry: NaverPriceEntry | undefined, source: string, now = Date.now()): boolean => {
     if (!entry) return false;
     const isMiss = entry.lastAttemptStatus === 'miss';
     const timestamp = isMiss ? entry.lastAttemptAt : entry.crawledAt;
     if (!timestamp) return false;
-    const freshnessHours = isMiss ? MISS_RETRY_HOURS : FRESH_HOURS;
+    const freshnessHours = freshnessHoursFor(entry, source);
     return now - new Date(timestamp).getTime() < freshnessHours * 3600000;
 };
 
@@ -131,7 +137,7 @@ const attemptTimestamp = (entry: NaverPriceEntry): number =>
 
     // 노선 중복 제거 + 신선한 항목 제외 + 우선순위 정렬
     const { selected: uniqueFlights, skippedFresh } = selectFlightsByPriority(rawData, naverPrices, MAX_FLIGHTS);
-    console.log(`⏭️ ${FRESH_HOURS}시간 내 검색된 노선 스킵: ${skippedFresh}건`);
+    console.log(`⏭️ 신선도 기준 내 이미 시도된 노선 스킵: ${skippedFresh}건 (마이리얼트립 ${MYREALTRIP_FRESH_HOURS}h / 기타 ${FRESH_HOURS}h / 실패 ${MISS_RETRY_HOURS}h)`);
     console.log(`📋 검색할 항공권: ${uniqueFlights.length}건 (신규 노선 우선 → 오래된 순)\n`);
 
     if (DRY_RUN) {
@@ -187,8 +193,8 @@ const attemptTimestamp = (entry: NaverPriceEntry): number =>
 
         // 신선한 데이터가 있으면 스킵 (선별 단계에서 걸러지지만 안전망으로 유지)
         const existingEntry = naverPrices[key];
-        if (isAttemptFresh(existingEntry)) {
-            const freshnessHours = existingEntry.lastAttemptStatus === 'miss' ? MISS_RETRY_HOURS : FRESH_HOURS;
+        if (isAttemptFresh(existingEntry, flight.source)) {
+            const freshnessHours = freshnessHoursFor(existingEntry, flight.source);
             const resultLabel = existingEntry.lastAttemptStatus === 'miss'
                 ? '최근 검색 결과 없음'
                 : `${existingEntry.naverLowest.toLocaleString()}원`;
@@ -363,7 +369,7 @@ function selectFlightsByPriority(
 
     const stale = unique.filter(f => {
         const entry = naverPrices[flightKey(f)];
-        if (isAttemptFresh(entry, now)) {
+        if (isAttemptFresh(entry, f.source, now)) {
             skippedFresh++;
             return false;
         }
