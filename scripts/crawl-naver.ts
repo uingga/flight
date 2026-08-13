@@ -19,6 +19,7 @@ const MAX_DAYS_AHEAD = parseInt(process.env.MAX_DAYS_AHEAD || '60', 10); // 출�
 const SOURCE_FILTER_RAW = process.env.SOURCE_FILTER ?? 'myrealtrip';
 const SOURCE_FILTER = SOURCE_FILTER_RAW.toLowerCase() === 'all' ? '' : SOURCE_FILTER_RAW; // all이면 전체 소스
 const FRESH_HOURS = parseInt(process.env.FRESH_HOURS || '48', 10);  // N시간 내 검색한 노선은 스킵
+const MISS_RETRY_HOURS = parseInt(process.env.MISS_RETRY_HOURS || '6', 10); // 검색 실패 노선은 잠시 뒤 재시도
 const ABORT_AFTER_MISSES = parseInt(process.env.ABORT_AFTER_MISSES || '3', 10); // 연속 N건 결과 없으면 차단으로 보고 조기 철수
 const DRY_RUN = process.env.DRY_RUN === '1';                        // 검색 계획만 출력하고 종료
 const MIN_VALID_PRICE = parseInt(process.env.MIN_VALID_PRICE || '60000', 10); // 국제선 왕복 최저 방어선 — 미만이면 오염 데이터로 보고 폐기
@@ -73,7 +74,21 @@ interface NaverPriceEntry {
     route: string;
     depDate: string;
     retDate: string;
+    lastAttemptAt?: string;
+    lastAttemptStatus?: 'success' | 'miss';
 }
+
+const isAttemptFresh = (entry: NaverPriceEntry | undefined, now = Date.now()): boolean => {
+    if (!entry) return false;
+    const isMiss = entry.lastAttemptStatus === 'miss';
+    const timestamp = isMiss ? entry.lastAttemptAt : entry.crawledAt;
+    if (!timestamp) return false;
+    const freshnessHours = isMiss ? MISS_RETRY_HOURS : FRESH_HOURS;
+    return now - new Date(timestamp).getTime() < freshnessHours * 3600000;
+};
+
+const attemptTimestamp = (entry: NaverPriceEntry): number =>
+    new Date(entry.lastAttemptAt || entry.crawledAt).getTime();
 
 // ─── 메인 ───
 (async () => {
@@ -126,7 +141,7 @@ interface NaverPriceEntry {
             const entry = naverPrices[key];
             const reason = !entry
                 ? `신규 (할인율 ${f.discountRate ?? 0}%)`
-                : `마지막 검색 ${Math.round((Date.now() - new Date(entry.crawledAt).getTime()) / 3600000)}시간 전`;
+                : `${entry.lastAttemptStatus === 'miss' ? '마지막 실패' : '마지막 검색'} ${Math.round((Date.now() - attemptTimestamp(entry)) / 3600000)}시간 전`;
             console.log(`  ${String(i + 1).padStart(2)}. ${f.departure.city}→${f.arrival.city} ${normalizeDate(f.departure.date)} — ${reason}`);
         });
         process.exit(0);
@@ -172,8 +187,12 @@ interface NaverPriceEntry {
 
         // 신선한 데이터가 있으면 스킵 (선별 단계에서 걸러지지만 안전망으로 유지)
         const existingEntry = naverPrices[key];
-        if (existingEntry?.crawledAt && (Date.now() - new Date(existingEntry.crawledAt).getTime()) < FRESH_HOURS * 3600000) {
-            console.log(`  ⏭️ ${FRESH_HOURS}시간 내 검색됨 (${existingEntry.naverLowest.toLocaleString()}원)\n`);
+        if (isAttemptFresh(existingEntry)) {
+            const freshnessHours = existingEntry.lastAttemptStatus === 'miss' ? MISS_RETRY_HOURS : FRESH_HOURS;
+            const resultLabel = existingEntry.lastAttemptStatus === 'miss'
+                ? '최근 검색 결과 없음'
+                : `${existingEntry.naverLowest.toLocaleString()}원`;
+            console.log(`  ⏭️ ${freshnessHours}시간 내 시도됨 (${resultLabel})\n`);
             continue;
         }
 
@@ -231,6 +250,8 @@ interface NaverPriceEntry {
                     route: `${depCode}-${arrCode}`,
                     depDate,
                     retDate,
+                    lastAttemptAt: new Date().toISOString(),
+                    lastAttemptStatus: 'success',
                 };
 
                 const diff = flight.price - lowestPrice;
@@ -240,11 +261,33 @@ interface NaverPriceEntry {
                 consecutiveMisses = 0;
             } else {
                 console.log(`  ❓ 네이버 최저가를 찾을 수 없음`);
+                const attemptedAt = new Date().toISOString();
+                naverPrices[key] = {
+                    ...(existingEntry || {}),
+                    naverLowest: existingEntry?.naverLowest || 0,
+                    crawledAt: existingEntry?.crawledAt || attemptedAt,
+                    route: `${depCode}-${arrCode}`,
+                    depDate,
+                    retDate,
+                    lastAttemptAt: attemptedAt,
+                    lastAttemptStatus: 'miss',
+                };
                 failCount++;
                 consecutiveMisses++;
             }
         } catch (err: any) {
             console.log(`  ❌ 에러: ${err.message}`);
+            const attemptedAt = new Date().toISOString();
+            naverPrices[key] = {
+                ...(existingEntry || {}),
+                naverLowest: existingEntry?.naverLowest || 0,
+                crawledAt: existingEntry?.crawledAt || attemptedAt,
+                route: `${depCode}-${arrCode}`,
+                depDate,
+                retDate,
+                lastAttemptAt: attemptedAt,
+                lastAttemptStatus: 'miss',
+            };
             failCount++;
             consecutiveMisses++;
             page.removeAllListeners('response');
@@ -315,13 +358,12 @@ function selectFlightsByPriority(
             return true;
         });
 
-    const freshMs = FRESH_HOURS * 3600000;
     const now = Date.now();
     let skippedFresh = 0;
 
     const stale = unique.filter(f => {
         const entry = naverPrices[flightKey(f)];
-        if (entry?.crawledAt && now - new Date(entry.crawledAt).getTime() < freshMs) {
+        if (isAttemptFresh(entry, now)) {
             skippedFresh++;
             return false;
         }
@@ -337,7 +379,7 @@ function selectFlightsByPriority(
             // 신규끼리는 할인율 높은 순
             if (!ea && !eb) return (b.discountRate ?? 0) - (a.discountRate ?? 0);
             // 기존 노선끼리는 오래된 순
-            return new Date(ea!.crawledAt).getTime() - new Date(eb!.crawledAt).getTime();
+            return attemptTimestamp(ea!) - attemptTimestamp(eb!);
         })
         .slice(0, limit);
 
