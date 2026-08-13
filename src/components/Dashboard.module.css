@@ -1427,7 +1427,9 @@
     font-size: 0.9rem;
     font-weight: 600;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-    z-index: 1000;
+    /* 모든 예약/안내 모달(z-index: 9999) 위에서 보여야 함 */
+    z-index: 11000;
+    pointer-events: none;
     animation: toastIn 0.3s ease;
 }
 
