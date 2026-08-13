@@ -5,135 +5,153 @@ import webpush from 'web-push';
 interface AlertSubscription {
     id: string;
     subscription: { endpoint: string; keys: { p256dh: string; auth: string } };
-    conditions: {
-        route?: string;
-        maxPrice?: number;
-        region?: string;
-    };
-    createdAt: string;
-    lastSent?: string;
+    departure_city?: string;
+    arrival_city?: string;
+    departure_date_from?: string;
+    departure_date_to?: string;
+    max_price: number;
+    last_notified_price?: number;
+    last_notified_flight_id?: string;
+    notified_flight_ids?: string[];
+    last_sent_at?: string;
 }
 
 interface Flight {
     id: string;
-    departure: { city: string };
-    arrival: { city: string };
+    departure: { city: string; date?: string };
+    arrival: { city: string; date?: string };
     price: number;
     airline: string;
-    region?: string;
-    link: string;
     source: string;
 }
 
 const VAPID_PUBLIC = process.env.VAPID_PUBLIC_KEY || '';
 const VAPID_PRIVATE = process.env.VAPID_PRIVATE_KEY || '';
-const ALERTS_PATH = path.join(process.cwd(), 'data', 'alerts.json');
+const SUPABASE_URL = (process.env.SUPABASE_URL || '').replace(/\/$/, '');
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const FLIGHTS_PATH = path.join(process.cwd(), 'data', 'all-flights-cache.json');
 
-function normalizeCity(city: string): string {
+function normalizeCity(city = ''): string {
     return city.replace(/\(.*?\)/g, '').replace(/\s+/g, '').trim();
 }
 
+function normalizeDate(date = ''): string {
+    const match = date.match(/(\d{4})[.\/-](\d{1,2})[.\/-](\d{1,2})/);
+    if (!match) return date.slice(0, 10);
+    return `${match[1]}-${match[2].padStart(2, '0')}-${match[3].padStart(2, '0')}`;
+}
+
 function formatPrice(price: number): string {
-    return price < 1000000
-        ? `${Math.floor(price / 10000)}만원`
-        : `${(price / 10000).toFixed(0)}만원`;
+    return `${Math.floor(price / 10000)}만${price % 10000 ? `${Math.floor((price % 10000) / 1000)}천` : ''}원`;
+}
+
+function todayInKorea(date = new Date()): string {
+    return new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit',
+    }).format(date);
+}
+
+async function supabaseRequest(pathname: string, init: RequestInit = {}) {
+    return fetch(`${SUPABASE_URL}/rest/v1/${pathname}`, {
+        ...init,
+        headers: {
+            apikey: SUPABASE_KEY,
+            'Content-Type': 'application/json',
+            ...(init.headers || {}),
+        },
+    });
 }
 
 async function main() {
     console.log('\n=== 가격 알림 발송 시작 ===');
-
-    if (!VAPID_PUBLIC || !VAPID_PRIVATE) {
-        console.log('VAPID 키가 설정되지 않았습니다. 알림 발송 건너뜀.');
+    if (!VAPID_PUBLIC || !VAPID_PRIVATE || !SUPABASE_URL || !SUPABASE_KEY) {
+        console.log('VAPID 또는 Supabase 설정이 없어 알림 발송을 건너뜁니다.');
         return;
     }
 
-    webpush.setVapidDetails('mailto:tikit@tikit.app', VAPID_PUBLIC, VAPID_PRIVATE);
-
-    // 알림 구독 로드
-    if (!fs.existsSync(ALERTS_PATH)) {
-        console.log('알림 구독이 없습니다.');
-        return;
-    }
-
-    const alerts: AlertSubscription[] = JSON.parse(fs.readFileSync(ALERTS_PATH, 'utf-8'));
+    webpush.setVapidDetails('mailto:tikitikit.kr@gmail.com', VAPID_PUBLIC, VAPID_PRIVATE);
+    const alertResponse = await supabaseRequest('price_alerts?select=*&active=eq.true');
+    if (!alertResponse.ok) throw new Error(`알림 구독 조회 실패: ${alertResponse.status}`);
+    const alerts = await alertResponse.json() as AlertSubscription[];
     if (alerts.length === 0) {
-        console.log('알림 구독이 없습니다.');
+        console.log('활성 가격 알림이 없습니다.');
         return;
     }
-    console.log(`[알림] ${alerts.length}개 구독 확인`);
 
-    // 항공편 데이터 로드
     const flightsData = JSON.parse(fs.readFileSync(FLIGHTS_PATH, 'utf-8'));
     const flights: Flight[] = flightsData.flights || flightsData;
-    console.log(`[알림] ${flights.length}개 항공편 데이터`);
-
+    const today = todayInKorea();
     let sentCount = 0;
-    const now = new Date();
-    const updatedAlerts = [...alerts];
 
-    for (let i = 0; i < updatedAlerts.length; i++) {
-        const alert = updatedAlerts[i];
+    for (const alert of alerts) {
+        if (alert.last_sent_at && todayInKorea(new Date(alert.last_sent_at)) === today) continue;
 
-        // 같은 날 이미 보낸 경우 스킵 (하루 1회 제한)
-        if (alert.lastSent) {
-            const lastSentDate = new Date(alert.lastSent).toDateString();
-            if (lastSentDate === now.toDateString()) continue;
-        }
-
-        // 조건에 맞는 항공편 찾기
-        const matches = flights.filter(f => {
-            const { route, maxPrice, region } = alert.conditions;
-
-            if (route) {
-                const normalizedRoute = route.replace(/\s+/g, '');
-                const arrCity = normalizeCity(f.arrival.city);
-                const depCity = normalizeCity(f.departure.city);
-                if (!arrCity.includes(normalizedRoute) && !depCity.includes(normalizedRoute) && !normalizedRoute.includes(arrCity)) {
-                    return false;
-                }
-            }
-
-            if (maxPrice && f.price > maxPrice) return false;
-            if (region && f.region && !f.region.includes(region)) return false;
-
+        const matches = flights.filter(flight => {
+            if (normalizeCity(flight.departure.city) !== normalizeCity(alert.departure_city)) return false;
+            if (normalizeCity(flight.arrival.city) !== normalizeCity(alert.arrival_city)) return false;
+            if (flight.price > alert.max_price) return false;
+            const date = normalizeDate(flight.departure.date);
+            if (alert.departure_date_from && date < alert.departure_date_from) return false;
+            if (alert.departure_date_to && date > alert.departure_date_to) return false;
             return true;
-        });
+        }).sort((a, b) => a.price - b.price);
 
         if (matches.length === 0) continue;
+        const cheapest = matches[0];
+        const notifiedIds = Array.isArray(alert.notified_flight_ids) ? alert.notified_flight_ids : [];
+        const priceDrop = alert.last_notified_price ? alert.last_notified_price - cheapest.price : Infinity;
+        const priceDropRate = alert.last_notified_price ? priceDrop / alert.last_notified_price : Infinity;
+        const meaningfulDrop = priceDrop >= 5000 || priceDropRate >= 0.03;
+        const newFlight = !notifiedIds.includes(cheapest.id);
+        if (alert.last_notified_price && !meaningfulDrop && !newFlight) continue;
 
-        // 가장 저렴한 항공편
-        const cheapest = matches.sort((a, b) => a.price - b.price)[0];
-        const routeText = `${normalizeCity(cheapest.departure.city)} → ${normalizeCity(cheapest.arrival.city)}`;
-
+        const dep = normalizeCity(cheapest.departure.city);
+        const arr = normalizeCity(cheapest.arrival.city);
+        const date = normalizeDate(cheapest.departure.date);
         const payload = {
-            title: `✈️ ${routeText} ${formatPrice(cheapest.price)}`,
-            body: `${cheapest.airline} | 총 ${matches.length}건 발견! 지금 확인하세요.`,
-            url: `/?search=${encodeURIComponent(normalizeCity(cheapest.arrival.city))}`,
-            tag: `alert-${alert.id}`,
+            title: `✈️ ${dep} → ${arr} ${formatPrice(cheapest.price)}`,
+            body: meaningfulDrop && Number.isFinite(priceDrop)
+                ? `이전보다 ${formatPrice(priceDrop)} 내려갔어요 · ${cheapest.airline}`
+                : `새로운 목표가 이하 항공권이 나왔어요 · ${cheapest.airline}`,
+            url: `/share/${encodeURIComponent(cheapest.id)}?dep=${encodeURIComponent(dep)}&arr=${encodeURIComponent(arr)}&date=${encodeURIComponent(date)}`,
+            tag: `price-alert-${alert.id}`,
         };
 
         try {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            await webpush.sendNotification(alert.subscription as any, JSON.stringify(payload));
-            updatedAlerts[i].lastSent = now.toISOString();
+            await webpush.sendNotification(alert.subscription, JSON.stringify(payload));
+            const updatedIds = [...new Set([...notifiedIds, cheapest.id])].slice(-20);
+            const updateResponse = await supabaseRequest(`price_alerts?id=eq.${alert.id}`, {
+                method: 'PATCH',
+                headers: { Prefer: 'return=minimal' },
+                body: JSON.stringify({
+                    last_notified_price: cheapest.price,
+                    last_notified_flight_id: cheapest.id,
+                    notified_flight_ids: updatedIds,
+                    last_sent_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString(),
+                }),
+            });
+            if (!updateResponse.ok) throw new Error(`발송 이력 저장 실패: ${updateResponse.status}`);
             sentCount++;
-            console.log(`[알림] ✅ ${alert.id}: ${routeText} ${formatPrice(cheapest.price)} 발송`);
+            console.log(`[알림] ✅ ${dep} → ${arr} ${formatPrice(cheapest.price)}`);
         } catch (error: unknown) {
             const statusCode = (error as { statusCode?: number })?.statusCode;
-            if (statusCode === 410 || statusCode === 404) {
-                console.log(`[알림] 🗑️ ${alert.id}: 구독 만료 - 삭제`);
-                updatedAlerts[i] = null as unknown as AlertSubscription;
+            if (statusCode === 404 || statusCode === 410) {
+                await supabaseRequest(`price_alerts?id=eq.${alert.id}`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ active: false, updated_at: new Date().toISOString() }),
+                });
+                console.log(`[알림] 만료된 구독 비활성화: ${alert.id}`);
             } else {
-                console.error(`[알림] ❌ ${alert.id} 발송실패:`, error);
+                console.error(`[알림] 발송 실패: ${alert.id}`, error);
             }
         }
     }
 
-    // 만료된 구독 제거 후 저장
-    const validAlerts = updatedAlerts.filter(Boolean);
-    fs.writeFileSync(ALERTS_PATH, JSON.stringify(validAlerts, null, 2));
-    console.log(`\n[알림] 총 ${sentCount}건 발송, ${validAlerts.length}개 구독 유지`);
+    console.log(`\n[알림] 총 ${sentCount}건 발송, 활성 구독 ${alerts.length}건`);
 }
 
-main().catch(console.error);
+main().catch(error => {
+    console.error(error);
+    process.exitCode = 1;
+});

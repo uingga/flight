@@ -33,6 +33,13 @@ import { getYbtourBookingUrl } from '@/lib/utils/ybtour-url';
 
 const ITEMS_PER_PAGE = 20;
 
+function urlBase64ToUint8Array(base64String: string) {
+    const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    return Uint8Array.from(rawData, character => character.charCodeAt(0));
+}
+
 function getFreshnessInfo(checkedAt?: string) {
     if (!checkedAt) return { multiplier: 1.12, label: '확인 시각 미기록' };
     const checkedTime = new Date(checkedAt).getTime();
@@ -90,6 +97,12 @@ export default function Dashboard() {
     const [contactForm, setContactForm] = useState({ name: '', email: '', message: '' });
     const [contactSending, setContactSending] = useState(false);
     const [flightReport, setFlightReport] = useState<{ flightId: string; status: 'sending' | 'sent' | 'error' } | null>(null);
+    const [priceAlertSetup, setPriceAlertSetup] = useState<{
+        flightId: string;
+        maxPrice: string;
+        status: 'idle' | 'saving' | 'sent' | 'error';
+        message?: string;
+    } | null>(null);
     const observerRef = useRef<IntersectionObserver | null>(null);
     const loadMoreRef = useRef<HTMLDivElement | null>(null);
     const [headerHidden, setHeaderHidden] = useState(false);
@@ -519,6 +532,91 @@ export default function Dashboard() {
             setShareToast('신고 접수에 실패했습니다. 잠시 후 다시 시도해주세요.');
         }
         setTimeout(() => setShareToast(null), 2500);
+    };
+
+    const savePriceAlert = async (flight: Flight) => {
+        const maxPrice = Number(priceAlertSetup?.maxPrice);
+        if (!Number.isFinite(maxPrice) || maxPrice < 10000 || maxPrice > 10000000) {
+            setPriceAlertSetup(current => current ? { ...current, status: 'error', message: '목표 가격을 다시 확인해주세요.' } : current);
+            return;
+        }
+
+        const isIOS = /iPad|iPhone|iPod/i.test(navigator.userAgent);
+        const standaloneNavigator = navigator as Navigator & { standalone?: boolean };
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || standaloneNavigator.standalone === true;
+        if (isIOS && !isStandalone) {
+            setPriceAlertSetup(current => current ? {
+                ...current,
+                status: 'error',
+                message: '아이폰은 Safari 공유 버튼 → 홈 화면에 추가 후 티키티킷 아이콘에서 신청해주세요.',
+            } : current);
+            return;
+        }
+
+        if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
+            setPriceAlertSetup(current => current ? { ...current, status: 'error', message: '이 브라우저는 가격 알림을 지원하지 않습니다.' } : current);
+            return;
+        }
+
+        setPriceAlertSetup(current => current ? { ...current, status: 'saving', message: undefined } : current);
+        try {
+            const permission = Notification.permission === 'granted'
+                ? 'granted'
+                : await Notification.requestPermission();
+            if (permission !== 'granted') {
+                throw new Error('알림 권한이 허용되지 않았습니다. 브라우저 설정에서 알림을 허용해주세요.');
+            }
+
+            const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+            if (!vapidPublicKey) throw new Error('가격 알림 설정을 준비 중입니다. 잠시 후 다시 시도해주세요.');
+
+            const registration = await navigator.serviceWorker.register('/sw.js');
+            await navigator.serviceWorker.ready;
+            const subscription = await registration.pushManager.getSubscription()
+                || await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+                });
+
+            const nonceResponse = await fetch('/api/alerts', {
+                method: 'GET',
+                credentials: 'same-origin',
+            });
+            if (!nonceResponse.ok) throw new Error('가격 알림 보안 확인에 실패했습니다.');
+
+            const response = await fetch('/api/alerts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
+                body: JSON.stringify({
+                    subscription: subscription.toJSON(),
+                    conditions: {
+                        departureCity: normalizeCity(flight.departure.city),
+                        arrivalCity: normalizeCity(flight.arrival.city),
+                        departureDateFrom: flight.departure.date,
+                        departureDateTo: flight.departure.date,
+                        maxPrice,
+                    },
+                    baseline: {
+                        flightId: flight.id,
+                        price: flight.price,
+                    },
+                }),
+            });
+            if (!response.ok) throw new Error('가격 알림 저장에 실패했습니다.');
+
+            setPriceAlertSetup(current => current ? {
+                ...current,
+                status: 'sent',
+                message: `${formatPrice(maxPrice)} 이하의 새로운 특가나 의미 있는 가격 하락이 생기면 알려드릴게요.`,
+            } : current);
+        } catch (error) {
+            setPriceAlertSetup(current => current ? {
+                ...current,
+                status: 'error',
+                message: error instanceof Error ? error.message : '가격 알림 저장에 실패했습니다.',
+            } : current);
+        }
     };
 
     // 인원수 반영 예약 URL 생성
@@ -2987,6 +3085,82 @@ export default function Dashboard() {
                                             >
                                                 예약이 안 돼요
                                             </button>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className={styles.priceAlertArea}>
+                                    {priceAlertSetup?.flightId !== modetourGuide.id ? (
+                                        <button
+                                            type="button"
+                                            className={styles.priceAlertOpenBtn}
+                                            onClick={() => setPriceAlertSetup({
+                                                flightId: modetourGuide.id,
+                                                maxPrice: String(modetourGuide.price),
+                                                status: 'idle',
+                                            })}
+                                        >
+                                            <span aria-hidden="true">🔔</span>
+                                            이 노선·일정 가격 알림 받기
+                                        </button>
+                                    ) : (
+                                        <div className={styles.priceAlertPanel} aria-live="polite">
+                                            <div className={styles.priceAlertPanelHeader}>
+                                                <div>
+                                                    <strong>{depCity} → {arrCity}</strong>
+                                                    <span>{formatDate(depDate)} 출발</span>
+                                                </div>
+                                                {priceAlertSetup.status !== 'sent' && (
+                                                    <button
+                                                        type="button"
+                                                        className={styles.priceAlertCloseBtn}
+                                                        onClick={() => setPriceAlertSetup(null)}
+                                                        aria-label="가격 알림 설정 닫기"
+                                                    >
+                                                        ×
+                                                    </button>
+                                                )}
+                                            </div>
+                                            {priceAlertSetup.status === 'sent' ? (
+                                                <p className={styles.priceAlertSuccess}>✓ {priceAlertSetup.message}</p>
+                                            ) : (
+                                                <>
+                                                    <label className={styles.priceAlertPriceField}>
+                                                        <span>목표 가격</span>
+                                                        <span className={styles.priceAlertInputWrap}>
+                                                            <input
+                                                                type="number"
+                                                                min="10000"
+                                                                max="10000000"
+                                                                step="1000"
+                                                                inputMode="numeric"
+                                                                value={priceAlertSetup.maxPrice}
+                                                                onChange={event => setPriceAlertSetup(current => current ? {
+                                                                    ...current,
+                                                                    maxPrice: event.target.value,
+                                                                    status: 'idle',
+                                                                    message: undefined,
+                                                                } : current)}
+                                                            />
+                                                            <span>원 이하</span>
+                                                        </span>
+                                                    </label>
+                                                    <p className={styles.priceAlertHelp}>
+                                                        같은 노선·출발일의 새 특가 또는 5천원·3% 이상 가격 하락만 알려드립니다.
+                                                    </p>
+                                                    {priceAlertSetup.message && (
+                                                        <p className={styles.priceAlertError}>{priceAlertSetup.message}</p>
+                                                    )}
+                                                    <button
+                                                        type="button"
+                                                        className={styles.priceAlertSaveBtn}
+                                                        disabled={priceAlertSetup.status === 'saving'}
+                                                        onClick={() => savePriceAlert(modetourGuide)}
+                                                    >
+                                                        {priceAlertSetup.status === 'saving' ? '등록 중…' : '알림 등록'}
+                                                    </button>
+                                                </>
+                                            )}
                                         </div>
                                     )}
                                 </div>
