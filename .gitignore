@@ -51,3 +51,8 @@ scripts/browser-test-*.ts
 scripts/compare-*.js
 scripts/verify-*.js
 .naver-profile/
+
+# Local authentication captures (never commit)
+scripts/api-cookies.txt
+scripts/api-capture.json
+scripts/link-api-info.json
