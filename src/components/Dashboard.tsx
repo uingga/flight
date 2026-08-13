@@ -730,6 +730,9 @@ export default function Dashboard() {
                 // 스마트 정렬 (Penalty Score Sorting)
                 // 기본적으로 가격순(최저가)으로 정렬하되, 인터파크 벤치마크와 네이버 최저가를 활용하여 페널티/보너스를 부여합니다.
                 const getSortScore = (flight: Flight) => {
+                    // 땡처리닷컴은 결제 단계에서 발권수수료(TASF) 2만원이 추가되므로
+                    // 추천순에서만 수수료를 포함한 실질 가격으로 비교한다.
+                    const effectivePrice = flight.price + (flight.source === 'ttang' ? 20000 : 0);
                     const city = flight.arrival.city?.replace(/\([^)]+\)/, '').trim();
                     const depMonth = flight.departure.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 7);
                     const ipCityData = interparkPrices[city];
@@ -745,21 +748,21 @@ export default function Dashboard() {
                         if (closest) ipMonthData = ipCityData[closest];
                     }
 
-                    let score = flight.price;
+                    let score = effectivePrice;
 
                     // 네이버보다 싼 항공권인지 먼저 확인 (전 여행사 공통)
                     const isNaverCheaper = flight.naverLowest && flight.naverLowest > 0
-                        && flight.price <= flight.naverLowest;
+                        && effectivePrice <= flight.naverLowest;
 
                     // 인터파크 도시 데이터 자체가 없는 경우 — 약간 페널티 (검증 불가)
                     if (!ipMonthData) {
                         score = score * 1.1;
-                    } else if (flight.price <= ipMonthData.lowest) {
+                    } else if (effectivePrice <= ipMonthData.lowest) {
                         // 1. 월간 최저가 이하 — 페널티 없음
-                    } else if (flight.price <= ipMonthData.lowest * 1.2) {
+                    } else if (effectivePrice <= ipMonthData.lowest * 1.2) {
                         // 2. 최저가 초과 ~ ×1.2 이내 — 살짝 페널티
                         score = score * 1.15;
-                    } else if (flight.price < ipMonthData.avg) {
+                    } else if (effectivePrice < ipMonthData.avg) {
                         // 3. 최저가의 120% 초과 ~ 평균가 미만 -> 페널티
                         score = score * 1.3;
                     } else {
@@ -769,7 +772,7 @@ export default function Dashboard() {
 
                     // 네이버 최저가 보정 (전 여행사 공통)
                     if (flight.naverLowest && flight.naverLowest > 0) {
-                        const ratio = (flight.price - flight.naverLowest) / flight.naverLowest;
+                        const ratio = (effectivePrice - flight.naverLowest) / flight.naverLowest;
                         if (ratio <= -0.20) {
                             // 네이버보다 20% 이상 싸다 → 최우선 상향
                             score *= 0.3;
