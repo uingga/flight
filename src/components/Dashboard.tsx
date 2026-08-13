@@ -25,7 +25,7 @@ import {
     TRIPCOM_ALLIANCE_ID, TRIPCOM_SID, TRIPCOM_SUB3,
     AIRPORT_TO_TRIPCOM_CITY, TRIPCOM_CITY_DATA,
     TRIPCOM_HOTEL_SUB3, IATA_TO_ENGLISH,
-    getTripcomHotelUrl,
+    getTripcomHotelUrl, getTripcomTrackingId,
 } from '@/lib/utils/tripcom-helpers';
 import { checkIsMobile, getMobileUrl } from '@/lib/utils/mobile-url';
 import { getTtangBookingUrl } from '@/lib/utils/ttang-url';
@@ -555,7 +555,18 @@ export default function Dashboard() {
             url = url.replace(/adult%3D\d+/, `adult%3D${pax.adult}`);
             url = url.replace(/child%3D\d+/, `child%3D${pax.child}`);
             url = url.replace(/infant%3D\d+/, `infant%3D${pax.infant}`);
-            return url;
+            try {
+                const trackedUrl = new URL(url);
+                const trackingId = [
+                    'flight', flight.departure.airport, flight.arrival.airport,
+                    flight.departure.date?.replace(/\D/g, ''), flight.arrival.date?.replace(/\D/g, ''),
+                ].filter(Boolean).join('_').slice(0, 100);
+                trackedUrl.searchParams.set('utm_campaign', 'tikitikit_flight');
+                trackedUrl.searchParams.set('utm_content', trackingId);
+                return trackedUrl.toString();
+            } catch {
+                return url;
+            }
         }
 
         // 나머지 (ybtour 등): 인원 파라미터 없음
@@ -580,11 +591,21 @@ export default function Dashboard() {
         setBookingDisclaimer(null);
     };
 
+    const revenueClickDetails = (flight: Flight, trackingId?: string) => ({
+        departureDate: flight.departure.date,
+        returnDate: flight.arrival.date,
+        departureAirport: flight.departure.airport,
+        arrivalAirport: flight.arrival.airport,
+        airline: flight.airline,
+        destination: normalizeCity(flight.arrival.city),
+        trackingId,
+    });
+
     const confirmBooking = () => {
         if (!bookingFlight) return;
         const url = getBookingUrl(bookingFlight, passengers);
         const route = `${normalizeCity(bookingFlight.departure.city)}-${normalizeCity(bookingFlight.arrival.city)}`;
-        gtag.trackBookingClick(bookingFlight.source, route, bookingFlight.price);
+        gtag.trackBookingClick(bookingFlight.source, route, bookingFlight.price, revenueClickDetails(bookingFlight));
 
         setBookingFlight(null);
 
@@ -600,7 +621,7 @@ export default function Dashboard() {
     const disclaimerThenRedirect = (flight: Flight) => {
         const url = getMobileUrl(flight.link, isMobile);
         const route = `${normalizeCity(flight.departure.city)}-${normalizeCity(flight.arrival.city)}`;
-        gtag.trackBookingClick(flight.source, route, flight.price);
+        gtag.trackBookingClick(flight.source, route, flight.price, revenueClickDetails(flight));
         setBookingDisclaimer({ source: flight.source, url });
 
         if (!isMobile) {
@@ -2312,7 +2333,8 @@ export default function Dashboard() {
                                             </div>
                                             {(() => {
                                                 const naverUrl = getNaverFlightUrl(flight.departure.city, flight.arrival.city, flight.departure.date, flight.arrival.date, flight.departure.airport, flight.arrival.airport);
-                                                const tripcomHotelUrl = getTripcomHotelUrl(flight.arrival.city, flight.departure.date, flight.arrival.date, flight.arrival.airport);
+                                                const tripcomTrackingId = getTripcomTrackingId(flight.arrival.city, flight.departure.date, flight.arrival.date, flight.arrival.airport, flight.departure.city, flight.departure.airport);
+                                                const tripcomHotelUrl = getTripcomHotelUrl(flight.arrival.city, flight.departure.date, flight.arrival.date, flight.arrival.airport, flight.departure.city, flight.departure.airport);
                                                 if (!naverUrl && !tripcomHotelUrl) return null;
                                                 return (
                                                     <div className={styles.compareLinks}>
@@ -2328,7 +2350,11 @@ export default function Dashboard() {
                                                         )}
                                                         {tripcomHotelUrl && (
                                                             <a href={tripcomHotelUrl} target="_blank" rel="noopener noreferrer" className={styles.compareLinkHotel} title="트립닷컴에서 호텔 검색"
-                                                                onClick={() => gtag.trackCompareClick('tripcom', `${normalizeCity(flight.arrival.city)}-hotel`, flight.price)}
+                                                                onClick={() => gtag.trackHotelAffiliateClick(
+                                                                    `${normalizeCity(flight.departure.city)}-${normalizeCity(flight.arrival.city)}`,
+                                                                    flight.price,
+                                                                    revenueClickDetails(flight, tripcomTrackingId),
+                                                                )}
                                                             >
                                                                 🏨 {normalizeCity(flight.arrival.city)} 호텔도 비교 ›
                                                             </a>
@@ -2868,11 +2894,11 @@ export default function Dashboard() {
                             {/* 예약 버튼: 시트 직속 자식이라 내용 길이와 무관하게 항상 하단에 고정 표시 */}
                             <div className={styles.mdtBookBtnWrap}>
                                 <button className={styles.mdtBookBtn} onClick={() => {
-                                        gtag.trackBookingClick(modetourGuide.source, `${depCity}-${arrCity}`, totalPrice);
+                                        gtag.trackBookingClick(modetourGuide.source, `${depCity}-${arrCity}`, totalPrice, revenueClickDetails(modetourGuide));
                                         if (modetourGuide.source === 'modetour') {
                                             const url = getMobileUrl(modetourGuide.link, isMobile);
                                             window.open(url, '_blank', 'noopener,noreferrer');
-                                        } else if (modetourGuide.source === 'hanatour' || modetourGuide.source === 'onlinetour' || modetourGuide.source === 'ybtour') {
+                                        } else if (modetourGuide.source === 'hanatour' || modetourGuide.source === 'onlinetour' || modetourGuide.source === 'ybtour' || modetourGuide.source === 'myrealtrip') {
                                             const url = getBookingUrl(modetourGuide, passengers);
                                             window.open(url, '_blank', 'noopener,noreferrer');
                                         } else if (modetourGuide.source === 'ttang') {
@@ -3049,7 +3075,7 @@ export default function Dashboard() {
                         <button className={styles.modalConfirm} onClick={() => {
                             const f = ttangConfirmFlight;
                             const r = `${normalizeCity(f.departure.city)}-${normalizeCity(f.arrival.city)}`;
-                            gtag.trackBookingClick(f.source, r, f.price);
+                            gtag.trackBookingClick(f.source, r, f.price, revenueClickDetails(f));
                             const url = getTtangBookingUrl(f, { adult: 1, child: 0, infant: 0 });
                             window.open(url, '_blank', 'noopener,noreferrer');
                             setTtangConfirmFlight(null);
