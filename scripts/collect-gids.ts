@@ -8,7 +8,17 @@ import fs from 'fs';
 
 const BULK_API_URL = 'https://api3.myrealtrip.com/flight/api/price/calendar/bulk-lowest';
 const PARTNER_API_BASE = 'https://api3-backoffice.myrealtrip.com';
-const LOGIN_BODY = { email: 'ynal@naver.com', password: '48324936Cmg!?' };
+
+function getLoginBody() {
+    const email = process.env.MYREALTRIP_PARTNER_EMAIL;
+    const password = process.env.MYREALTRIP_PARTNER_PASSWORD;
+    if (!email || !password) {
+        throw new Error(
+            'MYREALTRIP_PARTNER_EMAIL 및 MYREALTRIP_PARTNER_PASSWORD 환경변수가 필요합니다.',
+        );
+    }
+    return { email, password };
+}
 
 const delay = (ms: number) => new Promise(r => setTimeout(r, ms));
 
@@ -17,7 +27,7 @@ async function login(): Promise<string> {
     const res = await fetch(`${PARTNER_API_BASE}/partner/v1/sign-in`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(LOGIN_BODY),
+        body: JSON.stringify(getLoginBody()),
     });
     const data = await res.json() as any;
     const token = data?.data?.accessToken;
