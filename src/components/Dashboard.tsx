@@ -729,13 +729,6 @@ export default function Dashboard() {
             case 'discount': {
                 // 스마트 정렬 (Penalty Score Sorting)
                 // 기본적으로 가격순(최저가)으로 정렬하되, 인터파크 벤치마크와 네이버 최저가를 활용하여 페널티/보너스를 부여합니다.
-                // 같은 노선(출발지-도착지)이면 벤치마크 월별 차이에 관계없이 절대 가격순으로 정렬합니다.
-                const routeA = `${normalizeCity(a.departure.city)}-${normalizeCity(a.arrival.city)}`;
-                const routeB = `${normalizeCity(b.departure.city)}-${normalizeCity(b.arrival.city)}`;
-                if (routeA === routeB) {
-                    comparison = a.price - b.price;
-                    break;
-                }
                 const getSortScore = (flight: Flight) => {
                     const city = flight.arrival.city?.replace(/\([^)]+\)/, '').trim();
                     const depMonth = flight.departure.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 7);
@@ -777,12 +770,15 @@ export default function Dashboard() {
                     // 네이버 최저가 보정 (전 여행사 공통)
                     if (flight.naverLowest && flight.naverLowest > 0) {
                         const ratio = (flight.price - flight.naverLowest) / flight.naverLowest;
-                        if (ratio <= -0.10) {
-                            // 네이버보다 10% 이상 싸다 → 상향
-                            score *= 0.55;
+                        if (ratio <= -0.20) {
+                            // 네이버보다 20% 이상 싸다 → 최우선 상향
+                            score *= 0.3;
+                        } else if (ratio <= -0.10) {
+                            // 네이버보다 10~20% 싸다 → 강하게 상향
+                            score *= 0.45;
                         } else if (ratio <= 0) {
                             // 네이버보다 싸다 → 상향
-                            score *= 0.7;
+                            score *= 0.65;
                         } else if (ratio <= 0.05) {
                             // 0~5% 비싸다 → 거의 동일, 미세 페널티
                             score *= 1.05;
