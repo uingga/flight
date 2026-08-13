@@ -434,21 +434,6 @@ export default function Dashboard() {
         return topDestinations.filter(city => availableCities.has(city)).slice(0, 8);
     }, [flights]);
 
-    // 외부 비교 정보는 공개하지 않고 가격·일정 조건을 종합해 엄격하게 판정한다.
-    const isTrueDeal = (flight: Flight) => {
-        const benchmark = flight.naverLowest || 0;
-        if (benchmark <= 0) return false;
-
-        // 땡처리닷컴은 결제 단계에서 발권수수료 2만원이 추가된다.
-        const effectivePrice = flight.price + (flight.source === 'ttang' ? 20000 : 0);
-        const priceAdvantage = (benchmark - effectivePrice) / benchmark;
-        if (priceAdvantage < 0.05) return false;
-
-        const explicitlyConnecting = flight.modetourDetail?.isDirect === false
-            || flight.modetourDetail?.isReturnDirect === false;
-        return !explicitlyConnecting;
-    };
-
     // 공유 기능
     const getFlightShareContent = (flight: Flight) => {
         const price = formatPrice(flight.price);
@@ -465,10 +450,9 @@ export default function Dashboard() {
         if (dateRaw) shareParams.set('date', dateRaw);
         const queryStr = shareParams.toString() ? `?${shareParams.toString()}` : '';
         const siteUrl = `${window.location.origin}/share/${encodeURIComponent(flight.id)}${queryStr}`;
-        const dealLabel = isTrueDeal(flight) ? '💎 진짜 특가\n' : '';
         return {
             title: `${dep} → ${arr} ${price}`,
-            text: `${dealLabel}✈️ ${dep} → ${arr}\n💰 ${price}/1인\n📅 ${depDate}${arrDate}\n🛫 ${flight.airline} · ${getSourceName(flight.source)}`,
+            text: `✈️ ${dep} → ${arr}\n💰 ${price}/1인\n📅 ${depDate}${arrDate}\n🛫 ${flight.airline} · ${getSourceName(flight.source)}`,
             url: siteUrl,
         };
     };
@@ -478,25 +462,13 @@ export default function Dashboard() {
         const clipboardText = `${content.text}\n🔗 ${content.url}`;
         const route = `${normalizeCity(flight.departure.city)}-${normalizeCity(flight.arrival.city)}`;
         try {
-            if (navigator.share) {
-                await navigator.share(content);
-                gtag.trackShare(route, 'native_share');
-            } else {
-                await navigator.clipboard.writeText(clipboardText);
-                gtag.trackShare(route, 'clipboard');
-                setShareToast('✅ 링크가 복사되었습니다!');
-                setTimeout(() => setShareToast(null), 2000);
-            }
-        } catch (error) {
-            // 사용자가 공유 창을 닫은 경우에는 링크를 임의로 복사하지 않는다.
-            if (error instanceof DOMException && error.name === 'AbortError') return;
-            try {
-                await navigator.clipboard.writeText(clipboardText);
-                gtag.trackShare(route, 'clipboard');
-                setShareToast('✅ 링크가 복사되었습니다!');
-                setTimeout(() => setShareToast(null), 2000);
-            } catch { }
+            await navigator.clipboard.writeText(clipboardText);
+            gtag.trackShare(route, 'clipboard');
+            setShareToast('✅ 링크가 복사되었습니다!');
+        } catch {
+            setShareToast('링크를 복사하지 못했습니다. 다시 시도해주세요.');
         }
+        setTimeout(() => setShareToast(null), 2000);
     };
 
     // 인원수 반영 예약 URL 생성
@@ -2314,9 +2286,6 @@ export default function Dashboard() {
                                                 <div className={styles.priceSection}>
                                                     <div className={styles.price}>{formatPrice(flight.price)}</div>
                                                     {(() => {
-                                                        if (isTrueDeal(flight)) {
-                                                            return <span className={styles.trueDealBadge}>💎 진짜 특가</span>;
-                                                        }
                                                         const city = flight.arrival.city?.replace(/\([^)]+\)/, '').trim();
                                                         const depMonth = flight.departure.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 7);
                                                         const ipCityData = interparkPrices[city];
@@ -2657,9 +2626,6 @@ export default function Dashboard() {
                                 <div className={styles.mdtAirlineInfo}>
                                     <span className={`badge ${getSourceBadgeClass(modetourGuide.source)}`}>{getSourceName(modetourGuide.source)}</span>
                                     <span className={styles.airline} style={{ marginLeft: '6px' }}>{modetourGuide.airline}</span>
-                                    {isTrueDeal(modetourGuide) && (
-                                        <span className={styles.trueDealBadge}>💎 진짜 특가</span>
-                                    )}
                                     {(() => {
                                         const seatNum = modetourGuide.availableSeats || (modetourGuide.seats ? parseInt(modetourGuide.seats) : 0);
                                         if (!seatNum) return null;
