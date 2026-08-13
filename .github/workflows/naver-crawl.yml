@@ -43,6 +43,8 @@ jobs:
           CI: true
           MAX_FLIGHTS: ${{ github.event.inputs.max_flights || '200' }}
           SOURCE_FILTER: myrealtrip
+          FRESH_HOURS: 48
+          MISS_RETRY_HOURS: 6
 
       - name: Filter flights by Naver prices
         if: steps.naver.outcome == 'success'

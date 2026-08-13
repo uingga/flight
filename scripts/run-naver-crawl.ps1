@@ -28,6 +28,7 @@ $env:HIDE_WINDOW = '1'
 $env:SOURCE_FILTER = 'all'
 $env:MAX_FLIGHTS = '280'
 $env:FRESH_HOURS = '48'
+$env:MISS_RETRY_HOURS = '6'
 npx --no-install tsx scripts/crawl-naver.ts 2>&1 | Add-Content -Encoding utf8 $LogFile
 if ($LASTEXITCODE -ne 0) {
     Log "Crawler exited abnormally (exit $LASTEXITCODE); stopping this run"

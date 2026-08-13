@@ -27,12 +27,14 @@ let added = 0;
 let updated = 0;
 let keptNewer = 0;
 
+const entryTimestamp = (entry) => entry?.lastAttemptAt || entry?.crawledAt || '';
+
 for (const [key, entry] of Object.entries(overlay)) {
     const existing = target[key];
     if (!existing) {
         target[key] = entry;
         added++;
-    } else if (!existing.crawledAt || (entry.crawledAt && entry.crawledAt > existing.crawledAt)) {
+    } else if (entryTimestamp(entry) > entryTimestamp(existing)) {
         target[key] = entry;
         updated++;
     } else {
