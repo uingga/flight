@@ -4,8 +4,8 @@ import { NextRequest } from 'next/server';
 export const runtime = 'edge';
 
 // Keep OG rendering independent from Google Fonts so Korean text never falls back to boxes.
-async function getFontData() {
-    const res = await fetch(new URL('../../../../public/Fonts/NanumGothic-OG.ttf', import.meta.url));
+async function getFontData(origin: string) {
+    const res = await fetch(`${origin}/Fonts/NanumGothic-OG.ttf`, { cache: 'no-store' });
     if (!res.ok) {
         throw new Error('Failed to fetch font data');
     }
@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
     const routeFontSize = longestCityLength >= 8 ? 58 : longestCityLength >= 6 ? 66 : 76;
 
     // Load font data
-    const fontData = await getFontData().catch((err) => {
+    const fontData = await getFontData(request.nextUrl.origin).catch((err) => {
         console.error('Font load error:', err);
         return null;
     });
