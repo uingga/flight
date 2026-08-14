@@ -2289,6 +2289,9 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    /* 알림 칩까지 두 칸이라 좁은 화면에서는 줄바꿈으로 흘린다 (닫기 버튼과 겹치지 않게) */
+    flex-wrap: wrap;
+    gap: 8px;
     padding: 20px 56px 16px 24px;
     border-bottom: 1px solid #f3f4f6;
 }
@@ -2688,19 +2691,22 @@
     margin: 10px 24px 2px;
 }
 
+/* 상세 모달 상단 요약 바의 알림 칩 — 가격→예약 흐름을 끊지 않도록 본문 밖에 둔다 */
 .priceAlertOpenBtn {
-    width: 100%;
-    display: flex;
+    flex: 0 0 auto;
+    /* 절대 배치된 닫기 버튼과 붙지 않도록 여백 확보 */
+    margin-right: 8px;
+    display: inline-flex;
     align-items: center;
-    justify-content: center;
-    gap: 7px;
-    padding: 9px 12px;
+    gap: 5px;
+    padding: 6px 11px;
     border: 1px solid #ddd9ff;
-    border-radius: 10px;
+    border-radius: 999px;
     background: #f7f6ff;
     color: #4338ca;
     font-size: 12px;
     font-weight: 700;
+    white-space: nowrap;
     cursor: pointer;
 }
 
@@ -2823,6 +2829,135 @@
 .priceAlertSaveBtn:disabled {
     cursor: wait;
     opacity: 0.6;
+}
+
+/* 목적지 검색 결과 상단의 알림 제안 배너 */
+.alertSuggestBar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+    padding: 10px 14px;
+    border: 1px solid #ddd9ff;
+    border-radius: var(--radius-lg);
+    background: #f8f7ff;
+}
+
+.alertSuggestBar .priceAlertPanel {
+    flex: 1;
+    border: 0;
+    background: transparent;
+    padding: 0;
+}
+
+.alertSuggestText {
+    color: #312e81;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.alertSuggestActions {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex: 0 0 auto;
+}
+
+.alertSuggestBtn {
+    padding: 7px 14px;
+    border: 0;
+    border-radius: 9px;
+    background: #4f46e5;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.alertSuggestBtn:hover {
+    opacity: 0.92;
+}
+
+.alertSuggestDismiss {
+    border: 0;
+    background: transparent;
+    color: #9ca3af;
+    font-size: 18px;
+    line-height: 1;
+    padding: 2px 4px;
+    cursor: pointer;
+}
+
+/* 결과 0건 원인이 된 필터 — 눌러서 바로 해제 */
+.emptyBlockers {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin: 14px 0 4px;
+}
+
+.emptyBlockerChip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 12px;
+    border: 1px solid #fecaca;
+    border-radius: 999px;
+    background: #fef2f2;
+    color: #b91c1c;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.emptyBlockerChip:hover {
+    border-color: #f87171;
+    background: #fee2e2;
+}
+
+.emptyBlockerChip span {
+    font-size: 14px;
+    line-height: 1;
+    opacity: 0.75;
+}
+
+/* 검색 결과 0건일 때의 알림 제안 */
+.alertEmptyCta {
+    max-width: 380px;
+    margin: 18px auto 0;
+    padding-top: 16px;
+    border-top: 1px solid var(--color-border);
+    text-align: center;
+}
+
+.alertEmptyText {
+    margin: 0 0 10px;
+    color: var(--color-text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.alertEmptyCta .priceAlertPanel {
+    text-align: left;
+}
+
+@media (max-width: 520px) {
+    .alertSuggestBar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .alertSuggestActions {
+        justify-content: space-between;
+    }
+
+    .alertSuggestBtn {
+        flex: 1;
+    }
 }
 
 .alertManagerSheet {
@@ -3919,4 +4054,4 @@
         font-size: 0.78rem;
     }
 }
-
+

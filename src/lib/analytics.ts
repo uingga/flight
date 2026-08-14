@@ -114,9 +114,13 @@ export const trackShare = (route: string, method: string) => {
     event('share_flight', { route, share_method: method });
 };
 
-/** Price alert */
-export const trackAlertSetup = (route: string, maxPrice?: number) => {
-    event('alert_setup', { route, ...(maxPrice ? { target_price: maxPrice } : {}) });
+/** Price alert; entry identifies which CTA the subscription came from. */
+export const trackAlertSetup = (route: string, maxPrice?: number, entry?: string) => {
+    event('alert_setup', {
+        route,
+        ...(maxPrice ? { target_price: maxPrice } : {}),
+        ...(entry ? { entry_point: entry } : {}),
+    });
 };
 
 /** Price-comparison link (Naver/Skyscanner) */

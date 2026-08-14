@@ -62,6 +62,23 @@ interface ManagedPriceAlert {
     createdAt: string;
 }
 
+/** 가격 알림을 등록한 화면 — GA4에서 진입점별 전환을 비교하기 위해 함께 기록한다. */
+type PriceAlertEntry = 'detail_modal' | 'filter_banner' | 'empty_state';
+
+const getSourceName = (source: string) => {
+    switch (source) {
+        case 'ybtour': return '노랑풍선';
+        case 'modetour': return '모두투어';
+        case 'hanatour': return '하나투어';
+        case 'onlinetour': return '온라인투어';
+        case 'ttang': return '땡처리닷컴';
+        case 'myrealtrip': return '마이리얼트립';
+        default: return source;
+    }
+};
+
+const DISMISSED_ALERT_ROUTES_KEY = 'tikitikit_dismissed_alert_routes';
+
 export default function Dashboard() {
     const [flights, setFlights] = useState<Flight[]>([]);
     const [loading, setLoading] = useState(true);
@@ -107,11 +124,16 @@ export default function Dashboard() {
     const [contactSending, setContactSending] = useState(false);
     const [flightReport, setFlightReport] = useState<{ flightId: string; status: 'sending' | 'sent' | 'error' } | null>(null);
     const [priceAlertSetup, setPriceAlertSetup] = useState<{
-        flightId: string;
+        key: string;
+        entry: PriceAlertEntry;
+        departureCity: string;
+        arrivalCity: string;
+        baseline?: { flightId: string; price: number };
         maxPrice: string;
         status: 'idle' | 'saving' | 'sent' | 'error';
         message?: string;
     } | null>(null);
+    const [dismissedAlertRoutes, setDismissedAlertRoutes] = useState<string[]>([]);
     const [showPriceAlertManager, setShowPriceAlertManager] = useState(false);
     const [managedPriceAlerts, setManagedPriceAlerts] = useState<ManagedPriceAlert[]>([]);
     const [priceAlertManagerStatus, setPriceAlertManagerStatus] = useState<'idle' | 'loading' | 'error'>('idle');
@@ -663,8 +685,10 @@ export default function Dashboard() {
         }
     };
 
-    const savePriceAlert = async (flight: Flight) => {
-        const maxPrice = Number(priceAlertSetup?.maxPrice);
+    const savePriceAlert = async () => {
+        const target = priceAlertSetup;
+        if (!target) return;
+        const maxPrice = Number(target.maxPrice);
         if (!Number.isFinite(maxPrice) || maxPrice < 10000 || maxPrice > 10000000) {
             setPriceAlertSetup(current => current ? { ...current, status: 'error', message: '목표 가격을 다시 확인해주세요.' } : current);
             return;
@@ -710,15 +734,15 @@ export default function Dashboard() {
             const result = await postPriceAlertAction({
                 subscription: subscription.toJSON(),
                 conditions: {
-                    departureCity: normalizeCity(flight.departure.city),
-                    arrivalCity: normalizeCity(flight.arrival.city),
+                    departureCity: target.departureCity,
+                    arrivalCity: target.arrivalCity,
                     maxPrice,
                 },
-                baseline: {
-                    flightId: flight.id,
-                    price: flight.price,
-                },
+                ...(target.baseline ? { baseline: target.baseline } : {}),
             });
+
+            gtag.trackAlertSetup(`${target.departureCity}-${target.arrivalCity}`, maxPrice, target.entry);
+            setDismissedAlertRoutes(current => current.includes(target.key) ? current : [...current, target.key]);
 
             setPriceAlertSetup(current => current ? {
                 ...current,
@@ -737,12 +761,113 @@ export default function Dashboard() {
     };
 
     useEffect(() => {
-        if (!priceAlertSetup?.flightId) return;
+        if (!priceAlertSetup?.key) return;
         const frame = window.requestAnimationFrame(() => {
             priceAlertAreaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         });
         return () => window.cancelAnimationFrame(frame);
-    }, [priceAlertSetup?.flightId]);
+    }, [priceAlertSetup?.key]);
+
+    // 세션 중 닫았거나 이미 등록한 노선은 알림 제안을 다시 띄우지 않는다
+    useEffect(() => {
+        try {
+            const saved = sessionStorage.getItem(DISMISSED_ALERT_ROUTES_KEY);
+            if (saved) setDismissedAlertRoutes(JSON.parse(saved));
+        } catch { }
+    }, []);
+
+    useEffect(() => {
+        try {
+            sessionStorage.setItem(DISMISSED_ALERT_ROUTES_KEY, JSON.stringify(dismissedAlertRoutes));
+        } catch { }
+    }, [dismissedAlertRoutes]);
+
+    const openPriceAlert = (setup: {
+        key: string;
+        entry: PriceAlertEntry;
+        departureCity: string;
+        arrivalCity: string;
+        baseline?: { flightId: string; price: number };
+        maxPrice: number | null;
+    }) => {
+        setPriceAlertSetup({ ...setup, maxPrice: setup.maxPrice === null ? '' : String(setup.maxPrice), status: 'idle' });
+    };
+
+    const dismissPriceAlert = () => {
+        const key = priceAlertSetup?.key;
+        setPriceAlertSetup(null);
+        if (key && key.startsWith('route:')) {
+            setDismissedAlertRoutes(current => current.includes(key) ? current : [...current, key]);
+        }
+    };
+
+    /** 알림 등록 패널 — 상세 모달·필터 배너·빈 결과에서 함께 쓴다 */
+    const renderPriceAlertPanel = (note: string) => {
+        if (!priceAlertSetup) return null;
+        const setup = priceAlertSetup;
+        return (
+            <div className={styles.priceAlertPanel} aria-live="polite">
+                <div className={styles.priceAlertPanelHeader}>
+                    <div>
+                        <strong>{setup.departureCity} → {setup.arrivalCity}</strong>
+                        <span>{note}</span>
+                    </div>
+                    {setup.status !== 'sent' && (
+                        <button
+                            type="button"
+                            className={styles.priceAlertCloseBtn}
+                            onClick={dismissPriceAlert}
+                            aria-label="가격 알림 설정 닫기"
+                        >
+                            ×
+                        </button>
+                    )}
+                </div>
+                {setup.status === 'sent' ? (
+                    <p className={styles.priceAlertSuccess}>✓ {setup.message}</p>
+                ) : (
+                    <>
+                        <label className={styles.priceAlertPriceField}>
+                            <span>목표 가격</span>
+                            <span className={styles.priceAlertInputWrap}>
+                                <input
+                                    type="number"
+                                    min="10000"
+                                    max="10000000"
+                                    step="1000"
+                                    inputMode="numeric"
+                                    placeholder="예: 300000"
+                                    value={setup.maxPrice}
+                                    onChange={event => setPriceAlertSetup(current => current ? {
+                                        ...current,
+                                        maxPrice: event.target.value,
+                                        status: 'idle',
+                                        message: undefined,
+                                    } : current)}
+                                    aria-label="목표 가격"
+                                />
+                                <span>원 이하</span>
+                            </span>
+                        </label>
+                        <p className={styles.priceAlertHelp}>
+                            같은 노선이면 출발일과 일정이 달라도 목표가 이하의 새 특가를 알려드립니다.
+                        </p>
+                        {setup.message && (
+                            <p className={styles.priceAlertError}>{setup.message}</p>
+                        )}
+                        <button
+                            type="button"
+                            className={styles.priceAlertSaveBtn}
+                            disabled={setup.status === 'saving'}
+                            onClick={savePriceAlert}
+                        >
+                            {setup.status === 'saving' ? '등록 중…' : '알림 등록'}
+                        </button>
+                    </>
+                )}
+            </div>
+        );
+    };
 
     // 인원수 반영 예약 URL 생성
     const getBookingUrl = (flight: Flight, pax: { adult: number; child: number; infant: number }) => {
@@ -931,34 +1056,33 @@ export default function Dashboard() {
     const hasActiveFilters = searchTerm || sourceFilter !== 'all' || regionFilter !== 'all' ||
         airlineFilter !== 'all' || departureFilter !== 'all' || startDate || endDate;
 
+    // 조건별 판정을 분리해 둔다 — 결과가 0건일 때 어느 조건이 막았는지 되짚어야 하기 때문
+    //
+    // 검색은 도시명만 본다. 항공사명까지 훑으면 도시명이 사명에 들어간 경우
+    // (푸꾸옥/썬푸꾸옥항공, 부산/에어부산) 엉뚱한 노선이 섞인다. 항공사는 별도 드롭다운으로 고른다.
+    const matchesSearchTerm = (flight: Flight) => {
+        const term = searchTerm.toLowerCase();
+        return flight.departure.city.toLowerCase().includes(term) ||
+            flight.arrival.city.toLowerCase().includes(term) ||
+            normalizeCity(flight.departure.city).toLowerCase().includes(term) ||
+            normalizeCity(flight.arrival.city).toLowerCase().includes(term);
+    };
+    const matchesSourceFilter = (flight: Flight) => sourceFilter === 'all' || flight.source === sourceFilter;
+    const matchesRegionFilter = (flight: Flight) => regionFilter === 'all' || flight.region === regionFilter;
+    const matchesAirlineFilter = (flight: Flight) => airlineFilter === 'all' || normalizeAirline(flight.airline) === airlineFilter;
+    const matchesDateFilter = (flight: Flight) => {
+        const m = flight.departure.date?.match(/^(\d{4})[.\-](\d{2})[.\-](\d{2})/);
+        const flightDate = m ? `${m[1]}-${m[2]}-${m[3]}` : (flight.departure.date || '');
+        return (!startDate || flightDate >= startDate) && (!endDate || flightDate <= endDate);
+    };
+    const matchesDepartureFilter = (flight: Flight) => {
+        if (departureFilter === 'all') return true;
+        if (departureFilter === '인천') return /인천|김포|서울|ICN|GMP|SEL/.test(flight.departure.city);
+        if (departureFilter === '부산') return /부산|김해|PUS/.test(flight.departure.city);
+        return flight.departure.city.includes(departureFilter);
+    };
+
     const filteredFlights = flights.filter(flight => {
-        const matchesSearch =
-            flight.departure.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            flight.arrival.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            normalizeCity(flight.departure.city).toLowerCase().includes(searchTerm.toLowerCase()) ||
-            normalizeCity(flight.arrival.city).toLowerCase().includes(searchTerm.toLowerCase()) ||
-            flight.airline.toLowerCase().includes(searchTerm.toLowerCase());
-
-        const matchesSource = sourceFilter === 'all' || flight.source === sourceFilter;
-        const matchesRegion = regionFilter === 'all' || flight.region === regionFilter;
-        const matchesAirline = airlineFilter === 'all' || normalizeAirline(flight.airline) === airlineFilter;
-        const normalizeDate = (d: string) => {
-            if (!d) return '';
-            const m = d.match(/^(\d{4})[.\-](\d{2})[.\-](\d{2})/);
-            return m ? `${m[1]}-${m[2]}-${m[3]}` : d;
-        };
-        const flightDate = normalizeDate(flight.departure.date);
-        const matchesDate =
-            (!startDate || flightDate >= startDate) &&
-            (!endDate || flightDate <= endDate);
-
-        const matchesDeparture = departureFilter === 'all' || (() => {
-            if (departureFilter === '인천') return /인천|김포|서울|ICN|GMP|SEL/.test(flight.departure.city);
-            if (departureFilter === '부산') return /부산|김해|PUS/.test(flight.departure.city);
-            return flight.departure.city.includes(departureFilter);
-        })();
-
-
         // 공유 링크로 접근 시 해당 항공편만 표시
         if (sharedFlightId) {
             // 1. 정확한 ID 매칭
@@ -984,7 +1108,8 @@ export default function Dashboard() {
 
         const matchesFav = !favFilter || isFavoriteFlight(flight.id);
 
-        return matchesSearch && matchesSource && matchesRegion && matchesAirline && matchesDate && matchesDeparture && matchesFav;
+        return matchesSearchTerm(flight) && matchesSourceFilter(flight) && matchesRegionFilter(flight)
+            && matchesAirlineFilter(flight) && matchesDateFilter(flight) && matchesDepartureFilter(flight) && matchesFav;
     }).sort((a, b) => {
         let comparison = 0;
 
@@ -1115,6 +1240,113 @@ export default function Dashboard() {
 
         return sortOrder === 'asc' ? comparison : -comparison;
     });
+
+    // 결과가 0건인 이유를 가려낸다.
+    // 검색어에 맞는 항공권이 있는데도 안 보이면 그건 "특가가 없는 것"이 아니라 필터가 막은 것이므로,
+    // 알림을 권하기 전에 어떤 조건이 걸렸는지 먼저 알려준다.
+    const emptyDiagnosis = useMemo(() => {
+        if (filteredFlights.length > 0 || sharedFlightId || !searchTerm.trim()) return null;
+
+        const byTerm = flights.filter(matchesSearchTerm);
+        if (byTerm.length === 0) return { kind: 'noDeals' as const, blockers: [], available: 0 };
+
+        const departureLabel = departureFilter === '인천' ? '인천/김포'
+            : departureFilter === '부산' ? '부산/김해' : departureFilter;
+        const blockers = [
+            {
+                id: 'region',
+                label: `도착 지역 · ${regionFilter}`,
+                active: regionFilter !== 'all',
+                passes: byTerm.some(matchesRegionFilter),
+                clear: () => setRegionFilter('all'),
+            },
+            {
+                id: 'departure',
+                label: `출발지 · ${departureLabel}`,
+                active: departureFilter !== 'all',
+                passes: byTerm.some(matchesDepartureFilter),
+                clear: () => setDepartureFilter('all'),
+            },
+            {
+                id: 'date',
+                label: `날짜 · ${fmtDate(startDate)}~${fmtDate(endDate)}`,
+                active: !!(startDate || endDate),
+                passes: byTerm.some(matchesDateFilter),
+                clear: () => { setStartDate(''); setEndDate(''); },
+            },
+            {
+                id: 'airline',
+                label: `항공사 · ${airlineFilter}`,
+                active: airlineFilter !== 'all',
+                passes: byTerm.some(matchesAirlineFilter),
+                clear: () => setAirlineFilter('all'),
+            },
+            {
+                id: 'source',
+                label: `여행사 · ${getSourceName(sourceFilter)}`,
+                active: sourceFilter !== 'all',
+                passes: byTerm.some(matchesSourceFilter),
+                clear: () => setSourceFilter('all'),
+            },
+        ].filter(b => b.active && !b.passes);
+
+        return { kind: 'filtered' as const, blockers, available: byTerm.length };
+    }, [filteredFlights.length, flights, searchTerm, sharedFlightId,
+        regionFilter, departureFilter, airlineFilter, sourceFilter, startDate, endDate]);
+
+    // 검색으로 목적지가 하나로 좁혀졌을 때만 알림을 제안한다.
+    // 알림 등록에는 출발·도착 도시가 특정돼야 하고, 근거로 보여줄 최저가도 필요하다.
+    const alertSuggestion = useMemo(() => {
+        if (sharedFlightId || favFilter || !searchTerm.trim()) return null;
+
+        if (filteredFlights.length > 0) {
+            const priced = filteredFlights.filter(f => f.price > 0);
+            if (priced.length === 0) return null;
+            // 목적지가 둘 이상 섞여 있으면 "이 노선"이라고 말할 수 없다 (도쿄 나리타/하네다 등)
+            if (new Set(priced.map(f => normalizeCity(f.arrival.city))).size !== 1) return null;
+            const cheapest = priced.reduce((min, f) => (f.price < min.price ? f : min), priced[0]);
+            return {
+                mode: 'results' as const,
+                departureCity: normalizeCity(cheapest.departure.city),
+                arrivalCity: normalizeCity(cheapest.arrival.city),
+                price: cheapest.price,
+                flightId: cheapest.id,
+            };
+        }
+
+        // 결과 0건 — 필터가 막은 경우가 아니라, 정말로 이 목적지 특가가 하나도 없을 때만 제안한다
+        if (emptyDiagnosis?.kind !== 'noDeals') return null;
+        const term = searchTerm.trim();
+        const arrivalCity = normalizeCity(term);
+        // 캐시에 없는 도시라 표기를 검증할 수 없으면 등록하지 않는다 (오타·항공사명 입력 방지)
+        if (!CITY_TO_AIRPORT[term] && !CITY_TO_AIRPORT[arrivalCity]) return null;
+        const departureCity = departureFilter === 'all' ? '인천' : normalizeCity(departureFilter);
+        // 보여줄 항공권이 없으니 기준가는 인터파크 월평균이 있으면 쓰고, 없으면 직접 입력받는다
+        const months = interparkPrices[arrivalCity] ? Object.values(interparkPrices[arrivalCity]) : [];
+        const avg = months.length ? Math.round(months.reduce((s, m) => s + m.avg, 0) / months.length / 10000) * 10000 : null;
+        return { mode: 'empty' as const, departureCity, arrivalCity, price: avg, flightId: null };
+    }, [searchTerm, filteredFlights, sharedFlightId, favFilter, emptyDiagnosis, departureFilter, interparkPrices]);
+
+    const alertRouteKey = alertSuggestion
+        ? `route:${alertSuggestion.departureCity}-${alertSuggestion.arrivalCity}`
+        : null;
+    const alertPanelOpen = !!alertRouteKey && priceAlertSetup?.key === alertRouteKey;
+    const showAlertCta = !!alertRouteKey && !dismissedAlertRoutes.includes(alertRouteKey);
+
+    const openSuggestedPriceAlert = () => {
+        if (!alertSuggestion || !alertRouteKey) return;
+        openPriceAlert({
+            key: alertRouteKey,
+            entry: alertSuggestion.mode === 'results' ? 'filter_banner' : 'empty_state',
+            departureCity: alertSuggestion.departureCity,
+            arrivalCity: alertSuggestion.arrivalCity,
+            // 빈 결과에서는 지금 보이는 항공권이 없으므로 기준가를 남기지 않는다
+            ...(alertSuggestion.mode === 'results'
+                ? { baseline: { flightId: alertSuggestion.flightId, price: alertSuggestion.price } }
+                : {}),
+            maxPrice: alertSuggestion.price,
+        });
+    };
 
     // 노선 분산 정렬: 같은 출발지-목적지가 연속 3개 이상 나오지 않도록 재배치
     // 추천순에서만 적용 (가격순/날짜순/검색 시 비활성화)
@@ -1974,19 +2206,6 @@ export default function Dashboard() {
         }
     };
 
-    const getSourceName = (source: string) => {
-        switch (source) {
-
-            case 'ybtour': return '노랑풍선';
-            case 'modetour': return '모두투어';
-            case 'hanatour': return '하나투어';
-            case 'onlinetour': return '온라인투어';
-            case 'ttang': return '땡처리닷컴';
-            case 'myrealtrip': return '마이리얼트립';
-            default: return source;
-        }
-    };
-
     return (
         <div className={styles.dashboard}>
             <header className={`${styles.header} ${(headerHidden || (isMobile && isScrolled)) ? styles.headerHidden : ''} ${headerScrolled ? styles.headerScrolled : ''}`}>
@@ -2212,7 +2431,6 @@ export default function Dashboard() {
                                         const arr = normalizeCity(f.arrival.city);
                                         if (dep.toLowerCase().includes(term)) matchCities.add(dep);
                                         if (arr.toLowerCase().includes(term)) matchCities.add(arr);
-                                        if (f.airline.toLowerCase().includes(term)) matchCities.add(f.airline);
                                     });
                                     const matches = Array.from(matchCities).slice(0, 8);
                                     if (matches.length === 0) return null;
@@ -2483,6 +2701,37 @@ export default function Dashboard() {
                             </div>
                         )}
 
+                        {alertSuggestion?.mode === 'results' && (alertPanelOpen || showAlertCta) && (
+                            <div className={styles.alertSuggestBar}>
+                                {alertPanelOpen ? renderPriceAlertPanel('출발일이 달라도 알려드려요') : (
+                                    <>
+                                        <span className={styles.alertSuggestText}>
+                                            {alertSuggestion.arrivalCity}, 지금 최저 {formatPrice(alertSuggestion.price)}.
+                                            {' '}더 내려가면 알려드릴까요?
+                                        </span>
+                                        <span className={styles.alertSuggestActions}>
+                                            <button
+                                                type="button"
+                                                className={styles.alertSuggestBtn}
+                                                onClick={openSuggestedPriceAlert}
+                                            >
+                                                알림 받기
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className={styles.alertSuggestDismiss}
+                                                onClick={() => setDismissedAlertRoutes(current =>
+                                                    alertRouteKey && !current.includes(alertRouteKey) ? [...current, alertRouteKey] : current)}
+                                                aria-label="알림 제안 닫기"
+                                            >
+                                                ×
+                                            </button>
+                                        </span>
+                                    </>
+                                )}
+                            </div>
+                        )}
+
                         <div className={styles.flightGrid}>
                             {displayedFlights.flatMap((flight, index) => {
                                 const route = `${flight.departure.city}-${flight.arrival.city}`;
@@ -2710,10 +2959,34 @@ export default function Dashboard() {
                                     </>
                                 ) : (
                                     <>
-                                        <p>검색 결과가 없습니다</p>
-                                        <p style={{ fontSize: '0.9rem', opacity: 0.7 }}>
-                                            필터를 조정하거나 다른 조건으로 검색해보세요
-                                        </p>
+                                        {emptyDiagnosis?.kind === 'filtered' && emptyDiagnosis.blockers.length > 0 ? (
+                                            <>
+                                                <p>{searchTerm} 항공권은 {emptyDiagnosis.available}건 있습니다</p>
+                                                <p style={{ fontSize: '0.9rem', opacity: 0.7 }}>
+                                                    아래 조건과 맞지 않아 가려졌어요. 눌러서 해제할 수 있습니다.
+                                                </p>
+                                                <div className={styles.emptyBlockers}>
+                                                    {emptyDiagnosis.blockers.map(blocker => (
+                                                        <button
+                                                            key={blocker.id}
+                                                            type="button"
+                                                            className={styles.emptyBlockerChip}
+                                                            onClick={blocker.clear}
+                                                        >
+                                                            {blocker.label}
+                                                            <span aria-hidden="true">×</span>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <p>검색 결과가 없습니다</p>
+                                                <p style={{ fontSize: '0.9rem', opacity: 0.7 }}>
+                                                    필터를 조정하거나 다른 조건으로 검색해보세요
+                                                </p>
+                                            </>
+                                        )}
                                         {hasActiveFilters && (
                                             <button
                                                 onClick={resetAllFilters}
@@ -2721,6 +2994,24 @@ export default function Dashboard() {
                                             >
                                                 필터 초기화
                                             </button>
+                                        )}
+                                        {alertSuggestion?.mode === 'empty' && (alertPanelOpen || showAlertCta) && (
+                                            <div className={styles.alertEmptyCta}>
+                                                {alertPanelOpen ? renderPriceAlertPanel('특가가 나오면 알려드려요') : (
+                                                    <>
+                                                        <p className={styles.alertEmptyText}>
+                                                            지금은 {alertSuggestion.arrivalCity} 특가가 없습니다. 나오면 알려드릴까요?
+                                                        </p>
+                                                        <button
+                                                            type="button"
+                                                            className={styles.alertSuggestBtn}
+                                                            onClick={openSuggestedPriceAlert}
+                                                        >
+                                                            알림 받기
+                                                        </button>
+                                                    </>
+                                                )}
+                                            </div>
                                         )}
                                     </>
                                 )}
@@ -2960,7 +3251,30 @@ export default function Dashboard() {
                                         );
                                     })()}
                                 </div>
+                                {priceAlertSetup?.key !== `flight:${modetourGuide.id}` && (
+                                    <button
+                                        type="button"
+                                        className={styles.priceAlertOpenBtn}
+                                        onClick={() => openPriceAlert({
+                                            key: `flight:${modetourGuide.id}`,
+                                            entry: 'detail_modal',
+                                            departureCity: depCity,
+                                            arrivalCity: arrCity,
+                                            baseline: { flightId: modetourGuide.id, price: modetourGuide.price },
+                                            maxPrice: modetourGuide.price,
+                                        })}
+                                    >
+                                        <span aria-hidden="true">🔔</span>
+                                        가격 알림
+                                    </button>
+                                )}
                             </div>
+
+                            {priceAlertSetup?.key === `flight:${modetourGuide.id}` && (
+                                <div ref={priceAlertAreaRef} className={styles.priceAlertArea}>
+                                    {renderPriceAlertPanel('출발일이 달라도 알려드려요')}
+                                </div>
+                            )}
 
                             {/* 타임라인 요약 */}
                             <div className={styles.mdtTimeline}>
@@ -3097,83 +3411,6 @@ export default function Dashboard() {
                                     <div className={styles.mdtPriceTotalSub}>(유류/제세공과금 포함)</div>
                                 </div>
                                 <div className={styles.mdtPriceTotalValue}>{formatPrice(totalPrice)}</div>
-                            </div>
-
-                            <div ref={priceAlertAreaRef} className={styles.priceAlertArea}>
-                                {priceAlertSetup?.flightId !== modetourGuide.id ? (
-                                    <button
-                                        type="button"
-                                        className={styles.priceAlertOpenBtn}
-                                        onClick={() => setPriceAlertSetup({
-                                            flightId: modetourGuide.id,
-                                            maxPrice: String(modetourGuide.price),
-                                            status: 'idle',
-                                        })}
-                                    >
-                                        <span aria-hidden="true">🔔</span>
-                                        이 노선 가격 알림 받기
-                                    </button>
-                                ) : (
-                                    <div className={styles.priceAlertPanel} aria-live="polite">
-                                        <div className={styles.priceAlertPanelHeader}>
-                                            <div>
-                                                <strong>{depCity} → {arrCity}</strong>
-                                                <span>출발일이 달라도 알려드려요</span>
-                                            </div>
-                                            {priceAlertSetup.status !== 'sent' && (
-                                                <button
-                                                    type="button"
-                                                    className={styles.priceAlertCloseBtn}
-                                                    onClick={() => setPriceAlertSetup(null)}
-                                                    aria-label="가격 알림 설정 닫기"
-                                                >
-                                                    ×
-                                                </button>
-                                            )}
-                                        </div>
-                                        {priceAlertSetup.status === 'sent' ? (
-                                            <p className={styles.priceAlertSuccess}>✓ {priceAlertSetup.message}</p>
-                                        ) : (
-                                            <>
-                                                <label className={styles.priceAlertPriceField}>
-                                                    <span>목표 가격</span>
-                                                    <span className={styles.priceAlertInputWrap}>
-                                                        <input
-                                                            type="number"
-                                                            min="10000"
-                                                            max="10000000"
-                                                            step="1000"
-                                                            inputMode="numeric"
-                                                            value={priceAlertSetup.maxPrice}
-                                                            onChange={event => setPriceAlertSetup(current => current ? {
-                                                                ...current,
-                                                                maxPrice: event.target.value,
-                                                                status: 'idle',
-                                                                message: undefined,
-                                                            } : current)}
-                                                            aria-label="목표 가격"
-                                                        />
-                                                        <span>원 이하</span>
-                                                    </span>
-                                                </label>
-                                                <p className={styles.priceAlertHelp}>
-                                                    같은 노선이면 출발일과 일정이 달라도 목표가 이하의 새 특가를 알려드립니다.
-                                                </p>
-                                                {priceAlertSetup.message && (
-                                                    <p className={styles.priceAlertError}>{priceAlertSetup.message}</p>
-                                                )}
-                                                <button
-                                                    type="button"
-                                                    className={styles.priceAlertSaveBtn}
-                                                    disabled={priceAlertSetup.status === 'saving'}
-                                                    onClick={() => savePriceAlert(modetourGuide)}
-                                                >
-                                                    {priceAlertSetup.status === 'saving' ? '등록 중…' : '알림 등록'}
-                                                </button>
-                                            </>
-                                        )}
-                                    </div>
-                                )}
                             </div>
 
                             {/* 하단 */}
