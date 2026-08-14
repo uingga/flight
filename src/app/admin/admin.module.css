@@ -756,3 +756,22 @@
     background: rgba(148, 163, 184, 0.15);
     color: #94a3b8;
 }
+
+.sectionHelp {
+    margin: -6px 0 16px;
+    color: #94a3b8;
+    font-size: 0.83rem;
+    line-height: 1.6;
+}
+
+.sectionHelp strong {
+    color: #cbd5e1;
+}
+
+/* 제외 사유 칩 무리 앞에 붙는 설명 — 칩과 구분되게 배경 없이 */
+.dealRejections .dealRejectionsLabel {
+    padding: 4px 0;
+    background: transparent;
+    color: #64748b;
+    font-weight: 700;
+}

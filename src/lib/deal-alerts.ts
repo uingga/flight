@@ -192,10 +192,10 @@ function candidateReasons(
 ): string[] {
     const reasons: string[] = [];
     if (baseline && effective < baseline) {
-        reasons.push(`최근 노선 최저가 중앙값보다 ${Math.round((1 - effective / baseline) * 100)}% 저렴`);
+        reasons.push(`평소 이 노선 시세보다 ${Math.round((1 - effective / baseline) * 100)}% 저렴`);
     }
     if (flight.naverLowest && effective <= flight.naverLowest) {
-        reasons.push(`외부 비교 최저가보다 ${Math.round((1 - effective / flight.naverLowest) * 100)}% 저렴`);
+        reasons.push(`네이버 최저가보다 ${Math.round((1 - effective / flight.naverLowest) * 100)}% 저렴`);
     }
     const duration = daysBetween(flight.departure.date, flight.arrival.date);
     if (duration !== null) reasons.push(`${duration}박 ${duration + 1}일 일정`);
