@@ -233,6 +233,170 @@ export const getAirportCode = (city: string, airport?: string): string | null =>
     return null;
 };
 
+// 도시별 시간대 (IANA). 항공권의 출발·도착 시각은 각 공항의 현지 시각이라
+// 그대로 빼면 시차만큼 어긋난다. 실제 비행시간을 내려면 UTC 오프셋 차이를 보정해야 한다.
+// 키는 normalizeCity를 거친 도시명이며, 괄호가 붙은 형태(도쿄(나리타))는 조회 시 앞부분으로 되짚는다.
+export const CITY_TIMEZONES: Record<string, string> = {
+    // 한국 (출발지)
+    '인천': 'Asia/Seoul', '김포': 'Asia/Seoul', '서울': 'Asia/Seoul', '부산': 'Asia/Seoul',
+    '대구': 'Asia/Seoul', '청주': 'Asia/Seoul', '제주': 'Asia/Seoul', '무안': 'Asia/Seoul',
+    '양양': 'Asia/Seoul', '광주': 'Asia/Seoul', '울산': 'Asia/Seoul', '여수': 'Asia/Seoul',
+    // 일본
+    '도쿄': 'Asia/Tokyo', '오사카': 'Asia/Tokyo', '후쿠오카': 'Asia/Tokyo', '삿포로': 'Asia/Tokyo',
+    '나고야': 'Asia/Tokyo', '오키나와': 'Asia/Tokyo', '구마모토': 'Asia/Tokyo', '기타큐슈': 'Asia/Tokyo',
+    '가고시마': 'Asia/Tokyo', '나가사키': 'Asia/Tokyo', '니가타': 'Asia/Tokyo', '다카마쓰': 'Asia/Tokyo',
+    '도쿠시마': 'Asia/Tokyo', '마츠야마': 'Asia/Tokyo', '미야자키': 'Asia/Tokyo', '미야코지마': 'Asia/Tokyo',
+    '사가': 'Asia/Tokyo', '센다이': 'Asia/Tokyo', '시모지시마': 'Asia/Tokyo', '시즈오카': 'Asia/Tokyo',
+    '오이타': 'Asia/Tokyo', '요나고': 'Asia/Tokyo', '이시가키': 'Asia/Tokyo', '히로시마': 'Asia/Tokyo',
+    '고베': 'Asia/Tokyo', '오카야마': 'Asia/Tokyo', '오비히로': 'Asia/Tokyo', '아사히카와': 'Asia/Tokyo',
+    '하코다테': 'Asia/Tokyo', '고마츠': 'Asia/Tokyo', '도야마': 'Asia/Tokyo',
+    // 중국
+    '베이징': 'Asia/Shanghai', '상하이': 'Asia/Shanghai', '칭다오': 'Asia/Shanghai', '선전': 'Asia/Shanghai',
+    '청두': 'Asia/Shanghai', '시안': 'Asia/Shanghai', '쿤밍': 'Asia/Shanghai', '구이린': 'Asia/Shanghai',
+    '난창': 'Asia/Shanghai', '라싸': 'Asia/Shanghai', '리장': 'Asia/Shanghai', '시닝': 'Asia/Shanghai',
+    '싼야': 'Asia/Shanghai', '오르도스': 'Asia/Shanghai', '우루무치': 'Asia/Shanghai', '우시': 'Asia/Shanghai',
+    '웨이하이': 'Asia/Shanghai', '잔장': 'Asia/Shanghai', '장가계': 'Asia/Shanghai', '장자제': 'Asia/Shanghai',
+    '장사': 'Asia/Shanghai', '정저우': 'Asia/Shanghai', '취안저우': 'Asia/Shanghai', '친황다오': 'Asia/Shanghai',
+    '카슈가르': 'Asia/Shanghai', '타이위안': 'Asia/Shanghai', '후허하오터': 'Asia/Shanghai',
+    '옌타이': 'Asia/Shanghai', '지난': 'Asia/Shanghai', '다롄': 'Asia/Shanghai', '선양': 'Asia/Shanghai',
+    '하얼빈': 'Asia/Shanghai', '항저우': 'Asia/Shanghai', '난징': 'Asia/Shanghai', '충칭': 'Asia/Shanghai',
+    '옌지': 'Asia/Shanghai', '인촨': 'Asia/Shanghai', '톈진': 'Asia/Shanghai', '천진': 'Asia/Shanghai',
+    // 대만·홍콩·마카오
+    '타이베이': 'Asia/Taipei', '가오슝': 'Asia/Taipei', '타이중': 'Asia/Taipei', '화롄': 'Asia/Taipei',
+    '홍콩': 'Asia/Hong_Kong', '마카오': 'Asia/Macau',
+    // 베트남
+    '다낭': 'Asia/Ho_Chi_Minh', '하노이': 'Asia/Ho_Chi_Minh', '호치민': 'Asia/Ho_Chi_Minh',
+    '나트랑': 'Asia/Ho_Chi_Minh', '푸꾸옥': 'Asia/Ho_Chi_Minh', '달랏': 'Asia/Ho_Chi_Minh',
+    '하이퐁': 'Asia/Ho_Chi_Minh', '후에': 'Asia/Ho_Chi_Minh', '껀터': 'Asia/Ho_Chi_Minh',
+    '반미투옷': 'Asia/Ho_Chi_Minh', '탄호아': 'Asia/Ho_Chi_Minh', '꾸이년': 'Asia/Ho_Chi_Minh',
+    // 태국·캄보디아·라오스·미얀마
+    '방콕': 'Asia/Bangkok', '푸켓': 'Asia/Bangkok', '치앙마이': 'Asia/Bangkok', '끄라비': 'Asia/Bangkok',
+    '시엠립': 'Asia/Phnom_Penh', '프놈펜': 'Asia/Phnom_Penh', '크라티에': 'Asia/Phnom_Penh',
+    '비엔티안': 'Asia/Vientiane', '루앙프라방': 'Asia/Vientiane', '양곤': 'Asia/Yangon',
+    // 필리핀
+    '마닐라': 'Asia/Manila', '세부': 'Asia/Manila', '보라카이': 'Asia/Manila', '보홀': 'Asia/Manila',
+    '클락': 'Asia/Manila', '일로일로': 'Asia/Manila', '두마게테': 'Asia/Manila',
+    '제네럴산토스': 'Asia/Manila', '카우아얀': 'Asia/Manila', '투게가라오': 'Asia/Manila',
+    '보홀팡라오': 'Asia/Manila', '다바오': 'Asia/Manila',
+    // 말레이시아·싱가포르·브루나이·인도네시아
+    '쿠알라룸푸르': 'Asia/Kuala_Lumpur', '코타키나발루': 'Asia/Kuala_Lumpur', '페낭': 'Asia/Kuala_Lumpur',
+    '싱가포르': 'Asia/Singapore', '반다르세리베가완': 'Asia/Brunei',
+    '발리': 'Asia/Makassar', '마나도': 'Asia/Makassar',
+    '자카르타': 'Asia/Jakarta', '솔로': 'Asia/Jakarta', '바탐': 'Asia/Jakarta',
+    '암본': 'Asia/Jayapura',
+    // 인도·스리랑카·몰디브·중앙아시아·몽골
+    '델리': 'Asia/Kolkata', '뭄바이': 'Asia/Kolkata', '고아': 'Asia/Kolkata', '코치': 'Asia/Kolkata',
+    '콜카타': 'Asia/Kolkata', '푸네': 'Asia/Kolkata', '파트나': 'Asia/Kolkata',
+    '바라나시': 'Asia/Kolkata', '찬디가르': 'Asia/Kolkata',
+    '콜롬보': 'Asia/Colombo', '몰디브': 'Indian/Maldives',
+    '타슈켄트': 'Asia/Tashkent', '알마티': 'Asia/Almaty', '울란바토르': 'Asia/Ulaanbaatar',
+    // 중동·튀르키예
+    '두바이': 'Asia/Dubai', '아부다비': 'Asia/Dubai', '도하': 'Asia/Qatar',
+    '이스탄불': 'Europe/Istanbul', '보드룸': 'Europe/Istanbul', '트라브존': 'Europe/Istanbul',
+    // 태평양·오세아니아
+    '괌': 'Pacific/Guam', '사이판': 'Pacific/Saipan', '누메아': 'Pacific/Noumea',
+    '포트모르즈비': 'Pacific/Port_Moresby', '시드니': 'Australia/Sydney', '멜버른': 'Australia/Melbourne',
+    '브리즈번': 'Australia/Brisbane', '오클랜드': 'Pacific/Auckland', '나디': 'Pacific/Fiji',
+    // 미주 (일광절약시간 적용 지역 — 날짜 기준으로 오프셋을 계산한다)
+    '마우이': 'Pacific/Honolulu', '코나': 'Pacific/Honolulu', '호놀룰루': 'Pacific/Honolulu',
+    '온타리오': 'America/Los_Angeles', '팜스프링스': 'America/Los_Angeles',
+    '로스앤젤레스': 'America/Los_Angeles', '샌프란시스코': 'America/Los_Angeles',
+    '시애틀': 'America/Los_Angeles', '라스베이거스': 'America/Los_Angeles',
+    '스테이트칼리지': 'America/New_York', '뉴욕': 'America/New_York', '워싱턴': 'America/New_York',
+    '시카고': 'America/Chicago', '댈러스': 'America/Chicago',
+    '밴쿠버': 'America/Vancouver', '토론토': 'America/Toronto',
+    // 유럽·러시아
+    '파리': 'Europe/Paris', '마르세유': 'Europe/Paris', '로마': 'Europe/Rome', '밀라노': 'Europe/Rome',
+    '바르셀로나': 'Europe/Madrid', '마드리드': 'Europe/Madrid', '바르샤바': 'Europe/Warsaw',
+    '런던': 'Europe/London', '프랑크푸르트': 'Europe/Berlin', '뮌헨': 'Europe/Berlin',
+    '암스테르담': 'Europe/Amsterdam', '취리히': 'Europe/Zurich', '프라하': 'Europe/Prague',
+    '빈': 'Europe/Vienna', '헬싱키': 'Europe/Helsinki',
+    '상트페테르부르크': 'Europe/Moscow', '모스크바': 'Europe/Moscow', '블라디보스토크': 'Asia/Vladivostok',
+};
+
+/** 도시명 → IANA 시간대. 괄호가 붙은 표기(도쿄(나리타))는 앞부분 도시명으로 되짚는다. */
+export const getCityTimeZone = (city: string): string | null => {
+    if (!city) return null;
+    const trimmed = city.trim();
+    const candidates = [normalizeCity(trimmed), trimmed];
+    for (const candidate of candidates) {
+        if (CITY_TIMEZONES[candidate]) return CITY_TIMEZONES[candidate];
+        const base = candidate.replace(/\(.*?\)/g, '').trim();
+        if (base && CITY_TIMEZONES[base]) return CITY_TIMEZONES[base];
+    }
+    return null;
+};
+
+/** 특정 시점에 해당 시간대가 UTC와 몇 분 차이나는지 (일광절약시간 포함) */
+const timeZoneOffsetMinutes = (timeZone: string, at: Date): number | null => {
+    try {
+        const parts = new Intl.DateTimeFormat('en-US', {
+            timeZone, hour12: false,
+            year: 'numeric', month: '2-digit', day: '2-digit',
+            hour: '2-digit', minute: '2-digit',
+        }).formatToParts(at);
+        const value: Record<string, number> = {};
+        for (const part of parts) {
+            if (part.type !== 'literal') value[part.type] = Number(part.value);
+        }
+        if (Object.values(value).some(Number.isNaN)) return null;
+        const asUTC = Date.UTC(value.year, value.month - 1, value.day, value.hour % 24, value.minute);
+        return (asUTC - at.getTime()) / 60000;
+    } catch {
+        return null;
+    }
+};
+
+const parseYmd = (date?: string): Date => {
+    const match = date?.match(/(\d{4})[.\-\/](\d{1,2})[.\-\/](\d{1,2})/);
+    // 일광절약시간 경계를 피하려고 정오 기준으로 오프셋을 잰다
+    if (!match) return new Date();
+    return new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]), 12));
+};
+
+const parseHm = (time?: string): number | null => {
+    const match = time?.match(/^(\d{1,2}):(\d{2})/);
+    if (!match) return null;
+    const hours = Number(match[1]);
+    const minutes = Number(match[2]);
+    if (hours > 23 || minutes > 59) return null;
+    return hours * 60 + minutes;
+};
+
+/**
+ * 실제 비행시간. 출·도착 시각이 각기 현지 시각이므로 UTC 오프셋 차이를 보정한다.
+ * 예: 인천(+9) 09:00 → 다낭(+7) 12:00 은 단순 계산 3시간이지만 실제로는 5시간.
+ * 시간대를 모르는 도시는 틀린 값을 보여주느니 null을 돌려준다.
+ */
+export const calcFlightDuration = (
+    depCity: string, depTime: string | undefined, depDate: string | undefined,
+    arrCity: string, arrTime: string | undefined,
+): string | null => {
+    const depMinutes = parseHm(depTime);
+    const arrMinutes = parseHm(arrTime);
+    if (depMinutes === null || arrMinutes === null) return null;
+
+    const depZone = getCityTimeZone(depCity);
+    const arrZone = getCityTimeZone(arrCity);
+    if (!depZone || !arrZone) return null;
+
+    const at = parseYmd(depDate);
+    const depOffset = timeZoneOffsetMinutes(depZone, at);
+    const arrOffset = timeZoneOffsetMinutes(arrZone, at);
+    if (depOffset === null || arrOffset === null) return null;
+
+    // 현지 시각 차이에 시차를 더해 실제 경과 시간으로 되돌린다
+    let total = (arrMinutes - depMinutes) + (depOffset - arrOffset);
+    // 날짜를 넘긴 경우 (도착 데이터에 날짜가 없어 가장 가까운 다음 날로 본다)
+    while (total <= 0) total += 24 * 60;
+    // 30시간을 넘으면 데이터가 잘못된 것으로 보고 표시하지 않는다
+    if (total > 30 * 60) return null;
+
+    const hours = Math.floor(total / 60);
+    const minutes = total % 60;
+    return `${hours}시간${minutes > 0 ? ` ${minutes}분` : ''}`;
+};
+
 // 네이버 항공권 비교 URL 생성 (왕복)
 export const getNaverFlightUrl = (depCity: string, arrCity: string, depDate: string, retDate?: string, depAirport?: string, arrAirport?: string): string | null => {
     const depCode = getAirportCode(depCity, depAirport);

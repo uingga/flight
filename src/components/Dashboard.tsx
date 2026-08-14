@@ -18,7 +18,7 @@ import AdCard from './AdCard';
 import {
     toDate, toStr, fmtDate, getDefaultStartDate, getDefaultEndDate,
     normalizeCity, normalizeAirline,
-    CITY_TO_AIRPORT, getAirportCode,
+    CITY_TO_AIRPORT, getAirportCode, calcFlightDuration,
     getNaverFlightUrl, getSkyscannerUrl,
 } from '@/lib/utils/flight-helpers';
 import {
@@ -2177,22 +2177,6 @@ export default function Dashboard() {
         }
     };
 
-    const calcDuration = (depTime: string | undefined, arrTime: string | undefined, depDate: string | undefined, arrDate: string | undefined) => {
-        if (!depTime || !arrTime) return null;
-        const [dh, dm] = depTime.split(':').map(Number);
-        const [ah, am] = arrTime.split(':').map(Number);
-        if (isNaN(dh) || isNaN(dm) || isNaN(ah) || isNaN(am)) return null;
-        let diffMin = (ah * 60 + am) - (dh * 60 + dm);
-        // If arrival is earlier in the day, assume next day (overnight flight)
-        if (diffMin <= 0 && depDate !== arrDate) {
-            diffMin += 24 * 60;
-        }
-        if (diffMin <= 0) return null;
-        const hours = Math.floor(diffMin / 60);
-        const mins = diffMin % 60;
-        return `${hours}시간${mins > 0 ? ` ${mins}분` : ''}`;
-    };
-
     const getSourceBadgeClass = (source: string) => {
         switch (source) {
 
@@ -3176,12 +3160,19 @@ export default function Dashboard() {
                 const retDepTime = mdt?.returnDepartureTime || modetourGuide.arrival.time || '';
                 const retArrTime = mdt?.returnArrivalTime || (modetourGuide.arrival as any)?.arrivalTime || '';
                 // 비행시간
-                const flyTime = mdt?.flyingTime
-                    ? `${mdt.flyingTime.replace(':', '시간 ')}분`.replace(' 00분', '')
-                    : calcDuration(depTime, depArrTime, depDate, depDate) || '';
-                const retFlyTime = mdt?.returnFlyingTime
-                    ? `${mdt.returnFlyingTime.replace(':', '시간 ')}분`.replace(' 00분', '')
-                    : calcDuration(retDepTime, retArrTime, arrDate, arrDate) || '';
+                // 여행사가 준 비행시간이 있으면 그대로, 없으면 현지 시각 차이에 시차를 보정해 계산한다.
+                // 같은 화면에 두 출처가 나란히 놓이므로 표기는 계산값 형식으로 맞춘다 ("05:40" → "5시간 40분")
+                const fmtAgencyFlyTime = (value: string) => {
+                    const parsed = value.match(/^(\d{1,2}):(\d{2})/);
+                    if (!parsed) return '';
+                    const hours = Number(parsed[1]);
+                    const minutes = Number(parsed[2]);
+                    return `${hours}시간${minutes > 0 ? ` ${minutes}분` : ''}`;
+                };
+                const flyTime = (mdt?.flyingTime && fmtAgencyFlyTime(mdt.flyingTime))
+                    || calcFlightDuration(depCity, depTime, depDate, arrCity, depArrTime) || '';
+                const retFlyTime = (mdt?.returnFlyingTime && fmtAgencyFlyTime(mdt.returnFlyingTime))
+                    || calcFlightDuration(arrCity, retDepTime, arrDate, depCity, retArrTime) || '';
                 // 총 체류기간 (N박 M일)
                 const stayDuration = (() => {
                     if (!depDate || !arrDate) return '';
