@@ -123,6 +123,16 @@ export const trackAlertSetup = (route: string, maxPrice?: number, entry?: string
     });
 };
 
+/** Departure + region + budget deal alert beta registration. */
+export const trackDealAlertSetup = (departure: string, region: string, maxPrice: number) => {
+    event('deal_alert_setup', {
+        departure,
+        region,
+        target_price: maxPrice,
+        alert_type: 'condition',
+    });
+};
+
 /** Price-comparison link (Naver/Skyscanner) */
 export const trackCompareClick = (provider: 'naver' | 'skyscanner' | 'tripcom', route: string, price: number) => {
     event('compare_click', { provider, route, price, currency: 'KRW', transport_type: 'beacon' });

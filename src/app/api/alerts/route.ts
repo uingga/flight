@@ -1,7 +1,14 @@
 import { createHash, createHmac, randomBytes, timingSafeEqual } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
+import {
+    DEAL_ALERT_REGIONS,
+    decodeDealAlertRegion,
+    encodeDealAlertRegion,
+    type DealAlertRegion,
+} from '@/lib/deal-alerts';
 
 interface AlertConditions {
+    alertType?: 'price' | 'deal';
     route?: string;
     region?: string;
     departureCity?: string;
@@ -35,9 +42,11 @@ function cleanText(value: unknown, maxLength = 80): string | undefined {
 
 function normalizeConditions(input: Record<string, unknown> = {}): AlertConditions {
     const rawMaxPrice = Number(input.maxPrice);
+    const region = cleanText(input.region);
     return {
+        alertType: input.alertType === 'deal' ? 'deal' : 'price',
         route: cleanText(input.route),
-        region: cleanText(input.region),
+        region: region && DEAL_ALERT_REGIONS.includes(region as DealAlertRegion) ? region : undefined,
         departureCity: cleanText(input.departureCity),
         arrivalCity: cleanText(input.arrivalCity),
         maxPrice: Number.isFinite(rawMaxPrice) && rawMaxPrice >= 10000 && rawMaxPrice <= 10000000
@@ -193,14 +202,19 @@ export async function POST(request: NextRequest) {
             }>;
             return jsonResponse({
                 ok: true,
-                alerts: rows.map(row => ({
-                    id: row.alert_key,
-                    departureCity: row.departure_city,
-                    arrivalCity: row.arrival_city,
-                    maxPrice: row.max_price,
-                    createdAt: row.created_at,
-                    updatedAt: row.updated_at,
-                })),
+                alerts: rows.map(row => {
+                    const dealRegion = decodeDealAlertRegion(row.arrival_city);
+                    return {
+                        id: row.alert_key,
+                        type: dealRegion ? 'deal' : 'price',
+                        departureCity: row.departure_city,
+                        arrivalCity: dealRegion ? undefined : row.arrival_city,
+                        region: dealRegion || undefined,
+                        maxPrice: row.max_price,
+                        createdAt: row.created_at,
+                        updatedAt: row.updated_at,
+                    };
+                }),
             });
         }
 
@@ -265,11 +279,23 @@ export async function POST(request: NextRequest) {
         }
 
         const conditions = normalizeConditions(rawConditions);
-        if (!conditions.arrivalCity || !conditions.departureCity || !conditions.maxPrice) {
+        const isDealAlert = conditions.alertType === 'deal';
+        if (!conditions.departureCity || !conditions.maxPrice
+            || (isDealAlert ? !conditions.region : !conditions.arrivalCity)) {
             return jsonResponse({ error: 'alert conditions required' }, 400);
         }
 
-        const alertKey = hash(`${subscription.endpoint}|${JSON.stringify(conditions)}`);
+        const storedArrivalCity = isDealAlert
+            ? encodeDealAlertRegion(conditions.region as DealAlertRegion)
+            : conditions.arrivalCity;
+        const storedConditions = {
+            alertType: conditions.alertType,
+            departureCity: conditions.departureCity,
+            arrivalCity: storedArrivalCity,
+            maxPrice: conditions.maxPrice,
+        };
+
+        const alertKey = hash(`${subscription.endpoint}|${JSON.stringify(storedConditions)}`);
         const existingResponse = await supabaseRequest(`price_alerts?select=id&alert_key=eq.${alertKey}&limit=1`);
         if (!existingResponse.ok) throw new Error(`Supabase lookup failed: ${existingResponse.status}`);
         const existing = await existingResponse.json() as Array<{ id: string }>;
@@ -292,7 +318,7 @@ export async function POST(request: NextRequest) {
             endpoint_hash: endpointHash,
             subscription,
             departure_city: conditions.departureCity,
-            arrival_city: conditions.arrivalCity,
+            arrival_city: storedArrivalCity,
             departure_date_from: null,
             departure_date_to: null,
             max_price: conditions.maxPrice,
@@ -313,7 +339,7 @@ export async function POST(request: NextRequest) {
         if (!saveResponse.ok) throw new Error(`Supabase save failed: ${saveResponse.status}`);
 
         let testQueued = false;
-        if (existing.length === 0) {
+        if (existing.length === 0 && !isDealAlert) {
             try {
                 testQueued = await queueTestNotification(alertKey);
                 if (testQueued) {

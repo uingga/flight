@@ -1,4 +1,5 @@
 import webpush from 'web-push';
+import { dealAlertRegionLabel, decodeDealAlertRegion } from '../src/lib/deal-alerts';
 
 interface AlertSubscription {
     alert_key: string;
@@ -38,11 +39,15 @@ async function main() {
     if (alerts.length === 0) throw new Error('Active alert not found');
 
     const alert = alerts[0];
+    const dealRegion = decodeDealAlertRegion(alert.arrival_city);
+    const destination = dealRegion ? dealAlertRegionLabel(dealRegion) : (alert.arrival_city || '목적지');
     webpush.setVapidDetails('mailto:tikitikit.kr@gmail.com', VAPID_PUBLIC, VAPID_PRIVATE);
     try {
         await webpush.sendNotification(alert.subscription, JSON.stringify({
             title: '✅ 테스트 알림이 도착했어요',
-            body: `${alert.departure_city || '등록 노선'} → ${alert.arrival_city || '목적지'} 가격 알림이 정상적으로 연결되었습니다.`,
+            body: dealRegion
+                ? `${alert.departure_city || '등록 출발지'} 출발 · ${destination} 특가 알림이 정상적으로 연결되었습니다.`
+                : `${alert.departure_city || '등록 노선'} → ${destination} 가격 알림이 정상적으로 연결되었습니다.`,
             url: '/',
             tag: 'price-alert-test',
         }));
