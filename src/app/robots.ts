@@ -1,14 +1,13 @@
 import { MetadataRoute } from 'next';
+import { SITE_URL } from '@/lib/site';
 
 export default function robots(): MetadataRoute.Robots {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://tikitikit.kr';
-
     return {
         rules: {
             userAgent: '*',
             allow: '/',
             disallow: ['/api/', '/admin/'],
         },
-        sitemap: `${baseUrl}/sitemap.xml`,
+        sitemap: `${SITE_URL}/sitemap.xml`,
     };
 }
