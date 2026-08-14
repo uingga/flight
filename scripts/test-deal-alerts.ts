@@ -7,6 +7,13 @@ import {
     isDealAlertDestination,
     type DealAlertCondition,
 } from '../src/lib/deal-alerts';
+import {
+    appendDealSentEvent,
+    buildDealNotificationText,
+    decodeDealSentEvent,
+    encodeDealSentEvent,
+    selectDealCandidateForNotification,
+} from '../src/lib/deal-alert-delivery';
 import type { Flight } from '../src/types/flight';
 
 const now = new Date('2026-08-14T12:00:00+09:00');
@@ -69,6 +76,8 @@ assert.equal(review.rejectionCounts.overBudget, 1, '땡처리닷컴 수수료를
 assert.equal(review.rejectionCounts.stale, 1);
 assert.equal(review.rejectionCounts.otherRegion, 1);
 assert.equal(review.rejectionCounts.expired, 1);
+assert.equal(review.candidates[0].reasons.some(reason => /네이버|naver/i.test(reason)), false,
+    '사용자에게 보이는 비교 근거에 특정 비교 서비스명을 노출하면 안 된다.');
 
 const anywhere = evaluateDealAlert(
     { ...condition, id: 'anywhere', region: 'all', maxPrice: 200_000 },
@@ -82,4 +91,68 @@ const anywhere = evaluateDealAlert(
 );
 assert.equal(anywhere.qualifiedCount, 2, '아무데나는 지역과 관계없이 후보를 평가해야 한다.');
 
-console.log('✅ 조건형 특가 알림 점수·필터 테스트 통과');
+const topCandidate = review.candidates[0];
+const otherDestination = {
+    ...topCandidate,
+    flightId: 'other-destination',
+    arrivalCity: '후쿠오카',
+    effectivePrice: 135_000,
+};
+const recentSentAt = '2026-08-13T12:00:00+09:00';
+const recentHistory = [encodeDealSentEvent({
+    arrivalCity: topCandidate.arrivalCity,
+    sentAt: recentSentAt,
+    effectivePrice: topCandidate.effectivePrice,
+    flightId: topCandidate.flightId,
+})];
+
+assert.equal(
+    selectDealCandidateForNotification([topCandidate, otherDestination], recentHistory, now).candidate?.flightId,
+    'other-destination',
+    '최근 보낸 목적지는 건너뛰고 다음 목적지를 골라야 한다.',
+);
+assert.equal(
+    selectDealCandidateForNotification([topCandidate], recentHistory, now).candidate,
+    null,
+    '같은 목적지를 가격 변화 없이 7일 안에 다시 보내면 안 된다.',
+);
+
+const cheaperCandidate = { ...topCandidate, effectivePrice: topCandidate.effectivePrice - 6_000 };
+assert.equal(
+    selectDealCandidateForNotification([cheaperCandidate], recentHistory, now).candidate?.flightId,
+    topCandidate.flightId,
+    '같은 목적지라도 5천원 이상 저렴해지면 다시 보낼 수 있어야 한다.',
+);
+
+const oldHistory = [encodeDealSentEvent({
+    arrivalCity: topCandidate.arrivalCity,
+    sentAt: '2026-08-05T12:00:00+09:00',
+    effectivePrice: topCandidate.effectivePrice,
+    flightId: topCandidate.flightId,
+})];
+assert.equal(
+    selectDealCandidateForNotification([topCandidate], oldHistory, now).candidate?.flightId,
+    topCandidate.flightId,
+    '7일이 지난 목적지는 다시 추천할 수 있어야 한다.',
+);
+
+const appendedHistory = appendDealSentEvent([], {
+    arrivalCity: '마츠야마',
+    sentAt: recentSentAt,
+    effectivePrice: 140_440,
+    flightId: 'matsuyama-flight',
+});
+assert.equal(decodeDealSentEvent(appendedHistory[0])?.arrivalCity, '마츠야마');
+assert.equal(decodeDealSentEvent('@deal-sent:%E0%A4%A|broken|price|id'), null,
+    '깨진 과거 기록이 있어도 전체 알림 발송을 중단하면 안 된다.');
+
+const publicNotification = buildDealNotificationText(condition, {
+    ...topCandidate,
+    reasons: ['네이버 최저가보다 10% 저렴'],
+});
+assert.equal(/네이버|naver/i.test(`${publicNotification.title} ${publicNotification.body}`), false,
+    '푸시 알림 제목과 본문에 특정 비교 서비스명을 노출하면 안 된다.');
+assert.match(publicNotification.body, /외부 비교/);
+assert.match(publicNotification.body, /129,000원/);
+
+console.log('✅ 조건형 특가 알림 점수·반복 방지·공개 문구 테스트 통과');
