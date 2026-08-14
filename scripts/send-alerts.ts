@@ -2,10 +2,23 @@ import * as fs from 'fs';
 import * as path from 'path';
 import webpush from 'web-push';
 import { normalizeCity as canonicalCity } from '../src/lib/utils/flight-helpers';
-import { isDealAlertDestination } from '../src/lib/deal-alerts';
+import {
+    decodeDealAlertRegion,
+    evaluateDealAlert,
+    type DealAlertCondition,
+    type DealCandidate,
+} from '../src/lib/deal-alerts';
+import {
+    appendDealSentEvent,
+    buildDealNotificationText,
+    selectDealCandidateForNotification,
+} from '../src/lib/deal-alert-delivery';
+import type { Flight } from '../src/types/flight';
 
 interface AlertSubscription {
     id: string;
+    alert_key?: string;
+    endpoint_hash?: string;
     subscription: { endpoint: string; keys: { p256dh: string; auth: string } };
     departure_city?: string;
     arrival_city?: string;
@@ -16,15 +29,7 @@ interface AlertSubscription {
     last_notified_flight_id?: string;
     notified_flight_ids?: string[];
     last_sent_at?: string;
-}
-
-interface Flight {
-    id: string;
-    departure: { city: string; date?: string };
-    arrival: { city: string; date?: string };
-    price: number;
-    airline: string;
-    source: string;
+    created_at?: string;
 }
 
 const VAPID_PUBLIC = process.env.VAPID_PUBLIC_KEY || '';
@@ -32,6 +37,9 @@ const VAPID_PRIVATE = process.env.VAPID_PRIVATE_KEY || '';
 const SUPABASE_URL = (process.env.SUPABASE_URL || '').replace(/\/$/, '');
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const FLIGHTS_PATH = path.join(process.cwd(), 'data', 'all-flights-cache.json');
+const PRICE_HISTORY_PATH = path.join(process.cwd(), 'data', 'price-history.json');
+// 실제 조건형 푸시는 명시적으로 1을 설정했을 때만 켠다. 기존 노선형 알림은 이 값과 무관하다.
+const DEAL_ALERT_SEND_ENABLED = process.env.DEAL_ALERT_SEND_ENABLED === '1';
 
 function normalizeCity(city = ''): string {
     return city.replace(/\(.*?\)/g, '').replace(/\s+/g, '').trim();
@@ -73,6 +81,44 @@ async function supabaseRequest(pathname: string, init: RequestInit = {}) {
     });
 }
 
+function endpointKey(alert: AlertSubscription): string {
+    return alert.endpoint_hash || alert.subscription.endpoint;
+}
+
+async function sendAndRecord(
+    alert: AlertSubscription,
+    payload: Record<string, unknown>,
+    updates: Record<string, unknown>,
+): Promise<boolean> {
+    try {
+        await webpush.sendNotification(alert.subscription, JSON.stringify(payload));
+        const now = new Date().toISOString();
+        const updateResponse = await supabaseRequest(`price_alerts?id=eq.${alert.id}`, {
+            method: 'PATCH',
+            headers: { Prefer: 'return=minimal' },
+            body: JSON.stringify({
+                ...updates,
+                last_sent_at: now,
+                updated_at: now,
+            }),
+        });
+        if (!updateResponse.ok) throw new Error(`발송 이력 저장 실패: ${updateResponse.status}`);
+        return true;
+    } catch (error: unknown) {
+        const statusCode = (error as { statusCode?: number })?.statusCode;
+        if (statusCode === 404 || statusCode === 410) {
+            await supabaseRequest(`price_alerts?id=eq.${alert.id}`, {
+                method: 'PATCH',
+                body: JSON.stringify({ active: false, updated_at: new Date().toISOString() }),
+            });
+            console.log(`[알림] 만료된 구독 비활성화: ${alert.id}`);
+        } else {
+            console.error(`[알림] 발송 실패: ${alert.id}`, error);
+        }
+        return false;
+    }
+}
+
 async function main() {
     console.log('\n=== 가격 알림 발송 시작 ===');
     if (!VAPID_PUBLIC || !VAPID_PRIVATE || !SUPABASE_URL || !SUPABASE_KEY) {
@@ -89,16 +135,92 @@ async function main() {
         return;
     }
 
-    const flightsData = JSON.parse(fs.readFileSync(FLIGHTS_PATH, 'utf-8'));
-    const flights: Flight[] = flightsData.flights || flightsData;
+    const flightsData = JSON.parse(fs.readFileSync(FLIGHTS_PATH, 'utf-8')) as {
+        flights?: Flight[];
+        sourceUpdatedAt?: Record<string, string>;
+        priceHistory?: Record<string, Array<{ date?: string; minPrice?: number; avgPrice?: number }>>;
+    } | Flight[];
+    const flights: Flight[] = Array.isArray(flightsData) ? flightsData : flightsData.flights || [];
+    let priceHistory = Array.isArray(flightsData) ? {} : flightsData.priceHistory || {};
+    if (fs.existsSync(PRICE_HISTORY_PATH)) {
+        priceHistory = JSON.parse(fs.readFileSync(PRICE_HISTORY_PATH, 'utf-8')) as typeof priceHistory;
+    }
+    const sourceUpdatedAt = Array.isArray(flightsData) ? {} : flightsData.sourceUpdatedAt || {};
     const today = todayInKorea();
+    const now = new Date();
+    const endpointsAlreadySentToday = new Set(
+        alerts
+            .filter(alert => alert.last_sent_at && todayInKorea(new Date(alert.last_sent_at)) === today)
+            .map(endpointKey),
+    );
+    // 사용자가 목적지를 명시한 노선형 알림을 조건형 추천보다 먼저 처리한다.
+    const orderedAlerts = [...alerts].sort((a, b) => {
+        const aIsDeal = decodeDealAlertRegion(a.arrival_city) ? 1 : 0;
+        const bIsDeal = decodeDealAlertRegion(b.arrival_city) ? 1 : 0;
+        return aIsDeal - bIsDeal;
+    });
     let sentCount = 0;
+    let routeSentCount = 0;
+    let dealSentCount = 0;
+    let dealDryRunCount = 0;
 
-    for (const alert of alerts) {
-        // 조건형 특가 알림은 현재 관리자 검토용 드라이런 단계다.
-        // 실제 발송을 승인하기 전까지 기존 특정 노선 발송기에서는 건너뛴다.
-        if (isDealAlertDestination(alert.arrival_city)) continue;
-        if (alert.last_sent_at && todayInKorea(new Date(alert.last_sent_at)) === today) continue;
+    for (const alert of orderedAlerts) {
+        const subscriberKey = endpointKey(alert);
+        // 같은 브라우저에는 노선형·조건형을 합쳐 하루 최대 한 번만 보낸다.
+        if (endpointsAlreadySentToday.has(subscriberKey)) continue;
+
+        const dealRegion = decodeDealAlertRegion(alert.arrival_city);
+        if (dealRegion) {
+            if (!alert.departure_city || !Number.isFinite(Number(alert.max_price))) continue;
+            const condition: DealAlertCondition = {
+                id: alert.alert_key || alert.id,
+                departureCity: alert.departure_city,
+                region: dealRegion,
+                maxPrice: Number(alert.max_price),
+                createdAt: alert.created_at,
+            };
+            const review = evaluateDealAlert(condition, flights, priceHistory, sourceUpdatedAt, now);
+            const notifiedIds = Array.isArray(alert.notified_flight_ids) ? alert.notified_flight_ids : [];
+            const selection = selectDealCandidateForNotification(review.candidates, notifiedIds, now);
+            const candidate = selection.candidate;
+            if (!candidate) {
+                if (selection.skippedRecentDestinations.length > 0) {
+                    console.log(`[조건형] 최근 발송 목적지 제외: ${selection.skippedRecentDestinations.join(', ')}`);
+                }
+                continue;
+            }
+
+            if (!DEAL_ALERT_SEND_ENABLED) {
+                dealDryRunCount++;
+                console.log(`[조건형][DRY RUN] ${candidate.departureCity} → ${candidate.arrivalCity} ${formatPrice(candidate.effectivePrice)} (${candidate.score}점)`);
+                continue;
+            }
+
+            const text = buildDealNotificationText(condition, candidate);
+            const payload = {
+                ...text,
+                url: `/share/${encodeURIComponent(candidate.flightId)}?dep=${encodeURIComponent(candidate.departureCity)}&arr=${encodeURIComponent(candidate.arrivalCity)}&date=${encodeURIComponent(normalizeDate(candidate.departureDate))}`,
+                tag: `deal-alert-${alert.id}`,
+            };
+            const sentAt = new Date().toISOString();
+            const sent = await sendAndRecord(alert, payload, {
+                last_notified_price: candidate.effectivePrice,
+                last_notified_flight_id: candidate.flightId,
+                notified_flight_ids: appendDealSentEvent(notifiedIds, {
+                    arrivalCity: candidate.arrivalCity,
+                    sentAt,
+                    effectivePrice: candidate.effectivePrice,
+                    flightId: candidate.flightId,
+                }),
+            });
+            if (sent) {
+                endpointsAlreadySentToday.add(subscriberKey);
+                sentCount++;
+                dealSentCount++;
+                console.log(`[조건형] ✅ ${candidate.departureCity} → ${candidate.arrivalCity} ${formatPrice(candidate.effectivePrice)}`);
+            }
+            continue;
+        }
 
         const matches = flights.filter(flight => {
             if (cityKey(flight.departure.city) !== cityKey(alert.departure_city)) return false;
@@ -128,38 +250,24 @@ async function main() {
             tag: `price-alert-${alert.id}`,
         };
 
-        try {
-            await webpush.sendNotification(alert.subscription, JSON.stringify(payload));
-            const updatedIds = [...new Set([...notifiedIds, cheapest.id])].slice(-20);
-            const updateResponse = await supabaseRequest(`price_alerts?id=eq.${alert.id}`, {
-                method: 'PATCH',
-                headers: { Prefer: 'return=minimal' },
-                body: JSON.stringify({
-                    last_notified_price: cheapest.price,
-                    last_notified_flight_id: cheapest.id,
-                    notified_flight_ids: updatedIds,
-                    last_sent_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString(),
-                }),
-            });
-            if (!updateResponse.ok) throw new Error(`발송 이력 저장 실패: ${updateResponse.status}`);
+        const updatedIds = [...new Set([...notifiedIds, cheapest.id])].slice(-20);
+        const sent = await sendAndRecord(alert, payload, {
+            last_notified_price: cheapest.price,
+            last_notified_flight_id: cheapest.id,
+            notified_flight_ids: updatedIds,
+        });
+        if (sent) {
+            endpointsAlreadySentToday.add(subscriberKey);
             sentCount++;
+            routeSentCount++;
             console.log(`[알림] ✅ ${dep} → ${arr} ${formatPrice(cheapest.price)}`);
-        } catch (error: unknown) {
-            const statusCode = (error as { statusCode?: number })?.statusCode;
-            if (statusCode === 404 || statusCode === 410) {
-                await supabaseRequest(`price_alerts?id=eq.${alert.id}`, {
-                    method: 'PATCH',
-                    body: JSON.stringify({ active: false, updated_at: new Date().toISOString() }),
-                });
-                console.log(`[알림] 만료된 구독 비활성화: ${alert.id}`);
-            } else {
-                console.error(`[알림] 발송 실패: ${alert.id}`, error);
-            }
         }
     }
 
-    console.log(`\n[알림] 총 ${sentCount}건 발송, 활성 구독 ${alerts.length}건`);
+    console.log(`\n[알림] 총 ${sentCount}건 발송 (노선형 ${routeSentCount}, 조건형 ${dealSentCount}), 활성 구독 ${alerts.length}건`);
+    if (!DEAL_ALERT_SEND_ENABLED && dealDryRunCount > 0) {
+        console.log(`[조건형] DRY RUN 후보 ${dealDryRunCount}건 — DEAL_ALERT_SEND_ENABLED=1 설정 전까지 실제 발송하지 않음`);
+    }
 }
 
 main().catch(error => {
