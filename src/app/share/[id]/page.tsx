@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import { SITE_URL } from '@/lib/site';
 
 type Props = {
     params: Promise<{ id: string }>;
@@ -8,7 +9,7 @@ type Props = {
 // 캐시에서 항공편 조회
 async function getFlightById(id: string) {
     try {
-        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://tikitikit.kr';
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || SITE_URL;
         const res = await fetch(`${baseUrl}/api/flights`, {
             next: { revalidate: 3600 } // 캐싱을 통해 불필요한 요청 방지
         });
@@ -89,7 +90,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     if (flight.airline) ogParams.set('airline', flight.airline);
     if (flight.source) ogParams.set('source', flight.source);
 
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://tikitikit.kr';
+    const baseUrl = SITE_URL;
     const ogImageUrl = `${baseUrl}/api/og?${ogParams.toString()}`;
 
     return {
