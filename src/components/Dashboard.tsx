@@ -31,6 +31,11 @@ import { checkIsMobile, getMobileUrl } from '@/lib/utils/mobile-url';
 import { getTtangBookingUrl } from '@/lib/utils/ttang-url';
 import { getYbtourBookingUrl } from '@/lib/utils/ybtour-url';
 import { dealAlertRegionLabel, type DealAlertRegion } from '@/lib/deal-alerts';
+import { getComparisonFreshness, getEffectivePrice } from '@/lib/price-quality';
+import {
+    getDestinationContext,
+    getItineraryContext,
+} from '@/lib/destination-contexts';
 
 const ITEMS_PER_PAGE = 20;
 
@@ -47,10 +52,9 @@ function getFreshnessInfo(checkedAt?: string) {
     if (!Number.isFinite(checkedTime)) return { multiplier: 1.12, label: '확인 시각 미기록' };
 
     const ageHours = Math.max(0, (Date.now() - checkedTime) / 3_600_000);
-    if (ageHours < 24) return { multiplier: 1, label: `${Math.max(1, Math.floor(ageHours))}시간 전 확인` };
-    if (ageHours < 48) return { multiplier: 1.03, label: '1일 전 확인' };
-    if (ageHours < 72) return { multiplier: 1.08, label: '2일 전 확인' };
-    if (ageHours < 120) return { multiplier: 1.18, label: `${Math.floor(ageHours / 24)}일 전 확인` };
+    if (ageHours <= 8) return { multiplier: 1, label: `${Math.max(1, Math.floor(ageHours))}시간 전 확인` };
+    if (ageHours <= 16) return { multiplier: 1.03, label: `${Math.floor(ageHours)}시간 전 확인` };
+    if (ageHours <= 24) return { multiplier: 1.08, label: `${Math.floor(ageHours)}시간 전 확인` };
     return { multiplier: 1.35, label: `${Math.floor(ageHours / 24)}일 이상 전 확인` };
 }
 
@@ -1185,80 +1189,66 @@ export default function Dashboard() {
         return flight.departure.city.includes(departureFilter);
     };
 
-    // 추천순(스마트 정렬) 점수 — 낮을수록 상위.
-    // 가격을 기준으로 인터파크 벤치마크·네이버 최저가 대비 페널티/보너스를 곱해 "얼마나 좋은 딜인가"를 만든다.
+    // 기존 추천순(스마트 정렬) 점수 — 낮을수록 상위.
+    // 실질 가격과 기존 벤치마크를 기반으로 하고, 신선한 외부 비교가만 보정에 쓴다.
     const recommendScores = useMemo(() => {
         const getSortScore = (flight: Flight) => {
-            // 땡처리닷컴은 결제 단계에서 발권수수료(TASF) 2만원이 추가되므로
-            // 추천순에서만 수수료를 포함한 실질 가격으로 비교한다.
-            const effectivePrice = flight.price + (flight.source === 'ttang' ? 20000 : 0);
+            const effectivePrice = getEffectivePrice(flight);
             const city = flight.arrival.city?.replace(/\([^)]+\)/, '').trim();
             const depMonth = flight.departure.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 7);
             const ipCityData = interparkPrices[city];
-            // 당월 데이터가 없으면 가장 가까운 월 데이터 사용
             let ipMonthData = ipCityData?.[depMonth];
             if (!ipMonthData && ipCityData && depMonth) {
                 const months = Object.keys(ipCityData).sort();
-                const closest = months.reduce((best, m) => {
-                    const diff = Math.abs(m.localeCompare(depMonth));
+                const closest = months.reduce((best, month) => {
+                    const diff = Math.abs(month.localeCompare(depMonth));
                     const bestDiff = best ? Math.abs(best.localeCompare(depMonth)) : Infinity;
-                    return diff < bestDiff ? m : best;
+                    return diff < bestDiff ? month : best;
                 }, '' as string);
                 if (closest) ipMonthData = ipCityData[closest];
             }
 
+            const comparisonUsable = !!flight.naverLowest
+                && flight.naverLowest > 0
+                && getComparisonFreshness(flight.naverCheckedAt).usable;
+            const comparisonPrice = comparisonUsable ? flight.naverLowest! : null;
+            const isComparisonCheaper = !!comparisonPrice && effectivePrice <= comparisonPrice;
+
             let score = effectivePrice;
-
-            // 네이버보다 싼 항공권인지 먼저 확인 (전 여행사 공통)
-            const isNaverCheaper = flight.naverLowest && flight.naverLowest > 0
-                && effectivePrice <= flight.naverLowest;
-
-            // 인터파크 도시 데이터 자체가 없는 경우 — 약간 페널티 (검증 불가)
             if (!ipMonthData) {
-                score = score * 1.1;
+                score *= 1.1;
             } else if (effectivePrice <= ipMonthData.lowest) {
-                // 1. 월간 최저가 이하 — 페널티 없음
+                // 월간 최저가 이하는 페널티 없음
             } else if (effectivePrice <= ipMonthData.lowest * 1.2) {
-                // 2. 최저가 초과 ~ ×1.2 이내 — 살짝 페널티
-                score = score * 1.15;
+                score *= 1.15;
             } else if (effectivePrice < ipMonthData.avg) {
-                // 3. 최저가의 120% 초과 ~ 평균가 미만 -> 페널티
-                score = score * 1.3;
+                score *= 1.3;
             } else {
-                // 4. 평균가보다 비싼 경우 → 단, 네이버보다 싸면 가벼운 페널티만
-                score = isNaverCheaper ? score * 1.3 : score * 10;
+                score *= isComparisonCheaper ? 1.3 : 10;
             }
 
-            // 네이버 최저가 보정 (전 여행사 공통)
-            if (flight.naverLowest && flight.naverLowest > 0) {
-                const ratio = (effectivePrice - flight.naverLowest) / flight.naverLowest;
-                if (ratio <= -0.20) score *= 0.3;        // 네이버보다 20% 이상 싸다 → 최우선 상향
-                else if (ratio <= -0.15) score *= 0.375; // 15~20% 싸다
-                else if (ratio <= -0.10) score *= 0.45;  // 10~15% 싸다
-                else if (ratio <= -0.05) score *= 0.55;  // 5~10% 싸다
-                else if (ratio <= 0) score *= 0.65;      // 0~5% 싸다
-                else if (ratio <= 0.05) score *= 1.05;   // 0~5% 비싸다 → 거의 동일, 미세 페널티
-                else if (ratio <= 0.10) score *= 1.15;   // 5~10% 비싸다
-                else if (ratio <= 0.15) score *= 1.3;    // 10~15% 비싸다
-                else if (ratio <= 0.20) score *= 1.5;    // 15~20% 비싸다
-                else score *= 2.0;                       // 20% 이상 비싸다 → 최대 페널티
+            if (comparisonPrice) {
+                const ratio = (effectivePrice - comparisonPrice) / comparisonPrice;
+                if (ratio <= -0.20) score *= 0.3;
+                else if (ratio <= -0.15) score *= 0.375;
+                else if (ratio <= -0.10) score *= 0.45;
+                else if (ratio <= -0.05) score *= 0.55;
+                else if (ratio <= 0) score *= 0.65;
+                else if (ratio <= 0.05) score *= 1.05;
+                else if (ratio <= 0.10) score *= 1.15;
+                else if (ratio <= 0.15) score *= 1.3;
+                else if (ratio <= 0.20) score *= 1.5;
+                else score *= 2;
             }
 
-            // 오래된 가격일수록 추천순에서 단계적으로 낮춘다.
-            // 가격·시간대 등 기존 장점은 유지하되 5일 이상 미확인 데이터만 크게 감점한다.
             score *= getFreshnessInfo(flight.priceCheckedAt).multiplier;
-
             return score;
         };
 
         const scores = new Map<string, number>();
         for (const flight of flights) scores.set(flight.id, getSortScore(flight));
 
-        // 같은 노선인데 더 비싼 항공권이 위에 오면 사용자가 납득하지 못한다.
-        // 벤치마크 데이터 유무에 따라 점수가 크게 갈리기 때문에 생기는 역전인데
-        // (네이버 최저가가 없으면 보너스를 못 받아 싼 표가 밀린다), 노선 안에서만 순서를 바로잡는다.
-        // 노선이 목록에서 확보한 점수 자리는 그대로 두고, 그 자리를 싼 항공권부터 채운다.
-        // 따라서 노선 간 우선순위는 유지되고 노선 내 가격 역전만 사라진다.
+        // 노선 간 순서는 유지하되, 같은 노선 안에서 비싼 표가 싼 표보다 위로 가는 역전만 바로잡는다.
         const byRoute = new Map<string, Flight[]>();
         for (const flight of flights) {
             const key = `${normalizeCity(flight.departure.city)}-${normalizeCity(flight.arrival.city)}`;
@@ -1268,9 +1258,9 @@ export default function Dashboard() {
         }
         Array.from(byRoute.values()).forEach(group => {
             if (group.length < 2) return;
-            const slots = group.map(flight => scores.get(flight.id)!).sort((x, y) => x - y);
+            const slots = group.map(flight => scores.get(flight.id)!).sort((a, b) => a - b);
             group.slice()
-                .sort((x, y) => x.price - y.price || scores.get(x.id)! - scores.get(y.id)!)
+                .sort((a, b) => getEffectivePrice(a) - getEffectivePrice(b) || scores.get(a.id)! - scores.get(b.id)!)
                 .forEach((flight, index) => scores.set(flight.id, slots[index]));
         });
         return scores;
@@ -1548,8 +1538,8 @@ export default function Dashboard() {
     // Insight Bars — 카드 사이에 삽입되는 정보 바
     // ============================================
     const generateInsightBar = (barIndex: number) => {
-        // 순서: 인기도시(2) → 최근특가(15) → 가격하락(11) → 20만원이하(10) → 내일출발(8) → 3일이내(7) → 할인Top5(6) → 주말출발(9) → 계절추천(14) → 지역현황+팁(5)
-        const barOrder = [2, 15, 11, 10, 8, 7, 6, 9, 14, 5];
+        // 첫 영역에서는 가격표만으로 알기 어려운 낯선 목적지의 여행 맥락을 먼저 제안한다.
+        const barOrder = [16, 2, 15, 11, 10, 8, 7, 6, 9, 14, 5];
         const barType = barOrder[barIndex % barOrder.length];
 
         // 공유 도시 이미지맵 & 카드 렌더러
@@ -1761,6 +1751,39 @@ export default function Dashboard() {
         };
 
         switch (barType) {
+            case 16: { // 🧭 낯선 여행지 발견
+                const candidate = diversifiedFlights.find(flight => {
+                    const context = getDestinationContext(flight.arrival.city);
+                    return !!context;
+                });
+                if (!candidate) return null;
+                const context = getDestinationContext(candidate.arrival.city);
+                if (!context) return null;
+                const departure = normalizeCity(candidate.departure.city);
+                const arrival = normalizeCity(candidate.arrival.city);
+                return (
+                    <button
+                        key={`insight-${barIndex}`}
+                        type="button"
+                        className={styles.destinationDiscoveryBar}
+                        onClick={(event) => {
+                            event.stopPropagation();
+                            setModetourGuide(candidate);
+                        }}
+                    >
+                        <span className={styles.destinationDiscoveryIcon} aria-hidden="true">🧭</span>
+                        <span className={styles.destinationDiscoveryCopy}>
+                            <span className={styles.destinationDiscoveryEyebrow}>여행지 발견</span>
+                            <strong>{arrival}, 어디에 있는 곳일까요?</strong>
+                            <span>{context.location}</span>
+                        </span>
+                        <span className={styles.destinationDiscoveryDeal}>
+                            <strong>{departure} 출발 · {formatPrice(candidate.price)}</strong>
+                            <span>여행 맥락과 일정 보기 →</span>
+                        </span>
+                    </button>
+                );
+            }
             case 1: { // 🌏 지역별 현황
                 const regionCounts: Record<string, number> = {};
                 flights.forEach(f => {
@@ -3285,16 +3308,17 @@ export default function Dashboard() {
                 const retFlyTime = (mdt?.returnFlyingTime && fmtAgencyFlyTime(mdt.returnFlyingTime))
                     || calcFlightDuration(arrCity, retDepTime, arrDate, depCity, retArrTime) || '';
                 // 총 체류기간 (N박 M일)
-                const stayDuration = (() => {
+                const stayNights = (() => {
                     if (!depDate || !arrDate) return '';
                     const parse = (d: string) => { const m = d.match(/^(\d{4})[.\-](\d{2})[.\-](\d{2})/); return m ? new Date(`${m[1]}-${m[2]}-${m[3]}`) : new Date(d); };
                     const d1 = parse(depDate);
                     const d2 = parse(arrDate);
                     if (isNaN(d1.getTime()) || isNaN(d2.getTime())) return '';
                     const nights = Math.round((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24));
-                    if (nights <= 0) return '';
-                    return `${nights}박 ${nights + 1}일`;
+                    return nights > 0 ? nights : '';
                 })();
+                const stayDuration = stayNights ? `${stayNights}박 ${stayNights + 1}일` : '';
+                const destinationContext = getDestinationContext(arrCity);
                 // 직항
                 const isDirect = mdt?.isDirect ?? true;
                 const isRetDirect = mdt?.isReturnDirect ?? isDirect;
@@ -3405,6 +3429,30 @@ export default function Dashboard() {
                                         <span className={styles.mdtPriceSuffix}>~</span>
                                     </div>
                                 </div>
+                            )}
+
+                            {destinationContext && (
+                                <section className={styles.mdtTravelContext} aria-labelledby="travel-context-title">
+                                    <div className={styles.mdtTravelContextHeader}>
+                                        <span aria-hidden="true">🧭</span>
+                                        <div>
+                                            <span>이 여행의 맥락</span>
+                                            <strong id="travel-context-title">{arrCity}, 이런 곳이에요</strong>
+                                        </div>
+                                    </div>
+                                    <div className={styles.mdtTravelContextFacts}>
+                                        <p><b>어디에 있나요</b><span>{destinationContext.location}</span></p>
+                                        <p><b>공항 이동</b><span>{destinationContext.transfer}</span></p>
+                                        <p><b>{stayDuration || '이 일정'}으로 가능한 여행</b><span>{getItineraryContext(destinationContext, Number(stayNights) || 0)}</span></p>
+                                    </div>
+                                    <details className={styles.mdtTravelContextMore}>
+                                        <summary>누구에게 잘 맞을까요?</summary>
+                                        <div>
+                                            <p><b>잘 맞아요</b>{destinationContext.goodFor.join(' · ')}</p>
+                                            <p><b>미리 확인하세요</b>{destinationContext.caution.join(' · ')}</p>
+                                        </div>
+                                    </details>
+                                </section>
                             )}
 
                             {/* 상세 항공편 섹션 */}

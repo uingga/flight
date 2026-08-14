@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Flight, FlightSearchParams } from '@/types/flight';
 import { resolveCityCode } from '@/lib/scrapers/interpark';
 import { normalizeCity } from '@/lib/utils/flight-helpers';
+import { getComparisonFreshness, getEffectivePrice } from '@/lib/price-quality';
 
 // 항공사명 정규화 맵
 const AIRLINE_NAME_MAP: Record<string, string> = {
@@ -79,7 +80,7 @@ export async function GET(request: NextRequest) {
 
         // 중복 항공편 합치기: 같은 노선+날짜+항공사 → 1개만 유지
         // - 도시명 정규화 적용 (서울=인천, 타이중(대중)=타이중(대만)=타이중 등)
-        // - 땡처리닷컴은 발권수수료 미포함 가격이므로 타 여행사 우선 선택
+        // - 땡처리닷컴은 발권수수료 2만원을 더한 실질 가격으로 비교
         const normDate = (d: string) => {
             if (!d) return '';
             const m = d.match(/^(\d{4})[-\.](\d{2})[-\.](\d{2})/);
@@ -92,16 +93,10 @@ export async function GET(request: NextRequest) {
             if (!existing) {
                 dedupMap.set(key, f);
             } else {
-                // 선택 우선순위: 1) 땡처리닷컴이 아닌 쪽 우선, 2) 같으면 최저가
-                const existingIsTtang = existing.source === 'ttang';
-                const newIsTtang = f.source === 'ttang';
-                if (existingIsTtang && !newIsTtang) {
-                    // 기존이 땡처리, 새 것이 타사 → 타사로 교체
-                    dedupMap.set(key, f);
-                } else if (!existingIsTtang && newIsTtang) {
-                    // 기존이 타사, 새 것이 땡처리 → 유지
-                } else if (f.price < existing.price) {
-                    // 둘 다 땡처리이거나 둘 다 타사 → 최저가
+                const existingEffectivePrice = getEffectivePrice(existing);
+                const newEffectivePrice = getEffectivePrice(f);
+                if (newEffectivePrice < existingEffectivePrice
+                    || (newEffectivePrice === existingEffectivePrice && existing.source === 'ttang' && f.source !== 'ttang')) {
                     dedupMap.set(key, f);
                 }
             }
@@ -129,10 +124,12 @@ export async function GET(request: NextRequest) {
                     if (depAirport && arrAirport && depDate && retDate) {
                         // 정확한 공항+날짜 매칭만 사용 (도시+월 폴백은 오매칭 위험이 커서 제거)
                         const exactKey = `${depAirport}-${arrAirport}_${depDate}_${retDate}`;
-                        const bestPrice: number | null = naverPrices[exactKey]?.naverLowest || null;
+                        const matchedPrice = naverPrices[exactKey];
+                        const bestPrice: number | null = matchedPrice?.naverLowest || null;
 
                         if (bestPrice) {
                             f.naverLowest = bestPrice;
+                            f.naverCheckedAt = matchedPrice?.crawledAt || undefined;
                             matched++;
                         }
                     }
@@ -140,7 +137,10 @@ export async function GET(request: NextRequest) {
                 const beforeNaverFilter = allFlights.length;
                 allFlights = allFlights.filter(f => {
                     if (!f.naverLowest || f.naverLowest <= 0) return true;
-                    const difference = f.price - f.naverLowest;
+                    // 48시간이 지난 비교가는 추천 점수뿐 아니라 제거 판단에도 사용하지 않는다.
+                    if (!getComparisonFreshness(f.naverCheckedAt).usable) return true;
+                    const effectivePrice = getEffectivePrice(f);
+                    const difference = effectivePrice - f.naverLowest;
                     const moreExpensiveRatio = difference / f.naverLowest;
                     return difference < 100000 || moreExpensiveRatio < 0.2;
                 });

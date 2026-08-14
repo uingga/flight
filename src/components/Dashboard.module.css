@@ -578,6 +578,90 @@
     font-weight: 500;
 }
 
+.destinationDiscoveryBar {
+    grid-column: 1 / -1;
+    width: 100%;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 18px;
+    border: 1px solid #dfe5ff;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #f8f9ff 0%, #f1f7ff 100%);
+    color: #1f2937;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    box-shadow: 0 3px 12px rgba(67, 56, 202, 0.06);
+    transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.destinationDiscoveryBar:hover {
+    border-color: #aebbf7;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(67, 56, 202, 0.1);
+}
+
+.destinationDiscoveryIcon {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    background: #fff;
+    font-size: 21px;
+    box-shadow: 0 2px 8px rgba(67, 56, 202, 0.1);
+}
+
+.destinationDiscoveryCopy,
+.destinationDiscoveryDeal {
+    display: flex;
+    flex-direction: column;
+}
+
+.destinationDiscoveryCopy {
+    min-width: 0;
+    gap: 3px;
+}
+
+.destinationDiscoveryEyebrow {
+    color: #6366f1;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+}
+
+.destinationDiscoveryCopy strong {
+    font-size: 16px;
+    color: #111827;
+}
+
+.destinationDiscoveryCopy > span:last-child {
+    color: #64748b;
+    font-size: 12px;
+    line-height: 1.5;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.destinationDiscoveryDeal {
+    align-items: flex-end;
+    gap: 4px;
+    white-space: nowrap;
+}
+
+.destinationDiscoveryDeal strong {
+    font-size: 14px;
+    color: #4338ca;
+}
+
+.destinationDiscoveryDeal span {
+    font-size: 11px;
+    color: #6b7280;
+}
+
 @media (max-width: 768px) {
     .insightBar {
         padding: 12px 14px;
@@ -593,6 +677,35 @@
     .insightChip {
         padding: 3px 8px;
         font-size: 0.75rem;
+    }
+
+    .destinationDiscoveryBar {
+        grid-template-columns: auto minmax(0, 1fr);
+        gap: 10px;
+        padding: 14px;
+    }
+
+    .destinationDiscoveryIcon {
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        font-size: 19px;
+    }
+
+    .destinationDiscoveryCopy strong {
+        font-size: 14px;
+    }
+
+    .destinationDiscoveryCopy > span:last-child {
+        white-space: normal;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+
+    .destinationDiscoveryDeal {
+        grid-column: 2;
+        align-items: flex-start;
     }
 }
 
@@ -1050,6 +1163,22 @@
     color: var(--color-text-primary);
     letter-spacing: -0.02em;
     white-space: nowrap;
+}
+
+/*
+ * 가격 숫자는 next/font 다운로드·빌드 해시에 영향받지 않도록
+ * 웹폰트 대신 기기 기본 UI 글꼴을 일관되게 사용한다.
+ */
+.price,
+.modalPrice,
+.modalTotalPrice,
+.mdtNormalPrice,
+.mdtFinalPrice,
+.mdtPriceRow strong,
+.mdtPriceTotalValue,
+.detailPrice {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-variant-numeric: tabular-nums;
 }
 
 .discountBadge {
@@ -2449,6 +2578,101 @@
     color: #6b7280;
 }
 
+.mdtTravelContext {
+    margin: 14px 20px 4px;
+    padding: 14px 16px;
+    border: 1px solid #dfe5ff;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #f8f9ff 0%, #f4f8ff 100%);
+}
+
+.mdtTravelContextHeader {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 11px;
+}
+
+.mdtTravelContextHeader > span {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 2px 7px rgba(67, 56, 202, 0.1);
+}
+
+.mdtTravelContextHeader > div {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.mdtTravelContextHeader div span {
+    color: #6366f1;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+}
+
+.mdtTravelContextHeader strong {
+    color: #111827;
+    font-size: 14px;
+}
+
+.mdtTravelContextFacts {
+    display: grid;
+    gap: 8px;
+}
+
+.mdtTravelContextFacts p {
+    display: grid;
+    grid-template-columns: 92px minmax(0, 1fr);
+    gap: 9px;
+    margin: 0;
+    color: #4b5563;
+    font-size: 11.5px;
+    line-height: 1.55;
+}
+
+.mdtTravelContextFacts b {
+    color: #374151;
+    font-weight: 700;
+}
+
+.mdtTravelContextMore {
+    margin-top: 10px;
+    padding-top: 9px;
+    border-top: 1px solid #e1e6f7;
+}
+
+.mdtTravelContextMore summary {
+    color: #4f46e5;
+    font-size: 11.5px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.mdtTravelContextMore > div {
+    display: grid;
+    gap: 7px;
+    padding-top: 9px;
+}
+
+.mdtTravelContextMore p {
+    margin: 0;
+    color: #596273;
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+.mdtTravelContextMore b {
+    display: block;
+    margin-bottom: 2px;
+    color: #374151;
+}
+
 /* 상세 항공편 섹션 */
 .mdtFlightSections {
     padding: 0 24px;
@@ -3689,6 +3913,25 @@
 
     .mdtPriceBar {
         padding: 8px 16px;
+    }
+
+    .mdtTravelContext {
+        margin: 10px 12px 2px;
+        padding: 11px 12px;
+    }
+
+    .mdtTravelContextHeader {
+        margin-bottom: 8px;
+    }
+
+    .mdtTravelContextFacts {
+        gap: 6px;
+    }
+
+    .mdtTravelContextFacts p {
+        grid-template-columns: 82px minmax(0, 1fr);
+        gap: 7px;
+        font-size: 11px;
     }
 
     .mdtFlightSections {
