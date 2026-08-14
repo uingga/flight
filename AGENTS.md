@@ -59,11 +59,22 @@ src/components/Dashboard.tsx (client component)
 
 ### Status: ✅ 완료 — 운영 중
 
-### MyRealTrip Scraper Details
+### 실제 운영 구조 (2단계 — 2026-08-15 문서 정정)
+
+1. **노선 시딩 (수동/간헐)**: `scripts/update-myrealtrip-cache.ts` → `src/lib/scrapers/myrealtrip.ts`의
+   공개 API로 노선·날짜·대략 가격을 수집해 캐시의 마이리얼트립 항목을 통째로 교체. **시간 정보 없음.**
+2. **가격·시간 갱신 (자동, 하루 2회 KST 01시/10시)**: `.github/workflows/myrealtrip-scrape.yml` →
+   `scripts/scrape-myrealtrip-prices.ts`가 Playwright로 실제 예약 페이지(offers.k1)를 열어
+   실시간 가격과 가는편·오는편 출발/도착 시간을 수집. 조회 실패 노선은 캐시에서 삭제.
+
+⚠️ 일일 크롤(`crawl-all.ts`)은 마이리얼트립을 **실행하지 않고** 이전 캐시를 유지한다
+(공개 API의 시간·가격이 부정확해 제외). "마이리얼트립 스크래퍼"를 수정할 때는 어느 단계인지 먼저 확인할 것.
+
+### Public API Details (1단계 시딩용)
 
 - **Public Bulk API**: `https://api3.myrealtrip.com/flight/api/price/calendar/bulk-lowest` — 전체 도시 최저가
 - **Public Calendar API**: `https://api3.myrealtrip.com/flight/api/price/calendar` — 노선별 일별 최저가
-- **인증**: 불필요 (공개 API)
+- **인증**: 불필요 (공개 API) / 응답 필드는 날짜·항공사·가격뿐 (시간 없음)
 - **Coverage**: ICN/PUS → 전체 도시, today+60 days
 - **Rate limiting**: 300ms delay between requests, 3s retry on 429
 - **파트너 딥링크**: `gid-map.json` 기반 생성, 파트너 링크 ID `1849392`
@@ -114,3 +125,9 @@ npm run deploy:rollback              # 문제 시: 코드만 되돌림 (data/ �
 5. **CSS Modules**: All Dashboard styles use `styles.className` pattern
 6. **Data must be in git**: `data/all-flights-cache.json` is committed to git for Vercel static reads
 7. **Booking URL patterns vary by source**: Each agency has different URL manipulation in `buildBookingUrl()`
+
+## Marketing Reference
+
+- 티키티킷의 홍보·마케팅 전략, 콘텐츠, 알림 성장 전략을 기획하거나 수정할 때는 먼저 `docs/티키티킷_홍보_마케팅_전략_원문_모음.docx`를 참고한다.
+- 실행 기준은 Version 2인 `docs/branding-guide.md`, `docs/marketing-strategy.md`, 사용자의 최신 지시를 함께 확인한다. `*-v1.md` 문서는 이전 논의를 보관한 자료이므로 현재 기준으로 사용하지 않는다.
+- 사용자가 앞으로 "블로그 글을 써달라"고 요청하면 비활성화된 기존 오후 4시 고정 TOP 3 자동 작업을 다시 켜거나 그대로 실행하지 않는다. `docs/marketing-strategy.md`의 콘텐츠 기준과 해당 시점의 사용자 지시에 따라 실제로 소개할 가치가 있는 항공권으로 새 글을 기획·생성한다.
