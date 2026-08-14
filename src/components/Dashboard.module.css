@@ -1868,6 +1868,15 @@
     max-width: 360px;
 }
 
+.footerBrandMessage {
+    max-width: 360px;
+    color: var(--color-text-primary);
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.55;
+    letter-spacing: -0.02em;
+}
+
 .footerLinks {
     display: flex;
     flex-direction: column;

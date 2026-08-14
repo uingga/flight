@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og';
 
 export const runtime = 'edge';
-export const alt = '티키티킷 - 여행사 땡처리 항공권을 한 곳에서';
+export const alt = '티키티킷 - 오늘은 어디가 싸게 나왔을까요?';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
@@ -95,7 +95,7 @@ export default async function Image() {
                         border: '1px solid rgba(79, 70, 229, 0.2)',
                     }}
                 >
-                    ✈️ 실시간 특가 항공권 비교
+                    ✈️ 저렴한 땡처리 항공권
                 </div>
 
                 {/* Logo area */}
@@ -148,7 +148,7 @@ export default async function Image() {
                         letterSpacing: '-0.01em',
                     }}
                 >
-                    여행사 땡처리 항공권을 한 곳에서
+                    오늘은 어디가 싸게 나왔을까요?
                 </div>
 
             </div>
