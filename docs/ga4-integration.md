@@ -131,13 +131,30 @@ Vercel 대시보드 → 프로젝트 → **Settings → Environment Variables** 
 조회 항목 (기본 최근 14일, `?days=` 로 2~90일 조정 가능):
 
 - 방문자 / 방문 횟수 / 페이지뷰 (기간 합계 + 일별 막대)
-- 행동별 발생 수 — `booking_click`, `affiliate_click`, `alert_setup`, `deal_alert_setup`,
-  `card_click`, `compare_click`, `share_flight`, `filter_change`, `date_filter`
-- 전환율 — 예약 클릭한 사람 / 알림 등록한 사람이 전체 방문자의 몇 %인지
+- 행동별 발생 수 — `booking_click`, `affiliate_click`, `detail_open`, `alert_setup`,
+  `deal_alert_setup`, `compare_click`, `share_flight`, `filter_change`, `date_filter`
+- **퍼널** — 방문 → 상세 열람(`detail_open`) → 예약 클릭(`booking_click`).
+  마지막 구간은 "상세를 연 사람 중 몇 %가 예약으로 갔는지"로 표시된다
 - 여행사별 예약 클릭 (`customEvent:travel_agency`)
 - 예약 클릭이 많은 노선 (`customEvent:route`)
-- 알림 등록이 시작된 위치 (`customEvent:entry_point`)
+- 상세를 연 위치 / 알림 등록이 시작된 위치 (`customEvent:entry_point`)
 - 유입 경로 (`sessionDefaultChannelGroup`)
+
+### 카드 클릭 이벤트 변경 (2026-08-14)
+
+원래 카드 본문 클릭은 `card_click`만 쏘고 **화면에서는 아무 일도 일어나지 않았다**.
+그래서 그 숫자는 "카드를 눌렀는데 반응이 없어 당황한 사람" 수에 가까웠고,
+정작 퍼널에서 제일 궁금한 구간(카드의 "예약하기 →" → 상세 시트 열림)은 추적되지 않았다.
+
+바꾼 내용:
+
+- 카드 본문 클릭이 이제 상세 시트를 연다 (`Dashboard.tsx`의 `openFlightDetail`)
+- 상세 시트를 여는 모든 경로가 `detail_open`을 쏘고, `entry_point`로 출처를 남긴다 —
+  `card_body`, `book_button`, `discovery_bar`, `shared_link`
+- `card_click`은 중단. 어드민에는 과거 데이터 해석을 위해
+  "카드 빈 곳 클릭 (8/14 이전, 반응 없던 클릭)"으로 남겨두었고, 14일이 지나면 표에서 자연히 사라진다
+
+`entry_point`는 이미 등록된 맞춤 측정기준이라 **GA4에서 추가 설정할 것은 없다.**
 
 동작 원칙:
 

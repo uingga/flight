@@ -9,13 +9,23 @@ const CACHE_TTL_MS = 10 * 60 * 1000;
 const EVENT_LABELS: Record<string, string> = {
     booking_click: '예약 클릭',
     affiliate_click: '제휴 클릭',
+    detail_open: '항공권 상세 열기',
     alert_setup: '가격 알림 등록',
     deal_alert_setup: '조건형 알림 등록',
-    card_click: '항공권 카드 클릭',
+    // 2026-08-14에 중단. 그전까지 카드 본문 클릭은 아무 동작도 하지 않았으므로 헛클릭 지표였다
+    card_click: '카드 빈 곳 클릭 (8/14 이전, 반응 없던 클릭)',
     compare_click: '가격 비교 클릭',
     share_flight: '공유',
     filter_change: '필터 변경',
     date_filter: '날짜 필터',
+};
+
+/** detail_open / alert_setup의 `entry_point` 값 — 어느 화면에서 시작했는지 */
+const ENTRY_LABELS: Record<string, string> = {
+    card_body: '카드 본문',
+    book_button: '카드의 예약 버튼',
+    discovery_bar: '여행지 발견 바',
+    shared_link: '공유 링크',
 };
 
 const CHANNEL_LABELS: Record<string, string> = {
@@ -70,7 +80,7 @@ async function buildStats(config: Ga4Config, days: number) {
         }),
     ]);
 
-    const [agencyReport, routeReport, entryReport, channelReport] = await Promise.all([
+    const [agencyReport, routeReport, entryReport, detailEntryReport, channelReport] = await Promise.all([
         optional('여행사별 예약 클릭', warnings, () => runReport(config, {
             dateRanges,
             dimensions: [{ name: 'customEvent:travel_agency' }],
@@ -92,6 +102,14 @@ async function buildStats(config: Ga4Config, days: number) {
             dimensions: [{ name: 'customEvent:entry_point' }],
             metrics: [{ name: 'eventCount' }],
             dimensionFilter: eventNameFilter('alert_setup'),
+            orderBys: [{ metric: { metricName: 'eventCount' }, desc: true }],
+            limit: 15,
+        })),
+        optional('상세 열기 진입점', warnings, () => runReport(config, {
+            dateRanges,
+            dimensions: [{ name: 'customEvent:entry_point' }],
+            metrics: [{ name: 'eventCount' }],
+            dimensionFilter: eventNameFilter('detail_open'),
             orderBys: [{ metric: { metricName: 'eventCount' }, desc: true }],
             limit: 15,
         })),
@@ -133,12 +151,13 @@ async function buildStats(config: Ga4Config, days: number) {
         .filter(entry => entry.known || entry.count > 0);
 
     const bookingClick = events.find(entry => entry.name === 'booking_click');
+    const detailOpen = events.find(entry => entry.name === 'detail_open');
     const alertSetup = events.find(entry => entry.name === 'alert_setup');
     const rate = (value: number) => (totals.users > 0 ? Number(((value / totals.users) * 100).toFixed(1)) : null);
 
-    const list = (report: ReportResponse | null, fallbackLabel = '(값 없음)') =>
+    const list = (report: ReportResponse | null, labels?: Record<string, string>, fallbackLabel = '(값 없음)') =>
         report === null ? null : (report.rows || []).map(row => ({
-            label: dim(row) || fallbackLabel,
+            label: labels?.[dim(row)] || dim(row) || fallbackLabel,
             count: num(row, 0),
         }));
 
@@ -151,14 +170,21 @@ async function buildStats(config: Ga4Config, days: number) {
         events: events.filter(entry => entry.known),
         otherEvents: events.filter(entry => !entry.known && !['page_view', 'session_start', 'first_visit', 'user_engagement', 'scroll'].includes(entry.name)),
         conversion: {
+            detailOpenUsers: detailOpen?.users ?? 0,
+            detailOpenRate: rate(detailOpen?.users ?? 0),
             bookingClickUsers: bookingClick?.users ?? 0,
             bookingClickRate: rate(bookingClick?.users ?? 0),
+            // 퍼널에서 제일 중요한 구간 — 상세를 연 사람 중 몇 %가 실제 예약으로 넘어갔는지
+            detailToBookingRate: detailOpen?.users
+                ? Number((((bookingClick?.users ?? 0) / detailOpen.users) * 100).toFixed(1))
+                : null,
             alertSetupUsers: alertSetup?.users ?? 0,
             alertSetupRate: rate(alertSetup?.users ?? 0),
         },
         bookingByAgency: list(agencyReport),
         bookingByRoute: list(routeReport),
-        alertByEntry: list(entryReport),
+        alertByEntry: list(entryReport, ENTRY_LABELS),
+        detailByEntry: list(detailEntryReport, ENTRY_LABELS),
         channels: channelReport === null ? null : (channelReport.rows || []).map(row => ({
             label: CHANNEL_LABELS[dim(row)] || dim(row) || '분류 안 됨',
             sessions: num(row, 0),
