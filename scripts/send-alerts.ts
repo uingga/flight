@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import webpush from 'web-push';
+import { normalizeCity as canonicalCity } from '../src/lib/utils/flight-helpers';
 
 interface AlertSubscription {
     id: string;
@@ -33,6 +34,15 @@ const FLIGHTS_PATH = path.join(process.cwd(), 'data', 'all-flights-cache.json');
 
 function normalizeCity(city = ''): string {
     return city.replace(/\(.*?\)/g, '').replace(/\s+/g, '').trim();
+}
+
+/**
+ * 알림 매칭용 도시 키.
+ * 등록은 대시보드의 normalizeCity(표기 통일: 서울(ICN)→인천, 쿠마모토→구마모토)를 거친 값을 저장하는데,
+ * 캐시에는 두 표기가 섞여 있어 여기서도 같은 정규화를 적용해야 같은 노선으로 매칭된다.
+ */
+function cityKey(city = ''): string {
+    return normalizeCity(canonicalCity(city || ''));
 }
 
 function normalizeDate(date = ''): string {
@@ -87,8 +97,8 @@ async function main() {
         if (alert.last_sent_at && todayInKorea(new Date(alert.last_sent_at)) === today) continue;
 
         const matches = flights.filter(flight => {
-            if (normalizeCity(flight.departure.city) !== normalizeCity(alert.departure_city)) return false;
-            if (normalizeCity(flight.arrival.city) !== normalizeCity(alert.arrival_city)) return false;
+            if (cityKey(flight.departure.city) !== cityKey(alert.departure_city)) return false;
+            if (cityKey(flight.arrival.city) !== cityKey(alert.arrival_city)) return false;
             if (flight.price > alert.max_price) return false;
             return true;
         }).sort((a, b) => a.price - b.price);
