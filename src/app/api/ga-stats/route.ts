@@ -182,8 +182,12 @@ export async function GET(request: NextRequest) {
         });
     }
 
-    const requested = Number(request.nextUrl.searchParams.get('days'));
-    const days = Number.isFinite(requested) ? Math.min(Math.max(Math.trunc(requested), 2), 90) : DEFAULT_DAYS;
+    // 파라미터가 없으면 Number(null)이 0이 되어 최소값으로 눌리므로 존재 여부를 먼저 본다
+    const rawDays = request.nextUrl.searchParams.get('days');
+    const requested = Number(rawDays);
+    const days = rawDays && Number.isFinite(requested)
+        ? Math.min(Math.max(Math.trunc(requested), 2), 90)
+        : DEFAULT_DAYS;
 
     // GA4 무료 할당량을 아끼려고 10분간 재사용한다
     if (cache && cache.days === days && Date.now() - cache.at < CACHE_TTL_MS) {
