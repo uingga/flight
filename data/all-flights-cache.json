@@ -1,6 +1,6 @@
 {
   "timestamp": "2026-08-14T03:41:02.535Z",
-  "count": 792,
+  "count": 806,
   "flights": [
     {
       "id": "ybtour-후쿠오카-20260902-2",
@@ -20702,7 +20702,33 @@
       "firstSeen": "2026-08-13"
     },
     {
-      "id": "mrt-ICN-BHJ-20260818-719300",
+      "id": "mrt-ICN-AMQ-20261012-1357200",
+      "source": "myrealtrip",
+      "airline": "가루다인도네시아",
+      "departure": {
+        "city": "서울(인천)",
+        "airport": "ICN",
+        "date": "2026-10-12",
+        "time": "10:35"
+      },
+      "arrival": {
+        "city": "암본",
+        "airport": "AMQ",
+        "date": "2026-10-16",
+        "time": "15:20"
+      },
+      "price": 1212200,
+      "currency": "KRW",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5962098%26depdt%3D2026-10-12%26arrdt%3D2026-10-16%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5962098%26depdt%3D2026-10-12%26arrdt%3D2026-10-16%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "region": "동남아",
+      "duration": "28시간 45분",
+      "returnDeparture": "16:10",
+      "returnArrival": "08:30",
+      "returnDuration": "18시간 00분"
+    },
+    {
+      "id": "mrt-ICN-BHJ-20260818-708900",
       "source": "myrealtrip",
       "airline": "에어인디아",
       "departure": {
@@ -20717,7 +20743,7 @@
         "date": "2026-08-21",
         "time": "16:50"
       },
-      "price": 705800,
+      "price": 941900,
       "currency": "KRW",
       "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5945206%26depdt%3D2026-08-18%26arrdt%3D2026-08-21%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5945206%26depdt%3D2026-08-18%26arrdt%3D2026-08-21%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
@@ -20726,12 +20752,10 @@
       "returnDeparture": "17:30",
       "returnArrival": "11:05",
       "returnDuration": "22시간 25분",
-      "discountRate": 6,
-      "naverLowest": 648100,
-      "naverDiscount": -9
+      "discountRate": -25
     },
     {
-      "id": "mrt-ICN-BHO-20261004-1313100",
+      "id": "mrt-ICN-BHO-20261004-1180500",
       "source": "myrealtrip",
       "airline": "에어인디아",
       "departure": {
@@ -20746,7 +20770,7 @@
         "date": "2026-10-10",
         "time": "07:55"
       },
-      "price": 1180500,
+      "price": 1320400,
       "currency": "KRW",
       "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5987063%26depdt%3D2026-10-04%26arrdt%3D2026-10-10%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5987063%26depdt%3D2026-10-04%26arrdt%3D2026-10-10%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
@@ -20754,41 +20778,37 @@
       "duration": "23시간 05분",
       "returnDeparture": "19:35",
       "returnArrival": "10:40",
-      "returnDuration": "13시간 35분",
-      "naverLowest": 1044400,
-      "naverDiscount": -13
+      "returnDuration": "13시간 35분"
     },
     {
-      "id": "mrt-ICN-BJS-20260913-380000",
+      "id": "mrt-ICN-BJS-20260915-279400",
       "source": "myrealtrip",
       "airline": "중국남방항공",
       "departure": {
         "city": "서울(인천)",
         "airport": "ICN",
-        "date": "2026-09-13",
+        "date": "2026-09-15",
         "time": "22:50"
       },
       "arrival": {
         "city": "베이징",
         "airport": "BJS",
-        "date": "2026-09-16",
-        "time": "09:00"
+        "date": "2026-09-19",
+        "time": "13:05"
       },
       "price": 244500,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3591742%26depdt%3D2026-09-13%26arrdt%3D2026-09-16%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3591742%26depdt%3D2026-09-13%26arrdt%3D2026-09-16%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3591742%26depdt%3D2026-09-15%26arrdt%3D2026-09-19%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3591742%26depdt%3D2026-09-15%26arrdt%3D2026-09-19%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "region": "중국",
-      "duration": "11시간 10분",
-      "returnDeparture": "21:10",
-      "returnArrival": "10:10",
-      "returnDuration": "08시간 10분",
-      "discountRate": 21,
-      "naverLowest": 244500,
-      "naverDiscount": 0
+      "duration": "15시간 15분",
+      "returnDeparture": "14:10",
+      "returnArrival": "21:40",
+      "returnDuration": "12시간 10분",
+      "discountRate": 21
     },
     {
-      "id": "mrt-ICN-BJV-20260824-1026200",
+      "id": "mrt-ICN-BJV-20260824-1361700",
       "source": "myrealtrip",
       "airline": "에미레이트항공",
       "departure": {
@@ -20811,18 +20831,16 @@
       "duration": "21시간 45분",
       "returnDeparture": "15:30",
       "returnArrival": "17:00",
-      "returnDuration": "07시간 35분",
-      "naverLowest": 1117600,
-      "naverDiscount": -14
+      "returnDuration": "07시간 35분"
     },
     {
-      "id": "mrt-ICN-BKI-20260927-446200",
+      "id": "mrt-ICN-BKI-20260929-416300",
       "source": "myrealtrip",
       "airline": "제주항공",
       "departure": {
         "city": "서울(인천)",
         "airport": "ICN",
-        "date": "2026-09-27",
+        "date": "2026-09-29",
         "time": "19:10"
       },
       "arrival": {
@@ -20831,50 +20849,46 @@
         "date": "2026-10-01",
         "time": "23:30"
       },
-      "price": 243400,
+      "price": 235780,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3533245%26depdt%3D2026-09-27%26arrdt%3D2026-10-01%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3533245%26depdt%3D2026-09-27%26arrdt%3D2026-10-01%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3533245%26depdt%3D2026-09-29%26arrdt%3D2026-10-01%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3533245%26depdt%3D2026-09-29%26arrdt%3D2026-10-01%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "region": "동남아",
       "duration": "05시간 20분",
       "returnDeparture": "00:30",
       "returnArrival": "06:50",
       "returnDuration": "05시간 20분",
-      "discountRate": -5,
-      "naverLowest": 221600,
-      "naverDiscount": -10
+      "discountRate": -2
     },
     {
-      "id": "mrt-ICN-BKK-20260928-334800",
+      "id": "mrt-ICN-BKK-20260929-335700",
       "source": "myrealtrip",
       "airline": "티웨이항공",
       "departure": {
         "city": "서울(인천)",
         "airport": "ICN",
-        "date": "2026-09-28",
+        "date": "2026-09-29",
         "time": "18:00"
       },
       "arrival": {
         "city": "방콕",
         "airport": "BKK",
-        "date": "2026-09-30",
+        "date": "2026-10-02",
         "time": "22:05"
       },
       "price": 265200,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531351%26depdt%3D2026-09-28%26arrdt%3D2026-09-30%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531351%26depdt%3D2026-09-28%26arrdt%3D2026-09-30%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531351%26depdt%3D2026-09-29%26arrdt%3D2026-10-02%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531351%26depdt%3D2026-09-29%26arrdt%3D2026-10-02%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "region": "동남아",
       "duration": "06시간 05분",
       "returnDeparture": "00:05",
       "returnArrival": "07:40",
       "returnDuration": "05시간 35분",
-      "discountRate": 2,
-      "naverLowest": 253770,
-      "naverDiscount": -5
+      "discountRate": 2
     },
     {
-      "id": "mrt-ICN-BMV-20261012-526700",
+      "id": "mrt-ICN-BMV-20261012-530700",
       "source": "myrealtrip",
       "airline": "베트남항공",
       "departure": {
@@ -20898,12 +20912,10 @@
       "returnDeparture": "09:20",
       "returnArrival": "16:35",
       "returnDuration": "10시간 25분",
-      "discountRate": 8,
-      "naverLowest": 297400,
-      "naverDiscount": -10
+      "discountRate": 8
     },
     {
-      "id": "mrt-ICN-BPE-20260903-641000",
+      "id": "mrt-ICN-BPE-20260903-983300",
       "source": "myrealtrip",
       "airline": "상해항공",
       "departure": {
@@ -20930,65 +20942,61 @@
       "discountRate": 12
     },
     {
-      "id": "mrt-ICN-CCU-20260831-618900",
+      "id": "mrt-ICN-CCU-20260826-636400",
       "source": "myrealtrip",
       "airline": "중국동방항공",
       "departure": {
         "city": "서울(인천)",
         "airport": "ICN",
-        "date": "2026-08-31",
-        "time": "07:45"
+        "date": "2026-08-26",
+        "time": "16:15"
       },
       "arrival": {
         "city": "콜카타",
         "airport": "CCU",
-        "date": "2026-09-04",
+        "date": "2026-08-31",
         "time": "00:10"
       },
-      "price": 546100,
+      "price": 508500,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D4528401%26depdt%3D2026-08-31%26arrdt%3D2026-09-04%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D4528401%26depdt%3D2026-08-31%26arrdt%3D2026-09-04%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D4528401%26depdt%3D2026-08-26%26arrdt%3D2026-08-31%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D4528401%26depdt%3D2026-08-26%26arrdt%3D2026-08-31%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "region": "기타",
-      "duration": "19시간 55분",
+      "duration": "35시간 25분",
       "returnDeparture": "01:10",
       "returnArrival": "22:45",
-      "returnDuration": "12시간 25분",
-      "discountRate": -11,
-      "naverLowest": 462500,
-      "naverDiscount": -18
+      "returnDuration": "18시간 05분",
+      "discountRate": -3
     },
     {
-      "id": "mrt-ICN-CEB-20260926-400900",
+      "id": "mrt-ICN-CEB-20260928-520700",
       "source": "myrealtrip",
       "airline": "제주항공",
       "departure": {
         "city": "서울(인천)",
         "airport": "ICN",
-        "date": "2026-09-26",
+        "date": "2026-09-28",
         "time": "20:55"
       },
       "arrival": {
         "city": "세부",
         "airport": "CEB",
-        "date": "2026-10-02",
+        "date": "2026-10-01",
         "time": "00:45"
       },
-      "price": 230100,
+      "price": 222000,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531346%26depdt%3D2026-09-26%26arrdt%3D2026-10-02%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531346%26depdt%3D2026-09-26%26arrdt%3D2026-10-02%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531346%26depdt%3D2026-09-28%26arrdt%3D2026-10-01%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531346%26depdt%3D2026-09-28%26arrdt%3D2026-10-01%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "region": "동남아",
       "duration": "04시간 50분",
       "returnDeparture": "01:45",
       "returnArrival": "07:30",
       "returnDuration": "04시간 45분",
-      "discountRate": -2,
-      "naverLowest": 218200,
-      "naverDiscount": -5
+      "discountRate": 1
     },
     {
-      "id": "mrt-ICN-CGO-20260930-458900",
+      "id": "mrt-ICN-CGO-20260930-518400",
       "source": "myrealtrip",
       "airline": "이스타항공",
       "departure": {
@@ -21003,7 +21011,7 @@
         "date": "2026-10-04",
         "time": "15:20"
       },
-      "price": 257800,
+      "price": 266200,
       "currency": "KRW",
       "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3924505%26depdt%3D2026-09-30%26arrdt%3D2026-10-04%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3924505%26depdt%3D2026-09-30%26arrdt%3D2026-10-04%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
@@ -21012,131 +21020,148 @@
       "returnDeparture": "16:20",
       "returnArrival": "19:25",
       "returnDuration": "02시간 05분",
-      "discountRate": 4,
-      "naverLowest": 248500,
-      "naverDiscount": -4
+      "discountRate": 1
     },
     {
-      "id": "mrt-ICN-CGQ-20260904-503300",
+      "id": "mrt-ICN-CMB-20261013-677200",
       "source": "myrealtrip",
-      "airline": "중국남방항공",
+      "airline": "베트남항공",
       "departure": {
         "city": "서울(인천)",
         "airport": "ICN",
-        "date": "2026-09-04",
-        "time": "19:20"
+        "date": "2026-10-13",
+        "time": "17:55"
       },
       "arrival": {
-        "city": "창춘",
-        "airport": "CGQ",
-        "date": "2026-09-08",
-        "time": "20:30"
+        "city": "콜롬보",
+        "airport": "CMB",
+        "date": "2026-10-19",
+        "time": "23:35"
       },
-      "price": 253500,
+      "price": 524000,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3823967%26depdt%3D2026-09-04%26arrdt%3D2026-09-08%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3823967%26depdt%3D2026-09-04%26arrdt%3D2026-09-08%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "region": "중국",
-      "duration": "02시간 10분",
-      "returnDeparture": "15:20",
-      "returnArrival": "18:20",
-      "returnDuration": "02시간 00분",
-      "naverLowest": 241227,
-      "naverDiscount": -5
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3936284%26depdt%3D2026-10-13%26arrdt%3D2026-10-19%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3936284%26depdt%3D2026-10-13%26arrdt%3D2026-10-19%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "region": "기타",
+      "duration": "33시간 10분",
+      "returnDeparture": "00:35",
+      "returnArrival": "16:25",
+      "returnDuration": "22시간 25분"
     },
     {
-      "id": "mrt-ICN-CNX-20260920-427600",
+      "id": "mrt-ICN-CNX-20260926-464000",
       "source": "myrealtrip",
       "airline": "에어부산",
       "departure": {
         "city": "서울(인천)",
         "airport": "ICN",
-        "date": "2026-09-20",
+        "date": "2026-09-26",
         "time": "19:55"
       },
       "arrival": {
         "city": "치앙마이",
         "airport": "CNX",
-        "date": "2026-09-24",
+        "date": "2026-10-02",
         "time": "23:50"
       },
       "price": 266100,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531390%26depdt%3D2026-09-20%26arrdt%3D2026-09-24%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531390%26depdt%3D2026-09-20%26arrdt%3D2026-09-24%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531390%26depdt%3D2026-09-26%26arrdt%3D2026-10-02%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531390%26depdt%3D2026-09-26%26arrdt%3D2026-10-02%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "region": "동남아",
       "duration": "05시간 55분",
       "returnDeparture": "00:50",
       "returnArrival": "08:15",
       "returnDuration": "05시간 25분",
-      "discountRate": 2,
-      "naverLowest": 253400,
-      "naverDiscount": -5
+      "discountRate": 2
     },
     {
-      "id": "mrt-ICN-COK-20260925-759500",
+      "id": "mrt-ICN-COK-20260826-855800",
       "source": "myrealtrip",
       "airline": "에어인디아",
       "departure": {
         "city": "서울(인천)",
         "airport": "ICN",
-        "date": "2026-09-25",
-        "time": "12:20"
+        "date": "2026-08-26",
+        "time": "12:35"
       },
       "arrival": {
         "city": "코치",
         "airport": "COK",
-        "date": "2026-09-29",
-        "time": "10:00"
+        "date": "2026-08-30",
+        "time": "01:20"
       },
-      "price": 881800,
+      "price": 694500,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D6048676%26depdt%3D2026-09-25%26arrdt%3D2026-09-29%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D6048676%26depdt%3D2026-09-25%26arrdt%3D2026-09-29%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D6048676%26depdt%3D2026-08-26%26arrdt%3D2026-08-30%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D6048676%26depdt%3D2026-08-26%26arrdt%3D2026-08-30%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "region": "기타",
-      "duration": "25시간 10분",
-      "returnDeparture": "10:30",
+      "duration": "16시간 15분",
+      "returnDeparture": "21:05",
       "returnArrival": "10:40",
-      "returnDuration": "13시간 55분",
-      "naverLowest": 763600,
-      "naverDiscount": -15
+      "returnDuration": "05시간 20분"
     },
     {
-      "id": "mrt-ICN-CRK-20260917-364200",
+      "id": "mrt-ICN-CRK-20260920-477600",
       "source": "myrealtrip",
       "airline": "제주항공",
       "departure": {
         "city": "서울(인천)",
         "airport": "ICN",
-        "date": "2026-09-17",
+        "date": "2026-09-20",
         "time": "21:35"
       },
       "arrival": {
         "city": "클라크",
         "airport": "CRK",
-        "date": "2026-09-23",
+        "date": "2026-09-24",
         "time": "00:40"
       },
-      "price": 263300,
+      "price": 245600,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3567287%26depdt%3D2026-09-17%26arrdt%3D2026-09-23%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3567287%26depdt%3D2026-09-17%26arrdt%3D2026-09-23%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3567287%26depdt%3D2026-09-20%26arrdt%3D2026-09-24%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3567287%26depdt%3D2026-09-20%26arrdt%3D2026-09-24%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "region": "동남아",
       "duration": "04시간 05분",
-      "returnDeparture": "01:40",
-      "returnArrival": "06:30",
-      "returnDuration": "03시간 50분",
-      "naverLowest": 236700,
-      "naverDiscount": -11
+      "returnDeparture": "00:20",
+      "returnArrival": "05:20",
+      "returnDuration": "04시간 00분"
     },
     {
-      "id": "mrt-ICN-CXR-20260916-404800",
+      "id": "mrt-ICN-CTS-20260917-501000",
+      "source": "myrealtrip",
+      "airline": "티웨이항공",
+      "departure": {
+        "city": "서울(인천)",
+        "airport": "ICN",
+        "date": "2026-09-17",
+        "time": "10:10"
+      },
+      "arrival": {
+        "city": "삿포로",
+        "airport": "CTS",
+        "date": "2026-09-23",
+        "time": "13:00"
+      },
+      "price": 254840,
+      "currency": "KRW",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531237%26depdt%3D2026-09-17%26arrdt%3D2026-09-23%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531237%26depdt%3D2026-09-17%26arrdt%3D2026-09-23%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "region": "일본",
+      "duration": "02시간 50분",
+      "returnDeparture": "14:30",
+      "returnArrival": "17:40",
+      "returnDuration": "03시간 10분",
+      "discountRate": 5
+    },
+    {
+      "id": "mrt-ICN-CXR-20260917-489400",
       "source": "myrealtrip",
       "airline": "에어서울",
       "departure": {
         "city": "서울(인천)",
         "airport": "ICN",
-        "date": "2026-09-16",
+        "date": "2026-09-17",
         "time": "19:50"
       },
       "arrival": {
@@ -21147,52 +21172,50 @@
       },
       "price": 244700,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531263%26depdt%3D2026-09-16%26arrdt%3D2026-09-22%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531263%26depdt%3D2026-09-16%26arrdt%3D2026-09-22%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531263%26depdt%3D2026-09-17%26arrdt%3D2026-09-22%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531263%26depdt%3D2026-09-17%26arrdt%3D2026-09-22%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "region": "동남아",
       "duration": "05시간 05분",
       "returnDeparture": "00:05",
       "returnArrival": "07:10",
       "returnDuration": "05시간 05분",
-      "discountRate": -8,
-      "naverLowest": 216100,
-      "naverDiscount": -13
+      "discountRate": -8
     },
     {
-      "id": "mrt-ICN-CYZ-20260913-418600",
+      "id": "mrt-ICN-CYZ-20260918-423100",
       "source": "myrealtrip",
-      "airline": "필리핀항공",
+      "airline": "더 저렴한 항공권",
       "departure": {
         "city": "서울(인천)",
         "airport": "ICN",
-        "date": "2026-09-13",
-        "time": "07:20"
+        "date": "2026-09-18",
+        "time": "20:30"
       },
       "arrival": {
         "city": "카우아얀",
         "airport": "CYZ",
-        "date": "2026-09-19",
+        "date": "2026-09-20",
         "time": "11:25"
       },
       "price": 423300,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D6024867%26depdt%3D2026-09-13%26arrdt%3D2026-09-19%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D6024867%26depdt%3D2026-09-13%26arrdt%3D2026-09-19%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D6024867%26depdt%3D2026-09-18%26arrdt%3D2026-09-20%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D6024867%26depdt%3D2026-09-18%26arrdt%3D2026-09-20%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "region": "동남아",
-      "duration": "29시간 05분",
+      "duration": "15시간 55분",
       "returnDeparture": "12:15",
       "returnArrival": "06:00",
-      "returnDuration": "23시간 50분",
+      "returnDuration": "10시간 40분",
       "discountRate": 22
     },
     {
-      "id": "mrt-ICN-DAD-20260913-325100",
+      "id": "mrt-ICN-DAD-20260916-392000",
       "source": "myrealtrip",
       "airline": "이스타항공",
       "departure": {
         "city": "서울(인천)",
         "airport": "ICN",
-        "date": "2026-09-13",
+        "date": "2026-09-16",
         "time": "20:35"
       },
       "arrival": {
@@ -21203,55 +21226,51 @@
       },
       "price": 214300,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531265%26depdt%3D2026-09-13%26arrdt%3D2026-09-18%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531265%26depdt%3D2026-09-13%26arrdt%3D2026-09-18%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531265%26depdt%3D2026-09-16%26arrdt%3D2026-09-18%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531265%26depdt%3D2026-09-16%26arrdt%3D2026-09-18%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "region": "동남아",
       "duration": "04시간 50분",
       "returnDeparture": "00:25",
       "returnArrival": "06:55",
       "returnDuration": "04시간 30분",
-      "discountRate": 1,
-      "naverLowest": 192600,
-      "naverDiscount": -11
+      "discountRate": 1
     },
     {
-      "id": "mrt-ICN-DGT-20260911-616600",
+      "id": "mrt-ICN-DGT-20260930-519400",
       "source": "myrealtrip",
       "airline": "필리핀항공",
       "departure": {
         "city": "서울(인천)",
         "airport": "ICN",
-        "date": "2026-09-11",
-        "time": "20:30"
+        "date": "2026-09-30",
+        "time": "07:20"
       },
       "arrival": {
         "city": "두마게테",
         "airport": "DGT",
-        "date": "2026-09-15",
-        "time": "07:25"
+        "date": "2026-10-04",
+        "time": "15:05"
       },
       "price": 423300,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5985044%26depdt%3D2026-09-11%26arrdt%3D2026-09-15%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5985044%26depdt%3D2026-09-11%26arrdt%3D2026-09-15%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5985044%26depdt%3D2026-09-30%26arrdt%3D2026-10-04%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5985044%26depdt%3D2026-09-30%26arrdt%3D2026-10-04%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "region": "동남아",
-      "duration": "11시간 55분",
+      "duration": "08시간 45분",
       "returnDeparture": "08:05",
       "returnArrival": "19:15",
-      "returnDuration": "06시간 25분",
-      "discountRate": -2,
-      "naverLowest": 380481,
-      "naverDiscount": -11
+      "returnDuration": "03시간 10분",
+      "discountRate": -2
     },
     {
-      "id": "mrt-ICN-DLI-20260909-1177600",
+      "id": "mrt-ICN-DLI-20260908-1159900",
       "source": "myrealtrip",
       "airline": "베트남항공",
       "departure": {
         "city": "서울(인천)",
         "airport": "ICN",
-        "date": "2026-09-09",
-        "time": "18:05"
+        "date": "2026-09-08",
+        "time": "10:05"
       },
       "arrival": {
         "city": "달랏",
@@ -21259,111 +21278,106 @@
         "date": "2026-09-14",
         "time": "08:50"
       },
-      "price": 325800,
+      "price": 323800,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3550615%26depdt%3D2026-09-09%26arrdt%3D2026-09-14%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3550615%26depdt%3D2026-09-09%26arrdt%3D2026-09-14%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3550615%26depdt%3D2026-09-08%26arrdt%3D2026-09-14%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3550615%26depdt%3D2026-09-08%26arrdt%3D2026-09-14%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "region": "동남아",
-      "duration": "16시간 45분",
-      "returnDeparture": "14:00",
-      "returnArrival": "05:50",
-      "returnDuration": "10시간 20분",
-      "discountRate": -2,
-      "naverLowest": 271694,
-      "naverDiscount": -20
+      "duration": "24시간 45분",
+      "returnDeparture": "07:50",
+      "returnArrival": "06:00",
+      "returnDuration": "18시간 20분",
+      "discountRate": -2
     },
     {
-      "id": "mrt-ICN-DYG-20260907-573200",
+      "id": "mrt-ICN-DNH-20260818-933800",
+      "source": "myrealtrip",
+      "airline": "심천항공",
+      "departure": {
+        "city": "서울(인천)",
+        "airport": "ICN",
+        "date": "2026-08-18",
+        "time": "17:45"
+      },
+      "arrival": {
+        "city": "둔황",
+        "airport": "DNH",
+        "date": "2026-08-21",
+        "time": "19:30"
+      },
+      "price": 868800,
+      "currency": "KRW",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5919967%26depdt%3D2026-08-18%26arrdt%3D2026-08-21%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5919967%26depdt%3D2026-08-18%26arrdt%3D2026-08-21%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "region": "중국",
+      "duration": "26시간 45분",
+      "returnDeparture": "20:30",
+      "returnArrival": "16:45",
+      "returnDuration": "18시간 15분",
+      "discountRate": -7
+    },
+    {
+      "id": "mrt-ICN-DYG-20260906-478700",
       "source": "myrealtrip",
       "airline": "산동항공",
       "departure": {
         "city": "서울(인천)",
         "airport": "ICN",
-        "date": "2026-09-07",
-        "time": "22:15"
+        "date": "2026-09-06",
+        "time": "08:35"
       },
       "arrival": {
         "city": "장자제",
         "airport": "DYG",
-        "date": "2026-09-09",
+        "date": "2026-09-08",
         "time": "14:45"
       },
       "price": 395100,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3823979%26depdt%3D2026-09-07%26arrdt%3D2026-09-09%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3823979%26depdt%3D2026-09-07%26arrdt%3D2026-09-09%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3823979%26depdt%3D2026-09-06%26arrdt%3D2026-09-08%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3823979%26depdt%3D2026-09-06%26arrdt%3D2026-09-08%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "region": "중국",
-      "duration": "17시간 30분",
+      "duration": "07시간 10분",
       "returnDeparture": "16:30",
       "returnArrival": "23:50",
-      "returnDuration": "13시간 35분",
-      "discountRate": -1,
-      "naverLowest": 318191,
-      "naverDiscount": -24
+      "returnDuration": "03시간 15분",
+      "discountRate": -1
     },
     {
-      "id": "mrt-ICN-FRU-20260921-922900",
-      "source": "myrealtrip",
-      "airline": "중국국제항공",
-      "departure": {
-        "city": "서울(인천)",
-        "airport": "ICN",
-        "date": "2026-09-21",
-        "time": "14:25"
-      },
-      "arrival": {
-        "city": "비슈케크",
-        "airport": "FRU",
-        "date": "2026-09-27",
-        "time": "20:40"
-      },
-      "price": 802700,
-      "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3699030%26depdt%3D2026-09-21%26arrdt%3D2026-09-27%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3699030%26depdt%3D2026-09-21%26arrdt%3D2026-09-27%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "region": "기타",
-      "duration": "09시간 15분",
-      "returnDeparture": "22:10",
-      "returnArrival": "13:05",
-      "returnDuration": "01시간 00분"
-    },
-    {
-      "id": "mrt-ICN-FUJ-20261001-839400",
+      "id": "mrt-ICN-FUJ-20260904-852000",
       "source": "myrealtrip",
       "airline": "ANA항공",
       "departure": {
         "city": "서울(인천)",
         "airport": "ICN",
-        "date": "2026-10-01",
+        "date": "2026-09-04",
         "time": "13:55"
       },
       "arrival": {
         "city": "후쿠에",
         "airport": "FUJ",
-        "date": "2026-10-04",
+        "date": "2026-09-06",
         "time": "09:05"
       },
       "price": 849600,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5913882%26depdt%3D2026-10-01%26arrdt%3D2026-10-04%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5913882%26depdt%3D2026-10-01%26arrdt%3D2026-10-04%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5913882%26depdt%3D2026-09-04%26arrdt%3D2026-09-06%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5913882%26depdt%3D2026-09-04%26arrdt%3D2026-09-06%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "region": "일본",
       "duration": "19시간 10분",
       "returnDeparture": "10:50",
       "returnArrival": "20:50",
       "returnDuration": "17시간 00분",
-      "discountRate": 11,
-      "naverLowest": 831400,
-      "naverDiscount": -2
+      "discountRate": 8
     },
     {
-      "id": "mrt-ICN-FUK-20260916-185600",
+      "id": "mrt-ICN-FUK-20260917-273700",
       "source": "myrealtrip",
       "airline": "에어부산",
       "departure": {
         "city": "서울(인천)",
         "airport": "ICN",
-        "date": "2026-09-16",
+        "date": "2026-09-17",
         "time": "07:20"
       },
       "arrival": {
@@ -21374,48 +21388,44 @@
       },
       "price": 159100,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531245%26depdt%3D2026-09-16%26arrdt%3D2026-09-22%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531245%26depdt%3D2026-09-16%26arrdt%3D2026-09-22%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531245%26depdt%3D2026-09-17%26arrdt%3D2026-09-22%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531245%26depdt%3D2026-09-17%26arrdt%3D2026-09-22%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "region": "일본",
       "duration": "01시간 35분",
       "returnDeparture": "10:00",
       "returnArrival": "11:35",
       "returnDuration": "01시간 35분",
-      "discountRate": 3,
-      "naverLowest": 149000,
-      "naverDiscount": -7
+      "discountRate": 3
     },
     {
-      "id": "mrt-ICN-GES-20260817-661900",
+      "id": "mrt-ICN-GES-20260902-623100",
       "source": "myrealtrip",
       "airline": "필리핀항공",
       "departure": {
         "city": "서울(인천)",
         "airport": "ICN",
-        "date": "2026-08-17",
-        "time": "07:20"
+        "date": "2026-09-02",
+        "time": "20:30"
       },
       "arrival": {
         "city": "제네럴산토스",
         "airport": "GES",
-        "date": "2026-08-20",
-        "time": "15:55"
+        "date": "2026-09-08",
+        "time": "08:05"
       },
-      "price": 522600,
+      "price": 452600,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5912671%26depdt%3D2026-08-17%26arrdt%3D2026-08-20%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5912671%26depdt%3D2026-08-17%26arrdt%3D2026-08-20%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5912671%26depdt%3D2026-09-02%26arrdt%3D2026-09-08%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5912671%26depdt%3D2026-09-02%26arrdt%3D2026-09-08%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "region": "동남아",
-      "duration": "09시간 35분",
-      "returnDeparture": "09:55",
+      "duration": "12시간 35분",
+      "returnDeparture": "17:15",
       "returnArrival": "19:15",
-      "returnDuration": "03시간 25분",
-      "discountRate": -18,
-      "naverLowest": 433037,
-      "naverDiscount": -21
+      "returnDuration": "06시간 20분",
+      "discountRate": 7
     },
     {
-      "id": "mrt-ICN-GOI-20260913-791700",
+      "id": "mrt-ICN-GOI-20260913-973900",
       "source": "myrealtrip",
       "airline": "에어인디아",
       "departure": {
@@ -21439,70 +21449,64 @@
       "returnDeparture": "07:55",
       "returnArrival": "10:40",
       "returnDuration": "17시간 50분",
-      "discountRate": 0,
-      "naverLowest": 677000,
-      "naverDiscount": -9
+      "discountRate": 0
     },
     {
-      "id": "mrt-ICN-HAN-20260905-370600",
+      "id": "mrt-ICN-HAN-20260906-421100",
       "source": "myrealtrip",
       "airline": "썬푸꾸옥항공",
       "departure": {
         "city": "서울(인천)",
         "airport": "ICN",
-        "date": "2026-09-05",
+        "date": "2026-09-06",
         "time": "00:15"
       },
       "arrival": {
         "city": "하노이",
         "airport": "HAN",
-        "date": "2026-09-07",
+        "date": "2026-09-10",
         "time": "03:10"
       },
       "price": 205000,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3533492%26depdt%3D2026-09-05%26arrdt%3D2026-09-07%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3533492%26depdt%3D2026-09-05%26arrdt%3D2026-09-07%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3533492%26depdt%3D2026-09-06%26arrdt%3D2026-09-10%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3533492%26depdt%3D2026-09-06%26arrdt%3D2026-09-10%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "region": "동남아",
       "duration": "04시간 55분",
       "returnDeparture": "16:20",
       "returnArrival": "22:45",
       "returnDuration": "04시간 25분",
-      "discountRate": 0,
-      "naverLowest": 190700,
-      "naverDiscount": -7
+      "discountRate": 0
     },
     {
-      "id": "mrt-ICN-HET-20260908-449000",
+      "id": "mrt-ICN-HET-20260916-440300",
       "source": "myrealtrip",
-      "airline": "중국남방항공",
+      "airline": "천진항공",
       "departure": {
         "city": "서울(인천)",
         "airport": "ICN",
-        "date": "2026-09-08",
-        "time": "14:35"
+        "date": "2026-09-16",
+        "time": "13:35"
       },
       "arrival": {
         "city": "후허하오터",
         "airport": "HET",
-        "date": "2026-09-12",
-        "time": "10:25"
+        "date": "2026-09-21",
+        "time": "23:45"
       },
-      "price": 325900,
+      "price": 315900,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D6060518%26depdt%3D2026-09-08%26arrdt%3D2026-09-12%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D6060518%26depdt%3D2026-09-08%26arrdt%3D2026-09-12%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D6060518%26depdt%3D2026-09-16%26arrdt%3D2026-09-21%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D6060518%26depdt%3D2026-09-16%26arrdt%3D2026-09-21%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "region": "중국",
-      "duration": "20시간 50분",
-      "returnDeparture": "20:30",
-      "returnArrival": "12:15",
-      "returnDuration": "16시간 10분",
-      "discountRate": -2,
-      "naverLowest": 297000,
-      "naverDiscount": -10
+      "duration": "11시간 10분",
+      "returnDeparture": "15:35",
+      "returnArrival": "10:45",
+      "returnDuration": "07시간 40분",
+      "discountRate": 1
     },
     {
-      "id": "mrt-ICN-HIJ-20260917-261200",
+      "id": "mrt-ICN-HIJ-20260917-304100",
       "source": "myrealtrip",
       "airline": "제주항공",
       "departure": {
@@ -21517,7 +21521,7 @@
         "date": "2026-09-23",
         "time": "09:30"
       },
-      "price": 143500,
+      "price": 141700,
       "currency": "KRW",
       "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3538127%26depdt%3D2026-09-17%26arrdt%3D2026-09-23%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3538127%26depdt%3D2026-09-17%26arrdt%3D2026-09-23%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
@@ -21526,41 +21530,115 @@
       "returnDeparture": "10:30",
       "returnArrival": "12:10",
       "returnDuration": "01시간 40분",
-      "discountRate": 1,
-      "naverLowest": 129900,
-      "naverDiscount": -10
+      "discountRate": 2
     },
     {
-      "id": "mrt-ICN-INC-20260913-410200",
+      "id": "mrt-ICN-HKG-20260905-368400",
       "source": "myrealtrip",
-      "airline": "중국남방항공",
+      "airline": "이스타항공",
       "departure": {
         "city": "서울(인천)",
         "airport": "ICN",
-        "date": "2026-09-13",
-        "time": "11:45"
+        "date": "2026-09-05",
+        "time": "20:10"
       },
       "arrival": {
-        "city": "인촨",
-        "airport": "INC",
-        "date": "2026-09-16",
-        "time": "18:40"
+        "city": "홍콩",
+        "airport": "HKG",
+        "date": "2026-09-09",
+        "time": "22:45"
       },
-      "price": 325100,
+      "price": 241800,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5891869%26depdt%3D2026-09-13%26arrdt%3D2026-09-16%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5891869%26depdt%3D2026-09-13%26arrdt%3D2026-09-16%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3533329%26depdt%3D2026-09-05%26arrdt%3D2026-09-09%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3533329%26depdt%3D2026-09-05%26arrdt%3D2026-09-09%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "region": "중국",
-      "duration": "07시간 55분",
-      "returnDeparture": "19:30",
-      "returnArrival": "10:45",
-      "returnDuration": "02시간 45분",
-      "discountRate": -2,
-      "naverLowest": 286775,
-      "naverDiscount": -13
+      "duration": "03시간 35분",
+      "returnDeparture": "00:05",
+      "returnArrival": "04:55",
+      "returnDuration": "03시간 50분",
+      "discountRate": 0
     },
     {
-      "id": "mrt-ICN-ISB-20260905-1116400",
+      "id": "mrt-ICN-HKT-20260908-568100",
+      "source": "myrealtrip",
+      "airline": "대한항공",
+      "departure": {
+        "city": "서울(인천)",
+        "airport": "ICN",
+        "date": "2026-09-08",
+        "time": "17:50"
+      },
+      "arrival": {
+        "city": "푸켓",
+        "airport": "HKT",
+        "date": "2026-09-10",
+        "time": "22:10"
+      },
+      "price": 464800,
+      "currency": "KRW",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531355%26depdt%3D2026-09-08%26arrdt%3D2026-09-10%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531355%26depdt%3D2026-09-08%26arrdt%3D2026-09-10%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "region": "동남아",
+      "duration": "06시간 20분",
+      "returnDeparture": "23:25",
+      "returnArrival": "07:35",
+      "returnDuration": "06시간 10분"
+    },
+    {
+      "id": "mrt-ICN-HUI-20260907-534500",
+      "source": "myrealtrip",
+      "airline": "베트남항공",
+      "departure": {
+        "city": "서울(인천)",
+        "airport": "ICN",
+        "date": "2026-09-07",
+        "time": "18:05"
+      },
+      "arrival": {
+        "city": "후에",
+        "airport": "HUI",
+        "date": "2026-09-09",
+        "time": "07:00"
+      },
+      "price": 325800,
+      "currency": "KRW",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3567285%26depdt%3D2026-09-07%26arrdt%3D2026-09-09%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3567285%26depdt%3D2026-09-07%26arrdt%3D2026-09-09%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "region": "동남아",
+      "duration": "14시간 55분",
+      "returnDeparture": "22:10",
+      "returnArrival": "16:35",
+      "returnDuration": "09시간 05분"
+    },
+    {
+      "id": "mrt-ICN-ILO-20261010-520600",
+      "source": "myrealtrip",
+      "airline": "필리핀항공",
+      "departure": {
+        "city": "서울(인천)",
+        "airport": "ICN",
+        "date": "2026-10-10",
+        "time": "07:20"
+      },
+      "arrival": {
+        "city": "일로일로",
+        "airport": "ILO",
+        "date": "2026-10-13",
+        "time": "15:05"
+      },
+      "price": 531500,
+      "currency": "KRW",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D4528277%26depdt%3D2026-10-10%26arrdt%3D2026-10-13%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D4528277%26depdt%3D2026-10-10%26arrdt%3D2026-10-13%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "region": "동남아",
+      "duration": "08시간 45분",
+      "returnDeparture": "06:20",
+      "returnArrival": "19:15",
+      "returnDuration": "03시간 15분"
+    },
+    {
+      "id": "mrt-ICN-ISB-20260905-1408700",
       "source": "myrealtrip",
       "airline": "중국남방항공",
       "departure": {
@@ -21575,7 +21653,7 @@
         "date": "2026-09-11",
         "time": "19:35"
       },
-      "price": 907000,
+      "price": 1061000,
       "currency": "KRW",
       "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5937395%26depdt%3D2026-09-05%26arrdt%3D2026-09-11%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5937395%26depdt%3D2026-09-05%26arrdt%3D2026-09-11%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
@@ -21584,12 +21662,10 @@
       "returnDeparture": "09:40",
       "returnArrival": "17:00",
       "returnDuration": "22시간 05분",
-      "discountRate": 10,
-      "naverLowest": 881400,
-      "naverDiscount": -3
+      "discountRate": -5
     },
     {
-      "id": "mrt-ICN-ISG-20260915-348100",
+      "id": "mrt-ICN-ISG-20260915-467400",
       "source": "myrealtrip",
       "airline": "진에어",
       "departure": {
@@ -21604,7 +21680,7 @@
         "date": "2026-09-18",
         "time": "12:00"
       },
-      "price": 285700,
+      "price": 296900,
       "currency": "KRW",
       "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D4238569%26depdt%3D2026-09-15%26arrdt%3D2026-09-18%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D4238569%26depdt%3D2026-09-15%26arrdt%3D2026-09-18%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
@@ -21613,76 +21689,95 @@
       "returnDeparture": "13:00",
       "returnArrival": "15:45",
       "returnDuration": "02시간 45분",
-      "discountRate": 1,
-      "naverLowest": 277600,
-      "naverDiscount": -3
+      "discountRate": -3
     },
     {
-      "id": "mrt-ICN-JGN-20260827-830500",
+      "id": "mrt-ICN-IXC-20261013-937700",
       "source": "myrealtrip",
-      "airline": "중국동방항공",
+      "airline": "에어인디아",
       "departure": {
         "city": "서울(인천)",
         "airport": "ICN",
-        "date": "2026-08-27",
-        "time": "16:15"
+        "date": "2026-10-13",
+        "time": "12:20"
       },
       "arrival": {
-        "city": "자이위관",
-        "airport": "JGN",
-        "date": "2026-09-01",
-        "time": "19:10"
+        "city": "찬디가르",
+        "airport": "IXC",
+        "date": "2026-10-16",
+        "time": "20:55"
       },
-      "price": 850300,
+      "price": 1116100,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5902597%26depdt%3D2026-08-27%26arrdt%3D2026-09-01%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5902597%26depdt%3D2026-08-27%26arrdt%3D2026-09-01%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "region": "중국",
-      "duration": "27시간 55분",
-      "returnDeparture": "22:00",
-      "returnArrival": "14:50",
-      "returnDuration": "21시간 30분",
-      "discountRate": 8,
-      "naverLowest": 797400,
-      "naverDiscount": -7
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5905552%26depdt%3D2026-10-13%26arrdt%3D2026-10-16%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5905552%26depdt%3D2026-10-13%26arrdt%3D2026-10-16%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "region": "기타",
+      "duration": "12시간 05분",
+      "returnDeparture": "13:40",
+      "returnArrival": "10:40",
+      "returnDuration": "03시간 05분"
     },
     {
-      "id": "mrt-ICN-JJN-20260903-751000",
+      "id": "mrt-ICN-JJN-20261013-568700",
       "source": "myrealtrip",
       "airline": "산동항공",
       "departure": {
         "city": "서울(인천)",
         "airport": "ICN",
-        "date": "2026-09-03",
-        "time": "08:35"
+        "date": "2026-10-13",
+        "time": "11:45"
       },
       "arrival": {
         "city": "취안저우",
         "airport": "JJN",
-        "date": "2026-09-05",
+        "date": "2026-10-16",
         "time": "11:20"
       },
       "price": 364300,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5923902%26depdt%3D2026-09-03%26arrdt%3D2026-09-05%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5923902%26depdt%3D2026-09-03%26arrdt%3D2026-09-05%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5923902%26depdt%3D2026-10-13%26arrdt%3D2026-10-16%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5923902%26depdt%3D2026-10-13%26arrdt%3D2026-10-16%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "region": "중국",
-      "duration": "27시간 45분",
+      "duration": "24시간 35분",
       "returnDeparture": "12:05",
-      "returnArrival": "23:50",
-      "returnDuration": "21시간 50분",
-      "discountRate": -1,
-      "naverLowest": 330300,
-      "naverDiscount": -10
+      "returnArrival": "21:15",
+      "returnDuration": "18시간 40분",
+      "discountRate": -1
     },
     {
-      "id": "mrt-ICN-KHH-20260904-261250",
+      "id": "mrt-ICN-KHG-20261013-833800",
+      "source": "myrealtrip",
+      "airline": "중국동방항공",
+      "departure": {
+        "city": "서울(인천)",
+        "airport": "ICN",
+        "date": "2026-10-13",
+        "time": "08:30"
+      },
+      "arrival": {
+        "city": "카슈가르",
+        "airport": "KHG",
+        "date": "2026-10-17",
+        "time": "14:55"
+      },
+      "price": 1018100,
+      "currency": "KRW",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D4266388%26depdt%3D2026-10-13%26arrdt%3D2026-10-17%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D4266388%26depdt%3D2026-10-13%26arrdt%3D2026-10-17%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "region": "중국",
+      "duration": "31시간 25분",
+      "returnDeparture": "14:35",
+      "returnArrival": "11:55",
+      "returnDuration": "23시간 35분"
+    },
+    {
+      "id": "mrt-ICN-KHH-20260903-254250",
       "source": "myrealtrip",
       "airline": "티웨이항공",
       "departure": {
         "city": "서울(인천)",
         "airport": "ICN",
-        "date": "2026-09-04",
+        "date": "2026-09-03",
         "time": "13:05"
       },
       "arrival": {
@@ -21693,77 +21788,71 @@
       },
       "price": 240380,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3533248%26depdt%3D2026-09-04%26arrdt%3D2026-09-06%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3533248%26depdt%3D2026-09-04%26arrdt%3D2026-09-06%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3533248%26depdt%3D2026-09-03%26arrdt%3D2026-09-06%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3533248%26depdt%3D2026-09-03%26arrdt%3D2026-09-06%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "region": "중국",
       "duration": "03시간 05분",
       "returnDeparture": "16:10",
       "returnArrival": "20:00",
       "returnDuration": "02시간 50분",
-      "discountRate": -25,
-      "naverLowest": 233346,
-      "naverDiscount": -3
+      "discountRate": -25
     },
     {
-      "id": "mrt-ICN-KHN-20260904-397700",
+      "id": "mrt-ICN-KHN-20260908-396800",
       "source": "myrealtrip",
       "airline": "중국동방항공",
       "departure": {
         "city": "서울(인천)",
         "airport": "ICN",
-        "date": "2026-09-04",
+        "date": "2026-09-08",
         "time": "08:30"
       },
       "arrival": {
         "city": "난창",
         "airport": "KHN",
-        "date": "2026-09-07",
+        "date": "2026-09-12",
         "time": "15:45"
       },
       "price": 352000,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5929828%26depdt%3D2026-09-04%26arrdt%3D2026-09-07%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5929828%26depdt%3D2026-09-04%26arrdt%3D2026-09-07%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5929828%26depdt%3D2026-09-08%26arrdt%3D2026-09-12%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5929828%26depdt%3D2026-09-08%26arrdt%3D2026-09-12%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "region": "중국",
       "duration": "08시간 15분",
       "returnDeparture": "07:00",
       "returnArrival": "19:35",
-      "returnDuration": "05시간 10분",
-      "discountRate": -3,
-      "naverLowest": 316900,
-      "naverDiscount": -11
+      "returnDuration": "04시간 50분",
+      "discountRate": -3
     },
     {
-      "id": "mrt-ICN-KIJ-20260903-463900",
+      "id": "mrt-ICN-KIJ-20260826-583500",
       "source": "myrealtrip",
       "airline": "대한항공",
       "departure": {
         "city": "서울(인천)",
         "airport": "ICN",
-        "date": "2026-09-03",
-        "time": "09:40"
+        "date": "2026-08-26",
+        "time": "17:10"
       },
       "arrival": {
         "city": "니가타",
         "airport": "KIJ",
-        "date": "2026-09-07",
-        "time": "11:45"
+        "date": "2026-08-31",
+        "time": "19:20"
       },
-      "price": 282900,
+      "price": 284200,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3898457%26depdt%3D2026-09-03%26arrdt%3D2026-09-07%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3898457%26depdt%3D2026-09-03%26arrdt%3D2026-09-07%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3898457%26depdt%3D2026-08-26%26arrdt%3D2026-08-31%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3898457%26depdt%3D2026-08-26%26arrdt%3D2026-08-31%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "region": "일본",
-      "duration": "02시간 05분",
+      "duration": "02시간 10분",
       "returnDeparture": "20:20",
       "returnArrival": "22:40",
       "returnDuration": "02시간 20분",
-      "discountRate": 0,
-      "naverLowest": 263800,
-      "naverDiscount": -7
+      "discountRate": -4
     },
     {
-      "id": "mrt-ICN-KIX-20260916-277800",
+      "id": "mrt-ICN-KIX-20260916-340020",
       "source": "myrealtrip",
       "airline": "제주항공",
       "departure": {
@@ -21778,7 +21867,7 @@
         "date": "2026-09-22",
         "time": "09:05"
       },
-      "price": 156000,
+      "price": 155230,
       "currency": "KRW",
       "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531274%26depdt%3D2026-09-16%26arrdt%3D2026-09-22%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531274%26depdt%3D2026-09-16%26arrdt%3D2026-09-22%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
@@ -21787,181 +21876,222 @@
       "returnDeparture": "09:00",
       "returnArrival": "11:00",
       "returnDuration": "02시간 00분",
-      "discountRate": 5,
-      "naverLowest": 144200,
-      "naverDiscount": -8
+      "discountRate": 5
     },
     {
-      "id": "mrt-ICN-KKJ-20260901-193900",
+      "id": "mrt-ICN-KKJ-20260905-234600",
       "source": "myrealtrip",
       "airline": "진에어",
       "departure": {
         "city": "서울(인천)",
         "airport": "ICN",
-        "date": "2026-09-01",
+        "date": "2026-09-05",
         "time": "15:45"
       },
       "arrival": {
         "city": "기타큐슈",
         "airport": "KKJ",
-        "date": "2026-09-03",
+        "date": "2026-09-10",
         "time": "17:15"
       },
-      "price": 148900,
+      "price": 175300,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3536878%26depdt%3D2026-09-01%26arrdt%3D2026-09-03%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3536878%26depdt%3D2026-09-01%26arrdt%3D2026-09-03%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3536878%26depdt%3D2026-09-05%26arrdt%3D2026-09-10%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3536878%26depdt%3D2026-09-05%26arrdt%3D2026-09-10%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "region": "일본",
       "duration": "01시간 30분",
       "returnDeparture": "18:15",
       "returnArrival": "19:40",
       "returnDuration": "01시간 25분",
-      "discountRate": 0,
-      "naverLowest": 137300,
-      "naverDiscount": -8
+      "discountRate": -18
     },
     {
-      "id": "mrt-ICN-KMG-20260916-414300",
-      "source": "myrealtrip",
-      "airline": "중국남방항공",
-      "departure": {
-        "city": "서울(인천)",
-        "airport": "ICN",
-        "date": "2026-09-16",
-        "time": "09:40"
-      },
-      "arrival": {
-        "city": "쿤밍",
-        "airport": "KMG",
-        "date": "2026-09-21",
-        "time": "17:30"
-      },
-      "price": 302400,
-      "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3778711%26depdt%3D2026-09-16%26arrdt%3D2026-09-21%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3778711%26depdt%3D2026-09-16%26arrdt%3D2026-09-21%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "region": "중국",
-      "duration": "08시간 50분",
-      "returnDeparture": "15:00",
-      "returnArrival": "10:45",
-      "returnDuration": "02시간 35분",
-      "naverLowest": 296300,
-      "naverDiscount": -2
-    },
-    {
-      "id": "mrt-ICN-KMJ-20260907-290230",
-      "source": "myrealtrip",
-      "airline": "대한항공",
-      "departure": {
-        "city": "서울(인천)",
-        "airport": "ICN",
-        "date": "2026-09-07",
-        "time": "17:05"
-      },
-      "arrival": {
-        "city": "구마모토",
-        "airport": "KMJ",
-        "date": "2026-09-11",
-        "time": "18:35"
-      },
-      "price": 250400,
-      "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3555883%26depdt%3D2026-09-07%26arrdt%3D2026-09-11%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3555883%26depdt%3D2026-09-07%26arrdt%3D2026-09-11%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "region": "일본",
-      "duration": "01시간 30분",
-      "returnDeparture": "19:35",
-      "returnArrival": "21:20",
-      "returnDuration": "01시간 45분",
-      "discountRate": -4,
-      "naverLowest": 233200,
-      "naverDiscount": -7
-    },
-    {
-      "id": "mrt-ICN-KTM-20260822-1436400",
-      "source": "myrealtrip",
-      "airline": "중국동방항공",
-      "departure": {
-        "city": "서울(인천)",
-        "airport": "ICN",
-        "date": "2026-08-22",
-        "time": "07:45"
-      },
-      "arrival": {
-        "city": "카트만두",
-        "airport": "KTM",
-        "date": "2026-08-27",
-        "time": "15:35"
-      },
-      "price": 583600,
-      "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3565704%26depdt%3D2026-08-22%26arrdt%3D2026-08-27%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3565704%26depdt%3D2026-08-22%26arrdt%3D2026-08-27%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "region": "기타",
-      "duration": "11시간 05분",
-      "returnDeparture": "16:35",
-      "returnArrival": "22:45",
-      "returnDuration": "02시간 55분",
-      "naverLowest": 514295,
-      "naverDiscount": -13
-    },
-    {
-      "id": "mrt-ICN-KUL-20260910-559300",
-      "source": "myrealtrip",
-      "airline": "베트남항공",
-      "departure": {
-        "city": "서울(인천)",
-        "airport": "ICN",
-        "date": "2026-09-10",
-        "time": "17:55"
-      },
-      "arrival": {
-        "city": "쿠알라룸푸르",
-        "airport": "KUL",
-        "date": "2026-09-13",
-        "time": "18:25"
-      },
-      "price": 381100,
-      "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531367%26depdt%3D2026-09-10%26arrdt%3D2026-09-13%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531367%26depdt%3D2026-09-10%26arrdt%3D2026-09-13%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "region": "동남아",
-      "duration": "25시간 30분",
-      "returnDeparture": "19:25",
-      "returnArrival": "16:25",
-      "returnDuration": "18시간 05분",
-      "discountRate": 2
-    },
-    {
-      "id": "mrt-ICN-KWL-20261011-400500",
+      "id": "mrt-ICN-KMG-20260913-414300",
       "source": "myrealtrip",
       "airline": "산동항공",
       "departure": {
         "city": "서울(인천)",
         "airport": "ICN",
-        "date": "2026-10-11",
-        "time": "11:45"
+        "date": "2026-09-13",
+        "time": "12:15"
+      },
+      "arrival": {
+        "city": "쿤밍",
+        "airport": "KMG",
+        "date": "2026-09-19",
+        "time": "20:10"
+      },
+      "price": 372900,
+      "currency": "KRW",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3778711%26depdt%3D2026-09-13%26arrdt%3D2026-09-19%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3778711%26depdt%3D2026-09-13%26arrdt%3D2026-09-19%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "region": "중국",
+      "duration": "08시간 55분",
+      "returnDeparture": "21:15",
+      "returnArrival": "11:15",
+      "returnDuration": "03시간 20분"
+    },
+    {
+      "id": "mrt-ICN-KMI-20260830-451400",
+      "source": "myrealtrip",
+      "airline": "아시아나항공",
+      "departure": {
+        "city": "서울(인천)",
+        "airport": "ICN",
+        "date": "2026-08-30",
+        "time": "16:20"
+      },
+      "arrival": {
+        "city": "미야자키",
+        "airport": "KMI",
+        "date": "2026-09-02",
+        "time": "18:10"
+      },
+      "price": 201100,
+      "currency": "KRW",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3730541%26depdt%3D2026-08-30%26arrdt%3D2026-09-02%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3730541%26depdt%3D2026-08-30%26arrdt%3D2026-09-02%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "region": "일본",
+      "duration": "01시간 50분",
+      "returnDeparture": "12:30",
+      "returnArrival": "14:00",
+      "returnDuration": "01시간 30분",
+      "discountRate": -1
+    },
+    {
+      "id": "mrt-ICN-KMJ-20260818-385680",
+      "source": "myrealtrip",
+      "airline": "티웨이항공",
+      "departure": {
+        "city": "서울(인천)",
+        "airport": "ICN",
+        "date": "2026-08-18",
+        "time": "07:55"
+      },
+      "arrival": {
+        "city": "구마모토",
+        "airport": "KMJ",
+        "date": "2026-08-20",
+        "time": "09:25"
+      },
+      "price": 242100,
+      "currency": "KRW",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3555883%26depdt%3D2026-08-18%26arrdt%3D2026-08-20%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3555883%26depdt%3D2026-08-18%26arrdt%3D2026-08-20%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "region": "일본",
+      "duration": "01시간 30분",
+      "returnDeparture": "10:25",
+      "returnArrival": "12:00",
+      "returnDuration": "01시간 35분",
+      "discountRate": 3
+    },
+    {
+      "id": "mrt-ICN-KOA-20261002-1430000",
+      "source": "myrealtrip",
+      "airline": "항공사 제공요금",
+      "departure": {
+        "city": "서울(인천)",
+        "airport": "ICN",
+        "date": "2026-10-02",
+        "time": "01:20"
+      },
+      "arrival": {
+        "city": "코나",
+        "airport": "KOA",
+        "date": "2026-10-06",
+        "time": "19:27"
+      },
+      "price": 2774700,
+      "currency": "KRW",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3896365%26depdt%3D2026-10-02%26arrdt%3D2026-10-06%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3896365%26depdt%3D2026-10-02%26arrdt%3D2026-10-06%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "region": "미주",
+      "duration": "37시간 07분",
+      "returnDeparture": "22:21",
+      "returnArrival": "11:25",
+      "returnDuration": "42시간 04분"
+    },
+    {
+      "id": "mrt-ICN-KTI-20260908-622100",
+      "source": "myrealtrip",
+      "airline": "베트남항공",
+      "departure": {
+        "city": "서울(인천)",
+        "airport": "ICN",
+        "date": "2026-09-08",
+        "time": "10:35"
+      },
+      "arrival": {
+        "city": "크라티에",
+        "airport": "KTI",
+        "date": "2026-09-11",
+        "time": "16:55"
+      },
+      "price": 367700,
+      "currency": "KRW",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5891903%26depdt%3D2026-09-08%26arrdt%3D2026-09-11%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5891903%26depdt%3D2026-09-08%26arrdt%3D2026-09-11%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "region": "동남아",
+      "duration": "08시간 20분",
+      "returnDeparture": "14:10",
+      "returnArrival": "16:25",
+      "returnDuration": "02시간 20분"
+    },
+    {
+      "id": "mrt-ICN-KUL-20260915-393700",
+      "source": "myrealtrip",
+      "airline": "베트남항공",
+      "departure": {
+        "city": "서울(인천)",
+        "airport": "ICN",
+        "date": "2026-09-15",
+        "time": "10:05"
+      },
+      "arrival": {
+        "city": "쿠알라룸푸르",
+        "airport": "KUL",
+        "date": "2026-09-17",
+        "time": "19:00"
+      },
+      "price": 381200,
+      "currency": "KRW",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531367%26depdt%3D2026-09-15%26arrdt%3D2026-09-17%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531367%26depdt%3D2026-09-15%26arrdt%3D2026-09-17%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "region": "동남아",
+      "duration": "09시간 55분",
+      "returnDeparture": "19:25",
+      "returnArrival": "16:25",
+      "returnDuration": "02시간 10분",
+      "discountRate": 2
+    },
+    {
+      "id": "mrt-ICN-KWL-20260911-459500",
+      "source": "myrealtrip",
+      "airline": "산동항공",
+      "departure": {
+        "city": "서울(인천)",
+        "airport": "ICN",
+        "date": "2026-09-11",
+        "time": "08:35"
       },
       "arrival": {
         "city": "구이린",
         "airport": "KWL",
-        "date": "2026-10-15",
+        "date": "2026-09-13",
         "time": "17:50"
       },
       "price": 335300,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5912725%26depdt%3D2026-10-11%26arrdt%3D2026-10-15%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5912725%26depdt%3D2026-10-11%26arrdt%3D2026-10-15%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5912725%26depdt%3D2026-09-11%26arrdt%3D2026-09-13%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5912725%26depdt%3D2026-09-11%26arrdt%3D2026-09-13%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "region": "중국",
-      "duration": "07시간 05분",
-      "returnDeparture": "12:00",
-      "returnArrival": "20:45",
-      "returnDuration": "02시간 50분",
-      "naverLowest": 301900,
-      "naverDiscount": -11
+      "duration": "10시간 15분",
+      "returnDeparture": "16:25",
+      "returnArrival": "23:50",
+      "returnDuration": "06시간 00분"
     },
     {
-      "id": "mrt-ICN-LED-20260918-976600",
+      "id": "mrt-ICN-LED-20260918-893100",
       "source": "myrealtrip",
       "airline": "중국동방항공",
       "departure": {
@@ -21982,15 +22112,13 @@
       "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3899355%26depdt%3D2026-09-18%26arrdt%3D2026-09-22%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "region": "유럽",
       "duration": "32시간 55분",
-      "returnDeparture": "18:20",
-      "returnArrival": "13:30",
+      "returnDeparture": "21:05",
+      "returnArrival": "17:25",
       "returnDuration": "20시간 15분",
-      "discountRate": 23,
-      "naverLowest": 726000,
-      "naverDiscount": -9
+      "discountRate": 23
     },
     {
-      "id": "mrt-ICN-LJG-20260901-467500",
+      "id": "mrt-ICN-LJG-20260901-682500",
       "source": "myrealtrip",
       "airline": "산동항공",
       "departure": {
@@ -22002,24 +22130,48 @@
       "arrival": {
         "city": "리장",
         "airport": "LJG",
-        "date": "2026-09-07",
+        "date": "2026-09-03",
         "time": "17:55"
       },
       "price": 335300,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3780553%26depdt%3D2026-09-01%26arrdt%3D2026-09-07%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3780553%26depdt%3D2026-09-01%26arrdt%3D2026-09-07%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3780553%26depdt%3D2026-09-01%26arrdt%3D2026-09-03%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3780553%26depdt%3D2026-09-01%26arrdt%3D2026-09-03%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "region": "중국",
       "duration": "10시간 20분",
       "returnDeparture": "18:40",
-      "returnArrival": "10:45",
+      "returnArrival": "23:50",
       "returnDuration": "04시간 05분",
-      "discountRate": -2,
-      "naverLowest": 300300,
-      "naverDiscount": -12
+      "discountRate": -2
     },
     {
-      "id": "mrt-ICN-LXA-20260908-881100",
+      "id": "mrt-ICN-LPQ-20261013-785000",
+      "source": "myrealtrip",
+      "airline": "베트남항공",
+      "departure": {
+        "city": "서울(인천)",
+        "airport": "ICN",
+        "date": "2026-10-13",
+        "time": "18:05"
+      },
+      "arrival": {
+        "city": "루앙프라방",
+        "airport": "LPQ",
+        "date": "2026-10-19",
+        "time": "14:15"
+      },
+      "price": 454700,
+      "currency": "KRW",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3567284%26depdt%3D2026-10-13%26arrdt%3D2026-10-19%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3567284%26depdt%3D2026-10-13%26arrdt%3D2026-10-19%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "region": "동남아",
+      "duration": "22시간 10분",
+      "returnDeparture": "19:30",
+      "returnArrival": "16:35",
+      "returnDuration": "16시간 35분"
+    },
+    {
+      "id": "mrt-ICN-LXA-20260908-801400",
       "source": "myrealtrip",
       "airline": "상해항공",
       "departure": {
@@ -22043,40 +22195,10 @@
       "returnDeparture": "11:20",
       "returnArrival": "19:35",
       "returnDuration": "16시간 10분",
-      "discountRate": -5,
-      "naverLowest": 774000,
-      "naverDiscount": -5
+      "discountRate": -5
     },
     {
-      "id": "mrt-ICN-MDT-20260923-1362200",
-      "source": "myrealtrip",
-      "airline": "유나이티드항공",
-      "departure": {
-        "city": "서울(인천)",
-        "airport": "ICN",
-        "date": "2026-09-23",
-        "time": "11:30"
-      },
-      "arrival": {
-        "city": "해리스버그",
-        "airport": "MDT",
-        "date": "2026-09-29",
-        "time": "23:30"
-      },
-      "price": 1347600,
-      "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D6047781%26depdt%3D2026-09-23%26arrdt%3D2026-09-29%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D6047781%26depdt%3D2026-09-23%26arrdt%3D2026-09-29%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "region": "미주",
-      "duration": "25시간 00분",
-      "returnDeparture": "17:54",
-      "returnArrival": "15:20",
-      "returnDuration": "32시간 26분",
-      "naverLowest": 1236000,
-      "naverDiscount": -9
-    },
-    {
-      "id": "mrt-ICN-MFM-20260917-320000",
+      "id": "mrt-ICN-MFM-20260917-404300",
       "source": "myrealtrip",
       "airline": "제주항공",
       "departure": {
@@ -22100,12 +22222,10 @@
       "returnDeparture": "13:50",
       "returnArrival": "18:40",
       "returnDuration": "03시간 50분",
-      "discountRate": 9,
-      "naverLowest": 258300,
-      "naverDiscount": 7
+      "discountRate": 9
     },
     {
-      "id": "mrt-ICN-MLE-20260914-1238700",
+      "id": "mrt-ICN-MLE-20260914-1075700",
       "source": "myrealtrip",
       "airline": "중국동방항공",
       "departure": {
@@ -22120,19 +22240,19 @@
         "date": "2026-09-16",
         "time": "17:50"
       },
-      "price": 813900,
+      "price": 849800,
       "currency": "KRW",
       "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3532893%26depdt%3D2026-09-14%26arrdt%3D2026-09-16%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3532893%26depdt%3D2026-09-14%26arrdt%3D2026-09-16%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "region": "기타",
       "duration": "29시간 35분",
       "returnDeparture": "19:40",
-      "returnArrival": "15:20",
+      "returnArrival": "11:55",
       "returnDuration": "19시간 30분",
-      "discountRate": 6
+      "discountRate": 2
     },
     {
-      "id": "mrt-ICN-MNL-20260928-336300",
+      "id": "mrt-ICN-MNL-20260928-385800",
       "source": "myrealtrip",
       "airline": "제주항공",
       "departure": {
@@ -22147,7 +22267,7 @@
         "date": "2026-10-03",
         "time": "22:20"
       },
-      "price": 270200,
+      "price": 258300,
       "currency": "KRW",
       "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3567286%26depdt%3D2026-09-28%26arrdt%3D2026-10-03%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3567286%26depdt%3D2026-09-28%26arrdt%3D2026-10-03%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
@@ -22156,41 +22276,37 @@
       "returnDeparture": "23:20",
       "returnArrival": "04:30",
       "returnDuration": "04시간 10분",
-      "discountRate": -2,
-      "naverLowest": 254000,
-      "naverDiscount": -6
+      "discountRate": 3
     },
     {
-      "id": "mrt-ICN-MRY-20260909-1085400",
+      "id": "mrt-ICN-MYJ-20260819-449300",
       "source": "myrealtrip",
-      "airline": "유나이티드항공",
+      "airline": "제주항공",
       "departure": {
         "city": "서울(인천)",
         "airport": "ICN",
-        "date": "2026-09-09",
-        "time": "11:30"
+        "date": "2026-08-19",
+        "time": "07:00"
       },
       "arrival": {
-        "city": "몬터레이",
-        "airport": "MRY",
-        "date": "2026-09-15",
-        "time": "11:20"
+        "city": "마츠야마",
+        "airport": "MYJ",
+        "date": "2026-08-22",
+        "time": "08:35"
       },
-      "price": 1085400,
+      "price": 140440,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5947381%26depdt%3D2026-09-09%26arrdt%3D2026-09-15%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5947381%26depdt%3D2026-09-09%26arrdt%3D2026-09-15%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "region": "미주",
-      "duration": "15시간 50분",
-      "returnDeparture": "13:51",
-      "returnArrival": "04:20",
-      "returnDuration": "04시간 05분",
-      "discountRate": 4,
-      "naverLowest": 1036000,
-      "naverDiscount": -5
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3534304%26depdt%3D2026-08-19%26arrdt%3D2026-08-22%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3534304%26depdt%3D2026-08-19%26arrdt%3D2026-08-22%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "region": "일본",
+      "duration": "01시간 35분",
+      "returnDeparture": "15:50",
+      "returnArrival": "17:30",
+      "returnDuration": "01시간 40분",
+      "discountRate": 15
     },
     {
-      "id": "mrt-ICN-NGO-20260821-515800",
+      "id": "mrt-ICN-NGO-20260821-611400",
       "source": "myrealtrip",
       "airline": "진에어",
       "departure": {
@@ -22214,41 +22330,89 @@
       "returnDeparture": "19:00",
       "returnArrival": "21:05",
       "returnDuration": "02시간 05분",
-      "discountRate": 5,
-      "naverLowest": 213300,
-      "naverDiscount": -4
+      "discountRate": 5
     },
     {
-      "id": "mrt-ICN-NRT-20260917-279410",
+      "id": "mrt-ICN-NOU-20260909-1471800",
       "source": "myrealtrip",
-      "airline": "에어부산",
+      "airline": "콴타스항공",
       "departure": {
         "city": "서울(인천)",
         "airport": "ICN",
-        "date": "2026-09-17",
-        "time": "07:10"
+        "date": "2026-09-09",
+        "time": "15:10"
+      },
+      "arrival": {
+        "city": "누메아",
+        "airport": "NOU",
+        "date": "2026-09-13",
+        "time": "16:15"
+      },
+      "price": 1658400,
+      "currency": "KRW",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D6060532%26depdt%3D2026-09-09%26arrdt%3D2026-09-13%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D6060532%26depdt%3D2026-09-09%26arrdt%3D2026-09-13%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "region": "남태평양",
+      "duration": "23시간 05분",
+      "returnDeparture": "13:50",
+      "returnArrival": "00:25",
+      "returnDuration": "36시간 35분"
+    },
+    {
+      "id": "mrt-ICN-NRT-20260821-875000",
+      "source": "myrealtrip",
+      "airline": "제주항공",
+      "departure": {
+        "city": "서울(인천)",
+        "airport": "ICN",
+        "date": "2026-08-21",
+        "time": "15:00"
       },
       "arrival": {
         "city": "도쿄(나리타)",
         "airport": "NRT",
-        "date": "2026-09-22",
-        "time": "10:00"
+        "date": "2026-08-24",
+        "time": "17:30"
       },
-      "price": 212300,
+      "price": 226650,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531201%26depdt%3D2026-09-17%26arrdt%3D2026-09-22%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531201%26depdt%3D2026-09-17%26arrdt%3D2026-09-22%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531201%26depdt%3D2026-08-21%26arrdt%3D2026-08-24%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531201%26depdt%3D2026-08-21%26arrdt%3D2026-08-24%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "region": "일본",
-      "duration": "02시간 50분",
-      "returnDeparture": "19:55",
-      "returnArrival": "22:35",
-      "returnDuration": "02시간 40분",
-      "discountRate": 4,
-      "naverLowest": 196600,
-      "naverDiscount": -8
+      "duration": "02시간 30분",
+      "returnDeparture": "17:15",
+      "returnArrival": "20:10",
+      "returnDuration": "02시간 55분",
+      "discountRate": -3
     },
     {
-      "id": "mrt-ICN-OIT-20260818-428800",
+      "id": "mrt-ICN-OGG-20261001-1430000",
+      "source": "myrealtrip",
+      "airline": "알래스카항공",
+      "departure": {
+        "city": "서울(인천)",
+        "airport": "ICN",
+        "date": "2026-10-01",
+        "time": "19:35"
+      },
+      "arrival": {
+        "city": "마우이",
+        "airport": "OGG",
+        "date": "2026-10-06",
+        "time": "22:14"
+      },
+      "price": 1248800,
+      "currency": "KRW",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3624108%26depdt%3D2026-10-01%26arrdt%3D2026-10-06%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3624108%26depdt%3D2026-10-01%26arrdt%3D2026-10-06%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "region": "미주",
+      "duration": "21시간 39분",
+      "returnDeparture": "21:29",
+      "returnArrival": "17:30",
+      "returnDuration": "05시간 19분"
+    },
+    {
+      "id": "mrt-ICN-OIT-20260818-1071600",
       "source": "myrealtrip",
       "airline": "제주항공",
       "departure": {
@@ -22272,12 +22436,10 @@
       "returnDeparture": "12:45",
       "returnArrival": "14:35",
       "returnDuration": "01시간 50분",
-      "discountRate": 7,
-      "naverLowest": 188300,
-      "naverDiscount": -4
+      "discountRate": 7
     },
     {
-      "id": "mrt-ICN-OKA-20260916-395800",
+      "id": "mrt-ICN-OKA-20260916-434900",
       "source": "myrealtrip",
       "airline": "이스타항공",
       "departure": {
@@ -22301,41 +22463,10 @@
       "returnDeparture": "11:30",
       "returnArrival": "14:05",
       "returnDuration": "02시간 35분",
-      "discountRate": 3,
-      "naverLowest": 184400,
-      "naverDiscount": -10
+      "discountRate": 3
     },
     {
-      "id": "mrt-ICN-OKJ-20260823-671500",
-      "source": "myrealtrip",
-      "airline": "대한항공",
-      "departure": {
-        "city": "서울(인천)",
-        "airport": "ICN",
-        "date": "2026-08-23",
-        "time": "10:35"
-      },
-      "arrival": {
-        "city": "오카야마",
-        "airport": "OKJ",
-        "date": "2026-08-26",
-        "time": "12:15"
-      },
-      "price": 243900,
-      "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3536403%26depdt%3D2026-08-23%26arrdt%3D2026-08-26%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3536403%26depdt%3D2026-08-23%26arrdt%3D2026-08-26%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "region": "일본",
-      "duration": "01시간 40분",
-      "returnDeparture": "13:15",
-      "returnArrival": "14:55",
-      "returnDuration": "01시간 40분",
-      "discountRate": -1,
-      "naverLowest": 227000,
-      "naverDiscount": -7
-    },
-    {
-      "id": "mrt-ICN-ONT-20260917-1266900",
+      "id": "mrt-ICN-ONT-20260917-1291100",
       "source": "myrealtrip",
       "airline": "유나이티드항공",
       "departure": {
@@ -22358,12 +22489,10 @@
       "duration": "16시간 42분",
       "returnDeparture": "06:08",
       "returnArrival": "15:00",
-      "returnDuration": "04시간 27분",
-      "naverLowest": 901000,
-      "naverDiscount": -9
+      "returnDuration": "04시간 27분"
     },
     {
-      "id": "mrt-ICN-OSA-20260831-436000",
+      "id": "mrt-ICN-OSA-20260831-375800",
       "source": "myrealtrip",
       "airline": "에어부산",
       "departure": {
@@ -22375,80 +22504,74 @@
       "arrival": {
         "city": "오사카",
         "airport": "OSA",
-        "date": "2026-09-03",
+        "date": "2026-09-05",
         "time": "17:00"
       },
       "price": 161800,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531255%26depdt%3D2026-08-31%26arrdt%3D2026-09-03%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531255%26depdt%3D2026-08-31%26arrdt%3D2026-09-03%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531255%26depdt%3D2026-08-31%26arrdt%3D2026-09-05%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531255%26depdt%3D2026-08-31%26arrdt%3D2026-09-05%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "region": "일본",
       "duration": "02시간 10분",
       "returnDeparture": "12:50",
       "returnArrival": "15:00",
       "returnDuration": "02시간 10분",
-      "discountRate": -1,
-      "naverLowest": 150862,
-      "naverDiscount": -7
+      "discountRate": -1
     },
     {
-      "id": "mrt-ICN-PEN-20261008-516800",
-      "source": "myrealtrip",
-      "airline": "캐세이퍼시픽항공",
-      "departure": {
-        "city": "서울(인천)",
-        "airport": "ICN",
-        "date": "2026-10-08",
-        "time": "01:55"
-      },
-      "arrival": {
-        "city": "페낭",
-        "airport": "PEN",
-        "date": "2026-10-10",
-        "time": "12:00"
-      },
-      "price": 687500,
-      "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D4224719%26depdt%3D2026-10-08%26arrdt%3D2026-10-10%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D4224719%26depdt%3D2026-10-08%26arrdt%3D2026-10-10%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "region": "동남아",
-      "duration": "11시간 05분",
-      "returnDeparture": "07:30",
-      "returnArrival": "19:05",
-      "returnDuration": "03시간 30분",
-      "naverLowest": 623600,
-      "naverDiscount": -10
-    },
-    {
-      "id": "mrt-ICN-PNQ-20260823-731700",
+      "id": "mrt-ICN-PAT-20260825-809600",
       "source": "myrealtrip",
       "airline": "에어인디아",
       "departure": {
         "city": "서울(인천)",
         "airport": "ICN",
-        "date": "2026-08-23",
-        "time": "12:30"
+        "date": "2026-08-25",
+        "time": "12:35"
+      },
+      "arrival": {
+        "city": "파트나",
+        "airport": "PAT",
+        "date": "2026-08-29",
+        "time": "07:15"
+      },
+      "price": 709500,
+      "currency": "KRW",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5896464%26depdt%3D2026-08-25%26arrdt%3D2026-08-29%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5896464%26depdt%3D2026-08-25%26arrdt%3D2026-08-29%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "region": "기타",
+      "duration": "22시간 10분",
+      "returnDeparture": "15:20",
+      "returnArrival": "11:00",
+      "returnDuration": "13시간 00분"
+    },
+    {
+      "id": "mrt-ICN-PNQ-20260829-907500",
+      "source": "myrealtrip",
+      "airline": "에어인디아",
+      "departure": {
+        "city": "서울(인천)",
+        "airport": "ICN",
+        "date": "2026-08-29",
+        "time": "12:35"
       },
       "arrival": {
         "city": "푸네",
         "airport": "PNQ",
-        "date": "2026-08-28",
+        "date": "2026-09-04",
         "time": "03:10"
       },
       "price": 709000,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5915921%26depdt%3D2026-08-23%26arrdt%3D2026-08-28%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5915921%26depdt%3D2026-08-23%26arrdt%3D2026-08-28%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5915921%26depdt%3D2026-08-29%26arrdt%3D2026-09-04%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5915921%26depdt%3D2026-08-29%26arrdt%3D2026-09-04%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "region": "기타",
-      "duration": "18시간 10분",
-      "returnDeparture": "01:20",
-      "returnArrival": "11:05",
-      "returnDuration": "30시간 15분",
-      "naverLowest": 653000,
-      "naverDiscount": -9
+      "duration": "18시간 05분",
+      "returnDeparture": "03:45",
+      "returnArrival": "10:40",
+      "returnDuration": "27시간 25분"
     },
     {
-      "id": "mrt-ICN-POM-20261003-1438300",
+      "id": "mrt-ICN-POM-20261003-1446700",
       "source": "myrealtrip",
       "airline": "필리핀항공",
       "departure": {
@@ -22472,12 +22595,10 @@
       "returnDeparture": "09:05",
       "returnArrival": "19:15",
       "returnDuration": "13시간 50분",
-      "discountRate": 25,
-      "naverLowest": 1240900,
-      "naverDiscount": -8
+      "discountRate": 25
     },
     {
-      "id": "mrt-ICN-PQC-20260915-427200",
+      "id": "mrt-ICN-PQC-20260915-427850",
       "source": "myrealtrip",
       "airline": "제주항공",
       "departure": {
@@ -22492,7 +22613,7 @@
         "date": "2026-09-21",
         "time": "21:25"
       },
-      "price": 244500,
+      "price": 239340,
       "currency": "KRW",
       "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531359%26depdt%3D2026-09-15%26arrdt%3D2026-09-21%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531359%26depdt%3D2026-09-15%26arrdt%3D2026-09-21%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
@@ -22501,12 +22622,10 @@
       "returnDeparture": "22:25",
       "returnArrival": "06:05",
       "returnDuration": "05시간 40분",
-      "discountRate": -4,
-      "naverLowest": 221400,
-      "naverDiscount": -10
+      "discountRate": -2
     },
     {
-      "id": "mrt-ICN-PSP-20260910-990000",
+      "id": "mrt-ICN-PSP-20260910-986000",
       "source": "myrealtrip",
       "airline": "유나이티드항공",
       "departure": {
@@ -22530,144 +22649,160 @@
       "returnDeparture": "06:00",
       "returnArrival": "15:00",
       "returnDuration": "02시간 26분",
-      "discountRate": 0,
-      "naverLowest": 901000,
-      "naverDiscount": -9
+      "discountRate": 0
     },
     {
-      "id": "mrt-ICN-PVG-20260909-294900",
+      "id": "mrt-ICN-PVG-20260911-480600",
       "source": "myrealtrip",
       "airline": "중국남방항공",
       "departure": {
         "city": "서울(인천)",
         "airport": "ICN",
-        "date": "2026-09-09",
+        "date": "2026-09-11",
         "time": "11:45"
       },
       "arrival": {
         "city": "상하이(푸동)",
         "airport": "PVG",
-        "date": "2026-09-15",
-        "time": "17:40"
+        "date": "2026-09-17",
+        "time": "22:35"
       },
       "price": 264100,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531409%26depdt%3D2026-09-09%26arrdt%3D2026-09-15%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531409%26depdt%3D2026-09-09%26arrdt%3D2026-09-15%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531409%26depdt%3D2026-09-11%26arrdt%3D2026-09-17%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531409%26depdt%3D2026-09-11%26arrdt%3D2026-09-17%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "region": "중국",
-      "duration": "06시간 55분",
+      "duration": "11시간 50분",
       "returnDeparture": "07:50",
       "returnArrival": "18:20",
-      "returnDuration": "02시간 15분",
-      "naverLowest": 257800,
-      "naverDiscount": -2
+      "returnDuration": "07시간 15분"
     },
     {
-      "id": "mrt-ICN-RGN-20260916-571400",
+      "id": "mrt-ICN-RGN-20260907-588600",
       "source": "myrealtrip",
       "airline": "중국남방항공",
       "departure": {
         "city": "서울(인천)",
         "airport": "ICN",
-        "date": "2026-09-16",
+        "date": "2026-09-07",
         "time": "09:40"
       },
       "arrival": {
         "city": "양곤",
         "airport": "RGN",
-        "date": "2026-09-19",
+        "date": "2026-09-09",
         "time": "17:10"
       },
       "price": 574400,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3756221%26depdt%3D2026-09-16%26arrdt%3D2026-09-19%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3756221%26depdt%3D2026-09-16%26arrdt%3D2026-09-19%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3756221%26depdt%3D2026-09-07%26arrdt%3D2026-09-09%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3756221%26depdt%3D2026-09-07%26arrdt%3D2026-09-09%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "region": "동남아",
       "duration": "10시간 00분",
       "returnDeparture": "18:15",
-      "returnArrival": "13:55",
+      "returnArrival": "21:50",
       "returnDuration": "02시간 40분",
-      "discountRate": -1,
-      "naverLowest": 531800,
-      "naverDiscount": -8
+      "discountRate": -1
     },
     {
-      "id": "mrt-ICN-SAI-20260907-580800",
+      "id": "mrt-ICN-SAI-20260827-803200",
       "source": "myrealtrip",
       "airline": "중국동방항공",
       "departure": {
         "city": "서울(인천)",
         "airport": "ICN",
-        "date": "2026-09-07",
-        "time": "16:15"
+        "date": "2026-08-27",
+        "time": "12:55"
       },
       "arrival": {
         "city": "시엠립",
         "airport": "SAI",
-        "date": "2026-09-11",
+        "date": "2026-09-02",
         "time": "20:10"
       },
       "price": 525600,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3756216%26depdt%3D2026-09-07%26arrdt%3D2026-09-11%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3756216%26depdt%3D2026-09-07%26arrdt%3D2026-09-11%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3756216%26depdt%3D2026-08-27%26arrdt%3D2026-09-02%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3756216%26depdt%3D2026-08-27%26arrdt%3D2026-09-02%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "region": "동남아",
-      "duration": "53시간 55분",
+      "duration": "33시간 15분",
       "returnDeparture": "21:10",
-      "returnArrival": "20:40",
-      "returnDuration": "21시간 30분",
-      "naverLowest": 437280,
-      "naverDiscount": -20
+      "returnArrival": "15:10",
+      "returnDuration": "16시간 00분"
     },
     {
-      "id": "mrt-ICN-SDJ-20260907-632700",
+      "id": "mrt-ICN-SCE-20260923-1362800",
+      "source": "myrealtrip",
+      "airline": "유나이티드항공",
+      "departure": {
+        "city": "서울(인천)",
+        "airport": "ICN",
+        "date": "2026-09-23",
+        "time": "11:30"
+      },
+      "arrival": {
+        "city": "스테이트칼리지",
+        "airport": "SCE",
+        "date": "2026-09-26",
+        "time": "23:44"
+      },
+      "price": 1280400,
+      "currency": "KRW",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5985042%26depdt%3D2026-09-23%26arrdt%3D2026-09-26%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5985042%26depdt%3D2026-09-23%26arrdt%3D2026-09-26%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "region": "미주",
+      "duration": "25시간 14분",
+      "returnDeparture": "17:57",
+      "returnArrival": "15:00",
+      "returnDuration": "32시간 03분"
+    },
+    {
+      "id": "mrt-ICN-SDJ-20260902-661100",
       "source": "myrealtrip",
       "airline": "아시아나항공",
       "departure": {
         "city": "서울(인천)",
         "airport": "ICN",
-        "date": "2026-09-07",
+        "date": "2026-09-02",
         "time": "09:35"
       },
       "arrival": {
         "city": "센다이",
         "airport": "SDJ",
-        "date": "2026-09-09",
+        "date": "2026-09-08",
         "time": "11:45"
       },
       "price": 295600,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3543171%26depdt%3D2026-09-07%26arrdt%3D2026-09-09%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3543171%26depdt%3D2026-09-07%26arrdt%3D2026-09-09%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3543171%26depdt%3D2026-09-02%26arrdt%3D2026-09-08%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3543171%26depdt%3D2026-09-02%26arrdt%3D2026-09-08%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "region": "일본",
       "duration": "02시간 10분",
       "returnDeparture": "12:45",
       "returnArrival": "15:10",
       "returnDuration": "02시간 25분",
-      "discountRate": -1,
-      "naverLowest": 275296,
-      "naverDiscount": -7
+      "discountRate": -1
     },
     {
-      "id": "mrt-ICN-SGN-20260904-371700",
+      "id": "mrt-ICN-SGN-20260927-404500",
       "source": "myrealtrip",
       "airline": "썬푸꾸옥항공",
       "departure": {
         "city": "서울(인천)",
         "airport": "ICN",
-        "date": "2026-09-04",
+        "date": "2026-09-27",
         "time": "00:10"
       },
       "arrival": {
         "city": "호치민",
         "airport": "SGN",
-        "date": "2026-09-07",
+        "date": "2026-09-30",
         "time": "03:35"
       },
       "price": 204500,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3533892%26depdt%3D2026-09-04%26arrdt%3D2026-09-07%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3533892%26depdt%3D2026-09-04%26arrdt%3D2026-09-07%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3533892%26depdt%3D2026-09-27%26arrdt%3D2026-09-30%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3533892%26depdt%3D2026-09-27%26arrdt%3D2026-09-30%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "region": "동남아",
       "duration": "05시간 25분",
       "returnDeparture": "15:25",
@@ -22676,36 +22811,7 @@
       "discountRate": 1
     },
     {
-      "id": "mrt-ICN-SHE-20261010-387670",
-      "source": "myrealtrip",
-      "airline": "중국남방항공",
-      "departure": {
-        "city": "서울(인천)",
-        "airport": "ICN",
-        "date": "2026-10-10",
-        "time": "11:45"
-      },
-      "arrival": {
-        "city": "선양",
-        "airport": "SHE",
-        "date": "2026-10-14",
-        "time": "12:45"
-      },
-      "price": 199600,
-      "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3756222%26depdt%3D2026-10-10%26arrdt%3D2026-10-14%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3756222%26depdt%3D2026-10-10%26arrdt%3D2026-10-14%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "region": "중국",
-      "duration": "02시간 00분",
-      "returnDeparture": "09:00",
-      "returnArrival": "11:45",
-      "returnDuration": "01시간 45분",
-      "discountRate": 30,
-      "naverLowest": 199600,
-      "naverDiscount": 0
-    },
-    {
-      "id": "mrt-ICN-SIN-20260916-349800",
+      "id": "mrt-ICN-SIN-20260916-415400",
       "source": "myrealtrip",
       "airline": "제주항공",
       "departure": {
@@ -22720,7 +22826,7 @@
         "date": "2026-09-20",
         "time": "23:40"
       },
-      "price": 271300,
+      "price": 262100,
       "currency": "KRW",
       "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531395%26depdt%3D2026-09-16%26arrdt%3D2026-09-20%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531395%26depdt%3D2026-09-16%26arrdt%3D2026-09-20%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
@@ -22729,241 +22835,275 @@
       "returnDeparture": "00:50",
       "returnArrival": "08:40",
       "returnDuration": "06시간 50분",
-      "discountRate": -5,
-      "naverLowest": 243000,
-      "naverDiscount": -12
+      "discountRate": -2
     },
     {
-      "id": "mrt-ICN-SXR-20260915-1059900",
+      "id": "mrt-ICN-SOC-20260902-1009000",
       "source": "myrealtrip",
-      "airline": "에어인디아",
+      "airline": "가루다인도네시아",
       "departure": {
         "city": "서울(인천)",
         "airport": "ICN",
-        "date": "2026-09-15",
-        "time": "12:20"
+        "date": "2026-09-02",
+        "time": "10:35"
       },
       "arrival": {
-        "city": "스리나가르",
-        "airport": "SXR",
-        "date": "2026-09-17",
-        "time": "08:00"
+        "city": "솔로",
+        "airport": "SOC",
+        "date": "2026-09-07",
+        "time": "10:00"
       },
-      "price": 770400,
+      "price": 842800,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5905142%26depdt%3D2026-09-15%26arrdt%3D2026-09-17%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5905142%26depdt%3D2026-09-15%26arrdt%3D2026-09-17%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "region": "기타",
-      "duration": "23시간 10분",
-      "returnDeparture": "16:30",
-      "returnArrival": "10:40",
-      "returnDuration": "13시간 40분",
-      "discountRate": 19,
-      "naverLowest": 687700,
-      "naverDiscount": -12
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D6060547%26depdt%3D2026-09-02%26arrdt%3D2026-09-07%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D6060547%26depdt%3D2026-09-02%26arrdt%3D2026-09-07%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "region": "동남아",
+      "duration": "25시간 25분",
+      "returnDeparture": "15:55",
+      "returnArrival": "08:30",
+      "returnDuration": "17시간 05분"
     },
     {
-      "id": "mrt-ICN-SYX-20260917-371600",
+      "id": "mrt-ICN-SPN-20260926-455270",
+      "source": "myrealtrip",
+      "airline": "더 저렴한 항공권",
+      "departure": {
+        "city": "서울(인천)",
+        "airport": "ICN",
+        "date": "2026-09-26",
+        "time": "20:20"
+      },
+      "arrival": {
+        "city": "사이판",
+        "airport": "SPN",
+        "date": "2026-10-02",
+        "time": "02:00"
+      },
+      "price": 239830,
+      "currency": "KRW",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3533022%26depdt%3D2026-09-26%26arrdt%3D2026-10-02%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3533022%26depdt%3D2026-09-26%26arrdt%3D2026-10-02%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "region": "남태평양",
+      "duration": "04시간 40분",
+      "returnDeparture": "03:05",
+      "returnArrival": "06:50",
+      "returnDuration": "04시간 45분",
+      "discountRate": 1
+    },
+    {
+      "id": "mrt-ICN-SRG-20260909-855700",
+      "source": "myrealtrip",
+      "airline": "타이항공",
+      "departure": {
+        "city": "서울(인천)",
+        "airport": "ICN",
+        "date": "2026-09-09",
+        "time": "09:35"
+      },
+      "arrival": {
+        "city": "스마랑",
+        "airport": "SRG",
+        "date": "2026-09-14",
+        "time": "08:45"
+      },
+      "price": 835400,
+      "currency": "KRW",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5964370%26depdt%3D2026-09-09%26arrdt%3D2026-09-14%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5964370%26depdt%3D2026-09-09%26arrdt%3D2026-09-14%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "region": "동남아",
+      "duration": "25시간 10분",
+      "returnDeparture": "09:30",
+      "returnArrival": "06:55",
+      "returnDuration": "19시간 25분"
+    },
+    {
+      "id": "mrt-ICN-SYX-20260911-614900",
       "source": "myrealtrip",
       "airline": "산동항공",
       "departure": {
         "city": "서울(인천)",
         "airport": "ICN",
-        "date": "2026-09-17",
+        "date": "2026-09-11",
         "time": "08:35"
       },
       "arrival": {
         "city": "싼야",
         "airport": "SYX",
-        "date": "2026-09-19",
+        "date": "2026-09-16",
         "time": "14:10"
       },
       "price": 338500,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3827850%26depdt%3D2026-09-17%26arrdt%3D2026-09-19%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3827850%26depdt%3D2026-09-17%26arrdt%3D2026-09-19%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3827850%26depdt%3D2026-09-11%26arrdt%3D2026-09-16%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3827850%26depdt%3D2026-09-11%26arrdt%3D2026-09-16%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "region": "중국",
       "duration": "06시간 35분",
       "returnDeparture": "15:10",
       "returnArrival": "22:40",
-      "returnDuration": "06시간 30분",
-      "naverLowest": 303600,
-      "naverDiscount": -11
+      "returnDuration": "06시간 30분"
     },
     {
-      "id": "mrt-ICN-SZX-20260911-407200",
+      "id": "mrt-ICN-SZX-20260918-405400",
       "source": "myrealtrip",
       "airline": "아시아나항공",
       "departure": {
         "city": "서울(인천)",
         "airport": "ICN",
-        "date": "2026-09-11",
+        "date": "2026-09-18",
         "time": "22:10"
       },
       "arrival": {
         "city": "선전",
         "airport": "SZX",
-        "date": "2026-09-17",
+        "date": "2026-09-24",
         "time": "01:15"
       },
       "price": 291900,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3612790%26depdt%3D2026-09-11%26arrdt%3D2026-09-17%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3612790%26depdt%3D2026-09-11%26arrdt%3D2026-09-17%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3612790%26depdt%3D2026-09-18%26arrdt%3D2026-09-24%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3612790%26depdt%3D2026-09-18%26arrdt%3D2026-09-24%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "region": "중국",
       "duration": "04시간 05분",
       "returnDeparture": "02:30",
       "returnArrival": "07:00",
       "returnDuration": "03시간 30분",
-      "discountRate": -3,
-      "naverLowest": 271200,
-      "naverDiscount": -8
+      "discountRate": -3
     },
     {
-      "id": "mrt-ICN-TAC-20260918-664300",
-      "source": "myrealtrip",
-      "airline": "필리핀항공",
-      "departure": {
-        "city": "서울(인천)",
-        "airport": "ICN",
-        "date": "2026-09-18",
-        "time": "20:30"
-      },
-      "arrival": {
-        "city": "타클로반",
-        "airport": "TAC",
-        "date": "2026-09-24",
-        "time": "05:40"
-      },
-      "price": 423300,
-      "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5889927%26depdt%3D2026-09-18%26arrdt%3D2026-09-24%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5889927%26depdt%3D2026-09-18%26arrdt%3D2026-09-24%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "region": "동남아",
-      "duration": "10시간 10분",
-      "returnDeparture": "18:55",
-      "returnArrival": "06:00",
-      "returnDuration": "04시간 35분",
-      "naverLowest": 385130,
-      "naverDiscount": -10
-    },
-    {
-      "id": "mrt-ICN-TAG-20260927-418430",
+      "id": "mrt-ICN-TAG-20260929-480700",
       "source": "myrealtrip",
       "airline": "제주항공",
       "departure": {
         "city": "서울(인천)",
         "airport": "ICN",
-        "date": "2026-09-27",
+        "date": "2026-09-29",
         "time": "21:30"
       },
       "arrival": {
         "city": "보홀",
         "airport": "TAG",
-        "date": "2026-09-30",
+        "date": "2026-10-02",
         "time": "01:15"
       },
-      "price": 248100,
+      "price": 244500,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531327%26depdt%3D2026-09-27%26arrdt%3D2026-09-30%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531327%26depdt%3D2026-09-27%26arrdt%3D2026-09-30%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531327%26depdt%3D2026-09-29%26arrdt%3D2026-10-02%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531327%26depdt%3D2026-09-29%26arrdt%3D2026-10-02%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "region": "동남아",
       "duration": "04시간 45분",
       "returnDeparture": "02:15",
       "returnArrival": "07:50",
       "returnDuration": "04시간 35분",
-      "discountRate": -17,
-      "naverLowest": 234700,
-      "naverDiscount": -6
+      "discountRate": -15
     },
     {
-      "id": "mrt-ICN-TAK-20260919-249400",
+      "id": "mrt-ICN-TAK-20260920-289400",
       "source": "myrealtrip",
-      "airline": "진에어",
+      "airline": "에어서울",
       "departure": {
         "city": "서울(인천)",
         "airport": "ICN",
-        "date": "2026-09-19",
-        "time": "15:10"
+        "date": "2026-09-20",
+        "time": "08:45"
       },
       "arrival": {
         "city": "다카마쓰",
         "airport": "TAK",
-        "date": "2026-09-23",
-        "time": "16:55"
+        "date": "2026-09-24",
+        "time": "10:30"
       },
-      "price": 159600,
+      "price": 165100,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531273%26depdt%3D2026-09-19%26arrdt%3D2026-09-23%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531273%26depdt%3D2026-09-19%26arrdt%3D2026-09-23%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531273%26depdt%3D2026-09-20%26arrdt%3D2026-09-24%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531273%26depdt%3D2026-09-20%26arrdt%3D2026-09-24%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "region": "일본",
       "duration": "01시간 45분",
-      "returnDeparture": "17:15",
-      "returnArrival": "18:55",
+      "returnDeparture": "11:40",
+      "returnArrival": "13:20",
       "returnDuration": "01시간 40분",
-      "discountRate": -8,
-      "naverLowest": 137680,
-      "naverDiscount": -16
+      "discountRate": -12
     },
     {
-      "id": "mrt-ICN-TAO-20260918-246200",
+      "id": "mrt-ICN-TAO-20260916-132400",
       "source": "myrealtrip",
       "airline": "진에어",
       "departure": {
         "city": "서울(인천)",
         "airport": "ICN",
-        "date": "2026-09-18",
+        "date": "2026-09-16",
         "time": "07:15"
       },
       "arrival": {
         "city": "칭다오",
         "airport": "TAO",
-        "date": "2026-09-22",
+        "date": "2026-09-19",
         "time": "07:55"
       },
       "price": 207300,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3539921%26depdt%3D2026-09-18%26arrdt%3D2026-09-22%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3539921%26depdt%3D2026-09-18%26arrdt%3D2026-09-22%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3539921%26depdt%3D2026-09-16%26arrdt%3D2026-09-19%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3539921%26depdt%3D2026-09-16%26arrdt%3D2026-09-19%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "region": "중국",
       "duration": "01시간 40분",
       "returnDeparture": "09:00",
       "returnArrival": "11:35",
       "returnDuration": "01시간 35분",
-      "discountRate": -10,
-      "naverLowest": 194274,
-      "naverDiscount": -7
+      "discountRate": -10
     },
     {
-      "id": "mrt-ICN-TFU-20260911-405300",
+      "id": "mrt-ICN-TAS-20260907-1104200",
+      "source": "myrealtrip",
+      "airline": "중국국제항공",
+      "departure": {
+        "city": "서울(인천)",
+        "airport": "ICN",
+        "date": "2026-09-07",
+        "time": "15:30"
+      },
+      "arrival": {
+        "city": "타슈켄트",
+        "airport": "TAS",
+        "date": "2026-09-12",
+        "time": "19:40"
+      },
+      "price": 737600,
+      "currency": "KRW",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3544570%26depdt%3D2026-09-07%26arrdt%3D2026-09-12%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3544570%26depdt%3D2026-09-07%26arrdt%3D2026-09-12%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "region": "기타",
+      "duration": "32시간 10분",
+      "returnDeparture": "21:00",
+      "returnArrival": "14:15",
+      "returnDuration": "23시간 05분"
+    },
+    {
+      "id": "mrt-ICN-TFU-20260915-374000",
       "source": "myrealtrip",
       "airline": "중국동방항공",
       "departure": {
         "city": "서울(인천)",
         "airport": "ICN",
-        "date": "2026-09-11",
-        "time": "15:55"
+        "date": "2026-09-15",
+        "time": "12:00"
       },
       "arrival": {
         "city": "청두",
         "airport": "TFU",
-        "date": "2026-09-15",
-        "time": "09:50"
+        "date": "2026-09-17",
+        "time": "23:05"
       },
-      "price": 306400,
+      "price": 311200,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3562945%26depdt%3D2026-09-11%26arrdt%3D2026-09-15%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3562945%26depdt%3D2026-09-11%26arrdt%3D2026-09-15%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3562945%26depdt%3D2026-09-15%26arrdt%3D2026-09-17%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3562945%26depdt%3D2026-09-15%26arrdt%3D2026-09-17%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "region": "중국",
-      "duration": "18시간 55분",
+      "duration": "12시간 05분",
       "returnDeparture": "12:55",
       "returnArrival": "21:05",
-      "returnDuration": "14시간 40분",
-      "naverLowest": 255495,
-      "naverDiscount": -20
+      "returnDuration": "07시간 30분"
     },
     {
-      "id": "mrt-ICN-THD-20260907-1033800",
+      "id": "mrt-ICN-THD-20260907-916400",
       "source": "myrealtrip",
       "airline": "베트남항공",
       "departure": {
@@ -22987,12 +23127,36 @@
       "returnDeparture": "22:25",
       "returnArrival": "16:25",
       "returnDuration": "06시간 05분",
-      "discountRate": 25,
-      "naverLowest": 350700,
-      "naverDiscount": -8
+      "discountRate": 25
     },
     {
-      "id": "mrt-ICN-TKS-20260919-157100",
+      "id": "mrt-ICN-TKG-20260916-765800",
+      "source": "myrealtrip",
+      "airline": "가루다인도네시아",
+      "departure": {
+        "city": "서울(인천)",
+        "airport": "ICN",
+        "date": "2026-09-16",
+        "time": "10:35"
+      },
+      "arrival": {
+        "city": "반다르람풍",
+        "airport": "TKG",
+        "date": "2026-09-20",
+        "time": "18:40"
+      },
+      "price": 765800,
+      "currency": "KRW",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5889993%26depdt%3D2026-09-16%26arrdt%3D2026-09-20%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5889993%26depdt%3D2026-09-16%26arrdt%3D2026-09-20%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "region": "동남아",
+      "duration": "10시간 05분",
+      "returnDeparture": "14:10",
+      "returnArrival": "08:30",
+      "returnDuration": "02시간 10분"
+    },
+    {
+      "id": "mrt-ICN-TKS-20260919-593200",
       "source": "myrealtrip",
       "airline": "이스타항공",
       "departure": {
@@ -23007,7 +23171,7 @@
         "date": "2026-09-24",
         "time": "15:30"
       },
-      "price": 198300,
+      "price": 198500,
       "currency": "KRW",
       "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D4133020%26depdt%3D2026-09-19%26arrdt%3D2026-09-24%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D4133020%26depdt%3D2026-09-19%26arrdt%3D2026-09-24%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
@@ -23016,12 +23180,10 @@
       "returnDeparture": "16:30",
       "returnArrival": "18:20",
       "returnDuration": "01시간 50분",
-      "discountRate": 19,
-      "naverLowest": 185000,
-      "naverDiscount": -7
+      "discountRate": 19
     },
     {
-      "id": "mrt-ICN-TPE-20260925-292700",
+      "id": "mrt-ICN-TPE-20260925-371600",
       "source": "myrealtrip",
       "airline": "이스타항공",
       "departure": {
@@ -23033,82 +23195,129 @@
       "arrival": {
         "city": "타이베이",
         "airport": "TPE",
-        "date": "2026-09-29",
+        "date": "2026-09-30",
         "time": "01:00"
       },
       "price": 229500,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531208%26depdt%3D2026-09-25%26arrdt%3D2026-09-29%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531208%26depdt%3D2026-09-25%26arrdt%3D2026-09-29%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531208%26depdt%3D2026-09-25%26arrdt%3D2026-09-30%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3531208%26depdt%3D2026-09-25%26arrdt%3D2026-09-30%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "region": "중국",
       "duration": "02시간 30분",
       "returnDeparture": "02:00",
       "returnArrival": "05:30",
       "returnDuration": "02시간 30분",
-      "discountRate": 0,
-      "naverLowest": 211500,
-      "naverDiscount": -9
+      "discountRate": 0
     },
     {
-      "id": "mrt-ICN-TSA-20260820-788300",
+      "id": "mrt-ICN-TSA-20260821-687600",
       "source": "myrealtrip",
-      "airline": "이스타항공",
+      "airline": "티웨이항공",
       "departure": {
         "city": "서울(인천)",
         "airport": "ICN",
-        "date": "2026-08-20",
-        "time": "11:15"
+        "date": "2026-08-21",
+        "time": "11:20"
       },
       "arrival": {
         "city": "타이베이",
         "airport": "TSA",
-        "date": "2026-08-25",
-        "time": "12:55"
+        "date": "2026-08-24",
+        "time": "13:00"
       },
-      "price": 244000,
+      "price": 346700,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3545688%26depdt%3D2026-08-20%26arrdt%3D2026-08-25%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3545688%26depdt%3D2026-08-20%26arrdt%3D2026-08-25%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3545688%26depdt%3D2026-08-21%26arrdt%3D2026-08-24%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3545688%26depdt%3D2026-08-21%26arrdt%3D2026-08-24%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "region": "중국",
       "duration": "02시간 40분",
       "returnDeparture": "14:00",
       "returnArrival": "17:25",
       "returnDuration": "02시간 25분",
-      "discountRate": -3,
-      "naverLowest": 380986,
-      "naverDiscount": 36
+      "discountRate": -47
     },
     {
-      "id": "mrt-ICN-TYN-20260910-432900",
+      "id": "mrt-ICN-TTE-20261007-982100",
       "source": "myrealtrip",
-      "airline": "천진항공",
+      "airline": "가루다인도네시아",
       "departure": {
         "city": "서울(인천)",
         "airport": "ICN",
-        "date": "2026-09-10",
-        "time": "12:00"
+        "date": "2026-10-07",
+        "time": "10:35"
+      },
+      "arrival": {
+        "city": "테르나테",
+        "airport": "TTE",
+        "date": "2026-10-11",
+        "time": "07:05"
+      },
+      "price": 1159700,
+      "currency": "KRW",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5965983%26depdt%3D2026-10-07%26arrdt%3D2026-10-11%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5965983%26depdt%3D2026-10-07%26arrdt%3D2026-10-11%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "region": "동남아",
+      "duration": "20시간 30분",
+      "returnDeparture": "08:00",
+      "returnArrival": "08:30",
+      "returnDuration": "09시간 35분"
+    },
+    {
+      "id": "mrt-ICN-TUG-20260822-561600",
+      "source": "myrealtrip",
+      "airline": "필리핀항공",
+      "departure": {
+        "city": "서울(인천)",
+        "airport": "ICN",
+        "date": "2026-08-22",
+        "time": "07:20"
+      },
+      "arrival": {
+        "city": "투게가라오",
+        "airport": "TUG",
+        "date": "2026-08-26",
+        "time": "09:50"
+      },
+      "price": 442600,
+      "currency": "KRW",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5910333%26depdt%3D2026-08-22%26arrdt%3D2026-08-26%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5910333%26depdt%3D2026-08-22%26arrdt%3D2026-08-26%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "region": "동남아",
+      "duration": "27시간 30분",
+      "returnDeparture": "10:35",
+      "returnArrival": "19:15",
+      "returnDuration": "22시간 20분",
+      "discountRate": -6
+    },
+    {
+      "id": "mrt-ICN-TYN-20260905-500600",
+      "source": "myrealtrip",
+      "airline": "중국동방항공",
+      "departure": {
+        "city": "서울(인천)",
+        "airport": "ICN",
+        "date": "2026-09-05",
+        "time": "08:30"
       },
       "arrival": {
         "city": "타이위안",
         "airport": "TYN",
-        "date": "2026-09-14",
-        "time": "08:50"
+        "date": "2026-09-09",
+        "time": "23:55"
       },
-      "price": 327700,
+      "price": 356500,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D4238544%26depdt%3D2026-09-10%26arrdt%3D2026-09-14%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D4238544%26depdt%3D2026-09-10%26arrdt%3D2026-09-14%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D4238544%26depdt%3D2026-09-05%26arrdt%3D2026-09-09%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D4238544%26depdt%3D2026-09-05%26arrdt%3D2026-09-09%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "region": "중국",
-      "duration": "21시간 50분",
-      "returnDeparture": "09:40",
-      "returnArrival": "10:45",
-      "returnDuration": "18시간 45분",
-      "discountRate": 5,
-      "naverLowest": 305100,
-      "naverDiscount": -7
+      "duration": "16시간 25분",
+      "returnDeparture": "19:15",
+      "returnArrival": "11:00",
+      "returnDuration": "12시간 40분",
+      "discountRate": -3
     },
     {
-      "id": "mrt-ICN-TYO-20260916-277090",
+      "id": "mrt-ICN-TYO-20260916-364100",
       "source": "myrealtrip",
       "airline": "이스타항공",
       "departure": {
@@ -23123,7 +23332,7 @@
         "date": "2026-09-22",
         "time": "09:50"
       },
-      "price": 199300,
+      "price": 199100,
       "currency": "KRW",
       "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3532998%26depdt%3D2026-09-16%26arrdt%3D2026-09-22%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3532998%26depdt%3D2026-09-16%26arrdt%3D2026-09-22%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
@@ -23132,98 +23341,37 @@
       "returnDeparture": "18:30",
       "returnArrival": "21:15",
       "returnDuration": "02시간 45분",
-      "discountRate": 10,
-      "naverLowest": 179700,
-      "naverDiscount": -11
+      "discountRate": 10
     },
     {
-      "id": "mrt-ICN-UBP-20260930-738600",
+      "id": "mrt-ICN-URC-20260915-495900",
       "source": "myrealtrip",
-      "airline": "타이항공",
+      "airline": "중국동방항공",
       "departure": {
         "city": "서울(인천)",
         "airport": "ICN",
-        "date": "2026-09-30",
-        "time": "09:35"
-      },
-      "arrival": {
-        "city": "우본라차타니",
-        "airport": "UBP",
-        "date": "2026-10-04",
-        "time": "17:10"
-      },
-      "price": 667600,
-      "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5919097%26depdt%3D2026-09-30%26arrdt%3D2026-10-04%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5919097%26depdt%3D2026-09-30%26arrdt%3D2026-10-04%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "region": "동남아",
-      "duration": "09시간 35분",
-      "returnDeparture": "17:40",
-      "returnArrival": "06:55",
-      "returnDuration": "02시간 35분",
-      "discountRate": -1,
-      "naverLowest": 626000,
-      "naverDiscount": -7
-    },
-    {
-      "id": "mrt-ICN-URC-20260904-561500",
-      "source": "myrealtrip",
-      "airline": "산동항공",
-      "departure": {
-        "city": "서울(인천)",
-        "airport": "ICN",
-        "date": "2026-09-04",
-        "time": "15:30"
+        "date": "2026-09-15",
+        "time": "13:10"
       },
       "arrival": {
         "city": "우루무치",
         "airport": "URC",
-        "date": "2026-09-08",
-        "time": "23:50"
+        "date": "2026-09-19",
+        "time": "12:40"
       },
-      "price": 415400,
+      "price": 401900,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5912831%26depdt%3D2026-09-04%26arrdt%3D2026-09-08%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5912831%26depdt%3D2026-09-04%26arrdt%3D2026-09-08%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5912831%26depdt%3D2026-09-15%26arrdt%3D2026-09-19%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5912831%26depdt%3D2026-09-15%26arrdt%3D2026-09-19%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "region": "중국",
-      "duration": "09시간 20분",
-      "returnDeparture": "07:35",
-      "returnArrival": "20:45",
-      "returnDuration": "03시간 00분",
-      "discountRate": -2,
-      "naverLowest": 382900,
-      "naverDiscount": -8
+      "duration": "24시간 30분",
+      "returnDeparture": "13:40",
+      "returnArrival": "11:00",
+      "returnDuration": "17시간 40분",
+      "discountRate": 1
     },
     {
-      "id": "mrt-ICN-UTH-20260905-703700",
-      "source": "myrealtrip",
-      "airline": "타이항공",
-      "departure": {
-        "city": "서울(인천)",
-        "airport": "ICN",
-        "date": "2026-09-05",
-        "time": "09:35"
-      },
-      "arrival": {
-        "city": "우타파오",
-        "airport": "UTH",
-        "date": "2026-09-11",
-        "time": "20:55"
-      },
-      "price": 696500,
-      "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5915895%26depdt%3D2026-09-05%26arrdt%3D2026-09-11%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5915895%26depdt%3D2026-09-05%26arrdt%3D2026-09-11%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "region": "동남아",
-      "duration": "13시간 20분",
-      "returnDeparture": "13:55",
-      "returnArrival": "06:35",
-      "returnDuration": "06시간 20분",
-      "naverLowest": 652100,
-      "naverDiscount": -7
-    },
-    {
-      "id": "mrt-ICN-VCA-20260912-526700",
+      "id": "mrt-ICN-VCA-20260912-489100",
       "source": "myrealtrip",
       "airline": "베트남항공",
       "departure": {
@@ -23247,41 +23395,36 @@
       "returnDeparture": "18:05",
       "returnArrival": "06:00",
       "returnDuration": "10시간 10분",
-      "discountRate": -4,
-      "naverLowest": 298000,
-      "naverDiscount": -9
+      "discountRate": -4
     },
     {
-      "id": "mrt-ICN-VDH-20260913-816200",
+      "id": "mrt-ICN-VNS-20260906-840600",
       "source": "myrealtrip",
-      "airline": "베트남항공",
+      "airline": "에어인디아",
       "departure": {
         "city": "서울(인천)",
         "airport": "ICN",
-        "date": "2026-09-13",
-        "time": "10:05"
+        "date": "2026-09-06",
+        "time": "12:20"
       },
       "arrival": {
-        "city": "동호이",
-        "airport": "VDH",
-        "date": "2026-09-16",
-        "time": "09:50"
+        "city": "바라나시",
+        "airport": "VNS",
+        "date": "2026-09-11",
+        "time": "08:30"
       },
-      "price": 347200,
+      "price": 717800,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5899787%26depdt%3D2026-09-13%26arrdt%3D2026-09-16%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5899787%26depdt%3D2026-09-13%26arrdt%3D2026-09-16%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "region": "동남아",
-      "duration": "25시간 45분",
-      "returnDeparture": "10:25",
-      "returnArrival": "05:50",
-      "returnDuration": "20시간 10분",
-      "discountRate": -2,
-      "naverLowest": 309886,
-      "naverDiscount": -12
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5919968%26depdt%3D2026-09-06%26arrdt%3D2026-09-11%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5919968%26depdt%3D2026-09-06%26arrdt%3D2026-09-11%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "region": "기타",
+      "duration": "23시간 40분",
+      "returnDeparture": "09:30",
+      "returnArrival": "10:40",
+      "returnDuration": "14시간 05분"
     },
     {
-      "id": "mrt-ICN-VTE-20260916-471100",
+      "id": "mrt-ICN-VTE-20260916-569000",
       "source": "myrealtrip",
       "airline": "제주항공",
       "departure": {
@@ -23293,138 +23436,128 @@
       "arrival": {
         "city": "비엔티안",
         "airport": "VTE",
-        "date": "2026-09-20",
+        "date": "2026-09-19",
         "time": "23:50"
       },
-      "price": 285600,
+      "price": 286280,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3543005%26depdt%3D2026-09-16%26arrdt%3D2026-09-20%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3543005%26depdt%3D2026-09-16%26arrdt%3D2026-09-20%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3543005%26depdt%3D2026-09-16%26arrdt%3D2026-09-19%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3543005%26depdt%3D2026-09-16%26arrdt%3D2026-09-19%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "region": "동남아",
       "duration": "05시간 30분",
       "returnDeparture": "00:50",
       "returnArrival": "08:10",
       "returnDuration": "05시간 20분",
-      "discountRate": -2,
-      "naverLowest": 267200,
-      "naverDiscount": -7
+      "discountRate": -2
     },
     {
-      "id": "mrt-ICN-WEH-20260905-285600",
+      "id": "mrt-ICN-WAW-20261011-1040500",
+      "source": "myrealtrip",
+      "airline": "중국국제항공",
+      "departure": {
+        "city": "서울(인천)",
+        "airport": "ICN",
+        "date": "2026-10-11",
+        "time": "15:30"
+      },
+      "arrival": {
+        "city": "바르샤바",
+        "airport": "WAW",
+        "date": "2026-10-16",
+        "time": "07:05"
+      },
+      "price": 699600,
+      "currency": "KRW",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3570910%26depdt%3D2026-10-11%26arrdt%3D2026-10-16%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3570910%26depdt%3D2026-10-11%26arrdt%3D2026-10-16%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "region": "유럽",
+      "duration": "22시간 35분",
+      "returnDeparture": "19:00",
+      "returnArrival": "22:00",
+      "returnDuration": "11시간 15분",
+      "discountRate": 5
+    },
+    {
+      "id": "mrt-ICN-WEH-20260908-287200",
       "source": "myrealtrip",
       "airline": "제주항공",
       "departure": {
         "city": "서울(인천)",
         "airport": "ICN",
-        "date": "2026-09-05",
+        "date": "2026-09-08",
         "time": "15:35"
       },
       "arrival": {
         "city": "웨이하이",
         "airport": "WEH",
-        "date": "2026-09-07",
+        "date": "2026-09-10",
         "time": "15:45"
       },
-      "price": 182100,
+      "price": 173630,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D4194441%26depdt%3D2026-09-05%26arrdt%3D2026-09-07%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D4194441%26depdt%3D2026-09-05%26arrdt%3D2026-09-07%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D4194441%26depdt%3D2026-09-08%26arrdt%3D2026-09-10%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D4194441%26depdt%3D2026-09-08%26arrdt%3D2026-09-10%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "region": "중국",
       "duration": "01시간 10분",
       "returnDeparture": "16:45",
       "returnArrival": "18:55",
       "returnDuration": "01시간 10분",
-      "discountRate": -1,
-      "naverLowest": 168100,
-      "naverDiscount": -8
+      "discountRate": 4
     },
     {
-      "id": "mrt-ICN-WUX-20260906-406700",
+      "id": "mrt-ICN-WUX-20260912-633400",
       "source": "myrealtrip",
       "airline": "중국동방항공",
       "departure": {
         "city": "서울(인천)",
         "airport": "ICN",
-        "date": "2026-09-06",
+        "date": "2026-09-12",
         "time": "08:30"
       },
       "arrival": {
         "city": "우시",
         "airport": "WUX",
-        "date": "2026-09-08",
+        "date": "2026-09-14",
         "time": "17:20"
       },
-      "price": 323800,
+      "price": 323500,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5905180%26depdt%3D2026-09-06%26arrdt%3D2026-09-08%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5905180%26depdt%3D2026-09-06%26arrdt%3D2026-09-08%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5905180%26depdt%3D2026-09-12%26arrdt%3D2026-09-14%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5905180%26depdt%3D2026-09-12%26arrdt%3D2026-09-14%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "region": "중국",
       "duration": "09시간 50분",
       "returnDeparture": "07:20",
-      "returnArrival": "13:15",
-      "returnDuration": "06시간 40분",
-      "naverLowest": 293330,
-      "naverDiscount": -10
+      "returnArrival": "11:00",
+      "returnDuration": "06시간 40분"
     },
     {
-      "id": "mrt-ICN-XIY-20260913-374800",
+      "id": "mrt-ICN-XIY-20260915-408400",
       "source": "myrealtrip",
       "airline": "중국남방항공",
       "departure": {
         "city": "서울(인천)",
         "airport": "ICN",
-        "date": "2026-09-13",
-        "time": "12:45"
+        "date": "2026-09-15",
+        "time": "11:45"
       },
       "arrival": {
         "city": "시안",
         "airport": "XIY",
-        "date": "2026-09-16",
+        "date": "2026-09-21",
         "time": "20:10"
       },
       "price": 214100,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3567271%26depdt%3D2026-09-13%26arrdt%3D2026-09-16%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3567271%26depdt%3D2026-09-13%26arrdt%3D2026-09-16%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3567271%26depdt%3D2026-09-15%26arrdt%3D2026-09-21%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3567271%26depdt%3D2026-09-15%26arrdt%3D2026-09-21%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
       "region": "중국",
-      "duration": "08시간 25분",
+      "duration": "09시간 25분",
       "returnDeparture": "21:40",
       "returnArrival": "10:10",
-      "returnDuration": "02시간 50분",
-      "naverLowest": 214100,
-      "naverDiscount": 0
+      "returnDuration": "03시간 55분"
     },
     {
-      "id": "mrt-ICN-YGJ-20260903-177700",
-      "source": "myrealtrip",
-      "airline": "에어서울",
-      "departure": {
-        "city": "서울(인천)",
-        "airport": "ICN",
-        "date": "2026-09-03",
-        "time": "13:25"
-      },
-      "arrival": {
-        "city": "요나고",
-        "airport": "YGJ",
-        "date": "2026-09-07",
-        "time": "14:50"
-      },
-      "price": 161000,
-      "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3561947%26depdt%3D2026-09-03%26arrdt%3D2026-09-07%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3561947%26depdt%3D2026-09-03%26arrdt%3D2026-09-07%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "region": "일본",
-      "duration": "01시간 25분",
-      "returnDeparture": "15:50",
-      "returnArrival": "17:45",
-      "returnDuration": "01시간 55분",
-      "discountRate": -13,
-      "naverLowest": 136715,
-      "naverDiscount": -18
-    },
-    {
-      "id": "mrt-ICN-ZRH-20260914-1164300",
+      "id": "mrt-ICN-XNN-20260914-413200",
       "source": "myrealtrip",
       "airline": "중국동방항공",
       "departure": {
@@ -23434,23 +23567,75 @@
         "time": "12:55"
       },
       "arrival": {
-        "city": "취리히",
-        "airport": "ZRH",
-        "date": "2026-09-17",
-        "time": "07:55"
+        "city": "시닝",
+        "airport": "XNN",
+        "date": "2026-09-19",
+        "time": "18:35"
       },
-      "price": 814300,
+      "price": 325900,
       "currency": "KRW",
-      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3533039%26depdt%3D2026-09-14%26arrdt%3D2026-09-17%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3533039%26depdt%3D2026-09-14%26arrdt%3D2026-09-17%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
-      "region": "유럽",
-      "duration": "26시간 00분",
-      "returnDeparture": "14:05",
-      "returnArrival": "17:25",
-      "returnDuration": "11시간 40분",
-      "discountRate": -3,
-      "naverLowest": 807900,
-      "naverDiscount": -1
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D6024633%26depdt%3D2026-09-14%26arrdt%3D2026-09-19%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D6024633%26depdt%3D2026-09-14%26arrdt%3D2026-09-19%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "region": "중국",
+      "duration": "30시간 40분",
+      "returnDeparture": "19:05",
+      "returnArrival": "11:00",
+      "returnDuration": "23시간 05분",
+      "discountRate": 0
+    },
+    {
+      "id": "mrt-ICN-YGJ-20260823-768100",
+      "source": "myrealtrip",
+      "airline": "에어서울",
+      "departure": {
+        "city": "서울(인천)",
+        "airport": "ICN",
+        "date": "2026-08-23",
+        "time": "13:25"
+      },
+      "arrival": {
+        "city": "요나고",
+        "airport": "YGJ",
+        "date": "2026-08-26",
+        "time": "14:50"
+      },
+      "price": 160500,
+      "currency": "KRW",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3561947%26depdt%3D2026-08-23%26arrdt%3D2026-08-26%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3561947%26depdt%3D2026-08-23%26arrdt%3D2026-08-26%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "region": "일본",
+      "duration": "01시간 25분",
+      "returnDeparture": "15:50",
+      "returnArrival": "17:45",
+      "returnDuration": "01시간 55분",
+      "discountRate": -13
+    },
+    {
+      "id": "mrt-ICN-ZHA-20260917-628900",
+      "source": "myrealtrip",
+      "airline": "중국동방항공",
+      "departure": {
+        "city": "서울(인천)",
+        "airport": "ICN",
+        "date": "2026-09-17",
+        "time": "15:50"
+      },
+      "arrival": {
+        "city": "잔장",
+        "airport": "ZHA",
+        "date": "2026-09-20",
+        "time": "15:55"
+      },
+      "price": 483500,
+      "currency": "KRW",
+      "link": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5948513%26depdt%3D2026-09-17%26arrdt%3D2026-09-20%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "searchLink": "https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D5948513%26depdt%3D2026-09-17%26arrdt%3D2026-09-20%26cabin%3DY%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392&utm_source=mktpartner&t_scope=86400",
+      "region": "중국",
+      "duration": "25시간 05분",
+      "returnDeparture": "16:40",
+      "returnArrival": "14:50",
+      "returnDuration": "17시간 50분",
+      "discountRate": 21
     }
   ],
   "sources": {
@@ -23459,7 +23644,7 @@
     "modetour": 102,
     "onlinetour": 8,
     "ttang": 257,
-    "myrealtrip": 96
+    "myrealtrip": 110
   },
   "sourceUpdatedAt": {
     "ybtour": "2026-08-14T03:41:02.473Z",
@@ -23467,7 +23652,7 @@
     "modetour": "2026-08-14T03:41:02.473Z",
     "onlinetour": "2026-08-14T03:41:02.473Z",
     "ttang": "2026-08-14T00:31:28.437Z",
-    "myrealtrip": "2026-08-13T17:46:18.459Z"
+    "myrealtrip": "2026-08-14T04:12:45.318Z"
   },
   "priceHistory": {
     "부산-세부": [
