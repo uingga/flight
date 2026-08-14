@@ -7,12 +7,14 @@ export interface Flight {
         airport: string;
         date: string;
         time: string;
+        arrivalTime?: string; // 가는편 현지 도착시간 (ttang/ybtour는 realtime 보강, onlinetour는 목록 파싱)
     };
     arrival: {
         city: string;
         airport: string;
         date: string;
-        time: string;
+        time: string;      // 오는편 출발시간
+        arrivalTime?: string; // 오는편 도착시간
     };
     price: number;
     currency: string;

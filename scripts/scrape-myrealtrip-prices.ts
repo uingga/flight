@@ -310,11 +310,14 @@ async function main() {
             const oldPrice = cache.flights[idx].price;
             cache.flights[idx].price = result.price;
             cache.flights[idx].airline = result.airline || cache.flights[idx].airline;
+            // 표기 규약: departure.time=가는편 출발, departure.arrivalTime=가는편 도착,
+            // arrival.time=오는편 출발, arrival.arrivalTime=오는편 도착 (다른 소스와 동일)
+            // 이전에는 arrival.time에 가는편 도착시간이 들어가 귀국편 출발시간처럼 표시되는 버그가 있었다.
             cache.flights[idx].departure.time = result.depTime;
-            cache.flights[idx].arrival.time = result.arrTime;
+            cache.flights[idx].departure.arrivalTime = result.arrTime;
             cache.flights[idx].duration = result.duration;
-            cache.flights[idx].returnDeparture = result.retDepTime;
-            cache.flights[idx].returnArrival = result.retArrTime;
+            cache.flights[idx].arrival.time = result.retDepTime;
+            cache.flights[idx].arrival.arrivalTime = result.retArrTime;
             cache.flights[idx].returnDuration = result.retDuration;
 
             const diff = Math.abs(result.price - oldPrice);
