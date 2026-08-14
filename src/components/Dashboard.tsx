@@ -2338,7 +2338,7 @@ export default function Dashboard() {
                     </div>
                     <div className={styles.headerRight}>
                         <p className={styles.subtitle}>
-                            전국 여행사의 <strong className={styles.highlight}>땡처리 항공권</strong>을 한눈에! 🚀
+                            오늘은 어디가 싸게 나왔을까요?
                         </p>
                     </div>
                 </div>
@@ -2473,10 +2473,9 @@ export default function Dashboard() {
             {/* SEO: 검색엔진 크롤러용 콘텐츠 (JavaScript 미지원 시 표시) */}
             <noscript>
                 <div style={{ padding: '40px 20px', maxWidth: '800px', margin: '0 auto', lineHeight: 1.8 }}>
-                    <h2>티키티킷 - 5대 여행사 땡처리 항공권 비교</h2>
+                    <h2>지금 갈 만한 땡처리 항공권 | 티키티킷</h2>
                     <p>
-                        티키티킷은 하나투어, 모두투어, 노랑풍선, 온라인투어, 땡처리닷컴의
-                        실시간 땡처리 항공권을 한눈에 비교할 수 있는 무료 서비스입니다.
+                        여행사마다 따로 올라오는 저렴한 땡처리 항공권을 한곳에 모아 보여주는 무료 서비스입니다.
                     </p>
                     <h3>인기 여행지 땡처리 항공권</h3>
                     <ul>
@@ -2487,8 +2486,8 @@ export default function Dashboard() {
                     </ul>
                     <h3>서비스 특징</h3>
                     <ul>
-                        <li>매일 7회 자동 업데이트로 최신 특가 정보 제공</li>
-                        <li>5대 여행사 가격 한눈에 비교</li>
+                        <li>하루 여러 차례 항공권 정보 업데이트</li>
+                        <li>여러 여행사의 땡처리 항공권을 한곳에서 확인</li>
                         <li>출발일, 도착지, 항공사별 필터링</li>
                         <li>관심 노선 즐겨찾기</li>
                         <li>회원가입 없이 무료 이용</li>
@@ -2806,7 +2805,7 @@ export default function Dashboard() {
 
                         <div className={styles.dealAlertBanner}>
                             <div>
-                                <strong>원하는 특가가 아직 없나요?</strong>
+                                <strong>지금 떠날 만한 표가 없나요?</strong>
                                 <span>출발지·지역·예산만 정해두면 갈 만한 특가 후보를 대신 찾아드려요.</span>
                             </div>
                             <button type="button" onClick={openDealAlertSetup}>
@@ -3155,10 +3154,7 @@ export default function Dashboard() {
                         {/* 서비스 소개 */}
                         <div className={styles.footerSection}>
                             <Logo size={0.7} />
-                            <p className={styles.footerDesc}>
-                                여행사 땡처리 항공권을 한 곳에서 비교하세요.<br />
-                                여러 여행사의 특가 항공권을 실시간으로 모아 가장 저렴한 항공편을 쉽게 찾을 수 있습니다.
-                            </p>
+                            <p className={styles.footerBrandMessage}>좋은 표 하나가, 없던 여행 계획을 만듭니다.</p>
                         </div>
 
                         {/* 데이터 소스 */}
@@ -3197,7 +3193,7 @@ export default function Dashboard() {
                     </div>
 
                     <div className={styles.footerBottom}>
-                        <span>© 2026 티키티킷 · 여행을 더 쉽게</span>
+                        <span>© 2026 티키티킷</span>
                         <span style={{ display: 'flex', gap: '12px', fontSize: '0.8rem' }}>
                             <a href="/terms" style={{ color: 'var(--color-text-muted)' }}>이용약관</a>
                             <a href="/privacy" style={{ color: 'var(--color-text-muted)' }}>개인정보처리방침</a>
@@ -3287,10 +3283,10 @@ export default function Dashboard() {
                 const arrDate = modetourGuide.arrival.date || '';
                 const depTime = modetourGuide.departure.time || '';
                 // 가는편 도착시간
-                const depArrTime = mdt?.departureArrivalTime || (modetourGuide.departure as any)?.arrivalTime || '';
+                const depArrTime = mdt?.departureArrivalTime || modetourGuide.departure.arrivalTime || '';
                 // 오는편 출발/도착시간
                 const retDepTime = mdt?.returnDepartureTime || modetourGuide.arrival.time || '';
-                const retArrTime = mdt?.returnArrivalTime || (modetourGuide.arrival as any)?.arrivalTime || '';
+                const retArrTime = mdt?.returnArrivalTime || modetourGuide.arrival.arrivalTime || '';
                 // 비행시간
                 // 여행사가 준 비행시간이 있으면 그대로, 없으면 현지 시각 차이에 시차를 보정해 계산한다.
                 // 같은 화면에 두 출처가 나란히 놓이므로 표기는 계산값 형식으로 맞춘다 ("05:40" → "5시간 40분")
@@ -3416,6 +3412,13 @@ export default function Dashboard() {
                                     <div className={styles.mdtTimeCity}>{arrCity}<br />{shortDate(arrDate, arrDay)}</div>
                                 </div>
                             </div>
+
+                            {/* 마이리얼트립은 그날 최저가만 제공하고 실제 항공편은 예약 단계에서 정해진다 */}
+                            {modetourGuide.source === 'myrealtrip' && !depTime && (
+                                <p style={{ margin: '4px 0 0', fontSize: '0.78rem', color: 'var(--color-text-muted)', textAlign: 'center' }}>
+                                    이 가격의 실제 항공편(출발·도착 시간)은 마이리얼트립 예약 페이지에서 선택할 때 확인돼요.
+                                </p>
+                            )}
 
                             {/* 가격 요약 바 */}
                             {(normalPrice > 0 || discountRate > 0) && (
