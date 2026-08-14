@@ -374,6 +374,17 @@ export default function AdminPage() {
                                 <small>페이지뷰 {gaStats.totals.pageViews.toLocaleString()}회</small>
                             </div>
                             <div className={styles.userStat}>
+                                <span>상세 열람한 사람</span>
+                                <strong>{gaStats.conversion.detailOpenUsers.toLocaleString()}</strong>
+                                <small>
+                                    {gaStats.conversion.detailOpenUsers === 0
+                                        ? '8/14부터 집계 시작'
+                                        : gaStats.conversion.detailOpenRate !== null
+                                            ? `방문자의 ${gaStats.conversion.detailOpenRate}%`
+                                            : '비율 계산 불가'}
+                                </small>
+                            </div>
+                            <div className={styles.userStat}>
                                 <span>예약 클릭한 사람</span>
                                 <strong>{gaStats.conversion.bookingClickUsers.toLocaleString()}</strong>
                                 <small>
@@ -392,20 +403,6 @@ export default function AdminPage() {
                                 </small>
                             </div>
                         </div>
-
-                        {/* 퍼널 — 어느 구간에서 사람이 빠지는지 한 줄로 본다 */}
-                        <p className={styles.sectionHelp} style={{ marginTop: '12px' }}>
-                            <strong>예약까지 가는 길:</strong>{' '}
-                            방문 {gaStats.totals.users.toLocaleString()}명
-                            {' → '}
-                            상세 열람 {gaStats.conversion.detailOpenUsers.toLocaleString()}명
-                            {gaStats.conversion.detailOpenRate !== null && ` (방문자의 ${gaStats.conversion.detailOpenRate}%)`}
-                            {' → '}
-                            예약 클릭 {gaStats.conversion.bookingClickUsers.toLocaleString()}명
-                            {gaStats.conversion.detailToBookingRate !== null && ` (상세를 연 사람의 ${gaStats.conversion.detailToBookingRate}%)`}
-                            . 상세까지 못 오면 카드 목록을, 상세에서 빠지면 상세 화면을 손볼 차례입니다.
-                            {gaStats.conversion.detailOpenUsers === 0 && ' (상세 열람은 2026-08-14부터 집계됩니다)'}
-                        </p>
 
                         <h3 className={styles.userSubTitle}>일별 방문자</h3>
                         {(() => {
