@@ -101,11 +101,14 @@ Vercel 대시보드 → 프로젝트 → **Settings → Environment Variables** 
 
 - [x] 1. Cloud 프로젝트 생성 — `tikitikit-admin`
 - [x] 2. Google Analytics **Data** API 활성화
-- [x] 3. 서비스 계정 생성 + JSON 키 다운로드 — `ga4-reader@tikitikit-admin.iam.gserviceaccount.com`, 키 파일 `tikitikit-admin-92556d77f851.json` (사용자 PC에 저장)
+- [x] 3. 서비스 계정 + JSON 키 — `ga4-reader@tikitikit-admin.iam.gserviceaccount.com`.
+      최초 키(`92556d77f851…`)는 파일이 저장되지 않아 못 쓰게 되어 **삭제**했고,
+      2026-08-14에 키를 재발급함: 키 ID `2c8e6276bdfc…`, 파일 `tikitikit-admin-2c8e6276bdfc.json`
+      (사용자 PC 바탕화면). 현재 살아있는 키는 이것 하나뿐.
 - [x] 4. GA4 속성 액세스 관리에 서비스 계정을 뷰어로 추가 — **속성 ID: `524973369`**
 - [ ] 5. Vercel에 환경변수 3개 등록 (`GA4_PROPERTY_ID`, `GA4_CLIENT_EMAIL`, `GA4_PRIVATE_KEY`) ← **사용자가 직접**
 - [x] 6. 맞춤 측정기준 — 기존 12개 이미 등록돼 있었음(`travel_agency`, `route`, `partner` 등). `entry_point`(알림 진입점)만 신규 추가
-- [ ] 7. Claude Code에 "GA4 연동 구현해줘" 요청
+- [x] 7. 코드 구현 (2026-08-14) — `src/lib/ga4.ts`, `src/app/api/ga-stats/route.ts`, 어드민 "방문자와 행동(GA4)" 섹션
 
 ### 5번에 넣을 값
 
@@ -114,3 +117,40 @@ Vercel 대시보드 → 프로젝트 → **Settings → Environment Variables** 
 | `GA4_PROPERTY_ID` | `524973369` |
 | `GA4_CLIENT_EMAIL` | `ga4-reader@tikitikit-admin.iam.gserviceaccount.com` |
 | `GA4_PRIVATE_KEY` | 다운로드한 JSON 파일의 `private_key` 값 전체 |
+
+---
+
+## 구현된 것 (7번)
+
+| 파일 | 역할 |
+|---|---|
+| `src/lib/ga4.ts` | 서비스 계정 JWT를 Node `crypto`로 서명 → 액세스 토큰 발급 → Data API `runReport` 호출. 외부 의존성 없음. 토큰은 만료 전까지 재사용 |
+| `src/app/api/ga-stats/route.ts` | 어드민 키로 보호. 리포트 6개를 병렬 조회해 하나의 JSON으로 반환. 응답은 10분간 캐시 |
+| `src/app/admin/page.tsx` | 요약 카드 위쪽에 **"🌐 방문자와 행동 (GA4)"** 섹션 추가 |
+
+조회 항목 (기본 최근 14일, `?days=` 로 2~90일 조정 가능):
+
+- 방문자 / 방문 횟수 / 페이지뷰 (기간 합계 + 일별 막대)
+- 행동별 발생 수 — `booking_click`, `affiliate_click`, `alert_setup`, `deal_alert_setup`,
+  `card_click`, `compare_click`, `share_flight`, `filter_change`, `date_filter`
+- 전환율 — 예약 클릭한 사람 / 알림 등록한 사람이 전체 방문자의 몇 %인지
+- 여행사별 예약 클릭 (`customEvent:travel_agency`)
+- 예약 클릭이 많은 노선 (`customEvent:route`)
+- 알림 등록이 시작된 위치 (`customEvent:entry_point`)
+- 유입 경로 (`sessionDefaultChannelGroup`)
+
+동작 원칙:
+
+- **환경변수가 없으면** 기존 유저 통계처럼 안내 문구만 보여주고 나머지 어드민은 정상 동작한다.
+- **맞춤 측정기준 리포트만 실패해도** 전체가 죽지 않는다. 해당 표만 "불러오지 못했습니다"로 표시되고
+  섹션 하단에 ⚠️ 경고가 붙는다 (측정기준 미등록 시 이렇게 보임).
+- GA4 무료 할당량을 아끼려고 서버에서 **10분간 응답을 캐시**한다.
+
+### 남은 확인
+
+환경변수 등록 후 어드민에서 실제 숫자가 뜨는지 확인하면 끝. 안 뜬다면 순서대로:
+
+1. 속성 ID가 측정 ID(`G-...`)가 아닌 숫자(`524973369`)인지
+2. 서비스 계정이 GA4 속성에 **뷰어**로 들어가 있는지
+3. `GA4_PRIVATE_KEY`에 `-----BEGIN PRIVATE KEY-----`부터 끝까지 줄바꿈 포함해 들어갔는지
+   (Vercel에서 `\n` 문자열로 저장돼도 코드가 실제 줄바꿈으로 바꿔준다)

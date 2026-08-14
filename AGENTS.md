@@ -78,6 +78,9 @@ src/components/Dashboard.tsx (client component)
 
 Other existing env vars: `EMAIL_USER`, `EMAIL_PASS`, `GH_PAT`, `NEXT_PUBLIC_BASE_URL`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY`
 
+GA4 어드민 통계용 (Vercel + `.env.local`): `GA4_PROPERTY_ID`, `GA4_CLIENT_EMAIL`, `GA4_PRIVATE_KEY`.
+없으면 `/api/ga-stats`가 안내 문구로 폴백한다. 절차와 조회 항목은 `docs/ga4-integration.md` 참고.
+
 ## Build & Run
 
 ```bash

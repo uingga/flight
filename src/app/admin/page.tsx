@@ -90,6 +90,33 @@ interface UserStatsData {
     trend: Array<{ date: string; count: number }>;
 }
 
+interface GaListItem {
+    label: string;
+    count: number;
+}
+
+interface GaStatsData {
+    available: boolean;
+    message?: string;
+    generatedAt: string;
+    days: number;
+    totals: { users: number; pageViews: number; sessions: number };
+    trend: Array<{ date: string; users: number; pageViews: number; sessions: number }>;
+    events: Array<{ name: string; label: string; count: number; users: number }>;
+    otherEvents: Array<{ name: string; label: string; count: number; users: number }>;
+    conversion: {
+        bookingClickUsers: number;
+        bookingClickRate: number | null;
+        alertSetupUsers: number;
+        alertSetupRate: number | null;
+    };
+    bookingByAgency: GaListItem[] | null;
+    bookingByRoute: GaListItem[] | null;
+    alertByEntry: GaListItem[] | null;
+    channels: Array<{ label: string; sessions: number; users: number }> | null;
+    warnings: string[];
+}
+
 const SOURCE_NAMES: Record<string, string> = {
     hanatour: '하나투어',
     modetour: '모두투어',
@@ -150,6 +177,8 @@ export default function AdminPage() {
     const [dealAlertReviewError, setDealAlertReviewError] = useState<string | null>(null);
     const [userStats, setUserStats] = useState<UserStatsData | null>(null);
     const [userStatsError, setUserStatsError] = useState<string | null>(null);
+    const [gaStats, setGaStats] = useState<GaStatsData | null>(null);
+    const [gaStatsError, setGaStatsError] = useState<string | null>(null);
 
     useEffect(() => {
         setAnalyticsExcludedState(isAnalyticsExcluded());
@@ -206,6 +235,19 @@ export default function AdminPage() {
                 }
             } catch {
                 setUserStatsError('유저 통계를 불러오지 못했습니다.');
+            }
+
+            try {
+                const gaResponse = await fetch(`/api/ga-stats?key=${encodeURIComponent(authKey)}`);
+                const gaJson = await gaResponse.json();
+                if (gaResponse.ok) {
+                    setGaStats(gaJson);
+                    setGaStatsError(null);
+                } else {
+                    setGaStatsError(gaJson.error || '방문 통계를 불러오지 못했습니다.');
+                }
+            } catch {
+                setGaStatsError('방문 통계를 불러오지 못했습니다.');
             }
 
             setAuthed(true);
@@ -300,6 +342,212 @@ export default function AdminPage() {
                     <span className={styles.summaryValue}>{sortedCities.length}</span>
                 </div>
             </div>
+
+            {/* GA4 방문·행동 통계 — 여기서 보이면 GA4 사이트로 나갈 일이 줄어든다 */}
+            <section className={styles.section}>
+                <h2>🌐 방문자와 행동 (GA4)</h2>
+                <p className={styles.sectionHelp}>
+                    최근 {gaStats?.days ?? 14}일 기준입니다. GA4는 데이터가 <strong>하루 정도 늦게</strong> 채워지므로
+                    오늘 숫자는 아직 작게 보일 수 있습니다.
+                </p>
+                {gaStatsError ? (
+                    <div className={styles.dealReviewEmpty}>{gaStatsError}</div>
+                ) : !gaStats?.available ? (
+                    <div className={styles.dealReviewEmpty}>
+                        {gaStats?.message || '방문 통계를 불러오는 중입니다.'}
+                    </div>
+                ) : (
+                    <>
+                        <div className={styles.userStatGrid}>
+                            <div className={styles.userStat}>
+                                <span>방문자</span>
+                                <strong>{gaStats.totals.users.toLocaleString()}</strong>
+                                <small>같은 사람이 여러 번 와도 1명</small>
+                            </div>
+                            <div className={styles.userStat}>
+                                <span>방문 횟수</span>
+                                <strong>{gaStats.totals.sessions.toLocaleString()}</strong>
+                                <small>페이지뷰 {gaStats.totals.pageViews.toLocaleString()}회</small>
+                            </div>
+                            <div className={styles.userStat}>
+                                <span>예약 클릭한 사람</span>
+                                <strong>{gaStats.conversion.bookingClickUsers.toLocaleString()}</strong>
+                                <small>
+                                    {gaStats.conversion.bookingClickRate !== null
+                                        ? `방문자의 ${gaStats.conversion.bookingClickRate}%`
+                                        : '비율 계산 불가'}
+                                </small>
+                            </div>
+                            <div className={styles.userStat}>
+                                <span>알림 등록한 사람</span>
+                                <strong>{gaStats.conversion.alertSetupUsers.toLocaleString()}</strong>
+                                <small>
+                                    {gaStats.conversion.alertSetupRate !== null
+                                        ? `방문자의 ${gaStats.conversion.alertSetupRate}%`
+                                        : '비율 계산 불가'}
+                                </small>
+                            </div>
+                        </div>
+
+                        <h3 className={styles.userSubTitle}>일별 방문자</h3>
+                        {(() => {
+                            const max = Math.max(...gaStats.trend.map(point => point.users), 1);
+                            return (
+                                <div className={styles.trendChart}>
+                                    {gaStats.trend.map(point => (
+                                        <div
+                                            key={point.date}
+                                            className={styles.trendCol}
+                                            title={`${point.date} · 방문자 ${point.users}명 · 페이지뷰 ${point.pageViews}회`}
+                                        >
+                                            <div
+                                                className={styles.trendBar}
+                                                style={{ height: `${Math.max(2, (point.users / max) * 100)}%` }}
+                                            />
+                                            <span className={styles.trendCount}>{point.users || ''}</span>
+                                            <span className={styles.trendDate}>{point.date.slice(5).replace('-', '/')}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            );
+                        })()}
+
+                        <h3 className={styles.userSubTitle}>행동별 발생 수</h3>
+                        <div className={styles.cityDetail}>
+                            <table className={styles.cityTable}>
+                                <thead>
+                                    <tr><th>행동</th><th>횟수</th><th>사람</th><th>방문자 대비</th></tr>
+                                </thead>
+                                <tbody>
+                                    {gaStats.events.length === 0 ? (
+                                        <tr><td colSpan={4}>아직 집계된 행동이 없습니다.</td></tr>
+                                    ) : gaStats.events.map(entry => (
+                                        <tr key={entry.name}>
+                                            <td><strong>{entry.label}</strong></td>
+                                            <td>{entry.count.toLocaleString()}회</td>
+                                            <td>{entry.users.toLocaleString()}명</td>
+                                            <td>
+                                                {gaStats.totals.users > 0
+                                                    ? `${Math.round((entry.users / gaStats.totals.users) * 100)}%`
+                                                    : '—'}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div className={styles.gaColumns}>
+                            <div>
+                                <h3 className={styles.userSubTitle}>여행사별 예약 클릭</h3>
+                                {gaStats.bookingByAgency === null ? (
+                                    <div className={styles.dealReviewEmpty}>불러오지 못했습니다.</div>
+                                ) : gaStats.bookingByAgency.length === 0 ? (
+                                    <div className={styles.dealReviewEmpty}>아직 예약 클릭이 없습니다.</div>
+                                ) : (
+                                    <div className={styles.cityDetail}>
+                                        <table className={styles.cityTable}>
+                                            <thead><tr><th>여행사</th><th>클릭</th></tr></thead>
+                                            <tbody>
+                                                {gaStats.bookingByAgency.map(item => (
+                                                    <tr key={item.label}>
+                                                        <td>{SOURCE_NAMES[item.label] || item.label}</td>
+                                                        <td>{item.count.toLocaleString()}회</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div>
+                                <h3 className={styles.userSubTitle}>유입 경로</h3>
+                                {gaStats.channels === null ? (
+                                    <div className={styles.dealReviewEmpty}>불러오지 못했습니다.</div>
+                                ) : gaStats.channels.length === 0 ? (
+                                    <div className={styles.dealReviewEmpty}>집계된 유입이 없습니다.</div>
+                                ) : (
+                                    <div className={styles.cityDetail}>
+                                        <table className={styles.cityTable}>
+                                            <thead><tr><th>경로</th><th>방문</th><th>사람</th></tr></thead>
+                                            <tbody>
+                                                {gaStats.channels.map(item => (
+                                                    <tr key={item.label}>
+                                                        <td>{item.label}</td>
+                                                        <td>{item.sessions.toLocaleString()}회</td>
+                                                        <td>{item.users.toLocaleString()}명</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div>
+                                <h3 className={styles.userSubTitle}>예약 클릭이 많은 노선</h3>
+                                {gaStats.bookingByRoute === null ? (
+                                    <div className={styles.dealReviewEmpty}>불러오지 못했습니다.</div>
+                                ) : gaStats.bookingByRoute.length === 0 ? (
+                                    <div className={styles.dealReviewEmpty}>아직 예약 클릭이 없습니다.</div>
+                                ) : (
+                                    <div className={styles.cityDetail}>
+                                        <table className={styles.cityTable}>
+                                            <thead><tr><th>노선</th><th>클릭</th></tr></thead>
+                                            <tbody>
+                                                {gaStats.bookingByRoute.map(item => (
+                                                    <tr key={item.label}>
+                                                        <td>{item.label}</td>
+                                                        <td>{item.count.toLocaleString()}회</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div>
+                                <h3 className={styles.userSubTitle}>알림 등록이 시작된 위치</h3>
+                                {gaStats.alertByEntry === null ? (
+                                    <div className={styles.dealReviewEmpty}>불러오지 못했습니다.</div>
+                                ) : gaStats.alertByEntry.length === 0 ? (
+                                    <div className={styles.dealReviewEmpty}>
+                                        아직 집계 전입니다. <code>entry_point</code> 측정기준은 등록 이후 데이터부터 쌓입니다.
+                                    </div>
+                                ) : (
+                                    <div className={styles.cityDetail}>
+                                        <table className={styles.cityTable}>
+                                            <thead><tr><th>진입점</th><th>등록</th></tr></thead>
+                                            <tbody>
+                                                {gaStats.alertByEntry.map(item => (
+                                                    <tr key={item.label}>
+                                                        <td>{item.label}</td>
+                                                        <td>{item.count.toLocaleString()}회</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {gaStats.otherEvents.length > 0 && (
+                            <p className={styles.sectionHelp} style={{ marginTop: '16px' }}>
+                                그 밖의 이벤트: {gaStats.otherEvents.map(entry => `${entry.name} ${entry.count.toLocaleString()}회`).join(' · ')}
+                            </p>
+                        )}
+
+                        {gaStats.warnings.length > 0 && (
+                            <div className={styles.dealReviewEmpty} style={{ marginTop: '16px' }}>
+                                {gaStats.warnings.map(warning => <div key={warning}>⚠️ {warning}</div>)}
+                            </div>
+                        )}
+                    </>
+                )}
+            </section>
 
             {/* 유저 통계 — 크롤링 현황과 별개로 "사람들이 무엇을 기다리는가"를 본다 */}
             <section className={styles.section}>
@@ -857,7 +1105,8 @@ export default function AdminPage() {
                 <h2>📈 수익 전환 분석</h2>
                 <div className={styles.card}>
                     <p style={{ margin: 0, lineHeight: 1.7 }}>
-                        예약·제휴 클릭은 GA4에서 확인합니다. 실제 구매와 수익은 마이리얼트립 및 Trip.com 파트너 정산 화면과 대조합니다.
+                        예약·제휴 클릭은 위 <strong>&ldquo;방문자와 행동(GA4)&rdquo;</strong> 항목에서 바로 볼 수 있습니다.
+                        더 깊게 파고들 때만 GA4를 열면 됩니다. 실제 구매와 수익은 마이리얼트립 및 Trip.com 파트너 정산 화면과 대조합니다.
                     </p>
                     <a href="https://analytics.google.com/" target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', marginTop: '10px', color: '#7c3aed', fontWeight: 700 }}>
                         Google Analytics 열기 →

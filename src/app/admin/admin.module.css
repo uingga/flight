@@ -757,6 +757,26 @@
     color: #94a3b8;
 }
 
+/* GA4 세부 표 — 4개라서 3열이 되면 마지막 줄이 하나만 남는다. 최대 2열로 묶는다 */
+.gaColumns {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0 24px;
+}
+
+@media (min-width: 760px) {
+    .gaColumns {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.gaColumns code {
+    padding: 1px 5px;
+    border-radius: 4px;
+    background: #0f172a;
+    font-size: 0.78rem;
+}
+
 .sectionHelp {
     margin: -6px 0 16px;
     color: #94a3b8;
