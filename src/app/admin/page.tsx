@@ -105,14 +105,18 @@ interface GaStatsData {
     events: Array<{ name: string; label: string; count: number; users: number }>;
     otherEvents: Array<{ name: string; label: string; count: number; users: number }>;
     conversion: {
+        detailOpenUsers: number;
+        detailOpenRate: number | null;
         bookingClickUsers: number;
         bookingClickRate: number | null;
+        detailToBookingRate: number | null;
         alertSetupUsers: number;
         alertSetupRate: number | null;
     };
     bookingByAgency: GaListItem[] | null;
     bookingByRoute: GaListItem[] | null;
     alertByEntry: GaListItem[] | null;
+    detailByEntry: GaListItem[] | null;
     channels: Array<{ label: string; sessions: number; users: number }> | null;
     warnings: string[];
 }
@@ -389,6 +393,20 @@ export default function AdminPage() {
                             </div>
                         </div>
 
+                        {/* 퍼널 — 어느 구간에서 사람이 빠지는지 한 줄로 본다 */}
+                        <p className={styles.sectionHelp} style={{ marginTop: '12px' }}>
+                            <strong>예약까지 가는 길:</strong>{' '}
+                            방문 {gaStats.totals.users.toLocaleString()}명
+                            {' → '}
+                            상세 열람 {gaStats.conversion.detailOpenUsers.toLocaleString()}명
+                            {gaStats.conversion.detailOpenRate !== null && ` (방문자의 ${gaStats.conversion.detailOpenRate}%)`}
+                            {' → '}
+                            예약 클릭 {gaStats.conversion.bookingClickUsers.toLocaleString()}명
+                            {gaStats.conversion.detailToBookingRate !== null && ` (상세를 연 사람의 ${gaStats.conversion.detailToBookingRate}%)`}
+                            . 상세까지 못 오면 카드 목록을, 상세에서 빠지면 상세 화면을 손볼 차례입니다.
+                            {gaStats.conversion.detailOpenUsers === 0 && ' (상세 열람은 2026-08-14부터 집계됩니다)'}
+                        </p>
+
                         <h3 className={styles.userSubTitle}>일별 방문자</h3>
                         {(() => {
                             const max = Math.max(...gaStats.trend.map(point => point.users), 1);
@@ -497,6 +515,31 @@ export default function AdminPage() {
                                             <thead><tr><th>노선</th><th>클릭</th></tr></thead>
                                             <tbody>
                                                 {gaStats.bookingByRoute.map(item => (
+                                                    <tr key={item.label}>
+                                                        <td>{item.label}</td>
+                                                        <td>{item.count.toLocaleString()}회</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div>
+                                <h3 className={styles.userSubTitle}>상세를 연 위치</h3>
+                                {gaStats.detailByEntry === null ? (
+                                    <div className={styles.dealReviewEmpty}>불러오지 못했습니다.</div>
+                                ) : gaStats.detailByEntry.length === 0 ? (
+                                    <div className={styles.dealReviewEmpty}>
+                                        아직 집계 전입니다. <code>detail_open</code>은 2026-08-14부터 수집합니다.
+                                    </div>
+                                ) : (
+                                    <div className={styles.cityDetail}>
+                                        <table className={styles.cityTable}>
+                                            <thead><tr><th>진입점</th><th>열람</th></tr></thead>
+                                            <tbody>
+                                                {gaStats.detailByEntry.map(item => (
                                                     <tr key={item.label}>
                                                         <td>{item.label}</td>
                                                         <td>{item.count.toLocaleString()}회</td>

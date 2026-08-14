@@ -138,9 +138,15 @@ export const trackCompareClick = (provider: 'naver' | 'skyscanner' | 'tripcom', 
     event('compare_click', { provider, route, price, currency: 'KRW', transport_type: 'beacon' });
 };
 
-/** Flight card click */
-export const trackCardClick = (route: string, price: number, airline: string, source: string) => {
-    event('card_click', { route, price, airline, source, currency: 'KRW' });
+/**
+ * Booking detail sheet opened — the funnel step between the card list and booking_click.
+ * `entry` records which surface opened it.
+ *
+ * Replaces the old `card_click` event (dropped 2026-08-14): back then a click on the card
+ * body did nothing, so the event only ever measured dead clicks.
+ */
+export const trackDetailOpen = (route: string, price: number, source: string, entry: string) => {
+    event('detail_open', { route, price, source, entry_point: entry, currency: 'KRW' });
 };
 
 export const trackFilterChange = (filterType: string, value: string) => {

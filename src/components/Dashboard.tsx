@@ -1100,6 +1100,19 @@ export default function Dashboard() {
         trackingId,
     });
 
+    // 예약 상세 시트를 여는 유일한 통로. entry로 "어디서 열었는지"를 남겨야
+    // 카드 목록 → 상세 → 예약 클릭 퍼널의 중간 구간이 GA4에서 보인다.
+    type DetailEntry = 'card_body' | 'book_button' | 'discovery_bar' | 'shared_link';
+    const openFlightDetail = (flight: Flight, entry: DetailEntry) => {
+        gtag.trackDetailOpen(
+            `${normalizeCity(flight.departure.city)}-${normalizeCity(flight.arrival.city)}`,
+            flight.price,
+            flight.source,
+            entry,
+        );
+        setModetourGuide(flight);
+    };
+
     const confirmBooking = () => {
         if (!bookingFlight) return;
         const url = getBookingUrl(bookingFlight, passengers);
@@ -1531,7 +1544,7 @@ export default function Dashboard() {
 
         if (!sharedFlight) return;
         openedSharedFlightId.current = sharedFlightId;
-        setModetourGuide(sharedFlight);
+        openFlightDetail(sharedFlight, 'shared_link');
     }, [sharedFlightId, loading, flights]);
 
     // ============================================
@@ -1768,7 +1781,7 @@ export default function Dashboard() {
                         className={styles.destinationDiscoveryBar}
                         onClick={(event) => {
                             event.stopPropagation();
-                            setModetourGuide(candidate);
+                            openFlightDetail(candidate, 'discovery_bar');
                         }}
                     >
                         <span className={styles.destinationDiscoveryIcon} aria-hidden="true">🧭</span>
@@ -2881,22 +2894,7 @@ export default function Dashboard() {
                                     <div
                                         key={flight.id}
                                         className={`card ${styles.flightCard} fade-in`}
-                                        onClick={() => {
-                                            const destination = normalizeCity(flight.arrival.city);
-                                            const agency = getSourceName(flight.source);
-
-                                            const formatD = (d: string) => d ? d.slice(5).replace('-', '.') : '';
-                                            const arrStr = flight.arrival.date ? formatD(flight.arrival.date) : '';
-                                            const depStr = flight.departure.date ? formatD(flight.departure.date) : '';
-                                            const flight_date = arrStr ? `${depStr}~${arrStr}` : (flight.departure.date || '');
-
-                                            gtag.trackCardClick(
-                                                `${normalizeCity(flight.departure.city)}-${destination}`,
-                                                flight.price,
-                                                agency,
-                                                flight.source
-                                            );
-                                        }}
+                                        onClick={() => openFlightDetail(flight, 'card_body')}
                                         style={{ cursor: 'pointer' }}
                                     >
 
@@ -2997,7 +2995,7 @@ export default function Dashboard() {
                                                         className="btn btn-primary"
                                                         onClick={(e) => {
                                                             e.stopPropagation();
-                                                            setModetourGuide(flight);
+                                                            openFlightDetail(flight, 'book_button');
                                                         }}
                                                     >
                                                         예약하기 →
