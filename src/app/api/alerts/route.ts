@@ -117,6 +117,33 @@ async function rowCount(query: string): Promise<number> {
     return Number(range?.split('/')[1] || 0);
 }
 
+function jsonResponse(body: Record<string, unknown>, status = 200) {
+    const response = NextResponse.json(body, { status });
+    response.cookies.delete('tikit_alert_nonce');
+    return response;
+}
+
+function validAlertId(value: unknown): value is string {
+    return typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);
+}
+
+async function queueTestNotification(alertKey: string): Promise<boolean> {
+    const token = process.env.GH_PAT;
+    if (!token) return false;
+    const response = await fetch('https://api.github.com/repos/uingga/flight/actions/workflows/send-alert-test.yml/dispatches', {
+        method: 'POST',
+        headers: {
+            Accept: 'application/vnd.github+json',
+            Authorization: `Bearer ${token}`,
+            'X-GitHub-Api-Version': '2022-11-28',
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ref: 'main', inputs: { alert_key: alertKey } }),
+        cache: 'no-store',
+    });
+    return response.status === 204;
+}
+
 export async function GET(request: NextRequest) {
     try {
         if (!sameSiteRequest(request)) return NextResponse.json({ error: 'forbidden' }, { status: 403 });
@@ -144,17 +171,104 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'forbidden' }, { status: 403 });
         }
 
-        const { subscription, conditions: rawConditions, baseline } = await request.json();
-        if (!subscription?.endpoint || !subscription?.keys?.p256dh || !subscription?.keys?.auth || !validPushEndpoint(subscription.endpoint)) {
+        const { action = 'register', subscription, conditions: rawConditions, baseline, alertId, maxPrice: rawMaxPrice } = await request.json();
+        if (!subscription?.endpoint || !validPushEndpoint(subscription.endpoint)) {
             return NextResponse.json({ error: 'invalid subscription' }, { status: 400 });
+        }
+
+        const endpointHash = hash(subscription.endpoint);
+
+        if (action === 'list') {
+            const listResponse = await supabaseRequest(
+                `price_alerts?select=alert_key,departure_city,arrival_city,max_price,created_at,updated_at&endpoint_hash=eq.${endpointHash}&active=eq.true&order=created_at.desc`
+            );
+            if (!listResponse.ok) throw new Error(`Supabase list failed: ${listResponse.status}`);
+            const rows = await listResponse.json() as Array<{
+                alert_key: string;
+                departure_city?: string;
+                arrival_city?: string;
+                max_price: number;
+                created_at: string;
+                updated_at: string;
+            }>;
+            return jsonResponse({
+                ok: true,
+                alerts: rows.map(row => ({
+                    id: row.alert_key,
+                    departureCity: row.departure_city,
+                    arrivalCity: row.arrival_city,
+                    maxPrice: row.max_price,
+                    createdAt: row.created_at,
+                    updatedAt: row.updated_at,
+                })),
+            });
+        }
+
+        if (action === 'delete') {
+            if (!validAlertId(alertId)) return jsonResponse({ error: 'invalid alert' }, 400);
+            const deleteResponse = await supabaseRequest(
+                `price_alerts?alert_key=eq.${alertId}&endpoint_hash=eq.${endpointHash}`,
+                {
+                    method: 'PATCH',
+                    headers: { Prefer: 'return=minimal' },
+                    body: JSON.stringify({ active: false, updated_at: new Date().toISOString() }),
+                }
+            );
+            if (!deleteResponse.ok) throw new Error(`Supabase delete failed: ${deleteResponse.status}`);
+            return jsonResponse({ ok: true });
+        }
+
+        if (action === 'update') {
+            const maxPrice = Number(rawMaxPrice);
+            if (!validAlertId(alertId) || !Number.isFinite(maxPrice) || maxPrice < 10000 || maxPrice > 10000000) {
+                return jsonResponse({ error: 'invalid alert update' }, 400);
+            }
+            const updateResponse = await supabaseRequest(
+                `price_alerts?alert_key=eq.${alertId}&endpoint_hash=eq.${endpointHash}&active=eq.true`,
+                {
+                    method: 'PATCH',
+                    headers: { Prefer: 'return=minimal' },
+                    body: JSON.stringify({ max_price: Math.round(maxPrice), updated_at: new Date().toISOString() }),
+                }
+            );
+            if (!updateResponse.ok) throw new Error(`Supabase update failed: ${updateResponse.status}`);
+            return jsonResponse({ ok: true });
+        }
+
+        if (action === 'test') {
+            if (!subscription?.keys?.p256dh || !subscription?.keys?.auth) {
+                return jsonResponse({ error: 'invalid subscription' }, 400);
+            }
+            const targetResponse = await supabaseRequest(
+                `price_alerts?select=alert_key,last_test_at&endpoint_hash=eq.${endpointHash}&active=eq.true&order=created_at.desc&limit=1`
+            );
+            if (!targetResponse.ok) throw new Error(`Supabase test lookup failed: ${targetResponse.status}`);
+            const targets = await targetResponse.json() as Array<{ alert_key: string; last_test_at?: string }>;
+            if (targets.length === 0) {
+                return jsonResponse({ error: 'no active alerts' }, 404);
+            }
+            const lastTestAt = targets[0].last_test_at ? new Date(targets[0].last_test_at).getTime() : 0;
+            if (Date.now() - lastTestAt < 10 * 60 * 1000) {
+                return jsonResponse({ error: 'test cooldown' }, 429);
+            }
+            const testQueued = await queueTestNotification(targets[0].alert_key);
+            if (!testQueued) return jsonResponse({ error: 'test unavailable' }, 503);
+            await supabaseRequest(`price_alerts?alert_key=eq.${targets[0].alert_key}`, {
+                method: 'PATCH',
+                body: JSON.stringify({ last_test_at: new Date().toISOString(), updated_at: new Date().toISOString() }),
+            });
+            return jsonResponse({ ok: true, testQueued }, 202);
+        }
+
+        if (!subscription?.keys?.p256dh || !subscription?.keys?.auth) {
+            return jsonResponse({ error: 'invalid subscription' }, 400);
         }
 
         const conditions = normalizeConditions(rawConditions);
         if (!conditions.arrivalCity || !conditions.departureCity || !conditions.maxPrice) {
-            return NextResponse.json({ error: 'alert conditions required' }, { status: 400 });
+            return jsonResponse({ error: 'alert conditions required' }, 400);
         }
 
-        const endpointHash = hash(subscription.endpoint);
         const alertKey = hash(`${subscription.endpoint}|${JSON.stringify(conditions)}`);
         const existingResponse = await supabaseRequest(`price_alerts?select=id&alert_key=eq.${alertKey}&limit=1`);
         if (!existingResponse.ok) throw new Error(`Supabase lookup failed: ${existingResponse.status}`);
@@ -198,9 +312,22 @@ export async function POST(request: NextRequest) {
         });
         if (!saveResponse.ok) throw new Error(`Supabase save failed: ${saveResponse.status}`);
 
-        const response = NextResponse.json({ ok: true, id: alertKey.slice(0, 24) });
-        response.cookies.delete('tikit_alert_nonce');
-        return response;
+        let testQueued = false;
+        if (existing.length === 0) {
+            try {
+                testQueued = await queueTestNotification(alertKey);
+                if (testQueued) {
+                    await supabaseRequest(`price_alerts?alert_key=eq.${alertKey}`, {
+                        method: 'PATCH',
+                        body: JSON.stringify({ last_test_at: new Date().toISOString(), updated_at: new Date().toISOString() }),
+                    });
+                }
+            } catch (error: unknown) {
+                console.error('Alert registration test failed:', error);
+            }
+        }
+
+        return jsonResponse({ ok: true, id: alertKey, testQueued });
     } catch (error) {
         console.error('Alert API error:', error);
         return NextResponse.json({ error: 'internal error' }, { status: 500 });

@@ -53,6 +53,15 @@ function getFreshnessInfo(checkedAt?: string) {
     return { multiplier: 1.35, label: `${Math.floor(ageHours / 24)}일 이상 전 확인` };
 }
 
+interface ManagedPriceAlert {
+    id: string;
+    departureCity: string;
+    arrivalCity: string;
+    maxPrice: number;
+    draftPrice: string;
+    createdAt: string;
+}
+
 export default function Dashboard() {
     const [flights, setFlights] = useState<Flight[]>([]);
     const [loading, setLoading] = useState(true);
@@ -103,6 +112,11 @@ export default function Dashboard() {
         status: 'idle' | 'saving' | 'sent' | 'error';
         message?: string;
     } | null>(null);
+    const [showPriceAlertManager, setShowPriceAlertManager] = useState(false);
+    const [managedPriceAlerts, setManagedPriceAlerts] = useState<ManagedPriceAlert[]>([]);
+    const [priceAlertManagerStatus, setPriceAlertManagerStatus] = useState<'idle' | 'loading' | 'error'>('idle');
+    const [priceAlertManagerMessage, setPriceAlertManagerMessage] = useState<string | null>(null);
+    const [priceAlertManagerBusy, setPriceAlertManagerBusy] = useState<string | null>(null);
     const priceAlertAreaRef = useRef<HTMLDivElement>(null);
     const observerRef = useRef<IntersectionObserver | null>(null);
     const loadMoreRef = useRef<HTMLDivElement | null>(null);
@@ -113,7 +127,7 @@ export default function Dashboard() {
 
     // 팝업이 열려 있는 동안 배경(body) 스크롤 잠금
     // (iOS Safari는 overflow:hidden만으로 안 막혀서 position:fixed 방식 사용)
-    const anyModalOpen = !!(bookingFlight || modetourGuide || bookingDisclaimer || naverDisclaimer || ttangConfirmFlight || showContactModal);
+    const anyModalOpen = !!(bookingFlight || modetourGuide || bookingDisclaimer || naverDisclaimer || ttangConfirmFlight || showContactModal || showPriceAlertManager);
     useEffect(() => {
         if (!anyModalOpen) return;
         const scrollY = window.scrollY;
@@ -535,6 +549,120 @@ export default function Dashboard() {
         setTimeout(() => setShareToast(null), 2500);
     };
 
+    const postPriceAlertAction = async (payload: Record<string, unknown>) => {
+        const nonceResponse = await fetch('/api/alerts', {
+            method: 'GET',
+            credentials: 'same-origin',
+        });
+        if (!nonceResponse.ok) throw new Error('가격 알림 보안 확인에 실패했습니다.');
+
+        const response = await fetch('/api/alerts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify(payload),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            const errorMessages: Record<string, string> = {
+                'test cooldown': '테스트 알림은 10분에 한 번 보낼 수 있습니다.',
+                'no active alerts': '테스트할 수 있는 활성 알림이 없습니다.',
+                'test unavailable': '테스트 알림 서비스를 잠시 사용할 수 없습니다.',
+            };
+            throw new Error(errorMessages[data.error] || '가격 알림 처리에 실패했습니다. 잠시 후 다시 시도해주세요.');
+        }
+        return data;
+    };
+
+    const getCurrentPushSubscription = async () => {
+        if (!('serviceWorker' in navigator) || !('PushManager' in window)) return null;
+        const registration = await navigator.serviceWorker.getRegistration();
+        return registration ? registration.pushManager.getSubscription() : null;
+    };
+
+    const loadManagedPriceAlerts = async () => {
+        setShowPriceAlertManager(true);
+        setPriceAlertManagerStatus('loading');
+        setPriceAlertManagerMessage(null);
+        try {
+            const subscription = await getCurrentPushSubscription();
+            if (!subscription) {
+                setManagedPriceAlerts([]);
+                setPriceAlertManagerStatus('idle');
+                return;
+            }
+            const data = await postPriceAlertAction({ action: 'list', subscription: subscription.toJSON() });
+            const alerts = Array.isArray(data.alerts) ? data.alerts : [];
+            setManagedPriceAlerts(alerts.map((alert: Omit<ManagedPriceAlert, 'draftPrice'>) => ({
+                ...alert,
+                draftPrice: String(alert.maxPrice),
+            })));
+            setPriceAlertManagerStatus('idle');
+        } catch (error) {
+            setPriceAlertManagerStatus('error');
+            setPriceAlertManagerMessage(error instanceof Error ? error.message : '내 알림을 불러오지 못했습니다.');
+        }
+    };
+
+    const updateManagedPriceAlert = async (alert: ManagedPriceAlert) => {
+        const maxPrice = Number(alert.draftPrice);
+        if (!Number.isFinite(maxPrice) || maxPrice < 10000 || maxPrice > 10000000) {
+            setPriceAlertManagerMessage('목표 가격을 1만원 이상으로 입력해주세요.');
+            return;
+        }
+        setPriceAlertManagerBusy(alert.id);
+        setPriceAlertManagerMessage(null);
+        try {
+            const subscription = await getCurrentPushSubscription();
+            if (!subscription) throw new Error('이 브라우저의 알림 연결을 찾지 못했습니다.');
+            await postPriceAlertAction({
+                action: 'update',
+                subscription: subscription.toJSON(),
+                alertId: alert.id,
+                maxPrice,
+            });
+            setManagedPriceAlerts(current => current.map(item => item.id === alert.id
+                ? { ...item, maxPrice: Math.round(maxPrice), draftPrice: String(Math.round(maxPrice)) }
+                : item));
+            setPriceAlertManagerMessage('목표 가격을 변경했습니다.');
+        } catch (error) {
+            setPriceAlertManagerMessage(error instanceof Error ? error.message : '목표 가격을 변경하지 못했습니다.');
+        } finally {
+            setPriceAlertManagerBusy(null);
+        }
+    };
+
+    const deleteManagedPriceAlert = async (alert: ManagedPriceAlert) => {
+        setPriceAlertManagerBusy(alert.id);
+        setPriceAlertManagerMessage(null);
+        try {
+            const subscription = await getCurrentPushSubscription();
+            if (!subscription) throw new Error('이 브라우저의 알림 연결을 찾지 못했습니다.');
+            await postPriceAlertAction({ action: 'delete', subscription: subscription.toJSON(), alertId: alert.id });
+            setManagedPriceAlerts(current => current.filter(item => item.id !== alert.id));
+            setPriceAlertManagerMessage(`${alert.departureCity} → ${alert.arrivalCity} 알림을 해제했습니다.`);
+        } catch (error) {
+            setPriceAlertManagerMessage(error instanceof Error ? error.message : '알림을 해제하지 못했습니다.');
+        } finally {
+            setPriceAlertManagerBusy(null);
+        }
+    };
+
+    const sendManagedPriceAlertTest = async () => {
+        setPriceAlertManagerBusy('test');
+        setPriceAlertManagerMessage(null);
+        try {
+            const subscription = await getCurrentPushSubscription();
+            if (!subscription) throw new Error('이 브라우저의 알림 연결을 찾지 못했습니다.');
+            await postPriceAlertAction({ action: 'test', subscription: subscription.toJSON() });
+            setPriceAlertManagerMessage('테스트 알림을 요청했습니다. 잠시 후 기기 알림을 확인해주세요.');
+        } catch (error) {
+            setPriceAlertManagerMessage(error instanceof Error ? error.message : '테스트 알림을 보내지 못했습니다.');
+        } finally {
+            setPriceAlertManagerBusy(null);
+        }
+    };
+
     const savePriceAlert = async (flight: Flight) => {
         const maxPrice = Number(priceAlertSetup?.maxPrice);
         if (!Number.isFinite(maxPrice) || maxPrice < 10000 || maxPrice > 10000000) {
@@ -579,35 +707,25 @@ export default function Dashboard() {
                     applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
                 });
 
-            const nonceResponse = await fetch('/api/alerts', {
-                method: 'GET',
-                credentials: 'same-origin',
+            const result = await postPriceAlertAction({
+                subscription: subscription.toJSON(),
+                conditions: {
+                    departureCity: normalizeCity(flight.departure.city),
+                    arrivalCity: normalizeCity(flight.arrival.city),
+                    maxPrice,
+                },
+                baseline: {
+                    flightId: flight.id,
+                    price: flight.price,
+                },
             });
-            if (!nonceResponse.ok) throw new Error('가격 알림 보안 확인에 실패했습니다.');
-
-            const response = await fetch('/api/alerts', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'same-origin',
-                body: JSON.stringify({
-                    subscription: subscription.toJSON(),
-                    conditions: {
-                        departureCity: normalizeCity(flight.departure.city),
-                        arrivalCity: normalizeCity(flight.arrival.city),
-                        maxPrice,
-                    },
-                    baseline: {
-                        flightId: flight.id,
-                        price: flight.price,
-                    },
-                }),
-            });
-            if (!response.ok) throw new Error('가격 알림 저장에 실패했습니다.');
 
             setPriceAlertSetup(current => current ? {
                 ...current,
                 status: 'sent',
-                message: `${formatPrice(maxPrice)} 이하의 새로운 특가나 의미 있는 가격 하락이 생기면 알려드릴게요.`,
+                message: result.testQueued
+                    ? `등록 완료! 테스트 알림을 요청했습니다. ${formatPrice(maxPrice)} 이하 특가가 나오면 알려드릴게요.`
+                    : `${formatPrice(maxPrice)} 이하의 새로운 특가가 생기면 알려드릴게요.`,
             } : current);
         } catch (error) {
             setPriceAlertSetup(current => current ? {
@@ -2291,6 +2409,13 @@ export default function Dashboard() {
                         <div className={styles.stats}>
                             <div className={styles.statsHeader}>
                                 <span className={styles.resultCount}>총 <strong>{filteredFlights.length}</strong>개의 항공권</span>
+                                <button
+                                    type="button"
+                                    className={styles.alertManagerBtn}
+                                    onClick={loadManagedPriceAlerts}
+                                >
+                                    🔔 내 알림{managedPriceAlerts.length > 0 ? ` ${managedPriceAlerts.length}` : ''}
+                                </button>
                                 {favoriteFlights.length > 0 && (
                                     <button
                                         className={favFilter ? styles.favFilterBtnActive : styles.favFilterBtn}
@@ -3381,6 +3506,97 @@ export default function Dashboard() {
                         }}>
                             땡처리닷컴에서 예약하기 →
                         </button>
+                    </div>
+                </div>
+            )}
+
+            {/* 현재 브라우저의 가격 알림 관리 */}
+            {showPriceAlertManager && (
+                <div className={styles.modalOverlay} onClick={() => setShowPriceAlertManager(false)}>
+                    <div className={styles.alertManagerSheet} onClick={(event) => event.stopPropagation()}>
+                        <div className={styles.modalHeader}>
+                            <div>
+                                <h3 className={styles.modalTitle}>🔔 내 가격 알림</h3>
+                                <p className={styles.alertManagerSubtitle}>이 브라우저에서 등록한 알림만 표시됩니다.</p>
+                            </div>
+                            <button className={styles.modalClose} onClick={() => setShowPriceAlertManager(false)}>×</button>
+                        </div>
+
+                        <div className={styles.alertManagerBody}>
+                            {priceAlertManagerStatus === 'loading' ? (
+                                <div className={styles.alertManagerEmpty}>알림을 불러오는 중…</div>
+                            ) : managedPriceAlerts.length === 0 ? (
+                                <div className={styles.alertManagerEmpty}>
+                                    <span>🔕</span>
+                                    <strong>등록된 가격 알림이 없습니다.</strong>
+                                    <p>항공권 상세 화면에서 원하는 노선의 가격 알림을 등록할 수 있어요.</p>
+                                </div>
+                            ) : (
+                                <div className={styles.alertManagerList}>
+                                    {managedPriceAlerts.map(alert => (
+                                        <div key={alert.id} className={styles.alertManagerItem}>
+                                            <div className={styles.alertManagerRoute}>
+                                                <strong>{alert.departureCity} → {alert.arrivalCity}</strong>
+                                                <span>출발일 상관없이</span>
+                                            </div>
+                                            <label className={styles.alertManagerPrice}>
+                                                <span>목표 가격</span>
+                                                <div>
+                                                    <input
+                                                        type="number"
+                                                        min="10000"
+                                                        max="10000000"
+                                                        step="1000"
+                                                        inputMode="numeric"
+                                                        value={alert.draftPrice}
+                                                        onChange={event => setManagedPriceAlerts(current => current.map(item => item.id === alert.id
+                                                            ? { ...item, draftPrice: event.target.value }
+                                                            : item))}
+                                                        aria-label={`${alert.departureCity}에서 ${alert.arrivalCity} 목표 가격`}
+                                                    />
+                                                    <span>원 이하</span>
+                                                </div>
+                                            </label>
+                                            <div className={styles.alertManagerActions}>
+                                                <button
+                                                    type="button"
+                                                    className={styles.alertManagerSaveBtn}
+                                                    disabled={priceAlertManagerBusy !== null || alert.draftPrice === String(alert.maxPrice)}
+                                                    onClick={() => updateManagedPriceAlert(alert)}
+                                                >
+                                                    {priceAlertManagerBusy === alert.id ? '저장 중…' : '변경 저장'}
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className={styles.alertManagerDeleteBtn}
+                                                    disabled={priceAlertManagerBusy !== null}
+                                                    onClick={() => deleteManagedPriceAlert(alert)}
+                                                >
+                                                    알림 해제
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {priceAlertManagerMessage && (
+                                <p className={priceAlertManagerStatus === 'error' ? styles.alertManagerError : styles.alertManagerMessage}>
+                                    {priceAlertManagerMessage}
+                                </p>
+                            )}
+
+                            {managedPriceAlerts.length > 0 && (
+                                <button
+                                    type="button"
+                                    className={styles.alertManagerTestBtn}
+                                    disabled={priceAlertManagerBusy !== null}
+                                    onClick={sendManagedPriceAlertTest}
+                                >
+                                    {priceAlertManagerBusy === 'test' ? '테스트 알림 보내는 중…' : '테스트 알림 보내기'}
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}

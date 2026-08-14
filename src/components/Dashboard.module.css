@@ -423,6 +423,27 @@
     white-space: nowrap;
 }
 
+.alertManagerBtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px 11px;
+    border: 1px solid #ddd9ff;
+    border-radius: 999px;
+    background: #f7f6ff;
+    color: #4338ca;
+    font-size: 0.78rem;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: 0.15s ease;
+}
+
+.alertManagerBtn:hover {
+    border-color: #a5b4fc;
+    background: #f0efff;
+}
+
 @media (max-width: 768px) {
     .stats {
         flex-direction: column;
@@ -2804,6 +2825,182 @@
     opacity: 0.6;
 }
 
+.alertManagerSheet {
+    width: min(500px, calc(100vw - 32px));
+    max-height: min(720px, calc(100dvh - 48px));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-radius: 20px;
+    background: #fff;
+    box-shadow: 0 24px 80px rgba(15, 23, 42, 0.24);
+}
+
+.alertManagerSubtitle {
+    margin: 3px 0 0;
+    color: #8b8f99;
+    font-size: 11px;
+}
+
+.alertManagerBody {
+    padding: 4px 20px 20px;
+}
+
+.alertManagerEmpty {
+    min-height: 180px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: #6b7280;
+    text-align: center;
+}
+
+.alertManagerEmpty > span {
+    font-size: 32px;
+}
+
+.alertManagerEmpty strong {
+    color: #374151;
+    font-size: 14px;
+}
+
+.alertManagerEmpty p {
+    max-width: 300px;
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.55;
+}
+
+.alertManagerList {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.alertManagerItem {
+    padding: 14px;
+    border: 1px solid #e6e3ff;
+    border-radius: 14px;
+    background: #faf9ff;
+}
+
+.alertManagerRoute {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.alertManagerRoute strong {
+    color: #312e81;
+    font-size: 15px;
+}
+
+.alertManagerRoute span {
+    color: #8b8f99;
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+.alertManagerPrice {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    color: #4b5563;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.alertManagerPrice > div {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.alertManagerPrice input {
+    width: 118px;
+    padding: 8px 9px;
+    border: 1px solid #d9d6f5;
+    border-radius: 8px;
+    background: #fff;
+    color: #312e81;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: right;
+}
+
+.alertManagerActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 7px;
+    margin-top: 11px;
+}
+
+.alertManagerActions button,
+.alertManagerTestBtn {
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.alertManagerActions button {
+    padding: 7px 10px;
+}
+
+.alertManagerSaveBtn {
+    border: 1px solid #c7d2fe;
+    background: #eef2ff;
+    color: #4338ca;
+}
+
+.alertManagerDeleteBtn {
+    border: 1px solid #fecaca;
+    background: #fff;
+    color: #b91c1c;
+}
+
+.alertManagerActions button:disabled,
+.alertManagerTestBtn:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+}
+
+.alertManagerMessage,
+.alertManagerError {
+    margin: 12px 0 0;
+    font-size: 12px;
+    line-height: 1.5;
+    text-align: center;
+}
+
+.alertManagerMessage {
+    color: #15803d;
+}
+
+.alertManagerError {
+    color: #b91c1c;
+}
+
+.alertManagerTestBtn {
+    width: 100%;
+    margin-top: 14px;
+    padding: 10px 12px;
+    border: 1px solid #ddd9ff;
+    background: #fff;
+    color: #4338ca;
+}
+
+.alertManagerTestBtn:hover:not(:disabled) {
+    background: #f7f6ff;
+}
+
 .mdtSearchGuide {
     padding: 12px 14px;
     background: #f5f3ff;
@@ -3118,6 +3315,21 @@
 
     .priceAlertArea {
         margin: 8px 16px 2px;
+    }
+
+    .alertManagerSheet {
+        width: 100%;
+        max-height: 88dvh;
+        border-radius: 20px 20px 0 0;
+        margin-top: auto;
+    }
+
+    .alertManagerBody {
+        padding: 2px 16px calc(18px + env(safe-area-inset-bottom));
+    }
+
+    .alertManagerPrice input {
+        width: 104px;
     }
 
     .mdtFooter {
