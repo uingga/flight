@@ -1165,22 +1165,6 @@
     white-space: nowrap;
 }
 
-/*
- * 가격 숫자는 next/font 다운로드·빌드 해시에 영향받지 않도록
- * 웹폰트 대신 기기 기본 UI 글꼴을 일관되게 사용한다.
- */
-.price,
-.modalPrice,
-.modalTotalPrice,
-.mdtNormalPrice,
-.mdtFinalPrice,
-.mdtPriceRow strong,
-.mdtPriceTotalValue,
-.detailPrice {
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    font-variant-numeric: tabular-nums;
-}
-
 .discountBadge {
     font-size: 0.8rem;
     font-weight: 700;
