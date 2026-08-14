@@ -1185,6 +1185,97 @@ export default function Dashboard() {
         return flight.departure.city.includes(departureFilter);
     };
 
+    // 추천순(스마트 정렬) 점수 — 낮을수록 상위.
+    // 가격을 기준으로 인터파크 벤치마크·네이버 최저가 대비 페널티/보너스를 곱해 "얼마나 좋은 딜인가"를 만든다.
+    const recommendScores = useMemo(() => {
+        const getSortScore = (flight: Flight) => {
+            // 땡처리닷컴은 결제 단계에서 발권수수료(TASF) 2만원이 추가되므로
+            // 추천순에서만 수수료를 포함한 실질 가격으로 비교한다.
+            const effectivePrice = flight.price + (flight.source === 'ttang' ? 20000 : 0);
+            const city = flight.arrival.city?.replace(/\([^)]+\)/, '').trim();
+            const depMonth = flight.departure.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 7);
+            const ipCityData = interparkPrices[city];
+            // 당월 데이터가 없으면 가장 가까운 월 데이터 사용
+            let ipMonthData = ipCityData?.[depMonth];
+            if (!ipMonthData && ipCityData && depMonth) {
+                const months = Object.keys(ipCityData).sort();
+                const closest = months.reduce((best, m) => {
+                    const diff = Math.abs(m.localeCompare(depMonth));
+                    const bestDiff = best ? Math.abs(best.localeCompare(depMonth)) : Infinity;
+                    return diff < bestDiff ? m : best;
+                }, '' as string);
+                if (closest) ipMonthData = ipCityData[closest];
+            }
+
+            let score = effectivePrice;
+
+            // 네이버보다 싼 항공권인지 먼저 확인 (전 여행사 공통)
+            const isNaverCheaper = flight.naverLowest && flight.naverLowest > 0
+                && effectivePrice <= flight.naverLowest;
+
+            // 인터파크 도시 데이터 자체가 없는 경우 — 약간 페널티 (검증 불가)
+            if (!ipMonthData) {
+                score = score * 1.1;
+            } else if (effectivePrice <= ipMonthData.lowest) {
+                // 1. 월간 최저가 이하 — 페널티 없음
+            } else if (effectivePrice <= ipMonthData.lowest * 1.2) {
+                // 2. 최저가 초과 ~ ×1.2 이내 — 살짝 페널티
+                score = score * 1.15;
+            } else if (effectivePrice < ipMonthData.avg) {
+                // 3. 최저가의 120% 초과 ~ 평균가 미만 -> 페널티
+                score = score * 1.3;
+            } else {
+                // 4. 평균가보다 비싼 경우 → 단, 네이버보다 싸면 가벼운 페널티만
+                score = isNaverCheaper ? score * 1.3 : score * 10;
+            }
+
+            // 네이버 최저가 보정 (전 여행사 공통)
+            if (flight.naverLowest && flight.naverLowest > 0) {
+                const ratio = (effectivePrice - flight.naverLowest) / flight.naverLowest;
+                if (ratio <= -0.20) score *= 0.3;        // 네이버보다 20% 이상 싸다 → 최우선 상향
+                else if (ratio <= -0.15) score *= 0.375; // 15~20% 싸다
+                else if (ratio <= -0.10) score *= 0.45;  // 10~15% 싸다
+                else if (ratio <= -0.05) score *= 0.55;  // 5~10% 싸다
+                else if (ratio <= 0) score *= 0.65;      // 0~5% 싸다
+                else if (ratio <= 0.05) score *= 1.05;   // 0~5% 비싸다 → 거의 동일, 미세 페널티
+                else if (ratio <= 0.10) score *= 1.15;   // 5~10% 비싸다
+                else if (ratio <= 0.15) score *= 1.3;    // 10~15% 비싸다
+                else if (ratio <= 0.20) score *= 1.5;    // 15~20% 비싸다
+                else score *= 2.0;                       // 20% 이상 비싸다 → 최대 페널티
+            }
+
+            // 오래된 가격일수록 추천순에서 단계적으로 낮춘다.
+            // 가격·시간대 등 기존 장점은 유지하되 5일 이상 미확인 데이터만 크게 감점한다.
+            score *= getFreshnessInfo(flight.priceCheckedAt).multiplier;
+
+            return score;
+        };
+
+        const scores = new Map<string, number>();
+        for (const flight of flights) scores.set(flight.id, getSortScore(flight));
+
+        // 같은 노선인데 더 비싼 항공권이 위에 오면 사용자가 납득하지 못한다.
+        // 벤치마크 데이터 유무에 따라 점수가 크게 갈리기 때문에 생기는 역전인데
+        // (네이버 최저가가 없으면 보너스를 못 받아 싼 표가 밀린다), 노선 안에서만 순서를 바로잡는다.
+        // 노선이 목록에서 확보한 점수 자리는 그대로 두고, 그 자리를 싼 항공권부터 채운다.
+        // 따라서 노선 간 우선순위는 유지되고 노선 내 가격 역전만 사라진다.
+        const byRoute = new Map<string, Flight[]>();
+        for (const flight of flights) {
+            const key = `${normalizeCity(flight.departure.city)}-${normalizeCity(flight.arrival.city)}`;
+            const group = byRoute.get(key);
+            if (group) group.push(flight);
+            else byRoute.set(key, [flight]);
+        }
+        Array.from(byRoute.values()).forEach(group => {
+            if (group.length < 2) return;
+            const slots = group.map(flight => scores.get(flight.id)!).sort((x, y) => x - y);
+            group.slice()
+                .sort((x, y) => x.price - y.price || scores.get(x.id)! - scores.get(y.id)!)
+                .forEach((flight, index) => scores.set(flight.id, slots[index]));
+        });
+        return scores;
+    }, [flights, interparkPrices]);
+
     const filteredFlights = flights.filter(flight => {
         // 공유 링크로 접근 시 해당 항공편만 표시
         if (sharedFlightId) {
@@ -1243,100 +1334,7 @@ export default function Dashboard() {
                 break;
             }
             case 'discount': {
-                // 스마트 정렬 (Penalty Score Sorting)
-                // 기본적으로 가격순(최저가)으로 정렬하되, 인터파크 벤치마크와 네이버 최저가를 활용하여 페널티/보너스를 부여합니다.
-                const getSortScore = (flight: Flight) => {
-                    // 땡처리닷컴은 결제 단계에서 발권수수료(TASF) 2만원이 추가되므로
-                    // 추천순에서만 수수료를 포함한 실질 가격으로 비교한다.
-                    const effectivePrice = flight.price + (flight.source === 'ttang' ? 20000 : 0);
-                    const city = flight.arrival.city?.replace(/\([^)]+\)/, '').trim();
-                    const depMonth = flight.departure.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 7);
-                    const ipCityData = interparkPrices[city];
-                    // 당월 데이터가 없으면 가장 가까운 월 데이터 사용
-                    let ipMonthData = ipCityData?.[depMonth];
-                    if (!ipMonthData && ipCityData && depMonth) {
-                        const months = Object.keys(ipCityData).sort();
-                        const closest = months.reduce((best, m) => {
-                            const diff = Math.abs(m.localeCompare(depMonth));
-                            const bestDiff = best ? Math.abs(best.localeCompare(depMonth)) : Infinity;
-                            return diff < bestDiff ? m : best;
-                        }, '' as string);
-                        if (closest) ipMonthData = ipCityData[closest];
-                    }
-
-                    let score = effectivePrice;
-
-                    // 네이버보다 싼 항공권인지 먼저 확인 (전 여행사 공통)
-                    const isNaverCheaper = flight.naverLowest && flight.naverLowest > 0
-                        && effectivePrice <= flight.naverLowest;
-
-                    // 인터파크 도시 데이터 자체가 없는 경우 — 약간 페널티 (검증 불가)
-                    if (!ipMonthData) {
-                        score = score * 1.1;
-                    } else if (effectivePrice <= ipMonthData.lowest) {
-                        // 1. 월간 최저가 이하 — 페널티 없음
-                    } else if (effectivePrice <= ipMonthData.lowest * 1.2) {
-                        // 2. 최저가 초과 ~ ×1.2 이내 — 살짝 페널티
-                        score = score * 1.15;
-                    } else if (effectivePrice < ipMonthData.avg) {
-                        // 3. 최저가의 120% 초과 ~ 평균가 미만 -> 페널티
-                        score = score * 1.3;
-                    } else {
-                        // 4. 평균가보다 비싼 경우 → 단, 네이버보다 싸면 가벼운 페널티만
-                        score = isNaverCheaper ? score * 1.3 : score * 10;
-                    }
-
-                    // 네이버 최저가 보정 (전 여행사 공통)
-                    if (flight.naverLowest && flight.naverLowest > 0) {
-                        const ratio = (effectivePrice - flight.naverLowest) / flight.naverLowest;
-                        if (ratio <= -0.20) {
-                            // 네이버보다 20% 이상 싸다 → 최우선 상향
-                            score *= 0.3;
-                        } else if (ratio <= -0.15) {
-                            // 네이버보다 15~20% 싸다
-                            score *= 0.375;
-                        } else if (ratio <= -0.10) {
-                            // 네이버보다 10~15% 싸다
-                            score *= 0.45;
-                        } else if (ratio <= -0.05) {
-                            // 네이버보다 5~10% 싸다
-                            score *= 0.55;
-                        } else if (ratio <= 0) {
-                            // 네이버보다 0~5% 싸다
-                            score *= 0.65;
-                        } else if (ratio <= 0.05) {
-                            // 0~5% 비싸다 → 거의 동일, 미세 페널티
-                            score *= 1.05;
-                        } else if (ratio <= 0.10) {
-                            // 5~10% 비싸다 → 약한 페널티
-                            score *= 1.15;
-                        } else if (ratio <= 0.15) {
-                            // 10~15% 비싸다 → 페널티
-                            score *= 1.3;
-                        } else if (ratio <= 0.20) {
-                            // 15~20% 비싸다 → 페널티
-                            score *= 1.5;
-                        } else {
-                            // 20% 이상 비싸다 → 최대 페널티
-                            score *= 2.0;
-                        }
-                    }
-
-                    // 오래된 가격일수록 추천순에서 단계적으로 낮춘다.
-                    // 가격·시간대 등 기존 장점은 유지하되 5일 이상 미확인 데이터만 크게 감점한다.
-                    score *= getFreshnessInfo(flight.priceCheckedAt).multiplier;
-
-                    return score;
-                };
-
-                const scoreA = getSortScore(a);
-                const scoreB = getSortScore(b);
-
-                comparison = scoreA - scoreB;
-
-                // 기존 할인율 정렬은 내림차순(desc) 효과를 주기 위해 여기서 반전시켰지만,
-                // 이제는 낮을수록 좋은 값(티어, 가격)이므로 기본 오름차순이 맞습니다.
-                // 아래 sortOrder 처리와 맞물려 정상 작동합니다.
+                comparison = (recommendScores.get(a.id) ?? Infinity) - (recommendScores.get(b.id) ?? Infinity);
                 break;
             }
         }
@@ -3984,6 +3982,22 @@ export default function Dashboard() {
                         </div>
 
                         <div className={styles.alertManagerBody}>
+                            <button
+                                type="button"
+                                className={styles.alertManagerCreateDealBtn}
+                                onClick={() => {
+                                    setShowPriceAlertManager(false);
+                                    openDealAlertSetup();
+                                }}
+                            >
+                                <span className={styles.alertManagerCreateDealIcon}>✨</span>
+                                <span>
+                                    <strong>새 특가 알림 만들기</strong>
+                                    <small>날짜·목적지 없이 출발지·지역·예산만 선택</small>
+                                </span>
+                                <b aria-hidden="true">›</b>
+                            </button>
+
                             {priceAlertManagerStatus === 'loading' ? (
                                 <div className={styles.alertManagerEmpty}>알림을 불러오는 중…</div>
                             ) : managedPriceAlerts.length === 0 ? (
