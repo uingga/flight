@@ -18,7 +18,8 @@
     "deploy:mark": "node scripts/deploy-guard.mjs mark",
     "deploy:list": "node scripts/deploy-guard.mjs list",
     "deploy:rollback": "node scripts/deploy-guard.mjs rollback",
-    "blog:draft": "node scripts/draft-naver-blog.mjs"
+    "blog:draft": "node scripts/draft-naver-blog.mjs",
+    "blog:preview": "node scripts/generate-blog.js --local --preview-week"
   },
   "dependencies": {
     "@types/react-datepicker": "^6.2.0",

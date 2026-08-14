@@ -70,15 +70,21 @@ function fetchProductionFlights() {
 //   node scripts/generate-blog.js --include 후쿠오카,세부   (강제 포함, 중복 제외 무시)
 //   node scripts/generate-blog.js --exclude 칭다오          (강제 제외)
 //   node scripts/generate-blog.js --include 후쿠오카 --exclude 칭다오
+//   node scripts/generate-blog.js --local --preview-week [--date 2026-08-17]
 function parseCliArgs() {
     const args = process.argv.slice(2);
-    const result = { include: [], exclude: [] };
+    const result = { include: [], exclude: [], previewWeek: false, date: null };
     for (let i = 0; i < args.length; i++) {
         if (args[i] === '--include' && args[i + 1]) {
             result.include = args[i + 1].split(',').map(s => s.trim());
             i++;
         } else if (args[i] === '--exclude' && args[i + 1]) {
             result.exclude = args[i + 1].split(',').map(s => s.trim());
+            i++;
+        } else if (args[i] === '--preview-week') {
+            result.previewWeek = true;
+        } else if (args[i] === '--date' && args[i + 1]) {
+            result.date = args[i + 1];
             i++;
         }
     }
@@ -530,6 +536,13 @@ async function main() {
 
     // 6. Top 3 선발 (종합점수 + 지방/수도권 출발 보장 + 중복 방지)
     const rankedFlights = rankBlogFlights(flights);
+
+    if (CLI_OVERRIDES.previewWeek) {
+        const requestedStartDate = parsePreviewDate(CLI_OVERRIDES.date);
+        previewThemeWeek(rankedFlights, recentDests, priceDropDestNames, requestedStartDate);
+        return;
+    }
+
     const topFlights = selectTopWithIncheon(rankedFlights, recentDests, priceDropDestNames);
 
     if (topFlights.length === 0) {
@@ -798,6 +811,264 @@ function rankBlogFlights(candidates, statsFlights = candidates) {
             blogScore: { totalScore, priceScore, discountScore, popularityScore, convenienceScore, naverScore },
         };
     }).sort((a, b) => b.blogScore.totalScore - a.blogScore.totalScore || getEffectiveBlogPrice(a) - getEffectiveBlogPrice(b));
+}
+
+// ===== 요일별 발견형 콘텐츠 미리보기 =====
+const BLOG_THEMES = {
+    budget: { label: '20만원으로 갈 수 있는 여행' },
+    regional: { label: '지방공항에서 발견한 특가' },
+    noLeave: { label: '연차 없이 가능한 일정' },
+    shortTrip: { label: '연차 하루면 가능한 짧은 일정' },
+    discovery: { label: '처음 보는 여행지' },
+    drop: { label: '이번 주 티키티킷 드롭' },
+    lastMinute: { label: '다음 주 바로 떠나는 항공권' },
+};
+
+function parsePreviewDate(value) {
+    if (!value) return null;
+    const match = String(value).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!match) throw new Error(`--date 형식이 올바르지 않습니다: ${value} (YYYY-MM-DD 필요)`);
+    const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+    if (Number.isNaN(date.getTime())) throw new Error(`--date 값을 해석할 수 없습니다: ${value}`);
+    return date;
+}
+
+function addLocalDays(date, amount) {
+    const result = new Date(date);
+    result.setDate(result.getDate() + amount);
+    return result;
+}
+
+function getNextMonday(date) {
+    const day = date.getDay();
+    const offset = day === 1 ? 0 : (8 - day) % 7;
+    return addLocalDays(date, offset);
+}
+
+function formatYmd(date) {
+    return [
+        date.getFullYear(),
+        String(date.getMonth() + 1).padStart(2, '0'),
+        String(date.getDate()).padStart(2, '0'),
+    ].join('-');
+}
+
+function flightDepartureDate(flight) {
+    const match = String(flight.departure?.date || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!match) return null;
+    return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+}
+
+function isCapitalDeparture(flight) {
+    const city = normalizeCity(flight.departure?.city);
+    return city === '인천' || city === '김포';
+}
+
+function uniqueDestinationCount(flights) {
+    return new Set(flights.map(f => normalizeCity(f.arrival?.city))).size;
+}
+
+function isNoLeaveSchedule(flight) {
+    const depDate = flightDepartureDate(flight);
+    const returnDate = (() => {
+        const match = String(flight.arrival?.date || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
+        return match ? new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3])) : null;
+    })();
+    if (!depDate || !returnDate) return false;
+
+    const depDay = depDate.getDay();
+    const returnDay = returnDate.getDay();
+    const depHour = parseHour(flight.departure?.time);
+    const leavesAfterWork = depDay === 5 && depHour !== null && depHour >= 17;
+    const leavesSaturday = depDay === 6;
+    return (leavesAfterWork || leavesSaturday) && returnDay === 0;
+}
+
+// 평일 09~18시 근무를 가정해 실제로 휴가가 필요한 평일 수를 계산한다.
+// 출발일 18시 이후 출발과 귀국일 08시 이전 도착은 연차가 필요 없는 것으로 본다.
+function getRequiredLeaveDays(flight) {
+    const depDate = flightDepartureDate(flight);
+    const returnMatch = String(flight.arrival?.date || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!depDate || !returnMatch) return Number.POSITIVE_INFINITY;
+    const returnDate = new Date(Number(returnMatch[1]), Number(returnMatch[2]) - 1, Number(returnMatch[3]));
+    const depHour = parseHour(flight.departure?.time);
+    const returnHour = parseHour(flight.arrival?.arrivalTime || flight.arrival?.time);
+    let leaveDays = 0;
+
+    for (let cursor = new Date(depDate); cursor <= returnDate; cursor = addLocalDays(cursor, 1)) {
+        const day = cursor.getDay();
+        if (day === 0 || day === 6) continue;
+        const isDepartureDay = cursor.toDateString() === depDate.toDateString();
+        const isReturnDay = cursor.toDateString() === returnDate.toDateString();
+        if (isDepartureDay && depHour !== null && depHour >= 18) continue;
+        if (isReturnDay && returnHour !== null && returnHour < 8) continue;
+        leaveDays++;
+    }
+    return leaveDays;
+}
+
+function getDaysUntilDeparture(flight, referenceDate) {
+    const depDate = flightDepartureDate(flight);
+    if (!depDate) return Number.POSITIVE_INFINITY;
+    const start = new Date(referenceDate);
+    start.setHours(0, 0, 0, 0);
+    return Math.round((depDate - start) / 86400000);
+}
+
+function isRecentlyAdded(flight, referenceDate, days = 4) {
+    const match = String(flight.firstSeen || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!match) return false;
+    const firstSeen = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+    const age = Math.round((referenceDate - firstSeen) / 86400000);
+    return age >= 0 && age <= days;
+}
+
+function discoveryPriceCap(flight) {
+    const region = categorizeRegion(flight.arrival?.city || '');
+    if (region === '일본' || region === '중국' || region === '대만') return 300000;
+    if (region === '동남아') return 450000;
+    return 600000;
+}
+
+function rankDiscoveryFlights(flights) {
+    return flights
+        .filter(flight => {
+            const score = flight.blogScore;
+            const tripDays = getTripDays(flight);
+            return score
+                && score.totalScore >= 35
+                && score.naverScore >= 15
+                && getEffectiveBlogPrice(flight) <= discoveryPriceCap(flight)
+                && tripDays !== null && tripDays >= 2 && tripDays <= 8;
+        })
+        .map(flight => {
+            const noveltyScore = 100 - flight.blogScore.popularityScore;
+            const discoveryScore = flight.blogScore.totalScore * 0.65 + noveltyScore * 0.35;
+            return { ...flight, discoveryScore };
+        })
+        .sort((a, b) => b.discoveryScore - a.discoveryScore || getEffectiveBlogPrice(a) - getEffectiveBlogPrice(b));
+}
+
+function getThemeCandidates(allRankedFlights, referenceDate) {
+    const available = allRankedFlights.filter(flight => {
+        const daysUntil = getDaysUntilDeparture(flight, referenceDate);
+        return daysUntil >= 0;
+    });
+    const day = referenceDate.getDay();
+    let key;
+    let candidates;
+    let fallback = '';
+
+    if (day === 1) {
+        key = 'budget';
+        candidates = available.filter(f => getEffectiveBlogPrice(f) <= 200000);
+        if (uniqueDestinationCount(candidates) < TOP_N) {
+            fallback = '20만원 이하 후보 부족으로 일반 드롭으로 대체';
+            key = 'drop';
+            candidates = available;
+        }
+    } else if (day === 2) {
+        key = 'regional';
+        // 기존 원칙대로 전체 3개 중 지방공항 출발은 정확히 1개만 담는다.
+        candidates = available;
+    } else if (day === 3) {
+        key = 'noLeave';
+        candidates = available.filter(isNoLeaveSchedule);
+        if (uniqueDestinationCount(candidates) < TOP_N) {
+            fallback = `연차 없이 가능한 목적지가 ${uniqueDestinationCount(candidates)}개뿐이라 2~4일 짧은 일정으로 대체`;
+            key = 'shortTrip';
+            candidates = available.filter(f => {
+                const tripDays = getTripDays(f);
+                return tripDays !== null && tripDays >= 2 && tripDays <= 4 && getRequiredLeaveDays(f) <= 1;
+            });
+            if (uniqueDestinationCount(candidates) < TOP_N) {
+                fallback += ' (후보 부족으로 일반 드롭 사용)';
+                key = 'drop';
+                candidates = available;
+            }
+        }
+    } else if (day === 4) {
+        key = 'discovery';
+        candidates = rankDiscoveryFlights(available);
+    } else if (day === 5) {
+        key = 'drop';
+        candidates = available;
+    } else {
+        key = 'lastMinute';
+        candidates = available
+            .filter(f => {
+                const daysUntil = getDaysUntilDeparture(f, referenceDate);
+                return daysUntil >= 0 && daysUntil <= 14;
+            })
+            .sort((a, b) => {
+                const dayDiff = getDaysUntilDeparture(a, referenceDate) - getDaysUntilDeparture(b, referenceDate);
+                return dayDiff || (b.blogScore?.totalScore || 0) - (a.blogScore?.totalScore || 0);
+            });
+        if (uniqueDestinationCount(candidates) < TOP_N) {
+            const newlyAdded = available.filter(f => isRecentlyAdded(f, referenceDate));
+            if (uniqueDestinationCount(newlyAdded) >= TOP_N) {
+                fallback = '2주 안 출발 후보 부족으로 이번 주 새로 등장한 목적지로 대체';
+                candidates = newlyAdded;
+            } else {
+                fallback = '출발 임박·신규 후보 부족으로 일반 드롭으로 대체';
+                key = 'drop';
+                candidates = available;
+            }
+        }
+    }
+
+    return { key, candidates, fallback, originalDay: day };
+}
+
+function makeThemeTitle(themeKey, flights, referenceDate) {
+    const first = flights[0];
+    if (!first) return BLOG_THEMES[themeKey]?.label || '티키티킷 특가';
+    const date = `${referenceDate.getMonth() + 1}/${referenceDate.getDate()}`;
+    const city = displayCity(first.arrival?.city || '');
+    const price = `${Math.floor(getEffectiveBlogPrice(first) / 10000)}만원대`;
+    const regional = flights.find(f => !isCapitalDeparture(f));
+
+    if (themeKey === 'budget') return `[${date}] 20만원으로 갈 수 있는 해외여행 | ${city} ${price}`;
+    if (themeKey === 'regional' && regional) {
+        return `[${date}] ${displayCity(regional.departure?.city)}에서 바로 떠나는 ${displayCity(regional.arrival?.city)} ${Math.floor(getEffectiveBlogPrice(regional) / 10000)}만원대`;
+    }
+    if (themeKey === 'noLeave') return `[${date}] 연차 없이 다녀올 수 있는 ${city} 주말여행`;
+    if (themeKey === 'shortTrip') return `[${date}] 연차 하루면 가능한 ${city} ${getTripDays(first)}일 여행`;
+    if (themeKey === 'discovery') return `[${date}] 처음 보는 ${city}, 왕복 ${price}이면 가볼 만할까?`;
+    if (themeKey === 'lastMinute') return `[${date}] 다음 주 바로 떠날 수 있는 ${city} 항공권`;
+    return `[${date}] 이번 주 티키티킷 드롭 | ${city} ${price}`;
+}
+
+function previewThemeWeek(allRankedFlights, recentDests, priceDropDests, requestedStartDate) {
+    const baseDate = requestedStartDate || getNextMonday(new Date());
+    const simulatedDays = [];
+
+    console.log(`\n📅 발견형 블로그 일주일 미리보기: ${formatYmd(baseDate)}부터`);
+    for (let offset = 0; offset < 7; offset++) {
+        const referenceDate = addLocalDays(baseDate, offset);
+        const recentFromPreview = simulatedDays
+            .slice(Math.max(0, simulatedDays.length - HISTORY_DAYS))
+            .flatMap(day => day.destinations);
+        const existingRecent = offset < HISTORY_DAYS ? recentDests : [];
+        const blockedDests = [...new Set([...existingRecent, ...recentFromPreview])];
+        const theme = getThemeCandidates(allRankedFlights, referenceDate);
+        const selected = selectTopWithIncheon(theme.candidates, blockedDests, priceDropDests);
+        const destinations = selected.map(f => normalizeCity(f.arrival?.city));
+        simulatedDays.push({ destinations });
+
+        console.log(`\n${formatYmd(referenceDate)} (${DAY_NAMES[referenceDate.getDay()]}) · ${BLOG_THEMES[theme.key].label}`);
+        if (theme.fallback) console.log(`  ↳ 대체 규칙: ${theme.fallback}`);
+        console.log(`  제목 예시: ${makeThemeTitle(theme.key, selected, referenceDate)}`);
+        selected.forEach((flight, index) => {
+            const discovery = flight.discoveryScore ? ` · 발견 ${flight.discoveryScore.toFixed(1)}` : '';
+            console.log(
+                `  ${index + 1}. ${flight.departure?.city} → ${flight.arrival?.city}`
+                + ` · ${getEffectiveBlogPrice(flight).toLocaleString()}원 · ${getTripDays(flight)}일`
+                + ` · 종합 ${(flight.blogScore?.totalScore || 0).toFixed(1)}${discovery}`
+            );
+        });
+    }
+    console.log('\n✅ 실제 블로그 초안과 히스토리는 변경하지 않았습니다.');
 }
 
 // ===== Top N 선발 (지방 1 + 인천/김포 2 기본 + 최근 중복 방지 + 가격 하락 면제) =====
