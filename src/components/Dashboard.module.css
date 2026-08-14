@@ -3026,13 +3026,15 @@
     box-shadow: 0 24px 80px rgba(15, 23, 42, 0.24);
 }
 
-.dealAlertSheet > .modalHeader {
+.dealAlertSheet > .modalHeader,
+.alertManagerSheet > .modalHeader {
     margin-bottom: 0;
     padding: 22px 24px 0;
     align-items: flex-start;
 }
 
-.dealAlertSheet > .modalHeader .modalClose {
+.dealAlertSheet > .modalHeader .modalClose,
+.alertManagerSheet > .modalHeader .modalClose {
     flex: 0 0 auto;
     margin-left: 16px;
 }
