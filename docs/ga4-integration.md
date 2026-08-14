@@ -97,12 +97,20 @@ Vercel 대시보드 → 프로젝트 → **Settings → Environment Variables** 
 
 ---
 
-## 체크리스트
+## 체크리스트 (2026-08-14 Claude Code가 브라우저로 1~4, 6 수행)
 
-- [ ] 1. Cloud 프로젝트 생성
-- [ ] 2. Google Analytics **Data** API 활성화
-- [ ] 3. 서비스 계정 생성 + JSON 키 다운로드
-- [ ] 4. GA4 속성 액세스 관리에 서비스 계정을 뷰어로 추가 + 속성 ID 메모
-- [ ] 5. Vercel에 환경변수 3개 등록 (`GA4_PROPERTY_ID`, `GA4_CLIENT_EMAIL`, `GA4_PRIVATE_KEY`)
-- [ ] 6. (선택) 맞춤 측정기준 등록: `travel_agency`, `route`, `entry_point`
+- [x] 1. Cloud 프로젝트 생성 — `tikitikit-admin`
+- [x] 2. Google Analytics **Data** API 활성화
+- [x] 3. 서비스 계정 생성 + JSON 키 다운로드 — `ga4-reader@tikitikit-admin.iam.gserviceaccount.com`, 키 파일 `tikitikit-admin-92556d77f851.json` (사용자 PC에 저장)
+- [x] 4. GA4 속성 액세스 관리에 서비스 계정을 뷰어로 추가 — **속성 ID: `524973369`**
+- [ ] 5. Vercel에 환경변수 3개 등록 (`GA4_PROPERTY_ID`, `GA4_CLIENT_EMAIL`, `GA4_PRIVATE_KEY`) ← **사용자가 직접**
+- [x] 6. 맞춤 측정기준 — 기존 12개 이미 등록돼 있었음(`travel_agency`, `route`, `partner` 등). `entry_point`(알림 진입점)만 신규 추가
 - [ ] 7. Claude Code에 "GA4 연동 구현해줘" 요청
+
+### 5번에 넣을 값
+
+| 환경변수 | 값 |
+|---|---|
+| `GA4_PROPERTY_ID` | `524973369` |
+| `GA4_CLIENT_EMAIL` | `ga4-reader@tikitikit-admin.iam.gserviceaccount.com` |
+| `GA4_PRIVATE_KEY` | 다운로드한 JSON 파일의 `private_key` 값 전체 |
