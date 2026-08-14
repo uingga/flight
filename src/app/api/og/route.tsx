@@ -121,7 +121,7 @@ export async function GET(request: NextRequest) {
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 8px 0', color: '#d9d5ff', fontSize: '18px' }}>
-                    <span>전국 여행사의 땡처리 항공권을 한눈에</span>
+                    <span>오늘은 어디가 싸게 나왔을까요?</span>
                     <span>가격과 좌석은 실시간으로 변동될 수 있어요</span>
                 </div>
             </div>

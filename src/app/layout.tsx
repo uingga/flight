@@ -25,9 +25,9 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
     title: {
         template: '%s | 티키티킷',
-        default: '여행사 땡처리 항공권을 한 곳에서 | 티키티킷',
+        default: '지금 갈 만한 땡처리 항공권 | 티키티킷',
     },
-    description: '여행사마다 숨어있는 땡처리 항공권, 직접 찾아다닐 필요 없이 한 화면에서 비교하세요.',
+    description: '여행사마다 따로 올라오는 저렴한 표를 한곳에서 확인하세요.',
     keywords: [
         '땡처리항공권', '특가항공권', '해외여행', '항공권비교', '티키티킷', 'tikitikit',
         '항공권특가', '해외항공권', '항공권최저가', '저가항공',
@@ -49,8 +49,8 @@ export const metadata: Metadata = {
         canonical: '/',
     },
     openGraph: {
-        title: '여행사 땡처리 항공권을 한 곳에서 | 티키티킷',
-        description: '여행사마다 숨어있는 땡처리 항공권, 직접 찾아다닐 필요 없이 한 화면에서 비교하세요.',
+        title: '지금 갈 만한 땡처리 항공권 | 티키티킷',
+        description: '여행사마다 따로 올라오는 저렴한 표를 한곳에서 확인하세요.',
         url: BASE_URL,
         siteName: '티키티킷',
         images: [
@@ -58,7 +58,7 @@ export const metadata: Metadata = {
                 url: '/opengraph-image',
                 width: 1200,
                 height: 630,
-                alt: '여행사 땡처리 항공권을 한 곳에서 | 티키티킷',
+                alt: '지금 갈 만한 땡처리 항공권 | 티키티킷',
             },
         ],
         locale: 'ko_KR',
@@ -66,8 +66,8 @@ export const metadata: Metadata = {
     },
     twitter: {
         card: 'summary_large_image',
-        title: '여행사 땡처리 항공권을 한 곳에서 | 티키티킷',
-        description: '흩어진 특가를 한 화면에 모았습니다.',
+        title: '지금 갈 만한 땡처리 항공권 | 티키티킷',
+        description: '여행사마다 따로 올라오는 저렴한 표를 한곳에서 확인하세요.',
         images: ['/opengraph-image'],
     },
     robots: {
@@ -175,7 +175,7 @@ export default function RootLayout({
                                     '@type': 'WebSite',
                                     name: '티키티킷',
                                     url: BASE_URL,
-                                    description: '여행사 땡처리 항공권을 한 곳에서',
+                                    description: '여행사마다 따로 올라오는 저렴한 표를 한곳에서 확인할 수 있는 서비스',
                                     inLanguage: 'ko',
                                     potentialAction: {
                                         '@type': 'SearchAction',
@@ -189,7 +189,7 @@ export default function RootLayout({
                                     alternateName: 'TikiTikit',
                                     url: BASE_URL,
                                     logo: `${BASE_URL}/icon.svg`,
-                                    description: '하나투어, 모두투어, 노랑풍선, 온라인투어, 땡처리닷컴의 실시간 특가 항공권을 한눈에 비교하는 서비스',
+                                    description: '여러 여행사의 저렴한 땡처리 항공권을 모아 보여주는 서비스',
                                     sameAs: [],
                                 },
                                 {
@@ -213,7 +213,7 @@ export default function RootLayout({
                                         price: '0',
                                         priceCurrency: 'KRW',
                                     },
-                                    description: '하나투어, 모두투어, 노랑풍선, 온라인투어, 땡처리닷컴의 땡처리 항공권을 한눈에 비교하는 무료 웹 서비스',
+                                    description: '여러 여행사의 저렴한 땡처리 항공권을 모아 보여주는 무료 웹 서비스',
                                 },
                                 {
                                     '@type': 'FAQPage',
@@ -223,7 +223,7 @@ export default function RootLayout({
                                             name: '티키티킷은 어떤 서비스인가요?',
                                             acceptedAnswer: {
                                                 '@type': 'Answer',
-                                                text: '티키티킷은 하나투어, 모두투어, 노랑풍선, 온라인투어, 땡처리닷컴 등 주요 여행사의 땡처리 항공권을 실시간으로 모아 한눈에 비교할 수 있는 무료 서비스입니다.',
+                                                text: '티키티킷은 여행사마다 따로 올라오는 저렴한 땡처리 항공권을 한곳에 모아 보여주는 무료 서비스입니다.',
                                             },
                                         },
                                         {
@@ -239,7 +239,7 @@ export default function RootLayout({
                                             name: '어떤 여행사의 항공권을 비교할 수 있나요?',
                                             acceptedAnswer: {
                                                 '@type': 'Answer',
-                                                text: '현재 하나투어, 모두투어, 노랑풍선, 온라인투어, 땡처리닷컴의 실시간 특가 항공권을 비교하실 수 있습니다. 향후 더 많은 여행사가 추가될 예정입니다.',
+                                                text: '현재 하나투어, 모두투어, 노랑풍선, 온라인투어, 땡처리닷컴, 마이리얼트립의 항공권을 확인할 수 있습니다.',
                                             },
                                         },
                                         {
@@ -247,7 +247,7 @@ export default function RootLayout({
                                             name: '항공권 가격은 얼마나 자주 업데이트되나요?',
                                             acceptedAnswer: {
                                                 '@type': 'Answer',
-                                                text: '항공권 가격은 매일 7회 자동으로 업데이트됩니다. 각 여행사의 최신 땡처리 특가 정보를 실시간으로 반영합니다.',
+                                                text: '항공권 정보는 하루 여러 차례 자동으로 업데이트합니다. 실제 가격과 좌석은 예약 시점에 달라질 수 있습니다.',
                                             },
                                         },
                                         {
@@ -255,7 +255,7 @@ export default function RootLayout({
                                             name: '땡처리 항공권이란 무엇인가요?',
                                             acceptedAnswer: {
                                                 '@type': 'Answer',
-                                                text: '땡처리 항공권은 여행사가 보유한 좌석 중 출발일이 임박하여 할인 판매하는 특가 항공권입니다. 정상가 대비 최대 50% 이상 저렴하게 구매할 수 있습니다.',
+                                                text: '땡처리 항공권은 여행사가 보유한 좌석을 출발일이 가까워졌을 때 할인해 판매하는 항공권입니다.',
                                             },
                                         },
                                     ],

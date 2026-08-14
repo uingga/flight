@@ -59,8 +59,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
     if (!flight) {
         return {
-            title: '티키티킷 - 여행사 땡처리 항공권을 한 곳에서',
-            description: '여행사 땡처리 항공권을 한 곳에서 비교하세요',
+            title: '지금 갈 만한 땡처리 항공권 | 티키티킷',
+            description: '여행사마다 따로 올라오는 저렴한 표를 한곳에서 확인하세요.',
         };
     }
 
