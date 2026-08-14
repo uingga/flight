@@ -30,6 +30,7 @@ import {
 import { checkIsMobile, getMobileUrl } from '@/lib/utils/mobile-url';
 import { getTtangBookingUrl } from '@/lib/utils/ttang-url';
 import { getYbtourBookingUrl } from '@/lib/utils/ybtour-url';
+import { dealAlertRegionLabel, type DealAlertRegion } from '@/lib/deal-alerts';
 
 const ITEMS_PER_PAGE = 20;
 
@@ -55,8 +56,10 @@ function getFreshnessInfo(checkedAt?: string) {
 
 interface ManagedPriceAlert {
     id: string;
+    type: 'price' | 'deal';
     departureCity: string;
-    arrivalCity: string;
+    arrivalCity?: string;
+    region?: DealAlertRegion;
     maxPrice: number;
     draftPrice: string;
     createdAt: string;
@@ -135,6 +138,19 @@ export default function Dashboard() {
     } | null>(null);
     const [dismissedAlertRoutes, setDismissedAlertRoutes] = useState<string[]>([]);
     const [showPriceAlertManager, setShowPriceAlertManager] = useState(false);
+    const [showDealAlertSetup, setShowDealAlertSetup] = useState(false);
+    const [dealAlertSetup, setDealAlertSetup] = useState<{
+        departureCity: string;
+        region: DealAlertRegion;
+        maxPrice: string;
+        status: 'idle' | 'saving' | 'sent' | 'error';
+        message?: string;
+    }>({
+        departureCity: '인천',
+        region: '일본',
+        maxPrice: '200000',
+        status: 'idle',
+    });
     const [managedPriceAlerts, setManagedPriceAlerts] = useState<ManagedPriceAlert[]>([]);
     const [priceAlertManagerStatus, setPriceAlertManagerStatus] = useState<'idle' | 'loading' | 'error'>('idle');
     const [priceAlertManagerMessage, setPriceAlertManagerMessage] = useState<string | null>(null);
@@ -149,7 +165,7 @@ export default function Dashboard() {
 
     // 팝업이 열려 있는 동안 배경(body) 스크롤 잠금
     // (iOS Safari는 overflow:hidden만으로 안 막혀서 position:fixed 방식 사용)
-    const anyModalOpen = !!(bookingFlight || modetourGuide || bookingDisclaimer || naverDisclaimer || ttangConfirmFlight || showContactModal || showPriceAlertManager);
+    const anyModalOpen = !!(bookingFlight || modetourGuide || bookingDisclaimer || naverDisclaimer || ttangConfirmFlight || showContactModal || showPriceAlertManager || showDealAlertSetup);
     useEffect(() => {
         if (!anyModalOpen) return;
         const scrollY = window.scrollY;
@@ -662,7 +678,10 @@ export default function Dashboard() {
             if (!subscription) throw new Error('이 브라우저의 알림 연결을 찾지 못했습니다.');
             await postPriceAlertAction({ action: 'delete', subscription: subscription.toJSON(), alertId: alert.id });
             setManagedPriceAlerts(current => current.filter(item => item.id !== alert.id));
-            setPriceAlertManagerMessage(`${alert.departureCity} → ${alert.arrivalCity} 알림을 해제했습니다.`);
+            const target = alert.type === 'deal' && alert.region
+                ? `${alert.departureCity} 출발 · ${dealAlertRegionLabel(alert.region)}`
+                : `${alert.departureCity} → ${alert.arrivalCity}`;
+            setPriceAlertManagerMessage(`${target} 알림을 해제했습니다.`);
         } catch (error) {
             setPriceAlertManagerMessage(error instanceof Error ? error.message : '알림을 해제하지 못했습니다.');
         } finally {
@@ -757,6 +776,90 @@ export default function Dashboard() {
                 status: 'error',
                 message: error instanceof Error ? error.message : '가격 알림 저장에 실패했습니다.',
             } : current);
+        }
+    };
+
+    const openDealAlertSetup = () => {
+        const filteredDeparture = departureFilter !== 'all' ? normalizeCity(departureFilter) : null;
+        const filteredRegion = ['일본', '동남아', '중국', '남태평양'].includes(regionFilter)
+            ? regionFilter as DealAlertRegion
+            : null;
+        setDealAlertSetup(current => ({
+            ...current,
+            ...(filteredDeparture ? { departureCity: filteredDeparture } : {}),
+            ...(filteredRegion ? { region: filteredRegion } : {}),
+            status: 'idle',
+            message: undefined,
+        }));
+        setShowDealAlertSetup(true);
+    };
+
+    const saveDealAlert = async () => {
+        const maxPrice = Number(dealAlertSetup.maxPrice);
+        if (!Number.isFinite(maxPrice) || maxPrice < 10000 || maxPrice > 10000000) {
+            setDealAlertSetup(current => ({ ...current, status: 'error', message: '예산을 1만원 이상으로 입력해주세요.' }));
+            return;
+        }
+
+        const isIOS = /iPad|iPhone|iPod/i.test(navigator.userAgent);
+        const standaloneNavigator = navigator as Navigator & { standalone?: boolean };
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || standaloneNavigator.standalone === true;
+        if (isIOS && !isStandalone) {
+            setDealAlertSetup(current => ({
+                ...current,
+                status: 'error',
+                message: '아이폰은 Safari 공유 버튼 → 홈 화면에 추가 후 티키티킷 아이콘에서 신청해주세요.',
+            }));
+            return;
+        }
+
+        if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
+            setDealAlertSetup(current => ({ ...current, status: 'error', message: '이 브라우저는 특가 알림을 지원하지 않습니다.' }));
+            return;
+        }
+
+        setDealAlertSetup(current => ({ ...current, status: 'saving', message: undefined }));
+        try {
+            const permission = Notification.permission === 'granted'
+                ? 'granted'
+                : await Notification.requestPermission();
+            if (permission !== 'granted') {
+                throw new Error('알림 권한이 허용되지 않았습니다. 브라우저 설정에서 알림을 허용해주세요.');
+            }
+
+            const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+            if (!vapidPublicKey) throw new Error('특가 알림 설정을 준비 중입니다. 잠시 후 다시 시도해주세요.');
+
+            const registration = await navigator.serviceWorker.register('/sw.js');
+            await navigator.serviceWorker.ready;
+            const subscription = await registration.pushManager.getSubscription()
+                || await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+                });
+
+            await postPriceAlertAction({
+                subscription: subscription.toJSON(),
+                conditions: {
+                    alertType: 'deal',
+                    departureCity: dealAlertSetup.departureCity,
+                    region: dealAlertSetup.region,
+                    maxPrice,
+                },
+            });
+
+            gtag.trackDealAlertSetup(dealAlertSetup.departureCity, dealAlertSetup.region, maxPrice);
+            setDealAlertSetup(current => ({
+                ...current,
+                status: 'sent',
+                message: `${current.departureCity} 출발 · ${dealAlertRegionLabel(current.region)} · ${formatPrice(maxPrice)} 이하 조건을 저장했습니다. 현재 베타 검증 중이며 실제 발송 전까지 후보 품질을 확인합니다.`,
+            }));
+        } catch (error) {
+            setDealAlertSetup(current => ({
+                ...current,
+                status: 'error',
+                message: error instanceof Error ? error.message : '특가 알림 저장에 실패했습니다.',
+            }));
         }
     };
 
@@ -2667,6 +2770,16 @@ export default function Dashboard() {
                             </div>
                         </div>
 
+                        <div className={styles.dealAlertBanner}>
+                            <div>
+                                <strong>원하는 특가가 아직 없나요?</strong>
+                                <span>출발지·지역·예산만 정해두면 갈 만한 특가 후보를 대신 찾아드려요.</span>
+                            </div>
+                            <button type="button" onClick={openDealAlertSetup}>
+                                특가 알림 베타 신청
+                            </button>
+                        </div>
+
                         {sharedFlightId && (
                             <div style={{
                                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -3738,6 +3851,126 @@ export default function Dashboard() {
                 </div>
             )}
 
+            {/* 출발지 + 지역 + 예산 조건형 특가 알림 베타 */}
+            {showDealAlertSetup && (
+                <div className={styles.modalOverlay} onClick={() => setShowDealAlertSetup(false)}>
+                    <div className={styles.dealAlertSheet} onClick={(event) => event.stopPropagation()}>
+                        <div className={styles.modalHeader}>
+                            <div>
+                                <h3 className={styles.modalTitle}>🔔 조건형 특가 알림</h3>
+                                <p className={styles.alertManagerSubtitle}>날짜와 목적지는 정하지 않아도 됩니다.</p>
+                            </div>
+                            <button className={styles.modalClose} onClick={() => setShowDealAlertSetup(false)}>×</button>
+                        </div>
+
+                        <div className={styles.dealAlertBody}>
+                            {dealAlertSetup.status === 'sent' ? (
+                                <div className={styles.dealAlertSuccess}>
+                                    <span>✓</span>
+                                    <strong>조건을 저장했습니다.</strong>
+                                    <p>{dealAlertSetup.message}</p>
+                                    <button type="button" onClick={() => setShowDealAlertSetup(false)}>확인</button>
+                                </div>
+                            ) : (
+                                <>
+                                    <label className={styles.dealAlertField}>
+                                        <span>어디서 출발하세요?</span>
+                                        <select
+                                            value={dealAlertSetup.departureCity}
+                                            onChange={event => setDealAlertSetup(current => ({
+                                                ...current,
+                                                departureCity: event.target.value,
+                                                status: 'idle',
+                                                message: undefined,
+                                            }))}
+                                        >
+                                            <option value="인천">인천</option>
+                                            <option value="부산">부산</option>
+                                            <option value="대구">대구</option>
+                                            <option value="청주">청주</option>
+                                        </select>
+                                    </label>
+
+                                    <label className={styles.dealAlertField}>
+                                        <span>어디쯤 가고 싶으세요?</span>
+                                        <select
+                                            value={dealAlertSetup.region}
+                                            onChange={event => setDealAlertSetup(current => ({
+                                                ...current,
+                                                region: event.target.value as DealAlertRegion,
+                                                status: 'idle',
+                                                message: undefined,
+                                            }))}
+                                        >
+                                            <option value="일본">일본</option>
+                                            <option value="동남아">동남아</option>
+                                            <option value="중국">중국</option>
+                                            <option value="남태평양">남태평양</option>
+                                            <option value="all">아무데나</option>
+                                        </select>
+                                    </label>
+
+                                    <div className={styles.dealAlertField}>
+                                        <span>얼마까지 괜찮으세요?</span>
+                                        <div className={styles.dealAlertBudgetButtons}>
+                                            {[150000, 200000, 300000].map(price => (
+                                                <button
+                                                    key={price}
+                                                    type="button"
+                                                    className={dealAlertSetup.maxPrice === String(price) ? styles.dealAlertBudgetActive : ''}
+                                                    onClick={() => setDealAlertSetup(current => ({
+                                                        ...current,
+                                                        maxPrice: String(price),
+                                                        status: 'idle',
+                                                        message: undefined,
+                                                    }))}
+                                                >
+                                                    {price / 10000}만원
+                                                </button>
+                                            ))}
+                                        </div>
+                                        <div className={styles.dealAlertCustomPrice}>
+                                            <input
+                                                type="number"
+                                                min="10000"
+                                                max="10000000"
+                                                step="1000"
+                                                inputMode="numeric"
+                                                placeholder="직접 입력"
+                                                value={dealAlertSetup.maxPrice}
+                                                onChange={event => setDealAlertSetup(current => ({
+                                                    ...current,
+                                                    maxPrice: event.target.value,
+                                                    status: 'idle',
+                                                    message: undefined,
+                                                }))}
+                                            />
+                                            <span>원 이하</span>
+                                        </div>
+                                    </div>
+
+                                    <p className={styles.dealAlertNote}>
+                                        조건에 맞는 항공권을 전부 보내지 않고, 가격·일정·희소성·정보 신선도를 함께 검토합니다.
+                                        현재는 발송 전 후보 품질을 확인하는 베타 단계입니다.
+                                    </p>
+                                    {dealAlertSetup.message && (
+                                        <p className={styles.priceAlertError}>{dealAlertSetup.message}</p>
+                                    )}
+                                    <button
+                                        type="button"
+                                        className={styles.dealAlertSubmit}
+                                        disabled={dealAlertSetup.status === 'saving'}
+                                        onClick={saveDealAlert}
+                                    >
+                                        {dealAlertSetup.status === 'saving' ? '저장 중…' : '이 조건으로 특가 알림 신청'}
+                                    </button>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* 현재 브라우저의 가격 알림 관리 */}
             {showPriceAlertManager && (
                 <div className={styles.modalOverlay} onClick={() => setShowPriceAlertManager(false)}>
@@ -3764,11 +3997,15 @@ export default function Dashboard() {
                                     {managedPriceAlerts.map(alert => (
                                         <div key={alert.id} className={styles.alertManagerItem}>
                                             <div className={styles.alertManagerRoute}>
-                                                <strong>{alert.departureCity} → {alert.arrivalCity}</strong>
-                                                <span>출발일 상관없이</span>
+                                                <strong>
+                                                    {alert.type === 'deal' && alert.region
+                                                        ? `${alert.departureCity} 출발 · ${dealAlertRegionLabel(alert.region)}`
+                                                        : `${alert.departureCity} → ${alert.arrivalCity}`}
+                                                </strong>
+                                                <span>{alert.type === 'deal' ? '조건형 특가 · 베타' : '출발일 상관없이'}</span>
                                             </div>
                                             <label className={styles.alertManagerPrice}>
-                                                <span>목표 가격</span>
+                                                    <span>{alert.type === 'deal' ? '최대 예산' : '목표 가격'}</span>
                                                 <div>
                                                     <input
                                                         type="number"
@@ -3780,7 +4017,9 @@ export default function Dashboard() {
                                                         onChange={event => setManagedPriceAlerts(current => current.map(item => item.id === alert.id
                                                             ? { ...item, draftPrice: event.target.value }
                                                             : item))}
-                                                        aria-label={`${alert.departureCity}에서 ${alert.arrivalCity} 목표 가격`}
+                                                        aria-label={alert.type === 'deal' && alert.region
+                                                            ? `${alert.departureCity} 출발 ${dealAlertRegionLabel(alert.region)} 최대 예산`
+                                                            : `${alert.departureCity}에서 ${alert.arrivalCity} 목표 가격`}
                                                     />
                                                     <span>원 이하</span>
                                                 </div>

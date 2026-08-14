@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import webpush from 'web-push';
 import { normalizeCity as canonicalCity } from '../src/lib/utils/flight-helpers';
+import { isDealAlertDestination } from '../src/lib/deal-alerts';
 
 interface AlertSubscription {
     id: string;
@@ -94,6 +95,9 @@ async function main() {
     let sentCount = 0;
 
     for (const alert of alerts) {
+        // 조건형 특가 알림은 현재 관리자 검토용 드라이런 단계다.
+        // 실제 발송을 승인하기 전까지 기존 특정 노선 발송기에서는 건너뛴다.
+        if (isDealAlertDestination(alert.arrival_city)) continue;
         if (alert.last_sent_at && todayInKorea(new Date(alert.last_sent_at)) === today) continue;
 
         const matches = flights.filter(flight => {

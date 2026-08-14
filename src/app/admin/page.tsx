@@ -24,12 +24,50 @@ interface AdminData {
     crawlHistory?: CrawlHistoryEntry[];
 }
 
+interface DealAlertCandidate {
+    flightId: string;
+    departureCity: string;
+    arrivalCity: string;
+    departureDate: string;
+    returnDate: string;
+    airline: string;
+    source: string;
+    price: number;
+    effectivePrice: number;
+    feeNote?: string;
+    score: number;
+    reasons: string[];
+}
+
+interface DealAlertReviewData {
+    available: boolean;
+    dryRun: boolean;
+    message?: string;
+    generatedAt: string;
+    scoreThreshold: number;
+    subscriptions: number;
+    qualifiedCandidates: number;
+    reviews: Array<{
+        condition: {
+            id: string;
+            departureCity: string;
+            region: string;
+            maxPrice: number;
+        };
+        matchingFlights: number;
+        qualifiedCount: number;
+        candidates: DealAlertCandidate[];
+        rejectionCounts: Record<string, number>;
+    }>;
+}
+
 const SOURCE_NAMES: Record<string, string> = {
     hanatour: '하나투어',
     modetour: '모두투어',
     ttang: '땡처리닷컴',
     ybtour: '노랑풍선',
     onlinetour: '온라인투어',
+    myrealtrip: '마이리얼트립',
 };
 
 const SOURCE_COLORS: Record<string, string> = {
@@ -38,6 +76,15 @@ const SOURCE_COLORS: Record<string, string> = {
     ttang: '#dc2626',
     ybtour: '#d97706',
     onlinetour: '#1e40af',
+};
+
+const DEAL_REJECTION_LABELS: Record<string, string> = {
+    otherDeparture: '다른 출발지',
+    otherRegion: '다른 지역',
+    overBudget: '예산 초과',
+    expired: '출발일 만료',
+    stale: '가격 확인 72시간 초과',
+    lowScore: '특가 점수 미달',
 };
 
 function formatKST(iso: string): string {
@@ -70,6 +117,8 @@ export default function AdminPage() {
     const [key, setKey] = useState('');
     const [authed, setAuthed] = useState(false);
     const [analyticsExcluded, setAnalyticsExcludedState] = useState(false);
+    const [dealAlertReview, setDealAlertReview] = useState<DealAlertReviewData | null>(null);
+    const [dealAlertReviewError, setDealAlertReviewError] = useState<string | null>(null);
 
     useEffect(() => {
         setAnalyticsExcludedState(isAnalyticsExcluded());
@@ -101,6 +150,20 @@ export default function AdminPage() {
                 return;
             }
             setData(json);
+
+            try {
+                const dealResponse = await fetch(`/api/deal-alert-candidates?key=${encodeURIComponent(authKey)}`);
+                const dealJson = await dealResponse.json();
+                if (dealResponse.ok) {
+                    setDealAlertReview(dealJson);
+                    setDealAlertReviewError(null);
+                } else {
+                    setDealAlertReviewError(dealJson.error || '조건형 특가 후보를 불러오지 못했습니다.');
+                }
+            } catch {
+                setDealAlertReviewError('조건형 특가 후보를 불러오지 못했습니다.');
+            }
+
             setAuthed(true);
             setError(null);
             setAnalyticsExcluded(true);
@@ -193,6 +256,90 @@ export default function AdminPage() {
                     <span className={styles.summaryValue}>{sortedCities.length}</span>
                 </div>
             </div>
+
+            <section className={styles.section}>
+                <div className={styles.dealReviewHeader}>
+                    <div>
+                        <h2>🔔 조건형 특가 알림 후보</h2>
+                        <p>실제 푸시를 보내지 않고 현재 항공권으로 후보와 탈락 이유만 계산합니다.</p>
+                    </div>
+                    <span className={styles.dryRunBadge}>DRY RUN · 발송 안 함</span>
+                </div>
+
+                {dealAlertReviewError ? (
+                    <div className={styles.dealReviewEmpty}>{dealAlertReviewError}</div>
+                ) : !dealAlertReview?.available ? (
+                    <div className={styles.dealReviewEmpty}>
+                        {dealAlertReview?.message || '조건형 알림 정보를 불러오는 중입니다.'}
+                    </div>
+                ) : (
+                    <>
+                        <div className={styles.dealReviewSummary}>
+                            <div><span>등록 조건</span><strong>{dealAlertReview.subscriptions}개</strong></div>
+                            <div><span>점수 기준</span><strong>{dealAlertReview.scoreThreshold}점</strong></div>
+                            <div><span>통과 목적지</span><strong>{dealAlertReview.qualifiedCandidates}개</strong></div>
+                            <div><span>계산 시각</span><strong>{formatKST(dealAlertReview.generatedAt).replace(/\d{4}\. /, '')}</strong></div>
+                        </div>
+
+                        {dealAlertReview.reviews.length === 0 ? (
+                            <div className={styles.dealReviewEmpty}>
+                                아직 등록된 조건형 특가 알림이 없습니다. 사이트에서 베타 조건을 등록하면 이곳에 후보가 나타납니다.
+                            </div>
+                        ) : (
+                            <div className={styles.dealReviewList}>
+                                {dealAlertReview.reviews.map(review => (
+                                    <article key={review.condition.id} className={styles.dealReviewCard}>
+                                        <div className={styles.dealReviewCondition}>
+                                            <div>
+                                                <strong>
+                                                    {review.condition.departureCity} 출발 · {review.condition.region === 'all' ? '아무데나' : review.condition.region}
+                                                </strong>
+                                                <span>{formatPrice(review.condition.maxPrice)} 이하</span>
+                                            </div>
+                                            <span>{review.qualifiedCount}개 목적지 통과</span>
+                                        </div>
+
+                                        {review.candidates.length > 0 ? (
+                                            <div className={styles.dealCandidateList}>
+                                                {review.candidates.map(candidate => (
+                                                    <a
+                                                        key={candidate.flightId}
+                                                        href={`/share/${encodeURIComponent(candidate.flightId)}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className={styles.dealCandidate}
+                                                    >
+                                                        <div>
+                                                            <strong>{candidate.departureCity} → {candidate.arrivalCity}</strong>
+                                                            <span>{candidate.departureDate} ~ {candidate.returnDate} · {candidate.airline}</span>
+                                                            <small>{candidate.reasons.join(' · ')}</small>
+                                                        </div>
+                                                        <div>
+                                                            <em>{candidate.score}점</em>
+                                                            <strong>{formatPrice(candidate.effectivePrice)}</strong>
+                                                            <span>{SOURCE_NAMES[candidate.source] || candidate.source}{candidate.feeNote ? ` · ${candidate.feeNote}` : ''}</span>
+                                                        </div>
+                                                    </a>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <div className={styles.dealReviewEmpty}>현재 조건에서 기준을 통과한 특가가 없습니다.</div>
+                                        )}
+
+                                        <div className={styles.dealRejections}>
+                                            {Object.entries(review.rejectionCounts)
+                                                .filter(([, count]) => count > 0)
+                                                .map(([reason, count]) => (
+                                                    <span key={reason}>{DEAL_REJECTION_LABELS[reason] || reason} {count}건</span>
+                                                ))}
+                                        </div>
+                                    </article>
+                                ))}
+                            </div>
+                        )}
+                    </>
+                )}
+            </section>
 
             {/* 소스별 현황 - 도넛 차트 */}
             <section className={styles.section}>

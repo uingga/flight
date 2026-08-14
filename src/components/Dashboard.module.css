@@ -2691,6 +2691,52 @@
     margin: 10px 24px 2px;
 }
 
+.dealAlertBanner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    margin: -4px 0 16px;
+    padding: 14px 16px;
+    border: 1px solid #dbe4ff;
+    border-radius: var(--radius-lg);
+    background: linear-gradient(135deg, #f8faff 0%, #f5f3ff 100%);
+}
+
+.dealAlertBanner > div {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.dealAlertBanner strong {
+    color: #27346a;
+    font-size: 14px;
+}
+
+.dealAlertBanner span {
+    color: #6b7280;
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.dealAlertBanner button {
+    flex: 0 0 auto;
+    padding: 9px 14px;
+    border: 0;
+    border-radius: 10px;
+    background: #4f46e5;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 800;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.dealAlertBanner button:hover {
+    background: #4338ca;
+}
+
 /* 상세 모달 상단 요약 바의 알림 칩 — 가격→예약 흐름을 끊지 않도록 본문 밖에 둔다 */
 .priceAlertOpenBtn {
     flex: 0 0 auto;
@@ -2945,6 +2991,16 @@
 }
 
 @media (max-width: 520px) {
+    .dealAlertBanner {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .dealAlertBanner button {
+        width: 100%;
+    }
+
     .alertSuggestBar {
         flex-direction: column;
         align-items: stretch;
@@ -2958,6 +3014,154 @@
     .alertSuggestBtn {
         flex: 1;
     }
+}
+
+.dealAlertSheet {
+    width: min(460px, calc(100vw - 32px));
+    max-height: min(760px, calc(100dvh - 40px));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-radius: 20px;
+    background: #fff;
+    box-shadow: 0 24px 80px rgba(15, 23, 42, 0.24);
+}
+
+.dealAlertBody {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 4px 20px 22px;
+}
+
+.dealAlertField {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    color: #374151;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.dealAlertField select,
+.dealAlertCustomPrice input {
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 12px;
+    border: 1px solid #d7d9e0;
+    border-radius: 10px;
+    background: #fff;
+    color: #111827;
+    font: inherit;
+    font-size: 14px;
+    outline: none;
+}
+
+.dealAlertField select:focus,
+.dealAlertCustomPrice input:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+}
+
+.dealAlertBudgetButtons {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 7px;
+}
+
+.dealAlertBudgetButtons button {
+    padding: 9px 4px;
+    border: 1px solid #d7d9e0;
+    border-radius: 9px;
+    background: #fff;
+    color: #4b5563;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.dealAlertBudgetButtons button.dealAlertBudgetActive {
+    border-color: #6366f1;
+    background: #eef2ff;
+    color: #4338ca;
+}
+
+.dealAlertCustomPrice {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dealAlertCustomPrice input {
+    text-align: right;
+}
+
+.dealAlertCustomPrice span {
+    flex: 0 0 auto;
+    color: #6b7280;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.dealAlertNote {
+    margin: 0;
+    padding: 11px 12px;
+    border-radius: 10px;
+    background: #f8fafc;
+    color: #6b7280;
+    font-size: 11px;
+    line-height: 1.6;
+}
+
+.dealAlertSubmit,
+.dealAlertSuccess button {
+    width: 100%;
+    padding: 12px 14px;
+    border: 0;
+    border-radius: 10px;
+    background: #4f46e5;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.dealAlertSubmit:disabled {
+    cursor: wait;
+    opacity: 0.55;
+}
+
+.dealAlertSuccess {
+    min-height: 240px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    text-align: center;
+}
+
+.dealAlertSuccess > span {
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: #dcfce7;
+    color: #15803d;
+    font-size: 22px;
+    font-weight: 900;
+}
+
+.dealAlertSuccess strong {
+    color: #1f2937;
+    font-size: 16px;
+}
+
+.dealAlertSuccess p {
+    margin: 0 0 8px;
+    color: #6b7280;
+    font-size: 12px;
+    line-height: 1.6;
 }
 
 .alertManagerSheet {
