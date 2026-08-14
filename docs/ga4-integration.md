@@ -106,7 +106,7 @@ Vercel 대시보드 → 프로젝트 → **Settings → Environment Variables** 
       2026-08-14에 키를 재발급함: 키 ID `2c8e6276bdfc…`, 파일 `tikitikit-admin-2c8e6276bdfc.json`
       (사용자 PC 바탕화면). 현재 살아있는 키는 이것 하나뿐.
 - [x] 4. GA4 속성 액세스 관리에 서비스 계정을 뷰어로 추가 — **속성 ID: `524973369`**
-- [ ] 5. Vercel에 환경변수 3개 등록 (`GA4_PROPERTY_ID`, `GA4_CLIENT_EMAIL`, `GA4_PRIVATE_KEY`) ← **사용자가 직접**
+- [x] 5. Vercel에 환경변수 3개 등록 (`GA4_PROPERTY_ID`, `GA4_CLIENT_EMAIL`, `GA4_PRIVATE_KEY`)
 - [x] 6. 맞춤 측정기준 — 기존 12개 이미 등록돼 있었음(`travel_agency`, `route`, `partner` 등). `entry_point`(알림 진입점)만 신규 추가
 - [x] 7. 코드 구현 (2026-08-14) — `src/lib/ga4.ts`, `src/app/api/ga-stats/route.ts`, 어드민 "방문자와 행동(GA4)" 섹션
 
@@ -146,11 +146,15 @@ Vercel 대시보드 → 프로젝트 → **Settings → Environment Variables** 
   섹션 하단에 ⚠️ 경고가 붙는다 (측정기준 미등록 시 이렇게 보임).
 - GA4 무료 할당량을 아끼려고 서버에서 **10분간 응답을 캐시**한다.
 
-### 남은 확인
+### 운영 확인 (2026-08-14 완료)
 
-환경변수 등록 후 어드민에서 실제 숫자가 뜨는지 확인하면 끝. 안 뜬다면 순서대로:
+프로덕션에서 실데이터 조회 성공. 맞춤 측정기준 리포트 4개 모두 정상(경고 없음).
+`entry_point`(알림 진입점)만 등록 시점 이후 데이터가 없어 비어 있음 — 정상.
+
+문제가 생기면 순서대로 확인:
 
 1. 속성 ID가 측정 ID(`G-...`)가 아닌 숫자(`524973369`)인지
 2. 서비스 계정이 GA4 속성에 **뷰어**로 들어가 있는지
 3. `GA4_PRIVATE_KEY`에 `-----BEGIN PRIVATE KEY-----`부터 끝까지 줄바꿈 포함해 들어갔는지
    (Vercel에서 `\n` 문자열로 저장돼도 코드가 실제 줄바꿈으로 바꿔준다)
+4. 환경변수를 바꿨다면 **재배포해야 반영**된다 (Vercel은 새 배포부터 적용)
