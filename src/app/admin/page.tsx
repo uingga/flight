@@ -108,12 +108,12 @@ const SOURCE_COLORS: Record<string, string> = {
 };
 
 const DEAL_REJECTION_LABELS: Record<string, string> = {
-    otherDeparture: '다른 출발지',
-    otherRegion: '다른 지역',
-    overBudget: '예산 초과',
-    expired: '출발일 만료',
-    stale: '가격 확인 72시간 초과',
-    lowScore: '특가 점수 미달',
+    otherDeparture: '출발지가 다름',
+    otherRegion: '지역이 다름',
+    overBudget: '예산보다 비쌈',
+    expired: '출발일이 지남',
+    stale: '가격이 3일 넘게 미확인',
+    lowScore: '특가라기엔 점수 부족',
 };
 
 function formatKST(iso: string): string {
@@ -303,7 +303,11 @@ export default function AdminPage() {
 
             {/* 유저 통계 — 크롤링 현황과 별개로 "사람들이 무엇을 기다리는가"를 본다 */}
             <section className={styles.section}>
-                <h2>👥 유저 통계 — 가격 알림</h2>
+                <h2>👥 사용자 현황 — 가격 알림</h2>
+                <p className={styles.sectionHelp}>
+                    회원가입이 없는 서비스라 사람 수 대신 <strong>알림을 켠 브라우저(기기) 수</strong>를 셉니다.
+                    같은 사람이 폰과 PC에서 각각 켜면 2로 잡힙니다.
+                </p>
                 {userStatsError ? (
                     <div className={styles.dealReviewEmpty}>{userStatsError}</div>
                 ) : !userStats?.available ? (
@@ -314,37 +318,37 @@ export default function AdminPage() {
                     <>
                         <div className={styles.userStatGrid}>
                             <div className={styles.userStat}>
-                                <span>구독자</span>
+                                <span>알림 켠 기기</span>
                                 <strong>{userStats.summary.subscribers.toLocaleString()}</strong>
-                                <small>누적 {userStats.summary.everSubscribed.toLocaleString()}명</small>
+                                <small>지금까지 총 {userStats.summary.everSubscribed.toLocaleString()}대 (끈 기기 포함)</small>
                             </div>
                             <div className={styles.userStat}>
-                                <span>활성 알림</span>
+                                <span>걸려 있는 알림</span>
                                 <strong>{userStats.summary.activeAlerts.toLocaleString()}</strong>
-                                <small>1인당 {userStats.summary.alertsPerSubscriber}개</small>
+                                <small>기기당 평균 {userStats.summary.alertsPerSubscriber}개</small>
                             </div>
                             <div className={styles.userStat}>
-                                <span>알림 받아본 구독</span>
+                                <span>푸시를 받아본 알림</span>
                                 <strong>{userStats.summary.notified.toLocaleString()}</strong>
                                 <small>
-                                    아직 못 받음 {userStats.summary.neverNotified.toLocaleString()}건
+                                    아직 한 번도 못 받은 알림 {userStats.summary.neverNotified.toLocaleString()}개
                                 </small>
                             </div>
                             <div className={styles.userStat}>
-                                <span>지금 목표가 도달</span>
+                                <span>지금 보낼 수 있는 알림</span>
                                 <strong>{userStats.summary.reachableNow.toLocaleString()}</strong>
-                                <small>노선 알림 {userStats.summary.routeAlerts}건 중</small>
+                                <small>목표가 이하 항공권이 현재 있음</small>
                             </div>
                             <div className={styles.userStat}>
-                                <span>조건형 알림</span>
-                                <strong>{userStats.summary.dealAlerts.toLocaleString()}</strong>
-                                <small>노선형 {userStats.summary.routeAlerts.toLocaleString()}건</small>
+                                <span>알림 종류</span>
+                                <strong>{userStats.summary.routeAlerts.toLocaleString()} : {userStats.summary.dealAlerts.toLocaleString()}</strong>
+                                <small>노선 지정 : 조건만 지정(베타)</small>
                             </div>
                             <div className={styles.userStat}>
-                                <span>해지</span>
+                                <span>끈 알림</span>
                                 <strong>{userStats.summary.cancelledAlerts.toLocaleString()}</strong>
                                 <small>
-                                    {userStats.summary.activeAlerts + userStats.summary.cancelledAlerts > 0
+                                    전체의 {userStats.summary.activeAlerts + userStats.summary.cancelledAlerts > 0
                                         ? `${Math.round(userStats.summary.cancelledAlerts / (userStats.summary.activeAlerts + userStats.summary.cancelledAlerts) * 100)}%`
                                         : '0%'}
                                 </small>
@@ -380,7 +384,7 @@ export default function AdminPage() {
                                 <table className={styles.cityTable} style={{ minWidth: '560px' }}>
                                     <thead>
                                         <tr>
-                                            <th>노선</th><th>알림</th><th>구독자</th>
+                                            <th>노선</th><th>알림</th><th>기기</th>
                                             <th>평균 목표가</th><th>현재 최저가</th><th>상태</th>
                                         </tr>
                                     </thead>
@@ -389,7 +393,7 @@ export default function AdminPage() {
                                             <tr key={route.route}>
                                                 <td><strong>{route.route}</strong></td>
                                                 <td>{route.count}건</td>
-                                                <td>{route.devices}명</td>
+                                                <td>{route.devices}대</td>
                                                 <td>{route.avgTarget !== null ? formatPrice(route.avgTarget) : '—'}</td>
                                                 <td>{route.currentLowest !== null ? formatPrice(route.currentLowest) : '항공권 없음'}</td>
                                                 <td>
@@ -412,18 +416,18 @@ export default function AdminPage() {
 
                         {userStats.topRegions.length > 0 && (
                             <>
-                                <h3 className={styles.userSubTitle}>조건형 알림 조건</h3>
+                                <h3 className={styles.userSubTitle}>조건만 걸어둔 알림 (베타)</h3>
                                 <div className={styles.cityDetail}>
                                     <table className={styles.cityTable}>
                                         <thead>
-                                            <tr><th>조건</th><th>알림</th><th>구독자</th><th>평균 목표가</th></tr>
+                                            <tr><th>조건</th><th>알림</th><th>기기</th><th>평균 목표가</th></tr>
                                         </thead>
                                         <tbody>
                                             {userStats.topRegions.map(region => (
                                                 <tr key={region.label}>
                                                     <td>{region.label}</td>
                                                     <td>{region.count}건</td>
-                                                    <td>{region.devices}명</td>
+                                                    <td>{region.devices}대</td>
                                                     <td>{region.avgTarget !== null ? formatPrice(region.avgTarget) : '—'}</td>
                                                 </tr>
                                             ))}
@@ -439,10 +443,14 @@ export default function AdminPage() {
             <section className={styles.section}>
                 <div className={styles.dealReviewHeader}>
                     <div>
-                        <h2>🔔 조건형 특가 알림 후보</h2>
-                        <p>실제 푸시를 보내지 않고 현재 항공권으로 후보와 탈락 이유만 계산합니다.</p>
+                        <h2>🔔 조건형 특가 알림 — 발송 미리보기</h2>
+                        <p>
+                            사용자가 &ldquo;인천 출발, 일본, 20만원 이하면 알려줘&rdquo;처럼 <strong>조건만 걸어둔 알림</strong>입니다.
+                            아직 테스트 단계라 실제 푸시는 나가지 않고, 지금 항공권을 조건에 대입해
+                            &ldquo;오늘 보냈다면 어떤 특가가 나갔을지&rdquo;를 미리 보여줍니다.
+                        </p>
                     </div>
-                    <span className={styles.dryRunBadge}>DRY RUN · 발송 안 함</span>
+                    <span className={styles.dryRunBadge}>테스트 중 · 발송 안 함</span>
                 </div>
 
                 {dealAlertReviewError ? (
@@ -454,9 +462,9 @@ export default function AdminPage() {
                 ) : (
                     <>
                         <div className={styles.dealReviewSummary}>
-                            <div><span>등록 조건</span><strong>{dealAlertReview.subscriptions}개</strong></div>
-                            <div><span>점수 기준</span><strong>{dealAlertReview.scoreThreshold}점</strong></div>
-                            <div><span>통과 목적지</span><strong>{dealAlertReview.qualifiedCandidates}개</strong></div>
+                            <div><span>걸려 있는 조건</span><strong>{dealAlertReview.subscriptions}개</strong></div>
+                            <div><span>특가 판정선</span><strong>100점 만점에 {dealAlertReview.scoreThreshold}점</strong></div>
+                            <div><span>오늘 보낼 만한 특가</span><strong>{dealAlertReview.qualifiedCandidates}개</strong></div>
                             <div><span>계산 시각</span><strong>{formatKST(dealAlertReview.generatedAt).replace(/\d{4}\. /, '')}</strong></div>
                         </div>
 
@@ -475,7 +483,11 @@ export default function AdminPage() {
                                                 </strong>
                                                 <span>{formatPrice(review.condition.maxPrice)} 이하</span>
                                             </div>
-                                            <span>{review.qualifiedCount}개 목적지 통과</span>
+                                            <span>
+                                                {review.qualifiedCount > 0
+                                                    ? `보낼 만한 특가 ${review.qualifiedCount}개`
+                                                    : '지금은 보낼 특가 없음'}
+                                            </span>
                                         </div>
 
                                         {review.candidates.length > 0 ? (
@@ -494,7 +506,7 @@ export default function AdminPage() {
                                                             <small>{candidate.reasons.join(' · ')}</small>
                                                         </div>
                                                         <div>
-                                                            <em>{candidate.score}점</em>
+                                                            <em>특가점수 {candidate.score}점</em>
                                                             <strong>{formatPrice(candidate.effectivePrice)}</strong>
                                                             <span>{SOURCE_NAMES[candidate.source] || candidate.source}{candidate.feeNote ? ` · ${candidate.feeNote}` : ''}</span>
                                                         </div>
@@ -502,16 +514,19 @@ export default function AdminPage() {
                                                 ))}
                                             </div>
                                         ) : (
-                                            <div className={styles.dealReviewEmpty}>현재 조건에서 기준을 통과한 특가가 없습니다.</div>
+                                            <div className={styles.dealReviewEmpty}>지금 항공권 중에는 이 조건으로 보낼 만한 특가가 없습니다.</div>
                                         )}
 
-                                        <div className={styles.dealRejections}>
-                                            {Object.entries(review.rejectionCounts)
-                                                .filter(([, count]) => count > 0)
-                                                .map(([reason, count]) => (
-                                                    <span key={reason}>{DEAL_REJECTION_LABELS[reason] || reason} {count}건</span>
-                                                ))}
-                                        </div>
+                                        {Object.values(review.rejectionCounts).some(count => count > 0) && (
+                                            <div className={styles.dealRejections}>
+                                                <span className={styles.dealRejectionsLabel}>제외된 항공권과 이유:</span>
+                                                {Object.entries(review.rejectionCounts)
+                                                    .filter(([, count]) => count > 0)
+                                                    .map(([reason, count]) => (
+                                                        <span key={reason}>{DEAL_REJECTION_LABELS[reason] || reason} {count}건</span>
+                                                    ))}
+                                            </div>
+                                        )}
                                     </article>
                                 ))}
                             </div>
