@@ -454,6 +454,22 @@
         justify-content: center;
     }
 
+    .alertManagerBtn {
+        padding: 3px 2px;
+        border: 0;
+        border-radius: 4px;
+        background: transparent;
+        color: var(--color-text-muted);
+        font-size: 0.76rem;
+        font-weight: 600;
+    }
+
+    .alertManagerBtn:hover {
+        border-color: transparent;
+        background: transparent;
+        color: var(--color-text-secondary);
+    }
+
     .statsFilters {
         width: 100%;
     }
@@ -2943,6 +2959,10 @@
 
 .dealAlertBanner button:hover {
     background: #4338ca;
+}
+
+.mobileDealAlertBanner {
+    margin: 0;
 }
 
 /* 상세 모달 상단 요약 바의 알림 칩 — 가격→예약 흐름을 끊지 않도록 본문 밖에 둔다 */

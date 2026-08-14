@@ -2327,6 +2327,21 @@ export default function Dashboard() {
         }
     };
 
+    const renderDealAlertBanner = (placement: 'top' | 'mobile-list') => (
+        <div
+            key={`deal-alert-${placement}`}
+            className={`${styles.dealAlertBanner} ${placement === 'mobile-list' ? styles.mobileDealAlertBanner : ''}`}
+        >
+            <div>
+                <strong>지금 떠날 만한 표가 없나요?</strong>
+                <span>출발지·지역·예산만 정해두면 갈 만한 특가 후보를 대신 찾아드려요.</span>
+            </div>
+            <button type="button" onClick={openDealAlertSetup}>
+                특가 알림 베타 신청
+            </button>
+        </div>
+    );
+
     return (
         <div className={styles.dashboard}>
             <header className={`${styles.header} ${(headerHidden || (isMobile && isScrolled)) ? styles.headerHidden : ''} ${headerScrolled ? styles.headerScrolled : ''}`}>
@@ -2752,7 +2767,7 @@ export default function Dashboard() {
                                     className={styles.alertManagerBtn}
                                     onClick={loadManagedPriceAlerts}
                                 >
-                                    🔔 내 알림{managedPriceAlerts.length > 0 ? ` ${managedPriceAlerts.length}` : ''}
+                                    {isMobile ? '내 알림' : '🔔 내 알림'}{managedPriceAlerts.length > 0 ? ` ${managedPriceAlerts.length}` : ''}
                                 </button>
                                 {favoriteFlights.length > 0 && (
                                     <button
@@ -2803,15 +2818,7 @@ export default function Dashboard() {
                             </div>
                         </div>
 
-                        <div className={styles.dealAlertBanner}>
-                            <div>
-                                <strong>지금 떠날 만한 표가 없나요?</strong>
-                                <span>출발지·지역·예산만 정해두면 갈 만한 특가 후보를 대신 찾아드려요.</span>
-                            </div>
-                            <button type="button" onClick={openDealAlertSetup}>
-                                특가 알림 베타 신청
-                            </button>
-                        </div>
+                        {!isMobile && renderDealAlertBanner('top')}
 
                         {sharedFlightId && (
                             <div style={{
@@ -2871,7 +2878,11 @@ export default function Dashboard() {
                                 // 인사이트 바 삽입: 모바일 3개 후 시작(9개 간격), PC 6개 후 시작(12개 간격)
                                 const insightOffset = isMobile ? 3 : 6;
                                 const insightInterval = isMobile ? 9 : 12;
-                                if (index > 0 && index >= insightOffset && (index - insightOffset) % insightInterval === 0 && !searchTerm) {
+                                const isMobileDealAlertSlot = isMobile && index === 3;
+                                if (isMobileDealAlertSlot) {
+                                    items.push(renderDealAlertBanner('mobile-list'));
+                                }
+                                if (index > 0 && index >= insightOffset && (index - insightOffset) % insightInterval === 0 && !searchTerm && !isMobileDealAlertSlot) {
                                     const bar = generateInsightBar(Math.floor((index - insightOffset) / insightInterval));
                                     if (bar) items.push(bar);
                                 }
@@ -3040,6 +3051,7 @@ export default function Dashboard() {
                                 );
                                 return items;
                             })}
+                            {isMobile && displayedFlights.length > 0 && displayedFlights.length <= 3 && renderDealAlertBanner('mobile-list')}
                         </div>
 
                         {/* 무한 스크롤 감지 요소 */}
