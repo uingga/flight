@@ -3026,6 +3026,17 @@
     box-shadow: 0 24px 80px rgba(15, 23, 42, 0.24);
 }
 
+.dealAlertSheet > .modalHeader {
+    margin-bottom: 0;
+    padding: 22px 24px 0;
+    align-items: flex-start;
+}
+
+.dealAlertSheet > .modalHeader .modalClose {
+    flex: 0 0 auto;
+    margin-left: 16px;
+}
+
 .dealAlertBody {
     display: flex;
     flex-direction: column;
@@ -3182,6 +3193,56 @@
 
 .alertManagerBody {
     padding: 4px 20px 20px;
+}
+
+.alertManagerCreateDealBtn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    margin: 0 0 14px;
+    padding: 12px 14px;
+    border: 1px solid #ddd9ff;
+    border-radius: 12px;
+    background: #f8f7ff;
+    color: #4338ca;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.alertManagerCreateDealBtn:hover {
+    border-color: #c4b5fd;
+    background: #f2f0ff;
+}
+
+.alertManagerCreateDealBtn > span:nth-child(2) {
+    min-width: 0;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.alertManagerCreateDealBtn strong {
+    font-size: 13px;
+    line-height: 1.35;
+}
+
+.alertManagerCreateDealBtn small {
+    color: #737089;
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+.alertManagerCreateDealBtn b {
+    font-size: 22px;
+    font-weight: 400;
+    line-height: 1;
+}
+
+.alertManagerCreateDealIcon {
+    font-size: 18px;
 }
 
 .alertManagerEmpty {
