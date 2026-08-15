@@ -25,7 +25,7 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
     title: {
         template: '%s | 티키티킷',
-        default: '지금 갈 만한 땡처리 항공권 | 티키티킷',
+        default: '지금 나온 땡처리 항공권 | 티키티킷',
     },
     description: '여행사마다 따로 올라오는 저렴한 표를 한곳에서 확인하세요.',
     keywords: [
@@ -49,7 +49,7 @@ export const metadata: Metadata = {
         canonical: '/',
     },
     openGraph: {
-        title: '지금 갈 만한 땡처리 항공권 | 티키티킷',
+        title: '지금 나온 땡처리 항공권 | 티키티킷',
         description: '여행사마다 따로 올라오는 저렴한 표를 한곳에서 확인하세요.',
         url: BASE_URL,
         siteName: '티키티킷',
@@ -58,7 +58,7 @@ export const metadata: Metadata = {
                 url: '/opengraph-image',
                 width: 1200,
                 height: 630,
-                alt: '지금 갈 만한 땡처리 항공권 | 티키티킷',
+                alt: '지금 나온 땡처리 항공권 | 티키티킷',
             },
         ],
         locale: 'ko_KR',
@@ -66,7 +66,7 @@ export const metadata: Metadata = {
     },
     twitter: {
         card: 'summary_large_image',
-        title: '지금 갈 만한 땡처리 항공권 | 티키티킷',
+        title: '지금 나온 땡처리 항공권 | 티키티킷',
         description: '여행사마다 따로 올라오는 저렴한 표를 한곳에서 확인하세요.',
         images: ['/opengraph-image'],
     },
