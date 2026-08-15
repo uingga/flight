@@ -31,7 +31,7 @@ import { checkIsMobile, getMobileUrl } from '@/lib/utils/mobile-url';
 import { getTtangBookingUrl } from '@/lib/utils/ttang-url';
 import { getYbtourBookingUrl } from '@/lib/utils/ybtour-url';
 import { dealAlertRegionLabel, type DealAlertRegion } from '@/lib/deal-alerts';
-import { getComparisonFreshness, getEffectivePrice } from '@/lib/price-quality';
+import { getComparisonFreshness, getComparisonPriceTier, getEffectivePrice } from '@/lib/price-quality';
 import {
     getDestinationContext,
     getItineraryContext,
@@ -1220,8 +1220,8 @@ export default function Dashboard() {
         return flight.departure.city.includes(departureFilter);
     };
 
-    // 기존 추천순(스마트 정렬) 점수 — 낮을수록 상위.
-    // 실질 가격과 기존 벤치마크를 기반으로 하고, 신선한 외부 비교가만 보정에 쓴다.
+    // 추천순(스마트 정렬) 점수 — 낮을수록 상위.
+    // 먼저 신선한 외부 비교가 기준으로 구간을 나누고, 구간 안에서는 실질 가격과 기존 벤치마크를 종합한다.
     const recommendScores = useMemo(() => {
         const getSortScore = (flight: Flight) => {
             const effectivePrice = getEffectivePrice(flight);
@@ -1355,7 +1355,12 @@ export default function Dashboard() {
                 break;
             }
             case 'discount': {
-                comparison = (recommendScores.get(a.id) ?? Infinity) - (recommendScores.get(b.id) ?? Infinity);
+                // 추천순은 신선한 비교가 이하를 먼저, 비교 불가를 그다음,
+                // 신선한 비교가 초과를 마지막에 둔 뒤 각 구간 안에서 종합점수를 적용한다.
+                comparison = getComparisonPriceTier(a) - getComparisonPriceTier(b);
+                if (comparison === 0) {
+                    comparison = (recommendScores.get(a.id) ?? Infinity) - (recommendScores.get(b.id) ?? Infinity);
+                }
                 break;
             }
         }
@@ -1535,7 +1540,10 @@ export default function Dashboard() {
     };
 
     const diversifiedFlights = (sortBy === 'discount' && !searchTerm)
-        ? interleaveRoutes(filteredFlights)
+        // 서로 다른 비교가 구간이 노선 다양화 과정에서 뒤섞이지 않도록
+        // 각 구간 안에서만 노선을 분산한 뒤 다시 합친다.
+        ? ([0, 1, 2] as const).flatMap(tier =>
+            interleaveRoutes(filteredFlights.filter(flight => getComparisonPriceTier(flight) === tier)))
         : filteredFlights;
 
     // 표시할 항공권 (무한 스크롤용)

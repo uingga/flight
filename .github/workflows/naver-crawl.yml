@@ -43,8 +43,8 @@ jobs:
           CI: true
           MAX_FLIGHTS: ${{ github.event.inputs.max_flights || '200' }}
           SOURCE_FILTER: myrealtrip
-          FRESH_HOURS: 48
-          MYREALTRIP_FRESH_HOURS: 24
+          REFRESH_DAYS: 2
+          MYREALTRIP_REFRESH_DAYS: 1
           MISS_RETRY_HOURS: 6
 
       - name: Filter flights by Naver prices
