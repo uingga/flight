@@ -69,6 +69,19 @@ interface FlightResult {
     retDuration: string;  // 오는편 비행시간
 }
 
+const INVALID_AIRLINE_LABELS = new Set([
+    '더 저렴한 항공권',
+    '항공사 제공요금',
+    '항공사 미정',
+    '공동운항',
+]);
+
+function cleanAirlineName(value: string | undefined): string {
+    const name = (value || '').trim();
+    if (!name || INVALID_AIRLINE_LABELS.has(name) || name.includes('항공권') || name.includes('제공요금') || name.length > 20) return '';
+    return name;
+}
+
 async function getSearchPrice(page: Page, gid: number, depDate: string, arrDate: string): Promise<FlightResult | null> {
     const url = `https://flights.myrealtrip.com/air/agent/b2c/AIR/AAA/offers.k1?gid=${gid}&depdt=${depDate}&arrdt=${arrDate}&cabin=Y&adult=1&child=0&infant=0`;
 
@@ -96,6 +109,7 @@ async function getSearchPrice(page: Page, gid: number, depDate: string, arrDate:
                     const lines = t.split('\n').map(l => l.trim()).filter(l => l.length > 0);
                     let airline = '';
                     for (const line of lines) {
+                        if (line.includes('항공권') || /^(항공사 제공요금|항공사 미정|공동운항)$/.test(line)) continue;
                         if (line.includes('항공') || line.includes('에어') || line.includes('진에어') || line.includes('이스타')) {
                             airline = line.replace(/브랜드관.*/, '').replace(/\s*(초특가|특가|라이브|세일|프로모션|이벤트|할인|기획전).*$/g, '').trim();
                             break;
@@ -103,6 +117,7 @@ async function getSearchPrice(page: Page, gid: number, depDate: string, arrDate:
                     }
                     if (!airline) {
                         for (const line of lines) {
+                            if (line.includes('항공권') || /^(항공사 제공요금|항공사 미정|공동운항)$/.test(line)) continue;
                             if (line.length >= 2 && line.length <= 20 && !line.includes('원') && !line.includes('남음') && !line.includes('카드')) {
                                 airline = line;
                                 break;
@@ -309,7 +324,9 @@ async function main() {
         if (idx >= 0) {
             const oldPrice = cache.flights[idx].price;
             cache.flights[idx].price = result.price;
-            cache.flights[idx].airline = result.airline || cache.flights[idx].airline;
+            cache.flights[idx].airline = cleanAirlineName(result.airline)
+                || cleanAirlineName(cache.flights[idx].airline)
+                || '항공사 미정';
             // 표기 규약: departure.time=가는편 출발, departure.arrivalTime=가는편 도착,
             // arrival.time=오는편 출발, arrival.arrivalTime=오는편 도착 (다른 소스와 동일)
             // 이전에는 arrival.time에 가는편 도착시간이 들어가 귀국편 출발시간처럼 표시되는 버그가 있었다.
