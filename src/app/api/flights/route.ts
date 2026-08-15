@@ -27,6 +27,10 @@ const AIRLINE_NAME_MAP: Record<string, string> = {
 function normalizeAirline(name: string): string {
     if (!name) return name;
     const trimmed = name.trim();
+    const invalidNames = new Set(['더 저렴한 항공권', '항공사 제공요금', '항공사 미정', '공동운항']);
+    if (invalidNames.has(trimmed) || trimmed.includes('항공권') || trimmed.includes('제공요금') || trimmed.length > 20) {
+        return '항공사 미정';
+    }
     return AIRLINE_NAME_MAP[trimmed] || trimmed;
 }
 

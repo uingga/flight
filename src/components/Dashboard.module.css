@@ -2427,10 +2427,9 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    /* 알림 칩까지 두 칸이라 좁은 화면에서는 줄바꿈으로 흘린다 (닫기 버튼과 겹치지 않게) */
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: 8px;
-    padding: 20px 56px 16px 24px;
+    padding: 16px 20px;
     border-bottom: 1px solid #f3f4f6;
 }
 
@@ -2449,9 +2448,25 @@
     display: flex;
     align-items: center;
     gap: 8px;
+    flex: 1 1 auto;
+    min-width: 0;
     font-size: 15px;
     font-weight: 600;
     color: #374151;
+}
+
+.mdtAirlineInfo .airline {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mdtSummaryActions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 0 0 auto;
 }
 
 .mdtAirlineLogo {
@@ -2977,17 +2992,16 @@
 /* 상세 모달 상단 요약 바의 알림 칩 — 가격→예약 흐름을 끊지 않도록 본문 밖에 둔다 */
 .priceAlertOpenBtn {
     flex: 0 0 auto;
-    /* 절대 배치된 닫기 버튼과 붙지 않도록 여백 확보 */
-    margin-right: 8px;
     display: inline-flex;
     align-items: center;
-    gap: 5px;
-    padding: 6px 11px;
+    gap: 4px;
+    margin: 0;
+    padding: 4px 9px;
     border: 1px solid #ddd9ff;
     border-radius: 999px;
     background: #f7f6ff;
     color: #4338ca;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 700;
     white-space: nowrap;
     cursor: pointer;
@@ -3868,11 +3882,10 @@
 }
 
 .mdtCloseBtn {
-    position: absolute;
-    top: 16px;
-    right: 16px;
-    width: 32px;
-    height: 32px;
+    position: static;
+    flex: 0 0 auto;
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
     border: none;
     background: rgba(0,0,0,0.05);
@@ -3917,7 +3930,12 @@
 
     /* 세로 여백 압축 — 내용이 최대한 한 화면에 들어오도록 */
     .mdtSummaryBar {
-        padding: 14px 48px 10px 16px;
+        gap: 6px;
+        padding: 12px 12px 10px 16px;
+    }
+
+    .mdtSummaryActions {
+        gap: 6px;
     }
 
     .mdtTimeline {

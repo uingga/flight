@@ -3340,6 +3340,7 @@ export default function Dashboard() {
                 const baseFare = mdt?.baseFare || 0;
                 const tax = (mdt?.tax || 0) + (mdt?.tax2 || 0);
                 const totalPrice = modetourGuide.price;
+                const displayAirline = normalizeAirline(modetourGuide.airline);
                 // 요일
                 const cleanDate = (d: string) => d ? d.replace(/\(.*/g, '').replace(/\./g, '-') : '';
                 const getDayName = (d: string) => {
@@ -3366,13 +3367,11 @@ export default function Dashboard() {
                 return (
                     <div className={styles.modalOverlay} onClick={() => setModetourGuide(null)}>
                         <div className={styles.mdtDetailSheet} onClick={(e) => e.stopPropagation()} style={{ position: 'relative' }}>
-                            <button className={styles.mdtCloseBtn} onClick={() => setModetourGuide(null)}>×</button>
-
                             {/* 여행사 + 항공사 + 좌석 */}
                             <div className={styles.mdtSummaryBar}>
                                 <div className={styles.mdtAirlineInfo}>
                                     <span className={`badge ${getSourceBadgeClass(modetourGuide.source)}`}>{getSourceName(modetourGuide.source)}</span>
-                                    <span className={styles.airline} style={{ marginLeft: '6px' }}>{modetourGuide.airline}</span>
+                                    {displayAirline && <span className={styles.airline}>{displayAirline}</span>}
                                     {(() => {
                                         const seatNum = modetourGuide.availableSeats || (modetourGuide.seats ? parseInt(modetourGuide.seats) : 0);
                                         if (!seatNum) return null;
@@ -3383,23 +3382,33 @@ export default function Dashboard() {
                                         );
                                     })()}
                                 </div>
-                                {priceAlertSetup?.key !== `flight:${modetourGuide.id}` && (
+                                <div className={styles.mdtSummaryActions}>
+                                    {priceAlertSetup?.key !== `flight:${modetourGuide.id}` && (
+                                        <button
+                                            type="button"
+                                            className={styles.priceAlertOpenBtn}
+                                            onClick={() => openPriceAlert({
+                                                key: `flight:${modetourGuide.id}`,
+                                                entry: 'detail_modal',
+                                                departureCity: depCity,
+                                                arrivalCity: arrCity,
+                                                baseline: { flightId: modetourGuide.id, price: modetourGuide.price },
+                                                maxPrice: modetourGuide.price,
+                                            })}
+                                        >
+                                            <span aria-hidden="true">🔔</span>
+                                            가격 알림
+                                        </button>
+                                    )}
                                     <button
                                         type="button"
-                                        className={styles.priceAlertOpenBtn}
-                                        onClick={() => openPriceAlert({
-                                            key: `flight:${modetourGuide.id}`,
-                                            entry: 'detail_modal',
-                                            departureCity: depCity,
-                                            arrivalCity: arrCity,
-                                            baseline: { flightId: modetourGuide.id, price: modetourGuide.price },
-                                            maxPrice: modetourGuide.price,
-                                        })}
+                                        className={styles.mdtCloseBtn}
+                                        onClick={() => setModetourGuide(null)}
+                                        aria-label="상세 팝업 닫기"
                                     >
-                                        <span aria-hidden="true">🔔</span>
-                                        가격 알림
+                                        ×
                                     </button>
-                                )}
+                                </div>
                             </div>
 
                             {priceAlertSetup?.key === `flight:${modetourGuide.id}` && (
