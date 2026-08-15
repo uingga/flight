@@ -141,7 +141,7 @@ export async function GET(request: NextRequest) {
                 const beforeNaverFilter = allFlights.length;
                 allFlights = allFlights.filter(f => {
                     if (!f.naverLowest || f.naverLowest <= 0) return true;
-                    // 48시간이 지난 비교가는 추천 점수뿐 아니라 제거 판단에도 사용하지 않는다.
+                    // KST 날짜 기준 4일 이상 지난 비교가는 추천 점수뿐 아니라 제거 판단에도 사용하지 않는다.
                     if (!getComparisonFreshness(f.naverCheckedAt).usable) return true;
                     const effectivePrice = getEffectivePrice(f);
                     const difference = effectivePrice - f.naverLowest;

@@ -2359,11 +2359,11 @@ export default function Dashboard() {
             className={`${styles.dealAlertBanner} ${placement === 'mobile-list' ? styles.mobileDealAlertBanner : ''}`}
         >
             <div>
-                <strong>지금 떠날 만한 표가 없나요?</strong>
-                <span>출발지·지역·예산만 정해두면 갈 만한 특가 후보를 대신 찾아드려요.</span>
+                <strong>어디로 갈지는, 싼 표가 나오면 정해도 돼요</strong>
+                <span>출발지·지역·예산만 골라두세요. 새 표가 나오면 티키티킷이 먼저 알려드릴게요.</span>
             </div>
             <button type="button" onClick={openDealAlertSetup}>
-                특가 알림 베타 신청
+                내 조건 맡겨두기
             </button>
         </div>
     );
@@ -2514,7 +2514,7 @@ export default function Dashboard() {
             {/* SEO: 검색엔진 크롤러용 콘텐츠 (JavaScript 미지원 시 표시) */}
             <noscript>
                 <div style={{ padding: '40px 20px', maxWidth: '800px', margin: '0 auto', lineHeight: 1.8 }}>
-                    <h2>지금 갈 만한 땡처리 항공권 | 티키티킷</h2>
+                    <h2>지금 나온 땡처리 항공권 | 티키티킷</h2>
                     <p>
                         여행사마다 따로 올라오는 저렴한 땡처리 항공권을 한곳에 모아 보여주는 무료 서비스입니다.
                     </p>
@@ -3953,7 +3953,7 @@ export default function Dashboard() {
                     <div className={styles.dealAlertSheet} onClick={(event) => event.stopPropagation()}>
                         <div className={styles.modalHeader}>
                             <div>
-                                <h3 className={styles.modalTitle}>🔔 조건형 특가 알림</h3>
+                                <h3 className={styles.modalTitle}>🔔 내 조건 맡겨두기</h3>
                                 <p className={styles.alertManagerSubtitle}>날짜와 목적지는 정하지 않아도 됩니다.</p>
                             </div>
                             <button className={styles.modalClose} onClick={() => setShowDealAlertSetup(false)}>×</button>
@@ -4046,8 +4046,8 @@ export default function Dashboard() {
                                     </div>
 
                                     <p className={styles.dealAlertNote}>
-                                        조건에 맞는 항공권을 전부 보내지 않고, 가격·일정·희소성·정보 신선도를 함께 검토합니다.
-                                        현재는 발송 전 후보 품질을 확인하는 베타 단계입니다.
+                                        조건에 맞는 표를 모두 보내지는 않습니다. 가격이 좋고 일정이 괜찮은 표만 알려드려요.
+                                        지금은 알림을 보내기 전에 후보를 확인하는 베타 단계입니다.
                                     </p>
                                     {dealAlertSetup.message && (
                                         <p className={styles.priceAlertError}>{dealAlertSetup.message}</p>
@@ -4058,7 +4058,7 @@ export default function Dashboard() {
                                         disabled={dealAlertSetup.status === 'saving'}
                                         onClick={saveDealAlert}
                                     >
-                                        {dealAlertSetup.status === 'saving' ? '저장 중…' : '이 조건으로 특가 알림 신청'}
+                                        {dealAlertSetup.status === 'saving' ? '저장 중…' : '이 조건으로 알려주세요'}
                                     </button>
                                 </>
                             )}
@@ -4090,7 +4090,7 @@ export default function Dashboard() {
                             >
                                 <span className={styles.alertManagerCreateDealIcon}>✨</span>
                                 <span>
-                                    <strong>새 특가 알림 만들기</strong>
+                                    <strong>새 조건 맡겨두기</strong>
                                     <small>날짜·목적지 없이 출발지·지역·예산만 선택</small>
                                 </span>
                                 <b aria-hidden="true">›</b>
@@ -4114,7 +4114,7 @@ export default function Dashboard() {
                                                         ? `${alert.departureCity} 출발 · ${dealAlertRegionLabel(alert.region)}`
                                                         : `${alert.departureCity} → ${alert.arrivalCity}`}
                                                 </strong>
-                                                <span>{alert.type === 'deal' ? '조건형 특가 · 베타' : '출발일 상관없이'}</span>
+                                                <span>{alert.type === 'deal' ? '맡겨둔 조건 · 베타' : '출발일 상관없이'}</span>
                                             </div>
                                             <label className={styles.alertManagerPrice}>
                                                     <span>{alert.type === 'deal' ? '최대 예산' : '목표 가격'}</span>
