@@ -16,3 +16,13 @@ export function getComparisonFreshness(checkedAt?: string, now = Date.now()) {
     const ageHours = Math.max(0, (now - checkedTime) / HOUR);
     return { usable: ageHours <= 48, ageHours };
 }
+
+/** 추천순의 비교가 구간: 검증된 최저가 이하 → 비교 불가 → 검증된 최저가 초과. */
+export function getComparisonPriceTier(
+    flight: Pick<Flight, 'price' | 'source' | 'naverLowest' | 'naverCheckedAt'>,
+    now = Date.now(),
+): 0 | 1 | 2 {
+    if (!flight.naverLowest || flight.naverLowest <= 0) return 1;
+    if (!getComparisonFreshness(flight.naverCheckedAt, now).usable) return 1;
+    return getEffectivePrice(flight) <= flight.naverLowest ? 0 : 2;
+}

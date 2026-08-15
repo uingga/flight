@@ -1,7 +1,7 @@
 /**
  * 네이버 항공권 최저가 크롤러
  * 
- * all-flights-cache.json에서 가격순 상위 30개 항공권을 추출하고,
+ * all-flights-cache.json에서 갱신이 필요한 항공권을 우선순위로 추출하고,
  * 각 항공권의 구간+날짜로 네이버 항공권을 검색하여 최저가를 수집합니다.
  * 결과는 data/naver-prices.json에 저장됩니다.
  */
@@ -18,8 +18,8 @@ const MAX_FLIGHTS = parseInt(process.env.MAX_FLIGHTS || '9999', 10); // 기본: 
 const MAX_DAYS_AHEAD = parseInt(process.env.MAX_DAYS_AHEAD || '60', 10); // 출발일 N일 이내만
 const SOURCE_FILTER_RAW = process.env.SOURCE_FILTER ?? 'myrealtrip';
 const SOURCE_FILTER = SOURCE_FILTER_RAW.toLowerCase() === 'all' ? '' : SOURCE_FILTER_RAW; // all이면 전체 소스
-const FRESH_HOURS = parseInt(process.env.FRESH_HOURS || '48', 10);  // N시간 내 검색한 노선은 스킵
-const MYREALTRIP_FRESH_HOURS = parseInt(process.env.MYREALTRIP_FRESH_HOURS || '24', 10); // 마이리얼트립은 매일 갱신
+const REFRESH_DAYS = parseInt(process.env.REFRESH_DAYS || '2', 10); // 기타 여행사는 KST 날짜 기준 이틀마다 갱신
+const MYREALTRIP_REFRESH_DAYS = parseInt(process.env.MYREALTRIP_REFRESH_DAYS || '1', 10); // 마이리얼트립은 KST 날짜 기준 매일 갱신
 const MISS_RETRY_HOURS = parseInt(process.env.MISS_RETRY_HOURS || '6', 10); // 검색 실패 노선은 잠시 뒤 재시도
 const ABORT_AFTER_MISSES = parseInt(process.env.ABORT_AFTER_MISSES || '3', 10); // 연속 N건 결과 없으면 차단으로 보고 조기 철수
 const DRY_RUN = process.env.DRY_RUN === '1';                        // 검색 계획만 출력하고 종료
@@ -79,18 +79,30 @@ interface NaverPriceEntry {
     lastAttemptStatus?: 'success' | 'miss';
 }
 
-const freshnessHoursFor = (entry: NaverPriceEntry, source: string): number => {
-    if (entry.lastAttemptStatus === 'miss') return MISS_RETRY_HOURS;
-    return source === 'myrealtrip' ? MYREALTRIP_FRESH_HOURS : FRESH_HOURS;
-};
+const HOUR_MS = 3_600_000;
+const DAY_MS = 24 * HOUR_MS;
+const KST_OFFSET_MS = 9 * HOUR_MS;
+
+const kstDayNumber = (timestamp: number): number =>
+    Math.floor((timestamp + KST_OFFSET_MS) / DAY_MS);
+
+const elapsedKstDays = (timestamp: number, now: number): number =>
+    kstDayNumber(now) - kstDayNumber(timestamp);
 
 const isAttemptFresh = (entry: NaverPriceEntry | undefined, source: string, now = Date.now()): boolean => {
     if (!entry) return false;
     const isMiss = entry.lastAttemptStatus === 'miss';
     const timestamp = isMiss ? entry.lastAttemptAt : entry.crawledAt;
     if (!timestamp) return false;
-    const freshnessHours = freshnessHoursFor(entry, source);
-    return now - new Date(timestamp).getTime() < freshnessHours * 3600000;
+    const attemptedAt = new Date(timestamp).getTime();
+    if (!Number.isFinite(attemptedAt)) return false;
+
+    // 실패 건은 차단이 풀릴 기회를 주기 위해 정확한 시간 간격으로 재시도한다.
+    if (isMiss) return now - attemptedAt < MISS_RETRY_HOURS * HOUR_MS;
+
+    // 성공 건은 실행 시각의 몇 분 차이 때문에 하루를 더 건너뛰지 않도록 KST 날짜로 판단한다.
+    const refreshDays = source === 'myrealtrip' ? MYREALTRIP_REFRESH_DAYS : REFRESH_DAYS;
+    return elapsedKstDays(attemptedAt, now) < refreshDays;
 };
 
 const attemptTimestamp = (entry: NaverPriceEntry): number =>
@@ -137,7 +149,7 @@ const attemptTimestamp = (entry: NaverPriceEntry): number =>
 
     // 노선 중복 제거 + 신선한 항목 제외 + 우선순위 정렬
     const { selected: uniqueFlights, skippedFresh } = selectFlightsByPriority(rawData, naverPrices, MAX_FLIGHTS);
-    console.log(`⏭️ 신선도 기준 내 이미 시도된 노선 스킵: ${skippedFresh}건 (마이리얼트립 ${MYREALTRIP_FRESH_HOURS}h / 기타 ${FRESH_HOURS}h / 실패 ${MISS_RETRY_HOURS}h)`);
+    console.log(`⏭️ 갱신 주기 내 이미 시도된 노선 스킵: ${skippedFresh}건 (KST 기준 마이리얼트립 매일 / 기타 ${REFRESH_DAYS}일마다 / 실패 ${MISS_RETRY_HOURS}시간 후)`);
     console.log(`📋 검색할 항공권: ${uniqueFlights.length}건 (신규 노선 우선 → 오래된 순)\n`);
 
     if (DRY_RUN) {
@@ -341,7 +353,7 @@ function flightKey(f: FlightData): string {
 
 /**
  * 노선 중복 제거(같은 노선+날짜는 최저가 1건) 후,
- * 신선한(FRESH_HOURS 이내) 노선을 제외하고 우선순위로 정렬한다.
+ * KST 날짜 기준 갱신 주기 안의 노선을 제외하고 우선순위로 정렬한다.
  *
  * 우선순위: ① 네이버 데이터가 없는 신규 노선 (할인율 높은 순)
  *          ② 데이터가 있는 노선은 마지막 검색이 오래된 순
