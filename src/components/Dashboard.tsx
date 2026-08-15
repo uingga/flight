@@ -156,6 +156,7 @@ export default function Dashboard() {
         status: 'idle',
     });
     const [managedPriceAlerts, setManagedPriceAlerts] = useState<ManagedPriceAlert[]>([]);
+    const [managedPriceAlertsLoaded, setManagedPriceAlertsLoaded] = useState(false);
     const [priceAlertManagerStatus, setPriceAlertManagerStatus] = useState<'idle' | 'loading' | 'error'>('idle');
     const [priceAlertManagerMessage, setPriceAlertManagerMessage] = useState<string | null>(null);
     const [priceAlertManagerBusy, setPriceAlertManagerBusy] = useState<string | null>(null);
@@ -622,15 +623,18 @@ export default function Dashboard() {
         return registration ? registration.pushManager.getSubscription() : null;
     };
 
-    const loadManagedPriceAlerts = async () => {
-        setShowPriceAlertManager(true);
-        setPriceAlertManagerStatus('loading');
-        setPriceAlertManagerMessage(null);
+    const refreshManagedPriceAlerts = async (openManager: boolean) => {
+        if (openManager) {
+            setShowPriceAlertManager(true);
+            setPriceAlertManagerStatus('loading');
+            setPriceAlertManagerMessage(null);
+        }
         try {
             const subscription = await getCurrentPushSubscription();
             if (!subscription) {
                 setManagedPriceAlerts([]);
-                setPriceAlertManagerStatus('idle');
+                setManagedPriceAlertsLoaded(true);
+                if (openManager) setPriceAlertManagerStatus('idle');
                 return;
             }
             const data = await postPriceAlertAction({ action: 'list', subscription: subscription.toJSON() });
@@ -639,12 +643,24 @@ export default function Dashboard() {
                 ...alert,
                 draftPrice: String(alert.maxPrice),
             })));
-            setPriceAlertManagerStatus('idle');
+            setManagedPriceAlertsLoaded(true);
+            if (openManager) setPriceAlertManagerStatus('idle');
         } catch (error) {
-            setPriceAlertManagerStatus('error');
-            setPriceAlertManagerMessage(error instanceof Error ? error.message : '내 알림을 불러오지 못했습니다.');
+            setManagedPriceAlertsLoaded(true);
+            if (openManager) {
+                setPriceAlertManagerStatus('error');
+                setPriceAlertManagerMessage(error instanceof Error ? error.message : '내 알림을 불러오지 못했습니다.');
+            }
         }
     };
+
+    const loadManagedPriceAlerts = () => refreshManagedPriceAlerts(true);
+
+    useEffect(() => {
+        void refreshManagedPriceAlerts(false);
+        // 페이지 진입 시 현재 브라우저의 알림 개수만 조용히 미리 불러옵니다.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const updateManagedPriceAlert = async (alert: ManagedPriceAlert) => {
         const maxPrice = Number(alert.draftPrice);
@@ -774,6 +790,7 @@ export default function Dashboard() {
                     ? `등록 완료! 테스트 알림을 요청했습니다. ${formatPrice(maxPrice)} 이하 특가가 나오면 알려드릴게요.`
                     : `${formatPrice(maxPrice)} 이하의 새로운 특가가 생기면 알려드릴게요.`,
             } : current);
+            void refreshManagedPriceAlerts(false);
         } catch (error) {
             setPriceAlertSetup(current => current ? {
                 ...current,
@@ -858,6 +875,7 @@ export default function Dashboard() {
                 status: 'sent',
                 message: `${current.departureCity} 출발 · ${dealAlertRegionLabel(current.region)} · ${formatPrice(maxPrice)} 이하 조건을 저장했습니다. 현재 베타 검증 중이며 실제 발송 전까지 후보 품질을 확인합니다.`,
             }));
+            void refreshManagedPriceAlerts(false);
         } catch (error) {
             setDealAlertSetup(current => ({
                 ...current,
@@ -2762,19 +2780,21 @@ export default function Dashboard() {
                         <div className={styles.stats}>
                             <div className={styles.statsHeader}>
                                 <span className={styles.resultCount}>총 <strong>{filteredFlights.length}</strong>개의 항공권</span>
-                                <button
-                                    type="button"
-                                    className={styles.alertManagerBtn}
-                                    onClick={loadManagedPriceAlerts}
-                                >
-                                    {isMobile ? '내 알림' : '🔔 내 알림'}{managedPriceAlerts.length > 0 ? ` ${managedPriceAlerts.length}` : ''}
-                                </button>
+                                {managedPriceAlertsLoaded && managedPriceAlerts.length > 0 && (
+                                    <button
+                                        type="button"
+                                        className={styles.alertManagerBtn}
+                                        onClick={loadManagedPriceAlerts}
+                                    >
+                                        {isMobile ? '내 알림' : '🔔 내 알림'} {managedPriceAlerts.length}
+                                    </button>
+                                )}
                                 {favoriteFlights.length > 0 && (
                                     <button
-                                        className={favFilter ? styles.favFilterBtnActive : styles.favFilterBtn}
+                                        className={`${styles.alertManagerBtn} ${favFilter ? styles.alertManagerBtnActive : ''}`}
                                         onClick={() => setFavFilter(!favFilter)}
                                     >
-                                        ⭐ 즐겨찾기{favFilter ? ' ON' : ''}
+                                        {isMobile ? '즐겨찾기' : '⭐ 즐겨찾기'} {favoriteFlights.length}
                                     </button>
                                 )}
                             </div>

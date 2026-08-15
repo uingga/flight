@@ -444,6 +444,17 @@
     background: #f0efff;
 }
 
+.alertManagerBtnActive {
+    border-color: #6366f1;
+    background: #4f46e5;
+    color: #fff;
+}
+
+.alertManagerBtnActive:hover {
+    border-color: #4f46e5;
+    background: #4338ca;
+}
+
 @media (max-width: 768px) {
     .stats {
         flex-direction: column;
@@ -455,19 +466,31 @@
     }
 
     .alertManagerBtn {
-        padding: 3px 2px;
-        border: 0;
-        border-radius: 4px;
-        background: transparent;
-        color: var(--color-text-muted);
+        padding: 4px 8px;
+        border: 1px solid #e4e1f0;
+        border-radius: 999px;
+        background: #fff;
+        color: #6b7280;
         font-size: 0.76rem;
         font-weight: 600;
     }
 
     .alertManagerBtn:hover {
-        border-color: transparent;
-        background: transparent;
-        color: var(--color-text-secondary);
+        border-color: #c7c2e8;
+        background: #faf9ff;
+        color: #4b5563;
+    }
+
+    .alertManagerBtnActive {
+        border-color: #6366f1;
+        background: #4f46e5;
+        color: #fff;
+    }
+
+    .alertManagerBtnActive:hover {
+        border-color: #4f46e5;
+        background: #4338ca;
+        color: #fff;
     }
 
     .statsFilters {
@@ -1506,39 +1529,6 @@
     border-radius: 999px;
     border: 1px solid #fde68a;
     white-space: nowrap;
-}
-
-/* 즐겨찾기 필터 버튼 */
-.favFilterBtn {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 5px 12px;
-    background: var(--color-bg-secondary);
-    border: 1px solid var(--color-border);
-    border-radius: 999px;
-    font-size: 0.78rem;
-    font-weight: 600;
-    color: var(--color-text-secondary);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    white-space: nowrap;
-}
-
-.favFilterBtn:hover {
-    background: #f1f5f9;
-    border-color: #cbd5e1;
-}
-
-.favFilterBtnActive {
-    composes: favFilterBtn;
-    background: #1e293b;
-    border-color: #1e293b;
-    color: #fff;
-}
-
-.favFilterBtnActive:hover {
-    background: #334155;
 }
 
 /* 관심 노선 특가 배너 */
