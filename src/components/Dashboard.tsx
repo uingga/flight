@@ -3644,8 +3644,8 @@ export default function Dashboard() {
                                     </div>
                                 )}
 
-                                {/* 인원 선택 — 예약 URL이 인원수를 지원하는 여행사 전체 (모두투어만 딥링크 미지원) */}
-                                {modetourGuide.source !== 'modetour' && (
+                                {/* 인원 선택 — 예약 URL이 인원수를 반영하는 여행사만 (모두투어: 딥링크 없음, 온라인투어: 예약 페이지가 인원 파라미터를 무시하고 자체 선택 UI 사용) */}
+                                {modetourGuide.source !== 'modetour' && modetourGuide.source !== 'onlinetour' && (
                                     <>
                                         <div className={styles.mdtPaxSection}>
                                             <div className={styles.mdtPaxTitle}>탑승 인원</div>
