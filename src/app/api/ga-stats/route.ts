@@ -26,6 +26,7 @@ const ENTRY_LABELS: Record<string, string> = {
     book_button: '카드의 예약 버튼',
     discovery_bar: '여행지 발견 바',
     shared_link: '공유 링크',
+    today_pick: '오늘의 표',
 };
 
 const CHANNEL_LABELS: Record<string, string> = {
