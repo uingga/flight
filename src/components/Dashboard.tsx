@@ -975,7 +975,7 @@ export default function Dashboard() {
                             </span>
                         </label>
                         <p className={styles.priceAlertHelp}>
-                            같은 노선이면 출발일과 일정이 달라도 목표가 이하의 새 특가를 알려드립니다.
+                            같은 노선이면 출발일과 일정이 달라도 목표 가격 이하의 새 특가를 알려드립니다.
                         </p>
                         {setup.message && (
                             <p className={styles.priceAlertError}>{setup.message}</p>
@@ -1813,12 +1813,12 @@ export default function Dashboard() {
                         <span className={styles.destinationDiscoveryIcon} aria-hidden="true">🧭</span>
                         <span className={styles.destinationDiscoveryCopy}>
                             <span className={styles.destinationDiscoveryEyebrow}>여행지 발견</span>
-                            <strong>{arrival}, 어디에 있는 곳일까요?</strong>
+                            <strong>{arrival}, 이런 곳이에요</strong>
                             <span>{context.location}</span>
                         </span>
                         <span className={styles.destinationDiscoveryDeal}>
                             <strong>{departure} 출발 · {formatPrice(candidate.price)}</strong>
-                            <span>여행 맥락과 일정 보기 →</span>
+                            <span>위치와 일정 보기 →</span>
                         </span>
                     </button>
                 );
@@ -2154,7 +2154,7 @@ export default function Dashboard() {
                             { emoji: '🌺', city: '다낭', reason: '꽃 시즌' },
                             { emoji: '🌴', city: '세부', reason: '건기 여행' },
                             { emoji: '🌞', city: '푸켓', reason: '건기 성수기' },
-                            { emoji: '🌴', city: '방콕', reason: '베스트 시즌' },
+                            { emoji: '🌴', city: '방콕', reason: '건기 여행' },
                         ]
                     },
                     3: {
@@ -2234,7 +2234,7 @@ export default function Dashboard() {
                             { emoji: '❄️', city: '삿포로', reason: '눈축제 여행' },
                             { emoji: '🌴', city: '세부', reason: '건기 여행' },
                             { emoji: '🏖️', city: '푸켓', reason: '건기 성수기' },
-                            { emoji: '🌞', city: '방콕', reason: '베스트 시즌' },
+                            { emoji: '🌞', city: '방콕', reason: '건기 여행' },
                         ]
                     },
                 };
@@ -2871,7 +2871,7 @@ export default function Dashboard() {
                                 {alertPanelOpen ? renderPriceAlertPanel('출발일이 달라도 알려드려요') : (
                                     <>
                                         <span className={styles.alertSuggestText}>
-                                            {alertSuggestion.arrivalCity}, 지금 최저 {formatPrice(alertSuggestion.price)}.
+                                            {alertSuggestion.arrivalCity}, 지금 {formatPrice(alertSuggestion.price)}부터 있어요.
                                             {' '}더 내려가면 알려드릴까요?
                                         </span>
                                         <span className={styles.alertSuggestActions}>
@@ -3486,7 +3486,7 @@ export default function Dashboard() {
                                     <div className={styles.mdtTravelContextHeader}>
                                         <span aria-hidden="true">🧭</span>
                                         <div>
-                                            <span>이 여행의 맥락</span>
+                                            <span>처음 가는 곳이라면</span>
                                             <strong id="travel-context-title">{arrCity}, 이런 곳이에요</strong>
                                         </div>
                                     </div>
