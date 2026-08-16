@@ -1120,7 +1120,7 @@ export default function Dashboard() {
 
     // 예약 상세 시트를 여는 유일한 통로. entry로 "어디서 열었는지"를 남겨야
     // 카드 목록 → 상세 → 예약 클릭 퍼널의 중간 구간이 GA4에서 보인다.
-    type DetailEntry = 'card_body' | 'book_button' | 'discovery_bar' | 'shared_link';
+    type DetailEntry = 'card_body' | 'book_button' | 'discovery_bar' | 'shared_link' | 'today_pick';
     const openFlightDetail = (flight: Flight, entry: DetailEntry) => {
         gtag.trackDetailOpen(
             `${normalizeCity(flight.departure.city)}-${normalizeCity(flight.arrival.city)}`,
@@ -1314,6 +1314,54 @@ export default function Dashboard() {
         });
         return scores;
     }, [flights, interparkPrices]);
+
+    // 오늘의 표 — 헤더 질문("오늘은 어디가 싸게 나왔을까요?")에 대한 즉답 한 장.
+    // 오늘 새로 나왔거나 어제보다 내린 표 중 추천 점수 상위 20%만 자격이 있고,
+    // 자격 있는 표가 없는 날은 아예 표시하지 않는다 (억지로 뽑지 않는다).
+    const todayPick = useMemo(() => {
+        if (!flights.length) return null;
+        const pad = (n: number) => String(n).padStart(2, '0');
+        const now = new Date();
+        const todayStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+        const yest = new Date(now);
+        yest.setDate(now.getDate() - 1);
+        const yestStr = `${yest.getFullYear()}-${pad(yest.getMonth() + 1)}-${pad(yest.getDate())}`;
+
+        const sorted = flights.map(f => recommendScores.get(f.id) ?? Infinity).sort((a, b) => a - b);
+        const cutoff = sorted[Math.floor(sorted.length * 0.2)] ?? Infinity;
+
+        const findPick = (refStr: string, prevStr: string, isToday: boolean) => {
+            let best: { flight: Flight; reason: string; score: number } | null = null;
+            for (const flight of flights) {
+                if (!flight.price || flight.price <= 0) continue;
+                const score = recommendScores.get(flight.id) ?? Infinity;
+                if (score > cutoff) continue;
+                if (best && score >= best.score) continue;
+
+                let reason = '';
+                const history = priceHistory[`${normalizeCity(flight.departure.city)}-${normalizeCity(flight.arrival.city)}`];
+                if (history) {
+                    const t = history.find(h => h.date === refStr);
+                    const y = history.find(h => h.date === prevStr);
+                    // 이 표가 기준일의 노선 최저가일 때만 "내렸다"고 말한다 (남의 하락을 빌려 쓰지 않기)
+                    if (t && y && y.minPrice > t.minPrice && flight.price <= t.minPrice) {
+                        reason = `${isToday ? '어제보다' : '어제 하루 새'} ${(y.minPrice - t.minPrice).toLocaleString()}원 내렸어요`;
+                    }
+                }
+                if (!reason && flight.firstSeen === refStr) reason = `${isToday ? '오늘' : '어제'} 새로 올라온 표예요`;
+                if (!reason) continue;
+
+                best = { flight, reason, score };
+            }
+            return best;
+        };
+
+        // 새벽에는 오늘 크롤이 아직 없어 "오늘" 기준 자격자가 없을 수 있다 → 어제 기준으로 폴백
+        const dayBefore = new Date(now);
+        dayBefore.setDate(now.getDate() - 2);
+        const dayBeforeStr = `${dayBefore.getFullYear()}-${pad(dayBefore.getMonth() + 1)}-${pad(dayBefore.getDate())}`;
+        return findPick(todayStr, yestStr, true) ?? findPick(yestStr, dayBeforeStr, false);
+    }, [flights, priceHistory, recommendScores]);
 
     const filteredFlights = flights.filter(flight => {
         // 공유 링크로 접근 시 해당 항공편만 표시
@@ -2913,6 +2961,26 @@ export default function Dashboard() {
                                     </>
                                 )}
                             </div>
+                        )}
+
+                        {/* 오늘의 표 — 기본 화면에서만, 자격 있는 표가 있는 날만 표시 */}
+                        {todayPick && !sharedFlightId && !favFilter && searchTerm === '' && departureFilter === 'all' && regionFilter === 'all' && sourceFilter === 'all' && airlineFilter === 'all' && startDate === defaultStartDate && endDate === defaultEndDate && (
+                            <button type="button" className={styles.todayPick} onClick={() => openFlightDetail(todayPick.flight, 'today_pick')}>
+                                <span className={styles.todayPickTop}>
+                                    <span className={styles.todayPickBadge}>오늘의 표</span>
+                                    <span className={styles.todayPickReason}>{todayPick.reason}</span>
+                                </span>
+                                <span className={styles.todayPickBody}>
+                                    <span className={styles.todayPickRoute}>
+                                        <strong>{normalizeCity(todayPick.flight.departure.city)} → {normalizeCity(todayPick.flight.arrival.city)}</strong>
+                                        <span>{(todayPick.flight.departure.date || '').slice(5, 10).replace('-', '.')} ~ {(todayPick.flight.arrival.date || '').slice(5, 10).replace('-', '.')} 왕복 · {getSourceName(todayPick.flight.source)}</span>
+                                    </span>
+                                    <span className={styles.todayPickPrice}>
+                                        {formatPrice(todayPick.flight.price)}
+                                        <em>자세히 보기 →</em>
+                                    </span>
+                                </span>
+                            </button>
                         )}
 
                         <div className={styles.flightGrid}>
