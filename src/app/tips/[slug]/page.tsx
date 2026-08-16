@@ -261,7 +261,7 @@ const tips: Record<string, TipData> = {
                 <div className={styles.infoBox}>
                     <p><b>1. 출발지를 바꿔보세요</b> — 인천 대신 부산 출발로 바꾸면 20만원대에 나오는 경우가 있어요.</p>
                     <p><b>2. 만개일 직전을 노리세요</b> — 개화~7부 개화 시점에 가면 가격도 싸고 벚꽃도 충분히 예뻐요.</p>
-                    <p><b>3. 후쿠오카·나가사키부터 확인하세요</b> — 벚꽃이 가장 먼저 피고, 항공권도 가장 저렴한 도시입니다.</p>
+                    <p><b>3. 후쿠오카·나가사키부터 확인하세요</b> — 벚꽃이 가장 먼저 피고, 항공권도 저렴하게 나오는 편입니다.</p>
                     <p><b>4. 평일 출발이 핵심</b> — 금~일 출발은 주중 대비 5~10만원 비쌉니다.</p>
                 </div>
             </>
@@ -485,7 +485,7 @@ export default function TipPage({ params }: { params: { slug: string } }) {
 
                 <div className={styles.ctaSection}>
                     <p>더 이상 여러 여행사 사이트를 돌아다니며 시간을 낭비하지 마세요.</p>
-                    <p><b>티키티킷</b>에서 한눈에 비교하고 가장 저렴하게 떠나보세요.</p>
+                    <p>여행사마다 따로 올라오는 땡처리 항공권, <b>티키티킷</b>에서 한곳에 모아 비교해보세요.</p>
                     <Link href="/" className={styles.ctaButton}>지금 특가 확인하기 →</Link>
                 </div>
             </article>
