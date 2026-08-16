@@ -4589,29 +4589,20 @@
 }
 
 
-/* 상세 시트 스크롤 힌트 — 아래 내용이 남아 있을 때만 예약 버튼 위에 떠 있는다 */
-.mdtScrollHint {
+/* 상세 시트 스크롤 페이드 — 아래 내용이 남아 있는 동안 내용 끝이 예약 바 뒤로 흐려져
+   "이어진다"는 신호를 준다. 끝까지 내리면 사라진다. */
+.mdtScrollFade {
     position: absolute;
-    top: -32px;
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 5px 13px;
-    border: none;
-    border-radius: 999px;
-    background: rgba(17, 24, 39, 0.78);
-    color: #fff;
-    font-size: 12px;
-    font-weight: 600;
-    line-height: 1.4;
-    white-space: nowrap;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
-    cursor: pointer;
+    top: -56px;
+    left: 0;
+    right: 0;
+    height: 56px;
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0), #fff);
+    pointer-events: none;
     opacity: 1;
-    transition: opacity 0.25s ease;
-    z-index: 5;
+    transition: opacity 0.3s ease;
 }
 
-.mdtScrollHintHidden {
+.mdtScrollFadeHidden {
     opacity: 0;
-    pointer-events: none;
 }
