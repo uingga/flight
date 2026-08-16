@@ -1131,6 +1131,24 @@ export default function Dashboard() {
         setModetourGuide(flight);
     };
 
+    // 상세 시트 스크롤 힌트 — 화면 밖에 내용이 남아 있는지 사용자가 알 수 있게 한다
+    const detailSheetRef = useRef<HTMLDivElement | null>(null);
+    const [sheetHasMore, setSheetHasMore] = useState(false);
+    const measureSheetScroll = () => {
+        const el = detailSheetRef.current;
+        if (!el) return;
+        setSheetHasMore(el.scrollHeight - el.scrollTop - el.clientHeight > 60);
+    };
+    useEffect(() => {
+        if (!modetourGuide) return;
+        // 항공권마다 내용 길이가 달라 시트가 그려진 다음 프레임에 측정한다
+        const id = requestAnimationFrame(measureSheetScroll);
+        // 첫 페이지 로드 직후에는 레이아웃이 늦게 안정되므로 시트 등장 애니메이션(0.3s) 후 한 번 더 잰다
+        const late = setTimeout(measureSheetScroll, 450);
+        return () => { cancelAnimationFrame(id); clearTimeout(late); };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [modetourGuide]);
+
     const confirmBooking = () => {
         if (!bookingFlight) return;
         const url = getBookingUrl(bookingFlight, passengers);
@@ -3394,7 +3412,7 @@ export default function Dashboard() {
 
                 return (
                     <div className={styles.modalOverlay} onClick={() => setModetourGuide(null)}>
-                        <div className={styles.mdtDetailSheet} onClick={(e) => e.stopPropagation()} style={{ position: 'relative' }}>
+                        <div className={styles.mdtDetailSheet} onClick={(e) => e.stopPropagation()} style={{ position: 'relative' }} ref={detailSheetRef} onScroll={measureSheetScroll}>
                             {/* 여행사 + 항공사 + 좌석 */}
                             <div className={styles.mdtSummaryBar}>
                                 <div className={styles.mdtAirlineInfo}>
@@ -3739,6 +3757,15 @@ export default function Dashboard() {
 
                             {/* 예약 버튼: 시트 직속 자식이라 내용 길이와 무관하게 항상 하단에 고정 표시 */}
                             <div className={styles.mdtBookBtnWrap}>
+                                <button
+                                    type="button"
+                                    className={sheetHasMore ? styles.mdtScrollHint : `${styles.mdtScrollHint} ${styles.mdtScrollHintHidden}`}
+                                    onClick={() => detailSheetRef.current?.scrollBy({ top: 320, behavior: 'smooth' })}
+                                    aria-hidden={!sheetHasMore}
+                                    tabIndex={sheetHasMore ? 0 : -1}
+                                >
+                                    아래에 더 있어요 ▾
+                                </button>
                                 <div className={styles.mdtActionRow}>
                                     <button
                                         type="button"
