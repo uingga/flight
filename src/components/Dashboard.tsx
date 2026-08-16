@@ -378,6 +378,11 @@ export default function Dashboard() {
     const defaultStartDate = useMemo(() => getDefaultStartDate(), []);
     const defaultEndDate = useMemo(() => getDefaultEndDate(), []);
 
+    // 아무 필터도 손대지 않은 첫 화면인가 (기본 날짜 범위는 기본 화면으로 친다)
+    const isDefaultView = !sharedFlightId && !favFilter && searchTerm === ''
+        && departureFilter === 'all' && regionFilter === 'all' && sourceFilter === 'all' && airlineFilter === 'all'
+        && startDate === defaultStartDate && endDate === defaultEndDate;
+
     // 필터 상태 → URL 쿼리 파라미터 직렬화
     type FilterState = { q: string; dep: string; region: string; source: string; airline: string; sort: string; order: string; from: string; to: string };
     const buildFilterState = useCallback((): FilterState => ({
@@ -1613,7 +1618,11 @@ export default function Dashboard() {
         : filteredFlights;
 
     // 표시할 항공권 (무한 스크롤용)
-    const displayedFlights = diversifiedFlights.slice(0, displayCount);
+    const displayedFlightsBase = diversifiedFlights.slice(0, displayCount);
+    // 오늘의 표는 기본 화면에서 목록 맨 앞에 온다 — 일반 카드와 같은 모습, 위치와 표식만 특별하다
+    const displayedFlights = (todayPick && isDefaultView)
+        ? [todayPick.flight, ...displayedFlightsBase.filter(f => f.id !== todayPick.flight.id)]
+        : displayedFlightsBase;
     const hasMore = displayCount < diversifiedFlights.length;
 
     // 공유 링크로 들어오면 해당 항공권의 상세 팝업을 바로 연다.
@@ -2963,26 +2972,6 @@ export default function Dashboard() {
                             </div>
                         )}
 
-                        {/* 오늘의 표 — 기본 화면에서만, 자격 있는 표가 있는 날만 표시 */}
-                        {todayPick && !sharedFlightId && !favFilter && searchTerm === '' && departureFilter === 'all' && regionFilter === 'all' && sourceFilter === 'all' && airlineFilter === 'all' && startDate === defaultStartDate && endDate === defaultEndDate && (
-                            <button type="button" className={styles.todayPick} onClick={() => openFlightDetail(todayPick.flight, 'today_pick')}>
-                                <span className={styles.todayPickTop}>
-                                    <span className={styles.todayPickBadge}>오늘의 표</span>
-                                    <span className={styles.todayPickReason}>{todayPick.reason}</span>
-                                </span>
-                                <span className={styles.todayPickBody}>
-                                    <span className={styles.todayPickRoute}>
-                                        <strong>{normalizeCity(todayPick.flight.departure.city)} → {normalizeCity(todayPick.flight.arrival.city)}</strong>
-                                        <span>{(todayPick.flight.departure.date || '').slice(5, 10).replace('-', '.')} ~ {(todayPick.flight.arrival.date || '').slice(5, 10).replace('-', '.')} 왕복 · {getSourceName(todayPick.flight.source)}</span>
-                                    </span>
-                                    <span className={styles.todayPickPrice}>
-                                        {formatPrice(todayPick.flight.price)}
-                                        <em>자세히 보기 →</em>
-                                    </span>
-                                </span>
-                            </button>
-                        )}
-
                         <div className={styles.flightGrid}>
                             {displayedFlights.flatMap((flight, index) => {
                                 const route = `${flight.departure.city}-${flight.arrival.city}`;
@@ -3017,10 +3006,15 @@ export default function Dashboard() {
                                 items.push(
                                     <div
                                         key={flight.id}
-                                        className={`card ${styles.flightCard} fade-in`}
-                                        onClick={() => openFlightDetail(flight, 'card_body')}
+                                        className={`card ${styles.flightCard} fade-in${isDefaultView && todayPick?.flight.id === flight.id ? ` ${styles.todayPickCard}` : ''}`}
+                                        onClick={() => openFlightDetail(flight, isDefaultView && todayPick?.flight.id === flight.id ? 'today_pick' : 'card_body')}
                                         style={{ cursor: 'pointer' }}
                                     >
+                                        {isDefaultView && todayPick?.flight.id === flight.id && (
+                                            <div className={styles.todayPickStrip}>
+                                                <span>오늘의 표</span>{todayPick.reason}
+                                            </div>
+                                        )}
 
                                         <div className={styles.cardHeader}>
                                             <div className={styles.cardHeaderLeft}>
