@@ -3644,8 +3644,8 @@ export default function Dashboard() {
                                     </div>
                                 )}
 
-                                {/* 하나투어: 인원 선택 */}
-                                {modetourGuide.source === 'hanatour' && (
+                                {/* 인원 선택 — 예약 URL이 인원수를 지원하는 여행사 전체 (모두투어만 딥링크 미지원) */}
+                                {modetourGuide.source !== 'modetour' && (
                                     <>
                                         <div className={styles.mdtPaxSection}>
                                             <div className={styles.mdtPaxTitle}>탑승 인원</div>
@@ -3689,16 +3689,17 @@ export default function Dashboard() {
                                                     총 {passengers.adult + passengers.child + passengers.infant}명 · 예상 {formatPrice(totalPrice * (passengers.adult + passengers.child + passengers.infant))}
                                                 </div>
                                             )}
-                                        </div>
-                                        <div className={styles.mdtDisclaimer}>
-                                            표시된 가격 및 좌석은 실시간 변동될 수 있으며,
-                                            실제 예약은 {getSourceName(modetourGuide.source)}에서 직접 이루어집니다.
+                                            {(passengers.child + passengers.infant) > 0 && (
+                                                <p style={{ margin: '6px 0 0', fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
+                                                    소아·유아 요금은 성인과 달라서, 정확한 금액은 예약 페이지에서 확인돼요.
+                                                </p>
+                                            )}
                                         </div>
                                     </>
                                 )}
 
-                                {/* 온라인투어 / 노랑풍선: 면책조항만 */}
-                                {(modetourGuide.source === 'onlinetour' || modetourGuide.source === 'ybtour') && (
+                                {/* 온라인투어 / 노랑풍선 / 하나투어: 면책조항 */}
+                                {(modetourGuide.source === 'onlinetour' || modetourGuide.source === 'ybtour' || modetourGuide.source === 'hanatour') && (
                                     <div className={styles.mdtDisclaimer}>
                                         표시된 가격 및 좌석은 실시간 변동될 수 있으며,
                                         실제 예약은 {getSourceName(modetourGuide.source)}에서 직접 이루어집니다.
