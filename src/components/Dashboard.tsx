@@ -873,7 +873,7 @@ export default function Dashboard() {
             setDealAlertSetup(current => ({
                 ...current,
                 status: 'sent',
-                message: `${current.departureCity} 출발 · ${dealAlertRegionLabel(current.region)} · ${formatPrice(maxPrice)} 이하 조건을 저장했습니다. 현재 베타 검증 중이며 실제 발송 전까지 후보 품질을 확인합니다.`,
+                message: `${current.departureCity} 출발 · ${dealAlertRegionLabel(current.region)} · ${formatPrice(maxPrice)} 이하. 알림이 울리면, 볼 만한 표가 나왔다는 뜻이에요.`,
             }));
             void refreshManagedPriceAlerts(false);
         } catch (error) {
@@ -2359,8 +2359,8 @@ export default function Dashboard() {
             className={`${styles.dealAlertBanner} ${placement === 'mobile-list' ? styles.mobileDealAlertBanner : ''}`}
         >
             <div>
-                <strong>어디로 갈지는, 싼 표가 나오면 정해도 돼요</strong>
-                <span>출발지·지역·예산만 골라두세요. 새 표가 나오면 티키티킷이 먼저 알려드릴게요.</span>
+                <strong>떠날 만한 표가 없나요? 좋은 표만 골라서 알려드려요</strong>
+                <span>출발지·지역·예산만 골라두세요. 아무 표나 울리지 않고, 가격과 일정이 좋은 표만 보내드려요.</span>
             </div>
             <button type="button" onClick={openDealAlertSetup}>
                 내 조건 맡겨두기
