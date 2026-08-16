@@ -3757,15 +3757,10 @@ export default function Dashboard() {
 
                             {/* 예약 버튼: 시트 직속 자식이라 내용 길이와 무관하게 항상 하단에 고정 표시 */}
                             <div className={styles.mdtBookBtnWrap}>
-                                <button
-                                    type="button"
-                                    className={sheetHasMore ? styles.mdtScrollHint : `${styles.mdtScrollHint} ${styles.mdtScrollHintHidden}`}
-                                    onClick={() => detailSheetRef.current?.scrollBy({ top: 320, behavior: 'smooth' })}
-                                    aria-hidden={!sheetHasMore}
-                                    tabIndex={sheetHasMore ? 0 : -1}
-                                >
-                                    아래에 더 있어요 ▾
-                                </button>
+                                <div
+                                    aria-hidden="true"
+                                    className={sheetHasMore ? styles.mdtScrollFade : `${styles.mdtScrollFade} ${styles.mdtScrollFadeHidden}`}
+                                />
                                 <div className={styles.mdtActionRow}>
                                     <button
                                         type="button"
