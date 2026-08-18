@@ -45,7 +45,8 @@ interface Finding {
 const CACHE = path.join(process.cwd(), 'data', 'all-flights-cache.json');
 const args = process.argv.slice(2);
 const asJson = args.includes('--json');
-const sourceFilter = args[args.indexOf('--source') + 1];
+const sourceIndex = args.indexOf('--source');
+const sourceFilter = sourceIndex >= 0 ? args[sourceIndex + 1] : undefined;
 
 const airportOf = (p?: Place) => p?.airport || p?.city?.match(/\(([A-Z]{3})\)/)?.[1] || '';
 const dateOf = (v?: string) => (v || '').replace(/\./g, '-').replace(/\([^)]*\)/g, '').trim().slice(0, 10);
