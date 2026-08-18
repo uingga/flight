@@ -2984,7 +2984,9 @@ export default function Dashboard() {
                                 // 인사이트 바 삽입: 모바일 3개 후 시작(9개 간격), PC 6개 후 시작(12개 간격)
                                 const insightOffset = isMobile ? 3 : 6;
                                 const insightInterval = isMobile ? 9 : 12;
-                                const dealAlertSlot = index === (isMobile ? 3 : 6);
+                                // 한 화면에 닿지 않는 깊이에 둔다 — PC 4줄(12장), 모바일 8장쯤 내려야 나온다.
+                                // 인사이트 바 자리(PC 6·18, 모바일 3·12)와 겹치지 않는 값이다.
+                                const dealAlertSlot = index === (isMobile ? 8 : 12);
                                 if (dealAlertSlot) {
                                     items.push(renderDealAlertBanner());
                                 }
@@ -3162,7 +3164,7 @@ export default function Dashboard() {
                                 );
                                 return items;
                             })}
-                            {displayedFlights.length > 0 && displayedFlights.length <= (isMobile ? 3 : 6) && renderDealAlertBanner()}
+                            {displayedFlights.length > 0 && displayedFlights.length <= (isMobile ? 8 : 12) && renderDealAlertBanner()}
                         </div>
 
                         {/* 무한 스크롤 감지 요소 */}
