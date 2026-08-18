@@ -186,6 +186,18 @@ export default function DropPage({ searchParams }: { searchParams?: { preview?: 
                     <aside className={styles.notice}>가격과 좌석은 수집 시점 기준이며 판매처에서 달라질 수 있습니다. 결제 전 최종 금액, 수하물, 환불 규정을 확인하세요.</aside>
                 </article>
             )}
+            {/* 첫 방문(콜드 로드)에서는 폰트·데이터 로드로 레이아웃이 밀려 브라우저의
+                기본 앵커 스크롤이 무시되는 경우가 있다. 로드가 끝난 뒤 한 번 더 보정한다.
+                사용자가 이미 스크롤했다면 (scrollY 기준) 건드리지 않는다. */}
+            <script dangerouslySetInnerHTML={{ __html: `(function(){
+    if (location.hash !== '#tickets') return;
+    var go = function(){
+        var el = document.getElementById('tickets');
+        if (el && window.scrollY < 100) el.scrollIntoView();
+    };
+    go();
+    window.addEventListener('load', go);
+})();` }} />
         </main>
     );
 }
