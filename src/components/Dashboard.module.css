@@ -2978,7 +2978,9 @@
     background: #4338ca;
 }
 
-.mobileDealAlertBanner {
+/* 목록 안 배치 — 카드 그리드에서 한 줄 전체를 차지한다 */
+.listDealAlertBanner {
+    grid-column: 1 / -1;
     margin: 0;
 }
 
