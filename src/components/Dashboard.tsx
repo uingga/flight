@@ -1341,6 +1341,57 @@ export default function Dashboard() {
         const sorted = flights.map(f => recommendScores.get(f.id) ?? Infinity).sort((a, b) => a - b);
         const cutoff = sorted[Math.floor(sorted.length * 0.2)] ?? Infinity;
 
+        const parseDay = (value?: string) => {
+            const matched = (value || '').replace(/\./g, '-').match(/(\d{4})-(\d{2})-(\d{2})/);
+            return matched ? new Date(`${matched[1]}-${matched[2]}-${matched[3]}T00:00:00`) : null;
+        };
+        const LOCAL_AIRPORTS: Record<string, string> = { PUS: '부산', TAE: '대구', CJJ: '청주', CJU: '제주' };
+        const monthAgo = new Date(now);
+        monthAgo.setDate(now.getDate() - 30);
+        const monthAgoStr = `${monthAgo.getFullYear()}-${pad(monthAgo.getMonth() + 1)}-${pad(monthAgo.getDate())}`;
+
+        // 왜 이 표인지를 한 줄로. 외부 비교가는 쓰지 않는다 — 우리 가격 기록과 항공권 자체의 사실만.
+        // 드문 사실일수록 앞에 둬서, 가장 눈에 띄는 근거가 뽑히게 한다.
+        const describePick = (
+            flight: Flight,
+            history: Array<{ date: string; minPrice: number }> | undefined,
+            dropAmount: number,
+            isNew: boolean,
+            isToday: boolean,
+        ): string => {
+            const recent = (history || []).filter(entry => entry.date >= monthAgoStr);
+            if (recent.length >= 7 && flight.price <= Math.min(...recent.map(entry => entry.minPrice))) {
+                return '최근 한 달 중 가장 싼 가격이에요';
+            }
+            if (dropAmount > 0) {
+                return `${isToday ? '어제보다' : '어제 하루 새'} ${dropAmount.toLocaleString()}원 내렸어요`;
+            }
+
+            const departDay = parseDay(flight.departure.date);
+            const returnDay = parseDay(flight.arrival.date);
+            const departHour = Number((flight.departure.time || '').slice(0, 2));
+            // 금요일 저녁에 떠나 일요일에 돌아오는 일정일 때만 쓴다
+            if (departDay?.getDay() === 5 && departHour >= 17 && returnDay?.getDay() === 0) {
+                return '연차 없이 다녀올 수 있는 일정이에요';
+            }
+
+            const localCity = LOCAL_AIRPORTS[flight.departure.airport || ''];
+            if (localCity) return `${localCity}에서 바로 떠나는 표예요`;
+
+            if (departDay) {
+                const daysLeft = Math.round((departDay.getTime() - new Date(`${todayStr}T00:00:00`).getTime()) / 86400000);
+                if (daysLeft >= 0 && daysLeft <= 3) return '3일 안에 떠날 수 있어요';
+            }
+            if (returnDay && departDay) {
+                const nights = Math.round((returnDay.getTime() - departDay.getTime()) / 86400000);
+                if (nights >= 4 && flight.price < 300000) return `${nights}박 ${nights + 1}일을 30만원 아래로 다녀와요`;
+            }
+            if (flight.price < 200000) return '20만원 아래로 다녀올 수 있어요';
+
+            if (isNew) return `${isToday ? '오늘' : '어제'} 새로 올라온 표 중에서 골랐어요`;
+            return '';
+        };
+
         const findPick = (refStr: string, prevStr: string, isToday: boolean) => {
             let best: { flight: Flight; reason: string; score: number } | null = null;
             for (const flight of flights) {
@@ -1349,17 +1400,17 @@ export default function Dashboard() {
                 if (score > cutoff) continue;
                 if (best && score >= best.score) continue;
 
-                let reason = '';
                 const history = priceHistory[`${normalizeCity(flight.departure.city)}-${normalizeCity(flight.arrival.city)}`];
-                if (history) {
-                    const t = history.find(h => h.date === refStr);
-                    const y = history.find(h => h.date === prevStr);
-                    // 이 표가 기준일의 노선 최저가일 때만 "내렸다"고 말한다 (남의 하락을 빌려 쓰지 않기)
-                    if (t && y && y.minPrice > t.minPrice && flight.price <= t.minPrice) {
-                        reason = `${isToday ? '어제보다' : '어제 하루 새'} ${(y.minPrice - t.minPrice).toLocaleString()}원 내렸어요`;
-                    }
-                }
-                if (!reason && flight.firstSeen === refStr) reason = `${isToday ? '오늘' : '어제'} 새로 올라온 표 중에서 골랐어요`;
+                const todayEntry = history?.find(entry => entry.date === refStr);
+                const prevEntry = history?.find(entry => entry.date === prevStr);
+                // 이 표가 기준일의 노선 최저가일 때만 "내렸다"고 말한다 (남의 하락을 빌려 쓰지 않기)
+                const dropAmount = todayEntry && prevEntry && prevEntry.minPrice > todayEntry.minPrice && flight.price <= todayEntry.minPrice
+                    ? prevEntry.minPrice - todayEntry.minPrice
+                    : 0;
+                const isNew = flight.firstSeen === refStr;
+                if (!dropAmount && !isNew) continue;
+
+                const reason = describePick(flight, history, dropAmount, isNew, isToday);
                 if (!reason) continue;
 
                 best = { flight, reason, score };
