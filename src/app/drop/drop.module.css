@@ -14,7 +14,8 @@
 .heroDeals strong { color: #3730a3; font-size: 1.08rem; }
 .heroDeals em { color: #7c3aed; font-size: .66rem; font-style: normal; font-weight: 700; }
 .heroDeals small { color: var(--color-text-muted); font-size: .7rem; }
-.dealList { display: grid; gap: 18px; margin-top: 28px; }
+.dealList {
+    scroll-margin-top: 24px; display: grid; gap: 18px; margin-top: 28px; }
 .editorClosing { max-width: 760px; margin: 34px auto 0; color: #30364a; font-size: 1.04rem; font-weight: 650; line-height: 1.8; text-align: center; word-break: keep-all; }
 .dealCard { display: grid; grid-template-columns: 48px minmax(0, 1fr); padding: clamp(22px, 5vw, 38px); border: 1px solid var(--color-border); border-radius: 22px; background: var(--color-bg-primary); box-shadow: 0 10px 30px rgba(35,39,69,.05); }
 .dealNumber { color: #a5b4fc; font-size: 1.4rem; font-weight: 900; }

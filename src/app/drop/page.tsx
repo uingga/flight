@@ -127,7 +127,7 @@ export default function DropPage({ searchParams }: { searchParams?: { preview?: 
                         </div>
                         <time dateTime={drop.publishedAt}>{drop.publishedAt.replaceAll('-', '.')} 선정</time>
                     </header>
-                    <div className={styles.dealList}>
+                    <div id="tickets" className={styles.dealList}>
                         {drop.deals.map((deal, index) => {
                             const flight = byId.get(deal.flightId);
                             if (!flight) return (
