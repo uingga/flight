@@ -2498,7 +2498,7 @@ export default function Dashboard() {
                 <span>출발지·지역·예산만 골라두세요. 아무 표나 울리지 않고, 가격과 일정이 좋은 표만 보내드려요.</span>
             </div>
             <button type="button" onClick={openDealAlertSetup}>
-                내 조건 맡겨두기
+                원하는 특가 알림 받기
             </button>
         </div>
     );
@@ -4124,7 +4124,7 @@ export default function Dashboard() {
                     <div className={styles.dealAlertSheet} onClick={(event) => event.stopPropagation()}>
                         <div className={styles.modalHeader}>
                             <div>
-                                <h3 className={styles.modalTitle}>🔔 내 조건 맡겨두기</h3>
+                                <h3 className={styles.modalTitle}>🔔 원하는 특가 알림 받기</h3>
                                 <p className={styles.alertManagerSubtitle}>날짜와 목적지는 정하지 않아도 됩니다.</p>
                             </div>
                             <button className={styles.modalClose} onClick={() => setShowDealAlertSetup(false)}>×</button>
@@ -4261,7 +4261,7 @@ export default function Dashboard() {
                             >
                                 <span className={styles.alertManagerCreateDealIcon}>✨</span>
                                 <span>
-                                    <strong>새 조건 맡겨두기</strong>
+                                    <strong>원하는 특가 알림 추가하기</strong>
                                     <small>날짜·목적지 없이 출발지·지역·예산만 선택</small>
                                 </span>
                                 <b aria-hidden="true">›</b>
