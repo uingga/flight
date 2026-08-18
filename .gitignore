@@ -41,6 +41,9 @@ data/*
 !data/interpark-prices.json
 !data/naver-prices.json
 !data/gid-map.json
+!data/marketing/
+!data/marketing/*.json
+!data/marketing/*.md
 
 twitter-bot-test/
 
@@ -52,6 +55,10 @@ scripts/compare-*.js
 scripts/verify-*.js
 .naver-profile/
 /.tmp-ranking-*/
+.docx-readable/
+
+# Rejected local Drop image draft (the published design is code-rendered data cards)
+public/images/drop/drop-001-hero.png
 
 # Local authentication captures (never commit)
 scripts/api-cookies.txt

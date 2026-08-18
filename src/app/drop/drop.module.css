@@ -1,0 +1,49 @@
+.page { width: min(880px, calc(100% - 32px)); margin: 0 auto; padding: 32px 0 80px; color: var(--color-text-primary); }
+.backLink { display: inline-block; margin-bottom: 28px; color: var(--color-text-secondary); font-size: .9rem; }
+.hero, .empty { padding: clamp(28px, 6vw, 56px); border: 1px solid #dfe3ff; border-radius: 28px; background: radial-gradient(circle at 88% 5%, #ddd6fe 0, transparent 32%), linear-gradient(145deg, #fbfcff, #eef2ff); }
+.hero { color: #16182f; box-shadow: 0 18px 45px rgba(49,46,129,.1); }
+.eyebrow { margin: 0 0 12px; color: #4f46e5; font-size: .78rem; font-weight: 800; letter-spacing: .13em; }
+.hero h1, .empty h1 { max-width: 720px; margin: 0; font-size: clamp(1.8rem, 5vw, 3rem); line-height: 1.15; letter-spacing: -.045em; text-wrap: balance; word-break: keep-all; }
+.hero > p:not(.eyebrow), .empty > p:not(.eyebrow) { max-width: 650px; margin: 20px 0 0; color: var(--color-text-secondary); font-size: 1.05rem; line-height: 1.75; }
+.hero > p:not(.eyebrow) { color: #575b77; }
+.hero .eyebrow { color: #4f46e5; }
+.hero time { display: block; margin-top: 22px; color: var(--color-text-muted); font-size: .82rem; }
+.heroDeals { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; margin-top: 26px; }
+.heroDeals div { display: flex; flex-direction: column; gap: 5px; min-width: 0; padding: 16px; border: 1px solid rgba(99,102,241,.14); border-radius: 14px; background: rgba(255,255,255,.78); }
+.heroDeals span { overflow: hidden; color: #575b77; font-size: .78rem; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.heroDeals strong { color: #3730a3; font-size: 1.08rem; }
+.heroDeals em { color: #7c3aed; font-size: .66rem; font-style: normal; font-weight: 700; }
+.heroDeals small { color: var(--color-text-muted); font-size: .7rem; }
+.dealList { display: grid; gap: 18px; margin-top: 28px; }
+.editorClosing { max-width: 760px; margin: 34px auto 0; color: #30364a; font-size: 1.04rem; font-weight: 650; line-height: 1.8; text-align: center; word-break: keep-all; }
+.dealCard { display: grid; grid-template-columns: 48px minmax(0, 1fr); padding: clamp(22px, 5vw, 38px); border: 1px solid var(--color-border); border-radius: 22px; background: var(--color-bg-primary); box-shadow: 0 10px 30px rgba(35,39,69,.05); }
+.dealNumber { color: #a5b4fc; font-size: 1.4rem; font-weight: 900; }
+.dealTheme { margin: 0 0 6px; color: #4f46e5; font-size: .82rem; font-weight: 800; }
+.dealBody h2, .ended h2 { margin: 0; font-size: clamp(1.35rem, 4vw, 2rem); letter-spacing: -.035em; }
+.price { margin: 14px 0 22px; color: #111827; font-size: clamp(1.7rem, 5vw, 2.45rem); font-weight: 900; }
+.price small { color: var(--color-text-muted); font-size: .78rem; font-weight: 500; }
+.facts { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; margin: 0; }
+.facts div { padding: 14px; border-radius: 12px; background: var(--color-bg-secondary); }
+.facts dt { margin-bottom: 4px; color: var(--color-text-muted); font-size: .75rem; }
+.facts dd { margin: 0; font-size: .92rem; font-weight: 650; }
+.reason, .caveat { margin: 20px 0; color: var(--color-text-secondary); line-height: 1.7; }
+.reason strong, .caveat strong { display: block; margin-bottom: 4px; color: var(--color-text-primary); }
+.story, .context { margin: 20px 0; color: var(--color-text-secondary); line-height: 1.75; }
+.story strong, .context strong { display: block; margin-bottom: 5px; color: var(--color-text-primary); }
+.story { padding-left: 16px; border-left: 3px solid #818cf8; }
+.context { padding: 15px 17px; border-radius: 12px; background: #eef2ff; color: #373f68; }
+.fitGrid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; margin: 20px 0; }
+.fitGrid p { margin: 0; padding: 14px 15px; border: 1px solid var(--color-border); border-radius: 12px; color: var(--color-text-secondary); font-size: .88rem; line-height: 1.65; }
+.fitGrid strong { display: block; margin-bottom: 4px; color: var(--color-text-primary); }
+.caveat { padding: 13px 15px; border-radius: 12px; background: #fff7ed; color: #9a3412; }
+.sources { margin: -4px 0 20px; color: var(--color-text-muted); font-size: .75rem; }
+.sources a { color: #4f46e5; text-decoration: underline; text-underline-offset: 2px; }
+.primaryButton, .secondaryButton { display: inline-block; border-radius: 999px; font-weight: 800; text-align: center; }
+.primaryButton { padding: 14px 22px; background: #4f46e5; color: white; }
+.secondaryButton { margin-top: 18px; padding: 12px 18px; border: 1px solid var(--color-border); color: var(--color-text-primary); }
+.ended { background: #f9fafb; color: var(--color-text-muted); }
+.notice { margin-top: 24px; padding: 20px 24px; border-radius: 16px; background: #f3f4f6; color: var(--color-text-secondary); line-height: 1.65; }
+.alertCta { margin-top: 28px; padding: 30px; border: 1px solid #c7d2fe; border-radius: 20px; background: #eef2ff; text-align: center; }
+.alertCta h2 { margin: 0; color: #312e81; font-size: 1.25rem; word-break: keep-all; }
+.alertCta p { max-width: 600px; margin: 10px auto 18px; color: #575b77; line-height: 1.7; }
+@media (max-width: 640px) { .page { width: min(100% - 22px,880px); padding-top: 18px; } .heroDeals { grid-template-columns: 1fr; } .dealCard { grid-template-columns: 32px minmax(0,1fr); } .facts, .fitGrid { grid-template-columns: 1fr; } .primaryButton { display: block; } }
