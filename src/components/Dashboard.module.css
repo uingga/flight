@@ -1089,6 +1089,9 @@
 
 .route {
     display: flex;
+    /* 같은 행의 카드 높이가 맞춰질 때 남는 세로 공간을 이 영역이 흡수한다.
+       (없으면 여유가 전부 푸터 위 한 덩어리 여백으로 몰린다) */
+    flex: 1;
     align-items: center;
     justify-content: space-between;
     padding: var(--spacing-md) 0;
@@ -4617,7 +4620,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-bottom: 10px;
+    /* 카드가 flex column + gap을 이미 갖고 있어 margin-bottom은 중복이다 (높이만 늘어난다) */
     font-size: 0.85rem;
     font-weight: 700;
     color: #4338ca;
