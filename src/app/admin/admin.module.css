@@ -795,3 +795,33 @@
     color: #64748b;
     font-weight: 700;
 }
+
+/* 네이버 비교가 갱신 상태 — 오래되면 색으로 드러난다 */
+.naverStatus {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 10px;
+    margin-bottom: 16px;
+    padding: 10px 14px;
+    border: 1px solid #334155;
+    border-left: 3px solid #22c55e;
+    border-radius: 8px;
+    background: #111827;
+    font-size: 0.82rem;
+    color: #94a3b8;
+}
+
+.naverStatus strong {
+    color: #e2e8f0;
+}
+
+.naverStatusStale {
+    border-left-color: #f97316;
+}
+
+.naverStatus em {
+    flex-basis: 100%;
+    font-style: normal;
+    color: #fdba74;
+}

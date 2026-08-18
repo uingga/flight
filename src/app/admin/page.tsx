@@ -22,6 +22,12 @@ interface AdminData {
     priceByRegion: Record<string, { min: number; max: number; avg: number; count: number }>;
     cheapest: { route: string; airline: string; price: number; date: string; source: string }[];
     crawlHistory?: CrawlHistoryEntry[];
+    naverStatus?: {
+        lastCrawledAt: string | null;
+        ageDays: number | null;
+        freshEntries: number;
+        totalEntries: number;
+    } | null;
 }
 
 interface DealAlertCandidate {
@@ -326,6 +332,26 @@ export default function AdminPage() {
                     마지막 업데이트: {formatKST(data.timestamp)} ({timeAgo(data.timestamp)})
                 </span>
             </header>
+
+            {/* 네이버 비교가 상태 — 로컬 크롤이 멈추면 추천 품질이 조용히 나빠지므로 눈에 띄게 둔다 */}
+            {data.naverStatus && (() => {
+                const { lastCrawledAt, ageDays, freshEntries, totalEntries } = data.naverStatus;
+                const stale = ageDays === null || ageDays > 3;
+                return (
+                    <div className={stale ? `${styles.naverStatus} ${styles.naverStatusStale}` : styles.naverStatus}>
+                        <strong>네이버 비교가</strong>
+                        {lastCrawledAt ? (
+                            <span>
+                                마지막 갱신 {formatKST(lastCrawledAt)} ({timeAgo(lastCrawledAt)}) ·
+                                {' '}유효 {freshEntries.toLocaleString()}건 / 전체 {totalEntries.toLocaleString()}건
+                            </span>
+                        ) : (
+                            <span>갱신 기록이 없습니다.</span>
+                        )}
+                        {stale && <em>3일이 지나 비교가가 추천에서 제외됩니다. 크롤이 도는지 확인해주세요.</em>}
+                    </div>
+                );
+            })()}
 
             {/* 요약 카드 */}
             <div className={styles.summaryCards}>
