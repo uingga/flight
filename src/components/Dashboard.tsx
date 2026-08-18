@@ -667,6 +667,12 @@ export default function Dashboard() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+    // 드롭과 콘텐츠에서 조건형 알림 설정으로 바로 들어온 경우 모달을 연다.
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('dealAlert') === '1') setShowDealAlertSetup(true);
+    }, []);
+
     const updateManagedPriceAlert = async (alert: ManagedPriceAlert) => {
         const maxPrice = Number(alert.draftPrice);
         if (!Number.isFinite(maxPrice) || maxPrice < 10000 || maxPrice > 10000000) {
@@ -2428,11 +2434,9 @@ export default function Dashboard() {
         }
     };
 
-    const renderDealAlertBanner = (placement: 'top' | 'mobile-list') => (
-        <div
-            key={`deal-alert-${placement}`}
-            className={`${styles.dealAlertBanner} ${placement === 'mobile-list' ? styles.mobileDealAlertBanner : ''}`}
-        >
+    // 목록 중간에만 놓는다 — "떠날 만한 표가 없나요?"는 몇 개 훑어본 뒤라야 성립하는 질문이다
+    const renderDealAlertBanner = () => (
+        <div key="deal-alert" className={`${styles.dealAlertBanner} ${styles.listDealAlertBanner}`}>
             <div>
                 <strong>떠날 만한 표가 없나요? 좋은 표만 골라서 알려드려요</strong>
                 <span>출발지·지역·예산만 골라두세요. 아무 표나 울리지 않고, 가격과 일정이 좋은 표만 보내드려요.</span>
@@ -2921,7 +2925,6 @@ export default function Dashboard() {
                             </div>
                         </div>
 
-                        {!isMobile && renderDealAlertBanner('top')}
 
                         {sharedFlightId && (
                             <div style={{
@@ -2981,11 +2984,11 @@ export default function Dashboard() {
                                 // 인사이트 바 삽입: 모바일 3개 후 시작(9개 간격), PC 6개 후 시작(12개 간격)
                                 const insightOffset = isMobile ? 3 : 6;
                                 const insightInterval = isMobile ? 9 : 12;
-                                const isMobileDealAlertSlot = isMobile && index === 3;
-                                if (isMobileDealAlertSlot) {
-                                    items.push(renderDealAlertBanner('mobile-list'));
+                                const dealAlertSlot = index === (isMobile ? 3 : 6);
+                                if (dealAlertSlot) {
+                                    items.push(renderDealAlertBanner());
                                 }
-                                if (index > 0 && index >= insightOffset && (index - insightOffset) % insightInterval === 0 && !searchTerm && !isMobileDealAlertSlot) {
+                                if (index > 0 && index >= insightOffset && (index - insightOffset) % insightInterval === 0 && !searchTerm && !dealAlertSlot) {
                                     const bar = generateInsightBar(Math.floor((index - insightOffset) / insightInterval));
                                     if (bar) items.push(bar);
                                 }
@@ -3159,7 +3162,7 @@ export default function Dashboard() {
                                 );
                                 return items;
                             })}
-                            {isMobile && displayedFlights.length > 0 && displayedFlights.length <= 3 && renderDealAlertBanner('mobile-list')}
+                            {displayedFlights.length > 0 && displayedFlights.length <= (isMobile ? 3 : 6) && renderDealAlertBanner()}
                         </div>
 
                         {/* 무한 스크롤 감지 요소 */}
@@ -3275,6 +3278,10 @@ export default function Dashboard() {
                         <div className={styles.footerSection}>
                             <Logo size={0.7} />
                             <p className={styles.footerBrandMessage}>좋은 표 하나가, 없던 여행 계획을 만듭니다.</p>
+                            <div className={styles.footerLinks}>
+                                <a href="/drop">티키티킷 드롭</a>
+                                <a href="/tips">가격 기록과 여행 팁</a>
+                            </div>
                         </div>
 
                         {/* 데이터 소스 */}
