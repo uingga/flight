@@ -2982,11 +2982,11 @@ export default function Dashboard() {
                                 const items: React.ReactNode[] = [];
 
                                 // 인사이트 바 삽입: 모바일 3개 후 시작(9개 간격), PC 6개 후 시작(12개 간격)
-                                const insightOffset = isMobile ? 3 : 6;
+                                const insightOffset = isMobile ? 3 : 12;
                                 const insightInterval = isMobile ? 9 : 12;
-                                // 한 화면에 닿지 않는 깊이에 둔다 — PC 4줄(12장), 모바일 8장쯤 내려야 나온다.
-                                // 인사이트 바 자리(PC 6·18, 모바일 3·12)와 겹치지 않는 값이다.
-                                const dealAlertSlot = index === (isMobile ? 8 : 12);
+                                // 알림 배너는 인사이트 바 자리 하나를 대신 차지한다 — 그래야 위아래로
+                                // 같은 간격(PC 12장)의 항공권이 놓여 다른 바와 같은 리듬으로 읽힌다.
+                                const dealAlertSlot = index === (isMobile ? 12 : 24);
                                 if (dealAlertSlot) {
                                     items.push(renderDealAlertBanner());
                                 }
@@ -3164,7 +3164,7 @@ export default function Dashboard() {
                                 );
                                 return items;
                             })}
-                            {displayedFlights.length > 0 && displayedFlights.length <= (isMobile ? 8 : 12) && renderDealAlertBanner()}
+                            {!hasMore && displayedFlights.length > 0 && displayedFlights.length <= (isMobile ? 12 : 24) && renderDealAlertBanner()}
                         </div>
 
                         {/* 무한 스크롤 감지 요소 */}
