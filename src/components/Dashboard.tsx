@@ -3134,7 +3134,9 @@ export default function Dashboard() {
                                                     <div className={styles.compareLinks}>
                                                         {naverUrl && (
                                                             <button className={styles.compareLink} title="네이버 항공권에서 비교"
-                                                                onClick={() => {
+                                                                onClick={(e) => {
+                                                                    // 카드 본문 클릭(상세 열기)까지 함께 발생하지 않게 막는다
+                                                                    e.stopPropagation();
                                                                     gtag.trackCompareClick('naver', `${normalizeCity(flight.departure.city)}-${normalizeCity(flight.arrival.city)}`, flight.price);
                                                                     setNaverDisclaimer({ url: naverUrl, route: `${normalizeCity(flight.departure.city)} → ${normalizeCity(flight.arrival.city)}` });
                                                                 }}
@@ -3144,11 +3146,14 @@ export default function Dashboard() {
                                                         )}
                                                         {tripcomHotelUrl && (
                                                             <a href={tripcomHotelUrl} target="_blank" rel="noopener noreferrer" className={styles.compareLinkHotel} title="트립닷컴에서 호텔 검색"
-                                                                onClick={() => gtag.trackHotelAffiliateClick(
-                                                                    `${normalizeCity(flight.departure.city)}-${normalizeCity(flight.arrival.city)}`,
-                                                                    flight.price,
-                                                                    revenueClickDetails(flight, tripcomTrackingId),
-                                                                )}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    gtag.trackHotelAffiliateClick(
+                                                                        `${normalizeCity(flight.departure.city)}-${normalizeCity(flight.arrival.city)}`,
+                                                                        flight.price,
+                                                                        revenueClickDetails(flight, tripcomTrackingId),
+                                                                    );
+                                                                }}
                                                             >
                                                                 🏨 {normalizeCity(flight.arrival.city)} 호텔도 비교 ›
                                                             </a>
