@@ -121,6 +121,19 @@ const attemptTimestamp = (entry: NaverPriceEntry): number =>
     const rawFile = JSON.parse(fs.readFileSync(ALL_FLIGHTS_FILE, 'utf-8'));
     let rawData: FlightData[] = Array.isArray(rawFile) ? rawFile : (rawFile.flights || Object.values(rawFile).flat());
 
+    // 하나투어처럼 airport가 비고 도시명에만 코드가 붙은 표("서울(ICN)")를 보정한다.
+    // 보정하지 않으면 아래 우선순위 선별에서 공항 코드가 없다는 이유로 통째로 빠진다.
+    let airportFilled = 0;
+    for (const f of rawData) {
+        for (const place of [f.departure, f.arrival]) {
+            if (place && !place.airport) {
+                const code = place.city?.match(/\(([A-Z]{3})\)/)?.[1];
+                if (code) { place.airport = code; airportFilled++; }
+            }
+        }
+    }
+    if (airportFilled > 0) console.log(`🧩 도시명에서 공항 코드 보정: ${airportFilled}건`);
+
     // 소스 필터링 (기본: myrealtrip)
     if (SOURCE_FILTER) {
         const before = rawData.length;

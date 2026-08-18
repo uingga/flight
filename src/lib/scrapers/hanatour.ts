@@ -354,13 +354,15 @@ async function scrapeHanatourPromoPage(browser: any, url: string, label: string)
                                             airline: f.airline,
                                             departure: {
                                                 city: f.departureCity,
-                                                airport: '',
+                                                // 도시명에 붙은 IATA 코드를 그대로 쓴다 ("서울(ICN)" → ICN).
+                                                // 비워두면 네이버 최저가 매칭 키를 만들지 못한다.
+                                                airport: f.departureCity.match(/\(([A-Z]{3})\)/)?.[1] || '',
                                                 date: f.departureDate,
                                                 time: '',
                                             },
                                             arrival: {
                                                 city: f.arrivalCity,
-                                                airport: '',
+                                                airport: f.arrivalCity.match(/\(([A-Z]{3})\)/)?.[1] || '',
                                                 date: f.arrivalDate,
                                                 time: '',
                                             },
@@ -578,13 +580,15 @@ async function scrapeHanatourRegular(browser: any): Promise<Flight[]> {
                                     airline: airline,
                                     departure: {
                                         city: departureCity,
-                                        airport: '',
+                                        // 도시명에 붙은 IATA 코드를 그대로 쓴다 ("서울(ICN)" → ICN).
+                                        // 비워두면 네이버 최저가 매칭 키를 만들지 못한다.
+                                        airport: (departureCity.match(/\(([A-Z]{3})\)/) || [])[1] || '',
                                         date: departureDate,
                                         time: depTime,
                                     },
                                     arrival: {
                                         city: arrivalCity,
-                                        airport: '',
+                                        airport: (arrivalCity.match(/\(([A-Z]{3})\)/) || [])[1] || '',
                                         date: returnDate,
                                         time: arrTime,
                                     },
