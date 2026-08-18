@@ -119,10 +119,14 @@ export async function GET(request: NextRequest) {
             if (fs4.existsSync(naverPath)) {
                 const naverPrices = JSON.parse(fs4.readFileSync(naverPath, 'utf-8'));
 
+                // 하나투어처럼 airport가 비어 있고 도시명에만 코드가 붙은 표("서울(ICN)")도 매칭한다.
+                const airportOf = (place?: { airport?: string; city?: string }) =>
+                    place?.airport || place?.city?.match(/\(([A-Z]{3})\)/)?.[1] || '';
+
                 let matched = 0;
                 for (const f of allFlights) {
-                    const depAirport = f.departure?.airport;
-                    const arrAirport = f.arrival?.airport;
+                    const depAirport = airportOf(f.departure);
+                    const arrAirport = airportOf(f.arrival);
                     const depDate = f.departure?.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 10);
                     const retDate = f.arrival?.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 10);
                     if (depAirport && arrAirport && depDate && retDate) {
