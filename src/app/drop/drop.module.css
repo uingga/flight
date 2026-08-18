@@ -22,7 +22,8 @@
 .dealTheme { margin: 0 0 6px; color: #4f46e5; font-size: .82rem; font-weight: 800; }
 .dealBody h2, .ended h2 { margin: 0; font-size: clamp(1.35rem, 4vw, 2rem); letter-spacing: -.035em; }
 .price { margin: 14px 0 22px; color: #111827; font-size: clamp(1.7rem, 5vw, 2.45rem); font-weight: 900; }
-.price small { color: var(--color-text-muted); font-size: .78rem; font-weight: 500; }
+.price small {
+    word-break: keep-all; color: var(--color-text-muted); font-size: .78rem; font-weight: 500; }
 .facts { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; margin: 0; }
 .facts div { padding: 14px; border-radius: 12px; background: var(--color-bg-secondary); }
 .facts dt { margin-bottom: 4px; color: var(--color-text-muted); font-size: .75rem; }
