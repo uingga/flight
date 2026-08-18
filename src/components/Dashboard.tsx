@@ -3008,6 +3008,16 @@ export default function Dashboard() {
                                 //     );
                                 // }
 
+                                // 표식을 카드 안에 넣으면 그 카드만 높아져 같은 행의 카드까지 늘어난다.
+                                // 그리드의 독립된 행으로 빼면 모든 카드가 같은 크기를 유지한다.
+                                if (isDefaultView && todayPick?.flight.id === flight.id) {
+                                    items.push(
+                                        <div key="today-pick-label" className={styles.todayPickLabel}>
+                                            <span>오늘의 표</span>{todayPick.reason}
+                                        </div>
+                                    );
+                                }
+
                                 items.push(
                                     <div
                                         key={flight.id}
@@ -3015,12 +3025,6 @@ export default function Dashboard() {
                                         onClick={() => openFlightDetail(flight, isDefaultView && todayPick?.flight.id === flight.id ? 'today_pick' : 'card_body')}
                                         style={{ cursor: 'pointer' }}
                                     >
-                                        {isDefaultView && todayPick?.flight.id === flight.id && (
-                                            <div className={styles.todayPickStrip}>
-                                                <span>오늘의 표</span>{todayPick.reason}
-                                            </div>
-                                        )}
-
                                         <div className={styles.cardHeader}>
                                             <div className={styles.cardHeaderLeft}>
                                                 <span className={`badge ${getSourceBadgeClass(flight.source)}`}>

@@ -4626,21 +4626,25 @@
 
 /* 오늘의 표 — 목록 맨 앞의 일반 카드에 표식만 얹는다. 헤더 질문("오늘은 어디가 싸게 나왔을까요?")의 즉답 */
 .todayPickCard {
-    border: 2px solid #6366f1;
-    box-shadow: 0 6px 18px rgba(99, 102, 241, 0.14);
+    /* 테두리를 굵히면 그 카드만 2px 높아져 같은 행 전체가 따라 커진다.
+       두께는 레이아웃에 영향 없는 그림자 링으로 낸다. */
+    border-color: #6366f1;
+    box-shadow: 0 0 0 1px #6366f1, 0 6px 18px rgba(99, 102, 241, 0.16);
 }
 
-.todayPickStrip {
+/* 카드 위 별도 행. 카드 안에 두면 그 카드만 높아져 같은 행 전체가 늘어난다. */
+.todayPickLabel {
+    grid-column: 1 / -1;
     display: flex;
     align-items: center;
     gap: 8px;
-    /* 카드가 flex column + gap을 이미 갖고 있어 margin-bottom은 중복이다 (높이만 늘어난다) */
+    margin-bottom: -4px;
     font-size: 0.85rem;
     font-weight: 700;
     color: #4338ca;
 }
 
-.todayPickStrip span {
+.todayPickLabel span {
     padding: 3px 10px;
     border-radius: 999px;
     background: #6366f1;
