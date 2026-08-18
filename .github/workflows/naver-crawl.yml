@@ -14,6 +14,7 @@ on:
 jobs:
   naver-crawl:
     runs-on: ubuntu-latest
+    timeout-minutes: 180
     if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
 
     permissions:
@@ -33,7 +34,19 @@ jobs:
         run: npm ci
 
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
+        timeout-minutes: 10
+        shell: bash
+        run: |
+          for attempt in 1 2; do
+            echo "Playwright install attempt ${attempt}/2"
+            if timeout 240s npx playwright install --with-deps chromium; then
+              exit 0
+            fi
+            echo "Install attempt ${attempt} timed out or failed. Retrying..."
+            sleep 10
+          done
+          echo "Playwright browser installation failed after 2 attempts."
+          exit 1
 
       - name: Run Naver price crawler
         id: naver
