@@ -1359,7 +1359,7 @@ export default function Dashboard() {
                         reason = `${isToday ? '어제보다' : '어제 하루 새'} ${(y.minPrice - t.minPrice).toLocaleString()}원 내렸어요`;
                     }
                 }
-                if (!reason && flight.firstSeen === refStr) reason = `${isToday ? '오늘' : '어제'} 새로 올라온 표예요`;
+                if (!reason && flight.firstSeen === refStr) reason = `${isToday ? '오늘' : '어제'} 새로 올라온 표 중에서 골랐어요`;
                 if (!reason) continue;
 
                 best = { flight, reason, score };
