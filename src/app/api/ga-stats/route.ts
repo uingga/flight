@@ -8,13 +8,14 @@ const CACHE_TTL_MS = 10 * 60 * 1000;
 /** 어드민에서 의미 있는 이벤트만 골라 한국어 이름을 붙인다. */
 const EVENT_LABELS: Record<string, string> = {
     booking_click: '예약 클릭',
-    affiliate_click: '제휴 클릭',
     detail_open: '항공권 상세 열기',
     alert_setup: '가격 알림 등록',
     deal_alert_setup: '조건형 알림 등록',
     // 2026-08-14에 중단. 그전까지 카드 본문 클릭은 아무 동작도 하지 않았으므로 헛클릭 지표였다
     card_click: '카드 빈 곳 클릭 (8/14 이전, 반응 없던 클릭)',
-    compare_click: '가격 비교 클릭',
+    compare_click: '네이버 가격비교 열기',
+    compare_outbound_click: '네이버로 이동',
+    hotel_compare_click: '호텔 비교 클릭',
     share_flight: '공유',
     filter_change: '필터 변경',
     date_filter: '날짜 필터',
@@ -169,7 +170,7 @@ async function buildStats(config: Ga4Config, days: number) {
         totals,
         trend,
         events: events.filter(entry => entry.known),
-        otherEvents: events.filter(entry => !entry.known && !['page_view', 'session_start', 'first_visit', 'user_engagement', 'scroll'].includes(entry.name)),
+        otherEvents: events.filter(entry => !entry.known && !['page_view', 'session_start', 'first_visit', 'user_engagement', 'scroll', 'affiliate_click'].includes(entry.name)),
         conversion: {
             detailOpenUsers: detailOpen?.users ?? 0,
             detailOpenRate: rate(detailOpen?.users ?? 0),

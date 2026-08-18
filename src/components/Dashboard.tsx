@@ -121,7 +121,12 @@ export default function Dashboard() {
     const [bookingDisclaimer, setBookingDisclaimer] = useState<{ source: string; url: string } | null>(null);
     const disclaimerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const [modetourGuide, setModetourGuide] = useState<Flight | null>(null);
-    const [naverDisclaimer, setNaverDisclaimer] = useState<{ url: string; route: string } | null>(null);
+    const [naverDisclaimer, setNaverDisclaimer] = useState<{
+        url: string;
+        route: string;
+        analyticsRoute: string;
+        price: number;
+    } | null>(null);
     const disclaimerWindowRef = useRef<Window | null>(null);
     const [favoriteFlights, setFavoriteFlights] = useState<string[]>([]);
     const [favFilter, setFavFilter] = useState(false);
@@ -3193,7 +3198,12 @@ export default function Dashboard() {
                                                                     // 카드 본문 클릭(상세 열기)까지 함께 발생하지 않게 막는다
                                                                     e.stopPropagation();
                                                                     gtag.trackCompareClick('naver', `${normalizeCity(flight.departure.city)}-${normalizeCity(flight.arrival.city)}`, flight.price);
-                                                                    setNaverDisclaimer({ url: naverUrl, route: `${normalizeCity(flight.departure.city)} → ${normalizeCity(flight.arrival.city)}` });
+                                                                    setNaverDisclaimer({
+                                                                        url: naverUrl,
+                                                                        route: `${normalizeCity(flight.departure.city)} → ${normalizeCity(flight.arrival.city)}`,
+                                                                        analyticsRoute: `${normalizeCity(flight.departure.city)}-${normalizeCity(flight.arrival.city)}`,
+                                                                        price: flight.price,
+                                                                    });
                                                                 }}
                                                             >
                                                                 네이버 가격비교 ›
@@ -4057,7 +4067,14 @@ export default function Dashboard() {
                                 rel="noopener noreferrer"
                                 className={styles.modalConfirm}
                                 style={{ flex: 2, display: 'block', textDecoration: 'none', textAlign: 'center' }}
-                                onClick={() => setNaverDisclaimer(null)}
+                                onClick={() => {
+                                    gtag.trackCompareOutboundClick(
+                                        'naver',
+                                        naverDisclaimer.analyticsRoute,
+                                        naverDisclaimer.price,
+                                    );
+                                    setNaverDisclaimer(null);
+                                }}
                             >
                                 네이버에서 비교하기 →
                             </a>
