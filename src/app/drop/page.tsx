@@ -134,7 +134,7 @@ export default function DropPage({ searchParams }: { searchParams?: { preview?: 
                                 <section className={`${styles.dealCard} ${styles.ended}`} key={deal.flightId}>
                                     <span className={styles.dealNumber}>{index + 1}</span>
                                     <div><p className={styles.dealTheme}>{deal.theme}</p><h2>이 표는 현재 목록에서 내려갔어요</h2>
-                                        <p>{deal.reason}</p><Link href="/" className={styles.secondaryButton}>지금 남은 표 보기</Link></div>
+                                        <Link href="/" className={styles.secondaryButton}>지금 남은 표 보기</Link></div>
                                 </section>
                             );
                             const query = new URLSearchParams({ dep: departureLabel(flight), arr: cleanCity(flight.arrival.city), date: flight.departure.date.slice(0, 10).replaceAll('.', '-') });
@@ -151,26 +151,7 @@ export default function DropPage({ searchParams }: { searchParams?: { preview?: 
                                             <div><dt>항공사</dt><dd>{flight.airline}</dd></div>
                                             <div><dt>판매처</dt><dd>{SOURCE_NAMES[flight.source]}</dd></div>
                                         </dl>
-                                        <p className={styles.reason}><strong>고른 이유</strong>{deal.reason}</p>
-                                        {deal.story && <p className={styles.story}><strong>이 표로 가능한 여행</strong>{deal.story}</p>}
-                                        {deal.context && <p className={styles.context}><strong>알아두면 더 재밌는 점</strong>{deal.context}</p>}
-                                        {(deal.bestFor || deal.notFor) && (
-                                            <div className={styles.fitGrid}>
-                                                {deal.bestFor && <p><strong>잘 맞는 사람</strong>{deal.bestFor}</p>}
-                                                {deal.notFor && <p><strong>다시 생각해볼 사람</strong>{deal.notFor}</p>}
-                                            </div>
-                                        )}
                                         <p className={styles.caveat}><strong>확인할 점</strong>{deal.caveat}</p>
-                                        {deal.sources && deal.sources.length > 0 && (
-                                            <p className={styles.sources}>공식 자료&nbsp;
-                                                {deal.sources.map((source, sourceIndex) => (
-                                                    <span key={source.url}>
-                                                        {sourceIndex > 0 && ' · '}
-                                                        <a href={source.url} target="_blank" rel="noopener noreferrer">{source.label}</a>
-                                                    </span>
-                                                ))}
-                                            </p>
-                                        )}
                                         <Link href={`/share/${encodeURIComponent(flight.id)}?${query.toString()}`} className={styles.primaryButton}>이 표 자세히 보기</Link>
                                     </div>
                                 </section>
