@@ -98,7 +98,7 @@ export const trackHotelAffiliateClick = (
     price: number,
     details: RevenueClickDetails,
 ) => {
-    event('affiliate_click', {
+    const params = {
         partner: 'tripcom',
         product_type: 'hotel',
         route,
@@ -106,7 +106,11 @@ export const trackHotelAffiliateClick = (
         currency: 'KRW',
         transport_type: 'beacon',
         ...revenueParams(details),
-    });
+    };
+    // Keep the umbrella affiliate event for revenue reconciliation, while exposing
+    // a dedicated event so the admin can show hotel clicks separately from flights.
+    event('affiliate_click', params);
+    event('hotel_compare_click', params);
 };
 
 /** Flight share */
@@ -136,6 +140,11 @@ export const trackDealAlertSetup = (departure: string, region: string, maxPrice:
 /** Price-comparison link (Naver/Skyscanner) */
 export const trackCompareClick = (provider: 'naver' | 'skyscanner' | 'tripcom', route: string, price: number) => {
     event('compare_click', { provider, route, price, currency: 'KRW', transport_type: 'beacon' });
+};
+
+/** Actual outbound click after the price-comparison notice has been acknowledged. */
+export const trackCompareOutboundClick = (provider: 'naver' | 'skyscanner' | 'tripcom', route: string, price: number) => {
+    event('compare_outbound_click', { provider, route, price, currency: 'KRW', transport_type: 'beacon' });
 };
 
 /**
