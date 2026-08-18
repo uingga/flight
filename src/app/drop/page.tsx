@@ -144,7 +144,7 @@ export default function DropPage({ searchParams }: { searchParams?: { preview?: 
                                     <div className={styles.dealBody}>
                                         <p className={styles.dealTheme}>{deal.theme}</p>
                                         <h2>{departureLabel(flight)} → {cleanCity(flight.arrival.city)}</h2>
-                                        <p className={styles.price}>{effectivePrice(flight).toLocaleString('ko-KR')}원 <small>{flight.source === 'ttang' ? '수수료 포함 예상 금액 · 왕복 1인' : '왕복 1인'}</small></p>
+                                        <p className={styles.price}>{effectivePrice(flight).toLocaleString('ko-KR')}원 <small>{flight.source === 'ttang' ? `표시가 ${flight.price.toLocaleString('ko-KR')}원 + 발권수수료 20,000원 · 왕복 1인` : '왕복 1인'}</small></p>
                                         <dl className={styles.facts}>
                                             <div><dt>일정</dt><dd>{cleanDate(flight.departure.date)}~{cleanDate(flight.arrival.date)}</dd></div>
                                             <div><dt>항공 시간</dt><dd>{flight.departure.time} 출발 · {flight.arrival.time} 귀국편 출발</dd></div>
