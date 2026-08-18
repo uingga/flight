@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import * as fs from 'fs';
 import * as path from 'path';
+import { getComparisonFreshness } from '@/lib/price-quality';
 
 const CACHE_FILE_PATH = path.join(process.cwd(), 'data', 'all-flights-cache.json');
 const ADMIN_KEY = process.env.ADMIN_KEY || 'tikit2026';
@@ -136,9 +137,40 @@ export async function GET(request: NextRequest) {
             }
         } catch { }
 
+        // 네이버 비교가 갱신 상태 — 로컬 PC의 새벽 예약 작업이 조용히 멈춰도 알아채기 위한 지표.
+        // 3일 판정 기준은 추천 점수가 쓰는 것과 동일하게 getComparisonFreshness를 재사용한다.
+        let naverStatus: {
+            lastCrawledAt: string | null;
+            ageDays: number | null;
+            freshEntries: number;
+            totalEntries: number;
+        } | null = null;
+        try {
+            const naverPath = path.join(process.cwd(), 'data', 'naver-prices.json');
+            if (fs.existsSync(naverPath)) {
+                const naverData = JSON.parse(fs.readFileSync(naverPath, 'utf-8')) as Record<string, { crawledAt?: string }>;
+                const entries = Object.values(naverData);
+                let lastCrawledAt: string | null = null;
+                let freshEntries = 0;
+                for (const entry of entries) {
+                    const crawledAt = entry?.crawledAt;
+                    if (!crawledAt) continue;
+                    if (!lastCrawledAt || crawledAt > lastCrawledAt) lastCrawledAt = crawledAt;
+                    if (getComparisonFreshness(crawledAt).usable) freshEntries += 1;
+                }
+                naverStatus = {
+                    lastCrawledAt,
+                    ageDays: getComparisonFreshness(lastCrawledAt ?? undefined).ageDays,
+                    freshEntries,
+                    totalEntries: entries.length,
+                };
+            }
+        } catch { }
+
         return NextResponse.json({
             timestamp,
             totalFlights: flights.length,
+            naverStatus,
             bySource,
             byRegion,
             byCity,
