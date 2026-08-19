@@ -124,6 +124,23 @@ interface GaStatsData {
     alertByEntry: GaListItem[] | null;
     detailByEntry: GaListItem[] | null;
     channels: Array<{ label: string; sessions: number; users: number }> | null;
+    campaigns: Array<{
+        name: string;
+        source: string;
+        label: string;
+        sessions: number;
+        users: number;
+        bookingClicks: number | null;
+    }> | null;
+    dateFilter: {
+        picks: number;
+        emptyPicks: number;
+        emptyRate: number | null;
+        leadTime: GaListItem[] | null;
+        range: GaListItem[] | null;
+        method: GaListItem[] | null;
+        presets: GaListItem[] | null;
+    };
     warnings: string[];
 }
 
@@ -527,6 +544,31 @@ export default function AdminPage() {
                             </div>
 
                             <div>
+                                <h3 className={styles.userSubTitle}>콘텐츠별 유입과 예약 클릭</h3>
+                                {gaStats.campaigns === null ? (
+                                    <div className={styles.dealReviewEmpty}>불러오지 못했습니다.</div>
+                                ) : gaStats.campaigns.length === 0 ? (
+                                    <div className={styles.dealReviewEmpty}>추적 링크로 들어온 방문이 아직 없습니다.</div>
+                                ) : (
+                                    <div className={styles.cityDetail}>
+                                        <table className={styles.cityTable}>
+                                            <thead><tr><th>콘텐츠</th><th>방문</th><th>사람</th><th>예약 클릭</th></tr></thead>
+                                            <tbody>
+                                                {gaStats.campaigns.map(item => (
+                                                    <tr key={`${item.name}-${item.source}`}>
+                                                        <td>{item.label}</td>
+                                                        <td>{item.sessions.toLocaleString()}회</td>
+                                                        <td>{item.users.toLocaleString()}명</td>
+                                                        <td>{item.bookingClicks === null ? '확인 불가' : `${item.bookingClicks.toLocaleString()}회`}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div>
                                 <h3 className={styles.userSubTitle}>예약 클릭이 많은 노선</h3>
                                 {gaStats.bookingByRoute === null ? (
                                     <div className={styles.dealReviewEmpty}>불러오지 못했습니다.</div>
@@ -598,6 +640,48 @@ export default function AdminPage() {
                                     </div>
                                 )}
                             </div>
+                        </div>
+
+                        {/* 날짜 필터는 방문자가 가장 많이 쓰는 조작이라 따로 떼어 본다 */}
+                        <h3 className={styles.userSubTitle} style={{ marginTop: '24px' }}>
+                            날짜 필터 — 사람들이 언제 떠나려 하나
+                        </h3>
+                        <p className={styles.sectionHelp}>
+                            날짜를 고른 {gaStats.dateFilter.picks.toLocaleString()}회 중{' '}
+                            {gaStats.dateFilter.emptyPicks.toLocaleString()}회는 표가 하나도 없었습니다
+                            {gaStats.dateFilter.emptyRate !== null && ` (${gaStats.dateFilter.emptyRate}%)`}.
+                            아래 표는 2026-08-19에 측정기준을 등록해 그 이후 데이터만 쌓입니다.
+                        </p>
+                        <div className={styles.userGrid}>
+                            {([
+                                { title: '출발까지 남은 기간', data: gaStats.dateFilter.leadTime, head: '기간' },
+                                { title: '고른 기간 길이', data: gaStats.dateFilter.range, head: '길이' },
+                                { title: '날짜를 고른 방식', data: gaStats.dateFilter.method, head: '방식' },
+                                { title: '누른 빠른 선택 칩', data: gaStats.dateFilter.presets, head: '칩' },
+                            ] as const).map(section => (
+                                <div key={section.title}>
+                                    <h3 className={styles.userSubTitle}>{section.title}</h3>
+                                    {section.data === null ? (
+                                        <div className={styles.dealReviewEmpty}>불러오지 못했습니다.</div>
+                                    ) : section.data.length === 0 ? (
+                                        <div className={styles.dealReviewEmpty}>아직 집계된 데이터가 없습니다.</div>
+                                    ) : (
+                                        <div className={styles.cityDetail}>
+                                            <table className={styles.cityTable}>
+                                                <thead><tr><th>{section.head}</th><th>선택</th></tr></thead>
+                                                <tbody>
+                                                    {section.data.map(item => (
+                                                        <tr key={item.label}>
+                                                            <td>{item.label}</td>
+                                                            <td>{item.count.toLocaleString()}회</td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
                         </div>
 
                         {gaStats.otherEvents.length > 0 && (
