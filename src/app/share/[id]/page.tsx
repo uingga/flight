@@ -197,6 +197,12 @@ export default async function SharePage({ params, searchParams }: Props) {
     if (arr) fallbackParams.set('arr', arr);
     if (date) fallbackParams.set('date', date);
 
+    // 외부 콘텐츠에서 공유 링크로 바로 들어온 경우에도 캠페인 출처를 잃지 않는다.
+    for (const key of ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term']) {
+        const value = sp[key];
+        if (typeof value === 'string' && value) fallbackParams.set(key, value);
+    }
+
     const redirectUrl = `/?${fallbackParams.toString()}`;
 
     return (
@@ -204,7 +210,7 @@ export default async function SharePage({ params, searchParams }: Props) {
             <head>
                 <meta httpEquiv="refresh" content={`0;url=${redirectUrl}`} />
                 <script dangerouslySetInnerHTML={{
-                    __html: `window.location.replace("${redirectUrl}");`
+                    __html: `window.location.replace(${JSON.stringify(redirectUrl)});`
                 }} />
             </head>
             <body>

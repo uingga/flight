@@ -42,8 +42,8 @@ data/*
 !data/naver-prices.json
 !data/gid-map.json
 !data/marketing/
-!data/marketing/*.json
-!data/marketing/*.md
+data/marketing/*
+!data/marketing/current-drop.json
 
 twitter-bot-test/
 
@@ -55,6 +55,7 @@ scripts/compare-*.js
 scripts/verify-*.js
 .naver-profile/
 /.tmp-ranking-*/
+/.tmp-art/
 .docx-readable/
 
 # Rejected local Drop image draft (the published design is code-rendered data cards)
