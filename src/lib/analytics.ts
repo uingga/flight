@@ -137,6 +137,15 @@ export const trackDealAlertSetup = (departure: string, region: string, maxPrice:
     });
 };
 
+/** Successful arrivals from the two link types used in a Naver DROP article. */
+export const trackBlogLinkOpen = (type: 'flight' | 'alert', campaign: string) => {
+    event(type === 'flight' ? 'blog_flight_link_open' : 'blog_alert_link_open', {
+        campaign_name: campaign,
+        content_source: 'naver_blog',
+        link_type: type,
+    });
+};
+
 /** Price-comparison link (Naver/Skyscanner) */
 export const trackCompareClick = (provider: 'naver' | 'skyscanner' | 'tripcom', route: string, price: number) => {
     event('compare_click', { provider, route, price, currency: 'KRW', transport_type: 'beacon' });

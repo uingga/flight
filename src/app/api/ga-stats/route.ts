@@ -11,6 +11,8 @@ const EVENT_LABELS: Record<string, string> = {
     detail_open: '항공권 상세 열기',
     alert_setup: '가격 알림 등록',
     deal_alert_setup: '조건형 알림 등록',
+    blog_flight_link_open: '블로그 항공권 링크 열기',
+    blog_alert_link_open: '블로그 특가 알림 링크 열기',
     // 2026-08-14에 중단. 그전까지 카드 본문 클릭은 아무 동작도 하지 않았으므로 헛클릭 지표였다
     card_click: '카드 빈 곳 클릭 (8/14 이전, 반응 없던 클릭)',
     compare_click: '네이버 가격비교 열기',
