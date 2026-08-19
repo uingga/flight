@@ -1,0 +1,44 @@
+.section {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 8px 20px 48px;
+    color: #4b5163;
+}
+
+.section h2 {
+    font-size: 16px;
+    margin: 0 0 6px;
+    color: #1f2334;
+}
+
+.summary {
+    font-size: 14px;
+    line-height: 1.7;
+    margin: 0 0 14px;
+    word-break: keep-all;
+}
+
+.links {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.links a {
+    display: inline-block;
+    padding: 7px 13px;
+    border: 1px solid #e7e8f0;
+    border-radius: 999px;
+    font-size: 13px;
+    color: #4b5163;
+    text-decoration: none;
+    background: #fff;
+}
+
+.links a:hover {
+    border-color: #c7d2fe;
+    color: #4f46e5;
+}

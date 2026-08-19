@@ -1,5 +1,6 @@
 import { MetadataRoute } from 'next';
 import { SITE_URL } from '@/lib/site';
+import { loadActiveFlights, groupByCity } from '@/lib/flight-static';
 
 export default function sitemap(): MetadataRoute.Sitemap {
     const tipSlugs = [
@@ -37,6 +38,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
             lastModified: new Date(),
             changeFrequency: 'monthly' as const,
             priority: 0.7,
+        })),
+        // 도시별 땡처리 항공권 페이지 — 캐시 커밋마다 재빌드되므로 daily
+        ...groupByCity(loadActiveFlights()).map(c => ({
+            url: `${SITE_URL}/flights/${encodeURIComponent(c.city)}`,
+            lastModified: new Date(),
+            changeFrequency: 'daily' as const,
+            priority: 0.8,
         })),
         {
             url: `${SITE_URL}/terms`,
