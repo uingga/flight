@@ -11,6 +11,7 @@ export const metadata: Metadata = {
 };
 
 const tips = [
+    { slug: 'price-watch', emoji: '📉', title: '최근 가격이 내려간 주요 노선', desc: '최근 2~3주 동안 수집한 실제 최저가 기록' },
     { slug: 'cheap-flights-101', emoji: '✈️', title: '땡처리 항공권, 이렇게 싸도 되나요?', desc: '땡처리가 싼 이유와 가격 비교 절약법' },
     { slug: 'regional-airports', emoji: '🗺️', title: '지방공항이 인천보다 싼 노선 총정리', desc: '부산·청주·대구 출발이 더 싼 노선 비교' },
     { slug: 'faq-10', emoji: '❓', title: '땡처리 항공권 Q&A 10가지', desc: '환불, 수하물, 유아 동반 등 자주 묻는 질문' },

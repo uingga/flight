@@ -3,6 +3,7 @@ import { SITE_URL } from '@/lib/site';
 
 export default function sitemap(): MetadataRoute.Sitemap {
     const tipSlugs = [
+        'price-watch',
         'cheap-flights-101',
         'regional-airports',
         'faq-10',
@@ -24,6 +25,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
             lastModified: new Date(),
             changeFrequency: 'weekly' as const,
             priority: 0.8,
+        },
+        {
+            url: `${SITE_URL}/drop`,
+            lastModified: new Date(),
+            changeFrequency: 'daily' as const,
+            priority: 0.9,
         },
         ...tipSlugs.map(slug => ({
             url: `${SITE_URL}/tips/${slug}`,
