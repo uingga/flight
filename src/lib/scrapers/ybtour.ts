@@ -354,6 +354,7 @@ export async function scrapeYbtour(prevFlights: any[] = []): Promise<Flight[]> {
                                         arrCode: cf.arrival.airport || '',
                                         depDate: (cf.departure.date || '').replace(/-/g, ''),
                                         arrDate: (cf.arrival.date || '').replace(/-/g, ''),
+                                        airline: cf.airline,
                                     });
                                 }
                                 totalFlights += cheapestFlights.length;

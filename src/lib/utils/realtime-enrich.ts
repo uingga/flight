@@ -1,4 +1,5 @@
 import { Page } from 'playwright';
+import { normalizeAirline } from './flight-helpers';
 
 /**
  * 땡처리닷컴 realtime_V2 API를 활용한 시간/좌석 데이터 보강 유틸리티
@@ -65,6 +66,29 @@ export interface RouteKey {
     arrCode: string;
     depDate: string; // YYYYMMDD
     arrDate: string; // YYYYMMDD
+    /**
+     * 이 노선에서 우리가 시각을 알고 싶은 항공사.
+     * 한 노선에 여러 항공사가 뜨므로, 이걸 지정하지 않으면 엉뚱한 항공사의
+     * 시각을 가져올 수 있다 (인천–간사이 응답 첫 줄은 제주항공인데 우리 표는 피치항공인 식).
+     */
+    airline?: string;
+}
+
+/** skdset1Info에서 항공사명 추출 — "...||ICN||KIX||7C||제주항공||..." */
+function extractAirlineFromInfo(info: string): string {
+    const parts = (info || '').split('||');
+    return (parts[7] || '').trim();
+}
+
+/** 노선 단위 키 (항공사 제외) */
+function routeIdOf(r: RouteKey): string {
+    return `${r.depCode}|${r.arrCode}|${r.depDate}|${r.arrDate}`;
+}
+
+/** 보강 결과 조회 키 — 항공사를 아는 경우 항공사까지 포함한다 */
+export function enrichKeyOf(r: RouteKey): string {
+    const airline = normalizeAirline(r.airline || '');
+    return airline ? `${routeIdOf(r)}|${airline}` : routeIdOf(r);
 }
 
 export interface EnrichData {
@@ -88,28 +112,31 @@ export async function enrichWithRealtimeData(
 ): Promise<Map<string, EnrichData>> {
     const enrichMap = new Map<string, EnrichData>();
 
-    // 고유 노선만 조회
-    const uniqueRoutes = new Map<string, RouteKey>();
+    // 같은 노선을 여러 항공사가 함께 요청할 수 있으므로 조회는 노선 단위로 한 번만 한다.
+    const byRoute = new Map<string, { route: RouteKey; airlines: Set<string> }>();
     for (const r of routes) {
-        const key = `${r.depCode}|${r.arrCode}|${r.depDate}|${r.arrDate}`;
-        if (!uniqueRoutes.has(key)) uniqueRoutes.set(key, r);
+        const id = routeIdOf(r);
+        if (!byRoute.has(id)) byRoute.set(id, { route: r, airlines: new Set() });
+        const airline = normalizeAirline(r.airline || '');
+        if (airline) byRoute.get(id)!.airlines.add(airline);
     }
 
-    console.log(`[${label}] realtime_V2 보강: ${uniqueRoutes.size}개 노선`);
+    console.log(`[${label}] realtime_V2 보강: ${byRoute.size}개 노선`);
 
     let enriched = 0;
     let failed = 0;
+    let unmatched = 0;
     let idx = 0;
 
-    for (const [key, route] of Array.from(uniqueRoutes.entries())) {
+    for (const [routeId, { route, airlines }] of Array.from(byRoute.entries())) {
         idx++;
         try {
             const depDateHyphen = toHyphenDate(route.depDate);
             const arrDateHyphen = toHyphenDate(route.arrDate);
 
-            // API 응답을 Promise로 대기 (타임아웃 5초)
+            // 응답이 늦게 오는 노선이 적지 않아 넉넉히 기다린다 (5초로는 자주 놓쳤다)
             const apiPromise = new Promise<string>((resolve) => {
-                const timer = setTimeout(() => resolve(''), 5000);
+                const timer = setTimeout(() => resolve(''), 12000);
                 const handler = async (res: any) => {
                     if (res.url().includes('listAct.do')) {
                         try {
@@ -125,7 +152,7 @@ export async function enrichWithRealtimeData(
 
             const url = `https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=${route.depCode}&arr0=${route.arrCode}&depdate0=${depDateHyphen}&dep1=${route.arrCode}&arr1=${route.depCode}&depdate1=${arrDateHyphen}&adt=1&chd=0&inf=0&comp=Y`;
 
-            page.goto(url, { waitUntil: 'commit', timeout: 8000 }).catch(() => {});
+            page.goto(url, { waitUntil: 'commit', timeout: 15000 }).catch(() => {});
             const apiResponse = await apiPromise;
 
             if (!apiResponse) { failed++; continue; }
@@ -134,22 +161,44 @@ export async function enrichWithRealtimeData(
             if (!jsonMatch) { failed++; continue; }
 
             const data = JSON.parse(jsonMatch[0]);
-            if (data.code !== 'OK' || !data.response?.length) continue;
+            if (data.code !== 'OK' || !data.response?.length) { failed++; continue; }
 
-            const first = data.response[0];
-            const outbound = extractTimesFromInfo(first.skdset1Info || '');
-            const inbound = extractTimesFromInfo(first.skdset2Info || '');
-            const seats = extractSeatsFromDetail(first.skdset1Detail || '');
-
-            if (outbound.depTime || seats > 0) {
-                enrichMap.set(key, {
+            // 응답 전체를 항공사별로 정리한다 (같은 항공사는 첫 번째 편을 쓴다)
+            const perAirline = new Map<string, EnrichData>();
+            for (const entry of data.response) {
+                const info = entry.skdset1Info || '';
+                const outbound = extractTimesFromInfo(info);
+                if (!outbound.depTime) continue;
+                const airline = normalizeAirline(extractAirlineFromInfo(info));
+                if (!airline || perAirline.has(airline)) continue;
+                const inbound = extractTimesFromInfo(entry.skdset2Info || '');
+                perAirline.set(airline, {
                     depTime: outbound.depTime,
                     arrTime: outbound.arrTime,
                     retDepTime: inbound.depTime,
                     retArrTime: inbound.arrTime,
-                    seats,
+                    seats: extractSeatsFromDetail(entry.skdset1Detail || ''),
                 });
+            }
+
+            if (airlines.size > 0) {
+                // 항공사를 아는 경우: 그 항공사 편만 쓴다. 없으면 비워두는 편이
+                // 다른 항공사의 시각을 잘못 붙이는 것보다 낫다.
+                for (const airline of Array.from(airlines)) {
+                    const found = perAirline.get(airline);
+                    if (found) {
+                        enrichMap.set(`${routeId}|${airline}`, found);
+                        enriched++;
+                    } else {
+                        unmatched++;
+                    }
+                }
+            } else if (perAirline.size === 1) {
+                // 항공사를 모르는 경우엔 응답에 항공사가 하나뿐일 때만 안전하게 채운다.
+                enrichMap.set(routeId, perAirline.values().next().value!);
                 enriched++;
+            } else {
+                unmatched++;
             }
 
         } catch (error) {
@@ -160,11 +209,11 @@ export async function enrichWithRealtimeData(
             await randomDelay(0.2, 0.5);
         }
         if (idx % 20 === 0) {
-            console.log(`[${label}]   ... ${idx}/${uniqueRoutes.size} (보강: ${enriched}, 실패: ${failed})`);
+            console.log(`[${label}]   ... ${idx}/${byRoute.size} (보강: ${enriched}, 실패: ${failed})`);
         }
     }
 
-    console.log(`[${label}] 보강 완료: ${enriched}/${uniqueRoutes.size} (실패: ${failed})`);
+    console.log(`[${label}] 보강 완료: ${enriched}건 (조회 ${byRoute.size}노선, 응답 실패 ${failed}, 항공사 불일치 ${unmatched})`);
     return enrichMap;
 }
 
@@ -180,8 +229,7 @@ export function applyEnrichData(
     for (let i = 0; i < flights.length; i++) {
         const rk = routeKeys[i];
         if (!rk) continue;
-        const enrichKey = `${rk.depCode}|${rk.arrCode}|${rk.depDate}|${rk.arrDate}`;
-        const data = enrichMap.get(enrichKey);
+        const data = enrichMap.get(enrichKeyOf(rk));
 
         if (data) {
             if (data.depTime) {
