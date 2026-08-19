@@ -1,10 +1,31 @@
 import { Metadata } from 'next';
+import fs from 'node:fs';
+import path from 'node:path';
 import { SITE_URL } from '@/lib/site';
 
 type Props = {
     params: Promise<{ id: string }>;
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
+
+type ShareSnapshot = {
+    dep: string;
+    arr: string;
+    price: number;
+    date: string;
+    airline: string;
+    source: string;
+};
+
+function getShareSnapshot(id: string): ShareSnapshot | null {
+    try {
+        const file = path.join(process.cwd(), 'data', 'share-snapshots.json');
+        const snapshots = JSON.parse(fs.readFileSync(file, 'utf8')) as Record<string, ShareSnapshot>;
+        return snapshots[id] || null;
+    } catch {
+        return null;
+    }
+}
 
 // 캐시에서 항공편 조회
 async function getFlightById(id: string) {
@@ -60,12 +81,13 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     const flight = await getFlightById(decodeURIComponent(id));
 
     if (!flight) {
-        const fallbackDep = typeof sp.dep === 'string' ? sp.dep : '';
-        const fallbackArr = typeof sp.arr === 'string' ? sp.arr : '';
-        const fallbackPrice = typeof sp.price === 'string' ? Number(sp.price) : 0;
-        const fallbackDate = typeof sp.date === 'string' ? sp.date : '';
-        const fallbackAirline = typeof sp.airline === 'string' ? sp.airline : '';
-        const fallbackSource = typeof sp.source === 'string' ? sp.source : '';
+        const snapshot = getShareSnapshot(decodeURIComponent(id));
+        const fallbackDep = typeof sp.dep === 'string' ? sp.dep : snapshot?.dep || '';
+        const fallbackArr = typeof sp.arr === 'string' ? sp.arr : snapshot?.arr || '';
+        const fallbackPrice = typeof sp.price === 'string' ? Number(sp.price) : snapshot?.price || 0;
+        const fallbackDate = typeof sp.date === 'string' ? sp.date : snapshot?.date || '';
+        const fallbackAirline = typeof sp.airline === 'string' ? sp.airline : snapshot?.airline || '';
+        const fallbackSource = typeof sp.source === 'string' ? sp.source : snapshot?.source || '';
 
         if (fallbackArr) {
             const priceText = fallbackPrice > 0 ? formatPrice(fallbackPrice) : '';
