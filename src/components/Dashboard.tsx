@@ -1186,6 +1186,14 @@ export default function Dashboard() {
 
     const beginDetailSheetDrag = (event: React.PointerEvent<HTMLDivElement>) => {
         if (!isMobile || (event.pointerType === 'mouse' && event.button !== 0)) return;
+        const sheet = detailSheetRef.current;
+        if (!sheet) return;
+        const target = event.target as HTMLElement;
+        const startedOnHandle = !!target.closest('[data-detail-drag-handle]');
+        const startedOnControl = !!target.closest('button, a, input, select, textarea, [role="button"]');
+        // 버튼과 링크의 탭 동작은 보존한다. 본문에서는 스크롤이 맨 위일 때만
+        // 아래로 끌어 닫기가 시작되고, 손잡이는 현재 스크롤 위치와 무관하게 동작한다.
+        if (startedOnControl || (!startedOnHandle && sheet.scrollTop > 1)) return;
         if (detailDragTimerRef.current) clearTimeout(detailDragTimerRef.current);
         detailDragRef.current = {
             pointerId: event.pointerId,
@@ -1194,11 +1202,8 @@ export default function Dashboard() {
             startedAt: performance.now(),
         };
         event.currentTarget.setPointerCapture(event.pointerId);
-        const sheet = detailSheetRef.current;
-        if (sheet) {
-            sheet.style.animation = 'none';
-            sheet.style.transition = 'none';
-        }
+        sheet.style.animation = 'none';
+        sheet.style.transition = 'none';
     };
 
     const moveDetailSheetDrag = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -3739,14 +3744,21 @@ export default function Dashboard() {
 
                 return (
                     <div className={styles.modalOverlay} onClick={() => setModetourGuide(null)}>
-                        <div className={styles.mdtDetailSheet} onClick={(e) => e.stopPropagation()} style={{ position: 'relative' }} ref={detailSheetRef} onScroll={measureSheetScroll}>
+                        <div
+                            className={styles.mdtDetailSheet}
+                            onClick={(e) => e.stopPropagation()}
+                            style={{ position: 'relative' }}
+                            ref={detailSheetRef}
+                            onScroll={measureSheetScroll}
+                            onPointerDown={beginDetailSheetDrag}
+                            onPointerMove={moveDetailSheetDrag}
+                            onPointerUp={(event) => endDetailSheetDrag(event)}
+                            onPointerCancel={(event) => endDetailSheetDrag(event, true)}
+                        >
                             <div
                                 className={styles.mdtDragHandleArea}
+                                data-detail-drag-handle
                                 aria-hidden="true"
-                                onPointerDown={beginDetailSheetDrag}
-                                onPointerMove={moveDetailSheetDrag}
-                                onPointerUp={(event) => endDetailSheetDrag(event)}
-                                onPointerCancel={(event) => endDetailSheetDrag(event, true)}
                             >
                                 <span className={styles.mdtDragHandle} />
                             </div>
