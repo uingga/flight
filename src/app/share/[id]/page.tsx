@@ -60,6 +60,47 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     const flight = await getFlightById(decodeURIComponent(id));
 
     if (!flight) {
+        const fallbackDep = typeof sp.dep === 'string' ? sp.dep : '';
+        const fallbackArr = typeof sp.arr === 'string' ? sp.arr : '';
+        const fallbackPrice = typeof sp.price === 'string' ? Number(sp.price) : 0;
+        const fallbackDate = typeof sp.date === 'string' ? sp.date : '';
+        const fallbackAirline = typeof sp.airline === 'string' ? sp.airline : '';
+        const fallbackSource = typeof sp.source === 'string' ? sp.source : '';
+
+        if (fallbackArr) {
+            const priceText = fallbackPrice > 0 ? formatPrice(fallbackPrice) : '';
+            const sourceName = SOURCE_NAMES[fallbackSource] || fallbackSource;
+            const title = priceText
+                ? `${fallbackDep || '서울'}에서 ${fallbackArr}, 왕복 ${priceText} | 티키티킷`
+                : `${fallbackDep || '서울'}에서 ${fallbackArr} | 티키티킷`;
+            const description = [
+                fallbackDate,
+                fallbackAirline,
+                sourceName ? `${sourceName}에서 발견한 땡처리 항공권` : '지금 발견한 땡처리 항공권',
+            ].filter(Boolean).join(' · ');
+            const ogParams = new URLSearchParams({ dep: fallbackDep || '서울', arr: fallbackArr });
+            if (fallbackPrice > 0) ogParams.set('price', String(fallbackPrice));
+            if (fallbackDate) ogParams.set('date', fallbackDate);
+            if (fallbackAirline) ogParams.set('airline', fallbackAirline);
+            if (fallbackSource) ogParams.set('source', fallbackSource);
+            if (typeof sp.v === 'string' && sp.v) ogParams.set('v', sp.v);
+            const ogImageUrl = `${SITE_URL}/api/og?${ogParams.toString()}`;
+
+            return {
+                title,
+                description,
+                alternates: { canonical: `/share/${id}` },
+                openGraph: {
+                    title,
+                    description,
+                    images: [{ url: ogImageUrl, width: 1200, height: 630 }],
+                    type: 'website',
+                    siteName: '티키티킷',
+                },
+                twitter: { card: 'summary_large_image', title, description, images: [ogImageUrl] },
+            };
+        }
+
         return {
             title: '지금 나온 땡처리 항공권 | 티키티킷',
             description: '여행사마다 따로 올라오는 저렴한 표를 한곳에서 확인하세요.',

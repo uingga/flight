@@ -57,7 +57,9 @@ export async function GET(request: NextRequest) {
                 justifyContent: 'center', alignItems: 'center',
                 background: 'linear-gradient(140deg, #241b63 0%, #4537a2 58%, #6757dc 100%)',
                 fontFamily: 'Pretendard', position: 'relative', overflow: 'hidden',
-                padding: '48px 52px',
+                // Naver Blog crops 1200x630 link previews to roughly 5:3.
+                // Keep all meaningful content inside a 110px horizontal safe area.
+                padding: '48px 110px',
             }}>
                 <div style={{
                     position: 'absolute', width: '520px', height: '520px', borderRadius: '50%',
