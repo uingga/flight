@@ -1337,17 +1337,21 @@ export default function Dashboard() {
     };
     const renderDatePresets = (onApplied?: () => void) => (
         <div className={styles.datePresetRow}>
-            {dateRangePresets.map(preset => (
-                <button
-                    key={preset.label}
-                    type="button"
-                    className={styles.datePresetChip}
-                    onClick={() => { applyDatePreset(preset); onApplied?.(); }}
-                >
-                    {preset.label}
-                </button>
-            ))}
-            <span className={styles.dateBasisNote}>출발일 기준</span>
+            <div className={styles.datePresetChips}>
+                {dateRangePresets.map(preset => (
+                    <button
+                        key={preset.label}
+                        type="button"
+                        className={styles.datePresetChip}
+                        onClick={() => { applyDatePreset(preset); onApplied?.(); }}
+                    >
+                        {preset.label}
+                    </button>
+                ))}
+            </div>
+            <p className={styles.dateBasisNote}>
+                고른 날짜는 가는 편이 출발하는 날 기준이에요. 돌아오는 날은 이 기간 밖일 수 있어요.
+            </p>
         </div>
     );
 
