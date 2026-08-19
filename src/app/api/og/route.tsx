@@ -53,10 +53,15 @@ export async function GET(request: NextRequest) {
     return new ImageResponse(
         (
             <div style={{
-                width: '100%', height: '100%', display: 'flex', flexDirection: 'column',
+                width: '100%', height: '100%', display: 'flex', overflow: 'hidden',
+                alignItems: 'flex-start', justifyContent: 'flex-start',
+            }}>
+            <div style={{
+                width: '1200px', height: '630px', display: 'flex', flexDirection: 'column', flex: 'none',
                 justifyContent: 'center', alignItems: 'center',
                 background: 'linear-gradient(140deg, #241b63 0%, #4537a2 58%, #6757dc 100%)',
                 fontFamily: 'Pretendard', position: 'relative', overflow: 'hidden',
+                transform: 'scale(1.5)', transformOrigin: 'top left',
                 // Naver Blog crops 1200x630 link previews to roughly 5:3.
                 // Keep all meaningful content inside a 110px horizontal safe area.
                 padding: '48px 110px',
@@ -101,8 +106,12 @@ export async function GET(request: NextRequest) {
                             }}>{dep}</span>
                             <div style={{ display: 'flex', alignItems: 'center', flex: 1, margin: '0 24px' }}>
                                 <div style={{ display: 'flex', height: '2px', flex: 1, background: '#aaa1e6' }} />
-                                <svg width="42" height="42" viewBox="0 0 42 42" fill="none" style={{ margin: '0 9px' }}>
-                                    <path d="M5 21H35M25 11L36 21L25 31" stroke="#6654d9" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
+                                <svg width="46" height="46" viewBox="0 0 64 64" fill="none" style={{ margin: '0 9px' }}>
+                                    <path
+                                        d="M58 29.5L38 18V8C38 3.5 35.5 1 32 1S26 3.5 26 8V18L6 29.5C3 31.2 3 34.8 6 36.5L26 33V48L18 54V59L32 56L46 59V54L38 48V33L58 36.5C61 37 62 31.2 58 29.5Z"
+                                        fill="#6654d9"
+                                        transform="rotate(90 32 32)"
+                                    />
                                 </svg>
                                 <div style={{ display: 'flex', height: '2px', flex: 1, background: '#aaa1e6' }} />
                             </div>
@@ -135,7 +144,7 @@ export async function GET(request: NextRequest) {
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                             <span style={{ fontSize: '29px', color: '#514c5c', marginBottom: '14px', fontWeight: 800 }}>1인 왕복 예상금액</span>
                             <span style={{
-                                fontSize: priceText.length >= 9 ? '56px' : '62px', fontWeight: 800,
+                                fontSize: priceText.length >= 9 ? '46px' : priceText.length >= 8 ? '50px' : '54px', fontWeight: 800,
                                 color: '#5140c6', letterSpacing: '-0.055em', lineHeight: 1.08, whiteSpace: 'nowrap',
                             }}>{priceText || '가격 확인'}</span>
                         </div>
@@ -149,10 +158,11 @@ export async function GET(request: NextRequest) {
                     <span style={{ color: '#ffffff', fontSize: '30px', fontWeight: 800 }}>여행사마다 흩어진 땡처리 항공권을 한곳에서</span>
                 </div>
             </div>
+            </div>
         ),
         {
-            width: 1200,
-            height: 630,
+            width: 1800,
+            height: 945,
             ...(fontData ? {
                 fonts: [
                     {
