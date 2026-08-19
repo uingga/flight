@@ -1252,6 +1252,104 @@ export default function Dashboard() {
         if (departureFilter === '부산') return /부산|김해|PUS/.test(flight.departure.city);
         return flight.departure.city.includes(departureFilter);
     };
+    const matchesNonDateFilters = (flight: Flight) =>
+        matchesSearchTerm(flight) && matchesSourceFilter(flight) && matchesRegionFilter(flight)
+        && matchesAirlineFilter(flight) && matchesDepartureFilter(flight);
+    const flightDateKey = (flight: Flight) => {
+        const m = flight.departure.date?.match(/^(\d{4})[.\-](\d{2})[.\-](\d{2})/);
+        return m ? `${m[1]}-${m[2]}-${m[3]}` : '';
+    };
+
+    // 달력에 표시할 출발일별 최저가 (날짜를 뺀 나머지 필터 기준).
+    // 목적지 없이 전체를 보는 기본 화면에서는 거의 모든 날에 표가 있고 최저가도
+    // "아무 도시나 제일 싼 값"이라 오해만 부르므로 아무것도 표시하지 않는다.
+    const hasNonDateFilter = !!searchTerm || sourceFilter !== 'all' || regionFilter !== 'all'
+        || airlineFilter !== 'all' || departureFilter !== 'all';
+    const dayMinPrices = useMemo(() => {
+        const map = new Map<string, number>();
+        if (!hasNonDateFilter) return map;
+        flights.forEach(flight => {
+            if (!matchesNonDateFilters(flight)) return;
+            const key = flightDateKey(flight);
+            const price = getEffectivePrice(flight);
+            if (!key || price <= 0) return;
+            const prev = map.get(key);
+            if (prev === undefined || price < prev) map.set(key, price);
+        });
+        return map;
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [flights, hasNonDateFilter, searchTerm, sourceFilter, regionFilter, airlineFilter, departureFilter]);
+
+    const calendarDayClassName = (date: Date) => {
+        if (dayMinPrices.size === 0) return '';
+        const key = toStr(date);
+        if (key < toStr(new Date())) return '';
+        return dayMinPrices.has(key) ? '' : styles.dayNoDeal;
+    };
+    const renderCalendarDay = (dayOfMonth: number, date?: Date) => {
+        if (!date || dayMinPrices.size === 0) return dayOfMonth;
+        const price = dayMinPrices.get(toStr(date));
+        return (
+            <div className={styles.dayCell}>
+                <span>{dayOfMonth}</span>
+                <span className={styles.dayPrice}>{price ? `${Math.floor(price / 10000)}만` : ''}</span>
+            </div>
+        );
+    };
+
+    // 방금 고른 범위로 몇 건이 보이게 되는지 — date_filter 이벤트에 실어 보낸다
+    const countInDateRange = (start: string, end: string) => flights.reduce((n, f) => {
+        if (!matchesNonDateFilters(f)) return n;
+        const key = flightDateKey(f);
+        return key && (!start || key >= start) && (!end || key <= end) ? n + 1 : n;
+    }, 0);
+
+    // 달력 안 빠른 선택 — 날짜만 바꾼다 (다른 필터는 건드리지 않는다)
+    const dateRangePresets = useMemo(() => {
+        const now = new Date();
+        const day = now.getDay();
+        // 이번 주말: 다가오는 토~일. 토요일이면 오늘~내일, 일요일이면 오늘 하루.
+        const sat = new Date(now);
+        sat.setDate(now.getDate() + (6 - day));
+        const sun = new Date(sat); sun.setDate(sat.getDate() + 1);
+        const weekendStart = day === 0 ? now : sat;
+        const weekendEnd = day === 0 ? now : sun;
+        const nextMon = new Date(now); nextMon.setDate(now.getDate() + ((8 - day) % 7 || 7));
+        const nextSun = new Date(nextMon); nextSun.setDate(nextMon.getDate() + 6);
+        const thisMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        const nextMonthStart = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+        const nextMonthEnd = new Date(now.getFullYear(), now.getMonth() + 2, 0);
+        const presets = [
+            { label: '이번 주말', start: toStr(weekendStart), end: toStr(weekendEnd) },
+            { label: '다음 주', start: toStr(nextMon), end: toStr(nextSun) },
+            { label: '이번 달', start: toStr(now), end: toStr(thisMonthEnd) },
+            { label: '다음 달', start: toStr(nextMonthStart), end: toStr(nextMonthEnd) },
+        ];
+        return presets.filter(p => p.start <= p.end);
+    }, []);
+
+    const applyDatePreset = (preset: { label: string; start: string; end: string }) => {
+        setStartDate(preset.start);
+        setEndDate(preset.end);
+        gtag.trackDateFilter(preset.start, preset.end, {
+            method: 'preset', presetLabel: preset.label, resultCount: countInDateRange(preset.start, preset.end),
+        });
+    };
+    const renderDatePresets = (onApplied?: () => void) => (
+        <div className={styles.datePresetRow}>
+            {dateRangePresets.map(preset => (
+                <button
+                    key={preset.label}
+                    type="button"
+                    className={styles.datePresetChip}
+                    onClick={() => { applyDatePreset(preset); onApplied?.(); }}
+                >
+                    {preset.label}
+                </button>
+            ))}
+            <span className={styles.dateBasisNote}>출발일 기준</span>
+        </div>
+    );
 
     // 추천순(스마트 정렬) 점수 — 낮을수록 상위.
     // 먼저 신선한 외부 비교가 기준으로 구간을 나누고, 구간 안에서는 실질 가격과 기존 벤치마크를 종합한다.
@@ -1528,7 +1626,7 @@ export default function Dashboard() {
             },
             {
                 id: 'date',
-                label: `날짜 · ${fmtDate(startDate)}~${fmtDate(endDate)}`,
+                label: `출발일 · ${fmtDate(startDate)}~${fmtDate(endDate)}`,
                 active: !!(startDate || endDate),
                 passes: byTerm.some(matchesDateFilter),
                 clear: () => { setStartDate(''); setEndDate(''); },
@@ -1552,6 +1650,38 @@ export default function Dashboard() {
         return { kind: 'filtered' as const, blockers, available: byTerm.length };
     }, [filteredFlights.length, flights, searchTerm, sharedFlightId,
         regionFilter, departureFilter, airlineFilter, sourceFilter, startDate, endDate]);
+
+    // 날짜 때문에 0건일 때 — 다른 조건은 그대로 두고 가장 가까운 출발일 하나를 제안한다.
+    // 사용자가 달력을 다시 헤집지 않고 한 번 눌러 옮겨갈 수 있게 하는 게 목적이다.
+    const nearestDateSuggestion = useMemo(() => {
+        if (filteredFlights.length > 0 || sharedFlightId || favFilter) return null;
+        if (!startDate && !endDate) return null;
+        const today = toStr(new Date());
+        let best: { date: string; price: number; count: number } | null = null;
+        const counts = new Map<string, { price: number; count: number }>();
+        flights.forEach(flight => {
+            if (!matchesNonDateFilters(flight)) return;
+            const key = flightDateKey(flight);
+            const price = getEffectivePrice(flight);
+            if (!key || key < today || price <= 0) return;
+            const prev = counts.get(key);
+            if (prev) { prev.count += 1; if (price < prev.price) prev.price = price; }
+            else counts.set(key, { price, count: 1 });
+        });
+        // 선택한 구간에서 가장 가깝게 벗어난 날 (앞뒤 모두 후보로 두고 거리로 고른다)
+        const anchor = startDate || endDate;
+        const distance = (key: string) => {
+            if (startDate && key < startDate) return Math.abs(new Date(startDate).getTime() - new Date(key).getTime());
+            if (endDate && key > endDate) return Math.abs(new Date(key).getTime() - new Date(endDate).getTime());
+            return Math.abs(new Date(key).getTime() - new Date(anchor).getTime());
+        };
+        Array.from(counts.entries()).forEach(([date, info]) => {
+            if (!best || distance(date) < distance(best.date)) best = { date, ...info };
+        });
+        return best as { date: string; price: number; count: number } | null;
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [filteredFlights.length, flights, sharedFlightId, favFilter, startDate, endDate,
+        searchTerm, sourceFilter, regionFilter, airlineFilter, departureFilter]);
 
     // 검색으로 목적지가 하나로 좁혀졌을 때만 알림을 제안한다.
     // 알림 등록에는 출발·도착 도시가 특정돼야 하고, 근거로 보여줄 최저가도 필요하다.
@@ -2055,7 +2185,8 @@ export default function Dashboard() {
                                 <span
                                     key={chip.label}
                                     className={styles.insightChip}
-                                    onClick={(e) => { e.stopPropagation(); setStartDate(chip.start); setEndDate(chip.end); setDepartureFilter('all'); setRegionFilter('all'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                                    // 날짜만 바꾼다 — 예전엔 출발지·도착지까지 초기화해서 걸어둔 필터가 날아갔다
+                                    onClick={(e) => { e.stopPropagation(); applyDatePreset({ label: chip.label, start: chip.start, end: chip.end }); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                                 >
                                     {chip.label} <span className={styles.insightChipCount}>{chip.count}건</span>
                                 </span>
@@ -2551,7 +2682,9 @@ export default function Dashboard() {
                                             setStartDate(toStr(start));
                                             setEndDate(toStr(end));
                                             if (end) {
-                                                gtag.trackDateFilter(toStr(start), toStr(end));
+                                                gtag.trackDateFilter(toStr(start), toStr(end), {
+                                                    resultCount: countInDateRange(toStr(start), toStr(end)),
+                                                });
                                                 setStickyDrop(null);
                                             }
                                         }}
@@ -2559,7 +2692,11 @@ export default function Dashboard() {
                                         inline
                                         minDate={new Date()}
                                         calendarClassName={styles.stickyCalendar}
-                                    />
+                                        dayClassName={calendarDayClassName}
+                                        renderDayContents={renderCalendarDay}
+                                    >
+                                        {renderDatePresets(() => setStickyDrop(null))}
+                                    </DatePicker>
                                     {(startDate || endDate) && (
                                         <button
                                             className={styles.stickyResetBtn}
@@ -2686,7 +2823,9 @@ export default function Dashboard() {
                                     setStartDate(toStr(start));
                                     setEndDate(toStr(end));
                                     if (end) {
-                                        gtag.trackDateFilter(toStr(start), toStr(end));
+                                        gtag.trackDateFilter(toStr(start), toStr(end), {
+                                            resultCount: countInDateRange(toStr(start), toStr(end)),
+                                        });
                                         setTimeout(() => setIsCalendarOpen(false), 500);
                                     }
                                 }}
@@ -2703,7 +2842,11 @@ export default function Dashboard() {
                                 minDate={new Date()}
                                 isClearable={true}
                                 onFocus={(e: React.FocusEvent<HTMLInputElement>) => e.target.blur()}
-                            />
+                                dayClassName={calendarDayClassName}
+                                renderDayContents={renderCalendarDay}
+                            >
+                                {renderDatePresets(() => setTimeout(() => setIsCalendarOpen(false), 300))}
+                            </DatePicker>
                         </div>
                         <div className={styles.searchBox} style={{ flex: 1, minWidth: '150px', position: 'relative' }}>
                             <span className={styles.searchIcon}>🔍</span>
@@ -3268,6 +3411,27 @@ export default function Dashboard() {
                                     </>
                                 ) : (
                                     <>
+                                        {nearestDateSuggestion && (
+                                            <div className={styles.nearestDate}>
+                                                <p className={styles.nearestDateText}>
+                                                    고른 날짜에는 표가 없어요. 가장 가까운 출발일은{' '}
+                                                    <strong>{fmtDate(nearestDateSuggestion.date)}</strong>
+                                                    {nearestDateSuggestion.price > 0 && ` · ${Math.floor(nearestDateSuggestion.price / 10000)}만원~`}
+                                                    {' '}({nearestDateSuggestion.count}건)입니다.
+                                                </p>
+                                                <button
+                                                    type="button"
+                                                    className={styles.nearestDateBtn}
+                                                    onClick={() => {
+                                                        const d = nearestDateSuggestion.date;
+                                                        setStartDate(d); setEndDate(d);
+                                                        gtag.trackDateFilter(d, d, { method: 'preset', presetLabel: 'nearest_date', resultCount: nearestDateSuggestion.count });
+                                                    }}
+                                                >
+                                                    {fmtDate(nearestDateSuggestion.date)} 표 보기
+                                                </button>
+                                            </div>
+                                        )}
                                         {emptyDiagnosis?.kind === 'filtered' && emptyDiagnosis.blockers.length > 0 ? (
                                             <>
                                                 <p>{searchTerm} 항공권은 {emptyDiagnosis.available}건 있습니다</p>
