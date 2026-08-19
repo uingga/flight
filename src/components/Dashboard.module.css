@@ -392,46 +392,6 @@
     line-height: 1.5;
 }
 
-/* ===== 0건일 때 가장 가까운 출발일 안내 ===== */
-.nearestDate {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-    margin: 4px auto 18px;
-    padding: 14px 18px;
-    max-width: 420px;
-    border: 1px solid #e0e7ff;
-    border-radius: 14px;
-    background: #f8faff;
-}
-
-.nearestDateText {
-    margin: 0;
-    font-size: 0.9rem;
-    color: #374151;
-    line-height: 1.55;
-    text-align: center;
-}
-
-.nearestDateText strong {
-    color: #4f46e5;
-}
-
-.nearestDateBtn {
-    padding: 9px 18px;
-    border: none;
-    border-radius: 999px;
-    background: #4f46e5;
-    color: #fff;
-    font-size: 0.85rem;
-    font-weight: 700;
-    cursor: pointer;
-}
-
-.nearestDateBtn:hover {
-    background: #4338ca;
-}
 
 /* Chips */
 .chipGroup {

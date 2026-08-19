@@ -315,7 +315,7 @@ async function buildStats(config: Ga4Config, days: number) {
             ]),
             // 측정기준 등록 전 이벤트는 `(not set)`으로 뭉쳐 오므로 버린다 — 세는 의미가 없다
             method: measured(list(dateMethodReport, { calendar: '달력에서 직접', preset: '빠른 선택 칩' })),
-            presets: measured(list(presetReport, { nearest_date: '가장 가까운 출발일' })),
+            presets: measured(list(presetReport)),
         },
         warnings,
     };

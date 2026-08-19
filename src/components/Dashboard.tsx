@@ -1655,38 +1655,6 @@ export default function Dashboard() {
     }, [filteredFlights.length, flights, searchTerm, sharedFlightId,
         regionFilter, departureFilter, airlineFilter, sourceFilter, startDate, endDate]);
 
-    // 날짜 때문에 0건일 때 — 다른 조건은 그대로 두고 가장 가까운 출발일 하나를 제안한다.
-    // 사용자가 달력을 다시 헤집지 않고 한 번 눌러 옮겨갈 수 있게 하는 게 목적이다.
-    const nearestDateSuggestion = useMemo(() => {
-        if (filteredFlights.length > 0 || sharedFlightId || favFilter) return null;
-        if (!startDate && !endDate) return null;
-        const today = toStr(new Date());
-        let best: { date: string; price: number; count: number } | null = null;
-        const counts = new Map<string, { price: number; count: number }>();
-        flights.forEach(flight => {
-            if (!matchesNonDateFilters(flight)) return;
-            const key = flightDateKey(flight);
-            const price = getEffectivePrice(flight);
-            if (!key || key < today || price <= 0) return;
-            const prev = counts.get(key);
-            if (prev) { prev.count += 1; if (price < prev.price) prev.price = price; }
-            else counts.set(key, { price, count: 1 });
-        });
-        // 선택한 구간에서 가장 가깝게 벗어난 날 (앞뒤 모두 후보로 두고 거리로 고른다)
-        const anchor = startDate || endDate;
-        const distance = (key: string) => {
-            if (startDate && key < startDate) return Math.abs(new Date(startDate).getTime() - new Date(key).getTime());
-            if (endDate && key > endDate) return Math.abs(new Date(key).getTime() - new Date(endDate).getTime());
-            return Math.abs(new Date(key).getTime() - new Date(anchor).getTime());
-        };
-        Array.from(counts.entries()).forEach(([date, info]) => {
-            if (!best || distance(date) < distance(best.date)) best = { date, ...info };
-        });
-        return best as { date: string; price: number; count: number } | null;
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [filteredFlights.length, flights, sharedFlightId, favFilter, startDate, endDate,
-        searchTerm, sourceFilter, regionFilter, airlineFilter, departureFilter]);
-
     // 검색으로 목적지가 하나로 좁혀졌을 때만 알림을 제안한다.
     // 알림 등록에는 출발·도착 도시가 특정돼야 하고, 근거로 보여줄 최저가도 필요하다.
     const alertSuggestion = useMemo(() => {
@@ -3415,27 +3383,6 @@ export default function Dashboard() {
                                     </>
                                 ) : (
                                     <>
-                                        {nearestDateSuggestion && (
-                                            <div className={styles.nearestDate}>
-                                                <p className={styles.nearestDateText}>
-                                                    고른 날짜에는 표가 없어요. 가장 가까운 출발일은{' '}
-                                                    <strong>{fmtDate(nearestDateSuggestion.date)}</strong>
-                                                    {nearestDateSuggestion.price > 0 && ` · ${Math.floor(nearestDateSuggestion.price / 10000)}만원~`}
-                                                    {' '}({nearestDateSuggestion.count}건)입니다.
-                                                </p>
-                                                <button
-                                                    type="button"
-                                                    className={styles.nearestDateBtn}
-                                                    onClick={() => {
-                                                        const d = nearestDateSuggestion.date;
-                                                        setStartDate(d); setEndDate(d);
-                                                        gtag.trackDateFilter(d, d, { method: 'preset', presetLabel: 'nearest_date', resultCount: nearestDateSuggestion.count });
-                                                    }}
-                                                >
-                                                    {fmtDate(nearestDateSuggestion.date)} 표 보기
-                                                </button>
-                                            </div>
-                                        )}
                                         {emptyDiagnosis?.kind === 'filtered' && emptyDiagnosis.blockers.length > 0 ? (
                                             <>
                                                 <p>{searchTerm} 항공권은 {emptyDiagnosis.available}건 있습니다</p>

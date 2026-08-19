@@ -168,7 +168,7 @@ Vercel 대시보드 → 프로젝트 → **Settings → Environment Variables** 
 | 출발까지 남은 일수 | `days_from_now` | 오늘로부터 며칠 뒤 출발인지 (숫자) |
 | 선택한 기간 길이 | `range_days` | 고른 범위가 며칠짜리인지 (숫자) |
 | 날짜 선택 방식 | `filter_method` | `calendar` / `preset` |
-| 누른 날짜 칩 | `preset_label` | 이번 주말, 다음 주, … , `nearest_date` |
+| 누른 날짜 칩 | `preset_label` | 이번 주말, 다음 주, 이번 달, 다음 달 |
 
 `filter_method`는 GA4 표준 이벤트(share·login)가 쓰는 `method`와 겹치지 않도록 이름을 구분했다.
 숫자 두 개는 그대로 나열하면 90줄이 되므로 `/api/ga-stats`에서 구간으로 묶어 어드민에 보여준다.
