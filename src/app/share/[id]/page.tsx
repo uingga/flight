@@ -54,8 +54,9 @@ function shortDate(dateStr: string): string {
     return dateStr;
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
     const { id } = await params;
+    const sp = await searchParams;
     const flight = await getFlightById(decodeURIComponent(id));
 
     if (!flight) {
@@ -88,6 +89,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     if (dateRange) ogParams.set('date', dateRange);
     if (flight.airline) ogParams.set('airline', flight.airline);
     if (flight.source) ogParams.set('source', flight.source);
+    if (typeof sp.v === 'string' && sp.v) ogParams.set('v', sp.v);
 
     const baseUrl = SITE_URL;
     const ogImageUrl = `${baseUrl}/api/og?${ogParams.toString()}`;
