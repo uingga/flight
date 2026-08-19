@@ -1350,7 +1350,7 @@ export default function Dashboard() {
                 ))}
             </div>
             <p className={styles.dateBasisNote}>
-                고른 날짜는 가는 편이 출발하는 날 기준이에요. 돌아오는 날은 이 기간 밖일 수 있어요.
+                출발일 기준으로 검색됩니다.
             </p>
         </div>
     );
