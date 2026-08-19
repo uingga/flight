@@ -19,6 +19,7 @@ const EVENT_LABELS: Record<string, string> = {
     share_flight: '공유',
     filter_change: '필터 변경',
     date_filter: '날짜 필터',
+    date_filter_empty: '날짜 필터 — 결과 0건',
 };
 
 /** detail_open / alert_setup의 `entry_point` 값 — 어느 화면에서 시작했는지 */
@@ -82,7 +83,7 @@ async function buildStats(config: Ga4Config, days: number) {
         }),
     ]);
 
-    const [agencyReport, routeReport, entryReport, detailEntryReport, channelReport] = await Promise.all([
+    const [agencyReport, routeReport, entryReport, detailEntryReport, channelReport, campaignTrafficReport, campaignBookingReport, leadTimeReport, rangeReport, dateMethodReport, presetReport] = await Promise.all([
         optional('여행사별 예약 클릭', warnings, () => runReport(config, {
             dateRanges,
             dimensions: [{ name: 'customEvent:travel_agency' }],
@@ -121,6 +122,52 @@ async function buildStats(config: Ga4Config, days: number) {
             metrics: [{ name: 'sessions' }, { name: 'activeUsers' }],
             orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
             limit: 12,
+        })),
+        optional('콘텐츠별 유입', warnings, () => runReport(config, {
+            dateRanges,
+            dimensions: [{ name: 'sessionCampaignName' }, { name: 'sessionSource' }],
+            metrics: [{ name: 'sessions' }, { name: 'activeUsers' }],
+            orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
+            limit: 50,
+        })),
+        optional('콘텐츠별 예약 클릭', warnings, () => runReport(config, {
+            dateRanges,
+            dimensions: [{ name: 'sessionCampaignName' }, { name: 'sessionSource' }],
+            metrics: [{ name: 'eventCount' }],
+            dimensionFilter: eventNameFilter('booking_click'),
+            orderBys: [{ metric: { metricName: 'eventCount' }, desc: true }],
+            limit: 50,
+        })),
+        // 날짜 필터를 쓴 사람들이 언제 떠나려는지 — 2026-08-19에 측정기준을 등록해 그 이후 데이터만 있다
+        optional('출발까지 남은 일수', warnings, () => runReport(config, {
+            dateRanges,
+            dimensions: [{ name: 'customEvent:days_from_now' }],
+            metrics: [{ name: 'eventCount' }],
+            dimensionFilter: eventNameFilter('date_filter'),
+            limit: 200,
+        })),
+        optional('선택한 기간 길이', warnings, () => runReport(config, {
+            dateRanges,
+            dimensions: [{ name: 'customEvent:range_days' }],
+            metrics: [{ name: 'eventCount' }],
+            dimensionFilter: eventNameFilter('date_filter'),
+            limit: 200,
+        })),
+        optional('날짜 선택 방식', warnings, () => runReport(config, {
+            dateRanges,
+            dimensions: [{ name: 'customEvent:filter_method' }],
+            metrics: [{ name: 'eventCount' }],
+            dimensionFilter: eventNameFilter('date_filter'),
+            orderBys: [{ metric: { metricName: 'eventCount' }, desc: true }],
+            limit: 10,
+        })),
+        optional('누른 날짜 칩', warnings, () => runReport(config, {
+            dateRanges,
+            dimensions: [{ name: 'customEvent:preset_label' }],
+            metrics: [{ name: 'eventCount' }],
+            dimensionFilter: eventNameFilter('date_filter'),
+            orderBys: [{ metric: { metricName: 'eventCount' }, desc: true }],
+            limit: 15,
         })),
     ]);
 
@@ -163,6 +210,55 @@ async function buildStats(config: Ga4Config, days: number) {
             count: num(row, 0),
         }));
 
+    const campaignLabel = (name: string) => {
+        const drop = name.match(/^tikitikit_drop_(\d+)$/);
+        return drop ? `티키티킷 드롭 ${Number(drop[1])}` : name;
+    };
+    const contentSourceLabel = (source: string) => ({
+        naver_blog: '네이버 블로그',
+        travel_community: '여행 커뮤니티',
+    }[source] || source);
+    const campaignBookings = new Map(
+        (campaignBookingReport?.rows || []).map(row => [`${dim(row)}|${dim(row, 1)}`, num(row, 0)]),
+    );
+    const campaigns = campaignTrafficReport === null ? null : (campaignTrafficReport.rows || [])
+        .map(row => {
+            const name = dim(row);
+            const source = dim(row, 1);
+            return {
+                name,
+                source,
+                label: `${campaignLabel(name)} · ${contentSourceLabel(source)}`,
+                sessions: num(row, 0),
+                users: num(row, 1),
+                bookingClicks: campaignBookingReport === null ? null : (campaignBookings.get(`${name}|${source}`) || 0),
+            };
+        })
+        .filter(item => item.name.startsWith('tikitikit_'));
+
+    // 며칠 뒤 출발인지를 그대로 나열하면 90줄이 되므로 읽을 수 있는 구간으로 묶는다.
+    // `(not set)` 같은 비수치 값은 버린다 — 측정기준 등록 전 데이터가 이렇게 들어온다.
+    const bucketize = (
+        report: ReportResponse | null,
+        buckets: Array<{ label: string; max: number }>,
+    ) => {
+        if (report === null) return null;
+        const totals = new Map(buckets.map(b => [b.label, 0]));
+        let counted = 0;
+        (report.rows || []).forEach(row => {
+            const value = Number(dim(row));
+            if (!Number.isFinite(value)) return;
+            const bucket = buckets.find(b => value <= b.max) || buckets[buckets.length - 1];
+            totals.set(bucket.label, (totals.get(bucket.label) || 0) + num(row, 0));
+            counted += num(row, 0);
+        });
+        if (counted === 0) return [];
+        return buckets.map(b => ({ label: b.label, count: totals.get(b.label) || 0 }));
+    };
+
+    const dateFilterEmpty = events.find(entry => entry.name === 'date_filter_empty');
+    const dateFilter = events.find(entry => entry.name === 'date_filter');
+
     return {
         available: true,
         generatedAt: new Date().toISOString(),
@@ -192,6 +288,31 @@ async function buildStats(config: Ga4Config, days: number) {
             sessions: num(row, 0),
             users: num(row, 1),
         })),
+        campaigns,
+        dateFilter: {
+            picks: dateFilter?.count ?? 0,
+            emptyPicks: dateFilterEmpty?.count ?? 0,
+            // 고른 날짜에 표가 하나도 없던 비율 — 달력 표시가 잘 먹는지 보는 지표
+            emptyRate: dateFilter?.count
+                ? Number((((dateFilterEmpty?.count ?? 0) / dateFilter.count) * 100).toFixed(1))
+                : null,
+            leadTime: bucketize(leadTimeReport, [
+                { label: '3일 이내', max: 3 },
+                { label: '4~7일', max: 7 },
+                { label: '1~2주', max: 14 },
+                { label: '2주~1달', max: 30 },
+                { label: '1달 이후', max: Infinity },
+            ]),
+            range: bucketize(rangeReport, [
+                { label: '하루', max: 1 },
+                { label: '2~3일', max: 3 },
+                { label: '4~7일', max: 7 },
+                { label: '1~2주', max: 14 },
+                { label: '2주 이상', max: Infinity },
+            ]),
+            method: list(dateMethodReport, { calendar: '달력에서 직접', preset: '빠른 선택 칩' }),
+            presets: list(presetReport, { nearest_date: '가장 가까운 출발일' }),
+        },
         warnings,
     };
 }

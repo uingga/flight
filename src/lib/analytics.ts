@@ -181,7 +181,8 @@ export const trackDateFilter = (
         end_date: endDate,
         days_from_now: start ? Math.round((start.getTime() - today.getTime()) / dayMs) : undefined,
         range_days: start && end ? Math.round((end.getTime() - start.getTime()) / dayMs) + 1 : undefined,
-        method: extra?.method || 'calendar',
+        // GA4 표준 이벤트(share/login)도 `method`를 쓰므로 이름을 구분한다
+        filter_method: extra?.method || 'calendar',
         preset_label: extra?.presetLabel,
         result_count: extra?.resultCount,
     }));
