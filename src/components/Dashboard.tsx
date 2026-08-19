@@ -1172,7 +1172,7 @@ export default function Dashboard() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [modetourGuide]);
 
-    const resetDetailSheetPosition = () => {
+    const resetDetailSheetPosition = useCallback(() => {
         const sheet = detailSheetRef.current;
         if (!sheet) return;
         sheet.style.transition = 'transform 220ms cubic-bezier(0.22, 1, 0.36, 1)';
@@ -1182,7 +1182,7 @@ export default function Dashboard() {
             detailSheetRef.current.style.transition = '';
             detailSheetRef.current.style.transform = '';
         }, 230);
-    };
+    }, []);
 
     const beginDetailSheetDrag = (event: React.PointerEvent<HTMLDivElement>) => {
         if (!isMobile || (event.pointerType === 'mouse' && event.button !== 0)) return;
@@ -1236,6 +1236,81 @@ export default function Dashboard() {
         sheet.style.transform = `translate3d(0, ${sheet.clientHeight}px, 0)`;
         detailDragTimerRef.current = setTimeout(() => setModetourGuide(null), 170);
     };
+
+    // 모바일 브라우저는 본문 영역의 pointer 이벤트를 세로 스크롤로 선점한다.
+    // passive:false인 네이티브 touchmove에서, 스크롤 최상단의 아래 방향 제스처만
+    // 시트 드래그로 전환해야 본문 어디서 시작해도 안정적으로 닫을 수 있다.
+    useEffect(() => {
+        if (!modetourGuide || !isMobile) return;
+        const sheet = detailSheetRef.current;
+        if (!sheet) return;
+
+        let tracking = false;
+        let dragging = false;
+        let startY = 0;
+        let lastY = 0;
+        let startedAt = 0;
+
+        const onTouchStart = (event: TouchEvent) => {
+            if (event.touches.length !== 1 || sheet.scrollTop > 1) return;
+            const target = event.target as HTMLElement;
+            if (target.closest('[data-detail-drag-handle], button, a, input, select, textarea, [role="button"]')) return;
+            tracking = true;
+            dragging = false;
+            startY = event.touches[0].clientY;
+            lastY = startY;
+            startedAt = performance.now();
+        };
+
+        const onTouchMove = (event: TouchEvent) => {
+            if (!tracking || event.touches.length !== 1) return;
+            const currentY = event.touches[0].clientY;
+            const offset = currentY - startY;
+            if (!dragging) {
+                if (offset <= 6) return;
+                if (sheet.scrollTop > 1) { tracking = false; return; }
+                dragging = true;
+                if (detailDragTimerRef.current) clearTimeout(detailDragTimerRef.current);
+                sheet.style.animation = 'none';
+                sheet.style.transition = 'none';
+            }
+            event.preventDefault();
+            lastY = currentY;
+            sheet.style.transform = `translate3d(0, ${Math.max(0, offset)}px, 0)`;
+        };
+
+        const finishTouchDrag = (cancelled: boolean) => {
+            if (!tracking) return;
+            tracking = false;
+            if (!dragging) return;
+            dragging = false;
+            const offset = Math.max(0, lastY - startY);
+            const elapsed = Math.max(1, performance.now() - startedAt);
+            const velocity = offset / elapsed;
+            const closeDistance = Math.min(120, sheet.clientHeight * 0.22);
+            const shouldClose = !cancelled && (offset >= closeDistance || (offset >= 44 && velocity >= 0.65));
+            if (!shouldClose) {
+                resetDetailSheetPosition();
+                return;
+            }
+            sheet.style.transition = 'transform 180ms ease-in';
+            sheet.style.transform = `translate3d(0, ${sheet.clientHeight}px, 0)`;
+            detailDragTimerRef.current = setTimeout(() => setModetourGuide(null), 170);
+        };
+
+        const onTouchEnd = () => finishTouchDrag(false);
+        const onTouchCancel = () => finishTouchDrag(true);
+        sheet.addEventListener('touchstart', onTouchStart, { passive: true });
+        sheet.addEventListener('touchmove', onTouchMove, { passive: false });
+        sheet.addEventListener('touchend', onTouchEnd);
+        sheet.addEventListener('touchcancel', onTouchCancel);
+        return () => {
+            sheet.removeEventListener('touchstart', onTouchStart);
+            sheet.removeEventListener('touchmove', onTouchMove);
+            sheet.removeEventListener('touchend', onTouchEnd);
+            sheet.removeEventListener('touchcancel', onTouchCancel);
+        };
+    }, [isMobile, modetourGuide, resetDetailSheetPosition]);
 
     useEffect(() => () => {
         if (detailDragTimerRef.current) clearTimeout(detailDragTimerRef.current);
@@ -3750,15 +3825,15 @@ export default function Dashboard() {
                             style={{ position: 'relative' }}
                             ref={detailSheetRef}
                             onScroll={measureSheetScroll}
-                            onPointerDown={beginDetailSheetDrag}
-                            onPointerMove={moveDetailSheetDrag}
-                            onPointerUp={(event) => endDetailSheetDrag(event)}
-                            onPointerCancel={(event) => endDetailSheetDrag(event, true)}
                         >
                             <div
                                 className={styles.mdtDragHandleArea}
                                 data-detail-drag-handle
                                 aria-hidden="true"
+                                onPointerDown={beginDetailSheetDrag}
+                                onPointerMove={moveDetailSheetDrag}
+                                onPointerUp={(event) => endDetailSheetDrag(event)}
+                                onPointerCancel={(event) => endDetailSheetDrag(event, true)}
                             >
                                 <span className={styles.mdtDragHandle} />
                             </div>
