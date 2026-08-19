@@ -169,6 +169,7 @@ export async function scrapeTtang(prevFlights: any[] = []): Promise<Flight[]> {
                         arrCode: item.arrCityCode,
                         depDate: depDateRaw,
                         arrDate: arrDateRaw,
+                        airline: flight.airline,
                     });
                     dayCount++;
                 }
