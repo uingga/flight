@@ -256,6 +256,9 @@ async function buildStats(config: Ga4Config, days: number) {
         return buckets.map(b => ({ label: b.label, count: totals.get(b.label) || 0 }));
     };
 
+    const measured = (items: Array<{ label: string; count: number }> | null) =>
+        items === null ? null : items.filter(item => item.label !== '(not set)' && item.label !== '(값 없음)');
+
     const dateFilterEmpty = events.find(entry => entry.name === 'date_filter_empty');
     const dateFilter = events.find(entry => entry.name === 'date_filter');
 
@@ -310,8 +313,9 @@ async function buildStats(config: Ga4Config, days: number) {
                 { label: '1~2주', max: 14 },
                 { label: '2주 이상', max: Infinity },
             ]),
-            method: list(dateMethodReport, { calendar: '달력에서 직접', preset: '빠른 선택 칩' }),
-            presets: list(presetReport, { nearest_date: '가장 가까운 출발일' }),
+            // 측정기준 등록 전 이벤트는 `(not set)`으로 뭉쳐 오므로 버린다 — 세는 의미가 없다
+            method: measured(list(dateMethodReport, { calendar: '달력에서 직접', preset: '빠른 선택 칩' })),
+            presets: measured(list(presetReport, { nearest_date: '가장 가까운 출발일' })),
         },
         warnings,
     };
