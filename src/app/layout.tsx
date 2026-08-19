@@ -190,7 +190,7 @@ export default function RootLayout({
                                     url: BASE_URL,
                                     logo: `${BASE_URL}/icon.svg`,
                                     description: '여러 여행사의 저렴한 땡처리 항공권을 모아 보여주는 서비스',
-                                    sameAs: [],
+                                    sameAs: ['https://blog.naver.com/mytikit'],
                                 },
                                 {
                                     '@type': 'BreadcrumbList',
