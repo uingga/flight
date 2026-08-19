@@ -4119,7 +4119,9 @@
     }
 
     .mdtBookBtnWrap {
-        padding: 8px 12px calc(10px + env(safe-area-inset-bottom, 0px));
+        /* Android 등 safe-area 값이 0인 환경에서도 버튼이 화면 끝에 붙지 않게
+           최소 18px을 확보하고, 홈 인디케이터가 있으면 기존 안전영역을 따른다. */
+        padding: 8px 12px max(18px, calc(10px + env(safe-area-inset-bottom, 0px)));
     }
 }
 
