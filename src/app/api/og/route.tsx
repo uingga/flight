@@ -53,15 +53,10 @@ export async function GET(request: NextRequest) {
     return new ImageResponse(
         (
             <div style={{
-                width: '100%', height: '100%', display: 'flex', overflow: 'hidden',
-                alignItems: 'flex-start', justifyContent: 'flex-start',
-            }}>
-            <div style={{
-                width: '1200px', height: '630px', display: 'flex', flexDirection: 'column', flex: 'none',
+                width: '100%', height: '100%', display: 'flex', flexDirection: 'column',
                 justifyContent: 'center', alignItems: 'center',
                 background: 'linear-gradient(140deg, #241b63 0%, #4537a2 58%, #6757dc 100%)',
                 fontFamily: 'Pretendard', position: 'relative', overflow: 'hidden',
-                transform: 'scale(1.5)', transformOrigin: 'top left',
                 // Naver Blog crops 1200x630 link previews to roughly 5:3.
                 // Keep all meaningful content inside a 110px horizontal safe area.
                 padding: '48px 110px',
@@ -158,11 +153,10 @@ export async function GET(request: NextRequest) {
                     <span style={{ color: '#ffffff', fontSize: '30px', fontWeight: 800 }}>여행사마다 흩어진 땡처리 항공권을 한곳에서</span>
                 </div>
             </div>
-            </div>
         ),
         {
-            width: 1800,
-            height: 945,
+            width: 1200,
+            height: 630,
             ...(fontData ? {
                 fonts: [
                     {

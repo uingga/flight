@@ -115,7 +115,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
                 openGraph: {
                     title,
                     description,
-                    images: [{ url: ogImageUrl, width: 1800, height: 945 }],
+                    images: [{ url: ogImageUrl, width: 1200, height: 630 }],
                     type: 'website',
                     siteName: '티키티킷',
                 },
@@ -166,7 +166,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
         openGraph: {
             title,
             description,
-            images: [{ url: ogImageUrl, width: 1800, height: 945 }],
+            images: [{ url: ogImageUrl, width: 1200, height: 630 }],
             type: 'website',
             siteName: '티키티킷',
         },
