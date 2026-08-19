@@ -2509,6 +2509,10 @@
     border-radius: 4px;
 }
 
+.mdtDragHandleArea {
+    display: none;
+}
+
 /* 상단 요약 바 */
 .mdtSummaryBar {
     display: flex;
@@ -4005,6 +4009,34 @@
         max-height: 85vh;
         max-height: 88dvh; /* 실제 보이는 영역 기준 (iOS 주소창 보정) */
         animation: slideUpMobile 0.3s ease;
+        will-change: transform;
+    }
+
+    .mdtDragHandleArea {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 22px;
+        border-radius: 20px 20px 0 0;
+        background: #fff;
+        cursor: grab;
+        touch-action: none;
+        user-select: none;
+        -webkit-user-select: none;
+    }
+
+    .mdtDragHandleArea:active {
+        cursor: grabbing;
+    }
+
+    .mdtDragHandle {
+        width: 36px;
+        height: 4px;
+        border-radius: 999px;
+        background: #d1d5db;
     }
 
     .mdtTimeValue {

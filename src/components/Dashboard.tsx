@@ -1154,6 +1154,8 @@ export default function Dashboard() {
 
     // 상세 시트 스크롤 힌트 — 화면 밖에 내용이 남아 있는지 사용자가 알 수 있게 한다
     const detailSheetRef = useRef<HTMLDivElement | null>(null);
+    const detailDragRef = useRef({ pointerId: -1, startY: 0, lastY: 0, startedAt: 0 });
+    const detailDragTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const [sheetHasMore, setSheetHasMore] = useState(false);
     const measureSheetScroll = () => {
         const el = detailSheetRef.current;
@@ -1169,6 +1171,70 @@ export default function Dashboard() {
         return () => { cancelAnimationFrame(id); clearTimeout(late); };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [modetourGuide]);
+
+    const resetDetailSheetPosition = () => {
+        const sheet = detailSheetRef.current;
+        if (!sheet) return;
+        sheet.style.transition = 'transform 220ms cubic-bezier(0.22, 1, 0.36, 1)';
+        sheet.style.transform = 'translate3d(0, 0, 0)';
+        detailDragTimerRef.current = setTimeout(() => {
+            if (!detailSheetRef.current) return;
+            detailSheetRef.current.style.transition = '';
+            detailSheetRef.current.style.transform = '';
+        }, 230);
+    };
+
+    const beginDetailSheetDrag = (event: React.PointerEvent<HTMLDivElement>) => {
+        if (!isMobile || (event.pointerType === 'mouse' && event.button !== 0)) return;
+        if (detailDragTimerRef.current) clearTimeout(detailDragTimerRef.current);
+        detailDragRef.current = {
+            pointerId: event.pointerId,
+            startY: event.clientY,
+            lastY: event.clientY,
+            startedAt: performance.now(),
+        };
+        event.currentTarget.setPointerCapture(event.pointerId);
+        const sheet = detailSheetRef.current;
+        if (sheet) {
+            sheet.style.animation = 'none';
+            sheet.style.transition = 'none';
+        }
+    };
+
+    const moveDetailSheetDrag = (event: React.PointerEvent<HTMLDivElement>) => {
+        if (detailDragRef.current.pointerId !== event.pointerId) return;
+        const offset = Math.max(0, event.clientY - detailDragRef.current.startY);
+        detailDragRef.current.lastY = event.clientY;
+        if (detailSheetRef.current) {
+            detailSheetRef.current.style.transform = `translate3d(0, ${offset}px, 0)`;
+        }
+        if (offset > 0) event.preventDefault();
+    };
+
+    const endDetailSheetDrag = (event: React.PointerEvent<HTMLDivElement>, cancelled = false) => {
+        if (detailDragRef.current.pointerId !== event.pointerId) return;
+        const sheet = detailSheetRef.current;
+        const offset = Math.max(0, detailDragRef.current.lastY - detailDragRef.current.startY);
+        const elapsed = Math.max(1, performance.now() - detailDragRef.current.startedAt);
+        const velocity = offset / elapsed;
+        detailDragRef.current.pointerId = -1;
+        try { event.currentTarget.releasePointerCapture(event.pointerId); } catch { /* 이미 해제됨 */ }
+
+        const closeDistance = Math.min(120, (sheet?.clientHeight || 480) * 0.22);
+        const shouldClose = !cancelled && (offset >= closeDistance || (offset >= 44 && velocity >= 0.65));
+        if (!sheet || !shouldClose) {
+            resetDetailSheetPosition();
+            return;
+        }
+
+        sheet.style.transition = 'transform 180ms ease-in';
+        sheet.style.transform = `translate3d(0, ${sheet.clientHeight}px, 0)`;
+        detailDragTimerRef.current = setTimeout(() => setModetourGuide(null), 170);
+    };
+
+    useEffect(() => () => {
+        if (detailDragTimerRef.current) clearTimeout(detailDragTimerRef.current);
+    }, []);
 
     const confirmBooking = () => {
         if (!bookingFlight) return;
@@ -3674,6 +3740,16 @@ export default function Dashboard() {
                 return (
                     <div className={styles.modalOverlay} onClick={() => setModetourGuide(null)}>
                         <div className={styles.mdtDetailSheet} onClick={(e) => e.stopPropagation()} style={{ position: 'relative' }} ref={detailSheetRef} onScroll={measureSheetScroll}>
+                            <div
+                                className={styles.mdtDragHandleArea}
+                                aria-hidden="true"
+                                onPointerDown={beginDetailSheetDrag}
+                                onPointerMove={moveDetailSheetDrag}
+                                onPointerUp={(event) => endDetailSheetDrag(event)}
+                                onPointerCancel={(event) => endDetailSheetDrag(event, true)}
+                            >
+                                <span className={styles.mdtDragHandle} />
+                            </div>
                             {/* 여행사 + 항공사 + 좌석 */}
                             <div className={styles.mdtSummaryBar}>
                                 <div className={styles.mdtAirlineInfo}>
