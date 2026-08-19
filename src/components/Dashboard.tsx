@@ -437,6 +437,9 @@ export default function Dashboard() {
     // 초기 로드 시 URL 파라미터에서 필터 복원
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
+        // 알림 설정 딥링크(/?dealAlert=1)는 아래 replaceState가 쿼리를 지우기 전에
+        // 여기서 먼저 읽어야 한다. 별도 effect에서 읽으면 실행 순서상 이미 늦다.
+        if (params.get('dealAlert') === '1') setShowDealAlertSetup(true);
         if (params.get('flight')) return; // 공유 링크는 위에서 처리
         const hasFilterParams = params.has('q') || params.has('dep') || params.has('region') || params.has('source') || params.has('airline') || params.has('sort') || params.has('from') || params.has('to');
         if (hasFilterParams) {
@@ -672,11 +675,7 @@ export default function Dashboard() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // 드롭과 콘텐츠에서 조건형 알림 설정으로 바로 들어온 경우 모달을 연다.
-    useEffect(() => {
-        const params = new URLSearchParams(window.location.search);
-        if (params.get('dealAlert') === '1') setShowDealAlertSetup(true);
-    }, []);
+    // (알림 설정 딥링크 처리는 필터 복원 effect 안으로 이동 — replaceState 순서 문제)
 
     const updateManagedPriceAlert = async (alert: ManagedPriceAlert) => {
         const maxPrice = Number(alert.draftPrice);

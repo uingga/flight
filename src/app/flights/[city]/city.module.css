@@ -96,13 +96,23 @@
 }
 
 .more {
-    margin: 14px 2px 0;
-    font-size: 14px;
+    margin: 18px 0 0;
+    text-align: center;
 }
 
-.more a {
-    color: #6366f1;
+.cta {
+    display: inline-block;
+    padding: 13px 26px;
+    border-radius: 999px;
+    background: #4f46e5;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
     text-decoration: none;
+}
+
+.cta:hover {
+    background: #4338ca;
 }
 
 .note {
