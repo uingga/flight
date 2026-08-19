@@ -132,7 +132,8 @@ Vercel 대시보드 → 프로젝트 → **Settings → Environment Variables** 
 
 - 방문자 / 방문 횟수 / 페이지뷰 (기간 합계 + 일별 막대)
 - 행동별 발생 수 — `booking_click`, `affiliate_click`, `detail_open`, `alert_setup`,
-  `deal_alert_setup`, `compare_click`, `share_flight`, `filter_change`, `date_filter`
+  `deal_alert_setup`, `blog_flight_link_open`, `blog_alert_link_open`, `compare_click`,
+  `share_flight`, `filter_change`, `date_filter`
 - **퍼널** — 방문 → 상세 열람(`detail_open`) → 예약 클릭(`booking_click`).
   마지막 구간은 "상세를 연 사람 중 몇 %가 예약으로 갔는지"로 표시된다
 - 여행사별 예약 클릭 (`customEvent:travel_agency`)

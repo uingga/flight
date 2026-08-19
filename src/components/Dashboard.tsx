@@ -355,6 +355,12 @@ export default function Dashboard() {
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const flightId = params.get('flight');
+        const campaign = params.get('utm_campaign') || '';
+        const content = params.get('utm_content');
+        if (params.get('utm_source') === 'naver_blog' && /^tikitikit_drop_\d+$/.test(campaign)) {
+            if (content === 'drop_deal') gtag.trackBlogLinkOpen('flight', campaign);
+            if (content === 'alert_cta') gtag.trackBlogLinkOpen('alert', campaign);
+        }
         if (flightId) {
             setSharedFlightId(flightId);
             // Fallback 노선 정보 저장 (share 페이지에서 전달)
