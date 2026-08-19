@@ -116,10 +116,12 @@ export async function GET(request: NextRequest) {
                             }}>{arr}</span>
                         </div>
 
-                        <div style={{ display: 'flex', alignItems: 'center', marginTop: 'auto', width: '100%' }}>
-                            {date && <span style={{ fontSize: '32px', fontWeight: 800, color: '#302b43' }}>{date}</span>}
-                            {date && airline && <span style={{ fontSize: '28px', color: '#aaa4b3', margin: '0 18px' }}>·</span>}
-                            {airline && <span style={{ fontSize: '32px', fontWeight: 800, color: '#302b43' }}>{airline}</span>}
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', marginTop: 'auto', width: '100%' }}>
+                            <span style={{ fontSize: '25px', color: '#6a6573', marginBottom: '8px', fontWeight: 800 }}>1인 왕복 예상금액</span>
+                            <span style={{
+                                fontSize: priceText.length >= 9 ? '68px' : priceText.length >= 8 ? '73px' : '78px', fontWeight: 800,
+                                color: '#5140c6', letterSpacing: '-0.055em', lineHeight: 1, whiteSpace: 'nowrap',
+                            }}>{priceText || '가격 확인'}</span>
                         </div>
                     </div>
 
@@ -136,12 +138,9 @@ export async function GET(request: NextRequest) {
                             position: 'absolute', width: '34px', height: '34px', borderRadius: '50%',
                             background: '#4e40b7', left: '-18px', bottom: '-17px', display: 'flex',
                         }} />
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                            <span style={{ fontSize: '29px', color: '#514c5c', marginBottom: '14px', fontWeight: 800 }}>1인 왕복 예상금액</span>
-                            <span style={{
-                                fontSize: priceText.length >= 9 ? '46px' : priceText.length >= 8 ? '50px' : '54px', fontWeight: 800,
-                                color: '#5140c6', letterSpacing: '-0.055em', lineHeight: 1.08, whiteSpace: 'nowrap',
-                            }}>{priceText || '가격 확인'}</span>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+                            {date && <span style={{ fontSize: date.length >= 13 ? '32px' : '37px', fontWeight: 800, color: '#302b43', lineHeight: 1.1, whiteSpace: 'nowrap' }}>{date}</span>}
+                            {airline && <span style={{ fontSize: airline.length >= 7 ? '28px' : '32px', fontWeight: 800, color: '#5d5867', marginTop: '13px', lineHeight: 1.1, whiteSpace: 'nowrap' }}>{airline}</span>}
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                             <span style={{ fontSize: '31px', fontWeight: 800, color: '#40394f', letterSpacing: '0.05em' }}>TIKITIKIT.KR</span>
