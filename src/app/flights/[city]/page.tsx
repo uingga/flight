@@ -33,8 +33,9 @@ export function generateStaticParams() {
 
 export function generateMetadata({ params }: { params: { city: string } }): Metadata {
     const data = getCity(params.city);
-    if (!data) return { title: '땡처리 항공권 | 티키티킷' };
-    const title = `${data.city} 땡처리 항공권 최저가 ${data.minPrice.toLocaleString('ko-KR')}원 | 티키티킷`;
+    if (!data) return { title: '땡처리 항공권' };
+    // 레이아웃 템플릿이 "| 티키티킷"을 붙이므로 여기서는 넣지 않는다
+    const title = `${data.city} 땡처리 항공권 최저가 ${data.minPrice.toLocaleString('ko-KR')}원`;
     const description = `${data.city}행 땡처리 항공권 ${data.flights.length}장 판매 중. 왕복 최저 ${data.minPrice.toLocaleString('ko-KR')}원, 출발일 ${formatKoreanDate(data.earliestDate)}~${formatKoreanDate(data.latestDate)}. 하루 7번 갱신됩니다.`;
     const canonical = `/flights/${encodeURIComponent(data.city)}`;
     return {
