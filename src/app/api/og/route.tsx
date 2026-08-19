@@ -5,12 +5,16 @@ export const runtime = 'edge';
 
 // Keep OG rendering independent from Google Fonts so Korean text never falls back to boxes.
 async function getFontData(origin: string) {
-    const res = await fetch(`${origin}/Fonts/NanumGothic-OG.ttf`, { cache: 'no-store' });
-    if (!res.ok) {
-        throw new Error('Failed to fetch font data');
-    }
+    const [regular, extraBold] = await Promise.all([
+        fetch(`${origin}/Fonts/Pretendard-OG-Regular.otf`, { cache: 'no-store' }),
+        fetch(`${origin}/Fonts/Pretendard-OG-ExtraBold.otf`, { cache: 'no-store' }),
+    ]);
+    if (!regular.ok || !extraBold.ok) throw new Error('Failed to fetch Pretendard font data');
 
-    return await res.arrayBuffer();
+    return {
+        regular: await regular.arrayBuffer(),
+        extraBold: await extraBold.arrayBuffer(),
+    };
 }
 
 export async function GET(request: NextRequest) {
@@ -37,8 +41,8 @@ export async function GET(request: NextRequest) {
         interpark: '인터파크',
     };
     const sourceName = sourceNames[source] || source;
-    const longestCityLength = Math.max(dep.length, arr.length);
-    const routeFontSize = longestCityLength >= 8 ? 58 : longestCityLength >= 6 ? 66 : 76;
+    const routeLength = dep.length + arr.length;
+    const routeFontSize = routeLength >= 15 ? 54 : routeLength >= 11 ? 62 : 70;
 
     // Load font data
     const fontData = await getFontData(request.nextUrl.origin).catch((err) => {
@@ -50,79 +54,97 @@ export async function GET(request: NextRequest) {
         (
             <div style={{
                 width: '100%', height: '100%', display: 'flex', flexDirection: 'column',
-                background: 'linear-gradient(135deg, #17133f 0%, #302675 55%, #5547b8 100%)',
-                fontFamily: '"Nanum Gothic", sans-serif', position: 'relative', overflow: 'hidden',
-                padding: '42px 54px',
+                justifyContent: 'center', alignItems: 'center',
+                background: 'linear-gradient(140deg, #241b63 0%, #4537a2 58%, #6757dc 100%)',
+                fontFamily: 'Pretendard', position: 'relative', overflow: 'hidden',
+                padding: '48px 52px',
             }}>
                 <div style={{
-                    position: 'absolute', width: '480px', height: '480px', borderRadius: '50%',
-                    background: 'rgba(255,255,255,0.06)', top: '-270px', right: '-100px', display: 'flex',
+                    position: 'absolute', width: '520px', height: '520px', borderRadius: '50%',
+                    border: '90px solid rgba(255,255,255,0.045)', top: '-330px', right: '-80px', display: 'flex',
                 }} />
                 <div style={{
-                    position: 'absolute', width: '320px', height: '320px', borderRadius: '50%',
-                    background: 'rgba(129,140,248,0.14)', bottom: '-220px', left: '-60px', display: 'flex',
+                    position: 'absolute', width: '360px', height: '360px', borderRadius: '50%',
+                    background: 'rgba(255,255,255,0.045)', bottom: '-245px', left: '-70px', display: 'flex',
                 }} />
 
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <svg width="38" height="38" viewBox="0 0 24 24" fill="none">
-                            <path d="M3.8 11.1 L20.2 2.9 Q22 2 21.2 3.8 L13.8 20.2 Q13 22 12 20.3 L9.5 15.7 Q8.5 14 6.6 13.4 L3.9 12.6 Q2 12 3.8 11.1Z" fill="#ffffff" transform="rotate(8 12 12)" />
-                        </svg>
-                        <span style={{ fontSize: '32px', fontWeight: 700, color: '#ffffff', letterSpacing: '-0.03em' }}>티키티킷</span>
-                    </div>
-                    <div style={{
-                        display: 'flex', padding: '9px 20px', borderRadius: '999px',
-                        background: 'rgba(255,255,255,0.13)', border: '1px solid rgba(255,255,255,0.22)',
-                        fontSize: '20px', fontWeight: 700, color: '#e9e7ff',
-                    }}>여행사 특가 항공권</div>
-                </div>
-
                 <div style={{
-                    flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-                    background: '#ffffff', borderRadius: '30px', padding: '34px 42px 30px',
-                    boxShadow: '0 22px 60px rgba(8, 5, 35, 0.28)',
+                    width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    marginBottom: '24px', padding: '0 10px',
                 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', width: '39%' }}>
-                            <span style={{ fontSize: '20px', color: '#7c7a91', marginBottom: '5px' }}>출발</span>
-                            <span style={{ fontSize: `${routeFontSize}px`, fontWeight: 700, color: '#191633', letterSpacing: '-0.05em', lineHeight: 1.08 }}>{dep}</span>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <span style={{ fontSize: '40px', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.04em' }}>티키티킷</span>
+                    </div>
+                    <span style={{ fontSize: '32px', fontWeight: 800, color: '#ffffff' }}>여행 기회가 도착했습니다</span>
+                </div>
+
+                <div style={{
+                    width: '100%', height: '430px', display: 'flex', position: 'relative',
+                    background: '#fbfaf7', borderRadius: '30px',
+                    boxShadow: '0 24px 70px rgba(9, 5, 40, 0.35)', overflow: 'hidden',
+                }}>
+                    <div style={{ width: '72%', display: 'flex', flexDirection: 'column', padding: '44px 46px 38px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '26px' }}>
+                            <span style={{
+                                display: 'flex', padding: '8px 15px', borderRadius: '999px',
+                                background: '#eeeafd', color: '#5544c7', fontSize: '28px', fontWeight: 800,
+                            }}>왕복 항공권</span>
+                            {sourceName && <span style={{ fontSize: '31px', color: '#4f4a59', marginLeft: '20px', fontWeight: 800 }}>{sourceName}</span>}
                         </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '18%' }}>
-                            <svg width="72" height="44" viewBox="0 0 72 44" fill="none">
-                                <path d="M5 22H65" stroke="#6D5CE8" strokeWidth="3" strokeLinecap="round" strokeDasharray="7 7" />
-                                <path d="M50 8L66 22L50 36" stroke="#6D5CE8" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                            <span style={{ fontSize: '18px', color: '#6d5ce8', fontWeight: 700, marginTop: '5px' }}>왕복</span>
+
+                        <div style={{ display: 'flex', alignItems: 'center', width: '100%', marginBottom: '30px' }}>
+                            <span style={{
+                                fontSize: `${routeFontSize}px`, fontWeight: 800, color: '#1e1938',
+                                letterSpacing: '-0.055em', lineHeight: 1.05, whiteSpace: 'nowrap',
+                            }}>{dep}</span>
+                            <div style={{ display: 'flex', alignItems: 'center', flex: 1, margin: '0 24px' }}>
+                                <div style={{ display: 'flex', height: '2px', flex: 1, background: '#aaa1e6' }} />
+                                <svg width="42" height="42" viewBox="0 0 42 42" fill="none" style={{ margin: '0 9px' }}>
+                                    <path d="M5 21H35M25 11L36 21L25 31" stroke="#6654d9" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                                <div style={{ display: 'flex', height: '2px', flex: 1, background: '#aaa1e6' }} />
+                            </div>
+                            <span style={{
+                                fontSize: `${routeFontSize}px`, fontWeight: 800, color: '#1e1938',
+                                letterSpacing: '-0.055em', lineHeight: 1.05, whiteSpace: 'nowrap',
+                            }}>{arr}</span>
                         </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', width: '39%' }}>
-                            <span style={{ fontSize: '20px', color: '#7c7a91', marginBottom: '5px' }}>도착</span>
-                            <span style={{ fontSize: `${routeFontSize}px`, fontWeight: 700, color: '#191633', letterSpacing: '-0.05em', lineHeight: 1.08 }}>{arr}</span>
+
+                        <div style={{ display: 'flex', alignItems: 'center', marginTop: 'auto', width: '100%' }}>
+                            {date && <span style={{ fontSize: '32px', fontWeight: 800, color: '#302b43' }}>{date}</span>}
+                            {date && airline && <span style={{ fontSize: '28px', color: '#aaa4b3', margin: '0 18px' }}>·</span>}
+                            {airline && <span style={{ fontSize: '32px', fontWeight: 800, color: '#302b43' }}>{airline}</span>}
                         </div>
                     </div>
 
-                    <div style={{ height: '1px', width: '100%', background: '#ebeaf2', display: 'flex' }} />
-
-                    <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', width: '100%' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '11px' }}>
-                            {date && <span style={{ fontSize: '25px', color: '#343149', fontWeight: 700 }}>일정&nbsp;&nbsp;{date}</span>}
-                            <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
-                                {airline && <span style={{ fontSize: '22px', color: '#68657a' }}>{airline}</span>}
-                                {airline && sourceName && <span style={{ fontSize: '19px', color: '#c1bfca' }}>•</span>}
-                                {sourceName && <span style={{ fontSize: '22px', color: '#68657a' }}>{sourceName}</span>}
-                            </div>
+                    <div style={{
+                        width: '28%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+                        alignItems: 'center', padding: '42px 28px 34px', borderLeft: '3px dashed #d8d3e9',
+                        background: '#f5f2ff', position: 'relative',
+                    }}>
+                        <div style={{
+                            position: 'absolute', width: '34px', height: '34px', borderRadius: '50%',
+                            background: '#3d3092', left: '-18px', top: '-17px', display: 'flex',
+                        }} />
+                        <div style={{
+                            position: 'absolute', width: '34px', height: '34px', borderRadius: '50%',
+                            background: '#4e40b7', left: '-18px', bottom: '-17px', display: 'flex',
+                        }} />
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <span style={{ fontSize: '29px', color: '#514c5c', marginBottom: '14px', fontWeight: 800 }}>1인 왕복 예상금액</span>
+                            <span style={{
+                                fontSize: priceText.length >= 9 ? '56px' : '62px', fontWeight: 800,
+                                color: '#5140c6', letterSpacing: '-0.055em', lineHeight: 1.08, whiteSpace: 'nowrap',
+                            }}>{priceText || '가격 확인'}</span>
                         </div>
-                        {priceText && (
-                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                                <span style={{ fontSize: '19px', color: '#777489', marginBottom: '3px' }}>성인 1인 총액</span>
-                                <span style={{ fontSize: '58px', fontWeight: 700, color: '#5b4bd6', letterSpacing: '-0.045em', lineHeight: 1 }}>{priceText}</span>
-                            </div>
-                        )}
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <span style={{ fontSize: '31px', fontWeight: 800, color: '#40394f', letterSpacing: '0.05em' }}>TIKITIKIT.KR</span>
+                        </div>
                     </div>
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 8px 0', color: '#d9d5ff', fontSize: '18px' }}>
-                    <span>오늘은 어디가 싸게 나왔을까요?</span>
-                    <span>가격과 좌석은 실시간으로 변동될 수 있어요</span>
+                <div style={{ width: '100%', display: 'flex', padding: '20px 10px 0' }}>
+                    <span style={{ color: '#ffffff', fontSize: '30px', fontWeight: 800 }}>여행사마다 흩어진 땡처리 항공권을 한곳에서</span>
                 </div>
             </div>
         ),
@@ -132,10 +154,16 @@ export async function GET(request: NextRequest) {
             ...(fontData ? {
                 fonts: [
                     {
-                        name: 'Nanum Gothic',
-                        data: fontData,
+                        name: 'Pretendard',
+                        data: fontData.regular,
                         style: 'normal' as const,
-                        weight: 700,
+                        weight: 400,
+                    },
+                    {
+                        name: 'Pretendard',
+                        data: fontData.extraBold,
+                        style: 'normal' as const,
+                        weight: 800,
                     }
                 ]
             } : {})

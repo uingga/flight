@@ -42,6 +42,7 @@ const SOURCE_NAMES: Record<string, string> = {
     ybtour: '노랑풍선',
     onlinetour: '온라인투어',
     ttang: '땡처리닷컴',
+    myrealtrip: '마이리얼트립',
     interpark: '인터파크',
 };
 
@@ -72,14 +73,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const dateRange = arrDate ? `${depDate}~${arrDate}` : depDate;
     const sourceName = SOURCE_NAMES[flight.source] || flight.source;
 
-    const title = `✈️ ${dep} → ${arr} ${priceText}~ | 티키티킷`;
+    const title = `${dep}에서 ${arr}, 왕복 ${priceText} | 티키티킷`;
     const description = [
-        `${dep} → ${arr}`,
-        priceText + '~',
         dateRange,
         flight.airline,
-        sourceName,
-    ].filter(Boolean).join(' | ');
+        sourceName ? `${sourceName}에서 발견한 땡처리 항공권` : '지금 발견한 땡처리 항공권',
+    ].filter(Boolean).join(' · ');
 
     // OG 이미지 URL — 최소 파라미터
     const ogParams = new URLSearchParams();
