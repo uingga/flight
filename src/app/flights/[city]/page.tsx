@@ -20,7 +20,8 @@ const SOURCE_NAMES: Record<string, string> = {
     onlinetour: '온라인투어', ttang: '땡처리닷컴', myrealtrip: '마이리얼트립',
 };
 
-const MAX_LISTED = 12;
+// 몇 장만 보여주고 나머지는 본 사이트(검색 필터 적용)로 유도한다
+const MAX_LISTED = 5;
 
 function getCity(cityParam: string): CityDeals | undefined {
     const city = decodeURIComponent(cityParam);
@@ -118,11 +119,13 @@ export default function CityFlightsPage({ params }: { params: { city: string } }
                     </li>
                 ))}
             </ul>
-            {data.flights.length > MAX_LISTED && (
-                <p className={styles.more}>
-                    <Link href="/">나머지 {data.flights.length - MAX_LISTED}장은 전체 목록에서 볼 수 있습니다 →</Link>
-                </p>
-            )}
+            <p className={styles.more}>
+                <Link href={`/?q=${encodeURIComponent(data.city)}`} className={styles.cta}>
+                    {/* 대시보드는 기본 날짜 필터(30일)가 걸려 있어 여기의 총 장수와
+                        착지 화면의 장수가 다를 수 있다 — 숫자는 쓰지 않는다 */}
+                    {data.city} 표 전체 보기 →
+                </Link>
+            </p>
 
             <section className={styles.note}>
                 <h2>확인해 두세요</h2>
