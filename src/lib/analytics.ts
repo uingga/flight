@@ -162,6 +162,30 @@ export const trackFilterChange = (filterType: string, value: string) => {
     event('filter_change', { filter_type: filterType, filter_value: value });
 };
 
-export const trackDateFilter = (startDate: string, endDate: string) => {
-    event('date_filter', { start_date: startDate, end_date: endDate });
+/**
+ * Date-range filter applied. Beyond the raw range we derive the shape of demand
+ * (how far ahead, how long a window) and whether the pick actually surfaced flights —
+ * a zero-result pick fires an extra `date_filter_empty` so dead ends are countable.
+ */
+export const trackDateFilter = (
+    startDate: string,
+    endDate: string,
+    extra?: { method?: 'calendar' | 'preset'; presetLabel?: string; resultCount?: number },
+) => {
+    const dayMs = 24 * 60 * 60 * 1000;
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const start = startDate ? new Date(startDate) : null;
+    const end = endDate ? new Date(endDate) : null;
+    event('date_filter', defined({
+        start_date: startDate,
+        end_date: endDate,
+        days_from_now: start ? Math.round((start.getTime() - today.getTime()) / dayMs) : undefined,
+        range_days: start && end ? Math.round((end.getTime() - start.getTime()) / dayMs) + 1 : undefined,
+        method: extra?.method || 'calendar',
+        preset_label: extra?.presetLabel,
+        result_count: extra?.resultCount,
+    }));
+    if (extra?.resultCount === 0) {
+        event('date_filter_empty', defined({ start_date: startDate, end_date: endDate }));
+    }
 };

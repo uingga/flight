@@ -311,6 +311,128 @@
     color: var(--color-text-muted);
 }
 
+/* ===== 달력: 출발일별 표 유무 · 최저가 =====
+   목적지 등 다른 필터가 걸린 상태에서만 값이 들어온다 (기본 화면은 빈 셀). */
+.dayCell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1.05;
+}
+
+.dayPrice {
+    font-size: 0.58rem;
+    font-weight: 600;
+    color: #6366f1;
+    min-height: 0.7em;
+    letter-spacing: -0.02em;
+}
+
+/* 표가 없는 날 — 누를 수는 있지만 비어 있다는 걸 먼저 보이게 한다 */
+.dayNoDeal:not(:global(.react-datepicker__day--disabled)) {
+    opacity: 0.35;
+}
+
+:global(.react-datepicker__day--selected) .dayPrice,
+:global(.react-datepicker__day--in-range) .dayPrice,
+:global(.react-datepicker__day--in-selecting-range) .dayPrice {
+    color: #fff;
+}
+
+.datePresetRow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 12px;
+    border-top: 1px solid #f0f0f0;
+    background: #fff;
+}
+
+.datePresetChip {
+    padding: 6px 11px;
+    border: 1px solid #e5e7eb;
+    border-radius: 999px;
+    background: #fff;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #4b5563;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.datePresetChip:hover {
+    background: #eef2ff;
+    border-color: #c7d2fe;
+    color: #4f46e5;
+}
+
+.dateBasisNote {
+    margin-left: auto;
+    font-size: 0.68rem;
+    color: #9ca3af;
+    white-space: nowrap;
+}
+
+/* 좁은 달력(모바일·고정 바)에서는 칩이 3줄로 늘어나므로 한 단계 압축한다 */
+@media (max-width: 480px) {
+    .datePresetRow {
+        gap: 5px;
+        padding: 9px 10px;
+    }
+
+    .datePresetChip {
+        padding: 5px 9px;
+        font-size: 0.72rem;
+    }
+
+    /* 자기 줄을 차지하지 않게 마지막 칩 뒤로 흘려보낸다 */
+    .dateBasisNote {
+        margin-left: 4px;
+    }
+}
+
+/* ===== 0건일 때 가장 가까운 출발일 안내 ===== */
+.nearestDate {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin: 4px auto 18px;
+    padding: 14px 18px;
+    max-width: 420px;
+    border: 1px solid #e0e7ff;
+    border-radius: 14px;
+    background: #f8faff;
+}
+
+.nearestDateText {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #374151;
+    line-height: 1.55;
+    text-align: center;
+}
+
+.nearestDateText strong {
+    color: #4f46e5;
+}
+
+.nearestDateBtn {
+    padding: 9px 18px;
+    border: none;
+    border-radius: 999px;
+    background: #4f46e5;
+    color: #fff;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.nearestDateBtn:hover {
+    background: #4338ca;
+}
+
 /* Chips */
 .chipGroup {
     display: flex;
