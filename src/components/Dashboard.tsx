@@ -87,6 +87,11 @@ const getSourceName = (source: string) => {
 const DISMISSED_ALERT_ROUTES_KEY = 'tikitikit_dismissed_alert_routes';
 const VISIT_FLIGHT_SNAPSHOT_KEY = 'tikitikit_visit_flight_snapshot_v1';
 
+// 살짝 당기거나 빠르게 스친 동작은 닫기로 이어지지 않게 한다.
+// 화면 크기에 따라 140~180px를 의도적으로 내려야 닫힘 구간에 들어간다.
+const getDetailSheetCloseDistance = (sheetHeight: number) =>
+    Math.min(180, Math.max(140, sheetHeight * 0.28));
+
 // 여행사 크롤 순서가 바뀌면 flight.id의 끝 번호가 달라질 수 있어,
 // 사용자가 보기에 같은 표를 구성하는 값들로 방문 간 비교 키를 만든다.
 const flightDiscoveryKey = (flight: Flight) => [
@@ -1204,7 +1209,7 @@ export default function Dashboard() {
     // 상세 시트 스크롤 힌트 — 화면 밖에 내용이 남아 있는지 사용자가 알 수 있게 한다
     const detailSheetRef = useRef<HTMLDivElement | null>(null);
     const detailSheetInnerRef = useRef<HTMLDivElement | null>(null);
-    const detailDragRef = useRef({ pointerId: -1, startY: 0, lastY: 0, startedAt: 0 });
+    const detailDragRef = useRef({ pointerId: -1, startY: 0, lastY: 0 });
     const detailDragTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const [sheetHasMore, setSheetHasMore] = useState(false);
     const measureSheetScroll = () => {
@@ -1243,7 +1248,7 @@ export default function Dashboard() {
         const sheet = detailSheetRef.current;
         const inner = detailSheetInnerRef.current;
         if (!sheet || !inner) return;
-        const closeDistance = Math.min(110, sheet.clientHeight * 0.2);
+        const closeDistance = getDetailSheetCloseDistance(sheet.clientHeight);
         const resistedOffset = Math.min(16, Math.max(0, offset) * (16 / closeDistance));
         inner.style.transform = `translate3d(0, ${resistedOffset}px, 0)`;
         // 기준을 넘기기 전에는 외곽은 고정하고 내용만 저항감 있게 당긴다.
@@ -1266,7 +1271,6 @@ export default function Dashboard() {
             pointerId: event.pointerId,
             startY: event.clientY,
             lastY: event.clientY,
-            startedAt: performance.now(),
         };
         event.currentTarget.setPointerCapture(event.pointerId);
         sheet.style.animation = 'none';
@@ -1286,13 +1290,11 @@ export default function Dashboard() {
         if (detailDragRef.current.pointerId !== event.pointerId) return;
         const sheet = detailSheetRef.current;
         const offset = Math.max(0, detailDragRef.current.lastY - detailDragRef.current.startY);
-        const elapsed = Math.max(1, performance.now() - detailDragRef.current.startedAt);
-        const velocity = offset / elapsed;
         detailDragRef.current.pointerId = -1;
         try { event.currentTarget.releasePointerCapture(event.pointerId); } catch { /* 이미 해제됨 */ }
 
-        const closeDistance = Math.min(110, (sheet?.clientHeight || 480) * 0.2);
-        const shouldClose = !cancelled && (offset >= closeDistance || (offset >= 60 && velocity >= 0.9));
+        const closeDistance = getDetailSheetCloseDistance(sheet?.clientHeight || 480);
+        const shouldClose = !cancelled && offset >= closeDistance;
         if (!sheet || !shouldClose) {
             resetDetailSheetPosition();
             return;
@@ -1319,7 +1321,6 @@ export default function Dashboard() {
         let dragging = false;
         let startY = 0;
         let lastY = 0;
-        let startedAt = 0;
 
         const onTouchStart = (event: TouchEvent) => {
             if (event.touches.length !== 1 || sheet.scrollTop > 1) return;
@@ -1329,7 +1330,6 @@ export default function Dashboard() {
             dragging = false;
             startY = event.touches[0].clientY;
             lastY = startY;
-            startedAt = performance.now();
         };
 
         const onTouchMove = (event: TouchEvent) => {
@@ -1356,10 +1356,8 @@ export default function Dashboard() {
             if (!dragging) return;
             dragging = false;
             const offset = Math.max(0, lastY - startY);
-            const elapsed = Math.max(1, performance.now() - startedAt);
-            const velocity = offset / elapsed;
-            const closeDistance = Math.min(110, sheet.clientHeight * 0.2);
-            const shouldClose = !cancelled && (offset >= closeDistance || (offset >= 60 && velocity >= 0.9));
+            const closeDistance = getDetailSheetCloseDistance(sheet.clientHeight);
+            const shouldClose = !cancelled && offset >= closeDistance;
             if (!shouldClose) {
                 resetDetailSheetPosition();
                 return;
@@ -3259,7 +3257,7 @@ export default function Dashboard() {
                                 )}
                                 {newSinceLastVisitFilter && (
                                     <span className={styles.filterTag}>
-                                        지난 방문 이후 새 표
+                                        새로 들어온 항공권
                                         <button onClick={() => setNewSinceLastVisitFilter(false)}>×</button>
                                     </span>
                                 )}
@@ -3283,8 +3281,8 @@ export default function Dashboard() {
                                 <div className={styles.newSinceVisitCopy}>
                                     <strong>
                                         {newSinceLastVisitCount > 0
-                                            ? `지난 방문 뒤 새로 들어온 표 ${newSinceLastVisitCount}개`
-                                            : '현재 조건에는 새로 들어온 표가 없어요'}
+                                            ? `지난 방문 뒤 새로 들어온 항공권 ${newSinceLastVisitCount}개`
+                                            : '현재 조건에는 새로 들어온 항공권이 없어요'}
                                     </strong>
                                     <span>지금 보고 있는 조건을 기준으로 찾았습니다.</span>
                                 </div>
@@ -3297,7 +3295,7 @@ export default function Dashboard() {
                                         gtag.trackFilterChange('new_since_last_visit', next ? 'on' : 'off');
                                     }}
                                 >
-                                    {newSinceLastVisitFilter ? '전체 표 보기' : '새 표만 보기'}
+                                    {newSinceLastVisitFilter ? '전체 항공권 보기' : '새 항공권만 보기'}
                                 </button>
                             </div>
                         )}
