@@ -136,7 +136,6 @@ export default function Dashboard() {
     const [showFuelBanner, setShowFuelBanner] = useState(false);
     const sharedRouteFallback = useRef<{ dep: string | null; arr: string | null; date: string | null } | null>(null);
     const openedSharedFlightId = useRef<string | null>(null);
-    const [bookingFlight, setBookingFlight] = useState<Flight | null>(null);
     const [ttangConfirmFlight, setTtangConfirmFlight] = useState<Flight | null>(null);
     const [passengers, setPassengers] = useState({ adult: 1, child: 0, infant: 0 });
     const [bookingDisclaimer, setBookingDisclaimer] = useState<{ source: string; url: string } | null>(null);
@@ -201,7 +200,7 @@ export default function Dashboard() {
 
     // 팝업이 열려 있는 동안 배경(body) 스크롤 잠금
     // (iOS Safari는 overflow:hidden만으로 안 막혀서 position:fixed 방식 사용)
-    const anyModalOpen = !!(bookingFlight || modetourGuide || bookingDisclaimer || naverDisclaimer || ttangConfirmFlight || showContactModal || showPriceAlertManager || showDealAlertSetup);
+    const anyModalOpen = !!(modetourGuide || bookingDisclaimer || naverDisclaimer || ttangConfirmFlight || showContactModal || showPriceAlertManager || showDealAlertSetup);
     useEffect(() => {
         if (!anyModalOpen) return;
         const scrollY = window.scrollY;
@@ -1121,7 +1120,7 @@ export default function Dashboard() {
 
         // 땡처리닷컴: 해당 노선·왕복 날짜의 실시간 검색 결과로 이동
         if (flight.source === 'ttang') {
-            return getTtangBookingUrl(flight, pax);
+            return getTtangBookingUrl(flight);
         }
 
         // 노랑풍선: 해당 노선·왕복 날짜·항공사의 모바일 실시간 검색 결과로 이동
@@ -1129,18 +1128,11 @@ export default function Dashboard() {
             return getYbtourBookingUrl(flight, pax);
         }
 
-        // 온라인투어: eventCode URL에 인원 파라미터 추가
+        // 온라인투어: 예약 페이지가 URL의 인원 파라미터를 완전히 무시하고
+        // 자체 증감 버튼(chdIncrease 등)으로만 인원을 받는다 — 붙여봐야 화면이 달라지지 않아
+        // 인원을 반영하는 것처럼 오해만 남기므로 링크를 그대로 연다.
         if (flight.source === 'onlinetour') {
-            let url = flight.link;
-            // 기존 파라미터가 있으면 교체, 없으면 추가
-            if (url.includes('adt=')) {
-                url = url.replace(/adt=\d+/, `adt=${pax.adult}`);
-            } else {
-                url += `&adt=${pax.adult}`;
-            }
-            if (pax.child > 0) url += `&chd=${pax.child}`;
-            if (pax.infant > 0) url += `&inf=${pax.infant}`;
-            return getMobileUrl(url, isMobile);
+            return getMobileUrl(flight.link, isMobile);
         }
 
         // 마이리얼트립: offers.k1 검색 URL (bridge/marketing return_url 내부, URL-인코딩됨)
@@ -1165,11 +1157,6 @@ export default function Dashboard() {
 
         // 나머지 (ybtour 등): 인원 파라미터 없음
         return getMobileUrl(flight.link, isMobile);
-    };
-
-    const openBookingModal = (flight: Flight) => {
-        setPassengers({ adult: 1, child: 0, infant: 0 });
-        setBookingFlight(flight);
     };
 
     // 면책 팝업 닫기 (타이머 취소 + 미리 열린 빈 창 닫기)
@@ -1390,22 +1377,6 @@ export default function Dashboard() {
     useEffect(() => () => {
         if (detailDragTimerRef.current) clearTimeout(detailDragTimerRef.current);
     }, []);
-
-    const confirmBooking = () => {
-        if (!bookingFlight) return;
-        const url = getBookingUrl(bookingFlight, passengers);
-        const route = `${normalizeCity(bookingFlight.departure.city)}-${normalizeCity(bookingFlight.arrival.city)}`;
-        gtag.trackBookingClick(bookingFlight.source, route, bookingFlight.price, revenueClickDetails(bookingFlight));
-
-        setBookingFlight(null);
-
-        if (!isMobile) {
-            window.open(url, '_blank', 'noopener,noreferrer');
-        } else {
-            // 모바일: 새 탭으로 열기
-            window.open(url, '_blank', 'noopener,noreferrer');
-        }
-    };
 
     // 노랑풍선/온라인투어용: 인원선택 없이 면책조항 팝업 후 자동 이동
     const disclaimerThenRedirect = (flight: Flight) => {
@@ -3792,73 +3763,6 @@ export default function Dashboard() {
 
 
             {/* 인원 선택 모달 */}
-            {bookingFlight && (
-                <div className={styles.modalOverlay} onClick={() => setBookingFlight(null)}>
-                    <div className={styles.modalSheet} onClick={(e) => e.stopPropagation()}>
-                        <div className={styles.modalHeader}>
-                            <h3 className={styles.modalTitle}>탑승 인원 선택</h3>
-                            <button className={styles.modalClose} onClick={() => setBookingFlight(null)}>×</button>
-                        </div>
-                        <div className={styles.modalFlightInfo}>
-                            <span>{normalizeCity(bookingFlight.departure.city)} → {normalizeCity(bookingFlight.arrival.city)}</span>
-                            <span className={styles.modalPrice}>{formatPrice(bookingFlight.price)}/1인</span>
-                        </div>
-                        <div className={styles.paxRows}>
-                            <div className={styles.paxRow}>
-                                <div className={styles.paxLabel}>
-                                    <span className={styles.paxType}>성인</span>
-                                    <span className={styles.paxAge}>만 12세 이상</span>
-                                </div>
-                                <div className={styles.paxCounter}>
-                                    <button className={styles.paxBtn} disabled={passengers.adult <= 1} onClick={() => setPassengers(p => ({ ...p, adult: p.adult - 1 }))}>−</button>
-                                    <span className={styles.paxCount}>{passengers.adult}</span>
-                                    <button className={styles.paxBtn} disabled={passengers.adult >= 9} onClick={() => setPassengers(p => ({ ...p, adult: p.adult + 1 }))}>+</button>
-                                </div>
-                            </div>
-                            <div className={styles.paxRow}>
-                                <div className={styles.paxLabel}>
-                                    <span className={styles.paxType}>소아</span>
-                                    <span className={styles.paxAge}>만 2~11세</span>
-                                </div>
-                                <div className={styles.paxCounter}>
-                                    <button className={styles.paxBtn} disabled={passengers.child <= 0} onClick={() => setPassengers(p => ({ ...p, child: p.child - 1 }))}>−</button>
-                                    <span className={styles.paxCount}>{passengers.child}</span>
-                                    <button className={styles.paxBtn} disabled={passengers.child >= 9} onClick={() => setPassengers(p => ({ ...p, child: p.child + 1 }))}>+</button>
-                                </div>
-                            </div>
-                            <div className={styles.paxRow}>
-                                <div className={styles.paxLabel}>
-                                    <span className={styles.paxType}>유아</span>
-                                    <span className={styles.paxAge}>만 2세 미만</span>
-                                </div>
-                                <div className={styles.paxCounter}>
-                                    <button className={styles.paxBtn} disabled={passengers.infant <= 0} onClick={() => setPassengers(p => ({ ...p, infant: p.infant - 1 }))}>−</button>
-                                    <span className={styles.paxCount}>{passengers.infant}</span>
-                                    <button className={styles.paxBtn} disabled={passengers.infant >= 4} onClick={() => setPassengers(p => ({ ...p, infant: p.infant + 1 }))}>+</button>
-                                </div>
-                            </div>
-                        </div>
-                        <div className={styles.modalTotal}>
-                            <span className={styles.modalTotalLabel}>총 {passengers.adult + passengers.child + passengers.infant}명</span>
-                            <span className={styles.modalTotalPrice}>
-                                {formatPrice(bookingFlight.price * (passengers.adult + passengers.child + passengers.infant))}
-                            </span>
-                        </div>
-                        <div style={{ padding: '0 0 12px', fontSize: '11px', color: '#aaa', lineHeight: 1.6 }}>
-                            <p style={{ margin: 0 }}>
-                                표시된 가격 및 좌석은 실시간 변동될 수 있으며,
-                                실제 예약은 해당 여행사에서 직접 이루어집니다.
-                                티키티킷은 가격 비교 정보를 제공하며,
-                                예약·결제·환불 등에 대한 책임은 해당 여행사에 있습니다.
-                            </p>
-                        </div>
-                        <button className={styles.modalConfirm} onClick={confirmBooking}>
-                            {getSourceName(bookingFlight.source)}에서 예약하기 →
-                        </button>
-                    </div>
-                </div>
-            )}
-
             {/* 항공편 상세 뷰 팝업 (전체 여행사 공용) */}
             {modetourGuide && (() => {
                 const mdt = modetourGuide.modetourDetail;
@@ -4191,8 +4095,13 @@ export default function Dashboard() {
                                     </div>
                                 )}
 
-                                {/* 인원 선택 — 예약 URL이 인원수를 반영하는 여행사만 (모두투어: 딥링크 없음, 온라인투어: 예약 페이지가 인원 파라미터를 무시하고 자체 선택 UI 사용) */}
-                                {modetourGuide.source !== 'modetour' && modetourGuide.source !== 'onlinetour' && (
+                                {/* 인원 선택 — 예약 URL이 인원수를 반영하는 여행사만
+                                    (모두투어: 딥링크 없음,
+                                     온라인투어: 예약 페이지가 인원 파라미터를 무시하고 자체 선택 UI 사용,
+                                     땡처리닷컴: 특가 목록이 인원을 반영하지 않고 고정 1인 기준가만 보여준다.
+                                       게다가 특가 절반이 최소 2인 조건이라 "가격 × 인원" 계산이 실제와 다르다) */}
+                                {modetourGuide.source !== 'modetour' && modetourGuide.source !== 'onlinetour'
+                                    && modetourGuide.source !== 'ttang' && (
                                     <>
                                         <div className={styles.mdtPaxSection}>
                                             <div className={styles.mdtPaxTitle}>탑승 인원</div>
@@ -4332,7 +4241,7 @@ export default function Dashboard() {
                                             const url = getBookingUrl(modetourGuide, passengers);
                                             window.open(url, '_blank', 'noopener,noreferrer');
                                         } else if (modetourGuide.source === 'ttang') {
-                                            const url = getTtangBookingUrl(modetourGuide, passengers);
+                                            const url = getTtangBookingUrl(modetourGuide);
                                             window.open(url, '_blank', 'noopener,noreferrer');
                                         } else {
                                             const url = getMobileUrl(modetourGuide.link, isMobile);
@@ -4515,7 +4424,7 @@ export default function Dashboard() {
                             const f = ttangConfirmFlight;
                             const r = `${normalizeCity(f.departure.city)}-${normalizeCity(f.arrival.city)}`;
                             gtag.trackBookingClick(f.source, r, f.price, revenueClickDetails(f));
-                            const url = getTtangBookingUrl(f, { adult: 1, child: 0, infant: 0 });
+                            const url = getTtangBookingUrl(f);
                             window.open(url, '_blank', 'noopener,noreferrer');
                             setTtangConfirmFlight(null);
                         }}>

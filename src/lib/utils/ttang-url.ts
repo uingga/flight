@@ -1,11 +1,5 @@
 import { Flight } from '@/types/flight';
 
-export interface TtangPassengers {
-    adult: number;
-    child: number;
-    infant: number;
-}
-
 /**
  * 땡처리닷컴 예약 링크 = 해당 출발일의 "땡처리 특가" 목록.
  *
@@ -21,16 +15,20 @@ export interface TtangPassengers {
  * 있던 기능의 개선판. 도시명 대신 가격을 1순위로 쓴다(더 고유해서 정확히 그 항목에 착지;
  * 동적 로딩 목록에서도 매칭되는 것 실측 확인). 도시명은 ttang 원본 표기 그대로 써야 한다
  * (예: 우리 표기 "다카마쓰" ≠ ttang 표기 "다카마츠") — 캐시의 city가 ttang API 원본이므로 그대로 사용.
- * 미지원 브라우저(일부 인앱)에서는 프래그먼트가 조용히 무시되고 안내 문구가 대신한다.
+ * 미지원 브라우저(일부 인앱)에서는 프래그먼트가 조용히 무시된다.
+ *
+ * 인원은 받지 않는다. 특가 목록은 adt/chd/inf를 폼에 넣기만 하고 화면에는 반영하지
+ * 않으며(가격은 고정된 1인 기준가), 특가의 절반은 최소 2인 조건이라 우리가 고른
+ * 인원이 의미를 갖지 못한다. 인원은 땡처리 예약 단계에서 선택된다.
  */
-export function getTtangBookingUrl(flight: Flight, pax: TtangPassengers): string {
+export function getTtangBookingUrl(flight: Flight): string {
     const compactDate = flight.departure.date?.replace(/\D/g, '').slice(0, 8) || '';
     const params = new URLSearchParams({
         trip: 'RT',
         depdate0: compactDate,
-        adt: String(pax.adult),
-        chd: String(pax.child),
-        inf: String(pax.infant),
+        adt: '1',
+        chd: '0',
+        inf: '0',
         page: '1',
         scale: '200',
     });
