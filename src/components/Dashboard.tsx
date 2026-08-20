@@ -3094,12 +3094,15 @@ export default function Dashboard() {
                         onClick={() => setShowFilters(!showFilters)}
                     >
                         <span>
+                            {/* 접힌 상태에서는 '지역'이 출발 쪽인지 도착 쪽인지 읽는 사람이 알 수 없었다.
+                                펼친 뒤의 항목명(출발지 / 도착 지역), 상단 고정 칩(✈️ 출발 / 📍 도착)과
+                                같은 방향 표기를 여기에도 붙인다. */}
                             {departureFilter !== 'all' || regionFilter !== 'all'
                                 ? [
-                                    departureFilter !== 'all' && ('출발지 : ' + (departureFilter === '인천' ? '인천/김포' : departureFilter === '부산' ? '부산/김해' : departureFilter)),
-                                    regionFilter !== 'all' && regionFilter,
+                                    departureFilter !== 'all' && ((departureFilter === '인천' ? '인천/김포' : departureFilter === '부산' ? '부산/김해' : departureFilter) + ' 출발'),
+                                    regionFilter !== 'all' && (regionFilter + ' 도착'),
                                 ].filter(Boolean).join(' · ')
-                                : '출발지 · 지역 선택'}
+                                : '출발지 · 도착 지역 선택'}
                         </span>
                         <span className={`${styles.filterToggleArrow} ${showFilters ? styles.filterToggleArrowOpen : ''}`}>▾</span>
                     </button>
