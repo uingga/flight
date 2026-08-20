@@ -107,6 +107,17 @@ interface GaStatsData {
     generatedAt: string;
     days: number;
     totals: { users: number; pageViews: number; sessions: number };
+    periods: {
+        today: { users: number; pageViews: number; sessions: number };
+        recent7: { users: number; pageViews: number; sessions: number };
+        previous7: { users: number; pageViews: number; sessions: number };
+        current: { users: number; pageViews: number; sessions: number };
+        previous: { users: number; pageViews: number; sessions: number };
+    };
+    returning: {
+        current: { newUsers: number; returningUsers: number; rate: number | null };
+        previous: { newUsers: number; returningUsers: number; rate: number | null };
+    };
     trend: Array<{ date: string; users: number; pageViews: number; sessions: number }>;
     events: Array<{ name: string; label: string; count: number; users: number }>;
     otherEvents: Array<{ name: string; label: string; count: number; users: number }>;
@@ -394,7 +405,7 @@ export default function AdminPage() {
             <section className={styles.section}>
                 <h2>🌐 방문자와 행동 (GA4)</h2>
                 <p className={styles.sectionHelp}>
-                    최근 {gaStats?.days ?? 14}일 기준입니다. GA4는 데이터가 <strong>하루 정도 늦게</strong> 채워지므로
+                    최근 {gaStats?.days ?? 30}일 기준입니다. GA4는 데이터가 <strong>하루 정도 늦게</strong> 채워지므로
                     오늘 숫자는 아직 작게 보일 수 있습니다.
                 </p>
                 {gaStatsError ? (
@@ -407,9 +418,35 @@ export default function AdminPage() {
                     <>
                         <div className={styles.userStatGrid}>
                             <div className={styles.userStat}>
-                                <span>방문자</span>
+                                <span>최근 30일 방문자</span>
                                 <strong>{gaStats.totals.users.toLocaleString()}</strong>
-                                <small>같은 사람이 여러 번 와도 1명</small>
+                                <small>
+                                    {gaStats.periods.current.users - gaStats.periods.previous.users >= 0 ? '+' : ''}
+                                    {(gaStats.periods.current.users - gaStats.periods.previous.users).toLocaleString()}명 · 이전 30일 대비
+                                </small>
+                            </div>
+                            <div className={styles.userStat}>
+                                <span>최근 7일 방문자</span>
+                                <strong>{gaStats.periods.recent7.users.toLocaleString()}</strong>
+                                <small>
+                                    {gaStats.periods.recent7.users - gaStats.periods.previous7.users >= 0 ? '+' : ''}
+                                    {(gaStats.periods.recent7.users - gaStats.periods.previous7.users).toLocaleString()}명 · 이전 7일 대비
+                                </small>
+                            </div>
+                            <div className={styles.userStat}>
+                                <span>오늘 방문자</span>
+                                <strong>{gaStats.periods.today.users.toLocaleString()}</strong>
+                                <small>오늘 데이터는 늦게 반영될 수 있음</small>
+                            </div>
+                            <div className={styles.userStat}>
+                                <span>30일 재방문율</span>
+                                <strong>{gaStats.returning.current.rate !== null ? `${gaStats.returning.current.rate}%` : '-'}</strong>
+                                <small>
+                                    재방문 {gaStats.returning.current.returningUsers.toLocaleString()}명
+                                    {gaStats.returning.current.rate !== null && gaStats.returning.previous.rate !== null
+                                        ? ` · 이전보다 ${(gaStats.returning.current.rate - gaStats.returning.previous.rate) >= 0 ? '+' : ''}${(gaStats.returning.current.rate - gaStats.returning.previous.rate).toFixed(1)}%p`
+                                        : ''}
+                                </small>
                             </div>
                             <div className={styles.userStat}>
                                 <span>방문 횟수</span>
@@ -447,7 +484,7 @@ export default function AdminPage() {
                             </div>
                         </div>
 
-                        <h3 className={styles.userSubTitle}>일별 방문자</h3>
+                        <h3 className={styles.userSubTitle}>최근 30일 일별 방문자 추이</h3>
                         {(() => {
                             const max = Math.max(...gaStats.trend.map(point => point.users), 1);
                             return (
