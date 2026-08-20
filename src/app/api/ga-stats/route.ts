@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ga4Config, runReport, eventNameFilter, dim, num, type Ga4Config, type ReportResponse } from '@/lib/ga4';
 
-const ADMIN_KEY = process.env.ADMIN_KEY || 'tikit2026';
+// 저장소가 공개라 코드에 박아 둔 기본값은 그대로 공개 열쇠가 된다.
+// 환경변수가 없으면 조용히 열리는 대신 인증을 전부 거부한다.
+const ADMIN_KEY = process.env.ADMIN_KEY;
 const DEFAULT_DAYS = 30;
 const CACHE_TTL_MS = 10 * 60 * 1000;
 
@@ -417,7 +419,7 @@ async function buildStats(config: Ga4Config, days: number) {
 }
 
 export async function GET(request: NextRequest) {
-    if (request.nextUrl.searchParams.get('key') !== ADMIN_KEY) {
+    if (!ADMIN_KEY || request.nextUrl.searchParams.get('key') !== ADMIN_KEY) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

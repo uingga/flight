@@ -8,13 +8,45 @@ import { NextRequest, NextResponse } from 'next/server';
  * 서버에서 응답 본문까지 검사하여 만료된 fareId / 0원 결제 감지
  * → 유저는 0원 페이지를 절대 보지 않음
  */
+/**
+ * 이 API가 대신 열어줄 수 있는 곳.
+ *
+ * 예전에는 url 파라미터를 그대로 받아 서버가 조회하고 그 주소로 넘겼다. 그래서
+ * tikitikit.kr 주소로 아무 사이트나 열어줄 수 있었고(피싱에 쓰기 좋은 형태였다),
+ * 서버가 내부망 주소를 대신 조회하게 만들 수도 있었다. 예약 링크가 향하는 곳만
+ * 정확히 일치할 때 통과시킨다.
+ */
+const ALLOWED_HOSTS = new Set([
+    'www.hanatour.com', 'm.hanatour.com', 'hope.hanatour.com',
+    'fly.ybtour.co.kr',
+    'mm.ttang.com',
+    'www.modetour.com',
+    'www.onlinetour.co.kr',
+    'www.myrealtrip.com',
+]);
+
+function isAllowed(raw: string | null): raw is string {
+    if (!raw) return false;
+    try {
+        const parsed = new URL(raw);
+        return parsed.protocol === 'https:' && ALLOWED_HOSTS.has(parsed.hostname);
+    } catch {
+        return false;
+    }
+}
+
 export async function GET(request: NextRequest) {
     const url = request.nextUrl.searchParams.get('url');
-    const fallback = request.nextUrl.searchParams.get('fallback');
+    const rawFallback = request.nextUrl.searchParams.get('fallback');
 
     if (!url) {
         return NextResponse.json({ error: 'url parameter required' }, { status: 400 });
     }
+    if (!isAllowed(url)) {
+        return NextResponse.json({ error: 'url not allowed' }, { status: 400 });
+    }
+    // 폴백도 같은 검사를 거친다. 통과하지 못하면 폴백이 없는 것으로 본다.
+    const fallback = isAllowed(rawFallback) ? rawFallback : null;
 
     try {
         // PC 하나투어 예약 페이지인지 판별

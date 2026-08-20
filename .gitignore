@@ -23,8 +23,10 @@ yarn-debug.log*
 yarn-error.log*
 
 # local env files
-.env
-.env*.local
+# .env 와 .env*.local 만 막던 시절 .env.production 이 규칙을 빠져나가
+# 공개 저장소에 지메일 앱 비밀번호가 6개월간 올라가 있었다.
+.env*
+!.env.example
 
 # vercel
 .vercel
