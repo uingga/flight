@@ -4,6 +4,7 @@ import { getRegionByCity } from '@/lib/utils/region-mapper';
 // logCrawlResults moved to crawl-all.ts
 import { enrichWithRealtimeData, applyEnrichData, RouteKey } from '@/lib/utils/realtime-enrich';
 import { IncompleteScrapeError, ScrapeCompleteness } from './scrape-errors';
+import { survivingRouteMinPrice } from '@/lib/utils/route-min-price';
 
 const randomDelay = (min: number, max: number) =>
     new Promise(r => setTimeout(r, (Math.random() * (max - min) + min) * 1000));
@@ -421,6 +422,9 @@ export async function scrapeYbtour(prevFlights: any[] = []): Promise<Flight[]> {
             const newRouteKeys: RouteKey[] = [];
             const newRouteIndices: number[] = [];
 
+            // 최저가 필터에서 살아남을 표만 보강한다 (버려질 표까지 열면 크롤이 몇 시간씩 늘어진다)
+            const survivors = survivingRouteMinPrice(flights);
+
             for (let i = 0; i < flights.length; i++) {
                 const f = flights[i];
                 const key = `${f.departure?.airport || ''}|${f.arrival?.airport || ''}|${f.departure?.date || ''}|${f.arrival?.date || ''}`;
@@ -433,14 +437,14 @@ export async function scrapeYbtour(prevFlights: any[] = []): Promise<Flight[]> {
                     if (prev.arrival?.time) f.arrival.time = prev.arrival.time;
                     if (prev.arrival?.arrivalTime) (f.arrival as any).arrivalTime = prev.arrival.arrivalTime;
                     carriedOver++;
-                } else if (routeKeys[i]) {
+                } else if (routeKeys[i] && survivors.has(f)) {
                     // 시간 없음 → enrich 대상
                     newRouteKeys.push(routeKeys[i]);
                     newRouteIndices.push(i);
                 }
             }
 
-            console.log(`[노랑풍선] 이전 시간 복사: ${carriedOver}/${flights.length}개, 신규 enrich 대상: ${newRouteKeys.length}개`);
+            console.log(`[노랑풍선] 이전 시간 복사: ${carriedOver}/${flights.length}개, 신규 enrich 대상: ${newRouteKeys.length}개 (최저가 생존 ${survivors.size}건 중)`);
 
             // 신규 노선만 realtime_V2로 보강
             if (newRouteKeys.length > 0) {
