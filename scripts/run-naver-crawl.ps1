@@ -4,7 +4,7 @@
 # every agency. Successful prices refresh by KST calendar date: MyRealTrip daily,
 # other agencies every two days. Failed searches retry after 6 hours.
 #
-# Schedule: daily at 04:00
+# Schedule: daily at 14:30 (Windows task TikitikitNaverCrawl; moved from 04:00 on 2026-08-18)
 # Manual:   powershell -File scripts\run-naver-crawl.ps1
 
 $ErrorActionPreference = 'Continue'
