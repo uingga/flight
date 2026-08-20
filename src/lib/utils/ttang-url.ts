@@ -16,6 +16,12 @@ export interface TtangPassengers {
  * (특가 목록은 dep0/arr0 노선 파라미터를 서버가 무시하므로 노선 필터 착지는 불가능.
  *  대신 scale=200으로 한 페이지에 다 실어 광고한 가격이 반드시 목록에 존재하게 한다.
  *  어떤 항목을 찾을지는 상세 시트의 안내 문구가 알려준다.)
+ *
+ * 텍스트 프래그먼트(#:~:text=)로 해당 항목까지 자동 스크롤+하이라이트한다 — 8/12 이전에도
+ * 있던 기능의 개선판. 도시명 대신 가격을 1순위로 쓴다(더 고유해서 정확히 그 항목에 착지;
+ * 동적 로딩 목록에서도 매칭되는 것 실측 확인). 도시명은 ttang 원본 표기 그대로 써야 한다
+ * (예: 우리 표기 "다카마쓰" ≠ ttang 표기 "다카마츠") — 캐시의 city가 ttang API 원본이므로 그대로 사용.
+ * 미지원 브라우저(일부 인앱)에서는 프래그먼트가 조용히 무시되고 안내 문구가 대신한다.
  */
 export function getTtangBookingUrl(flight: Flight, pax: TtangPassengers): string {
     const compactDate = flight.departure.date?.replace(/\D/g, '').slice(0, 8) || '';
@@ -28,5 +34,12 @@ export function getTtangBookingUrl(flight: Flight, pax: TtangPassengers): string
         page: '1',
         scale: '200',
     });
-    return `https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?${params.toString()}`;
+
+    const fragments: string[] = [];
+    if (flight.price > 0) fragments.push(encodeURIComponent(`${flight.price.toLocaleString('ko-KR')}원`));
+    const rawArrCity = flight.arrival.city?.replace(/\([^)]+\)/g, '').trim();
+    if (rawArrCity) fragments.push(encodeURIComponent(rawArrCity));
+    const textFragment = fragments.length ? `#:~:text=${fragments.join('&text=')}` : '';
+
+    return `https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?${params.toString()}${textFragment}`;
 }

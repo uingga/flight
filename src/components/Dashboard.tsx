@@ -4272,7 +4272,7 @@ export default function Dashboard() {
                                             <span className={styles.mdtTtangNoticeIcon}>🔎</span>
                                             <span>
                                                 예약 페이지는 {fmtDate(modetourGuide.departure.date)} 출발 땡처리 특가 전체 목록이에요(가격 낮은 순).
-                                                목록에서 이 항목을 찾아 예약하세요:{' '}
+                                                이 항목까지 자동으로 이동해 표시해드려요 — 안 되면 직접 찾아주세요:{' '}
                                                 <b>
                                                     {normalizeCity(modetourGuide.departure.city)}({modetourGuide.departure.airport}) → {normalizeCity(modetourGuide.arrival.city)}({modetourGuide.arrival.airport})
                                                     {' · '}{normalizeAirline(modetourGuide.airline) || modetourGuide.airline}
