@@ -4,6 +4,7 @@ import { getRegionByCity } from '@/lib/utils/region-mapper';
 // logCrawlResults moved to crawl-all.ts
 import { enrichWithRealtimeData, applyEnrichData, RouteKey } from '@/lib/utils/realtime-enrich';
 import { IncompleteScrapeError, ScrapeCompleteness } from './scrape-errors';
+import { survivingRouteMinPrice } from '@/lib/utils/route-min-price';
 
 const randomDelay = (min: number, max: number) =>
     new Promise(r => setTimeout(r, (Math.random() * (max - min) + min) * 1000));
@@ -213,6 +214,10 @@ export async function scrapeTtang(prevFlights: any[] = []): Promise<Flight[]> {
             const newRouteKeys: RouteKey[] = [];
             const newRouteIndices: number[] = [];
 
+            // 최저가 필터에서 살아남을 표만 보강한다 — 나머지는 crawl-all이 어차피 버리는데
+            // 노선당 실시간 페이지를 여는 비용이 커서 크롤 전체가 몇 시간씩 늘어졌다.
+            const survivors = survivingRouteMinPrice(allFlights);
+
             for (let i = 0; i < allFlights.length; i++) {
                 const f = allFlights[i];
                 const key = `${f.departure?.airport || ''}|${f.arrival?.airport || ''}|${f.departure?.date || ''}|${f.arrival?.date || ''}`;
@@ -228,13 +233,13 @@ export async function scrapeTtang(prevFlights: any[] = []): Promise<Flight[]> {
                         f.seats = prev.seats;
                     }
                     carriedOver++;
-                } else if (routeKeys[i]) {
+                } else if (routeKeys[i] && survivors.has(f)) {
                     newRouteKeys.push(routeKeys[i]);
                     newRouteIndices.push(i);
                 }
             }
 
-            console.log(`[땅처리] 이전 시간 복사: ${carriedOver}/${allFlights.length}개, 신규 enrich 대상: ${newRouteKeys.length}개`);
+            console.log(`[땅처리] 이전 시간 복사: ${carriedOver}/${allFlights.length}개, 신규 enrich 대상: ${newRouteKeys.length}개 (최저가 생존 ${survivors.size}건 중)`);
 
             // 신규 노선만 realtime_V2로 보강
             if (newRouteKeys.length > 0) {
