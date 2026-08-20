@@ -245,11 +245,9 @@ async function main() {
         console.log(`📅 출발 ${MAX_DAYS}일 초과 항공편 제거: ${removedByDate}개 (${beforeCutoff} → ${cache.flights.length})`);
     }
 
-    // 중간 저장 (Playwright 실패해도 최소한 Calendar 가격은 반영)
-    cache.count = cache.flights.length;
-    cache.lastUpdated = new Date().toISOString();
-    fs.writeFileSync(cachePath, JSON.stringify(cache));
-    console.log('💾 Calendar API 가격으로 중간 저장 완료\n');
+    // Playwright 단계가 비정상 종료되면 기존 운영 캐시를 그대로 보존하기 위해
+    // 모든 검증이 끝날 때까지 파일에는 쓰지 않는다.
+    console.log('💾 Calendar API 결과를 메모리에 보관 (검증 후 최종 저장)\n');
 
     // ── 2단계: Playwright로 실제 가격 보정 ──────────────────
     console.log('🎭 2단계: Playwright로 실제 가격 보정 시작...\n');
@@ -270,6 +268,12 @@ async function main() {
         .map(f => ({ flight: f, gid: gidMap[f.arrival.airport] }));
 
     console.log(`대상: ${tasks.length}개 노선 (gid 있는 마이리얼트립 항공편)`);
+    if (mrtFlights.length === 0) {
+        throw new Error('마이리얼트립 항공편이 0건이므로 기존 캐시를 보존하고 작업을 중단합니다.');
+    }
+    if (tasks.length === 0) {
+        throw new Error(`마이리얼트립 ${mrtFlights.length}건에 조회 가능한 gid/날짜 조합이 없어 작업을 중단합니다.`);
+    }
     // 셔플 (순서 랜덤화)
     const shuffled = shuffle(tasks);
 
@@ -286,7 +290,7 @@ async function main() {
         args: ['--disable-blink-features=AutomationControlled'],
     });
 
-    const results = new Map<string, { price: number; airline: string }>();
+    const results = new Map<string, FlightResult>();
 
     // 1차 실행
     await Promise.all(
@@ -297,7 +301,7 @@ async function main() {
 
     // 2차 재시도: 실패한 노선만
     const failedTasks = tasks.filter(t => !results.has(t.flight.id));
-    if (failedTasks.length > 0 && failedTasks.length < tasks.length) {
+    if (failedTasks.length > 0) {
         console.log(`\n🔄 ${failedTasks.length}개 실패 노선 재시도 중...\n`);
         const retryBrowser = await chromium.launch({
             headless: true,
@@ -311,6 +315,17 @@ async function main() {
         await retryBrowser.close();
         const recovered = failedTasks.length - tasks.filter(t => !results.has(t.flight.id)).length;
         console.log(`✅ 재시도 결과: ${recovered}개 복구 성공`);
+    }
+
+    // 사이트 구조 변경·차단·브라우저 장애처럼 전 노선에 영향을 주는 실패를
+    // 개별 항공권 매진으로 오판하지 않는다. 이 경우 파일을 쓰지 않고 실패로 종료한다.
+    const successRatio = results.size / tasks.length;
+    const minSuccessRatio = Number(process.env.MIN_SUCCESS_RATIO || '0.5');
+    if (successRatio < minSuccessRatio) {
+        throw new Error(
+            `마이리얼트립 대량 조회 실패: ${results.size}/${tasks.length}건 성공 ` +
+            `(${(successRatio * 100).toFixed(1)}%, 최소 ${(minSuccessRatio * 100).toFixed(0)}%). 기존 캐시를 보존합니다.`
+        );
     }
 
     // 캐시 업데이트
@@ -346,18 +361,16 @@ async function main() {
         }
     }
 
-    // Playwright 가격 조회 실패한 노선 = 실제 항공권 없을 가능성 높으므로 삭제
+    // Calendar API에는 존재하지만 Playwright 조회만 실패한 항공편은 삭제하지 않는다.
+    // 일시 차단이나 페이지 변경일 수 있으며, 실제 판매 종료 여부는 다음 Calendar API가 판단한다.
     let skipped = 0;
-    const failedIds = new Set<string>();
     for (const task of tasks) {
         if (!results.has(task.flight.id)) {
             skipped++;
-            failedIds.add(task.flight.id);
         }
     }
     if (skipped > 0) {
-        cache.flights = cache.flights.filter((f: any) => !failedIds.has(f.id));
-        console.log(`\n🗑️ ${skipped}개 노선 Playwright 조회 실패 → 캐시에서 삭제 (예약 불가 가능성 높음)`);
+        console.log(`\n⚠️ ${skipped}개 노선 Playwright 조회 실패 → Calendar API 가격으로 유지`);
     }
 
     // ── 인터파크 벤치마크 필터링 ──────────────────────────────
@@ -432,7 +445,9 @@ async function main() {
     console.log(`보정: ${updated}개 (↑${priceUp} ↓${priceDown})`);
     console.log(`실패: ${tasks.length - results.size}개`);
     if (benchmarkFiltered > 0) console.log(`인터파크 필터: ${benchmarkFiltered}개 제거`);
-    if (naverFiltered > 0) console.log(`네이버 필터: ${naverFiltered}개 제거`);
 }
 
-main().catch(console.error);
+main().catch((error) => {
+    console.error('\n❌ 마이리얼트립 스크래핑 중단:', error);
+    process.exitCode = 1;
+});
