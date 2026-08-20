@@ -101,5 +101,5 @@ jobs:
             echo "✅ 네이버 크롤링 성공"
           else
             echo "❌ 네이버 크롤링 실패 — Xvfb 환경에서 차단되었을 수 있음"
-            echo "💡 로컬 Mac에서 scripts/run-naver-crawl.sh 실행을 권장합니다"
+            echo "💡 로컬 PC의 TikitikitNaverCrawl 작업(매일 14:30, scripts/run-naver-crawl.ps1)이 가정용 IP로 다시 채웁니다"
           fi
