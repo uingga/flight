@@ -6,7 +6,7 @@ import { scrapeOnlineTour } from '../src/lib/scrapers/onlinetour';
 import { scrapeTtang } from '../src/lib/scrapers/ttang';
 import { scrapeMyrealtrip } from '../src/lib/scrapers/myrealtrip';
 import { scrapeInterparkBenchmark, resolveCityCode } from '../src/lib/scrapers/interpark';
-import { logCrawlResults } from '../src/lib/utils/crawl-logger';
+import { logCrawlResults, recordCrawlAlerts } from '../src/lib/utils/crawl-logger';
 import { getEffectivePrice } from '../src/lib/price-quality';
 import fs from 'fs';
 import path from 'path';
@@ -16,6 +16,10 @@ interface CacheData {
     count: number;
     flights: any[];
     sourceUpdatedAt?: Record<string, string>;
+    /** 소스별 연속 실패 횟수 — 어드민이 "며칠째 고장"인지 보여주는 근거 */
+    staleStreak?: Record<string, number>;
+    /** 이번 크롤에서 데이터를 폐기·유지한 이유 (어드민 상단 배너용) */
+    integrityAlerts?: string[];
     sources: {
 
         ybtour: number;
@@ -60,9 +64,9 @@ async function main() {
 
         const scraperTasks = [
             { name: '노랑풍선', key: 'ybtour' as const, fn: () => scrapeYbtour(prevFlights) },
-            { name: '하나투어', key: 'hanatour' as const, fn: () => scrapeHanatour() },
-            { name: '모두투어', key: 'modetour' as const, fn: () => scrapeModetour() },
-            { name: '온라인투어', key: 'onlinetour' as const, fn: () => scrapeOnlineTour() },
+            { name: '하나투어', key: 'hanatour' as const, fn: () => scrapeHanatour(prevFlights) },
+            { name: '모두투어', key: 'modetour' as const, fn: () => scrapeModetour(prevFlights) },
+            { name: '온라인투어', key: 'onlinetour' as const, fn: () => scrapeOnlineTour(prevFlights) },
             { name: '땡처리닷컴', key: 'ttang' as const, fn: () => scrapeTtang(prevFlights) },
             // 마이리얼트립은 별도 Playwright 워크플로우(myrealtrip-scrape.yml)에서 처리
             // Bulk API는 시간/가격 정보가 부정확하므로 여기서 실행하지 않음
@@ -70,30 +74,100 @@ async function main() {
 
         const results = await Promise.allSettled(scraperTasks.map(t => t.fn()));
 
+        // 채택 여부는 아래 무결성 검사에서 정하므로, 여기서는 결과만 모아 둔다
+        const scraped: Partial<Record<SourceKey, any[]>> = {};
+        const scrapeFailures: Partial<Record<SourceKey, string>> = {};
+        const attempted = new Set<SourceKey>(scraperTasks.map(t => t.key));
         results.forEach((result, i) => {
             const task = scraperTasks[i];
             if (result.status === 'fulfilled') {
-                allFlights.push(...result.value);
-                sources[task.key] = result.value.length;
-                if (result.value.length > 0) sourceUpdatedAt[task.key] = new Date().toISOString();
+                scraped[task.key] = result.value;
                 console.log(`✅ ${task.name}: ${result.value.length}개`);
             } else {
-                console.error(`❌ ${task.name} 실패:`, result.reason);
+                const reason = result.reason instanceof Error ? result.reason.message : String(result.reason);
+                scrapeFailures[task.key] = reason;
+                console.error(`❌ ${task.name} 실패:`, reason);
             }
         });
 
-
-        // 소스별 실패 시 이전 데이터 복구
+        // 소스별 무결성 검사 — 0건뿐 아니라 "급감"도 실패로 본다.
+        //
+        // 스크래퍼가 지역 탭 하나를 못 열면 그 지역만 통째로 빠진 채 정상 종료한다
+        // (노랑풍선 아시아 탭이 실패해 250건→87건이 되는 일이 최근 8일 94회 중 7회).
+        // 이때 결과가 0이 아니므로 예전 조건은 이를 잡지 못했고, 반쪽짜리 결과가
+        // 멀쩡한 캐시를 덮어 동남아·중국 항공권이 사이트에서 사라졌다.
+        //
+        // 의심스러운 값은 시간이 지나도 자동으로 받아들이지 않는다. 고장을 시간으로
+        // 덮으면 여행사가 사이트를 바꿔 스크래퍼가 죽어도 그대로 굳어버리기 때문이다.
+        // 대신 이전 데이터를 지키고, 몇 회 연속 문제인지까지 경고에 담아 사람이 고치게 한다.
         const sourceNames = ['ybtour', 'hanatour', 'modetour', 'onlinetour', 'ttang', 'myrealtrip'] as const;
+        type SourceKey = typeof sourceNames[number];
+        const DROP_RATIO = 0.6;              // 직전의 60% 미만이면 의심
+        const MIN_BASELINE = 30;             // 원래 적은 소스는 흔들림이 커서 제외
+        const integrityWarnings: string[] = [];
+        const staleStreak: Record<string, number> = { ...(prevCache?.staleStreak || {}) };
+
         for (const src of sourceNames) {
-            if (sources[src] === 0 && prevCache?.flights) {
-                const srcPrevFlights = prevCache.flights.filter((f: any) => f.source === src);
-                if (srcPrevFlights.length > 0) {
-                    console.log(`⚠️ ${src} 실패 → 이전 캐시 ${srcPrevFlights.length}개 유지`);
+            const fresh = scraped[src];
+            const srcPrevFlights = (prevCache?.flights || []).filter((f: any) => f.source === src);
+            const prevCount = srcPrevFlights.length;
+            const freshCount = fresh?.length ?? 0;
+
+            const keepPrevious = (reason: string, alertText?: string) => {
+                staleStreak[src] = (staleStreak[src] || 0) + 1;
+                const streak = staleStreak[src];
+                const suffix = streak > 1 ? ` — ${streak}회 연속` : '';
+                console.log(`⚠️ ${src} ${reason} → 이전 캐시 ${prevCount}개 유지${suffix}`);
+                if (alertText) integrityWarnings.push(`${alertText}${suffix}`);
+                allFlights.push(...srcPrevFlights);
+                sources[src] = prevCount;
+                // sourceUpdatedAt은 갱신하지 않는다 — 어드민에서 "며칠째 안 갱신"이 보여야 한다
+            };
+
+            // 여기서 안 돌린 소스(마이리얼트립)는 별도 워크플로우 담당이라 조용히 이어받는다
+            if (!attempted.has(src)) {
+                if (prevCount > 0) {
                     allFlights.push(...srcPrevFlights);
-                    sources[src] = srcPrevFlights.length;
+                    sources[src] = prevCount;
                 }
+                continue;
             }
+
+            // 스크래퍼가 예외로 끝남 (불완전 수집 포함) — 데이터를 믿을 수 없다
+            if (fresh === undefined) {
+                if (prevCount > 0) {
+                    keepPrevious('수집 실패', `🚨 ${src} 수집 실패로 이전 데이터 유지: ${scrapeFailures[src] || '알 수 없는 오류'}`);
+                } else {
+                    integrityWarnings.push(`🚨 ${src} 수집 실패 (복구할 이전 데이터 없음): ${scrapeFailures[src] || '알 수 없는 오류'}`);
+                }
+                continue;
+            }
+
+            // 0건은 명백한 실패 — 예전부터 이전 데이터를 지켜 왔다
+            if (freshCount === 0 && prevCount > 0) {
+                keepPrevious('0건 수집', `🚨 ${src} 0건 수집 — 스크래퍼 점검 필요`);
+                continue;
+            }
+
+            // 급감은 지역 탭 하나가 빠진 반쪽 결과일 가능성이 크다
+            if (freshCount > 0 && prevCount >= MIN_BASELINE && freshCount < prevCount * DROP_RATIO) {
+                keepPrevious(
+                    `급감 의심 (${prevCount}건 → ${freshCount}건)`,
+                    `🚨 ${src} 급감으로 새 데이터 폐기 (${prevCount}건 → ${freshCount}건) — 스크래퍼 점검 필요`,
+                );
+                continue;
+            }
+
+            staleStreak[src] = 0;
+            allFlights.push(...fresh);
+            sources[src] = freshCount;
+            if (freshCount > 0) sourceUpdatedAt[src] = new Date().toISOString();
+        }
+
+        if (integrityWarnings.length > 0) {
+            console.log(`\n🚨 무결성 경고 ${integrityWarnings.length}건 — 스크래퍼 점검 필요`);
+            integrityWarnings.forEach(w => console.log(`   ${w}`));
+            recordCrawlAlerts(integrityWarnings);
         }
 
         // 통합 크롤링 로그 기록 (병렬 실행 후 한 번에)
@@ -313,6 +387,8 @@ async function main() {
                 flights: benchmarkedFlights,
                 sources: sources,
                 sourceUpdatedAt,
+                staleStreak,
+                integrityAlerts: integrityWarnings,
                 priceHistory: history,
             };
 

@@ -1,5 +1,6 @@
 import { Flight } from '@/types/flight';
 import { getRegionByCity } from '@/lib/utils/region-mapper';
+import { IncompleteScrapeError, ScrapeCompleteness } from './scrape-errors';
 // logCrawlResults moved to crawl-all.ts
 
 /**
@@ -34,7 +35,17 @@ const getContinentByArrivalCode = (code: string): string | null => {
  * URL: https://b2c-api.modetour.com/DiscountFlight/GetList
  * 인증: ModeEcommerceContext 쿠키에서 ApiKey 추출 → modewebapireqheader 헤더로 전달
  */
-export async function scrapeModetour(): Promise<Flight[]> {
+/** 모두투어 대륙 코드 → 우리 지역 표기 (수집 실패 판정에 쓴다) */
+const CONTINENT_REGIONS: Record<string, string[]> = {
+    ASIA: ['동남아', '기타'],
+    JPN: ['일본'],
+    CHI: ['중국'],
+    EUR: ['유럽'],
+    AMCA: ['미주'],
+    SOPA: ['남태평양'],
+};
+
+export async function scrapeModetour(prevFlights: any[] = []): Promise<Flight[]> {
     try {
         // 1단계: 모두투어 웹사이트에서 ApiKey 획득
         console.log('모두투어 ApiKey 획득 중...');
@@ -159,6 +170,8 @@ export async function scrapeModetour(): Promise<Flight[]> {
 
         // 모든 대륙 코드 (모드투어 API에서 사용하는 실제 코드들)
         const continentCodes = ['ASIA', 'JPN', 'CHI', 'EUR', 'AMCA', 'SOPA'];
+        // 대륙 API 하나가 실패해도 나머지가 채워져 정상처럼 보인다 — 실패 구간을 모아 끝에서 판정한다
+        const completeness = new ScrapeCompleteness('모두투어', 'modetour', prevFlights);
         const allFlights: Flight[] = [];
 
         // 각 대륙별로 데이터 가져오기
@@ -191,6 +204,11 @@ export async function scrapeModetour(): Promise<Flight[]> {
 
             if (!response.ok) {
                 console.error(`모두투어 ${continentCode} API 호출 실패:`, response.status);
+                const regions = CONTINENT_REGIONS[continentCode] || [];
+                completeness.recordFailure(
+                    `${continentCode} (HTTP ${response.status})`,
+                    f => regions.includes(f.region || getRegionByCity(f.arrival?.city || '')),
+                );
                 continue; // 다음 대륙으로 계속
             }
 
@@ -300,6 +318,7 @@ export async function scrapeModetour(): Promise<Flight[]> {
         }
 
         console.log(`모두투어에서 총 ${allFlights.length}개의 항공권을 가져왔습니다.`);
+        completeness.assertComplete(allFlights.length);
 
         const cityStats: { [city: string]: number } = {};
         allFlights.forEach(f => { cityStats[f.arrival.city] = (cityStats[f.arrival.city] || 0) + 1; });
@@ -308,6 +327,8 @@ export async function scrapeModetour(): Promise<Flight[]> {
         return allFlights;
     } catch (error) {
         console.error('모두투어 스크래핑 오류:', error);
+        // 불완전 수집은 호출부가 알아야 이전 캐시를 지킬 수 있으므로 삼키지 않는다
+        if (error instanceof IncompleteScrapeError) throw error;
         return [];
     }
 }

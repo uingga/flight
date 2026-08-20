@@ -2,6 +2,7 @@
 import { chromium } from 'playwright';
 import { Flight } from '@/types/flight';
 import { getRegionByCity } from '@/lib/utils/region-mapper';
+import { ScrapeCompleteness } from './scrape-errors';
 // logCrawlResults moved to crawl-all.ts
 
 const randomDelay = (min: number, max: number) =>
@@ -17,10 +18,13 @@ const REGIONS = [
     { code: 'GS', name: '괌/사이판' },
 ];
 
-export async function scrapeOnlineTour(): Promise<Flight[]> {
+export async function scrapeOnlineTour(prevFlights: any[] = []): Promise<Flight[]> {
     console.log('온라인투어 크롤링 시작...');
     const browser = await chromium.launch({ headless: true });
     const flights: Flight[] = [];
+    // 지역 페이지·도시 목록이 조용히 실패하면 결과가 반쪽이 된다
+    // (2026-08-20 오후: 81건→13건, 13개 도시→6개). 실패 구간을 모아 끝에서 판정한다.
+    const completeness = new ScrapeCompleteness('온라인투어', 'onlinetour', prevFlights);
 
     try {
         const context = await browser.newContext({
@@ -54,7 +58,10 @@ export async function scrapeOnlineTour(): Promise<Flight[]> {
                 try {
                     await page.waitForSelector('input[name="city"]', { timeout: 5000 });
                 } catch (e) {
-                    console.log(`  ${region.name}: 도시 목록 로드 실패`);
+                    completeness.recordFailure(
+                        `${region.name} 지역 도시 목록`,
+                        f => f.region === region.name || getRegionByCity(f.arrival?.city || '') === region.name,
+                    );
                     continue;
                 }
 
@@ -112,8 +119,11 @@ export async function scrapeOnlineTour(): Promise<Flight[]> {
                         }
 
                         if (!listLoaded) {
-                            console.log(`    ${city.name}: 목록 로드 최종 실패. 스크린샷 저장.`);
-                            await page.screenshot({ path: `debug_onlinetour_fail_${city.code}.png` });
+                            await page.screenshot({ path: `debug_onlinetour_fail_${city.code}.png` }).catch(() => { });
+                            completeness.recordFailure(
+                                `${city.name}(${city.code}) 목록`,
+                                f => f.arrival?.airport === city.code,
+                            );
                             continue;
                         }
 
@@ -312,6 +322,7 @@ export async function scrapeOnlineTour(): Promise<Flight[]> {
     }
 
     console.log(`온라인투어 완료: 총 ${flights.length}건`);
+    completeness.assertComplete(flights.length);
 
     // 지역별 수집 결과 검증
     const regionCounts: Record<string, number> = {};

@@ -3,6 +3,7 @@ import { Flight } from '@/types/flight';
 import { getRegionByCity } from '@/lib/utils/region-mapper';
 // logCrawlResults moved to crawl-all.ts
 import { enrichWithRealtimeData, applyEnrichData, RouteKey } from '@/lib/utils/realtime-enrich';
+import { IncompleteScrapeError, ScrapeCompleteness } from './scrape-errors';
 
 const randomDelay = (min: number, max: number) =>
     new Promise(r => setTimeout(r, (Math.random() * (max - min) + min) * 1000));
@@ -69,6 +70,10 @@ export async function scrapeTtang(prevFlights: any[] = []): Promise<Flight[]> {
         // ===== Phase 1: 프로모션 API로 기본 데이터 수집 =====
         console.log('[땡처리] Phase 1: 프로모션 API 수집');
 
+        // 날짜 하나가 실패하면 그날 특가가 통째로 빠진 채 정상 종료한다.
+        // 직전 크롤에 그 출발일 항공권이 있었다면 고장으로 본다.
+        const completeness = new ScrapeCompleteness('땡처리닷컴', 'ttang', prevFlights);
+
         const today = new Date();
         const endDate = new Date(today);
         endDate.setMonth(endDate.getMonth() + 1);
@@ -113,6 +118,10 @@ export async function scrapeTtang(prevFlights: any[] = []): Promise<Flight[]> {
                 }, dateParam);
 
                 if (!apiData?.response || !Array.isArray(apiData.response)) {
+                    completeness.recordFailure(
+                        `${dateParam} 출발`,
+                        f => (f.departure?.date || '').replace(/-/g, '') === dateParam,
+                    );
                     currentDate.setDate(currentDate.getDate() + 1);
                     continue;
                 }
@@ -178,6 +187,10 @@ export async function scrapeTtang(prevFlights: any[] = []): Promise<Flight[]> {
                 }
             } catch (error) {
                 console.error(`[땡처리] ${dateParam} 실패:`, error instanceof Error ? error.message : error);
+                completeness.recordFailure(
+                    `${dateParam} 출발`,
+                    f => (f.departure?.date || '').replace(/-/g, '') === dateParam,
+                );
             }
 
             currentDate.setDate(currentDate.getDate() + 1);
@@ -185,6 +198,7 @@ export async function scrapeTtang(prevFlights: any[] = []): Promise<Flight[]> {
         }
 
         console.log(`[땡처리] Phase 1 완료: ${totalDays}일 순회, ${allFlights.length}개 수집`);
+        completeness.assertComplete(allFlights.length);
 
         // ===== Phase 2: 이전 캐시에서 시간 복사 + 신규만 realtime_V2 보강 =====
         if (allFlights.length > 0) {
@@ -235,6 +249,8 @@ export async function scrapeTtang(prevFlights: any[] = []): Promise<Flight[]> {
 
     } catch (error) {
         console.error('[땡처리] 크롤링 오류:', error);
+        // 불완전 수집은 호출부가 알아야 이전 캐시를 지킬 수 있으므로 삼키지 않는다
+        if (error instanceof IncompleteScrapeError) throw error;
     } finally {
         await browser.close();
     }
