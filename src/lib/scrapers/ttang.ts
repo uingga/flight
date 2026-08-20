@@ -2,7 +2,7 @@ import { chromium } from 'playwright';
 import { Flight } from '@/types/flight';
 import { getRegionByCity } from '@/lib/utils/region-mapper';
 // logCrawlResults moved to crawl-all.ts
-import { enrichWithRealtimeData, applyEnrichData, toHyphenDate, RouteKey } from '@/lib/utils/realtime-enrich';
+import { enrichWithRealtimeData, applyEnrichData, RouteKey } from '@/lib/utils/realtime-enrich';
 
 const randomDelay = (min: number, max: number) =>
     new Promise(r => setTimeout(r, (Math.random() * (max - min) + min) * 1000));
@@ -133,11 +133,10 @@ export async function scrapeTtang(prevFlights: any[] = []): Promise<Flight[]> {
                     const depInfo = DEP_CITY_MAP[item.depCityCode] || { city: item.depCityDesc || '서울', airport: item.depCityCode || 'ICN' };
                     const depDateRaw = (item.departureDate || '').replace(/-/g, '');
                     const arrDateRaw = (item.arrivalDate || '').replace(/-/g, '');
-                    const depDateHyphen = toHyphenDate(depDateRaw);
-                    const arrDateHyphen = toHyphenDate(arrDateRaw);
-
-                    // realtime_V2 링크 (시간/좌석 데이터가 있는 페이지)
-                    const link = `https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=${item.depCityCode}&arr0=${item.arrCityCode}&depdate0=${depDateHyphen}&dep1=${item.arrCityCode}&arr1=${item.depCityCode}&depdate1=${arrDateHyphen}&adt=1&chd=0&inf=0&comp=Y`;
+                    // 예약 링크는 해당 출발일의 "땡처리 특가" 목록으로 보낸다.
+                    // 이 가격은 특가 API에서 온 것이라 일반 실시간 검색(realtime_V2)에는 없다 —
+                    // 실시간 검색으로 보내면 광고한 가격이 페이지에 존재하지 않는다. (시간 보강은 routeKeys로 별도 수행)
+                    const link = `https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=${depDateRaw}&adt=1&chd=0&inf=0&page=1&scale=200`;
                     const searchLink = link;
 
                     const flight: Flight = {

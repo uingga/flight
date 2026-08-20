@@ -6,71 +6,27 @@ export interface TtangPassengers {
     infant: number;
 }
 
+/**
+ * 땡처리닷컴 예약 링크 = 해당 출발일의 "땡처리 특가" 목록.
+ *
+ * 우리가 보여주는 가격은 특가 프로모션 API(allTtangListAct)에서 온 것이라
+ * 일반 실시간 운임 검색(realtime_V2)에는 그 가격이 아예 없다 — 2026-08-12에
+ * 노선별 착지를 노리고 realtime_V2로 바꿨다가, 가격이 96% 정확한데도
+ * "티키티킷 가격이 거짓"으로 보이는 회귀가 생겨 특가 목록으로 되돌렸다.
+ * (특가 목록은 dep0/arr0 노선 파라미터를 서버가 무시하므로 노선 필터 착지는 불가능.
+ *  대신 scale=200으로 한 페이지에 다 실어 광고한 가격이 반드시 목록에 존재하게 한다.
+ *  어떤 항목을 찾을지는 상세 시트의 안내 문구가 알려준다.)
+ */
 export function getTtangBookingUrl(flight: Flight, pax: TtangPassengers): string {
-    const dateParam = (value: string | undefined) => {
-        const digits = value?.replace(/\D/g, '').slice(0, 8) || '';
-        return digits.length === 8
-            ? `${digits.slice(0, 4)}-${digits.slice(4, 6)}-${digits.slice(6, 8)}`
-            : '';
-    };
-    const cityName = (city: string | undefined, airport: string | undefined) => {
-        const base = city?.replace(/\([^)]+\)/g, '').trim() || '';
-        if (airport === 'ICN' && (base === '서울' || base === '인천')) return '인천';
-        if (airport === 'GMP' && (base === '서울' || base === '김포')) return '김포';
-        return base;
-    };
-
-    const depCode = flight.departure.airport || '';
-    const arrCode = flight.arrival.airport || '';
-    const depDate = dateParam(flight.departure.date);
-    const returnDate = dateParam(flight.arrival.date);
-
-    // 크롤러가 저장한 realtime_V2 주소를 우선 사용한다. 노선·왕복 날짜가 모두 들어 있어
-    // 같은 출발일의 전체 프로모션 목록이 아니라 해당 여정의 소수 결과만 표시된다.
-    const storedUrl = flight.link || flight.searchLink || '';
-    if (storedUrl.includes('/ttangair/search/realtime_V2/list.do')) {
-        try {
-            const url = new URL(storedUrl);
-            url.searchParams.set('adt', String(pax.adult));
-            url.searchParams.set('chd', String(pax.child));
-            url.searchParams.set('inf', String(pax.infant));
-            if (depCode) url.searchParams.set('dep0', depCode);
-            if (arrCode) url.searchParams.set('arr0', arrCode);
-            if (depDate) url.searchParams.set('depdate0', depDate);
-            if (arrCode) url.searchParams.set('dep1', arrCode);
-            if (depCode) url.searchParams.set('arr1', depCode);
-            if (returnDate) url.searchParams.set('depdate1', returnDate);
-            url.searchParams.set('dep0Name', cityName(flight.departure.city, depCode));
-            url.searchParams.set('arr0Name', cityName(flight.arrival.city, arrCode));
-            url.searchParams.set('dep1Name', cityName(flight.arrival.city, arrCode));
-            url.searchParams.set('arr1Name', cityName(flight.departure.city, depCode));
-            url.searchParams.set('comp', 'Y');
-            return url.toString();
-        } catch { /* 아래의 재구성 주소 사용 */ }
-    }
-
-    if (depCode && arrCode && depDate && returnDate) {
-        const params = new URLSearchParams({
-            trip: 'RT',
-            dep0: depCode,
-            arr0: arrCode,
-            dep0Name: cityName(flight.departure.city, depCode),
-            arr0Name: cityName(flight.arrival.city, arrCode),
-            depdate0: depDate,
-            dep1: arrCode,
-            arr1: depCode,
-            dep1Name: cityName(flight.arrival.city, arrCode),
-            arr1Name: cityName(flight.departure.city, depCode),
-            depdate1: returnDate,
-            adt: String(pax.adult),
-            chd: String(pax.child),
-            inf: String(pax.infant),
-            comp: 'Y',
-        });
-        return `https://mm.ttang.com/ttangair/search/realtime_V2/list.do?${params.toString()}`;
-    }
-
-    // 오래된 캐시에 상세 정보가 없을 때만 기존 날짜별 목록으로 안전하게 폴백한다.
-    const compactDepDate = depDate.replace(/-/g, '');
-    return `https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=${compactDepDate}&adt=${pax.adult}&chd=${pax.child}&inf=${pax.infant}&page=1&scale=200`;
+    const compactDate = flight.departure.date?.replace(/\D/g, '').slice(0, 8) || '';
+    const params = new URLSearchParams({
+        trip: 'RT',
+        depdate0: compactDate,
+        adt: String(pax.adult),
+        chd: String(pax.child),
+        inf: String(pax.infant),
+        page: '1',
+        scale: '200',
+    });
+    return `https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?${params.toString()}`;
 }
