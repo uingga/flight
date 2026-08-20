@@ -126,7 +126,7 @@ export async function GET(request: NextRequest) {
         // 크롤링 히스토리 로드
         let crawlHistory: Array<{
             timestamp: string;
-            sites: Record<string, { total: number }>;
+            sites: Record<string, { total: number; scraped?: number; preserved?: boolean }>;
             alerts: string[];
         }> = [];
         try {
@@ -170,6 +170,10 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({
             timestamp,
             totalFlights: flights.length,
+            // 여행사별 마지막 성공 갱신 시각과 연속 실패 횟수. 무결성 가드가 새 결과를 폐기하면
+            // sourceUpdatedAt이 멈추므로, 어느 여행사가 며칠째 굳어 있는지 여기서 드러난다.
+            sourceUpdatedAt: (cache.sourceUpdatedAt || {}) as Record<string, string>,
+            staleStreak: (cache.staleStreak || {}) as Record<string, number>,
             naverStatus,
             bySource,
             byRegion,
