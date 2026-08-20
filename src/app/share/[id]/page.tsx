@@ -63,7 +63,7 @@ const SOURCE_NAMES: Record<string, string> = {
 // 외부 글에 이미 게시된 공유 주소는 유지하면서, 판매가 끝난 상품을
 // 현재 판매 중인 동일 일정 상품으로 넘긴다.
 const SHARE_ID_ALIASES: Record<string, string> = {
-    'online-260831116869': 'ttang-9G0455ICNPQC-G3-2026-08-31',
+    'online-260831116869': 'online-260830116868',
 };
 
 function resolveShareId(id: string): string {
