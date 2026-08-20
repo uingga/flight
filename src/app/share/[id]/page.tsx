@@ -1,7 +1,6 @@
 import { Metadata } from 'next';
-import fs from 'node:fs';
-import path from 'node:path';
 import { SITE_URL } from '@/lib/site';
+import shareSnapshots from '../../../../data/share-snapshots.json';
 
 type Props = {
     params: Promise<{ id: string }>;
@@ -18,13 +17,7 @@ type ShareSnapshot = {
 };
 
 function getShareSnapshot(id: string): ShareSnapshot | null {
-    try {
-        const file = path.join(process.cwd(), 'data', 'share-snapshots.json');
-        const snapshots = JSON.parse(fs.readFileSync(file, 'utf8')) as Record<string, ShareSnapshot>;
-        return snapshots[id] || null;
-    } catch {
-        return null;
-    }
+    return (shareSnapshots as Record<string, ShareSnapshot>)[id] || null;
 }
 
 // 캐시에서 항공편 조회
