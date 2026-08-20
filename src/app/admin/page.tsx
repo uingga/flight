@@ -220,6 +220,28 @@ function formatPrice(price: number): string {
     return `${price.toLocaleString()}원`;
 }
 
+/**
+ * 어드민 키를 브라우저에 남겨 새로고침마다 다시 입력하지 않게 한다.
+ *
+ * 이 키는 이미 모든 어드민 API 호출에 `?key=`로 실려 URL에 노출되므로,
+ * localStorage 보관이 기존 방식보다 노출을 늘리지 않는다. 대신 키가 바뀌거나
+ * 인증에 실패하면 즉시 지우고, 공용 PC를 위해 로그아웃 버튼을 둔다.
+ */
+const ADMIN_KEY_STORAGE = 'tikitikit_admin_key';
+
+const readSavedKey = (): string => {
+    if (typeof window === 'undefined') return '';
+    try { return window.localStorage.getItem(ADMIN_KEY_STORAGE) || ''; } catch { return ''; }
+};
+
+const saveKey = (value: string) => {
+    try { window.localStorage.setItem(ADMIN_KEY_STORAGE, value); } catch { /* 저장 불가여도 이번 세션은 정상 동작 */ }
+};
+
+const clearSavedKey = () => {
+    try { window.localStorage.removeItem(ADMIN_KEY_STORAGE); } catch { /* noop */ }
+};
+
 export default function AdminPage() {
     const [data, setData] = useState<AdminData | null>(null);
     const [loading, setLoading] = useState(true);
@@ -237,7 +259,8 @@ export default function AdminPage() {
     useEffect(() => {
         setAnalyticsExcludedState(isAnalyticsExcluded());
         const params = new URLSearchParams(window.location.search);
-        const urlKey = params.get('key');
+        // URL의 key가 우선 (공유받은 링크로 들어온 경우), 없으면 지난번에 저장해 둔 키로 자동 로그인
+        const urlKey = params.get('key') || readSavedKey();
         if (urlKey) {
             setKey(urlKey);
             setAuthed(true);
@@ -252,6 +275,8 @@ export default function AdminPage() {
         try {
             const crawlRes = await fetch(`/api/crawl-log?key=${encodeURIComponent(authKey)}`);
             if (crawlRes.status === 401) {
+                // 키가 바뀐 뒤 옛 키로 자동 로그인이 반복되지 않도록 지운다
+                clearSavedKey();
                 setError('인증 실패: 올바른 키를 입력해주세요.');
                 setAuthed(false);
                 setLoading(false);
@@ -306,6 +331,7 @@ export default function AdminPage() {
 
             setAuthed(true);
             setError(null);
+            saveKey(authKey);
             setAnalyticsExcluded(true);
             setAnalyticsExcludedState(true);
 
@@ -371,11 +397,48 @@ export default function AdminPage() {
     return (
         <div className={styles.container}>
             <header className={styles.header}>
-                <h1>📊 크롤링 모니터</h1>
+                <div className={styles.headerRow}>
+                    <h1>📊 크롤링 모니터</h1>
+                    <button
+                        type="button"
+                        className={styles.logoutBtn}
+                        onClick={() => {
+                            clearSavedKey();
+                            setAuthed(false);
+                            setKey('');
+                            setData(null);
+                            // ?key= 가 남아 있으면 새로고침 때 다시 자동 로그인된다
+                            window.history.replaceState(null, '', window.location.pathname);
+                        }}
+                    >
+                        로그아웃
+                    </button>
+                </div>
                 <span className={styles.lastUpdated}>
                     마지막 업데이트: {formatKST(data.timestamp)} ({timeAgo(data.timestamp)})
                 </span>
             </header>
+
+            {/* 무결성 경보 — 크롤이 반쪽 결과를 폐기하고 이전 데이터로 버티는 중이라는 뜻.
+                표 안에 묻히면 놓치므로(실제로 두 번 뜨고도 지나갔다) 최상단에 크게 띄운다. */}
+            {(() => {
+                const latest = data.crawlHistory?.[data.crawlHistory.length - 1];
+                const critical = (latest?.alerts || []).filter(a => a.startsWith('🚨'));
+                if (critical.length === 0) return null;
+                return (
+                    <div className={styles.integrityBanner} role="alert">
+                        <strong>스크래퍼 점검이 필요합니다</strong>
+                        <p>
+                            아래 문제로 새 수집 결과를 버리고 이전 데이터를 그대로 쓰고 있어요.
+                            고칠 때까지 해당 여행사 항공권은 갱신되지 않습니다.
+                        </p>
+                        <ul>
+                            {critical.map((alert, i) => <li key={i}>{alert.replace(/^🚨\s*/, '')}</li>)}
+                        </ul>
+                        <span>{formatKST(latest!.timestamp)} 크롤 기준</span>
+                    </div>
+                );
+            })()}
 
             {/* 네이버 비교가 상태 — 로컬 크롤이 멈추면 추천 품질이 조용히 나빠지므로 눈에 띄게 둔다 */}
             {data.naverStatus && (() => {
