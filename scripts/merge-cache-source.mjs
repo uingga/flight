@@ -43,6 +43,16 @@ const keptFlights = target.flights.filter((f) => f?.source !== sourceKey);
 const beforeCount = target.flights.length;
 const replacedCount = beforeCount - keptFlights.length;
 
+// 크롤러 장애로 생성된 빈 결과가 정상 데이터를 통째로 지우는 것을 막는다.
+// 실제로 소스를 0건으로 비워야 할 때만 명시적으로 우회할 수 있다.
+if (replacedCount > 0 && overlayFlights.length === 0 && process.env.ALLOW_EMPTY_SOURCE !== '1') {
+    console.error(
+        `❌ ${sourceKey} 병합 중단: 기존 ${replacedCount}건을 빈 결과로 교체하려고 했습니다. ` +
+        '의도적인 초기화라면 ALLOW_EMPTY_SOURCE=1을 지정하세요.'
+    );
+    process.exit(1);
+}
+
 target.flights = [...keptFlights, ...overlayFlights];
 target.count = target.flights.length;
 
