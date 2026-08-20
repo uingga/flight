@@ -18,6 +18,15 @@ interface CacheData {
     sourceUpdatedAt?: Record<string, string>;
     /** 소스별 연속 실패 횟수 — 어드민이 "며칠째 고장"인지 보여주는 근거 */
     staleStreak?: Record<string, number>;
+    /**
+     * 여행사별 '이번에 긁어온 원본 개수'.
+     *
+     * 급감 판정은 반드시 원본끼리 비교해야 한다. flights는 최저가·만료·인터파크 필터를
+     * 모두 통과한 뒤의 목록이라, 그 개수를 원본과 맞비교하면 기준이 어긋난다.
+     * (땡처리는 원본 2,078건이 필터 후 229건이라, 발동선이 원본 137건이 되어
+     *  88% 붕괴도 통과했다.)
+     */
+    scrapedCounts?: Record<string, number>;
     /** 이번 크롤에서 데이터를 폐기·유지한 이유 (어드민 상단 배너용) */
     integrityAlerts?: string[];
     sources: {
@@ -30,6 +39,16 @@ interface CacheData {
         myrealtrip: number;
     };
     priceHistory?: Record<string, Array<{ date: string; minPrice: number; avgPrice: number; count: number }>>;
+}
+
+/** 항공권 배열을 여행사별 개수로 집계한다. 캐시와 크롤 로그가 같은 기준을 쓰게 하는 용도. */
+function countBySource(flights: any[]): Record<string, number> {
+    const counts: Record<string, number> = {};
+    for (const f of flights) {
+        if (!f?.source) continue;
+        counts[f.source] = (counts[f.source] || 0) + 1;
+    }
+    return counts;
 }
 
 async function main() {
@@ -106,14 +125,26 @@ async function main() {
         const MIN_BASELINE = 30;             // 원래 적은 소스는 흔들림이 커서 제외
         const integrityWarnings: string[] = [];
         const staleStreak: Record<string, number> = { ...(prevCache?.staleStreak || {}) };
+        // 크롤 로그에 '이번에 긁어온 개수'와 '실패해서 물려받은 개수'를 구분해 남기기 위한 기록.
+        // 이 둘을 한 칸에 뭉뚱그리면 보존된 숫자가 다음 크롤의 수집량과 맞비교되어
+        // 일어나지도 않은 급감이 경보로 찍힌다.
+        const preservedSources = new Set<SourceKey>();
+        const scrapedCounts: Record<string, number> = {};
 
         for (const src of sourceNames) {
             const fresh = scraped[src];
             const srcPrevFlights = (prevCache?.flights || []).filter((f: any) => f.source === src);
             const prevCount = srcPrevFlights.length;
             const freshCount = fresh?.length ?? 0;
+            if (attempted.has(src)) scrapedCounts[src] = freshCount;
 
             const keepPrevious = (reason: string, alertText?: string) => {
+                preservedSources.add(src);
+                // 이번 결과를 버렸으므로 원본 기준선도 이전 값을 그대로 물려준다.
+                // 실패한 값으로 기준선을 낮추면 다음 회차부터 같은 붕괴를 정상으로 본다.
+                const carried = prevCache?.scrapedCounts?.[src];
+                if (carried !== undefined) scrapedCounts[src] = carried;
+                else delete scrapedCounts[src];
                 staleStreak[src] = (staleStreak[src] || 0) + 1;
                 const streak = staleStreak[src];
                 const suffix = streak > 1 ? ` — ${streak}회 연속` : '';
@@ -149,13 +180,28 @@ async function main() {
                 continue;
             }
 
-            // 급감은 지역 탭 하나가 빠진 반쪽 결과일 가능성이 크다
-            if (freshCount > 0 && prevCount >= MIN_BASELINE && freshCount < prevCount * DROP_RATIO) {
+            // 급감은 지역 탭 하나가 빠진 반쪽 결과일 가능성이 크다.
+            //
+            // 비교는 원본 수집량끼리만 한다. 예전에는 이전 캐시(필터 후)와 이번 원본을
+            // 맞비교해서, 땡처리 기준 발동선이 원본 137건이 되어 88% 붕괴도 통과했다.
+            const prevScraped = prevCache?.scrapedCounts?.[src];
+            if (
+                freshCount > 0
+                && prevScraped !== undefined
+                && prevScraped >= MIN_BASELINE
+                && freshCount < prevScraped * DROP_RATIO
+            ) {
                 keepPrevious(
-                    `급감 의심 (${prevCount}건 → ${freshCount}건)`,
-                    `🚨 ${src} 급감으로 새 데이터 폐기 (${prevCount}건 → ${freshCount}건) — 스크래퍼 점검 필요`,
+                    `급감 의심 (수집 ${prevScraped}건 → ${freshCount}건)`,
+                    `🚨 ${src} 급감으로 새 데이터 폐기 (수집 ${prevScraped}건 → ${freshCount}건) — 스크래퍼 점검 필요`,
                 );
                 continue;
+            }
+
+            // 비교할 원본 기준선이 아직 없으면(이 기능을 켠 직후) 이번 값을 기준선으로 삼는다.
+            // 이때는 판정을 건너뛰되, 사람이 알 수 있도록 로그를 남긴다.
+            if (freshCount > 0 && prevScraped === undefined) {
+                console.log(`ℹ️ ${src} 원본 기준선 없음 — 이번 ${freshCount}건을 기준선으로 저장합니다`);
             }
 
             staleStreak[src] = 0;
@@ -168,19 +214,6 @@ async function main() {
             console.log(`\n🚨 무결성 경고 ${integrityWarnings.length}건 — 스크래퍼 점검 필요`);
             integrityWarnings.forEach(w => console.log(`   ${w}`));
             recordCrawlAlerts(integrityWarnings);
-        }
-
-        // 통합 크롤링 로그 기록 (병렬 실행 후 한 번에)
-        for (const src of sourceNames) {
-            if (sources[src] > 0) {
-                const srcFlights = allFlights.filter((f: any) => f.source === src);
-                const cityStats: { [city: string]: number } = {};
-                srcFlights.forEach((f: any) => {
-                    const city = f.arrival?.city || '기타';
-                    cityStats[city] = (cityStats[city] || 0) + 1;
-                });
-                logCrawlResults(src, sources[src], undefined, cityStats);
-            }
         }
 
         // 노선별 최저가 필터링 (각 업체별 같은 노선에서 최저가만 유지)
@@ -342,10 +375,15 @@ async function main() {
             console.error('⚠️ 인터파크 벤치마크 실패 (필터링 건너뜀):', error);
         }
 
+        // 크롤 로그에 남길 '실제로 사이트에 나가는 목록'.
+        // 어느 경로로 끝나든 이 변수가 최종본을 가리킨다.
+        let savedFlights: any[] = benchmarkedFlights;
+
         // 전체 결과가 이전 캐시의 50% 미만이면 이전 캐시 유지
         if (prevCache && prevCache.count > 0 && benchmarkedFlights.length < prevCache.count * 0.5) {
             console.log(`\n⚠️ 결과가 이전 캐시(${prevCache.count}개)의 50% 미만(${benchmarkedFlights.length}개) → 이전 캐시 유지`);
             console.log('크롤링 결과를 저장하지 않습니다.');
+            savedFlights = prevCache.flights || [];
         } else {
             // firstSeen 필드 추가: 이전 캐시와 비교하여 새 항공편 감지
             const prevFlightMap = new Map<string, string>();
@@ -385,9 +423,12 @@ async function main() {
                 timestamp: new Date().toISOString(),
                 count: benchmarkedFlights.length,
                 flights: benchmarkedFlights,
-                sources: sources,
+                // 캐시에는 필터를 통과해 실제로 노출되는 수를 담는다.
+                // (원본 수집량은 crawl-log.json의 scraped가 갖는다)
+                sources: countBySource(benchmarkedFlights) as CacheData['sources'],
                 sourceUpdatedAt,
                 staleStreak,
+                scrapedCounts: { ...(prevCache?.scrapedCounts || {}), ...scrapedCounts },
                 integrityAlerts: integrityWarnings,
                 priceHistory: history,
             };
@@ -446,6 +487,28 @@ async function main() {
             console.log(`🕐 타임스탬프: ${cacheData.timestamp}`);
             console.log('='.repeat(50));
 
+        }
+
+        // 통합 크롤링 로그 기록.
+        //
+        // 필터가 모두 끝난 뒤에 남긴다. 예전에는 필터 전에 기록해서 정상 수집된 여행사는
+        // 원본 수집량이, 실패해서 이전 데이터를 물려받은 여행사는 필터 후 개수가 한 표에
+        // 섞여 있었다(땡처리 246건과 모두투어 995건이 같은 열에 놓이는 식).
+        // 이제 total은 언제나 '사이트에 실제로 나가는 수', scraped는 '이번에 긁어온 원본 수'다.
+        const finalCounts = countBySource(savedFlights);
+        for (const src of sourceNames) {
+            const srcFlights = savedFlights.filter((f: any) => f.source === src);
+            if (srcFlights.length === 0 && scrapedCounts[src] === undefined) continue;
+
+            const cityStats: { [city: string]: number } = {};
+            srcFlights.forEach((f: any) => {
+                const city = f.arrival?.city || '기타';
+                cityStats[city] = (cityStats[city] || 0) + 1;
+            });
+            logCrawlResults(src, finalCounts[src] || 0, undefined, cityStats, {
+                scraped: scrapedCounts[src],
+                preserved: preservedSources.has(src),
+            });
         }
 
     } catch (error) {

@@ -143,6 +143,10 @@ export async function scrapeYbtour(prevFlights: any[] = []): Promise<Flight[]> {
 
         // 각 지역별로 크롤링
         const completeness = new ScrapeCompleteness('노랑풍선', 'ybtour', prevFlights);
+        // 탭 클릭이 먹지 않으면 화면에 직전 지역의 도시 목록이 그대로 남는다.
+        // 목록이 비어 있지 않다는 이유로 성공 처리하면 그 지역이 통째로 빠지므로
+        // 직전에 본 목록과 같은지까지 확인한다. (2026-08-20 아시아 탭 실패의 원인)
+        let lastDetectedKey = '';
         for (const region of REGIONS) {
             console.log(`\n=== ${region.name} 지역 크롤링 ===`);
 
@@ -173,7 +177,22 @@ export async function scrapeYbtour(prevFlights: any[] = []): Promise<Flight[]> {
                             })).filter(c => c.code)
                         ).catch(() => [] as { code: string; name: string }[]);
 
-                        if (dynamicCities.length > 0) break;
+                        if (dynamicCities.length > 0) {
+                            const detectedKey = dynamicCities.map(c => c.code).sort().join(',');
+                            const regionCityCodes = new Set(region.cities.map(c => c.code));
+                            const belongsHere = dynamicCities.some(c => regionCityCodes.has(c.code));
+
+                            // 이 지역의 알려진 도시가 하나라도 있으면 제대로 열린 것이다.
+                            // 없더라도 직전과 다른 목록이면 받아들인다 — 여행사가 취항지를
+                            // 바꿔 우리 목록이 낡았을 뿐일 수 있어 섣불리 실패로 몰지 않는다.
+                            if (belongsHere || detectedKey !== lastDetectedKey) {
+                                lastDetectedKey = detectedKey;
+                                break;
+                            }
+
+                            console.log(`[STALE] ${region.name} 탭을 눌렀지만 직전 지역의 도시 목록이 그대로입니다 (${dynamicCities.slice(0, 4).map(c => c.code).join(', ')} …)`);
+                            dynamicCities = [];
+                        }
                     }
 
                     if (attempt < TAB_ATTEMPTS) {
