@@ -106,6 +106,32 @@ function generateAlerts(
 }
 
 /**
+ * 무결성 경고를 이번 크롤 엔트리에 직접 기록한다.
+ *
+ * generateAlerts는 "이번에 저장된 수치"만 비교하는데, 반쪽 결과를 폐기하고 이전
+ * 데이터를 유지하면 수치는 그대로라 아무 경고도 남지 않는다. 정작 사람이 알아야 할
+ * 사건이 그때 일어나므로 호출부가 직접 남긴다.
+ */
+export function recordCrawlAlerts(alerts: string[]): void {
+    if (alerts.length === 0) return;
+
+    const history = loadLogHistory();
+    const now = new Date();
+    let currentEntry = history.entries.find(
+        e => now.getTime() - new Date(e.timestamp).getTime() < 30 * 60 * 1000,
+    );
+
+    if (!currentEntry) {
+        currentEntry = { timestamp: now.toISOString(), sites: {}, alerts: [] };
+        history.entries.push(currentEntry);
+    }
+
+    currentEntry.alerts = Array.from(new Set([...currentEntry.alerts, ...alerts]));
+    history.lastEntry = currentEntry;
+    saveLogHistory(history);
+}
+
+/**
  * 크롤링 결과 로깅
  */
 export function logCrawlResults(
