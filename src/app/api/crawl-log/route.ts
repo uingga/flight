@@ -4,7 +4,9 @@ import * as path from 'path';
 import { getComparisonFreshness } from '@/lib/price-quality';
 
 const CACHE_FILE_PATH = path.join(process.cwd(), 'data', 'all-flights-cache.json');
-const ADMIN_KEY = process.env.ADMIN_KEY || 'tikit2026';
+// 저장소가 공개라 코드에 박아 둔 기본값은 그대로 공개 열쇠가 된다.
+// 환경변수가 없으면 조용히 열리는 대신 인증을 전부 거부한다.
+const ADMIN_KEY = process.env.ADMIN_KEY;
 
 interface Flight {
     id: string;
@@ -47,7 +49,7 @@ function normalizeAirline(name: string): string {
 export async function GET(request: NextRequest) {
     const key = request.nextUrl.searchParams.get('key');
 
-    if (key !== ADMIN_KEY) {
+    if (!ADMIN_KEY || key !== ADMIN_KEY) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

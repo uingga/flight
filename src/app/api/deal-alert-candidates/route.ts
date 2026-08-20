@@ -11,7 +11,9 @@ import type { Flight } from '@/types/flight';
 
 const CACHE_FILE_PATH = path.join(process.cwd(), 'data', 'all-flights-cache.json');
 const PRICE_HISTORY_PATH = path.join(process.cwd(), 'data', 'price-history.json');
-const ADMIN_KEY = process.env.ADMIN_KEY || 'tikit2026';
+// 저장소가 공개라 코드에 박아 둔 기본값은 그대로 공개 열쇠가 된다.
+// 환경변수가 없으면 조용히 열리는 대신 인증을 전부 거부한다.
+const ADMIN_KEY = process.env.ADMIN_KEY;
 
 interface AlertRow {
     alert_key: string;
@@ -32,7 +34,7 @@ function readJson(filePath: string): Record<string, unknown> {
 }
 
 export async function GET(request: NextRequest) {
-    if (request.nextUrl.searchParams.get('key') !== ADMIN_KEY) {
+    if (!ADMIN_KEY || request.nextUrl.searchParams.get('key') !== ADMIN_KEY) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
