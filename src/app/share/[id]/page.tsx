@@ -182,16 +182,18 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
 export default async function SharePage({ params, searchParams }: Props) {
     const { id } = await params;
     const sp = await searchParams;
-    const flight = await getFlightById(decodeURIComponent(id));
+    const decodedId = decodeURIComponent(id);
+    const flight = await getFlightById(decodedId);
+    const snapshot = getShareSnapshot(decodedId);
 
     // Fallback 파라미터: flight ID가 변경되어도 같은 노선 항공편을 찾을 수 있도록
     // 소스 우선순위: 1) URL 쿼리 파라미터 (공유 시 삽입됨) 2) API에서 조회한 flight 데이터
     const fallbackParams = new URLSearchParams();
     fallbackParams.set('flight', id);
 
-    const dep = (sp.dep as string) || flight?.departure?.city?.replace(/\([^)]+\)/g, '').trim();
-    const arr = (sp.arr as string) || flight?.arrival?.city?.replace(/\([^)]+\)/g, '').trim();
-    const date = (sp.date as string) || flight?.departure?.date?.replace(/[^0-9\-\.]/g, '').replace(/\./g, '-').replace(/-+$/, '');
+    const dep = (sp.dep as string) || flight?.departure?.city?.replace(/\([^)]+\)/g, '').trim() || snapshot?.dep;
+    const arr = (sp.arr as string) || flight?.arrival?.city?.replace(/\([^)]+\)/g, '').trim() || snapshot?.arr;
+    const date = (sp.date as string) || flight?.departure?.date?.replace(/[^0-9\-\.]/g, '').replace(/\./g, '-').replace(/-+$/, '') || snapshot?.date;
 
     if (dep) fallbackParams.set('dep', dep);
     if (arr) fallbackParams.set('arr', arr);

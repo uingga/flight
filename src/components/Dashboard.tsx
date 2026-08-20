@@ -113,6 +113,7 @@ export default function Dashboard() {
     const [lastUpdated, setLastUpdated] = useState<string | null>(null);
     const [priceHistory, setPriceHistory] = useState<Record<string, Array<{ date: string; minPrice: number }>>>({});
     const [interparkPrices, setInterparkPrices] = useState<Record<string, Record<string, { avg: number; lowest: number }>>>({});
+    const [fixedTodayPickId, setFixedTodayPickId] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [sortBy, setSortBy] = useState<'price' | 'date' | 'airline' | 'discount' | 'discountRate'>('discount');
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
@@ -370,6 +371,7 @@ export default function Dashboard() {
             setLastUpdated(data.lastUpdated || null);
             setPriceHistory(data.priceHistory || {});
             setInterparkPrices(data.interparkPrices || {});
+            setFixedTodayPickId(typeof data.todayPickId === 'string' ? data.todayPickId : null);
 
             try {
                 if (!visitSnapshotLoadedRef.current) {
@@ -599,7 +601,7 @@ export default function Dashboard() {
         const depDate = formatDate(flight.departure.date);
         const arrDate = flight.arrival.date ? ` ~ ${formatDate(flight.arrival.date)}` : '';
         // 짧은 공유 URL: /share/항공편ID → 서버에서 OG 이미지 생성 → 메인 페이지로 리다이렉트
-        // dep/arr/date 파라미터: ID 변경 시 노선 기반 fallback 매칭용
+        // dep/arr/date 파라미터: 원본 판매 종료 시 같은 노선 대안을 안내하는 용도
         const dep = normalizeCity(flight.departure.city);
         const arr = normalizeCity(flight.arrival.city);
         const dateRaw = flight.departure.date?.replace(/[^0-9\-\.]/g, '').replace(/\./g, '-').replace(/-+$/, '');
@@ -1435,6 +1437,24 @@ export default function Dashboard() {
         setNewSinceLastVisitFilter(false);
     };
 
+    const showSharedRouteAlternatives = () => {
+        const fallback = sharedRouteFallback.current;
+        const departure = fallback?.dep || '';
+        const departureValue = /인천|김포|서울|ICN|GMP|SEL/i.test(departure) ? '인천'
+            : /부산|김해|PUS/i.test(departure) ? '부산'
+                : /대구|TAE/i.test(departure) ? '대구'
+                    : /청주|CJJ/i.test(departure) ? '청주'
+                        : /제주|CJU/i.test(departure) ? '제주'
+                            : 'all';
+
+        openedSharedFlightId.current = null;
+        setSharedFlightId(null);
+        resetAllFilters();
+        if (fallback?.arr) setSearchTerm(fallback.arr);
+        setDepartureFilter(departureValue);
+        sharedRouteFallback.current = null;
+    };
+
     // 홈으로 (인천/김포 + 기본 날짜 복원)
     const goHome = () => {
         setSearchTerm('');
@@ -1662,9 +1682,8 @@ export default function Dashboard() {
         return scores;
     }, [flights, interparkPrices]);
 
-    // 오늘의 표 — 헤더 질문("오늘은 어디가 싸게 나왔을까요?")에 대한 즉답 한 장.
-    // 오늘 새로 나왔거나 어제보다 내린 표 중 추천 점수 상위 20%만 자격이 있고,
-    // 자격 있는 표가 없는 날은 아예 표시하지 않는다 (억지로 뽑지 않는다).
+    // 오늘의 표 — 현재 판매 중인 전체 항공권에서 가장 좋은 한 장을 고른다.
+    // 신규·가격 하락은 동점일 때만 우선하며, 더 좋은 기존 표를 후보에서 제외하지 않는다.
     const todayPick = useMemo(() => {
         if (!flights.length) return null;
         const pad = (n: number) => String(n).padStart(2, '0');
@@ -1695,8 +1714,9 @@ export default function Dashboard() {
             isNew: boolean,
             isToday: boolean,
         ): string => {
+            const payablePrice = getEffectivePrice(flight);
             const recent = (history || []).filter(entry => entry.date >= monthAgoStr);
-            if (recent.length >= 7 && flight.price <= Math.min(...recent.map(entry => entry.minPrice))) {
+            if (recent.length >= 7 && payablePrice <= Math.min(...recent.map(entry => entry.minPrice))) {
                 return '최근 한 달 중 가장 싼 가격이에요';
             }
             if (dropAmount > 0) {
@@ -1720,69 +1740,68 @@ export default function Dashboard() {
             }
             if (returnDay && departDay) {
                 const nights = Math.round((returnDay.getTime() - departDay.getTime()) / 86400000);
-                if (nights >= 4 && flight.price < 300000) return `${nights}박 ${nights + 1}일을 30만원 아래로 다녀와요`;
+                if (nights >= 4 && payablePrice < 300000) return `${nights}박 ${nights + 1}일을 30만원 아래로 다녀와요`;
             }
-            if (flight.price < 200000) return '20만원 아래로 다녀올 수 있어요';
+            if (payablePrice < 200000) return '20만원 아래로 다녀올 수 있어요';
 
             if (isNew) return `${isToday ? '오늘' : '어제'} 새로 올라온 표 중에서 골랐어요`;
-            return '';
+            return `왕복 ${Math.floor(payablePrice / 10000)}만원대로 나온 항공권이에요`;
         };
 
         const findPick = (refStr: string, prevStr: string, isToday: boolean) => {
-            let best: { flight: Flight; reason: string; score: number } | null = null;
+            let best: { flight: Flight; reason: string; score: number; changePriority: number } | null = null;
             for (const flight of flights) {
                 if (!flight.price || flight.price <= 0) continue;
                 const score = recommendScores.get(flight.id) ?? Infinity;
                 if (score > cutoff) continue;
-                if (best && score >= best.score) continue;
 
                 const history = priceHistory[`${normalizeCity(flight.departure.city)}-${normalizeCity(flight.arrival.city)}`];
                 const todayEntry = history?.find(entry => entry.date === refStr);
                 const prevEntry = history?.find(entry => entry.date === prevStr);
                 // 이 표가 기준일의 노선 최저가일 때만 "내렸다"고 말한다 (남의 하락을 빌려 쓰지 않기)
-                const dropAmount = todayEntry && prevEntry && prevEntry.minPrice > todayEntry.minPrice && flight.price <= todayEntry.minPrice
+                const payablePrice = getEffectivePrice(flight);
+                const dropAmount = todayEntry && prevEntry && prevEntry.minPrice > todayEntry.minPrice && payablePrice <= todayEntry.minPrice
                     ? prevEntry.minPrice - todayEntry.minPrice
                     : 0;
                 const isNew = flight.firstSeen === refStr;
-                if (!dropAmount && !isNew) continue;
+                const changePriority = dropAmount > 0 ? 2 : isNew ? 1 : 0;
+                if (best && (score > best.score || (score === best.score && changePriority <= best.changePriority))) continue;
 
                 const reason = describePick(flight, history, dropAmount, isNew, isToday);
-                if (!reason) continue;
-
-                best = { flight, reason, score };
+                best = { flight, reason, score, changePriority };
             }
             return best;
         };
 
-        // 새벽에는 오늘 크롤이 아직 없어 "오늘" 기준 자격자가 없을 수 있다 → 어제 기준으로 폴백
-        const dayBefore = new Date(now);
-        dayBefore.setDate(now.getDate() - 2);
-        const dayBeforeStr = `${dayBefore.getFullYear()}-${pad(dayBefore.getMonth() + 1)}-${pad(dayBefore.getDate())}`;
-        return findPick(todayStr, yestStr, true) ?? findPick(yestStr, dayBeforeStr, false);
-    }, [flights, priceHistory, recommendScores]);
+        if (fixedTodayPickId) {
+            const fixedFlight = flights.find(flight => flight.id === fixedTodayPickId);
+            if (fixedFlight) {
+                const history = priceHistory[`${normalizeCity(fixedFlight.departure.city)}-${normalizeCity(fixedFlight.arrival.city)}`];
+                const todayEntry = history?.find(entry => entry.date === todayStr);
+                const prevEntry = history?.find(entry => entry.date === yestStr);
+                const payablePrice = getEffectivePrice(fixedFlight);
+                const dropAmount = todayEntry && prevEntry && prevEntry.minPrice > todayEntry.minPrice && payablePrice <= todayEntry.minPrice
+                    ? prevEntry.minPrice - todayEntry.minPrice
+                    : 0;
+                const isNew = fixedFlight.firstSeen === todayStr;
+                return {
+                    flight: fixedFlight,
+                    reason: describePick(fixedFlight, history, dropAmount, isNew, true),
+                    score: recommendScores.get(fixedFlight.id) ?? Infinity,
+                    changePriority: dropAmount > 0 ? 2 : isNew ? 1 : 0,
+                };
+            }
+        }
+
+        return findPick(todayStr, yestStr, true);
+    }, [flights, priceHistory, recommendScores, fixedTodayPickId]);
 
     const filteredFlights = flights.filter(flight => {
         // 공유 링크로 접근 시 해당 항공편만 표시
         if (sharedFlightId) {
-            // 1. 정확한 ID 매칭
-            if (flight.id === sharedFlightId) return true;
-            // 2. fuzzy 매칭: ybtour ID에서 도착지+출발일 추출 → 같은 노선 매칭
-            const parts = sharedFlightId.match(/^[^-]+-(.+)-(\d{8})-\d+$/);
-            if (parts) {
-                const [, city, dateStr] = parts;
-                const flDate = flight.departure?.date?.replace(/[-\.]/g, '').substring(0, 8);
-                if (flight.arrival?.city?.includes(city) && flDate === dateStr) return true;
-            }
-            // 3. Fallback: share 페이지에서 전달받은 노선 정보(dep/arr/date)로 매칭
-            const fb = sharedRouteFallback.current;
-            if (fb) {
-                const flCity = flight.arrival?.city?.replace(/\([^)]+\)/g, '').trim();
-                const flDate = flight.departure?.date?.replace(/[^0-9\-\.]/g, '').replace(/\./g, '-').replace(/-+$/, '');
-                const matchArr = fb.arr && flCity && flCity.includes(fb.arr);
-                const matchDate = fb.date && flDate && flDate.startsWith(fb.date.substring(0, 10));
-                if (matchArr && matchDate) return true;
-            }
-            return false;
+            // ID가 달라진 다른 항공권을 원본인 것처럼 자동으로 열지 않는다.
+            // 원본이 없으면 만료 안내를 먼저 보여준 뒤 사용자가 같은 노선을 선택하게 한다.
+            return flight.id === sharedFlightId;
         }
 
         const matchesFav = !favFilter || isFavoriteFlight(flight.id);
@@ -2029,19 +2048,7 @@ export default function Dashboard() {
     useEffect(() => {
         if (!sharedFlightId || loading || openedSharedFlightId.current === sharedFlightId) return;
 
-        let sharedFlight = flights.find((flight) => flight.id === sharedFlightId);
-
-        if (!sharedFlight) {
-            const fallback = sharedRouteFallback.current;
-            sharedFlight = flights.find((flight) => {
-                const arrivalCity = flight.arrival?.city?.replace(/\([^)]+\)/g, '').trim();
-                const departureDate = flight.departure?.date?.replace(/[^0-9\-\.]/g, '').replace(/\./g, '-').replace(/-+$/, '');
-                return Boolean(
-                    fallback?.arr && arrivalCity?.includes(fallback.arr)
-                    && fallback.date && departureDate?.startsWith(fallback.date.substring(0, 10))
-                );
-            });
-        }
+        const sharedFlight = flights.find((flight) => flight.id === sharedFlightId);
 
         if (!sharedFlight) return;
         openedSharedFlightId.current = sharedFlightId;
@@ -3637,15 +3644,15 @@ export default function Dashboard() {
                                 <div className={styles.emptyIcon}>✈️</div>
                                 {sharedFlightId ? (
                                     <>
-                                        <p>공유된 항공편이 만료되었거나 찾을 수 없습니다</p>
+                                        <p>이 항공권은 판매가 종료되었습니다</p>
                                         <p style={{ fontSize: '0.9rem', opacity: 0.7 }}>
-                                            해당 특가 항공권이 종료되었을 수 있습니다
+                                            판매 종료 후에도 같은 노선의 다른 항공권을 확인할 수 있어요.
                                         </p>
                                         <button
-                                            onClick={() => { setSharedFlightId(null); sharedRouteFallback.current = null; resetAllFilters(); }}
+                                            onClick={showSharedRouteAlternatives}
                                             className="btn btn-primary"
                                         >
-                                            전체 항공편 보기
+                                            {sharedRouteFallback.current?.arr ? '같은 노선의 다른 항공권 보기' : '현재 항공권 보기'}
                                         </button>
                                     </>
                                 ) : (

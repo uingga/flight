@@ -1,0 +1,42 @@
+name: Select Today Pick
+
+on:
+  schedule:
+    # 매일 오전 11시 30분 KST (02:30 UTC)
+    - cron: '30 2 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: today-pick
+  cancel-in-progress: false
+
+jobs:
+  select:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Select today's pick
+        run: node scripts/select-today-pick.mjs
+
+      - name: Commit and push selection
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          if [[ -z $(git status --porcelain -- data/today-pick.json) ]]; then
+            echo "No selection change"
+            exit 0
+          fi
+          git add data/today-pick.json
+          git commit -m "chore(data): select today pick"
+          git pull --rebase origin main
+          git push origin main
