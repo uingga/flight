@@ -6,7 +6,7 @@ import { isAnalyticsExcluded, setAnalyticsExcluded } from '@/lib/analytics';
 
 interface CrawlHistoryEntry {
     timestamp: string;
-    sites: Record<string, { total: number }>;
+    sites: Record<string, { total: number; scraped?: number; preserved?: boolean }>;
     alerts: string[];
 }
 
@@ -22,6 +22,10 @@ interface AdminData {
     priceByRegion: Record<string, { min: number; max: number; avg: number; count: number }>;
     cheapest: { route: string; airline: string; price: number; date: string; source: string }[];
     crawlHistory?: CrawlHistoryEntry[];
+    /** 여행사별 마지막 성공 갱신 시각. 무결성 가드가 새 결과를 폐기하면 여기서 멈춘다. */
+    sourceUpdatedAt?: Record<string, string>;
+    /** 여행사별 연속 실패 횟수. 0이 아니면 그만큼 이전 데이터로 버티고 있다는 뜻이다. */
+    staleStreak?: Record<string, number>;
     naverStatus?: {
         lastCrawledAt: string | null;
         ageDays: number | null;
@@ -188,6 +192,28 @@ const SOURCE_COLORS: Record<string, string> = {
     onlinetour: '#1e40af',
 };
 
+/**
+ * 어드민 탭.
+ *
+ * 기능을 하나씩 덧붙이다 보니 성격이 다른 화면이 한 줄로 계속 쌓였다. 볼 때 품는 질문을
+ * 기준으로 넷으로 나눈다: 지금 정상인가 / 무엇을 얼마에 내보내고 있나 / 누가 들어오나 /
+ * 누가 무엇을 기다리나.
+ */
+const TABS = [
+    { id: 'health', label: '운영 상태', hint: '수집이 정상인지' },
+    { id: 'flights', label: '항공권 데이터', hint: '무엇을 얼마에 내보내는지' },
+    { id: 'visitors', label: '방문자', hint: '누가 들어와 무엇을 하는지' },
+    { id: 'alerts', label: '알림 사용자', hint: '누가 무엇을 기다리는지' },
+] as const;
+
+type TabId = typeof TABS[number]['id'];
+
+const TAB_STORAGE = 'tikitikit_admin_tab';
+
+/** 마지막 갱신이 이 시간을 넘기면 지연으로 본다. 마이리얼트립은 별도 워크플로우가 하루 두 번만 돈다. */
+const STALE_AFTER_HOURS: Record<string, number> = { myrealtrip: 20 };
+const DEFAULT_STALE_AFTER_HOURS = 8;
+
 const DEAL_REJECTION_LABELS: Record<string, string> = {
     otherDeparture: '출발지가 다름',
     otherRegion: '지역이 다름',
@@ -255,9 +281,17 @@ export default function AdminPage() {
     const [userStatsError, setUserStatsError] = useState<string | null>(null);
     const [gaStats, setGaStats] = useState<GaStatsData | null>(null);
     const [gaStatsError, setGaStatsError] = useState<string | null>(null);
+    const [tab, setTab] = useState<TabId>('health');
+    // 크롤 히스토리 표가 무엇을 세는지: 사이트에 나가는 수(shown)인지 긁어온 원본 수(scraped)인지
+    const [crawlMetric, setCrawlMetric] = useState<'shown' | 'scraped'>('shown');
 
     useEffect(() => {
         setAnalyticsExcludedState(isAnalyticsExcluded());
+        // 새로고침해도 보던 탭에 그대로 머무르게 한다
+        try {
+            const savedTab = window.localStorage.getItem(TAB_STORAGE) as TabId | null;
+            if (savedTab && TABS.some(t => t.id === savedTab)) setTab(savedTab);
+        } catch { /* 저장소를 못 읽어도 기본 탭으로 동작한다 */ }
         const params = new URLSearchParams(window.location.search);
         // URL의 key가 우선 (공유받은 링크로 들어온 경우), 없으면 지난번에 저장해 둔 키로 자동 로그인
         const urlKey = params.get('key') || readSavedKey();
@@ -394,6 +428,23 @@ export default function AdminPage() {
     const sortedDepCities = Object.entries(data.byDepartureCity).sort((a, b) => b[1] - a[1]);
     const maxSourceCount = Math.max(...Object.values(data.bySource), 1);
 
+    const latestCrawl = data.crawlHistory?.[data.crawlHistory.length - 1];
+    const criticalAlerts = (latestCrawl?.alerts || []).filter(a => a.startsWith('🚨'));
+
+    const selectTab = (next: TabId) => {
+        setTab(next);
+        try { window.localStorage.setItem(TAB_STORAGE, next); } catch { /* noop */ }
+    };
+
+    // 한 칸이 보여줄 수를 한 곳에서 고른다. 예전에는 정상 수집된 여행사는 필터 전 수가,
+    // 실패해 이전 데이터를 물려받은 여행사는 필터 후 수가 같은 표에 섞여 있었다.
+    const metricOf = (stat?: { total: number; scraped?: number }): number | null => {
+        if (!stat) return null;
+        return crawlMetric === 'shown' ? stat.total : (stat.scraped ?? null);
+    };
+    const sumMetric = (sites: CrawlHistoryEntry['sites']): number =>
+        Object.values(sites).reduce((acc, stat) => acc + (metricOf(stat) ?? 0), 0);
+
     return (
         <div className={styles.container}>
             <header className={styles.header}>
@@ -420,25 +471,289 @@ export default function AdminPage() {
             </header>
 
             {/* 무결성 경보 — 크롤이 반쪽 결과를 폐기하고 이전 데이터로 버티는 중이라는 뜻.
-                표 안에 묻히면 놓치므로(실제로 두 번 뜨고도 지나갔다) 최상단에 크게 띄운다. */}
-            {(() => {
-                const latest = data.crawlHistory?.[data.crawlHistory.length - 1];
-                const critical = (latest?.alerts || []).filter(a => a.startsWith('🚨'));
-                if (critical.length === 0) return null;
-                return (
-                    <div className={styles.integrityBanner} role="alert">
-                        <strong>스크래퍼 점검이 필요합니다</strong>
-                        <p>
-                            아래 문제로 새 수집 결과를 버리고 이전 데이터를 그대로 쓰고 있어요.
-                            고칠 때까지 해당 여행사 항공권은 갱신되지 않습니다.
-                        </p>
-                        <ul>
-                            {critical.map((alert, i) => <li key={i}>{alert.replace(/^🚨\s*/, '')}</li>)}
-                        </ul>
-                        <span>{formatKST(latest!.timestamp)} 크롤 기준</span>
+                탭 안에 두면 다른 탭을 보는 동안 놓치므로 탭 바깥 최상단에 고정한다. */}
+            {criticalAlerts.length > 0 && latestCrawl && (
+                <div className={styles.integrityBanner} role="alert">
+                    <strong>스크래퍼 점검이 필요합니다</strong>
+                    <p>
+                        아래 문제로 새 수집 결과를 버리고 이전 데이터를 그대로 쓰고 있어요.
+                        고칠 때까지 해당 여행사 항공권은 갱신되지 않습니다.
+                    </p>
+                    <ul>
+                        {criticalAlerts.map((alert, i) => <li key={i}>{alert.replace(/^🚨\s*/, '')}</li>)}
+                    </ul>
+                    <span>{formatKST(latestCrawl.timestamp)} 크롤 기준</span>
+                </div>
+            )}
+
+            <nav className={styles.tabNav}>
+                {TABS.map(t => (
+                    <button
+                        key={t.id}
+                        type="button"
+                        className={tab === t.id ? `${styles.tabBtn} ${styles.tabBtnActive}` : styles.tabBtn}
+                        onClick={() => selectTab(t.id)}
+                    >
+                        <span className={styles.tabLabel}>
+                            {t.label}
+                            {t.id === 'health' && criticalAlerts.length > 0 && (
+                                <span className={styles.tabDot} title={`점검 필요 ${criticalAlerts.length}건`} />
+                            )}
+                        </span>
+                        <span className={styles.tabHint}>{t.hint}</span>
+                    </button>
+                ))}
+            </nav>
+
+            {tab === 'health' && (<>
+            {/* 여행사별 수집 상태 — 노랑풍선이 이틀 가까이 반쪽으로 서비스되는 동안
+                어느 화면에서도 그 사실을 알 수 없었다. 건수·마지막 갱신·추세를 한 카드에 모은다. */}
+            <section className={styles.section}>
+                <h2>여행사별 수집 상태</h2>
+                <p className={styles.sectionHelp}>
+                    큰 숫자는 지금 사이트에 나가는 항공권 수이고, 막대는 최근 크롤에서 실제로 긁어온 양의 추이입니다.
+                    노란 막대는 수집에 실패해 이전 데이터를 그대로 유지한 회차입니다.
+                </p>
+                <div className={styles.sourceGrid}>
+                    {allSources.map(source => {
+                        const updatedAt = data.sourceUpdatedAt?.[source];
+                        const streak = data.staleStreak?.[source] || 0;
+                        const staleAfter = STALE_AFTER_HOURS[source] ?? DEFAULT_STALE_AFTER_HOURS;
+                        const ageHours = updatedAt ? (Date.now() - new Date(updatedAt).getTime()) / 3600000 : null;
+                        const stale = ageHours === null || ageHours > staleAfter;
+
+                        const history = (data.crawlHistory || []).slice(-16).map(e => ({
+                            ts: e.timestamp,
+                            value: e.sites[source]?.scraped ?? e.sites[source]?.total ?? 0,
+                            preserved: Boolean(e.sites[source]?.preserved),
+                        }));
+
+                        // 무결성 가드가 막지 못하고 통과한 반쪽 결과도 여기서는 보이게 한다.
+                        // 가드는 직전 한 번과만 비교하므로, 반쪽 결과가 한 번 자리를 잡으면
+                        // 그 다음부터는 그 낮은 값이 기준이 되어 조용해진다(노랑풍선 89건이 그랬다).
+                        // 최근 중앙값과 견주면 그렇게 굳어버린 상태도 드러난다.
+                        const past = history.slice(0, -1).filter(h => !h.preserved).map(h => h.value).sort((a, b) => a - b);
+                        const median = past.length ? past[Math.floor(past.length / 2)] : 0;
+                        const latest = history.length ? history[history.length - 1] : null;
+                        const slumped = Boolean(
+                            latest && !latest.preserved && median >= 30 && latest.value < median * 0.6,
+                        );
+
+                        const status = streak > 0 || slumped ? 'broken' : stale ? 'stale' : 'ok';
+                        const peak = Math.max(...history.map(h => h.value), 1);
+                        const shown = data.bySource[source] ?? 0;
+
+                        return (
+                            <div
+                                key={source}
+                                className={[
+                                    styles.sourceCard,
+                                    status === 'broken' ? styles.sourceCardBroken : '',
+                                    status === 'stale' ? styles.sourceCardStale : '',
+                                ].filter(Boolean).join(' ')}
+                            >
+                                <div className={styles.sourceCardHead}>
+                                    <span className={styles.sourceName}>
+                                        <span
+                                            className={styles.sourceDot}
+                                            style={{ background: SOURCE_COLORS[source] || '#6b7280' }}
+                                        />
+                                        {SOURCE_NAMES[source] || source}
+                                    </span>
+                                    <span
+                                        className={[
+                                            styles.statusBadge,
+                                            status === 'broken' ? styles.statusBadgeBroken : '',
+                                            status === 'stale' ? styles.statusBadgeStale : '',
+                                        ].filter(Boolean).join(' ')}
+                                    >
+                                        {streak > 0
+                                            ? `수집 실패 ${streak}회`
+                                            : slumped
+                                                ? `수집량 이상 (평소 ${median.toLocaleString()}건)`
+                                                : status === 'stale' ? '갱신 지연' : '정상'}
+                                    </span>
+                                </div>
+
+                                <div className={styles.sourceCount}>
+                                    {shown.toLocaleString()}
+                                    <small>건 노출 중</small>
+                                </div>
+
+                                <div className={styles.sourceMeta}>
+                                    {updatedAt
+                                        ? <span>마지막 갱신 {timeAgo(updatedAt)}</span>
+                                        : <span>갱신 기록 없음</span>}
+                                    {latest && !latest.preserved && latest.value !== shown && (
+                                        <span>수집 {latest.value.toLocaleString()}건 중 {shown.toLocaleString()}건이 필터 통과</span>
+                                    )}
+                                </div>
+
+                                <div className={styles.sparkBars} aria-hidden="true">
+                                    {history.map((h, i) => (
+                                        <span
+                                            key={i}
+                                            className={h.preserved ? `${styles.sparkBar} ${styles.sparkBarPreserved}` : styles.sparkBar}
+                                            style={{ height: `${Math.max(4, Math.round((h.value / peak) * 100))}%` }}
+                                            title={`${formatKST(h.ts).replace(/\d{4}\. /, '')} · ${h.value.toLocaleString()}건${h.preserved ? ' (수집 실패, 이전 데이터 유지)' : ''}`}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            </section>
+
+            {/* 크롤링 히스토리 */}
+            {data.crawlHistory && data.crawlHistory.length > 0 && (
+                <section className={styles.section}>
+                    <h2>크롤링 히스토리</h2>
+                    <div className={styles.metricToggle}>
+                        <span className={styles.metricLabel}>표시 기준</span>
+                        <button
+                            type="button"
+                            className={crawlMetric === 'shown' ? `${styles.metricBtn} ${styles.metricBtnActive}` : styles.metricBtn}
+                            onClick={() => setCrawlMetric('shown')}
+                        >
+                            노출 건수
+                        </button>
+                        <button
+                            type="button"
+                            className={crawlMetric === 'scraped' ? `${styles.metricBtn} ${styles.metricBtnActive}` : styles.metricBtn}
+                            onClick={() => setCrawlMetric('scraped')}
+                        >
+                            수집 건수
+                        </button>
                     </div>
-                );
-            })()}
+                    <p className={styles.sectionHelp}>
+                        <strong>노출 건수</strong>는 최저가·만료·인터파크 기준 필터를 모두 통과해 사이트에 실제로 나간 수이고,
+                        <strong>수집 건수</strong>는 여행사에서 긁어온 원본 수입니다. 두 기준을 섞어 보면 여행사끼리 비교가 되지 않으므로
+                        표 전체가 한 기준으로만 표시됩니다. 수집 건수를 따로 남기기 시작한 것은 2026-08-21부터라,
+                        그 이전 기록은 수집 건수가 <code>—</code>로 비어 있고 노출 건수 자리에도 여행사마다 기준이 섞여 있습니다.
+                        로그는 7일치만 보관하므로 그 주가 지나면 저절로 정리됩니다.
+                    </p>
+                    <div className={styles.cityDetail} style={{ overflowX: 'auto' }}>
+                        <table className={styles.cityTable} style={{ minWidth: '500px' }}>
+                            <thead>
+                                <tr>
+                                    <th>시간</th>
+                                    {allSources.map(s => (
+                                        <th key={s} style={{ color: SOURCE_COLORS[s] }}>
+                                            {SOURCE_NAMES[s] || s}
+                                        </th>
+                                    ))}
+                                    <th>합계</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {[...data.crawlHistory].reverse().slice(0, 14).map((entry, idx, arr) => {
+                                    const prev = arr[idx + 1];
+                                    const total = sumMetric(entry.sites);
+                                    const prevTotal = prev ? sumMetric(prev.sites) : null;
+                                    const totalDiff = prevTotal !== null ? total - prevTotal : null;
+
+                                    return (
+                                        <tr key={entry.timestamp}>
+                                            <td style={{ whiteSpace: 'nowrap', fontSize: '0.85rem' }}>
+                                                {formatKST(entry.timestamp).replace(/\d{4}. /, '')}
+                                            </td>
+                                            {allSources.map(source => {
+                                                const stat = entry.sites[source];
+                                                const prevStat = prev?.sites[source];
+                                                const count = metricOf(stat);
+                                                const prevCount = metricOf(prevStat);
+                                                // 수집에 실패해 이전 데이터를 물려받은 칸은 측정치가 아니다.
+                                                // 여기에 증감을 붙이면 일어나지 않은 변화를 읽게 된다.
+                                                const preserved = Boolean(stat?.preserved);
+                                                const diff = !preserved && !prevStat?.preserved && prevCount !== null && count !== null
+                                                    ? count - prevCount
+                                                    : null;
+                                                return (
+                                                    <td key={source} style={{ textAlign: 'center' }}>
+                                                        <span style={preserved ? { opacity: 0.5 } : undefined}>
+                                                            {count === null ? '—' : count.toLocaleString()}
+                                                        </span>
+                                                        {preserved && (
+                                                            <span
+                                                                title={`이번 크롤에서 ${stat?.scraped ?? 0}건만 수집되어 실패로 판정했습니다. 노출 건수는 이전 크롤의 데이터를 그대로 유지한 것입니다.`}
+                                                                style={{
+                                                                    fontSize: '0.7rem',
+                                                                    marginLeft: '4px',
+                                                                    padding: '1px 4px',
+                                                                    borderRadius: '4px',
+                                                                    background: '#fef3c7',
+                                                                    color: '#92400e',
+                                                                    fontWeight: 600,
+                                                                    cursor: 'help',
+                                                                }}
+                                                            >
+                                                                유지
+                                                            </span>
+                                                        )}
+                                                        {diff !== null && diff !== 0 && (
+                                                            <span style={{
+                                                                fontSize: '0.75rem',
+                                                                marginLeft: '4px',
+                                                                color: diff > 0 ? '#10b981' : '#ef4444',
+                                                                fontWeight: 600,
+                                                            }}>
+                                                                {diff > 0 ? `+${diff}` : diff}
+                                                            </span>
+                                                        )}
+                                                    </td>
+                                                );
+                                            })}
+                                            <td style={{ textAlign: 'center', fontWeight: 600 }}>
+                                                <span>{total}</span>
+                                                {totalDiff !== null && totalDiff !== 0 && (
+                                                    <span style={{
+                                                        fontSize: '0.75rem',
+                                                        marginLeft: '4px',
+                                                        color: totalDiff > 0 ? '#10b981' : '#ef4444',
+                                                    }}>
+                                                        {totalDiff > 0 ? `+${totalDiff}` : totalDiff}
+                                                    </span>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* 경고 목록 */}
+                    {data.crawlHistory.some(e => e.alerts.length > 0) && (
+                        <div className={styles.cityDetail} style={{ marginTop: '16px' }}>
+                            <h3 style={{ marginBottom: '8px' }}>⚠️ 최근 경고</h3>
+                            <table className={styles.cityTable}>
+                                <thead>
+                                    <tr><th>시간</th><th>내용</th></tr>
+                                </thead>
+                                <tbody>
+                                    {data.crawlHistory
+                                        .filter(e => e.alerts.length > 0)
+                                        .slice(-5)
+                                        .reverse()
+                                        .flatMap((e) =>
+                                            e.alerts.map((a, j) => (
+                                                <tr key={`${e.timestamp}-${j}`}>
+                                                    {j === 0 ? (
+                                                        <td rowSpan={e.alerts.length} style={{ whiteSpace: 'nowrap', verticalAlign: 'top', fontSize: '0.85rem' }}>
+                                                            {formatKST(e.timestamp).replace(/\d{4}\. /, '')}
+                                                        </td>
+                                                    ) : null}
+                                                    <td style={{ color: '#ef4444', fontSize: '0.85rem' }}>{a}</td>
+                                                </tr>
+                                            ))
+                                        )}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </section>
+            )}
 
             {/* 네이버 비교가 상태 — 로컬 크롤이 멈추면 추천 품질이 조용히 나빠지므로 눈에 띄게 둔다 */}
             {data.naverStatus && (() => {
@@ -459,7 +774,9 @@ export default function AdminPage() {
                     </div>
                 );
             })()}
+            </>)}
 
+            {tab === 'flights' && (<>
             {/* 요약 카드 */}
             <div className={styles.summaryCards}>
                 <div className={styles.summaryCard}>
@@ -480,9 +797,229 @@ export default function AdminPage() {
                 </div>
             </div>
 
+            {/* 소스별 현황 - 도넛 차트 */}
+            <section className={styles.section}>
+                <h2>여행사별 현황</h2>
+                {(() => {
+                    // conic-gradient 계산
+                    let cumPct = 0;
+                    const gradientParts = allSources.map(source => {
+                        const pct = (data.bySource[source] / data.totalFlights) * 100;
+                        const start = cumPct;
+                        cumPct += pct;
+                        return `${SOURCE_COLORS[source] || '#6b7280'} ${start}% ${cumPct}%`;
+                    });
+                    const gradient = `conic-gradient(${gradientParts.join(', ')})`;
+
+                    return (
+                        <div style={{ display: 'flex', gap: '32px', alignItems: 'center', flexWrap: 'wrap' }}>
+                            {/* 도넛 차트 */}
+                            <div style={{
+                                width: '200px',
+                                height: '200px',
+                                borderRadius: '50%',
+                                background: gradient,
+                                position: 'relative',
+                                flexShrink: 0,
+                                margin: '0 auto',
+                            }}>
+                                <div style={{
+                                    position: 'absolute',
+                                    top: '50%',
+                                    left: '50%',
+                                    transform: 'translate(-50%, -50%)',
+                                    width: '110px',
+                                    height: '110px',
+                                    borderRadius: '50%',
+                                    background: '#1a1a2e',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                }}>
+                                    <span style={{ fontSize: '1.4rem', fontWeight: 700 }}>{data.totalFlights.toLocaleString()}</span>
+                                    <span style={{ fontSize: '0.75rem', color: '#9ca3af' }}>전체</span>
+                                </div>
+                            </div>
+
+                            {/* 범례 테이블 */}
+                            <div className={styles.cityDetail} style={{ flex: 1, minWidth: '280px' }}>
+                                <table className={styles.cityTable}>
+                                    <thead>
+                                        <tr><th>여행사</th><th>항공편</th><th>비율</th><th>평균가</th></tr>
+                                    </thead>
+                                    <tbody>
+                                        {allSources.map(source => {
+                                            const count = data.bySource[source];
+                                            const pct = Math.round((count / data.totalFlights) * 100);
+                                            const avgPrice = data.avgPriceBySource[source];
+                                            return (
+                                                <tr key={source}>
+                                                    <td>
+                                                        <span style={{
+                                                            display: 'inline-block',
+                                                            width: '10px',
+                                                            height: '10px',
+                                                            borderRadius: '50%',
+                                                            background: SOURCE_COLORS[source] || '#6b7280',
+                                                            marginRight: '8px',
+                                                            verticalAlign: 'middle',
+                                                        }} />
+                                                        {SOURCE_NAMES[source] || source}
+                                                    </td>
+                                                    <td>{count.toLocaleString()}건</td>
+                                                    <td>{pct}%</td>
+                                                    <td>{formatPrice(avgPrice)}</td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    );
+                })()}
+            </section>
+
+            {/* 지역별 가격 현황 */}
+            <section className={styles.section}>
+                <h2>지역별 가격 현황</h2>
+                <div className={styles.cityDetail}>
+                    <table className={styles.cityTable}>
+                        <thead>
+                            <tr>
+                                <th>지역</th>
+                                <th>항공편</th>
+                                <th>최저가</th>
+                                <th>최고가</th>
+                                <th>평균가</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {sortedRegions.map(([region, count]) => {
+                                const rp = data.priceByRegion[region];
+                                return (
+                                    <tr key={region}>
+                                        <td><strong>{region}</strong></td>
+                                        <td>{count}건</td>
+                                        <td style={{ color: '#10b981' }}>{formatPrice(rp.min)}</td>
+                                        <td style={{ color: '#ef4444' }}>{formatPrice(rp.max)}</td>
+                                        <td>{formatPrice(Math.round(rp.avg))}</td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            {/* 인기 도착 도시 TOP 15 */}
+            <section className={styles.section}>
+                <h2>인기 도착 도시 TOP 15</h2>
+                <div className={styles.cityDetail}>
+                    <table className={styles.cityTable}>
+                        <thead>
+                            <tr><th>도시</th><th>항공편</th><th>비율</th></tr>
+                        </thead>
+                        <tbody>
+                            {sortedCities.slice(0, 15).map(([city, count]) => (
+                                <tr key={city}>
+                                    <td>{city}</td>
+                                    <td>{count}건</td>
+                                    <td>{Math.round((count / data.totalFlights) * 100)}%</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            {/* 출발 도시별 */}
+            <section className={styles.section}>
+                <h2>출발 도시별</h2>
+                <div className={styles.cityDetail}>
+                    <table className={styles.cityTable}>
+                        <thead>
+                            <tr><th>출발 도시</th><th>항공편</th><th>비율</th></tr>
+                        </thead>
+                        <tbody>
+                            {sortedDepCities.map(([city, count]) => (
+                                <tr key={city}>
+                                    <td>{city}</td>
+                                    <td>{count}건</td>
+                                    <td>{Math.round((count / data.totalFlights) * 100)}%</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            {/* 항공사별 TOP 15 */}
+            <section className={styles.section}>
+                <h2>항공사별 TOP 15</h2>
+                <div className={styles.cityDetail}>
+                    <table className={styles.cityTable}>
+                        <thead>
+                            <tr><th>항공사</th><th>항공편</th><th>비율</th></tr>
+                        </thead>
+                        <tbody>
+                            {sortedAirlines.slice(0, 15).map(([airline, count]) => (
+                                <tr key={airline}>
+                                    <td>{airline}</td>
+                                    <td>{count}건</td>
+                                    <td>{Math.round((count / data.totalFlights) * 100)}%</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            {/* 최저가 TOP 10 */}
+            <section className={styles.section}>
+                <h2>최저가 TOP 10</h2>
+                <div className={styles.cityDetail}>
+                    <table className={styles.cityTable}>
+                        <thead>
+                            <tr>
+                                <th>노선</th>
+                                <th>항공사</th>
+                                <th>가격</th>
+                                <th>출발일</th>
+                                <th>여행사</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {data.cheapest.map((f, i) => (
+                                <tr key={i}>
+                                    <td>{f.route}</td>
+                                    <td>{f.airline}</td>
+                                    <td style={{ color: '#10b981', fontWeight: 600 }}>{formatPrice(f.price)}</td>
+                                    <td>{f.date}</td>
+                                    <td>
+                                        <span style={{
+                                            background: SOURCE_COLORS[f.source] || '#6b7280',
+                                            color: '#fff',
+                                            padding: '2px 8px',
+                                            borderRadius: '4px',
+                                            fontSize: '0.8rem',
+                                        }}>
+                                            {SOURCE_NAMES[f.source] || f.source}
+                                        </span>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+            </>)}
+
+            {tab === 'visitors' && (<>
             {/* GA4 방문·행동 통계 — 여기서 보이면 GA4 사이트로 나갈 일이 줄어든다 */}
             <section className={styles.section}>
-                <h2>🌐 방문자와 행동 (GA4)</h2>
+                <h2>방문자와 행동 (GA4)</h2>
                 <p className={styles.sectionHelp}>
                     아래 수치는 모두 최근 {gaStats?.days ?? 30}일 기준입니다. 방문자는 같은 사람이 여러 번 와도 1명,
                     방문 횟수는 사이트에 들어온 횟수, 페이지 열림은 실제 페이지가 열린 횟수입니다.
@@ -854,9 +1391,43 @@ export default function AdminPage() {
                 )}
             </section>
 
+            <section className={styles.section}>
+                <h2>수익 전환 분석</h2>
+                <div className={styles.card}>
+                    <p style={{ margin: 0, lineHeight: 1.7 }}>
+                        예약·제휴 클릭은 위 <strong>&ldquo;방문자와 행동(GA4)&rdquo;</strong> 항목에서 바로 볼 수 있습니다.
+                        더 깊게 파고들 때만 GA4를 열면 됩니다. 실제 구매와 수익은 마이리얼트립 및 Trip.com 파트너 정산 화면과 대조합니다.
+                    </p>
+                    <a href="https://analytics.google.com/" target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', marginTop: '10px', color: '#7c3aed', fontWeight: 700 }}>
+                        Google Analytics 열기 →
+                    </a>
+                    <div style={{ marginTop: '18px', paddingTop: '16px', borderTop: '1px solid #334155' }}>
+                        <p style={{ margin: '0 0 10px', color: analyticsExcluded ? '#86efac' : '#fbbf24', fontWeight: 700 }}>
+                            내 방문 통계: {analyticsExcluded ? '제외 중' : '포함 중'}
+                        </p>
+                        <p style={{ margin: '0 0 12px', color: '#94a3b8', fontSize: '0.85rem', lineHeight: 1.6 }}>
+                            이 브라우저에서 발생하는 방문과 예약 클릭을 GA4에서 제외합니다. 다른 기기나 브라우저는 각각 설정해야 합니다.
+                        </p>
+                        <button
+                            type="button"
+                            className={styles.analyticsToggle}
+                            onClick={() => {
+                                const next = !analyticsExcluded;
+                                setAnalyticsExcluded(next);
+                                setAnalyticsExcludedState(next);
+                            }}
+                        >
+                            {analyticsExcluded ? '내 방문 다시 포함하기' : '내 방문 제외하기'}
+                        </button>
+                    </div>
+                </div>
+            </section>
+            </>)}
+
+            {tab === 'alerts' && (<>
             {/* 유저 통계 — 크롤링 현황과 별개로 "사람들이 무엇을 기다리는가"를 본다 */}
             <section className={styles.section}>
-                <h2>👥 사용자 현황 — 가격 알림</h2>
+                <h2>사용자 현황 — 가격 알림</h2>
                 <p className={styles.sectionHelp}>
                     회원가입이 없는 서비스라 사람 수 대신 <strong>알림을 켠 브라우저(기기) 수</strong>를 셉니다.
                     같은 사람이 폰과 PC에서 각각 켜면 2로 잡힙니다.
@@ -996,7 +1567,7 @@ export default function AdminPage() {
             <section className={styles.section}>
                 <div className={styles.dealReviewHeader}>
                     <div>
-                        <h2>🔔 조건형 특가 알림 — 발송 미리보기</h2>
+                        <h2>조건형 특가 알림 — 발송 미리보기</h2>
                         <p>
                             사용자가 &ldquo;인천 출발, 일본, 20만원 이하면 알려줘&rdquo;처럼 <strong>조건만 걸어둔 알림</strong>입니다.
                             아직 테스트 단계라 실제 푸시는 나가지 않고, 지금 항공권을 조건에 대입해
@@ -1087,356 +1658,8 @@ export default function AdminPage() {
                     </>
                 )}
             </section>
+            </>)}
 
-            {/* 소스별 현황 - 도넛 차트 */}
-            <section className={styles.section}>
-                <h2>여행사별 현황</h2>
-                {(() => {
-                    // conic-gradient 계산
-                    let cumPct = 0;
-                    const gradientParts = allSources.map(source => {
-                        const pct = (data.bySource[source] / data.totalFlights) * 100;
-                        const start = cumPct;
-                        cumPct += pct;
-                        return `${SOURCE_COLORS[source] || '#6b7280'} ${start}% ${cumPct}%`;
-                    });
-                    const gradient = `conic-gradient(${gradientParts.join(', ')})`;
-
-                    return (
-                        <div style={{ display: 'flex', gap: '32px', alignItems: 'center', flexWrap: 'wrap' }}>
-                            {/* 도넛 차트 */}
-                            <div style={{
-                                width: '200px',
-                                height: '200px',
-                                borderRadius: '50%',
-                                background: gradient,
-                                position: 'relative',
-                                flexShrink: 0,
-                                margin: '0 auto',
-                            }}>
-                                <div style={{
-                                    position: 'absolute',
-                                    top: '50%',
-                                    left: '50%',
-                                    transform: 'translate(-50%, -50%)',
-                                    width: '110px',
-                                    height: '110px',
-                                    borderRadius: '50%',
-                                    background: '#1a1a2e',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                }}>
-                                    <span style={{ fontSize: '1.4rem', fontWeight: 700 }}>{data.totalFlights.toLocaleString()}</span>
-                                    <span style={{ fontSize: '0.75rem', color: '#9ca3af' }}>전체</span>
-                                </div>
-                            </div>
-
-                            {/* 범례 테이블 */}
-                            <div className={styles.cityDetail} style={{ flex: 1, minWidth: '280px' }}>
-                                <table className={styles.cityTable}>
-                                    <thead>
-                                        <tr><th>여행사</th><th>항공편</th><th>비율</th><th>평균가</th></tr>
-                                    </thead>
-                                    <tbody>
-                                        {allSources.map(source => {
-                                            const count = data.bySource[source];
-                                            const pct = Math.round((count / data.totalFlights) * 100);
-                                            const avgPrice = data.avgPriceBySource[source];
-                                            return (
-                                                <tr key={source}>
-                                                    <td>
-                                                        <span style={{
-                                                            display: 'inline-block',
-                                                            width: '10px',
-                                                            height: '10px',
-                                                            borderRadius: '50%',
-                                                            background: SOURCE_COLORS[source] || '#6b7280',
-                                                            marginRight: '8px',
-                                                            verticalAlign: 'middle',
-                                                        }} />
-                                                        {SOURCE_NAMES[source] || source}
-                                                    </td>
-                                                    <td>{count.toLocaleString()}건</td>
-                                                    <td>{pct}%</td>
-                                                    <td>{formatPrice(avgPrice)}</td>
-                                                </tr>
-                                            );
-                                        })}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    );
-                })()}
-            </section>
-
-            {/* 크롤링 히스토리 */}
-            {data.crawlHistory && data.crawlHistory.length > 0 && (
-                <section className={styles.section}>
-                    <h2>📈 크롤링 히스토리</h2>
-                    <div className={styles.cityDetail} style={{ overflowX: 'auto' }}>
-                        <table className={styles.cityTable} style={{ minWidth: '500px' }}>
-                            <thead>
-                                <tr>
-                                    <th>시간</th>
-                                    {allSources.map(s => (
-                                        <th key={s} style={{ color: SOURCE_COLORS[s] }}>
-                                            {SOURCE_NAMES[s] || s}
-                                        </th>
-                                    ))}
-                                    <th>합계</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {[...data.crawlHistory].reverse().slice(0, 14).map((entry, idx, arr) => {
-                                    const prev = arr[idx + 1];
-                                    const total = Object.values(entry.sites).reduce((a, s) => a + s.total, 0);
-                                    const prevTotal = prev ? Object.values(prev.sites).reduce((a, s) => a + s.total, 0) : null;
-                                    const totalDiff = prevTotal !== null ? total - prevTotal : null;
-
-                                    return (
-                                        <tr key={entry.timestamp}>
-                                            <td style={{ whiteSpace: 'nowrap', fontSize: '0.85rem' }}>
-                                                {formatKST(entry.timestamp).replace(/\d{4}. /, '')}
-                                            </td>
-                                            {allSources.map(source => {
-                                                const count = entry.sites[source]?.total ?? 0;
-                                                const prevCount = prev?.sites[source]?.total ?? null;
-                                                const diff = prevCount !== null ? count - prevCount : null;
-                                                return (
-                                                    <td key={source} style={{ textAlign: 'center' }}>
-                                                        <span>{count}</span>
-                                                        {diff !== null && diff !== 0 && (
-                                                            <span style={{
-                                                                fontSize: '0.75rem',
-                                                                marginLeft: '4px',
-                                                                color: diff > 0 ? '#10b981' : '#ef4444',
-                                                                fontWeight: 600,
-                                                            }}>
-                                                                {diff > 0 ? `+${diff}` : diff}
-                                                            </span>
-                                                        )}
-                                                    </td>
-                                                );
-                                            })}
-                                            <td style={{ textAlign: 'center', fontWeight: 600 }}>
-                                                <span>{total}</span>
-                                                {totalDiff !== null && totalDiff !== 0 && (
-                                                    <span style={{
-                                                        fontSize: '0.75rem',
-                                                        marginLeft: '4px',
-                                                        color: totalDiff > 0 ? '#10b981' : '#ef4444',
-                                                    }}>
-                                                        {totalDiff > 0 ? `+${totalDiff}` : totalDiff}
-                                                    </span>
-                                                )}
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {/* 경고 목록 */}
-                    {data.crawlHistory.some(e => e.alerts.length > 0) && (
-                        <div className={styles.cityDetail} style={{ marginTop: '16px' }}>
-                            <h3 style={{ marginBottom: '8px' }}>⚠️ 최근 경고</h3>
-                            <table className={styles.cityTable}>
-                                <thead>
-                                    <tr><th>시간</th><th>내용</th></tr>
-                                </thead>
-                                <tbody>
-                                    {data.crawlHistory
-                                        .filter(e => e.alerts.length > 0)
-                                        .slice(-5)
-                                        .reverse()
-                                        .flatMap((e) =>
-                                            e.alerts.map((a, j) => (
-                                                <tr key={`${e.timestamp}-${j}`}>
-                                                    {j === 0 ? (
-                                                        <td rowSpan={e.alerts.length} style={{ whiteSpace: 'nowrap', verticalAlign: 'top', fontSize: '0.85rem' }}>
-                                                            {formatKST(e.timestamp).replace(/\d{4}\. /, '')}
-                                                        </td>
-                                                    ) : null}
-                                                    <td style={{ color: '#ef4444', fontSize: '0.85rem' }}>{a}</td>
-                                                </tr>
-                                            ))
-                                        )}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                </section>
-            )}
-
-            {/* 지역별 가격 현황 */}
-            <section className={styles.section}>
-                <h2>지역별 가격 현황</h2>
-                <div className={styles.cityDetail}>
-                    <table className={styles.cityTable}>
-                        <thead>
-                            <tr>
-                                <th>지역</th>
-                                <th>항공편</th>
-                                <th>최저가</th>
-                                <th>최고가</th>
-                                <th>평균가</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {sortedRegions.map(([region, count]) => {
-                                const rp = data.priceByRegion[region];
-                                return (
-                                    <tr key={region}>
-                                        <td><strong>{region}</strong></td>
-                                        <td>{count}건</td>
-                                        <td style={{ color: '#10b981' }}>{formatPrice(rp.min)}</td>
-                                        <td style={{ color: '#ef4444' }}>{formatPrice(rp.max)}</td>
-                                        <td>{formatPrice(Math.round(rp.avg))}</td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-
-            {/* 인기 도착 도시 TOP 15 */}
-            <section className={styles.section}>
-                <h2>인기 도착 도시 TOP 15</h2>
-                <div className={styles.cityDetail}>
-                    <table className={styles.cityTable}>
-                        <thead>
-                            <tr><th>도시</th><th>항공편</th><th>비율</th></tr>
-                        </thead>
-                        <tbody>
-                            {sortedCities.slice(0, 15).map(([city, count]) => (
-                                <tr key={city}>
-                                    <td>{city}</td>
-                                    <td>{count}건</td>
-                                    <td>{Math.round((count / data.totalFlights) * 100)}%</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-
-            {/* 출발 도시별 */}
-            <section className={styles.section}>
-                <h2>출발 도시별</h2>
-                <div className={styles.cityDetail}>
-                    <table className={styles.cityTable}>
-                        <thead>
-                            <tr><th>출발 도시</th><th>항공편</th><th>비율</th></tr>
-                        </thead>
-                        <tbody>
-                            {sortedDepCities.map(([city, count]) => (
-                                <tr key={city}>
-                                    <td>{city}</td>
-                                    <td>{count}건</td>
-                                    <td>{Math.round((count / data.totalFlights) * 100)}%</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-
-            {/* 항공사별 TOP 15 */}
-            <section className={styles.section}>
-                <h2>항공사별 TOP 15</h2>
-                <div className={styles.cityDetail}>
-                    <table className={styles.cityTable}>
-                        <thead>
-                            <tr><th>항공사</th><th>항공편</th><th>비율</th></tr>
-                        </thead>
-                        <tbody>
-                            {sortedAirlines.slice(0, 15).map(([airline, count]) => (
-                                <tr key={airline}>
-                                    <td>{airline}</td>
-                                    <td>{count}건</td>
-                                    <td>{Math.round((count / data.totalFlights) * 100)}%</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-
-            {/* 최저가 TOP 10 */}
-            <section className={styles.section}>
-                <h2>🔥 최저가 TOP 10</h2>
-                <div className={styles.cityDetail}>
-                    <table className={styles.cityTable}>
-                        <thead>
-                            <tr>
-                                <th>노선</th>
-                                <th>항공사</th>
-                                <th>가격</th>
-                                <th>출발일</th>
-                                <th>여행사</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {data.cheapest.map((f, i) => (
-                                <tr key={i}>
-                                    <td>{f.route}</td>
-                                    <td>{f.airline}</td>
-                                    <td style={{ color: '#10b981', fontWeight: 600 }}>{formatPrice(f.price)}</td>
-                                    <td>{f.date}</td>
-                                    <td>
-                                        <span style={{
-                                            background: SOURCE_COLORS[f.source] || '#6b7280',
-                                            color: '#fff',
-                                            padding: '2px 8px',
-                                            borderRadius: '4px',
-                                            fontSize: '0.8rem',
-                                        }}>
-                                            {SOURCE_NAMES[f.source] || f.source}
-                                        </span>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-
-            <section className={styles.section}>
-                <h2>📈 수익 전환 분석</h2>
-                <div className={styles.card}>
-                    <p style={{ margin: 0, lineHeight: 1.7 }}>
-                        예약·제휴 클릭은 위 <strong>&ldquo;방문자와 행동(GA4)&rdquo;</strong> 항목에서 바로 볼 수 있습니다.
-                        더 깊게 파고들 때만 GA4를 열면 됩니다. 실제 구매와 수익은 마이리얼트립 및 Trip.com 파트너 정산 화면과 대조합니다.
-                    </p>
-                    <a href="https://analytics.google.com/" target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', marginTop: '10px', color: '#7c3aed', fontWeight: 700 }}>
-                        Google Analytics 열기 →
-                    </a>
-                    <div style={{ marginTop: '18px', paddingTop: '16px', borderTop: '1px solid #334155' }}>
-                        <p style={{ margin: '0 0 10px', color: analyticsExcluded ? '#86efac' : '#fbbf24', fontWeight: 700 }}>
-                            내 방문 통계: {analyticsExcluded ? '제외 중' : '포함 중'}
-                        </p>
-                        <p style={{ margin: '0 0 12px', color: '#94a3b8', fontSize: '0.85rem', lineHeight: 1.6 }}>
-                            이 브라우저에서 발생하는 방문과 예약 클릭을 GA4에서 제외합니다. 다른 기기나 브라우저는 각각 설정해야 합니다.
-                        </p>
-                        <button
-                            type="button"
-                            className={styles.analyticsToggle}
-                            onClick={() => {
-                                const next = !analyticsExcluded;
-                                setAnalyticsExcluded(next);
-                                setAnalyticsExcludedState(next);
-                            }}
-                        >
-                            {analyticsExcluded ? '내 방문 다시 포함하기' : '내 방문 제외하기'}
-                        </button>
-                    </div>
-                </div>
-            </section>
         </div>
     );
 }

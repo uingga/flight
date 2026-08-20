@@ -890,3 +890,229 @@
     font-size: 0.75rem;
     color: #94a3b8;
 }
+
+/* ── 탭 ─────────────────────────────────────────────
+   기능이 한 줄로 쌓여 길어진 화면을 성격별로 나눈다. */
+.tabNav {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 28px;
+    padding-bottom: 2px;
+    overflow-x: auto;
+    border-bottom: 1px solid #1e293b;
+}
+
+.tabBtn {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 10px 16px;
+    border: 1px solid transparent;
+    border-bottom: 2px solid transparent;
+    border-radius: 10px 10px 0 0;
+    background: transparent;
+    color: #94a3b8;
+    text-align: left;
+    cursor: pointer;
+    transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+
+.tabBtn:hover {
+    color: #e2e8f0;
+    background: #1e293b;
+}
+
+.tabBtnActive,
+.tabBtnActive:hover {
+    color: #f1f5f9;
+    background: #1e293b;
+    border-color: #334155;
+    border-bottom-color: #6366f1;
+}
+
+.tabLabel {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.tabHint {
+    font-size: 0.72rem;
+    color: #64748b;
+    white-space: nowrap;
+}
+
+.tabBtnActive .tabHint {
+    color: #94a3b8;
+}
+
+.tabDot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #ef4444;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.18);
+}
+
+/* ── 여행사별 수집 상태 카드 ────────────────────────── */
+.sourceGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 14px;
+}
+
+.sourceCard {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 16px;
+    border: 1px solid #334155;
+    border-left: 3px solid #10b981;
+    border-radius: 12px;
+    background: #1e293b;
+}
+
+.sourceCardStale {
+    border-left-color: #f59e0b;
+}
+
+.sourceCardBroken {
+    border-left-color: #ef4444;
+    background: linear-gradient(135deg, #1e293b, #3f1d1d);
+}
+
+.sourceCardHead {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.sourceName {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #f1f5f9;
+}
+
+.sourceDot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.statusBadge {
+    flex-shrink: 0;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(16, 185, 129, 0.15);
+    color: #6ee7b7;
+    font-size: 0.7rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.statusBadgeStale {
+    background: rgba(245, 158, 11, 0.16);
+    color: #fcd34d;
+}
+
+.statusBadgeBroken {
+    background: rgba(239, 68, 68, 0.18);
+    color: #fca5a5;
+}
+
+.sourceCount {
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+    font-size: 1.7rem;
+    font-weight: 800;
+    color: #f1f5f9;
+    font-variant-numeric: tabular-nums;
+}
+
+.sourceCount small {
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: #94a3b8;
+}
+
+.sourceMeta {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    font-size: 0.75rem;
+    color: #94a3b8;
+    line-height: 1.5;
+}
+
+/* 최근 크롤의 수집량 추이. 여행사마다 규모가 크게 달라 각 카드가 자기 최대값을 기준으로 그린다. */
+.sparkBars {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 34px;
+    margin-top: 2px;
+}
+
+.sparkBar {
+    flex: 1;
+    min-width: 3px;
+    border-radius: 2px 2px 0 0;
+    background: #475569;
+}
+
+.sparkBar:last-child {
+    background: #818cf8;
+}
+
+.sparkBarPreserved,
+.sparkBarPreserved:last-child {
+    background: #f59e0b;
+}
+
+/* ── 표시 기준 토글 ─────────────────────────────────── */
+.metricToggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+}
+
+.metricLabel {
+    font-size: 0.78rem;
+    color: #94a3b8;
+    margin-right: 2px;
+}
+
+.metricBtn {
+    padding: 5px 12px;
+    border: 1px solid #334155;
+    border-radius: 999px;
+    background: transparent;
+    color: #94a3b8;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.metricBtn:hover {
+    border-color: #64748b;
+    color: #e2e8f0;
+}
+
+.metricBtnActive,
+.metricBtnActive:hover {
+    border-color: #6366f1;
+    background: rgba(99, 102, 241, 0.15);
+    color: #c7d2fe;
+}
