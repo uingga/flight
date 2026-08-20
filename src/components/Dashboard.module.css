@@ -483,6 +483,76 @@
     background: #fef2f2;
 }
 
+.newSinceVisitBar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin: 4px 0 16px;
+    padding: 13px 16px;
+    border: 1px solid #ddd9ff;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #faf9ff 0%, #f4f2ff 100%);
+}
+
+.newSinceVisitBarActive {
+    border-color: #8b7cf6;
+    background: #f1efff;
+}
+
+.newSinceVisitCopy {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.newSinceVisitCopy strong {
+    color: #2f286d;
+    font-size: 0.94rem;
+    line-height: 1.35;
+}
+
+.newSinceVisitCopy span {
+    color: #77728f;
+    font-size: 0.78rem;
+    line-height: 1.35;
+}
+
+.newSinceVisitBtn {
+    flex-shrink: 0;
+    padding: 8px 13px;
+    border: 1px solid #7367dd;
+    border-radius: 999px;
+    background: #fff;
+    color: #4f46a5;
+    font-size: 0.8rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.newSinceVisitBtn:hover {
+    background: #4f46a5;
+    color: #fff;
+}
+
+@media (max-width: 768px) {
+    .newSinceVisitBar {
+        gap: 10px;
+        margin: 2px 0 12px;
+        padding: 11px 12px;
+    }
+
+    .newSinceVisitCopy span {
+        display: none;
+    }
+
+    .newSinceVisitBtn {
+        padding: 7px 11px;
+        font-size: 0.76rem;
+    }
+}
+
 /* Stats Bar */
 .stats {
     margin-top: var(--spacing-md);
@@ -2513,6 +2583,10 @@
     display: none;
 }
 
+.mdtSheetInner {
+    min-height: 100%;
+}
+
 /* 상단 요약 바 */
 .mdtSummaryBar {
     display: flex;
@@ -3799,7 +3873,7 @@
     transform: scale(0.98);
 }
 
-/* 예약 버튼 고정 래퍼 — 시트(.mdtDetailSheet) 직속 자식.
+/* 예약 버튼 고정 래퍼 — 시트 스크롤 콘텐츠 안의 하단 영역.
    내용이 아무리 길어도 시트 하단에 항상 고정되고,
    위로 지나가는 내용이 그림자에 비쳐 "스크롤 가능" 신호 역할도 한다. */
 .mdtBookBtnWrap {
@@ -4009,6 +4083,10 @@
         max-height: 85vh;
         max-height: 88dvh; /* 실제 보이는 영역 기준 (iOS 주소창 보정) */
         animation: slideUpMobile 0.3s ease;
+        will-change: transform;
+    }
+
+    .mdtSheetInner {
         will-change: transform;
     }
 

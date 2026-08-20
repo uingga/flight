@@ -107,7 +107,7 @@ async function buildStats(config: Ga4Config, days: number) {
         returningRequest(previousDateRanges),
     ]);
 
-    const [agencyReport, routeReport, entryReport, detailEntryReport, channelReport, campaignTrafficReport, campaignBookingReport, leadTimeReport, rangeReport, dateMethodReport, presetReport] = await Promise.all([
+    const [agencyReport, routeReport, entryReport, detailEntryReport, channelReport, campaignTrafficReport, campaignBookingReport, leadTimeReport, rangeReport, dateMethodReport, presetReport, repeatBehaviorReport] = await Promise.all([
         optional('여행사별 예약 클릭', warnings, () => runReport(config, {
             dateRanges,
             dimensions: [{ name: 'customEvent:travel_agency' }],
@@ -193,6 +193,18 @@ async function buildStats(config: Ga4Config, days: number) {
             orderBys: [{ metric: { metricName: 'eventCount' }, desc: true }],
             limit: 15,
         })),
+        optional('신규·재방문 행동 비교', warnings, () => runReport(config, {
+            dateRanges,
+            dimensions: [{ name: 'newVsReturning' }, { name: 'eventName' }],
+            metrics: [{ name: 'totalUsers' }],
+            dimensionFilter: {
+                orGroup: {
+                    expressions: ['detail_open', 'booking_click', 'share_flight', 'alert_setup']
+                        .map(eventName => eventNameFilter(eventName)),
+                },
+            },
+            limit: 20,
+        })),
     ]);
 
     // YYYYMMDD → YYYY-MM-DD
@@ -241,6 +253,29 @@ async function buildStats(config: Ga4Config, days: number) {
     const detailOpen = events.find(entry => entry.name === 'detail_open');
     const alertSetup = events.find(entry => entry.name === 'alert_setup');
     const rate = (value: number) => (totals.users > 0 ? Number(((value / totals.users) * 100).toFixed(1)) : null);
+
+    const repeatGroups = {
+        new: { users: returning(returningReport).newUsers, detailOpen: 0, bookingClick: 0, share: 0, alertSetup: 0 },
+        returning: { users: returning(returningReport).returningUsers, detailOpen: 0, bookingClick: 0, share: 0, alertSetup: 0 },
+    };
+    (repeatBehaviorReport?.rows || []).forEach(row => {
+        const group = dim(row).toLowerCase() as keyof typeof repeatGroups;
+        if (!(group in repeatGroups)) return;
+        const eventName = dim(row, 1);
+        const key = ({
+            detail_open: 'detailOpen',
+            booking_click: 'bookingClick',
+            share_flight: 'share',
+            alert_setup: 'alertSetup',
+        } as const)[eventName];
+        if (key) repeatGroups[group][key] = num(row, 0);
+    });
+    const behavior = (group: typeof repeatGroups.new) => ({
+        ...group,
+        detailOpenRate: group.users > 0 ? Number(((group.detailOpen / group.users) * 100).toFixed(1)) : null,
+        bookingClickRate: group.users > 0 ? Number(((group.bookingClick / group.users) * 100).toFixed(1)) : null,
+        shareRate: group.users > 0 ? Number(((group.share / group.users) * 100).toFixed(1)) : null,
+    });
 
     const list = (report: ReportResponse | null, labels?: Record<string, string>, fallbackLabel = '(값 없음)') =>
         report === null ? null : (report.rows || []).map(row => ({
@@ -315,6 +350,17 @@ async function buildStats(config: Ga4Config, days: number) {
         returning: {
             current: returning(returningReport),
             previous: returning(previousReturningReport),
+        },
+        monitoring: {
+            recent7Share: totals.users > 0
+                ? Number(((summary(recent7Report).users / totals.users) * 100).toFixed(1))
+                : null,
+            sessionsPerUser: totals.users > 0
+                ? Number((totals.sessions / totals.users).toFixed(2))
+                : null,
+            behaviorAvailable: repeatBehaviorReport !== null,
+            newUsers: behavior(repeatGroups.new),
+            returningUsers: behavior(repeatGroups.returning),
         },
         trend,
         events: events.filter(entry => entry.known),

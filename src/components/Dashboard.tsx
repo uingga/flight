@@ -85,6 +85,21 @@ const getSourceName = (source: string) => {
 };
 
 const DISMISSED_ALERT_ROUTES_KEY = 'tikitikit_dismissed_alert_routes';
+const VISIT_FLIGHT_SNAPSHOT_KEY = 'tikitikit_visit_flight_snapshot_v1';
+
+// 여행사 크롤 순서가 바뀌면 flight.id의 끝 번호가 달라질 수 있어,
+// 사용자가 보기에 같은 표를 구성하는 값들로 방문 간 비교 키를 만든다.
+const flightDiscoveryKey = (flight: Flight) => [
+    flight.source,
+    normalizeCity(flight.departure.city),
+    normalizeCity(flight.arrival.city),
+    flight.departure.date,
+    flight.arrival.date,
+    flight.departure.time,
+    flight.arrival.time,
+    normalizeAirline(flight.airline),
+    flight.flightNumber || '',
+].join('|');
 
 export default function Dashboard() {
     const [flights, setFlights] = useState<Flight[]>([]);
@@ -130,6 +145,11 @@ export default function Dashboard() {
     const disclaimerWindowRef = useRef<Window | null>(null);
     const [favoriteFlights, setFavoriteFlights] = useState<string[]>([]);
     const [favFilter, setFavFilter] = useState(false);
+    const [newSinceLastVisitFilter, setNewSinceLastVisitFilter] = useState(false);
+    const [newSinceLastVisitKeys, setNewSinceLastVisitKeys] = useState<string[]>([]);
+    const [previousVisitAt, setPreviousVisitAt] = useState<string | null>(null);
+    const visitBaselineRef = useRef<Set<string> | null>(null);
+    const visitSnapshotLoadedRef = useRef(false);
     const [favToast, setFavToast] = useState<string | null>(null);
     const [showContactModal, setShowContactModal] = useState(false);
     const [contactForm, setContactForm] = useState({ name: '', email: '', message: '' });
@@ -293,7 +313,7 @@ export default function Dashboard() {
     // 필터 변경 시 displayCount 리셋
     useEffect(() => {
         setDisplayCount(ITEMS_PER_PAGE);
-    }, [searchTerm, sourceFilter, regionFilter, airlineFilter, startDate, endDate, departureFilter, sortBy, favFilter]);
+    }, [searchTerm, sourceFilter, regionFilter, airlineFilter, startDate, endDate, departureFilter, sortBy, favFilter, newSinceLastVisitFilter]);
 
     // 스크롤 감지 (맨위로 버튼 + 헤더 숨김)
     useEffect(() => {
@@ -340,10 +360,38 @@ export default function Dashboard() {
             }
 
             const data = await response.json();
-            setFlights(data.flights || []);
+            const fetchedFlights: Flight[] = data.flights || [];
+            setFlights(fetchedFlights);
             setLastUpdated(data.lastUpdated || null);
             setPriceHistory(data.priceHistory || {});
             setInterparkPrices(data.interparkPrices || {});
+
+            try {
+                if (!visitSnapshotLoadedRef.current) {
+                    const raw = localStorage.getItem(VISIT_FLIGHT_SNAPSHOT_KEY);
+                    if (raw) {
+                        const saved = JSON.parse(raw) as { checkedAt?: string; keys?: unknown };
+                        if (Array.isArray(saved.keys)) {
+                            visitBaselineRef.current = new Set(saved.keys.filter((key): key is string => typeof key === 'string'));
+                            setPreviousVisitAt(saved.checkedAt || null);
+                        }
+                    }
+                    visitSnapshotLoadedRef.current = true;
+                }
+
+                const currentKeys = fetchedFlights.map(flightDiscoveryKey);
+                const baseline = visitBaselineRef.current;
+                setNewSinceLastVisitKeys(baseline ? currentKeys.filter(key => !baseline.has(key)) : []);
+
+                // 첫 방문이라 비교 대상이 없으면 현재 목록을 이번 세션의 기준으로 삼는다.
+                if (!baseline) visitBaselineRef.current = new Set(currentKeys);
+                localStorage.setItem(VISIT_FLIGHT_SNAPSHOT_KEY, JSON.stringify({
+                    checkedAt: new Date().toISOString(),
+                    keys: currentKeys,
+                }));
+            } catch {
+                // 저장 공간이 막혀도 항공권 목록 자체는 정상 동작해야 한다.
+            }
         } catch (err) {
             setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.');
         } finally {
@@ -378,6 +426,7 @@ export default function Dashboard() {
             setSourceFilter('all');
             setAirlineFilter('all');
             setSearchTerm('');
+            setNewSinceLastVisitFilter(false);
             // URL 정리
             window.history.replaceState({}, '', window.location.pathname);
         }
@@ -390,7 +439,7 @@ export default function Dashboard() {
     const defaultEndDate = useMemo(() => getDefaultEndDate(), []);
 
     // 아무 필터도 손대지 않은 첫 화면인가 (기본 날짜 범위는 기본 화면으로 친다)
-    const isDefaultView = !sharedFlightId && !favFilter && searchTerm === ''
+    const isDefaultView = !sharedFlightId && !favFilter && !newSinceLastVisitFilter && searchTerm === ''
         && departureFilter === 'all' && regionFilter === 'all' && sourceFilter === 'all' && airlineFilter === 'all'
         && startDate === defaultStartDate && endDate === defaultEndDate;
 
@@ -1154,6 +1203,7 @@ export default function Dashboard() {
 
     // 상세 시트 스크롤 힌트 — 화면 밖에 내용이 남아 있는지 사용자가 알 수 있게 한다
     const detailSheetRef = useRef<HTMLDivElement | null>(null);
+    const detailSheetInnerRef = useRef<HTMLDivElement | null>(null);
     const detailDragRef = useRef({ pointerId: -1, startY: 0, lastY: 0, startedAt: 0 });
     const detailDragTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const [sheetHasMore, setSheetHasMore] = useState(false);
@@ -1174,14 +1224,31 @@ export default function Dashboard() {
 
     const resetDetailSheetPosition = useCallback(() => {
         const sheet = detailSheetRef.current;
-        if (!sheet) return;
+        const inner = detailSheetInnerRef.current;
+        if (!sheet || !inner) return;
         sheet.style.transition = 'transform 220ms cubic-bezier(0.22, 1, 0.36, 1)';
         sheet.style.transform = 'translate3d(0, 0, 0)';
+        inner.style.transition = 'transform 220ms cubic-bezier(0.22, 1, 0.36, 1)';
+        inner.style.transform = 'translate3d(0, 0, 0)';
         detailDragTimerRef.current = setTimeout(() => {
-            if (!detailSheetRef.current) return;
+            if (!detailSheetRef.current || !detailSheetInnerRef.current) return;
             detailSheetRef.current.style.transition = '';
             detailSheetRef.current.style.transform = '';
+            detailSheetInnerRef.current.style.transition = '';
+            detailSheetInnerRef.current.style.transform = '';
         }, 230);
+    }, []);
+
+    const applyDetailSheetPull = useCallback((offset: number) => {
+        const sheet = detailSheetRef.current;
+        const inner = detailSheetInnerRef.current;
+        if (!sheet || !inner) return;
+        const closeDistance = Math.min(110, sheet.clientHeight * 0.2);
+        const resistedOffset = Math.min(16, Math.max(0, offset) * (16 / closeDistance));
+        inner.style.transform = `translate3d(0, ${resistedOffset}px, 0)`;
+        // 기준을 넘기기 전에는 외곽은 고정하고 내용만 저항감 있게 당긴다.
+        const sheetOffset = Math.max(0, offset - closeDistance);
+        sheet.style.transform = `translate3d(0, ${sheetOffset}px, 0)`;
     }, []);
 
     const beginDetailSheetDrag = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -1204,15 +1271,14 @@ export default function Dashboard() {
         event.currentTarget.setPointerCapture(event.pointerId);
         sheet.style.animation = 'none';
         sheet.style.transition = 'none';
+        if (detailSheetInnerRef.current) detailSheetInnerRef.current.style.transition = 'none';
     };
 
     const moveDetailSheetDrag = (event: React.PointerEvent<HTMLDivElement>) => {
         if (detailDragRef.current.pointerId !== event.pointerId) return;
         const offset = Math.max(0, event.clientY - detailDragRef.current.startY);
         detailDragRef.current.lastY = event.clientY;
-        if (detailSheetRef.current) {
-            detailSheetRef.current.style.transform = `translate3d(0, ${offset}px, 0)`;
-        }
+        applyDetailSheetPull(offset);
         if (offset > 0) event.preventDefault();
     };
 
@@ -1225,8 +1291,8 @@ export default function Dashboard() {
         detailDragRef.current.pointerId = -1;
         try { event.currentTarget.releasePointerCapture(event.pointerId); } catch { /* 이미 해제됨 */ }
 
-        const closeDistance = Math.min(120, (sheet?.clientHeight || 480) * 0.22);
-        const shouldClose = !cancelled && (offset >= closeDistance || (offset >= 44 && velocity >= 0.65));
+        const closeDistance = Math.min(110, (sheet?.clientHeight || 480) * 0.2);
+        const shouldClose = !cancelled && (offset >= closeDistance || (offset >= 60 && velocity >= 0.9));
         if (!sheet || !shouldClose) {
             resetDetailSheetPosition();
             return;
@@ -1234,6 +1300,10 @@ export default function Dashboard() {
 
         sheet.style.transition = 'transform 180ms ease-in';
         sheet.style.transform = `translate3d(0, ${sheet.clientHeight}px, 0)`;
+        if (detailSheetInnerRef.current) {
+            detailSheetInnerRef.current.style.transition = 'transform 120ms ease-out';
+            detailSheetInnerRef.current.style.transform = 'translate3d(0, 0, 0)';
+        }
         detailDragTimerRef.current = setTimeout(() => setModetourGuide(null), 170);
     };
 
@@ -1273,10 +1343,11 @@ export default function Dashboard() {
                 if (detailDragTimerRef.current) clearTimeout(detailDragTimerRef.current);
                 sheet.style.animation = 'none';
                 sheet.style.transition = 'none';
+                if (detailSheetInnerRef.current) detailSheetInnerRef.current.style.transition = 'none';
             }
             event.preventDefault();
             lastY = currentY;
-            sheet.style.transform = `translate3d(0, ${Math.max(0, offset)}px, 0)`;
+            applyDetailSheetPull(Math.max(0, offset));
         };
 
         const finishTouchDrag = (cancelled: boolean) => {
@@ -1287,14 +1358,18 @@ export default function Dashboard() {
             const offset = Math.max(0, lastY - startY);
             const elapsed = Math.max(1, performance.now() - startedAt);
             const velocity = offset / elapsed;
-            const closeDistance = Math.min(120, sheet.clientHeight * 0.22);
-            const shouldClose = !cancelled && (offset >= closeDistance || (offset >= 44 && velocity >= 0.65));
+            const closeDistance = Math.min(110, sheet.clientHeight * 0.2);
+            const shouldClose = !cancelled && (offset >= closeDistance || (offset >= 60 && velocity >= 0.9));
             if (!shouldClose) {
                 resetDetailSheetPosition();
                 return;
             }
             sheet.style.transition = 'transform 180ms ease-in';
             sheet.style.transform = `translate3d(0, ${sheet.clientHeight}px, 0)`;
+            if (detailSheetInnerRef.current) {
+                detailSheetInnerRef.current.style.transition = 'transform 120ms ease-out';
+                detailSheetInnerRef.current.style.transform = 'translate3d(0, 0, 0)';
+            }
             detailDragTimerRef.current = setTimeout(() => setModetourGuide(null), 170);
         };
 
@@ -1310,7 +1385,7 @@ export default function Dashboard() {
             sheet.removeEventListener('touchend', onTouchEnd);
             sheet.removeEventListener('touchcancel', onTouchCancel);
         };
-    }, [isMobile, modetourGuide, resetDetailSheetPosition]);
+    }, [applyDetailSheetPull, isMobile, modetourGuide, resetDetailSheetPosition]);
 
     useEffect(() => () => {
         if (detailDragTimerRef.current) clearTimeout(detailDragTimerRef.current);
@@ -1359,6 +1434,7 @@ export default function Dashboard() {
         setStartDate('');
         setEndDate('');
         setSortBy('discount');
+        setNewSinceLastVisitFilter(false);
     };
 
     // 홈으로 (인천/김포 + 기본 날짜 복원)
@@ -1371,13 +1447,14 @@ export default function Dashboard() {
         setStartDate(getDefaultStartDate());
         setEndDate(getDefaultEndDate());
         setSortBy('discount');
+        setNewSinceLastVisitFilter(false);
         setSharedFlightId(null);
         sharedRouteFallback.current = null;
     };
 
     // 활성 필터 여부
     const hasActiveFilters = searchTerm || sourceFilter !== 'all' || regionFilter !== 'all' ||
-        airlineFilter !== 'all' || departureFilter !== 'all' || startDate || endDate;
+        airlineFilter !== 'all' || departureFilter !== 'all' || startDate || endDate || newSinceLastVisitFilter;
 
     // 조건별 판정을 분리해 둔다 — 결과가 0건일 때 어느 조건이 막았는지 되짚어야 하기 때문
     //
@@ -1404,6 +1481,9 @@ export default function Dashboard() {
         if (departureFilter === '부산') return /부산|김해|PUS/.test(flight.departure.city);
         return flight.departure.city.includes(departureFilter);
     };
+    const newSinceLastVisitKeySet = useMemo(() => new Set(newSinceLastVisitKeys), [newSinceLastVisitKeys]);
+    const matchesNewSinceLastVisit = (flight: Flight) =>
+        !newSinceLastVisitFilter || newSinceLastVisitKeySet.has(flightDiscoveryKey(flight));
     const matchesNonDateFilters = (flight: Flight) =>
         matchesSearchTerm(flight) && matchesSourceFilter(flight) && matchesRegionFilter(flight)
         && matchesAirlineFilter(flight) && matchesDepartureFilter(flight);
@@ -1710,7 +1790,8 @@ export default function Dashboard() {
         const matchesFav = !favFilter || isFavoriteFlight(flight.id);
 
         return matchesSearchTerm(flight) && matchesSourceFilter(flight) && matchesRegionFilter(flight)
-            && matchesAirlineFilter(flight) && matchesDateFilter(flight) && matchesDepartureFilter(flight) && matchesFav;
+            && matchesAirlineFilter(flight) && matchesDateFilter(flight) && matchesDepartureFilter(flight)
+            && matchesFav && matchesNewSinceLastVisit(flight);
     }).sort((a, b) => {
         let comparison = 0;
 
@@ -1753,6 +1834,12 @@ export default function Dashboard() {
 
         return sortOrder === 'asc' ? comparison : -comparison;
     });
+
+    const newSinceLastVisitCount = previousVisitAt
+        ? flights.filter(flight => newSinceLastVisitKeySet.has(flightDiscoveryKey(flight))
+            && matchesSearchTerm(flight) && matchesSourceFilter(flight) && matchesRegionFilter(flight)
+            && matchesAirlineFilter(flight) && matchesDateFilter(flight) && matchesDepartureFilter(flight)).length
+        : 0;
 
     // 결과가 0건인 이유를 가려낸다.
     // 검색어에 맞는 항공권이 있는데도 안 보이면 그건 "특가가 없는 것"이 아니라 필터가 막은 것이므로,
@@ -3170,6 +3257,12 @@ export default function Dashboard() {
                                         <button onClick={() => setAirlineFilter('all')}>×</button>
                                     </span>
                                 )}
+                                {newSinceLastVisitFilter && (
+                                    <span className={styles.filterTag}>
+                                        지난 방문 이후 새 표
+                                        <button onClick={() => setNewSinceLastVisitFilter(false)}>×</button>
+                                    </span>
+                                )}
                                 {(startDate || endDate) && (
                                     <span className={styles.filterTag}>
                                         {fmtDate(startDate) || '시작'} ~ {fmtDate(endDate) || '종료'}
@@ -3184,6 +3277,30 @@ export default function Dashboard() {
 
 
 
+
+                        {previousVisitAt && (newSinceLastVisitCount > 0 || newSinceLastVisitFilter) && (
+                            <div className={`${styles.newSinceVisitBar} ${newSinceLastVisitFilter ? styles.newSinceVisitBarActive : ''}`}>
+                                <div className={styles.newSinceVisitCopy}>
+                                    <strong>
+                                        {newSinceLastVisitCount > 0
+                                            ? `지난 방문 뒤 새로 들어온 표 ${newSinceLastVisitCount}개`
+                                            : '현재 조건에는 새로 들어온 표가 없어요'}
+                                    </strong>
+                                    <span>지금 보고 있는 조건을 기준으로 찾았습니다.</span>
+                                </div>
+                                <button
+                                    type="button"
+                                    className={styles.newSinceVisitBtn}
+                                    onClick={() => {
+                                        const next = !newSinceLastVisitFilter;
+                                        setNewSinceLastVisitFilter(next);
+                                        gtag.trackFilterChange('new_since_last_visit', next ? 'on' : 'off');
+                                    }}
+                                >
+                                    {newSinceLastVisitFilter ? '전체 표 보기' : '새 표만 보기'}
+                                </button>
+                            </div>
+                        )}
 
                         {/* 항공권 수 + 여행사/항공사/정렬 드롭다운 */}
                         <div className={styles.stats}>
@@ -3826,6 +3943,7 @@ export default function Dashboard() {
                             ref={detailSheetRef}
                             onScroll={measureSheetScroll}
                         >
+                            <div className={styles.mdtSheetInner} ref={detailSheetInnerRef}>
                             <div
                                 className={styles.mdtDragHandleArea}
                                 data-detail-drag-handle
@@ -4180,7 +4298,7 @@ export default function Dashboard() {
 
                             </div>
 
-                            {/* 예약 버튼: 시트 직속 자식이라 내용 길이와 무관하게 항상 하단에 고정 표시 */}
+                            {/* 예약 버튼: 스크롤 콘텐츠 하단에서 항상 고정 표시 */}
                             <div className={styles.mdtBookBtnWrap}>
                                 <div
                                     aria-hidden="true"
@@ -4225,6 +4343,7 @@ export default function Dashboard() {
                                         제휴 링크 안내: 이 링크를 통해 예약이 완료되면 티키티킷이 수수료를 받을 수 있습니다.
                                     </p>
                                 )}
+                            </div>
                             </div>
                         </div>
                     </div>
