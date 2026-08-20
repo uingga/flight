@@ -118,6 +118,22 @@ interface GaStatsData {
         current: { newUsers: number; returningUsers: number; rate: number | null };
         previous: { newUsers: number; returningUsers: number; rate: number | null };
     };
+    monitoring: {
+        recent7Share: number | null;
+        sessionsPerUser: number | null;
+        behaviorAvailable: boolean;
+        newUsers: {
+            users: number;
+            detailOpen: number;
+            bookingClick: number;
+            share: number;
+            alertSetup: number;
+            detailOpenRate: number | null;
+            bookingClickRate: number | null;
+            shareRate: number | null;
+        };
+        returningUsers: GaStatsData['monitoring']['newUsers'];
+    };
     trend: Array<{ date: string; users: number; pageViews: number; sessions: number }>;
     events: Array<{ name: string; label: string; count: number; users: number }>;
     otherEvents: Array<{ name: string; label: string; count: number; users: number }>;
@@ -454,6 +470,16 @@ export default function AdminPage() {
                                 <small>페이지뷰 {gaStats.totals.pageViews.toLocaleString()}회</small>
                             </div>
                             <div className={styles.userStat}>
+                                <span>최근 활동 비중</span>
+                                <strong>{gaStats.monitoring.recent7Share !== null ? `${gaStats.monitoring.recent7Share}%` : '-'}</strong>
+                                <small>30일 방문자 중 최근 7일에도 방문</small>
+                            </div>
+                            <div className={styles.userStat}>
+                                <span>사용자당 방문 횟수</span>
+                                <strong>{gaStats.monitoring.sessionsPerUser !== null ? `${gaStats.monitoring.sessionsPerUser}회` : '-'}</strong>
+                                <small>최근 30일 평균</small>
+                            </div>
+                            <div className={styles.userStat}>
                                 <span>상세 열람한 사람</span>
                                 <strong>{gaStats.conversion.detailOpenUsers.toLocaleString()}</strong>
                                 <small>
@@ -506,6 +532,33 @@ export default function AdminPage() {
                                 </div>
                             );
                         })()}
+
+                        <h3 className={styles.userSubTitle}>신규 방문자와 재방문자의 행동</h3>
+                        {gaStats.monitoring.behaviorAvailable ? (
+                            <div className={styles.cityDetail}>
+                                <table className={styles.cityTable}>
+                                    <thead>
+                                        <tr><th>구분</th><th>사용자</th><th>상세 열람</th><th>예약 클릭</th><th>공유</th></tr>
+                                    </thead>
+                                    <tbody>
+                                        {([
+                                            ['신규 방문자', gaStats.monitoring.newUsers],
+                                            ['재방문자', gaStats.monitoring.returningUsers],
+                                        ] as const).map(([label, item]) => (
+                                            <tr key={label}>
+                                                <td>{label}</td>
+                                                <td>{item.users.toLocaleString()}명</td>
+                                                <td>{item.detailOpen.toLocaleString()}명{item.detailOpenRate !== null ? ` (${item.detailOpenRate}%)` : ''}</td>
+                                                <td>{item.bookingClick.toLocaleString()}명{item.bookingClickRate !== null ? ` (${item.bookingClickRate}%)` : ''}</td>
+                                                <td>{item.share.toLocaleString()}명{item.shareRate !== null ? ` (${item.shareRate}%)` : ''}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ) : (
+                            <div className={styles.dealReviewEmpty}>신규·재방문 행동 비교를 아직 불러오지 못했습니다.</div>
+                        )}
 
                         <h3 className={styles.userSubTitle}>행동별 발생 수</h3>
                         <div className={styles.cityDetail}>
