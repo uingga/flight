@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ga4Config, runReport, eventNameFilter, dim, num, type Ga4Config, type ReportResponse } from '@/lib/ga4';
 
 const ADMIN_KEY = process.env.ADMIN_KEY || 'tikit2026';
-const DEFAULT_DAYS = 14;
+const DEFAULT_DAYS = 30;
 const CACHE_TTL_MS = 10 * 60 * 1000;
 
 /** 어드민에서 의미 있는 이벤트만 골라 한국어 이름을 붙인다. */
@@ -63,10 +63,25 @@ async function optional(
 
 async function buildStats(config: Ga4Config, days: number) {
     const dateRanges = [{ startDate: `${days - 1}daysAgo`, endDate: 'today' }];
+    const previousDateRanges = [{ startDate: `${days * 2 - 1}daysAgo`, endDate: `${days}daysAgo` }];
+    const recent7DateRanges = [{ startDate: '6daysAgo', endDate: 'today' }];
+    const previous7DateRanges = [{ startDate: '13daysAgo', endDate: '7daysAgo' }];
+    const todayDateRanges = [{ startDate: 'today', endDate: 'today' }];
     const warnings: string[] = [];
 
+    const summaryRequest = (range: Array<{ startDate: string; endDate: string }>) => runReport(config, {
+        dateRanges: range,
+        metrics: [{ name: 'activeUsers' }, { name: 'screenPageViews' }, { name: 'sessions' }],
+    });
+
+    const returningRequest = (range: Array<{ startDate: string; endDate: string }>) => runReport(config, {
+        dateRanges: range,
+        dimensions: [{ name: 'newVsReturning' }],
+        metrics: [{ name: 'activeUsers' }],
+    });
+
     // 핵심 2개는 실패하면 그대로 에러 — 표준 측정기준만 쓰므로 실패 = 설정 문제
-    const [trendReport, eventReport] = await Promise.all([
+    const [trendReport, eventReport, currentReport, previousReport, recent7Report, previous7Report, todayReport, returningReport, previousReturningReport] = await Promise.all([
         runReport(config, {
             dateRanges,
             dimensions: [{ name: 'date' }],
@@ -83,6 +98,13 @@ async function buildStats(config: Ga4Config, days: number) {
             orderBys: [{ metric: { metricName: 'eventCount' }, desc: true }],
             limit: 50,
         }),
+        summaryRequest(dateRanges),
+        summaryRequest(previousDateRanges),
+        summaryRequest(recent7DateRanges),
+        summaryRequest(previous7DateRanges),
+        summaryRequest(todayDateRanges),
+        returningRequest(dateRanges),
+        returningRequest(previousDateRanges),
     ]);
 
     const [agencyReport, routeReport, entryReport, detailEntryReport, channelReport, campaignTrafficReport, campaignBookingReport, leadTimeReport, rangeReport, dateMethodReport, presetReport] = await Promise.all([
@@ -184,11 +206,25 @@ async function buildStats(config: Ga4Config, days: number) {
         };
     });
 
-    const totalRow = trendReport.totals?.[0];
-    const totals = {
-        users: num(totalRow, 0),
-        pageViews: num(totalRow, 1),
-        sessions: num(totalRow, 2),
+    const summary = (report: ReportResponse) => ({
+        users: num(report.rows?.[0], 0),
+        pageViews: num(report.rows?.[0], 1),
+        sessions: num(report.rows?.[0], 2),
+    });
+    const totals = summary(currentReport);
+
+    const returning = (report: ReportResponse) => {
+        const rows = report.rows || [];
+        const newUsers = rows.find(row => dim(row).toLowerCase() === 'new');
+        const returningUsers = rows.find(row => dim(row).toLowerCase() === 'returning');
+        const newCount = num(newUsers, 0);
+        const returningCount = num(returningUsers, 0);
+        const classified = newCount + returningCount;
+        return {
+            newUsers: newCount,
+            returningUsers: returningCount,
+            rate: classified > 0 ? Number(((returningCount / classified) * 100).toFixed(1)) : null,
+        };
     };
 
     const events = (eventReport.rows || [])
@@ -269,6 +305,17 @@ async function buildStats(config: Ga4Config, days: number) {
         generatedAt: new Date().toISOString(),
         days,
         totals,
+        periods: {
+            today: summary(todayReport),
+            recent7: summary(recent7Report),
+            previous7: summary(previous7Report),
+            current: totals,
+            previous: summary(previousReport),
+        },
+        returning: {
+            current: returning(returningReport),
+            previous: returning(previousReturningReport),
+        },
         trend,
         events: events.filter(entry => entry.known),
         otherEvents: events.filter(entry => !entry.known && !['page_view', 'session_start', 'first_visit', 'user_engagement', 'scroll', 'affiliate_click'].includes(entry.name)),
