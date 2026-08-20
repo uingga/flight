@@ -4279,6 +4279,7 @@ export default function Dashboard() {
                                                     {' · '}귀국 {fmtDate(modetourGuide.arrival.date)}
                                                     {' · '}{modetourGuide.price.toLocaleString('ko-KR')}원
                                                 </b>
+                                                {' '}목록 가격은 1인 기준이고, 인원은 땡처리 예약 단계에서 다시 선택해요.
                                             </span>
                                         </div>
                                         <div className={styles.mdtDisclaimer}>
