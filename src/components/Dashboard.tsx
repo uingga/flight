@@ -4260,12 +4260,26 @@ export default function Dashboard() {
                                         실제 예약은 마이리얼트립에서 직접 이루어집니다.
                                     </div>
                                 )}
-                                {/* 땡처리닷컴: TASF 수수료 안내 */}
+                                {/* 땡처리닷컴: TASF 수수료 안내 + 특가 목록에서 찾는 방법 */}
                                 {modetourGuide.source === 'ttang' && (
                                     <>
                                         <div className={styles.mdtTtangNotice}>
                                             <span className={styles.mdtTtangNoticeIcon}>💡</span>
                                             <span>땡처리닷컴은 표시된 가격 외에 <b>발권수수료(TASF)</b>가 별도 부과됩니다.</span>
+                                        </div>
+                                        {/* 특가 목록은 노선 필터 착지가 안 돼 출발일 전체가 열린다 — 어떤 항목인지 알려준다 */}
+                                        <div className={styles.mdtTtangNotice}>
+                                            <span className={styles.mdtTtangNoticeIcon}>🔎</span>
+                                            <span>
+                                                예약 페이지는 {fmtDate(modetourGuide.departure.date)} 출발 땡처리 특가 전체 목록이에요(가격 낮은 순).
+                                                목록에서 이 항목을 찾아 예약하세요:{' '}
+                                                <b>
+                                                    {normalizeCity(modetourGuide.departure.city)}({modetourGuide.departure.airport}) → {normalizeCity(modetourGuide.arrival.city)}({modetourGuide.arrival.airport})
+                                                    {' · '}{normalizeAirline(modetourGuide.airline) || modetourGuide.airline}
+                                                    {' · '}귀국 {fmtDate(modetourGuide.arrival.date)}
+                                                    {' · '}{modetourGuide.price.toLocaleString('ko-KR')}원
+                                                </b>
+                                            </span>
                                         </div>
                                         <div className={styles.mdtDisclaimer}>
                                             표시된 가격 및 좌석은 실시간 변동될 수 있으며,
