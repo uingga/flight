@@ -10,7 +10,12 @@ interface RegionStats {
 }
 
 interface SiteStats {
+    /** 이번 크롤이 끝난 뒤 캐시에 실제로 담긴 개수. 보존된 경우 이전 값과 같다. */
     total: number;
+    /** 스크래퍼가 이번에 실제로 긁어온 개수. 보존과 수집을 구분하려고 따로 남긴다. */
+    scraped?: number;
+    /** true면 수집에 실패해 이전 캐시를 그대로 유지한 것이다. */
+    preserved?: boolean;
     byRegion?: RegionStats;
     byCity?: CityStats;
 }
@@ -69,8 +74,13 @@ function generateAlerts(
     if (!previous) return alerts;
 
     for (const siteName of Object.keys(current)) {
-        const currentTotal = current[siteName].total;
-        const previousTotal = previous[siteName]?.total || 0;
+        // 보존된 값은 측정치가 아니라 직전 캐시를 옮겨 적은 숫자다. 이것을 수집량과
+        // 맞비교하면 '2082 → 246 (-88%)' 처럼 실제로는 없었던 감소가 보고된다.
+        // 보존 사실 자체는 무결성 가드가 recordCrawlAlerts로 따로 남긴다.
+        if (current[siteName].preserved || previous[siteName]?.preserved) continue;
+
+        const currentTotal = current[siteName].scraped ?? current[siteName].total;
+        const previousTotal = previous[siteName]?.scraped ?? previous[siteName]?.total ?? 0;
 
         if (previousTotal > 0) {
             const changeRate = (currentTotal - previousTotal) / previousTotal;
@@ -138,7 +148,8 @@ export function logCrawlResults(
     siteName: string,
     total: number,
     byRegion?: RegionStats,
-    byCity?: CityStats
+    byCity?: CityStats,
+    meta?: { scraped?: number; preserved?: boolean },
 ): void {
     const history = loadLogHistory();
 
@@ -162,6 +173,8 @@ export function logCrawlResults(
     // 사이트 통계 저장
     currentEntry.sites[siteName] = {
         total,
+        scraped: meta?.scraped,
+        preserved: meta?.preserved || undefined,
         byRegion,
         byCity
     };
@@ -192,7 +205,9 @@ export function logCrawlResults(
 
     // 요약 출력
     console.log(`\n📊 ${siteName} 크롤링 로그 저장됨`);
-    console.log(`   총: ${total}개`);
+    console.log(meta?.preserved
+        ? `   총: ${total}개 (이번 수집 ${meta.scraped ?? 0}개가 실패해 이전 데이터를 유지함)`
+        : `   총: ${total}개`);
     if (byCity) {
         const topCities = Object.entries(byCity)
             .sort((a, b) => b[1] - a[1])
