@@ -60,6 +60,16 @@ const SOURCE_NAMES: Record<string, string> = {
     interpark: '인터파크',
 };
 
+// 외부 글에 이미 게시된 공유 주소는 유지하면서, 판매가 끝난 상품을
+// 현재 판매 중인 동일 일정 상품으로 넘긴다.
+const SHARE_ID_ALIASES: Record<string, string> = {
+    'online-260831116869': 'ttang-9G0455ICNPQC-G3-2026-08-31',
+};
+
+function resolveShareId(id: string): string {
+    return SHARE_ID_ALIASES[id] || id;
+}
+
 // 날짜 포맷 (2026-03-01 → 3/1)
 function shortDate(dateStr: string): string {
     if (!dateStr) return '';
@@ -71,7 +81,8 @@ function shortDate(dateStr: string): string {
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
     const { id } = await params;
     const sp = await searchParams;
-    const flight = await getFlightById(decodeURIComponent(id));
+    const decodedId = decodeURIComponent(id);
+    const flight = await getFlightById(resolveShareId(decodedId));
 
     if (!flight) {
         const snapshot = getShareSnapshot(decodeURIComponent(id));
@@ -176,13 +187,14 @@ export default async function SharePage({ params, searchParams }: Props) {
     const { id } = await params;
     const sp = await searchParams;
     const decodedId = decodeURIComponent(id);
-    const flight = await getFlightById(decodedId);
+    const resolvedId = resolveShareId(decodedId);
+    const flight = await getFlightById(resolvedId);
     const snapshot = getShareSnapshot(decodedId);
 
     // Fallback 파라미터: flight ID가 변경되어도 같은 노선 항공편을 찾을 수 있도록
     // 소스 우선순위: 1) URL 쿼리 파라미터 (공유 시 삽입됨) 2) API에서 조회한 flight 데이터
     const fallbackParams = new URLSearchParams();
-    fallbackParams.set('flight', id);
+    fallbackParams.set('flight', resolvedId);
 
     const dep = (sp.dep as string) || flight?.departure?.city?.replace(/\([^)]+\)/g, '').trim() || snapshot?.dep;
     const arr = (sp.arr as string) || flight?.arrival?.city?.replace(/\([^)]+\)/g, '').trim() || snapshot?.arr;
