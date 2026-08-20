@@ -7,6 +7,7 @@ import { scrapeTtang } from '../src/lib/scrapers/ttang';
 import { scrapeMyrealtrip } from '../src/lib/scrapers/myrealtrip';
 import { scrapeInterparkBenchmark, resolveCityCode } from '../src/lib/scrapers/interpark';
 import { logCrawlResults } from '../src/lib/utils/crawl-logger';
+import { getEffectivePrice } from '../src/lib/price-quality';
 import fs from 'fs';
 import path from 'path';
 
@@ -327,7 +328,8 @@ async function main() {
                 const route = `${f.departure?.city || ''}-${f.arrival?.city || ''}`;
                 if (f.price > 0) {
                     if (!routePrices[route]) routePrices[route] = [];
-                    routePrices[route].push(f.price);
+                    // 땡처리닷컴은 발권수수료 2만원을 포함한 실질 가격으로 기록한다.
+                    routePrices[route].push(getEffectivePrice(f));
                 }
             });
 

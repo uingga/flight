@@ -237,6 +237,20 @@ export async function GET(request: NextRequest) {
             }
         } catch (e) { }
 
+        // 오전 11시 30분에 선정해 다음 선정 전까지 고정하는 오늘의 표.
+        let todayPickId: string | null = null;
+        try {
+            const fs4 = require('fs');
+            const path4 = require('path');
+            const pickPath = path4.join(process.cwd(), 'data', 'today-pick.json');
+            if (fs4.existsSync(pickPath)) {
+                const pick = JSON.parse(fs4.readFileSync(pickPath, 'utf-8'));
+                if (typeof pick.flightId === 'string' && allFlights.some(f => f.id === pick.flightId)) {
+                    todayPickId = pick.flightId;
+                }
+            }
+        } catch (e) { }
+
         // 인터파크 벤치마크 가격 로드 (도시명 기준으로 변환)
         let interparkPrices: Record<string, Record<string, { avg: number; lowest: number }>> = {};
         try {
@@ -307,6 +321,7 @@ export async function GET(request: NextRequest) {
             },
             lastUpdated,
             priceHistory,
+            todayPickId,
         });
     } catch (error) {
         console.error('항공권 데이터 수집 오류:', error);

@@ -421,8 +421,10 @@ export default function AdminPage() {
             <section className={styles.section}>
                 <h2>🌐 방문자와 행동 (GA4)</h2>
                 <p className={styles.sectionHelp}>
-                    최근 {gaStats?.days ?? 30}일 기준입니다. GA4는 데이터가 <strong>하루 정도 늦게</strong> 채워지므로
-                    오늘 숫자는 아직 작게 보일 수 있습니다.
+                    아래 수치는 모두 최근 {gaStats?.days ?? 30}일 기준입니다. 방문자는 같은 사람이 여러 번 와도 1명,
+                    방문 횟수는 사이트에 들어온 횟수, 페이지 열림은 실제 페이지가 열린 횟수입니다.
+                    항공권 상세 팝업은 페이지 열림이 아니라 <strong>상세 열람</strong>으로 따로 집계합니다.
+                    GA4는 데이터가 하루 정도 늦게 채워질 수 있습니다.
                 </p>
                 {gaStatsError ? (
                     <div className={styles.dealReviewEmpty}>{gaStatsError}</div>
@@ -434,11 +436,11 @@ export default function AdminPage() {
                     <>
                         <div className={styles.userStatGrid}>
                             <div className={styles.userStat}>
-                                <span>최근 30일 방문자</span>
+                                <span>최근 {gaStats.days}일 방문자</span>
                                 <strong>{gaStats.totals.users.toLocaleString()}</strong>
                                 <small>
                                     {gaStats.periods.current.users - gaStats.periods.previous.users >= 0 ? '+' : ''}
-                                    {(gaStats.periods.current.users - gaStats.periods.previous.users).toLocaleString()}명 · 이전 30일 대비
+                                    {(gaStats.periods.current.users - gaStats.periods.previous.users).toLocaleString()}명 · 이전 {gaStats.days}일 대비
                                 </small>
                             </div>
                             <div className={styles.userStat}>
@@ -455,7 +457,7 @@ export default function AdminPage() {
                                 <small>오늘 데이터는 늦게 반영될 수 있음</small>
                             </div>
                             <div className={styles.userStat}>
-                                <span>30일 재방문율</span>
+                                <span>{gaStats.days}일 재방문율</span>
                                 <strong>{gaStats.returning.current.rate !== null ? `${gaStats.returning.current.rate}%` : '-'}</strong>
                                 <small>
                                     재방문 {gaStats.returning.current.returningUsers.toLocaleString()}명
@@ -465,19 +467,19 @@ export default function AdminPage() {
                                 </small>
                             </div>
                             <div className={styles.userStat}>
-                                <span>방문 횟수</span>
+                                <span>최근 {gaStats.days}일 방문 횟수</span>
                                 <strong>{gaStats.totals.sessions.toLocaleString()}</strong>
-                                <small>페이지뷰 {gaStats.totals.pageViews.toLocaleString()}회</small>
+                                <small>페이지가 열린 횟수 {gaStats.totals.pageViews.toLocaleString()}회</small>
                             </div>
                             <div className={styles.userStat}>
                                 <span>최근 활동 비중</span>
                                 <strong>{gaStats.monitoring.recent7Share !== null ? `${gaStats.monitoring.recent7Share}%` : '-'}</strong>
-                                <small>30일 방문자 중 최근 7일에도 방문</small>
+                                <small>{gaStats.days}일 방문자 중 최근 7일에도 방문</small>
                             </div>
                             <div className={styles.userStat}>
                                 <span>사용자당 방문 횟수</span>
                                 <strong>{gaStats.monitoring.sessionsPerUser !== null ? `${gaStats.monitoring.sessionsPerUser}회` : '-'}</strong>
-                                <small>최근 30일 평균</small>
+                                <small>최근 {gaStats.days}일 평균</small>
                             </div>
                             <div className={styles.userStat}>
                                 <span>상세 열람한 사람</span>
@@ -510,7 +512,7 @@ export default function AdminPage() {
                             </div>
                         </div>
 
-                        <h3 className={styles.userSubTitle}>최근 30일 일별 방문자 추이</h3>
+                        <h3 className={styles.userSubTitle}>최근 {gaStats.days}일 일별 방문자 추이</h3>
                         {(() => {
                             const max = Math.max(...gaStats.trend.map(point => point.users), 1);
                             return (
@@ -519,7 +521,7 @@ export default function AdminPage() {
                                         <div
                                             key={point.date}
                                             className={styles.trendCol}
-                                            title={`${point.date} · 방문자 ${point.users}명 · 페이지뷰 ${point.pageViews}회`}
+                                            title={`${point.date} · 방문자 ${point.users}명 · 페이지 열림 ${point.pageViews}회`}
                                         >
                                             <div
                                                 className={styles.trendBar}
@@ -560,7 +562,7 @@ export default function AdminPage() {
                             <div className={styles.dealReviewEmpty}>신규·재방문 행동 비교를 아직 불러오지 못했습니다.</div>
                         )}
 
-                        <h3 className={styles.userSubTitle}>행동별 발생 수</h3>
+                        <h3 className={styles.userSubTitle}>최근 {gaStats.days}일 주요 행동</h3>
                         <div className={styles.cityDetail}>
                             <table className={styles.cityTable}>
                                 <thead>
@@ -610,7 +612,7 @@ export default function AdminPage() {
                             </div>
 
                             <div>
-                                <h3 className={styles.userSubTitle}>유입 경로</h3>
+                                <h3 className={styles.userSubTitle}>최근 {gaStats.days}일 유입 경로</h3>
                                 {gaStats.channels === null ? (
                                     <div className={styles.dealReviewEmpty}>불러오지 못했습니다.</div>
                                 ) : gaStats.channels.length === 0 ? (
@@ -682,7 +684,7 @@ export default function AdminPage() {
                             </div>
 
                             <div>
-                                <h3 className={styles.userSubTitle}>상세를 연 위치</h3>
+                                <h3 className={styles.userSubTitle}>항공권 상세를 연 위치</h3>
                                 {gaStats.detailByEntry === null ? (
                                     <div className={styles.dealReviewEmpty}>불러오지 못했습니다.</div>
                                 ) : gaStats.detailByEntry.length === 0 ? (
