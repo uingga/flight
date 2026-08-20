@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import todayPick from '../../../../data/today-pick.json';
 import { Flight, FlightSearchParams } from '@/types/flight';
 import { resolveCityCode } from '@/lib/scrapers/interpark';
 import { normalizeCity } from '@/lib/utils/flight-helpers';
@@ -237,19 +238,11 @@ export async function GET(request: NextRequest) {
             }
         } catch (e) { }
 
-        // 오전 11시 30분에 선정해 다음 선정 전까지 고정하는 오늘의 표.
-        let todayPickId: string | null = null;
-        try {
-            const fs4 = require('fs');
-            const path4 = require('path');
-            const pickPath = path4.join(process.cwd(), 'data', 'today-pick.json');
-            if (fs4.existsSync(pickPath)) {
-                const pick = JSON.parse(fs4.readFileSync(pickPath, 'utf-8'));
-                if (typeof pick.flightId === 'string' && allFlights.some(f => f.id === pick.flightId)) {
-                    todayPickId = pick.flightId;
-                }
-            }
-        } catch (e) { }
+        // 정적 import로 Vercel 서버 함수 번들에도 선정 파일을 확실히 포함한다.
+        const todayPickId = typeof todayPick.flightId === 'string'
+            && allFlights.some(f => f.id === todayPick.flightId)
+            ? todayPick.flightId
+            : null;
 
         // 인터파크 벤치마크 가격 로드 (도시명 기준으로 변환)
         let interparkPrices: Record<string, Record<string, { avg: number; lowest: number }>> = {};
