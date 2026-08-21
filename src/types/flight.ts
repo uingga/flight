@@ -22,6 +22,8 @@ export interface Flight {
     availableSeats?: number;
     seats?: string;
     flightNumber?: string;
+    /** 최소 탑승 인원. 2 이상이면 1인으로는 예약할 수 없다 (노랑풍선 상세에서 수집). */
+    minPax?: number;
     region?: string;
     searchLink?: string;
     discountRate?: number; // 인터파크 최저가 대비 할인율 (%)
