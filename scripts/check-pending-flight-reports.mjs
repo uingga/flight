@@ -11,7 +11,9 @@ if (!url || !key || !outputPath) {
     process.exit(1);
 }
 
-const headers = { apikey: key, Authorization: `Bearer ${key}` };
+// 새 sb_secret_ 형식은 apikey 자체가 서버 권한을 나타낸다. JWT가 아니므로
+// Authorization: Bearer에 넣으면 오히려 403이 난다.
+const headers = { apikey: key };
 const pendingResponse = await fetch(`${url}/rest/v1/flight_reports?select=id&status=eq.pending&limit=1`, { headers });
 if (!pendingResponse.ok) {
     console.error(`미처리 신고 확인 실패: ${pendingResponse.status}`);

@@ -26,7 +26,6 @@ for (const report of reports) {
         method: 'PATCH',
         headers: {
             apikey: key,
-            Authorization: `Bearer ${key}`,
             'Content-Type': 'application/json',
             Prefer: 'return=minimal',
         },
