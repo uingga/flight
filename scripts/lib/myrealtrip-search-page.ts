@@ -1,0 +1,160 @@
+import type { Page } from 'playwright';
+
+export interface FlightResult {
+    price: number;
+    airline: string;
+    depTime: string;
+    arrTime: string;
+    duration: string;
+    retDepTime: string;
+    retArrTime: string;
+    retDuration: string;
+}
+
+const RESULT_BUTTON_SELECTOR = 'button[aria-label*="항공권"][aria-label*="원 선택"]';
+
+/**
+ * 마이리얼트립 검색 결과에서 왕복 최저가와 시간을 읽는다.
+ *
+ * offers.k1 주소는 현재 air-web.myrealtrip.com/results로 이동한다. 새 화면은
+ * 각 결과 카드의 선택 버튼 aria-label에 항공사와 결제 가격을 함께 제공하므로,
+ * 화면 전체 텍스트나 좌석 문구보다 이 값을 우선 사용한다.
+ */
+export async function getMyrealtripSearchPrice(
+    page: Page,
+    gid: number,
+    depDate: string,
+    arrDate: string,
+): Promise<FlightResult | null> {
+    const url = `https://flights.myrealtrip.com/air/agent/b2c/AIR/AAA/offers.k1?gid=${gid}&depdt=${depDate}&arrdt=${arrDate}&cabin=Y&adult=1&child=0&infant=0`;
+
+    try {
+        await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45000 });
+        const newResultCard = await page.waitForSelector(RESULT_BUTTON_SELECTOR, { timeout: 15000 })
+            .catch(() => null);
+
+        // 새 화면은 기본값이 추천순이라 화면에 아직 붙지 않은 더 싼 표가 있을 수 있다.
+        // 가격 낮은 순으로 바꾼 뒤 읽어 첫 화면만 읽더라도 실제 최저가가 포함되게 한다.
+        if (newResultCard) {
+            try {
+                const currentSort = page.getByRole('button', { name: '추천순', exact: true });
+                if (await currentSort.isVisible()) {
+                    await currentSort.click();
+                    const lowestPriceSort = page.getByRole('button', { name: '가격 낮은 순', exact: true });
+                    await lowestPriceSort.click({ timeout: 5000 });
+                }
+            } catch {
+                // 정렬 UI가 바뀌어도 현재 로드된 결과에서 가격을 읽는 폴백은 유지한다.
+            }
+        }
+        // 첫 카드가 보인 직후 나머지 검색 결과가 이어서 붙는 시간을 짧게 허용한다.
+        await page.waitForTimeout(1200 + Math.random() * 800);
+
+        const results: FlightResult[] = await page.evaluate((buttonSelector) => {
+            type ParsedFlight = {
+                price: number;
+                airline: string;
+                depTime: string;
+                arrTime: string;
+                duration: string;
+                retDepTime: string;
+                retArrTime: string;
+                retDuration: string;
+            };
+
+            const directFlights: ParsedFlight[] = [];
+            const allFlights: ParsedFlight[] = [];
+
+            // 2026-08 현재 화면: 선택 버튼에 "항공사 항공권 278,600원 선택"이 들어간다.
+            document.querySelectorAll<HTMLButtonElement>(buttonSelector).forEach((button) => {
+                const label = button.getAttribute('aria-label') || '';
+                const priceMatch = label.match(/([\d,]+)원\s*선택\s*$/);
+                if (!priceMatch) return;
+
+                const price = Number(priceMatch[1].replace(/,/g, ''));
+                if (!Number.isFinite(price) || price < 100000 || price > 5000000) return;
+
+                // 버튼의 바로 위 요소가 한 항공권의 접힌 요약 카드다. 더 위로 올라가면
+                // 다른 항공권 텍스트까지 섞이므로 parentElement 한 단계만 사용한다.
+                const summaryText = button.parentElement?.innerText || '';
+                const airline = label
+                    .replace(/\s*항공권\s+[\d,]+원\s*선택\s*$/, '')
+                    .trim();
+                const timeMatches = summaryText.match(/\b\d{2}:\d{2}\b/g) || [];
+                const durationMatches = summaryText.match(/\d+시간(?:\s*\d+분)?/g) || [];
+
+                const flight = {
+                    price,
+                    airline,
+                    depTime: timeMatches[0] || '',
+                    arrTime: timeMatches[1] || '',
+                    duration: durationMatches[0] || '',
+                    retDepTime: timeMatches[2] || '',
+                    retArrTime: timeMatches[3] || '',
+                    retDuration: durationMatches[1] || '',
+                };
+                const isDirect = summaryText.includes('직항') && !/경유|[12]회/.test(summaryText);
+                if (isDirect && !directFlights.some(item => item.price === flight.price)) {
+                    directFlights.push(flight);
+                }
+                if (!allFlights.some(item => item.price === flight.price)) {
+                    allFlights.push(flight);
+                }
+            });
+
+            // 예전 offers.k1 화면이 다시 제공될 경우를 위한 제한적인 폴백.
+            if (allFlights.length === 0) {
+                document.querySelectorAll<HTMLElement>('*').forEach((element) => {
+                    const text = element.innerText || '';
+                    if (!text.includes('석 남음') || !text.includes('원') || text.length <= 50 || text.length >= 500) return;
+
+                    const priceMatch = text.match(/([\d,]+)원/);
+                    if (!priceMatch) return;
+                    const price = Number(priceMatch[1].replace(/,/g, ''));
+                    if (!Number.isFinite(price) || price < 100000 || price > 5000000) return;
+
+                    const lines = text.split('\n').map(line => line.trim()).filter(Boolean);
+                    const airline = lines.find(line =>
+                        !line.includes('항공권')
+                        && !line.includes('원')
+                        && !line.includes('남음')
+                        && line.length >= 2
+                        && line.length <= 40
+                    ) || '';
+                    const timeMatches = text.match(/\b\d{2}:\d{2}\b/g) || [];
+                    const durationMatches = text.match(/\d+시간(?:\s*\d+분)?/g) || [];
+
+                    const flight = {
+                        price,
+                        airline,
+                        depTime: timeMatches[0] || '',
+                        arrTime: timeMatches[1] || '',
+                        duration: durationMatches[0] || '',
+                        retDepTime: timeMatches[2] || '',
+                        retArrTime: timeMatches[3] || '',
+                        retDuration: durationMatches[1] || '',
+                    };
+                    const isDirect = text.includes('직항') && !/경유|[12]회/.test(text);
+                    if (isDirect && !directFlights.some(item => item.price === flight.price)) {
+                        directFlights.push(flight);
+                    }
+                    if (!allFlights.some(item => item.price === flight.price)) {
+                        allFlights.push(flight);
+                    }
+                });
+            }
+
+            const target = directFlights.length > 0 ? directFlights : allFlights;
+            target.sort((a, b) => a.price - b.price);
+            return target.slice(0, 3);
+        }, RESULT_BUTTON_SELECTOR);
+
+        return results[0] || null;
+    } catch (error) {
+        console.warn(
+            `[마이리얼트립] 실제 가격 조회 실패: gid=${gid}, ${depDate}~${arrDate} -`,
+            error instanceof Error ? error.message : error,
+        );
+        return null;
+    }
+}

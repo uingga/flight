@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import Link from 'next/link';
 import type { Flight } from '@/types/flight';
+import { filterStaleMyrealtripFlights } from '@/lib/source-freshness';
 import styles from './drop.module.css';
 
 interface DropData {
@@ -35,8 +36,10 @@ function readJson<T>(relativePath: string): T | null {
 }
 
 function loadFlights(): Flight[] {
-    const parsed = readJson<Flight[] | { flights?: Flight[] }>('data/all-flights-cache.json');
-    return Array.isArray(parsed) ? parsed : parsed?.flights || [];
+    const parsed = readJson<Flight[] | { flights?: Flight[]; sourceUpdatedAt?: Record<string, string> }>('data/all-flights-cache.json');
+    const flights = Array.isArray(parsed) ? parsed : parsed?.flights || [];
+    const sourceUpdatedAt = Array.isArray(parsed) ? {} : parsed?.sourceUpdatedAt || {};
+    return filterStaleMyrealtripFlights(flights, sourceUpdatedAt);
 }
 
 function cleanCity(value: string): string {

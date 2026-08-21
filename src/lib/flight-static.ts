@@ -9,6 +9,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { Flight } from '@/types/flight';
 import { normalizeAirline, normalizeCity } from '@/lib/utils/flight-helpers';
+import { filterStaleMyrealtripFlights } from '@/lib/source-freshness';
 
 export interface CityDeals {
     /** 정규화된 도시명 (URL 슬러그로도 사용) */
@@ -51,8 +52,10 @@ export function loadActiveFlights(): Flight[] {
     try {
         const raw = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'data', 'all-flights-cache.json'), 'utf8'));
         const flights: Flight[] = Array.isArray(raw) ? raw : raw.flights || [];
+        const sourceUpdatedAt = Array.isArray(raw) ? {} : raw.sourceUpdatedAt || {};
         const today = new Date().toISOString().slice(0, 10);
-        return flights.filter(f => f.price > 0 && parseDate(f.departure?.date) >= today);
+        return filterStaleMyrealtripFlights(flights, sourceUpdatedAt)
+            .filter(f => f.price > 0 && parseDate(f.departure?.date) >= today);
     } catch {
         return [];
     }

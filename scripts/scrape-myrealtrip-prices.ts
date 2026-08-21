@@ -1,14 +1,15 @@
-import { chromium, Browser, Page } from 'playwright';
+import { chromium, Browser } from 'playwright';
 import fs from 'fs';
 import path from 'path';
 import { scrapeMyrealtrip } from '../src/lib/scrapers/myrealtrip';
+import { getMyrealtripSearchPrice, type FlightResult } from './lib/myrealtrip-search-page';
 
 /**
  * 마이리얼트립 실제 가격 스크래핑 (Playwright)
  *
  * 1단계: Calendar API로 항공편 목록 갱신 (새 항공편 추가 + 없어진 항공편 제거)
- * 2단계: offers.k1 페이지에서 검색 결과의 실제 최저가를 추출
- * - "석 남음" 텍스트 근처의 가격 = 유저가 보는 실제 가격
+ * 2단계: 마이리얼트립 검색 결과 카드에서 실제 최저가를 추출
+ * - 선택 버튼의 "항공권 000원 선택" 값을 사용해 결제 가격을 정확히 읽음
  * - 2개 병렬 실행, 랜덤 딜레이 + 셔플로 감지 회피
  * - 하루 1회 새벽 3시 실행 권장
  *
@@ -58,17 +59,6 @@ function loadGidMap(): Record<string, number> {
 
 // ── 가격 추출 (직항만, 항공사+시간 포함) ──────────────────
 
-interface FlightResult {
-    price: number;
-    airline: string;
-    depTime: string;      // 가는편 출발
-    arrTime: string;      // 가는편 도착
-    duration: string;     // 가는편 비행시간
-    retDepTime: string;   // 오는편 출발
-    retArrTime: string;   // 오는편 도착
-    retDuration: string;  // 오는편 비행시간
-}
-
 const INVALID_AIRLINE_LABELS = new Set([
     '더 저렴한 항공권',
     '항공사 제공요금',
@@ -78,87 +68,8 @@ const INVALID_AIRLINE_LABELS = new Set([
 
 function cleanAirlineName(value: string | undefined): string {
     const name = (value || '').trim();
-    if (!name || INVALID_AIRLINE_LABELS.has(name) || name.includes('항공권') || name.includes('제공요금') || name.length > 20) return '';
+    if (!name || INVALID_AIRLINE_LABELS.has(name) || name.includes('항공권') || name.includes('제공요금') || name.length > 60) return '';
     return name;
-}
-
-async function getSearchPrice(page: Page, gid: number, depDate: string, arrDate: string): Promise<FlightResult | null> {
-    const url = `https://flights.myrealtrip.com/air/agent/b2c/AIR/AAA/offers.k1?gid=${gid}&depdt=${depDate}&arrdt=${arrDate}&cabin=Y&adult=1&child=0&infant=0`;
-
-    try {
-        await page.goto(url, { waitUntil: 'networkidle', timeout: 45000 });
-        await page.waitForTimeout(10000 + Math.random() * 4000); // 10~14초 대기
-
-        // 검색 결과 카드에서 항공편 추출 (직항 우선, 없으면 경유 포함)
-        const results: FlightResult[] = await page.evaluate(() => {
-            const directFlights: { price: number; airline: string; depTime: string; arrTime: string; duration: string; retDepTime: string; retArrTime: string; retDuration: string }[] = [];
-            const allFlights: typeof directFlights = [];
-
-            document.querySelectorAll('*').forEach(el => {
-                const t = (el as HTMLElement).innerText || '';
-
-                // 검색 결과 카드: "석 남음" + "원" 포함
-                if (t.includes('석 남음') && t.includes('원') && t.length > 50 && t.length < 500) {
-                    // 가격 추출
-                    const priceMatch = t.match(/([\d,]+)원/);
-                    if (!priceMatch) return;
-                    const price = parseInt(priceMatch[1].replace(/,/g, ''));
-                    if (price < 100000 || price > 5000000) return;
-
-                    // 항공사 추출
-                    const lines = t.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-                    let airline = '';
-                    for (const line of lines) {
-                        if (line.includes('항공권') || /^(항공사 제공요금|항공사 미정|공동운항)$/.test(line)) continue;
-                        if (line.includes('항공') || line.includes('에어') || line.includes('진에어') || line.includes('이스타')) {
-                            airline = line.replace(/브랜드관.*/, '').replace(/\s*(초특가|특가|라이브|세일|프로모션|이벤트|할인|기획전).*$/g, '').trim();
-                            break;
-                        }
-                    }
-                    if (!airline) {
-                        for (const line of lines) {
-                            if (line.includes('항공권') || /^(항공사 제공요금|항공사 미정|공동운항)$/.test(line)) continue;
-                            if (line.length >= 2 && line.length <= 20 && !line.includes('원') && !line.includes('남음') && !line.includes('카드')) {
-                                airline = line;
-                                break;
-                            }
-                        }
-                    }
-
-                    // 시간 추출 (HH:MM 패턴)
-                    const timeMatches = t.match(/(\d{2}:\d{2})/g) || [];
-                    const depTime = timeMatches[0] || '';
-                    const arrTime = timeMatches[1] || '';
-                    const retDepTime = timeMatches[2] || '';
-                    const retArrTime = timeMatches[3] || '';
-
-                    // 비행시간 추출
-                    const durMatches = t.match(/(\d+시간\s*\d+분)/g) || [];
-                    const duration = durMatches[0] || '';
-                    const retDuration = durMatches[1] || '';
-
-                    const flight = { price, airline, depTime, arrTime, duration, retDepTime, retArrTime, retDuration };
-
-                    // 직항/경유 분류
-                    const isDirect = t.includes('직항') && !t.includes('경유') && !t.includes('1회') && !t.includes('2회');
-                    if (isDirect) {
-                        if (!directFlights.some(f => f.price === price)) directFlights.push(flight);
-                    }
-                    if (!allFlights.some(f => f.price === price)) allFlights.push(flight);
-                }
-            });
-
-            // 직항 우선, 없으면 전체에서 최저가
-            const target = directFlights.length > 0 ? directFlights : allFlights;
-            target.sort((a, b) => a.price - b.price);
-            return target.slice(0, 3);
-        });
-
-        if (results.length === 0) return null;
-        return results[0]; // 직항 최저가
-    } catch {
-        return null;
-    }
 }
 
 // ── 병렬 워커 ──────────────────────────────────────────
@@ -166,7 +77,7 @@ async function getSearchPrice(page: Page, gid: number, depDate: string, arrDate:
 async function worker(
     browser: Browser,
     tasks: { flight: CachedFlight; gid: number }[],
-    results: Map<string, { price: number; airline: string }>,
+    results: Map<string, FlightResult>,
     workerId: number
 ) {
     const page = await browser.newPage();
@@ -186,7 +97,7 @@ async function worker(
 
         if (!depDate || !arrDate) continue;
 
-        const result = await getSearchPrice(page, gid, depDate, arrDate);
+        const result = await getMyrealtripSearchPrice(page, gid, depDate, arrDate);
         if (result) {
             results.set(flight.id, result);
         }
@@ -332,7 +243,17 @@ async function main() {
     let updated = 0;
     let priceUp = 0;
     let priceDown = 0;
-    let removed = 0;
+    // 전체 장애가 아닌 개별 조회 실패는 오래된 Calendar API 가격으로 노출하지 않는다.
+    // 대량 실패 안전장치를 통과한 뒤에만 실제 화면에서 확인된 항공권만 남긴다.
+    const verifiedIds = new Set(results.keys());
+    const beforeVerifiedOnly = cache.flights.length;
+    cache.flights = cache.flights.filter((flight: any) =>
+        flight.source !== 'myrealtrip' || verifiedIds.has(flight.id)
+    );
+    const unverifiedRemoved = beforeVerifiedOnly - cache.flights.length;
+    if (unverifiedRemoved > 0) {
+        console.log(`\n🧹 실제 가격 미확인 ${unverifiedRemoved}개 → 표시 대상에서 제외`);
+    }
 
     for (const [flightId, result] of results) {
         const idx = cache.flights.findIndex((f: any) => f.id === flightId);
@@ -359,18 +280,6 @@ async function main() {
             }
             updated++;
         }
-    }
-
-    // Calendar API에는 존재하지만 Playwright 조회만 실패한 항공편은 삭제하지 않는다.
-    // 일시 차단이나 페이지 변경일 수 있으며, 실제 판매 종료 여부는 다음 Calendar API가 판단한다.
-    let skipped = 0;
-    for (const task of tasks) {
-        if (!results.has(task.flight.id)) {
-            skipped++;
-        }
-    }
-    if (skipped > 0) {
-        console.log(`\n⚠️ ${skipped}개 노선 Playwright 조회 실패 → Calendar API 가격으로 유지`);
     }
 
     // ── 인터파크 벤치마크 필터링 ──────────────────────────────
@@ -429,8 +338,16 @@ async function main() {
     // console.log(`\n=== 네이버 최저가 비교 ===`);
     // 네이버 필터 일시 중단
 
+    const finalMrtCount = cache.flights.filter((flight: any) => flight.source === 'myrealtrip').length;
+    if (finalMrtCount === 0) {
+        throw new Error('가격 검증과 필터 적용 후 마이리얼트립 항공편이 0건이므로 기존 캐시를 보존합니다.');
+    }
+
     // 저장
     cache.count = cache.flights.length;
+    if (cache.sources && typeof cache.sources === 'object') {
+        cache.sources.myrealtrip = finalMrtCount;
+    }
     cache.lastUpdated = new Date().toISOString();
     cache.sourceUpdatedAt = {
         ...(cache.sourceUpdatedAt || {}),
@@ -443,7 +360,7 @@ async function main() {
     console.log(`소요: ${elapsed}분`);
     console.log(`검증: ${results.size}/${tasks.length}개 성공`);
     console.log(`보정: ${updated}개 (↑${priceUp} ↓${priceDown})`);
-    console.log(`실패: ${tasks.length - results.size}개`);
+    console.log(`표시 제외: ${unverifiedRemoved}개`);
     if (benchmarkFiltered > 0) console.log(`인터파크 필터: ${benchmarkFiltered}개 제거`);
 }
 

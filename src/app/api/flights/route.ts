@@ -4,6 +4,7 @@ import { Flight, FlightSearchParams } from '@/types/flight';
 import { resolveCityCode } from '@/lib/scrapers/interpark';
 import { normalizeCity } from '@/lib/utils/flight-helpers';
 import { getComparisonFreshness, getEffectivePrice } from '@/lib/price-quality';
+import { filterStaleMyrealtripFlights, getMyrealtripFreshness } from '@/lib/source-freshness';
 
 // 항공사명 정규화 맵
 const AIRLINE_NAME_MAP: Record<string, string> = {
@@ -29,7 +30,7 @@ function normalizeAirline(name: string): string {
     if (!name) return name;
     const trimmed = name.trim();
     const invalidNames = new Set(['더 저렴한 항공권', '항공사 제공요금', '항공사 미정', '공동운항']);
-    if (invalidNames.has(trimmed) || trimmed.includes('항공권') || trimmed.includes('제공요금') || trimmed.length > 20) {
+    if (invalidNames.has(trimmed) || trimmed.includes('항공권') || trimmed.includes('제공요금') || trimmed.length > 60) {
         return '항공사 미정';
     }
     return AIRLINE_NAME_MAP[trimmed] || trimmed;
@@ -70,6 +71,16 @@ export async function GET(request: NextRequest) {
             }
         } catch (cacheError) {
             console.error('캐시 읽기 오류:', cacheError);
+        }
+
+        // 마이리얼트립은 실제 예약 화면 가격을 별도 확인한다. 이 갱신이 하루 넘게
+        // 멈추면 Calendar API의 대략 가격이나 오래된 가격을 사용자에게 보여주지 않는다.
+        const beforeFreshnessFilter = allFlights.length;
+        allFlights = filterStaleMyrealtripFlights(allFlights, sourceUpdatedAt);
+        const hiddenCount = beforeFreshnessFilter - allFlights.length;
+        if (hiddenCount > 0) {
+            const freshness = getMyrealtripFreshness(sourceUpdatedAt);
+            console.warn(`마이리얼트립 가격 갱신이 ${freshness.maxAgeHours}시간 넘게 멈춰 ${hiddenCount}개를 숨겼습니다.`);
         }
 
         // 항공사명 정규화

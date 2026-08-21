@@ -117,7 +117,7 @@ export const normalizeAirline = (airline: string): string => {
     
     // 의미없는 텍스트 필터링
     const invalidNames = ['항공사 제공요금', '항공사 미정', '더 저렴한 항공권', '공동운항', ''];
-    if (invalidNames.includes(name) || name.length > 20) return '';
+    if (invalidNames.includes(name) || name.length > 60) return '';
     
     // IATA 코드 → 한글명 변환
     const iataMap: Record<string, string> = {
