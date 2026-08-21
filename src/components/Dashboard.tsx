@@ -85,26 +85,11 @@ const getSourceName = (source: string) => {
 };
 
 const DISMISSED_ALERT_ROUTES_KEY = 'tikitikit_dismissed_alert_routes';
-const VISIT_FLIGHT_SNAPSHOT_KEY = 'tikitikit_visit_flight_snapshot_v1';
 
 // 살짝 당기거나 빠르게 스친 동작은 닫기로 이어지지 않게 한다.
 // 화면 크기에 따라 140~180px를 의도적으로 내려야 닫힘 구간에 들어간다.
 const getDetailSheetCloseDistance = (sheetHeight: number) =>
     Math.min(180, Math.max(140, sheetHeight * 0.28));
-
-// 여행사 크롤 순서가 바뀌면 flight.id의 끝 번호가 달라질 수 있어,
-// 사용자가 보기에 같은 표를 구성하는 값들로 방문 간 비교 키를 만든다.
-const flightDiscoveryKey = (flight: Flight) => [
-    flight.source,
-    normalizeCity(flight.departure.city),
-    normalizeCity(flight.arrival.city),
-    flight.departure.date,
-    flight.arrival.date,
-    flight.departure.time,
-    flight.arrival.time,
-    normalizeAirline(flight.airline),
-    flight.flightNumber || '',
-].join('|');
 
 export default function Dashboard() {
     const [flights, setFlights] = useState<Flight[]>([]);
@@ -150,11 +135,6 @@ export default function Dashboard() {
     const disclaimerWindowRef = useRef<Window | null>(null);
     const [favoriteFlights, setFavoriteFlights] = useState<string[]>([]);
     const [favFilter, setFavFilter] = useState(false);
-    const [newSinceLastVisitFilter, setNewSinceLastVisitFilter] = useState(false);
-    const [newSinceLastVisitKeys, setNewSinceLastVisitKeys] = useState<string[]>([]);
-    const [previousVisitAt, setPreviousVisitAt] = useState<string | null>(null);
-    const visitBaselineRef = useRef<Set<string> | null>(null);
-    const visitSnapshotLoadedRef = useRef(false);
     const [favToast, setFavToast] = useState<string | null>(null);
     const [showContactModal, setShowContactModal] = useState(false);
     const [contactForm, setContactForm] = useState({ name: '', email: '', message: '' });
@@ -318,7 +298,7 @@ export default function Dashboard() {
     // 필터 변경 시 displayCount 리셋
     useEffect(() => {
         setDisplayCount(ITEMS_PER_PAGE);
-    }, [searchTerm, sourceFilter, regionFilter, airlineFilter, startDate, endDate, departureFilter, sortBy, favFilter, newSinceLastVisitFilter]);
+    }, [searchTerm, sourceFilter, regionFilter, airlineFilter, startDate, endDate, departureFilter, sortBy, favFilter]);
 
     // 스크롤 감지 (맨위로 버튼 + 헤더 숨김)
     useEffect(() => {
@@ -371,33 +351,6 @@ export default function Dashboard() {
             setPriceHistory(data.priceHistory || {});
             setInterparkPrices(data.interparkPrices || {});
             setFixedTodayPickId(typeof data.todayPickId === 'string' ? data.todayPickId : null);
-
-            try {
-                if (!visitSnapshotLoadedRef.current) {
-                    const raw = localStorage.getItem(VISIT_FLIGHT_SNAPSHOT_KEY);
-                    if (raw) {
-                        const saved = JSON.parse(raw) as { checkedAt?: string; keys?: unknown };
-                        if (Array.isArray(saved.keys)) {
-                            visitBaselineRef.current = new Set(saved.keys.filter((key): key is string => typeof key === 'string'));
-                            setPreviousVisitAt(saved.checkedAt || null);
-                        }
-                    }
-                    visitSnapshotLoadedRef.current = true;
-                }
-
-                const currentKeys = fetchedFlights.map(flightDiscoveryKey);
-                const baseline = visitBaselineRef.current;
-                setNewSinceLastVisitKeys(baseline ? currentKeys.filter(key => !baseline.has(key)) : []);
-
-                // 첫 방문이라 비교 대상이 없으면 현재 목록을 이번 세션의 기준으로 삼는다.
-                if (!baseline) visitBaselineRef.current = new Set(currentKeys);
-                localStorage.setItem(VISIT_FLIGHT_SNAPSHOT_KEY, JSON.stringify({
-                    checkedAt: new Date().toISOString(),
-                    keys: currentKeys,
-                }));
-            } catch {
-                // 저장 공간이 막혀도 항공권 목록 자체는 정상 동작해야 한다.
-            }
         } catch (err) {
             setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.');
         } finally {
@@ -432,7 +385,6 @@ export default function Dashboard() {
             setSourceFilter('all');
             setAirlineFilter('all');
             setSearchTerm('');
-            setNewSinceLastVisitFilter(false);
             // URL 정리
             window.history.replaceState({}, '', window.location.pathname);
         }
@@ -445,7 +397,7 @@ export default function Dashboard() {
     const defaultEndDate = useMemo(() => getDefaultEndDate(), []);
 
     // 아무 필터도 손대지 않은 첫 화면인가 (기본 날짜 범위는 기본 화면으로 친다)
-    const isDefaultView = !sharedFlightId && !favFilter && !newSinceLastVisitFilter && searchTerm === ''
+    const isDefaultView = !sharedFlightId && !favFilter && searchTerm === ''
         && departureFilter === 'all' && regionFilter === 'all' && sourceFilter === 'all' && airlineFilter === 'all'
         && startDate === defaultStartDate && endDate === defaultEndDate;
 
@@ -1405,7 +1357,6 @@ export default function Dashboard() {
         setStartDate('');
         setEndDate('');
         setSortBy('discount');
-        setNewSinceLastVisitFilter(false);
     };
 
     const showSharedRouteAlternatives = () => {
@@ -1436,14 +1387,13 @@ export default function Dashboard() {
         setStartDate(getDefaultStartDate());
         setEndDate(getDefaultEndDate());
         setSortBy('discount');
-        setNewSinceLastVisitFilter(false);
         setSharedFlightId(null);
         sharedRouteFallback.current = null;
     };
 
     // 활성 필터 여부
     const hasActiveFilters = searchTerm || sourceFilter !== 'all' || regionFilter !== 'all' ||
-        airlineFilter !== 'all' || departureFilter !== 'all' || startDate || endDate || newSinceLastVisitFilter;
+        airlineFilter !== 'all' || departureFilter !== 'all' || startDate || endDate;
 
     // 조건별 판정을 분리해 둔다 — 결과가 0건일 때 어느 조건이 막았는지 되짚어야 하기 때문
     //
@@ -1470,9 +1420,6 @@ export default function Dashboard() {
         if (departureFilter === '부산') return /부산|김해|PUS/.test(flight.departure.city);
         return flight.departure.city.includes(departureFilter);
     };
-    const newSinceLastVisitKeySet = useMemo(() => new Set(newSinceLastVisitKeys), [newSinceLastVisitKeys]);
-    const matchesNewSinceLastVisit = (flight: Flight) =>
-        !newSinceLastVisitFilter || newSinceLastVisitKeySet.has(flightDiscoveryKey(flight));
     const matchesNonDateFilters = (flight: Flight) =>
         matchesSearchTerm(flight) && matchesSourceFilter(flight) && matchesRegionFilter(flight)
         && matchesAirlineFilter(flight) && matchesDepartureFilter(flight);
@@ -1779,7 +1726,7 @@ export default function Dashboard() {
 
         return matchesSearchTerm(flight) && matchesSourceFilter(flight) && matchesRegionFilter(flight)
             && matchesAirlineFilter(flight) && matchesDateFilter(flight) && matchesDepartureFilter(flight)
-            && matchesFav && matchesNewSinceLastVisit(flight);
+            && matchesFav;
     }).sort((a, b) => {
         let comparison = 0;
 
@@ -1822,12 +1769,6 @@ export default function Dashboard() {
 
         return sortOrder === 'asc' ? comparison : -comparison;
     });
-
-    const newSinceLastVisitCount = previousVisitAt
-        ? flights.filter(flight => newSinceLastVisitKeySet.has(flightDiscoveryKey(flight))
-            && matchesSearchTerm(flight) && matchesSourceFilter(flight) && matchesRegionFilter(flight)
-            && matchesAirlineFilter(flight) && matchesDateFilter(flight) && matchesDepartureFilter(flight)).length
-        : 0;
 
     // 결과가 0건인 이유를 가려낸다.
     // 검색어에 맞는 항공권이 있는데도 안 보이면 그건 "특가가 없는 것"이 아니라 필터가 막은 것이므로,
@@ -3236,12 +3177,6 @@ export default function Dashboard() {
                                         <button onClick={() => setAirlineFilter('all')}>×</button>
                                     </span>
                                 )}
-                                {newSinceLastVisitFilter && (
-                                    <span className={styles.filterTag}>
-                                        새로 들어온 항공권
-                                        <button onClick={() => setNewSinceLastVisitFilter(false)}>×</button>
-                                    </span>
-                                )}
                                 {(startDate || endDate) && (
                                     <span className={styles.filterTag}>
                                         {fmtDate(startDate) || '시작'} ~ {fmtDate(endDate) || '종료'}
@@ -3256,30 +3191,6 @@ export default function Dashboard() {
 
 
 
-
-                        {previousVisitAt && (newSinceLastVisitCount > 0 || newSinceLastVisitFilter) && (
-                            <div className={`${styles.newSinceVisitBar} ${newSinceLastVisitFilter ? styles.newSinceVisitBarActive : ''}`}>
-                                <div className={styles.newSinceVisitCopy}>
-                                    <strong>
-                                        {newSinceLastVisitCount > 0
-                                            ? `지난 방문 뒤 새로 들어온 항공권 ${newSinceLastVisitCount}개`
-                                            : '현재 조건에는 새로 들어온 항공권이 없어요'}
-                                    </strong>
-                                    <span>지금 보고 있는 조건을 기준으로 찾았습니다.</span>
-                                </div>
-                                <button
-                                    type="button"
-                                    className={styles.newSinceVisitBtn}
-                                    onClick={() => {
-                                        const next = !newSinceLastVisitFilter;
-                                        setNewSinceLastVisitFilter(next);
-                                        gtag.trackFilterChange('new_since_last_visit', next ? 'on' : 'off');
-                                    }}
-                                >
-                                    {newSinceLastVisitFilter ? '전체 항공권 보기' : '새 항공권만 보기'}
-                                </button>
-                            </div>
-                        )}
 
                         {/* 항공권 수 + 여행사/항공사/정렬 드롭다운 */}
                         <div className={styles.stats}>
