@@ -4,8 +4,9 @@ on:
   schedule:
     # 매일 새벽 1시 KST (16:00 UTC 전날)
     - cron: '0 16 * * *'
-    # 매일 오전 10시 KST (01:00 UTC)
-    - cron: '0 1 * * *'
+    # 매일 오전 9시 KST (00:00 UTC)
+    # 항공권 크롤과 같은 10시에 돌면서 같은 캐시 파일을 밀어 넣어 서로 푸시를 막았다.
+    - cron: '0 0 * * *'
   workflow_dispatch: # 수동 실행 가능
 
 jobs:
