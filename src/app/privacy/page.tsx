@@ -38,8 +38,8 @@ export default function PrivacyPage() {
             <div className={styles.section}>
                 <h2 className={styles.sectionTitle}>2. 수집하는 정보</h2>
                 <div className={styles.sectionContent}>
-                    <p>본 서비스는 회원가입을 요구하지 않으며, <strong>이름, 이메일, 전화번호 등 개인을 식별할 수 있는 정보를 직접 수집하지 않습니다.</strong></p>
-                    <p>다만, 서비스 운영을 위해 다음 정보가 자동으로 수집될 수 있습니다:</p>
+                    <p>본 서비스는 회원가입을 요구하지 않습니다. 서비스를 이용하시는 데 이름이나 연락처를 남기실 필요가 없습니다.</p>
+                    <p>다만 다음 두 경우에 정보가 수집됩니다.</p>
 
                     <table className={styles.table}>
                         <thead>
@@ -59,6 +59,21 @@ export default function PrivacyPage() {
                                 <td>브라우저 푸시 알림 토큰</td>
                                 <td>가격 알림 기능 (사용자 동의 시)</td>
                                 <td>알림 해제 시까지</td>
+                            </tr>
+                            <tr>
+                                <td>이름, 이메일 주소, 문의 내용 (직접 입력하신 경우에만)</td>
+                                <td>문의 및 항공권 제보에 답변</td>
+                                <td>답변 후 보관하지 않음</td>
+                            </tr>
+                            <tr>
+                                <td>접속 IP를 되돌릴 수 없게 변환한 값</td>
+                                <td>알림 기능 남용 방지</td>
+                                <td>알림 해제 시까지</td>
+                            </tr>
+                            <tr>
+                                <td>광고 식별을 위한 쿠키</td>
+                                <td>Google AdSense 광고 노출</td>
+                                <td>Google 정책에 따름</td>
                             </tr>
                         </tbody>
                     </table>
@@ -118,8 +133,37 @@ export default function PrivacyPage() {
                 <h2 className={styles.sectionTitle}>5. 개인정보의 제3자 제공</h2>
                 <div className={styles.sectionContent}>
                     <p>
-                        본 서비스는 이용자의 개인정보를 제3자에게 제공하지 않습니다.
-                        다만, 법령에 의한 요청이 있는 경우에는 관련 법률에 따라 제공할 수 있습니다.
+                        본 서비스는 이용자의 개인정보를 판매하거나 광고 목적으로 다른 회사에 넘기지 않습니다.
+                        다만 서비스를 운영하려면 아래 업체들의 도움을 받아야 하며, 그 과정에서 정보가 이들의 시스템에 저장됩니다.
+                    </p>
+                    <table className={styles.table}>
+                        <thead>
+                            <tr>
+                                <th>업체</th>
+                                <th>맡기는 일</th>
+                                <th>전달되는 정보</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Vercel</td>
+                                <td>웹사이트 운영</td>
+                                <td>접속 기록</td>
+                            </tr>
+                            <tr>
+                                <td>Supabase</td>
+                                <td>가격 알림 정보 보관</td>
+                                <td>푸시 알림 토큰, 알림 조건</td>
+                            </tr>
+                            <tr>
+                                <td>Google</td>
+                                <td>이용 통계(Analytics), 광고(AdSense), 알림 전송</td>
+                                <td>방문 기록, 쿠키, 푸시 알림 토큰</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p>
+                        법령에 따른 요청이 있는 경우에는 관련 법률에 따라 제공할 수 있습니다.
                     </p>
                 </div>
             </div>

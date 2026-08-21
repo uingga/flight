@@ -3482,8 +3482,11 @@ export default function Dashboard() {
                                                                 네이버 가격비교 ›
                                                             </button>
                                                         )}
+                                                        {/* 제휴 링크라는 사실은 링크에 올렸을 때 뜨는 설명과 푸터 고지로 밝힌다.
+                                                            카드마다 딱지를 붙이면 목록이 지저분해져 두 곳으로 나눴다. */}
                                                         {tripcomHotelUrl && (
-                                                            <a href={tripcomHotelUrl} target="_blank" rel="noopener noreferrer" className={styles.compareLinkHotel} title="트립닷컴에서 호텔 검색"
+                                                            <a href={tripcomHotelUrl} target="_blank" rel="noopener noreferrer" className={styles.compareLinkHotel}
+                                                                title="트립닷컴에서 호텔 검색 (예약이 완료되면 티키티킷이 수수료를 받을 수 있습니다)"
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
                                                                     gtag.trackHotelAffiliateClick(
@@ -3662,6 +3665,8 @@ export default function Dashboard() {
                         본 서비스는 각 여행사의 특가 항공권 정보를 수집하여 제공하며, 실제 예약 시점의 가격 및 좌석 상태는 해당 여행사와 다를 수 있습니다. 예약은 각 여행사 사이트에서 직접 진행됩니다.
                         <br /><br />
                         티키티킷은 통신판매중개자로서 통신판매의 당사자가 아닙니다. 따라서 항공권의 예약, 결제, 취소, 환불 및 운항 스케줄 등에 대한 모든 의무와 법적 책임은 해당 상품을 판매하는 여행사 및 항공사에 있습니다.
+                        <br /><br />
+                        일부 링크는 제휴 링크이며, 이를 통해 예약이 완료되면 티키티킷이 수수료를 받을 수 있습니다. 이용자가 부담하는 가격은 달라지지 않습니다.
                     </div>
 
                     <div className={styles.footerBottom}>
