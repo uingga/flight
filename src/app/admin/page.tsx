@@ -735,7 +735,7 @@ export default function AdminPage() {
                         변동이 없어 보이므로, 어느 시각 크롤이 실제로 일하는지는 이 기준으로 봐야 합니다.
                         표 전체가 한 기준으로만 표시됩니다. 수집 건수와 들고남을 따로 남기기 시작한 것은 2026-08-21부터라,
                         그 이전 기록은 수집 건수가 <code>—</code>로 비어 있고 노출 건수 자리에도 여행사마다 기준이 섞여 있습니다.
-                        로그는 7일치만 보관하므로 그 주가 지나면 저절로 정리됩니다.
+                        회차별 수치와 경고는 최대 28일 보관하고, 파일 용량이 큰 도시·지역 상세만 7일 뒤 정리합니다.
                     </p>
                     <div className={styles.cityDetail} style={{ overflowX: 'auto' }}>
                         <table className={styles.cityTable} style={{ minWidth: '500px' }}>
