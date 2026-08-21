@@ -2952,6 +2952,29 @@
     margin-top: 2px;
 }
 
+.mdtMyrealtripSortNotice {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin: 10px 24px 0;
+    padding: 11px 12px;
+    border: 1px solid #e0e3ff;
+    border-radius: 10px;
+    background: #f7f7ff;
+    color: #555d70;
+    font-size: 12px;
+    line-height: 1.55;
+}
+
+.mdtMyrealtripSortNotice > span:first-child {
+    flex: 0 0 auto;
+}
+
+.mdtMyrealtripSortNotice strong {
+    color: #4338ca;
+    font-weight: 700;
+}
+
 /* 하단 면책/인원선택 (예약 버튼은 .mdtBookBtnWrap로 분리) */
 .mdtFooter {
     padding: 12px 24px 6px;
@@ -4106,6 +4129,11 @@
 
     .mdtPriceTotal {
         padding: 10px 16px;
+    }
+
+    .mdtMyrealtripSortNotice {
+        margin: 8px 16px 0;
+        padding: 10px 11px;
     }
 
     .priceAlertArea {

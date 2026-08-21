@@ -4001,6 +4001,17 @@ export default function Dashboard() {
                                 <div className={styles.mdtPriceTotalValue}>{formatPrice(totalPrice)}</div>
                             </div>
 
+                            {modetourGuide.source === 'myrealtrip' && (
+                                <div className={styles.mdtMyrealtripSortNotice}>
+                                    <span aria-hidden="true">💡</span>
+                                    <span>
+                                        이 항공권은 검색 결과의 <strong>직항 최저가</strong>예요.
+                                        예약 페이지는 추천순으로 열리므로 <strong>‘가격 낮은 순’</strong>을 누른 뒤
+                                        같은 항공사·시간을 확인해 주세요.
+                                    </span>
+                                </div>
+                            )}
+
                             {/* 하단 */}
                             <div className={styles.mdtFooter}>
 
