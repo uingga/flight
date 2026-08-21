@@ -5,6 +5,7 @@ import { getRegionByCity } from '@/lib/utils/region-mapper';
 import { enrichWithRealtimeData, applyEnrichData, RouteKey } from '@/lib/utils/realtime-enrich';
 import { IncompleteScrapeError, ScrapeCompleteness } from './scrape-errors';
 import { survivingRouteMinPrice } from '@/lib/utils/route-min-price';
+import { normalizeAirline } from '@/lib/utils/flight-helpers';
 
 const randomDelay = (min: number, max: number) =>
     new Promise(r => setTimeout(r, (Math.random() * (max - min) + min) * 1000));
@@ -204,10 +205,23 @@ export async function scrapeTtang(prevFlights: any[] = []): Promise<Flight[]> {
         // ===== Phase 2: 이전 캐시에서 시간 복사 + 신규만 realtime_V2 보강 =====
         if (allFlights.length > 0) {
             // 이전 캐시에서 시간 데이터 복사
+            // 이전 캐시에서 시각을 옮겨올 때 쓰는 키.
+            //
+            // 예전에는 노선과 날짜만 봤다. 같은 노선·같은 날짜에 항공사가 둘이면 엉뚱한
+            // 항공사의 출발 시각이 붙는다. 실시간 보강 쪽은 이미 항공사까지 대조하는데
+            // (enrichKeyOf) 복사 쪽만 빠져 있었다. 가격과 노선은 맞고 시각만 틀리므로
+            // 아무도 알아채지 못한 채 남는다.
+            const timeKeyOf = (f: any) => [
+                normalizeAirline(f.airline || ''),
+                f.departure?.airport || '',
+                f.arrival?.airport || '',
+                f.departure?.date || '',
+                f.arrival?.date || '',
+            ].join('|');
+
             const prevTimeMap = new Map<string, any>();
             prevFlights.filter((f: any) => f.source === 'ttang' && f.departure?.time).forEach((f: any) => {
-                const key = `${f.departure?.airport || ''}|${f.arrival?.airport || ''}|${f.departure?.date || ''}|${f.arrival?.date || ''}`;
-                prevTimeMap.set(key, f);
+                prevTimeMap.set(timeKeyOf(f), f);
             });
 
             let carriedOver = 0;
@@ -220,8 +234,7 @@ export async function scrapeTtang(prevFlights: any[] = []): Promise<Flight[]> {
 
             for (let i = 0; i < allFlights.length; i++) {
                 const f = allFlights[i];
-                const key = `${f.departure?.airport || ''}|${f.arrival?.airport || ''}|${f.departure?.date || ''}|${f.arrival?.date || ''}`;
-                const prev = prevTimeMap.get(key);
+                const prev = prevTimeMap.get(timeKeyOf(f));
 
                 if (prev?.departure?.time) {
                     f.departure.time = prev.departure.time;

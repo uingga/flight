@@ -255,6 +255,16 @@ async function scrapeHanatourRegular(browser: any, prevFlights: any[] = []): Pro
                         console.log('fareId 추출 실패:', e);
                     }
 
+                    // farLst와 화면 카드를 순번으로 짝지어 왔는데, 두 목록이 같은 순서라는
+                    // 보장이 없다. 목록에 구분용 항목이 하나만 섞여도 전체가 한 칸씩 밀려서,
+                    // 카드에 적힌 가격과 예약 버튼이 여는 상품이 달라진다. 사용자가 눌러 보고서야
+                    // 아는 종류의 오류라 가장 비싸다. 길이가 어긋나면 짝짓기를 포기하고
+                    // 검색 페이지로 보낸다 — 한 번 더 고르게 하는 편이 틀린 상품을 여는 것보다 낫다.
+                    const fareAligned = fareLst.length === cards.length;
+                    if (fareLst.length > 0 && !fareAligned) {
+                        console.log(`[하나투어] fareId 정렬 불일치 (카드 ${cards.length}개 vs 운임 ${fareLst.length}개) — 예약 링크를 검색 페이지로 보냅니다`);
+                    }
+
                     cards.forEach((card, index) => {
                         try {
                             const rows = card.querySelectorAll('.fl .row');
@@ -287,7 +297,7 @@ async function scrapeHanatourRegular(browser: any, prevFlights: any[] = []): Pro
 
                             // fareId로 다이렉트 예약 링크 생성
                             let fullLink = 'https://www.hanatour.com/trp/air/CHPC0AIR0233M200';
-                            if (fareLst[index] && fareLst[index].fareId) {
+                            if (fareAligned && fareLst[index] && fareLst[index].fareId) {
                                 const fareId = encodeURIComponent(fareLst[index].fareId);
                                 const psngrCntLst = encodeURIComponent(JSON.stringify([{ ageDvCd: 'A', psngrCnt: 1 }]));
                                 const selectedCard = encodeURIComponent('{}');
@@ -297,7 +307,7 @@ async function scrapeHanatourRegular(browser: any, prevFlights: any[] = []): Pro
                             if (price > 0 && arrivalCity && departureDate && returnDate) {
                                 // fareId에서 availCnt 추출
                                 let availCnt = 0;
-                                if (fareLst[index] && fareLst[index].availCnt) {
+                                if (fareAligned && fareLst[index] && fareLst[index].availCnt) {
                                     availCnt = parseInt(fareLst[index].availCnt) || 0;
                                 }
 

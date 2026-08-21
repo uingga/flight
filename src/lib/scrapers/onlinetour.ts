@@ -162,7 +162,20 @@ export async function scrapeOnlineTour(prevFlights: any[] = []): Promise<Flight[
 
                         // Extract Data
                         const items = await page.evaluate((args) => {
-                            const { regionName, cityName, cityCode, depAirport, depCity } = args as { regionName: string, cityName: string, cityCode: string, depAirport: string, depCity: string };
+                            const { regionName, cityName, cityCode, depAirport, depCity, crawlYear, crawlMonth } = args as { regionName: string, cityName: string, cityCode: string, depAirport: string, depCity: string, crawlYear: number, crawlMonth: number };
+
+                            // 페이지가 MM-DD만 주기 때문에 연도를 우리가 붙여야 한다.
+                            // 예전에는 '2026'이 문자열로 박혀 있었다. 온라인투어는 한 달 앞까지
+                            // 노출하므로 12월 크롤에서 1월 출발편을 만나면 한 해 전으로 기록되고,
+                            // 그 표들은 만료 필터에 전부 걸려 조용히 사라진다.
+                            const withYear = (mmdd: string | undefined): string => {
+                                if (!mmdd) return '';
+                                const month = Number(mmdd.slice(0, 2));
+                                if (!month) return '';
+                                // 지금보다 이른 달이면 해가 넘어간 것이다 (12월에 보는 1월 출발편)
+                                const year = month < crawlMonth ? crawlYear + 1 : crawlYear;
+                                return `${year}-${mmdd}`;
+                            };
                             const results: any[] = [];
                             const listItems = document.querySelectorAll('#data_list > li.item');
 
@@ -197,13 +210,13 @@ export async function scrapeOnlineTour(prevFlights: any[] = []): Promise<Flight[
                                     // Inline all datetimes to avoid ReferenceError with helpers
                                     const t1 = outboundRow.querySelectorAll('.city')[0]?.querySelector('time')?.textContent || '';
                                     const d1 = {
-                                        d: t1.match(/(\d{2}-\d{2})/)?.[1] ? `2026-${t1.match(/(\d{2}-\d{2})/)?.[1]}` : '',
+                                        d: withYear(t1.match(/(\d{2}-\d{2})/)?.[1]),
                                         t: t1.match(/(\d{2}:\d{2})/)?.[1] || ''
                                     };
 
                                     const t2 = outboundRow.querySelectorAll('.city')[1]?.querySelector('time')?.textContent || '';
                                     const d2 = {
-                                        d: t2.match(/(\d{2}-\d{2})/)?.[1] ? `2026-${t2.match(/(\d{2}-\d{2})/)?.[1]}` : '',
+                                        d: withYear(t2.match(/(\d{2}-\d{2})/)?.[1]),
                                         t: t2.match(/(\d{2}:\d{2})/)?.[1] || ''
                                     };
 
@@ -212,13 +225,13 @@ export async function scrapeOnlineTour(prevFlights: any[] = []): Promise<Flight[
 
                                     const t3 = inboundRow.querySelectorAll('.city')[0]?.querySelector('time')?.textContent || '';
                                     const d3 = {
-                                        d: t3.match(/(\d{2}-\d{2})/)?.[1] ? `2026-${t3.match(/(\d{2}-\d{2})/)?.[1]}` : '',
+                                        d: withYear(t3.match(/(\d{2}-\d{2})/)?.[1]),
                                         t: t3.match(/(\d{2}:\d{2})/)?.[1] || ''
                                     };
 
                                     const t4 = inboundRow.querySelectorAll('.city')[1]?.querySelector('time')?.textContent || '';
                                     const d4 = {
-                                        d: t4.match(/(\d{2}-\d{2})/)?.[1] ? `2026-${t4.match(/(\d{2}-\d{2})/)?.[1]}` : '',
+                                        d: withYear(t4.match(/(\d{2}-\d{2})/)?.[1]),
                                         t: t4.match(/(\d{2}:\d{2})/)?.[1] || ''
                                     };
 
@@ -274,7 +287,11 @@ export async function scrapeOnlineTour(prevFlights: any[] = []): Promise<Flight[
                                 }
                             });
                             return results;
-                        }, { regionName: region.name, cityName: city.name, cityCode: city.code, depAirport: departureAirportInfo.airport, depCity: departureAirportInfo.city });
+                        }, {
+                            regionName: region.name, cityName: city.name, cityCode: city.code,
+                            depAirport: departureAirportInfo.airport, depCity: departureAirportInfo.city,
+                            crawlYear: new Date().getFullYear(), crawlMonth: new Date().getMonth() + 1,
+                        });
 
                         console.log(`    ${city.name}: ${Array.isArray(items) ? items.length : 0}건 수집`);
                         if (Array.isArray(items)) {
