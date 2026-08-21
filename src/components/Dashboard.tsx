@@ -85,6 +85,8 @@ const getSourceName = (source: string) => {
 };
 
 const DISMISSED_ALERT_ROUTES_KEY = 'tikitikit_dismissed_alert_routes';
+const RECENT_FLIGHT_REPORTS_KEY = 'tikitikit_recent_flight_reports';
+const FLIGHT_REPORT_VISIBLE_MS = 24 * 60 * 60 * 1000;
 
 // 살짝 당기거나 빠르게 스친 동작은 닫기로 이어지지 않게 한다.
 // 화면 크기에 따라 140~180px를 의도적으로 내려야 닫힘 구간에 들어간다.
@@ -140,6 +142,7 @@ export default function Dashboard() {
     const [contactForm, setContactForm] = useState({ name: '', email: '', message: '' });
     const [contactSending, setContactSending] = useState(false);
     const [flightReport, setFlightReport] = useState<{ flightId: string; status: 'sending' | 'sent' | 'error' } | null>(null);
+    const [recentFlightReports, setRecentFlightReports] = useState<Record<string, number>>({});
     const [priceAlertSetup, setPriceAlertSetup] = useState<{
         key: string;
         entry: PriceAlertEntry;
@@ -231,6 +234,20 @@ export default function Dashboard() {
         try {
             const saved = localStorage.getItem('favoriteFlights');
             if (saved) setFavoriteFlights(JSON.parse(saved));
+        } catch { }
+    }, []);
+
+    // 신고를 마친 항공권은 새로고침해도 하루 동안 다시 신고 버튼을 보여주지 않는다.
+    // 서버에서도 같은 항공권을 중복 저장하지 않지만, 브라우저에서 먼저 막아 불필요한 요청을 줄인다.
+    useEffect(() => {
+        try {
+            const saved = JSON.parse(localStorage.getItem(RECENT_FLIGHT_REPORTS_KEY) || '{}') as Record<string, number>;
+            const cutoff = Date.now() - FLIGHT_REPORT_VISIBLE_MS;
+            const recent = Object.fromEntries(
+                Object.entries(saved).filter(([, timestamp]) => Number(timestamp) >= cutoff),
+            );
+            setRecentFlightReports(recent);
+            localStorage.setItem(RECENT_FLIGHT_REPORTS_KEY, JSON.stringify(recent));
         } catch { }
     }, []);
 
@@ -585,6 +602,12 @@ export default function Dashboard() {
 
     const reportFlightIssue = async (flight: Flight, reportType: 'price_changed' | 'unavailable') => {
         if (flightReport?.status === 'sending') return;
+        if (recentFlightReports[flight.id]) {
+            setFlightReport({ flightId: flight.id, status: 'sent' });
+            setShareToast('이미 신고가 접수된 항공권이에요.');
+            setTimeout(() => setShareToast(null), 2500);
+            return;
+        }
         setFlightReport({ flightId: flight.id, status: 'sending' });
 
         try {
@@ -607,13 +630,32 @@ export default function Dashboard() {
                     },
                 }),
             });
-            if (!response.ok) throw new Error('report failed');
+            const result = await response.json().catch(() => ({})) as {
+                duplicate?: boolean;
+                recheckQueued?: boolean;
+                error?: string;
+            };
+            if (!response.ok) throw new Error(result.error || 'report failed');
+            const reportedAt = Date.now();
+            const nextReports = { ...recentFlightReports, [flight.id]: reportedAt };
+            setRecentFlightReports(nextReports);
+            try {
+                localStorage.setItem(RECENT_FLIGHT_REPORTS_KEY, JSON.stringify(nextReports));
+            } catch { }
 
             setFlightReport({ flightId: flight.id, status: 'sent' });
-            setShareToast('신고가 접수되었습니다. 확인해볼게요.');
-        } catch {
+            setShareToast(result.duplicate
+                ? result.recheckQueued === false
+                    ? '이미 신고가 처리된 항공권이에요.'
+                    : '이미 접수된 항공권이에요. 확인 중입니다.'
+                : result.recheckQueued === false
+                    ? '신고가 접수되었습니다. 운영자가 확인할게요.'
+                    : '신고가 접수되었습니다. 가격과 예약 가능 여부를 다시 확인할게요.');
+        } catch (error) {
             setFlightReport({ flightId: flight.id, status: 'error' });
-            setShareToast('신고 접수에 실패했습니다. 잠시 후 다시 시도해주세요.');
+            setShareToast(error instanceof Error && error.message !== 'report failed'
+                ? error.message
+                : '신고 접수에 실패했습니다. 잠시 후 다시 시도해주세요.');
         }
         setTimeout(() => setShareToast(null), 2500);
     };
@@ -4117,7 +4159,8 @@ export default function Dashboard() {
                                     <span className={styles.mdtFreshnessText}>
                                         가격 정보 · {getFreshnessInfo(modetourGuide.priceCheckedAt).label}
                                     </span>
-                                    {flightReport?.flightId === modetourGuide.id && flightReport.status === 'sent' ? (
+                                    {(recentFlightReports[modetourGuide.id]
+                                        || (flightReport?.flightId === modetourGuide.id && flightReport.status === 'sent')) ? (
                                         <span className={styles.mdtReportDone}>✓ 신고 접수 완료</span>
                                     ) : (
                                         <div className={styles.mdtReportActions} aria-label="항공권 정보 신고">

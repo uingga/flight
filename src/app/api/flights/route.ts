@@ -86,7 +86,9 @@ export async function GET(request: NextRequest) {
         // 항공사명 정규화
         allFlights = allFlights.map(f => ({
             ...f,
-            priceCheckedAt: sourceUpdatedAt[f.source] || lastUpdated || undefined,
+            // 신고 후 한 항공권만 다시 확인한 경우에는 그 항공권의 시각이 여행사 전체
+            // 크롤 시각보다 정확하다. 개별 확인값을 지우지 않고 우선 사용한다.
+            priceCheckedAt: f.priceCheckedAt || sourceUpdatedAt[f.source] || lastUpdated || undefined,
             airline: normalizeAirline(f.airline),
             // 모두투어 예약 링크에서 departureCity SEL → ICN 보정 (SEL은 모두투어 웹에서 미인식)
             link: (f.source === 'modetour' && f.link?.includes('%22SEL%22'))
