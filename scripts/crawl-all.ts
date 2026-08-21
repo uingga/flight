@@ -38,7 +38,6 @@ interface CacheData {
         ttang: number;
         myrealtrip: number;
     };
-    priceHistory?: Record<string, Array<{ date: string; minPrice: number; avgPrice: number; count: number }>>;
 }
 
 /** 항공권 배열을 여행사별 개수로 집계한다. 캐시와 크롤 로그가 같은 기준을 쓰게 하는 용도. */
@@ -407,8 +406,8 @@ async function main() {
             });
             console.log(`🆕 오늘 새로 추가된 항공편: ${newFlightCount}개 / 전체 ${benchmarkedFlights.length}개`);
 
-            // 캐시 데이터 구조 생성 (가격 히스토리 포함)
-            // 먼저 기존 히스토리를 로드하여 cacheData에 포함
+            // 캐시 데이터 구조 생성
+            // 가격 히스토리는 중복 저장하지 않고 별도 파일만 유지한다.
             const historyPath = path.join(dataDir, 'price-history.json');
             let history: Record<string, Array<{ date: string; minPrice: number; avgPrice: number; count: number }>> = {};
             try {
@@ -430,7 +429,6 @@ async function main() {
                 staleStreak,
                 scrapedCounts: { ...(prevCache?.scrapedCounts || {}), ...scrapedCounts },
                 integrityAlerts: integrityWarnings,
-                priceHistory: history,
             };
 
             // data 디렉토리 확인 및 생성
@@ -463,9 +461,6 @@ async function main() {
                 // 최근 14일만 유지
                 history[route] = history[route].slice(-14);
             });
-
-            // cacheData에 최신 히스토리 반영
-            cacheData.priceHistory = history;
 
             // 통합 캐시 파일 저장
             fs.writeFileSync(cachePath, JSON.stringify(cacheData, null, 2), 'utf-8');
