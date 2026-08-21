@@ -1,9 +1,8 @@
 name: Recheck Reported Flights
 
 on:
-  schedule:
-    # 신고는 최대 15분 안에 자동 확인을 시작한다. 미처리 신고가 없으면 설치·크롤을 하지 않는다.
-    - cron: '*/15 * * * *'
+  # 신고 때문에 여행사 접속이 늘지 않도록 예약 실행은 하지 않는다.
+  # 관리자가 꼭 필요할 때만 Actions 화면에서 수동으로 실행한다.
   workflow_dispatch:
 
 concurrency:

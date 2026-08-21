@@ -633,6 +633,7 @@ export default function Dashboard() {
             const result = await response.json().catch(() => ({})) as {
                 duplicate?: boolean;
                 recheckQueued?: boolean;
+                autoHidden?: boolean;
                 error?: string;
             };
             if (!response.ok) throw new Error(result.error || 'report failed');
@@ -644,12 +645,18 @@ export default function Dashboard() {
             } catch { }
 
             setFlightReport({ flightId: flight.id, status: 'sent' });
-            setShareToast(result.duplicate
+            if (result.autoHidden) {
+                setFlights(current => current.filter(item => item.id !== flight.id));
+                setModetourGuide(null);
+            }
+            setShareToast(result.autoHidden
+                ? '신고가 여러 건 접수되어 확인하는 동안 이 항공권을 잠시 숨겼습니다.'
+                : result.duplicate
                 ? result.recheckQueued === false
                     ? '이미 신고가 처리된 항공권이에요.'
                     : '이미 접수된 항공권이에요. 확인 중입니다.'
                 : result.recheckQueued === false
-                    ? '신고가 접수되었습니다. 운영자가 확인할게요.'
+                    ? '신고가 접수되었습니다. 같은 신고가 더 들어오면 잠시 숨겨집니다.'
                     : '신고가 접수되었습니다. 가격과 예약 가능 여부를 다시 확인할게요.');
         } catch (error) {
             setFlightReport({ flightId: flight.id, status: 'error' });

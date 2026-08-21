@@ -708,6 +708,102 @@
     font-size: 0.95rem;
 }
 
+.summarySub {
+    color: #64748b;
+    font-size: 0.74rem;
+}
+
+.reportError {
+    margin-bottom: 14px;
+    padding: 10px 12px;
+    border: 1px solid rgba(248, 113, 113, 0.4);
+    border-radius: 8px;
+    background: rgba(127, 29, 29, 0.18);
+    color: #fecaca;
+    font-size: 0.82rem;
+}
+
+.reportCards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.reportCard,
+.reportCardActive {
+    padding: 15px;
+    border: 1px solid #334155;
+    border-radius: 11px;
+    background: #1e293b;
+}
+
+.reportCardActive {
+    border-color: rgba(245, 158, 11, 0.65);
+    background: linear-gradient(135deg, #1e293b, rgba(69, 26, 3, 0.72));
+}
+
+.reportCardHead {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.reportCardHead div {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.reportCardHead strong {
+    color: #f1f5f9;
+    font-size: 0.92rem;
+}
+
+.reportCardHead div span {
+    color: #94a3b8;
+    font-size: 0.75rem;
+}
+
+.reportBreakdown {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 12px;
+    margin-top: 12px;
+    color: #cbd5e1;
+    font-size: 0.76rem;
+    line-height: 1.5;
+}
+
+.reportActions {
+    display: flex;
+    gap: 8px;
+    margin-top: 13px;
+}
+
+.reportActions button {
+    padding: 7px 11px;
+    border: 1px solid #d97706;
+    border-radius: 7px;
+    background: rgba(120, 53, 15, 0.36);
+    color: #fde68a;
+    font-size: 0.76rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.reportActions button:disabled {
+    cursor: wait;
+    opacity: 0.55;
+}
+
+.reportActions .reportReleaseBtn {
+    border-color: #475569;
+    background: #0f172a;
+    color: #cbd5e1;
+}
+
 .gaHint {
     margin: 8px 2px 0;
     color: #64748b;
@@ -1008,6 +1104,20 @@
     border-radius: 50%;
     background: #ef4444;
     box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.18);
+}
+
+.reportTabCount {
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: #d97706;
+    color: #fff7ed;
+    font-size: 0.68rem;
+    line-height: 1;
 }
 
 /* ── 여행사별 수집 상태 카드 ────────────────────────── */

@@ -6,6 +6,63 @@ import { normalizeCity } from '@/lib/utils/flight-helpers';
 import { getComparisonFreshness, getEffectivePrice } from '@/lib/price-quality';
 import { filterStaleMyrealtripFlights, getMyrealtripFreshness } from '@/lib/source-freshness';
 
+const HIDDEN_FLIGHT_CACHE_MS = 60 * 1000;
+let hiddenFlightCache: { ids: Set<string>; validUntil: number } = {
+    ids: new Set(),
+    validUntil: 0,
+};
+
+async function loadHiddenFlightIds(): Promise<Set<string>> {
+    if (hiddenFlightCache.validUntil > Date.now()) return hiddenFlightCache.ids;
+
+    const url = process.env.SUPABASE_URL?.replace(/\/$/, '');
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!url || !key) return new Set();
+
+    const headers = { apikey: key, 'Content-Type': 'application/json' };
+    const nowIso = new Date().toISOString();
+    try {
+        // 만료된 임시 숨김은 첫 목록 요청 때 자동 해제한다. DB 트리거가 해제 기록도 남긴다.
+        const expireResponse = await fetch(
+            `${url}/rest/v1/flight_report_hides?status=eq.active&expires_at=lte.${encodeURIComponent(nowIso)}`,
+            {
+                method: 'PATCH',
+                headers: { ...headers, Prefer: 'return=minimal' },
+                body: JSON.stringify({
+                    status: 'expired',
+                    released_at: nowIso,
+                    release_reason: '24시간 임시 숨김 만료',
+                    updated_at: nowIso,
+                }),
+                cache: 'no-store',
+            },
+        );
+        if (!expireResponse.ok) throw new Error(`hide expiry ${expireResponse.status}`);
+
+        const query = [
+            'select=flight_id',
+            'status=in.(active,manual)',
+            `or=(expires_at.is.null,expires_at.gt.${encodeURIComponent(nowIso)})`,
+        ].join('&');
+        const response = await fetch(`${url}/rest/v1/flight_report_hides?${query}`, {
+            headers,
+            cache: 'no-store',
+        });
+        if (!response.ok) throw new Error(`hide lookup ${response.status}`);
+        const rows = await response.json() as Array<{ flight_id: string }>;
+        hiddenFlightCache = {
+            ids: new Set(rows.map(row => row.flight_id)),
+            validUntil: Date.now() + HIDDEN_FLIGHT_CACHE_MS,
+        };
+        return hiddenFlightCache.ids;
+    } catch (error) {
+        // 숨김 DB가 잠시 고장 났다고 전체 목록을 비우지는 않는다.
+        console.error('임시 숨김 항공권 조회 실패:', error);
+        hiddenFlightCache = { ids: new Set(), validUntil: Date.now() + 10_000 };
+        return hiddenFlightCache.ids;
+    }
+}
+
 // 항공사명 정규화 맵
 const AIRLINE_NAME_MAP: Record<string, string> = {
     '베트남 항공': '베트남항공',
@@ -81,6 +138,16 @@ export async function GET(request: NextRequest) {
         if (hiddenCount > 0) {
             const freshness = getMyrealtripFreshness(sourceUpdatedAt);
             console.warn(`마이리얼트립 가격 갱신이 ${freshness.maxAgeHours}시간 넘게 멈춰 ${hiddenCount}개를 숨겼습니다.`);
+        }
+
+        const temporarilyHiddenIds = await loadHiddenFlightIds();
+        if (temporarilyHiddenIds.size > 0) {
+            const beforeReportFilter = allFlights.length;
+            allFlights = allFlights.filter(flight => !temporarilyHiddenIds.has(flight.id));
+            const reportHiddenCount = beforeReportFilter - allFlights.length;
+            if (reportHiddenCount > 0) {
+                console.log(`신고 누적으로 임시 숨김 ${reportHiddenCount}개`);
+            }
         }
 
         // 항공사명 정규화

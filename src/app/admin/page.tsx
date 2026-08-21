@@ -100,6 +100,55 @@ interface UserStatsData {
     trend: Array<{ date: string; count: number }>;
 }
 
+interface FlightReportAdminData {
+    available: boolean;
+    message?: string;
+    generatedAt?: string;
+    summary?: {
+        recentReports: number;
+        activeHides: number;
+        needsReview: number;
+    };
+    reports: Array<{
+        id: number;
+        flight_id: string;
+        source: string;
+        report_type: 'price_changed' | 'unavailable';
+        status: string;
+        departure_city: string;
+        arrival_city: string;
+        departure_date: string;
+        arrival_date: string;
+        airline: string | null;
+        displayed_price: number;
+        created_at: string;
+        result: Record<string, unknown> | null;
+    }>;
+    hides: Array<{
+        flight_id: string;
+        source: string;
+        latest_report_id: number;
+        status: 'active' | 'manual' | 'released' | 'expired' | 'resolved';
+        report_count: number;
+        price_changed_count: number;
+        unavailable_count: number;
+        hidden_at: string;
+        expires_at: string | null;
+        released_at: string | null;
+        release_reason: string | null;
+        updated_at: string;
+    }>;
+    events: Array<{
+        id: number;
+        report_id: number;
+        flight_id: string;
+        source: string;
+        event_type: string;
+        details: Record<string, unknown>;
+        created_at: string;
+    }>;
+}
+
 interface GaListItem {
     label: string;
     count: number;
@@ -202,6 +251,7 @@ const SOURCE_COLORS: Record<string, string> = {
  */
 const TABS = [
     { id: 'health', label: '운영 상태', hint: '수집이 정상인지' },
+    { id: 'reports', label: '항공권 신고', hint: '숨김과 확인이 필요한 표' },
     { id: 'flights', label: '항공권 데이터', hint: '무엇을 얼마에 내보내는지' },
     { id: 'visitors', label: '방문자', hint: '누가 들어와 무엇을 하는지' },
     { id: 'alerts', label: '알림 사용자', hint: '누가 무엇을 기다리는지' },
@@ -247,6 +297,18 @@ function formatPrice(price: number): string {
     return `${price.toLocaleString()}원`;
 }
 
+function reportStatusLabel(status: string): string {
+    const labels: Record<string, string> = {
+        pending: '신고 기록됨',
+        processing: '수동 확인 중',
+        confirmed: '정보 일치',
+        updated: '정보 갱신',
+        removed: '판매 종료',
+        check_failed: '확인 실패',
+    };
+    return labels[status] || status;
+}
+
 /**
  * 어드민 키를 브라우저에 남겨 새로고침마다 다시 입력하지 않게 한다.
  *
@@ -282,6 +344,9 @@ export default function AdminPage() {
     const [userStatsError, setUserStatsError] = useState<string | null>(null);
     const [gaStats, setGaStats] = useState<GaStatsData | null>(null);
     const [gaStatsError, setGaStatsError] = useState<string | null>(null);
+    const [flightReports, setFlightReports] = useState<FlightReportAdminData | null>(null);
+    const [flightReportsError, setFlightReportsError] = useState<string | null>(null);
+    const [flightReportAction, setFlightReportAction] = useState<string | null>(null);
     const [tab, setTab] = useState<TabId>('health');
     // 크롤 히스토리 표가 무엇을 세는지: 사이트에 나가는 수(shown)인지 긁어온 원본 수(scraped)인지
     const [crawlMetric, setCrawlMetric] = useState<'shown' | 'scraped' | 'turnover'>('shown');
@@ -364,6 +429,19 @@ export default function AdminPage() {
                 setGaStatsError('방문 통계를 불러오지 못했습니다.');
             }
 
+            try {
+                const reportResponse = await fetch(`/api/admin-flight-reports?key=${encodeURIComponent(authKey)}`);
+                const reportJson = await reportResponse.json();
+                if (reportResponse.ok) {
+                    setFlightReports(reportJson);
+                    setFlightReportsError(null);
+                } else {
+                    setFlightReportsError(reportJson.error || '항공권 신고 현황을 불러오지 못했습니다.');
+                }
+            } catch {
+                setFlightReportsError('항공권 신고 현황을 불러오지 못했습니다.');
+            }
+
             setAuthed(true);
             setError(null);
             saveKey(authKey);
@@ -379,6 +457,29 @@ export default function AdminPage() {
     function handleLogin(e: React.FormEvent) {
         e.preventDefault();
         fetchData(key);
+    }
+
+    async function updateFlightHide(flightId: string, action: 'keep_hidden' | 'release') {
+        const actionKey = `${flightId}:${action}`;
+        setFlightReportAction(actionKey);
+        try {
+            const response = await fetch('/api/admin-flight-reports', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ key, flightId, action }),
+            });
+            const json = await response.json();
+            if (!response.ok) throw new Error(json.error || '상태 변경에 실패했습니다.');
+            const refreshResponse = await fetch(`/api/admin-flight-reports?key=${encodeURIComponent(key)}`);
+            const refreshJson = await refreshResponse.json();
+            if (!refreshResponse.ok) throw new Error(refreshJson.error || '새 상태를 불러오지 못했습니다.');
+            setFlightReports(refreshJson);
+            setFlightReportsError(null);
+        } catch (actionError) {
+            setFlightReportsError(actionError instanceof Error ? actionError.message : '상태 변경에 실패했습니다.');
+        } finally {
+            setFlightReportAction(null);
+        }
     }
 
     if (!authed && !loading) {
@@ -530,11 +631,129 @@ export default function AdminPage() {
                             {t.id === 'health' && criticalAlerts.length > 0 && (
                                 <span className={styles.tabDot} title={`점검 필요 ${criticalAlerts.length}건`} />
                             )}
+                            {t.id === 'reports' && (flightReports?.summary?.activeHides || 0) > 0 && (
+                                <span className={styles.reportTabCount} title="현재 임시 숨김 항공권">
+                                    {flightReports?.summary?.activeHides}
+                                </span>
+                            )}
                         </span>
                         <span className={styles.tabHint}>{t.hint}</span>
                     </button>
                 ))}
             </nav>
+
+            {tab === 'reports' && (<>
+                <section className={styles.section}>
+                    <h2>항공권 신고와 임시 숨김</h2>
+                    <p className={styles.sectionHelp}>
+                        신고 한두 건은 기록만 하고, 24시간 안에 서로 다른 익명 기기 3개와 접속망 2곳 이상에서
+                        신고한 항공권만 24시간 숨깁니다. 신고 때문에 여행사를 추가 크롤링하지 않습니다.
+                    </p>
+                    {flightReportsError && <div className={styles.reportError}>{flightReportsError}</div>}
+                    {!flightReports?.available ? (
+                        <div className={styles.dealReviewEmpty}>
+                            {flightReports?.message || '신고 정보를 불러오는 중입니다.'}
+                        </div>
+                    ) : (<>
+                        <div className={styles.summaryCards}>
+                            <div className={styles.summaryCard}>
+                                <span className={styles.summaryLabel}>최근 신고</span>
+                                <span className={styles.summaryValue}>{flightReports.summary?.recentReports || 0}</span>
+                                <span className={styles.summarySub}>최근 60건 범위</span>
+                            </div>
+                            <div className={`${styles.summaryCard} ${(flightReports.summary?.activeHides || 0) > 0 ? styles.alertCard : ''}`}>
+                                <span className={styles.summaryLabel}>지금 숨긴 항공권</span>
+                                <span className={styles.summaryValue}>{flightReports.summary?.activeHides || 0}</span>
+                                <span className={styles.summarySub}>자동·수동 숨김 포함</span>
+                            </div>
+                            <div className={styles.summaryCard}>
+                                <span className={styles.summaryLabel}>확인 필요</span>
+                                <span className={styles.summaryValue}>{flightReports.summary?.needsReview || 0}</span>
+                                <span className={styles.summarySub}>24시간 임시 숨김 중</span>
+                            </div>
+                        </div>
+
+                        <h3 className={styles.userSubTitle}>현재 숨김 또는 최근 처리</h3>
+                        {flightReports.hides.length === 0 ? (
+                            <div className={styles.dealReviewEmpty}>아직 임시 숨김 처리된 항공권이 없습니다.</div>
+                        ) : (
+                            <div className={styles.reportCards}>
+                                {flightReports.hides.map(hide => {
+                                    const active = hide.status === 'manual'
+                                        || (hide.status === 'active' && Boolean(hide.expires_at) && new Date(hide.expires_at as string).getTime() > Date.now());
+                                    const report = flightReports.reports.find(item => item.id === hide.latest_report_id)
+                                        || flightReports.reports.find(item => item.flight_id === hide.flight_id);
+                                    return (
+                                        <article key={hide.flight_id} className={active ? styles.reportCardActive : styles.reportCard}>
+                                            <div className={styles.reportCardHead}>
+                                                <div>
+                                                    <strong>{report ? `${report.departure_city} → ${report.arrival_city}` : hide.flight_id}</strong>
+                                                    <span>{SOURCE_NAMES[hide.source] || hide.source} · 신고 {hide.report_count}건</span>
+                                                </div>
+                                                <span className={active ? styles.tagWarn : styles.tagMuted}>
+                                                    {hide.status === 'manual' ? '관리자가 계속 숨김'
+                                                        : active ? '24시간 임시 숨김'
+                                                            : hide.status === 'resolved' ? '확인 후 해결'
+                                                                : hide.status === 'expired' ? '자동으로 다시 표시'
+                                                                    : '다시 표시'}
+                                                </span>
+                                            </div>
+                                            <div className={styles.reportBreakdown}>
+                                                <span>가격이 달라요 {hide.price_changed_count}</span>
+                                                <span>예약이 안 돼요 {hide.unavailable_count}</span>
+                                                <span>숨긴 시각 {formatKST(hide.hidden_at)}</span>
+                                                {active && hide.expires_at && <span>자동 복구 {formatKST(hide.expires_at)}</span>}
+                                            </div>
+                                            {active && (
+                                                <div className={styles.reportActions}>
+                                                    {hide.status !== 'manual' && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => updateFlightHide(hide.flight_id, 'keep_hidden')}
+                                                            disabled={flightReportAction !== null}
+                                                        >
+                                                            {flightReportAction === `${hide.flight_id}:keep_hidden` ? '처리 중…' : '계속 숨김'}
+                                                        </button>
+                                                    )}
+                                                    <button
+                                                        type="button"
+                                                        className={styles.reportReleaseBtn}
+                                                        onClick={() => updateFlightHide(hide.flight_id, 'release')}
+                                                        disabled={flightReportAction !== null}
+                                                    >
+                                                        {flightReportAction === `${hide.flight_id}:release` ? '처리 중…' : '다시 표시'}
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </article>
+                                    );
+                                })}
+                            </div>
+                        )}
+
+                        <h3 className={styles.userSubTitle}>최근 신고</h3>
+                        <div className={styles.cityDetail} style={{ overflowX: 'auto' }}>
+                            <table className={styles.cityTable} style={{ minWidth: '760px' }}>
+                                <thead>
+                                    <tr><th>시간</th><th>여행사</th><th>항공권</th><th>신고</th><th>상태</th><th>표시 가격</th></tr>
+                                </thead>
+                                <tbody>
+                                    {flightReports.reports.map(report => (
+                                        <tr key={report.id}>
+                                            <td style={{ whiteSpace: 'nowrap' }}>{formatKST(report.created_at).replace(/\d{4}\. /, '')}</td>
+                                            <td>{SOURCE_NAMES[report.source] || report.source}</td>
+                                            <td>{report.departure_city} → {report.arrival_city}<br /><small>{report.departure_date}</small></td>
+                                            <td>{report.report_type === 'price_changed' ? '가격이 달라요' : '예약이 안 돼요'}</td>
+                                            <td><span className={report.status === 'pending' ? styles.tagWarn : styles.tagMuted}>{reportStatusLabel(report.status)}</span></td>
+                                            <td>{formatPrice(report.displayed_price)}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </>)}
+                </section>
+            </>)}
 
             {tab === 'health' && (<>
             {/* 여행사별 수집 상태 — 노랑풍선이 이틀 가까이 반쪽으로 서비스되는 동안
