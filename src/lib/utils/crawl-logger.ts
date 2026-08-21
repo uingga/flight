@@ -199,12 +199,24 @@ export function logCrawlResults(
         alerts.forEach(alert => console.log(`  ${alert}`));
     }
 
-    // 최근 7일 로그만 유지 (하루 7회 × 7일 = 최대 49개)
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    history.entries = history.entries.filter(
-        e => new Date(e.timestamp) > sevenDaysAgo
-    );
+    // 크롤 횟수를 줄일지는 최소 2주 이상 봐야 판단할 수 있다. 회차별 변동 수치는
+    // 28일 보관하되, 용량이 큰 도시·지역 상세는 7일이 지나면 걷어낸다.
+    const detailCutoff = new Date();
+    detailCutoff.setDate(detailCutoff.getDate() - 7);
+    const retentionCutoff = new Date();
+    retentionCutoff.setDate(retentionCutoff.getDate() - 28);
+    history.entries = history.entries
+        .filter(e => new Date(e.timestamp) > retentionCutoff)
+        .map(entry => {
+            if (new Date(entry.timestamp) > detailCutoff) return entry;
+            return {
+                ...entry,
+                sites: Object.fromEntries(Object.entries(entry.sites).map(([site, stats]) => [
+                    site,
+                    { ...stats, byRegion: undefined, byCity: undefined },
+                ])),
+            };
+        });
 
     history.lastEntry = currentEntry;
     saveLogHistory(history);

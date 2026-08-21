@@ -448,6 +448,34 @@ export default function AdminPage() {
     const sumMetric = (sites: CrawlHistoryEntry['sites']): number =>
         Object.values(sites).reduce((acc, stat) => acc + (metricOf(stat) ?? 0), 0);
 
+    const turnoverOf = (entry: CrawlHistoryEntry) => {
+        const stats = allSources.map(source => ({ source, stat: entry.sites[source] }));
+        const measured = stats.filter(({ stat }) => stat?.added !== undefined || stat?.removed !== undefined);
+        if (measured.length === 0) return null;
+
+        const failedSources = measured
+            .filter(({ stat }) => stat?.preserved)
+            .map(({ source }) => SOURCE_NAMES[source] || source);
+        const missingSources = stats
+            .filter(({ stat }) => !stat || (stat.added === undefined && stat.removed === undefined))
+            .map(({ source }) => SOURCE_NAMES[source] || source);
+        const reliable = failedSources.length === 0 && missingSources.length === 0;
+        const valid = measured.filter(({ stat }) => !stat?.preserved);
+        const added = valid.reduce((sum, { stat }) => sum + (stat?.added || 0), 0);
+        const removed = valid.reduce((sum, { stat }) => sum + (stat?.removed || 0), 0);
+
+        return { entry, reliable, failedSources, missingSources, added, removed, changed: added + removed };
+    };
+    const turnoverHistory = (data.crawlHistory || [])
+        .map(turnoverOf)
+        .filter((row): row is NonNullable<ReturnType<typeof turnoverOf>> => row !== null);
+    const turnoverCoverageDays = turnoverHistory.length > 0
+        ? Math.max(1, Math.floor(
+            (new Date(turnoverHistory[turnoverHistory.length - 1].entry.timestamp).getTime()
+                - new Date(turnoverHistory[0].entry.timestamp).getTime()) / 86_400_000,
+        ) + 1)
+        : 0;
+
     return (
         <div className={styles.container}>
             <header className={styles.header}>
@@ -612,6 +640,70 @@ export default function AdminPage() {
             {data.crawlHistory && data.crawlHistory.length > 0 && (
                 <section className={styles.section}>
                     <h2>크롤링 히스토리</h2>
+                    <h3 className={styles.userSubTitle}>회차마다 표가 얼마나 바뀌었나</h3>
+                    <p className={styles.sectionHelp}>
+                        <strong>새로 들어옴</strong>은 직전 크롤에는 없던 항공권, <strong>사라짐</strong>은 직전에는 있었지만
+                        이번에 없어진 항공권입니다. <strong>총 변동</strong>은 두 수를 합친 값입니다. 수집에 실패해 이전 데이터를
+                        유지한 회차는 급감·급증으로 오해하지 않도록 판단에서 통째로 제외합니다.
+                    </p>
+                    <div className={turnoverCoverageDays >= 14 ? styles.naverStatus : `${styles.naverStatus} ${styles.naverStatusStale}`}>
+                        <strong>{turnoverCoverageDays >= 14 ? '판단 가능한 기록이 쌓였습니다.' : '아직 판단을 보류합니다.'}</strong>
+                        <span>
+                            현재 {turnoverCoverageDays.toLocaleString()}일 기록 · 최소 14일 필요 · 최대 28일 보관
+                        </span>
+                    </div>
+                    {turnoverHistory.length === 0 ? (
+                        <div className={styles.dealReviewEmpty}>변동 측정을 시작한 뒤의 크롤 기록이 아직 없습니다.</div>
+                    ) : (
+                        <div className={styles.cityDetail} style={{ maxHeight: '520px', overflow: 'auto' }}>
+                            <table className={styles.cityTable} style={{ minWidth: '680px' }}>
+                                <thead>
+                                    <tr>
+                                        <th>크롤 시간</th>
+                                        <th>새로 들어옴</th>
+                                        <th>사라짐</th>
+                                        <th>총 변동</th>
+                                        <th>쉽게 말하면</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {[...turnoverHistory].reverse().map(row => {
+                                        const excluded = !row.reliable;
+                                        const explanation = row.failedSources.length > 0
+                                            ? `${row.failedSources.join(', ')} 수집 실패 — 판단에서 제외`
+                                            : row.missingSources.length > 0
+                                                ? '일부 여행사 측정값 없음 — 판단에서 제외'
+                                                : row.changed === 0
+                                                    ? '새로 생기거나 사라진 표가 없음'
+                                                    : `${row.added.toLocaleString()}개 들어오고 ${row.removed.toLocaleString()}개 사라짐`;
+                                        return (
+                                            <tr key={row.entry.timestamp}>
+                                                <td style={{ whiteSpace: 'nowrap' }}>
+                                                    {formatKST(row.entry.timestamp).replace(/\d{4}\. /, '')}
+                                                </td>
+                                                <td style={{ textAlign: 'center', color: excluded ? '#64748b' : '#34d399' }}>
+                                                    {excluded ? '—' : `${row.added.toLocaleString()}개`}
+                                                </td>
+                                                <td style={{ textAlign: 'center', color: excluded ? '#64748b' : '#f87171' }}>
+                                                    {excluded ? '—' : `${row.removed.toLocaleString()}개`}
+                                                </td>
+                                                <td style={{ textAlign: 'center', fontWeight: 700 }}>
+                                                    {excluded ? '제외' : `${row.changed.toLocaleString()}개`}
+                                                </td>
+                                                <td>
+                                                    <span className={excluded ? styles.tagWarn : row.changed === 0 ? styles.tagMuted : styles.tagGood}>
+                                                        {explanation}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+
+                    <h3 className={styles.userSubTitle}>여행사별 상세 기록</h3>
                     <div className={styles.metricToggle}>
                         <span className={styles.metricLabel}>표시 기준</span>
                         <button
