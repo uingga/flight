@@ -47,8 +47,9 @@ export async function getMyrealtripSearchPrice(
                 // 정렬 UI가 바뀌어도 현재 로드된 결과에서 가격을 읽는 폴백은 유지한다.
             }
         }
-        // 첫 카드가 보인 직후 나머지 검색 결과가 이어서 붙는 시간을 짧게 허용한다.
-        await page.waitForTimeout(1200 + Math.random() * 800);
+        // 첫 카드가 보인 뒤 3~6초를 쉬어 나머지 결과를 받고, 다음 노선으로 너무
+        // 빠르게 넘어가 차단 가능성을 높이지 않도록 요청 간격도 확보한다.
+        await page.waitForTimeout(3000 + Math.random() * 3000);
 
         const results: FlightResult[] = await page.evaluate((buttonSelector) => {
             type ParsedFlight = {
