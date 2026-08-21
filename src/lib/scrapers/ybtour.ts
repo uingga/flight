@@ -2,9 +2,10 @@ import { chromium } from 'playwright';
 import { Flight } from '@/types/flight';
 import { getRegionByCity } from '@/lib/utils/region-mapper';
 // logCrawlResults moved to crawl-all.ts
-import { enrichWithRealtimeData, applyEnrichData, RouteKey } from '@/lib/utils/realtime-enrich';
+import { fetchYbtourSchedules, scheduleKeyOf, ScheduleKey } from './ybtour-schedule';
 import { IncompleteScrapeError, ScrapeCompleteness } from './scrape-errors';
 import { survivingRouteMinPrice } from '@/lib/utils/route-min-price';
+import { normalizeAirline } from '@/lib/utils/flight-helpers';
 
 const randomDelay = (min: number, max: number) =>
     new Promise(r => setTimeout(r, (Math.random() * (max - min) + min) * 1000));
@@ -125,7 +126,7 @@ export async function scrapeYbtour(prevFlights: any[] = []): Promise<Flight[]> {
     // page.on('console', msg => console.log(`[BROWSER] ${msg.text()}`));
 
     const flights: Flight[] = [];
-    const routeKeys: RouteKey[] = [];
+    const scheduleKeys: ScheduleKey[] = [];
     let totalFlights = 0;
 
     try {
@@ -305,6 +306,11 @@ export async function scrapeYbtour(prevFlights: any[] = []): Promise<Flight[]> {
                                             const arrApInput = link.querySelector('input[id*="_inpArrApCode_"]') as HTMLInputElement | null;
                                             const depApInput = link.querySelector('input[id*="_inpDepApCode_"]') as HTMLInputElement | null;
                                             const seatsInput = link.querySelector('input[id*="_remainingSeat_"]') as HTMLInputElement | null;
+                                            // 아래 셋은 노랑풍선 자체 스케줄 조회에 필요한 값이다.
+                                            // 예전에는 시각을 땡처리에서 빌려오느라 읽지 않았다.
+                                            const seqIdInput = link.querySelector('input[id*="_inmSeqId_"]') as HTMLInputElement | null;
+                                            const inpIdInput = link.querySelector('input[id*="_inpId_"]') as HTMLInputElement | null;
+                                            const clsInput = link.querySelector('input[id*="_bookingCls_"]') as HTMLInputElement | null;
 
                                             const depDateRaw = depDateInput?.value || '';
                                             const retDateRaw = retDateInput?.value || '';
@@ -355,6 +361,15 @@ export async function scrapeYbtour(prevFlights: any[] = []): Promise<Flight[]> {
                                                 link: flightLink,
                                                 seats: seats ? seats + '석' : '',
                                                 availableSeats: seats ? parseInt(seats) || undefined : undefined,
+                                                // 캐시에 남기지 않는다. 아래에서 뽑아 쓴 뒤 지운다.
+                                                _sk: {
+                                                    inhId,
+                                                    inmSeqId: seqIdInput?.value || '',
+                                                    inpId: inpIdInput?.value || '',
+                                                    depDate: depDateRaw,
+                                                    bookingCls: clsInput?.value || '',
+                                                    remainingSeat: seats,
+                                                },
                                             });
                                         }
 
@@ -388,17 +403,12 @@ export async function scrapeYbtour(prevFlights: any[] = []): Promise<Flight[]> {
                                     : 0;
                                 const cheapestFlights = validFlights.filter((f: any) => f.price === minPrice);
 
-                                flights.push(...cheapestFlights);
-                                // RouteKey 수집 (Phase 2 보강용)
+                                // 조회 키는 따로 모으고 항공권 객체에서는 지운다 (캐시에 남기지 않는다)
                                 for (const cf of cheapestFlights) {
-                                    routeKeys.push({
-                                        depCode: cf.departure.airport || 'ICN',
-                                        arrCode: cf.arrival.airport || '',
-                                        depDate: (cf.departure.date || '').replace(/-/g, ''),
-                                        arrDate: (cf.arrival.date || '').replace(/-/g, ''),
-                                        airline: cf.airline,
-                                    });
+                                    scheduleKeys.push(cf._sk as ScheduleKey);
+                                    delete cf._sk;
                                 }
+                                flights.push(...cheapestFlights);
                                 totalFlights += cheapestFlights.length;
 
                                 if (cheapestFlights.length > 0) {
@@ -428,59 +438,77 @@ export async function scrapeYbtour(prevFlights: any[] = []): Promise<Flight[]> {
         // 지역이 통째로 빠진 결과는 "적게 수집된 것"이 아니라 "믿을 수 없는 것"이다.
         completeness.assertComplete(flights.length);
 
-        // ===== Phase 2: 이전 캐시에서 시간 복사 + 신규만 realtime_V2 보강 =====
+        // ===== Phase 2: 이전 캐시에서 시각 복사 + 신규만 노랑풍선 자체 조회 =====
         if (flights.length > 0) {
-            // 이전 캐시에서 시간 데이터 복사
+            // 복사 키에 항공사를 넣는다. 같은 노선·같은 날짜에 항공사가 둘이면
+            // 엉뚱한 항공사의 시각이 붙는다.
+            const timeKeyOf = (f: any) => [
+                normalizeAirline(f.airline || ''),
+                f.departure?.airport || '',
+                f.arrival?.airport || '',
+                f.departure?.date || '',
+                f.arrival?.date || '',
+            ].join('|');
+
+            // 편명이 있는 항목만 물려받는다.
+            //
+            // 편명은 노랑풍선 자체 조회에서만 채워진다. 그 전까지는 시각을 땡처리에서
+            // 빌려왔고, 그 값이 실제와 어긋난 사례를 확인했다(진에어 귀국편 11:00 대 10:55).
+            // 편명 없는 항목을 걸러내면 옛 값이 저절로 씻겨 나가고, 한 번 제대로 채운 뒤에는
+            // 평소처럼 복사로 넘어간다.
             const prevTimeMap = new Map<string, any>();
-            prevFlights.filter((f: any) => f.source === 'ybtour' && f.departure?.time).forEach((f: any) => {
-                const key = `${f.departure?.airport || ''}|${f.arrival?.airport || ''}|${f.departure?.date || ''}|${f.arrival?.date || ''}`;
-                prevTimeMap.set(key, f);
-            });
+            prevFlights
+                .filter((f: any) => f.source === 'ybtour' && f.departure?.time && f.flightNumber)
+                .forEach((f: any) => {
+                    prevTimeMap.set(timeKeyOf(f), f);
+                });
 
             let carriedOver = 0;
-            const newRouteKeys: RouteKey[] = [];
-            const newRouteIndices: number[] = [];
+            const pendingKeys: ScheduleKey[] = [];
+            const pendingIndices: number[] = [];
 
-            // 최저가 필터에서 살아남을 표만 보강한다 (버려질 표까지 열면 크롤이 몇 시간씩 늘어진다)
+            // 최저가 필터에서 살아남을 표만 조회한다 (버려질 표까지 물으면 크롤이 늘어진다)
             const survivors = survivingRouteMinPrice(flights);
 
             for (let i = 0; i < flights.length; i++) {
                 const f = flights[i];
-                const key = `${f.departure?.airport || ''}|${f.arrival?.airport || ''}|${f.departure?.date || ''}|${f.arrival?.date || ''}`;
-                const prev = prevTimeMap.get(key);
+                const prev = prevTimeMap.get(timeKeyOf(f));
 
                 if (prev?.departure?.time) {
-                    // 이전 시간 데이터 복사
                     f.departure.time = prev.departure.time;
                     if (prev.departure.arrivalTime) (f.departure as any).arrivalTime = prev.departure.arrivalTime;
                     if (prev.arrival?.time) f.arrival.time = prev.arrival.time;
                     if (prev.arrival?.arrivalTime) (f.arrival as any).arrivalTime = prev.arrival.arrivalTime;
+                    if (prev.flightNumber) f.flightNumber = prev.flightNumber;
+                    if (prev.minPax) f.minPax = prev.minPax;
                     carriedOver++;
-                } else if (routeKeys[i] && survivors.has(f)) {
-                    // 시간 없음 → enrich 대상
-                    newRouteKeys.push(routeKeys[i]);
-                    newRouteIndices.push(i);
+                } else if (scheduleKeys[i] && survivors.has(f)) {
+                    pendingKeys.push(scheduleKeys[i]);
+                    pendingIndices.push(i);
                 }
             }
 
-            console.log(`[노랑풍선] 이전 시간 복사: ${carriedOver}/${flights.length}개, 신규 enrich 대상: ${newRouteKeys.length}개 (최저가 생존 ${survivors.size}건 중)`);
+            console.log(`[노랑풍선] 이전 시각 복사: ${carriedOver}/${flights.length}개, 신규 조회 대상: ${pendingKeys.length}개 (최저가 생존 ${survivors.size}건 중)`);
 
-            // 신규 노선만 realtime_V2로 보강
-            if (newRouteKeys.length > 0) {
-                const enrichPage = await context.newPage();
-                await enrichPage.goto('https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=ICN&arr0=NRT&depdate0=2026-04-20&dep1=NRT&arr1=ICN&depdate1=2026-04-23&adt=1&chd=0&inf=0&comp=Y', {
-                    waitUntil: 'domcontentloaded', timeout: 15000,
-                }).catch(() => {});
-                await enrichPage.waitForTimeout(3000);
+            if (pendingKeys.length > 0) {
+                // 노랑풍선 세션을 이미 쥐고 있는 페이지를 그대로 쓴다.
+                // 새 창도, 다른 여행사 사이트도 필요하지 않다.
+                const schedules = await fetchYbtourSchedules(page, pendingKeys);
 
-                const enrichMap = await enrichWithRealtimeData(enrichPage, newRouteKeys, '노랑풍선');
-
-                // 신규 노선에만 적용
-                const newFlights = newRouteIndices.map(i => flights[i]);
-                const enrichedCount = applyEnrichData(newFlights, newRouteKeys, enrichMap);
-                console.log(`[노랑풍선] 신규 시간 보강: ${enrichedCount}/${newRouteKeys.length}개`);
-
-                await enrichPage.close();
+                let applied = 0;
+                for (let j = 0; j < pendingIndices.length; j++) {
+                    const data = schedules.get(scheduleKeyOf(pendingKeys[j]));
+                    if (!data) continue;
+                    const f = flights[pendingIndices[j]];
+                    f.departure.time = data.depTime;
+                    (f.departure as any).arrivalTime = data.arrTime;
+                    f.arrival.time = data.retDepTime;
+                    (f.arrival as any).arrivalTime = data.retArrTime;
+                    if (data.flightNumber) f.flightNumber = data.flightNumber;
+                    if (data.minPax > 1) f.minPax = data.minPax;
+                    applied++;
+                }
+                console.log(`[노랑풍선] 신규 시각 반영: ${applied}/${pendingKeys.length}개`);
             }
         }
 
