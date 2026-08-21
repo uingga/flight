@@ -496,6 +496,30 @@ async function main() {
         // 섞여 있었다(땡처리 246건과 모두투어 995건이 같은 열에 놓이는 식).
         // 이제 total은 언제나 '사이트에 실제로 나가는 수', scraped는 '이번에 긁어온 원본 수'다.
         const finalCounts = countBySource(savedFlights);
+
+        // 직전 캐시와 견줘 표가 얼마나 갈렸는지 센다.
+        //
+        // 개수만 남기면 '5건이 빠지고 다른 5건이 들어온' 회차가 변동 0으로 보인다.
+        // 어느 시각 크롤이 실제로 일하고 있는지 판단하려면 이 값이 필요하다.
+        // 가격은 키에서 뺀다. 가격 변동은 '다른 표'가 아니다.
+        const turnoverKey = (f: any) => [
+            f.source, f.airline,
+            f.departure?.airport || f.departure?.city,
+            f.arrival?.airport || f.arrival?.city,
+            f.departure?.date, f.arrival?.date,
+        ].join('|');
+        const prevKeys = new Set((prevCache?.flights || []).map(turnoverKey));
+        const nowKeys = new Set(savedFlights.map(turnoverKey));
+        const turnover: Record<string, { added: number; removed: number }> = {};
+        for (const src of sourceNames) turnover[src] = { added: 0, removed: 0 };
+        for (const k of Array.from(nowKeys)) {
+            const src = String(k).split('|')[0];
+            if (turnover[src] && !prevKeys.has(k)) turnover[src].added++;
+        }
+        for (const k of Array.from(prevKeys)) {
+            const src = String(k).split('|')[0];
+            if (turnover[src] && !nowKeys.has(k)) turnover[src].removed++;
+        }
         for (const src of sourceNames) {
             const srcFlights = savedFlights.filter((f: any) => f.source === src);
             if (srcFlights.length === 0 && scrapedCounts[src] === undefined) continue;
@@ -508,6 +532,8 @@ async function main() {
             logCrawlResults(src, finalCounts[src] || 0, undefined, cityStats, {
                 scraped: scrapedCounts[src],
                 preserved: preservedSources.has(src),
+                added: turnover[src]?.added,
+                removed: turnover[src]?.removed,
             });
         }
 

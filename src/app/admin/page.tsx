@@ -6,7 +6,7 @@ import { isAnalyticsExcluded, setAnalyticsExcluded } from '@/lib/analytics';
 
 interface CrawlHistoryEntry {
     timestamp: string;
-    sites: Record<string, { total: number; scraped?: number; preserved?: boolean }>;
+    sites: Record<string, { total: number; scraped?: number; preserved?: boolean; added?: number; removed?: number }>;
     alerts: string[];
 }
 
@@ -283,7 +283,7 @@ export default function AdminPage() {
     const [gaStatsError, setGaStatsError] = useState<string | null>(null);
     const [tab, setTab] = useState<TabId>('health');
     // 크롤 히스토리 표가 무엇을 세는지: 사이트에 나가는 수(shown)인지 긁어온 원본 수(scraped)인지
-    const [crawlMetric, setCrawlMetric] = useState<'shown' | 'scraped'>('shown');
+    const [crawlMetric, setCrawlMetric] = useState<'shown' | 'scraped' | 'turnover'>('shown');
 
     useEffect(() => {
         setAnalyticsExcludedState(isAnalyticsExcluded());
@@ -438,9 +438,11 @@ export default function AdminPage() {
 
     // 한 칸이 보여줄 수를 한 곳에서 고른다. 예전에는 정상 수집된 여행사는 필터 전 수가,
     // 실패해 이전 데이터를 물려받은 여행사는 필터 후 수가 같은 표에 섞여 있었다.
-    const metricOf = (stat?: { total: number; scraped?: number }): number | null => {
+    const metricOf = (stat?: CrawlHistoryEntry['sites'][string]): number | null => {
         if (!stat) return null;
-        return crawlMetric === 'shown' ? stat.total : (stat.scraped ?? null);
+        if (crawlMetric === 'shown') return stat.total;
+        if (crawlMetric === 'turnover') return stat.added ?? null;
+        return stat.scraped ?? null;
     };
     const sumMetric = (sites: CrawlHistoryEntry['sites']): number =>
         Object.values(sites).reduce((acc, stat) => acc + (metricOf(stat) ?? 0), 0);
@@ -625,11 +627,20 @@ export default function AdminPage() {
                         >
                             수집 건수
                         </button>
+                        <button
+                            type="button"
+                            className={crawlMetric === 'turnover' ? `${styles.metricBtn} ${styles.metricBtnActive}` : styles.metricBtn}
+                            onClick={() => setCrawlMetric('turnover')}
+                        >
+                            새로 들어온 표
+                        </button>
                     </div>
                     <p className={styles.sectionHelp}>
                         <strong>노출 건수</strong>는 최저가·만료·인터파크 기준 필터를 모두 통과해 사이트에 실제로 나간 수이고,
                         <strong>수집 건수</strong>는 여행사에서 긁어온 원본 수입니다. 두 기준을 섞어 보면 여행사끼리 비교가 되지 않으므로
-                        표 전체가 한 기준으로만 표시됩니다. 수집 건수를 따로 남기기 시작한 것은 2026-08-21부터라,
+                        <strong>새로 들어온 표</strong>는 직전 크롤에 없던 표의 수입니다. 개수만 보면 표가 통째로 갈려도
+                        변동이 없어 보이므로, 어느 시각 크롤이 실제로 일하는지는 이 기준으로 봐야 합니다.
+                        표 전체가 한 기준으로만 표시됩니다. 수집 건수와 들고남을 따로 남기기 시작한 것은 2026-08-21부터라,
                         그 이전 기록은 수집 건수가 <code>—</code>로 비어 있고 노출 건수 자리에도 여행사마다 기준이 섞여 있습니다.
                         로그는 7일치만 보관하므로 그 주가 지나면 저절로 정리됩니다.
                     </p>

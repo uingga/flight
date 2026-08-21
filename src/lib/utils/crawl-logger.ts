@@ -16,6 +16,10 @@ interface SiteStats {
     scraped?: number;
     /** true면 수집에 실패해 이전 캐시를 그대로 유지한 것이다. */
     preserved?: boolean;
+    /** 직전 크롤에 없던 표. 개수만 보면 표가 통째로 갈려도 0으로 보인다. */
+    added?: number;
+    /** 직전 크롤에 있다가 사라진 표. */
+    removed?: number;
     byRegion?: RegionStats;
     byCity?: CityStats;
 }
@@ -149,7 +153,7 @@ export function logCrawlResults(
     total: number,
     byRegion?: RegionStats,
     byCity?: CityStats,
-    meta?: { scraped?: number; preserved?: boolean },
+    meta?: { scraped?: number; preserved?: boolean; added?: number; removed?: number },
 ): void {
     const history = loadLogHistory();
 
@@ -175,6 +179,8 @@ export function logCrawlResults(
         total,
         scraped: meta?.scraped,
         preserved: meta?.preserved || undefined,
+        added: meta?.added,
+        removed: meta?.removed,
         byRegion,
         byCity
     };
