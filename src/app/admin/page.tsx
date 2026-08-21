@@ -740,6 +740,10 @@ export default function AdminPage() {
                         그 이전 기록은 수집 건수가 <code>—</code>로 비어 있고 노출 건수 자리에도 여행사마다 기준이 섞여 있습니다.
                         회차별 수치와 경고는 최대 28일 보관하고, 파일 용량이 큰 도시·지역 상세만 7일 뒤 정리합니다.
                     </p>
+                    <div className={styles.previousDataNotice} role="note">
+                        <span className={styles.previousDataNoticeBadge}>⚠ 이전 크롤 값</span>
+                        <span>이번 수집에 문제가 있어 새 값 대신 직전 정상 데이터를 표시한다는 뜻입니다.</span>
+                    </div>
                     <div className={styles.cityDetail} style={{ overflowX: 'auto' }}>
                         <table className={styles.cityTable} style={{ minWidth: '500px' }}>
                             <thead>
@@ -777,25 +781,21 @@ export default function AdminPage() {
                                                     ? count - prevCount
                                                     : null;
                                                 return (
-                                                    <td key={source} style={{ textAlign: 'center' }}>
-                                                        <span style={preserved ? { opacity: 0.5 } : undefined}>
+                                                    <td
+                                                        key={source}
+                                                        className={preserved ? styles.previousDataCell : undefined}
+                                                        style={{ textAlign: 'center' }}
+                                                    >
+                                                        <span className={preserved ? styles.previousDataValue : undefined}>
                                                             {count === null ? '—' : count.toLocaleString()}
                                                         </span>
                                                         {preserved && (
                                                             <span
-                                                                title={`이번 크롤에서 ${stat?.scraped ?? 0}건만 수집되어 실패로 판정했습니다. 노출 건수는 이전 크롤의 데이터를 그대로 유지한 것입니다.`}
-                                                                style={{
-                                                                    fontSize: '0.7rem',
-                                                                    marginLeft: '4px',
-                                                                    padding: '1px 4px',
-                                                                    borderRadius: '4px',
-                                                                    background: '#fef3c7',
-                                                                    color: '#92400e',
-                                                                    fontWeight: 600,
-                                                                    cursor: 'help',
-                                                                }}
+                                                                className={styles.previousDataBadge}
+                                                                title="이번 수집에 문제가 있어 직전 정상 데이터를 표시하고 있습니다. 이번 회차의 새 측정값이 아닙니다."
+                                                                aria-label="수집 실패로 이전 크롤 값을 표시 중"
                                                             >
-                                                                유지
+                                                                ⚠ 이전 크롤 값
                                                             </span>
                                                         )}
                                                         {diff !== null && diff !== 0 && (

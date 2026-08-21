@@ -818,6 +818,51 @@
     color: #cbd5e1;
 }
 
+/* 이번 회차의 측정값이 아니라는 사실이 긍정적인 '유지' 상태로 보이지 않게 한다. */
+.previousDataNotice {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 7px 10px;
+    margin: -6px 0 14px;
+    padding: 9px 11px;
+    border: 1px solid rgba(248, 113, 113, 0.35);
+    border-radius: 8px;
+    background: rgba(127, 29, 29, 0.16);
+    color: #fecaca;
+    font-size: 0.78rem;
+    line-height: 1.45;
+}
+
+.previousDataNoticeBadge,
+.previousDataBadge {
+    display: inline-flex;
+    align-items: center;
+    width: max-content;
+    padding: 2px 7px;
+    border: 1px solid rgba(248, 113, 113, 0.45);
+    border-radius: 999px;
+    background: rgba(153, 27, 27, 0.42);
+    color: #fecaca;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.previousDataCell {
+    background: rgba(127, 29, 29, 0.14);
+}
+
+.previousDataValue {
+    color: #fca5a5;
+    font-weight: 800;
+}
+
+.previousDataBadge {
+    margin: 3px auto 0;
+    font-size: 0.66rem;
+    cursor: help;
+}
+
 /* 제외 사유 칩 무리 앞에 붙는 설명 — 칩과 구분되게 배경 없이 */
 .dealRejections .dealRejectionsLabel {
     padding: 4px 0;
