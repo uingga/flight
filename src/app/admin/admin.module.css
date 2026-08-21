@@ -171,6 +171,57 @@
     color: #f1f5f9;
 }
 
+.summaryHint {
+    color: #64748b;
+    font-size: 0.75rem;
+    line-height: 1.4;
+}
+
+.visibilityBreakdown {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    margin: -12px 0 32px;
+    padding: 18px 20px;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    background: #111827;
+}
+
+.visibilityBreakdown strong {
+    color: #f1f5f9;
+}
+
+.visibilityBreakdown p {
+    margin: 6px 0 0;
+    color: #94a3b8;
+    font-size: 0.82rem;
+    line-height: 1.5;
+}
+
+.visibilityReasons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+    max-width: 52%;
+}
+
+.visibilityReasons span {
+    padding: 6px 9px;
+    border: 1px solid #334155;
+    border-radius: 999px;
+    background: #1e293b;
+    color: #cbd5e1;
+    font-size: 0.76rem;
+    white-space: nowrap;
+}
+
+.visibilityReasons b {
+    color: #fbbf24;
+}
+
 /* Section */
 .section {
     margin-bottom: 32px;
@@ -631,6 +682,16 @@
 
     .summaryValue {
         font-size: 1.5rem;
+    }
+
+    .visibilityBreakdown {
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .visibilityReasons {
+        justify-content: flex-start;
+        max-width: none;
     }
 
     .sourceGrid {

@@ -100,6 +100,20 @@ interface UserStatsData {
     trend: Array<{ date: string; count: number }>;
 }
 
+interface FlightFilterSummary {
+    collected: number;
+    visible: number;
+    excluded: number;
+    reasons: {
+        staleMyrealtrip: number;
+        reported: number;
+        duplicate: number;
+        naverExpensive: number;
+        expired: number;
+        oneWay: number;
+    };
+}
+
 interface FlightReportAdminData {
     available: boolean;
     message?: string;
@@ -347,6 +361,7 @@ export default function AdminPage() {
     const [flightReports, setFlightReports] = useState<FlightReportAdminData | null>(null);
     const [flightReportsError, setFlightReportsError] = useState<string | null>(null);
     const [flightReportAction, setFlightReportAction] = useState<string | null>(null);
+    const [flightFilterSummary, setFlightFilterSummary] = useState<FlightFilterSummary | null>(null);
     const [tab, setTab] = useState<TabId>('health');
     // 크롤 히스토리 표가 무엇을 세는지: 사이트에 나가는 수(shown)인지 긁어온 원본 수(scraped)인지
     const [crawlMetric, setCrawlMetric] = useState<'shown' | 'scraped' | 'turnover'>('shown');
@@ -370,6 +385,17 @@ export default function AdminPage() {
         }
     }, []);
 
+    async function fetchFlightFilterSummary() {
+        try {
+            const response = await fetch('/api/flights?summaryOnly=1', { cache: 'no-store' });
+            const json = await response.json();
+            if (!response.ok || !json.filterSummary) throw new Error('summary unavailable');
+            setFlightFilterSummary(json.filterSummary);
+        } catch {
+            setFlightFilterSummary(null);
+        }
+    }
+
     async function fetchData(authKey: string) {
         setLoading(true);
         try {
@@ -389,6 +415,7 @@ export default function AdminPage() {
                 return;
             }
             setData(json);
+            await fetchFlightFilterSummary();
 
             try {
                 const dealResponse = await fetch(`/api/deal-alert-candidates?key=${encodeURIComponent(authKey)}`);
@@ -475,6 +502,7 @@ export default function AdminPage() {
             if (!refreshResponse.ok) throw new Error(refreshJson.error || '새 상태를 불러오지 못했습니다.');
             setFlightReports(refreshJson);
             setFlightReportsError(null);
+            await fetchFlightFilterSummary();
         } catch (actionError) {
             setFlightReportsError(actionError instanceof Error ? actionError.message : '상태 변경에 실패했습니다.');
         } finally {
@@ -529,6 +557,14 @@ export default function AdminPage() {
     const sortedAirlines = Object.entries(data.byAirline).sort((a, b) => b[1] - a[1]);
     const sortedDepCities = Object.entries(data.byDepartureCity).sort((a, b) => b[1] - a[1]);
     const maxSourceCount = Math.max(...Object.values(data.bySource), 1);
+    const exclusionReasons = flightFilterSummary ? [
+        { label: '같은 정확한 일정 중 더 싼 표만 남김', count: flightFilterSummary.reasons.duplicate },
+        { label: '네이버보다 10만원·20% 이상 비쌈', count: flightFilterSummary.reasons.naverExpensive },
+        { label: '신고가 3건 이상 쌓여 임시 숨김', count: flightFilterSummary.reasons.reported },
+        { label: '마이리얼트립 가격 확인이 하루 넘게 멈춤', count: flightFilterSummary.reasons.staleMyrealtrip },
+        { label: '출발일이 지남', count: flightFilterSummary.reasons.expired },
+        { label: '출발일과 귀국일이 같음', count: flightFilterSummary.reasons.oneWay },
+    ].filter(item => item.count > 0) : [];
 
     const latestCrawl = data.crawlHistory?.[data.crawlHistory.length - 1];
     const criticalAlerts = (latestCrawl?.alerts || []).filter(a => a.startsWith('🚨'));
@@ -1111,8 +1147,19 @@ export default function AdminPage() {
             {/* 요약 카드 */}
             <div className={styles.summaryCards}>
                 <div className={styles.summaryCard}>
-                    <span className={styles.summaryLabel}>전체 항공편</span>
-                    <span className={styles.summaryValue}>{data.totalFlights.toLocaleString()}</span>
+                    <span className={styles.summaryLabel}>수집·저장</span>
+                    <span className={styles.summaryValue}>{(flightFilterSummary?.collected ?? data.totalFlights).toLocaleString()}</span>
+                    <span className={styles.summaryHint}>여행사에서 가져온 원본</span>
+                </div>
+                <div className={styles.summaryCard}>
+                    <span className={styles.summaryLabel}>사이트 노출</span>
+                    <span className={styles.summaryValue}>{flightFilterSummary ? flightFilterSummary.visible.toLocaleString() : '—'}</span>
+                    <span className={styles.summaryHint}>날짜 필터를 모두 해제한 수</span>
+                </div>
+                <div className={styles.summaryCard}>
+                    <span className={styles.summaryLabel}>화면에서 제외</span>
+                    <span className={styles.summaryValue}>{flightFilterSummary ? flightFilterSummary.excluded.toLocaleString() : '—'}</span>
+                    <span className={styles.summaryHint}>중복·가격·신고 기준 적용</span>
                 </div>
                 <div className={styles.summaryCard}>
                     <span className={styles.summaryLabel}>여행사</span>
@@ -1128,9 +1175,25 @@ export default function AdminPage() {
                 </div>
             </div>
 
-            {/* 소스별 현황 - 도넛 차트 */}
+            {flightFilterSummary && (
+                <section className={styles.visibilityBreakdown}>
+                    <div>
+                        <strong>왜 {flightFilterSummary.excluded.toLocaleString()}건이 화면에서 빠졌나요?</strong>
+                        <p>수집에는 성공했지만 사용자에게 같은 표를 반복해서 보여주지 않거나, 특가로 보기 어려운 표를 제외한 결과입니다.</p>
+                    </div>
+                    <div className={styles.visibilityReasons}>
+                        {exclusionReasons.length > 0 ? exclusionReasons.map(reason => (
+                            <span key={reason.label}>
+                                {reason.label} <b>{reason.count.toLocaleString()}건</b>
+                            </span>
+                        )) : <span>현재 제외된 항공권이 없습니다.</span>}
+                    </div>
+                </section>
+            )}
+
+            {/* 소스별 수집 현황 - 도넛 차트 */}
             <section className={styles.section}>
-                <h2>여행사별 현황</h2>
+                <h2>여행사별 수집 현황</h2>
                 {(() => {
                     // conic-gradient 계산
                     let cumPct = 0;
@@ -1169,7 +1232,7 @@ export default function AdminPage() {
                                     justifyContent: 'center',
                                 }}>
                                     <span style={{ fontSize: '1.4rem', fontWeight: 700 }}>{data.totalFlights.toLocaleString()}</span>
-                                    <span style={{ fontSize: '0.75rem', color: '#9ca3af' }}>전체</span>
+                                    <span style={{ fontSize: '0.75rem', color: '#9ca3af' }}>수집</span>
                                 </div>
                             </div>
 

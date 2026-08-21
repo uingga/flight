@@ -2,9 +2,23 @@ import { NextRequest, NextResponse } from 'next/server';
 import todayPick from '../../../../data/today-pick.json';
 import { Flight, FlightSearchParams } from '@/types/flight';
 import { resolveCityCode } from '@/lib/scrapers/interpark';
-import { normalizeCity } from '@/lib/utils/flight-helpers';
 import { getComparisonFreshness, getEffectivePrice } from '@/lib/price-quality';
 import { filterStaleMyrealtripFlights, getMyrealtripFreshness } from '@/lib/source-freshness';
+import { deduplicateDisplayFlights } from '@/lib/flight-visibility';
+
+interface FlightFilterSummary {
+    collected: number;
+    visible: number;
+    excluded: number;
+    reasons: {
+        staleMyrealtrip: number;
+        reported: number;
+        duplicate: number;
+        naverExpensive: number;
+        expired: number;
+        oneWay: number;
+    };
+}
 
 const HIDDEN_FLIGHT_CACHE_MS = 60 * 1000;
 let hiddenFlightCache: { ids: Set<string>; validUntil: number } = {
@@ -110,6 +124,19 @@ export async function GET(request: NextRequest) {
         let allFlights: Flight[] = [];
         let lastUpdated: string | null = null;
         let sourceUpdatedAt: Record<string, string> = {};
+        const filterSummary: FlightFilterSummary = {
+            collected: 0,
+            visible: 0,
+            excluded: 0,
+            reasons: {
+                staleMyrealtrip: 0,
+                reported: 0,
+                duplicate: 0,
+                naverExpensive: 0,
+                expired: 0,
+                oneWay: 0,
+            },
+        };
 
         try {
             const fs = require('fs');
@@ -119,6 +146,7 @@ export async function GET(request: NextRequest) {
             if (fs.existsSync(cachePath)) {
                 const cacheData = JSON.parse(fs.readFileSync(cachePath, 'utf-8'));
                 allFlights = cacheData.flights || [];
+                filterSummary.collected = allFlights.length;
                 lastUpdated = cacheData.lastUpdated || cacheData.timestamp || null;
                 sourceUpdatedAt = cacheData.sourceUpdatedAt || {};
                 console.log(`통합 캐시에서 ${allFlights.length}개 항공권 로드`);
@@ -135,6 +163,7 @@ export async function GET(request: NextRequest) {
         const beforeFreshnessFilter = allFlights.length;
         allFlights = filterStaleMyrealtripFlights(allFlights, sourceUpdatedAt);
         const hiddenCount = beforeFreshnessFilter - allFlights.length;
+        filterSummary.reasons.staleMyrealtrip = hiddenCount;
         if (hiddenCount > 0) {
             const freshness = getMyrealtripFreshness(sourceUpdatedAt);
             console.warn(`마이리얼트립 가격 갱신이 ${freshness.maxAgeHours}시간 넘게 멈춰 ${hiddenCount}개를 숨겼습니다.`);
@@ -145,6 +174,7 @@ export async function GET(request: NextRequest) {
             const beforeReportFilter = allFlights.length;
             allFlights = allFlights.filter(flight => !temporarilyHiddenIds.has(flight.id));
             const reportHiddenCount = beforeReportFilter - allFlights.length;
+            filterSummary.reasons.reported = reportHiddenCount;
             if (reportHiddenCount > 0) {
                 console.log(`신고 누적으로 임시 숨김 ${reportHiddenCount}개`);
             }
@@ -163,31 +193,12 @@ export async function GET(request: NextRequest) {
                 : f.link,
         }));
 
-        // 중복 항공편 합치기: 같은 노선+날짜+항공사 → 1개만 유지
+        // 중복 항공편 합치기: 같은 노선+출국일시+귀국일시+항공사 → 1개만 유지
         // - 도시명 정규화 적용 (서울=인천, 타이중(대중)=타이중(대만)=타이중 등)
         // - 땡처리닷컴은 발권수수료 2만원을 더한 실질 가격으로 비교
-        const normDate = (d: string) => {
-            if (!d) return '';
-            const m = d.match(/^(\d{4})[-\.](\d{2})[-\.](\d{2})/);
-            return m ? `${m[1]}-${m[2]}-${m[3]}` : d;
-        };
-        const dedupMap = new Map<string, typeof allFlights[0]>();
-        for (const f of allFlights) {
-            const key = `${normalizeCity(f.departure?.city || '')}|${normalizeCity(f.arrival?.city || '')}|${normDate(f.departure?.date || '')}|${f.airline}`;
-            const existing = dedupMap.get(key);
-            if (!existing) {
-                dedupMap.set(key, f);
-            } else {
-                const existingEffectivePrice = getEffectivePrice(existing);
-                const newEffectivePrice = getEffectivePrice(f);
-                if (newEffectivePrice < existingEffectivePrice
-                    || (newEffectivePrice === existingEffectivePrice && existing.source === 'ttang' && f.source !== 'ttang')) {
-                    dedupMap.set(key, f);
-                }
-            }
-        }
         const beforeDedup = allFlights.length;
-        allFlights = Array.from(dedupMap.values());
+        allFlights = deduplicateDisplayFlights(allFlights);
+        filterSummary.reasons.duplicate = beforeDedup - allFlights.length;
         if (beforeDedup > allFlights.length) {
             console.log(`중복 항공편 ${beforeDedup - allFlights.length}개 제거 (${beforeDedup} → ${allFlights.length})`);
         }
@@ -234,6 +245,7 @@ export async function GET(request: NextRequest) {
                     return difference < 100000 || moreExpensiveRatio < 0.2;
                 });
                 const removed = beforeNaverFilter - allFlights.length;
+                filterSummary.reasons.naverExpensive = removed;
                 if (matched > 0) console.log(`네이버 최저가 매칭: ${matched}/${allFlights.length}건`);
                 if (removed > 0) console.log(`네이버보다 10만원·20% 이상 비싼 항공권 제거: ${removed}건`);
             }
@@ -253,6 +265,7 @@ export async function GET(request: NextRequest) {
             return depDate >= today;
         });
         const removedCount = beforeCount - allFlights.length;
+        filterSummary.reasons.expired = removedCount;
         if (removedCount > 0) {
             console.log(`만료 항공권 ${removedCount}개 제거됨 (${beforeCount} → ${allFlights.length})`);
         }
@@ -266,8 +279,21 @@ export async function GET(request: NextRequest) {
             return depClean !== arrClean;
         });
         const oneWayRemoved = beforeOneWay - allFlights.length;
+        filterSummary.reasons.oneWay = oneWayRemoved;
         if (oneWayRemoved > 0) {
             console.log(`편도 항공권 ${oneWayRemoved}개 제거됨 (${beforeOneWay} → ${allFlights.length})`);
+        }
+
+        filterSummary.visible = allFlights.length;
+        filterSummary.excluded = filterSummary.collected - filterSummary.visible;
+
+        if (searchParams.get('summaryOnly') === '1') {
+            return NextResponse.json({
+                success: true,
+                count: allFlights.length,
+                filterSummary,
+                lastUpdated,
+            });
         }
 
         // 필터링
@@ -395,6 +421,7 @@ export async function GET(request: NextRequest) {
             lastUpdated,
             priceHistory,
             todayPickId,
+            filterSummary,
         });
     } catch (error) {
         console.error('항공권 데이터 수집 오류:', error);
