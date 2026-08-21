@@ -49,7 +49,11 @@ function latestSafeTag() {
 
 // ── mark ────────────────────────────────────────────────
 function cmdMark(label) {
-    assertCleanTree();
+    const dirtyTree = sh('git status --porcelain');
+    if (dirtyTree) {
+        console.warn('\n⚠️ 커밋되지 않은 변경은 안전 지점에 포함되지 않습니다.');
+        console.warn('   현재 배포된 HEAD만 되돌아갈 지점으로 기록합니다.\n');
+    }
 
     const now = new Date();
     const pad = (n) => String(n).padStart(2, '0');
