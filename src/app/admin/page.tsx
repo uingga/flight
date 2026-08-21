@@ -470,10 +470,10 @@ export default function AdminPage() {
         .map(turnoverOf)
         .filter((row): row is NonNullable<ReturnType<typeof turnoverOf>> => row !== null);
     const turnoverCoverageDays = turnoverHistory.length > 0
-        ? Math.max(1, Math.floor(
+        ? Math.floor(
             (new Date(turnoverHistory[turnoverHistory.length - 1].entry.timestamp).getTime()
                 - new Date(turnoverHistory[0].entry.timestamp).getTime()) / 86_400_000,
-        ) + 1)
+        )
         : 0;
 
     return (
@@ -649,7 +649,7 @@ export default function AdminPage() {
                     <div className={turnoverCoverageDays >= 14 ? styles.naverStatus : `${styles.naverStatus} ${styles.naverStatusStale}`}>
                         <strong>{turnoverCoverageDays >= 14 ? '판단 가능한 기록이 쌓였습니다.' : '아직 판단을 보류합니다.'}</strong>
                         <span>
-                            현재 {turnoverCoverageDays.toLocaleString()}일 기록 · 최소 14일 필요 · 최대 28일 보관
+                            측정 시작 후 {turnoverCoverageDays.toLocaleString()}일 경과 · 최소 14일 필요 · 최대 28일 보관
                         </span>
                     </div>
                     {turnoverHistory.length === 0 ? (
