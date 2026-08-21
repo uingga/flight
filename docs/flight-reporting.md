@@ -7,6 +7,7 @@
 
 1. 배포된 캐시에 실제로 존재하는 항공권인지 서버가 다시 확인한다.
 2. 신고를 Supabase `flight_reports`에 저장한다.
+   상태가 바뀔 때마다 `flight_report_events`에도 이전 기록을 덮어쓰지 않고 한 줄씩 쌓는다.
 3. 운영자 이메일로 신고 번호와 항공권 정보를 보낸다.
 4. 브라우저에는 하루 동안 `신고 접수 완료`를 유지한다.
 
@@ -31,6 +32,11 @@
 - 수집 실패나 결과 판별 실패 때는 기존 항공권을 유지한다.
 - 자동 확인 실패는 최대 3회 재시도한 뒤 `check_failed`로 남긴다.
 
+`flight_report_events`에는 신고 접수, 확인 시작, 재시도, 정보 일치, 가격 갱신,
+판매 종료로 숨김, 확인 실패가 발생한 시각과 당시 결과를 기록한다. 가격을 갱신하거나
+표를 숨긴 경우에는 변경을 배포한 데이터 커밋 번호와 GitHub Actions 실행 주소도 남는다.
+따라서 현재 상태가 나중에 다시 바뀌더라도 앞선 처리 기록은 사라지지 않는다.
+
 변경된 `data/all-flights-cache.json`은 최신 원격 캐시에 여행사 단위로 병합한 뒤 커밋한다.
 다른 자동 크롤링이 동시에 갱신한 여행사 데이터는 덮어쓰지 않는다.
 
@@ -43,6 +49,7 @@
 - `removed`: 판매 종료가 확인되어 목록에서 제거
 - `check_failed`: 세 번 확인했지만 여행사 응답을 신뢰할 수 없어 기존 표 유지
 
-테이블 정의는 `supabase/migrations/20260821_create_flight_reports.sql`에 있다.
+현재 상태 테이블 정의는 `supabase/migrations/20260821_create_flight_reports.sql`,
+변경 기록 테이블 정의는 `supabase/migrations/20260821_create_flight_report_events.sql`에 있다.
 RLS를 켜고 공개 클라이언트 권한을 제거했으므로 Vercel API와 GitHub Actions의
 `SUPABASE_SERVICE_ROLE_KEY`만 읽고 쓸 수 있다.

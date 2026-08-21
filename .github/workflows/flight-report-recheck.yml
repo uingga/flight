@@ -80,12 +80,14 @@ jobs:
 
             if git diff --quiet -- data/all-flights-cache.json; then
               echo "No verified cache change to publish."
+              echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
               exit 0
             fi
 
             git add data/all-flights-cache.json
             git commit -m "chore(data): apply reported flight rechecks"
             if git push origin main; then
+              echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
               exit 0
             fi
             echo "Another data update was pushed first; retrying ($attempt/3)."
@@ -97,6 +99,8 @@ jobs:
       - name: Save report results
         if: steps.process.outcome == 'success' && steps.publish.outcome == 'success'
         run: node scripts/finalize-flight-reports.mjs "$REPORT_BATCH_PATH"
+        env:
+          PUBLISHED_COMMIT: ${{ steps.publish.outputs.commit }}
 
       - name: Release reports when publishing fails
         if: failure() && steps.process.outcome == 'success' && steps.publish.outcome == 'failure'

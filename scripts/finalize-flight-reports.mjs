@@ -18,10 +18,22 @@ if (!url || !key) {
 const batch = JSON.parse(fs.readFileSync(batchPath, 'utf8'));
 const reports = Array.isArray(batch.reports) ? batch.reports : [];
 const releaseOnly = mode === '--release';
+const workflowRunUrl = process.env.GITHUB_SERVER_URL
+    && process.env.GITHUB_REPOSITORY
+    && process.env.GITHUB_RUN_ID
+    ? `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`
+    : undefined;
+const publishedCommit = process.env.PUBLISHED_COMMIT || undefined;
 
 for (const report of reports) {
     const finalStatus = releaseOnly ? 'pending' : report.finalStatus;
     const retrying = finalStatus === 'pending';
+    const result = {
+        ...report.result,
+        ...(workflowRunUrl ? { workflowRunUrl } : {}),
+        ...(publishedCommit ? { publishedCommit } : {}),
+        ...(releaseOnly ? { publishFailed: true, retryScheduled: true } : {}),
+    };
     const response = await fetch(`${url}/rest/v1/flight_reports?id=eq.${Number(report.id)}&status=eq.processing`, {
         method: 'PATCH',
         headers: {
@@ -31,9 +43,7 @@ for (const report of reports) {
         },
         body: JSON.stringify({
             status: finalStatus,
-            result: releaseOnly
-                ? { ...report.result, publishFailed: true, retryScheduled: true }
-                : report.result,
+            result,
             processing_started_at: null,
             processed_at: retrying ? null : new Date().toISOString(),
         }),
