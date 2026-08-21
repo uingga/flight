@@ -1,5 +1,5 @@
 
-import { scrapeYbtour } from '../src/lib/scrapers/ybtour';
+import { getLastYbtourScheduleStats, scrapeYbtour } from '../src/lib/scrapers/ybtour';
 import { scrapeHanatour } from '../src/lib/scrapers/hanatour';
 import { scrapeModetour } from '../src/lib/scrapers/modetour';
 import { scrapeOnlineTour } from '../src/lib/scrapers/onlinetour';
@@ -133,6 +133,19 @@ async function main() {
             }
         });
 
+        // 목록 수집은 정상이어도 상세 시간 응답만 대량으로 읽지 못할 수 있다.
+        // 항공권은 그대로 살리고, 운영자가 페이지 구조 변경을 알아차릴 수 있게 별도 경고로 남긴다.
+        const collectionWarnings: string[] = [];
+        const ybtourScheduleStats = attempted.has('ybtour') ? getLastYbtourScheduleStats() : null;
+        if (ybtourScheduleStats?.degraded) {
+            const reason = ybtourScheduleStats.stopReason === 'network'
+                ? `요청 연속 실패 ${ybtourScheduleStats.failed}건`
+                : `응답 읽기 실패 ${ybtourScheduleStats.rejected}/${ybtourScheduleStats.processed}건`;
+            collectionWarnings.push(
+                `⚠️ 시간 정보: 노랑풍선 상세 시간 수집 이상 (${reason}, 남은 ${ybtourScheduleStats.skipped}건 건너뜀) — 항공권 목록과 기존 시간은 유지`,
+            );
+        }
+
         // 소스별 무결성 검사 — 0건뿐 아니라 "급감"도 실패로 본다.
         //
         // 스크래퍼가 지역 탭 하나를 못 열면 그 지역만 통째로 빠진 채 정상 종료한다
@@ -234,9 +247,14 @@ async function main() {
         }
 
         if (integrityWarnings.length > 0) {
-            console.log(`\n🚨 무결성 경고 ${integrityWarnings.length}건 — 스크래퍼 점검 필요`);
+            console.log(`\n🚨 수집 이상 경고 ${integrityWarnings.length}건 — 스크래퍼 점검 필요`);
             integrityWarnings.forEach(w => console.log(`   ${w}`));
             recordCrawlAlerts(integrityWarnings);
+        }
+        if (collectionWarnings.length > 0) {
+            console.log(`\n⚠️ 시간 정보 수집 경고 ${collectionWarnings.length}건`);
+            collectionWarnings.forEach(w => console.log(`   ${w}`));
+            recordCrawlAlerts(collectionWarnings);
         }
 
         // 노선별 최저가 필터링 (각 업체별 같은 노선에서 최저가만 유지)

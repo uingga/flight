@@ -851,7 +851,12 @@ export default function AdminPage() {
                                                             {formatKST(e.timestamp).replace(/\d{4}\. /, '')}
                                                         </td>
                                                     ) : null}
-                                                    <td style={{ color: '#ef4444', fontSize: '0.85rem' }}>{a}</td>
+                                                    <td style={{
+                                                        color: a.startsWith('⚠️ 시간 정보:') ? '#fbbf24' : '#ef4444',
+                                                        fontSize: '0.85rem',
+                                                    }}>
+                                                        {a}
+                                                    </td>
                                                 </tr>
                                             ))
                                         )}

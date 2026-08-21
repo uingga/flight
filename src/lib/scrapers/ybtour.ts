@@ -2,13 +2,20 @@ import { chromium } from 'playwright';
 import { Flight } from '@/types/flight';
 import { getRegionByCity } from '@/lib/utils/region-mapper';
 // logCrawlResults moved to crawl-all.ts
-import { fetchYbtourSchedules, scheduleKeyOf, ScheduleKey } from './ybtour-schedule';
+import { fetchYbtourSchedules, scheduleKeyOf, ScheduleFetchStats, ScheduleKey } from './ybtour-schedule';
 import { IncompleteScrapeError, ScrapeCompleteness } from './scrape-errors';
 import { survivingRouteMinPrice } from '@/lib/utils/route-min-price';
 import { buildStableFlightId, normalizeAirline } from '@/lib/utils/flight-helpers';
 
 const randomDelay = (min: number, max: number) =>
     new Promise(r => setTimeout(r, (Math.random() * (max - min) + min) * 1000));
+
+let lastScheduleStats: ScheduleFetchStats | null = null;
+
+/** 통합 크롤러가 시간 정보 수집 이상을 별도 경고로 남길 때 사용한다. */
+export function getLastYbtourScheduleStats(): ScheduleFetchStats | null {
+    return lastScheduleStats;
+}
 
 /**
  * 노랑풍선 땡처리 항공권 크롤링
@@ -103,6 +110,7 @@ const REGIONS = [
 
 export async function scrapeYbtour(prevFlights: any[] = []): Promise<Flight[]> {
     console.log('노랑풍선 크롤링 시작...');
+    lastScheduleStats = null;
 
     const browser = await chromium.launch({
         headless: !!process.env.CI,
@@ -505,7 +513,9 @@ export async function scrapeYbtour(prevFlights: any[] = []): Promise<Flight[]> {
             if (pendingKeys.length > 0) {
                 // 노랑풍선 세션을 이미 쥐고 있는 페이지를 그대로 쓴다.
                 // 새 창도, 다른 여행사 사이트도 필요하지 않다.
-                const schedules = await fetchYbtourSchedules(page, pendingKeys);
+                const scheduleResult = await fetchYbtourSchedules(page, pendingKeys);
+                const schedules = scheduleResult.schedules;
+                lastScheduleStats = scheduleResult.stats;
 
                 let applied = 0;
                 for (let j = 0; j < pendingIndices.length; j++) {

@@ -1,4 +1,4 @@
-import { Page } from 'playwright';
+import type { Page } from 'playwright';
 
 /**
  * 노랑풍선 항공권의 출발·도착 시각을 노랑풍선에서 직접 가져온다.
@@ -41,6 +41,39 @@ export interface ScheduleData {
     baggage: string;
 }
 
+export type ScheduleParseFailureReason =
+    | 'missing-sections'
+    | 'missing-legs'
+    | 'departure-date-mismatch'
+    | 'route-mismatch';
+
+export interface ScheduleResponseShape {
+    characters: number;
+    hasOutbound: boolean;
+    hasInbound: boolean;
+    legMatches: number;
+    looksLikeLogin: boolean;
+}
+
+export interface ScheduleFetchStats {
+    requested: number;
+    processed: number;
+    ok: number;
+    failed: number;
+    rejected: number;
+    retryAttempts: number;
+    recoveredAfterRetry: number;
+    skipped: number;
+    degraded: boolean;
+    stopReason?: 'network' | 'response-format';
+    reasonCounts: Record<ScheduleParseFailureReason, number>;
+}
+
+export interface ScheduleFetchResult {
+    schedules: Map<string, ScheduleData>;
+    stats: ScheduleFetchStats;
+}
+
 export function scheduleKeyOf(k: ScheduleKey): string {
     return `${k.inhId}|${k.inmSeqId}|${k.depDate}`;
 }
@@ -64,38 +97,58 @@ function readLegs(section: string): Leg[] {
     }));
 }
 
-/**
- * 응답을 뜯어 스케줄을 만든다. 조금이라도 어긋나면 null을 돌려준다.
- * 시각이 비는 것보다 틀린 시각이 붙는 것이 훨씬 비싸기 때문이다.
- */
-export function parseScheduleDetail(html: string, expectedDepDate: string): ScheduleData | null {
+export function describeScheduleResponse(html: string): ScheduleResponseShape {
+    return {
+        characters: html.length,
+        hasOutbound: html.includes('출국</td>'),
+        hasInbound: html.includes('귀국</td>'),
+        legMatches: readLegs(html).length,
+        looksLikeLogin: /로그인|login/i.test(html),
+    };
+}
+
+export function parseScheduleDetailWithReason(
+    html: string,
+    expectedDepDate: string,
+): { data: ScheduleData } | { reason: ScheduleParseFailureReason } {
     const outIdx = html.indexOf('출국</td>');
     const inIdx = html.indexOf('귀국</td>');
-    if (outIdx < 0 || inIdx < 0 || inIdx <= outIdx) return null;
+    if (outIdx < 0 || inIdx < 0 || inIdx <= outIdx) return { reason: 'missing-sections' };
 
     const outbound = readLegs(html.slice(outIdx, inIdx));
     const inbound = readLegs(html.slice(inIdx));
-    if (outbound.length < 2 || inbound.length < 2) return null;
+    if (outbound.length < 2 || inbound.length < 2) return { reason: 'missing-legs' };
 
     // 요청한 출발일과 응답의 출국 날짜가 같아야 한다 (엉뚱한 편을 붙이지 않기 위한 최소 확인)
     const expectedMmdd = `${expectedDepDate.slice(4, 6)}/${expectedDepDate.slice(6, 8)}`;
-    if (outbound[0].date !== expectedMmdd) return null;
+    if (outbound[0].date !== expectedMmdd) return { reason: 'departure-date-mismatch' };
 
     // 왕복이므로 가는 편 도착지와 오는 편 출발지가 같아야 한다
-    if (!outbound[1].city || outbound[1].city !== inbound[0].city) return null;
+    if (!outbound[1].city || outbound[1].city !== inbound[0].city) return { reason: 'route-mismatch' };
 
     const carrier = (html.match(/carrier_logo\/30\/'\+'([A-Z0-9]{2})'/) || [])[1] || '';
     const number = (html.match(/'(\d{3,4})'\+'편/) || [])[1] || '';
 
     return {
-        flightNumber: carrier && number ? `${carrier}${number}` : '',
-        depTime: outbound[0].time,
-        arrTime: outbound[1].time,
-        retDepTime: inbound[0].time,
-        retArrTime: inbound[1].time,
-        minPax: Number((html.match(/minpax\s*=\s*Number\('(\d+)'\)/) || [])[1] || 1) || 1,
-        baggage: (html.match(/'(\d+\s*Kg)'/i) || [])[1] || '',
+        data: {
+            flightNumber: carrier && number ? `${carrier}${number}` : '',
+            depTime: outbound[0].time,
+            arrTime: outbound[1].time,
+            retDepTime: inbound[0].time,
+            retArrTime: inbound[1].time,
+            minPax: Number((html.match(/minpax\s*=\s*Number\('(\d+)'\)/) || [])[1] || 1) || 1,
+            baggage: (html.match(/'(\d+\s*Kg)'/i) || [])[1] || '',
+        },
     };
+}
+
+/**
+ * 응답을 뜯어 스케줄을 만든다. 조금이라도 어긋나면 null을 돌려준다.
+ * 시각이 비는 것보다 틀린 시각이 붙는 것이 훨씬 비싸기 때문이다.
+ */
+export function parseScheduleDetail(html: string, expectedDepDate: string): ScheduleData | null {
+    const parsed = parseScheduleDetailWithReason(html, expectedDepDate);
+    return 'data' in parsed ? parsed.data : null;
 }
 
 /**
@@ -104,11 +157,28 @@ export function parseScheduleDetail(html: string, expectedDepDate: string): Sche
  * 목록에서 사라지지 않고 다음 크롤에서 채워진다.
  */
 const MAX_CONSECUTIVE_FAILURES = 8;
+const MAX_ATTEMPTS_PER_SCHEDULE = 2;
+const MAX_REJECTED_RESPONSES = 20;
+const MIN_RATE_SAMPLE = 30;
+const MAX_REJECTED_RATE = 0.1;
+
+/** 작은 표본의 우연한 실패는 넘기고, 구조 변경으로 보이는 대량 실패만 중단한다. */
+export function isScheduleResponseFailureSpike(processed: number, rejected: number): boolean {
+    if (rejected >= MAX_REJECTED_RESPONSES) return true;
+    return processed >= MIN_RATE_SAMPLE && rejected / processed > MAX_REJECTED_RATE;
+}
+
+const REASON_LABELS: Record<ScheduleParseFailureReason, string> = {
+    'missing-sections': '출국·귀국 구간 없음',
+    'missing-legs': '구간 시각 부족',
+    'departure-date-mismatch': '출발일 다름',
+    'route-mismatch': '왕복 도시 연결 다름',
+};
 
 export async function fetchYbtourSchedules(
     page: Page,
     keys: ScheduleKey[],
-): Promise<Map<string, ScheduleData>> {
+): Promise<ScheduleFetchResult> {
     const result = new Map<string, ScheduleData>();
 
     // 같은 편을 두 번 묻지 않는다
@@ -123,50 +193,87 @@ export async function fetchYbtourSchedules(
     let ok = 0;
     let failed = 0;
     let rejected = 0;
+    let retryAttempts = 0;
+    let recoveredAfterRetry = 0;
     let consecutiveFailures = 0;
     let idx = 0;
+    let stopReason: ScheduleFetchStats['stopReason'];
+    const reasonCounts: ScheduleFetchStats['reasonCounts'] = {
+        'missing-sections': 0,
+        'missing-legs': 0,
+        'departure-date-mismatch': 0,
+        'route-mismatch': 0,
+    };
+    const rejectedSamples: Array<{
+        id: string;
+        reason: ScheduleParseFailureReason;
+        shape: ScheduleResponseShape;
+    }> = [];
 
     for (const [id, key] of entries) {
         idx++;
-        let succeeded = false;
+        let parsedData: ScheduleData | null = null;
+        let parseFailure: { reason: ScheduleParseFailureReason; shape: ScheduleResponseShape } | null = null;
+        let receivedResponse = false;
+        let successfulAttempt = 0;
 
-        try {
-            const res = await page.evaluate(async (body: Record<string, string>) => {
-                const r = await fetch('/booking/findDscInvSkdDetail.lts', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
-                    body: new URLSearchParams(body).toString(),
+        for (let attempt = 1; attempt <= MAX_ATTEMPTS_PER_SCHEDULE; attempt++) {
+            if (attempt > 1) retryAttempts++;
+            try {
+                const res = await page.evaluate(async (body: Record<string, string>) => {
+                    const r = await fetch('/booking/findDscInvSkdDetail.lts', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+                        body: new URLSearchParams(body).toString(),
+                    });
+                    return { status: r.status, text: await r.text() };
+                }, {
+                    inmInhId: key.inhId,
+                    inmSeqId: key.inmSeqId,
+                    inmInpId: key.inpId,
+                    inmDepDate: key.depDate,
+                    bookingCls: key.bookingCls,
+                    // 화면 위치를 가리키는 값인데 서버가 보지 않는다 (다른 노선을 조회해도 그 노선이 온다)
+                    skdLoc: '1',
+                    skdSeq: '1',
+                    remainingSeat: key.remainingSeat,
+                    viewType: '',
                 });
-                return { status: r.status, text: await r.text() };
-            }, {
-                inmInhId: key.inhId,
-                inmSeqId: key.inmSeqId,
-                inmInpId: key.inpId,
-                inmDepDate: key.depDate,
-                bookingCls: key.bookingCls,
-                // 화면 위치를 가리키는 값인데 서버가 보지 않는다 (다른 노선을 조회해도 그 노선이 온다)
-                skdLoc: '1',
-                skdSeq: '1',
-                remainingSeat: key.remainingSeat,
-                viewType: '',
-            });
 
-            if (res.status === 200 && res.text) {
-                succeeded = true;
-                const parsed = parseScheduleDetail(res.text, key.depDate);
-                if (parsed) {
-                    result.set(id, parsed);
-                    ok++;
-                } else {
-                    // 응답은 받았는데 읽지 못했다. 서버 탓이 아니므로 차단 판단에는 쓰지 않는다.
-                    rejected++;
+                if (res.status === 200 && res.text) {
+                    receivedResponse = true;
+                    const parsed = parseScheduleDetailWithReason(res.text, key.depDate);
+                    if ('data' in parsed) {
+                        parsedData = parsed.data;
+                        successfulAttempt = attempt;
+                        break;
+                    }
+                    parseFailure = {
+                        reason: parsed.reason,
+                        shape: describeScheduleResponse(res.text),
+                    };
                 }
+            } catch {
+                // 같은 항목을 한 번 더 시도한 뒤 최종 실패로 센다.
             }
-        } catch {
-            succeeded = false;
+
+            if (attempt < MAX_ATTEMPTS_PER_SCHEDULE) {
+                await randomDelay(0.8, 1.6);
+            }
         }
 
-        if (succeeded) {
+        if (parsedData) {
+            result.set(id, parsedData);
+            ok++;
+            if (successfulAttempt > 1) recoveredAfterRetry++;
+            consecutiveFailures = 0;
+        } else if (receivedResponse && parseFailure) {
+            rejected++;
+            reasonCounts[parseFailure.reason]++;
+            if (rejectedSamples.length < 5) {
+                rejectedSamples.push({ id, reason: parseFailure.reason, shape: parseFailure.shape });
+            }
+            // 서버 응답은 정상적으로 왔으므로 네트워크 차단의 연속 실패로 세지 않는다.
             consecutiveFailures = 0;
         } else {
             failed++;
@@ -174,11 +281,18 @@ export async function fetchYbtourSchedules(
         }
 
         if (idx % 25 === 0 || consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
-            console.log(`[노랑풍선]   ... ${idx}/${entries.length} (성공: ${ok}, 실패: ${failed}, 형식 불일치: ${rejected})`);
+            console.log(`[노랑풍선]   ... ${idx}/${entries.length} (성공: ${ok}, 요청 실패: ${failed}, 응답 읽기 실패: ${rejected})`);
         }
 
         if (consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
             console.log(`[노랑풍선] 연속 ${consecutiveFailures}건 실패 — 남은 ${entries.length - idx}개는 건너뜁니다`);
+            stopReason = 'network';
+            break;
+        }
+
+        if (isScheduleResponseFailureSpike(idx, rejected)) {
+            console.log(`[노랑풍선] 시간 상세 응답 읽기 실패가 ${rejected}/${idx}건으로 증가 — 남은 ${entries.length - idx}개는 건너뜁니다`);
+            stopReason = 'response-format';
             break;
         }
 
@@ -191,9 +305,32 @@ export async function fetchYbtourSchedules(
     }
 
     if (rejected > 0) {
-        console.log(`[노랑풍선] 응답 형식을 읽지 못한 건 ${rejected}개 — 페이지 구조가 바뀌었는지 확인이 필요합니다`);
+        const reasonSummary = Object.entries(reasonCounts)
+            .filter(([, count]) => count > 0)
+            .map(([reason, count]) => `${REASON_LABELS[reason as ScheduleParseFailureReason]} ${count}건`)
+            .join(', ');
+        console.log(`[노랑풍선] 시간 상세 응답을 읽지 못한 건 ${rejected}개 (${reasonSummary})`);
+        rejectedSamples.forEach(sample => {
+            const shape = sample.shape;
+            console.log(`[노랑풍선]   읽기 실패 표본 ${sample.id}: ${REASON_LABELS[sample.reason]} · 문자 ${shape.characters}, 출국 ${shape.hasOutbound ? '있음' : '없음'}, 귀국 ${shape.hasInbound ? '있음' : '없음'}, 구간 ${shape.legMatches}, 로그인 화면 ${shape.looksLikeLogin ? '의심' : '아님'}`);
+        });
     }
-    console.log(`[노랑풍선] 자체 스케줄 완료: ${ok}건 (조회 ${idx}/${entries.length}, 실패 ${failed}, 형식 불일치 ${rejected})`);
+    console.log(`[노랑풍선] 자체 스케줄 완료: ${ok}건 (조회 ${idx}/${entries.length}, 요청 실패 ${failed}, 응답 읽기 실패 ${rejected}, 재시도 복구 ${recoveredAfterRetry})`);
 
-    return result;
+    return {
+        schedules: result,
+        stats: {
+            requested: entries.length,
+            processed: idx,
+            ok,
+            failed,
+            rejected,
+            retryAttempts,
+            recoveredAfterRetry,
+            skipped: entries.length - idx,
+            degraded: stopReason !== undefined,
+            stopReason,
+            reasonCounts,
+        },
+    };
 }

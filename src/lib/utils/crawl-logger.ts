@@ -208,8 +208,10 @@ export function logCrawlResults(
     const alerts = generateAlerts(currentEntry.sites, previousMeasuredSites);
     // ⚠️ 수치 비교 경고는 매번 다시 계산한다. 앞선 호출에서 임시로 생긴 경고를
     // 계속 합치면 같은 엔트리를 보완해도 이미 해소된 경고가 남는다.
-    const integrityAlerts = currentEntry.alerts.filter(alert => alert.startsWith('🚨'));
-    currentEntry.alerts = Array.from(new Set([...integrityAlerts, ...alerts]));
+    const explicitAlerts = currentEntry.alerts.filter(
+        alert => alert.startsWith('🚨') || alert.startsWith('⚠️ 시간 정보:'),
+    );
+    currentEntry.alerts = Array.from(new Set([...explicitAlerts, ...alerts]));
 
     // 경고 출력
     if (alerts.length > 0) {
