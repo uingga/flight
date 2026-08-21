@@ -109,7 +109,7 @@ async function buildStats(config: Ga4Config, days: number) {
         returningRequest(previousDateRanges),
     ]);
 
-    const [agencyReport, routeReport, entryReport, detailEntryReport, channelReport, campaignTrafficReport, campaignBookingReport, leadTimeReport, rangeReport, dateMethodReport, presetReport, repeatBehaviorReport] = await Promise.all([
+    const [agencyReport, routeReport, entryReport, detailEntryReport, channelReport, referralReport, campaignTrafficReport, campaignBookingReport, leadTimeReport, rangeReport, dateMethodReport, presetReport, repeatBehaviorReport] = await Promise.all([
         optional('여행사별 예약 클릭', warnings, () => runReport(config, {
             dateRanges,
             dimensions: [{ name: 'customEvent:travel_agency' }],
@@ -148,6 +148,19 @@ async function buildStats(config: Ga4Config, days: number) {
             metrics: [{ name: 'sessions' }, { name: 'activeUsers' }],
             orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
             limit: 12,
+        })),
+        optional('외부 유입 사이트', warnings, () => runReport(config, {
+            dateRanges,
+            dimensions: [{ name: 'sessionSource' }],
+            metrics: [{ name: 'sessions' }, { name: 'activeUsers' }],
+            dimensionFilter: {
+                filter: {
+                    fieldName: 'sessionMedium',
+                    stringFilter: { value: 'referral', matchType: 'EXACT', caseSensitive: false },
+                },
+            },
+            orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
+            limit: 30,
         })),
         optional('콘텐츠별 유입', warnings, () => runReport(config, {
             dateRanges,
@@ -292,7 +305,13 @@ async function buildStats(config: Ga4Config, days: number) {
     const contentSourceLabel = (source: string) => ({
         naver_blog: '네이버 블로그',
         travel_community: '여행 커뮤니티',
+        te31: 'TE31',
     }[source] || source);
+    const referralSourceLabel = (source: string) => {
+        const normalized = source.toLowerCase().replace(/^www\./, '');
+        if (normalized === 'te31.com') return 'TE31';
+        return source || '(출처 없음)';
+    };
     const campaignBookings = new Map(
         (campaignBookingReport?.rows || []).map(row => [`${dim(row)}|${dim(row, 1)}`, num(row, 0)]),
     );
@@ -385,6 +404,12 @@ async function buildStats(config: Ga4Config, days: number) {
         detailByEntry: list(detailEntryReport, ENTRY_LABELS),
         channels: channelReport === null ? null : (channelReport.rows || []).map(row => ({
             label: CHANNEL_LABELS[dim(row)] || dim(row) || '분류 안 됨',
+            sessions: num(row, 0),
+            users: num(row, 1),
+        })),
+        referrals: referralReport === null ? null : (referralReport.rows || []).map(row => ({
+            source: dim(row),
+            label: referralSourceLabel(dim(row)),
             sessions: num(row, 0),
             users: num(row, 1),
         })),

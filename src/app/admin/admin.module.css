@@ -708,6 +708,13 @@
     font-size: 0.95rem;
 }
 
+.gaHint {
+    margin: 8px 2px 0;
+    color: #64748b;
+    font-size: 0.72rem;
+    line-height: 1.5;
+}
+
 /* 최근 등록 추이 — 막대는 아래에서 자라고 날짜는 축 역할을 한다 */
 .trendChart {
     display: flex;

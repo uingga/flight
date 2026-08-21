@@ -155,6 +155,7 @@ interface GaStatsData {
     alertByEntry: GaListItem[] | null;
     detailByEntry: GaListItem[] | null;
     channels: Array<{ label: string; sessions: number; users: number }> | null;
+    referrals: Array<{ source: string; label: string; sessions: number; users: number }> | null;
     campaigns: Array<{
         name: string;
         source: string;
@@ -1244,6 +1245,33 @@ export default function AdminPage() {
                                         </table>
                                     </div>
                                 )}
+                            </div>
+
+                            <div>
+                                <h3 className={styles.userSubTitle}>외부 유입 사이트</h3>
+                                {gaStats.referrals === null ? (
+                                    <div className={styles.dealReviewEmpty}>불러오지 못했습니다.</div>
+                                ) : gaStats.referrals.length === 0 ? (
+                                    <div className={styles.dealReviewEmpty}>출처가 확인된 외부 링크 방문이 없습니다.</div>
+                                ) : (
+                                    <div className={styles.cityDetail}>
+                                        <table className={styles.cityTable}>
+                                            <thead><tr><th>사이트</th><th>방문</th><th>사람</th></tr></thead>
+                                            <tbody>
+                                                {gaStats.referrals.map(item => (
+                                                    <tr key={item.source}>
+                                                        <td>{item.label}</td>
+                                                        <td>{item.sessions.toLocaleString()}회</td>
+                                                        <td>{item.users.toLocaleString()}명</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+                                <p className={styles.gaHint}>
+                                    게시판이 출처를 숨기지 않은 방문만 표시됩니다. 앞으로 홍보 링크에 UTM을 붙이면 아래 콘텐츠 표에서 예약 클릭까지 정확히 구분됩니다.
+                                </p>
                             </div>
 
                             <div>
