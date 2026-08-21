@@ -975,6 +975,64 @@
     color: #cbd5e1;
 }
 
+.experimentPanel {
+    margin: 0 0 20px;
+    padding: 16px;
+    border: 1px solid #3730a3;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(49, 46, 129, 0.22), rgba(15, 23, 42, 0.72));
+}
+
+.experimentHeader {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.experimentHeader > div {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.experimentHeader strong {
+    color: #f8fafc;
+    font-size: 0.95rem;
+}
+
+.experimentHeader span,
+.experimentNote {
+    color: #94a3b8;
+    font-size: 0.75rem;
+}
+
+.experimentHeader .experimentStatus,
+.experimentHeader .experimentStop {
+    padding: 5px 9px;
+    border-radius: 999px;
+    font-weight: 800;
+}
+
+.experimentHeader .experimentStatus {
+    border: 1px solid rgba(99, 102, 241, 0.5);
+    background: rgba(67, 56, 202, 0.25);
+    color: #c7d2fe;
+}
+
+.experimentHeader .experimentStop {
+    border: 1px solid rgba(248, 113, 113, 0.55);
+    background: rgba(127, 29, 29, 0.32);
+    color: #fecaca;
+}
+
+.experimentNote {
+    margin: 12px 2px 0;
+    line-height: 1.55;
+}
+
 /* 이번 회차의 측정값이 아니라는 사실이 긍정적인 '유지' 상태로 보이지 않게 한다. */
 .previousDataNotice {
     display: flex;

@@ -1,4 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import {
+    NAVER_COMPARE_EXPERIMENT,
+    addCalendarDays,
+    getNaverCompareMeasurementRanges,
+} from '@/lib/experiments/naver-compare';
 
 const ADMIN_KEY = process.env.ADMIN_KEY;
 
@@ -54,6 +59,27 @@ async function supabaseRequest(restPath: string, init: RequestInit = {}) {
     });
 }
 
+async function reportCount(
+    reportType: 'price_changed' | 'unavailable',
+    range: { startDate: string; endDate: string } | null,
+): Promise<number | null> {
+    if (!range) return null;
+    const start = encodeURIComponent(`${range.startDate}T00:00:00+09:00`);
+    const endExclusive = encodeURIComponent(`${addCalendarDays(range.endDate, 1)}T00:00:00+09:00`);
+    const response = await supabaseRequest([
+        'flight_reports?select=id',
+        `report_type=eq.${reportType}`,
+        `created_at=gte.${start}`,
+        `created_at=lt.${endExclusive}`,
+    ].join('&'), {
+        headers: { Prefer: 'count=exact', Range: '0-0' },
+    });
+    if (!response.ok) throw new Error(`Flight report count failed: ${response.status}`);
+    const contentRange = response.headers.get('content-range') || '';
+    const total = Number(contentRange.split('/')[1]);
+    return Number.isFinite(total) ? total : 0;
+}
+
 function hideIsActive(hide: FlightReportHideRow, now = Date.now()) {
     if (hide.status === 'manual') return true;
     return hide.status === 'active'
@@ -76,7 +102,8 @@ export async function GET(request: NextRequest) {
     }
 
     try {
-        const [reportsResponse, hidesResponse, eventsResponse] = await Promise.all([
+        const experimentRanges = getNaverCompareMeasurementRanges();
+        const [reportsResponse, hidesResponse, eventsResponse, hiddenPriceReports, hiddenUnavailableReports] = await Promise.all([
             supabaseRequest([
                 'flight_reports?select=id,flight_id,source,report_type,status,departure_city,arrival_city,departure_date,arrival_date,airline,displayed_price,created_at,result',
                 'order=created_at.desc',
@@ -88,6 +115,8 @@ export async function GET(request: NextRequest) {
                 'order=created_at.desc',
                 'limit=100',
             ].join('&')),
+            reportCount('price_changed', experimentRanges.hiddenFull),
+            reportCount('unavailable', experimentRanges.hiddenFull),
         ]);
         if (!reportsResponse.ok || !hidesResponse.ok || !eventsResponse.ok) {
             throw new Error(`Supabase response ${reportsResponse.status}/${hidesResponse.status}/${eventsResponse.status}`);
@@ -105,6 +134,17 @@ export async function GET(request: NextRequest) {
                 recentReports: reports.length,
                 activeHides: activeHides.length,
                 needsReview: hides.filter(hide => hide.status === 'active' && hideIsActive(hide)).length,
+            },
+            naverCompareExperiment: {
+                baselineAvailable: false,
+                storedReportsStartedAt: NAVER_COMPARE_EXPERIMENT.storedReportsStartedAt,
+                hiddenPeriod: experimentRanges.hiddenFull,
+                priceChangedReports: hiddenPriceReports,
+                unavailableReports: hiddenUnavailableReports,
+                stopRules: {
+                    minimumCount: NAVER_COMPARE_EXPERIMENT.priceReportMinimumCount,
+                    rate: NAVER_COMPARE_EXPERIMENT.priceReportStopRate,
+                },
             },
             reports,
             hides,

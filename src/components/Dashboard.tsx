@@ -32,6 +32,7 @@ import { getTtangBookingUrl } from '@/lib/utils/ttang-url';
 import { getYbtourBookingUrl } from '@/lib/utils/ybtour-url';
 import { dealAlertRegionLabel, type DealAlertRegion } from '@/lib/deal-alerts';
 import { getComparisonFreshness, getComparisonPriceTier, getEffectivePrice } from '@/lib/price-quality';
+import { isNaverCompareHidden } from '@/lib/experiments/naver-compare';
 import {
     getDestinationContext,
     getItineraryContext,
@@ -94,6 +95,7 @@ const getDetailSheetCloseDistance = (sheetHeight: number) =>
     Math.min(180, Math.max(140, sheetHeight * 0.28));
 
 export default function Dashboard() {
+    const naverCompareHidden = isNaverCompareHidden();
     const [flights, setFlights] = useState<Flight[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -3508,7 +3510,11 @@ export default function Dashboard() {
                                                 )}
                                             </div>
                                             {(() => {
-                                                const naverUrl = getNaverFlightUrl(flight.departure.city, flight.arrival.city, flight.departure.date, flight.arrival.date, flight.departure.airport, flight.arrival.airport);
+                                                // 실험 기간에는 링크 생성·클릭 코드를 지우지 않고 사용자에게만 감춘다.
+                                                // 기간이 끝나면 isNaverCompareHidden()이 false가 되어 자동으로 다시 보인다.
+                                                const naverUrl = naverCompareHidden
+                                                    ? null
+                                                    : getNaverFlightUrl(flight.departure.city, flight.arrival.city, flight.departure.date, flight.arrival.date, flight.departure.airport, flight.arrival.airport);
                                                 const tripcomTrackingId = getTripcomTrackingId(flight.arrival.city, flight.departure.date, flight.arrival.date, flight.arrival.airport, flight.departure.city, flight.departure.airport);
                                                 const tripcomHotelUrl = getTripcomHotelUrl(flight.arrival.city, flight.departure.date, flight.arrival.date, flight.arrival.airport, flight.departure.city, flight.departure.airport);
                                                 if (!naverUrl && !tripcomHotelUrl) return null;
