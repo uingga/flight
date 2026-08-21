@@ -1,0 +1,94 @@
+.tealPreview {
+    min-height: 100vh;
+    background: #f3f4f6;
+    --color-primary: #0f766e;
+    --color-primary-dark: #115e59;
+    --color-secondary: #134e4a;
+    --color-bg-tertiary: #f0fdfa;
+}
+
+/* 전역 버튼과 로고도 실제 화면 구조를 유지한 채 색만 바꾼다. */
+.tealPreview :global(.btn-primary) {
+    background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
+    box-shadow: 0 4px 6px -1px rgba(15, 118, 110, 0.22);
+}
+
+.tealPreview :global(.btn-primary:hover) {
+    box-shadow: 0 6px 8px -1px rgba(13, 148, 136, 0.3);
+}
+
+.tealPreview :global(.logo-container stop:first-child) {
+    stop-color: #0f766e;
+}
+
+.tealPreview :global(.logo-container stop:last-child) {
+    stop-color: #134e4a;
+}
+
+/* 첫 화면에서 보이는 인디고 고정색도 청록 계열로 맞춘다. */
+.tealPreview [class*='alertManagerBtn'] {
+    border-color: #bfe8e2;
+    background: #f0fdfa;
+    color: #115e59;
+}
+
+.tealPreview [class*='alertManagerBtnActive'] {
+    border-color: #0f766e;
+    background: #0f766e;
+    color: #fff;
+}
+
+.tealPreview [class*='dealAlertBanner'] {
+    border-color: #ccebe6;
+    background: linear-gradient(135deg, #f4fffd 0%, #ecfdf5 100%);
+}
+
+.tealPreview [class*='dealAlertBanner'] strong {
+    color: #134e4a;
+}
+
+.tealPreview [class*='dealAlertBanner'] button,
+.tealPreview [class*='priceAlertSaveBtn'] {
+    background: #0f766e;
+}
+
+.tealPreview [class*='dealAlertBanner'] button:hover,
+.tealPreview [class*='priceAlertSaveBtn']:hover {
+    background: #115e59;
+}
+
+.tealPreview [class*='priceAlertOpenBtn'],
+.tealPreview [class*='alertSuggestBar'] {
+    border-color: #bfe8e2;
+    background: #f0fdfa;
+    color: #115e59;
+}
+
+.tealPreview [class*='priceAlertPanel'] {
+    border-color: #bfe8e2;
+    background: #f4fffd;
+}
+
+.tealPreview [class*='todayPickCard'] {
+    border-color: #0d9488;
+    box-shadow: 0 0 0 1px #0d9488, 0 6px 18px rgba(15, 118, 110, 0.16);
+}
+
+.tealPreview [class*='todayPickLabel'] span {
+    background: #0f766e;
+}
+
+.tealPreview [class*='datePresetChip']:hover {
+    border-color: #99d5cc;
+    background: #f0fdfa;
+    color: #0f766e;
+}
+
+.tealPreview [class*='dayPrice'] {
+    color: #0d9488;
+}
+
+.tealPreview [class*='filterToggleBtn'],
+.tealPreview [class*='inlineLink'] {
+    color: #0f766e;
+}
