@@ -8,15 +8,30 @@ import { ScrapeCompleteness } from './scrape-errors';
 const randomDelay = (min: number, max: number) =>
     new Promise(r => setTimeout(r, (Math.random() * (max - min) + min) * 1000));
 
+// 탭 이름과 우리가 항공권에 붙이는 지역 이름이 다르다. 온라인투어는 '아시아'라고 부르는데
+// getRegionByCity는 '동남아'를 돌려준다. 예전에는 탭 이름을 그대로 대조해서, 가장 큰
+// 아시아 탭이 실패해도 '원래 항공권이 없던 지역'으로 판정되어 늘 조용히 넘어갔다.
+// (2026-08-20 온라인투어 81건 → 13건 사고가 정확히 이 구멍이다.)
+//
+// 괌/사이판은 우리 분류상 남태평양에 묶이므로 공항 코드로 따로 가른다.
 const REGIONS = [
-    { code: 'AS', name: '아시아' },
-    { code: 'JA', name: '일본' },
-    { code: 'CH', name: '중국' },
-    { code: 'EU', name: '유럽' },
-    { code: 'HN', name: '남태평양' },
-    { code: 'US', name: '미주' },
-    { code: 'GS', name: '괌/사이판' },
+    { code: 'AS', name: '아시아', regions: ['동남아', '기타'] },
+    { code: 'JA', name: '일본', regions: ['일본'] },
+    { code: 'CH', name: '중국', regions: ['중국'] },
+    { code: 'EU', name: '유럽', regions: ['유럽'] },
+    { code: 'HN', name: '남태평양', regions: ['남태평양'], excludeAirports: ['GUM', 'SPN'] },
+    { code: 'US', name: '미주', regions: ['미주'] },
+    { code: 'GS', name: '괌/사이판', regions: [] as string[], airports: ['GUM', 'SPN'] },
 ];
+
+/** 이 항공권이 그 탭에서 나온 것인지 가린다. 지역 이름과 공항 코드를 함께 본다. */
+function belongsToRegion(flight: any, region: typeof REGIONS[number]): boolean {
+    const airport = flight?.arrival?.airport || '';
+    if ((region as any).airports) return (region as any).airports.includes(airport);
+    if ((region as any).excludeAirports?.includes(airport)) return false;
+    const named = flight?.region || getRegionByCity(flight?.arrival?.city || '');
+    return region.regions.includes(named);
+}
 
 export async function scrapeOnlineTour(prevFlights: any[] = []): Promise<Flight[]> {
     console.log('온라인투어 크롤링 시작...');
@@ -60,7 +75,7 @@ export async function scrapeOnlineTour(prevFlights: any[] = []): Promise<Flight[
                 } catch (e) {
                     completeness.recordFailure(
                         `${region.name} 지역 도시 목록`,
-                        f => f.region === region.name || getRegionByCity(f.arrival?.city || '') === region.name,
+                        f => belongsToRegion(f, region),
                     );
                     continue;
                 }

@@ -237,6 +237,19 @@ async function main() {
             if (cityKey(flight.departure.city) !== cityKey(alert.departure_city)) return false;
             if (cityKey(flight.arrival.city) !== cityKey(alert.arrival_city)) return false;
             if (flight.price > alert.max_price) return false;
+
+            // 오래된 값으로는 알리지 않는다.
+            //
+            // 무결성 가드는 수집이 실패하면 일부러 이전 데이터를 그대로 둔다. 그때
+            // sourceUpdatedAt이 멈추므로 얼마나 묵었는지 알 수 있는데, 노선형 알림만
+            // 그걸 보지 않았다. 며칠 전에 사라진 표로 '가격이 내려갔어요' 알림이 가고,
+            // 눌러 들어가면 없는 표다. 조건형 알림은 이미 같은 기준(72시간)을 쓴다.
+            const checkedAt = flight.priceCheckedAt || sourceUpdatedAt[flight.source];
+            if (checkedAt) {
+                const ageHours = (Date.now() - new Date(checkedAt).getTime()) / 3600000;
+                if (Number.isFinite(ageHours) && ageHours >= 72) return false;
+            }
+
             return true;
         }).sort((a, b) => a.price - b.price);
 

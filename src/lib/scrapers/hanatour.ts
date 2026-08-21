@@ -13,11 +13,14 @@ const randomDelay = (min: number, max: number) =>
  */
 
 // 출발 도시 탭 목록
+// 탭이 실패했을 때 '원래 이 탭에 항공권이 있었는가'를 판정하려면 출발 공항으로 봐야 한다.
+// 예전에는 탭 이름을 도시 표기에 대조했는데, 캐시의 출발 도시는 '서울(ICN)'이라
+// '인천'과 겹치지 않았다. 가장 큰 인천/김포 탭이 통째로 빠져도 늘 '정상'으로 넘어갔다.
 const DEPARTURE_TABS = [
-    { name: '인천/김포', index: 0 },
-    { name: '청주', index: 1 },
-    { name: '부산', index: 2 },
-    { name: '대구/제주', index: 3 },
+    { name: '인천/김포', index: 0, airports: ['ICN', 'GMP'] },
+    { name: '청주', index: 1, airports: ['CJJ'] },
+    { name: '부산', index: 2, airports: ['PUS'] },
+    { name: '대구/제주', index: 3, airports: ['TAE', 'CJU'] },
 ];
 
 // 도시명 -> 하나투어 도시코드 매핑 (공항코드가 아닌 도시코드 사용: SEL, TYO 등)
@@ -222,7 +225,7 @@ async function scrapeHanatourRegular(browser: any, prevFlights: any[] = []): Pro
                 } else {
                     completeness.recordFailure(
                         `${tab.name} 출발 탭`,
-                        f => tab.name.split('/').some(n => (f.departure?.city || '').includes(n)),
+                        f => tab.airports.includes(f.departure?.airport || ''),
                     );
                     continue;
                 }
@@ -232,7 +235,13 @@ async function scrapeHanatourRegular(browser: any, prevFlights: any[] = []): Pro
                 try {
                     await page.waitForSelector('.flight_list.special > ul > li', { timeout: 5000 });
                 } catch (e) {
-                    console.log(`${tab.name}: 항공권이 없거나 로딩 시간 초과`);
+                    // '진짜 0건'과 '로딩 실패'를 한 문구로 묶어 두면 사람 눈으로도 구분되지 않는다.
+                    // 직전 크롤에 이 탭 항공권이 있었다면 고장으로 본다.
+                    console.log(`${tab.name}: 목록이 뜨지 않았습니다 (5초 대기 초과)`);
+                    completeness.recordFailure(
+                        `${tab.name} 출발 목록`,
+                        f => tab.airports.includes(f.departure?.airport || ''),
+                    );
                     continue;
                 }
 
@@ -264,6 +273,18 @@ async function scrapeHanatourRegular(browser: any, prevFlights: any[] = []): Pro
                     if (fareLst.length > 0 && !fareAligned) {
                         console.log(`[하나투어] fareId 정렬 불일치 (카드 ${cards.length}개 vs 운임 ${fareLst.length}개) — 예약 링크를 검색 페이지로 보냅니다`);
                     }
+
+                    // 항공권 번호를 내용으로 만든다.
+                    //
+                    // 예전에는 화면에 나온 순서(index)를 번호에 넣었다. 크롤마다 순서가 달라지니 같은 표가
+                    // 매번 새 번호를 받았고, 알림이 '처음 보는 표'로 판단해 가격이 그대로여도 다시 발송됐다.
+                    // 공유 링크(/share/{id})도 다음 크롤 뒤에는 다른 표를 가리켰다.
+                    const stableId = (prefix: string, parts: (string | number)[]): string => {
+                        const raw = parts.join('|');
+                        let h = 0;
+                        for (let i = 0; i < raw.length; i++) h = (h * 31 + raw.charCodeAt(i)) | 0;
+                        return `${prefix}-${(h >>> 0).toString(36)}`;
+                    };
 
                     cards.forEach((card, index) => {
                         try {
@@ -312,7 +333,7 @@ async function scrapeHanatourRegular(browser: any, prevFlights: any[] = []): Pro
                                 }
 
                                 results.push({
-                                    id: `hanatour-regular-${tabName}-${index}`,
+                                    id: stableId('hanatour', [airline, departureCity, arrivalCity, departureDate, returnDate, price, depTime]),
                                     source: 'hanatour',
                                     airline: airline,
                                     departure: {

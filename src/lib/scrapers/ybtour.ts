@@ -296,6 +296,18 @@ export async function scrapeYbtour(prevFlights: any[] = []): Promise<Flight[]> {
                                         const results: any[] = [];
                                         const links = document.querySelectorAll('td.link a[onclick*="selectFareINV"]');
 
+                                        // 항공권 번호를 내용으로 만든다.
+                                        //
+                                        // 예전에는 화면에 나온 순서(index)를 번호에 넣었다. 크롤마다 순서가 달라지니 같은 표가
+                                        // 매번 새 번호를 받았고, 알림이 '처음 보는 표'로 판단해 가격이 그대로여도 다시 발송됐다.
+                                        // 공유 링크(/share/{id})도 다음 크롤 뒤에는 다른 표를 가리켰다.
+                                        const stableId = (prefix: string, parts: (string | number)[]): string => {
+                                            const raw = parts.join('|');
+                                            let h = 0;
+                                            for (let i = 0; i < raw.length; i++) h = (h * 31 + raw.charCodeAt(i)) | 0;
+                                            return `${prefix}-${(h >>> 0).toString(36)}`;
+                                        };
+
                                         for (var idx = 0; idx < links.length; idx++) {
                                             const link = links[idx];
 
@@ -341,7 +353,7 @@ export async function scrapeYbtour(prevFlights: any[] = []): Promise<Flight[]> {
                                             if (arrApCode) flightLink += '&efcCityCode=' + arrApCode;
 
                                             results.push({
-                                                id: 'ybtour-' + args.cityName + '-' + depDateRaw + '-' + idx,
+                                                id: stableId('ybtour', [args.airline, args.departure, args.arrival, depDateRaw, retDateRaw, price, depApCode, arrApCode]),
                                                 source: 'ybtour',
                                                 airline: args.airline,
                                                 departure: {
