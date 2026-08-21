@@ -1,0 +1,301 @@
+.previewPage {
+    min-height: 100vh;
+    background: #dbe7e5;
+    color: #17211f;
+    --teal: #0f766e;
+    --teal-dark: #0b5d57;
+    --teal-soft: #e7f5f2;
+    --ink: #17211f;
+    --muted: #687672;
+    --line: #dfe7e4;
+}
+
+.phoneCanvas {
+    width: 100%;
+    max-width: 480px;
+    min-height: 100vh;
+    margin: 0 auto;
+    background: #f6f8f7;
+    box-shadow: 0 0 48px rgba(24, 59, 53, 0.13);
+}
+
+.previewPage :global(.logo-container stop:first-child) { stop-color: #0f766e; }
+.previewPage :global(.logo-container stop:last-child) { stop-color: #0b5d57; }
+
+.header {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    height: 58px;
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(255, 255, 255, 0.94);
+    border-bottom: 1px solid rgba(223, 231, 228, 0.85);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+}
+
+.logoLink { display: inline-flex; }
+.logoLink:hover { color: inherit; }
+
+.headerActions { display: flex; align-items: center; gap: 8px; }
+.iconButton,
+.alertButton {
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+}
+
+.iconButton { width: 36px; color: #43504d; }
+.iconButton svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.9; }
+.alertButton { padding: 0 13px; background: var(--teal-soft); color: var(--teal-dark); font-size: 12px; font-weight: 700; }
+
+.searchRow {
+    position: sticky;
+    top: 58px;
+    z-index: 29;
+    height: 52px;
+    margin: 0;
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #fff;
+    border-bottom: 1px solid var(--line);
+}
+
+.searchRow > svg { width: 18px; height: 18px; fill: none; stroke: #73817d; stroke-width: 2; }
+.searchRow input { flex: 1; min-width: 0; border: 0; outline: 0; font-size: 14px; color: var(--ink); }
+.searchRow button { padding: 5px; font-size: 12px; font-weight: 600; color: var(--teal); }
+
+.feedIntro {
+    padding: 19px 18px 11px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.feedIntro p { color: var(--teal); font-size: 11px; line-height: 1.3; font-weight: 700; letter-spacing: -0.01em; }
+.feedIntro h1 { margin-top: 3px; color: var(--ink); font-size: 20px; line-height: 1.3; font-weight: 800; letter-spacing: -0.045em; }
+.feedIntro > span { flex-shrink: 0; padding-bottom: 2px; color: #899591; font-size: 10px; white-space: nowrap; }
+
+.quickFilters {
+    display: flex;
+    gap: 7px;
+    padding: 5px 16px 14px;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+.quickFilters::-webkit-scrollbar { display: none; }
+.quickFilters button {
+    flex: 0 0 auto;
+    height: 34px;
+    padding: 0 13px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    border: 1px solid #d9e1de;
+    border-radius: 999px;
+    background: #fff;
+    color: #4f5c59;
+    font-size: 12px;
+    font-weight: 600;
+}
+.quickFilters button svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.8; }
+.quickFilters .activeFilter { border-color: var(--teal); background: var(--teal); color: #fff; }
+
+.feedSection { padding: 0 12px 40px; }
+.feedHeading { min-height: 44px; padding: 3px 5px 8px; display: flex; align-items: center; justify-content: space-between; }
+.feedHeading > div { display: flex; align-items: baseline; gap: 7px; }
+.feedHeading h2 { font-size: 15px; line-height: 1.4; font-weight: 800; letter-spacing: -0.03em; }
+.feedHeading div span { color: #8a9692; font-size: 10px; }
+.feedHeading > button { padding: 5px 0 5px 8px; color: #5e6b67; font-size: 11px; font-weight: 600; }
+.feedHeading > button span { margin-left: 2px; color: #93a09c; }
+
+.cardList,
+.loadingList { display: grid; gap: 10px; }
+
+.flightCard {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 4px 16px rgba(29, 55, 50, 0.045);
+}
+
+.cardBody {
+    width: 100%;
+    padding: 15px 15px 13px;
+    text-align: left;
+    color: inherit;
+}
+
+.cardTopline { min-height: 22px; padding-right: 34px; display: flex; align-items: center; justify-content: space-between; }
+.cardTopline > div { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.sourceBadge { display: inline-flex; height: 21px; padding: 0 7px; align-items: center; border-radius: 6px; font-size: 9px; line-height: 1; font-weight: 800; white-space: nowrap; }
+.ybtour { background: #fff3be; color: #735800; }
+.modetour { background: #e8edff; color: #3048a6; }
+.hanatour { background: #e7f7f0; color: #157451; }
+.onlinetour { background: #e8f4ff; color: #1a65a2; }
+.ttang { background: #fff0eb; color: #a24529; }
+.myrealtrip { background: #eaf7ff; color: #16729c; }
+.airline { overflow: hidden; color: #66736f; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.cardNumber { color: #bdc7c3; font-size: 9px; font-variant-numeric: tabular-nums; }
+
+.favoriteButton {
+    position: absolute;
+    z-index: 2;
+    top: 10px;
+    right: 10px;
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    color: #a8b3af;
+}
+.favoriteButton svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; }
+.favoriteButton.favoriteActive { color: var(--teal); }
+.favoriteButton.favoriteActive svg { fill: currentColor; }
+
+.routePriceRow { margin-top: 12px; display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.routeTitle { min-width: 0; display: flex; align-items: center; gap: 5px; color: #687571; font-size: 14px; line-height: 1.25; letter-spacing: -0.025em; }
+.routeTitle strong { overflow: hidden; color: var(--ink); font-size: 18px; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
+.routeTitle svg { width: 16px; height: 16px; fill: none; stroke: #90a09b; stroke-width: 1.8; }
+.priceBlock { flex-shrink: 0; text-align: right; }
+.priceBlock strong { display: block; color: var(--teal-dark); font-size: 18px; line-height: 1.25; font-weight: 800; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
+.priceBlock span { display: block; margin-top: 2px; color: #899591; font-size: 9px; }
+
+.scheduleBox {
+    margin-top: 13px;
+    padding: 9px 10px;
+    display: grid;
+    gap: 6px;
+    border-radius: 11px;
+    background: #f5f8f7;
+}
+.scheduleBox > div { display: grid; grid-template-columns: 43px 83px 1fr; align-items: baseline; gap: 4px; font-size: 11px; }
+.scheduleBox span { color: #8a9692; font-size: 9px; font-weight: 600; }
+.scheduleBox strong { color: #35423e; font-size: 11px; font-weight: 700; }
+.scheduleBox em { color: #596662; font-size: 10px; font-style: normal; text-align: right; font-variant-numeric: tabular-nums; }
+
+.cardMeta { min-height: 28px; margin-top: 9px; display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; }
+.cardMeta > div { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
+.cardMeta > div span { padding: 3px 6px; border-radius: 5px; background: #f0f3f2; color: #6f7b77; font-size: 9px; line-height: 1.3; }
+.cardMeta > div .lowSeats { background: #fff0ec; color: #ba4d2d; font-weight: 700; }
+.viewCta { flex-shrink: 0; display: inline-flex; align-items: center; gap: 3px; color: var(--teal); font-size: 10px; font-weight: 800; }
+.viewCta svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; }
+
+.moreButton { width: 100%; height: 46px; margin-top: 14px; border: 1px solid #d8e2df; border-radius: 13px; background: #fff; color: #4b5a56; font-size: 12px; font-weight: 700; }
+
+.skeletonCard { height: 210px; border: 1px solid #e5ebe9; border-radius: 18px; background: linear-gradient(90deg, #fff 25%, #f3f6f5 50%, #fff 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; }
+@keyframes shimmer { to { background-position: -200% 0; } }
+
+.emptyState { min-height: 220px; padding: 52px 20px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+.emptyState strong { font-size: 15px; }
+.emptyState span { margin-top: 6px; color: var(--muted); font-size: 12px; }
+.emptyState button { margin-top: 18px; padding: 9px 14px; border-radius: 9px; background: var(--teal-soft); color: var(--teal); font-size: 11px; font-weight: 700; }
+
+.previewFooter { padding: 25px 18px 36px; display: flex; flex-direction: column; align-items: center; gap: 5px; color: #8b9793; font-size: 10px; }
+.previewFooter a { color: var(--teal); font-weight: 700; }
+
+.sheetOverlay {
+    position: fixed;
+    z-index: 100;
+    inset: 0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    background: rgba(18, 30, 27, 0.44);
+    animation: overlayIn 160ms ease-out;
+}
+
+.bottomSheet {
+    width: min(480px, 100%);
+    max-height: min(88dvh, 760px);
+    padding: 8px 18px max(18px, env(safe-area-inset-bottom));
+    overflow-y: auto;
+    border-radius: 24px 24px 0 0;
+    background: #fff;
+    box-shadow: 0 -18px 48px rgba(8, 32, 28, 0.16);
+    animation: sheetUp 220ms cubic-bezier(.2, .8, .2, 1);
+}
+
+.sheetHandle { width: 38px; height: 4px; margin: 2px auto 15px; border-radius: 999px; background: #d8dfdd; }
+.sheetHeader { display: flex; align-items: center; justify-content: space-between; }
+.sheetHeader h2 { font-size: 19px; font-weight: 800; letter-spacing: -0.04em; }
+.sheetHeader button { padding: 6px 0 6px 10px; color: #84908c; font-size: 11px; font-weight: 600; }
+.filterGroup { margin-top: 22px; }
+.filterGroup h3 { margin-bottom: 9px; color: #56635f; font-size: 11px; font-weight: 700; }
+.optionGrid { display: flex; flex-wrap: wrap; gap: 7px; }
+.optionGrid button { min-height: 36px; padding: 0 13px; border: 1px solid #dce4e1; border-radius: 10px; background: #fff; color: #596662; font-size: 11px; font-weight: 600; }
+.optionGrid .optionActive { border-color: var(--teal); background: var(--teal-soft); color: var(--teal-dark); font-weight: 800; }
+.applyButton { position: sticky; bottom: 0; width: 100%; height: 50px; margin-top: 26px; border-radius: 13px; background: var(--teal); color: #fff; font-size: 13px; font-weight: 800; box-shadow: 0 10px 20px rgba(15, 118, 110, 0.2); }
+
+.detailSheet { overflow: hidden; }
+.detailHeader { display: flex; align-items: center; justify-content: space-between; }
+.detailHeader > button { width: 34px; height: 34px; display: grid; place-items: center; color: #73807c; }
+.detailHeader > button svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; }
+.detailTitle { margin-top: 15px; display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+.detailTitle p { color: #74817d; font-size: 11px; }
+.detailTitle h2 { margin-top: 1px; font-size: 24px; line-height: 1.25; font-weight: 800; letter-spacing: -0.05em; }
+.detailTitle > div:last-child { flex-shrink: 0; text-align: right; }
+.detailTitle > div:last-child strong { display: block; color: var(--teal-dark); font-size: 20px; line-height: 1.25; font-weight: 800; letter-spacing: -0.04em; }
+.detailTitle > div:last-child span { color: #8a9692; font-size: 9px; }
+
+.detailSchedule { position: relative; margin-top: 22px; padding: 15px; display: grid; gap: 14px; border-radius: 14px; background: #f4f8f7; }
+.detailSchedule::before { content: ''; position: absolute; top: 27px; bottom: 27px; left: 20px; width: 1px; background: #c8d7d3; }
+.detailSchedule > div { position: relative; display: grid; grid-template-columns: 12px 1fr auto; align-items: center; gap: 8px; }
+.detailSchedule > div > span { position: relative; z-index: 1; width: 11px; height: 11px; border: 3px solid #f4f8f7; border-radius: 50%; box-shadow: 0 0 0 1px var(--teal); background: var(--teal); }
+.detailSchedule p { display: flex; align-items: baseline; gap: 7px; }
+.detailSchedule p b { color: #7a8783; font-size: 9px; }
+.detailSchedule p strong { font-size: 12px; }
+.detailSchedule em { color: #52605c; font-size: 10px; font-style: normal; font-variant-numeric: tabular-nums; }
+
+.detailFacts { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 6px; }
+.detailFacts span { padding: 5px 8px; border-radius: 7px; background: #f0f3f2; color: #64716d; font-size: 9px; }
+.priceNotice { margin-top: 15px; padding: 10px 11px; border-radius: 9px; background: #faf5e9; color: #776541; font-size: 10px; line-height: 1.55; }
+.detailTools { margin-top: 13px; display: grid; grid-template-columns: .75fr 1fr 1fr; gap: 6px; }
+.detailTools button { height: 36px; display: inline-flex; align-items: center; justify-content: center; gap: 4px; border: 1px solid #dce3e1; border-radius: 9px; color: #63706c; font-size: 9px; font-weight: 600; }
+.detailTools svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.8; }
+.bookingButton { height: 52px; margin-top: 12px; display: flex; align-items: center; justify-content: center; gap: 5px; border-radius: 13px; background: var(--teal); color: #fff; font-size: 13px; font-weight: 800; box-shadow: 0 10px 20px rgba(15, 118, 110, 0.19); }
+.bookingButton:hover { color: #fff; }
+.bookingButton svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; }
+
+.toast {
+    position: fixed;
+    z-index: 150;
+    left: 50%;
+    bottom: max(24px, env(safe-area-inset-bottom));
+    width: max-content;
+    max-width: calc(100vw - 36px);
+    padding: 10px 14px;
+    transform: translateX(-50%);
+    border-radius: 10px;
+    background: #22312e;
+    color: #fff;
+    font-size: 11px;
+    box-shadow: 0 10px 24px rgba(15, 30, 26, 0.2);
+}
+
+@keyframes overlayIn { from { opacity: 0; } }
+@keyframes sheetUp { from { transform: translateY(24px); opacity: .6; } }
+
+@media (min-width: 700px) {
+    .phoneCanvas { min-height: calc(100vh - 48px); margin-top: 24px; margin-bottom: 24px; border-radius: 24px; overflow: hidden; }
+    .header { top: 24px; }
+    .searchRow { top: 82px; }
+    .bottomSheet { margin-bottom: 24px; border-radius: 24px; }
+}
+
+@media (max-width: 360px) {
+    .feedIntro h1 { font-size: 18px; }
+    .priceBlock strong { font-size: 16px; }
+    .routeTitle strong { font-size: 17px; }
+    .scheduleBox > div { grid-template-columns: 40px 76px 1fr; }
+}
