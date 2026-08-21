@@ -9,6 +9,17 @@ interface AlertSubscription {
 }
 
 const ALERT_KEY = process.env.ALERT_KEY || '';
+/**
+ * 웹 푸시 발송자 연락처(VAPID subject).
+ *
+ * 푸시 서비스가 문제를 발견했을 때 발송자에게 연락하는 통로라 실재해야 한다.
+ * 예전에는 만든 적 없는 주소가 적혀 있어서, 연락이 와도 아무도 받지 못했다.
+ * RFC 8292는 mailto: 외에 https: URL도 허용하므로, 공개 저장소에 개인 메일
+ * 주소를 남기지 않도록 사이트 주소를 기본값으로 쓴다. 실제로 받을 수 있는
+ * 주소를 쓰고 싶으면 VAPID_CONTACT 환경변수로 덮어쓴다.
+ */
+const VAPID_CONTACT = process.env.VAPID_CONTACT || 'https://tikitikit.kr';
+
 const VAPID_PUBLIC = process.env.VAPID_PUBLIC_KEY || '';
 const VAPID_PRIVATE = process.env.VAPID_PRIVATE_KEY || '';
 const SUPABASE_URL = (process.env.SUPABASE_URL || '').replace(/\/$/, '');
@@ -41,7 +52,7 @@ async function main() {
     const alert = alerts[0];
     const dealRegion = decodeDealAlertRegion(alert.arrival_city);
     const destination = dealRegion ? dealAlertRegionLabel(dealRegion) : (alert.arrival_city || '목적지');
-    webpush.setVapidDetails('mailto:tikitikit.kr@gmail.com', VAPID_PUBLIC, VAPID_PRIVATE);
+    webpush.setVapidDetails(VAPID_CONTACT, VAPID_PUBLIC, VAPID_PRIVATE);
     try {
         await webpush.sendNotification(alert.subscription, JSON.stringify({
             title: '✅ 테스트 알림이 도착했어요',
