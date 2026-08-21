@@ -2,13 +2,16 @@ name: Daily Flight Crawl
 
 on:
   schedule:
-    # 하루 7회 (KST): 오전 2시간, 오후~저녁 3시간 간격, 자정 00:30
+    # 하루 6회 (KST): 오전 2시간, 오후~저녁 3시간 간격, 자정 00:30
+    #
+    # 21시는 뺐다. 최근 4주 23회차를 표 단위로 세어 보니 13회(57%)가 새 표를
+    # 하나도 못 찾았고 중앙값이 0이었다. 여행사 사이트 이용자가 가장 많은
+    # 시간대이기도 해서, 얻는 것 없이 부담만 주는 자리였다.
     - cron: '0 23 * * *'     # 08:00 KST
     - cron: '0 1 * * *'      # 10:00 KST
     - cron: '0 2 * * *'      # 11:00 KST
     - cron: '0 6 * * *'      # 15:00 KST
     - cron: '0 9 * * *'      # 18:00 KST
-    - cron: '0 12 * * *'     # 21:00 KST
     - cron: '30 15 * * *'    # 00:30 KST
   workflow_dispatch: # 수동 실행 가능
 
@@ -18,6 +21,8 @@ jobs:
     
     permissions:
       contents: write # 리포지토리 커밋 권한 필요
+      # 실패 알림이 이슈를 만든다. 이 권한이 없어 지금까지 403으로 조용히 실패했다.
+      issues: write
 
     steps:
       - name: Checkout code
@@ -92,6 +97,14 @@ jobs:
             echo "ℹ️ No changes to commit."
           fi
 
+      - name: Archive long-term price history
+        if: steps.crawl.outcome == 'success'
+        continue-on-error: true
+        run: npm run archive:prices
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+
       - name: Send price alerts
         if: steps.crawl.outcome == 'success'
         continue-on-error: true
@@ -102,8 +115,11 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
 
+      # 예전에는 크롤 단계의 실패만 알렸다. 커밋·푸시 단계가 실패하면(같은 시각에 다른
+      # 워크플로가 먼저 밀어 넣은 경우 등) 잡은 빨간불이 되면서도 이 조건에 걸리지 않아,
+      # 몇십 분짜리 크롤 결과가 조용히 사라졌다. failure()를 함께 본다.
       - name: Alert on failure
-        if: steps.crawl.outcome == 'failure'
+        if: failure() || steps.crawl.outcome == 'failure'
         uses: actions/github-script@v7
         with:
           script: |
@@ -113,6 +129,8 @@ jobs:
               '',
               `- **시간**: ${new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })}`,
               `- **Workflow**: ${context.workflow}`,
+              `- **크롤 단계**: ${{ steps.crawl.outcome }}`,
+              `- **잡 상태**: ${{ job.status }}`,
               `- **Run**: [${context.runId}](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})`,
               '',
               '수동으로 확인해주세요: `npm run crawl:all`',
