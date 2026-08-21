@@ -5,7 +5,7 @@ import { getRegionByCity } from '@/lib/utils/region-mapper';
 import { fetchYbtourSchedules, scheduleKeyOf, ScheduleKey } from './ybtour-schedule';
 import { IncompleteScrapeError, ScrapeCompleteness } from './scrape-errors';
 import { survivingRouteMinPrice } from '@/lib/utils/route-min-price';
-import { normalizeAirline } from '@/lib/utils/flight-helpers';
+import { buildStableFlightId, normalizeAirline } from '@/lib/utils/flight-helpers';
 
 const randomDelay = (min: number, max: number) =>
     new Promise(r => setTimeout(r, (Math.random() * (max - min) + min) * 1000));
@@ -296,18 +296,6 @@ export async function scrapeYbtour(prevFlights: any[] = []): Promise<Flight[]> {
                                         const results: any[] = [];
                                         const links = document.querySelectorAll('td.link a[onclick*="selectFareINV"]');
 
-                                        // 항공권 번호를 내용으로 만든다.
-                                        //
-                                        // 예전에는 화면에 나온 순서(index)를 번호에 넣었다. 크롤마다 순서가 달라지니 같은 표가
-                                        // 매번 새 번호를 받았고, 알림이 '처음 보는 표'로 판단해 가격이 그대로여도 다시 발송됐다.
-                                        // 공유 링크(/share/{id})도 다음 크롤 뒤에는 다른 표를 가리켰다.
-                                        const stableId = (prefix: string, parts: (string | number)[]): string => {
-                                            const raw = parts.join('|');
-                                            let h = 0;
-                                            for (let i = 0; i < raw.length; i++) h = (h * 31 + raw.charCodeAt(i)) | 0;
-                                            return `${prefix}-${(h >>> 0).toString(36)}`;
-                                        };
-
                                         for (var idx = 0; idx < links.length; idx++) {
                                             const link = links[idx];
 
@@ -353,7 +341,9 @@ export async function scrapeYbtour(prevFlights: any[] = []): Promise<Flight[]> {
                                             if (arrApCode) flightLink += '&efcCityCode=' + arrApCode;
 
                                             results.push({
-                                                id: stableId('ybtour', [args.airline, args.departure, args.arrival, depDateRaw, retDateRaw, price, depApCode, arrApCode]),
+                                                // ID는 page.evaluate 밖(Node.js)에서 만든다. tsx가 브라우저에 없는
+                                                // __name 보조 함수를 삽입할 수 있어 여기서는 계산하지 않는다.
+                                                id: '',
                                                 source: 'ybtour',
                                                 airline: args.airline,
                                                 departure: {
@@ -406,6 +396,16 @@ export async function scrapeYbtour(prevFlights: any[] = []): Promise<Flight[]> {
                                     })
                                     .map((f: any) => ({
                                         ...f,
+                                        id: buildStableFlightId('ybtour', [
+                                            f.airline,
+                                            f.departure.city,
+                                            f.arrival.city,
+                                            f.departure.date.replace(/-/g, ''),
+                                            f.arrival.date.replace(/-/g, ''),
+                                            f.price,
+                                            f.departure.airport,
+                                            f.arrival.airport,
+                                        ]),
                                         region: getRegionByCity(f.arrival.city),
                                     }));
 

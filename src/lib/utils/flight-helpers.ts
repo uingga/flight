@@ -3,6 +3,14 @@
  * Dashboard.tsx에서 추출
  */
 
+/** 크롤 순서와 무관하게 항공권 내용만으로 같은 ID를 만든다. */
+export const buildStableFlightId = (prefix: string, parts: (string | number)[]): string => {
+    const raw = parts.join('|');
+    let hash = 0;
+    for (let i = 0; i < raw.length; i++) hash = (hash * 31 + raw.charCodeAt(i)) | 0;
+    return `${prefix}-${(hash >>> 0).toString(36)}`;
+};
+
 // Helper: string(YYYY-MM-DD) <-> Date
 export const toDate = (s: string) => s ? new Date(s + 'T00:00:00') : null;
 export const toStr = (d: Date | null) => {

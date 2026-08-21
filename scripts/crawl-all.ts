@@ -40,6 +40,10 @@ interface CacheData {
     };
 }
 
+const sourceNames = ['ybtour', 'hanatour', 'modetour', 'onlinetour', 'ttang', 'myrealtrip'] as const;
+type SourceKey = typeof sourceNames[number];
+type CrawlableSourceKey = Exclude<SourceKey, 'myrealtrip'>;
+
 /** 항공권 배열을 여행사별 개수로 집계한다. 캐시와 크롤 로그가 같은 기준을 쓰게 하는 용도. */
 function countBySource(flights: any[]): Record<string, number> {
     const counts: Record<string, number> = {};
@@ -51,7 +55,21 @@ function countBySource(flights: any[]): Record<string, number> {
 }
 
 async function main() {
-    console.log('🚀 전체 사이트 크롤링 시작...\n');
+    const sourceArg = process.argv.find(arg => arg.startsWith('--sources='));
+    const requestedSources = sourceArg
+        ? new Set(sourceArg.slice('--sources='.length).split(',').map(value => value.trim()).filter(Boolean))
+        : null;
+    const crawlableSources = new Set<CrawlableSourceKey>(['ybtour', 'hanatour', 'modetour', 'onlinetour', 'ttang']);
+
+    if (requestedSources) {
+        const invalidSources = [...requestedSources].filter(source => !crawlableSources.has(source as CrawlableSourceKey));
+        if (requestedSources.size === 0 || invalidSources.length > 0) {
+            throw new Error(`--sources에는 다음 값만 쉼표로 지정할 수 있습니다: ${[...crawlableSources].join(', ')}${invalidSources.length > 0 ? ` (잘못된 값: ${invalidSources.join(', ')})` : ''}`);
+        }
+        console.log(`🎯 선택 사이트 크롤링 시작: ${[...requestedSources].join(', ')}\n`);
+    } else {
+        console.log('🚀 전체 사이트 크롤링 시작...\n');
+    }
 
     const allFlights: any[] = [];
     const sources = {
@@ -75,10 +93,14 @@ async function main() {
     } catch { }
     const prevFlights = prevCache?.flights || [];
     const sourceUpdatedAt: Record<string, string> = { ...(prevCache?.sourceUpdatedAt || {}) };
+    // 부분 복구에서 실행하지 않은 여행사는 이전 최종본을 그대로 붙인다.
+    // 이미 필터를 통과한 데이터를 다시 가격 필터에 넣으면, 실제로 다시 긁지 않았는데도
+    // 항공권이 빠질 수 있어 "선택한 여행사만 복구"라는 보장이 깨진다.
+    const untouchedFlights: any[] = [];
 
     try {
-        // 전체 사이트 병렬 크롤링
-        console.log('🔄 6개 사이트 병렬 크롤링 시작...\n');
+        // 전체 또는 선택한 사이트 병렬 크롤링
+        console.log(`🔄 ${requestedSources ? requestedSources.size : 5}개 사이트 병렬 크롤링 시작...\n`);
 
         const scraperTasks = [
             { name: '노랑풍선', key: 'ybtour' as const, fn: () => scrapeYbtour(prevFlights) },
@@ -90,14 +112,17 @@ async function main() {
             // Bulk API는 시간/가격 정보가 부정확하므로 여기서 실행하지 않음
         ];
 
-        const results = await Promise.allSettled(scraperTasks.map(t => t.fn()));
+        const activeTasks = requestedSources
+            ? scraperTasks.filter(task => requestedSources.has(task.key))
+            : scraperTasks;
+        const results = await Promise.allSettled(activeTasks.map(t => t.fn()));
 
         // 채택 여부는 아래 무결성 검사에서 정하므로, 여기서는 결과만 모아 둔다
         const scraped: Partial<Record<SourceKey, any[]>> = {};
         const scrapeFailures: Partial<Record<SourceKey, string>> = {};
-        const attempted = new Set<SourceKey>(scraperTasks.map(t => t.key));
+        const attempted = new Set<SourceKey>(activeTasks.map(t => t.key));
         results.forEach((result, i) => {
-            const task = scraperTasks[i];
+            const task = activeTasks[i];
             if (result.status === 'fulfilled') {
                 scraped[task.key] = result.value;
                 console.log(`✅ ${task.name}: ${result.value.length}개`);
@@ -118,8 +143,6 @@ async function main() {
         // 의심스러운 값은 시간이 지나도 자동으로 받아들이지 않는다. 고장을 시간으로
         // 덮으면 여행사가 사이트를 바꿔 스크래퍼가 죽어도 그대로 굳어버리기 때문이다.
         // 대신 이전 데이터를 지키고, 몇 회 연속 문제인지까지 경고에 담아 사람이 고치게 한다.
-        const sourceNames = ['ybtour', 'hanatour', 'modetour', 'onlinetour', 'ttang', 'myrealtrip'] as const;
-        type SourceKey = typeof sourceNames[number];
         const DROP_RATIO = 0.6;              // 직전의 60% 미만이면 의심
         const MIN_BASELINE = 30;             // 원래 적은 소스는 흔들림이 커서 제외
         const integrityWarnings: string[] = [];
@@ -157,7 +180,8 @@ async function main() {
             // 여기서 안 돌린 소스(마이리얼트립)는 별도 워크플로우 담당이라 조용히 이어받는다
             if (!attempted.has(src)) {
                 if (prevCount > 0) {
-                    allFlights.push(...srcPrevFlights);
+                    if (requestedSources) untouchedFlights.push(...srcPrevFlights);
+                    else allFlights.push(...srcPrevFlights);
                     sources[src] = prevCount;
                 }
                 continue;
@@ -374,6 +398,11 @@ async function main() {
             console.error('⚠️ 인터파크 벤치마크 실패 (필터링 건너뜀):', error);
         }
 
+        if (requestedSources && untouchedFlights.length > 0) {
+            benchmarkedFlights = [...benchmarkedFlights, ...untouchedFlights];
+            console.log(`🔒 부분 크롤 미실행 여행사: 이전 최종 데이터 ${untouchedFlights.length}개 그대로 유지`);
+        }
+
         // 크롤 로그에 남길 '실제로 사이트에 나가는 목록'.
         // 어느 경로로 끝나든 이 변수가 최종본을 가리킨다.
         let savedFlights: any[] = benchmarkedFlights;
@@ -410,12 +439,14 @@ async function main() {
             // 가격 히스토리는 중복 저장하지 않고 별도 파일만 유지한다.
             const historyPath = path.join(dataDir, 'price-history.json');
             let history: Record<string, Array<{ date: string; minPrice: number; avgPrice: number; count: number }>> = {};
-            try {
-                if (fs.existsSync(historyPath)) {
-                    history = JSON.parse(fs.readFileSync(historyPath, 'utf-8'));
+            if (!requestedSources) {
+                try {
+                    if (fs.existsSync(historyPath)) {
+                        history = JSON.parse(fs.readFileSync(historyPath, 'utf-8'));
+                    }
+                } catch (e) {
+                    console.log('가격 히스토리 파일 초기화');
                 }
-            } catch (e) {
-                console.log('가격 히스토리 파일 초기화');
             }
 
             const cacheData: CacheData = {
@@ -437,37 +468,43 @@ async function main() {
             }
 
             // 가격 히스토리에 오늘 데이터 추가 (history는 위에서 이미 로드됨)
-            const todayStr = new Date().toISOString().split('T')[0];
             const routePrices: Record<string, number[]> = {};
-            allFlights.forEach((f: any) => {
-                const route = `${f.departure?.city || ''}-${f.arrival?.city || ''}`;
-                if (f.price > 0) {
-                    if (!routePrices[route]) routePrices[route] = [];
-                    // 땡처리닷컴은 발권수수료 2만원을 포함한 실질 가격으로 기록한다.
-                    routePrices[route].push(getEffectivePrice(f));
-                }
-            });
-
-            // 히스토리에 오늘 데이터 추가 (같은 날이면 덮어쓰기)
-            Object.entries(routePrices).forEach(([route, prices]) => {
-                if (!history[route]) history[route] = [];
-                history[route] = history[route].filter(h => h.date !== todayStr);
-                history[route].push({
-                    date: todayStr,
-                    minPrice: Math.min(...prices),
-                    avgPrice: Math.round(prices.reduce((a, b) => a + b, 0) / prices.length),
-                    count: prices.length,
+            if (!requestedSources) {
+                const todayStr = new Date().toISOString().split('T')[0];
+                allFlights.forEach((f: any) => {
+                    const route = `${f.departure?.city || ''}-${f.arrival?.city || ''}`;
+                    if (f.price > 0) {
+                        if (!routePrices[route]) routePrices[route] = [];
+                        // 땡처리닷컴은 발권수수료 2만원을 포함한 실질 가격으로 기록한다.
+                        routePrices[route].push(getEffectivePrice(f));
+                    }
                 });
-                // 최근 14일만 유지
-                history[route] = history[route].slice(-14);
-            });
+
+                // 히스토리에 오늘 데이터 추가 (같은 날이면 덮어쓰기)
+                Object.entries(routePrices).forEach(([route, prices]) => {
+                    if (!history[route]) history[route] = [];
+                    history[route] = history[route].filter(h => h.date !== todayStr);
+                    history[route].push({
+                        date: todayStr,
+                        minPrice: Math.min(...prices),
+                        avgPrice: Math.round(prices.reduce((a, b) => a + b, 0) / prices.length),
+                        count: prices.length,
+                    });
+                    // 최근 14일만 유지
+                    history[route] = history[route].slice(-14);
+                });
+            }
 
             // 통합 캐시 파일 저장
             fs.writeFileSync(cachePath, JSON.stringify(cacheData, null, 2), 'utf-8');
 
-            // 히스토리 별도 파일도 저장
-            fs.writeFileSync(historyPath, JSON.stringify(history, null, 2), 'utf-8');
-            console.log(`📈 가격 히스토리 기록: ${Object.keys(routePrices).length}개 노선`);
+            // 부분 복구는 전체 여행사를 같은 시각에 측정한 표본이 아니므로 가격 기록에 섞지 않는다.
+            if (requestedSources) {
+                console.log('⏭️ 부분 크롤: 가격 히스토리 갱신 건너뜀');
+            } else {
+                fs.writeFileSync(historyPath, JSON.stringify(history, null, 2), 'utf-8');
+                console.log(`📈 가격 히스토리 기록: ${Object.keys(routePrices).length}개 노선`);
+            }
 
             console.log('\n\n✅ 전체 크롤링 완료!');
             console.log('='.repeat(50));
@@ -527,6 +564,7 @@ async function main() {
             logCrawlResults(src, finalCounts[src] || 0, undefined, cityStats, {
                 scraped: scrapedCounts[src],
                 preserved: preservedSources.has(src),
+                skipped: requestedSources !== null && !attempted.has(src),
                 added: turnover[src]?.added,
                 removed: turnover[src]?.removed,
             });

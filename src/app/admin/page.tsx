@@ -6,7 +6,7 @@ import { isAnalyticsExcluded, setAnalyticsExcluded } from '@/lib/analytics';
 
 interface CrawlHistoryEntry {
     timestamp: string;
-    sites: Record<string, { total: number; scraped?: number; preserved?: boolean; added?: number; removed?: number }>;
+    sites: Record<string, { total: number; scraped?: number; preserved?: boolean; skipped?: boolean; added?: number; removed?: number }>;
     alerts: string[];
 }
 
@@ -440,7 +440,7 @@ export default function AdminPage() {
     // 한 칸이 보여줄 수를 한 곳에서 고른다. 예전에는 정상 수집된 여행사는 필터 전 수가,
     // 실패해 이전 데이터를 물려받은 여행사는 필터 후 수가 같은 표에 섞여 있었다.
     const metricOf = (stat?: CrawlHistoryEntry['sites'][string]): number | null => {
-        if (!stat) return null;
+        if (!stat || stat.skipped) return null;
         if (crawlMetric === 'shown') return stat.total;
         if (crawlMetric === 'turnover') return stat.added ?? null;
         return stat.scraped ?? null;
@@ -457,7 +457,7 @@ export default function AdminPage() {
             .filter(({ stat }) => stat?.preserved)
             .map(({ source }) => SOURCE_NAMES[source] || source);
         const missingSources = stats
-            .filter(({ stat }) => !stat || (stat.added === undefined && stat.removed === undefined))
+            .filter(({ stat }) => !stat || stat.skipped || (stat.added === undefined && stat.removed === undefined))
             .map(({ source }) => SOURCE_NAMES[source] || source);
         const reliable = failedSources.length === 0 && missingSources.length === 0;
         const valid = measured.filter(({ stat }) => !stat?.preserved);
@@ -553,11 +553,14 @@ export default function AdminPage() {
                         const ageHours = updatedAt ? (Date.now() - new Date(updatedAt).getTime()) / 3600000 : null;
                         const stale = ageHours === null || ageHours > staleAfter;
 
-                        const history = (data.crawlHistory || []).slice(-16).map(e => ({
-                            ts: e.timestamp,
-                            value: e.sites[source]?.scraped ?? e.sites[source]?.total ?? 0,
-                            preserved: Boolean(e.sites[source]?.preserved),
-                        }));
+                        const history = (data.crawlHistory || [])
+                            .filter(e => !e.sites[source]?.skipped)
+                            .slice(-16)
+                            .map(e => ({
+                                ts: e.timestamp,
+                                value: e.sites[source]?.scraped ?? e.sites[source]?.total ?? 0,
+                                preserved: Boolean(e.sites[source]?.preserved),
+                            }));
 
                         // 무결성 가드가 막지 못하고 통과한 반쪽 결과도 여기서는 보이게 한다.
                         // 가드는 직전 한 번과만 비교하므로, 반쪽 결과가 한 번 자리를 잡으면

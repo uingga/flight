@@ -16,6 +16,8 @@ interface SiteStats {
     scraped?: number;
     /** true면 수집에 실패해 이전 캐시를 그대로 유지한 것이다. */
     preserved?: boolean;
+    /** 부분 복구 크롤에서 이 여행사는 실행하지 않았다는 뜻. 실패나 측정값으로 세지 않는다. */
+    skipped?: boolean;
     /** 직전 크롤에 없던 표. 개수만 보면 표가 통째로 갈려도 0으로 보인다. */
     added?: number;
     /** 직전 크롤에 있다가 사라진 표. */
@@ -78,6 +80,9 @@ function generateAlerts(
     if (!previous) return alerts;
 
     for (const siteName of Object.keys(current)) {
+        // 부분 복구 크롤에서 실행하지 않은 여행사는 측정치가 아니다.
+        if (current[siteName].skipped) continue;
+
         // 보존된 값은 측정치가 아니라 직전 캐시를 옮겨 적은 숫자다. 이것을 수집량과
         // 맞비교하면 '2082 → 246 (-88%)' 처럼 실제로는 없었던 감소가 보고된다.
         // 보존 사실 자체는 무결성 가드가 recordCrawlAlerts로 따로 남긴다.
@@ -153,7 +158,7 @@ export function logCrawlResults(
     total: number,
     byRegion?: RegionStats,
     byCity?: CityStats,
-    meta?: { scraped?: number; preserved?: boolean; added?: number; removed?: number },
+    meta?: { scraped?: number; preserved?: boolean; skipped?: boolean; added?: number; removed?: number },
 ): void {
     const history = loadLogHistory();
 
@@ -179,6 +184,7 @@ export function logCrawlResults(
         total,
         scraped: meta?.scraped,
         preserved: meta?.preserved || undefined,
+        skipped: meta?.skipped || undefined,
         added: meta?.added,
         removed: meta?.removed,
         byRegion,
@@ -186,12 +192,24 @@ export function logCrawlResults(
     };
 
     // 이전 엔트리와 비교하여 경고 생성
-    const previousEntry = history.entries.length > 1
-        ? history.entries[history.entries.length - 2]
-        : undefined;
+    // 직전 엔트리가 부분 크롤이면 해당 여행사의 마지막 실제 측정치를 더 거슬러 올라가 찾는다.
+    // 그렇지 않으면 다음 전체 크롤이 '건너뜀' 값을 기준선으로 삼게 된다.
+    const previousMeasuredSites: Record<string, SiteStats> = {};
+    for (const siteName of Object.keys(currentEntry.sites)) {
+        for (let i = history.entries.length - 2; i >= 0; i--) {
+            const candidate = history.entries[i].sites[siteName];
+            if (candidate && !candidate.skipped) {
+                previousMeasuredSites[siteName] = candidate;
+                break;
+            }
+        }
+    }
 
-    const alerts = generateAlerts(currentEntry.sites, previousEntry?.sites);
-    currentEntry.alerts = Array.from(new Set([...currentEntry.alerts, ...alerts]));
+    const alerts = generateAlerts(currentEntry.sites, previousMeasuredSites);
+    // ⚠️ 수치 비교 경고는 매번 다시 계산한다. 앞선 호출에서 임시로 생긴 경고를
+    // 계속 합치면 같은 엔트리를 보완해도 이미 해소된 경고가 남는다.
+    const integrityAlerts = currentEntry.alerts.filter(alert => alert.startsWith('🚨'));
+    currentEntry.alerts = Array.from(new Set([...integrityAlerts, ...alerts]));
 
     // 경고 출력
     if (alerts.length > 0) {
@@ -225,6 +243,8 @@ export function logCrawlResults(
     console.log(`\n📊 ${siteName} 크롤링 로그 저장됨`);
     console.log(meta?.preserved
         ? `   총: ${total}개 (이번 수집 ${meta.scraped ?? 0}개가 실패해 이전 데이터를 유지함)`
+        : meta?.skipped
+            ? `   총: ${total}개 (부분 크롤에서 실행하지 않음)`
         : `   총: ${total}개`);
     if (byCity) {
         const topCities = Object.entries(byCity)
