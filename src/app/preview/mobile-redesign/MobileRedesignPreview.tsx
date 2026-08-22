@@ -445,6 +445,7 @@ export default function MobileRedesignPreview() {
                             const duration = tripLength(flight);
                             const destination = stripAirport(flight.arrival.city);
                             const price = effectivePrice(flight);
+                            const discountRate = Math.round(Math.max(0, flight.discountRate || 0));
                             return (
                                 <article className={styles.flightCard} key={flight.id}>
                                     <button type="button" className={styles.cardBody} onClick={() => setSelectedFlight(flight)}>
@@ -452,24 +453,24 @@ export default function MobileRedesignPreview() {
                                             <div>
                                                 <span className={`${styles.sourceBadge} ${styles[flight.source]}`}>{SOURCE_NAMES[flight.source]}</span>
                                                 <span className={styles.airline}>{flight.airline || '항공사 확인'}</span>
+                                                {seats > 0 && <span className={`${styles.seatStatus} ${seats <= 5 ? styles.lowSeats : ''}`}>{seats}석 남음</span>}
+                                                {flight.minPax && flight.minPax > 1 && <span className={styles.bookingStatus}>{flight.minPax}인부터</span>}
                                             </div>
                                         </div>
 
                                         <div className={styles.dealSummary}>
-                                            <div className={styles.destinationBlock}>
-                                                <span>{departureName(flight)} 출발</span>
+                                            <div className={styles.routeTitle}>
+                                                <span>{departureName(flight)}</span>
+                                                <b aria-hidden="true">→</b>
                                                 <strong>{destination}</strong>
                                             </div>
                                             <div className={styles.priceBlock}>
-                                                <strong>{priceText(flight.source === 'ttang' ? flight.price : price)}</strong>
-                                                {flight.source === 'ttang' && <span>발권수수료가 추가될 수 있어요</span>}
+                                                <div className={styles.priceLine}>
+                                                    {discountRate >= 5 && <span className={styles.discountBadge}>-{discountRate}%</span>}
+                                                    <strong>{priceText(flight.source === 'ttang' ? flight.price : price)}</strong>
+                                                </div>
+                                                {flight.source === 'ttang' && <span className={styles.feeNotice}>발권수수료가 추가될 수 있어요</span>}
                                             </div>
-                                        </div>
-
-                                        <div className={styles.cardFacts}>
-                                            {duration && <span>{duration}</span>}
-                                            {seats > 0 && <span className={seats <= 5 ? styles.lowSeats : ''}>{seats}석 남음</span>}
-                                            {flight.minPax && flight.minPax > 1 && <span>{flight.minPax}인부터 예약</span>}
                                         </div>
 
                                         <div className={styles.journeyStrip}>
@@ -479,6 +480,7 @@ export default function MobileRedesignPreview() {
                                             </div>
                                             <div className={styles.journeyConnector} aria-hidden="true">
                                                 <Icon name="plane" />
+                                                {duration && <span>{duration}</span>}
                                             </div>
                                             <div className={`${styles.journeyPoint} ${styles.journeyPointArrival}`}>
                                                 <b>{cardDate(flight.arrival.date)}</b>
