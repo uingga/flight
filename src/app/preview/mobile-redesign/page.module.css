@@ -148,6 +148,12 @@
 .cardList,
 .loadingList { display: grid; gap: 10px; }
 
+.cardEntry { display: grid; gap: 7px; }
+
+.todayPickLabel { padding: 0 5px; display: flex; align-items: center; gap: 7px; color: #666666; }
+.todayPickLabel span { height: 22px; padding: 0 8px; display: inline-flex; align-items: center; border-radius: 999px; background: var(--teal); color: #fff; font-size: 9px; line-height: 1; font-weight: 800; white-space: nowrap; }
+.todayPickLabel p { min-width: 0; overflow: hidden; font-size: 10px; line-height: 1.3; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+
 .flightCard {
     position: relative;
     overflow: hidden;
@@ -156,6 +162,8 @@
     background: #fff;
     box-shadow: 0 5px 18px rgba(34, 34, 34, 0.055);
 }
+
+.todayPickCard { border-color: #ff8ba0; box-shadow: 0 0 0 1px rgba(255, 56, 92, 0.28), 0 6px 20px rgba(255, 56, 92, 0.1); }
 
 .cardBody {
     width: 100%;
@@ -175,6 +183,8 @@
 .ttang { color: #dc2626; }
 .myrealtrip { color: #2563eb; }
 .airline { min-width: 0; height: 19px; overflow: hidden; display: inline-flex; align-items: center; color: #626262; font-size: 11px; line-height: 1; text-overflow: ellipsis; white-space: nowrap; }
+.cardSeatCount { flex: 0 0 auto; color: #737373; font-size: 10px; line-height: 1; font-weight: 650; white-space: nowrap; }
+.cardSeatCountLow { color: #b94a2c; font-weight: 750; }
 
 .favoriteButton {
     position: absolute;
@@ -212,13 +222,18 @@
 .cardFooter { min-height: 64px; padding: 11px 16px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .availabilityGroup { min-width: 0; display: flex; align-items: center; flex-wrap: wrap; gap: 5px; }
 .availabilityGroup span { height: 23px; padding: 0 8px; display: inline-flex; align-items: center; border-radius: 6px; background: #f2f2f2; color: #606060; font-size: 10.5px; line-height: 1; white-space: nowrap; }
-.availabilityGroup .lowSeats { background: #fff0ec; color: #ba4d2d; font-weight: 700; }
+.availabilityGroup .footerDiscountBadge { background: var(--teal-soft); color: var(--teal-dark); font-size: 10px; font-weight: 800; }
 
 .priceBlock { min-width: 0; min-height: 34px; flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; justify-content: center; text-align: right; }
-.priceLine { display: flex; align-items: center; justify-content: flex-end; gap: 5px; }
 .priceBlock strong { display: block; color: var(--teal); font-size: 18px; line-height: 1.25; font-weight: 800; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
-.priceBlock .discountBadge { height: 21px; padding: 0 6px; display: inline-flex; align-items: center; border-radius: 6px; background: var(--teal-soft); color: var(--teal-dark); font-size: 10px; line-height: 1; font-weight: 800; white-space: nowrap; }
 .priceBlock .feeNotice { margin-top: 3px; color: #777777; font-size: 9.5px; letter-spacing: -0.025em; white-space: nowrap; }
+
+.insightBar { width: 100%; padding: 14px 15px; display: flex; flex-direction: column; align-items: flex-start; border: 1px solid #e5e5e5; border-radius: 14px; background: #f8f8f8; color: #333333; text-align: left; }
+.insightEyebrow { color: var(--teal-dark); font-size: 9px; line-height: 1; font-weight: 800; }
+.insightBar > strong { margin-top: 5px; font-size: 14px; line-height: 1.3; font-weight: 800; }
+.insightBar > p { margin-top: 4px; overflow: hidden; color: #6f6f6f; font-size: 10px; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.insightDeal { margin-top: 9px; display: inline-flex; align-items: center; gap: 4px; color: var(--teal-dark); font-size: 10px; font-weight: 750; }
+.insightDeal svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2; }
 
 .moreButton { width: 100%; height: 46px; margin-top: 14px; border: 1px solid #dddddd; border-radius: 13px; background: #fff; color: #3f3f3f; font-size: 12px; font-weight: 700; }
 

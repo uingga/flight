@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { ko } from 'date-fns/locale';
 import 'react-datepicker/dist/react-datepicker.css';
 import Logo from '@/components/Logo';
 import * as gtag from '@/lib/analytics';
+import { getDestinationContext } from '@/lib/destination-contexts';
 import { calcFlightDuration } from '@/lib/utils/flight-helpers';
 import { getTripcomHotelUrl, getTripcomTrackingId } from '@/lib/utils/tripcom-helpers';
 import type { Flight } from '@/types/flight';
@@ -22,6 +23,7 @@ interface FlightsResponse {
     count: number;
     flights: Flight[];
     lastUpdated?: string | null;
+    todayPickId?: string | null;
 }
 
 const SOURCE_NAMES: Record<Flight['source'], string> = {
@@ -208,6 +210,16 @@ const recommendedScore = (flight: Flight) => {
     return effectivePrice(flight) - discount * 2_500 - seatBonus * 1_000;
 };
 
+const describeTodayPick = (flight: Flight) => {
+    const localAirports: Record<string, string> = { PUS: '부산', TAE: '대구', CJJ: '청주', CJU: '제주' };
+    const localCity = localAirports[flight.departure.airport || ''];
+    if (localCity) return `${localCity}에서 바로 떠나는 표예요`;
+    const duration = tripLength(flight);
+    if (duration && effectivePrice(flight) < 300_000) return `${duration}을 30만원 아래로 다녀와요`;
+    if (effectivePrice(flight) < 200_000) return '20만원 아래로 다녀올 수 있어요';
+    return '오늘 가장 먼저 살펴볼 항공권이에요';
+};
+
 function Icon({ name }: { name: 'sliders' | 'search' | 'star' | 'share' | 'close' | 'arrow' | 'plane' }) {
     const paths = {
         sliders: <><line x1="4" y1="7" x2="20" y2="7" /><circle cx="9" cy="7" r="2" /><line x1="4" y1="17" x2="20" y2="17" /><circle cx="15" cy="17" r="2" /></>,
@@ -226,6 +238,7 @@ export default function MobileRedesignPreview() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+    const [todayPickId, setTodayPickId] = useState<string | null>(null);
     const [region, setRegion] = useState('전체');
     const [departure, setDeparture] = useState('전체');
     const [datePeriod, setDatePeriod] = useState<DatePeriod>('all');
@@ -255,6 +268,7 @@ export default function MobileRedesignPreview() {
                 if (!data.success) throw new Error('항공권을 불러오지 못했습니다.');
                 setFlights(data.flights || []);
                 setLastUpdated(data.lastUpdated || null);
+                setTodayPickId(typeof data.todayPickId === 'string' ? data.todayPickId : null);
             })
             .catch(cause => {
                 if (active) setError(cause instanceof Error ? cause.message : '항공권을 불러오지 못했습니다.');
@@ -301,6 +315,24 @@ export default function MobileRedesignPreview() {
             return recommendedScore(a) - recommendedScore(b);
         });
     }, [customEndDate, customStartDate, datePeriod, departure, flights, maxPrice, query, region, sort]);
+
+    const isDefaultView = region === '전체'
+        && departure === '전체'
+        && datePeriod === 'all'
+        && !maxPrice
+        && !query.trim()
+        && sort === 'recommended';
+    const todayPick = useMemo(() => {
+        const flight = flights.find(item => item.id === todayPickId)
+            || flights.slice().sort((a, b) => recommendedScore(a) - recommendedScore(b))[0];
+        return flight ? { flight, reason: describeTodayPick(flight) } : null;
+    }, [flights, todayPickId]);
+    const displayedFlights = isDefaultView && todayPick
+        ? [todayPick.flight, ...filteredFlights.filter(flight => flight.id !== todayPick.flight.id)]
+        : filteredFlights;
+    const insightCandidate = useMemo(() => filteredFlights.find(flight => (
+        getDestinationContext(flight.arrival.city) !== null
+    )) || null, [filteredFlights]);
 
     const filterCount = [departure !== '전체', datePeriod !== 'all', maxPrice > 0].filter(Boolean).length;
     const updatedLabel = lastUpdated
@@ -483,73 +515,103 @@ export default function MobileRedesignPreview() {
                     )}
 
                     <div className={styles.cardList}>
-                        {filteredFlights.slice(0, visibleCount).map((flight) => {
+                        {displayedFlights.slice(0, visibleCount).map((flight, index) => {
                             const seats = flight.availableSeats || Number.parseInt(flight.seats || '', 10) || 0;
                             const duration = tripLength(flight);
                             const destination = stripAirport(flight.arrival.city);
                             const price = effectivePrice(flight);
                             const discountRate = Math.round(Math.max(0, flight.discountRate || 0));
+                            const isTodayPick = isDefaultView && todayPick?.flight.id === flight.id;
+                            const insightContext = index === 2 && insightCandidate
+                                ? getDestinationContext(insightCandidate.arrival.city)
+                                : null;
                             return (
-                                <article className={styles.flightCard} key={flight.id}>
-                                    <button type="button" className={styles.cardBody} onClick={() => setSelectedFlight(flight)}>
-                                        <div className={styles.cardTopline}>
-                                            <div>
-                                                <span className={`${styles.sourceBadge} ${styles[flight.source]}`}>{SOURCE_NAMES[flight.source]}</span>
-                                                <span className={styles.airline}>{flight.airline || '항공사 확인'}</span>
+                                <Fragment key={flight.id}>
+                                    <div className={styles.cardEntry}>
+                                        {isTodayPick && (
+                                            <div className={styles.todayPickLabel}>
+                                                <span>오늘의 표</span>
+                                                <p>{todayPick.reason}</p>
                                             </div>
-                                        </div>
-
-                                        <div className={styles.routeGrid}>
-                                            <div className={styles.routeEndpoint}>
-                                                <strong>{departureName(flight)}</strong>
-                                                <div className={styles.routeTiming}>
-                                                    <b>{cardDate(flight.departure.date)}</b>
-                                                    <em>{flight.departure.time || '시간 확인'}</em>
+                                        )}
+                                        <article className={`${styles.flightCard} ${isTodayPick ? styles.todayPickCard : ''}`}>
+                                            <button type="button" className={styles.cardBody} onClick={() => setSelectedFlight(flight)}>
+                                                <div className={styles.cardTopline}>
+                                                    <div>
+                                                        <span className={`${styles.sourceBadge} ${styles[flight.source]}`}>{SOURCE_NAMES[flight.source]}</span>
+                                                        <span className={styles.airline}>{flight.airline || '항공사 확인'}</span>
+                                                        {seats > 0 && (
+                                                            <span className={`${styles.cardSeatCount} ${seats <= 5 ? styles.cardSeatCountLow : ''}`}>
+                                                                {seats}석 남음
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            <div className={styles.routeConnector} aria-hidden="true">
-                                                <Icon name="plane" />
-                                                {duration && <span>{duration}</span>}
-                                            </div>
-                                            <div className={`${styles.routeEndpoint} ${styles.routeEndpointArrival}`}>
-                                                <strong>{destination}</strong>
-                                                <div className={styles.routeTiming}>
-                                                    <b>{cardDate(flight.arrival.date)}</b>
-                                                    <em>{flight.arrival.time || '시간 확인'}</em>
-                                                </div>
-                                            </div>
-                                        </div>
 
-                                        <div className={styles.ticketDivider} aria-hidden="true" />
-
-                                        <div className={styles.cardFooter}>
-                                            <div className={styles.availabilityGroup}>
-                                                {seats > 0 && <span className={seats <= 5 ? styles.lowSeats : ''}>{seats}석 남음</span>}
-                                                {flight.minPax && flight.minPax > 1 && <span>{flight.minPax}인부터</span>}
-                                            </div>
-                                            <div className={styles.priceBlock}>
-                                                <div className={styles.priceLine}>
-                                                    {discountRate >= 5 && <span className={styles.discountBadge}>-{discountRate}%</span>}
-                                                    <strong>{priceText(flight.source === 'ttang' ? flight.price : price)}</strong>
+                                                <div className={styles.routeGrid}>
+                                                    <div className={styles.routeEndpoint}>
+                                                        <strong>{departureName(flight)}</strong>
+                                                        <div className={styles.routeTiming}>
+                                                            <b>{cardDate(flight.departure.date)}</b>
+                                                            <em>{flight.departure.time || '시간 확인'}</em>
+                                                        </div>
+                                                    </div>
+                                                    <div className={styles.routeConnector} aria-hidden="true">
+                                                        <Icon name="plane" />
+                                                        {duration && <span>{duration}</span>}
+                                                    </div>
+                                                    <div className={`${styles.routeEndpoint} ${styles.routeEndpointArrival}`}>
+                                                        <strong>{destination}</strong>
+                                                        <div className={styles.routeTiming}>
+                                                            <b>{cardDate(flight.arrival.date)}</b>
+                                                            <em>{flight.arrival.time || '시간 확인'}</em>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                {flight.source === 'ttang' && <span className={styles.feeNotice}>발권수수료가 추가될 수 있어요</span>}
-                                            </div>
-                                        </div>
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className={`${styles.favoriteButton} ${favorites.has(flight.id) ? styles.favoriteActive : ''}`}
-                                        onClick={() => toggleFavorite(flight.id)}
-                                        aria-label={favorites.has(flight.id) ? '찜 해제' : '찜하기'}
-                                    >
-                                        <Icon name="star" />
-                                    </button>
-                                </article>
+
+                                                <div className={styles.ticketDivider} aria-hidden="true" />
+
+                                                <div className={styles.cardFooter}>
+                                                    <div className={styles.availabilityGroup}>
+                                                        {discountRate >= 5 && <span className={styles.footerDiscountBadge}>-{discountRate}%</span>}
+                                                        {flight.minPax && flight.minPax > 1 && <span>{flight.minPax}인부터</span>}
+                                                    </div>
+                                                    <div className={styles.priceBlock}>
+                                                        <strong>{priceText(flight.source === 'ttang' ? flight.price : price)}</strong>
+                                                        {flight.source === 'ttang' && <span className={styles.feeNotice}>발권수수료가 추가될 수 있어요</span>}
+                                                    </div>
+                                                </div>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className={`${styles.favoriteButton} ${favorites.has(flight.id) ? styles.favoriteActive : ''}`}
+                                                onClick={() => toggleFavorite(flight.id)}
+                                                aria-label={favorites.has(flight.id) ? '찜 해제' : '찜하기'}
+                                            >
+                                                <Icon name="star" />
+                                            </button>
+                                        </article>
+                                    </div>
+                                    {insightContext && insightCandidate && (
+                                        <button
+                                            type="button"
+                                            className={styles.insightBar}
+                                            onClick={() => setSelectedFlight(insightCandidate)}
+                                        >
+                                            <span className={styles.insightEyebrow}>여행지 발견</span>
+                                            <strong>{stripAirport(insightCandidate.arrival.city)}, 이런 곳이에요</strong>
+                                            <p>{insightContext.location}</p>
+                                            <span className={styles.insightDeal}>
+                                                {departureName(insightCandidate)} 출발 · {priceText(effectivePrice(insightCandidate))} <Icon name="arrow" />
+                                            </span>
+                                        </button>
+                                    )}
+                                </Fragment>
                             );
                         })}
                     </div>
 
-                    {visibleCount < filteredFlights.length && (
+                    {visibleCount < displayedFlights.length && (
                         <button type="button" className={styles.moreButton} onClick={() => setVisibleCount(count => count + 16)}>
                             특가 더 보기
                         </button>
