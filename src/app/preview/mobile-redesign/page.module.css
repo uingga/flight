@@ -184,31 +184,24 @@
 .favoriteButton.favoriteActive { color: var(--teal); }
 .favoriteButton.favoriteActive svg { fill: currentColor; }
 
-.routePriceRow { margin-top: 12px; display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
-.routeTitle { min-width: 0; display: flex; align-items: center; gap: 5px; color: #6a6a6a; font-size: 14px; line-height: 1.25; letter-spacing: -0.025em; }
-.routeTitle strong { overflow: hidden; color: var(--ink); font-size: 18px; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
-.routeTitle svg { width: 16px; height: 16px; fill: none; stroke: #929292; stroke-width: 1.8; }
+.tripRouteGrid { margin-top: 14px; display: grid; grid-template-columns: minmax(0, 1fr) 36px minmax(0, 1fr); align-items: center; gap: 8px; }
+.tripEndpoint { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; }
+.tripEndpointArrival { align-items: flex-end; text-align: right; }
+.tripEndpoint > span { color: #929292; font-size: 9px; font-weight: 700; }
+.tripEndpoint > strong { width: 100%; margin-top: 3px; overflow: hidden; color: var(--ink); font-size: 18px; line-height: 1.25; font-weight: 800; letter-spacing: -0.035em; text-overflow: ellipsis; white-space: nowrap; }
+.tripEndpoint > b { margin-top: 7px; color: #4a4a4a; font-size: 12px; line-height: 1.25; font-weight: 700; }
+.tripEndpoint > em { margin-top: 3px; color: #9ca3af; font-size: 11px; line-height: 1.2; font-style: normal; font-variant-numeric: tabular-nums; }
+.tripPlane { display: grid; place-items: center; color: #d1d5db; }
+.tripPlane svg { width: 26px; height: 26px; fill: currentColor; stroke: none; }
 .priceBlock { flex-shrink: 0; text-align: right; }
 .priceBlock strong { display: block; color: var(--teal-dark); font-size: 18px; line-height: 1.25; font-weight: 800; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
 .priceBlock span { display: block; margin-top: 2px; color: #929292; font-size: 9px; }
 
-.scheduleBox {
-    margin-top: 13px;
-    padding: 9px 10px;
-    display: grid;
-    gap: 6px;
-    border-radius: 11px;
-    background: #f7f7f7;
-}
-.scheduleBox > div { display: grid; grid-template-columns: 43px 83px 1fr; align-items: baseline; gap: 4px; font-size: 11px; }
-.scheduleBox span { color: #929292; font-size: 9px; font-weight: 600; }
-.scheduleBox strong { color: #3f3f3f; font-size: 11px; font-weight: 700; }
-.scheduleBox em { color: #6a6a6a; font-size: 10px; font-style: normal; text-align: right; font-variant-numeric: tabular-nums; }
-
-.cardMeta { min-height: 28px; margin-top: 9px; display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; }
-.cardMeta > div { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
-.cardMeta > div span { padding: 3px 6px; border-radius: 5px; background: #f2f2f2; color: #6a6a6a; font-size: 9px; line-height: 1.3; }
-.cardMeta > div .lowSeats { background: #fff0ec; color: #ba4d2d; font-weight: 700; }
+.cardMeta { min-height: 38px; margin-top: 13px; padding-top: 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px; border-top: 1px solid #eeeeee; }
+.cardFacts { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
+.cardFacts span { padding: 3px 6px; border-radius: 5px; background: #f2f2f2; color: #6a6a6a; font-size: 9px; line-height: 1.3; }
+.cardFacts .lowSeats { background: #fff0ec; color: #ba4d2d; font-weight: 700; }
+.cardDecision { display: flex; align-items: center; gap: 8px; }
 .viewCta { flex-shrink: 0; display: inline-flex; align-items: center; gap: 3px; color: var(--teal); font-size: 10px; font-weight: 800; }
 .viewCta svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; }
 
@@ -279,21 +272,14 @@
 .detailHeader { display: flex; align-items: center; justify-content: space-between; }
 .detailHeader > button { width: 34px; height: 34px; display: grid; place-items: center; color: #6a6a6a; }
 .detailHeader > button svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; }
-.detailTitle { margin-top: 15px; display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
-.detailTitle p { color: #6a6a6a; font-size: 11px; }
-.detailTitle h2 { margin-top: 1px; font-size: 24px; line-height: 1.25; font-weight: 800; letter-spacing: -0.05em; }
-.detailTitle > div:last-child { flex-shrink: 0; text-align: right; }
-.detailTitle > div:last-child strong { display: block; color: var(--teal-dark); font-size: 20px; line-height: 1.25; font-weight: 800; letter-spacing: -0.04em; }
-.detailTitle > div:last-child span { color: #929292; font-size: 9px; }
-
-.detailSchedule { position: relative; margin-top: 22px; padding: 15px; display: grid; gap: 14px; border-radius: 14px; background: #f7f7f7; }
-.detailSchedule::before { content: ''; position: absolute; top: 27px; bottom: 27px; left: 20px; width: 1px; background: #dddddd; }
-.detailSchedule > div { position: relative; display: grid; grid-template-columns: 12px 1fr auto; align-items: center; gap: 8px; }
-.detailSchedule > div > span { position: relative; z-index: 1; width: 11px; height: 11px; border: 3px solid #f7f7f7; border-radius: 50%; box-shadow: 0 0 0 1px var(--teal); background: var(--teal); }
-.detailSchedule p { display: flex; align-items: baseline; gap: 7px; }
-.detailSchedule p b { color: #6a6a6a; font-size: 9px; }
-.detailSchedule p strong { font-size: 12px; }
-.detailSchedule em { color: #3f3f3f; font-size: 10px; font-style: normal; font-variant-numeric: tabular-nums; }
+.detailTripRoute { margin-top: 14px; padding: 15px; border-radius: 14px; background: #f7f7f7; }
+.detailTripRoute .tripEndpoint > strong { font-size: 22px; }
+.detailTripRoute .tripEndpoint > b { font-size: 13px; }
+.detailTripRoute .tripEndpoint > em { font-size: 12px; }
+.detailTripRoute .tripPlane svg { width: 30px; height: 30px; }
+.detailPriceRow { margin-top: 12px; display: flex; align-items: baseline; justify-content: space-between; }
+.detailPriceRow span { color: #929292; font-size: 9px; }
+.detailPriceRow strong { color: var(--teal-dark); font-size: 20px; line-height: 1.25; font-weight: 800; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
 
 .detailFacts { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 6px; }
 .detailFacts span { padding: 5px 8px; border-radius: 7px; background: #f2f2f2; color: #6a6a6a; font-size: 9px; }
@@ -304,6 +290,13 @@
 .bookingButton { height: 52px; margin-top: 12px; display: flex; align-items: center; justify-content: center; gap: 5px; border-radius: 13px; background: var(--teal); color: #fff; font-size: 13px; font-weight: 800; box-shadow: 0 10px 20px rgba(255, 56, 92, 0.21); }
 .bookingButton:hover { color: #fff; }
 .bookingButton svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; }
+.hotelCompareButton { min-height: 52px; margin-top: 8px; padding: 8px 13px; display: flex; align-items: center; gap: 10px; border: 1px solid #dddddd; border-radius: 13px; background: #fff; color: #3f3f3f; }
+.hotelCompareButton:hover { border-color: #b8b8b8; color: #222222; }
+.hotelIcon { flex: 0 0 auto; font-size: 17px; }
+.hotelButtonText { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.hotelButtonText strong { overflow: hidden; font-size: 12px; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
+.hotelButtonText small { color: #929292; font-size: 9px; }
+.hotelCompareButton > svg { width: 16px; height: 16px; fill: none; stroke: #929292; stroke-width: 2; }
 
 .toast {
     position: fixed;
@@ -334,6 +327,6 @@
 @media (max-width: 360px) {
     .feedIntro h1 { font-size: 18px; }
     .priceBlock strong { font-size: 16px; }
-    .routeTitle strong { font-size: 17px; }
-    .scheduleBox > div { grid-template-columns: 40px 76px 1fr; }
+    .tripEndpoint > strong { font-size: 17px; }
+    .detailTripRoute .tripEndpoint > strong { font-size: 20px; }
 }

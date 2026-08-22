@@ -5,6 +5,8 @@ import dynamic from 'next/dynamic';
 import { ko } from 'date-fns/locale';
 import 'react-datepicker/dist/react-datepicker.css';
 import Logo from '@/components/Logo';
+import * as gtag from '@/lib/analytics';
+import { getTripcomHotelUrl, getTripcomTrackingId } from '@/lib/utils/tripcom-helpers';
 import type { Flight } from '@/types/flight';
 import styles from './page.module.css';
 
@@ -156,7 +158,7 @@ const recommendedScore = (flight: Flight) => {
     return effectivePrice(flight) - discount * 2_500 - seatBonus * 1_000;
 };
 
-function Icon({ name }: { name: 'sliders' | 'search' | 'star' | 'share' | 'close' | 'arrow' }) {
+function Icon({ name }: { name: 'sliders' | 'search' | 'star' | 'share' | 'close' | 'arrow' | 'plane' }) {
     const paths = {
         sliders: <><line x1="4" y1="7" x2="20" y2="7" /><circle cx="9" cy="7" r="2" /><line x1="4" y1="17" x2="20" y2="17" /><circle cx="15" cy="17" r="2" /></>,
         search: <><circle cx="11" cy="11" r="7" /><line x1="16.5" y1="16.5" x2="21" y2="21" /></>,
@@ -164,6 +166,7 @@ function Icon({ name }: { name: 'sliders' | 'search' | 'star' | 'share' | 'close
         share: <><path d="M4 12v8h16v-8" /><polyline points="8 7 12 3 16 7" /><line x1="12" y1="3" x2="12" y2="15" /></>,
         close: <><line x1="5" y1="5" x2="19" y2="19" /><line x1="19" y1="5" x2="5" y2="19" /></>,
         arrow: <><line x1="5" y1="12" x2="19" y2="12" /><polyline points="14 7 19 12 14 17" /></>,
+        plane: <path d="M2.5 13.2 9 15.6l3.4 6h2l-1.2-6.8 5.8-2.1c1.2-.4 2-1.5 2-2.7 0-.7-.6-1.2-1.3-1l-6.5 2.1-4.4-6.6h-2l2.3 8-4.6-1.4-2-2H1l1.5 4.1Z" />,
     };
     return <svg viewBox="0 0 24 24" aria-hidden="true">{paths[name]}</svg>;
 }
@@ -252,6 +255,26 @@ export default function MobileRedesignPreview() {
     const updatedLabel = lastUpdated
         ? `${new Intl.DateTimeFormat('ko-KR', { month: 'numeric', day: 'numeric' }).format(new Date(lastUpdated))} 기준`
         : '최근 기준';
+    const selectedHotelTrackingId = selectedFlight
+        ? getTripcomTrackingId(
+            selectedFlight.arrival.city,
+            selectedFlight.departure.date,
+            selectedFlight.arrival.date,
+            selectedFlight.arrival.airport,
+            selectedFlight.departure.city,
+            selectedFlight.departure.airport,
+        )
+        : '';
+    const selectedHotelUrl = selectedFlight
+        ? getTripcomHotelUrl(
+            selectedFlight.arrival.city,
+            selectedFlight.departure.date,
+            selectedFlight.arrival.date,
+            selectedFlight.arrival.airport,
+            selectedFlight.departure.city,
+            selectedFlight.departure.airport,
+        )
+        : null;
 
     const toggleFavorite = (id: string) => {
         setFavorites(current => {
@@ -391,38 +414,35 @@ export default function MobileRedesignPreview() {
                                             <span className={styles.cardNumber}>{String(index + 1).padStart(2, '0')}</span>
                                         </div>
 
-                                        <div className={styles.routePriceRow}>
-                                            <div className={styles.routeTitle}>
-                                                <span>{departureName(flight)}</span>
-                                                <Icon name="arrow" />
-                                                <strong>{destination}</strong>
-                                            </div>
-                                            <div className={styles.priceBlock}>
-                                                <strong>{priceText(price)}</strong>
-                                                <span>{flight.source === 'ttang' ? '수수료 포함' : '1인 왕복'}</span>
-                                            </div>
-                                        </div>
-
-                                        <div className={styles.scheduleBox}>
-                                            <div>
+                                        <div className={styles.tripRouteGrid}>
+                                            <div className={styles.tripEndpoint}>
                                                 <span>가는 날</span>
-                                                <strong>{shortDate(flight.departure.date)}</strong>
-                                                <em>{flight.departure.time || '시간 확인'}{flight.departure.arrivalTime ? ` → ${flight.departure.arrivalTime}` : ''}</em>
+                                                <strong>{departureName(flight)}</strong>
+                                                <b>{shortDate(flight.departure.date)}</b>
+                                                <em>{flight.departure.time || '시간 확인'}</em>
                                             </div>
-                                            <div>
+                                            <div className={styles.tripPlane}><Icon name="plane" /></div>
+                                            <div className={`${styles.tripEndpoint} ${styles.tripEndpointArrival}`}>
                                                 <span>오는 날</span>
-                                                <strong>{shortDate(flight.arrival.date)}</strong>
-                                                <em>{flight.arrival.time || '시간 확인'}{flight.arrival.arrivalTime ? ` → ${flight.arrival.arrivalTime}` : ''}</em>
+                                                <strong>{destination}</strong>
+                                                <b>{shortDate(flight.arrival.date)}</b>
+                                                <em>{flight.arrival.time || '시간 확인'}</em>
                                             </div>
                                         </div>
 
                                         <div className={styles.cardMeta}>
-                                            <div>
+                                            <div className={styles.cardFacts}>
                                                 {duration && <span>{duration}</span>}
                                                 {seats > 0 && <span className={seats <= 5 ? styles.lowSeats : ''}>{seats}석 남음</span>}
                                                 {flight.minPax && flight.minPax > 1 && <span>{flight.minPax}인부터 예약</span>}
                                             </div>
-                                            <span className={styles.viewCta}>이 표 보기 <Icon name="arrow" /></span>
+                                            <div className={styles.cardDecision}>
+                                                <div className={styles.priceBlock}>
+                                                    <strong>{priceText(price)}</strong>
+                                                    <span>{flight.source === 'ttang' ? '수수료 포함' : '1인 왕복'}</span>
+                                                </div>
+                                                <span className={styles.viewCta}>보기 <Icon name="arrow" /></span>
+                                            </div>
                                         </div>
                                     </button>
                                     <button
@@ -557,28 +577,25 @@ export default function MobileRedesignPreview() {
                             <button type="button" onClick={() => setSelectedFlight(null)} aria-label="닫기"><Icon name="close" /></button>
                         </div>
 
-                        <div className={styles.detailTitle}>
-                            <div>
-                                <p>{departureName(selectedFlight)}에서</p>
-                                <h2>{stripAirport(selectedFlight.arrival.city)} 왕복</h2>
+                        <div className={`${styles.tripRouteGrid} ${styles.detailTripRoute}`}>
+                            <div className={styles.tripEndpoint}>
+                                <span>가는 날</span>
+                                <strong>{departureName(selectedFlight)}</strong>
+                                <b>{shortDate(selectedFlight.departure.date)}</b>
+                                <em>{selectedFlight.departure.time || '시간 확인'}</em>
                             </div>
-                            <div>
-                                <strong>{priceText(effectivePrice(selectedFlight))}</strong>
-                                <span>{selectedFlight.source === 'ttang' ? '1인 · 발권수수료 포함' : '1인 왕복'}</span>
+                            <div className={styles.tripPlane}><Icon name="plane" /></div>
+                            <div className={`${styles.tripEndpoint} ${styles.tripEndpointArrival}`}>
+                                <span>오는 날</span>
+                                <strong>{stripAirport(selectedFlight.arrival.city)}</strong>
+                                <b>{shortDate(selectedFlight.arrival.date)}</b>
+                                <em>{selectedFlight.arrival.time || '시간 확인'}</em>
                             </div>
                         </div>
 
-                        <div className={styles.detailSchedule}>
-                            <div>
-                                <span className={styles.outboundDot} />
-                                <p><b>가는 날</b><strong>{shortDate(selectedFlight.departure.date)}</strong></p>
-                                <em>{selectedFlight.departure.time || '시간 확인'}{selectedFlight.departure.arrivalTime ? ` → ${selectedFlight.departure.arrivalTime}` : ''}</em>
-                            </div>
-                            <div>
-                                <span className={styles.inboundDot} />
-                                <p><b>오는 날</b><strong>{shortDate(selectedFlight.arrival.date)}</strong></p>
-                                <em>{selectedFlight.arrival.time || '시간 확인'}{selectedFlight.arrival.arrivalTime ? ` → ${selectedFlight.arrival.arrivalTime}` : ''}</em>
-                            </div>
+                        <div className={styles.detailPriceRow}>
+                            <span>{selectedFlight.source === 'ttang' ? '1인 · 발권수수료 포함' : '1인 왕복'}</span>
+                            <strong>{priceText(effectivePrice(selectedFlight))}</strong>
                         </div>
 
                         <div className={styles.detailFacts}>
@@ -601,6 +618,35 @@ export default function MobileRedesignPreview() {
                         <a className={styles.bookingButton} href={selectedFlight.link} target="_blank" rel="noopener noreferrer">
                             {SOURCE_NAMES[selectedFlight.source]}에서 확인하기 <Icon name="arrow" />
                         </a>
+                        {selectedHotelUrl && (
+                            <a
+                                className={styles.hotelCompareButton}
+                                href={selectedHotelUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                title="트립닷컴에서 호텔 검색"
+                                onClick={() => gtag.trackHotelAffiliateClick(
+                                    `${departureName(selectedFlight)}-${stripAirport(selectedFlight.arrival.city)}`,
+                                    selectedFlight.price,
+                                    {
+                                        departureDate: selectedFlight.departure.date,
+                                        returnDate: selectedFlight.arrival.date,
+                                        departureAirport: selectedFlight.departure.airport,
+                                        arrivalAirport: selectedFlight.arrival.airport,
+                                        airline: selectedFlight.airline,
+                                        destination: stripAirport(selectedFlight.arrival.city),
+                                        trackingId: selectedHotelTrackingId,
+                                    },
+                                )}
+                            >
+                                <span className={styles.hotelIcon}>🏨</span>
+                                <span className={styles.hotelButtonText}>
+                                    <strong>{stripAirport(selectedFlight.arrival.city)} 호텔도 비교</strong>
+                                    <small>트립닷컴 · 제휴</small>
+                                </span>
+                                <Icon name="arrow" />
+                            </a>
+                        )}
                     </section>
                 </div>
             )}

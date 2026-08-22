@@ -278,6 +278,14 @@ export const getTripcomTrackingId = (
     return parts.join('_').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 100);
 };
 
+const parseTravelDate = (value?: string): Date | null => {
+    if (!value) return null;
+    const match = value.match(/(\d{4})\D+(\d{1,2})\D+(\d{1,2})/);
+    if (!match) return null;
+    const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+    return Number.isNaN(date.getTime()) ? null : date;
+};
+
 export const getTripcomHotelUrl = (
     arrCity: string, depDate?: string, arrDate?: string, arrAirport?: string,
     depCity?: string, depAirport?: string,
@@ -287,10 +295,11 @@ export const getTripcomHotelUrl = (
     if (bm) cityName = bm[1];
     let checkinStr = '';
     let checkoutStr = '';
-    if (depDate) {
-        const ci = new Date(depDate);
-        const co = new Date(ci);
-        co.setDate(co.getDate() + 1);
+    const ci = parseTravelDate(depDate);
+    if (ci) {
+        const requestedCheckout = parseTravelDate(arrDate);
+        const co = requestedCheckout && requestedCheckout > ci ? requestedCheckout : new Date(ci);
+        if (!requestedCheckout || requestedCheckout <= ci) co.setDate(co.getDate() + 1);
         const fmt = (d: Date) => d.getFullYear() + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + String(d.getDate()).padStart(2, '0');
         checkinStr = fmt(ci);
         checkoutStr = fmt(co);
