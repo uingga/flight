@@ -610,9 +610,12 @@ export default function MobileRedesignPreview() {
                         <p className={styles.priceNotice}>가격과 좌석은 바뀔 수 있어요. 예약 전에 여행사에서 한 번 더 확인해주세요.</p>
 
                         <div className={styles.detailTools}>
-                            <button type="button" onClick={() => shareFlight(selectedFlight)}><Icon name="share" />공유</button>
-                            <button type="button" onClick={() => setToast('미리보기에서는 실제 신고를 저장하지 않아요.')}>가격이 달라요</button>
-                            <button type="button" onClick={() => setToast('미리보기에서는 실제 신고를 저장하지 않아요.')}>예약이 안 돼요</button>
+                            <button className={styles.shareTool} type="button" onClick={() => shareFlight(selectedFlight)}><Icon name="share" />공유</button>
+                            <div className={styles.reportTools}>
+                                <button type="button" onClick={() => setToast('미리보기에서는 실제 신고를 저장하지 않아요.')}>가격이 달라요</button>
+                                <span aria-hidden="true">·</span>
+                                <button type="button" onClick={() => setToast('미리보기에서는 실제 신고를 저장하지 않아요.')}>예약이 안 돼요</button>
+                            </div>
                         </div>
 
                         <a className={styles.bookingButton} href={selectedFlight.link} target="_blank" rel="noopener noreferrer">

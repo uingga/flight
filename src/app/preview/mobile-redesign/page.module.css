@@ -284,9 +284,13 @@
 .detailFacts { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 6px; }
 .detailFacts span { padding: 5px 8px; border-radius: 7px; background: #f2f2f2; color: #6a6a6a; font-size: 9px; }
 .priceNotice { margin-top: 15px; padding: 10px 11px; border-radius: 9px; background: #faf5e9; color: #776541; font-size: 10px; line-height: 1.55; }
-.detailTools { margin-top: 13px; display: grid; grid-template-columns: .75fr 1fr 1fr; gap: 6px; }
-.detailTools button { height: 36px; display: inline-flex; align-items: center; justify-content: center; gap: 4px; border: 1px solid #dddddd; border-radius: 9px; color: #6a6a6a; font-size: 9px; font-weight: 600; }
-.detailTools svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.8; }
+.detailTools { margin-top: 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.shareTool { min-height: 32px; padding: 0 10px; display: inline-flex; align-items: center; justify-content: center; gap: 4px; border: 1px solid #e4e4e4; border-radius: 8px; color: #777777; font-size: 9px; font-weight: 600; }
+.shareTool svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.8; }
+.reportTools { display: flex; align-items: center; justify-content: flex-end; color: #c0c0c0; }
+.reportTools button { min-height: 32px; padding: 0 5px; color: #9a9a9a; font-size: 9px; font-weight: 500; text-decoration: underline; text-decoration-color: #d7d7d7; text-underline-offset: 2px; }
+.reportTools button:hover { color: #666666; text-decoration-color: #999999; }
+.reportTools span { font-size: 9px; }
 .bookingButton { height: 52px; margin-top: 12px; display: flex; align-items: center; justify-content: center; gap: 5px; border-radius: 13px; background: var(--teal); color: #fff; font-size: 13px; font-weight: 800; box-shadow: 0 10px 20px rgba(255, 56, 92, 0.21); }
 .bookingButton:hover { color: #fff; }
 .bookingButton svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; }
