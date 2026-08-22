@@ -193,10 +193,9 @@
 .routeEndpoint { min-width: 0; display: flex; flex-direction: column; align-items: center; text-align: center; }
 .routeEndpoint strong { max-width: 100%; overflow: hidden; color: var(--ink); font-size: 19px; line-height: 1.2; font-weight: 800; letter-spacing: -0.04em; text-overflow: ellipsis; white-space: nowrap; }
 .routeEndpointArrival strong { color: #111111; }
-.routeTiming { margin-top: 9px; display: flex; align-items: center; justify-content: center; gap: 4px; white-space: nowrap; }
+.routeTiming { margin-top: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; white-space: nowrap; }
 .routeTiming b { color: #555555; font-size: 10.5px; line-height: 1.25; font-weight: 700; }
 .routeTiming em { color: #858585; font-size: 10.5px; line-height: 1.2; font-style: normal; font-variant-numeric: tabular-nums; }
-.routeTiming em::before { content: '·'; margin-right: 4px; color: #c1c1c1; }
 .routeConnector { position: relative; min-height: 47px; display: flex; flex-direction: column; align-items: center; color: #aaaaaa; }
 .routeConnector::before { content: ''; position: absolute; top: 10px; right: 0; left: 0; height: 1px; background: #dddddd; }
 .routeConnector svg { position: relative; width: 22px; height: 22px; padding: 3px; fill: currentColor; stroke: none; border-radius: 50%; background: #fff; }
@@ -349,8 +348,6 @@
 @media (max-width: 360px) {
     .feedIntro h1 { font-size: 18px; }
     .routeEndpoint strong { font-size: 18px; }
-    .routeTiming { gap: 3px; }
-    .routeTiming em::before { margin-right: 3px; }
     .priceLine { gap: 3px; }
     .priceBlock strong { font-size: 16px; }
     .priceBlock .discountBadge { height: 18px; padding: 0 5px; font-size: 8px; }

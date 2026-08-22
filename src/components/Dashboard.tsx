@@ -4047,10 +4047,12 @@ export default function Dashboard() {
                                 </div>
                             )}
 
-                            {/* 총 예상금액 */}
+                            {/* 표시 금액 */}
                             <div className={styles.mdtPriceTotal}>
                                 <div>
-                                    <div className={styles.mdtPriceTotalLabel}>총 예상금액</div>
+                                    <div className={styles.mdtPriceTotalLabel}>
+                                        {modetourGuide.source === 'ttang' ? '수수료 전 표시가격' : '총 예상금액'}
+                                    </div>
                                     <div className={styles.mdtPriceTotalSub}>(유류/제세공과금 포함)</div>
                                 </div>
                                 <div className={styles.mdtPriceTotalValue}>{formatPrice(totalPrice)}</div>
@@ -4159,7 +4161,7 @@ export default function Dashboard() {
                                     <>
                                         <div className={styles.mdtTtangNotice}>
                                             <span className={styles.mdtTtangNoticeIcon}>💡</span>
-                                            <span>땡처리닷컴은 표시된 가격 외에 <b>발권수수료(TASF)</b>가 별도 부과됩니다.</span>
+                                            <span>땡처리닷컴에서는 예약·결제 단계에서 <b>발권수수료 20,000원</b>이 추가될 수 있어요.</span>
                                         </div>
                                         <div className={styles.mdtDisclaimer}>
                                             표시된 가격 및 좌석은 실시간 변동될 수 있으며,
@@ -4394,8 +4396,8 @@ export default function Dashboard() {
                             <button className={styles.modalClose} onClick={() => setTtangConfirmFlight(null)}>×</button>
                         </div>
                         <div style={{ padding: '12px 20px 16px', fontSize: '15px', color: '#333', lineHeight: 1.8, textAlign: 'center' }}>
-                            땡처리닷컴은 표시된 가격 외에<br />
-                            <b>발권수수료(TASF)</b>가 별도 부과됩니다.
+                            표시된 금액은 수수료 전 가격이에요.<br />
+                            땡처리닷컴에서 <b>발권수수료 20,000원</b>이 추가될 수 있어요.
                         </div>
                         <div style={{ padding: '0 16px 16px', fontSize: '12px', color: '#999', lineHeight: 1.6, textAlign: 'left' }}>
                             <p style={{ margin: '0 0 6px', fontWeight: 600, color: '#aaa', fontSize: '11px' }}>안내사항</p>

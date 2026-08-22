@@ -629,8 +629,8 @@ export default function MobileRedesignPreview() {
                                 <h2>{stripAirport(selectedFlight.arrival.city)} 왕복</h2>
                             </div>
                             <div>
-                                <strong>{priceText(effectivePrice(selectedFlight))}</strong>
-                                <span>{selectedFlight.source === 'ttang' ? '1인 예상 총액' : '1인 왕복'}</span>
+                                <strong>{priceText(selectedFlight.source === 'ttang' ? selectedFlight.price : effectivePrice(selectedFlight))}</strong>
+                                <span>{selectedFlight.source === 'ttang' ? '수수료 전 표시가격' : '1인 왕복'}</span>
                             </div>
                         </div>
 
@@ -658,9 +658,8 @@ export default function MobileRedesignPreview() {
 
                         {selectedFlight.source === 'ttang' ? (
                             <p className={styles.priceNotice}>
-                                땡처리닷컴에서 <strong>{priceText(selectedFlight.price)}</strong>인 항공권을 찾으세요.
-                                발권수수료 <strong>{priceText(TTANG_TICKETING_FEE)}</strong>이 붙어 1인 예상 총액은
-                                <strong> {priceText(effectivePrice(selectedFlight))}</strong>입니다.
+                                땡처리닷컴에서는 예약·결제 단계에서 발권수수료
+                                <strong> {priceText(TTANG_TICKETING_FEE)}</strong>이 추가될 수 있어요.
                             </p>
                         ) : (
                             <p className={styles.priceNotice}>가격과 좌석은 바뀔 수 있어요. 예약 전에 여행사에서 한 번 더 확인해주세요.</p>
