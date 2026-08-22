@@ -353,7 +353,7 @@ export default function MobileRedesignPreview() {
 
                 <section className={styles.feedIntro}>
                     <div>
-                        <p>6개 여행사에서 모았어요</p>
+                        <p>좋은 표 하나가, 평범한 주말을 여행으로 바꿉니다.</p>
                         <h1>지금 나온 땡처리 항공권</h1>
                     </div>
                     <span>{updatedLabel}</span>
