@@ -228,9 +228,9 @@ export default function MobileRedesignPreview() {
     }, []);
 
     useEffect(() => {
-        document.body.style.overflow = selectedFlight || filterOpen || regionMoreOpen ? 'hidden' : '';
+        document.body.style.overflow = selectedFlight || filterOpen ? 'hidden' : '';
         return () => { document.body.style.overflow = ''; };
-    }, [selectedFlight, filterOpen, regionMoreOpen]);
+    }, [selectedFlight, filterOpen]);
 
     useEffect(() => setVisibleCount(16), [region, departure, datePeriod, customStartDate, customEndDate, maxPrice, sort, query]);
 
@@ -264,7 +264,7 @@ export default function MobileRedesignPreview() {
         });
     }, [customEndDate, customStartDate, datePeriod, departure, flights, maxPrice, query, region, sort]);
 
-    const filterCount = [departure !== '전체', region !== '전체', datePeriod !== 'all', maxPrice > 0].filter(Boolean).length;
+    const filterCount = [departure !== '전체', datePeriod !== 'all', maxPrice > 0].filter(Boolean).length;
     const updatedLabel = lastUpdated
         ? `${new Intl.DateTimeFormat('ko-KR', { month: 'numeric', day: 'numeric' }).format(new Date(lastUpdated))} 기준`
         : '최근 기준';
@@ -371,7 +371,10 @@ export default function MobileRedesignPreview() {
                                 key={item}
                                 className={region === item ? styles.activeFilter : ''}
                                 aria-label={`도착 지역 ${item}`}
-                                onClick={() => setRegion(item)}
+                                onClick={() => {
+                                    setRegion(item);
+                                    setRegionMoreOpen(false);
+                                }}
                             >
                                 {item}
                             </button>
@@ -381,12 +384,29 @@ export default function MobileRedesignPreview() {
                             className={`${styles.moreRegionButton} ${MORE_REGION_OPTIONS.includes(region) ? styles.activeFilter : ''}`}
                             aria-label="다른 도착 지역 선택"
                             aria-expanded={regionMoreOpen}
-                            onClick={() => setRegionMoreOpen(true)}
+                            onClick={() => setRegionMoreOpen(open => !open)}
                         >
                             {MORE_REGION_OPTIONS.includes(region) ? region : '···'}
                         </button>
                     </nav>
                 </div>
+                {regionMoreOpen && (
+                    <nav className={styles.moreRegionInline} aria-label="추가 도착 지역">
+                        {MORE_REGION_OPTIONS.map(item => (
+                            <button
+                                type="button"
+                                key={item}
+                                className={region === item ? styles.moreRegionActive : ''}
+                                onClick={() => {
+                                    setRegion(item);
+                                    setRegionMoreOpen(false);
+                                }}
+                            >
+                                {item}
+                            </button>
+                        ))}
+                    </nav>
+                )}
 
                 <section className={styles.feedSection}>
                     <div className={styles.feedHeading}>
@@ -467,8 +487,15 @@ export default function MobileRedesignPreview() {
                                             </div>
                                             <div className={styles.cardDecision}>
                                                 <div className={styles.priceBlock}>
-                                                    <strong>{priceText(price)}</strong>
-                                                    <span>{flight.source === 'ttang' ? `예약페이지 표시가 ${priceText(flight.price)}` : '1인 왕복'}</span>
+                                                    <strong>{flight.source === 'ttang' ? `총 ${priceText(price)}` : priceText(price)}</strong>
+                                                    {flight.source === 'ttang' ? (
+                                                        <span className={styles.ttangPriceBreakdown}>
+                                                            <b>항공권 {priceText(flight.price)}</b>
+                                                            <em>+ 수수료 {priceText(TTANG_TICKETING_FEE)}</em>
+                                                        </span>
+                                                    ) : (
+                                                        <span>1인 왕복</span>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
@@ -498,33 +525,6 @@ export default function MobileRedesignPreview() {
                     <a href="/">현재 티키티킷으로 돌아가기</a>
                 </footer>
             </div>
-
-            {regionMoreOpen && (
-                <div className={styles.sheetOverlay} onClick={() => setRegionMoreOpen(false)}>
-                    <section className={`${styles.bottomSheet} ${styles.regionPickerSheet}`} onClick={event => event.stopPropagation()} aria-label="다른 도착 지역 선택">
-                        <div className={styles.sheetHandle} />
-                        <div className={styles.sheetHeader}>
-                            <h2>다른 도착 지역</h2>
-                            <button type="button" onClick={() => setRegionMoreOpen(false)}>닫기</button>
-                        </div>
-                        <div className={styles.regionPickerOptions}>
-                            {MORE_REGION_OPTIONS.map(item => (
-                                <button
-                                    type="button"
-                                    key={item}
-                                    className={region === item ? styles.regionPickerActive : ''}
-                                    onClick={() => {
-                                        setRegion(item);
-                                        setRegionMoreOpen(false);
-                                    }}
-                                >
-                                    {item}
-                                </button>
-                            ))}
-                        </div>
-                    </section>
-                </div>
-            )}
 
             {filterOpen && (
                 <div className={styles.sheetOverlay} onClick={() => setFilterOpen(false)}>
@@ -639,7 +639,7 @@ export default function MobileRedesignPreview() {
                             </div>
                             <div>
                                 <strong>{priceText(effectivePrice(selectedFlight))}</strong>
-                                <span>{selectedFlight.source === 'ttang' ? '예상 결제 · 수수료 포함' : '1인 왕복'}</span>
+                                <span>{selectedFlight.source === 'ttang' ? '1인 예상 총액' : '1인 왕복'}</span>
                             </div>
                         </div>
 
@@ -667,8 +667,8 @@ export default function MobileRedesignPreview() {
 
                         {selectedFlight.source === 'ttang' ? (
                             <p className={styles.priceNotice}>
-                                예약페이지에는 <strong>{priceText(selectedFlight.price)}</strong>으로 표시돼요.
-                                발권수수료 <strong>{priceText(TTANG_TICKETING_FEE)}</strong>을 더한 예상 결제가는
+                                땡처리닷컴에서 <strong>{priceText(selectedFlight.price)}</strong>인 항공권을 찾으세요.
+                                발권수수료 <strong>{priceText(TTANG_TICKETING_FEE)}</strong>이 붙어 1인 예상 총액은
                                 <strong> {priceText(effectivePrice(selectedFlight))}</strong>입니다.
                             </p>
                         ) : (
