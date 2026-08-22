@@ -166,7 +166,7 @@ function Icon({ name }: { name: 'sliders' | 'search' | 'star' | 'share' | 'close
         share: <><path d="M4 12v8h16v-8" /><polyline points="8 7 12 3 16 7" /><line x1="12" y1="3" x2="12" y2="15" /></>,
         close: <><line x1="5" y1="5" x2="19" y2="19" /><line x1="19" y1="5" x2="5" y2="19" /></>,
         arrow: <><line x1="5" y1="12" x2="19" y2="12" /><polyline points="14 7 19 12 14 17" /></>,
-        plane: <path d="M2.5 13.2 9 15.6l3.4 6h2l-1.2-6.8 5.8-2.1c1.2-.4 2-1.5 2-2.7 0-.7-.6-1.2-1.3-1l-6.5 2.1-4.4-6.6h-2l2.3 8-4.6-1.4-2-2H1l1.5 4.1Z" />,
+        plane: <path d="M22 12c0-.6-.5-1.1-1.1-1.2l-6.4-.9-3.8-6.2C10.4 3.3 10 3 9.4 3H8.1l2.2 7.3-4.8.7-1.8-2H2.2l1 3-1 3h1.5l1.8-2 4.8.7L8.1 21h1.3c.6 0 1-.3 1.3-.7l3.8-6.2 6.4-.9c.6-.1 1.1-.6 1.1-1.2Z" />,
     };
     return <svg viewBox="0 0 24 24" aria-hidden="true">{paths[name]}</svg>;
 }
