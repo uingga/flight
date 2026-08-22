@@ -32,7 +32,11 @@ const SOURCE_NAMES: Record<Flight['source'], string> = {
     myrealtrip: '마이리얼트립',
 };
 
+const TTANG_TICKETING_FEE = 20_000;
+
 const REGION_OPTIONS = ['전체', '일본', '동남아', '중화권', '남태평양', '유럽', '미주', '기타'];
+const QUICK_REGION_OPTIONS = REGION_OPTIONS.slice(0, 4);
+const MORE_REGION_OPTIONS = REGION_OPTIONS.slice(4);
 const DEPARTURE_OPTIONS = ['전체', '인천/김포', '부산/김해', '대구', '청주', '제주'];
 const DATE_PERIOD_OPTIONS: Array<{ label: string; value: DatePeriod }> = [
     { label: '전체', value: 'all' },
@@ -57,7 +61,7 @@ const departureName = (flight: Flight) => {
     return stripAirport(flight.departure.city);
 };
 
-const effectivePrice = (flight: Flight) => flight.price + (flight.source === 'ttang' ? 20_000 : 0);
+const effectivePrice = (flight: Flight) => flight.price + (flight.source === 'ttang' ? TTANG_TICKETING_FEE : 0);
 
 const parseDate = (value: string) => {
     const normalized = value.replace(/\./g, '-').replace(/\([^)]*\)/g, '').trim().slice(0, 10);
@@ -87,7 +91,8 @@ const tripLength = (flight: Flight) => {
     const arrival = parseDate(flight.arrival.date);
     if (!departure || !arrival) return null;
     const days = Math.round((arrival.getTime() - departure.getTime()) / 86_400_000) + 1;
-    return days > 0 ? `${days}일` : null;
+    if (days === 1) return '당일';
+    return days > 1 ? `${days - 1}박 ${days}일` : null;
 };
 
 const priceText = (price: number) => `${new Intl.NumberFormat('ko-KR').format(price)}원`;
@@ -194,6 +199,7 @@ export default function MobileRedesignPreview() {
     const [query, setQuery] = useState('');
     const [searchOpen, setSearchOpen] = useState(false);
     const [filterOpen, setFilterOpen] = useState(false);
+    const [regionMoreOpen, setRegionMoreOpen] = useState(false);
     const [selectedFlight, setSelectedFlight] = useState<Flight | null>(null);
     const [favorites, setFavorites] = useState<Set<string>>(new Set());
     const [visibleCount, setVisibleCount] = useState(16);
@@ -222,9 +228,9 @@ export default function MobileRedesignPreview() {
     }, []);
 
     useEffect(() => {
-        document.body.style.overflow = selectedFlight || filterOpen ? 'hidden' : '';
+        document.body.style.overflow = selectedFlight || filterOpen || regionMoreOpen ? 'hidden' : '';
         return () => { document.body.style.overflow = ''; };
-    }, [selectedFlight, filterOpen]);
+    }, [selectedFlight, filterOpen, regionMoreOpen]);
 
     useEffect(() => setVisibleCount(16), [region, departure, datePeriod, customStartDate, customEndDate, maxPrice, sort, query]);
 
@@ -359,7 +365,7 @@ export default function MobileRedesignPreview() {
                         필터{filterCount ? ` ${filterCount}` : ''}
                     </button>
                     <nav className={`${styles.quickFilters} ${styles.regionChipRail}`} aria-label="도착 지역 빠른 선택">
-                        {REGION_OPTIONS.map(item => (
+                        {QUICK_REGION_OPTIONS.map(item => (
                             <button
                                 type="button"
                                 key={item}
@@ -370,6 +376,15 @@ export default function MobileRedesignPreview() {
                                 {item}
                             </button>
                         ))}
+                        <button
+                            type="button"
+                            className={`${styles.moreRegionButton} ${MORE_REGION_OPTIONS.includes(region) ? styles.activeFilter : ''}`}
+                            aria-label="다른 도착 지역 선택"
+                            aria-expanded={regionMoreOpen}
+                            onClick={() => setRegionMoreOpen(true)}
+                        >
+                            {MORE_REGION_OPTIONS.includes(region) ? region : '···'}
+                        </button>
                     </nav>
                 </div>
 
@@ -422,32 +437,38 @@ export default function MobileRedesignPreview() {
 
                                         <div className={styles.tripRouteGrid}>
                                             <div className={styles.tripEndpoint}>
-                                                <strong>{departureName(flight)}</strong>
-                                                <div className={styles.tripTiming}>
-                                                    <b>{cardDate(flight.departure.date)}</b>
-                                                    <em>{flight.departure.time || '시간 확인'}</em>
+                                                <div className={styles.tripEndpointInner}>
+                                                    <strong>{departureName(flight)}</strong>
+                                                    <div className={styles.tripTiming}>
+                                                        <b>{cardDate(flight.departure.date)}</b>
+                                                        <em>{flight.departure.time || '시간 확인'}</em>
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <div className={styles.tripPlane}><Icon name="plane" /></div>
+                                            <div className={styles.tripPlane}>
+                                                <Icon name="plane" />
+                                                {duration && <span>{duration}</span>}
+                                            </div>
                                             <div className={`${styles.tripEndpoint} ${styles.tripEndpointArrival}`}>
-                                                <strong>{destination}</strong>
-                                                <div className={styles.tripTiming}>
-                                                    <b>{cardDate(flight.arrival.date)}</b>
-                                                    <em>{flight.arrival.time || '시간 확인'}</em>
+                                                <div className={styles.tripEndpointInner}>
+                                                    <strong>{destination}</strong>
+                                                    <div className={styles.tripTiming}>
+                                                        <b>{cardDate(flight.arrival.date)}</b>
+                                                        <em>{flight.arrival.time || '시간 확인'}</em>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
 
                                         <div className={styles.cardMeta}>
                                             <div className={styles.cardFacts}>
-                                                {duration && <span>{duration}</span>}
                                                 {seats > 0 && <span className={seats <= 5 ? styles.lowSeats : ''}>{seats}석 남음</span>}
                                                 {flight.minPax && flight.minPax > 1 && <span>{flight.minPax}인부터 예약</span>}
                                             </div>
                                             <div className={styles.cardDecision}>
                                                 <div className={styles.priceBlock}>
                                                     <strong>{priceText(price)}</strong>
-                                                    <span>{flight.source === 'ttang' ? '수수료 포함' : '1인 왕복'}</span>
+                                                    <span>{flight.source === 'ttang' ? `예약페이지 표시가 ${priceText(flight.price)}` : '1인 왕복'}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -477,6 +498,33 @@ export default function MobileRedesignPreview() {
                     <a href="/">현재 티키티킷으로 돌아가기</a>
                 </footer>
             </div>
+
+            {regionMoreOpen && (
+                <div className={styles.sheetOverlay} onClick={() => setRegionMoreOpen(false)}>
+                    <section className={`${styles.bottomSheet} ${styles.regionPickerSheet}`} onClick={event => event.stopPropagation()} aria-label="다른 도착 지역 선택">
+                        <div className={styles.sheetHandle} />
+                        <div className={styles.sheetHeader}>
+                            <h2>다른 도착 지역</h2>
+                            <button type="button" onClick={() => setRegionMoreOpen(false)}>닫기</button>
+                        </div>
+                        <div className={styles.regionPickerOptions}>
+                            {MORE_REGION_OPTIONS.map(item => (
+                                <button
+                                    type="button"
+                                    key={item}
+                                    className={region === item ? styles.regionPickerActive : ''}
+                                    onClick={() => {
+                                        setRegion(item);
+                                        setRegionMoreOpen(false);
+                                    }}
+                                >
+                                    {item}
+                                </button>
+                            ))}
+                        </div>
+                    </section>
+                </div>
+            )}
 
             {filterOpen && (
                 <div className={styles.sheetOverlay} onClick={() => setFilterOpen(false)}>
@@ -591,7 +639,7 @@ export default function MobileRedesignPreview() {
                             </div>
                             <div>
                                 <strong>{priceText(effectivePrice(selectedFlight))}</strong>
-                                <span>{selectedFlight.source === 'ttang' ? '1인 · 발권수수료 포함' : '1인 왕복'}</span>
+                                <span>{selectedFlight.source === 'ttang' ? '예상 결제 · 수수료 포함' : '1인 왕복'}</span>
                             </div>
                         </div>
 
@@ -617,7 +665,15 @@ export default function MobileRedesignPreview() {
                             {selectedFlight.minPax && selectedFlight.minPax > 1 && <span>{selectedFlight.minPax}인부터 예약</span>}
                         </div>
 
-                        <p className={styles.priceNotice}>가격과 좌석은 바뀔 수 있어요. 예약 전에 여행사에서 한 번 더 확인해주세요.</p>
+                        {selectedFlight.source === 'ttang' ? (
+                            <p className={styles.priceNotice}>
+                                예약페이지에는 <strong>{priceText(selectedFlight.price)}</strong>으로 표시돼요.
+                                발권수수료 <strong>{priceText(TTANG_TICKETING_FEE)}</strong>을 더한 예상 결제가는
+                                <strong> {priceText(effectivePrice(selectedFlight))}</strong>입니다.
+                            </p>
+                        ) : (
+                            <p className={styles.priceNotice}>가격과 좌석은 바뀔 수 있어요. 예약 전에 여행사에서 한 번 더 확인해주세요.</p>
+                        )}
 
                         <div className={styles.detailTools}>
                             <button className={styles.shareTool} type="button" onClick={() => shareFlight(selectedFlight)}><Icon name="share" />공유</button>
