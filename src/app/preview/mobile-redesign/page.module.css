@@ -296,16 +296,16 @@
 
 .detailSchedule { position: relative; margin-top: 22px; padding: 15px; display: grid; gap: 10px; border-radius: 14px; background: #f7f7f7; }
 .detailSchedule::before { content: ''; position: absolute; top: 29px; bottom: 29px; left: 20px; width: 1px; background: #dddddd; }
-.detailScheduleRow { position: relative; display: grid; grid-template-columns: 12px minmax(0, 1fr) auto; align-items: center; gap: 8px; }
+.detailScheduleRow { position: relative; display: grid; grid-template-columns: 12px minmax(0, 1fr); align-items: center; gap: 8px; }
 .detailScheduleRow > span { position: relative; z-index: 1; width: 11px; height: 11px; border: 3px solid #f7f7f7; border-radius: 50%; box-shadow: 0 0 0 1px var(--teal); background: var(--teal); }
 .detailScheduleInfo { min-width: 0; }
 .detailSchedule p { display: flex; align-items: baseline; gap: 7px; }
 .detailSchedule p b { color: #6a6a6a; font-size: 9px; }
 .detailSchedule p strong { font-size: 12px; }
-.detailScheduleInfo > small { display: block; max-width: 100%; margin-top: 4px; overflow: hidden; color: #737373; font-size: 9px; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
-.detailFlightTiming { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.detailScheduleInfo > small { display: block; max-width: 100%; margin-top: 5px; overflow: hidden; color: #5f5f5f; font-size: 9.5px; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
+.detailFlightTiming { margin-top: 3px; display: flex; align-items: center; gap: 7px; }
 .detailSchedule em { color: #3f3f3f; font-size: 10px; font-style: normal; font-variant-numeric: tabular-nums; }
-.detailFlightTiming small { color: #929292; font-size: 8.5px; line-height: 1.2; white-space: nowrap; }
+.detailFlightTiming small { padding-left: 7px; border-left: 1px solid #d4d4d4; color: #858585; font-size: 9px; line-height: 1.2; white-space: nowrap; }
 .detailStayDivider { position: relative; z-index: 2; margin-left: 20px; display: flex; align-items: center; gap: 7px; }
 .detailStayDivider::before,
 .detailStayDivider::after { content: ''; height: 1px; flex: 1; background: #dddddd; }

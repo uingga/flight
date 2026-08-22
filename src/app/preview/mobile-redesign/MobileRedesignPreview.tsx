@@ -687,10 +687,10 @@ export default function MobileRedesignPreview() {
                                 <div className={styles.detailScheduleInfo}>
                                     <p><b>가는 날</b><strong>{shortDate(selectedFlight.departure.date)}</strong></p>
                                     <small>{outbound.route}</small>
-                                </div>
-                                <div className={styles.detailFlightTiming}>
-                                    <em>{outbound.times}</em>
-                                    <small>{outbound.duration ? `비행시간 ${outbound.duration}` : '비행시간 확인 필요'}</small>
+                                    <div className={styles.detailFlightTiming}>
+                                        <em>{outbound.times}</em>
+                                        <small>{outbound.duration ? `비행시간 ${outbound.duration}` : '비행시간 확인 필요'}</small>
+                                    </div>
                                 </div>
                             </div>
                             {stay && <div className={styles.detailStayDivider}><span>{stay}</span></div>}
@@ -699,10 +699,10 @@ export default function MobileRedesignPreview() {
                                 <div className={styles.detailScheduleInfo}>
                                     <p><b>오는 날</b><strong>{shortDate(selectedFlight.arrival.date)}</strong></p>
                                     <small>{inbound.route}</small>
-                                </div>
-                                <div className={styles.detailFlightTiming}>
-                                    <em>{inbound.times}</em>
-                                    <small>{inbound.duration ? `비행시간 ${inbound.duration}` : '비행시간 확인 필요'}</small>
+                                    <div className={styles.detailFlightTiming}>
+                                        <em>{inbound.times}</em>
+                                        <small>{inbound.duration ? `비행시간 ${inbound.duration}` : '비행시간 확인 필요'}</small>
+                                    </div>
                                 </div>
                             </div>
                         </div>
