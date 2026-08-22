@@ -1,9 +1,9 @@
 .previewPage {
     min-height: 100vh;
-    background: #ece9ea;
+    background: #ffeef2;
     color: #222222;
-    --teal: #ee4564;
-    --teal-dark: #d92f52;
+    --teal: #ff385c;
+    --teal-dark: #e00b41;
     --teal-soft: #fff0f3;
     --ink: #222222;
     --muted: #6a6a6a;
@@ -15,12 +15,12 @@
     max-width: 480px;
     min-height: 100vh;
     margin: 0 auto;
-    background: #f7f7f7;
+    background: #fff9fa;
     box-shadow: 0 0 48px rgba(34, 34, 34, 0.11);
 }
 
-.previewPage :global(.logo-container stop:first-child) { stop-color: #ee4564; }
-.previewPage :global(.logo-container stop:last-child) { stop-color: #d92f52; }
+.previewPage :global(.logo-container stop:first-child) { stop-color: #ff385c; }
+.previewPage :global(.logo-container stop:last-child) { stop-color: #e00b41; }
 
 .header {
     position: sticky;
@@ -177,7 +177,7 @@
     display: grid;
     gap: 6px;
     border-radius: 11px;
-    background: #f7f7f7;
+    background: #fbf8f9;
 }
 .scheduleBox > div { display: grid; grid-template-columns: 43px 83px 1fr; align-items: baseline; gap: 4px; font-size: 11px; }
 .scheduleBox span { color: #929292; font-size: 9px; font-weight: 600; }
@@ -235,7 +235,7 @@
 .optionGrid { display: flex; flex-wrap: wrap; gap: 7px; }
 .optionGrid button { min-height: 36px; padding: 0 13px; border: 1px solid #dddddd; border-radius: 10px; background: #fff; color: #3f3f3f; font-size: 11px; font-weight: 600; }
 .optionGrid .optionActive { border-color: var(--teal); background: var(--teal-soft); color: var(--teal-dark); font-weight: 800; }
-.applyButton { position: sticky; bottom: 0; width: 100%; height: 50px; margin-top: 26px; border-radius: 13px; background: var(--teal); color: #fff; font-size: 13px; font-weight: 800; box-shadow: 0 10px 20px rgba(238, 69, 100, 0.2); }
+.applyButton { position: sticky; bottom: 0; width: 100%; height: 50px; margin-top: 26px; border-radius: 13px; background: var(--teal); color: #fff; font-size: 13px; font-weight: 800; box-shadow: 0 10px 20px rgba(255, 56, 92, 0.22); }
 
 .detailSheet { overflow: hidden; }
 .detailHeader { display: flex; align-items: center; justify-content: space-between; }
@@ -248,10 +248,10 @@
 .detailTitle > div:last-child strong { display: block; color: var(--teal-dark); font-size: 20px; line-height: 1.25; font-weight: 800; letter-spacing: -0.04em; }
 .detailTitle > div:last-child span { color: #929292; font-size: 9px; }
 
-.detailSchedule { position: relative; margin-top: 22px; padding: 15px; display: grid; gap: 14px; border-radius: 14px; background: #f7f7f7; }
+.detailSchedule { position: relative; margin-top: 22px; padding: 15px; display: grid; gap: 14px; border-radius: 14px; background: #fbf8f9; }
 .detailSchedule::before { content: ''; position: absolute; top: 27px; bottom: 27px; left: 20px; width: 1px; background: #dddddd; }
 .detailSchedule > div { position: relative; display: grid; grid-template-columns: 12px 1fr auto; align-items: center; gap: 8px; }
-.detailSchedule > div > span { position: relative; z-index: 1; width: 11px; height: 11px; border: 3px solid #f7f7f7; border-radius: 50%; box-shadow: 0 0 0 1px var(--teal); background: var(--teal); }
+.detailSchedule > div > span { position: relative; z-index: 1; width: 11px; height: 11px; border: 3px solid #fbf8f9; border-radius: 50%; box-shadow: 0 0 0 1px var(--teal); background: var(--teal); }
 .detailSchedule p { display: flex; align-items: baseline; gap: 7px; }
 .detailSchedule p b { color: #6a6a6a; font-size: 9px; }
 .detailSchedule p strong { font-size: 12px; }
@@ -263,7 +263,7 @@
 .detailTools { margin-top: 13px; display: grid; grid-template-columns: .75fr 1fr 1fr; gap: 6px; }
 .detailTools button { height: 36px; display: inline-flex; align-items: center; justify-content: center; gap: 4px; border: 1px solid #dddddd; border-radius: 9px; color: #6a6a6a; font-size: 9px; font-weight: 600; }
 .detailTools svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.8; }
-.bookingButton { height: 52px; margin-top: 12px; display: flex; align-items: center; justify-content: center; gap: 5px; border-radius: 13px; background: var(--teal); color: #fff; font-size: 13px; font-weight: 800; box-shadow: 0 10px 20px rgba(238, 69, 100, 0.19); }
+.bookingButton { height: 52px; margin-top: 12px; display: flex; align-items: center; justify-content: center; gap: 5px; border-radius: 13px; background: var(--teal); color: #fff; font-size: 13px; font-weight: 800; box-shadow: 0 10px 20px rgba(255, 56, 92, 0.21); }
 .bookingButton:hover { color: #fff; }
 .bookingButton svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; }
 
