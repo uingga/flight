@@ -1,12 +1,18 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import dynamic from 'next/dynamic';
+import { ko } from 'date-fns/locale';
+import 'react-datepicker/dist/react-datepicker.css';
 import Logo from '@/components/Logo';
 import type { Flight } from '@/types/flight';
 import styles from './page.module.css';
 
 type SortMode = 'recommended' | 'price' | 'date';
-type DatePeriod = 'all' | 'this-week' | 'this-weekend' | 'next-week' | 'this-month' | 'next-month';
+type DatePeriod = 'all' | 'this-week' | 'next-week' | 'this-month' | 'next-month' | 'custom';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const DatePicker: any = dynamic(() => import('react-datepicker').then((mod: any) => mod.default), { ssr: false });
 
 interface FlightsResponse {
     success: boolean;
@@ -26,10 +32,14 @@ const SOURCE_NAMES: Record<Flight['source'], string> = {
 
 const REGION_OPTIONS = ['전체', '일본', '동남아', '중화권', '남태평양', '유럽', '미주', '기타'];
 const DEPARTURE_OPTIONS = ['전체', '인천/김포', '부산/김해', '대구', '청주', '제주'];
+const QUICK_DEPARTURE_OPTIONS = [
+    { label: '인천', value: '인천/김포' },
+    { label: '부산', value: '부산/김해' },
+];
+const QUICK_REGION_OPTIONS = ['일본', '동남아', '중화권'];
 const DATE_PERIOD_OPTIONS: Array<{ label: string; value: DatePeriod }> = [
     { label: '전체', value: 'all' },
     { label: '이번 주', value: 'this-week' },
-    { label: '이번 주말', value: 'this-weekend' },
     { label: '다음 주', value: 'next-week' },
     { label: '이번 달', value: 'this-month' },
     { label: '다음 달', value: 'next-month' },
@@ -99,10 +109,28 @@ const addDays = (date: Date, days: number) => {
     return next;
 };
 
-const datePeriodMatches = (flight: Flight, period: DatePeriod, referenceDate: Date) => {
+const dateKey = (date: Date) => [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, '0'),
+    String(date.getDate()).padStart(2, '0'),
+].join('-');
+
+const datePeriodMatches = (
+    flight: Flight,
+    period: DatePeriod,
+    referenceDate: Date,
+    customStartDate: Date | null,
+    customEndDate: Date | null,
+) => {
     if (period === 'all') return true;
     const departureDate = parseDate(flight.departure.date);
     if (!departureDate) return false;
+
+    if (period === 'custom') {
+        const departureKey = dateKey(departureDate);
+        return (!customStartDate || departureKey >= dateKey(customStartDate))
+            && (!customEndDate || departureKey <= dateKey(customEndDate));
+    }
 
     const today = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), referenceDate.getDate());
     const mondayOffset = (today.getDay() + 6) % 7;
@@ -112,9 +140,6 @@ const datePeriodMatches = (flight: Flight, period: DatePeriod, referenceDate: Da
 
     if (period === 'this-week') {
         start = thisMonday;
-        end = addDays(thisMonday, 7);
-    } else if (period === 'this-weekend') {
-        start = addDays(thisMonday, 5);
         end = addDays(thisMonday, 7);
     } else if (period === 'next-week') {
         start = addDays(thisMonday, 7);
@@ -156,6 +181,9 @@ export default function MobileRedesignPreview() {
     const [region, setRegion] = useState('전체');
     const [departure, setDeparture] = useState('전체');
     const [datePeriod, setDatePeriod] = useState<DatePeriod>('all');
+    const [customStartDate, setCustomStartDate] = useState<Date | null>(null);
+    const [customEndDate, setCustomEndDate] = useState<Date | null>(null);
+    const [calendarOpen, setCalendarOpen] = useState(false);
     const [maxPrice, setMaxPrice] = useState(0);
     const [sort, setSort] = useState<SortMode>('recommended');
     const [query, setQuery] = useState('');
@@ -193,7 +221,7 @@ export default function MobileRedesignPreview() {
         return () => { document.body.style.overflow = ''; };
     }, [selectedFlight, filterOpen]);
 
-    useEffect(() => setVisibleCount(16), [region, departure, datePeriod, maxPrice, sort, query]);
+    useEffect(() => setVisibleCount(16), [region, departure, datePeriod, customStartDate, customEndDate, maxPrice, sort, query]);
 
     useEffect(() => {
         if (!toast) return;
@@ -214,7 +242,7 @@ export default function MobileRedesignPreview() {
             return matchesQuery
                 && regionMatches(flight, region)
                 && departureMatches(flight, departure)
-                && datePeriodMatches(flight, datePeriod, referenceDate)
+                && datePeriodMatches(flight, datePeriod, referenceDate, customStartDate, customEndDate)
                 && (!maxPrice || effectivePrice(flight) <= maxPrice);
         });
 
@@ -223,7 +251,7 @@ export default function MobileRedesignPreview() {
             if (sort === 'date') return (parseDate(a.departure.date)?.getTime() || 0) - (parseDate(b.departure.date)?.getTime() || 0);
             return recommendedScore(a) - recommendedScore(b);
         });
-    }, [datePeriod, departure, flights, maxPrice, query, region, sort]);
+    }, [customEndDate, customStartDate, datePeriod, departure, flights, maxPrice, query, region, sort]);
 
     const filterCount = [departure !== '전체', region !== '전체', datePeriod !== 'all', maxPrice > 0].filter(Boolean).length;
     const updatedLabel = lastUpdated
@@ -257,6 +285,9 @@ export default function MobileRedesignPreview() {
         setDeparture('전체');
         setRegion('전체');
         setDatePeriod('all');
+        setCustomStartDate(null);
+        setCustomEndDate(null);
+        setCalendarOpen(false);
         setMaxPrice(0);
     };
 
@@ -297,23 +328,36 @@ export default function MobileRedesignPreview() {
                     <span>{updatedLabel}</span>
                 </section>
 
-                <nav className={`${styles.quickFilters} ${styles.primaryQuickFilters}`} aria-label="빠른 항공권 필터">
-                    <button type="button" className={filterCount ? styles.activeFilter : ''} onClick={() => setFilterOpen(true)}>
+                <nav className={`${styles.quickFilters} ${styles.quickChipRail}`} aria-label="빠른 항공권 필터">
+                    <button type="button" className={filterCount ? styles.filterHasValue : ''} onClick={() => setFilterOpen(true)}>
                         <Icon name="sliders" />
                         필터{filterCount ? ` ${filterCount}` : ''}
                     </button>
-                    <label className={`${styles.quickSelect} ${departure !== '전체' ? styles.activeSelect : ''}`}>
-                        <span>출발</span>
-                        <select value={departure} onChange={event => setDeparture(event.target.value)} aria-label="출발지 선택">
-                            {DEPARTURE_OPTIONS.map(item => <option value={item} key={item}>{item}</option>)}
-                        </select>
-                    </label>
-                    <label className={`${styles.quickSelect} ${region !== '전체' ? styles.activeSelect : ''}`}>
-                        <span>도착</span>
-                        <select value={region} onChange={event => setRegion(event.target.value)} aria-label="도착 지역 선택">
-                            {REGION_OPTIONS.map(item => <option value={item} key={item}>{item}</option>)}
-                        </select>
-                    </label>
+                    <span className={styles.quickGroupLabel}>출발</span>
+                    {QUICK_DEPARTURE_OPTIONS.map(item => (
+                        <button
+                            type="button"
+                            key={item.value}
+                            className={departure === item.value ? styles.activeFilter : ''}
+                            aria-label={`출발지 ${item.value}`}
+                            onClick={() => setDeparture(departure === item.value ? '전체' : item.value)}
+                        >
+                            {item.label}
+                        </button>
+                    ))}
+                    <span className={styles.quickDivider} aria-hidden="true" />
+                    <span className={styles.quickGroupLabel}>도착</span>
+                    {QUICK_REGION_OPTIONS.map(item => (
+                        <button
+                            type="button"
+                            key={item}
+                            className={region === item ? styles.activeFilter : ''}
+                            aria-label={`도착 지역 ${item}`}
+                            onClick={() => setRegion(region === item ? '전체' : item)}
+                        >
+                            {item}
+                        </button>
+                    ))}
                 </nav>
 
                 <section className={styles.feedSection}>
@@ -464,12 +508,58 @@ export default function MobileRedesignPreview() {
                             <h3>출발 시기</h3>
                             <div className={styles.optionGrid}>
                                 {DATE_PERIOD_OPTIONS.map(item => (
-                                    <button type="button" key={item.value} className={datePeriod === item.value ? styles.optionActive : ''} onClick={() => setDatePeriod(item.value)}>{item.label}</button>
+                                    <button
+                                        type="button"
+                                        key={item.value}
+                                        className={datePeriod === item.value ? styles.optionActive : ''}
+                                        onClick={() => {
+                                            setDatePeriod(item.value);
+                                            setCustomStartDate(null);
+                                            setCustomEndDate(null);
+                                            setCalendarOpen(false);
+                                        }}
+                                    >
+                                        {item.label}
+                                    </button>
                                 ))}
                             </div>
+                            <button
+                                type="button"
+                                className={`${styles.dateDirectButton} ${datePeriod === 'custom' ? styles.dateDirectActive : ''}`}
+                                onClick={() => setCalendarOpen(open => !open)}
+                            >
+                                <span>📅</span>
+                                <strong>
+                                    {customStartDate
+                                        ? `${customStartDate.getMonth() + 1}.${customStartDate.getDate()}.${customEndDate ? ` ~ ${customEndDate.getMonth() + 1}.${customEndDate.getDate()}.` : ' 부터'}`
+                                        : '날짜 직접 선택'}
+                                </strong>
+                                <em>{calendarOpen ? '닫기' : '달력 열기'}</em>
+                            </button>
+                            {calendarOpen && (
+                                <div className={styles.dateCalendarWrap}>
+                                    <DatePicker
+                                        selectsRange
+                                        startDate={customStartDate}
+                                        endDate={customEndDate}
+                                        onChange={(update: [Date | null, Date | null]) => {
+                                            const [start, end] = update;
+                                            setCustomStartDate(start);
+                                            setCustomEndDate(end);
+                                            setDatePeriod(start ? 'custom' : 'all');
+                                            if (end) window.setTimeout(() => setCalendarOpen(false), 250);
+                                        }}
+                                        locale={ko}
+                                        inline
+                                        minDate={new Date()}
+                                        calendarClassName={styles.dateCalendar}
+                                    />
+                                    <p>출발일 범위를 선택하세요.</p>
+                                </div>
+                            )}
                         </div>
 
-                        <button type="button" className={styles.applyButton} onClick={() => setFilterOpen(false)}>
+                        <button type="button" className={`${styles.applyButton} ${calendarOpen ? styles.applyButtonCalendarOpen : ''}`} onClick={() => setFilterOpen(false)}>
                             {filteredFlights.length.toLocaleString('ko-KR')}개 항공권 보기
                         </button>
                     </section>
