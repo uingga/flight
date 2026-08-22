@@ -203,9 +203,6 @@
 .priceBlock { flex-shrink: 0; text-align: right; }
 .priceBlock strong { display: block; color: var(--teal-dark); font-size: 18px; line-height: 1.25; font-weight: 800; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
 .priceBlock span { display: block; margin-top: 2px; color: #929292; font-size: 9px; white-space: nowrap; }
-.priceBlock .ttangPriceBreakdown { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; }
-.ttangPriceBreakdown b { color: #777777; font-size: 8px; font-weight: 650; }
-.ttangPriceBreakdown em { color: #a0a0a0; font-size: 8px; font-style: normal; }
 
 .cardMeta { position: relative; min-height: 38px; margin-top: 14px; padding: 11px clamp(10px, 3vw, 14px) 0; display: flex; align-items: center; justify-content: space-between; gap: 8px; border-top: 1px dashed #d9d9d9; }
 .cardMeta::before,

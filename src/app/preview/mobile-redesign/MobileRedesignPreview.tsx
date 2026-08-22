@@ -487,15 +487,8 @@ export default function MobileRedesignPreview() {
                                             </div>
                                             <div className={styles.cardDecision}>
                                                 <div className={styles.priceBlock}>
-                                                    <strong>{flight.source === 'ttang' ? `총 ${priceText(price)}` : priceText(price)}</strong>
-                                                    {flight.source === 'ttang' ? (
-                                                        <span className={styles.ttangPriceBreakdown}>
-                                                            <b>항공권 {priceText(flight.price)}</b>
-                                                            <em>+ 수수료 {priceText(TTANG_TICKETING_FEE)}</em>
-                                                        </span>
-                                                    ) : (
-                                                        <span>1인 왕복</span>
-                                                    )}
+                                                    <strong>{priceText(flight.source === 'ttang' ? flight.price : price)}</strong>
+                                                    <span>{flight.source === 'ttang' ? '발권수수료가 추가될 수 있어요' : '1인 왕복'}</span>
                                                 </div>
                                             </div>
                                         </div>
