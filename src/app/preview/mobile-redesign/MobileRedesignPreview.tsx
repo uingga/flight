@@ -658,6 +658,7 @@ export default function MobileRedesignPreview() {
                 const outbound = legDetails(selectedFlight, 'outbound');
                 const inbound = legDetails(selectedFlight, 'return');
                 const stay = tripLength(selectedFlight);
+                const detailSeats = selectedFlight.availableSeats || Number.parseInt(selectedFlight.seats || '', 10) || 0;
                 return (
                 <div className={styles.sheetOverlay} onClick={() => setSelectedFlight(null)}>
                     <section className={`${styles.bottomSheet} ${styles.detailSheet}`} onClick={event => event.stopPropagation()} aria-label="항공권 상세">
@@ -672,12 +673,19 @@ export default function MobileRedesignPreview() {
 
                         <div className={styles.detailTitle}>
                             <div>
-                                <p>{departureName(selectedFlight)}에서</p>
-                                <h2>{stripAirport(selectedFlight.arrival.city)} 왕복</h2>
+                                <p>왕복 항공권</p>
+                                <h2>{departureName(selectedFlight)} ↔ {stripAirport(selectedFlight.arrival.city)}</h2>
                             </div>
                             <div>
                                 <strong>{priceText(selectedFlight.source === 'ttang' ? selectedFlight.price : effectivePrice(selectedFlight))}</strong>
                                 <span>(유류/제세공과금 포함)</span>
+                                {(detailSeats > 0 || (selectedFlight.minPax && selectedFlight.minPax > 1)) && (
+                                    <small className={styles.detailAvailabilityText}>
+                                        {detailSeats > 0 && `${detailSeats}석 남음`}
+                                        {detailSeats > 0 && selectedFlight.minPax && selectedFlight.minPax > 1 && ' · '}
+                                        {selectedFlight.minPax && selectedFlight.minPax > 1 && `${selectedFlight.minPax}인부터 예약`}
+                                    </small>
+                                )}
                             </div>
                         </div>
 
@@ -707,13 +715,6 @@ export default function MobileRedesignPreview() {
                             </div>
                         </div>
 
-                        <div className={styles.detailFacts}>
-                            {(selectedFlight.availableSeats || Number.parseInt(selectedFlight.seats || '', 10)) > 0 && (
-                                <span>{selectedFlight.availableSeats || Number.parseInt(selectedFlight.seats || '', 10)}석 남음</span>
-                            )}
-                            {selectedFlight.minPax && selectedFlight.minPax > 1 && <span>{selectedFlight.minPax}인부터 예약</span>}
-                        </div>
-
                         {selectedFlight.source === 'ttang' ? (
                             <p className={styles.priceNotice}>
                                 땡처리닷컴에서는 예약·결제 단계에서 발권수수료
@@ -724,6 +725,9 @@ export default function MobileRedesignPreview() {
                         )}
 
                         <div className={styles.detailTools}>
+                            <p className={styles.detailBookingNotice}>
+                                가격·좌석은 변동될 수 있으며 예약은 {SOURCE_NAMES[selectedFlight.source]}에서 진행돼요.
+                            </p>
                             <div className={styles.reportTools}>
                                 <button type="button" onClick={() => setToast('미리보기에서는 실제 신고를 저장하지 않아요.')}>가격이 달라요</button>
                                 <span aria-hidden="true">·</span>

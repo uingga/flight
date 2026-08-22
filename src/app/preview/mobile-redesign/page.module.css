@@ -116,7 +116,7 @@
 .filterButton svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.8; }
 .quickFilters .activeFilter { border-color: var(--teal); background: var(--teal); color: #fff; }
 .quickFilters button { padding-right: 8px; padding-left: 8px; }
-.quickFilters .moreRegionButton { min-width: 42px; padding-right: 11px; padding-left: 11px; font-size: 14px; letter-spacing: 0.06em; }
+.quickFilters .moreRegionButton { min-width: 42px; padding-right: 0; padding-left: 0; justify-content: center; font-size: 14px; line-height: 1; letter-spacing: 0; text-align: center; }
 .regionChipRail { flex: 1; min-width: 0; }
 .moreRegionInline { margin: -7px 16px 13px; display: flex; justify-content: flex-end; gap: 5px; animation: inlineFilterIn 150ms ease-out; }
 .moreRegionInline button { height: 32px; padding: 0 11px; border: 1px solid #dddddd; border-radius: 999px; background: #fff; color: #555555; font-size: 11px; font-weight: 650; }
@@ -199,7 +199,7 @@
 .routeConnector { position: relative; min-height: 47px; display: flex; flex-direction: column; align-items: center; color: #aaaaaa; }
 .routeConnector::before { content: ''; position: absolute; top: 10px; right: 0; left: 0; height: 1px; background: #dddddd; }
 .routeConnector svg { position: relative; width: 22px; height: 22px; padding: 3px; fill: currentColor; stroke: none; border-radius: 50%; background: #fff; }
-.routeConnector span { margin-top: 7px; color: #5f5f5f; font-size: 10.5px; line-height: 1.1; font-weight: 700; white-space: nowrap; }
+.routeConnector span { position: absolute; top: 31px; color: #858585; font-size: 10px; line-height: 1.25; font-weight: 500; white-space: nowrap; }
 
 .ticketDivider { position: relative; height: 1px; margin: 14px 16px 0; border-top: 1px dashed #d6d6d6; }
 .ticketDivider::before,
@@ -207,7 +207,7 @@
 .ticketDivider::before { left: -23px; }
 .ticketDivider::after { right: -23px; }
 
-.cardFooter { min-height: 58px; padding: 9px 16px 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.cardFooter { min-height: 64px; padding: 11px 16px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .availabilityGroup { min-width: 0; display: flex; align-items: center; flex-wrap: wrap; gap: 5px; }
 .availabilityGroup span { height: 23px; padding: 0 8px; display: inline-flex; align-items: center; border-radius: 6px; background: #f2f2f2; color: #606060; font-size: 10.5px; line-height: 1; white-space: nowrap; }
 .availabilityGroup .lowSeats { background: #fff0ec; color: #ba4d2d; font-weight: 700; }
@@ -293,6 +293,7 @@
 .detailTitle > div:last-child { flex-shrink: 0; text-align: right; }
 .detailTitle > div:last-child strong { display: block; color: var(--teal); font-size: 20px; line-height: 1.25; font-weight: 800; letter-spacing: -0.04em; }
 .detailTitle > div:last-child span { color: #929292; font-size: 9px; }
+.detailAvailabilityText { display: block; margin-top: 3px; color: #747474; font-size: 9px; line-height: 1.2; font-weight: 600; }
 
 .detailSchedule { position: relative; margin-top: 22px; padding: 15px; display: grid; gap: 10px; border-radius: 14px; background: #f7f7f7; }
 .detailSchedule::before { content: ''; position: absolute; top: 29px; bottom: 29px; left: 20px; width: 1px; background: #dddddd; }
@@ -311,11 +312,10 @@
 .detailStayDivider::after { content: ''; height: 1px; flex: 1; background: #dddddd; }
 .detailStayDivider span { flex: 0 0 auto; padding: 3px 8px; border: 1px solid #dddddd; border-radius: 999px; background: #fff; color: #666666; font-size: 9px; line-height: 1; font-weight: 700; }
 
-.detailFacts { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 6px; }
-.detailFacts span { padding: 5px 8px; border-radius: 7px; background: #f2f2f2; color: #6a6a6a; font-size: 9px; }
 .priceNotice { margin-top: 15px; padding: 10px 11px; border-radius: 9px; background: #faf5e9; color: #776541; font-size: 10px; line-height: 1.55; }
 .priceNotice strong { color: #5f4c29; font-weight: 800; }
-.detailTools { margin-top: 10px; display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+.detailTools { margin-top: 10px; display: grid; gap: 3px; }
+.detailBookingNotice { overflow: hidden; color: #929292; font-size: 8px; line-height: 1.4; letter-spacing: -0.04em; text-overflow: ellipsis; white-space: nowrap; }
 .reportTools { display: flex; align-items: center; justify-content: flex-end; color: #c0c0c0; }
 .reportTools button { min-height: 32px; padding: 0 5px; color: #9a9a9a; font-size: 9px; font-weight: 500; text-decoration: underline; text-decoration-color: #d7d7d7; text-underline-offset: 2px; }
 .reportTools button:hover { color: #666666; text-decoration-color: #999999; }
