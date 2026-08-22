@@ -157,20 +157,21 @@
 
 .cardBody {
     width: 100%;
-    padding: 14px 16px 12px;
+    padding: 0;
     text-align: left;
     color: inherit;
 }
 
-.cardTopline { min-height: 22px; padding-right: 34px; display: flex; align-items: center; justify-content: space-between; }
+.cardTopline { min-height: 35px; padding: 13px 50px 0 16px; display: flex; align-items: center; justify-content: space-between; }
 .cardTopline > div { overflow: hidden; display: flex; align-items: center; gap: 6px; min-width: 0; }
-.sourceBadge { display: inline-flex; height: 21px; padding: 0 7px; align-items: center; border-radius: 6px; font-size: 9px; line-height: 1; font-weight: 800; white-space: nowrap; }
-.ybtour { background: #fff3be; color: #735800; }
-.modetour { background: #e8edff; color: #3048a6; }
-.hanatour { background: #e7f7f0; color: #157451; }
-.onlinetour { background: #e8f4ff; color: #1a65a2; }
-.ttang { background: #fff0eb; color: #a24529; }
-.myrealtrip { background: #eaf7ff; color: #16729c; }
+.sourceBadge { position: relative; display: inline-flex; height: 18px; padding: 0 0 0 8px; align-items: center; font-size: 9px; line-height: 1; font-weight: 800; white-space: nowrap; }
+.sourceBadge::before { content: ''; position: absolute; left: 0; width: 3px; height: 12px; border-radius: 999px; background: currentColor; }
+.ybtour { color: #806300; }
+.modetour { color: #4359b5; }
+.hanatour { color: #1b7b59; }
+.onlinetour { color: #276fa8; }
+.ttang { color: #aa4d32; }
+.myrealtrip { color: #227ba2; }
 .airline { min-width: 0; overflow: hidden; color: #6a6a6a; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
 
 .favoriteButton {
@@ -188,18 +189,22 @@
 .favoriteButton.favoriteActive { color: var(--teal); }
 .favoriteButton.favoriteActive svg { fill: currentColor; }
 
-.routeGrid { margin-top: 14px; display: grid; grid-template-columns: minmax(0, 1fr) 44px minmax(0, 1fr); align-items: start; gap: 4px; }
+.journeyPanel { margin: 10px 10px 0; padding: 14px 8px 12px; border: 1px solid #eeeeee; border-radius: 14px; background: #fafafa; }
+.routeGrid { display: grid; grid-template-columns: minmax(0, 1fr) 48px minmax(0, 1fr); align-items: start; gap: 3px; }
 .routeEndpoint { min-width: 0; display: flex; flex-direction: column; align-items: center; text-align: center; }
-.routeEndpoint strong { max-width: 100%; overflow: hidden; color: var(--ink); font-size: 20px; line-height: 1.2; font-weight: 800; letter-spacing: -0.04em; text-overflow: ellipsis; white-space: nowrap; }
-.routeTiming { margin-top: 7px; display: flex; flex-direction: column; align-items: center; gap: 3px; }
-.routeTiming b { color: #555555; font-size: 11px; line-height: 1.25; font-weight: 700; white-space: nowrap; }
-.routeTiming em { color: #929292; font-size: 10px; line-height: 1.2; font-style: normal; font-variant-numeric: tabular-nums; }
-.routeConnector { position: relative; min-height: 61px; display: flex; flex-direction: column; align-items: center; color: #b5b5b5; }
-.routeConnector::before { content: ''; position: absolute; top: 10px; right: 0; left: 0; height: 1px; background: #e8e8e8; }
-.routeConnector svg { position: relative; width: 22px; height: 22px; padding: 2px; fill: currentColor; stroke: none; background: #fff; }
-.routeConnector span { margin-top: 8px; color: #707070; font-size: 8px; line-height: 1.1; font-weight: 700; white-space: nowrap; }
+.routeEndpoint strong { max-width: 100%; overflow: hidden; color: var(--ink); font-size: 19px; line-height: 1.2; font-weight: 800; letter-spacing: -0.04em; text-overflow: ellipsis; white-space: nowrap; }
+.routeEndpointArrival strong { color: #111111; }
+.routeTiming { margin-top: 9px; display: flex; align-items: center; justify-content: center; gap: 4px; white-space: nowrap; }
+.routeTiming b { color: #616161; font-size: 9px; line-height: 1.25; font-weight: 700; }
+.routeTiming em { color: #929292; font-size: 9px; line-height: 1.2; font-style: normal; font-variant-numeric: tabular-nums; }
+.routeTiming em::before { content: '·'; margin-right: 4px; color: #c1c1c1; }
+.routeConnector { position: relative; min-height: 47px; display: flex; flex-direction: column; align-items: center; color: #aaaaaa; }
+.routeConnector::before { content: ''; position: absolute; top: 10px; right: 0; left: 0; height: 1px; background: #dddddd; }
+.routeConnector svg { position: relative; width: 22px; height: 22px; padding: 3px; fill: currentColor; stroke: none; border-radius: 50%; background: #fafafa; }
+.routeConnector span { margin-top: 7px; color: #6f6f6f; font-size: 8px; line-height: 1.1; font-weight: 700; white-space: nowrap; }
 
-.cardFooter { min-height: 46px; margin-top: 13px; padding-top: 10px; display: flex; align-items: center; justify-content: space-between; gap: 10px; border-top: 1px solid #eeeeee; }
+.cardFooter { position: relative; min-height: 58px; margin-top: 13px; padding: 3px 16px 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.cardFooter::before { content: ''; position: absolute; top: -7px; right: 16px; left: 16px; border-top: 1px dashed #dfdfdf; }
 .availabilityGroup { min-width: 0; display: flex; align-items: center; flex-wrap: wrap; gap: 5px; }
 .availabilityGroup span { height: 21px; padding: 0 7px; display: inline-flex; align-items: center; border-radius: 6px; background: #f2f2f2; color: #6a6a6a; font-size: 9px; line-height: 1; white-space: nowrap; }
 .availabilityGroup .lowSeats { background: #fff0ec; color: #ba4d2d; font-weight: 700; }
@@ -344,7 +349,9 @@
 
 @media (max-width: 360px) {
     .feedIntro h1 { font-size: 18px; }
-    .routeEndpoint strong { font-size: 19px; }
+    .routeEndpoint strong { font-size: 18px; }
+    .routeTiming { gap: 3px; }
+    .routeTiming em::before { margin-right: 3px; }
     .priceLine { gap: 3px; }
     .priceBlock strong { font-size: 16px; }
     .priceBlock .discountBadge { height: 18px; padding: 0 5px; font-size: 8px; }
