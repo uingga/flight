@@ -6,6 +6,7 @@ import type { Flight } from '@/types/flight';
 import styles from './page.module.css';
 
 type SortMode = 'recommended' | 'price' | 'date';
+type DatePeriod = 'all' | 'this-week' | 'this-weekend' | 'next-week' | 'this-month' | 'next-month';
 
 interface FlightsResponse {
     success: boolean;
@@ -23,8 +24,16 @@ const SOURCE_NAMES: Record<Flight['source'], string> = {
     myrealtrip: '마이리얼트립',
 };
 
-const REGION_OPTIONS = ['전체', '일본', '동남아', '중화권', '남태평양', '유럽'];
+const REGION_OPTIONS = ['전체', '일본', '동남아', '중화권', '남태평양', '유럽', '미주', '기타'];
 const DEPARTURE_OPTIONS = ['전체', '인천/김포', '부산/김해', '대구', '청주', '제주'];
+const DATE_PERIOD_OPTIONS: Array<{ label: string; value: DatePeriod }> = [
+    { label: '전체', value: 'all' },
+    { label: '이번 주', value: 'this-week' },
+    { label: '이번 주말', value: 'this-weekend' },
+    { label: '다음 주', value: 'next-week' },
+    { label: '이번 달', value: 'this-month' },
+    { label: '다음 달', value: 'next-month' },
+];
 const PRICE_OPTIONS = [
     { label: '제한 없음', value: 0 },
     { label: '20만원 이하', value: 200_000 },
@@ -84,6 +93,43 @@ const departureMatches = (flight: Flight, departure: string) => {
     return flight.departure.city.includes(departure);
 };
 
+const addDays = (date: Date, days: number) => {
+    const next = new Date(date);
+    next.setDate(next.getDate() + days);
+    return next;
+};
+
+const datePeriodMatches = (flight: Flight, period: DatePeriod, referenceDate: Date) => {
+    if (period === 'all') return true;
+    const departureDate = parseDate(flight.departure.date);
+    if (!departureDate) return false;
+
+    const today = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), referenceDate.getDate());
+    const mondayOffset = (today.getDay() + 6) % 7;
+    const thisMonday = addDays(today, -mondayOffset);
+    let start: Date;
+    let end: Date;
+
+    if (period === 'this-week') {
+        start = thisMonday;
+        end = addDays(thisMonday, 7);
+    } else if (period === 'this-weekend') {
+        start = addDays(thisMonday, 5);
+        end = addDays(thisMonday, 7);
+    } else if (period === 'next-week') {
+        start = addDays(thisMonday, 7);
+        end = addDays(thisMonday, 14);
+    } else if (period === 'this-month') {
+        start = new Date(today.getFullYear(), today.getMonth(), 1);
+        end = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+    } else {
+        start = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+        end = new Date(today.getFullYear(), today.getMonth() + 2, 1);
+    }
+
+    return departureDate >= start && departureDate < end;
+};
+
 const recommendedScore = (flight: Flight) => {
     const discount = Math.max(0, flight.discountRate || 0);
     const seatBonus = flight.availableSeats && flight.availableSeats <= 9 ? 8 : 0;
@@ -109,6 +155,7 @@ export default function MobileRedesignPreview() {
     const [lastUpdated, setLastUpdated] = useState<string | null>(null);
     const [region, setRegion] = useState('전체');
     const [departure, setDeparture] = useState('전체');
+    const [datePeriod, setDatePeriod] = useState<DatePeriod>('all');
     const [maxPrice, setMaxPrice] = useState(0);
     const [sort, setSort] = useState<SortMode>('recommended');
     const [query, setQuery] = useState('');
@@ -146,7 +193,7 @@ export default function MobileRedesignPreview() {
         return () => { document.body.style.overflow = ''; };
     }, [selectedFlight, filterOpen]);
 
-    useEffect(() => setVisibleCount(16), [region, departure, maxPrice, sort, query]);
+    useEffect(() => setVisibleCount(16), [region, departure, datePeriod, maxPrice, sort, query]);
 
     useEffect(() => {
         if (!toast) return;
@@ -156,6 +203,7 @@ export default function MobileRedesignPreview() {
 
     const filteredFlights = useMemo(() => {
         const normalizedQuery = query.trim().toLowerCase();
+        const referenceDate = new Date();
         const result = flights.filter(flight => {
             const matchesQuery = !normalizedQuery || [
                 flight.departure.city,
@@ -166,6 +214,7 @@ export default function MobileRedesignPreview() {
             return matchesQuery
                 && regionMatches(flight, region)
                 && departureMatches(flight, departure)
+                && datePeriodMatches(flight, datePeriod, referenceDate)
                 && (!maxPrice || effectivePrice(flight) <= maxPrice);
         });
 
@@ -174,9 +223,9 @@ export default function MobileRedesignPreview() {
             if (sort === 'date') return (parseDate(a.departure.date)?.getTime() || 0) - (parseDate(b.departure.date)?.getTime() || 0);
             return recommendedScore(a) - recommendedScore(b);
         });
-    }, [departure, flights, maxPrice, query, region, sort]);
+    }, [datePeriod, departure, flights, maxPrice, query, region, sort]);
 
-    const filterCount = [departure !== '전체', region !== '전체', maxPrice > 0].filter(Boolean).length;
+    const filterCount = [departure !== '전체', region !== '전체', datePeriod !== 'all', maxPrice > 0].filter(Boolean).length;
     const updatedLabel = lastUpdated
         ? `${new Intl.DateTimeFormat('ko-KR', { month: 'numeric', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(new Date(lastUpdated))} 갱신`
         : '최근 수집 기준';
@@ -207,8 +256,8 @@ export default function MobileRedesignPreview() {
     const resetFilters = () => {
         setDeparture('전체');
         setRegion('전체');
+        setDatePeriod('all');
         setMaxPrice(0);
-        setSort('recommended');
     };
 
     return (
@@ -248,22 +297,32 @@ export default function MobileRedesignPreview() {
                     <span>{updatedLabel}</span>
                 </section>
 
-                <nav className={styles.quickFilters} aria-label="빠른 항공권 필터">
-                    <button type="button" className={filterCount ? styles.activeFilter : ''} onClick={() => setFilterOpen(true)}>
-                        <Icon name="sliders" />
-                        필터{filterCount ? ` ${filterCount}` : ''}
-                    </button>
-                    {REGION_OPTIONS.slice(0, 4).map(item => (
-                        <button
-                            type="button"
-                            key={item}
-                            className={region === item ? styles.activeFilter : ''}
-                            onClick={() => setRegion(item)}
-                        >
-                            {item}
+                <div className={styles.quickFilterStack}>
+                    <div className={`${styles.quickFilters} ${styles.departureQuickFilters}`}>
+                        <button type="button" className={filterCount ? styles.activeFilter : ''} onClick={() => setFilterOpen(true)}>
+                            <Icon name="sliders" />
+                            필터{filterCount ? ` ${filterCount}` : ''}
                         </button>
-                    ))}
-                </nav>
+                        <label className={`${styles.departureSelect} ${departure !== '전체' ? styles.activeSelect : ''}`}>
+                            <span>출발지</span>
+                            <select value={departure} onChange={event => setDeparture(event.target.value)} aria-label="출발지 선택">
+                                {DEPARTURE_OPTIONS.map(item => <option value={item} key={item}>{item}</option>)}
+                            </select>
+                        </label>
+                    </div>
+                    <nav className={`${styles.quickFilters} ${styles.regionQuickFilters}`} aria-label="도착 지역 빠른 선택">
+                        {REGION_OPTIONS.map(item => (
+                            <button
+                                type="button"
+                                key={item}
+                                className={region === item ? styles.activeFilter : ''}
+                                onClick={() => setRegion(item)}
+                            >
+                                {item}
+                            </button>
+                        ))}
+                    </nav>
+                </div>
 
                 <section className={styles.feedSection}>
                     <div className={styles.feedHeading}>
@@ -271,10 +330,13 @@ export default function MobileRedesignPreview() {
                             <h2>{query ? `'${query}' 검색 결과` : region === '전체' ? '지금 볼 만한 표' : `${region} 특가`}</h2>
                             <span>총 {filteredFlights.length.toLocaleString('ko-KR')}개</span>
                         </div>
-                        <button type="button" onClick={() => setFilterOpen(true)}>
-                            {sort === 'recommended' ? '추천순' : sort === 'price' ? '낮은 가격순' : '빠른 출발순'}
-                            <span>⌄</span>
-                        </button>
+                        <label className={styles.sortSelect}>
+                            <select value={sort} onChange={event => setSort(event.target.value as SortMode)} aria-label="항공권 정렬">
+                                <option value="recommended">추천순</option>
+                                <option value="price">낮은 가격순</option>
+                                <option value="date">빠른 출발순</option>
+                            </select>
+                        </label>
                     </div>
 
                     {loading && (
@@ -407,14 +469,10 @@ export default function MobileRedesignPreview() {
                         </div>
 
                         <div className={styles.filterGroup}>
-                            <h3>정렬</h3>
+                            <h3>출발 시기</h3>
                             <div className={styles.optionGrid}>
-                                {([
-                                    ['recommended', '추천순'],
-                                    ['price', '낮은 가격순'],
-                                    ['date', '빠른 출발순'],
-                                ] as Array<[SortMode, string]>).map(([value, label]) => (
-                                    <button type="button" key={value} className={sort === value ? styles.optionActive : ''} onClick={() => setSort(value)}>{label}</button>
+                                {DATE_PERIOD_OPTIONS.map(item => (
+                                    <button type="button" key={item.value} className={datePeriod === item.value ? styles.optionActive : ''} onClick={() => setDatePeriod(item.value)}>{item.label}</button>
                                 ))}
                             </div>
                         </div>
