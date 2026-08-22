@@ -108,11 +108,8 @@
 }
 .quickFilters button svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.8; }
 .quickFilters .activeFilter { border-color: var(--teal); background: var(--teal); color: #fff; }
-.quickChipRail { gap: 4px; padding-right: 12px; padding-left: 12px; }
-.quickChipRail button { padding: 0 10px; font-size: 11px; }
+.quickChipRail { padding-right: 28px; }
 .quickFilters .filterHasValue { border-color: var(--teal); color: var(--teal-dark); }
-.quickGroupLabel { flex: 0 0 auto; align-self: center; padding: 0 2px; color: #929292; font-size: 9px; font-weight: 700; }
-.quickDivider { flex: 0 0 auto; width: 1px; height: 20px; align-self: center; margin: 0 2px; background: #e5e5e5; }
 .sortSelect::after { content: '⌄'; position: absolute; pointer-events: none; color: #929292; }
 .sortSelect select {
     border: 0;
@@ -252,10 +249,9 @@
 .optionGrid { display: flex; flex-wrap: wrap; gap: 7px; }
 .optionGrid button { min-height: 36px; padding: 0 13px; border: 1px solid #dddddd; border-radius: 10px; background: #fff; color: #3f3f3f; font-size: 11px; font-weight: 600; }
 .optionGrid .optionActive { border-color: var(--teal); background: var(--teal-soft); color: var(--teal-dark); font-weight: 800; }
-.dateDirectButton { width: 100%; min-height: 44px; margin-top: 9px; padding: 0 12px; display: flex; align-items: center; gap: 7px; border: 1px solid #dddddd; border-radius: 10px; background: #fff; color: #3f3f3f; text-align: left; }
+.dateDirectButton { width: fit-content; min-height: 36px; margin-top: 9px; padding: 0 13px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid #dddddd; border-radius: 10px; background: #fff; color: #3f3f3f; text-align: left; }
 .dateDirectButton span { flex: 0 0 auto; font-size: 13px; }
-.dateDirectButton strong { flex: 1; font-size: 11px; font-weight: 700; }
-.dateDirectButton em { color: #929292; font-size: 9px; font-style: normal; }
+.dateDirectButton strong { font-size: 11px; font-weight: 700; }
 .dateDirectButton.dateDirectActive { border-color: var(--teal); color: var(--teal-dark); }
 .dateCalendarWrap { margin-top: 8px; overflow: hidden; border: 1px solid #eeeeee; border-radius: 14px; background: #fff; }
 .dateCalendarWrap > p { margin: 0; padding: 0 12px 10px; color: #929292; font-size: 9px; text-align: center; }

@@ -32,11 +32,6 @@ const SOURCE_NAMES: Record<Flight['source'], string> = {
 
 const REGION_OPTIONS = ['전체', '일본', '동남아', '중화권', '남태평양', '유럽', '미주', '기타'];
 const DEPARTURE_OPTIONS = ['전체', '인천/김포', '부산/김해', '대구', '청주', '제주'];
-const QUICK_DEPARTURE_OPTIONS = [
-    { label: '인천', value: '인천/김포' },
-    { label: '부산', value: '부산/김해' },
-];
-const QUICK_REGION_OPTIONS = ['일본', '동남아', '중화권'];
 const DATE_PERIOD_OPTIONS: Array<{ label: string; value: DatePeriod }> = [
     { label: '전체', value: 'all' },
     { label: '이번 주', value: 'this-week' },
@@ -333,27 +328,13 @@ export default function MobileRedesignPreview() {
                         <Icon name="sliders" />
                         필터{filterCount ? ` ${filterCount}` : ''}
                     </button>
-                    <span className={styles.quickGroupLabel}>출발</span>
-                    {QUICK_DEPARTURE_OPTIONS.map(item => (
-                        <button
-                            type="button"
-                            key={item.value}
-                            className={departure === item.value ? styles.activeFilter : ''}
-                            aria-label={`출발지 ${item.value}`}
-                            onClick={() => setDeparture(departure === item.value ? '전체' : item.value)}
-                        >
-                            {item.label}
-                        </button>
-                    ))}
-                    <span className={styles.quickDivider} aria-hidden="true" />
-                    <span className={styles.quickGroupLabel}>도착</span>
-                    {QUICK_REGION_OPTIONS.map(item => (
+                    {REGION_OPTIONS.map(item => (
                         <button
                             type="button"
                             key={item}
                             className={region === item ? styles.activeFilter : ''}
                             aria-label={`도착 지역 ${item}`}
-                            onClick={() => setRegion(region === item ? '전체' : item)}
+                            onClick={() => setRegion(item)}
                         >
                             {item}
                         </button>
@@ -534,7 +515,6 @@ export default function MobileRedesignPreview() {
                                         ? `${customStartDate.getMonth() + 1}.${customStartDate.getDate()}.${customEndDate ? ` ~ ${customEndDate.getMonth() + 1}.${customEndDate.getDate()}.` : ' 부터'}`
                                         : '날짜 직접 선택'}
                                 </strong>
-                                <em>{calendarOpen ? '닫기' : '달력 열기'}</em>
                             </button>
                             {calendarOpen && (
                                 <div className={styles.dateCalendarWrap}>
