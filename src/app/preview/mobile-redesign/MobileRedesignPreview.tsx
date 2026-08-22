@@ -449,11 +449,16 @@ export default function MobileRedesignPreview() {
                 <section className={styles.feedSection}>
                     <div className={styles.feedHeading}>
                         <div>
-                            <h2>{query ? `'${query}' 검색 결과` : region === '전체' ? '지금 볼 만한 표' : `${region} 특가`}</h2>
+                            <h2>{query ? `'${query}' 검색 결과` : region === '전체' ? '어디로 떠나볼까요?' : `${region} 특가`}</h2>
                             <span>총 {filteredFlights.length.toLocaleString('ko-KR')}개</span>
                         </div>
                         <label className={styles.sortSelect}>
-                            <select value={sort} onChange={event => setSort(event.target.value as SortMode)} aria-label="항공권 정렬">
+                            <select
+                                className={sort === 'recommended' ? styles.sortRecommended : styles.sortLong}
+                                value={sort}
+                                onChange={event => setSort(event.target.value as SortMode)}
+                                aria-label="항공권 정렬"
+                            >
                                 <option value="recommended">추천순</option>
                                 <option value="price">낮은 가격순</option>
                                 <option value="date">빠른 출발순</option>
@@ -667,24 +672,20 @@ export default function MobileRedesignPreview() {
                             <div className={styles.detailAgencyLine}>
                                 <span className={`${styles.sourceBadge} ${styles[selectedFlight.source]}`}>{SOURCE_NAMES[selectedFlight.source]}</span>
                                 <span className={styles.detailAirline}>{selectedFlight.airline || '항공사 확인'}</span>
+                                {detailSeats > 0 && <span className={styles.detailSeatCount}>{detailSeats}석 남음</span>}
                             </div>
                             <button type="button" onClick={() => setSelectedFlight(null)} aria-label="닫기"><Icon name="close" /></button>
                         </div>
 
                         <div className={styles.detailTitle}>
                             <div>
-                                <p>왕복 항공권</p>
                                 <h2>{departureName(selectedFlight)} ↔ {stripAirport(selectedFlight.arrival.city)}</h2>
                             </div>
                             <div>
                                 <strong>{priceText(selectedFlight.source === 'ttang' ? selectedFlight.price : effectivePrice(selectedFlight))}</strong>
                                 <span>(유류/제세공과금 포함)</span>
-                                {(detailSeats > 0 || (selectedFlight.minPax && selectedFlight.minPax > 1)) && (
-                                    <small className={styles.detailAvailabilityText}>
-                                        {detailSeats > 0 && `${detailSeats}석 남음`}
-                                        {detailSeats > 0 && selectedFlight.minPax && selectedFlight.minPax > 1 && ' · '}
-                                        {selectedFlight.minPax && selectedFlight.minPax > 1 && `${selectedFlight.minPax}인부터 예약`}
-                                    </small>
+                                {selectedFlight.minPax && selectedFlight.minPax > 1 && (
+                                    <small className={styles.detailAvailabilityText}>{selectedFlight.minPax}인부터 예약</small>
                                 )}
                             </div>
                         </div>
@@ -725,9 +726,6 @@ export default function MobileRedesignPreview() {
                         )}
 
                         <div className={styles.detailTools}>
-                            <p className={styles.detailBookingNotice}>
-                                가격·좌석은 변동될 수 있으며 예약은 {SOURCE_NAMES[selectedFlight.source]}에서 진행돼요.
-                            </p>
                             <div className={styles.reportTools}>
                                 <button type="button" onClick={() => setToast('미리보기에서는 실제 신고를 저장하지 않아요.')}>가격이 달라요</button>
                                 <span aria-hidden="true">·</span>
