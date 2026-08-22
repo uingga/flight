@@ -416,17 +416,21 @@ export default function MobileRedesignPreview() {
 
                                         <div className={styles.tripRouteGrid}>
                                             <div className={styles.tripEndpoint}>
-                                                <span>가는 날</span>
                                                 <strong>{departureName(flight)}</strong>
-                                                <b>{shortDate(flight.departure.date)}</b>
-                                                <em>{flight.departure.time || '시간 확인'}</em>
+                                                <div className={styles.tripTiming}>
+                                                    <b>{shortDate(flight.departure.date)}</b>
+                                                    <span aria-hidden="true">·</span>
+                                                    <em>{flight.departure.time || '시간 확인'}</em>
+                                                </div>
                                             </div>
                                             <div className={styles.tripPlane}><Icon name="plane" /></div>
                                             <div className={`${styles.tripEndpoint} ${styles.tripEndpointArrival}`}>
-                                                <span>오는 날</span>
                                                 <strong>{destination}</strong>
-                                                <b>{shortDate(flight.arrival.date)}</b>
-                                                <em>{flight.arrival.time || '시간 확인'}</em>
+                                                <div className={styles.tripTiming}>
+                                                    <b>{shortDate(flight.arrival.date)}</b>
+                                                    <span aria-hidden="true">·</span>
+                                                    <em>{flight.arrival.time || '시간 확인'}</em>
+                                                </div>
                                             </div>
                                         </div>
 
@@ -441,7 +445,6 @@ export default function MobileRedesignPreview() {
                                                     <strong>{priceText(price)}</strong>
                                                     <span>{flight.source === 'ttang' ? '수수료 포함' : '1인 왕복'}</span>
                                                 </div>
-                                                <span className={styles.viewCta}>보기 <Icon name="arrow" /></span>
                                             </div>
                                         </div>
                                     </button>
@@ -577,25 +580,28 @@ export default function MobileRedesignPreview() {
                             <button type="button" onClick={() => setSelectedFlight(null)} aria-label="닫기"><Icon name="close" /></button>
                         </div>
 
-                        <div className={`${styles.tripRouteGrid} ${styles.detailTripRoute}`}>
-                            <div className={styles.tripEndpoint}>
-                                <span>가는 날</span>
-                                <strong>{departureName(selectedFlight)}</strong>
-                                <b>{shortDate(selectedFlight.departure.date)}</b>
-                                <em>{selectedFlight.departure.time || '시간 확인'}</em>
+                        <div className={styles.detailTitle}>
+                            <div>
+                                <p>{departureName(selectedFlight)}에서</p>
+                                <h2>{stripAirport(selectedFlight.arrival.city)} 왕복</h2>
                             </div>
-                            <div className={styles.tripPlane}><Icon name="plane" /></div>
-                            <div className={`${styles.tripEndpoint} ${styles.tripEndpointArrival}`}>
-                                <span>오는 날</span>
-                                <strong>{stripAirport(selectedFlight.arrival.city)}</strong>
-                                <b>{shortDate(selectedFlight.arrival.date)}</b>
-                                <em>{selectedFlight.arrival.time || '시간 확인'}</em>
+                            <div>
+                                <strong>{priceText(effectivePrice(selectedFlight))}</strong>
+                                <span>{selectedFlight.source === 'ttang' ? '1인 · 발권수수료 포함' : '1인 왕복'}</span>
                             </div>
                         </div>
 
-                        <div className={styles.detailPriceRow}>
-                            <span>{selectedFlight.source === 'ttang' ? '1인 · 발권수수료 포함' : '1인 왕복'}</span>
-                            <strong>{priceText(effectivePrice(selectedFlight))}</strong>
+                        <div className={styles.detailSchedule}>
+                            <div>
+                                <span className={styles.outboundDot} />
+                                <p><b>가는 날</b><strong>{shortDate(selectedFlight.departure.date)}</strong></p>
+                                <em>{selectedFlight.departure.time || '시간 확인'}{selectedFlight.departure.arrivalTime ? ` → ${selectedFlight.departure.arrivalTime}` : ''}</em>
+                            </div>
+                            <div>
+                                <span className={styles.inboundDot} />
+                                <p><b>오는 날</b><strong>{shortDate(selectedFlight.arrival.date)}</strong></p>
+                                <em>{selectedFlight.arrival.time || '시간 확인'}{selectedFlight.arrival.arrivalTime ? ` → ${selectedFlight.arrival.arrivalTime}` : ''}</em>
+                            </div>
                         </div>
 
                         <div className={styles.detailFacts}>

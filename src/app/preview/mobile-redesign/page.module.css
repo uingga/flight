@@ -184,26 +184,27 @@
 .favoriteButton.favoriteActive { color: var(--teal); }
 .favoriteButton.favoriteActive svg { fill: currentColor; }
 
-.tripRouteGrid { margin-top: 14px; display: grid; grid-template-columns: minmax(0, 1fr) 36px minmax(0, 1fr); align-items: center; gap: 8px; }
+.tripRouteGrid { margin-top: 14px; display: grid; grid-template-columns: minmax(0, 1fr) 44px minmax(0, 1fr); align-items: start; gap: 7px; }
 .tripEndpoint { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; }
 .tripEndpointArrival { align-items: flex-end; text-align: right; }
-.tripEndpoint > span { color: #929292; font-size: 9px; font-weight: 700; }
-.tripEndpoint > strong { width: 100%; margin-top: 3px; overflow: hidden; color: var(--ink); font-size: 18px; line-height: 1.25; font-weight: 800; letter-spacing: -0.035em; text-overflow: ellipsis; white-space: nowrap; }
-.tripEndpoint > b { margin-top: 7px; color: #4a4a4a; font-size: 12px; line-height: 1.25; font-weight: 700; }
-.tripEndpoint > em { margin-top: 3px; color: #9ca3af; font-size: 11px; line-height: 1.2; font-style: normal; font-variant-numeric: tabular-nums; }
-.tripPlane { display: grid; place-items: center; color: #d1d5db; }
-.tripPlane svg { width: 26px; height: 26px; fill: currentColor; stroke: none; }
+.tripEndpoint > strong { width: 100%; overflow: hidden; color: var(--ink); font-size: 20px; line-height: 1.2; font-weight: 800; letter-spacing: -0.04em; text-overflow: ellipsis; white-space: nowrap; }
+.tripTiming { width: 100%; margin-top: 8px; display: flex; align-items: baseline; gap: 4px; color: #a0a0a0; white-space: nowrap; }
+.tripEndpointArrival .tripTiming { justify-content: flex-end; }
+.tripTiming b { color: #555555; font-size: 11px; line-height: 1.25; font-weight: 700; }
+.tripTiming span { color: #c4c4c4; font-size: 9px; }
+.tripTiming em { color: #929292; font-size: 10px; line-height: 1.2; font-style: normal; font-variant-numeric: tabular-nums; }
+.tripPlane { position: relative; height: 24px; display: grid; place-items: center; color: #c9c9c9; }
+.tripPlane::before { content: ''; position: absolute; right: -2px; left: -2px; top: 50%; height: 1px; background: #eeeeee; }
+.tripPlane svg { position: relative; width: 19px; height: 19px; padding: 2px; fill: currentColor; stroke: none; background: #fff; }
 .priceBlock { flex-shrink: 0; text-align: right; }
 .priceBlock strong { display: block; color: var(--teal-dark); font-size: 18px; line-height: 1.25; font-weight: 800; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
 .priceBlock span { display: block; margin-top: 2px; color: #929292; font-size: 9px; }
 
-.cardMeta { min-height: 38px; margin-top: 13px; padding-top: 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px; border-top: 1px solid #eeeeee; }
+.cardMeta { min-height: 38px; margin-top: 14px; padding-top: 11px; display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; border-top: 1px solid #eeeeee; }
 .cardFacts { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
 .cardFacts span { padding: 3px 6px; border-radius: 5px; background: #f2f2f2; color: #6a6a6a; font-size: 9px; line-height: 1.3; }
 .cardFacts .lowSeats { background: #fff0ec; color: #ba4d2d; font-weight: 700; }
-.cardDecision { display: flex; align-items: center; gap: 8px; }
-.viewCta { flex-shrink: 0; display: inline-flex; align-items: center; gap: 3px; color: var(--teal); font-size: 10px; font-weight: 800; }
-.viewCta svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; }
+.cardDecision { flex-shrink: 0; }
 
 .moreButton { width: 100%; height: 46px; margin-top: 14px; border: 1px solid #dddddd; border-radius: 13px; background: #fff; color: #3f3f3f; font-size: 12px; font-weight: 700; }
 
@@ -268,18 +269,25 @@
 .applyButton { position: sticky; bottom: 0; width: 100%; height: 50px; margin-top: 26px; border-radius: 13px; background: var(--teal); color: #fff; font-size: 13px; font-weight: 800; box-shadow: 0 10px 20px rgba(255, 56, 92, 0.22); }
 .applyButtonCalendarOpen { position: static; }
 
-.detailSheet { overflow: hidden; }
+.detailSheet { overflow-y: auto; }
 .detailHeader { display: flex; align-items: center; justify-content: space-between; }
 .detailHeader > button { width: 34px; height: 34px; display: grid; place-items: center; color: #6a6a6a; }
 .detailHeader > button svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; }
-.detailTripRoute { margin-top: 14px; padding: 15px; border-radius: 14px; background: #f7f7f7; }
-.detailTripRoute .tripEndpoint > strong { font-size: 22px; }
-.detailTripRoute .tripEndpoint > b { font-size: 13px; }
-.detailTripRoute .tripEndpoint > em { font-size: 12px; }
-.detailTripRoute .tripPlane svg { width: 30px; height: 30px; }
-.detailPriceRow { margin-top: 12px; display: flex; align-items: baseline; justify-content: space-between; }
-.detailPriceRow span { color: #929292; font-size: 9px; }
-.detailPriceRow strong { color: var(--teal-dark); font-size: 20px; line-height: 1.25; font-weight: 800; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
+.detailTitle { margin-top: 15px; display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+.detailTitle p { color: #6a6a6a; font-size: 11px; }
+.detailTitle h2 { margin-top: 1px; font-size: 24px; line-height: 1.25; font-weight: 800; letter-spacing: -0.05em; }
+.detailTitle > div:last-child { flex-shrink: 0; text-align: right; }
+.detailTitle > div:last-child strong { display: block; color: var(--teal-dark); font-size: 20px; line-height: 1.25; font-weight: 800; letter-spacing: -0.04em; }
+.detailTitle > div:last-child span { color: #929292; font-size: 9px; }
+
+.detailSchedule { position: relative; margin-top: 22px; padding: 15px; display: grid; gap: 14px; border-radius: 14px; background: #f7f7f7; }
+.detailSchedule::before { content: ''; position: absolute; top: 27px; bottom: 27px; left: 20px; width: 1px; background: #dddddd; }
+.detailSchedule > div { position: relative; display: grid; grid-template-columns: 12px 1fr auto; align-items: center; gap: 8px; }
+.detailSchedule > div > span { position: relative; z-index: 1; width: 11px; height: 11px; border: 3px solid #f7f7f7; border-radius: 50%; box-shadow: 0 0 0 1px var(--teal); background: var(--teal); }
+.detailSchedule p { display: flex; align-items: baseline; gap: 7px; }
+.detailSchedule p b { color: #6a6a6a; font-size: 9px; }
+.detailSchedule p strong { font-size: 12px; }
+.detailSchedule em { color: #3f3f3f; font-size: 10px; font-style: normal; font-variant-numeric: tabular-nums; }
 
 .detailFacts { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 6px; }
 .detailFacts span { padding: 5px 8px; border-radius: 7px; background: #f2f2f2; color: #6a6a6a; font-size: 9px; }
@@ -331,6 +339,8 @@
 @media (max-width: 360px) {
     .feedIntro h1 { font-size: 18px; }
     .priceBlock strong { font-size: 16px; }
-    .tripEndpoint > strong { font-size: 17px; }
-    .detailTripRoute .tripEndpoint > strong { font-size: 20px; }
+    .tripEndpoint > strong { font-size: 18px; }
+    .tripTiming { gap: 3px; }
+    .tripTiming b { font-size: 10px; }
+    .tripTiming em { font-size: 9px; }
 }
