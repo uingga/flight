@@ -120,8 +120,10 @@ const legDetails = (flight: Flight, leg: 'outbound' | 'return') => {
     if (leg === 'outbound') {
         const arrivalTime = detail?.departureArrivalTime || flight.departure.arrivalTime || '';
         return {
-            route: `${airportLabel(departureCity, flight.departure.airport)} → ${airportLabel(arrivalCity, flight.arrival.airport)}`,
-            times: `${flight.departure.time || '시간 확인'}${arrivalTime ? ` → ${arrivalTime}` : ''}`,
+            origin: airportLabel(departureCity, flight.departure.airport),
+            destination: airportLabel(arrivalCity, flight.arrival.airport),
+            departureTime: flight.departure.time || '시간 확인',
+            arrivalTime: arrivalTime || '시간 확인',
             duration: calcFlightDuration(departureCity, flight.departure.time, flight.departure.date, arrivalCity, arrivalTime)
                 || agencyFlightDuration(detail?.flyingTime),
         };
@@ -130,8 +132,10 @@ const legDetails = (flight: Flight, leg: 'outbound' | 'return') => {
     const departureTime = detail?.returnDepartureTime || flight.arrival.time || '';
     const arrivalTime = detail?.returnArrivalTime || flight.arrival.arrivalTime || '';
     return {
-        route: `${airportLabel(arrivalCity, detail?.returnDepartureAirport || flight.arrival.airport)} → ${airportLabel(departureCity, detail?.returnArrivalAirport || flight.departure.airport)}`,
-        times: `${departureTime || '시간 확인'}${arrivalTime ? ` → ${arrivalTime}` : ''}`,
+        origin: airportLabel(arrivalCity, detail?.returnDepartureAirport || flight.arrival.airport),
+        destination: airportLabel(departureCity, detail?.returnArrivalAirport || flight.departure.airport),
+        departureTime: departureTime || '시간 확인',
+        arrivalTime: arrivalTime || '시간 확인',
         duration: calcFlightDuration(arrivalCity, departureTime, flight.arrival.date, departureCity, arrivalTime)
             || agencyFlightDuration(detail?.returnFlyingTime),
     };
@@ -753,29 +757,57 @@ export default function MobileRedesignPreview() {
                         </div>
 
                         <div className={styles.detailSchedule}>
-                            <div className={styles.detailScheduleRow}>
-                                <span className={styles.outboundDot} />
-                                <div className={styles.detailScheduleInfo}>
-                                    <p><b>가는 날</b><strong>{shortDate(selectedFlight.departure.date)}</strong></p>
-                                    <small>{outbound.route}</small>
-                                    <div className={styles.detailFlightTiming}>
-                                        <em>{outbound.times}</em>
-                                        <small>{outbound.duration ? `비행시간 ${outbound.duration}` : '비행시간 확인 필요'}</small>
+                            <section className={styles.detailFlightLeg}>
+                                <header className={styles.detailLegHeader}>
+                                    <div>
+                                        <strong>가는 항공편</strong>
+                                        <span>{shortDate(selectedFlight.departure.date)}</span>
+                                    </div>
+                                    <small>{outbound.duration ? `비행시간 ${outbound.duration}` : '비행시간 확인 필요'}</small>
+                                </header>
+                                <div className={styles.detailVerticalRoute}>
+                                    <div className={styles.detailRouteStop}>
+                                        <span aria-hidden="true" />
+                                        <div>
+                                            <em>{outbound.departureTime}</em>
+                                            <strong>{outbound.origin}</strong>
+                                        </div>
+                                    </div>
+                                    <div className={styles.detailRouteStop}>
+                                        <span aria-hidden="true" />
+                                        <div>
+                                            <em>{outbound.arrivalTime}</em>
+                                            <strong>{outbound.destination}</strong>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            </section>
                             {stay && <div className={styles.detailStayDivider}><span>{stay}</span></div>}
-                            <div className={styles.detailScheduleRow}>
-                                <span className={styles.inboundDot} />
-                                <div className={styles.detailScheduleInfo}>
-                                    <p><b>오는 날</b><strong>{shortDate(selectedFlight.arrival.date)}</strong></p>
-                                    <small>{inbound.route}</small>
-                                    <div className={styles.detailFlightTiming}>
-                                        <em>{inbound.times}</em>
-                                        <small>{inbound.duration ? `비행시간 ${inbound.duration}` : '비행시간 확인 필요'}</small>
+                            <section className={styles.detailFlightLeg}>
+                                <header className={styles.detailLegHeader}>
+                                    <div>
+                                        <strong>오는 항공편</strong>
+                                        <span>{shortDate(selectedFlight.arrival.date)}</span>
+                                    </div>
+                                    <small>{inbound.duration ? `비행시간 ${inbound.duration}` : '비행시간 확인 필요'}</small>
+                                </header>
+                                <div className={styles.detailVerticalRoute}>
+                                    <div className={styles.detailRouteStop}>
+                                        <span aria-hidden="true" />
+                                        <div>
+                                            <em>{inbound.departureTime}</em>
+                                            <strong>{inbound.origin}</strong>
+                                        </div>
+                                    </div>
+                                    <div className={styles.detailRouteStop}>
+                                        <span aria-hidden="true" />
+                                        <div>
+                                            <em>{inbound.arrivalTime}</em>
+                                            <strong>{inbound.destination}</strong>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            </section>
                         </div>
 
                         {selectedFlight.source === 'ttang' ? (
