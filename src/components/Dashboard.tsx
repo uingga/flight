@@ -3794,6 +3794,22 @@ export default function Dashboard() {
                 const tax = (mdt?.tax || 0) + (mdt?.tax2 || 0);
                 const totalPrice = modetourGuide.price;
                 const displayAirline = normalizeAirline(modetourGuide.airline);
+                const detailHotelTrackingId = getTripcomTrackingId(
+                    arrCity,
+                    depDate,
+                    arrDate,
+                    arrAirport,
+                    depCity,
+                    depAirport,
+                );
+                const detailHotelUrl = getTripcomHotelUrl(
+                    arrCity,
+                    depDate,
+                    arrDate,
+                    arrAirport,
+                    depCity,
+                    depAirport,
+                );
                 // 요일
                 const cleanDate = (d: string) => d ? d.replace(/\(.*/g, '').replace(/\./g, '-') : '';
                 const getDayName = (d: string) => {
@@ -4220,7 +4236,29 @@ export default function Dashboard() {
                                         </svg>
                                         <span>공유</span>
                                     </button>
-                                    <button className={styles.mdtBookBtn} onClick={() => {
+                                    {detailHotelUrl && (
+                                        <a
+                                            href={detailHotelUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className={styles.mdtHotelBtn}
+                                            title="트립닷컴에서 호텔 검색 (예약이 완료되면 티키티킷이 수수료를 받을 수 있습니다)"
+                                            onClick={() => gtag.trackHotelAffiliateClick(
+                                                `${depCity}-${arrCity}`,
+                                                totalPrice,
+                                                revenueClickDetails(modetourGuide, detailHotelTrackingId),
+                                            )}
+                                        >
+                                            <span aria-hidden="true">🏨</span>
+                                            <span>
+                                                <strong>{arrCity} 호텔도 비교</strong>
+                                                <small>트립닷컴 · 제휴</small>
+                                            </span>
+                                            <span aria-hidden="true">›</span>
+                                        </a>
+                                    )}
+                                </div>
+                                <button className={styles.mdtBookBtn} onClick={() => {
                                         gtag.trackBookingClick(modetourGuide.source, `${depCity}-${arrCity}`, totalPrice, revenueClickDetails(modetourGuide));
                                         if (modetourGuide.source === 'modetour') {
                                             const url = getMobileUrl(modetourGuide.link, isMobile);
@@ -4238,8 +4276,7 @@ export default function Dashboard() {
                                         setModetourGuide(null);
                                     }}>
                                         {getSourceName(modetourGuide.source)}에서 예약하기 →
-                                    </button>
-                                </div>
+                                </button>
                                 {modetourGuide.source === 'myrealtrip' && (
                                     <p className={styles.affiliateDisclosure}>
                                         제휴 링크 안내: 이 링크를 통해 예약이 완료되면 티키티킷이 수수료를 받을 수 있습니다.

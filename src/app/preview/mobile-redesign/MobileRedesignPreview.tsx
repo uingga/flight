@@ -666,7 +666,6 @@ export default function MobileRedesignPreview() {
                         )}
 
                         <div className={styles.detailTools}>
-                            <button className={styles.shareTool} type="button" onClick={() => shareFlight(selectedFlight)}><Icon name="share" />공유</button>
                             <div className={styles.reportTools}>
                                 <button type="button" onClick={() => setToast('미리보기에서는 실제 신고를 저장하지 않아요.')}>가격이 달라요</button>
                                 <span aria-hidden="true">·</span>
@@ -677,35 +676,41 @@ export default function MobileRedesignPreview() {
                         <a className={styles.bookingButton} href={selectedFlight.link} target="_blank" rel="noopener noreferrer">
                             {SOURCE_NAMES[selectedFlight.source]}에서 확인하기 <Icon name="arrow" />
                         </a>
-                        {selectedHotelUrl && (
-                            <a
-                                className={styles.hotelCompareButton}
-                                href={selectedHotelUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                title="트립닷컴에서 호텔 검색"
-                                onClick={() => gtag.trackHotelAffiliateClick(
-                                    `${departureName(selectedFlight)}-${stripAirport(selectedFlight.arrival.city)}`,
-                                    selectedFlight.price,
-                                    {
-                                        departureDate: selectedFlight.departure.date,
-                                        returnDate: selectedFlight.arrival.date,
-                                        departureAirport: selectedFlight.departure.airport,
-                                        arrivalAirport: selectedFlight.arrival.airport,
-                                        airline: selectedFlight.airline,
-                                        destination: stripAirport(selectedFlight.arrival.city),
-                                        trackingId: selectedHotelTrackingId,
-                                    },
-                                )}
-                            >
-                                <span className={styles.hotelIcon}>🏨</span>
-                                <span className={styles.hotelButtonText}>
-                                    <strong>{stripAirport(selectedFlight.arrival.city)} 호텔도 비교</strong>
-                                    <small>트립닷컴 · 제휴</small>
-                                </span>
-                                <Icon name="arrow" />
-                            </a>
-                        )}
+                        <div className={styles.detailSecondaryActions}>
+                            <button className={styles.detailShareButton} type="button" onClick={() => shareFlight(selectedFlight)}>
+                                <Icon name="share" />
+                                <span>공유</span>
+                            </button>
+                            {selectedHotelUrl && (
+                                <a
+                                    className={styles.hotelCompareButton}
+                                    href={selectedHotelUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    title="트립닷컴에서 호텔 검색"
+                                    onClick={() => gtag.trackHotelAffiliateClick(
+                                        `${departureName(selectedFlight)}-${stripAirport(selectedFlight.arrival.city)}`,
+                                        selectedFlight.price,
+                                        {
+                                            departureDate: selectedFlight.departure.date,
+                                            returnDate: selectedFlight.arrival.date,
+                                            departureAirport: selectedFlight.departure.airport,
+                                            arrivalAirport: selectedFlight.arrival.airport,
+                                            airline: selectedFlight.airline,
+                                            destination: stripAirport(selectedFlight.arrival.city),
+                                            trackingId: selectedHotelTrackingId,
+                                        },
+                                    )}
+                                >
+                                    <span className={styles.hotelIcon}>🏨</span>
+                                    <span className={styles.hotelButtonText}>
+                                        <strong>{stripAirport(selectedFlight.arrival.city)} 호텔도 비교</strong>
+                                        <small>트립닷컴 · 제휴</small>
+                                    </span>
+                                    <Icon name="arrow" />
+                                </a>
+                            )}
+                        </div>
                     </section>
                 </div>
             )}

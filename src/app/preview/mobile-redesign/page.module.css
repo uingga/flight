@@ -172,7 +172,7 @@
 .onlinetour { color: #1e40af; }
 .ttang { color: #dc2626; }
 .myrealtrip { color: #2563eb; }
-.airline { min-width: 0; overflow: hidden; color: #6a6a6a; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.airline { min-width: 0; height: 18px; overflow: hidden; display: inline-flex; align-items: center; color: #6a6a6a; font-size: 10px; line-height: 1; text-overflow: ellipsis; white-space: nowrap; }
 
 .favoriteButton {
     position: absolute;
@@ -300,9 +300,7 @@
 .detailFacts span { padding: 5px 8px; border-radius: 7px; background: #f2f2f2; color: #6a6a6a; font-size: 9px; }
 .priceNotice { margin-top: 15px; padding: 10px 11px; border-radius: 9px; background: #faf5e9; color: #776541; font-size: 10px; line-height: 1.55; }
 .priceNotice strong { color: #5f4c29; font-weight: 800; }
-.detailTools { margin-top: 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.shareTool { min-height: 32px; padding: 0 10px; display: inline-flex; align-items: center; justify-content: center; gap: 4px; border: 1px solid #e4e4e4; border-radius: 8px; color: #777777; font-size: 9px; font-weight: 600; }
-.shareTool svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.8; }
+.detailTools { margin-top: 10px; display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
 .reportTools { display: flex; align-items: center; justify-content: flex-end; color: #c0c0c0; }
 .reportTools button { min-height: 32px; padding: 0 5px; color: #9a9a9a; font-size: 9px; font-weight: 500; text-decoration: underline; text-decoration-color: #d7d7d7; text-underline-offset: 2px; }
 .reportTools button:hover { color: #666666; text-decoration-color: #999999; }
@@ -310,7 +308,11 @@
 .bookingButton { height: 52px; margin-top: 12px; display: flex; align-items: center; justify-content: center; gap: 5px; border-radius: 13px; background: var(--teal); color: #fff; font-size: 13px; font-weight: 800; box-shadow: 0 10px 20px rgba(255, 56, 92, 0.21); }
 .bookingButton:hover { color: #fff; }
 .bookingButton svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; }
-.hotelCompareButton { min-height: 52px; margin-top: 8px; padding: 8px 13px; display: flex; align-items: center; gap: 10px; border: 1px solid #dddddd; border-radius: 13px; background: #fff; color: #3f3f3f; }
+.detailSecondaryActions { margin-top: 8px; display: grid; grid-template-columns: 54px minmax(0, 1fr); align-items: stretch; gap: 8px; }
+.detailShareButton { min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; border: 1px solid #dddddd; border-radius: 13px; background: #fff; color: #6a6a6a; font-size: 9px; font-weight: 700; }
+.detailShareButton:hover { border-color: #b8b8b8; color: #333333; }
+.detailShareButton svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; }
+.hotelCompareButton { min-height: 52px; padding: 8px 13px; display: flex; align-items: center; gap: 10px; border: 1px solid #dddddd; border-radius: 13px; background: #fff; color: #3f3f3f; }
 .hotelCompareButton:hover { border-color: #b8b8b8; color: #222222; }
 .hotelIcon { flex: 0 0 auto; font-size: 17px; }
 .hotelButtonText { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }

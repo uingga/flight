@@ -3857,8 +3857,50 @@
     transform: scale(0.97);
 }
 
-.mdtActionRow .mdtBookBtn {
+.mdtHotelBtn {
     flex: 1;
+    min-width: 0;
+    min-height: 48px;
+    padding: 7px 12px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
+    background: #fff;
+    color: #374151;
+}
+
+.mdtHotelBtn > span:nth-child(2) {
+    min-width: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.mdtHotelBtn strong {
+    overflow: hidden;
+    font-size: 12px;
+    line-height: 1.2;
+    font-weight: 800;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mdtHotelBtn small {
+    color: #9ca3af;
+    font-size: 9px;
+    line-height: 1.2;
+}
+
+.mdtHotelBtn:hover {
+    border-color: #9ca3af;
+    background: #f9fafb;
+}
+
+.mdtBookBtnWrap > .mdtBookBtn {
+    margin-top: 8px;
 }
 
 .affiliateDisclosure {
