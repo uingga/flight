@@ -6,6 +6,7 @@ import { ko } from 'date-fns/locale';
 import 'react-datepicker/dist/react-datepicker.css';
 import Logo from '@/components/Logo';
 import * as gtag from '@/lib/analytics';
+import { calcFlightDuration } from '@/lib/utils/flight-helpers';
 import { getTripcomHotelUrl, getTripcomTrackingId } from '@/lib/utils/tripcom-helpers';
 import type { Flight } from '@/types/flight';
 import styles from './page.module.css';
@@ -96,6 +97,43 @@ const tripLength = (flight: Flight) => {
 };
 
 const priceText = (price: number) => `${new Intl.NumberFormat('ko-KR').format(price)}원`;
+
+const airportLabel = (city: string, airport?: string) => (
+    airport ? `${city}(${airport})` : city
+);
+
+const agencyFlightDuration = (value?: string) => {
+    const parsed = value?.match(/^(\d{1,2}):(\d{2})/);
+    if (!parsed) return null;
+    const hours = Number(parsed[1]);
+    const minutes = Number(parsed[2]);
+    return `${hours}시간${minutes > 0 ? ` ${minutes}분` : ''}`;
+};
+
+const legDetails = (flight: Flight, leg: 'outbound' | 'return') => {
+    const detail = flight.modetourDetail;
+    const departureCity = departureName(flight);
+    const arrivalCity = stripAirport(flight.arrival.city);
+
+    if (leg === 'outbound') {
+        const arrivalTime = detail?.departureArrivalTime || flight.departure.arrivalTime || '';
+        return {
+            route: `${airportLabel(departureCity, flight.departure.airport)} → ${airportLabel(arrivalCity, flight.arrival.airport)}`,
+            times: `${flight.departure.time || '시간 확인'}${arrivalTime ? ` → ${arrivalTime}` : ''}`,
+            duration: calcFlightDuration(departureCity, flight.departure.time, flight.departure.date, arrivalCity, arrivalTime)
+                || agencyFlightDuration(detail?.flyingTime),
+        };
+    }
+
+    const departureTime = detail?.returnDepartureTime || flight.arrival.time || '';
+    const arrivalTime = detail?.returnArrivalTime || flight.arrival.arrivalTime || '';
+    return {
+        route: `${airportLabel(arrivalCity, detail?.returnDepartureAirport || flight.arrival.airport)} → ${airportLabel(departureCity, detail?.returnArrivalAirport || flight.departure.airport)}`,
+        times: `${departureTime || '시간 확인'}${arrivalTime ? ` → ${arrivalTime}` : ''}`,
+        duration: calcFlightDuration(arrivalCity, departureTime, flight.arrival.date, departureCity, arrivalTime)
+            || agencyFlightDuration(detail?.returnFlyingTime),
+    };
+};
 
 const regionMatches = (flight: Flight, region: string) => {
     if (region === '전체') return true;
@@ -477,6 +515,8 @@ export default function MobileRedesignPreview() {
                                             </div>
                                         </div>
 
+                                        <div className={styles.ticketDivider} aria-hidden="true" />
+
                                         <div className={styles.cardFooter}>
                                             <div className={styles.availabilityGroup}>
                                                 {seats > 0 && <span className={seats <= 5 ? styles.lowSeats : ''}>{seats}석 남음</span>}
@@ -545,7 +585,7 @@ export default function MobileRedesignPreview() {
                         </div>
 
                         <div className={styles.filterGroup}>
-                            <h3>1인 왕복 가격</h3>
+                            <h3>가격</h3>
                             <div className={styles.optionGrid}>
                                 {PRICE_OPTIONS.map(item => (
                                     <button type="button" key={item.value} className={maxPrice === item.value ? styles.optionActive : ''} onClick={() => setMaxPrice(item.value)}>{item.label}</button>
@@ -614,12 +654,19 @@ export default function MobileRedesignPreview() {
                 </div>
             )}
 
-            {selectedFlight && (
+            {selectedFlight && (() => {
+                const outbound = legDetails(selectedFlight, 'outbound');
+                const inbound = legDetails(selectedFlight, 'return');
+                const stay = tripLength(selectedFlight);
+                return (
                 <div className={styles.sheetOverlay} onClick={() => setSelectedFlight(null)}>
                     <section className={`${styles.bottomSheet} ${styles.detailSheet}`} onClick={event => event.stopPropagation()} aria-label="항공권 상세">
                         <div className={styles.sheetHandle} />
                         <div className={styles.detailHeader}>
-                            <span className={`${styles.sourceBadge} ${styles[selectedFlight.source]}`}>{SOURCE_NAMES[selectedFlight.source]}</span>
+                            <div className={styles.detailAgencyLine}>
+                                <span className={`${styles.sourceBadge} ${styles[selectedFlight.source]}`}>{SOURCE_NAMES[selectedFlight.source]}</span>
+                                <span className={styles.detailAirline}>{selectedFlight.airline || '항공사 확인'}</span>
+                            </div>
                             <button type="button" onClick={() => setSelectedFlight(null)} aria-label="닫기"><Icon name="close" /></button>
                         </div>
 
@@ -630,26 +677,37 @@ export default function MobileRedesignPreview() {
                             </div>
                             <div>
                                 <strong>{priceText(selectedFlight.source === 'ttang' ? selectedFlight.price : effectivePrice(selectedFlight))}</strong>
-                                <span>{selectedFlight.source === 'ttang' ? '수수료 전 표시가격' : '1인 왕복'}</span>
+                                <span>(유류/제세공과금 포함)</span>
                             </div>
                         </div>
 
                         <div className={styles.detailSchedule}>
-                            <div>
+                            <div className={styles.detailScheduleRow}>
                                 <span className={styles.outboundDot} />
-                                <p><b>가는 날</b><strong>{shortDate(selectedFlight.departure.date)}</strong></p>
-                                <em>{selectedFlight.departure.time || '시간 확인'}{selectedFlight.departure.arrivalTime ? ` → ${selectedFlight.departure.arrivalTime}` : ''}</em>
+                                <div className={styles.detailScheduleInfo}>
+                                    <p><b>가는 날</b><strong>{shortDate(selectedFlight.departure.date)}</strong></p>
+                                    <small>{outbound.route}</small>
+                                </div>
+                                <div className={styles.detailFlightTiming}>
+                                    <em>{outbound.times}</em>
+                                    <small>{outbound.duration ? `비행시간 ${outbound.duration}` : '비행시간 확인 필요'}</small>
+                                </div>
                             </div>
-                            <div>
+                            {stay && <div className={styles.detailStayDivider}><span>{stay}</span></div>}
+                            <div className={styles.detailScheduleRow}>
                                 <span className={styles.inboundDot} />
-                                <p><b>오는 날</b><strong>{shortDate(selectedFlight.arrival.date)}</strong></p>
-                                <em>{selectedFlight.arrival.time || '시간 확인'}{selectedFlight.arrival.arrivalTime ? ` → ${selectedFlight.arrival.arrivalTime}` : ''}</em>
+                                <div className={styles.detailScheduleInfo}>
+                                    <p><b>오는 날</b><strong>{shortDate(selectedFlight.arrival.date)}</strong></p>
+                                    <small>{inbound.route}</small>
+                                </div>
+                                <div className={styles.detailFlightTiming}>
+                                    <em>{inbound.times}</em>
+                                    <small>{inbound.duration ? `비행시간 ${inbound.duration}` : '비행시간 확인 필요'}</small>
+                                </div>
                             </div>
                         </div>
 
                         <div className={styles.detailFacts}>
-                            <span>{selectedFlight.airline || '항공사 확인'}</span>
-                            {tripLength(selectedFlight) && <span>{tripLength(selectedFlight)}</span>}
                             {(selectedFlight.availableSeats || Number.parseInt(selectedFlight.seats || '', 10)) > 0 && (
                                 <span>{selectedFlight.availableSeats || Number.parseInt(selectedFlight.seats || '', 10)}석 남음</span>
                             )}
@@ -713,7 +771,8 @@ export default function MobileRedesignPreview() {
                         </div>
                     </section>
                 </div>
-            )}
+                );
+            })()}
 
             {toast && <div className={styles.toast} role="status">{toast}</div>}
         </main>

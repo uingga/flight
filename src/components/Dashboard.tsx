@@ -3762,10 +3762,10 @@ export default function Dashboard() {
                     const minutes = Number(parsed[2]);
                     return `${hours}시간${minutes > 0 ? ` ${minutes}분` : ''}`;
                 };
-                const flyTime = (mdt?.flyingTime && fmtAgencyFlyTime(mdt.flyingTime))
-                    || calcFlightDuration(depCity, depTime, depDate, arrCity, depArrTime) || '';
-                const retFlyTime = (mdt?.returnFlyingTime && fmtAgencyFlyTime(mdt.returnFlyingTime))
-                    || calcFlightDuration(arrCity, retDepTime, arrDate, depCity, retArrTime) || '';
+                const flyTime = calcFlightDuration(depCity, depTime, depDate, arrCity, depArrTime)
+                    || (mdt?.flyingTime && fmtAgencyFlyTime(mdt.flyingTime)) || '';
+                const retFlyTime = calcFlightDuration(arrCity, retDepTime, arrDate, depCity, retArrTime)
+                    || (mdt?.returnFlyingTime && fmtAgencyFlyTime(mdt.returnFlyingTime)) || '';
                 // 총 체류기간 (N박 M일)
                 const stayNights = (() => {
                     if (!depDate || !arrDate) return '';
@@ -4065,12 +4065,7 @@ export default function Dashboard() {
 
                             {/* 표시 금액 */}
                             <div className={styles.mdtPriceTotal}>
-                                <div>
-                                    <div className={styles.mdtPriceTotalLabel}>
-                                        {modetourGuide.source === 'ttang' ? '수수료 전 표시가격' : '총 예상금액'}
-                                    </div>
-                                    <div className={styles.mdtPriceTotalSub}>(유류/제세공과금 포함)</div>
-                                </div>
+                                <div className={styles.mdtPriceTotalSub}>(유류/제세공과금 포함)</div>
                                 <div className={styles.mdtPriceTotalValue}>{formatPrice(totalPrice)}</div>
                             </div>
 
