@@ -1,6 +1,6 @@
 .previewPage {
     min-height: 100vh;
-    background: #ffeef2;
+    background: #f3f3f3;
     color: #222222;
     --teal: #ff385c;
     --teal-dark: #e00b41;
@@ -15,7 +15,7 @@
     max-width: 480px;
     min-height: 100vh;
     margin: 0 auto;
-    background: #fff9fa;
+    background: #ffffff;
     box-shadow: 0 0 48px rgba(34, 34, 34, 0.11);
 }
 
@@ -177,7 +177,7 @@
     display: grid;
     gap: 6px;
     border-radius: 11px;
-    background: #fbf8f9;
+    background: #f7f7f7;
 }
 .scheduleBox > div { display: grid; grid-template-columns: 43px 83px 1fr; align-items: baseline; gap: 4px; font-size: 11px; }
 .scheduleBox span { color: #929292; font-size: 9px; font-weight: 600; }
@@ -248,10 +248,10 @@
 .detailTitle > div:last-child strong { display: block; color: var(--teal-dark); font-size: 20px; line-height: 1.25; font-weight: 800; letter-spacing: -0.04em; }
 .detailTitle > div:last-child span { color: #929292; font-size: 9px; }
 
-.detailSchedule { position: relative; margin-top: 22px; padding: 15px; display: grid; gap: 14px; border-radius: 14px; background: #fbf8f9; }
+.detailSchedule { position: relative; margin-top: 22px; padding: 15px; display: grid; gap: 14px; border-radius: 14px; background: #f7f7f7; }
 .detailSchedule::before { content: ''; position: absolute; top: 27px; bottom: 27px; left: 20px; width: 1px; background: #dddddd; }
 .detailSchedule > div { position: relative; display: grid; grid-template-columns: 12px 1fr auto; align-items: center; gap: 8px; }
-.detailSchedule > div > span { position: relative; z-index: 1; width: 11px; height: 11px; border: 3px solid #fbf8f9; border-radius: 50%; box-shadow: 0 0 0 1px var(--teal); background: var(--teal); }
+.detailSchedule > div > span { position: relative; z-index: 1; width: 11px; height: 11px; border: 3px solid #f7f7f7; border-radius: 50%; box-shadow: 0 0 0 1px var(--teal); background: var(--teal); }
 .detailSchedule p { display: flex; align-items: baseline; gap: 7px; }
 .detailSchedule p b { color: #6a6a6a; font-size: 9px; }
 .detailSchedule p strong { font-size: 12px; }
