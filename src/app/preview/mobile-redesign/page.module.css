@@ -305,7 +305,7 @@
 .detailSeatCount { flex: 0 0 auto; color: #666666; font-size: 10.5px; line-height: 1; font-weight: 700; white-space: nowrap; }
 .detailHeader > button { width: 34px; height: 34px; display: grid; place-items: center; color: #6a6a6a; }
 .detailHeader > button svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; }
-.detailTitle { margin-top: 15px; display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+.detailTitle { margin-top: 15px; display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
 .detailTitle p { color: #6a6a6a; font-size: 11px; }
 .detailTitle h2 { margin-top: 1px; font-size: 24px; line-height: 1.25; font-weight: 800; letter-spacing: -0.05em; }
 .detailTitle > div:last-child { flex-shrink: 0; text-align: right; }
