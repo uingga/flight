@@ -1,9 +1,9 @@
 export const NAVER_COMPARE_EXPERIMENT = {
     id: 'hide_naver_compare_20260821',
     label: '네이버 가격비교 버튼 숨김',
-    // 배포 직후부터 숨기고, 14일의 온전한 날짜(8/22~9/4)를 확보한 뒤 자동 복원한다.
+    // 2026-08-22 사용자 요청으로 실험을 조기 종료하고 버튼을 즉시 복원했다.
     hideStartsAt: '2026-08-21T22:00:00+09:00',
-    hideEndsAt: '2026-09-05T00:00:00+09:00',
+    hideEndsAt: '2026-08-22T23:02:22+09:00',
     measurementStartDate: '2026-08-22',
     measurementEndDate: '2026-09-04',
     previousPeriodStartDate: '2026-08-08',
