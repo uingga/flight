@@ -456,25 +456,23 @@ export default function MobileRedesignPreview() {
                                             </div>
                                         </div>
 
-                                        <div className={styles.journeyPanel}>
-                                            <div className={styles.routeGrid}>
-                                                <div className={styles.routeEndpoint}>
-                                                    <strong>{departureName(flight)}</strong>
-                                                    <div className={styles.routeTiming}>
-                                                        <b>{cardDate(flight.departure.date)}</b>
-                                                        <em>{flight.departure.time || '시간 확인'}</em>
-                                                    </div>
+                                        <div className={styles.routeGrid}>
+                                            <div className={styles.routeEndpoint}>
+                                                <strong>{departureName(flight)}</strong>
+                                                <div className={styles.routeTiming}>
+                                                    <b>{cardDate(flight.departure.date)}</b>
+                                                    <em>{flight.departure.time || '시간 확인'}</em>
                                                 </div>
-                                                <div className={styles.routeConnector} aria-hidden="true">
-                                                    <Icon name="plane" />
-                                                    {duration && <span>{duration}</span>}
-                                                </div>
-                                                <div className={`${styles.routeEndpoint} ${styles.routeEndpointArrival}`}>
-                                                    <strong>{destination}</strong>
-                                                    <div className={styles.routeTiming}>
-                                                        <b>{cardDate(flight.arrival.date)}</b>
-                                                        <em>{flight.arrival.time || '시간 확인'}</em>
-                                                    </div>
+                                            </div>
+                                            <div className={styles.routeConnector} aria-hidden="true">
+                                                <Icon name="plane" />
+                                                {duration && <span>{duration}</span>}
+                                            </div>
+                                            <div className={`${styles.routeEndpoint} ${styles.routeEndpointArrival}`}>
+                                                <strong>{destination}</strong>
+                                                <div className={styles.routeTiming}>
+                                                    <b>{cardDate(flight.arrival.date)}</b>
+                                                    <em>{flight.arrival.time || '시간 확인'}</em>
                                                 </div>
                                             </div>
                                         </div>
