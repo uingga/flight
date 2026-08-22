@@ -488,7 +488,7 @@ export default function MobileRedesignPreview() {
                                             <div className={styles.cardDecision}>
                                                 <div className={styles.priceBlock}>
                                                     <strong>{priceText(flight.source === 'ttang' ? flight.price : price)}</strong>
-                                                    <span>{flight.source === 'ttang' ? '발권수수료가 추가될 수 있어요' : '1인 왕복'}</span>
+                                                    {flight.source === 'ttang' && <span>발권수수료가 추가될 수 있어요</span>}
                                                 </div>
                                             </div>
                                         </div>
