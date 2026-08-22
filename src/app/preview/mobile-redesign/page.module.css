@@ -147,6 +147,7 @@
 .loadingList { display: grid; gap: 10px; }
 
 .flightCard {
+    --card-rail: clamp(10px, 3.5vw, 14px);
     position: relative;
     overflow: hidden;
     border: 1px solid var(--line);
@@ -157,12 +158,12 @@
 
 .cardBody {
     width: 100%;
-    padding: 15px 15px 13px;
+    padding: 14px 13px 12px;
     text-align: left;
     color: inherit;
 }
 
-.cardTopline { min-height: 22px; padding-right: 34px; padding-left: clamp(10px, 3vw, 14px); display: flex; align-items: center; justify-content: space-between; }
+.cardTopline { min-height: 22px; padding-right: 34px; padding-left: var(--card-rail); display: flex; align-items: center; justify-content: space-between; }
 .cardTopline > div { display: flex; align-items: center; gap: 7px; min-width: 0; }
 .sourceBadge { display: inline-flex; height: 21px; padding: 0 7px; align-items: center; border-radius: 6px; font-size: 9px; line-height: 1; font-weight: 800; white-space: nowrap; }
 .ybtour { background: #fff3be; color: #735800; }
@@ -188,31 +189,31 @@
 .favoriteButton.favoriteActive { color: var(--teal); }
 .favoriteButton.favoriteActive svg { fill: currentColor; }
 
-.tripRouteGrid { margin-top: 14px; padding: 0 clamp(20px, 6vw, 26px); display: grid; grid-template-columns: minmax(0, 1fr) 44px minmax(0, 1fr); align-items: start; gap: 7px; }
-.tripEndpoint { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; }
-.tripEndpointArrival { align-items: flex-end; text-align: right; }
-.tripEndpointInner { max-width: 100%; display: flex; flex-direction: column; align-items: center; text-align: center; }
+.tripRouteGrid { margin-top: 12px; padding: 0 var(--card-rail); display: grid; grid-template-columns: minmax(0, 1fr) 38px minmax(0, 1fr); align-items: start; gap: 3px; }
+.tripEndpoint { min-width: 0; display: flex; flex-direction: column; align-items: center; text-align: center; }
+.tripEndpointArrival { align-items: center; text-align: center; }
+.tripEndpointInner { width: 100%; max-width: 100%; display: flex; flex-direction: column; align-items: center; text-align: center; }
 .tripEndpointInner > strong { max-width: 100%; overflow: hidden; color: var(--ink); font-size: 20px; line-height: 1.2; font-weight: 800; letter-spacing: -0.04em; text-overflow: ellipsis; white-space: nowrap; }
-.tripTiming { margin-top: 7px; display: flex; flex-direction: column; align-items: center; gap: 3px; color: #a0a0a0; white-space: nowrap; }
+.tripTiming { margin-top: 6px; display: flex; flex-direction: column; align-items: center; gap: 3px; color: #a0a0a0; white-space: nowrap; }
 .tripTiming b { color: #555555; font-size: 11px; line-height: 1.25; font-weight: 700; }
 .tripTiming em { color: #929292; font-size: 10px; line-height: 1.2; font-style: normal; font-variant-numeric: tabular-nums; }
-.tripPlane { position: relative; min-height: 58px; display: flex; flex-direction: column; align-items: center; color: #bdbdbd; }
-.tripPlane::before { content: ''; position: absolute; right: -2px; left: -2px; top: 11px; height: 1px; background: #eeeeee; }
-.tripPlane svg { position: relative; width: 23px; height: 23px; padding: 2px; fill: currentColor; stroke: none; background: #fff; }
+.tripPlane { position: relative; min-height: 57px; display: flex; flex-direction: column; align-items: center; color: #bdbdbd; }
+.tripPlane::before { content: ''; position: absolute; right: 0; left: 0; top: 10px; height: 1px; background: #eeeeee; }
+.tripPlane svg { position: relative; width: 22px; height: 22px; padding: 2px; fill: currentColor; stroke: none; background: #fff; }
 .tripPlane span { margin-top: 8px; color: #777777; font-size: 9px; line-height: 1.2; font-weight: 700; white-space: nowrap; }
-.priceBlock { flex-shrink: 0; text-align: right; }
-.priceBlock strong { display: block; color: var(--teal-dark); font-size: 18px; line-height: 1.25; font-weight: 800; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
+.priceBlock { min-width: 0; text-align: center; }
+.priceBlock strong { display: block; color: var(--teal); font-size: 18px; line-height: 1.25; font-weight: 800; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
 .priceBlock span { display: block; margin-top: 2px; color: #929292; font-size: 9px; white-space: nowrap; }
 
-.cardMeta { position: relative; min-height: 38px; margin-top: 14px; padding: 11px clamp(10px, 3vw, 14px) 0; display: flex; align-items: center; justify-content: space-between; gap: 8px; border-top: 1px dashed #d9d9d9; }
+.cardMeta { position: relative; min-height: 42px; margin-top: 12px; padding: 10px var(--card-rail) 0; display: grid; grid-template-columns: minmax(0, 1fr) 38px minmax(0, 1fr); align-items: center; gap: 3px; border-top: 1px dashed #d9d9d9; }
 .cardMeta::before,
 .cardMeta::after { content: ''; position: absolute; top: -7px; width: 13px; height: 13px; border: 1px solid var(--line); border-radius: 50%; background: #fff; }
 .cardMeta::before { left: -22px; }
 .cardMeta::after { right: -22px; }
-.cardFacts { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
+.cardFacts { grid-column: 1; justify-self: center; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 4px; }
 .cardFacts span { height: 21px; padding: 0 7px; display: inline-flex; align-items: center; border-radius: 6px; background: #f2f2f2; color: #6a6a6a; font-size: 9px; line-height: 1; }
 .cardFacts .lowSeats { background: #fff0ec; color: #ba4d2d; font-weight: 700; }
-.cardDecision { flex-shrink: 0; }
+.cardDecision { grid-column: 3; min-width: 0; justify-self: center; }
 
 .moreButton { width: 100%; height: 46px; margin-top: 14px; border: 1px solid #dddddd; border-radius: 13px; background: #fff; color: #3f3f3f; font-size: 12px; font-weight: 700; }
 
@@ -285,7 +286,7 @@
 .detailTitle p { color: #6a6a6a; font-size: 11px; }
 .detailTitle h2 { margin-top: 1px; font-size: 24px; line-height: 1.25; font-weight: 800; letter-spacing: -0.05em; }
 .detailTitle > div:last-child { flex-shrink: 0; text-align: right; }
-.detailTitle > div:last-child strong { display: block; color: var(--teal-dark); font-size: 20px; line-height: 1.25; font-weight: 800; letter-spacing: -0.04em; }
+.detailTitle > div:last-child strong { display: block; color: var(--teal); font-size: 20px; line-height: 1.25; font-weight: 800; letter-spacing: -0.04em; }
 .detailTitle > div:last-child span { color: #929292; font-size: 9px; }
 
 .detailSchedule { position: relative; margin-top: 22px; padding: 15px; display: grid; gap: 14px; border-radius: 14px; background: #f7f7f7; }
