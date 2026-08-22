@@ -75,6 +75,13 @@ const shortDate = (value: string) => {
     }).format(date).replace(/\.$/, '');
 };
 
+const cardDate = (value: string) => {
+    const date = parseDate(value);
+    if (!date) return value || '날짜 확인';
+    const weekday = new Intl.DateTimeFormat('ko-KR', { weekday: 'short' }).format(date);
+    return `${date.getMonth() + 1}월 ${date.getDate()}일(${weekday})`;
+};
+
 const tripLength = (flight: Flight) => {
     const departure = parseDate(flight.departure.date);
     const arrival = parseDate(flight.arrival.date);
@@ -398,7 +405,7 @@ export default function MobileRedesignPreview() {
                     )}
 
                     <div className={styles.cardList}>
-                        {filteredFlights.slice(0, visibleCount).map((flight, index) => {
+                        {filteredFlights.slice(0, visibleCount).map((flight) => {
                             const seats = flight.availableSeats || Number.parseInt(flight.seats || '', 10) || 0;
                             const duration = tripLength(flight);
                             const destination = stripAirport(flight.arrival.city);
@@ -411,15 +418,13 @@ export default function MobileRedesignPreview() {
                                                 <span className={`${styles.sourceBadge} ${styles[flight.source]}`}>{SOURCE_NAMES[flight.source]}</span>
                                                 <span className={styles.airline}>{flight.airline || '항공사 확인'}</span>
                                             </div>
-                                            <span className={styles.cardNumber}>{String(index + 1).padStart(2, '0')}</span>
                                         </div>
 
                                         <div className={styles.tripRouteGrid}>
                                             <div className={styles.tripEndpoint}>
                                                 <strong>{departureName(flight)}</strong>
                                                 <div className={styles.tripTiming}>
-                                                    <b>{shortDate(flight.departure.date)}</b>
-                                                    <span aria-hidden="true">·</span>
+                                                    <b>{cardDate(flight.departure.date)}</b>
                                                     <em>{flight.departure.time || '시간 확인'}</em>
                                                 </div>
                                             </div>
@@ -427,8 +432,7 @@ export default function MobileRedesignPreview() {
                                             <div className={`${styles.tripEndpoint} ${styles.tripEndpointArrival}`}>
                                                 <strong>{destination}</strong>
                                                 <div className={styles.tripTiming}>
-                                                    <b>{shortDate(flight.arrival.date)}</b>
-                                                    <span aria-hidden="true">·</span>
+                                                    <b>{cardDate(flight.arrival.date)}</b>
                                                     <em>{flight.arrival.time || '시간 확인'}</em>
                                                 </div>
                                             </div>

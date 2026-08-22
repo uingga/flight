@@ -167,7 +167,6 @@
 .ttang { background: #fff0eb; color: #a24529; }
 .myrealtrip { background: #eaf7ff; color: #16729c; }
 .airline { overflow: hidden; color: #6a6a6a; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
-.cardNumber { color: #b8b8b8; font-size: 9px; font-variant-numeric: tabular-nums; }
 
 .favoriteButton {
     position: absolute;
@@ -184,14 +183,13 @@
 .favoriteButton.favoriteActive { color: var(--teal); }
 .favoriteButton.favoriteActive svg { fill: currentColor; }
 
-.tripRouteGrid { margin-top: 14px; padding: 0 clamp(12px, 4vw, 18px); display: grid; grid-template-columns: minmax(0, 1fr) 44px minmax(0, 1fr); align-items: start; gap: 7px; }
+.tripRouteGrid { margin-top: 14px; padding: 0 clamp(20px, 6vw, 26px); display: grid; grid-template-columns: minmax(0, 1fr) 44px minmax(0, 1fr); align-items: start; gap: 7px; }
 .tripEndpoint { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; }
 .tripEndpointArrival { align-items: flex-end; text-align: right; }
 .tripEndpoint > strong { width: 100%; overflow: hidden; color: var(--ink); font-size: 20px; line-height: 1.2; font-weight: 800; letter-spacing: -0.04em; text-overflow: ellipsis; white-space: nowrap; }
-.tripTiming { width: 100%; margin-top: 8px; display: flex; align-items: baseline; gap: 4px; color: #a0a0a0; white-space: nowrap; }
-.tripEndpointArrival .tripTiming { justify-content: flex-end; }
+.tripTiming { width: 100%; margin-top: 7px; display: flex; flex-direction: column; align-items: flex-start; gap: 3px; color: #a0a0a0; white-space: nowrap; }
+.tripEndpointArrival .tripTiming { align-items: flex-end; }
 .tripTiming b { color: #555555; font-size: 11px; line-height: 1.25; font-weight: 700; }
-.tripTiming span { color: #c4c4c4; font-size: 9px; }
 .tripTiming em { color: #929292; font-size: 10px; line-height: 1.2; font-style: normal; font-variant-numeric: tabular-nums; }
 .tripPlane { position: relative; height: 24px; display: grid; place-items: center; color: #bdbdbd; }
 .tripPlane::before { content: ''; position: absolute; right: -2px; left: -2px; top: 50%; height: 1px; background: #eeeeee; }
@@ -200,7 +198,11 @@
 .priceBlock strong { display: block; color: var(--teal-dark); font-size: 18px; line-height: 1.25; font-weight: 800; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
 .priceBlock span { display: block; margin-top: 2px; color: #929292; font-size: 9px; }
 
-.cardMeta { min-height: 38px; margin-top: 14px; padding-top: 11px; display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; border-top: 1px solid #eeeeee; }
+.cardMeta { position: relative; min-height: 38px; margin-top: 14px; padding-top: 11px; display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; border-top: 1px dashed #d9d9d9; }
+.cardMeta::before,
+.cardMeta::after { content: ''; position: absolute; top: -7px; width: 13px; height: 13px; border: 1px solid var(--line); border-radius: 50%; background: #fff; }
+.cardMeta::before { left: -22px; }
+.cardMeta::after { right: -22px; }
 .cardFacts { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
 .cardFacts span { padding: 3px 6px; border-radius: 5px; background: #f2f2f2; color: #6a6a6a; font-size: 9px; line-height: 1.3; }
 .cardFacts .lowSeats { background: #fff0ec; color: #ba4d2d; font-weight: 700; }
@@ -340,7 +342,6 @@
     .feedIntro h1 { font-size: 18px; }
     .priceBlock strong { font-size: 16px; }
     .tripEndpoint > strong { font-size: 18px; }
-    .tripTiming { gap: 3px; }
     .tripTiming b { font-size: 10px; }
     .tripTiming em { font-size: 9px; }
 }
