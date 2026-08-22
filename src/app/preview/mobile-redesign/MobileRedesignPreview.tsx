@@ -323,23 +323,25 @@ export default function MobileRedesignPreview() {
                     <span>{updatedLabel}</span>
                 </section>
 
-                <nav className={`${styles.quickFilters} ${styles.quickChipRail}`} aria-label="빠른 항공권 필터">
-                    <button type="button" className={filterCount ? styles.filterHasValue : ''} onClick={() => setFilterOpen(true)}>
+                <div className={styles.quickFilterRow}>
+                    <button type="button" className={`${styles.filterButton} ${filterCount ? styles.filterHasValue : ''}`} onClick={() => setFilterOpen(true)}>
                         <Icon name="sliders" />
                         필터{filterCount ? ` ${filterCount}` : ''}
                     </button>
-                    {REGION_OPTIONS.map(item => (
-                        <button
-                            type="button"
-                            key={item}
-                            className={region === item ? styles.activeFilter : ''}
-                            aria-label={`도착 지역 ${item}`}
-                            onClick={() => setRegion(item)}
-                        >
-                            {item}
-                        </button>
-                    ))}
-                </nav>
+                    <nav className={`${styles.quickFilters} ${styles.regionChipRail}`} aria-label="도착 지역 빠른 선택">
+                        {REGION_OPTIONS.map(item => (
+                            <button
+                                type="button"
+                                key={item}
+                                className={region === item ? styles.activeFilter : ''}
+                                aria-label={`도착 지역 ${item}`}
+                                onClick={() => setRegion(item)}
+                            >
+                                {item}
+                            </button>
+                        ))}
+                    </nav>
+                </div>
 
                 <section className={styles.feedSection}>
                     <div className={styles.feedHeading}>
