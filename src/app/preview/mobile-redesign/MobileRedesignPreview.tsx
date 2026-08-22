@@ -227,8 +227,8 @@ export default function MobileRedesignPreview() {
 
     const filterCount = [departure !== '전체', region !== '전체', datePeriod !== 'all', maxPrice > 0].filter(Boolean).length;
     const updatedLabel = lastUpdated
-        ? `${new Intl.DateTimeFormat('ko-KR', { month: 'numeric', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(new Date(lastUpdated))} 갱신`
-        : '최근 수집 기준';
+        ? `${new Intl.DateTimeFormat('ko-KR', { month: 'numeric', day: 'numeric' }).format(new Date(lastUpdated))} 기준`
+        : '최근 기준';
 
     const toggleFavorite = (id: string) => {
         setFavorites(current => {
@@ -297,32 +297,24 @@ export default function MobileRedesignPreview() {
                     <span>{updatedLabel}</span>
                 </section>
 
-                <div className={styles.quickFilterStack}>
-                    <div className={`${styles.quickFilters} ${styles.departureQuickFilters}`}>
-                        <button type="button" className={filterCount ? styles.activeFilter : ''} onClick={() => setFilterOpen(true)}>
-                            <Icon name="sliders" />
-                            필터{filterCount ? ` ${filterCount}` : ''}
-                        </button>
-                        <label className={`${styles.departureSelect} ${departure !== '전체' ? styles.activeSelect : ''}`}>
-                            <span>출발지</span>
-                            <select value={departure} onChange={event => setDeparture(event.target.value)} aria-label="출발지 선택">
-                                {DEPARTURE_OPTIONS.map(item => <option value={item} key={item}>{item}</option>)}
-                            </select>
-                        </label>
-                    </div>
-                    <nav className={`${styles.quickFilters} ${styles.regionQuickFilters}`} aria-label="도착 지역 빠른 선택">
-                        {REGION_OPTIONS.map(item => (
-                            <button
-                                type="button"
-                                key={item}
-                                className={region === item ? styles.activeFilter : ''}
-                                onClick={() => setRegion(item)}
-                            >
-                                {item}
-                            </button>
-                        ))}
-                    </nav>
-                </div>
+                <nav className={`${styles.quickFilters} ${styles.primaryQuickFilters}`} aria-label="빠른 항공권 필터">
+                    <button type="button" className={filterCount ? styles.activeFilter : ''} onClick={() => setFilterOpen(true)}>
+                        <Icon name="sliders" />
+                        필터{filterCount ? ` ${filterCount}` : ''}
+                    </button>
+                    <label className={`${styles.quickSelect} ${departure !== '전체' ? styles.activeSelect : ''}`}>
+                        <span>출발</span>
+                        <select value={departure} onChange={event => setDeparture(event.target.value)} aria-label="출발지 선택">
+                            {DEPARTURE_OPTIONS.map(item => <option value={item} key={item}>{item}</option>)}
+                        </select>
+                    </label>
+                    <label className={`${styles.quickSelect} ${region !== '전체' ? styles.activeSelect : ''}`}>
+                        <span>도착</span>
+                        <select value={region} onChange={event => setRegion(event.target.value)} aria-label="도착 지역 선택">
+                            {REGION_OPTIONS.map(item => <option value={item} key={item}>{item}</option>)}
+                        </select>
+                    </label>
+                </nav>
 
                 <section className={styles.feedSection}>
                     <div className={styles.feedHeading}>
