@@ -455,41 +455,34 @@ export default function MobileRedesignPreview() {
                                             </div>
                                         </div>
 
-                                        <div className={styles.tripRouteGrid}>
-                                            <div className={styles.tripEndpoint}>
-                                                <div className={styles.tripEndpointInner}>
-                                                    <strong>{departureName(flight)}</strong>
-                                                    <div className={styles.tripTiming}>
-                                                        <b>{cardDate(flight.departure.date)}</b>
-                                                        <em>{flight.departure.time || '시간 확인'}</em>
-                                                    </div>
-                                                </div>
+                                        <div className={styles.dealSummary}>
+                                            <div className={styles.destinationBlock}>
+                                                <span>{departureName(flight)} 출발</span>
+                                                <strong>{destination}</strong>
                                             </div>
-                                            <div className={styles.tripPlane}>
-                                                <Icon name="plane" />
-                                                {duration && <span>{duration}</span>}
-                                            </div>
-                                            <div className={`${styles.tripEndpoint} ${styles.tripEndpointArrival}`}>
-                                                <div className={styles.tripEndpointInner}>
-                                                    <strong>{destination}</strong>
-                                                    <div className={styles.tripTiming}>
-                                                        <b>{cardDate(flight.arrival.date)}</b>
-                                                        <em>{flight.arrival.time || '시간 확인'}</em>
-                                                    </div>
-                                                </div>
+                                            <div className={styles.priceBlock}>
+                                                <strong>{priceText(flight.source === 'ttang' ? flight.price : price)}</strong>
+                                                {flight.source === 'ttang' && <span>발권수수료가 추가될 수 있어요</span>}
                                             </div>
                                         </div>
 
-                                        <div className={styles.cardMeta}>
-                                            <div className={styles.cardFacts}>
-                                                {seats > 0 && <span className={seats <= 5 ? styles.lowSeats : ''}>{seats}석 남음</span>}
-                                                {flight.minPax && flight.minPax > 1 && <span>{flight.minPax}인부터 예약</span>}
+                                        <div className={styles.cardFacts}>
+                                            {duration && <span>{duration}</span>}
+                                            {seats > 0 && <span className={seats <= 5 ? styles.lowSeats : ''}>{seats}석 남음</span>}
+                                            {flight.minPax && flight.minPax > 1 && <span>{flight.minPax}인부터 예약</span>}
+                                        </div>
+
+                                        <div className={styles.journeyStrip}>
+                                            <div className={styles.journeyPoint}>
+                                                <b>{cardDate(flight.departure.date)}</b>
+                                                <em>{flight.departure.time || '시간 확인'}</em>
                                             </div>
-                                            <div className={styles.cardDecision}>
-                                                <div className={styles.priceBlock}>
-                                                    <strong>{priceText(flight.source === 'ttang' ? flight.price : price)}</strong>
-                                                    {flight.source === 'ttang' && <span>발권수수료가 추가될 수 있어요</span>}
-                                                </div>
+                                            <div className={styles.journeyConnector} aria-hidden="true">
+                                                <Icon name="plane" />
+                                            </div>
+                                            <div className={`${styles.journeyPoint} ${styles.journeyPointArrival}`}>
+                                                <b>{cardDate(flight.arrival.date)}</b>
+                                                <em>{flight.arrival.time || '시간 확인'}</em>
                                             </div>
                                         </div>
                                     </button>
