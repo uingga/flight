@@ -58,7 +58,8 @@
 
 .headerActions { display: flex; align-items: center; gap: 8px; }
 .iconButton,
-.alertButton {
+.alertButton,
+.accountIconButton {
     height: 36px;
     display: inline-flex;
     align-items: center;
@@ -69,6 +70,9 @@
 .iconButton { width: 36px; color: #3f3f3f; }
 .iconButton svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.9; }
 .alertButton { padding: 0 13px; background: var(--teal-soft); color: var(--teal-dark); font-size: var(--size-meta); font-weight: var(--weight-bold); }
+.accountIconButton { position: relative; width: 36px; border: 1px solid var(--line); background: #fff; color: #444; }
+.accountIconButton svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
+.accountIconButton span { position: absolute; top: 4px; right: 4px; width: 6px; height: 6px; border: 1px solid white; border-radius: 50%; background: var(--teal); }
 
 .searchRow {
     position: sticky;

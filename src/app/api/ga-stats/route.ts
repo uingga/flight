@@ -29,6 +29,13 @@ const EVENT_LABELS: Record<string, string> = {
     filter_change: '필터 변경',
     date_filter: '날짜 필터',
     date_filter_empty: '날짜 필터 — 결과 0건',
+    account_open: '내 여행 열기',
+    login_code_requested: '로그인 인증번호 요청',
+    account_login: '로그인 완료',
+    saved_search_create: '검색 조건 저장',
+    saved_search_apply: '저장한 검색 다시 보기',
+    account_logout: '로그아웃',
+    account_delete: '계정 삭제',
 };
 
 /** detail_open / alert_setup의 `entry_point` 값 — 어느 화면에서 시작했는지 */

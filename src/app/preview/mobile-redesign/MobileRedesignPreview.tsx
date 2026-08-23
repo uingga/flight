@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { ko } from 'date-fns/locale';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -10,6 +10,8 @@ import { getDestinationContext } from '@/lib/destination-contexts';
 import { calcFlightTiming } from '@/lib/utils/flight-helpers';
 import { getTripcomHotelUrl, getTripcomTrackingId } from '@/lib/utils/tripcom-helpers';
 import type { Flight } from '@/types/flight';
+import AccountSheet from '@/components/account/AccountSheet';
+import { useAccount, type AccountSearchFilters } from '@/components/account/useAccount';
 import styles from './page.module.css';
 
 type SortMode = 'recommended' | 'price' | 'date';
@@ -280,6 +282,7 @@ function Icon({ name }: { name: 'sliders' | 'search' | 'star' | 'share' | 'close
 }
 
 export default function MobileRedesignPreview() {
+    const account = useAccount();
     const [flights, setFlights] = useState<Flight[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -302,6 +305,8 @@ export default function MobileRedesignPreview() {
     const [visibleCount, setVisibleCount] = useState(16);
     const [toast, setToast] = useState('');
     const [showScrollTop, setShowScrollTop] = useState(false);
+    const [showAccount, setShowAccount] = useState(false);
+    const mergedAccountRef = useRef<string | null>(null);
 
     useEffect(() => {
         let active = true;
@@ -327,9 +332,34 @@ export default function MobileRedesignPreview() {
     }, []);
 
     useEffect(() => {
-        document.body.style.overflow = selectedFlight || filterOpen ? 'hidden' : '';
+        document.body.style.overflow = selectedFlight || filterOpen || showAccount ? 'hidden' : '';
         return () => { document.body.style.overflow = ''; };
-    }, [selectedFlight, filterOpen]);
+    }, [selectedFlight, filterOpen, showAccount]);
+
+    useEffect(() => {
+        try {
+            const saved = JSON.parse(localStorage.getItem('favoriteFlights') || '[]');
+            if (Array.isArray(saved)) setFavorites(new Set(saved.filter(id => typeof id === 'string')));
+        } catch { }
+    }, []);
+
+    useEffect(() => {
+        if (account.status !== 'authenticated') {
+            if (account.status === 'anonymous') mergedAccountRef.current = null;
+            return;
+        }
+        if (!account.email || mergedAccountRef.current === account.email) return;
+        mergedAccountRef.current = account.email;
+        let localIds: string[] = [];
+        try {
+            const saved = JSON.parse(localStorage.getItem('favoriteFlights') || '[]');
+            if (Array.isArray(saved)) localIds = saved.filter(id => typeof id === 'string');
+        } catch { }
+        const combined = Array.from(new Set([...localIds, ...account.favoriteIds]));
+        setFavorites(new Set(combined));
+        try { localStorage.setItem('favoriteFlights', JSON.stringify(combined)); } catch { }
+        if (localIds.length) void account.mergeLocalFavorites(localIds).catch(() => undefined);
+    }, [account, account.email, account.status]);
 
     useEffect(() => setVisibleCount(16), [region, departure, datePeriod, customStartDate, customEndDate, maxPrice, sort, query]);
 
@@ -424,10 +454,63 @@ export default function MobileRedesignPreview() {
     const toggleFavorite = (id: string) => {
         setFavorites(current => {
             const next = new Set(current);
-            if (next.has(id)) next.delete(id);
+            const willFavorite = !next.has(id);
+            if (!willFavorite) next.delete(id);
             else next.add(id);
+            try { localStorage.setItem('favoriteFlights', JSON.stringify(Array.from(next))); } catch { }
+            void account.setFavorite(id, willFavorite).catch(() => setToast('계정에는 저장하지 못했어요.'));
             return next;
         });
+    };
+
+    const openFlight = (flight: Flight) => {
+        account.recordRecent(flight.id);
+        setSelectedFlight(flight);
+    };
+
+    const currentAccountSearch: AccountSearchFilters = {
+        searchTerm: query,
+        sortBy: sort === 'price' ? 'price' : sort === 'date' ? 'date' : 'discount',
+        sortOrder: 'asc',
+        sourceFilter: 'all',
+        regionFilter: region === '전체' ? 'all' : region,
+        startDate: datePeriod === 'custom' && customStartDate ? dateKey(customStartDate) : '',
+        endDate: datePeriod === 'custom' && customEndDate ? dateKey(customEndDate) : '',
+        departureFilter: departure === '전체' ? 'all' : departure.replace('/김포', '').replace('/김해', ''),
+        airlineFilter: 'all',
+        ...(maxPrice ? { maxPrice } : {}),
+        datePeriod,
+    };
+
+    const applyAccountSearch = (filters: AccountSearchFilters) => {
+        setQuery(filters.searchTerm);
+        setSort(filters.sortBy === 'price' ? 'price' : filters.sortBy === 'date' ? 'date' : 'recommended');
+        setRegion(filters.regionFilter === 'all' ? '전체' : filters.regionFilter);
+        setDeparture(filters.departureFilter === 'all' ? '전체'
+            : filters.departureFilter === '인천' ? '인천/김포'
+                : filters.departureFilter === '부산' ? '부산/김해'
+                    : filters.departureFilter);
+        setMaxPrice(filters.maxPrice || 0);
+        if (filters.startDate) {
+            setDatePeriod('custom');
+            setCustomStartDate(parseDate(filters.startDate));
+            setCustomEndDate(filters.endDate ? parseDate(filters.endDate) : null);
+        } else {
+            setDatePeriod((filters.datePeriod || 'all') as DatePeriod);
+            setCustomStartDate(null);
+            setCustomEndDate(null);
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const openAccountFlight = (flightId: string) => {
+        const flight = flights.find(item => item.id === flightId);
+        if (!flight) {
+            setToast('이 표는 현재 목록에서 내려갔어요.');
+            return;
+        }
+        setShowAccount(false);
+        openFlight(flight);
     };
 
     const shareFlight = async (flight: Flight) => {
@@ -466,6 +549,10 @@ export default function MobileRedesignPreview() {
                             <Icon name="search" />
                         </button>
                         <button type="button" className={styles.alertButton} onClick={() => setToast('알림 화면은 다음 단계에서 연결할 수 있어요.')}>특가 알림</button>
+                        <button type="button" className={styles.accountIconButton} onClick={() => { gtag.trackAccountAction('open', 'preview'); setShowAccount(true); }} aria-label={account.status === 'authenticated' ? '내 여행 열기' : '로그인'}>
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5" /><path d="M5.5 19c.6-3.5 3-5.4 6.5-5.4s5.9 1.9 6.5 5.4" /></svg>
+                            {account.status === 'authenticated' && <span />}
+                        </button>
                     </div>
                 </header>
 
@@ -592,7 +679,7 @@ export default function MobileRedesignPreview() {
                                 <Fragment key={flight.id}>
                                     <div className={styles.cardEntry}>
                                         <article className={`${styles.flightCard} ${isTodayPick ? styles.todayPickCard : ''}`}>
-                                            <button type="button" className={styles.cardBody} onClick={() => setSelectedFlight(flight)}>
+                                            <button type="button" className={styles.cardBody} onClick={() => openFlight(flight)}>
                                                 <div className={styles.cardTopline}>
                                                     <div>
                                                         <span className={`${styles.sourceBadge} ${styles[flight.source]}`}>{SOURCE_NAMES[flight.source]}</span>
@@ -653,7 +740,7 @@ export default function MobileRedesignPreview() {
                                         <button
                                             type="button"
                                             className={styles.insightBar}
-                                            onClick={() => setSelectedFlight(insightCandidate)}
+                                            onClick={() => openFlight(insightCandidate)}
                                         >
                                             <span className={styles.insightEyebrow}>여행지 발견</span>
                                             <strong>{stripAirport(insightCandidate.arrival.city)}, 이런 곳이에요</strong>
@@ -951,6 +1038,23 @@ export default function MobileRedesignPreview() {
                 </div>
                 );
             })()}
+
+            <AccountSheet
+                open={showAccount}
+                onClose={() => setShowAccount(false)}
+                account={account}
+                currentSearch={currentAccountSearch}
+                onApplySearch={applyAccountSearch}
+                onOpenFlight={openAccountFlight}
+                onFavoriteRemoved={flightId => {
+                    setFavorites(current => {
+                        const next = new Set(current);
+                        next.delete(flightId);
+                        try { localStorage.setItem('favoriteFlights', JSON.stringify(Array.from(next))); } catch { }
+                        return next;
+                    });
+                }}
+            />
 
             {toast && <div className={styles.toast} role="status">{toast}</div>}
         </main>

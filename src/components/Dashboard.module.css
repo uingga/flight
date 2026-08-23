@@ -42,6 +42,7 @@
     justify-content: space-between;
     align-items: center;
     height: 48px;
+    position: relative;
     /* Fixed height for consistency */
 }
 
@@ -67,6 +68,27 @@
     opacity: 0.8;
     letter-spacing: -0.01em;
 }
+
+.accountButton {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 36px;
+    padding: 0 12px;
+    border: 1px solid #e8e3e6;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.88);
+    color: #4b4549;
+    font: inherit;
+    font-size: 0.79rem;
+    font-weight: 750;
+    cursor: pointer;
+    box-shadow: 0 3px 12px rgba(35, 28, 32, 0.05);
+}
+
+.accountButton:hover { border-color: #e6437a; color: #d53c70; }
+.accountButton svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
+.accountButton b { display: grid; place-items: center; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 999px; background: #fff0f5; color: #d53c70; font-size: 10px; }
 
 .highlight {
     color: var(--color-primary);
@@ -105,9 +127,22 @@
     .headerContainer {
         justify-content: center;
         height: 36px;
-        padding-right: 48px;
-        /* 시각적 보정 (심볼[40px] + 간격[8px] 만큼 우측 여백 추가하여 완전한 중앙 정렬) */
+        padding: 0 88px;
     }
+
+    .accountButton {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        height: 33px;
+        padding: 0 10px;
+        transform: translateY(-50%);
+        background: #fff;
+        font-size: 0.74rem;
+    }
+
+    .accountButton svg { width: 15px; height: 15px; }
+    .accountButton b { display: none; }
 
     .dashboard {
         padding-top: 0;

@@ -18,7 +18,7 @@ export default function TermsPage() {
             </Link>
 
             <h1 className={styles.pageTitle}>이용약관</h1>
-            <p className={styles.lastUpdated}>최종 수정일: 2026년 2월 24일</p>
+            <p className={styles.lastUpdated}>최종 수정일: 2026년 8월 24일</p>
 
             <div className={styles.section}>
                 <h2 className={styles.sectionTitle}>제1조 (목적)</h2>
@@ -38,6 +38,7 @@ export default function TermsPage() {
                         <li>하나투어, 모두투어, 노랑풍선, 온라인투어, 땡처리닷컴 등 여행사의 땡처리 항공권 정보 수집 및 비교</li>
                         <li>항공권 가격 변동 추적 및 알림</li>
                         <li>여행사 사이트로의 예약 링크 제공</li>
+                        <li>찜한 항공권, 최근 본 항공권, 검색 조건의 개인 저장 기능</li>
                     </ul>
                 </div>
             </div>
@@ -46,9 +47,10 @@ export default function TermsPage() {
                 <h2 className={styles.sectionTitle}>제3조 (서비스 이용)</h2>
                 <div className={styles.sectionContent}>
                     <p>
-                        본 서비스는 별도의 회원가입 없이 누구나 무료로 이용할 수 있습니다.
-                        서비스 이용 시 별도의 로그인이나 개인정보 입력이 필요하지 않습니다.
+                        항공권 조회는 별도의 회원가입 없이 누구나 무료로 이용할 수 있습니다.
+                        찜 동기화, 최근 본 항공권, 검색 조건 저장 기능은 이메일 일회용 인증번호로 로그인한 뒤 선택적으로 이용할 수 있습니다.
                     </p>
+                    <p>이용자는 본인이 접근할 수 있는 이메일 주소로만 로그인해야 하며, 계정 화면에서 언제든 로그아웃하거나 계정과 저장 데이터를 삭제할 수 있습니다.</p>
                 </div>
             </div>
 
@@ -115,7 +117,7 @@ export default function TermsPage() {
                 <div className={styles.sectionContent}>
                     <div className={styles.contactInfo}>
                         <p><strong>서비스명:</strong> 티키티킷 (TikiTikit)</p>
-                        <p><strong>이메일:</strong> uingga@gmail.com</p>
+                        <p><strong>이메일:</strong> tikitikit.official@gmail.com</p>
                     </div>
                 </div>
             </div>

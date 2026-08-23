@@ -37,6 +37,8 @@ import {
     getDestinationContext,
     getItineraryContext,
 } from '@/lib/destination-contexts';
+import AccountSheet from './account/AccountSheet';
+import { useAccount, type AccountSearchFilters } from './account/useAccount';
 
 const ITEMS_PER_PAGE = 20;
 
@@ -96,6 +98,7 @@ const getDetailSheetCloseDistance = (sheetHeight: number) =>
 
 export default function Dashboard() {
     const naverCompareHidden = isNaverCompareHidden();
+    const account = useAccount();
     const [flights, setFlights] = useState<Flight[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -138,6 +141,7 @@ export default function Dashboard() {
     } | null>(null);
     const disclaimerWindowRef = useRef<Window | null>(null);
     const [favoriteFlights, setFavoriteFlights] = useState<string[]>([]);
+    const [showAccount, setShowAccount] = useState(false);
     const [favFilter, setFavFilter] = useState(false);
     const [favToast, setFavToast] = useState<string | null>(null);
     const [showContactModal, setShowContactModal] = useState(false);
@@ -182,10 +186,11 @@ export default function Dashboard() {
     const [headerScrolled, setHeaderScrolled] = useState(false);
     const lastScrollY = useRef(0);
     const filterAreaRef = useRef<HTMLDivElement>(null);
+    const mergedAccountRef = useRef<string | null>(null);
 
     // 팝업이 열려 있는 동안 배경(body) 스크롤 잠금
     // (iOS Safari는 overflow:hidden만으로 안 막혀서 position:fixed 방식 사용)
-    const anyModalOpen = !!(modetourGuide || bookingDisclaimer || naverDisclaimer || ttangConfirmFlight || showContactModal || showPriceAlertManager || showDealAlertSetup);
+    const anyModalOpen = !!(modetourGuide || bookingDisclaimer || naverDisclaimer || ttangConfirmFlight || showContactModal || showPriceAlertManager || showDealAlertSetup || showAccount);
     useEffect(() => {
         if (!anyModalOpen) return;
         const scrollY = window.scrollY;
@@ -239,6 +244,26 @@ export default function Dashboard() {
         } catch { }
     }, []);
 
+    // 로그인 직후 이 브라우저에서 찜했던 표와 계정의 찜을 합친다.
+    // 한 번 합친 뒤에는 서버 저장본을 기준으로 여러 기기에서 이어서 쓸 수 있다.
+    useEffect(() => {
+        if (account.status !== 'authenticated') {
+            if (account.status === 'anonymous') mergedAccountRef.current = null;
+            return;
+        }
+        if (!account.email || mergedAccountRef.current === account.email) return;
+        mergedAccountRef.current = account.email;
+        let localIds: string[] = [];
+        try {
+            const saved = JSON.parse(localStorage.getItem('favoriteFlights') || '[]');
+            if (Array.isArray(saved)) localIds = saved.filter(id => typeof id === 'string');
+        } catch { }
+        const combined = Array.from(new Set([...localIds, ...account.favoriteIds]));
+        setFavoriteFlights(combined);
+        try { localStorage.setItem('favoriteFlights', JSON.stringify(combined)); } catch { }
+        if (localIds.length) void account.mergeLocalFavorites(localIds).catch(() => undefined);
+    }, [account, account.email, account.status]);
+
     // 신고를 마친 항공권은 새로고침해도 하루 동안 다시 신고 버튼을 보여주지 않는다.
     // 서버에서도 같은 항공권을 중복 저장하지 않지만, 브라우저에서 먼저 막아 불필요한 요청을 줄인다.
     useEffect(() => {
@@ -271,16 +296,20 @@ export default function Dashboard() {
 
     const toggleFavorite = (flightId: string, cityName: string) => {
         setFavoriteFlights(prev => {
-            const next = prev.includes(flightId)
+            const willFavorite = !prev.includes(flightId);
+            const next = !willFavorite
                 ? prev.filter(id => id !== flightId)
                 : [...prev, flightId];
             localStorage.setItem('favoriteFlights', JSON.stringify(next));
-            if (next.includes(flightId)) {
+            if (willFavorite) {
                 setFavToast(`⭐ ${cityName} 항공권 즐겨찾기 등록!`);
             } else {
                 setFavToast(`${cityName} 항공권 즐겨찾기 해제`);
             }
             setTimeout(() => setFavToast(null), 2000);
+            void account.setFavorite(flightId, willFavorite).catch(() => {
+                setFavToast('계정에는 저장하지 못했어요. 잠시 뒤 다시 시도해 주세요.');
+            });
             return next;
         });
     };
@@ -1195,6 +1224,7 @@ export default function Dashboard() {
             flight.source,
             entry,
         );
+        account.recordRecent(flight.id);
         setModetourGuide(flight);
     };
 
@@ -1408,6 +1438,31 @@ export default function Dashboard() {
         setStartDate('');
         setEndDate('');
         setSortBy('discount');
+    };
+
+    const applyAccountSearch = (filters: AccountSearchFilters) => {
+        setSearchTerm(filters.searchTerm);
+        setSortBy(filters.sortBy);
+        setSortOrder(filters.sortOrder);
+        setSourceFilter(filters.sourceFilter);
+        setRegionFilter(filters.regionFilter);
+        setStartDate(filters.startDate);
+        setEndDate(filters.endDate);
+        setDepartureFilter(filters.departureFilter);
+        setAirlineFilter(filters.airlineFilter);
+        setFavFilter(false);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const openAccountFlight = (flightId: string) => {
+        const flight = flights.find(item => item.id === flightId);
+        if (!flight) {
+            setFavToast('이 표는 현재 목록에서 내려갔어요. 저장 당시 정보는 내 여행에 남아 있어요.');
+            setTimeout(() => setFavToast(null), 3000);
+            return;
+        }
+        setShowAccount(false);
+        openFlightDetail(flight, 'card_body');
     };
 
     const showSharedRouteAlternatives = () => {
@@ -2825,6 +2880,14 @@ export default function Dashboard() {
                         <p className={styles.subtitle}>
                             오늘은 어디가 싸게 나왔을까요?
                         </p>
+                        <button type="button" className={styles.accountButton} onClick={() => { gtag.trackAccountAction('open', 'main'); setShowAccount(true); }}>
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <circle cx="12" cy="8" r="3.5" />
+                                <path d="M5.5 19c.6-3.5 3-5.4 6.5-5.4s5.9 1.9 6.5 5.4" />
+                            </svg>
+                            <span>{account.status === 'authenticated' ? '내 여행' : '로그인'}</span>
+                            {account.status === 'authenticated' && account.favorites.length > 0 && <b>{account.favorites.length}</b>}
+                        </button>
                     </div>
                 </div>
             </header>
@@ -4761,6 +4824,32 @@ export default function Dashboard() {
                     </div>
                 </div>
             )}
+
+            <AccountSheet
+                open={showAccount}
+                onClose={() => setShowAccount(false)}
+                account={account}
+                currentSearch={{
+                    searchTerm,
+                    sortBy,
+                    sortOrder,
+                    sourceFilter,
+                    regionFilter,
+                    startDate,
+                    endDate,
+                    departureFilter,
+                    airlineFilter,
+                }}
+                onApplySearch={applyAccountSearch}
+                onOpenFlight={openAccountFlight}
+                onFavoriteRemoved={flightId => {
+                    setFavoriteFlights(current => {
+                        const next = current.filter(id => id !== flightId);
+                        try { localStorage.setItem('favoriteFlights', JSON.stringify(next)); } catch { }
+                        return next;
+                    });
+                }}
+            />
 
             {/* 공유/알림 토스트 */}
             {shareToast && (

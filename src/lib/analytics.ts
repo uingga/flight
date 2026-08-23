@@ -171,6 +171,23 @@ export const trackFilterChange = (filterType: string, value: string) => {
     event('filter_change', { filter_type: filterType, filter_value: value });
 };
 
+/** Account funnel events never include an email address or another user identifier. */
+export const trackAccountAction = (
+    action: 'open' | 'code_requested' | 'login' | 'save_search' | 'apply_search' | 'logout' | 'delete',
+    surface: 'main' | 'preview' | 'account_sheet' = 'account_sheet',
+) => {
+    const eventName = ({
+        open: 'account_open',
+        code_requested: 'login_code_requested',
+        login: 'account_login',
+        save_search: 'saved_search_create',
+        apply_search: 'saved_search_apply',
+        logout: 'account_logout',
+        delete: 'account_delete',
+    } as const)[action];
+    event(eventName, { surface });
+};
+
 /**
  * Date-range filter applied. Beyond the raw range we derive the shape of demand
  * (how far ahead, how long a window) and whether the pick actually surfaced flights —

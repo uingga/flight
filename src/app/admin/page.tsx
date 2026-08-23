@@ -86,6 +86,13 @@ interface UserStatsData {
         notified: number;
         neverNotified: number;
         reachableNow: number;
+        accountAvailable: boolean;
+        accounts: number;
+        accountsLast7Days: number;
+        activeSessions: number;
+        favorites: number;
+        recentFlights: number;
+        savedSearches: number;
     };
     topRoutes: Array<{
         route: string;
@@ -1989,9 +1996,9 @@ export default function AdminPage() {
             {tab === 'alerts' && (<>
             {/* 유저 통계 — 크롤링 현황과 별개로 "사람들이 무엇을 기다리는가"를 본다 */}
             <section className={styles.section}>
-                <h2>사용자 현황 — 가격 알림</h2>
+                <h2>사용자 현황 — 계정과 가격 알림</h2>
                 <p className={styles.sectionHelp}>
-                    회원가입이 없는 서비스라 사람 수 대신 <strong>알림을 켠 브라우저(기기) 수</strong>를 셉니다.
+                    계정은 이메일 주소를 드러내지 않고 수만 셉니다. 알림은 계정과 별개라 <strong>알림을 켠 브라우저(기기) 수</strong>로 집계하며,
                     같은 사람이 폰과 PC에서 각각 켜면 2로 잡힙니다.
                 </p>
                 {userStatsError ? (
@@ -2002,6 +2009,40 @@ export default function AdminPage() {
                     </div>
                 ) : (
                     <>
+                        {userStats.summary.accountAvailable && (
+                            <>
+                                <h3 className={styles.userSubTitle}>내 여행 계정</h3>
+                                <div className={styles.userStatGrid}>
+                                    <div className={styles.userStat}>
+                                        <span>전체 계정</span>
+                                        <strong>{userStats.summary.accounts.toLocaleString()}</strong>
+                                        <small>최근 7일 새 계정 {userStats.summary.accountsLast7Days.toLocaleString()}개</small>
+                                    </div>
+                                    <div className={styles.userStat}>
+                                        <span>로그인 세션</span>
+                                        <strong>{userStats.summary.activeSessions.toLocaleString()}</strong>
+                                        <small>현재 만료되지 않은 기기 로그인</small>
+                                    </div>
+                                    <div className={styles.userStat}>
+                                        <span>계정에 저장된 찜</span>
+                                        <strong>{userStats.summary.favorites.toLocaleString()}</strong>
+                                        <small>여러 기기에서 함께 보는 항공권</small>
+                                    </div>
+                                    <div className={styles.userStat}>
+                                        <span>최근 본 표</span>
+                                        <strong>{userStats.summary.recentFlights.toLocaleString()}</strong>
+                                        <small>계정별 최대 30건</small>
+                                    </div>
+                                    <div className={styles.userStat}>
+                                        <span>저장한 검색</span>
+                                        <strong>{userStats.summary.savedSearches.toLocaleString()}</strong>
+                                        <small>다시 사용하려고 남긴 조건</small>
+                                    </div>
+                                </div>
+                            </>
+                        )}
+
+                        <h3 className={styles.userSubTitle}>가격 알림</h3>
                         <div className={styles.userStatGrid}>
                             <div className={styles.userStat}>
                                 <span>알림 켠 기기</span>

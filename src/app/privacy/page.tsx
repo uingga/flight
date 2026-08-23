@@ -18,19 +18,21 @@ export default function PrivacyPage() {
             </Link>
 
             <h1 className={styles.pageTitle}>개인정보처리방침</h1>
-            <p className={styles.lastUpdated}>최종 수정일: 2026년 2월 18일</p>
+            <p className={styles.lastUpdated}>최종 수정일: 2026년 8월 24일</p>
 
             <div className={styles.section}>
                 <h2 className={styles.sectionTitle}>1. 개인정보 처리 목적</h2>
                 <div className={styles.sectionContent}>
                     <p>
-                        티키티킷(이하 &quot;서비스&quot;)은 항공권 가격 비교 정보를 제공하는 서비스로,
-                        별도의 회원가입이나 로그인 없이 이용할 수 있습니다.
+                        티키티킷(이하 &quot;서비스&quot;)은 항공권 가격 비교 정보를 제공하는 서비스입니다.
+                        항공권 조회는 로그인 없이 이용할 수 있고, 개인 저장 기능은 선택적으로 로그인해 이용할 수 있습니다.
                     </p>
                     <p>서비스 운영 및 개선을 위해 다음의 목적으로 최소한의 정보를 처리합니다:</p>
                     <ul>
                         <li>서비스 이용 통계 분석 및 서비스 개선</li>
                         <li>가격 알림 기능 제공 (사용자 동의 시)</li>
+                        <li>이메일 본인 확인 및 로그인 상태 유지</li>
+                        <li>찜한 항공권, 최근 본 항공권, 저장한 검색 조건의 기기 간 동기화</li>
                     </ul>
                 </div>
             </div>
@@ -38,8 +40,7 @@ export default function PrivacyPage() {
             <div className={styles.section}>
                 <h2 className={styles.sectionTitle}>2. 수집하는 정보</h2>
                 <div className={styles.sectionContent}>
-                    <p>본 서비스는 회원가입을 요구하지 않습니다. 서비스를 이용하시는 데 이름이나 연락처를 남기실 필요가 없습니다.</p>
-                    <p>다만 다음 두 경우에 정보가 수집됩니다.</p>
+                    <p>항공권 조회에는 회원가입이 필요하지 않습니다. 로그인이나 문의 등 이용자가 선택한 기능에서만 다음 정보를 수집합니다.</p>
 
                     <table className={styles.table}>
                         <thead>
@@ -61,14 +62,29 @@ export default function PrivacyPage() {
                                 <td>알림 해제 시까지</td>
                             </tr>
                             <tr>
+                                <td>이메일 주소</td>
+                                <td>일회용 인증번호 로그인 및 계정 식별</td>
+                                <td>계정 삭제 시까지</td>
+                            </tr>
+                            <tr>
+                                <td>찜한 항공권, 최근 본 항공권(최대 30건), 저장한 검색 조건(최대 10건)</td>
+                                <td>개인 저장 기능과 기기 간 동기화</td>
+                                <td>직접 삭제하거나 계정 삭제 시까지</td>
+                            </tr>
+                            <tr>
+                                <td>인증번호와 로그인 토큰을 복원할 수 없게 변환한 값</td>
+                                <td>본인 확인 및 로그인 상태 유지</td>
+                                <td>인증번호 기록 24시간 이내, 로그인 세션 30일</td>
+                            </tr>
+                            <tr>
                                 <td>이름, 이메일 주소, 문의 내용 (직접 입력하신 경우에만)</td>
                                 <td>문의 및 항공권 제보에 답변</td>
                                 <td>답변 후 보관하지 않음</td>
                             </tr>
                             <tr>
                                 <td>접속 IP를 되돌릴 수 없게 변환한 값</td>
-                                <td>알림 기능 남용 방지</td>
-                                <td>알림 해제 시까지</td>
+                                <td>알림 및 로그인 기능 남용 방지</td>
+                                <td>각 기능 해제 시까지 또는 인증 요청 기록 24시간 이내</td>
                             </tr>
                             <tr>
                                 <td>광고 식별을 위한 쿠키</td>
@@ -120,6 +136,11 @@ export default function PrivacyPage() {
                                 <td>방문자 통계 분석</td>
                                 <td>Google Analytics</td>
                             </tr>
+                            <tr>
+                                <td>__Host-tikitikit_session</td>
+                                <td>로그인 상태 유지 (자바스크립트에서 읽을 수 없는 보안 쿠키)</td>
+                                <td>티키티킷</td>
+                            </tr>
                         </tbody>
                     </table>
                     <p>
@@ -152,13 +173,13 @@ export default function PrivacyPage() {
                             </tr>
                             <tr>
                                 <td>Supabase</td>
-                                <td>가격 알림 정보 보관</td>
-                                <td>푸시 알림 토큰, 알림 조건</td>
+                                <td>가격 알림 및 계정 정보 보관</td>
+                                <td>푸시 알림 토큰, 알림 조건, 이메일, 개인 저장 데이터, 변환된 인증 정보</td>
                             </tr>
                             <tr>
                                 <td>Google</td>
-                                <td>이용 통계(Analytics), 광고(AdSense), 알림 전송</td>
-                                <td>방문 기록, 쿠키, 푸시 알림 토큰</td>
+                                <td>이용 통계(Analytics), 광고(AdSense), 알림 및 로그인 인증 메일 전송</td>
+                                <td>방문 기록, 쿠키, 푸시 알림 토큰, 인증 메일 수신 주소</td>
                             </tr>
                         </tbody>
                     </table>
@@ -175,6 +196,7 @@ export default function PrivacyPage() {
                     <ul>
                         <li>브라우저 설정을 통한 쿠키 삭제 및 차단</li>
                         <li>브라우저 알림 설정에서 푸시 알림 해제</li>
+                        <li>내 여행 화면에서 저장한 검색 조건 삭제 및 계정 전체 삭제</li>
                         <li>Google Analytics 수집 거부 (<a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-primary)' }}>GA 옵트아웃 브라우저 플러그인</a>)</li>
                     </ul>
                 </div>
@@ -187,6 +209,9 @@ export default function PrivacyPage() {
                     <ul>
                         <li>HTTPS 암호화 통신 적용</li>
                         <li>최소한의 데이터만 수집</li>
+                        <li>인증번호 및 로그인 토큰 원문을 저장하지 않고 일방향 변환값만 보관</li>
+                        <li>로그인 쿠키에 HttpOnly, Secure, SameSite 보안 속성 적용</li>
+                        <li>계정 데이터는 브라우저가 데이터베이스에 직접 접근하지 않고 서버에서 로그인 상태 확인 후 제공</li>
                         <li>Google Analytics IP 익명화 처리</li>
                     </ul>
                 </div>

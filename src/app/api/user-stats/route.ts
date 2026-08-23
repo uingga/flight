@@ -29,6 +29,30 @@ function supabaseConfig() {
     return url && key ? { url, key } : null;
 }
 
+async function countSupabaseRows(
+    config: { url: string; key: string },
+    table: string,
+    selectColumn: string,
+    filter = '',
+) {
+    const response = await fetch(
+        `${config.url}/rest/v1/${table}?select=${selectColumn}${filter}`,
+        {
+            method: 'HEAD',
+            headers: {
+                apikey: config.key,
+                Authorization: `Bearer ${config.key}`,
+                Prefer: 'count=exact',
+            },
+            cache: 'no-store',
+        },
+    );
+    if (!response.ok) throw new Error(`Account metric failed: ${response.status}`);
+    const range = response.headers.get('content-range') || '';
+    const total = Number(range.split('/')[1]);
+    return Number.isFinite(total) ? total : 0;
+}
+
 function dayInKorea(iso?: string): string | null {
     if (!iso) return null;
     const date = new Date(iso);
@@ -64,6 +88,40 @@ export async function GET(request: NextRequest) {
         );
         if (!response.ok) throw new Error(`Supabase lookup failed: ${response.status}`);
         const rows = await response.json() as AlertRow[];
+
+        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+        const nowIso = new Date().toISOString();
+        let accountMetrics = {
+            accountAvailable: true,
+            accounts: 0,
+            accountsLast7Days: 0,
+            activeSessions: 0,
+            favorites: 0,
+            recentFlights: 0,
+            savedSearches: 0,
+        };
+        try {
+            const [accounts, accountsLast7Days, activeSessions, favorites, recentFlights, savedSearches] = await Promise.all([
+                countSupabaseRows(config, 'tikitikit_users', 'id'),
+                countSupabaseRows(config, 'tikitikit_users', 'id', `&created_at=gte.${encodeURIComponent(sevenDaysAgo)}`),
+                countSupabaseRows(config, 'tikitikit_auth_sessions', 'id', `&expires_at=gt.${encodeURIComponent(nowIso)}`),
+                countSupabaseRows(config, 'tikitikit_user_favorites', 'flight_id'),
+                countSupabaseRows(config, 'tikitikit_user_recent_flights', 'flight_id'),
+                countSupabaseRows(config, 'tikitikit_user_saved_searches', 'id'),
+            ]);
+            accountMetrics = {
+                accountAvailable: true,
+                accounts,
+                accountsLast7Days,
+                activeSessions,
+                favorites,
+                recentFlights,
+                savedSearches,
+            };
+        } catch (error) {
+            console.error('Account stats unavailable:', error instanceof Error ? error.message : 'unknown');
+            accountMetrics.accountAvailable = false;
+        }
 
         const active = rows.filter(row => row.active !== false);
         const cancelled = rows.length - active.length;
@@ -179,6 +237,7 @@ export async function GET(request: NextRequest) {
                 neverNotified: active.length - notified,
                 // 목표가 이하 항공권이 지금 존재하는 노선 알림 수
                 reachableNow: topRoutes.filter(r => r.reachable === true).reduce((sum, r) => sum + r.count, 0),
+                ...accountMetrics,
             },
             topRoutes: topRoutes.slice(0, 20),
             topRegions,
