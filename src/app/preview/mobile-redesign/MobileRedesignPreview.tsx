@@ -109,13 +109,6 @@ const tripLength = (flight: Flight) => {
     return days > 1 ? `${days - 1}박 ${days}일` : null;
 };
 
-const hourFromTime = (value?: string) => {
-    const match = value?.match(/(\d{1,2}):(\d{2})/);
-    if (!match) return null;
-    const hour = Number(match[1]);
-    return hour >= 0 && hour <= 23 ? hour : null;
-};
-
 const fallbackArrivalDayOffset = (departureTime?: string, arrivalTime?: string) => {
     const parseMinutes = (value?: string) => {
         const match = value?.match(/(\d{1,2}):(\d{2})/);
@@ -131,82 +124,13 @@ const fallbackArrivalDayOffset = (departureTime?: string, arrivalTime?: string) 
     return arrivalMinutes < departureMinutes ? 1 : 0;
 };
 
-const readableTime = (value?: string) => {
-    const match = value?.match(/(\d{1,2}):(\d{2})/);
-    if (!match) return null;
-    const hour = Number(match[1]);
-    const minute = Number(match[2]);
-    if (hour < 0 || hour > 23) return null;
-    const period = hour < 6 ? '새벽' : hour < 12 ? '오전' : hour < 18 ? '오후' : '밤';
-    const displayHour = hour % 12 || 12;
-    return `${period} ${displayHour}시${minute > 0 ? ` ${minute}분` : ''}`;
-};
-
-const weekdayLabel = (date: Date) => new Intl.DateTimeFormat('ko-KR', { weekday: 'long' }).format(date);
-
-const includesWeekend = (departure: Date, arrival: Date) => {
-    const cursor = new Date(departure);
-    for (let offset = 0; offset < 31 && cursor <= arrival; offset += 1) {
-        if ([0, 6].includes(cursor.getDay())) return true;
-        cursor.setDate(cursor.getDate() + 1);
-    }
-    return false;
-};
-
-const flightFeatureText = (flight: Flight, referenceDate: Date) => {
-    if (flight.minPax && flight.minPax > 1) return `${flight.minPax}명부터 함께 예약할 수 있어요`;
-
+const departureCountdownText = (flight: Flight, referenceDate: Date) => {
     const departure = parseDate(flight.departure.date);
-    const arrival = parseDate(flight.arrival.date);
-    const departureHour = hourFromTime(flight.departure.time);
-    const returnHour = hourFromTime(flight.arrival.time);
-    const departureTime = readableTime(flight.departure.time);
-    const returnTime = readableTime(flight.arrival.time);
-
-    if (departure) {
-        const today = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), referenceDate.getDate(), 12);
-        const daysUntilDeparture = Math.ceil((departure.getTime() - today.getTime()) / 86_400_000);
-        if (daysUntilDeparture === 0) return '오늘 바로 떠나는 표예요';
-        if (daysUntilDeparture >= 0 && daysUntilDeparture <= 7) {
-            return `출발까지 ${daysUntilDeparture}일 남았어요`;
-        }
-    }
-
-    if (departure && arrival) {
-        const days = Math.round((arrival.getTime() - departure.getTime()) / 86_400_000) + 1;
-        const fridayToSunday = departure.getDay() === 5 && arrival.getDay() === 0;
-        if (fridayToSunday) {
-            return '금요일 출발 · 일요일 귀국';
-        }
-        if (days <= 4 && includesWeekend(departure, arrival)) {
-            return `주말 포함 · ${days === 1 ? '당일' : `${days - 1}박 ${days}일`}`;
-        }
-    }
-
-    if (departureHour !== null && departureHour >= 19 && departureTime) {
-        return `가는 편 ${departureTime} 출발`;
-    }
-
-    if (departureHour !== null && departureHour < 9 && departureTime) {
-        return `가는 편 ${departureTime} 출발`;
-    }
-
-    if (returnHour !== null && returnHour >= 17 && returnTime) {
-        return `오는 편 ${returnTime} 출발`;
-    }
-
-    if (departure && arrival) {
-        const days = Math.round((arrival.getTime() - departure.getTime()) / 86_400_000) + 1;
-        if (days >= 6) {
-            return `${days - 1}박 ${days}일 · 긴 일정`;
-        }
-        if (days <= 4) {
-            return `${days === 1 ? '당일' : `${days - 1}박 ${days}일`} · 짧은 일정`;
-        }
-    }
-
-    if (departure && arrival) return `${weekdayLabel(departure)} 출발 · ${weekdayLabel(arrival)} 귀국`;
-    return '출발 날짜와 시간을 확인해 보세요';
+    if (!departure) return '출발일 확인';
+    const today = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), referenceDate.getDate(), 12);
+    const daysUntilDeparture = Math.ceil((departure.getTime() - today.getTime()) / 86_400_000);
+    if (daysUntilDeparture <= 0) return '오늘 출발';
+    return `출발 D-${daysUntilDeparture}`;
 };
 
 const priceText = (price: number) => `${new Intl.NumberFormat('ko-KR').format(price)}원`;
@@ -341,7 +265,7 @@ const describeTodayPick = (flight: Flight) => {
     return '오늘 가장 먼저 살펴볼 항공권이에요';
 };
 
-function Icon({ name }: { name: 'sliders' | 'search' | 'star' | 'share' | 'close' | 'arrow' | 'plane' }) {
+function Icon({ name }: { name: 'sliders' | 'search' | 'star' | 'share' | 'close' | 'arrow' | 'plane' | 'up' }) {
     const paths = {
         sliders: <><line x1="4" y1="7" x2="20" y2="7" /><circle cx="9" cy="7" r="2" /><line x1="4" y1="17" x2="20" y2="17" /><circle cx="15" cy="17" r="2" /></>,
         search: <><circle cx="11" cy="11" r="7" /><line x1="16.5" y1="16.5" x2="21" y2="21" /></>,
@@ -350,6 +274,7 @@ function Icon({ name }: { name: 'sliders' | 'search' | 'star' | 'share' | 'close
         close: <><line x1="5" y1="5" x2="19" y2="19" /><line x1="19" y1="5" x2="5" y2="19" /></>,
         arrow: <><line x1="5" y1="12" x2="19" y2="12" /><polyline points="14 7 19 12 14 17" /></>,
         plane: <path d="M22 12c0-.6-.5-1.1-1.1-1.2l-6.4-.9-3.8-6.2C10.4 3.3 10 3 9.4 3H8.1l2.2 7.3-4.8.7-1.8-2H2.2l1 3-1 3h1.5l1.8-2 4.8.7L8.1 21h1.3c.6 0 1-.3 1.3-.7l3.8-6.2 6.4-.9c.6-.1 1.1-.6 1.1-1.2Z" />,
+        up: <><line x1="12" y1="19" x2="12" y2="5" /><polyline points="6.5 10.5 12 5 17.5 10.5" /></>,
     };
     return <svg viewBox="0 0 24 24" aria-hidden="true">{paths[name]}</svg>;
 }
@@ -376,6 +301,7 @@ export default function MobileRedesignPreview() {
     const [favorites, setFavorites] = useState<Set<string>>(new Set());
     const [visibleCount, setVisibleCount] = useState(16);
     const [toast, setToast] = useState('');
+    const [showScrollTop, setShowScrollTop] = useState(false);
 
     useEffect(() => {
         let active = true;
@@ -412,6 +338,15 @@ export default function MobileRedesignPreview() {
         const timer = window.setTimeout(() => setToast(''), 2400);
         return () => window.clearTimeout(timer);
     }, [toast]);
+
+    useEffect(() => {
+        const updateScrollTopVisibility = () => {
+            setShowScrollTop(window.scrollY > Math.max(900, window.innerHeight * 1.25));
+        };
+        updateScrollTopVisibility();
+        window.addEventListener('scroll', updateScrollTopVisibility, { passive: true });
+        return () => window.removeEventListener('scroll', updateScrollTopVisibility);
+    }, []);
 
     const filteredFlights = useMemo(() => {
         const normalizedQuery = query.trim().toLowerCase();
@@ -451,9 +386,15 @@ export default function MobileRedesignPreview() {
     const displayedFlights = isDefaultView && todayPick
         ? [todayPick.flight, ...filteredFlights.filter(flight => flight.id !== todayPick.flight.id)]
         : filteredFlights;
-    const insightCandidate = useMemo(() => filteredFlights.find(flight => (
-        getDestinationContext(flight.arrival.city) !== null
-    )) || null, [filteredFlights]);
+    const insightCandidates = useMemo(() => {
+        const seenDestinations = new Set<string>();
+        return filteredFlights.filter(flight => {
+            const destination = stripAirport(flight.arrival.city);
+            if (!getDestinationContext(destination) || seenDestinations.has(destination)) return false;
+            seenDestinations.add(destination);
+            return true;
+        });
+    }, [filteredFlights]);
 
     const filterCount = [departure !== '전체', datePeriod !== 'all', maxPrice > 0].filter(Boolean).length;
     const updatedLabel = lastUpdated
@@ -643,10 +584,10 @@ export default function MobileRedesignPreview() {
                             const price = effectivePrice(flight);
                             const discountRate = Math.round(Math.max(0, flight.discountRate || 0));
                             const isTodayPick = isDefaultView && todayPick?.flight.id === flight.id;
-                            const featureText = flightFeatureText(flight, new Date());
-                            const insightContext = index === 2 && insightCandidate
-                                ? getDestinationContext(insightCandidate.arrival.city)
-                                : null;
+                            const footerStatus = seats > 0 ? `${seats}석 남음` : departureCountdownText(flight, new Date());
+                            const insightIndex = index >= 2 && (index - 2) % 9 === 0 ? Math.floor((index - 2) / 9) : -1;
+                            const insightCandidate = insightIndex >= 0 ? insightCandidates[insightIndex] : null;
+                            const insightContext = insightCandidate ? getDestinationContext(insightCandidate.arrival.city) : null;
                             return (
                                 <Fragment key={flight.id}>
                                     <div className={styles.cardEntry}>
@@ -656,11 +597,6 @@ export default function MobileRedesignPreview() {
                                                     <div>
                                                         <span className={`${styles.sourceBadge} ${styles[flight.source]}`}>{SOURCE_NAMES[flight.source]}</span>
                                                         <span className={styles.airline}>{flight.airline || '항공사 확인'}</span>
-                                                        {seats > 0 && (
-                                                            <span className={`${styles.cardSeatCount} ${seats <= 4 ? styles.cardSeatCountLow : ''}`}>
-                                                                {seats}석 남음
-                                                            </span>
-                                                        )}
                                                     </div>
                                                 </div>
 
@@ -689,14 +625,10 @@ export default function MobileRedesignPreview() {
 
                                                 <div className={styles.cardFooter}>
                                                     <div className={styles.availabilityGroup}>
-                                                        {isTodayPick ? (
-                                                            <div className={styles.todayPickFooter}>
-                                                                <span>오늘의 표</span>
-                                                                <p>{todayPick.reason}</p>
-                                                            </div>
-                                                        ) : (
-                                                            <p className={styles.cardFeatureText}>{featureText}</p>
-                                                        )}
+                                                        {isTodayPick && <span className={styles.todayPickBadge}>오늘의 표</span>}
+                                                        <span className={`${styles.footerStatus} ${seats > 0 && seats <= 4 && !isTodayPick ? styles.footerStatusLow : ''} ${seats > 0 && seats <= 4 && isTodayPick ? styles.footerStatusUrgent : ''}`}>
+                                                            {footerStatus}
+                                                        </span>
                                                     </div>
                                                     <div className={styles.priceBlock}>
                                                         <div className={styles.priceLine}>
@@ -748,6 +680,24 @@ export default function MobileRedesignPreview() {
                     <a href="/">현재 티키티킷으로 돌아가기</a>
                 </footer>
             </div>
+
+            {showScrollTop && !filterOpen && !selectedFlight && (
+                <div className={styles.floatingActions}>
+                    <button type="button" className={styles.floatingFilterButton} onClick={() => setFilterOpen(true)}>
+                        <Icon name="sliders" />
+                        <span>필터{filterCount ? ` ${filterCount}` : ''}</span>
+                    </button>
+                    <button
+                        type="button"
+                        className={styles.scrollTopButton}
+                        aria-label="맨 위로 이동"
+                        title="맨 위로"
+                        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                    >
+                        <Icon name="up" />
+                    </button>
+                </div>
+            )}
 
             {filterOpen && (
                 <div className={styles.sheetOverlay} onClick={() => setFilterOpen(false)}>
