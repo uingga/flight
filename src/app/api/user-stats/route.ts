@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
 import { decodeDealAlertRegion, dealAlertRegionLabel } from '@/lib/deal-alerts';
+import { getSupabaseServerHeaders } from '@/lib/server/supabase-rest';
 import { normalizeCity } from '@/lib/utils/flight-helpers';
 import type { Flight } from '@/types/flight';
 
@@ -40,8 +41,7 @@ async function countSupabaseRows(
         {
             method: 'HEAD',
             headers: {
-                apikey: config.key,
-                Authorization: `Bearer ${config.key}`,
+                ...getSupabaseServerHeaders(config.key),
                 Prefer: 'count=exact',
             },
             cache: 'no-store',
@@ -84,7 +84,7 @@ export async function GET(request: NextRequest) {
         // 해지된 구독도 이탈률 계산에 필요하므로 active 필터 없이 전부 가져온다
         const response = await fetch(
             `${config.url}/rest/v1/price_alerts?select=alert_key,endpoint_hash,departure_city,arrival_city,max_price,created_at,active,last_sent_at,last_notified_price`,
-            { headers: { apikey: config.key, Authorization: `Bearer ${config.key}` }, cache: 'no-store' },
+            { headers: getSupabaseServerHeaders(config.key), cache: 'no-store' },
         );
         if (!response.ok) throw new Error(`Supabase lookup failed: ${response.status}`);
         const rows = await response.json() as AlertRow[];

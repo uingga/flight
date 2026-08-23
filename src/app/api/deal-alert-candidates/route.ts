@@ -7,6 +7,7 @@ import {
     evaluateDealAlert,
     type DealAlertCondition,
 } from '@/lib/deal-alerts';
+import { getSupabaseServerHeaders } from '@/lib/server/supabase-rest';
 import type { Flight } from '@/types/flight';
 
 const CACHE_FILE_PATH = path.join(process.cwd(), 'data', 'all-flights-cache.json');
@@ -60,10 +61,7 @@ export async function GET(request: NextRequest) {
         const alertResponse = await fetch(
             `${config.url}/rest/v1/price_alerts?select=alert_key,departure_city,arrival_city,max_price,created_at&active=eq.true`,
             {
-                headers: {
-                    apikey: config.key,
-                    Authorization: `Bearer ${config.key}`,
-                },
+                headers: getSupabaseServerHeaders(config.key),
                 cache: 'no-store',
             },
         );
