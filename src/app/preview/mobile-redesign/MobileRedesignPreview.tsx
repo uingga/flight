@@ -810,16 +810,17 @@ export default function MobileRedesignPreview() {
                             </section>
                         </div>
 
-                        {selectedFlight.source === 'ttang' ? (
-                            <p className={styles.priceNotice}>
-                                땡처리닷컴에서는 예약·결제 단계에서 발권수수료
-                                <strong> {priceText(TTANG_TICKETING_FEE)}</strong>이 추가될 수 있어요.
-                            </p>
-                        ) : (
-                            <p className={styles.priceNotice}>가격과 좌석은 바뀔 수 있어요. 예약 전에 여행사에서 한 번 더 확인해주세요.</p>
-                        )}
-
-                        <div className={styles.detailTools}>
+                        <div className={styles.priceNotice}>
+                            <span>
+                                {selectedFlight.source === 'ttang' ? (
+                                    <>
+                                        땡처리닷컴에서는 예약·결제 단계에서 발권수수료
+                                        <strong> {priceText(TTANG_TICKETING_FEE)}</strong>이 추가될 수 있어요.
+                                    </>
+                                ) : (
+                                    <>가격과 좌석은 바뀔 수 있어요. 예약 전에 여행사에서 한 번 더 확인해주세요.</>
+                                )}
+                            </span>
                             <div className={styles.reportTools}>
                                 <button type="button" onClick={() => setToast('미리보기에서는 실제 신고를 저장하지 않아요.')}>가격이 달라요</button>
                                 <span aria-hidden="true">·</span>
@@ -831,10 +832,6 @@ export default function MobileRedesignPreview() {
                             {SOURCE_NAMES[selectedFlight.source]}에서 확인하기 <Icon name="arrow" />
                         </a>
                         <div className={styles.detailSecondaryActions}>
-                            <button className={styles.detailShareButton} type="button" onClick={() => shareFlight(selectedFlight)}>
-                                <Icon name="share" />
-                                <span>공유</span>
-                            </button>
                             {selectedHotelUrl && (
                                 <a
                                     className={styles.hotelCompareButton}
@@ -864,6 +861,10 @@ export default function MobileRedesignPreview() {
                                     <Icon name="arrow" />
                                 </a>
                             )}
+                            <button className={styles.detailShareButton} type="button" onClick={() => shareFlight(selectedFlight)}>
+                                <Icon name="share" />
+                                <span>공유</span>
+                            </button>
                         </div>
                     </section>
                 </div>
