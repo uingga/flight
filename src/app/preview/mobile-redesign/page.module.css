@@ -343,7 +343,7 @@
 .detailRouteStop > span { position: relative; z-index: 1; width: 8px; height: 8px; margin-top: 5px; border: 1.5px solid #ef8fa2; border-radius: 50%; background: #fff; }
 .detailRouteStop > div { min-width: 0; display: grid; gap: 3px; }
 .detailRouteTime { display: flex; align-items: baseline; gap: 7px; }
-.detailRouteStop em { color: #1f1f1f; font-size: var(--size-card); line-height: 1.18; font-style: normal; font-weight: var(--weight-regular); font-variant-numeric: tabular-nums; }
+.detailRouteStop em { color: #1f1f1f; font-size: var(--size-card); line-height: 1.18; font-style: normal; font-weight: var(--weight-heavy); font-variant-numeric: tabular-nums; }
 .detailRouteTime span { color: var(--text-muted); font-size: var(--size-meta); line-height: 1.2; font-weight: var(--weight-medium); white-space: nowrap; }
 .detailRouteTimeUnknown em { color: var(--text-muted); font-size: var(--size-body); font-weight: var(--weight-medium); }
 .detailRouteStop strong { overflow: hidden; color: var(--text-secondary); font-size: var(--size-body); line-height: 1.3; font-weight: var(--weight-regular); text-overflow: ellipsis; white-space: nowrap; }
