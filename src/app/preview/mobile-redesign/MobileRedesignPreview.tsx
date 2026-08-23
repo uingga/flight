@@ -98,17 +98,25 @@ const tripLength = (flight: Flight) => {
     return days > 1 ? `${days - 1}박 ${days}일` : null;
 };
 
-const stableVariant = (flight: Flight, options: string[]) => {
-    const seed = Array.from(flight.id).reduce((sum, character) => sum + character.charCodeAt(0), 0);
-    return options[seed % options.length];
-};
-
 const hourFromTime = (value?: string) => {
     const match = value?.match(/(\d{1,2}):(\d{2})/);
     if (!match) return null;
     const hour = Number(match[1]);
     return hour >= 0 && hour <= 23 ? hour : null;
 };
+
+const readableTime = (value?: string) => {
+    const match = value?.match(/(\d{1,2}):(\d{2})/);
+    if (!match) return null;
+    const hour = Number(match[1]);
+    const minute = Number(match[2]);
+    if (hour < 0 || hour > 23) return null;
+    const period = hour < 6 ? '새벽' : hour < 12 ? '오전' : hour < 18 ? '오후' : '밤';
+    const displayHour = hour % 12 || 12;
+    return `${period} ${displayHour}시${minute > 0 ? ` ${minute}분` : ''}`;
+};
+
+const weekdayLabel = (date: Date) => new Intl.DateTimeFormat('ko-KR', { weekday: 'short' }).format(date);
 
 const includesWeekend = (departure: Date, arrival: Date) => {
     const cursor = new Date(departure);
@@ -126,18 +134,15 @@ const flightFeatureText = (flight: Flight, referenceDate: Date) => {
     const arrival = parseDate(flight.arrival.date);
     const departureHour = hourFromTime(flight.departure.time);
     const returnHour = hourFromTime(flight.arrival.time);
-    const destination = stripAirport(flight.arrival.city);
+    const departureTime = readableTime(flight.departure.time);
+    const returnTime = readableTime(flight.arrival.time);
 
     if (departure) {
         const today = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), referenceDate.getDate(), 12);
         const daysUntilDeparture = Math.ceil((departure.getTime() - today.getTime()) / 86_400_000);
         if (daysUntilDeparture === 0) return '오늘 바로 떠나는 표예요';
         if (daysUntilDeparture >= 0 && daysUntilDeparture <= 7) {
-            return stableVariant(flight, [
-                `출발까지 ${daysUntilDeparture}일, 곧 떠나요`,
-                `${daysUntilDeparture}일 뒤면 ${destination}이에요`,
-                '이번 주, 여행이 시작돼요',
-            ]);
+            return `출발까지 ${daysUntilDeparture}일 남았어요`;
         }
     }
 
@@ -145,74 +150,41 @@ const flightFeatureText = (flight: Flight, referenceDate: Date) => {
         const days = Math.round((arrival.getTime() - departure.getTime()) / 86_400_000) + 1;
         const fridayToSunday = departure.getDay() === 5 && arrival.getDay() === 0;
         if (fridayToSunday) {
-            return stableVariant(flight, [
-                '금요일에 떠나 일요일에 돌아와요',
-                '주말을 통째로 여행에 써요',
-            ]);
+            return '금요일 출발 · 일요일 귀국';
         }
         if (days <= 4 && includesWeekend(departure, arrival)) {
-            return stableVariant(flight, [
-                '주말을 끼고 가볍게 다녀와요',
-                '짧은 주말이 여행으로 바뀌어요',
-                '주말에 슬쩍 다녀오기 좋은 일정',
-            ]);
+            return `주말 포함 · ${days === 1 ? '당일' : `${days - 1}박 ${days}일`}`;
         }
     }
 
-    if (departureHour !== null && departureHour >= 19) {
-        return stableVariant(flight, [
-            '밤 비행으로 하루를 아껴요',
-            '하루 끝에 바로 떠나요',
-            '밤에 출발해 여행 시간을 벌어요',
-        ]);
+    if (departureHour !== null && departureHour >= 19 && departureTime) {
+        return `가는 편 ${departureTime} 출발`;
     }
 
-    if (departureHour !== null && departureHour < 9) {
-        return stableVariant(flight, [
-            '아침 일찍, 여행은 더 길게',
-            '이른 비행으로 첫날부터 알차게',
-            '해 뜰 때 출발해 하루를 넉넉히',
-        ]);
+    if (departureHour !== null && departureHour < 9 && departureTime) {
+        return `가는 편 ${departureTime} 출발`;
     }
 
-    if (returnHour !== null && returnHour >= 17) {
-        return stableVariant(flight, [
-            '마지막 날까지 천천히 즐겨요',
-            '돌아오는 날도 여유가 있어요',
-            '여행의 마지막 날도 넉넉하게',
-        ]);
+    if (returnHour !== null && returnHour >= 17 && returnTime) {
+        return `오는 편 ${returnTime} 출발`;
     }
 
     if (departure && arrival) {
         const days = Math.round((arrival.getTime() - departure.getTime()) / 86_400_000) + 1;
         if (days >= 6) {
-            return stableVariant(flight, [
-                '조금 길게, 느긋하게 머물러요',
-                '서두르지 않는 여행 일정이에요',
-                '여유 있게 머물다 돌아와요',
-            ]);
+            return `${days - 1}박 ${days}일 · 긴 일정`;
         }
         if (days <= 4) {
-            return stableVariant(flight, [
-                '짧은 일정으로 가볍게 떠나요',
-                '부담 없이 다녀오기 좋은 일정',
-                '잠깐의 휴가를 여행으로 바꿔요',
-            ]);
+            return `${days === 1 ? '당일' : `${days - 1}박 ${days}일`} · 짧은 일정`;
         }
     }
 
     if (flight.modetourDetail?.isDirect && flight.modetourDetail?.isReturnDirect) {
-        return stableVariant(flight, [
-            '갈아타지 않고 바로 다녀와요',
-            '가는 길도 오는 길도 직항이에요',
-        ]);
+        return '가는 편 · 오는 편 모두 직항';
     }
 
-    return stableVariant(flight, [
-        `${destination}, 이번엔 여기 어때요?`,
-        `${destination}로 떠날 날짜가 생겼어요`,
-        `다음 여행지는 ${destination} 어때요?`,
-    ]);
+    if (departure && arrival) return `${weekdayLabel(departure)} 출발 · ${weekdayLabel(arrival)} 귀국`;
+    return '출발 날짜와 시간을 확인해 보세요';
 };
 
 const priceText = (price: number) => `${new Intl.NumberFormat('ko-KR').format(price)}원`;
