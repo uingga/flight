@@ -532,12 +532,6 @@ export default function MobileRedesignPreview() {
                             return (
                                 <Fragment key={flight.id}>
                                     <div className={styles.cardEntry}>
-                                        {isTodayPick && (
-                                            <div className={styles.todayPickLabel}>
-                                                <span>오늘의 표</span>
-                                                <p>{todayPick.reason}</p>
-                                            </div>
-                                        )}
                                         <article className={`${styles.flightCard} ${isTodayPick ? styles.todayPickCard : ''}`}>
                                             <button type="button" className={styles.cardBody} onClick={() => setSelectedFlight(flight)}>
                                                 <div className={styles.cardTopline}>
@@ -577,11 +571,20 @@ export default function MobileRedesignPreview() {
 
                                                 <div className={styles.cardFooter}>
                                                     <div className={styles.availabilityGroup}>
-                                                        {discountRate >= 5 && <span className={styles.footerDiscountBadge}>-{discountRate}%</span>}
-                                                        {flight.minPax && flight.minPax > 1 && <span>{flight.minPax}인부터</span>}
+                                                        {isTodayPick ? (
+                                                            <div className={styles.todayPickFooter}>
+                                                                <span>오늘의 표</span>
+                                                                <p>{todayPick.reason}</p>
+                                                            </div>
+                                                        ) : (
+                                                            flight.minPax && flight.minPax > 1 && <span>{flight.minPax}인부터</span>
+                                                        )}
                                                     </div>
                                                     <div className={styles.priceBlock}>
-                                                        <strong>{priceText(flight.source === 'ttang' ? flight.price : price)}</strong>
+                                                        <div className={styles.priceLine}>
+                                                            {discountRate >= 5 && <span className={styles.priceDiscountBadge}>-{discountRate}%</span>}
+                                                            <strong>{priceText(flight.source === 'ttang' ? flight.price : price)}</strong>
+                                                        </div>
                                                         {flight.source === 'ttang' && <span className={styles.feeNotice}>발권수수료가 추가될 수 있어요</span>}
                                                     </div>
                                                 </div>
