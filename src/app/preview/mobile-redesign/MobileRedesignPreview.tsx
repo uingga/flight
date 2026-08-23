@@ -427,7 +427,7 @@ export default function MobileRedesignPreview() {
 
                 <section className={styles.feedIntro}>
                     <div>
-                        <p>좋은 표 하나가, 평범한 주말을 여행으로 바꿉니다.</p>
+                        <p>좋은 표 하나가, 주말을 여행으로.</p>
                         <h1>지금 나온 땡처리 항공권</h1>
                     </div>
                     <span>{updatedLabel}</span>
