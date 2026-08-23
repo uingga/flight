@@ -889,7 +889,7 @@ export default function MobileRedesignPreview() {
                                     <div className={styles.detailRouteStop}>
                                         <span aria-hidden="true" />
                                         <div>
-                                            <div className={styles.detailRouteTime}>
+                                            <div className={`${styles.detailRouteTime} ${outbound.departureTime === '시간 확인' ? styles.detailRouteTimeUnknown : ''}`}>
                                                 <em>{outbound.departureTime}</em>
                                                 <span>{outbound.departureDate}</span>
                                             </div>
@@ -899,7 +899,7 @@ export default function MobileRedesignPreview() {
                                     <div className={styles.detailRouteStop}>
                                         <span aria-hidden="true" />
                                         <div>
-                                            <div className={styles.detailRouteTime}>
+                                            <div className={`${styles.detailRouteTime} ${outbound.arrivalTime === '시간 확인' ? styles.detailRouteTimeUnknown : ''}`}>
                                                 <em>{outbound.arrivalTime}</em>
                                                 <span>{outbound.arrivalDate}</span>
                                             </div>
@@ -920,7 +920,7 @@ export default function MobileRedesignPreview() {
                                     <div className={styles.detailRouteStop}>
                                         <span aria-hidden="true" />
                                         <div>
-                                            <div className={styles.detailRouteTime}>
+                                            <div className={`${styles.detailRouteTime} ${inbound.departureTime === '시간 확인' ? styles.detailRouteTimeUnknown : ''}`}>
                                                 <em>{inbound.departureTime}</em>
                                                 <span>{inbound.departureDate}</span>
                                             </div>
@@ -930,7 +930,7 @@ export default function MobileRedesignPreview() {
                                     <div className={styles.detailRouteStop}>
                                         <span aria-hidden="true" />
                                         <div>
-                                            <div className={styles.detailRouteTime}>
+                                            <div className={`${styles.detailRouteTime} ${inbound.arrivalTime === '시간 확인' ? styles.detailRouteTimeUnknown : ''}`}>
                                                 <em>{inbound.arrivalTime}</em>
                                                 <span>{inbound.arrivalDate}</span>
                                             </div>
