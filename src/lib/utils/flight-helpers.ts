@@ -376,15 +376,21 @@ const parseHm = (time?: string): number | null => {
     return hours * 60 + minutes;
 };
 
+export interface FlightTiming {
+    duration: string;
+    arrivalDayOffset: number;
+}
+
 /**
- * 실제 비행시간. 출·도착 시각이 각기 현지 시각이므로 UTC 오프셋 차이를 보정한다.
- * 예: 인천(+9) 09:00 → 다낭(+7) 12:00 은 단순 계산 3시간이지만 실제로는 5시간.
+ * 실제 비행시간과 도착지 현지 날짜의 변경 일수.
+ * 출·도착 시각이 각기 현지 시각이므로 UTC 오프셋 차이를 보정한다.
+ * 예: 인천(+9) 22:00 → 방콕(+7) 01:00은 5시간 비행이며 현지 날짜는 다음 날(+1)이다.
  * 시간대를 모르는 도시는 틀린 값을 보여주느니 null을 돌려준다.
  */
-export const calcFlightDuration = (
+export const calcFlightTiming = (
     depCity: string, depTime: string | undefined, depDate: string | undefined,
     arrCity: string, arrTime: string | undefined,
-): string | null => {
+): FlightTiming | null => {
     const depMinutes = parseHm(depTime);
     const arrMinutes = parseHm(arrTime);
     if (depMinutes === null || arrMinutes === null) return null;
@@ -400,15 +406,28 @@ export const calcFlightDuration = (
 
     // 현지 시각 차이에 시차를 더해 실제 경과 시간으로 되돌린다
     let total = (arrMinutes - depMinutes) + (depOffset - arrOffset);
+    let arrivalDayOffset = 0;
     // 날짜를 넘긴 경우 (도착 데이터에 날짜가 없어 가장 가까운 다음 날로 본다)
-    while (total <= 0) total += 24 * 60;
+    while (total <= 0) {
+        total += 24 * 60;
+        arrivalDayOffset += 1;
+    }
     // 30시간을 넘으면 데이터가 잘못된 것으로 보고 표시하지 않는다
     if (total > 30 * 60) return null;
 
     const hours = Math.floor(total / 60);
     const minutes = total % 60;
-    return `${hours}시간${minutes > 0 ? ` ${minutes}분` : ''}`;
+    return {
+        duration: `${hours}시간${minutes > 0 ? ` ${minutes}분` : ''}`,
+        arrivalDayOffset,
+    };
 };
+
+/** 실제 비행시간만 필요한 기존 화면용 호환 함수. */
+export const calcFlightDuration = (
+    depCity: string, depTime: string | undefined, depDate: string | undefined,
+    arrCity: string, arrTime: string | undefined,
+): string | null => calcFlightTiming(depCity, depTime, depDate, arrCity, arrTime)?.duration || null;
 
 // 네이버 항공권 비교 URL 생성 (왕복)
 export const getNaverFlightUrl = (depCity: string, arrCity: string, depDate: string, retDate?: string, depAirport?: string, arrAirport?: string): string | null => {

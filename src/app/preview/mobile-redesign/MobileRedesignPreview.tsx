@@ -7,7 +7,7 @@ import 'react-datepicker/dist/react-datepicker.css';
 import Logo from '@/components/Logo';
 import * as gtag from '@/lib/analytics';
 import { getDestinationContext } from '@/lib/destination-contexts';
-import { calcFlightDuration } from '@/lib/utils/flight-helpers';
+import { calcFlightTiming } from '@/lib/utils/flight-helpers';
 import { getTripcomHotelUrl, getTripcomTrackingId } from '@/lib/utils/tripcom-helpers';
 import type { Flight } from '@/types/flight';
 import styles from './page.module.css';
@@ -82,6 +82,17 @@ const shortDate = (value: string) => {
     }).format(date).replace(/\.$/, '');
 };
 
+const shortDateWithOffset = (value: string, offset: number) => {
+    const date = parseDate(value);
+    if (!date) return shortDate(value);
+    date.setDate(date.getDate() + offset);
+    return new Intl.DateTimeFormat('ko-KR', {
+        month: 'numeric',
+        day: 'numeric',
+        weekday: 'short',
+    }).format(date).replace(/\.$/, '');
+};
+
 const cardDate = (value: string) => {
     const date = parseDate(value);
     if (!date) return value || '날짜 확인';
@@ -103,6 +114,21 @@ const hourFromTime = (value?: string) => {
     if (!match) return null;
     const hour = Number(match[1]);
     return hour >= 0 && hour <= 23 ? hour : null;
+};
+
+const fallbackArrivalDayOffset = (departureTime?: string, arrivalTime?: string) => {
+    const parseMinutes = (value?: string) => {
+        const match = value?.match(/(\d{1,2}):(\d{2})/);
+        if (!match) return null;
+        const hours = Number(match[1]);
+        const minutes = Number(match[2]);
+        if (hours > 23 || minutes > 59) return null;
+        return hours * 60 + minutes;
+    };
+    const departureMinutes = parseMinutes(departureTime);
+    const arrivalMinutes = parseMinutes(arrivalTime);
+    if (departureMinutes === null || arrivalMinutes === null) return 0;
+    return arrivalMinutes < departureMinutes ? 1 : 0;
 };
 
 const readableTime = (value?: string) => {
@@ -204,25 +230,31 @@ const legDetails = (flight: Flight, leg: 'outbound' | 'return') => {
 
     if (leg === 'outbound') {
         const arrivalTime = detail?.departureArrivalTime || flight.departure.arrivalTime || '';
+        const timing = calcFlightTiming(departureCity, flight.departure.time, flight.departure.date, arrivalCity, arrivalTime);
+        const fallbackDayOffset = fallbackArrivalDayOffset(flight.departure.time, arrivalTime);
         return {
             origin: airportLabel(departureCity, flight.departure.airport),
             destination: airportLabel(arrivalCity, flight.arrival.airport),
             departureTime: flight.departure.time || '시간 확인',
             arrivalTime: arrivalTime || '시간 확인',
-            duration: calcFlightDuration(departureCity, flight.departure.time, flight.departure.date, arrivalCity, arrivalTime)
-                || agencyFlightDuration(detail?.flyingTime),
+            departureDate: shortDate(flight.departure.date),
+            arrivalDate: shortDateWithOffset(flight.departure.date, timing?.arrivalDayOffset ?? fallbackDayOffset),
+            duration: timing?.duration || agencyFlightDuration(detail?.flyingTime),
         };
     }
 
     const departureTime = detail?.returnDepartureTime || flight.arrival.time || '';
     const arrivalTime = detail?.returnArrivalTime || flight.arrival.arrivalTime || '';
+    const timing = calcFlightTiming(arrivalCity, departureTime, flight.arrival.date, departureCity, arrivalTime);
+    const fallbackDayOffset = fallbackArrivalDayOffset(departureTime, arrivalTime);
     return {
         origin: airportLabel(arrivalCity, detail?.returnDepartureAirport || flight.arrival.airport),
         destination: airportLabel(departureCity, detail?.returnArrivalAirport || flight.departure.airport),
         departureTime: departureTime || '시간 확인',
         arrivalTime: arrivalTime || '시간 확인',
-        duration: calcFlightDuration(arrivalCity, departureTime, flight.arrival.date, departureCity, arrivalTime)
-            || agencyFlightDuration(detail?.returnFlyingTime),
+        departureDate: shortDate(flight.arrival.date),
+        arrivalDate: shortDateWithOffset(flight.arrival.date, timing?.arrivalDayOffset ?? fallbackDayOffset),
+        duration: timing?.duration || agencyFlightDuration(detail?.returnFlyingTime),
     };
 };
 
@@ -850,7 +882,6 @@ export default function MobileRedesignPreview() {
                                 <header className={styles.detailLegHeader}>
                                     <div>
                                         <strong>가는 항공편</strong>
-                                        <span>{shortDate(selectedFlight.departure.date)}</span>
                                     </div>
                                     <small>{outbound.duration ? `비행시간 ${outbound.duration}` : '비행시간 확인 필요'}</small>
                                 </header>
@@ -858,14 +889,20 @@ export default function MobileRedesignPreview() {
                                     <div className={styles.detailRouteStop}>
                                         <span aria-hidden="true" />
                                         <div>
-                                            <em>{outbound.departureTime}</em>
+                                            <div className={styles.detailRouteTime}>
+                                                <em>{outbound.departureTime}</em>
+                                                <span>{outbound.departureDate}</span>
+                                            </div>
                                             <strong>{outbound.origin}</strong>
                                         </div>
                                     </div>
                                     <div className={styles.detailRouteStop}>
                                         <span aria-hidden="true" />
                                         <div>
-                                            <em>{outbound.arrivalTime}</em>
+                                            <div className={styles.detailRouteTime}>
+                                                <em>{outbound.arrivalTime}</em>
+                                                <span>{outbound.arrivalDate}</span>
+                                            </div>
                                             <strong>{outbound.destination}</strong>
                                         </div>
                                     </div>
@@ -876,7 +913,6 @@ export default function MobileRedesignPreview() {
                                 <header className={styles.detailLegHeader}>
                                     <div>
                                         <strong>오는 항공편</strong>
-                                        <span>{shortDate(selectedFlight.arrival.date)}</span>
                                     </div>
                                     <small>{inbound.duration ? `비행시간 ${inbound.duration}` : '비행시간 확인 필요'}</small>
                                 </header>
@@ -884,14 +920,20 @@ export default function MobileRedesignPreview() {
                                     <div className={styles.detailRouteStop}>
                                         <span aria-hidden="true" />
                                         <div>
-                                            <em>{inbound.departureTime}</em>
+                                            <div className={styles.detailRouteTime}>
+                                                <em>{inbound.departureTime}</em>
+                                                <span>{inbound.departureDate}</span>
+                                            </div>
                                             <strong>{inbound.origin}</strong>
                                         </div>
                                     </div>
                                     <div className={styles.detailRouteStop}>
                                         <span aria-hidden="true" />
                                         <div>
-                                            <em>{inbound.arrivalTime}</em>
+                                            <div className={styles.detailRouteTime}>
+                                                <em>{inbound.arrivalTime}</em>
+                                                <span>{inbound.arrivalDate}</span>
+                                            </div>
                                             <strong>{inbound.destination}</strong>
                                         </div>
                                     </div>

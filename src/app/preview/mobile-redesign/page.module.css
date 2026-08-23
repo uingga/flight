@@ -320,14 +320,15 @@
 .detailLegHeader { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
 .detailLegHeader > div { display: flex; align-items: baseline; gap: 8px; }
 .detailLegHeader strong { color: #2d2d2d; font-size: 13.5px; line-height: 1.25; font-weight: 800; }
-.detailLegHeader span { color: #555555; font-size: 12px; line-height: 1.25; font-weight: 700; white-space: nowrap; }
 .detailLegHeader small { color: #767676; font-size: 11px; line-height: 1.2; white-space: nowrap; }
 .detailVerticalRoute { position: relative; display: grid; gap: 17px; }
 .detailVerticalRoute::before { content: ''; position: absolute; top: 8px; bottom: 8px; left: 3.5px; width: 1px; background: #d5d5d5; }
 .detailRouteStop { position: relative; display: grid; grid-template-columns: 8px minmax(0, 1fr); align-items: start; gap: 11px; }
 .detailRouteStop > span { position: relative; z-index: 1; width: 8px; height: 8px; margin-top: 5px; border: 1.5px solid #ef8fa2; border-radius: 50%; background: #fff; }
 .detailRouteStop > div { min-width: 0; display: grid; gap: 3px; }
+.detailRouteTime { display: flex; align-items: baseline; gap: 7px; }
 .detailRouteStop em { color: #1f1f1f; font-size: 17px; line-height: 1.18; font-style: normal; font-weight: 800; font-variant-numeric: tabular-nums; }
+.detailRouteTime span { color: #767676; font-size: 12px; line-height: 1.2; font-weight: 600; white-space: nowrap; }
 .detailRouteStop strong { overflow: hidden; color: #4d4d4d; font-size: 13px; line-height: 1.3; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
 .detailStayDivider { margin-left: 19px; display: flex; align-items: center; gap: 9px; }
 .detailStayDivider::before,
