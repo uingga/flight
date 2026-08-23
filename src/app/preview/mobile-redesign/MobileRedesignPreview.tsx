@@ -116,7 +116,7 @@ const readableTime = (value?: string) => {
     return `${period} ${displayHour}시${minute > 0 ? ` ${minute}분` : ''}`;
 };
 
-const weekdayLabel = (date: Date) => new Intl.DateTimeFormat('ko-KR', { weekday: 'short' }).format(date);
+const weekdayLabel = (date: Date) => new Intl.DateTimeFormat('ko-KR', { weekday: 'long' }).format(date);
 
 const includesWeekend = (departure: Date, arrival: Date) => {
     const cursor = new Date(departure);
