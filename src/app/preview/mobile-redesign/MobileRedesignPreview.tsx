@@ -179,10 +179,6 @@ const flightFeatureText = (flight: Flight, referenceDate: Date) => {
         }
     }
 
-    if (flight.modetourDetail?.isDirect && flight.modetourDetail?.isReturnDirect) {
-        return '가는 편 · 오는 편 모두 직항';
-    }
-
     if (departure && arrival) return `${weekdayLabel(departure)} 출발 · ${weekdayLabel(arrival)} 귀국`;
     return '출발 날짜와 시간을 확인해 보세요';
 };
