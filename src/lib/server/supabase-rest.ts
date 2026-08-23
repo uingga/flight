@@ -58,5 +58,7 @@ export async function supabaseRest<T>(resource: string, init: SupabaseRestInit =
         throw new SupabaseRestError(response.status, `Account storage request failed (${response.status})`);
     }
     if (response.status === 204) return undefined as T;
-    return response.json() as Promise<T>;
+    const body = await response.text();
+    if (!body.trim()) return undefined as T;
+    return JSON.parse(body) as T;
 }
