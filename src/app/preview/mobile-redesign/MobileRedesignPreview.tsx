@@ -657,7 +657,7 @@ export default function MobileRedesignPreview() {
                                                         <span className={`${styles.sourceBadge} ${styles[flight.source]}`}>{SOURCE_NAMES[flight.source]}</span>
                                                         <span className={styles.airline}>{flight.airline || '항공사 확인'}</span>
                                                         {seats > 0 && (
-                                                            <span className={`${styles.cardSeatCount} ${seats <= 5 ? styles.cardSeatCountLow : ''}`}>
+                                                            <span className={`${styles.cardSeatCount} ${seats <= 4 ? styles.cardSeatCountLow : ''}`}>
                                                                 {seats}석 남음
                                                             </span>
                                                         )}

@@ -196,7 +196,7 @@
 .myrealtrip { color: #2563eb; }
 .airline { min-width: 0; height: 20px; overflow: hidden; display: inline-flex; align-items: center; color: var(--text-secondary); font-size: var(--size-meta); line-height: 1; text-overflow: ellipsis; white-space: nowrap; }
 .cardSeatCount { flex: 0 0 auto; color: var(--text-muted); font-size: var(--size-meta); line-height: 1; font-weight: var(--weight-medium); white-space: nowrap; }
-.cardSeatCountLow { color: #b94a2c; font-weight: var(--weight-bold); }
+.cardSeatCountLow { height: 20px; padding: 0 7px; display: inline-flex; align-items: center; border-radius: 999px; background: var(--teal-soft); color: #b42343; font-weight: var(--weight-bold); }
 
 .favoriteButton {
     position: absolute;
