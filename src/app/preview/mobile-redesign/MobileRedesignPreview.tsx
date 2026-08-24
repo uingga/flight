@@ -885,7 +885,6 @@ export default function MobileRedesignPreview() {
                         <p>좋은 표 하나가, 주말을 여행으로.</p>
                         <h1>지금 나온 땡처리 항공권</h1>
                     </div>
-                    <span>{updatedLabel}</span>
                 </section>
 
                 <div className={styles.quickFilterRow}>
@@ -940,8 +939,8 @@ export default function MobileRedesignPreview() {
                 <section className={styles.feedSection}>
                     <div className={styles.feedHeading}>
                         <div>
-                            <h2>{query ? `'${query}' 검색 결과` : region === '전체' ? '어디로 떠나볼까요?' : `${region} 특가`}</h2>
-                            <span>총 {filteredFlights.length.toLocaleString('ko-KR')}개</span>
+                            <h2>{query ? `'${query}' 검색 결과` : region === '전체' ? '전체 항공권' : `${region} 항공권`}</h2>
+                            <span>{filteredFlights.length.toLocaleString('ko-KR')}개 · {updatedLabel}</span>
                         </div>
                         <label className={styles.sortSelect}>
                             <select
