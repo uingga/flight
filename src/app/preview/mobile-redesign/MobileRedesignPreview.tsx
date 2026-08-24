@@ -627,7 +627,6 @@ export default function MobileRedesignPreview() {
             currentPrice: number;
             score: number;
         };
-        const insights: FeedInsight[] = [];
         let bestPriceDrop: PriceDropCandidate | null = null;
         const routeHistory = normalizedHistory(priceHistory);
         const historyDates = Array.from(new Set(
@@ -667,24 +666,7 @@ export default function MobileRedesignPreview() {
 
             const bestDrop = drops[0];
             bestPriceDrop = bestDrop || null;
-            if (bestDrop) {
-                insights.push({
-                    id: 'price-drop',
-                    kind: 'price',
-                    eyebrow: '가격 변화',
-                    title: `${compactWon(bestDrop.drop)} 내림`,
-                    flight: bestDrop.flight,
-                    destination: stripAirport(bestDrop.flight.arrival.city),
-                    previousPrice: bestDrop.previousPrice,
-                    currentPrice: bestDrop.currentPrice,
-                    meta: `${departureName(bestDrop.flight)} 출발 · ${cardDate(bestDrop.flight.departure.date)}`,
-                });
-            }
         }
-
-        const usedDestinations = new Set(
-            insights.map(insight => normalizeCity(insight.flight.arrival.city)),
-        );
 
         const stayCandidates = displayedFlights.flatMap(flight => {
             const minutes = onsiteStayMinutes(flight);
@@ -740,59 +722,6 @@ export default function MobileRedesignPreview() {
         });
         airportComparisons.sort((a, b) => b.savingRate - a.savingRate || b.saving - a.saving);
 
-        const factStay = stayCandidates.find(candidate => (
-            !usedDestinations.has(normalizeCity(candidate.flight.arrival.city))
-        ));
-        if (factStay) {
-            insights.push({
-                id: 'stay-time',
-                kind: 'stay',
-                eyebrow: '여행 시간',
-                title: `현지 체류 ${factStay.hours}시간`,
-                description: `${outboundArrivalTime(factStay.flight)} 도착 · ${returnDepartureTime(factStay.flight)} 출발`,
-                flight: factStay.flight,
-                destination: stripAirport(factStay.flight.arrival.city),
-                currentPrice: effectivePrice(factStay.flight),
-                meta: `${departureName(factStay.flight)} 출발 · ${tripLength(factStay.flight)}`,
-            });
-            usedDestinations.add(normalizeCity(factStay.flight.arrival.city));
-        }
-
-        const factAirport = airportComparisons.find(candidate => (
-            !usedDestinations.has(normalizeCity(candidate.cheaper.arrival.city))
-        ));
-        if (factAirport) {
-            insights.push({
-                id: 'airport-price-gap',
-                kind: 'airport',
-                eyebrow: '출발지 차이',
-                title: `${compactWon(factAirport.saving)} 낮음`,
-                description: `${departureName(factAirport.expensive)} 최저가보다 ${departureName(factAirport.cheaper)} 최저가가 낮아요`,
-                flight: factAirport.cheaper,
-                destination: stripAirport(factAirport.cheaper.arrival.city),
-                currentPrice: effectivePrice(factAirport.cheaper),
-                meta: `${departureName(factAirport.cheaper)} ${cardDate(factAirport.cheaper.departure.date)} · ${departureName(factAirport.expensive)} ${cardDate(factAirport.expensive.departure.date)}`,
-            });
-            usedDestinations.add(normalizeCity(factAirport.cheaper.arrival.city));
-        }
-
-        const factTiming = harshCandidates.find(candidate => (
-            !usedDestinations.has(normalizeCity(candidate.flight.arrival.city))
-        ));
-        if (factTiming) {
-            insights.push({
-                id: 'awkward-time',
-                kind: 'timing',
-                eyebrow: '시간 확인',
-                title: factTiming.detail,
-                flight: factTiming.flight,
-                destination: stripAirport(factTiming.flight.arrival.city),
-                currentPrice: effectivePrice(factTiming.flight),
-                meta: `${departureName(factTiming.flight)} 출발 · ${cardDate(factTiming.flight.departure.date)}`,
-            });
-            usedDestinations.add(normalizeCity(factTiming.flight.arrival.city));
-        }
-
         const latestDataDate = latestHistoryDate || lastUpdated?.slice(0, 10);
         let verifiedNewFlight: Flight | null = null;
         if (latestDataDate) {
@@ -817,7 +746,7 @@ export default function MobileRedesignPreview() {
                         kind: 'price',
                         editorial: true,
                         eyebrow: '가격 변화',
-                        title: '가격이 도망쳤습니다',
+                        title: '오늘 가격이 크게 떨어졌어요',
                         description: `${priceText(bestPriceDrop.previousPrice)}에서 ${priceText(bestPriceDrop.currentPrice)}으로 내려왔어요`,
                         flight: bestPriceDrop.flight,
                         destination: stripAirport(bestPriceDrop.flight.arrival.city),
@@ -929,14 +858,18 @@ export default function MobileRedesignPreview() {
         }
 
         editorialCandidates.sort((a, b) => b.score - a.score);
-        const editorialInsight = editorialCandidates[0]?.insight || null;
-        if (!editorialInsight) return insights;
-
-        const editorialDestination = normalizeCity(editorialInsight.flight.arrival.city);
-        const facts = insights.filter(insight => normalizeCity(insight.flight.arrival.city) !== editorialDestination);
-        return facts.length > 0
-            ? [facts[0], editorialInsight, ...facts.slice(1)]
-            : [editorialInsight];
+        const selectedInsights: FeedInsight[] = [];
+        const selectedKinds = new Set<FeedInsight['kind']>();
+        const selectedDestinations = new Set<string>();
+        for (const candidate of editorialCandidates) {
+            const destination = normalizeCity(candidate.insight.flight.arrival.city);
+            if (selectedKinds.has(candidate.insight.kind) || selectedDestinations.has(destination)) continue;
+            selectedInsights.push(candidate.insight);
+            selectedKinds.add(candidate.insight.kind);
+            selectedDestinations.add(destination);
+            if (selectedInsights.length >= 4) break;
+        }
+        return selectedInsights;
     }, [displayedFlights, lastUpdated, priceHistory, query, sort]);
 
     const filterCount = [departure !== '전체', datePeriod !== 'all', maxPrice > 0].filter(Boolean).length;
@@ -1093,7 +1026,7 @@ export default function MobileRedesignPreview() {
                     >
                         <span>🚨 TIKIT DROP 발생</span>
                         <span>{stripAirport(dropAlertFlight.arrival.city)} 왕복 {priceText(effectivePrice(dropAlertFlight))}</span>
-                        <span>가격이 도망쳤습니다</span>
+                        <span>오늘 가격이 크게 떨어졌어요</span>
                         <span>담당자가 눈치채기 전에 보세요</span>
                     </div>
                 )}
