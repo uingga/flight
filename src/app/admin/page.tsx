@@ -130,14 +130,6 @@ interface FlightReportAdminData {
         activeHides: number;
         needsReview: number;
     };
-    naverCompareExperiment?: {
-        baselineAvailable: boolean;
-        storedReportsStartedAt: string;
-        hiddenPeriod: { startDate: string; endDate: string } | null;
-        priceChangedReports: number | null;
-        unavailableReports: number | null;
-        stopRules: { minimumCount: number; rate: number };
-    };
     reports: Array<{
         id: number;
         flight_id: string;
@@ -181,16 +173,6 @@ interface FlightReportAdminData {
 interface GaListItem {
     label: string;
     count: number;
-}
-
-interface GaConversionPeriod {
-    startDate: string;
-    endDate: string;
-    detailOpenEvents: number;
-    detailOpenUsers: number;
-    bookingClickEvents: number;
-    bookingClickUsers: number;
-    detailToBookingRate: number | null;
 }
 
 interface GaStatsData {
@@ -260,28 +242,6 @@ interface GaStatsData {
         range: GaListItem[] | null;
         method: GaListItem[] | null;
         presets: GaListItem[] | null;
-    };
-    naverCompareExperiment: {
-        id: string;
-        label: string;
-        phase: 'before' | 'hidden' | 'restored';
-        hideStartsAt: string;
-        hideEndsAt: string;
-        measurementStartDate: string;
-        measurementEndDate: string;
-        detailTrackingStartedAt: string;
-        comparableDays: number;
-        baselineFull: GaConversionPeriod;
-        baseline: GaConversionPeriod | null;
-        hidden: GaConversionPeriod | null;
-        hiddenFull: GaConversionPeriod | null;
-        rateChange: number | null;
-        evaluation: {
-            ready: boolean;
-            minimumDays: number;
-            minimumDetailUsers: number;
-            bookingImproved: boolean | null;
-        };
     };
     warnings: string[];
 }
@@ -1475,107 +1435,6 @@ export default function AdminPage() {
                     </div>
                 ) : (
                     <>
-                        {(() => {
-                            const experiment = gaStats.naverCompareExperiment;
-                            const reportExperiment = flightReports?.naverCompareExperiment;
-                            const priceReports = reportExperiment?.priceChangedReports ?? null;
-                            const hiddenDetailUsers = experiment.hiddenFull?.detailOpenUsers || 0;
-                            const priceReportRate = priceReports !== null && hiddenDetailUsers > 0
-                                ? Number(((priceReports / hiddenDetailUsers) * 100).toFixed(1))
-                                : null;
-                            const priceStop = priceReports !== null
-                                && priceReportRate !== null
-                                && priceReports >= (reportExperiment?.stopRules.minimumCount || 3)
-                                && priceReportRate >= (reportExperiment?.stopRules.rate || 10);
-                            const bookingStop = experiment.evaluation.ready
-                                && experiment.evaluation.bookingImproved === false;
-                            const shouldRestore = bookingStop || priceStop;
-                            const phaseLabel = experiment.phase === 'hidden'
-                                ? '버튼 숨김 중'
-                                : experiment.phase === 'restored'
-                                    ? '자동 복원됨'
-                                    : '시작 전';
-                            const resultLabel = shouldRestore
-                                ? '복원 조건 충족'
-                                : experiment.evaluation.ready
-                                    ? '예약 클릭률 개선'
-                                    : '판단할 데이터 대기';
-
-                            return (
-                                <div className={styles.experimentPanel}>
-                                    <div className={styles.experimentHeader}>
-                                        <div>
-                                            <strong>네이버 가격비교 버튼 숨김 실험</strong>
-                                            <span>
-                                                {new Date(experiment.hideStartsAt).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })}
-                                                {' ~ '}
-                                                {new Date(experiment.hideEndsAt).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })}
-                                            </span>
-                                        </div>
-                                        <span className={shouldRestore ? styles.experimentStop : styles.experimentStatus}>
-                                            {phaseLabel} · {resultLabel}
-                                        </span>
-                                    </div>
-
-                                    <div className={styles.cityDetail}>
-                                        <table className={styles.cityTable}>
-                                            <thead>
-                                                <tr><th>비교</th><th>숨김 전</th><th>버튼 숨김</th><th>변화</th></tr>
-                                            </thead>
-                                            <tbody>
-                                                <tr>
-                                                    <td>2주 전체 기간</td>
-                                                    <td>{`${experiment.baselineFull.startDate}~${experiment.baselineFull.endDate}`}</td>
-                                                    <td>{experiment.hiddenFull ? `${experiment.hiddenFull.startDate}~${experiment.hiddenFull.endDate}` : '8/22부터 집계'}</td>
-                                                    <td>{experiment.phase === 'restored' ? '2주 완료' : '누적 중'}</td>
-                                                </tr>
-                                                <tr>
-                                                    <td>전환율 비교 기간</td>
-                                                    <td>{experiment.baseline ? `${experiment.baseline.startDate}~${experiment.baseline.endDate}` : '—'}</td>
-                                                    <td>{experiment.hidden ? `${experiment.hidden.startDate}~${experiment.hidden.endDate}` : '—'}</td>
-                                                    <td>{experiment.comparableDays}일</td>
-                                                </tr>
-                                                <tr>
-                                                    <td>2주 전체 예약 클릭</td>
-                                                    <td>{`${experiment.baselineFull.bookingClickUsers}명`}</td>
-                                                    <td>{experiment.hiddenFull ? `${experiment.hiddenFull.bookingClickUsers}명` : '집계 전'}</td>
-                                                    <td>{experiment.phase === 'restored' ? '최종 비교' : '아직 단순 비교 금지'}</td>
-                                                </tr>
-                                                <tr>
-                                                    <td>상세 열람한 사람</td>
-                                                    <td>{experiment.baseline ? `${experiment.baseline.detailOpenUsers}명` : '—'}</td>
-                                                    <td>{experiment.hidden ? `${experiment.hidden.detailOpenUsers}명` : '—'}</td>
-                                                    <td>같은 일수 비교</td>
-                                                </tr>
-                                                <tr>
-                                                    <td>여행사 예약 클릭</td>
-                                                    <td>{experiment.baseline ? `${experiment.baseline.bookingClickUsers}명` : '—'}</td>
-                                                    <td>{experiment.hidden ? `${experiment.hidden.bookingClickUsers}명` : '—'}</td>
-                                                    <td>사람 기준</td>
-                                                </tr>
-                                                <tr>
-                                                    <td>상세 → 예약 클릭률</td>
-                                                    <td>{experiment.baseline?.detailToBookingRate !== null && experiment.baseline ? `${experiment.baseline.detailToBookingRate}%` : '—'}</td>
-                                                    <td>{experiment.hidden?.detailToBookingRate !== null && experiment.hidden ? `${experiment.hidden.detailToBookingRate}%` : '—'}</td>
-                                                    <td>{experiment.rateChange !== null ? `${experiment.rateChange >= 0 ? '+' : ''}${experiment.rateChange}%p` : '—'}</td>
-                                                </tr>
-                                                <tr>
-                                                    <td>가격이 달라요 신고</td>
-                                                    <td>비교 불가</td>
-                                                    <td>{priceReports === null ? '집계 전' : `${priceReports}건${priceReportRate !== null ? ` (${priceReportRate}%)` : ''}`}</td>
-                                                    <td>{priceStop ? '복원 기준 도달' : '관찰 중'}</td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                    <p className={styles.experimentNote}>
-                                        상세 열람은 8월 14일부터 기록되어 숨김 전 전환율은 최대 7일만 비교합니다.
-                                        가격 신고의 데이터베이스 저장은 8월 21일 저녁에 시작되어 숨김 전 신고율은 정확히 비교할 수 없습니다.
-                                        대신 숨김 중 가격 신고가 3건 이상이면서 상세 열람자의 10% 이상이면 복원 신호로 봅니다.
-                                    </p>
-                                </div>
-                            );
-                        })()}
                         <div className={styles.userStatGrid}>
                             <div className={styles.userStat}>
                                 <span>최근 {gaStats.days}일 방문자</span>

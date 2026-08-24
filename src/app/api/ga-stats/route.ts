@@ -1,10 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ga4Config, runReport, eventNameFilter, dim, num, type Ga4Config, type ReportResponse } from '@/lib/ga4';
-import {
-    NAVER_COMPARE_EXPERIMENT,
-    getNaverCompareExperimentPhase,
-    getNaverCompareMeasurementRanges,
-} from '@/lib/experiments/naver-compare';
 
 // 저장소가 공개라 코드에 박아 둔 기본값은 그대로 공개 열쇠가 된다.
 // 환경변수가 없으면 조용히 열리는 대신 인증을 전부 거부한다.
@@ -75,48 +70,6 @@ async function optional(
     }
 }
 
-interface ConversionPeriod {
-    startDate: string;
-    endDate: string;
-    detailOpenEvents: number;
-    detailOpenUsers: number;
-    bookingClickEvents: number;
-    bookingClickUsers: number;
-    detailToBookingRate: number | null;
-}
-
-async function conversionPeriod(
-    config: Ga4Config,
-    range: { startDate: string; endDate: string } | null,
-): Promise<ConversionPeriod | null> {
-    if (!range) return null;
-    const report = await runReport(config, {
-        dateRanges: [range],
-        dimensions: [{ name: 'eventName' }],
-        metrics: [{ name: 'eventCount' }, { name: 'totalUsers' }],
-        dimensionFilter: {
-            orGroup: {
-                expressions: [eventNameFilter('detail_open'), eventNameFilter('booking_click')],
-            },
-        },
-        limit: 4,
-    });
-    const detail = (report.rows || []).find(row => dim(row) === 'detail_open');
-    const booking = (report.rows || []).find(row => dim(row) === 'booking_click');
-    const detailOpenUsers = num(detail, 1);
-    const bookingClickUsers = num(booking, 1);
-    return {
-        ...range,
-        detailOpenEvents: num(detail, 0),
-        detailOpenUsers,
-        bookingClickEvents: num(booking, 0),
-        bookingClickUsers,
-        detailToBookingRate: detailOpenUsers > 0
-            ? Number(((bookingClickUsers / detailOpenUsers) * 100).toFixed(1))
-            : null,
-    };
-}
-
 async function buildStats(config: Ga4Config, days: number) {
     const dateRanges = [{ startDate: `${days - 1}daysAgo`, endDate: 'today' }];
     const previousDateRanges = [{ startDate: `${days * 2 - 1}daysAgo`, endDate: `${days}daysAgo` }];
@@ -124,7 +77,6 @@ async function buildStats(config: Ga4Config, days: number) {
     const previous7DateRanges = [{ startDate: '13daysAgo', endDate: '7daysAgo' }];
     const todayDateRanges = [{ startDate: 'today', endDate: 'today' }];
     const warnings: string[] = [];
-    const experimentRanges = getNaverCompareMeasurementRanges();
 
     const summaryRequest = (range: Array<{ startDate: string; endDate: string }>) => runReport(config, {
         dateRanges: range,
@@ -410,24 +362,6 @@ async function buildStats(config: Ga4Config, days: number) {
 
     const dateFilterEmpty = events.find(entry => entry.name === 'date_filter_empty');
     const dateFilter = events.find(entry => entry.name === 'date_filter');
-    const hiddenRangesMatch = Boolean(experimentRanges.hiddenFull
-        && experimentRanges.hidden
-        && experimentRanges.hiddenFull.startDate === experimentRanges.hidden.startDate
-        && experimentRanges.hiddenFull.endDate === experimentRanges.hidden.endDate);
-    const [experimentBaselineFull, experimentBaseline, experimentHidden, experimentHiddenFullResult] = await Promise.all([
-        conversionPeriod(config, experimentRanges.baselineFull),
-        conversionPeriod(config, experimentRanges.baseline),
-        conversionPeriod(config, experimentRanges.hidden),
-        hiddenRangesMatch ? Promise.resolve(null) : conversionPeriod(config, experimentRanges.hiddenFull),
-    ]);
-    const experimentHiddenFull = hiddenRangesMatch ? experimentHidden : experimentHiddenFullResult;
-    const baselineRate = experimentBaseline?.detailToBookingRate ?? null;
-    const hiddenRate = experimentHidden?.detailToBookingRate ?? null;
-    const rateChange = baselineRate !== null && hiddenRate !== null
-        ? Number((hiddenRate - baselineRate).toFixed(1))
-        : null;
-    const enoughConversionData = experimentRanges.comparableDays >= NAVER_COMPARE_EXPERIMENT.minimumEvaluationDays
-        && (experimentHidden?.detailOpenUsers || 0) >= NAVER_COMPARE_EXPERIMENT.minimumDetailUsers;
 
     return {
         available: true,
@@ -511,28 +445,6 @@ async function buildStats(config: Ga4Config, days: number) {
             // 측정기준 등록 전 이벤트는 `(not set)`으로 뭉쳐 오므로 버린다 — 세는 의미가 없다
             method: measured(list(dateMethodReport, { calendar: '달력에서 직접', preset: '빠른 선택 칩' })),
             presets: measured(list(presetReport)),
-        },
-        naverCompareExperiment: {
-            id: NAVER_COMPARE_EXPERIMENT.id,
-            label: NAVER_COMPARE_EXPERIMENT.label,
-            phase: getNaverCompareExperimentPhase(),
-            hideStartsAt: NAVER_COMPARE_EXPERIMENT.hideStartsAt,
-            hideEndsAt: NAVER_COMPARE_EXPERIMENT.hideEndsAt,
-            measurementStartDate: NAVER_COMPARE_EXPERIMENT.measurementStartDate,
-            measurementEndDate: NAVER_COMPARE_EXPERIMENT.measurementEndDate,
-            detailTrackingStartedAt: NAVER_COMPARE_EXPERIMENT.detailTrackingStartedAt,
-            comparableDays: experimentRanges.comparableDays,
-            baselineFull: experimentBaselineFull,
-            baseline: experimentBaseline,
-            hidden: experimentHidden,
-            hiddenFull: experimentHiddenFull,
-            rateChange,
-            evaluation: {
-                ready: enoughConversionData,
-                minimumDays: NAVER_COMPARE_EXPERIMENT.minimumEvaluationDays,
-                minimumDetailUsers: NAVER_COMPARE_EXPERIMENT.minimumDetailUsers,
-                bookingImproved: enoughConversionData && rateChange !== null ? rateChange > 0 : null,
-            },
         },
         warnings,
     };
