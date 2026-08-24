@@ -306,6 +306,7 @@
 .insightEditorial .insightEyebrow::before { background: var(--ink); }
 .insightEditorial .insightTitle { max-width: 330px; font-size: 19px; line-height: 1.32; }
 .insightDiscovery .insightEyebrow::before { background: #8b7ab8; }
+.insightDiscovery .insightDescription { display: -webkit-box; overflow: hidden; text-overflow: clip; white-space: normal; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .insightOpportunity .insightEyebrow::before { background: #d18a35; }
 .insightNew .insightEyebrow::before { background: #4b8f75; }
 

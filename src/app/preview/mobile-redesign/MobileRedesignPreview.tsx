@@ -6,6 +6,7 @@ import { ko } from 'date-fns/locale';
 import 'react-datepicker/dist/react-datepicker.css';
 import Logo from '@/components/Logo';
 import * as gtag from '@/lib/analytics';
+import { getDestinationContext } from '@/lib/destination-contexts';
 import { calcFlightTiming, normalizeCity } from '@/lib/utils/flight-helpers';
 import { getTripcomHotelUrl, getTripcomTrackingId } from '@/lib/utils/tripcom-helpers';
 import type { Flight } from '@/types/flight';
@@ -627,6 +628,13 @@ export default function MobileRedesignPreview() {
             currentPrice: number;
             score: number;
         };
+        type InsightLane = 'event' | 'trip' | 'discovery';
+        type InsightCandidate = {
+            score: number;
+            lane: InsightLane;
+            loud?: boolean;
+            insight: FeedInsight;
+        };
         let bestPriceDrop: PriceDropCandidate | null = null;
         const routeHistory = normalizedHistory(priceHistory);
         const historyDates = Array.from(new Set(
@@ -735,19 +743,33 @@ export default function MobileRedesignPreview() {
             }).sort((a, b) => effectivePrice(a) - effectivePrice(b))[0] || null;
         }
 
-        const editorialCandidates: Array<{ score: number; insight: FeedInsight }> = [];
+        const editorialCandidates: InsightCandidate[] = [];
         if (bestPriceDrop) {
             const dropRate = bestPriceDrop.drop / bestPriceDrop.previousPrice;
             if (bestPriceDrop.drop >= 30_000 && dropRate >= 0.12) {
+                const crossedSelectedBudget = maxPrice > 0
+                    && bestPriceDrop.previousPrice > maxPrice
+                    && bestPriceDrop.currentPrice <= maxPrice;
+                const crossedTwenty = bestPriceDrop.previousPrice >= 200_000
+                    && bestPriceDrop.currentPrice < 200_000;
+                const collapsed = bestPriceDrop.drop >= 50_000 && dropRate >= 0.2;
                 editorialCandidates.push({
                     score: 100 + dropRate * 100,
+                    lane: 'event',
+                    loud: crossedSelectedBudget || crossedTwenty || collapsed,
                     insight: {
                         id: 'editorial-price-drop',
                         kind: 'price',
                         editorial: true,
                         eyebrow: '가격 변화',
-                        title: '오늘 가격이 크게 떨어졌어요',
-                        description: `${priceText(bestPriceDrop.previousPrice)}에서 ${priceText(bestPriceDrop.currentPrice)}으로 내려왔어요`,
+                        title: crossedSelectedBudget
+                            ? '💥 예산선 파괴'
+                            : crossedTwenty
+                                ? '🧨 20만원선 붕괴'
+                                : collapsed
+                                    ? '🚨 가격 붕괴 감지'
+                                    : `💸 ${compactWon(bestPriceDrop.drop)} 증발`,
+                        description: '어제 노선 최저가 대비',
                         flight: bestPriceDrop.flight,
                         destination: stripAirport(bestPriceDrop.flight.arrival.city),
                         previousPrice: bestPriceDrop.previousPrice,
@@ -759,21 +781,80 @@ export default function MobileRedesignPreview() {
             }
         }
 
+        if (latestHistoryDate) {
+            const latestDate = parseDate(latestHistoryDate);
+            const sixtyDaysAgo = latestDate ? dateKey(addDays(latestDate, -59)) : latestHistoryDate;
+            const historicalCandidates = displayedFlights.flatMap(flight => {
+                const entries = (routeHistory[normalizedRoute(flight)] || [])
+                    .filter(entry => entry.date <= latestHistoryDate);
+                const latest = entries.find(entry => entry.date === latestHistoryDate);
+                if (!latest || Math.abs(effectivePrice(flight) - latest.minPrice) > 1_000) return [];
+
+                const recentEntries = entries.filter(entry => entry.date >= sixtyDaysAgo);
+                if (recentEntries.length < 20 || latest.minPrice > 500_000) return [];
+                const recentPrices = recentEntries.map(entry => entry.minPrice).sort((a, b) => a - b);
+                const allDistinctPrices = Array.from(new Set(entries.map(entry => entry.minPrice))).sort((a, b) => a - b);
+                const yearRank = allDistinctPrices.indexOf(latest.minPrice) + 1;
+                const percentileRank = recentPrices.filter(price => price < latest.minPrice).length / recentPrices.length;
+
+                if (latest.minPrice === recentPrices[0]) {
+                    return [{ flight, title: '🏆 최근 60일 최저가', badge: '60일 최저', score: 104, loud: false }];
+                }
+                if (entries.length >= 50 && yearRank > 0 && yearRank <= 3) {
+                    return [{ flight, title: '🏆 올해 최저가 TOP 3', badge: `TOP ${yearRank}`, score: 101, loud: false }];
+                }
+                if (recentEntries.length >= 30 && percentileRank <= 0.05) {
+                    return [{ flight, title: '🦄 유니콘보다 드문 가격', badge: '하위 5%', score: 96, loud: true }];
+                }
+                return [];
+            }).sort((a, b) => b.score - a.score || recommendedScore(a.flight) - recommendedScore(b.flight));
+
+            const historical = historicalCandidates[0];
+            if (historical) {
+                editorialCandidates.push({
+                    score: historical.score,
+                    lane: 'event',
+                    loud: historical.loud,
+                    insight: {
+                        id: `editorial-history-${historical.flight.id}`,
+                        kind: 'opportunity',
+                        editorial: true,
+                        eyebrow: '가격 기록',
+                        title: historical.title,
+                        description: `${stripAirport(historical.flight.arrival.city)} 노선의 티키티킷 관측 기록 기준`,
+                        flight: historical.flight,
+                        destination: stripAirport(historical.flight.arrival.city),
+                        currentPrice: effectivePrice(historical.flight),
+                        meta: `${departureName(historical.flight)} 출발 · ${cardDate(historical.flight.departure.date)}`,
+                        badge: historical.badge,
+                    },
+                });
+            }
+        }
+
         const airportComparison = airportComparisons[0];
         if (airportComparison) {
+            const cheaperOrigin = departureName(airportComparison.cheaper);
+            const expensiveOrigin = departureName(airportComparison.expensive);
+            const airportTitle = airportComparison.saving >= 100_000
+                ? `💰 공항 바꾸고 ${compactWon(airportComparison.saving)} SAVE`
+                : cheaperOrigin === '청주'
+                    ? '🚄 청주까지 갈 이유'
+                    : `🛅 오늘은 ${expensiveOrigin}보다 ${cheaperOrigin}`;
             editorialCandidates.push({
                 score: 92 + airportComparison.savingRate * 100,
+                lane: 'trip',
                 insight: {
                     id: 'editorial-airport',
                     kind: 'airport',
                     editorial: true,
                     eyebrow: '출발지 비교',
-                    title: `오늘은 ${departureName(airportComparison.expensive)}보다 ${departureName(airportComparison.cheaper)}입니다`,
-                    description: `현재 ${stripAirport(airportComparison.cheaper.arrival.city)}행은 ${departureName(airportComparison.cheaper)} 출발이 ${compactWon(airportComparison.saving)} 더 쌉니다`,
+                    title: airportTitle,
+                    description: `${stripAirport(airportComparison.cheaper.arrival.city)}행 · ${cheaperOrigin} 출발이 ${compactWon(airportComparison.saving)} 더 저렴`,
                     flight: airportComparison.cheaper,
                     destination: stripAirport(airportComparison.cheaper.arrival.city),
                     currentPrice: effectivePrice(airportComparison.cheaper),
-                    meta: `${departureName(airportComparison.cheaper)} ${cardDate(airportComparison.cheaper.departure.date)} · ${departureName(airportComparison.expensive)} ${cardDate(airportComparison.expensive.departure.date)}`,
+                    meta: `${cheaperOrigin} ${cardDate(airportComparison.cheaper.departure.date)} · ${expensiveOrigin} ${cardDate(airportComparison.expensive.departure.date)}`,
                     badge: `${compactWon(airportComparison.saving)} 차이`,
                 },
             });
@@ -783,12 +864,13 @@ export default function MobileRedesignPreview() {
         if (zeroPtoFlight) {
             editorialCandidates.push({
                 score: 88 + Math.max(0, 350_000 - effectivePrice(zeroPtoFlight)) / 10_000,
+                lane: 'trip',
                 insight: {
                     id: 'editorial-zero-pto',
                     kind: 'schedule',
                     editorial: true,
                     eyebrow: '일정 분석',
-                    title: '연차 0일 탈출',
+                    title: '🏃 0연차 탈출 가능',
                     description: `금요일 ${zeroPtoFlight.departure.time} 출발 · 일요일 ${returnArrivalTime(zeroPtoFlight)} 도착`,
                     flight: zeroPtoFlight,
                     destination: stripAirport(zeroPtoFlight.arrival.city),
@@ -799,16 +881,23 @@ export default function MobileRedesignPreview() {
             });
         }
 
-        const stayCandidate = stayCandidates[0];
+        const stayCandidate = stayCandidates.find(candidate => {
+            const departureDate = parseDate(candidate.flight.departure.date);
+            const returnDate = parseDate(candidate.flight.arrival.date);
+            return !!departureDate && !!returnDate
+                && [4, 5, 6].includes(departureDate.getDay())
+                && [0, 1, 2].includes(returnDate.getDay());
+        });
         if (stayCandidate) {
             editorialCandidates.push({
                 score: 80 + Math.max(0, stayCandidate.hours - 60) / 2,
+                lane: 'trip',
                 insight: {
                     id: 'editorial-stay-time',
                     kind: 'stay',
                     editorial: true,
                     eyebrow: '여행시간 분석',
-                    title: '3박 4일이라고 다 같은 3박 4일이 아닙니다',
+                    title: '🧳 주말 압축 성공',
                     description: `${stripAirport(stayCandidate.flight.arrival.city)}에서 실제로 쓸 수 있는 시간`,
                     flight: stayCandidate.flight,
                     destination: stripAirport(stayCandidate.flight.arrival.city),
@@ -821,15 +910,19 @@ export default function MobileRedesignPreview() {
 
         const harshCandidate = harshCandidates[0];
         if (harshCandidate) {
+            const returnDate = parseDate(harshCandidate.flight.arrival.date);
+            const homeDate = returnArrivalDate(harshCandidate.flight);
+            const nextDayArrival = !!returnDate && !!homeDate && homeDate.getTime() > returnDate.getTime();
             editorialCandidates.push({
                 score: 76 + Math.max(0, harshCandidate.flight.discountRate || 0),
+                lane: 'trip',
                 insight: {
                     id: 'editorial-harsh-time',
                     kind: 'timing',
                     editorial: true,
                     eyebrow: '시간 확인',
-                    title: '가격은 좋고, 시간은 잔인합니다',
-                    description: `${harshCandidate.detail} · 싸다고 단점까지 숨기지는 않겠습니다`,
+                    title: nextDayArrival ? '🥱 귀국 다음 날 위험' : '🌙 가격 좋음 · 시간 험함',
+                    description: harshCandidate.detail,
                     flight: harshCandidate.flight,
                     destination: stripAirport(harshCandidate.flight.arrival.city),
                     currentPrice: effectivePrice(harshCandidate.flight),
@@ -841,12 +934,13 @@ export default function MobileRedesignPreview() {
         if (verifiedNewFlight && effectivePrice(verifiedNewFlight) <= 250_000) {
             editorialCandidates.push({
                 score: 70 + Math.max(0, 250_000 - effectivePrice(verifiedNewFlight)) / 10_000,
+                lane: 'event',
                 insight: {
                     id: 'editorial-new',
                     kind: 'new',
                     editorial: true,
                     eyebrow: '새로 등장',
-                    title: `${compactWon(effectivePrice(verifiedNewFlight))} ${stripAirport(verifiedNewFlight.arrival.city)}가 떴어요`,
+                    title: '🎟 새 일정 투하',
                     description: '이전 기록에는 없던 일정이에요',
                     flight: verifiedNewFlight,
                     destination: stripAirport(verifiedNewFlight.arrival.city),
@@ -857,20 +951,58 @@ export default function MobileRedesignPreview() {
             });
         }
 
+        const destinationCandidate = displayedFlights.find(flight => getDestinationContext(flight.arrival.city));
+        const destinationContext = destinationCandidate
+            ? getDestinationContext(destinationCandidate.arrival.city)
+            : null;
+        if (destinationCandidate && destinationContext) {
+            editorialCandidates.push({
+                score: 72,
+                lane: 'discovery',
+                insight: {
+                    id: `editorial-destination-${normalizeCity(destinationCandidate.arrival.city)}`,
+                    kind: 'discovery',
+                    editorial: true,
+                    eyebrow: '여행지 발견',
+                    title: `🧭 ${stripAirport(destinationCandidate.arrival.city)} 입문`,
+                    description: destinationContext.location,
+                    flight: destinationCandidate,
+                    destination: stripAirport(destinationCandidate.arrival.city),
+                    currentPrice: effectivePrice(destinationCandidate),
+                    meta: `${departureName(destinationCandidate)} 출발 · ${tripLength(destinationCandidate) || cardDate(destinationCandidate.departure.date)}`,
+                    badge: '처음 보는 도시',
+                },
+            });
+        }
+
         editorialCandidates.sort((a, b) => b.score - a.score);
         const selectedInsights: FeedInsight[] = [];
         const selectedKinds = new Set<FeedInsight['kind']>();
         const selectedDestinations = new Set<string>();
-        for (const candidate of editorialCandidates) {
+        let loudSelected = false;
+        const selectCandidate = (candidate: InsightCandidate) => {
             const destination = normalizeCity(candidate.insight.flight.arrival.city);
-            if (selectedKinds.has(candidate.insight.kind) || selectedDestinations.has(destination)) continue;
+            if (selectedKinds.has(candidate.insight.kind) || selectedDestinations.has(destination)) return false;
+            if (candidate.loud && loudSelected) return false;
             selectedInsights.push(candidate.insight);
             selectedKinds.add(candidate.insight.kind);
             selectedDestinations.add(destination);
-            if (selectedInsights.length >= 4) break;
+            if (candidate.loud) loudSelected = true;
+            return true;
+        };
+
+        const laneOrder: InsightLane[] = ['event', 'trip', 'discovery', 'event', 'trip'];
+        for (const lane of laneOrder) {
+            for (const candidate of editorialCandidates) {
+                if (candidate.lane === lane && selectCandidate(candidate)) break;
+            }
         }
-        return selectedInsights;
-    }, [displayedFlights, lastUpdated, priceHistory, query, sort]);
+        for (const candidate of editorialCandidates) {
+            if (selectedInsights.length >= 5) break;
+            selectCandidate(candidate);
+        }
+        return selectedInsights.slice(0, 5);
+    }, [displayedFlights, lastUpdated, maxPrice, priceHistory, query, sort]);
 
     const filterCount = [departure !== '전체', datePeriod !== 'all', maxPrice > 0].filter(Boolean).length;
     const updatedLabel = lastUpdated
@@ -1026,7 +1158,7 @@ export default function MobileRedesignPreview() {
                     >
                         <span>🚨 TIKIT DROP 발생</span>
                         <span>{stripAirport(dropAlertFlight.arrival.city)} 왕복 {priceText(effectivePrice(dropAlertFlight))}</span>
-                        <span>오늘 가격이 크게 떨어졌어요</span>
+                        <span>🤯 정상 가격 맞나요</span>
                         <span>담당자가 눈치채기 전에 보세요</span>
                     </div>
                 )}
