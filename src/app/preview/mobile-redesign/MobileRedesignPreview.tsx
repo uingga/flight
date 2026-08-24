@@ -1020,7 +1020,7 @@ export default function MobileRedesignPreview() {
                                         </button>
                                     )}
                                     {insight && insight.kind !== 'discovery' && insight.rows && (
-                                        <section className={`${styles.insightBar} ${insight.kind === 'price' ? styles.insightPrice : ''}`} aria-label={insight.title}>
+                                        <section className={styles.insightBar} aria-label={insight.title}>
                                             <div className={styles.insightHeader}>
                                                 <span className={styles.insightEyebrow}>{insight.eyebrow}</span>
                                                 <strong>{insight.title}</strong>
