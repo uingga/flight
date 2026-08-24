@@ -2,11 +2,13 @@
     min-height: 100vh;
     background: #f2f2ee;
     color: #17181d;
-    --brand: #4937e8;
-    --brand-dark: #3525bb;
-    --brand-soft: #f0eeff;
-    --drop: #d9ff43;
+    --brand: #20211d;
+    --brand-dark: #11120f;
+    --brand-soft: #f1f2ec;
+    --drop: #cfff3c;
+    --drop-soft: #f3ffd0;
     --drop-ink: #202600;
+    --drop-dark: #607900;
     --urgent: #ee5265;
     --urgent-dark: #c83249;
     --urgent-soft: #fff0f2;
@@ -40,8 +42,8 @@
     box-shadow: 0 0 48px rgba(34, 34, 34, 0.11);
 }
 
-.previewPage :global(.logo-container stop:first-child) { stop-color: #604cff; }
-.previewPage :global(.logo-container stop:last-child) { stop-color: #3525bb; }
+.previewPage :global(.logo-container stop:first-child) { stop-color: #b2df1a; }
+.previewPage :global(.logo-container stop:last-child) { stop-color: #607900; }
 
 .header {
     position: sticky;
@@ -74,10 +76,10 @@
 
 .iconButton { width: 36px; color: #35373e; }
 .iconButton svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.9; }
-.alertButton { padding: 0 13px; background: var(--brand-soft); color: var(--brand-dark); font-size: var(--size-meta); font-weight: var(--weight-bold); }
+.alertButton { padding: 0 13px; background: var(--drop-soft); color: var(--drop-dark); font-size: var(--size-meta); font-weight: var(--weight-bold); }
 .accountIconButton { position: relative; width: 36px; border: 1px solid var(--line); background: #fff; color: #3f4148; }
 .accountIconButton svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
-.accountIconButton span { position: absolute; top: 4px; right: 4px; width: 6px; height: 6px; border: 1px solid white; border-radius: 50%; background: var(--brand); }
+.accountIconButton span { position: absolute; top: 4px; right: 4px; width: 6px; height: 6px; border: 1px solid white; border-radius: 50%; background: var(--drop-dark); }
 
 .searchRow {
     position: sticky;
@@ -105,7 +107,7 @@
     gap: 12px;
 }
 
-.feedIntro p { color: var(--brand); font-size: var(--size-caption); line-height: 1.3; font-weight: var(--weight-bold); letter-spacing: -0.01em; }
+.feedIntro p { color: var(--drop-dark); font-size: var(--size-caption); line-height: 1.3; font-weight: var(--weight-bold); letter-spacing: -0.01em; }
 .feedIntro h1 { margin-top: 3px; color: var(--ink); font-size: var(--size-title); line-height: 1.3; font-weight: var(--weight-heavy); letter-spacing: -0.045em; }
 .feedIntro > span { flex-shrink: 0; padding-bottom: 2px; color: var(--text-faint); font-size: var(--size-micro); white-space: nowrap; }
 
@@ -271,7 +273,7 @@
 .insightTopline { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .insightTopline > svg { width: 16px; height: 16px; flex: 0 0 auto; fill: none; stroke: #a0a0a0; stroke-width: 1.8; }
 .insightEyebrow { display: inline-flex; align-items: center; gap: 6px; color: var(--text-secondary); font-size: var(--size-caption); line-height: 1; font-weight: var(--weight-bold); letter-spacing: -0.01em; }
-.insightEyebrow::before { width: 6px; height: 6px; flex: 0 0 auto; border-radius: 999px; background: var(--brand); content: ''; }
+.insightEyebrow::before { width: 6px; height: 6px; flex: 0 0 auto; border-radius: 999px; background: var(--drop-dark); content: ''; }
 .insightTitle { margin-top: 8px; font-size: 17px; line-height: 1.35; font-weight: var(--weight-heavy); letter-spacing: -0.025em; }
 .insightDescription { margin-top: 4px; overflow: hidden; color: var(--text-secondary); font-size: var(--size-meta); line-height: 1.4; text-overflow: ellipsis; white-space: nowrap; }
 .insightMetric { margin-top: 12px; min-width: 0; display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
@@ -285,7 +287,7 @@
 .insightFooter > em { padding: 4px 7px; flex: 0 0 auto; border-radius: 999px; background: var(--brand-soft); color: var(--brand-dark); font-style: normal; font-weight: var(--weight-heavy); white-space: nowrap; }
 .insightDiscovery .insightEyebrow::before,
 .insightOpportunity .insightEyebrow::before,
-.insightNew .insightEyebrow::before { background: var(--brand); }
+.insightNew .insightEyebrow::before { background: var(--drop-dark); }
 
 .moreButton { width: 100%; height: 46px; margin-top: 14px; border: 1px solid var(--line); border-radius: 13px; background: #fff; color: #35373e; font-size: var(--size-meta); font-weight: var(--weight-bold); }
 
@@ -390,7 +392,7 @@
 .dateCalendar :global(.react-datepicker__day--range-start:not(.react-datepicker__day--range-end))::after,
 .dateCalendar :global(.react-datepicker__day--range-end:not(.react-datepicker__day--range-start))::after { background-color: var(--brand-soft) !important; }
 .dateCalendar :global(.react-datepicker__day--today) { color: var(--brand-dark) !important; }
-.applyButton { position: sticky; bottom: 0; width: 100%; height: 50px; margin-top: 26px; border-radius: 13px; background: var(--brand); color: #fff; font-size: var(--size-body); font-weight: var(--weight-heavy); box-shadow: 0 8px 18px rgba(73, 55, 232, 0.2); }
+.applyButton { position: sticky; bottom: 0; width: 100%; height: 50px; margin-top: 26px; border-radius: 13px; background: var(--brand); color: #fff; font-size: var(--size-body); font-weight: var(--weight-heavy); box-shadow: 0 8px 18px rgba(23, 24, 20, 0.18); }
 .applyButtonCalendarOpen { position: static; }
 
 .detailSheet { overflow-y: auto; }
@@ -418,7 +420,7 @@
 .detailVerticalRoute { position: relative; display: grid; gap: 17px; }
 .detailVerticalRoute::before { content: ''; position: absolute; top: 8px; bottom: 8px; left: 3.5px; width: 1px; background: #d5d5d5; }
 .detailRouteStop { position: relative; display: grid; grid-template-columns: 8px minmax(0, 1fr); align-items: start; gap: 11px; }
-.detailRouteStop > span { position: relative; z-index: 1; width: 8px; height: 8px; margin-top: 5px; border: 1.5px solid #8f82f4; border-radius: 50%; background: #fff; }
+.detailRouteStop > span { position: relative; z-index: 1; width: 8px; height: 8px; margin-top: 5px; border: 1.5px solid #9ebc35; border-radius: 50%; background: #fff; }
 .detailRouteStop > div { min-width: 0; display: grid; gap: 3px; }
 .detailRouteTime { display: flex; align-items: baseline; gap: 7px; }
 .detailRouteStop em { color: #1f1f1f; font-size: var(--size-card); line-height: 1.18; font-style: normal; font-weight: var(--weight-heavy); font-variant-numeric: tabular-nums; }
@@ -436,7 +438,7 @@
 .reportTools button { min-height: 22px; padding: 0 2px; color: #8d836e; font-size: var(--size-micro); line-height: 1; font-weight: var(--weight-medium); text-decoration: underline; text-decoration-color: #cfc4ab; text-underline-offset: 2px; }
 .reportTools button:hover { color: #666666; text-decoration-color: #999999; }
 .reportTools span { font-size: var(--size-micro); }
-.bookingButton { height: 54px; margin-top: 14px; display: flex; align-items: center; justify-content: center; gap: 6px; border-radius: 14px; background: var(--brand); color: #fff; font-size: var(--size-body); font-weight: var(--weight-heavy); box-shadow: 0 8px 18px rgba(73, 55, 232, 0.2); }
+.bookingButton { height: 54px; margin-top: 14px; display: flex; align-items: center; justify-content: center; gap: 6px; border-radius: 14px; background: var(--brand); color: #fff; font-size: var(--size-body); font-weight: var(--weight-heavy); box-shadow: 0 8px 18px rgba(23, 24, 20, 0.18); }
 .bookingButton:hover { color: #fff; }
 .bookingButton svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; }
 .detailSecondaryActions { margin-top: 9px; display: grid; grid-template-columns: minmax(0, 1fr) 88px; align-items: stretch; gap: 8px; }
