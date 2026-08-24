@@ -918,24 +918,24 @@ export default function MobileRedesignPreview() {
                             {MORE_REGION_OPTIONS.includes(region) ? region : '···'}
                         </button>
                     </nav>
+                    {regionMoreOpen && (
+                        <nav className={styles.moreRegionInline} aria-label="추가 도착 지역">
+                            {MORE_REGION_OPTIONS.map(item => (
+                                <button
+                                    type="button"
+                                    key={item}
+                                    className={region === item ? styles.moreRegionActive : ''}
+                                    onClick={() => {
+                                        setRegion(item);
+                                        setRegionMoreOpen(false);
+                                    }}
+                                >
+                                    {item}
+                                </button>
+                            ))}
+                        </nav>
+                    )}
                 </div>
-                {regionMoreOpen && (
-                    <nav className={styles.moreRegionInline} aria-label="추가 도착 지역">
-                        {MORE_REGION_OPTIONS.map(item => (
-                            <button
-                                type="button"
-                                key={item}
-                                className={region === item ? styles.moreRegionActive : ''}
-                                onClick={() => {
-                                    setRegion(item);
-                                    setRegionMoreOpen(false);
-                                }}
-                            >
-                                {item}
-                            </button>
-                        ))}
-                    </nav>
-                )}
 
                 <section className={styles.feedSection}>
                     <div className={styles.feedHeading}>
