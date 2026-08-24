@@ -172,14 +172,16 @@
 
 .flightCard {
     position: relative;
-    overflow: hidden;
+    /* 홈을 덮는 흰 면이 카드 테두리 바깥까지 나가야 세로선이 실제로 끊긴다. */
+    overflow: visible;
+    --ticket-border: #e1e1e1;
     border: 1px solid #e1e1e1;
     border-radius: 16px;
     background: #fff;
     box-shadow: 0 4px 14px rgba(34, 34, 34, 0.045);
 }
 
-.todayPickCard { border-color: #eeb0bd; box-shadow: 0 4px 14px rgba(34, 34, 34, 0.045); }
+.todayPickCard { --ticket-border: #eeb0bd; border-color: #eeb0bd; box-shadow: 0 4px 14px rgba(34, 34, 34, 0.045); }
 
 .cardBody {
     width: 100%;
@@ -230,8 +232,8 @@
 .ticketDivider { position: relative; height: 1px; margin: 14px 16px 0; border-top: 1px dashed #d6d6d6; }
 .ticketDivider::before,
 .ticketDivider::after { content: ''; position: absolute; z-index: 2; top: -9px; box-sizing: border-box; width: 10px; height: 18px; background: #fff; }
-.ticketDivider::before { left: -17px; border: 1px solid #e1e1e1; border-left: 0; border-radius: 0 999px 999px 0; box-shadow: -2px 0 0 2px #fff; }
-.ticketDivider::after { right: -17px; border: 1px solid #e1e1e1; border-right: 0; border-radius: 999px 0 0 999px; box-shadow: 2px 0 0 2px #fff; }
+.ticketDivider::before { left: -17px; border: 1px solid var(--ticket-border); border-left: 0; border-radius: 0 999px 999px 0; box-shadow: -3px 0 0 3px #fff; }
+.ticketDivider::after { right: -17px; border: 1px solid var(--ticket-border); border-right: 0; border-radius: 999px 0 0 999px; box-shadow: 3px 0 0 3px #fff; }
 
 .cardFooter { min-height: 64px; padding: 11px 16px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .availabilityGroup { min-width: 0; flex: 1; display: flex; align-items: center; gap: 7px; }
