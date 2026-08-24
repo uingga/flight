@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import * as fs from 'fs';
 import * as path from 'path';
 import { getComparisonFreshness } from '@/lib/price-quality';
+import type { NaverCrawlHistoryEntry } from '@/lib/utils/naver-crawl-history';
 
 const CACHE_FILE_PATH = path.join(process.cwd(), 'data', 'all-flights-cache.json');
 // 저장소가 공개라 코드에 박아 둔 기본값은 그대로 공개 열쇠가 된다.
@@ -171,6 +172,18 @@ export async function GET(request: NextRequest) {
             }
         } catch { }
 
+        let naverCrawlHistory: NaverCrawlHistoryEntry[] = [];
+        try {
+            const historyPath = path.join(process.cwd(), 'data', 'naver-crawl-history.json');
+            if (fs.existsSync(historyPath)) {
+                const parsed = JSON.parse(fs.readFileSync(historyPath, 'utf-8'));
+                if (Array.isArray(parsed?.entries)) {
+                    // 하루 여러 회차가 쌓여도 60일 기록은 충분히 볼 수 있도록 넉넉히 반환한다.
+                    naverCrawlHistory = parsed.entries.slice(-180);
+                }
+            }
+        } catch { }
+
         return NextResponse.json({
             timestamp,
             totalFlights: flights.length,
@@ -179,6 +192,7 @@ export async function GET(request: NextRequest) {
             sourceUpdatedAt: (cache.sourceUpdatedAt || {}) as Record<string, string>,
             staleStreak: (cache.staleStreak || {}) as Record<string, number>,
             naverStatus,
+            naverCrawlHistory,
             bySource,
             byRegion,
             byCity,

@@ -32,6 +32,23 @@ interface AdminData {
         freshEntries: number;
         totalEntries: number;
     } | null;
+    naverCrawlHistory?: Array<{
+        id: string;
+        timestamp: string;
+        runner: 'local' | 'github' | 'manual';
+        sourceFilter: string;
+        maxFlights: number;
+        needed: number;
+        attempted: number;
+        newRoutes: number;
+        newRoutesAttempted: number;
+        deferred: number;
+        deferredNeverChecked: number;
+        oldestDeferredHours: number | null;
+        success: number;
+        misses: number;
+        abortedEarly: boolean;
+    }>;
 }
 
 interface DealAlertCandidate {
@@ -1148,6 +1165,81 @@ export default function AdminPage() {
                     </div>
                 );
             })()}
+
+            {data.naverCrawlHistory && data.naverCrawlHistory.length > 0 && (
+                <section className={styles.section}>
+                    <h2>네이버 가격 확인 회차 기록</h2>
+                    <p className={styles.sectionHelp}>
+                        <strong>확인 필요</strong>는 실행 시작 때 가격 확인 시점이 지난 노선,
+                        {' '}<strong>실제 확인</strong>은 이번 회차에 네이버를 열어본 노선입니다.
+                        최대치 때문에 처리하지 못한 항목은 <strong>다음으로 미룸</strong>에 남습니다. 기록은 60일간 보관합니다.
+                    </p>
+                    <div className={styles.cityDetail} style={{ maxHeight: '520px', overflow: 'auto' }}>
+                        <table className={styles.cityTable} style={{ minWidth: '820px' }}>
+                            <thead>
+                                <tr>
+                                    <th>실행 시간</th>
+                                    <th>확인 필요</th>
+                                    <th>실제 확인</th>
+                                    <th>새 항공권</th>
+                                    <th>다음으로 미룸</th>
+                                    <th>가장 오래 밀림</th>
+                                    <th>확인 결과</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {[...data.naverCrawlHistory].slice(-60).reverse().map(entry => {
+                                    const oldestDeferred = entry.deferred === 0
+                                        ? '없음'
+                                        : entry.deferredNeverChecked > 0
+                                            ? `한 번도 미확인 ${entry.deferredNeverChecked.toLocaleString()}개`
+                                            : entry.oldestDeferredHours === null
+                                                ? '확인 불가'
+                                                : entry.oldestDeferredHours >= 24
+                                                    ? `${(entry.oldestDeferredHours / 24).toFixed(1)}일`
+                                                    : `${Math.round(entry.oldestDeferredHours)}시간`;
+                                    const runner = entry.runner === 'local' ? 'PC' : entry.runner === 'github' ? 'GitHub' : '수동';
+                                    const coverage = entry.sourceFilter === 'all'
+                                        ? '전체 여행사'
+                                        : SOURCE_NAMES[entry.sourceFilter] || entry.sourceFilter;
+                                    return (
+                                        <tr key={entry.id}>
+                                            <td style={{ whiteSpace: 'nowrap' }}>
+                                                {formatKST(entry.timestamp).replace(/\d{4}\. /, '')}
+                                                <span style={{ display: 'block', color: '#64748b', fontSize: '0.72rem' }}>
+                                                    {runner} · {coverage}
+                                                </span>
+                                            </td>
+                                            <td style={{ textAlign: 'center' }}>{entry.needed.toLocaleString()}개</td>
+                                            <td style={{ textAlign: 'center' }}>{entry.attempted.toLocaleString()}개</td>
+                                            <td style={{ textAlign: 'center' }}>
+                                                {entry.newRoutes.toLocaleString()}개
+                                                {entry.newRoutesAttempted < entry.newRoutes && (
+                                                    <span style={{ display: 'block', color: '#94a3b8', fontSize: '0.72rem' }}>
+                                                        {entry.newRoutesAttempted.toLocaleString()}개 확인
+                                                    </span>
+                                                )}
+                                            </td>
+                                            <td style={{ textAlign: 'center', color: entry.deferred > 0 ? '#fbbf24' : '#94a3b8' }}>
+                                                {entry.deferred.toLocaleString()}개
+                                            </td>
+                                            <td style={{ textAlign: 'center' }}>{oldestDeferred}</td>
+                                            <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
+                                                <span style={{ color: '#34d399' }}>{entry.success.toLocaleString()} 성공</span>
+                                                {' · '}
+                                                <span style={{ color: entry.misses > 0 ? '#f87171' : '#94a3b8' }}>{entry.misses.toLocaleString()} 실패</span>
+                                                {entry.abortedEarly && (
+                                                    <span style={{ display: 'block', color: '#fb923c', fontSize: '0.72rem' }}>일찍 중단됨</span>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            )}
             </>)}
 
             {tab === 'flights' && (<>

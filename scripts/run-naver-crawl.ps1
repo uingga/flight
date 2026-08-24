@@ -12,6 +12,7 @@ $ErrorActionPreference = 'Continue'
 $ProjectDir = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 $LogFile = Join-Path $ProjectDir 'data\naver-crawl-local.log'
 $SessionCopy = Join-Path $env:TEMP 'tikitikit-naver-session.json'
+$HistorySessionCopy = Join-Path $env:TEMP 'tikitikit-naver-history-session.json'
 
 Set-Location $ProjectDir
 
@@ -40,22 +41,25 @@ if ($LASTEXITCODE -ne 0) {
 # Preserve this session, merge it onto the latest remote data, then push.
 for ($attempt = 1; $attempt -le 2; $attempt++) {
     Copy-Item data/naver-prices.json $SessionCopy -Force
+    Copy-Item data/naver-crawl-history.json $HistorySessionCopy -Force
 
-    git checkout -- data/naver-prices.json data/all-flights-cache.json 2>$null
+    git checkout -- data/naver-prices.json data/naver-crawl-history.json data/all-flights-cache.json 2>$null
     git pull --rebase --autostash 2>&1 | Add-Content -Encoding utf8 $LogFile
 
     npx --no-install tsx scripts/merge-naver-prices.mjs data/naver-prices.json $SessionCopy 2>&1 | Add-Content -Encoding utf8 $LogFile
     Log "merge exit=$LASTEXITCODE"
+    node scripts/merge-naver-crawl-history.mjs data/naver-crawl-history.json $HistorySessionCopy 2>&1 | Add-Content -Encoding utf8 $LogFile
+    Log "history merge exit=$LASTEXITCODE"
     npx --no-install tsx scripts/filter-by-naver.ts 2>&1 | Add-Content -Encoding utf8 $LogFile
     Log "filter exit=$LASTEXITCODE"
 
-    $dirty = git status --porcelain data/naver-prices.json data/all-flights-cache.json
+    $dirty = git status --porcelain data/naver-prices.json data/naver-crawl-history.json data/all-flights-cache.json
     if (-not $dirty) {
         Log 'No data changes; commit skipped'
         break
     }
 
-    git add data/naver-prices.json data/all-flights-cache.json
+    git add data/naver-prices.json data/naver-crawl-history.json data/all-flights-cache.json
     git commit -m 'chore(data): update naver prices + filter flights [local]' 2>&1 | Add-Content -Encoding utf8 $LogFile
     git push origin main 2>&1 | Add-Content -Encoding utf8 $LogFile
 

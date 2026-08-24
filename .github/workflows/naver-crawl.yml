@@ -71,19 +71,21 @@ jobs:
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
 
           if [[ -n $(git status --porcelain data/) ]]; then
-            # 이 워크플로우의 산출물은 naver-prices.json 하나만 보관한다.
+            # 이번 실행의 가격과 회차 기록을 원격 최신 데이터 위에 다시 합친다.
             cp data/naver-prices.json /tmp/naver-prices.json
+            cp data/naver-crawl-history.json /tmp/naver-crawl-history.json
 
             git fetch origin main
             git reset --hard origin/main
 
             # 네이버 가격은 노선 항목 단위로 병합 (로컬 PC 크롤링과 동시 실행 대비 — 최신 수집분이 이김)
-            # 캐시 필터는 원격 최신 캐시 기준으로 다시 계산한다.
+            # 실행 기록은 회차 ID 단위로 병합하고, 캐시 필터는 원격 최신 캐시 기준으로 다시 계산한다.
             node scripts/merge-naver-prices.mjs data/naver-prices.json /tmp/naver-prices.json
+            node scripts/merge-naver-crawl-history.mjs data/naver-crawl-history.json /tmp/naver-crawl-history.json
             npx tsx scripts/filter-by-naver.ts
 
             if [[ -n $(git status --porcelain data/) ]]; then
-              git add data/naver-prices.json data/all-flights-cache.json
+              git add data/naver-prices.json data/naver-crawl-history.json data/all-flights-cache.json
               git commit -m "chore(data): update naver prices + filter flights"
               git push
               echo "✅ Naver prices + filtered flights updated."

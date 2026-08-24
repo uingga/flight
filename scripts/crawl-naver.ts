@@ -10,6 +10,7 @@ import { chromium } from 'playwright-extra';
 import stealth from 'puppeteer-extra-plugin-stealth';
 import * as fs from 'fs';
 import * as path from 'path';
+import { recordNaverCrawlHistory } from '../src/lib/utils/naver-crawl-history';
 
 chromium.use(stealth());
 
@@ -161,9 +162,10 @@ const attemptTimestamp = (entry: NaverPriceEntry): number =>
     }
 
     // 노선 중복 제거 + 신선한 항목 제외 + 우선순위 정렬
-    const { selected: uniqueFlights, skippedFresh } = selectFlightsByPriority(rawData, naverPrices, MAX_FLIGHTS);
+    const { selected: uniqueFlights, pending: neededFlights, skippedFresh } = selectFlightsByPriority(rawData, naverPrices, MAX_FLIGHTS);
+    const newRouteCount = neededFlights.filter(f => !naverPrices[flightKey(f)]).length;
     console.log(`⏭️ 갱신 주기 내 이미 시도된 노선 스킵: ${skippedFresh}건 (KST 기준 마이리얼트립 매일 / 기타 ${REFRESH_DAYS}일마다 / 실패 ${MISS_RETRY_HOURS}시간 후)`);
-    console.log(`📋 검색할 항공권: ${uniqueFlights.length}건 (신규 노선 우선 → 오래된 순)\n`);
+    console.log(`📋 확인 필요 ${neededFlights.length}건 · 이번 실행 ${uniqueFlights.length}건 · 새 항공권 ${newRouteCount}건 · 다음 회차 ${Math.max(0, neededFlights.length - uniqueFlights.length)}건\n`);
 
     if (DRY_RUN) {
         console.log('=== DRY RUN: 검색 계획 (상위 20건) ===');
@@ -199,6 +201,8 @@ const attemptTimestamp = (entry: NaverPriceEntry): number =>
 
     let successCount = 0;
     let failCount = 0;
+    let attemptedCount = 0;
+    let newRoutesAttempted = 0;
     let consecutiveMisses = 0; // 연속 실패 (차단 감지용)
     let abortedEarly = false;
 
@@ -226,6 +230,9 @@ const attemptTimestamp = (entry: NaverPriceEntry): number =>
             console.log(`  ⏭️ ${freshnessHours}시간 내 시도됨 (${resultLabel})\n`);
             continue;
         }
+
+        attemptedCount++;
+        if (!existingEntry) newRoutesAttempted++;
 
         try {
             // 네이버 항공권 왕복 검색 URL (직항+경유 모두 포함)
@@ -354,8 +361,42 @@ const attemptTimestamp = (entry: NaverPriceEntry): number =>
     // 4. 결과 저장
     fs.writeFileSync(OUTPUT_FILE, JSON.stringify(naverPrices, null, 2), 'utf-8');
 
+    // 실행 뒤에도 확인이 필요한 항목을 다시 계산해야 조기 철수와 실패 재시도까지
+    // 반영된 정확한 이월 수를 남길 수 있다.
+    const remaining = selectFlightsByPriority(rawData, naverPrices, Number.MAX_SAFE_INTEGER).pending;
+    const deferredNeverChecked = remaining.filter(f => !naverPrices[flightKey(f)]).length;
+    const deferredAges = remaining
+        .map(f => naverPrices[flightKey(f)])
+        .filter((entry): entry is NaverPriceEntry => Boolean(entry))
+        .map(entry => Math.max(0, (Date.now() - attemptTimestamp(entry)) / HOUR_MS))
+        .filter(Number.isFinite);
+    const oldestDeferredHours = deferredAges.length > 0
+        ? Math.round(Math.max(...deferredAges) * 10) / 10
+        : null;
+    const recordedAt = new Date().toISOString();
+    recordNaverCrawlHistory({
+        id: `${recordedAt}-${process.env.CI ? 'github' : HIDE_WINDOW ? 'local' : 'manual'}-${process.pid}`,
+        timestamp: recordedAt,
+        runner: process.env.CI ? 'github' : HIDE_WINDOW ? 'local' : 'manual',
+        sourceFilter: SOURCE_FILTER || 'all',
+        maxFlights: MAX_FLIGHTS,
+        needed: neededFlights.length,
+        attempted: attemptedCount,
+        newRoutes: newRouteCount,
+        newRoutesAttempted,
+        deferred: remaining.length,
+        deferredNeverChecked,
+        oldestDeferredHours,
+        success: successCount,
+        misses: failCount,
+        abortedEarly,
+    });
+
     console.log('─'.repeat(50));
     console.log(`${abortedEarly ? '🛑 조기 철수' : '✅ 완료'}! 성공: ${successCount}건, 실패: ${failCount}건`);
+    console.log(`📊 확인 필요 ${neededFlights.length}건 → 실제 확인 ${attemptedCount}건 → 다음 회차 ${remaining.length}건`);
+    console.log(`🆕 새 항공권 ${newRouteCount}건 중 ${newRoutesAttempted}건 확인`);
+    console.log(`⏳ 가장 오래 밀린 항목: ${deferredNeverChecked > 0 ? `아직 한 번도 확인하지 않은 항목 ${deferredNeverChecked}건` : oldestDeferredHours === null ? '없음' : `${oldestDeferredHours}시간`}`);
     console.log(`📁 저장: ${OUTPUT_FILE}`);
 })();
 
@@ -377,7 +418,7 @@ function selectFlightsByPriority(
     flights: FlightData[],
     naverPrices: Record<string, NaverPriceEntry>,
     limit: number
-): { selected: FlightData[]; skippedFresh: number } {
+): { selected: FlightData[]; pending: FlightData[]; skippedFresh: number } {
     const seen = new Set<string>();
     const unique = flights
         .filter(f => f.price > 0 && f.departure?.airport && f.arrival?.airport)
@@ -401,8 +442,7 @@ function selectFlightsByPriority(
         return true;
     });
 
-    const selected = stale
-        .sort((a, b) => {
+    const pending = stale.sort((a, b) => {
             const ea = naverPrices[flightKey(a)];
             const eb = naverPrices[flightKey(b)];
             // 신규 노선 먼저
@@ -411,10 +451,9 @@ function selectFlightsByPriority(
             if (!ea && !eb) return (b.discountRate ?? 0) - (a.discountRate ?? 0);
             // 기존 노선끼리는 오래된 순
             return attemptTimestamp(ea!) - attemptTimestamp(eb!);
-        })
-        .slice(0, limit);
+        });
 
-    return { selected, skippedFresh };
+    return { selected: pending.slice(0, limit), pending, skippedFresh };
 }
 
 // ─── GraphQL 응답에서 가격 추출 ───
