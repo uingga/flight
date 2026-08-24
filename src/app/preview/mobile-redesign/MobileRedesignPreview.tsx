@@ -840,7 +840,7 @@ export default function MobileRedesignPreview() {
                     editorial: true,
                     eyebrow: '출발지 비교',
                     title: `오늘은 ${departureName(airportComparison.expensive)}보다 ${departureName(airportComparison.cheaper)}입니다`,
-                    description: `현재 올라온 ${stripAirport(airportComparison.cheaper.arrival.city)} 표의 출발공항별 최저가를 비교했어요`,
+                    description: `현재 ${stripAirport(airportComparison.cheaper.arrival.city)}행은 ${departureName(airportComparison.cheaper)} 출발이 ${compactWon(airportComparison.saving)} 더 쌉니다`,
                     flight: airportComparison.cheaper,
                     destination: stripAirport(airportComparison.cheaper.arrival.city),
                     currentPrice: effectivePrice(airportComparison.cheaper),
