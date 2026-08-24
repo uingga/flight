@@ -270,28 +270,31 @@
     flex-direction: column;
     align-items: stretch;
     overflow: hidden;
-    border: 1px solid var(--line);
-    border-radius: 8px;
+    border: 1px solid #e2e2e2;
+    border-radius: 16px;
     background: var(--paper);
     color: var(--ink);
     text-align: left;
-    box-shadow: none;
+    box-shadow: 0 4px 16px rgba(34, 34, 34, 0.045);
 }
-.insightTopline { margin: -16px -16px 0; padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--brand); }
-.insightTopline > svg { width: 16px; height: 16px; flex: 0 0 auto; fill: none; stroke: var(--paper); stroke-width: 1.8; }
-.insightEyebrow { display: inline-flex; align-items: center; gap: 6px; color: var(--paper); font-size: var(--size-caption); line-height: 1; font-weight: var(--weight-bold); letter-spacing: -0.01em; }
-.insightEyebrow::before { width: 6px; height: 6px; flex: 0 0 auto; border-radius: 999px; background: currentColor; content: ''; }
-.insightTitle { margin-top: 12px; font-size: 17px; line-height: 1.35; font-weight: var(--weight-heavy); letter-spacing: -0.025em; }
+.insightTopline { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.insightTopline > svg { width: 16px; height: 16px; flex: 0 0 auto; fill: none; stroke: #a0a0a0; stroke-width: 1.8; }
+.insightEyebrow { display: inline-flex; align-items: center; gap: 6px; color: var(--text-secondary); font-size: var(--size-caption); line-height: 1; font-weight: var(--weight-bold); letter-spacing: -0.01em; }
+.insightEyebrow::before { width: 6px; height: 6px; flex: 0 0 auto; border-radius: 999px; background: var(--brand); content: ''; }
+.insightTitle { margin-top: 8px; font-size: 17px; line-height: 1.35; font-weight: var(--weight-heavy); letter-spacing: -0.025em; }
 .insightDescription { margin-top: 4px; overflow: hidden; color: var(--text-secondary); font-size: var(--size-meta); line-height: 1.4; text-overflow: ellipsis; white-space: nowrap; }
 .insightMetric { margin-top: 12px; min-width: 0; display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
 .insightDestination { min-width: 0; overflow: hidden; font-size: 16px; line-height: 1.25; font-weight: var(--weight-bold); text-overflow: ellipsis; white-space: nowrap; }
 .insightPriceTrail { flex: 0 0 auto; display: inline-flex; align-items: baseline; gap: 6px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .insightPreviousPrice { color: var(--text-faint); font-size: var(--size-meta); line-height: 1.2; font-weight: var(--weight-medium); }
 .insightPriceArrow { color: #b5b5b5; font-size: var(--size-caption); }
-.insightCurrentPrice { color: currentColor; font-size: 18px; line-height: 1.2; font-weight: var(--weight-heavy); letter-spacing: -0.035em; }
+.insightCurrentPrice { color: var(--brand); font-size: 18px; line-height: 1.2; font-weight: var(--weight-heavy); letter-spacing: -0.035em; }
 .insightFooter { margin-top: 10px; min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 10px; color: var(--text-muted); font-size: var(--size-caption); line-height: 1.25; }
 .insightFooter > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .insightFooter > em { padding: 4px 7px; flex: 0 0 auto; border-radius: 999px; background: var(--brand-soft); color: var(--brand-dark); font-style: normal; font-weight: var(--weight-heavy); white-space: nowrap; }
+.insightDiscovery .insightEyebrow::before { background: #8b7ab8; }
+.insightOpportunity .insightEyebrow::before { background: #d18a35; }
+.insightNew .insightEyebrow::before { background: #4b8f75; }
 
 .moreButton { width: 100%; height: 46px; margin-top: 14px; border: 1px solid var(--line); border-radius: 13px; background: var(--paper); color: var(--ink); font-size: var(--size-meta); font-weight: var(--weight-bold); }
 

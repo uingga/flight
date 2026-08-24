@@ -358,6 +358,13 @@ const recommendedScore = (flight: Flight) => {
     return effectivePrice(flight) - discount * 2_500 - seatBonus * 1_000;
 };
 
+// 상단 경보는 평범한 오늘의 표가 아니라, 가격과 할인폭이 함께 드문 경우에만 켠다.
+const isTickerWorthyDrop = (flight: Flight) => {
+    const price = effectivePrice(flight);
+    const discount = Math.max(0, flight.discountRate || 0);
+    return price <= 140_000 || (price <= 180_000 && discount >= 25);
+};
+
 const describeTodayPick = (flight: Flight) => {
     const localAirports: Record<string, string> = { PUS: '부산', TAE: '대구', CJJ: '청주', CJU: '제주' };
     const localCity = localAirports[flight.departure.airport || ''];
@@ -516,12 +523,22 @@ export default function MobileRedesignPreview() {
             || flights.slice().sort((a, b) => recommendedScore(a) - recommendedScore(b))[0];
         return flight ? { flight, reason: describeTodayPick(flight) } : null;
     }, [flights, todayPickId]);
+    const dropAlertFlight = useMemo(() => (
+        flights
+            .filter(isTickerWorthyDrop)
+            .sort((a, b) => recommendedScore(a) - recommendedScore(b))[0] || null
+    ), [flights]);
+    const featuredPick = useMemo(() => (
+        dropAlertFlight
+            ? { flight: dropAlertFlight, reason: '지금 가격이 유난히 크게 내려온 표예요' }
+            : todayPick
+    ), [dropAlertFlight, todayPick]);
     const displayedFlights = useMemo(() => {
-        const base = isDefaultView && todayPick
-            ? [todayPick.flight, ...filteredFlights.filter(flight => flight.id !== todayPick.flight.id)]
+        const base = isDefaultView && featuredPick
+            ? [featuredPick.flight, ...filteredFlights.filter(flight => flight.id !== featuredPick.flight.id)]
             : filteredFlights;
         return sort === 'recommended' && !query.trim() ? diversifyFlights(base) : base;
-    }, [filteredFlights, isDefaultView, query, sort, todayPick]);
+    }, [featuredPick, filteredFlights, isDefaultView, query, sort]);
     const feedInsights = useMemo<FeedInsight[]>(() => {
         if (sort !== 'recommended' || query.trim()) return [];
 
@@ -836,12 +853,18 @@ export default function MobileRedesignPreview() {
                     </div>
                 </header>
 
-                <div className={styles.dropTicker} aria-hidden="true">
-                    <span>TIKIT DROP</span>
-                    <span>JUST FOUND</span>
-                    <span>PRICE MOVES</span>
-                    <span>BEFORE IT&apos;S GONE</span>
-                </div>
+                {isDefaultView && dropAlertFlight && (
+                    <div
+                        className={styles.dropTicker}
+                        role="status"
+                        aria-label={`특가 경보. ${stripAirport(dropAlertFlight.arrival.city)} 왕복 ${priceText(effectivePrice(dropAlertFlight))}`}
+                    >
+                        <span>🚨 TIKIT DROP 발생</span>
+                        <span>{stripAirport(dropAlertFlight.arrival.city)} 왕복 {priceText(effectivePrice(dropAlertFlight))}</span>
+                        <span>가격이 도망쳤습니다</span>
+                        <span>담당자가 눈치채기 전에 보세요</span>
+                    </div>
+                )}
 
                 {searchOpen && (
                     <div className={styles.searchRow}>
@@ -957,7 +980,7 @@ export default function MobileRedesignPreview() {
                             const destination = stripAirport(flight.arrival.city);
                             const price = effectivePrice(flight);
                             const discountRate = Math.round(Math.max(0, flight.discountRate || 0));
-                            const isTodayPick = isDefaultView && todayPick?.flight.id === flight.id;
+                            const isTodayPick = isDefaultView && featuredPick?.flight.id === flight.id;
                             const cardNumber = index + 1;
                             const insightIndex = cardNumber >= 4 && (cardNumber - 4) % 8 === 0
                                 ? Math.floor((cardNumber - 4) / 8)
