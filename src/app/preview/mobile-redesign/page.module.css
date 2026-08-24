@@ -71,7 +71,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border-radius: 2px;
+    border-radius: 999px;
 }
 
 .iconButton { width: 36px; color: #35373e; }
@@ -136,7 +136,7 @@
     align-items: center;
     gap: 5px;
     border: 1px solid var(--line);
-    border-radius: 0;
+    border-radius: 999px;
     background: var(--paper);
     color: #35373e;
     font-size: var(--size-meta);
@@ -149,7 +149,7 @@
 .quickFilters .moreRegionButton { min-width: 42px; padding-right: 0; padding-left: 0; justify-content: center; font-size: 14px; line-height: 1; letter-spacing: 0; text-align: center; }
 .regionChipRail { flex: 1; min-width: 0; }
 .moreRegionInline { margin: -7px 16px 13px; display: flex; justify-content: flex-end; gap: 5px; animation: inlineFilterIn 150ms ease-out; }
-.moreRegionInline button { height: 32px; padding: 0 11px; border: 1px solid var(--line); border-radius: 0; background: var(--paper); color: var(--text-secondary); font-size: var(--size-caption); font-weight: var(--weight-medium); }
+.moreRegionInline button { height: 32px; padding: 0 11px; border: 1px solid var(--line); border-radius: 999px; background: var(--paper); color: var(--text-secondary); font-size: var(--size-caption); font-weight: var(--weight-medium); }
 .moreRegionInline .moreRegionActive { border-color: var(--brand); background: var(--brand-soft); color: var(--brand-dark); font-weight: var(--weight-bold); }
 .filterButton.filterHasValue { border-color: var(--brand); color: var(--brand-dark); }
 .sortSelect::after { content: '⌄'; position: absolute; pointer-events: none; color: #929292; }
@@ -258,7 +258,7 @@
 
 .priceBlock { min-width: 0; min-height: 34px; flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; justify-content: center; text-align: right; }
 .priceLine { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
-.priceDiscountBadge { height: 20px; padding: 0 6px; display: inline-flex; align-items: center; border: 1px solid #f2c7d0; border-radius: 0; background: var(--brand-soft); color: var(--brand-dark); font-size: var(--size-micro); line-height: 1; font-weight: var(--weight-heavy); white-space: nowrap; }
+.priceDiscountBadge { height: 20px; padding: 0 6px; display: inline-flex; align-items: center; border: 1px solid #f2c7d0; border-radius: 6px; background: var(--brand-soft); color: var(--brand-dark); font-size: var(--size-micro); line-height: 1; font-weight: var(--weight-heavy); white-space: nowrap; }
 .priceBlock strong { display: block; color: var(--brand); font-size: var(--size-card); line-height: 1.25; font-weight: var(--weight-heavy); letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
 .priceBlock .feeNotice { margin-top: 3px; color: var(--text-muted); font-size: var(--size-micro); letter-spacing: -0.02em; white-space: nowrap; }
 
@@ -291,9 +291,9 @@
 .insightCurrentPrice { color: currentColor; font-size: 18px; line-height: 1.2; font-weight: var(--weight-heavy); letter-spacing: -0.035em; }
 .insightFooter { margin-top: 10px; min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 10px; color: var(--text-muted); font-size: var(--size-caption); line-height: 1.25; }
 .insightFooter > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.insightFooter > em { padding: 4px 7px; flex: 0 0 auto; border-radius: 0; background: var(--brand-soft); color: var(--brand-dark); font-style: normal; font-weight: var(--weight-heavy); white-space: nowrap; }
+.insightFooter > em { padding: 4px 7px; flex: 0 0 auto; border-radius: 999px; background: var(--brand-soft); color: var(--brand-dark); font-style: normal; font-weight: var(--weight-heavy); white-space: nowrap; }
 
-.moreButton { width: 100%; height: 46px; margin-top: 14px; border: 1px solid var(--line); border-radius: 0; background: var(--paper); color: var(--ink); font-size: var(--size-meta); font-weight: var(--weight-bold); }
+.moreButton { width: 100%; height: 46px; margin-top: 14px; border: 1px solid var(--line); border-radius: 13px; background: var(--paper); color: var(--ink); font-size: var(--size-meta); font-weight: var(--weight-bold); }
 
 .skeletonCard { height: 210px; border: 1px solid var(--line); border-radius: 8px; background: linear-gradient(90deg, var(--paper) 25%, var(--paper-soft) 50%, var(--paper) 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; }
 @keyframes shimmer { to { background-position: -200% 0; } }
@@ -380,13 +380,13 @@
 .filterGroup { margin-top: 22px; }
 .filterGroup h3 { margin-bottom: 9px; color: #3f3f3f; font-size: var(--size-meta); font-weight: var(--weight-bold); }
 .optionGrid { display: flex; flex-wrap: wrap; gap: 7px; }
-.optionGrid button { min-height: 36px; padding: 0 13px; border: 1px solid var(--line); border-radius: 0; background: var(--paper); color: var(--ink); font-size: var(--size-meta); font-weight: var(--weight-medium); }
+.optionGrid button { min-height: 36px; padding: 0 13px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); color: var(--ink); font-size: var(--size-meta); font-weight: var(--weight-medium); }
 .optionGrid .optionActive { border-color: var(--brand); background: var(--brand); color: var(--paper); font-weight: var(--weight-bold); }
-.dateDirectButton { width: fit-content; min-height: 36px; margin-top: 9px; padding: 0 13px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 0; background: var(--paper); color: var(--ink); text-align: left; }
+.dateDirectButton { width: fit-content; min-height: 36px; margin-top: 9px; padding: 0 13px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); color: var(--ink); text-align: left; }
 .dateDirectButton span { flex: 0 0 auto; font-size: var(--size-body); }
 .dateDirectButton strong { font-size: var(--size-meta); font-weight: var(--weight-bold); }
 .dateDirectButton.dateDirectActive { border-color: var(--brand); color: var(--brand-dark); }
-.dateCalendarWrap { margin-top: 8px; overflow: hidden; border: 1px solid var(--line); border-radius: 0; background: var(--paper); }
+.dateCalendarWrap { margin-top: 8px; overflow: hidden; border: 1px solid var(--line); border-radius: 14px; background: var(--paper); }
 .dateCalendarWrap > p { margin: 0; padding: 0 12px 10px; color: var(--text-faint); font-size: var(--size-micro); text-align: center; }
 .dateCalendar { width: 100%; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; }
 .dateCalendar :global(.react-datepicker__month-container) { width: 100%; float: none; }
@@ -398,7 +398,7 @@
 .dateCalendar :global(.react-datepicker__day--range-start:not(.react-datepicker__day--range-end))::after,
 .dateCalendar :global(.react-datepicker__day--range-end:not(.react-datepicker__day--range-start))::after { background-color: var(--brand-soft) !important; }
 .dateCalendar :global(.react-datepicker__day--today) { color: var(--brand-dark) !important; }
-.applyButton { position: sticky; bottom: 0; width: 100%; height: 50px; margin-top: 26px; border-radius: 0; background: var(--brand); color: var(--paper); font-size: var(--size-body); font-weight: var(--weight-heavy); box-shadow: none; }
+.applyButton { position: sticky; bottom: 0; width: 100%; height: 50px; margin-top: 26px; border-radius: 13px; background: var(--brand); color: var(--paper); font-size: var(--size-body); font-weight: var(--weight-heavy); box-shadow: none; }
 .applyButtonCalendarOpen { position: static; }
 
 .detailSheet { overflow-y: auto; }
@@ -417,7 +417,7 @@
 .detailTitle > div:last-child span { display: block; margin-top: 2px; color: var(--text-muted); font-size: var(--size-micro); line-height: 1.15; }
 .detailAvailabilityText { display: block; margin-top: 4px; color: var(--muted); font-size: var(--size-micro); line-height: 1.2; font-weight: var(--weight-medium); }
 
-.detailSchedule { margin-top: 18px; padding: 16px; display: grid; gap: 16px; border: 1px solid var(--line); border-radius: 0; background: var(--paper-soft); }
+.detailSchedule { margin-top: 18px; padding: 16px; display: grid; gap: 16px; border: 1px solid var(--line); border-radius: 16px; background: var(--paper-soft); }
 .detailFlightLeg { display: grid; gap: 14px; }
 .detailLegHeader { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
 .detailLegHeader > div { display: flex; align-items: baseline; gap: 8px; }
@@ -444,15 +444,15 @@
 .reportTools button { min-height: 22px; padding: 0 2px; color: #8d836e; font-size: var(--size-micro); line-height: 1; font-weight: var(--weight-medium); text-decoration: underline; text-decoration-color: #cfc4ab; text-underline-offset: 2px; }
 .reportTools button:hover { color: #666666; text-decoration-color: #999999; }
 .reportTools span { font-size: var(--size-micro); }
-.bookingButton { height: 54px; margin-top: 14px; display: flex; align-items: center; justify-content: center; gap: 6px; border-radius: 0; background: var(--brand); color: var(--paper); font-size: var(--size-body); font-weight: var(--weight-heavy); box-shadow: none; }
+.bookingButton { height: 54px; margin-top: 14px; display: flex; align-items: center; justify-content: center; gap: 6px; border-radius: 14px; background: var(--brand); color: var(--paper); font-size: var(--size-body); font-weight: var(--weight-heavy); box-shadow: none; }
 .bookingButton:hover { color: #fff; }
 .bookingButton svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; }
 .detailSecondaryActions { margin-top: 9px; display: grid; grid-template-columns: minmax(0, 1fr) 88px; align-items: stretch; gap: 8px; }
 .detailSecondaryActions > :only-child { grid-column: 1 / -1; }
-.detailShareButton { min-height: 50px; display: flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--line); border-radius: 0; background: var(--paper); color: var(--text-secondary); font-size: var(--size-meta); font-weight: var(--weight-bold); }
+.detailShareButton { min-height: 50px; display: flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--line); border-radius: 13px; background: var(--paper); color: var(--text-secondary); font-size: var(--size-meta); font-weight: var(--weight-bold); }
 .detailShareButton:hover { border-color: #b8b8b8; color: #333333; }
 .detailShareButton svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; }
-.hotelCompareButton { min-height: 50px; padding: 8px 12px; display: flex; align-items: center; gap: 9px; border: 1px solid var(--line); border-radius: 0; background: var(--paper); color: var(--ink); }
+.hotelCompareButton { min-height: 50px; padding: 8px 12px; display: flex; align-items: center; gap: 9px; border: 1px solid var(--line); border-radius: 13px; background: var(--paper); color: var(--ink); }
 .hotelCompareButton:hover { border-color: #b8b8b8; color: #222222; }
 .hotelIcon { flex: 0 0 auto; font-size: 16px; }
 .hotelButtonText { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
@@ -483,8 +483,8 @@
 
 @media (min-width: 700px) {
     .phoneCanvas { min-height: calc(100vh - 48px); margin-top: 24px; margin-bottom: 24px; border-radius: 24px; overflow: hidden; }
-    .header { top: 24px; }
-    .searchRow { top: 82px; }
+    .header { top: 0; }
+    .searchRow { top: 58px; }
     .bottomSheet { margin-bottom: 24px; border-radius: 24px; }
     .floatingActions { bottom: 42px; }
 }
