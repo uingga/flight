@@ -836,6 +836,13 @@ export default function MobileRedesignPreview() {
                     </div>
                 </header>
 
+                <div className={styles.dropTicker} aria-hidden="true">
+                    <span>TIKIT DROP</span>
+                    <span>JUST FOUND</span>
+                    <span>PRICE MOVES</span>
+                    <span>BEFORE IT&apos;S GONE</span>
+                </div>
+
                 {searchOpen && (
                     <div className={styles.searchRow}>
                         <Icon name="search" />
