@@ -711,24 +711,33 @@ export default function MobileRedesignPreview() {
             saving: number;
             savingRate: number;
         }> = [];
-        for (let leftIndex = 0; leftIndex < displayedFlights.length; leftIndex += 1) {
-            for (let rightIndex = leftIndex + 1; rightIndex < displayedFlights.length; rightIndex += 1) {
-                const left = displayedFlights[leftIndex];
-                const right = displayedFlights[rightIndex];
-                if (normalizeCity(left.arrival.city) !== normalizeCity(right.arrival.city)) continue;
-                if (departureName(left) === departureName(right)) continue;
-                const departureGapDays = daysBetweenDates(left.departure.date, right.departure.date);
-                const leftNights = daysBetweenDates(left.departure.date, left.arrival.date);
-                const rightNights = daysBetweenDates(right.departure.date, right.arrival.date);
-                if (departureGapDays === null || Math.abs(departureGapDays) > 1 || leftNights === null || leftNights !== rightNights) continue;
-                const cheaper = effectivePrice(left) <= effectivePrice(right) ? left : right;
-                const expensive = cheaper === left ? right : left;
-                const saving = effectivePrice(expensive) - effectivePrice(cheaper);
-                const savingRate = saving / effectivePrice(expensive);
-                if (effectivePrice(cheaper) > 350_000 || saving < 50_000 || savingRate < 0.2) continue;
-                airportComparisons.push({ cheaper, expensive, saving, savingRate });
+        const cheapestByDestinationAndAirport = new Map<string, Map<string, Flight>>();
+        displayedFlights.forEach(flight => {
+            const destination = normalizeCity(flight.arrival.city);
+            const origin = departureName(flight);
+            const byAirport = cheapestByDestinationAndAirport.get(destination) || new Map<string, Flight>();
+            const current = byAirport.get(origin);
+            if (!current || effectivePrice(flight) < effectivePrice(current)) {
+                byAirport.set(origin, flight);
             }
-        }
+            cheapestByDestinationAndAirport.set(destination, byAirport);
+        });
+
+        cheapestByDestinationAndAirport.forEach(byAirport => {
+            const originMinimums = Array.from(byAirport.values());
+            for (let leftIndex = 0; leftIndex < originMinimums.length; leftIndex += 1) {
+                for (let rightIndex = leftIndex + 1; rightIndex < originMinimums.length; rightIndex += 1) {
+                    const left = originMinimums[leftIndex];
+                    const right = originMinimums[rightIndex];
+                    const cheaper = effectivePrice(left) <= effectivePrice(right) ? left : right;
+                    const expensive = cheaper === left ? right : left;
+                    const saving = effectivePrice(expensive) - effectivePrice(cheaper);
+                    const savingRate = saving / effectivePrice(expensive);
+                    if (effectivePrice(cheaper) > 500_000 || (saving < 10_000 && savingRate < 0.05)) continue;
+                    airportComparisons.push({ cheaper, expensive, saving, savingRate });
+                }
+            }
+        });
         airportComparisons.sort((a, b) => b.savingRate - a.savingRate || b.saving - a.saving);
 
         const factStay = stayCandidates.find(candidate => (
@@ -758,11 +767,11 @@ export default function MobileRedesignPreview() {
                 kind: 'airport',
                 eyebrow: '출발지 차이',
                 title: `${compactWon(factAirport.saving)} 낮음`,
-                description: `${departureName(factAirport.expensive)} 대신 ${departureName(factAirport.cheaper)} 출발`,
+                description: `${departureName(factAirport.expensive)} 최저가보다 ${departureName(factAirport.cheaper)} 최저가가 낮아요`,
                 flight: factAirport.cheaper,
                 destination: stripAirport(factAirport.cheaper.arrival.city),
                 currentPrice: effectivePrice(factAirport.cheaper),
-                meta: `${cardDate(factAirport.cheaper.departure.date)} · ${tripLength(factAirport.cheaper) || '일정 확인'}`,
+                meta: `${departureName(factAirport.cheaper)} ${cardDate(factAirport.cheaper.departure.date)} · ${departureName(factAirport.expensive)} ${cardDate(factAirport.expensive.departure.date)}`,
             });
             usedDestinations.add(normalizeCity(factAirport.cheaper.arrival.city));
         }
@@ -831,11 +840,11 @@ export default function MobileRedesignPreview() {
                     editorial: true,
                     eyebrow: '출발지 비교',
                     title: `오늘은 ${departureName(airportComparison.expensive)}보다 ${departureName(airportComparison.cheaper)}입니다`,
-                    description: `같은 목적지·같은 여행 기간에서 ${compactWon(airportComparison.saving)} 낮아요`,
+                    description: `현재 올라온 ${stripAirport(airportComparison.cheaper.arrival.city)} 표의 출발공항별 최저가를 비교했어요`,
                     flight: airportComparison.cheaper,
                     destination: stripAirport(airportComparison.cheaper.arrival.city),
                     currentPrice: effectivePrice(airportComparison.cheaper),
-                    meta: `${cardDate(airportComparison.cheaper.departure.date)} · ${tripLength(airportComparison.cheaper) || '일정 확인'}`,
+                    meta: `${departureName(airportComparison.cheaper)} ${cardDate(airportComparison.cheaper.departure.date)} · ${departureName(airportComparison.expensive)} ${cardDate(airportComparison.expensive.departure.date)}`,
                     badge: `${compactWon(airportComparison.saving)} 차이`,
                 },
             });
