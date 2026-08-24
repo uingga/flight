@@ -53,6 +53,7 @@ jobs:
         env:
           CI: true
           MYREALTRIP_API_KEY: ${{ secrets.MYREALTRIP_API_KEY }}
+          LIFECYCLE_OBSERVATION_PATH: /tmp/tikitikit-lifecycle-observation.json
 
       - name: Commit and push changes
         if: steps.crawl.outcome == 'success'
@@ -102,6 +103,15 @@ jobs:
         continue-on-error: true
         run: npm run archive:prices
         env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+
+      - name: Record flight lifecycle changes
+        if: steps.crawl.outcome == 'success'
+        continue-on-error: true
+        run: npm run record:lifecycle
+        env:
+          LIFECYCLE_OBSERVATION_PATH: /tmp/tikitikit-lifecycle-observation.json
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
 

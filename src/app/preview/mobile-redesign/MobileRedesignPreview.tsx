@@ -38,24 +38,18 @@ interface PriceHistoryEntry {
 
 type PriceHistory = Record<string, PriceHistoryEntry[]>;
 
-interface InsightRow {
-    id: string;
-    flight: Flight;
-    destination: string;
-    note: string;
-    price: number;
-    badge?: string;
-}
-
 interface FeedInsight {
     id: string;
     kind: 'price' | 'opportunity' | 'discovery' | 'new';
     eyebrow: string;
     title: string;
+    flight: Flight;
+    destination: string;
+    currentPrice: number;
+    previousPrice?: number;
+    meta: string;
+    badge?: string;
     description?: string;
-    rows?: InsightRow[];
-    flight?: Flight;
-    dealLabel?: string;
 }
 
 const SOURCE_NAMES: Record<Flight['source'], string> = {
@@ -547,6 +541,7 @@ export default function MobileRedesignPreview() {
                 if (!current || effectivePrice(flight) < effectivePrice(current)) cheapestByRoute.set(key, flight);
             });
 
+            const displayRank = new Map(displayedFlights.map((flight, index) => [flight.id, index]));
             const drops = Array.from(cheapestByRoute.entries()).flatMap(([route, flight]) => {
                 const entries = routeHistory[route] || [];
                 const latest = entries.find(entry => entry.date === latestHistoryDate);
@@ -561,83 +556,40 @@ export default function MobileRedesignPreview() {
                     const countRatio = latest.count / previous.count;
                     if (countRatio < 0.45 || countRatio > 2.2) return [];
                 }
-                if (effectivePrice(flight) > latest.minPrice * 1.02 + 2_000) return [];
-                return [{ flight, drop }];
-            }).sort((a, b) => b.drop - a.drop);
+                if (Math.abs(effectivePrice(flight) - latest.minPrice) > 1_000) return [];
+                const rankPenalty = Math.min(displayRank.get(flight.id) || 0, 30) * 0.12;
+                const score = dropRate * 100 + Math.min(drop / 20_000, 5) - rankPenalty;
+                return [{ flight, drop, previousPrice: previous.minPrice, currentPrice: latest.minPrice, score }];
+            }).sort((a, b) => b.score - a.score);
 
-            const seenDropDestinations = new Set<string>();
-            const dropRows = drops.filter(({ flight }) => {
-                const destination = normalizeCity(flight.arrival.city);
-                if (seenDropDestinations.has(destination)) return false;
-                seenDropDestinations.add(destination);
-                return true;
-            }).slice(0, 3).map(({ flight, drop }) => ({
-                id: `drop-${flight.id}`,
-                flight,
-                destination: stripAirport(flight.arrival.city),
-                note: `${departureName(flight)} 출발 · ${cardDate(flight.departure.date)}`,
-                price: effectivePrice(flight),
-                badge: `↓ ${compactWon(drop)}`,
-            }));
-
-            if (dropRows.length > 0) {
+            const bestDrop = drops[0];
+            if (bestDrop) {
                 const latestDate = parseDate(latestHistoryDate);
                 const previousDate = parseDate(previousHistoryDate);
-                const isYesterday = latestDate && previousDate
+                const isConsecutive = latestDate && previousDate
                     ? Math.round((latestDate.getTime() - previousDate.getTime()) / 86_400_000) === 1
                     : false;
                 insights.push({
                     id: 'price-drop',
                     kind: 'price',
-                    eyebrow: '오늘의 변화',
-                    title: isYesterday ? '어제보다 내려간 표' : '지난 기록보다 내려간 표',
-                    rows: dropRows,
+                    eyebrow: '노선 최저가 변화',
+                    title: latestHistoryDate === dateKey(new Date()) && isConsecutive
+                        ? '오늘 가격이 크게 떨어졌어요'
+                        : '최근 가격이 크게 떨어졌어요',
+                    flight: bestDrop.flight,
+                    destination: stripAirport(bestDrop.flight.arrival.city),
+                    previousPrice: bestDrop.previousPrice,
+                    currentPrice: bestDrop.currentPrice,
+                    meta: `${departureName(bestDrop.flight)} 출발 · ${cardDate(bestDrop.flight.departure.date)}`,
+                    badge: `${compactWon(bestDrop.drop)} 내림`,
                 });
             }
         }
 
-        const now = new Date();
-        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12);
-        const saturday = addDays(today, (6 - today.getDay() + 7) % 7);
-        const sunday = addDays(saturday, 1);
-        const weekendFlights = uniqueDestinations(displayedFlights.filter(flight => {
-            const departureDate = parseDate(flight.departure.date);
-            return departureDate && departureDate >= saturday && departureDate <= sunday;
-        }).sort((a, b) => effectivePrice(a) - effectivePrice(b)));
-        const soonEnd = addDays(today, 3);
-        const soonFlights = uniqueDestinations(displayedFlights.filter(flight => {
-            const departureDate = parseDate(flight.departure.date);
-            return departureDate && departureDate >= today && departureDate <= soonEnd;
-        }).sort((a, b) => effectivePrice(a) - effectivePrice(b)));
-        const cheapFlights = uniqueDestinations(displayedFlights.filter(flight => effectivePrice(flight) < 200_000)
-            .sort((a, b) => effectivePrice(a) - effectivePrice(b)));
+        const usedDestinations = new Set(
+            insights.map(insight => normalizeCity(insight.flight.arrival.city)),
+        );
 
-        const opportunity = weekendFlights.length >= 2
-            ? { title: '이번 주말에 떠나는 표', flights: weekendFlights }
-            : soonFlights.length >= 2
-                ? { title: '3일 안에 떠날 수 있는 표', flights: soonFlights }
-                : cheapFlights.length >= 2
-                    ? { title: '20만원 아래로 떠날 수 있는 곳', flights: cheapFlights }
-                    : null;
-        if (opportunity) {
-            insights.push({
-                id: 'opportunity',
-                kind: 'opportunity',
-                eyebrow: '지금 가능한 여행',
-                title: opportunity.title,
-                rows: opportunity.flights.map(flight => ({
-                    id: `opportunity-${flight.id}`,
-                    flight,
-                    destination: stripAirport(flight.arrival.city),
-                    note: `${departureName(flight)} 출발 · ${cardDate(flight.departure.date)}`,
-                    price: effectivePrice(flight),
-                })),
-            });
-        }
-
-        const usedDestinations = new Set(insights.flatMap(insight =>
-            (insight.rows || []).map(row => normalizeCity(row.flight.arrival.city)),
-        ));
         const discoveryFlight = displayedFlights.find(flight => {
             const destination = normalizeCity(flight.arrival.city);
             return effectivePrice(flight) <= 350_000
@@ -654,10 +606,59 @@ export default function MobileRedesignPreview() {
                     title: `${stripAirport(discoveryFlight.arrival.city)}, 이런 곳이에요`,
                     description: context.location,
                     flight: discoveryFlight,
-                    dealLabel: `${departureName(discoveryFlight)} 출발 · ${priceText(effectivePrice(discoveryFlight))}`,
+                    destination: stripAirport(discoveryFlight.arrival.city),
+                    currentPrice: effectivePrice(discoveryFlight),
+                    meta: `${departureName(discoveryFlight)} 출발 · ${cardDate(discoveryFlight.departure.date)}`,
                 });
                 usedDestinations.add(normalizeCity(discoveryFlight.arrival.city));
             }
+        }
+
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12);
+        const saturday = addDays(today, (6 - today.getDay() + 7) % 7);
+        const sunday = addDays(saturday, 1);
+        const weekendFlights = uniqueDestinations(displayedFlights.filter(flight => {
+            const departureDate = parseDate(flight.departure.date);
+            return departureDate
+                && departureDate >= saturday
+                && departureDate <= sunday
+                && !usedDestinations.has(normalizeCity(flight.arrival.city));
+        }).sort((a, b) => effectivePrice(a) - effectivePrice(b)));
+        const soonEnd = addDays(today, 3);
+        const soonFlights = uniqueDestinations(displayedFlights.filter(flight => {
+            const departureDate = parseDate(flight.departure.date);
+            return departureDate
+                && departureDate >= today
+                && departureDate <= soonEnd
+                && !usedDestinations.has(normalizeCity(flight.arrival.city));
+        }).sort((a, b) => effectivePrice(a) - effectivePrice(b)));
+        const cheapFlights = uniqueDestinations(displayedFlights.filter(flight => (
+            effectivePrice(flight) < 200_000
+            && !usedDestinations.has(normalizeCity(flight.arrival.city))
+        ))
+            .sort((a, b) => effectivePrice(a) - effectivePrice(b)));
+
+        const opportunity = weekendFlights.length > 0
+            ? { title: '이번 주말에 출발할 수 있어요', flight: weekendFlights[0] }
+            : soonFlights.length > 0
+                ? { title: '3일 안에 출발할 수 있어요', flight: soonFlights[0] }
+                : cheapFlights.length > 0
+                    ? { title: '20만원 아래로 떠날 수 있어요', flight: cheapFlights[0] }
+                    : null;
+        if (opportunity) {
+            const flight = opportunity.flight;
+            insights.push({
+                id: 'opportunity',
+                kind: 'opportunity',
+                eyebrow: '지금 가능한 여행',
+                title: opportunity.title,
+                flight,
+                destination: stripAirport(flight.arrival.city),
+                currentPrice: effectivePrice(flight),
+                meta: `${departureName(flight)} 출발 · ${cardDate(flight.departure.date)}`,
+            });
+            usedDestinations.add(normalizeCity(flight.arrival.city));
         }
 
         const latestDataDate = latestHistoryDate || lastUpdated?.slice(0, 10);
@@ -672,19 +673,17 @@ export default function MobileRedesignPreview() {
             }).sort((a, b) => effectivePrice(a) - effectivePrice(b)));
 
             if (verifiedNewFlights.length > 0) {
+                const flight = verifiedNewFlights[0];
                 insights.push({
                     id: 'verified-new',
                     kind: 'new',
                     eyebrow: '새로 발견',
-                    title: '최근 처음 보인 노선',
-                    rows: verifiedNewFlights.map(flight => ({
-                        id: `new-${flight.id}`,
-                        flight,
-                        destination: stripAirport(flight.arrival.city),
-                        note: `${departureName(flight)} 출발 · ${cardDate(flight.departure.date)}`,
-                        price: effectivePrice(flight),
-                        badge: 'NEW',
-                    })),
+                    title: '최근 처음 보인 노선이에요',
+                    flight,
+                    destination: stripAirport(flight.arrival.city),
+                    currentPrice: effectivePrice(flight),
+                    meta: `${departureName(flight)} 출발 · ${cardDate(flight.departure.date)}`,
+                    badge: 'NEW',
                 });
             }
         }
@@ -729,9 +728,24 @@ export default function MobileRedesignPreview() {
         });
     };
 
-    const openFlight = (flight: Flight) => {
+    const openFlight = (flight: Flight, entry = 'card_body') => {
+        gtag.trackDetailOpen(
+            `${normalizeCity(flight.departure.city)}-${normalizeCity(flight.arrival.city)}`,
+            effectivePrice(flight),
+            flight.source,
+            entry,
+        );
         account.recordRecent(flight.id);
         setSelectedFlight(flight);
+    };
+
+    const openInsight = (insight: FeedInsight) => {
+        gtag.event('insight_click', {
+            insight_type: insight.kind,
+            destination: normalizeCity(insight.flight.arrival.city),
+            flight_id: insight.flight.id,
+        });
+        openFlight(insight.flight, `insight_${insight.kind}`);
     };
 
     const currentAccountSearch: AccountSearchFilters = {
@@ -1005,42 +1019,36 @@ export default function MobileRedesignPreview() {
                                             </button>
                                         </article>
                                     </div>
-                                    {insight?.kind === 'discovery' && insight.flight && (
+                                    {insight && (
                                         <button
                                             type="button"
-                                            className={`${styles.insightBar} ${styles.insightDiscovery}`}
-                                            onClick={() => openFlight(insight.flight!)}
+                                            className={`${styles.insightBar} ${styles[`insight${insight.kind[0].toUpperCase()}${insight.kind.slice(1)}`] || ''}`}
+                                            onClick={() => openInsight(insight)}
+                                            aria-label={`${insight.title}: ${insight.destination} ${priceText(insight.currentPrice)}`}
                                         >
-                                            <span className={styles.insightEyebrow}>{insight.eyebrow}</span>
-                                            <strong>{insight.title}</strong>
-                                            {insight.description && <p>{insight.description}</p>}
-                                            <span className={styles.insightDeal}>
-                                                {insight.dealLabel} <Icon name="arrow" />
+                                            <span className={styles.insightTopline}>
+                                                <span className={styles.insightEyebrow}>{insight.eyebrow}</span>
+                                                <Icon name="arrow" />
+                                            </span>
+                                            <strong className={styles.insightTitle}>{insight.title}</strong>
+                                            {insight.description && <span className={styles.insightDescription}>{insight.description}</span>}
+                                            <span className={styles.insightMetric}>
+                                                <strong className={styles.insightDestination}>{insight.destination}</strong>
+                                                <span className={styles.insightPriceTrail}>
+                                                    {insight.previousPrice && (
+                                                        <>
+                                                            <span className={styles.insightPreviousPrice}>{priceText(insight.previousPrice)}</span>
+                                                            <span className={styles.insightPriceArrow}>→</span>
+                                                        </>
+                                                    )}
+                                                    <strong className={styles.insightCurrentPrice}>{priceText(insight.currentPrice)}</strong>
+                                                </span>
+                                            </span>
+                                            <span className={styles.insightFooter}>
+                                                <span>{insight.meta}</span>
+                                                {insight.badge && <em>{insight.badge}</em>}
                                             </span>
                                         </button>
-                                    )}
-                                    {insight && insight.kind !== 'discovery' && insight.rows && (
-                                        <section className={styles.insightBar} aria-label={insight.title}>
-                                            <div className={styles.insightHeader}>
-                                                <span className={styles.insightEyebrow}>{insight.eyebrow}</span>
-                                                <strong>{insight.title}</strong>
-                                            </div>
-                                            <div className={styles.insightRows}>
-                                                {insight.rows.map(row => (
-                                                    <button type="button" key={row.id} className={styles.insightRow} onClick={() => openFlight(row.flight)}>
-                                                        <span className={styles.insightRoute}>
-                                                            <strong>{row.destination}</strong>
-                                                            <small>{row.note}</small>
-                                                        </span>
-                                                        <span className={styles.insightPriceBlock}>
-                                                            <strong>{priceText(row.price)}</strong>
-                                                            {row.badge && <small>{row.badge}</small>}
-                                                        </span>
-                                                        <Icon name="arrow" />
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </section>
                                     )}
                                 </Fragment>
                             );

@@ -63,6 +63,8 @@ jobs:
       - name: Filter flights by Naver prices
         if: steps.naver.outcome == 'success'
         run: npx tsx scripts/filter-by-naver.ts
+        env:
+          LIFECYCLE_OBSERVATION_PATH: /tmp/tikitikit-naver-lifecycle-observation.json
 
       - name: Commit and push
         if: steps.naver.outcome == 'success'
@@ -82,7 +84,7 @@ jobs:
             # 실행 기록은 회차 ID 단위로 병합하고, 캐시 필터는 원격 최신 캐시 기준으로 다시 계산한다.
             node scripts/merge-naver-prices.mjs data/naver-prices.json /tmp/naver-prices.json
             node scripts/merge-naver-crawl-history.mjs data/naver-crawl-history.json /tmp/naver-crawl-history.json
-            npx tsx scripts/filter-by-naver.ts
+            LIFECYCLE_OBSERVATION_PATH=/tmp/tikitikit-naver-lifecycle-observation.json npx tsx scripts/filter-by-naver.ts
 
             if [[ -n $(git status --porcelain data/) ]]; then
               git add data/naver-prices.json data/naver-crawl-history.json data/all-flights-cache.json
@@ -95,6 +97,15 @@ jobs:
           else
             echo "ℹ️ No changes."
           fi
+
+      - name: Record Naver comparison changes
+        if: steps.naver.outcome == 'success'
+        continue-on-error: true
+        run: npm run record:lifecycle
+        env:
+          LIFECYCLE_OBSERVATION_PATH: /tmp/tikitikit-naver-lifecycle-observation.json
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
 
       - name: Report result
         if: always()

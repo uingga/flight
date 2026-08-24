@@ -45,6 +45,7 @@ jobs:
         run: npx tsx scripts/scrape-myrealtrip-prices.ts
         env:
           CI: true
+          LIFECYCLE_OBSERVATION_PATH: /tmp/tikitikit-mrt-lifecycle-observation.json
 
       - name: Commit and push changes
         if: success()
@@ -74,6 +75,15 @@ jobs:
           else
             echo "ℹ️ 변경 없음"
           fi
+
+      - name: Record MyRealTrip lifecycle changes
+        if: success()
+        continue-on-error: true
+        run: npm run record:lifecycle -- --source=myrealtrip
+        env:
+          LIFECYCLE_OBSERVATION_PATH: /tmp/tikitikit-mrt-lifecycle-observation.json
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
 
       - name: Alert on failure
         if: failure()

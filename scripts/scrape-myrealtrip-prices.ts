@@ -292,6 +292,12 @@ async function main() {
         }
     }
 
+    // 벤치마크 필터 때문에 화면에서 제외되더라도 여행사 예약 화면에서 이번에 정상
+    // 확인한 상품의 가격·좌석 생애는 이어서 기록한다.
+    const lifecycleFlights = cache.flights
+        .filter((flight: any) => flight.source === 'myrealtrip')
+        .map((flight: any) => JSON.parse(JSON.stringify(flight)));
+
     // ── 인터파크 벤치마크 필터링 ──────────────────────────────
     console.log(`\n=== 인터파크 가격 벤치마크 ===`);
     const benchmarkPath = path.resolve(process.cwd(), 'data/interpark-prices.json');
@@ -364,6 +370,32 @@ async function main() {
         myrealtrip: cache.lastUpdated,
     };
     fs.writeFileSync(cachePath, JSON.stringify(cache));
+
+    const lifecycleObservationPath = process.env.LIFECYCLE_OBSERVATION_PATH;
+    if (lifecycleObservationPath) {
+        const visibleIds = new Set(
+            cache.flights
+                .filter((flight: any) => flight.source === 'myrealtrip')
+                .map((flight: any) => String(flight.id)),
+        );
+        fs.writeFileSync(lifecycleObservationPath, JSON.stringify({
+            observedAt: cache.lastUpdated,
+            cachePreserved: false,
+            alerts: [],
+            sources: {
+                myrealtrip: {
+                    status: results.size === tasks.length ? 'success' : 'warning',
+                    scraped: results.size,
+                    allowMissing: results.size === tasks.length,
+                },
+            },
+            observations: lifecycleFlights.map((flight: any) => ({
+                flight,
+                visible: visibleIds.has(String(flight.id)),
+            })),
+        }), 'utf8');
+        console.log(`생애 기록 입력 준비: ${lifecycleFlights.length}개 후보`);
+    }
 
     const elapsed = ((Date.now() - startTime) / 60000).toFixed(1);
     console.log(`\n=== 스크래핑 완료 ===`);

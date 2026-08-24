@@ -20,6 +20,8 @@ if (!fs.existsSync(naverPath)) {
 
 const cache = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
 const naverPrices = JSON.parse(fs.readFileSync(naverPath, 'utf8'));
+const lifecycleCandidates = [...cache.flights];
+const hiddenFlightKeys = new Set<string>();
 
 console.log(`📡 네이버 가격 데이터: ${Object.keys(naverPrices).length}건`);
 console.log(`📋 전체 항공권: ${cache.flights.length}건\n`);
@@ -44,7 +46,8 @@ cache.flights = cache.flights.filter((f: any) => {
 
     // 정확한 공항+날짜 매칭만 사용 (도시+월 폴백은 오매칭 위험이 커서 제거)
     const naverKey = `${depAirport}-${arrAirport}_${depDate}_${retDate}`;
-    const bestNaverPrice: number | null = naverPrices[naverKey]?.naverLowest || null;
+    const naverEntry = naverPrices[naverKey];
+    const bestNaverPrice: number | null = naverEntry?.naverLowest || null;
 
     if (!bestNaverPrice) {
         noData++;
@@ -53,12 +56,14 @@ cache.flights = cache.flights.filter((f: any) => {
 
     // 네이버 최저가 저장 (추천순 정렬에서 사용)
     f.naverLowest = bestNaverPrice;
+    if (naverEntry.crawledAt) f.naverCheckedAt = naverEntry.crawledAt;
 
     const diff = f.price - bestNaverPrice;
     const moreExpensiveRatio = diff / bestNaverPrice;
     if (diff >= 100000 && moreExpensiveRatio >= 0.2) {
         console.log(`  ❌ ${f.arrival?.city} ${depDate} ${f.source} ${f.price.toLocaleString()}원 > 네이버 ${bestNaverPrice.toLocaleString()}원 (+${diff.toLocaleString()}원, +${Math.round(moreExpensiveRatio * 100)}%)`);
         filtered++;
+        hiddenFlightKeys.add(`${f.source}|${f.id}`);
         return false;
     }
 
@@ -71,6 +76,29 @@ cache.flights = cache.flights.filter((f: any) => {
 cache.count = cache.flights.length;
 cache.lastUpdated = new Date().toISOString();
 fs.writeFileSync(cachePath, JSON.stringify(cache));
+
+const lifecycleObservationPath = process.env.LIFECYCLE_OBSERVATION_PATH;
+if (lifecycleObservationPath) {
+    const sources = Object.fromEntries(
+        Array.from(new Set(lifecycleCandidates.map((flight: any) => flight.source))).map(source => [source, {
+            status: 'warning',
+            // 비교 가격을 확인하는 회차이지 여행사 재고 전체를 다시 긁는 회차가 아니다.
+            allowMissing: false,
+        }]),
+    );
+    fs.writeFileSync(lifecycleObservationPath, JSON.stringify({
+        observedAt: cache.lastUpdated,
+        mode: 'comparison',
+        cachePreserved: false,
+        alerts: [],
+        sources,
+        observations: lifecycleCandidates.map((flight: any) => ({
+            flight,
+            visible: !hiddenFlightKeys.has(`${flight.source}|${flight.id}`),
+        })),
+    }), 'utf8');
+    console.log(`🧭 비교가 생애 기록 입력 준비: ${lifecycleCandidates.length}개 후보`);
+}
 
 console.log(`\n=== 필터링 결과 ===`);
 console.log(`✅ 여행사 가격이 네이버 이하: ${cheaper}건 (유지)`);

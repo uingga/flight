@@ -8,6 +8,7 @@ import { scrapeMyrealtrip } from '../src/lib/scrapers/myrealtrip';
 import { scrapeInterparkBenchmark, resolveCityCode } from '../src/lib/scrapers/interpark';
 import { logCrawlResults, recordCrawlAlerts } from '../src/lib/utils/crawl-logger';
 import { getEffectivePrice } from '../src/lib/price-quality';
+import { buildLifecycleIdentity } from './lib/flight-lifecycle';
 import fs from 'fs';
 import path from 'path';
 
@@ -164,6 +165,7 @@ async function main() {
         // 이 둘을 한 칸에 뭉뚱그리면 보존된 숫자가 다음 크롤의 수집량과 맞비교되어
         // 일어나지도 않은 급감이 경보로 찍힌다.
         const preservedSources = new Set<SourceKey>();
+        const missingDetectionSafeSources = new Set<SourceKey>();
         const scrapedCounts: Record<string, number> = {};
 
         for (const src of sourceNames) {
@@ -243,6 +245,16 @@ async function main() {
             staleStreak[src] = 0;
             allFlights.push(...fresh);
             sources[src] = freshCount;
+            // 화면 보존 기준(60%)보다 더 보수적으로 사라짐을 판정한다. 직전 원본보다
+            // 15% 넘게 줄어든 회차는 관측된 가격·좌석만 기록하고, 안 보인 표를
+            // 판매 종료로 세기 시작하지 않는다. 다음 정상 회차에서 다시 판단한다.
+            if (
+                prevScraped === undefined
+                || prevScraped < MIN_BASELINE
+                || freshCount >= prevScraped * 0.85
+            ) {
+                missingDetectionSafeSources.add(src);
+            }
             if (freshCount > 0) sourceUpdatedAt[src] = new Date().toISOString();
         }
 
@@ -256,6 +268,28 @@ async function main() {
             collectionWarnings.forEach(w => console.log(`   ${w}`));
             recordCrawlAlerts(collectionWarnings);
         }
+
+        // 장기 생애 기록은 사이트에 최종 노출된 최저가만이 아니라, 여행사에서 이번에
+        // 정상 확인한 유효 왕복 후보를 기준으로 삼는다. 그래야 벤치마크 기준을 벗어나
+        // 화면에서 숨겨진 경우와 여행사에서 실제로 사라진 경우를 나중에 구분할 수 있다.
+        const todayKst = new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'Asia/Seoul',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+        }).format(new Date());
+        const lifecycleFlights = allFlights.filter((f: any) => {
+            if (!Number.isFinite(Number(f.price)) || Number(f.price) <= 0) return false;
+            const departureDate = String(f.departure?.date || '').match(/(\d{4})[.\/-](\d{1,2})[.\/-](\d{1,2})/);
+            const normalizedDepartureDate = departureDate
+                ? `${departureDate[1]}-${departureDate[2].padStart(2, '0')}-${departureDate[3].padStart(2, '0')}`
+                : '';
+            if (normalizedDepartureDate && normalizedDepartureDate < todayKst) return false;
+            if (!String(f.arrival?.date || '').trim()) return false;
+            const departureCity = String(f.departure?.city || '').trim();
+            const arrivalCity = String(f.arrival?.city || '').trim();
+            return !!arrivalCity && departureCity !== arrivalCity;
+        });
 
         // 노선별 최저가 필터링 (각 업체별 같은 노선에서 최저가만 유지)
         console.log('\n=== 최저가 필터링 ===');
@@ -424,26 +458,28 @@ async function main() {
         // 크롤 로그에 남길 '실제로 사이트에 나가는 목록'.
         // 어느 경로로 끝나든 이 변수가 최종본을 가리킨다.
         let savedFlights: any[] = benchmarkedFlights;
+        let cachePreservedGlobally = false;
 
         // 전체 결과가 이전 캐시의 50% 미만이면 이전 캐시 유지
         if (prevCache && prevCache.count > 0 && benchmarkedFlights.length < prevCache.count * 0.5) {
             console.log(`\n⚠️ 결과가 이전 캐시(${prevCache.count}개)의 50% 미만(${benchmarkedFlights.length}개) → 이전 캐시 유지`);
             console.log('크롤링 결과를 저장하지 않습니다.');
             savedFlights = prevCache.flights || [];
+            cachePreservedGlobally = true;
         } else {
             // firstSeen 필드 추가: 이전 캐시와 비교하여 새 항공편 감지
             const prevFlightMap = new Map<string, string>();
             if (prevCache?.flights) {
                 prevCache.flights.forEach((f: any) => {
-                    if (f.id && f.firstSeen) {
-                        prevFlightMap.set(f.id, f.firstSeen);
+                    if (f.firstSeen) {
+                        prevFlightMap.set(buildLifecycleIdentity(f).offerKey, f.firstSeen);
                     }
                 });
             }
-            const todayDate = new Date().toISOString().split('T')[0];
+            const todayDate = todayKst;
             let newFlightCount = 0;
             benchmarkedFlights.forEach((f: any) => {
-                const prevFirstSeen = prevFlightMap.get(f.id);
+                const prevFirstSeen = prevFlightMap.get(buildLifecycleIdentity(f).offerKey);
                 if (prevFirstSeen) {
                     f.firstSeen = prevFirstSeen; // 기존 항공편: firstSeen 이어받기
                 } else {
@@ -488,7 +524,7 @@ async function main() {
             // 가격 히스토리에 오늘 데이터 추가 (history는 위에서 이미 로드됨)
             const routePrices: Record<string, number[]> = {};
             if (!requestedSources) {
-                const todayStr = new Date().toISOString().split('T')[0];
+                const todayStr = todayKst;
                 allFlights.forEach((f: any) => {
                     const route = `${f.departure?.city || ''}-${f.arrival?.city || ''}`;
                     if (f.price > 0) {
@@ -537,6 +573,33 @@ async function main() {
             console.log(`🕐 타임스탬프: ${cacheData.timestamp}`);
             console.log('='.repeat(50));
 
+        }
+
+        // GitHub Actions의 커밋 충돌 처리에서 저장소가 초기화되어도 사라지지 않도록
+        // 생애 기록 입력은 /tmp 경로(환경변수로 전달)에만 남긴다. 환경변수가 없으면
+        // 로컬 크롤 동작은 지금과 완전히 같다.
+        const lifecycleObservationPath = process.env.LIFECYCLE_OBSERVATION_PATH;
+        if (lifecycleObservationPath) {
+            const visibleIds = new Set(benchmarkedFlights.map((f: any) => `${f.source}|${f.id}`));
+            const sourceStatus = Object.fromEntries(sourceNames.map(src => [src, {
+                status: cachePreservedGlobally || preservedSources.has(src)
+                    ? 'preserved'
+                    : attempted.has(src) ? 'success' : 'skipped',
+                scraped: attempted.has(src) ? scrapedCounts[src] : undefined,
+                allowMissing: missingDetectionSafeSources.has(src),
+            }]));
+            const observation = {
+                observedAt: new Date().toISOString(),
+                cachePreserved: cachePreservedGlobally,
+                alerts: [...integrityWarnings, ...collectionWarnings],
+                sources: sourceStatus,
+                observations: lifecycleFlights.map((flight: any) => ({
+                    flight,
+                    visible: visibleIds.has(`${flight.source}|${flight.id}`),
+                })),
+            };
+            fs.writeFileSync(lifecycleObservationPath, JSON.stringify(observation), 'utf8');
+            console.log(`🧭 생애 기록 입력 준비: ${lifecycleFlights.length}개 후보`);
         }
 
         // 통합 크롤링 로그 기록.
