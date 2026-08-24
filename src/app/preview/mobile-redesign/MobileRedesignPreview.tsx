@@ -613,7 +613,7 @@ export default function MobileRedesignPreview() {
             .sort((a, b) => effectivePrice(a) - effectivePrice(b)));
 
         const opportunity = weekendFlights.length >= 2
-            ? { title: '이번 주말 바로 떠날 표', flights: weekendFlights }
+            ? { title: '이번 주말에 떠나는 표', flights: weekendFlights }
             : soonFlights.length >= 2
                 ? { title: '3일 안에 떠날 수 있는 표', flights: soonFlights }
                 : cheapFlights.length >= 2
