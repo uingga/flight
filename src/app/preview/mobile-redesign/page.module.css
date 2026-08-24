@@ -1,23 +1,23 @@
 .previewPage {
     min-height: 100vh;
-    background: #777777;
-    color: #111111;
-    --brand: #111111;
-    --brand-dark: #000000;
-    --brand-soft: #e9e4d9;
-    --paper: #f4f0e6;
-    --paper-soft: #faf7ef;
-    --spectrum: linear-gradient(100deg, #00c8ff 0%, #f000b8 34%, #ff4d00 68%, #c8ff00 100%);
+    background: #f3f3f3;
+    color: #222222;
+    --brand: #ff385c;
+    --brand-dark: #e00b41;
+    --brand-soft: #fff0f3;
+    --paper: #ffffff;
+    --paper-soft: #f7f7f7;
+    --spectrum: linear-gradient(100deg, #ff385c 0%, #e00b41 100%);
     --urgent: #ff4d34;
     --urgent-dark: #cf2f1c;
     --urgent-soft: #fff0f2;
-    --ink: #111111;
-    --muted: #55534d;
-    --line: #111111;
-    --line-soft: #c6c0b5;
-    --text-secondary: #4f4c46;
-    --text-muted: #706c64;
-    --text-faint: #8b867d;
+    --ink: #222222;
+    --muted: #6a6a6a;
+    --line: #dddddd;
+    --line-soft: #d6d6d6;
+    --text-secondary: #5f5f5f;
+    --text-muted: #858585;
+    --text-faint: #999999;
     --size-micro: 10px;
     --size-caption: 11px;
     --size-meta: 12px;
@@ -39,11 +39,11 @@
     min-height: 100vh;
     margin: 0 auto;
     background: var(--paper);
-    box-shadow: 0 0 48px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 0 48px rgba(34, 34, 34, 0.11);
 }
 
-.previewPage :global(.logo-container stop:first-child) { stop-color: #111111; }
-.previewPage :global(.logo-container stop:last-child) { stop-color: #111111; }
+.previewPage :global(.logo-container stop:first-child) { stop-color: #ff385c; }
+.previewPage :global(.logo-container stop:last-child) { stop-color: #e00b41; }
 
 .header {
     position: sticky;
@@ -54,8 +54,8 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: rgba(244, 240, 230, 0.96);
-    border-bottom: 1px solid var(--ink);
+    background: rgba(255, 255, 255, 0.94);
+    border-bottom: 1px solid rgba(221, 221, 221, 0.88);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
 }
@@ -76,12 +76,12 @@
 
 .iconButton { width: 36px; color: #35373e; }
 .iconButton svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.9; }
-.alertButton { padding: 0 13px; background: var(--ink); color: var(--paper); font-size: var(--size-meta); font-weight: var(--weight-bold); }
+.alertButton { padding: 0 13px; background: var(--brand-soft); color: var(--brand-dark); font-size: var(--size-meta); font-weight: var(--weight-bold); }
 .accountIconButton { position: relative; width: 36px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); }
 .accountIconButton svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
-.accountIconButton span { position: absolute; top: 4px; right: 4px; width: 6px; height: 6px; border: 1px solid white; border-radius: 50%; background: var(--ink); }
+.accountIconButton span { position: absolute; top: 4px; right: 4px; width: 6px; height: 6px; border: 1px solid white; border-radius: 50%; background: var(--brand); }
 
-.dropTicker { height: 25px; padding: 0 8px; display: flex; align-items: center; gap: 18px; overflow: hidden; border-bottom: 1px solid var(--ink); background: var(--paper); color: var(--ink); font-size: var(--size-micro); line-height: 1; font-weight: var(--weight-heavy); letter-spacing: 0.04em; white-space: nowrap; }
+.dropTicker { height: 25px; padding: 0 8px; display: flex; align-items: center; gap: 18px; overflow: hidden; border-bottom: 1px solid #f2c7d0; background: var(--brand-soft); color: var(--brand-dark); font-size: var(--size-micro); line-height: 1; font-weight: var(--weight-heavy); letter-spacing: 0.04em; white-space: nowrap; }
 .dropTicker span::after { margin-left: 18px; content: '✦'; }
 
 .searchRow {
@@ -184,14 +184,14 @@
     position: relative;
     /* 홈을 덮는 흰 면이 카드 테두리 바깥까지 나가야 세로선이 실제로 끊긴다. */
     overflow: visible;
-    --ticket-border: var(--ink);
-    border: 1px solid var(--ink);
+    --ticket-border: var(--line);
+    border: 1px solid var(--line);
     border-radius: 10px;
     background: var(--paper);
     box-shadow: none;
 }
 
-.todayPickCard { --ticket-border: var(--ink); border-color: var(--ink); box-shadow: none; }
+.todayPickCard { --ticket-border: #eeb0bd; border-color: #eeb0bd; box-shadow: none; }
 
 .cardBody {
     width: 100%;
@@ -200,7 +200,7 @@
     color: inherit;
 }
 
-.todayPickStrip { height: 32px; padding: 0 11px; display: flex; align-items: center; justify-content: space-between; border-radius: 9px 9px 0 0; background: var(--spectrum); color: var(--ink); line-height: 1; }
+.todayPickStrip { height: 32px; padding: 0 11px; display: flex; align-items: center; justify-content: space-between; border-radius: 9px 9px 0 0; background: var(--spectrum); color: #ffffff; line-height: 1; }
 .todayPickStrip strong { font-size: var(--size-caption); font-weight: var(--weight-heavy); letter-spacing: 0.02em; }
 .todayPickStrip span { font-size: var(--size-micro); font-weight: var(--weight-bold); }
 .todayPickCard .favoriteButton { top: 40px; }
@@ -235,7 +235,7 @@
 .routeGrid { margin: 15px 16px 0; display: grid; grid-template-columns: minmax(0, 1fr) 48px minmax(0, 1fr); align-items: start; gap: 3px; }
 .routeEndpoint { min-width: 0; display: flex; flex-direction: column; align-items: center; text-align: center; }
 .routeEndpoint strong { max-width: 100%; overflow: hidden; color: var(--ink); font-size: var(--size-title); line-height: 1.2; font-weight: var(--weight-heavy); letter-spacing: -0.04em; text-overflow: ellipsis; white-space: nowrap; }
-.routeEndpointArrival strong { color: #111111; }
+.routeEndpointArrival strong { color: var(--ink); }
 .routeTiming { margin-top: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; white-space: nowrap; }
 .routeTiming b { color: var(--text-secondary); font-size: var(--size-meta); line-height: 1.25; font-weight: var(--weight-bold); }
 .routeTiming em { color: var(--text-muted); font-size: var(--size-meta); line-height: 1.2; font-style: normal; font-variant-numeric: tabular-nums; }
@@ -258,7 +258,7 @@
 
 .priceBlock { min-width: 0; min-height: 34px; flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; justify-content: center; text-align: right; }
 .priceLine { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
-.priceDiscountBadge { height: 20px; padding: 0 6px; display: inline-flex; align-items: center; border: 1px solid var(--ink); border-radius: 0; background: var(--paper); color: var(--ink); font-size: var(--size-micro); line-height: 1; font-weight: var(--weight-heavy); white-space: nowrap; }
+.priceDiscountBadge { height: 20px; padding: 0 6px; display: inline-flex; align-items: center; border: 1px solid #f2c7d0; border-radius: 0; background: var(--brand-soft); color: var(--brand-dark); font-size: var(--size-micro); line-height: 1; font-weight: var(--weight-heavy); white-space: nowrap; }
 .priceBlock strong { display: block; color: var(--brand); font-size: var(--size-card); line-height: 1.25; font-weight: var(--weight-heavy); letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
 .priceBlock .feeNotice { margin-top: 3px; color: var(--text-muted); font-size: var(--size-micro); letter-spacing: -0.02em; white-space: nowrap; }
 
@@ -270,14 +270,14 @@
     flex-direction: column;
     align-items: stretch;
     overflow: hidden;
-    border: 1px solid var(--ink);
+    border: 1px solid var(--line);
     border-radius: 8px;
     background: var(--paper);
     color: var(--ink);
     text-align: left;
     box-shadow: none;
 }
-.insightTopline { margin: -16px -16px 0; padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--ink); }
+.insightTopline { margin: -16px -16px 0; padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--brand); }
 .insightTopline > svg { width: 16px; height: 16px; flex: 0 0 auto; fill: none; stroke: var(--paper); stroke-width: 1.8; }
 .insightEyebrow { display: inline-flex; align-items: center; gap: 6px; color: var(--paper); font-size: var(--size-caption); line-height: 1; font-weight: var(--weight-bold); letter-spacing: -0.01em; }
 .insightEyebrow::before { width: 6px; height: 6px; flex: 0 0 auto; border-radius: 999px; background: currentColor; content: ''; }
@@ -291,7 +291,7 @@
 .insightCurrentPrice { color: currentColor; font-size: 18px; line-height: 1.2; font-weight: var(--weight-heavy); letter-spacing: -0.035em; }
 .insightFooter { margin-top: 10px; min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 10px; color: var(--text-muted); font-size: var(--size-caption); line-height: 1.25; }
 .insightFooter > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.insightFooter > em { padding: 4px 7px; flex: 0 0 auto; border-radius: 0; background: var(--ink); color: var(--paper); font-style: normal; font-weight: var(--weight-heavy); white-space: nowrap; }
+.insightFooter > em { padding: 4px 7px; flex: 0 0 auto; border-radius: 0; background: var(--brand-soft); color: var(--brand-dark); font-style: normal; font-weight: var(--weight-heavy); white-space: nowrap; }
 
 .moreButton { width: 100%; height: 46px; margin-top: 14px; border: 1px solid var(--line); border-radius: 0; background: var(--paper); color: var(--ink); font-size: var(--size-meta); font-weight: var(--weight-bold); }
 
@@ -323,9 +323,9 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    border: 1px solid var(--ink);
+    border: 1px solid var(--line);
     border-radius: 999px;
-    background: rgba(244, 240, 230, 0.96);
+    background: rgba(255, 255, 255, 0.96);
     color: var(--ink);
     font-size: var(--size-meta);
     font-weight: var(--weight-bold);
@@ -339,9 +339,9 @@
     height: 44px;
     display: grid;
     place-items: center;
-    border: 1px solid var(--ink);
+    border: 1px solid var(--line);
     border-radius: 50%;
-    background: rgba(244, 240, 230, 0.96);
+    background: rgba(255, 255, 255, 0.96);
     color: var(--ink);
     box-shadow: 0 5px 16px rgba(0, 0, 0, 0.13);
     backdrop-filter: blur(8px);
@@ -365,7 +365,7 @@
     max-height: min(88dvh, 760px);
     padding: 8px 18px max(18px, env(safe-area-inset-bottom));
     overflow-y: auto;
-    border: 1px solid var(--ink);
+    border: 1px solid var(--line);
     border-bottom: 0;
     border-radius: 12px 12px 0 0;
     background: var(--paper);
@@ -380,13 +380,13 @@
 .filterGroup { margin-top: 22px; }
 .filterGroup h3 { margin-bottom: 9px; color: #3f3f3f; font-size: var(--size-meta); font-weight: var(--weight-bold); }
 .optionGrid { display: flex; flex-wrap: wrap; gap: 7px; }
-.optionGrid button { min-height: 36px; padding: 0 13px; border: 1px solid var(--ink); border-radius: 0; background: var(--paper); color: var(--ink); font-size: var(--size-meta); font-weight: var(--weight-medium); }
+.optionGrid button { min-height: 36px; padding: 0 13px; border: 1px solid var(--line); border-radius: 0; background: var(--paper); color: var(--ink); font-size: var(--size-meta); font-weight: var(--weight-medium); }
 .optionGrid .optionActive { border-color: var(--brand); background: var(--brand); color: var(--paper); font-weight: var(--weight-bold); }
-.dateDirectButton { width: fit-content; min-height: 36px; margin-top: 9px; padding: 0 13px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--ink); border-radius: 0; background: var(--paper); color: var(--ink); text-align: left; }
+.dateDirectButton { width: fit-content; min-height: 36px; margin-top: 9px; padding: 0 13px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 0; background: var(--paper); color: var(--ink); text-align: left; }
 .dateDirectButton span { flex: 0 0 auto; font-size: var(--size-body); }
 .dateDirectButton strong { font-size: var(--size-meta); font-weight: var(--weight-bold); }
 .dateDirectButton.dateDirectActive { border-color: var(--brand); color: var(--brand-dark); }
-.dateCalendarWrap { margin-top: 8px; overflow: hidden; border: 1px solid var(--ink); border-radius: 0; background: var(--paper); }
+.dateCalendarWrap { margin-top: 8px; overflow: hidden; border: 1px solid var(--line); border-radius: 0; background: var(--paper); }
 .dateCalendarWrap > p { margin: 0; padding: 0 12px 10px; color: var(--text-faint); font-size: var(--size-micro); text-align: center; }
 .dateCalendar { width: 100%; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; }
 .dateCalendar :global(.react-datepicker__month-container) { width: 100%; float: none; }
@@ -417,7 +417,7 @@
 .detailTitle > div:last-child span { display: block; margin-top: 2px; color: var(--text-muted); font-size: var(--size-micro); line-height: 1.15; }
 .detailAvailabilityText { display: block; margin-top: 4px; color: var(--muted); font-size: var(--size-micro); line-height: 1.2; font-weight: var(--weight-medium); }
 
-.detailSchedule { margin-top: 18px; padding: 16px; display: grid; gap: 16px; border: 1px solid var(--ink); border-radius: 0; background: var(--paper-soft); }
+.detailSchedule { margin-top: 18px; padding: 16px; display: grid; gap: 16px; border: 1px solid var(--line); border-radius: 0; background: var(--paper-soft); }
 .detailFlightLeg { display: grid; gap: 14px; }
 .detailLegHeader { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
 .detailLegHeader > div { display: flex; align-items: baseline; gap: 8px; }
@@ -449,10 +449,10 @@
 .bookingButton svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; }
 .detailSecondaryActions { margin-top: 9px; display: grid; grid-template-columns: minmax(0, 1fr) 88px; align-items: stretch; gap: 8px; }
 .detailSecondaryActions > :only-child { grid-column: 1 / -1; }
-.detailShareButton { min-height: 50px; display: flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--ink); border-radius: 0; background: var(--paper); color: var(--text-secondary); font-size: var(--size-meta); font-weight: var(--weight-bold); }
+.detailShareButton { min-height: 50px; display: flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--line); border-radius: 0; background: var(--paper); color: var(--text-secondary); font-size: var(--size-meta); font-weight: var(--weight-bold); }
 .detailShareButton:hover { border-color: #b8b8b8; color: #333333; }
 .detailShareButton svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; }
-.hotelCompareButton { min-height: 50px; padding: 8px 12px; display: flex; align-items: center; gap: 9px; border: 1px solid var(--ink); border-radius: 0; background: var(--paper); color: var(--ink); }
+.hotelCompareButton { min-height: 50px; padding: 8px 12px; display: flex; align-items: center; gap: 9px; border: 1px solid var(--line); border-radius: 0; background: var(--paper); color: var(--ink); }
 .hotelCompareButton:hover { border-color: #b8b8b8; color: #222222; }
 .hotelIcon { flex: 0 0 auto; font-size: 16px; }
 .hotelButtonText { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
