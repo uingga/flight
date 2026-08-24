@@ -961,6 +961,12 @@ export default function MobileRedesignPreview() {
                                     <div className={styles.cardEntry}>
                                         <article className={`${styles.flightCard} ${isTodayPick ? styles.todayPickCard : ''}`}>
                                             <button type="button" className={styles.cardBody} onClick={() => openFlight(flight)}>
+                                                {isTodayPick && (
+                                                    <span className={styles.todayPickStrip}>
+                                                        <strong>TIKIT DROP</strong>
+                                                        <span>오늘 발견</span>
+                                                    </span>
+                                                )}
                                                 <div className={styles.cardTopline}>
                                                     <div>
                                                         <span className={`${styles.sourceBadge} ${styles[flight.source]}`}>{SOURCE_NAMES[flight.source]}</span>
@@ -993,7 +999,6 @@ export default function MobileRedesignPreview() {
 
                                                 <div className={styles.cardFooter}>
                                                     <div className={styles.availabilityGroup}>
-                                                        {isTodayPick && <span className={styles.todayPickBadge}>오늘의 표</span>}
                                                         {seats > 0 && (
                                                             <span className={`${styles.footerStatus} ${seats <= 4 && !isTodayPick ? styles.footerStatusLow : ''} ${seats <= 4 && isTodayPick ? styles.footerStatusUrgent : ''}`}>
                                                                 {seats}석 남음

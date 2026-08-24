@@ -5,10 +5,7 @@
     --brand: #20211d;
     --brand-dark: #11120f;
     --brand-soft: #f2f2f2;
-    --festival-blue: #174bff;
-    --festival-green: #42f56c;
-    --festival-pink: #f04dd5;
-    --festival-yellow: #ffe600;
+    --signal: #e5ff2a;
     --urgent: #ff4d34;
     --urgent-dark: #cf2f1c;
     --urgent-soft: #fff0f2;
@@ -42,8 +39,8 @@
     box-shadow: 0 0 48px rgba(34, 34, 34, 0.11);
 }
 
-.previewPage :global(.logo-container stop:first-child) { stop-color: #174bff; }
-.previewPage :global(.logo-container stop:last-child) { stop-color: #174bff; }
+.previewPage :global(.logo-container stop:first-child) { stop-color: #111111; }
+.previewPage :global(.logo-container stop:last-child) { stop-color: #111111; }
 
 .header {
     position: sticky;
@@ -76,10 +73,10 @@
 
 .iconButton { width: 36px; color: #35373e; }
 .iconButton svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.9; }
-.alertButton { padding: 0 13px; background: var(--festival-yellow); color: var(--ink); font-size: var(--size-meta); font-weight: var(--weight-bold); }
+.alertButton { padding: 0 13px; background: var(--signal); color: var(--ink); font-size: var(--size-meta); font-weight: var(--weight-bold); }
 .accountIconButton { position: relative; width: 36px; border: 1px solid var(--line); background: #fff; color: #3f4148; }
 .accountIconButton svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
-.accountIconButton span { position: absolute; top: 4px; right: 4px; width: 6px; height: 6px; border: 1px solid white; border-radius: 50%; background: var(--festival-pink); }
+.accountIconButton span { position: absolute; top: 4px; right: 4px; width: 6px; height: 6px; border: 1px solid white; border-radius: 50%; background: var(--ink); }
 
 .searchRow {
     position: sticky;
@@ -107,7 +104,7 @@
     gap: 12px;
 }
 
-.feedIntro p { color: var(--festival-blue); font-size: var(--size-caption); line-height: 1.3; font-weight: var(--weight-bold); letter-spacing: -0.01em; }
+.feedIntro p { width: fit-content; padding: 2px 4px; background: var(--signal); color: var(--ink); font-size: var(--size-caption); line-height: 1.3; font-weight: var(--weight-bold); letter-spacing: -0.01em; }
 .feedIntro h1 { margin-top: 3px; color: var(--ink); font-size: var(--size-title); line-height: 1.3; font-weight: var(--weight-heavy); letter-spacing: -0.045em; }
 .feedIntro > span { flex-shrink: 0; padding-bottom: 2px; color: var(--text-faint); font-size: var(--size-micro); white-space: nowrap; }
 
@@ -188,7 +185,7 @@
     box-shadow: 0 4px 14px rgba(34, 34, 34, 0.045);
 }
 
-.todayPickCard { --ticket-border: var(--festival-blue); border-color: var(--festival-blue); box-shadow: none; }
+.todayPickCard { --ticket-border: var(--ink); border-color: var(--ink); box-shadow: none; }
 
 .cardBody {
     width: 100%;
@@ -196,6 +193,11 @@
     text-align: left;
     color: inherit;
 }
+
+.todayPickStrip { height: 30px; padding: 0 11px; display: flex; align-items: center; justify-content: space-between; border-radius: 15px 15px 0 0; background: var(--signal); color: var(--ink); line-height: 1; }
+.todayPickStrip strong { font-size: var(--size-caption); font-weight: var(--weight-heavy); letter-spacing: 0.02em; }
+.todayPickStrip span { font-size: var(--size-micro); font-weight: var(--weight-bold); }
+.todayPickCard .favoriteButton { top: 40px; }
 
 .cardTopline { min-height: 35px; padding: 13px 50px 0 16px; display: flex; align-items: center; justify-content: space-between; }
 .cardTopline > div { overflow: hidden; display: flex; align-items: center; gap: 6px; min-width: 0; }
@@ -244,22 +246,15 @@
 
 .cardFooter { min-height: 64px; padding: 11px 16px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .availabilityGroup { min-width: 0; flex: 1; display: flex; align-items: center; gap: 7px; }
-.todayPickBadge { height: 22px; padding: 0 7px; flex: 0 0 auto; display: inline-flex; align-items: center; border-radius: 999px; background: var(--festival-yellow); color: var(--ink); font-size: var(--size-micro); line-height: 1; font-weight: var(--weight-heavy); white-space: nowrap; }
 .footerStatus { flex: 0 0 auto; color: var(--text-muted); font-size: var(--size-meta); line-height: 1; font-weight: var(--weight-medium); white-space: nowrap; }
 .footerStatusLow { height: 22px; padding: 0 7px; display: inline-flex; align-items: center; border-radius: 999px; background: var(--urgent-soft); color: var(--urgent-dark); font-weight: var(--weight-bold); }
 .footerStatusUrgent { color: var(--urgent-dark); font-weight: var(--weight-bold); }
 
 .priceBlock { min-width: 0; min-height: 34px; flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; justify-content: center; text-align: right; }
 .priceLine { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
-.priceDiscountBadge { height: 20px; padding: 0 6px; display: inline-flex; align-items: center; border-radius: 6px; background: var(--brand-soft); color: var(--brand-dark); font-size: var(--size-micro); line-height: 1; font-weight: var(--weight-heavy); white-space: nowrap; }
+.priceDiscountBadge { height: 20px; padding: 0 6px; display: inline-flex; align-items: center; border-radius: 2px; background: var(--signal); color: var(--ink); font-size: var(--size-micro); line-height: 1; font-weight: var(--weight-heavy); white-space: nowrap; }
 .priceBlock strong { display: block; color: var(--brand); font-size: var(--size-card); line-height: 1.25; font-weight: var(--weight-heavy); letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
 .priceBlock .feeNotice { margin-top: 3px; color: var(--text-muted); font-size: var(--size-micro); letter-spacing: -0.02em; white-space: nowrap; }
-
-.todayPickCard .cardFooter { background: var(--festival-blue); border-radius: 0 0 15px 15px; }
-.todayPickCard .footerStatusLow { background: #fff; color: var(--ink); }
-.todayPickCard .priceDiscountBadge { background: var(--festival-pink); color: var(--ink); }
-.todayPickCard .priceBlock strong { color: #fff; }
-.todayPickCard .priceBlock .feeNotice { color: rgba(255, 255, 255, 0.72); }
 
 .insightBar {
     width: 100%;
@@ -276,11 +271,11 @@
     text-align: left;
     box-shadow: none;
 }
-.insightTopline { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.insightTopline > svg { width: 16px; height: 16px; flex: 0 0 auto; fill: none; stroke: #a0a0a0; stroke-width: 1.8; }
-.insightEyebrow { display: inline-flex; align-items: center; gap: 6px; color: var(--text-secondary); font-size: var(--size-caption); line-height: 1; font-weight: var(--weight-bold); letter-spacing: -0.01em; }
+.insightTopline { margin: -16px -16px 0; padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--signal); }
+.insightTopline > svg { width: 16px; height: 16px; flex: 0 0 auto; fill: none; stroke: var(--ink); stroke-width: 1.8; }
+.insightEyebrow { display: inline-flex; align-items: center; gap: 6px; color: var(--ink); font-size: var(--size-caption); line-height: 1; font-weight: var(--weight-bold); letter-spacing: -0.01em; }
 .insightEyebrow::before { width: 6px; height: 6px; flex: 0 0 auto; border-radius: 999px; background: currentColor; content: ''; }
-.insightTitle { margin-top: 8px; font-size: 17px; line-height: 1.35; font-weight: var(--weight-heavy); letter-spacing: -0.025em; }
+.insightTitle { margin-top: 12px; font-size: 17px; line-height: 1.35; font-weight: var(--weight-heavy); letter-spacing: -0.025em; }
 .insightDescription { margin-top: 4px; overflow: hidden; color: var(--text-secondary); font-size: var(--size-meta); line-height: 1.4; text-overflow: ellipsis; white-space: nowrap; }
 .insightMetric { margin-top: 12px; min-width: 0; display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
 .insightDestination { min-width: 0; overflow: hidden; font-size: 16px; line-height: 1.25; font-weight: var(--weight-bold); text-overflow: ellipsis; white-space: nowrap; }
@@ -290,32 +285,7 @@
 .insightCurrentPrice { color: currentColor; font-size: 18px; line-height: 1.2; font-weight: var(--weight-heavy); letter-spacing: -0.035em; }
 .insightFooter { margin-top: 10px; min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 10px; color: var(--text-muted); font-size: var(--size-caption); line-height: 1.25; }
 .insightFooter > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.insightFooter > em { padding: 4px 7px; flex: 0 0 auto; border-radius: 999px; background: var(--ink); color: #fff; font-style: normal; font-weight: var(--weight-heavy); white-space: nowrap; }
-.insightPrice { background: var(--festival-pink); }
-.insightOpportunity { background: var(--festival-yellow); }
-.insightNew { background: var(--festival-green); }
-.insightDiscovery { background: var(--festival-blue); color: #fff; }
-.insightPrice .insightEyebrow,
-.insightPrice .insightDescription,
-.insightPrice .insightPreviousPrice,
-.insightPrice .insightPriceArrow,
-.insightPrice .insightFooter,
-.insightOpportunity .insightEyebrow,
-.insightOpportunity .insightDescription,
-.insightOpportunity .insightPreviousPrice,
-.insightOpportunity .insightPriceArrow,
-.insightOpportunity .insightFooter,
-.insightNew .insightEyebrow,
-.insightNew .insightDescription,
-.insightNew .insightPreviousPrice,
-.insightNew .insightPriceArrow,
-.insightNew .insightFooter { color: rgba(17, 17, 17, 0.72); }
-.insightDiscovery .insightEyebrow,
-.insightDiscovery .insightDescription,
-.insightDiscovery .insightPreviousPrice,
-.insightDiscovery .insightPriceArrow,
-.insightDiscovery .insightFooter { color: rgba(255, 255, 255, 0.78); }
-.insightDiscovery .insightFooter > em { background: #fff; color: var(--ink); }
+.insightFooter > em { padding: 4px 7px; flex: 0 0 auto; border-radius: 2px; background: var(--signal); color: var(--ink); font-style: normal; font-weight: var(--weight-heavy); white-space: nowrap; }
 
 .moreButton { width: 100%; height: 46px; margin-top: 14px; border: 1px solid var(--line); border-radius: 13px; background: #fff; color: #35373e; font-size: var(--size-meta); font-weight: var(--weight-bold); }
 
@@ -448,7 +418,7 @@
 .detailVerticalRoute { position: relative; display: grid; gap: 17px; }
 .detailVerticalRoute::before { content: ''; position: absolute; top: 8px; bottom: 8px; left: 3.5px; width: 1px; background: #d5d5d5; }
 .detailRouteStop { position: relative; display: grid; grid-template-columns: 8px minmax(0, 1fr); align-items: start; gap: 11px; }
-.detailRouteStop > span { position: relative; z-index: 1; width: 8px; height: 8px; margin-top: 5px; border: 1.5px solid #9ebc35; border-radius: 50%; background: #fff; }
+.detailRouteStop > span { position: relative; z-index: 1; width: 8px; height: 8px; margin-top: 5px; border: 1.5px solid var(--ink); border-radius: 50%; background: #fff; }
 .detailRouteStop > div { min-width: 0; display: grid; gap: 3px; }
 .detailRouteTime { display: flex; align-items: baseline; gap: 7px; }
 .detailRouteStop em { color: #1f1f1f; font-size: var(--size-card); line-height: 1.18; font-style: normal; font-weight: var(--weight-heavy); font-variant-numeric: tabular-nums; }
