@@ -1,16 +1,21 @@
 .previewPage {
     min-height: 100vh;
-    background: #f3f3f3;
-    color: #222222;
-    --teal: #ff385c;
-    --teal-dark: #e00b41;
-    --teal-soft: #fff0f3;
-    --ink: #222222;
-    --muted: #6a6a6a;
-    --line: #dddddd;
-    --text-secondary: #5f5f5f;
-    --text-muted: #858585;
-    --text-faint: #999999;
+    background: #f2f2ee;
+    color: #17181d;
+    --brand: #4937e8;
+    --brand-dark: #3525bb;
+    --brand-soft: #f0eeff;
+    --drop: #d9ff43;
+    --drop-ink: #202600;
+    --urgent: #ee5265;
+    --urgent-dark: #c83249;
+    --urgent-soft: #fff0f2;
+    --ink: #17181d;
+    --muted: #63666f;
+    --line: #e7e7e2;
+    --text-secondary: #565962;
+    --text-muted: #7d8088;
+    --text-faint: #9698a0;
     --size-micro: 10px;
     --size-caption: 11px;
     --size-meta: 12px;
@@ -35,8 +40,8 @@
     box-shadow: 0 0 48px rgba(34, 34, 34, 0.11);
 }
 
-.previewPage :global(.logo-container stop:first-child) { stop-color: #ff385c; }
-.previewPage :global(.logo-container stop:last-child) { stop-color: #e00b41; }
+.previewPage :global(.logo-container stop:first-child) { stop-color: #604cff; }
+.previewPage :global(.logo-container stop:last-child) { stop-color: #3525bb; }
 
 .header {
     position: sticky;
@@ -48,7 +53,7 @@
     align-items: center;
     justify-content: space-between;
     background: rgba(255, 255, 255, 0.94);
-    border-bottom: 1px solid rgba(221, 221, 221, 0.88);
+    border-bottom: 1px solid rgba(231, 231, 226, 0.9);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
 }
@@ -67,12 +72,12 @@
     border-radius: 999px;
 }
 
-.iconButton { width: 36px; color: #3f3f3f; }
+.iconButton { width: 36px; color: #35373e; }
 .iconButton svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.9; }
-.alertButton { padding: 0 13px; background: var(--teal-soft); color: var(--teal-dark); font-size: var(--size-meta); font-weight: var(--weight-bold); }
-.accountIconButton { position: relative; width: 36px; border: 1px solid var(--line); background: #fff; color: #444; }
+.alertButton { padding: 0 13px; background: var(--brand-soft); color: var(--brand-dark); font-size: var(--size-meta); font-weight: var(--weight-bold); }
+.accountIconButton { position: relative; width: 36px; border: 1px solid var(--line); background: #fff; color: #3f4148; }
 .accountIconButton svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
-.accountIconButton span { position: absolute; top: 4px; right: 4px; width: 6px; height: 6px; border: 1px solid white; border-radius: 50%; background: var(--teal); }
+.accountIconButton span { position: absolute; top: 4px; right: 4px; width: 6px; height: 6px; border: 1px solid white; border-radius: 50%; background: var(--brand); }
 
 .searchRow {
     position: sticky;
@@ -88,9 +93,9 @@
     border-bottom: 1px solid var(--line);
 }
 
-.searchRow > svg { width: 18px; height: 18px; fill: none; stroke: #6a6a6a; stroke-width: 2; }
+.searchRow > svg { width: 18px; height: 18px; fill: none; stroke: var(--muted); stroke-width: 2; }
 .searchRow input { flex: 1; min-width: 0; border: 0; outline: 0; font-size: var(--size-body); color: var(--ink); }
-.searchRow button { padding: 5px; font-size: var(--size-meta); font-weight: var(--weight-medium); color: var(--teal); }
+.searchRow button { padding: 5px; font-size: var(--size-meta); font-weight: var(--weight-medium); color: var(--brand); }
 
 .feedIntro {
     padding: 19px 18px 11px;
@@ -100,7 +105,7 @@
     gap: 12px;
 }
 
-.feedIntro p { color: var(--teal); font-size: var(--size-caption); line-height: 1.3; font-weight: var(--weight-bold); letter-spacing: -0.01em; }
+.feedIntro p { color: var(--brand); font-size: var(--size-caption); line-height: 1.3; font-weight: var(--weight-bold); letter-spacing: -0.01em; }
 .feedIntro h1 { margin-top: 3px; color: var(--ink); font-size: var(--size-title); line-height: 1.3; font-weight: var(--weight-heavy); letter-spacing: -0.045em; }
 .feedIntro > span { flex-shrink: 0; padding-bottom: 2px; color: var(--text-faint); font-size: var(--size-micro); white-space: nowrap; }
 
@@ -125,29 +130,29 @@
     display: inline-flex;
     align-items: center;
     gap: 5px;
-    border: 1px solid #dddddd;
+    border: 1px solid var(--line);
     border-radius: 999px;
     background: #fff;
-    color: #3f3f3f;
+    color: #35373e;
     font-size: var(--size-meta);
     font-weight: var(--weight-medium);
 }
 .quickFilters button svg,
 .filterButton svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.8; }
-.quickFilters .activeFilter { border-color: var(--teal); background: var(--teal); color: #fff; }
+.quickFilters .activeFilter { border-color: var(--brand); background: var(--brand); color: #fff; }
 .quickFilters button { padding-right: 8px; padding-left: 8px; }
 .quickFilters .moreRegionButton { min-width: 42px; padding-right: 0; padding-left: 0; justify-content: center; font-size: 14px; line-height: 1; letter-spacing: 0; text-align: center; }
 .regionChipRail { flex: 1; min-width: 0; }
 .moreRegionInline { margin: -7px 16px 13px; display: flex; justify-content: flex-end; gap: 5px; animation: inlineFilterIn 150ms ease-out; }
-.moreRegionInline button { height: 32px; padding: 0 11px; border: 1px solid #dddddd; border-radius: 999px; background: #fff; color: var(--text-secondary); font-size: var(--size-caption); font-weight: var(--weight-medium); }
-.moreRegionInline .moreRegionActive { border-color: var(--teal); background: var(--teal-soft); color: var(--teal-dark); font-weight: var(--weight-bold); }
-.filterButton.filterHasValue { border-color: var(--teal); color: var(--teal-dark); }
+.moreRegionInline button { height: 32px; padding: 0 11px; border: 1px solid var(--line); border-radius: 999px; background: #fff; color: var(--text-secondary); font-size: var(--size-caption); font-weight: var(--weight-medium); }
+.moreRegionInline .moreRegionActive { border-color: var(--brand); background: var(--brand-soft); color: var(--brand-dark); font-weight: var(--weight-bold); }
+.filterButton.filterHasValue { border-color: var(--brand); color: var(--brand-dark); }
 .sortSelect::after { content: '⌄'; position: absolute; pointer-events: none; color: #929292; }
 .sortSelect select {
     border: 0;
     outline: 0;
     background: transparent;
-    color: #3f3f3f;
+    color: #35373e;
     font: inherit;
     font-weight: var(--weight-bold);
     appearance: none;
@@ -174,14 +179,14 @@
     position: relative;
     /* 홈을 덮는 흰 면이 카드 테두리 바깥까지 나가야 세로선이 실제로 끊긴다. */
     overflow: visible;
-    --ticket-border: #e1e1e1;
-    border: 1px solid #e1e1e1;
+    --ticket-border: #e7e7e2;
+    border: 1px solid #e7e7e2;
     border-radius: 16px;
     background: #fff;
     box-shadow: 0 4px 14px rgba(34, 34, 34, 0.045);
 }
 
-.todayPickCard { --ticket-border: #eeb0bd; border-color: #eeb0bd; box-shadow: 0 4px 14px rgba(34, 34, 34, 0.045); }
+.todayPickCard { --ticket-border: #c9dc79; border-color: #c9dc79; box-shadow: 0 5px 16px rgba(32, 38, 0, 0.06); }
 
 .cardBody {
     width: 100%;
@@ -214,7 +219,7 @@
     color: #a8a8a8;
 }
 .favoriteButton svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; }
-.favoriteButton.favoriteActive { color: var(--teal); }
+.favoriteButton.favoriteActive { color: var(--brand); }
 .favoriteButton.favoriteActive svg { fill: currentColor; }
 
 .routeGrid { margin: 15px 16px 0; display: grid; grid-template-columns: minmax(0, 1fr) 48px minmax(0, 1fr); align-items: start; gap: 3px; }
@@ -229,7 +234,7 @@
 .routeConnector svg { position: relative; width: 22px; height: 22px; padding: 3px; fill: currentColor; stroke: none; border-radius: 50%; background: #fff; }
 .routeConnector span { position: absolute; top: 31px; color: var(--text-muted); font-size: var(--size-caption); line-height: 1.25; font-weight: var(--weight-regular); white-space: nowrap; }
 
-.ticketDivider { position: relative; height: 1px; margin: 14px 16px 0; border-top: 1px dashed #d6d6d6; }
+.ticketDivider { position: relative; height: 1px; margin: 14px 16px 0; border-top: 1px dashed #d8d8d2; }
 .ticketDivider::before,
 .ticketDivider::after { content: ''; position: absolute; z-index: 2; top: -9px; box-sizing: border-box; width: 10px; height: 18px; background: #fff; }
 .ticketDivider::before { left: -17px; border: 1px solid var(--ticket-border); border-left: 0; border-radius: 0 999px 999px 0; box-shadow: -2px 0 0 -1px #fff; }
@@ -237,15 +242,15 @@
 
 .cardFooter { min-height: 64px; padding: 11px 16px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .availabilityGroup { min-width: 0; flex: 1; display: flex; align-items: center; gap: 7px; }
-.todayPickBadge { height: 22px; padding: 0 7px; flex: 0 0 auto; display: inline-flex; align-items: center; border-radius: 999px; background: var(--teal); color: #fff; font-size: var(--size-micro); line-height: 1; font-weight: var(--weight-heavy); white-space: nowrap; }
+.todayPickBadge { height: 22px; padding: 0 7px; flex: 0 0 auto; display: inline-flex; align-items: center; border-radius: 999px; background: var(--drop); color: var(--drop-ink); font-size: var(--size-micro); line-height: 1; font-weight: var(--weight-heavy); white-space: nowrap; }
 .footerStatus { flex: 0 0 auto; color: var(--text-muted); font-size: var(--size-meta); line-height: 1; font-weight: var(--weight-medium); white-space: nowrap; }
-.footerStatusLow { height: 22px; padding: 0 7px; display: inline-flex; align-items: center; border-radius: 999px; background: var(--teal-soft); color: #b42343; font-weight: var(--weight-bold); }
-.footerStatusUrgent { color: #b42343; font-weight: var(--weight-bold); }
+.footerStatusLow { height: 22px; padding: 0 7px; display: inline-flex; align-items: center; border-radius: 999px; background: var(--urgent-soft); color: var(--urgent-dark); font-weight: var(--weight-bold); }
+.footerStatusUrgent { color: var(--urgent-dark); font-weight: var(--weight-bold); }
 
 .priceBlock { min-width: 0; min-height: 34px; flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; justify-content: center; text-align: right; }
 .priceLine { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
-.priceDiscountBadge { height: 20px; padding: 0 6px; display: inline-flex; align-items: center; border-radius: 6px; background: var(--teal-soft); color: var(--teal-dark); font-size: var(--size-micro); line-height: 1; font-weight: var(--weight-heavy); white-space: nowrap; }
-.priceBlock strong { display: block; color: var(--teal); font-size: var(--size-card); line-height: 1.25; font-weight: var(--weight-heavy); letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
+.priceDiscountBadge { height: 20px; padding: 0 6px; display: inline-flex; align-items: center; border-radius: 6px; background: var(--brand-soft); color: var(--brand-dark); font-size: var(--size-micro); line-height: 1; font-weight: var(--weight-heavy); white-space: nowrap; }
+.priceBlock strong { display: block; color: var(--brand); font-size: var(--size-card); line-height: 1.25; font-weight: var(--weight-heavy); letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
 .priceBlock .feeNotice { margin-top: 3px; color: var(--text-muted); font-size: var(--size-micro); letter-spacing: -0.02em; white-space: nowrap; }
 
 .insightBar {
@@ -256,7 +261,7 @@
     flex-direction: column;
     align-items: stretch;
     overflow: hidden;
-    border: 1px solid #e2e2e2;
+    border: 1px solid var(--line);
     border-radius: 16px;
     background: #fff;
     color: var(--ink);
@@ -266,7 +271,7 @@
 .insightTopline { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .insightTopline > svg { width: 16px; height: 16px; flex: 0 0 auto; fill: none; stroke: #a0a0a0; stroke-width: 1.8; }
 .insightEyebrow { display: inline-flex; align-items: center; gap: 6px; color: var(--text-secondary); font-size: var(--size-caption); line-height: 1; font-weight: var(--weight-bold); letter-spacing: -0.01em; }
-.insightEyebrow::before { width: 6px; height: 6px; flex: 0 0 auto; border-radius: 999px; background: var(--teal); content: ''; }
+.insightEyebrow::before { width: 6px; height: 6px; flex: 0 0 auto; border-radius: 999px; background: var(--brand); content: ''; }
 .insightTitle { margin-top: 8px; font-size: 17px; line-height: 1.35; font-weight: var(--weight-heavy); letter-spacing: -0.025em; }
 .insightDescription { margin-top: 4px; overflow: hidden; color: var(--text-secondary); font-size: var(--size-meta); line-height: 1.4; text-overflow: ellipsis; white-space: nowrap; }
 .insightMetric { margin-top: 12px; min-width: 0; display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
@@ -274,15 +279,15 @@
 .insightPriceTrail { flex: 0 0 auto; display: inline-flex; align-items: baseline; gap: 6px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .insightPreviousPrice { color: var(--text-faint); font-size: var(--size-meta); line-height: 1.2; font-weight: var(--weight-medium); }
 .insightPriceArrow { color: #b5b5b5; font-size: var(--size-caption); }
-.insightCurrentPrice { color: var(--teal); font-size: 18px; line-height: 1.2; font-weight: var(--weight-heavy); letter-spacing: -0.035em; }
+.insightCurrentPrice { color: var(--brand); font-size: 18px; line-height: 1.2; font-weight: var(--weight-heavy); letter-spacing: -0.035em; }
 .insightFooter { margin-top: 10px; min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 10px; color: var(--text-muted); font-size: var(--size-caption); line-height: 1.25; }
 .insightFooter > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.insightFooter > em { padding: 4px 7px; flex: 0 0 auto; border-radius: 999px; background: var(--teal-soft); color: var(--teal-dark); font-style: normal; font-weight: var(--weight-heavy); white-space: nowrap; }
-.insightDiscovery .insightEyebrow::before { background: #8b7ab8; }
-.insightOpportunity .insightEyebrow::before { background: #d18a35; }
-.insightNew .insightEyebrow::before { background: #4b8f75; }
+.insightFooter > em { padding: 4px 7px; flex: 0 0 auto; border-radius: 999px; background: var(--brand-soft); color: var(--brand-dark); font-style: normal; font-weight: var(--weight-heavy); white-space: nowrap; }
+.insightDiscovery .insightEyebrow::before,
+.insightOpportunity .insightEyebrow::before,
+.insightNew .insightEyebrow::before { background: var(--brand); }
 
-.moreButton { width: 100%; height: 46px; margin-top: 14px; border: 1px solid #dddddd; border-radius: 13px; background: #fff; color: #3f3f3f; font-size: var(--size-meta); font-weight: var(--weight-bold); }
+.moreButton { width: 100%; height: 46px; margin-top: 14px; border: 1px solid var(--line); border-radius: 13px; background: #fff; color: #35373e; font-size: var(--size-meta); font-weight: var(--weight-bold); }
 
 .skeletonCard { height: 210px; border: 1px solid #e5e5e5; border-radius: 18px; background: linear-gradient(90deg, #fff 25%, #f2f2f2 50%, #fff 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; }
 @keyframes shimmer { to { background-position: -200% 0; } }
@@ -290,10 +295,10 @@
 .emptyState { min-height: 220px; padding: 52px 20px; display: flex; flex-direction: column; align-items: center; text-align: center; }
 .emptyState strong { font-size: var(--size-section); }
 .emptyState span { margin-top: 6px; color: var(--muted); font-size: var(--size-meta); }
-.emptyState button { margin-top: 18px; padding: 9px 14px; border-radius: 9px; background: var(--teal-soft); color: var(--teal); font-size: var(--size-meta); font-weight: var(--weight-bold); }
+.emptyState button { margin-top: 18px; padding: 9px 14px; border-radius: 9px; background: var(--brand-soft); color: var(--brand); font-size: var(--size-meta); font-weight: var(--weight-bold); }
 
 .previewFooter { padding: 25px 18px 36px; display: flex; flex-direction: column; align-items: center; gap: 5px; color: var(--text-faint); font-size: var(--size-micro); }
-.previewFooter a { color: var(--teal); font-weight: var(--weight-bold); }
+.previewFooter a { color: var(--brand); font-weight: var(--weight-bold); }
 
 .floatingActions {
     position: fixed;
@@ -368,24 +373,24 @@
 .filterGroup h3 { margin-bottom: 9px; color: #3f3f3f; font-size: var(--size-meta); font-weight: var(--weight-bold); }
 .optionGrid { display: flex; flex-wrap: wrap; gap: 7px; }
 .optionGrid button { min-height: 36px; padding: 0 13px; border: 1px solid #dddddd; border-radius: 10px; background: #fff; color: #3f3f3f; font-size: var(--size-meta); font-weight: var(--weight-medium); }
-.optionGrid .optionActive { border-color: var(--teal); background: var(--teal-soft); color: var(--teal-dark); font-weight: var(--weight-bold); }
+.optionGrid .optionActive { border-color: var(--brand); background: var(--brand-soft); color: var(--brand-dark); font-weight: var(--weight-bold); }
 .dateDirectButton { width: fit-content; min-height: 36px; margin-top: 9px; padding: 0 13px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid #dddddd; border-radius: 10px; background: #fff; color: #3f3f3f; text-align: left; }
 .dateDirectButton span { flex: 0 0 auto; font-size: var(--size-body); }
 .dateDirectButton strong { font-size: var(--size-meta); font-weight: var(--weight-bold); }
-.dateDirectButton.dateDirectActive { border-color: var(--teal); color: var(--teal-dark); }
+.dateDirectButton.dateDirectActive { border-color: var(--brand); color: var(--brand-dark); }
 .dateCalendarWrap { margin-top: 8px; overflow: hidden; border: 1px solid #eeeeee; border-radius: 14px; background: #fff; }
 .dateCalendarWrap > p { margin: 0; padding: 0 12px 10px; color: var(--text-faint); font-size: var(--size-micro); text-align: center; }
 .dateCalendar { width: 100%; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; }
 .dateCalendar :global(.react-datepicker__month-container) { width: 100%; float: none; }
 .dateCalendar :global(.react-datepicker__day--in-range),
-.dateCalendar :global(.react-datepicker__day--in-selecting-range) { background-color: var(--teal-soft) !important; }
+.dateCalendar :global(.react-datepicker__day--in-selecting-range) { background-color: var(--brand-soft) !important; }
 .dateCalendar :global(.react-datepicker__day--selecting-range-start)::before,
 .dateCalendar :global(.react-datepicker__day--range-start)::before,
-.dateCalendar :global(.react-datepicker__day--range-end)::before { background-color: var(--teal) !important; }
+.dateCalendar :global(.react-datepicker__day--range-end)::before { background-color: var(--brand) !important; }
 .dateCalendar :global(.react-datepicker__day--range-start:not(.react-datepicker__day--range-end))::after,
-.dateCalendar :global(.react-datepicker__day--range-end:not(.react-datepicker__day--range-start))::after { background-color: var(--teal-soft) !important; }
-.dateCalendar :global(.react-datepicker__day--today) { color: var(--teal-dark) !important; }
-.applyButton { position: sticky; bottom: 0; width: 100%; height: 50px; margin-top: 26px; border-radius: 13px; background: var(--teal); color: #fff; font-size: var(--size-body); font-weight: var(--weight-heavy); box-shadow: 0 8px 18px rgba(255, 56, 92, 0.18); }
+.dateCalendar :global(.react-datepicker__day--range-end:not(.react-datepicker__day--range-start))::after { background-color: var(--brand-soft) !important; }
+.dateCalendar :global(.react-datepicker__day--today) { color: var(--brand-dark) !important; }
+.applyButton { position: sticky; bottom: 0; width: 100%; height: 50px; margin-top: 26px; border-radius: 13px; background: var(--brand); color: #fff; font-size: var(--size-body); font-weight: var(--weight-heavy); box-shadow: 0 8px 18px rgba(73, 55, 232, 0.2); }
 .applyButtonCalendarOpen { position: static; }
 
 .detailSheet { overflow-y: auto; }
@@ -393,14 +398,14 @@
 .detailAgencyLine { min-width: 0; display: flex; align-items: center; gap: 8px; }
 .detailAgencyLine .sourceBadge { height: 20px; font-size: var(--size-meta); }
 .detailAirline { min-width: 0; height: 20px; display: inline-flex; align-items: center; overflow: hidden; color: var(--text-secondary); font-size: var(--size-meta); line-height: 20px; font-weight: var(--weight-medium); text-overflow: ellipsis; white-space: nowrap; }
-.detailSeatCount { height: 20px; padding: 0 7px; flex: 0 0 auto; display: inline-flex; align-items: center; border-radius: 999px; background: #fff0f3; color: #b42343; font-size: var(--size-caption); line-height: 20px; font-weight: var(--weight-bold); white-space: nowrap; }
+.detailSeatCount { height: 20px; padding: 0 7px; flex: 0 0 auto; display: inline-flex; align-items: center; border-radius: 999px; background: var(--urgent-soft); color: var(--urgent-dark); font-size: var(--size-caption); line-height: 20px; font-weight: var(--weight-bold); white-space: nowrap; }
 .detailHeader > button { width: 34px; height: 34px; display: grid; place-items: center; color: #6a6a6a; }
 .detailHeader > button svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; }
 .detailTitle { margin-top: 13px; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .detailTitle p { color: var(--muted); font-size: var(--size-meta); }
 .detailTitle h2 { margin-top: 1px; font-size: var(--size-display); line-height: 1.22; font-weight: var(--weight-heavy); letter-spacing: -0.05em; }
 .detailTitle > div:last-child { flex-shrink: 0; text-align: right; }
-.detailTitle > div:last-child strong { display: block; color: var(--teal); font-size: var(--size-detail-price); line-height: 1.1; font-weight: var(--weight-heavy); letter-spacing: -0.04em; }
+.detailTitle > div:last-child strong { display: block; color: var(--brand); font-size: var(--size-detail-price); line-height: 1.1; font-weight: var(--weight-heavy); letter-spacing: -0.04em; }
 .detailTitle > div:last-child span { display: block; margin-top: 2px; color: var(--text-muted); font-size: var(--size-micro); line-height: 1.15; }
 .detailAvailabilityText { display: block; margin-top: 4px; color: var(--muted); font-size: var(--size-micro); line-height: 1.2; font-weight: var(--weight-medium); }
 
@@ -413,7 +418,7 @@
 .detailVerticalRoute { position: relative; display: grid; gap: 17px; }
 .detailVerticalRoute::before { content: ''; position: absolute; top: 8px; bottom: 8px; left: 3.5px; width: 1px; background: #d5d5d5; }
 .detailRouteStop { position: relative; display: grid; grid-template-columns: 8px minmax(0, 1fr); align-items: start; gap: 11px; }
-.detailRouteStop > span { position: relative; z-index: 1; width: 8px; height: 8px; margin-top: 5px; border: 1.5px solid #ef8fa2; border-radius: 50%; background: #fff; }
+.detailRouteStop > span { position: relative; z-index: 1; width: 8px; height: 8px; margin-top: 5px; border: 1.5px solid #8f82f4; border-radius: 50%; background: #fff; }
 .detailRouteStop > div { min-width: 0; display: grid; gap: 3px; }
 .detailRouteTime { display: flex; align-items: baseline; gap: 7px; }
 .detailRouteStop em { color: #1f1f1f; font-size: var(--size-card); line-height: 1.18; font-style: normal; font-weight: var(--weight-heavy); font-variant-numeric: tabular-nums; }
@@ -431,7 +436,7 @@
 .reportTools button { min-height: 22px; padding: 0 2px; color: #8d836e; font-size: var(--size-micro); line-height: 1; font-weight: var(--weight-medium); text-decoration: underline; text-decoration-color: #cfc4ab; text-underline-offset: 2px; }
 .reportTools button:hover { color: #666666; text-decoration-color: #999999; }
 .reportTools span { font-size: var(--size-micro); }
-.bookingButton { height: 54px; margin-top: 14px; display: flex; align-items: center; justify-content: center; gap: 6px; border-radius: 14px; background: var(--teal); color: #fff; font-size: var(--size-body); font-weight: var(--weight-heavy); box-shadow: 0 8px 18px rgba(255, 56, 92, 0.18); }
+.bookingButton { height: 54px; margin-top: 14px; display: flex; align-items: center; justify-content: center; gap: 6px; border-radius: 14px; background: var(--brand); color: #fff; font-size: var(--size-body); font-weight: var(--weight-heavy); box-shadow: 0 8px 18px rgba(73, 55, 232, 0.2); }
 .bookingButton:hover { color: #fff; }
 .bookingButton svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; }
 .detailSecondaryActions { margin-top: 9px; display: grid; grid-template-columns: minmax(0, 1fr) 88px; align-items: stretch; gap: 8px; }
