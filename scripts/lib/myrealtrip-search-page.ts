@@ -3,6 +3,7 @@ import type { Page } from 'playwright';
 export interface FlightResult {
     price: number;
     airline: string;
+    availableSeats?: number;
     depTime: string;
     arrTime: string;
     duration: string;
@@ -12,6 +13,13 @@ export interface FlightResult {
 }
 
 const RESULT_BUTTON_SELECTOR = 'button[aria-label*="항공권"][aria-label*="원 선택"]';
+const SEAT_PATTERN_SOURCE = String.raw`(?:잔여\s*(\d{1,3})석|(\d{1,3})석\s*남음)`;
+
+export function parseMyrealtripAvailableSeats(text: string): number | undefined {
+    const match = text.match(new RegExp(SEAT_PATTERN_SOURCE));
+    const seats = Number(match?.[1] || match?.[2]);
+    return Number.isInteger(seats) && seats > 0 && seats <= 999 ? seats : undefined;
+}
 
 /**
  * 마이리얼트립 검색 결과에서 왕복 최저가와 시간을 읽는다.
@@ -51,10 +59,11 @@ export async function getMyrealtripSearchPrice(
         // 빠르게 넘어가 차단 가능성을 높이지 않도록 요청 간격도 확보한다.
         await page.waitForTimeout(3000 + Math.random() * 3000);
 
-        const results: FlightResult[] = await page.evaluate((buttonSelector) => {
+        const results: FlightResult[] = await page.evaluate(({ buttonSelector, seatPatternSource }) => {
             type ParsedFlight = {
                 price: number;
                 airline: string;
+                availableSeats?: number;
                 depTime: string;
                 arrTime: string;
                 duration: string;
@@ -83,10 +92,15 @@ export async function getMyrealtripSearchPrice(
                     .trim();
                 const timeMatches = summaryText.match(/\b\d{2}:\d{2}\b/g) || [];
                 const durationMatches = summaryText.match(/\d+시간(?:\s*\d+분)?/g) || [];
+                const seatMatch = summaryText.match(new RegExp(seatPatternSource));
+                const parsedSeats = Number(seatMatch?.[1] || seatMatch?.[2]);
 
                 const flight = {
                     price,
                     airline,
+                    availableSeats: Number.isInteger(parsedSeats) && parsedSeats > 0 && parsedSeats <= 999
+                        ? parsedSeats
+                        : undefined,
                     depTime: timeMatches[0] || '',
                     arrTime: timeMatches[1] || '',
                     duration: durationMatches[0] || '',
@@ -124,10 +138,15 @@ export async function getMyrealtripSearchPrice(
                     ) || '';
                     const timeMatches = text.match(/\b\d{2}:\d{2}\b/g) || [];
                     const durationMatches = text.match(/\d+시간(?:\s*\d+분)?/g) || [];
+                    const seatMatch = text.match(new RegExp(seatPatternSource));
+                    const parsedSeats = Number(seatMatch?.[1] || seatMatch?.[2]);
 
                     const flight = {
                         price,
                         airline,
+                        availableSeats: Number.isInteger(parsedSeats) && parsedSeats > 0 && parsedSeats <= 999
+                            ? parsedSeats
+                            : undefined,
                         depTime: timeMatches[0] || '',
                         arrTime: timeMatches[1] || '',
                         duration: durationMatches[0] || '',
@@ -148,7 +167,7 @@ export async function getMyrealtripSearchPrice(
             const target = directFlights.length > 0 ? directFlights : allFlights;
             target.sort((a, b) => a.price - b.price);
             return target.slice(0, 3);
-        }, RESULT_BUTTON_SELECTOR);
+        }, { buttonSelector: RESULT_BUTTON_SELECTOR, seatPatternSource: SEAT_PATTERN_SOURCE });
 
         return results[0] || null;
     } catch (error) {

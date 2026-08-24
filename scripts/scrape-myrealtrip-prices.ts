@@ -243,6 +243,7 @@ async function main() {
     let updated = 0;
     let priceUp = 0;
     let priceDown = 0;
+    let seatsUpdated = 0;
     // 전체 장애가 아닌 개별 조회 실패는 오래된 Calendar API 가격으로 노출하지 않는다.
     // 대량 실패 안전장치를 통과한 뒤에만 실제 화면에서 확인된 항공권만 남긴다.
     const verifiedIds = new Set(results.keys());
@@ -272,6 +273,15 @@ async function main() {
             cache.flights[idx].arrival.time = result.retDepTime;
             cache.flights[idx].arrival.arrivalTime = result.retArrTime;
             cache.flights[idx].returnDuration = result.retDuration;
+            if (result.availableSeats !== undefined) {
+                cache.flights[idx].availableSeats = result.availableSeats;
+                cache.flights[idx].seats = `${result.availableSeats}석 남음`;
+                seatsUpdated++;
+            } else {
+                // 잔여 좌석은 실시간 정보라 이번 화면에서 확인하지 못한 이전 값을 재사용하지 않는다.
+                delete cache.flights[idx].availableSeats;
+                delete cache.flights[idx].seats;
+            }
 
             const diff = Math.abs(result.price - oldPrice);
             if (diff > 5000) {
@@ -360,6 +370,7 @@ async function main() {
     console.log(`소요: ${elapsed}분`);
     console.log(`검증: ${results.size}/${tasks.length}개 성공`);
     console.log(`보정: ${updated}개 (↑${priceUp} ↓${priceDown})`);
+    console.log(`잔여 좌석: ${seatsUpdated}/${updated}개 확인`);
     console.log(`표시 제외: ${unverifiedRemoved}개`);
     if (benchmarkFiltered > 0) console.log(`인터파크 필터: ${benchmarkFiltered}개 제거`);
 }

@@ -9,6 +9,8 @@ interface CachedFlight {
     airline: string;
     price: number;
     priceCheckedAt?: string;
+    availableSeats?: number;
+    seats?: string;
     departure: { airport: string; date: string; time: string; arrivalTime?: string };
     arrival: { airport: string; date: string; time: string; arrivalTime?: string };
     duration?: string;
@@ -74,6 +76,13 @@ async function main() {
             target.arrival.arrivalTime = result.retArrTime;
             target.duration = result.duration;
             target.returnDuration = result.retDuration;
+            if (result.availableSeats !== undefined) {
+                target.availableSeats = result.availableSeats;
+                target.seats = `${result.availableSeats}석 남음`;
+            } else {
+                delete target.availableSeats;
+                delete target.seats;
+            }
             target.priceCheckedAt = checkedAt;
             fs.writeFileSync(cachePath, JSON.stringify(cache, null, 2));
             console.log(`✅ 마이리얼트립 실제 결과 확인: ${result.price.toLocaleString()}원`);
