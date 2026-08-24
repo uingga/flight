@@ -1,16 +1,16 @@
 .previewPage {
     min-height: 100vh;
-    background: #f2f2ee;
+    background: #f2f2f2;
     color: #17181d;
     --brand: #20211d;
     --brand-dark: #11120f;
-    --brand-soft: #f1f2ec;
-    --drop: #cfff3c;
-    --drop-soft: #f3ffd0;
-    --drop-ink: #202600;
-    --drop-dark: #607900;
-    --urgent: #ee5265;
-    --urgent-dark: #c83249;
+    --brand-soft: #f2f2f2;
+    --festival-blue: #174bff;
+    --festival-green: #42f56c;
+    --festival-pink: #f04dd5;
+    --festival-yellow: #ffe600;
+    --urgent: #ff4d34;
+    --urgent-dark: #cf2f1c;
     --urgent-soft: #fff0f2;
     --ink: #17181d;
     --muted: #63666f;
@@ -42,8 +42,8 @@
     box-shadow: 0 0 48px rgba(34, 34, 34, 0.11);
 }
 
-.previewPage :global(.logo-container stop:first-child) { stop-color: #b2df1a; }
-.previewPage :global(.logo-container stop:last-child) { stop-color: #607900; }
+.previewPage :global(.logo-container stop:first-child) { stop-color: #174bff; }
+.previewPage :global(.logo-container stop:last-child) { stop-color: #174bff; }
 
 .header {
     position: sticky;
@@ -76,10 +76,10 @@
 
 .iconButton { width: 36px; color: #35373e; }
 .iconButton svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.9; }
-.alertButton { padding: 0 13px; background: var(--drop-soft); color: var(--drop-dark); font-size: var(--size-meta); font-weight: var(--weight-bold); }
+.alertButton { padding: 0 13px; background: var(--festival-yellow); color: var(--ink); font-size: var(--size-meta); font-weight: var(--weight-bold); }
 .accountIconButton { position: relative; width: 36px; border: 1px solid var(--line); background: #fff; color: #3f4148; }
 .accountIconButton svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
-.accountIconButton span { position: absolute; top: 4px; right: 4px; width: 6px; height: 6px; border: 1px solid white; border-radius: 50%; background: var(--drop-dark); }
+.accountIconButton span { position: absolute; top: 4px; right: 4px; width: 6px; height: 6px; border: 1px solid white; border-radius: 50%; background: var(--festival-pink); }
 
 .searchRow {
     position: sticky;
@@ -107,7 +107,7 @@
     gap: 12px;
 }
 
-.feedIntro p { color: var(--drop-dark); font-size: var(--size-caption); line-height: 1.3; font-weight: var(--weight-bold); letter-spacing: -0.01em; }
+.feedIntro p { color: var(--festival-blue); font-size: var(--size-caption); line-height: 1.3; font-weight: var(--weight-bold); letter-spacing: -0.01em; }
 .feedIntro h1 { margin-top: 3px; color: var(--ink); font-size: var(--size-title); line-height: 1.3; font-weight: var(--weight-heavy); letter-spacing: -0.045em; }
 .feedIntro > span { flex-shrink: 0; padding-bottom: 2px; color: var(--text-faint); font-size: var(--size-micro); white-space: nowrap; }
 
@@ -188,7 +188,7 @@
     box-shadow: 0 4px 14px rgba(34, 34, 34, 0.045);
 }
 
-.todayPickCard { --ticket-border: #c9dc79; border-color: #c9dc79; box-shadow: 0 5px 16px rgba(32, 38, 0, 0.06); }
+.todayPickCard { --ticket-border: var(--festival-blue); border-color: var(--festival-blue); box-shadow: none; }
 
 .cardBody {
     width: 100%;
@@ -244,7 +244,7 @@
 
 .cardFooter { min-height: 64px; padding: 11px 16px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .availabilityGroup { min-width: 0; flex: 1; display: flex; align-items: center; gap: 7px; }
-.todayPickBadge { height: 22px; padding: 0 7px; flex: 0 0 auto; display: inline-flex; align-items: center; border-radius: 999px; background: var(--drop); color: var(--drop-ink); font-size: var(--size-micro); line-height: 1; font-weight: var(--weight-heavy); white-space: nowrap; }
+.todayPickBadge { height: 22px; padding: 0 7px; flex: 0 0 auto; display: inline-flex; align-items: center; border-radius: 999px; background: var(--festival-yellow); color: var(--ink); font-size: var(--size-micro); line-height: 1; font-weight: var(--weight-heavy); white-space: nowrap; }
 .footerStatus { flex: 0 0 auto; color: var(--text-muted); font-size: var(--size-meta); line-height: 1; font-weight: var(--weight-medium); white-space: nowrap; }
 .footerStatusLow { height: 22px; padding: 0 7px; display: inline-flex; align-items: center; border-radius: 999px; background: var(--urgent-soft); color: var(--urgent-dark); font-weight: var(--weight-bold); }
 .footerStatusUrgent { color: var(--urgent-dark); font-weight: var(--weight-bold); }
@@ -255,6 +255,12 @@
 .priceBlock strong { display: block; color: var(--brand); font-size: var(--size-card); line-height: 1.25; font-weight: var(--weight-heavy); letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
 .priceBlock .feeNotice { margin-top: 3px; color: var(--text-muted); font-size: var(--size-micro); letter-spacing: -0.02em; white-space: nowrap; }
 
+.todayPickCard .cardFooter { background: var(--festival-blue); border-radius: 0 0 15px 15px; }
+.todayPickCard .footerStatusLow { background: #fff; color: var(--ink); }
+.todayPickCard .priceDiscountBadge { background: var(--festival-pink); color: var(--ink); }
+.todayPickCard .priceBlock strong { color: #fff; }
+.todayPickCard .priceBlock .feeNotice { color: rgba(255, 255, 255, 0.72); }
+
 .insightBar {
     width: 100%;
     min-height: 142px;
@@ -263,17 +269,17 @@
     flex-direction: column;
     align-items: stretch;
     overflow: hidden;
-    border: 1px solid var(--line);
-    border-radius: 16px;
+    border: 1px solid var(--ink);
+    border-radius: 12px;
     background: #fff;
     color: var(--ink);
     text-align: left;
-    box-shadow: 0 4px 16px rgba(34, 34, 34, 0.045);
+    box-shadow: none;
 }
 .insightTopline { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .insightTopline > svg { width: 16px; height: 16px; flex: 0 0 auto; fill: none; stroke: #a0a0a0; stroke-width: 1.8; }
 .insightEyebrow { display: inline-flex; align-items: center; gap: 6px; color: var(--text-secondary); font-size: var(--size-caption); line-height: 1; font-weight: var(--weight-bold); letter-spacing: -0.01em; }
-.insightEyebrow::before { width: 6px; height: 6px; flex: 0 0 auto; border-radius: 999px; background: var(--drop-dark); content: ''; }
+.insightEyebrow::before { width: 6px; height: 6px; flex: 0 0 auto; border-radius: 999px; background: currentColor; content: ''; }
 .insightTitle { margin-top: 8px; font-size: 17px; line-height: 1.35; font-weight: var(--weight-heavy); letter-spacing: -0.025em; }
 .insightDescription { margin-top: 4px; overflow: hidden; color: var(--text-secondary); font-size: var(--size-meta); line-height: 1.4; text-overflow: ellipsis; white-space: nowrap; }
 .insightMetric { margin-top: 12px; min-width: 0; display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
@@ -281,13 +287,35 @@
 .insightPriceTrail { flex: 0 0 auto; display: inline-flex; align-items: baseline; gap: 6px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .insightPreviousPrice { color: var(--text-faint); font-size: var(--size-meta); line-height: 1.2; font-weight: var(--weight-medium); }
 .insightPriceArrow { color: #b5b5b5; font-size: var(--size-caption); }
-.insightCurrentPrice { color: var(--brand); font-size: 18px; line-height: 1.2; font-weight: var(--weight-heavy); letter-spacing: -0.035em; }
+.insightCurrentPrice { color: currentColor; font-size: 18px; line-height: 1.2; font-weight: var(--weight-heavy); letter-spacing: -0.035em; }
 .insightFooter { margin-top: 10px; min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 10px; color: var(--text-muted); font-size: var(--size-caption); line-height: 1.25; }
 .insightFooter > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.insightFooter > em { padding: 4px 7px; flex: 0 0 auto; border-radius: 999px; background: var(--brand-soft); color: var(--brand-dark); font-style: normal; font-weight: var(--weight-heavy); white-space: nowrap; }
-.insightDiscovery .insightEyebrow::before,
-.insightOpportunity .insightEyebrow::before,
-.insightNew .insightEyebrow::before { background: var(--drop-dark); }
+.insightFooter > em { padding: 4px 7px; flex: 0 0 auto; border-radius: 999px; background: var(--ink); color: #fff; font-style: normal; font-weight: var(--weight-heavy); white-space: nowrap; }
+.insightPrice { background: var(--festival-pink); }
+.insightOpportunity { background: var(--festival-yellow); }
+.insightNew { background: var(--festival-green); }
+.insightDiscovery { background: var(--festival-blue); color: #fff; }
+.insightPrice .insightEyebrow,
+.insightPrice .insightDescription,
+.insightPrice .insightPreviousPrice,
+.insightPrice .insightPriceArrow,
+.insightPrice .insightFooter,
+.insightOpportunity .insightEyebrow,
+.insightOpportunity .insightDescription,
+.insightOpportunity .insightPreviousPrice,
+.insightOpportunity .insightPriceArrow,
+.insightOpportunity .insightFooter,
+.insightNew .insightEyebrow,
+.insightNew .insightDescription,
+.insightNew .insightPreviousPrice,
+.insightNew .insightPriceArrow,
+.insightNew .insightFooter { color: rgba(17, 17, 17, 0.72); }
+.insightDiscovery .insightEyebrow,
+.insightDiscovery .insightDescription,
+.insightDiscovery .insightPreviousPrice,
+.insightDiscovery .insightPriceArrow,
+.insightDiscovery .insightFooter { color: rgba(255, 255, 255, 0.78); }
+.insightDiscovery .insightFooter > em { background: #fff; color: var(--ink); }
 
 .moreButton { width: 100%; height: 46px; margin-top: 14px; border: 1px solid var(--line); border-radius: 13px; background: #fff; color: #35373e; font-size: var(--size-meta); font-weight: var(--weight-bold); }
 
