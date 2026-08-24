@@ -6,7 +6,6 @@ import { ko } from 'date-fns/locale';
 import 'react-datepicker/dist/react-datepicker.css';
 import Logo from '@/components/Logo';
 import * as gtag from '@/lib/analytics';
-import { getDestinationContext } from '@/lib/destination-contexts';
 import { calcFlightTiming, normalizeCity } from '@/lib/utils/flight-helpers';
 import { getTripcomHotelUrl, getTripcomTrackingId } from '@/lib/utils/tripcom-helpers';
 import type { Flight } from '@/types/flight';
@@ -40,7 +39,8 @@ type PriceHistory = Record<string, PriceHistoryEntry[]>;
 
 interface FeedInsight {
     id: string;
-    kind: 'price' | 'opportunity' | 'discovery' | 'new';
+    kind: 'price' | 'stay' | 'schedule' | 'timing' | 'airport' | 'discovery' | 'new' | 'opportunity';
+    editorial?: boolean;
     eyebrow: string;
     title: string;
     flight: Flight;
@@ -228,16 +228,6 @@ const diversifyFlights = (items: Flight[], topWindow = 24, maxPerDestination = 2
     return result;
 };
 
-const uniqueDestinations = (items: Flight[], limit = 3) => {
-    const seen = new Set<string>();
-    return items.filter(flight => {
-        const destination = normalizeCity(flight.arrival.city);
-        if (seen.has(destination)) return false;
-        seen.add(destination);
-        return true;
-    }).slice(0, limit);
-};
-
 const airportLabel = (city: string, airport?: string) => (
     airport ? `${city}(${airport})` : city
 );
@@ -356,6 +346,94 @@ const recommendedScore = (flight: Flight) => {
     const discount = Math.max(0, flight.discountRate || 0);
     const seatBonus = flight.availableSeats && flight.availableSeats <= 9 ? 8 : 0;
     return effectivePrice(flight) - discount * 2_500 - seatBonus * 1_000;
+};
+
+const clockMinutes = (value?: string) => {
+    const match = value?.match(/(\d{1,2}):(\d{2})/);
+    if (!match) return null;
+    const hours = Number(match[1]);
+    const minutes = Number(match[2]);
+    if (hours > 23 || minutes > 59) return null;
+    return hours * 60 + minutes;
+};
+
+const daysBetweenDates = (start?: string, end?: string) => {
+    const startDate = start ? parseDate(start) : null;
+    const endDate = end ? parseDate(end) : null;
+    if (!startDate || !endDate) return null;
+    return Math.round((endDate.getTime() - startDate.getTime()) / 86_400_000);
+};
+
+const outboundArrivalTime = (flight: Flight) => (
+    flight.modetourDetail?.departureArrivalTime || flight.departure.arrivalTime || ''
+);
+
+const returnDepartureTime = (flight: Flight) => (
+    flight.modetourDetail?.returnDepartureTime || flight.arrival.time || ''
+);
+
+const returnArrivalTime = (flight: Flight) => (
+    flight.modetourDetail?.returnArrivalTime || flight.arrival.arrivalTime || ''
+);
+
+const onsiteStayMinutes = (flight: Flight) => {
+    const tripDays = daysBetweenDates(flight.departure.date, flight.arrival.date);
+    const arrivalTime = outboundArrivalTime(flight);
+    const returnTime = returnDepartureTime(flight);
+    const arrivalMinutes = clockMinutes(arrivalTime);
+    const returnMinutes = clockMinutes(returnTime);
+    if (tripDays === null || arrivalMinutes === null || returnMinutes === null) return null;
+
+    const timing = calcFlightTiming(
+        departureName(flight),
+        flight.departure.time,
+        flight.departure.date,
+        stripAirport(flight.arrival.city),
+        arrivalTime,
+    );
+    const arrivalDayOffset = timing?.arrivalDayOffset
+        ?? fallbackArrivalDayOffset(flight.departure.time, arrivalTime);
+    const minutes = (tripDays - arrivalDayOffset) * 1_440 + returnMinutes - arrivalMinutes;
+    return minutes >= 12 * 60 && minutes <= 10 * 24 * 60 ? minutes : null;
+};
+
+const returnArrivalDate = (flight: Flight) => {
+    const returnDate = parseDate(flight.arrival.date);
+    const departureTime = returnDepartureTime(flight);
+    const arrivalTime = returnArrivalTime(flight);
+    if (!returnDate || clockMinutes(departureTime) === null || clockMinutes(arrivalTime) === null) return null;
+    const timing = calcFlightTiming(
+        stripAirport(flight.arrival.city),
+        departureTime,
+        flight.arrival.date,
+        departureName(flight),
+        arrivalTime,
+    );
+    return addDays(returnDate, timing?.arrivalDayOffset ?? fallbackArrivalDayOffset(departureTime, arrivalTime));
+};
+
+const isZeroPtoSchedule = (flight: Flight) => {
+    const departureDate = parseDate(flight.departure.date);
+    const departureMinutes = clockMinutes(flight.departure.time);
+    const homeArrivalDate = returnArrivalDate(flight);
+    return !!departureDate
+        && departureDate.getDay() === 5
+        && departureMinutes !== null
+        && departureMinutes >= 18 * 60
+        && !!homeArrivalDate
+        && homeArrivalDate.getDay() === 0;
+};
+
+const harshScheduleDetail = (flight: Flight) => {
+    const outboundDeparture = clockMinutes(flight.departure.time);
+    const outboundArrival = clockMinutes(outboundArrivalTime(flight));
+    const inboundDeparture = clockMinutes(returnDepartureTime(flight));
+    const inboundArrival = clockMinutes(returnArrivalTime(flight));
+    if (outboundDeparture !== null && outboundDeparture < 7 * 60) return `가는 편 ${flight.departure.time} 출발`;
+    if (outboundArrival !== null && (outboundArrival < 5 * 60 || outboundArrival >= 23 * 60)) return `가는 편 ${outboundArrivalTime(flight)} 도착`;
+    if (inboundDeparture !== null && inboundDeparture < 7 * 60) return `오는 편 ${returnDepartureTime(flight)} 출발`;
+    if (inboundArrival !== null && (inboundArrival < 5 * 60 || inboundArrival >= 23 * 60)) return `오는 편 ${returnArrivalTime(flight)} 도착`;
+    return null;
 };
 
 // 상단 경보는 평범한 오늘의 표가 아니라, 가격과 할인폭이 함께 드문 경우에만 켠다.
@@ -542,7 +620,15 @@ export default function MobileRedesignPreview() {
     const feedInsights = useMemo<FeedInsight[]>(() => {
         if (sort !== 'recommended' || query.trim()) return [];
 
+        type PriceDropCandidate = {
+            flight: Flight;
+            drop: number;
+            previousPrice: number;
+            currentPrice: number;
+            score: number;
+        };
         const insights: FeedInsight[] = [];
+        let bestPriceDrop: PriceDropCandidate | null = null;
         const routeHistory = normalizedHistory(priceHistory);
         const historyDates = Array.from(new Set(
             Object.values(routeHistory).flatMap(entries => entries.map(entry => entry.date)),
@@ -580,25 +666,18 @@ export default function MobileRedesignPreview() {
             }).sort((a, b) => b.score - a.score);
 
             const bestDrop = drops[0];
+            bestPriceDrop = bestDrop || null;
             if (bestDrop) {
-                const latestDate = parseDate(latestHistoryDate);
-                const previousDate = parseDate(previousHistoryDate);
-                const isConsecutive = latestDate && previousDate
-                    ? Math.round((latestDate.getTime() - previousDate.getTime()) / 86_400_000) === 1
-                    : false;
                 insights.push({
                     id: 'price-drop',
                     kind: 'price',
-                    eyebrow: '노선 최저가 변화',
-                    title: latestHistoryDate === dateKey(new Date()) && isConsecutive
-                        ? '오늘 가격이 크게 떨어졌어요'
-                        : '최근 가격이 크게 떨어졌어요',
+                    eyebrow: '가격 변화',
+                    title: `${compactWon(bestDrop.drop)} 내림`,
                     flight: bestDrop.flight,
                     destination: stripAirport(bestDrop.flight.arrival.city),
                     previousPrice: bestDrop.previousPrice,
                     currentPrice: bestDrop.currentPrice,
                     meta: `${departureName(bestDrop.flight)} 출발 · ${cardDate(bestDrop.flight.departure.date)}`,
-                    badge: `${compactWon(bestDrop.drop)} 내림`,
                 });
             }
         }
@@ -607,105 +686,248 @@ export default function MobileRedesignPreview() {
             insights.map(insight => normalizeCity(insight.flight.arrival.city)),
         );
 
-        const discoveryFlight = displayedFlights.find(flight => {
-            const destination = normalizeCity(flight.arrival.city);
-            return effectivePrice(flight) <= 350_000
-                && !usedDestinations.has(destination)
-                && !!getDestinationContext(flight.arrival.city);
-        });
-        if (discoveryFlight) {
-            const context = getDestinationContext(discoveryFlight.arrival.city);
-            if (context) {
-                insights.push({
-                    id: 'destination-discovery',
-                    kind: 'discovery',
-                    eyebrow: '여행지 발견',
-                    title: `${stripAirport(discoveryFlight.arrival.city)}, 이런 곳이에요`,
-                    description: context.location,
-                    flight: discoveryFlight,
-                    destination: stripAirport(discoveryFlight.arrival.city),
-                    currentPrice: effectivePrice(discoveryFlight),
-                    meta: `${departureName(discoveryFlight)} 출발 · ${cardDate(discoveryFlight.departure.date)}`,
-                });
-                usedDestinations.add(normalizeCity(discoveryFlight.arrival.city));
+        const stayCandidates = displayedFlights.flatMap(flight => {
+            const minutes = onsiteStayMinutes(flight);
+            const nights = daysBetweenDates(flight.departure.date, flight.arrival.date);
+            if (minutes === null || nights !== 3 || effectivePrice(flight) > 350_000) return [];
+            const hours = Math.round(minutes / 60);
+            if (hours < 48) return [];
+            return [{ flight, hours, score: hours - effectivePrice(flight) / 20_000 }];
+        }).sort((a, b) => b.score - a.score);
+
+        const zeroPtoCandidates = displayedFlights
+            .filter(flight => isZeroPtoSchedule(flight) && effectivePrice(flight) <= 350_000)
+            .sort((a, b) => effectivePrice(a) - effectivePrice(b));
+
+        const harshCandidates = displayedFlights.flatMap(flight => {
+            const detail = harshScheduleDetail(flight);
+            const attractive = effectivePrice(flight) <= 220_000 || Math.max(0, flight.discountRate || 0) >= 20;
+            return detail && attractive ? [{ flight, detail }] : [];
+        }).sort((a, b) => recommendedScore(a.flight) - recommendedScore(b.flight));
+
+        const airportComparisons: Array<{
+            cheaper: Flight;
+            expensive: Flight;
+            saving: number;
+            savingRate: number;
+        }> = [];
+        for (let leftIndex = 0; leftIndex < displayedFlights.length; leftIndex += 1) {
+            for (let rightIndex = leftIndex + 1; rightIndex < displayedFlights.length; rightIndex += 1) {
+                const left = displayedFlights[leftIndex];
+                const right = displayedFlights[rightIndex];
+                if (normalizeCity(left.arrival.city) !== normalizeCity(right.arrival.city)) continue;
+                if (departureName(left) === departureName(right)) continue;
+                const departureGapDays = daysBetweenDates(left.departure.date, right.departure.date);
+                const leftNights = daysBetweenDates(left.departure.date, left.arrival.date);
+                const rightNights = daysBetweenDates(right.departure.date, right.arrival.date);
+                if (departureGapDays === null || Math.abs(departureGapDays) > 1 || leftNights === null || leftNights !== rightNights) continue;
+                const cheaper = effectivePrice(left) <= effectivePrice(right) ? left : right;
+                const expensive = cheaper === left ? right : left;
+                const saving = effectivePrice(expensive) - effectivePrice(cheaper);
+                const savingRate = saving / effectivePrice(expensive);
+                if (effectivePrice(cheaper) > 350_000 || saving < 50_000 || savingRate < 0.2) continue;
+                airportComparisons.push({ cheaper, expensive, saving, savingRate });
             }
         }
+        airportComparisons.sort((a, b) => b.savingRate - a.savingRate || b.saving - a.saving);
 
-        const now = new Date();
-        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12);
-        const saturday = addDays(today, (6 - today.getDay() + 7) % 7);
-        const sunday = addDays(saturday, 1);
-        const weekendFlights = uniqueDestinations(displayedFlights.filter(flight => {
-            const departureDate = parseDate(flight.departure.date);
-            return departureDate
-                && departureDate >= saturday
-                && departureDate <= sunday
-                && !usedDestinations.has(normalizeCity(flight.arrival.city));
-        }).sort((a, b) => effectivePrice(a) - effectivePrice(b)));
-        const soonEnd = addDays(today, 3);
-        const soonFlights = uniqueDestinations(displayedFlights.filter(flight => {
-            const departureDate = parseDate(flight.departure.date);
-            return departureDate
-                && departureDate >= today
-                && departureDate <= soonEnd
-                && !usedDestinations.has(normalizeCity(flight.arrival.city));
-        }).sort((a, b) => effectivePrice(a) - effectivePrice(b)));
-        const cheapFlights = uniqueDestinations(displayedFlights.filter(flight => (
-            effectivePrice(flight) < 200_000
-            && !usedDestinations.has(normalizeCity(flight.arrival.city))
-        ))
-            .sort((a, b) => effectivePrice(a) - effectivePrice(b)));
-
-        const opportunity = weekendFlights.length > 0
-            ? { title: '이번 주말에 출발할 수 있어요', flight: weekendFlights[0] }
-            : soonFlights.length > 0
-                ? { title: '3일 안에 출발할 수 있어요', flight: soonFlights[0] }
-                : cheapFlights.length > 0
-                    ? { title: '20만원 아래로 떠날 수 있어요', flight: cheapFlights[0] }
-                    : null;
-        if (opportunity) {
-            const flight = opportunity.flight;
+        const factStay = stayCandidates.find(candidate => (
+            !usedDestinations.has(normalizeCity(candidate.flight.arrival.city))
+        ));
+        if (factStay) {
             insights.push({
-                id: 'opportunity',
-                kind: 'opportunity',
-                eyebrow: '지금 가능한 여행',
-                title: opportunity.title,
-                flight,
-                destination: stripAirport(flight.arrival.city),
-                currentPrice: effectivePrice(flight),
-                meta: `${departureName(flight)} 출발 · ${cardDate(flight.departure.date)}`,
+                id: 'stay-time',
+                kind: 'stay',
+                eyebrow: '여행 시간',
+                title: `현지 체류 ${factStay.hours}시간`,
+                description: `${outboundArrivalTime(factStay.flight)} 도착 · ${returnDepartureTime(factStay.flight)} 출발`,
+                flight: factStay.flight,
+                destination: stripAirport(factStay.flight.arrival.city),
+                currentPrice: effectivePrice(factStay.flight),
+                meta: `${departureName(factStay.flight)} 출발 · ${tripLength(factStay.flight)}`,
             });
-            usedDestinations.add(normalizeCity(flight.arrival.city));
+            usedDestinations.add(normalizeCity(factStay.flight.arrival.city));
+        }
+
+        const factAirport = airportComparisons.find(candidate => (
+            !usedDestinations.has(normalizeCity(candidate.cheaper.arrival.city))
+        ));
+        if (factAirport) {
+            insights.push({
+                id: 'airport-price-gap',
+                kind: 'airport',
+                eyebrow: '출발지 차이',
+                title: `${compactWon(factAirport.saving)} 낮음`,
+                description: `${departureName(factAirport.expensive)} 대신 ${departureName(factAirport.cheaper)} 출발`,
+                flight: factAirport.cheaper,
+                destination: stripAirport(factAirport.cheaper.arrival.city),
+                currentPrice: effectivePrice(factAirport.cheaper),
+                meta: `${cardDate(factAirport.cheaper.departure.date)} · ${tripLength(factAirport.cheaper) || '일정 확인'}`,
+            });
+            usedDestinations.add(normalizeCity(factAirport.cheaper.arrival.city));
+        }
+
+        const factTiming = harshCandidates.find(candidate => (
+            !usedDestinations.has(normalizeCity(candidate.flight.arrival.city))
+        ));
+        if (factTiming) {
+            insights.push({
+                id: 'awkward-time',
+                kind: 'timing',
+                eyebrow: '시간 확인',
+                title: factTiming.detail,
+                flight: factTiming.flight,
+                destination: stripAirport(factTiming.flight.arrival.city),
+                currentPrice: effectivePrice(factTiming.flight),
+                meta: `${departureName(factTiming.flight)} 출발 · ${cardDate(factTiming.flight.departure.date)}`,
+            });
+            usedDestinations.add(normalizeCity(factTiming.flight.arrival.city));
         }
 
         const latestDataDate = latestHistoryDate || lastUpdated?.slice(0, 10);
+        let verifiedNewFlight: Flight | null = null;
         if (latestDataDate) {
             const latestDate = parseDate(latestDataDate);
             const newSince = latestDate ? dateKey(addDays(latestDate, -2)) : latestDataDate;
-            const verifiedNewFlights = uniqueDestinations(displayedFlights.filter(flight => {
-                if (!flight.firstSeen || flight.firstSeen < newSince || usedDestinations.has(normalizeCity(flight.arrival.city))) return false;
+            verifiedNewFlight = displayedFlights.filter(flight => {
+                if (!flight.firstSeen || flight.firstSeen < newSince) return false;
                 const earlierRouteRecord = (routeHistory[normalizedRoute(flight)] || [])
                     .some(entry => entry.date < flight.firstSeen!);
                 return !earlierRouteRecord;
-            }).sort((a, b) => effectivePrice(a) - effectivePrice(b)));
+            }).sort((a, b) => effectivePrice(a) - effectivePrice(b))[0] || null;
+        }
 
-            if (verifiedNewFlights.length > 0) {
-                const flight = verifiedNewFlights[0];
-                insights.push({
-                    id: 'verified-new',
-                    kind: 'new',
-                    eyebrow: '새로 발견',
-                    title: '최근 처음 보인 노선이에요',
-                    flight,
-                    destination: stripAirport(flight.arrival.city),
-                    currentPrice: effectivePrice(flight),
-                    meta: `${departureName(flight)} 출발 · ${cardDate(flight.departure.date)}`,
-                    badge: 'NEW',
+        const editorialCandidates: Array<{ score: number; insight: FeedInsight }> = [];
+        if (bestPriceDrop) {
+            const dropRate = bestPriceDrop.drop / bestPriceDrop.previousPrice;
+            if (bestPriceDrop.drop >= 30_000 && dropRate >= 0.12) {
+                editorialCandidates.push({
+                    score: 100 + dropRate * 100,
+                    insight: {
+                        id: 'editorial-price-drop',
+                        kind: 'price',
+                        editorial: true,
+                        eyebrow: '가격 변화',
+                        title: '가격이 도망쳤습니다',
+                        description: `${priceText(bestPriceDrop.previousPrice)}에서 ${priceText(bestPriceDrop.currentPrice)}으로 내려왔어요`,
+                        flight: bestPriceDrop.flight,
+                        destination: stripAirport(bestPriceDrop.flight.arrival.city),
+                        previousPrice: bestPriceDrop.previousPrice,
+                        currentPrice: bestPriceDrop.currentPrice,
+                        meta: `${departureName(bestPriceDrop.flight)} 출발 · ${cardDate(bestPriceDrop.flight.departure.date)}`,
+                        badge: `${compactWon(bestPriceDrop.drop)} 내림`,
+                    },
                 });
             }
         }
 
-        return insights;
+        const airportComparison = airportComparisons[0];
+        if (airportComparison) {
+            editorialCandidates.push({
+                score: 92 + airportComparison.savingRate * 100,
+                insight: {
+                    id: 'editorial-airport',
+                    kind: 'airport',
+                    editorial: true,
+                    eyebrow: '출발지 비교',
+                    title: `오늘은 ${departureName(airportComparison.expensive)}보다 ${departureName(airportComparison.cheaper)}입니다`,
+                    description: `같은 목적지·같은 여행 기간에서 ${compactWon(airportComparison.saving)} 낮아요`,
+                    flight: airportComparison.cheaper,
+                    destination: stripAirport(airportComparison.cheaper.arrival.city),
+                    currentPrice: effectivePrice(airportComparison.cheaper),
+                    meta: `${cardDate(airportComparison.cheaper.departure.date)} · ${tripLength(airportComparison.cheaper) || '일정 확인'}`,
+                    badge: `${compactWon(airportComparison.saving)} 차이`,
+                },
+            });
+        }
+
+        const zeroPtoFlight = zeroPtoCandidates[0];
+        if (zeroPtoFlight) {
+            editorialCandidates.push({
+                score: 88 + Math.max(0, 350_000 - effectivePrice(zeroPtoFlight)) / 10_000,
+                insight: {
+                    id: 'editorial-zero-pto',
+                    kind: 'schedule',
+                    editorial: true,
+                    eyebrow: '일정 분석',
+                    title: '연차 0일 탈출',
+                    description: `금요일 ${zeroPtoFlight.departure.time} 출발 · 일요일 ${returnArrivalTime(zeroPtoFlight)} 도착`,
+                    flight: zeroPtoFlight,
+                    destination: stripAirport(zeroPtoFlight.arrival.city),
+                    currentPrice: effectivePrice(zeroPtoFlight),
+                    meta: `${departureName(zeroPtoFlight)} 출발 · ${tripLength(zeroPtoFlight) || '주말 일정'}`,
+                    badge: '연차 0일',
+                },
+            });
+        }
+
+        const stayCandidate = stayCandidates[0];
+        if (stayCandidate) {
+            editorialCandidates.push({
+                score: 80 + Math.max(0, stayCandidate.hours - 60) / 2,
+                insight: {
+                    id: 'editorial-stay-time',
+                    kind: 'stay',
+                    editorial: true,
+                    eyebrow: '여행시간 분석',
+                    title: '3박 4일이라고 다 같은 3박 4일이 아닙니다',
+                    description: `${stripAirport(stayCandidate.flight.arrival.city)}에서 실제로 쓸 수 있는 시간`,
+                    flight: stayCandidate.flight,
+                    destination: stripAirport(stayCandidate.flight.arrival.city),
+                    currentPrice: effectivePrice(stayCandidate.flight),
+                    meta: `${outboundArrivalTime(stayCandidate.flight)} 도착 · ${returnDepartureTime(stayCandidate.flight)} 출발`,
+                    badge: `현지 ${stayCandidate.hours}시간`,
+                },
+            });
+        }
+
+        const harshCandidate = harshCandidates[0];
+        if (harshCandidate) {
+            editorialCandidates.push({
+                score: 76 + Math.max(0, harshCandidate.flight.discountRate || 0),
+                insight: {
+                    id: 'editorial-harsh-time',
+                    kind: 'timing',
+                    editorial: true,
+                    eyebrow: '시간 확인',
+                    title: '가격은 좋고, 시간은 잔인합니다',
+                    description: `${harshCandidate.detail} · 싸다고 단점까지 숨기지는 않겠습니다`,
+                    flight: harshCandidate.flight,
+                    destination: stripAirport(harshCandidate.flight.arrival.city),
+                    currentPrice: effectivePrice(harshCandidate.flight),
+                    meta: `${departureName(harshCandidate.flight)} 출발 · ${cardDate(harshCandidate.flight.departure.date)}`,
+                },
+            });
+        }
+
+        if (verifiedNewFlight && effectivePrice(verifiedNewFlight) <= 250_000) {
+            editorialCandidates.push({
+                score: 70 + Math.max(0, 250_000 - effectivePrice(verifiedNewFlight)) / 10_000,
+                insight: {
+                    id: 'editorial-new',
+                    kind: 'new',
+                    editorial: true,
+                    eyebrow: '새로 등장',
+                    title: `${compactWon(effectivePrice(verifiedNewFlight))} ${stripAirport(verifiedNewFlight.arrival.city)}가 떴어요`,
+                    description: '이전 기록에는 없던 일정이에요',
+                    flight: verifiedNewFlight,
+                    destination: stripAirport(verifiedNewFlight.arrival.city),
+                    currentPrice: effectivePrice(verifiedNewFlight),
+                    meta: `${departureName(verifiedNewFlight)} 출발 · ${cardDate(verifiedNewFlight.departure.date)}`,
+                    badge: 'NEW',
+                },
+            });
+        }
+
+        editorialCandidates.sort((a, b) => b.score - a.score);
+        const editorialInsight = editorialCandidates[0]?.insight || null;
+        if (!editorialInsight) return insights;
+
+        const editorialDestination = normalizeCity(editorialInsight.flight.arrival.city);
+        const facts = insights.filter(insight => normalizeCity(insight.flight.arrival.city) !== editorialDestination);
+        return facts.length > 0
+            ? [facts[0], editorialInsight, ...facts.slice(1)]
+            : [editorialInsight];
     }, [displayedFlights, lastUpdated, priceHistory, query, sort]);
 
     const filterCount = [departure !== '전체', datePeriod !== 'all', maxPrice > 0].filter(Boolean).length;
@@ -759,6 +981,7 @@ export default function MobileRedesignPreview() {
     const openInsight = (insight: FeedInsight) => {
         gtag.event('insight_click', {
             insight_type: insight.kind,
+            insight_format: insight.editorial ? 'editorial' : 'fact',
             destination: normalizeCity(insight.flight.arrival.city),
             flight_id: insight.flight.id,
         });
@@ -1056,7 +1279,7 @@ export default function MobileRedesignPreview() {
                                     {insight && (
                                         <button
                                             type="button"
-                                            className={`${styles.insightBar} ${styles[`insight${insight.kind[0].toUpperCase()}${insight.kind.slice(1)}`] || ''}`}
+                                            className={`${styles.insightBar} ${insight.editorial ? styles.insightEditorial : styles.insightFact} ${styles[`insight${insight.kind[0].toUpperCase()}${insight.kind.slice(1)}`] || ''}`}
                                             onClick={() => openInsight(insight)}
                                             aria-label={`${insight.title}: ${insight.destination} ${priceText(insight.currentPrice)}`}
                                         >
@@ -1064,24 +1287,48 @@ export default function MobileRedesignPreview() {
                                                 <span className={styles.insightEyebrow}>{insight.eyebrow}</span>
                                                 <Icon name="arrow" />
                                             </span>
-                                            <strong className={styles.insightTitle}>{insight.title}</strong>
-                                            {insight.description && <span className={styles.insightDescription}>{insight.description}</span>}
-                                            <span className={styles.insightMetric}>
-                                                <strong className={styles.insightDestination}>{insight.destination}</strong>
-                                                <span className={styles.insightPriceTrail}>
-                                                    {insight.previousPrice && (
-                                                        <>
-                                                            <span className={styles.insightPreviousPrice}>{priceText(insight.previousPrice)}</span>
-                                                            <span className={styles.insightPriceArrow}>→</span>
-                                                        </>
-                                                    )}
-                                                    <strong className={styles.insightCurrentPrice}>{priceText(insight.currentPrice)}</strong>
-                                                </span>
-                                            </span>
-                                            <span className={styles.insightFooter}>
-                                                <span>{insight.meta}</span>
-                                                {insight.badge && <em>{insight.badge}</em>}
-                                            </span>
+                                            {insight.editorial ? (
+                                                <>
+                                                    <strong className={styles.insightTitle}>{insight.title}</strong>
+                                                    {insight.description && <span className={styles.insightDescription}>{insight.description}</span>}
+                                                    <span className={styles.insightMetric}>
+                                                        <strong className={styles.insightDestination}>{insight.destination}</strong>
+                                                        <span className={styles.insightPriceTrail}>
+                                                            {insight.previousPrice && (
+                                                                <>
+                                                                    <span className={styles.insightPreviousPrice}>{priceText(insight.previousPrice)}</span>
+                                                                    <span className={styles.insightPriceArrow}>→</span>
+                                                                </>
+                                                            )}
+                                                            <strong className={styles.insightCurrentPrice}>{priceText(insight.currentPrice)}</strong>
+                                                        </span>
+                                                    </span>
+                                                    <span className={styles.insightFooter}>
+                                                        <span>{insight.meta}</span>
+                                                        {insight.badge && <em>{insight.badge}</em>}
+                                                    </span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <span className={styles.insightFactHeadline}>
+                                                        <strong>{insight.title}</strong>
+                                                        <span>{insight.destination}</span>
+                                                    </span>
+                                                    {insight.description && <span className={styles.insightDescription}>{insight.description}</span>}
+                                                    <span className={styles.insightFactFooter}>
+                                                        <span>{insight.meta}</span>
+                                                        <span className={styles.insightPriceTrail}>
+                                                            {insight.previousPrice && (
+                                                                <>
+                                                                    <span className={styles.insightPreviousPrice}>{priceText(insight.previousPrice)}</span>
+                                                                    <span className={styles.insightPriceArrow}>→</span>
+                                                                </>
+                                                            )}
+                                                            <strong className={styles.insightCurrentPrice}>{priceText(insight.currentPrice)}</strong>
+                                                        </span>
+                                                    </span>
+                                                </>
+                                            )}
                                         </button>
                                     )}
                                 </Fragment>
