@@ -937,7 +937,6 @@ export default function MobileRedesignPreview() {
                             const price = effectivePrice(flight);
                             const discountRate = Math.round(Math.max(0, flight.discountRate || 0));
                             const isTodayPick = isDefaultView && todayPick?.flight.id === flight.id;
-                            const footerStatus = seats > 0 ? `${seats}석 남음` : departureCountdownText(flight, new Date());
                             const cardNumber = index + 1;
                             const insightIndex = cardNumber >= 4 && (cardNumber - 4) % 8 === 0
                                 ? Math.floor((cardNumber - 4) / 8)
@@ -981,9 +980,11 @@ export default function MobileRedesignPreview() {
                                                 <div className={styles.cardFooter}>
                                                     <div className={styles.availabilityGroup}>
                                                         {isTodayPick && <span className={styles.todayPickBadge}>오늘의 표</span>}
-                                                        <span className={`${styles.footerStatus} ${seats > 0 && seats <= 4 && !isTodayPick ? styles.footerStatusLow : ''} ${seats > 0 && seats <= 4 && isTodayPick ? styles.footerStatusUrgent : ''}`}>
-                                                            {footerStatus}
-                                                        </span>
+                                                        {seats > 0 && (
+                                                            <span className={`${styles.footerStatus} ${seats <= 4 && !isTodayPick ? styles.footerStatusLow : ''} ${seats <= 4 && isTodayPick ? styles.footerStatusUrgent : ''}`}>
+                                                                {seats}석 남음
+                                                            </span>
+                                                        )}
                                                     </div>
                                                     <div className={styles.priceBlock}>
                                                         <div className={styles.priceLine}>
