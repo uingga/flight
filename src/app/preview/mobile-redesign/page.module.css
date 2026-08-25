@@ -290,6 +290,7 @@
 .ttang { color: #dc2626; }
 .myrealtrip { color: #2563eb; }
 .airline { min-width: 0; height: 20px; overflow: hidden; display: inline-flex; align-items: center; color: var(--text-secondary); font-size: var(--size-meta); line-height: 1; font-weight: var(--weight-medium); text-overflow: ellipsis; white-space: nowrap; }
+.cardFeeLabel { flex: 0 0 auto; color: var(--text-faint); font-size: var(--size-micro); line-height: 1; font-weight: 500; white-space: nowrap; }
 
 .favoriteButton {
     position: absolute;
@@ -334,7 +335,7 @@
 .priceLine { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
 .priceDiscountBadge { height: 20px; padding: 0 6px; display: inline-flex; align-items: center; border: 1px solid #f2c7d0; border-radius: 6px; background: var(--brand-soft); color: var(--brand-dark); font-size: var(--size-micro); line-height: 1; font-weight: var(--weight-heavy); white-space: nowrap; }
 .priceBlock strong { display: block; color: var(--brand); font-size: var(--size-card); line-height: 1.25; font-weight: var(--weight-bold); letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
-.priceBlock .feeNotice { margin-top: 3px; color: var(--text-muted); font-size: var(--size-micro); letter-spacing: -0.02em; white-space: nowrap; }
+.priceBlock strong small { margin-left: 1px; font-size: .58em; font-weight: inherit; letter-spacing: -0.02em; }
 
 .insightBar {
     width: 100%;
@@ -747,13 +748,12 @@
     .routeConnector::before { background: #e8e8e8; }
     .routeConnector span { color: #9a9a9a; font-size: 11px; }
     .ticketDivider { margin: 17px 16px 0; border-top-color: #e4e4e4; }
-    .cardFooter { min-height: 72px; padding: 14px 16px 16px; }
+    .cardFooter { min-height: 60px; padding: 12px 16px 13px; }
     .footerStatus { font-size: 12px; font-weight: 500; }
     .footerStatusLow,
     .footerStatusUrgent { font-weight: 500; }
     .priceDiscountBadge { padding-right: 5px; padding-left: 5px; border-color: transparent; background: #fff3f5; font-weight: 600; }
     .priceBlock strong { font-size: 22px; font-weight: 600; letter-spacing: -0.035em; }
-    .priceBlock .feeNotice { color: #999999; }
     .favoriteButton { top: 12px; right: 12px; }
     .favoriteButton svg { width: 17px; height: 17px; }
     .todayPickCard .favoriteButton { top: 43px; }

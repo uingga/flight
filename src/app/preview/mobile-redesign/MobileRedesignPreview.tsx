@@ -1440,6 +1440,7 @@ export default function MobileRedesignPreview() {
                                                     <div>
                                                         <span className={`${styles.sourceBadge} ${styles[flight.source]}`}>{SOURCE_NAMES[flight.source]}</span>
                                                         <span className={styles.airline}>{flight.airline || '항공사 확인'}</span>
+                                                        {flight.source === 'ttang' && <span className={styles.cardFeeLabel}>수수료 별도</span>}
                                                     </div>
                                                 </div>
 
@@ -1477,9 +1478,11 @@ export default function MobileRedesignPreview() {
                                                     <div className={styles.priceBlock}>
                                                         <div className={styles.priceLine}>
                                                             {discountRate >= 5 && <span className={styles.priceDiscountBadge}>-{discountRate}%</span>}
-                                                            <strong>{priceText(flight.source === 'ttang' ? flight.price : price)}</strong>
+                                                            <strong>
+                                                                {(flight.source === 'ttang' ? flight.price : price).toLocaleString('ko-KR')}
+                                                                <small>원</small>
+                                                            </strong>
                                                         </div>
-                                                        {flight.source === 'ttang' && <span className={styles.feeNotice}>발권수수료가 추가될 수 있어요</span>}
                                                     </div>
                                                 </div>
                                             </button>
