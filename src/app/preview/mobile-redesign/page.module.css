@@ -142,6 +142,8 @@
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
 }
+
+.headerWithMobileTicker { border-bottom-color: transparent; }
 .conditionFilterBarPinned {
     position: fixed;
     z-index: 50;

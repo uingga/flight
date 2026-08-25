@@ -1404,7 +1404,7 @@ export default function MobileRedesignPreview() {
             )}
 
             <div className={styles.phoneCanvas}>
-                <header className={styles.header}>
+                <header className={`${styles.header} ${isDefaultView && dropAlertFlight ? styles.headerWithMobileTicker : ''}`}>
                     <a href="/preview/mobile-redesign" className={styles.logoLink} aria-label="티키티킷 모바일 디자인 미리보기 홈">
                         <Logo size={0.84} />
                     </a>
