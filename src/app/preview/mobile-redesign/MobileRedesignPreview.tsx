@@ -12,6 +12,7 @@ import { getTripcomHotelUrl, getTripcomTrackingId } from '@/lib/utils/tripcom-he
 import type { Flight } from '@/types/flight';
 import AccountSheet from '@/components/account/AccountSheet';
 import { useAccount, type AccountSearchFilters } from '@/components/account/useAccount';
+import MobileDealAlertSheet from './MobileDealAlertSheet';
 import styles from './page.module.css';
 
 type SortMode = 'recommended' | 'price' | 'date';
@@ -65,8 +66,6 @@ const SOURCE_NAMES: Record<Flight['source'], string> = {
 const TTANG_TICKETING_FEE = 20_000;
 
 const REGION_OPTIONS = ['전체', '일본', '동남아', '중화권', '남태평양', '유럽', '미주', '기타'];
-const QUICK_REGION_OPTIONS = REGION_OPTIONS.slice(0, 4);
-const MORE_REGION_OPTIONS = REGION_OPTIONS.slice(4);
 const DEPARTURE_OPTIONS = ['전체', '인천/김포', '부산/김해', '대구', '청주', '제주'];
 const DATE_PERIOD_OPTIONS: Array<{ label: string; value: DatePeriod }> = [
     { label: '전체', value: 'all' },
@@ -487,13 +486,15 @@ export default function MobileRedesignPreview() {
     const [query, setQuery] = useState('');
     const [searchOpen, setSearchOpen] = useState(false);
     const [filterOpen, setFilterOpen] = useState(false);
-    const [regionMoreOpen, setRegionMoreOpen] = useState(false);
+    const [showDealAlert, setShowDealAlert] = useState(false);
     const [selectedFlight, setSelectedFlight] = useState<Flight | null>(null);
     const [favorites, setFavorites] = useState<Set<string>>(new Set());
     const [visibleCount, setVisibleCount] = useState(16);
     const [toast, setToast] = useState('');
     const [showScrollTop, setShowScrollTop] = useState(false);
+    const [filterBarPinned, setFilterBarPinned] = useState(false);
     const [showAccount, setShowAccount] = useState(false);
+    const filterBarSlotRef = useRef<HTMLDivElement | null>(null);
     const mergedAccountRef = useRef<string | null>(null);
 
     useEffect(() => {
@@ -521,9 +522,9 @@ export default function MobileRedesignPreview() {
     }, []);
 
     useEffect(() => {
-        document.body.style.overflow = selectedFlight || filterOpen || showAccount ? 'hidden' : '';
+        document.body.style.overflow = selectedFlight || filterOpen || showAccount || showDealAlert ? 'hidden' : '';
         return () => { document.body.style.overflow = ''; };
-    }, [selectedFlight, filterOpen, showAccount]);
+    }, [selectedFlight, filterOpen, showAccount, showDealAlert]);
 
     useEffect(() => {
         try {
@@ -559,12 +560,18 @@ export default function MobileRedesignPreview() {
     }, [toast]);
 
     useEffect(() => {
-        const updateScrollTopVisibility = () => {
+        const updateScrollState = () => {
             setShowScrollTop(window.scrollY > Math.max(900, window.innerHeight * 1.25));
+            const filterTop = filterBarSlotRef.current?.getBoundingClientRect().top;
+            setFilterBarPinned(typeof filterTop === 'number' && filterTop <= 0);
         };
-        updateScrollTopVisibility();
-        window.addEventListener('scroll', updateScrollTopVisibility, { passive: true });
-        return () => window.removeEventListener('scroll', updateScrollTopVisibility);
+        updateScrollState();
+        window.addEventListener('scroll', updateScrollState, { passive: true });
+        window.addEventListener('resize', updateScrollState);
+        return () => {
+            window.removeEventListener('scroll', updateScrollState);
+            window.removeEventListener('resize', updateScrollState);
+        };
     }, []);
 
     const filteredFlights = useMemo(() => {
@@ -1004,7 +1011,18 @@ export default function MobileRedesignPreview() {
         return selectedInsights.slice(0, 5);
     }, [displayedFlights, lastUpdated, maxPrice, priceHistory, query, sort]);
 
-    const filterCount = [departure !== '전체', datePeriod !== 'all', maxPrice > 0].filter(Boolean).length;
+    const departureFilterLabel = departure === '전체'
+        ? '출발지'
+        : departure.replace('/김포', '').replace('/김해', '');
+    const destinationFilterLabel = region === '전체' ? '목적지' : region;
+    const dateFilterLabel = datePeriod === 'custom'
+        ? customStartDate
+            ? `${customStartDate.getMonth() + 1}.${customStartDate.getDate()}${customEndDate ? `~${customEndDate.getMonth() + 1}.${customEndDate.getDate()}` : '~'}`
+            : '날짜'
+        : datePeriod === 'all'
+            ? '날짜'
+            : DATE_PERIOD_OPTIONS.find(item => item.value === datePeriod)?.label || '날짜';
+    const priceFilterLabel = maxPrice ? `${Math.round(maxPrice / 10_000)}만원 이하` : '가격';
     const updatedLabel = lastUpdated
         ? `${new Intl.DateTimeFormat('ko-KR', { month: 'numeric', day: 'numeric' }).format(new Date(lastUpdated))} 기준`
         : '최근 기준';
@@ -1142,7 +1160,7 @@ export default function MobileRedesignPreview() {
                         <button type="button" className={styles.iconButton} onClick={() => setSearchOpen(value => !value)} aria-label="검색">
                             <Icon name="search" />
                         </button>
-                        <button type="button" className={styles.alertButton} onClick={() => setToast('알림 화면은 다음 단계에서 연결할 수 있어요.')}>특가 알림</button>
+                        <button type="button" className={styles.alertButton} onClick={() => setShowDealAlert(true)}>특가 알림</button>
                         <button type="button" className={styles.accountIconButton} onClick={() => { gtag.trackAccountAction('open', 'preview'); setShowAccount(true); }} aria-label={account.status === 'authenticated' ? '내 여행 열기' : '로그인'}>
                             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5" /><path d="M5.5 19c.6-3.5 3-5.4 6.5-5.4s5.9 1.9 6.5 5.4" /></svg>
                             {account.status === 'authenticated' && <span />}
@@ -1184,53 +1202,13 @@ export default function MobileRedesignPreview() {
                     </div>
                 </section>
 
-                <div className={styles.quickFilterRow}>
-                    <button type="button" className={`${styles.filterButton} ${filterCount ? styles.filterHasValue : ''}`} onClick={() => setFilterOpen(true)}>
-                        <Icon name="sliders" />
-                        필터{filterCount ? ` ${filterCount}` : ''}
-                    </button>
-                    <nav className={`${styles.quickFilters} ${styles.regionChipRail}`} aria-label="도착 지역 빠른 선택">
-                        {QUICK_REGION_OPTIONS.map(item => (
-                            <button
-                                type="button"
-                                key={item}
-                                className={region === item ? styles.activeFilter : ''}
-                                aria-label={`도착 지역 ${item}`}
-                                onClick={() => {
-                                    setRegion(item);
-                                    setRegionMoreOpen(false);
-                                }}
-                            >
-                                {item}
-                            </button>
-                        ))}
-                        <button
-                            type="button"
-                            className={`${styles.moreRegionButton} ${MORE_REGION_OPTIONS.includes(region) ? styles.activeFilter : ''}`}
-                            aria-label="다른 도착 지역 선택"
-                            aria-expanded={regionMoreOpen}
-                            onClick={() => setRegionMoreOpen(open => !open)}
-                        >
-                            {MORE_REGION_OPTIONS.includes(region) ? region : '···'}
-                        </button>
+                <div className={styles.conditionFilterSlot} ref={filterBarSlotRef}>
+                    <nav className={`${styles.conditionFilterBar} ${filterBarPinned ? styles.conditionFilterBarPinned : ''}`} aria-label="현재 항공권 조건">
+                        <button type="button" className={departure !== '전체' ? styles.conditionActive : ''} onClick={() => setFilterOpen(true)}>{departureFilterLabel}</button>
+                        <button type="button" className={region !== '전체' ? styles.conditionActive : ''} onClick={() => setFilterOpen(true)}>{destinationFilterLabel}</button>
+                        <button type="button" className={datePeriod !== 'all' ? styles.conditionActive : ''} onClick={() => setFilterOpen(true)}>{dateFilterLabel}</button>
+                        <button type="button" className={maxPrice ? styles.conditionActive : ''} onClick={() => setFilterOpen(true)}>{priceFilterLabel}</button>
                     </nav>
-                    {regionMoreOpen && (
-                        <nav className={styles.moreRegionInline} aria-label="추가 도착 지역">
-                            {MORE_REGION_OPTIONS.map(item => (
-                                <button
-                                    type="button"
-                                    key={item}
-                                    className={region === item ? styles.moreRegionActive : ''}
-                                    onClick={() => {
-                                        setRegion(item);
-                                        setRegionMoreOpen(false);
-                                    }}
-                                >
-                                    {item}
-                                </button>
-                            ))}
-                        </nav>
-                    )}
                 </div>
 
                 <section className={styles.feedSection}>
@@ -1425,10 +1403,6 @@ export default function MobileRedesignPreview() {
 
             {showScrollTop && !filterOpen && !selectedFlight && (
                 <div className={styles.floatingActions}>
-                    <button type="button" className={styles.floatingFilterButton} onClick={() => setFilterOpen(true)}>
-                        <Icon name="sliders" />
-                        <span>필터{filterCount ? ` ${filterCount}` : ''}</span>
-                    </button>
                     <button
                         type="button"
                         className={styles.scrollTopButton}
@@ -1709,6 +1683,14 @@ export default function MobileRedesignPreview() {
                         return next;
                     });
                 }}
+            />
+
+            <MobileDealAlertSheet
+                open={showDealAlert}
+                initialDeparture={departure}
+                initialRegion={region}
+                initialMaxPrice={maxPrice || 200_000}
+                onClose={() => setShowDealAlert(false)}
             />
 
             {toast && <div className={styles.toast} role="status">{toast}</div>}
