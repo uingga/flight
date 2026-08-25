@@ -10,6 +10,13 @@ interface MobileDealAlertSheetProps {
     initialDeparture: string;
     initialRegion: string;
     initialMaxPrice: number;
+    initialRoute?: {
+        flightId?: string;
+        departureCity: string;
+        arrivalCity: string;
+        currentPrice?: number;
+        suggestedPrice?: number;
+    } | null;
     onClose: () => void;
 }
 
@@ -77,6 +84,8 @@ const postAlert = async (payload: Record<string, unknown>) => {
     if (!response.ok) {
         const errors: Record<string, string> = {
             'daily limit reached': '오늘 등록할 수 있는 알림 수를 모두 사용했어요.',
+            'capacity reached': '현재 알림 신청이 많아 잠시 등록할 수 없어요.',
+            'too many alerts': '이 기기에 등록할 수 있는 알림 수를 모두 사용했어요.',
             'test cooldown': '테스트 알림은 10분에 한 번 보낼 수 있어요.',
             'no active alerts': '테스트할 수 있는 알림이 없어요.',
             'test unavailable': '테스트 알림을 잠시 사용할 수 없어요.',
@@ -91,6 +100,7 @@ export default function MobileDealAlertSheet({
     initialDeparture,
     initialRegion,
     initialMaxPrice,
+    initialRoute = null,
     onClose,
 }: MobileDealAlertSheetProps) {
     const [departure, setDeparture] = useState('인천');
@@ -128,14 +138,14 @@ export default function MobileDealAlertSheet({
 
     useEffect(() => {
         if (!open) return;
-        setDeparture(normalizeDeparture(initialDeparture));
+        setDeparture(normalizeDeparture(initialRoute?.departureCity || initialDeparture));
         setRegion(normalizeRegion(initialRegion));
-        setMaxPrice(String(initialMaxPrice || 200_000));
+        setMaxPrice(String(initialRoute?.currentPrice || initialRoute?.suggestedPrice || initialMaxPrice || 200_000));
         setStatus('idle');
         setMessage(null);
         setView('create');
         setManagerMessage(null);
-    }, [initialDeparture, initialMaxPrice, initialRegion, open]);
+    }, [initialDeparture, initialMaxPrice, initialRegion, initialRoute, open]);
 
     useEffect(() => {
         if (!open) return;
@@ -192,16 +202,27 @@ export default function MobileDealAlertSheet({
             await postAlert({
                 subscription: subscription.toJSON(),
                 conditions: {
-                    alertType: 'deal',
-                    departureCity: departure,
-                    region,
+                    alertType: initialRoute ? 'price' : 'deal',
+                    departureCity: initialRoute?.departureCity || departure,
+                    ...(initialRoute
+                        ? { arrivalCity: initialRoute.arrivalCity }
+                        : { region }),
                     maxPrice: budget,
                 },
+                ...(initialRoute?.flightId && initialRoute.currentPrice ? {
+                    baseline: { flightId: initialRoute.flightId, price: initialRoute.currentPrice },
+                } : {}),
             });
-            gtag.trackDealAlertSetup(departure, region, budget);
+            if (initialRoute) {
+                gtag.trackAlertSetup(`${initialRoute.departureCity}-${initialRoute.arrivalCity}`, budget, 'redesign_detail');
+            } else {
+                gtag.trackDealAlertSetup(departure, region, budget);
+            }
             await loadManagedAlerts();
             setStatus('sent');
-            setMessage(`${departure} 출발 · ${dealAlertRegionLabel(region)} · ${formatPrice(budget)} 이하`);
+            setMessage(initialRoute
+                ? `${initialRoute.departureCity} → ${initialRoute.arrivalCity} · ${formatPrice(budget)} 이하`
+                : `${departure} 출발 · ${dealAlertRegionLabel(region)} · ${formatPrice(budget)} 이하`);
         } catch (error) {
             setStatus('error');
             setMessage(error instanceof Error ? error.message : '알림을 저장하지 못했어요.');
@@ -274,8 +295,12 @@ export default function MobileDealAlertSheet({
                 <header className={styles.header}>
                     <div>
                         <p>특가 알림</p>
-                        <h2 id="deal-alert-title">{view === 'manage' ? '내 특가 알림' : '떠날 만한 표가 없나요?'}</h2>
-                        <span>{view === 'manage' ? '이 기기에 등록한 조건을 관리해요.' : '좋은 표만 골라서 알려드려요.'}</span>
+                        <h2 id="deal-alert-title">{view === 'manage'
+                            ? '내 특가 알림'
+                            : initialRoute ? `${initialRoute.arrivalCity} 가격 알림` : '떠날 만한 표가 없나요?'}</h2>
+                        <span>{view === 'manage'
+                            ? '이 기기에 등록한 조건을 관리해요.'
+                            : initialRoute ? '이 가격 이하로 내려오면 알려드려요.' : '좋은 표만 골라서 알려드려요.'}</span>
                     </div>
                     <button type="button" onClick={onClose} aria-label="닫기">×</button>
                 </header>
@@ -358,23 +383,37 @@ export default function MobileDealAlertSheet({
                     </div>
                 ) : (
                     <div className={styles.body}>
-                        <fieldset>
-                            <legend>어디서 출발하세요?</legend>
-                            <div className={styles.options}>
-                                {DEPARTURES.map(item => (
-                                    <button type="button" key={item} className={departure === item ? styles.active : ''} onClick={() => setDeparture(item)}>{item}</button>
-                                ))}
+                        {initialRoute ? (
+                            <div className={styles.routeAlertSummary}>
+                                <span>선택한 노선</span>
+                                <strong>{initialRoute.departureCity} → {initialRoute.arrivalCity}</strong>
+                                <small>{initialRoute.currentPrice
+                                    ? `현재 표시가 ${initialRoute.currentPrice.toLocaleString('ko-KR')}원`
+                                    : initialRoute.suggestedPrice
+                                        ? `비슷한 시기 평균을 참고해 ${initialRoute.suggestedPrice.toLocaleString('ko-KR')}원부터 제안해요.`
+                                    : '원하는 가격을 정하면 새 표가 나올 때 확인해요.'}</small>
                             </div>
-                        </fieldset>
+                        ) : (
+                            <>
+                                <fieldset>
+                                    <legend>어디서 출발하세요?</legend>
+                                    <div className={styles.options}>
+                                        {DEPARTURES.map(item => (
+                                            <button type="button" key={item} className={departure === item ? styles.active : ''} onClick={() => setDeparture(item)}>{item}</button>
+                                        ))}
+                                    </div>
+                                </fieldset>
 
-                        <fieldset>
-                            <legend>어디쯤 가고 싶으세요?</legend>
-                            <div className={styles.options}>
-                                {REGIONS.map(item => (
-                                    <button type="button" key={item.value} className={region === item.value ? styles.active : ''} onClick={() => setRegion(item.value)}>{item.label}</button>
-                                ))}
-                            </div>
-                        </fieldset>
+                                <fieldset>
+                                    <legend>어디쯤 가고 싶으세요?</legend>
+                                    <div className={styles.options}>
+                                        {REGIONS.map(item => (
+                                            <button type="button" key={item.value} className={region === item.value ? styles.active : ''} onClick={() => setRegion(item.value)}>{item.label}</button>
+                                        ))}
+                                    </div>
+                                </fieldset>
+                            </>
+                        )}
 
                         <fieldset>
                             <legend>얼마까지 괜찮으세요?</legend>
@@ -389,7 +428,9 @@ export default function MobileDealAlertSheet({
                             </label>
                         </fieldset>
 
-                        <p className={styles.note}>날짜와 도시는 정하지 않아도 돼요. 로그인 없이 이 기기에 알림을 보냅니다.</p>
+                        <p className={styles.note}>{initialRoute
+                            ? '현재 표가 사라져도 같은 노선에서 조건에 맞는 가격을 찾으면 알려드려요.'
+                            : '날짜와 도시는 정하지 않아도 돼요. 로그인 없이 이 기기에 알림을 보냅니다.'}</p>
                         {message && <p className={styles.error} role="alert">{message}</p>}
                         <button type="button" className={styles.submit} disabled={status === 'saving'} onClick={() => void saveAlert()}>
                             {status === 'saving' ? '저장 중…' : '이 조건으로 알려주세요'}
