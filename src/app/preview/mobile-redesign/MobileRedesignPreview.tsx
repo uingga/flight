@@ -350,6 +350,23 @@ const recommendedScore = (flight: Flight) => {
     return effectivePrice(flight) - discount * 2_500 - seatBonus * 1_000;
 };
 
+const seoulDateKey = (date = new Date()) => new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Seoul',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+}).format(date);
+
+const dailyOrderValue = (dateKey: string, value: string) => {
+    let hash = 2166136261;
+    const input = `${dateKey}:${value}`;
+    for (let index = 0; index < input.length; index += 1) {
+        hash ^= input.charCodeAt(index);
+        hash = Math.imul(hash, 16777619);
+    }
+    return hash >>> 0;
+};
+
 const clockMinutes = (value?: string) => {
     const match = value?.match(/(\d{1,2}):(\d{2})/);
     if (!match) return null;
@@ -497,6 +514,7 @@ export default function MobileRedesignPreview() {
     const [showScrollTop, setShowScrollTop] = useState(false);
     const [filterBarPinned, setFilterBarPinned] = useState(false);
     const [showAccount, setShowAccount] = useState(false);
+    const [insightDateKey, setInsightDateKey] = useState(() => seoulDateKey());
     const filterBarSlotRef = useRef<HTMLDivElement | null>(null);
     const lastScrollYRef = useRef(0);
     const scrollDirectionRef = useRef<'up' | 'down' | null>(null);
@@ -515,6 +533,7 @@ export default function MobileRedesignPreview() {
                 if (!data.success) throw new Error('항공권을 불러오지 못했습니다.');
                 setFlights(data.flights || []);
                 setLastUpdated(data.lastUpdated || null);
+                setInsightDateKey(data.lastUpdated ? seoulDateKey(new Date(data.lastUpdated)) : seoulDateKey());
                 setTodayPickId(typeof data.todayPickId === 'string' ? data.todayPickId : null);
                 setPriceHistory(data.priceHistory || {});
             })
@@ -1025,10 +1044,26 @@ export default function MobileRedesignPreview() {
             return true;
         };
 
+        const dailyCandidatesForLane = (lane: InsightLane) => {
+            const candidates = editorialCandidates.filter(candidate => candidate.lane === lane);
+            const bestScore = candidates[0]?.score ?? 0;
+            return candidates
+                .filter(candidate => candidate.score >= bestScore - 16)
+                .sort((a, b) => (
+                    dailyOrderValue(insightDateKey, a.insight.id)
+                    - dailyOrderValue(insightDateKey, b.insight.id)
+                ));
+        };
+
+        const dailyCandidates = new Map<InsightLane, InsightCandidate[]>([
+            ['event', dailyCandidatesForLane('event')],
+            ['trip', dailyCandidatesForLane('trip')],
+            ['discovery', dailyCandidatesForLane('discovery')],
+        ]);
         const laneOrder: InsightLane[] = ['event', 'trip', 'discovery', 'event', 'trip'];
         for (const lane of laneOrder) {
-            for (const candidate of editorialCandidates) {
-                if (candidate.lane === lane && selectCandidate(candidate)) break;
+            for (const candidate of dailyCandidates.get(lane) || []) {
+                if (selectCandidate(candidate)) break;
             }
         }
         for (const candidate of editorialCandidates) {
@@ -1036,7 +1071,7 @@ export default function MobileRedesignPreview() {
             selectCandidate(candidate);
         }
         return selectedInsights.slice(0, 5);
-    }, [displayedFlights, lastUpdated, maxPrice, priceHistory, query, sort]);
+    }, [displayedFlights, insightDateKey, lastUpdated, maxPrice, priceHistory, query, sort]);
 
     const departureFilterLabel = departure === '전체'
         ? '출발지'
@@ -1049,7 +1084,8 @@ export default function MobileRedesignPreview() {
         : datePeriod === 'all'
             ? '날짜'
             : DATE_PERIOD_OPTIONS.find(item => item.value === datePeriod)?.label || '날짜';
-    const priceFilterLabel = maxPrice ? `${Math.round(maxPrice / 10_000)}만원 이하` : '가격';
+    const priceFilterLabel = maxPrice ? `${Math.round(maxPrice / 10_000)}만원 이하` : '가격 전체';
+    const firstInsightCard = isDefaultView && dropAlertFlight ? 5 : 4;
     const hasAdvancedFilter = departure !== '전체' || datePeriod !== 'all' || maxPrice > 0;
     const updatedLabel = lastUpdated
         ? `${new Intl.DateTimeFormat('ko-KR', { month: 'numeric', day: 'numeric' }).format(new Date(lastUpdated))} 기준`
@@ -1269,6 +1305,20 @@ export default function MobileRedesignPreview() {
                                 {MORE_REGION_OPTIONS.includes(region) ? region : '···'}
                             </button>
                         </nav>
+                        <nav className={styles.desktopFilterSummary} aria-label="PC 항공권 조건">
+                            <button type="button" className={departure !== '전체' ? styles.conditionActive : ''} onClick={() => setFilterOpen(true)}>
+                                출발 {departureFilterLabel === '출발지' ? '전체' : departureFilterLabel}
+                                <span className={styles.conditionChevron} aria-hidden="true">▼</span>
+                            </button>
+                            <button type="button" className={datePeriod !== 'all' ? styles.conditionActive : ''} onClick={() => setFilterOpen(true)}>
+                                {dateFilterLabel === '날짜' ? '날짜 전체' : dateFilterLabel}
+                                <span className={styles.conditionChevron} aria-hidden="true">▼</span>
+                            </button>
+                            <button type="button" className={maxPrice ? styles.conditionActive : ''} onClick={() => setFilterOpen(true)}>
+                                {priceFilterLabel}
+                                <span className={styles.conditionChevron} aria-hidden="true">▼</span>
+                            </button>
+                        </nav>
                         {regionMoreOpen && (
                             <nav className={styles.moreRegionInline} aria-label="추가 도착 지역">
                                 {MORE_REGION_OPTIONS.map(item => (
@@ -1356,14 +1406,15 @@ export default function MobileRedesignPreview() {
                             const price = effectivePrice(flight);
                             const discountRate = Math.round(Math.max(0, flight.discountRate || 0));
                             const isTodayPick = isDefaultView && featuredPick?.flight.id === flight.id;
+                            const isFeaturedDrop = isTodayPick && dropAlertFlight?.id === flight.id;
                             const cardNumber = index + 1;
-                            const insightIndex = cardNumber >= 4 && (cardNumber - 4) % 8 === 0
-                                ? Math.floor((cardNumber - 4) / 8)
+                            const insightIndex = cardNumber >= firstInsightCard && (cardNumber - firstInsightCard) % 8 === 0
+                                ? Math.floor((cardNumber - firstInsightCard) / 8)
                                 : -1;
                             const insight = insightIndex >= 0 ? feedInsights[insightIndex] : null;
                             return (
                                 <Fragment key={flight.id}>
-                                    <div className={styles.cardEntry}>
+                                    <div className={`${styles.cardEntry} ${isFeaturedDrop ? styles.featuredCardEntry : ''}`}>
                                         <article className={`${styles.flightCard} ${isTodayPick ? styles.todayPickCard : ''}`}>
                                             <button type="button" className={styles.cardBody} onClick={() => openFlight(flight)}>
                                                 {isTodayPick && (
@@ -1497,7 +1548,7 @@ export default function MobileRedesignPreview() {
                 </section>
 
                 <footer className={styles.previewFooter}>
-                    <span>모바일 새 디자인 미리보기</span>
+                    <span>티키티킷 새 디자인 미리보기</span>
                     <a href="/">현재 티키티킷으로 돌아가기</a>
                 </footer>
             </div>
@@ -1517,7 +1568,7 @@ export default function MobileRedesignPreview() {
             )}
 
             {filterOpen && (
-                <div className={styles.sheetOverlay} onClick={() => setFilterOpen(false)}>
+                <div className={`${styles.sheetOverlay} ${styles.filterOverlay}`} onClick={() => setFilterOpen(false)}>
                     <section className={styles.bottomSheet} onClick={event => event.stopPropagation()} aria-label="항공권 필터">
                         <div className={styles.sheetHandle} />
                         <div className={styles.sheetHeader}>
@@ -1619,7 +1670,7 @@ export default function MobileRedesignPreview() {
                 const stay = tripLength(selectedFlight);
                 const detailSeats = selectedFlight.availableSeats || Number.parseInt(selectedFlight.seats || '', 10) || 0;
                 return (
-                <div className={styles.sheetOverlay} onClick={() => setSelectedFlight(null)}>
+                <div className={`${styles.sheetOverlay} ${styles.detailOverlay}`} onClick={() => setSelectedFlight(null)}>
                     <section className={`${styles.bottomSheet} ${styles.detailSheet}`} onClick={event => event.stopPropagation()} aria-label="항공권 상세">
                         <div className={styles.sheetHandle} />
                         <div className={styles.detailHeader}>
