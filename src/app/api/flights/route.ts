@@ -6,6 +6,11 @@ import { getComparisonFreshness, getEffectivePrice } from '@/lib/price-quality';
 import { filterStaleMyrealtripFlights, getMyrealtripFreshness } from '@/lib/source-freshness';
 import { deduplicateDisplayFlights } from '@/lib/flight-visibility';
 import { buildNaverPriceKey } from '@/lib/naver-route';
+import {
+    compactPublicPriceHistory,
+    publicFlightRouteKey,
+    type PublicPriceHistory,
+} from '@/lib/public-flight-data';
 
 interface FlightFilterSummary {
     collected: number;
@@ -328,14 +333,19 @@ export async function GET(request: NextRequest) {
             return params.sortOrder === 'desc' ? -comparison : comparison;
         });
 
-        // 가격 히스토리 로드
-        let priceHistory: Record<string, Array<{ date: string; minPrice: number }>> = {};
+        // 화면 인사이트에 필요한 현재 노선의 최근 60일 최저가·표본 수만 공개한다.
+        // 원본 장기 이력과 평균가는 서버 데이터로 남기되 브라우저 응답에는 싣지 않는다.
+        let priceHistory: PublicPriceHistory = {};
         try {
             const fs2 = require('fs');
             const path2 = require('path');
             const histPath = path2.join(process.cwd(), 'data', 'price-history.json');
             if (fs2.existsSync(histPath)) {
-                priceHistory = JSON.parse(fs2.readFileSync(histPath, 'utf-8'));
+                const rawPriceHistory: unknown = JSON.parse(fs2.readFileSync(histPath, 'utf-8'));
+                const visibleRoutes = new Set(allFlights.map(flight => (
+                    publicFlightRouteKey(flight.departure?.city || '', flight.arrival?.city || '')
+                )).filter(Boolean));
+                priceHistory = compactPublicPriceHistory(rawPriceHistory, { allowedRoutes: visibleRoutes });
             }
         } catch (e) { }
 

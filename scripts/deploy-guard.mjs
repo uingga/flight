@@ -29,8 +29,10 @@ function fail(msg) {
 }
 
 function assertCleanTree() {
-    if (sh('git status --porcelain')) {
-        fail('커밋되지 않은 변경사항이 있습니다. 먼저 커밋하거나 되돌린 뒤 다시 실행하세요.\n   확인: git status');
+    // 추적 중인 파일만 검사한다. 별도 작업의 untracked 파일은 롤백 대상도,
+    // 커밋 대상도 아니므로 그대로 보존한다.
+    if (sh('git status --porcelain --untracked-files=no')) {
+        fail('추적 중인 파일에 커밋되지 않은 변경사항이 있습니다. 먼저 커밋하거나 되돌린 뒤 다시 실행하세요.\n   확인: git status');
     }
 }
 
@@ -138,7 +140,7 @@ function cmdRollback(requestedTag) {
         fail('자동 되돌리기 실패. 작업 트리를 원래대로 되돌렸습니다.\n   수동 확인이 필요합니다.');
     }
 
-    if (!sh('git status --porcelain')) {
+    if (!sh('git diff --cached --name-only')) {
         console.log('\n✅ 되돌릴 코드 변경이 없습니다 (이미 안전 지점과 동일).\n');
         return;
     }

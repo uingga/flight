@@ -95,12 +95,25 @@ async function requireAccount() {
     return account?.user || null;
 }
 
+async function readAllFavoriteIds(userId: string) {
+    const flightIds: string[] = [];
+    const pageSize = 1000;
+    for (let offset = 0; ; offset += pageSize) {
+        const rows = await supabaseRest<Array<{ flight_id: string }>>(
+            `tikitikit_user_favorites?select=flight_id&user_id=eq.${userId}&order=updated_at.desc&limit=${pageSize}&offset=${offset}`,
+        );
+        flightIds.push(...rows.map(row => row.flight_id));
+        if (rows.length < pageSize) return flightIds;
+    }
+}
+
 export async function GET() {
     try {
         const user = await requireAccount();
         if (!user) return json({ authenticated: false });
         const userId = encodeURIComponent(user.id);
-        const [favorites, recent, savedSearches] = await Promise.all([
+        const [favoriteIdRows, favorites, recent, savedSearches] = await Promise.all([
+            readAllFavoriteIds(userId),
             supabaseRest<FavoriteRow[]>(`tikitikit_user_favorites?select=flight_id,flight_snapshot,created_at,updated_at&user_id=eq.${userId}&order=updated_at.desc&limit=100`),
             supabaseRest<RecentRow[]>(`tikitikit_user_recent_flights?select=flight_id,flight_snapshot,viewed_at&user_id=eq.${userId}&order=viewed_at.desc&limit=30`),
             supabaseRest<SavedSearchRow[]>(`tikitikit_user_saved_searches?select=id,name,filters,created_at,updated_at&user_id=eq.${userId}&order=updated_at.desc&limit=10`),
@@ -108,6 +121,7 @@ export async function GET() {
         return json({
             authenticated: true,
             user: { email: user.email },
+            favoriteIds: favoriteIdRows,
             favorites: favorites.map(row => {
                 const currentSnapshot = getAccountFlightSnapshot(row.flight_id);
                 return {
@@ -150,6 +164,10 @@ export async function POST(request: NextRequest) {
     try {
         const user = await requireAccount();
         if (!user) return json({ error: '로그인이 필요해요.' }, 401);
+        const expectedAccountEmail = cleanText(input.expectedAccountEmail, 320).trim().toLowerCase();
+        if (!expectedAccountEmail || expectedAccountEmail !== user.email.trim().toLowerCase()) {
+            return json({ error: '다른 탭에서 로그인 계정이 바뀌었어요. 화면을 새로고침해 주세요.' }, 409);
+        }
         const userId = user.id;
         const action = input.action;
 
@@ -170,7 +188,7 @@ export async function POST(request: NextRequest) {
                     body: JSON.stringify(rows),
                 });
             }
-            return json({ ok: true });
+            return json({ ok: true, mergedFlightIds: rows.map(row => row.flight_id) });
         }
 
         if (action === 'set_favorite') {

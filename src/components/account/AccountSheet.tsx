@@ -9,6 +9,7 @@ import type {
 } from './useAccount';
 import styles from './AccountSheet.module.css';
 import * as gtag from '@/lib/analytics';
+import { useDialogFocus } from '@/lib/hooks/use-dialog-focus';
 
 interface AccountSheetProps {
     open: boolean;
@@ -95,7 +96,9 @@ export default function AccountSheet({
     const [searchName, setSearchName] = useState('');
     const [savedNotice, setSavedNotice] = useState(false);
     const firstInputRef = useRef<HTMLInputElement>(null);
+    const sheetRef = useRef<HTMLElement>(null);
     const suggestedName = useMemo(() => getSuggestedName(currentSearch), [currentSearch]);
+    useDialogFocus(open, sheetRef);
 
     useEffect(() => {
         if (!open) return;
@@ -105,15 +108,6 @@ export default function AccountSheet({
         const id = setTimeout(() => firstInputRef.current?.focus(), 180);
         return () => clearTimeout(id);
     }, [open, suggestedName]);
-
-    useEffect(() => {
-        if (!open) return;
-        const closeOnEscape = (event: KeyboardEvent) => {
-            if (event.key === 'Escape') onClose();
-        };
-        window.addEventListener('keydown', closeOnEscape);
-        return () => window.removeEventListener('keydown', closeOnEscape);
-    }, [onClose, open]);
 
     if (!open) return null;
 
@@ -162,9 +156,31 @@ export default function AccountSheet({
         } finally { setBusy(false); }
     };
 
+    const logout = async () => {
+        gtag.trackAccountAction('logout');
+        setBusy(true); setError(null);
+        try { await account.logout(); } catch (err) {
+            setError(err instanceof Error ? err.message : '로그아웃하지 못했어요.');
+        } finally { setBusy(false); }
+    };
+
+    const clearRecent = async () => {
+        setBusy(true); setError(null);
+        try { await account.clearRecent(); } catch (err) {
+            setError(err instanceof Error ? err.message : '최근 본 표를 비우지 못했어요.');
+        } finally { setBusy(false); }
+    };
+
+    const deleteSavedSearch = async (id: string) => {
+        setBusy(true); setError(null);
+        try { await account.deleteSearch(id); } catch (err) {
+            setError(err instanceof Error ? err.message : '저장한 검색을 삭제하지 못했어요.');
+        } finally { setBusy(false); }
+    };
+
     return (
         <div className={styles.overlay} role="presentation" onMouseDown={event => event.target === event.currentTarget && onClose()}>
-            <section className={styles.sheet} role="dialog" aria-modal="true" aria-labelledby="account-title">
+            <section ref={sheetRef} className={styles.sheet} role="dialog" aria-modal="true" aria-labelledby="account-title">
                 <div className={styles.handle} aria-hidden="true" />
                 <header className={styles.header}>
                     <div>
@@ -258,11 +274,11 @@ export default function AccountSheet({
                         <div className={styles.profileRow}>
                             <div className={styles.avatar}>{account.email.slice(0, 1).toUpperCase()}</div>
                             <div className={styles.profileText}><strong>{account.email}</strong><span>30일 동안 로그인 상태가 유지돼요</span></div>
-                            <button type="button" className={styles.logout} onClick={() => { gtag.trackAccountAction('logout'); void account.logout(); }}>로그아웃</button>
+                            <button type="button" className={styles.logout} disabled={busy} onClick={() => void logout()}>로그아웃</button>
                         </div>
 
                         <div className={styles.summary}>
-                            <button type="button" onClick={() => setTab('favorites')}><strong>{account.favorites.length}</strong><span>찜한 표</span></button>
+                            <button type="button" onClick={() => setTab('favorites')}><strong>{account.favoriteIds.length}</strong><span>찜한 표</span></button>
                             <button type="button" onClick={() => setTab('recent')}><strong>{account.recent.length}</strong><span>최근 본 표</span></button>
                             <button type="button" onClick={() => setTab('searches')}><strong>{account.savedSearches.length}</strong><span>저장 검색</span></button>
                         </div>
@@ -290,14 +306,11 @@ export default function AccountSheet({
                                     savedPrice={item.savedPrice}
                                     availableNow={item.availableNow}
                                     onClick={() => onOpenFlight(item.flightId)}
-                                    onRemove={() => {
-                                        onFavoriteRemoved(item.flightId);
-                                        void account.setFavorite(item.flightId, false);
-                                    }}
+                                    onRemove={() => onFavoriteRemoved(item.flightId)}
                                 />)
                                 : <p className={styles.empty}>마음에 드는 표의 ♡를 눌러 두세요.</p>)}
                             {tab === 'recent' && (account.recent.length ? <>
-                                <div className={styles.listToolbar}><span>최근 30개까지 보여요</span><button type="button" onClick={() => void account.clearRecent()}>기록 비우기</button></div>
+                                <div className={styles.listToolbar}><span>최근 30개까지 보여요</span><button type="button" disabled={busy} onClick={() => void clearRecent()}>기록 비우기</button></div>
                                 {account.recent.map(item => <FlightRow key={item.flightId} snapshot={item.snapshot} availableNow={item.availableNow} onClick={() => onOpenFlight(item.flightId)} />)}
                             </> : <p className={styles.empty}>상세하게 본 항공권이 여기에 남아요.</p>)}
                             {tab === 'searches' && (account.savedSearches.length
@@ -307,7 +320,7 @@ export default function AccountSheet({
                                             <strong>{item.name}</strong>
                                             <span>{savedSearchDateLabel(item.filters)} · 눌러서 다시 보기</span>
                                         </button>
-                                        <button type="button" className={styles.deleteRow} aria-label={`${item.name} 삭제`} onClick={() => void account.deleteSearch(item.id)}>×</button>
+                                        <button type="button" className={styles.deleteRow} disabled={busy} aria-label={`${item.name} 삭제`} onClick={() => void deleteSavedSearch(item.id)}>×</button>
                                     </div>
                                 ))
                                 : <p className={styles.empty}>자주 찾는 출발지·여행지·날짜를 저장해 보세요.</p>)}

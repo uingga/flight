@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, type FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, type FormEvent, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { ko } from 'date-fns/locale';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -10,6 +10,7 @@ import { getDestinationContext } from '@/lib/destination-contexts';
 import { CITY_TO_AIRPORT, calcFlightTiming, getNaverFlightUrl, normalizeAirline, normalizeCity } from '@/lib/utils/flight-helpers';
 import { getTripcomHotelUrl, getTripcomTrackingId } from '@/lib/utils/tripcom-helpers';
 import { getFlightBookingUrl } from '@/lib/utils/booking-url';
+import { useDialogFocus } from '@/lib/hooks/use-dialog-focus';
 import { checkIsMobile } from '@/lib/utils/mobile-url';
 import {
     getComparisonFreshness,
@@ -56,6 +57,8 @@ type InterparkPrices = Record<string, Record<string, { avg: number; lowest: numb
 
 interface MobileRedesignPreviewProps {
     previewMode?: boolean;
+    beforeFooter?: ReactNode;
+    rootAs?: 'main' | 'div';
 }
 
 interface RouteAlertTarget {
@@ -309,6 +312,7 @@ const agencyFlightDuration = (value?: string) => {
 
 const legDetails = (flight: Flight, leg: 'outbound' | 'return') => {
     const detail = flight.modetourDetail;
+    const routeAirports = flight.routeAirports;
     const departureCity = departureName(flight);
     const arrivalCity = stripAirport(flight.arrival.city);
 
@@ -317,8 +321,8 @@ const legDetails = (flight: Flight, leg: 'outbound' | 'return') => {
         const timing = calcFlightTiming(departureCity, flight.departure.time, flight.departure.date, arrivalCity, arrivalTime);
         const fallbackDayOffset = fallbackArrivalDayOffset(flight.departure.time, arrivalTime);
         return {
-            origin: airportLabel(departureCity, flight.departure.airport),
-            destination: airportLabel(arrivalCity, flight.arrival.airport),
+            origin: airportLabel(departureCity, routeAirports?.outboundDeparture || flight.departure.airport),
+            destination: airportLabel(arrivalCity, routeAirports?.outboundArrival || flight.arrival.airport),
             departureTime: flight.departure.time || '시간 확인',
             arrivalTime: arrivalTime || '시간 확인',
             departureDate: shortDate(flight.departure.date),
@@ -332,8 +336,8 @@ const legDetails = (flight: Flight, leg: 'outbound' | 'return') => {
     const timing = calcFlightTiming(arrivalCity, departureTime, flight.arrival.date, departureCity, arrivalTime);
     const fallbackDayOffset = fallbackArrivalDayOffset(departureTime, arrivalTime);
     return {
-        origin: airportLabel(arrivalCity, detail?.returnDepartureAirport || flight.arrival.airport),
-        destination: airportLabel(departureCity, detail?.returnArrivalAirport || flight.departure.airport),
+        origin: airportLabel(arrivalCity, routeAirports?.returnDeparture || detail?.returnDepartureAirport || flight.arrival.airport),
+        destination: airportLabel(departureCity, routeAirports?.returnArrival || detail?.returnArrivalAirport || flight.departure.airport),
         departureTime: departureTime || '시간 확인',
         arrivalTime: arrivalTime || '시간 확인',
         departureDate: shortDate(flight.arrival.date),
@@ -432,6 +436,18 @@ const seoulDateKey = (date = new Date()) => new Intl.DateTimeFormat('en-CA', {
     month: '2-digit',
     day: '2-digit',
 }).format(date);
+
+const monthDistance = (first: string, second: string) => {
+    const toIndex = (value: string) => {
+        const match = value.match(/^(\d{4})-(\d{2})$/);
+        return match ? Number(match[1]) * 12 + Number(match[2]) - 1 : Number.NaN;
+    };
+    const firstIndex = toIndex(first);
+    const secondIndex = toIndex(second);
+    return Number.isFinite(firstIndex) && Number.isFinite(secondIndex)
+        ? Math.abs(firstIndex - secondIndex)
+        : Number.POSITIVE_INFINITY;
+};
 
 const dailyOrderValue = (dateKey: string, value: string) => {
     let hash = 2166136261;
@@ -677,7 +693,11 @@ function Icon({ name }: { name: 'sliders' | 'search' | 'star' | 'share' | 'close
     return <svg viewBox="0 0 24 24" aria-hidden="true">{paths[name]}</svg>;
 }
 
-export default function MobileRedesignPreview({ previewMode = true }: MobileRedesignPreviewProps) {
+export default function MobileRedesignPreview({
+    previewMode = true,
+    beforeFooter,
+    rootAs = 'main',
+}: MobileRedesignPreviewProps) {
     const account = useAccount();
     const [flights, setFlights] = useState<Flight[]>([]);
     const [loading, setLoading] = useState(true);
@@ -707,6 +727,7 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
     const [alertRouteTarget, setAlertRouteTarget] = useState<RouteAlertTarget | null>(null);
     const [selectedFlight, setSelectedFlight] = useState<Flight | null>(null);
     const [favorites, setFavorites] = useState<Set<string>>(new Set());
+    const [guestFavorites, setGuestFavorites] = useState<Set<string>>(new Set());
     const [flightReport, setFlightReport] = useState<{ flightId: string; status: FlightReportStatus } | null>(null);
     const [recentFlightReports, setRecentFlightReports] = useState<Record<string, number>>({});
     const [visibleCount, setVisibleCount] = useState(18);
@@ -723,14 +744,91 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
     const [recommendationRotationSlot, setRecommendationRotationSlot] = useState(() => getRecommendationRotationSlot());
     const filterBarSlotRef = useRef<HTMLDivElement | null>(null);
     const desktopFilterRef = useRef<HTMLDivElement | null>(null);
+    const desktopFilterTriggerRef = useRef<HTMLButtonElement | null>(null);
     const sortMenuRef = useRef<HTMLDivElement | null>(null);
+    const sortTriggerRef = useRef<HTMLButtonElement | null>(null);
+    const searchButtonRef = useRef<HTMLButtonElement | null>(null);
     const lastScrollYRef = useRef(0);
     const scrollDirectionRef = useRef<'up' | 'down' | null>(null);
     const scrollDirectionAnchorRef = useRef(0);
     const mergedAccountRef = useRef<string | null>(null);
+    const favoriteMutationVersionRef = useRef(new Map<string, number>());
+    const favoriteIntentRef = useRef(new Map<string, boolean>());
+    const confirmedAccountFavoritesRef = useRef(new Set<string>());
+    const historyClosePendingRef = useRef(false);
+    const alertClosePendingRef = useRef(false);
     const lastFetchAtRef = useRef(0);
     const urlInitializedRef = useRef(false);
     const sharedFlightIdRef = useRef<string | null>(null);
+    const filterDialogRef = useRef<HTMLElement | null>(null);
+    const detailDialogRef = useRef<HTMLElement | null>(null);
+    const contactDialogRef = useRef<HTMLElement | null>(null);
+    const historyUiStateRef = useRef({
+        selectedFlight,
+        showContact,
+        showAccount,
+        showDealAlert,
+        flights,
+        loading,
+    });
+    historyUiStateRef.current = {
+        selectedFlight,
+        showContact,
+        showAccount,
+        showDealAlert,
+        flights,
+        loading,
+    };
+    const Root = rootAs;
+    useDialogFocus(filterOpen, filterDialogRef);
+    useDialogFocus(
+        Boolean(selectedFlight),
+        detailDialogRef,
+        !showDealAlert && !showAccount && !showContact,
+    );
+    useDialogFocus(showContact, contactDialogRef);
+
+    const closeSelectedFlight = useCallback(() => {
+        if (window.history.state?.tikitikitOverlay === 'flight') {
+            if (historyClosePendingRef.current) return;
+            historyClosePendingRef.current = true;
+            window.history.back();
+            return;
+        }
+        setSelectedFlight(null);
+        const nextUrl = new URL(window.location.href);
+        nextUrl.searchParams.delete('flight');
+        const nextState = { ...window.history.state };
+        delete nextState.tikitikitOverlay;
+        window.history.replaceState(nextState, '', `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`);
+    }, []);
+
+    const openDealAlert = useCallback((target: RouteAlertTarget | null) => {
+        setAlertRouteTarget(target);
+        if (window.history.state?.tikitikitOverlay !== 'deal-alert') {
+            window.history.pushState(
+                {
+                    ...window.history.state,
+                    tikitikitOverlay: 'deal-alert',
+                    tikitikitAlertTarget: target,
+                },
+                '',
+                `${window.location.pathname}${window.location.search}${window.location.hash}`,
+            );
+        }
+        setShowDealAlert(true);
+    }, []);
+
+    const closeDealAlert = useCallback(() => {
+        if (window.history.state?.tikitikitOverlay === 'deal-alert') {
+            if (alertClosePendingRef.current) return;
+            alertClosePendingRef.current = true;
+            window.history.back();
+            return;
+        }
+        setShowDealAlert(false);
+        setAlertRouteTarget(null);
+    }, []);
 
     const loadFlights = useCallback(async (background = false) => {
         if (!background) setLoading(true);
@@ -739,12 +837,14 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
             if (!response.ok) throw new Error('항공권을 불러오지 못했습니다.');
             const data = await response.json() as FlightsResponse;
             if (!data.success) throw new Error('항공권을 불러오지 못했습니다.');
-            setFlights(data.flights || []);
             setLastUpdated(data.lastUpdated || null);
             setInsightDateKey(data.lastUpdated ? seoulDateKey(new Date(data.lastUpdated)) : seoulDateKey());
             setTodayPickId(typeof data.todayPickId === 'string' ? data.todayPickId : null);
             setPriceHistory(data.priceHistory || {});
             setInterparkPrices(data.interparkPrices || {});
+            // 추천·DROP 판단에 필요한 기준가를 먼저 넣은 뒤 목록을 연다. 상태 반영이
+            // 나뉘는 브라우저에서도 첫 카드가 잠깐 다른 표로 보이지 않게 한다.
+            setFlights(data.flights || []);
             setError('');
             lastFetchAtRef.current = Date.now();
         } catch (cause) {
@@ -756,9 +856,9 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
 
     useEffect(() => {
         void loadFlights();
-        const refreshTimer = window.setInterval(() => void loadFlights(true), 5 * 60 * 1000);
+        const refreshTimer = window.setInterval(() => void loadFlights(true), 30 * 60 * 1000);
         const refreshVisiblePage = () => {
-            if (document.visibilityState === 'visible' && Date.now() - lastFetchAtRef.current > 2 * 60 * 1000) {
+            if (document.visibilityState === 'visible' && Date.now() - lastFetchAtRef.current > 5 * 60 * 1000) {
                 void loadFlights(true);
             }
         };
@@ -788,14 +888,18 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
         const closeTopLayer = (event: KeyboardEvent) => {
             if (event.key !== 'Escape') return;
             if (showContact) setShowContact(false);
-            else if (selectedFlight) setSelectedFlight(null);
+            else if (showAccount) setShowAccount(false);
+            else if (showDealAlert) closeDealAlert();
+            else if (selectedFlight) closeSelectedFlight();
             else if (filterOpen) setFilterOpen(false);
-            else if (showDealAlert) { setShowDealAlert(false); setAlertRouteTarget(null); }
-            else if (searchOpen) setSearchOpen(false);
+            else if (searchOpen) {
+                setSearchOpen(false);
+                window.requestAnimationFrame(() => searchButtonRef.current?.focus());
+            }
         };
         window.addEventListener('keydown', closeTopLayer);
         return () => window.removeEventListener('keydown', closeTopLayer);
-    }, [filterOpen, searchOpen, selectedFlight, showContact, showDealAlert]);
+    }, [closeDealAlert, closeSelectedFlight, filterOpen, searchOpen, selectedFlight, showAccount, showContact, showDealAlert]);
 
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
@@ -833,7 +937,7 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
             setDatePeriod(periodParam);
         }
 
-        if (params.get('dealAlert') === '1') setShowDealAlert(true);
+        if (params.get('dealAlert') === '1') openDealAlert(null);
         const campaign = params.get('utm_campaign') || '';
         if (params.get('utm_source') === 'naver_blog' && /^tikitikit_drop_\d+$/.test(campaign)) {
             const content = params.get('utm_content');
@@ -843,7 +947,7 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
 
         const readyTimer = window.setTimeout(() => { urlInitializedRef.current = true; }, 0);
         return () => window.clearTimeout(readyTimer);
-    }, []);
+    }, [openDealAlert]);
 
     useEffect(() => {
         if (loading || !sharedFlightIdRef.current) return;
@@ -858,6 +962,7 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
                 'shared_link',
             );
             account.recordRecent(sharedFlight.id);
+            setPassengers({ adult: Math.max(1, sharedFlight.minPax || 1), child: 0, infant: 0 });
             setSelectedFlight(sharedFlight);
             return;
         }
@@ -865,6 +970,15 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
         const params = new URLSearchParams(window.location.search);
         const fallbackArrival = params.get('arr');
         if (fallbackArrival) setQuery(fallbackArrival);
+        params.delete('flight');
+        const queryString = params.toString();
+        const nextState = { ...window.history.state };
+        delete nextState.tikitikitOverlay;
+        window.history.replaceState(
+            nextState,
+            '',
+            `${window.location.pathname}${queryString ? `?${queryString}` : ''}${window.location.hash}`,
+        );
         setToast(fallbackArrival
             ? '공유된 표는 내려갔어요. 같은 목적지의 현재 항공권을 보여드려요.'
             : '공유된 표는 현재 목록에서 내려갔어요.');
@@ -893,8 +1007,72 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
         }
         if (selectedFlight) next.set('flight', selectedFlight.id);
         const queryString = next.toString();
-        window.history.replaceState({}, '', `${window.location.pathname}${queryString ? `?${queryString}` : ''}`);
+        window.history.replaceState(
+            window.history.state,
+            '',
+            `${window.location.pathname}${queryString ? `?${queryString}` : ''}`,
+        );
     }, [airlineFilter, customEndDate, customStartDate, datePeriod, departure, maxPrice, query, region, selectedFlight, sort, sourceFilter]);
+
+    useEffect(() => {
+        const syncDetailFromHistory = () => {
+            const historyUi = historyUiStateRef.current;
+            if (window.history.state?.tikitikitOverlay === 'deal-alert') {
+                alertClosePendingRef.current = false;
+                setAlertRouteTarget(window.history.state?.tikitikitAlertTarget || null);
+                setShowDealAlert(true);
+                return;
+            }
+            if (historyUi.showDealAlert) {
+                alertClosePendingRef.current = false;
+                historyClosePendingRef.current = false;
+                setShowDealAlert(false);
+                setAlertRouteTarget(null);
+                return;
+            }
+            if (historyUi.selectedFlight && (historyUi.showContact || historyUi.showAccount)) {
+                if (historyUi.showContact) setShowContact(false);
+                else if (historyUi.showAccount) setShowAccount(false);
+                else {
+                    setShowDealAlert(false);
+                    setAlertRouteTarget(null);
+                }
+                const restoredUrl = new URL(window.location.href);
+                restoredUrl.searchParams.set('flight', historyUi.selectedFlight.id);
+                window.history.pushState(
+                    { ...window.history.state, tikitikitOverlay: 'flight' },
+                    '',
+                    `${restoredUrl.pathname}${restoredUrl.search}${restoredUrl.hash}`,
+                );
+                return;
+            }
+            historyClosePendingRef.current = false;
+            const flightId = new URLSearchParams(window.location.search).get('flight');
+            if (!flightId) {
+                setSelectedFlight(null);
+                return;
+            }
+            const flight = historyUi.flights.find(item => item.id === flightId);
+            if (!flight) {
+                if (historyUi.loading) {
+                    sharedFlightIdRef.current = flightId;
+                    return;
+                }
+                setSelectedFlight(null);
+                const nextUrl = new URL(window.location.href);
+                nextUrl.searchParams.delete('flight');
+                const nextState = { ...window.history.state };
+                delete nextState.tikitikitOverlay;
+                window.history.replaceState(nextState, '', `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`);
+                setToast('이 표는 현재 목록에서 내려갔어요.');
+                return;
+            }
+            setPassengers({ adult: Math.max(1, flight.minPax || 1), child: 0, infant: 0 });
+            setSelectedFlight(flight);
+        };
+        window.addEventListener('popstate', syncDetailFromHistory);
+        return () => window.removeEventListener('popstate', syncDetailFromHistory);
+    }, []);
 
     useEffect(() => {
         if (!selectedFlight || loading) return;
@@ -903,9 +1081,13 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
             if (refreshedFlight !== selectedFlight) setSelectedFlight(refreshedFlight);
             return;
         }
-        setSelectedFlight(null);
+        if (showDealAlert) {
+            closeDealAlert();
+            return;
+        }
+        closeSelectedFlight();
         setToast('이 표는 방금 현재 목록에서 내려갔어요.');
-    }, [flights, loading, selectedFlight]);
+    }, [closeDealAlert, closeSelectedFlight, flights, loading, selectedFlight, showDealAlert]);
 
     useEffect(() => {
         if (!desktopFilterOpen) return;
@@ -919,6 +1101,7 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
             if (event.key === 'Escape') {
                 setDesktopFilterOpen(null);
                 setCalendarOpen(false);
+                window.requestAnimationFrame(() => desktopFilterTriggerRef.current?.focus());
             }
         };
         document.addEventListener('pointerdown', closeDesktopFilter);
@@ -935,7 +1118,10 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
             if (!sortMenuRef.current?.contains(event.target as Node)) setSortOpen(false);
         };
         const closeSortMenuWithKeyboard = (event: KeyboardEvent) => {
-            if (event.key === 'Escape') setSortOpen(false);
+            if (event.key === 'Escape') {
+                setSortOpen(false);
+                window.requestAnimationFrame(() => sortTriggerRef.current?.focus());
+            }
         };
         document.addEventListener('pointerdown', closeSortMenu);
         document.addEventListener('keydown', closeSortMenuWithKeyboard);
@@ -948,7 +1134,11 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
     useEffect(() => {
         try {
             const saved = JSON.parse(localStorage.getItem('favoriteFlights') || '[]');
-            if (Array.isArray(saved)) setFavorites(new Set(saved.filter(id => typeof id === 'string')));
+            if (Array.isArray(saved)) {
+                const ids = new Set<string>(saved.filter(id => typeof id === 'string'));
+                setGuestFavorites(ids);
+                setFavorites(ids);
+            }
         } catch { }
     }, []);
 
@@ -962,23 +1152,59 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
         } catch { }
     }, []);
 
+    const accountFavoriteKey = account.favoriteIds.slice().sort().join('\u0000');
+
     useEffect(() => {
         if (account.status !== 'authenticated') {
-            if (account.status === 'anonymous') mergedAccountRef.current = null;
+            if (account.status === 'anonymous' || account.status === 'unavailable') {
+                mergedAccountRef.current = null;
+                favoriteIntentRef.current.clear();
+                favoriteMutationVersionRef.current.clear();
+                confirmedAccountFavoritesRef.current.clear();
+                setFavorites(new Set(guestFavorites));
+            }
             return;
         }
-        if (!account.email || mergedAccountRef.current === account.email) return;
+
+        const accountIds = accountFavoriteKey ? accountFavoriteKey.split('\u0000') : [];
+        confirmedAccountFavoritesRef.current = new Set(accountIds);
+        const applyPendingIntents = (baseIds: string[]) => {
+            const next = new Set(baseIds);
+            favoriteIntentRef.current.forEach((favorite, flightId) => {
+                if (favorite) next.add(flightId);
+                else next.delete(flightId);
+            });
+            return next;
+        };
+        if (!account.email) return;
+        if (mergedAccountRef.current === account.email) {
+            setFavorites(applyPendingIntents([...accountIds, ...Array.from(guestFavorites)]));
+            return;
+        }
+
         mergedAccountRef.current = account.email;
-        let localIds: string[] = [];
-        try {
-            const saved = JSON.parse(localStorage.getItem('favoriteFlights') || '[]');
-            if (Array.isArray(saved)) localIds = saved.filter(id => typeof id === 'string');
-        } catch { }
-        const combined = Array.from(new Set([...localIds, ...account.favoriteIds]));
-        setFavorites(new Set(combined));
-        try { localStorage.setItem('favoriteFlights', JSON.stringify(combined)); } catch { }
-        if (localIds.length) void account.mergeLocalFavorites(localIds).catch(() => undefined);
-    }, [account, account.email, account.status]);
+        const guestIds = Array.from(guestFavorites);
+        const mergeAccountEmail = account.email;
+        setFavorites(applyPendingIntents([...guestIds, ...accountIds]));
+        if (!guestIds.length) return;
+
+        void account.mergeLocalFavorites(guestIds).then(result => {
+            if (!result.completed) return;
+            if (mergedAccountRef.current !== mergeAccountEmail) return;
+            const mergedSet = new Set(result.mergedFlightIds);
+            setGuestFavorites(current => {
+                const next = new Set(Array.from(current).filter(id => !mergedSet.has(id)));
+                try {
+                    if (next.size) localStorage.setItem('favoriteFlights', JSON.stringify(Array.from(next)));
+                    else localStorage.removeItem('favoriteFlights');
+                } catch { }
+                return next;
+            });
+        }).catch(() => {
+            mergedAccountRef.current = null;
+            setToast('이 기기의 찜을 계정으로 옮기지 못했어요. 잠시 후 다시 시도해주세요.');
+        });
+    }, [account.email, account.status, accountFavoriteKey, account.mergeLocalFavorites, guestFavorites]);
 
     useEffect(() => {
         setIsMobile(checkIsMobile());
@@ -1047,8 +1273,8 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
             let benchmark = departureMonth ? cityPrices?.[departureMonth] : undefined;
             if (!benchmark && cityPrices && departureMonth) {
                 const closestMonth = Object.keys(cityPrices).sort().reduce((best, month) => {
-                    const difference = Math.abs(month.localeCompare(departureMonth));
-                    const bestDifference = best ? Math.abs(best.localeCompare(departureMonth)) : Infinity;
+                    const difference = monthDistance(month, departureMonth);
+                    const bestDifference = best ? monthDistance(best, departureMonth) : Infinity;
                     return difference < bestDifference ? month : best;
                 }, '');
                 if (closestMonth) benchmark = cityPrices[closestMonth];
@@ -1163,19 +1389,52 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
         && !maxPrice
         && !query.trim()
         && sort === 'recommended';
-    const todayPick = useMemo(() => {
-        const flight = flights.find(item => item.id === todayPickId)
-            || flights.slice().sort(compareRecommended)[0];
-        return flight ? { flight, reason: describeDropCard(flight) } : null;
-    }, [compareRecommended, flights, todayPickId]);
-    const dropAlertFlight = useMemo(() => (
-        flights
-            .filter(isTickerWorthyDrop)
-            .sort(compareRecommended)[0] || null
-    ), [compareRecommended, flights]);
     const featuredPick = useMemo(() => (
-        todayPick || (dropAlertFlight ? { flight: dropAlertFlight, reason: describeDropCard(dropAlertFlight) } : null)
-    ), [dropAlertFlight, todayPick]);
+        (() => {
+            const absoluteDropMax = 150_000;
+            const deepDropMax = 200_000;
+            const comparisonTolerance = 1.05;
+            const deepDropRatio = 0.75;
+            const marketReference = (flight: Flight) => {
+                if (flight.naverLowest && flight.naverLowest > 0
+                    && getComparisonFreshness(flight.naverCheckedAt).usable) {
+                    return flight.naverLowest;
+                }
+                const city = stripAirport(flight.arrival.city);
+                const month = flight.departure.date
+                    ?.replace(/\./g, '-')
+                    .replace(/\(.*\)/g, '')
+                    .trim()
+                    .substring(0, 7);
+                const months = interparkPrices[city];
+                if (!months || !month) return null;
+                const exact = months[month];
+                if (exact?.lowest) return exact.lowest;
+                const closest = Object.keys(months).sort().reduce((best, candidate) => {
+                    const difference = monthDistance(candidate, month);
+                    const bestDifference = best ? monthDistance(best, month) : Infinity;
+                    return difference < bestDifference ? candidate : best;
+                }, '');
+                return closest ? months[closest]?.lowest || null : null;
+            };
+            const exceptional = (flight: Flight) => {
+                const price = effectivePrice(flight);
+                if (price <= 0 || price > deepDropMax) return false;
+                const reference = marketReference(flight);
+                return (price <= absoluteDropMax && (!reference || price <= reference * comparisonTolerance))
+                    || (!!reference && price <= reference * deepDropRatio);
+            };
+            const flight = flights
+                .filter(exceptional)
+                .sort((a, b) => effectivePrice(a) - effectivePrice(b) || compareRecommended(a, b))[0]
+                || flights.find(item => item.id === todayPickId)
+                || flights.slice().sort(compareRecommended)[0];
+            return flight ? { flight, reason: describeDropCard(flight) } : null;
+        })()
+    ), [compareRecommended, flights, interparkPrices, todayPickId]);
+    const dropAlertFlight = useMemo(() => (
+        featuredPick && isTickerWorthyDrop(featuredPick.flight) ? featuredPick.flight : null
+    ), [featuredPick]);
     const displayedFlights = useMemo(() => {
         const pinnedFlight = isDefaultView ? featuredPick?.flight : undefined;
         const pool = pinnedFlight
@@ -1668,28 +1927,48 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
         };
     }, [departure, error, filteredFlights.length, flights, interparkPrices, loading, query]);
     const guestFavoriteSnapshots = useMemo(
-        () => flights.filter(flight => favorites.has(flight.id)).map(toAccountSnapshot),
-        [favorites, flights],
+        () => flights.filter(flight => guestFavorites.has(flight.id)).map(toAccountSnapshot),
+        [flights, guestFavorites],
     );
 
     const toggleFavorite = (flight: Flight) => {
         const willFavorite = !favorites.has(flight.id);
+        const mutationVersion = (favoriteMutationVersionRef.current.get(flight.id) || 0) + 1;
+        favoriteMutationVersionRef.current.set(flight.id, mutationVersion);
+        favoriteIntentRef.current.set(flight.id, willFavorite);
         const next = new Set(favorites);
         if (willFavorite) next.add(flight.id);
         else next.delete(flight.id);
         setFavorites(next);
-        try { localStorage.setItem('favoriteFlights', JSON.stringify(Array.from(next))); } catch { }
+
+        if (account.status !== 'authenticated' || (!willFavorite && guestFavorites.has(flight.id))) {
+            const nextGuestFavorites = new Set(guestFavorites);
+            if (willFavorite && account.status !== 'authenticated') nextGuestFavorites.add(flight.id);
+            else nextGuestFavorites.delete(flight.id);
+            setGuestFavorites(nextGuestFavorites);
+            try { localStorage.setItem('favoriteFlights', JSON.stringify(Array.from(nextGuestFavorites))); } catch { }
+        }
         setToast(willFavorite
             ? account.status === 'authenticated'
                 ? `${stripAirport(flight.arrival.city)} 표를 내 여행에 저장했어요.`
                 : `${stripAirport(flight.arrival.city)} 표를 찜했어요. 로그인하면 다른 기기에서도 볼 수 있어요.`
             : '찜에서 뺐어요.');
-        void account.setFavorite(flight.id, willFavorite).catch(() => {
-            const restored = new Set(next);
-            if (willFavorite) restored.delete(flight.id);
-            else restored.add(flight.id);
-            setFavorites(restored);
-            try { localStorage.setItem('favoriteFlights', JSON.stringify(Array.from(restored))); } catch { }
+        if (account.status !== 'authenticated') {
+            favoriteIntentRef.current.delete(flight.id);
+            return;
+        }
+        void account.setFavorite(flight.id, willFavorite).then(() => {
+            if (favoriteMutationVersionRef.current.get(flight.id) !== mutationVersion) return;
+            favoriteIntentRef.current.delete(flight.id);
+        }).catch(() => {
+            if (favoriteMutationVersionRef.current.get(flight.id) !== mutationVersion) return;
+            favoriteIntentRef.current.delete(flight.id);
+            setFavorites(current => {
+                const restored = new Set(current);
+                if (confirmedAccountFavoritesRef.current.has(flight.id)) restored.add(flight.id);
+                else restored.delete(flight.id);
+                return restored;
+            });
             setToast('계정에 저장하지 못해 이전 상태로 되돌렸어요.');
         });
     };
@@ -1724,7 +2003,7 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
             setFlightReport({ flightId: flight.id, status: 'sent' });
             if (result.autoHidden) {
                 setFlights(current => current.filter(item => item.id !== flight.id));
-                setSelectedFlight(null);
+                closeSelectedFlight();
                 setToast('신고가 여러 건 모여 확인하는 동안 이 표를 잠시 숨겼어요.');
             } else {
                 setToast(result.duplicate
@@ -1738,6 +2017,7 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
     };
 
     const openFlight = (flight: Flight, entry = 'card_body') => {
+        if (selectedFlight?.id === flight.id && window.history.state?.tikitikitOverlay === 'flight') return;
         gtag.trackDetailOpen(
             `${normalizeCity(flight.departure.city)}-${normalizeCity(flight.arrival.city)}`,
             effectivePrice(flight),
@@ -1745,6 +2025,17 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
             entry,
         );
         account.recordRecent(flight.id);
+        const nextUrl = new URL(window.location.href);
+        nextUrl.searchParams.set('flight', flight.id);
+        const historyMethod = window.history.state?.tikitikitOverlay === 'flight'
+            ? 'replaceState'
+            : 'pushState';
+        window.history[historyMethod](
+            { ...window.history.state, tikitikitOverlay: 'flight' },
+            '',
+            `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`,
+        );
+        setPassengers({ adult: Math.max(1, flight.minPax || 1), child: 0, infant: 0 });
         setSelectedFlight(flight);
     };
 
@@ -1802,12 +2093,12 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
     };
 
     const openAccountFlight = (flightId: string) => {
+        setShowAccount(false);
         const flight = flights.find(item => item.id === flightId);
         if (!flight) {
             setToast('이 표는 현재 목록에서 내려갔어요.');
             return;
         }
-        setShowAccount(false);
         openFlight(flight);
     };
 
@@ -1873,10 +2164,11 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
     };
 
     return (
-        <main className={styles.previewPage}>
+        <Root className={styles.previewPage}>
             {isDefaultView && dropAlertFlight && (
                 <div
                     className={`${styles.dropTicker} ${styles.desktopDropTicker}`}
+                    data-drop-alert-flight-id={dropAlertFlight.id}
                     role="status"
                     aria-label={`특가 경보. ${stripAirport(dropAlertFlight.arrival.city)} 왕복 ${priceText(dropAlertFlight.price)}`}
                 >
@@ -1899,11 +2191,11 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
                         <Logo size={0.84} />
                     </a>
                     <div className={styles.headerActions}>
-                        <button type="button" className={styles.iconButton} onClick={() => setSearchOpen(value => !value)} aria-label="검색">
+                        <button ref={searchButtonRef} type="button" className={styles.iconButton} onClick={() => setSearchOpen(value => !value)} aria-label="검색">
                             <Icon name="search" />
                         </button>
-                        <button type="button" className={styles.alertButton} onClick={() => { setAlertRouteTarget(null); setShowDealAlert(true); }}>특가 알림</button>
-                        <button type="button" className={styles.accountIconButton} onClick={() => { gtag.trackAccountAction('open', 'preview'); setShowAccount(true); }} aria-label={account.status === 'authenticated' ? '내 여행 열기' : '로그인'}>
+                        <button type="button" className={styles.alertButton} onClick={() => openDealAlert(null)}>특가 알림</button>
+                        <button type="button" className={styles.accountIconButton} onClick={() => { gtag.trackAccountAction('open', previewMode ? 'preview' : 'main'); setShowAccount(true); }} aria-label={account.status === 'authenticated' ? '내 여행 열기' : '로그인'}>
                             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5" /><path d="M5.5 19c.6-3.5 3-5.4 6.5-5.4s5.9 1.9 6.5 5.4" /></svg>
                             <span className={styles.accountLabel}>{account.status === 'authenticated' ? '내 여행' : '로그인'}</span>
                             {account.status === 'authenticated' && <i className={styles.accountStatusDot} aria-hidden="true" />}
@@ -1914,6 +2206,7 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
                 {isDefaultView && dropAlertFlight && (
                     <div
                         className={`${styles.dropTicker} ${styles.mobileDropTicker}`}
+                        data-drop-alert-flight-id={dropAlertFlight.id}
                         role="status"
                         aria-label={`특가 경보. ${stripAirport(dropAlertFlight.arrival.city)} 왕복 ${priceText(dropAlertFlight.price)}`}
                     >
@@ -1959,7 +2252,10 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
                                     type="button"
                                     className={`${styles.desktopFilterSummary} ${departure !== '전체' ? styles.desktopFilterSummaryActive : ''}`}
                                     aria-expanded={desktopFilterOpen === 'departure'}
-                                    onClick={() => setDesktopFilterOpen(open => open === 'departure' ? null : 'departure')}
+                                    onClick={event => {
+                                        desktopFilterTriggerRef.current = event.currentTarget;
+                                        setDesktopFilterOpen(open => open === 'departure' ? null : 'departure');
+                                    }}
                                 >
                                     <span>출발지</span>
                                     <strong>{departure === '전체' ? '전체' : departureFilterLabel}</strong>
@@ -1972,6 +2268,7 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
                                                 type="button"
                                                 key={item}
                                                 className={departure === item ? styles.desktopFilterOptionActive : ''}
+                                                aria-pressed={departure === item}
                                                 onClick={() => {
                                                     setDeparture(item);
                                                     setDesktopFilterOpen(null);
@@ -1989,7 +2286,10 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
                                     type="button"
                                     className={`${styles.desktopFilterSummary} ${region !== '전체' ? styles.desktopFilterSummaryActive : ''}`}
                                     aria-expanded={desktopFilterOpen === 'region'}
-                                    onClick={() => setDesktopFilterOpen(open => open === 'region' ? null : 'region')}
+                                    onClick={event => {
+                                        desktopFilterTriggerRef.current = event.currentTarget;
+                                        setDesktopFilterOpen(open => open === 'region' ? null : 'region');
+                                    }}
                                 >
                                     <span>도착지</span>
                                     <strong>{region}</strong>
@@ -2002,6 +2302,7 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
                                                 type="button"
                                                 key={item}
                                                 className={region === item ? styles.desktopFilterOptionActive : ''}
+                                                aria-pressed={region === item}
                                                 onClick={() => {
                                                     setRegion(item);
                                                     setDesktopFilterOpen(null);
@@ -2019,7 +2320,8 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
                                     type="button"
                                     className={`${styles.desktopFilterSummary} ${datePeriod !== 'all' ? styles.desktopFilterSummaryActive : ''}`}
                                     aria-expanded={desktopFilterOpen === 'date'}
-                                    onClick={() => {
+                                    onClick={event => {
+                                        desktopFilterTriggerRef.current = event.currentTarget;
                                         setDesktopFilterOpen(open => open === 'date' ? null : 'date');
                                         setCalendarOpen(false);
                                     }}
@@ -2036,6 +2338,7 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
                                                     type="button"
                                                     key={item.value}
                                                     className={datePeriod === item.value ? styles.desktopFilterOptionActive : ''}
+                                                    aria-pressed={datePeriod === item.value}
                                                     onClick={() => {
                                                         setDatePeriod(item.value);
                                                         setCustomStartDate(null);
@@ -2050,6 +2353,7 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
                                             <button
                                                 type="button"
                                                 className={datePeriod === 'custom' ? styles.desktopFilterOptionActive : ''}
+                                                aria-pressed={datePeriod === 'custom'}
                                                 onClick={() => setCalendarOpen(open => !open)}
                                             >
                                                 날짜 직접 선택
@@ -2089,7 +2393,10 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
                                     type="button"
                                     className={`${styles.desktopFilterSummary} ${maxPrice > 0 ? styles.desktopFilterSummaryActive : ''}`}
                                     aria-expanded={desktopFilterOpen === 'price'}
-                                    onClick={() => setDesktopFilterOpen(open => open === 'price' ? null : 'price')}
+                                    onClick={event => {
+                                        desktopFilterTriggerRef.current = event.currentTarget;
+                                        setDesktopFilterOpen(open => open === 'price' ? null : 'price');
+                                    }}
                                 >
                                     <span>가격</span>
                                     <strong>{maxPrice ? PRICE_OPTIONS.find(item => item.value === maxPrice)?.label : '전체'}</strong>
@@ -2102,6 +2409,7 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
                                                 type="button"
                                                 key={item.value}
                                                 className={maxPrice === item.value ? styles.desktopFilterOptionActive : ''}
+                                                aria-pressed={maxPrice === item.value}
                                                 onClick={() => {
                                                     setMaxPrice(item.value);
                                                     setDesktopFilterOpen(null);
@@ -2115,6 +2423,7 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
                             </div>
 
                             <button
+                                ref={sortTriggerRef}
                                 type="button"
                                 className={`${styles.desktopAdvancedFilter} ${(sourceFilter !== 'all' || airlineFilter !== 'all') ? styles.desktopAdvancedFilterActive : ''}`}
                                 onClick={() => setFilterOpen(true)}
@@ -2143,6 +2452,7 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
                                     key={item}
                                     className={region === item ? styles.activeFilter : ''}
                                     aria-label={`도착 지역 ${item}`}
+                                    aria-pressed={region === item}
                                     onClick={() => {
                                         setRegion(item);
                                         setRegionMoreOpen(false);
@@ -2168,6 +2478,7 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
                                         type="button"
                                         key={item}
                                         className={region === item ? styles.moreRegionActive : ''}
+                                        aria-pressed={region === item}
                                         onClick={() => {
                                             setRegion(item);
                                             setRegionMoreOpen(false);
@@ -2216,7 +2527,7 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
                                 type="button"
                                 className={styles.sortTrigger}
                                 aria-label="항공권 정렬"
-                                aria-haspopup="listbox"
+                                aria-controls="flight-sort-options"
                                 aria-expanded={sortOpen}
                                 onClick={() => setSortOpen(value => !value)}
                             >
@@ -2224,12 +2535,11 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
                                 <span className={`${styles.sortChevron} ${sortOpen ? styles.sortChevronOpen : ''}`} aria-hidden="true"><Icon name="chevron" /></span>
                             </button>
                             {sortOpen && (
-                                <div className={styles.sortMenu} role="listbox" aria-label="정렬 방식">
+                                <div id="flight-sort-options" className={styles.sortMenu} role="group" aria-label="정렬 방식">
                                     {SORT_OPTIONS.map(option => (
                                         <button
                                             type="button"
-                                            role="option"
-                                            aria-selected={sort === option.value}
+                                            aria-pressed={sort === option.value}
                                             className={`${styles.sortOption} ${sort === option.value ? styles.sortOptionSelected : ''}`}
                                             key={option.value}
                                             onClick={() => {
@@ -2269,10 +2579,7 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
                                 {emptyRouteAlertTarget && (
                                     <button
                                         type="button"
-                                        onClick={() => {
-                                            setAlertRouteTarget(emptyRouteAlertTarget);
-                                            setShowDealAlert(true);
-                                        }}
+                                        onClick={() => openDealAlert(emptyRouteAlertTarget)}
                                     >{emptyRouteAlertTarget.arrivalCity} 표 나오면 알림</button>
                                 )}
                             </div>
@@ -2295,7 +2602,11 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
                             return (
                                 <Fragment key={flight.id}>
                                     <div className={styles.cardEntry}>
-                                        <article className={`${styles.flightCard} ${isTodayPick ? styles.todayPickCard : ''}`}>
+                                        <article
+                                            className={`${styles.flightCard} ${isTodayPick ? styles.todayPickCard : ''}`}
+                                            data-flight-id={flight.id}
+                                            data-tikit-drop={isTodayPick ? 'true' : undefined}
+                                        >
                                             <button type="button" className={styles.cardBody} onClick={() => openFlight(flight)}>
                                                 {isTodayPick && (
                                                     <span className={styles.todayPickStrip}>
@@ -2439,6 +2750,7 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
                     )}
                 </section>
 
+                {beforeFooter}
                 <footer className={styles.siteFooter}>
                     <div className={styles.siteFooterGrid}>
                         <section className={styles.siteFooterBrand}>
@@ -2507,10 +2819,10 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
 
             {filterOpen && (
                 <div className={`${styles.sheetOverlay} ${styles.filterOverlay}`} onClick={() => setFilterOpen(false)}>
-                    <section className={styles.bottomSheet} onClick={event => event.stopPropagation()} aria-label="항공권 필터">
+                    <section ref={filterDialogRef} className={styles.bottomSheet} role="dialog" aria-modal="true" aria-label="항공권 필터" aria-labelledby="flight-filter-title" onClick={event => event.stopPropagation()}>
                         <div className={styles.sheetHandle} />
                         <div className={styles.sheetHeader}>
-                            <h2>표 골라보기</h2>
+                            <h2 id="flight-filter-title">표 골라보기</h2>
                             <button type="button" onClick={resetFilters}>초기화</button>
                         </div>
 
@@ -2518,7 +2830,7 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
                             <h3>출발지</h3>
                             <div className={styles.optionGrid}>
                                 {DEPARTURE_OPTIONS.map(item => (
-                                    <button type="button" key={item} className={departure === item ? styles.optionActive : ''} onClick={() => setDeparture(item)}>{item}</button>
+                                    <button type="button" key={item} className={departure === item ? styles.optionActive : ''} aria-pressed={departure === item} onClick={() => setDeparture(item)}>{item}</button>
                                 ))}
                             </div>
                         </div>
@@ -2527,7 +2839,7 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
                             <h3>도착 지역</h3>
                             <div className={styles.optionGrid}>
                                 {REGION_OPTIONS.map(item => (
-                                    <button type="button" key={item} className={region === item ? styles.optionActive : ''} onClick={() => setRegion(item)}>{item}</button>
+                                    <button type="button" key={item} className={region === item ? styles.optionActive : ''} aria-pressed={region === item} onClick={() => setRegion(item)}>{item}</button>
                                 ))}
                             </div>
                         </div>
@@ -2536,7 +2848,7 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
                             <h3>가격</h3>
                             <div className={styles.optionGrid}>
                                 {PRICE_OPTIONS.map(item => (
-                                    <button type="button" key={item.value} className={maxPrice === item.value ? styles.optionActive : ''} onClick={() => setMaxPrice(item.value)}>{item.label}</button>
+                                    <button type="button" key={item.value} className={maxPrice === item.value ? styles.optionActive : ''} aria-pressed={maxPrice === item.value} onClick={() => setMaxPrice(item.value)}>{item.label}</button>
                                 ))}
                             </div>
                         </div>
@@ -2549,6 +2861,7 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
                                         type="button"
                                         key={item.value}
                                         className={datePeriod === item.value ? styles.optionActive : ''}
+                                        aria-pressed={datePeriod === item.value}
                                         onClick={() => {
                                             setDatePeriod(item.value);
                                             setCustomStartDate(null);
@@ -2563,6 +2876,7 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
                             <button
                                 type="button"
                                 className={`${styles.dateDirectButton} ${datePeriod === 'custom' ? styles.dateDirectActive : ''}`}
+                                aria-pressed={datePeriod === 'custom'}
                                 onClick={() => setCalendarOpen(open => !open)}
                             >
                                 <span>📅</span>
@@ -2634,8 +2948,17 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
                 const reportCompleted = Boolean(recentFlightReports[selectedFlight.id])
                     || (flightReport?.flightId === selectedFlight.id && flightReport.status === 'sent');
                 return (
-                <div className={`${styles.sheetOverlay} ${styles.detailOverlay}`} onClick={() => setSelectedFlight(null)}>
-                    <section className={`${styles.bottomSheet} ${styles.detailSheet}`} onClick={event => event.stopPropagation()} aria-label="항공권 상세">
+                <div className={`${styles.sheetOverlay} ${styles.detailOverlay}`} onClick={closeSelectedFlight}>
+                    <section
+                        ref={detailDialogRef}
+                        className={`${styles.bottomSheet} ${styles.detailSheet}`}
+                        role="dialog"
+                        aria-modal={showDealAlert || showAccount || showContact ? undefined : true}
+                        aria-hidden={showDealAlert || showAccount || showContact ? true : undefined}
+                        aria-label="항공권 상세"
+                        aria-labelledby="flight-detail-title"
+                        onClick={event => event.stopPropagation()}
+                    >
                         <div className={styles.sheetHandle} />
                         <div className={styles.detailHeader}>
                             <div className={styles.detailAgencyLine}>
@@ -2643,12 +2966,12 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
                                 <span className={styles.detailAirline}>{selectedFlight.airline || '항공사 확인'}</span>
                                 {detailSeats > 0 && <span className={styles.detailSeatCount}>{detailSeats}석 남음</span>}
                             </div>
-                            <button type="button" onClick={() => setSelectedFlight(null)} aria-label="닫기"><Icon name="close" /></button>
+                            <button type="button" onClick={closeSelectedFlight} aria-label="닫기"><Icon name="close" /></button>
                         </div>
 
                         <div className={styles.detailTitle}>
                             <div>
-                                <h2>{departureName(selectedFlight)} ↔ {stripAirport(selectedFlight.arrival.city)}</h2>
+                                <h2 id="flight-detail-title">{departureName(selectedFlight)} ↔ {stripAirport(selectedFlight.arrival.city)}</h2>
                             </div>
                             <div>
                                 <strong>{priceText(selectedFlight.source === 'ttang' ? selectedFlight.price : effectivePrice(selectedFlight))}</strong>
@@ -2753,13 +3076,14 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
                             <button
                                 type="button"
                                 onClick={() => {
-                                    setAlertRouteTarget({
+                                    openDealAlert({
                                         flightId: selectedFlight.id,
                                         departureCity: departureName(selectedFlight),
                                         arrivalCity: stripAirport(selectedFlight.arrival.city),
-                                        currentPrice: effectivePrice(selectedFlight),
+                                        currentPrice: selectedFlight.source === 'ttang'
+                                            ? selectedFlight.price
+                                            : effectivePrice(selectedFlight),
                                     });
-                                    setShowDealAlert(true);
                                 }}
                             >
                                 이 노선 가격 알림
@@ -2799,14 +3123,19 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
                                         { key: 'adult', label: '성인', age: '만 12세 이상', min: 1, max: 9 },
                                         { key: 'child', label: '소아', age: '만 2~11세', min: 0, max: 9 },
                                         { key: 'infant', label: '유아', age: '만 2세 미만', min: 0, max: Math.min(4, passengers.adult) },
-                                    ] as const).map(item => (
+                                    ] as const).map(item => {
+                                        const seatPassengers = passengers.adult + passengers.child;
+                                        const minimumPassengers = Math.max(1, selectedFlight.minPax || 1);
+                                        const decrementDisabled = passengers[item.key] <= item.min
+                                            || (item.key !== 'infant' && seatPassengers <= minimumPassengers);
+                                        return (
                                         <div className={styles.passengerRow} key={item.key}>
                                             <span><strong>{item.label}</strong><small>{item.age}</small></span>
                                             <div>
                                                 <button
                                                     type="button"
                                                     aria-label={`${item.label} 한 명 줄이기`}
-                                                    disabled={passengers[item.key] <= item.min}
+                                                    disabled={decrementDisabled}
                                                     onClick={() => setPassengers(current => {
                                                         const nextValue = current[item.key] - 1;
                                                         return item.key === 'adult'
@@ -2823,7 +3152,8 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
                                                 >+</button>
                                             </div>
                                         </div>
-                                    ))}
+                                        );
+                                    })}
                                     {passengers.child + passengers.infant > 0 && (
                                         <p>소아·유아 요금은 성인과 달라요. 정확한 금액은 예약 페이지에서 확인해주세요.</p>
                                     )}
@@ -2897,7 +3227,7 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
 
             {showContact && (
                 <div className={`${styles.sheetOverlay} ${styles.contactOverlay}`} onClick={() => setShowContact(false)}>
-                    <section className={`${styles.bottomSheet} ${styles.contactSheet}`} role="dialog" aria-modal="true" aria-labelledby="contact-title" onClick={event => event.stopPropagation()}>
+                    <section ref={contactDialogRef} className={`${styles.bottomSheet} ${styles.contactSheet}`} role="dialog" aria-modal="true" aria-labelledby="contact-title" onClick={event => event.stopPropagation()}>
                         <div className={styles.sheetHandle} />
                         <div className={styles.contactHeader}>
                             <div>
@@ -2945,12 +3275,39 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
                 onOpenFlight={openAccountFlight}
                 guestFavorites={guestFavoriteSnapshots}
                 onFavoriteRemoved={flightId => {
+                    if (!favorites.has(flightId)) return;
+                    const mutationVersion = (favoriteMutationVersionRef.current.get(flightId) || 0) + 1;
+                    favoriteMutationVersionRef.current.set(flightId, mutationVersion);
+                    favoriteIntentRef.current.set(flightId, false);
                     setFavorites(current => {
                         const next = new Set(current);
                         next.delete(flightId);
-                        try { localStorage.setItem('favoriteFlights', JSON.stringify(Array.from(next))); } catch { }
                         return next;
                     });
+                    if (account.status !== 'authenticated') {
+                        favoriteIntentRef.current.delete(flightId);
+                        setGuestFavorites(current => {
+                            const next = new Set(current);
+                            next.delete(flightId);
+                            try { localStorage.setItem('favoriteFlights', JSON.stringify(Array.from(next))); } catch { }
+                            return next;
+                        });
+                    } else {
+                        void account.setFavorite(flightId, false).then(() => {
+                            if (favoriteMutationVersionRef.current.get(flightId) !== mutationVersion) return;
+                            favoriteIntentRef.current.delete(flightId);
+                        }).catch(() => {
+                            if (favoriteMutationVersionRef.current.get(flightId) !== mutationVersion) return;
+                            favoriteIntentRef.current.delete(flightId);
+                            setFavorites(current => {
+                                const restored = new Set(current);
+                                if (confirmedAccountFavoritesRef.current.has(flightId)) restored.add(flightId);
+                                else restored.delete(flightId);
+                                return restored;
+                            });
+                            setToast('계정에서 찜을 해제하지 못했어요. 이전 상태로 되돌렸어요.');
+                        });
+                    }
                     setToast('찜에서 뺐어요.');
                 }}
             />
@@ -2961,10 +3318,10 @@ export default function MobileRedesignPreview({ previewMode = true }: MobileRede
                 initialRegion={region}
                 initialMaxPrice={maxPrice || 200_000}
                 initialRoute={alertRouteTarget}
-                onClose={() => { setShowDealAlert(false); setAlertRouteTarget(null); }}
+                onClose={closeDealAlert}
             />
 
             {toast && <div className={styles.toast} role="status">{toast}</div>}
-        </main>
+        </Root>
     );
 }

@@ -32,6 +32,8 @@ interface AlertSubscription {
     created_at?: string;
 }
 
+type DeliveryResult = 'sent' | 'expired' | 'failed';
+
 /**
  * 웹 푸시 발송자 연락처(VAPID subject).
  *
@@ -96,45 +98,88 @@ function endpointKey(alert: AlertSubscription): string {
     return alert.endpoint_hash || alert.subscription.endpoint;
 }
 
+async function claimDelivery(alert: AlertSubscription): Promise<boolean> {
+    const response = await supabaseRequest('rpc/claim_price_alert_delivery', {
+        method: 'POST',
+        body: JSON.stringify({ p_alert_id: String(alert.id) }),
+    });
+    if (!response.ok) {
+        const detail = await response.text().catch(() => '');
+        throw new Error(`발송 중복 방지 잠금 실패: ${response.status}${detail ? ` ${detail.slice(0, 200)}` : ''}`);
+    }
+    return await response.json() === true;
+}
+
+async function releaseDeliveryClaim(alert: AlertSubscription): Promise<boolean> {
+    const response = await supabaseRequest(`price_alerts?id=eq.${encodeURIComponent(String(alert.id))}`, {
+        method: 'PATCH',
+        headers: { Prefer: 'return=minimal' },
+        body: JSON.stringify({ delivery_claimed_at: null, updated_at: new Date().toISOString() }),
+    });
+    return response.ok;
+}
+
 async function sendAndRecord(
     alert: AlertSubscription,
     payload: Record<string, unknown>,
     updates: Record<string, unknown>,
-): Promise<boolean> {
+): Promise<DeliveryResult> {
     try {
         await webpush.sendNotification(alert.subscription, JSON.stringify(payload));
         const now = new Date().toISOString();
-        const updateResponse = await supabaseRequest(`price_alerts?id=eq.${alert.id}`, {
+        const updateResponse = await supabaseRequest(`price_alerts?id=eq.${encodeURIComponent(String(alert.id))}`, {
             method: 'PATCH',
             headers: { Prefer: 'return=minimal' },
             body: JSON.stringify({
                 ...updates,
                 last_sent_at: now,
+                delivery_claimed_at: null,
                 updated_at: now,
             }),
         });
         if (!updateResponse.ok) throw new Error(`발송 이력 저장 실패: ${updateResponse.status}`);
-        return true;
+        return 'sent';
     } catch (error: unknown) {
         const statusCode = (error as { statusCode?: number })?.statusCode;
         if (statusCode === 404 || statusCode === 410) {
-            await supabaseRequest(`price_alerts?id=eq.${alert.id}`, {
-                method: 'PATCH',
-                body: JSON.stringify({ active: false, updated_at: new Date().toISOString() }),
-            });
+            try {
+                const deactivateResponse = await supabaseRequest(`price_alerts?id=eq.${encodeURIComponent(String(alert.id))}`, {
+                    method: 'PATCH',
+                    headers: { Prefer: 'return=minimal' },
+                    body: JSON.stringify({
+                        active: false,
+                        delivery_claimed_at: null,
+                        updated_at: new Date().toISOString(),
+                    }),
+                });
+                if (!deactivateResponse.ok) {
+                    console.error(`[알림] 만료 구독 비활성화 실패: ${alert.id} (${deactivateResponse.status})`);
+                    return 'failed';
+                }
+            } catch (deactivateError) {
+                console.error(`[알림] 만료 구독 비활성화 실패: ${alert.id}`, deactivateError);
+                return 'failed';
+            }
             console.log(`[알림] 만료된 구독 비활성화: ${alert.id}`);
+            return 'expired';
         } else {
             console.error(`[알림] 발송 실패: ${alert.id}`, error);
         }
-        return false;
+        try {
+            if (!await releaseDeliveryClaim(alert)) {
+                console.error(`[알림] 발송 잠금 해제 실패: ${alert.id}`);
+            }
+        } catch (releaseError) {
+            console.error(`[알림] 발송 잠금 해제 실패: ${alert.id}`, releaseError);
+        }
+        return 'failed';
     }
 }
 
 async function main() {
     console.log('\n=== 가격 알림 발송 시작 ===');
     if (!VAPID_PUBLIC || !VAPID_PRIVATE || !SUPABASE_URL || !SUPABASE_KEY) {
-        console.log('VAPID 또는 Supabase 설정이 없어 알림 발송을 건너뜁니다.');
-        return;
+        throw new Error('VAPID 또는 Supabase 설정이 없어 알림을 발송할 수 없습니다.');
     }
 
     webpush.setVapidDetails(VAPID_CONTACT, VAPID_PUBLIC, VAPID_PRIVATE);
@@ -174,6 +219,7 @@ async function main() {
     let routeSentCount = 0;
     let dealSentCount = 0;
     let dealDryRunCount = 0;
+    let deliveryFailureCount = 0;
 
     for (const alert of orderedAlerts) {
         const subscriberKey = endpointKey(alert);
@@ -207,6 +253,20 @@ async function main() {
                 continue;
             }
 
+            let claimed = false;
+            try {
+                claimed = await claimDelivery(alert);
+            } catch (error) {
+                deliveryFailureCount++;
+                console.error(`[조건형] 발송 준비 실패: ${alert.id}`, error);
+                continue;
+            }
+            if (!claimed) {
+                console.log(`[조건형] 오늘 이미 발송했거나 다른 실행에서 처리 중: ${alert.id}`);
+                endpointsAlreadySentToday.add(subscriberKey);
+                continue;
+            }
+
             const text = buildDealNotificationText(condition, candidate);
             const payload = {
                 ...text,
@@ -214,7 +274,7 @@ async function main() {
                 tag: `deal-alert-${alert.id}`,
             };
             const sentAt = new Date().toISOString();
-            const sent = await sendAndRecord(alert, payload, {
+            const delivery = await sendAndRecord(alert, payload, {
                 last_notified_price: candidate.effectivePrice,
                 last_notified_flight_id: candidate.flightId,
                 notified_flight_ids: appendDealSentEvent(notifiedIds, {
@@ -224,11 +284,14 @@ async function main() {
                     flightId: candidate.flightId,
                 }),
             });
-            if (sent) {
-                endpointsAlreadySentToday.add(subscriberKey);
+            // 성공 여부와 관계없이 같은 실행에서 동일 기기에 두 번째 푸시를 시도하지 않는다.
+            endpointsAlreadySentToday.add(subscriberKey);
+            if (delivery === 'sent') {
                 sentCount++;
                 dealSentCount++;
                 console.log(`[조건형] ✅ ${candidate.departureCity} → ${candidate.arrivalCity} ${formatPrice(candidate.effectivePrice)}`);
+            } else if (delivery === 'failed') {
+                deliveryFailureCount++;
             }
             continue;
         }
@@ -274,23 +337,43 @@ async function main() {
             tag: `price-alert-${alert.id}`,
         };
 
+        let claimed = false;
+        try {
+            claimed = await claimDelivery(alert);
+        } catch (error) {
+            deliveryFailureCount++;
+            console.error(`[알림] 발송 준비 실패: ${alert.id}`, error);
+            continue;
+        }
+        if (!claimed) {
+            console.log(`[알림] 오늘 이미 발송했거나 다른 실행에서 처리 중: ${alert.id}`);
+            endpointsAlreadySentToday.add(subscriberKey);
+            continue;
+        }
+
         const updatedIds = [...new Set([...notifiedIds, cheapest.id])].slice(-20);
-        const sent = await sendAndRecord(alert, payload, {
+        const delivery = await sendAndRecord(alert, payload, {
             last_notified_price: cheapest.price,
             last_notified_flight_id: cheapest.id,
             notified_flight_ids: updatedIds,
         });
-        if (sent) {
-            endpointsAlreadySentToday.add(subscriberKey);
+        // 일부 이력 저장만 실패했더라도 같은 실행에서 중복 푸시를 보내지 않는다.
+        endpointsAlreadySentToday.add(subscriberKey);
+        if (delivery === 'sent') {
             sentCount++;
             routeSentCount++;
             console.log(`[알림] ✅ ${dep} → ${arr} ${formatPrice(cheapest.price)}`);
+        } else if (delivery === 'failed') {
+            deliveryFailureCount++;
         }
     }
 
     console.log(`\n[알림] 총 ${sentCount}건 발송 (노선형 ${routeSentCount}, 조건형 ${dealSentCount}), 활성 구독 ${alerts.length}건`);
     if (!DEAL_ALERT_SEND_ENABLED && dealDryRunCount > 0) {
         console.log(`[조건형] DRY RUN 후보 ${dealDryRunCount}건 — DEAL_ALERT_SEND_ENABLED=1 설정 전까지 실제 발송하지 않음`);
+    }
+    if (deliveryFailureCount > 0) {
+        throw new Error(`가격 알림 ${deliveryFailureCount}건의 발송 또는 이력 저장에 실패했습니다.`);
     }
 }
 
