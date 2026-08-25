@@ -1237,7 +1237,7 @@ export default function MobileRedesignPreview() {
 
                 {isDefaultView && dropAlertFlight && (
                     <div
-                        className={styles.dropTicker}
+                        className={`${styles.dropTicker} ${styles.mobileDropTicker}`}
                         role="status"
                         aria-label={`특가 경보. ${stripAirport(dropAlertFlight.arrival.city)} 왕복 ${priceText(dropAlertFlight.price)}`}
                     >
@@ -1276,6 +1276,27 @@ export default function MobileRedesignPreview() {
                         <h1>지금 나온 땡처리 항공권</h1>
                     </div>
                 </section>
+
+                {isDefaultView && dropAlertFlight && (
+                    <div
+                        className={`${styles.dropTicker} ${styles.desktopDropTicker}`}
+                        role="status"
+                        aria-label={`특가 경보. ${stripAirport(dropAlertFlight.arrival.city)} 왕복 ${priceText(dropAlertFlight.price)}`}
+                    >
+                        <div className={styles.dropTickerTrack}>
+                            {[false, true].map(isDuplicate => (
+                                <div className={styles.dropTickerContent} aria-hidden={isDuplicate || undefined} key={String(isDuplicate)}>
+                                    <span>🚨 TIKIT DROP 발생</span>
+                                    <span>{stripAirport(dropAlertFlight.arrival.city)} 왕복 {priceText(dropAlertFlight.price)}</span>
+                                    <span>🤯 담당자가 미쳤어요</span>
+                                    <span>{stripAirport(dropAlertFlight.arrival.city)} 왕복 {priceText(dropAlertFlight.price)}</span>
+                                    <span>담당자 알아채면 사라짐</span>
+                                    <span>{stripAirport(dropAlertFlight.arrival.city)} 왕복 {priceText(dropAlertFlight.price)}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 <div className={styles.conditionFilterAnchor} ref={filterBarSlotRef}>
                     <div className={`${styles.conditionFilterSlot} ${filterBarPinned ? styles.conditionFilterSlotPinned : ''}`}>
