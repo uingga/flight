@@ -11,13 +11,17 @@ import { calcFlightTiming, normalizeCity } from '@/lib/utils/flight-helpers';
 import { getTripcomHotelUrl, getTripcomTrackingId } from '@/lib/utils/tripcom-helpers';
 import type { Flight } from '@/types/flight';
 import AccountSheet from '@/components/account/AccountSheet';
-import { useAccount, type AccountSearchFilters } from '@/components/account/useAccount';
+import { useAccount, type AccountFlightSnapshot, type AccountSearchFilters } from '@/components/account/useAccount';
 import MobileDealAlertSheet from './MobileDealAlertSheet';
 import styles from './page.module.css';
 
 type SortMode = 'recommended' | 'price' | 'date';
 type DatePeriod = 'all' | 'this-week' | 'next-week' | 'this-month' | 'next-month' | 'custom';
 type DesktopFilterKey = 'departure' | 'region' | 'date' | 'price';
+type FlightReportStatus = 'sending' | 'sent' | 'error';
+
+const RECENT_FLIGHT_REPORTS_KEY = 'tikitikit_recent_flight_reports';
+const FLIGHT_REPORT_TTL_MS = 24 * 60 * 60 * 1000;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const DatePicker: any = dynamic(() => import('react-datepicker').then((mod: any) => mod.default), { ssr: false });
@@ -99,6 +103,22 @@ const departureName = (flight: Flight) => {
 };
 
 const effectivePrice = (flight: Flight) => flight.price + (flight.source === 'ttang' ? TTANG_TICKETING_FEE : 0);
+
+const toAccountSnapshot = (flight: Flight): AccountFlightSnapshot => ({
+    id: flight.id,
+    source: flight.source,
+    airline: flight.airline,
+    departureCity: flight.departure.city,
+    departureAirport: flight.departure.airport,
+    departureDate: flight.departure.date,
+    departureTime: flight.departure.time,
+    arrivalCity: flight.arrival.city,
+    arrivalAirport: flight.arrival.airport,
+    returnDate: flight.arrival.date,
+    returnTime: flight.arrival.time,
+    price: flight.price,
+    ...(flight.availableSeats ? { availableSeats: flight.availableSeats } : {}),
+});
 
 const parseDate = (value: string) => {
     const normalized = value.replace(/\./g, '-').replace(/\([^)]*\)/g, '').trim().slice(0, 10);
@@ -632,6 +652,8 @@ export default function MobileRedesignPreview() {
     const [showDealAlert, setShowDealAlert] = useState(false);
     const [selectedFlight, setSelectedFlight] = useState<Flight | null>(null);
     const [favorites, setFavorites] = useState<Set<string>>(new Set());
+    const [flightReport, setFlightReport] = useState<{ flightId: string; status: FlightReportStatus } | null>(null);
+    const [recentFlightReports, setRecentFlightReports] = useState<Record<string, number>>({});
     const [visibleCount, setVisibleCount] = useState(18);
     const [toast, setToast] = useState('');
     const [showScrollTop, setShowScrollTop] = useState(false);
@@ -718,6 +740,16 @@ export default function MobileRedesignPreview() {
         try {
             const saved = JSON.parse(localStorage.getItem('favoriteFlights') || '[]');
             if (Array.isArray(saved)) setFavorites(new Set(saved.filter(id => typeof id === 'string')));
+        } catch { }
+    }, []);
+
+    useEffect(() => {
+        try {
+            const saved = JSON.parse(localStorage.getItem(RECENT_FLIGHT_REPORTS_KEY) || '{}') as Record<string, number>;
+            const cutoff = Date.now() - FLIGHT_REPORT_TTL_MS;
+            const recent = Object.fromEntries(Object.entries(saved).filter(([, reportedAt]) => Number(reportedAt) >= cutoff));
+            setRecentFlightReports(recent);
+            localStorage.setItem(RECENT_FLIGHT_REPORTS_KEY, JSON.stringify(recent));
         } catch { }
     }, []);
 
@@ -1278,17 +1310,74 @@ export default function MobileRedesignPreview() {
             selectedFlight.departure.airport,
         )
         : null;
+    const guestFavoriteSnapshots = useMemo(
+        () => flights.filter(flight => favorites.has(flight.id)).map(toAccountSnapshot),
+        [favorites, flights],
+    );
 
-    const toggleFavorite = (id: string) => {
-        setFavorites(current => {
-            const next = new Set(current);
-            const willFavorite = !next.has(id);
-            if (!willFavorite) next.delete(id);
-            else next.add(id);
-            try { localStorage.setItem('favoriteFlights', JSON.stringify(Array.from(next))); } catch { }
-            void account.setFavorite(id, willFavorite).catch(() => setToast('계정에는 저장하지 못했어요.'));
-            return next;
+    const toggleFavorite = (flight: Flight) => {
+        const willFavorite = !favorites.has(flight.id);
+        const next = new Set(favorites);
+        if (willFavorite) next.add(flight.id);
+        else next.delete(flight.id);
+        setFavorites(next);
+        try { localStorage.setItem('favoriteFlights', JSON.stringify(Array.from(next))); } catch { }
+        setToast(willFavorite
+            ? account.status === 'authenticated'
+                ? `${stripAirport(flight.arrival.city)} 표를 내 여행에 저장했어요.`
+                : `${stripAirport(flight.arrival.city)} 표를 찜했어요. 로그인하면 다른 기기에서도 볼 수 있어요.`
+            : '찜에서 뺐어요.');
+        void account.setFavorite(flight.id, willFavorite).catch(() => {
+            const restored = new Set(next);
+            if (willFavorite) restored.delete(flight.id);
+            else restored.add(flight.id);
+            setFavorites(restored);
+            try { localStorage.setItem('favoriteFlights', JSON.stringify(Array.from(restored))); } catch { }
+            setToast('계정에 저장하지 못해 이전 상태로 되돌렸어요.');
         });
+    };
+
+    const submitFlightReport = async (flight: Flight, reportType: 'price_changed' | 'unavailable') => {
+        if (flightReport?.status === 'sending') return;
+        if (recentFlightReports[flight.id]) {
+            setToast('이미 신고가 접수된 항공권이에요.');
+            return;
+        }
+        setFlightReport({ flightId: flight.id, status: 'sending' });
+        try {
+            const response = await fetch('/api/flight-report', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
+                body: JSON.stringify({
+                    reportType,
+                    flight: { id: flight.id, source: flight.source },
+                }),
+            });
+            const result = await response.json().catch(() => ({})) as {
+                duplicate?: boolean;
+                autoHidden?: boolean;
+                error?: string;
+            };
+            if (!response.ok) throw new Error(result.error || '신고 접수에 실패했습니다.');
+            const reportedAt = Date.now();
+            const nextReports = { ...recentFlightReports, [flight.id]: reportedAt };
+            setRecentFlightReports(nextReports);
+            try { localStorage.setItem(RECENT_FLIGHT_REPORTS_KEY, JSON.stringify(nextReports)); } catch { }
+            setFlightReport({ flightId: flight.id, status: 'sent' });
+            if (result.autoHidden) {
+                setFlights(current => current.filter(item => item.id !== flight.id));
+                setSelectedFlight(null);
+                setToast('신고가 여러 건 모여 확인하는 동안 이 표를 잠시 숨겼어요.');
+            } else {
+                setToast(result.duplicate
+                    ? '이미 신고가 처리된 항공권이에요.'
+                    : '신고를 접수했어요. 같은 신고가 더 모이면 표를 잠시 숨겨요.');
+            }
+        } catch (cause) {
+            setFlightReport({ flightId: flight.id, status: 'error' });
+            setToast(cause instanceof Error ? cause.message : '신고 접수에 실패했습니다.');
+        }
     };
 
     const openFlight = (flight: Flight, entry = 'card_body') => {
@@ -1415,7 +1504,8 @@ export default function MobileRedesignPreview() {
                         <button type="button" className={styles.alertButton} onClick={() => setShowDealAlert(true)}>특가 알림</button>
                         <button type="button" className={styles.accountIconButton} onClick={() => { gtag.trackAccountAction('open', 'preview'); setShowAccount(true); }} aria-label={account.status === 'authenticated' ? '내 여행 열기' : '로그인'}>
                             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5" /><path d="M5.5 19c.6-3.5 3-5.4 6.5-5.4s5.9 1.9 6.5 5.4" /></svg>
-                            {account.status === 'authenticated' && <span />}
+                            <span className={styles.accountLabel}>{account.status === 'authenticated' ? '내 여행' : '로그인'}</span>
+                            {account.status === 'authenticated' && <i className={styles.accountStatusDot} aria-hidden="true" />}
                         </button>
                     </div>
                 </header>
@@ -1845,7 +1935,7 @@ export default function MobileRedesignPreview() {
                                             <button
                                                 type="button"
                                                 className={`${styles.favoriteButton} ${favorites.has(flight.id) ? styles.favoriteActive : ''}`}
-                                                onClick={() => toggleFavorite(flight.id)}
+                                                onClick={() => toggleFavorite(flight)}
                                                 aria-label={favorites.has(flight.id) ? '찜 해제' : '찜하기'}
                                             >
                                                 <Icon name="star" />
@@ -2045,6 +2135,9 @@ export default function MobileRedesignPreview() {
                 const inbound = legDetails(selectedFlight, 'return');
                 const stay = tripLength(selectedFlight);
                 const detailSeats = selectedFlight.availableSeats || Number.parseInt(selectedFlight.seats || '', 10) || 0;
+                const reportPending = flightReport?.flightId === selectedFlight.id && flightReport.status === 'sending';
+                const reportCompleted = Boolean(recentFlightReports[selectedFlight.id])
+                    || (flightReport?.flightId === selectedFlight.id && flightReport.status === 'sent');
                 return (
                 <div className={`${styles.sheetOverlay} ${styles.detailOverlay}`} onClick={() => setSelectedFlight(null)}>
                     <section className={`${styles.bottomSheet} ${styles.detailSheet}`} onClick={event => event.stopPropagation()} aria-label="항공권 상세">
@@ -2147,9 +2240,17 @@ export default function MobileRedesignPreview() {
                                 )}
                             </span>
                             <div className={styles.reportTools}>
-                                <button type="button" onClick={() => setToast('미리보기에서는 실제 신고를 저장하지 않아요.')}>가격이 달라요</button>
-                                <span aria-hidden="true">·</span>
-                                <button type="button" onClick={() => setToast('미리보기에서는 실제 신고를 저장하지 않아요.')}>예약이 안 돼요</button>
+                                {reportCompleted ? (
+                                    <span className={styles.reportReceived}>신고 접수됨</span>
+                                ) : reportPending ? (
+                                    <span className={styles.reportReceived}>접수 중…</span>
+                                ) : (
+                                    <>
+                                        <button type="button" onClick={() => void submitFlightReport(selectedFlight, 'price_changed')}>가격이 달라요</button>
+                                        <span aria-hidden="true">·</span>
+                                        <button type="button" onClick={() => void submitFlightReport(selectedFlight, 'unavailable')}>예약이 안 돼요</button>
+                                    </>
+                                )}
                             </div>
                         </div>
 
@@ -2203,6 +2304,7 @@ export default function MobileRedesignPreview() {
                 currentSearch={currentAccountSearch}
                 onApplySearch={applyAccountSearch}
                 onOpenFlight={openAccountFlight}
+                guestFavorites={guestFavoriteSnapshots}
                 onFavoriteRemoved={flightId => {
                     setFavorites(current => {
                         const next = new Set(current);
@@ -2210,6 +2312,7 @@ export default function MobileRedesignPreview() {
                         try { localStorage.setItem('favoriteFlights', JSON.stringify(Array.from(next))); } catch { }
                         return next;
                     });
+                    setToast('찜에서 뺐어요.');
                 }}
             />
 

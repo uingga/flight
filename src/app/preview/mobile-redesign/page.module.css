@@ -79,9 +79,10 @@
 .iconButton { width: 36px; color: #35373e; }
 .iconButton svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.9; }
 .alertButton { padding: 0 13px; background: var(--brand-soft); color: var(--brand-dark); font-size: var(--size-meta); font-weight: var(--weight-bold); }
-.accountIconButton { position: relative; width: 36px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); }
-.accountIconButton svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
-.accountIconButton span { position: absolute; top: 4px; right: 4px; width: 6px; height: 6px; border: 1px solid white; border-radius: 50%; background: var(--brand); }
+.accountIconButton { position: relative; min-width: 36px; padding: 0 10px; gap: 5px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); }
+.accountIconButton svg { width: 17px; height: 17px; flex: 0 0 auto; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
+.accountLabel { font-size: var(--size-caption); line-height: 1; font-weight: var(--weight-bold); white-space: nowrap; }
+.accountStatusDot { position: absolute; top: 4px; right: 5px; width: 6px; height: 6px; border: 1px solid white; border-radius: 50%; background: var(--brand); }
 
 .dropTicker { box-sizing: border-box; height: 29px; overflow: hidden; border-bottom: 2px solid #f2c7d0; background: var(--brand-soft); color: var(--brand-dark); font-size: var(--size-caption); line-height: 1; font-weight: var(--weight-heavy); letter-spacing: 0.035em; white-space: nowrap; }
 .mobileDropTicker { box-shadow: inset 0 2px #f2c7d0; }
@@ -647,6 +648,7 @@
 .reportTools button { min-height: 22px; padding: 0 2px; color: #8d836e; font-size: var(--size-micro); line-height: 1; font-weight: var(--weight-medium); text-decoration: underline; text-decoration-color: #cfc4ab; text-underline-offset: 2px; }
 .reportTools button:hover { color: #666666; text-decoration-color: #999999; }
 .reportTools span { font-size: var(--size-micro); }
+.reportTools .reportReceived { color: #777067; font-weight: var(--weight-medium); }
 .bookingButton { height: 54px; margin-top: 14px; display: flex; align-items: center; justify-content: center; gap: 6px; border-radius: 14px; background: var(--brand); color: var(--on-brand); font-size: var(--size-body); font-weight: var(--weight-heavy); box-shadow: none; }
 .bookingButton:hover { color: var(--on-brand); }
 .bookingButton svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; }
@@ -742,8 +744,8 @@
         background: #e8e8e8;
     }
     .headerActions { gap: 10px; }
-    .iconButton,
-    .accountIconButton { width: 40px; height: 40px; }
+    .iconButton { width: 40px; height: 40px; }
+    .accountIconButton { height: 40px; padding: 0 13px; }
     .alertButton { height: 40px; padding: 0 17px; }
     .mobileDropTicker { display: none; }
     .desktopDropTicker {
@@ -1113,6 +1115,9 @@
 }
 
 @media (max-width: 360px) {
+    .headerActions { gap: 5px; }
+    .alertButton { padding: 0 9px; }
+    .accountIconButton { padding: 0 8px; }
     .routeGrid { margin-right: 12px; margin-left: 12px; }
     .cardFooter { padding-right: 12px; padding-left: 12px; }
     .priceLine { gap: 3px; }

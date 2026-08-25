@@ -18,6 +18,7 @@ interface AccountSheetProps {
     onApplySearch: (filters: AccountSearchFilters) => void;
     onOpenFlight: (flightId: string) => void;
     onFavoriteRemoved: (flightId: string) => void;
+    guestFavorites?: AccountFlightSnapshot[];
 }
 
 type AccountTab = 'favorites' | 'recent' | 'searches';
@@ -83,7 +84,7 @@ function savedSearchDateLabel(filters: AccountSearchFilters) {
 }
 
 export default function AccountSheet({
-    open, onClose, account, currentSearch, onApplySearch, onOpenFlight, onFavoriteRemoved,
+    open, onClose, account, currentSearch, onApplySearch, onOpenFlight, onFavoriteRemoved, guestFavorites = [],
 }: AccountSheetProps) {
     const [loginEmail, setLoginEmail] = useState('');
     const [code, setCode] = useState('');
@@ -187,6 +188,24 @@ export default function AccountSheet({
                         <div className={styles.benefits}>
                             <span>♡ 찜 동기화</span><span>↻ 최근 본 표</span><span>⌕ 검색 조건 저장</span>
                         </div>
+                        {guestFavorites.length > 0 && (
+                            <section className={styles.guestFavorites} aria-label="이 브라우저에 찜한 표">
+                                <div className={styles.guestFavoritesHeader}>
+                                    <strong>이 브라우저에 찜한 표</strong>
+                                    <span>{guestFavorites.length}개 · 로그인하면 다른 기기에서도 보여요</span>
+                                </div>
+                                <div className={styles.guestFavoritesList}>
+                                    {guestFavorites.map(snapshot => (
+                                        <FlightRow
+                                            key={snapshot.id}
+                                            snapshot={snapshot}
+                                            onClick={() => onOpenFlight(snapshot.id)}
+                                            onRemove={() => onFavoriteRemoved(snapshot.id)}
+                                        />
+                                    ))}
+                                </div>
+                            </section>
+                        )}
                         {!requestId ? (
                             <form onSubmit={event => { event.preventDefault(); void sendCode(); }}>
                                 <label className={styles.label} htmlFor="account-email">이메일</label>

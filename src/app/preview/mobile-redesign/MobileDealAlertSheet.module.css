@@ -28,6 +28,10 @@
 .header h2 { margin-top: 3px; color: var(--ink, #222); font-size: 22px; line-height: 1.25; font-weight: 800; letter-spacing: -0.045em; }
 .header span { display: block; margin-top: 3px; color: var(--muted, #6a6a6a); font-size: 13px; }
 .header > button { width: 34px; height: 34px; flex: 0 0 auto; color: #777; font-size: 25px; line-height: 1; }
+.tabs { display: flex; gap: 18px; margin: 17px 0 0; border-bottom: 1px solid #ece9eb; }
+.tabs button { position: relative; padding: 0 1px 10px; color: #8a8387; font-size: 13px; font-weight: 700; }
+.tabs .activeTab { color: var(--ink, #222); }
+.tabs .activeTab::after { content: ''; position: absolute; right: 0; bottom: -1px; left: 0; height: 2px; border-radius: 999px; background: var(--brand, #ff385c); }
 .body { padding-top: 3px; }
 .body fieldset { margin-top: 22px; border: 0; }
 .body legend { margin-bottom: 9px; color: #3f3f3f; font-size: 12px; font-weight: 700; }
@@ -47,10 +51,36 @@
 .success span { margin-top: 8px; color: var(--muted, #6a6a6a); font-size: 13px; }
 .success p { max-width: 290px; margin-top: 9px; color: #858585; font-size: 11px; line-height: 1.5; }
 .success button { width: 100%; height: 48px; margin-top: 28px; border-radius: 13px; background: var(--brand, #ff385c); color: #fff; font-size: 14px; font-weight: 800; }
+.successActions { width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 28px; }
+.successActions button { margin-top: 0; }
+.successActions button:first-child { border: 1px solid var(--line, #ddd); background: #fff; color: var(--ink, #222); }
+
+.managerBody { padding: 16px 0 2px; }
+.managerEmpty { min-height: 220px; padding: 28px 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: #858585; text-align: center; }
+.managerEmpty strong { color: var(--ink, #222); font-size: 15px; }
+.managerEmpty span { max-width: 290px; font-size: 12px; line-height: 1.55; }
+.managerEmpty button { min-height: 40px; margin-top: 10px; padding: 0 16px; border: 1px solid var(--line, #ddd); border-radius: 10px; background: #fff; color: var(--ink, #222); font-size: 12px; font-weight: 700; }
+.alertList { display: grid; gap: 9px; }
+.alertItem { padding: 13px; border: 1px solid #e8e5e6; border-radius: 14px; background: #fff; }
+.alertItemTitle { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.alertItemTitle strong { min-width: 0; color: var(--ink, #222); font-size: 13px; line-height: 1.35; }
+.alertItemTitle span { flex: 0 0 auto; color: #918a8e; font-size: 10px; line-height: 1.4; }
+.alertPriceInput { height: 41px; margin-top: 11px; padding: 0 11px; display: flex; align-items: center; border: 1px solid var(--line, #ddd); border-radius: 10px; }
+.alertPriceInput input { width: 100%; min-width: 0; border: 0; outline: 0; color: var(--ink, #222); font-size: 14px; font-weight: 700; }
+.alertPriceInput span { flex: 0 0 auto; color: var(--muted, #6a6a6a); font-size: 11px; }
+.alertItemActions { margin-top: 9px; display: flex; justify-content: flex-end; gap: 7px; }
+.alertItemActions button { min-height: 32px; padding: 0 11px; border: 1px solid var(--line, #ddd); border-radius: 9px; color: #5d575a; font-size: 11px; font-weight: 700; }
+.alertItemActions button:first-child { border-color: #f1c3d0; color: var(--brand-dark, #c93058); }
+.alertItemActions button:disabled,
+.managerFooter button:disabled { opacity: .48; }
+.managerMessage { margin: 11px 2px 0; color: #6f676b; font-size: 11px; line-height: 1.5; text-align: center; }
+.managerFooter { margin-top: 16px; padding-top: 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid #eee; }
+.managerFooter span { max-width: 210px; color: #8c8589; font-size: 10px; line-height: 1.45; }
+.managerFooter button { flex: 0 0 auto; min-height: 34px; padding: 0 11px; border: 1px solid var(--line, #ddd); border-radius: 9px; color: #5d575a; font-size: 11px; font-weight: 700; }
 
 @keyframes overlayIn { from { opacity: 0; } }
 @keyframes sheetUp { from { transform: translateY(24px); opacity: .6; } }
 
 @media (min-width: 700px) {
-    .sheet { margin-bottom: 24px; border-radius: 24px; }
+    .sheet { margin-bottom: 24px; padding: 14px 24px 24px; border-radius: 24px; }
 }

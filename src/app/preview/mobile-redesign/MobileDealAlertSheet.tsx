@@ -14,6 +14,17 @@ interface MobileDealAlertSheetProps {
 }
 
 type SaveStatus = 'idle' | 'saving' | 'sent' | 'error';
+type SheetView = 'create' | 'manage';
+
+interface ManagedAlert {
+    id: string;
+    type: 'price' | 'deal';
+    departureCity: string;
+    arrivalCity?: string;
+    region?: DealAlertRegion;
+    maxPrice: number;
+    draftPrice: string;
+}
 
 const DEPARTURES = ['인천', '부산', '대구', '청주'];
 const REGIONS: Array<{ value: DealAlertRegion; label: string }> = [
@@ -46,6 +57,12 @@ const urlBase64ToUint8Array = (base64String: string) => {
     return Uint8Array.from(rawData, character => character.charCodeAt(0));
 };
 
+const getCurrentPushSubscription = async () => {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return null;
+    const registration = await navigator.serviceWorker.getRegistration();
+    return registration ? registration.pushManager.getSubscription() : null;
+};
+
 const postAlert = async (payload: Record<string, unknown>) => {
     const nonceResponse = await fetch('/api/alerts', { method: 'GET', credentials: 'same-origin' });
     if (!nonceResponse.ok) throw new Error('알림 보안 확인에 실패했어요.');
@@ -57,9 +74,16 @@ const postAlert = async (payload: Record<string, unknown>) => {
         body: JSON.stringify(payload),
     });
     const data = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(data.error === 'daily limit reached'
-        ? '오늘 등록할 수 있는 알림 수를 모두 사용했어요.'
-        : '알림을 저장하지 못했어요. 잠시 뒤 다시 시도해주세요.');
+    if (!response.ok) {
+        const errors: Record<string, string> = {
+            'daily limit reached': '오늘 등록할 수 있는 알림 수를 모두 사용했어요.',
+            'test cooldown': '테스트 알림은 10분에 한 번 보낼 수 있어요.',
+            'no active alerts': '테스트할 수 있는 알림이 없어요.',
+            'test unavailable': '테스트 알림을 잠시 사용할 수 없어요.',
+        };
+        throw new Error(errors[data.error] || '알림을 처리하지 못했어요. 잠시 뒤 다시 시도해주세요.');
+    }
+    return data as Record<string, unknown>;
 };
 
 export default function MobileDealAlertSheet({
@@ -74,6 +98,33 @@ export default function MobileDealAlertSheet({
     const [maxPrice, setMaxPrice] = useState('200000');
     const [status, setStatus] = useState<SaveStatus>('idle');
     const [message, setMessage] = useState<string | null>(null);
+    const [view, setView] = useState<SheetView>('create');
+    const [managedAlerts, setManagedAlerts] = useState<ManagedAlert[]>([]);
+    const [alertsLoading, setAlertsLoading] = useState(false);
+    const [alertBusy, setAlertBusy] = useState<string | null>(null);
+    const [managerMessage, setManagerMessage] = useState<string | null>(null);
+
+    const loadManagedAlerts = async () => {
+        setAlertsLoading(true);
+        setManagerMessage(null);
+        try {
+            const subscription = await getCurrentPushSubscription();
+            if (!subscription) {
+                setManagedAlerts([]);
+                return;
+            }
+            const data = await postAlert({ action: 'list', subscription: subscription.toJSON() });
+            const alerts = Array.isArray(data.alerts) ? data.alerts : [];
+            setManagedAlerts(alerts.map(item => {
+                const alert = item as Omit<ManagedAlert, 'draftPrice'>;
+                return { ...alert, draftPrice: String(alert.maxPrice) };
+            }));
+        } catch (error) {
+            setManagerMessage(error instanceof Error ? error.message : '내 알림을 불러오지 못했어요.');
+        } finally {
+            setAlertsLoading(false);
+        }
+    };
 
     useEffect(() => {
         if (!open) return;
@@ -82,7 +133,16 @@ export default function MobileDealAlertSheet({
         setMaxPrice(String(initialMaxPrice || 200_000));
         setStatus('idle');
         setMessage(null);
+        setView('create');
+        setManagerMessage(null);
     }, [initialDeparture, initialMaxPrice, initialRegion, open]);
+
+    useEffect(() => {
+        if (!open) return;
+        void loadManagedAlerts();
+        // 열릴 때 현재 기기의 푸시 구독을 한 번만 확인한다.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [open]);
 
     if (!open) return null;
 
@@ -139,11 +199,71 @@ export default function MobileDealAlertSheet({
                 },
             });
             gtag.trackDealAlertSetup(departure, region, budget);
+            await loadManagedAlerts();
             setStatus('sent');
             setMessage(`${departure} 출발 · ${dealAlertRegionLabel(region)} · ${formatPrice(budget)} 이하`);
         } catch (error) {
             setStatus('error');
             setMessage(error instanceof Error ? error.message : '알림을 저장하지 못했어요.');
+        }
+    };
+
+    const updateManagedAlert = async (alert: ManagedAlert) => {
+        const budget = Number(alert.draftPrice);
+        if (!Number.isFinite(budget) || budget < 10_000 || budget > 10_000_000) {
+            setManagerMessage('목표 가격을 1만원 이상으로 입력해주세요.');
+            return;
+        }
+        setAlertBusy(alert.id);
+        setManagerMessage(null);
+        try {
+            const subscription = await getCurrentPushSubscription();
+            if (!subscription) throw new Error('이 기기의 알림 연결을 찾지 못했어요.');
+            await postAlert({
+                action: 'update',
+                subscription: subscription.toJSON(),
+                alertId: alert.id,
+                maxPrice: budget,
+            });
+            setManagedAlerts(current => current.map(item => item.id === alert.id
+                ? { ...item, maxPrice: Math.round(budget), draftPrice: String(Math.round(budget)) }
+                : item));
+            setManagerMessage('목표 가격을 바꿨어요.');
+        } catch (error) {
+            setManagerMessage(error instanceof Error ? error.message : '목표 가격을 바꾸지 못했어요.');
+        } finally {
+            setAlertBusy(null);
+        }
+    };
+
+    const deleteManagedAlert = async (alert: ManagedAlert) => {
+        setAlertBusy(alert.id);
+        setManagerMessage(null);
+        try {
+            const subscription = await getCurrentPushSubscription();
+            if (!subscription) throw new Error('이 기기의 알림 연결을 찾지 못했어요.');
+            await postAlert({ action: 'delete', subscription: subscription.toJSON(), alertId: alert.id });
+            setManagedAlerts(current => current.filter(item => item.id !== alert.id));
+            setManagerMessage('알림을 해제했어요.');
+        } catch (error) {
+            setManagerMessage(error instanceof Error ? error.message : '알림을 해제하지 못했어요.');
+        } finally {
+            setAlertBusy(null);
+        }
+    };
+
+    const sendTestAlert = async () => {
+        setAlertBusy('test');
+        setManagerMessage(null);
+        try {
+            const subscription = await getCurrentPushSubscription();
+            if (!subscription) throw new Error('이 기기의 알림 연결을 찾지 못했어요.');
+            await postAlert({ action: 'test', subscription: subscription.toJSON() });
+            setManagerMessage('테스트 알림을 요청했어요. 잠시 후 기기 알림을 확인해주세요.');
+        } catch (error) {
+            setManagerMessage(error instanceof Error ? error.message : '테스트 알림을 보내지 못했어요.');
+        } finally {
+            setAlertBusy(null);
         }
     };
 
@@ -154,19 +274,87 @@ export default function MobileDealAlertSheet({
                 <header className={styles.header}>
                     <div>
                         <p>특가 알림</p>
-                        <h2 id="deal-alert-title">떠날 만한 표가 없나요?</h2>
-                        <span>좋은 표만 골라서 알려드려요.</span>
+                        <h2 id="deal-alert-title">{view === 'manage' ? '내 특가 알림' : '떠날 만한 표가 없나요?'}</h2>
+                        <span>{view === 'manage' ? '이 기기에 등록한 조건을 관리해요.' : '좋은 표만 골라서 알려드려요.'}</span>
                     </div>
                     <button type="button" onClick={onClose} aria-label="닫기">×</button>
                 </header>
 
-                {status === 'sent' ? (
+                <nav className={styles.tabs} aria-label="특가 알림 메뉴">
+                    <button type="button" className={view === 'create' ? styles.activeTab : ''} onClick={() => setView('create')}>새 알림</button>
+                    <button type="button" className={view === 'manage' ? styles.activeTab : ''} onClick={() => { setView('manage'); void loadManagedAlerts(); }}>
+                        내 알림{managedAlerts.length > 0 ? ` ${managedAlerts.length}` : ''}
+                    </button>
+                </nav>
+
+                {view === 'manage' ? (
+                    <div className={styles.managerBody}>
+                        {alertsLoading ? (
+                            <div className={styles.managerEmpty}>
+                                <span>이 기기에 등록한 알림을 불러오고 있어요…</span>
+                            </div>
+                        ) : managedAlerts.length === 0 ? (
+                            <div className={styles.managerEmpty}>
+                                <strong>이 기기에 등록된 알림이 없어요.</strong>
+                                <span>출발지·지역·예산만 정하면 볼 만한 표가 나올 때 알려드려요.</span>
+                                <button type="button" onClick={() => setView('create')}>새 알림 만들기</button>
+                            </div>
+                        ) : (
+                            <div className={styles.alertList}>
+                                {managedAlerts.map(alert => {
+                                    const destination = alert.type === 'deal' && alert.region
+                                        ? dealAlertRegionLabel(alert.region)
+                                        : alert.arrivalCity || '목적지';
+                                    return (
+                                        <article className={styles.alertItem} key={alert.id}>
+                                            <div className={styles.alertItemTitle}>
+                                                <strong>{alert.departureCity} 출발 · {destination}</strong>
+                                                <span>{alert.type === 'deal' ? '좋은 표만 골라서 알림' : '노선 가격 알림'}</span>
+                                            </div>
+                                            <label className={styles.alertPriceInput}>
+                                                <input
+                                                    type="number"
+                                                    min="10000"
+                                                    max="10000000"
+                                                    step="1000"
+                                                    inputMode="numeric"
+                                                    value={alert.draftPrice}
+                                                    onChange={event => setManagedAlerts(current => current.map(item => item.id === alert.id
+                                                        ? { ...item, draftPrice: event.target.value }
+                                                        : item))}
+                                                    aria-label={`${destination} 알림 목표 가격`}
+                                                />
+                                                <span>원 이하</span>
+                                            </label>
+                                            <div className={styles.alertItemActions}>
+                                                <button type="button" disabled={alertBusy === alert.id} onClick={() => void updateManagedAlert(alert)}>가격 저장</button>
+                                                <button type="button" disabled={alertBusy === alert.id} onClick={() => void deleteManagedAlert(alert)}>알림 해제</button>
+                                            </div>
+                                        </article>
+                                    );
+                                })}
+                            </div>
+                        )}
+                        {managerMessage && <p className={styles.managerMessage} role="status">{managerMessage}</p>}
+                        {managedAlerts.length > 0 && (
+                            <div className={styles.managerFooter}>
+                                <span>알림은 브라우저 권한 때문에 기기별로 관리돼요.</span>
+                                <button type="button" disabled={alertBusy === 'test'} onClick={() => void sendTestAlert()}>
+                                    {alertBusy === 'test' ? '요청 중…' : '테스트 알림 보내기'}
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                ) : status === 'sent' ? (
                     <div className={styles.success}>
                         <b>✓</b>
                         <strong>조건을 저장했어요.</strong>
                         <span>{message}</span>
                         <p>조건에 맞는 표를 전부 보내지는 않아요. 정말 볼 만할 때만 알려드릴게요.</p>
-                        <button type="button" onClick={onClose}>확인</button>
+                        <div className={styles.successActions}>
+                            <button type="button" onClick={() => setView('manage')}>내 알림 보기</button>
+                            <button type="button" onClick={onClose}>확인</button>
+                        </div>
                     </div>
                 ) : (
                     <div className={styles.body}>
