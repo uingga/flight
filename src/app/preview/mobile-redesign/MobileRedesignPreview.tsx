@@ -66,6 +66,8 @@ const SOURCE_NAMES: Record<Flight['source'], string> = {
 const TTANG_TICKETING_FEE = 20_000;
 
 const REGION_OPTIONS = ['전체', '일본', '동남아', '중화권', '남태평양', '유럽', '미주', '기타'];
+const QUICK_REGION_OPTIONS = REGION_OPTIONS.slice(0, 4);
+const MORE_REGION_OPTIONS = REGION_OPTIONS.slice(4);
 const DEPARTURE_OPTIONS = ['전체', '인천/김포', '부산/김해', '대구', '청주', '제주'];
 const DATE_PERIOD_OPTIONS: Array<{ label: string; value: DatePeriod }> = [
     { label: '전체', value: 'all' },
@@ -486,6 +488,7 @@ export default function MobileRedesignPreview() {
     const [query, setQuery] = useState('');
     const [searchOpen, setSearchOpen] = useState(false);
     const [filterOpen, setFilterOpen] = useState(false);
+    const [regionMoreOpen, setRegionMoreOpen] = useState(false);
     const [showDealAlert, setShowDealAlert] = useState(false);
     const [selectedFlight, setSelectedFlight] = useState<Flight | null>(null);
     const [favorites, setFavorites] = useState<Set<string>>(new Set());
@@ -1023,6 +1026,7 @@ export default function MobileRedesignPreview() {
             ? '날짜'
             : DATE_PERIOD_OPTIONS.find(item => item.value === datePeriod)?.label || '날짜';
     const priceFilterLabel = maxPrice ? `${Math.round(maxPrice / 10_000)}만원 이하` : '가격';
+    const hasAdvancedFilter = departure !== '전체' || datePeriod !== 'all' || maxPrice > 0;
     const updatedLabel = lastUpdated
         ? `${new Intl.DateTimeFormat('ko-KR', { month: 'numeric', day: 'numeric' }).format(new Date(lastUpdated))} 기준`
         : '최근 기준';
@@ -1174,10 +1178,16 @@ export default function MobileRedesignPreview() {
                         role="status"
                         aria-label={`특가 경보. ${stripAirport(dropAlertFlight.arrival.city)} 왕복 ${priceText(effectivePrice(dropAlertFlight))}`}
                     >
-                        <span>🚨 TIKIT DROP 발생</span>
-                        <span>{stripAirport(dropAlertFlight.arrival.city)} 왕복 {priceText(effectivePrice(dropAlertFlight))}</span>
-                        <span>🤯 정상 가격 맞나요</span>
-                        <span>담당자가 눈치채기 전에 보세요</span>
+                        <div className={styles.dropTickerTrack}>
+                            {[false, true].map(isDuplicate => (
+                                <div className={styles.dropTickerContent} aria-hidden={isDuplicate || undefined} key={String(isDuplicate)}>
+                                    <span>🚨 TIKIT DROP 발생</span>
+                                    <span>{stripAirport(dropAlertFlight.arrival.city)} 왕복 {priceText(effectivePrice(dropAlertFlight))}</span>
+                                    <span>🫣 담당자 확인 전</span>
+                                    <span>사라지기 전에 보세요</span>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 )}
 
@@ -1203,12 +1213,84 @@ export default function MobileRedesignPreview() {
                 </section>
 
                 <div className={styles.conditionFilterSlot} ref={filterBarSlotRef}>
-                    <nav className={`${styles.conditionFilterBar} ${filterBarPinned ? styles.conditionFilterBarPinned : ''}`} aria-label="현재 항공권 조건">
-                        <button type="button" className={departure !== '전체' ? styles.conditionActive : ''} onClick={() => setFilterOpen(true)}>{departureFilterLabel}</button>
-                        <button type="button" className={region !== '전체' ? styles.conditionActive : ''} onClick={() => setFilterOpen(true)}>{destinationFilterLabel}</button>
-                        <button type="button" className={datePeriod !== 'all' ? styles.conditionActive : ''} onClick={() => setFilterOpen(true)}>{dateFilterLabel}</button>
-                        <button type="button" className={maxPrice ? styles.conditionActive : ''} onClick={() => setFilterOpen(true)}>{priceFilterLabel}</button>
-                    </nav>
+                    <div className={styles.quickFilterRow}>
+                        <button type="button" className={`${styles.filterButton} ${hasAdvancedFilter ? styles.filterHasValue : ''}`} onClick={() => setFilterOpen(true)}>
+                            <Icon name="sliders" />
+                            필터
+                        </button>
+                        <nav className={`${styles.quickFilters} ${styles.regionChipRail}`} aria-label="도착 지역 빠른 선택">
+                            {QUICK_REGION_OPTIONS.map(item => (
+                                <button
+                                    type="button"
+                                    key={item}
+                                    className={region === item ? styles.activeFilter : ''}
+                                    aria-label={`도착 지역 ${item}`}
+                                    onClick={() => {
+                                        setRegion(item);
+                                        setRegionMoreOpen(false);
+                                    }}
+                                >
+                                    {item}
+                                </button>
+                            ))}
+                            <button
+                                type="button"
+                                className={`${styles.moreRegionButton} ${MORE_REGION_OPTIONS.includes(region) ? styles.activeFilter : ''}`}
+                                aria-label="다른 도착 지역 선택"
+                                aria-expanded={regionMoreOpen}
+                                onClick={() => setRegionMoreOpen(open => !open)}
+                            >
+                                {MORE_REGION_OPTIONS.includes(region) ? region : '···'}
+                            </button>
+                        </nav>
+                        {regionMoreOpen && (
+                            <nav className={styles.moreRegionInline} aria-label="추가 도착 지역">
+                                {MORE_REGION_OPTIONS.map(item => (
+                                    <button
+                                        type="button"
+                                        key={item}
+                                        className={region === item ? styles.moreRegionActive : ''}
+                                        onClick={() => {
+                                            setRegion(item);
+                                            setRegionMoreOpen(false);
+                                        }}
+                                    >
+                                        {item}
+                                    </button>
+                                ))}
+                            </nav>
+                        )}
+                    </div>
+                    {filterBarPinned && (
+                        <nav className={`${styles.conditionFilterBar} ${styles.conditionFilterBarPinned}`} aria-label="현재 항공권 조건">
+                            <div className={styles.conditionDateRow}>
+                                <button type="button" className={datePeriod !== 'all' ? styles.conditionActive : ''} onClick={() => setFilterOpen(true)}>
+                                    <span aria-hidden="true">📅</span>
+                                    {dateFilterLabel === '날짜' ? '날짜 전체' : dateFilterLabel}
+                                    <span className={styles.conditionChevron} aria-hidden="true">▼</span>
+                                </button>
+                                {maxPrice > 0 && (
+                                    <button type="button" className={styles.conditionActive} onClick={() => setFilterOpen(true)}>
+                                        <span aria-hidden="true">💰</span>
+                                        {priceFilterLabel}
+                                        <span className={styles.conditionChevron} aria-hidden="true">▼</span>
+                                    </button>
+                                )}
+                            </div>
+                            <div className={styles.conditionRouteRow}>
+                                <button type="button" className={departure !== '전체' ? styles.conditionActive : ''} onClick={() => setFilterOpen(true)}>
+                                    <span aria-hidden="true">✈️</span>
+                                    출발 {departureFilterLabel === '출발지' ? '전체' : departureFilterLabel}
+                                    <span className={styles.conditionChevron} aria-hidden="true">▼</span>
+                                </button>
+                                <button type="button" className={region !== '전체' ? styles.conditionActive : ''} onClick={() => setFilterOpen(true)}>
+                                    <span aria-hidden="true">📍</span>
+                                    도착 {destinationFilterLabel === '목적지' ? '전체' : destinationFilterLabel}
+                                    <span className={styles.conditionChevron} aria-hidden="true">▼</span>
+                                </button>
+                            </div>
+                        </nav>
+                    )}
                 </div>
 
                 <section className={styles.feedSection}>
