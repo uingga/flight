@@ -1301,6 +1301,92 @@ export default function MobileRedesignPreview() {
 
                 <div className={styles.conditionFilterAnchor} ref={filterBarSlotRef}>
                     <div className={`${styles.conditionFilterSlot} ${filterBarPinned ? styles.conditionFilterSlotPinned : ''}`}>
+                        <div className={styles.desktopFilterPanel} aria-label="항공권 필터">
+                            <div className={styles.desktopFilterRow}>
+                                <div className={styles.desktopFilterGroup}>
+                                    <strong>출발지</strong>
+                                    <div className={styles.desktopFilterOptions}>
+                                        {DEPARTURE_OPTIONS.map(item => (
+                                            <button
+                                                type="button"
+                                                key={item}
+                                                className={departure === item ? styles.desktopFilterActive : ''}
+                                                onClick={() => setDeparture(item)}
+                                            >
+                                                {item}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className={styles.desktopFilterGroup}>
+                                    <strong>도착지</strong>
+                                    <div className={styles.desktopFilterOptions}>
+                                        {REGION_OPTIONS.map(item => (
+                                            <button
+                                                type="button"
+                                                key={item}
+                                                className={region === item ? styles.desktopFilterActive : ''}
+                                                onClick={() => setRegion(item)}
+                                            >
+                                                {item}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                            <div className={styles.desktopFilterRow}>
+                                <div className={styles.desktopFilterGroup}>
+                                    <strong>출발 시기</strong>
+                                    <div className={styles.desktopFilterOptions}>
+                                        {DATE_PERIOD_OPTIONS.map(item => (
+                                            <button
+                                                type="button"
+                                                key={item.value}
+                                                className={datePeriod === item.value ? styles.desktopFilterActive : ''}
+                                                onClick={() => {
+                                                    setDatePeriod(item.value);
+                                                    setCustomStartDate(null);
+                                                    setCustomEndDate(null);
+                                                    setCalendarOpen(false);
+                                                }}
+                                            >
+                                                {item.label}
+                                            </button>
+                                        ))}
+                                        <button
+                                            type="button"
+                                            className={datePeriod === 'custom' ? styles.desktopFilterActive : ''}
+                                            onClick={() => {
+                                                setCalendarOpen(true);
+                                                setFilterOpen(true);
+                                            }}
+                                        >
+                                            {datePeriod === 'custom' ? dateFilterLabel : '날짜 선택'}
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className={styles.desktopFilterGroup}>
+                                    <strong>가격</strong>
+                                    <div className={styles.desktopFilterOptions}>
+                                        {PRICE_OPTIONS.map(item => (
+                                            <button
+                                                type="button"
+                                                key={item.value}
+                                                className={maxPrice === item.value ? styles.desktopFilterActive : ''}
+                                                onClick={() => setMaxPrice(item.value)}
+                                            >
+                                                {item.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                                {hasAdvancedFilter || region !== '전체' ? (
+                                    <button type="button" className={styles.desktopFilterReset} onClick={resetFilters}>
+                                        초기화
+                                    </button>
+                                ) : null}
+                            </div>
+                        </div>
                         <div className={styles.quickFilterRow}>
                         <button type="button" className={`${styles.filterButton} ${hasAdvancedFilter ? styles.filterHasValue : ''}`} onClick={() => setFilterOpen(true)}>
                             <Icon name="sliders" />
