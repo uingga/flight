@@ -472,7 +472,7 @@ const describeTodayPick = (flight: Flight) => {
     return '오늘 가장 먼저 살펴볼 항공권이에요';
 };
 
-function Icon({ name }: { name: 'sliders' | 'search' | 'star' | 'share' | 'close' | 'arrow' | 'plane' | 'up' }) {
+function Icon({ name }: { name: 'sliders' | 'search' | 'star' | 'share' | 'close' | 'arrow' | 'plane' | 'up' | 'chevron' }) {
     const paths = {
         sliders: <><line x1="4" y1="7" x2="20" y2="7" /><circle cx="9" cy="7" r="2" /><line x1="4" y1="17" x2="20" y2="17" /><circle cx="15" cy="17" r="2" /></>,
         search: <><circle cx="11" cy="11" r="7" /><line x1="16.5" y1="16.5" x2="21" y2="21" /></>,
@@ -482,6 +482,7 @@ function Icon({ name }: { name: 'sliders' | 'search' | 'star' | 'share' | 'close
         arrow: <><line x1="5" y1="12" x2="19" y2="12" /><polyline points="14 7 19 12 14 17" /></>,
         plane: <path d="M22 12c0-.6-.5-1.1-1.1-1.2l-6.4-.9-3.8-6.2C10.4 3.3 10 3 9.4 3H8.1l2.2 7.3-4.8.7-1.8-2H2.2l1 3-1 3h1.5l1.8-2 4.8.7L8.1 21h1.3c.6 0 1-.3 1.3-.7l3.8-6.2 6.4-.9c.6-.1 1.1-.6 1.1-1.2Z" />,
         up: <><line x1="12" y1="19" x2="12" y2="5" /><polyline points="6.5 10.5 12 5 17.5 10.5" /></>,
+        chevron: <polyline points="7 9 12 14 17 9" />,
     };
     return <svg viewBox="0 0 24 24" aria-hidden="true">{paths[name]}</svg>;
 }
@@ -1357,17 +1358,17 @@ export default function MobileRedesignPreview() {
                                 <button type="button" tabIndex={filterBarPinned ? 0 : -1} className={datePeriod !== 'all' ? styles.conditionActive : ''} onClick={() => setFilterOpen(true)}>
                                     <span aria-hidden="true">📅</span>
                                     {dateFilterLabel === '날짜' ? '날짜 전체' : dateFilterLabel}
-                                    <span className={styles.conditionChevron} aria-hidden="true">▼</span>
+                                    <span className={styles.conditionChevron} aria-hidden="true"><Icon name="chevron" /></span>
                                 </button>
                                 <button type="button" tabIndex={filterBarPinned ? 0 : -1} className={departure !== '전체' ? styles.conditionActive : ''} onClick={() => setFilterOpen(true)}>
                                     <span aria-hidden="true">✈️</span>
                                     출발 {departureFilterLabel === '출발지' ? '전체' : departureFilterLabel}
-                                    <span className={styles.conditionChevron} aria-hidden="true">▼</span>
+                                    <span className={styles.conditionChevron} aria-hidden="true"><Icon name="chevron" /></span>
                                 </button>
                                 <button type="button" tabIndex={filterBarPinned ? 0 : -1} className={region !== '전체' ? styles.conditionActive : ''} onClick={() => setFilterOpen(true)}>
                                     <span aria-hidden="true">📍</span>
                                     도착 {destinationFilterLabel === '목적지' ? '전체' : destinationFilterLabel}
-                                    <span className={styles.conditionChevron} aria-hidden="true">▼</span>
+                                    <span className={styles.conditionChevron} aria-hidden="true"><Icon name="chevron" /></span>
                                 </button>
                             </div>
                         </nav>
@@ -1391,6 +1392,7 @@ export default function MobileRedesignPreview() {
                                 <option value="price">낮은 가격순</option>
                                 <option value="date">빠른 출발순</option>
                             </select>
+                            <span className={styles.sortChevron} aria-hidden="true"><Icon name="chevron" /></span>
                         </label>
                     </div>
 
