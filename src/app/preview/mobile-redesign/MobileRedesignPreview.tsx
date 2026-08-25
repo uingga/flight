@@ -1200,15 +1200,17 @@ export default function MobileRedesignPreview() {
                     <div
                         className={styles.dropTicker}
                         role="status"
-                        aria-label={`특가 경보. ${stripAirport(dropAlertFlight.arrival.city)} 왕복 ${priceText(effectivePrice(dropAlertFlight))}`}
+                        aria-label={`특가 경보. ${stripAirport(dropAlertFlight.arrival.city)} 왕복 ${priceText(dropAlertFlight.price)}`}
                     >
                         <div className={styles.dropTickerTrack}>
                             {[false, true].map(isDuplicate => (
                                 <div className={styles.dropTickerContent} aria-hidden={isDuplicate || undefined} key={String(isDuplicate)}>
                                     <span>🚨 TIKIT DROP 발생</span>
-                                    <span>{stripAirport(dropAlertFlight.arrival.city)} 왕복 {priceText(effectivePrice(dropAlertFlight))}</span>
-                                    <span>🫣 담당자 확인 전</span>
-                                    <span>사라지기 전에 보세요</span>
+                                    <span>{stripAirport(dropAlertFlight.arrival.city)} 왕복 {priceText(dropAlertFlight.price)}</span>
+                                    <span>🤯 담당자가 미쳤어요</span>
+                                    <span>{stripAirport(dropAlertFlight.arrival.city)} 왕복 {priceText(dropAlertFlight.price)}</span>
+                                    <span>담당자 알아채면 사라짐</span>
+                                    <span>{stripAirport(dropAlertFlight.arrival.city)} 왕복 {priceText(dropAlertFlight.price)}</span>
                                 </div>
                             ))}
                         </div>
