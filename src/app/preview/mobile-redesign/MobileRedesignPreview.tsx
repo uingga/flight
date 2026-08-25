@@ -1220,21 +1220,26 @@ export default function MobileRedesignPreview() {
     return (
         <main className={styles.previewPage}>
             <div className={styles.phoneCanvas}>
-                <header className={styles.header}>
-                    <a href="/preview/mobile-redesign" className={styles.logoLink} aria-label="티키티킷 모바일 디자인 미리보기 홈">
-                        <Logo size={0.84} />
-                    </a>
-                    <div className={styles.headerActions}>
-                        <button type="button" className={styles.iconButton} onClick={() => setSearchOpen(value => !value)} aria-label="검색">
-                            <Icon name="search" />
-                        </button>
-                        <button type="button" className={styles.alertButton} onClick={() => setShowDealAlert(true)}>특가 알림</button>
-                        <button type="button" className={styles.accountIconButton} onClick={() => { gtag.trackAccountAction('open', 'preview'); setShowAccount(true); }} aria-label={account.status === 'authenticated' ? '내 여행 열기' : '로그인'}>
-                            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5" /><path d="M5.5 19c.6-3.5 3-5.4 6.5-5.4s5.9 1.9 6.5 5.4" /></svg>
-                            {account.status === 'authenticated' && <span />}
-                        </button>
+                {isDefaultView && dropAlertFlight && (
+                    <div
+                        className={`${styles.dropTicker} ${styles.desktopDropTicker}`}
+                        role="status"
+                        aria-label={`특가 경보. ${stripAirport(dropAlertFlight.arrival.city)} 왕복 ${priceText(dropAlertFlight.price)}`}
+                    >
+                        <div className={styles.dropTickerTrack}>
+                            {[false, true].map(isDuplicate => (
+                                <div className={styles.dropTickerContent} aria-hidden={isDuplicate || undefined} key={String(isDuplicate)}>
+                                    <span>🚨 TIKIT DROP 발생</span>
+                                    <span>{stripAirport(dropAlertFlight.arrival.city)} 왕복 {priceText(dropAlertFlight.price)}</span>
+                                    <span>🤯 담당자가 미쳤어요</span>
+                                    <span>{stripAirport(dropAlertFlight.arrival.city)} 왕복 {priceText(dropAlertFlight.price)}</span>
+                                    <span>담당자 알아채면 사라짐</span>
+                                    <span>{stripAirport(dropAlertFlight.arrival.city)} 왕복 {priceText(dropAlertFlight.price)}</span>
+                                </div>
+                            ))}
+                        </div>
                     </div>
-                </header>
+                )}
 
                 {isDefaultView && dropAlertFlight && (
                     <div
@@ -1257,6 +1262,22 @@ export default function MobileRedesignPreview() {
                     </div>
                 )}
 
+                <header className={styles.header}>
+                    <a href="/preview/mobile-redesign" className={styles.logoLink} aria-label="티키티킷 모바일 디자인 미리보기 홈">
+                        <Logo size={0.84} />
+                    </a>
+                    <div className={styles.headerActions}>
+                        <button type="button" className={styles.iconButton} onClick={() => setSearchOpen(value => !value)} aria-label="검색">
+                            <Icon name="search" />
+                        </button>
+                        <button type="button" className={styles.alertButton} onClick={() => setShowDealAlert(true)}>특가 알림</button>
+                        <button type="button" className={styles.accountIconButton} onClick={() => { gtag.trackAccountAction('open', 'preview'); setShowAccount(true); }} aria-label={account.status === 'authenticated' ? '내 여행 열기' : '로그인'}>
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5" /><path d="M5.5 19c.6-3.5 3-5.4 6.5-5.4s5.9 1.9 6.5 5.4" /></svg>
+                            {account.status === 'authenticated' && <span />}
+                        </button>
+                    </div>
+                </header>
+
                 {searchOpen && (
                     <div className={styles.searchRow}>
                         <Icon name="search" />
@@ -1277,27 +1298,6 @@ export default function MobileRedesignPreview() {
                         <h1>지금 나온 땡처리 항공권</h1>
                     </div>
                 </section>
-
-                {isDefaultView && dropAlertFlight && (
-                    <div
-                        className={`${styles.dropTicker} ${styles.desktopDropTicker}`}
-                        role="status"
-                        aria-label={`특가 경보. ${stripAirport(dropAlertFlight.arrival.city)} 왕복 ${priceText(dropAlertFlight.price)}`}
-                    >
-                        <div className={styles.dropTickerTrack}>
-                            {[false, true].map(isDuplicate => (
-                                <div className={styles.dropTickerContent} aria-hidden={isDuplicate || undefined} key={String(isDuplicate)}>
-                                    <span>🚨 TIKIT DROP 발생</span>
-                                    <span>{stripAirport(dropAlertFlight.arrival.city)} 왕복 {priceText(dropAlertFlight.price)}</span>
-                                    <span>🤯 담당자가 미쳤어요</span>
-                                    <span>{stripAirport(dropAlertFlight.arrival.city)} 왕복 {priceText(dropAlertFlight.price)}</span>
-                                    <span>담당자 알아채면 사라짐</span>
-                                    <span>{stripAirport(dropAlertFlight.arrival.city)} 왕복 {priceText(dropAlertFlight.price)}</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
 
                 <div className={styles.conditionFilterAnchor} ref={filterBarSlotRef}>
                     <div className={`${styles.conditionFilterSlot} ${filterBarPinned ? styles.conditionFilterSlotPinned : ''}`}>
