@@ -664,17 +664,17 @@
 
     .cardList,
     .loadingList {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        align-items: start;
-        gap: 16px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        align-items: end;
+        gap: 12px;
     }
-    .loadingList .skeletonCard:first-child { grid-column: 1 / -1; }
     .flightCard { border-radius: 12px; }
     .todayPickStrip { border-radius: 11px 11px 0 0; }
-    .cardTopline { padding-top: 15px; padding-right: 54px; padding-left: 18px; }
-    .routeGrid { margin-top: 18px; }
-    .routeEndpoint strong { font-size: var(--size-title); }
-    .cardFooter { min-height: 70px; padding: 13px 18px 16px; }
+    .cardTopline { padding-top: 14px; padding-right: 50px; padding-left: 14px; }
+    .routeGrid { margin: 17px 12px 0; }
+    .routeEndpoint strong { font-size: 20px; }
+    .cardFooter { min-height: 68px; padding: 12px 14px 15px; }
+    .priceBlock strong { font-size: 19px; }
     .favoriteButton { top: 12px; right: 12px; }
     .todayPickCard .favoriteButton { top: 43px; }
 

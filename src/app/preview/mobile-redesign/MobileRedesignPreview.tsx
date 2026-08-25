@@ -1087,8 +1087,8 @@ export default function MobileRedesignPreview() {
         : datePeriod === 'all'
             ? '날짜'
             : DATE_PERIOD_OPTIONS.find(item => item.value === datePeriod)?.label || '날짜';
-    const firstInsightCard = 8;
-    const insightInterval = 16;
+    const firstInsightCard = 9;
+    const insightInterval = 18;
     const hasAdvancedFilter = departure !== '전체' || datePeriod !== 'all' || maxPrice > 0;
     const updatedLabel = lastUpdated
         ? `${new Intl.DateTimeFormat('ko-KR', { month: 'numeric', day: 'numeric' }).format(new Date(lastUpdated))} 기준`
