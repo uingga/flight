@@ -1440,7 +1440,6 @@ export default function MobileRedesignPreview() {
                                                     <div>
                                                         <span className={`${styles.sourceBadge} ${styles[flight.source]}`}>{SOURCE_NAMES[flight.source]}</span>
                                                         <span className={styles.airline}>{flight.airline || '항공사 확인'}</span>
-                                                        {flight.source === 'ttang' && <span className={styles.cardFeeLabel}>수수료 별도</span>}
                                                     </div>
                                                 </div>
 
