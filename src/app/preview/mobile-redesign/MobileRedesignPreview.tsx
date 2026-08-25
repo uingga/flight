@@ -1084,8 +1084,8 @@ export default function MobileRedesignPreview() {
         : datePeriod === 'all'
             ? '날짜'
             : DATE_PERIOD_OPTIONS.find(item => item.value === datePeriod)?.label || '날짜';
-    const priceFilterLabel = maxPrice ? `${Math.round(maxPrice / 10_000)}만원 이하` : '가격 전체';
-    const firstInsightCard = isDefaultView && dropAlertFlight ? 5 : 4;
+    const firstInsightCard = 8;
+    const insightInterval = 16;
     const hasAdvancedFilter = departure !== '전체' || datePeriod !== 'all' || maxPrice > 0;
     const updatedLabel = lastUpdated
         ? `${new Intl.DateTimeFormat('ko-KR', { month: 'numeric', day: 'numeric' }).format(new Date(lastUpdated))} 기준`
@@ -1305,20 +1305,6 @@ export default function MobileRedesignPreview() {
                                 {MORE_REGION_OPTIONS.includes(region) ? region : '···'}
                             </button>
                         </nav>
-                        <nav className={styles.desktopFilterSummary} aria-label="PC 항공권 조건">
-                            <button type="button" className={departure !== '전체' ? styles.conditionActive : ''} onClick={() => setFilterOpen(true)}>
-                                출발 {departureFilterLabel === '출발지' ? '전체' : departureFilterLabel}
-                                <span className={styles.conditionChevron} aria-hidden="true">▼</span>
-                            </button>
-                            <button type="button" className={datePeriod !== 'all' ? styles.conditionActive : ''} onClick={() => setFilterOpen(true)}>
-                                {dateFilterLabel === '날짜' ? '날짜 전체' : dateFilterLabel}
-                                <span className={styles.conditionChevron} aria-hidden="true">▼</span>
-                            </button>
-                            <button type="button" className={maxPrice ? styles.conditionActive : ''} onClick={() => setFilterOpen(true)}>
-                                {priceFilterLabel}
-                                <span className={styles.conditionChevron} aria-hidden="true">▼</span>
-                            </button>
-                        </nav>
                         {regionMoreOpen && (
                             <nav className={styles.moreRegionInline} aria-label="추가 도착 지역">
                                 {MORE_REGION_OPTIONS.map(item => (
@@ -1406,15 +1392,14 @@ export default function MobileRedesignPreview() {
                             const price = effectivePrice(flight);
                             const discountRate = Math.round(Math.max(0, flight.discountRate || 0));
                             const isTodayPick = isDefaultView && featuredPick?.flight.id === flight.id;
-                            const isFeaturedDrop = isTodayPick && dropAlertFlight?.id === flight.id;
                             const cardNumber = index + 1;
-                            const insightIndex = cardNumber >= firstInsightCard && (cardNumber - firstInsightCard) % 8 === 0
-                                ? Math.floor((cardNumber - firstInsightCard) / 8)
+                            const insightIndex = cardNumber >= firstInsightCard && (cardNumber - firstInsightCard) % insightInterval === 0
+                                ? Math.floor((cardNumber - firstInsightCard) / insightInterval)
                                 : -1;
                             const insight = insightIndex >= 0 ? feedInsights[insightIndex] : null;
                             return (
                                 <Fragment key={flight.id}>
-                                    <div className={`${styles.cardEntry} ${isFeaturedDrop ? styles.featuredCardEntry : ''}`}>
+                                    <div className={styles.cardEntry}>
                                         <article className={`${styles.flightCard} ${isTodayPick ? styles.todayPickCard : ''}`}>
                                             <button type="button" className={styles.cardBody} onClick={() => openFlight(flight)}>
                                                 {isTodayPick && (

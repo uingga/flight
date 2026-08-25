@@ -216,7 +216,6 @@
 .quickFilters button { padding-right: 8px; padding-left: 8px; }
 .quickFilters .moreRegionButton { min-width: 42px; padding-right: 0; padding-left: 0; justify-content: center; font-size: 14px; line-height: 1; letter-spacing: 0; text-align: center; }
 .regionChipRail { flex: 1; min-width: 0; }
-.desktopFilterSummary { display: none; }
 .moreRegionInline { grid-column: 2; min-width: 0; display: flex; justify-content: flex-start; gap: 5px; overflow-x: auto; scrollbar-width: none; animation: inlineFilterIn 150ms ease-out; }
 .moreRegionInline::-webkit-scrollbar { display: none; }
 .moreRegionInline button { height: 32px; padding: 0 11px; flex: 0 0 auto; border: 1px solid var(--line); border-radius: 999px; background: var(--paper); color: var(--text-secondary); font-size: var(--size-caption); font-weight: var(--weight-medium); }
@@ -304,7 +303,7 @@
 
 .routeGrid { margin: 15px 16px 0; display: grid; grid-template-columns: minmax(0, 1fr) 48px minmax(0, 1fr); align-items: start; gap: 3px; }
 .routeEndpoint { min-width: 0; display: flex; flex-direction: column; align-items: center; text-align: center; }
-.routeEndpoint strong { max-width: 100%; overflow: hidden; color: var(--ink); font-size: var(--size-title); line-height: 1.2; font-weight: var(--weight-heavy); letter-spacing: -0.04em; text-overflow: ellipsis; white-space: nowrap; }
+.routeEndpoint strong { max-width: 100%; overflow: hidden; color: var(--ink); font-size: var(--size-title); line-height: 1.2; font-weight: var(--weight-bold); letter-spacing: -0.04em; text-overflow: ellipsis; white-space: nowrap; }
 .routeEndpointArrival strong { color: var(--ink); }
 .routeTiming { margin-top: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; white-space: nowrap; }
 .routeTiming b { color: var(--text-secondary); font-size: var(--size-meta); line-height: 1.25; font-weight: var(--weight-bold); }
@@ -353,10 +352,10 @@
 .insightTopline > svg { width: 16px; height: 16px; flex: 0 0 auto; fill: none; stroke: #a0a0a0; stroke-width: 1.8; }
 .insightEyebrow { display: inline-flex; align-items: center; gap: 6px; color: var(--text-secondary); font-size: var(--size-caption); line-height: 1; font-weight: var(--weight-bold); letter-spacing: -0.01em; }
 .insightEyebrow::before { width: 6px; height: 6px; flex: 0 0 auto; border-radius: 999px; background: var(--brand); content: ''; }
-.insightTitle { margin-top: 8px; font-size: 17px; line-height: 1.35; font-weight: var(--weight-heavy); letter-spacing: -0.025em; }
+.insightTitle { margin-top: 8px; font-size: 17px; line-height: 1.35; font-weight: var(--weight-bold); letter-spacing: -0.025em; }
 .insightDescription { margin-top: 4px; overflow: hidden; color: var(--text-secondary); font-size: var(--size-meta); line-height: 1.4; text-overflow: ellipsis; white-space: nowrap; }
 .insightMetric { margin-top: 12px; min-width: 0; display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
-.insightDestination { min-width: 0; overflow: hidden; font-size: 16px; line-height: 1.25; font-weight: var(--weight-bold); text-overflow: ellipsis; white-space: nowrap; }
+.insightDestination { min-width: 0; overflow: hidden; font-size: 16px; line-height: 1.25; font-weight: var(--weight-medium); text-overflow: ellipsis; white-space: nowrap; }
 .insightPriceTrail { flex: 0 0 auto; display: inline-flex; align-items: baseline; gap: 6px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .insightPreviousPrice { color: var(--text-faint); font-size: var(--size-meta); line-height: 1.2; font-weight: var(--weight-medium); }
 .insightPriceArrow { color: #b5b5b5; font-size: var(--size-caption); }
@@ -365,7 +364,7 @@
 .insightFooter > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .insightFooter > em { padding: 4px 7px; flex: 0 0 auto; border-radius: 999px; background: var(--brand-soft); color: var(--brand-dark); font-style: normal; font-weight: var(--weight-heavy); white-space: nowrap; }
 .insightFactHeadline { margin-top: 8px; min-width: 0; display: flex; align-items: baseline; gap: 8px; }
-.insightFactHeadline > strong { flex: 0 0 auto; color: var(--ink); font-size: 18px; line-height: 1.3; font-weight: var(--weight-heavy); letter-spacing: -0.03em; }
+.insightFactHeadline > strong { flex: 0 0 auto; color: var(--ink); font-size: 18px; line-height: 1.3; font-weight: var(--weight-bold); letter-spacing: -0.03em; }
 .insightFactHeadline > span { min-width: 0; overflow: hidden; color: var(--text-secondary); font-size: var(--size-meta); font-weight: var(--weight-bold); text-overflow: ellipsis; white-space: nowrap; }
 .insightFactFooter { margin-top: 9px; min-width: 0; display: flex; align-items: baseline; justify-content: space-between; gap: 10px; color: var(--text-muted); font-size: var(--size-caption); line-height: 1.25; }
 .insightFactFooter > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -479,7 +478,7 @@
 .detailHeader > button svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; }
 .detailTitle { margin-top: 13px; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .detailTitle p { color: var(--muted); font-size: var(--size-meta); }
-.detailTitle h2 { margin-top: 1px; font-size: var(--size-display); line-height: 1.22; font-weight: var(--weight-heavy); letter-spacing: -0.05em; }
+.detailTitle h2 { margin-top: 1px; font-size: var(--size-display); line-height: 1.22; font-weight: var(--weight-bold); letter-spacing: -0.05em; }
 .detailTitle > div:last-child { flex-shrink: 0; text-align: right; }
 .detailTitle > div:last-child strong { display: block; color: var(--brand); font-size: var(--size-detail-price); line-height: 1.1; font-weight: var(--weight-heavy); letter-spacing: -0.04em; }
 .detailTitle > div:last-child span { display: block; margin-top: 2px; color: var(--text-muted); font-size: var(--size-micro); line-height: 1.15; }
@@ -489,7 +488,7 @@
 .detailFlightLeg { display: grid; gap: 14px; }
 .detailLegHeader { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
 .detailLegHeader > div { display: flex; align-items: baseline; gap: 8px; }
-.detailLegHeader strong { color: #2d2d2d; font-size: var(--size-body); line-height: 1.25; font-weight: var(--weight-heavy); }
+.detailLegHeader strong { color: #2d2d2d; font-size: var(--size-body); line-height: 1.25; font-weight: var(--weight-bold); }
 .detailLegHeader small { color: var(--text-muted); font-size: var(--size-caption); line-height: 1.2; white-space: nowrap; }
 .detailVerticalRoute { position: relative; display: grid; gap: 17px; }
 .detailVerticalRoute::before { content: ''; position: absolute; top: 8px; bottom: 8px; left: 3.5px; width: 1px; background: #d5d5d5; }
@@ -497,7 +496,7 @@
 .detailRouteStop > span { position: relative; z-index: 1; width: 8px; height: 8px; margin-top: 5px; border: 1.5px solid var(--ink); border-radius: 50%; background: var(--paper-soft); }
 .detailRouteStop > div { min-width: 0; display: grid; gap: 3px; }
 .detailRouteTime { display: flex; align-items: baseline; gap: 7px; }
-.detailRouteStop em { color: #1f1f1f; font-size: var(--size-card); line-height: 1.18; font-style: normal; font-weight: var(--weight-heavy); font-variant-numeric: tabular-nums; }
+.detailRouteStop em { color: #1f1f1f; font-size: var(--size-card); line-height: 1.18; font-style: normal; font-weight: var(--weight-bold); font-variant-numeric: tabular-nums; }
 .detailRouteTime span { color: var(--text-muted); font-size: var(--size-meta); line-height: 1.2; font-weight: var(--weight-medium); white-space: nowrap; }
 .detailRouteTimeUnknown em { color: var(--text-muted); font-size: var(--size-body); font-weight: var(--weight-medium); }
 .detailRouteStop strong { overflow: hidden; color: var(--text-secondary); font-size: var(--size-body); line-height: 1.3; font-weight: var(--weight-regular); text-overflow: ellipsis; white-space: nowrap; }
@@ -627,7 +626,7 @@
     }
     .quickFilterRow {
         min-height: 58px;
-        grid-template-columns: max-content minmax(280px, 1fr) auto;
+        grid-template-columns: max-content minmax(0, 1fr);
         column-gap: 10px;
         padding: 10px 28px;
     }
@@ -636,29 +635,7 @@
     .quickFilters { gap: 6px; }
     .quickFilters button { padding-right: 12px; padding-left: 12px; }
     .quickFilters .moreRegionButton { min-width: 44px; padding: 0; }
-    .desktopFilterSummary {
-        display: flex;
-        align-items: center;
-        gap: 2px;
-        padding-left: 8px;
-        border-left: 1px solid var(--line);
-    }
-    .desktopFilterSummary button {
-        min-width: 0;
-        height: 34px;
-        padding: 0 9px;
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        border-radius: 8px;
-        color: var(--text-secondary);
-        font-size: var(--size-caption);
-        font-weight: var(--weight-bold);
-        white-space: nowrap;
-    }
-    .desktopFilterSummary button:hover { background: var(--paper-soft); color: var(--ink); }
-    .desktopFilterSummary .conditionActive { color: var(--brand-dark); }
-    .moreRegionInline { grid-column: 2 / 4; padding-bottom: 2px; }
+    .moreRegionInline { grid-column: 2; padding-bottom: 2px; }
     .conditionFilterBarPinned { display: none; }
 
     .feedSection { padding: 24px 28px 54px; }
@@ -674,28 +651,6 @@
         gap: 16px;
     }
     .loadingList .skeletonCard:first-child { grid-column: 1 / -1; }
-    .featuredCardEntry { grid-column: 1 / -1; }
-    .featuredCardEntry .cardBody {
-        display: grid;
-        grid-template-columns: minmax(0, 1.25fr) minmax(270px, .75fr);
-    }
-    .featuredCardEntry .todayPickStrip,
-    .featuredCardEntry .cardTopline { grid-column: 1 / -1; }
-    .featuredCardEntry .routeGrid {
-        grid-column: 1;
-        grid-row: 3;
-        margin: 19px 32px 22px;
-    }
-    .featuredCardEntry .ticketDivider { display: none; }
-    .featuredCardEntry .cardFooter {
-        grid-column: 2;
-        grid-row: 3;
-        min-height: 84px;
-        margin: 11px 0 14px;
-        padding: 14px 28px;
-        border-left: 1px dashed var(--line-soft);
-    }
-
     .flightCard { border-radius: 12px; }
     .todayPickStrip { border-radius: 11px 11px 0 0; }
     .cardTopline { padding-top: 15px; padding-right: 54px; padding-left: 18px; }
