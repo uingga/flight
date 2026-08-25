@@ -1220,6 +1220,22 @@ export default function MobileRedesignPreview() {
     return (
         <main className={styles.previewPage}>
             <div className={styles.phoneCanvas}>
+                <header className={styles.header}>
+                    <a href="/preview/mobile-redesign" className={styles.logoLink} aria-label="티키티킷 모바일 디자인 미리보기 홈">
+                        <Logo size={0.84} />
+                    </a>
+                    <div className={styles.headerActions}>
+                        <button type="button" className={styles.iconButton} onClick={() => setSearchOpen(value => !value)} aria-label="검색">
+                            <Icon name="search" />
+                        </button>
+                        <button type="button" className={styles.alertButton} onClick={() => setShowDealAlert(true)}>특가 알림</button>
+                        <button type="button" className={styles.accountIconButton} onClick={() => { gtag.trackAccountAction('open', 'preview'); setShowAccount(true); }} aria-label={account.status === 'authenticated' ? '내 여행 열기' : '로그인'}>
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5" /><path d="M5.5 19c.6-3.5 3-5.4 6.5-5.4s5.9 1.9 6.5 5.4" /></svg>
+                            {account.status === 'authenticated' && <span />}
+                        </button>
+                    </div>
+                </header>
+
                 {isDefaultView && dropAlertFlight && (
                     <div
                         className={`${styles.dropTicker} ${styles.desktopDropTicker}`}
@@ -1261,22 +1277,6 @@ export default function MobileRedesignPreview() {
                         </div>
                     </div>
                 )}
-
-                <header className={styles.header}>
-                    <a href="/preview/mobile-redesign" className={styles.logoLink} aria-label="티키티킷 모바일 디자인 미리보기 홈">
-                        <Logo size={0.84} />
-                    </a>
-                    <div className={styles.headerActions}>
-                        <button type="button" className={styles.iconButton} onClick={() => setSearchOpen(value => !value)} aria-label="검색">
-                            <Icon name="search" />
-                        </button>
-                        <button type="button" className={styles.alertButton} onClick={() => setShowDealAlert(true)}>특가 알림</button>
-                        <button type="button" className={styles.accountIconButton} onClick={() => { gtag.trackAccountAction('open', 'preview'); setShowAccount(true); }} aria-label={account.status === 'authenticated' ? '내 여행 열기' : '로그인'}>
-                            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5" /><path d="M5.5 19c.6-3.5 3-5.4 6.5-5.4s5.9 1.9 6.5 5.4" /></svg>
-                            {account.status === 'authenticated' && <span />}
-                        </button>
-                    </div>
-                </header>
 
                 {searchOpen && (
                     <div className={styles.searchRow}>
