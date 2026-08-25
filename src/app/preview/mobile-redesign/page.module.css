@@ -125,11 +125,10 @@
 
 .conditionFilterSlot { min-height: 48px; }
 .conditionFilterBar {
-    min-height: 82px;
-    padding: 9px 16px 10px;
-    display: grid;
-    align-content: center;
-    gap: 3px;
+    min-height: 46px;
+    padding: 6px 10px;
+    display: flex;
+    align-items: center;
     border-bottom: 1px solid rgba(221, 221, 221, 0.92);
     background: rgba(255, 255, 255, 0.96);
     backdrop-filter: blur(14px);
@@ -141,36 +140,45 @@
     top: 0;
     left: 50%;
     width: min(480px, 100%);
-    transform: translateX(-50%);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translate(-50%, -100%);
     box-shadow: 0 5px 18px rgba(0, 0, 0, 0.08);
+    transition: opacity 180ms ease, transform 180ms ease, visibility 0s linear 180ms;
 }
-.conditionDateRow,
-.conditionRouteRow {
+.conditionFilterBarVisible {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translate(-50%, 0);
+    transition-delay: 0s;
+}
+.conditionSummaryRow {
+    width: 100%;
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: space-around;
+    gap: 4px;
 }
-.conditionDateRow { gap: 14px; }
-.conditionRouteRow { gap: 22px; }
 .conditionFilterBar button {
     min-width: 0;
-    padding: 3px 2px;
+    padding: 2px 4px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 4px;
+    gap: 3px;
     border: 0;
     border-radius: 0;
     background: transparent;
     color: #2f3138;
     font-size: var(--size-meta);
-    line-height: 1.35;
+    line-height: 1.2;
     font-weight: var(--weight-bold);
     white-space: nowrap;
 }
-.conditionDateRow button { font-size: var(--size-body); }
 .conditionFilterBar .conditionActive { color: var(--brand-dark); }
-.conditionChevron { margin-left: 2px; color: #8b8e97; font-size: 8px; transform: translateY(1px); }
+.conditionChevron { margin-left: 1px; color: #8b8e97; font-size: 8px; transform: translateY(1px); }
 
 .quickFilterRow {
     display: grid;

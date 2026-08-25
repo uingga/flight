@@ -498,6 +498,9 @@ export default function MobileRedesignPreview() {
     const [filterBarPinned, setFilterBarPinned] = useState(false);
     const [showAccount, setShowAccount] = useState(false);
     const filterBarSlotRef = useRef<HTMLDivElement | null>(null);
+    const lastScrollYRef = useRef(0);
+    const scrollDirectionRef = useRef<'up' | 'down' | null>(null);
+    const scrollDirectionAnchorRef = useRef(0);
     const mergedAccountRef = useRef<string | null>(null);
 
     useEffect(() => {
@@ -564,10 +567,31 @@ export default function MobileRedesignPreview() {
 
     useEffect(() => {
         const updateScrollState = () => {
-            setShowScrollTop(window.scrollY > Math.max(900, window.innerHeight * 1.25));
+            const scrollY = Math.max(0, window.scrollY);
+            setShowScrollTop(scrollY > Math.max(900, window.innerHeight * 1.25));
             const filterTop = filterBarSlotRef.current?.getBoundingClientRect().top;
-            setFilterBarPinned(typeof filterTop === 'number' && filterTop <= 0);
+            const isPastFilters = typeof filterTop === 'number' && filterTop <= 0;
+            const lastScrollY = lastScrollYRef.current;
+            const nextDirection = scrollY > lastScrollY ? 'down' : scrollY < lastScrollY ? 'up' : null;
+
+            if (!isPastFilters) {
+                setFilterBarPinned(false);
+                scrollDirectionRef.current = nextDirection;
+                scrollDirectionAnchorRef.current = scrollY;
+            } else if (nextDirection) {
+                if (scrollDirectionRef.current !== nextDirection) {
+                    scrollDirectionRef.current = nextDirection;
+                    scrollDirectionAnchorRef.current = lastScrollY;
+                }
+                const directionDistance = Math.abs(scrollY - scrollDirectionAnchorRef.current);
+                if (nextDirection === 'up' && directionDistance >= 18) setFilterBarPinned(true);
+                if (nextDirection === 'down' && directionDistance >= 12) setFilterBarPinned(false);
+            }
+
+            lastScrollYRef.current = scrollY;
         };
+        lastScrollYRef.current = Math.max(0, window.scrollY);
+        scrollDirectionAnchorRef.current = lastScrollYRef.current;
         updateScrollState();
         window.addEventListener('scroll', updateScrollState, { passive: true });
         window.addEventListener('resize', updateScrollState);
@@ -1261,36 +1285,29 @@ export default function MobileRedesignPreview() {
                             </nav>
                         )}
                     </div>
-                    {filterBarPinned && (
-                        <nav className={`${styles.conditionFilterBar} ${styles.conditionFilterBarPinned}`} aria-label="현재 항공권 조건">
-                            <div className={styles.conditionDateRow}>
-                                <button type="button" className={datePeriod !== 'all' ? styles.conditionActive : ''} onClick={() => setFilterOpen(true)}>
+                    <nav
+                        className={`${styles.conditionFilterBar} ${styles.conditionFilterBarPinned} ${filterBarPinned ? styles.conditionFilterBarVisible : ''}`}
+                        aria-label="현재 항공권 조건"
+                        aria-hidden={!filterBarPinned}
+                    >
+                            <div className={styles.conditionSummaryRow}>
+                                <button type="button" tabIndex={filterBarPinned ? 0 : -1} className={datePeriod !== 'all' ? styles.conditionActive : ''} onClick={() => setFilterOpen(true)}>
                                     <span aria-hidden="true">📅</span>
                                     {dateFilterLabel === '날짜' ? '날짜 전체' : dateFilterLabel}
                                     <span className={styles.conditionChevron} aria-hidden="true">▼</span>
                                 </button>
-                                {maxPrice > 0 && (
-                                    <button type="button" className={styles.conditionActive} onClick={() => setFilterOpen(true)}>
-                                        <span aria-hidden="true">💰</span>
-                                        {priceFilterLabel}
-                                        <span className={styles.conditionChevron} aria-hidden="true">▼</span>
-                                    </button>
-                                )}
-                            </div>
-                            <div className={styles.conditionRouteRow}>
-                                <button type="button" className={departure !== '전체' ? styles.conditionActive : ''} onClick={() => setFilterOpen(true)}>
+                                <button type="button" tabIndex={filterBarPinned ? 0 : -1} className={departure !== '전체' ? styles.conditionActive : ''} onClick={() => setFilterOpen(true)}>
                                     <span aria-hidden="true">✈️</span>
                                     출발 {departureFilterLabel === '출발지' ? '전체' : departureFilterLabel}
                                     <span className={styles.conditionChevron} aria-hidden="true">▼</span>
                                 </button>
-                                <button type="button" className={region !== '전체' ? styles.conditionActive : ''} onClick={() => setFilterOpen(true)}>
+                                <button type="button" tabIndex={filterBarPinned ? 0 : -1} className={region !== '전체' ? styles.conditionActive : ''} onClick={() => setFilterOpen(true)}>
                                     <span aria-hidden="true">📍</span>
                                     도착 {destinationFilterLabel === '목적지' ? '전체' : destinationFilterLabel}
                                     <span className={styles.conditionChevron} aria-hidden="true">▼</span>
                                 </button>
                             </div>
-                        </nav>
-                    )}
+                    </nav>
                 </div>
 
                 <section className={styles.feedSection}>
