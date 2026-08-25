@@ -3,13 +3,13 @@
     background: #f3f3f3;
     color: #222222;
     font-variant-numeric: normal;
-    --brand: #eaff2f;
-    --brand-dark: #4b5700;
-    --brand-soft: #f8ffd6;
-    --on-brand: #1a1a1a;
+    --brand: #ff385c;
+    --brand-dark: #e00b41;
+    --brand-soft: #fff0f3;
+    --on-brand: #ffffff;
     --paper: #ffffff;
     --paper-soft: #f7f7f7;
-    --spectrum: linear-gradient(100deg, #eaff2f 0%, #cde700 100%);
+    --spectrum: linear-gradient(100deg, #ff385c 0%, #e00b41 100%);
     --urgent: #ff4d34;
     --urgent-dark: #cf2f1c;
     --urgent-soft: #fff0f2;
@@ -44,8 +44,8 @@
     box-shadow: 0 0 48px rgba(34, 34, 34, 0.11);
 }
 
-.previewPage :global(.logo-container stop:first-child) { stop-color: #eaff2f; }
-.previewPage :global(.logo-container stop:last-child) { stop-color: #b8cf00; }
+.previewPage :global(.logo-container stop:first-child) { stop-color: #ff385c; }
+.previewPage :global(.logo-container stop:last-child) { stop-color: #e00b41; }
 
 .header {
     position: sticky;
@@ -83,8 +83,8 @@
 .accountIconButton svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
 .accountIconButton span { position: absolute; top: 4px; right: 4px; width: 6px; height: 6px; border: 1px solid white; border-radius: 50%; background: var(--brand); }
 
-.dropTicker { box-sizing: border-box; height: 32px; overflow: hidden; border-bottom: 2px solid #c7d800; background: var(--brand); color: var(--on-brand); font-size: var(--size-meta); line-height: 1; font-weight: var(--weight-heavy); letter-spacing: 0.035em; white-space: nowrap; }
-.mobileDropTicker { box-shadow: inset 0 2px #c7d800; }
+.dropTicker { box-sizing: border-box; height: 32px; overflow: hidden; border-bottom: 2px solid #f2c7d0; background: var(--brand-soft); color: var(--brand-dark); font-size: var(--size-meta); line-height: 1; font-weight: var(--weight-heavy); letter-spacing: 0.035em; white-space: nowrap; }
+.mobileDropTicker { box-shadow: inset 0 2px #f2c7d0; }
 .desktopDropTicker { display: none; }
 .dropTickerTrack { display: flex; align-items: center; width: max-content; height: 100%; animation: dropTickerScroll 17s linear infinite; will-change: transform; }
 .dropTickerContent { display: flex; align-items: center; gap: 18px; padding-left: 8px; }
@@ -117,7 +117,7 @@
 
 .searchRow > svg { width: 18px; height: 18px; fill: none; stroke: var(--muted); stroke-width: 2; }
 .searchRow input { flex: 1; min-width: 0; border: 0; outline: 0; font-size: var(--size-body); color: var(--ink); }
-.searchRow button { padding: 5px; font-size: var(--size-meta); font-weight: var(--weight-medium); color: var(--brand-dark); }
+.searchRow button { padding: 5px; font-size: var(--size-meta); font-weight: var(--weight-medium); color: var(--brand); }
 
 .feedIntro {
     padding: 22px 18px 16px;
@@ -259,7 +259,7 @@
 }
 .sortTrigger:hover,
 .sortTrigger[aria-expanded='true'] { background: var(--paper-soft); color: var(--ink); }
-.sortTrigger:focus-visible { box-shadow: 0 0 0 2px rgba(184, 207, 0, 0.32); }
+.sortTrigger:focus-visible { box-shadow: 0 0 0 2px rgba(255, 56, 92, 0.2); }
 .sortChevron { pointer-events: none; transition: transform 150ms ease; }
 .sortChevronOpen { transform: rotate(180deg); }
 .sortMenu {
@@ -294,8 +294,8 @@
 .sortOption:hover { background: #f7f7f7; }
 .sortOptionSelected { background: var(--brand-soft); color: var(--brand-dark); font-weight: var(--weight-medium); }
 .sortOptionSelected:hover { background: var(--brand-soft); }
-.sortOption:focus-visible { box-shadow: inset 0 0 0 2px rgba(184, 207, 0, 0.28); }
-.sortCheck { color: var(--brand-dark); font-size: 13px; font-weight: var(--weight-bold); }
+.sortOption:focus-visible { box-shadow: inset 0 0 0 2px rgba(255, 56, 92, 0.18); }
+.sortCheck { color: var(--brand); font-size: 13px; font-weight: var(--weight-bold); }
 
 @keyframes sortMenuIn {
     from { opacity: 0; transform: translateY(-4px); }
@@ -318,7 +318,7 @@
     box-shadow: none;
 }
 
-.todayPickCard { --ticket-border: #cbdc35; border-color: #cbdc35; box-shadow: none; }
+.todayPickCard { --ticket-border: #eeb0bd; border-color: #eeb0bd; box-shadow: none; }
 
 .cardBody {
     width: 100%;
@@ -357,7 +357,7 @@
     color: #a8a8a8;
 }
 .favoriteButton svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; }
-.favoriteButton.favoriteActive { color: var(--brand-dark); }
+.favoriteButton.favoriteActive { color: var(--brand); }
 .favoriteButton.favoriteActive svg { fill: currentColor; }
 
 .routeGrid { margin: 15px 16px 0; display: grid; grid-template-columns: minmax(0, 1fr) 48px minmax(0, 1fr); align-items: start; gap: 3px; }
@@ -388,9 +388,9 @@
 
 .priceBlock { min-width: 0; min-height: 34px; flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; justify-content: center; text-align: right; }
 .priceLine { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
-.priceDiscountBadge { height: 20px; padding: 0 6px; display: inline-flex; align-items: center; border: 1px solid #dce88a; border-radius: 6px; background: var(--brand-soft); color: var(--brand-dark); font-size: var(--size-micro); line-height: 1; font-weight: var(--weight-heavy); white-space: nowrap; }
+.priceDiscountBadge { height: 20px; padding: 0 6px; display: inline-flex; align-items: center; border: 1px solid #f2c7d0; border-radius: 6px; background: var(--brand-soft); color: var(--brand-dark); font-size: var(--size-micro); line-height: 1; font-weight: var(--weight-heavy); white-space: nowrap; }
 .priceBlock strong { display: block; color: var(--ink); font-size: var(--size-card); line-height: 1.25; font-weight: var(--weight-bold); letter-spacing: -0.04em; }
-.todayPickCard .priceBlock strong { color: var(--ink); }
+.todayPickCard .priceBlock strong { color: var(--brand); }
 .priceBlock strong small { margin-left: 2px; color: var(--text-secondary); font-size: .58em; font-weight: 500; letter-spacing: -0.02em; }
 
 .insightBar {
@@ -421,7 +421,7 @@
 .insightPriceTrail { flex: 0 0 auto; display: inline-flex; align-items: baseline; gap: 6px; white-space: nowrap; }
 .insightPreviousPrice { color: var(--text-faint); font-size: var(--size-meta); line-height: 1.2; font-weight: var(--weight-medium); }
 .insightPriceArrow { color: #b5b5b5; font-size: var(--size-caption); }
-.insightCurrentPrice { color: var(--brand-dark); font-size: 18px; line-height: 1.2; font-weight: var(--weight-heavy); letter-spacing: -0.035em; }
+.insightCurrentPrice { color: var(--brand); font-size: 18px; line-height: 1.2; font-weight: var(--weight-heavy); letter-spacing: -0.035em; }
 .insightFooter { margin-top: 10px; min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 10px; color: var(--text-muted); font-size: var(--size-caption); line-height: 1.25; }
 .insightFooter > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .insightFooter > em { padding: 4px 7px; flex: 0 0 auto; border-radius: 999px; background: var(--brand-soft); color: var(--brand-dark); font-style: normal; font-weight: var(--weight-heavy); white-space: nowrap; }
@@ -447,10 +447,10 @@
 .emptyState { min-height: 220px; padding: 52px 20px; display: flex; flex-direction: column; align-items: center; text-align: center; }
 .emptyState strong { font-size: var(--size-section); }
 .emptyState span { margin-top: 6px; color: var(--muted); font-size: var(--size-meta); }
-.emptyState button { margin-top: 18px; padding: 9px 14px; border-radius: 9px; background: var(--brand-soft); color: var(--brand-dark); font-size: var(--size-meta); font-weight: var(--weight-bold); }
+.emptyState button { margin-top: 18px; padding: 9px 14px; border-radius: 9px; background: var(--brand-soft); color: var(--brand); font-size: var(--size-meta); font-weight: var(--weight-bold); }
 
 .previewFooter { padding: 25px 18px 36px; display: flex; flex-direction: column; align-items: center; gap: 5px; color: var(--text-faint); font-size: var(--size-micro); }
-.previewFooter a { color: var(--brand-dark); font-weight: var(--weight-bold); }
+.previewFooter a { color: var(--brand); font-weight: var(--weight-bold); }
 
 .floatingActions {
     position: fixed;
@@ -548,8 +548,8 @@
     background: linear-gradient(
         to bottom,
         transparent 4px,
-        #efffa3 4px,
-        #efffa3 calc(100% - 4px),
+        #ffe1e7 4px,
+        #ffe1e7 calc(100% - 4px),
         transparent calc(100% - 4px)
     ) !important;
     color: var(--brand-dark) !important;
@@ -572,7 +572,7 @@
 .dateCalendar.dateCalendar:has(:global(.react-datepicker__day--selecting-range-start)) :global(.react-datepicker__day:hover:not(.react-datepicker__day--disabled):not(.react-datepicker__day--selecting-range-start):not(.react-datepicker__day--range-start):not(.react-datepicker__day--range-end)) {
     border-radius: 0 !important;
     background:
-        radial-gradient(circle at center, #efffa3 0 49%, transparent 50%) center / 100% 100% no-repeat,
+        radial-gradient(circle at center, #ffe1e7 0 49%, transparent 50%) center / 100% 100% no-repeat,
         linear-gradient(
             to bottom,
             transparent 4px,
@@ -616,7 +616,7 @@
 .detailTitle p { color: var(--muted); font-size: var(--size-meta); }
 .detailTitle h2 { margin-top: 1px; font-size: var(--size-display); line-height: 1.22; font-weight: var(--weight-bold); letter-spacing: -0.05em; }
 .detailTitle > div:last-child { flex-shrink: 0; text-align: right; }
-.detailTitle > div:last-child strong { display: block; color: var(--ink); font-size: var(--size-detail-price); line-height: 1.1; font-weight: var(--weight-heavy); letter-spacing: -0.04em; }
+.detailTitle > div:last-child strong { display: block; color: var(--brand); font-size: var(--size-detail-price); line-height: 1.1; font-weight: var(--weight-heavy); letter-spacing: -0.04em; }
 .detailTitle > div:last-child span { display: block; margin-top: 2px; color: var(--text-muted); font-size: var(--size-micro); line-height: 1.15; }
 .detailAvailabilityText { display: block; margin-top: 4px; color: var(--muted); font-size: var(--size-micro); line-height: 1.2; font-weight: var(--weight-medium); }
 
@@ -753,9 +753,9 @@
         max-width: 1144px;
         height: 48px;
         margin: 0 auto;
-        border-top: 2px solid #c7d800;
+        border-top: 2px solid #f2c7d0;
         border-right: 0;
-        border-bottom: 2px solid #c7d800;
+        border-bottom: 2px solid #f2c7d0;
         border-left: 0;
         border-radius: 0;
         font-size: 15px;
@@ -772,8 +772,8 @@
         width: 38px;
         pointer-events: none;
     }
-    .desktopDropTicker::before { left: 0; background: linear-gradient(90deg, #eaff2f 0%, rgba(234, 255, 47, 0) 100%); }
-    .desktopDropTicker::after { right: 0; background: linear-gradient(270deg, #eaff2f 0%, rgba(234, 255, 47, 0) 100%); }
+    .desktopDropTicker::before { left: 0; background: linear-gradient(90deg, #ffffff 0%, rgba(255, 255, 255, 0) 100%); }
+    .desktopDropTicker::after { right: 0; background: linear-gradient(270deg, #ffffff 0%, rgba(255, 255, 255, 0) 100%); }
     .desktopDropTicker .dropTickerContent { gap: 22px; }
     .desktopDropTicker .dropTickerContent span::after { margin-left: 22px; }
     .searchRow {
@@ -984,8 +984,8 @@
         transform: translateY(-1px);
     }
     .todayPickCard {
-        --ticket-border: #cbdc35;
-        border-color: #cbdc35;
+        --ticket-border: #e9a5b4;
+        border-color: #e9a5b4;
         background: var(--paper);
         box-shadow: none;
     }
@@ -1012,7 +1012,7 @@
         writing-mode: vertical-rl;
         transform: rotate(180deg);
     }
-    .todayPickCard:hover { border-color: #c7d800; box-shadow: none; }
+    .todayPickCard:hover { border-color: #df8fa1; box-shadow: none; }
     .ticketDivider::before,
     .ticketDivider::after { background: var(--desktop-feed); }
     .todayPickStrip { display: none; }
@@ -1036,7 +1036,7 @@
     .dropMessageDesktop { display: inline; }
     .footerStatusLow { height: auto; padding: 0; border-radius: 0; background: transparent; color: var(--urgent-dark); }
     .footerStatusUrgent { font-weight: 500; }
-    .priceDiscountBadge { padding-right: 5px; padding-left: 5px; border-color: transparent; background: var(--brand-soft); font-weight: 600; }
+    .priceDiscountBadge { padding-right: 5px; padding-left: 5px; border-color: transparent; background: #fff3f5; font-weight: 600; }
     .priceBlock strong { font-size: 23px; font-weight: 700; letter-spacing: -0.02em; }
     .favoriteButton { top: 12px; right: 12px; }
     .favoriteButton svg { width: 17px; height: 17px; }
