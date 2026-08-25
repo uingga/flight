@@ -88,8 +88,8 @@
 .dropTickerTrack { display: flex; align-items: center; width: max-content; height: 100%; animation: dropTickerScroll 17s linear infinite; will-change: transform; }
 .dropTickerContent { display: flex; align-items: center; gap: 18px; padding-left: 8px; }
 .dropTickerContent span::after { margin-left: 18px; content: '✦'; }
-.tickerEmergency { display: inline-flex; align-items: center; }
-.tickerEmergency i { position: relative; top: .5px; margin-right: 4px; font-style: normal; line-height: 1; }
+.tickerEmergency { height: 18px; padding: 0 6px; display: inline-flex; align-items: center; border: 1px solid #1f1f1f; border-radius: 2px; background: #eaff2f; color: #1a1a1a; letter-spacing: 0.015em; }
+.tickerEmergency i { position: relative; top: .5px; margin-right: 3px; font-style: normal; line-height: 1; }
 .tickerEmergency b { font: inherit; line-height: 1; }
 
 @keyframes dropTickerScroll {
