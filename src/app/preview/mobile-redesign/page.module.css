@@ -615,9 +615,23 @@
     .feedIntro h1 { margin-top: 4px; font-size: 30px; }
 
     .conditionFilterAnchor {
+        position: relative;
         min-height: 73px;
         padding: 14px 28px 0;
         background: #f3f4f6;
+    }
+    .conditionFilterAnchor::before,
+    .feedSection::before,
+    .previewFooter::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 50%;
+        width: 100vw;
+        transform: translateX(-50%);
+        background: #f3f4f6;
+        pointer-events: none;
     }
     .conditionFilterSlot {
         position: relative;
@@ -656,7 +670,7 @@
     .moreRegionInline { grid-column: 2; padding-bottom: 2px; }
     .conditionFilterBarPinned { display: none; }
 
-    .feedSection { padding: 18px 28px 54px; background: #f3f4f6; }
+    .feedSection { position: relative; padding: 18px 28px 54px; background: #f3f4f6; }
     .feedHeading { min-height: 44px; padding: 0 2px 14px; }
     .feedHeading h2 { font-size: var(--size-section); }
     .feedHeading div span { font-size: var(--size-meta); }
@@ -706,7 +720,7 @@
     .insightCurrentPrice { font-size: 22px; }
 
     .moreButton { max-width: 420px; margin: 20px auto 0; display: block; }
-    .previewFooter { padding: 28px 28px 42px; background: #f3f4f6; }
+    .previewFooter { position: relative; padding: 28px 28px 42px; background: #f3f4f6; }
     .floatingActions { right: max(32px, calc((100vw - 1200px) / 2 + 32px)); }
 
     .filterOverlay { align-items: center; padding: 24px; }
