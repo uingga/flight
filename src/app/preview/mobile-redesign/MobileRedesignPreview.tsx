@@ -590,6 +590,7 @@ export default function MobileRedesignPreview() {
             setShowScrollTop(scrollY > Math.max(900, window.innerHeight * 1.25));
             const filterTop = filterBarSlotRef.current?.getBoundingClientRect().top;
             const isPastFilters = typeof filterTop === 'number' && filterTop <= 0;
+            const isDesktop = window.matchMedia('(min-width: 960px)').matches;
             const lastScrollY = lastScrollYRef.current;
             const nextDirection = scrollY > lastScrollY ? 'down' : scrollY < lastScrollY ? 'up' : null;
 
@@ -597,6 +598,8 @@ export default function MobileRedesignPreview() {
                 setFilterBarPinned(false);
                 scrollDirectionRef.current = nextDirection;
                 scrollDirectionAnchorRef.current = scrollY;
+            } else if (isDesktop) {
+                setFilterBarPinned(true);
             } else if (nextDirection) {
                 if (scrollDirectionRef.current !== nextDirection) {
                     scrollDirectionRef.current = nextDirection;
@@ -1274,8 +1277,9 @@ export default function MobileRedesignPreview() {
                     </div>
                 </section>
 
-                <div className={styles.conditionFilterSlot} ref={filterBarSlotRef}>
-                    <div className={styles.quickFilterRow}>
+                <div className={styles.conditionFilterAnchor} ref={filterBarSlotRef}>
+                    <div className={`${styles.conditionFilterSlot} ${filterBarPinned ? styles.conditionFilterSlotPinned : ''}`}>
+                        <div className={styles.quickFilterRow}>
                         <button type="button" className={`${styles.filterButton} ${hasAdvancedFilter ? styles.filterHasValue : ''}`} onClick={() => setFilterOpen(true)}>
                             <Icon name="sliders" />
                             필터
@@ -1322,12 +1326,12 @@ export default function MobileRedesignPreview() {
                                 ))}
                             </nav>
                         )}
-                    </div>
-                    <nav
-                        className={`${styles.conditionFilterBar} ${styles.conditionFilterBarPinned} ${filterBarPinned ? styles.conditionFilterBarVisible : ''}`}
-                        aria-label="현재 항공권 조건"
-                        aria-hidden={!filterBarPinned}
-                    >
+                        </div>
+                        <nav
+                            className={`${styles.conditionFilterBar} ${styles.conditionFilterBarPinned} ${filterBarPinned ? styles.conditionFilterBarVisible : ''}`}
+                            aria-label="현재 항공권 조건"
+                            aria-hidden={!filterBarPinned}
+                        >
                             <div className={styles.conditionSummaryRow}>
                                 <button type="button" tabIndex={filterBarPinned ? 0 : -1} className={datePeriod !== 'all' ? styles.conditionActive : ''} onClick={() => setFilterOpen(true)}>
                                     <span aria-hidden="true">📅</span>
@@ -1345,7 +1349,8 @@ export default function MobileRedesignPreview() {
                                     <span className={styles.conditionChevron} aria-hidden="true">▼</span>
                                 </button>
                             </div>
-                    </nav>
+                        </nav>
+                    </div>
                 </div>
 
                 <section className={styles.feedSection}>
