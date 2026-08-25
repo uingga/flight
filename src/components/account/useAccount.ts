@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 export interface AccountFlightSnapshot {
     id: string;
@@ -59,6 +59,7 @@ interface AccountPayload {
     unavailable?: boolean;
     error?: string;
     user?: { email: string };
+    favoriteIds?: string[];
     favorites?: AccountFavorite[];
     recent?: AccountRecent[];
     savedSearches?: AccountSavedSearch[];
@@ -76,34 +77,53 @@ export function useAccount() {
     const [status, setStatus] = useState<AccountStatus>('loading');
     const [email, setEmail] = useState('');
     const [favorites, setFavorites] = useState<AccountFavorite[]>([]);
+    const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
     const [recent, setRecent] = useState<AccountRecent[]>([]);
     const [savedSearches, setSavedSearches] = useState<AccountSavedSearch[]>([]);
     const [message, setMessage] = useState<string | null>(null);
+    const favoriteMutationQueueRef = useRef<Promise<void>>(Promise.resolve());
+    const sessionGenerationRef = useRef(0);
+    const sessionIdentityRef = useRef('');
+    const refreshRequestRef = useRef(0);
 
     const refresh = useCallback(async () => {
+        const requestNumber = ++refreshRequestRef.current;
         try {
             const response = await fetch('/api/account', { credentials: 'same-origin', cache: 'no-store' });
             const payload = await response.json() as AccountPayload;
+            if (requestNumber !== refreshRequestRef.current) return;
             if (!response.ok) {
                 setStatus(payload.unavailable ? 'unavailable' : 'anonymous');
                 setMessage(payload.error || null);
                 return;
             }
             if (!payload.authenticated) {
+                if (sessionIdentityRef.current) {
+                    sessionGenerationRef.current += 1;
+                    sessionIdentityRef.current = '';
+                }
                 setStatus('anonymous');
                 setEmail('');
                 setFavorites([]);
+                setFavoriteIds([]);
                 setRecent([]);
                 setSavedSearches([]);
                 return;
             }
+            const nextEmail = payload.user?.email || '';
+            if (sessionIdentityRef.current !== nextEmail) {
+                sessionGenerationRef.current += 1;
+                sessionIdentityRef.current = nextEmail;
+            }
             setStatus('authenticated');
-            setEmail(payload.user?.email || '');
+            setEmail(nextEmail);
             setFavorites(payload.favorites || []);
+            setFavoriteIds(payload.favoriteIds || (payload.favorites || []).map(item => item.flightId));
             setRecent(payload.recent || []);
             setSavedSearches(payload.savedSearches || []);
             setMessage(null);
         } catch {
+            if (requestNumber !== refreshRequestRef.current) return;
             setStatus('unavailable');
             setMessage('계정 정보를 불러오지 못했어요.');
         }
@@ -138,25 +158,67 @@ export function useAccount() {
             method: 'POST',
             credentials: 'same-origin',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body),
+            body: JSON.stringify({
+                ...body,
+                expectedAccountEmail: sessionIdentityRef.current,
+            }),
         });
         const payload = await readJson(response);
         if (shouldRefresh) await refresh();
         return payload;
     }, [refresh]);
 
+    const enqueueFavoriteMutation = useCallback((
+        operation: (isCurrentSession: () => boolean) => Promise<void>,
+    ) => {
+        const generation = sessionGenerationRef.current;
+        const isCurrentSession = () => generation === sessionGenerationRef.current;
+        const next = favoriteMutationQueueRef.current
+            .catch(() => undefined)
+            .then(async () => {
+                if (!isCurrentSession()) return;
+                await operation(isCurrentSession);
+            });
+        favoriteMutationQueueRef.current = next.catch(() => undefined);
+        return next;
+    }, []);
+
     const mergeLocalFavorites = useCallback(async (flightIds: string[]) => {
-        if (status !== 'authenticated' || !flightIds.length) return;
-        await postAction({ action: 'merge_favorites', flightIds }, true);
-    }, [postAction, status]);
+        if (status !== 'authenticated' || !flightIds.length) {
+            return { completed: false, mergedFlightIds: [] as string[] };
+        }
+        const uniqueFlightIds = Array.from(new Set(flightIds));
+        const mergedFlightIds: string[] = [];
+        let completed = false;
+        await enqueueFavoriteMutation(async isCurrentSession => {
+            for (let index = 0; index < uniqueFlightIds.length; index += 100) {
+                if (!isCurrentSession()) return;
+                const result = await postAction({
+                    action: 'merge_favorites',
+                    flightIds: uniqueFlightIds.slice(index, index + 100),
+                });
+                if (Array.isArray(result.mergedFlightIds)) {
+                    mergedFlightIds.push(...result.mergedFlightIds.filter(id => typeof id === 'string'));
+                }
+            }
+            if (!isCurrentSession()) return;
+            await refresh();
+            completed = isCurrentSession();
+        });
+        return {
+            completed,
+            mergedFlightIds: Array.from(new Set(mergedFlightIds)),
+        };
+    }, [enqueueFavoriteMutation, postAction, refresh, status]);
 
     const setFavorite = useCallback(async (flightId: string, favorite: boolean) => {
         if (status !== 'authenticated') return;
-        setFavorites(current => favorite
-            ? current
-            : current.filter(item => item.flightId !== flightId));
-        await postAction({ action: 'set_favorite', flightId, favorite }, favorite);
-    }, [postAction, status]);
+        await enqueueFavoriteMutation(async isCurrentSession => {
+            if (!isCurrentSession()) return;
+            await postAction({ action: 'set_favorite', flightId, favorite });
+            if (isCurrentSession()) await refresh();
+        });
+    }, [enqueueFavoriteMutation, postAction, refresh, status]);
 
     const recordRecent = useCallback((flightId: string) => {
         if (status !== 'authenticated') return;
@@ -172,17 +234,38 @@ export function useAccount() {
     }, [postAction]);
 
     const clearRecent = useCallback(async () => {
+        const previousRecent = recent;
         setRecent([]);
-        await postAction({ action: 'clear_recent' });
-    }, [postAction]);
+        try {
+            await postAction({ action: 'clear_recent' });
+        } catch (error) {
+            setRecent(previousRecent);
+            throw error;
+        }
+    }, [postAction, recent]);
 
     const logout = useCallback(async () => {
-        await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
-        await refresh();
+        const previousIdentity = sessionIdentityRef.current;
+        sessionGenerationRef.current += 1;
+        sessionIdentityRef.current = '';
+        refreshRequestRef.current += 1;
+        try {
+            const response = await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
+            await readJson(response);
+            await refresh();
+        } catch (error) {
+            sessionGenerationRef.current += 1;
+            sessionIdentityRef.current = previousIdentity;
+            refreshRequestRef.current += 1;
+            throw error;
+        }
     }, [refresh]);
 
     const deleteAccount = useCallback(async () => {
         await postAction({ action: 'delete_account' });
+        sessionGenerationRef.current += 1;
+        sessionIdentityRef.current = '';
+        refreshRequestRef.current += 1;
         await refresh();
     }, [postAction, refresh]);
 
@@ -193,7 +276,7 @@ export function useAccount() {
         recent,
         savedSearches,
         message,
-        favoriteIds: favorites.map(item => item.flightId),
+        favoriteIds,
         requestCode,
         verifyCode,
         mergeLocalFavorites,

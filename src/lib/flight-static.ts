@@ -10,6 +10,8 @@ import path from 'node:path';
 import type { Flight } from '@/types/flight';
 import { normalizeAirline, normalizeCity } from '@/lib/utils/flight-helpers';
 import { filterStaleMyrealtripFlights } from '@/lib/source-freshness';
+import { deduplicateDisplayFlights } from '@/lib/flight-visibility';
+import { getComparisonFreshness } from '@/lib/price-quality';
 
 export interface CityDeals {
     /** 정규화된 도시명 (URL 슬러그로도 사용) */
@@ -53,9 +55,21 @@ export function loadActiveFlights(): Flight[] {
         const raw = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'data', 'all-flights-cache.json'), 'utf8'));
         const flights: Flight[] = Array.isArray(raw) ? raw : raw.flights || [];
         const sourceUpdatedAt = Array.isArray(raw) ? {} : raw.sourceUpdatedAt || {};
-        const today = new Date().toISOString().slice(0, 10);
-        return filterStaleMyrealtripFlights(flights, sourceUpdatedAt)
-            .filter(f => f.price > 0 && parseDate(f.departure?.date) >= today);
+        const today = new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit',
+        }).format(new Date());
+        const visible = filterStaleMyrealtripFlights(flights, sourceUpdatedAt)
+            .filter(flight => {
+                if (flight.price <= 0 || parseDate(flight.departure?.date) < today) return false;
+                if (parseDate(flight.departure?.date) === parseDate(flight.arrival?.date)) return false;
+                if (!flight.naverLowest || flight.naverLowest <= 0
+                    || !getComparisonFreshness(flight.naverCheckedAt).usable) return true;
+                const difference = effectivePrice(flight) - flight.naverLowest;
+                return difference < 100_000 || difference / flight.naverLowest < 0.2;
+            });
+        // 메인 API와 같은 중복 제거 규칙을 써 정적 도시 페이지의 장수·최저가가
+        // 실제 목록보다 부풀어 보이지 않게 한다.
+        return deduplicateDisplayFlights(visible);
     } catch {
         return [];
     }

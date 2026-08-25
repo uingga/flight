@@ -9,6 +9,25 @@ export interface BookingPassengers {
     infant: number;
 }
 
+export function normalizeBookingPassengers(
+    flight: Flight,
+    passengers: BookingPassengers,
+): BookingPassengers {
+    const normalized = {
+        adult: Math.max(1, Math.floor(passengers.adult || 0)),
+        child: Math.max(0, Math.floor(passengers.child || 0)),
+        infant: Math.max(0, Math.floor(passengers.infant || 0)),
+    };
+    const minimumPassengers = Math.max(1, Math.floor(flight.minPax || 1));
+    // 좌석을 점유하지 않는 유아는 여행사의 최소 예약 인원에 포함하지 않는다.
+    const seatPassengers = normalized.adult + normalized.child;
+    if (seatPassengers < minimumPassengers) {
+        normalized.adult += minimumPassengers - seatPassengers;
+    }
+    normalized.infant = Math.min(normalized.infant, normalized.adult);
+    return normalized;
+}
+
 /**
  * 여행사마다 다른 실제 예약 착지 주소를 한곳에서 만든다.
  * 목록에 저장된 원본 링크를 그대로 열면 하나투어·노랑풍선·땡처리닷컴은
@@ -19,6 +38,7 @@ export function getFlightBookingUrl(
     passengers: BookingPassengers = { adult: 1, child: 0, infant: 0 },
     isMobile = false,
 ): string {
+    passengers = normalizeBookingPassengers(flight, passengers);
     if (flight.source === 'hanatour') {
         const psngrCntLst: Array<{ ageDvCd: string; psngrCnt: number }> = [];
         if (passengers.adult > 0) psngrCntLst.push({ ageDvCd: 'A', psngrCnt: passengers.adult });

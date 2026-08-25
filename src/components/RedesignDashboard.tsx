@@ -1,11 +1,21 @@
-'use client';
-
+import type { ReactNode } from 'react';
 import MobileRedesignPreview from '@/app/preview/mobile-redesign/MobileRedesignPreview';
+
+interface RedesignDashboardProps {
+    children?: ReactNode;
+}
 
 /**
  * 운영 메인 교체용 진입점.
- * 미리보기 전용 안내와 미리보기 경로 링크를 숨기고 실제 홈 동작을 사용한다.
+ * 페이지의 유일한 main 안에서 쓰도록 루트는 div로 렌더링하고,
+ * 서버 렌더링 콘텐츠(children)는 리디자인 푸터 바로 앞에 배치한다.
  */
-export default function RedesignDashboard() {
-    return <MobileRedesignPreview previewMode={false} />;
+export default function RedesignDashboard({ children }: RedesignDashboardProps) {
+    return (
+        <MobileRedesignPreview
+            previewMode={false}
+            rootAs="div"
+            beforeFooter={children}
+        />
+    );
 }

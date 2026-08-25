@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import * as gtag from '@/lib/analytics';
 import { dealAlertRegionLabel, type DealAlertRegion } from '@/lib/deal-alerts';
+import { useDialogFocus } from '@/lib/hooks/use-dialog-focus';
 import styles from './MobileDealAlertSheet.module.css';
 
 interface MobileDealAlertSheetProps {
@@ -113,6 +114,8 @@ export default function MobileDealAlertSheet({
     const [alertsLoading, setAlertsLoading] = useState(false);
     const [alertBusy, setAlertBusy] = useState<string | null>(null);
     const [managerMessage, setManagerMessage] = useState<string | null>(null);
+    const sheetRef = useRef<HTMLElement>(null);
+    useDialogFocus(open, sheetRef);
 
     const loadManagedAlerts = async () => {
         setAlertsLoading(true);
@@ -290,7 +293,7 @@ export default function MobileDealAlertSheet({
 
     return (
         <div className={styles.overlay} onClick={onClose}>
-            <section className={styles.sheet} role="dialog" aria-modal="true" aria-labelledby="deal-alert-title" onClick={event => event.stopPropagation()}>
+            <section ref={sheetRef} className={styles.sheet} role="dialog" aria-modal="true" aria-labelledby="deal-alert-title" onClick={event => event.stopPropagation()}>
                 <div className={styles.handle} />
                 <header className={styles.header}>
                     <div>
@@ -399,7 +402,7 @@ export default function MobileDealAlertSheet({
                                     <legend>어디서 출발하세요?</legend>
                                     <div className={styles.options}>
                                         {DEPARTURES.map(item => (
-                                            <button type="button" key={item} className={departure === item ? styles.active : ''} onClick={() => setDeparture(item)}>{item}</button>
+                                            <button type="button" key={item} className={departure === item ? styles.active : ''} aria-pressed={departure === item} onClick={() => setDeparture(item)}>{item}</button>
                                         ))}
                                     </div>
                                 </fieldset>
@@ -408,7 +411,7 @@ export default function MobileDealAlertSheet({
                                     <legend>어디쯤 가고 싶으세요?</legend>
                                     <div className={styles.options}>
                                         {REGIONS.map(item => (
-                                            <button type="button" key={item.value} className={region === item.value ? styles.active : ''} onClick={() => setRegion(item.value)}>{item.label}</button>
+                                            <button type="button" key={item.value} className={region === item.value ? styles.active : ''} aria-pressed={region === item.value} onClick={() => setRegion(item.value)}>{item.label}</button>
                                         ))}
                                     </div>
                                 </fieldset>
@@ -419,7 +422,7 @@ export default function MobileDealAlertSheet({
                             <legend>얼마까지 괜찮으세요?</legend>
                             <div className={styles.options}>
                                 {BUDGETS.map(price => (
-                                    <button type="button" key={price} className={maxPrice === String(price) ? styles.active : ''} onClick={() => setMaxPrice(String(price))}>{formatPrice(price)}</button>
+                                    <button type="button" key={price} className={maxPrice === String(price) ? styles.active : ''} aria-pressed={maxPrice === String(price)} onClick={() => setMaxPrice(String(price))}>{formatPrice(price)}</button>
                                 ))}
                             </div>
                             <label className={styles.customPrice}>
