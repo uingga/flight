@@ -504,7 +504,6 @@ const describeDropCard = (flight: Flight) => {
                 `🏃 ${daysUntilDeparture}일 뒤 출국`,
                 '🧳 여행 계획 강제 생성',
                 '🚧 막판에 가격이 선 넘음',
-                `🫨 D-${daysUntilDeparture}, 이제 와서 이 가격`,
                 `🧳 D-${daysUntilDeparture}, 이러면 가야 하잖아`,
                 `🤷 D-${daysUntilDeparture}, 안 가기엔 너무 싸짐`,
                 `🏃 D-${daysUntilDeparture}, 사람 급하게 만드는 가격`,
