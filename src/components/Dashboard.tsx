@@ -1747,10 +1747,14 @@ export default function Dashboard() {
         ]));
     }, [flights, recommendScores, recommendationRotationSlot]);
 
-    // 오늘의 표 — 현재 판매 중인 전체 항공권에서 가장 좋은 한 장을 고른다.
-    // 신규·가격 하락은 동점일 때만 우선하며, 더 좋은 기존 표를 후보에서 제외하지 않는다.
+    // 오늘의 표 — 파격적인 절대가격을 먼저 잡고, 없을 때 현재 판매 중인 전체 항공권에서 고른다.
+    // 신규·가격 하락은 일반 후보의 동점일 때만 우선한다.
     const todayPick = useMemo(() => {
         if (!flights.length) return null;
+        const ABSOLUTE_DROP_MAX = 150_000;
+        const DEEP_DROP_MAX = 200_000;
+        const DEEP_DROP_RATIO = 0.75;
+        const COMPARISON_TOLERANCE = 1.05;
         const pad = (n: number) => String(n).padStart(2, '0');
         const now = new Date();
         const todayStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
@@ -1838,28 +1842,70 @@ export default function Dashboard() {
             return best;
         };
 
+        const getMarketReference = (flight: Flight): number | null => {
+            if (flight.naverLowest && flight.naverLowest > 0 && getComparisonFreshness(flight.naverCheckedAt).usable) {
+                return flight.naverLowest;
+            }
+            const city = flight.arrival.city?.replace(/\([^)]+\)/, '').trim();
+            const depMonth = flight.departure.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 7);
+            const cityData = interparkPrices[city];
+            let monthData = cityData?.[depMonth];
+            if (!monthData && cityData && depMonth) {
+                const closest = Object.keys(cityData).sort().reduce((best, month) => {
+                    const diff = Math.abs(month.localeCompare(depMonth));
+                    const bestDiff = best ? Math.abs(best.localeCompare(depMonth)) : Infinity;
+                    return diff < bestDiff ? month : best;
+                }, '' as string);
+                if (closest) monthData = cityData[closest];
+            }
+            return monthData?.lowest || null;
+        };
+
+        const isExceptionalCandidate = (flight: Flight) => {
+            const payablePrice = getEffectivePrice(flight);
+            if (payablePrice <= 0 || payablePrice > DEEP_DROP_MAX) return false;
+            const referencePrice = getMarketReference(flight);
+            const absoluteDrop = payablePrice <= ABSOLUTE_DROP_MAX
+                && (!referencePrice || payablePrice <= referencePrice * COMPARISON_TOLERANCE);
+            const deepDrop = !!referencePrice && payablePrice <= referencePrice * DEEP_DROP_RATIO;
+            return absoluteDrop || deepDrop;
+        };
+
+        const buildPick = (flight: Flight) => {
+            const history = priceHistory[`${normalizeCity(flight.departure.city)}-${normalizeCity(flight.arrival.city)}`];
+            const todayEntry = history?.find(entry => entry.date === todayStr);
+            const prevEntry = history?.find(entry => entry.date === yestStr);
+            const payablePrice = getEffectivePrice(flight);
+            const dropAmount = todayEntry && prevEntry && prevEntry.minPrice > todayEntry.minPrice && payablePrice <= todayEntry.minPrice
+                ? prevEntry.minPrice - todayEntry.minPrice
+                : 0;
+            const isNew = flight.firstSeen === todayStr;
+            const defaultReason = describePick(flight, history, dropAmount, isNew, true);
+            const exceptionalReason = flight.source === 'ttang'
+                ? `발권수수료를 더해도 왕복 ${Math.floor(payablePrice / 10000)}만원대예요`
+                : `왕복 ${Math.floor(payablePrice / 10000)}만원대로 나온 파격가예요`;
+            return {
+                flight,
+                reason: isExceptionalCandidate(flight) ? exceptionalReason : defaultReason,
+                score: recommendScores.get(flight.id) ?? Infinity,
+                changePriority: dropAmount > 0 ? 2 : isNew ? 1 : 0,
+            };
+        };
+
+        // 하루 한 번 고정된 표가 있어도 이후 크롤에서 진짜 파격가가 들어오면 즉시 교체한다.
+        const exceptionalFlight = flights
+            .filter(isExceptionalCandidate)
+            .sort((a, b) => getEffectivePrice(a) - getEffectivePrice(b)
+                || (recommendScores.get(a.id) ?? Infinity) - (recommendScores.get(b.id) ?? Infinity))[0];
+        if (exceptionalFlight) return buildPick(exceptionalFlight);
+
         if (fixedTodayPickId) {
             const fixedFlight = flights.find(flight => flight.id === fixedTodayPickId);
-            if (fixedFlight) {
-                const history = priceHistory[`${normalizeCity(fixedFlight.departure.city)}-${normalizeCity(fixedFlight.arrival.city)}`];
-                const todayEntry = history?.find(entry => entry.date === todayStr);
-                const prevEntry = history?.find(entry => entry.date === yestStr);
-                const payablePrice = getEffectivePrice(fixedFlight);
-                const dropAmount = todayEntry && prevEntry && prevEntry.minPrice > todayEntry.minPrice && payablePrice <= todayEntry.minPrice
-                    ? prevEntry.minPrice - todayEntry.minPrice
-                    : 0;
-                const isNew = fixedFlight.firstSeen === todayStr;
-                return {
-                    flight: fixedFlight,
-                    reason: describePick(fixedFlight, history, dropAmount, isNew, true),
-                    score: recommendScores.get(fixedFlight.id) ?? Infinity,
-                    changePriority: dropAmount > 0 ? 2 : isNew ? 1 : 0,
-                };
-            }
+            if (fixedFlight) return buildPick(fixedFlight);
         }
 
         return findPick(todayStr, yestStr, true);
-    }, [flights, priceHistory, recommendScores, fixedTodayPickId]);
+    }, [flights, priceHistory, interparkPrices, recommendScores, fixedTodayPickId]);
 
     const filteredFlights = flights.filter(flight => {
         // 공유 링크로 접근 시 해당 항공편만 표시

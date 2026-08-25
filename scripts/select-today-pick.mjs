@@ -7,6 +7,10 @@ const SITE_URL = process.env.SITE_URL || 'https://www.tikitikit.kr';
 const OUTPUT_PATH = path.resolve(process.cwd(), 'data/today-pick.json');
 const KST_OFFSET = 9 * 60 * 60 * 1000;
 const DAY = 24 * 60 * 60 * 1000;
+const ABSOLUTE_DROP_MAX = 150_000;
+const DEEP_DROP_MAX = 200_000;
+const DEEP_DROP_RATIO = 0.75;
+const COMPARISON_TOLERANCE = 1.05;
 
 const effectivePrice = (flight) => flight.price + (flight.source === 'ttang' ? 20_000 : 0);
 const kstDayNumber = (timestamp) => Math.floor((timestamp + KST_OFFSET) / DAY);
@@ -26,8 +30,7 @@ function freshnessMultiplier(checkedAt, now) {
     return 1.35;
 }
 
-function recommendScore(flight, interparkPrices, now) {
-    const price = effectivePrice(flight);
+function interparkMonthData(flight, interparkPrices) {
     const city = (flight.arrival?.city || '').replace(/\([^)]+\)/, '').trim();
     const depMonth = (flight.departure?.date || '').replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 7);
     const cityData = interparkPrices[city];
@@ -40,6 +43,31 @@ function recommendScore(flight, interparkPrices, now) {
         }, '');
         if (closest) monthData = cityData[closest];
     }
+    return monthData;
+}
+
+function marketReference(flight, interparkPrices, now) {
+    if (flight.naverLowest > 0 && comparisonUsable(flight.naverCheckedAt, now)) {
+        return flight.naverLowest;
+    }
+    return interparkMonthData(flight, interparkPrices)?.lowest || null;
+}
+
+// 오늘의 표는 추천점수만 좇지 않는다. 실질가가 15만원 이하이면서 비교가보다
+// 명백히 비싸지 않거나, 20만원 이하에서 시장 기준보다 25% 이상 싼 표는 먼저 잡는다.
+function isExceptionalCandidate(flight, interparkPrices, now) {
+    const price = effectivePrice(flight);
+    if (price <= 0 || price > DEEP_DROP_MAX) return false;
+    const reference = marketReference(flight, interparkPrices, now);
+    const absoluteDrop = price <= ABSOLUTE_DROP_MAX
+        && (!reference || price <= reference * COMPARISON_TOLERANCE);
+    const deepDrop = !!reference && price <= reference * DEEP_DROP_RATIO;
+    return absoluteDrop || deepDrop;
+}
+
+function recommendScore(flight, interparkPrices, now) {
+    const price = effectivePrice(flight);
+    const monthData = interparkMonthData(flight, interparkPrices);
 
     const comparisonPrice = flight.naverLowest > 0 && comparisonUsable(flight.naverCheckedAt, now)
         ? flight.naverLowest
@@ -78,11 +106,21 @@ async function main() {
     if (flights.length === 0) throw new Error('선정할 항공권이 없습니다. 기존 오늘의 표를 유지합니다.');
 
     const now = Date.now();
-    const ranked = flights
+    const scored = flights
         .filter((flight) => Number(flight.price) > 0)
-        .map((flight) => ({ flight, score: recommendScore(flight, data.interparkPrices || {}, now) }))
+        .map((flight) => ({
+            flight,
+            score: recommendScore(flight, data.interparkPrices || {}, now),
+            exceptional: isExceptionalCandidate(flight, data.interparkPrices || {}, now),
+            referencePrice: marketReference(flight, data.interparkPrices || {}, now),
+        }));
+    const exceptional = scored
+        .filter((entry) => entry.exceptional)
+        .sort((a, b) => effectivePrice(a.flight) - effectivePrice(b.flight) || a.score - b.score);
+    const ranked = scored
+        .slice()
         .sort((a, b) => a.score - b.score || effectivePrice(a.flight) - effectivePrice(b.flight));
-    const selected = ranked[0];
+    const selected = exceptional[0] || ranked[0];
     if (!selected) throw new Error('유효한 오늘의 표 후보가 없습니다.');
 
     const selectedAt = new Date().toISOString();
@@ -93,9 +131,12 @@ async function main() {
         flightId: selected.flight.id,
         source: selected.flight.source,
         effectivePrice: effectivePrice(selected.flight),
+        selectionMode: selected.exceptional ? 'exceptional-price' : 'recommend-score',
+        referencePrice: selected.referencePrice || null,
     };
     fs.writeFileSync(OUTPUT_PATH, `${JSON.stringify(output, null, 2)}\n`, 'utf8');
     console.log(`✅ 오늘의 표: ${selected.flight.departure?.city} → ${selected.flight.arrival?.city} · ${output.effectivePrice.toLocaleString()}원`);
+    console.log(`   선정 기준: ${output.selectionMode}${output.referencePrice ? ` · 비교 기준 ${output.referencePrice.toLocaleString()}원` : ''}`);
     console.log(`   ${selected.flight.id}`);
 }
 
