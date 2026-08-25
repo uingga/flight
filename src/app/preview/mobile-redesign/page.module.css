@@ -728,10 +728,18 @@
     .ticketDivider::before,
     .ticketDivider::after { background: var(--desktop-feed); }
     .todayPickStrip { border-radius: 11px 11px 0 0; }
-    .cardTopline { min-height: 36px; padding: 15px 48px 0 16px; }
+    .cardTopline { position: relative; min-height: 46px; padding: 15px 48px 11px 16px; }
+    .cardTopline::after {
+        content: '';
+        position: absolute;
+        right: 16px;
+        bottom: 0;
+        left: 16px;
+        border-top: 1px dashed #ededed;
+    }
     .sourceBadge { font-size: 12px; font-weight: 600; }
     .airline { color: #747474; font-size: 12px; font-weight: 500; }
-    .routeGrid { margin: 18px 16px 0; grid-template-columns: minmax(0, 1fr) 52px minmax(0, 1fr); }
+    .routeGrid { margin: 16px 16px 0; grid-template-columns: minmax(0, 1fr) 52px minmax(0, 1fr); }
     .routeEndpoint strong { font-size: 19px; font-weight: 600; letter-spacing: -0.03em; }
     .routeTiming { margin-top: 9px; gap: 4px; }
     .routeTiming b { color: #686868; font-size: 12px; font-weight: 500; }
@@ -744,7 +752,7 @@
     .footerStatusLow,
     .footerStatusUrgent { font-weight: 500; }
     .priceDiscountBadge { padding-right: 5px; padding-left: 5px; border-color: transparent; background: #fff3f5; font-weight: 600; }
-    .priceBlock strong { font-size: 19px; font-weight: 600; letter-spacing: -0.03em; }
+    .priceBlock strong { font-size: 22px; font-weight: 600; letter-spacing: -0.035em; }
     .priceBlock .feeNotice { color: #999999; }
     .favoriteButton { top: 12px; right: 12px; }
     .favoriteButton svg { width: 17px; height: 17px; }
