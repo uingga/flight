@@ -83,6 +83,11 @@ const PRICE_OPTIONS = [
     { label: '30만원 이하', value: 300_000 },
     { label: '50만원 이하', value: 500_000 },
 ];
+const SORT_OPTIONS: Array<{ label: string; value: SortMode }> = [
+    { label: '추천순', value: 'recommended' },
+    { label: '낮은 가격순', value: 'price' },
+    { label: '빠른 출발순', value: 'date' },
+];
 
 const stripAirport = (city: string) => city.replace(/\([^)]*\)/g, '').trim();
 
@@ -126,7 +131,7 @@ const cardDate = (value: string) => {
     const date = parseDate(value);
     if (!date) return value || '날짜 확인';
     const weekday = new Intl.DateTimeFormat('ko-KR', { weekday: 'short' }).format(date);
-    return `${date.getMonth() + 1}월 ${date.getDate()}일(${weekday})`;
+    return `${date.getMonth() + 1}.${date.getDate()}(${weekday})`;
 };
 
 const tripLength = (flight: Flight) => {
@@ -463,15 +468,130 @@ const isTickerWorthyDrop = (flight: Flight) => {
     return price <= 140_000 || (price <= 180_000 && discount >= 25);
 };
 
-const describeTodayPick = (flight: Flight) => {
-    const localAirports: Record<string, string> = { PUS: '부산', TAE: '대구', CJJ: '청주', CJU: '제주' };
-    const localCity = localAirports[flight.departure.airport || ''];
-    if (localCity) return `${localCity}에서 바로 떠나는 표예요`;
+const describeDropCard = (flight: Flight) => {
+    const seats = flight.availableSeats || Number.parseInt(flight.seats || '', 10) || 0;
+    const departureDate = parseDate(flight.departure.date);
+    const today = parseDate(seoulDateKey());
+    const destination = stripAirport(flight.arrival.city);
+    const displayedPrice = flight.source === 'ttang' ? flight.price : effectivePrice(flight);
+    const discountRate = Math.round(Math.max(0, flight.discountRate || 0));
+    const harshDetail = harshScheduleDetail(flight);
+    const editorialReactions = [
+        '📣 오늘 업무: 이 표 알리기',
+        '🫣 이건 묻어두면 혼남',
+        '📋 안 보여드리면 업무 태만',
+        '🤝 담당자 전원 말없이 고개 끄덕임',
+    ];
+    const variant = (options: string[]) => {
+        const seed = Array.from(`${flight.id}:${seoulDateKey()}`)
+            .reduce((sum, character) => sum + character.charCodeAt(0), 0);
+        return options[seed % options.length];
+    };
+
+    if (isZeroPtoSchedule(flight)) {
+        return variant([
+            '🏃 0연차 탈출 가능',
+            '🗓 연차칸 비우고 출국',
+            `🌙 ${flight.departure.time} 퇴근 후 출국`,
+        ]);
+    }
+
+    if (departureDate && today) {
+        const daysUntilDeparture = Math.round((departureDate.getTime() - today.getTime()) / 86_400_000);
+        if (daysUntilDeparture === 0) return '🏃 오늘 바로 출국';
+        if (daysUntilDeparture > 0 && daysUntilDeparture <= 5) {
+            return variant([
+                `🏃 ${daysUntilDeparture}일 뒤 출국`,
+                '🧳 여행 계획 강제 생성',
+                '🚧 막판에 가격이 선 넘음',
+                `🫨 D-${daysUntilDeparture}, 이제 와서 이 가격`,
+                `🧳 D-${daysUntilDeparture}, 이러면 가야 하잖아`,
+                `🤷 D-${daysUntilDeparture}, 안 가기엔 너무 싸짐`,
+                `🏃 D-${daysUntilDeparture}, 사람 급하게 만드는 가격`,
+                `😵‍💫 D-${daysUntilDeparture}, 어쩌자고 이 가격`,
+            ]);
+        }
+    }
+
+    if (seats > 0 && seats <= 4) {
+        return variant([
+            '🪑 고민보다 좌석이 적음',
+            `🚪 문 닫히기 전 ${seats}자리`,
+            '👥 친구 고를 시간 없음',
+        ]);
+    }
+
+    if (displayedPrice <= 150_000) {
+        const priceReactions = [
+            `💸 ${compactWon(displayedPrice)}이 ${destination} 됨`,
+            '🧾 왕복 맞음. 두 번 봄',
+            '✈️ 편도인 척하는 왕복',
+            '🤏 예산은 국내, 결과는 해외',
+            '👀 왕복인데 이 숫자',
+            `🧳 일정 없었는데 ${destination}`,
+            '🤨 이 가격이면 얘기가 달라짐',
+            '🤷 안 갈 이유가 가격을 못 이김',
+            '🧲 안 가려고 해도 가격이 방해함',
+            `💸 부산 갈 돈으로 ${destination}`,
+            '🚄 KTX 고민하다 출국',
+            ...editorialReactions,
+        ];
+        return variant(priceReactions);
+    }
+
+    if (displayedPrice < 170_000) return `💸 부산 갈 돈으로 ${destination}`;
+
+    if (discountRate >= 25) {
+        return variant([
+            `🚨 평균가 -${discountRate}% 이탈`,
+            '🧨 가격표 사고 발생',
+            '🧾 숫자 하나 두고 간 듯',
+            '🧮 계산기 다시 켜봄',
+            '👀 왕복인데 이 숫자',
+            ...(!harshDetail ? ['🕰 싼 이유를 시간표에서도 못 찾음'] : []),
+            ...editorialReactions,
+        ]);
+    }
+
+    const departureMinutes = clockMinutes(flight.departure.time);
+    if (departureMinutes !== null && departureMinutes >= 18 * 60) {
+        return variant([
+            `🌙 ${flight.departure.time} 퇴근 후 출국`,
+            '🗓 연차칸 비우고 출국',
+            '🌙 퇴근은 한국에서, 취침은 해외에서',
+        ]);
+    }
+
+    if (harshDetail) {
+        const homeDate = returnArrivalDate(flight);
+        return homeDate?.getDay() === 1 ? '🥱 월요일의 내가 알아서' : '🌙 가격 좋음 · 시간 험함';
+    }
+
     const duration = tripLength(flight);
-    if (duration && effectivePrice(flight) < 300_000) return `${duration}을 30만원 아래로 다녀와요`;
-    if (effectivePrice(flight) < 200_000) return '20만원 아래로 다녀올 수 있어요';
-    return '오늘 가장 먼저 살펴볼 항공권이에요';
+    if (duration) {
+        return variant([
+            `🧳 ${duration} 일정 압축`,
+            '🧳 여행 계획 강제 생성',
+            '📲 단톡방에 먼저 던질 표',
+            '🤝 공범 찾으면 출국',
+        ]);
+    }
+
+    return variant([
+        `🧳 일정 없었는데 ${destination}`,
+        `🪤 구경하다 ${destination} 잡힘`,
+        `📍 검색 안 했는데 ${destination}`,
+        '🛫 표가 먼저 가자고 함',
+        '🫣 안 가도 일단 공유',
+    ]);
 };
+
+const compactDropCardMessage = (message: string) => message
+    .replace('담당자 전원 말없이 고개 끄덕임', '전원 말없이 고개 끄덕임')
+    .replace('퇴근은 한국에서, 취침은 해외에서', '한국서 퇴근, 해외서 취침')
+    .replace('싼 이유를 시간표에서도 못 찾음', '싼 이유, 시간표에도 없음')
+    .replace('사람 급하게 만드는 가격', '사람 급하게 만듦')
+    .replace('안 가려고 해도 가격이 방해함', '안 가려는데 가격이 방해함');
 
 function Icon({ name }: { name: 'sliders' | 'search' | 'star' | 'share' | 'close' | 'arrow' | 'plane' | 'up' | 'chevron' }) {
     const paths = {
@@ -504,6 +624,7 @@ export default function MobileRedesignPreview() {
     const [calendarOpen, setCalendarOpen] = useState(false);
     const [maxPrice, setMaxPrice] = useState(0);
     const [sort, setSort] = useState<SortMode>('recommended');
+    const [sortOpen, setSortOpen] = useState(false);
     const [query, setQuery] = useState('');
     const [searchOpen, setSearchOpen] = useState(false);
     const [filterOpen, setFilterOpen] = useState(false);
@@ -520,6 +641,7 @@ export default function MobileRedesignPreview() {
     const [insightDateKey, setInsightDateKey] = useState(() => seoulDateKey());
     const filterBarSlotRef = useRef<HTMLDivElement | null>(null);
     const desktopFilterRef = useRef<HTMLDivElement | null>(null);
+    const sortMenuRef = useRef<HTMLDivElement | null>(null);
     const lastScrollYRef = useRef(0);
     const scrollDirectionRef = useRef<'up' | 'down' | null>(null);
     const scrollDirectionAnchorRef = useRef(0);
@@ -578,6 +700,22 @@ export default function MobileRedesignPreview() {
     }, [desktopFilterOpen]);
 
     useEffect(() => {
+        if (!sortOpen) return;
+        const closeSortMenu = (event: PointerEvent) => {
+            if (!sortMenuRef.current?.contains(event.target as Node)) setSortOpen(false);
+        };
+        const closeSortMenuWithKeyboard = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') setSortOpen(false);
+        };
+        document.addEventListener('pointerdown', closeSortMenu);
+        document.addEventListener('keydown', closeSortMenuWithKeyboard);
+        return () => {
+            document.removeEventListener('pointerdown', closeSortMenu);
+            document.removeEventListener('keydown', closeSortMenuWithKeyboard);
+        };
+    }, [sortOpen]);
+
+    useEffect(() => {
         try {
             const saved = JSON.parse(localStorage.getItem('favoriteFlights') || '[]');
             if (Array.isArray(saved)) setFavorites(new Set(saved.filter(id => typeof id === 'string')));
@@ -602,7 +740,9 @@ export default function MobileRedesignPreview() {
         if (localIds.length) void account.mergeLocalFavorites(localIds).catch(() => undefined);
     }, [account, account.email, account.status]);
 
-    useEffect(() => setVisibleCount(18), [region, departure, datePeriod, customStartDate, customEndDate, maxPrice, sort, query]);
+    useEffect(() => {
+        setVisibleCount(window.matchMedia('(min-width: 960px)').matches ? 36 : 18);
+    }, [region, departure, datePeriod, customStartDate, customEndDate, maxPrice, sort, query]);
 
     useEffect(() => {
         if (!toast) return;
@@ -682,7 +822,7 @@ export default function MobileRedesignPreview() {
     const todayPick = useMemo(() => {
         const flight = flights.find(item => item.id === todayPickId)
             || flights.slice().sort((a, b) => recommendedScore(a) - recommendedScore(b))[0];
-        return flight ? { flight, reason: describeTodayPick(flight) } : null;
+        return flight ? { flight, reason: describeDropCard(flight) } : null;
     }, [flights, todayPickId]);
     const dropAlertFlight = useMemo(() => (
         flights
@@ -691,7 +831,7 @@ export default function MobileRedesignPreview() {
     ), [flights]);
     const featuredPick = useMemo(() => (
         dropAlertFlight
-            ? { flight: dropAlertFlight, reason: '지금 가격이 유난히 크게 내려온 표예요' }
+            ? { flight: dropAlertFlight, reason: describeDropCard(dropAlertFlight) }
             : todayPick
     ), [dropAlertFlight, todayPick]);
     const displayedFlights = useMemo(() => {
@@ -1117,7 +1257,7 @@ export default function MobileRedesignPreview() {
     const insightInterval = 18;
     const hasAdvancedFilter = departure !== '전체' || datePeriod !== 'all' || maxPrice > 0;
     const updatedLabel = lastUpdated
-        ? `${new Intl.DateTimeFormat('ko-KR', { month: 'numeric', day: 'numeric' }).format(new Date(lastUpdated))} 기준`
+        ? `${new Intl.DateTimeFormat('ko-KR', { month: 'numeric', day: 'numeric' }).format(new Date(lastUpdated)).replace(/\.\s*$/, '')} 기준`
         : '최근 기준';
     const selectedHotelTrackingId = selectedFlight
         ? getTripcomTrackingId(
@@ -1245,6 +1385,25 @@ export default function MobileRedesignPreview() {
 
     return (
         <main className={styles.previewPage}>
+            {isDefaultView && dropAlertFlight && (
+                <div
+                    className={`${styles.dropTicker} ${styles.desktopDropTicker}`}
+                    role="status"
+                    aria-label={`특가 경보. ${stripAirport(dropAlertFlight.arrival.city)} 왕복 ${priceText(dropAlertFlight.price)}`}
+                >
+                    <div className={styles.dropTickerTrack}>
+                        {[0, 1, 2, 3].map(copyIndex => (
+                            <div className={styles.dropTickerContent} aria-hidden={copyIndex > 0 || undefined} key={copyIndex}>
+                                <span className={styles.tickerEmergency}><i aria-hidden="true">🚨</i><b>비상!! 비상!!</b></span>
+                                <span>{stripAirport(dropAlertFlight.arrival.city)} 왕복 {priceText(dropAlertFlight.price)}</span>
+                                <span>🤯 담당자가 미쳤어요</span>
+                                <span>{stripAirport(dropAlertFlight.arrival.city)} 왕복 {priceText(dropAlertFlight.price)}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
             <div className={styles.phoneCanvas}>
                 <header className={styles.header}>
                     <a href="/preview/mobile-redesign" className={styles.logoLink} aria-label="티키티킷 모바일 디자인 미리보기 홈">
@@ -1264,39 +1423,16 @@ export default function MobileRedesignPreview() {
 
                 {isDefaultView && dropAlertFlight && (
                     <div
-                        className={`${styles.dropTicker} ${styles.desktopDropTicker}`}
-                        role="status"
-                        aria-label={`특가 경보. ${stripAirport(dropAlertFlight.arrival.city)} 왕복 ${priceText(dropAlertFlight.price)}`}
-                    >
-                        <div className={styles.dropTickerTrack}>
-                            {[false, true].map(isDuplicate => (
-                                <div className={styles.dropTickerContent} aria-hidden={isDuplicate || undefined} key={String(isDuplicate)}>
-                                    <span>🚨 TIKIT DROP 발생</span>
-                                    <span>{stripAirport(dropAlertFlight.arrival.city)} 왕복 {priceText(dropAlertFlight.price)}</span>
-                                    <span>🤯 담당자가 미쳤어요</span>
-                                    <span>{stripAirport(dropAlertFlight.arrival.city)} 왕복 {priceText(dropAlertFlight.price)}</span>
-                                    <span>담당자 알아채면 사라짐</span>
-                                    <span>{stripAirport(dropAlertFlight.arrival.city)} 왕복 {priceText(dropAlertFlight.price)}</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-
-                {isDefaultView && dropAlertFlight && (
-                    <div
                         className={`${styles.dropTicker} ${styles.mobileDropTicker}`}
                         role="status"
                         aria-label={`특가 경보. ${stripAirport(dropAlertFlight.arrival.city)} 왕복 ${priceText(dropAlertFlight.price)}`}
                     >
                         <div className={styles.dropTickerTrack}>
-                            {[false, true].map(isDuplicate => (
-                                <div className={styles.dropTickerContent} aria-hidden={isDuplicate || undefined} key={String(isDuplicate)}>
-                                    <span>🚨 TIKIT DROP 발생</span>
+                            {[0, 1, 2, 3].map(copyIndex => (
+                                <div className={styles.dropTickerContent} aria-hidden={copyIndex > 0 || undefined} key={copyIndex}>
+                                    <span className={styles.tickerEmergency}><i aria-hidden="true">🚨</i><b>비상!! 비상!!</b></span>
                                     <span>{stripAirport(dropAlertFlight.arrival.city)} 왕복 {priceText(dropAlertFlight.price)}</span>
                                     <span>🤯 담당자가 미쳤어요</span>
-                                    <span>{stripAirport(dropAlertFlight.arrival.city)} 왕복 {priceText(dropAlertFlight.price)}</span>
-                                    <span>담당자 알아채면 사라짐</span>
                                     <span>{stripAirport(dropAlertFlight.arrival.city)} 왕복 {priceText(dropAlertFlight.price)}</span>
                                 </div>
                             ))}
@@ -1577,19 +1713,39 @@ export default function MobileRedesignPreview() {
                             <h2>{query ? `'${query}' 검색 결과` : region === '전체' ? '전체 항공권' : `${region} 항공권`}</h2>
                             <span>{filteredFlights.length.toLocaleString('ko-KR')}개 · {updatedLabel}</span>
                         </div>
-                        <label className={styles.sortSelect}>
-                            <select
-                                className={sort === 'recommended' ? styles.sortRecommended : styles.sortLong}
-                                value={sort}
-                                onChange={event => setSort(event.target.value as SortMode)}
+                        <div className={styles.sortSelect} ref={sortMenuRef}>
+                            <button
+                                type="button"
+                                className={styles.sortTrigger}
                                 aria-label="항공권 정렬"
+                                aria-haspopup="listbox"
+                                aria-expanded={sortOpen}
+                                onClick={() => setSortOpen(value => !value)}
                             >
-                                <option value="recommended">추천순</option>
-                                <option value="price">낮은 가격순</option>
-                                <option value="date">빠른 출발순</option>
-                            </select>
-                            <span className={styles.sortChevron} aria-hidden="true"><Icon name="chevron" /></span>
-                        </label>
+                                {SORT_OPTIONS.find(option => option.value === sort)?.label}
+                                <span className={`${styles.sortChevron} ${sortOpen ? styles.sortChevronOpen : ''}`} aria-hidden="true"><Icon name="chevron" /></span>
+                            </button>
+                            {sortOpen && (
+                                <div className={styles.sortMenu} role="listbox" aria-label="정렬 방식">
+                                    {SORT_OPTIONS.map(option => (
+                                        <button
+                                            type="button"
+                                            role="option"
+                                            aria-selected={sort === option.value}
+                                            className={`${styles.sortOption} ${sort === option.value ? styles.sortOptionSelected : ''}`}
+                                            key={option.value}
+                                            onClick={() => {
+                                                setSort(option.value);
+                                                setSortOpen(false);
+                                            }}
+                                        >
+                                            <span>{option.label}</span>
+                                            {sort === option.value && <span className={styles.sortCheck} aria-hidden="true">✓</span>}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     {loading && (
@@ -1665,8 +1821,13 @@ export default function MobileRedesignPreview() {
 
                                                 <div className={styles.cardFooter}>
                                                     <div className={styles.availabilityGroup}>
-                                                        {seats > 0 && (
-                                                            <span className={`${styles.footerStatus} ${seats <= 4 && !isTodayPick ? styles.footerStatusLow : ''} ${seats <= 4 && isTodayPick ? styles.footerStatusUrgent : ''}`}>
+                                                        {isTodayPick ? (
+                                                            <span className={`${styles.footerStatus} ${styles.todayPickStatus}`}>
+                                                                <span className={styles.dropMessageMobile}>{compactDropCardMessage(featuredPick?.reason || '')}</span>
+                                                                <span className={styles.dropMessageDesktop}>{featuredPick?.reason}</span>
+                                                            </span>
+                                                        ) : seats > 0 && (
+                                                            <span className={`${styles.footerStatus} ${seats <= 4 ? styles.footerStatusLow : ''}`}>
                                                                 {seats}석 남음
                                                             </span>
                                                         )}
@@ -1753,7 +1914,11 @@ export default function MobileRedesignPreview() {
                     </div>
 
                     {visibleCount < displayedFlights.length && (
-                        <button type="button" className={styles.moreButton} onClick={() => setVisibleCount(count => count + 18)}>
+                        <button
+                            type="button"
+                            className={styles.moreButton}
+                            onClick={() => setVisibleCount(count => count + (window.matchMedia('(min-width: 960px)').matches ? 36 : 18))}
+                        >
                             특가 더 보기
                         </button>
                     )}
