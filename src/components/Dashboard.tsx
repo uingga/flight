@@ -31,7 +31,13 @@ import { checkIsMobile, getMobileUrl } from '@/lib/utils/mobile-url';
 import { getTtangBookingUrl } from '@/lib/utils/ttang-url';
 import { getYbtourBookingUrl } from '@/lib/utils/ybtour-url';
 import { dealAlertRegionLabel, type DealAlertRegion } from '@/lib/deal-alerts';
-import { getComparisonFreshness, getComparisonPriceTier, getEffectivePrice } from '@/lib/price-quality';
+import {
+    getComparisonFreshness,
+    getComparisonPriceTier,
+    getEffectivePrice,
+    getRecommendationRotationRank,
+    getRecommendationRotationSlot,
+} from '@/lib/price-quality';
 import {
     getDestinationContext,
     getItineraryContext,
@@ -1704,6 +1710,43 @@ export default function Dashboard() {
         return scores;
     }, [flights, interparkPrices]);
 
+    // 네이버 최저가 이하 그룹은 KST 오전 6시·오후 6시에 순서를 바꾼다.
+    // 열린 화면도 슬롯이 바뀐 뒤 1분 안에 새 순서를 반영한다.
+    const [recommendationRotationSlot, setRecommendationRotationSlot] = useState(
+        () => getRecommendationRotationSlot(),
+    );
+    useEffect(() => {
+        const timer = window.setInterval(() => {
+            setRecommendationRotationSlot(current => {
+                const next = getRecommendationRotationSlot();
+                return current === next ? current : next;
+            });
+        }, 60_000);
+        return () => window.clearInterval(timer);
+    }, []);
+
+    // 기존 품질순위 60%와 회차별 변화순위 40%를 합친다.
+    // 완전 무작위가 아니므로 더 좋은 표가 상단에 나올 가능성을 보존한다.
+    const recommendationRotationScores = useMemo(() => {
+        const qualified = flights.filter(flight => getComparisonPriceTier(flight) === 0);
+        const byQuality = qualified.slice().sort((a, b) =>
+            (recommendScores.get(a.id) ?? Infinity) - (recommendScores.get(b.id) ?? Infinity)
+            || a.id.localeCompare(b.id));
+        const byRotation = qualified.slice().sort((a, b) =>
+            getRecommendationRotationRank(a.id, recommendationRotationSlot)
+            - getRecommendationRotationRank(b.id, recommendationRotationSlot)
+            || a.id.localeCompare(b.id));
+        const qualityRanks = new Map(byQuality.map((flight, index) => [flight.id, index]));
+        const rotationRanks = new Map(byRotation.map((flight, index) => [flight.id, index]));
+        const divisor = Math.max(1, qualified.length - 1);
+
+        return new Map(qualified.map(flight => [
+            flight.id,
+            ((qualityRanks.get(flight.id) ?? divisor) / divisor) * 0.6
+                + ((rotationRanks.get(flight.id) ?? divisor) / divisor) * 0.4,
+        ]));
+    }, [flights, recommendScores, recommendationRotationSlot]);
+
     // 오늘의 표 — 현재 판매 중인 전체 항공권에서 가장 좋은 한 장을 고른다.
     // 신규·가격 하락은 동점일 때만 우선하며, 더 좋은 기존 표를 후보에서 제외하지 않는다.
     const todayPick = useMemo(() => {
@@ -1862,10 +1905,14 @@ export default function Dashboard() {
             }
             case 'discount': {
                 // 추천순은 신선한 비교가 이하를 먼저, 비교 불가를 그다음,
-                // 신선한 비교가 초과를 마지막에 둔 뒤 각 구간 안에서 종합점수를 적용한다.
-                comparison = getComparisonPriceTier(a) - getComparisonPriceTier(b);
+                // 신선한 비교가 초과를 마지막에 둔다. 비교가 이하 그룹은 하루 두 번 순환하고,
+                // 나머지 그룹은 기존 종합점수를 유지한다.
+                const comparisonTier = getComparisonPriceTier(a);
+                comparison = comparisonTier - getComparisonPriceTier(b);
                 if (comparison === 0) {
-                    comparison = (recommendScores.get(a.id) ?? Infinity) - (recommendScores.get(b.id) ?? Infinity);
+                    comparison = comparisonTier === 0
+                        ? (recommendationRotationScores.get(a.id) ?? Infinity) - (recommendationRotationScores.get(b.id) ?? Infinity)
+                        : (recommendScores.get(a.id) ?? Infinity) - (recommendScores.get(b.id) ?? Infinity);
                 }
                 break;
             }
@@ -1981,84 +2028,84 @@ export default function Dashboard() {
         });
     };
 
-    // 노선 분산 정렬: 같은 출발지-목적지가 연속 3개 이상 나오지 않도록 재배치
+    // 다양성 재정렬: 같은 출발지-목적지는 최대 2개 연속,
+    // 첫 20개에는 같은 목적지가 최대 2개만 나오도록 재배치한다.
     // 추천순에서만 적용 (가격순/날짜순/검색 시 비활성화)
-    // 개선: pending 항목을 적극적으로 drain하여 저렴한 항공편이 비싼 항공편 뒤로 밀리는 역전 방지
-    const interleaveRoutes = (flights: Flight[], maxConsecutive: number = 2): Flight[] => {
-        if (flights.length <= maxConsecutive) return flights;
+    const interleaveRoutes = (
+        flights: Flight[],
+        maxConsecutive: number = 2,
+        topWindow: number = 20,
+        maxPerDestination: number = 2,
+        leadingFlight?: Flight,
+    ): Flight[] => {
+        if (flights.length <= 1) return flights;
 
+        const remaining = [...flights];
         const result: Flight[] = [];
-        const pending: Flight[] = [];
-
+        const sequence: Flight[] = leadingFlight ? [leadingFlight] : [];
+        const topDestinationCounts = new Map<string, number>();
+        if (leadingFlight) {
+            topDestinationCounts.set(normalizeCity(leadingFlight.arrival.city), 1);
+        }
         const getRoute = (f: Flight) => `${normalizeCity(f.departure.city)}-${normalizeCity(f.arrival.city)}`;
-
-        // result 끝에서 해당 노선의 연속 streak 확인
         const getStreak = (route: string) => {
             let streak = 0;
-            for (let i = result.length - 1; i >= 0 && i >= result.length - maxConsecutive; i--) {
-                if (getRoute(result[i]) === route) streak++;
+            for (let i = sequence.length - 1; i >= 0 && i >= sequence.length - maxConsecutive; i--) {
+                if (getRoute(sequence[i]) === route) streak++;
                 else break;
             }
             return streak;
         };
 
-        // pending에서 배치 가능한 항목을 최대한 drain (스코어순 유지)
-        const drainPending = () => {
-            let drained = true;
-            while (drained && pending.length > 0) {
-                drained = false;
-                for (let pi = 0; pi < pending.length; pi++) {
-                    if (getStreak(getRoute(pending[pi])) < maxConsecutive) {
-                        result.push(pending.splice(pi, 1)[0]);
-                        drained = true;
-                        break; // pending 앞쪽(저렴한)부터 다시 시도
-                    }
-                }
+        while (remaining.length > 0) {
+            const insideTopWindow = sequence.length < topWindow;
+            let candidateIndex = remaining.findIndex(flight => {
+                const destination = normalizeCity(flight.arrival.city);
+                return getStreak(getRoute(flight)) < maxConsecutive
+                    && (!insideTopWindow || (topDestinationCounts.get(destination) || 0) < maxPerDestination);
+            });
+            if (candidateIndex < 0) {
+                candidateIndex = remaining.findIndex(flight => getStreak(getRoute(flight)) < maxConsecutive);
             }
-        };
+            if (candidateIndex < 0) candidateIndex = 0;
 
-        for (const flight of flights) {
-            const route = getRoute(flight);
-
-            if (getStreak(route) >= maxConsecutive) {
-                // 연속 한도 초과 → pending으로 보류
-                pending.push(flight);
-            } else {
-                // 현재 항공편 배치 전에 pending 항목을 먼저 drain
-                // (pending은 스코어순으로 쌓이므로, 먼저 배치하면 저렴한 것이 우선)
-                if (pending.length > 0) {
-                    drainPending();
-                }
-                // drain 후에도 현재 항공편이 배치 가능한지 재확인
-                if (getStreak(route) < maxConsecutive) {
-                    result.push(flight);
-                } else {
-                    pending.push(flight);
-                }
+            const [next] = remaining.splice(candidateIndex, 1);
+            result.push(next);
+            sequence.push(next);
+            if (sequence.length <= topWindow) {
+                const destination = normalizeCity(next.arrival.city);
+                topDestinationCounts.set(destination, (topDestinationCounts.get(destination) || 0) + 1);
             }
         }
-
-        // 남은 pending 항목을 유효한 위치에 배치 시도
-        drainPending();
-        // 그래도 남은 항목은 마지막에 추가 (극단적 edge case)
-        result.push(...pending);
         return result;
     };
 
+    // 오늘의 표는 편집 콘텐츠이므로 추천순 재편성 대상에서 완전히 제외한다.
+    const recommendationPool = (todayPick && isDefaultView)
+        ? filteredFlights.filter(flight => flight.id !== todayPick.flight.id)
+        : filteredFlights;
     const diversifiedFlights = (sortBy === 'discount' && !searchTerm)
         // 서로 다른 비교가 구간이 노선 다양화 과정에서 뒤섞이지 않도록
         // 각 구간 안에서만 노선을 분산한 뒤 다시 합친다.
         ? ([0, 1, 2] as const).flatMap(tier =>
-            interleaveRoutes(filteredFlights.filter(flight => getComparisonPriceTier(flight) === tier)))
-        : filteredFlights;
+            interleaveRoutes(
+                recommendationPool.filter(flight => getComparisonPriceTier(flight) === tier),
+                2,
+                20,
+                2,
+                tier === 0 && todayPick && isDefaultView ? todayPick.flight : undefined,
+            ))
+        : recommendationPool;
 
     // 표시할 항공권 (무한 스크롤용)
-    const displayedFlightsBase = diversifiedFlights.slice(0, displayCount);
+    const hasPinnedTodayPick = !!todayPick && isDefaultView;
+    const poolDisplayCount = Math.max(0, displayCount - (hasPinnedTodayPick ? 1 : 0));
+    const displayedFlightsBase = diversifiedFlights.slice(0, poolDisplayCount);
     // 오늘의 표는 기본 화면에서 목록 맨 앞에 온다 — 일반 카드와 같은 모습, 위치와 표식만 특별하다
-    const displayedFlights = (todayPick && isDefaultView)
-        ? [todayPick.flight, ...displayedFlightsBase.filter(f => f.id !== todayPick.flight.id)]
+    const displayedFlights = hasPinnedTodayPick
+        ? [todayPick!.flight, ...displayedFlightsBase]
         : displayedFlightsBase;
-    const hasMore = displayCount < diversifiedFlights.length;
+    const hasMore = poolDisplayCount < diversifiedFlights.length;
 
     // 공유 링크로 들어오면 해당 항공권의 상세 팝업을 바로 연다.
     useEffect(() => {
