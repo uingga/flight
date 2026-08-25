@@ -1,14 +1,22 @@
 'use client';
 
-import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, type FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { ko } from 'date-fns/locale';
 import 'react-datepicker/dist/react-datepicker.css';
 import Logo from '@/components/Logo';
 import * as gtag from '@/lib/analytics';
 import { getDestinationContext } from '@/lib/destination-contexts';
-import { calcFlightTiming, normalizeCity } from '@/lib/utils/flight-helpers';
+import { CITY_TO_AIRPORT, calcFlightTiming, getNaverFlightUrl, normalizeAirline, normalizeCity } from '@/lib/utils/flight-helpers';
 import { getTripcomHotelUrl, getTripcomTrackingId } from '@/lib/utils/tripcom-helpers';
+import { getFlightBookingUrl } from '@/lib/utils/booking-url';
+import { checkIsMobile } from '@/lib/utils/mobile-url';
+import {
+    getComparisonFreshness,
+    getComparisonPriceTier,
+    getRecommendationRotationRank,
+    getRecommendationRotationSlot,
+} from '@/lib/price-quality';
 import type { Flight } from '@/types/flight';
 import AccountSheet from '@/components/account/AccountSheet';
 import { useAccount, type AccountFlightSnapshot, type AccountSearchFilters } from '@/components/account/useAccount';
@@ -33,6 +41,7 @@ interface FlightsResponse {
     lastUpdated?: string | null;
     todayPickId?: string | null;
     priceHistory?: PriceHistory;
+    interparkPrices?: InterparkPrices;
 }
 
 interface PriceHistoryEntry {
@@ -43,6 +52,19 @@ interface PriceHistoryEntry {
 }
 
 type PriceHistory = Record<string, PriceHistoryEntry[]>;
+type InterparkPrices = Record<string, Record<string, { avg: number; lowest: number }>>;
+
+interface MobileRedesignPreviewProps {
+    previewMode?: boolean;
+}
+
+interface RouteAlertTarget {
+    flightId?: string;
+    departureCity: string;
+    arrivalCity: string;
+    currentPrice?: number;
+    suggestedPrice?: number;
+}
 
 interface FeedInsight {
     id: string;
@@ -67,6 +89,10 @@ const SOURCE_NAMES: Record<Flight['source'], string> = {
     ttang: '땡처리닷컴',
     myrealtrip: '마이리얼트립',
 };
+const SOURCE_OPTIONS: Array<{ value: 'all' | Flight['source']; label: string }> = [
+    { value: 'all', label: '전체' },
+    ...Object.entries(SOURCE_NAMES).map(([value, label]) => ({ value: value as Flight['source'], label })),
+];
 
 const TTANG_TICKETING_FEE = 20_000;
 
@@ -224,20 +250,32 @@ const normalizedHistory = (history: PriceHistory) => {
     return result;
 };
 
-const diversifyFlights = (items: Flight[], topWindow = 24, maxPerDestination = 2, maxConsecutive = 2) => {
-    if (items.length <= maxConsecutive) return items;
+const diversifyFlights = (
+    items: Flight[],
+    topWindow = 20,
+    maxPerDestination = 2,
+    maxConsecutive = 2,
+    leadingFlight?: Flight,
+) => {
+    if (items.length <= 1) return items;
     const remaining = [...items];
     const result: Flight[] = [];
+    const sequence: Flight[] = leadingFlight ? [leadingFlight] : [];
     const topCounts = new Map<string, number>();
+    if (leadingFlight) topCounts.set(normalizeCity(leadingFlight.arrival.city), 1);
 
     const breaksConsecutiveRun = (flight: Flight) => {
-        if (result.length < maxConsecutive) return true;
-        const destination = normalizeCity(flight.arrival.city);
-        return result.slice(-maxConsecutive).some(item => normalizeCity(item.arrival.city) !== destination);
+        const route = normalizedRoute(flight);
+        let streak = 0;
+        for (let index = sequence.length - 1; index >= 0 && index >= sequence.length - maxConsecutive; index -= 1) {
+            if (normalizedRoute(sequence[index]) === route) streak += 1;
+            else break;
+        }
+        return streak < maxConsecutive;
     };
 
     while (remaining.length > 0) {
-        const protectTopMix = result.length < topWindow;
+        const protectTopMix = sequence.length < topWindow;
         let candidateIndex = remaining.findIndex(flight => {
             const destination = normalizeCity(flight.arrival.city);
             return breaksConsecutiveRun(flight)
@@ -248,7 +286,8 @@ const diversifyFlights = (items: Flight[], topWindow = 24, maxPerDestination = 2
 
         const [next] = remaining.splice(candidateIndex, 1);
         result.push(next);
-        if (result.length <= topWindow) {
+        sequence.push(next);
+        if (sequence.length <= topWindow) {
             const destination = normalizeCity(next.arrival.city);
             topCounts.set(destination, (topCounts.get(destination) || 0) + 1);
         }
@@ -374,6 +413,17 @@ const recommendedScore = (flight: Flight) => {
     const discount = Math.max(0, flight.discountRate || 0);
     const seatBonus = flight.availableSeats && flight.availableSeats <= 9 ? 8 : 0;
     return effectivePrice(flight) - discount * 2_500 - seatBonus * 1_000;
+};
+
+const priceFreshnessMultiplier = (checkedAt?: string) => {
+    if (!checkedAt) return 1.12;
+    const checkedTime = new Date(checkedAt).getTime();
+    if (!Number.isFinite(checkedTime)) return 1.12;
+    const ageHours = Math.max(0, (Date.now() - checkedTime) / 3_600_000);
+    if (ageHours <= 8) return 1;
+    if (ageHours <= 16) return 1.03;
+    if (ageHours <= 24) return 1.08;
+    return 1.35;
 };
 
 const seoulDateKey = (date = new Date()) => new Intl.DateTimeFormat('en-CA', {
@@ -627,7 +677,7 @@ function Icon({ name }: { name: 'sliders' | 'search' | 'star' | 'share' | 'close
     return <svg viewBox="0 0 24 24" aria-hidden="true">{paths[name]}</svg>;
 }
 
-export default function MobileRedesignPreview() {
+export default function MobileRedesignPreview({ previewMode = true }: MobileRedesignPreviewProps) {
     const account = useAccount();
     const [flights, setFlights] = useState<Flight[]>([]);
     const [loading, setLoading] = useState(true);
@@ -635,8 +685,12 @@ export default function MobileRedesignPreview() {
     const [lastUpdated, setLastUpdated] = useState<string | null>(null);
     const [todayPickId, setTodayPickId] = useState<string | null>(null);
     const [priceHistory, setPriceHistory] = useState<PriceHistory>({});
+    const [interparkPrices, setInterparkPrices] = useState<InterparkPrices>({});
+    const [passengers, setPassengers] = useState({ adult: 1, child: 0, infant: 0 });
     const [region, setRegion] = useState('전체');
     const [departure, setDeparture] = useState('전체');
+    const [sourceFilter, setSourceFilter] = useState<'all' | Flight['source']>('all');
+    const [airlineFilter, setAirlineFilter] = useState('all');
     const [datePeriod, setDatePeriod] = useState<DatePeriod>('all');
     const [customStartDate, setCustomStartDate] = useState<Date | null>(null);
     const [customEndDate, setCustomEndDate] = useState<Date | null>(null);
@@ -650,6 +704,7 @@ export default function MobileRedesignPreview() {
     const [desktopFilterOpen, setDesktopFilterOpen] = useState<DesktopFilterKey | null>(null);
     const [regionMoreOpen, setRegionMoreOpen] = useState(false);
     const [showDealAlert, setShowDealAlert] = useState(false);
+    const [alertRouteTarget, setAlertRouteTarget] = useState<RouteAlertTarget | null>(null);
     const [selectedFlight, setSelectedFlight] = useState<Flight | null>(null);
     const [favorites, setFavorites] = useState<Set<string>>(new Set());
     const [flightReport, setFlightReport] = useState<{ flightId: string; status: FlightReportStatus } | null>(null);
@@ -657,9 +712,15 @@ export default function MobileRedesignPreview() {
     const [visibleCount, setVisibleCount] = useState(18);
     const [toast, setToast] = useState('');
     const [showScrollTop, setShowScrollTop] = useState(false);
+    const [isMobile, setIsMobile] = useState(false);
     const [filterBarPinned, setFilterBarPinned] = useState(false);
     const [showAccount, setShowAccount] = useState(false);
+    const [showContact, setShowContact] = useState(false);
+    const [contactForm, setContactForm] = useState({ name: '', email: '', message: '' });
+    const [contactStatus, setContactStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+    const [contactMessage, setContactMessage] = useState('');
     const [insightDateKey, setInsightDateKey] = useState(() => seoulDateKey());
+    const [recommendationRotationSlot, setRecommendationRotationSlot] = useState(() => getRecommendationRotationSlot());
     const filterBarSlotRef = useRef<HTMLDivElement | null>(null);
     const desktopFilterRef = useRef<HTMLDivElement | null>(null);
     const sortMenuRef = useRef<HTMLDivElement | null>(null);
@@ -667,36 +728,184 @@ export default function MobileRedesignPreview() {
     const scrollDirectionRef = useRef<'up' | 'down' | null>(null);
     const scrollDirectionAnchorRef = useRef(0);
     const mergedAccountRef = useRef<string | null>(null);
+    const lastFetchAtRef = useRef(0);
+    const urlInitializedRef = useRef(false);
+    const sharedFlightIdRef = useRef<string | null>(null);
 
-    useEffect(() => {
-        let active = true;
-        fetch('/api/flights?sortBy=price&sortOrder=asc')
-            .then(response => {
-                if (!response.ok) throw new Error('항공권을 불러오지 못했습니다.');
-                return response.json() as Promise<FlightsResponse>;
-            })
-            .then(data => {
-                if (!active) return;
-                if (!data.success) throw new Error('항공권을 불러오지 못했습니다.');
-                setFlights(data.flights || []);
-                setLastUpdated(data.lastUpdated || null);
-                setInsightDateKey(data.lastUpdated ? seoulDateKey(new Date(data.lastUpdated)) : seoulDateKey());
-                setTodayPickId(typeof data.todayPickId === 'string' ? data.todayPickId : null);
-                setPriceHistory(data.priceHistory || {});
-            })
-            .catch(cause => {
-                if (active) setError(cause instanceof Error ? cause.message : '항공권을 불러오지 못했습니다.');
-            })
-            .finally(() => {
-                if (active) setLoading(false);
-            });
-        return () => { active = false; };
+    const loadFlights = useCallback(async (background = false) => {
+        if (!background) setLoading(true);
+        try {
+            const response = await fetch('/api/flights?sortBy=price&sortOrder=asc', { cache: 'no-store' });
+            if (!response.ok) throw new Error('항공권을 불러오지 못했습니다.');
+            const data = await response.json() as FlightsResponse;
+            if (!data.success) throw new Error('항공권을 불러오지 못했습니다.');
+            setFlights(data.flights || []);
+            setLastUpdated(data.lastUpdated || null);
+            setInsightDateKey(data.lastUpdated ? seoulDateKey(new Date(data.lastUpdated)) : seoulDateKey());
+            setTodayPickId(typeof data.todayPickId === 'string' ? data.todayPickId : null);
+            setPriceHistory(data.priceHistory || {});
+            setInterparkPrices(data.interparkPrices || {});
+            setError('');
+            lastFetchAtRef.current = Date.now();
+        } catch (cause) {
+            if (!background) setError(cause instanceof Error ? cause.message : '항공권을 불러오지 못했습니다.');
+        } finally {
+            if (!background) setLoading(false);
+        }
     }, []);
 
     useEffect(() => {
-        document.body.style.overflow = selectedFlight || filterOpen || showAccount || showDealAlert ? 'hidden' : '';
+        void loadFlights();
+        const refreshTimer = window.setInterval(() => void loadFlights(true), 5 * 60 * 1000);
+        const refreshVisiblePage = () => {
+            if (document.visibilityState === 'visible' && Date.now() - lastFetchAtRef.current > 2 * 60 * 1000) {
+                void loadFlights(true);
+            }
+        };
+        document.addEventListener('visibilitychange', refreshVisiblePage);
+        return () => {
+            window.clearInterval(refreshTimer);
+            document.removeEventListener('visibilitychange', refreshVisiblePage);
+        };
+    }, [loadFlights]);
+
+    useEffect(() => {
+        const timer = window.setInterval(() => {
+            setRecommendationRotationSlot(current => {
+                const next = getRecommendationRotationSlot();
+                return current === next ? current : next;
+            });
+        }, 60_000);
+        return () => window.clearInterval(timer);
+    }, []);
+
+    useEffect(() => {
+        document.body.style.overflow = selectedFlight || filterOpen || showAccount || showDealAlert || showContact ? 'hidden' : '';
         return () => { document.body.style.overflow = ''; };
-    }, [selectedFlight, filterOpen, showAccount, showDealAlert]);
+    }, [selectedFlight, filterOpen, showAccount, showContact, showDealAlert]);
+
+    useEffect(() => {
+        const closeTopLayer = (event: KeyboardEvent) => {
+            if (event.key !== 'Escape') return;
+            if (showContact) setShowContact(false);
+            else if (selectedFlight) setSelectedFlight(null);
+            else if (filterOpen) setFilterOpen(false);
+            else if (showDealAlert) { setShowDealAlert(false); setAlertRouteTarget(null); }
+            else if (searchOpen) setSearchOpen(false);
+        };
+        window.addEventListener('keydown', closeTopLayer);
+        return () => window.removeEventListener('keydown', closeTopLayer);
+    }, [filterOpen, searchOpen, selectedFlight, showContact, showDealAlert]);
+
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const requestedFlight = params.get('flight');
+        sharedFlightIdRef.current = requestedFlight;
+
+        const departureParam = params.get('dep');
+        if (/인천|김포|서울|ICN|GMP|SEL/i.test(departureParam || '')) setDeparture('인천/김포');
+        else if (/부산|김해|PUS/i.test(departureParam || '')) setDeparture('부산/김해');
+        else if (/대구|TAE/i.test(departureParam || '')) setDeparture('대구');
+        else if (/청주|CJJ/i.test(departureParam || '')) setDeparture('청주');
+        else if (/제주|CJU/i.test(departureParam || '')) setDeparture('제주');
+
+        const regionParam = params.get('region');
+        if (regionParam) setRegion(regionParam === '중국' ? '중화권' : REGION_OPTIONS.includes(regionParam) ? regionParam : '전체');
+        const queryParam = params.get('q');
+        if (queryParam) setQuery(queryParam);
+        const sourceParam = params.get('source');
+        if (SOURCE_OPTIONS.some(option => option.value === sourceParam)) setSourceFilter(sourceParam as 'all' | Flight['source']);
+        const airlineParam = params.get('airline');
+        if (airlineParam) setAirlineFilter(airlineParam);
+        const sortParam = params.get('sort');
+        if (sortParam === 'price' || sortParam === 'date' || sortParam === 'recommended') setSort(sortParam);
+        const maxParam = Number(params.get('max'));
+        if (Number.isFinite(maxParam) && maxParam > 0) setMaxPrice(maxParam);
+
+        const startParam = params.get('from');
+        const endParam = params.get('to');
+        const periodParam = params.get('period') as DatePeriod | null;
+        if (startParam) {
+            setDatePeriod('custom');
+            setCustomStartDate(parseDate(startParam));
+            setCustomEndDate(endParam ? parseDate(endParam) : null);
+        } else if (periodParam && DATE_PERIOD_OPTIONS.some(option => option.value === periodParam)) {
+            setDatePeriod(periodParam);
+        }
+
+        if (params.get('dealAlert') === '1') setShowDealAlert(true);
+        const campaign = params.get('utm_campaign') || '';
+        if (params.get('utm_source') === 'naver_blog' && /^tikitikit_drop_\d+$/.test(campaign)) {
+            const content = params.get('utm_content');
+            if (content === 'drop_deal') gtag.trackBlogLinkOpen('flight', campaign);
+            if (content === 'alert_cta') gtag.trackBlogLinkOpen('alert', campaign);
+        }
+
+        const readyTimer = window.setTimeout(() => { urlInitializedRef.current = true; }, 0);
+        return () => window.clearTimeout(readyTimer);
+    }, []);
+
+    useEffect(() => {
+        if (loading || !sharedFlightIdRef.current) return;
+        const flightId = sharedFlightIdRef.current;
+        sharedFlightIdRef.current = null;
+        const sharedFlight = flights.find(flight => flight.id === flightId);
+        if (sharedFlight) {
+            gtag.trackDetailOpen(
+                `${normalizeCity(sharedFlight.departure.city)}-${normalizeCity(sharedFlight.arrival.city)}`,
+                effectivePrice(sharedFlight),
+                sharedFlight.source,
+                'shared_link',
+            );
+            account.recordRecent(sharedFlight.id);
+            setSelectedFlight(sharedFlight);
+            return;
+        }
+
+        const params = new URLSearchParams(window.location.search);
+        const fallbackArrival = params.get('arr');
+        if (fallbackArrival) setQuery(fallbackArrival);
+        setToast(fallbackArrival
+            ? '공유된 표는 내려갔어요. 같은 목적지의 현재 항공권을 보여드려요.'
+            : '공유된 표는 현재 목록에서 내려갔어요.');
+    }, [account, flights, loading]);
+
+    useEffect(() => {
+        if (!urlInitializedRef.current) return;
+        const current = new URLSearchParams(window.location.search);
+        const next = new URLSearchParams();
+        for (const key of ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term']) {
+            const value = current.get(key);
+            if (value) next.set(key, value);
+        }
+        if (query.trim()) next.set('q', query.trim());
+        if (departure !== '전체') next.set('dep', departure.replace('/김포', '').replace('/김해', ''));
+        if (region !== '전체') next.set('region', region);
+        if (sourceFilter !== 'all') next.set('source', sourceFilter);
+        if (airlineFilter !== 'all') next.set('airline', airlineFilter);
+        if (sort !== 'recommended') next.set('sort', sort);
+        if (maxPrice > 0) next.set('max', String(maxPrice));
+        if (datePeriod === 'custom' && customStartDate) {
+            next.set('from', dateKey(customStartDate));
+            if (customEndDate) next.set('to', dateKey(customEndDate));
+        } else if (datePeriod !== 'all') {
+            next.set('period', datePeriod);
+        }
+        if (selectedFlight) next.set('flight', selectedFlight.id);
+        const queryString = next.toString();
+        window.history.replaceState({}, '', `${window.location.pathname}${queryString ? `?${queryString}` : ''}`);
+    }, [airlineFilter, customEndDate, customStartDate, datePeriod, departure, maxPrice, query, region, selectedFlight, sort, sourceFilter]);
+
+    useEffect(() => {
+        if (!selectedFlight || loading) return;
+        const refreshedFlight = flights.find(flight => flight.id === selectedFlight.id);
+        if (refreshedFlight) {
+            if (refreshedFlight !== selectedFlight) setSelectedFlight(refreshedFlight);
+            return;
+        }
+        setSelectedFlight(null);
+        setToast('이 표는 방금 현재 목록에서 내려갔어요.');
+    }, [flights, loading, selectedFlight]);
 
     useEffect(() => {
         if (!desktopFilterOpen) return;
@@ -772,8 +981,12 @@ export default function MobileRedesignPreview() {
     }, [account, account.email, account.status]);
 
     useEffect(() => {
+        setIsMobile(checkIsMobile());
+    }, []);
+
+    useEffect(() => {
         setVisibleCount(window.matchMedia('(min-width: 960px)').matches ? 36 : 18);
-    }, [region, departure, datePeriod, customStartDate, customEndDate, maxPrice, sort, query]);
+    }, [airlineFilter, region, departure, datePeriod, customStartDate, customEndDate, maxPrice, sort, query, sourceFilter]);
 
     useEffect(() => {
         if (!toast) return;
@@ -820,6 +1033,102 @@ export default function MobileRedesignPreview() {
         };
     }, []);
 
+    const uniqueAirlines = useMemo(() => Array.from(new Set(
+        flights.map(flight => normalizeAirline(flight.airline)).filter(Boolean),
+    )).sort((a, b) => a.localeCompare(b, 'ko')), [flights]);
+
+    const recommendationScores = useMemo(() => {
+        const scores = new Map<string, number>();
+        for (const flight of flights) {
+            const price = effectivePrice(flight);
+            const city = stripAirport(flight.arrival.city);
+            const departureMonth = flight.departure.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 7);
+            const cityPrices = interparkPrices[city];
+            let benchmark = departureMonth ? cityPrices?.[departureMonth] : undefined;
+            if (!benchmark && cityPrices && departureMonth) {
+                const closestMonth = Object.keys(cityPrices).sort().reduce((best, month) => {
+                    const difference = Math.abs(month.localeCompare(departureMonth));
+                    const bestDifference = best ? Math.abs(best.localeCompare(departureMonth)) : Infinity;
+                    return difference < bestDifference ? month : best;
+                }, '');
+                if (closestMonth) benchmark = cityPrices[closestMonth];
+            }
+
+            const comparisonUsable = !!flight.naverLowest
+                && flight.naverLowest > 0
+                && getComparisonFreshness(flight.naverCheckedAt).usable;
+            const comparisonPrice = comparisonUsable ? flight.naverLowest! : null;
+            const isComparisonCheaper = !!comparisonPrice && price <= comparisonPrice;
+            let score = price;
+
+            if (!benchmark) score *= 1.1;
+            else if (price <= benchmark.lowest) { /* 월간 최저가 이하는 그대로 둔다. */ }
+            else if (price <= benchmark.lowest * 1.2) score *= 1.15;
+            else if (price < benchmark.avg) score *= 1.3;
+            else score *= isComparisonCheaper ? 1.3 : 10;
+
+            if (comparisonPrice) {
+                const ratio = (price - comparisonPrice) / comparisonPrice;
+                if (ratio <= -0.20) score *= 0.3;
+                else if (ratio <= -0.15) score *= 0.375;
+                else if (ratio <= -0.10) score *= 0.45;
+                else if (ratio <= -0.05) score *= 0.55;
+                else if (ratio <= 0) score *= 0.65;
+                else if (ratio <= 0.05) score *= 1.05;
+                else if (ratio <= 0.10) score *= 1.15;
+                else if (ratio <= 0.15) score *= 1.3;
+                else if (ratio <= 0.20) score *= 1.5;
+                else score *= 2;
+            }
+            scores.set(flight.id, score * priceFreshnessMultiplier(flight.priceCheckedAt));
+        }
+
+        const flightsByRoute = new Map<string, Flight[]>();
+        for (const flight of flights) {
+            const route = normalizedRoute(flight);
+            flightsByRoute.set(route, [...(flightsByRoute.get(route) || []), flight]);
+        }
+        flightsByRoute.forEach(group => {
+            if (group.length < 2) return;
+            const slots = group.map(flight => scores.get(flight.id) ?? Infinity).sort((a, b) => a - b);
+            group.slice()
+                .sort((a, b) => effectivePrice(a) - effectivePrice(b) || (scores.get(a.id) ?? Infinity) - (scores.get(b.id) ?? Infinity))
+                .forEach((flight, index) => scores.set(flight.id, slots[index]));
+        });
+        return scores;
+    }, [flights, interparkPrices]);
+
+    const recommendationRotationScores = useMemo(() => {
+        const qualified = flights.filter(flight => getComparisonPriceTier(flight) === 0);
+        const byQuality = qualified.slice().sort((a, b) =>
+            (recommendationScores.get(a.id) ?? Infinity) - (recommendationScores.get(b.id) ?? Infinity)
+            || a.id.localeCompare(b.id));
+        const byRotation = qualified.slice().sort((a, b) =>
+            getRecommendationRotationRank(a.id, recommendationRotationSlot)
+            - getRecommendationRotationRank(b.id, recommendationRotationSlot)
+            || a.id.localeCompare(b.id));
+        const qualityRanks = new Map(byQuality.map((flight, index) => [flight.id, index]));
+        const rotationRanks = new Map(byRotation.map((flight, index) => [flight.id, index]));
+        const divisor = Math.max(1, qualified.length - 1);
+        return new Map(qualified.map(flight => [
+            flight.id,
+            ((qualityRanks.get(flight.id) ?? 0) / divisor) * 0.6
+                + ((rotationRanks.get(flight.id) ?? 0) / divisor) * 0.4,
+        ]));
+    }, [flights, recommendationRotationSlot, recommendationScores]);
+
+    const compareRecommended = useCallback((a: Flight, b: Flight) => {
+        const tierDifference = getComparisonPriceTier(a) - getComparisonPriceTier(b);
+        if (tierDifference !== 0) return tierDifference;
+        if (getComparisonPriceTier(a) === 0) {
+            const rotationDifference = (recommendationRotationScores.get(a.id) ?? Infinity)
+                - (recommendationRotationScores.get(b.id) ?? Infinity);
+            if (rotationDifference !== 0) return rotationDifference;
+        }
+        return (recommendationScores.get(a.id) ?? Infinity) - (recommendationScores.get(b.id) ?? Infinity)
+            || a.id.localeCompare(b.id);
+    }, [recommendationRotationScores, recommendationScores]);
+
     const filteredFlights = useMemo(() => {
         const normalizedQuery = query.trim().toLowerCase();
         const referenceDate = new Date();
@@ -833,6 +1142,8 @@ export default function MobileRedesignPreview() {
             return matchesQuery
                 && regionMatches(flight, region)
                 && departureMatches(flight, departure)
+                && (sourceFilter === 'all' || flight.source === sourceFilter)
+                && (airlineFilter === 'all' || normalizeAirline(flight.airline) === airlineFilter)
                 && datePeriodMatches(flight, datePeriod, referenceDate, customStartDate, customEndDate)
                 && (!maxPrice || effectivePrice(flight) <= maxPrice);
         });
@@ -840,36 +1151,46 @@ export default function MobileRedesignPreview() {
         return result.sort((a, b) => {
             if (sort === 'price') return effectivePrice(a) - effectivePrice(b);
             if (sort === 'date') return (parseDate(a.departure.date)?.getTime() || 0) - (parseDate(b.departure.date)?.getTime() || 0);
-            return recommendedScore(a) - recommendedScore(b);
+            return compareRecommended(a, b);
         });
-    }, [customEndDate, customStartDate, datePeriod, departure, flights, maxPrice, query, region, sort]);
+    }, [airlineFilter, compareRecommended, customEndDate, customStartDate, datePeriod, departure, flights, maxPrice, query, region, sort, sourceFilter]);
 
     const isDefaultView = region === '전체'
         && departure === '전체'
+        && sourceFilter === 'all'
+        && airlineFilter === 'all'
         && datePeriod === 'all'
         && !maxPrice
         && !query.trim()
         && sort === 'recommended';
     const todayPick = useMemo(() => {
         const flight = flights.find(item => item.id === todayPickId)
-            || flights.slice().sort((a, b) => recommendedScore(a) - recommendedScore(b))[0];
+            || flights.slice().sort(compareRecommended)[0];
         return flight ? { flight, reason: describeDropCard(flight) } : null;
-    }, [flights, todayPickId]);
+    }, [compareRecommended, flights, todayPickId]);
     const dropAlertFlight = useMemo(() => (
         flights
             .filter(isTickerWorthyDrop)
-            .sort((a, b) => recommendedScore(a) - recommendedScore(b))[0] || null
-    ), [flights]);
+            .sort(compareRecommended)[0] || null
+    ), [compareRecommended, flights]);
     const featuredPick = useMemo(() => (
-        dropAlertFlight
-            ? { flight: dropAlertFlight, reason: describeDropCard(dropAlertFlight) }
-            : todayPick
+        todayPick || (dropAlertFlight ? { flight: dropAlertFlight, reason: describeDropCard(dropAlertFlight) } : null)
     ), [dropAlertFlight, todayPick]);
     const displayedFlights = useMemo(() => {
-        const base = isDefaultView && featuredPick
-            ? [featuredPick.flight, ...filteredFlights.filter(flight => flight.id !== featuredPick.flight.id)]
+        const pinnedFlight = isDefaultView ? featuredPick?.flight : undefined;
+        const pool = pinnedFlight
+            ? filteredFlights.filter(flight => flight.id !== pinnedFlight.id)
             : filteredFlights;
-        return sort === 'recommended' && !query.trim() ? diversifyFlights(base) : base;
+        const diversified = sort === 'recommended' && !query.trim()
+            ? ([0, 1, 2] as const).flatMap(tier => diversifyFlights(
+                pool.filter(flight => getComparisonPriceTier(flight) === tier),
+                20,
+                2,
+                2,
+                tier === 0 ? pinnedFlight : undefined,
+            ))
+            : pool;
+        return pinnedFlight ? [pinnedFlight, ...diversified] : diversified;
     }, [featuredPick, filteredFlights, isDefaultView, query, sort]);
     const feedInsights = useMemo<FeedInsight[]>(() => {
         if (sort !== 'recommended' || query.trim()) return [];
@@ -1286,7 +1607,11 @@ export default function MobileRedesignPreview() {
             : DATE_PERIOD_OPTIONS.find(item => item.value === datePeriod)?.label || '날짜';
     const firstInsightCard = 9;
     const insightInterval = 18;
-    const hasAdvancedFilter = departure !== '전체' || datePeriod !== 'all' || maxPrice > 0;
+    const hasAdvancedFilter = departure !== '전체'
+        || datePeriod !== 'all'
+        || maxPrice > 0
+        || sourceFilter !== 'all'
+        || airlineFilter !== 'all';
     const updatedLabel = lastUpdated
         ? `${new Intl.DateTimeFormat('ko-KR', { month: 'numeric', day: 'numeric' }).format(new Date(lastUpdated)).replace(/\.\s*$/, '')} 기준`
         : '최근 기준';
@@ -1310,6 +1635,38 @@ export default function MobileRedesignPreview() {
             selectedFlight.departure.airport,
         )
         : null;
+    const selectedBookingUrl = selectedFlight
+        ? getFlightBookingUrl(selectedFlight, passengers, isMobile)
+        : '';
+    const selectedNaverUrl = selectedFlight && !(selectedFlight.source === 'myrealtrip' && !selectedFlight.routeAirports)
+        ? getNaverFlightUrl(
+            selectedFlight.departure.city,
+            selectedFlight.arrival.city,
+            selectedFlight.departure.date,
+            selectedFlight.arrival.date,
+            selectedFlight.departure.airport,
+            selectedFlight.arrival.airport,
+            selectedFlight.routeAirports,
+        )
+        : null;
+    const emptyRouteAlertTarget = useMemo<RouteAlertTarget | null>(() => {
+        const term = query.trim();
+        if (!term || loading || error || filteredFlights.length > 0) return null;
+        const arrivalCity = normalizeCity(term);
+        if (!CITY_TO_AIRPORT[term] && !CITY_TO_AIRPORT[arrivalCity]) return null;
+        const hasUnfilteredFlight = flights.some(flight => normalizeCity(flight.arrival.city) === arrivalCity);
+        if (hasUnfilteredFlight) return null;
+
+        const months = Object.values(interparkPrices[arrivalCity] || {});
+        const suggestedPrice = months.length
+            ? Math.round(months.reduce((sum, month) => sum + month.avg, 0) / months.length / 10_000) * 10_000
+            : undefined;
+        return {
+            departureCity: departure === '전체' ? '인천' : departure.replace('/김포', '').replace('/김해', ''),
+            arrivalCity,
+            suggestedPrice,
+        };
+    }, [departure, error, filteredFlights.length, flights, interparkPrices, loading, query]);
     const guestFavoriteSnapshots = useMemo(
         () => flights.filter(flight => favorites.has(flight.id)).map(toAccountSnapshot),
         [favorites, flights],
@@ -1405,12 +1762,12 @@ export default function MobileRedesignPreview() {
         searchTerm: query,
         sortBy: sort === 'price' ? 'price' : sort === 'date' ? 'date' : 'discount',
         sortOrder: 'asc',
-        sourceFilter: 'all',
+        sourceFilter,
         regionFilter: region === '전체' ? 'all' : region,
         startDate: datePeriod === 'custom' && customStartDate ? dateKey(customStartDate) : '',
         endDate: datePeriod === 'custom' && customEndDate ? dateKey(customEndDate) : '',
         departureFilter: departure === '전체' ? 'all' : departure.replace('/김포', '').replace('/김해', ''),
-        airlineFilter: 'all',
+        airlineFilter,
         ...(maxPrice ? { maxPrice } : {}),
         datePeriod,
     };
@@ -1418,12 +1775,20 @@ export default function MobileRedesignPreview() {
     const applyAccountSearch = (filters: AccountSearchFilters) => {
         setQuery(filters.searchTerm);
         setSort(filters.sortBy === 'price' ? 'price' : filters.sortBy === 'date' ? 'date' : 'recommended');
-        setRegion(filters.regionFilter === 'all' ? '전체' : filters.regionFilter);
+        setRegion(filters.regionFilter === 'all'
+            ? '전체'
+            : filters.regionFilter === '중국'
+                ? '중화권'
+                : filters.regionFilter);
         setDeparture(filters.departureFilter === 'all' ? '전체'
             : filters.departureFilter === '인천' ? '인천/김포'
                 : filters.departureFilter === '부산' ? '부산/김해'
                     : filters.departureFilter);
         setMaxPrice(filters.maxPrice || 0);
+        setSourceFilter(SOURCE_OPTIONS.some(option => option.value === filters.sourceFilter)
+            ? filters.sourceFilter as 'all' | Flight['source']
+            : 'all');
+        setAirlineFilter(filters.airlineFilter || 'all');
         if (filters.startDate) {
             setDatePeriod('custom');
             setCustomStartDate(parseDate(filters.startDate));
@@ -1447,12 +1812,24 @@ export default function MobileRedesignPreview() {
     };
 
     const shareFlight = async (flight: Flight) => {
-        const url = `${window.location.origin}/share/${encodeURIComponent(flight.id)}`;
+        const shareParams = new URLSearchParams({
+            dep: departureName(flight),
+            arr: stripAirport(flight.arrival.city),
+            date: flight.departure.date.replace(/[^0-9\-.]/g, '').replace(/\./g, '-').replace(/-+$/, ''),
+            price: String(flight.price),
+            airline: flight.airline,
+            source: flight.source,
+        });
+        const url = `${window.location.origin}/share/${encodeURIComponent(flight.id)}?${shareParams.toString()}`;
         const text = `${departureName(flight)}에서 ${stripAirport(flight.arrival.city)}, 왕복 ${priceText(effectivePrice(flight))}`;
+        const route = normalizedRoute(flight);
         try {
-            if (navigator.share) await navigator.share({ title: '티키티킷 항공권', text, url });
-            else {
+            if (navigator.share) {
+                await navigator.share({ title: '티키티킷 항공권', text, url });
+                gtag.trackShare(route, 'native');
+            } else {
                 await navigator.clipboard.writeText(`${text}\n${url}`);
+                gtag.trackShare(route, 'clipboard');
                 setToast('항공권 주소를 복사했어요.');
             }
         } catch {
@@ -1468,7 +1845,31 @@ export default function MobileRedesignPreview() {
         setCustomEndDate(null);
         setCalendarOpen(false);
         setMaxPrice(0);
+        setSourceFilter('all');
+        setAirlineFilter('all');
         setDesktopFilterOpen(null);
+    };
+
+    const submitContact = async (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        if (!contactForm.message.trim() || contactStatus === 'sending') return;
+        setContactStatus('sending');
+        setContactMessage('');
+        try {
+            const response = await fetch('/api/contact', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
+                body: JSON.stringify(contactForm),
+            });
+            if (!response.ok) throw new Error('문의 전송에 실패했어요.');
+            setContactStatus('sent');
+            setContactMessage('문의가 전송됐어요. 확인 후 답변드릴게요.');
+            setContactForm({ name: '', email: '', message: '' });
+        } catch (cause) {
+            setContactStatus('error');
+            setContactMessage(cause instanceof Error ? cause.message : '문의 전송에 실패했어요.');
+        }
     };
 
     return (
@@ -1494,14 +1895,14 @@ export default function MobileRedesignPreview() {
 
             <div className={styles.phoneCanvas}>
                 <header className={`${styles.header} ${isDefaultView && dropAlertFlight ? styles.headerWithMobileTicker : ''}`}>
-                    <a href="/preview/mobile-redesign" className={styles.logoLink} aria-label="티키티킷 모바일 디자인 미리보기 홈">
+                    <a href={previewMode ? '/preview/mobile-redesign' : '/'} className={styles.logoLink} aria-label="티키티킷 홈">
                         <Logo size={0.84} />
                     </a>
                     <div className={styles.headerActions}>
                         <button type="button" className={styles.iconButton} onClick={() => setSearchOpen(value => !value)} aria-label="검색">
                             <Icon name="search" />
                         </button>
-                        <button type="button" className={styles.alertButton} onClick={() => setShowDealAlert(true)}>특가 알림</button>
+                        <button type="button" className={styles.alertButton} onClick={() => { setAlertRouteTarget(null); setShowDealAlert(true); }}>특가 알림</button>
                         <button type="button" className={styles.accountIconButton} onClick={() => { gtag.trackAccountAction('open', 'preview'); setShowAccount(true); }} aria-label={account.status === 'authenticated' ? '내 여행 열기' : '로그인'}>
                             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5" /><path d="M5.5 19c.6-3.5 3-5.4 6.5-5.4s5.9 1.9 6.5 5.4" /></svg>
                             <span className={styles.accountLabel}>{account.status === 'authenticated' ? '내 여행' : '로그인'}</span>
@@ -1715,6 +2116,14 @@ export default function MobileRedesignPreview() {
 
                             <button
                                 type="button"
+                                className={`${styles.desktopAdvancedFilter} ${(sourceFilter !== 'all' || airlineFilter !== 'all') ? styles.desktopAdvancedFilterActive : ''}`}
+                                onClick={() => setFilterOpen(true)}
+                            >
+                                상세 조건
+                                {(sourceFilter !== 'all' || airlineFilter !== 'all') && <span aria-hidden="true" />}
+                            </button>
+                            <button
+                                type="button"
                                 className={styles.desktopFilterReset}
                                 disabled={!hasAdvancedFilter && region === '전체'}
                                 onClick={resetFilters}
@@ -1843,13 +2252,30 @@ export default function MobileRedesignPreview() {
                         </div>
                     )}
 
-                    {error && <div className={styles.emptyState}><strong>잠시 불러오지 못했어요.</strong><span>{error}</span></div>}
+                    {error && (
+                        <div className={styles.emptyState} role="alert">
+                            <strong>잠시 불러오지 못했어요.</strong>
+                            <span>{error}</span>
+                            <button type="button" onClick={() => void loadFlights()}>다시 불러오기</button>
+                        </div>
+                    )}
 
                     {!loading && !error && filteredFlights.length === 0 && (
                         <div className={styles.emptyState}>
                             <strong>조건에 맞는 표가 없어요.</strong>
                             <span>필터를 조금 넓혀보세요.</span>
-                            <button type="button" onClick={resetFilters}>필터 초기화</button>
+                            <div className={styles.emptyStateActions}>
+                                <button type="button" onClick={resetFilters}>필터 초기화</button>
+                                {emptyRouteAlertTarget && (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setAlertRouteTarget(emptyRouteAlertTarget);
+                                            setShowDealAlert(true);
+                                        }}
+                                    >{emptyRouteAlertTarget.arrivalCity} 표 나오면 알림</button>
+                                )}
+                            </div>
                         </div>
                     )}
 
@@ -2013,9 +2439,55 @@ export default function MobileRedesignPreview() {
                     )}
                 </section>
 
-                <footer className={styles.previewFooter}>
-                    <span>티키티킷 새 디자인 미리보기</span>
-                    <a href="/">현재 티키티킷으로 돌아가기</a>
+                <footer className={styles.siteFooter}>
+                    <div className={styles.siteFooterGrid}>
+                        <section className={styles.siteFooterBrand}>
+                            <Logo size={0.68} />
+                            <p>좋은 표 하나가, 주말을 여행으로.</p>
+                            <div>
+                                <a href="/drop">TIKIT DROP</a>
+                                <a href="/tips">가격 기록과 여행 팁</a>
+                            </div>
+                        </section>
+                        <section>
+                            <strong>여행사 바로가기</strong>
+                            <div className={styles.siteFooterLinks}>
+                                <a href="https://www.hanatour.com" target="_blank" rel="noopener noreferrer">하나투어</a>
+                                <a href="https://www.modetour.com" target="_blank" rel="noopener noreferrer">모두투어</a>
+                                <a href="https://www.ybtour.co.kr" target="_blank" rel="noopener noreferrer">노랑풍선</a>
+                                <a href="https://www.onlinetour.co.kr" target="_blank" rel="noopener noreferrer">온라인투어</a>
+                                <a href="https://www.ttang.com" target="_blank" rel="noopener noreferrer">땡처리닷컴</a>
+                                <a href="https://www.myrealtrip.com" target="_blank" rel="noopener noreferrer">마이리얼트립</a>
+                            </div>
+                        </section>
+                        <section>
+                            <strong>어디로 갈까요?</strong>
+                            <div className={styles.siteFooterDestinations}>
+                                {['오사카', '도쿄', '후쿠오카', '다낭', '방콕', '세부', '괌', '타이베이'].map(city => (
+                                    <button type="button" key={city} onClick={() => { setQuery(city); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>{city}</button>
+                                ))}
+                            </div>
+                        </section>
+                    </div>
+                    <p className={styles.siteFooterDisclaimer}>
+                        티키티킷은 여행사별 특가 정보를 비교해 보여주는 서비스이며 통신판매의 당사자가 아닙니다.
+                        가격·좌석·운항 일정은 예약 시점에 달라질 수 있고, 예약·결제·취소·환불은 각 여행사에서 진행됩니다.
+                        일부 링크는 제휴 링크로, 예약이 완료되면 티키티킷이 수수료를 받을 수 있지만 이용자 가격은 달라지지 않습니다.
+                    </p>
+                    <div className={styles.siteFooterBottom}>
+                        <span>© 2026 티키티킷</span>
+                        <nav aria-label="서비스 안내">
+                            <a href="/terms">이용약관</a>
+                            <a href="/privacy">개인정보처리방침</a>
+                            <button type="button" onClick={() => { setContactStatus('idle'); setContactMessage(''); setShowContact(true); }}>문의하기</button>
+                        </nav>
+                    </div>
+                    {previewMode && (
+                        <div className={styles.previewModeNote}>
+                            <span>새 디자인 미리보기</span>
+                            <a href="/">현재 티키티킷으로 돌아가기</a>
+                        </div>
+                    )}
                 </footer>
             </div>
 
@@ -2121,6 +2593,29 @@ export default function MobileRedesignPreview() {
                                     <p>출발일 범위를 선택하세요.</p>
                                 </div>
                             )}
+                        </div>
+
+                        <div className={`${styles.filterGroup} ${styles.advancedFilterGroup}`}>
+                            <h3>여행사</h3>
+                            <div className={styles.optionGrid}>
+                                {SOURCE_OPTIONS.map(item => (
+                                    <button
+                                        type="button"
+                                        key={item.value}
+                                        className={sourceFilter === item.value ? styles.optionActive : ''}
+                                        onClick={() => setSourceFilter(item.value)}
+                                    >
+                                        {item.label}
+                                    </button>
+                                ))}
+                            </div>
+                            <label className={styles.filterSelectRow}>
+                                <span>항공사</span>
+                                <select value={airlineFilter} onChange={event => setAirlineFilter(event.target.value)}>
+                                    <option value="all">전체 항공사</option>
+                                    {uniqueAirlines.map(airline => <option value={airline} key={airline}>{airline}</option>)}
+                                </select>
+                            </label>
                         </div>
 
                         <button type="button" className={`${styles.applyButton} ${calendarOpen ? styles.applyButtonCalendarOpen : ''}`} onClick={() => setFilterOpen(false)}>
@@ -2254,16 +2749,119 @@ export default function MobileRedesignPreview() {
                             </div>
                         </div>
 
-                        <a className={styles.bookingButton} href={selectedFlight.link} target="_blank" rel="noopener noreferrer">
+                        <div className={styles.detailUtilityRow}>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setAlertRouteTarget({
+                                        flightId: selectedFlight.id,
+                                        departureCity: departureName(selectedFlight),
+                                        arrivalCity: stripAirport(selectedFlight.arrival.city),
+                                        currentPrice: effectivePrice(selectedFlight),
+                                    });
+                                    setShowDealAlert(true);
+                                }}
+                            >
+                                이 노선 가격 알림
+                            </button>
+                            {selectedNaverUrl && (
+                                <a
+                                    href={selectedNaverUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={() => {
+                                        const route = normalizedRoute(selectedFlight);
+                                        const price = effectivePrice(selectedFlight);
+                                        gtag.trackCompareClick('naver', route, price);
+                                        gtag.trackCompareOutboundClick('naver', route, price);
+                                    }}
+                                >
+                                    네이버에서 같은 일정 비교
+                                </a>
+                            )}
+                        </div>
+
+                        {selectedFlight.source !== 'modetour'
+                            && selectedFlight.source !== 'onlinetour'
+                            && selectedFlight.source !== 'ttang' && (
+                            <details className={styles.passengerPicker}>
+                                <summary>
+                                    <span>탑승 인원</span>
+                                    <strong>
+                                        성인 {passengers.adult}명
+                                        {passengers.child > 0 ? ` · 소아 ${passengers.child}명` : ''}
+                                        {passengers.infant > 0 ? ` · 유아 ${passengers.infant}명` : ''}
+                                    </strong>
+                                    <Icon name="chevron" />
+                                </summary>
+                                <div className={styles.passengerRows}>
+                                    {([
+                                        { key: 'adult', label: '성인', age: '만 12세 이상', min: 1, max: 9 },
+                                        { key: 'child', label: '소아', age: '만 2~11세', min: 0, max: 9 },
+                                        { key: 'infant', label: '유아', age: '만 2세 미만', min: 0, max: Math.min(4, passengers.adult) },
+                                    ] as const).map(item => (
+                                        <div className={styles.passengerRow} key={item.key}>
+                                            <span><strong>{item.label}</strong><small>{item.age}</small></span>
+                                            <div>
+                                                <button
+                                                    type="button"
+                                                    aria-label={`${item.label} 한 명 줄이기`}
+                                                    disabled={passengers[item.key] <= item.min}
+                                                    onClick={() => setPassengers(current => {
+                                                        const nextValue = current[item.key] - 1;
+                                                        return item.key === 'adult'
+                                                            ? { ...current, adult: nextValue, infant: Math.min(current.infant, nextValue) }
+                                                            : { ...current, [item.key]: nextValue };
+                                                    })}
+                                                >−</button>
+                                                <strong>{passengers[item.key]}</strong>
+                                                <button
+                                                    type="button"
+                                                    aria-label={`${item.label} 한 명 늘리기`}
+                                                    disabled={passengers[item.key] >= item.max}
+                                                    onClick={() => setPassengers(current => ({ ...current, [item.key]: current[item.key] + 1 }))}
+                                                >+</button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {passengers.child + passengers.infant > 0 && (
+                                        <p>소아·유아 요금은 성인과 달라요. 정확한 금액은 예약 페이지에서 확인해주세요.</p>
+                                    )}
+                                </div>
+                            </details>
+                        )}
+
+                        <a
+                            className={styles.bookingButton}
+                            href={selectedBookingUrl}
+                            target="_blank"
+                            rel={selectedFlight.source === 'myrealtrip' ? 'sponsored noopener noreferrer' : 'noopener noreferrer'}
+                            onClick={() => gtag.trackBookingClick(
+                                selectedFlight.source,
+                                normalizedRoute(selectedFlight),
+                                effectivePrice(selectedFlight),
+                                {
+                                    departureDate: selectedFlight.departure.date,
+                                    returnDate: selectedFlight.arrival.date,
+                                    departureAirport: selectedFlight.routeAirports?.outboundDeparture || selectedFlight.departure.airport,
+                                    arrivalAirport: selectedFlight.routeAirports?.outboundArrival || selectedFlight.arrival.airport,
+                                    airline: selectedFlight.airline,
+                                    destination: stripAirport(selectedFlight.arrival.city),
+                                },
+                            )}
+                        >
                             {SOURCE_NAMES[selectedFlight.source]}에서 확인하기 <Icon name="arrow" />
                         </a>
+                        {selectedFlight.source === 'myrealtrip' && (
+                            <p className={styles.affiliateDisclosure}>제휴 링크를 통해 예약되면 티키티킷이 수수료를 받을 수 있어요.</p>
+                        )}
                         <div className={styles.detailSecondaryActions}>
                             {selectedHotelUrl && (
                                 <a
                                     className={styles.hotelCompareButton}
                                     href={selectedHotelUrl}
                                     target="_blank"
-                                    rel="noopener noreferrer"
+                                    rel="sponsored noopener noreferrer"
                                     title="트립닷컴에서 호텔 검색"
                                     onClick={() => gtag.trackHotelAffiliateClick(
                                         `${departureName(selectedFlight)}-${stripAirport(selectedFlight.arrival.city)}`,
@@ -2297,6 +2895,47 @@ export default function MobileRedesignPreview() {
                 );
             })()}
 
+            {showContact && (
+                <div className={`${styles.sheetOverlay} ${styles.contactOverlay}`} onClick={() => setShowContact(false)}>
+                    <section className={`${styles.bottomSheet} ${styles.contactSheet}`} role="dialog" aria-modal="true" aria-labelledby="contact-title" onClick={event => event.stopPropagation()}>
+                        <div className={styles.sheetHandle} />
+                        <div className={styles.contactHeader}>
+                            <div>
+                                <span>티키티킷에 말해주세요</span>
+                                <h2 id="contact-title">문의하기</h2>
+                            </div>
+                            <button type="button" onClick={() => setShowContact(false)} aria-label="닫기"><Icon name="close" /></button>
+                        </div>
+                        {contactStatus === 'sent' ? (
+                            <div className={styles.contactSuccess}>
+                                <strong>잘 받았습니다.</strong>
+                                <span>{contactMessage}</span>
+                                <button type="button" onClick={() => setShowContact(false)}>확인</button>
+                            </div>
+                        ) : (
+                            <form className={styles.contactForm} onSubmit={submitContact}>
+                                <label>
+                                    <span>이름 <small>선택</small></span>
+                                    <input value={contactForm.name} onChange={event => setContactForm(current => ({ ...current, name: event.target.value }))} autoComplete="name" />
+                                </label>
+                                <label>
+                                    <span>답변받을 이메일 <small>선택</small></span>
+                                    <input type="email" value={contactForm.email} onChange={event => setContactForm(current => ({ ...current, email: event.target.value }))} autoComplete="email" />
+                                </label>
+                                <label>
+                                    <span>문의 내용</span>
+                                    <textarea required rows={5} value={contactForm.message} onChange={event => setContactForm(current => ({ ...current, message: event.target.value }))} />
+                                </label>
+                                {contactMessage && <p className={styles.contactError} role="alert">{contactMessage}</p>}
+                                <button type="submit" className={styles.contactSubmit} disabled={!contactForm.message.trim() || contactStatus === 'sending'}>
+                                    {contactStatus === 'sending' ? '보내는 중…' : '문의 보내기'}
+                                </button>
+                            </form>
+                        )}
+                    </section>
+                </div>
+            )}
+
             <AccountSheet
                 open={showAccount}
                 onClose={() => setShowAccount(false)}
@@ -2321,7 +2960,8 @@ export default function MobileRedesignPreview() {
                 initialDeparture={departure}
                 initialRegion={region}
                 initialMaxPrice={maxPrice || 200_000}
-                onClose={() => setShowDealAlert(false)}
+                initialRoute={alertRouteTarget}
+                onClose={() => { setShowDealAlert(false); setAlertRouteTarget(null); }}
             />
 
             {toast && <div className={styles.toast} role="status">{toast}</div>}
