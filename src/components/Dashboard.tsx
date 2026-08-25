@@ -1211,8 +1211,8 @@ export default function Dashboard() {
     const revenueClickDetails = (flight: Flight, trackingId?: string) => ({
         departureDate: flight.departure.date,
         returnDate: flight.arrival.date,
-        departureAirport: flight.departure.airport,
-        arrivalAirport: flight.arrival.airport,
+        departureAirport: flight.routeAirports?.outboundDeparture || flight.departure.airport,
+        arrivalAirport: flight.routeAirports?.outboundArrival || flight.arrival.airport,
         airline: flight.airline,
         destination: normalizeCity(flight.arrival.city),
         trackingId,
@@ -3664,7 +3664,17 @@ export default function Dashboard() {
                                                 )}
                                             </div>
                                             {(() => {
-                                                const naverUrl = getNaverFlightUrl(flight.departure.city, flight.arrival.city, flight.departure.date, flight.arrival.date, flight.departure.airport, flight.arrival.airport);
+                                                const naverUrl = flight.source === 'myrealtrip' && !flight.routeAirports
+                                                    ? null
+                                                    : getNaverFlightUrl(
+                                                    flight.departure.city,
+                                                    flight.arrival.city,
+                                                    flight.departure.date,
+                                                    flight.arrival.date,
+                                                    flight.departure.airport,
+                                                    flight.arrival.airport,
+                                                    flight.routeAirports,
+                                                );
                                                 const tripcomTrackingId = getTripcomTrackingId(flight.arrival.city, flight.departure.date, flight.arrival.date, flight.arrival.airport, flight.departure.city, flight.departure.airport);
                                                 const tripcomHotelUrl = getTripcomHotelUrl(flight.arrival.city, flight.departure.date, flight.arrival.date, flight.arrival.airport, flight.departure.city, flight.departure.airport);
                                                 if (!naverUrl && !tripcomHotelUrl) return null;
@@ -3892,8 +3902,9 @@ export default function Dashboard() {
                 const mdt = modetourGuide.modetourDetail;
                 const depCity = normalizeCity(modetourGuide.departure.city);
                 const arrCity = normalizeCity(modetourGuide.arrival.city);
-                const depAirport = modetourGuide.departure.airport || '';
-                const arrAirport = modetourGuide.arrival.airport || '';
+                const exactAirports = modetourGuide.routeAirports;
+                const depAirport = exactAirports?.outboundDeparture || modetourGuide.departure.airport || '';
+                const arrAirport = exactAirports?.outboundArrival || modetourGuide.arrival.airport || '';
                 const depDate = modetourGuide.departure.date || '';
                 const arrDate = modetourGuide.arrival.date || '';
                 const depTime = modetourGuide.departure.time || '';
@@ -3935,8 +3946,8 @@ export default function Dashboard() {
                 const depFlightNo = mdt?.departureFlightNo || modetourGuide.flightNumber?.split('/')[0]?.trim() || '';
                 const retFlightNo = mdt?.returnFlightNo || modetourGuide.flightNumber?.split('/')[1]?.trim() || '';
                 // 귀국편 공항
-                const retDepAirport = mdt?.returnDepartureAirport || arrAirport;
-                const retArrAirport = mdt?.returnArrivalAirport || depAirport;
+                const retDepAirport = exactAirports?.returnDeparture || mdt?.returnDepartureAirport || arrAirport;
+                const retArrAirport = exactAirports?.returnArrival || mdt?.returnArrivalAirport || depAirport;
                 // 가격
                 const normalPrice = mdt?.normalPrice || 0;
                 const discountRate = mdt?.sourceDiscountRate || 0;

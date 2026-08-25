@@ -3,6 +3,8 @@
  * Dashboard.tsx에서 추출
  */
 
+import { buildNaverSearchUrl, type ExactRouteAirports } from '../naver-route';
+
 /** 크롤 순서와 무관하게 항공권 내용만으로 같은 ID를 만든다. */
 export const buildStableFlightId = (prefix: string, parts: (string | number)[]): string => {
     const raw = parts.join('|');
@@ -430,22 +432,26 @@ export const calcFlightDuration = (
 ): string | null => calcFlightTiming(depCity, depTime, depDate, arrCity, arrTime)?.duration || null;
 
 // 네이버 항공권 비교 URL 생성 (왕복)
-export const getNaverFlightUrl = (depCity: string, arrCity: string, depDate: string, retDate?: string, depAirport?: string, arrAirport?: string): string | null => {
+export const getNaverFlightUrl = (
+    depCity: string,
+    arrCity: string,
+    depDate: string,
+    retDate?: string,
+    depAirport?: string,
+    arrAirport?: string,
+    routeAirports?: ExactRouteAirports,
+): string | null => {
+    if (routeAirports) return buildNaverSearchUrl(routeAirports, depDate, retDate);
+
     const depCode = getAirportCode(depCity, depAirport);
     const arrCode = getAirportCode(arrCity, arrAirport);
     if (!depCode || !arrCode) return null;
-    const fmtD = (d: string) => d.replace(/[-\.]/g, '').slice(0, 8);
-    const depStr = fmtD(depDate);
-    if (depStr.length !== 8) return null;
-    // 왕복: 귀국 날짜가 있고, 출발일과 다르면 왕복 URL
-    if (retDate) {
-        const retStr = fmtD(retDate);
-        if (retStr.length === 8 && retStr !== depStr) {
-            return `https://flight.naver.com/flights/international/${depCode}-${arrCode}-${depStr}/${arrCode}-${depCode}-${retStr}?adult=1&fareType=Y`;
-        }
-    }
-    // 편도
-    return `https://flight.naver.com/flights/international/${depCode}-${arrCode}-${depStr}?adult=1&fareType=Y`;
+    return buildNaverSearchUrl({
+        outboundDeparture: depCode,
+        outboundArrival: arrCode,
+        returnDeparture: arrCode,
+        returnArrival: depCode,
+    }, depDate, retDate);
 };
 
 // 스카이스캐너 비교 URL 생성 (왕복)

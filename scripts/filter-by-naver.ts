@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { buildNaverPriceKey } from '../src/lib/naver-route';
 
 /**
  * 네이버 최저가 기준으로 전체 여행사 항공권 필터링
@@ -31,21 +32,18 @@ let filtered = 0;
 let cheaper = 0;
 let noData = 0;
 
-const normalizeDate = (value: unknown): string => String(value || '')
-    .replace(/\(.*\)/g, '')
-    .replace(/\./g, '-')
-    .trim()
-    .substring(0, 10);
-
 cache.flights = cache.flights.filter((f: any) => {
-    const depAirport = f.departure?.airport;
-    const arrAirport = f.arrival?.airport;
-    const depDate = normalizeDate(f.departure?.date);
-    const retDate = normalizeDate(f.arrival?.date);
-    if (!depAirport || !arrAirport || !depDate || !retDate) return true;
+    const depDate = String(f.departure?.date || '').replace(/\(.*\)/g, '').replace(/\./g, '-').trim().substring(0, 10);
+    delete f.naverLowest;
+    delete f.naverCheckedAt;
+    delete f.naverDiscount;
 
-    // 정확한 공항+날짜 매칭만 사용 (도시+월 폴백은 오매칭 위험이 커서 제거)
-    const naverKey = `${depAirport}-${arrAirport}_${depDate}_${retDate}`;
+    // 예약 결과에서 확인한 가는편·오는편 실제 공항 네 개와 날짜가 모두 같을 때만 비교한다.
+    const naverKey = buildNaverPriceKey(f, f.departure?.date, f.arrival?.date);
+    if (!naverKey) {
+        noData++;
+        return true;
+    }
     const naverEntry = naverPrices[naverKey];
     const bestNaverPrice: number | null = naverEntry?.naverLowest || null;
 

@@ -5,6 +5,7 @@ import { resolveCityCode } from '@/lib/scrapers/interpark';
 import { getComparisonFreshness, getEffectivePrice } from '@/lib/price-quality';
 import { filterStaleMyrealtripFlights, getMyrealtripFreshness } from '@/lib/source-freshness';
 import { deduplicateDisplayFlights } from '@/lib/flight-visibility';
+import { buildNaverPriceKey } from '@/lib/naver-route';
 
 interface FlightFilterSummary {
     collected: number;
@@ -203,7 +204,7 @@ export async function GET(request: NextRequest) {
             console.log(`중복 항공편 ${beforeDedup - allFlights.length}개 제거 (${beforeDedup} → ${allFlights.length})`);
         }
 
-        // 네이버 최저가 매칭 (도시 수준: 같은 도시의 모든 공항 최저가 반영)
+        // 네이버 최저가 매칭 (가는편·오는편의 실제 공항 네 개와 날짜가 모두 같은 결과만 사용)
         try {
             const fs4 = require('fs');
             const path4 = require('path');
@@ -211,19 +212,13 @@ export async function GET(request: NextRequest) {
             if (fs4.existsSync(naverPath)) {
                 const naverPrices = JSON.parse(fs4.readFileSync(naverPath, 'utf-8'));
 
-                // 하나투어처럼 airport가 비어 있고 도시명에만 코드가 붙은 표("서울(ICN)")도 매칭한다.
-                const airportOf = (place?: { airport?: string; city?: string }) =>
-                    place?.airport || place?.city?.match(/\(([A-Z]{3})\)/)?.[1] || '';
-
                 let matched = 0;
                 for (const f of allFlights) {
-                    const depAirport = airportOf(f.departure);
-                    const arrAirport = airportOf(f.arrival);
-                    const depDate = f.departure?.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 10);
-                    const retDate = f.arrival?.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 10);
-                    if (depAirport && arrAirport && depDate && retDate) {
-                        // 정확한 공항+날짜 매칭만 사용 (도시+월 폴백은 오매칭 위험이 커서 제거)
-                        const exactKey = `${depAirport}-${arrAirport}_${depDate}_${retDate}`;
+                    // 캐시에 남은 과거 비교값이 새 실제 공항 조합에 붙지 않도록 먼저 비운다.
+                    delete f.naverLowest;
+                    delete f.naverCheckedAt;
+                    const exactKey = buildNaverPriceKey(f, f.departure?.date, f.arrival?.date);
+                    if (exactKey) {
                         const matchedPrice = naverPrices[exactKey];
                         const bestPrice: number | null = matchedPrice?.naverLowest || null;
 

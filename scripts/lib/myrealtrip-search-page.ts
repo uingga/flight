@@ -10,10 +10,31 @@ export interface FlightResult {
     retDepTime: string;
     retArrTime: string;
     retDuration: string;
+    routeAirports?: {
+        outboundDeparture: string;
+        outboundArrival: string;
+        returnDeparture: string;
+        returnArrival: string;
+    };
 }
 
 const RESULT_BUTTON_SELECTOR = 'button[aria-label*="항공권"][aria-label*="원 선택"]';
 const SEAT_PATTERN_SOURCE = String.raw`(?:잔여\s*(\d{1,3})석|(\d{1,3})석\s*남음)`;
+const AIRPORT_LINE_PATTERN_SOURCE = String.raw`^([A-Z]{3})(?:\s+T[A-Z0-9]+)?$`;
+
+export function parseMyrealtripRouteAirports(text: string): FlightResult['routeAirports'] {
+    const airportPattern = new RegExp(AIRPORT_LINE_PATTERN_SOURCE);
+    const codes = text.split('\n')
+        .map(line => line.trim().match(airportPattern)?.[1])
+        .filter((code): code is string => Boolean(code));
+    if (codes.length < 4) return undefined;
+    return {
+        outboundDeparture: codes[0],
+        outboundArrival: codes[1],
+        returnDeparture: codes[2],
+        returnArrival: codes[3],
+    };
+}
 
 export function parseMyrealtripAvailableSeats(text: string): number | undefined {
     const match = text.match(new RegExp(SEAT_PATTERN_SOURCE));
@@ -59,7 +80,7 @@ export async function getMyrealtripSearchPrice(
         // 빠르게 넘어가 차단 가능성을 높이지 않도록 요청 간격도 확보한다.
         await page.waitForTimeout(3000 + Math.random() * 3000);
 
-        const results: FlightResult[] = await page.evaluate(({ buttonSelector, seatPatternSource }) => {
+        const results: FlightResult[] = await page.evaluate(({ buttonSelector, seatPatternSource, airportLinePatternSource }) => {
             type ParsedFlight = {
                 price: number;
                 airline: string;
@@ -70,6 +91,12 @@ export async function getMyrealtripSearchPrice(
                 retDepTime: string;
                 retArrTime: string;
                 retDuration: string;
+                routeAirports?: {
+                    outboundDeparture: string;
+                    outboundArrival: string;
+                    returnDeparture: string;
+                    returnArrival: string;
+                };
             };
 
             const directFlights: ParsedFlight[] = [];
@@ -94,6 +121,10 @@ export async function getMyrealtripSearchPrice(
                 const durationMatches = summaryText.match(/\d+시간(?:\s*\d+분)?/g) || [];
                 const seatMatch = summaryText.match(new RegExp(seatPatternSource));
                 const parsedSeats = Number(seatMatch?.[1] || seatMatch?.[2]);
+                const airportPattern = new RegExp(airportLinePatternSource);
+                const airportCodes = summaryText.split('\n')
+                    .map(line => line.trim().match(airportPattern)?.[1])
+                    .filter((code): code is string => Boolean(code));
 
                 const flight = {
                     price,
@@ -107,6 +138,12 @@ export async function getMyrealtripSearchPrice(
                     retDepTime: timeMatches[2] || '',
                     retArrTime: timeMatches[3] || '',
                     retDuration: durationMatches[1] || '',
+                    routeAirports: airportCodes.length >= 4 ? {
+                        outboundDeparture: airportCodes[0],
+                        outboundArrival: airportCodes[1],
+                        returnDeparture: airportCodes[2],
+                        returnArrival: airportCodes[3],
+                    } : undefined,
                 };
                 const isDirect = summaryText.includes('직항') && !/경유|[12]회/.test(summaryText);
                 if (isDirect && !directFlights.some(item => item.price === flight.price)) {
@@ -140,6 +177,10 @@ export async function getMyrealtripSearchPrice(
                     const durationMatches = text.match(/\d+시간(?:\s*\d+분)?/g) || [];
                     const seatMatch = text.match(new RegExp(seatPatternSource));
                     const parsedSeats = Number(seatMatch?.[1] || seatMatch?.[2]);
+                    const airportPattern = new RegExp(airportLinePatternSource);
+                    const airportCodes = text.split('\n')
+                        .map(line => line.trim().match(airportPattern)?.[1])
+                        .filter((code): code is string => Boolean(code));
 
                     const flight = {
                         price,
@@ -153,6 +194,12 @@ export async function getMyrealtripSearchPrice(
                         retDepTime: timeMatches[2] || '',
                         retArrTime: timeMatches[3] || '',
                         retDuration: durationMatches[1] || '',
+                        routeAirports: airportCodes.length >= 4 ? {
+                            outboundDeparture: airportCodes[0],
+                            outboundArrival: airportCodes[1],
+                            returnDeparture: airportCodes[2],
+                            returnArrival: airportCodes[3],
+                        } : undefined,
                     };
                     const isDirect = text.includes('직항') && !/경유|[12]회/.test(text);
                     if (isDirect && !directFlights.some(item => item.price === flight.price)) {
@@ -167,7 +214,11 @@ export async function getMyrealtripSearchPrice(
             const target = directFlights.length > 0 ? directFlights : allFlights;
             target.sort((a, b) => a.price - b.price);
             return target.slice(0, 3);
-        }, { buttonSelector: RESULT_BUTTON_SELECTOR, seatPatternSource: SEAT_PATTERN_SOURCE });
+        }, {
+            buttonSelector: RESULT_BUTTON_SELECTOR,
+            seatPatternSource: SEAT_PATTERN_SOURCE,
+            airportLinePatternSource: AIRPORT_LINE_PATTERN_SOURCE,
+        });
 
         return results[0] || null;
     } catch (error) {

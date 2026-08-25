@@ -15,6 +15,12 @@ interface CachedFlight {
     arrival: { airport: string; date: string; time: string; arrivalTime?: string };
     duration?: string;
     returnDuration?: string;
+    routeAirports?: {
+        outboundDeparture: string;
+        outboundArrival: string;
+        returnDeparture: string;
+        returnArrival: string;
+    };
 }
 
 interface CacheData {
@@ -76,6 +82,8 @@ async function main() {
             target.arrival.arrivalTime = result.retArrTime;
             target.duration = result.duration;
             target.returnDuration = result.retDuration;
+            if (result.routeAirports) target.routeAirports = result.routeAirports;
+            else delete target.routeAirports;
             if (result.availableSeats !== undefined) {
                 target.availableSeats = result.availableSeats;
                 target.seats = `${result.availableSeats}석 남음`;

@@ -11,6 +11,12 @@ import stealth from 'puppeteer-extra-plugin-stealth';
 import * as fs from 'fs';
 import * as path from 'path';
 import { recordNaverCrawlHistory } from '../src/lib/utils/naver-crawl-history';
+import {
+    buildNaverPriceKey,
+    buildNaverSearchUrl,
+    formatNaverRoute,
+    getExactRouteAirports,
+} from '../src/lib/naver-route';
 
 chromium.use(stealth());
 
@@ -40,11 +46,6 @@ const ALL_FLIGHTS_FILE = path.join(DATA_DIR, 'all-flights-cache.json');
 const humanDelay = (min = MIN_DELAY, max = MAX_DELAY) =>
     new Promise<void>(r => setTimeout(r, Math.random() * (max - min) + min));
 
-const formatDate = (dateStr: string): string => {
-    // "2026-03-03" → "20260303"
-    return dateStr.replace(/-/g, '').replace(/\./g, '').replace(/\(.*\)/, '').trim().substring(0, 8);
-};
-
 const normalizeDate = (dateStr: string): string => {
     // 다양한 날짜 포맷을 YYYY-MM-DD로 통일
     const clean = dateStr.replace(/\(.*\)/g, '').replace(/\s/g, '').trim();
@@ -68,6 +69,12 @@ interface FlightData {
     airline: string;
     source: string;
     discountRate?: number;
+    routeAirports?: {
+        outboundDeparture: string;
+        outboundArrival: string;
+        returnDeparture: string;
+        returnArrival: string;
+    };
 }
 
 interface NaverPriceEntry {
@@ -208,14 +215,11 @@ const attemptTimestamp = (entry: NaverPriceEntry): number =>
 
     for (let i = 0; i < uniqueFlights.length; i++) {
         const flight = uniqueFlights[i];
-        const depCode = flight.departure.airport;
-        const arrCode = flight.arrival.airport;
         const depDate = normalizeDate(flight.departure.date);
         const retDate = normalizeDate(flight.arrival.date);
-        const depDateCompact = formatDate(depDate);
-        const retDateCompact = formatDate(retDate);
-
-        const key = `${depCode}-${arrCode}_${depDate}_${retDate}`;
+        const route = getExactRouteAirports(flight);
+        const key = flightKey(flight);
+        if (!route || !key) continue;
         const routeLabel = `${flight.departure.city}→${flight.arrival.city} (${depDate}~${retDate})`;
 
         console.log(`[${i + 1}/${uniqueFlights.length}] ${routeLabel} — 현재가: ${flight.price.toLocaleString()}원`);
@@ -236,7 +240,8 @@ const attemptTimestamp = (entry: NaverPriceEntry): number =>
 
         try {
             // 네이버 항공권 왕복 검색 URL (직항+경유 모두 포함)
-            const naverUrl = `https://flight.naver.com/flights/international/${depCode}-${arrCode}-${depDateCompact}/${arrCode}-${depCode}-${retDateCompact}?adult=1&fareType=Y`;
+            const naverUrl = buildNaverSearchUrl(route, depDate, retDate);
+            if (!naverUrl) throw new Error('정확한 네이버 검색 URL을 만들 수 없음');
 
             // GraphQL 응답 캡처를 위한 변수
             let lowestPrice: number | null = null;
@@ -285,7 +290,7 @@ const attemptTimestamp = (entry: NaverPriceEntry): number =>
                 naverPrices[key] = {
                     naverLowest: lowestPrice,
                     crawledAt: new Date().toISOString(),
-                    route: `${depCode}-${arrCode}`,
+                    route: formatNaverRoute(route),
                     depDate,
                     retDate,
                     lastAttemptAt: new Date().toISOString(),
@@ -304,7 +309,7 @@ const attemptTimestamp = (entry: NaverPriceEntry): number =>
                     ...(existingEntry || {}),
                     naverLowest: existingEntry?.naverLowest || 0,
                     crawledAt: existingEntry?.crawledAt || attemptedAt,
-                    route: `${depCode}-${arrCode}`,
+                    route: formatNaverRoute(route),
                     depDate,
                     retDate,
                     lastAttemptAt: attemptedAt,
@@ -320,7 +325,7 @@ const attemptTimestamp = (entry: NaverPriceEntry): number =>
                 ...(existingEntry || {}),
                 naverLowest: existingEntry?.naverLowest || 0,
                 crawledAt: existingEntry?.crawledAt || attemptedAt,
-                route: `${depCode}-${arrCode}`,
+                route: formatNaverRoute(route),
                 depDate,
                 retDate,
                 lastAttemptAt: attemptedAt,
@@ -402,7 +407,7 @@ const attemptTimestamp = (entry: NaverPriceEntry): number =>
 
 // ─── 검색 키 ───
 function flightKey(f: FlightData): string {
-    return `${f.departure.airport}-${f.arrival.airport}_${normalizeDate(f.departure.date)}_${normalizeDate(f.arrival.date)}`;
+    return buildNaverPriceKey(f, f.departure.date, f.arrival.date) || '';
 }
 
 /**
@@ -421,7 +426,7 @@ function selectFlightsByPriority(
 ): { selected: FlightData[]; pending: FlightData[]; skippedFresh: number } {
     const seen = new Set<string>();
     const unique = flights
-        .filter(f => f.price > 0 && f.departure?.airport && f.arrival?.airport)
+        .filter(f => f.price > 0 && Boolean(flightKey(f)))
         .sort((a, b) => a.price - b.price) // 같은 노선+날짜 중복 시 최저가 유지
         .filter(f => {
             const key = flightKey(f);

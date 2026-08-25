@@ -273,6 +273,12 @@ async function main() {
             cache.flights[idx].arrival.time = result.retDepTime;
             cache.flights[idx].arrival.arrivalTime = result.retArrTime;
             cache.flights[idx].returnDuration = result.retDuration;
+            if (result.routeAirports) {
+                cache.flights[idx].routeAirports = result.routeAirports;
+            } else {
+                // 도시 검색 코드(SHA 등)를 실제 공항으로 오인하지 않도록 확인되지 않은 값은 남기지 않는다.
+                delete cache.flights[idx].routeAirports;
+            }
             if (result.availableSeats !== undefined) {
                 cache.flights[idx].availableSeats = result.availableSeats;
                 cache.flights[idx].seats = `${result.availableSeats}석 남음`;

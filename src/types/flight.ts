@@ -31,6 +31,13 @@ export interface Flight {
     naverCheckedAt?: string; // 네이버 동일 구간+날짜 가격을 확인한 시각
     priceCheckedAt?: string; // 해당 여행사 가격을 마지막으로 정상 확인한 시각
     firstSeen?: string; // 이 항공권을 캐시에서 처음 발견한 날짜
+    /** 예약 결과에서 확인한 실제 가는편·오는편 공항. 도시 검색 코드를 공항으로 오인하지 않기 위해 사용한다. */
+    routeAirports?: {
+        outboundDeparture: string;
+        outboundArrival: string;
+        returnDeparture: string;
+        returnArrival: string;
+    };
 
     // 모두투어 상세 정보 (선택적 — 모두투어 소스에서만 사용)
     modetourDetail?: {

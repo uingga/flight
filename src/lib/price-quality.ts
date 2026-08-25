@@ -1,4 +1,5 @@
 import type { Flight } from '../types/flight';
+import { getExactRouteAirports } from './naver-route';
 
 const HOUR = 3_600_000;
 const DAY = 24 * HOUR;
@@ -30,9 +31,10 @@ export function getComparisonFreshness(checkedAt?: string, now = Date.now()) {
 
 /** 추천순의 비교가 구간: 검증된 최저가 이하 → 비교 불가 → 검증된 최저가 초과. */
 export function getComparisonPriceTier(
-    flight: Pick<Flight, 'price' | 'source' | 'naverLowest' | 'naverCheckedAt'>,
+    flight: Pick<Flight, 'price' | 'source' | 'departure' | 'arrival' | 'routeAirports' | 'naverLowest' | 'naverCheckedAt'>,
     now = Date.now(),
 ): 0 | 1 | 2 {
+    if (!getExactRouteAirports(flight)) return 1;
     if (!flight.naverLowest || flight.naverLowest <= 0) return 1;
     if (!getComparisonFreshness(flight.naverCheckedAt, now).usable) return 1;
     return getEffectivePrice(flight) <= flight.naverLowest ? 0 : 2;
