@@ -510,7 +510,7 @@ export default function MobileRedesignPreview() {
     const [showDealAlert, setShowDealAlert] = useState(false);
     const [selectedFlight, setSelectedFlight] = useState<Flight | null>(null);
     const [favorites, setFavorites] = useState<Set<string>>(new Set());
-    const [visibleCount, setVisibleCount] = useState(16);
+    const [visibleCount, setVisibleCount] = useState(18);
     const [toast, setToast] = useState('');
     const [showScrollTop, setShowScrollTop] = useState(false);
     const [filterBarPinned, setFilterBarPinned] = useState(false);
@@ -577,7 +577,7 @@ export default function MobileRedesignPreview() {
         if (localIds.length) void account.mergeLocalFavorites(localIds).catch(() => undefined);
     }, [account, account.email, account.status]);
 
-    useEffect(() => setVisibleCount(16), [region, departure, datePeriod, customStartDate, customEndDate, maxPrice, sort, query]);
+    useEffect(() => setVisibleCount(18), [region, departure, datePeriod, customStartDate, customEndDate, maxPrice, sort, query]);
 
     useEffect(() => {
         if (!toast) return;
@@ -1554,7 +1554,7 @@ export default function MobileRedesignPreview() {
                     </div>
 
                     {visibleCount < displayedFlights.length && (
-                        <button type="button" className={styles.moreButton} onClick={() => setVisibleCount(count => count + 16)}>
+                        <button type="button" className={styles.moreButton} onClick={() => setVisibleCount(count => count + 18)}>
                             특가 더 보기
                         </button>
                     )}
