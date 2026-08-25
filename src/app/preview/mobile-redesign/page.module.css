@@ -278,6 +278,7 @@
 .todayPickStrip { height: 32px; padding: 0 11px; display: flex; align-items: center; justify-content: space-between; border-radius: 9px 9px 0 0; background: var(--spectrum); color: #ffffff; line-height: 1; }
 .todayPickStrip strong { font-size: var(--size-caption); font-weight: var(--weight-heavy); letter-spacing: 0.02em; }
 .todayPickStrip span { font-size: var(--size-micro); font-weight: var(--weight-bold); }
+.todayPickInline { display: none; }
 .todayPickCard .favoriteButton { top: 40px; }
 
 .cardTopline { min-height: 35px; padding: 13px 50px 0 16px; display: flex; align-items: center; justify-content: space-between; }
@@ -650,7 +651,7 @@
     .conditionFilterAnchor {
         position: relative;
         width: 100vw;
-        min-height: 126px;
+        min-height: 69px;
         margin-left: calc(50% - 50vw);
         padding: 14px max(28px, calc((100vw - 1200px) / 2 + 28px)) 0;
         background: var(--desktop-feed);
@@ -659,7 +660,7 @@
         position: relative;
         z-index: 29;
         width: 100%;
-        min-height: 112px;
+        min-height: 55px;
         border: 1px solid rgba(221, 221, 221, 0.94);
         border-radius: 12px;
         background: rgba(255, 255, 255, 0.96);
@@ -676,69 +677,120 @@
         backdrop-filter: blur(16px);
         -webkit-backdrop-filter: blur(16px);
     }
-    .desktopFilterPanel { display: block; }
-    .desktopFilterRow {
-        min-height: 55px;
-        padding: 8px 14px;
+    .desktopFilterPanel {
+        position: relative;
         display: flex;
-        align-items: center;
-        gap: 20px;
+        align-items: stretch;
+        min-height: 53px;
     }
-    .desktopFilterRow + .desktopFilterRow { border-top: 1px solid #eeeeee; }
-    .desktopFilterGroup {
+    .desktopFilterControl {
+        position: relative;
         min-width: 0;
-        display: flex;
+        flex: 1;
+    }
+    .desktopFilterControl + .desktopFilterControl { border-left: 1px solid #eeeeee; }
+    .desktopFilterSummary {
+        width: 100%;
+        height: 53px;
+        padding: 0 17px;
+        display: grid;
+        grid-template-columns: max-content minmax(0, 1fr) 14px;
         align-items: center;
         gap: 10px;
-    }
-    .desktopFilterGroup + .desktopFilterGroup {
-        padding-left: 20px;
-        border-left: 1px solid #eeeeee;
-    }
-    .desktopFilterGroup > strong {
-        flex: 0 0 auto;
-        color: #777777;
-        font-size: 12px;
-        line-height: 1;
-        font-weight: 600;
-        white-space: nowrap;
-    }
-    .desktopFilterOptions {
-        min-width: 0;
-        display: flex;
-        align-items: center;
-        gap: 3px;
-    }
-    .desktopFilterOptions button {
-        height: 32px;
-        padding: 0 9px;
         border: 0;
-        border-radius: 7px;
         background: transparent;
-        color: #4a4a4a;
-        font-size: 12px;
+        text-align: left;
+    }
+    .desktopFilterSummary:hover,
+    .desktopFilterSummary[aria-expanded='true'] { background: #fafafa; }
+    .desktopFilterSummary > span:first-child {
+        color: #888888;
+        font-size: 11px;
         line-height: 1;
         font-weight: 500;
         white-space: nowrap;
     }
-    .desktopFilterOptions button:hover { background: #f6f6f6; color: #1f1f1f; }
-    .desktopFilterOptions .desktopFilterActive {
+    .desktopFilterSummary > strong {
+        min-width: 0;
+        overflow: hidden;
+        color: #292929;
+        font-size: 13px;
+        line-height: 1.2;
+        font-weight: 600;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .desktopFilterSummaryActive > strong { color: var(--brand-dark); }
+    .desktopFilterChevron {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #9a9a9a;
+        transition: transform 150ms ease;
+    }
+    .desktopFilterChevron svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .desktopFilterChevronOpen { transform: rotate(180deg); }
+    .desktopFilterPopover {
+        position: absolute;
+        z-index: 60;
+        top: calc(100% + 8px);
+        left: 0;
+        width: max-content;
+        min-width: 250px;
+        padding: 9px;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(105px, 1fr));
+        gap: 5px;
+        border: 1px solid #dfdfdf;
+        border-radius: 11px;
+        background: #ffffff;
+        box-shadow: 0 12px 30px rgba(34, 34, 34, 0.12);
+    }
+    .desktopFilterPopoverWide { min-width: 286px; }
+    .desktopFilterPopover > button,
+    .desktopFilterDateOptions > button {
+        min-height: 36px;
+        padding: 0 10px;
+        border: 0;
+        border-radius: 7px;
+        background: transparent;
+        color: #444444;
+        font-size: 12px;
+        line-height: 1.2;
+        font-weight: 500;
+        text-align: left;
+        white-space: nowrap;
+    }
+    .desktopFilterPopover > button:hover,
+    .desktopFilterDateOptions > button:hover { background: #f6f6f6; color: #1f1f1f; }
+    .desktopFilterPopover .desktopFilterOptionActive {
         background: var(--brand-soft);
         color: var(--brand-dark);
         font-weight: 700;
     }
+    .desktopFilterDatePopover {
+        width: 330px;
+        display: block;
+    }
+    .desktopFilterDateOptions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 5px;
+    }
+    .desktopDateCalendarWrap { width: 310px; margin: 8px 0 0; }
     .desktopFilterReset {
-        min-width: 48px;
-        margin-left: auto;
-        padding: 7px 4px;
+        flex: 0 0 67px;
+        min-width: 67px;
+        padding: 0 12px;
         border: 0;
+        border-left: 1px solid #eeeeee;
         background: transparent;
         color: #8b8b8b;
-        font-size: 12px;
+        font-size: 11px;
         font-weight: 500;
-        text-decoration: underline;
-        text-underline-offset: 3px;
     }
+    .desktopFilterReset:hover:not(:disabled) { color: var(--brand-dark); }
+    .desktopFilterReset:disabled { opacity: 0.35; cursor: default; }
     .quickFilterRow {
         display: none;
         min-height: 58px;
@@ -787,40 +839,33 @@
         transform: translateY(-1px);
     }
     .todayPickCard {
-        --ticket-border: #eeb0bd;
-        border-color: #eeb0bd;
+        --ticket-border: var(--desktop-card-line);
+        border-color: var(--desktop-card-line);
     }
     .ticketDivider::before,
     .ticketDivider::after { background: var(--desktop-feed); }
-    .todayPickStrip { border-radius: 11px 11px 0 0; }
-    .cardTopline { position: relative; min-height: 46px; padding: 15px 48px 11px 16px; }
-    .cardTopline::after {
-        content: '';
-        position: absolute;
-        right: 16px;
-        bottom: 0;
-        left: 16px;
-        border-top: 1px dashed #ededed;
-    }
+    .todayPickStrip { display: none; }
+    .todayPickInline { display: inline-flex; align-items: center; color: var(--brand-dark); font-size: 10px; line-height: 1; font-weight: 700; letter-spacing: 0.035em; white-space: nowrap; }
+    .cardTopline { position: relative; min-height: 34px; padding: 15px 48px 0 17px; }
     .sourceBadge { font-size: 12px; font-weight: 600; }
-    .airline { color: #747474; font-size: 12px; font-weight: 500; }
-    .routeGrid { margin: 16px 16px 0; grid-template-columns: minmax(0, 1fr) 52px minmax(0, 1fr); }
-    .routeEndpoint strong { font-size: 19px; font-weight: 600; letter-spacing: -0.03em; }
-    .routeTiming { margin-top: 9px; gap: 4px; }
-    .routeTiming b { color: #686868; font-size: 12px; font-weight: 500; }
+    .airline { color: #777777; font-size: 12px; font-weight: 400; }
+    .routeGrid { margin: 19px 18px 0; grid-template-columns: minmax(0, 1fr) 54px minmax(0, 1fr); }
+    .routeEndpoint strong { font-size: 20px; font-weight: 600; letter-spacing: -0.025em; }
+    .routeTiming { margin-top: 8px; gap: 5px; }
+    .routeTiming b { color: #707070; font-size: 12px; font-weight: 400; }
     .routeTiming em { color: #999999; font-size: 12px; font-weight: 400; }
     .routeConnector::before { background: #e8e8e8; }
     .routeConnector span { color: #9a9a9a; font-size: 11px; }
-    .ticketDivider { margin: 17px 16px 0; border-top-color: #e4e4e4; }
-    .cardFooter { min-height: 60px; padding: 12px 16px 13px; }
+    .ticketDivider { margin: 20px 16px 0; border-top-color: #e4e4e4; }
+    .cardFooter { min-height: 66px; padding: 14px 17px 15px; }
     .footerStatus { font-size: 12px; font-weight: 500; }
-    .footerStatusLow,
+    .footerStatusLow { height: auto; padding: 0; border-radius: 0; background: transparent; color: var(--urgent-dark); }
     .footerStatusUrgent { font-weight: 500; }
     .priceDiscountBadge { padding-right: 5px; padding-left: 5px; border-color: transparent; background: #fff3f5; font-weight: 600; }
     .priceBlock strong { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; }
     .favoriteButton { top: 12px; right: 12px; }
     .favoriteButton svg { width: 17px; height: 17px; }
-    .todayPickCard .favoriteButton { top: 43px; }
+    .todayPickCard .favoriteButton { top: 12px; }
 
     .insightBar {
         position: relative;

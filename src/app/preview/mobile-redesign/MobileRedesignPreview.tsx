@@ -17,6 +17,7 @@ import styles from './page.module.css';
 
 type SortMode = 'recommended' | 'price' | 'date';
 type DatePeriod = 'all' | 'this-week' | 'next-week' | 'this-month' | 'next-month' | 'custom';
+type DesktopFilterKey = 'departure' | 'region' | 'date' | 'price';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const DatePicker: any = dynamic(() => import('react-datepicker').then((mod: any) => mod.default), { ssr: false });
@@ -506,6 +507,7 @@ export default function MobileRedesignPreview() {
     const [query, setQuery] = useState('');
     const [searchOpen, setSearchOpen] = useState(false);
     const [filterOpen, setFilterOpen] = useState(false);
+    const [desktopFilterOpen, setDesktopFilterOpen] = useState<DesktopFilterKey | null>(null);
     const [regionMoreOpen, setRegionMoreOpen] = useState(false);
     const [showDealAlert, setShowDealAlert] = useState(false);
     const [selectedFlight, setSelectedFlight] = useState<Flight | null>(null);
@@ -517,6 +519,7 @@ export default function MobileRedesignPreview() {
     const [showAccount, setShowAccount] = useState(false);
     const [insightDateKey, setInsightDateKey] = useState(() => seoulDateKey());
     const filterBarSlotRef = useRef<HTMLDivElement | null>(null);
+    const desktopFilterRef = useRef<HTMLDivElement | null>(null);
     const lastScrollYRef = useRef(0);
     const scrollDirectionRef = useRef<'up' | 'down' | null>(null);
     const scrollDirectionAnchorRef = useRef(0);
@@ -551,6 +554,28 @@ export default function MobileRedesignPreview() {
         document.body.style.overflow = selectedFlight || filterOpen || showAccount || showDealAlert ? 'hidden' : '';
         return () => { document.body.style.overflow = ''; };
     }, [selectedFlight, filterOpen, showAccount, showDealAlert]);
+
+    useEffect(() => {
+        if (!desktopFilterOpen) return;
+        const closeDesktopFilter = (event: PointerEvent) => {
+            if (!desktopFilterRef.current?.contains(event.target as Node)) {
+                setDesktopFilterOpen(null);
+                setCalendarOpen(false);
+            }
+        };
+        const closeDesktopFilterWithKeyboard = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') {
+                setDesktopFilterOpen(null);
+                setCalendarOpen(false);
+            }
+        };
+        document.addEventListener('pointerdown', closeDesktopFilter);
+        document.addEventListener('keydown', closeDesktopFilterWithKeyboard);
+        return () => {
+            document.removeEventListener('pointerdown', closeDesktopFilter);
+            document.removeEventListener('keydown', closeDesktopFilterWithKeyboard);
+        };
+    }, [desktopFilterOpen]);
 
     useEffect(() => {
         try {
@@ -1215,6 +1240,7 @@ export default function MobileRedesignPreview() {
         setCustomEndDate(null);
         setCalendarOpen(false);
         setMaxPrice(0);
+        setDesktopFilterOpen(null);
     };
 
     return (
@@ -1301,91 +1327,175 @@ export default function MobileRedesignPreview() {
 
                 <div className={styles.conditionFilterAnchor} ref={filterBarSlotRef}>
                     <div className={`${styles.conditionFilterSlot} ${filterBarPinned ? styles.conditionFilterSlotPinned : ''}`}>
-                        <div className={styles.desktopFilterPanel} aria-label="항공권 필터">
-                            <div className={styles.desktopFilterRow}>
-                                <div className={styles.desktopFilterGroup}>
-                                    <strong>출발지</strong>
-                                    <div className={styles.desktopFilterOptions}>
+                        <div className={styles.desktopFilterPanel} aria-label="항공권 필터" ref={desktopFilterRef}>
+                            <div className={styles.desktopFilterControl}>
+                                <button
+                                    type="button"
+                                    className={`${styles.desktopFilterSummary} ${departure !== '전체' ? styles.desktopFilterSummaryActive : ''}`}
+                                    aria-expanded={desktopFilterOpen === 'departure'}
+                                    onClick={() => setDesktopFilterOpen(open => open === 'departure' ? null : 'departure')}
+                                >
+                                    <span>출발지</span>
+                                    <strong>{departure === '전체' ? '전체' : departureFilterLabel}</strong>
+                                    <span className={`${styles.desktopFilterChevron} ${desktopFilterOpen === 'departure' ? styles.desktopFilterChevronOpen : ''}`}><Icon name="chevron" /></span>
+                                </button>
+                                {desktopFilterOpen === 'departure' && (
+                                    <div className={styles.desktopFilterPopover}>
                                         {DEPARTURE_OPTIONS.map(item => (
                                             <button
                                                 type="button"
                                                 key={item}
-                                                className={departure === item ? styles.desktopFilterActive : ''}
-                                                onClick={() => setDeparture(item)}
+                                                className={departure === item ? styles.desktopFilterOptionActive : ''}
+                                                onClick={() => {
+                                                    setDeparture(item);
+                                                    setDesktopFilterOpen(null);
+                                                }}
                                             >
                                                 {item}
                                             </button>
                                         ))}
                                     </div>
-                                </div>
-                                <div className={styles.desktopFilterGroup}>
-                                    <strong>도착지</strong>
-                                    <div className={styles.desktopFilterOptions}>
+                                )}
+                            </div>
+
+                            <div className={styles.desktopFilterControl}>
+                                <button
+                                    type="button"
+                                    className={`${styles.desktopFilterSummary} ${region !== '전체' ? styles.desktopFilterSummaryActive : ''}`}
+                                    aria-expanded={desktopFilterOpen === 'region'}
+                                    onClick={() => setDesktopFilterOpen(open => open === 'region' ? null : 'region')}
+                                >
+                                    <span>도착지</span>
+                                    <strong>{region}</strong>
+                                    <span className={`${styles.desktopFilterChevron} ${desktopFilterOpen === 'region' ? styles.desktopFilterChevronOpen : ''}`}><Icon name="chevron" /></span>
+                                </button>
+                                {desktopFilterOpen === 'region' && (
+                                    <div className={`${styles.desktopFilterPopover} ${styles.desktopFilterPopoverWide}`}>
                                         {REGION_OPTIONS.map(item => (
                                             <button
                                                 type="button"
                                                 key={item}
-                                                className={region === item ? styles.desktopFilterActive : ''}
-                                                onClick={() => setRegion(item)}
+                                                className={region === item ? styles.desktopFilterOptionActive : ''}
+                                                onClick={() => {
+                                                    setRegion(item);
+                                                    setDesktopFilterOpen(null);
+                                                }}
                                             >
                                                 {item}
                                             </button>
                                         ))}
                                     </div>
-                                </div>
+                                )}
                             </div>
-                            <div className={styles.desktopFilterRow}>
-                                <div className={styles.desktopFilterGroup}>
-                                    <strong>출발 시기</strong>
-                                    <div className={styles.desktopFilterOptions}>
-                                        {DATE_PERIOD_OPTIONS.map(item => (
+
+                            <div className={styles.desktopFilterControl}>
+                                <button
+                                    type="button"
+                                    className={`${styles.desktopFilterSummary} ${datePeriod !== 'all' ? styles.desktopFilterSummaryActive : ''}`}
+                                    aria-expanded={desktopFilterOpen === 'date'}
+                                    onClick={() => {
+                                        setDesktopFilterOpen(open => open === 'date' ? null : 'date');
+                                        setCalendarOpen(false);
+                                    }}
+                                >
+                                    <span>날짜</span>
+                                    <strong>{dateFilterLabel === '날짜' ? '전체' : dateFilterLabel}</strong>
+                                    <span className={`${styles.desktopFilterChevron} ${desktopFilterOpen === 'date' ? styles.desktopFilterChevronOpen : ''}`}><Icon name="chevron" /></span>
+                                </button>
+                                {desktopFilterOpen === 'date' && (
+                                    <div className={`${styles.desktopFilterPopover} ${styles.desktopFilterDatePopover}`}>
+                                        <div className={styles.desktopFilterDateOptions}>
+                                            {DATE_PERIOD_OPTIONS.map(item => (
+                                                <button
+                                                    type="button"
+                                                    key={item.value}
+                                                    className={datePeriod === item.value ? styles.desktopFilterOptionActive : ''}
+                                                    onClick={() => {
+                                                        setDatePeriod(item.value);
+                                                        setCustomStartDate(null);
+                                                        setCustomEndDate(null);
+                                                        setCalendarOpen(false);
+                                                        setDesktopFilterOpen(null);
+                                                    }}
+                                                >
+                                                    {item.label}
+                                                </button>
+                                            ))}
+                                            <button
+                                                type="button"
+                                                className={datePeriod === 'custom' ? styles.desktopFilterOptionActive : ''}
+                                                onClick={() => setCalendarOpen(open => !open)}
+                                            >
+                                                날짜 직접 선택
+                                            </button>
+                                        </div>
+                                        {calendarOpen && (
+                                            <div className={`${styles.dateCalendarWrap} ${styles.desktopDateCalendarWrap}`}>
+                                                <DatePicker
+                                                    selectsRange
+                                                    startDate={customStartDate}
+                                                    endDate={customEndDate}
+                                                    onChange={(update: [Date | null, Date | null]) => {
+                                                        const [start, end] = update;
+                                                        setCustomStartDate(start);
+                                                        setCustomEndDate(end);
+                                                        setDatePeriod(start ? 'custom' : 'all');
+                                                        if (end) {
+                                                            window.setTimeout(() => {
+                                                                setCalendarOpen(false);
+                                                                setDesktopFilterOpen(null);
+                                                            }, 250);
+                                                        }
+                                                    }}
+                                                    locale={ko}
+                                                    inline
+                                                    minDate={new Date()}
+                                                    calendarClassName={styles.dateCalendar}
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className={styles.desktopFilterControl}>
+                                <button
+                                    type="button"
+                                    className={`${styles.desktopFilterSummary} ${maxPrice > 0 ? styles.desktopFilterSummaryActive : ''}`}
+                                    aria-expanded={desktopFilterOpen === 'price'}
+                                    onClick={() => setDesktopFilterOpen(open => open === 'price' ? null : 'price')}
+                                >
+                                    <span>가격</span>
+                                    <strong>{maxPrice ? PRICE_OPTIONS.find(item => item.value === maxPrice)?.label : '전체'}</strong>
+                                    <span className={`${styles.desktopFilterChevron} ${desktopFilterOpen === 'price' ? styles.desktopFilterChevronOpen : ''}`}><Icon name="chevron" /></span>
+                                </button>
+                                {desktopFilterOpen === 'price' && (
+                                    <div className={styles.desktopFilterPopover}>
+                                        {PRICE_OPTIONS.map(item => (
                                             <button
                                                 type="button"
                                                 key={item.value}
-                                                className={datePeriod === item.value ? styles.desktopFilterActive : ''}
+                                                className={maxPrice === item.value ? styles.desktopFilterOptionActive : ''}
                                                 onClick={() => {
-                                                    setDatePeriod(item.value);
-                                                    setCustomStartDate(null);
-                                                    setCustomEndDate(null);
-                                                    setCalendarOpen(false);
+                                                    setMaxPrice(item.value);
+                                                    setDesktopFilterOpen(null);
                                                 }}
                                             >
                                                 {item.label}
                                             </button>
                                         ))}
-                                        <button
-                                            type="button"
-                                            className={datePeriod === 'custom' ? styles.desktopFilterActive : ''}
-                                            onClick={() => {
-                                                setCalendarOpen(true);
-                                                setFilterOpen(true);
-                                            }}
-                                        >
-                                            {datePeriod === 'custom' ? dateFilterLabel : '날짜 선택'}
-                                        </button>
                                     </div>
-                                </div>
-                                <div className={styles.desktopFilterGroup}>
-                                    <strong>가격</strong>
-                                    <div className={styles.desktopFilterOptions}>
-                                        {PRICE_OPTIONS.map(item => (
-                                            <button
-                                                type="button"
-                                                key={item.value}
-                                                className={maxPrice === item.value ? styles.desktopFilterActive : ''}
-                                                onClick={() => setMaxPrice(item.value)}
-                                            >
-                                                {item.label}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                                {hasAdvancedFilter || region !== '전체' ? (
-                                    <button type="button" className={styles.desktopFilterReset} onClick={resetFilters}>
-                                        초기화
-                                    </button>
-                                ) : null}
+                                )}
                             </div>
+
+                            <button
+                                type="button"
+                                className={styles.desktopFilterReset}
+                                disabled={!hasAdvancedFilter && region === '전체'}
+                                onClick={resetFilters}
+                            >
+                                초기화
+                            </button>
                         </div>
                         <div className={styles.quickFilterRow}>
                         <button type="button" className={`${styles.filterButton} ${hasAdvancedFilter ? styles.filterHasValue : ''}`} onClick={() => setFilterOpen(true)}>
@@ -1524,6 +1634,7 @@ export default function MobileRedesignPreview() {
                                                 )}
                                                 <div className={styles.cardTopline}>
                                                     <div>
+                                                        {isTodayPick && <span className={styles.todayPickInline}>TIKIT DROP</span>}
                                                         <span className={`${styles.sourceBadge} ${styles[flight.source]}`}>{SOURCE_NAMES[flight.source]}</span>
                                                         <span className={styles.airline}>{flight.airline || '항공사 확인'}</span>
                                                     </div>
