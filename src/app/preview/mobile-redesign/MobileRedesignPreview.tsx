@@ -3046,6 +3046,62 @@ export default function MobileRedesignPreview({
                             </section>
                         </div>
 
+                        {selectedFlight.source !== 'modetour'
+                            && selectedFlight.source !== 'onlinetour'
+                            && selectedFlight.source !== 'ttang' && (
+                            <details className={styles.passengerPicker} open>
+                                <summary>
+                                    <span>탑승 인원</span>
+                                    <strong>
+                                        성인 {passengers.adult}명
+                                        {passengers.child > 0 ? ` · 소아 ${passengers.child}명` : ''}
+                                        {passengers.infant > 0 ? ` · 유아 ${passengers.infant}명` : ''}
+                                    </strong>
+                                    <Icon name="chevron" />
+                                </summary>
+                                <div className={styles.passengerRows}>
+                                    {([
+                                        { key: 'adult', label: '성인', age: '만 12세 이상', min: 1, max: 9 },
+                                        { key: 'child', label: '소아', age: '만 2~11세', min: 0, max: 9 },
+                                        { key: 'infant', label: '유아', age: '만 2세 미만', min: 0, max: Math.min(4, passengers.adult) },
+                                    ] as const).map(item => {
+                                        const seatPassengers = passengers.adult + passengers.child;
+                                        const minimumPassengers = Math.max(1, selectedFlight.minPax || 1);
+                                        const decrementDisabled = passengers[item.key] <= item.min
+                                            || (item.key !== 'infant' && seatPassengers <= minimumPassengers);
+                                        return (
+                                        <div className={styles.passengerRow} key={item.key}>
+                                            <span><strong>{item.label}</strong><small>{item.age}</small></span>
+                                            <div>
+                                                <button
+                                                    type="button"
+                                                    aria-label={`${item.label} 한 명 줄이기`}
+                                                    disabled={decrementDisabled}
+                                                    onClick={() => setPassengers(current => {
+                                                        const nextValue = current[item.key] - 1;
+                                                        return item.key === 'adult'
+                                                            ? { ...current, adult: nextValue, infant: Math.min(current.infant, nextValue) }
+                                                            : { ...current, [item.key]: nextValue };
+                                                    })}
+                                                >−</button>
+                                                <strong>{passengers[item.key]}</strong>
+                                                <button
+                                                    type="button"
+                                                    aria-label={`${item.label} 한 명 늘리기`}
+                                                    disabled={passengers[item.key] >= item.max}
+                                                    onClick={() => setPassengers(current => ({ ...current, [item.key]: current[item.key] + 1 }))}
+                                                >+</button>
+                                            </div>
+                                        </div>
+                                        );
+                                    })}
+                                    {passengers.child + passengers.infant > 0 && (
+                                        <p>소아·유아 요금은 성인과 달라요. 정확한 금액은 예약 페이지에서 확인해주세요.</p>
+                                    )}
+                                </div>
+                            </details>
+                        )}
+
                         <div className={styles.priceNotice}>
                             <span>
                                 {selectedFlight.source === 'ttang' ? (
@@ -3104,62 +3160,6 @@ export default function MobileRedesignPreview({
                                 </a>
                             )}
                         </div>
-
-                        {selectedFlight.source !== 'modetour'
-                            && selectedFlight.source !== 'onlinetour'
-                            && selectedFlight.source !== 'ttang' && (
-                            <details className={styles.passengerPicker}>
-                                <summary>
-                                    <span>탑승 인원</span>
-                                    <strong>
-                                        성인 {passengers.adult}명
-                                        {passengers.child > 0 ? ` · 소아 ${passengers.child}명` : ''}
-                                        {passengers.infant > 0 ? ` · 유아 ${passengers.infant}명` : ''}
-                                    </strong>
-                                    <Icon name="chevron" />
-                                </summary>
-                                <div className={styles.passengerRows}>
-                                    {([
-                                        { key: 'adult', label: '성인', age: '만 12세 이상', min: 1, max: 9 },
-                                        { key: 'child', label: '소아', age: '만 2~11세', min: 0, max: 9 },
-                                        { key: 'infant', label: '유아', age: '만 2세 미만', min: 0, max: Math.min(4, passengers.adult) },
-                                    ] as const).map(item => {
-                                        const seatPassengers = passengers.adult + passengers.child;
-                                        const minimumPassengers = Math.max(1, selectedFlight.minPax || 1);
-                                        const decrementDisabled = passengers[item.key] <= item.min
-                                            || (item.key !== 'infant' && seatPassengers <= minimumPassengers);
-                                        return (
-                                        <div className={styles.passengerRow} key={item.key}>
-                                            <span><strong>{item.label}</strong><small>{item.age}</small></span>
-                                            <div>
-                                                <button
-                                                    type="button"
-                                                    aria-label={`${item.label} 한 명 줄이기`}
-                                                    disabled={decrementDisabled}
-                                                    onClick={() => setPassengers(current => {
-                                                        const nextValue = current[item.key] - 1;
-                                                        return item.key === 'adult'
-                                                            ? { ...current, adult: nextValue, infant: Math.min(current.infant, nextValue) }
-                                                            : { ...current, [item.key]: nextValue };
-                                                    })}
-                                                >−</button>
-                                                <strong>{passengers[item.key]}</strong>
-                                                <button
-                                                    type="button"
-                                                    aria-label={`${item.label} 한 명 늘리기`}
-                                                    disabled={passengers[item.key] >= item.max}
-                                                    onClick={() => setPassengers(current => ({ ...current, [item.key]: current[item.key] + 1 }))}
-                                                >+</button>
-                                            </div>
-                                        </div>
-                                        );
-                                    })}
-                                    {passengers.child + passengers.infant > 0 && (
-                                        <p>소아·유아 요금은 성인과 달라요. 정확한 금액은 예약 페이지에서 확인해주세요.</p>
-                                    )}
-                                </div>
-                            </details>
-                        )}
 
                         <a
                             className={styles.bookingButton}
