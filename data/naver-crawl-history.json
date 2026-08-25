@@ -50,6 +50,23 @@
       "success": 4,
       "misses": 3,
       "abortedEarly": true
+    },
+    {
+      "id": "2026-08-25T08:00:52.686Z-local-54284",
+      "timestamp": "2026-08-25T08:00:52.686Z",
+      "runner": "local",
+      "sourceFilter": "all",
+      "maxFlights": 280,
+      "needed": 367,
+      "attempted": 280,
+      "newRoutes": 93,
+      "newRoutesAttempted": 93,
+      "deferred": 90,
+      "deferredNeverChecked": 0,
+      "oldestDeferredHours": 49.9,
+      "success": 279,
+      "misses": 1,
+      "abortedEarly": false
     }
   ]
 }
