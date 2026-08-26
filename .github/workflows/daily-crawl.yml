@@ -9,7 +9,7 @@ on:
     # 시간대이기도 해서, 얻는 것 없이 부담만 주는 자리였다.
     - cron: '0 23 * * *'     # 08:00 KST
     - cron: '0 1 * * *'      # 10:00 KST
-    - cron: '0 2 * * *'      # 11:00 KST
+    - cron: '0 3 * * *'      # 12:00 KST
     - cron: '0 6 * * *'      # 15:00 KST
     - cron: '0 9 * * *'      # 18:00 KST
     - cron: '30 15 * * *'    # 00:30 KST
@@ -97,6 +97,26 @@ jobs:
           else
             echo "ℹ️ No changes to commit."
           fi
+
+      # 정오 회차의 최신 데이터가 저장된 뒤에만 오늘의 표를 고른다.
+      # 별도 시각 예약으로 두면 크롤링 지연 시 이전 데이터에서 선정될 수 있다.
+      - name: Select today's pick from noon crawl
+        if: steps.crawl.outcome == 'success' && github.event_name == 'schedule' && github.event.schedule == '0 3 * * *'
+        run: |
+          git pull --ff-only origin main
+          node scripts/select-today-pick.mjs
+
+      - name: Commit and push today's pick
+        if: steps.crawl.outcome == 'success' && github.event_name == 'schedule' && github.event.schedule == '0 3 * * *'
+        run: |
+          if [[ -z $(git status --porcelain -- data/today-pick.json) ]]; then
+            echo "No selection change"
+            exit 0
+          fi
+          git add data/today-pick.json
+          git commit -m "chore(data): select today pick"
+          git pull --rebase origin main
+          git push origin main
 
       - name: Archive long-term price history
         if: steps.crawl.outcome == 'success'
