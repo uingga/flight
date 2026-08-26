@@ -455,6 +455,31 @@ const monthDistance = (first: string, second: string) => {
         : Number.POSITIVE_INFINITY;
 };
 
+const getAverageDiscountRate = (flight: Flight, benchmarks: InterparkPrices) => {
+    const city = stripAirport(flight.arrival.city);
+    const departureMonth = flight.departure.date
+        ?.replace(/\./g, '-')
+        .replace(/\(.*\)/g, '')
+        .trim()
+        .substring(0, 7);
+    const cityPrices = benchmarks[city];
+    if (!cityPrices || !departureMonth) return 0;
+
+    let benchmark = cityPrices[departureMonth];
+    if (!benchmark) {
+        const closestMonth = Object.keys(cityPrices).sort().reduce((best, month) => {
+            const difference = monthDistance(month, departureMonth);
+            const bestDifference = best ? monthDistance(best, departureMonth) : Infinity;
+            return difference < bestDifference ? month : best;
+        }, '');
+        if (closestMonth) benchmark = cityPrices[closestMonth];
+    }
+    if (!benchmark?.avg || benchmark.avg <= 0) return 0;
+
+    const displayedPrice = flight.source === 'ttang' ? flight.price : effectivePrice(flight);
+    return Math.max(0, Math.round((1 - displayedPrice / benchmark.avg) * 100));
+};
+
 const dailyOrderValue = (dateKey: string, value: string) => {
     let hash = 2166136261;
     const input = `${dateKey}:${value}`;
@@ -560,13 +585,13 @@ const isTickerWorthyDrop = (flight: Flight) => {
     return price <= 140_000 || (price <= 180_000 && discount >= 25);
 };
 
-const describeDropCard = (flight: Flight) => {
+const describeDropCard = (flight: Flight, averageDiscountRate = 0) => {
     const seats = flight.availableSeats || Number.parseInt(flight.seats || '', 10) || 0;
     const departureDate = parseDate(flight.departure.date);
     const today = parseDate(seoulDateKey());
     const destination = stripAirport(flight.arrival.city);
     const displayedPrice = flight.source === 'ttang' ? flight.price : effectivePrice(flight);
-    const discountRate = Math.round(Math.max(0, flight.discountRate || 0));
+    const discountRate = Math.round(Math.max(0, averageDiscountRate));
     const harshDetail = harshScheduleDetail(flight);
     const editorialReactions = [
         '📣 오늘 업무: 이 표 알리기',
@@ -1461,7 +1486,7 @@ export default function MobileRedesignPreview({
                 .sort((a, b) => effectivePrice(a) - effectivePrice(b) || compareRecommended(a, b))[0]
                 || flights.find(item => item.id === todayPickId)
                 || flights.slice().sort(compareRecommended)[0];
-            return flight ? { flight, reason: describeDropCard(flight) } : null;
+            return flight ? { flight, reason: describeDropCard(flight, getAverageDiscountRate(flight, interparkPrices)) } : null;
         })()
     ), [compareRecommended, flights, interparkPrices, todayPickId]);
     const dropAlertFlight = useMemo(() => (
@@ -2794,7 +2819,7 @@ export default function MobileRedesignPreview({
                             const duration = tripLength(flight);
                             const destination = stripAirport(flight.arrival.city);
                             const price = effectivePrice(flight);
-                            const discountRate = Math.round(Math.max(0, flight.discountRate || 0));
+                            const averageDiscountRate = getAverageDiscountRate(flight, interparkPrices);
                             const isTodayPick = isDefaultView && featuredPick?.flight.id === flight.id;
                             const cardNumber = index + 1;
                             const insightIndex = cardNumber >= firstInsightCard && (cardNumber - firstInsightCard) % insightInterval === 0
@@ -2863,7 +2888,14 @@ export default function MobileRedesignPreview({
                                                     </div>
                                                     <div className={styles.priceBlock}>
                                                         <div className={styles.priceLine}>
-                                                            {discountRate >= 5 && <span className={styles.priceDiscountBadge}>-{discountRate}%</span>}
+                                                            {averageDiscountRate >= 5 && (
+                                                                <span
+                                                                    className={styles.priceDiscountBadge}
+                                                                    aria-label={`평균가보다 ${averageDiscountRate}% 낮은 가격`}
+                                                                >
+                                                                    평균가 -{averageDiscountRate}%
+                                                                </span>
+                                                            )}
                                                             <strong>
                                                                 {(flight.source === 'ttang' ? flight.price : price).toLocaleString('ko-KR')}
                                                                 <small>원</small>
