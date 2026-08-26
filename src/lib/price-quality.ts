@@ -4,8 +4,6 @@ import { getExactRouteAirports } from './naver-route';
 const HOUR = 3_600_000;
 const DAY = 24 * HOUR;
 const KST_OFFSET = 9 * HOUR;
-const MORNING_ROTATION_START = 6 * HOUR;
-const EVENING_ROTATION_START = 20 * HOUR;
 
 const kstDayNumber = (timestamp: number): number =>
     Math.floor((timestamp + KST_OFFSET) / DAY);
@@ -38,26 +36,4 @@ export function getComparisonPriceTier(
     if (!flight.naverLowest || flight.naverLowest <= 0) return 1;
     if (!getComparisonFreshness(flight.naverCheckedAt, now).usable) return 1;
     return getEffectivePrice(flight) <= flight.naverLowest ? 0 : 2;
-}
-
-/** KST 오전 6시와 오후 8시에 바뀌는 추천순 슬롯. 같은 슬롯에서는 모두 같은 순서를 유지한다. */
-export function getRecommendationRotationSlot(now = Date.now()): number {
-    const kstTimestamp = now + KST_OFFSET;
-    const kstDay = Math.floor(kstTimestamp / DAY);
-    const timeOfDay = ((kstTimestamp % DAY) + DAY) % DAY;
-
-    if (timeOfDay >= EVENING_ROTATION_START) return kstDay * 2 + 1;
-    if (timeOfDay >= MORNING_ROTATION_START) return kstDay * 2;
-    return kstDay * 2 - 1;
-}
-
-/** 네이버 최저가 이하 항공권을 하루 두 차례 안정적으로 섞기 위한 순위값. */
-export function getRecommendationRotationRank(flightId: string, slot: number): number {
-    const value = `${slot}:${flightId}`;
-    let hash = 2_166_136_261;
-    for (let index = 0; index < value.length; index += 1) {
-        hash ^= value.charCodeAt(index);
-        hash = Math.imul(hash, 16_777_619);
-    }
-    return hash >>> 0;
 }

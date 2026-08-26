@@ -16,8 +16,6 @@ import { checkIsMobile } from '@/lib/utils/mobile-url';
 import {
     getComparisonFreshness,
     getComparisonPriceTier,
-    getRecommendationRotationRank,
-    getRecommendationRotationSlot,
 } from '@/lib/price-quality';
 import type { Flight } from '@/types/flight';
 import AccountSheet from '@/components/account/AccountSheet';
@@ -229,6 +227,13 @@ const compactWon = (price: number) => {
 
 const normalizedRoute = (flight: Flight) => `${normalizeCity(flight.departure.city)}-${normalizeCity(flight.arrival.city)}`;
 
+const isIncheonAreaDeparture = (flight: Flight) => {
+    const airport = flight.departure.airport?.toUpperCase();
+    return airport === 'ICN'
+        || airport === 'GMP'
+        || /인천|김포|서울/.test(normalizeCity(flight.departure.city));
+};
+
 const normalizedHistory = (history: PriceHistory) => {
     const result: PriceHistory = {};
     Object.entries(history).forEach(([route, entries]) => {
@@ -261,14 +266,19 @@ const diversifyFlights = (
     topWindow = 20,
     maxPerDestination = 2,
     maxConsecutive = 2,
-    leadingFlight?: Flight,
+    leadingFlights: Flight[] = [],
+    scoreOf?: (flight: Flight) => number,
+    balanceIncheon = true,
 ) => {
     if (items.length <= 1) return items;
     const remaining = [...items];
     const result: Flight[] = [];
-    const sequence: Flight[] = leadingFlight ? [leadingFlight] : [];
+    const sequence: Flight[] = [...leadingFlights];
     const topCounts = new Map<string, number>();
-    if (leadingFlight) topCounts.set(normalizeCity(leadingFlight.arrival.city), 1);
+    sequence.slice(0, topWindow).forEach(flight => {
+        const destination = normalizeCity(flight.arrival.city);
+        topCounts.set(destination, (topCounts.get(destination) || 0) + 1);
+    });
 
     const breaksConsecutiveRun = (flight: Flight) => {
         const route = normalizedRoute(flight);
@@ -282,12 +292,73 @@ const diversifyFlights = (
 
     while (remaining.length > 0) {
         const protectTopMix = sequence.length < topWindow;
-        let candidateIndex = remaining.findIndex(flight => {
-            const destination = normalizeCity(flight.arrival.city);
-            return breaksConsecutiveRun(flight)
-                && (!protectTopMix || (topCounts.get(destination) || 0) < maxPerDestination);
-        });
-        if (candidateIndex < 0) candidateIndex = remaining.findIndex(breaksConsecutiveRun);
+        const recentDestinations = new Set(
+            sequence.slice(-2).map(flight => normalizeCity(flight.arrival.city)),
+        );
+        const blockPosition = sequence.length % 9;
+        const block = sequence.slice(sequence.length - blockPosition);
+        const incheonCount = block.filter(isIncheonAreaDeparture).length;
+        const positionsAfterNext = 8 - blockPosition;
+        const availableIncheon = remaining.filter(isIncheonAreaDeparture).length;
+        const canReachIncheonMinimum = incheonCount
+            + Math.min(availableIncheon, positionsAfterNext + 1) >= 4;
+        const mustChooseIncheon = balanceIncheon
+            && canReachIncheonMinimum
+            && incheonCount + positionsAfterNext < 4;
+        const desiredIncheonCount = Math.floor(((blockPosition + 1) * 4) / 9);
+
+        const findCandidate = (
+            keepSpacing: boolean,
+            keepTopLimit: boolean,
+            keepFirstNineUnique: boolean,
+            keepDepartureBalance: boolean,
+        ) => {
+            const eligibleIndexes = remaining
+                .map((_, index) => index)
+                .filter(index => {
+                    const flight = remaining[index];
+                    const destination = normalizeCity(flight.arrival.city);
+                    const departsFromIncheonArea = isIncheonAreaDeparture(flight);
+                    return breaksConsecutiveRun(flight)
+                        && (!keepSpacing || !recentDestinations.has(destination))
+                        && (!keepTopLimit || !protectTopMix || (topCounts.get(destination) || 0) < maxPerDestination)
+                        && (!keepFirstNineUnique || sequence.length >= 9 || (topCounts.get(destination) || 0) === 0)
+                        && (!keepDepartureBalance || !mustChooseIncheon || departsFromIncheonArea)
+                        && (!keepDepartureBalance || incheonCount < 5 || !departsFromIncheonArea);
+                });
+            if (eligibleIndexes.length === 0) return -1;
+
+            const bestIndex = eligibleIndexes[0];
+            const bestScore = scoreOf?.(remaining[bestIndex]);
+            if (!protectTopMix || !Number.isFinite(bestScore)) return bestIndex;
+
+            if (balanceIncheon && incheonCount < desiredIncheonCount) {
+                const incheonIndex = eligibleIndexes.find(index => {
+                    const score = scoreOf?.(remaining[index]);
+                    return isIncheonAreaDeparture(remaining[index])
+                        && Number.isFinite(score)
+                        && score! <= bestScore! * 1.15;
+                });
+                if (incheonIndex !== undefined) return incheonIndex;
+            }
+
+            const unseenIndex = eligibleIndexes.find(index => {
+                const flight = remaining[index];
+                const destination = normalizeCity(flight.arrival.city);
+                const score = scoreOf?.(flight);
+                return (topCounts.get(destination) || 0) === 0
+                    && Number.isFinite(score)
+                    && score! <= bestScore! * 1.15;
+            });
+            return unseenIndex ?? bestIndex;
+        };
+
+        let candidateIndex = findCandidate(true, true, true, true);
+        if (candidateIndex < 0) candidateIndex = findCandidate(true, false, true, true);
+        if (candidateIndex < 0) candidateIndex = findCandidate(true, true, true, false);
+        if (candidateIndex < 0) candidateIndex = findCandidate(true, false, true, false);
+        if (candidateIndex < 0) candidateIndex = findCandidate(true, true, false, true);
+        if (candidateIndex < 0) candidateIndex = findCandidate(false, false, false, false);
         if (candidateIndex < 0) candidateIndex = 0;
 
         const [next] = remaining.splice(candidateIndex, 1);
@@ -792,7 +863,6 @@ export default function MobileRedesignPreview({
     const [contactStatus, setContactStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
     const [contactMessage, setContactMessage] = useState('');
     const [insightDateKey, setInsightDateKey] = useState(() => seoulDateKey());
-    const [recommendationRotationSlot, setRecommendationRotationSlot] = useState(() => getRecommendationRotationSlot());
     const filterBarSlotRef = useRef<HTMLDivElement | null>(null);
     const desktopFilterRef = useRef<HTMLDivElement | null>(null);
     const desktopFilterTriggerRef = useRef<HTMLButtonElement | null>(null);
@@ -996,16 +1066,6 @@ export default function MobileRedesignPreview({
                 setRecentSearches(saved.filter((item): item is string => typeof item === 'string' && item.trim().length > 0).slice(0, 6));
             }
         } catch { }
-    }, []);
-
-    useEffect(() => {
-        const timer = window.setInterval(() => {
-            setRecommendationRotationSlot(current => {
-                const next = getRecommendationRotationSlot();
-                return current === next ? current : next;
-            });
-        }, 60_000);
-        return () => window.clearInterval(timer);
     }, []);
 
     useEffect(() => {
@@ -1435,36 +1495,12 @@ export default function MobileRedesignPreview({
         return scores;
     }, [flights, interparkPrices]);
 
-    const recommendationRotationScores = useMemo(() => {
-        const qualified = flights.filter(flight => getComparisonPriceTier(flight) === 0);
-        const byQuality = qualified.slice().sort((a, b) =>
-            (recommendationScores.get(a.id) ?? Infinity) - (recommendationScores.get(b.id) ?? Infinity)
-            || a.id.localeCompare(b.id));
-        const byRotation = qualified.slice().sort((a, b) =>
-            getRecommendationRotationRank(a.id, recommendationRotationSlot)
-            - getRecommendationRotationRank(b.id, recommendationRotationSlot)
-            || a.id.localeCompare(b.id));
-        const qualityRanks = new Map(byQuality.map((flight, index) => [flight.id, index]));
-        const rotationRanks = new Map(byRotation.map((flight, index) => [flight.id, index]));
-        const divisor = Math.max(1, qualified.length - 1);
-        return new Map(qualified.map(flight => [
-            flight.id,
-            ((qualityRanks.get(flight.id) ?? 0) / divisor) * 0.6
-                + ((rotationRanks.get(flight.id) ?? 0) / divisor) * 0.4,
-        ]));
-    }, [flights, recommendationRotationSlot, recommendationScores]);
-
     const compareRecommended = useCallback((a: Flight, b: Flight) => {
         const tierDifference = getComparisonPriceTier(a) - getComparisonPriceTier(b);
         if (tierDifference !== 0) return tierDifference;
-        if (getComparisonPriceTier(a) === 0) {
-            const rotationDifference = (recommendationRotationScores.get(a.id) ?? Infinity)
-                - (recommendationRotationScores.get(b.id) ?? Infinity);
-            if (rotationDifference !== 0) return rotationDifference;
-        }
         return (recommendationScores.get(a.id) ?? Infinity) - (recommendationScores.get(b.id) ?? Infinity)
             || a.id.localeCompare(b.id);
-    }, [recommendationRotationScores, recommendationScores]);
+    }, [recommendationScores]);
 
     const filteredFlights = useMemo(() => {
         const referenceDate = new Date();
@@ -1546,13 +1582,24 @@ export default function MobileRedesignPreview({
             ? filteredFlights.filter(flight => flight.id !== pinnedFlight.id)
             : filteredFlights;
         const diversified = sort === 'recommended' && !query.trim()
-            ? ([0, 1, 2] as const).flatMap(tier => diversifyFlights(
-                pool.filter(flight => getComparisonPriceTier(flight) === tier),
-                20,
-                2,
-                2,
-                tier === 0 ? pinnedFlight : undefined,
-            ))
+            ? (() => {
+                const result: Flight[] = [];
+                const leadingFlights: Flight[] = pinnedFlight ? [pinnedFlight] : [];
+                for (const tier of [0, 1, 2] as const) {
+                    const group = diversifyFlights(
+                        pool.filter(flight => getComparisonPriceTier(flight) === tier),
+                        20,
+                        2,
+                        2,
+                        leadingFlights,
+                        flight => recommendationScores.get(flight.id) ?? Infinity,
+                        departure === '전체',
+                    );
+                    result.push(...group);
+                    leadingFlights.push(...group);
+                }
+                return result;
+            })()
             : pool;
         return pinnedFlight ? [pinnedFlight, ...diversified] : diversified;
     }, [featuredPick, filteredFlights, isDefaultView, query, sort]);

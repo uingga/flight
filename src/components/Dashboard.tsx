@@ -35,8 +35,6 @@ import {
     getComparisonFreshness,
     getComparisonPriceTier,
     getEffectivePrice,
-    getRecommendationRotationRank,
-    getRecommendationRotationSlot,
 } from '@/lib/price-quality';
 import {
     getDestinationContext,
@@ -1767,43 +1765,6 @@ export default function Dashboard() {
         return scores;
     }, [flights, interparkPrices]);
 
-    // 네이버 최저가 이하 그룹은 KST 오전 6시·오후 8시에 순서를 바꾼다.
-    // 열린 화면도 슬롯이 바뀐 뒤 1분 안에 새 순서를 반영한다.
-    const [recommendationRotationSlot, setRecommendationRotationSlot] = useState(
-        () => getRecommendationRotationSlot(),
-    );
-    useEffect(() => {
-        const timer = window.setInterval(() => {
-            setRecommendationRotationSlot(current => {
-                const next = getRecommendationRotationSlot();
-                return current === next ? current : next;
-            });
-        }, 60_000);
-        return () => window.clearInterval(timer);
-    }, []);
-
-    // 기존 품질순위 60%와 회차별 변화순위 40%를 합친다.
-    // 완전 무작위가 아니므로 더 좋은 표가 상단에 나올 가능성을 보존한다.
-    const recommendationRotationScores = useMemo(() => {
-        const qualified = flights.filter(flight => getComparisonPriceTier(flight) === 0);
-        const byQuality = qualified.slice().sort((a, b) =>
-            (recommendScores.get(a.id) ?? Infinity) - (recommendScores.get(b.id) ?? Infinity)
-            || a.id.localeCompare(b.id));
-        const byRotation = qualified.slice().sort((a, b) =>
-            getRecommendationRotationRank(a.id, recommendationRotationSlot)
-            - getRecommendationRotationRank(b.id, recommendationRotationSlot)
-            || a.id.localeCompare(b.id));
-        const qualityRanks = new Map(byQuality.map((flight, index) => [flight.id, index]));
-        const rotationRanks = new Map(byRotation.map((flight, index) => [flight.id, index]));
-        const divisor = Math.max(1, qualified.length - 1);
-
-        return new Map(qualified.map(flight => [
-            flight.id,
-            ((qualityRanks.get(flight.id) ?? divisor) / divisor) * 0.6
-                + ((rotationRanks.get(flight.id) ?? divisor) / divisor) * 0.4,
-        ]));
-    }, [flights, recommendScores, recommendationRotationSlot]);
-
     // 오늘의 표 — 파격적인 절대가격을 먼저 잡고, 없을 때 현재 판매 중인 전체 항공권에서 고른다.
     // 신규·가격 하락은 일반 후보의 동점일 때만 우선한다.
     const todayPick = useMemo(() => {
@@ -2008,14 +1969,11 @@ export default function Dashboard() {
             }
             case 'discount': {
                 // 추천순은 신선한 비교가 이하를 먼저, 비교 불가를 그다음,
-                // 신선한 비교가 초과를 마지막에 둔다. 비교가 이하 그룹은 하루 두 번 순환하고,
-                // 나머지 그룹은 기존 종합점수를 유지한다.
+                // 신선한 비교가 초과를 마지막에 둔다. 각 그룹 안에서는 종합 품질점수를 유지한다.
                 const comparisonTier = getComparisonPriceTier(a);
                 comparison = comparisonTier - getComparisonPriceTier(b);
                 if (comparison === 0) {
-                    comparison = comparisonTier === 0
-                        ? (recommendationRotationScores.get(a.id) ?? Infinity) - (recommendationRotationScores.get(b.id) ?? Infinity)
-                        : (recommendScores.get(a.id) ?? Infinity) - (recommendScores.get(b.id) ?? Infinity);
+                    comparison = (recommendScores.get(a.id) ?? Infinity) - (recommendScores.get(b.id) ?? Infinity);
                 }
                 break;
             }
@@ -2131,26 +2089,36 @@ export default function Dashboard() {
         });
     };
 
-    // 다양성 재정렬: 같은 출발지-목적지는 최대 2개 연속,
-    // 첫 20개에는 같은 목적지가 최대 2개만 나오도록 재배치한다.
+    // 다양성 재정렬: 첫 9개는 목적지를 겹치지 않게 하고, 이후에도 최근 두 목적지는 피한다.
+    // 9개 단위로 인천/김포 출발을 4~5개 배치하되 해당 표가 부족하면 조건을 완화한다.
+    // 비슷한 추천 점수 안에서는 아직 노출되지 않은 목적지를 먼저 고른다.
     // 추천순에서만 적용 (가격순/날짜순/검색 시 비활성화)
     const interleaveRoutes = (
         flights: Flight[],
         maxConsecutive: number = 2,
         topWindow: number = 20,
         maxPerDestination: number = 2,
-        leadingFlight?: Flight,
+        leadingFlights: Flight[] = [],
+        scoreOf?: (flight: Flight) => number,
+        balanceIncheon: boolean = true,
     ): Flight[] => {
         if (flights.length <= 1) return flights;
 
         const remaining = [...flights];
         const result: Flight[] = [];
-        const sequence: Flight[] = leadingFlight ? [leadingFlight] : [];
+        const sequence: Flight[] = [...leadingFlights];
         const topDestinationCounts = new Map<string, number>();
-        if (leadingFlight) {
-            topDestinationCounts.set(normalizeCity(leadingFlight.arrival.city), 1);
-        }
+        sequence.slice(0, topWindow).forEach(flight => {
+            const destination = normalizeCity(flight.arrival.city);
+            topDestinationCounts.set(destination, (topDestinationCounts.get(destination) || 0) + 1);
+        });
         const getRoute = (f: Flight) => `${normalizeCity(f.departure.city)}-${normalizeCity(f.arrival.city)}`;
+        const departsFromIncheonArea = (flight: Flight) => {
+            const airport = flight.departure.airport?.toUpperCase();
+            return airport === 'ICN'
+                || airport === 'GMP'
+                || /인천|김포|서울/.test(normalizeCity(flight.departure.city));
+        };
         const getStreak = (route: string) => {
             let streak = 0;
             for (let i = sequence.length - 1; i >= 0 && i >= sequence.length - maxConsecutive; i--) {
@@ -2162,14 +2130,73 @@ export default function Dashboard() {
 
         while (remaining.length > 0) {
             const insideTopWindow = sequence.length < topWindow;
-            let candidateIndex = remaining.findIndex(flight => {
-                const destination = normalizeCity(flight.arrival.city);
-                return getStreak(getRoute(flight)) < maxConsecutive
-                    && (!insideTopWindow || (topDestinationCounts.get(destination) || 0) < maxPerDestination);
-            });
-            if (candidateIndex < 0) {
-                candidateIndex = remaining.findIndex(flight => getStreak(getRoute(flight)) < maxConsecutive);
-            }
+            const recentDestinations = new Set(
+                sequence.slice(-2).map(flight => normalizeCity(flight.arrival.city)),
+            );
+            const blockPosition = sequence.length % 9;
+            const block = sequence.slice(sequence.length - blockPosition);
+            const incheonCount = block.filter(departsFromIncheonArea).length;
+            const positionsAfterNext = 8 - blockPosition;
+            const availableIncheon = remaining.filter(departsFromIncheonArea).length;
+            const canReachIncheonMinimum = incheonCount
+                + Math.min(availableIncheon, positionsAfterNext + 1) >= 4;
+            const mustChooseIncheon = balanceIncheon
+                && canReachIncheonMinimum
+                && incheonCount + positionsAfterNext < 4;
+            const desiredIncheonCount = Math.floor(((blockPosition + 1) * 4) / 9);
+
+            const findCandidate = (
+                keepSpacing: boolean,
+                keepTopLimit: boolean,
+                keepFirstNineUnique: boolean,
+                keepDepartureBalance: boolean,
+            ) => {
+                const eligibleIndexes = remaining
+                    .map((_, index) => index)
+                    .filter(index => {
+                        const flight = remaining[index];
+                        const destination = normalizeCity(flight.arrival.city);
+                        const isIncheonArea = departsFromIncheonArea(flight);
+                        return getStreak(getRoute(flight)) < maxConsecutive
+                            && (!keepSpacing || !recentDestinations.has(destination))
+                            && (!keepTopLimit || !insideTopWindow || (topDestinationCounts.get(destination) || 0) < maxPerDestination)
+                            && (!keepFirstNineUnique || sequence.length >= 9 || (topDestinationCounts.get(destination) || 0) === 0)
+                            && (!keepDepartureBalance || !mustChooseIncheon || isIncheonArea)
+                            && (!keepDepartureBalance || incheonCount < 5 || !isIncheonArea);
+                    });
+                if (eligibleIndexes.length === 0) return -1;
+
+                const bestIndex = eligibleIndexes[0];
+                const bestScore = scoreOf?.(remaining[bestIndex]);
+                if (!insideTopWindow || !Number.isFinite(bestScore)) return bestIndex;
+
+                if (balanceIncheon && incheonCount < desiredIncheonCount) {
+                    const incheonIndex = eligibleIndexes.find(index => {
+                        const score = scoreOf?.(remaining[index]);
+                        return departsFromIncheonArea(remaining[index])
+                            && Number.isFinite(score)
+                            && score! <= bestScore! * 1.15;
+                    });
+                    if (incheonIndex !== undefined) return incheonIndex;
+                }
+
+                const unseenIndex = eligibleIndexes.find(index => {
+                    const flight = remaining[index];
+                    const destination = normalizeCity(flight.arrival.city);
+                    const score = scoreOf?.(flight);
+                    return (topDestinationCounts.get(destination) || 0) === 0
+                        && Number.isFinite(score)
+                        && score! <= bestScore! * 1.15;
+                });
+                return unseenIndex ?? bestIndex;
+            };
+
+            let candidateIndex = findCandidate(true, true, true, true);
+            if (candidateIndex < 0) candidateIndex = findCandidate(true, false, true, true);
+            if (candidateIndex < 0) candidateIndex = findCandidate(true, true, true, false);
+            if (candidateIndex < 0) candidateIndex = findCandidate(true, false, true, false);
+            if (candidateIndex < 0) candidateIndex = findCandidate(true, true, false, true);
+            if (candidateIndex < 0) candidateIndex = findCandidate(false, false, false, false);
             if (candidateIndex < 0) candidateIndex = 0;
 
             const [next] = remaining.splice(candidateIndex, 1);
@@ -2189,15 +2216,25 @@ export default function Dashboard() {
         : filteredFlights;
     const diversifiedFlights = (sortBy === 'discount' && !searchTerm)
         // 서로 다른 비교가 구간이 노선 다양화 과정에서 뒤섞이지 않도록
-        // 각 구간 안에서만 노선을 분산한 뒤 다시 합친다.
-        ? ([0, 1, 2] as const).flatMap(tier =>
-            interleaveRoutes(
-                recommendationPool.filter(flight => getComparisonPriceTier(flight) === tier),
-                2,
-                20,
-                2,
-                tier === 0 && todayPick && isDefaultView ? todayPick.flight : undefined,
-            ))
+        // 각 구간 안에서만 분산하되, 구간 경계의 직전 목적지도 이어서 확인한다.
+        ? (() => {
+            const result: Flight[] = [];
+            const leadingFlights: Flight[] = todayPick && isDefaultView ? [todayPick.flight] : [];
+            for (const tier of [0, 1, 2] as const) {
+                const group = interleaveRoutes(
+                    recommendationPool.filter(flight => getComparisonPriceTier(flight) === tier),
+                    2,
+                    20,
+                    2,
+                    leadingFlights,
+                    flight => recommendScores.get(flight.id) ?? Infinity,
+                    departureFilter === 'all',
+                );
+                result.push(...group);
+                leadingFlights.push(...group);
+            }
+            return result;
+        })()
         : recommendationPool;
 
     // 표시할 항공권 (무한 스크롤용)
