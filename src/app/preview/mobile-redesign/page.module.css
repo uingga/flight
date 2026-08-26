@@ -333,7 +333,7 @@
 .todayPickStrip strong { font-size: var(--size-caption); font-weight: var(--weight-heavy); letter-spacing: 0.02em; }
 .todayPickStrip span { font-size: var(--size-micro); font-weight: var(--weight-bold); }
 .todayPickInline { display: none; }
-.todayPickCard .favoriteButton { top: 40px; --favorite-fold-top: -8px; }
+.todayPickCard .favoriteButton { top: 40px; }
 
 .cardTopline { min-height: 35px; padding: 13px 50px 0 16px; display: flex; align-items: center; justify-content: space-between; }
 .cardTopline > div { overflow: hidden; display: flex; align-items: center; gap: 6px; min-width: 0; }
@@ -352,8 +352,6 @@
     z-index: 2;
     top: 10px;
     right: 10px;
-    --favorite-fold-top: -10px;
-    --favorite-fold-right: -10px;
     width: 34px;
     height: 34px;
     display: grid;
@@ -361,34 +359,13 @@
     color: #a8a8a8;
     transition: color 150ms ease;
 }
-.favoriteButton::before {
-    content: '';
-    position: absolute;
-    z-index: 0;
-    top: var(--favorite-fold-top);
-    right: var(--favorite-fold-right);
-    width: 42px;
-    height: 42px;
-    opacity: 0;
-    border-top-right-radius: 10px;
-    background: var(--brand-soft);
-    clip-path: polygon(100% 0, 100% 100%, 0 100%);
-    filter: drop-shadow(-1px -1px 0 #eeb0bd);
-    pointer-events: none;
-    transform: scale(.55);
-    transform-origin: top right;
-    transition: opacity 150ms ease, transform 180ms ease;
-}
 .favoriteButton svg { position: relative; z-index: 1; width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linejoin: round; transition: fill 150ms ease, transform 150ms ease; }
 .favoriteButton:focus-visible { color: var(--brand-dark); }
-.favoriteButton:focus-visible::before { opacity: .82; transform: scale(.72); }
 .favoriteButton.favoriteActive { color: var(--brand-dark); }
-.favoriteButton.favoriteActive::before { opacity: 1; transform: scale(1); }
 .favoriteButton.favoriteActive svg { fill: currentColor; transform: translateY(-.5px); }
 
 @media (hover: hover) {
     .favoriteButton:hover { color: var(--brand-dark); }
-    .favoriteButton:not(.favoriteActive):hover::before { opacity: .82; transform: scale(.72); }
 }
 
 .routeGrid { margin: 15px 16px 0; display: grid; grid-template-columns: minmax(0, 1fr) 48px minmax(0, 1fr); align-items: start; gap: 3px; }
@@ -1187,7 +1164,7 @@
     .footerStatusUrgent { font-weight: 500; }
     .priceDiscountBadge { padding-right: 5px; padding-left: 5px; border-color: transparent; background: #fff3f5; font-weight: 600; }
     .priceBlock strong { font-size: 23px; font-weight: 700; letter-spacing: -0.02em; }
-    .favoriteButton { top: 12px; right: 12px; --favorite-fold-top: -12px; --favorite-fold-right: -12px; }
+    .favoriteButton { top: 12px; right: 12px; }
     .favoriteButton svg { width: 17px; height: 17px; }
     .todayPickCard .favoriteButton { top: 12px; }
 
