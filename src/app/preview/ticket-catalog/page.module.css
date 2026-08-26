@@ -1,0 +1,1221 @@
+.page {
+    --ink: #11120f;
+    --paper: #f7f2e8;
+    --white: #fffdf8;
+    --lime: #d5ff3f;
+    --pink: #f4a9db;
+    --sky: #8bd8ff;
+    --lilac: #aaa5ff;
+    --orange: #ff704c;
+    --line: #171814;
+    min-height: 100vh;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-inter, Pretendard), Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    line-height: 1.42;
+}
+
+.page *,
+.page *::before,
+.page *::after {
+    box-sizing: border-box;
+}
+
+.page button,
+.page input,
+.page select {
+    font: inherit;
+}
+
+.header {
+    height: 72px;
+    padding: 0 max(24px, calc((100vw - 1520px) / 2));
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 28px;
+    background: var(--white);
+    border-bottom: 1px solid var(--line);
+}
+
+.brand,
+.footerBrand {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--ink);
+}
+
+.brand span,
+.footerBrand span {
+    width: 25px;
+    height: 25px;
+    display: grid;
+    place-items: center;
+    color: #ff315b;
+    transform: rotate(-7deg);
+}
+
+.brand svg,
+.footerBrand svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.brand strong,
+.footerBrand b {
+    font-family: 'YeogiOttaeJalnan', sans-serif;
+    font-size: 26px;
+    font-weight: 400;
+    line-height: 1;
+    letter-spacing: -.035em;
+}
+
+.utilityNav {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    border-left: 1px solid var(--line);
+}
+
+.utilityNav a,
+.utilityNav button {
+    height: 72px;
+    padding: 0 22px;
+    display: grid;
+    place-items: center;
+    border: 0;
+    border-right: 1px solid var(--line);
+    background: transparent;
+    color: var(--ink);
+    font-size: 13px;
+    font-weight: 680;
+}
+
+.utilityNav button:last-child {
+    background: var(--lime);
+}
+
+.utilityNav a:hover,
+.utilityNav button:hover {
+    background: var(--pink);
+}
+
+.newTicker {
+    height: 34px;
+    overflow: hidden;
+    border-bottom: 1px solid var(--line);
+    background: var(--lime);
+}
+
+.newTicker > div {
+    min-width: max-content;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    gap: 36px;
+    font-size: 11px;
+    font-weight: 850;
+    letter-spacing: .08em;
+    animation: ticker 22s linear infinite;
+}
+
+.newTicker span {
+    min-width: 118px;
+    text-align: center;
+}
+
+.newTicker i {
+    font-size: 18px;
+    font-style: normal;
+}
+
+@keyframes ticker {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+}
+
+.hero {
+    max-width: 1520px;
+    min-height: 650px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: .82fr 1.18fr;
+    border-left: 1px solid var(--line);
+    border-right: 1px solid var(--line);
+}
+
+.heroIntro {
+    padding: clamp(64px, 7vw, 106px) clamp(32px, 5vw, 78px) 58px;
+    background: var(--white);
+    border-right: 1px solid var(--line);
+    position: relative;
+}
+
+.issueLabel {
+    margin: 0 0 28px;
+    font-size: 10px;
+    font-weight: 780;
+    letter-spacing: .14em;
+}
+
+.heroIntro h1 {
+    margin: 0;
+    font-size: clamp(52px, 5.6vw, 86px);
+    line-height: .96;
+    font-weight: 820;
+    letter-spacing: -.065em;
+}
+
+.heroIntro h1 em {
+    font-style: normal;
+    background: linear-gradient(transparent 56%, var(--lime) 56%);
+}
+
+.heroDescription {
+    margin: 30px 0 46px;
+    font-size: 17px;
+    color: #4c4d48;
+    line-height: 1.75;
+}
+
+.marketFacts {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+}
+
+.marketFacts span {
+    min-height: 84px;
+    padding: 15px 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border-right: 1px solid var(--line);
+}
+
+.marketFacts span:last-child {
+    border-right: 0;
+}
+
+.marketFacts b {
+    font-size: 25px;
+    line-height: 1;
+    letter-spacing: -.03em;
+}
+
+.marketFacts small {
+    margin-top: 8px;
+    font-size: 10px;
+    color: #73746e;
+}
+
+.heroCatalog {
+    min-width: 0;
+    display: grid;
+    grid-template-rows: 1fr auto;
+    background: var(--pink);
+}
+
+.heroArt {
+    min-height: 320px;
+    padding: 48px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border-bottom: 1px solid var(--line);
+}
+
+.heroArt::before,
+.heroArt::after {
+    content: '';
+    position: absolute;
+    width: 220px;
+    height: 220px;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+}
+
+.heroArt::before {
+    left: -70px;
+    top: -74px;
+    background: var(--sky);
+}
+
+.heroArt::after {
+    right: -38px;
+    bottom: -78px;
+    background: var(--lime);
+}
+
+.heroArt > p {
+    margin: 0;
+    max-width: 570px;
+    text-align: center;
+    font-size: clamp(56px, 6vw, 96px);
+    font-weight: 900;
+    letter-spacing: -.075em;
+    line-height: .78;
+    transform: rotate(-4deg);
+    position: relative;
+    z-index: 2;
+    text-shadow: 4px 4px 0 var(--white);
+}
+
+.sunburst {
+    position: absolute;
+    right: 13%;
+    top: 10%;
+    z-index: 3;
+    font-size: 68px;
+    line-height: 1;
+    transform: rotate(13deg);
+}
+
+.artRoute {
+    position: absolute;
+    left: 20px;
+    bottom: 18px;
+    z-index: 3;
+    padding: 8px 12px 7px;
+    border: 1px solid var(--line);
+    background: var(--white);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .05em;
+}
+
+.heroTicket,
+.heroTicketLoading {
+    min-height: 254px;
+    padding: 0;
+    display: grid;
+    grid-template-columns: 72px minmax(190px, .72fr) 1fr;
+    grid-template-rows: 1fr 74px;
+    border: 0;
+    background: var(--white);
+    color: var(--ink);
+    text-align: left;
+}
+
+.heroTicket:hover .heroTicketTitle h2 {
+    color: #ff315b;
+}
+
+.ticketIndex {
+    grid-row: 1 / 3;
+    display: grid;
+    place-items: center;
+    border-right: 1px solid var(--line);
+    background: var(--lime);
+    font-size: 25px;
+    font-weight: 900;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+}
+
+.heroTicketTitle {
+    padding: 30px 25px;
+    border-right: 1px solid var(--line);
+}
+
+.heroTicketTitle > span {
+    font-size: 9px;
+    font-weight: 850;
+    letter-spacing: .1em;
+}
+
+.heroTicketTitle h2 {
+    margin: 18px 0 8px;
+    font-size: clamp(30px, 3.8vw, 55px);
+    line-height: 1;
+    letter-spacing: -.055em;
+    transition: color .15s ease;
+}
+
+.heroTicketTitle p {
+    margin: 0;
+    color: #696a65;
+    font-size: 13px;
+}
+
+.heroRoute {
+    padding: 32px 28px;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 18px;
+    align-items: center;
+}
+
+.heroRoute > span {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 23px;
+    font-weight: 730;
+}
+
+.heroRoute > span:last-child {
+    text-align: right;
+}
+
+.heroRoute small {
+    color: #72736d;
+    font-size: 11px;
+    font-weight: 540;
+}
+
+.heroRoute i {
+    font-size: 22px;
+    font-style: normal;
+}
+
+.heroTicketBottom {
+    grid-column: 2 / 4;
+    padding: 0 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    border-top: 1px solid var(--line);
+}
+
+.heroTicketBottom > span {
+    font-size: 12px;
+    color: #555650;
+}
+
+.heroTicketBottom strong {
+    font-size: 30px;
+    letter-spacing: -.045em;
+}
+
+.heroTicketLoading {
+    place-items: center;
+    grid-template-columns: 1fr;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.statementGrid {
+    max-width: 1520px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    border: 1px solid var(--line);
+    border-bottom: 0;
+}
+
+.statementGrid > div {
+    min-height: 190px;
+    padding: 26px 30px;
+    display: grid;
+    grid-template-columns: 45px 1fr;
+    grid-template-rows: auto 1fr;
+    border-right: 1px solid var(--line);
+}
+
+.statementGrid > div:last-child {
+    border-right: 0;
+}
+
+.statementGrid span {
+    grid-row: 1 / 3;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.statementGrid b {
+    font-size: clamp(30px, 3vw, 48px);
+    line-height: 1;
+    letter-spacing: -.055em;
+}
+
+.statementGrid p {
+    margin: auto 0 0;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.statementPink { background: var(--pink); }
+.statementSky { background: var(--sky); }
+.statementLime { background: var(--lime); }
+
+.market {
+    max-width: 1520px;
+    margin: 0 auto;
+    border: 1px solid var(--line);
+    background: var(--white);
+}
+
+.marketTitleRow {
+    min-height: 152px;
+    padding: 34px 38px 28px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 30px;
+    border-bottom: 1px solid var(--line);
+}
+
+.marketTitleRow span {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .12em;
+}
+
+.marketTitleRow h2 {
+    margin: 10px 0 0;
+    font-size: clamp(36px, 4vw, 56px);
+    line-height: 1;
+    letter-spacing: -.055em;
+}
+
+.marketTitleRow p {
+    margin: 0;
+    font-size: 11px;
+    letter-spacing: .08em;
+}
+
+.marketTitleRow strong {
+    margin-right: 6px;
+    color: #f52f5c;
+    font-size: 27px;
+    letter-spacing: -.04em;
+}
+
+.filterTable {
+    min-height: 88px;
+    display: grid;
+    grid-template-columns: 1.15fr 2.2fr .75fr .75fr;
+    border-bottom: 1px solid var(--line);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--white);
+}
+
+.searchField,
+.regionField,
+.selectField {
+    min-width: 0;
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 8px;
+    border-right: 1px solid var(--line);
+}
+
+.selectField:last-child {
+    border-right: 0;
+}
+
+.searchField > span,
+.regionField > span,
+.selectField > span {
+    font-size: 9px;
+    font-weight: 850;
+    letter-spacing: .12em;
+}
+
+.searchField input,
+.selectField select {
+    width: 100%;
+    height: 32px;
+    padding: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--ink);
+    font-size: 14px;
+    font-weight: 650;
+}
+
+.regionField > div {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.regionField > div::-webkit-scrollbar { display: none; }
+
+.regionField button {
+    flex: 0 0 auto;
+    min-height: 31px;
+    padding: 0 10px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--ink);
+    font-size: 12px;
+    font-weight: 630;
+}
+
+.regionField button:hover,
+.regionField .activeFilter {
+    border-color: var(--line);
+    background: var(--lime);
+}
+
+.stateBox {
+    min-height: 220px;
+    display: grid;
+    place-items: center;
+    border-bottom: 1px solid var(--line);
+    font-size: 15px;
+    font-weight: 650;
+}
+
+.catalogGrid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+}
+
+.catalogCard {
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    background: var(--white);
+    color: var(--ink);
+    text-align: left;
+}
+
+.catalogCard:nth-child(4n) {
+    border-right: 0;
+}
+
+.catalogCard:hover .cardPoster h3 {
+    transform: translateX(8px);
+}
+
+.cardPoster {
+    min-height: 245px;
+    padding: 20px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    overflow: hidden;
+    border-bottom: 1px solid var(--line);
+}
+
+.cardPoster::after {
+    content: '';
+    position: absolute;
+    width: 116px;
+    height: 116px;
+    right: -30px;
+    top: 34px;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .3);
+}
+
+.lime { background: var(--lime); }
+.pink { background: var(--pink); }
+.sky { background: var(--sky); }
+.lilac { background: var(--lilac); }
+.orange { background: var(--orange); }
+.cream { background: #efe7d6; }
+
+.cardNumber {
+    position: absolute;
+    left: 18px;
+    top: 16px;
+    font-size: 12px;
+    font-weight: 850;
+}
+
+.posterStamp {
+    position: absolute;
+    right: 17px;
+    top: 16px;
+    z-index: 2;
+    padding: 5px 7px;
+    border: 1px solid var(--line);
+    background: var(--white);
+    font-size: 8px;
+    font-weight: 850;
+    line-height: 1.15;
+    letter-spacing: .06em;
+    transform: rotate(3deg);
+}
+
+.cardPoster h3 {
+    position: relative;
+    z-index: 2;
+    margin: 0 0 7px;
+    overflow: hidden;
+    font-size: clamp(33px, 3.5vw, 54px);
+    line-height: .95;
+    letter-spacing: -.06em;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    transition: transform .18s ease;
+}
+
+.cardPoster > p {
+    position: relative;
+    z-index: 2;
+    margin: 0;
+    font-size: 12px;
+    font-weight: 660;
+}
+
+.posterArrow {
+    position: absolute;
+    right: 18px;
+    bottom: 8px;
+    z-index: 2;
+    font-size: 34px;
+    line-height: 1;
+}
+
+.cardInfo {
+    min-height: 210px;
+    display: grid;
+    grid-template-rows: 50px 1fr 64px;
+}
+
+.cardSupplier,
+.cardPriceRow {
+    padding: 0 17px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.cardSupplier {
+    border-bottom: 1px solid var(--line);
+    font-size: 11px;
+}
+
+.cardSupplier b {
+    color: #f22857;
+    font-weight: 750;
+}
+
+.cardSupplier span {
+    min-width: 0;
+    overflow: hidden;
+    color: #696a64;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cardSchedule {
+    padding: 16px 17px;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 10px;
+    align-items: center;
+}
+
+.cardSchedule > span {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-size: 13px;
+    font-weight: 680;
+}
+
+.cardSchedule > span:last-child {
+    text-align: right;
+}
+
+.cardSchedule small {
+    color: #797a74;
+    font-size: 12px;
+    font-weight: 520;
+}
+
+.cardSchedule i {
+    color: #777872;
+    font-size: 9px;
+    font-style: normal;
+    white-space: nowrap;
+}
+
+.cardPriceRow {
+    border-top: 1px solid var(--line);
+}
+
+.cardPriceRow > span {
+    color: #656660;
+    font-size: 11px;
+}
+
+.cardPriceRow > div {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.cardPriceRow small {
+    padding: 3px 5px 2px;
+    border: 1px solid #f22857;
+    color: #e70f43;
+    font-size: 9px;
+    font-weight: 800;
+}
+
+.cardPriceRow strong {
+    font-size: clamp(18px, 1.7vw, 24px);
+    letter-spacing: -.04em;
+}
+
+.loadMore {
+    width: 100%;
+    min-height: 88px;
+    border: 0;
+    background: var(--ink);
+    color: white;
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: .08em;
+}
+
+.loadMore span {
+    margin-left: 10px;
+    color: var(--lime);
+}
+
+.loadMore:hover {
+    background: #f22857;
+}
+
+.closingPanel {
+    max-width: 1520px;
+    min-height: 330px;
+    margin: 0 auto;
+    padding: 56px 58px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 40px;
+    border-left: 1px solid var(--line);
+    border-right: 1px solid var(--line);
+    background: var(--lilac);
+    position: relative;
+    overflow: hidden;
+}
+
+.closingPanel::after {
+    content: '✦';
+    position: absolute;
+    right: 13%;
+    top: -80px;
+    font-size: 260px;
+    opacity: .24;
+}
+
+.closingPanel > div,
+.closingPanel button {
+    position: relative;
+    z-index: 2;
+}
+
+.closingPanel span {
+    font-size: 10px;
+    font-weight: 850;
+    letter-spacing: .14em;
+}
+
+.closingPanel h2 {
+    margin: 15px 0 0;
+    font-size: clamp(40px, 5vw, 70px);
+    line-height: .98;
+    letter-spacing: -.06em;
+}
+
+.closingPanel button {
+    min-height: 58px;
+    padding: 0 24px;
+    border: 1px solid var(--line);
+    background: var(--lime);
+    color: var(--ink);
+    font-size: 13px;
+    font-weight: 750;
+    box-shadow: 5px 5px 0 var(--ink);
+}
+
+.footer {
+    min-height: 130px;
+    padding: 28px max(24px, calc((100vw - 1440px) / 2));
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 30px;
+    border-top: 1px solid var(--line);
+    background: var(--white);
+}
+
+.footer p {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 650;
+}
+
+.footer > div:last-child {
+    display: flex;
+    justify-content: flex-end;
+    gap: 18px;
+}
+
+.footer a {
+    color: var(--ink);
+    font-size: 10px;
+    font-weight: 750;
+    letter-spacing: .06em;
+}
+
+.modalBackdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    padding: 30px;
+    display: grid;
+    place-items: center;
+    background: rgba(17, 18, 15, .74);
+}
+
+.modal {
+    width: min(860px, 100%);
+    max-height: calc(100vh - 60px);
+    display: grid;
+    grid-template-columns: .78fr 1.22fr;
+    border: 1px solid var(--line);
+    background: var(--white);
+    box-shadow: 12px 12px 0 var(--lime);
+    overflow: auto;
+    position: relative;
+}
+
+.modalClose {
+    position: absolute;
+    right: 0;
+    top: 0;
+    z-index: 2;
+    width: 48px;
+    height: 48px;
+    display: grid;
+    place-items: center;
+    border: 0;
+    border-left: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    background: var(--lime);
+    font-size: 30px;
+}
+
+.modalPoster {
+    min-height: 520px;
+    padding: 45px 32px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    border-right: 1px solid var(--line);
+    background: var(--pink);
+    position: relative;
+    overflow: hidden;
+}
+
+.modalPoster::before {
+    content: '✦';
+    position: absolute;
+    left: 10%;
+    top: 8%;
+    font-size: 140px;
+    opacity: .28;
+}
+
+.modalPoster span {
+    font-size: 9px;
+    font-weight: 850;
+    letter-spacing: .12em;
+}
+
+.modalPoster h2 {
+    margin: 14px 0 8px;
+    font-size: clamp(42px, 5vw, 68px);
+    line-height: .92;
+    letter-spacing: -.06em;
+}
+
+.modalPoster p {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 680;
+}
+
+.modalBody {
+    padding: 62px 34px 34px;
+}
+
+.modalSupplier {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 12px;
+}
+
+.modalSupplier b { color: #f22857; }
+.modalSupplier span { color: #696a64; }
+
+.modalSchedule {
+    margin-top: 32px;
+    padding: 24px 0;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 18px;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+}
+
+.modalSchedule > div {
+    display: flex;
+    flex-direction: column;
+}
+
+.modalSchedule > div:last-child { text-align: right; }
+.modalSchedule > div > span { color: #6f706a; font-size: 10px; }
+.modalSchedule b { margin-top: 10px; font-size: 16px; }
+.modalSchedule strong { margin-top: 4px; font-size: 25px; }
+.modalSchedule small { margin-top: 9px; color: #6f706a; font-size: 10px; }
+.modalSchedule i { align-self: center; font-size: 21px; font-style: normal; }
+
+.modalPrice {
+    min-height: 82px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.modalPrice span { color: #60615b; font-size: 11px; }
+.modalPrice strong { font-size: 30px; letter-spacing: -.045em; }
+
+.notice {
+    margin: 0 0 8px;
+    color: #777871;
+    font-size: 10px;
+    line-height: 1.5;
+}
+
+.modalActions {
+    margin-top: 25px;
+    display: grid;
+    grid-template-columns: .55fr 1.45fr;
+    gap: 8px;
+}
+
+.modalActions button,
+.modalActions a {
+    min-height: 50px;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--line);
+    background: var(--white);
+    color: var(--ink);
+    font-size: 12px;
+    font-weight: 750;
+}
+
+.modalActions a {
+    background: var(--lime);
+}
+
+@media (max-width: 1100px) {
+    .hero { grid-template-columns: .9fr 1.1fr; }
+    .heroIntro { padding-left: 32px; padding-right: 32px; }
+    .heroTicket { grid-template-columns: 50px 1fr; grid-template-rows: auto auto 64px; }
+    .ticketIndex { grid-row: 1 / 4; }
+    .heroTicketTitle { border-right: 0; }
+    .heroRoute { grid-column: 2; padding-top: 10px; }
+    .heroTicketBottom { grid-column: 2; }
+    .filterTable { grid-template-columns: 1fr 1.8fr .75fr .75fr; }
+    .catalogGrid { grid-template-columns: repeat(3, 1fr); }
+    .catalogCard:nth-child(4n) { border-right: 1px solid var(--line); }
+    .catalogCard:nth-child(3n) { border-right: 0; }
+}
+
+@media (max-width: 760px) {
+    .header {
+        height: 62px;
+        padding: 0 16px;
+    }
+
+    .brand span { width: 21px; height: 21px; }
+    .brand strong { font-size: 23px; }
+    .utilityNav a { display: none; }
+    .utilityNav { margin-right: -16px; }
+    .utilityNav button {
+        height: 62px;
+        padding: 0 13px;
+        font-size: 11px;
+    }
+
+    .newTicker { height: 31px; }
+
+    .hero {
+        min-height: auto;
+        display: block;
+        border: 0;
+    }
+
+    .heroIntro {
+        padding: 44px 18px 38px;
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+    }
+
+    .issueLabel { margin-bottom: 18px; font-size: 8px; }
+    .heroIntro h1 { font-size: clamp(45px, 14.4vw, 60px); }
+    .heroDescription { margin: 22px 0 30px; font-size: 14px; }
+    .marketFacts span { min-height: 70px; padding: 10px 8px; }
+    .marketFacts b { font-size: 20px; }
+    .marketFacts small { font-size: 8px; }
+
+    .heroArt { min-height: 250px; padding: 34px 18px; }
+    .heroArt > p { font-size: clamp(48px, 15vw, 68px); text-shadow: 3px 3px 0 var(--white); }
+    .heroArt::before { width: 150px; height: 150px; }
+    .heroArt::after { width: 150px; height: 150px; }
+    .sunburst { font-size: 46px; }
+
+    .heroTicket {
+        min-height: 320px;
+        grid-template-columns: 42px 1fr;
+        grid-template-rows: auto auto 65px;
+    }
+
+    .ticketIndex { font-size: 18px; }
+    .heroTicketTitle { padding: 23px 18px 10px; }
+    .heroTicketTitle h2 { margin-top: 10px; font-size: 40px; }
+    .heroTicketTitle p { font-size: 11px; }
+    .heroRoute { padding: 15px 18px 22px; gap: 10px; }
+    .heroRoute > span { font-size: 19px; }
+    .heroRoute small { font-size: 9px; }
+    .heroTicketBottom { padding: 0 18px; }
+    .heroTicketBottom > span { font-size: 10px; }
+    .heroTicketBottom strong { font-size: 24px; }
+
+    .statementGrid {
+        grid-template-columns: 1fr;
+        border-left: 0;
+        border-right: 0;
+    }
+
+    .statementGrid > div {
+        min-height: 124px;
+        grid-template-columns: 36px 1fr;
+        padding: 19px 18px;
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+    }
+
+    .statementGrid b { font-size: 34px; }
+    .statementGrid p { font-size: 12px; }
+
+    .market { border-left: 0; border-right: 0; }
+    .marketTitleRow { min-height: 125px; padding: 26px 18px 22px; align-items: flex-end; }
+    .marketTitleRow h2 { font-size: 38px; }
+    .marketTitleRow p { font-size: 8px; }
+    .marketTitleRow strong { display: block; margin: 0; font-size: 24px; }
+
+    .filterTable {
+        min-height: 0;
+        grid-template-columns: 1.2fr .8fr .8fr;
+        top: 0;
+    }
+
+    .searchField,
+    .selectField { min-height: 66px; padding: 9px 11px; }
+    .searchField input,
+    .selectField select { font-size: 11px; }
+    .regionField {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        min-height: 58px;
+        padding: 8px 11px;
+        border-top: 1px solid var(--line);
+        border-right: 0;
+        order: 3;
+    }
+    .regionField button { min-height: 29px; padding: 0 9px; font-size: 11px; }
+
+    .catalogGrid { grid-template-columns: repeat(2, 1fr); }
+    .catalogCard:nth-child(3n) { border-right: 1px solid var(--line); }
+    .catalogCard:nth-child(2n) { border-right: 0; }
+    .cardPoster { min-height: 178px; padding: 14px; }
+    .cardPoster::after { width: 86px; height: 86px; }
+    .cardNumber { left: 13px; top: 11px; font-size: 9px; }
+    .posterStamp { right: 10px; top: 10px; font-size: 6px; }
+    .cardPoster h3 { margin-bottom: 5px; font-size: clamp(28px, 9vw, 38px); }
+    .cardPoster > p { max-width: 120px; font-size: 9px; }
+    .posterArrow { right: 10px; bottom: 4px; font-size: 26px; }
+    .cardInfo { min-height: 180px; grid-template-rows: 42px 1fr 56px; }
+    .cardSupplier { padding: 0 11px; gap: 6px; font-size: 9px; }
+    .cardSchedule { padding: 13px 11px; gap: 5px; }
+    .cardSchedule > span { gap: 4px; font-size: 10px; }
+    .cardSchedule small { font-size: 9px; }
+    .cardSchedule i { font-size: 7px; }
+    .cardPriceRow { padding: 0 11px; display: block; position: relative; }
+    .cardPriceRow > span { display: block; margin-bottom: 3px; font-size: 8px; }
+    .cardPriceRow > div { justify-content: space-between; }
+    .cardPriceRow small { font-size: 7px; }
+    .cardPriceRow strong { font-size: clamp(16px, 4.7vw, 21px); }
+    .loadMore { min-height: 68px; font-size: 12px; }
+
+    .closingPanel {
+        min-height: 310px;
+        padding: 40px 18px 30px;
+        display: block;
+        border-left: 0;
+        border-right: 0;
+    }
+    .closingPanel h2 { margin-bottom: 35px; font-size: 42px; }
+    .closingPanel button { width: 100%; min-height: 52px; }
+
+    .footer {
+        padding: 25px 18px;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 20px;
+    }
+    .footerBrand b { font-size: 22px; }
+    .footer p { width: 100%; order: 3; }
+    .footer > div:last-child { gap: 12px; }
+    .footer a { font-size: 8px; }
+
+    .modalBackdrop { padding: 12px; }
+    .modal {
+        max-height: calc(100vh - 24px);
+        display: block;
+        box-shadow: 6px 6px 0 var(--lime);
+    }
+    .modalPoster {
+        min-height: 190px;
+        padding: 25px 20px;
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+    }
+    .modalPoster h2 { font-size: 48px; }
+    .modalBody { padding: 26px 20px 20px; }
+    .modalSchedule { margin-top: 20px; padding: 18px 0; gap: 9px; }
+    .modalSchedule b { font-size: 13px; }
+    .modalSchedule strong { font-size: 21px; }
+    .modalPrice strong { font-size: 26px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .newTicker > div { animation: none; }
+}
