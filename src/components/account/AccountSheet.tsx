@@ -200,15 +200,15 @@ export default function AccountSheet({
 
                 {account.status === 'anonymous' && (
                     <div className={styles.loginBody}>
-                        <p className={styles.loginIntro}>찜한 표, 최근 본 표, 저장한 검색 조건을 휴대폰과 컴퓨터에서 그대로 이어볼 수 있어요.</p>
+                        <p className={styles.loginIntro}>로그인하면 찜한 표, 최근 본 표, 저장한 검색 조건을 휴대폰과 컴퓨터에서 그대로 이어볼 수 있어요.</p>
                         <div className={styles.benefits}>
                             <span>♡ 찜 동기화</span><span>↻ 최근 본 표</span><span>⌕ 검색 조건 저장</span>
                         </div>
                         {guestFavorites.length > 0 && (
                             <section className={styles.guestFavorites} aria-label="이 브라우저에 찜한 표">
                                 <div className={styles.guestFavoritesHeader}>
-                                    <strong>이 브라우저에 찜한 표</strong>
-                                    <span>{guestFavorites.length}개 · 로그인하면 다른 기기에서도 보여요</span>
+                                    <strong>이전 버전에서 찜한 표</strong>
+                                    <span>{guestFavorites.length}개 · 로그인하면 계정으로 옮겨요</span>
                                 </div>
                                 <div className={styles.guestFavoritesList}>
                                     {guestFavorites.map(snapshot => (

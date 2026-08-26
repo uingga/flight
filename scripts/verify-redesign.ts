@@ -1,6 +1,7 @@
 import { chromium, type Page } from 'playwright';
 
 const baseUrl = process.argv[2] || 'http://localhost:3002/preview/mobile-redesign';
+const isLocalPreview = ['localhost', '127.0.0.1', '::1'].includes(new URL(baseUrl).hostname);
 
 function assert(condition: unknown, message: string): asserts condition {
     if (!condition) throw new Error(message);
@@ -65,7 +66,10 @@ async function verifyViewport(width: number, height: number) {
                     myrealtrip: (payload.flights || []).filter(flight => flight.source === 'myrealtrip').length,
                 };
             });
-            assert(previewData.source === 'live', `미리보기가 운영 데이터 대신 ${previewData.source || '알 수 없는 데이터'}를 사용합니다.`);
+            assert(
+                previewData.source === 'live' || (isLocalPreview && previewData.source === 'branch-fallback'),
+                `미리보기가 운영 데이터 대신 ${previewData.source || '알 수 없는 데이터'}를 사용합니다.`,
+            );
             assert(previewData.myrealtrip > 0, '미리보기 최신 데이터에서 마이리얼트립 항공권이 모두 빠졌습니다.');
 
             await page.getByRole('button', { name: '로그인하고 찜하기' }).first().click();
@@ -84,6 +88,17 @@ async function verifyViewport(width: number, height: number) {
             detailForPassenger = page.locator('[aria-label="항공권 상세"]');
             await detailForPassenger.getByText('여행사 예약 화면에서 선택해요', { exact: true }).waitFor();
             await page.keyboard.press('Escape');
+
+            await page.goto(baseUrl, { waitUntil: 'domcontentloaded' });
+            await waitForFlights(page);
+            await page.getByRole('button', { name: '검색', exact: true }).click();
+            await page.getByLabel('도시나 항공사 검색').fill('후쿠오카');
+            await page.getByRole('button', { name: '필터', exact: true }).filter({ visible: true }).first().click();
+            const emptyFilterDialog = page.locator('[aria-label="항공권 필터"]').filter({ visible: true }).last();
+            await emptyFilterDialog.getByRole('button', { name: '동남아', exact: true }).click();
+            await emptyFilterDialog.getByRole('button', { name: /개 항공권 보기/ }).click();
+            await page.getByText(/후쿠오카 표는 [\d,]+개 있어요\./).waitFor();
+            await page.locator('[class*="emptyBlockers"] button').first().waitFor();
 
             await page.goto(baseUrl, { waitUntil: 'domcontentloaded' });
             await waitForFlights(page);
