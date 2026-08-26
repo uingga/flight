@@ -421,7 +421,7 @@
 
 .priceBlock { min-width: 0; min-height: 34px; flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; justify-content: center; text-align: right; }
 .priceLine { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
-.priceDiscountBadge { height: 18px; padding: 0 5px; display: inline-flex; align-items: center; border: 1px solid #f2c7d0; border-radius: 5px; background: var(--brand-soft); color: var(--brand-dark); font-size: 9px; line-height: 1; font-weight: var(--weight-bold); letter-spacing: -0.025em; white-space: nowrap; }
+.priceDiscountBadge { height: 18px; padding: 1px 5px 0; display: inline-flex; align-items: center; border: 1px solid #f2c7d0; border-radius: 5px; background: var(--brand-soft); color: var(--brand-dark); font-size: 10px; line-height: 1; font-weight: var(--weight-bold); letter-spacing: -0.025em; white-space: nowrap; }
 .priceBlock strong { display: block; color: var(--ink); font-size: var(--size-card); line-height: 1.25; font-weight: var(--weight-bold); letter-spacing: -0.04em; }
 .todayPickCard .priceBlock strong { color: var(--brand-dark); }
 .priceBlock strong small { margin-left: 2px; color: var(--text-secondary); font-size: .58em; font-weight: 500; letter-spacing: -0.02em; }
@@ -1213,6 +1213,7 @@
         width: 100vw;
         margin-left: calc(50% - 50vw);
         padding: 20px max(28px, calc((100vw - 1200px) / 2 + 28px)) 58px;
+        --desktop-feed: #f7f7f8;
         background: var(--desktop-feed);
     }
     .feedHeading { min-height: 44px; padding: 0 2px 15px; }
@@ -1282,8 +1283,8 @@
     .routeGrid { margin: 18px 20px 0; padding-bottom: 6px; grid-template-columns: minmax(0, 1fr) 54px minmax(0, 1fr); }
     .routeEndpoint strong { font-size: 20px; font-weight: 600; letter-spacing: -0.025em; }
     .routeTiming { margin-top: 8px; gap: 4px; }
-    .routeTiming b { color: #4b5563; font-size: 13px; font-weight: 500; }
-    .routeTiming em { color: #6b7280; font-size: 12px; font-weight: 400; }
+    .routeTiming b { color: #6b7280; font-size: 13px; font-weight: 500; }
+    .routeTiming em { color: #858b94; font-size: 12px; font-weight: 400; }
     .routeConnector { padding-top: 8px; gap: 2px; }
     .routeConnector span { color: #858b94; font-size: 12px; line-height: 1.2; transform: translateY(2px); }
     .ticketDivider { margin: 18px 17px 0; border-top-color: #e4e4e4; }
