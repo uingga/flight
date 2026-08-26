@@ -2090,7 +2090,7 @@ export default function Dashboard() {
     };
 
     // 다양성 재정렬: 첫 9개는 목적지를 겹치지 않게 하고, 이후에도 최근 두 목적지는 피한다.
-    // 9개 단위로 인천/김포 출발을 4~5개 배치하되 해당 표가 부족하면 조건을 완화한다.
+    // 9개 단위로 인천/김포 출발을 6개 배치하되 해당 표가 부족하면 조건을 완화한다.
     // 비슷한 추천 점수 안에서는 아직 노출되지 않은 목적지를 먼저 고른다.
     // 추천순에서만 적용 (가격순/날짜순/검색 시 비활성화)
     const interleaveRoutes = (
@@ -2139,11 +2139,11 @@ export default function Dashboard() {
             const positionsAfterNext = 8 - blockPosition;
             const availableIncheon = remaining.filter(departsFromIncheonArea).length;
             const canReachIncheonMinimum = incheonCount
-                + Math.min(availableIncheon, positionsAfterNext + 1) >= 4;
+                + Math.min(availableIncheon, positionsAfterNext + 1) >= 6;
             const mustChooseIncheon = balanceIncheon
                 && canReachIncheonMinimum
-                && incheonCount + positionsAfterNext < 4;
-            const desiredIncheonCount = Math.floor(((blockPosition + 1) * 4) / 9);
+                && incheonCount + positionsAfterNext < 6;
+            const desiredIncheonCount = Math.floor(((blockPosition + 1) * 6) / 9);
 
             const findCandidate = (
                 keepSpacing: boolean,
@@ -2162,7 +2162,7 @@ export default function Dashboard() {
                             && (!keepTopLimit || !insideTopWindow || (topDestinationCounts.get(destination) || 0) < maxPerDestination)
                             && (!keepFirstNineUnique || sequence.length >= 9 || (topDestinationCounts.get(destination) || 0) === 0)
                             && (!keepDepartureBalance || !mustChooseIncheon || isIncheonArea)
-                            && (!keepDepartureBalance || incheonCount < 5 || !isIncheonArea);
+                            && (!keepDepartureBalance || incheonCount < 6 || !isIncheonArea);
                     });
                 if (eligibleIndexes.length === 0) return -1;
 

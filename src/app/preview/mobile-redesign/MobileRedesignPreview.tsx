@@ -301,11 +301,11 @@ const diversifyFlights = (
         const positionsAfterNext = 8 - blockPosition;
         const availableIncheon = remaining.filter(isIncheonAreaDeparture).length;
         const canReachIncheonMinimum = incheonCount
-            + Math.min(availableIncheon, positionsAfterNext + 1) >= 4;
+            + Math.min(availableIncheon, positionsAfterNext + 1) >= 6;
         const mustChooseIncheon = balanceIncheon
             && canReachIncheonMinimum
-            && incheonCount + positionsAfterNext < 4;
-        const desiredIncheonCount = Math.floor(((blockPosition + 1) * 4) / 9);
+            && incheonCount + positionsAfterNext < 6;
+        const desiredIncheonCount = Math.floor(((blockPosition + 1) * 6) / 9);
 
         const findCandidate = (
             keepSpacing: boolean,
@@ -324,7 +324,7 @@ const diversifyFlights = (
                         && (!keepTopLimit || !protectTopMix || (topCounts.get(destination) || 0) < maxPerDestination)
                         && (!keepFirstNineUnique || sequence.length >= 9 || (topCounts.get(destination) || 0) === 0)
                         && (!keepDepartureBalance || !mustChooseIncheon || departsFromIncheonArea)
-                        && (!keepDepartureBalance || incheonCount < 5 || !departsFromIncheonArea);
+                        && (!keepDepartureBalance || incheonCount < 6 || !departsFromIncheonArea);
                 });
             if (eligibleIndexes.length === 0) return -1;
 
