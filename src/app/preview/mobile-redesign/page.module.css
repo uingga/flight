@@ -368,6 +368,8 @@
 .ttang { color: #dc2626; }
 .myrealtrip { color: #2563eb; }
 .airline { min-width: 0; height: 20px; overflow: hidden; display: inline-flex; align-items: center; color: var(--text-secondary); font-size: var(--size-meta); line-height: 1; font-weight: var(--weight-medium); text-overflow: ellipsis; white-space: nowrap; }
+.cardTopline .sourceBadge,
+.cardTopline .airline { opacity: 0.78; }
 
 .favoriteButton {
     position: absolute;
