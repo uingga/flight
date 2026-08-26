@@ -2783,8 +2783,9 @@ export default function MobileRedesignPreview({
                                 className={`${styles.desktopAdvancedFilter} ${(sourceFilter !== 'all' || airlineFilter !== 'all') ? styles.desktopAdvancedFilterActive : ''}`}
                                 onClick={() => setFilterOpen(true)}
                             >
-                                상세 조건
-                                {(sourceFilter !== 'all' || airlineFilter !== 'all') && <span aria-hidden="true" />}
+                                <Icon name="sliders" />
+                                <span className={styles.desktopAdvancedFilterLabel}>상세 조건</span>
+                                {(sourceFilter !== 'all' || airlineFilter !== 'all') && <i aria-hidden="true" />}
                             </button>
                             <button
                                 type="button"

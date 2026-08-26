@@ -1171,33 +1171,55 @@
     }
     .desktopDateCalendarWrap { width: 310px; margin: 8px 0 0; }
     .desktopFilterReset {
-        flex: 0 0 67px;
-        min-width: 67px;
+        flex: 0 0 74px;
+        min-width: 74px;
         padding: 0 12px;
         border: 0;
         border-left: 1px solid #eeeeee;
-        background: transparent;
-        color: #737373;
-        font-size: 11px;
-        font-weight: 500;
+        background: #fff7f8;
+        color: var(--brand-dark);
+        font-size: 12px;
+        font-weight: 650;
+        transition: background 150ms ease, color 150ms ease;
     }
-    .desktopFilterReset:hover:not(:disabled) { color: var(--brand-dark); }
-    .desktopFilterReset:disabled { opacity: 0.35; cursor: default; }
+    .desktopFilterReset:hover:not(:disabled) { background: var(--brand-soft); }
+    .desktopFilterReset:disabled {
+        background: #fcfcfc;
+        color: #aaaaaa;
+        font-weight: 500;
+        opacity: 1;
+        cursor: default;
+    }
     .desktopAdvancedFilter {
         position: relative;
-        flex: 0 0 82px;
-        min-width: 82px;
+        flex: 0 0 104px;
+        min-width: 104px;
         padding: 0 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
         border: 0;
         border-left: 1px solid #eeeeee;
-        background: transparent;
-        color: #666666;
-        font-size: 11px;
+        background: #fafafa;
+        color: #3f3f3f;
+        font-size: 12px;
         font-weight: 600;
+        transition: background 150ms ease, color 150ms ease;
     }
-    .desktopAdvancedFilter:hover { background: #fafafa; color: var(--ink); }
-    .desktopAdvancedFilterActive { color: var(--brand-dark); }
-    .desktopAdvancedFilter > span { position: absolute; top: 12px; right: 10px; width: 5px; height: 5px; border-radius: 50%; background: var(--brand); }
+    .desktopAdvancedFilter > svg {
+        width: 15px;
+        height: 15px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+    .desktopAdvancedFilter:hover { background: #f5f5f5; color: var(--ink); }
+    .desktopAdvancedFilterActive { background: var(--brand-soft); color: var(--brand-dark); }
+    .desktopAdvancedFilter > i { position: absolute; top: 11px; right: 9px; width: 5px; height: 5px; border-radius: 50%; background: var(--brand); }
+    .desktopAdvancedFilterLabel { white-space: nowrap; }
     .quickFilterRow {
         display: none;
         min-height: 58px;
