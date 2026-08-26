@@ -2558,7 +2558,6 @@ export default function MobileRedesignPreview({
                         <button type="button" className={styles.accountIconButton} onClick={() => { gtag.trackAccountAction('open', previewMode ? 'preview' : 'main'); setShowAccount(true); }} aria-label={account.status === 'authenticated' ? '내 여행 열기' : '로그인'}>
                             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5" /><path d="M5.5 19c.6-3.5 3-5.4 6.5-5.4s5.9 1.9 6.5 5.4" /></svg>
                             <span className={styles.accountLabel}>{account.status === 'authenticated' ? '내 여행' : '로그인'}</span>
-                            {account.status === 'authenticated' && <i className={styles.accountStatusDot} aria-hidden="true" />}
                         </button>
                     </div>
                 </header>
