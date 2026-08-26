@@ -32,6 +32,7 @@ type FlightReportStatus = 'sending' | 'sent' | 'error';
 type EmptyFilterId = 'region' | 'departure' | 'date' | 'price' | 'source' | 'airline';
 
 const RECENT_FLIGHT_REPORTS_KEY = 'tikitikit_recent_flight_reports';
+const RECENT_SEARCHES_KEY = 'tikitikit_recent_searches';
 const FLIGHT_REPORT_TTL_MS = 24 * 60 * 60 * 1000;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -631,7 +632,7 @@ const describeDropCard = (flight: Flight, averageDiscountRate = 0) => {
 
     if (seats > 0 && seats <= 4) {
         return variant([
-            '🪑 고민보다 좌석이 적음',
+            `🎟 딱 ${seats}석 남음`,
             `🚪 문 닫히기 전 ${seats}자리`,
             '👥 친구 고를 시간 없음',
         ]);
@@ -754,6 +755,8 @@ export default function MobileRedesignPreview({
     const [sortOpen, setSortOpen] = useState(false);
     const [query, setQuery] = useState('');
     const [searchOpen, setSearchOpen] = useState(false);
+    const [recentSearches, setRecentSearches] = useState<string[]>([]);
+    const [desktopSearchFocused, setDesktopSearchFocused] = useState(false);
     const [filterOpen, setFilterOpen] = useState(false);
     const [airlineMenuOpen, setAirlineMenuOpen] = useState(false);
     const [desktopFilterOpen, setDesktopFilterOpen] = useState<DesktopFilterKey | null>(null);
@@ -828,6 +831,36 @@ export default function MobileRedesignPreview({
         try {
             window.localStorage.setItem(SERVICE_UPDATE_NOTICE_KEY, 'dismissed');
         } catch { }
+    }, []);
+
+    const rememberSearch = useCallback((value: string) => {
+        const search = value.trim();
+        if (!search) return;
+        setRecentSearches(current => {
+            const normalized = search.toLocaleLowerCase('ko-KR');
+            const next = [
+                search,
+                ...current.filter(item => item.toLocaleLowerCase('ko-KR') !== normalized),
+            ].slice(0, 6);
+            try { window.localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(next)); } catch { }
+            return next;
+        });
+    }, []);
+
+    const removeRecentSearch = useCallback((value: string) => {
+        setRecentSearches(current => {
+            const next = current.filter(item => item !== value);
+            try {
+                if (next.length) window.localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(next));
+                else window.localStorage.removeItem(RECENT_SEARCHES_KEY);
+            } catch { }
+            return next;
+        });
+    }, []);
+
+    const clearRecentSearches = useCallback(() => {
+        setRecentSearches([]);
+        try { window.localStorage.removeItem(RECENT_SEARCHES_KEY); } catch { }
     }, []);
 
     const closeSelectedFlight = useCallback(() => {
@@ -943,6 +976,15 @@ export default function MobileRedesignPreview({
             setShowServiceUpdate(true);
         }
     }, [previewMode]);
+
+    useEffect(() => {
+        try {
+            const saved = JSON.parse(window.localStorage.getItem(RECENT_SEARCHES_KEY) || '[]');
+            if (Array.isArray(saved)) {
+                setRecentSearches(saved.filter((item): item is string => typeof item === 'string' && item.trim().length > 0).slice(0, 6));
+            }
+        } catch { }
+    }, []);
 
     useEffect(() => {
         const timer = window.setInterval(() => {
@@ -2395,7 +2437,74 @@ export default function MobileRedesignPreview({
                         <Logo size={0.84} />
                     </a>
                     <div className={styles.headerActions}>
-                        <button ref={searchButtonRef} type="button" className={styles.iconButton} onClick={() => setSearchOpen(value => !value)} aria-label="검색">
+                        <div
+                            className={styles.desktopSearch}
+                            role="search"
+                            onFocus={() => setDesktopSearchFocused(true)}
+                            onBlur={event => {
+                                if (event.currentTarget.contains(event.relatedTarget)) return;
+                                rememberSearch(query);
+                                setDesktopSearchFocused(false);
+                            }}
+                        >
+                            <Icon name="search" />
+                            <input
+                                value={query}
+                                onChange={event => setQuery(event.target.value)}
+                                onKeyDown={event => {
+                                    if (event.key === 'Enter') {
+                                        rememberSearch(query);
+                                        setDesktopSearchFocused(false);
+                                    }
+                                }}
+                                placeholder="도시·항공사 검색"
+                                aria-label="도시·항공사 검색"
+                                autoComplete="off"
+                                maxLength={40}
+                            />
+                            {query && (
+                                <button type="button" className={styles.desktopSearchClear} onClick={() => setQuery('')} aria-label="검색어 지우기">
+                                    <Icon name="close" />
+                                </button>
+                            )}
+                            {desktopSearchFocused && recentSearches.length > 0 && (
+                                <div className={styles.desktopRecentSearches} aria-label="최근 검색어">
+                                    <div className={styles.desktopRecentHeader}>
+                                        <strong>최근 검색</strong>
+                                        <button type="button" onClick={clearRecentSearches}>전체 삭제</button>
+                                    </div>
+                                    <div className={styles.desktopRecentList}>
+                                        {recentSearches
+                                            .filter(item => !query.trim() || item.toLocaleLowerCase('ko-KR').includes(query.trim().toLocaleLowerCase('ko-KR')))
+                                            .map(item => (
+                                                <div className={styles.desktopRecentItem} key={item}>
+                                                    <button
+                                                        type="button"
+                                                        className={styles.desktopRecentTerm}
+                                                        onClick={() => {
+                                                            setQuery(item);
+                                                            rememberSearch(item);
+                                                            setDesktopSearchFocused(false);
+                                                        }}
+                                                    >
+                                                        <Icon name="search" />
+                                                        <span>{item}</span>
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        className={styles.desktopRecentRemove}
+                                                        onClick={() => removeRecentSearch(item)}
+                                                        aria-label={`${item} 검색 기록 삭제`}
+                                                    >
+                                                        <Icon name="close" />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                        <button ref={searchButtonRef} type="button" className={`${styles.iconButton} ${styles.mobileSearchButton}`} onClick={() => setSearchOpen(value => !value)} aria-label="검색">
                             <Icon name="search" />
                         </button>
                         <button type="button" className={styles.alertButton} onClick={() => openDealAlert(null)}>특가 알림</button>

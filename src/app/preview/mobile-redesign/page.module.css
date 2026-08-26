@@ -80,6 +80,7 @@
 .logoLink:hover { color: inherit; }
 
 .headerActions { display: flex; align-items: center; gap: 8px; }
+.desktopSearch { display: none; }
 .iconButton,
 .alertButton,
 .accountIconButton {
@@ -884,6 +885,109 @@
         background: #e8e8e8;
     }
     .headerActions { gap: 10px; }
+    .desktopSearch {
+        position: relative;
+        width: clamp(240px, 25vw, 320px);
+        height: 40px;
+        padding: 0 11px 0 13px;
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        border: 1px solid #e1e1e1;
+        border-radius: 999px;
+        background: #fafafa;
+        transition: border-color 150ms ease, background 150ms ease;
+    }
+    .desktopSearch:focus-within { border-color: #bdbdbd; background: #ffffff; }
+    .desktopSearch > svg {
+        width: 17px;
+        height: 17px;
+        flex: 0 0 auto;
+        fill: none;
+        stroke: #777777;
+        stroke-width: 1.8;
+    }
+    .desktopSearch input {
+        min-width: 0;
+        flex: 1;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        color: var(--ink);
+        font-size: var(--size-meta);
+        font-weight: var(--weight-medium);
+    }
+    .desktopSearch input::placeholder { color: #8b8b8b; opacity: 1; }
+    .desktopSearchClear {
+        width: 24px;
+        height: 24px;
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        color: #777777;
+    }
+    .desktopSearchClear:hover { background: #eeeeee; color: var(--ink); }
+    .desktopSearchClear svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.9; }
+    .desktopRecentSearches {
+        position: absolute;
+        z-index: 70;
+        top: calc(100% + 8px);
+        right: 0;
+        left: 0;
+        padding: 9px;
+        border: 1px solid #dfdfdf;
+        border-radius: 12px;
+        background: #ffffff;
+        box-shadow: 0 14px 34px rgba(34, 34, 34, 0.13);
+    }
+    .desktopRecentHeader {
+        min-height: 30px;
+        padding: 0 5px 5px 7px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .desktopRecentHeader strong { color: #555555; font-size: 11px; font-weight: 600; }
+    .desktopRecentHeader button { padding: 5px; color: #888888; font-size: 11px; font-weight: 500; }
+    .desktopRecentHeader button:hover { color: var(--brand-dark); }
+    .desktopRecentList { display: grid; gap: 2px; }
+    .desktopRecentItem {
+        min-width: 0;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        border-radius: 8px;
+    }
+    .desktopRecentItem:hover { background: #f7f7f7; }
+    .desktopRecentTerm {
+        min-width: 0;
+        height: 100%;
+        padding: 0 6px;
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #333333;
+        text-align: left;
+    }
+    .desktopRecentTerm svg { width: 14px; height: 14px; flex: 0 0 auto; fill: none; stroke: #999999; stroke-width: 1.8; }
+    .desktopRecentTerm span { overflow: hidden; font-size: 12px; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
+    .desktopRecentRemove {
+        width: 28px;
+        height: 28px;
+        margin-right: 2px;
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        color: #aaaaaa;
+    }
+    .desktopRecentRemove:hover { background: #eaeaea; color: #555555; }
+    .desktopRecentRemove svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.9; }
+    .mobileSearchButton { display: none; }
     .iconButton { width: 40px; height: 40px; }
     .accountIconButton { height: 40px; padding: 0 13px; }
     .alertButton { height: 40px; padding: 0 17px; }
@@ -919,14 +1023,7 @@
     .desktopDropTicker .dropTickerContent { gap: 22px; }
     .desktopDropTicker .dropTickerContent span::after { margin-left: 22px; }
     .searchRow {
-        position: relative;
-        z-index: 1;
-        top: auto;
-        left: auto;
-        width: 100%;
-        height: 58px;
-        padding: 9px 28px;
-        transform: none;
+        display: none;
     }
 
     .feedIntro { padding: 32px 28px 22px; }
