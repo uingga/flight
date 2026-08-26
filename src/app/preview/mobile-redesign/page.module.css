@@ -1142,11 +1142,8 @@
         transform: translateY(-1px);
     }
     .todayPickCard {
-        --ticket-border: #e9a5b4;
-        --ticket-border-width: 2px;
-        --ticket-notch-offset: 19px;
-        border-width: var(--ticket-border-width);
-        border-color: #e9a5b4;
+        --ticket-border: var(--brand);
+        border-color: var(--brand);
         background: var(--paper);
         box-shadow: none;
     }
@@ -1173,7 +1170,7 @@
         writing-mode: vertical-rl;
         transform: rotate(180deg);
     }
-    .todayPickCard:hover { border-color: #df8fa1; box-shadow: none; }
+    .todayPickCard:hover { --ticket-border: var(--brand-dark); border-color: var(--brand-dark); box-shadow: none; }
     .ticketDivider::before,
     .ticketDivider::after { background: var(--desktop-feed); }
     .todayPickStrip { display: none; }
