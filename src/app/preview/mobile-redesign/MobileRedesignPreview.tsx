@@ -2893,7 +2893,7 @@ export default function MobileRedesignPreview({
                                                                     className={styles.priceDiscountBadge}
                                                                     aria-label={`평균가보다 ${averageDiscountRate}% 낮은 가격`}
                                                                 >
-                                                                    평균가 -{averageDiscountRate}%
+                                                                    -{averageDiscountRate}%
                                                                 </span>
                                                             )}
                                                             <strong>
