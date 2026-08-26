@@ -14,6 +14,8 @@
     "crawl:onlinetour": "tsx scripts/crawl-onlinetour.ts",
     "crawl:all": "tsx scripts/crawl-all.ts",
     "test:ybtour-schedule": "tsx scripts/test-ybtour-schedule.ts",
+    "test:scraper-contracts": "tsx scripts/test-scraper-response-contracts.ts",
+    "verify:scraper-sources": "tsx scripts/verify-source-scrapers.ts",
     "scrape:myrealtrip": "tsx scripts/scrape-myrealtrip-prices.ts",
     "send:alerts": "tsx scripts/send-alerts.ts",
     "archive:prices": "tsx scripts/archive-flight-prices.ts",

@@ -1,399 +1,309 @@
-
-import { chromium } from 'playwright';
 import { Flight } from '@/types/flight';
 import { getRegionByCity } from '@/lib/utils/region-mapper';
 import { ScrapeCompleteness } from './scrape-errors';
-// logCrawlResults moved to crawl-all.ts
+import {
+    describeSourceError,
+    fetchSourceText,
+    OnlineTourCitySeed,
+    parseOnlineTourCities,
+    parseOnlineTourJsonp,
+    SourceResponseError,
+} from './source-response';
 
-const randomDelay = (min: number, max: number) =>
-    new Promise(r => setTimeout(r, (Math.random() * (max - min) + min) * 1000));
+const LIST_PAGE_URL = 'https://www.onlinetour.co.kr/flight/w/international/dcair/dcairList';
+const LIST_API_URL = 'https://api.onlinetour.co.kr/v2/flight/international/dcair/list';
+const PAGE_SIZE = 200;
+const MAX_PAGES = 20;
+const REQUEST_HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
+    Referer: LIST_PAGE_URL,
+};
 
-// 탭 이름과 우리가 항공권에 붙이는 지역 이름이 다르다. 온라인투어는 '아시아'라고 부르는데
-// getRegionByCity는 '동남아'를 돌려준다. 예전에는 탭 이름을 그대로 대조해서, 가장 큰
-// 아시아 탭이 실패해도 '원래 항공권이 없던 지역'으로 판정되어 늘 조용히 넘어갔다.
-// (2026-08-20 온라인투어 81건 → 13건 사고가 정확히 이 구멍이다.)
-//
-// 괌/사이판은 우리 분류상 남태평양에 묶이므로 공항 코드로 따로 가른다.
-const REGIONS = [
+interface RegionDefinition {
+    code: string;
+    name: string;
+    regions: string[];
+    excludeAirports?: string[];
+    airports?: string[];
+}
+
+// 탭 이름과 우리가 항공권에 붙이는 지역 이름이 다르므로 지역 이름과 공항 코드를 함께 본다.
+const REGIONS: RegionDefinition[] = [
     { code: 'AS', name: '아시아', regions: ['동남아', '기타'] },
     { code: 'JA', name: '일본', regions: ['일본'] },
     { code: 'CH', name: '중국', regions: ['중국'] },
     { code: 'EU', name: '유럽', regions: ['유럽'] },
     { code: 'HN', name: '남태평양', regions: ['남태평양'], excludeAirports: ['GUM', 'SPN'] },
     { code: 'US', name: '미주', regions: ['미주'] },
-    { code: 'GS', name: '괌/사이판', regions: [] as string[], airports: ['GUM', 'SPN'] },
+    { code: 'GS', name: '괌/사이판', regions: [], airports: ['GUM', 'SPN'] },
 ];
 
-/** 이 항공권이 그 탭에서 나온 것인지 가린다. 지역 이름과 공항 코드를 함께 본다. */
-function belongsToRegion(flight: any, region: typeof REGIONS[number]): boolean {
+function belongsToRegion(flight: any, region: RegionDefinition): boolean {
     const airport = flight?.arrival?.airport || '';
-    if ((region as any).airports) return (region as any).airports.includes(airport);
-    if ((region as any).excludeAirports?.includes(airport)) return false;
+    if (region.airports) return region.airports.includes(airport);
+    if (region.excludeAirports?.includes(airport)) return false;
     const named = flight?.region || getRegionByCity(flight?.arrival?.city || '');
     return region.regions.includes(named);
 }
 
-export async function scrapeOnlineTour(prevFlights: any[] = []): Promise<Flight[]> {
-    console.log('온라인투어 크롤링 시작...');
-    const browser = await chromium.launch({ headless: true });
-    const flights: Flight[] = [];
-    // 지역 페이지·도시 목록이 조용히 실패하면 결과가 반쪽이 된다
-    // (2026-08-20 오후: 81건→13건, 13개 도시→6개). 실패 구간을 모아 끝에서 판정한다.
-    const completeness = new ScrapeCompleteness('온라인투어', 'onlinetour', prevFlights);
+function formatDate(raw: unknown, referenceDate?: string): string {
+    const value = String(raw || '').trim();
+    const compact = value.match(/^(\d{4})(\d{2})(\d{2})$/);
+    if (compact) return `${compact[1]}-${compact[2]}-${compact[3]}`;
 
-    try {
-        const context = await browser.newContext({
-            userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            extraHTTPHeaders: {
-                'Referer': 'https://www.google.com/',
-                'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
+    const monthDay = value.match(/^(\d{2})-(\d{2})/);
+    const reference = referenceDate?.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!monthDay || !reference) return '';
+
+    const month = Number(monthDay[1]);
+    const referenceMonth = Number(reference[2]);
+    const year = Number(reference[1]) + (month < referenceMonth ? 1 : 0);
+    return `${year}-${monthDay[1]}-${monthDay[2]}`;
+}
+
+function formatTime(raw: unknown): string {
+    const digits = String(raw || '').replace(/\D/g, '');
+    if (digits.length < 3) return '';
+    const padded = digits.padStart(4, '0').slice(0, 4);
+    return `${padded.slice(0, 2)}:${padded.slice(2, 4)}`;
+}
+
+function textField(item: Record<string, unknown>, key: string): string {
+    return String(item[key] || '').trim();
+}
+
+function numberField(item: Record<string, unknown>, key: string): number {
+    const value = Number(item[key]);
+    return Number.isFinite(value) ? value : 0;
+}
+
+function mapOnlineTourFlight(item: Record<string, unknown>, city: OnlineTourCitySeed): Flight | null {
+    const eventCode = textField(item, 'event_code');
+    const departureDate = formatDate(item.dep_start_date);
+    const returnDate = formatDate(item.arr_start_date, departureDate);
+    const price = numberField(item, 'adult_price') - numberField(item, 'adult_fee_price');
+    const departureAirport = textField(item, 'start_city_code');
+    const actualOutboundArrival = textField(item, 'start_city_code2');
+    const actualOutboundArrivalCity = textField(item, 'start_city_code_name2');
+    const actualReturnDeparture = textField(item, 'end_city_code');
+    const actualReturnArrival = textField(item, 'end_city_code2');
+
+    if (!eventCode || !departureDate || !returnDate || !departureAirport || price <= 0) return null;
+    if (departureDate === returnDate) return null;
+
+    const seats = numberField(item, 'res_cnt');
+    const depCodeForSearch = departureAirport === 'GMP' || departureAirport === 'ICN'
+        ? 'SEL'
+        : departureAirport;
+    const startDt = departureDate.replace(/-/g, '');
+    const endDt = returnDate.replace(/-/g, '');
+    const arrivalCity = actualOutboundArrivalCity && actualOutboundArrivalCity !== textField(item, 'start_city_code_name')
+        ? actualOutboundArrivalCity
+        : city.name;
+    const searchLink = `https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=${depCodeForSearch}&eCity1=${city.code}&sCity2=${city.code}&eCity2=${depCodeForSearch}&startDt=${startDt}&endDt=${endDt}&adt=1`;
+
+    return {
+        id: `online-${eventCode}`,
+        source: 'onlinetour',
+        airline: textField(item, 'transport_detail_name') || textField(item, 'dep_pyun_name') || '알 수 없음',
+        departure: {
+            city: textField(item, 'start_city_code_name') || (departureAirport === 'PUS' ? '부산' : departureAirport === 'GMP' ? '김포' : '인천'),
+            airport: departureAirport,
+            date: departureDate,
+            time: formatTime(item.dep_start_time),
+            arrivalTime: formatTime(item.dep_end_time),
+        },
+        arrival: {
+            city: arrivalCity,
+            // 기존 필터·노선 키와의 호환을 위해 여행지 코드를 유지하고 실제 공항은 routeAirports에 보관한다.
+            airport: city.code,
+            date: returnDate,
+            time: formatTime(item.arr_start_time),
+            arrivalTime: formatTime(item.arr_end_time),
+        },
+        price,
+        currency: 'KRW',
+        link: `https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=${eventCode}`,
+        searchLink,
+        region: getRegionByCity(arrivalCity),
+        ...(seats > 0 ? { availableSeats: seats, seats: `${seats}석` } : {}),
+        ...(actualOutboundArrival && actualReturnDeparture && actualReturnArrival ? {
+            routeAirports: {
+                outboundDeparture: departureAirport,
+                outboundArrival: actualOutboundArrival,
+                returnDeparture: actualReturnDeparture,
+                returnArrival: actualReturnArrival,
             },
-        });
-        const page = await context.newPage();
-        await page.addInitScript(() => {
-            Object.defineProperty(navigator, 'webdriver', { get: () => false });
-        });
+        } : {}),
+    };
+}
 
-        page.on('console', msg => console.log(`[BROWSER] ${msg.text()}`));
+async function fetchRegionCities(region: RegionDefinition): Promise<OnlineTourCitySeed[]> {
+    const url = new URL(LIST_PAGE_URL);
+    url.searchParams.set('TabGubun', region.code);
+    const response = await fetchSourceText(
+        `온라인투어 ${region.name} 지역`,
+        url,
+        { headers: REQUEST_HEADERS },
+        20_000,
+    );
+    if (!response.contentType.toLowerCase().includes('text/html')) {
+        throw new SourceResponseError(
+            'unexpected-content',
+            `온라인투어 ${region.name} 지역 응답 형식이 HTML이 아닙니다: ${response.contentType || '없음'}`,
+            response.status,
+            response.contentType,
+        );
+    }
+    return parseOnlineTourCities(response.text);
+}
 
-        // 1. Visit Main List Page to get initialized
-        await page.goto('https://www.onlinetour.co.kr/flight/w/international/dcair/dcairList', { timeout: 30000 });
+async function fetchCityRows(region: RegionDefinition, city: OnlineTourCitySeed): Promise<Record<string, unknown>[]> {
+    const rows: Record<string, unknown>[] = [];
+    const eventStartMonth = city.firstDepartureDate.slice(0, 6);
 
-        // 2. Iterate Regions
-        for (const region of REGIONS) {
-            console.log(`\n=== ${region.name} (${region.code}) 크롤링 ===`);
+    for (let pageNo = 1; pageNo <= MAX_PAGES; pageNo++) {
+        const callback = `tikitikitDcair${region.code}${city.code}${pageNo}`;
+        const url = new URL(LIST_API_URL);
+        const params: Record<string, string> = {
+            apiKey: '',
+            transportStartCity: '',
+            transportEndCity: city.code,
+            eventStartMonth,
+            eventStartDate: '',
+            areaCode: region.code,
+            order: 'LP',
+            pageNo: String(pageNo),
+            pageSize: String(PAGE_SIZE),
+            pageYn: 'Y',
+            depPyunStr: '',
+            statusStr: '',
+            callback,
+        };
+        Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, value));
 
-            try {
-                // Navigate to Region
-                // airSect 파라미터 제거 - 페이지가 도시별로 적절한 출발 공항을 자동 선택하도록 함
-                await page.goto(`https://www.onlinetour.co.kr/flight/w/international/dcair/dcairList?TabGubun=${region.code}`, { timeout: 30000 });
-
-                // 도시 목록이 로드될 때까지 대기
-                await randomDelay(2, 4);
-                try {
-                    await page.waitForSelector('input[name="city"]', { timeout: 5000 });
-                } catch (e) {
-                    completeness.recordFailure(
-                        `${region.name} 지역 도시 목록`,
-                        f => belongsToRegion(f, region),
-                    );
-                    continue;
-                }
-
-                // Get Cities in this Region
-                const cities = await page.evaluate(() => {
-                    const params: { code: string, name: string }[] = [];
-                    // 더 유연한 셀렉터 사용
-                    document.querySelectorAll('input[name="city"]').forEach(el => {
-                        const code = el.getAttribute('onclick')?.match(/goSelectedCity\('([^']+)'/)?.[1];
-                        const name = el.nextElementSibling?.textContent?.trim() ||
-                            el.closest('label')?.querySelector('em')?.textContent?.trim();
-                        if (code && name) {
-                            params.push({ code, name });
-                        }
-                    });
-                    return params;
-                });
-
-                console.log(`발견된 도시: ${cities.length}개 - ${cities.map(c => c.name).join(', ')}`);
-
-                // 3. Iterate Cities
-                for (const city of cities) {
-                    console.log(`  - ${city.name} (${city.code}) 검색 중...`);
-
-                    try {
-                        // airSect 파라미터 제거 - 하네다 등 김포출발 전용 노선도 수집 가능
-                        const cityUrl = `https://www.onlinetour.co.kr/flight/w/international/dcair/dcairList?TabGubun=${region.code}&SelectedCityCd=${city.code}`;
-                        await page.goto(cityUrl, { timeout: 30000 });
-
-                        // Explicit wait for data loading (AJAX) - 증가된 대기 시간
-                        await randomDelay(3, 5);
-
-                        // Wait for list with retry logic
-                        let listLoaded = false;
-                        for (let retry = 0; retry < 3; retry++) {
-                            try {
-                                // Check #data_list first
-                                await page.waitForSelector('#data_list', { timeout: 5000 });
-
-                                // Check content
-                                const listHtml = await page.$eval('#data_list', el => el.innerHTML);
-                                if (listHtml.trim().length < 10) {
-                                    console.log(`    ${city.name}: #data_list 비어있음, 재시도 ${retry + 1}/3`);
-                                    await page.waitForTimeout(2000);
-                                    continue;
-                                }
-
-                                await page.waitForSelector('#data_list > li.item', { timeout: 5000 });
-                                listLoaded = true;
-                                break;
-                            } catch (e) {
-                                console.log(`    ${city.name}: 목록 로드 시도 ${retry + 1}/3 실패`);
-                                await page.waitForTimeout(2000);
-                            }
-                        }
-
-                        if (!listLoaded) {
-                            await page.screenshot({ path: `debug_onlinetour_fail_${city.code}.png` }).catch(() => { });
-                            completeness.recordFailure(
-                                `${city.name}(${city.code}) 목록`,
-                                f => f.arrival?.airport === city.code,
-                            );
-                            continue;
-                        }
-
-                        // Load more if button exists (optional, limit for speed)
-                        /*
-                        try {
-                            const moreBtn = await page.$('#btn_more');
-                            if (moreBtn && await moreBtn.isVisible()) {
-                                await moreBtn.click();
-                                await randomDelay(1, 3);
-                            }
-                        } catch(e) {} 
-                        */
-
-                        // 현재 페이지의 출발 공항 확인 (인천출발/김포출발/부산출발)
-                        const departureAirportInfo = await page.evaluate(() => {
-                            // 방법 1: 선택된 라디오 버튼의 value 확인 (가장 정확함)
-                            const checkedInput = document.querySelector('input[name="airsect"]:checked') as HTMLInputElement;
-                            if (checkedInput) {
-                                const airportCode = checkedInput.value; // GMP, ICN, PUS
-                                const label = checkedInput.closest('label')?.querySelector('em')?.textContent?.trim() || '';
-                                const cityName = label.replace('출발', '').trim(); // "김포출발" -> "김포"
-                                return { airport: airportCode, city: cityName || (airportCode === 'GMP' ? '김포' : airportCode === 'PUS' ? '부산' : '인천') };
-                            }
-
-                            // 방법 2: 활성화된 버튼 텍스트로 추론 (fallback)
-                            const activeLabel = document.querySelector('label.choice_type3 input:checked + em, .btn_sect.on');
-                            const labelText = activeLabel?.textContent?.trim() || '';
-
-                            if (labelText.includes('김포')) return { airport: 'GMP', city: '김포' };
-                            if (labelText.includes('부산')) return { airport: 'PUS', city: '부산' };
-                            return { airport: 'ICN', city: '인천' };
-                        });
-
-                        console.log(`    출발공항: ${departureAirportInfo.city} (${departureAirportInfo.airport})`);
-
-                        // Extract Data
-                        const items = await page.evaluate((args) => {
-                            const { regionName, cityName, cityCode, depAirport, depCity, crawlYear, crawlMonth } = args as { regionName: string, cityName: string, cityCode: string, depAirport: string, depCity: string, crawlYear: number, crawlMonth: number };
-
-                            const results: any[] = [];
-                            const listItems = document.querySelectorAll('#data_list > li.item');
-
-                            if (listItems.length > 0) {
-                            }
-
-                            listItems.forEach((item, idx) => {
-                                try {
-                                    const airline = item.querySelector('.cell1 em')?.textContent?.trim() || '';
-
-                                    // Path: ICN -> ARR -> ICN (Round Trip)
-                                    // Row 1: Outbound, Row 2: Inbound
-                                    const rows = item.querySelectorAll('.cell2 dl.path dd');
-                                    if (rows.length < 2) {
-                                        return;
-                                    }
-
-                                    const outboundRow = rows[0];
-                                    const inboundRow = rows[1];
-
-                                    // 페이지에서 추출한 도시명 (참고용)
-                                    // :first-child/:last-child는 .city 뒤에 다른 요소가 붙는 레이아웃에서
-                                    // 출발지를 도착지로 잘못 집어내므로 인덱스로 직접 고른다.
-                                    const outboundCities = outboundRow.querySelectorAll('.city');
-                                    const pageDepCity = outboundCities[0]?.querySelector('em')?.textContent?.trim() || depCity;
-                                    const pageArrCity = outboundCities.length > 1
-                                        ? outboundCities[outboundCities.length - 1]?.querySelector('em')?.textContent?.trim()
-                                        : '';
-                                    // 도착지가 출발지와 같거나 비어 있으면 탭에서 선택한 도시명을 신뢰한다.
-                                    const arrCity = (pageArrCity && pageArrCity !== pageDepCity) ? pageArrCity : cityName;
-
-                                    // Inline all datetimes to avoid ReferenceError with helpers
-                                    const t1 = outboundRow.querySelectorAll('.city')[0]?.querySelector('time')?.textContent || '';
-                                    const md1 = t1.match(/(\d{2}-\d{2})/)?.[1] || '';
-                                    const month1 = Number(md1.slice(0, 2));
-                                    const d1 = {
-                                        d: md1 && month1 ? `${month1 < crawlMonth ? crawlYear + 1 : crawlYear}-${md1}` : '',
-                                        t: t1.match(/(\d{2}:\d{2})/)?.[1] || ''
-                                    };
-
-                                    const t2 = outboundRow.querySelectorAll('.city')[1]?.querySelector('time')?.textContent || '';
-                                    const md2 = t2.match(/(\d{2}-\d{2})/)?.[1] || '';
-                                    const month2 = Number(md2.slice(0, 2));
-                                    const d2 = {
-                                        d: md2 && month2 ? `${month2 < crawlMonth ? crawlYear + 1 : crawlYear}-${md2}` : '',
-                                        t: t2.match(/(\d{2}:\d{2})/)?.[1] || ''
-                                    };
-
-                                    const outDep = { date: d1.d, time: d1.t };
-                                    const outArr = { date: d2.d, time: d2.t };
-
-                                    const t3 = inboundRow.querySelectorAll('.city')[0]?.querySelector('time')?.textContent || '';
-                                    const md3 = t3.match(/(\d{2}-\d{2})/)?.[1] || '';
-                                    const month3 = Number(md3.slice(0, 2));
-                                    const d3 = {
-                                        d: md3 && month3 ? `${month3 < crawlMonth ? crawlYear + 1 : crawlYear}-${md3}` : '',
-                                        t: t3.match(/(\d{2}:\d{2})/)?.[1] || ''
-                                    };
-
-                                    const t4 = inboundRow.querySelectorAll('.city')[1]?.querySelector('time')?.textContent || '';
-                                    const md4 = t4.match(/(\d{2}-\d{2})/)?.[1] || '';
-                                    const month4 = Number(md4.slice(0, 2));
-                                    const d4 = {
-                                        d: md4 && month4 ? `${month4 < crawlMonth ? crawlYear + 1 : crawlYear}-${md4}` : '',
-                                        t: t4.match(/(\d{2}:\d{2})/)?.[1] || ''
-                                    };
-
-                                    const inDep = { date: d3.d, time: d3.t };
-                                    const inArr = { date: d4.d, time: d4.t };
-
-                                    const priceStr = item.querySelector('.cell5 .txt_data strong')?.textContent?.replace(/,/g, '') || '0';
-                                    const price = parseInt(priceStr);
-
-                                    const seats = item.querySelector('.cell6 b')?.textContent?.trim() || '';
-
-                                    // Link
-                                    const reserveBtn = item.querySelector('a.btn_type5.popupLogin');
-                                    const onclick = reserveBtn?.getAttribute('onclick') || '';
-                                    const eventCode = onclick.match(/go_reserve\('([^']+)'\)/)?.[1];
-
-                                    let link = '';
-                                    if (eventCode) {
-                                        link = `https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=${eventCode}`;
-                                    } else {
-                                        link = 'https://www.onlinetour.co.kr/flight/w/international/dcair/dcairList';
-                                    }
-
-                                    if (price > 0 && eventCode && outDep.date && inDep.date) {
-                                        results.push({
-                                            id: `online-${eventCode}`,
-                                            source: 'onlinetour',
-                                            airline,
-                                            departure: {
-                                                city: depCity,
-                                                airport: depAirport,
-                                                date: outDep.date,
-                                                time: outDep.time,
-                                                arrivalTime: outArr.time
-                                            },
-                                            arrival: {
-                                                city: arrCity,
-                                                airport: cityCode || '',
-                                                date: inDep.date,
-                                                time: inDep.time,
-                                                arrivalTime: inArr.time
-                                            },
-                                            price,
-                                            currency: 'KRW',
-                                            link,
-                                            seats
-                                        });
-                                    } else {
-                                        // console.log(`[SKIP] Price: ${price}, EventCode: ${eventCode}`);
-                                    }
-                                } catch (e) {
-                                    // console.log(`[ERROR] Item ${idx}: ${e}`);
-                                }
-                            });
-                            return results;
-                        }, {
-                            regionName: region.name, cityName: city.name, cityCode: city.code,
-                            depAirport: departureAirportInfo.airport, depCity: departureAirportInfo.city,
-                            crawlYear: new Date().getFullYear(), crawlMonth: new Date().getMonth() + 1,
-                        });
-
-                        console.log(`    ${city.name}: ${Array.isArray(items) ? items.length : 0}건 수집`);
-                        if (Array.isArray(items)) {
-                            const processed = items.map((f: any) => {
-                                // 검색 링크 생성 (eventCode 만료 시 폴백용)
-                                const depCode = (departureAirportInfo.airport === 'GMP' || departureAirportInfo.airport === 'ICN') ? 'SEL' : departureAirportInfo.airport;
-                                const arrCode = city.code;
-                                const startDt = (f.departure?.date || '').replace(/[-\.]/g, '').slice(0, 8);
-                                const endDt = (f.arrival?.date || '').replace(/[-\.]/g, '').slice(0, 8);
-                                let searchLink = 'https://www.onlinetour.co.kr/flight/w/international/dcair/dcairList';
-                                if (startDt.length === 8 && endDt.length === 8 && arrCode) {
-                                    searchLink = `https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=${depCode}&eCity1=${arrCode}&sCity2=${arrCode}&eCity2=${depCode}&startDt=${startDt}&endDt=${endDt}&adt=1`;
-                                }
-                                return {
-                                    ...f,
-                                    searchLink,
-                                    region: getRegionByCity(city.name)
-                                };
-                            });
-                            flights.push(...processed);
-                        }
-
-                        // [DEBUG] Break after one successful city for testing
-                        /*
-                        if (items.length > 0) {
-                            console.log('    [DEBUG] 첫 도시 성공, 테스트 종료');
-                            // return flights; // Uncomment to stop early
-                        }
-                        */
-
-                    } catch (e) {
-                        console.error(`    ${city.name} 오류:`, e);
-                    }
-                }
-
-            } catch (e) {
-                console.error(`  ${region.name} 탭 오류:`, e);
-            }
+        const response = await fetchSourceText(
+            `온라인투어 ${city.name} 목록 ${pageNo}페이지`,
+            url,
+            { headers: REQUEST_HEADERS },
+            20_000,
+        );
+        if (!/javascript|json|text\/plain/i.test(response.contentType)) {
+            throw new SourceResponseError(
+                'unexpected-content',
+                `온라인투어 ${city.name} 목록 응답 형식이 JSONP가 아닙니다: ${response.contentType || '없음'}`,
+                response.status,
+                response.contentType,
+            );
         }
 
-    } catch (e) {
-        console.error('온라인투어 오류:', e);
-    } finally {
-        await browser.close();
+        const payload = parseOnlineTourJsonp(response.text, callback);
+        rows.push(...payload.data.list);
+
+        const lastPage = Number(payload.data.paging?.totalLastPage || 1);
+        if (lastPage > MAX_PAGES) {
+            throw new SourceResponseError(
+                'schema-mismatch',
+                `온라인투어 ${city.name} 페이지 수 ${lastPage}가 안전 한도 ${MAX_PAGES}를 넘었습니다.`,
+            );
+        }
+        if (pageNo >= lastPage || payload.data.list.length === 0) return rows;
+    }
+
+    throw new SourceResponseError('schema-mismatch', `온라인투어 ${city.name} 페이지 순회가 끝나지 않았습니다.`);
+}
+
+export async function scrapeOnlineTour(prevFlights: any[] = []): Promise<Flight[]> {
+    console.log('온라인투어 크롤링 시작...');
+    const flights: Flight[] = [];
+    const processedIds = new Set<string>();
+    const completeness = new ScrapeCompleteness('온라인투어', 'onlinetour', prevFlights);
+
+    for (const region of REGIONS) {
+        console.log(`\n=== ${region.name} (${region.code}) 직접 수집 ===`);
+
+        let cities: OnlineTourCitySeed[];
+        try {
+            cities = await fetchRegionCities(region);
+        } catch (error) {
+            console.error(`  ${region.name} 지역 실패: ${describeSourceError(error)}`);
+            completeness.recordFailure(
+                `${region.name} 지역 도시 목록`,
+                flight => belongsToRegion(flight, region),
+            );
+            continue;
+        }
+
+        console.log(`발견된 도시: ${cities.length}개 - ${cities.map(city => city.name).join(', ')}`);
+        if (cities.length === 0) {
+            completeness.recordFailure(
+                `${region.name} 지역 도시 목록 0건`,
+                flight => belongsToRegion(flight, region),
+            );
+            continue;
+        }
+
+        for (const city of cities) {
+            try {
+                const rows = await fetchCityRows(region, city);
+                let cityCount = 0;
+                let invalidRows = 0;
+
+                for (const row of rows) {
+                    const flight = mapOnlineTourFlight(row, city);
+                    if (!flight) {
+                        invalidRows++;
+                        continue;
+                    }
+                    if (processedIds.has(flight.id)) continue;
+                    processedIds.add(flight.id);
+                    flights.push(flight);
+                    cityCount++;
+                }
+
+                if (rows.length > 0 && cityCount === 0) {
+                    throw new SourceResponseError(
+                        'schema-mismatch',
+                        `온라인투어 ${city.name} 응답 ${rows.length}건을 항공권으로 변환하지 못했습니다.`,
+                    );
+                }
+                if (invalidRows > 0) console.warn(`    ${city.name}: 필수값이 없는 ${invalidRows}건 제외`);
+                console.log(`    ${city.name}: ${cityCount}건 수집 (원본 ${rows.length}건)`);
+            } catch (error) {
+                console.error(`    ${city.name}(${city.code}) 실패: ${describeSourceError(error)}`);
+                completeness.recordFailure(
+                    `${city.name}(${city.code}) 목록`,
+                    flight => flight.arrival?.airport === city.code,
+                );
+            }
+        }
     }
 
     console.log(`온라인투어 완료: 총 ${flights.length}건`);
     completeness.assertComplete(flights.length);
 
-    // 지역별 수집 결과 검증
     const regionCounts: Record<string, number> = {};
-    flights.forEach(f => {
-        const region = f.region || '기타';
+    flights.forEach(flight => {
+        const region = flight.region || '기타';
         regionCounts[region] = (regionCounts[region] || 0) + 1;
     });
 
-    // 주요 지역 (0건이면 경고)
-    const criticalRegions = ['동남아', '일본'];
-    // 그 외 지역 (0건이면 정보 로그)
-    const optionalRegions = ['중국', '유럽', '남태평양', '미주', '괌/사이판', '기타'];
-
     console.log('\n📊 지역별 수집 결과:');
-    criticalRegions.forEach(region => {
+    for (const region of ['동남아', '일본']) {
         const count = regionCounts[region] || 0;
-        if (count === 0) {
-            console.warn(`  ⚠️ 경고: ${region} - 0건 (스크래퍼 점검 필요)`);
-        } else {
-            console.log(`  ✅ ${region}: ${count}건`);
-        }
-    });
-
-    optionalRegions.forEach(region => {
+        if (count === 0) console.warn(`  ⚠️ 경고: ${region} - 0건 (스크래퍼 점검 필요)`);
+        else console.log(`  ✅ ${region}: ${count}건`);
+    }
+    for (const region of ['중국', '유럽', '남태평양', '미주', '괌/사이판', '기타']) {
         const count = regionCounts[region] || 0;
-        if (count === 0) {
-            console.log(`  ℹ️ ${region}: 0건 (특가 없음 또는 미지원)`);
-        } else {
-            console.log(`  ✅ ${region}: ${count}건`);
-        }
-    });
-
-    // 김포출발(GMP) 항공편 확인
-    const gmpFlights = flights.filter(f => f.departure.airport === 'GMP').length;
-    if (gmpFlights === 0) {
-        console.warn('  ⚠️ 경고: 김포출발(GMP) 항공편 0건 - 하네다 노선 확인 필요');
-    } else {
-        console.log(`  ✅ 김포출발(GMP): ${gmpFlights}건`);
+        if (count === 0) console.log(`  ℹ️ ${region}: 0건 (특가 없음 또는 미지원)`);
+        else console.log(`  ✅ ${region}: ${count}건`);
     }
 
-    const cityStats: { [city: string]: number } = {};
-    flights.forEach(f => { cityStats[f.arrival.city] = (cityStats[f.arrival.city] || 0) + 1; });
-    // logCrawlResults moved to crawl-all.ts
+    const gmpFlights = flights.filter(flight => flight.departure.airport === 'GMP').length;
+    if (gmpFlights === 0) console.warn('  ⚠️ 경고: 김포출발(GMP) 항공편 0건 - 하네다 노선 확인 필요');
+    else console.log(`  ✅ 김포출발(GMP): ${gmpFlights}건`);
 
     return flights;
 }
