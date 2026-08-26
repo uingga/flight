@@ -42,9 +42,17 @@
 `tikitikit_verify_auth_code` RPC가 PostgREST에서 호출되는지 확인한다. 마이그레이션이
 스키마 캐시 갱신까지 요청하지만, 실제 REST 호출 확인 전에는 새 코드를 배포하지 않는다.
 
-## 메인 교체 시
+### 2026-08-26 적용 확인
 
-1. `src/app/page.tsx`에서 기존 `Dashboard` import를 `RedesignDashboard`로 교체한다. 현재는 아직 운영 메인을 바꾸지 않는다.
+- 운영 Tikitikit Supabase에 위 3개 마이그레이션을 순서대로 적용했다.
+- 계정·찜·최근 본 표·저장 검색·가격 알림 테이블이 모두 존재하는 것을 확인했다.
+- `claim_price_alert_delivery`, `tikitikit_take_rate_limit`, `tikitikit_verify_auth_code` 함수가 모두 존재하는 것을 확인했다.
+- 공개 미리보기의 로그인 검증 API가 누락 함수로 인한 500 대신 잘못된/만료된 인증번호를 400으로 처리하는 것을 확인했다.
+- 실제 이메일 수신과 실제 기기 푸시 수신은 아래의 배포 직후 실제 기기 확인에서 진행한다.
+
+## 메인 교체 시 (2026-08-26 완료)
+
+1. `src/app/page.tsx`에서 기존 `Dashboard` import를 `RedesignDashboard`로 교체한다.
 2. 페이지 구조는 아래처럼 **하나의 `main`만** 사용한다. `HomeCityLinks`를 리디자인 바깥의 형제 요소로 두면 푸터 뒤에 붙으므로 반드시 자식으로 전달한다.
 
    ```tsx

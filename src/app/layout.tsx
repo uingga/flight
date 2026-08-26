@@ -94,7 +94,7 @@ export const metadata: Metadata = {
     },
     manifest: '/manifest.json',
     other: {
-        'theme-color': '#6366f1',
+        'theme-color': '#ff385c',
         'apple-mobile-web-app-capable': 'yes',
         'apple-mobile-web-app-status-bar-style': 'default',
         'apple-mobile-web-app-title': '티키티킷',

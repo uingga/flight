@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import Dashboard from '@/components/Dashboard';
+import RedesignDashboard from '@/components/RedesignDashboard';
 import { loadActiveFlights, groupByCity } from '@/lib/flight-static';
 import styles from './home-city-links.module.css';
 
@@ -39,12 +39,9 @@ function HomeCityLinks() {
 export default function Home() {
     return (
         <main>
-            <Dashboard />
-            <HomeCityLinks />
+            <RedesignDashboard>
+                <HomeCityLinks />
+            </RedesignDashboard>
         </main>
     );
 }
-
-// 리디자인을 운영 메인으로 바꿀 때는 Dashboard와 나란히 CityLinks를 두지 않는다.
-// <main><RedesignDashboard><HomeCityLinks /></RedesignDashboard></main> 구조를 사용하면
-// main 중첩 없이 서버 렌더링 링크가 리디자인 푸터 바로 앞에 들어간다.
