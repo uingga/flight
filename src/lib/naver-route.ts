@@ -27,7 +27,7 @@ export const normalizeComparisonDate = (value: unknown): string => String(value 
  * 네이버와 비교할 실제 네 구간 공항을 반환한다.
  *
  * 마이리얼트립의 Calendar API는 SHA처럼 실제 공항이 아닌 도시 코드를 줄 수 있다.
- * 따라서 마이리얼트립은 예약 결과 카드에서 확인한 routeAirports가 없으면 비교하지 않는다.
+ * 따라서 마이리얼트립과 온라인투어는 예약/상품 응답에서 확인한 routeAirports가 없으면 비교하지 않는다.
  * 다른 여행사는 기존 데이터 구조가 실제 왕복 공항을 뜻하므로 대칭 왕복으로 해석한다.
  */
 export function getExactRouteAirports(flight: NaverComparableFlight): ExactRouteAirports | null {
@@ -40,7 +40,9 @@ export function getExactRouteAirports(flight: NaverComparableFlight): ExactRoute
         return { outboundDeparture, outboundArrival, returnDeparture, returnArrival };
     }
 
-    if (flight.source === 'myrealtrip') return null;
+    // 마이리얼트립은 도시 검색 코드(SHA 등), 온라인투어는 여행지 코드(BOR 등)가
+    // arrival.airport에 들어올 수 있다. 검증된 실제 구간이 없으면 네이버 URL을 만들지 않는다.
+    if (flight.source === 'myrealtrip' || flight.source === 'onlinetour') return null;
 
     const outboundDeparture = normalizeAirport(flight.departure?.airport);
     const outboundArrival = normalizeAirport(flight.arrival?.airport);

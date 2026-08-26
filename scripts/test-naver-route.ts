@@ -5,6 +5,7 @@ import {
     buildNaverSearchUrl,
     getExactRouteAirports,
 } from '../src/lib/naver-route';
+import { classifyNaverPageState } from '../src/lib/naver-crawl-page-state';
 
 const symmetricSummary = [
     '이스타항공',
@@ -86,5 +87,38 @@ assert.equal(
     buildNaverPriceKey(legacy, '2026.09.17(목)', '2026.09.19(토)'),
     'PUS-FUK_2026-09-17_2026-09-19',
 );
+
+const unverifiedOnlineTour = {
+    source: 'onlinetour',
+    departure: { airport: 'ICN' },
+    // 온라인투어의 BOR는 칼리보 실제 공항 KLO가 아니라 여행지 코드다.
+    arrival: { airport: 'BOR' },
+};
+assert.equal(getExactRouteAirports(unverifiedOnlineTour), null);
+assert.equal(buildNaverPriceKey(unverifiedOnlineTour, '2026-08-28', '2026-08-31'), null);
+
+const verifiedOnlineTour = {
+    ...unverifiedOnlineTour,
+    routeAirports: {
+        outboundDeparture: 'ICN',
+        outboundArrival: 'KLO',
+        returnDeparture: 'KLO',
+        returnArrival: 'ICN',
+    },
+};
+assert.equal(
+    buildNaverPriceKey(verifiedOnlineTour, '2026-08-28', '2026-08-31'),
+    'ICN-KLO_2026-08-28_2026-08-31',
+);
+assert.equal(
+    buildNaverSearchUrl(getExactRouteAirports(verifiedOnlineTour)!, '2026-08-28', '2026-08-31').includes('BOR'),
+    false,
+);
+
+assert.equal(classifyNaverPageState({ priceCount: 10, url: 'https://flight.naver.com/flights/international/...' }), 'results');
+assert.equal(classifyNaverPageState({ bodyText: '조건에 맞는 항공권이 없습니다.' }), 'no_result');
+assert.equal(classifyNaverPageState({ url: 'https://flight.naver.com/error', bodyText: '일시적으로 서비스를 이용할 수 없습니다' }), 'route_error');
+assert.equal(classifyNaverPageState({ httpStatus: 429, bodyText: 'Too Many Requests' }), 'blocked');
+assert.equal(classifyNaverPageState({ bodyText: '검색 결과를 불러오는 중입니다.' }), 'transient_error');
 
 console.log('실제 공항 기반 네이버 비교 경로 테스트 통과');

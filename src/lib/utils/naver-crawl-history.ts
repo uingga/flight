@@ -16,6 +16,11 @@ export interface NaverCrawlHistoryEntry {
     oldestDeferredHours: number | null;
     success: number;
     misses: number;
+    noResult?: number;
+    routeErrors?: number;
+    transientErrors?: number;
+    blocked?: number;
+    healthChecks?: number;
     abortedEarly: boolean;
 }
 

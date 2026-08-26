@@ -47,6 +47,11 @@ interface AdminData {
         oldestDeferredHours: number | null;
         success: number;
         misses: number;
+        noResult?: number;
+        routeErrors?: number;
+        transientErrors?: number;
+        blocked?: number;
+        healthChecks?: number;
         abortedEarly: boolean;
     }>;
 }
@@ -1228,6 +1233,20 @@ export default function AdminPage() {
                                                 <span style={{ color: '#34d399' }}>{entry.success.toLocaleString()} 성공</span>
                                                 {' · '}
                                                 <span style={{ color: entry.misses > 0 ? '#f87171' : '#94a3b8' }}>{entry.misses.toLocaleString()} 실패</span>
+                                                {entry.misses > 0 && [entry.noResult, entry.routeErrors, entry.transientErrors, entry.blocked]
+                                                    .some(value => value !== undefined) && (
+                                                    <span style={{ display: 'block', color: '#94a3b8', fontSize: '0.72rem' }}>
+                                                        결과 없음 {(entry.noResult || 0).toLocaleString()}
+                                                        {' · '}노선 오류 {(entry.routeErrors || 0).toLocaleString()}
+                                                        {' · '}일시 오류 {(entry.transientErrors || 0).toLocaleString()}
+                                                        {' · '}접근 제한 {(entry.blocked || 0).toLocaleString()}
+                                                    </span>
+                                                )}
+                                                {(entry.healthChecks || 0) > 0 && (
+                                                    <span style={{ display: 'block', color: '#60a5fa', fontSize: '0.72rem' }}>
+                                                        정상 대조 조회 {entry.healthChecks?.toLocaleString()}회
+                                                    </span>
+                                                )}
                                                 {entry.abortedEarly && (
                                                     <span style={{ display: 'block', color: '#fb923c', fontSize: '0.72rem' }}>일찍 중단됨</span>
                                                 )}
