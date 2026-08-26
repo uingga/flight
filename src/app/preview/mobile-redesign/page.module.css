@@ -328,7 +328,9 @@
     /* 홈을 덮는 흰 면이 카드 테두리 바깥까지 나가야 세로선이 실제로 끊긴다. */
     overflow: visible;
     --ticket-border: var(--line);
-    border: 1px solid var(--line);
+    --ticket-border-width: 1px;
+    --ticket-notch-offset: 17px;
+    border: var(--ticket-border-width) solid var(--line);
     border-radius: 10px;
     background: var(--paper);
     box-shadow: none;
@@ -401,8 +403,8 @@
 .ticketDivider { position: relative; height: 1px; margin: 14px 16px 0; border-top: 1px dashed var(--line-soft); }
 .ticketDivider::before,
 .ticketDivider::after { content: ''; position: absolute; z-index: 2; top: -9px; box-sizing: border-box; width: 10px; height: 18px; background: var(--paper); }
-.ticketDivider::before { left: -17px; border: 1px solid var(--ticket-border); border-left: 0; border-radius: 0 999px 999px 0; box-shadow: -2px 0 0 -1px var(--paper); }
-.ticketDivider::after { right: -17px; border: 1px solid var(--ticket-border); border-right: 0; border-radius: 999px 0 0 999px; box-shadow: 2px 0 0 -1px var(--paper); }
+.ticketDivider::before { left: calc(0px - var(--ticket-notch-offset)); border: 1px solid var(--ticket-border); border-left: 0; border-radius: 0 999px 999px 0; }
+.ticketDivider::after { right: calc(0px - var(--ticket-notch-offset)); border: 1px solid var(--ticket-border); border-right: 0; border-radius: 999px 0 0 999px; }
 
 .cardFooter { min-height: 64px; padding: 11px 16px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .availabilityGroup { min-width: 0; flex: 1; display: flex; align-items: center; gap: 7px; }
@@ -1128,6 +1130,7 @@
     }
     .flightCard {
         --ticket-border: var(--desktop-card-line);
+        --ticket-notch-offset: 18px;
         border-color: var(--desktop-card-line);
         border-radius: 12px;
         box-shadow: 0 1px 2px rgba(34, 34, 34, 0.025);
@@ -1140,7 +1143,9 @@
     }
     .todayPickCard {
         --ticket-border: #e9a5b4;
-        border-width: 2px;
+        --ticket-border-width: 2px;
+        --ticket-notch-offset: 19px;
+        border-width: var(--ticket-border-width);
         border-color: #e9a5b4;
         background: var(--paper);
         box-shadow: none;
