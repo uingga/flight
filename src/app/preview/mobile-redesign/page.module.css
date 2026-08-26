@@ -44,6 +44,11 @@
     outline: none;
 }
 
+.previewPage button:focus-visible:not(.cardBody) {
+    outline: 2px solid rgba(224, 11, 65, 0.48);
+    outline-offset: 2px;
+}
+
 .phoneCanvas {
     width: 100%;
     max-width: 480px;
@@ -270,7 +275,7 @@
 }
 .sortTrigger:hover,
 .sortTrigger[aria-expanded='true'] { background: var(--paper-soft); color: var(--ink); }
-.sortTrigger:focus-visible { box-shadow: 0 0 0 2px rgba(255, 56, 92, 0.2); }
+.sortTrigger:focus-visible { box-shadow: none; }
 .sortChevron { pointer-events: none; transition: transform 150ms ease; }
 .sortChevronOpen { transform: rotate(180deg); }
 .sortMenu {
@@ -305,7 +310,7 @@
 .sortOption:hover { background: #f7f7f7; }
 .sortOptionSelected { background: var(--brand-soft); color: var(--brand-dark); font-weight: var(--weight-medium); }
 .sortOptionSelected:hover { background: var(--brand-soft); }
-.sortOption:focus-visible { box-shadow: inset 0 0 0 2px rgba(255, 56, 92, 0.18); }
+.sortOption:focus-visible { box-shadow: none; }
 .sortCheck { color: var(--brand-dark); font-size: 13px; font-weight: var(--weight-bold); }
 
 @keyframes sortMenuIn {
@@ -330,6 +335,11 @@
 }
 
 .todayPickCard { --ticket-border: #eeb0bd; border-color: #eeb0bd; box-shadow: none; }
+
+.flightCard:has(.cardBody:focus-visible) {
+    --ticket-border: #d7657e;
+    border-color: #d7657e;
+}
 
 .cardBody {
     width: 100%;
