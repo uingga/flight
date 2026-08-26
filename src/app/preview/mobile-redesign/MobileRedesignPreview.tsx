@@ -364,6 +364,18 @@ const departureMatches = (flight: Flight, departure: string) => {
     return flight.departure.city.includes(departure);
 };
 
+const searchQueryMatches = (flight: Flight, query: string) => {
+    const normalizedQuery = query.trim().toLocaleLowerCase('ko-KR');
+    if (!normalizedQuery) return true;
+
+    const routeMatches = [flight.departure.city, flight.arrival.city]
+        .some(value => value.toLocaleLowerCase('ko-KR').includes(normalizedQuery));
+    const providerMatches = [flight.airline, SOURCE_NAMES[flight.source]]
+        .some(value => value.toLocaleLowerCase('ko-KR').startsWith(normalizedQuery));
+
+    return routeMatches || providerMatches;
+};
+
 const addDays = (date: Date, days: number) => {
     const next = new Date(date);
     next.setDate(next.getDate() + days);
@@ -1455,15 +1467,9 @@ export default function MobileRedesignPreview({
     }, [recommendationRotationScores, recommendationScores]);
 
     const filteredFlights = useMemo(() => {
-        const normalizedQuery = query.trim().toLowerCase();
         const referenceDate = new Date();
         const result = flights.filter(flight => {
-            const matchesQuery = !normalizedQuery || [
-                flight.departure.city,
-                flight.arrival.city,
-                flight.airline,
-                SOURCE_NAMES[flight.source],
-            ].some(value => value.toLowerCase().includes(normalizedQuery));
+            const matchesQuery = searchQueryMatches(flight, query);
             return matchesQuery
                 && regionMatches(flight, region)
                 && departureMatches(flight, departure)
@@ -2028,13 +2034,7 @@ export default function MobileRedesignPreview({
 
     const emptyDiagnosis = useMemo(() => {
         if (loading || error || filteredFlights.length > 0) return null;
-        const normalizedQuery = query.trim().toLowerCase();
-        const matchesQuery = (flight: Flight) => !normalizedQuery || [
-            flight.departure.city,
-            flight.arrival.city,
-            flight.airline,
-            SOURCE_NAMES[flight.source],
-        ].some(value => value.toLowerCase().includes(normalizedQuery));
+        const matchesQuery = (flight: Flight) => searchQueryMatches(flight, query);
         const queryFlights = flights.filter(matchesQuery);
         if (queryFlights.length === 0) {
             return { kind: 'no-deals' as const, available: 0, blockers: [] };
