@@ -927,6 +927,60 @@ export default function Dashboard() {
         setShowDealAlertSetup(true);
     };
 
+    const saveDealAlertSearch = async (maxPrice: number) => {
+        if (account.status !== 'authenticated') return false;
+        const filters: AccountSearchFilters = {
+            searchTerm: '',
+            sortBy: 'discount',
+            sortOrder: 'asc',
+            sourceFilter: 'all',
+            regionFilter: dealAlertSetup.region,
+            startDate: '',
+            endDate: '',
+            departureFilter: dealAlertSetup.departureCity,
+            airlineFilter: 'all',
+            maxPrice,
+            datePeriod: 'all',
+        };
+        const alreadySaved = account.savedSearches.some(item => (
+            item.filters.searchTerm === ''
+            && item.filters.regionFilter === filters.regionFilter
+            && item.filters.departureFilter === filters.departureFilter
+            && item.filters.maxPrice === filters.maxPrice
+            && (item.filters.datePeriod || 'all') === 'all'
+        ));
+        if (alreadySaved) return true;
+        await account.saveSearch(
+            `${dealAlertSetup.departureCity} 출발 · ${dealAlertRegionLabel(dealAlertSetup.region)} · ${Math.round(maxPrice / 10_000)}만원 이하`,
+            filters,
+        );
+        gtag.trackAccountAction('save_search');
+        return true;
+    };
+
+    const saveDealSearchOnly = async () => {
+        const maxPrice = Number(dealAlertSetup.maxPrice);
+        if (!Number.isFinite(maxPrice) || maxPrice < 10000 || maxPrice > 10000000) {
+            setDealAlertSetup(current => ({ ...current, status: 'error', message: '예산을 1만원 이상으로 입력해주세요.' }));
+            return;
+        }
+        setDealAlertSetup(current => ({ ...current, status: 'saving', message: undefined }));
+        try {
+            await saveDealAlertSearch(maxPrice);
+            setDealAlertSetup(current => ({
+                ...current,
+                status: 'sent',
+                message: `${current.departureCity} 출발 · ${dealAlertRegionLabel(current.region)} · ${formatPrice(maxPrice)} 이하. 내 여행에서 다시 볼 수 있어요.`,
+            }));
+        } catch (error) {
+            setDealAlertSetup(current => ({
+                ...current,
+                status: 'error',
+                message: error instanceof Error ? error.message : '조건을 저장하지 못했습니다.',
+            }));
+        }
+    };
+
     const saveDealAlert = async () => {
         const maxPrice = Number(dealAlertSetup.maxPrice);
         if (!Number.isFinite(maxPrice) || maxPrice < 10000 || maxPrice > 10000000) {
@@ -982,6 +1036,9 @@ export default function Dashboard() {
             });
 
             gtag.trackDealAlertSetup(dealAlertSetup.departureCity, dealAlertSetup.region, maxPrice);
+            if (account.status === 'authenticated') {
+                try { await saveDealAlertSearch(maxPrice); } catch { }
+            }
             setDealAlertSetup(current => ({
                 ...current,
                 status: 'sent',
@@ -4728,6 +4785,16 @@ export default function Dashboard() {
                                     >
                                         {dealAlertSetup.status === 'saving' ? '저장 중…' : '이 조건으로 알려주세요'}
                                     </button>
+                                    {account.status === 'authenticated' && (
+                                        <button
+                                            type="button"
+                                            className={styles.dealAlertSaveOnly}
+                                            disabled={dealAlertSetup.status === 'saving'}
+                                            onClick={() => void saveDealSearchOnly()}
+                                        >
+                                            알림 없이 조건만 저장
+                                        </button>
+                                    )}
                                 </>
                             )}
                         </div>
@@ -4927,19 +4994,12 @@ export default function Dashboard() {
                 open={showAccount}
                 onClose={() => setShowAccount(false)}
                 account={account}
-                currentSearch={{
-                    searchTerm,
-                    sortBy,
-                    sortOrder,
-                    sourceFilter,
-                    regionFilter,
-                    startDate,
-                    endDate,
-                    departureFilter,
-                    airlineFilter,
-                }}
                 onApplySearch={applyAccountSearch}
                 onOpenFlight={openAccountFlight}
+                onOpenAlert={() => {
+                    setShowAccount(false);
+                    openDealAlertSetup();
+                }}
                 onFavoriteRemoved={flightId => {
                     setFavoriteFlights(current => {
                         const next = current.filter(id => id !== flightId);

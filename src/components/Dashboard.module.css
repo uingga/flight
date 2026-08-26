@@ -3533,6 +3533,23 @@
     opacity: 0.55;
 }
 
+.dealAlertSaveOnly {
+    width: 100%;
+    margin-top: 8px;
+    border: 0;
+    background: transparent;
+    color: #6b7280;
+    font-size: 12px;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+}
+
+.dealAlertSaveOnly:disabled {
+    opacity: .5;
+    cursor: wait;
+}
+
 .dealAlertSuccess {
     min-height: 240px;
     display: flex;

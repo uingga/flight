@@ -22,7 +22,7 @@ import {
 import type { Flight } from '@/types/flight';
 import AccountSheet from '@/components/account/AccountSheet';
 import { useAccount, type AccountFlightSnapshot, type AccountSearchFilters } from '@/components/account/useAccount';
-import MobileDealAlertSheet from './MobileDealAlertSheet';
+import MobileDealAlertSheet, { type AlertSearchCondition } from './MobileDealAlertSheet';
 import styles from './page.module.css';
 
 type SortMode = 'recommended' | 'price' | 'date';
@@ -2203,18 +2203,39 @@ export default function MobileRedesignPreview({
         openFlight(insight.flight, `insight_${insight.kind}`);
     };
 
-    const currentAccountSearch: AccountSearchFilters = {
-        searchTerm: query,
-        sortBy: sort === 'price' ? 'price' : sort === 'date' ? 'date' : 'discount',
-        sortOrder: 'asc',
-        sourceFilter,
-        regionFilter: region === '전체' ? 'all' : region,
-        startDate: datePeriod === 'custom' && customStartDate ? dateKey(customStartDate) : '',
-        endDate: datePeriod === 'custom' && customEndDate ? dateKey(customEndDate) : '',
-        departureFilter: departure === '전체' ? 'all' : departure.replace('/김포', '').replace('/김해', ''),
-        airlineFilter,
-        ...(maxPrice ? { maxPrice } : {}),
-        datePeriod,
+    const saveAlertSearchCondition = async (condition: AlertSearchCondition) => {
+        if (account.status !== 'authenticated') return;
+        const destination = condition.arrivalCity
+            || (condition.region === 'all' ? '아무데나' : condition.region === '중국' ? '중화권' : condition.region)
+            || '아무데나';
+        const filters: AccountSearchFilters = {
+            searchTerm: condition.arrivalCity || '',
+            sortBy: 'discount',
+            sortOrder: 'asc',
+            sourceFilter: 'all',
+            regionFilter: condition.arrivalCity
+                ? 'all'
+                : condition.region === '중국' ? '중화권' : condition.region || 'all',
+            startDate: '',
+            endDate: '',
+            departureFilter: condition.departureCity,
+            airlineFilter: 'all',
+            maxPrice: condition.maxPrice,
+            datePeriod: 'all',
+        };
+        const alreadySaved = account.savedSearches.some(item => (
+            item.filters.searchTerm === filters.searchTerm
+            && item.filters.regionFilter === filters.regionFilter
+            && item.filters.departureFilter === filters.departureFilter
+            && item.filters.maxPrice === filters.maxPrice
+            && (item.filters.datePeriod || 'all') === 'all'
+        ));
+        if (alreadySaved) return;
+        await account.saveSearch(
+            `${condition.departureCity} 출발 · ${destination} · ${Math.round(condition.maxPrice / 10_000)}만원 이하`,
+            filters,
+        );
+        gtag.trackAccountAction('save_search');
     };
 
     const applyAccountSearch = (filters: AccountSearchFilters) => {
@@ -3521,9 +3542,12 @@ export default function MobileRedesignPreview({
                 open={showAccount}
                 onClose={() => setShowAccount(false)}
                 account={account}
-                currentSearch={currentAccountSearch}
                 onApplySearch={applyAccountSearch}
                 onOpenFlight={openAccountFlight}
+                onOpenAlert={() => {
+                    setShowAccount(false);
+                    openDealAlert(null);
+                }}
                 guestFavorites={guestFavoriteSnapshots}
                 onFavoriteRemoved={flightId => {
                     if (!favorites.has(flightId)) return;
@@ -3569,6 +3593,7 @@ export default function MobileRedesignPreview({
                 initialRegion={region}
                 initialMaxPrice={maxPrice || 200_000}
                 initialRoute={alertRouteTarget}
+                onSaveSearchCondition={account.status === 'authenticated' ? saveAlertSearchCondition : undefined}
                 onClose={closeDealAlert}
             />
 

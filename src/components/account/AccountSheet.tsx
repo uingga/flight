@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type {
     AccountController,
     AccountFlightSnapshot,
@@ -16,9 +16,9 @@ interface AccountSheetProps {
     open: boolean;
     onClose: () => void;
     account: AccountController;
-    currentSearch: AccountSearchFilters;
     onApplySearch: (filters: AccountSearchFilters) => void;
     onOpenFlight: (flightId: string) => void;
+    onOpenAlert: () => void;
     onFavoriteRemoved: (flightId: string) => void;
     guestFavorites?: AccountFlightSnapshot[];
 }
@@ -33,20 +33,6 @@ const SOURCE_NAMES: Record<string, string> = {
 function formatDate(value: string) {
     const match = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
     return match ? `${Number(match[2])}월 ${Number(match[3])}일` : value;
-}
-
-function getSuggestedName(filters: AccountSearchFilters) {
-    const periodLabel = ({
-        'this-week': '이번 주', 'next-week': '다음 주',
-        'this-month': '이번 달', 'next-month': '다음 달',
-    } as Record<string, string>)[filters.datePeriod || ''];
-    const parts = [
-        filters.departureFilter !== 'all' ? `${filters.departureFilter} 출발` : '',
-        filters.searchTerm || (filters.regionFilter !== 'all' ? filters.regionFilter : ''),
-        periodLabel || '',
-        filters.maxPrice ? `${Math.round(filters.maxPrice / 10_000)}만원 이하` : '',
-    ].filter(Boolean);
-    return parts.join(' · ') || '전체 특가';
 }
 
 function FlightRow({
@@ -86,7 +72,7 @@ function savedSearchDateLabel(filters: AccountSearchFilters) {
 }
 
 export default function AccountSheet({
-    open, onClose, account, currentSearch, onApplySearch, onOpenFlight, onFavoriteRemoved, guestFavorites = [],
+    open, onClose, account, onApplySearch, onOpenFlight, onOpenAlert, onFavoriteRemoved, guestFavorites = [],
 }: AccountSheetProps) {
     const [loginEmail, setLoginEmail] = useState('');
     const [code, setCode] = useState('');
@@ -94,22 +80,17 @@ export default function AccountSheet({
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [tab, setTab] = useState<AccountTab>('favorites');
-    const [searchName, setSearchName] = useState('');
-    const [savedNotice, setSavedNotice] = useState(false);
     const firstInputRef = useRef<HTMLInputElement>(null);
     const sheetRef = useRef<HTMLElement>(null);
-    const suggestedName = useMemo(() => getSuggestedName(currentSearch), [currentSearch]);
     useDialogFocus(open, sheetRef);
     const swipeHandle = useSwipeToDismiss({ open, sheetRef, onDismiss: onClose });
 
     useEffect(() => {
         if (!open) return;
         setError(null);
-        setSavedNotice(false);
-        setSearchName(suggestedName);
         const id = setTimeout(() => firstInputRef.current?.focus(), 180);
         return () => clearTimeout(id);
-    }, [open, suggestedName]);
+    }, [open]);
 
     if (!open) return null;
 
@@ -134,18 +115,6 @@ export default function AccountSheet({
             gtag.trackAccountAction('login');
         } catch (err) {
             setError(err instanceof Error ? err.message : '로그인하지 못했어요.');
-        } finally { setBusy(false); }
-    };
-
-    const saveCurrentSearch = async () => {
-        setBusy(true); setError(null);
-        try {
-            await account.saveSearch(searchName || suggestedName, currentSearch);
-            setSavedNotice(true);
-            setTab('searches');
-            gtag.trackAccountAction('save_search');
-        } catch (err) {
-            setError(err instanceof Error ? err.message : '검색 조건을 저장하지 못했어요.');
         } finally { setBusy(false); }
     };
 
@@ -282,22 +251,19 @@ export default function AccountSheet({
                         <div className={styles.summary}>
                             <button type="button" onClick={() => setTab('favorites')}><strong>{account.favoriteIds.length}</strong><span>찜한 표</span></button>
                             <button type="button" onClick={() => setTab('recent')}><strong>{account.recent.length}</strong><span>최근 본 표</span></button>
-                            <button type="button" onClick={() => setTab('searches')}><strong>{account.savedSearches.length}</strong><span>저장 검색</span></button>
+                            <button type="button" onClick={() => setTab('searches')}><strong>{account.savedSearches.length}</strong><span>다시 볼 조건</span></button>
                         </div>
 
                         <div className={styles.saveBox}>
-                            <div><strong>지금 보고 있는 조건</strong><span>{suggestedName}</span></div>
-                            <div className={styles.saveControls}>
-                                <input value={searchName} maxLength={40} onChange={event => setSearchName(event.target.value)} aria-label="저장할 검색 이름" />
-                                <button type="button" disabled={busy || account.savedSearches.length >= 10} onClick={() => void saveCurrentSearch()}>저장</button>
-                            </div>
-                            {savedNotice && <small className={styles.savedNotice}>저장했어요. 다음에는 한 번에 다시 볼 수 있어요.</small>}
+                            <div><strong>특가 알림</strong><span>출발지 · 지역 · 예산</span></div>
+                            <button type="button" className={styles.alertSetupButton} onClick={onOpenAlert}>알림 조건 만들기</button>
+                            <small className={styles.saveHint}>여기서 만든 조건은 다음에도 다시 볼 수 있게 함께 저장해요.</small>
                         </div>
 
                         <nav className={styles.tabs} aria-label="내 여행 목록">
                             <button type="button" className={tab === 'favorites' ? styles.activeTab : ''} onClick={() => setTab('favorites')}>찜한 표</button>
                             <button type="button" className={tab === 'recent' ? styles.activeTab : ''} onClick={() => setTab('recent')}>최근 본 표</button>
-                            <button type="button" className={tab === 'searches' ? styles.activeTab : ''} onClick={() => setTab('searches')}>저장한 검색</button>
+                            <button type="button" className={tab === 'searches' ? styles.activeTab : ''} onClick={() => setTab('searches')}>다시 볼 조건</button>
                         </nav>
 
                         <div className={styles.list}>
@@ -325,7 +291,7 @@ export default function AccountSheet({
                                         <button type="button" className={styles.deleteRow} disabled={busy} aria-label={`${item.name} 삭제`} onClick={() => void deleteSavedSearch(item.id)}>×</button>
                                     </div>
                                 ))
-                                : <p className={styles.empty}>자주 찾는 출발지·여행지·날짜를 저장해 보세요.</p>)}
+                                : <p className={styles.empty}>특가 알림을 만들면 같은 조건을 여기서 다시 볼 수 있어요.</p>)}
                         </div>
                         {error && <p className={styles.error}>{error}</p>}
                         <div className={styles.accountFooter}>

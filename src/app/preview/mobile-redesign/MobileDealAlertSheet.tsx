@@ -19,11 +19,20 @@ interface MobileDealAlertSheetProps {
         currentPrice?: number;
         suggestedPrice?: number;
     } | null;
+    onSaveSearchCondition?: (condition: AlertSearchCondition) => Promise<void>;
     onClose: () => void;
+}
+
+export interface AlertSearchCondition {
+    departureCity: string;
+    arrivalCity?: string;
+    region?: DealAlertRegion;
+    maxPrice: number;
 }
 
 type SaveStatus = 'idle' | 'saving' | 'sent' | 'error';
 type SheetView = 'create' | 'manage';
+type SuccessKind = 'alert' | 'search';
 
 interface ManagedAlert {
     id: string;
@@ -103,12 +112,15 @@ export default function MobileDealAlertSheet({
     initialRegion,
     initialMaxPrice,
     initialRoute = null,
+    onSaveSearchCondition,
     onClose,
 }: MobileDealAlertSheetProps) {
     const [departure, setDeparture] = useState('인천');
     const [region, setRegion] = useState<DealAlertRegion>('일본');
     const [maxPrice, setMaxPrice] = useState('200000');
     const [status, setStatus] = useState<SaveStatus>('idle');
+    const [successKind, setSuccessKind] = useState<SuccessKind>('alert');
+    const [searchSaveWarning, setSearchSaveWarning] = useState(false);
     const [message, setMessage] = useState<string | null>(null);
     const [view, setView] = useState<SheetView>('create');
     const [managedAlerts, setManagedAlerts] = useState<ManagedAlert[]>([]);
@@ -147,6 +159,8 @@ export default function MobileDealAlertSheet({
         setRegion(normalizeRegion(initialRegion));
         setMaxPrice(String(initialRoute?.currentPrice || initialRoute?.suggestedPrice || initialMaxPrice || 200_000));
         setStatus('idle');
+        setSuccessKind('alert');
+        setSearchSaveWarning(false);
         setMessage(null);
         setView('create');
         setManagerMessage(null);
@@ -223,7 +237,21 @@ export default function MobileDealAlertSheet({
             } else {
                 gtag.trackDealAlertSetup(departure, region, budget);
             }
+            let failedToSaveSearch = false;
+            if (onSaveSearchCondition) {
+                try {
+                    await onSaveSearchCondition({
+                        departureCity: initialRoute?.departureCity || departure,
+                        ...(initialRoute ? { arrivalCity: initialRoute.arrivalCity } : { region }),
+                        maxPrice: budget,
+                    });
+                } catch {
+                    failedToSaveSearch = true;
+                }
+            }
             await loadManagedAlerts();
+            setSuccessKind('alert');
+            setSearchSaveWarning(failedToSaveSearch);
             setStatus('sent');
             setMessage(initialRoute
                 ? `${initialRoute.departureCity} → ${initialRoute.arrivalCity} · ${formatPrice(budget)} 이하`
@@ -231,6 +259,34 @@ export default function MobileDealAlertSheet({
         } catch (error) {
             setStatus('error');
             setMessage(error instanceof Error ? error.message : '알림을 저장하지 못했어요.');
+        }
+    };
+
+    const saveSearchOnly = async () => {
+        const budget = Number(maxPrice);
+        if (!onSaveSearchCondition) return;
+        if (!Number.isFinite(budget) || budget < 10_000 || budget > 10_000_000) {
+            setStatus('error');
+            setMessage('예산을 1만원 이상으로 입력해주세요.');
+            return;
+        }
+        setStatus('saving');
+        setMessage(null);
+        try {
+            await onSaveSearchCondition({
+                departureCity: initialRoute?.departureCity || departure,
+                ...(initialRoute ? { arrivalCity: initialRoute.arrivalCity } : { region }),
+                maxPrice: budget,
+            });
+            setSuccessKind('search');
+            setSearchSaveWarning(false);
+            setStatus('sent');
+            setMessage(initialRoute
+                ? `${initialRoute.departureCity} → ${initialRoute.arrivalCity} · ${formatPrice(budget)} 이하`
+                : `${departure} 출발 · ${dealAlertRegionLabel(region)} · ${formatPrice(budget)} 이하`);
+        } catch (error) {
+            setStatus('error');
+            setMessage(error instanceof Error ? error.message : '조건을 저장하지 못했어요.');
         }
     };
 
@@ -378,13 +434,23 @@ export default function MobileDealAlertSheet({
                 ) : status === 'sent' ? (
                     <div className={styles.success}>
                         <b>✓</b>
-                        <strong>조건을 저장했어요.</strong>
+                        <strong>{successKind === 'alert' ? '특가 알림을 저장했어요.' : '다시 볼 조건을 저장했어요.'}</strong>
                         <span>{message}</span>
-                        <p>조건에 맞는 표를 전부 보내지는 않아요. 정말 볼 만할 때만 알려드릴게요.</p>
-                        <div className={styles.successActions}>
-                            <button type="button" onClick={() => setView('manage')}>내 알림 보기</button>
+                        <p>{successKind === 'alert'
+                            ? searchSaveWarning
+                                ? '알림은 켰지만 내 여행에는 저장하지 못했어요. 알림은 정상적으로 받을 수 있어요.'
+                                : onSaveSearchCondition
+                                    ? '같은 조건을 내 여행에서도 다시 볼 수 있어요. 정말 볼 만할 때만 알려드릴게요.'
+                                    : '조건에 맞는 표를 전부 보내지는 않아요. 정말 볼 만할 때만 알려드릴게요.'
+                            : '내 여행의 ‘다시 볼 조건’에서 한 번에 다시 볼 수 있어요.'}</p>
+                        {successKind === 'alert' ? (
+                            <div className={styles.successActions}>
+                                <button type="button" onClick={() => setView('manage')}>내 알림 보기</button>
+                                <button type="button" onClick={onClose}>확인</button>
+                            </div>
+                        ) : (
                             <button type="button" onClick={onClose}>확인</button>
-                        </div>
+                        )}
                     </div>
                 ) : (
                     <div className={styles.body}>
@@ -435,11 +501,18 @@ export default function MobileDealAlertSheet({
 
                         <p className={styles.note}>{initialRoute
                             ? '현재 표가 사라져도 같은 노선에서 조건에 맞는 가격을 찾으면 알려드려요.'
-                            : '날짜와 도시는 정하지 않아도 돼요. 로그인 없이 이 기기에 알림을 보냅니다.'}</p>
+                            : onSaveSearchCondition
+                                ? '알림을 켜면 같은 조건을 내 여행에도 저장해요.'
+                                : '날짜와 도시는 정하지 않아도 돼요. 로그인 없이 이 기기에 알림을 보냅니다.'}</p>
                         {message && <p className={styles.error} role="alert">{message}</p>}
                         <button type="button" className={styles.submit} disabled={status === 'saving'} onClick={() => void saveAlert()}>
-                            {status === 'saving' ? '저장 중…' : '이 조건으로 알려주세요'}
+                            {status === 'saving' ? '저장 중…' : '이 조건으로 특가 알림 받기'}
                         </button>
+                        {onSaveSearchCondition && (
+                            <button type="button" className={styles.saveOnly} disabled={status === 'saving'} onClick={() => void saveSearchOnly()}>
+                                알림 없이 조건만 저장
+                            </button>
+                        )}
                     </div>
                 )}
             </section>
