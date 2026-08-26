@@ -84,6 +84,23 @@
       "success": 150,
       "misses": 2,
       "abortedEarly": false
+    },
+    {
+      "id": "2026-08-26T01:03:11.152Z-github-3165",
+      "timestamp": "2026-08-26T01:03:11.152Z",
+      "runner": "github",
+      "sourceFilter": "myrealtrip",
+      "maxFlights": 200,
+      "needed": 85,
+      "attempted": 7,
+      "newRoutes": 59,
+      "newRoutesAttempted": 7,
+      "deferred": 78,
+      "deferredNeverChecked": 52,
+      "oldestDeferredHours": 342.6,
+      "success": 4,
+      "misses": 3,
+      "abortedEarly": true
     }
   ]
 }
