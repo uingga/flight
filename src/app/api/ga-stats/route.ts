@@ -65,22 +65,32 @@ async function optional(
     } catch (error) {
         // 맞춤 측정기준이 아직 등록되지 않았으면 이 리포트만 실패한다 — 전체를 죽이지 않는다
         console.error(`GA4 optional report failed (${label}):`, error);
-        warnings.push(`${label}은(는) 불러오지 못했습니다. GA4 맞춤 측정기준 등록 여부를 확인해주세요.`);
+        warnings.push(`${label}은(는) 불러오지 못했습니다. 방문 통계의 세부 항목 설정을 확인해주세요.`);
         return null;
     }
 }
 
 async function buildStats(config: Ga4Config, days: number) {
-    const dateRanges = [{ startDate: `${days - 1}daysAgo`, endDate: 'today' }];
-    const previousDateRanges = [{ startDate: `${days * 2 - 1}daysAgo`, endDate: `${days}daysAgo` }];
-    const recent7DateRanges = [{ startDate: '6daysAgo', endDate: 'today' }];
-    const previous7DateRanges = [{ startDate: '13daysAgo', endDate: '7daysAgo' }];
+    // 7일·30일 수치는 아직 덜 쌓인 오늘을 빼고 어제까지의 완결된 날짜만 쓴다.
+    // 오늘은 별도 열에서 잠정 수치로 보여준다.
+    const dateRanges = [{ startDate: `${days}daysAgo`, endDate: 'yesterday' }];
+    const previousDateRanges = [{ startDate: `${days * 2}daysAgo`, endDate: `${days + 1}daysAgo` }];
+    const recent7DateRanges = [{ startDate: '7daysAgo', endDate: 'yesterday' }];
+    const previous7DateRanges = [{ startDate: '14daysAgo', endDate: '8daysAgo' }];
     const todayDateRanges = [{ startDate: 'today', endDate: 'today' }];
     const warnings: string[] = [];
 
     const summaryRequest = (range: Array<{ startDate: string; endDate: string }>) => runReport(config, {
         dateRanges: range,
         metrics: [{ name: 'activeUsers' }, { name: 'screenPageViews' }, { name: 'sessions' }],
+    });
+
+    const eventRequest = (range: Array<{ startDate: string; endDate: string }>) => runReport(config, {
+        dateRanges: range,
+        dimensions: [{ name: 'eventName' }],
+        metrics: [{ name: 'eventCount' }, { name: 'totalUsers' }],
+        orderBys: [{ metric: { metricName: 'eventCount' }, desc: true }],
+        limit: 50,
     });
 
     const returningRequest = (range: Array<{ startDate: string; endDate: string }>) => runReport(config, {
@@ -90,7 +100,19 @@ async function buildStats(config: Ga4Config, days: number) {
     });
 
     // 핵심 2개는 실패하면 그대로 에러 — 표준 측정기준만 쓰므로 실패 = 설정 문제
-    const [trendReport, eventReport, currentReport, previousReport, recent7Report, previous7Report, todayReport, returningReport, previousReturningReport] = await Promise.all([
+    const [
+        trendReport,
+        eventReport,
+        recent7EventReport,
+        todayEventReport,
+        currentReport,
+        previousReport,
+        recent7Report,
+        previous7Report,
+        todayReport,
+        returningReport,
+        previousReturningReport,
+    ] = await Promise.all([
         runReport(config, {
             dateRanges,
             dimensions: [{ name: 'date' }],
@@ -100,13 +122,9 @@ async function buildStats(config: Ga4Config, days: number) {
             keepEmptyRows: true,
             limit: days,
         }),
-        runReport(config, {
-            dateRanges,
-            dimensions: [{ name: 'eventName' }],
-            metrics: [{ name: 'eventCount' }, { name: 'totalUsers' }],
-            orderBys: [{ metric: { metricName: 'eventCount' }, desc: true }],
-            limit: 50,
-        }),
+        eventRequest(dateRanges),
+        eventRequest(recent7DateRanges),
+        eventRequest(todayDateRanges),
         summaryRequest(dateRanges),
         summaryRequest(previousDateRanges),
         summaryRequest(recent7DateRanges),
@@ -261,7 +279,7 @@ async function buildStats(config: Ga4Config, days: number) {
         };
     };
 
-    const events = (eventReport.rows || [])
+    const parseEvents = (report: ReportResponse) => (report.rows || [])
         .map(row => ({
             name: dim(row),
             label: EVENT_LABELS[dim(row)] || dim(row),
@@ -270,6 +288,25 @@ async function buildStats(config: Ga4Config, days: number) {
             known: dim(row) in EVENT_LABELS,
         }))
         .filter(entry => entry.known || entry.count > 0);
+
+    const events = parseEvents(eventReport);
+
+    const activity = (report: ReportResponse, periodSummary: ReturnType<typeof summary>) => {
+        const periodEvents = parseEvents(report);
+        const usersOf = (name: string) => periodEvents.find(entry => entry.name === name)?.users ?? 0;
+        const detailOpenUsers = usersOf('detail_open');
+        const bookingClickUsers = usersOf('booking_click');
+        const alertSetupUsers = usersOf('alert_setup');
+        return {
+            visitors: periodSummary.users,
+            detailOpenUsers,
+            bookingClickUsers,
+            alertSetupUsers,
+            detailToBookingRate: detailOpenUsers > 0
+                ? Number(((bookingClickUsers / detailOpenUsers) * 100).toFixed(1))
+                : null,
+        };
+    };
 
     const bookingClick = events.find(entry => entry.name === 'booking_click');
     const detailOpen = events.find(entry => entry.name === 'detail_open');
@@ -375,6 +412,11 @@ async function buildStats(config: Ga4Config, days: number) {
             current: totals,
             previous: summary(previousReport),
         },
+        activityPeriods: {
+            today: activity(todayEventReport, summary(todayReport)),
+            recent7: activity(recent7EventReport, summary(recent7Report)),
+            current: activity(eventReport, totals),
+        },
         returning: {
             current: returning(returningReport),
             previous: returning(previousReturningReport),
@@ -459,7 +501,7 @@ export async function GET(request: NextRequest) {
     if (!config) {
         return NextResponse.json({
             available: false,
-            message: 'GA4 환경변수(GA4_PROPERTY_ID, GA4_CLIENT_EMAIL, GA4_PRIVATE_KEY)가 없어 방문 통계를 불러올 수 없습니다.',
+            message: '방문 통계 연결 설정이 없어 정보를 불러올 수 없습니다.',
             generatedAt: new Date().toISOString(),
         });
     }

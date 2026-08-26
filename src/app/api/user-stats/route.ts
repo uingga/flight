@@ -10,7 +10,7 @@ const CACHE_FILE_PATH = path.join(process.cwd(), 'data', 'all-flights-cache.json
 // 저장소가 공개라 코드에 박아 둔 기본값은 그대로 공개 열쇠가 된다.
 // 환경변수가 없으면 조용히 열리는 대신 인증을 전부 거부한다.
 const ADMIN_KEY = process.env.ADMIN_KEY;
-const TREND_DAYS = 14;
+const TREND_DAYS = 30;
 
 interface AlertRow {
     alert_key: string;
@@ -62,6 +62,15 @@ function dayInKorea(iso?: string): string | null {
     }).format(date);
 }
 
+function koreaDayStartIso(daysAgo = 0): string {
+    const koreaNow = new Date(Date.now() + 9 * 60 * 60 * 1000);
+    return new Date(Date.UTC(
+        koreaNow.getUTCFullYear(),
+        koreaNow.getUTCMonth(),
+        koreaNow.getUTCDate() - daysAgo,
+    ) - 9 * 60 * 60 * 1000).toISOString();
+}
+
 /** 알림 매칭과 같은 기준으로 도시를 맞춰야 현재 최저가를 제대로 찾는다 */
 const cityKey = (city = '') =>
     normalizeCity(city).replace(/\(.*?\)/g, '').replace(/\s+/g, '').trim();
@@ -75,7 +84,7 @@ export async function GET(request: NextRequest) {
     if (!config) {
         return NextResponse.json({
             available: false,
-            message: 'Supabase 설정이 없어 알림 구독 통계를 불러올 수 없습니다.',
+            message: '회원·알림 통계 연결 설정이 없어 정보를 불러올 수 없습니다.',
             generatedAt: new Date().toISOString(),
         });
     }
@@ -89,21 +98,27 @@ export async function GET(request: NextRequest) {
         if (!response.ok) throw new Error(`Supabase lookup failed: ${response.status}`);
         const rows = await response.json() as AlertRow[];
 
-        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+        const todayStart = koreaDayStartIso();
+        const sevenDaysAgo = koreaDayStartIso(7);
+        const thirtyDaysAgo = koreaDayStartIso(30);
         const nowIso = new Date().toISOString();
         let accountMetrics = {
             accountAvailable: true,
             accounts: 0,
+            accountsToday: 0,
             accountsLast7Days: 0,
+            accountsLast30Days: 0,
             activeSessions: 0,
             favorites: 0,
             recentFlights: 0,
             savedSearches: 0,
         };
         try {
-            const [accounts, accountsLast7Days, activeSessions, favorites, recentFlights, savedSearches] = await Promise.all([
+            const [accounts, accountsToday, accountsLast7Days, accountsLast30Days, activeSessions, favorites, recentFlights, savedSearches] = await Promise.all([
                 countSupabaseRows(config, 'tikitikit_users', 'id'),
-                countSupabaseRows(config, 'tikitikit_users', 'id', `&created_at=gte.${encodeURIComponent(sevenDaysAgo)}`),
+                countSupabaseRows(config, 'tikitikit_users', 'id', `&created_at=gte.${encodeURIComponent(todayStart)}`),
+                countSupabaseRows(config, 'tikitikit_users', 'id', `&created_at=gte.${encodeURIComponent(sevenDaysAgo)}&created_at=lt.${encodeURIComponent(todayStart)}`),
+                countSupabaseRows(config, 'tikitikit_users', 'id', `&created_at=gte.${encodeURIComponent(thirtyDaysAgo)}&created_at=lt.${encodeURIComponent(todayStart)}`),
                 countSupabaseRows(config, 'tikitikit_auth_sessions', 'id', `&expires_at=gt.${encodeURIComponent(nowIso)}`),
                 countSupabaseRows(config, 'tikitikit_user_favorites', 'flight_id'),
                 countSupabaseRows(config, 'tikitikit_user_recent_flights', 'flight_id'),
@@ -112,7 +127,9 @@ export async function GET(request: NextRequest) {
             accountMetrics = {
                 accountAvailable: true,
                 accounts,
+                accountsToday,
                 accountsLast7Days,
+                accountsLast30Days,
                 activeSessions,
                 favorites,
                 recentFlights,
@@ -125,6 +142,16 @@ export async function GET(request: NextRequest) {
 
         const active = rows.filter(row => row.active !== false);
         const cancelled = rows.length - active.length;
+        const createdBetween = (row: AlertRow, threshold: string, before?: string) => {
+            if (!row.created_at) return false;
+            const createdAt = new Date(row.created_at).getTime();
+            return Number.isFinite(createdAt)
+                && createdAt >= new Date(threshold).getTime()
+                && (!before || createdAt < new Date(before).getTime());
+        };
+        const registrationsToday = rows.filter(row => createdBetween(row, todayStart)).length;
+        const registrationsLast7Days = rows.filter(row => createdBetween(row, sevenDaysAgo, todayStart)).length;
+        const registrationsLast30Days = rows.filter(row => createdBetween(row, thirtyDaysAgo, todayStart)).length;
 
         // 구독자 = 고유 기기(푸시 endpoint). 한 사람이 여러 노선을 걸 수 있다.
         const devices = new Set(active.map(row => row.endpoint_hash).filter(Boolean));
@@ -235,6 +262,9 @@ export async function GET(request: NextRequest) {
                 dealAlerts,
                 notified,
                 neverNotified: active.length - notified,
+                registrationsToday,
+                registrationsLast7Days,
+                registrationsLast30Days,
                 // 목표가 이하 항공권이 지금 존재하는 노선 알림 수
                 reachableNow: topRoutes.filter(r => r.reachable === true).reduce((sum, r) => sum + r.count, 0),
                 ...accountMetrics,

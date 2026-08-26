@@ -61,6 +61,15 @@ function hideIsActive(hide: FlightReportHideRow, now = Date.now()) {
         && new Date(hide.expires_at as string).getTime() > now;
 }
 
+function koreaDayStart(daysAgo = 0): number {
+    const koreaNow = new Date(Date.now() + 9 * 60 * 60 * 1000);
+    return new Date(Date.UTC(
+        koreaNow.getUTCFullYear(),
+        koreaNow.getUTCMonth(),
+        koreaNow.getUTCDate() - daysAgo,
+    ) - 9 * 60 * 60 * 1000).getTime();
+}
+
 export async function GET(request: NextRequest) {
     if (!authorized(request)) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -80,7 +89,7 @@ export async function GET(request: NextRequest) {
             supabaseRequest([
                 'flight_reports?select=id,flight_id,source,report_type,status,departure_city,arrival_city,departure_date,arrival_date,airline,displayed_price,created_at,result',
                 'order=created_at.desc',
-                'limit=60',
+                'limit=500',
             ].join('&')),
             supabaseRequest('flight_report_hides?select=*&order=updated_at.desc&limit=60'),
             supabaseRequest([
@@ -93,20 +102,29 @@ export async function GET(request: NextRequest) {
             throw new Error(`Supabase response ${reportsResponse.status}/${hidesResponse.status}/${eventsResponse.status}`);
         }
 
-        const reports = await reportsResponse.json();
+        const allReports = await reportsResponse.json() as Array<{ created_at: string; [key: string]: unknown }>;
         const hides = await hidesResponse.json() as FlightReportHideRow[];
         const events = await eventsResponse.json();
         const activeHides = hides.filter(hide => hideIsActive(hide));
+        const reportsBetween = (daysAgo: number, beforeToday = false) => allReports.filter(report => {
+            const createdAt = new Date(report.created_at).getTime();
+            return Number.isFinite(createdAt)
+                && createdAt >= koreaDayStart(daysAgo)
+                && (!beforeToday || createdAt < koreaDayStart(0));
+        }).length;
 
         return NextResponse.json({
             available: true,
             generatedAt: new Date().toISOString(),
             summary: {
-                recentReports: reports.length,
+                recentReports: allReports.length,
+                reportsToday: reportsBetween(0),
+                reportsLast7Days: reportsBetween(7, true),
+                reportsLast30Days: reportsBetween(30, true),
                 activeHides: activeHides.length,
                 needsReview: hides.filter(hide => hide.status === 'active' && hideIsActive(hide)).length,
             },
-            reports,
+            reports: allReports.slice(0, 60),
             hides,
             events,
         });

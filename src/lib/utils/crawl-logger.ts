@@ -220,11 +220,11 @@ export function logCrawlResults(
     }
 
     // 크롤 횟수를 줄일지는 최소 2주 이상 봐야 판단할 수 있다. 회차별 변동 수치는
-    // 28일 보관하되, 용량이 큰 도시·지역 상세는 7일이 지나면 걷어낸다.
+    // 최근 30일을 온전히 비교할 수 있도록 31일 보관하되, 용량이 큰 도시·지역 상세는 7일이 지나면 걷어낸다.
     const detailCutoff = new Date();
     detailCutoff.setDate(detailCutoff.getDate() - 7);
     const retentionCutoff = new Date();
-    retentionCutoff.setDate(retentionCutoff.getDate() - 28);
+    retentionCutoff.setDate(retentionCutoff.getDate() - 31);
     history.entries = history.entries
         .filter(e => new Date(e.timestamp) > retentionCutoff)
         .map(entry => {

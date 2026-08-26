@@ -6,6 +6,7 @@ import { getComparisonFreshness, getEffectivePrice } from '@/lib/price-quality';
 import { filterStaleMyrealtripFlights, getMyrealtripFreshness } from '@/lib/source-freshness';
 import { deduplicateDisplayFlights } from '@/lib/flight-visibility';
 import { buildNaverPriceKey } from '@/lib/naver-route';
+import { normalizeCity } from '@/lib/utils/flight-helpers';
 import {
     compactPublicPriceHistory,
     publicFlightRouteKey,
@@ -24,6 +25,26 @@ interface FlightFilterSummary {
         expired: number;
         oneWay: number;
     };
+    visibleBySource: Record<string, number>;
+    visibleByRegion: Record<string, number>;
+    visibleByCity: Record<string, number>;
+    visibleByDepartureCity: Record<string, number>;
+    visibleByAirline: Record<string, number>;
+    quality: {
+        missingTimes: number;
+        missingSeats: number;
+        missingBookingLink: number;
+        missingExactAirports: number;
+        freshNaverComparison: number;
+    };
+    lowestVisible: Array<{
+        id: string;
+        route: string;
+        airline: string;
+        price: number;
+        date: string;
+        source: string;
+    }>;
 }
 
 const HIDDEN_FLIGHT_CACHE_MS = 60 * 1000;
@@ -142,6 +163,19 @@ export async function GET(request: NextRequest) {
                 expired: 0,
                 oneWay: 0,
             },
+            visibleBySource: {},
+            visibleByRegion: {},
+            visibleByCity: {},
+            visibleByDepartureCity: {},
+            visibleByAirline: {},
+            quality: {
+                missingTimes: 0,
+                missingSeats: 0,
+                missingBookingLink: 0,
+                missingExactAirports: 0,
+                freshNaverComparison: 0,
+            },
+            lowestVisible: [],
         };
 
         try {
@@ -286,6 +320,38 @@ export async function GET(request: NextRequest) {
 
         filterSummary.visible = allFlights.length;
         filterSummary.excluded = filterSummary.collected - filterSummary.visible;
+        const addCount = (target: Record<string, number>, key: string) => {
+            target[key] = (target[key] || 0) + 1;
+        };
+        for (const flight of allFlights) {
+            addCount(filterSummary.visibleBySource, flight.source);
+            addCount(filterSummary.visibleByRegion, flight.region || '기타');
+            addCount(filterSummary.visibleByCity, normalizeCity(flight.arrival?.city || '') || '알 수 없음');
+            addCount(filterSummary.visibleByDepartureCity, normalizeCity(flight.departure?.city || '') || '알 수 없음');
+            addCount(filterSummary.visibleByAirline, flight.airline || '항공사 미정');
+
+            if (!flight.departure?.time || !flight.arrival?.time) filterSummary.quality.missingTimes += 1;
+            if (flight.availableSeats === undefined && !flight.seats) filterSummary.quality.missingSeats += 1;
+            if (!flight.link) filterSummary.quality.missingBookingLink += 1;
+            const airports = flight.routeAirports;
+            if (!airports?.outboundDeparture || !airports.outboundArrival || !airports.returnDeparture || !airports.returnArrival) {
+                filterSummary.quality.missingExactAirports += 1;
+            }
+            if (flight.naverLowest && getComparisonFreshness(flight.naverCheckedAt).usable) {
+                filterSummary.quality.freshNaverComparison += 1;
+            }
+        }
+        filterSummary.lowestVisible = [...allFlights]
+            .sort((a, b) => getEffectivePrice(a) - getEffectivePrice(b))
+            .slice(0, 10)
+            .map(flight => ({
+                id: flight.id,
+                route: `${flight.departure.city} → ${flight.arrival.city}`,
+                airline: flight.airline,
+                price: getEffectivePrice(flight),
+                date: flight.departure.date,
+                source: flight.source,
+            }));
 
         if (searchParams.get('summaryOnly') === '1') {
             return NextResponse.json({
