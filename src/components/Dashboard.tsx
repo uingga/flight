@@ -1767,7 +1767,7 @@ export default function Dashboard() {
         return scores;
     }, [flights, interparkPrices]);
 
-    // 네이버 최저가 이하 그룹은 KST 오전 6시·오후 6시에 순서를 바꾼다.
+    // 네이버 최저가 이하 그룹은 KST 오전 6시·오후 8시에 순서를 바꾼다.
     // 열린 화면도 슬롯이 바뀐 뒤 1분 안에 새 순서를 반영한다.
     const [recommendationRotationSlot, setRecommendationRotationSlot] = useState(
         () => getRecommendationRotationSlot(),
