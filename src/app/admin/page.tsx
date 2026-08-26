@@ -306,6 +306,12 @@ interface GaActivityPeriod {
     detailOpenUsers: number;
     bookingClickUsers: number;
     alertSetupUsers: number;
+    routeAlertSetupUsers: number;
+    dealAlertSetupUsers: number;
+    shareUsers: number;
+    detailOpenRate: number | null;
+    bookingClickRate: number | null;
+    alertSetupRate: number | null;
     detailToBookingRate: number | null;
 }
 
@@ -334,15 +340,15 @@ const SOURCE_ORDER = ['ybtour', 'hanatour', 'modetour', 'onlinetour', 'ttang', '
  * 초보 운영자가 "지금 뭘 봐야 하지?"에서 시작해 필요한 세부 화면으로 내려가도록 나눈다.
  */
 const TABS = [
-    { id: 'overview', label: '한눈에 보기', hint: '오늘 먼저 볼 것' },
-    { id: 'collection', label: '수집 상태', hint: '여행사·가격 갱신' },
-    { id: 'flights', label: '항공권 관리', hint: '노출·제외·신고' },
-    { id: 'visitors', label: '마케팅', hint: '방문·예약·홍보 성과' },
-    { id: 'members', label: '회원', hint: '로그인·찜·저장' },
-    { id: 'alerts', label: '알림', hint: '수요·발송 후보' },
+    { id: 'overview', label: '오늘', hint: '지금 볼 것' },
+    { id: 'visitors', label: '방문·예약', hint: '1·7·30일 행동' },
+    { id: 'operations', label: '항공권·수집', hint: '노출·신고·갱신' },
+    { id: 'audience', label: '고객·알림', hint: '찜·수요·발송' },
 ] as const;
 
-type TabId = typeof TABS[number]['id'];
+type VisibleTabId = typeof TABS[number]['id'];
+type LegacyTabId = 'collection' | 'flights' | 'members' | 'alerts';
+type TabId = VisibleTabId | LegacyTabId;
 
 const TAB_STORAGE = 'tikitikit_admin_tab';
 
@@ -450,6 +456,89 @@ function PeriodTable({ rows }: { rows: PeriodRow[] }) {
     );
 }
 
+function BehaviorSnapshot({ activity }: { activity: NonNullable<GaStatsData['activityPeriods']> }) {
+    const periods = [
+        { key: 'today', title: '오늘 (1일)', caption: '현재까지 · 집계 중', data: activity.today, sample: 10 },
+        { key: 'recent7', title: '최근 7일', caption: '어제까지 누적', data: activity.recent7, sample: 30 },
+        { key: 'current', title: '최근 30일', caption: '어제까지 누적', data: activity.current, sample: 30 },
+    ] as const;
+
+    const rate = (value: number | null) => value === null ? '—' : `${value}%`;
+
+    return (
+        <div className={styles.behaviorGrid}>
+            {periods.map(period => {
+                const lowSample = period.data.visitors < period.sample || period.data.detailOpenUsers < 10;
+                return (
+                    <article key={period.key} className={styles.behaviorCard}>
+                        <header className={styles.behaviorCardHead}>
+                            <strong>{period.title}</strong>
+                            <span>{period.caption}</span>
+                        </header>
+                        <div className={styles.behaviorVisitor}>
+                            <strong>{period.data.visitors.toLocaleString()}명</strong>
+                            <span>사이트를 본 사람</span>
+                        </div>
+                        <div className={styles.behaviorSteps}>
+                            <div>
+                                <span>상세 열람</span>
+                                <strong>{period.data.detailOpenUsers.toLocaleString()}명</strong>
+                                <small>방문자의 {rate(period.data.detailOpenRate)}</small>
+                            </div>
+                            <span className={styles.behaviorArrow} aria-hidden="true">→</span>
+                            <div>
+                                <span>예약 페이지 이동</span>
+                                <strong>{period.data.bookingClickUsers.toLocaleString()}명</strong>
+                                <small>방문자의 {rate(period.data.bookingClickRate)}</small>
+                            </div>
+                        </div>
+                        <div className={styles.behaviorConversion}>
+                            <span>상세 열람 인원 대비 예약 이동 인원</span>
+                            <strong>{rate(period.data.detailToBookingRate)}</strong>
+                        </div>
+                        <div className={styles.behaviorSignals}>
+                            <span>알림 등록 <b>{period.data.alertSetupUsers.toLocaleString()}명</b><small>방문자의 {rate(period.data.alertSetupRate)}</small></span>
+                            <span>항공권 링크 복사 <b>{period.data.shareUsers.toLocaleString()}명</b></span>
+                        </div>
+                        {period.data.alertSetupUsers > 0 && (
+                            <p className={styles.behaviorBreakdown}>
+                                노선 알림 {period.data.routeAlertSetupUsers.toLocaleString()}명 · 여행지 미지정 알림 {period.data.dealAlertSetupUsers.toLocaleString()}명
+                            </p>
+                        )}
+                        <p className={lowSample ? styles.sampleCaution : styles.sampleReady}>
+                            {lowSample ? '표본이 적어 비율은 참고만 하세요.' : '흐름의 방향을 볼 수 있는 정도로 쌓였어요.'}
+                        </p>
+                    </article>
+                );
+            })}
+            <p className={styles.behaviorFootnote}>
+                예약 비율은 상세 열람 사용자 수와 예약 이동 사용자 수를 비교한 참고값입니다. 같은 사람이 같은 방문에서 순서대로 행동했는지까지 연결한 구매 전환율은 아닙니다.
+            </p>
+        </div>
+    );
+}
+
+function RankList({
+    items,
+    empty = '아직 보여줄 데이터가 없어요.',
+}: {
+    items: Array<{ label: string; value: string; note?: string }>;
+    empty?: string;
+}) {
+    if (items.length === 0) return <div className={styles.emptyState}>{empty}</div>;
+    return (
+        <div className={styles.rankList}>
+            {items.map((item, index) => (
+                <div key={`${item.label}-${index}`} className={styles.rankRow}>
+                    <span className={styles.rankNumber}>{index + 1}</span>
+                    <span className={styles.rankLabel}>{item.label}{item.note && <small>{item.note}</small>}</span>
+                    <strong>{item.value}</strong>
+                </div>
+            ))}
+        </div>
+    );
+}
+
 function SectionNav({ items }: { items: Array<{ href: string; label: string }> }) {
     return (
         <nav className={styles.sectionNav} aria-label="이 화면의 세부 항목">
@@ -490,10 +579,11 @@ export default function AdminPage() {
         // 새로고침해도 보던 탭에 그대로 머무르게 한다
         try {
             const savedTab = window.localStorage.getItem(TAB_STORAGE);
-            const migratedTab = savedTab === 'health' ? 'collection'
-                : savedTab === 'reports' ? 'flights'
-                    : savedTab === 'users' ? 'members'
-                        : savedTab;
+            const migratedTab = ['health', 'collection', 'reports', 'flights'].includes(savedTab || '')
+                ? 'operations'
+                : ['users', 'members', 'alerts'].includes(savedTab || '')
+                    ? 'audience'
+                    : savedTab;
             if (migratedTab && TABS.some(t => t.id === migratedTab)) setTab(migratedTab as TabId);
         } catch { /* 저장소를 못 읽어도 기본 탭으로 동작한다 */ }
         const params = new URLSearchParams(window.location.search);
@@ -862,10 +952,10 @@ export default function AdminPage() {
                     >
                         <span className={styles.tabLabel}>
                             {t.label}
-                            {t.id === 'collection' && (criticalAlerts.length > 0 || sourceIssueCount > 0) && (
+                            {t.id === 'operations' && (criticalAlerts.length > 0 || sourceIssueCount > 0) && (
                                 <span className={styles.tabDot} title={`점검 필요 ${criticalAlerts.length}건`} />
                             )}
-                            {t.id === 'flights' && (flightReports?.summary?.activeHides || 0) > 0 && (
+                            {t.id === 'operations' && (flightReports?.summary?.activeHides || 0) > 0 && (
                                 <span className={styles.reportTabCount} title="현재 임시 숨김 항공권">
                                     {flightReports?.summary?.activeHides}
                                 </span>
@@ -879,11 +969,9 @@ export default function AdminPage() {
             {tab === 'overview' && (<>
                 <section className={styles.overviewHero}>
                     <div>
-                        <span className={styles.eyebrow}>오늘의 운영 요약</span>
-                        <h2>{attentionCount > 0 ? `${attentionCount}가지를 확인해주세요` : '지금 크게 문제된 곳은 없어요'}</h2>
-                        <p>
-                            먼저 문제를 확인한 뒤, 오늘·7일·30일 숫자로 방문과 예약 흐름을 살펴보면 됩니다.
-                        </p>
+                        <span className={styles.eyebrow}>오늘</span>
+                        <h2>{attentionCount > 0 ? `지금 ${attentionCount}가지를 확인해주세요` : '지금 바로 처리할 문제는 없어요'}</h2>
+                        <p>문제가 생긴 곳과 오늘의 방문·예약 흐름만 먼저 보여드립니다.</p>
                     </div>
                     <span className={attentionCount > 0 ? styles.overviewStatusWarn : styles.overviewStatusGood}>
                         {attentionCount > 0 ? '확인 필요' : '정상 운영 중'}
@@ -893,33 +981,41 @@ export default function AdminPage() {
                 <section className={styles.section} id="overview-actions">
                     <div className={styles.sectionHeading}>
                         <div>
-                            <h2>지금 먼저 볼 것</h2>
-                            <p>문제가 있는 항목은 색으로 표시합니다. 누르면 자세한 화면으로 이동합니다.</p>
+                            <h2>오늘 처리할 일</h2>
+                            <p>문제가 있는 항목만 나타납니다. 누르면 원인과 기록을 볼 수 있어요.</p>
                         </div>
                         <span className={styles.nowBadge}>지금</span>
                     </div>
-                    <div className={styles.actionGrid}>
-                        <button type="button" onClick={() => selectTab('collection')} className={sourceIssueCount > 0 ? styles.actionCardWarn : styles.actionCard}>
-                            <span>여행사 항공권 수집</span>
-                            <strong>{sourceIssueCount > 0 ? `${sourceIssueCount}곳 확인 필요` : '6곳 정상'}</strong>
-                            <small>{sourceIssueCount > 0 ? '새 데이터가 늦거나 이전 데이터를 쓰는 곳이 있어요.' : '예정된 시간 안에 갱신되고 있어요.'}</small>
-                        </button>
-                        <button type="button" onClick={() => selectTab('collection')} className={naverNeedsAttention ? styles.actionCardWarn : styles.actionCard}>
-                            <span>네이버 가격 확인</span>
-                            <strong>{naverNeedsAttention ? '확인 필요' : '최근 가격 사용 중'}</strong>
-                            <small>{data.naverStatus?.lastCrawledAt ? `마지막 확인 ${timeAgo(data.naverStatus.lastCrawledAt)}` : '확인 기록이 없어요.'}</small>
-                        </button>
-                        <button type="button" onClick={() => selectTab('flights')} className={reportsToReview > 0 ? styles.actionCardWarn : styles.actionCard}>
-                            <span>신고받은 항공권</span>
-                            <strong>{reportsToReview > 0 ? `${reportsToReview}개 확인 필요` : '처리할 항공권 없음'}</strong>
-                            <small>현재 숨김 {flightReports?.summary?.activeHides || 0}개</small>
-                        </button>
-                        <button type="button" onClick={() => selectTab('alerts')} className={styles.actionCard}>
-                            <span>알림 발송 후보</span>
-                            <strong>{dealAlertReview?.qualifiedCandidates ?? '—'}개</strong>
-                            <small>가격뿐 아니라 품질 기준까지 통과한 표예요.</small>
-                        </button>
-                    </div>
+                    {attentionCount === 0 ? (
+                        <div className={styles.allClear}>
+                            <span aria-hidden="true">✓</span>
+                            <div><strong>수집·가격 확인·신고 처리 모두 괜찮아요</strong><small>평소처럼 방문자 흐름만 살펴보면 됩니다.</small></div>
+                        </div>
+                    ) : (
+                        <div className={styles.actionGrid}>
+                            {sourceIssueCount > 0 && (
+                                <button type="button" onClick={() => selectTab('operations')} className={styles.actionCardWarn}>
+                                    <span>여행사 항공권 수집</span>
+                                    <strong>{sourceIssueCount}곳 확인 필요</strong>
+                                    <small>새 데이터가 늦거나 이전 데이터를 쓰는 곳이 있어요.</small>
+                                </button>
+                            )}
+                            {naverNeedsAttention && (
+                                <button type="button" onClick={() => selectTab('operations')} className={styles.actionCardWarn}>
+                                    <span>가격 비교 데이터</span>
+                                    <strong>갱신 상태 확인</strong>
+                                    <small>{data.naverStatus?.lastCrawledAt ? `마지막 확인 ${timeAgo(data.naverStatus.lastCrawledAt)}` : '확인 기록이 없어요.'}</small>
+                                </button>
+                            )}
+                            {reportsToReview > 0 && (
+                                <button type="button" onClick={() => selectTab('operations')} className={styles.actionCardWarn}>
+                                    <span>사용자 신고</span>
+                                    <strong>{reportsToReview}개 확인 필요</strong>
+                                    <small>현재 숨김 {flightReports?.summary?.activeHides || 0}개</small>
+                                </button>
+                            )}
+                        </div>
+                    )}
                 </section>
 
                 <section className={styles.section} id="overview-performance">
@@ -933,57 +1029,11 @@ export default function AdminPage() {
                         <div className={styles.dealReviewEmpty}>{gaStatsError}</div>
                     ) : gaStats && !gaStats.available ? (
                         <div className={styles.dealReviewEmpty}>{gaStats.message || '방문 통계를 불러오지 못했습니다.'}</div>
-                    ) : gaPeriodRows.length > 0 ? (
-                        <PeriodTable rows={gaPeriodRows} />
+                    ) : gaActivity ? (
+                        <BehaviorSnapshot activity={gaActivity} />
                     ) : (
                         <div className={styles.dealReviewEmpty}>방문 통계를 불러오는 중입니다.</div>
                     )}
-                </section>
-
-                <section className={styles.section} id="overview-crawl">
-                    <div className={styles.sectionHeading}>
-                        <div>
-                            <h2>오늘·7일·30일 수집 기록</h2>
-                            <p>수집 실패로 이전 항공권을 그대로 쓴 회차는 새로 들어오거나 사라진 표 계산에서 제외합니다.</p>
-                        </div>
-                    </div>
-                    <PeriodTable
-                        rows={[
-                            { label: '수집을 실행한 횟수', today: `${crawlToday.runs}회`, recent7: `${crawl7.runs}회`, recent30: `${crawl30.runs}회` },
-                            { label: '문제가 있었던 회차', today: `${crawlToday.failed}회`, recent7: `${crawl7.failed}회`, recent30: `${crawl30.failed}회`, note: '한 여행사라도 실패해 이전 데이터를 쓴 회차입니다.' },
-                            { label: '새로 들어온 항공권', today: `${crawlToday.added.toLocaleString()}개`, recent7: `${crawl7.added.toLocaleString()}개`, recent30: `${crawl30.added.toLocaleString()}개` },
-                            { label: '사라진 항공권', today: `${crawlToday.removed.toLocaleString()}개`, recent7: `${crawl7.removed.toLocaleString()}개`, recent30: `${crawl30.removed.toLocaleString()}개` },
-                        ]}
-                    />
-                    {crawl30RecordedDays > 0 && crawl30RecordedDays < 30 && (
-                        <p className={styles.dataNotice}>
-                            최근 30일 칸에는 아직 기록이 있는 {crawl30RecordedDays}일치만 포함됩니다. 날짜가 쌓이면 30일치로 자동 채워집니다.
-                        </p>
-                    )}
-                </section>
-
-                <section className={styles.section} id="overview-inventory">
-                    <div className={styles.sectionHeading}>
-                        <div>
-                            <h2>현재 사이트 항공권</h2>
-                            <p>기간 합계가 아니라 지금 이 순간의 상태입니다.</p>
-                        </div>
-                        <span className={styles.nowBadge}>지금</span>
-                    </div>
-                    <div className={styles.summaryCards}>
-                        <div className={styles.summaryCard}>
-                            <span className={styles.summaryLabel}>여행사에서 가져온 표</span>
-                            <span className={styles.summaryValue}>{(flightFilterSummary?.collected ?? data.totalFlights).toLocaleString()}</span>
-                        </div>
-                        <div className={styles.summaryCard}>
-                            <span className={styles.summaryLabel}>사이트에 보이는 표</span>
-                            <span className={styles.summaryValue}>{flightFilterSummary?.visible.toLocaleString() ?? '—'}</span>
-                        </div>
-                        <div className={styles.summaryCard}>
-                            <span className={styles.summaryLabel}>기준에 따라 제외한 표</span>
-                            <span className={styles.summaryValue}>{flightFilterSummary?.excluded.toLocaleString() ?? '—'}</span>
-                        </div>
-                    </div>
                 </section>
 
                 <details className={styles.glossary}>
@@ -997,6 +1047,273 @@ export default function AdminPage() {
                         <div><dt>이전 데이터 사용</dt><dd>이번 수집이 실패해 마지막으로 정상 수집한 항공권을 대신 보여주는 상태입니다.</dd></div>
                     </dl>
                 </details>
+            </>)}
+
+            {tab === 'operations' && (<>
+                <div className={styles.tabIntro}>
+                    <div>
+                        <span className={styles.eyebrow}>항공권·수집</span>
+                        <h2>지금 사이트에 나가는 표가 괜찮은지 봅니다</h2>
+                        <p>기간별 횟수표 대신 현재 상태와 최근 문제 기록만 남겼습니다.</p>
+                    </div>
+                </div>
+                <SectionNav items={[
+                    { href: '#operations-current', label: '현재 노출' },
+                    { href: '#operations-sources', label: '여행사 상태' },
+                    { href: '#operations-reports', label: '사용자 신고' },
+                    { href: '#operations-history', label: '최근 기록' },
+                ]} />
+
+                <section className={styles.section} id="operations-current">
+                    <div className={styles.sectionHeading}>
+                        <div>
+                            <h2>현재 항공권 상태</h2>
+                            <p>사용자 화면에 실제로 보이는 표와 바로 고쳐야 할 정보 누락입니다.</p>
+                        </div>
+                        <span className={styles.nowBadge}>지금</span>
+                    </div>
+                    <div className={styles.compactStats}>
+                        <div><span>사이트에 보이는 표</span><strong>{flightFilterSummary?.visible.toLocaleString() ?? '—'}</strong></div>
+                        <div><span>기준에 따라 제외</span><strong>{flightFilterSummary?.excluded.toLocaleString() ?? '—'}</strong></div>
+                        <div className={(flightFilterSummary?.quality.missingBookingLink || 0) > 0 ? styles.compactStatWarn : ''}>
+                            <span>예약 링크 없음</span><strong>{flightFilterSummary?.quality.missingBookingLink.toLocaleString() ?? '—'}</strong>
+                        </div>
+                    </div>
+                    {exclusionReasons.length > 0 && (
+                        <details className={styles.disclosure}>
+                            <summary>제외된 항공권 이유 보기</summary>
+                            <RankList items={exclusionReasons.map(item => ({ label: item.label, value: `${item.count.toLocaleString()}개` }))} />
+                        </details>
+                    )}
+                </section>
+
+                <section className={styles.section} id="operations-sources">
+                    <div className={styles.sectionHeading}>
+                        <div>
+                            <h2>여행사별 수집 상태</h2>
+                            <p>‘이전 데이터 사용’은 이번 수집에 실패해 마지막 정상 데이터를 그대로 보여준다는 뜻입니다.</p>
+                        </div>
+                    </div>
+                    <div className={styles.sourceHealthList}>
+                        {allSources.map(source => {
+                            const updatedAt = data.sourceUpdatedAt?.[source];
+                            const ageHours = updatedAt ? (Date.now() - new Date(updatedAt).getTime()) / 3_600_000 : null;
+                            const staleCount = data.staleStreak?.[source] || 0;
+                            const late = ageHours === null || ageHours > (STALE_AFTER_HOURS[source] ?? DEFAULT_STALE_AFTER_HOURS);
+                            const issue = staleCount > 0 || late;
+                            const currentSite = latestCrawl?.sites[source];
+                            return (
+                                <div key={source} className={issue ? `${styles.sourceHealthRow} ${styles.sourceHealthRowWarn}` : styles.sourceHealthRow}>
+                                    <span className={styles.sourceMark} style={{ background: SOURCE_COLORS[source] }} />
+                                    <div className={styles.sourceHealthName}>
+                                        <strong>{SOURCE_NAMES[source]}</strong>
+                                        <small>{updatedAt ? `${timeAgo(updatedAt)} 갱신` : '정상 갱신 기록 없음'}</small>
+                                    </div>
+                                    <span className={issue ? styles.statusWarn : styles.statusGood}>
+                                        {staleCount > 0 ? `이전 데이터 ${staleCount}회` : late ? '갱신 늦음' : '정상'}
+                                    </span>
+                                    <strong className={styles.sourceHealthCount}>
+                                        {(flightFilterSummary?.visibleBySource[source] ?? currentSite?.total ?? data.bySource[source] ?? 0).toLocaleString()}개
+                                    </strong>
+                                </div>
+                            );
+                        })}
+                    </div>
+                    <div className={naverNeedsAttention ? `${styles.naverCompact} ${styles.naverCompactWarn}` : styles.naverCompact}>
+                        <div>
+                            <strong>가격 비교 데이터</strong>
+                            <span>{data.naverStatus?.lastCrawledAt ? `${timeAgo(data.naverStatus.lastCrawledAt)} 확인` : '확인 기록 없음'}</span>
+                        </div>
+                        <div>
+                            <strong>{data.naverStatus ? `${data.naverStatus.freshEntries.toLocaleString()} / ${data.naverStatus.totalEntries.toLocaleString()}개` : '—'}</strong>
+                            <span>최근 가격 / 전체 비교값</span>
+                        </div>
+                    </div>
+                </section>
+
+                <section className={styles.section} id="operations-reports">
+                    <div className={styles.sectionHeading}>
+                        <div>
+                            <h2>사용자 신고</h2>
+                            <p>신고가 쌓여 숨긴 표와 사람이 확인해야 하는 표만 봅니다.</p>
+                        </div>
+                        <span className={(flightReports?.summary?.needsReview || 0) > 0 ? styles.issueBadge : styles.nowBadge}>
+                            확인 필요 {flightReports?.summary?.needsReview || 0}
+                        </span>
+                    </div>
+                    {flightReportsError ? (
+                        <div className={styles.dealReviewEmpty}>{flightReportsError}</div>
+                    ) : !flightReports?.available ? (
+                        <div className={styles.dealReviewEmpty}>{flightReports?.message || '신고 정보를 불러오는 중입니다.'}</div>
+                    ) : flightReports.hides.length === 0 ? (
+                        <div className={styles.allClear}><span aria-hidden="true">✓</span><div><strong>현재 숨긴 항공권이 없어요</strong><small>새 신고가 생기면 이곳에 표시됩니다.</small></div></div>
+                    ) : (
+                        <div className={styles.reportList}>
+                            {flightReports.hides.slice(0, 8).map(hide => {
+                                const report = flightReports.reports.find(item => item.id === hide.latest_report_id)
+                                    || flightReports.reports.find(item => item.flight_id === hide.flight_id);
+                                const active = hide.status === 'active' || hide.status === 'manual';
+                                return (
+                                    <article key={hide.flight_id} className={styles.reportRow}>
+                                        <div>
+                                            <strong>{report ? `${report.departure_city} → ${report.arrival_city}` : hide.flight_id}</strong>
+                                            <span>{SOURCE_NAMES[hide.source] || hide.source} · 신고 {hide.report_count}건 · {timeAgo(hide.updated_at)}</span>
+                                        </div>
+                                        <span className={active ? styles.statusWarn : styles.statusGood}>{active ? '숨김 중' : '해제됨'}</span>
+                                        {active && (
+                                            <div className={styles.reportActions}>
+                                                <button type="button" onClick={() => updateFlightHide(hide.flight_id, 'keep_hidden')} disabled={flightReportAction !== null}>계속 숨김</button>
+                                                <button type="button" onClick={() => updateFlightHide(hide.flight_id, 'release')} disabled={flightReportAction !== null}>다시 표시</button>
+                                            </div>
+                                        )}
+                                    </article>
+                                );
+                            })}
+                        </div>
+                    )}
+                </section>
+
+                <section className={styles.section} id="operations-history">
+                    <div className={styles.sectionHeading}>
+                        <div>
+                            <h2>최근 수집 기록</h2>
+                            <p>실패로 이전 데이터를 쓴 회차는 변화량을 믿을 수 없다고 따로 표시합니다.</p>
+                        </div>
+                    </div>
+                    <RankList
+                        items={turnoverHistory.slice(-8).reverse().map(row => ({
+                            label: formatKST(row.entry.timestamp).replace(/:\d{2}$/, ''),
+                            value: row.reliable ? `+${row.added.toLocaleString()} · −${row.removed.toLocaleString()}` : '변화량 제외',
+                            note: row.reliable ? '새로 들어옴 · 사라짐' : [...row.failedSources, ...row.missingSources].join(', '),
+                        }))}
+                        empty="아직 변화 기록이 없어요."
+                    />
+                    {(data.naverCrawlHistory?.length || 0) > 0 && (
+                        <details className={styles.disclosure}>
+                            <summary>최근 가격 비교 확인 기록</summary>
+                            <RankList items={(data.naverCrawlHistory || []).slice(-8).reverse().map(item => ({
+                                label: `${formatKST(item.timestamp).replace(/:\d{2}$/, '')} · ${item.runner === 'local' ? '내 PC' : item.runner === 'github' ? '자동 실행' : '수동'}`,
+                                value: `${item.success.toLocaleString()}개 성공`,
+                                note: `시도 ${item.attempted.toLocaleString()} · 다음 회차 ${item.deferred.toLocaleString()}${item.abortedEarly ? ' · 조기 중단' : ''}`,
+                            }))} />
+                        </details>
+                    )}
+                </section>
+            </>)}
+
+            {tab === 'audience' && (<>
+                <div className={styles.tabIntro}>
+                    <div>
+                        <span className={styles.eyebrow}>고객·알림</span>
+                        <h2>사람들이 저장한 여행과 기다리는 표를 봅니다</h2>
+                        <p>기간별 가입 표보다 현재 남아 있는 관심과 실제 발송 후보를 중심으로 정리했습니다.</p>
+                    </div>
+                </div>
+                <SectionNav items={[
+                    { href: '#audience-current', label: '현재 이용' },
+                    { href: '#audience-demand', label: '기다리는 표' },
+                    { href: '#audience-candidates', label: '발송 후보' },
+                ]} />
+
+                <section className={styles.section} id="audience-current">
+                    <div className={styles.sectionHeading}>
+                        <div>
+                            <h2>현재 이용 현황</h2>
+                            <p>오늘 생긴 수가 아니라 데이터베이스에 지금 남아 있는 수입니다.</p>
+                        </div>
+                        <span className={styles.nowBadge}>지금</span>
+                    </div>
+                    {userStatsError ? (
+                        <div className={styles.dealReviewEmpty}>{userStatsError}</div>
+                    ) : !userStats?.available ? (
+                        <div className={styles.dealReviewEmpty}>{userStats?.message || '고객 정보를 불러오는 중입니다.'}</div>
+                    ) : (
+                        <div className={styles.compactStats}>
+                            <div><span>로그인 계정</span><strong>{userStats.summary.accounts.toLocaleString()}</strong></div>
+                            <div><span>찜한 항공권</span><strong>{userStats.summary.favorites.toLocaleString()}</strong></div>
+                            <div><span>저장한 검색 조건</span><strong>{userStats.summary.savedSearches.toLocaleString()}</strong></div>
+                            <div><span>알림을 켠 기기</span><strong>{userStats.summary.subscribers.toLocaleString()}</strong></div>
+                            <div><span>활성 알림 조건</span><strong>{userStats.summary.activeAlerts.toLocaleString()}</strong></div>
+                            <div><span>아직 발송 전인 조건</span><strong>{userStats.summary.neverNotified.toLocaleString()}</strong></div>
+                        </div>
+                    )}
+                    <p className={styles.dataGap}>알림이 실제로 도착했는지와 사용자가 열었는지는 아직 기록하지 않습니다.</p>
+                </section>
+
+                <section className={styles.section} id="audience-demand">
+                    <div className={styles.sectionHeading}>
+                        <div>
+                            <h2>사람들이 기다리는 표</h2>
+                            <p>수요가 많은 순서로 5개만 보여드립니다.</p>
+                        </div>
+                    </div>
+                    {userStats?.available ? (
+                        <div className={styles.analysisGrid}>
+                            <div className={styles.analysisPanel}>
+                                <h3>많이 기다리는 노선</h3>
+                                <RankList items={userStats.topRoutes.slice(0, 5).map(route => ({
+                                    label: route.route,
+                                    value: `${route.count.toLocaleString()}건`,
+                                    note: route.avgTarget !== null ? `평균 희망 ${formatPrice(route.avgTarget)}` : undefined,
+                                }))} empty="등록된 노선 알림이 없어요." />
+                            </div>
+                            <div className={styles.analysisPanel}>
+                                <h3>여행지를 열어둔 알림</h3>
+                                <RankList items={userStats.topRegions.slice(0, 5).map(region => ({
+                                    label: region.label,
+                                    value: `${region.count.toLocaleString()}건`,
+                                    note: region.avgTarget !== null ? `평균 희망 ${formatPrice(region.avgTarget)}` : undefined,
+                                }))} empty="등록된 조건형 알림이 없어요." />
+                            </div>
+                        </div>
+                    ) : (
+                        <div className={styles.dealReviewEmpty}>알림 수요를 불러오는 중입니다.</div>
+                    )}
+                </section>
+
+                <section className={styles.section} id="audience-candidates">
+                    <div className={styles.sectionHeading}>
+                        <div>
+                            <h2>지금 보낼 만한 표</h2>
+                            <p>등록 조건에 맞는 표 중 가격 근거와 정보 신선도까지 통과한 후보입니다.</p>
+                        </div>
+                        <span className={styles.dryRunBadge}>테스트 중 · 실제 발송 없음</span>
+                    </div>
+                    {dealAlertReviewError ? (
+                        <div className={styles.dealReviewEmpty}>{dealAlertReviewError}</div>
+                    ) : !dealAlertReview?.available ? (
+                        <div className={styles.dealReviewEmpty}>{dealAlertReview?.message || '발송 후보를 불러오는 중입니다.'}</div>
+                    ) : (
+                        <>
+                            <div className={styles.candidateSummary}>
+                                <div><span>검토한 조건</span><strong>{dealAlertReview.subscriptions.toLocaleString()}개</strong></div>
+                                <div><span>보낼 만한 표</span><strong>{dealAlertReview.qualifiedCandidates.toLocaleString()}개</strong></div>
+                            </div>
+                            <details className={styles.disclosure}>
+                                <summary>후보와 제외 이유 자세히 보기</summary>
+                                <div className={styles.dealReviewList}>
+                                    {dealAlertReview.reviews.map(review => (
+                                        <article key={review.condition.id} className={styles.dealReviewCard}>
+                                            <div className={styles.dealReviewCondition}>
+                                                <div><strong>{review.condition.departureCity} 출발 · {review.condition.region === 'all' ? '아무데나' : review.condition.region}</strong><span>{formatPrice(review.condition.maxPrice)} 이하</span></div>
+                                                <span>{review.qualifiedCount > 0 ? `후보 ${review.qualifiedCount}개` : '보낼 표 없음'}</span>
+                                            </div>
+                                            {review.candidates.slice(0, 5).map(candidate => (
+                                                <a key={candidate.flightId} href={`/share/${encodeURIComponent(candidate.flightId)}`} target="_blank" rel="noopener noreferrer" className={styles.dealCandidate}>
+                                                    <div><strong>{candidate.departureCity} → {candidate.arrivalCity}</strong><span>{candidate.departureDate} ~ {candidate.returnDate} · {candidate.airline}</span><small>{candidate.reasons.join(' · ')}</small></div>
+                                                    <div><strong>{formatPrice(candidate.effectivePrice)}</strong><span>{SOURCE_NAMES[candidate.source] || candidate.source}</span></div>
+                                                </a>
+                                            ))}
+                                            {Object.values(review.rejectionCounts).some(count => count > 0) && (
+                                                <p className={styles.rejectionLine}>{Object.entries(review.rejectionCounts).filter(([, count]) => count > 0).map(([reason, count]) => `${DEAL_REJECTION_LABELS[reason] || reason} ${count}`).join(' · ')}</p>
+                                            )}
+                                        </article>
+                                    ))}
+                                </div>
+                            </details>
+                        </>
+                    )}
+                </section>
             </>)}
 
             {tab === 'flights' && (<>
@@ -1894,6 +2211,137 @@ export default function AdminPage() {
             </>)}
 
             {tab === 'visitors' && (<>
+                <div className={styles.tabIntro}>
+                    <div>
+                        <span className={styles.eyebrow}>방문·예약</span>
+                        <h2>사람들이 들어와서 예약 화면까지 갔는지 봅니다</h2>
+                        <p>오늘은 현재까지, 7일과 30일은 어제까지 끝난 날짜만 비교합니다.</p>
+                    </div>
+                </div>
+                <SectionNav items={[
+                    { href: '#visitor-flow', label: '1·7·30일 행동' },
+                    { href: '#visitor-trend', label: '30일 추이' },
+                    { href: '#visitor-acquisition', label: '유입·예약 관심' },
+                ]} />
+
+                <section className={styles.section} id="visitor-flow">
+                    <div className={styles.sectionHeading}>
+                        <div>
+                            <h2>방문부터 예약 페이지 이동까지</h2>
+                            <p>조회수가 아닌 사람 수를 기준으로, 같은 기간끼리 비교합니다.</p>
+                        </div>
+                    </div>
+                    {gaStatsError ? (
+                        <div className={styles.dealReviewEmpty}>{gaStatsError}</div>
+                    ) : !gaStats?.available ? (
+                        <div className={styles.dealReviewEmpty}>{gaStats?.message || '방문 통계를 불러오는 중입니다.'}</div>
+                    ) : gaStats.activityPeriods ? (
+                        <BehaviorSnapshot activity={gaStats.activityPeriods} />
+                    ) : (
+                        <div className={styles.dealReviewEmpty}>방문 행동을 계산하는 중입니다.</div>
+                    )}
+                </section>
+
+                {gaStats?.available && (
+                    <>
+                        <section className={styles.section} id="visitor-trend">
+                            <div className={styles.sectionHeading}>
+                                <div>
+                                    <h2>최근 30일 방문자 추이</h2>
+                                    <p>오늘은 제외했습니다. 막대 위 숫자는 그날 방문한 사람 수입니다.</p>
+                                </div>
+                            </div>
+                            <div className={styles.signalGrid}>
+                                <div className={styles.signalCard}>
+                                    <span>다시 온 사람 비율</span>
+                                    <strong>{gaStats.returning.current.rate !== null ? `${gaStats.returning.current.rate}%` : '—'}</strong>
+                                    <small>최근 30일 재방문자 {gaStats.returning.current.returningUsers.toLocaleString()}명</small>
+                                </div>
+                                <div className={(gaStats.dateFilter.emptyRate || 0) >= 20 ? `${styles.signalCard} ${styles.signalCardWarn}` : styles.signalCard}>
+                                    <span>날짜 선택 후 결과 없음</span>
+                                    <strong>{gaStats.dateFilter.emptyRate !== null ? `${gaStats.dateFilter.emptyRate}%` : '—'}</strong>
+                                    <small>{gaStats.dateFilter.picks.toLocaleString()}번 선택 중 {gaStats.dateFilter.emptyPicks.toLocaleString()}번</small>
+                                </div>
+                                <div className={styles.signalCard}>
+                                    <span>항공권 링크를 복사한 사람</span>
+                                    <strong>{gaStats.activityPeriods?.current.shareUsers.toLocaleString() ?? '—'}명</strong>
+                                    <small>실제 전송·열람이 아닌 복사 완료 수입니다.</small>
+                                </div>
+                            </div>
+                            {(() => {
+                                const max = Math.max(...gaStats.trend.map(point => point.users), 1);
+                                return (
+                                    <div className={styles.trendChart} aria-label="최근 30일 일별 방문자">
+                                        {gaStats.trend.map(point => (
+                                            <div key={point.date} className={styles.trendCol} title={`${point.date} · ${point.users}명`}>
+                                                <span className={styles.trendCount}>{point.users || ''}</span>
+                                                <div className={styles.trendTrack}>
+                                                    <div className={styles.trendBar} style={{ height: `${Math.max(3, (point.users / max) * 100)}%` }} />
+                                                </div>
+                                                <span className={styles.trendDate}>{point.date.slice(5).replace('-', '/')}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                );
+                            })()}
+                        </section>
+
+                        <section className={styles.section} id="visitor-acquisition">
+                            <div className={styles.sectionHeading}>
+                                <div>
+                                    <h2>어디서 와서 무엇을 눌렀나</h2>
+                                    <p>긴 원본 표 대신 상위 5개만 보여드립니다.</p>
+                                </div>
+                            </div>
+                            <div className={styles.analysisGrid}>
+                                <div className={styles.analysisPanel}>
+                                    <h3>들어온 경로</h3>
+                                    <RankList items={(gaStats.channels || []).slice(0, 5).map(item => ({ label: item.label, value: `${item.users.toLocaleString()}명`, note: `방문 ${item.sessions.toLocaleString()}회` }))} empty="유입 경로가 아직 없어요." />
+                                </div>
+                                <div className={styles.analysisPanel}>
+                                    <h3>홍보글·캠페인</h3>
+                                    <RankList items={(gaStats.campaigns || []).slice(0, 5).map(item => ({ label: item.label, value: `${item.users.toLocaleString()}명`, note: item.bookingClicks === null ? undefined : `예약 이동 ${item.bookingClicks.toLocaleString()}회` }))} empty="추적 링크로 들어온 방문이 아직 없어요." />
+                                </div>
+                                <div className={styles.analysisPanel}>
+                                    <h3>예약 이동이 많은 노선</h3>
+                                    <RankList items={(gaStats.bookingByRoute || []).slice(0, 5).map(item => ({ label: item.label, value: `${item.count.toLocaleString()}회` }))} empty="아직 예약 이동이 없어요." />
+                                </div>
+                                <div className={styles.analysisPanel}>
+                                    <h3>예약 이동이 많은 여행사</h3>
+                                    <RankList items={(gaStats.bookingByAgency || []).slice(0, 5).map(item => ({ label: SOURCE_NAMES[item.label] || item.label, value: `${item.count.toLocaleString()}회` }))} empty="아직 예약 이동이 없어요." />
+                                </div>
+                            </div>
+                            {(gaStats.referrals || []).length > 0 && (
+                                <details className={styles.disclosure}>
+                                    <summary>외부 사이트 이름 자세히 보기</summary>
+                                    <RankList items={(gaStats.referrals || []).slice(0, 8).map(item => ({ label: item.label, value: `${item.users.toLocaleString()}명`, note: `방문 ${item.sessions.toLocaleString()}회` }))} />
+                                </details>
+                            )}
+                            {gaStats.warnings.length > 0 && (
+                                <div className={styles.dataGap}>{gaStats.warnings.join(' · ')}</div>
+                            )}
+                            <details className={styles.disclosure}>
+                                <summary>통계 설정과 내 방문 제외</summary>
+                                <p>실제 구매 완료와 매출은 여행사 제휴 정산 화면에서 따로 확인해야 합니다.</p>
+                                <a href="https://analytics.google.com/" target="_blank" rel="noopener noreferrer">Google Analytics 열기 →</a>
+                                <button
+                                    type="button"
+                                    className={styles.analyticsToggle}
+                                    onClick={() => {
+                                        const next = !analyticsExcluded;
+                                        setAnalyticsExcluded(next);
+                                        setAnalyticsExcludedState(next);
+                                    }}
+                                >
+                                    {analyticsExcluded ? '이 브라우저 방문을 다시 포함하기' : '이 브라우저 방문 제외하기'}
+                                </button>
+                            </details>
+                        </section>
+                    </>
+                )}
+            </>)}
+
+            {tab === 'visitors' && (<div className={styles.legacyHidden} aria-hidden="true">
             <div className={styles.tabIntro}>
                 <div>
                     <span className={styles.eyebrow}>마케팅</span>
@@ -2281,7 +2729,7 @@ export default function AdminPage() {
                     </div>
                 </div>
             </section>
-            </>)}
+            </div>)}
 
             {tab === 'members' && (<>
                 <div className={styles.tabIntro}>

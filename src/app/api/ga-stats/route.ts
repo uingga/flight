@@ -93,6 +93,18 @@ async function buildStats(config: Ga4Config, days: number) {
         limit: 50,
     });
 
+    // 일반 가격 알림과 여행지를 열어둔 특가 알림을 둘 다 성공한 사람 수.
+    // 이벤트별 사용자를 단순히 더하면 같은 사람이 중복될 수 있어 OR 필터로 한 번에 세다.
+    const alertIntentRequest = (range: Array<{ startDate: string; endDate: string }>) => runReport(config, {
+        dateRanges: range,
+        metrics: [{ name: 'totalUsers' }],
+        dimensionFilter: {
+            orGroup: {
+                expressions: ['alert_setup', 'deal_alert_setup'].map(eventName => eventNameFilter(eventName)),
+            },
+        },
+    });
+
     const returningRequest = (range: Array<{ startDate: string; endDate: string }>) => runReport(config, {
         dateRanges: range,
         dimensions: [{ name: 'newVsReturning' }],
@@ -105,6 +117,9 @@ async function buildStats(config: Ga4Config, days: number) {
         eventReport,
         recent7EventReport,
         todayEventReport,
+        currentAlertIntentReport,
+        recent7AlertIntentReport,
+        todayAlertIntentReport,
         currentReport,
         previousReport,
         recent7Report,
@@ -125,6 +140,9 @@ async function buildStats(config: Ga4Config, days: number) {
         eventRequest(dateRanges),
         eventRequest(recent7DateRanges),
         eventRequest(todayDateRanges),
+        alertIntentRequest(dateRanges),
+        alertIntentRequest(recent7DateRanges),
+        alertIntentRequest(todayDateRanges),
         summaryRequest(dateRanges),
         summaryRequest(previousDateRanges),
         summaryRequest(recent7DateRanges),
@@ -291,17 +309,33 @@ async function buildStats(config: Ga4Config, days: number) {
 
     const events = parseEvents(eventReport);
 
-    const activity = (report: ReportResponse, periodSummary: ReturnType<typeof summary>) => {
+    const activity = (
+        report: ReportResponse,
+        periodSummary: ReturnType<typeof summary>,
+        alertIntentReport: ReportResponse,
+    ) => {
         const periodEvents = parseEvents(report);
         const usersOf = (name: string) => periodEvents.find(entry => entry.name === name)?.users ?? 0;
         const detailOpenUsers = usersOf('detail_open');
         const bookingClickUsers = usersOf('booking_click');
-        const alertSetupUsers = usersOf('alert_setup');
+        const routeAlertSetupUsers = usersOf('alert_setup');
+        const dealAlertSetupUsers = usersOf('deal_alert_setup');
+        const alertSetupUsers = num(alertIntentReport.rows?.[0], 0);
+        const shareUsers = usersOf('share_flight');
+        const visitorRate = (value: number) => periodSummary.users > 0
+            ? Number(((value / periodSummary.users) * 100).toFixed(1))
+            : null;
         return {
             visitors: periodSummary.users,
             detailOpenUsers,
             bookingClickUsers,
             alertSetupUsers,
+            routeAlertSetupUsers,
+            dealAlertSetupUsers,
+            shareUsers,
+            detailOpenRate: visitorRate(detailOpenUsers),
+            bookingClickRate: visitorRate(bookingClickUsers),
+            alertSetupRate: visitorRate(alertSetupUsers),
             detailToBookingRate: detailOpenUsers > 0
                 ? Number(((bookingClickUsers / detailOpenUsers) * 100).toFixed(1))
                 : null,
@@ -413,9 +447,9 @@ async function buildStats(config: Ga4Config, days: number) {
             previous: summary(previousReport),
         },
         activityPeriods: {
-            today: activity(todayEventReport, summary(todayReport)),
-            recent7: activity(recent7EventReport, summary(recent7Report)),
-            current: activity(eventReport, totals),
+            today: activity(todayEventReport, summary(todayReport), todayAlertIntentReport),
+            recent7: activity(recent7EventReport, summary(recent7Report), recent7AlertIntentReport),
+            current: activity(eventReport, totals, currentAlertIntentReport),
         },
         returning: {
             current: returning(returningReport),
