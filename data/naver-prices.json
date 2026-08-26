@@ -2541,11 +2541,13 @@
     "retDate": "2026-09-10"
   },
   "ICN-PNQ_2026-09-09_2026-09-12": {
-    "naverLowest": 652600,
-    "crawledAt": "2026-08-13T01:49:34.635Z",
+    "naverLowest": 698522,
+    "crawledAt": "2026-08-26T17:29:54.729Z",
     "route": "ICN-PNQ",
     "depDate": "2026-09-09",
-    "retDate": "2026-09-12"
+    "retDate": "2026-09-12",
+    "lastAttemptAt": "2026-08-26T17:29:54.729Z",
+    "lastAttemptStatus": "success"
   },
   "ICN-MLE_2026-09-12_2026-09-17": {
     "naverLowest": 803800,
@@ -3916,8 +3918,10 @@
     "route": "ICN-TNA",
     "depDate": "2026-09-17",
     "retDate": "2026-09-19",
-    "lastAttemptAt": "2026-08-13T05:53:43.734Z",
-    "lastAttemptStatus": "success"
+    "lastAttemptAt": "2026-08-26T17:31:20.542Z",
+    "lastAttemptStatus": "transient_error",
+    "lastAttemptDetail": "GraphQL 2회 · Naver 사용자 링크 로그인 서비스 더보기 여행상품 여행정보 0 로그인 후 등급확인 마이페이지 여행핫딜 항공 호텔 패키지 For U 15 왕복 편도 다구간 인천 ICN 인천국제공항 지난 TNA 지난야오창공항 09.17.목 09.19.토 성인 1명 일반석 직항만 검색 ",
+    "lastFinalUrl": "https://flight.naver.com/flights/international/ICN-TNA-20260917/TNA-ICN-20260919?adult=1&fareType=Y"
   },
   "ICN-TAK_2026-09-19_2026-09-21": {
     "naverLowest": 147400,
@@ -19292,5 +19296,54 @@
     "retDate": "2026-09-25",
     "lastAttemptAt": "2026-08-26T11:18:39.914Z",
     "lastAttemptStatus": "success"
+  },
+  "ICN-KHH_2026-09-05_2026-09-08": {
+    "naverLowest": 177902,
+    "crawledAt": "2026-08-26T17:28:57.543Z",
+    "route": "ICN-KHH",
+    "depDate": "2026-09-05",
+    "retDate": "2026-09-08",
+    "lastAttemptAt": "2026-08-26T17:28:57.543Z",
+    "lastAttemptStatus": "success"
+  },
+  "ICN-WEH_2026-09-14_2026-09-17": {
+    "naverLowest": 140160,
+    "crawledAt": "2026-08-26T17:29:26.168Z",
+    "route": "ICN-WEH",
+    "depDate": "2026-09-14",
+    "retDate": "2026-09-17",
+    "lastAttemptAt": "2026-08-26T17:29:26.168Z",
+    "lastAttemptStatus": "success"
+  },
+  "ICN-HKG_2026-09-16_2026-09-22": {
+    "naverLowest": 219400,
+    "crawledAt": "2026-08-26T17:30:22.540Z",
+    "route": "ICN-HKG",
+    "depDate": "2026-09-16",
+    "retDate": "2026-09-22",
+    "lastAttemptAt": "2026-08-26T17:30:22.540Z",
+    "lastAttemptStatus": "success"
+  },
+  "ICN-TSN_2026-10-01_2026-10-06": {
+    "naverLowest": 0,
+    "crawledAt": "2026-08-26T17:30:51.872Z",
+    "route": "ICN-TSN",
+    "depDate": "2026-10-01",
+    "retDate": "2026-10-06",
+    "lastAttemptAt": "2026-08-26T17:30:51.872Z",
+    "lastAttemptStatus": "transient_error",
+    "lastAttemptDetail": "GraphQL 2회 · Naver 사용자 링크 로그인 서비스 더보기 여행상품 여행정보 0 로그인 후 등급확인 마이페이지 여행핫딜 항공 호텔 패키지 For U 15 왕복 편도 다구간 인천 ICN 인천국제공항 텐진 TSN 천진공항 10.01.목 10.06.화 성인 1명 일반석 직항만 검색 왕복 ",
+    "lastFinalUrl": "https://flight.naver.com/flights/international/ICN-TSN-20261001/TSN-ICN-20261006?adult=1&fareType=Y"
+  },
+  "ICN-AKL_2026-09-10_2026-09-15": {
+    "naverLowest": 0,
+    "crawledAt": "2026-08-26T17:31:49.447Z",
+    "route": "ICN-AKL",
+    "depDate": "2026-09-10",
+    "retDate": "2026-09-15",
+    "lastAttemptAt": "2026-08-26T17:31:49.447Z",
+    "lastAttemptStatus": "transient_error",
+    "lastAttemptDetail": "GraphQL 2회 · Naver 사용자 링크 로그인 서비스 더보기 여행상품 여행정보 0 로그인 후 등급확인 마이페이지 여행핫딜 항공 호텔 패키지 For U 15 왕복 편도 다구간 인천 ICN 인천국제공항 오클랜드 AKL 오클랜드공항 09.10.목 09.15.화 성인 1명 일반석 직항만 검색",
+    "lastFinalUrl": "https://flight.naver.com/flights/international/ICN-AKL-20260910/AKL-ICN-20260915?adult=1&fareType=Y"
   }
 }
