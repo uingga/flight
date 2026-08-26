@@ -2471,11 +2471,6 @@ export default function MobileRedesignPreview({
                             aria-hidden={!filterBarPinned}
                         >
                             <div className={styles.conditionSummaryRow}>
-                                <button type="button" tabIndex={filterBarPinned ? 0 : -1} className={datePeriod !== 'all' ? styles.conditionActive : ''} onClick={() => setFilterOpen(true)}>
-                                    <span aria-hidden="true">📅</span>
-                                    {dateFilterLabel === '날짜' ? '날짜 전체' : dateFilterLabel}
-                                    <span className={styles.conditionChevron} aria-hidden="true"><Icon name="chevron" /></span>
-                                </button>
                                 <button type="button" tabIndex={filterBarPinned ? 0 : -1} className={departure !== '전체' ? styles.conditionActive : ''} onClick={() => setFilterOpen(true)}>
                                     <span aria-hidden="true">✈️</span>
                                     출발 {departureFilterLabel === '출발지' ? '전체' : departureFilterLabel}
@@ -2484,6 +2479,11 @@ export default function MobileRedesignPreview({
                                 <button type="button" tabIndex={filterBarPinned ? 0 : -1} className={region !== '전체' ? styles.conditionActive : ''} onClick={() => setFilterOpen(true)}>
                                     <span aria-hidden="true">📍</span>
                                     도착 {destinationFilterLabel === '목적지' ? '전체' : destinationFilterLabel}
+                                    <span className={styles.conditionChevron} aria-hidden="true"><Icon name="chevron" /></span>
+                                </button>
+                                <button type="button" tabIndex={filterBarPinned ? 0 : -1} className={datePeriod !== 'all' ? styles.conditionActive : ''} onClick={() => setFilterOpen(true)}>
+                                    <span aria-hidden="true">📅</span>
+                                    {dateFilterLabel === '날짜' ? '일정 전체' : dateFilterLabel}
                                     <span className={styles.conditionChevron} aria-hidden="true"><Icon name="chevron" /></span>
                                 </button>
                             </div>
