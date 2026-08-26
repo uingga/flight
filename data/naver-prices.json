@@ -1059,11 +1059,13 @@
     "retDate": "2026-09-03"
   },
   "ICN-TFU_2026-09-16_2026-09-18": {
-    "naverLowest": 269500,
-    "crawledAt": "2026-08-11T18:24:49.003Z",
+    "naverLowest": 264700,
+    "crawledAt": "2026-08-26T10:11:00.248Z",
     "route": "ICN-TFU",
     "depDate": "2026-09-16",
-    "retDate": "2026-09-18"
+    "retDate": "2026-09-18",
+    "lastAttemptAt": "2026-08-26T10:11:00.248Z",
+    "lastAttemptStatus": "success"
   },
   "ICN-WUX_2026-09-06_2026-09-12": {
     "naverLowest": 284962,
@@ -4148,8 +4150,10 @@
     "route": "ICN-MDT",
     "depDate": "2026-09-23",
     "retDate": "2026-09-29",
-    "lastAttemptAt": "2026-08-13T06:08:17.843Z",
-    "lastAttemptStatus": "success"
+    "lastAttemptAt": "2026-08-26T10:12:26.906Z",
+    "lastAttemptStatus": "transient_error",
+    "lastAttemptDetail": "GraphQL 2회 · Naver 사용자 링크 로그인 서비스 더보기 여행상품 여행정보 0 로그인 후 등급확인 마이페이지 여행핫딜 항공 호텔 패키지 For U 15 왕복 편도 다구간 인천 ICN 인천국제공항 해리스버그 MDT 해리스버그국제공항 09.23.수 09.29.화 성인 1명 일반석 직항",
+    "lastFinalUrl": "https://flight.naver.com/flights/international/ICN-MDT-20260923/MDT-ICN-20260929?adult=1&fareType=Y"
   },
   "ICN-EBB_2026-08-24_2026-08-28": {
     "naverLowest": 1448200,
@@ -18514,5 +18518,54 @@
     "retDate": "2026-09-02",
     "lastAttemptAt": "2026-08-26T05:34:18.333Z",
     "lastAttemptStatus": "miss"
+  },
+  "ICN-XIY_2026-10-18_2026-10-21": {
+    "naverLowest": 298400,
+    "crawledAt": "2026-08-26T10:10:01.791Z",
+    "route": "ICN-XIY",
+    "depDate": "2026-10-18",
+    "retDate": "2026-10-21",
+    "lastAttemptAt": "2026-08-26T10:10:01.791Z",
+    "lastAttemptStatus": "success"
+  },
+  "ICN-PPS_2026-09-26_2026-09-29": {
+    "naverLowest": 340900,
+    "crawledAt": "2026-08-26T10:10:31.103Z",
+    "route": "ICN-PPS",
+    "depDate": "2026-09-26",
+    "retDate": "2026-09-29",
+    "lastAttemptAt": "2026-08-26T10:10:31.103Z",
+    "lastAttemptStatus": "success"
+  },
+  "ICN-CGO_2026-10-16_2026-10-19": {
+    "naverLowest": 291000,
+    "crawledAt": "2026-08-26T10:11:29.016Z",
+    "route": "ICN-CGO",
+    "depDate": "2026-10-16",
+    "retDate": "2026-10-19",
+    "lastAttemptAt": "2026-08-26T10:11:29.016Z",
+    "lastAttemptStatus": "success"
+  },
+  "GMP-KCZ_2026-08-29_2026-09-01": {
+    "naverLowest": 0,
+    "crawledAt": "2026-08-26T10:11:58.359Z",
+    "route": "GMP-KCZ",
+    "depDate": "2026-08-29",
+    "retDate": "2026-09-01",
+    "lastAttemptAt": "2026-08-26T10:11:58.359Z",
+    "lastAttemptStatus": "transient_error",
+    "lastAttemptDetail": "GraphQL 2회 · Naver 사용자 링크 로그인 서비스 더보기 여행상품 여행정보 0 로그인 후 등급확인 마이페이지 여행핫딜 항공 호텔 패키지 For U 15 왕복 편도 다구간 김포 GMP 김포국제공항 고치 KCZ 고치공항 08.29.토 09.01.화 성인 1명 일반석 직항만 검색 왕복 ",
+    "lastFinalUrl": "https://flight.naver.com/flights/international/GMP-KCZ-20260829/KCZ-GMP-20260901?adult=1&fareType=Y"
+  },
+  "GMP-TOY_2026-09-17_2026-09-23": {
+    "naverLowest": 0,
+    "crawledAt": "2026-08-26T10:12:55.416Z",
+    "route": "GMP-TOY",
+    "depDate": "2026-09-17",
+    "retDate": "2026-09-23",
+    "lastAttemptAt": "2026-08-26T10:12:55.416Z",
+    "lastAttemptStatus": "transient_error",
+    "lastAttemptDetail": "GraphQL 2회 · Naver 사용자 링크 로그인 서비스 더보기 여행상품 여행정보 0 로그인 후 등급확인 마이페이지 여행핫딜 항공 호텔 패키지 For U 15 왕복 편도 다구간 김포 GMP 김포국제공항 토야마 TOY 토야마공항 09.17.목 09.23.수 성인 1명 일반석 직항만 검색 왕",
+    "lastFinalUrl": "https://flight.naver.com/flights/international/GMP-TOY-20260917/TOY-GMP-20260923?adult=1&fareType=Y"
   }
 }
