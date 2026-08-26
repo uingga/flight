@@ -748,9 +748,6 @@ export default function MobileRedesignPreview({
     const sortMenuRef = useRef<HTMLDivElement | null>(null);
     const sortTriggerRef = useRef<HTMLButtonElement | null>(null);
     const searchButtonRef = useRef<HTMLButtonElement | null>(null);
-    const lastScrollYRef = useRef(0);
-    const scrollDirectionRef = useRef<'up' | 'down' | null>(null);
-    const scrollDirectionAnchorRef = useRef(0);
     const mergedAccountRef = useRef<string | null>(null);
     const favoriteMutationVersionRef = useRef(new Map<string, number>());
     const favoriteIntentRef = useRef(new Map<string, boolean>());
@@ -1226,30 +1223,8 @@ export default function MobileRedesignPreview({
             setShowScrollTop(scrollY > Math.max(900, window.innerHeight * 1.25));
             const filterTop = filterBarSlotRef.current?.getBoundingClientRect().top;
             const isPastFilters = typeof filterTop === 'number' && filterTop <= 0;
-            const isDesktop = window.matchMedia('(min-width: 960px)').matches;
-            const lastScrollY = lastScrollYRef.current;
-            const nextDirection = scrollY > lastScrollY ? 'down' : scrollY < lastScrollY ? 'up' : null;
-
-            if (!isPastFilters) {
-                setFilterBarPinned(false);
-                scrollDirectionRef.current = nextDirection;
-                scrollDirectionAnchorRef.current = scrollY;
-            } else if (isDesktop) {
-                setFilterBarPinned(true);
-            } else if (nextDirection) {
-                if (scrollDirectionRef.current !== nextDirection) {
-                    scrollDirectionRef.current = nextDirection;
-                    scrollDirectionAnchorRef.current = lastScrollY;
-                }
-                const directionDistance = Math.abs(scrollY - scrollDirectionAnchorRef.current);
-                if (nextDirection === 'up' && directionDistance >= 18) setFilterBarPinned(true);
-                if (nextDirection === 'down' && directionDistance >= 12) setFilterBarPinned(false);
-            }
-
-            lastScrollYRef.current = scrollY;
+            setFilterBarPinned(isPastFilters);
         };
-        lastScrollYRef.current = Math.max(0, window.scrollY);
-        scrollDirectionAnchorRef.current = lastScrollYRef.current;
         updateScrollState();
         window.addEventListener('scroll', updateScrollState, { passive: true });
         window.addEventListener('resize', updateScrollState);
