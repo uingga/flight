@@ -479,6 +479,10 @@ async function main() {
             const todayDate = todayKst;
             let newFlightCount = 0;
             benchmarkedFlights.forEach((f: any) => {
+                // 부분 크롤에서 실행하지 않은 여행사는 기존 최종 객체를 그대로 보존한다.
+                // firstSeen 같은 필드를 여기서 새로 붙이면 "선택한 소스만 교체"가 아니게 되고,
+                // 별도 워크플로가 관리하는 마이리얼트립 데이터까지 조용히 바뀐다.
+                if (requestedSources && !requestedSources.has(f.source)) return;
                 const prevFirstSeen = prevFlightMap.get(buildLifecycleIdentity(f).offerKey);
                 if (prevFirstSeen) {
                     f.firstSeen = prevFirstSeen; // 기존 항공편: firstSeen 이어받기
