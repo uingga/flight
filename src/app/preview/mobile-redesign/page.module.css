@@ -359,8 +359,7 @@
 
 .cardTopline { min-height: 35px; padding: 13px 50px 0 16px; display: flex; align-items: center; justify-content: space-between; }
 .cardTopline > div { overflow: hidden; display: flex; align-items: center; gap: 6px; min-width: 0; }
-.sourceBadge { position: relative; display: inline-flex; height: 20px; padding: 0 0 0 8px; align-items: center; font-size: var(--size-meta); line-height: 1; font-weight: var(--weight-bold); white-space: nowrap; }
-.sourceBadge::before { content: ''; position: absolute; left: 0; width: 3px; height: 12px; border-radius: 999px; background: currentColor; }
+.sourceBadge { position: relative; display: inline-flex; height: 20px; padding: 0; align-items: center; font-size: var(--size-meta); line-height: 1; font-weight: var(--weight-bold); white-space: nowrap; }
 .ybtour { color: #b45309; }
 .modetour { color: #047857; }
 .hanatour { color: #7c3aed; }
@@ -368,8 +367,6 @@
 .ttang { color: #dc2626; }
 .myrealtrip { color: #2563eb; }
 .airline { min-width: 0; height: 20px; overflow: hidden; display: inline-flex; align-items: center; color: var(--text-secondary); font-size: var(--size-meta); line-height: 1; font-weight: var(--weight-medium); text-overflow: ellipsis; white-space: nowrap; }
-.cardTopline .sourceBadge { font-weight: var(--weight-medium); }
-.cardTopline .sourceBadge,
 .cardTopline .airline { opacity: 0.78; }
 
 .favoriteButton {
@@ -1283,7 +1280,6 @@
     .todayPickInline { display: none; }
     .cardTopline { position: relative; min-height: 39px; padding: 14px 48px 0 18px; }
     .sourceBadge { font-size: 12px; font-weight: 600; }
-    .cardTopline .sourceBadge { font-weight: 500; }
     .airline { color: #707070; font-size: 12px; font-weight: 500; }
     .routeGrid { margin: 18px 20px 0; padding-bottom: 6px; grid-template-columns: minmax(0, 1fr) 54px minmax(0, 1fr); }
     .routeEndpoint strong { font-size: 20px; font-weight: 600; letter-spacing: -0.025em; }
