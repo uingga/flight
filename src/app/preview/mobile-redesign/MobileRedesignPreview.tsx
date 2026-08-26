@@ -11,6 +11,7 @@ import { CITY_TO_AIRPORT, calcFlightTiming, getNaverFlightUrl, normalizeAirline,
 import { getTripcomHotelUrl, getTripcomTrackingId } from '@/lib/utils/tripcom-helpers';
 import { getFlightBookingUrl } from '@/lib/utils/booking-url';
 import { useDialogFocus } from '@/lib/hooks/use-dialog-focus';
+import { useSwipeToDismiss } from '@/lib/hooks/use-swipe-to-dismiss';
 import { checkIsMobile } from '@/lib/utils/mobile-url';
 import {
     getComparisonFreshness,
@@ -845,6 +846,27 @@ export default function MobileRedesignPreview({
         setShowDealAlert(false);
         setAlertRouteTarget(null);
     }, []);
+
+    const filterSwipe = useSwipeToDismiss({
+        open: filterOpen,
+        sheetRef: filterDialogRef,
+        onDismiss: () => setFilterOpen(false),
+    });
+    const detailSwipe = useSwipeToDismiss({
+        open: Boolean(selectedFlight),
+        sheetRef: detailDialogRef,
+        onDismiss: closeSelectedFlight,
+    });
+    const serviceUpdateSwipe = useSwipeToDismiss({
+        open: showServiceUpdate,
+        sheetRef: serviceUpdateDialogRef,
+        onDismiss: dismissServiceUpdate,
+    });
+    const contactSwipe = useSwipeToDismiss({
+        open: showContact,
+        sheetRef: contactDialogRef,
+        onDismiss: () => setShowContact(false),
+    });
 
     const loadFlights = useCallback(async (background = false) => {
         if (!background) setLoading(true);
@@ -2982,7 +3004,7 @@ export default function MobileRedesignPreview({
             {filterOpen && (
                 <div className={`${styles.sheetOverlay} ${styles.filterOverlay}`} onClick={() => setFilterOpen(false)}>
                     <section ref={filterDialogRef} className={styles.bottomSheet} role="dialog" aria-modal="true" aria-label="항공권 필터" aria-labelledby="flight-filter-title" onClick={event => event.stopPropagation()}>
-                        <div className={styles.sheetHandle} />
+                        <div className={styles.sheetHandle} aria-hidden="true" {...filterSwipe} />
                         <div className={styles.sheetHeader}>
                             <h2 id="flight-filter-title">표 골라보기</h2>
                             <button type="button" onClick={resetFilters}>초기화</button>
@@ -3154,7 +3176,7 @@ export default function MobileRedesignPreview({
                         aria-labelledby="flight-detail-title"
                         onClick={event => event.stopPropagation()}
                     >
-                        <div className={styles.sheetHandle} />
+                        <div className={styles.sheetHandle} aria-hidden="true" {...detailSwipe} />
                         <div className={styles.detailHeader}>
                             <div className={styles.detailAgencyLine}>
                                 <span className={`${styles.sourceBadge} ${styles[selectedFlight.source]}`}>{SOURCE_NAMES[selectedFlight.source]}</span>
@@ -3438,7 +3460,7 @@ export default function MobileRedesignPreview({
                         aria-labelledby="service-update-title"
                         onClick={event => event.stopPropagation()}
                     >
-                        <div className={styles.sheetHandle} />
+                        <div className={styles.sheetHandle} aria-hidden="true" {...serviceUpdateSwipe} />
                         <p className={styles.serviceUpdateEyebrow}>서비스 안내</p>
                         <div className={styles.serviceUpdateNotice}>
                             <h2 id="service-update-title">🔐 로그인 기능이 생겼어요</h2>
@@ -3457,7 +3479,7 @@ export default function MobileRedesignPreview({
             {showContact && (
                 <div className={`${styles.sheetOverlay} ${styles.contactOverlay}`} onClick={() => setShowContact(false)}>
                     <section ref={contactDialogRef} className={`${styles.bottomSheet} ${styles.contactSheet}`} role="dialog" aria-modal="true" aria-labelledby="contact-title" onClick={event => event.stopPropagation()}>
-                        <div className={styles.sheetHandle} />
+                        <div className={styles.sheetHandle} aria-hidden="true" {...contactSwipe} />
                         <div className={styles.contactHeader}>
                             <div>
                                 <span>티키티킷에 말해주세요</span>

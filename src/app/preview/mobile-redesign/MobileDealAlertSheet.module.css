@@ -22,7 +22,9 @@
     animation: sheetUp 220ms cubic-bezier(.2, .8, .2, 1);
 }
 
-.handle { width: 38px; height: 4px; margin: 2px auto 15px; border-radius: 999px; background: #ddd; }
+.handle { width: 100%; height: 24px; display: flex; align-items: center; justify-content: center; touch-action: none; cursor: grab; }
+.handle::after { content: ''; width: 38px; height: 4px; border-radius: 999px; background: #ddd; }
+.handle:active { cursor: grabbing; }
 .header { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
 .header p { color: var(--brand, #ff385c); font-size: 11px; font-weight: 800; }
 .header h2 { margin-top: 3px; color: var(--ink, #222); font-size: 22px; line-height: 1.25; font-weight: 800; letter-spacing: -0.045em; }

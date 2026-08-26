@@ -564,7 +564,18 @@
     animation: sheetUp 220ms cubic-bezier(.2, .8, .2, 1);
 }
 
-.sheetHandle { width: 38px; height: 4px; margin: 2px auto 15px; border-radius: 999px; background: #dddddd; }
+.sheetHandle {
+    width: 100%;
+    height: 22px;
+    margin: -2px 0 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    touch-action: none;
+    cursor: grab;
+}
+.sheetHandle::after { content: ''; width: 38px; height: 4px; border-radius: 999px; background: #dddddd; }
+.sheetHandle:active { cursor: grabbing; }
 .sheetHeader { display: flex; align-items: center; justify-content: space-between; }
 .sheetHeader h2 { font-size: var(--size-title); font-weight: var(--weight-heavy); letter-spacing: -0.04em; }
 .sheetHeader button { padding: 6px 0 6px 10px; color: var(--muted); font-size: var(--size-meta); font-weight: var(--weight-medium); }

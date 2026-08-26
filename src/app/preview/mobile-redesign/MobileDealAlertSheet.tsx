@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import * as gtag from '@/lib/analytics';
 import { dealAlertRegionLabel, type DealAlertRegion } from '@/lib/deal-alerts';
 import { useDialogFocus } from '@/lib/hooks/use-dialog-focus';
+import { useSwipeToDismiss } from '@/lib/hooks/use-swipe-to-dismiss';
 import styles from './MobileDealAlertSheet.module.css';
 
 interface MobileDealAlertSheetProps {
@@ -116,6 +117,7 @@ export default function MobileDealAlertSheet({
     const [managerMessage, setManagerMessage] = useState<string | null>(null);
     const sheetRef = useRef<HTMLElement>(null);
     useDialogFocus(open, sheetRef);
+    const swipeHandle = useSwipeToDismiss({ open, sheetRef, onDismiss: onClose });
 
     const loadManagedAlerts = async () => {
         setAlertsLoading(true);
@@ -294,7 +296,7 @@ export default function MobileDealAlertSheet({
     return (
         <div className={styles.overlay} onClick={onClose}>
             <section ref={sheetRef} className={styles.sheet} role="dialog" aria-modal="true" aria-labelledby="deal-alert-title" onClick={event => event.stopPropagation()}>
-                <div className={styles.handle} />
+                <div className={styles.handle} aria-hidden="true" {...swipeHandle} />
                 <header className={styles.header}>
                     <div>
                         <p>특가 알림</p>

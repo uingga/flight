@@ -1,10 +1,23 @@
-import { chromium, type Page } from 'playwright';
+import { chromium, type Locator, type Page } from 'playwright';
 
 const baseUrl = process.argv[2] || 'http://localhost:3002/preview/mobile-redesign';
 const isLocalPreview = ['localhost', '127.0.0.1', '::1'].includes(new URL(baseUrl).hostname);
 
 function assert(condition: unknown, message: string): asserts condition {
     if (!condition) throw new Error(message);
+}
+
+async function swipeSheetDown(page: Page, dialog: Locator) {
+    const handle = dialog.locator('[data-swipe-handle]');
+    await handle.waitFor({ state: 'visible' });
+    const box = await handle.boundingBox();
+    assert(box, '바텀시트 드래그 손잡이의 위치를 찾지 못했습니다.');
+    const x = box.x + box.width / 2;
+    const y = box.y + box.height / 2;
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    await page.mouse.move(x, y + 190, { steps: 8 });
+    await page.mouse.up();
 }
 
 async function waitForFlights(page: Page) {
@@ -119,6 +132,12 @@ async function verifyViewport(width: number, height: number) {
         }
         const mainFilterDialog = page.locator('[aria-label="항공권 필터"]').filter({ visible: true }).last();
         await mainFilterDialog.waitFor();
+        if (width < 960) {
+            await swipeSheetDown(page, mainFilterDialog);
+            await mainFilterDialog.waitFor({ state: 'hidden' });
+            await filterButton.first().click();
+            await mainFilterDialog.waitFor();
+        }
         if (width >= 960) {
             await mainFilterDialog.getByRole('button', { name: '전체 항공사', exact: true }).click();
             const airlineListbox = mainFilterDialog.getByRole('listbox', { name: '항공사 선택' });
@@ -171,6 +190,14 @@ async function verifyViewport(width: number, height: number) {
         assert(new URL(page.url()).searchParams.has('flight'), '가격 알림을 뒤로 닫은 뒤 상세 URL이 사라졌습니다.');
         await page.goBack();
         await detail.waitFor({ state: 'hidden' });
+
+        if (width < 960) {
+            await page.locator('article').first().locator('button').first().click();
+            await detail.waitFor();
+            await swipeSheetDown(page, detail);
+            await detail.waitFor({ state: 'hidden' });
+            assert(!new URL(page.url()).searchParams.has('flight'), '상세를 아래로 내려 닫은 뒤 URL에 항공권 식별자가 남았습니다.');
+        }
 
         await page.getByRole('button', { name: /로그인|내 여행/ }).first().click();
         await page.getByRole('heading', { name: /어디서든 이어보기|저장해 둔 여행/ }).first().waitFor();

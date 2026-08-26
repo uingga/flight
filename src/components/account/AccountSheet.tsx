@@ -10,6 +10,7 @@ import type {
 import styles from './AccountSheet.module.css';
 import * as gtag from '@/lib/analytics';
 import { useDialogFocus } from '@/lib/hooks/use-dialog-focus';
+import { useSwipeToDismiss } from '@/lib/hooks/use-swipe-to-dismiss';
 
 interface AccountSheetProps {
     open: boolean;
@@ -99,6 +100,7 @@ export default function AccountSheet({
     const sheetRef = useRef<HTMLElement>(null);
     const suggestedName = useMemo(() => getSuggestedName(currentSearch), [currentSearch]);
     useDialogFocus(open, sheetRef);
+    const swipeHandle = useSwipeToDismiss({ open, sheetRef, onDismiss: onClose });
 
     useEffect(() => {
         if (!open) return;
@@ -181,7 +183,7 @@ export default function AccountSheet({
     return (
         <div className={styles.overlay} role="presentation" onMouseDown={event => event.target === event.currentTarget && onClose()}>
             <section ref={sheetRef} className={styles.sheet} role="dialog" aria-modal="true" aria-labelledby="account-title">
-                <div className={styles.handle} aria-hidden="true" />
+                <div className={styles.handle} aria-hidden="true" {...swipeHandle} />
                 <header className={styles.header}>
                     <div>
                         <p className={styles.eyebrow}>내 여행</p>
