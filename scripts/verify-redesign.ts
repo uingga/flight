@@ -13,6 +13,17 @@ async function waitForFlights(page: Page) {
     assert(cardCount >= 3, `항공권 카드가 ${cardCount}개만 표시됐습니다.`);
 }
 
+async function selectSource(page: Page, sourceName: string) {
+    const filterButton = page.getByRole('button', { name: '필터', exact: true }).filter({ visible: true });
+    if (await filterButton.count()) await filterButton.first().click();
+    else await page.getByRole('button', { name: '상세 조건', exact: true }).click();
+    const filterDialog = page.locator('[aria-label="항공권 필터"]').filter({ visible: true }).last();
+    await filterDialog.waitFor();
+    await filterDialog.getByRole('button', { name: sourceName, exact: true }).click();
+    await filterDialog.getByRole('button', { name: /개 항공권 보기/ }).click();
+    await page.locator('article').first().waitFor();
+}
+
 async function verifyViewport(width: number, height: number) {
     const browser = await chromium.launch({ headless: true });
     const page = await browser.newPage({ viewport: { width, height } });
@@ -22,6 +33,61 @@ async function verifyViewport(width: number, height: number) {
     try {
         await page.goto(baseUrl, { waitUntil: 'domcontentloaded' });
         await waitForFlights(page);
+
+        const initialCardCount = await page.locator('article').count();
+        const expectedInitialCards = width >= 960 ? 30 : 15;
+        assert(
+            initialCardCount >= expectedInitialCards,
+            `더 보기를 누르기 전 카드가 ${initialCardCount}개뿐입니다. 최소 ${expectedInitialCards}개가 보여야 합니다.`,
+        );
+
+        if (width < 960) {
+            await page.evaluate(() => window.scrollTo(0, Math.max(1200, document.body.scrollHeight * 0.45)));
+            const stickyFilters = page.getByRole('navigation', { name: '현재 항공권 조건' });
+            await stickyFilters.waitFor({ state: 'visible' });
+            const stickyText = (await stickyFilters.locator('button').allTextContents()).join(' ');
+            const departureIndex = stickyText.indexOf('출발');
+            const arrivalIndex = stickyText.indexOf('도착');
+            const dateIndex = stickyText.indexOf('일정');
+            assert(
+                departureIndex >= 0 && departureIndex < arrivalIndex && arrivalIndex < dateIndex,
+                `스크롤 필터 순서가 출발→도착→일정이 아닙니다: ${stickyText}`,
+            );
+            await page.evaluate(() => window.scrollTo(0, 0));
+        }
+
+        if (width === 390) {
+            const previewData = await page.evaluate(async () => {
+                const response = await fetch('/api/preview-flights?sortBy=price&sortOrder=asc', { cache: 'no-store' });
+                const payload = await response.json() as { flights?: Array<{ source?: string }> };
+                return {
+                    source: response.headers.get('x-tikitikit-preview-data'),
+                    myrealtrip: (payload.flights || []).filter(flight => flight.source === 'myrealtrip').length,
+                };
+            });
+            assert(previewData.source === 'live', `미리보기가 운영 데이터 대신 ${previewData.source || '알 수 없는 데이터'}를 사용합니다.`);
+            assert(previewData.myrealtrip > 0, '미리보기 최신 데이터에서 마이리얼트립 항공권이 모두 빠졌습니다.');
+
+            await page.getByRole('button', { name: '로그인하고 찜하기' }).first().click();
+            await page.getByRole('heading', { name: '어디서든 이어보기' }).waitFor();
+            await page.keyboard.press('Escape');
+
+            await selectSource(page, '하나투어');
+            await page.locator('article[data-source="hanatour"]').first().locator('button').first().click();
+            let detailForPassenger = page.locator('[aria-label="항공권 상세"]');
+            await detailForPassenger.getByText('탑승 인원', { exact: true }).waitFor();
+            assert(await detailForPassenger.locator('details[open]').count() > 0, '지원 여행사의 탑승 인원 선택이 펼쳐져 있지 않습니다.');
+            await page.keyboard.press('Escape');
+
+            await selectSource(page, '모두투어');
+            await page.locator('article[data-source="modetour"]').first().locator('button').first().click();
+            detailForPassenger = page.locator('[aria-label="항공권 상세"]');
+            await detailForPassenger.getByText('여행사 예약 화면에서 선택해요', { exact: true }).waitFor();
+            await page.keyboard.press('Escape');
+
+            await page.goto(baseUrl, { waitUntil: 'domcontentloaded' });
+            await waitForFlights(page);
+        }
 
         const dropTicker = page.locator('[data-drop-alert-flight-id]').filter({ visible: true }).first();
         if (await dropTicker.count()) {
