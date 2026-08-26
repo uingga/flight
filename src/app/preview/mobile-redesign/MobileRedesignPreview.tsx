@@ -699,6 +699,8 @@ function Icon({ name }: { name: 'sliders' | 'search' | 'star' | 'bookmark' | 'sh
     return <svg viewBox="0 0 24 24" aria-hidden="true">{paths[name]}</svg>;
 }
 
+const SERVICE_UPDATE_NOTICE_KEY = 'tikitikit-service-update-20260826-v1';
+
 export default function MobileRedesignPreview({
     previewMode = true,
     beforeFooter,
@@ -744,6 +746,7 @@ export default function MobileRedesignPreview({
     const [filterBarPinned, setFilterBarPinned] = useState(false);
     const [showAccount, setShowAccount] = useState(false);
     const [showContact, setShowContact] = useState(false);
+    const [showServiceUpdate, setShowServiceUpdate] = useState(false);
     const [contactForm, setContactForm] = useState({ name: '', email: '', message: '' });
     const [contactStatus, setContactStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
     const [contactMessage, setContactMessage] = useState('');
@@ -767,6 +770,7 @@ export default function MobileRedesignPreview({
     const filterDialogRef = useRef<HTMLElement | null>(null);
     const detailDialogRef = useRef<HTMLElement | null>(null);
     const contactDialogRef = useRef<HTMLElement | null>(null);
+    const serviceUpdateDialogRef = useRef<HTMLElement | null>(null);
     const historyUiStateRef = useRef({
         selectedFlight,
         showContact,
@@ -791,6 +795,14 @@ export default function MobileRedesignPreview({
         !showDealAlert && !showAccount && !showContact,
     );
     useDialogFocus(showContact, contactDialogRef);
+    useDialogFocus(showServiceUpdate, serviceUpdateDialogRef);
+
+    const dismissServiceUpdate = useCallback(() => {
+        setShowServiceUpdate(false);
+        try {
+            window.localStorage.setItem(SERVICE_UPDATE_NOTICE_KEY, 'dismissed');
+        } catch { }
+    }, []);
 
     const closeSelectedFlight = useCallback(() => {
         if (window.history.state?.tikitikitOverlay === 'flight') {
@@ -875,6 +887,17 @@ export default function MobileRedesignPreview({
     }, [loadFlights]);
 
     useEffect(() => {
+        if (previewMode) return;
+        try {
+            if (window.localStorage.getItem(SERVICE_UPDATE_NOTICE_KEY) !== 'dismissed') {
+                setShowServiceUpdate(true);
+            }
+        } catch {
+            setShowServiceUpdate(true);
+        }
+    }, [previewMode]);
+
+    useEffect(() => {
         const timer = window.setInterval(() => {
             setRecommendationRotationSlot(current => {
                 const next = getRecommendationRotationSlot();
@@ -885,9 +908,9 @@ export default function MobileRedesignPreview({
     }, []);
 
     useEffect(() => {
-        document.body.style.overflow = selectedFlight || filterOpen || showAccount || showDealAlert || showContact ? 'hidden' : '';
+        document.body.style.overflow = selectedFlight || filterOpen || showAccount || showDealAlert || showContact || showServiceUpdate ? 'hidden' : '';
         return () => { document.body.style.overflow = ''; };
-    }, [selectedFlight, filterOpen, showAccount, showContact, showDealAlert]);
+    }, [selectedFlight, filterOpen, showAccount, showContact, showDealAlert, showServiceUpdate]);
 
     useEffect(() => {
         if (!filterOpen) setAirlineMenuOpen(false);
@@ -896,7 +919,8 @@ export default function MobileRedesignPreview({
     useEffect(() => {
         const closeTopLayer = (event: KeyboardEvent) => {
             if (event.key !== 'Escape') return;
-            if (showContact) setShowContact(false);
+            if (showServiceUpdate) dismissServiceUpdate();
+            else if (showContact) setShowContact(false);
             else if (showAccount) setShowAccount(false);
             else if (showDealAlert) closeDealAlert();
             else if (selectedFlight) closeSelectedFlight();
@@ -908,7 +932,7 @@ export default function MobileRedesignPreview({
         };
         window.addEventListener('keydown', closeTopLayer);
         return () => window.removeEventListener('keydown', closeTopLayer);
-    }, [closeDealAlert, closeSelectedFlight, filterOpen, searchOpen, selectedFlight, showAccount, showContact, showDealAlert]);
+    }, [closeDealAlert, closeSelectedFlight, dismissServiceUpdate, filterOpen, searchOpen, selectedFlight, showAccount, showContact, showDealAlert, showServiceUpdate]);
 
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
@@ -3403,6 +3427,32 @@ export default function MobileRedesignPreview({
                 </div>
                 );
             })()}
+
+            {showServiceUpdate && (
+                <div className={`${styles.sheetOverlay} ${styles.serviceUpdateOverlay}`} onClick={dismissServiceUpdate}>
+                    <section
+                        ref={serviceUpdateDialogRef}
+                        className={`${styles.bottomSheet} ${styles.serviceUpdateSheet}`}
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="service-update-title"
+                        onClick={event => event.stopPropagation()}
+                    >
+                        <div className={styles.sheetHandle} />
+                        <p className={styles.serviceUpdateEyebrow}>서비스 안내</p>
+                        <div className={styles.serviceUpdateNotice}>
+                            <h2 id="service-update-title">🔐 로그인 기능이 생겼어요</h2>
+                            <p>찜한 표를 다른 기기에서도 이어볼 수 있어요. 지금은 보안을 위해 이메일 인증만 지원해요.</p>
+                        </div>
+                        <div className={styles.serviceUpdateDivider} />
+                        <div className={styles.serviceUpdateNotice}>
+                            <h2>🥲 아쉽게도, 네이버 비교는 잠시 쉬어가요</h2>
+                            <p>법률·정책 검토가 끝날 때까지 버튼을 내려뒀어요.</p>
+                        </div>
+                        <button type="button" className={styles.serviceUpdateConfirm} onClick={dismissServiceUpdate}>확인했어요</button>
+                    </section>
+                </div>
+            )}
 
             {showContact && (
                 <div className={`${styles.sheetOverlay} ${styles.contactOverlay}`} onClick={() => setShowContact(false)}>

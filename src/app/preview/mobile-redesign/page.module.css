@@ -763,6 +763,14 @@
 .hotelCompareButton > svg { width: 16px; height: 16px; fill: none; stroke: #929292; stroke-width: 2; }
 .affiliateDisclosure { margin: 7px 2px 0; color: var(--text-faint); font-size: var(--size-micro); line-height: 1.45; text-align: center; }
 
+.serviceUpdateOverlay { z-index: 145; }
+.serviceUpdateSheet { padding: 8px 20px max(20px, calc(14px + env(safe-area-inset-bottom))); }
+.serviceUpdateEyebrow { margin: 0 0 18px; color: var(--brand-dark); font-size: var(--size-caption); line-height: 1.3; font-weight: var(--weight-bold); }
+.serviceUpdateNotice h2 { margin: 0; color: var(--ink); font-size: var(--size-body); line-height: 1.35; font-weight: var(--weight-bold); letter-spacing: -0.025em; }
+.serviceUpdateNotice p { margin: 7px 0 0; color: var(--text-muted); font-size: var(--size-meta); line-height: 1.55; word-break: keep-all; }
+.serviceUpdateDivider { height: 1px; margin: 15px 0; background: var(--line); }
+.serviceUpdateConfirm { width: 100%; height: 50px; margin-top: 20px; border: 0; border-radius: 13px; background: var(--brand-dark); color: var(--on-brand); font-size: var(--size-meta); font-weight: var(--weight-bold); }
+
 .contactOverlay { z-index: 125; }
 .contactSheet { padding-bottom: max(22px, env(safe-area-inset-bottom)); }
 .contactHeader { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
