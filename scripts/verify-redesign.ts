@@ -117,7 +117,16 @@ async function verifyViewport(width: number, height: number) {
         } else {
             await page.getByRole('button', { name: '상세 조건', exact: true }).click();
         }
-        await page.locator('[aria-label="항공권 필터"]').filter({ visible: true }).last().waitFor();
+        const mainFilterDialog = page.locator('[aria-label="항공권 필터"]').filter({ visible: true }).last();
+        await mainFilterDialog.waitFor();
+        if (width >= 960) {
+            await mainFilterDialog.getByRole('button', { name: '전체 항공사', exact: true }).click();
+            const airlineListbox = mainFilterDialog.getByRole('listbox', { name: '항공사 선택' });
+            await airlineListbox.waitFor();
+            assert(await airlineListbox.getByRole('option').count() > 1, 'PC 항공사 선택 목록이 비어 있습니다.');
+            await airlineListbox.getByRole('option', { name: '전체 항공사', exact: true }).click();
+            await airlineListbox.waitFor({ state: 'hidden' });
+        }
         await page.keyboard.press('Escape');
 
         await page.locator('article').first().locator('button').first().click();

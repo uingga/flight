@@ -333,7 +333,7 @@
 .todayPickStrip strong { font-size: var(--size-caption); font-weight: var(--weight-heavy); letter-spacing: 0.02em; }
 .todayPickStrip span { font-size: var(--size-micro); font-weight: var(--weight-bold); }
 .todayPickInline { display: none; }
-.todayPickCard .favoriteButton { top: 40px; }
+.todayPickCard .favoriteButton { top: 40px; --favorite-fold-top: -8px; }
 
 .cardTopline { min-height: 35px; padding: 13px 50px 0 16px; display: flex; align-items: center; justify-content: space-between; }
 .cardTopline > div { overflow: hidden; display: flex; align-items: center; gap: 6px; min-width: 0; }
@@ -352,15 +352,44 @@
     z-index: 2;
     top: 10px;
     right: 10px;
+    --favorite-fold-top: -10px;
+    --favorite-fold-right: -10px;
     width: 34px;
     height: 34px;
     display: grid;
     place-items: center;
     color: #a8a8a8;
+    transition: color 150ms ease;
 }
-.favoriteButton svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; }
-.favoriteButton.favoriteActive { color: var(--brand); }
-.favoriteButton.favoriteActive svg { fill: currentColor; }
+.favoriteButton::before {
+    content: '';
+    position: absolute;
+    z-index: 0;
+    top: var(--favorite-fold-top);
+    right: var(--favorite-fold-right);
+    width: 42px;
+    height: 42px;
+    opacity: 0;
+    border-top-right-radius: 10px;
+    background: var(--brand-soft);
+    clip-path: polygon(100% 0, 100% 100%, 0 100%);
+    filter: drop-shadow(-1px -1px 0 #eeb0bd);
+    pointer-events: none;
+    transform: scale(.55);
+    transform-origin: top right;
+    transition: opacity 150ms ease, transform 180ms ease;
+}
+.favoriteButton svg { position: relative; z-index: 1; width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linejoin: round; transition: fill 150ms ease, transform 150ms ease; }
+.favoriteButton:focus-visible { color: var(--brand-dark); }
+.favoriteButton:focus-visible::before { opacity: .82; transform: scale(.72); }
+.favoriteButton.favoriteActive { color: var(--brand-dark); }
+.favoriteButton.favoriteActive::before { opacity: 1; transform: scale(1); }
+.favoriteButton.favoriteActive svg { fill: currentColor; transform: translateY(-.5px); }
+
+@media (hover: hover) {
+    .favoriteButton:hover { color: var(--brand-dark); }
+    .favoriteButton:not(.favoriteActive):hover::before { opacity: .82; transform: scale(.72); }
+}
 
 .routeGrid { margin: 15px 16px 0; display: grid; grid-template-columns: minmax(0, 1fr) 48px minmax(0, 1fr); align-items: start; gap: 3px; }
 .routeEndpoint { min-width: 0; display: flex; flex-direction: column; align-items: center; text-align: center; }
@@ -384,7 +413,7 @@
 .footerStatus { flex: 0 0 auto; color: var(--text-muted); font-size: var(--size-meta); line-height: 1; font-weight: 500; white-space: nowrap; }
 .footerStatusLow { height: 22px; padding: 0 7px; display: inline-flex; align-items: center; border-radius: 999px; background: var(--urgent-soft); color: var(--urgent-dark); font-weight: 500; }
 .footerStatusUrgent { color: var(--urgent-dark); font-weight: 500; }
-.todayPickStatus { overflow: hidden; color: var(--brand-dark); font-weight: 700; text-overflow: ellipsis; }
+.todayPickStatus { overflow: hidden; color: var(--brand-dark); font-size: 13px; line-height: 1.2; font-weight: 700; letter-spacing: -0.015em; text-overflow: ellipsis; }
 .dropMessageMobile { display: inline; }
 .dropMessageDesktop { display: none; }
 
@@ -559,6 +588,8 @@
 .filterSelectRow > span { flex: 0 0 auto; color: var(--text-secondary); font-size: var(--size-meta); font-weight: var(--weight-bold); }
 .filterSelectRow select { min-width: 0; flex: 1; border: 0; outline: 0; background: transparent; color: var(--ink); font-size: var(--size-meta); font-weight: var(--weight-medium); text-align: right; }
 .filterSelectRow:focus-within { border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-soft); }
+.mobileAirlineSelect { display: flex; }
+.desktopAirlineSelect { display: none; }
 .dateCalendar { width: 100%; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; }
 .dateCalendar :global(.react-datepicker__month-container) { width: 100%; float: none; }
 .dateCalendar :global(.react-datepicker__day:hover:not(.react-datepicker__day--disabled):not(.react-datepicker__day--in-range):not(.react-datepicker__day--in-selecting-range):not(.react-datepicker__day--range-start):not(.react-datepicker__day--range-end)) {
@@ -1094,6 +1125,7 @@
     }
     .todayPickCard {
         --ticket-border: #e9a5b4;
+        border-width: 2px;
         border-color: #e9a5b4;
         background: var(--paper);
         box-shadow: none;
@@ -1140,14 +1172,14 @@
     .cardFooter { min-height: 60px; padding: 9px 18px 10px; align-items: center; }
     .availabilityGroup { padding-bottom: 0; align-items: center; transform: translateY(2px); }
     .footerStatus { font-size: 12px; font-weight: 500; }
-    .todayPickStatus { font-weight: 700; }
+    .todayPickStatus { font-size: 13px; font-weight: 700; }
     .dropMessageMobile { display: none; }
     .dropMessageDesktop { display: inline; }
     .footerStatusLow { height: auto; padding: 0; border-radius: 0; background: transparent; color: var(--urgent-dark); }
     .footerStatusUrgent { font-weight: 500; }
     .priceDiscountBadge { padding-right: 5px; padding-left: 5px; border-color: transparent; background: #fff3f5; font-weight: 600; }
     .priceBlock strong { font-size: 23px; font-weight: 700; letter-spacing: -0.02em; }
-    .favoriteButton { top: 12px; right: 12px; }
+    .favoriteButton { top: 12px; right: 12px; --favorite-fold-top: -12px; --favorite-fold-right: -12px; }
     .favoriteButton svg { width: 17px; height: 17px; }
     .todayPickCard .favoriteButton { top: 12px; }
 
@@ -1214,6 +1246,101 @@
     }
     .filterOverlay .sheetHandle { display: none; }
     .filterOverlay .optionGrid button { min-height: 40px; padding: 0 16px; }
+    .mobileAirlineSelect { display: none; }
+    .desktopAirlineSelect { margin-top: 12px; display: block; }
+    .desktopAirlineSelectControl {
+        min-height: 46px;
+        display: grid;
+        grid-template-columns: 96px minmax(0, 1fr);
+        align-items: stretch;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--paper);
+        transition: border-color 140ms ease, box-shadow 140ms ease;
+    }
+    .desktopAirlineSelectControlOpen {
+        border-color: var(--brand);
+        box-shadow: 0 0 0 3px var(--brand-soft);
+    }
+    .desktopAirlineSelectControl > span {
+        padding-left: 14px;
+        display: flex;
+        align-items: center;
+        color: var(--text-secondary);
+        font-size: var(--size-meta);
+        font-weight: var(--weight-bold);
+    }
+    .desktopAirlineSelectControl > button {
+        min-width: 0;
+        padding: 0 12px 0 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        border-left: 1px solid #eeeeee;
+        background: transparent;
+        color: var(--ink);
+        text-align: left;
+    }
+    .desktopAirlineSelectControl > button:hover { background: #fafafa; }
+    .desktopAirlineSelectControl > button > strong {
+        min-width: 0;
+        overflow: hidden;
+        font-size: var(--size-meta);
+        font-weight: var(--weight-medium);
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .desktopAirlineChevron {
+        flex: 0 0 auto;
+        display: inline-flex;
+        color: #8d8d8d;
+        transition: transform 150ms ease;
+    }
+    .desktopAirlineChevron svg {
+        width: 14px;
+        height: 14px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+    .desktopAirlineChevronOpen { transform: rotate(180deg); }
+    .desktopAirlineMenu {
+        max-height: 224px;
+        margin-top: 7px;
+        padding: 8px;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 4px;
+        overflow-y: auto;
+        border: 1px solid #dfdfdf;
+        border-radius: 10px;
+        background: var(--paper);
+        box-shadow: 0 12px 28px rgba(34, 34, 34, 0.11);
+    }
+    .desktopAirlineMenu > button {
+        min-height: 38px;
+        padding: 0 10px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        border-radius: 7px;
+        background: transparent;
+        color: #444444;
+        font-size: 12px;
+        font-weight: 500;
+        text-align: left;
+    }
+    .desktopAirlineMenu > button:hover { background: #f6f6f6; color: var(--ink); }
+    .desktopAirlineMenu .desktopAirlineOptionActive {
+        background: var(--brand-soft);
+        color: var(--brand-dark);
+        font-weight: 700;
+    }
 
     .detailOverlay { align-items: stretch; justify-content: flex-end; }
     .detailOverlay .detailSheet {

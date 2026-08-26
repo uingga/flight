@@ -683,11 +683,12 @@ const compactDropCardMessage = (message: string) => message
     .replace('사람 급하게 만드는 가격', '사람 급하게 만듦')
     .replace('안 가려고 해도 가격이 방해함', '안 가려는데 가격이 방해함');
 
-function Icon({ name }: { name: 'sliders' | 'search' | 'star' | 'share' | 'close' | 'arrow' | 'plane' | 'up' | 'chevron' }) {
+function Icon({ name }: { name: 'sliders' | 'search' | 'star' | 'bookmark' | 'share' | 'close' | 'arrow' | 'plane' | 'up' | 'chevron' }) {
     const paths = {
         sliders: <><line x1="4" y1="7" x2="20" y2="7" /><circle cx="9" cy="7" r="2" /><line x1="4" y1="17" x2="20" y2="17" /><circle cx="15" cy="17" r="2" /></>,
         search: <><circle cx="11" cy="11" r="7" /><line x1="16.5" y1="16.5" x2="21" y2="21" /></>,
         star: <polygon points="12 2.8 14.8 8.5 21.1 9.4 16.5 13.9 17.6 20.2 12 17.2 6.4 20.2 7.5 13.9 2.9 9.4 9.2 8.5 12 2.8" />,
+        bookmark: <path d="M7 3.5h10a1.5 1.5 0 0 1 1.5 1.5v16l-6.5-4-6.5 4V5A1.5 1.5 0 0 1 7 3.5Z" />,
         share: <><path d="M4 12v8h16v-8" /><polyline points="8 7 12 3 16 7" /><line x1="12" y1="3" x2="12" y2="15" /></>,
         close: <><line x1="5" y1="5" x2="19" y2="19" /><line x1="19" y1="5" x2="5" y2="19" /></>,
         arrow: <><line x1="5" y1="12" x2="19" y2="12" /><polyline points="14 7 19 12 14 17" /></>,
@@ -726,6 +727,7 @@ export default function MobileRedesignPreview({
     const [query, setQuery] = useState('');
     const [searchOpen, setSearchOpen] = useState(false);
     const [filterOpen, setFilterOpen] = useState(false);
+    const [airlineMenuOpen, setAirlineMenuOpen] = useState(false);
     const [desktopFilterOpen, setDesktopFilterOpen] = useState<DesktopFilterKey | null>(null);
     const [regionMoreOpen, setRegionMoreOpen] = useState(false);
     const [showDealAlert, setShowDealAlert] = useState(false);
@@ -886,6 +888,10 @@ export default function MobileRedesignPreview({
         document.body.style.overflow = selectedFlight || filterOpen || showAccount || showDealAlert || showContact ? 'hidden' : '';
         return () => { document.body.style.overflow = ''; };
     }, [selectedFlight, filterOpen, showAccount, showContact, showDealAlert]);
+
+    useEffect(() => {
+        if (!filterOpen) setAirlineMenuOpen(false);
+    }, [filterOpen]);
 
     useEffect(() => {
         const closeTopLayer = (event: KeyboardEvent) => {
@@ -2243,6 +2249,7 @@ export default function MobileRedesignPreview({
         setMaxPrice(0);
         setSourceFilter('all');
         setAirlineFilter('all');
+        setAirlineMenuOpen(false);
         setDesktopFilterOpen(null);
     };
 
@@ -2806,7 +2813,7 @@ export default function MobileRedesignPreview({
                                                     ? '찜 해제'
                                                     : account.status === 'authenticated' ? '찜하기' : '로그인하고 찜하기'}
                                             >
-                                                <Icon name="star" />
+                                                <Icon name="bookmark" />
                                             </button>
                                         </article>
                                     </div>
@@ -3047,16 +3054,56 @@ export default function MobileRedesignPreview({
                                     </button>
                                 ))}
                             </div>
-                            <label className={styles.filterSelectRow}>
+                            <label className={`${styles.filterSelectRow} ${styles.mobileAirlineSelect}`}>
                                 <span>항공사</span>
                                 <select value={airlineFilter} onChange={event => selectAirlineFilter(event.target.value)}>
                                     <option value="all">전체 항공사</option>
                                     {uniqueAirlines.map(airline => <option value={airline} key={airline}>{airline}</option>)}
                                 </select>
                             </label>
+                            <div className={styles.desktopAirlineSelect}>
+                                <div className={`${styles.desktopAirlineSelectControl} ${airlineMenuOpen ? styles.desktopAirlineSelectControlOpen : ''}`}>
+                                    <span>항공사</span>
+                                    <button
+                                        type="button"
+                                        aria-haspopup="listbox"
+                                        aria-expanded={airlineMenuOpen}
+                                        onClick={() => setAirlineMenuOpen(open => !open)}
+                                    >
+                                        <strong>{airlineFilter === 'all' ? '전체 항공사' : airlineFilter}</strong>
+                                        <span className={`${styles.desktopAirlineChevron} ${airlineMenuOpen ? styles.desktopAirlineChevronOpen : ''}`}>
+                                            <Icon name="chevron" />
+                                        </span>
+                                    </button>
+                                </div>
+                                {airlineMenuOpen && (
+                                    <div className={styles.desktopAirlineMenu} role="listbox" aria-label="항공사 선택">
+                                        {['all', ...uniqueAirlines].map(airline => {
+                                            const label = airline === 'all' ? '전체 항공사' : airline;
+                                            const active = airlineFilter === airline;
+                                            return (
+                                                <button
+                                                    type="button"
+                                                    role="option"
+                                                    aria-selected={active}
+                                                    className={active ? styles.desktopAirlineOptionActive : ''}
+                                                    key={airline}
+                                                    onClick={() => {
+                                                        selectAirlineFilter(airline);
+                                                        setAirlineMenuOpen(false);
+                                                    }}
+                                                >
+                                                    <span>{label}</span>
+                                                    {active && <span aria-hidden="true">✓</span>}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
-                        <button type="button" className={`${styles.applyButton} ${calendarOpen ? styles.applyButtonCalendarOpen : ''}`} onClick={() => setFilterOpen(false)}>
+                        <button type="button" className={`${styles.applyButton} ${(calendarOpen || airlineMenuOpen) ? styles.applyButtonCalendarOpen : ''}`} onClick={() => setFilterOpen(false)}>
                             {filteredFlights.length.toLocaleString('ko-KR')}개 항공권 보기
                         </button>
                     </section>
