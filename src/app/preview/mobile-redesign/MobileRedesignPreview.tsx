@@ -3269,13 +3269,14 @@ export default function MobileRedesignPreview({
                                     {uniqueAirlines.map(airline => <option value={airline} key={airline}>{airline}</option>)}
                                 </select>
                             </label>
+                            <h3 className={styles.desktopAirlineHeading}>항공사</h3>
                             <div className={styles.desktopAirlineSelect}>
                                 <div className={`${styles.desktopAirlineSelectControl} ${airlineMenuOpen ? styles.desktopAirlineSelectControlOpen : ''}`}>
-                                    <span>항공사</span>
                                     <button
                                         type="button"
                                         aria-haspopup="listbox"
                                         aria-expanded={airlineMenuOpen}
+                                        aria-label={`항공사 선택: ${airlineFilter === 'all' ? '전체 항공사' : airlineFilter}`}
                                         onClick={() => setAirlineMenuOpen(open => !open)}
                                     >
                                         <strong>{airlineFilter === 'all' ? '전체 항공사' : airlineFilter}</strong>

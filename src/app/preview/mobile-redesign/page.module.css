@@ -602,6 +602,7 @@
 .filterSelectRow select { min-width: 0; flex: 1; border: 0; outline: 0; background: transparent; color: var(--ink); font-size: var(--size-meta); font-weight: var(--weight-medium); text-align: right; }
 .filterSelectRow:focus-within { border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-soft); }
 .mobileAirlineSelect { display: flex; }
+.desktopAirlineHeading { display: none; }
 .desktopAirlineSelect { display: none; }
 .dateCalendar { width: 100%; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; }
 .dateCalendar :global(.react-datepicker__month-container) { width: 100%; float: none; }
@@ -1366,12 +1367,11 @@
     .filterOverlay .sheetHandle { display: none; }
     .filterOverlay .optionGrid button { min-height: 40px; padding: 0 16px; }
     .mobileAirlineSelect { display: none; }
-    .desktopAirlineSelect { margin-top: 12px; display: block; }
+    .desktopAirlineHeading { margin-top: 18px; display: block; }
+    .desktopAirlineSelect { margin-top: 0; display: block; }
     .desktopAirlineSelectControl {
         min-height: 46px;
-        display: grid;
-        grid-template-columns: 96px minmax(0, 1fr);
-        align-items: stretch;
+        display: block;
         overflow: hidden;
         border: 1px solid var(--line);
         border-radius: 10px;
@@ -1382,22 +1382,15 @@
         border-color: var(--brand);
         box-shadow: 0 0 0 3px var(--brand-soft);
     }
-    .desktopAirlineSelectControl > span {
-        padding-left: 14px;
-        display: flex;
-        align-items: center;
-        color: var(--text-secondary);
-        font-size: var(--size-meta);
-        font-weight: var(--weight-bold);
-    }
     .desktopAirlineSelectControl > button {
+        width: 100%;
+        min-height: 44px;
         min-width: 0;
-        padding: 0 12px 0 16px;
+        padding: 0 12px 0 14px;
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 12px;
-        border-left: 1px solid #eeeeee;
         background: transparent;
         color: var(--ink);
         text-align: left;
