@@ -28,6 +28,7 @@ type SortMode = 'recommended' | 'price' | 'date';
 type DatePeriod = 'all' | 'this-week' | 'next-week' | 'this-month' | 'next-month' | 'custom';
 type DesktopFilterKey = 'departure' | 'region' | 'date' | 'price';
 type FlightReportStatus = 'sending' | 'sent' | 'error';
+type EmptyFilterId = 'region' | 'departure' | 'date' | 'price' | 'source' | 'airline';
 
 const RECENT_FLIGHT_REPORTS_KEY = 'tikitikit_recent_flight_reports';
 const FLIGHT_REPORT_TTL_MS = 24 * 60 * 60 * 1000;
@@ -103,7 +104,7 @@ const REGION_OPTIONS = ['전체', '일본', '동남아', '중화권', '남태평
 const QUICK_REGION_OPTIONS = REGION_OPTIONS.slice(0, 4);
 const MORE_REGION_OPTIONS = REGION_OPTIONS.slice(4);
 const DEPARTURE_OPTIONS = ['전체', '인천/김포', '부산/김해', '대구', '청주', '제주'];
-const DATE_PERIOD_OPTIONS: Array<{ label: string; value: DatePeriod }> = [
+const DATE_PERIOD_OPTIONS: Array<{ label: string; value: Exclude<DatePeriod, 'custom'> }> = [
     { label: '전체', value: 'all' },
     { label: '이번 주', value: 'this-week' },
     { label: '다음 주', value: 'next-week' },
@@ -373,6 +374,29 @@ const dateKey = (date: Date) => [
     String(date.getDate()).padStart(2, '0'),
 ].join('-');
 
+const datePeriodBounds = (period: Exclude<DatePeriod, 'all' | 'custom'>, referenceDate: Date) => {
+    const today = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), referenceDate.getDate());
+    const mondayOffset = (today.getDay() + 6) % 7;
+    const thisMonday = addDays(today, -mondayOffset);
+
+    if (period === 'this-week') {
+        return { start: thisMonday, endExclusive: addDays(thisMonday, 7) };
+    }
+    if (period === 'next-week') {
+        return { start: addDays(thisMonday, 7), endExclusive: addDays(thisMonday, 14) };
+    }
+    if (period === 'this-month') {
+        return {
+            start: new Date(today.getFullYear(), today.getMonth(), 1),
+            endExclusive: new Date(today.getFullYear(), today.getMonth() + 1, 1),
+        };
+    }
+    return {
+        start: new Date(today.getFullYear(), today.getMonth() + 1, 1),
+        endExclusive: new Date(today.getFullYear(), today.getMonth() + 2, 1),
+    };
+};
+
 const datePeriodMatches = (
     flight: Flight,
     period: DatePeriod,
@@ -390,27 +414,8 @@ const datePeriodMatches = (
             && (!customEndDate || departureKey <= dateKey(customEndDate));
     }
 
-    const today = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), referenceDate.getDate());
-    const mondayOffset = (today.getDay() + 6) % 7;
-    const thisMonday = addDays(today, -mondayOffset);
-    let start: Date;
-    let end: Date;
-
-    if (period === 'this-week') {
-        start = thisMonday;
-        end = addDays(thisMonday, 7);
-    } else if (period === 'next-week') {
-        start = addDays(thisMonday, 7);
-        end = addDays(thisMonday, 14);
-    } else if (period === 'this-month') {
-        start = new Date(today.getFullYear(), today.getMonth(), 1);
-        end = new Date(today.getFullYear(), today.getMonth() + 1, 1);
-    } else {
-        start = new Date(today.getFullYear(), today.getMonth() + 1, 1);
-        end = new Date(today.getFullYear(), today.getMonth() + 2, 1);
-    }
-
-    return departureDate >= start && departureDate < end;
+    const { start, endExclusive } = datePeriodBounds(period, referenceDate);
+    return departureDate >= start && departureDate < endExclusive;
 };
 
 const recommendedScore = (flight: Flight) => {
@@ -830,7 +835,8 @@ export default function MobileRedesignPreview({
     const loadFlights = useCallback(async (background = false) => {
         if (!background) setLoading(true);
         try {
-            const response = await fetch('/api/flights?sortBy=price&sortOrder=asc', { cache: 'no-store' });
+            const flightsApi = previewMode ? '/api/preview-flights' : '/api/flights';
+            const response = await fetch(`${flightsApi}?sortBy=price&sortOrder=asc`, { cache: 'no-store' });
             if (!response.ok) throw new Error('항공권을 불러오지 못했습니다.');
             const data = await response.json() as FlightsResponse;
             if (!data.success) throw new Error('항공권을 불러오지 못했습니다.');
@@ -849,7 +855,7 @@ export default function MobileRedesignPreview({
         } finally {
             if (!background) setLoading(false);
         }
-    }, []);
+    }, [previewMode]);
 
     useEffect(() => {
         void loadFlights();
@@ -1134,7 +1140,6 @@ export default function MobileRedesignPreview({
             if (Array.isArray(saved)) {
                 const ids = new Set<string>(saved.filter(id => typeof id === 'string'));
                 setGuestFavorites(ids);
-                setFavorites(ids);
             }
         } catch { }
     }, []);
@@ -1158,7 +1163,7 @@ export default function MobileRedesignPreview({
                 favoriteIntentRef.current.clear();
                 favoriteMutationVersionRef.current.clear();
                 confirmedAccountFavoritesRef.current.clear();
-                setFavorites(new Set(guestFavorites));
+                setFavorites(new Set());
             }
             return;
         }
@@ -1901,13 +1906,142 @@ export default function MobileRedesignPreview({
             suggestedPrice,
         };
     }, [departure, error, filteredFlights.length, flights, interparkPrices, loading, query]);
+
+    const emptyDiagnosis = useMemo(() => {
+        if (loading || error || filteredFlights.length > 0) return null;
+        const normalizedQuery = query.trim().toLowerCase();
+        const matchesQuery = (flight: Flight) => !normalizedQuery || [
+            flight.departure.city,
+            flight.arrival.city,
+            flight.airline,
+            SOURCE_NAMES[flight.source],
+        ].some(value => value.toLowerCase().includes(normalizedQuery));
+        const queryFlights = flights.filter(matchesQuery);
+        if (queryFlights.length === 0) {
+            return { kind: 'no-deals' as const, available: 0, blockers: [] };
+        }
+
+        const referenceDate = new Date();
+        const activeFilters: Array<{ id: EmptyFilterId; label: string }> = [];
+        if (region !== '전체') activeFilters.push({ id: 'region', label: `도착 지역 · ${region}` });
+        if (departure !== '전체') activeFilters.push({ id: 'departure', label: `출발지 · ${departure}` });
+        if (datePeriod !== 'all') {
+            const label = datePeriod === 'custom'
+                ? `${customStartDate ? cardDate(dateKey(customStartDate)) : '시작일'}~${customEndDate ? cardDate(dateKey(customEndDate)) : ''}`
+                : DATE_PERIOD_OPTIONS.find(item => item.value === datePeriod)?.label || '선택 날짜';
+            activeFilters.push({ id: 'date', label: `출발일 · ${label}` });
+        }
+        if (maxPrice) {
+            activeFilters.push({
+                id: 'price',
+                label: `가격 · ${PRICE_OPTIONS.find(item => item.value === maxPrice)?.label || priceText(maxPrice)}`,
+            });
+        }
+        if (sourceFilter !== 'all') activeFilters.push({ id: 'source', label: `여행사 · ${SOURCE_NAMES[sourceFilter]}` });
+        if (airlineFilter !== 'all') activeFilters.push({ id: 'airline', label: `항공사 · ${airlineFilter}` });
+
+        const matchesAllExcept = (flight: Flight, except: EmptyFilterId) => (
+            (except === 'region' || regionMatches(flight, region))
+            && (except === 'departure' || departureMatches(flight, departure))
+            && (except === 'date' || datePeriodMatches(flight, datePeriod, referenceDate, customStartDate, customEndDate))
+            && (except === 'price' || !maxPrice || effectivePrice(flight) <= maxPrice)
+            && (except === 'source' || sourceFilter === 'all' || flight.source === sourceFilter)
+            && (except === 'airline' || airlineFilter === 'all' || normalizeAirline(flight.airline) === airlineFilter)
+        );
+        const measured = activeFilters.map(filter => ({
+            ...filter,
+            revealedCount: queryFlights.filter(flight => matchesAllExcept(flight, filter.id)).length,
+        }));
+        const recoverable = measured.filter(filter => filter.revealedCount > 0);
+
+        return {
+            kind: 'filtered' as const,
+            available: queryFlights.length,
+            blockers: recoverable.length ? recoverable : measured,
+        };
+    }, [
+        airlineFilter, customEndDate, customStartDate, datePeriod, departure, error,
+        filteredFlights.length, flights, loading, maxPrice, query, region, sourceFilter,
+    ]);
     const guestFavoriteSnapshots = useMemo(
         () => flights.filter(flight => guestFavorites.has(flight.id)).map(toAccountSnapshot),
         [flights, guestFavorites],
     );
 
+    const selectDepartureFilter = (value: string) => {
+        if (departure !== value) gtag.trackFilterChange('departure', value);
+        setDeparture(value);
+    };
+
+    const selectRegionFilter = (value: string) => {
+        if (region !== value) gtag.trackFilterChange('region', value);
+        setRegion(value);
+    };
+
+    const selectPriceFilter = (value: number) => {
+        if (maxPrice !== value) gtag.trackFilterChange('max_price', value ? String(value) : 'all');
+        setMaxPrice(value);
+    };
+
+    const selectSourceFilter = (value: 'all' | Flight['source']) => {
+        if (sourceFilter !== value) gtag.trackFilterChange('source', value);
+        setSourceFilter(value);
+    };
+
+    const selectAirlineFilter = (value: string) => {
+        if (airlineFilter !== value) gtag.trackFilterChange('airline', value);
+        setAirlineFilter(value);
+    };
+
+    const selectSort = (value: SortMode) => {
+        if (sort !== value) gtag.trackFilterChange('sort', value);
+        setSort(value);
+    };
+
+    const selectDatePeriod = (value: Exclude<DatePeriod, 'custom'>) => {
+        if (datePeriod !== value) gtag.trackFilterChange('date_period', value);
+        setDatePeriod(value);
+        setCustomStartDate(null);
+        setCustomEndDate(null);
+        setCalendarOpen(false);
+        if (value !== 'all') {
+            const { start, endExclusive } = datePeriodBounds(value, new Date());
+            gtag.trackDateFilter(dateKey(start), dateKey(addDays(endExclusive, -1)), {
+                method: 'preset',
+                presetLabel: DATE_PERIOD_OPTIONS.find(item => item.value === value)?.label,
+            });
+        }
+    };
+
+    const selectCustomDateRange = (update: [Date | null, Date | null]) => {
+        const [start, end] = update;
+        setCustomStartDate(start);
+        setCustomEndDate(end);
+        setDatePeriod(start ? 'custom' : 'all');
+        if (start && end) {
+            gtag.trackFilterChange('date_period', 'custom');
+            gtag.trackDateFilter(dateKey(start), dateKey(end), { method: 'calendar' });
+        }
+    };
+
+    const clearEmptyBlocker = (id: EmptyFilterId) => {
+        if (id === 'region') selectRegionFilter('전체');
+        else if (id === 'departure') selectDepartureFilter('전체');
+        else if (id === 'date') selectDatePeriod('all');
+        else if (id === 'price') selectPriceFilter(0);
+        else if (id === 'source') selectSourceFilter('all');
+        else selectAirlineFilter('all');
+    };
+
     const toggleFavorite = (flight: Flight) => {
         const willFavorite = !favorites.has(flight.id);
+        if (account.status !== 'authenticated') {
+            setShowAccount(true);
+            setToast(account.status === 'unavailable'
+                ? '지금은 로그인 기능을 불러오지 못했어요. 잠시 후 다시 시도해주세요.'
+                : '찜은 로그인하면 저장할 수 있어요.');
+            return;
+        }
         const mutationVersion = (favoriteMutationVersionRef.current.get(flight.id) || 0) + 1;
         favoriteMutationVersionRef.current.set(flight.id, mutationVersion);
         favoriteIntentRef.current.set(flight.id, willFavorite);
@@ -1916,22 +2050,15 @@ export default function MobileRedesignPreview({
         else next.delete(flight.id);
         setFavorites(next);
 
-        if (account.status !== 'authenticated' || (!willFavorite && guestFavorites.has(flight.id))) {
+        if (!willFavorite && guestFavorites.has(flight.id)) {
             const nextGuestFavorites = new Set(guestFavorites);
-            if (willFavorite && account.status !== 'authenticated') nextGuestFavorites.add(flight.id);
-            else nextGuestFavorites.delete(flight.id);
+            nextGuestFavorites.delete(flight.id);
             setGuestFavorites(nextGuestFavorites);
             try { localStorage.setItem('favoriteFlights', JSON.stringify(Array.from(nextGuestFavorites))); } catch { }
         }
         setToast(willFavorite
-            ? account.status === 'authenticated'
-                ? `${stripAirport(flight.arrival.city)} 표를 내 여행에 저장했어요.`
-                : `${stripAirport(flight.arrival.city)} 표를 찜했어요. 로그인하면 다른 기기에서도 볼 수 있어요.`
+            ? `${stripAirport(flight.arrival.city)} 표를 내 여행에 저장했어요.`
             : '찜에서 뺐어요.');
-        if (account.status !== 'authenticated') {
-            favoriteIntentRef.current.delete(flight.id);
-            return;
-        }
         void account.setFavorite(flight.id, willFavorite).then(() => {
             if (favoriteMutationVersionRef.current.get(flight.id) !== mutationVersion) return;
             favoriteIntentRef.current.delete(flight.id);
@@ -2104,6 +2231,9 @@ export default function MobileRedesignPreview({
     };
 
     const resetFilters = () => {
+        if (departure !== '전체' || region !== '전체' || datePeriod !== 'all' || maxPrice || sourceFilter !== 'all' || airlineFilter !== 'all') {
+            gtag.trackFilterChange('reset', 'all');
+        }
         setDeparture('전체');
         setRegion('전체');
         setDatePeriod('all');
@@ -2245,7 +2375,7 @@ export default function MobileRedesignPreview({
                                                 className={departure === item ? styles.desktopFilterOptionActive : ''}
                                                 aria-pressed={departure === item}
                                                 onClick={() => {
-                                                    setDeparture(item);
+                                                    selectDepartureFilter(item);
                                                     setDesktopFilterOpen(null);
                                                 }}
                                             >
@@ -2279,7 +2409,7 @@ export default function MobileRedesignPreview({
                                                 className={region === item ? styles.desktopFilterOptionActive : ''}
                                                 aria-pressed={region === item}
                                                 onClick={() => {
-                                                    setRegion(item);
+                                                    selectRegionFilter(item);
                                                     setDesktopFilterOpen(null);
                                                 }}
                                             >
@@ -2315,10 +2445,7 @@ export default function MobileRedesignPreview({
                                                     className={datePeriod === item.value ? styles.desktopFilterOptionActive : ''}
                                                     aria-pressed={datePeriod === item.value}
                                                     onClick={() => {
-                                                        setDatePeriod(item.value);
-                                                        setCustomStartDate(null);
-                                                        setCustomEndDate(null);
-                                                        setCalendarOpen(false);
+                                                        selectDatePeriod(item.value);
                                                         setDesktopFilterOpen(null);
                                                     }}
                                                 >
@@ -2341,10 +2468,8 @@ export default function MobileRedesignPreview({
                                                     startDate={customStartDate}
                                                     endDate={customEndDate}
                                                     onChange={(update: [Date | null, Date | null]) => {
-                                                        const [start, end] = update;
-                                                        setCustomStartDate(start);
-                                                        setCustomEndDate(end);
-                                                        setDatePeriod(start ? 'custom' : 'all');
+                                                        const [, end] = update;
+                                                        selectCustomDateRange(update);
                                                         if (end) {
                                                             window.setTimeout(() => {
                                                                 setCalendarOpen(false);
@@ -2386,7 +2511,7 @@ export default function MobileRedesignPreview({
                                                 className={maxPrice === item.value ? styles.desktopFilterOptionActive : ''}
                                                 aria-pressed={maxPrice === item.value}
                                                 onClick={() => {
-                                                    setMaxPrice(item.value);
+                                                    selectPriceFilter(item.value);
                                                     setDesktopFilterOpen(null);
                                                 }}
                                             >
@@ -2429,7 +2554,7 @@ export default function MobileRedesignPreview({
                                     aria-label={`도착 지역 ${item}`}
                                     aria-pressed={region === item}
                                     onClick={() => {
-                                        setRegion(item);
+                                        selectRegionFilter(item);
                                         setRegionMoreOpen(false);
                                     }}
                                 >
@@ -2455,7 +2580,7 @@ export default function MobileRedesignPreview({
                                         className={region === item ? styles.moreRegionActive : ''}
                                         aria-pressed={region === item}
                                         onClick={() => {
-                                            setRegion(item);
+                                            selectRegionFilter(item);
                                             setRegionMoreOpen(false);
                                         }}
                                     >
@@ -2518,7 +2643,7 @@ export default function MobileRedesignPreview({
                                             className={`${styles.sortOption} ${sort === option.value ? styles.sortOptionSelected : ''}`}
                                             key={option.value}
                                             onClick={() => {
-                                                setSort(option.value);
+                                                selectSort(option.value);
                                                 setSortOpen(false);
                                             }}
                                         >
@@ -2547,8 +2672,36 @@ export default function MobileRedesignPreview({
 
                     {!loading && !error && filteredFlights.length === 0 && (
                         <div className={styles.emptyState}>
-                            <strong>조건에 맞는 표가 없어요.</strong>
-                            <span>필터를 조금 넓혀보세요.</span>
+                            {emptyDiagnosis?.kind === 'filtered' ? (
+                                <>
+                                    <strong>
+                                        {query.trim()
+                                            ? `${query.trim()} 표는 ${emptyDiagnosis.available.toLocaleString('ko-KR')}개 있어요.`
+                                            : '표는 있지만 조건이 서로 겹쳤어요.'}
+                                    </strong>
+                                    <span>아래 조건을 하나씩 풀어보세요.</span>
+                                    {emptyDiagnosis.blockers.length > 0 && (
+                                        <div className={styles.emptyBlockers}>
+                                            {emptyDiagnosis.blockers.map(blocker => (
+                                                <button
+                                                    type="button"
+                                                    key={blocker.id}
+                                                    onClick={() => clearEmptyBlocker(blocker.id)}
+                                                >
+                                                    {blocker.label}
+                                                    {blocker.revealedCount > 0 && <small>{blocker.revealedCount.toLocaleString('ko-KR')}개 보기</small>}
+                                                    <b aria-hidden="true">×</b>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </>
+                            ) : (
+                                <>
+                                    <strong>조건에 맞는 표가 없어요.</strong>
+                                    <span>다른 목적지를 검색하거나 특가 알림을 받아보세요.</span>
+                                </>
+                            )}
                             <div className={styles.emptyStateActions}>
                                 <button type="button" onClick={resetFilters}>필터 초기화</button>
                                 {emptyRouteAlertTarget && (
@@ -2580,6 +2733,7 @@ export default function MobileRedesignPreview({
                                         <article
                                             className={`${styles.flightCard} ${isTodayPick ? styles.todayPickCard : ''}`}
                                             data-flight-id={flight.id}
+                                            data-source={flight.source}
                                             data-tikit-drop={isTodayPick ? 'true' : undefined}
                                         >
                                             <button type="button" className={styles.cardBody} onClick={() => openFlight(flight)}>
@@ -2648,7 +2802,9 @@ export default function MobileRedesignPreview({
                                                 type="button"
                                                 className={`${styles.favoriteButton} ${favorites.has(flight.id) ? styles.favoriteActive : ''}`}
                                                 onClick={() => toggleFavorite(flight)}
-                                                aria-label={favorites.has(flight.id) ? '찜 해제' : '찜하기'}
+                                                aria-label={favorites.has(flight.id)
+                                                    ? '찜 해제'
+                                                    : account.status === 'authenticated' ? '찜하기' : '로그인하고 찜하기'}
                                             >
                                                 <Icon name="star" />
                                             </button>
@@ -2805,7 +2961,7 @@ export default function MobileRedesignPreview({
                             <h3>출발지</h3>
                             <div className={styles.optionGrid}>
                                 {DEPARTURE_OPTIONS.map(item => (
-                                    <button type="button" key={item} className={departure === item ? styles.optionActive : ''} aria-pressed={departure === item} onClick={() => setDeparture(item)}>{item}</button>
+                                    <button type="button" key={item} className={departure === item ? styles.optionActive : ''} aria-pressed={departure === item} onClick={() => selectDepartureFilter(item)}>{item}</button>
                                 ))}
                             </div>
                         </div>
@@ -2814,7 +2970,7 @@ export default function MobileRedesignPreview({
                             <h3>도착 지역</h3>
                             <div className={styles.optionGrid}>
                                 {REGION_OPTIONS.map(item => (
-                                    <button type="button" key={item} className={region === item ? styles.optionActive : ''} aria-pressed={region === item} onClick={() => setRegion(item)}>{item}</button>
+                                    <button type="button" key={item} className={region === item ? styles.optionActive : ''} aria-pressed={region === item} onClick={() => selectRegionFilter(item)}>{item}</button>
                                 ))}
                             </div>
                         </div>
@@ -2823,7 +2979,7 @@ export default function MobileRedesignPreview({
                             <h3>가격</h3>
                             <div className={styles.optionGrid}>
                                 {PRICE_OPTIONS.map(item => (
-                                    <button type="button" key={item.value} className={maxPrice === item.value ? styles.optionActive : ''} aria-pressed={maxPrice === item.value} onClick={() => setMaxPrice(item.value)}>{item.label}</button>
+                                    <button type="button" key={item.value} className={maxPrice === item.value ? styles.optionActive : ''} aria-pressed={maxPrice === item.value} onClick={() => selectPriceFilter(item.value)}>{item.label}</button>
                                 ))}
                             </div>
                         </div>
@@ -2837,12 +2993,7 @@ export default function MobileRedesignPreview({
                                         key={item.value}
                                         className={datePeriod === item.value ? styles.optionActive : ''}
                                         aria-pressed={datePeriod === item.value}
-                                        onClick={() => {
-                                            setDatePeriod(item.value);
-                                            setCustomStartDate(null);
-                                            setCustomEndDate(null);
-                                            setCalendarOpen(false);
-                                        }}
+                                        onClick={() => selectDatePeriod(item.value)}
                                     >
                                         {item.label}
                                     </button>
@@ -2868,10 +3019,8 @@ export default function MobileRedesignPreview({
                                         startDate={customStartDate}
                                         endDate={customEndDate}
                                         onChange={(update: [Date | null, Date | null]) => {
-                                            const [start, end] = update;
-                                            setCustomStartDate(start);
-                                            setCustomEndDate(end);
-                                            setDatePeriod(start ? 'custom' : 'all');
+                                            const [, end] = update;
+                                            selectCustomDateRange(update);
                                             if (end) window.setTimeout(() => setCalendarOpen(false), 250);
                                         }}
                                         locale={ko}
@@ -2892,7 +3041,7 @@ export default function MobileRedesignPreview({
                                         type="button"
                                         key={item.value}
                                         className={sourceFilter === item.value ? styles.optionActive : ''}
-                                        onClick={() => setSourceFilter(item.value)}
+                                        onClick={() => selectSourceFilter(item.value)}
                                     >
                                         {item.label}
                                     </button>
@@ -2900,7 +3049,7 @@ export default function MobileRedesignPreview({
                             </div>
                             <label className={styles.filterSelectRow}>
                                 <span>항공사</span>
-                                <select value={airlineFilter} onChange={event => setAirlineFilter(event.target.value)}>
+                                <select value={airlineFilter} onChange={event => selectAirlineFilter(event.target.value)}>
                                     <option value="all">전체 항공사</option>
                                     {uniqueAirlines.map(airline => <option value={airline} key={airline}>{airline}</option>)}
                                 </select>
@@ -3075,6 +3224,14 @@ export default function MobileRedesignPreview({
                                     )}
                                 </div>
                             </details>
+                        )}
+                        {(selectedFlight.source === 'modetour'
+                            || selectedFlight.source === 'onlinetour'
+                            || selectedFlight.source === 'ttang') && (
+                            <div className={styles.passengerAgencyNotice}>
+                                <span>탑승 인원</span>
+                                <strong>여행사 예약 화면에서 선택해요</strong>
+                            </div>
                         )}
 
                         <div className={styles.priceNotice}>
