@@ -699,7 +699,7 @@ function Icon({ name }: { name: 'sliders' | 'search' | 'star' | 'bookmark' | 'sh
     return <svg viewBox="0 0 24 24" aria-hidden="true">{paths[name]}</svg>;
 }
 
-const SERVICE_UPDATE_NOTICE_KEY = 'tikitikit-service-update-20260826-v1';
+const SERVICE_UPDATE_NOTICE_KEY = 'tikitikit-service-update-20260826-v2';
 
 export default function MobileRedesignPreview({
     previewMode = true,
@@ -3446,8 +3446,8 @@ export default function MobileRedesignPreview({
                         </div>
                         <div className={styles.serviceUpdateDivider} />
                         <div className={styles.serviceUpdateNotice}>
-                            <h2>🥲 아쉽게도, 네이버 비교는 잠시 쉬어가요</h2>
-                            <p>법률·정책 검토가 끝날 때까지 버튼을 내려뒀어요.</p>
+                            <h2>🔎 네이버 비교는 상세페이지로 옮겼어요</h2>
+                            <p>항공권을 누르면 상세페이지 안에서 확인할 수 있어요. 이 기능은 8월 31일까지 제공되고 이후에는 종료돼요.</p>
                         </div>
                         <button type="button" className={styles.serviceUpdateConfirm} onClick={dismissServiceUpdate}>확인했어요</button>
                     </section>
