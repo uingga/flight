@@ -1,4 +1,5 @@
 import webpush from 'web-push';
+import { normalizeVapidKey } from './lib/vapid';
 import { dealAlertRegionLabel, decodeDealAlertRegion } from '../src/lib/deal-alerts';
 
 interface AlertSubscription {
@@ -20,8 +21,8 @@ const ALERT_KEY = process.env.ALERT_KEY || '';
  */
 const VAPID_CONTACT = process.env.VAPID_CONTACT || 'https://tikitikit.kr';
 
-const VAPID_PUBLIC = process.env.VAPID_PUBLIC_KEY || '';
-const VAPID_PRIVATE = process.env.VAPID_PRIVATE_KEY || '';
+const VAPID_PUBLIC = normalizeVapidKey(process.env.VAPID_PUBLIC_KEY || '');
+const VAPID_PRIVATE = normalizeVapidKey(process.env.VAPID_PRIVATE_KEY || '');
 const SUPABASE_URL = (process.env.SUPABASE_URL || '').replace(/\/$/, '');
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 

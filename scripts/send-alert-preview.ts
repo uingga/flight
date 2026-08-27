@@ -6,6 +6,7 @@ import {
     type AlertSubscriptionRecord,
 } from '../src/lib/alert-approval';
 import type { Flight } from '../src/types/flight';
+import { normalizeVapidKey } from './lib/vapid';
 
 interface AdminPreviewTarget {
     alert_key: string;
@@ -15,8 +16,8 @@ interface AdminPreviewTarget {
 const BATCH_KEY = (process.env.ALERT_APPROVAL_BATCH_KEY || '').trim();
 const TARGET_KEY = (process.env.ADMIN_TEST_ALERT_KEY || '').trim();
 const VAPID_CONTACT = process.env.VAPID_CONTACT || 'https://tikitikit.kr';
-const VAPID_PUBLIC = process.env.VAPID_PUBLIC_KEY || '';
-const VAPID_PRIVATE = process.env.VAPID_PRIVATE_KEY || '';
+const VAPID_PUBLIC = normalizeVapidKey(process.env.VAPID_PUBLIC_KEY || '');
+const VAPID_PRIVATE = normalizeVapidKey(process.env.VAPID_PRIVATE_KEY || '');
 const SUPABASE_URL = (process.env.SUPABASE_URL || '').replace(/\/$/, '');
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const FLIGHTS_PATH = path.join(process.cwd(), 'data', 'all-flights-cache.json');
