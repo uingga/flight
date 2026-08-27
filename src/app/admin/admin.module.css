@@ -2588,6 +2588,10 @@
     font-weight: 730;
 }
 
+.analysisPanelWide {
+    grid-column: 1 / -1;
+}
+
 .candidateSummary {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));

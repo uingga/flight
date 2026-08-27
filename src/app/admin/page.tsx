@@ -2387,21 +2387,6 @@ export default function AdminPage() {
             </>)}
 
             {tab === 'visitors' && (<>
-                <div className={styles.tabIntro}>
-                    <div>
-                        <span className={styles.eyebrow}>방문·예약</span>
-                        <h2>사람들이 들어와서 예약 화면까지 갔는지 봅니다</h2>
-                        <p>방문 규모뿐 아니라 다시 온 사람, 유입 경로, 관심 노선과 날짜 선택까지 함께 봅니다.</p>
-                    </div>
-                </div>
-                <SectionNav items={[
-                    { href: '#visitor-flow', label: '1·7·30일 행동' },
-                    { href: '#visitor-trend', label: '기간 변화' },
-                    { href: '#visitor-segments', label: '신규·재방문' },
-                    { href: '#visitor-acquisition', label: '유입·예약 관심' },
-                    { href: '#visitor-dates', label: '날짜 선택' },
-                ]} />
-
                 <section className={styles.section} id="visitor-flow">
                     <div className={styles.sectionHeading}>
                         <div>
@@ -2533,13 +2518,13 @@ export default function AdminPage() {
                                     <h3>알림 등록을 시작한 위치</h3>
                                     <RankList items={(gaStats.alertByEntry || []).slice(0, 5).map(item => ({ label: item.label, value: `${item.count.toLocaleString()}회` }))} empty="알림 등록 위치가 아직 기록되지 않았어요." />
                                 </div>
+                                {(gaStats.referrals || []).length > 0 && (
+                                    <div className={`${styles.analysisPanel} ${styles.analysisPanelWide}`}>
+                                        <h3>외부 사이트에서 들어온 방문</h3>
+                                        <RankList items={(gaStats.referrals || []).slice(0, 8).map(item => ({ label: item.label, value: `${item.users.toLocaleString()}명`, note: `방문 ${item.sessions.toLocaleString()}회` }))} />
+                                    </div>
+                                )}
                             </div>
-                            {(gaStats.referrals || []).length > 0 && (
-                                <details className={styles.disclosure}>
-                                    <summary>외부 사이트 이름 자세히 보기</summary>
-                                    <RankList items={(gaStats.referrals || []).slice(0, 8).map(item => ({ label: item.label, value: `${item.users.toLocaleString()}명`, note: `방문 ${item.sessions.toLocaleString()}회` }))} />
-                                </details>
-                            )}
                             {gaStats.warnings.length > 0 && (
                                 <div className={styles.dataGap}>{gaStats.warnings.join(' · ')}</div>
                             )}
