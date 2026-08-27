@@ -5,7 +5,7 @@
     display: flex;
     align-items: flex-end;
     justify-content: center;
-    background: rgba(0, 0, 0, 0.46);
+    background: rgba(24, 27, 32, 0.4);
     animation: overlayIn 160ms ease-out;
 }
 
@@ -93,7 +93,7 @@
 @keyframes dialogIn { from { transform: translateY(8px) scale(.985); opacity: .6; } }
 
 @media (min-width: 700px) {
-    .overlay { align-items: center; padding: 24px; }
+    .overlay { align-items: center; padding: 24px; background: rgba(24, 27, 32, 0.2); }
     .sheet {
         width: min(520px, 100%);
         max-height: calc(100dvh - 48px);

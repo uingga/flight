@@ -553,7 +553,7 @@
     display: flex;
     align-items: flex-end;
     justify-content: center;
-    background: rgba(0, 0, 0, 0.46);
+    background: rgba(24, 27, 32, 0.4);
     animation: overlayIn 160ms ease-out;
 }
 
@@ -833,6 +833,7 @@
 @keyframes scrollTopIn { from { transform: translateY(6px); opacity: 0; } }
 
 @media (min-width: 700px) {
+    .sheetOverlay { background: rgba(24, 27, 32, 0.2); }
     .phoneCanvas { min-height: calc(100vh - 48px); margin-top: 24px; margin-bottom: 24px; border-radius: 24px; overflow: hidden; }
     .header { top: 0; }
     .searchRow { top: 58px; }
@@ -1493,12 +1494,6 @@
     .detailOverlay {
         align-items: stretch;
         justify-content: flex-end;
-        background: linear-gradient(
-            90deg,
-            rgba(24, 27, 32, 0.07) 0%,
-            rgba(24, 27, 32, 0.1) 52%,
-            rgba(24, 27, 32, 0.23) 100%
-        );
     }
     .detailOverlay .detailSheet {
         width: min(520px, 46vw);
