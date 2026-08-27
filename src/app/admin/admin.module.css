@@ -3276,6 +3276,34 @@
     background: #fff;
 }
 
+.alertPreviewStatus {
+    margin-top: 10px;
+    padding: 9px 11px;
+    border: 1px solid #dfe3e8;
+    border-radius: 9px;
+    font-size: 0.7rem;
+    font-weight: 650;
+    line-height: 1.45;
+}
+
+.alertPreviewStatus_working {
+    border-color: #d9e2ef;
+    background: #f4f7fb;
+    color: #53677f;
+}
+
+.alertPreviewStatus_success {
+    border-color: #cfe7d7;
+    background: #f3fbf6;
+    color: #2f6f49;
+}
+
+.alertPreviewStatus_error {
+    border-color: #efc9c4;
+    background: #fff5f3;
+    color: #a43b31;
+}
+
 .alertApprovalMeta {
     display: flex;
     align-items: flex-end;

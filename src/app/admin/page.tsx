@@ -153,6 +153,11 @@ interface AlertApprovalGroup {
     batches: AlertApprovalBatch[];
 }
 
+interface AlertPreviewStatus {
+    state: 'working' | 'success' | 'error';
+    message: string;
+}
+
 function groupAlertApprovalBatches(batches: AlertApprovalBatch[]): AlertApprovalGroup[] {
     const grouped = new Map<string, AlertApprovalGroup>();
     for (const batch of batches) {
@@ -701,6 +706,7 @@ export default function AdminPage() {
     const [alertApprovalAction, setAlertApprovalAction] = useState<string | null>(null);
     const [alertPreviewAction, setAlertPreviewAction] = useState<string | null>(null);
     const [previewedAlertBatches, setPreviewedAlertBatches] = useState<string[]>([]);
+    const [alertPreviewStatuses, setAlertPreviewStatuses] = useState<Record<string, AlertPreviewStatus>>({});
     const [queuedAlertBatches, setQueuedAlertBatches] = useState<string[]>([]);
     const [alertApprovalMessage, setAlertApprovalMessage] = useState<string | null>(null);
     const [userStats, setUserStats] = useState<UserStatsData | null>(null);
@@ -869,24 +875,35 @@ export default function AdminPage() {
     }
 
     async function previewAlertBatch(batch: AlertApprovalBatch) {
+        const setPreviewStatus = (status: AlertPreviewStatus) => {
+            setAlertPreviewStatuses(current => ({ ...current, [batch.batchKey]: status }));
+        };
+        if (!dealAlertReview?.deliveryAvailable) {
+            setPreviewStatus({
+                state: 'error',
+                message: '시험 발송 서버 연결이 꺼져 있습니다. GitHub 발송 키 설정을 먼저 확인해야 합니다.',
+            });
+            return;
+        }
         if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
-            setAlertApprovalMessage('이 브라우저는 웹 알림 시험 발송을 지원하지 않습니다.');
+            setPreviewStatus({ state: 'error', message: '이 브라우저는 웹 알림 시험 발송을 지원하지 않습니다.' });
             return;
         }
         const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
         if (!vapidPublicKey) {
-            setAlertApprovalMessage('웹 알림 공개키 설정이 없어 시험 발송을 준비할 수 없습니다.');
+            setPreviewStatus({ state: 'error', message: '웹 알림 공개키 설정이 없어 시험 발송을 준비할 수 없습니다.' });
             return;
         }
 
         setAlertPreviewAction(batch.batchKey);
-        setAlertApprovalMessage(null);
+        setPreviewStatus({ state: 'working', message: '브라우저 알림 권한을 확인하고 있습니다…' });
         try {
             const permission = Notification.permission === 'default'
                 ? await Notification.requestPermission()
                 : Notification.permission;
             if (permission !== 'granted') throw new Error('브라우저 알림 권한을 허용해야 내 기기로 시험 발송할 수 있습니다.');
 
+            setPreviewStatus({ state: 'working', message: '이 기기의 알림 수신 정보를 준비하고 있습니다…' });
             const registration = await navigator.serviceWorker.register('/sw.js');
             const subscription = await registration.pushManager.getSubscription()
                 || await registration.pushManager.subscribe({
@@ -898,6 +915,7 @@ export default function AdminPage() {
                 throw new Error('이 브라우저의 알림 수신 정보를 만들지 못했습니다.');
             }
 
+            setPreviewStatus({ state: 'working', message: '시험 알림을 서버에 요청하고 있습니다…' });
             const response = await fetch('/api/deal-alert-candidates', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -914,9 +932,15 @@ export default function AdminPage() {
             const json = await response.json();
             if (!response.ok) throw new Error(json.error || '시험 발송 작업을 시작하지 못했습니다.');
             setPreviewedAlertBatches(current => current.includes(batch.batchKey) ? current : [...current, batch.batchKey]);
-            setAlertApprovalMessage('내 기기로 시험 발송을 요청했습니다. 알림이 도착한 뒤 문구와 링크를 확인하고 전체 발송을 눌러주세요.');
+            setPreviewStatus({
+                state: 'success',
+                message: '시험 발송 요청이 접수됐습니다. 알림이 도착하면 문구와 링크를 확인해주세요.',
+            });
         } catch (previewError) {
-            setAlertApprovalMessage(previewError instanceof Error ? previewError.message : '시험 발송 작업을 시작하지 못했습니다.');
+            setPreviewStatus({
+                state: 'error',
+                message: previewError instanceof Error ? previewError.message : '시험 발송 작업을 시작하지 못했습니다.',
+            });
         } finally {
             setAlertPreviewAction(null);
         }
@@ -1855,6 +1879,7 @@ export default function AdminPage() {
                                                 {group.batches.map(batch => {
                                                     const queued = queuedAlertBatches.includes(batch.batchKey);
                                                     const previewed = previewedAlertBatches.includes(batch.batchKey);
+                                                    const previewStatus = alertPreviewStatuses[batch.batchKey];
                                                     return (
                                                         <section key={batch.batchKey} className={styles.alertCandidateCard}>
                                                             <div className={styles.dealReviewCondition}>
@@ -1883,7 +1908,7 @@ export default function AdminPage() {
                                                                         type="button"
                                                                         className={styles.alertPreviewButton}
                                                                         onClick={() => previewAlertBatch(batch)}
-                                                                        disabled={!dealAlertReview.deliveryAvailable || queued || alertPreviewAction === batch.batchKey}
+                                                                        disabled={queued || alertPreviewAction === batch.batchKey}
                                                                     >
                                                                         {alertPreviewAction === batch.batchKey ? '시험 요청 중…' : previewed ? '다시 시험 발송' : '내 기기로 먼저 보내기'}
                                                                     </button>
@@ -1896,6 +1921,15 @@ export default function AdminPage() {
                                                                     </button>
                                                                 </div>
                                                             </div>
+                                                            {previewStatus && (
+                                                                <div
+                                                                    className={`${styles.alertPreviewStatus} ${styles[`alertPreviewStatus_${previewStatus.state}`]}`}
+                                                                    role={previewStatus.state === 'error' ? 'alert' : 'status'}
+                                                                    aria-live="polite"
+                                                                >
+                                                                    {previewStatus.message}
+                                                                </div>
+                                                            )}
                                                         </section>
                                                     );
                                                 })}
