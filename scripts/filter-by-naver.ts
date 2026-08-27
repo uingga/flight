@@ -74,6 +74,17 @@ cache.flights = cache.flights.filter((f: any) => {
 });
 
 cache.count = cache.flights.length;
+// 네이버 필터가 항공권을 제거한 뒤에도 여행사별 숫자가 필터 전 값으로 남으면
+// 어드민과 실제 사이트 개수가 다시 어긋난다. 화면에 남는 항공권 기준으로 맞춘다.
+const visibleSourceCounts: Record<string, number> = Object.fromEntries(
+    Object.keys(cache.sources || {}).map(source => [source, 0]),
+);
+for (const flight of cache.flights) {
+    const source = String(flight?.source || '');
+    if (!source) continue;
+    visibleSourceCounts[source] = (visibleSourceCounts[source] || 0) + 1;
+}
+cache.sources = visibleSourceCounts;
 cache.lastUpdated = new Date().toISOString();
 fs.writeFileSync(cachePath, JSON.stringify(cache));
 
