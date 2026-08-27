@@ -109,14 +109,36 @@ interface DealAlertCandidate {
     reasons: string[];
 }
 
+interface AlertApprovalBatch {
+    batchKey: string;
+    kind: 'route' | 'deal';
+    title: string;
+    body: string;
+    url: string;
+    flightId: string;
+    departureCity: string;
+    arrivalCity: string;
+    departureDate: string;
+    returnDate: string;
+    airline: string;
+    source: string;
+    effectivePrice: number;
+    score: number;
+    reasons: string[];
+    recipientCount: number;
+}
+
 interface DealAlertReviewData {
     available: boolean;
-    dryRun: boolean;
+    approvalMode: 'manual';
+    deliveryAvailable: boolean;
     message?: string;
     generatedAt: string;
     scoreThreshold: number;
     subscriptions: number;
     qualifiedCandidates: number;
+    pendingRecipients: number;
+    approvalBatches: AlertApprovalBatch[];
     reviews: Array<{
         condition: {
             id: string;
@@ -609,6 +631,9 @@ export default function AdminPage() {
     const [analyticsExcluded, setAnalyticsExcludedState] = useState(false);
     const [dealAlertReview, setDealAlertReview] = useState<DealAlertReviewData | null>(null);
     const [dealAlertReviewError, setDealAlertReviewError] = useState<string | null>(null);
+    const [alertApprovalAction, setAlertApprovalAction] = useState<string | null>(null);
+    const [queuedAlertBatches, setQueuedAlertBatches] = useState<string[]>([]);
+    const [alertApprovalMessage, setAlertApprovalMessage] = useState<string | null>(null);
     const [userStats, setUserStats] = useState<UserStatsData | null>(null);
     const [userStatsError, setUserStatsError] = useState<string | null>(null);
     const [gaStats, setGaStats] = useState<GaStatsData | null>(null);
@@ -744,6 +769,34 @@ export default function AdminPage() {
     function handleLogin(e: React.FormEvent) {
         e.preventDefault();
         fetchData(key);
+    }
+
+    async function approveAlertBatch(batch: AlertApprovalBatch) {
+        const approved = window.confirm([
+            `${batch.recipientCount.toLocaleString()}명에게 아래 알림을 보낼까요?`,
+            '',
+            batch.title,
+            batch.body,
+        ].join('\n'));
+        if (!approved) return;
+
+        setAlertApprovalAction(batch.batchKey);
+        setAlertApprovalMessage(null);
+        try {
+            const response = await fetch('/api/deal-alert-candidates', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ key, batchKey: batch.batchKey }),
+            });
+            const json = await response.json();
+            if (!response.ok) throw new Error(json.error || '발송 작업을 시작하지 못했습니다.');
+            setQueuedAlertBatches(current => current.includes(batch.batchKey) ? current : [...current, batch.batchKey]);
+            setAlertApprovalMessage(`${batch.recipientCount.toLocaleString()}명 대상 알림의 발송 작업을 시작했습니다.`);
+        } catch (approvalError) {
+            setAlertApprovalMessage(approvalError instanceof Error ? approvalError.message : '발송 작업을 시작하지 못했습니다.');
+        } finally {
+            setAlertApprovalAction(null);
+        }
     }
 
     async function updateFlightHide(flightId: string, action: 'keep_hidden' | 'release') {
@@ -1631,10 +1684,10 @@ export default function AdminPage() {
                 <section className={styles.section} id="audience-candidates">
                     <div className={styles.sectionHeading}>
                         <div>
-                            <h2>지금 보낼 만한 표</h2>
-                            <p>등록 조건에 맞는 표 중 가격 근거와 정보 신선도까지 통과한 후보입니다.</p>
+                            <h2>승인 대기 알림</h2>
+                            <p>아래 내용을 확인하고 승인한 알림만 발송합니다. 크롤링이 끝나도 자동으로 보내지 않습니다.</p>
                         </div>
-                        <span className={styles.dryRunBadge}>테스트 중 · 실제 발송 없음</span>
+                        <span className={styles.dryRunBadge}>내 승인 후 발송</span>
                     </div>
                     {dealAlertReviewError ? (
                         <div className={styles.dealReviewEmpty}>{dealAlertReviewError}</div>
@@ -1643,28 +1696,54 @@ export default function AdminPage() {
                     ) : (
                         <>
                             <div className={styles.candidateSummary}>
-                                <div><span>검토한 조건</span><strong>{dealAlertReview.subscriptions.toLocaleString()}개</strong></div>
-                                <div><span>보낼 만한 표</span><strong>{dealAlertReview.qualifiedCandidates.toLocaleString()}개</strong></div>
+                                <div><span>활성 알림 조건</span><strong>{dealAlertReview.subscriptions.toLocaleString()}개</strong></div>
+                                <div><span>승인할 후보</span><strong>{dealAlertReview.qualifiedCandidates.toLocaleString()}개</strong></div>
+                                <div><span>받을 사람</span><strong>{dealAlertReview.pendingRecipients.toLocaleString()}명</strong></div>
                             </div>
+                            {alertApprovalMessage && <div className={styles.alertApprovalMessage}>{alertApprovalMessage}</div>}
+                            {!dealAlertReview.deliveryAvailable && (
+                                <div className={styles.alertApprovalWarning}>후보 확인은 가능하지만 GitHub 발송 연결이 없어 승인 버튼은 잠겨 있습니다.</div>
+                            )}
                             <div className={styles.openDisclosure}>
-                                <h3>발송 후보</h3>
+                                <h3>실제로 보낼 내용</h3>
                                 <div className={`${styles.openDisclosureBody} ${styles.dealReviewList}`}>
-                                    {dealAlertReview.reviews.filter(review => review.candidates.length > 0).map(review => (
-                                        <article key={review.condition.id} className={styles.dealReviewCard}>
+                                    {dealAlertReview.approvalBatches.map(batch => {
+                                        const queued = queuedAlertBatches.includes(batch.batchKey);
+                                        return (
+                                        <article key={batch.batchKey} className={styles.dealReviewCard}>
                                             <div className={styles.dealReviewCondition}>
-                                                <div><strong>{review.condition.departureCity} 출발 · {review.condition.region === 'all' ? '아무데나' : review.condition.region}</strong><span>{formatPrice(review.condition.maxPrice)} 이하</span></div>
-                                                <span>후보 {review.qualifiedCount}개</span>
+                                                <div>
+                                                    <strong>{batch.departureCity} → {batch.arrivalCity}</strong>
+                                                    <span>{batch.departureDate} ~ {batch.returnDate}</span>
+                                                </div>
+                                                <span>{batch.kind === 'route' ? '노선 지정 알림' : '조건형 특가 알림'}</span>
                                             </div>
-                                            {review.candidates.slice(0, 5).map(candidate => (
-                                                <a key={candidate.flightId} href={`/share/${encodeURIComponent(candidate.flightId)}`} target="_blank" rel="noopener noreferrer" className={styles.dealCandidate}>
-                                                    <div><strong>{candidate.departureCity} → {candidate.arrivalCity}</strong><span>{candidate.departureDate} ~ {candidate.returnDate} · {candidate.airline}</span><small>{candidate.reasons.join(' · ')}</small></div>
-                                                    <div><strong>{formatPrice(candidate.effectivePrice)}</strong><span>{SOURCE_NAMES[candidate.source] || candidate.source}</span></div>
-                                                </a>
-                                            ))}
+                                            <div className={styles.notificationPreview}>
+                                                <span>받는 사람에게 이렇게 보여요</span>
+                                                <strong>{batch.title}</strong>
+                                                <p>{batch.body}</p>
+                                            </div>
+                                            <div className={styles.alertApprovalMeta}>
+                                                <div>
+                                                    <strong>{batch.recipientCount.toLocaleString()}명에게 발송</strong>
+                                                    <span>{SOURCE_NAMES[batch.source] || batch.source} · {batch.airline} · 품질 {batch.score}점</span>
+                                                    <small>{batch.reasons.join(' · ')}</small>
+                                                </div>
+                                                <div className={styles.alertApprovalActions}>
+                                                    <a href={batch.url} target="_blank" rel="noopener noreferrer">항공권 확인</a>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => approveAlertBatch(batch)}
+                                                        disabled={!dealAlertReview.deliveryAvailable || queued || alertApprovalAction === batch.batchKey}
+                                                    >
+                                                        {queued ? '발송 요청됨' : alertApprovalAction === batch.batchKey ? '요청 중…' : '확인하고 보내기'}
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </article>
-                                    ))}
-                                    {dealAlertReview.reviews.every(review => review.candidates.length === 0) && (
-                                        <div className={styles.dealReviewEmpty}>현재 발송 후보가 없어요.</div>
+                                    );})}
+                                    {dealAlertReview.approvalBatches.length === 0 && (
+                                        <div className={styles.dealReviewEmpty}>지금은 품질 기준과 알림 조건을 모두 통과한 후보가 없어요.</div>
                                     )}
                                 </div>
                             </div>

@@ -1,0 +1,39 @@
+name: Send Approved Flight Alert
+
+on:
+  workflow_dispatch:
+    inputs:
+      batch_key:
+        description: 'Admin-approved notification batch key'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: approved-flight-alert
+  cancel-in-progress: false
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - run: npm ci
+
+      - name: Send only the approved batch
+        run: npm run send:alerts
+        env:
+          ALERT_APPROVAL_BATCH_KEY: ${{ inputs.batch_key }}
+          VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}

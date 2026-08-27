@@ -3138,8 +3138,107 @@
 
 .candidateSummary {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 10px;
+}
+
+.alertApprovalMessage,
+.alertApprovalWarning {
+    margin-top: 10px;
+    padding: 10px 12px;
+    border: 1px solid #cfe7d7;
+    border-radius: 10px;
+    background: #f3fbf6;
+    color: #2f6f49;
+    font-size: 0.72rem;
+    line-height: 1.5;
+}
+
+.alertApprovalWarning {
+    border-color: #efd9ad;
+    background: #fff9ed;
+    color: #8a6125;
+}
+
+.notificationPreview {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin: 0 0 12px;
+    padding: 13px 14px;
+    border: 1px solid #e3e6ea;
+    border-radius: 12px;
+    background: #f7f8fa;
+}
+
+.notificationPreview > span {
+    color: #858e9a;
+    font-size: 0.66rem;
+}
+
+.notificationPreview > strong {
+    color: #202936;
+    font-size: 0.9rem;
+    font-weight: 720;
+}
+
+.notificationPreview > p {
+    margin: 0;
+    color: #586270;
+    font-size: 0.76rem;
+    line-height: 1.5;
+}
+
+.alertApprovalMeta {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.alertApprovalMeta > div:first-child {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.alertApprovalMeta strong { color: #25303e; font-size: 0.78rem; }
+.alertApprovalMeta span,
+.alertApprovalMeta small { color: #7b8491; font-size: 0.68rem; line-height: 1.45; }
+
+.alertApprovalActions {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 8px;
+}
+
+.alertApprovalActions a,
+.alertApprovalActions button {
+    padding: 8px 11px;
+    border: 1px solid #d8dde3;
+    border-radius: 9px;
+    background: #fff;
+    color: #4d5866;
+    font: inherit;
+    font-size: 0.7rem;
+    font-weight: 680;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.alertApprovalActions button {
+    border-color: #d92b4c;
+    background: #d92b4c;
+    color: #fff;
+}
+
+.alertApprovalActions button:disabled {
+    border-color: #dfe2e6;
+    background: #e9ebee;
+    color: #929aa5;
+    cursor: default;
 }
 
 .dataGap {
@@ -3545,4 +3644,7 @@
     .nowBadge,
     .issueBadge,
     .dryRunBadge { align-self: flex-start; }
+
+    .alertApprovalMeta { align-items: stretch; flex-direction: column; }
+    .alertApprovalActions { justify-content: flex-end; }
 }
