@@ -1101,23 +1101,23 @@
     .desktopFilterSummary:hover,
     .desktopFilterSummary[aria-expanded='true'] { background: #fafafa; }
     .desktopFilterSummary > span:first-child {
-        color: #737373;
-        font-size: 11px;
+        color: #4f4f4f;
+        font-size: 12px;
         line-height: 1;
-        font-weight: 500;
+        font-weight: 600;
         white-space: nowrap;
     }
     .desktopFilterSummary > strong {
         min-width: 0;
         overflow: hidden;
-        color: #292929;
-        font-size: 13px;
+        color: #858585;
+        font-size: 12px;
         line-height: 1.2;
-        font-weight: 600;
+        font-weight: 500;
         text-overflow: ellipsis;
         white-space: nowrap;
     }
-    .desktopFilterSummaryActive > strong { color: var(--brand-dark); }
+    .desktopFilterSummaryActive > strong { color: var(--brand-dark); font-weight: 600; }
     .desktopFilterChevron {
         display: inline-flex;
         align-items: center;
