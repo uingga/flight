@@ -6,11 +6,12 @@ type FlightOgCardProps = {
 };
 
 export function FlightOgCard({ dep, arr, priceText, dateText = '' }: FlightOgCardProps) {
+    const contentScale = 0.95;
     const routeLength = dep.length + arr.length;
-    const routeFontSize = routeLength >= 13 ? 68 : routeLength >= 9 ? 78 : 90;
+    const routeFontSize = Math.round((routeLength >= 13 ? 68 : routeLength >= 9 ? 78 : 90) * contentScale);
     const priceAmount = priceText.replace(/원$/, '');
     const priceUnit = priceText.endsWith('원') ? '원' : '';
-    const priceFontSize = priceAmount.length >= 10 ? 72 : priceAmount.length >= 8 ? 80 : 88;
+    const priceFontSize = Math.round((priceAmount.length >= 10 ? 72 : priceAmount.length >= 8 ? 80 : 88) * contentScale);
     const priceAffixFontSize = Math.round(priceFontSize * 0.89);
 
     return (
@@ -31,12 +32,12 @@ export function FlightOgCard({ dep, arr, priceText, dateText = '' }: FlightOgCar
             <div
                 style={{
                     position: 'relative',
-                    width: '1120px',
-                    height: '550px',
+                    width: '1080px',
+                    height: '520px',
                     display: 'flex',
                     flexDirection: 'column',
                     overflow: 'visible',
-                    borderRadius: '30px',
+                    borderRadius: '28px',
                     background: '#ffffff',
                 }}
             >
@@ -44,29 +45,29 @@ export function FlightOgCard({ dep, arr, priceText, dateText = '' }: FlightOgCar
                     style={{
                         position: 'relative',
                         width: '100%',
-                        height: '350px',
+                        height: '330px',
                         display: 'flex',
                         flexShrink: 0,
                         alignItems: 'center',
                         justifyContent: 'center',
                         boxSizing: 'border-box',
-                        padding: '70px 56px 0',
+                        padding: '60px 54px 0',
                     }}
                 >
                     <div
                         style={{
                             position: 'absolute',
-                            top: '38px',
-                            right: '48px',
+                            top: '34px',
+                            right: '46px',
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '6px',
+                            gap: `${Math.round(6 * contentScale)}px`,
                             whiteSpace: 'nowrap',
                         }}
                     >
                         <svg
-                            width="36"
-                            height="36"
+                            width={Math.round(36 * contentScale)}
+                            height={Math.round(36 * contentScale)}
                             viewBox="0 0 24 24"
                             fill="none"
                             xmlns="http://www.w3.org/2000/svg"
@@ -89,7 +90,7 @@ export function FlightOgCard({ dep, arr, priceText, dateText = '' }: FlightOgCar
                             style={{
                                 color: '#111827',
                                 fontFamily: 'YeogiOttaeJalnan',
-                                fontSize: '42px',
+                                fontSize: `${Math.round(42 * contentScale)}px`,
                                 fontWeight: 400,
                                 lineHeight: 1,
                                 letterSpacing: '0.02em',
@@ -105,9 +106,9 @@ export function FlightOgCard({ dep, arr, priceText, dateText = '' }: FlightOgCar
                             </span>
                             <span
                                 style={{
-                                    margin: '0 22px',
+                                    margin: `0 ${Math.round(22 * contentScale)}px`,
                                     color: '#ff385c',
-                                    fontSize: '60px',
+                                    fontSize: `${Math.round(60 * contentScale)}px`,
                                     lineHeight: 1,
                                     fontWeight: 700,
                                 }}
@@ -121,9 +122,9 @@ export function FlightOgCard({ dep, arr, priceText, dateText = '' }: FlightOgCar
                         {dateText && (
                             <span
                                 style={{
-                                    marginTop: '22px',
+                                    marginTop: `${Math.round(22 * contentScale)}px`,
                                     color: '#4b4b4b',
-                                    fontSize: '64px',
+                                    fontSize: `${Math.round(64 * contentScale)}px`,
                                     lineHeight: 1,
                                     fontWeight: 600,
                                     letterSpacing: '-0.03em',
@@ -145,14 +146,14 @@ export function FlightOgCard({ dep, arr, priceText, dateText = '' }: FlightOgCar
                         flexShrink: 0,
                         alignItems: 'center',
                         justifyContent: 'space-between',
-                        padding: '0 60px',
+                        padding: `0 ${Math.round(60 * contentScale)}px`,
                     }}
                 >
                     {Array.from({ length: 29 }).map((_, index) => (
                         <div
                             key={index}
                             style={{
-                                width: '18px',
+                                width: `${Math.round(18 * contentScale)}px`,
                                 height: '3px',
                                 display: 'flex',
                                 borderRadius: '999px',
@@ -165,17 +166,17 @@ export function FlightOgCard({ dep, arr, priceText, dateText = '' }: FlightOgCar
                 <div
                     style={{
                         width: '100%',
-                        height: '197px',
+                        height: '187px',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        padding: '0 54px 2px',
+                        padding: `0 ${Math.round(54 * contentScale)}px 2px`,
                     }}
                 >
                     <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', whiteSpace: 'nowrap' }}>
                         <span
                             style={{
-                                marginRight: '20px',
+                                marginRight: `${Math.round(20 * contentScale)}px`,
                                 fontSize: `${priceAffixFontSize}px`,
                                 lineHeight: 1,
                                 fontWeight: 700,
@@ -198,7 +199,7 @@ export function FlightOgCard({ dep, arr, priceText, dateText = '' }: FlightOgCar
                         {priceUnit && (
                             <span
                                 style={{
-                                    marginLeft: '9px',
+                                    marginLeft: `${Math.round(9 * contentScale)}px`,
                                     fontSize: `${priceAffixFontSize}px`,
                                     lineHeight: 1,
                                     fontWeight: 700,
@@ -214,10 +215,10 @@ export function FlightOgCard({ dep, arr, priceText, dateText = '' }: FlightOgCar
                 <div
                     style={{
                         position: 'absolute',
-                        top: '318px',
+                        top: '298px',
                         left: '0',
-                        width: '34px',
-                        height: '66px',
+                        width: '32px',
+                        height: '64px',
                         display: 'flex',
                         boxSizing: 'border-box',
                         borderRadius: '0 999px 999px 0',
@@ -227,10 +228,10 @@ export function FlightOgCard({ dep, arr, priceText, dateText = '' }: FlightOgCar
                 <div
                     style={{
                         position: 'absolute',
-                        top: '318px',
+                        top: '298px',
                         right: '0',
-                        width: '34px',
-                        height: '66px',
+                        width: '32px',
+                        height: '64px',
                         display: 'flex',
                         boxSizing: 'border-box',
                         borderRadius: '999px 0 0 999px',

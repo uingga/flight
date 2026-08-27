@@ -167,7 +167,7 @@ export default function OgKakaoPreviewPage() {
                                                 letterSpacing: '-0.025em',
                                             }}
                                         >
-                                            {copy}
+                                            {copy} | 티키티킷
                                         </div>
                                     ))}
                                 </div>
@@ -243,7 +243,7 @@ export default function OgKakaoPreviewPage() {
                                             letterSpacing: '-0.025em',
                                         }}
                                     >
-                                        <span style={{ display: 'block' }}>🚨 비상!! 비상!!</span>
+                                        <span style={{ display: 'block' }}>🚨 비상!! 비상!! | 티키티킷</span>
                                         <span
                                             style={{
                                                 display: 'block',
@@ -272,7 +272,7 @@ export default function OgKakaoPreviewPage() {
                                 <div style={{ width: '100%', height: `${height}px`, overflow: 'hidden' }}>
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
                                     <img
-                                        src={`/opengraph-image?v=small-preview-4`}
+                                        src={`/opengraph-image?v=small-preview-5`}
                                         alt={`${width}×${height} 크기로 축소한 티키티킷 OG 이미지`}
                                         style={{ display: 'block', width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }}
                                     />

@@ -2454,7 +2454,7 @@ export default function MobileRedesignPreview({
             ...(isEmergencyShare ? EMERGENCY_SHARE_COPY : GENERAL_SHARE_COPY),
             ...contextualCopy,
         ];
-        const text = copyPool[Math.floor(Math.random() * copyPool.length)];
+        const text = `${copyPool[Math.floor(Math.random() * copyPool.length)]} | 티키티킷`;
         const route = normalizedRoute(flight);
         try {
             await navigator.clipboard.writeText(`${text}\n${url}`);
