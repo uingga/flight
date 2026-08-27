@@ -2447,9 +2447,8 @@
 .operationsOrderSources { order: 1; }
 .operationsOrderCurrent { order: 2; }
 .operationsOrderReports { order: 3; }
-.operationsOrderPeriod { order: 4; }
-.operationsOrderHistory { order: 5; }
-.operationsOrderMix { order: 6; }
+.operationsOrderHistory { order: 4; }
+.operationsOrderMix { order: 5; }
 
 .behaviorGrid {
     display: grid;
@@ -2650,94 +2649,6 @@
 .compactStats .compactStatWarn strong {
     color: #c43d30;
 }
-
-.crawlPeriodGrid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 10px;
-}
-
-.crawlPeriodCard {
-    min-width: 0;
-    padding: 15px;
-    border: 1px solid #dfe7e2;
-    border-radius: 13px;
-    background: #fbfdfc;
-}
-
-.crawlPeriodCardWarn {
-    border-color: #efc9c3;
-    background: #fff9f7;
-}
-
-.crawlPeriodCard header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-}
-
-.crawlPeriodCard header span {
-    color: #394452;
-    font-size: 0.78rem;
-    font-weight: 720;
-}
-
-.crawlPeriodCard header small,
-.crawlPeriodCard footer {
-    color: #8a939f;
-    font-size: 0.64rem;
-}
-
-.crawlPeriodCard > strong {
-    display: flex;
-    align-items: baseline;
-    gap: 5px;
-    margin-top: 13px;
-    color: #202b38;
-    font-size: 1.45rem;
-    font-variant-numeric: tabular-nums;
-}
-
-.crawlPeriodCard > strong small {
-    color: #7c8692;
-    font-size: 0.68rem;
-    font-weight: 560;
-}
-
-.crawlSuccessTrack {
-    height: 7px;
-    margin-top: 12px;
-    overflow: hidden;
-    border-radius: 999px;
-    background: #e9edf0;
-}
-
-.crawlSuccessTrack > span {
-    display: block;
-    height: 100%;
-    border-radius: inherit;
-    background: #4c9a70;
-}
-
-.crawlPeriodCard dl {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin: 13px 0 0;
-}
-
-.crawlPeriodCard dl > div {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 6px;
-}
-
-.crawlPeriodCard dt { color: #7f8995; font-size: 0.65rem; }
-.crawlPeriodCard dd { margin: 0; color: #34404d; font-size: 0.72rem; font-weight: 690; }
-.crawlPeriodCardWarn dl > div:last-child dd { color: #c43d30; }
-.crawlPeriodCard footer { margin-top: 11px; }
 
 .sourceTrendGrid {
     display: grid;
@@ -3457,7 +3368,6 @@
     .candidateSummary { grid-template-columns: 1fr 1fr; }
 
     .sourceTrendGrid { grid-template-columns: 1fr; }
-    .crawlPeriodGrid { grid-template-columns: 1fr; }
     .todayCrawlMetrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .naverCompact { align-items: flex-start; }
 

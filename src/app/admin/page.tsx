@@ -951,7 +951,6 @@ export default function AdminPage() {
             recent30: `${gaActivity.current.alertSetupUsers.toLocaleString()}명`,
         },
     ] : [];
-    const recentCrawlIssueRate = crawl7.runs > 0 ? Math.round((crawl7.failed / crawl7.runs) * 100) : null;
 
     return (
         <div className={styles.container}>
@@ -1264,49 +1263,6 @@ export default function AdminPage() {
                     </div>
                 </section>
 
-                <section className={`${styles.section} ${styles.operationsOrderPeriod}`} id="operations-period">
-                    <div className={styles.sectionHeading}>
-                        <div>
-                            <h2>수집 실행 상태</h2>
-                            <p>정해진 수집 회차가 정상적으로 끝났는지만 봅니다. 항공권 수 변화는 아래 최근 수집 기록에서 따로 확인합니다.</p>
-                        </div>
-                        <span className={(recentCrawlIssueRate || 0) > 0 ? styles.issueBadge : styles.nowBadge}>
-                            {recentCrawlIssueRate === null
-                                ? '최근 7일 기록 없음'
-                                : recentCrawlIssueRate > 0
-                                    ? `최근 7일 문제 ${crawl7.failed}회`
-                                    : '최근 7일 모두 정상'}
-                        </span>
-                    </div>
-                    <div className={styles.crawlPeriodGrid}>
-                        {([
-                            { label: '오늘', summary: crawlToday, note: '진행 중인 날짜' },
-                            { label: '최근 7일', summary: crawl7, note: '어제까지' },
-                            { label: '최근 30일', summary: crawl30, note: '어제까지' },
-                        ] as const).map(({ label, summary, note }) => {
-                            const normalRuns = Math.max(0, summary.runs - summary.failed);
-                            const normalRate = summary.runs > 0 ? Math.round((normalRuns / summary.runs) * 100) : null;
-                            return (
-                                <article key={label} className={summary.failed > 0 ? `${styles.crawlPeriodCard} ${styles.crawlPeriodCardWarn}` : styles.crawlPeriodCard}>
-                                    <header><span>{label}</span><small>{note}</small></header>
-                                    <strong>{summary.runs.toLocaleString()}<small>회 실행</small></strong>
-                                    <div className={styles.crawlSuccessTrack} aria-label={`${label} 정상 완료율 ${normalRate === null ? '계산 전' : `${normalRate}%`}`}>
-                                        <span style={{ width: `${normalRate || 0}%` }} />
-                                    </div>
-                                    <dl>
-                                        <div><dt>정상 완료</dt><dd>{normalRuns.toLocaleString()}회</dd></div>
-                                        <div><dt>문제 회차</dt><dd>{summary.failed.toLocaleString()}회</dd></div>
-                                    </dl>
-                                    <footer>{normalRate === null ? '아직 실행 기록이 없어요' : `정상 완료율 ${normalRate}%`}</footer>
-                                </article>
-                            );
-                        })}
-                    </div>
-                    {crawl30RecordedDays > 0 && crawl30RecordedDays < 30 && (
-                        <p className={styles.dataNotice}>최근 30일 칸은 기록이 있는 {crawl30RecordedDays}일치만 포함합니다.</p>
-                    )}
-                </section>
-
                 <section className={`${styles.section} ${styles.operationsOrderMix}`} id="operations-mix">
                     <div className={styles.sectionHeading}>
                         <div>
@@ -1330,16 +1286,6 @@ export default function AdminPage() {
                         <div className={styles.analysisPanel}>
                             <h3>항공권이 많은 항공사</h3>
                             <RankList items={sortedAirlines.slice(0, 6).map(([label, count]) => ({ label, value: `${count.toLocaleString()}개` }))} />
-                        </div>
-                    </div>
-                    <div className={styles.openDisclosure}>
-                        <h3>현재 가격이 낮은 표</h3>
-                        <div className={styles.openDisclosureBody}>
-                            <RankList items={(flightFilterSummary?.lowestVisible || data.cheapest).slice(0, 8).map(item => ({
-                                label: item.route,
-                                value: formatPrice(item.price),
-                                note: `${item.date} · ${item.airline} · ${SOURCE_NAMES[item.source] || item.source}`,
-                            }))} />
                         </div>
                     </div>
                 </section>
@@ -1613,7 +1559,6 @@ export default function AdminPage() {
                     { href: '#flight-visibility', label: '노출 현황' },
                     { href: '#flight-quality', label: '빠진 정보' },
                     { href: '#flight-mix', label: '항공권 구성' },
-                    { href: '#flight-low-price', label: '낮은 가격의 표' },
                 ]} />
                 <section className={styles.section} id="flight-reports">
                     <h2>신고받은 항공권</h2>
@@ -2461,37 +2406,6 @@ export default function AdminPage() {
                 </div>
             </section>
 
-            {/* 현재 표시 가격이 낮은 표 — 추천 품질 순위와는 다르다 */}
-            <section className={styles.section} id="flight-low-price">
-                <h2>현재 표시 가격이 낮은 표 10개</h2>
-                <p className={styles.sectionHelp}>단순히 결제 예상 금액이 낮은 순서입니다. 일정·가격 근거까지 평가하는 추천순이나 TIKIT DROP 선정 순위는 아닙니다.</p>
-                <div className={styles.cityDetail}>
-                    <table className={styles.cityTable}>
-                        <thead>
-                            <tr>
-                                <th>노선</th>
-                                <th>항공사</th>
-                                <th>가격</th>
-                                <th>출발일</th>
-                                <th>여행사</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {(flightFilterSummary?.lowestVisible || []).map((f) => (
-                                <tr key={f.id}>
-                                    <td>{f.route}</td>
-                                    <td>{f.airline}</td>
-                                    <td style={{ color: '#10b981', fontWeight: 600 }}>{formatPrice(f.price)}</td>
-                                    <td>{f.date}</td>
-                                    <td>
-                                        {SOURCE_NAMES[f.source] || f.source}
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </section>
             </>)}
 
             {tab === 'visitors' && (<>
