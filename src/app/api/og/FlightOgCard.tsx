@@ -23,7 +23,7 @@ export function FlightOgCard({ dep, arr, priceText, dateText = '' }: FlightOgCar
                 alignItems: 'center',
                 justifyContent: 'center',
                 overflow: 'hidden',
-                background: '#f3f3f3',
+                background: '#ff385c',
                 color: '#222222',
                 fontFamily: 'Pretendard',
             }}
@@ -221,7 +221,7 @@ export function FlightOgCard({ dep, arr, priceText, dateText = '' }: FlightOgCar
                         display: 'flex',
                         boxSizing: 'border-box',
                         borderRadius: '0 999px 999px 0',
-                        background: '#f3f3f3',
+                        background: '#ff385c',
                     }}
                 />
                 <div
@@ -234,7 +234,7 @@ export function FlightOgCard({ dep, arr, priceText, dateText = '' }: FlightOgCar
                         display: 'flex',
                         boxSizing: 'border-box',
                         borderRadius: '999px 0 0 999px',
-                        background: '#f3f3f3',
+                        background: '#ff385c',
                     }}
                 />
             </div>

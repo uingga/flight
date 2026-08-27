@@ -2050,7 +2050,14 @@ export default function MobileRedesignPreview({
         || sourceFilter !== 'all'
         || airlineFilter !== 'all';
     const updatedLabel = lastUpdated
-        ? `${new Intl.DateTimeFormat('ko-KR', { month: 'long', day: 'numeric' }).format(new Date(lastUpdated))} 기준`
+        ? `${new Intl.DateTimeFormat('ko-KR', {
+            timeZone: 'Asia/Seoul',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+        }).format(new Date(lastUpdated))} 기준`
         : '최근 기준';
     const selectedHotelTrackingId = selectedFlight
         ? getTripcomTrackingId(
