@@ -96,7 +96,9 @@ export async function GET(request: NextRequest) {
             { headers: getSupabaseServerHeaders(config.key), cache: 'no-store' },
         );
         if (!response.ok) throw new Error(`Supabase lookup failed: ${response.status}`);
-        const rows = await response.json() as AlertRow[];
+        const storedRows = await response.json() as AlertRow[];
+        // 관리자 시험 발송용 비활성 기기는 실제 가입·해지·알림 수요 통계에 포함하지 않는다.
+        const rows = storedRows.filter(row => row.arrival_city !== '@admin-test');
 
         const todayStart = koreaDayStartIso();
         const sevenDaysAgo = koreaDayStartIso(7);

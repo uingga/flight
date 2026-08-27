@@ -75,7 +75,10 @@ export function isDealAlertDestination(value?: string): boolean {
 }
 
 export function dealAlertRegionLabel(region: DealAlertRegion): string {
-    return region === 'all' ? '아무데나' : region;
+    if (region === 'all') return '아무데나';
+    // 저장값은 기존 구독과의 호환을 위해 `중국`을 유지하되 사용자 화면에서는
+    // 중국 본토·대만·홍콩·마카오를 함께 아우르는 이름으로 보여준다.
+    return region === '중국' ? '중화권' : region;
 }
 
 function clamp(value: number, min: number, max: number): number {

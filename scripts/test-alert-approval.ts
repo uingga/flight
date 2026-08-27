@@ -4,6 +4,7 @@ import {
     toPublicApprovalBatch,
     type AlertSubscriptionRecord,
 } from '../src/lib/alert-approval';
+import { encodeDealAlertRegion } from '../src/lib/deal-alerts';
 import type { Flight } from '../src/types/flight';
 
 const now = new Date('2026-08-27T08:00:00.000Z');
@@ -81,6 +82,44 @@ assert.equal(
     buildAlertApprovalBatches([outOfRange], [flight], history, sourceUpdatedAt, now).length,
     0,
     '사용자가 지정한 출발 기간 밖의 표는 제외해야 한다',
+);
+
+const chinaAlert: AlertSubscriptionRecord = {
+    ...alert('5', 'device-e'),
+    arrival_city: encodeDealAlertRegion('중국'),
+    max_price: 200_000,
+};
+const kaohsiung: Flight = {
+    ...flight,
+    id: 'kaohsiung-flight',
+    arrival: { ...flight.arrival, city: '가오슝', airport: 'KHH', date: '2026-09-13' },
+    price: 191_000,
+    region: '중국',
+    naverLowest: 200_000,
+};
+const weihai: Flight = {
+    ...flight,
+    id: 'weihai-flight',
+    arrival: { ...flight.arrival, city: '웨이하이', airport: 'WEH', date: '2026-09-12' },
+    price: 176_000,
+    region: '중국',
+    naverLowest: 180_000,
+};
+const dealAlternatives = buildAlertApprovalBatches(
+    [chinaAlert],
+    [kaohsiung, weihai],
+    {
+        '인천-가오슝': [{ date: '2026-08-01', minPrice: 240_000 }],
+        '인천-웨이하이': [{ date: '2026-08-01', minPrice: 220_000 }],
+    },
+    sourceUpdatedAt,
+    now,
+);
+assert.equal(dealAlternatives.length, 2, '조건형 알림은 목적지가 다른 상위 후보를 함께 보여줘야 한다');
+assert.deepEqual(
+    dealAlternatives.map(candidate => candidate.selectionRank),
+    [1, 2],
+    '조건형 후보는 선택 순위를 보존해야 한다',
 );
 
 console.log('✅ 알림 승인 후보 테스트 통과');

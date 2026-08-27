@@ -1,6 +1,7 @@
 import { createHash } from 'crypto';
 import {
     decodeDealAlertRegion,
+    dealAlertRegionLabel,
     evaluateDealAlert,
     type DealAlertCondition,
     type DealCandidate,
@@ -36,6 +37,7 @@ export interface AlertSubscriptionRecord {
 export interface AlertApprovalRecipient {
     alert: AlertSubscriptionRecord;
     updates: Record<string, unknown>;
+    selectionRank: number;
 }
 
 export interface AlertApprovalBatch {
@@ -54,6 +56,7 @@ export interface AlertApprovalBatch {
     effectivePrice: number;
     score: number;
     reasons: string[];
+    selectionRank: number;
     recipients: AlertApprovalRecipient[];
 }
 
@@ -66,6 +69,7 @@ export interface PublicAlertApprovalBatch extends Omit<AlertApprovalBatch, 'reci
         maxPrice: number;
         departureDateFrom?: string;
         departureDateTo?: string;
+        selectionRank: number;
         recipientCount: number;
     }>;
 }
@@ -80,6 +84,7 @@ interface AlertProposal {
     candidate: DealCandidate;
     recipient: AlertApprovalRecipient;
     endpointKey: string;
+    selectionRank: number;
 }
 
 function cleanCity(city = ''): string {
@@ -190,24 +195,26 @@ function routeProposal(
         endpointKey: endpointKey(alert),
         recipient: {
             alert,
+            selectionRank: 1,
             updates: {
                 last_notified_price: candidate.effectivePrice,
                 last_notified_flight_id: candidate.flightId,
                 notified_flight_ids: Array.from(new Set([...notifiedIds, candidate.flightId])).slice(-20),
             },
         },
+        selectionRank: 1,
     };
 }
 
-function dealProposal(
+function dealProposals(
     alert: AlertSubscriptionRecord,
     flights: Flight[],
     priceHistory: PriceHistory,
     sourceUpdatedAt: Record<string, string>,
     now: Date,
-): AlertProposal | null {
+): AlertProposal[] {
     const region = decodeDealAlertRegion(alert.arrival_city);
-    if (!region || !alert.departure_city || !Number.isFinite(Number(alert.max_price))) return null;
+    if (!region || !alert.departure_city || !Number.isFinite(Number(alert.max_price))) return [];
     const condition: DealAlertCondition = {
         id: alert.alert_key || alert.id,
         departureCity: alert.departure_city,
@@ -217,37 +224,42 @@ function dealProposal(
     };
     const review = evaluateDealAlert(condition, flights, priceHistory, sourceUpdatedAt, now);
     const notifiedIds = Array.isArray(alert.notified_flight_ids) ? alert.notified_flight_ids : [];
-    const selection = selectDealCandidateForNotification(review.candidates, notifiedIds, now);
-    const candidate = selection.candidate;
-    if (!candidate) return null;
-    const text = buildDealNotificationText(condition, candidate);
-    const sentAt = now.toISOString();
+    const eligibleCandidates = review.candidates
+        .filter(candidate => selectDealCandidateForNotification([candidate], notifiedIds, now).candidate !== null)
+        .slice(0, 3);
 
-    return {
-        kind: 'deal',
-        ...text,
-        url: shareUrl(candidate),
-        candidate,
-        endpointKey: endpointKey(alert),
-        recipient: {
-            alert,
-            updates: {
-                last_notified_price: candidate.effectivePrice,
-                last_notified_flight_id: candidate.flightId,
-                notified_flight_ids: appendDealSentEvent(notifiedIds, {
-                    arrivalCity: candidate.arrivalCity,
-                    sentAt,
-                    effectivePrice: candidate.effectivePrice,
-                    flightId: candidate.flightId,
-                }),
+    return eligibleCandidates.map((candidate, index) => {
+        const text = buildDealNotificationText(condition, candidate);
+        const sentAt = now.toISOString();
+        const selectionRank = index + 1;
+        return {
+            kind: 'deal',
+            ...text,
+            url: shareUrl(candidate),
+            candidate,
+            endpointKey: endpointKey(alert),
+            selectionRank,
+            recipient: {
+                alert,
+                selectionRank,
+                updates: {
+                    last_notified_price: candidate.effectivePrice,
+                    last_notified_flight_id: candidate.flightId,
+                    notified_flight_ids: appendDealSentEvent(notifiedIds, {
+                        arrivalCity: candidate.arrivalCity,
+                        sentAt,
+                        effectivePrice: candidate.effectivePrice,
+                        flightId: candidate.flightId,
+                    }),
+                },
             },
-        },
-    };
+        };
+    });
 }
 
 /**
  * 현재 데이터로 실제 발송 가능한 후보를 계산한다. 이 함수는 발송하지 않는다.
- * 한 기기에는 하루 한 번만, 여러 조건이 겹치면 명시 노선 → 높은 품질 순으로 하나만 남긴다.
+ * 한 기기에는 하루 한 번만 발송하되, 승인 화면에서는 조건형 알림의 상위 후보를 최대 3개 보여준다.
  */
 export function buildAlertApprovalBatches(
     alerts: AlertSubscriptionRecord[],
@@ -267,25 +279,26 @@ export function buildAlertApprovalBatches(
     const proposals = alerts.flatMap(alert => {
         const target = endpointKey(alert);
         if (!target || sentEndpoints.has(target)) return [];
-        const proposal = decodeDealAlertRegion(alert.arrival_city)
-            ? dealProposal(alert, flights, priceHistory, sourceUpdatedAt, now)
-            : routeProposal(alert, flights, priceHistory, sourceUpdatedAt, now);
+        if (decodeDealAlertRegion(alert.arrival_city)) {
+            return dealProposals(alert, flights, priceHistory, sourceUpdatedAt, now);
+        }
+        const proposal = routeProposal(alert, flights, priceHistory, sourceUpdatedAt, now);
         return proposal ? [proposal] : [];
     }).sort((a, b) => (
-        (a.kind === 'route' ? 0 : 1) - (b.kind === 'route' ? 0 : 1)
+        a.selectionRank - b.selectionRank
+        || (a.kind === 'route' ? 0 : 1) - (b.kind === 'route' ? 0 : 1)
         || b.candidate.score - a.candidate.score
         || a.candidate.effectivePrice - b.candidate.effectivePrice
     ));
 
-    const chosenEndpoints = new Set<string>();
     const grouped = new Map<string, AlertApprovalBatch>();
     for (const proposal of proposals) {
-        if (chosenEndpoints.has(proposal.endpointKey)) continue;
-        chosenEndpoints.add(proposal.endpointKey);
         const batchKey = proposalKey(proposal);
         const existing = grouped.get(batchKey);
         if (existing) {
-            existing.recipients.push(proposal.recipient);
+            const duplicateEndpoint = existing.recipients.some(recipient => endpointKey(recipient.alert) === proposal.endpointKey);
+            if (!duplicateEndpoint) existing.recipients.push(proposal.recipient);
+            existing.selectionRank = Math.min(existing.selectionRank, proposal.selectionRank);
             continue;
         }
         grouped.set(batchKey, {
@@ -304,12 +317,14 @@ export function buildAlertApprovalBatches(
             effectivePrice: proposal.candidate.effectivePrice,
             score: proposal.candidate.score,
             reasons: proposal.candidate.reasons,
+            selectionRank: proposal.selectionRank,
             recipients: [proposal.recipient],
         });
     }
 
     return Array.from(grouped.values()).sort((a, b) => (
-        (a.kind === 'route' ? 0 : 1) - (b.kind === 'route' ? 0 : 1)
+        a.selectionRank - b.selectionRank
+        || (a.kind === 'route' ? 0 : 1) - (b.kind === 'route' ? 0 : 1)
         || b.score - a.score
         || a.effectivePrice - b.effectivePrice
     ));
@@ -318,15 +333,16 @@ export function buildAlertApprovalBatches(
 export function toPublicApprovalBatch(batch: AlertApprovalBatch): PublicAlertApprovalBatch {
     const { recipients, ...publicBatch } = batch;
     const groupedConditions = new Map<string, PublicAlertApprovalBatch['recipientConditions'][number]>();
-    for (const { alert } of recipients) {
+    for (const { alert, selectionRank } of recipients) {
         const region = decodeDealAlertRegion(alert.arrival_city);
         const condition = {
             kind: region ? 'deal' as const : 'route' as const,
             departureCity: alert.departure_city || '전체',
-            destination: region ? (region === 'all' ? '아무데나' : region) : (alert.arrival_city || '전체'),
+            destination: region ? dealAlertRegionLabel(region) : (alert.arrival_city || '전체'),
             maxPrice: Number(alert.max_price),
             departureDateFrom: alert.departure_date_from ? normalizeAlertDate(alert.departure_date_from) : undefined,
             departureDateTo: alert.departure_date_to ? normalizeAlertDate(alert.departure_date_to) : undefined,
+            selectionRank,
             recipientCount: 1,
         };
         const key = [
@@ -336,6 +352,7 @@ export function toPublicApprovalBatch(batch: AlertApprovalBatch): PublicAlertApp
             condition.maxPrice,
             condition.departureDateFrom || '',
             condition.departureDateTo || '',
+            condition.selectionRank,
         ].join('|');
         const existing = groupedConditions.get(key);
         if (existing) existing.recipientCount++;

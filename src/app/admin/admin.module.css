@@ -3260,6 +3260,12 @@
     cursor: pointer;
 }
 
+.alertApprovalActions .alertPreviewButton {
+    border-color: #d8dde3;
+    background: #fff;
+    color: #4d5866;
+}
+
 .alertApprovalActions button {
     border-color: #d92b4c;
     background: #d92b4c;
@@ -3271,6 +3277,23 @@
     background: #e9ebee;
     color: #929aa5;
     cursor: default;
+}
+
+@media (max-width: 720px) {
+    .alertApprovalMeta {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .alertApprovalActions {
+        flex-wrap: wrap;
+    }
+
+    .alertApprovalActions a,
+    .alertApprovalActions button {
+        flex: 1 1 auto;
+        text-align: center;
+    }
 }
 
 .dataGap {

@@ -1,0 +1,44 @@
+name: Send Admin Alert Preview
+
+on:
+  workflow_dispatch:
+    inputs:
+      batch_key:
+        description: 'Notification batch to preview'
+        required: true
+        type: string
+      target_key:
+        description: 'Admin preview device key'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: admin-alert-preview
+  cancel-in-progress: false
+
+jobs:
+  send-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - run: npm ci
+
+      - name: Send exact notification to the admin device only
+        run: npx --no-install tsx scripts/send-alert-preview.ts
+        env:
+          ALERT_APPROVAL_BATCH_KEY: ${{ inputs.batch_key }}
+          ADMIN_TEST_ALERT_KEY: ${{ inputs.target_key }}
+          VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}

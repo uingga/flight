@@ -4762,7 +4762,7 @@ export default function Dashboard() {
                                         >
                                             <option value="일본">일본</option>
                                             <option value="동남아">동남아</option>
-                                            <option value="중국">중국</option>
+                                            <option value="중국">중화권</option>
                                             <option value="남태평양">남태평양</option>
                                             <option value="all">아무데나</option>
                                         </select>

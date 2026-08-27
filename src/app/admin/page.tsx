@@ -4,6 +4,13 @@ import { useState, useEffect } from 'react';
 import styles from './admin.module.css';
 import { isAnalyticsExcluded, setAnalyticsExcluded } from '@/lib/analytics';
 
+function urlBase64ToUint8Array(base64String: string) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    return Uint8Array.from(rawData, character => character.charCodeAt(0));
+}
+
 interface CrawlHistoryEntry {
     timestamp: string;
     sites: Record<string, { total: number; scraped?: number; preserved?: boolean; skipped?: boolean; added?: number; removed?: number }>;
@@ -125,6 +132,7 @@ interface AlertApprovalBatch {
     effectivePrice: number;
     score: number;
     reasons: string[];
+    selectionRank: number;
     recipientCount: number;
     recipientConditions: Array<{
         kind: 'route' | 'deal';
@@ -133,6 +141,7 @@ interface AlertApprovalBatch {
         maxPrice: number;
         departureDateFrom?: string;
         departureDateTo?: string;
+        selectionRank: number;
         recipientCount: number;
     }>;
 }
@@ -641,6 +650,8 @@ export default function AdminPage() {
     const [dealAlertReview, setDealAlertReview] = useState<DealAlertReviewData | null>(null);
     const [dealAlertReviewError, setDealAlertReviewError] = useState<string | null>(null);
     const [alertApprovalAction, setAlertApprovalAction] = useState<string | null>(null);
+    const [alertPreviewAction, setAlertPreviewAction] = useState<string | null>(null);
+    const [previewedAlertBatches, setPreviewedAlertBatches] = useState<string[]>([]);
     const [queuedAlertBatches, setQueuedAlertBatches] = useState<string[]>([]);
     const [alertApprovalMessage, setAlertApprovalMessage] = useState<string | null>(null);
     const [userStats, setUserStats] = useState<UserStatsData | null>(null);
@@ -805,6 +816,60 @@ export default function AdminPage() {
             setAlertApprovalMessage(approvalError instanceof Error ? approvalError.message : '발송 작업을 시작하지 못했습니다.');
         } finally {
             setAlertApprovalAction(null);
+        }
+    }
+
+    async function previewAlertBatch(batch: AlertApprovalBatch) {
+        if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
+            setAlertApprovalMessage('이 브라우저는 웹 알림 시험 발송을 지원하지 않습니다.');
+            return;
+        }
+        const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+        if (!vapidPublicKey) {
+            setAlertApprovalMessage('웹 알림 공개키 설정이 없어 시험 발송을 준비할 수 없습니다.');
+            return;
+        }
+
+        setAlertPreviewAction(batch.batchKey);
+        setAlertApprovalMessage(null);
+        try {
+            const permission = Notification.permission === 'default'
+                ? await Notification.requestPermission()
+                : Notification.permission;
+            if (permission !== 'granted') throw new Error('브라우저 알림 권한을 허용해야 내 기기로 시험 발송할 수 있습니다.');
+
+            const registration = await navigator.serviceWorker.register('/sw.js');
+            const subscription = await registration.pushManager.getSubscription()
+                || await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+                });
+            const serialized = subscription.toJSON();
+            if (!serialized.endpoint || !serialized.keys?.p256dh || !serialized.keys?.auth) {
+                throw new Error('이 브라우저의 알림 수신 정보를 만들지 못했습니다.');
+            }
+
+            const response = await fetch('/api/deal-alert-candidates', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    key,
+                    batchKey: batch.batchKey,
+                    action: 'test',
+                    subscription: {
+                        endpoint: serialized.endpoint,
+                        keys: serialized.keys,
+                    },
+                }),
+            });
+            const json = await response.json();
+            if (!response.ok) throw new Error(json.error || '시험 발송 작업을 시작하지 못했습니다.');
+            setPreviewedAlertBatches(current => current.includes(batch.batchKey) ? current : [...current, batch.batchKey]);
+            setAlertApprovalMessage('내 기기로 시험 발송을 요청했습니다. 알림이 도착한 뒤 문구와 링크를 확인하고 전체 발송을 눌러주세요.');
+        } catch (previewError) {
+            setAlertApprovalMessage(previewError instanceof Error ? previewError.message : '시험 발송 작업을 시작하지 못했습니다.');
+        } finally {
+            setAlertPreviewAction(null);
         }
     }
 
@@ -1718,6 +1783,7 @@ export default function AdminPage() {
                                 <div className={`${styles.openDisclosureBody} ${styles.dealReviewList}`}>
                                     {dealAlertReview.approvalBatches.map(batch => {
                                         const queued = queuedAlertBatches.includes(batch.batchKey);
+                                        const previewed = previewedAlertBatches.includes(batch.batchKey);
                                         return (
                                         <article key={batch.batchKey} className={styles.dealReviewCard}>
                                             <div className={styles.dealReviewCondition}>
@@ -1725,7 +1791,11 @@ export default function AdminPage() {
                                                     <strong>{batch.departureCity} → {batch.arrivalCity}</strong>
                                                     <span>{batch.departureDate} ~ {batch.returnDate}</span>
                                                 </div>
-                                                <span>{batch.kind === 'route' ? '노선 지정 알림' : '조건형 특가 알림'}</span>
+                                                <span>{batch.kind === 'route'
+                                                    ? '노선 지정 알림'
+                                                    : batch.selectionRank === 1
+                                                        ? '조건형 1순위'
+                                                        : `조건형 대안 ${batch.selectionRank}순위`}</span>
                                             </div>
                                             <div className={styles.notificationPreview}>
                                                 <span>받는 사람에게 이렇게 보여요</span>
@@ -1745,7 +1815,7 @@ export default function AdminPage() {
                                                     return (
                                                         <div key={`${condition.kind}-${condition.departureCity}-${condition.destination}-${condition.maxPrice}-${dateLabel}`}>
                                                             <strong>{condition.departureCity} → {condition.destination}</strong>
-                                                            <span>{formatPrice(condition.maxPrice)} 이하 · {dateLabel}</span>
+                                                            <span>{formatPrice(condition.maxPrice)} 이하 · {dateLabel}{condition.kind === 'deal' ? ` · ${condition.selectionRank}순위` : ''}</span>
                                                             <b>{condition.recipientCount.toLocaleString()}명</b>
                                                         </div>
                                                     );
@@ -1761,10 +1831,18 @@ export default function AdminPage() {
                                                     <a href={batch.url} target="_blank" rel="noopener noreferrer">항공권 확인</a>
                                                     <button
                                                         type="button"
-                                                        onClick={() => approveAlertBatch(batch)}
-                                                        disabled={!dealAlertReview.deliveryAvailable || queued || alertApprovalAction === batch.batchKey}
+                                                        className={styles.alertPreviewButton}
+                                                        onClick={() => previewAlertBatch(batch)}
+                                                        disabled={!dealAlertReview.deliveryAvailable || queued || alertPreviewAction === batch.batchKey}
                                                     >
-                                                        {queued ? '발송 요청됨' : alertApprovalAction === batch.batchKey ? '요청 중…' : '확인하고 보내기'}
+                                                        {alertPreviewAction === batch.batchKey ? '시험 요청 중…' : previewed ? '다시 시험 발송' : '내 기기로 먼저 보내기'}
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => approveAlertBatch(batch)}
+                                                        disabled={!dealAlertReview.deliveryAvailable || !previewed || queued || alertApprovalAction === batch.batchKey}
+                                                    >
+                                                        {queued ? '발송 요청됨' : alertApprovalAction === batch.batchKey ? '요청 중…' : previewed ? '전체 발송' : '시험 발송 후 가능'}
                                                     </button>
                                                 </div>
                                             </div>
@@ -1783,7 +1861,7 @@ export default function AdminPage() {
                                         return (
                                             <article key={review.condition.id} className={styles.dealReviewCard}>
                                                 <div className={styles.dealReviewCondition}>
-                                                    <div><strong>{review.condition.departureCity} 출발 · {review.condition.region === 'all' ? '아무데나' : review.condition.region}</strong><span>{formatPrice(review.condition.maxPrice)} 이하</span></div>
+                                                    <div><strong>{review.condition.departureCity} 출발 · {review.condition.region === 'all' ? '아무데나' : review.condition.region === '중국' ? '중화권' : review.condition.region}</strong><span>{formatPrice(review.condition.maxPrice)} 이하</span></div>
                                                     <span>제외 {rejectedCount.toLocaleString()}개</span>
                                                 </div>
                                                 <div className={styles.dealRejections}>
