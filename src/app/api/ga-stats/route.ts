@@ -59,10 +59,13 @@ const inferChannelFromSource = (sourceValue: string, mediumValue: string): strin
     const source = sourceValue.trim().toLowerCase();
     const medium = mediumValue.trim().toLowerCase();
     if (source === '(direct)' && (medium === '(none)' || medium === '(not set)')) return '직접 방문';
-    if (isUnsetDimension(source) || isUnsetDimension(medium)) return null;
+    if (['google', 'naver', 'bing', 'daum'].some(value => source.includes(value))) return '검색';
+    if (['instagram', 'threads', 'facebook', 'twitter', 'x.com', 't.co'].some(value => source.includes(value))) return 'SNS';
+    if (isUnsetDimension(source)) return null;
+    if (isUnsetDimension(medium)) return '기타 유입';
     if (medium.includes('organic')) return '검색';
     if (medium === 'referral') return '외부 링크';
-    if (medium.includes('social') || ['instagram', 'threads', 'facebook', 'twitter', 'x.com', 't.co'].some(value => source.includes(value))) return 'SNS';
+    if (medium.includes('social')) return 'SNS';
     if (['cpc', 'ppc', 'paidsearch', 'paid_search'].includes(medium)) return '검색 광고';
     if (medium === 'email') return '이메일';
     return '기타 유입';
@@ -498,23 +501,30 @@ async function buildStats(config: Ga4Config, days: number) {
             if (unassignedChannelReport === null || !(unassignedChannelReport.rows || []).length) {
                 add('출처 확인 불가', rawUnassignedSessions, rawUnassignedUsers, '브라우저·앱에서 출처 정보가 전달되지 않음');
             } else {
-                let explainedSessions = 0;
-                let explainedUsers = 0;
+                const inferredBuckets = new Map<string, { sessions: number; note?: string }>();
                 (unassignedChannelReport.rows || []).forEach(row => {
-                    const inferred = inferChannelFromSource(dim(row, 1), dim(row, 2));
-                    const sessions = num(row, 0);
-                    const users = num(row, 1);
-                    explainedSessions += sessions;
-                    explainedUsers += users;
-                    add(
-                        inferred || '출처 확인 불가',
-                        sessions,
-                        users,
-                        inferred ? undefined : '브라우저·앱에서 출처 정보가 전달되지 않음',
-                    );
+                    const label = inferChannelFromSource(dim(row, 1), dim(row, 2)) || '출처 확인 불가';
+                    const previous = inferredBuckets.get(label);
+                    inferredBuckets.set(label, {
+                        sessions: (previous?.sessions || 0) + num(row, 0),
+                        note: label === '출처 확인 불가' ? '브라우저·앱에서 출처 정보가 전달되지 않음' : undefined,
+                    });
                 });
-                if (explainedSessions < rawUnassignedSessions) {
-                    add('출처 확인 불가', rawUnassignedSessions - explainedSessions, Math.max(0, rawUnassignedUsers - explainedUsers), '일부 과거 방문은 출처를 되살릴 수 없음');
+                const buckets = Array.from(inferredBuckets.entries());
+                const detailSessions = buckets.reduce((sum, [, bucket]) => sum + bucket.sessions, 0);
+                let remainingSessions = rawUnassignedSessions;
+                let remainingUsers = rawUnassignedUsers;
+                buckets.forEach(([label, bucket], index) => {
+                    const isLast = index === buckets.length - 1;
+                    const ratio = detailSessions > 0 ? bucket.sessions / detailSessions : 0;
+                    const sessions = isLast ? remainingSessions : Math.min(remainingSessions, Math.round(rawUnassignedSessions * ratio));
+                    const users = isLast ? remainingUsers : Math.min(remainingUsers, Math.round(rawUnassignedUsers * ratio));
+                    add(label, sessions, users, bucket.note);
+                    remainingSessions -= sessions;
+                    remainingUsers -= users;
+                });
+                if (buckets.length === 0) {
+                    add('출처 확인 불가', rawUnassignedSessions, rawUnassignedUsers, '브라우저·앱에서 출처 정보가 전달되지 않음');
                 }
             }
         }
