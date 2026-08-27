@@ -77,12 +77,36 @@ assert(ttangUrl.hostname === 'mm.ttang.com', '땡처리닷컴 특가 목록 주�
 assert(ttangUrl.searchParams.get('scale') === '200', '땡처리닷컴 목록에서 해당 표를 찾기 어려운 작은 페이지로 연결됩니다.');
 assert(ttang.includes('#:~:text='), '땡처리닷컴에서 표시 가격을 찾는 강조 정보가 빠졌습니다.');
 
-const myrealtrip = getFlightBookingUrl(sampleFlight(
-    'myrealtrip',
-    'https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3567293%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392',
-), { adult: 2, child: 1, infant: 0 });
-assert(myrealtrip.includes('adult%3D2'), '마이리얼트립 성인 인원이 연결되지 않았습니다.');
-assert(myrealtrip.includes('child%3D1'), '마이리얼트립 소아 인원이 연결되지 않았습니다.');
-assert(new URL(myrealtrip).searchParams.get('utm_campaign') === 'tikitikit_flight', '마이리얼트립 제휴 추적값이 빠졌습니다.');
+const myrealtripFlight: Flight = {
+    ...sampleFlight(
+        'myrealtrip',
+        'https://www.myrealtrip.com/bridge/marketing/?return_url=https%3A%2F%2Fflights.myrealtrip.com%2Fair%2Fagent%2Fb2c%2FAIR%2FAAA%2Foffers.k1%3Fgid%3D3567293%26adult%3D1%26child%3D0%26infant%3D0&mylink_id=1849392',
+    ),
+    departure: { city: '인천', airport: 'ICN', date: '2026-09-10', time: '10:00' },
+    // 도시 검색용 코드는 SHA지만 실제 예약 결과에서 확인한 공항은 PVG인 사례를 재현한다.
+    arrival: { city: '상하이(푸동)', airport: 'SHA', date: '2026-09-13', time: '18:00' },
+    routeAirports: {
+        outboundDeparture: 'ICN',
+        outboundArrival: 'PVG',
+        returnDeparture: 'PVG',
+        returnArrival: 'ICN',
+    },
+};
+const myrealtrip = getFlightBookingUrl(myrealtripFlight, { adult: 2, child: 1, infant: 0 });
+const myrealtripPartnerUrl = new URL(myrealtrip);
+assert(myrealtripPartnerUrl.hostname === 'www.myrealtrip.com', '마이리얼트립 제휴 연결 주소가 아닙니다.');
+assert(myrealtripPartnerUrl.searchParams.get('mylink_id') === '1849392', '마이리얼트립 제휴 ID가 빠졌습니다.');
+assert(myrealtripPartnerUrl.searchParams.get('utm_campaign') === 'tikitikit_flight', '마이리얼트립 제휴 추적값이 빠졌습니다.');
+
+const myrealtripResultUrl = new URL(myrealtripPartnerUrl.searchParams.get('return_url') || '');
+assert(myrealtripResultUrl.hostname === 'air-web.myrealtrip.com', '마이리얼트립 최신 검색 화면으로 연결되지 않습니다.');
+assert(
+    myrealtripResultUrl.searchParams.get('trip') === 'A.ICN.A.PVG.2026-09-10/A.PVG.A.ICN.2026-09-13',
+    '마이리얼트립 검색 주소가 실제 확인된 공항과 날짜를 사용하지 않습니다.',
+);
+assert(myrealtripResultUrl.searchParams.get('adult') === '2', '마이리얼트립 성인 인원이 연결되지 않았습니다.');
+assert(myrealtripResultUrl.searchParams.get('child') === '1', '마이리얼트립 소아 인원이 연결되지 않았습니다.');
+assert(myrealtripResultUrl.searchParams.get('infant') === '0', '마이리얼트립 유아 인원이 연결되지 않았습니다.');
+assert(myrealtripResultUrl.searchParams.get('cityNames') === '인천,상하이', '마이리얼트립 도시명이 정리되지 않았습니다.');
 
 console.log('6개 여행사 예약 연결 확인 완료: 인원 보정·모바일 주소·특가 목록·제휴 추적');
