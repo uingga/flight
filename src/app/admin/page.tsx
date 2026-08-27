@@ -146,6 +146,55 @@ interface AlertApprovalBatch {
     }>;
 }
 
+interface AlertApprovalGroup {
+    groupKey: string;
+    recipientConditions: AlertApprovalBatch['recipientConditions'];
+    recipientCount: number;
+    batches: AlertApprovalBatch[];
+}
+
+function groupAlertApprovalBatches(batches: AlertApprovalBatch[]): AlertApprovalGroup[] {
+    const grouped = new Map<string, AlertApprovalGroup>();
+    for (const batch of batches) {
+        const conditionKey = batch.recipientConditions
+            .map(condition => [
+                condition.kind,
+                condition.departureCity,
+                condition.destination,
+                condition.maxPrice,
+                condition.departureDateFrom || '',
+                condition.departureDateTo || '',
+            ].join('|'))
+            .sort()
+            .join('::');
+        const existing = grouped.get(conditionKey);
+        if (existing) {
+            existing.batches.push(batch);
+            existing.recipientCount = Math.max(existing.recipientCount, batch.recipientCount);
+        } else {
+            grouped.set(conditionKey, {
+                groupKey: conditionKey || batch.batchKey,
+                recipientConditions: batch.recipientConditions,
+                recipientCount: batch.recipientCount,
+                batches: [batch],
+            });
+        }
+    }
+    return Array.from(grouped.values()).map(group => ({
+        ...group,
+        batches: group.batches.sort((a, b) => a.selectionRank - b.selectionRank || b.score - a.score),
+    }));
+}
+
+function alertConditionDateLabel(condition: AlertApprovalBatch['recipientConditions'][number]): string {
+    if (condition.departureDateFrom && condition.departureDateTo) {
+        return `${condition.departureDateFrom} ~ ${condition.departureDateTo}`;
+    }
+    if (condition.departureDateFrom) return `${condition.departureDateFrom} 이후`;
+    if (condition.departureDateTo) return `${condition.departureDateTo} 이전`;
+    return '날짜 제한 없음';
+}
+
 interface DealAlertReviewData {
     available: boolean;
     approvalMode: 'manual';
@@ -1781,73 +1830,78 @@ export default function AdminPage() {
                             <div className={styles.openDisclosure}>
                                 <h3>실제로 보낼 내용</h3>
                                 <div className={`${styles.openDisclosureBody} ${styles.dealReviewList}`}>
-                                    {dealAlertReview.approvalBatches.map(batch => {
-                                        const queued = queuedAlertBatches.includes(batch.batchKey);
-                                        const previewed = previewedAlertBatches.includes(batch.batchKey);
-                                        return (
-                                        <article key={batch.batchKey} className={styles.dealReviewCard}>
-                                            <div className={styles.dealReviewCondition}>
+                                    {groupAlertApprovalBatches(dealAlertReview.approvalBatches).map(group => (
+                                        <article key={group.groupKey} className={styles.alertRequestGroup}>
+                                            <div className={styles.alertRequestHeading}>
                                                 <div>
-                                                    <strong>{batch.departureCity} → {batch.arrivalCity}</strong>
-                                                    <span>{batch.departureDate} ~ {batch.returnDate}</span>
+                                                    <span>한 번의 알림 요청</span>
+                                                    <strong>{group.batches.length.toLocaleString()}개 후보 중 하나를 골라 보내요</strong>
                                                 </div>
-                                                <span>{batch.kind === 'route'
-                                                    ? '노선 지정 알림'
-                                                    : batch.selectionRank === 1
-                                                        ? '조건형 1순위'
-                                                        : `조건형 대안 ${batch.selectionRank}순위`}</span>
-                                            </div>
-                                            <div className={styles.notificationPreview}>
-                                                <span>받는 사람에게 이렇게 보여요</span>
-                                                <strong>{batch.title}</strong>
-                                                <p>{batch.body}</p>
+                                                <b>{group.recipientCount.toLocaleString()}명</b>
                                             </div>
                                             <div className={styles.recipientConditions}>
-                                                <span>이 조건을 설정한 사람에게 보내요</span>
-                                                {batch.recipientConditions.map(condition => {
-                                                    const dateLabel = condition.departureDateFrom && condition.departureDateTo
-                                                        ? `${condition.departureDateFrom} ~ ${condition.departureDateTo}`
-                                                        : condition.departureDateFrom
-                                                            ? `${condition.departureDateFrom} 이후`
-                                                            : condition.departureDateTo
-                                                                ? `${condition.departureDateTo} 이전`
-                                                                : '날짜 제한 없음';
+                                                {group.recipientConditions.map(condition => {
+                                                    const dateLabel = alertConditionDateLabel(condition);
                                                     return (
                                                         <div key={`${condition.kind}-${condition.departureCity}-${condition.destination}-${condition.maxPrice}-${dateLabel}`}>
-                                                            <strong>{condition.departureCity} → {condition.destination}</strong>
-                                                            <span>{formatPrice(condition.maxPrice)} 이하 · {dateLabel}{condition.kind === 'deal' ? ` · ${condition.selectionRank}순위` : ''}</span>
+                                                            <strong>{condition.departureCity} 출발 · {condition.destination}</strong>
+                                                            <span>{formatPrice(condition.maxPrice)} 이하 · {dateLabel}</span>
                                                             <b>{condition.recipientCount.toLocaleString()}명</b>
                                                         </div>
                                                     );
                                                 })}
                                             </div>
-                                            <div className={styles.alertApprovalMeta}>
-                                                <div>
-                                                    <strong>{batch.recipientCount.toLocaleString()}명에게 발송</strong>
-                                                    <span>{SOURCE_NAMES[batch.source] || batch.source} · {batch.airline} · 품질 {batch.score}점</span>
-                                                    <small>{batch.reasons.join(' · ')}</small>
-                                                </div>
-                                                <div className={styles.alertApprovalActions}>
-                                                    <a href={batch.url} target="_blank" rel="noopener noreferrer">항공권 확인</a>
-                                                    <button
-                                                        type="button"
-                                                        className={styles.alertPreviewButton}
-                                                        onClick={() => previewAlertBatch(batch)}
-                                                        disabled={!dealAlertReview.deliveryAvailable || queued || alertPreviewAction === batch.batchKey}
-                                                    >
-                                                        {alertPreviewAction === batch.batchKey ? '시험 요청 중…' : previewed ? '다시 시험 발송' : '내 기기로 먼저 보내기'}
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => approveAlertBatch(batch)}
-                                                        disabled={!dealAlertReview.deliveryAvailable || !previewed || queued || alertApprovalAction === batch.batchKey}
-                                                    >
-                                                        {queued ? '발송 요청됨' : alertApprovalAction === batch.batchKey ? '요청 중…' : previewed ? '전체 발송' : '시험 발송 후 가능'}
-                                                    </button>
-                                                </div>
+                                            <div className={styles.alertCandidateStack}>
+                                                {group.batches.map(batch => {
+                                                    const queued = queuedAlertBatches.includes(batch.batchKey);
+                                                    const previewed = previewedAlertBatches.includes(batch.batchKey);
+                                                    return (
+                                                        <section key={batch.batchKey} className={styles.alertCandidateCard}>
+                                                            <div className={styles.dealReviewCondition}>
+                                                                <div>
+                                                                    <strong>{batch.departureCity} → {batch.arrivalCity}</strong>
+                                                                    <span>{batch.departureDate} ~ {batch.returnDate}</span>
+                                                                </div>
+                                                                <span>{batch.kind === 'route'
+                                                                    ? '노선 지정 후보'
+                                                                    : `${batch.selectionRank}순위 후보`}</span>
+                                                            </div>
+                                                            <div className={styles.notificationPreview}>
+                                                                <span>받는 사람에게 이렇게 보여요</span>
+                                                                <strong>{batch.title}</strong>
+                                                                <p>{batch.body}</p>
+                                                            </div>
+                                                            <div className={styles.alertApprovalMeta}>
+                                                                <div>
+                                                                    <strong>{batch.recipientCount.toLocaleString()}명에게 발송</strong>
+                                                                    <span>{SOURCE_NAMES[batch.source] || batch.source} · {batch.airline} · 품질 {batch.score}점</span>
+                                                                    <small>{batch.reasons.join(' · ')}</small>
+                                                                </div>
+                                                                <div className={styles.alertApprovalActions}>
+                                                                    <a href={batch.url} target="_blank" rel="noopener noreferrer">항공권 확인</a>
+                                                                    <button
+                                                                        type="button"
+                                                                        className={styles.alertPreviewButton}
+                                                                        onClick={() => previewAlertBatch(batch)}
+                                                                        disabled={!dealAlertReview.deliveryAvailable || queued || alertPreviewAction === batch.batchKey}
+                                                                    >
+                                                                        {alertPreviewAction === batch.batchKey ? '시험 요청 중…' : previewed ? '다시 시험 발송' : '내 기기로 먼저 보내기'}
+                                                                    </button>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => approveAlertBatch(batch)}
+                                                                        disabled={!dealAlertReview.deliveryAvailable || !previewed || queued || alertApprovalAction === batch.batchKey}
+                                                                    >
+                                                                        {queued ? '발송 요청됨' : alertApprovalAction === batch.batchKey ? '요청 중…' : previewed ? '전체 발송' : '시험 발송 후 가능'}
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </section>
+                                                    );
+                                                })}
                                             </div>
                                         </article>
-                                    );})}
+                                    ))}
                                     {dealAlertReview.approvalBatches.length === 0 && (
                                         <div className={styles.dealReviewEmpty}>지금은 품질 기준과 알림 조건을 모두 통과한 후보가 없어요.</div>
                                     )}

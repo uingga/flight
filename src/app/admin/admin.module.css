@@ -3221,6 +3221,61 @@
     font-variant-numeric: tabular-nums;
 }
 
+.alertRequestGroup {
+    padding: 15px;
+    border: 1px solid #dde2e8;
+    border-radius: 13px;
+    background: #fff;
+}
+
+.alertRequestHeading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 11px;
+}
+
+.alertRequestHeading > div {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.alertRequestHeading span {
+    color: #8a929e;
+    font-size: 0.66rem;
+}
+
+.alertRequestHeading strong {
+    color: #273140;
+    font-size: 0.84rem;
+    font-weight: 710;
+}
+
+.alertRequestHeading > b {
+    flex: 0 0 auto;
+    color: #d92b4c;
+    font-size: 0.75rem;
+}
+
+.alertCandidateStack {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.alertCandidateCard {
+    padding: 13px;
+    border: 1px solid #e5e8ec;
+    border-radius: 11px;
+    background: #fafbfc;
+}
+
+.alertCandidateCard .notificationPreview {
+    background: #fff;
+}
+
 .alertApprovalMeta {
     display: flex;
     align-items: flex-end;
