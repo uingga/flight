@@ -1,6 +1,7 @@
 name: Naver Price Crawl
 
 on:
+  # 독립 예약을 두지 않는다. 분산된 마이리얼트립 수집이 성공하면 바로 이어서 실행한다.
   workflow_run:
     workflows: ["MyRealTrip Price Scraping"]
     types: [completed]

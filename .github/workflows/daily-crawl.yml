@@ -2,17 +2,17 @@ name: Daily Flight Crawl
 
 on:
   schedule:
-    # 하루 6회 (KST): 오전 2시간, 오후~저녁 3시간 간격, 자정 00:30
+    # 하루 6회 (KST): GitHub Actions 정각 혼잡을 피해 분 단위로 분산한다.
     #
     # 21시는 뺐다. 최근 4주 23회차를 표 단위로 세어 보니 13회(57%)가 새 표를
     # 하나도 못 찾았고 중앙값이 0이었다. 여행사 사이트 이용자가 가장 많은
     # 시간대이기도 해서, 얻는 것 없이 부담만 주는 자리였다.
-    - cron: '0 23 * * *'     # 08:00 KST
-    - cron: '0 1 * * *'      # 10:00 KST
-    - cron: '0 3 * * *'      # 12:00 KST
-    - cron: '0 6 * * *'      # 15:00 KST
-    - cron: '0 9 * * *'      # 18:00 KST
-    - cron: '30 15 * * *'    # 00:30 KST
+    - cron: '13 23 * * *'    # 08:13 KST
+    - cron: '53 0 * * *'     # 09:53 KST
+    - cron: '56 2 * * *'     # 11:56 KST
+    - cron: '17 6 * * *'     # 15:17 KST
+    - cron: '29 9 * * *'     # 18:29 KST
+    - cron: '37 15 * * *'    # 00:37 KST
   workflow_dispatch: # 수동 실행 가능
 
 jobs:
@@ -101,13 +101,13 @@ jobs:
       # 정오 회차의 최신 데이터가 저장된 뒤에만 오늘의 표를 고른다.
       # 별도 시각 예약으로 두면 크롤링 지연 시 이전 데이터에서 선정될 수 있다.
       - name: Select today's pick from noon crawl
-        if: steps.crawl.outcome == 'success' && github.event_name == 'schedule' && github.event.schedule == '0 3 * * *'
+        if: steps.crawl.outcome == 'success' && github.event_name == 'schedule' && github.event.schedule == '56 2 * * *'
         run: |
           git pull --ff-only origin main
           node scripts/select-today-pick.mjs
 
       - name: Commit and push today's pick
-        if: steps.crawl.outcome == 'success' && github.event_name == 'schedule' && github.event.schedule == '0 3 * * *'
+        if: steps.crawl.outcome == 'success' && github.event_name == 'schedule' && github.event.schedule == '56 2 * * *'
         run: |
           if [[ -z $(git status --porcelain -- data/today-pick.json) ]]; then
             echo "No selection change"
