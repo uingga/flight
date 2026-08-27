@@ -1073,17 +1073,19 @@ export default function AdminPage() {
                     </div>
                 </section>
 
-                <details className={styles.glossary}>
-                    <summary>용어가 헷갈리나요?</summary>
-                    <dl>
-                        <div><dt>방문한 사람</dt><dd>같은 사람이 여러 번 들어와도 한 명으로 셉니다.</dd></div>
-                        <div><dt>방문 횟수</dt><dd>사이트에 들어온 횟수입니다. 한 사람이 여러 번 방문하면 늘어납니다.</dd></div>
-                        <div><dt>상세를 본 사람</dt><dd>항공권 카드를 열어 일정과 가격을 자세히 본 사람입니다.</dd></div>
-                        <div><dt>예약 페이지로 이동</dt><dd>여행사 예약 버튼을 눌러 외부 예약 화면으로 넘어간 행동입니다. 실제 구매 완료와는 다릅니다.</dd></div>
-                        <div><dt>사이트에 보이는 표</dt><dd>중복·만료·신고·가격 기준을 거친 뒤 사용자 화면에 남은 항공권입니다.</dd></div>
-                        <div><dt>이전 데이터 사용</dt><dd>이번 수집이 실패해 마지막으로 정상 수집한 항공권을 대신 보여주는 상태입니다.</dd></div>
-                    </dl>
-                </details>
+                <div className={`${styles.openDisclosure} ${styles.glossary}`}>
+                    <h3>용어가 헷갈리나요?</h3>
+                    <div className={styles.openDisclosureBody}>
+                        <dl>
+                            <div><dt>방문한 사람</dt><dd>같은 사람이 여러 번 들어와도 한 명으로 셉니다.</dd></div>
+                            <div><dt>방문 횟수</dt><dd>사이트에 들어온 횟수입니다. 한 사람이 여러 번 방문하면 늘어납니다.</dd></div>
+                            <div><dt>상세를 본 사람</dt><dd>항공권 카드를 열어 일정과 가격을 자세히 본 사람입니다.</dd></div>
+                            <div><dt>예약 페이지로 이동</dt><dd>여행사 예약 버튼을 눌러 외부 예약 화면으로 넘어간 행동입니다. 실제 구매 완료와는 다릅니다.</dd></div>
+                            <div><dt>사이트에 보이는 표</dt><dd>중복·만료·신고·가격 기준을 거친 뒤 사용자 화면에 남은 항공권입니다.</dd></div>
+                            <div><dt>이전 데이터 사용</dt><dd>이번 수집이 실패해 마지막으로 정상 수집한 항공권을 대신 보여주는 상태입니다.</dd></div>
+                        </dl>
+                    </div>
+                </div>
             </>)}
 
             {tab === 'operations' && (<>
@@ -1119,10 +1121,12 @@ export default function AdminPage() {
                         </div>
                     </div>
                     {exclusionReasons.length > 0 && (
-                        <details className={styles.disclosure}>
-                            <summary>제외된 항공권 이유 보기</summary>
-                            <RankList items={exclusionReasons.map(item => ({ label: item.label, value: `${item.count.toLocaleString()}개` }))} />
-                        </details>
+                        <div className={styles.openDisclosure}>
+                            <h3>제외된 항공권 이유</h3>
+                            <div className={styles.openDisclosureBody}>
+                                <RankList items={exclusionReasons.map(item => ({ label: item.label, value: `${item.count.toLocaleString()}개` }))} />
+                            </div>
+                        </div>
                     )}
                 </section>
 
@@ -1172,14 +1176,16 @@ export default function AdminPage() {
                             <RankList items={sortedAirlines.slice(0, 6).map(([label, count]) => ({ label, value: `${count.toLocaleString()}개` }))} />
                         </div>
                     </div>
-                    <details className={styles.disclosure}>
-                        <summary>현재 가격이 낮은 표 보기</summary>
-                        <RankList items={(flightFilterSummary?.lowestVisible || data.cheapest).slice(0, 8).map(item => ({
-                            label: item.route,
-                            value: formatPrice(item.price),
-                            note: `${item.date} · ${item.airline} · ${SOURCE_NAMES[item.source] || item.source}`,
-                        }))} />
-                    </details>
+                    <div className={styles.openDisclosure}>
+                        <h3>현재 가격이 낮은 표</h3>
+                        <div className={styles.openDisclosureBody}>
+                            <RankList items={(flightFilterSummary?.lowestVisible || data.cheapest).slice(0, 8).map(item => ({
+                                label: item.route,
+                                value: formatPrice(item.price),
+                                note: `${item.date} · ${item.airline} · ${SOURCE_NAMES[item.source] || item.source}`,
+                            }))} />
+                        </div>
+                    </div>
                 </section>
 
                 <section className={styles.section} id="operations-sources">
@@ -1448,9 +1454,9 @@ export default function AdminPage() {
                                 <div><span>검토한 조건</span><strong>{dealAlertReview.subscriptions.toLocaleString()}개</strong></div>
                                 <div><span>보낼 만한 표</span><strong>{dealAlertReview.qualifiedCandidates.toLocaleString()}개</strong></div>
                             </div>
-                            <details className={styles.disclosure}>
-                                <summary>발송 후보 자세히 보기</summary>
-                                <div className={styles.dealReviewList}>
+                            <div className={styles.openDisclosure}>
+                                <h3>발송 후보</h3>
+                                <div className={`${styles.openDisclosureBody} ${styles.dealReviewList}`}>
                                     {dealAlertReview.reviews.filter(review => review.candidates.length > 0).map(review => (
                                         <article key={review.condition.id} className={styles.dealReviewCard}>
                                             <div className={styles.dealReviewCondition}>
@@ -1469,10 +1475,10 @@ export default function AdminPage() {
                                         <div className={styles.dealReviewEmpty}>현재 발송 후보가 없어요.</div>
                                     )}
                                 </div>
-                            </details>
-                            <details className={styles.disclosure}>
-                                <summary>제외 이유 자세히 보기</summary>
-                                <div className={styles.dealReviewList}>
+                            </div>
+                            <div className={styles.openDisclosure}>
+                                <h3>제외 이유</h3>
+                                <div className={`${styles.openDisclosureBody} ${styles.dealReviewList}`}>
                                     {dealAlertReview.reviews.filter(review => Object.values(review.rejectionCounts).some(count => count > 0)).map(review => {
                                         const rejectedCount = Object.values(review.rejectionCounts).reduce((sum, count) => sum + count, 0);
                                         return (
@@ -1493,7 +1499,7 @@ export default function AdminPage() {
                                         <div className={styles.dealReviewEmpty}>제외된 표가 없어요.</div>
                                     )}
                                 </div>
-                            </details>
+                            </div>
                         </>
                     )}
                 </section>
@@ -2535,22 +2541,24 @@ export default function AdminPage() {
                             {gaStats.warnings.length > 0 && (
                                 <div className={styles.dataGap}>{gaStats.warnings.join(' · ')}</div>
                             )}
-                            <details className={styles.disclosure}>
-                                <summary>통계 설정과 내 방문 제외</summary>
-                                <p>실제 구매 완료와 매출은 여행사 제휴 정산 화면에서 따로 확인해야 합니다.</p>
-                                <a href="https://analytics.google.com/" target="_blank" rel="noopener noreferrer">Google Analytics 열기 →</a>
-                                <button
-                                    type="button"
-                                    className={styles.analyticsToggle}
-                                    onClick={() => {
-                                        const next = !analyticsExcluded;
-                                        setAnalyticsExcluded(next);
-                                        setAnalyticsExcludedState(next);
-                                    }}
-                                >
-                                    {analyticsExcluded ? '이 브라우저 방문을 다시 포함하기' : '이 브라우저 방문 제외하기'}
-                                </button>
-                            </details>
+                            <div className={styles.openDisclosure}>
+                                <h3>통계 설정과 내 방문 제외</h3>
+                                <div className={styles.openDisclosureBody}>
+                                    <p>실제 구매 완료와 매출은 여행사 제휴 정산 화면에서 따로 확인해야 합니다.</p>
+                                    <a href="https://analytics.google.com/" target="_blank" rel="noopener noreferrer">Google Analytics 열기 →</a>
+                                    <button
+                                        type="button"
+                                        className={styles.analyticsToggle}
+                                        onClick={() => {
+                                            const next = !analyticsExcluded;
+                                            setAnalyticsExcluded(next);
+                                            setAnalyticsExcludedState(next);
+                                        }}
+                                    >
+                                        {analyticsExcluded ? '이 브라우저 방문을 다시 포함하기' : '이 브라우저 방문 제외하기'}
+                                    </button>
+                                </div>
+                            </div>
                         </section>
 
                         <section className={styles.section} id="visitor-dates">

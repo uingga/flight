@@ -2582,6 +2582,41 @@
     color: #172033;
 }
 
+.openDisclosure {
+    margin: 12px 0 0;
+    overflow: hidden;
+    border: 1px solid #e4e7ec;
+    border-radius: 12px;
+    background: #fafbfc;
+    color: #172033;
+}
+
+.openDisclosure > h3 {
+    margin: 0;
+    padding: 13px 15px;
+    border-bottom: 1px solid #e5e8ec;
+    color: #4f5967;
+    font-size: 0.78rem;
+    font-weight: 710;
+}
+
+.openDisclosureBody {
+    margin: 12px 14px;
+}
+
+.openDisclosureBody.dealReviewList {
+    margin: 12px 14px;
+}
+
+.openDisclosureBody > :first-child { margin-top: 0; }
+.openDisclosureBody > :last-child { margin-bottom: 0; }
+
+.openDisclosure a {
+    color: #d92b4c;
+    font-size: 0.75rem;
+    font-weight: 680;
+}
+
 .glossary {
     margin-bottom: 14px;
 }
