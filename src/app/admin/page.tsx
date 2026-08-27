@@ -984,17 +984,6 @@ export default function AdminPage() {
             </nav>
 
             {tab === 'overview' && (<>
-                <section className={styles.overviewHero}>
-                    <div>
-                        <span className={styles.eyebrow}>오늘</span>
-                        <h2>{attentionCount > 0 ? `지금 ${attentionCount}가지를 확인해주세요` : '지금 바로 처리할 문제는 없어요'}</h2>
-                        <p>문제가 생긴 곳과 오늘의 방문·예약 흐름만 먼저 보여드립니다.</p>
-                    </div>
-                    <span className={attentionCount > 0 ? styles.overviewStatusWarn : styles.overviewStatusGood}>
-                        {attentionCount > 0 ? '확인 필요' : '정상 운영 중'}
-                    </span>
-                </section>
-
                 <section className={styles.section} id="overview-actions">
                     <div className={styles.sectionHeading}>
                         <div>
