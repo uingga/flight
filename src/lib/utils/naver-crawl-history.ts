@@ -22,6 +22,7 @@ export interface NaverCrawlHistoryEntry {
     blocked?: number;
     healthChecks?: number;
     abortedEarly: boolean;
+    abortReason?: string;
 }
 
 interface NaverCrawlHistoryFile {

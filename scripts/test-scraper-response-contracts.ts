@@ -1,8 +1,13 @@
 import assert from 'node:assert/strict';
 import {
+    keepEarliestDepartureMonthByDestination,
+    mapOnlineTourFlight,
+} from '../src/lib/scrapers/onlinetour.ts';
+import {
     parseOnlineTourCities,
     parseOnlineTourJsonp,
     parseTtangPromotionXml,
+    retrySourceOperation,
     SourceResponseError,
 } from '../src/lib/scrapers/source-response.ts';
 
@@ -35,6 +40,100 @@ assertSourceError(
     'api-error',
 );
 
+async function testSourceRetries() {
+    let transientAttempts = 0;
+    const retriedResult = await retrySourceOperation('온라인투어 테스트', async () => {
+        transientAttempts++;
+        if (transientAttempts < 3) throw new SourceResponseError('network', 'fetch failed', undefined, undefined, 'ECONNRESET');
+        return 'ok';
+    }, { maxAttempts: 3, delaysMs: [0, 0] });
+    assert.equal(retriedResult, 'ok');
+    assert.equal(transientAttempts, 3);
+
+    let schemaAttempts = 0;
+    await assert.rejects(
+        retrySourceOperation('온라인투어 형식 테스트', async () => {
+            schemaAttempts++;
+            throw new SourceResponseError('schema-mismatch', '필드 변경');
+        }, { maxAttempts: 3, delaysMs: [0, 0] }),
+        error => error instanceof SourceResponseError && error.kind === 'schema-mismatch',
+    );
+    assert.equal(schemaAttempts, 1);
+}
+
+let apiError: SourceResponseError | null = null;
+try {
+    parseOnlineTourJsonp('tikitikitTest({"status":503,"message":"down","data":{"list":[]}})', 'tikitikitTest');
+} catch (error) {
+    if (error instanceof SourceResponseError) apiError = error;
+}
+assert.equal(apiError?.status, 503);
+
+const onlineTourBaseRow = {
+    event_code: '260901833163',
+    dep_start_date: '20260901',
+    arr_start_date: '20260904',
+    adult_price: 170_000,
+    adult_fee_price: 20_000,
+    start_city_code: 'ICN',
+    start_city_code_name: '인천',
+    start_city_code2: 'PQC',
+    start_city_code_name2: '푸꾸옥',
+    end_city_code: 'PQC',
+    end_city_code2: 'ICN',
+    transport_detail_name: '테스트항공',
+};
+const fallbackDestination = mapOnlineTourFlight(onlineTourBaseRow);
+assert.equal(fallbackDestination?.arrival.airport, 'PQC');
+assert.equal(fallbackDestination?.arrival.city, '푸꾸옥');
+
+const boracayDestination = mapOnlineTourFlight({
+    ...onlineTourBaseRow,
+    event_code: '260901833164',
+    arr_city_code: 'BOR',
+    arr_city_code_name: '보라카이',
+    start_city_code2: 'KLO',
+    start_city_code_name2: '칼리보',
+    end_city_code: 'KLO',
+});
+assert.equal(boracayDestination?.arrival.airport, 'BOR');
+assert.equal(boracayDestination?.routeAirports?.outboundArrival, 'KLO');
+
+const earliestMonthRows = keepEarliestDepartureMonthByDestination([
+    {
+        ...onlineTourBaseRow,
+        event_code: 'pqc-aug',
+        dep_start_date: '20260831',
+        adult_price: 300_000,
+        arr_city_code: 'PQC',
+    },
+    {
+        ...onlineTourBaseRow,
+        event_code: 'pqc-aug-no-search-code',
+        dep_start_date: '20260830',
+        adult_price: 310_000,
+        arr_city_code: null,
+    },
+    {
+        ...onlineTourBaseRow,
+        event_code: 'pqc-sep-cheaper',
+        dep_start_date: '20260901',
+        adult_price: 100_000,
+        arr_city_code: 'PQC',
+    },
+    {
+        ...onlineTourBaseRow,
+        event_code: 'ceb-sep',
+        dep_start_date: '20260923',
+        arr_city_code: 'CEB',
+        start_city_code2: 'CEB',
+    },
+]);
+assert.deepEqual(
+    earliestMonthRows.map(row => row.event_code),
+    ['pqc-aug', 'pqc-aug-no-search-code', 'ceb-sep'],
+);
+
 const ttangPayload = parseTtangPromotionXml(
     '<RESPONSE><HEAD><error>false</error><message></message></HEAD><RESULT><RECORD><CONTENS><![CDATA[{"code":"OK","desc":"SUCCESS","response":[]}]]></CONTENS></RECORD></RESULT></RESPONSE>',
 );
@@ -53,4 +152,9 @@ assertSourceError(
     'api-error',
 );
 
-console.log('스크래퍼 응답 계약 테스트 통과');
+testSourceRetries()
+    .then(() => console.log('스크래퍼 응답 계약 테스트 통과'))
+    .catch(error => {
+        console.error(error);
+        process.exitCode = 1;
+    });

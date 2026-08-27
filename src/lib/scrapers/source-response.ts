@@ -7,6 +7,7 @@ export type SourceResponseFailureKind =
     | 'malformed-xml'
     | 'malformed-json'
     | 'api-error'
+    | 'snapshot-changed'
     | 'schema-mismatch';
 
 export class SourceResponseError extends Error {
@@ -15,10 +16,39 @@ export class SourceResponseError extends Error {
         message: string,
         readonly status?: number,
         readonly contentType?: string,
+        readonly causeCode?: string,
+        readonly finalUrl?: string,
+        readonly attempts = 1,
     ) {
         super(message);
         this.name = 'SourceResponseError';
     }
+}
+
+function sourceErrorCause(error: unknown): { reason: string; code?: string } {
+    const messages: string[] = [];
+    const seen = new Set<unknown>();
+    let current: unknown = error;
+    let code: string | undefined;
+
+    for (let depth = 0; current && depth < 4 && !seen.has(current); depth++) {
+        seen.add(current);
+        if (current instanceof Error) {
+            if (current.message && !messages.includes(current.message)) messages.push(current.message);
+            const candidate = current as Error & { code?: unknown; cause?: unknown };
+            if (!code && typeof candidate.code === 'string') code = candidate.code;
+            current = candidate.cause;
+        } else {
+            const value = String(current);
+            if (value && !messages.includes(value)) messages.push(value);
+            break;
+        }
+    }
+
+    return {
+        reason: messages.join(' <- ') || '알 수 없는 네트워크 오류',
+        code,
+    };
 }
 
 export interface SourceTextResponse {
@@ -43,8 +73,15 @@ export async function fetchSourceText(
         response = await fetch(url, { ...init, signal: controller.signal });
         text = await response.text();
     } catch (error) {
-        const reason = error instanceof Error ? error.message : String(error);
-        throw new SourceResponseError('network', `${label} 요청 실패: ${reason}`);
+        const cause = sourceErrorCause(error);
+        throw new SourceResponseError(
+            'network',
+            `${label} 요청 실패: ${cause.reason}`,
+            undefined,
+            undefined,
+            cause.code,
+            String(url),
+        );
     } finally {
         clearTimeout(timeout);
     }
@@ -56,6 +93,8 @@ export async function fetchSourceText(
             `${label} HTTP ${response.status} (content-type: ${contentType || '없음'})`,
             response.status,
             contentType,
+            undefined,
+            response.url,
         );
     }
 
@@ -65,6 +104,57 @@ export async function fetchSourceText(
         contentType,
         finalUrl: response.url,
     };
+}
+
+export interface SourceRetryOptions {
+    maxAttempts?: number;
+    delaysMs?: number[];
+    onRetry?: (error: SourceResponseError, nextAttempt: number) => void;
+}
+
+export function isRetryableSourceError(error: unknown): error is SourceResponseError {
+    if (!(error instanceof SourceResponseError)) return false;
+    if (error.kind === 'network') return true;
+    if (error.kind !== 'http-status' && error.kind !== 'api-error') return false;
+    const status = Number(error.status || 0);
+    return status === 408 || status === 425 || status === 429 || status >= 500;
+}
+
+/** 일시적인 전송/API 오류만 제한적으로 다시 시도하고, 형식 변경은 즉시 드러낸다. */
+export async function retrySourceOperation<T>(
+    _label: string,
+    operation: (attempt: number) => Promise<T>,
+    options: SourceRetryOptions = {},
+): Promise<T> {
+    const maxAttempts = Math.max(1, options.maxAttempts || 3);
+    const delaysMs = options.delaysMs || [500, 1_500];
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+            return await operation(attempt);
+        } catch (error) {
+            if (!isRetryableSourceError(error) || attempt >= maxAttempts) {
+                if (error instanceof SourceResponseError && attempt > 1) {
+                    throw new SourceResponseError(
+                        error.kind,
+                        error.message,
+                        error.status,
+                        error.contentType,
+                        error.causeCode,
+                        error.finalUrl,
+                        attempt,
+                    );
+                }
+                throw error;
+            }
+
+            options.onRetry?.(error, attempt + 1);
+            const delayMs = delaysMs[Math.min(attempt - 1, delaysMs.length - 1)] || 0;
+            if (delayMs > 0) await new Promise(resolve => setTimeout(resolve, delayMs));
+        }
+    }
+
+    throw new Error('도달할 수 없는 재시도 상태');
 }
 
 function decodeHtml(value: string): string {
@@ -164,6 +254,7 @@ export function parseOnlineTourJsonp(text: string, expectedCallback: string): On
         throw new SourceResponseError(
             'api-error',
             `온라인투어 목록 API 오류: ${candidate.status ?? '상태 없음'} ${candidate.message || ''}`.trim(),
+            typeof candidate.status === 'number' ? candidate.status : undefined,
         );
     }
     if (!candidate.data || !Array.isArray(candidate.data.list)) {
@@ -231,7 +322,9 @@ export function parseTtangPromotionXml(xml: string): TtangPromotionPayload {
 
 export function describeSourceError(error: unknown): string {
     if (error instanceof SourceResponseError) {
-        return `[${error.kind}] ${error.message}`;
+        const cause = error.causeCode ? ` · 원인 ${error.causeCode}` : '';
+        const attempts = error.attempts > 1 ? ` · ${error.attempts}회 시도` : '';
+        return `[${error.kind}] ${error.message}${cause}${attempts}`;
     }
     return error instanceof Error ? error.message : String(error);
 }

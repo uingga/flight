@@ -50,7 +50,6 @@ jobs:
 
       - name: Run Naver price crawler
         id: naver
-        continue-on-error: true
         run: xvfb-run --auto-servernum --server-args='-screen 0 1280x900x24' npx tsx scripts/crawl-naver.ts
         env:
           CI: true
@@ -59,6 +58,25 @@ jobs:
           REFRESH_DAYS: 2
           MYREALTRIP_REFRESH_DAYS: 1
           MISS_RETRY_HOURS: 6
+
+      - name: Preserve failed run history
+        if: ${{ always() && steps.naver.outcome == 'failure' }}
+        run: |
+          cp data/naver-crawl-history.json /tmp/naver-crawl-history.json
+
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git fetch origin main
+          git reset --hard origin/main
+          node scripts/merge-naver-crawl-history.mjs data/naver-crawl-history.json /tmp/naver-crawl-history.json
+
+          if [[ -n $(git status --porcelain data/naver-crawl-history.json) ]]; then
+            git add data/naver-crawl-history.json
+            git commit -m "chore(data): record failed naver crawl"
+            git push
+          else
+            echo "ℹ️ 새 네이버 실패 기록 없음"
+          fi
 
       - name: Filter flights by Naver prices
         if: steps.naver.outcome == 'success'
@@ -113,6 +131,7 @@ jobs:
           if [[ "${{ steps.naver.outcome }}" == "success" ]]; then
             echo "✅ 네이버 크롤링 성공"
           else
-            echo "❌ 네이버 크롤링 실패 — Xvfb 환경에서 차단되었을 수 있음"
+            echo "❌ 네이버 크롤링 실패 또는 부분 중단"
+            echo "💡 Run Naver price crawler 로그의 HTTP/GraphQL 상태와 중단 원인을 확인하세요"
             echo "💡 로컬 PC의 TikitikitNaverCrawl 작업(매일 14:30, scripts/run-naver-crawl.ps1)이 가정용 IP로 다시 채웁니다"
           fi

@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { buildNaverPriceKey } from '../src/lib/naver-route';
+import { getUsableNaverComparison } from '../src/lib/naver-comparison';
 
 /**
  * 네이버 최저가 기준으로 전체 여행사 항공권 필터링
@@ -45,7 +46,8 @@ cache.flights = cache.flights.filter((f: any) => {
         return true;
     }
     const naverEntry = naverPrices[naverKey];
-    const bestNaverPrice: number | null = naverEntry?.naverLowest || null;
+    const comparison = getUsableNaverComparison(naverEntry);
+    const bestNaverPrice: number | null = comparison?.price || null;
 
     if (!bestNaverPrice) {
         noData++;
@@ -54,7 +56,7 @@ cache.flights = cache.flights.filter((f: any) => {
 
     // 네이버 최저가 저장 (추천순 정렬에서 사용)
     f.naverLowest = bestNaverPrice;
-    if (naverEntry.crawledAt) f.naverCheckedAt = naverEntry.crawledAt;
+    f.naverCheckedAt = comparison!.checkedAt;
 
     const diff = f.price - bestNaverPrice;
     const moreExpensiveRatio = diff / bestNaverPrice;

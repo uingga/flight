@@ -3,6 +3,7 @@ import todayPick from '../../../../data/today-pick.json';
 import { Flight, FlightSearchParams } from '@/types/flight';
 import { resolveCityCode } from '@/lib/scrapers/interpark';
 import { getComparisonFreshness, getEffectivePrice } from '@/lib/price-quality';
+import { getUsableNaverComparison } from '@/lib/naver-comparison';
 import { filterStaleMyrealtripFlights, getMyrealtripFreshness } from '@/lib/source-freshness';
 import { deduplicateDisplayFlights } from '@/lib/flight-visibility';
 import { buildNaverPriceKey } from '@/lib/naver-route';
@@ -259,11 +260,12 @@ export async function GET(request: NextRequest) {
                     const exactKey = buildNaverPriceKey(f, f.departure?.date, f.arrival?.date);
                     if (exactKey) {
                         const matchedPrice = naverPrices[exactKey];
-                        const bestPrice: number | null = matchedPrice?.naverLowest || null;
+                        const comparison = getUsableNaverComparison(matchedPrice);
+                        const bestPrice: number | null = comparison?.price || null;
 
                         if (bestPrice) {
                             f.naverLowest = bestPrice;
-                            f.naverCheckedAt = matchedPrice?.crawledAt || undefined;
+                            f.naverCheckedAt = comparison!.checkedAt;
                             matched++;
                         }
                     }

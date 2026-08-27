@@ -30,6 +30,7 @@ function flight(overrides: Partial<Flight> & Pick<Flight, 'id'>): Flight & { fir
         link: 'https://example.com',
         region: overrides.region || '일본',
         naverLowest: overrides.naverLowest ?? 159_000,
+        naverCheckedAt: overrides.naverCheckedAt || '2026-08-14T08:00:00+09:00',
         priceCheckedAt: overrides.priceCheckedAt || '2026-08-14T08:00:00+09:00',
         firstSeen: '2026-08-14',
         ...overrides,
@@ -72,12 +73,50 @@ const review = evaluateDealAlert(
 assert.equal(review.qualifiedCount, 1, '같은 목적지는 가장 좋은 후보 하나만 남겨야 한다.');
 assert.equal(review.candidates[0].flightId, 'qualified');
 assert.ok(review.candidates[0].score >= DEAL_ALERT_SCORE_THRESHOLD);
+assert.ok(review.candidates[0].scoreBreakdown.comparison > 0,
+    '최근 비교가는 좋은 표 알림 점수에 반영해야 한다.');
 assert.equal(review.rejectionCounts.overBudget, 1, '땡처리닷컴 수수료를 더한 금액으로 예산을 검사해야 한다.');
 assert.equal(review.rejectionCounts.stale, 1);
 assert.equal(review.rejectionCounts.otherRegion, 1);
 assert.equal(review.rejectionCounts.expired, 1);
 assert.equal(review.candidates[0].reasons.some(reason => /네이버|naver/i.test(reason)), false,
     '사용자에게 보이는 비교 근거에 특정 비교 서비스명을 노출하면 안 된다.');
+
+const staleComparisonReview = evaluateDealAlert(
+    { ...condition, id: 'stale-comparison', maxPrice: 200_000 },
+    [flight({
+        id: 'stale-comparison-flight',
+        naverLowest: 220_000,
+        naverCheckedAt: '2026-08-05T08:00:00+09:00',
+    })],
+    {
+        '인천-오사카(간사이)': [
+            { date: '2026-08-10', minPrice: 180_000 },
+            { date: '2026-08-11', minPrice: 175_000 },
+        ],
+    },
+    {},
+    now,
+);
+const noComparisonReview = evaluateDealAlert(
+    { ...condition, id: 'no-comparison', maxPrice: 200_000 },
+    [flight({ id: 'no-comparison-flight', naverLowest: 0 })],
+    {
+        '인천-오사카(간사이)': [
+            { date: '2026-08-10', minPrice: 180_000 },
+            { date: '2026-08-11', minPrice: 175_000 },
+        ],
+    },
+    {},
+    now,
+);
+assert.equal(
+    staleComparisonReview.candidates[0].scoreBreakdown.comparison,
+    noComparisonReview.candidates[0].scoreBreakdown.comparison,
+    '3일이 지난 비교가는 비교 데이터가 없는 표와 같은 점수를 받아야 한다.',
+);
+assert.equal(staleComparisonReview.candidates[0].reasons.some(reason => reason.includes('외부 비교')), false,
+    '3일이 지난 비교가는 알림 이유에도 사용하면 안 된다.');
 
 const anywhere = evaluateDealAlert(
     { ...condition, id: 'anywhere', region: 'all', maxPrice: 200_000 },

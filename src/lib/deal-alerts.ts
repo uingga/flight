@@ -1,5 +1,6 @@
 import type { Flight } from '../types/flight';
 import { normalizeCity } from './utils/flight-helpers';
+import { getComparisonFreshness } from './price-quality';
 
 export const DEAL_ALERT_PREFIX = '@deal:';
 export const DEAL_ALERT_SCORE_THRESHOLD = 65;
@@ -188,14 +189,15 @@ function candidateReasons(
     flight: ReviewFlight,
     effective: number,
     baseline: number | null,
+    comparisonPrice: number | undefined,
     freshness: { score: number; ageHours: number | null },
 ): string[] {
     const reasons: string[] = [];
     if (baseline && effective < baseline) {
         reasons.push(`평소 이 노선 시세보다 ${Math.round((1 - effective / baseline) * 100)}% 저렴`);
     }
-    if (flight.naverLowest && effective <= flight.naverLowest) {
-        const savingRate = Math.round((1 - effective / flight.naverLowest) * 100);
+    if (comparisonPrice && effective <= comparisonPrice) {
+        const savingRate = Math.round((1 - effective / comparisonPrice) * 100);
         reasons.push(savingRate > 0
             ? `외부 비교 최저가보다 ${savingRate}% 저렴`
             : '외부 비교 최저가 이하');
@@ -216,9 +218,13 @@ function scoreFlight(
     const effective = effectivePrice(flight);
     const baseline = routeHistoryBaseline(flight, priceHistory);
     const freshness = freshnessInfo(checkedAt, now);
+    const comparisonPrice = flight.naverLowest
+        && getComparisonFreshness(flight.naverCheckedAt, now.getTime()).usable
+        ? flight.naverLowest
+        : undefined;
     const breakdown: DealScoreBreakdown = {
         history: historyScore(effective.price, baseline),
-        comparison: comparisonScore(effective.price, flight.naverLowest),
+        comparison: comparisonScore(effective.price, comparisonPrice),
         schedule: scheduleScore(flight),
         novelty: noveltyScore(flight.firstSeen, now),
         freshness: freshness.score,
@@ -238,7 +244,7 @@ function scoreFlight(
         feeNote: effective.feeNote,
         score,
         scoreBreakdown: breakdown,
-        reasons: candidateReasons(flight, effective.price, baseline, freshness),
+        reasons: candidateReasons(flight, effective.price, baseline, comparisonPrice, freshness),
         priceCheckedAt: checkedAt,
     };
 }

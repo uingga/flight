@@ -19,8 +19,13 @@ import {
 } from '../src/lib/naver-route';
 import {
     classifyNaverPageState,
+    classifyNaverProbeAvailability,
+    combineNaverProbeResults,
     naverPageStateLabel,
+    shouldAbortNaverCrawlForZeroSuccess,
+    type NaverAvailability,
     type NaverCrawlPageState,
+    type NaverPageSnapshot,
 } from '../src/lib/naver-crawl-page-state';
 
 chromium.use(stealth());
@@ -33,11 +38,15 @@ const SOURCE_FILTER = SOURCE_FILTER_RAW.toLowerCase() === 'all' ? '' : SOURCE_FI
 const REFRESH_DAYS = parseInt(process.env.REFRESH_DAYS || '2', 10); // 기타 여행사는 KST 날짜 기준 이틀마다 갱신
 const MYREALTRIP_REFRESH_DAYS = parseInt(process.env.MYREALTRIP_REFRESH_DAYS || '1', 10); // 마이리얼트립은 KST 날짜 기준 매일 갱신
 const MISS_RETRY_HOURS = parseInt(process.env.MISS_RETRY_HOURS || '6', 10); // 검색 실패 노선은 잠시 뒤 재시도
-const ABORT_AFTER_MISSES = parseInt(process.env.ABORT_AFTER_MISSES || '3', 10); // 연속 N건 결과 없으면 차단으로 보고 조기 철수
+const NO_RESULT_RETRY_HOURS = parseInt(process.env.NO_RESULT_RETRY_HOURS || '24', 10); // 정상 빈 노선은 하루 뒤 재확인
+const ABORT_AFTER_MISSES = parseInt(process.env.ABORT_AFTER_MISSES || '3', 10); // 연속 N건 일시 오류면 서비스 상태를 별도 확인
+const MIN_ZERO_SUCCESS_GUARD_ATTEMPTS = parseInt(process.env.MIN_ZERO_SUCCESS_GUARD_ATTEMPTS || '10', 10); // 추출기 전면 변경 방어선
 const DRY_RUN = process.env.DRY_RUN === '1';                        // 검색 계획만 출력하고 종료
 const MIN_VALID_PRICE = parseInt(process.env.MIN_VALID_PRICE || '60000', 10); // 국제선 왕복 최저 방어선 — 미만이면 오염 데이터로 보고 폐기
 const HIDE_WINDOW = process.env.HIDE_WINDOW === '1';                // 브라우저 창을 화면 밖에 배치 (로컬 스케줄 실행용)
 const NAVER_WAIT_MS = 25000;        // 네이버 검색 결과 로딩 대기 (25초)
+const NAVER_EXTRA_WAIT_MS = 20000;  // API/로딩이 끝나지 않은 페이지만 추가 대기
+const NAVER_HEALTH_WAIT_MS = 20000; // 대조 노선은 가격이 아닌 API 도달 여부만 확인
 const MIN_DELAY = 1000;             // 최소 랜덤 딜레이 (ms)
 const MAX_DELAY = 3000;             // 최대 랜덤 딜레이 (ms)
 const BATCH_SIZE = 10;              // N건마다 휴식
@@ -113,7 +122,14 @@ const isAttemptFresh = (entry: NaverPriceEntry | undefined, source: string, now 
     if (!Number.isFinite(attemptedAt)) return false;
 
     // 실패 건은 차단이 풀릴 기회를 주기 위해 정확한 시간 간격으로 재시도한다.
-    if (isMiss) return now - attemptedAt < MISS_RETRY_HOURS * HOUR_MS;
+    if (isMiss) {
+        const retryHours = entry.lastAttemptStatus === 'no_result'
+            || entry.lastAttemptStatus === 'route_error'
+            || entry.lastAttemptStatus === 'miss'
+            ? NO_RESULT_RETRY_HOURS
+            : MISS_RETRY_HOURS;
+        return now - attemptedAt < retryHours * HOUR_MS;
+    }
 
     // 성공 건은 실행 시각의 몇 분 차이 때문에 하루를 더 건너뛰지 않도록 KST 날짜로 판단한다.
     const refreshDays = source === 'myrealtrip' ? MYREALTRIP_REFRESH_DAYS : REFRESH_DAYS;
@@ -189,7 +205,7 @@ const freshnessHoursFor = (entry: NaverPriceEntry, _source: string): number => {
     // 노선 중복 제거 + 신선한 항목 제외 + 우선순위 정렬
     const { selected: uniqueFlights, pending: neededFlights, skippedFresh } = selectFlightsByPriority(rawData, naverPrices, MAX_FLIGHTS);
     const newRouteCount = neededFlights.filter(f => !naverPrices[flightKey(f)]).length;
-    console.log(`⏭️ 갱신 주기 내 이미 시도된 노선 스킵: ${skippedFresh}건 (KST 기준 마이리얼트립 매일 / 기타 ${REFRESH_DAYS}일마다 / 실패 ${MISS_RETRY_HOURS}시간 후)`);
+    console.log(`⏭️ 갱신 주기 내 이미 시도된 노선 스킵: ${skippedFresh}건 (KST 기준 마이리얼트립 매일 / 기타 ${REFRESH_DAYS}일마다 / 빈 결과 ${NO_RESULT_RETRY_HOURS}시간 · 일시 오류 ${MISS_RETRY_HOURS}시간 후)`);
     console.log(`📋 확인 필요 ${neededFlights.length}건 · 이번 실행 ${uniqueFlights.length}건 · 새 항공권 ${newRouteCount}건 · 다음 회차 ${Math.max(0, neededFlights.length - uniqueFlights.length)}건\n`);
 
     if (DRY_RUN) {
@@ -241,6 +257,7 @@ const freshnessHoursFor = (entry: NaverPriceEntry, _source: string): number => {
     };
     let abortedEarly = false;
     let explicitBlockDetected = false;
+    let abortReason: string | undefined;
 
     for (let i = 0; i < uniqueFlights.length; i++) {
         const flight = uniqueFlights[i];
@@ -276,6 +293,8 @@ const freshnessHoursFor = (entry: NaverPriceEntry, _source: string): number => {
             // GraphQL 응답 캡처를 위한 변수
             let lowestPrice: number | null = null;
             let graphqlResponseCount = 0;
+            let graphqlSuccessCount = 0;
+            let graphqlErrorCount = 0;
             let graphqlProblemStatus: number | null = null;
 
             // flight-api 응답 가로채기
@@ -284,9 +303,17 @@ const freshnessHoursFor = (entry: NaverPriceEntry, _source: string): number => {
                 if (url.includes('flight-api.naver.com/graphql')) {
                     graphqlResponseCount++;
                     const status = response.status();
-                    if (status === 403 || status === 429 || status >= 500) graphqlProblemStatus = status;
+                    if (status === 403 || status === 429) graphqlProblemStatus = status;
+                    else if (status >= 500 && graphqlProblemStatus !== 403 && graphqlProblemStatus !== 429) graphqlProblemStatus = status;
+                    if (status < 200 || status >= 400) graphqlErrorCount++;
                     try {
                         const json = await response.json();
+                        if (status >= 200 && status < 400) {
+                            const hasErrors = Array.isArray(json?.errors) && json.errors.length > 0;
+                            const hasData = json && typeof json === 'object' && json.data !== undefined && json.data !== null;
+                            if (hasData && !hasErrors) graphqlSuccessCount++;
+                            else graphqlErrorCount++;
+                        }
                         // 응답에서 최저가 추출
                         const prices = extractPricesFromGraphQL(json);
                         for (const p of prices) {
@@ -294,7 +321,9 @@ const freshnessHoursFor = (entry: NaverPriceEntry, _source: string): number => {
                                 lowestPrice = p;
                             }
                         }
-                    } catch { /* JSON 파싱 실패 무시 */ }
+                    } catch {
+                        if (status >= 200 && status < 400) graphqlErrorCount++;
+                    }
                 }
             };
             page.on('response', responseHandler);
@@ -308,9 +337,45 @@ const freshnessHoursFor = (entry: NaverPriceEntry, _source: string): number => {
 
             // DOM에서 가격 읽기 — 2026-07 네이버 개편 후 운임이 GraphQL로 오지 않아
             // 실질적으로 이쪽이 주 소스다 (사용자가 화면에서 보는 가격과 동일)
-            const domPrice = await extractPriceFromDOM(page);
+            let domPrice = await extractPriceFromDOM(page);
             if (domPrice && (lowestPrice === null || domPrice < lowestPrice)) {
                 lowestPrice = domPrice;
+            }
+
+            let pageSnapshot: NaverPageSnapshot | null = null;
+            if (lowestPrice === null) {
+                pageSnapshot = await inspectNaverPage(page, navigationResponse?.status(), {
+                    graphqlResponseCount,
+                    graphqlSuccessCount,
+                    graphqlErrorCount,
+                    graphqlProblemStatus,
+                });
+
+                // 25초가 지났는데 API가 아직 안 왔거나 화면이 로딩 중일 때만 더 기다린다.
+                // 이미 정상 GraphQL이 끝난 빈 결과를 무조건 20초 더 기다리지는 않는다.
+                if (pageSnapshot.isLoading || graphqlSuccessCount === 0) {
+                    console.log(`  ⏳ 검색이 아직 끝나지 않아 최대 ${NAVER_EXTRA_WAIT_MS / 1000}초 더 확인합니다.`);
+                    const deadline = Date.now() + NAVER_EXTRA_WAIT_MS;
+                    while (Date.now() < deadline && lowestPrice === null) {
+                        await page.waitForTimeout(2_000);
+                        domPrice = await extractPriceFromDOM(page);
+                        if (domPrice && (lowestPrice === null || domPrice < lowestPrice)) {
+                            lowestPrice = domPrice;
+                            break;
+                        }
+
+                        pageSnapshot = await inspectNaverPage(page, navigationResponse?.status(), {
+                            graphqlResponseCount,
+                            graphqlSuccessCount,
+                            graphqlErrorCount,
+                            graphqlProblemStatus,
+                        });
+                        const settledState = classifyNaverPageState(pageSnapshot);
+                        if (settledState === 'blocked' || settledState === 'no_result' || settledState === 'route_error') {
+                            break;
+                        }
+                    }
+                }
             }
 
             // 오염 방어선: 국제선 왕복이 이 값보다 쌀 수 없다 (호텔 가격 등 혼입 차단)
@@ -336,15 +401,17 @@ const freshnessHoursFor = (entry: NaverPriceEntry, _source: string): number => {
                 successCount++;
                 consecutiveAmbiguousMisses = 0;
             } else {
-                const pageSnapshot = await inspectNaverPage(
-                    page,
-                    graphqlProblemStatus || navigationResponse?.status(),
-                );
+                pageSnapshot = pageSnapshot || await inspectNaverPage(page, navigationResponse?.status(), {
+                    graphqlResponseCount,
+                    graphqlSuccessCount,
+                    graphqlErrorCount,
+                    graphqlProblemStatus,
+                });
                 const pageState = classifyNaverPageState(pageSnapshot);
                 const failureState: Exclude<NaverCrawlPageState, 'results'> = pageState === 'results'
                     ? 'transient_error'
                     : pageState;
-                console.log(`  ❓ ${naverPageStateLabel(failureState)} — 가격을 찾지 못함 (GraphQL ${graphqlResponseCount}회)`);
+                console.log(`  ❓ ${naverPageStateLabel(failureState)} — 가격을 찾지 못함 (GraphQL 정상 ${graphqlSuccessCount}/${graphqlResponseCount}회 · 오류 ${graphqlErrorCount})`);
                 const attemptedAt = new Date().toISOString();
                 naverPrices[key] = {
                     ...(existingEntry || {}),
@@ -355,17 +422,17 @@ const freshnessHoursFor = (entry: NaverPriceEntry, _source: string): number => {
                     retDate,
                     lastAttemptAt: attemptedAt,
                     lastAttemptStatus: failureState,
-                    lastAttemptDetail: `GraphQL ${graphqlResponseCount}회 · ${pageSnapshot.bodyText?.slice(0, 150) || '본문 없음'}`,
+                    lastAttemptDetail: `GraphQL 정상 ${graphqlSuccessCount}/${graphqlResponseCount}회 · 오류 ${graphqlErrorCount} · ${pageSnapshot.bodyText?.slice(0, 150) || '본문 없음'}`,
                     lastFinalUrl: pageSnapshot.url,
                 };
                 failCount++;
                 failureStateCounts[failureState]++;
                 if (failureState === 'blocked') {
                     explicitBlockDetected = true;
-                } else if (failureState === 'route_error' || failureState === 'transient_error') {
+                } else if (failureState === 'transient_error') {
                     consecutiveAmbiguousMisses++;
                 } else {
-                    // 네이버가 명시한 정상적인 결과 없음은 서비스 차단 증거가 아니다.
+                    // 정상 빈 결과와 잘못됐거나 미지원인 개별 노선은 서비스 차단 증거가 아니다.
                     consecutiveAmbiguousMisses = 0;
                 }
             }
@@ -394,6 +461,7 @@ const freshnessHoursFor = (entry: NaverPriceEntry, _source: string): number => {
         if (explicitBlockDetected) {
             console.log('\n🛑 네이버 접근 제한 응답이 확인되어 추가 요청 없이 조기 철수합니다.');
             console.log(`   (지금까지 수집한 ${successCount}건은 저장됨)`);
+            abortReason = '명시적 접근 제한(403/429/CAPTCHA)';
             abortedEarly = true;
             break;
         }
@@ -403,12 +471,19 @@ const freshnessHoursFor = (entry: NaverPriceEntry, _source: string): number => {
         if (consecutiveAmbiguousMisses >= ABORT_AFTER_MISSES) {
             healthCheckCount++;
             console.log(`\n🩺 애매한 실패 ${consecutiveAmbiguousMisses}건 — 정상 대조 노선으로 접속 상태를 확인합니다.`);
-            const healthy = await probeNaverAvailability(context);
-            if (healthy) {
-                console.log('   ✅ 네이버는 정상입니다. 노선별 실패로 기록하고 다음 항목을 계속 확인합니다.');
+            const availability = await probeNaverAvailability(context);
+            if (availability === 'available') {
+                console.log('   ✅ 검색 API는 정상입니다. 노선별 실패로 기록하고 다음 항목을 계속 확인합니다.');
+                consecutiveAmbiguousMisses = 0;
+            } else if (availability === 'unknown') {
+                // 가격이 없거나 한 번의 애매한 대조 결과만으로 전체 회차를 멈추지 않는다.
+                console.log('   ℹ️ 전체 장애라는 증거가 없어 다음 항목을 계속 확인합니다.');
                 consecutiveAmbiguousMisses = 0;
             } else {
-                console.log('   🛑 정상 대조 노선도 실패 — 접근 제한 또는 서비스 장애로 보고 조기 철수합니다.');
+                abortReason = availability === 'blocked'
+                    ? '대조 노선에서 명시적 접근 제한 확인'
+                    : '서로 다른 대조 노선 2개의 전송/API 장애';
+                console.log(`   🛑 ${abortReason} — 추가 요청 없이 조기 철수합니다.`);
                 console.log(`   (지금까지 수집한 ${successCount}건은 저장됨)`);
                 abortedEarly = true;
                 break;
@@ -429,6 +504,19 @@ const freshnessHoursFor = (entry: NaverPriceEntry, _source: string): number => {
             await new Promise<void>(r => setTimeout(r, restSeconds * 1000));
             console.log(`🔄 크롤링 재개!\n`);
         }
+    }
+
+    // API가 정상이어도 화면 구조가 바뀌면 모든 노선을 정상 빈 결과로 오판할 수 있다.
+    // 충분한 수를 확인했는데 가격을 단 한 건도 읽지 못한 회차는 부분 데이터를
+    // 운영에 반영하지 않고 실패로 남긴다.
+    if (!abortedEarly && shouldAbortNaverCrawlForZeroSuccess(
+        attemptedCount,
+        successCount,
+        MIN_ZERO_SUCCESS_GUARD_ATTEMPTS,
+    )) {
+        abortedEarly = true;
+        abortReason = `${attemptedCount}건 확인 중 가격 추출 0건(화면 구조 변경 또는 전체 응답 이상 의심)`;
+        console.log(`\n🛑 ${abortReason} — 이번 회차의 부분 결과는 운영에 반영하지 않습니다.`);
     }
 
     await browser.close();
@@ -470,6 +558,7 @@ const freshnessHoursFor = (entry: NaverPriceEntry, _source: string): number => {
         blocked: failureStateCounts.blocked,
         healthChecks: healthCheckCount,
         abortedEarly,
+        abortReason,
     });
 
     console.log('─'.repeat(50));
@@ -482,6 +571,11 @@ const freshnessHoursFor = (entry: NaverPriceEntry, _source: string): number => {
     console.log(`🆕 새 항공권 ${newRouteCount}건 중 ${newRoutesAttempted}건 확인`);
     console.log(`⏳ 가장 오래 밀린 항목: ${deferredNeverChecked > 0 ? `아직 한 번도 확인하지 않은 항목 ${deferredNeverChecked}건` : oldestDeferredHours === null ? '없음' : `${oldestDeferredHours}시간`}`);
     console.log(`📁 저장: ${OUTPUT_FILE}`);
+    if (abortedEarly) {
+        // 부분 회차를 GitHub Actions의 성공으로 가장하지 않는다. 워크플로가 필터와
+        // 데이터 커밋을 건너뛰고 실패 원인을 운영자에게 보여주게 한다.
+        process.exitCode = 2;
+    }
 })();
 
 // ─── 검색 키 ───
@@ -658,24 +752,41 @@ async function extractPriceFromDOM(page: any): Promise<number | null> {
     }
 }
 
-async function inspectNaverPage(page: any, httpStatus?: number | null) {
+async function inspectNaverPage(
+    page: any,
+    httpStatus?: number | null,
+    network: Pick<NaverPageSnapshot, 'graphqlResponseCount' | 'graphqlSuccessCount' | 'graphqlErrorCount' | 'graphqlProblemStatus'> = {},
+): Promise<NaverPageSnapshot> {
     try {
-        return await page.evaluate((status: number | null) => ({
-            url: window.location.href,
-            bodyText: (document.body?.innerText || '').replace(/\s+/g, ' ').slice(0, 4000),
-            // 빈 결과/차단 화면에도 가격용 껍데기 노드가 남을 수 있으므로
-            // 실제 숫자 운임이 들어 있는 노드만 결과로 센다.
-            priceCount: Array.from(document.querySelectorAll('[class*="item_num"]'))
-                .map(element => Number((element.textContent || '').replace(/[^0-9]/g, '')))
-                .filter(price => Number.isFinite(price) && price >= 60_000).length,
-            httpStatus: status,
-        }), httpStatus ?? null);
+        const snapshot = await page.evaluate((status: number | null) => {
+            const bodyText = (document.body?.innerText || '').replace(/\s+/g, ' ');
+            const visibleBusy = Array.from(document.querySelectorAll('[aria-busy="true"]')).some(element => {
+                const rect = element.getBoundingClientRect();
+                const style = window.getComputedStyle(element);
+                return rect.width > 0 && rect.height > 0 && style.display !== 'none' && style.visibility !== 'hidden';
+            });
+            return {
+                url: window.location.href,
+                bodyText: bodyText.slice(0, 4000),
+                // 빈 결과/차단 화면에도 가격용 껍데기 노드가 남을 수 있으므로
+                // 실제 숫자 운임이 들어 있는 노드만 결과로 센다.
+                priceCount: Array.from(document.querySelectorAll('[class*="item_num"]'))
+                    .map(element => Number((element.textContent || '').replace(/[^0-9]/g, '')))
+                    .filter(price => Number.isFinite(price) && price >= 60_000).length,
+                httpStatus: status,
+                isLoading: visibleBusy || /검색 결과를 불러오는 중|항공권을 찾는 중|불러오는 중입니다/.test(bodyText),
+                searchPageReached: /flight\.naver\.com\/flights\/international\//.test(window.location.href),
+            };
+        }, httpStatus ?? null);
+        return { ...snapshot, ...network };
     } catch {
         return {
             url: typeof page.url === 'function' ? page.url() : '',
             bodyText: '',
             priceCount: 0,
             httpStatus: httpStatus ?? null,
+            searchPageReached: false,
+            ...network,
         };
     }
 }
@@ -689,32 +800,116 @@ function kstDateAfter(days: number): string {
     return `${year}-${month}-${day}`;
 }
 
-/**
- * 여러 노선에서 가격이 연속으로 안 보일 때, 늘 검색량이 있는 인천-후쿠오카를
- * 별도 페이지로 확인한다. 이 대조군까지 실패할 때만 전체 접근 제한으로 판단한다.
- */
-async function probeNaverAvailability(context: any): Promise<boolean> {
+interface NaverProbeRoute {
+    outboundDeparture: string;
+    outboundArrival: string;
+    returnDeparture: string;
+    returnArrival: string;
+    depAfterDays: number;
+    retAfterDays: number;
+}
+
+async function probeNaverRoute(context: any, route: NaverProbeRoute): Promise<NaverAvailability> {
     const probePage = await context.newPage();
+    let graphqlResponseCount = 0;
+    let graphqlSuccessCount = 0;
+    let graphqlErrorCount = 0;
+    let graphqlProblemStatus: number | null = null;
+    const responseHandler = async (response: any) => {
+        if (!response.url().includes('flight-api.naver.com/graphql')) return;
+        graphqlResponseCount++;
+        const status = response.status();
+        if (status === 403 || status === 429) graphqlProblemStatus = status;
+        else if (status >= 500 && graphqlProblemStatus !== 403 && graphqlProblemStatus !== 429) graphqlProblemStatus = status;
+        if (status < 200 || status >= 400) graphqlErrorCount++;
+        if (status >= 200 && status < 400) {
+            try {
+                const json = await response.json();
+                const hasErrors = Array.isArray(json?.errors) && json.errors.length > 0;
+                const hasData = json && typeof json === 'object' && json.data !== undefined && json.data !== null;
+                if (hasData && !hasErrors) graphqlSuccessCount++;
+                else graphqlErrorCount++;
+            } catch {
+                graphqlErrorCount++;
+            }
+        }
+    };
+    probePage.on('response', responseHandler);
+
     try {
-        const route = {
+        const url = buildNaverSearchUrl(route, kstDateAfter(route.depAfterDays), kstDateAfter(route.retAfterDays));
+        if (!url) return 'unknown';
+
+        let response: any = null;
+        let navigationFailed = false;
+        try {
+            response = await probePage.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
+        } catch (error: any) {
+            navigationFailed = true;
+            console.log(`   ${route.outboundDeparture}-${route.outboundArrival} 이동 실패: ${String(error?.message || error).slice(0, 120)}`);
+        }
+
+        const deadline = Date.now() + NAVER_HEALTH_WAIT_MS;
+        while (
+            Date.now() < deadline
+            && graphqlSuccessCount === 0
+            && graphqlProblemStatus !== 403
+            && graphqlProblemStatus !== 429
+        ) {
+            await probePage.waitForTimeout(1_000);
+        }
+
+        const snapshot = await inspectNaverPage(probePage, response?.status(), {
+            graphqlResponseCount,
+            graphqlSuccessCount,
+            graphqlErrorCount,
+            graphqlProblemStatus,
+        });
+        const availability = classifyNaverProbeAvailability(snapshot, navigationFailed);
+        console.log(
+            `   ${route.outboundDeparture}-${route.outboundArrival}: ${availability}`
+            + ` (HTTP ${snapshot.httpStatus || '없음'}, GraphQL 정상 ${graphqlSuccessCount}/${graphqlResponseCount})`,
+        );
+        return availability;
+    } catch (error: any) {
+        console.log(`   대조 노선 확인 실패: ${String(error?.message || error).slice(0, 160)}`);
+        return 'unavailable';
+    } finally {
+        probePage.off('response', responseHandler);
+        await probePage.close().catch(() => undefined);
+    }
+}
+
+/**
+ * 가격이 없는 단일 노선을 서비스 장애 증거로 쓰지 않는다. 서로 다른 두 대조
+ * 노선의 HTTP/GraphQL 전송 상태를 확인하고, 둘 다 실제로 닿지 않을 때만 멈춘다.
+ */
+async function probeNaverAvailability(context: any): Promise<NaverAvailability> {
+    const routes: NaverProbeRoute[] = [
+        {
             outboundDeparture: 'ICN',
             outboundArrival: 'FUK',
             returnDeparture: 'FUK',
             returnArrival: 'ICN',
-        };
-        const url = buildNaverSearchUrl(route, kstDateAfter(14), kstDateAfter(17));
-        if (!url) return false;
-        const response = await probePage.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
-        await probePage.waitForTimeout(NAVER_WAIT_MS);
-        const price = await extractPriceFromDOM(probePage);
-        if (price && price >= MIN_VALID_PRICE) return true;
-        const state = classifyNaverPageState(await inspectNaverPage(probePage, response?.status()));
-        console.log(`   대조 노선 상태: ${naverPageStateLabel(state)}`);
-        return state === 'results';
-    } catch (error: any) {
-        console.log(`   대조 노선 확인 실패: ${String(error?.message || error).slice(0, 160)}`);
-        return false;
-    } finally {
-        await probePage.close().catch(() => undefined);
+            depAfterDays: 14,
+            retAfterDays: 17,
+        },
+        {
+            outboundDeparture: 'ICN',
+            outboundArrival: 'KIX',
+            returnDeparture: 'KIX',
+            returnArrival: 'ICN',
+            depAfterDays: 21,
+            retAfterDays: 24,
+        },
+    ];
+    const results: NaverAvailability[] = [];
+
+    for (const route of routes) {
+        const result = await probeNaverRoute(context, route);
+        results.push(result);
+        if (result === 'available' || result === 'blocked') return result;
     }
+
+    return combineNaverProbeResults(results);
 }

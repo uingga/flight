@@ -5,7 +5,14 @@ import {
     buildNaverSearchUrl,
     getExactRouteAirports,
 } from '../src/lib/naver-route';
-import { classifyNaverPageState } from '../src/lib/naver-crawl-page-state';
+import {
+    classifyNaverAvailability,
+    classifyNaverPageState,
+    classifyNaverProbeAvailability,
+    combineNaverProbeResults,
+    shouldAbortNaverCrawlForZeroSuccess,
+} from '../src/lib/naver-crawl-page-state';
+import { getUsableNaverComparison } from '../src/lib/naver-comparison';
 
 const symmetricSummary = [
     '이스타항공',
@@ -117,8 +124,99 @@ assert.equal(
 
 assert.equal(classifyNaverPageState({ priceCount: 10, url: 'https://flight.naver.com/flights/international/...' }), 'results');
 assert.equal(classifyNaverPageState({ bodyText: '조건에 맞는 항공권이 없습니다.' }), 'no_result');
-assert.equal(classifyNaverPageState({ url: 'https://flight.naver.com/error', bodyText: '일시적으로 서비스를 이용할 수 없습니다' }), 'route_error');
+assert.equal(classifyNaverPageState({ url: 'https://flight.naver.com/error', bodyText: '일시적으로 서비스를 이용할 수 없습니다' }), 'transient_error');
 assert.equal(classifyNaverPageState({ httpStatus: 429, bodyText: 'Too Many Requests' }), 'blocked');
 assert.equal(classifyNaverPageState({ bodyText: '검색 결과를 불러오는 중입니다.' }), 'transient_error');
+assert.equal(classifyNaverPageState({
+    url: 'https://flight.naver.com/flights/international/ICN-TSN-20261001/TSN-ICN-20261006',
+    httpStatus: 200,
+    searchPageReached: true,
+    graphqlResponseCount: 2,
+    graphqlSuccessCount: 2,
+    graphqlProblemStatus: null,
+    isLoading: false,
+    priceCount: 0,
+}), 'no_result');
+assert.equal(classifyNaverAvailability({
+    url: 'https://flight.naver.com/flights/international/ICN-FUK-20260910/FUK-ICN-20260913',
+    httpStatus: 200,
+    searchPageReached: true,
+    graphqlResponseCount: 1,
+    graphqlSuccessCount: 1,
+    isLoading: true,
+}), 'available');
+assert.equal(classifyNaverAvailability({
+    httpStatus: 200,
+    searchPageReached: true,
+    graphqlResponseCount: 1,
+    graphqlSuccessCount: 0,
+    graphqlProblemStatus: 503,
+}), 'unavailable');
+assert.equal(classifyNaverAvailability({
+    httpStatus: 429,
+    searchPageReached: true,
+}), 'blocked');
+assert.equal(classifyNaverPageState({
+    httpStatus: 200,
+    searchPageReached: true,
+    graphqlResponseCount: 1,
+    graphqlSuccessCount: 0,
+    graphqlErrorCount: 1,
+    isLoading: false,
+}), 'transient_error');
+assert.equal(shouldAbortNaverCrawlForZeroSuccess(9, 0), false);
+assert.equal(shouldAbortNaverCrawlForZeroSuccess(10, 0), true);
+assert.equal(shouldAbortNaverCrawlForZeroSuccess(10, 1), false);
+
+const comparisonNow = new Date('2026-08-27T03:00:00Z').getTime();
+assert.deepEqual(getUsableNaverComparison({
+    naverLowest: 150_000,
+    crawledAt: '2026-08-26T03:00:00Z',
+    lastAttemptStatus: 'success',
+}, comparisonNow), { price: 150_000, checkedAt: '2026-08-26T03:00:00Z' });
+assert.equal(getUsableNaverComparison({
+    naverLowest: 150_000,
+    crawledAt: '2026-08-26T03:00:00Z',
+    lastAttemptStatus: 'no_result',
+}, comparisonNow), null);
+assert.equal(getUsableNaverComparison({
+    naverLowest: 150_000,
+    crawledAt: '2026-08-20T03:00:00Z',
+    lastAttemptStatus: 'transient_error',
+}, comparisonNow), null);
+assert.equal(classifyNaverProbeAvailability({
+    httpStatus: 200,
+    searchPageReached: true,
+    graphqlResponseCount: 0,
+    graphqlSuccessCount: 0,
+}), 'unavailable');
+assert.equal(classifyNaverProbeAvailability({
+    httpStatus: 200,
+    searchPageReached: true,
+    graphqlResponseCount: 1,
+    graphqlSuccessCount: 0,
+    graphqlErrorCount: 1,
+}), 'unavailable');
+assert.equal(combineNaverProbeResults(['unavailable', 'unavailable']), 'unavailable');
+assert.equal(combineNaverProbeResults(['unavailable', 'unknown']), 'unknown');
+assert.equal(classifyNaverAvailability({
+    httpStatus: 200,
+    searchPageReached: true,
+    graphqlResponseCount: 2,
+    graphqlSuccessCount: 1,
+    graphqlErrorCount: 0,
+    graphqlProblemStatus: 503,
+}), 'available');
+assert.equal(classifyNaverPageState({
+    httpStatus: 200,
+    searchPageReached: true,
+    graphqlResponseCount: 2,
+    graphqlSuccessCount: 1,
+    graphqlProblemStatus: 503,
+}), 'transient_error');
+assert.equal(classifyNaverPageState({
+    httpStatus: 200,
+    bodyText: '일시적으로 서비스를 이용할 수 없습니다.',
+}), 'transient_error');
 
 console.log('실제 공항 기반 네이버 비교 경로 테스트 통과');
