@@ -341,9 +341,9 @@ const SOURCE_ORDER = ['ybtour', 'hanatour', 'modetour', 'onlinetour', 'ttang', '
  */
 const TABS = [
     { id: 'overview', label: '오늘', hint: '지금 볼 것' },
-    { id: 'visitors', label: '방문·예약', hint: '1·7·30일 행동' },
-    { id: 'operations', label: '항공권·수집', hint: '노출·신고·갱신' },
-    { id: 'audience', label: '고객·알림', hint: '찜·수요·발송' },
+    { id: 'visitors', label: '방문·예약', hint: '유입·행동·관심' },
+    { id: 'operations', label: '항공권·수집', hint: '품질·변화·갱신' },
+    { id: 'audience', label: '고객·알림', hint: '가입·수요·발송' },
 ] as const;
 
 type VisibleTabId = typeof TABS[number]['id'];
@@ -382,6 +382,15 @@ function timeAgo(iso: string): string {
 
 function formatPrice(price: number): string {
     return `${price.toLocaleString('ko-KR')}원`;
+}
+
+function comparisonText(current: number, previous: number, unit = '명'): string {
+    if (previous === 0) {
+        return current === 0 ? '직전 기간과 같아요' : `직전 기간 0${unit} → ${current.toLocaleString()}${unit}`;
+    }
+    const change = Math.round(((current - previous) / previous) * 100);
+    if (change === 0) return '직전 기간과 같아요';
+    return `직전 기간보다 ${Math.abs(change).toLocaleString()}% ${change > 0 ? '늘었어요' : '줄었어요'}`;
 }
 
 function reportStatusLabel(status: string): string {
@@ -900,6 +909,7 @@ export default function AdminPage() {
             recent30: `${gaActivity.current.alertSetupUsers.toLocaleString()}명`,
         },
     ] : [];
+    const recentCrawlIssueRate = crawl7.runs > 0 ? Math.round((crawl7.failed / crawl7.runs) * 100) : null;
 
     return (
         <div className={styles.container}>
@@ -1036,6 +1046,37 @@ export default function AdminPage() {
                     )}
                 </section>
 
+                <section className={styles.section} id="overview-digest">
+                    <div className={styles.sectionHeading}>
+                        <div>
+                            <h2>지금 운영 흐름</h2>
+                            <p>각 탭에서 다시 찾지 않아도 되도록, 오늘 판단에 필요한 변화만 모았습니다.</p>
+                        </div>
+                    </div>
+                    <div className={styles.overviewDigestGrid}>
+                        <button type="button" onClick={() => selectTab('visitors')} className={styles.digestCard}>
+                            <span>최근 7일 방문자</span>
+                            <strong>{gaStats?.available ? `${gaStats.periods.recent7.users.toLocaleString()}명` : '—'}</strong>
+                            <small>{gaStats?.available ? comparisonText(gaStats.periods.recent7.users, gaStats.periods.previous7.users) : '방문 통계를 확인하는 중입니다.'}</small>
+                        </button>
+                        <button type="button" onClick={() => selectTab('visitors')} className={styles.digestCard}>
+                            <span>최근 30일 방문자</span>
+                            <strong>{gaStats?.available ? `${gaStats.periods.current.users.toLocaleString()}명` : '—'}</strong>
+                            <small>{gaStats?.available ? comparisonText(gaStats.periods.current.users, gaStats.periods.previous.users) : '방문 통계를 확인하는 중입니다.'}</small>
+                        </button>
+                        <button type="button" onClick={() => selectTab('operations')} className={(flightFilterSummary?.quality.missingBookingLink || 0) > 0 ? `${styles.digestCard} ${styles.digestCardWarn}` : styles.digestCard}>
+                            <span>현재 노출 항공권</span>
+                            <strong>{flightFilterSummary ? `${flightFilterSummary.visible.toLocaleString()}개` : '—'}</strong>
+                            <small>{flightFilterSummary ? `시간 미표기 ${flightFilterSummary.quality.missingTimes.toLocaleString()}개 · 공항 확인 전 ${flightFilterSummary.quality.missingExactAirports.toLocaleString()}개` : '항공권 상태를 확인하는 중입니다.'}</small>
+                        </button>
+                        <button type="button" onClick={() => selectTab('audience')} className={styles.digestCard}>
+                            <span>최근 7일 새 알림</span>
+                            <strong>{userStats?.available ? `${userStats.summary.registrationsLast7Days.toLocaleString()}개` : '—'}</strong>
+                            <small>{userStats?.available ? `활성 조건 ${userStats.summary.activeAlerts.toLocaleString()}개 · 지금 후보 ${dealAlertReview?.qualifiedCandidates ?? 0}개` : '알림 수요를 확인하는 중입니다.'}</small>
+                        </button>
+                    </div>
+                </section>
+
                 <details className={styles.glossary}>
                     <summary>용어가 헷갈리나요?</summary>
                     <dl>
@@ -1054,11 +1095,13 @@ export default function AdminPage() {
                     <div>
                         <span className={styles.eyebrow}>항공권·수집</span>
                         <h2>지금 사이트에 나가는 표가 괜찮은지 봅니다</h2>
-                        <p>기간별 횟수표 대신 현재 상태와 최근 문제 기록만 남겼습니다.</p>
+                        <p>현재 노출 수만 보지 않고 정보 누락, 수집 안정성, 항공권 구성과 최근 변화를 함께 봅니다.</p>
                     </div>
                 </div>
                 <SectionNav items={[
                     { href: '#operations-current', label: '현재 노출' },
+                    { href: '#operations-period', label: '1·7·30일 수집' },
+                    { href: '#operations-mix', label: '항공권 구성' },
                     { href: '#operations-sources', label: '여행사 상태' },
                     { href: '#operations-reports', label: '사용자 신고' },
                     { href: '#operations-history', label: '최근 기록' },
@@ -1073,10 +1116,26 @@ export default function AdminPage() {
                         <span className={styles.nowBadge}>지금</span>
                     </div>
                     <div className={styles.compactStats}>
+                        <div><span>수집 파일에 있는 표</span><strong>{flightFilterSummary?.collected.toLocaleString() ?? data.totalFlights.toLocaleString()}</strong></div>
                         <div><span>사이트에 보이는 표</span><strong>{flightFilterSummary?.visible.toLocaleString() ?? '—'}</strong></div>
                         <div><span>기준에 따라 제외</span><strong>{flightFilterSummary?.excluded.toLocaleString() ?? '—'}</strong></div>
-                        <div className={(flightFilterSummary?.quality.missingBookingLink || 0) > 0 ? styles.compactStatWarn : ''}>
+                    </div>
+                    <h3 className={styles.sectionSubTitle}>정보가 비어 있는 항공권</h3>
+                    <div className={styles.qualityGrid}>
+                        <div className={(flightFilterSummary?.quality.missingTimes || 0) > 0 ? styles.qualityCardNotice : styles.qualityCard}>
+                            <span>출·도착 시간 미표기</span><strong>{flightFilterSummary?.quality.missingTimes.toLocaleString() ?? '—'}</strong>
+                            <small>카드에서 시간을 보여줄 수 없음</small>
+                        </div>
+                        <div className={(flightFilterSummary?.quality.missingSeats || 0) > 0 ? styles.qualityCardSoft : styles.qualityCard}>
+                            <span>남은 좌석 수 미표기</span><strong>{flightFilterSummary?.quality.missingSeats.toLocaleString() ?? '—'}</strong>
+                            <small>여행사가 제공하지 않는 표도 포함</small>
+                        </div>
+                        <div className={(flightFilterSummary?.quality.missingBookingLink || 0) > 0 ? styles.qualityCardWarn : styles.qualityCard}>
                             <span>예약 링크 없음</span><strong>{flightFilterSummary?.quality.missingBookingLink.toLocaleString() ?? '—'}</strong>
+                        </div>
+                        <div className={(flightFilterSummary?.quality.missingExactAirports || 0) > 0 ? styles.qualityCardSoft : styles.qualityCard}>
+                            <span>공항 코드 확인 전</span><strong>{flightFilterSummary?.quality.missingExactAirports.toLocaleString() ?? '—'}</strong>
+                            <small>도시는 알지만 정확한 공항은 모르는 표</small>
                         </div>
                     </div>
                     {exclusionReasons.length > 0 && (
@@ -1085,6 +1144,62 @@ export default function AdminPage() {
                             <RankList items={exclusionReasons.map(item => ({ label: item.label, value: `${item.count.toLocaleString()}개` }))} />
                         </details>
                     )}
+                </section>
+
+                <section className={styles.section} id="operations-period">
+                    <div className={styles.sectionHeading}>
+                        <div>
+                            <h2>수집 실행과 항공권 변화</h2>
+                            <p>실패해 이전 데이터를 쓴 회차는 새로 들어옴·사라짐 계산에서 제외합니다.</p>
+                        </div>
+                        <span className={(recentCrawlIssueRate || 0) > 0 ? styles.issueBadge : styles.nowBadge}>
+                            최근 7일 문제 회차 {recentCrawlIssueRate === null ? '—' : `${recentCrawlIssueRate}%`}
+                        </span>
+                    </div>
+                    <PeriodTable rows={[
+                        { label: '실행한 횟수', today: `${crawlToday.runs}회`, recent7: `${crawl7.runs}회`, recent30: `${crawl30.runs}회` },
+                        { label: '문제가 있었던 회차', today: `${crawlToday.failed}회`, recent7: `${crawl7.failed}회`, recent30: `${crawl30.failed}회`, note: '한 여행사라도 실패해 이전 데이터를 쓴 회차입니다.' },
+                        { label: '새로 들어온 표', today: `${crawlToday.added.toLocaleString()}개`, recent7: `${crawl7.added.toLocaleString()}개`, recent30: `${crawl30.added.toLocaleString()}개` },
+                        { label: '사라진 표', today: `${crawlToday.removed.toLocaleString()}개`, recent7: `${crawl7.removed.toLocaleString()}개`, recent30: `${crawl30.removed.toLocaleString()}개` },
+                    ]} />
+                    {crawl30RecordedDays > 0 && crawl30RecordedDays < 30 && (
+                        <p className={styles.dataNotice}>최근 30일 칸은 기록이 있는 {crawl30RecordedDays}일치만 포함합니다.</p>
+                    )}
+                </section>
+
+                <section className={styles.section} id="operations-mix">
+                    <div className={styles.sectionHeading}>
+                        <div>
+                            <h2>지금 어떤 표가 많은가</h2>
+                            <p>현재 노출 중인 항공권의 쏠림과 콘텐츠로 살펴볼 만한 표를 봅니다.</p>
+                        </div>
+                    </div>
+                    <div className={styles.analysisGrid}>
+                        <div className={styles.analysisPanel}>
+                            <h3>지역별 항공권</h3>
+                            <RankList items={sortedRegions.slice(0, 6).map(([label, count]) => ({ label, value: `${count.toLocaleString()}개` }))} />
+                        </div>
+                        <div className={styles.analysisPanel}>
+                            <h3>출발 공항</h3>
+                            <RankList items={sortedDepCities.slice(0, 6).map(([label, count]) => ({ label, value: `${count.toLocaleString()}개` }))} />
+                        </div>
+                        <div className={styles.analysisPanel}>
+                            <h3>항공권이 많은 도착지</h3>
+                            <RankList items={sortedCities.slice(0, 6).map(([label, count]) => ({ label, value: `${count.toLocaleString()}개` }))} />
+                        </div>
+                        <div className={styles.analysisPanel}>
+                            <h3>항공권이 많은 항공사</h3>
+                            <RankList items={sortedAirlines.slice(0, 6).map(([label, count]) => ({ label, value: `${count.toLocaleString()}개` }))} />
+                        </div>
+                    </div>
+                    <details className={styles.disclosure}>
+                        <summary>현재 가격이 낮은 표 보기</summary>
+                        <RankList items={(flightFilterSummary?.lowestVisible || data.cheapest).slice(0, 8).map(item => ({
+                            label: item.route,
+                            value: formatPrice(item.price),
+                            note: `${item.date} · ${item.airline} · ${SOURCE_NAMES[item.source] || item.source}`,
+                        }))} />
+                    </details>
                 </section>
 
                 <section className={styles.section} id="operations-sources">
@@ -1206,11 +1321,12 @@ export default function AdminPage() {
                     <div>
                         <span className={styles.eyebrow}>고객·알림</span>
                         <h2>사람들이 저장한 여행과 기다리는 표를 봅니다</h2>
-                        <p>기간별 가입 표보다 현재 남아 있는 관심과 실제 발송 후보를 중심으로 정리했습니다.</p>
+                        <p>현재 누적값, 오늘·7일·30일 증가, 희망 가격 도달 여부와 실제 발송 후보를 함께 봅니다.</p>
                     </div>
                 </div>
                 <SectionNav items={[
                     { href: '#audience-current', label: '현재 이용' },
+                    { href: '#audience-growth', label: '1·7·30일 증가' },
                     { href: '#audience-demand', label: '기다리는 표' },
                     { href: '#audience-candidates', label: '발송 후보' },
                 ]} />
@@ -1230,14 +1346,66 @@ export default function AdminPage() {
                     ) : (
                         <div className={styles.compactStats}>
                             <div><span>로그인 계정</span><strong>{userStats.summary.accounts.toLocaleString()}</strong></div>
+                            <div><span>유효한 로그인</span><strong>{userStats.summary.activeSessions.toLocaleString()}</strong></div>
                             <div><span>찜한 항공권</span><strong>{userStats.summary.favorites.toLocaleString()}</strong></div>
                             <div><span>저장한 검색 조건</span><strong>{userStats.summary.savedSearches.toLocaleString()}</strong></div>
                             <div><span>알림을 켠 기기</span><strong>{userStats.summary.subscribers.toLocaleString()}</strong></div>
                             <div><span>활성 알림 조건</span><strong>{userStats.summary.activeAlerts.toLocaleString()}</strong></div>
+                            <div><span>지금 목표가에 닿은 조건</span><strong>{userStats.summary.reachableNow.toLocaleString()}</strong></div>
                             <div><span>아직 발송 전인 조건</span><strong>{userStats.summary.neverNotified.toLocaleString()}</strong></div>
                         </div>
                     )}
                     <p className={styles.dataGap}>알림이 실제로 도착했는지와 사용자가 열었는지는 아직 기록하지 않습니다.</p>
+                </section>
+
+                <section className={styles.section} id="audience-growth">
+                    <div className={styles.sectionHeading}>
+                        <div>
+                            <h2>새로 생긴 계정과 알림</h2>
+                            <p>누적 숫자만 보면 성장을 알기 어려워 기간별 증가분을 따로 봅니다.</p>
+                        </div>
+                    </div>
+                    {userStats?.available ? (
+                        <>
+                            <PeriodTable rows={[
+                                {
+                                    label: '새 로그인 계정',
+                                    today: `${userStats.summary.accountsToday.toLocaleString()}개`,
+                                    recent7: `${userStats.summary.accountsLast7Days.toLocaleString()}개`,
+                                    recent30: `${userStats.summary.accountsLast30Days.toLocaleString()}개`,
+                                    note: '비밀번호 없이 이메일로 만든 계정입니다.',
+                                },
+                                {
+                                    label: '새 알림 조건',
+                                    today: `${userStats.summary.registrationsToday.toLocaleString()}개`,
+                                    recent7: `${userStats.summary.registrationsLast7Days.toLocaleString()}개`,
+                                    recent30: `${userStats.summary.registrationsLast30Days.toLocaleString()}개`,
+                                    note: '나중에 끈 알림도 처음 등록한 날에는 포함합니다.',
+                                },
+                            ]} />
+                            {userStats.trend.length > 0 && (() => {
+                                const max = Math.max(...userStats.trend.map(point => point.count), 1);
+                                return (
+                                    <div className={styles.miniTrendWrap}>
+                                        <h3 className={styles.sectionSubTitle}>최근 30일 새 알림</h3>
+                                        <div className={styles.trendChart} aria-label="최근 30일 새 알림 조건">
+                                            {userStats.trend.map(point => (
+                                                <div key={point.date} className={styles.trendCol} title={`${point.date} · ${point.count}개`}>
+                                                    <span className={styles.trendCount}>{point.count || ''}</span>
+                                                    <div className={styles.trendTrack}>
+                                                        <div className={styles.trendBar} style={{ height: `${Math.max(3, (point.count / max) * 100)}%` }} />
+                                                    </div>
+                                                    <span className={styles.trendDate}>{point.date.slice(5).replace('-', '/')}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                );
+                            })()}
+                        </>
+                    ) : (
+                        <div className={styles.dealReviewEmpty}>고객 증가 정보를 불러오는 중입니다.</div>
+                    )}
                 </section>
 
                 <section className={styles.section} id="audience-demand">
@@ -1253,8 +1421,16 @@ export default function AdminPage() {
                                 <h3>많이 기다리는 노선</h3>
                                 <RankList items={userStats.topRoutes.slice(0, 5).map(route => ({
                                     label: route.route,
-                                    value: `${route.count.toLocaleString()}건`,
-                                    note: route.avgTarget !== null ? `평균 희망 ${formatPrice(route.avgTarget)}` : undefined,
+                                    value: route.reachable === true
+                                        ? '희망가 도달'
+                                        : route.gap !== null
+                                            ? `${formatPrice(route.gap)} 차이`
+                                            : `${route.count.toLocaleString()}건`,
+                                    note: [
+                                        `${route.count.toLocaleString()}건 · ${route.devices.toLocaleString()}대`,
+                                        route.avgTarget !== null ? `평균 희망 ${formatPrice(route.avgTarget)}` : null,
+                                        route.currentLowest !== null ? `현재 최저 ${formatPrice(route.currentLowest)}` : '현재 항공권 없음',
+                                    ].filter(Boolean).join(' · '),
                                 }))} empty="등록된 노선 알림이 없어요." />
                             </div>
                             <div className={styles.analysisPanel}>
@@ -2215,13 +2391,15 @@ export default function AdminPage() {
                     <div>
                         <span className={styles.eyebrow}>방문·예약</span>
                         <h2>사람들이 들어와서 예약 화면까지 갔는지 봅니다</h2>
-                        <p>오늘은 현재까지, 7일과 30일은 어제까지 끝난 날짜만 비교합니다.</p>
+                        <p>방문 규모뿐 아니라 다시 온 사람, 유입 경로, 관심 노선과 날짜 선택까지 함께 봅니다.</p>
                     </div>
                 </div>
                 <SectionNav items={[
                     { href: '#visitor-flow', label: '1·7·30일 행동' },
-                    { href: '#visitor-trend', label: '30일 추이' },
+                    { href: '#visitor-trend', label: '기간 변화' },
+                    { href: '#visitor-segments', label: '신규·재방문' },
                     { href: '#visitor-acquisition', label: '유입·예약 관심' },
+                    { href: '#visitor-dates', label: '날짜 선택' },
                 ]} />
 
                 <section className={styles.section} id="visitor-flow">
@@ -2251,21 +2429,29 @@ export default function AdminPage() {
                                     <p>오늘은 제외했습니다. 막대 위 숫자는 그날 방문한 사람 수입니다.</p>
                                 </div>
                             </div>
-                            <div className={styles.signalGrid}>
+                            <div className={styles.signalGridFour}>
+                                <div className={styles.signalCard}>
+                                    <span>최근 7일 방문자</span>
+                                    <strong>{gaStats.periods.recent7.users.toLocaleString()}명</strong>
+                                    <small>{comparisonText(gaStats.periods.recent7.users, gaStats.periods.previous7.users)}</small>
+                                </div>
+                                <div className={styles.signalCard}>
+                                    <span>최근 30일 방문자</span>
+                                    <strong>{gaStats.periods.current.users.toLocaleString()}명</strong>
+                                    <small>{comparisonText(gaStats.periods.current.users, gaStats.periods.previous.users)}</small>
+                                </div>
                                 <div className={styles.signalCard}>
                                     <span>다시 온 사람 비율</span>
                                     <strong>{gaStats.returning.current.rate !== null ? `${gaStats.returning.current.rate}%` : '—'}</strong>
-                                    <small>최근 30일 재방문자 {gaStats.returning.current.returningUsers.toLocaleString()}명</small>
+                                    <small>
+                                        최근 30일 {gaStats.returning.current.returningUsers.toLocaleString()}명
+                                        {gaStats.returning.previous.rate !== null ? ` · 직전 ${gaStats.returning.previous.rate}%` : ''}
+                                    </small>
                                 </div>
                                 <div className={(gaStats.dateFilter.emptyRate || 0) >= 20 ? `${styles.signalCard} ${styles.signalCardWarn}` : styles.signalCard}>
                                     <span>날짜 선택 후 결과 없음</span>
                                     <strong>{gaStats.dateFilter.emptyRate !== null ? `${gaStats.dateFilter.emptyRate}%` : '—'}</strong>
                                     <small>{gaStats.dateFilter.picks.toLocaleString()}번 선택 중 {gaStats.dateFilter.emptyPicks.toLocaleString()}번</small>
-                                </div>
-                                <div className={styles.signalCard}>
-                                    <span>항공권 링크를 복사한 사람</span>
-                                    <strong>{gaStats.activityPeriods?.current.shareUsers.toLocaleString() ?? '—'}명</strong>
-                                    <small>실제 전송·열람이 아닌 복사 완료 수입니다.</small>
                                 </div>
                             </div>
                             {(() => {
@@ -2284,6 +2470,35 @@ export default function AdminPage() {
                                     </div>
                                 );
                             })()}
+                        </section>
+
+                        <section className={styles.section} id="visitor-segments">
+                            <div className={styles.sectionHeading}>
+                                <div>
+                                    <h2>처음 온 사람과 다시 온 사람</h2>
+                                    <p>최근 30일 동안 두 집단이 상세·예약·공유·알림 중 어디까지 갔는지 비교합니다.</p>
+                                </div>
+                            </div>
+                            {gaStats.monitoring.behaviorAvailable ? (
+                                <div className={styles.segmentGrid}>
+                                    {([
+                                        ['처음 온 사람', gaStats.monitoring.newUsers],
+                                        ['다시 온 사람', gaStats.monitoring.returningUsers],
+                                    ] as const).map(([label, segment]) => (
+                                        <article key={label} className={styles.segmentCard}>
+                                            <header><span>{label}</span><strong>{segment.users.toLocaleString()}명</strong></header>
+                                            <dl>
+                                                <div><dt>상세 열람</dt><dd>{segment.detailOpen.toLocaleString()}명 <small>{segment.detailOpenRate !== null ? `${segment.detailOpenRate}%` : '—'}</small></dd></div>
+                                                <div><dt>예약 이동</dt><dd>{segment.bookingClick.toLocaleString()}명 <small>{segment.bookingClickRate !== null ? `${segment.bookingClickRate}%` : '—'}</small></dd></div>
+                                                <div><dt>링크 복사</dt><dd>{segment.share.toLocaleString()}명 <small>{segment.shareRate !== null ? `${segment.shareRate}%` : '—'}</small></dd></div>
+                                                <div><dt>알림 등록</dt><dd>{segment.alertSetup.toLocaleString()}명</dd></div>
+                                            </dl>
+                                        </article>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className={styles.dealReviewEmpty}>신규·재방문 행동 구분을 위한 통계 설정이 아직 필요합니다.</div>
+                            )}
                         </section>
 
                         <section className={styles.section} id="visitor-acquisition">
@@ -2309,6 +2524,14 @@ export default function AdminPage() {
                                 <div className={styles.analysisPanel}>
                                     <h3>예약 이동이 많은 여행사</h3>
                                     <RankList items={(gaStats.bookingByAgency || []).slice(0, 5).map(item => ({ label: SOURCE_NAMES[item.label] || item.label, value: `${item.count.toLocaleString()}회` }))} empty="아직 예약 이동이 없어요." />
+                                </div>
+                                <div className={styles.analysisPanel}>
+                                    <h3>상세를 연 위치</h3>
+                                    <RankList items={(gaStats.detailByEntry || []).slice(0, 5).map(item => ({ label: item.label, value: `${item.count.toLocaleString()}회` }))} empty="상세 열람 위치가 아직 기록되지 않았어요." />
+                                </div>
+                                <div className={styles.analysisPanel}>
+                                    <h3>알림 등록을 시작한 위치</h3>
+                                    <RankList items={(gaStats.alertByEntry || []).slice(0, 5).map(item => ({ label: item.label, value: `${item.count.toLocaleString()}회` }))} empty="알림 등록 위치가 아직 기록되지 않았어요." />
                                 </div>
                             </div>
                             {(gaStats.referrals || []).length > 0 && (
@@ -2336,6 +2559,28 @@ export default function AdminPage() {
                                     {analyticsExcluded ? '이 브라우저 방문을 다시 포함하기' : '이 브라우저 방문 제외하기'}
                                 </button>
                             </details>
+                        </section>
+
+                        <section className={styles.section} id="visitor-dates">
+                            <div className={styles.sectionHeading}>
+                                <div>
+                                    <h2>사람들이 언제 떠나려 했나</h2>
+                                    <p>검색 수요와 현재 항공권 공급이 어긋나는 구간을 찾는 데 쓰는 정보입니다.</p>
+                                </div>
+                            </div>
+                            <div className={styles.analysisGrid}>
+                                {([
+                                    ['출발까지 남은 기간', gaStats.dateFilter.leadTime],
+                                    ['고른 여행 기간', gaStats.dateFilter.range],
+                                    ['날짜를 고른 방식', gaStats.dateFilter.method],
+                                    ['누른 빠른 선택', gaStats.dateFilter.presets],
+                                ] as const).map(([title, items]) => (
+                                    <div key={title} className={styles.analysisPanel}>
+                                        <h3>{title}</h3>
+                                        <RankList items={(items || []).slice(0, 6).map(item => ({ label: item.label, value: `${item.count.toLocaleString()}회` }))} empty="아직 기록된 선택이 없어요." />
+                                    </div>
+                                ))}
+                            </div>
                         </section>
                     </>
                 )}
