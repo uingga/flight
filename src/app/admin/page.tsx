@@ -899,6 +899,11 @@ export default function AdminPage() {
     const crawl7 = crawlSummary(crawlPeriod(7));
     const crawl30 = crawlSummary(crawlPeriod(30));
     const crawl30RecordedDays = new Set(crawlPeriod(30).map(entry => koreaDateKey(entry.timestamp))).size;
+    const latestCrawlToday = latestCrawl && koreaDateKey(latestCrawl.timestamp) === todayKey ? latestCrawl : null;
+    const latestCrawlHasIssue = Boolean(latestCrawlToday && (
+        latestCrawlToday.alerts.some(alert => alert.startsWith('🚨'))
+        || Object.values(latestCrawlToday.sites).some(site => site.preserved)
+    ));
     const sourceIssueCount = allSources.filter(source => {
         const updatedAt = data.sourceUpdatedAt?.[source];
         const ageHours = updatedAt ? (Date.now() - new Date(updatedAt).getTime()) / 3_600_000 : null;
@@ -1072,6 +1077,32 @@ export default function AdminPage() {
                     )}
                 </section>
 
+                <section className={styles.section} id="overview-crawl">
+                    <div className={styles.sectionHeading}>
+                        <div>
+                            <h2>오늘 수집 상태</h2>
+                            <p>가장 최근 크롤링이 정상적으로 끝났는지와 오늘 실행 결과를 봅니다.</p>
+                        </div>
+                        <span className={latestCrawlHasIssue ? styles.issueBadge : styles.nowBadge}>
+                            {!latestCrawlToday ? '오늘 기록 없음' : latestCrawlHasIssue ? '최근 회차 확인 필요' : '최근 회차 정상'}
+                        </span>
+                    </div>
+                    <div className={latestCrawlHasIssue ? `${styles.todayCrawlPanel} ${styles.todayCrawlPanelWarn}` : styles.todayCrawlPanel}>
+                        <div className={styles.todayCrawlLead}>
+                            <span aria-hidden="true">{!latestCrawlToday ? '–' : latestCrawlHasIssue ? '!' : '✓'}</span>
+                            <div>
+                                <strong>{!latestCrawlToday ? '아직 오늘 수집 기록이 없어요' : latestCrawlHasIssue ? '최근 수집에서 확인할 문제가 있어요' : '최근 수집이 정상적으로 끝났어요'}</strong>
+                                <small>{latestCrawlToday ? `${formatKST(latestCrawlToday.timestamp)} 실행` : '첫 수집이 끝나면 이곳에 표시됩니다.'}</small>
+                            </div>
+                        </div>
+                        <div className={styles.todayCrawlMetrics}>
+                            <div><span>오늘 실행</span><strong>{crawlToday.runs.toLocaleString()}회</strong></div>
+                            <div><span>정상 완료</span><strong>{Math.max(0, crawlToday.runs - crawlToday.failed).toLocaleString()}회</strong></div>
+                            <div className={crawlToday.failed > 0 ? styles.todayCrawlMetricWarn : undefined}><span>문제 회차</span><strong>{crawlToday.failed.toLocaleString()}회</strong></div>
+                        </div>
+                    </div>
+                </section>
+
                 <section className={styles.section} id="overview-digest">
                     <div className={styles.sectionHeading}>
                         <div>
@@ -1103,23 +1134,10 @@ export default function AdminPage() {
                     </div>
                 </section>
 
-                <div className={`${styles.openDisclosure} ${styles.glossary}`}>
-                    <h3>용어가 헷갈리나요?</h3>
-                    <div className={styles.openDisclosureBody}>
-                        <dl>
-                            <div><dt>방문한 사람</dt><dd>같은 사람이 여러 번 들어와도 한 명으로 셉니다.</dd></div>
-                            <div><dt>방문 횟수</dt><dd>사이트에 들어온 횟수입니다. 한 사람이 여러 번 방문하면 늘어납니다.</dd></div>
-                            <div><dt>상세를 본 사람</dt><dd>항공권 카드를 열어 일정과 가격을 자세히 본 사람입니다.</dd></div>
-                            <div><dt>예약 페이지로 이동</dt><dd>여행사 예약 버튼을 눌러 외부 예약 화면으로 넘어간 행동입니다. 실제 구매 완료와는 다릅니다.</dd></div>
-                            <div><dt>사이트에 보이는 표</dt><dd>중복·만료·신고·가격 기준을 거친 뒤 사용자 화면에 남은 항공권입니다.</dd></div>
-                            <div><dt>이전 데이터 사용</dt><dd>이번 수집이 실패해 마지막으로 정상 수집한 항공권을 대신 보여주는 상태입니다.</dd></div>
-                        </dl>
-                    </div>
-                </div>
             </>)}
 
             {tab === 'operations' && (<>
-                <section className={styles.section} id="operations-current">
+                <section className={`${styles.section} ${styles.operationsOrderCurrent}`} id="operations-current">
                     <div className={styles.sectionHeading}>
                         <div>
                             <h2>현재 항공권 상태</h2>
@@ -1160,7 +1178,7 @@ export default function AdminPage() {
                     )}
                 </section>
 
-                <section className={styles.section} id="operations-sources">
+                <section className={`${styles.section} ${styles.operationsOrderSources}`} id="operations-sources">
                     <div className={styles.sectionHeading}>
                         <div>
                             <h2>여행사별 수집 상태</h2>
@@ -1246,7 +1264,7 @@ export default function AdminPage() {
                     </div>
                 </section>
 
-                <section className={styles.section} id="operations-period">
+                <section className={`${styles.section} ${styles.operationsOrderPeriod}`} id="operations-period">
                     <div className={styles.sectionHeading}>
                         <div>
                             <h2>수집 실행 상태</h2>
@@ -1289,7 +1307,7 @@ export default function AdminPage() {
                     )}
                 </section>
 
-                <section className={styles.section} id="operations-mix">
+                <section className={`${styles.section} ${styles.operationsOrderMix}`} id="operations-mix">
                     <div className={styles.sectionHeading}>
                         <div>
                             <h2>지금 어떤 표가 많은가</h2>
@@ -1326,7 +1344,7 @@ export default function AdminPage() {
                     </div>
                 </section>
 
-                <section className={styles.section} id="operations-reports">
+                <section className={`${styles.section} ${styles.operationsOrderReports}`} id="operations-reports">
                     <div className={styles.sectionHeading}>
                         <div>
                             <h2>사용자 신고</h2>
@@ -1368,7 +1386,7 @@ export default function AdminPage() {
                     )}
                 </section>
 
-                <section className={styles.section} id="operations-history">
+                <section className={`${styles.section} ${styles.operationsOrderHistory}`} id="operations-history">
                     <div className={styles.sectionHeading}>
                         <div>
                             <h2>최근 수집 기록</h2>

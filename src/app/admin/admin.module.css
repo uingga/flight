@@ -2369,6 +2369,88 @@
     font-size: 0.73rem;
 }
 
+.todayCrawlPanel {
+    display: grid;
+    grid-template-columns: minmax(260px, 1.15fr) minmax(360px, 1fr);
+    align-items: center;
+    gap: 20px;
+    padding: 16px;
+    border: 1px solid #dcece3;
+    border-radius: 13px;
+    background: #f5fbf7;
+}
+
+.todayCrawlPanelWarn {
+    border-color: #f0c9c3;
+    background: #fff8f6;
+}
+
+.todayCrawlLead {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.todayCrawlLead > span {
+    display: grid;
+    width: 32px;
+    height: 32px;
+    flex: 0 0 auto;
+    place-items: center;
+    border-radius: 50%;
+    background: #dff3e6;
+    color: #25784b;
+    font-size: 0.88rem;
+    font-weight: 800;
+}
+
+.todayCrawlPanelWarn .todayCrawlLead > span {
+    background: #fde5e1;
+    color: #c43d30;
+}
+
+.todayCrawlLead > div {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.todayCrawlLead strong { color: #285c3e; font-size: 0.88rem; }
+.todayCrawlLead small { color: #708779; font-size: 0.7rem; }
+.todayCrawlPanelWarn .todayCrawlLead strong { color: #7e251d; }
+.todayCrawlPanelWarn .todayCrawlLead small { color: #8a6d69; }
+
+.todayCrawlMetrics {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.todayCrawlMetrics > div {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 11px;
+    border: 1px solid rgba(76, 154, 112, 0.17);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.72);
+}
+
+.todayCrawlMetrics span { color: #76847b; font-size: 0.64rem; }
+.todayCrawlMetrics strong { color: #2f6849; font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+.todayCrawlMetrics .todayCrawlMetricWarn { border-color: #f1d0cb; background: #fff; }
+.todayCrawlMetrics .todayCrawlMetricWarn strong { color: #c43d30; }
+
+.operationsOrderSources { order: 1; }
+.operationsOrderCurrent { order: 2; }
+.operationsOrderReports { order: 3; }
+.operationsOrderPeriod { order: 4; }
+.operationsOrderHistory { order: 5; }
+.operationsOrderMix { order: 6; }
+
 .behaviorGrid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -3295,11 +3377,13 @@
     .qualityGrid,
     .signalGridFour { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .actionGrid { grid-template-columns: 1fr; }
+    .todayCrawlPanel { grid-template-columns: 1fr; gap: 13px; }
 }
 
 @media (max-width: 760px) {
     .container {
-        display: block;
+        display: flex;
+        flex-direction: column;
         padding: 10px 10px 48px;
     }
 
@@ -3374,6 +3458,7 @@
 
     .sourceTrendGrid { grid-template-columns: 1fr; }
     .crawlPeriodGrid { grid-template-columns: 1fr; }
+    .todayCrawlMetrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .naverCompact { align-items: flex-start; }
 
     .reportRow {
