@@ -848,6 +848,7 @@ export default function MobileRedesignPreview({
     const [recentSearches, setRecentSearches] = useState<string[]>([]);
     const [desktopSearchFocused, setDesktopSearchFocused] = useState(false);
     const [filterOpen, setFilterOpen] = useState(false);
+    const [filterPopoverPosition, setFilterPopoverPosition] = useState<{ top: number; left: number; maxHeight: number } | null>(null);
     const [airlineMenuOpen, setAirlineMenuOpen] = useState(false);
     const [desktopFilterOpen, setDesktopFilterOpen] = useState<DesktopFilterKey | null>(null);
     const [regionMoreOpen, setRegionMoreOpen] = useState(false);
@@ -2784,10 +2785,19 @@ export default function MobileRedesignPreview({
                             </div>
 
                             <button
-                                ref={sortTriggerRef}
                                 type="button"
                                 className={`${styles.desktopAdvancedFilter} ${(sourceFilter !== 'all' || airlineFilter !== 'all') ? styles.desktopAdvancedFilterActive : ''}`}
-                                onClick={() => setFilterOpen(true)}
+                                onClick={event => {
+                                    const rect = event.currentTarget.getBoundingClientRect();
+                                    const panelWidth = Math.min(640, window.innerWidth - 48);
+                                    const top = rect.bottom + 8;
+                                    setFilterPopoverPosition({
+                                        top,
+                                        left: Math.max(24, Math.min(rect.right - panelWidth, window.innerWidth - panelWidth - 24)),
+                                        maxHeight: Math.max(280, window.innerHeight - top - 24),
+                                    });
+                                    setFilterOpen(true);
+                                }}
                             >
                                 <Icon name="sliders" />
                                 <span className={styles.desktopAdvancedFilterLabel}>상세 조건</span>
@@ -2886,6 +2896,7 @@ export default function MobileRedesignPreview({
                         </div>
                         <div className={styles.sortSelect} ref={sortMenuRef}>
                             <button
+                                ref={sortTriggerRef}
                                 type="button"
                                 className={styles.sortTrigger}
                                 aria-label="항공권 정렬"
@@ -3227,7 +3238,20 @@ export default function MobileRedesignPreview({
 
             {filterOpen && (
                 <div className={`${styles.sheetOverlay} ${styles.filterOverlay}`} onClick={() => setFilterOpen(false)}>
-                    <section ref={filterDialogRef} className={styles.bottomSheet} role="dialog" aria-modal="true" aria-label="항공권 필터" aria-labelledby="flight-filter-title" onClick={event => event.stopPropagation()}>
+                    <section
+                        ref={filterDialogRef}
+                        className={styles.bottomSheet}
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label="항공권 필터"
+                        aria-labelledby="flight-filter-title"
+                        onClick={event => event.stopPropagation()}
+                        style={filterPopoverPosition && !isMobile ? {
+                            top: filterPopoverPosition.top,
+                            left: filterPopoverPosition.left,
+                            maxHeight: filterPopoverPosition.maxHeight,
+                        } : undefined}
+                    >
                         <div className={styles.sheetHandle} aria-hidden="true" {...filterSwipe} />
                         <div className={styles.sheetHeader}>
                             <h2 id="flight-filter-title">표 골라보기</h2>

@@ -90,7 +90,19 @@
 
 @keyframes overlayIn { from { opacity: 0; } }
 @keyframes sheetUp { from { transform: translateY(24px); opacity: .6; } }
+@keyframes dialogIn { from { transform: translateY(8px) scale(.985); opacity: .6; } }
 
 @media (min-width: 700px) {
-    .sheet { margin-bottom: 24px; padding: 14px 24px 24px; border-radius: 24px; }
+    .overlay { align-items: center; padding: 24px; }
+    .sheet {
+        width: min(520px, 100%);
+        max-height: calc(100dvh - 48px);
+        margin: 0;
+        padding: 22px 26px 26px;
+        border-bottom: 1px solid var(--line, #ddd);
+        border-radius: 22px;
+        box-shadow: 0 22px 70px rgba(0, 0, 0, .2);
+        animation: dialogIn 190ms cubic-bezier(.2, .8, .2, 1);
+    }
+    .handle { display: none; }
 }
