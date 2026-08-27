@@ -313,7 +313,7 @@ export async function POST(request: NextRequest) {
                 batchKey,
                 title: approved.title,
                 body: approved.body,
-                message: '내 기기로 시험 알림을 보냈습니다. 도착한 문구를 확인한 뒤 전체 발송을 눌러주세요.',
+                message: '내 기기로 시험 알림을 보냈습니다. 필요하면 도착한 문구와 링크를 확인해주세요.',
             }, { status: 202 });
         }
 

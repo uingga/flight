@@ -1915,9 +1915,9 @@ export default function AdminPage() {
                                                                     <button
                                                                         type="button"
                                                                         onClick={() => approveAlertBatch(batch)}
-                                                                        disabled={!dealAlertReview.deliveryAvailable || !previewed || queued || alertApprovalAction === batch.batchKey}
+                                                                        disabled={!dealAlertReview.deliveryAvailable || queued || alertApprovalAction === batch.batchKey}
                                                                     >
-                                                                        {queued ? '발송 요청됨' : alertApprovalAction === batch.batchKey ? '요청 중…' : previewed ? '전체 발송' : '시험 발송 후 가능'}
+                                                                        {queued ? '발송 요청됨' : alertApprovalAction === batch.batchKey ? '요청 중…' : '전체 발송'}
                                                                     </button>
                                                                 </div>
                                                             </div>
