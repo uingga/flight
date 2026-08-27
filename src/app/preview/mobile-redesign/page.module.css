@@ -1490,7 +1490,16 @@
         font-weight: 700;
     }
 
-    .detailOverlay { align-items: stretch; justify-content: flex-end; }
+    .detailOverlay {
+        align-items: stretch;
+        justify-content: flex-end;
+        background: linear-gradient(
+            90deg,
+            rgba(24, 27, 32, 0.07) 0%,
+            rgba(24, 27, 32, 0.1) 52%,
+            rgba(24, 27, 32, 0.23) 100%
+        );
+    }
     .detailOverlay .detailSheet {
         width: min(520px, 46vw);
         height: 100dvh;
