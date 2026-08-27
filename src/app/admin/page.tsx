@@ -778,7 +778,6 @@ export default function AdminPage() {
     const sortedCities = Object.entries(flightFilterSummary?.visibleByCity || data.byCity).sort((a, b) => b[1] - a[1]);
     const sortedAirlines = Object.entries(flightFilterSummary?.visibleByAirline || data.byAirline).sort((a, b) => b[1] - a[1]);
     const sortedDepCities = Object.entries(flightFilterSummary?.visibleByDepartureCity || data.byDepartureCity).sort((a, b) => b[1] - a[1]);
-    const maxSourceCount = Math.max(...Object.values(data.bySource), 1);
     const exclusionReasons = flightFilterSummary ? [
         { label: '같은 정확한 일정 중 더 싼 표만 남김', count: flightFilterSummary.reasons.duplicate },
         { label: '네이버보다 10만원·20% 이상 비쌈', count: flightFilterSummary.reasons.naverExpensive },
@@ -789,6 +788,14 @@ export default function AdminPage() {
     ].filter(item => item.count > 0) : [];
 
     const latestCrawl = data.crawlHistory?.[data.crawlHistory.length - 1];
+    const sourceVisibleCounts = Object.fromEntries(allSources.map(source => [
+        source,
+        flightFilterSummary?.visibleBySource[source]
+            ?? latestCrawl?.sites[source]?.total
+            ?? data.bySource[source]
+            ?? 0,
+    ])) as Record<string, number>;
+    const maxSourceCount = Math.max(...Object.values(sourceVisibleCounts), 1);
     const criticalAlerts = (latestCrawl?.alerts || []).filter(a => a.startsWith('🚨'));
 
     const selectTab = (next: TabId) => {
@@ -1091,22 +1098,6 @@ export default function AdminPage() {
             </>)}
 
             {tab === 'operations' && (<>
-                <div className={styles.tabIntro}>
-                    <div>
-                        <span className={styles.eyebrow}>항공권·수집</span>
-                        <h2>지금 사이트에 나가는 표가 괜찮은지 봅니다</h2>
-                        <p>현재 노출 수만 보지 않고 정보 누락, 수집 안정성, 항공권 구성과 최근 변화를 함께 봅니다.</p>
-                    </div>
-                </div>
-                <SectionNav items={[
-                    { href: '#operations-current', label: '현재 노출' },
-                    { href: '#operations-period', label: '1·7·30일 수집' },
-                    { href: '#operations-mix', label: '항공권 구성' },
-                    { href: '#operations-sources', label: '여행사 상태' },
-                    { href: '#operations-reports', label: '사용자 신고' },
-                    { href: '#operations-history', label: '최근 기록' },
-                ]} />
-
                 <section className={styles.section} id="operations-current">
                     <div className={styles.sectionHeading}>
                         <div>
@@ -1206,30 +1197,47 @@ export default function AdminPage() {
                     <div className={styles.sectionHeading}>
                         <div>
                             <h2>여행사별 수집 상태</h2>
-                            <p>‘이전 데이터 사용’은 이번 수집에 실패해 마지막 정상 데이터를 그대로 보여준다는 뜻입니다.</p>
+                            <p>막대 길이로 현재 사이트에 보이는 항공권 수를 비교합니다. ‘이전 데이터 사용’은 이번 수집에 실패했다는 뜻입니다.</p>
                         </div>
                     </div>
-                    <div className={styles.sourceHealthList}>
+                    <div className={styles.sourceHealthChart}>
+                        <div className={styles.sourceHealthLegend}>
+                            <span>사이트에 보이는 항공권</span>
+                            <span>가장 많은 여행사 기준</span>
+                        </div>
                         {allSources.map(source => {
                             const updatedAt = data.sourceUpdatedAt?.[source];
                             const ageHours = updatedAt ? (Date.now() - new Date(updatedAt).getTime()) / 3_600_000 : null;
                             const staleCount = data.staleStreak?.[source] || 0;
                             const late = ageHours === null || ageHours > (STALE_AFTER_HOURS[source] ?? DEFAULT_STALE_AFTER_HOURS);
                             const issue = staleCount > 0 || late;
-                            const currentSite = latestCrawl?.sites[source];
+                            const visibleCount = sourceVisibleCounts[source] || 0;
+                            const barWidth = visibleCount > 0 ? Math.max(3, (visibleCount / maxSourceCount) * 100) : 0;
                             return (
                                 <div key={source} className={issue ? `${styles.sourceHealthRow} ${styles.sourceHealthRowWarn}` : styles.sourceHealthRow}>
-                                    <span className={styles.sourceMark} style={{ background: SOURCE_COLORS[source] }} />
-                                    <div className={styles.sourceHealthName}>
-                                        <strong>{SOURCE_NAMES[source]}</strong>
-                                        <small>{updatedAt ? `${timeAgo(updatedAt)} 갱신` : '정상 갱신 기록 없음'}</small>
+                                    <div className={styles.sourceHealthTopline}>
+                                        <div className={styles.sourceHealthName}>
+                                            <span className={styles.sourceMark} style={{ background: SOURCE_COLORS[source] }} />
+                                            <strong>{SOURCE_NAMES[source]}</strong>
+                                            <small>{updatedAt ? `${timeAgo(updatedAt)} 갱신` : '정상 갱신 기록 없음'}</small>
+                                        </div>
+                                        <span className={issue ? styles.statusWarn : styles.statusGood}>
+                                            {staleCount > 0 ? `이전 데이터 ${staleCount}회` : late ? '갱신 늦음' : '정상'}
+                                        </span>
                                     </div>
-                                    <span className={issue ? styles.statusWarn : styles.statusGood}>
-                                        {staleCount > 0 ? `이전 데이터 ${staleCount}회` : late ? '갱신 늦음' : '정상'}
-                                    </span>
-                                    <strong className={styles.sourceHealthCount}>
-                                        {(flightFilterSummary?.visibleBySource[source] ?? currentSite?.total ?? data.bySource[source] ?? 0).toLocaleString()}개
-                                    </strong>
+                                    <div className={styles.sourceHealthMetric}>
+                                        <div
+                                            className={styles.sourceHealthTrack}
+                                            role="img"
+                                            aria-label={`${SOURCE_NAMES[source]} 항공권 ${visibleCount.toLocaleString()}개`}
+                                        >
+                                            <span
+                                                className={styles.sourceHealthBar}
+                                                style={{ width: `${barWidth}%`, background: SOURCE_COLORS[source] }}
+                                            />
+                                        </div>
+                                        <strong className={styles.sourceHealthCount}>{visibleCount.toLocaleString()}개</strong>
+                                    </div>
                                 </div>
                             );
                         })}
@@ -1317,20 +1325,6 @@ export default function AdminPage() {
             </>)}
 
             {tab === 'audience' && (<>
-                <div className={styles.tabIntro}>
-                    <div>
-                        <span className={styles.eyebrow}>고객·알림</span>
-                        <h2>사람들이 저장한 여행과 기다리는 표를 봅니다</h2>
-                        <p>현재 누적값, 오늘·7일·30일 증가, 희망 가격 도달 여부와 실제 발송 후보를 함께 봅니다.</p>
-                    </div>
-                </div>
-                <SectionNav items={[
-                    { href: '#audience-current', label: '현재 이용' },
-                    { href: '#audience-growth', label: '1·7·30일 증가' },
-                    { href: '#audience-demand', label: '기다리는 표' },
-                    { href: '#audience-candidates', label: '발송 후보' },
-                ]} />
-
                 <section className={styles.section} id="audience-current">
                     <div className={styles.sectionHeading}>
                         <div>
@@ -1466,13 +1460,13 @@ export default function AdminPage() {
                                 <div><span>보낼 만한 표</span><strong>{dealAlertReview.qualifiedCandidates.toLocaleString()}개</strong></div>
                             </div>
                             <details className={styles.disclosure}>
-                                <summary>후보와 제외 이유 자세히 보기</summary>
+                                <summary>발송 후보 자세히 보기</summary>
                                 <div className={styles.dealReviewList}>
-                                    {dealAlertReview.reviews.map(review => (
+                                    {dealAlertReview.reviews.filter(review => review.candidates.length > 0).map(review => (
                                         <article key={review.condition.id} className={styles.dealReviewCard}>
                                             <div className={styles.dealReviewCondition}>
                                                 <div><strong>{review.condition.departureCity} 출발 · {review.condition.region === 'all' ? '아무데나' : review.condition.region}</strong><span>{formatPrice(review.condition.maxPrice)} 이하</span></div>
-                                                <span>{review.qualifiedCount > 0 ? `후보 ${review.qualifiedCount}개` : '보낼 표 없음'}</span>
+                                                <span>후보 {review.qualifiedCount}개</span>
                                             </div>
                                             {review.candidates.slice(0, 5).map(candidate => (
                                                 <a key={candidate.flightId} href={`/share/${encodeURIComponent(candidate.flightId)}`} target="_blank" rel="noopener noreferrer" className={styles.dealCandidate}>
@@ -1480,11 +1474,35 @@ export default function AdminPage() {
                                                     <div><strong>{formatPrice(candidate.effectivePrice)}</strong><span>{SOURCE_NAMES[candidate.source] || candidate.source}</span></div>
                                                 </a>
                                             ))}
-                                            {Object.values(review.rejectionCounts).some(count => count > 0) && (
-                                                <p className={styles.rejectionLine}>{Object.entries(review.rejectionCounts).filter(([, count]) => count > 0).map(([reason, count]) => `${DEAL_REJECTION_LABELS[reason] || reason} ${count}`).join(' · ')}</p>
-                                            )}
                                         </article>
                                     ))}
+                                    {dealAlertReview.reviews.every(review => review.candidates.length === 0) && (
+                                        <div className={styles.dealReviewEmpty}>현재 발송 후보가 없어요.</div>
+                                    )}
+                                </div>
+                            </details>
+                            <details className={styles.disclosure}>
+                                <summary>제외 이유 자세히 보기</summary>
+                                <div className={styles.dealReviewList}>
+                                    {dealAlertReview.reviews.filter(review => Object.values(review.rejectionCounts).some(count => count > 0)).map(review => {
+                                        const rejectedCount = Object.values(review.rejectionCounts).reduce((sum, count) => sum + count, 0);
+                                        return (
+                                            <article key={review.condition.id} className={styles.dealReviewCard}>
+                                                <div className={styles.dealReviewCondition}>
+                                                    <div><strong>{review.condition.departureCity} 출발 · {review.condition.region === 'all' ? '아무데나' : review.condition.region}</strong><span>{formatPrice(review.condition.maxPrice)} 이하</span></div>
+                                                    <span>제외 {rejectedCount.toLocaleString()}개</span>
+                                                </div>
+                                                <div className={styles.dealRejections}>
+                                                    {Object.entries(review.rejectionCounts)
+                                                        .filter(([, count]) => count > 0)
+                                                        .map(([reason, count]) => <span key={reason}>{DEAL_REJECTION_LABELS[reason] || reason} {count.toLocaleString()}</span>)}
+                                                </div>
+                                            </article>
+                                        );
+                                    })}
+                                    {dealAlertReview.reviews.every(review => Object.values(review.rejectionCounts).every(count => count === 0)) && (
+                                        <div className={styles.dealReviewEmpty}>제외된 표가 없어요.</div>
+                                    )}
                                 </div>
                             </details>
                         </>
