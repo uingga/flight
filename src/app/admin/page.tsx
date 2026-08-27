@@ -616,11 +616,13 @@ function BehaviorSnapshot({ activity }: { activity: NonNullable<GaStatsData['act
                             <strong>{period.title}</strong>
                             <span>{period.caption}</span>
                         </header>
-                        <div className={styles.behaviorVisitor}>
-                            <strong>{period.data.visitors.toLocaleString()}명</strong>
-                            <span>사이트를 본 사람</span>
-                        </div>
                         <div className={styles.behaviorSteps}>
+                            <div>
+                                <span>방문</span>
+                                <strong>{period.data.visitors.toLocaleString()}명</strong>
+                                <small>기준 100%</small>
+                            </div>
+                            <span className={styles.behaviorArrow} aria-hidden="true">→</span>
                             <div>
                                 <span>상세 열람</span>
                                 <strong>{period.data.detailOpenUsers.toLocaleString()}명</strong>
@@ -634,7 +636,14 @@ function BehaviorSnapshot({ activity }: { activity: NonNullable<GaStatsData['act
                             </div>
                         </div>
                         <div className={styles.behaviorConversion}>
-                            <span>상세 열람 인원 대비 예약 이동 인원</span>
+                            <div>
+                                <span>최종 예약 이동률</span>
+                                <small>전체 방문자 대비</small>
+                            </div>
+                            <strong>{rate(period.data.bookingClickRate)}</strong>
+                        </div>
+                        <div className={styles.behaviorReference}>
+                            <span>참고 · 상세 열람자 대비 예약 이동 사용자</span>
                             <strong>{rate(period.data.detailToBookingRate)}</strong>
                         </div>
                         <div className={styles.behaviorSignals}>
@@ -653,7 +662,7 @@ function BehaviorSnapshot({ activity }: { activity: NonNullable<GaStatsData['act
                 );
             })}
             <p className={styles.behaviorFootnote}>
-                예약 비율은 상세 열람 사용자 수와 예약 이동 사용자 수를 비교한 참고값입니다. 같은 사람이 같은 방문에서 순서대로 행동했는지까지 연결한 구매 전환율은 아닙니다.
+                세 단계의 비율은 모두 전체 방문자 수를 기준으로 합니다. 상세 열람자 대비 수치는 두 사용자 수를 단순 비교한 참고값이며, 같은 사람이 같은 방문에서 순서대로 행동했는지까지 연결한 전환율은 아닙니다.
             </p>
         </div>
     );
@@ -2836,8 +2845,8 @@ export default function AdminPage() {
                 <section className={styles.section} id="visitor-flow">
                     <div className={styles.sectionHeading}>
                         <div>
-                            <h2>방문부터 예약 페이지 이동까지</h2>
-                            <p>조회수가 아닌 사람 수를 기준으로, 같은 기간끼리 비교합니다.</p>
+                            <h2>방문 → 상세 열람 → 예약 페이지 이동</h2>
+                            <p>조회수가 아닌 사람 수를 기준으로, 모든 비율을 전체 방문자와 비교합니다.</p>
                         </div>
                     </div>
                     {gaStatsError ? (
