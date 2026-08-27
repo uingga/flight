@@ -50,7 +50,7 @@
     outline: none;
 }
 
-.previewPage button:focus-visible:not(.cardBody) {
+.previewPage[data-keyboard-navigation='true'] button:focus-visible:not(.cardBody) {
     outline: 2px solid rgba(224, 11, 65, 0.48);
     outline-offset: 2px;
 }

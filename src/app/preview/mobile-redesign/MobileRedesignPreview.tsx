@@ -887,6 +887,7 @@ export default function MobileRedesignPreview({
     const [contactStatus, setContactStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
     const [contactMessage, setContactMessage] = useState('');
     const [insightDateKey, setInsightDateKey] = useState(() => seoulDateKey());
+    const [keyboardNavigation, setKeyboardNavigation] = useState(false);
     const filterBarSlotRef = useRef<HTMLDivElement | null>(null);
     const desktopFilterRef = useRef<HTMLDivElement | null>(null);
     const desktopFilterTriggerRef = useRef<HTMLButtonElement | null>(null);
@@ -2497,7 +2498,14 @@ export default function MobileRedesignPreview({
     };
 
     return (
-        <Root className={styles.previewPage}>
+        <Root
+            className={styles.previewPage}
+            data-keyboard-navigation={keyboardNavigation ? 'true' : 'false'}
+            onPointerDownCapture={() => setKeyboardNavigation(false)}
+            onKeyDownCapture={event => {
+                if (event.key === 'Tab') setKeyboardNavigation(true);
+            }}
+        >
             {isDefaultView && dropAlertFlight && (
                 <div
                     className={`${styles.dropTicker} ${styles.desktopDropTicker}`}
