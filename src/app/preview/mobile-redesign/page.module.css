@@ -1505,10 +1505,26 @@
     .detailOverlay .sheetHandle { display: none; }
     .detailHeader { min-height: 42px; }
     .detailSchedule { padding: 19px; }
+    .toast {
+        top: 24px;
+        bottom: auto;
+        min-width: 280px;
+        padding: 14px 20px;
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 700;
+        text-align: center;
+        box-shadow: 0 14px 36px rgba(0, 0, 0, 0.28);
+        animation: desktopToastIn 180ms ease-out;
+    }
 }
 
 @keyframes filterPopoverIn {
     from { transform: translateY(-7px); opacity: .55; }
+}
+
+@keyframes desktopToastIn {
+    from { transform: translateX(-50%) translateY(-8px); opacity: 0; }
 }
 
 @media (max-width: 360px) {
