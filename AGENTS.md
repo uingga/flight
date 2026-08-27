@@ -127,6 +127,7 @@ npm run deploy:rollback              # 문제 시: 코드만 되돌림 (data/ �
 5. **CSS Modules**: All Dashboard styles use `styles.className` pattern
 6. **Data must be in git**: `data/all-flights-cache.json` is committed to git for Vercel static reads
 7. **Booking URL patterns vary by source**: Each agency has different URL manipulation in `buildBookingUrl()`
+8. **Redesign UI system**: 운영 메인 리디자인의 글자·색상 규격은 `docs/ui-design-system.md`를 따른다. 폰트 굵기는 실제 로드된 `400/600/700/800`만 사용하고, 일반 패널 제목과 버튼에 `800`을 사용하지 않는다.
 
 ## Marketing Reference
 

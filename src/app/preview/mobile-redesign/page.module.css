@@ -1,8 +1,10 @@
 .previewPage {
     min-height: 100vh;
-    background: #f3f3f3;
+    background: var(--canvas);
     color: #222222;
     font-variant-numeric: normal;
+    /* Redesign UI tokens: keep type weights aligned with the loaded Inter faces. */
+    --canvas: #f3f3f3;
     --brand: #ff385c;
     --brand-dark: #e00b41;
     --brand-soft: #fff0f3;
@@ -27,12 +29,16 @@
     --size-section: 16px;
     --size-card: 18px;
     --size-title: 20px;
+    --size-panel-title: 20px;
     --size-detail-price: 22px;
     --size-display: 24px;
     --weight-regular: 400;
-    --weight-medium: 600;
-    --weight-bold: 700;
-    --weight-heavy: 800;
+    --weight-control: 600;
+    --weight-heading: 700;
+    --weight-emphasis: 800;
+    --weight-medium: var(--weight-control);
+    --weight-bold: var(--weight-heading);
+    --weight-heavy: var(--weight-emphasis);
 }
 
 .previewPage button {
@@ -144,8 +150,8 @@
     gap: 12px;
 }
 
-.feedIntro p { color: var(--text-secondary); font-size: var(--size-caption); line-height: 1.3; font-weight: 500; letter-spacing: -0.01em; }
-.feedIntro h1 { margin-top: 3px; color: var(--ink); font-size: var(--size-title); line-height: 1.3; font-weight: var(--weight-heavy); letter-spacing: -0.045em; }
+.feedIntro p { color: var(--text-secondary); font-size: var(--size-caption); line-height: 1.3; font-weight: var(--weight-regular); letter-spacing: -0.01em; }
+.feedIntro h1 { margin-top: 3px; color: var(--ink); font-size: var(--size-title); line-height: 1.3; font-weight: var(--weight-bold); letter-spacing: -0.045em; }
 
 .conditionFilterAnchor,
 .conditionFilterSlot { min-height: 48px; }
@@ -305,7 +311,7 @@
     color: #2f2f2f;
     outline: 0;
     font-size: var(--size-meta);
-    font-weight: 500;
+    font-weight: var(--weight-regular);
     text-align: left;
 }
 .sortOption:hover { background: #f7f7f7; }
@@ -395,7 +401,7 @@
 .routeEndpoint strong { max-width: 100%; overflow: hidden; color: var(--ink); font-size: var(--size-title); line-height: 1.2; font-weight: var(--weight-bold); letter-spacing: -0.04em; text-overflow: ellipsis; white-space: nowrap; }
 .routeEndpointArrival strong { color: var(--ink); }
 .routeTiming { margin-top: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; white-space: nowrap; }
-.routeTiming b { color: #6b7280; font-size: var(--size-meta); line-height: 1.25; font-weight: 500; }
+.routeTiming b { color: #6b7280; font-size: var(--size-meta); line-height: 1.25; font-weight: var(--weight-regular); }
 .routeTiming em { color: #858b94; font-size: calc(var(--size-meta) - 1px); line-height: 1.2; font-style: normal; }
 .routeConnector { position: relative; min-height: 47px; padding-top: 7px; display: flex; flex-direction: column; align-items: center; gap: 3px; color: #e5e7eb; }
 .routeConnector svg { position: relative; width: 22px; height: 22px; padding: 3px; fill: currentColor; stroke: none; border-radius: 50%; background: var(--paper); }
@@ -425,7 +431,7 @@
 .priceDiscountBadge { height: 18px; padding: 1px 5px 0; display: inline-flex; align-items: center; border: 1px solid #f2c7d0; border-radius: 5px; background: var(--brand-soft); color: var(--brand-dark); font-size: 10px; line-height: 1; font-weight: var(--weight-bold); letter-spacing: -0.025em; white-space: nowrap; }
 .priceBlock strong { display: block; color: var(--ink); font-size: var(--size-card); line-height: 1.25; font-weight: var(--weight-bold); letter-spacing: -0.04em; }
 .todayPickCard .priceBlock strong { color: var(--brand-dark); }
-.priceBlock strong small { margin-left: 2px; color: var(--text-secondary); font-size: .58em; font-weight: 500; letter-spacing: -0.02em; }
+.priceBlock strong small { margin-left: 2px; color: var(--text-secondary); font-size: .58em; font-weight: var(--weight-regular); letter-spacing: -0.02em; }
 
 .insightBar {
     width: 100%;
@@ -458,7 +464,7 @@
 .insightCurrentPrice { color: var(--brand-dark); font-size: 18px; line-height: 1.2; font-weight: var(--weight-heavy); letter-spacing: -0.035em; }
 .insightFooter { margin-top: 10px; min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 10px; color: var(--text-muted); font-size: var(--size-caption); line-height: 1.25; }
 .insightFooter > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.insightFooter > em { padding: 4px 7px; flex: 0 0 auto; border-radius: 999px; background: var(--brand-soft); color: var(--brand-dark); font-style: normal; font-weight: var(--weight-heavy); white-space: nowrap; }
+.insightFooter > em { padding: 4px 7px; flex: 0 0 auto; border-radius: 999px; background: var(--brand-soft); color: var(--brand-dark); font-style: normal; font-weight: var(--weight-bold); white-space: nowrap; }
 .insightFactHeadline { margin-top: 8px; min-width: 0; display: flex; align-items: baseline; gap: 8px; }
 .insightFactHeadline > strong { flex: 0 0 auto; color: var(--ink); font-size: 18px; line-height: 1.3; font-weight: var(--weight-bold); letter-spacing: -0.03em; }
 .insightFactHeadline > span { min-width: 0; overflow: hidden; color: var(--text-secondary); font-size: var(--size-meta); font-weight: var(--weight-bold); text-overflow: ellipsis; white-space: nowrap; }
@@ -584,7 +590,7 @@
 .sheetHandle::after { content: ''; width: 38px; height: 4px; border-radius: 999px; background: #dddddd; }
 .sheetHandle:active { cursor: grabbing; }
 .sheetHeader { display: flex; align-items: center; justify-content: space-between; }
-.sheetHeader h2 { font-size: var(--size-title); font-weight: var(--weight-heavy); letter-spacing: -0.04em; }
+.sheetHeader h2 { font-size: var(--size-panel-title); font-weight: var(--weight-bold); letter-spacing: -0.04em; }
 .sheetHeader button { padding: 6px 0 6px 10px; color: var(--muted); font-size: var(--size-meta); font-weight: var(--weight-medium); }
 .filterGroup { margin-top: 22px; }
 .filterGroup h3 { margin-bottom: 9px; color: #3f3f3f; font-size: var(--size-meta); font-weight: var(--weight-bold); }
@@ -689,7 +695,7 @@
 .dateCalendar :global(.react-datepicker__day--today.react-datepicker__day--selecting-range-start),
 .dateCalendar :global(.react-datepicker__day--today.react-datepicker__day--range-start),
 .dateCalendar :global(.react-datepicker__day--today.react-datepicker__day--range-end) { color: var(--on-brand) !important; }
-.applyButton { position: sticky; bottom: 0; width: 100%; height: 50px; margin-top: 26px; border-radius: 13px; background: var(--brand); color: var(--on-brand); font-size: var(--size-body); font-weight: var(--weight-heavy); box-shadow: none; }
+.applyButton { position: sticky; bottom: 0; width: 100%; height: 50px; margin-top: 26px; border-radius: 13px; background: var(--brand); color: var(--on-brand); font-size: var(--size-body); font-weight: var(--weight-bold); box-shadow: none; }
 .applyButtonCalendarOpen { position: static; }
 
 .detailSheet { overflow-y: auto; }
@@ -730,7 +736,7 @@
 .detailStayDivider span { flex: 0 0 auto; color: var(--text-muted); font-size: var(--size-caption); line-height: 1.2; font-weight: var(--weight-medium); }
 
 .priceNotice { margin-top: 15px; padding: 11px 12px; border-radius: 10px; background: #faf5e9; color: #6f5d3c; font-size: var(--size-caption); line-height: 1.55; }
-.priceNotice strong { color: #5f4c29; font-weight: var(--weight-heavy); }
+.priceNotice strong { color: #5f4c29; font-weight: var(--weight-bold); }
 .reportTools { margin-left: 7px; display: inline-flex; align-items: center; color: #766c58; white-space: nowrap; }
 .reportTools button { min-height: 22px; padding: 0 2px; color: #6f6552; font-size: var(--size-micro); line-height: 1; font-weight: var(--weight-medium); text-decoration: underline; text-decoration-color: #a99e87; text-underline-offset: 2px; }
 .reportTools button:hover { color: #666666; text-decoration-color: #999999; }
@@ -761,7 +767,7 @@
 .passengerRow button:disabled { opacity: .35; }
 .passengerRow > div strong { font-size: var(--size-meta); font-weight: var(--weight-bold); }
 .passengerRows > p { margin: 4px 0 0; color: var(--text-faint); font-size: var(--size-micro); line-height: 1.45; }
-.bookingButton { height: 54px; margin-top: 14px; display: flex; align-items: center; justify-content: center; gap: 6px; border-radius: 14px; background: var(--brand-dark); color: var(--on-brand); font-size: var(--size-body); font-weight: var(--weight-heavy); box-shadow: none; }
+.bookingButton { height: 54px; margin-top: 14px; display: flex; align-items: center; justify-content: center; gap: 6px; border-radius: 14px; background: var(--brand-dark); color: var(--on-brand); font-size: var(--size-body); font-weight: var(--weight-bold); box-shadow: none; }
 .bookingButton:hover { color: var(--on-brand); }
 .bookingButton svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; }
 .detailSecondaryActions { margin-top: 9px; display: grid; grid-template-columns: minmax(0, 1fr) 88px; align-items: stretch; gap: 8px; }
@@ -790,7 +796,7 @@
 .contactSheet { padding-bottom: max(22px, env(safe-area-inset-bottom)); }
 .contactHeader { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
 .contactHeader span { color: var(--brand-dark); font-size: var(--size-micro); font-weight: var(--weight-bold); }
-.contactHeader h2 { margin-top: 3px; color: var(--ink); font-size: var(--size-title); line-height: 1.25; font-weight: var(--weight-heavy); letter-spacing: -0.04em; }
+.contactHeader h2 { margin-top: 3px; color: var(--ink); font-size: var(--size-panel-title); line-height: 1.25; font-weight: var(--weight-bold); letter-spacing: -0.04em; }
 .contactHeader > button { width: 34px; height: 34px; display: grid; place-items: center; color: var(--muted); }
 .contactHeader > button svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.8; }
 .contactForm { margin-top: 20px; display: grid; gap: 15px; }
@@ -804,7 +810,7 @@
 .contactForm input:focus,
 .contactForm textarea:focus { border-color: var(--brand); box-shadow: 0 0 0 2px var(--brand-soft); }
 .contactError { color: #c83838; font-size: var(--size-caption); line-height: 1.45; }
-.contactSubmit { height: 50px; border-radius: 13px; background: var(--brand-dark); color: var(--on-brand); font-size: var(--size-body); font-weight: var(--weight-heavy); }
+.contactSubmit { height: 50px; border-radius: 13px; background: var(--brand-dark); color: var(--on-brand); font-size: var(--size-body); font-weight: var(--weight-bold); }
 .contactSubmit:disabled { opacity: 0.55; }
 .contactSuccess { min-height: 270px; padding: 48px 18px 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
 .contactSuccess strong { color: var(--ink); font-size: var(--size-section); }
@@ -854,6 +860,7 @@
         --size-section: 18px;
         --size-card: 20px;
         --size-title: 23px;
+        --size-panel-title: 23px;
         --size-detail-price: 25px;
         --size-display: 28px;
     }
@@ -959,7 +966,7 @@
         justify-content: space-between;
     }
     .desktopRecentHeader strong { color: #555555; font-size: 11px; font-weight: 600; }
-    .desktopRecentHeader button { padding: 5px; color: #888888; font-size: 11px; font-weight: 500; }
+    .desktopRecentHeader button { padding: 5px; color: #888888; font-size: 11px; font-weight: var(--weight-regular); }
     .desktopRecentHeader button:hover { color: var(--brand-dark); }
     .desktopRecentList { display: grid; gap: 2px; }
     .desktopRecentItem {
@@ -982,7 +989,7 @@
         text-align: left;
     }
     .desktopRecentTerm svg { width: 14px; height: 14px; flex: 0 0 auto; fill: none; stroke: #999999; stroke-width: 1.8; }
-    .desktopRecentTerm span { overflow: hidden; font-size: 12px; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
+    .desktopRecentTerm span { overflow: hidden; font-size: 12px; font-weight: var(--weight-regular); text-overflow: ellipsis; white-space: nowrap; }
     .desktopRecentRemove {
         width: 28px;
         height: 28px;
@@ -1113,7 +1120,7 @@
         color: #858585;
         font-size: 12px;
         line-height: 1.2;
-        font-weight: 500;
+        font-weight: var(--weight-regular);
         text-overflow: ellipsis;
         white-space: nowrap;
     }
@@ -1154,7 +1161,7 @@
         color: #444444;
         font-size: 12px;
         line-height: 1.2;
-        font-weight: 500;
+        font-weight: var(--weight-regular);
         text-align: left;
         white-space: nowrap;
     }
@@ -1184,14 +1191,14 @@
         background: #fff7f8;
         color: var(--brand-dark);
         font-size: 12px;
-        font-weight: 650;
+        font-weight: var(--weight-medium);
         transition: background 150ms ease, color 150ms ease;
     }
     .desktopFilterReset:hover:not(:disabled) { background: var(--brand-soft); }
     .desktopFilterReset:disabled {
         background: #fcfcfc;
         color: #aaaaaa;
-        font-weight: 500;
+        font-weight: var(--weight-regular);
         opacity: 1;
         cursor: default;
     }
@@ -1311,11 +1318,11 @@
     .todayPickInline { display: none; }
     .cardTopline { position: relative; min-height: 39px; padding: 14px 48px 0 18px; }
     .sourceBadge { font-size: 12px; font-weight: 600; }
-    .airline { color: #707070; font-size: 12px; font-weight: 500; }
+    .airline { color: #707070; font-size: 12px; font-weight: var(--weight-regular); }
     .routeGrid { margin: 18px 20px 0; padding-bottom: 6px; grid-template-columns: minmax(0, 1fr) 54px minmax(0, 1fr); }
     .routeEndpoint strong { font-size: 20px; font-weight: 600; letter-spacing: -0.025em; }
     .routeTiming { margin-top: 8px; gap: 4px; }
-    .routeTiming b { color: #6b7280; font-size: 13px; font-weight: 500; }
+    .routeTiming b { color: #6b7280; font-size: 13px; font-weight: var(--weight-regular); }
     .routeTiming em { color: #858b94; font-size: 12px; font-weight: 400; }
     .routeConnector { padding-top: 8px; gap: 2px; }
     .routeConnector span { color: #858b94; font-size: 12px; line-height: 1.2; transform: translateY(2px); }
@@ -1482,7 +1489,7 @@
         background: transparent;
         color: #444444;
         font-size: 12px;
-        font-weight: 500;
+        font-weight: var(--weight-regular);
         text-align: left;
     }
     .desktopAirlineMenu > button:hover { background: #f6f6f6; color: var(--ink); }
