@@ -757,9 +757,40 @@ export default function AdminPage() {
 
     if (loading) {
         return (
-            <div className={styles.loginContainer}>
-                <div className={styles.spinner}></div>
-                <p>로딩 중...</p>
+            <div className={styles.loadingPage} role="status" aria-live="polite" aria-busy="true">
+                <header className={styles.loadingHeader} aria-hidden="true">
+                    <div>
+                        <strong>티키티킷 운영실</strong>
+                        <span>최신 운영 데이터를 불러오는 중입니다</span>
+                    </div>
+                    <span className={styles.loadingHeaderAction} />
+                </header>
+                <div className={styles.loadingLayout} aria-hidden="true">
+                    <nav className={styles.loadingNav} aria-label="관리자 메뉴를 준비하는 중">
+                        {['오늘', '방문·예약', '항공권·수집', '고객·알림'].map((label, index) => (
+                            <div key={label} className={index === 0 ? `${styles.loadingNavItem} ${styles.loadingNavItemActive}` : styles.loadingNavItem}>
+                                <span>{label}</span>
+                                <i />
+                            </div>
+                        ))}
+                    </nav>
+                    <main className={styles.loadingContent}>
+                        <div className={styles.loadingStatus}><span />운영 현황을 정리하고 있어요</div>
+                        <section className={styles.loadingSection}>
+                            <div className={styles.loadingSectionHead}><i /><i /></div>
+                            <div className={styles.loadingCardGrid}>
+                                {[0, 1, 2].map(item => <div key={item} className={styles.loadingStatCard}><i /><b /><i /></div>)}
+                            </div>
+                        </section>
+                        <section className={styles.loadingSection}>
+                            <div className={styles.loadingSectionHead}><i /><i /></div>
+                            <div className={styles.loadingRows}>
+                                {[0, 1, 2, 3].map(item => <div key={item}><i /><b /></div>)}
+                            </div>
+                        </section>
+                    </main>
+                </div>
+                <span className={styles.loadingSrOnly}>관리자 데이터를 불러오는 중입니다.</span>
             </div>
         );
     }
@@ -1132,19 +1163,41 @@ export default function AdminPage() {
                 <section className={styles.section} id="operations-period">
                     <div className={styles.sectionHeading}>
                         <div>
-                            <h2>수집 실행과 항공권 변화</h2>
-                            <p>실패해 이전 데이터를 쓴 회차는 새로 들어옴·사라짐 계산에서 제외합니다.</p>
+                            <h2>수집 실행 상태</h2>
+                            <p>정해진 수집 회차가 정상적으로 끝났는지만 봅니다. 항공권 수 변화는 아래 최근 수집 기록에서 따로 확인합니다.</p>
                         </div>
                         <span className={(recentCrawlIssueRate || 0) > 0 ? styles.issueBadge : styles.nowBadge}>
-                            최근 7일 문제 회차 {recentCrawlIssueRate === null ? '—' : `${recentCrawlIssueRate}%`}
+                            {recentCrawlIssueRate === null
+                                ? '최근 7일 기록 없음'
+                                : recentCrawlIssueRate > 0
+                                    ? `최근 7일 문제 ${crawl7.failed}회`
+                                    : '최근 7일 모두 정상'}
                         </span>
                     </div>
-                    <PeriodTable rows={[
-                        { label: '실행한 횟수', today: `${crawlToday.runs}회`, recent7: `${crawl7.runs}회`, recent30: `${crawl30.runs}회` },
-                        { label: '문제가 있었던 회차', today: `${crawlToday.failed}회`, recent7: `${crawl7.failed}회`, recent30: `${crawl30.failed}회`, note: '한 여행사라도 실패해 이전 데이터를 쓴 회차입니다.' },
-                        { label: '새로 들어온 표', today: `${crawlToday.added.toLocaleString()}개`, recent7: `${crawl7.added.toLocaleString()}개`, recent30: `${crawl30.added.toLocaleString()}개` },
-                        { label: '사라진 표', today: `${crawlToday.removed.toLocaleString()}개`, recent7: `${crawl7.removed.toLocaleString()}개`, recent30: `${crawl30.removed.toLocaleString()}개` },
-                    ]} />
+                    <div className={styles.crawlPeriodGrid}>
+                        {([
+                            { label: '오늘', summary: crawlToday, note: '진행 중인 날짜' },
+                            { label: '최근 7일', summary: crawl7, note: '어제까지' },
+                            { label: '최근 30일', summary: crawl30, note: '어제까지' },
+                        ] as const).map(({ label, summary, note }) => {
+                            const normalRuns = Math.max(0, summary.runs - summary.failed);
+                            const normalRate = summary.runs > 0 ? Math.round((normalRuns / summary.runs) * 100) : null;
+                            return (
+                                <article key={label} className={summary.failed > 0 ? `${styles.crawlPeriodCard} ${styles.crawlPeriodCardWarn}` : styles.crawlPeriodCard}>
+                                    <header><span>{label}</span><small>{note}</small></header>
+                                    <strong>{summary.runs.toLocaleString()}<small>회 실행</small></strong>
+                                    <div className={styles.crawlSuccessTrack} aria-label={`${label} 정상 완료율 ${normalRate === null ? '계산 전' : `${normalRate}%`}`}>
+                                        <span style={{ width: `${normalRate || 0}%` }} />
+                                    </div>
+                                    <dl>
+                                        <div><dt>정상 완료</dt><dd>{normalRuns.toLocaleString()}회</dd></div>
+                                        <div><dt>문제 회차</dt><dd>{summary.failed.toLocaleString()}회</dd></div>
+                                    </dl>
+                                    <footer>{normalRate === null ? '아직 실행 기록이 없어요' : `정상 완료율 ${normalRate}%`}</footer>
+                                </article>
+                            );
+                        })}
+                    </div>
                     {crawl30RecordedDays > 0 && crawl30RecordedDays < 30 && (
                         <p className={styles.dataNotice}>최근 30일 칸은 기록이 있는 {crawl30RecordedDays}일치만 포함합니다.</p>
                     )}
@@ -1227,7 +1280,7 @@ export default function AdminPage() {
                             return (
                                 <article key={source} className={issue ? `${styles.sourceTrendCard} ${styles.sourceTrendCardWarn}` : styles.sourceTrendCard}>
                                     <div className={styles.sourceTrendHead}>
-                                        <strong><span style={{ background: SOURCE_COLORS[source] }} />{SOURCE_NAMES[source]}</strong>
+                                        <strong><span className={issue ? styles.sourceStateMarkWarn : styles.sourceStateMarkGood} />{SOURCE_NAMES[source]}</strong>
                                         <span className={issue ? styles.statusWarn : styles.statusGood}>
                                             {statusText}
                                         </span>
@@ -1249,10 +1302,15 @@ export default function AdminPage() {
                                             return (
                                             <span
                                                 key={`${entry.timestamp}-${index}`}
-                                                className={entry.preserved ? styles.sourceTrendBarPreserved : styles.sourceTrendBar}
+                                                className={entry.preserved
+                                                    ? styles.sourceTrendBarPreserved
+                                                    : isLatest && slumped
+                                                        ? styles.sourceTrendBarBroken
+                                                        : isLatest
+                                                            ? styles.sourceTrendBarLatest
+                                                            : styles.sourceTrendBar}
                                                 style={{
                                                     height: `${Math.max(5, Math.round((entry.value / peak) * 100))}%`,
-                                                    background: entry.preserved ? undefined : isLatest ? SOURCE_COLORS[source] : undefined,
                                                 }}
                                                 title={`${formatKST(entry.timestamp).replace(/\d{4}\. /, '')} · ${entry.value.toLocaleString()}개${entry.preserved ? ' · 수집 실패, 이전 데이터 사용' : ''}`}
                                             />
