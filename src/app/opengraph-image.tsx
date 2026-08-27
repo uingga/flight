@@ -25,11 +25,15 @@ function shortDate(dateText: string | undefined) {
 }
 
 async function getFontData() {
+    // Keep font binaries out of the Edge Function bundle. Vercel's Hobby plan
+    // limits each Edge Function to 1 MB, while the Korean font files are much
+    // larger. They are still served as public assets and fetched at runtime.
+    const assetBaseUrl = (process.env.NEXT_PUBLIC_BASE_URL || 'https://www.tikitikit.kr').replace(/\/$/, '');
     const [regular, semiBold, extraBold, logo] = await Promise.all([
-        fetch(new URL('../../public/Fonts/Pretendard-OG-Regular.otf', import.meta.url)),
-        fetch(new URL('../../public/Fonts/Pretendard-OG-SemiBold.otf', import.meta.url)),
-        fetch(new URL('../../public/Fonts/Pretendard-OG-ExtraBold.otf', import.meta.url)),
-        fetch(new URL('../../public/Fonts/YeogiOttaeJalnan-OG.woff', import.meta.url)),
+        fetch(`${assetBaseUrl}/Fonts/Pretendard-OG-Regular.otf`, { cache: 'force-cache' }),
+        fetch(`${assetBaseUrl}/Fonts/Pretendard-OG-SemiBold.otf`, { cache: 'force-cache' }),
+        fetch(`${assetBaseUrl}/Fonts/Pretendard-OG-ExtraBold.otf`, { cache: 'force-cache' }),
+        fetch(`${assetBaseUrl}/Fonts/YeogiOttaeJalnan-OG.woff`, { cache: 'force-cache' }),
     ]);
     if (!regular.ok || !semiBold.ok || !extraBold.ok || !logo.ok) throw new Error('Failed to fetch OG font data');
 
