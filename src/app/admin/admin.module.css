@@ -2345,90 +2345,99 @@
     color: #c43d30;
 }
 
-.sourceHealthChart {
+.sourceTrendGrid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.sourceTrendCard {
+    min-width: 0;
+    padding: 15px;
     border: 1px solid #e4e7ec;
     border-radius: 13px;
-    overflow: hidden;
-    background: #fff;
+    background: #fbfcfd;
 }
 
-.sourceHealthLegend {
+.sourceTrendCardWarn {
+    border-color: #efc9c3;
+    background: #fff9f7;
+}
+
+.sourceTrendHead,
+.sourceTrendFoot {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
-    padding: 10px 14px;
-    border-bottom: 1px solid #edf0f3;
-    background: #fafbfc;
-    color: #8b939f;
-    font-size: 0.65rem;
+    gap: 10px;
 }
 
-.sourceHealthRow {
-    display: flex;
-    flex-direction: column;
-    gap: 9px;
-    min-height: 72px;
-    padding: 11px 14px 12px;
-    border-bottom: 1px solid #edf0f3;
-    background: #fff;
-}
-
-.sourceHealthRow:last-child { border-bottom: 0; }
-.sourceHealthRowWarn { background: #fff9f7; }
-
-.sourceMark {
-    width: 5px;
-    height: 18px;
-    border-radius: 999px;
-    flex: 0 0 auto;
-}
-
-.sourceHealthTopline {
-    display: flex;
+.sourceTrendHead > strong {
+    display: inline-flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-}
-
-.sourceHealthName {
-    display: flex;
-    align-items: center;
-    min-width: 0;
-    gap: 8px;
-}
-
-.sourceHealthName strong {
-    color: #26303e;
+    gap: 7px;
+    color: #283240;
     font-size: 0.84rem;
 }
 
-.sourceHealthName small {
-    color: #8b939f;
-    font-size: 0.67rem;
-}
-
-.sourceHealthMetric {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 76px;
-    align-items: center;
-    gap: 12px;
-}
-
-.sourceHealthTrack {
-    position: relative;
-    height: 13px;
-    overflow: hidden;
+.sourceTrendHead > strong > span {
+    width: 6px;
+    height: 18px;
     border-radius: 999px;
-    background: #eff1f4;
 }
 
-.sourceHealthBar {
-    display: block;
-    height: 100%;
-    border-radius: inherit;
-    opacity: 0.86;
-    transition: width 0.25s ease;
+.sourceTrendSummary {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.sourceTrendSummary > div {
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+}
+
+.sourceTrendSummary strong {
+    color: #202a38;
+    font-size: 1.15rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.sourceTrendSummary span,
+.sourceTrendFoot {
+    color: #8a929e;
+    font-size: 0.65rem;
+}
+
+.sourceTrendBars {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 62px;
+    margin-top: 12px;
+    padding: 8px 8px 0;
+    border-bottom: 1px solid #dfe3e8;
+    border-radius: 8px 8px 0 0;
+    background: linear-gradient(to top, #f4f6f8, rgba(244, 246, 248, 0));
+}
+
+.sourceTrendBar,
+.sourceTrendBarPreserved {
+    flex: 1;
+    min-width: 4px;
+    max-width: 22px;
+    border-radius: 3px 3px 0 0;
+    background: #c4cad2;
+}
+
+.sourceTrendBarPreserved {
+    background: #e7a93c;
+}
+
+.sourceTrendFoot {
+    margin-top: 7px;
 }
 
 .statusGood,
@@ -3042,11 +3051,7 @@
     .analysisGrid,
     .candidateSummary { grid-template-columns: 1fr 1fr; }
 
-    .sourceHealthRow { padding-inline: 12px; }
-    .sourceHealthName { gap: 6px; }
-    .sourceHealthName small { display: none; }
-    .sourceHealthMetric { grid-template-columns: minmax(0, 1fr) 68px; gap: 9px; }
-    .sourceHealthCount { color: #747d89; }
+    .sourceTrendGrid { grid-template-columns: 1fr; }
     .naverCompact { align-items: flex-start; }
 
     .reportRow {

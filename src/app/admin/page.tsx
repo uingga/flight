@@ -795,7 +795,6 @@ export default function AdminPage() {
             ?? data.bySource[source]
             ?? 0,
     ])) as Record<string, number>;
-    const maxSourceCount = Math.max(...Object.values(sourceVisibleCounts), 1);
     const criticalAlerts = (latestCrawl?.alerts || []).filter(a => a.startsWith('🚨'));
 
     const selectTab = (next: TabId) => {
@@ -1192,48 +1191,79 @@ export default function AdminPage() {
                     <div className={styles.sectionHeading}>
                         <div>
                             <h2>여행사별 수집 상태</h2>
-                            <p>막대 길이로 현재 사이트에 보이는 항공권 수를 비교합니다. ‘이전 데이터 사용’은 이번 수집에 실패했다는 뜻입니다.</p>
+                            <p>각 여행사의 최근 16회 수집량을 보여줍니다. 노란 막대는 수집에 실패해 이전 데이터를 사용한 회차입니다.</p>
                         </div>
                     </div>
-                    <div className={styles.sourceHealthChart}>
-                        <div className={styles.sourceHealthLegend}>
-                            <span>사이트에 보이는 항공권</span>
-                            <span>가장 많은 여행사 기준</span>
-                        </div>
+                    <div className={styles.sourceTrendGrid}>
                         {allSources.map(source => {
                             const updatedAt = data.sourceUpdatedAt?.[source];
                             const ageHours = updatedAt ? (Date.now() - new Date(updatedAt).getTime()) / 3_600_000 : null;
                             const staleCount = data.staleStreak?.[source] || 0;
                             const late = ageHours === null || ageHours > (STALE_AFTER_HOURS[source] ?? DEFAULT_STALE_AFTER_HOURS);
-                            const issue = staleCount > 0 || late;
                             const visibleCount = sourceVisibleCounts[source] || 0;
-                            const barWidth = visibleCount > 0 ? Math.max(3, (visibleCount / maxSourceCount) * 100) : 0;
+                            const history = (data.crawlHistory || [])
+                                .filter(entry => !entry.sites[source]?.skipped)
+                                .slice(-16)
+                                .map(entry => ({
+                                    timestamp: entry.timestamp,
+                                    value: entry.sites[source]?.scraped ?? entry.sites[source]?.total ?? 0,
+                                    preserved: Boolean(entry.sites[source]?.preserved),
+                                }));
+                            const pastValues = history
+                                .slice(0, -1)
+                                .filter(entry => !entry.preserved)
+                                .map(entry => entry.value)
+                                .sort((a, b) => a - b);
+                            const median = pastValues.length ? pastValues[Math.floor(pastValues.length / 2)] : 0;
+                            const latest = history[history.length - 1] || null;
+                            const slumped = Boolean(latest && !latest.preserved && median >= 30 && latest.value < median * 0.6);
+                            const issue = staleCount > 0 || late || slumped;
+                            const peak = Math.max(...history.map(entry => entry.value), 1);
+                            const statusText = staleCount > 0
+                                ? `이전 데이터 ${staleCount}회`
+                                : slumped
+                                    ? '평소보다 너무 적음'
+                                    : late ? '갱신 늦음' : '정상';
                             return (
-                                <div key={source} className={issue ? `${styles.sourceHealthRow} ${styles.sourceHealthRowWarn}` : styles.sourceHealthRow}>
-                                    <div className={styles.sourceHealthTopline}>
-                                        <div className={styles.sourceHealthName}>
-                                            <span className={styles.sourceMark} style={{ background: SOURCE_COLORS[source] }} />
-                                            <strong>{SOURCE_NAMES[source]}</strong>
-                                            <small>{updatedAt ? `${timeAgo(updatedAt)} 갱신` : '정상 갱신 기록 없음'}</small>
-                                        </div>
+                                <article key={source} className={issue ? `${styles.sourceTrendCard} ${styles.sourceTrendCardWarn}` : styles.sourceTrendCard}>
+                                    <div className={styles.sourceTrendHead}>
+                                        <strong><span style={{ background: SOURCE_COLORS[source] }} />{SOURCE_NAMES[source]}</strong>
                                         <span className={issue ? styles.statusWarn : styles.statusGood}>
-                                            {staleCount > 0 ? `이전 데이터 ${staleCount}회` : late ? '갱신 늦음' : '정상'}
+                                            {statusText}
                                         </span>
                                     </div>
-                                    <div className={styles.sourceHealthMetric}>
-                                        <div
-                                            className={styles.sourceHealthTrack}
-                                            role="img"
-                                            aria-label={`${SOURCE_NAMES[source]} 항공권 ${visibleCount.toLocaleString()}개`}
-                                        >
-                                            <span
-                                                className={styles.sourceHealthBar}
-                                                style={{ width: `${barWidth}%`, background: SOURCE_COLORS[source] }}
-                                            />
+                                    <div className={styles.sourceTrendSummary}>
+                                        <div><strong>{visibleCount.toLocaleString()}</strong><span>사이트 노출</span></div>
+                                        <div>
+                                            <strong>{latest ? latest.value.toLocaleString() : '—'}</strong>
+                                            <span>최근 수집</span>
                                         </div>
-                                        <strong className={styles.sourceHealthCount}>{visibleCount.toLocaleString()}개</strong>
                                     </div>
-                                </div>
+                                    <div
+                                        className={styles.sourceTrendBars}
+                                        role="img"
+                                        aria-label={`${SOURCE_NAMES[source]} 최근 ${history.length}회 수집량 변화`}
+                                    >
+                                        {history.map((entry, index) => {
+                                            const isLatest = index === history.length - 1;
+                                            return (
+                                            <span
+                                                key={`${entry.timestamp}-${index}`}
+                                                className={entry.preserved ? styles.sourceTrendBarPreserved : styles.sourceTrendBar}
+                                                style={{
+                                                    height: `${Math.max(5, Math.round((entry.value / peak) * 100))}%`,
+                                                    background: entry.preserved ? undefined : isLatest ? SOURCE_COLORS[source] : undefined,
+                                                }}
+                                                title={`${formatKST(entry.timestamp).replace(/\d{4}\. /, '')} · ${entry.value.toLocaleString()}개${entry.preserved ? ' · 수집 실패, 이전 데이터 사용' : ''}`}
+                                            />
+                                            );
+                                        })}
+                                    </div>
+                                    <div className={styles.sourceTrendFoot}>
+                                        <span>{history.length > 0 ? `최근 ${history.length}회` : '수집 기록 없음'}</span>
+                                        <span>{updatedAt ? `${timeAgo(updatedAt)} 갱신` : '정상 갱신 기록 없음'}</span>
+                                    </div>
+                                </article>
                             );
                         })}
                     </div>
