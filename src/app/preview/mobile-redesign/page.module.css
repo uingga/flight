@@ -9,7 +9,7 @@
     --on-brand: #ffffff;
     --paper: #ffffff;
     --paper-soft: #f7f7f7;
-    --spectrum: linear-gradient(100deg, #e00b41 0%, #c80739 100%);
+    --spectrum: var(--brand);
     --urgent: #ff4d34;
     --urgent-dark: #cf2f1c;
     --urgent-soft: #fff0f2;
@@ -589,11 +589,11 @@
 .filterGroup h3 { margin-bottom: 9px; color: #3f3f3f; font-size: var(--size-meta); font-weight: var(--weight-bold); }
 .optionGrid { display: flex; flex-wrap: wrap; gap: 7px; }
 .optionGrid button { min-height: 36px; padding: 0 13px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); color: var(--ink); font-size: var(--size-meta); font-weight: var(--weight-medium); }
-.optionGrid .optionActive { border-color: var(--brand-dark); background: var(--brand-dark); color: var(--on-brand); font-weight: var(--weight-bold); }
+.optionGrid .optionActive { border-color: var(--brand); background: var(--brand); color: var(--on-brand); font-weight: var(--weight-bold); }
 .dateDirectButton { width: fit-content; min-height: 36px; margin-top: 9px; padding: 0 13px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); color: var(--ink); text-align: left; }
 .dateDirectButton span { flex: 0 0 auto; font-size: var(--size-body); }
 .dateDirectButton strong { font-size: var(--size-meta); font-weight: var(--weight-bold); }
-.dateDirectButton.dateDirectActive { border-color: var(--brand); color: var(--brand-dark); }
+.dateDirectButton.dateDirectActive { border-color: var(--brand); color: var(--brand); }
 .dateCalendarWrap { margin-top: 8px; overflow: hidden; border: 1px solid var(--line); border-radius: 14px; background: var(--paper); }
 .dateCalendarWrap > p { margin: 0; padding: 0 12px 10px; color: var(--text-faint); font-size: var(--size-micro); text-align: center; }
 .advancedFilterGroup { padding-top: 21px; border-top: 1px solid #eeeeee; }
@@ -614,7 +614,7 @@
 .dateCalendar :global(.react-datepicker__day--keyboard-selected:not(.react-datepicker__day--selecting-range-start):not(.react-datepicker__day--range-start):not(.react-datepicker__day--range-end)),
 .dateCalendar :global(.react-datepicker__day--selected:not(.react-datepicker__day--selecting-range-start):not(.react-datepicker__day--range-start):not(.react-datepicker__day--range-end)) {
     border-radius: 50% !important;
-    background: var(--brand-dark) !important;
+    background: var(--brand) !important;
     color: var(--on-brand) !important;
 }
 .dateCalendar :global(.react-datepicker__day--in-range),
@@ -677,7 +677,7 @@
 }
 .dateCalendar :global(.react-datepicker__day--selecting-range-start)::before,
 .dateCalendar :global(.react-datepicker__day--range-start)::before,
-.dateCalendar :global(.react-datepicker__day--range-end)::before { background-color: var(--brand-dark) !important; }
+.dateCalendar :global(.react-datepicker__day--range-end)::before { background-color: var(--brand) !important; }
 .dateCalendar :global(.react-datepicker__day--range-start:not(.react-datepicker__day--range-end))::after,
 .dateCalendar :global(.react-datepicker__day--range-end:not(.react-datepicker__day--range-start))::after {
     top: 4px !important;
@@ -688,7 +688,7 @@
 .dateCalendar :global(.react-datepicker__day--today.react-datepicker__day--selecting-range-start),
 .dateCalendar :global(.react-datepicker__day--today.react-datepicker__day--range-start),
 .dateCalendar :global(.react-datepicker__day--today.react-datepicker__day--range-end) { color: var(--on-brand) !important; }
-.applyButton { position: sticky; bottom: 0; width: 100%; height: 50px; margin-top: 26px; border-radius: 13px; background: var(--brand-dark); color: var(--on-brand); font-size: var(--size-body); font-weight: var(--weight-heavy); box-shadow: none; }
+.applyButton { position: sticky; bottom: 0; width: 100%; height: 50px; margin-top: 26px; border-radius: 13px; background: var(--brand); color: var(--on-brand); font-size: var(--size-body); font-weight: var(--weight-heavy); box-shadow: none; }
 .applyButtonCalendarOpen { position: static; }
 
 .detailSheet { overflow-y: auto; }
@@ -1220,7 +1220,7 @@
         stroke-linejoin: round;
     }
     .desktopAdvancedFilter:hover { background: #f5f5f5; color: var(--ink); }
-    .desktopAdvancedFilterActive { background: var(--brand-soft); color: var(--brand-dark); }
+    .desktopAdvancedFilterActive { background: var(--brand-soft); color: var(--brand); }
     .desktopAdvancedFilter > i { position: absolute; top: 11px; right: 9px; width: 5px; height: 5px; border-radius: 50%; background: var(--brand); }
     .desktopAdvancedFilterLabel { white-space: nowrap; }
     .quickFilterRow {
@@ -1284,8 +1284,8 @@
         position: absolute;
         z-index: 4;
         top: 17px;
-        left: -23px;
-        width: 23px;
+        left: -26px;
+        width: 26px;
         height: 82px;
         padding: 0;
         display: inline-flex;
@@ -1295,7 +1295,7 @@
         border-radius: 0 6px 6px 0;
         background: var(--spectrum);
         color: var(--on-brand);
-        font-size: 10px;
+        font-size: 11px;
         line-height: 1;
         font-weight: 700;
         letter-spacing: 0.08em;
