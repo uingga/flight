@@ -184,6 +184,28 @@
       "blocked": 0,
       "healthChecks": 1,
       "abortedEarly": true
+    },
+    {
+      "id": "2026-08-27T03:45:34.805Z-local-59264",
+      "timestamp": "2026-08-27T03:45:34.805Z",
+      "runner": "local",
+      "sourceFilter": "all",
+      "maxFlights": 280,
+      "needed": 272,
+      "attempted": 272,
+      "newRoutes": 58,
+      "newRoutesAttempted": 58,
+      "deferred": 0,
+      "deferredNeverChecked": 0,
+      "oldestDeferredHours": null,
+      "success": 269,
+      "misses": 3,
+      "noResult": 0,
+      "routeErrors": 0,
+      "transientErrors": 3,
+      "blocked": 0,
+      "healthChecks": 0,
+      "abortedEarly": false
     }
   ]
 }
