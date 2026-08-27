@@ -669,13 +669,20 @@ const isTickerWorthyDrop = (flight: Flight) => {
     return price <= 140_000 || (price <= 180_000 && discount >= 25);
 };
 
-const describeDropCard = (flight: Flight, averageDiscountRate = 0) => {
+const describeDropCard = (flight: Flight, averageDiscountRate = 0, trustFirst = true) => {
     const seats = flight.availableSeats || Number.parseInt(flight.seats || '', 10) || 0;
     const departureDate = parseDate(flight.departure.date);
     const today = parseDate(seoulDateKey());
     const destination = stripAirport(flight.arrival.city);
     const displayedPrice = flight.source === 'ttang' ? flight.price : effectivePrice(flight);
     const discountRate = Math.round(Math.max(0, averageDiscountRate));
+
+    if (trustFirst) {
+        if (discountRate >= 5) return '동일 목적지 월평균가 대비';
+        if (seats > 0) return `현재 ${seats}석`;
+        return '가격·일정을 비교해 고른 표';
+    }
+
     const harshDetail = harshScheduleDetail(flight);
     const editorialReactions = [
         '📣 오늘 업무: 이 표 알리기',
@@ -2024,7 +2031,7 @@ export default function MobileRedesignPreview({
         || sourceFilter !== 'all'
         || airlineFilter !== 'all';
     const updatedLabel = lastUpdated
-        ? `${new Intl.DateTimeFormat('ko-KR', { month: 'numeric', day: 'numeric' }).format(new Date(lastUpdated)).replace(/\.\s*$/, '')} 기준`
+        ? `${new Intl.DateTimeFormat('ko-KR', { month: 'long', day: 'numeric' }).format(new Date(lastUpdated))} 기준`
         : '최근 기준';
     const selectedHotelTrackingId = selectedFlight
         ? getTripcomTrackingId(
@@ -2598,7 +2605,7 @@ export default function MobileRedesignPreview({
 
                 <section className={styles.feedIntro}>
                     <div>
-                        <p>좋은 표 하나가, 주말을 여행으로.</p>
+                        <p>전국 여행사의 땡처리 항공권을 한눈에! 🚀</p>
                         <h1>지금 나온 땡처리 항공권</h1>
                     </div>
                 </section>
@@ -2995,7 +3002,7 @@ export default function MobileRedesignPreview({
                                                 {isTodayPick && (
                                                     <span className={styles.todayPickStrip}>
                                                         <strong>TIKIT DROP</strong>
-                                                        <span>오늘 발견</span>
+                                                        <span>오늘 선정</span>
                                                     </span>
                                                 )}
                                                 <div className={styles.cardTopline}>
@@ -3035,6 +3042,14 @@ export default function MobileRedesignPreview({
                                                             <span className={`${styles.footerStatus} ${styles.todayPickStatus}`}>
                                                                 <span className={styles.dropMessageMobile}>{compactDropCardMessage(featuredPick?.reason || '')}</span>
                                                                 <span className={styles.dropMessageDesktop}>{featuredPick?.reason}</span>
+                                                                {averageDiscountRate >= 5 && (
+                                                                    <span
+                                                                        className={styles.dropDiscountInline}
+                                                                        aria-label={`${averageDiscountRate}% 낮음`}
+                                                                    >
+                                                                        <span aria-hidden="true">↓</span>{averageDiscountRate}%
+                                                                    </span>
+                                                                )}
                                                             </span>
                                                         ) : seats > 0 && (
                                                             <span className={`${styles.footerStatus} ${seats <= 4 ? styles.footerStatusLow : ''}`}>
@@ -3044,10 +3059,10 @@ export default function MobileRedesignPreview({
                                                     </div>
                                                     <div className={styles.priceBlock}>
                                                         <div className={styles.priceLine}>
-                                                            {averageDiscountRate >= 5 && (
+                                                            {!isTodayPick && averageDiscountRate >= 5 && (
                                                                 <span
                                                                     className={styles.priceDiscountBadge}
-                                                                    aria-label={`평균가보다 ${averageDiscountRate}% 낮은 가격`}
+                                                                    aria-label={`동일 목적지 월평균가보다 ${averageDiscountRate}% 낮은 가격`}
                                                                 >
                                                                     -{averageDiscountRate}%
                                                                 </span>
