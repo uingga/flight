@@ -818,6 +818,9 @@ function Icon({ name }: { name: 'sliders' | 'search' | 'star' | 'bookmark' | 'sh
 }
 
 const SERVICE_UPDATE_NOTICE_KEY = 'tikitikit-service-update-20260826-v2';
+// Push alerts stay implemented while the public entry points remain hidden until
+// account-linked delivery history and device recovery are ready.
+const PUBLIC_DEAL_ALERTS_ENABLED = false;
 const GENERAL_SHARE_COPY = [
     '🎫 오늘의 이상한 표',
     '👀 가격이 좀 이상함',
@@ -1154,7 +1157,7 @@ export default function MobileRedesignPreview({
             setDatePeriod(periodParam);
         }
 
-        if (params.get('dealAlert') === '1') openDealAlert(null);
+        if (PUBLIC_DEAL_ALERTS_ENABLED && params.get('dealAlert') === '1') openDealAlert(null);
         const campaign = params.get('utm_campaign') || '';
         if (params.get('utm_source') === 'naver_blog' && /^tikitikit_drop_\d+$/.test(campaign)) {
             const content = params.get('utm_content');
@@ -2591,7 +2594,9 @@ export default function MobileRedesignPreview({
                         <button ref={searchButtonRef} type="button" className={`${styles.iconButton} ${styles.mobileSearchButton}`} onClick={() => setSearchOpen(value => !value)} aria-label="검색">
                             <Icon name="search" />
                         </button>
-                        <button type="button" className={styles.alertButton} onClick={() => openDealAlert(null)}>특가 알림</button>
+                        {PUBLIC_DEAL_ALERTS_ENABLED && (
+                            <button type="button" className={styles.alertButton} onClick={() => openDealAlert(null)}>특가 알림</button>
+                        )}
                         <button type="button" className={styles.accountIconButton} onClick={() => { gtag.trackAccountAction('open', previewMode ? 'preview' : 'main'); setShowAccount(true); }} aria-label={account.status === 'authenticated' ? '내 여행 열기' : '로그인'}>
                             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5" /><path d="M5.5 19c.6-3.5 3-5.4 6.5-5.4s5.9 1.9 6.5 5.4" /></svg>
                             <span className={styles.accountLabel}>{account.status === 'authenticated' ? '내 여행' : '로그인'}</span>
@@ -3027,12 +3032,12 @@ export default function MobileRedesignPreview({
                             ) : (
                                 <>
                                     <strong>조건에 맞는 표가 없어요.</strong>
-                                    <span>다른 목적지를 검색하거나 특가 알림을 받아보세요.</span>
+                                    <span>다른 목적지를 검색하거나 조건을 조금 넓혀보세요.</span>
                                 </>
                             )}
                             <div className={styles.emptyStateActions}>
                                 <button type="button" onClick={resetFilters}>필터 초기화</button>
-                                {emptyRouteAlertTarget && (
+                                {PUBLIC_DEAL_ALERTS_ENABLED && emptyRouteAlertTarget && (
                                     <button
                                         type="button"
                                         onClick={() => openDealAlert(emptyRouteAlertTarget)}
@@ -3657,38 +3662,42 @@ export default function MobileRedesignPreview({
                             </div>
                         </div>
 
-                        <div className={styles.detailUtilityRow}>
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    openDealAlert({
-                                        flightId: selectedFlight.id,
-                                        departureCity: departureName(selectedFlight),
-                                        arrivalCity: stripAirport(selectedFlight.arrival.city),
-                                        currentPrice: selectedFlight.source === 'ttang'
-                                            ? selectedFlight.price
-                                            : effectivePrice(selectedFlight),
-                                    });
-                                }}
-                            >
-                                이 노선 가격 알림
-                            </button>
-                            {selectedNaverUrl && (
-                                <a
-                                    href={selectedNaverUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    onClick={() => {
-                                        const route = normalizedRoute(selectedFlight);
-                                        const price = effectivePrice(selectedFlight);
-                                        gtag.trackCompareClick('naver', route, price);
-                                        gtag.trackCompareOutboundClick('naver', route, price);
-                                    }}
-                                >
-                                    네이버에서 같은 일정 비교
-                                </a>
-                            )}
-                        </div>
+                        {(PUBLIC_DEAL_ALERTS_ENABLED || selectedNaverUrl) && (
+                            <div className={styles.detailUtilityRow}>
+                                {PUBLIC_DEAL_ALERTS_ENABLED && (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            openDealAlert({
+                                                flightId: selectedFlight.id,
+                                                departureCity: departureName(selectedFlight),
+                                                arrivalCity: stripAirport(selectedFlight.arrival.city),
+                                                currentPrice: selectedFlight.source === 'ttang'
+                                                    ? selectedFlight.price
+                                                    : effectivePrice(selectedFlight),
+                                            });
+                                        }}
+                                    >
+                                        이 노선 가격 알림
+                                    </button>
+                                )}
+                                {selectedNaverUrl && (
+                                    <a
+                                        href={selectedNaverUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        onClick={() => {
+                                            const route = normalizedRoute(selectedFlight);
+                                            const price = effectivePrice(selectedFlight);
+                                            gtag.trackCompareClick('naver', route, price);
+                                            gtag.trackCompareOutboundClick('naver', route, price);
+                                        }}
+                                    >
+                                        네이버에서 같은 일정 비교
+                                    </a>
+                                )}
+                            </div>
+                        )}
 
                         <a
                             className={styles.bookingButton}
@@ -3831,6 +3840,7 @@ export default function MobileRedesignPreview({
                     setShowAccount(false);
                     openDealAlert(null);
                 }}
+                dealAlertsEnabled={PUBLIC_DEAL_ALERTS_ENABLED}
                 guestFavorites={guestFavoriteSnapshots}
                 onFavoriteRemoved={flightId => {
                     if (!favorites.has(flightId)) return;
@@ -3870,15 +3880,17 @@ export default function MobileRedesignPreview({
                 }}
             />
 
-            <MobileDealAlertSheet
-                open={showDealAlert}
-                initialDeparture={departure}
-                initialRegion={region}
-                initialMaxPrice={maxPrice || 200_000}
-                initialRoute={alertRouteTarget}
-                onSaveSearchCondition={account.status === 'authenticated' ? saveAlertSearchCondition : undefined}
-                onClose={closeDealAlert}
-            />
+            {PUBLIC_DEAL_ALERTS_ENABLED && (
+                <MobileDealAlertSheet
+                    open={showDealAlert}
+                    initialDeparture={departure}
+                    initialRegion={region}
+                    initialMaxPrice={maxPrice || 200_000}
+                    initialRoute={alertRouteTarget}
+                    onSaveSearchCondition={account.status === 'authenticated' ? saveAlertSearchCondition : undefined}
+                    onClose={closeDealAlert}
+                />
+            )}
 
             {toast && <div className={styles.toast} role="status">{toast}</div>}
         </Root>

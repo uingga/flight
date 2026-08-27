@@ -162,11 +162,6 @@ export default function DropPage({ searchParams }: { searchParams?: { preview?: 
                         })}
                     </div>
                     {drop.closing && <p className={styles.editorClosing}>{drop.closing}</p>}
-                    <section className={styles.alertCta}>
-                        <h2>떠날 만한 표가 없나요? 좋은 표만 골라서 알려드려요</h2>
-                        <p>출발지·지역·예산만 골라두세요. 아무 표나 울리지 않고, 가격과 일정이 좋은 표만 보내드려요.</p>
-                        <Link href="/?dealAlert=1" className={styles.primaryButton}>원하는 특가 알림 받기</Link>
-                    </section>
                     <aside className={styles.notice}>가격과 좌석은 수집 시점 기준이며 판매처에서 달라질 수 있습니다. 결제 전 최종 금액, 수하물, 환불 규정을 확인하세요.</aside>
                 </article>
             )}

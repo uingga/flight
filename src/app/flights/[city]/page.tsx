@@ -134,10 +134,6 @@ export default function CityFlightsPage({ params }: { params: { city: string } }
                     좌석이 적고 예고 없이 종료됩니다. 위 가격과 좌석 수는 {checkedLabel} 수집 기준이며,
                     결제 전 판매처에서 최종 금액·수하물·환불 규정을 확인하세요.
                 </p>
-                <p>
-                    조건에 맞는 표가 나올 때만 알림을 받고 싶다면{' '}
-                    <Link href="/?dealAlert=1">알림을 설정</Link>해 두세요.
-                </p>
             </section>
 
             {others.length > 0 && (

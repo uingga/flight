@@ -19,6 +19,7 @@ interface AccountSheetProps {
     onApplySearch: (filters: AccountSearchFilters) => void;
     onOpenFlight: (flightId: string) => void;
     onOpenAlert: () => void;
+    dealAlertsEnabled?: boolean;
     onFavoriteRemoved: (flightId: string) => void;
     guestFavorites?: AccountFlightSnapshot[];
 }
@@ -72,7 +73,7 @@ function savedSearchDateLabel(filters: AccountSearchFilters) {
 }
 
 export default function AccountSheet({
-    open, onClose, account, onApplySearch, onOpenFlight, onOpenAlert, onFavoriteRemoved, guestFavorites = [],
+    open, onClose, account, onApplySearch, onOpenFlight, onOpenAlert, onFavoriteRemoved, guestFavorites = [], dealAlertsEnabled = true,
 }: AccountSheetProps) {
     const [loginEmail, setLoginEmail] = useState('');
     const [code, setCode] = useState('');
@@ -254,11 +255,13 @@ export default function AccountSheet({
                             <button type="button" onClick={() => setTab('searches')}><strong>{account.savedSearches.length}</strong><span>다시 볼 조건</span></button>
                         </div>
 
-                        <div className={styles.saveBox}>
-                            <div><strong>특가 알림</strong><span>출발지 · 지역 · 예산</span></div>
-                            <button type="button" className={styles.alertSetupButton} onClick={onOpenAlert}>알림 조건 만들기</button>
-                            <small className={styles.saveHint}>여기서 만든 조건은 다음에도 다시 볼 수 있게 함께 저장해요.</small>
-                        </div>
+                        {dealAlertsEnabled && (
+                            <div className={styles.saveBox}>
+                                <div><strong>특가 알림</strong><span>출발지 · 지역 · 예산</span></div>
+                                <button type="button" className={styles.alertSetupButton} onClick={onOpenAlert}>알림 조건 만들기</button>
+                                <small className={styles.saveHint}>여기서 만든 조건은 다음에도 다시 볼 수 있게 함께 저장해요.</small>
+                            </div>
+                        )}
 
                         <nav className={styles.tabs} aria-label="내 여행 목록">
                             <button type="button" className={tab === 'favorites' ? styles.activeTab : ''} onClick={() => setTab('favorites')}>찜한 표</button>
@@ -291,7 +294,9 @@ export default function AccountSheet({
                                         <button type="button" className={styles.deleteRow} disabled={busy} aria-label={`${item.name} 삭제`} onClick={() => void deleteSavedSearch(item.id)}>×</button>
                                     </div>
                                 ))
-                                : <p className={styles.empty}>특가 알림을 만들면 같은 조건을 여기서 다시 볼 수 있어요.</p>)}
+                                : <p className={styles.empty}>{dealAlertsEnabled
+                                    ? '특가 알림을 만들면 같은 조건을 여기서 다시 볼 수 있어요.'
+                                    : '저장해 둔 검색 조건이 여기에 모여요.'}</p>)}
                         </div>
                         {error && <p className={styles.error}>{error}</p>}
                         <div className={styles.accountFooter}>
