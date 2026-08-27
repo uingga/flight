@@ -610,6 +610,9 @@ export default function Dashboard() {
         if (dep) shareParams.set('dep', dep);
         if (arr) shareParams.set('arr', arr);
         if (dateRaw) shareParams.set('date', dateRaw);
+        shareParams.set('utm_source', 'user_share');
+        shareParams.set('utm_medium', 'referral');
+        shareParams.set('utm_campaign', 'tikitikit_user_share');
         const queryStr = shareParams.toString() ? `?${shareParams.toString()}` : '';
         const siteUrl = `${window.location.origin}/share/${encodeURIComponent(flight.id)}${queryStr}`;
         return {

@@ -2451,6 +2451,85 @@
 .operationsOrderHistory { order: 5; }
 .operationsOrderMix { order: 6; }
 
+.behaviorSummary {
+    overflow: hidden;
+    border: 1px solid #e4e7ec;
+    border-radius: 14px;
+    background: #fff;
+}
+
+.behaviorSummaryHead,
+.behaviorSummaryRow {
+    display: grid;
+    grid-template-columns: 112px repeat(3, minmax(92px, 1fr)) 112px;
+    align-items: center;
+}
+
+.behaviorSummaryHead {
+    min-height: 35px;
+    padding: 0 16px;
+    border-bottom: 1px solid #e8ebef;
+    background: #f7f8fa;
+    color: #7f8895;
+    font-size: 0.65rem;
+}
+
+.behaviorSummaryHead span:not(:first-child) { text-align: right; }
+
+.behaviorSummaryRow {
+    min-height: 70px;
+    padding: 0 16px;
+    border-bottom: 1px solid #edf0f3;
+}
+
+.behaviorSummaryRow header,
+.behaviorSummaryStage,
+.behaviorSummaryResult {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.behaviorSummaryRow header strong {
+    color: #202a38;
+    font-size: 0.9rem;
+}
+
+.behaviorSummaryRow header small,
+.behaviorSummaryStage span,
+.behaviorSummaryResult span {
+    color: #8a929e;
+    font-size: 0.62rem;
+}
+
+.behaviorSummaryStage,
+.behaviorSummaryResult { align-items: flex-end; }
+.behaviorSummaryStage span,
+.behaviorSummaryResult span { display: none; }
+
+.behaviorSummaryStage strong,
+.behaviorSummaryResult strong {
+    color: #303948;
+    font-size: 1rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.behaviorSummaryStage small {
+    color: #89919d;
+    font-size: 0.63rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.behaviorSummaryResult {
+    margin-left: 12px;
+    padding: 8px 10px;
+    border-radius: 9px;
+    background: #fff1f4;
+}
+
+.behaviorSummaryResult strong { color: #d92b4c; }
+
 .behaviorGrid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -2619,8 +2698,9 @@
 .sampleReady { color: #478060; }
 
 .behaviorFootnote {
-    grid-column: 1 / -1;
     margin: 0;
+    padding: 10px 16px;
+    background: #fafbfc;
     color: #8b939f;
     font-size: 0.69rem;
     line-height: 1.55;
@@ -3429,32 +3509,65 @@
 .signalCardWarn { border-color: #f0c9c3; background: #fff8f6; }
 .signalCardWarn strong { color: #c43d30; }
 
-.trendChart {
-    display: flex;
-    min-height: 215px;
-    align-items: flex-end;
-    gap: 5px;
-    padding: 16px 12px 10px;
+.visitorTrend {
+    overflow: hidden;
     border: 1px solid #e5e8ec;
     border-radius: 13px;
     background: #fbfcfd;
 }
 
+.visitorTrendSelected {
+    display: flex;
+    min-height: 46px;
+    align-items: baseline;
+    gap: 8px;
+    padding: 12px 14px 8px;
+    color: #727c89;
+    font-size: 0.7rem;
+}
+
+.visitorTrendSelected strong {
+    color: #273140;
+    font-size: 1.08rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.visitorTrendSelected small {
+    margin-left: auto;
+    color: #939aa5;
+    font-size: 0.64rem;
+}
+
+.trendChart {
+    display: flex;
+    min-height: 164px;
+    align-items: flex-end;
+    gap: 3px;
+    padding: 4px 12px 8px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+}
+
 .trendCol {
-    flex: 1 0 18px;
-    min-width: 18px;
-    height: 184px;
+    flex: 1 1 0;
+    min-width: 0;
+    height: 145px;
+    padding: 0;
+    border: 0;
+    background: transparent;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: flex-end;
-    gap: 4px;
+    gap: 5px;
+    cursor: pointer;
 }
 
 .trendTrack {
     width: 100%;
-    max-width: 18px;
-    height: 138px;
+    max-width: 20px;
+    height: 118px;
     display: flex;
     align-items: flex-end;
 }
@@ -3464,14 +3577,29 @@
     width: 100%;
     min-height: 3px;
     border-radius: 4px 4px 1px 1px;
-    background: #ff5b78;
+    background: #d8dde4;
+    transition: background 140ms ease, transform 140ms ease;
 }
 
-.trendCount,
 .trendDate {
     color: #858e9a;
-    font-size: 0.58rem;
+    font-size: 0.57rem;
     font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.trendCol:hover .trendBar,
+.trendColSelected .trendBar {
+    background: #ff385c;
+}
+
+.trendColSelected .trendBar { transform: scaleX(1.08); }
+
+.trendHint {
+    margin: 0;
+    padding: 0 14px 10px;
+    color: #9aa1ab;
+    font-size: 0.61rem;
 }
 
 .analyticsToggle {
@@ -3748,6 +3876,29 @@
     .section { margin-bottom: 10px; scroll-margin-top: 110px; }
     .sectionHeading { gap: 10px; }
 
+    .behaviorSummaryHead { display: none; }
+    .behaviorSummaryRow {
+        grid-template-columns: 52px repeat(3, minmax(0, 1fr));
+        min-height: 0;
+        gap: 8px;
+        padding: 12px;
+    }
+    .behaviorSummaryRow header { grid-row: 1 / 3; align-self: start; }
+    .behaviorSummaryStage { align-items: flex-start; }
+    .behaviorSummaryStage span { display: block; }
+    .behaviorSummaryStage strong { font-size: 0.92rem; }
+    .behaviorSummaryResult {
+        grid-column: 2 / 5;
+        flex-direction: row;
+        align-items: baseline;
+        justify-content: flex-end;
+        gap: 7px;
+        margin: 0;
+        padding: 6px 8px;
+    }
+    .behaviorSummaryResult span { display: block; }
+    .behaviorFootnote { padding: 9px 12px; font-size: 0.64rem; }
+
     .behaviorCard { padding: 14px; }
     .behaviorSignals { grid-template-columns: 1fr 1fr; }
     .compactStats,
@@ -3771,9 +3922,9 @@
     }
 
     .reportActions { grid-column: 1 / -1; }
-    .trendChart { margin-inline: -4px; gap: 3px; }
+    .trendChart { gap: 2px; padding-inline: 6px; }
     .trendCount { display: none; }
-    .trendCol { min-width: 15px; }
+    .trendCol { min-width: 0; }
 }
 
 @media (max-width: 440px) {
@@ -3785,6 +3936,14 @@
     .segmentGrid,
     .analysisGrid,
     .candidateSummary { grid-template-columns: 1fr; }
+
+    .trendSignals { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .trendSignals .signalCard { min-height: 86px; padding: 11px; }
+    .visitorTrendSelected { padding-inline: 11px; }
+    .visitorTrendSelected small { display: none; }
+    .trendChart { min-height: 150px; }
+    .trendCol { height: 132px; }
+    .trendTrack { height: 106px; }
 
     .segmentCard dl { grid-template-columns: 1fr 1fr; }
     .linkHealthSummary { grid-template-columns: 1fr 1fr; }

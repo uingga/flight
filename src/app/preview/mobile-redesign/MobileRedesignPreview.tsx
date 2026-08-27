@@ -2425,7 +2425,12 @@ export default function MobileRedesignPreview({
     };
 
     const shareFlight = async (flight: Flight) => {
-        const url = `${window.location.origin}/s/${encodeURIComponent(encodeShareId(flight.id))}`;
+        const shareParams = new URLSearchParams({
+            utm_source: 'user_share',
+            utm_medium: 'referral',
+            utm_campaign: 'tikitikit_user_share',
+        });
+        const url = `${window.location.origin}/s/${encodeURIComponent(encodeShareId(flight.id))}?${shareParams.toString()}`;
         const discountRate = getAverageDiscountRate(flight, interparkPrices);
         const isEmergencyShare = discountRate >= 30
             || (flight.id === featuredPick?.flight.id && discountRate >= 20);

@@ -10,8 +10,8 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
     const flightId = decodeShareCode(decodeURIComponent(code));
     if (!flightId) return NextResponse.redirect(new URL('/', request.url), 302);
 
-    return NextResponse.redirect(
-        new URL(`/share/${encodeURIComponent(flightId)}`, request.url),
-        307,
-    );
+    const destination = new URL(`/share/${encodeURIComponent(flightId)}`, request.url);
+    request.nextUrl.searchParams.forEach((value, key) => destination.searchParams.set(key, value));
+
+    return NextResponse.redirect(destination, 307);
 }

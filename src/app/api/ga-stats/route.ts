@@ -49,7 +49,23 @@ const CHANNEL_LABELS: Record<string, string> = {
     'Organic Social': 'SNS',
     'Paid Search': '검색 광고',
     'Email': '이메일',
-    'Unassigned': '분류 안 됨',
+    'Unassigned': '출처 확인 불가',
+};
+
+const UNSET_DIMENSION_VALUES = new Set(['', '(not set)', '(값 없음)', '(none)']);
+const isUnsetDimension = (value: string) => UNSET_DIMENSION_VALUES.has(value.trim().toLowerCase());
+
+const inferChannelFromSource = (sourceValue: string, mediumValue: string): string | null => {
+    const source = sourceValue.trim().toLowerCase();
+    const medium = mediumValue.trim().toLowerCase();
+    if (source === '(direct)' && (medium === '(none)' || medium === '(not set)')) return '직접 방문';
+    if (isUnsetDimension(source) || isUnsetDimension(medium)) return null;
+    if (medium.includes('organic')) return '검색';
+    if (medium === 'referral') return '외부 링크';
+    if (medium.includes('social') || ['instagram', 'threads', 'facebook', 'twitter', 'x.com', 't.co'].some(value => source.includes(value))) return 'SNS';
+    if (['cpc', 'ppc', 'paidsearch', 'paid_search'].includes(medium)) return '검색 광고';
+    if (medium === 'email') return '이메일';
+    return '기타 유입';
 };
 
 interface CachedPayload { at: number; days: number; body: unknown }
@@ -152,7 +168,7 @@ async function buildStats(config: Ga4Config, days: number) {
         returningRequest(previousDateRanges),
     ]);
 
-    const [agencyReport, routeReport, entryReport, detailEntryReport, channelReport, referralReport, campaignTrafficReport, campaignBookingReport, leadTimeReport, rangeReport, dateMethodReport, presetReport, repeatBehaviorReport] = await Promise.all([
+    const [agencyReport, routeReport, entryReport, detailEntryReport, channelReport, unassignedChannelReport, referralReport, campaignTrafficReport, campaignBookingReport, leadTimeReport, rangeReport, dateMethodReport, presetReport, repeatBehaviorReport] = await Promise.all([
         optional('여행사별 예약 클릭', warnings, () => runReport(config, {
             dateRanges,
             dimensions: [{ name: 'customEvent:travel_agency' }],
@@ -191,6 +207,19 @@ async function buildStats(config: Ga4Config, days: number) {
             metrics: [{ name: 'sessions' }, { name: 'activeUsers' }],
             orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
             limit: 12,
+        })),
+        optional('출처 확인 불가 원인', warnings, () => runReport(config, {
+            dateRanges,
+            dimensions: [{ name: 'sessionDefaultChannelGroup' }, { name: 'sessionSource' }, { name: 'sessionMedium' }],
+            metrics: [{ name: 'sessions' }, { name: 'activeUsers' }],
+            dimensionFilter: {
+                filter: {
+                    fieldName: 'sessionDefaultChannelGroup',
+                    stringFilter: { value: 'Unassigned', matchType: 'EXACT', caseSensitive: false },
+                },
+            },
+            orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
+            limit: 50,
         })),
         optional('외부 유입 사이트', warnings, () => runReport(config, {
             dateRanges,
@@ -265,15 +294,22 @@ async function buildStats(config: Ga4Config, days: number) {
         })),
     ]);
 
-    // YYYYMMDD → YYYY-MM-DD
-    const trend = (trendReport.rows || []).map(row => {
+    // GA4는 방문이 0인 날짜를 종종 행 자체에서 빼므로, 모바일 그래프가 정확히 30칸이 되도록 채운다.
+    const trendByDate = new Map((trendReport.rows || []).map(row => {
         const raw = dim(row);
-        return {
-            date: `${raw.slice(0, 4)}-${raw.slice(4, 6)}-${raw.slice(6, 8)}`,
+        const date = `${raw.slice(0, 4)}-${raw.slice(4, 6)}-${raw.slice(6, 8)}`;
+        return [date, {
+            date,
             users: num(row, 0),
             pageViews: num(row, 1),
             sessions: num(row, 2),
-        };
+        }] as const;
+    }));
+    const kstNow = new Date(Date.now() + (9 * 60 * 60 * 1000));
+    const trendEndUtc = Date.UTC(kstNow.getUTCFullYear(), kstNow.getUTCMonth(), kstNow.getUTCDate() - 1);
+    const trend = Array.from({ length: days }, (_, index) => {
+        const date = new Date(trendEndUtc - ((days - 1 - index) * 24 * 60 * 60 * 1000)).toISOString().slice(0, 10);
+        return trendByDate.get(date) || { date, users: 0, pageViews: 0, sessions: 0 };
     });
 
     const summary = (report: ReportResponse) => ({
@@ -377,6 +413,7 @@ async function buildStats(config: Ga4Config, days: number) {
         }));
 
     const campaignLabel = (name: string) => {
+        if (name === 'tikitikit_user_share') return '사용자 공유 항공권';
         const drop = name.match(/^tikitikit_drop_(\d+)$/);
         return drop ? `티키티킷 드롭 ${Number(drop[1])}` : name;
     };
@@ -384,6 +421,7 @@ async function buildStats(config: Ga4Config, days: number) {
         naver_blog: '네이버 블로그',
         travel_community: '여행 커뮤니티',
         te31: 'TE31',
+        user_share: '사용자 공유',
     }[source] || source);
     const referralSourceLabel = (source: string) => {
         const normalized = source.toLowerCase().replace(/^www\./, '');
@@ -429,7 +467,60 @@ async function buildStats(config: Ga4Config, days: number) {
     };
 
     const measured = (items: Array<{ label: string; count: number }> | null) =>
-        items === null ? null : items.filter(item => item.label !== '(not set)' && item.label !== '(값 없음)');
+        items === null ? null : items.filter(item => !isUnsetDimension(item.label));
+
+    const channels = (() => {
+        if (channelReport === null) return null;
+        const grouped = new Map<string, { label: string; sessions: number; users: number; note?: string }>();
+        const add = (label: string, sessions: number, users: number, note?: string) => {
+            const previous = grouped.get(label);
+            grouped.set(label, {
+                label,
+                sessions: (previous?.sessions || 0) + sessions,
+                users: (previous?.users || 0) + users,
+                note: previous?.note || note,
+            });
+        };
+
+        let rawUnassignedSessions = 0;
+        let rawUnassignedUsers = 0;
+        (channelReport.rows || []).forEach(row => {
+            const rawChannel = dim(row);
+            if (rawChannel === 'Unassigned' || isUnsetDimension(rawChannel)) {
+                rawUnassignedSessions += num(row, 0);
+                rawUnassignedUsers += num(row, 1);
+                return;
+            }
+            add(CHANNEL_LABELS[rawChannel] || rawChannel, num(row, 0), num(row, 1));
+        });
+
+        if (rawUnassignedSessions > 0) {
+            if (unassignedChannelReport === null || !(unassignedChannelReport.rows || []).length) {
+                add('출처 확인 불가', rawUnassignedSessions, rawUnassignedUsers, '브라우저·앱에서 출처 정보가 전달되지 않음');
+            } else {
+                let explainedSessions = 0;
+                let explainedUsers = 0;
+                (unassignedChannelReport.rows || []).forEach(row => {
+                    const inferred = inferChannelFromSource(dim(row, 1), dim(row, 2));
+                    const sessions = num(row, 0);
+                    const users = num(row, 1);
+                    explainedSessions += sessions;
+                    explainedUsers += users;
+                    add(
+                        inferred || '출처 확인 불가',
+                        sessions,
+                        users,
+                        inferred ? undefined : '브라우저·앱에서 출처 정보가 전달되지 않음',
+                    );
+                });
+                if (explainedSessions < rawUnassignedSessions) {
+                    add('출처 확인 불가', rawUnassignedSessions - explainedSessions, Math.max(0, rawUnassignedUsers - explainedUsers), '일부 과거 방문은 출처를 되살릴 수 없음');
+                }
+            }
+        }
+
+        return Array.from(grouped.values()).sort((a, b) => b.sessions - a.sessions);
+    })();
 
     const dateFilterEmpty = events.find(entry => entry.name === 'date_filter_empty');
     const dateFilter = events.find(entry => entry.name === 'date_filter');
@@ -481,15 +572,11 @@ async function buildStats(config: Ga4Config, days: number) {
             alertSetupUsers: alertSetup?.users ?? 0,
             alertSetupRate: rate(alertSetup?.users ?? 0),
         },
-        bookingByAgency: list(agencyReport),
-        bookingByRoute: list(routeReport),
-        alertByEntry: list(entryReport, ENTRY_LABELS),
-        detailByEntry: list(detailEntryReport, ENTRY_LABELS),
-        channels: channelReport === null ? null : (channelReport.rows || []).map(row => ({
-            label: CHANNEL_LABELS[dim(row)] || dim(row) || '분류 안 됨',
-            sessions: num(row, 0),
-            users: num(row, 1),
-        })),
+        bookingByAgency: measured(list(agencyReport)),
+        bookingByRoute: measured(list(routeReport)),
+        alertByEntry: measured(list(entryReport, ENTRY_LABELS)),
+        detailByEntry: measured(list(detailEntryReport, ENTRY_LABELS)),
+        channels,
         referrals: referralReport === null ? null : (referralReport.rows || []).map(row => ({
             source: dim(row),
             label: referralSourceLabel(dim(row)),

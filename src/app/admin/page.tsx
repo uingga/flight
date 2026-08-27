@@ -411,7 +411,7 @@ interface GaStatsData {
     bookingByRoute: GaListItem[] | null;
     alertByEntry: GaListItem[] | null;
     detailByEntry: GaListItem[] | null;
-    channels: Array<{ label: string; sessions: number; users: number }> | null;
+    channels: Array<{ label: string; sessions: number; users: number; note?: string }> | null;
     referrals: Array<{ source: string; label: string; sessions: number; users: number }> | null;
     campaigns: Array<{
         name: string;
@@ -599,71 +599,97 @@ function PeriodTable({ rows }: { rows: PeriodRow[] }) {
 
 function BehaviorSnapshot({ activity }: { activity: NonNullable<GaStatsData['activityPeriods']> }) {
     const periods = [
-        { key: 'today', title: '오늘 (1일)', caption: '현재까지 · 집계 중', data: activity.today, sample: 10 },
-        { key: 'recent7', title: '최근 7일', caption: '어제까지 누적', data: activity.recent7, sample: 30 },
-        { key: 'current', title: '최근 30일', caption: '어제까지 누적', data: activity.current, sample: 30 },
+        { key: 'today', title: '오늘', caption: '현재까지', data: activity.today },
+        { key: 'recent7', title: '7일', caption: '어제까지', data: activity.recent7 },
+        { key: 'current', title: '30일', caption: '어제까지', data: activity.current },
     ] as const;
 
     const rate = (value: number | null) => value === null ? '—' : `${value}%`;
 
     return (
-        <div className={styles.behaviorGrid}>
-            {periods.map(period => {
-                const lowSample = period.data.visitors < period.sample || period.data.detailOpenUsers < 10;
-                return (
-                    <article key={period.key} className={styles.behaviorCard}>
-                        <header className={styles.behaviorCardHead}>
-                            <strong>{period.title}</strong>
-                            <span>{period.caption}</span>
-                        </header>
-                        <div className={styles.behaviorSteps}>
-                            <div>
-                                <span>방문</span>
-                                <strong>{period.data.visitors.toLocaleString()}명</strong>
-                                <small>기준 100%</small>
-                            </div>
-                            <span className={styles.behaviorArrow} aria-hidden="true">→</span>
-                            <div>
-                                <span>상세 열람</span>
-                                <strong>{period.data.detailOpenUsers.toLocaleString()}명</strong>
-                                <small>방문자의 {rate(period.data.detailOpenRate)}</small>
-                            </div>
-                            <span className={styles.behaviorArrow} aria-hidden="true">→</span>
-                            <div>
-                                <span>예약 페이지 이동</span>
-                                <strong>{period.data.bookingClickUsers.toLocaleString()}명</strong>
-                                <small>방문자의 {rate(period.data.bookingClickRate)}</small>
-                            </div>
-                        </div>
-                        <div className={styles.behaviorConversion}>
-                            <div>
-                                <span>최종 예약 이동률</span>
-                                <small>전체 방문자 대비</small>
-                            </div>
-                            <strong>{rate(period.data.bookingClickRate)}</strong>
-                        </div>
-                        <div className={styles.behaviorReference}>
-                            <span>참고 · 상세 열람자 대비 예약 이동 사용자</span>
-                            <strong>{rate(period.data.detailToBookingRate)}</strong>
-                        </div>
-                        <div className={styles.behaviorSignals}>
-                            <span>알림 등록 <b>{period.data.alertSetupUsers.toLocaleString()}명</b><small>방문자의 {rate(period.data.alertSetupRate)}</small></span>
-                            <span>항공권 링크 복사 <b>{period.data.shareUsers.toLocaleString()}명</b></span>
-                        </div>
-                        {period.data.alertSetupUsers > 0 && (
-                            <p className={styles.behaviorBreakdown}>
-                                노선 알림 {period.data.routeAlertSetupUsers.toLocaleString()}명 · 여행지 미지정 알림 {period.data.dealAlertSetupUsers.toLocaleString()}명
-                            </p>
-                        )}
-                        <p className={lowSample ? styles.sampleCaution : styles.sampleReady}>
-                            {lowSample ? '표본이 적어 비율은 참고만 하세요.' : '흐름의 방향을 볼 수 있는 정도로 쌓였어요.'}
-                        </p>
-                    </article>
-                );
-            })}
-            <p className={styles.behaviorFootnote}>
-                세 단계의 비율은 모두 전체 방문자 수를 기준으로 합니다. 상세 열람자 대비 수치는 두 사용자 수를 단순 비교한 참고값이며, 같은 사람이 같은 방문에서 순서대로 행동했는지까지 연결한 전환율은 아닙니다.
-            </p>
+        <div className={styles.behaviorSummary}>
+            <div className={styles.behaviorSummaryHead} aria-hidden="true">
+                <span>기간</span>
+                <span>방문</span>
+                <span>상세 열람</span>
+                <span>예약 이동</span>
+                <span>상세 → 예약</span>
+            </div>
+            {periods.map(period => (
+                <article key={period.key} className={styles.behaviorSummaryRow}>
+                    <header>
+                        <strong>{period.title}</strong>
+                        <small>{period.caption}</small>
+                    </header>
+                    <div className={styles.behaviorSummaryStage}>
+                        <span>방문</span>
+                        <strong>{period.data.visitors.toLocaleString()}명</strong>
+                        <small>100%</small>
+                    </div>
+                    <div className={styles.behaviorSummaryStage}>
+                        <span>상세 열람</span>
+                        <strong>{period.data.detailOpenUsers.toLocaleString()}명</strong>
+                        <small>{rate(period.data.detailOpenRate)}</small>
+                    </div>
+                    <div className={styles.behaviorSummaryStage}>
+                        <span>예약 이동</span>
+                        <strong>{period.data.bookingClickUsers.toLocaleString()}명</strong>
+                        <small>{rate(period.data.bookingClickRate)}</small>
+                    </div>
+                    <div className={styles.behaviorSummaryResult}>
+                        <span>상세 → 예약</span>
+                        <strong>{rate(period.data.detailToBookingRate)}</strong>
+                    </div>
+                </article>
+            ))}
+            <p className={styles.behaviorFootnote}>상세·예약 비율은 전체 방문자 대비입니다. ‘상세 → 예약’은 두 사용자 수를 비교한 참고값입니다.</p>
+        </div>
+    );
+}
+
+function VisitorTrendChart({ trend }: { trend: GaStatsData['trend'] }) {
+    const [selectedIndex, setSelectedIndex] = useState(() => Math.max(0, trend.length - 1));
+
+    useEffect(() => {
+        setSelectedIndex(Math.max(0, trend.length - 1));
+    }, [trend.length]);
+
+    if (trend.length === 0) return <div className={styles.emptyState}>일별 방문 기록이 아직 없어요.</div>;
+
+    const max = Math.max(...trend.map(point => point.users), 1);
+    const selected = trend[Math.min(selectedIndex, trend.length - 1)];
+    const tickIndexes = new Set([0, 7, 14, 21, trend.length - 1].filter(index => index < trend.length));
+    const shortDate = (date: string) => {
+        const [, month, day] = date.split('-').map(Number);
+        return `${month}/${day}`;
+    };
+    const selectedDate = shortDate(selected.date).replace('/', '월 ') + '일';
+
+    return (
+        <div className={styles.visitorTrend}>
+            <div className={styles.visitorTrendSelected} aria-live="polite">
+                <span>{selectedDate}</span>
+                <strong>{selected.users.toLocaleString()}명</strong>
+                <small>방문 {selected.sessions.toLocaleString()}회</small>
+            </div>
+            <div className={styles.trendChart} aria-label="최근 30일 일별 방문자">
+                {trend.map((point, index) => (
+                    <button
+                        key={point.date}
+                        type="button"
+                        className={index === selectedIndex ? `${styles.trendCol} ${styles.trendColSelected}` : styles.trendCol}
+                        onClick={() => setSelectedIndex(index)}
+                        aria-label={`${point.date}, 방문자 ${point.users}명`}
+                        aria-pressed={index === selectedIndex}
+                    >
+                        <span className={styles.trendTrack}>
+                            <span className={styles.trendBar} style={{ height: `${Math.max(3, (point.users / max) * 100)}%` }} />
+                        </span>
+                        <span className={styles.trendDate}>{tickIndexes.has(index) ? shortDate(point.date) : ''}</span>
+                    </button>
+                ))}
+            </div>
+            <p className={styles.trendHint}>막대를 누르면 날짜별 방문자를 볼 수 있어요.</p>
         </div>
     );
 }
@@ -1334,8 +1360,8 @@ export default function AdminPage() {
                 <section className={styles.section} id="overview-performance">
                     <div className={styles.sectionHeading}>
                         <div>
-                            <h2>오늘·7일·30일 방문과 예약</h2>
-                            <p>오늘은 아직 집계 중이고, 7일과 30일은 어제까지 끝난 날짜만 계산합니다.</p>
+                            <h2>오늘·7일·30일 방문 흐름</h2>
+                            <p>몇 명이 들어와 상세를 보고 예약 페이지까지 갔는지 한눈에 비교합니다.</p>
                         </div>
                     </div>
                     {gaStatsError ? (
@@ -2845,8 +2871,8 @@ export default function AdminPage() {
                 <section className={styles.section} id="visitor-flow">
                     <div className={styles.sectionHeading}>
                         <div>
-                            <h2>방문 → 상세 열람 → 예약 페이지 이동</h2>
-                            <p>조회수가 아닌 사람 수를 기준으로, 모든 비율을 전체 방문자와 비교합니다.</p>
+                            <h2>방문 흐름 요약</h2>
+                            <p>방문 → 상세 열람 → 예약 페이지 이동을 사람 수로 비교합니다.</p>
                         </div>
                     </div>
                     {gaStatsError ? (
@@ -2866,10 +2892,10 @@ export default function AdminPage() {
                             <div className={styles.sectionHeading}>
                                 <div>
                                     <h2>최근 30일 방문자 추이</h2>
-                                    <p>오늘은 제외했습니다. 막대 위 숫자는 그날 방문한 사람 수입니다.</p>
+                                    <p>오늘은 제외했습니다. 막대를 누르면 그날 방문한 사람 수가 위에 표시됩니다.</p>
                                 </div>
                             </div>
-                            <div className={styles.signalGridFour}>
+                            <div className={`${styles.signalGridFour} ${styles.trendSignals}`}>
                                 <div className={styles.signalCard}>
                                     <span>최근 7일 방문자</span>
                                     <strong>{gaStats.periods.recent7.users.toLocaleString()}명</strong>
@@ -2894,22 +2920,7 @@ export default function AdminPage() {
                                     <small>{gaStats.dateFilter.picks.toLocaleString()}번 선택 중 {gaStats.dateFilter.emptyPicks.toLocaleString()}번</small>
                                 </div>
                             </div>
-                            {(() => {
-                                const max = Math.max(...gaStats.trend.map(point => point.users), 1);
-                                return (
-                                    <div className={styles.trendChart} aria-label="최근 30일 일별 방문자">
-                                        {gaStats.trend.map(point => (
-                                            <div key={point.date} className={styles.trendCol} title={`${point.date} · ${point.users}명`}>
-                                                <span className={styles.trendCount}>{point.users || ''}</span>
-                                                <div className={styles.trendTrack}>
-                                                    <div className={styles.trendBar} style={{ height: `${Math.max(3, (point.users / max) * 100)}%` }} />
-                                                </div>
-                                                <span className={styles.trendDate}>{point.date.slice(5).replace('-', '/')}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                );
-                            })()}
+                            <VisitorTrendChart trend={gaStats.trend} />
                         </section>
 
                         <section className={styles.section} id="visitor-segments">
@@ -2951,7 +2962,7 @@ export default function AdminPage() {
                             <div className={styles.analysisGrid}>
                                 <div className={styles.analysisPanel}>
                                     <h3>들어온 경로</h3>
-                                    <RankList items={(gaStats.channels || []).slice(0, 5).map(item => ({ label: item.label, value: `${item.users.toLocaleString()}명`, note: `방문 ${item.sessions.toLocaleString()}회` }))} empty="유입 경로가 아직 없어요." />
+                                    <RankList items={(gaStats.channels || []).slice(0, 5).map(item => ({ label: item.label, value: `${item.users.toLocaleString()}명`, note: item.note ? `${item.note} · 방문 ${item.sessions.toLocaleString()}회` : `방문 ${item.sessions.toLocaleString()}회` }))} empty="유입 경로가 아직 없어요." />
                                 </div>
                                 <div className={styles.analysisPanel}>
                                     <h3>홍보글·캠페인</h3>
