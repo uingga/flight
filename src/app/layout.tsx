@@ -27,7 +27,7 @@ export const metadata: Metadata = {
         template: '%s | 티키티킷',
         default: '지금 나온 땡처리 항공권 | 티키티킷',
     },
-    description: '여행사마다 따로 올라오는 저렴한 표를 한곳에서 확인하세요.',
+    description: '6개 여행사의 땡처리 항공권 가격과 일정을 한곳에서 비교하세요.',
     keywords: [
         '땡처리항공권', '특가항공권', '해외여행', '항공권비교', '티키티킷', 'tikitikit',
         '항공권특가', '해외항공권', '항공권최저가', '저가항공',
@@ -49,8 +49,8 @@ export const metadata: Metadata = {
         canonical: '/',
     },
     openGraph: {
-        title: '지금 나온 땡처리 항공권 | 티키티킷',
-        description: '여행사마다 따로 올라오는 저렴한 표를 한곳에서 확인하세요.',
+        title: '땡처리 항공권은 여기서 먼저 봅니다 | 티키티킷',
+        description: '6개 여행사의 땡처리 항공권 가격과 일정을 한곳에서 비교하세요.',
         url: BASE_URL,
         siteName: '티키티킷',
         images: [
@@ -66,8 +66,8 @@ export const metadata: Metadata = {
     },
     twitter: {
         card: 'summary_large_image',
-        title: '지금 나온 땡처리 항공권 | 티키티킷',
-        description: '여행사마다 따로 올라오는 저렴한 표를 한곳에서 확인하세요.',
+        title: '땡처리 항공권은 여기서 먼저 봅니다 | 티키티킷',
+        description: '6개 여행사의 땡처리 항공권 가격과 일정을 한곳에서 비교하세요.',
         images: ['/opengraph-image'],
     },
     robots: {
@@ -175,7 +175,7 @@ export default function RootLayout({
                                     '@type': 'WebSite',
                                     name: '티키티킷',
                                     url: BASE_URL,
-                                    description: '여행사마다 따로 올라오는 저렴한 표를 한곳에서 확인할 수 있는 서비스',
+                                    description: '6개 여행사의 땡처리 항공권 가격과 일정을 한곳에서 비교하는 서비스',
                                     inLanguage: 'ko',
                                     potentialAction: {
                                         '@type': 'SearchAction',

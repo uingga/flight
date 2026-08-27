@@ -10,6 +10,7 @@ import { getDestinationContext } from '@/lib/destination-contexts';
 import { CITY_TO_AIRPORT, calcFlightTiming, getNaverFlightUrl, normalizeAirline, normalizeCity } from '@/lib/utils/flight-helpers';
 import { getTripcomHotelUrl, getTripcomTrackingId } from '@/lib/utils/tripcom-helpers';
 import { getFlightBookingUrl } from '@/lib/utils/booking-url';
+import { encodeShareId } from '@/lib/share-code';
 import { useDialogFocus } from '@/lib/hooks/use-dialog-focus';
 import { useSwipeToDismiss } from '@/lib/hooks/use-swipe-to-dismiss';
 import { checkIsMobile } from '@/lib/utils/mobile-url';
@@ -645,7 +646,7 @@ const isZeroPtoSchedule = (flight: Flight) => {
     return !!departureDate
         && departureDate.getDay() === 5
         && departureMinutes !== null
-        && departureMinutes >= 18 * 60
+        && departureMinutes >= 20 * 60
         && !!homeArrivalDate
         && homeArrivalDate.getDay() === 0;
 };
@@ -817,6 +818,17 @@ function Icon({ name }: { name: 'sliders' | 'search' | 'star' | 'bookmark' | 'sh
 }
 
 const SERVICE_UPDATE_NOTICE_KEY = 'tikitikit-service-update-20260826-v2';
+const GENERAL_SHARE_COPY = [
+    '🎫 오늘의 이상한 표',
+    '👀 가격이 좀 이상함',
+    '👀 이건 한 번 봐야 함',
+];
+const EMERGENCY_SHARE_COPY = [
+    '🚨 비상!! 비상!!',
+    '🏆 오늘의 이상한 가격',
+    '🕳 가격에 구멍 남',
+    '🤯 담당자가 미쳤어요',
+];
 
 export default function MobileRedesignPreview({
     previewMode = true,
@@ -861,6 +873,7 @@ export default function MobileRedesignPreview({
     const [recentFlightReports, setRecentFlightReports] = useState<Record<string, number>>({});
     const [visibleCount, setVisibleCount] = useState(18);
     const [toast, setToast] = useState('');
+    const [expiredShareNotice, setExpiredShareNotice] = useState<{ arrival: string | null } | null>(null);
     const [showScrollTop, setShowScrollTop] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
     const [filterBarPinned, setFilterBarPinned] = useState(false);
@@ -886,6 +899,7 @@ export default function MobileRedesignPreview({
     const lastFetchAtRef = useRef(0);
     const urlInitializedRef = useRef(false);
     const sharedFlightIdRef = useRef<string | null>(null);
+    const sharedFallbackArrivalRef = useRef<string | null>(null);
     const filterDialogRef = useRef<HTMLElement | null>(null);
     const detailDialogRef = useRef<HTMLElement | null>(null);
     const contactDialogRef = useRef<HTMLElement | null>(null);
@@ -1107,6 +1121,7 @@ export default function MobileRedesignPreview({
         const params = new URLSearchParams(window.location.search);
         const requestedFlight = params.get('flight');
         sharedFlightIdRef.current = requestedFlight;
+        sharedFallbackArrivalRef.current = params.get('arr');
 
         const departureParam = params.get('dep');
         if (/인천|김포|서울|ICN|GMP|SEL/i.test(departureParam || '')) setDeparture('인천/김포');
@@ -1170,7 +1185,8 @@ export default function MobileRedesignPreview({
         }
 
         const params = new URLSearchParams(window.location.search);
-        const fallbackArrival = params.get('arr');
+        const fallbackArrival = sharedFallbackArrivalRef.current || params.get('arr');
+        sharedFallbackArrivalRef.current = null;
         if (fallbackArrival) setQuery(fallbackArrival);
         params.delete('flight');
         const queryString = params.toString();
@@ -1181,9 +1197,7 @@ export default function MobileRedesignPreview({
             '',
             `${window.location.pathname}${queryString ? `?${queryString}` : ''}${window.location.hash}`,
         );
-        setToast(fallbackArrival
-            ? '공유된 표는 내려갔어요. 같은 목적지의 현재 항공권을 보여드려요.'
-            : '공유된 표는 현재 목록에서 내려갔어요.');
+        setExpiredShareNotice({ arrival: fallbackArrival });
     }, [account, flights, loading]);
 
     useEffect(() => {
@@ -2400,16 +2414,36 @@ export default function MobileRedesignPreview({
     };
 
     const shareFlight = async (flight: Flight) => {
-        const shareParams = new URLSearchParams({
-            dep: departureName(flight),
-            arr: stripAirport(flight.arrival.city),
-            date: flight.departure.date.replace(/[^0-9\-.]/g, '').replace(/\./g, '-').replace(/-+$/, ''),
-            price: String(flight.price),
-            airline: flight.airline,
-            source: flight.source,
-        });
-        const url = `${window.location.origin}/share/${encodeURIComponent(flight.id)}?${shareParams.toString()}`;
-        const text = `${departureName(flight)}에서 ${stripAirport(flight.arrival.city)}, 왕복 ${priceText(effectivePrice(flight))}`;
+        const url = `${window.location.origin}/s/${encodeURIComponent(encodeShareId(flight.id))}`;
+        const discountRate = getAverageDiscountRate(flight, interparkPrices);
+        const isEmergencyShare = discountRate >= 30
+            || (flight.id === featuredPick?.flight.id && discountRate >= 20);
+        const routeEntries = (normalizedHistory(priceHistory)[normalizedRoute(flight)] || [])
+            .slice(-60);
+        const isSixtyDayLow = routeEntries.length >= 20
+            && effectivePrice(flight) <= Math.min(...routeEntries.map(entry => entry.minPrice));
+        const contextualCopy: string[] = [];
+        if (isSixtyDayLow) contextualCopy.push('🏆 최근 60일 중 가장 낮은 가격');
+        if (isZeroPtoSchedule(flight)) contextualCopy.push('🏃 0연차 탈출 가능');
+
+        const departureDate = parseDate(flight.departure.date);
+        const departureMinutes = clockMinutes(flight.departure.time);
+        if (departureDate
+            && departureDate.getDay() >= 1
+            && departureDate.getDay() <= 5
+            && departureMinutes !== null
+            && departureMinutes >= 20 * 60) {
+            contextualCopy.push(`🌙 ${flight.departure.time} 퇴근 후 출국`);
+        }
+
+        const seats = flight.availableSeats || Number.parseInt(flight.seats || '', 10) || 0;
+        if (seats > 0 && seats <= 6) contextualCopy.push(`🪑 마지막 ${seats}석 생존`);
+
+        const copyPool = [
+            ...(isEmergencyShare ? EMERGENCY_SHARE_COPY : GENERAL_SHARE_COPY),
+            ...contextualCopy,
+        ];
+        const text = copyPool[Math.floor(Math.random() * copyPool.length)];
         const route = normalizedRoute(flight);
         try {
             await navigator.clipboard.writeText(`${text}\n${url}`);
@@ -2923,6 +2957,32 @@ export default function MobileRedesignPreview({
                             )}
                         </div>
                     </div>
+
+                    {expiredShareNotice
+                        && (!expiredShareNotice.arrival
+                            || normalizeCity(query.trim()) === normalizeCity(expiredShareNotice.arrival))
+                        && (
+                            <div className={styles.expiredShareNotice} role="status">
+                                <span className={styles.expiredShareNoticeIcon} aria-hidden="true">😅</span>
+                                <div className={styles.expiredShareNoticeCopy}>
+                                    <strong>아, 조금 늦었네요.</strong>
+                                    <span>
+                                        공유된 표는 판매가 종료됐어요.<br />
+                                        {expiredShareNotice.arrival
+                                            ? `${stripAirport(expiredShareNotice.arrival)}의 현재 항공권을 대신 보여드려요.`
+                                            : '지금 예약할 수 있는 항공권을 대신 보여드려요.'}
+                                    </span>
+                                </div>
+                                <button
+                                    type="button"
+                                    className={styles.expiredShareNoticeClose}
+                                    aria-label="판매 종료 안내 닫기"
+                                    onClick={() => setExpiredShareNotice(null)}
+                                >
+                                    <Icon name="close" />
+                                </button>
+                            </div>
+                        )}
 
                     {loading && (
                         <div className={styles.loadingList} aria-label="항공권 불러오는 중">

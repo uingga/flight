@@ -264,6 +264,52 @@
 .feedHeading > div { display: flex; align-items: baseline; gap: 7px; }
 .feedHeading h2 { font-size: var(--size-body); line-height: 1.35; font-weight: var(--weight-bold); letter-spacing: -0.02em; }
 .feedHeading div span { color: var(--text-faint); font-size: var(--size-caption); }
+.expiredShareNotice {
+    min-height: 78px;
+    margin: 0 0 12px;
+    padding: 15px 12px 15px 14px;
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    border: 1px solid rgba(255, 56, 92, 0.22);
+    border-radius: 12px;
+    background: var(--brand-soft);
+    animation: expiredShareNoticeIn 240ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes expiredShareNoticeIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.expiredShareNoticeIcon {
+    width: 27px;
+    height: 27px;
+    flex: 0 0 27px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+    font-size: 23px;
+    line-height: 1;
+}
+.expiredShareNoticeCopy { min-width: 0; padding-top: 1px; display: flex; flex: 1; flex-direction: column; gap: 4px; }
+.expiredShareNoticeCopy strong { color: var(--ink); font-size: var(--size-body); line-height: 1.4; font-weight: var(--weight-bold); letter-spacing: -0.02em; }
+.expiredShareNoticeCopy span { color: var(--text-secondary); font-size: var(--size-meta); line-height: 1.45; }
+.expiredShareNoticeClose {
+    width: 30px;
+    height: 30px;
+    margin: -4px -4px 0 0;
+    flex: 0 0 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    color: var(--text-muted);
+}
+.expiredShareNoticeClose:hover { background: rgba(34, 34, 34, 0.06); color: var(--ink); }
+.expiredShareNoticeClose svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
+@media (prefers-reduced-motion: reduce) {
+    .expiredShareNotice { animation: none; }
+}
 .sortSelect { position: relative; flex: 0 0 auto; display: inline-flex; align-items: center; gap: 3px; }
 .sortTrigger {
     height: 32px;
@@ -1259,6 +1305,9 @@
     .feedHeading { min-height: 44px; padding: 0 2px 15px; }
     .feedHeading h2 { font-size: var(--size-section); }
     .feedHeading div span { font-size: var(--size-meta); }
+    .expiredShareNotice { min-height: 72px; margin-bottom: 16px; padding: 15px 16px; align-items: center; }
+    .expiredShareNoticeCopy strong { font-size: var(--size-section); }
+    .expiredShareNoticeCopy span { font-size: var(--size-body); }
     .sortTrigger { height: 34px; padding-right: 8px; padding-left: 11px; }
     .sortMenu { width: 158px; padding: 6px; border-radius: 11px; }
     .sortOption { height: 40px; padding-right: 11px; padding-left: 11px; }

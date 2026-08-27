@@ -16,6 +16,17 @@ type ShareSnapshot = {
     source: string;
 };
 
+type ArchivedFlight = {
+    flight_id: string;
+    source: string;
+    departure_city: string;
+    arrival_city: string;
+    departure_date: string | null;
+    return_date: string | null;
+    airline: string | null;
+    listed_price: number;
+};
+
 function getShareSnapshot(id: string): ShareSnapshot | null {
     return (shareSnapshots as Record<string, ShareSnapshot>)[id] || null;
 }
@@ -39,14 +50,39 @@ async function getFlightById(id: string) {
     return null;
 }
 
-// 가격 포맷
 function formatPrice(price: number): string {
-    if (price >= 10000) {
-        const man = Math.floor(price / 10000);
-        const chun = Math.floor((price % 10000) / 1000);
-        return chun > 0 ? `${man}만${chun}천원` : `${man}만원`;
+    return `${price.toLocaleString('ko-KR')}원`;
+}
+
+async function getArchivedFlightById(id: string): Promise<ArchivedFlight | null> {
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!supabaseUrl || !serviceRoleKey) return null;
+
+    try {
+        const endpoint = new URL(`${supabaseUrl}/rest/v1/flight_price_daily`);
+        endpoint.searchParams.set('flight_id', `eq.${id}`);
+        endpoint.searchParams.set(
+            'select',
+            'flight_id,source,departure_city,arrival_city,departure_date,return_date,airline,listed_price',
+        );
+        endpoint.searchParams.set('order', 'snapshot_date.desc');
+        endpoint.searchParams.set('limit', '1');
+
+        const response = await fetch(endpoint, {
+            headers: {
+                apikey: serviceRoleKey,
+                Authorization: `Bearer ${serviceRoleKey}`,
+            },
+            next: { revalidate: 300 },
+        });
+        if (!response.ok) return null;
+        const rows = await response.json() as ArchivedFlight[];
+        return rows[0] || null;
+    } catch (error) {
+        console.error('Archived flight lookup error:', error);
+        return null;
     }
-    return `${price.toLocaleString()}원`;
 }
 
 // 여행사 이름
@@ -78,37 +114,53 @@ function shortDate(dateStr: string): string {
     return dateStr;
 }
 
+const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
+
+function ogShortDate(dateStr: string): string {
+    if (!dateStr) return '';
+    const match = dateStr.match(/(\d{4})[.-]?(\d{2})[.-]?(\d{2})/);
+    if (!match) return dateStr;
+    const [, year, month, day] = match;
+    const weekday = WEEKDAYS[new Date(`${year}-${month}-${day}T00:00:00+09:00`).getDay()];
+    return `${parseInt(month)}.${parseInt(day)}(${weekday})`;
+}
+
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
     const { id } = await params;
     const sp = await searchParams;
     const decodedId = decodeURIComponent(id);
     const flight = await getFlightById(resolveShareId(decodedId));
+    const archivedFlight = flight ? null : await getArchivedFlightById(resolveShareId(decodedId));
 
     if (!flight) {
         const snapshot = getShareSnapshot(decodeURIComponent(id));
-        const fallbackDep = typeof sp.dep === 'string' ? sp.dep : snapshot?.dep || '';
-        const fallbackArr = typeof sp.arr === 'string' ? sp.arr : snapshot?.arr || '';
-        const fallbackPrice = typeof sp.price === 'string' ? Number(sp.price) : snapshot?.price || 0;
-        const fallbackDate = typeof sp.date === 'string' ? sp.date : snapshot?.date || '';
-        const fallbackAirline = typeof sp.airline === 'string' ? sp.airline : snapshot?.airline || '';
-        const fallbackSource = typeof sp.source === 'string' ? sp.source : snapshot?.source || '';
+        const archivedDate = archivedFlight
+            ? [ogShortDate(archivedFlight.departure_date || ''), ogShortDate(archivedFlight.return_date || '')]
+                .filter(Boolean)
+                .join('–')
+            : '';
+        const fallbackDep = typeof sp.dep === 'string' ? sp.dep : snapshot?.dep || archivedFlight?.departure_city || '';
+        const fallbackArr = typeof sp.arr === 'string' ? sp.arr : snapshot?.arr || archivedFlight?.arrival_city || '';
+        const fallbackPrice = typeof sp.price === 'string' ? Number(sp.price) : snapshot?.price || archivedFlight?.listed_price || 0;
+        const fallbackDate = typeof sp.date === 'string' ? sp.date : snapshot?.date || archivedDate;
+        const fallbackAirline = typeof sp.airline === 'string' ? sp.airline : snapshot?.airline || archivedFlight?.airline || '';
+        const fallbackSource = typeof sp.source === 'string' ? sp.source : snapshot?.source || archivedFlight?.source || '';
 
         if (fallbackArr) {
             const priceText = fallbackPrice > 0 ? formatPrice(fallbackPrice) : '';
             const sourceName = SOURCE_NAMES[fallbackSource] || fallbackSource;
+            const routeText = `${fallbackDep || '서울'} → ${fallbackArr}`;
             const title = priceText
-                ? `${fallbackDep || '서울'}에서 ${fallbackArr}, 왕복 ${priceText} | 티키티킷`
-                : `${fallbackDep || '서울'}에서 ${fallbackArr} | 티키티킷`;
+                ? `${routeText} 왕복 ${priceText} | 티키티킷`
+                : `${routeText} | 티키티킷`;
             const description = [
                 fallbackDate,
                 fallbackAirline,
-                sourceName ? `${sourceName}에서 발견한 땡처리 항공권` : '지금 발견한 땡처리 항공권',
+                sourceName || '지금 발견한 땡처리 항공권',
             ].filter(Boolean).join(' · ');
             const ogParams = new URLSearchParams({ dep: fallbackDep || '서울', arr: fallbackArr });
             if (fallbackPrice > 0) ogParams.set('price', String(fallbackPrice));
             if (fallbackDate) ogParams.set('date', fallbackDate);
-            if (fallbackAirline) ogParams.set('airline', fallbackAirline);
-            if (fallbackSource) ogParams.set('source', fallbackSource);
             if (typeof sp.v === 'string' && sp.v) ogParams.set('v', sp.v);
             const ogImageUrl = `${SITE_URL}/api/og?${ogParams.toString()}`;
 
@@ -129,7 +181,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
 
         return {
             title: '지금 나온 땡처리 항공권 | 티키티킷',
-            description: '여행사마다 따로 올라오는 저렴한 표를 한곳에서 확인하세요.',
+            description: '6개 여행사의 땡처리 항공권 가격과 일정을 한곳에서 비교하세요.',
         };
     }
 
@@ -141,11 +193,14 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     const dateRange = arrDate ? `${depDate}~${arrDate}` : depDate;
     const sourceName = SOURCE_NAMES[flight.source] || flight.source;
 
-    const title = `${dep}에서 ${arr}, 왕복 ${priceText} | 티키티킷`;
+    const rawSeatText = flight.seats || (flight.availableSeats ? `${flight.availableSeats}석 남음` : '');
+    const seatText = rawSeatText && !rawSeatText.includes('남음') ? `${rawSeatText} 남음` : rawSeatText;
+    const title = `${dep} → ${arr} 왕복 ${priceText} | 티키티킷`;
     const description = [
         dateRange,
         flight.airline,
-        sourceName ? `${sourceName}에서 발견한 땡처리 항공권` : '지금 발견한 땡처리 항공권',
+        sourceName || '지금 발견한 땡처리 항공권',
+        seatText,
     ].filter(Boolean).join(' · ');
 
     // OG 이미지 URL — 최소 파라미터
@@ -153,9 +208,8 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     ogParams.set('dep', dep);
     if (arr) ogParams.set('arr', arr);
     if (flight.price) ogParams.set('price', String(flight.price));
-    if (dateRange) ogParams.set('date', dateRange);
-    if (flight.airline) ogParams.set('airline', flight.airline);
-    if (flight.source) ogParams.set('source', flight.source);
+    const ogDateRange = [ogShortDate(flight.departure?.date), ogShortDate(flight.arrival?.date)].filter(Boolean).join('–');
+    if (ogDateRange) ogParams.set('date', ogDateRange);
     if (typeof sp.v === 'string' && sp.v) ogParams.set('v', sp.v);
 
     const baseUrl = SITE_URL;
@@ -190,15 +244,26 @@ export default async function SharePage({ params, searchParams }: Props) {
     const resolvedId = resolveShareId(decodedId);
     const flight = await getFlightById(resolvedId);
     const snapshot = getShareSnapshot(decodedId);
+    const archivedFlight = flight ? null : await getArchivedFlightById(resolvedId);
 
     // Fallback 파라미터: flight ID가 변경되어도 같은 노선 항공편을 찾을 수 있도록
     // 소스 우선순위: 1) URL 쿼리 파라미터 (공유 시 삽입됨) 2) API에서 조회한 flight 데이터
     const fallbackParams = new URLSearchParams();
     fallbackParams.set('flight', resolvedId);
 
-    const dep = (sp.dep as string) || flight?.departure?.city?.replace(/\([^)]+\)/g, '').trim() || snapshot?.dep;
-    const arr = (sp.arr as string) || flight?.arrival?.city?.replace(/\([^)]+\)/g, '').trim() || snapshot?.arr;
-    const date = (sp.date as string) || flight?.departure?.date?.replace(/[^0-9\-\.]/g, '').replace(/\./g, '-').replace(/-+$/, '') || snapshot?.date;
+    const dep = (sp.dep as string)
+        || flight?.departure?.city?.replace(/\([^)]+\)/g, '').trim()
+        || snapshot?.dep
+        || archivedFlight?.departure_city;
+    const arr = (sp.arr as string)
+        || flight?.arrival?.city?.replace(/\([^)]+\)/g, '').trim()
+        || snapshot?.arr
+        || archivedFlight?.arrival_city;
+    const date = (sp.date as string)
+        || flight?.departure?.date?.replace(/[^0-9\-\.]/g, '').replace(/\./g, '-').replace(/-+$/, '')
+        || snapshot?.date
+        || archivedFlight?.departure_date
+        || undefined;
 
     if (dep) fallbackParams.set('dep', dep);
     if (arr) fallbackParams.set('arr', arr);
