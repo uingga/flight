@@ -2412,16 +2412,11 @@ export default function MobileRedesignPreview({
         const text = `${departureName(flight)}에서 ${stripAirport(flight.arrival.city)}, 왕복 ${priceText(effectivePrice(flight))}`;
         const route = normalizedRoute(flight);
         try {
-            if (navigator.share) {
-                await navigator.share({ title: '티키티킷 항공권', text, url });
-                gtag.trackShare(route, 'native');
-            } else {
-                await navigator.clipboard.writeText(`${text}\n${url}`);
-                gtag.trackShare(route, 'clipboard');
-                setToast('항공권 주소를 복사했어요.');
-            }
+            await navigator.clipboard.writeText(`${text}\n${url}`);
+            gtag.trackShare(route, 'clipboard');
+            setToast('항공권 링크를 복사했어요.');
         } catch {
-            // 사용자가 공유 창을 닫은 경우에는 아무 안내도 띄우지 않는다.
+            setToast('링크를 복사하지 못했어요. 다시 시도해주세요.');
         }
     };
 
