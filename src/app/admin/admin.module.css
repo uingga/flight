@@ -2592,6 +2592,10 @@
     grid-column: 1 / -1;
 }
 
+.analysisPanelStandalone {
+    margin-top: 12px;
+}
+
 .candidateSummary {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));

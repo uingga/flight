@@ -1304,14 +1304,14 @@ export default function AdminPage() {
                         empty="아직 변화 기록이 없어요."
                     />
                     {(data.naverCrawlHistory?.length || 0) > 0 && (
-                        <details className={styles.disclosure}>
-                            <summary>최근 가격 비교 확인 기록</summary>
+                        <div className={`${styles.analysisPanel} ${styles.analysisPanelStandalone}`}>
+                            <h3>최근 가격 비교 확인 기록</h3>
                             <RankList items={(data.naverCrawlHistory || []).slice(-8).reverse().map(item => ({
                                 label: `${formatKST(item.timestamp).replace(/:\d{2}$/, '')} · ${item.runner === 'local' ? '내 PC' : item.runner === 'github' ? '자동 실행' : '수동'}`,
                                 value: `${item.success.toLocaleString()}개 성공`,
                                 note: `시도 ${item.attempted.toLocaleString()} · 다음 회차 ${item.deferred.toLocaleString()}${item.abortedEarly ? ' · 조기 중단' : ''}`,
                             }))} />
-                        </details>
+                        </div>
                     )}
                 </section>
             </>)}
