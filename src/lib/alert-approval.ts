@@ -59,6 +59,15 @@ export interface AlertApprovalBatch {
 
 export interface PublicAlertApprovalBatch extends Omit<AlertApprovalBatch, 'recipients'> {
     recipientCount: number;
+    recipientConditions: Array<{
+        kind: 'route' | 'deal';
+        departureCity: string;
+        destination: string;
+        maxPrice: number;
+        departureDateFrom?: string;
+        departureDateTo?: string;
+        recipientCount: number;
+    }>;
 }
 
 type PriceHistory = Record<string, Array<{ date?: string; minPrice?: number; avgPrice?: number }>>;
@@ -308,5 +317,34 @@ export function buildAlertApprovalBatches(
 
 export function toPublicApprovalBatch(batch: AlertApprovalBatch): PublicAlertApprovalBatch {
     const { recipients, ...publicBatch } = batch;
-    return { ...publicBatch, recipientCount: recipients.length };
+    const groupedConditions = new Map<string, PublicAlertApprovalBatch['recipientConditions'][number]>();
+    for (const { alert } of recipients) {
+        const region = decodeDealAlertRegion(alert.arrival_city);
+        const condition = {
+            kind: region ? 'deal' as const : 'route' as const,
+            departureCity: alert.departure_city || '전체',
+            destination: region ? (region === 'all' ? '아무데나' : region) : (alert.arrival_city || '전체'),
+            maxPrice: Number(alert.max_price),
+            departureDateFrom: alert.departure_date_from ? normalizeAlertDate(alert.departure_date_from) : undefined,
+            departureDateTo: alert.departure_date_to ? normalizeAlertDate(alert.departure_date_to) : undefined,
+            recipientCount: 1,
+        };
+        const key = [
+            condition.kind,
+            condition.departureCity,
+            condition.destination,
+            condition.maxPrice,
+            condition.departureDateFrom || '',
+            condition.departureDateTo || '',
+        ].join('|');
+        const existing = groupedConditions.get(key);
+        if (existing) existing.recipientCount++;
+        else groupedConditions.set(key, condition);
+    }
+    return {
+        ...publicBatch,
+        recipientCount: recipients.length,
+        recipientConditions: Array.from(groupedConditions.values())
+            .sort((a, b) => b.recipientCount - a.recipientCount || a.maxPrice - b.maxPrice),
+    };
 }

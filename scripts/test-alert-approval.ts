@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {
     buildAlertApprovalBatches,
+    toPublicApprovalBatch,
     type AlertSubscriptionRecord,
 } from '../src/lib/alert-approval';
 import type { Flight } from '../src/types/flight';
@@ -48,6 +49,10 @@ const grouped = buildAlertApprovalBatches(
 );
 assert.equal(grouped.length, 1, '같은 문구와 항공권은 한 승인 묶음이어야 한다');
 assert.equal(grouped[0].recipients.length, 2, '받을 사람 수를 묶어서 보여줘야 한다');
+const publicBatch = toPublicApprovalBatch(grouped[0]);
+assert.equal(publicBatch.recipientConditions.length, 1, '같은 수신 조건은 한 줄로 묶어야 한다');
+assert.equal(publicBatch.recipientConditions[0].recipientCount, 2, '조건별 받을 사람 수를 보여줘야 한다');
+assert.equal('recipients' in publicBatch, false, '관리자 응답에 푸시 구독 정보가 노출되면 안 된다');
 
 const sentToday = { ...alert('2', 'device-b'), last_sent_at: '2026-08-27T01:00:00.000Z' };
 const dailyLimited = buildAlertApprovalBatches(

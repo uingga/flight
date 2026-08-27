@@ -126,6 +126,15 @@ interface AlertApprovalBatch {
     score: number;
     reasons: string[];
     recipientCount: number;
+    recipientConditions: Array<{
+        kind: 'route' | 'deal';
+        departureCity: string;
+        destination: string;
+        maxPrice: number;
+        departureDateFrom?: string;
+        departureDateTo?: string;
+        recipientCount: number;
+    }>;
 }
 
 interface DealAlertReviewData {
@@ -1722,6 +1731,25 @@ export default function AdminPage() {
                                                 <span>받는 사람에게 이렇게 보여요</span>
                                                 <strong>{batch.title}</strong>
                                                 <p>{batch.body}</p>
+                                            </div>
+                                            <div className={styles.recipientConditions}>
+                                                <span>이 조건을 설정한 사람에게 보내요</span>
+                                                {batch.recipientConditions.map(condition => {
+                                                    const dateLabel = condition.departureDateFrom && condition.departureDateTo
+                                                        ? `${condition.departureDateFrom} ~ ${condition.departureDateTo}`
+                                                        : condition.departureDateFrom
+                                                            ? `${condition.departureDateFrom} 이후`
+                                                            : condition.departureDateTo
+                                                                ? `${condition.departureDateTo} 이전`
+                                                                : '날짜 제한 없음';
+                                                    return (
+                                                        <div key={`${condition.kind}-${condition.departureCity}-${condition.destination}-${condition.maxPrice}-${dateLabel}`}>
+                                                            <strong>{condition.departureCity} → {condition.destination}</strong>
+                                                            <span>{formatPrice(condition.maxPrice)} 이하 · {dateLabel}</span>
+                                                            <b>{condition.recipientCount.toLocaleString()}명</b>
+                                                        </div>
+                                                    );
+                                                })}
                                             </div>
                                             <div className={styles.alertApprovalMeta}>
                                                 <div>
