@@ -10,6 +10,39 @@ interface CrawlHistoryEntry {
     alerts: string[];
 }
 
+interface BookingLinkProbe {
+    source: string;
+    flightId: string;
+    route: string;
+    departureDate: string;
+    checkedAt: string;
+    stage: 'initial' | 'retry' | 'confirmation';
+    success: boolean;
+    statusCode: number | null;
+    finalUrl: string;
+    reason: string | null;
+    durationMs: number;
+}
+
+interface BookingLinkHealthEntry {
+    date: string;
+    checkedAt: string;
+    summary: {
+        scheduled: number;
+        passed: number;
+        failed: number;
+        recovered: number;
+        systemicSources: number;
+        checkedSources: number;
+    };
+    sources: Array<{
+        source: string;
+        status: 'healthy' | 'recovered' | 'isolated_failure' | 'systemic_suspected' | 'not_checked';
+        availableFlights: number;
+        checks: BookingLinkProbe[];
+    }>;
+}
+
 interface AdminData {
     timestamp: string;
     totalFlights: number;
@@ -54,6 +87,11 @@ interface AdminData {
         healthChecks?: number;
         abortedEarly: boolean;
     }>;
+    bookingLinkHealth?: {
+        version: number;
+        updatedAt: string;
+        entries: BookingLinkHealthEntry[];
+    } | null;
 }
 
 interface DealAlertCandidate {
@@ -904,6 +942,22 @@ export default function AdminPage() {
         latestCrawlToday.alerts.some(alert => alert.startsWith('🚨'))
         || Object.values(latestCrawlToday.sites).some(site => site.preserved)
     ));
+    const bookingLinkEntries = (data.bookingLinkHealth?.entries || []).slice(-30);
+    const latestBookingLinkHealth = bookingLinkEntries[bookingLinkEntries.length - 1] || null;
+    const bookingLinkSystemicIssue = (latestBookingLinkHealth?.summary.systemicSources || 0) > 0;
+    const bookingLinkHasFailure = (latestBookingLinkHealth?.summary.failed || 0) > 0;
+    const bookingLinkChartPeak = Math.max(
+        ...bookingLinkEntries.map(entry => entry.summary.passed + entry.summary.failed),
+        1,
+    );
+    const bookingLinkFailureDetails = bookingLinkEntries.flatMap(entry => entry.sources.flatMap(source => {
+        if (source.status !== 'isolated_failure' && source.status !== 'systemic_suspected') return [];
+        const latestByFlight = new Map<string, BookingLinkProbe>();
+        source.checks.forEach(check => latestByFlight.set(check.flightId, check));
+        return Array.from(latestByFlight.values())
+            .filter(check => !check.success)
+            .map(check => ({ ...check, date: entry.date, sourceStatus: source.status }));
+    })).slice(-12).reverse();
     const sourceIssueCount = allSources.filter(source => {
         const updatedAt = data.sourceUpdatedAt?.[source];
         const ageHours = updatedAt ? (Date.now() - new Date(updatedAt).getTime()) / 3_600_000 : null;
@@ -915,7 +969,10 @@ export default function AdminPage() {
         || data.naverStatus.ageDays === null
         || data.naverStatus.ageDays > 3;
     const reportsToReview = flightReports?.summary?.needsReview || 0;
-    const attentionCount = sourceIssueCount + (naverNeedsAttention ? 1 : 0) + (reportsToReview > 0 ? 1 : 0);
+    const attentionCount = sourceIssueCount
+        + (naverNeedsAttention ? 1 : 0)
+        + (reportsToReview > 0 ? 1 : 0)
+        + (bookingLinkSystemicIssue ? 1 : 0);
     const gaActivity = gaStats?.activityPeriods;
     const gaPeriodRows: PeriodRow[] = gaActivity ? [
         {
@@ -1003,7 +1060,7 @@ export default function AdminPage() {
                     >
                         <span className={styles.tabLabel}>
                             {t.label}
-                            {t.id === 'operations' && (criticalAlerts.length > 0 || sourceIssueCount > 0) && (
+                            {t.id === 'operations' && (criticalAlerts.length > 0 || sourceIssueCount > 0 || bookingLinkHasFailure) && (
                                 <span className={styles.tabDot} title={`점검 필요 ${criticalAlerts.length}건`} />
                             )}
                             {t.id === 'operations' && (flightReports?.summary?.activeHides || 0) > 0 && (
@@ -1052,6 +1109,13 @@ export default function AdminPage() {
                                     <span>사용자 신고</span>
                                     <strong>{reportsToReview}개 확인 필요</strong>
                                     <small>현재 숨김 {flightReports?.summary?.activeHides || 0}개</small>
+                                </button>
+                            )}
+                            {bookingLinkSystemicIssue && (
+                                <button type="button" onClick={() => selectTab('operations')} className={styles.actionCardWarn}>
+                                    <span>예약 링크 연결</span>
+                                    <strong>{latestBookingLinkHealth?.summary.systemicSources || 0}곳 전체 문제 의심</strong>
+                                    <small>대표 링크 여러 개가 함께 열리지 않았어요.</small>
                                 </button>
                             )}
                         </div>
@@ -1261,6 +1325,93 @@ export default function AdminPage() {
                             <span>최근 가격 / 전체 비교값</span>
                         </div>
                     </div>
+                </section>
+
+                <section className={`${styles.section} ${styles.operationsOrderLinks}`} id="operations-booking-links">
+                    <div className={styles.sectionHeading}>
+                        <div>
+                            <h2>예약 링크 연결 상태</h2>
+                            <p>가격은 다시 수집하지 않고, 여행사마다 대표 항공권 2개가 예약 화면까지 열리는지만 하루 한 번 확인합니다.</p>
+                        </div>
+                        <span className={bookingLinkSystemicIssue ? styles.issueBadge : styles.nowBadge}>
+                            {!latestBookingLinkHealth
+                                ? '첫 점검 전'
+                                : bookingLinkSystemicIssue
+                                    ? `전체 문제 의심 ${latestBookingLinkHealth.summary.systemicSources}곳`
+                                    : bookingLinkHasFailure
+                                        ? '일부 링크 확인 필요'
+                                        : '정상'}
+                        </span>
+                    </div>
+                    {!latestBookingLinkHealth ? (
+                        <div className={styles.emptyState}>첫 자동 점검이 끝나면 최근 30일 흐름이 여기에 쌓입니다.</div>
+                    ) : (
+                        <>
+                            <div className={styles.linkHealthSummary}>
+                                <div>
+                                    <span>마지막 점검</span>
+                                    <strong>{formatKST(latestBookingLinkHealth.checkedAt).replace(/:\d{2}$/, '')}</strong>
+                                </div>
+                                <div>
+                                    <span>정상 확인</span>
+                                    <strong>{latestBookingLinkHealth.summary.passed.toLocaleString()}개</strong>
+                                </div>
+                                <div className={latestBookingLinkHealth.summary.failed > 0 ? styles.linkHealthSummaryWarn : undefined}>
+                                    <span>열리지 않음</span>
+                                    <strong>{latestBookingLinkHealth.summary.failed.toLocaleString()}개</strong>
+                                </div>
+                                <div>
+                                    <span>재확인 후 정상</span>
+                                    <strong>{latestBookingLinkHealth.summary.recovered.toLocaleString()}곳</strong>
+                                </div>
+                            </div>
+                            <div className={styles.linkHealthChart} role="img" aria-label="최근 30일 예약 링크 정상과 실패 흐름">
+                                {bookingLinkEntries.map((entry, index) => {
+                                    const passHeight = Math.round((entry.summary.passed / bookingLinkChartPeak) * 100);
+                                    const failHeight = Math.round((entry.summary.failed / bookingLinkChartPeak) * 100);
+                                    const showDate = index === bookingLinkEntries.length - 1 || index % 5 === 0;
+                                    return (
+                                        <div
+                                            key={`${entry.date}-${entry.checkedAt}`}
+                                            className={styles.linkHealthDay}
+                                            title={`${entry.date} · 정상 ${entry.summary.passed} · 실패 ${entry.summary.failed} · 재확인 후 정상 ${entry.summary.recovered} · 전체 문제 의심 ${entry.summary.systemicSources}곳`}
+                                        >
+                                            <div className={styles.linkHealthBars}>
+                                                {entry.summary.passed > 0 && <span className={styles.linkHealthPass} style={{ height: `${Math.max(4, passHeight)}%` }} />}
+                                                {entry.summary.failed > 0 && <span className={styles.linkHealthFail} style={{ height: `${Math.max(4, failHeight)}%` }} />}
+                                                {entry.summary.recovered > 0 && <i className={styles.linkHealthRecovered} aria-hidden="true" />}
+                                            </div>
+                                            <span className={styles.linkHealthDate}>{showDate ? entry.date.slice(5).replace('-', '.') : ''}</span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                            <div className={styles.linkHealthLegend}>
+                                <span><i className={styles.linkHealthLegendPass} />정상</span>
+                                <span><i className={styles.linkHealthLegendFail} />실패</span>
+                                <span><i className={styles.linkHealthLegendRecovered} />재확인 후 정상</span>
+                            </div>
+                            {bookingLinkFailureDetails.length > 0 && (
+                                <div className={styles.linkHealthFailures}>
+                                    <h3>최근 확인이 필요한 링크</h3>
+                                    {bookingLinkFailureDetails.map((failure, index) => (
+                                        <article key={`${failure.date}-${failure.flightId}-${index}`}>
+                                            <div>
+                                                <strong>{SOURCE_NAMES[failure.source] || failure.source} · {failure.route}</strong>
+                                                <span>{failure.departureDate} 출발 · {failure.reason || '예약 화면을 열지 못함'}</span>
+                                            </div>
+                                            <span className={failure.sourceStatus === 'systemic_suspected' ? styles.statusWarn : styles.statusMuted}>
+                                                {failure.sourceStatus === 'systemic_suspected' ? '전체 문제 의심' : '개별 링크 실패'}
+                                            </span>
+                                            {failure.finalUrl && (
+                                                <a href={failure.finalUrl} target="_blank" rel="noopener noreferrer">직접 열기</a>
+                                            )}
+                                        </article>
+                                    ))}
+                                </div>
+                            )}
+                        </>
+                    )}
                 </section>
 
                 <section className={`${styles.section} ${styles.operationsOrderMix}`} id="operations-mix">

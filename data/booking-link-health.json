@@ -1,0 +1,231 @@
+{
+  "version": 1,
+  "updatedAt": "2026-08-27T07:09:20.984Z",
+  "entries": [
+    {
+      "date": "2026-08-27",
+      "checkedAt": "2026-08-27T07:08:49.329Z",
+      "summary": {
+        "scheduled": 12,
+        "passed": 12,
+        "failed": 0,
+        "recovered": 1,
+        "systemicSources": 0,
+        "checkedSources": 6
+      },
+      "sources": [
+        {
+          "source": "ybtour",
+          "status": "healthy",
+          "availableFlights": 157,
+          "checks": [
+            {
+              "source": "ybtour",
+              "flightId": "ybtour-102i5l3",
+              "route": "부산 → 괌",
+              "departureDate": "2026-11-17",
+              "checkedAt": "2026-08-27T07:08:49.587Z",
+              "stage": "initial",
+              "success": true,
+              "statusCode": 200,
+              "finalUrl": "",
+              "reason": null,
+              "durationMs": 2631
+            },
+            {
+              "source": "ybtour",
+              "flightId": "ybtour-19l1gea",
+              "route": "부산 → 삿포로(치토세)",
+              "departureDate": "2026-09-16",
+              "checkedAt": "2026-08-27T07:08:52.316Z",
+              "stage": "initial",
+              "success": true,
+              "statusCode": 200,
+              "finalUrl": "",
+              "reason": null,
+              "durationMs": 3146
+            }
+          ]
+        },
+        {
+          "source": "hanatour",
+          "status": "healthy",
+          "availableFlights": 23,
+          "checks": [
+            {
+              "source": "hanatour",
+              "flightId": "hanatour-13zs6pc",
+              "route": "부산(PUS) → 오사카(KIX)",
+              "departureDate": "2026.09.08(화)",
+              "checkedAt": "2026-08-27T07:08:55.578Z",
+              "stage": "initial",
+              "success": true,
+              "statusCode": 200,
+              "finalUrl": "",
+              "reason": null,
+              "durationMs": 4551
+            },
+            {
+              "source": "hanatour",
+              "flightId": "hanatour-14h5hhr",
+              "route": "대구(TAE) → 후쿠오카(FUK)",
+              "departureDate": "2026.09.21(월)",
+              "checkedAt": "2026-08-27T07:09:00.243Z",
+              "stage": "initial",
+              "success": true,
+              "statusCode": 200,
+              "finalUrl": "",
+              "reason": null,
+              "durationMs": 3192
+            }
+          ]
+        },
+        {
+          "source": "modetour",
+          "status": "recovered",
+          "availableFlights": 75,
+          "checks": [
+            {
+              "source": "modetour",
+              "flightId": "modetour-ASIA-19543342",
+              "route": "인천 → 다낭",
+              "departureDate": "2026-09-06",
+              "checkedAt": "2026-08-27T07:09:03.538Z",
+              "stage": "initial",
+              "success": false,
+              "statusCode": 200,
+              "finalUrl": "https://modetour.queue-it.net/?c=modetour&e=ad2&ver=javascript-5.0.1&cver=57&man=Main&enqueuetoken=eyJ0eXAiOiJRVDEiLCJlbmMiOiJBRVMyNTYiLCJpc3MiOjE3ODc4MTQ1NDQzNjIsImV4cCI6MTc4NzgxNDc4NDM2MiwidGkiOiJjZTU1Zjk5NC1iZjc0LTRkZTctYWZkMy0wYTk4ZmIxMjg5MDUiLCJjIjoibW9kZXRvdXIiLCJlIjoiYWQyIiwiaXAiOiIyMjIuMTA2LjMxLjc2In0.gVu_tctJBabtkEfFtv1mjQ.6CIjS7Ri96W03cjUlr18Xd6y5xh2yRqnNvPk-KD9C24&t=https%3A%2F%2Fm.modetour.com%2Fflights%2Fdiscount-flight%3Fquery%3D%257B%2522departureCity%2522%253A%2522ICN%2522%252C%2522continentCode%2522%253A%2522ASIA%2522%252C%2522arrivalCity%2522%253A%2522DAD%2522%252C%2522departureDate%2522%253A%25222026-09-06%2522%252C%2522arrivalDate%2522%253A%25222026-09-07%2522%252C%2522page%2522%253A1%252C%2522itemCount%2522%253A200%252C%2522sort%2522%253A%2522Lowest%2522%257D&kupver=akamai-5.0.1",
+              "reason": "예상과 다른 사이트로 이동 (modetour.queue-it.net)",
+              "durationMs": 1417
+            },
+            {
+              "source": "modetour",
+              "flightId": "modetour-ASIA-19543342",
+              "route": "인천 → 다낭",
+              "departureDate": "2026-09-06",
+              "checkedAt": "2026-08-27T07:09:06.569Z",
+              "stage": "retry",
+              "success": true,
+              "statusCode": 200,
+              "finalUrl": "",
+              "reason": null,
+              "durationMs": 1440
+            },
+            {
+              "source": "modetour",
+              "flightId": "modetour-ASIA-20008104",
+              "route": "인천 → 푸꾸옥",
+              "departureDate": "2026-09-10",
+              "checkedAt": "2026-08-27T07:09:08.115Z",
+              "stage": "initial",
+              "success": true,
+              "statusCode": 200,
+              "finalUrl": "",
+              "reason": null,
+              "durationMs": 1674
+            }
+          ]
+        },
+        {
+          "source": "onlinetour",
+          "status": "healthy",
+          "availableFlights": 6,
+          "checks": [
+            {
+              "source": "onlinetour",
+              "flightId": "online-260828912879",
+              "route": "인천 → 칼리보",
+              "departureDate": "2026-08-28",
+              "checkedAt": "2026-08-27T07:09:09.888Z",
+              "stage": "initial",
+              "success": true,
+              "statusCode": 200,
+              "finalUrl": "",
+              "reason": null,
+              "durationMs": 2014
+            },
+            {
+              "source": "onlinetour",
+              "flightId": "online-260831872522",
+              "route": "인천 → 푸꾸옥",
+              "departureDate": "2026-08-31",
+              "checkedAt": "2026-08-27T07:09:11.992Z",
+              "stage": "initial",
+              "success": true,
+              "statusCode": 200,
+              "finalUrl": "",
+              "reason": null,
+              "durationMs": 2120
+            }
+          ]
+        },
+        {
+          "source": "ttang",
+          "status": "healthy",
+          "availableFlights": 189,
+          "checks": [
+            {
+              "source": "ttang",
+              "flightId": "ttang-7C5257PUSUBN-G23-2026-09-27",
+              "route": "부산 → 울란바토르",
+              "departureDate": "2026-09-27",
+              "checkedAt": "2026-08-27T07:09:14.229Z",
+              "stage": "initial",
+              "success": true,
+              "statusCode": 200,
+              "finalUrl": "",
+              "reason": null,
+              "durationMs": 1507
+            },
+            {
+              "source": "ttang",
+              "flightId": "ttang-RF0521CJJCRK-G1-2026-09-22",
+              "route": "청주 → 클락(앙헬레스)",
+              "departureDate": "2026-09-22",
+              "checkedAt": "2026-08-27T07:09:15.827Z",
+              "stage": "initial",
+              "success": true,
+              "statusCode": 200,
+              "finalUrl": "",
+              "reason": null,
+              "durationMs": 1492
+            }
+          ]
+        },
+        {
+          "source": "myrealtrip",
+          "status": "healthy",
+          "availableFlights": 141,
+          "checks": [
+            {
+              "source": "myrealtrip",
+              "flightId": "mrt-ICN-ALA-20261010-853600",
+              "route": "서울(인천) → 알마티",
+              "departureDate": "2026-10-10",
+              "checkedAt": "2026-08-27T07:09:17.406Z",
+              "stage": "initial",
+              "success": true,
+              "statusCode": 200,
+              "finalUrl": "",
+              "reason": null,
+              "durationMs": 1926
+            },
+            {
+              "source": "myrealtrip",
+              "flightId": "mrt-ICN-UBJ-20261026-607800",
+              "route": "서울(인천) → 우베",
+              "departureDate": "2026-10-26",
+              "checkedAt": "2026-08-27T07:09:19.430Z",
+              "stage": "initial",
+              "success": true,
+              "statusCode": 200,
+              "finalUrl": "",
+              "reason": null,
+              "durationMs": 1482
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

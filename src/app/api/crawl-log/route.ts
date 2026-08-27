@@ -187,6 +187,17 @@ export async function GET(request: NextRequest) {
             }
         } catch { }
 
+        // 하루 한 번 여행사별 대표 링크만 실제로 열어본 결과.
+        // 가격을 다시 수집하는 크롤링이 아니라 예약 화면 연결이 통째로 깨졌는지 보는 표본 점검이다.
+        let bookingLinkHealth: Record<string, unknown> | null = null;
+        try {
+            const healthPath = path.join(process.cwd(), 'data', 'booking-link-health.json');
+            if (fs.existsSync(healthPath)) {
+                const parsed = JSON.parse(fs.readFileSync(healthPath, 'utf-8'));
+                if (parsed && Array.isArray(parsed.entries)) bookingLinkHealth = parsed;
+            }
+        } catch { }
+
         return NextResponse.json({
             timestamp,
             totalFlights: flights.length,
@@ -196,6 +207,7 @@ export async function GET(request: NextRequest) {
             staleStreak: (cache.staleStreak || {}) as Record<string, number>,
             naverStatus,
             naverCrawlHistory,
+            bookingLinkHealth,
             bySource,
             byRegion,
             byCity,

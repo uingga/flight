@@ -26,6 +26,7 @@
     "test:naver-route": "tsx scripts/test-naver-route.ts",
     "test:redesign": "tsx scripts/verify-redesign.ts",
     "test:booking-url": "tsx scripts/test-booking-url.ts",
+    "check:booking-links": "tsx scripts/check-booking-links.ts",
     "deploy:mark": "node scripts/deploy-guard.mjs mark",
     "deploy:list": "node scripts/deploy-guard.mjs list",
     "deploy:rollback": "node scripts/deploy-guard.mjs rollback",

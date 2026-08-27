@@ -2445,10 +2445,11 @@
 .todayCrawlMetrics .todayCrawlMetricWarn strong { color: #c43d30; }
 
 .operationsOrderSources { order: 1; }
-.operationsOrderCurrent { order: 2; }
-.operationsOrderReports { order: 3; }
-.operationsOrderHistory { order: 4; }
-.operationsOrderMix { order: 5; }
+.operationsOrderLinks { order: 2; }
+.operationsOrderCurrent { order: 3; }
+.operationsOrderReports { order: 4; }
+.operationsOrderHistory { order: 5; }
+.operationsOrderMix { order: 6; }
 
 .behaviorGrid {
     display: grid;
@@ -2796,6 +2797,144 @@
 .naverCompact > div:last-child { text-align: right; }
 .naverCompact strong { color: #273140; font-size: 0.84rem; }
 .naverCompact span { color: #818a97; font-size: 0.67rem; }
+
+.linkHealthSummary {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 9px;
+    margin-bottom: 16px;
+}
+
+.linkHealthSummary > div {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 5px;
+    padding: 12px 13px;
+    border: 1px solid #e5e8ec;
+    border-radius: 11px;
+    background: #fbfcfd;
+}
+
+.linkHealthSummary span { color: #7f8895; font-size: 0.68rem; }
+.linkHealthSummary strong { color: #27313f; font-size: 0.92rem; font-variant-numeric: tabular-nums; }
+.linkHealthSummary .linkHealthSummaryWarn { border-color: #efc9c3; background: #fff8f6; }
+.linkHealthSummary .linkHealthSummaryWarn strong { color: #c43d30; }
+
+.linkHealthChart {
+    display: flex;
+    align-items: stretch;
+    gap: 4px;
+    height: 174px;
+    padding: 14px 13px 9px;
+    border: 1px solid #e5e8ec;
+    border-radius: 12px;
+    background: linear-gradient(to top, #f7f9fa, #fff);
+}
+
+.linkHealthDay {
+    display: flex;
+    min-width: 0;
+    flex: 1;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 6px;
+}
+
+.linkHealthBars {
+    position: relative;
+    display: flex;
+    min-width: 5px;
+    height: 132px;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 1px;
+    border-bottom: 1px solid #dfe4e8;
+}
+
+.linkHealthPass,
+.linkHealthFail {
+    width: min(9px, 46%);
+    border-radius: 3px 3px 0 0;
+}
+
+.linkHealthPass { background: #72b18d; }
+.linkHealthFail { background: #db6759; }
+
+.linkHealthRecovered {
+    position: absolute;
+    top: -3px;
+    right: 0;
+    width: 6px;
+    height: 6px;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    background: #e5a538;
+    box-shadow: 0 0 0 1px #d79a34;
+}
+
+.linkHealthDate {
+    min-height: 11px;
+    color: #959da8;
+    font-size: 0.58rem;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.linkHealthLegend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 15px;
+    margin-top: 10px;
+    color: #747d89;
+    font-size: 0.67rem;
+}
+
+.linkHealthLegend span { display: inline-flex; align-items: center; gap: 5px; }
+.linkHealthLegend i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; }
+.linkHealthLegendPass { background: #72b18d; }
+.linkHealthLegendFail { background: #db6759; }
+.linkHealthLegend .linkHealthLegendRecovered { border-radius: 50%; background: #e5a538; }
+
+.linkHealthFailures {
+    margin-top: 18px;
+}
+
+.linkHealthFailures h3 {
+    margin: 0 0 9px;
+    color: #34404f;
+    font-size: 0.8rem;
+}
+
+.linkHealthFailures article {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 12px;
+    border-top: 1px solid #edf0f2;
+}
+
+.linkHealthFailures article > div {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.linkHealthFailures strong { color: #303a48; font-size: 0.76rem; }
+.linkHealthFailures article > div span { color: #818a96; font-size: 0.66rem; }
+.linkHealthFailures a { color: #515b68; font-size: 0.67rem; text-decoration: underline; text-underline-offset: 2px; }
+
+.statusMuted {
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: #f0f2f4;
+    color: #737d89;
+    font-size: 0.66rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
 
 .reportList {
     display: flex;
@@ -3368,6 +3507,10 @@
     .candidateSummary { grid-template-columns: 1fr 1fr; }
 
     .sourceTrendGrid { grid-template-columns: 1fr; }
+    .linkHealthSummary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .linkHealthChart { margin-inline: -4px; gap: 3px; }
+    .linkHealthFailures article { grid-template-columns: minmax(0, 1fr) auto; }
+    .linkHealthFailures a { grid-column: 1 / -1; }
     .todayCrawlMetrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .naverCompact { align-items: flex-start; }
 
@@ -3392,6 +3535,7 @@
     .candidateSummary { grid-template-columns: 1fr; }
 
     .segmentCard dl { grid-template-columns: 1fr 1fr; }
+    .linkHealthSummary { grid-template-columns: 1fr 1fr; }
 
     .behaviorSteps { gap: 4px; }
     .behaviorSteps span,
