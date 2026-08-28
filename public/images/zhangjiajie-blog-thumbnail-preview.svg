@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080">
+  <defs>
+    <style>
+      @font-face {
+        font-family: "Pretendard OG";
+        src: url("/Fonts/Pretendard-OG-SemiBold.otf") format("opentype");
+        font-weight: 600;
+      }
+      @font-face {
+        font-family: "Pretendard OG";
+        src: url("/Fonts/Pretendard-OG-ExtraBold.otf") format("opentype");
+        font-weight: 800;
+      }
+      .route,
+      .price {
+        font-family: "Pretendard OG", sans-serif;
+        text-anchor: middle;
+      }
+    </style>
+  </defs>
+
+  <rect width="1080" height="1080" fill="#ff385c" />
+
+  <rect x="105" y="225" width="870" height="630" rx="28" fill="#ffffff" />
+  <circle cx="105" cy="585" r="28" fill="#ff385c" />
+  <circle cx="975" cy="585" r="28" fill="#ff385c" />
+
+  <text class="route" x="540" y="470" fill="#111827" font-size="92" font-weight="800" letter-spacing="-4.2">
+    <tspan>부산</tspan>
+    <tspan fill="#ff385c"> → </tspan>
+    <tspan>장가계</tspan>
+  </text>
+
+  <line x1="170" y1="585" x2="910" y2="585" stroke="#d8d8d8" stroke-width="3" stroke-linecap="round" stroke-dasharray="15 15" />
+
+  <text class="price" x="540" y="730" fill="#ff385c" font-size="108" font-weight="800" letter-spacing="-5.2">219,000원</text>
+</svg>
