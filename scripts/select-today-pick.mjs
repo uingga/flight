@@ -11,6 +11,7 @@ const ABSOLUTE_DROP_MAX = 150_000;
 const DEEP_DROP_MAX = 200_000;
 const DEEP_DROP_RATIO = 0.75;
 const COMPARISON_TOLERANCE = 1.05;
+const repairOnly = process.argv.includes('--repair');
 
 const effectivePrice = (flight) => flight.price + (flight.source === 'ttang' ? 20_000 : 0);
 const kstDayNumber = (timestamp) => Math.floor((timestamp + KST_OFFSET) / DAY);
@@ -106,6 +107,12 @@ async function main() {
     if (flights.length === 0) throw new Error('선정할 항공권이 없습니다. 기존 오늘의 표를 유지합니다.');
 
     const now = Date.now();
+    const kstDate = new Date(now + KST_OFFSET).toISOString().slice(0, 10);
+    if (repairOnly && data.todayPickId && data.todayPickDate === kstDate) {
+        console.log(`✅ 오늘의 표 유지: ${data.todayPickId} (${kstDate})`);
+        return;
+    }
+
     const scored = flights
         .filter((flight) => Number(flight.price) > 0)
         .map((flight) => ({
@@ -124,7 +131,6 @@ async function main() {
     if (!selected) throw new Error('유효한 오늘의 표 후보가 없습니다.');
 
     const selectedAt = new Date().toISOString();
-    const kstDate = new Date(Date.now() + KST_OFFSET).toISOString().slice(0, 10);
     const output = {
         date: kstDate,
         selectedAt,

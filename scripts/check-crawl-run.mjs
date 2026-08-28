@@ -31,6 +31,11 @@ if (checkCache) {
 }
 
 const automatic = eventName === 'schedule' || triggerSource === 'watchdog';
+const expectedDate = expectedTimestamp === null ? null : new Date(expectedTimestamp);
+const isTodayPickSlot = automatic
+    && expectedDate !== null
+    && expectedDate.getUTCHours() === 2
+    && expectedDate.getUTCMinutes() === 56;
 const shouldRun = !checkCache
     || !automatic
     || expectedTimestamp === null
@@ -52,12 +57,14 @@ console.log(`[trigger] observed_at=${now.toISOString()}`);
 console.log(`[trigger] delay_minutes=${delayMinutes ?? 'n/a'}`);
 if (checkCache) console.log(`[preflight] last_completed_at=${lastCompletedAt || 'none'}`);
 console.log(`[preflight] should_run=${shouldRun}`);
+console.log(`[preflight] is_today_pick_slot=${isTodayPickSlot}`);
 console.log(`[preflight] reason=${reason}`);
 
 const outputPath = process.env.GITHUB_OUTPUT;
 if (outputPath) {
     fs.appendFileSync(outputPath, [
         `should_run=${shouldRun}`,
+        `is_today_pick_slot=${isTodayPickSlot}`,
         `expected_at=${expectedAt || ''}`,
         `delay_minutes=${delayMinutes ?? ''}`,
         `last_completed_at=${lastCompletedAt || ''}`,
@@ -78,6 +85,7 @@ if (summaryPath) {
         ...(checkCache ? [
             `- Last completed at: \`${lastCompletedAt || 'none'}\``,
             `- Crawl required: \`${shouldRun}\` (${reason})`,
+            `- Today pick slot: \`${isTodayPickSlot}\``,
         ] : []),
         '',
     ].join('\n'));

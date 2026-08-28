@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import test from 'node:test';
 import {
@@ -64,4 +65,27 @@ test('watchdog dispatch inputs are declared by daily-crawl.yml', () => {
 test('today pick has a 06:17 KST selection slot', () => {
     const workflow = fs.readFileSync('.github/workflows/today-pick.yml', 'utf8');
     assert.match(workflow, /^\s*- cron: '17 21 \* \* \*'/m);
+});
+
+test('watchdog fallback keeps the 11:56 today-pick slot identity', () => {
+    const result = spawnSync(process.execPath, ['scripts/check-crawl-run.mjs'], {
+        encoding: 'utf8',
+        env: {
+            ...process.env,
+            TRIGGER_EVENT: 'workflow_dispatch',
+            TRIGGER_SOURCE: 'watchdog',
+            EXPECTED_AT: '2026-08-28T02:56:00.000Z',
+            CHECK_NOW: '2026-08-28T04:30:00.000Z',
+        },
+    });
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /\[preflight\] is_today_pick_slot=true/);
+});
+
+test('every completed crawl validates today pick after the deployed cache catches up', () => {
+    const workflow = fs.readFileSync('.github/workflows/daily-crawl.yml', 'utf8');
+    assert.match(workflow, /^\s+is_today_pick_slot: \$\{\{ steps\.trigger\.outputs\.is_today_pick_slot \}\}/m);
+    assert.match(workflow, /run: node scripts\/wait-for-flight-api-cache\.mjs/);
+    assert.match(workflow, /node scripts\/select-today-pick\.mjs --repair/);
 });

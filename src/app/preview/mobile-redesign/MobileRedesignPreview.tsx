@@ -44,6 +44,7 @@ interface FlightsResponse {
     flights: Flight[];
     lastUpdated?: string | null;
     todayPickId?: string | null;
+    todayPickDate?: string | null;
     priceHistory?: PriceHistory;
     interparkPrices?: InterparkPrices;
 }
@@ -1474,10 +1475,13 @@ export default function MobileRedesignPreview({
                 return (price <= absoluteDropMax && (!reference || price <= reference * comparisonTolerance))
                     || (!!reference && price <= reference * deepDropRatio);
             };
-            const flight = flights
-                .filter(exceptional)
-                .sort((a, b) => effectivePrice(a) - effectivePrice(b) || compareRecommended(a, b))[0]
-                || flights.find(item => item.id === todayPickId)
+            // 자동 선정 파일에 고정된 오늘의 표를 먼저 사용한다. 현재 캐시에서 사라졌을
+            // 때만 즉석 후보를 골라, 크롤 직후에도 DROP 자리가 비지 않게 한다.
+            const fixedTodayPick = flights.find(item => item.id === todayPickId);
+            const flight = fixedTodayPick
+                || flights
+                    .filter(exceptional)
+                    .sort((a, b) => effectivePrice(a) - effectivePrice(b) || compareRecommended(a, b))[0]
                 || flights.slice().sort(compareRecommended)[0];
             return flight ? { flight, reason: describeDropCard(flight, getAverageDiscountRate(flight, interparkPrices)) } : null;
         })()
@@ -2976,13 +2980,13 @@ export default function MobileRedesignPreview({
                                             <button type="button" className={styles.cardBody} onClick={() => openFlight(flight)}>
                                                 {isTodayPick && (
                                                     <span className={styles.todayPickStrip}>
-                                                        <strong>TIKIT DROP</strong>
-                                                        <span>오늘 선정</span>
+                                                        <strong>오늘의 표</strong>
+                                                        <span>TIKIT DROP</span>
                                                     </span>
                                                 )}
                                                 <div className={styles.cardTopline}>
                                                     <div>
-                                                        {isTodayPick && <span className={styles.todayPickInline}>TIKIT DROP</span>}
+                                                        {isTodayPick && <span className={styles.todayPickInline}>오늘의 표</span>}
                                                         <span className={`${styles.sourceBadge} ${styles[flight.source]}`}>{SOURCE_NAMES[flight.source]}</span>
                                                         <span className={styles.airline}>{flight.airline || '항공사 확인'}</span>
                                                     </div>

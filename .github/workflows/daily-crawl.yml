@@ -39,6 +39,7 @@ jobs:
     outputs:
       should_run: ${{ steps.trigger.outputs.should_run }}
       expected_at: ${{ steps.trigger.outputs.expected_at }}
+      is_today_pick_slot: ${{ steps.trigger.outputs.is_today_pick_slot }}
 
     steps:
       - name: Checkout code
@@ -147,16 +148,29 @@ jobs:
             echo "ℹ️ No changes to commit."
           fi
 
-      # 정오 회차의 최신 데이터가 저장된 뒤에만 오늘의 표를 고른다.
-      # 별도 시각 예약으로 두면 크롤링 지연 시 이전 데이터에서 선정될 수 있다.
-      - name: Select today's pick from noon crawl
-        if: steps.crawl.outcome == 'success' && github.event_name == 'schedule' && github.event.schedule == '56 2 * * *'
+      # 데이터 커밋 직후에는 Vercel이 아직 이전 캐시를 제공할 수 있다. 운영 API가 이번
+      # 캐시 이상으로 올라온 것을 확인한 뒤에만 오늘의 표 유효성을 검사한다.
+      - name: Wait for updated flight API
+        id: flight_api
+        if: steps.crawl.outcome == 'success'
+        run: node scripts/wait-for-flight-api-cache.mjs
+
+      # 11:56 회차(정상 schedule과 watchdog 대체 실행 모두)는 새로 선정한다.
+      # 나머지 크롤 뒤에는 기존 선정이 오늘 날짜이고 새 캐시에도 남아 있는지 확인하고,
+      # 사라졌거나 오래됐을 때만 즉시 복구한다.
+      - name: Refresh today's pick
+        if: steps.crawl.outcome == 'success' && steps.flight_api.outcome == 'success'
+        shell: bash
         run: |
           git pull --ff-only origin main
-          node scripts/select-today-pick.mjs
+          if [[ "${{ needs.preflight.outputs.is_today_pick_slot }}" == "true" ]]; then
+            node scripts/select-today-pick.mjs
+          else
+            node scripts/select-today-pick.mjs --repair
+          fi
 
       - name: Commit and push today's pick
-        if: steps.crawl.outcome == 'success' && github.event_name == 'schedule' && github.event.schedule == '56 2 * * *'
+        if: steps.crawl.outcome == 'success' && steps.flight_api.outcome == 'success'
         run: |
           if [[ -z $(git status --porcelain -- data/today-pick.json) ]]; then
             echo "No selection change"
