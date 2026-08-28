@@ -15,9 +15,10 @@ test('the fixed selection wins before the dynamic fallback candidate', () => {
     assert.match(feed, /const flight = fixedTodayPick\s*\|\| flights/);
 });
 
-test('today pick is named explicitly on both compact and desktop labels', () => {
-    assert.equal((feed.match(/>오늘의 표</g) || []).length, 2);
-    assert.match(feedStyles, /@media[^}]*min-width[\s\S]*?\.todayPickInline\s*\{[\s\S]*?display:\s*inline-flex/);
+test('TIKIT DROP card does not add an unrequested today-pick label', () => {
+    assert.equal((feed.match(/>오늘의 표</g) || []).length, 0);
+    assert.match(feed, /className=\{styles\.todayPickStrip\}>\s*<strong>TIKIT DROP<\/strong>/);
+    assert.doesNotMatch(feedStyles, /\.todayPickInline/);
 });
 
 test('a repeated pick selected after a price drop exposes and displays that reason', () => {

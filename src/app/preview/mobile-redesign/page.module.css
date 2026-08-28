@@ -403,10 +403,8 @@
     color: inherit;
 }
 
-.todayPickStrip { height: 32px; padding: 0 11px; display: flex; align-items: center; justify-content: space-between; border-radius: 9px 9px 0 0; background: var(--spectrum); color: var(--on-brand); line-height: 1; }
+.todayPickStrip { height: 32px; padding: 0 11px; display: flex; align-items: center; border-radius: 9px 9px 0 0; background: var(--spectrum); color: var(--on-brand); line-height: 1; }
 .todayPickStrip strong { font-size: var(--size-caption); font-weight: var(--weight-heavy); letter-spacing: 0.02em; }
-.todayPickStrip span { font-size: var(--size-micro); font-weight: var(--weight-bold); }
-.todayPickInline { display: none; }
 .todayPickCard .favoriteButton { top: 40px; }
 
 .cardTopline { min-height: 35px; padding: 13px 50px 0 16px; display: flex; align-items: center; justify-content: space-between; }
@@ -1365,14 +1363,6 @@
     .ticketDivider::before,
     .ticketDivider::after { background: var(--desktop-feed); }
     .todayPickStrip { display: none; }
-    .todayPickInline {
-        display: inline-flex;
-        align-items: center;
-        color: var(--brand-dark);
-        font-size: 11px;
-        font-weight: 700;
-        white-space: nowrap;
-    }
     .cardTopline { position: relative; min-height: 39px; padding: 14px 48px 0 18px; }
     .sourceBadge { font-size: 12px; font-weight: 600; }
     .airline { color: #707070; font-size: 12px; font-weight: var(--weight-regular); }

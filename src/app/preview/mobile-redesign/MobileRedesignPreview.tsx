@@ -2999,13 +2999,11 @@ export default function MobileRedesignPreview({
                                             <button type="button" className={styles.cardBody} onClick={() => openFlight(flight)}>
                                                 {isTodayPick && (
                                                     <span className={styles.todayPickStrip}>
-                                                        <strong>오늘의 표</strong>
-                                                        <span>TIKIT DROP</span>
+                                                        <strong>TIKIT DROP</strong>
                                                     </span>
                                                 )}
                                                 <div className={styles.cardTopline}>
                                                     <div>
-                                                        {isTodayPick && <span className={styles.todayPickInline}>오늘의 표</span>}
                                                         <span className={`${styles.sourceBadge} ${styles[flight.source]}`}>{SOURCE_NAMES[flight.source]}</span>
                                                         <span className={styles.airline}>{flight.airline || '항공사 확인'}</span>
                                                     </div>
