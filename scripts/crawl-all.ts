@@ -14,6 +14,8 @@ import path from 'path';
 
 interface CacheData {
     timestamp: string;
+    /** 일반 여행사 5곳을 모두 시도한 마지막 전체 크롤 완료 시각 */
+    fullCrawlUpdatedAt?: string;
     count: number;
     flights: any[];
     sourceUpdatedAt?: Record<string, string>;
@@ -507,8 +509,14 @@ async function main() {
                 }
             }
 
+            const cacheUpdatedAt = new Date().toISOString();
             const cacheData: CacheData = {
-                timestamp: new Date().toISOString(),
+                timestamp: cacheUpdatedAt,
+                // 부분 복구가 최신 캐시 timestamp를 바꿔도 다음 예약 전체 크롤을
+                // 완료된 것으로 오인하지 않도록 독립된 완료 표식을 유지한다.
+                fullCrawlUpdatedAt: requestedSources
+                    ? prevCache?.fullCrawlUpdatedAt
+                    : cacheUpdatedAt,
                 count: benchmarkedFlights.length,
                 flights: benchmarkedFlights,
                 // 캐시에는 필터를 통과해 실제로 노출되는 수를 담는다.

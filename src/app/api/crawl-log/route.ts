@@ -4,7 +4,7 @@ import * as path from 'path';
 import { getComparisonFreshness } from '@/lib/price-quality';
 import { getUsableNaverComparison, type NaverComparisonEntry } from '@/lib/naver-comparison';
 import type { NaverCrawlHistoryEntry } from '@/lib/utils/naver-crawl-history';
-import { getCrawlScheduleHealth } from '@/lib/crawl-schedule-health.mjs';
+import { getCrawlScheduleHealth, getFullCrawlUpdatedAt } from '@/lib/crawl-schedule-health.mjs';
 
 const CACHE_FILE_PATH = path.join(process.cwd(), 'data', 'all-flights-cache.json');
 // 저장소가 공개라 코드에 박아 둔 기본값은 그대로 공개 열쇠가 된다.
@@ -176,9 +176,9 @@ export async function GET(request: NextRequest) {
             }
         } catch { }
 
-        // cache.timestamp는 일반 전체 크롤이 끝났을 때만 바뀐다. MyRealTrip/네이버 후처리도
-        // 바꾸는 lastUpdated를 쓰면 예약 회차 누락이 정상 갱신처럼 보일 수 있다.
-        const crawlScheduleHealth = getCrawlScheduleHealth(timestamp);
+        // 부분 소스 복구도 cache.timestamp를 바꿀 수 있으므로, 전체 일반 여행사를
+        // 실제로 시도한 완료 표식만 예약 회차 상태에 사용한다.
+        const crawlScheduleHealth = getCrawlScheduleHealth(getFullCrawlUpdatedAt(cache));
 
         let naverCrawlHistory: NaverCrawlHistoryEntry[] = [];
         try {

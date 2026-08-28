@@ -11,14 +11,44 @@ export const DAILY_CRAWL_CRONS = Object.freeze([
     '37 15 * * *',
 ]);
 
+// daily-crawl.yml에서 한 번에 확인하는 일반 여행사다. 마이리얼트립은 별도
+// 워크플로우 소스이므로 전체 일반 크롤 완료 시각을 복원할 때 포함하지 않는다.
+export const FULL_CRAWL_SOURCE_KEYS = Object.freeze([
+    'ybtour',
+    'hanatour',
+    'modetour',
+    'onlinetour',
+    'ttang',
+]);
+
 // GitHub 예약 실행이 45분 넘게 생성되지 않으면 운영실에 먼저 알리고,
 // 60분부터 watchdog이 workflow_dispatch 보조 실행을 요청한다.
 export const CRAWL_WARNING_MINUTES = 45;
 export const CRAWL_FALLBACK_MINUTES = 60;
 
 function toTimestamp(value) {
+    if (value === null || value === undefined || value === '') return null;
     const timestamp = value instanceof Date ? value.getTime() : new Date(value).getTime();
     return Number.isFinite(timestamp) ? timestamp : null;
+}
+
+/**
+ * 캐시에서 마지막 전체 일반 크롤 완료 시각을 읽는다.
+ *
+ * timestamp는 부분 소스 복구와 후처리에서도 바뀔 수 있으므로 예약 누락 판단에 쓰지
+ * 않는다. 새 캐시는 fullCrawlUpdatedAt을 명시하고, 필드가 없는 이전 캐시는 모든 일반
+ * 여행사의 마지막 성공 시각 중 가장 오래된 값을 사용해 보수적으로 한 번 복구한다.
+ */
+export function getFullCrawlUpdatedAt(cache) {
+    const explicit = toTimestamp(cache?.fullCrawlUpdatedAt);
+    if (explicit !== null) return new Date(explicit).toISOString();
+
+    const legacySourceTimes = FULL_CRAWL_SOURCE_KEYS.map(source =>
+        toTimestamp(cache?.sourceUpdatedAt?.[source])
+    );
+    if (legacySourceTimes.some(timestamp => timestamp === null)) return null;
+
+    return new Date(Math.min(...legacySourceTimes)).toISOString();
 }
 
 export function parseDailyCron(cron) {

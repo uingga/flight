@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { Flight } from '../src/types/flight';
 import { safeIso, toLifecycleSnapshot, type LifecycleSnapshot } from './lib/flight-lifecycle';
+import { groupRowsByShape } from './lib/postgrest-batch';
 
 type Source = Flight['source'];
 type RunStatus = 'success' | 'preserved' | 'skipped' | 'warning';
@@ -491,21 +492,27 @@ async function fetchCurrentRows(sources: Source[]): Promise<CurrentOfferRow[]> {
 async function upsertRows(table: string, conflict: string, rows: unknown[], ignoreDuplicates = false): Promise<void> {
     if (rows.length === 0) return;
     const { url, key } = supabaseConfig();
-    for (let start = 0; start < rows.length; start += BATCH_SIZE) {
-        const batch = rows.slice(start, start + BATCH_SIZE);
-        const response = await fetch(`${url}/rest/v1/${table}?on_conflict=${encodeURIComponent(conflict)}`, {
-            method: 'POST',
-            headers: {
-                apikey: key,
-                Authorization: `Bearer ${key}`,
-                'Content-Type': 'application/json',
-                Prefer: `${ignoreDuplicates ? 'resolution=ignore-duplicates' : 'resolution=merge-duplicates'},return=minimal`,
-            },
-            body: JSON.stringify(batch),
-        });
-        if (!response.ok) {
-            const detail = (await response.text()).slice(0, 500);
-            throw new Error(`${table} 저장 실패 (${response.status}): ${detail}`);
+    const shapeGroups = groupRowsByShape(rows);
+    if (shapeGroups.length > 1) {
+        console.log(`  ${table}: 서로 다른 열 구조 ${shapeGroups.length}개를 분리 저장`);
+    }
+    for (const shapedRows of shapeGroups) {
+        for (let start = 0; start < shapedRows.length; start += BATCH_SIZE) {
+            const batch = shapedRows.slice(start, start + BATCH_SIZE);
+            const response = await fetch(`${url}/rest/v1/${table}?on_conflict=${encodeURIComponent(conflict)}`, {
+                method: 'POST',
+                headers: {
+                    apikey: key,
+                    Authorization: `Bearer ${key}`,
+                    'Content-Type': 'application/json',
+                    Prefer: `${ignoreDuplicates ? 'resolution=ignore-duplicates' : 'resolution=merge-duplicates'},return=minimal`,
+                },
+                body: JSON.stringify(batch),
+            });
+            if (!response.ok) {
+                const detail = (await response.text()).slice(0, 500);
+                throw new Error(`${table} 저장 실패 (${response.status}): ${detail}`);
+            }
         }
     }
 }

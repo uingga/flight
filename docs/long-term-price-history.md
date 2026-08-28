@@ -64,6 +64,7 @@ Supabase SQL Editor에서 다음 마이그레이션을 한 번 실행한다.
 ```text
 supabase/migrations/20260819_create_long_term_price_history.sql
 supabase/migrations/20260824_create_flight_lifecycle.sql
+supabase/migrations/20260829_grant_long_term_price_history_access.sql
 ```
 
 테이블 생성 전에는 GitHub의 장기 기록 단계가 실패할 수 있으므로 워크플로우에서 `continue-on-error`로 격리한다. 기존 항공권 크롤링과 사이트 배포는 계속 정상 작동한다.

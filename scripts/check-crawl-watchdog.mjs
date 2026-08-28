@@ -1,11 +1,15 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { getCrawlScheduleHealth } from '../src/lib/crawl-schedule-health.mjs';
+import {
+    getCrawlScheduleHealth,
+    getFullCrawlUpdatedAt,
+} from '../src/lib/crawl-schedule-health.mjs';
 
-const cachePath = path.join(process.cwd(), 'data', 'all-flights-cache.json');
+const cachePath = process.env.CRAWL_CACHE_PATH
+    || path.join(process.cwd(), 'data', 'all-flights-cache.json');
 const cache = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
 const now = process.env.WATCHDOG_NOW ? new Date(process.env.WATCHDOG_NOW) : new Date();
-const health = getCrawlScheduleHealth(cache.timestamp, { now });
+const health = getCrawlScheduleHealth(getFullCrawlUpdatedAt(cache), { now });
 const shouldDispatch = health.status === 'overdue';
 
 console.log(JSON.stringify({

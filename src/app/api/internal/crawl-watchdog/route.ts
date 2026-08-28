@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { NextRequest, NextResponse } from 'next/server';
 import { getCrawlDispatchBlocker, type GitHubWorkflowRunSummary } from '@/lib/crawl-watchdog-dispatch.mjs';
-import { getCrawlScheduleHealth } from '@/lib/crawl-schedule-health.mjs';
+import { getCrawlScheduleHealth, getFullCrawlUpdatedAt } from '@/lib/crawl-schedule-health.mjs';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -35,10 +35,11 @@ function githubHeaders(token: string) {
 
 function readLastCompletedAt(): string | null {
     const cachePath = path.join(process.cwd(), 'data', 'all-flights-cache.json');
-    const cache = JSON.parse(fs.readFileSync(cachePath, 'utf8')) as { timestamp?: unknown };
-    if (typeof cache.timestamp !== 'string') return null;
-    const timestamp = new Date(cache.timestamp).getTime();
-    return Number.isFinite(timestamp) ? new Date(timestamp).toISOString() : null;
+    const cache = JSON.parse(fs.readFileSync(cachePath, 'utf8')) as {
+        fullCrawlUpdatedAt?: unknown;
+        sourceUpdatedAt?: Record<string, unknown>;
+    };
+    return getFullCrawlUpdatedAt(cache);
 }
 
 export async function GET(request: NextRequest) {

@@ -53,6 +53,7 @@ async function main() {
 
     var cacheData = {
         timestamp: new Date().toISOString(),
+        fullCrawlUpdatedAt: existing.fullCrawlUpdatedAt,
         count: filteredFlights.length,
         flights: filteredFlights,
         sourceUpdatedAt: {

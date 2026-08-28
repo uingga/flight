@@ -68,6 +68,11 @@ alter table public.route_price_daily enable row level security;
 revoke all on table public.flight_price_daily from anon, authenticated;
 revoke all on table public.route_price_daily from anon, authenticated;
 
+grant select, insert, update on table
+    public.flight_price_daily,
+    public.route_price_daily
+to service_role;
+
 comment on table public.flight_price_daily is
     'Daily flight-level price observations. Internal service-role access only.';
 comment on table public.route_price_daily is

@@ -1,12 +1,89 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import test from 'node:test';
 import {
     DAILY_CRAWL_CRONS,
     getCrawlScheduleHealth,
+    getFullCrawlUpdatedAt,
 } from '../src/lib/crawl-schedule-health.mjs';
 import { getCrawlDispatchBlocker } from '../src/lib/crawl-watchdog-dispatch.mjs';
+
+function withTempCache(cache, callback) {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'tikitikit-crawl-health-'));
+    const cachePath = path.join(tempDir, 'all-flights-cache.json');
+    fs.writeFileSync(cachePath, JSON.stringify(cache));
+    try {
+        return callback(cachePath);
+    } finally {
+        fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+}
+
+test('an explicit full-crawl marker is not replaced by a newer partial cache timestamp', () => {
+    const result = getFullCrawlUpdatedAt({
+        timestamp: '2026-08-28T09:54:18.225Z',
+        fullCrawlUpdatedAt: '2026-08-28T08:49:59.902Z',
+        sourceUpdatedAt: { ttang: '2026-08-28T09:54:18.205Z' },
+    });
+
+    assert.equal(result, '2026-08-28T08:49:59.902Z');
+});
+
+test('legacy caches use the oldest general-source update instead of a partial cache timestamp', () => {
+    const result = getFullCrawlUpdatedAt({
+        timestamp: '2026-08-28T09:54:18.225Z',
+        sourceUpdatedAt: {
+            ybtour: '2026-08-28T08:48:58.176Z',
+            hanatour: '2026-08-28T08:48:58.176Z',
+            modetour: '2026-08-28T08:48:58.176Z',
+            onlinetour: '2026-08-28T08:48:58.176Z',
+            ttang: '2026-08-28T09:54:18.205Z',
+            myrealtrip: '2026-08-28T01:24:45.202Z',
+        },
+    });
+
+    assert.equal(result, '2026-08-28T08:48:58.176Z');
+});
+
+test('preflight and watchdog recover a slot hidden by a partial source refresh', () => {
+    withTempCache({
+        timestamp: '2026-08-28T09:54:18.225Z',
+        fullCrawlUpdatedAt: '2026-08-28T08:49:59.902Z',
+    }, cachePath => {
+        const preflight = spawnSync(process.execPath, ['scripts/check-crawl-run.mjs'], {
+            encoding: 'utf8',
+            env: {
+                ...process.env,
+                TRIGGER_EVENT: 'schedule',
+                TRIGGER_SCHEDULE: '29 9 * * *',
+                CHECK_CACHE: '1',
+                CHECK_NOW: '2026-08-28T10:45:00.000Z',
+                CRAWL_CACHE_PATH: cachePath,
+            },
+        });
+        assert.equal(preflight.status, 0, preflight.stderr);
+        assert.match(preflight.stdout, /\[preflight\] cache_updated_at=2026-08-28T09:54:18\.225Z/);
+        assert.match(preflight.stdout, /\[preflight\] last_completed_at=2026-08-28T08:49:59\.902Z/);
+        assert.match(preflight.stdout, /\[preflight\] should_run=true/);
+
+        const watchdog = spawnSync(process.execPath, ['scripts/check-crawl-watchdog.mjs'], {
+            encoding: 'utf8',
+            env: {
+                ...process.env,
+                WATCHDOG_NOW: '2026-08-28T10:45:00.000Z',
+                CRAWL_CACHE_PATH: cachePath,
+            },
+        });
+        assert.equal(watchdog.status, 0, watchdog.stderr);
+        const health = JSON.parse(watchdog.stdout);
+        assert.equal(health.status, 'overdue');
+        assert.equal(health.expectedAt, '2026-08-28T09:29:00.000Z');
+        assert.equal(health.shouldDispatch, true);
+    });
+});
 
 test('warns 45 minutes after an uncovered crawl slot', () => {
     const health = getCrawlScheduleHealth('2026-08-27T15:50:00.000Z', {
@@ -51,6 +128,14 @@ test('health schedule stays in sync with daily-crawl.yml', () => {
     const workflow = fs.readFileSync('.github/workflows/daily-crawl.yml', 'utf8');
     const workflowCrons = [...workflow.matchAll(/^\s*- cron: '([^']+)'/gm)].map(match => match[1]);
     assert.deepEqual([...DAILY_CRAWL_CRONS].sort(), workflowCrons.sort());
+});
+
+test('full crawls advance the marker while partial crawls preserve it', () => {
+    const crawler = fs.readFileSync('scripts/crawl-all.ts', 'utf8');
+    assert.match(
+        crawler,
+        /fullCrawlUpdatedAt:\s*requestedSources\s*\?\s*prevCache\?\.fullCrawlUpdatedAt\s*:\s*cacheUpdatedAt/,
+    );
 });
 
 test('watchdog dispatch inputs are declared by daily-crawl.yml', () => {

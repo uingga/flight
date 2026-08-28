@@ -18,9 +18,16 @@ export interface CrawlScheduleHealthOptions {
     crons?: readonly string[];
 }
 
+export interface CrawlCacheTimestamps {
+    fullCrawlUpdatedAt?: unknown;
+    sourceUpdatedAt?: Record<string, unknown>;
+}
+
 export const DAILY_CRAWL_CRONS: readonly string[];
+export const FULL_CRAWL_SOURCE_KEYS: readonly string[];
 export const CRAWL_WARNING_MINUTES: number;
 export const CRAWL_FALLBACK_MINUTES: number;
+export function getFullCrawlUpdatedAt(cache: CrawlCacheTimestamps | null | undefined): string | null;
 export function parseDailyCron(cron: string): { minute: number; hour: number } | null;
 export function getScheduledAtForCron(cron: string, now?: string | number | Date): number | null;
 export function getCrawlScheduleHealth(

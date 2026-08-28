@@ -7,7 +7,8 @@ GitHub 예약 실행이 늦거나 누락될 때도 전체 항공권 수집을 �
 ## 운영 구조
 
 1. Supabase Cron이 20분마다 `GET /api/internal/crawl-watchdog`를 호출한다.
-2. API는 `data/all-flights-cache.json`의 `timestamp`로 마지막 전체 수집 완료 시각을 확인한다.
+2. API는 `data/all-flights-cache.json`의 `fullCrawlUpdatedAt`으로 마지막 전체 수집 완료
+   시각을 확인한다. 부분 여행사 복구는 이 값을 바꾸지 않는다.
 3. 예정 회차가 60분 이상 늦었고 실행 중이거나 최근 요청된 보조 실행이 없을 때만
    `daily-crawl.yml`을 `trigger_source=watchdog`으로 실행한다.
 4. 기존 preflight와 concurrency가 뒤늦은 예약 실행 및 중복 크롤을 한 번 더 막는다.

@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import type { Flight } from '../src/types/flight';
 import { buildLifecycleIdentity, seatAvailability, toLifecycleSnapshot } from './lib/flight-lifecycle';
+import { groupRowsByShape } from './lib/postgrest-batch';
 
 function flight(overrides: Partial<Flight> = {}): Flight {
     return {
@@ -68,5 +70,26 @@ const compared = flight({ naverLowest: 188_000, naverCheckedAt: '2026-08-24T01:0
 const comparedSnapshot = toLifecycleSnapshot(compared, true);
 assert.equal(comparedSnapshot.comparisonPrice, 188_000);
 assert.equal(comparedSnapshot.comparisonCheckedAt, '2026-08-24T01:00:00.000Z');
+
+const shapedBatches = groupRowsByShape([
+    { offer_key: 'new-1', price: 100_000 },
+    { offer_key: 'existing-1', price: 110_000, created_at: '2026-08-24T00:00:00Z' },
+    { offer_key: 'new-2', price: 120_000 },
+]);
+assert.deepEqual(
+    shapedBatches.map(batch => batch.length).sort((a, b) => a - b),
+    [1, 2],
+    'PostgREST 한 요청에는 같은 열 구조의 행만 들어가야 합니다.',
+);
+for (const batch of shapedBatches) {
+    const expectedKeys = Object.keys(batch[0]).sort();
+    for (const row of batch) assert.deepEqual(Object.keys(row).sort(), expectedKeys);
+}
+
+const grantMigration = fs.readFileSync(
+    'supabase/migrations/20260829_grant_long_term_price_history_access.sql',
+    'utf8',
+);
+assert.match(grantMigration, /grant select, insert, update on table[\s\S]*flight_price_daily[\s\S]*route_price_daily[\s\S]*to service_role;/i);
 
 console.log('항공권 생애 식별자 테스트 통과');

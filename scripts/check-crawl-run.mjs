@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {
+    getFullCrawlUpdatedAt,
     getCrawlScheduleHealth,
     getScheduledAtForCron,
 } from '../src/lib/crawl-schedule-health.mjs';
@@ -22,12 +23,16 @@ if (expectedInput) {
 }
 
 let lastCompletedAt = null;
+let cacheUpdatedAt = null;
 if (checkCache) {
-    const cachePath = path.join(process.cwd(), 'data', 'all-flights-cache.json');
+    const cachePath = process.env.CRAWL_CACHE_PATH
+        || path.join(process.cwd(), 'data', 'all-flights-cache.json');
     const cache = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
-    if (cache.timestamp && Number.isFinite(new Date(cache.timestamp).getTime())) {
-        lastCompletedAt = new Date(cache.timestamp).toISOString();
-    }
+    const parsedCacheTimestamp = new Date(cache.timestamp).getTime();
+    cacheUpdatedAt = Number.isFinite(parsedCacheTimestamp)
+        ? new Date(parsedCacheTimestamp).toISOString()
+        : null;
+    lastCompletedAt = getFullCrawlUpdatedAt(cache);
 }
 
 const automatic = eventName === 'schedule' || triggerSource === 'watchdog';
@@ -55,7 +60,10 @@ console.log(`[trigger] source=${triggerSource || 'none'}`);
 console.log(`[trigger] expected_at=${expectedAt || 'none'}`);
 console.log(`[trigger] observed_at=${now.toISOString()}`);
 console.log(`[trigger] delay_minutes=${delayMinutes ?? 'n/a'}`);
-if (checkCache) console.log(`[preflight] last_completed_at=${lastCompletedAt || 'none'}`);
+if (checkCache) {
+    console.log(`[preflight] cache_updated_at=${cacheUpdatedAt || 'none'}`);
+    console.log(`[preflight] last_completed_at=${lastCompletedAt || 'none'}`);
+}
 console.log(`[preflight] should_run=${shouldRun}`);
 console.log(`[preflight] is_today_pick_slot=${isTodayPickSlot}`);
 console.log(`[preflight] reason=${reason}`);
