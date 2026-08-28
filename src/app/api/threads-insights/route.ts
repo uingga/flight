@@ -30,7 +30,8 @@ let cache: CachedPayload | null = null;
 const threadsSourceFilter = {
     filter: {
         fieldName: 'sessionSource',
-        stringFilter: { value: 'threads', matchType: 'EXACT', caseSensitive: false },
+        // UTM 유입은 `threads`, 기존 자연 유입은 `threads.net`/`threads.com`으로 들어올 수 있다.
+        stringFilter: { value: 'threads', matchType: 'CONTAINS', caseSensitive: false },
     },
 };
 

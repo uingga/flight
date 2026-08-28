@@ -30,7 +30,7 @@ utm_campaign=tikitikit_threads
 utm_content=share_{공유코드}
 ```
 
-기존 `/s/{공유코드}` 링크도 `threads.net` referrer가 전달되면 같은 방식으로 분류한다. 다만 앱이 referrer를 지울 수 있으므로 새 Threads 글에는 `/t/` 링크를 쓰는 편이 안전하다.
+기존 `/s/{공유코드}` 링크도 `threads.net` 또는 `threads.com` referrer가 전달되면 같은 방식으로 분류한다. 다만 앱이 referrer를 지울 수 있으므로 새 Threads 글에는 `/t/` 링크를 쓰는 편이 안전하다.
 
 ## 보안과 운영
 

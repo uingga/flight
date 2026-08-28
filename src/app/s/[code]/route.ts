@@ -15,7 +15,7 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
     let fromThreads = false;
     try {
         const hostname = new URL(referer).hostname.toLowerCase();
-        fromThreads = hostname === 'threads.net' || hostname.endsWith('.threads.net');
+        fromThreads = ['threads.net', 'threads.com'].some(domain => hostname === domain || hostname.endsWith(`.${domain}`));
     } catch {
         // 앱이 referrer를 전달하지 않으면 기존 사용자 공유로 처리한다.
     }
