@@ -185,12 +185,14 @@ export default function RootLayout({
                                 },
                                 {
                                     '@type': 'Organization',
+                                    '@id': `${BASE_URL}/#organization`,
                                     name: '티키티킷',
                                     alternateName: 'TikiTikit',
                                     url: BASE_URL,
                                     logo: `${BASE_URL}/icon.svg`,
                                     description: '여러 여행사의 저렴한 땡처리 항공권을 모아 보여주는 서비스',
                                     sameAs: ['https://blog.naver.com/mytikit'],
+                                    knowsAbout: ['땡처리 항공권', '특가 항공권', '항공권 가격 비교'],
                                 },
                                 {
                                     '@type': 'BreadcrumbList',
@@ -214,51 +216,6 @@ export default function RootLayout({
                                         priceCurrency: 'KRW',
                                     },
                                     description: '여러 여행사의 저렴한 땡처리 항공권을 모아 보여주는 무료 웹 서비스',
-                                },
-                                {
-                                    '@type': 'FAQPage',
-                                    mainEntity: [
-                                        {
-                                            '@type': 'Question',
-                                            name: '티키티킷은 어떤 서비스인가요?',
-                                            acceptedAnswer: {
-                                                '@type': 'Answer',
-                                                text: '티키티킷은 여행사마다 따로 올라오는 저렴한 땡처리 항공권을 한곳에 모아 보여주는 무료 서비스입니다.',
-                                            },
-                                        },
-                                        {
-                                            '@type': 'Question',
-                                            name: '티키티킷은 무료인가요?',
-                                            acceptedAnswer: {
-                                                '@type': 'Answer',
-                                                text: '네, 티키티킷은 완전히 무료로 이용하실 수 있습니다. 별도의 회원가입이나 결제 없이 바로 항공권 가격을 비교하실 수 있습니다.',
-                                            },
-                                        },
-                                        {
-                                            '@type': 'Question',
-                                            name: '어떤 여행사의 항공권을 비교할 수 있나요?',
-                                            acceptedAnswer: {
-                                                '@type': 'Answer',
-                                                text: '현재 하나투어, 모두투어, 노랑풍선, 온라인투어, 땡처리닷컴, 마이리얼트립의 항공권을 확인할 수 있습니다.',
-                                            },
-                                        },
-                                        {
-                                            '@type': 'Question',
-                                            name: '항공권 가격은 얼마나 자주 업데이트되나요?',
-                                            acceptedAnswer: {
-                                                '@type': 'Answer',
-                                                text: '항공권 정보는 하루 여러 차례 자동으로 업데이트합니다. 실제 가격과 좌석은 예약 시점에 달라질 수 있습니다.',
-                                            },
-                                        },
-                                        {
-                                            '@type': 'Question',
-                                            name: '땡처리 항공권이란 무엇인가요?',
-                                            acceptedAnswer: {
-                                                '@type': 'Answer',
-                                                text: '땡처리 항공권은 여행사가 보유한 좌석을 출발일이 가까워졌을 때 할인해 판매하는 항공권입니다.',
-                                            },
-                                        },
-                                    ],
                                 },
                             ],
                         }),

@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import fs from 'node:fs';
 import path from 'node:path';
 import Link from 'next/link';
+import { SITE_URL } from '@/lib/site';
 import styles from '../tips.module.css';
 
 interface PricePoint {
@@ -93,9 +94,26 @@ function buildInsights(history: Record<string, PricePoint[]>) {
 
 export default function PriceWatchPage() {
     const data = buildInsights(loadHistory());
+    const firstObserved = data.rows.map(row => row.firstDate).filter(Boolean).sort()[0] || '';
+    const datasetJsonLd = {
+        '@context': 'https://schema.org',
+        '@type': 'Dataset',
+        '@id': `${SITE_URL}/tips/price-watch#dataset`,
+        name: '티키티킷 주요 항공 노선 최저 표시 가격 기록',
+        description: '티키티킷이 여행사 상품에서 날짜별로 수집한 노선별 최저 표시 가격의 최근 변화 요약',
+        url: `${SITE_URL}/tips/price-watch`,
+        creator: { '@id': `${SITE_URL}/#organization` },
+        dateModified: data.latestDate || undefined,
+        temporalCoverage: firstObserved && data.latestDate ? `${firstObserved}/${data.latestDate}` : undefined,
+        inLanguage: 'ko-KR',
+        isAccessibleForFree: true,
+        measurementTechnique: '각 수집일의 여행사 상품 중 노선별 최저 표시 가격 비교',
+        variableMeasured: ['노선', '수집일', '최저 표시 가격', '표본 수'],
+    };
 
     return (
         <main className={styles.tipsPage}>
+            <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(datasetJsonLd) }} />
             <Link href="/tips" className={styles.backLink}>← 여행 팁 목록</Link>
             <article className={styles.article}>
                 <p className={styles.dataEyebrow}>TIKITIKIT PRICE NOTE</p>
@@ -103,6 +121,7 @@ export default function PriceWatchPage() {
                 <p className={styles.articleDesc}>
                     여행 상식이 아니라 티키티킷의 실제 가격 기록에서 시작했습니다. 최근 기록 구간이 20일 이내인 주요 노선만 골라 첫 기록과 최근 기록을 비교했습니다.
                 </p>
+                {data.latestDate && <p className={styles.articleDesc}>마지막 기록일: <time dateTime={data.latestDate}>{data.latestDate}</time></p>}
 
                 <div className={styles.dataSummary}>
                     <div><strong>{data.trackedRoutes.toLocaleString()}</strong><span>가격 기록이 있는 노선</span></div>

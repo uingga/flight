@@ -53,6 +53,23 @@ async function countSupabaseRows(
     return Number.isFinite(total) ? total : 0;
 }
 
+async function supabaseUserIdsCreatedSince(
+    config: { url: string; key: string },
+    table: string,
+    since: string,
+) {
+    const response = await fetch(
+        `${config.url}/rest/v1/${table}?select=user_id&created_at=gte.${encodeURIComponent(since)}`,
+        {
+            headers: getSupabaseServerHeaders(config.key),
+            cache: 'no-store',
+        },
+    );
+    if (!response.ok) throw new Error(`Today save metric failed: ${response.status}`);
+    const rows = await response.json() as Array<{ user_id?: string }>;
+    return rows.map(row => row.user_id).filter((value): value is string => Boolean(value));
+}
+
 function dayInKorea(iso?: string): string | null {
     if (!iso) return null;
     const date = new Date(iso);
@@ -112,20 +129,37 @@ export async function GET(request: NextRequest) {
             accountsLast30Days: 0,
             activeSessions: 0,
             favorites: 0,
+            favoritesToday: 0,
             recentFlights: 0,
             savedSearches: 0,
+            savedSearchesToday: 0,
+            saversToday: 0,
         };
         try {
-            const [accounts, accountsToday, accountsLast7Days, accountsLast30Days, activeSessions, favorites, recentFlights, savedSearches] = await Promise.all([
+            const [
+                accounts,
+                accountsToday,
+                accountsLast7Days,
+                accountsLast30Days,
+                activeSessions,
+                favorites,
+                favoriteUserIdsToday,
+                recentFlights,
+                savedSearches,
+                savedSearchUserIdsToday,
+            ] = await Promise.all([
                 countSupabaseRows(config, 'tikitikit_users', 'id'),
                 countSupabaseRows(config, 'tikitikit_users', 'id', `&created_at=gte.${encodeURIComponent(todayStart)}`),
                 countSupabaseRows(config, 'tikitikit_users', 'id', `&created_at=gte.${encodeURIComponent(sevenDaysAgo)}&created_at=lt.${encodeURIComponent(todayStart)}`),
                 countSupabaseRows(config, 'tikitikit_users', 'id', `&created_at=gte.${encodeURIComponent(thirtyDaysAgo)}&created_at=lt.${encodeURIComponent(todayStart)}`),
                 countSupabaseRows(config, 'tikitikit_auth_sessions', 'id', `&expires_at=gt.${encodeURIComponent(nowIso)}`),
                 countSupabaseRows(config, 'tikitikit_user_favorites', 'flight_id'),
+                supabaseUserIdsCreatedSince(config, 'tikitikit_user_favorites', todayStart),
                 countSupabaseRows(config, 'tikitikit_user_recent_flights', 'flight_id'),
                 countSupabaseRows(config, 'tikitikit_user_saved_searches', 'id'),
+                supabaseUserIdsCreatedSince(config, 'tikitikit_user_saved_searches', todayStart),
             ]);
+            const saversToday = new Set([...favoriteUserIdsToday, ...savedSearchUserIdsToday]).size;
             accountMetrics = {
                 accountAvailable: true,
                 accounts,
@@ -134,8 +168,11 @@ export async function GET(request: NextRequest) {
                 accountsLast30Days,
                 activeSessions,
                 favorites,
+                favoritesToday: favoriteUserIdsToday.length,
                 recentFlights,
                 savedSearches,
+                savedSearchesToday: savedSearchUserIdsToday.length,
+                saversToday,
             };
         } catch (error) {
             console.error('Account stats unavailable:', error instanceof Error ? error.message : 'unknown');
@@ -154,6 +191,9 @@ export async function GET(request: NextRequest) {
         const registrationsToday = rows.filter(row => createdBetween(row, todayStart)).length;
         const registrationsLast7Days = rows.filter(row => createdBetween(row, sevenDaysAgo, todayStart)).length;
         const registrationsLast30Days = rows.filter(row => createdBetween(row, thirtyDaysAgo, todayStart)).length;
+        const alertUsersToday = new Set(
+            rows.filter(row => createdBetween(row, todayStart)).map(row => row.endpoint_hash).filter(Boolean),
+        ).size;
 
         // 구독자 = 고유 기기(푸시 endpoint). 한 사람이 여러 노선을 걸 수 있다.
         const devices = new Set(active.map(row => row.endpoint_hash).filter(Boolean));
@@ -265,6 +305,7 @@ export async function GET(request: NextRequest) {
                 notified,
                 neverNotified: active.length - notified,
                 registrationsToday,
+                alertUsersToday,
                 registrationsLast7Days,
                 registrationsLast30Days,
                 // 목표가 이하 항공권이 지금 존재하는 노선 알림 수

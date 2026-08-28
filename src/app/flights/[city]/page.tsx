@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import { SITE_URL } from '@/lib/site';
 import {
     loadActiveFlights, groupByCity, effectivePrice, departureLabel, formatKoreanDate,
-    type CityDeals,
+    loadFlightCacheMeta, type CityDeals,
 } from '@/lib/flight-static';
 import { normalizeAirline } from '@/lib/utils/flight-helpers';
 import type { Flight } from '@/types/flight';
@@ -37,7 +37,7 @@ export function generateMetadata({ params }: { params: { city: string } }): Meta
     if (!data) return { title: '땡처리 항공권' };
     // 레이아웃 템플릿이 "| 티키티킷"을 붙이므로 여기서는 넣지 않는다
     const title = `${data.city} 땡처리 항공권 최저가 ${data.minPrice.toLocaleString('ko-KR')}원`;
-    const description = `${data.city}행 땡처리 항공권 ${data.flights.length}장 판매 중. 왕복 최저 ${data.minPrice.toLocaleString('ko-KR')}원, 출발일 ${formatKoreanDate(data.earliestDate)}~${formatKoreanDate(data.latestDate)}. 하루 7번 갱신됩니다.`;
+    const description = `${data.city}행 땡처리 항공권 ${data.flights.length}장 판매 중. 왕복 최저 ${data.minPrice.toLocaleString('ko-KR')}원, 출발일 ${formatKoreanDate(data.earliestDate)}~${formatKoreanDate(data.latestDate)}. 하루 여러 차례 갱신됩니다.`;
     const canonical = `/flights/${encodeURIComponent(data.city)}`;
     return {
         title,
@@ -51,8 +51,12 @@ export default function CityFlightsPage({ params }: { params: { city: string } }
     const data = getCity(params.city);
     if (!data) notFound();
 
-    const checkedAt = new Date();
-    const checkedLabel = `${checkedAt.getMonth() + 1}월 ${checkedAt.getDate()}일`;
+    const cacheMeta = loadFlightCacheMeta();
+    const checkedAt = cacheMeta.timestamp || cacheMeta.lastUpdated;
+    const checkedDate = checkedAt ? new Date(checkedAt) : new Date();
+    const checkedLabel = new Intl.DateTimeFormat('ko-KR', {
+        timeZone: 'Asia/Seoul', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: false,
+    }).format(checkedDate);
     const listed = data.flights.slice(0, MAX_LISTED);
     const others = groupByCity(loadActiveFlights())
         .filter(c => c.city !== data.city)
@@ -62,6 +66,16 @@ export default function CityFlightsPage({ params }: { params: { city: string } }
         '@context': 'https://schema.org',
         '@graph': [
             {
+                '@type': 'CollectionPage',
+                '@id': `${SITE_URL}/flights/${encodeURIComponent(data.city)}#page`,
+                url: `${SITE_URL}/flights/${encodeURIComponent(data.city)}`,
+                name: `${data.city} 땡처리 항공권`,
+                description: `${checkedLabel} 기준 ${data.city} 왕복 최저 ${data.minPrice.toLocaleString('ko-KR')}원, ${data.flights.length}장 판매 중`,
+                dateModified: checkedAt || undefined,
+                inLanguage: 'ko-KR',
+                mainEntity: { '@id': `${SITE_URL}/flights/${encodeURIComponent(data.city)}#list` },
+            },
+            {
                 '@type': 'BreadcrumbList',
                 itemListElement: [
                     { '@type': 'ListItem', position: 1, name: '홈', item: SITE_URL },
@@ -70,6 +84,7 @@ export default function CityFlightsPage({ params }: { params: { city: string } }
             },
             {
                 '@type': 'ItemList',
+                '@id': `${SITE_URL}/flights/${encodeURIComponent(data.city)}#list`,
                 name: `${data.city} 땡처리 항공권`,
                 numberOfItems: listed.length,
                 itemListElement: listed.map((f, i) => ({

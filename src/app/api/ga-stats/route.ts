@@ -147,6 +147,7 @@ async function buildStats(config: Ga4Config, days: number) {
         todayReport,
         returningReport,
         previousReturningReport,
+        todayReturningReport,
     ] = await Promise.all([
         runReport(config, {
             dateRanges: trendDateRanges,
@@ -170,9 +171,10 @@ async function buildStats(config: Ga4Config, days: number) {
         summaryRequest(todayDateRanges),
         returningRequest(dateRanges),
         returningRequest(previousDateRanges),
+        returningRequest(todayDateRanges),
     ]);
 
-    const [agencyReport, routeReport, entryReport, detailEntryReport, channelReport, unassignedChannelReport, referralReport, campaignTrafficReport, campaignBookingReport, leadTimeReport, rangeReport, dateMethodReport, presetReport, repeatBehaviorReport] = await Promise.all([
+    const [agencyReport, routeReport, entryReport, detailEntryReport, channelReport, unassignedChannelReport, referralReport, campaignTrafficReport, campaignBookingReport, leadTimeReport, rangeReport, dateMethodReport, presetReport, repeatBehaviorReport, todayRouteReport, todayAcquisitionReport] = await Promise.all([
         optional('여행사별 예약 클릭', warnings, () => runReport(config, {
             dateRanges,
             dimensions: [{ name: 'customEvent:travel_agency' }],
@@ -295,6 +297,25 @@ async function buildStats(config: Ga4Config, days: number) {
                 },
             },
             limit: 20,
+        })),
+        optional('오늘 많이 본 노선', warnings, () => runReport(config, {
+            dateRanges: todayDateRanges,
+            dimensions: [{ name: 'customEvent:route' }],
+            metrics: [{ name: 'eventCount' }],
+            dimensionFilter: eventNameFilter('detail_open'),
+            orderBys: [{ metric: { metricName: 'eventCount' }, desc: true }],
+            limit: 8,
+        })),
+        optional('오늘 유입 경로', warnings, () => runReport(config, {
+            dateRanges: todayDateRanges,
+            dimensions: [
+                { name: 'sessionDefaultChannelGroup' },
+                { name: 'sessionSource' },
+                { name: 'sessionMedium' },
+            ],
+            metrics: [{ name: 'sessions' }, { name: 'activeUsers' }],
+            orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
+            limit: 50,
         })),
     ]);
 
@@ -432,6 +453,32 @@ async function buildStats(config: Ga4Config, days: number) {
         if (normalized === 'te31.com') return 'TE31';
         return source || '(출처 없음)';
     };
+    const todayChannels = (() => {
+        if (todayAcquisitionReport === null) return null;
+        const grouped = new Map<string, { label: string; sessions: number; users: number }>();
+        (todayAcquisitionReport.rows || []).forEach(row => {
+            const rawChannel = dim(row);
+            const label = rawChannel === 'Unassigned' || isUnsetDimension(rawChannel)
+                ? inferChannelFromSource(dim(row, 1), dim(row, 2)) || '출처 확인 불가'
+                : CHANNEL_LABELS[rawChannel] || rawChannel;
+            const previous = grouped.get(label);
+            grouped.set(label, {
+                label,
+                sessions: (previous?.sessions || 0) + num(row, 0),
+                users: (previous?.users || 0) + num(row, 1),
+            });
+        });
+        return Array.from(grouped.values()).sort((a, b) => b.sessions - a.sessions);
+    })();
+    const todayReferrals = todayAcquisitionReport === null ? null : (todayAcquisitionReport.rows || [])
+        .filter(row => dim(row, 2).toLowerCase() === 'referral' && !isUnsetDimension(dim(row, 1)))
+        .map(row => ({
+            source: dim(row, 1),
+            label: referralSourceLabel(dim(row, 1)),
+            sessions: num(row, 0),
+            users: num(row, 1),
+        }))
+        .sort((a, b) => b.sessions - a.sessions);
     const campaignBookings = new Map(
         (campaignBookingReport?.rows || []).map(row => [`${dim(row)}|${dim(row, 1)}`, num(row, 0)]),
     );
@@ -553,6 +600,14 @@ async function buildStats(config: Ga4Config, days: number) {
             recent7: activity(recent7EventReport, summary(recent7Report), recent7AlertIntentReport),
             current: activity(eventReport, totals, currentAlertIntentReport),
         },
+        todayOverview: {
+            audience: returning(todayReturningReport),
+            savedSearchUsers: parseEvents(todayEventReport)
+                .find(entry => entry.name === 'saved_search_create')?.users ?? 0,
+            topRoutes: measured(list(todayRouteReport)),
+            channels: todayChannels,
+            referrals: todayReferrals,
+        },
         returning: {
             current: returning(returningReport),
             previous: returning(previousReturningReport),
@@ -575,8 +630,9 @@ async function buildStats(config: Ga4Config, days: number) {
             detailOpenUsers: detailOpen?.users ?? 0,
             detailOpenRate: rate(detailOpen?.users ?? 0),
             bookingClickUsers: bookingClick?.users ?? 0,
+            // 전체 성과의 핵심 지표 — 방문자 중 몇 %가 여행사 예약 페이지로 이동했는지
             bookingClickRate: rate(bookingClick?.users ?? 0),
-            // 퍼널에서 제일 중요한 구간 — 상세를 연 사람 중 몇 %가 실제 예약으로 넘어갔는지
+            // 상세 화면의 설득력을 보는 보조 지표
             detailToBookingRate: detailOpen?.users
                 ? Number((((bookingClick?.users ?? 0) / detailOpen.users) * 100).toFixed(1))
                 : null,

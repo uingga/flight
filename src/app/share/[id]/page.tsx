@@ -167,6 +167,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
             return {
                 title,
                 description,
+                robots: { index: false, follow: true },
                 alternates: { canonical: `/share/${id}` },
                 openGraph: {
                     title,
@@ -182,6 +183,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
         return {
             title: '지금 나온 땡처리 항공권 | 티키티킷',
             description: '6개 여행사의 땡처리 항공권 가격과 일정을 한곳에서 비교하세요.',
+            robots: { index: false, follow: true },
         };
     }
 
@@ -218,6 +220,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     return {
         title,
         description,
+        robots: { index: false, follow: true },
         alternates: {
             canonical: `/share/${id}`,
         },

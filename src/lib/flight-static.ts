@@ -26,6 +26,30 @@ export interface CityDeals {
     latestDate: string;
 }
 
+export interface FlightCacheMeta {
+    /** 전체 크롤이 시작된 시각(ISO 8601) */
+    timestamp: string;
+    /** 캐시가 마지막으로 저장된 시각(ISO 8601) */
+    lastUpdated: string;
+    sourceUpdatedAt: Record<string, string>;
+}
+
+export function loadFlightCacheMeta(): FlightCacheMeta {
+    try {
+        const raw = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'data', 'all-flights-cache.json'), 'utf8'));
+        if (Array.isArray(raw)) return { timestamp: '', lastUpdated: '', sourceUpdatedAt: {} };
+        return {
+            timestamp: typeof raw.timestamp === 'string' ? raw.timestamp : '',
+            lastUpdated: typeof raw.lastUpdated === 'string' ? raw.lastUpdated : '',
+            sourceUpdatedAt: raw.sourceUpdatedAt && typeof raw.sourceUpdatedAt === 'object'
+                ? raw.sourceUpdatedAt
+                : {},
+        };
+    } catch {
+        return { timestamp: '', lastUpdated: '', sourceUpdatedAt: {} };
+    }
+}
+
 /** 표시가가 아닌 실결제가 (땡처리닷컴은 발권수수료 2만원 별도) */
 export function effectivePrice(flight: Flight): number {
     return flight.price + (flight.source === 'ttang' ? 20_000 : 0);

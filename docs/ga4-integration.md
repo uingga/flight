@@ -135,7 +135,8 @@ Vercel 대시보드 → 프로젝트 → **Settings → Environment Variables** 
   `deal_alert_setup`, `blog_flight_link_open`, `blog_alert_link_open`, `compare_click`,
   `share_flight`, `filter_change`, `date_filter`
 - **퍼널** — 방문 → 상세 열람(`detail_open`) → 예약 클릭(`booking_click`).
-  마지막 구간은 "상세를 연 사람 중 몇 %가 예약으로 갔는지"로 표시된다
+  핵심 지표는 "전체 방문자 중 몇 %가 예약 페이지로 이동했는지"다.
+  "상세를 연 사람 중 몇 %가 예약으로 갔는지"는 상세 화면의 설득력을 보는 보조 지표로 함께 표시한다
 - 여행사별 예약 클릭 (`customEvent:travel_agency`)
 - 예약 클릭이 많은 노선 (`customEvent:route`)
 - 상세를 연 위치 / 알림 등록이 시작된 위치 (`customEvent:entry_point`)

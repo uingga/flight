@@ -2530,6 +2530,218 @@
 
 .behaviorSummaryResult strong { color: #d92b4c; }
 
+.todayBehaviorSummary {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 190px;
+    align-items: stretch;
+    gap: 12px;
+}
+
+.todayBehaviorFlow {
+    padding: 17px 20px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 22px;
+    border: 1px solid #e4e7ec;
+    border-radius: 13px;
+    background: #fff;
+}
+
+.todayBehaviorStage {
+    position: relative;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.todayBehaviorStage:not(:last-child)::after {
+    position: absolute;
+    top: 50%;
+    right: -15px;
+    color: #b3bac4;
+    font-size: 0.85rem;
+    line-height: 1;
+    transform: translateY(-50%);
+    content: '→';
+}
+
+.todayBehaviorStage span,
+.todayBehaviorResult span {
+    color: #7f8895;
+    font-size: 0.68rem;
+}
+
+.todayBehaviorStage strong {
+    color: #263140;
+    font-size: 1.18rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.todayBehaviorStage small {
+    color: #89919d;
+    font-size: 0.63rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.todayBehaviorResult {
+    padding: 15px 17px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 5px;
+    border-radius: 13px;
+    background: #fff1f4;
+}
+
+.todayBehaviorResult strong {
+    color: #d92b4c;
+    font-size: 1.45rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.todaySignalGrid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 9px;
+}
+
+.todaySignalGrid article {
+    min-width: 0;
+    min-height: 108px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    border: 1px solid #e5e8ec;
+    border-radius: 12px;
+    background: #fff;
+}
+
+.todaySignalGrid span {
+    color: #7d8794;
+    font-size: 0.68rem;
+}
+
+.todaySignalGrid strong {
+    color: #222d3b;
+    font-size: 1.32rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.todaySignalGrid small {
+    margin-top: auto;
+    color: #929aa5;
+    font-size: 0.62rem;
+    line-height: 1.45;
+}
+
+.todayInsightGrid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.todayInsightCard {
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid #e4e7ec;
+    border-radius: 13px;
+    background: #fff;
+}
+
+.todayInsightCard > header {
+    padding: 13px 14px 10px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    border-bottom: 1px solid #eef0f3;
+}
+
+.todayInsightCard > header strong {
+    color: #27313f;
+    font-size: 0.8rem;
+}
+
+.todayInsightCard > header small {
+    color: #929aa5;
+    font-size: 0.6rem;
+}
+
+.todayInsightCard .rankList {
+    border: 0;
+    border-radius: 0;
+}
+
+.collectionTimeline {
+    overflow: hidden;
+    border: 1px solid #e4e7ec;
+    border-radius: 13px;
+    background: #fff;
+}
+
+.collectionTimelineRow {
+    min-height: 58px;
+    padding: 10px 13px;
+    display: grid;
+    grid-template-columns: 142px 62px minmax(170px, 1fr) minmax(190px, auto);
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid #edf0f3;
+}
+
+.collectionTimelineRow:last-child { border-bottom: 0; }
+
+.collectionTimelineRow time {
+    color: #7e8793;
+    font-size: 0.66rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.collectionTimelineRow > div {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.collectionTimelineRow > div strong {
+    color: #27313f;
+    font-size: 0.76rem;
+}
+
+.collectionTimelineRow > div small {
+    overflow: hidden;
+    color: #8c949f;
+    font-size: 0.62rem;
+    line-height: 1.35;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.collectionTimelineRow > b {
+    color: #4a5564;
+    font-size: 0.68rem;
+    font-weight: 680;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.collectionStatus {
+    justify-self: start;
+    padding: 4px 7px;
+    border-radius: 999px;
+    font-size: 0.6rem;
+    font-weight: 760;
+    white-space: nowrap;
+}
+
+.collectionStatus_success { background: #e8f5ed; color: #27764b; }
+.collectionStatus_partial { background: #fff3dc; color: #9a6500; }
+.collectionStatus_failed { background: #fde8e5; color: #bd3d31; }
+
 .behaviorGrid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -3979,6 +4191,11 @@
     .signalGridFour { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .actionGrid { grid-template-columns: 1fr; }
     .todayCrawlPanel { grid-template-columns: 1fr; gap: 13px; }
+    .todaySignalGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .todayInsightGrid { grid-template-columns: 1fr 1fr; }
+    .todayInsightCard:last-child { grid-column: 1 / -1; }
+    .collectionTimelineRow { grid-template-columns: 128px 62px minmax(150px, 1fr); }
+    .collectionTimelineRow > b { grid-column: 3; text-align: left; }
 }
 
 @media (max-width: 760px) {
@@ -4079,6 +4296,33 @@
     .behaviorSummaryResult span { display: block; }
     .behaviorFootnote { padding: 9px 12px; font-size: 0.64rem; }
 
+    .todayBehaviorSummary { grid-template-columns: 1fr; gap: 8px; }
+    .todayBehaviorFlow { padding: 14px 12px; gap: 18px; }
+    .todayBehaviorStage:not(:last-child)::after { right: -12px; }
+    .todayBehaviorStage strong { font-size: 1rem; }
+    .todayBehaviorStage span { font-size: 0.63rem; }
+    .todayBehaviorStage small { font-size: 0.58rem; }
+    .todayBehaviorResult {
+        padding: 10px 12px;
+        flex-direction: row;
+        align-items: baseline;
+        justify-content: space-between;
+    }
+    .todayBehaviorResult strong { font-size: 1.18rem; }
+    .todaySignalGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .todayInsightGrid { grid-template-columns: 1fr; }
+    .todayInsightCard:last-child { grid-column: auto; }
+    .collectionTimelineRow {
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        gap: 7px 9px;
+        padding: 11px 12px;
+    }
+    .collectionTimelineRow time { grid-column: 1 / 3; }
+    .collectionTimelineRow .collectionStatus { grid-column: 3; grid-row: 1; }
+    .collectionTimelineRow > div { grid-column: 1 / -1; }
+    .collectionTimelineRow > div small { white-space: normal; }
+    .collectionTimelineRow > b { grid-column: 1 / -1; text-align: left; }
+
     .behaviorCard { padding: 14px; }
     .behaviorSignals { grid-template-columns: 1fr 1fr; }
     .compactStats,
@@ -4118,6 +4362,7 @@
     .analysisGrid,
     .donutGrid,
     .candidateSummary { grid-template-columns: 1fr; }
+    .todaySignalGrid { grid-template-columns: 1fr; }
 
     .donutBody {
         grid-template-columns: 104px minmax(0, 1fr);

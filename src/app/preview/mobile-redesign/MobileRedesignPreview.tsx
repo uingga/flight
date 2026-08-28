@@ -2852,7 +2852,9 @@ export default function MobileRedesignPreview({
                     <div className={styles.feedHeading}>
                         <div>
                             <h2>{query ? `'${query}' 검색 결과` : region === '전체' ? '전체 항공권' : `${region} 항공권`}</h2>
-                            <span>{filteredFlights.length.toLocaleString('ko-KR')}개 · {updatedLabel}</span>
+                            <span>{loading
+                                ? '항공권 불러오는 중'
+                                : `${filteredFlights.length.toLocaleString('ko-KR')}개 · ${updatedLabel}`}</span>
                         </div>
                         <div className={styles.sortSelect} ref={sortMenuRef}>
                             <button
@@ -3162,6 +3164,7 @@ export default function MobileRedesignPreview({
                             <div>
                                 <a href="/drop">TIKIT DROP</a>
                                 <a href="/tips">가격 기록과 여행 팁</a>
+                                <a href="/about">서비스와 수집 기준</a>
                             </div>
                         </section>
                         <section>

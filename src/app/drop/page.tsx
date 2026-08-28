@@ -4,6 +4,7 @@ import path from 'node:path';
 import Link from 'next/link';
 import type { Flight } from '@/types/flight';
 import { filterStaleMyrealtripFlights } from '@/lib/source-freshness';
+import { SITE_URL } from '@/lib/site';
 import styles from './drop.module.css';
 
 interface DropData {
@@ -97,9 +98,24 @@ export default function DropPage({ searchParams }: { searchParams?: { preview?: 
     const previewProposal = process.env.NODE_ENV !== 'production' && searchParams?.preview === 'proposal';
     const drop = readJson<DropData>(previewProposal ? 'data/marketing/drop-proposal.json' : 'data/marketing/current-drop.json');
     const byId = new Map(loadFlights().map(flight => [flight.id, flight]));
+    const jsonLd = drop ? {
+        '@context': 'https://schema.org',
+        '@type': 'Article',
+        '@id': `${SITE_URL}/drop#article`,
+        mainEntityOfPage: `${SITE_URL}/drop`,
+        headline: drop.headline,
+        description: drop.intro,
+        datePublished: drop.publishedAt,
+        dateModified: drop.publishedAt,
+        inLanguage: 'ko-KR',
+        author: { '@id': `${SITE_URL}/#organization` },
+        publisher: { '@id': `${SITE_URL}/#organization` },
+        isAccessibleForFree: true,
+    } : null;
 
     return (
         <main className={styles.page}>
+            {jsonLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />}
             <Link href="/" className={styles.backLink}>← 항공권 목록</Link>
             {!drop ? (
                 <section className={styles.empty}>
