@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { scrapeOnlineTour } from '../src/lib/scrapers/onlinetour';
-import { fetchTtangPromotion, scrapeTtang } from '../src/lib/scrapers/ttang';
+import { scrapeTtang } from '../src/lib/scrapers/ttang';
 
 function verifyFlights(source: string, flights: any[]) {
     if (flights.length === 0) throw new Error(`${source}: 검증 결과가 0건입니다.`);
@@ -41,19 +41,10 @@ async function main() {
         verifyFlights('온라인투어', flights);
     }
 
-    if (target === 'ttang-api' || target === 'all') {
-        const date = new Date();
-        date.setDate(date.getDate() + 14);
-        const dateParam = [
-            date.getFullYear(),
-            String(date.getMonth() + 1).padStart(2, '0'),
-            String(date.getDate()).padStart(2, '0'),
-        ].join('');
-        const payload = await fetchTtangPromotion(dateParam);
-        console.log(`땡처리닷컴 API ${dateParam}: ${payload.response.length}건, XML·JSON 계약 검증 통과`);
-    }
-
-    if (target === 'ttang') {
+    if (target === 'ttang-api' || target === 'ttang' || target === 'all') {
+        if (target === 'ttang-api') {
+            console.log('ttang-api는 호환용 이름이며, 차단을 피하기 위해 브라우저 수집 전체를 검증합니다.');
+        }
         const flights = await scrapeTtang(previousFlights);
         verifyFlights('땡처리닷컴', flights);
     }

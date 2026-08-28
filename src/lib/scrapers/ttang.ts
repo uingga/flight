@@ -1,4 +1,4 @@
-import { Browser, chromium } from 'playwright';
+import { Browser, Page, chromium } from 'playwright';
 import { Flight } from '@/types/flight';
 import { getRegionByCity } from '@/lib/utils/region-mapper';
 // logCrawlResults moved to crawl-all.ts
@@ -8,8 +8,8 @@ import { survivingRouteMinPrice } from '@/lib/utils/route-min-price';
 import { normalizeAirline } from '@/lib/utils/flight-helpers';
 import {
     describeSourceError,
-    fetchSourceText,
     parseTtangPromotionXml,
+    retrySourceOperation,
     SourceResponseError,
     TtangPromotionPayload,
 } from './source-response';
@@ -52,8 +52,13 @@ function formatDate(raw: string): string {
 }
 
 const TTANG_PROMOTION_API = 'https://mm.ttang.com/ttangair/search/promotion/allTtangListAct.do';
+const TTANG_PROMOTION_PAGE = 'https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do';
 
-export async function fetchTtangPromotion(dateParam: string): Promise<TtangPromotionPayload> {
+/** 브라우저 쿠키와 네트워크 스택을 사용해 같은 출처에서 프로모션 API를 호출한다. */
+export async function fetchTtangPromotionInBrowser(
+    page: Pick<Page, 'evaluate'>,
+    dateParam: string,
+): Promise<TtangPromotionPayload> {
     const body = new URLSearchParams({
         trip: 'RT', depdate0: dateParam, adt: '1', chd: '0', inf: '0',
         page: '1', scale: '200', totalCnt: '0',
@@ -62,33 +67,35 @@ export async function fetchTtangPromotion(dateParam: string): Promise<TtangPromo
         depdate1: '', depdate2: '', comp: '', car: '', groupId: '',
         gubun: '', seq: '', requestData: '',
         skdset1: '', skdset2: '', skdset3: '',
-    });
-    const response = await fetchSourceText(
-        `땡처리닷컴 ${dateParam} 프로모션 API`,
-        TTANG_PROMOTION_API,
-        {
+    }).toString();
+
+    const response = await page.evaluate(async ({ apiUrl, requestBody }) => {
+        const result = await fetch(apiUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
                 Accept: 'application/xml,text/xml,*/*',
-                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                Referer: 'https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do',
-                'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
             },
-            body,
-        },
-        20_000,
-    );
+            body: requestBody,
+            credentials: 'include',
+        });
+        return {
+            ok: result.ok,
+            status: result.status,
+            contentType: result.headers.get('content-type') || '',
+            finalUrl: result.url,
+            text: await result.text(),
+        };
+    }, { apiUrl: TTANG_PROMOTION_API, requestBody: body });
 
-    if (!/xml|text\/plain/i.test(response.contentType)) {
-        if (/<!doctype\s+html|<html\b/i.test(response.text)) {
-            return parseTtangPromotionXml(response.text);
-        }
+    if (!response.ok) {
         throw new SourceResponseError(
-            'unexpected-content',
-            `땡처리닷컴 ${dateParam} 응답 형식이 XML이 아닙니다: ${response.contentType || '없음'}`,
+            'http-status',
+            `땡처리닷컴 ${dateParam} 브라우저 프로모션 API HTTP ${response.status} (content-type: ${response.contentType || '없음'})`,
             response.status,
             response.contentType,
+            undefined,
+            response.finalUrl,
         );
     }
 
@@ -99,7 +106,10 @@ export async function fetchTtangPromotion(dateParam: string): Promise<TtangPromo
 
 export async function scrapeTtang(prevFlights: any[] = []): Promise<Flight[]> {
     console.log('\n=== 땡처리닷컴 크롤링 시작 ===');
-    let browser: Browser | null = null;
+    const browserState: { browser: Browser | null; page: Page | null } = {
+        browser: null,
+        page: null,
+    };
     const allFlights: Flight[] = [];
     const processedKeys = new Set<string>();
     const routeKeys: RouteKey[] = [];
@@ -112,9 +122,57 @@ export async function scrapeTtang(prevFlights: any[] = []): Promise<Flight[]> {
         // 직전 크롤에 그 출발일 항공권이 있었다면 고장으로 본다.
         const completeness = new ScrapeCompleteness('땡처리닷컴', 'ttang', prevFlights);
 
+        const ensureBrowserPage = async (dateParam: string): Promise<Page> => {
+            if (browserState.page) return browserState.page;
+
+            browserState.browser = await chromium.launch({
+                headless: true,
+                args: ['--no-sandbox', '--disable-setuid-sandbox'],
+            });
+            const context = await browserState.browser.newContext({
+                userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+                viewport: { width: 1200, height: 800 },
+                locale: 'ko-KR',
+                extraHTTPHeaders: {
+                    Referer: 'https://mm.ttang.com/',
+                    'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
+                },
+            });
+            browserState.page = await context.newPage();
+            const landingResponse = await browserState.page.goto(
+                `${TTANG_PROMOTION_PAGE}?trip=RT&depdate0=${dateParam}&adt=1&chd=0&inf=0&page=1&scale=5`,
+                { waitUntil: 'domcontentloaded', timeout: 30_000 },
+            );
+            if (landingResponse && !landingResponse.ok()) {
+                throw new SourceResponseError(
+                    'http-status',
+                    `땡처리닷컴 브라우저 세션 페이지 HTTP ${landingResponse.status()}`,
+                    landingResponse.status(),
+                    landingResponse.headers()['content-type'] || '',
+                    undefined,
+                    landingResponse.url(),
+                );
+            }
+            await browserState.page.waitForTimeout(1_500);
+            return browserState.page;
+        };
+
+        const loadInBrowser = async (dateParam: string) => {
+            const page = await ensureBrowserPage(dateParam);
+            return retrySourceOperation(
+                `땡처리닷컴 ${dateParam} 브라우저 요청`,
+                () => fetchTtangPromotionInBrowser(page, dateParam),
+                { maxAttempts: 2, delaysMs: [700] },
+            );
+        };
+
         const today = new Date();
         const endDate = new Date(today);
         endDate.setMonth(endDate.getMonth() + 1);
+
+        // GitHub 실행 환경에서 일반 Node.js 요청이 403으로 차단된 이력이 있어
+        // 처음부터 실제 브라우저 세션을 확보한다. 차단 확인용 직접 요청은 보내지 않는다.
+        await ensureBrowserPage(formatDateParam(today));
 
         const currentDate = new Date(today);
         let totalDays = 0;
@@ -124,7 +182,7 @@ export async function scrapeTtang(prevFlights: any[] = []): Promise<Flight[]> {
             totalDays++;
 
             try {
-                const apiData = await fetchTtangPromotion(dateParam);
+                const apiData = await loadInBrowser(dateParam);
 
                 let dayCount = 0;
                 for (const rawItem of apiData.response) {
@@ -188,9 +246,9 @@ export async function scrapeTtang(prevFlights: any[] = []): Promise<Flight[]> {
                 }
             } catch (error) {
                 console.error(`[땡처리] ${dateParam} 실패: ${describeSourceError(error)}`);
-                completeness.recordFailure(
-                    `${dateParam} 출발`,
-                    f => (f.departure?.date || '').replace(/-/g, '') === dateParam,
+                throw new IncompleteScrapeError(
+                    `땡처리닷컴 브라우저 수집이 실패했습니다: ${dateParam} (${describeSourceError(error)})`,
+                    [`${dateParam} 이후 전체 출발일`],
                 );
             }
 
@@ -255,19 +313,7 @@ export async function scrapeTtang(prevFlights: any[] = []): Promise<Flight[]> {
 
             // 신규 노선만 realtime_V2로 보강
             if (newRouteKeys.length > 0) {
-                browser = await chromium.launch({
-                    headless: true,
-                    args: ['--no-sandbox', '--disable-setuid-sandbox'],
-                });
-                const context = await browser.newContext({
-                    userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                    viewport: { width: 1200, height: 800 },
-                    extraHTTPHeaders: {
-                        Referer: 'https://mm.ttang.com/',
-                        'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
-                    },
-                });
-                const page = await context.newPage();
+                const page = await ensureBrowserPage(formatDateParam(today));
                 const enrichMap = await enrichWithRealtimeData(page, newRouteKeys, '땅처리');
                 const newFlights = newRouteIndices.map(i => allFlights[i]);
                 const enrichedCount = applyEnrichData(newFlights, newRouteKeys, enrichMap);
@@ -281,8 +327,12 @@ export async function scrapeTtang(prevFlights: any[] = []): Promise<Flight[]> {
         console.error('[땡처리] 크롤링 오류:', error);
         // 불완전 수집은 호출부가 알아야 이전 캐시를 지킬 수 있으므로 삼키지 않는다
         if (error instanceof IncompleteScrapeError) throw error;
+        throw new IncompleteScrapeError(
+            `땡처리닷컴 브라우저 수집을 시작하거나 완료하지 못했습니다: ${describeSourceError(error)}`,
+            ['전체 출발일'],
+        );
     } finally {
-        await browser?.close();
+        await browserState.browser?.close();
     }
 
     return allFlights;

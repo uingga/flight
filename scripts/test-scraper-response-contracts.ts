@@ -3,6 +3,7 @@ import {
     keepEarliestDepartureMonthByDestination,
     mapOnlineTourFlight,
 } from '../src/lib/scrapers/onlinetour.ts';
+import { fetchTtangPromotionInBrowser } from '../src/lib/scrapers/ttang.ts';
 import {
     parseOnlineTourCities,
     parseOnlineTourJsonp,
@@ -35,6 +36,36 @@ assertSourceError(
     () => parseOnlineTourJsonp('<html>blocked</html>', 'tikitikitTest'),
     'malformed-jsonp',
 );
+
+async function testTtangBrowserRequestContract() {
+    const xml = '<RESPONSE><HEAD><error>false</error><message></message></HEAD><RESULT><RECORD><CONTENS><![CDATA[{"code":"OK","desc":"SUCCESS","response":[]}]]></CONTENS></RECORD></RESULT></RESPONSE>';
+    const successPage = {
+        evaluate: async () => ({
+            ok: true,
+            status: 201,
+            contentType: 'application/xml',
+            finalUrl: 'https://mm.ttang.com/ttangair/search/promotion/allTtangListAct.do',
+            text: xml,
+        }),
+    };
+    const payload = await fetchTtangPromotionInBrowser(successPage as any, '20260831');
+    assert.equal(payload.code, 'OK');
+    assert.deepEqual(payload.response, []);
+
+    const blockedPage = {
+        evaluate: async () => ({
+            ok: false,
+            status: 403,
+            contentType: 'text/html',
+            finalUrl: 'https://mm.ttang.com/ttangair/search/promotion/allTtangListAct.do',
+            text: '<html>blocked</html>',
+        }),
+    };
+    await assert.rejects(
+        fetchTtangPromotionInBrowser(blockedPage as any, '20260831'),
+        error => error instanceof SourceResponseError && error.status === 403,
+    );
+}
 assertSourceError(
     () => parseOnlineTourJsonp('tikitikitTest({"status":500,"message":"down","data":{"list":[]}})', 'tikitikitTest'),
     'api-error',
@@ -152,7 +183,7 @@ assertSourceError(
     'api-error',
 );
 
-testSourceRetries()
+Promise.all([testSourceRetries(), testTtangBrowserRequestContract()])
     .then(() => console.log('스크래퍼 응답 계약 테스트 통과'))
     .catch(error => {
         console.error(error);
