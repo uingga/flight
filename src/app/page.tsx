@@ -15,6 +15,7 @@ const SOURCE_NAMES: Record<string, string> = {
 };
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
+const HOME_TITLE = '지금 나온 땡처리 항공권 | 티키티킷';
 
 function cleanCity(city: string | undefined, fallback: string) {
     return city?.replace(/\([^)]+\)/g, '').trim() || fallback;
@@ -55,7 +56,7 @@ export function generateMetadata(): Metadata {
     const fullTitle = `${routeTitle} | 티키티킷`;
 
     return {
-        title: { absolute: fullTitle },
+        title: { absolute: HOME_TITLE },
         description,
         alternates: { canonical: '/' },
         openGraph: {
