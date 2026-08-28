@@ -1,6 +1,7 @@
 'use client';
 
 import { Fragment, type FormEvent, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { PointerEvent as ReactPointerEvent } from 'react';
 import dynamic from 'next/dynamic';
 import { ko } from 'date-fns/locale';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -38,6 +39,8 @@ type EmptyFilterId = 'region' | 'departure' | 'date' | 'price' | 'source' | 'air
 const RECENT_FLIGHT_REPORTS_KEY = 'tikitikit_recent_flight_reports';
 const RECENT_SEARCHES_KEY = 'tikitikit_recent_searches';
 const FLIGHT_REPORT_TTL_MS = 24 * 60 * 60 * 1000;
+const FRESH_MOBILE_ITEM_HEIGHT = 132;
+const FRESH_MOBILE_AUTO_ADVANCE_MS = 4_800;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const DatePicker: any = dynamic(() => import('react-datepicker').then((mod: any) => mod.default), { ssr: false });
@@ -82,6 +85,12 @@ interface RouteAlertTarget {
     arrivalCity: string;
     currentPrice?: number;
     suggestedPrice?: number;
+}
+
+interface FreshMobileDragState {
+    pointerId: number;
+    startY: number;
+    startedAt: number;
 }
 
 interface FeedInsight {
@@ -784,6 +793,10 @@ export default function MobileRedesignPreview({
     const [contactMessage, setContactMessage] = useState('');
     const [insightDateKey, setInsightDateKey] = useState(() => seoulDateKey());
     const [keyboardNavigation, setKeyboardNavigation] = useState(false);
+    const [freshMobilePosition, setFreshMobilePosition] = useState(1);
+    const [freshMobileDragOffset, setFreshMobileDragOffset] = useState(0);
+    const [freshMobileAnimating, setFreshMobileAnimating] = useState(true);
+    const [freshMobileReduceMotion, setFreshMobileReduceMotion] = useState(false);
     const filterBarSlotRef = useRef<HTMLDivElement | null>(null);
     const desktopFilterRef = useRef<HTMLDivElement | null>(null);
     const desktopFilterTriggerRef = useRef<HTMLButtonElement | null>(null);
@@ -798,6 +811,8 @@ export default function MobileRedesignPreview({
     const alertClosePendingRef = useRef(false);
     const lastFetchAtRef = useRef(0);
     const urlInitializedRef = useRef(false);
+    const freshMobileDragRef = useRef<FreshMobileDragState | null>(null);
+    const freshMobileSuppressClickRef = useRef(false);
     const sharedFlightIdRef = useRef<string | null>(null);
     const sharedFallbackArrivalRef = useRef<string | null>(null);
     const filterDialogRef = useRef<HTMLElement | null>(null);
@@ -1986,10 +2001,106 @@ export default function MobileRedesignPreview({
 
         return {
             copyPrefix: targetDate === todayKey ? '오늘' : '최근',
+            flights: evenFlights,
             pairs: pairs.length > 1 ? [...fourSlots, fourSlots[0]] : pairs,
             animated: pairs.length > 1,
         };
     }, [displayedFlights, query, sort]);
+
+    const freshMobileFlights = useMemo(() => freshFlightsInsight?.flights || [], [freshFlightsInsight]);
+    const freshMobileFlightCount = freshMobileFlights.length;
+    const freshMobileLoopingFlights = useMemo(() => {
+        if (freshMobileFlightCount <= 1) return freshMobileFlights;
+        return [
+            freshMobileFlights[freshMobileFlightCount - 1],
+            ...freshMobileFlights,
+            freshMobileFlights[0],
+        ];
+    }, [freshMobileFlightCount, freshMobileFlights]);
+
+    useEffect(() => {
+        setFreshMobilePosition(freshMobileFlightCount > 1 ? 1 : 0);
+        setFreshMobileDragOffset(0);
+    }, [freshMobileFlightCount]);
+
+    useEffect(() => {
+        const media = window.matchMedia('(prefers-reduced-motion: reduce)');
+        const updatePreference = () => setFreshMobileReduceMotion(media.matches);
+        updatePreference();
+        media.addEventListener('change', updatePreference);
+        return () => media.removeEventListener('change', updatePreference);
+    }, []);
+
+    const moveFreshMobileTicket = useCallback((direction: -1 | 1) => {
+        if (freshMobileFlightCount <= 1) return;
+        setFreshMobileAnimating(!freshMobileReduceMotion);
+        setFreshMobileDragOffset(0);
+        setFreshMobilePosition(current => current + direction);
+    }, [freshMobileFlightCount, freshMobileReduceMotion]);
+
+    useEffect(() => {
+        if (freshMobileFlightCount <= 1 || freshMobileReduceMotion || freshMobileDragRef.current) return;
+        const timer = window.setTimeout(() => moveFreshMobileTicket(1), FRESH_MOBILE_AUTO_ADVANCE_MS);
+        return () => window.clearTimeout(timer);
+    }, [freshMobileFlightCount, freshMobilePosition, freshMobileReduceMotion, moveFreshMobileTicket]);
+
+    useEffect(() => {
+        if (freshMobileFlightCount <= 1) return;
+        const isLeadingClone = freshMobilePosition <= 0;
+        const isTrailingClone = freshMobilePosition >= freshMobileFlightCount + 1;
+        if (!isLeadingClone && !isTrailingClone) return;
+
+        const isExpectedClone = freshMobilePosition === 0 || freshMobilePosition === freshMobileFlightCount + 1;
+        const timer = window.setTimeout(() => {
+            setFreshMobileAnimating(false);
+            setFreshMobilePosition(isLeadingClone ? freshMobileFlightCount : 1);
+        }, isExpectedClone && !freshMobileReduceMotion ? 760 : 0);
+        return () => window.clearTimeout(timer);
+    }, [freshMobileFlightCount, freshMobilePosition, freshMobileReduceMotion]);
+
+    const handleFreshMobilePointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+        if (freshMobileFlightCount <= 1 || (event.pointerType === 'mouse' && event.button !== 0)) return;
+        freshMobileDragRef.current = {
+            pointerId: event.pointerId,
+            startY: event.clientY,
+            startedAt: performance.now(),
+        };
+        freshMobileSuppressClickRef.current = false;
+        setFreshMobileAnimating(false);
+        setFreshMobileDragOffset(0);
+        event.currentTarget.setPointerCapture(event.pointerId);
+    };
+
+    const handleFreshMobilePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+        const drag = freshMobileDragRef.current;
+        if (!drag || drag.pointerId !== event.pointerId) return;
+        const nextOffset = Math.max(-64, Math.min(64, event.clientY - drag.startY));
+        setFreshMobileDragOffset(nextOffset);
+    };
+
+    const handleFreshMobilePointerEnd = (event: ReactPointerEvent<HTMLDivElement>) => {
+        const drag = freshMobileDragRef.current;
+        if (!drag || drag.pointerId !== event.pointerId) return;
+        const distance = event.clientY - drag.startY;
+        const elapsed = Math.max(1, performance.now() - drag.startedAt);
+        const velocity = Math.abs(distance) / elapsed;
+        freshMobileDragRef.current = null;
+
+        if (Math.abs(distance) >= 30 || velocity >= 0.42) {
+            freshMobileSuppressClickRef.current = true;
+            window.setTimeout(() => {
+                freshMobileSuppressClickRef.current = false;
+            }, 320);
+            moveFreshMobileTicket(distance < 0 ? 1 : -1);
+        } else {
+            setFreshMobileAnimating(!freshMobileReduceMotion);
+            setFreshMobileDragOffset(0);
+        }
+    };
+
+    const freshMobileActiveIndex = freshMobileFlightCount
+        ? ((freshMobilePosition - 1 + freshMobileFlightCount) % freshMobileFlightCount)
+        : 0;
 
     const departureFilterLabel = departure === '전체'
         ? '출발지'
@@ -3132,12 +3243,67 @@ export default function MobileRedesignPreview({
                                     {cardNumber === firstInsightCard && freshFlightsInsight && (
                                         <div className={styles.freshFlightsEntry}>
                                             <section className={styles.freshFlightsBar} aria-labelledby="fresh-flights-title">
-                                                <div className={styles.freshFlightsCopy}>
+                                                <div className={styles.freshFlightsMobileTopline}>
                                                     <span>새로 발견</span>
+                                                    {freshMobileFlightCount > 1 && (
+                                                        <span aria-hidden="true">
+                                                            {freshMobileActiveIndex + 1} / {freshMobileFlightCount}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <div className={styles.freshFlightsCopy}>
+                                                    <span className={styles.freshFlightsDesktopEyebrow}>새로 발견</span>
                                                     <strong id="fresh-flights-title">{freshFlightsInsight.copyPrefix} 새로 뜬 항공권</strong>
                                                     <p>{freshFlightsInsight.copyPrefix} 처음 포착된 항공권을 보여드려요.</p>
-                                                    <small>티켓을 누르면 일정과 가격을 바로 확인할 수 있어요.</small>
+                                                    <small className={styles.freshFlightsDesktopHint}>티켓을 누르면 일정과 가격을 바로 확인할 수 있어요.</small>
                                                 </div>
+                                                <div
+                                                    className={styles.freshFlightsMobileViewport}
+                                                    aria-label={`${freshFlightsInsight.copyPrefix} 처음 포착된 항공권. 위아래로 밀어 다른 항공권 보기`}
+                                                    onPointerDown={handleFreshMobilePointerDown}
+                                                    onPointerMove={handleFreshMobilePointerMove}
+                                                    onPointerUp={handleFreshMobilePointerEnd}
+                                                    onPointerCancel={handleFreshMobilePointerEnd}
+                                                >
+                                                    <div
+                                                        className={`${styles.freshFlightsMobileTrack} ${freshMobileAnimating ? styles.freshFlightsMobileTrackAnimated : ''}`}
+                                                        style={{ transform: `translateY(${(-freshMobilePosition * FRESH_MOBILE_ITEM_HEIGHT) + freshMobileDragOffset}px)` }}
+                                                    >
+                                                        {freshMobileLoopingFlights.map((freshFlight, ticketIndex) => (
+                                                            <button
+                                                                type="button"
+                                                                className={styles.freshFlightsMobileTicket}
+                                                                key={`${freshFlight.id}-mobile-${ticketIndex}`}
+                                                                onClick={(event) => {
+                                                                    if (freshMobileSuppressClickRef.current) {
+                                                                        event.preventDefault();
+                                                                        freshMobileSuppressClickRef.current = false;
+                                                                        return;
+                                                                    }
+                                                                    openFlight(freshFlight, 'insight_new_flights');
+                                                                }}
+                                                            >
+                                                                <span className={styles.freshFlightsMobileTicketMain}>
+                                                                    <span className={styles.freshFlightsMobilePlace}>
+                                                                        <small>{departureName(freshFlight)} 출발</small>
+                                                                        <strong>{stripAirport(freshFlight.arrival.city)}</strong>
+                                                                    </span>
+                                                                    <span className={styles.freshFlightsMobilePrice}>
+                                                                        <small>왕복 총액</small>
+                                                                        <strong>{effectivePrice(freshFlight).toLocaleString('ko-KR')}<i>원</i></strong>
+                                                                    </span>
+                                                                </span>
+                                                                <span className={styles.freshFlightsMobileSchedule}>
+                                                                    <span>{cardDate(freshFlight.departure.date)} — {cardDate(freshFlight.arrival.date)}</span>
+                                                                    <small>{tripLength(freshFlight)}</small>
+                                                                </span>
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                                <footer className={styles.freshFlightsMobileFooter}>
+                                                    <small>티켓을 누르면 일정과 가격을 바로 확인할 수 있어요.</small>
+                                                </footer>
                                                 <div className={styles.freshFlightsViewport} aria-label={`${freshFlightsInsight.copyPrefix} 처음 포착된 항공권`}>
                                                     <div className={`${styles.freshFlightsTrack} ${freshFlightsInsight.animated ? styles.freshFlightsTrackAnimated : ''}`}>
                                                         {freshFlightsInsight.pairs.map((pair, pairIndex) => (
