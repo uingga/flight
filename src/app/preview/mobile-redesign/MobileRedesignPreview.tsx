@@ -4026,11 +4026,13 @@ export default function MobileRedesignPreview({
                             </button>
                         </div>
                 </OverlayDialog>
-                {detailHasMoreBelow && (
-                    <div className={styles.detailScrollHint} data-detail-scroll-hint aria-hidden="true">
-                        <span>아래에 정보가 더 있어요 <Icon name="chevron" /></span>
-                    </div>
-                )}
+                <div
+                    className={detailHasMoreBelow
+                        ? styles.detailScrollFade
+                        : `${styles.detailScrollFade} ${styles.detailScrollFadeHidden}`}
+                    data-detail-scroll-hint
+                    aria-hidden="true"
+                />
                 </>
                 );
             })()}

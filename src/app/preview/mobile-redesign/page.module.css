@@ -992,35 +992,25 @@
 .applyButtonCalendarOpen { position: static; }
 
 .detailSheet { overflow-y: auto; }
-.detailScrollHint {
+.detailScrollFade {
     position: fixed;
-    z-index: 103;
-    right: 0;
-    bottom: max(14px, calc(env(safe-area-inset-bottom) + 8px));
-    left: 0;
-    display: flex;
-    justify-content: center;
+    z-index: 102;
+    bottom: 0;
+    left: 50%;
+    width: min(480px, 100%);
+    height: max(70px, calc(56px + env(safe-area-inset-bottom)));
+    transform: translateX(-50%);
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0), var(--paper) 82%);
     pointer-events: none;
-    animation: detailScrollHintIn 160ms ease-out;
+    visibility: visible;
+    opacity: 1;
+    transition: opacity 220ms ease, visibility 0s linear 0s;
 }
-.detailScrollHint > span {
-    min-height: 30px;
-    padding: 0 10px;
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-pill);
-    background: rgba(255, 255, 255, 0.96);
-    color: var(--text-secondary);
-    font-size: var(--size-caption);
-    line-height: 1;
-    font-weight: var(--weight-medium);
-    box-shadow: 0 5px 16px rgba(34, 34, 34, 0.1);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+.detailScrollFadeHidden {
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 220ms ease, visibility 0s linear 220ms;
 }
-.detailScrollHint svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.8; }
 .detailHeader { min-height: 34px; display: flex; align-items: center; justify-content: space-between; }
 .detailAgencyLine { min-width: 0; display: flex; align-items: center; gap: 8px; }
 .detailAgencyLine .sourceBadge { height: 20px; font-size: var(--size-meta); }
@@ -1160,7 +1150,6 @@
 @keyframes drawerIn { from { transform: translateX(34px); opacity: .65; } }
 @keyframes inlineFilterIn { from { transform: translateY(-5px); opacity: 0; } }
 @keyframes scrollTopIn { from { transform: translateY(6px); opacity: 0; } }
-@keyframes detailScrollHintIn { from { transform: translateY(5px); opacity: 0; } }
 
 @media (min-width: 700px) {
     .sheetOverlay { --overlay-scrim-current: var(--overlay-scrim-desktop); }
@@ -2066,11 +2055,12 @@
         box-shadow: var(--shadow-drawer);
         animation: drawerIn 220ms cubic-bezier(.2, .8, .2, 1);
     }
-    .detailScrollHint {
-        right: 0;
+    .detailScrollFade {
         left: auto;
+        right: 0;
         width: min(520px, 46vw);
-        bottom: 18px;
+        height: 74px;
+        transform: none;
     }
     .detailOverlay .sheetHandle { display: none; }
     .detailHeader { min-height: 42px; }
