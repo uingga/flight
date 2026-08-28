@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {
     diversifyFlightDestinations,
     excludePinnedDestination,
+    sortFirstBlockByNewestArrival,
     trailingDestinationStreak,
 } from '../src/lib/flight-diversity';
 import type { Flight } from '../src/types/flight';
@@ -51,6 +52,23 @@ assert.equal(
     2,
     '출발지가 달라도 도착지가 같으면 같은 연속 목적지로 세야 한다.',
 );
+
+const recentlyAddedCandidates = ordered.map((item, index) => ({
+    ...item,
+    firstSeen: index === 5 ? '2026-08-28' : index === 2 ? '2026-08-27' : index === 9 ? '2026-08-29' : '2026-08-26',
+}));
+const recentlyAddedFirst = sortFirstBlockByNewestArrival(recentlyAddedCandidates, 9);
+assert.deepEqual(
+    recentlyAddedFirst.slice(0, 2).map(item => item.id),
+    [ordered[5].id, ordered[2].id],
+    '첫 9개는 처음 발견한 날짜가 최신인 항공권부터 보여야 한다.',
+);
+assert.deepEqual(
+    new Set(recentlyAddedFirst.slice(0, 9).map(item => item.id)),
+    new Set(ordered.slice(0, 9).map(item => item.id)),
+    '새 항공권 우선 정렬은 첫 9개의 구성 자체를 바꾸면 안 된다.',
+);
+assert.equal(recentlyAddedFirst[9].id, ordered[9].id, '첫 9개 밖의 순서는 바꾸면 안 된다.');
 
 const onlyOneDestination = diversifyFlightDestinations(candidates.slice(0, 3), {
     scoreOf: item => (item as Flight & { testScore: number }).testScore,

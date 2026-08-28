@@ -26,6 +26,26 @@ export function trailingDestinationStreak(destinations: string[], candidate: str
     return streak;
 }
 
+/** 다양성 규칙으로 뽑힌 첫 묶음의 구성은 유지하면서 새로 발견된 날짜순으로 정렬한다. */
+export function sortFirstBlockByNewestArrival(items: Flight[], blockSize = 9): Flight[] {
+    const firstBlockSize = Math.min(Math.max(0, blockSize), items.length);
+    if (firstBlockSize <= 1) return items;
+
+    const firstBlock = items.slice(0, firstBlockSize)
+        .map((flight, index) => {
+            const parsedFirstSeen = flight.firstSeen ? new Date(flight.firstSeen).getTime() : Number.NaN;
+            return {
+                flight,
+                index,
+                firstSeenTime: Number.isFinite(parsedFirstSeen) ? parsedFirstSeen : Number.NEGATIVE_INFINITY,
+            };
+        })
+        .sort((a, b) => b.firstSeenTime - a.firstSeenTime || a.index - b.index)
+        .map(item => item.flight);
+
+    return [...firstBlock, ...items.slice(firstBlockSize)];
+}
+
 /** 오늘의 표와 같은 목적지는 기본 추천 배열에서 분리해 특별 카드의 의미를 지킨다. */
 export function excludePinnedDestination(items: Flight[], pinnedFlight?: Flight): Flight[] {
     if (!pinnedFlight) return items;

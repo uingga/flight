@@ -932,6 +932,13 @@
         border-bottom: 0;
         border-radius: 0;
     }
+    .logoLink :global(.logo-container) { gap: 3px !important; }
+    .logoLink :global(.logo-container > svg) {
+        width: 21px;
+        height: 21px;
+        margin-top: -1px !important;
+    }
+    .logoLink :global(.logo-container > span) { font-size: 24px !important; }
     .header::after {
         content: '';
         position: absolute;

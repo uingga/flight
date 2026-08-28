@@ -7,7 +7,11 @@ import 'react-datepicker/dist/react-datepicker.css';
 import Logo from '@/components/Logo';
 import * as gtag from '@/lib/analytics';
 import { getDestinationContext } from '@/lib/destination-contexts';
-import { diversifyFlightDestinations, excludePinnedDestination } from '@/lib/flight-diversity';
+import {
+    diversifyFlightDestinations,
+    excludePinnedDestination,
+    sortFirstBlockByNewestArrival,
+} from '@/lib/flight-diversity';
 import { CITY_TO_AIRPORT, calcFlightTiming, getNaverFlightUrl, normalizeAirline, normalizeCity } from '@/lib/utils/flight-helpers';
 import { getTripcomHotelUrl, getTripcomTrackingId } from '@/lib/utils/tripcom-helpers';
 import { getFlightBookingUrl } from '@/lib/utils/booking-url';
@@ -1531,7 +1535,7 @@ export default function MobileRedesignPreview({
                     result.push(...group);
                     leadingFlights.push(...group);
                 }
-                return result;
+                return sortFirstBlockByNewestArrival(result, 9);
             })()
             : pool;
         return pinnedFlight ? [pinnedFlight, ...diversified] : diversified;
