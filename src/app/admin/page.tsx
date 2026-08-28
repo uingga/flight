@@ -469,6 +469,49 @@ interface GaActivityPeriod {
     detailToBookingRate: number | null;
 }
 
+interface ThreadsAttribution {
+    content: string;
+    sessions: number;
+    users: number;
+    detailOpens: number;
+    detailUsers: number;
+    bookingClicks: number;
+    bookingUsers: number;
+}
+
+interface ThreadsInsightsData {
+    available: boolean;
+    message?: string;
+    generatedAt: string;
+    posts: Array<{
+        id: string;
+        text: string;
+        timestamp: string;
+        permalink: string;
+        mediaType: string;
+        shortcode: string;
+        isQuotePost: boolean;
+        metrics: {
+            views: number;
+            likes: number;
+            replies: number;
+            reposts: number;
+            quotes: number;
+            shares: number;
+        };
+        engagementRate: number | null;
+        trackingContent: string | null;
+        shareCode: string | null;
+        attribution: ThreadsAttribution | null;
+    }>;
+    attribution: {
+        available: boolean;
+        message?: string;
+        rows: ThreadsAttribution[];
+        totals: Omit<ThreadsAttribution, 'content'>;
+    };
+}
+
 const SOURCE_NAMES: Record<string, string> = {
     hanatour: '하나투어',
     modetour: '모두투어',
@@ -495,6 +538,7 @@ const SOURCE_ORDER = ['ybtour', 'hanatour', 'modetour', 'onlinetour', 'ttang', '
  */
 const TABS = [
     { id: 'overview', label: '오늘', hint: '지금 볼 것' },
+    { id: 'threads', label: 'Threads', hint: '글·유입·예약' },
     { id: 'visitors', label: '방문·예약', hint: '유입·행동·관심' },
     { id: 'operations', label: '항공권·수집', hint: '품질·변화·갱신' },
     { id: 'audience', label: '고객·알림', hint: '가입·수요·발송' },
@@ -755,7 +799,13 @@ function RankList({
     );
 }
 
-function TodayBehaviorSummary({ data }: { data: NonNullable<GaStatsData['activityPeriods']>['today'] }) {
+function TodayBehaviorSummary({
+    data,
+    sessions,
+}: {
+    data: NonNullable<GaStatsData['activityPeriods']>['today'];
+    sessions: number;
+}) {
     const rate = (value: number | null) => value === null ? '—' : `${value}%`;
 
     return (
@@ -764,6 +814,7 @@ function TodayBehaviorSummary({ data }: { data: NonNullable<GaStatsData['activit
                 <div className={styles.todayBehaviorStage}>
                     <span>방문</span>
                     <strong>{data.visitors.toLocaleString()}명</strong>
+                    <small>재방문 포함 총 {sessions.toLocaleString()}회 접속</small>
                 </div>
                 <div className={styles.todayBehaviorStage}>
                     <span>상세 열람</span>
@@ -886,6 +937,8 @@ export default function AdminPage() {
     const [userStatsError, setUserStatsError] = useState<string | null>(null);
     const [gaStats, setGaStats] = useState<GaStatsData | null>(null);
     const [gaStatsError, setGaStatsError] = useState<string | null>(null);
+    const [threadsInsights, setThreadsInsights] = useState<ThreadsInsightsData | null>(null);
+    const [threadsInsightsError, setThreadsInsightsError] = useState<string | null>(null);
     const [flightReports, setFlightReports] = useState<FlightReportAdminData | null>(null);
     const [flightReportsError, setFlightReportsError] = useState<string | null>(null);
     const [flightReportAction, setFlightReportAction] = useState<string | null>(null);
@@ -987,6 +1040,19 @@ export default function AdminPage() {
                 }
             } catch {
                 setGaStatsError('방문 통계를 불러오지 못했습니다.');
+            }
+
+            try {
+                const threadsResponse = await fetch(`/api/threads-insights?key=${encodeURIComponent(authKey)}`);
+                const threadsJson = await threadsResponse.json();
+                if (threadsResponse.ok) {
+                    setThreadsInsights(threadsJson);
+                    setThreadsInsightsError(null);
+                } else {
+                    setThreadsInsightsError(threadsJson.message || threadsJson.error || 'Threads 인사이트를 불러오지 못했습니다.');
+                }
+            } catch {
+                setThreadsInsightsError('Threads 인사이트를 불러오지 못했습니다.');
             }
 
             try {
@@ -1585,7 +1651,7 @@ export default function AdminPage() {
                     ) : gaStats && !gaStats.available ? (
                         <div className={styles.dealReviewEmpty}>{gaStats.message || '방문 통계를 불러오지 못했습니다.'}</div>
                     ) : gaActivity ? (
-                        <TodayBehaviorSummary data={gaActivity.today} />
+                        <TodayBehaviorSummary data={gaActivity.today} sessions={gaStats.periods.today.sessions} />
                     ) : (
                         <div className={styles.dealReviewEmpty}>방문 통계를 불러오는 중입니다.</div>
                     )}
@@ -3154,6 +3220,145 @@ export default function AdminPage() {
                 </div>
             </section>
 
+            </>)}
+
+            {tab === 'threads' && (<>
+                <div className={styles.tabIntro}>
+                    <div>
+                        <span className={styles.eyebrow}>THREADS</span>
+                        <h2>어떤 글이 사람을 데려왔는지 봅니다</h2>
+                        <p>글의 조회·반응은 Threads에서, 사이트 방문·상세·예약 페이지 이동은 GA4에서 가져옵니다.</p>
+                    </div>
+                </div>
+
+                <section className={styles.section} id="threads-summary">
+                    <div className={styles.sectionHeading}>
+                        <div>
+                            <h2>최근 Threads 성과</h2>
+                            <p>Threads 글은 최근 30개, 사이트 행동은 최근 30일을 집계합니다.</p>
+                        </div>
+                        <button type="button" className={styles.analyticsToggle} onClick={() => fetchData(key)}>새로고침</button>
+                    </div>
+                    {threadsInsightsError ? (
+                        <div className={styles.dealReviewEmpty}>{threadsInsightsError}</div>
+                    ) : !threadsInsights?.available ? (
+                        <div className={styles.dealReviewEmpty}>{threadsInsights?.message || 'Threads 인사이트를 불러오는 중입니다.'}</div>
+                    ) : (() => {
+                        const totals = threadsInsights.posts.reduce((sum, post) => ({
+                            views: sum.views + post.metrics.views,
+                            interactions: sum.interactions + post.metrics.likes + post.metrics.replies
+                                + post.metrics.reposts + post.metrics.quotes + post.metrics.shares,
+                        }), { views: 0, interactions: 0 });
+                        const site = threadsInsights.attribution.totals;
+                        return (
+                            <>
+                                <div className={styles.signalGridFour}>
+                                    <div className={styles.signalCard}>
+                                        <span>글 조회</span>
+                                        <strong>{totals.views.toLocaleString()}회</strong>
+                                        <small>최근 글 {threadsInsights.posts.length.toLocaleString()}개 합계</small>
+                                    </div>
+                                    <div className={styles.signalCard}>
+                                        <span>반응</span>
+                                        <strong>{totals.interactions.toLocaleString()}회</strong>
+                                        <small>좋아요·답글·재게시·인용·공유</small>
+                                    </div>
+                                    <div className={styles.signalCard}>
+                                        <span>사이트 방문</span>
+                                        <strong>{site.users.toLocaleString()}명</strong>
+                                        <small>최근 30일 · 총 {site.sessions.toLocaleString()}회 접속</small>
+                                    </div>
+                                    <div className={styles.signalCard}>
+                                        <span>예약 페이지 이동</span>
+                                        <strong>{site.bookingUsers.toLocaleString()}명</strong>
+                                        <small>{site.bookingClicks.toLocaleString()}회 이동</small>
+                                    </div>
+                                </div>
+                                {!threadsInsights.attribution.available && (
+                                    <div className={styles.dataGap}>{threadsInsights.attribution.message}</div>
+                                )}
+                            </>
+                        );
+                    })()}
+                </section>
+
+                <section className={styles.section} id="threads-posts">
+                    <div className={styles.sectionHeading}>
+                        <div>
+                            <h2>글별 인사이트</h2>
+                            <p>예약 이동은 <code>/t/</code> 추적 링크를 쓴 글부터 정확히 글별로 연결됩니다.</p>
+                        </div>
+                    </div>
+                    {threadsInsights?.available && threadsInsights.posts.length > 0 ? (
+                        <div className={styles.threadsPostList}>
+                            {threadsInsights.posts.map(post => {
+                                const site = post.attribution;
+                                return (
+                                    <article className={styles.threadsPostCard} key={post.id}>
+                                        <div className={styles.threadsPostHead}>
+                                            <time dateTime={post.timestamp}>{post.timestamp ? formatKST(post.timestamp) : '게시 시각 없음'}</time>
+                                            {post.permalink && <a href={post.permalink} target="_blank" rel="noopener noreferrer">Threads에서 보기 →</a>}
+                                        </div>
+                                        <p className={styles.threadsPostText}>{post.text || '(본문 없음)'}</p>
+                                        <dl className={styles.threadsMetricGrid}>
+                                            <div><dt>조회</dt><dd>{post.metrics.views.toLocaleString()}</dd></div>
+                                            <div><dt>좋아요</dt><dd>{post.metrics.likes.toLocaleString()}</dd></div>
+                                            <div><dt>답글</dt><dd>{post.metrics.replies.toLocaleString()}</dd></div>
+                                            <div><dt>재게시</dt><dd>{post.metrics.reposts.toLocaleString()}</dd></div>
+                                            <div><dt>인용</dt><dd>{post.metrics.quotes.toLocaleString()}</dd></div>
+                                            <div><dt>공유</dt><dd>{post.metrics.shares.toLocaleString()}</dd></div>
+                                            <div><dt>반응률</dt><dd>{post.engagementRate === null ? '—' : `${post.engagementRate}%`}</dd></div>
+                                        </dl>
+                                        <div className={styles.threadsSiteFlow}>
+                                            {site ? (
+                                                <>
+                                                    <div><span>사이트 방문</span><strong>{site.users.toLocaleString()}명</strong><small>{site.sessions.toLocaleString()}회</small></div>
+                                                    <span aria-hidden="true">→</span>
+                                                    <div><span>상세 열람</span><strong>{site.detailUsers.toLocaleString()}명</strong><small>{site.detailOpens.toLocaleString()}회</small></div>
+                                                    <span aria-hidden="true">→</span>
+                                                    <div><span>예약 이동</span><strong>{site.bookingUsers.toLocaleString()}명</strong><small>{site.bookingClicks.toLocaleString()}회</small></div>
+                                                </>
+                                            ) : post.trackingContent ? (
+                                                <p>추적 링크는 확인됐지만 최근 30일 사이트 방문은 아직 없습니다.</p>
+                                            ) : (
+                                                <p>이 글에는 추적 가능한 티키티킷 링크가 없어 사이트 행동을 글별로 나눌 수 없습니다.</p>
+                                            )}
+                                        </div>
+                                        {post.shareCode && (
+                                            <small className={styles.threadsTrackingHint}>다음 게시부터 추적 링크: tikitikit.kr/t/{post.shareCode}</small>
+                                        )}
+                                    </article>
+                                );
+                            })}
+                        </div>
+                    ) : !threadsInsightsError && (
+                        <div className={styles.dealReviewEmpty}>불러온 Threads 글이 없습니다.</div>
+                    )}
+                </section>
+
+                <section className={styles.section} id="threads-attribution">
+                    <h2>Threads 링크별 사이트 이동</h2>
+                    <p className={styles.sectionHelp}>글과 연결되지 않은 링크도 빠뜨리지 않고 표시합니다. 실제 결제 완료가 아니라 여행사 예약 페이지로 이동한 수입니다.</p>
+                    {threadsInsights?.available && threadsInsights.attribution.rows.length > 0 ? (
+                        <div className={styles.cityDetail}>
+                            <table className={styles.cityTable}>
+                                <thead><tr><th>추적 링크</th><th>방문</th><th>상세</th><th>예약 이동</th></tr></thead>
+                                <tbody>
+                                    {threadsInsights.attribution.rows.map(row => (
+                                        <tr key={row.content}>
+                                            <td>{row.content === '(not set)' ? '글 구분 없음' : row.content}</td>
+                                            <td>{row.users.toLocaleString()}명 · {row.sessions.toLocaleString()}회</td>
+                                            <td>{row.detailUsers.toLocaleString()}명 · {row.detailOpens.toLocaleString()}회</td>
+                                            <td>{row.bookingUsers.toLocaleString()}명 · {row.bookingClicks.toLocaleString()}회</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    ) : (
+                        <div className={styles.dealReviewEmpty}>Threads 추적 링크로 들어온 방문이 아직 없습니다.</div>
+                    )}
+                </section>
             </>)}
 
             {tab === 'visitors' && (<>

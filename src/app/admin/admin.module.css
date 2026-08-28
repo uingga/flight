@@ -4176,6 +4176,101 @@
 .loginBtn { background: #ff385c; color: #fff; }
 .loginBtn:hover { background: #e92e51; }
 
+.threadsPostList {
+    display: grid;
+    gap: 14px;
+    margin-top: 18px;
+}
+
+.threadsPostCard {
+    padding: 20px;
+    border: 1px solid #e3e7ec;
+    border-radius: 15px;
+    background: #fff;
+}
+
+.threadsPostHead {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    color: #7b8491;
+    font-size: 0.76rem;
+}
+
+.threadsPostHead a {
+    color: #df2148;
+    font-weight: 660;
+    text-decoration: none;
+}
+
+.threadsPostText {
+    margin: 14px 0 17px;
+    color: #1c2535;
+    font-size: 0.97rem;
+    font-weight: 620;
+    line-height: 1.65;
+    white-space: pre-wrap;
+}
+
+.threadsMetricGrid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 7px;
+    margin: 0;
+}
+
+.threadsMetricGrid div {
+    min-width: 0;
+    padding: 10px 8px;
+    border-radius: 10px;
+    background: #f6f7f9;
+    text-align: center;
+}
+
+.threadsMetricGrid dt {
+    color: #818a96;
+    font-size: 0.66rem;
+}
+
+.threadsMetricGrid dd {
+    margin: 4px 0 0;
+    color: #202a3a;
+    font-size: 0.9rem;
+    font-weight: 720;
+}
+
+.threadsSiteFlow {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+    padding: 13px 15px;
+    border-radius: 11px;
+    background: #fff1f4;
+    color: #bd3150;
+}
+
+.threadsSiteFlow > div {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: baseline;
+    gap: 4px 10px;
+}
+
+.threadsSiteFlow span { font-size: 0.71rem; }
+.threadsSiteFlow strong { color: #8f263d; font-size: 0.92rem; }
+.threadsSiteFlow small { grid-column: 1 / -1; color: #b36b7b; font-size: 0.65rem; }
+.threadsSiteFlow p { grid-column: 1 / -1; margin: 0; color: #8f5261; font-size: 0.77rem; }
+
+.threadsTrackingHint {
+    display: block;
+    margin-top: 9px;
+    color: #7e8793;
+    font-size: 0.68rem;
+}
+
 @media (max-width: 980px) {
     .container {
         grid-template-columns: 178px minmax(0, 1fr);
@@ -4196,6 +4291,7 @@
     .todayInsightCard:last-child { grid-column: 1 / -1; }
     .collectionTimelineRow { grid-template-columns: 128px 62px minmax(150px, 1fr); }
     .collectionTimelineRow > b { grid-column: 3; text-align: left; }
+    .threadsMetricGrid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 
 @media (max-width: 760px) {
@@ -4229,7 +4325,7 @@
         top: 0;
         z-index: 20;
         display: grid;
-        grid-template-columns: repeat(4, minmax(max-content, 1fr));
+        grid-template-columns: repeat(5, minmax(max-content, 1fr));
         gap: 4px;
         margin: 0 0 10px;
         padding: 5px;
@@ -4248,6 +4344,10 @@
 
     .tabLabel { font-size: 0.78rem; }
     .tabHint { display: none; }
+    .threadsPostCard { padding: 15px; }
+    .threadsMetricGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .threadsSiteFlow { grid-template-columns: 1fr; gap: 8px; }
+    .threadsSiteFlow > span { display: none; }
 
     .overviewHero,
     .tabIntro,
