@@ -1,8 +1,11 @@
 name: Select Today Pick
 
+run-name: Select Today Pick · ${{ github.event.schedule || github.event_name }}
+
 on:
-  # 자동 선정은 정오 전체 크롤링이 끝난 직후 daily-crawl.yml에서 실행한다.
-  # 이 워크플로는 필요할 때 다시 고르는 수동 실행용으로만 남긴다.
+  schedule:
+    # 매일 오전 6시대에 한 번 더 고른다. 정각 혼잡을 피해 06:17 KST에 요청한다.
+    - cron: '17 21 * * *'
   workflow_dispatch:
 
 concurrency:
@@ -19,15 +22,41 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Record trigger metadata
+        run: node scripts/check-crawl-run.mjs
+        env:
+          TRIGGER_EVENT: ${{ github.event_name }}
+          TRIGGER_SCHEDULE: ${{ github.event.schedule }}
+
+      # GitHub가 오전 예약을 정오 이후에 뒤늦게 생성하면 정오 DROP을 다시 덮지 않는다.
+      - name: Check morning selection window
+        id: window
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" != "schedule" ]]; then
+            echo "should_select=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          CURRENT_KST=$(TZ=Asia/Seoul date +%H%M)
+          if (( 10#$CURRENT_KST < 600 || 10#$CURRENT_KST >= 1130 )); then
+            echo "should_select=false" >> "$GITHUB_OUTPUT"
+            echo "Morning selection arrived outside 06:00-11:30 KST; keeping the existing pick."
+          else
+            echo "should_select=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
       - name: Select today's pick
+        if: steps.window.outputs.should_select == 'true'
         run: node scripts/select-today-pick.mjs
 
       - name: Commit and push selection
+        if: steps.window.outputs.should_select == 'true'
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'

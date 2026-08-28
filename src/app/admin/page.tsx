@@ -62,6 +62,17 @@ interface AdminData {
     priceByRegion: Record<string, { min: number; max: number; avg: number; count: number }>;
     cheapest: { route: string; airline: string; price: number; date: string; source: string }[];
     crawlHistory?: CrawlHistoryEntry[];
+    /** 전체 크롤 예약 회차와 마지막 완료 시각을 비교한 자동화 상태. */
+    crawlScheduleHealth?: {
+        status: 'healthy' | 'waiting' | 'late' | 'overdue';
+        expectedAt: string | null;
+        expectedCron: string | null;
+        lastCompletedAt: string | null;
+        delayMinutes: number;
+        pendingSlots: number;
+        warningMinutes: number;
+        fallbackMinutes: number;
+    };
     /** 여행사별 마지막 성공 갱신 시각. 무결성 가드가 새 결과를 폐기하면 여기서 멈춘다. */
     sourceUpdatedAt?: Record<string, string>;
     /** 여행사별 연속 실패 횟수. 0이 아니면 그만큼 이전 데이터로 버티고 있다는 뜻이다. */
@@ -672,7 +683,7 @@ function VisitorTrendChart({ trend }: { trend: GaStatsData['trend'] }) {
                 <strong>{selected.users.toLocaleString()}명</strong>
                 <small>방문 {selected.sessions.toLocaleString()}회</small>
             </div>
-            <div className={styles.trendChart} aria-label="최근 30일 일별 방문자">
+            <div className={`${styles.trendChart} ${styles.desktopVisitorTrend}`} aria-label="최근 30일 일별 방문자">
                 {trend.map((point, index) => (
                     <button
                         key={point.date}
@@ -687,6 +698,20 @@ function VisitorTrendChart({ trend }: { trend: GaStatsData['trend'] }) {
                         </span>
                         <span className={styles.trendDate}>{tickIndexes.has(index) ? shortDate(point.date) : ''}</span>
                     </button>
+                ))}
+            </div>
+            <div className={styles.verticalTrend} aria-label="최근 30일 일별 방문자">
+                {[...trend].reverse().map(point => (
+                    <div key={point.date} className={styles.verticalTrendRow}>
+                        <time dateTime={point.date}>{shortDate(point.date)}</time>
+                        <div className={styles.verticalTrendTrack} aria-hidden="true">
+                            <div
+                                className={styles.verticalTrendBar}
+                                style={{ width: `${Math.max(2, (point.users / max) * 100)}%` }}
+                            />
+                        </div>
+                        <strong>{point.users.toLocaleString()}명</strong>
+                    </div>
                 ))}
             </div>
             <p className={styles.trendHint}>막대를 누르면 날짜별 방문자를 볼 수 있어요.</p>
@@ -712,6 +737,75 @@ function RankList({
                 </div>
             ))}
         </div>
+    );
+}
+
+const DONUT_COLORS = ['#ff5b78', '#5267d9', '#27a878', '#f2a33a', '#8b6fc0'];
+
+function DonutBreakdown({ title, items }: { title: string; items: GaListItem[] | null }) {
+    if (items === null) {
+        return (
+            <article className={styles.donutCard}>
+                <h3>{title}</h3>
+                <div className={styles.emptyState}>불러오지 못했습니다.</div>
+            </article>
+        );
+    }
+
+    const counted = items.filter(item => item.count > 0).sort((a, b) => b.count - a.count);
+    if (counted.length === 0) {
+        return (
+            <article className={styles.donutCard}>
+                <h3>{title}</h3>
+                <div className={styles.emptyState}>아직 집계된 데이터가 없습니다.</div>
+            </article>
+        );
+    }
+
+    const displayed = counted.length <= 5
+        ? counted
+        : [
+            ...counted.slice(0, 4),
+            { label: '기타', count: counted.slice(4).reduce((sum, item) => sum + item.count, 0) },
+        ];
+    const total = displayed.reduce((sum, item) => sum + item.count, 0);
+    let angle = 0;
+    const segments = displayed.map((item, index) => {
+        const start = angle;
+        angle += (item.count / total) * 360;
+        return `${DONUT_COLORS[index]} ${start}deg ${angle}deg`;
+    });
+    const chartLabel = displayed
+        .map(item => `${item.label} ${Math.round((item.count / total) * 100)}%`)
+        .join(', ');
+
+    return (
+        <article className={styles.donutCard}>
+            <h3>{title}</h3>
+            <div className={styles.donutBody}>
+                <div
+                    className={styles.donutChart}
+                    role="img"
+                    aria-label={`${title}: ${chartLabel}`}
+                    style={{ background: `conic-gradient(${segments.join(', ')})` }}
+                >
+                    <div className={styles.donutCenter}>
+                        <strong>{total.toLocaleString()}</strong>
+                        <span>선택</span>
+                    </div>
+                </div>
+                <ul className={styles.donutLegend}>
+                    {displayed.map((item, index) => (
+                        <li key={item.label}>
+                            <span className={styles.donutSwatch} style={{ backgroundColor: DONUT_COLORS[index] }} />
+                            <span>{item.label}</span>
+                            <strong>{item.count.toLocaleString()}회</strong>
+                            <small>{Math.round((item.count / total) * 100)}%</small>
+                        </li>
+                    ))}
+                </ul>
+            </div>
+        </article>
     );
 }
 
@@ -1100,6 +1194,9 @@ export default function AdminPage() {
             ?? 0,
     ])) as Record<string, number>;
     const criticalAlerts = (latestCrawl?.alerts || []).filter(a => a.startsWith('🚨'));
+    const crawlScheduleHealth = data.crawlScheduleHealth;
+    const crawlScheduleIssue = crawlScheduleHealth?.status === 'late'
+        || crawlScheduleHealth?.status === 'overdue';
 
     const selectTab = (next: TabId) => {
         setTab(next);
@@ -1205,6 +1302,7 @@ export default function AdminPage() {
         || data.naverStatus.ageDays > 3;
     const reportsToReview = flightReports?.summary?.needsReview || 0;
     const attentionCount = sourceIssueCount
+        + (crawlScheduleIssue ? 1 : 0)
         + (naverNeedsAttention ? 1 : 0)
         + (reportsToReview > 0 ? 1 : 0)
         + (bookingLinkSystemicIssue ? 1 : 0);
@@ -1285,6 +1383,29 @@ export default function AdminPage() {
                 </div>
             )}
 
+            {crawlScheduleIssue && crawlScheduleHealth && (
+                <div className={styles.integrityBanner} role="alert">
+                    <strong>
+                        {crawlScheduleHealth.status === 'overdue'
+                            ? '자동 수집 회차가 누락됐어요'
+                            : '자동 수집 시작이 늦어지고 있어요'}
+                    </strong>
+                    <p>
+                        {crawlScheduleHealth.expectedAt
+                            ? `${formatKST(crawlScheduleHealth.expectedAt).replace(/:\d{2}$/, '')} 예정 회차가 ${crawlScheduleHealth.delayMinutes}분째 반영되지 않았습니다.`
+                            : '예정된 전체 수집이 아직 반영되지 않았습니다.'}
+                        {' '}
+                        {crawlScheduleHealth.status === 'overdue'
+                            ? `${crawlScheduleHealth.fallbackMinutes}분 기준을 넘어 감시 작업이 보조 실행을 요청하는 구간입니다.`
+                            : `${crawlScheduleHealth.fallbackMinutes}분까지 완료되지 않으면 감시 작업이 보조 실행을 요청합니다.`}
+                    </p>
+                    <span>
+                        마지막 전체 수집 완료: {crawlScheduleHealth.lastCompletedAt ? formatKST(crawlScheduleHealth.lastCompletedAt).replace(/:\d{2}$/, '') : '기록 없음'}
+                        {crawlScheduleHealth.pendingSlots > 1 ? ` · 미반영 회차 ${crawlScheduleHealth.pendingSlots}개` : ''}
+                    </span>
+                </div>
+            )}
+
             <nav className={styles.tabNav}>
                 {TABS.map(t => (
                     <button
@@ -1295,7 +1416,7 @@ export default function AdminPage() {
                     >
                         <span className={styles.tabLabel}>
                             {t.label}
-                            {t.id === 'operations' && (criticalAlerts.length > 0 || sourceIssueCount > 0 || bookingLinkHasFailure) && (
+                            {t.id === 'operations' && (crawlScheduleIssue || criticalAlerts.length > 0 || sourceIssueCount > 0 || bookingLinkHasFailure) && (
                                 <span className={styles.tabDot} title={`점검 필요 ${criticalAlerts.length}건`} />
                             )}
                             {t.id === 'operations' && (flightReports?.summary?.activeHides || 0) > 0 && (
@@ -1325,6 +1446,13 @@ export default function AdminPage() {
                         </div>
                     ) : (
                         <div className={styles.actionGrid}>
+                            {crawlScheduleIssue && crawlScheduleHealth && (
+                                <button type="button" onClick={() => selectTab('operations')} className={styles.actionCardWarn}>
+                                    <span>전체 자동 수집</span>
+                                    <strong>{crawlScheduleHealth.delayMinutes}분 지연</strong>
+                                    <small>{crawlScheduleHealth.status === 'overdue' ? '보조 실행 요청 구간입니다.' : '완료 기록을 기다리고 있어요.'}</small>
+                                </button>
+                            )}
                             {sourceIssueCount > 0 && (
                                 <button type="button" onClick={() => selectTab('operations')} className={styles.actionCardWarn}>
                                     <span>여행사 항공권 수집</span>
@@ -1422,7 +1550,7 @@ export default function AdminPage() {
                         <button type="button" onClick={() => selectTab('operations')} className={(flightFilterSummary?.quality.missingBookingLink || 0) > 0 ? `${styles.digestCard} ${styles.digestCardWarn}` : styles.digestCard}>
                             <span>현재 노출 항공권</span>
                             <strong>{flightFilterSummary ? `${flightFilterSummary.visible.toLocaleString()}개` : '—'}</strong>
-                            <small>{flightFilterSummary ? `시간 미표기 ${flightFilterSummary.quality.missingTimes.toLocaleString()}개 · 공항 확인 전 ${flightFilterSummary.quality.missingExactAirports.toLocaleString()}개` : '항공권 상태를 확인하는 중입니다.'}</small>
+                            <small>{flightFilterSummary ? `시간 미표기 ${flightFilterSummary.quality.missingTimes.toLocaleString()}개 · 예약 링크 없음 ${flightFilterSummary.quality.missingBookingLink.toLocaleString()}개` : '항공권 상태를 확인하는 중입니다.'}</small>
                         </button>
                         <button type="button" onClick={() => selectTab('audience')} className={styles.digestCard}>
                             <span>최근 7일 새 알림</span>
@@ -1461,10 +1589,6 @@ export default function AdminPage() {
                         <div className={(flightFilterSummary?.quality.missingBookingLink || 0) > 0 ? styles.qualityCardWarn : styles.qualityCard}>
                             <span>예약 링크 없음</span><strong>{flightFilterSummary?.quality.missingBookingLink.toLocaleString() ?? '—'}</strong>
                         </div>
-                        <div className={(flightFilterSummary?.quality.missingExactAirports || 0) > 0 ? styles.qualityCardSoft : styles.qualityCard}>
-                            <span>공항 코드 확인 전</span><strong>{flightFilterSummary?.quality.missingExactAirports.toLocaleString() ?? '—'}</strong>
-                            <small>도시는 알지만 정확한 공항은 모르는 표</small>
-                        </div>
                     </div>
                     {exclusionReasons.length > 0 && (
                         <div className={styles.openDisclosure}>
@@ -1483,6 +1607,31 @@ export default function AdminPage() {
                             <p>각 여행사의 최근 16회 수집량을 보여줍니다. 초록색은 정상 수집, 노란색은 수집 실패로 이전 데이터를 사용한 회차입니다.</p>
                         </div>
                     </div>
+                    {crawlScheduleHealth && (
+                        <div className={crawlScheduleIssue ? `${styles.naverCompact} ${styles.naverCompactWarn}` : styles.naverCompact}>
+                            <div>
+                                <strong>전체 자동 수집</strong>
+                                <span>
+                                    {crawlScheduleHealth.lastCompletedAt
+                                        ? `${timeAgo(crawlScheduleHealth.lastCompletedAt)} 완료`
+                                        : '완료 기록 없음'}
+                                </span>
+                            </div>
+                            <div>
+                                <strong>
+                                    {crawlScheduleHealth.status === 'healthy' ? '정상'
+                                        : crawlScheduleHealth.status === 'waiting' ? '시작 대기'
+                                            : crawlScheduleHealth.status === 'late' ? '지연'
+                                                : '보조 실행 대상'}
+                                </strong>
+                                <span>
+                                    {crawlScheduleHealth.expectedAt
+                                        ? `${formatKST(crawlScheduleHealth.expectedAt).replace(/:\d{2}$/, '')} 회차`
+                                        : '예정 회차 없음'}
+                                </span>
+                            </div>
+                        </div>
+                    )}
                     <div className={styles.sourceTrendGrid}>
                         {allSources.map(source => {
                             const updatedAt = data.sourceUpdatedAt?.[source];
@@ -2977,10 +3126,6 @@ export default function AdminPage() {
                                     <RankList items={(gaStats.bookingByAgency || []).slice(0, 5).map(item => ({ label: SOURCE_NAMES[item.label] || item.label, value: `${item.count.toLocaleString()}회` }))} empty="아직 예약 이동이 없어요." />
                                 </div>
                                 <div className={styles.analysisPanel}>
-                                    <h3>상세를 연 위치</h3>
-                                    <RankList items={(gaStats.detailByEntry || []).slice(0, 5).map(item => ({ label: item.label, value: `${item.count.toLocaleString()}회` }))} empty="상세 열람 위치가 아직 기록되지 않았어요." />
-                                </div>
-                                <div className={styles.analysisPanel}>
                                     <h3>알림 등록을 시작한 위치</h3>
                                     <RankList items={(gaStats.alertByEntry || []).slice(0, 5).map(item => ({ label: item.label, value: `${item.count.toLocaleString()}회` }))} empty="알림 등록 위치가 아직 기록되지 않았어요." />
                                 </div>
@@ -3021,19 +3166,13 @@ export default function AdminPage() {
                                     <p>검색 수요와 현재 항공권 공급이 어긋나는 구간을 찾는 데 쓰는 정보입니다.</p>
                                 </div>
                             </div>
-                            <div className={styles.analysisGrid}>
-                                {([
-                                    ['출발까지 남은 기간', gaStats.dateFilter.leadTime],
-                                    ['고른 여행 기간', gaStats.dateFilter.range],
-                                    ['날짜를 고른 방식', gaStats.dateFilter.method],
-                                    ['누른 빠른 선택', gaStats.dateFilter.presets],
-                                ] as const).map(([title, items]) => (
-                                    <div key={title} className={styles.analysisPanel}>
-                                        <h3>{title}</h3>
-                                        <RankList items={(items || []).slice(0, 6).map(item => ({ label: item.label, value: `${item.count.toLocaleString()}회` }))} empty="아직 기록된 선택이 없어요." />
-                                    </div>
-                                ))}
+                            <div className={styles.donutGrid}>
+                                <DonutBreakdown title="출발까지 남은 기간" items={gaStats.dateFilter.leadTime} />
+                                <DonutBreakdown title="고른 여행 기간" items={gaStats.dateFilter.range} />
+                                <DonutBreakdown title="날짜를 고른 방식" items={gaStats.dateFilter.method} />
+                                <DonutBreakdown title="누른 빠른 선택" items={gaStats.dateFilter.presets} />
                             </div>
+                            <p className={styles.dataFootnote}>2026년 8월 19일 이후 수집된 날짜 선택만 반영합니다.</p>
                         </section>
                     </>
                 )}

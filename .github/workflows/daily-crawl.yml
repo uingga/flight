@@ -1,5 +1,7 @@
 name: Daily Flight Crawl
 
+run-name: Daily Flight Crawl · ${{ github.event.schedule || inputs.trigger_source || github.event_name }} · ${{ inputs.expected_at || 'scheduled' }}
+
 on:
   schedule:
     # 하루 6회 (KST): GitHub Actions 정각 혼잡을 피해 분 단위로 분산한다.
@@ -13,11 +15,50 @@ on:
     - cron: '17 6 * * *'     # 15:17 KST
     - cron: '29 9 * * *'     # 18:29 KST
     - cron: '37 15 * * *'    # 00:37 KST
-  workflow_dispatch: # 수동 실행 가능
+  workflow_dispatch:
+    inputs:
+      trigger_source:
+        description: '실행 요청 출처(manual/watchdog)'
+        required: false
+        default: 'manual'
+        type: string
+      expected_at:
+        description: 'watchdog이 복구할 예약 회차(ISO 8601)'
+        required: false
+        type: string
+
+# 늦게 도착한 schedule과 watchdog 보조 실행이 같은 캐시를 동시에 만들지 않는다.
+# 보조 실행이 먼저 끝나면 뒤늦은 schedule은 preflight에서 이미 처리된 회차로 건너뛴다.
+concurrency:
+  group: daily-flight-crawl
+  cancel-in-progress: false
 
 jobs:
-  crawl:
+  preflight:
     runs-on: ubuntu-latest
+    outputs:
+      should_run: ${{ steps.trigger.outputs.should_run }}
+      expected_at: ${{ steps.trigger.outputs.expected_at }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Record trigger and skip duplicate slot
+        id: trigger
+        run: node scripts/check-crawl-run.mjs
+        env:
+          CHECK_CACHE: '1'
+          TRIGGER_EVENT: ${{ github.event_name }}
+          TRIGGER_SCHEDULE: ${{ github.event.schedule }}
+          TRIGGER_SOURCE: ${{ inputs.trigger_source }}
+          EXPECTED_AT: ${{ inputs.expected_at }}
+
+  crawl:
+    needs: preflight
+    if: needs.preflight.outputs.should_run == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
     
     permissions:
       contents: write # 리포지토리 커밋 권한 필요
@@ -27,6 +68,14 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Show trigger metadata
+        run: node scripts/check-crawl-run.mjs
+        env:
+          TRIGGER_EVENT: ${{ github.event_name }}
+          TRIGGER_SCHEDULE: ${{ github.event.schedule }}
+          TRIGGER_SOURCE: ${{ inputs.trigger_source }}
+          EXPECTED_AT: ${{ needs.preflight.outputs.expected_at }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4

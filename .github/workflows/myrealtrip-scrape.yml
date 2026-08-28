@@ -1,5 +1,7 @@
 name: MyRealTrip Price Scraping
 
+run-name: MyRealTrip Price Scraping · ${{ github.event.schedule || github.event_name }}
+
 on:
   schedule:
     # 정각 혼잡을 피하고 일반 항공권 수집 뒤에 이어지도록 분산한다.
@@ -22,6 +24,12 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Record trigger metadata
+        run: node scripts/check-crawl-run.mjs
+        env:
+          TRIGGER_EVENT: ${{ github.event_name }}
+          TRIGGER_SCHEDULE: ${{ github.event.schedule }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4

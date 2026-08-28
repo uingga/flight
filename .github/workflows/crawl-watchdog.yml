@@ -1,0 +1,87 @@
+name: Crawl Schedule Watchdog
+
+run-name: Crawl Schedule Watchdog · ${{ github.event.schedule || github.event_name }}
+
+on:
+  # 본 크롤과 다른 분에 20분 간격으로 확인한다. 한 회차가 누락돼도 다음 확인이 다시 온다.
+  schedule:
+    - cron: '7,27,47 * * * *'
+  # 일반 크롤 뒤에 도는 마이리얼트립 작업이 살아 있다면, GitHub schedule 확인을 기다리지
+  # 않고 그 완료 이벤트에서도 누락을 검사한다.
+  workflow_run:
+    workflows: ['MyRealTrip Price Scraping']
+    types: [completed]
+  workflow_dispatch:
+
+concurrency:
+  group: crawl-schedule-watchdog
+  cancel-in-progress: false
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout latest data
+        uses: actions/checkout@v4
+
+      - name: Record watchdog trigger metadata
+        run: node scripts/check-crawl-run.mjs
+        env:
+          TRIGGER_EVENT: ${{ github.event_name }}
+          TRIGGER_SCHEDULE: ${{ github.event.schedule }}
+
+      - name: Check crawl freshness
+        id: health
+        run: node scripts/check-crawl-watchdog.mjs
+
+      - name: Dispatch fallback crawl
+        if: steps.health.outputs.should_dispatch == 'true'
+        uses: actions/github-script@v7
+        env:
+          EXPECTED_AT: ${{ steps.health.outputs.expected_at }}
+          DELAY_MINUTES: ${{ steps.health.outputs.delay_minutes }}
+        with:
+          script: |
+            const workflowId = 'daily-crawl.yml';
+            const now = Date.now();
+            const { data } = await github.rest.actions.listWorkflowRuns({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: workflowId,
+              branch: 'main',
+              per_page: 30,
+            });
+
+            const active = data.workflow_runs.find(run => run.status !== 'completed');
+            if (active) {
+              core.notice(`Daily crawl is already ${active.status}: ${active.html_url}`);
+              return;
+            }
+
+            const recentFallback = data.workflow_runs.find(run =>
+              run.event === 'workflow_dispatch'
+              && (run.display_title || '').includes('watchdog')
+              && now - new Date(run.created_at).getTime() < 45 * 60 * 1000
+            );
+            if (recentFallback) {
+              core.notice(`A watchdog fallback was already requested recently: ${recentFallback.html_url}`);
+              return;
+            }
+
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: workflowId,
+              ref: 'main',
+              inputs: {
+                trigger_source: 'watchdog',
+                expected_at: process.env.EXPECTED_AT,
+              },
+            });
+            core.warning(`Dispatched fallback for ${process.env.EXPECTED_AT} (${process.env.DELAY_MINUTES} minutes late).`);

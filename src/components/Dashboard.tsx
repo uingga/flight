@@ -40,6 +40,7 @@ import {
     getDestinationContext,
     getItineraryContext,
 } from '@/lib/destination-contexts';
+import { diversifyFlightDestinations, excludePinnedDestination } from '@/lib/flight-diversity';
 import AccountSheet from './account/AccountSheet';
 import { useAccount, type AccountSearchFilters } from './account/useAccount';
 
@@ -2092,146 +2093,27 @@ export default function Dashboard() {
         });
     };
 
-    // 다양성 재정렬: 첫 9개는 목적지를 겹치지 않게 하고, 이후에도 최근 두 목적지는 피한다.
-    // 9개 단위로 인천/김포 출발을 6개 배치하되 해당 표가 부족하면 조건을 완화한다.
-    // 비슷한 추천 점수 안에서는 아직 노출되지 않은 목적지를 먼저 고른다.
-    // 추천순에서만 적용 (가격순/날짜순/검색 시 비활성화)
-    const interleaveRoutes = (
-        flights: Flight[],
-        maxConsecutive: number = 2,
-        topWindow: number = 20,
-        maxPerDestination: number = 2,
-        leadingFlights: Flight[] = [],
-        scoreOf?: (flight: Flight) => number,
-        balanceIncheon: boolean = true,
-    ): Flight[] => {
-        if (flights.length <= 1) return flights;
-
-        const remaining = [...flights];
-        const result: Flight[] = [];
-        const sequence: Flight[] = [...leadingFlights];
-        const topDestinationCounts = new Map<string, number>();
-        sequence.slice(0, topWindow).forEach(flight => {
-            const destination = normalizeCity(flight.arrival.city);
-            topDestinationCounts.set(destination, (topDestinationCounts.get(destination) || 0) + 1);
-        });
-        const getRoute = (f: Flight) => `${normalizeCity(f.departure.city)}-${normalizeCity(f.arrival.city)}`;
-        const departsFromIncheonArea = (flight: Flight) => {
-            const airport = flight.departure.airport?.toUpperCase();
-            return airport === 'ICN'
-                || airport === 'GMP'
-                || /인천|김포|서울/.test(normalizeCity(flight.departure.city));
-        };
-        const getStreak = (route: string) => {
-            let streak = 0;
-            for (let i = sequence.length - 1; i >= 0 && i >= sequence.length - maxConsecutive; i--) {
-                if (getRoute(sequence[i]) === route) streak++;
-                else break;
-            }
-            return streak;
-        };
-
-        while (remaining.length > 0) {
-            const insideTopWindow = sequence.length < topWindow;
-            const recentDestinations = new Set(
-                sequence.slice(-2).map(flight => normalizeCity(flight.arrival.city)),
-            );
-            const blockPosition = sequence.length % 9;
-            const block = sequence.slice(sequence.length - blockPosition);
-            const incheonCount = block.filter(departsFromIncheonArea).length;
-            const positionsAfterNext = 8 - blockPosition;
-            const availableIncheon = remaining.filter(departsFromIncheonArea).length;
-            const canReachIncheonMinimum = incheonCount
-                + Math.min(availableIncheon, positionsAfterNext + 1) >= 6;
-            const mustChooseIncheon = balanceIncheon
-                && canReachIncheonMinimum
-                && incheonCount + positionsAfterNext < 6;
-            const desiredIncheonCount = Math.floor(((blockPosition + 1) * 6) / 9);
-
-            const findCandidate = (
-                keepSpacing: boolean,
-                keepTopLimit: boolean,
-                keepFirstNineUnique: boolean,
-                keepDepartureBalance: boolean,
-            ) => {
-                const eligibleIndexes = remaining
-                    .map((_, index) => index)
-                    .filter(index => {
-                        const flight = remaining[index];
-                        const destination = normalizeCity(flight.arrival.city);
-                        const isIncheonArea = departsFromIncheonArea(flight);
-                        return getStreak(getRoute(flight)) < maxConsecutive
-                            && (!keepSpacing || !recentDestinations.has(destination))
-                            && (!keepTopLimit || !insideTopWindow || (topDestinationCounts.get(destination) || 0) < maxPerDestination)
-                            && (!keepFirstNineUnique || sequence.length >= 9 || (topDestinationCounts.get(destination) || 0) === 0)
-                            && (!keepDepartureBalance || !mustChooseIncheon || isIncheonArea)
-                            && (!keepDepartureBalance || incheonCount < 6 || !isIncheonArea);
-                    });
-                if (eligibleIndexes.length === 0) return -1;
-
-                const bestIndex = eligibleIndexes[0];
-                const bestScore = scoreOf?.(remaining[bestIndex]);
-                if (!insideTopWindow || !Number.isFinite(bestScore)) return bestIndex;
-
-                if (balanceIncheon && incheonCount < desiredIncheonCount) {
-                    const incheonIndex = eligibleIndexes.find(index => {
-                        const score = scoreOf?.(remaining[index]);
-                        return departsFromIncheonArea(remaining[index])
-                            && Number.isFinite(score)
-                            && score! <= bestScore! * 1.15;
-                    });
-                    if (incheonIndex !== undefined) return incheonIndex;
-                }
-
-                const unseenIndex = eligibleIndexes.find(index => {
-                    const flight = remaining[index];
-                    const destination = normalizeCity(flight.arrival.city);
-                    const score = scoreOf?.(flight);
-                    return (topDestinationCounts.get(destination) || 0) === 0
-                        && Number.isFinite(score)
-                        && score! <= bestScore! * 1.15;
-                });
-                return unseenIndex ?? bestIndex;
-            };
-
-            let candidateIndex = findCandidate(true, true, true, true);
-            if (candidateIndex < 0) candidateIndex = findCandidate(true, false, true, true);
-            if (candidateIndex < 0) candidateIndex = findCandidate(true, true, true, false);
-            if (candidateIndex < 0) candidateIndex = findCandidate(true, false, true, false);
-            if (candidateIndex < 0) candidateIndex = findCandidate(true, true, false, true);
-            if (candidateIndex < 0) candidateIndex = findCandidate(false, false, false, false);
-            if (candidateIndex < 0) candidateIndex = 0;
-
-            const [next] = remaining.splice(candidateIndex, 1);
-            result.push(next);
-            sequence.push(next);
-            if (sequence.length <= topWindow) {
-                const destination = normalizeCity(next.arrival.city);
-                topDestinationCounts.set(destination, (topDestinationCounts.get(destination) || 0) + 1);
-            }
-        }
-        return result;
-    };
-
-    // 오늘의 표는 편집 콘텐츠이므로 추천순 재편성 대상에서 완전히 제외한다.
-    const recommendationPool = (todayPick && isDefaultView)
-        ? filteredFlights.filter(flight => flight.id !== todayPick.flight.id)
-        : filteredFlights;
+    // 오늘의 표를 먼저 고른 뒤, 같은 목적지의 일반 카드는 추천 배열에서 분리한다.
+    const pinnedTodayPick = todayPick && isDefaultView ? todayPick.flight : undefined;
+    const recommendationPool = excludePinnedDestination(filteredFlights, pinnedTodayPick);
     const diversifiedFlights = (sortBy === 'discount' && !searchTerm)
         // 서로 다른 비교가 구간이 노선 다양화 과정에서 뒤섞이지 않도록
         // 각 구간 안에서만 분산하되, 구간 경계의 직전 목적지도 이어서 확인한다.
         ? (() => {
             const result: Flight[] = [];
-            const leadingFlights: Flight[] = todayPick && isDefaultView ? [todayPick.flight] : [];
+            // 오늘의 표는 추천 배열 바깥의 편집 카드다. 첫 9개·연속 횟수 계산에도 넣지 않는다.
+            const leadingFlights: Flight[] = [];
             for (const tier of [0, 1, 2] as const) {
-                const group = interleaveRoutes(
+                const group = diversifyFlightDestinations(
                     recommendationPool.filter(flight => getComparisonPriceTier(flight) === tier),
-                    2,
-                    20,
-                    2,
-                    leadingFlights,
-                    flight => recommendScores.get(flight.id) ?? Infinity,
-                    departureFilter === 'all',
+                    {
+                        maxConsecutiveDestinations: 2,
+                        topWindow: 20,
+                        maxPerDestination: 2,
+                        leadingFlights,
+                        scoreOf: flight => recommendScores.get(flight.id) ?? Infinity,
+                        balanceIncheon: departureFilter === 'all',
+                    },
                 );
                 result.push(...group);
                 leadingFlights.push(...group);
