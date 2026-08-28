@@ -74,14 +74,61 @@ test('MyRealTrip runs once in the morning and once in the afternoon', () => {
     assert.deepEqual(workflowCrons.sort(), ['5 22 * * *', '3 9 * * *'].sort());
 });
 
-test('the 11:56 general crawl dispatches Naver immediately after saving data', () => {
+test('the general crawl never dispatches the GitHub Naver workflow', () => {
     const dailyWorkflow = fs.readFileSync('.github/workflows/daily-crawl.yml', 'utf8');
     const naverWorkflow = fs.readFileSync('.github/workflows/naver-crawl.yml', 'utf8');
 
-    assert.match(dailyWorkflow, /Start Naver price crawl after 11:56 crawl/);
-    assert.match(dailyWorkflow, /needs\.preflight\.outputs\.is_today_pick_slot == 'true'/);
-    assert.match(dailyWorkflow, /workflow_id: 'naver-crawl\.yml'/);
+    assert.doesNotMatch(dailyWorkflow, /workflow_id: 'naver-crawl\.yml'/);
+    assert.doesNotMatch(dailyWorkflow, /^\s+actions:\s*write\b/m);
     assert.doesNotMatch(naverWorkflow, /^\s+workflow_run:/m);
+});
+
+test('only the successful 07:05 MyRealTrip schedule dispatches Naver for 200 flights', () => {
+    const workflow = fs.readFileSync('.github/workflows/myrealtrip-scrape.yml', 'utf8');
+    const dispatchStart = workflow.indexOf('- name: Start Naver price crawl after 07:05 MyRealTrip scrape');
+    const nextStep = workflow.indexOf('\n      - name:', dispatchStart + 1);
+
+    assert.notEqual(dispatchStart, -1);
+    const dispatchStep = workflow.slice(dispatchStart, nextStep === -1 ? workflow.length : nextStep);
+    assert.match(workflow, /^\s+actions:\s*write\b/m);
+    assert.match(dispatchStep, /if: success\(\)/);
+    assert.match(dispatchStep, /steps\.scrape\.outcome == 'success'/);
+    assert.match(dispatchStep, /github\.event_name == 'schedule'/);
+    assert.match(dispatchStep, /github\.event\.schedule == '5 22 \* \* \*'/);
+    assert.match(dispatchStep, /workflow_id: 'naver-crawl\.yml'/);
+    assert.match(dispatchStep, /inputs: \{ max_flights: '200' \}/);
+    assert.doesNotMatch(dispatchStep, /3 9 \* \* \*/);
+});
+
+test('GitHub Naver stays limited to MyRealTrip routes', () => {
+    const workflow = fs.readFileSync('.github/workflows/naver-crawl.yml', 'utf8');
+    assert.match(workflow, /^\s+SOURCE_FILTER:\s*myrealtrip\s*$/m);
+});
+
+test('the Windows Naver task keeps the 14:30 all-source 280-flight follow-up', () => {
+    const runner = fs.readFileSync('scripts/run-naver-crawl.ps1', 'utf8');
+    const installer = fs.readFileSync('scripts/install-naver-crawl-task.ps1', 'utf8');
+
+    assert.match(installer, /New-ScheduledTaskTrigger -Daily -At '14:30'/);
+    assert.match(runner, /\$env:SOURCE_FILTER = 'all'/);
+    assert.match(runner, /\$env:MAX_FLIGHTS = '280'/);
+    assert.match(runner, /git pull --rebase --autostash/);
+});
+
+test('a successful Windows Naver filter repairs today pick with conflict-safe push retries', () => {
+    const runner = fs.readFileSync('scripts/run-naver-crawl.ps1', 'utf8');
+    const filterIndex = runner.indexOf('npx --no-install tsx scripts/filter-by-naver.ts');
+    const waitIndex = runner.indexOf('node scripts/wait-for-flight-api-cache.mjs');
+    const repairIndex = runner.indexOf('node scripts/select-today-pick.mjs --repair');
+
+    assert.notEqual(filterIndex, -1);
+    assert.ok(waitIndex > filterIndex);
+    assert.ok(repairIndex > waitIndex);
+    assert.match(runner, /if \(-not \$DataPublished\)[\s\S]*today pick repair was skipped/);
+    assert.match(runner, /for \(\$repairAttempt = 1; \$repairAttempt -le 2; \$repairAttempt\+\+\)/);
+    assert.match(runner, /git pull --ff-only origin main/);
+    assert.match(runner, /git commit --only -m 'chore\(data\): repair today pick after naver crawl \[local\]' -- \$TodayPickPath/);
+    assert.match(runner, /git push origin main/);
 });
 
 test('watchdog fallback keeps the 11:56 today-pick slot identity', () => {
