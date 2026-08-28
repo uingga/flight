@@ -74,6 +74,7 @@ export function classifyNaverAvailability(snapshot: NaverPageSnapshot): NaverAva
         && status >= 200
         && status < 400
         && (snapshot.graphqlSuccessCount || 0) > 0
+        && !snapshot.isLoading
     ) return 'available';
     if (status >= 500 || (graphqlProblemStatus >= 500 && (snapshot.graphqlSuccessCount || 0) === 0)) {
         return 'unavailable';
@@ -89,6 +90,11 @@ export function classifyNaverProbeAvailability(
 ): NaverAvailability {
     const availability = classifyNaverAvailability(snapshot);
     if (availability !== 'unknown') return availability;
+
+    // A metadata GraphQL response can arrive while the actual flight result request is
+    // still stuck. The probe is called only after its full wait window, so a page that
+    // is still loading at this point is an unavailable search path, not a healthy one.
+    if (snapshot.isLoading) return 'unavailable';
 
     const status = Number(snapshot.httpStatus || 0);
     const noGraphqlReached = snapshot.searchPageReached
@@ -114,6 +120,31 @@ export function shouldAbortNaverCrawlForZeroSuccess(
     minimumAttempts = 10,
 ): boolean {
     return attempted >= Math.max(1, minimumAttempts) && success === 0;
+}
+
+/**
+ * Detect a degraded run that produced a handful of prices before the result API or
+ * rendering path stopped working. A zero-success guard alone allowed 5/176 to be
+ * committed as a successful run on 2026-08-28.
+ *
+ * Normal empty routes and unsupported routes are intentionally excluded. Only
+ * transient/blocked failures count as systemic failures.
+ */
+export function shouldAbortNaverCrawlForSystemicFailures(
+    attempted: number,
+    success: number,
+    transientErrors: number,
+    blocked: number,
+    minimumAttempts = 20,
+    minimumSystemicFailureRate = 0.8,
+    maximumSuccessRate = 0.2,
+): boolean {
+    if (attempted < Math.max(1, minimumAttempts)) return false;
+    if (attempted <= 0) return false;
+
+    const systemicFailures = Math.max(0, transientErrors) + Math.max(0, blocked);
+    return systemicFailures / attempted >= minimumSystemicFailureRate
+        && Math.max(0, success) / attempted <= maximumSuccessRate;
 }
 
 export function naverPageStateLabel(state: NaverCrawlPageState): string {

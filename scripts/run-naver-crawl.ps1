@@ -41,6 +41,27 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 
+# Keep a dedicated automation checkout in sync with package-lock changes without
+# paying the npm ci cost on every run.
+$DependencyMarker = Join-Path $ProjectDir 'node_modules\.tikitikit-package-lock.sha256'
+$PackageLockHash = (Get-FileHash -Algorithm SHA256 (Join-Path $ProjectDir 'package-lock.json')).Hash
+$InstalledPackageLockHash = if (Test-Path $DependencyMarker) {
+    (Get-Content -Raw $DependencyMarker).Trim()
+} else {
+    ''
+}
+if ($PackageLockHash -ne $InstalledPackageLockHash) {
+    Log 'package-lock.json changed or dependencies are missing; running npm ci'
+    npm.cmd ci --no-audit --no-fund 2>&1 | ForEach-Object {
+        "$_" | Add-Content -Encoding utf8 $LogFile
+    }
+    if ($LASTEXITCODE -ne 0) {
+        Log 'npm ci failed; stopping before the crawl'
+        exit 1
+    }
+    $PackageLockHash | Set-Content -Encoding ascii $DependencyMarker
+}
+
 # Crawl all agencies using the residential IP, with KST calendar-day refresh rules.
 $env:HIDE_WINDOW = '1'
 $env:SOURCE_FILTER = 'all'
@@ -48,7 +69,10 @@ $env:MAX_FLIGHTS = '280'
 $env:REFRESH_DAYS = '2'
 $env:MYREALTRIP_REFRESH_DAYS = '1'
 $env:MISS_RETRY_HOURS = '6'
-npx --no-install tsx scripts/crawl-naver.ts 2>&1 | Add-Content -Encoding utf8 $LogFile
+npx.cmd --no-install tsx scripts/crawl-naver.ts 2>&1 | ForEach-Object {
+    # Add-Content per line keeps the log readable while the long crawl is running.
+    "$_" | Add-Content -Encoding utf8 $LogFile
+}
 $CrawlerExitCode = $LASTEXITCODE
 $HistoryOnly = $CrawlerExitCode -ne 0
 if ($HistoryOnly) {

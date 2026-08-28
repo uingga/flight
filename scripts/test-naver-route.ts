@@ -10,6 +10,7 @@ import {
     classifyNaverPageState,
     classifyNaverProbeAvailability,
     combineNaverProbeResults,
+    shouldAbortNaverCrawlForSystemicFailures,
     shouldAbortNaverCrawlForZeroSuccess,
 } from '../src/lib/naver-crawl-page-state';
 import { getUsableNaverComparison } from '../src/lib/naver-comparison';
@@ -144,7 +145,7 @@ assert.equal(classifyNaverAvailability({
     graphqlResponseCount: 1,
     graphqlSuccessCount: 1,
     isLoading: true,
-}), 'available');
+}), 'unknown');
 assert.equal(classifyNaverAvailability({
     httpStatus: 200,
     searchPageReached: true,
@@ -167,6 +168,10 @@ assert.equal(classifyNaverPageState({
 assert.equal(shouldAbortNaverCrawlForZeroSuccess(9, 0), false);
 assert.equal(shouldAbortNaverCrawlForZeroSuccess(10, 0), true);
 assert.equal(shouldAbortNaverCrawlForZeroSuccess(10, 1), false);
+assert.equal(shouldAbortNaverCrawlForSystemicFailures(19, 0, 19, 0), false);
+assert.equal(shouldAbortNaverCrawlForSystemicFailures(20, 4, 16, 0), true);
+assert.equal(shouldAbortNaverCrawlForSystemicFailures(20, 5, 15, 0), false);
+assert.equal(shouldAbortNaverCrawlForSystemicFailures(20, 4, 3, 0), false);
 
 const comparisonNow = new Date('2026-08-27T03:00:00Z').getTime();
 assert.deepEqual(getUsableNaverComparison({
@@ -196,6 +201,14 @@ assert.equal(classifyNaverProbeAvailability({
     graphqlResponseCount: 1,
     graphqlSuccessCount: 0,
     graphqlErrorCount: 1,
+}), 'unavailable');
+assert.equal(classifyNaverProbeAvailability({
+    httpStatus: 200,
+    searchPageReached: true,
+    graphqlResponseCount: 2,
+    graphqlSuccessCount: 2,
+    graphqlErrorCount: 0,
+    isLoading: true,
 }), 'unavailable');
 assert.equal(combineNaverProbeResults(['unavailable', 'unavailable']), 'unavailable');
 assert.equal(combineNaverProbeResults(['unavailable', 'unknown']), 'unknown');

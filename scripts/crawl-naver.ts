@@ -22,6 +22,7 @@ import {
     classifyNaverProbeAvailability,
     combineNaverProbeResults,
     naverPageStateLabel,
+    shouldAbortNaverCrawlForSystemicFailures,
     shouldAbortNaverCrawlForZeroSuccess,
     type NaverAvailability,
     type NaverCrawlPageState,
@@ -41,6 +42,9 @@ const MISS_RETRY_HOURS = parseInt(process.env.MISS_RETRY_HOURS || '6', 10); // �
 const NO_RESULT_RETRY_HOURS = parseInt(process.env.NO_RESULT_RETRY_HOURS || '24', 10); // 정상 빈 노선은 하루 뒤 재확인
 const ABORT_AFTER_MISSES = parseInt(process.env.ABORT_AFTER_MISSES || '3', 10); // 연속 N건 일시 오류면 서비스 상태를 별도 확인
 const MIN_ZERO_SUCCESS_GUARD_ATTEMPTS = parseInt(process.env.MIN_ZERO_SUCCESS_GUARD_ATTEMPTS || '10', 10); // 추출기 전면 변경 방어선
+const MIN_SYSTEMIC_FAILURE_GUARD_ATTEMPTS = parseInt(process.env.MIN_SYSTEMIC_FAILURE_GUARD_ATTEMPTS || '20', 10);
+const MIN_SYSTEMIC_FAILURE_RATE = parseFloat(process.env.MIN_SYSTEMIC_FAILURE_RATE || '0.8');
+const MAX_SYSTEMIC_FAILURE_SUCCESS_RATE = parseFloat(process.env.MAX_SYSTEMIC_FAILURE_SUCCESS_RATE || '0.2');
 const DRY_RUN = process.env.DRY_RUN === '1';                        // 검색 계획만 출력하고 종료
 const MIN_VALID_PRICE = parseInt(process.env.MIN_VALID_PRICE || '60000', 10); // 국제선 왕복 최저 방어선 — 미만이면 오염 데이터로 보고 폐기
 const HIDE_WINDOW = process.env.HIDE_WINDOW === '1';                // 브라우저 창을 화면 밖에 배치 (로컬 스케줄 실행용)
@@ -466,6 +470,26 @@ const freshnessHoursFor = (entry: NaverPriceEntry, _source: string): number => {
             break;
         }
 
+        // 대조 노선이 메타데이터 GraphQL만 받고 정상으로 오판해도,
+        // 실제 수집 품질이 붕괴한 회차를 수십 번 더 요청하지 않는 누적 안전장치다.
+        if (shouldAbortNaverCrawlForSystemicFailures(
+            attemptedCount,
+            successCount,
+            failureStateCounts.transient_error,
+            failureStateCounts.blocked,
+            MIN_SYSTEMIC_FAILURE_GUARD_ATTEMPTS,
+            MIN_SYSTEMIC_FAILURE_RATE,
+            MAX_SYSTEMIC_FAILURE_SUCCESS_RATE,
+        )) {
+            const systemicFailures = failureStateCounts.transient_error + failureStateCounts.blocked;
+            const successRate = Math.round((successCount / attemptedCount) * 1000) / 10;
+            const failureRate = Math.round((systemicFailures / attemptedCount) * 1000) / 10;
+            abortReason = `${attemptedCount}건 중 성공 ${successCount}건(${successRate}%), 시스템성 오류 ${systemicFailures}건(${failureRate}%)`;
+            console.log(`\n🛑 ${abortReason} — 수집 품질 붕괴로 판정해 조기 철수합니다.`);
+            abortedEarly = true;
+            break;
+        }
+
         // 애매한 실패가 연속돼도 바로 차단이라고 단정하지 않는다. 알려진 정상 노선을
         // 별도 페이지에서 한 번 확인해 서비스 전체가 막혔을 때만 조기 철수한다.
         if (consecutiveAmbiguousMisses >= ABORT_AFTER_MISSES) {
@@ -850,16 +874,34 @@ async function probeNaverRoute(context: any, route: NaverProbeRoute): Promise<Na
         }
 
         const deadline = Date.now() + NAVER_HEALTH_WAIT_MS;
-        while (
-            Date.now() < deadline
-            && graphqlSuccessCount === 0
-            && graphqlProblemStatus !== 403
-            && graphqlProblemStatus !== 429
-        ) {
+        let snapshot: NaverPageSnapshot | null = null;
+        while (Date.now() < deadline) {
             await probePage.waitForTimeout(1_000);
+            const probePrice = await extractPriceFromDOM(probePage);
+            snapshot = await inspectNaverPage(probePage, response?.status(), {
+                graphqlResponseCount,
+                graphqlSuccessCount,
+                graphqlErrorCount,
+                graphqlProblemStatus,
+            });
+
+            if ((probePrice && probePrice >= MIN_VALID_PRICE) || (snapshot.priceCount || 0) > 0) {
+                console.log(
+                    `   ${route.outboundDeparture}-${route.outboundArrival}: available`
+                    + ` (HTTP ${snapshot.httpStatus || '없음'}, GraphQL 정상 ${graphqlSuccessCount}/${graphqlResponseCount}, 가격 확인)`,
+                );
+                return 'available';
+            }
+            if (classifyNaverPageState(snapshot) === 'blocked') {
+                console.log(
+                    `   ${route.outboundDeparture}-${route.outboundArrival}: blocked`
+                    + ` (HTTP ${snapshot.httpStatus || '없음'}, GraphQL 정상 ${graphqlSuccessCount}/${graphqlResponseCount})`,
+                );
+                return 'blocked';
+            }
         }
 
-        const snapshot = await inspectNaverPage(probePage, response?.status(), {
+        snapshot = snapshot || await inspectNaverPage(probePage, response?.status(), {
             graphqlResponseCount,
             graphqlSuccessCount,
             graphqlErrorCount,
