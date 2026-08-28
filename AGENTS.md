@@ -66,6 +66,17 @@ src/components/Dashboard.tsx (client component)
 2. **가격·시간 갱신 (자동, 하루 2회 KST 07:05/18:03)**: `.github/workflows/myrealtrip-scrape.yml` →
    `scripts/scrape-myrealtrip-prices.ts`가 Playwright로 실제 예약 페이지(offers.k1)를 열어
    실시간 가격과 가는편·오는편 출발/도착 시간을 수집. 조회 실패 노선은 캐시에서 삭제.
+   07:05 예약 회차가 성공하면 변경 유무와 관계없이 `naver-crawl.yml`을 `max_flights=200`으로
+   호출해 마이리얼트립 노선만 확인한다. 18:03 회차와 수동 실행은 네이버를 자동 호출하지 않는다.
+
+### Naver 비교가 확인 스케줄
+
+- GitHub `naver-crawl.yml`은 독립 cron 없이 07:05 마이리얼트립 성공 회차에서만 호출되며
+  `SOURCE_FILTER=myrealtrip`을 유지한다. 11:56 일반 크롤은 이 워크플로를 호출하지 않는다.
+- Windows `TikitikitNaverCrawl`은 매일 14:30 KST에 최신 `main`을 받은 뒤
+  `SOURCE_FILTER=all`, `MAX_FLIGHTS=280`으로 실행해 11:56 일반 여행사 수집 결과를 후속 확인한다.
+- PC 네이버 필터가 성공해 운영 API에 반영된 뒤에는 `select-today-pick.mjs --repair`로
+  기존 오늘의 표만 검증한다. 유효하면 유지하고, 사라졌거나 유효하지 않을 때만 복구한다.
 
 ⚠️ 일일 크롤(`crawl-all.ts`)은 마이리얼트립을 **실행하지 않고** 이전 캐시를 유지한다
 (공개 API의 시간·가격이 부정확해 제외). "마이리얼트립 스크래퍼"를 수정할 때는 어느 단계인지 먼저 확인할 것.

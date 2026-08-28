@@ -13,6 +13,9 @@ $ProjectDir = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Pat
 $LogFile = Join-Path $ProjectDir 'data\naver-crawl-local.log'
 $SessionCopy = Join-Path $env:TEMP 'tikitikit-naver-session.json'
 $HistorySessionCopy = Join-Path $env:TEMP 'tikitikit-naver-history-session.json'
+$NaverDataPaths = @('data/naver-prices.json', 'data/naver-crawl-history.json', 'data/all-flights-cache.json')
+$TodayPickPath = 'data/today-pick.json'
+$ManagedPaths = $NaverDataPaths + $TodayPickPath
 
 Set-Location $ProjectDir
 
@@ -24,7 +27,7 @@ Log '=== Local Naver crawl started ==='
 
 # These files are owned by this scheduled task. Refuse to run when they already
 # contain local edits so the crawler cannot overwrite a user's in-progress work.
-$PreexistingManagedChanges = git status --porcelain -- data/naver-prices.json data/naver-crawl-history.json data/all-flights-cache.json
+$PreexistingManagedChanges = git status --porcelain -- $ManagedPaths
 if ($LASTEXITCODE -ne 0) {
     Log 'Unable to inspect managed data files; stopping before the crawl'
     exit 1
@@ -80,6 +83,7 @@ if ($HistoryOnly) {
 }
 
 # Preserve this session, merge it onto the latest remote data, then push.
+$DataPublished = $false
 for ($attempt = 1; $attempt -le 2; $attempt++) {
     try {
         if (-not $HistoryOnly) {
@@ -91,7 +95,7 @@ for ($attempt = 1; $attempt -le 2; $attempt++) {
         exit 1
     }
 
-    git checkout -- data/naver-prices.json data/naver-crawl-history.json data/all-flights-cache.json 2>$null
+    git checkout -- $NaverDataPaths 2>$null
     git pull --rebase --autostash 2>&1 | Add-Content -Encoding utf8 $LogFile
     if ($LASTEXITCODE -ne 0) {
         Log "Remote refresh failed (attempt $attempt); session copies were preserved"
@@ -103,7 +107,7 @@ for ($attempt = 1; $attempt -le 2; $attempt++) {
         $PriceMergeExitCode = $LASTEXITCODE
         Log "merge exit=$PriceMergeExitCode"
         if ($PriceMergeExitCode -ne 0) {
-            git checkout -- data/naver-prices.json data/naver-crawl-history.json data/all-flights-cache.json 2>$null
+            git checkout -- $NaverDataPaths 2>$null
             Log 'Price merge failed; managed data files were restored and session copies were preserved'
             exit 1
         }
@@ -112,7 +116,7 @@ for ($attempt = 1; $attempt -le 2; $attempt++) {
     $HistoryMergeExitCode = $LASTEXITCODE
     Log "history merge exit=$HistoryMergeExitCode"
     if ($HistoryMergeExitCode -ne 0) {
-        git checkout -- data/naver-prices.json data/naver-crawl-history.json data/all-flights-cache.json 2>$null
+        git checkout -- $NaverDataPaths 2>$null
         Log 'History merge failed; managed data files were restored and session copies were preserved'
         exit 1
     }
@@ -121,7 +125,7 @@ for ($attempt = 1; $attempt -le 2; $attempt++) {
         $FilterExitCode = $LASTEXITCODE
         Log "filter exit=$FilterExitCode"
         if ($FilterExitCode -ne 0) {
-            git checkout -- data/naver-prices.json data/naver-crawl-history.json data/all-flights-cache.json 2>$null
+            git checkout -- $NaverDataPaths 2>$null
             Log 'Filtering failed; managed data files were restored and session copies were preserved'
             exit 1
         }
@@ -134,6 +138,9 @@ for ($attempt = 1; $attempt -le 2; $attempt++) {
     }
     if (-not $dirty) {
         Log 'No data changes; commit skipped'
+        if (-not $HistoryOnly) {
+            $DataPublished = $true
+        }
         break
     }
 
@@ -173,6 +180,7 @@ for ($attempt = 1; $attempt -le 2; $attempt++) {
             Log "Failed-run history commit and push completed (attempt $attempt)"
         } else {
             Log "Commit and push completed (attempt $attempt)"
+            $DataPublished = $true
         }
         break
     }
@@ -200,6 +208,90 @@ for ($attempt = 1; $attempt -le 2; $attempt++) {
 
 if ($HistoryOnly) {
     Log "=== Local Naver crawl failed; partial prices discarded (exit $CrawlerExitCode) ==="
+    '' | Add-Content $LogFile
+    exit 1
+}
+
+if (-not $DataPublished) {
+    Log 'Naver data could not be published; today pick repair was skipped'
+    '' | Add-Content $LogFile
+    exit 1
+}
+
+# Validate the existing pick only after the successful Naver filter is on main
+# and the deployed API has caught up. A concurrent data commit causes the next
+# attempt to pull the new main and run --repair again instead of overwriting it.
+$TodayPickChecked = $false
+for ($repairAttempt = 1; $repairAttempt -le 2; $repairAttempt++) {
+    git pull --ff-only origin main 2>&1 | Add-Content -Encoding utf8 $LogFile
+    if ($LASTEXITCODE -ne 0) {
+        Log "Unable to refresh main before today pick repair (attempt $repairAttempt)"
+        exit 1
+    }
+
+    node scripts/wait-for-flight-api-cache.mjs 2>&1 | ForEach-Object {
+        "$_" | Add-Content -Encoding utf8 $LogFile
+    }
+    if ($LASTEXITCODE -ne 0) {
+        Log 'The deployed flight API did not catch up; today pick repair was skipped'
+        exit 1
+    }
+
+    node scripts/select-today-pick.mjs --repair 2>&1 | ForEach-Object {
+        "$_" | Add-Content -Encoding utf8 $LogFile
+    }
+    if ($LASTEXITCODE -ne 0) {
+        git checkout -- $TodayPickPath 2>$null
+        Log 'Today pick repair check failed; the existing selection was restored'
+        exit 1
+    }
+
+    $TodayPickDirty = git status --porcelain -- $TodayPickPath
+    if (-not $TodayPickDirty) {
+        Log 'Today pick remains valid; repair commit skipped'
+        $TodayPickChecked = $true
+        break
+    }
+
+    git add -- $TodayPickPath
+    if ($LASTEXITCODE -ne 0) {
+        git reset HEAD -- $TodayPickPath 2>$null
+        git checkout -- $TodayPickPath 2>$null
+        Log 'Unable to stage today pick repair; the existing selection was restored'
+        exit 1
+    }
+
+    git commit --only -m 'chore(data): repair today pick after naver crawl [local]' -- $TodayPickPath 2>&1 | Add-Content -Encoding utf8 $LogFile
+    if ($LASTEXITCODE -ne 0) {
+        git reset HEAD -- $TodayPickPath 2>$null
+        git checkout -- $TodayPickPath 2>$null
+        Log 'Unable to commit today pick repair; the existing selection was restored'
+        exit 1
+    }
+
+    git push origin main 2>&1 | Add-Content -Encoding utf8 $LogFile
+    if ($LASTEXITCODE -eq 0) {
+        Log "Today pick repair commit and push completed (attempt $repairAttempt)"
+        $TodayPickChecked = $true
+        break
+    }
+
+    Log "Today pick push failed (attempt $repairAttempt); refreshing main and checking again"
+    git reset --soft HEAD~1 2>&1 | Add-Content -Encoding utf8 $LogFile
+    if ($LASTEXITCODE -ne 0) {
+        Log 'Unable to undo the unpushed today pick commit'
+        exit 1
+    }
+    git reset HEAD -- $TodayPickPath 2>&1 | Add-Content -Encoding utf8 $LogFile
+    git checkout -- $TodayPickPath 2>$null
+    if ($LASTEXITCODE -ne 0) {
+        Log 'Unable to restore today pick before retry'
+        exit 1
+    }
+}
+
+if (-not $TodayPickChecked) {
+    Log 'Today pick repair could not be published after two attempts'
     '' | Add-Content $LogFile
     exit 1
 }

@@ -1,8 +1,8 @@
 name: Naver Price Crawl
 
 on:
-  # 독립 예약을 두지 않는다. 11:56 일반 여행사 수집이 데이터를 저장한 직후
-  # daily-crawl.yml이 이 워크플로우를 호출한다.
+  # 독립 예약을 두지 않는다. 07:05 마이리얼트립 예약 스크래핑이 성공한 뒤
+  # myrealtrip-scrape.yml이 이 워크플로우를 호출한다.
   workflow_dispatch:
     inputs:
       max_flights:
