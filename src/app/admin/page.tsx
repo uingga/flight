@@ -503,12 +503,14 @@ interface ThreadsInsightsData {
         trackingContent: string | null;
         shareCode: string | null;
         attribution: ThreadsAttribution | null;
+        attributionShared: boolean;
     }>;
     attribution: {
         available: boolean;
         message?: string;
         rows: ThreadsAttribution[];
         totals: Omit<ThreadsAttribution, 'content'>;
+        verifiedTotals: Omit<ThreadsAttribution, 'content'>;
     };
 }
 
@@ -3266,7 +3268,7 @@ export default function AdminPage() {
                                     <div className={styles.signalCard}>
                                         <span>사이트 방문</span>
                                         <strong>{site.users.toLocaleString()}명</strong>
-                                        <small>최근 30일 · 총 {site.sessions.toLocaleString()}회 접속</small>
+                                        <small>출처 확인 {threadsInsights.attribution.verifiedTotals.users.toLocaleString()}명 · 링크 코드 자동 보완</small>
                                     </div>
                                     <div className={styles.signalCard}>
                                         <span>예약 페이지 이동</span>
@@ -3286,7 +3288,7 @@ export default function AdminPage() {
                     <div className={styles.sectionHeading}>
                         <div>
                             <h2>글별 인사이트</h2>
-                            <p>예약 이동은 <code>/t/</code> 추적 링크를 쓴 글부터 정확히 글별로 연결됩니다.</p>
+                            <p>게시한 <code>/s/</code> 링크를 글 본문에서 찾아 방문·예약 이동을 자동으로 연결합니다.</p>
                         </div>
                     </div>
                     {threadsInsights?.available && threadsInsights.posts.length > 0 ? (
@@ -3324,8 +3326,8 @@ export default function AdminPage() {
                                                 <p>이 글에는 추적 가능한 티키티킷 링크가 없어 사이트 행동을 글별로 나눌 수 없습니다.</p>
                                             )}
                                         </div>
-                                        {post.shareCode && (
-                                            <small className={styles.threadsTrackingHint}>다음 게시부터 추적 링크: tikitikit.kr/t/{post.shareCode}</small>
+                                        {post.attributionShared && (
+                                            <small className={styles.threadsTrackingHint}>같은 공유 링크가 여러 Threads 글에 있어 이 숫자는 해당 글들에 함께 표시됩니다.</small>
                                         )}
                                     </article>
                                 );
@@ -3338,7 +3340,7 @@ export default function AdminPage() {
 
                 <section className={styles.section} id="threads-attribution">
                     <h2>Threads 링크별 사이트 이동</h2>
-                    <p className={styles.sectionHelp}>글과 연결되지 않은 링크도 빠뜨리지 않고 표시합니다. 실제 결제 완료가 아니라 여행사 예약 페이지로 이동한 수입니다.</p>
+                    <p className={styles.sectionHelp}>Threads 출처를 우선 사용하고, 출처가 사라진 클릭은 글 속 공유 링크 코드로 자동 보완합니다. 같은 링크를 다른 채널에도 보냈다면 일부가 함께 잡힐 수 있습니다.</p>
                     {threadsInsights?.available && threadsInsights.attribution.rows.length > 0 ? (
                         <div className={styles.cityDetail}>
                             <table className={styles.cityTable}>
