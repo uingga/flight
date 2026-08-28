@@ -796,6 +796,7 @@ export default function MobileRedesignPreview({
     const [toast, setToast] = useState('');
     const [expiredShareNotice, setExpiredShareNotice] = useState<{ arrival: string | null } | null>(null);
     const [showScrollTop, setShowScrollTop] = useState(false);
+    const [detailHasMoreBelow, setDetailHasMoreBelow] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
     const [filterBarPinned, setFilterBarPinned] = useState(false);
     const [showAccount, setShowAccount] = useState(false);
@@ -969,6 +970,34 @@ export default function MobileRedesignPreview({
         sheetRef: detailDialogRef,
         onDismiss: closeSelectedFlight,
     });
+
+    useEffect(() => {
+        const detailSheet = detailDialogRef.current;
+        if (!selectedFlight || !detailSheet) {
+            setDetailHasMoreBelow(false);
+            return;
+        }
+
+        detailSheet.scrollTop = 0;
+        const updateDetailScrollHint = () => {
+            const remainingScroll = detailSheet.scrollHeight - detailSheet.scrollTop - detailSheet.clientHeight;
+            setDetailHasMoreBelow(remainingScroll > 24);
+        };
+        const firstCheck = window.requestAnimationFrame(updateDetailScrollHint);
+        const settledCheck = window.setTimeout(updateDetailScrollHint, 120);
+        const resizeObserver = new ResizeObserver(updateDetailScrollHint);
+
+        resizeObserver.observe(detailSheet);
+        detailSheet.addEventListener('scroll', updateDetailScrollHint, { passive: true });
+        window.addEventListener('resize', updateDetailScrollHint);
+        return () => {
+            window.cancelAnimationFrame(firstCheck);
+            window.clearTimeout(settledCheck);
+            resizeObserver.disconnect();
+            detailSheet.removeEventListener('scroll', updateDetailScrollHint);
+            window.removeEventListener('resize', updateDetailScrollHint);
+        };
+    }, [selectedFlight]);
     const serviceUpdateSwipe = useSwipeToDismiss({
         open: showServiceUpdate,
         sheetRef: serviceUpdateDialogRef,
@@ -3712,6 +3741,7 @@ export default function MobileRedesignPreview({
                 const reportCompleted = Boolean(recentFlightReports[selectedFlight.id])
                     || (flightReport?.flightId === selectedFlight.id && flightReport.status === 'sent');
                 return (
+                <>
                 <OverlayDialog
                     open={Boolean(selectedFlight)}
                     active={activeOverlay === 'flight'}
@@ -3996,6 +4026,12 @@ export default function MobileRedesignPreview({
                             </button>
                         </div>
                 </OverlayDialog>
+                {detailHasMoreBelow && (
+                    <div className={styles.detailScrollHint} data-detail-scroll-hint aria-hidden="true">
+                        <span>아래에 정보가 더 있어요 <Icon name="chevron" /></span>
+                    </div>
+                )}
+                </>
                 );
             })()}
 

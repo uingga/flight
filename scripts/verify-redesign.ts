@@ -158,6 +158,13 @@ async function verifyViewport(width: number, height: number) {
         await page.locator('article').first().locator('button').first().click();
         const detail = page.locator('[aria-label="항공권 상세"]');
         await detail.waitFor();
+        const detailIsScrollable = await detail.evaluate(element => element.scrollHeight > element.clientHeight + 24);
+        const detailScrollHint = page.locator('[data-detail-scroll-hint]');
+        if (detailIsScrollable) {
+            await detailScrollHint.waitFor({ state: 'visible' });
+            await detail.evaluate(element => { element.scrollTop = element.scrollHeight; });
+            await detailScrollHint.waitFor({ state: 'hidden' });
+        }
         const booking = detail.locator('a').filter({ hasText: /에서 확인하기/ });
         const bookingUrl = await booking.getAttribute('href');
         assert(bookingUrl && !bookingUrl.startsWith('javascript:'), '예약 링크가 올바르게 만들어지지 않았습니다.');
