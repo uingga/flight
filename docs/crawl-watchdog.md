@@ -26,8 +26,12 @@ Supabase Dashboard의 **Jobs**에서 HTTP 요청 작업을 만들고 다음과 �
 
 - Schedule: `*/20 * * * *`
 - Method: `GET`
-- URL: `https://tikitikit.kr/api/internal/crawl-watchdog`
+- URL: `https://www.tikitikit.kr/api/internal/crawl-watchdog`
 - Header: `Authorization: Bearer <WATCHDOG_SECRET>`
+
+루트 도메인 `tikitikit.kr`는 `www.tikitikit.kr`로 리디렉션되며, 이 과정에서 HTTP
+클라이언트가 `Authorization` 헤더를 제거할 수 있으므로 Cron에는 최종 `www` 주소를
+직접 사용한다.
 
 API 응답의 `action`은 `none`, `skipped`, `dispatched` 중 하나다. `dispatched`일 때만
 새 보조 실행을 요청한 것이다.
