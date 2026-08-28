@@ -477,6 +477,8 @@
 .todayPickCard .priceBlock strong { color: var(--brand-dark); }
 .priceBlock strong small { margin-left: 2px; color: var(--text-secondary); font-size: .58em; font-weight: var(--weight-regular); letter-spacing: -0.02em; }
 
+.freshFlightsEntry { display: none; }
+
 .insightBar {
     width: 100%;
     min-height: 142px;
@@ -527,6 +529,14 @@
 
 .skeletonCard { height: 210px; border: 1px solid var(--line); border-radius: 8px; background: linear-gradient(90deg, var(--paper) 25%, var(--paper-soft) 50%, var(--paper) 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; }
 @keyframes shimmer { to { background-position: -200% 0; } }
+
+@keyframes freshFlightsRoll {
+    0%, 18% { transform: translateY(0); }
+    25%, 43% { transform: translateY(-172px); }
+    50%, 68% { transform: translateY(-344px); }
+    75%, 93% { transform: translateY(-516px); }
+    100% { transform: translateY(-688px); }
+}
 
 .emptyState { min-height: 220px; padding: 52px 20px; display: flex; flex-direction: column; align-items: center; text-align: center; }
 .emptyState strong { font-size: var(--size-section); }
@@ -1394,6 +1404,213 @@
     .favoriteButton { top: 12px; right: 12px; }
     .favoriteButton svg { width: 17px; height: 17px; }
     .todayPickCard .favoriteButton { top: 12px; }
+
+    .freshFlightsEntry {
+        display: grid;
+        grid-column: 1 / -1;
+    }
+    .freshFlightsBar {
+        display: grid;
+        grid-template-columns: minmax(250px, .78fr) minmax(520px, 1.22fr);
+        align-items: stretch;
+        gap: clamp(28px, 3vw, 44px);
+        min-height: 192px;
+        min-width: 0;
+        padding: 14px 24px;
+        overflow: hidden;
+        border: 1px solid var(--desktop-card-line);
+        border-radius: 18px;
+        background: var(--paper);
+        color: var(--ink);
+    }
+    .freshFlightsCopy {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        min-width: 0;
+    }
+    .freshFlightsCopy > span {
+        width: fit-content;
+        margin-bottom: 7px;
+        color: var(--brand-dark);
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: -0.01em;
+    }
+    .freshFlightsCopy > strong {
+        color: #262d38;
+        font-size: clamp(22px, 1.7vw, 27px);
+        line-height: 1.18;
+        font-weight: 760;
+        letter-spacing: -0.05em;
+    }
+    .freshFlightsCopy > p {
+        margin: 8px 0 0;
+        color: #626b77;
+        font-size: 13px;
+        line-height: 1.5;
+        font-weight: 500;
+        word-break: keep-all;
+    }
+    .freshFlightsCopy > small {
+        margin-top: 13px;
+        color: #8a929e;
+        font-size: 10px;
+        line-height: 1.45;
+        font-weight: 500;
+    }
+    .freshFlightsViewport {
+        position: relative;
+        align-self: center;
+        height: 164px;
+        min-width: 0;
+        overflow: hidden;
+    }
+    .freshFlightsViewport::before,
+    .freshFlightsViewport::after {
+        content: '';
+        position: absolute;
+        z-index: 4;
+        left: 0;
+        width: 100%;
+        height: 36px;
+        pointer-events: none;
+    }
+    .freshFlightsViewport::before {
+        top: 0;
+        background: linear-gradient(to bottom, var(--paper) 4%, rgba(255, 255, 255, 0));
+    }
+    .freshFlightsViewport::after {
+        bottom: 0;
+        background: linear-gradient(to top, var(--paper) 4%, rgba(255, 255, 255, 0));
+    }
+    .freshFlightsTrack {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        width: 100%;
+        will-change: transform;
+    }
+    .freshFlightsTrackAnimated {
+        animation: freshFlightsRoll 20s cubic-bezier(.45, 0, .2, 1) infinite;
+    }
+    .freshFlightsViewport:hover .freshFlightsTrackAnimated,
+    .freshFlightsViewport:focus-within .freshFlightsTrackAnimated {
+        animation-play-state: paused;
+    }
+    .freshFlightsPair {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        flex: 0 0 164px;
+        height: 164px;
+        gap: clamp(32px, 3vw, 52px);
+    }
+    .freshFlightsTicket {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        width: 100%;
+        height: 164px;
+        min-width: 0;
+        padding: 24px 0 22px;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+        transition: opacity 180ms ease;
+    }
+    .freshFlightsTicket + .freshFlightsTicket::before {
+        content: '';
+        position: absolute;
+        top: 18px;
+        bottom: 18px;
+        left: calc(clamp(32px, 3vw, 52px) / -2);
+        width: 1px;
+        background: #eceef1;
+    }
+    .freshFlightsTicket:hover { opacity: .62; }
+    .freshFlightsTicket:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; }
+    .freshFlightsTicketMain {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        min-width: 0;
+        gap: 14px;
+    }
+    .freshFlightsPlace,
+    .freshFlightsPrice {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        gap: 5px;
+    }
+    .freshFlightsPlace > small,
+    .freshFlightsPrice > small {
+        color: #9298a1;
+        font-size: 10px;
+        font-weight: 560;
+        letter-spacing: -0.02em;
+        white-space: nowrap;
+    }
+    .freshFlightsPlace > strong {
+        min-width: 0;
+        overflow: hidden;
+        color: var(--ink);
+        font-size: 24px;
+        line-height: 1.08;
+        font-weight: 750;
+        letter-spacing: -0.045em;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .freshFlightsPrice {
+        flex: 0 0 auto;
+        align-items: flex-end;
+    }
+    .freshFlightsPrice > strong {
+        color: var(--brand-dark);
+        font-size: 21px;
+        line-height: 1.15;
+        font-weight: 780;
+        letter-spacing: -0.04em;
+        white-space: nowrap;
+    }
+    .freshFlightsPrice > strong > i {
+        margin-left: 2px;
+        color: #69717c;
+        font-size: 9px;
+        font-style: normal;
+        font-weight: 550;
+    }
+    .freshFlightsSchedule {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 14px;
+        padding-top: 11px;
+        border-top: 1px solid #edf0f2;
+        color: #6f7782;
+        font-size: 11px;
+        font-weight: 560;
+    }
+    .freshFlightsSchedule > small {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: #9a9fa7;
+        font-size: 10px;
+        font-weight: 500;
+    }
+    .freshFlightsSchedule > small:not(:empty)::before {
+        content: '';
+        width: 2px;
+        height: 2px;
+        border-radius: 50%;
+        background: #b8bdc4;
+    }
 
     .insightBar {
         position: relative;

@@ -1942,6 +1942,55 @@ export default function MobileRedesignPreview({
         return selectedInsights.slice(0, 5);
     }, [displayedFlights, insightDateKey, lastUpdated, maxPrice, priceHistory, query, sort]);
 
+    const freshFlightsInsight = useMemo(() => {
+        if (sort !== 'recommended' || query.trim()) return null;
+
+        const datedFlights = displayedFlights.filter(flight => flight.firstSeen && effectivePrice(flight) > 0);
+        const todayKey = seoulDateKey();
+        const latestSeen = datedFlights.reduce((latest, flight) => (
+            (flight.firstSeen || '') > latest ? flight.firstSeen || '' : latest
+        ), '');
+        let targetDate = todayKey;
+        let targetFlights = datedFlights.filter(flight => flight.firstSeen === targetDate);
+
+        const countDestinations = (items: Flight[]) => new Set(
+            items.map(flight => normalizeCity(flight.arrival.city)),
+        ).size;
+        if (countDestinations(targetFlights) < 2) {
+            targetDate = latestSeen;
+            targetFlights = datedFlights.filter(flight => flight.firstSeen === targetDate);
+        }
+        if (!targetDate || targetFlights.length < 2) return null;
+
+        const cheapestByDestination = new Map<string, Flight>();
+        targetFlights.forEach(flight => {
+            const destination = normalizeCity(flight.arrival.city);
+            const current = cheapestByDestination.get(destination);
+            if (!current || effectivePrice(flight) < effectivePrice(current)) {
+                cheapestByDestination.set(destination, flight);
+            }
+        });
+
+        const freshFlights = Array.from(cheapestByDestination.values())
+            .sort((a, b) => effectivePrice(a) - effectivePrice(b))
+            .slice(0, 8);
+        const evenFlights = freshFlights.slice(0, freshFlights.length - (freshFlights.length % 2));
+        if (evenFlights.length < 2) return null;
+
+        const pairs = Array.from({ length: evenFlights.length / 2 }, (_, index) => (
+            evenFlights.slice(index * 2, index * 2 + 2)
+        ));
+        const fourSlots = pairs.length === 3
+            ? [pairs[0], pairs[1], pairs[2], pairs[1]]
+            : Array.from({ length: 4 }, (_, index) => pairs[index % pairs.length]);
+
+        return {
+            copyPrefix: targetDate === todayKey ? '오늘' : '최근',
+            pairs: pairs.length > 1 ? [...fourSlots, fourSlots[0]] : pairs,
+            animated: pairs.length > 1,
+        };
+    }, [displayedFlights, query, sort]);
+
     const departureFilterLabel = departure === '전체'
         ? '출발지'
         : departure.replace('/김포', '').replace('/김해', '');
@@ -2984,10 +3033,6 @@ export default function MobileRedesignPreview({
                             const averageDiscountRate = getAverageDiscountRate(flight, interparkPrices);
                             const isTodayPick = isDefaultView && featuredPick?.flight.id === flight.id;
                             const cardNumber = index + 1;
-                            const insightIndex = cardNumber >= firstInsightCard && (cardNumber - firstInsightCard) % insightInterval === 0
-                                ? Math.floor((cardNumber - firstInsightCard) / insightInterval)
-                                : -1;
-                            const insight = insightIndex >= 0 ? feedInsights[insightIndex] : null;
                             return (
                                 <Fragment key={flight.id}>
                                     <div className={styles.cardEntry}>
@@ -3084,60 +3129,48 @@ export default function MobileRedesignPreview({
                                             </button>
                                         </article>
                                     </div>
-                                    {insight && (
-                                        <button
-                                            type="button"
-                                            className={`${styles.insightBar} ${insight.editorial ? styles.insightEditorial : styles.insightFact} ${styles[`insight${insight.kind[0].toUpperCase()}${insight.kind.slice(1)}`] || ''}`}
-                                            onClick={() => openInsight(insight)}
-                                            aria-label={`${insight.title}: ${insight.destination} ${priceText(insight.currentPrice)}`}
-                                        >
-                                            <span className={styles.insightTopline}>
-                                                <span className={styles.insightEyebrow}>{insight.eyebrow}</span>
-                                                <Icon name="arrow" />
-                                            </span>
-                                            {insight.editorial ? (
-                                                <>
-                                                    <strong className={styles.insightTitle}>{insight.title}</strong>
-                                                    {insight.description && <span className={styles.insightDescription}>{insight.description}</span>}
-                                                    <span className={styles.insightMetric}>
-                                                        <strong className={styles.insightDestination}>{insight.destination}</strong>
-                                                        <span className={styles.insightPriceTrail}>
-                                                            {insight.previousPrice && (
-                                                                <>
-                                                                    <span className={styles.insightPreviousPrice}>{priceText(insight.previousPrice)}</span>
-                                                                    <span className={styles.insightPriceArrow}>→</span>
-                                                                </>
-                                                            )}
-                                                            <strong className={styles.insightCurrentPrice}>{priceText(insight.currentPrice)}</strong>
-                                                        </span>
-                                                    </span>
-                                                    <span className={styles.insightFooter}>
-                                                        <span>{insight.meta}</span>
-                                                        {insight.badge && <em>{insight.badge}</em>}
-                                                    </span>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <span className={styles.insightFactHeadline}>
-                                                        <strong>{insight.title}</strong>
-                                                        <span>{insight.destination}</span>
-                                                    </span>
-                                                    {insight.description && <span className={styles.insightDescription}>{insight.description}</span>}
-                                                    <span className={styles.insightFactFooter}>
-                                                        <span>{insight.meta}</span>
-                                                        <span className={styles.insightPriceTrail}>
-                                                            {insight.previousPrice && (
-                                                                <>
-                                                                    <span className={styles.insightPreviousPrice}>{priceText(insight.previousPrice)}</span>
-                                                                    <span className={styles.insightPriceArrow}>→</span>
-                                                                </>
-                                                            )}
-                                                            <strong className={styles.insightCurrentPrice}>{priceText(insight.currentPrice)}</strong>
-                                                        </span>
-                                                    </span>
-                                                </>
-                                            )}
-                                        </button>
+                                    {cardNumber === firstInsightCard && freshFlightsInsight && (
+                                        <div className={styles.freshFlightsEntry}>
+                                            <section className={styles.freshFlightsBar} aria-labelledby="fresh-flights-title">
+                                                <div className={styles.freshFlightsCopy}>
+                                                    <span>새로 발견</span>
+                                                    <strong id="fresh-flights-title">{freshFlightsInsight.copyPrefix} 새로 뜬 항공권</strong>
+                                                    <p>{freshFlightsInsight.copyPrefix} 처음 포착된 항공권을 보여드려요.</p>
+                                                    <small>티켓을 누르면 일정과 가격을 바로 확인할 수 있어요.</small>
+                                                </div>
+                                                <div className={styles.freshFlightsViewport} aria-label={`${freshFlightsInsight.copyPrefix} 처음 포착된 항공권`}>
+                                                    <div className={`${styles.freshFlightsTrack} ${freshFlightsInsight.animated ? styles.freshFlightsTrackAnimated : ''}`}>
+                                                        {freshFlightsInsight.pairs.map((pair, pairIndex) => (
+                                                            <div className={styles.freshFlightsPair} key={`fresh-flights-pair-${pairIndex}`}>
+                                                                {pair.map((freshFlight, ticketIndex) => (
+                                                                    <button
+                                                                        type="button"
+                                                                        className={styles.freshFlightsTicket}
+                                                                        key={`${freshFlight.id}-${pairIndex}-${ticketIndex}`}
+                                                                        onClick={() => openFlight(freshFlight, 'insight_new_flights')}
+                                                                    >
+                                                                        <span className={styles.freshFlightsTicketMain}>
+                                                                            <span className={styles.freshFlightsPlace}>
+                                                                                <small>{departureName(freshFlight)} 출발</small>
+                                                                                <strong>{stripAirport(freshFlight.arrival.city)}</strong>
+                                                                            </span>
+                                                                            <span className={styles.freshFlightsPrice}>
+                                                                                <small>왕복 총액</small>
+                                                                                <strong>{effectivePrice(freshFlight).toLocaleString('ko-KR')}<i>원</i></strong>
+                                                                            </span>
+                                                                        </span>
+                                                                        <span className={styles.freshFlightsSchedule}>
+                                                                            <span>{cardDate(freshFlight.departure.date)} — {cardDate(freshFlight.arrival.date)}</span>
+                                                                            <small>{tripLength(freshFlight)}</small>
+                                                                        </span>
+                                                                    </button>
+                                                                ))}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </section>
+                                        </div>
                                     )}
                                 </Fragment>
                             );
