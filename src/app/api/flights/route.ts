@@ -48,6 +48,12 @@ interface FlightFilterSummary {
     }>;
 }
 
+interface TodayPickRepeatOverride {
+    previousEffectivePrice: number;
+    currentEffectivePrice: number;
+    dropAmount: number;
+}
+
 const HIDDEN_FLIGHT_CACHE_MS = 60 * 1000;
 let hiddenFlightCache: { ids: Set<string>; validUntil: number } = {
     ids: new Set(),
@@ -425,6 +431,20 @@ export async function GET(request: NextRequest) {
             && allFlights.some(f => f.id === todayPick.flightId)
             ? todayPick.flightId
             : null;
+        const rawRepeatOverride = (todayPick as unknown as {
+            repeatOverride?: Partial<TodayPickRepeatOverride> | null;
+        }).repeatOverride;
+        const todayPickRepeatOverride = todayPickId
+            && rawRepeatOverride
+            && Number(rawRepeatOverride.previousEffectivePrice) > 0
+            && Number(rawRepeatOverride.currentEffectivePrice) > 0
+            && Number(rawRepeatOverride.dropAmount) > 0
+            ? {
+                previousEffectivePrice: Number(rawRepeatOverride.previousEffectivePrice),
+                currentEffectivePrice: Number(rawRepeatOverride.currentEffectivePrice),
+                dropAmount: Number(rawRepeatOverride.dropAmount),
+            }
+            : null;
 
         // 인터파크 벤치마크 가격 로드 (도시명 기준으로 변환)
         let interparkPrices: Record<string, Record<string, { avg: number; lowest: number }>> = {};
@@ -498,6 +518,7 @@ export async function GET(request: NextRequest) {
             priceHistory,
             todayPickId,
             todayPickDate,
+            todayPickRepeatOverride,
             filterSummary,
         });
     } catch (error) {

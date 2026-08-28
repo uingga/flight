@@ -19,3 +19,10 @@ test('today pick is named explicitly on both compact and desktop labels', () => 
     assert.equal((feed.match(/>오늘의 표</g) || []).length, 2);
     assert.match(feedStyles, /@media[^}]*min-width[\s\S]*?\.todayPickInline\s*\{[\s\S]*?display:\s*inline-flex/);
 });
+
+test('a repeated pick selected after a price drop exposes and displays that reason', () => {
+    assert.match(apiRoute, /todayPickRepeatOverride/);
+    assert.match(feed, /어제 표보다 \$\{todayPickRepeatOverride\.dropAmount/);
+    assert.match(feed, /내려 재선정/);
+    assert.match(feed, /!featuredPick\?\.repeatPriceDrop && averageDiscountRate >= 5/);
+});

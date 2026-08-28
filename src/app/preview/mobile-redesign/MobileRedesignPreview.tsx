@@ -45,8 +45,15 @@ interface FlightsResponse {
     lastUpdated?: string | null;
     todayPickId?: string | null;
     todayPickDate?: string | null;
+    todayPickRepeatOverride?: TodayPickRepeatOverride | null;
     priceHistory?: PriceHistory;
     interparkPrices?: InterparkPrices;
+}
+
+interface TodayPickRepeatOverride {
+    previousEffectivePrice: number;
+    currentEffectivePrice: number;
+    dropAmount: number;
 }
 
 interface PriceHistoryEntry {
@@ -728,6 +735,7 @@ export default function MobileRedesignPreview({
     const [error, setError] = useState('');
     const [lastUpdated, setLastUpdated] = useState<string | null>(null);
     const [todayPickId, setTodayPickId] = useState<string | null>(null);
+    const [todayPickRepeatOverride, setTodayPickRepeatOverride] = useState<TodayPickRepeatOverride | null>(null);
     const [priceHistory, setPriceHistory] = useState<PriceHistory>({});
     const [interparkPrices, setInterparkPrices] = useState<InterparkPrices>({});
     const [passengers, setPassengers] = useState({ adult: 1, child: 0, infant: 0 });
@@ -929,6 +937,7 @@ export default function MobileRedesignPreview({
             setLastUpdated(data.lastUpdated || null);
             setInsightDateKey(data.lastUpdated ? seoulDateKey(new Date(data.lastUpdated)) : seoulDateKey());
             setTodayPickId(typeof data.todayPickId === 'string' ? data.todayPickId : null);
+            setTodayPickRepeatOverride(data.todayPickRepeatOverride || null);
             setPriceHistory(data.priceHistory || {});
             setInterparkPrices(data.interparkPrices || {});
             // 추천·DROP 판단에 필요한 기준가를 먼저 넣은 뒤 목록을 연다. 상태 반영이
@@ -1483,9 +1492,19 @@ export default function MobileRedesignPreview({
                     .filter(exceptional)
                     .sort((a, b) => effectivePrice(a) - effectivePrice(b) || compareRecommended(a, b))[0]
                 || flights.slice().sort(compareRecommended)[0];
-            return flight ? { flight, reason: describeDropCard(flight, getAverageDiscountRate(flight, interparkPrices)) } : null;
+            const repeatPriceDropReason = fixedTodayPick
+                && todayPickRepeatOverride?.dropAmount
+                ? `어제 표보다 ${todayPickRepeatOverride.dropAmount >= 10_000
+                    ? compactWon(todayPickRepeatOverride.dropAmount)
+                    : priceText(todayPickRepeatOverride.dropAmount)} 내려 재선정`
+                : null;
+            return flight ? {
+                flight,
+                reason: repeatPriceDropReason || describeDropCard(flight, getAverageDiscountRate(flight, interparkPrices)),
+                repeatPriceDrop: Boolean(repeatPriceDropReason),
+            } : null;
         })()
-    ), [compareRecommended, flights, interparkPrices, todayPickId]);
+    ), [compareRecommended, flights, interparkPrices, todayPickId, todayPickRepeatOverride]);
     const dropAlertFlight = useMemo(() => (
         featuredPick && isTickerWorthyDrop(featuredPick.flight) ? featuredPick.flight : null
     ), [featuredPick]);
@@ -3021,7 +3040,7 @@ export default function MobileRedesignPreview({
                                                             <span className={`${styles.footerStatus} ${styles.todayPickStatus}`}>
                                                                 <span className={styles.dropMessageMobile}>{compactDropCardMessage(featuredPick?.reason || '')}</span>
                                                                 <span className={styles.dropMessageDesktop}>{featuredPick?.reason}</span>
-                                                                {averageDiscountRate >= 5 && (
+                                                                {!featuredPick?.repeatPriceDrop && averageDiscountRate >= 5 && (
                                                                     <span
                                                                         className={styles.dropDiscountInline}
                                                                         aria-label={`${averageDiscountRate}% 낮음`}
