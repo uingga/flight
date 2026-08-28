@@ -3640,14 +3640,13 @@
 }
 
 .visitorTrendSelected small {
-    margin-left: auto;
     color: #939aa5;
     font-size: 0.64rem;
 }
 
 .trendChart {
     display: flex;
-    min-height: 164px;
+    min-height: 180px;
     align-items: flex-end;
     gap: 3px;
     padding: 4px 12px 8px;
@@ -3659,7 +3658,7 @@
 .trendCol {
     flex: 1 1 0;
     min-width: 0;
-    height: 145px;
+    height: 161px;
     padding: 0;
     border: 0;
     background: transparent;
@@ -3669,6 +3668,16 @@
     justify-content: flex-end;
     gap: 5px;
     cursor: pointer;
+}
+
+.trendValue {
+    min-height: 0.72rem;
+    color: #7c8591;
+    font-size: 0.58rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    white-space: nowrap;
 }
 
 .trendTrack {
@@ -3698,6 +3707,11 @@
 .trendCol:hover .trendBar,
 .trendColSelected .trendBar {
     background: #ff385c;
+}
+
+.trendCol:hover .trendValue,
+.trendColSelected .trendValue {
+    color: #e62f51;
 }
 
 .trendColSelected .trendBar { transform: scaleX(1.08); }

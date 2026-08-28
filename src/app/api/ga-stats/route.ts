@@ -91,8 +91,9 @@ async function optional(
 
 async function buildStats(config: Ga4Config, days: number) {
     // 7일·30일 수치는 아직 덜 쌓인 오늘을 빼고 어제까지의 완결된 날짜만 쓴다.
-    // 오늘은 별도 열에서 잠정 수치로 보여준다.
+    // 오늘은 별도 열의 잠정 수치와 일별 추이의 마지막 막대에서 보여준다.
     const dateRanges = [{ startDate: `${days}daysAgo`, endDate: 'yesterday' }];
+    const trendDateRanges = [{ startDate: `${days - 1}daysAgo`, endDate: 'today' }];
     const previousDateRanges = [{ startDate: `${days * 2}daysAgo`, endDate: `${days + 1}daysAgo` }];
     const recent7DateRanges = [{ startDate: '7daysAgo', endDate: 'yesterday' }];
     const previous7DateRanges = [{ startDate: '14daysAgo', endDate: '8daysAgo' }];
@@ -148,7 +149,7 @@ async function buildStats(config: Ga4Config, days: number) {
         previousReturningReport,
     ] = await Promise.all([
         runReport(config, {
-            dateRanges,
+            dateRanges: trendDateRanges,
             dimensions: [{ name: 'date' }],
             metrics: [{ name: 'activeUsers' }, { name: 'screenPageViews' }, { name: 'sessions' }],
             orderBys: [{ dimension: { dimensionName: 'date' } }],
@@ -297,7 +298,7 @@ async function buildStats(config: Ga4Config, days: number) {
         })),
     ]);
 
-    // GA4는 방문이 0인 날짜를 종종 행 자체에서 빼므로, 모바일 그래프가 정확히 30칸이 되도록 채운다.
+    // GA4는 방문이 0인 날짜를 종종 행 자체에서 빼므로, 그래프가 오늘까지 정확히 30칸이 되도록 채운다.
     const trendByDate = new Map((trendReport.rows || []).map(row => {
         const raw = dim(row);
         const date = `${raw.slice(0, 4)}-${raw.slice(4, 6)}-${raw.slice(6, 8)}`;
@@ -309,7 +310,7 @@ async function buildStats(config: Ga4Config, days: number) {
         }] as const;
     }));
     const kstNow = new Date(Date.now() + (9 * 60 * 60 * 1000));
-    const trendEndUtc = Date.UTC(kstNow.getUTCFullYear(), kstNow.getUTCMonth(), kstNow.getUTCDate() - 1);
+    const trendEndUtc = Date.UTC(kstNow.getUTCFullYear(), kstNow.getUTCMonth(), kstNow.getUTCDate());
     const trend = Array.from({ length: days }, (_, index) => {
         const date = new Date(trendEndUtc - ((days - 1 - index) * 24 * 60 * 60 * 1000)).toISOString().slice(0, 10);
         return trendByDate.get(date) || { date, users: 0, pageViews: 0, sessions: 0 };

@@ -681,7 +681,7 @@ function VisitorTrendChart({ trend }: { trend: GaStatsData['trend'] }) {
             <div className={styles.visitorTrendSelected} aria-live="polite">
                 <span>{selectedDate}</span>
                 <strong>{selected.users.toLocaleString()}명</strong>
-                <small>방문 {selected.sessions.toLocaleString()}회</small>
+                <small>· 재방문 포함 총 {selected.sessions.toLocaleString()}회 접속</small>
             </div>
             <div className={`${styles.trendChart} ${styles.desktopVisitorTrend}`} aria-label="최근 30일 일별 방문자">
                 {trend.map((point, index) => (
@@ -693,6 +693,7 @@ function VisitorTrendChart({ trend }: { trend: GaStatsData['trend'] }) {
                         aria-label={`${point.date}, 방문자 ${point.users}명`}
                         aria-pressed={index === selectedIndex}
                     >
+                        <span className={styles.trendValue}>{point.users.toLocaleString()}명</span>
                         <span className={styles.trendTrack}>
                             <span className={styles.trendBar} style={{ height: `${Math.max(3, (point.users / max) * 100)}%` }} />
                         </span>
@@ -714,7 +715,7 @@ function VisitorTrendChart({ trend }: { trend: GaStatsData['trend'] }) {
                     </div>
                 ))}
             </div>
-            <p className={styles.trendHint}>막대를 누르면 날짜별 방문자를 볼 수 있어요.</p>
+            <p className={styles.trendHint}>방문자는 사람 수, 접속은 같은 사람의 재방문을 포함한 횟수입니다.</p>
         </div>
     );
 }
@@ -3041,7 +3042,7 @@ export default function AdminPage() {
                             <div className={styles.sectionHeading}>
                                 <div>
                                     <h2>최근 30일 방문자 추이</h2>
-                                    <p>오늘은 제외했습니다. 막대를 누르면 그날 방문한 사람 수가 위에 표시됩니다.</p>
+                                    <p>오늘 현재까지 포함한 30일입니다. 각 막대 위에 그날 방문한 사람 수를 표시합니다.</p>
                                 </div>
                             </div>
                             <div className={`${styles.signalGridFour} ${styles.trendSignals}`}>
@@ -3230,7 +3231,7 @@ export default function AdminPage() {
                             </div>
                         </div>
 
-                        <h3 className={styles.userSubTitle}>어제까지 최근 {gaStats.days}일 방문자 추이</h3>
+                        <h3 className={styles.userSubTitle}>오늘 포함 최근 {gaStats.days}일 방문자 추이</h3>
                         {(() => {
                             const max = Math.max(...gaStats.trend.map(point => point.users), 1);
                             return (
