@@ -1,9 +1,14 @@
 import assert from 'node:assert/strict';
 import {
+    alertDayInKorea,
     buildAlertApprovalBatches,
+    getDailyLimitedAlertTargets,
+    revalidateAlertApprovalBatch,
     toPublicApprovalBatch,
     type AlertSubscriptionRecord,
 } from '../src/lib/alert-approval';
+import { classifyPushFailure, expiredSubscriptionUpdate } from '../src/lib/alert-delivery-policy';
+import { buildAdminAttentionItems, type AdminAttentionInput } from '../src/lib/admin-attention';
 import { encodeDealAlertRegion } from '../src/lib/deal-alerts';
 import type { Flight } from '../src/types/flight';
 
@@ -54,6 +59,25 @@ const publicBatch = toPublicApprovalBatch(grouped[0]);
 assert.equal(publicBatch.recipientConditions.length, 1, '같은 수신 조건은 한 줄로 묶어야 한다');
 assert.equal(publicBatch.recipientConditions[0].recipientCount, 2, '조건별 받을 사람 수를 보여줘야 한다');
 assert.equal('recipients' in publicBatch, false, '관리자 응답에 푸시 구독 정보가 노출되면 안 된다');
+assert.equal(/fcm\.googleapis\.com|device-a|device-b/.test(JSON.stringify(publicBatch)), false,
+    '관리자 응답에 endpoint나 내부 기기 식별값이 포함되면 안 된다');
+
+assert.ok(
+    revalidateAlertApprovalBatch(grouped[0].batchKey, [alert('1', 'device-a')], [flight], history, sourceUpdatedAt, now),
+    '승인 시점에도 조건을 만족하는 후보만 다시 찾을 수 있어야 한다',
+);
+assert.equal(
+    revalidateAlertApprovalBatch(
+        grouped[0].batchKey,
+        [alert('1', 'device-a')],
+        [{ ...flight, price: 130_000 }],
+        history,
+        sourceUpdatedAt,
+        now,
+    ),
+    null,
+    '승인 뒤 가격이 희망가를 넘으면 예전에 본 배치 키로 발송할 수 없어야 한다',
+);
 
 const sentToday = { ...alert('2', 'device-b'), last_sent_at: '2026-08-27T01:00:00.000Z' };
 const dailyLimited = buildAlertApprovalBatches(
@@ -64,6 +88,37 @@ const dailyLimited = buildAlertApprovalBatches(
     now,
 );
 assert.equal(dailyLimited[0].recipients.length, 1, '오늘 이미 받은 기기는 후보에서 빠져야 한다');
+
+const koreaDayBoundary = new Date('2026-08-27T16:00:00.000Z'); // KST 8월 28일 01:00
+assert.equal(alertDayInKorea(koreaDayBoundary), '2026-08-28', '하루 제한은 KST 날짜를 사용해야 한다');
+assert.equal(alertDayInKorea(new Date('invalid')), '', '깨진 발송 시각이 전체 후보 계산을 중단하면 안 된다');
+const sameDeviceDifferentCondition = {
+    ...alert('3', 'device-b'),
+    max_price: 130_000,
+};
+assert.equal(
+    buildAlertApprovalBatches([sentToday, sameDeviceDifferentCondition], [flight], history, sourceUpdatedAt, now).length,
+    0,
+    '한 기기의 다른 알림 조건도 오늘 이미 발송했다면 모두 하루 제한을 받아야 한다',
+);
+const previousKoreaDay = {
+    ...alert('6', 'device-f'),
+    last_sent_at: '2026-08-27T14:59:00.000Z', // KST 8월 27일 23:59
+};
+assert.equal(
+    getDailyLimitedAlertTargets([previousKoreaDay], koreaDayBoundary).size,
+    0,
+    'UTC 날짜가 같아도 KST 전날 발송은 오늘 제한에 포함하면 안 된다',
+);
+const sameKoreaDay = {
+    ...previousKoreaDay,
+    last_sent_at: '2026-08-27T15:01:00.000Z', // KST 8월 28일 00:01
+};
+assert.equal(
+    getDailyLimitedAlertTargets([sameKoreaDay], koreaDayBoundary).size,
+    1,
+    'KST 자정 이후 발송은 같은 날 제한에 포함해야 한다',
+);
 
 const feeFlight: Flight = { ...flight, id: 'fee-flight', source: 'ttang', price: 100_000 };
 const feeAlert = { ...alert('3', 'device-c'), max_price: 110_000 };
@@ -122,4 +177,48 @@ assert.deepEqual(
     '조건형 후보는 선택 순위를 보존해야 한다',
 );
 
-console.log('✅ 알림 승인 후보 테스트 통과');
+assert.equal(classifyPushFailure(404), 'deactivate-expired-subscription');
+assert.equal(classifyPushFailure(410), 'deactivate-expired-subscription');
+assert.equal(classifyPushFailure(429), 'keep-active', '일시 오류는 구독을 비활성화하면 안 된다');
+assert.deepEqual(
+    expiredSubscriptionUpdate(410, '2026-08-27T08:00:00.000Z'),
+    {
+        active: false,
+        delivery_claimed_at: null,
+        updated_at: '2026-08-27T08:00:00.000Z',
+    },
+    '만료 응답은 구독 비활성화와 발송 잠금 해제만 요청해야 한다',
+);
+assert.equal(expiredSubscriptionUpdate(500, now.toISOString()), null,
+    '일시적인 서버 오류는 만료 구독으로 처리하면 안 된다');
+
+const normalAdminInput: AdminAttentionInput = {
+    collection: { sourceIssueCount: 0, criticalAlertCount: 0 },
+    comparison: { needsAttention: false },
+    bookingLinks: { failed: 0, systemicSources: 0 },
+    reports: { available: true, loadError: false, needsReview: 0, activeHides: 0 },
+    alerts: {
+        available: true,
+        unavailable: false,
+        loadError: false,
+        qualifiedCandidates: 0,
+        pendingRecipients: 0,
+        deliveryAvailable: true,
+    },
+};
+assert.equal(buildAdminAttentionItems(normalAdminInput).length, 0,
+    '수집·링크·신고·알림 후보가 모두 정상이면 오늘 조치 목록이 비어야 한다');
+const adminAttention = buildAdminAttentionItems({
+    ...normalAdminInput,
+    bookingLinks: { failed: 1, systemicSources: 0 },
+    alerts: {
+        ...normalAdminInput.alerts,
+        qualifiedCandidates: 2,
+        pendingRecipients: 3,
+    },
+});
+assert.deepEqual(adminAttention.map(item => item.id), ['booking-links', 'alert-candidates']);
+assert.ok(adminAttention.every(item => item.state && item.cause && item.nextAction),
+    '어드민 조치 항목에는 상태·원인 후보·다음 행동이 모두 있어야 한다');
+
+console.log('✅ 알림 후보·승인 재검증·기기당 하루 1회·만료 구독 정책 테스트 통과');

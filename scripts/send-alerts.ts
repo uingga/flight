@@ -2,10 +2,11 @@ import * as fs from 'fs';
 import * as path from 'path';
 import webpush from 'web-push';
 import {
-    buildAlertApprovalBatches,
+    revalidateAlertApprovalBatch,
     type AlertApprovalRecipient,
     type AlertSubscriptionRecord,
 } from '../src/lib/alert-approval';
+import { expiredSubscriptionUpdate } from '../src/lib/alert-delivery-policy';
 import type { Flight } from '../src/types/flight';
 import { normalizeVapidKey } from './lib/vapid';
 
@@ -77,23 +78,20 @@ async function sendAndRecord(
         return 'sent';
     } catch (error: unknown) {
         const statusCode = (error as { statusCode?: number })?.statusCode;
-        if (statusCode === 404 || statusCode === 410) {
+        const expiredUpdate = expiredSubscriptionUpdate(statusCode, new Date().toISOString());
+        if (expiredUpdate) {
             const response = await supabaseRequest(`price_alerts?id=eq.${encodeURIComponent(String(alert.id))}`, {
                 method: 'PATCH',
                 headers: { Prefer: 'return=minimal' },
-                body: JSON.stringify({
-                    active: false,
-                    delivery_claimed_at: null,
-                    updated_at: new Date().toISOString(),
-                }),
+                body: JSON.stringify(expiredUpdate),
             });
             return response.ok ? 'expired' : 'failed';
         }
-        console.error(`[알림] 발송 실패: ${alert.id}`, error);
+        console.error(`[알림] 발송 실패${statusCode ? ` (응답 ${statusCode})` : ''}`);
         try {
             await releaseDeliveryClaim(alert);
-        } catch (releaseError) {
-            console.error(`[알림] 발송 잠금 해제 실패: ${alert.id}`, releaseError);
+        } catch {
+            console.error('[알림] 발송 잠금 해제 실패');
         }
         return 'failed';
     }
@@ -132,14 +130,14 @@ async function main() {
     if (!response.ok) throw new Error(`알림 구독 조회 실패: ${response.status}`);
     const alerts = await response.json() as AlertSubscriptionRecord[];
     const context = loadFlightContext();
-    const batches = buildAlertApprovalBatches(
+    const approved = revalidateAlertApprovalBatch(
+        APPROVED_BATCH_KEY,
         alerts,
         context.flights,
         context.priceHistory,
         context.sourceUpdatedAt,
         new Date(),
     );
-    const approved = batches.find(batch => batch.batchKey === APPROVED_BATCH_KEY);
     if (!approved) {
         throw new Error('승인된 후보가 가격 변경, 발송 이력 또는 최신성 기준 때문에 더 이상 유효하지 않습니다.');
     }
@@ -152,8 +150,8 @@ async function main() {
         let claimed = false;
         try {
             claimed = await claimDelivery(recipient.alert);
-        } catch (error) {
-            console.error(`[알림] 발송 준비 실패: ${recipient.alert.id}`, error);
+        } catch {
+            console.error('[알림] 발송 준비 실패');
             failed++;
             continue;
         }

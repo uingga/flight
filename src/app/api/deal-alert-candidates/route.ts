@@ -4,6 +4,7 @@ import { createHash } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import {
     buildAlertApprovalBatches,
+    revalidateAlertApprovalBatch,
     toPublicApprovalBatch,
     type AlertSubscriptionRecord,
 } from '@/lib/alert-approval';
@@ -277,14 +278,14 @@ export async function POST(request: NextRequest) {
             loadAlertRows(config),
             Promise.resolve(loadFlightContext()),
         ]);
-        const batches = buildAlertApprovalBatches(
+        const approved = revalidateAlertApprovalBatch(
+            batchKey,
             rows,
             context.flights,
             context.priceHistory,
             context.sourceUpdatedAt,
             new Date(),
         );
-        const approved = batches.find(batch => batch.batchKey === batchKey);
         if (!approved) {
             return NextResponse.json({ error: '이 후보는 가격 변경이나 중복 방지로 더 이상 발송할 수 없습니다.' }, { status: 409 });
         }

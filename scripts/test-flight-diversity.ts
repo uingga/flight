@@ -1,10 +1,16 @@
 import assert from 'node:assert/strict';
 import {
     diversifyFlightDestinations,
+    diversifyFlightDestinationsWithDecisions,
     excludePinnedDestination,
     sortFirstBlockByNewestArrival,
     trailingDestinationStreak,
 } from '../src/lib/flight-diversity';
+import {
+    buildRecommendationPresentation,
+    buildRecommendationScoreState,
+    compareRecommendedFlights,
+} from '../src/lib/flight-recommendation';
 import type { Flight } from '../src/types/flight';
 
 function flight(id: string, departureCity: string, arrivalCity: string, score: number): Flight & { testScore: number } {
@@ -38,6 +44,22 @@ const ordered = diversifyFlightDestinations(candidates, {
     scoreOf: item => (item as Flight & { testScore: number }).testScore,
     balanceIncheon: false,
 });
+const orderedWithDecisions = diversifyFlightDestinationsWithDecisions(candidates, {
+    scoreOf: item => (item as Flight & { testScore: number }).testScore,
+    balanceIncheon: false,
+});
+
+assert.deepEqual(
+    orderedWithDecisions.flights.map(item => item.id),
+    ordered.map(item => item.id),
+    '설명 객체를 계산해도 기존 목적지 분산 순서가 달라지면 안 된다.',
+);
+assert.equal(orderedWithDecisions.decisions.length, ordered.length, '모든 진열 카드에 다양성 결정 기록이 있어야 한다.');
+assert.deepEqual(
+    orderedWithDecisions.decisions.map(decision => decision.flightId),
+    ordered.map(item => item.id),
+    '다양성 설명은 실제 진열 순서와 같은 순서여야 한다.',
+);
 
 assert.deepEqual(ordered.slice(0, 3).map(item => item.id), ['a-1', 'a-2', 'b-1'],
     '같은 목적지는 두 번째까지 연속 허용하고 세 번째 앞에는 다른 목적지를 배치해야 한다.');
@@ -83,4 +105,110 @@ assert.deepEqual(
     '오늘의 표와 같은 정규화 목적지는 일반 추천 배열에서 모두 제외해야 한다.',
 );
 
-console.log('✅ 오늘의 표 우선 · 2회 연속 허용 · 첫 9개 목적지당 최대 2개');
+const recommendationNow = new Date('2026-08-28T12:00:00+09:00').getTime();
+const verifiedQuality = {
+    ...flight('verified-quality', '인천', '타이베이', 0),
+    price: 180_000,
+    naverLowest: 200_000,
+    naverCheckedAt: '2026-08-28T08:00:00+09:00',
+    priceCheckedAt: '2026-08-28T08:00:00+09:00',
+};
+const unverifiedCheap = {
+    ...flight('unverified-cheap', '인천', '홍콩', 0),
+    price: 80_000,
+    priceCheckedAt: '2026-08-28T08:00:00+09:00',
+};
+const tierState = buildRecommendationScoreState([unverifiedCheap, verifiedQuality], {}, recommendationNow);
+const tierRanked = [unverifiedCheap, verifiedQuality]
+    .sort((a, b) => compareRecommendedFlights(a, b, tierState.scores, recommendationNow));
+assert.deepEqual(
+    tierRanked.map(item => item.id),
+    ['verified-quality', 'unverified-cheap'],
+    '검증된 외부 비교가 이하 구간은 점수가 더 낮은 비교 불가 표보다 먼저여야 한다.',
+);
+
+const freshPrice = {
+    ...flight('fresh-price', '인천', '싱가포르', 0),
+    price: 200_000,
+    priceCheckedAt: '2026-08-28T08:00:00+09:00',
+};
+const oldPrice = {
+    ...flight('old-price', '인천', '방콕', 0),
+    price: 200_000,
+    priceCheckedAt: '2026-08-26T08:00:00+09:00',
+};
+const freshnessState = buildRecommendationScoreState([freshPrice, oldPrice], {}, recommendationNow);
+assert.ok(
+    freshnessState.scores.get('fresh-price')! < freshnessState.scores.get('old-price')!,
+    '같은 가격 품질이면 최근 확인한 표의 추천 점수가 더 좋아야 한다.',
+);
+assert.equal(
+    freshnessState.explanations.get('old-price')?.factors.at(-1)?.rule,
+    'price-freshness',
+    '추천 점수 설명에 신선도 규칙이 명시돼야 한다.',
+);
+
+const departureBalanceCandidates = Array.from({ length: 12 }, (_, index) => ({
+    ...flight(
+        `balance-${index + 1}`,
+        index < 4 ? '부산' : '인천',
+        `도시${index + 1}`,
+        index + 1,
+    ),
+    price: 100_000 + index * 1_000,
+    arrival: {
+        city: `도시${index + 1}`,
+        airport: `A${String(index).padStart(2, '0')}`,
+        date: '2026-09-05',
+        time: '18:00',
+    },
+    priceCheckedAt: '2026-08-28T08:00:00+09:00',
+}));
+const balanceState = buildRecommendationScoreState(departureBalanceCandidates, {}, recommendationNow);
+const balanceRanked = departureBalanceCandidates
+    .slice()
+    .sort((a, b) => compareRecommendedFlights(a, b, balanceState.scores, recommendationNow));
+const balancePresentation = buildRecommendationPresentation(balanceRanked, balanceState, {
+    balanceIncheon: true,
+    now: recommendationNow,
+});
+const firstNine = balancePresentation.orderedFlights.slice(0, 9);
+assert.equal(
+    firstNine.filter(item => item.departure.airport === 'ICN').length,
+    6,
+    '전체 출발지를 볼 때 첫 9개에는 가능한 경우 인천권 표가 6개 들어가야 한다.',
+);
+assert.equal(
+    balancePresentation.explanations.size,
+    departureBalanceCandidates.length,
+    '후보 판정 → 점수 → 최종 진열 설명이 모든 추천 후보에 있어야 한다.',
+);
+balancePresentation.orderedFlights.forEach((item, index) => {
+    const explanation = balancePresentation.explanations.get(item.id);
+    assert.equal(explanation?.candidate.rule, 'passed-current-filters');
+    assert.equal(explanation?.display.displayPosition, index + 1);
+    assert.ok(explanation?.display.diversityDecision, '진열된 추천 카드에는 적용된 다양성 규칙이 있어야 한다.');
+});
+
+const pinnedPresentation = buildRecommendationPresentation(balanceRanked, balanceState, {
+    pinnedFlight: balanceRanked[0],
+    balanceIncheon: true,
+    now: recommendationNow,
+});
+assert.equal(
+    pinnedPresentation.explanations.get(balanceRanked[0].id)?.candidate.rule,
+    'today-pick-pinned',
+    '오늘의 표는 일반 추천 후보가 아니라 별도 고정 단계로 설명해야 한다.',
+);
+assert.equal(
+    pinnedPresentation.explanations.get(balanceRanked[0].id)?.display.displayPosition,
+    1,
+    '오늘의 표 설명 위치는 실제 화면처럼 첫 번째여야 한다.',
+);
+assert.equal(
+    pinnedPresentation.orderedFlights.some(item => item.id === balanceRanked[0].id),
+    false,
+    '오늘의 표는 일반 추천 배열에 중복되면 안 된다.',
+);
+
+console.log('✅ 추천 후보 판정 · 가격/신선도 점수 · 오늘의 표/목적지/출발지 진열 설명');

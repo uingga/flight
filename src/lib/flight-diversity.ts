@@ -10,6 +10,42 @@ export interface FlightDiversityOptions {
     balanceIncheon?: boolean;
 }
 
+export type FlightDiversityConstraintRule =
+    | 'strict'
+    | 'relaxed-top-window-limit'
+    | 'relaxed-departure-balance'
+    | 'relaxed-top-window-and-departure'
+    | 'relaxed-first-nine-limit'
+    | 'relaxed-all-limits'
+    | 'only-remaining-destination';
+
+export type FlightDiversityPreferenceRule =
+    | 'original-rank'
+    | 'incheon-balance-within-15-percent'
+    | 'unseen-destination-within-15-percent';
+
+/** 추천 배열의 순서를 바꾸지 않고, 각 카드를 고를 때 실제 적용된 규칙만 기록한다. */
+export interface FlightDiversityDecision {
+    flightId: string;
+    selectionIndex: number;
+    originalIndex: number;
+    destination: string;
+    constraintRule: FlightDiversityConstraintRule;
+    preferenceRule: FlightDiversityPreferenceRule;
+    insideTopWindow: boolean;
+    firstNine: boolean;
+    blockPosition: number;
+    incheonCountBefore: number;
+    destinationCountBefore: number;
+    trailingDestinationCountBefore: number;
+    departsFromIncheonArea: boolean;
+}
+
+export interface FlightDiversityResult {
+    flights: Flight[];
+    decisions: FlightDiversityDecision[];
+}
+
 function isIncheonAreaDeparture(flight: Flight): boolean {
     const airport = flight.departure.airport?.toUpperCase();
     return airport === 'ICN'
@@ -66,7 +102,18 @@ export function diversifyFlightDestinations(
     items: Flight[],
     options: FlightDiversityOptions = {},
 ): Flight[] {
-    if (items.length <= 1) return items;
+    return diversifyFlightDestinationsWithDecisions(items, options).flights;
+}
+
+/**
+ * 운영 추천순과 같은 선택을 하면서 테스트·어드민 설명에 쓸 결정 기록을 함께 돌려준다.
+ * 외부 상태를 읽거나 기록하지 않는 순수 함수다.
+ */
+export function diversifyFlightDestinationsWithDecisions(
+    items: Flight[],
+    options: FlightDiversityOptions = {},
+): FlightDiversityResult {
+    if (items.length === 0) return { flights: items, decisions: [] };
 
     const {
         topWindow = 20,
@@ -78,8 +125,10 @@ export function diversifyFlightDestinations(
     } = options;
     const remaining = [...items];
     const result: Flight[] = [];
+    const decisions: FlightDiversityDecision[] = [];
     const sequence: Flight[] = [...leadingFlights];
     const topDestinationCounts = new Map<string, number>();
+    const originalIndexes = new Map(items.map((flight, index) => [flight, index]));
 
     sequence.slice(0, topWindow).forEach(flight => {
         const destination = normalizeCity(flight.arrival.city);
@@ -107,7 +156,7 @@ export function diversifyFlightDestinations(
             keepTopLimit: boolean,
             keepFirstNineCap: boolean,
             keepDepartureBalance: boolean,
-        ) => {
+        ): { index: number; preferenceRule: FlightDiversityPreferenceRule } | null => {
             const eligibleIndexes = remaining
                 .map((_, index) => index)
                 .filter(index => {
@@ -121,11 +170,13 @@ export function diversifyFlightDestinations(
                         && (!keepDepartureBalance || !mustChooseIncheon || departsFromIncheonArea)
                         && (!keepDepartureBalance || incheonCount < 6 || !departsFromIncheonArea);
                 });
-            if (eligibleIndexes.length === 0) return -1;
+            if (eligibleIndexes.length === 0) return null;
 
             const bestIndex = eligibleIndexes[0];
             const bestScore = scoreOf?.(remaining[bestIndex]);
-            if (!insideTopWindow || !Number.isFinite(bestScore)) return bestIndex;
+            if (!insideTopWindow || !Number.isFinite(bestScore)) {
+                return { index: bestIndex, preferenceRule: 'original-rank' };
+            }
 
             if (balanceIncheon && incheonCount < desiredIncheonCount) {
                 const incheonIndex = eligibleIndexes.find(index => {
@@ -134,13 +185,17 @@ export function diversifyFlightDestinations(
                         && Number.isFinite(score)
                         && score! <= bestScore! * 1.15;
                 });
-                if (incheonIndex !== undefined) return incheonIndex;
+                if (incheonIndex !== undefined) {
+                    return { index: incheonIndex, preferenceRule: 'incheon-balance-within-15-percent' };
+                }
             }
 
             const bestDestination = normalizeCity(remaining[bestIndex].arrival.city);
             // 최고 후보가 직전 목적지와 같다면 두 번째 카드까지는 원래 순위를 존중한다.
             // 이 예외가 없으면 아래 unseen 우선순위가 사실상 같은 목적지 연속을 계속 막는다.
-            if (trailingDestinationStreak(destinationSequence, bestDestination) === 1) return bestIndex;
+            if (trailingDestinationStreak(destinationSequence, bestDestination) === 1) {
+                return { index: bestIndex, preferenceRule: 'original-rank' };
+            }
 
             const unseenIndex = eligibleIndexes.find(index => {
                 const flight = remaining[index];
@@ -150,26 +205,63 @@ export function diversifyFlightDestinations(
                     && Number.isFinite(score)
                     && score! <= bestScore! * 1.15;
             });
-            return unseenIndex ?? bestIndex;
+            return unseenIndex === undefined
+                ? { index: bestIndex, preferenceRule: 'original-rank' }
+                : { index: unseenIndex, preferenceRule: 'unseen-destination-within-15-percent' };
         };
 
-        let candidateIndex = findCandidate(true, true, true);
-        if (candidateIndex < 0) candidateIndex = findCandidate(false, true, true);
-        if (candidateIndex < 0) candidateIndex = findCandidate(true, true, false);
-        if (candidateIndex < 0) candidateIndex = findCandidate(false, true, false);
-        if (candidateIndex < 0) candidateIndex = findCandidate(true, false, true);
-        if (candidateIndex < 0) candidateIndex = findCandidate(false, false, false);
+        const attempts: Array<{
+            rule: FlightDiversityConstraintRule;
+            keepTopLimit: boolean;
+            keepFirstNineCap: boolean;
+            keepDepartureBalance: boolean;
+        }> = [
+            { rule: 'strict', keepTopLimit: true, keepFirstNineCap: true, keepDepartureBalance: true },
+            { rule: 'relaxed-top-window-limit', keepTopLimit: false, keepFirstNineCap: true, keepDepartureBalance: true },
+            { rule: 'relaxed-departure-balance', keepTopLimit: true, keepFirstNineCap: true, keepDepartureBalance: false },
+            { rule: 'relaxed-top-window-and-departure', keepTopLimit: false, keepFirstNineCap: true, keepDepartureBalance: false },
+            { rule: 'relaxed-first-nine-limit', keepTopLimit: true, keepFirstNineCap: false, keepDepartureBalance: true },
+            { rule: 'relaxed-all-limits', keepTopLimit: false, keepFirstNineCap: false, keepDepartureBalance: false },
+        ];
+        let selection: { index: number; preferenceRule: FlightDiversityPreferenceRule } | null = null;
+        let constraintRule: FlightDiversityConstraintRule = 'only-remaining-destination';
+        for (const attempt of attempts) {
+            selection = findCandidate(
+                attempt.keepTopLimit,
+                attempt.keepFirstNineCap,
+                attempt.keepDepartureBalance,
+            );
+            if (selection) {
+                constraintRule = attempt.rule;
+                break;
+            }
+        }
         // 남은 표가 모두 같은 목적지라면 목록을 유실시키지 않고 최종적으로만 제한을 푼다.
-        if (candidateIndex < 0) candidateIndex = 0;
+        if (!selection) selection = { index: 0, preferenceRule: 'original-rank' };
 
-        const [next] = remaining.splice(candidateIndex, 1);
+        const [next] = remaining.splice(selection.index, 1);
+        const destination = normalizeCity(next.arrival.city);
+        decisions.push({
+            flightId: next.id,
+            selectionIndex: result.length,
+            originalIndex: originalIndexes.get(next) ?? -1,
+            destination,
+            constraintRule,
+            preferenceRule: selection.preferenceRule,
+            insideTopWindow,
+            firstNine: sequence.length < 9,
+            blockPosition,
+            incheonCountBefore: incheonCount,
+            destinationCountBefore: topDestinationCounts.get(destination) || 0,
+            trailingDestinationCountBefore: trailingDestinationStreak(destinationSequence, destination),
+            departsFromIncheonArea: isIncheonAreaDeparture(next),
+        });
         result.push(next);
         sequence.push(next);
         if (sequence.length <= topWindow) {
-            const destination = normalizeCity(next.arrival.city);
             topDestinationCounts.set(destination, (topDestinationCounts.get(destination) || 0) + 1);
         }
     }
 
-    return result;
+    return { flights: result, decisions };
 }

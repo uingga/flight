@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import styles from './admin.module.css';
 import { isAnalyticsExcluded, setAnalyticsExcluded } from '@/lib/analytics';
+import { buildAdminAttentionItems } from '@/lib/admin-attention';
 
 function urlBase64ToUint8Array(base64String: string) {
     const padding = '='.repeat((4 - base64String.length % 4) % 4);
@@ -1450,11 +1451,41 @@ export default function AdminPage() {
         || data.naverStatus.ageDays === null
         || data.naverStatus.ageDays > 3;
     const reportsToReview = flightReports?.summary?.needsReview || 0;
-    const attentionCount = sourceIssueCount
-        + (crawlScheduleIssue ? 1 : 0)
-        + (naverNeedsAttention ? 1 : 0)
-        + (reportsToReview > 0 ? 1 : 0)
-        + (bookingLinkSystemicIssue ? 1 : 0);
+    const attentionItems = buildAdminAttentionItems({
+        crawlSchedule: crawlScheduleHealth ? {
+            issue: crawlScheduleIssue,
+            delayMinutes: crawlScheduleHealth.delayMinutes,
+            overdue: crawlScheduleHealth.status === 'overdue',
+        } : undefined,
+        collection: {
+            sourceIssueCount,
+            criticalAlertCount: criticalAlerts.length,
+        },
+        comparison: {
+            needsAttention: naverNeedsAttention,
+            lastCheckedLabel: data.naverStatus?.lastCrawledAt
+                ? timeAgo(data.naverStatus.lastCrawledAt)
+                : undefined,
+        },
+        bookingLinks: {
+            failed: latestBookingLinkHealth?.summary.failed || 0,
+            systemicSources: latestBookingLinkHealth?.summary.systemicSources || 0,
+        },
+        reports: {
+            available: Boolean(flightReports?.available),
+            loadError: Boolean(flightReportsError),
+            needsReview: reportsToReview,
+            activeHides: flightReports?.summary?.activeHides || 0,
+        },
+        alerts: {
+            available: Boolean(dealAlertReview?.available),
+            unavailable: Boolean(dealAlertReview && !dealAlertReview.available),
+            loadError: Boolean(dealAlertReviewError),
+            qualifiedCandidates: dealAlertReview?.qualifiedCandidates || 0,
+            pendingRecipients: dealAlertReview?.pendingRecipients || 0,
+            deliveryAvailable: Boolean(dealAlertReview?.deliveryAvailable),
+        },
+    });
     const gaActivity = gaStats?.activityPeriods;
     const gaPeriodRows: PeriodRow[] = gaActivity ? [
         {
@@ -1580,6 +1611,11 @@ export default function AdminPage() {
                                     {flightReports?.summary?.activeHides}
                                 </span>
                             )}
+                            {t.id === 'audience' && (dealAlertReview?.qualifiedCandidates || 0) > 0 && (
+                                <span className={styles.reportTabCount} title="승인 대기 알림 후보">
+                                    {dealAlertReview?.qualifiedCandidates}
+                                </span>
+                            )}
                         </span>
                         <span className={styles.tabHint}>{t.hint}</span>
                     </button>
@@ -1595,48 +1631,26 @@ export default function AdminPage() {
                         </div>
                         <span className={styles.nowBadge}>지금</span>
                     </div>
-                    {attentionCount === 0 ? (
+                    {attentionItems.length === 0 ? (
                         <div className={styles.allClear}>
                             <span aria-hidden="true">✓</span>
-                            <div><strong>수집·가격 확인·신고 처리 모두 괜찮아요</strong><small>평소처럼 방문자 흐름만 살펴보면 됩니다.</small></div>
+                            <div><strong>수집·예약 링크·신고·알림 후보 모두 정상이에요</strong><small>오늘 바로 처리할 운영 항목이 없습니다.</small></div>
                         </div>
                     ) : (
                         <div className={styles.actionGrid}>
-                            {crawlScheduleIssue && crawlScheduleHealth && (
-                                <button type="button" onClick={() => selectTab('operations')} className={styles.actionCardWarn}>
-                                    <span>전체 자동 수집</span>
-                                    <strong>{crawlScheduleHealth.delayMinutes}분 지연</strong>
-                                    <small>{crawlScheduleHealth.status === 'overdue' ? '자동 복구 확인 기준을 넘었습니다.' : '완료 기록을 기다리고 있어요.'}</small>
+                            {attentionItems.map(item => (
+                                <button
+                                    key={item.id}
+                                    type="button"
+                                    onClick={() => selectTab(item.tab)}
+                                    className={styles.actionCardWarn}
+                                >
+                                    <span>{item.area}</span>
+                                    <strong>{item.state}</strong>
+                                    <small><b>원인 후보</b> · {item.cause}</small>
+                                    <small className={styles.actionNext}><b>다음 행동</b> · {item.nextAction}</small>
                                 </button>
-                            )}
-                            {sourceIssueCount > 0 && (
-                                <button type="button" onClick={() => selectTab('operations')} className={styles.actionCardWarn}>
-                                    <span>여행사 항공권 수집</span>
-                                    <strong>{sourceIssueCount}곳 확인 필요</strong>
-                                    <small>새 데이터가 늦거나 이전 데이터를 쓰는 곳이 있어요.</small>
-                                </button>
-                            )}
-                            {naverNeedsAttention && (
-                                <button type="button" onClick={() => selectTab('operations')} className={styles.actionCardWarn}>
-                                    <span>가격 비교 데이터</span>
-                                    <strong>갱신 상태 확인</strong>
-                                    <small>{data.naverStatus?.lastCrawledAt ? `마지막 확인 ${timeAgo(data.naverStatus.lastCrawledAt)}` : '확인 기록이 없어요.'}</small>
-                                </button>
-                            )}
-                            {reportsToReview > 0 && (
-                                <button type="button" onClick={() => selectTab('operations')} className={styles.actionCardWarn}>
-                                    <span>사용자 신고</span>
-                                    <strong>{reportsToReview}개 확인 필요</strong>
-                                    <small>현재 숨김 {flightReports?.summary?.activeHides || 0}개</small>
-                                </button>
-                            )}
-                            {bookingLinkSystemicIssue && (
-                                <button type="button" onClick={() => selectTab('operations')} className={styles.actionCardWarn}>
-                                    <span>예약 링크 연결</span>
-                                    <strong>{latestBookingLinkHealth?.summary.systemicSources || 0}곳 전체 문제 의심</strong>
-                                    <small>대표 링크 여러 개가 함께 열리지 않았어요.</small>
-                                </button>
-                            )}
+                            ))}
                         </div>
                     )}
                 </section>

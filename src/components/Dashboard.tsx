@@ -33,14 +33,18 @@ import { getYbtourBookingUrl } from '@/lib/utils/ybtour-url';
 import { dealAlertRegionLabel, type DealAlertRegion } from '@/lib/deal-alerts';
 import {
     getComparisonFreshness,
-    getComparisonPriceTier,
     getEffectivePrice,
 } from '@/lib/price-quality';
+import {
+    buildRecommendationPresentation,
+    buildRecommendationScoreState,
+    compareRecommendedFlights,
+    getRecommendationFreshness,
+} from '@/lib/flight-recommendation';
 import {
     getDestinationContext,
     getItineraryContext,
 } from '@/lib/destination-contexts';
-import { diversifyFlightDestinations, excludePinnedDestination } from '@/lib/flight-diversity';
 import AccountSheet from './account/AccountSheet';
 import { useAccount, type AccountSearchFilters } from './account/useAccount';
 
@@ -51,18 +55,6 @@ function urlBase64ToUint8Array(base64String: string) {
     const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
     const rawData = window.atob(base64);
     return Uint8Array.from(rawData, character => character.charCodeAt(0));
-}
-
-function getFreshnessInfo(checkedAt?: string) {
-    if (!checkedAt) return { multiplier: 1.12, label: '확인 시각 미기록' };
-    const checkedTime = new Date(checkedAt).getTime();
-    if (!Number.isFinite(checkedTime)) return { multiplier: 1.12, label: '확인 시각 미기록' };
-
-    const ageHours = Math.max(0, (Date.now() - checkedTime) / 3_600_000);
-    if (ageHours <= 8) return { multiplier: 1, label: `${Math.max(1, Math.floor(ageHours))}시간 전 확인` };
-    if (ageHours <= 16) return { multiplier: 1.03, label: `${Math.floor(ageHours)}시간 전 확인` };
-    if (ageHours <= 24) return { multiplier: 1.08, label: `${Math.floor(ageHours)}시간 전 확인` };
-    return { multiplier: 1.35, label: `${Math.floor(ageHours / 24)}일 이상 전 확인` };
 }
 
 interface ManagedPriceAlert {
@@ -1694,80 +1686,11 @@ export default function Dashboard() {
 
     // 추천순(스마트 정렬) 점수 — 낮을수록 상위.
     // 먼저 신선한 외부 비교가 기준으로 구간을 나누고, 구간 안에서는 실질 가격과 기존 벤치마크를 종합한다.
-    const recommendScores = useMemo(() => {
-        const getSortScore = (flight: Flight) => {
-            const effectivePrice = getEffectivePrice(flight);
-            const city = flight.arrival.city?.replace(/\([^)]+\)/, '').trim();
-            const depMonth = flight.departure.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 7);
-            const ipCityData = interparkPrices[city];
-            let ipMonthData = ipCityData?.[depMonth];
-            if (!ipMonthData && ipCityData && depMonth) {
-                const months = Object.keys(ipCityData).sort();
-                const closest = months.reduce((best, month) => {
-                    const diff = Math.abs(month.localeCompare(depMonth));
-                    const bestDiff = best ? Math.abs(best.localeCompare(depMonth)) : Infinity;
-                    return diff < bestDiff ? month : best;
-                }, '' as string);
-                if (closest) ipMonthData = ipCityData[closest];
-            }
-
-            const comparisonUsable = !!flight.naverLowest
-                && flight.naverLowest > 0
-                && getComparisonFreshness(flight.naverCheckedAt).usable;
-            const comparisonPrice = comparisonUsable ? flight.naverLowest! : null;
-            const isComparisonCheaper = !!comparisonPrice && effectivePrice <= comparisonPrice;
-
-            let score = effectivePrice;
-            if (!ipMonthData) {
-                score *= 1.1;
-            } else if (effectivePrice <= ipMonthData.lowest) {
-                // 월간 최저가 이하는 페널티 없음
-            } else if (effectivePrice <= ipMonthData.lowest * 1.2) {
-                score *= 1.15;
-            } else if (effectivePrice < ipMonthData.avg) {
-                score *= 1.3;
-            } else {
-                score *= isComparisonCheaper ? 1.3 : 10;
-            }
-
-            if (comparisonPrice) {
-                const ratio = (effectivePrice - comparisonPrice) / comparisonPrice;
-                if (ratio <= -0.20) score *= 0.3;
-                else if (ratio <= -0.15) score *= 0.375;
-                else if (ratio <= -0.10) score *= 0.45;
-                else if (ratio <= -0.05) score *= 0.55;
-                else if (ratio <= 0) score *= 0.65;
-                else if (ratio <= 0.05) score *= 1.05;
-                else if (ratio <= 0.10) score *= 1.15;
-                else if (ratio <= 0.15) score *= 1.3;
-                else if (ratio <= 0.20) score *= 1.5;
-                else score *= 2;
-            }
-
-            score *= getFreshnessInfo(flight.priceCheckedAt).multiplier;
-            return score;
-        };
-
-        const scores = new Map<string, number>();
-        for (const flight of flights) scores.set(flight.id, getSortScore(flight));
-
-        // 노선 간 순서는 유지하되, 같은 노선 안에서 비싼 표가 싼 표보다 위로 가는 역전만 바로잡는다.
-        const byRoute = new Map<string, Flight[]>();
-        for (const flight of flights) {
-            const key = `${normalizeCity(flight.departure.city)}-${normalizeCity(flight.arrival.city)}`;
-            const group = byRoute.get(key);
-            if (group) group.push(flight);
-            else byRoute.set(key, [flight]);
-        }
-        Array.from(byRoute.values()).forEach(group => {
-            if (group.length < 2) return;
-            const slots = group.map(flight => scores.get(flight.id)!).sort((a, b) => a - b);
-            group.slice()
-                .sort((a, b) => getEffectivePrice(a) - getEffectivePrice(b) || scores.get(a.id)! - scores.get(b.id)!)
-                .forEach((flight, index) => scores.set(flight.id, slots[index]));
-        });
-        return scores;
-    }, [flights, interparkPrices]);
+    const recommendScoreState = useMemo(
+        () => buildRecommendationScoreState(flights, interparkPrices),
+        [flights, interparkPrices],
+    );
+    const recommendScores = recommendScoreState.scores;
 
     // 오늘의 표 — 파격적인 절대가격을 먼저 잡고, 없을 때 현재 판매 중인 전체 항공권에서 고른다.
     // 신규·가격 하락은 일반 후보의 동점일 때만 우선한다.
@@ -1974,11 +1897,7 @@ export default function Dashboard() {
             case 'discount': {
                 // 추천순은 신선한 비교가 이하를 먼저, 비교 불가를 그다음,
                 // 신선한 비교가 초과를 마지막에 둔다. 각 그룹 안에서는 종합 품질점수를 유지한다.
-                const comparisonTier = getComparisonPriceTier(a);
-                comparison = comparisonTier - getComparisonPriceTier(b);
-                if (comparison === 0) {
-                    comparison = (recommendScores.get(a.id) ?? Infinity) - (recommendScores.get(b.id) ?? Infinity);
-                }
+                comparison = compareRecommendedFlights(a, b, recommendScores);
                 break;
             }
         }
@@ -2095,32 +2014,16 @@ export default function Dashboard() {
 
     // 오늘의 표를 먼저 고른 뒤, 같은 목적지의 일반 카드는 추천 배열에서 분리한다.
     const pinnedTodayPick = todayPick && isDefaultView ? todayPick.flight : undefined;
-    const recommendationPool = excludePinnedDestination(filteredFlights, pinnedTodayPick);
-    const diversifiedFlights = (sortBy === 'discount' && !searchTerm)
-        // 서로 다른 비교가 구간이 노선 다양화 과정에서 뒤섞이지 않도록
-        // 각 구간 안에서만 분산하되, 구간 경계의 직전 목적지도 이어서 확인한다.
-        ? (() => {
-            const result: Flight[] = [];
-            // 오늘의 표는 추천 배열 바깥의 편집 카드다. 첫 9개·연속 횟수 계산에도 넣지 않는다.
-            const leadingFlights: Flight[] = [];
-            for (const tier of [0, 1, 2] as const) {
-                const group = diversifyFlightDestinations(
-                    recommendationPool.filter(flight => getComparisonPriceTier(flight) === tier),
-                    {
-                        maxConsecutiveDestinations: 2,
-                        topWindow: 20,
-                        maxPerDestination: 2,
-                        leadingFlights,
-                        scoreOf: flight => recommendScores.get(flight.id) ?? Infinity,
-                        balanceIncheon: departureFilter === 'all',
-                    },
-                );
-                result.push(...group);
-                leadingFlights.push(...group);
-            }
-            return result;
-        })()
-        : recommendationPool;
+    const recommendationPresentation = buildRecommendationPresentation(
+        filteredFlights,
+        recommendScoreState,
+        {
+            pinnedFlight: pinnedTodayPick,
+            diversify: sortBy === 'discount' && !searchTerm,
+            balanceIncheon: departureFilter === 'all',
+        },
+    );
+    const diversifiedFlights = recommendationPresentation.orderedFlights;
 
     // 표시할 항공권 (무한 스크롤용)
     const hasPinnedTodayPick = !!todayPick && isDefaultView;
@@ -4323,7 +4226,7 @@ export default function Dashboard() {
 
                                 <div className={styles.mdtFreshnessReport}>
                                     <span className={styles.mdtFreshnessText}>
-                                        가격 정보 · {getFreshnessInfo(modetourGuide.priceCheckedAt).label}
+                                        가격 정보 · {getRecommendationFreshness(modetourGuide.priceCheckedAt).label}
                                     </span>
                                     {(recentFlightReports[modetourGuide.id]
                                         || (flightReport?.flightId === modetourGuide.id && flightReport.status === 'sent')) ? (

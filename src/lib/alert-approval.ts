@@ -105,7 +105,8 @@ function formatPrice(price: number): string {
     return `${Math.round(price).toLocaleString('ko-KR')}원`;
 }
 
-function todayInKorea(date = new Date()): string {
+export function alertDayInKorea(date = new Date()): string {
+    if (!Number.isFinite(date.getTime())) return '';
     return new Intl.DateTimeFormat('en-CA', {
         timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit',
     }).format(date);
@@ -113,6 +114,20 @@ function todayInKorea(date = new Date()): string {
 
 function endpointKey(alert: AlertSubscriptionRecord): string {
     return alert.endpoint_hash || alert.subscription?.endpoint || '';
+}
+
+/** 같은 기기의 다른 조건까지 포함해 KST 하루 1회 제한 대상을 계산한다. */
+export function getDailyLimitedAlertTargets(
+    alerts: AlertSubscriptionRecord[],
+    now = new Date(),
+): Set<string> {
+    const today = alertDayInKorea(now);
+    return new Set(
+        alerts
+            .filter(alert => alert.last_sent_at && alertDayInKorea(new Date(alert.last_sent_at)) === today)
+            .map(endpointKey)
+            .filter(Boolean),
+    );
 }
 
 function effectivePrice(flight: Flight): number {
@@ -268,13 +283,7 @@ export function buildAlertApprovalBatches(
     sourceUpdatedAt: Record<string, string> = {},
     now = new Date(),
 ): AlertApprovalBatch[] {
-    const today = todayInKorea(now);
-    const sentEndpoints = new Set(
-        alerts
-            .filter(alert => alert.last_sent_at && todayInKorea(new Date(alert.last_sent_at)) === today)
-            .map(endpointKey)
-            .filter(Boolean),
-    );
+    const sentEndpoints = getDailyLimitedAlertTargets(alerts, now);
 
     const proposals = alerts.flatMap(alert => {
         const target = endpointKey(alert);
@@ -328,6 +337,22 @@ export function buildAlertApprovalBatches(
         || b.score - a.score
         || a.effectivePrice - b.effectivePrice
     ));
+}
+
+/**
+ * 관리자가 본 배치 키를 현재 항공권·구독 상태로 다시 계산해 승인 가능 여부를 확인한다.
+ * 가격 변경, 후보 탈락, 오늘 이미 발송된 기기는 이 단계에서 자동으로 빠진다.
+ */
+export function revalidateAlertApprovalBatch(
+    batchKey: string,
+    alerts: AlertSubscriptionRecord[],
+    flights: Flight[],
+    priceHistory: PriceHistory = {},
+    sourceUpdatedAt: Record<string, string> = {},
+    now = new Date(),
+): AlertApprovalBatch | null {
+    return buildAlertApprovalBatches(alerts, flights, priceHistory, sourceUpdatedAt, now)
+        .find(batch => batch.batchKey === batchKey) || null;
 }
 
 export function toPublicApprovalBatch(batch: AlertApprovalBatch): PublicAlertApprovalBatch {

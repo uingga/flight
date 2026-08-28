@@ -2331,6 +2331,17 @@
     color: #7e251d;
 }
 
+.actionCard small b,
+.actionCardWarn small b {
+    color: #5f3c42;
+    font-weight: 600;
+}
+
+.actionNext {
+    padding-top: 6px;
+    border-top: 1px solid #f0d8d4;
+}
+
 .allClear {
     display: flex;
     align-items: center;
