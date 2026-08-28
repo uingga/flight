@@ -6,6 +6,7 @@ import {
     DAILY_CRAWL_CRONS,
     getCrawlScheduleHealth,
 } from '../src/lib/crawl-schedule-health.mjs';
+import { getCrawlDispatchBlocker } from '../src/lib/crawl-watchdog-dispatch.mjs';
 
 test('warns 45 minutes after an uncovered crawl slot', () => {
     const health = getCrawlScheduleHealth('2026-08-27T15:50:00.000Z', {
@@ -104,4 +105,55 @@ test('every completed crawl validates today pick after the deployed cache catche
     assert.match(workflow, /^\s+is_today_pick_slot: \$\{\{ steps\.trigger\.outputs\.is_today_pick_slot \}\}/m);
     assert.match(workflow, /run: node scripts\/wait-for-flight-api-cache\.mjs/);
     assert.match(workflow, /node scripts\/select-today-pick\.mjs --repair/);
+});
+
+test('an active crawl blocks a fallback dispatch', () => {
+    const blocker = getCrawlDispatchBlocker([
+        { id: 101, status: 'in_progress', html_url: 'https://example.com/runs/101' },
+    ], '2026-08-28T06:17:00.000Z', {
+        now: '2026-08-28T07:20:00.000Z',
+    });
+
+    assert.equal(blocker?.reason, 'active_run');
+    assert.equal(blocker?.runId, 101);
+});
+
+test('a recent fallback for the same slot blocks a duplicate dispatch', () => {
+    const blocker = getCrawlDispatchBlocker([
+        {
+            id: 102,
+            status: 'completed',
+            event: 'workflow_dispatch',
+            created_at: '2026-08-28T07:10:00.000Z',
+            display_title: 'Daily Flight Crawl · watchdog · 2026-08-28T06:17:00.000Z',
+        },
+    ], '2026-08-28T06:17:00.000Z', {
+        now: '2026-08-28T07:20:00.000Z',
+    });
+
+    assert.equal(blocker?.reason, 'recent_fallback');
+    assert.equal(blocker?.runId, 102);
+});
+
+test('an old fallback or a different slot does not block recovery', () => {
+    const runs = [
+        {
+            id: 103,
+            status: 'completed',
+            event: 'workflow_dispatch',
+            created_at: '2026-08-28T06:20:00.000Z',
+            display_title: 'Daily Flight Crawl · watchdog · 2026-08-28T06:17:00.000Z',
+        },
+        {
+            id: 104,
+            status: 'completed',
+            event: 'workflow_dispatch',
+            created_at: '2026-08-28T07:15:00.000Z',
+            display_title: 'Daily Flight Crawl · watchdog · 2026-08-28T02:56:00.000Z',
+        },
+    ];
+
+    assert.equal(getCrawlDispatchBlocker(runs, '2026-08-28T06:17:00.000Z', {
+        now: '2026-08-28T07:20:00.000Z',
+    }), null);
 });

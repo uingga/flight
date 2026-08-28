@@ -1484,8 +1484,8 @@ export default function AdminPage() {
                             : '예정된 전체 수집이 아직 반영되지 않았습니다.'}
                         {' '}
                         {crawlScheduleHealth.status === 'overdue'
-                            ? `${crawlScheduleHealth.fallbackMinutes}분 기준을 넘어 감시 작업이 보조 실행을 요청하는 구간입니다.`
-                            : `${crawlScheduleHealth.fallbackMinutes}분까지 완료되지 않으면 감시 작업이 보조 실행을 요청합니다.`}
+                            ? `${crawlScheduleHealth.fallbackMinutes}분 기준을 넘어 자동 복구 확인 대상입니다.`
+                            : `${crawlScheduleHealth.fallbackMinutes}분까지 완료되지 않으면 자동 복구를 시도합니다.`}
                     </p>
                     <span>
                         마지막 전체 수집 완료: {crawlScheduleHealth.lastCompletedAt ? formatKST(crawlScheduleHealth.lastCompletedAt).replace(/:\d{2}$/, '') : '기록 없음'}
@@ -1538,7 +1538,7 @@ export default function AdminPage() {
                                 <button type="button" onClick={() => selectTab('operations')} className={styles.actionCardWarn}>
                                     <span>전체 자동 수집</span>
                                     <strong>{crawlScheduleHealth.delayMinutes}분 지연</strong>
-                                    <small>{crawlScheduleHealth.status === 'overdue' ? '보조 실행 요청 구간입니다.' : '완료 기록을 기다리고 있어요.'}</small>
+                                    <small>{crawlScheduleHealth.status === 'overdue' ? '자동 복구 확인 기준을 넘었습니다.' : '완료 기록을 기다리고 있어요.'}</small>
                                 </button>
                             )}
                             {sourceIssueCount > 0 && (
