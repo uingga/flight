@@ -2,6 +2,11 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import {
+    destinationKey,
+    findPreviousDayPick,
+    repeatDecision,
+} from './today-pick-repeat-guard.mjs';
 
 const SITE_URL = process.env.SITE_URL || 'https://www.tikitikit.kr';
 const OUTPUT_PATH = path.resolve(process.cwd(), 'data/today-pick.json');
@@ -100,6 +105,11 @@ function recommendScore(flight, interparkPrices, now) {
 }
 
 async function main() {
+    let storedPick = {};
+    try {
+        storedPick = JSON.parse(fs.readFileSync(OUTPUT_PATH, 'utf8'));
+    } catch { /* 첫 선정이면 이전 기록 없이 진행한다. */ }
+
     const response = await fetch(`${SITE_URL}/api/flights`);
     if (!response.ok) throw new Error(`항공권 API 응답 실패: ${response.status}`);
     const data = await response.json();
@@ -113,22 +123,38 @@ async function main() {
         return;
     }
 
+    const previousPick = findPreviousDayPick(storedPick, flights, kstDate);
+    if (previousPick) {
+        console.log(`↩️ 전날 오늘의 표: ${previousPick.arrivalCity || previousPick.destinationKey} · ${previousPick.effectivePrice.toLocaleString()}원`);
+    }
+
     const scored = flights
         .filter((flight) => Number(flight.price) > 0)
-        .map((flight) => ({
-            flight,
-            score: recommendScore(flight, data.interparkPrices || {}, now),
-            exceptional: isExceptionalCandidate(flight, data.interparkPrices || {}, now),
-            referencePrice: marketReference(flight, data.interparkPrices || {}, now),
-        }));
-    const exceptional = scored
+        .map((flight) => {
+            const price = effectivePrice(flight);
+            return {
+                flight,
+                effectivePrice: price,
+                score: recommendScore(flight, data.interparkPrices || {}, now),
+                exceptional: isExceptionalCandidate(flight, data.interparkPrices || {}, now),
+                referencePrice: marketReference(flight, data.interparkPrices || {}, now),
+                repeat: repeatDecision(flight, price, previousPick),
+            };
+        });
+    const excludedRepeats = scored.filter(entry => entry.repeat.blocked);
+    const eligible = scored.filter(entry => !entry.repeat.blocked);
+    if (excludedRepeats.length > 0) {
+        console.log(`🚫 전날과 같은 항공권·목적지 ${excludedRepeats.length}개 제외 (가격 하락 시 예외)`);
+    }
+
+    const exceptional = eligible
         .filter((entry) => entry.exceptional)
-        .sort((a, b) => effectivePrice(a.flight) - effectivePrice(b.flight) || a.score - b.score);
-    const ranked = scored
+        .sort((a, b) => a.effectivePrice - b.effectivePrice || a.score - b.score);
+    const ranked = eligible
         .slice()
-        .sort((a, b) => a.score - b.score || effectivePrice(a.flight) - effectivePrice(b.flight));
+        .sort((a, b) => a.score - b.score || a.effectivePrice - b.effectivePrice);
     const selected = exceptional[0] || ranked[0];
-    if (!selected) throw new Error('유효한 오늘의 표 후보가 없습니다.');
+    if (!selected) throw new Error('전날 중복 제외 후 유효한 오늘의 표 후보가 없습니다.');
 
     const selectedAt = new Date().toISOString();
     const output = {
@@ -136,13 +162,24 @@ async function main() {
         selectedAt,
         flightId: selected.flight.id,
         source: selected.flight.source,
-        effectivePrice: effectivePrice(selected.flight),
+        arrivalCity: selected.flight.arrival?.city || null,
+        destinationKey: destinationKey(selected.flight),
+        effectivePrice: selected.effectivePrice,
         selectionMode: selected.exceptional ? 'exceptional-price' : 'recommend-score',
         referencePrice: selected.referencePrice || null,
+        previousPick,
+        repeatOverride: selected.repeat.priceDropped ? {
+            previousEffectivePrice: selected.repeat.previousEffectivePrice,
+            currentEffectivePrice: selected.effectivePrice,
+            dropAmount: selected.repeat.dropAmount,
+        } : null,
     };
     fs.writeFileSync(OUTPUT_PATH, `${JSON.stringify(output, null, 2)}\n`, 'utf8');
     console.log(`✅ 오늘의 표: ${selected.flight.departure?.city} → ${selected.flight.arrival?.city} · ${output.effectivePrice.toLocaleString()}원`);
     console.log(`   선정 기준: ${output.selectionMode}${output.referencePrice ? ` · 비교 기준 ${output.referencePrice.toLocaleString()}원` : ''}`);
+    if (selected.repeat.priceDropped) {
+        console.log(`   전날 중복 허용: 가격 ${selected.repeat.dropAmount.toLocaleString()}원 하락`);
+    }
     console.log(`   ${selected.flight.id}`);
 }
 
