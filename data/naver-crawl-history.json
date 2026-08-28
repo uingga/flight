@@ -228,6 +228,28 @@
       "blocked": 0,
       "healthChecks": 0,
       "abortedEarly": false
+    },
+    {
+      "id": "2026-08-28T04:01:35.696Z-github-3106",
+      "timestamp": "2026-08-28T04:01:35.696Z",
+      "runner": "github",
+      "sourceFilter": "myrealtrip",
+      "maxFlights": 200,
+      "needed": 176,
+      "attempted": 176,
+      "newRoutes": 64,
+      "newRoutesAttempted": 64,
+      "deferred": 0,
+      "deferredNeverChecked": 0,
+      "oldestDeferredHours": null,
+      "success": 5,
+      "misses": 171,
+      "noResult": 0,
+      "routeErrors": 0,
+      "transientErrors": 171,
+      "blocked": 0,
+      "healthChecks": 56,
+      "abortedEarly": false
     }
   ]
 }
