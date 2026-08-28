@@ -1494,9 +1494,9 @@ export default function MobileRedesignPreview({
                 || flights.slice().sort(compareRecommended)[0];
             const repeatPriceDropReason = fixedTodayPick
                 && todayPickRepeatOverride?.dropAmount
-                ? `어제 표보다 ${todayPickRepeatOverride.dropAmount >= 10_000
+                ? `어제보다 ${todayPickRepeatOverride.dropAmount >= 10_000
                     ? compactWon(todayPickRepeatOverride.dropAmount)
-                    : priceText(todayPickRepeatOverride.dropAmount)} 내려 재선정`
+                    : priceText(todayPickRepeatOverride.dropAmount)} 내려 다시 선정`
                 : null;
             return flight ? {
                 flight,
