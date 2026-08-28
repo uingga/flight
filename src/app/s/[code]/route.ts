@@ -11,6 +11,9 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
     if (!flightId) return NextResponse.redirect(new URL('/', request.url), 302);
 
     const destination = new URL(`/share/${encodeURIComponent(flightId)}`, request.url);
+    destination.searchParams.set('utm_source', 'user_share');
+    destination.searchParams.set('utm_medium', 'referral');
+    destination.searchParams.set('utm_campaign', 'tikitikit_user_share');
     request.nextUrl.searchParams.forEach((value, key) => destination.searchParams.set(key, value));
 
     return NextResponse.redirect(destination, 307);
