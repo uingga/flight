@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import RedesignDashboard from '@/components/RedesignDashboard';
-import HomeCrawlSummary from '@/components/HomeCrawlSummary';
 import flightCacheJson from '../../data/all-flights-cache.json';
 import todayPickJson from '../../data/today-pick.json';
 import type { Flight } from '@/types/flight';
@@ -81,9 +80,7 @@ export function generateMetadata(): Metadata {
 export default function Home() {
     return (
         <main>
-            <RedesignDashboard>
-                <HomeCrawlSummary />
-            </RedesignDashboard>
+            <RedesignDashboard />
         </main>
     );
 }
