@@ -4,12 +4,11 @@ run-name: MyRealTrip Price Scraping · ${{ github.event.schedule || github.event
 
 on:
   schedule:
-    # 정각 혼잡을 피하고 일반 항공권 수집 뒤에 이어지도록 분산한다.
-    # 매일 새벽 1시 17분 KST (16:17 UTC 전날)
-    - cron: '17 16 * * *'
-    # 매일 오전 8시 37분 KST (23:37 UTC 전날)
-    # 08:13 일반 수집 뒤에 실행하고, 완료되면 네이버 가격 크롤링이 이어진다.
-    - cron: '37 23 * * *'
+    # 오전·오후 각 1회. GitHub Actions 정각 혼잡을 피하도록 분산한다.
+    # 매일 오전 7시 5분 KST (22:05 UTC 전날)
+    - cron: '5 22 * * *'
+    # 매일 오후 6시 3분 KST (09:03 UTC)
+    - cron: '3 9 * * *'
   workflow_dispatch: # 수동 실행 가능
 
 jobs:

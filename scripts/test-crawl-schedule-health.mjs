@@ -67,6 +67,22 @@ test('today pick has a 06:17 KST selection slot', () => {
     assert.match(workflow, /^\s*- cron: '17 21 \* \* \*'/m);
 });
 
+test('MyRealTrip runs once in the morning and once in the afternoon', () => {
+    const workflow = fs.readFileSync('.github/workflows/myrealtrip-scrape.yml', 'utf8');
+    const workflowCrons = [...workflow.matchAll(/^\s*- cron: '([^']+)'/gm)].map(match => match[1]);
+    assert.deepEqual(workflowCrons.sort(), ['5 22 * * *', '3 9 * * *'].sort());
+});
+
+test('the 11:56 general crawl dispatches Naver immediately after saving data', () => {
+    const dailyWorkflow = fs.readFileSync('.github/workflows/daily-crawl.yml', 'utf8');
+    const naverWorkflow = fs.readFileSync('.github/workflows/naver-crawl.yml', 'utf8');
+
+    assert.match(dailyWorkflow, /Start Naver price crawl after 11:56 crawl/);
+    assert.match(dailyWorkflow, /needs\.preflight\.outputs\.is_today_pick_slot == 'true'/);
+    assert.match(dailyWorkflow, /workflow_id: 'naver-crawl\.yml'/);
+    assert.doesNotMatch(naverWorkflow, /^\s+workflow_run:/m);
+});
+
 test('watchdog fallback keeps the 11:56 today-pick slot identity', () => {
     const result = spawnSync(process.execPath, ['scripts/check-crawl-run.mjs'], {
         encoding: 'utf8',

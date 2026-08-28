@@ -3698,9 +3698,12 @@
 }
 
 .trendDate {
+    display: block;
+    min-height: 0.7rem;
     color: #858e9a;
     font-size: 0.57rem;
     font-variant-numeric: tabular-nums;
+    line-height: 0.7rem;
     white-space: nowrap;
 }
 

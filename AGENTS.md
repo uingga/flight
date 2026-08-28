@@ -6,7 +6,7 @@
 
 - **Stack**: Next.js 14 (App Router), TypeScript, CSS Modules, Playwright/Puppeteer
 - **Deploy**: Vercel (https://tikitikit.kr)
-- **Automation**: GitHub Actions — 하루 7회 자동 크롤링 (`daily-crawl.yml`)
+- **Automation**: GitHub Actions — 일반 여행사 하루 6회 자동 크롤링 (`daily-crawl.yml`)
 - **Package Manager**: npm
 
 ## Data Sources (6 Travel Agencies)
@@ -52,7 +52,7 @@ src/components/Dashboard.tsx (client component)
 | `src/components/Dashboard.tsx` | Main UI (~2300 lines) | Very large file — target specific functions |
 | `src/components/Dashboard.module.css` | Dashboard styles (~64KB) | CSS Modules — use `styles.className` |
 | `scripts/crawl-all.ts` | Unified crawler (~360 lines) | Orchestrates all scrapers + filtering |
-| `.github/workflows/daily-crawl.yml` | GH Actions cron | 7 runs/day, auto-commit to `data/` |
+| `.github/workflows/daily-crawl.yml` | GH Actions cron | 6 runs/day, auto-commit to `data/` |
 | `data/all-flights-cache.json` | Core data file (~1MB) | Must be in git for Vercel deploy |
 
 ## MyRealTrip Integration
@@ -63,7 +63,7 @@ src/components/Dashboard.tsx (client component)
 
 1. **노선 시딩 (수동/간헐)**: `scripts/update-myrealtrip-cache.ts` → `src/lib/scrapers/myrealtrip.ts`의
    공개 API로 노선·날짜·대략 가격을 수집해 캐시의 마이리얼트립 항목을 통째로 교체. **시간 정보 없음.**
-2. **가격·시간 갱신 (자동, 하루 2회 KST 01시/10시)**: `.github/workflows/myrealtrip-scrape.yml` →
+2. **가격·시간 갱신 (자동, 하루 2회 KST 07:05/18:03)**: `.github/workflows/myrealtrip-scrape.yml` →
    `scripts/scrape-myrealtrip-prices.ts`가 Playwright로 실제 예약 페이지(offers.k1)를 열어
    실시간 가격과 가는편·오는편 출발/도착 시간을 수집. 조회 실패 노선은 캐시에서 삭제.
 

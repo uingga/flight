@@ -63,6 +63,7 @@ jobs:
     
     permissions:
       contents: write # 리포지토리 커밋 권한 필요
+      actions: write # 11:56 수집 직후 네이버 가격 크롤링 실행
       # 실패 알림이 이슈를 만든다. 이 권한이 없어 지금까지 403으로 조용히 실패했다.
       issues: write
 
@@ -147,6 +148,22 @@ jobs:
           else
             echo "ℹ️ No changes to commit."
           fi
+
+      # 11:56 일반 여행사 수집 결과를 저장한 직후 네이버 가격 확인을 시작한다.
+      # watchdog이 대신 실행한 11:56 회차도 같은 is_today_pick_slot 값을 받아 포함된다.
+      - name: Start Naver price crawl after 11:56 crawl
+        if: steps.crawl.outcome == 'success' && needs.preflight.outputs.is_today_pick_slot == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'naver-crawl.yml',
+              ref: 'main',
+              inputs: { max_flights: '200' },
+            });
+            core.notice('Started Naver price crawl after the 11:56 general crawl.');
 
       # 데이터 커밋 직후에는 Vercel이 아직 이전 캐시를 제공할 수 있다. 운영 API가 이번
       # 캐시 이상으로 올라온 것을 확인한 뒤에만 오늘의 표 유효성을 검사한다.
