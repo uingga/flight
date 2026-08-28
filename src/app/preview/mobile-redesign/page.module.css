@@ -755,14 +755,6 @@
 .skeletonCard { height: 210px; border: 1px solid var(--line); border-radius: 8px; background: linear-gradient(90deg, var(--paper) 25%, var(--paper-soft) 50%, var(--paper) 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; }
 @keyframes shimmer { to { background-position: -200% 0; } }
 
-@keyframes freshFlightsRoll {
-    0%, 18% { transform: translateY(0); }
-    25%, 43% { transform: translateY(-172px); }
-    50%, 68% { transform: translateY(-344px); }
-    75%, 93% { transform: translateY(-516px); }
-    100% { transform: translateY(-688px); }
-}
-
 .emptyState { min-height: 220px; padding: 52px 20px; display: flex; flex-direction: column; align-items: center; text-align: center; }
 .emptyState strong { font-size: var(--size-section); }
 .emptyState span { margin-top: 6px; color: var(--muted); font-size: var(--size-meta); }
@@ -1697,7 +1689,11 @@
         height: 164px;
         min-width: 0;
         overflow: hidden;
+        cursor: grab;
+        touch-action: pan-x;
+        user-select: none;
     }
+    .freshFlightsViewport:active { cursor: grabbing; }
     .freshFlightsViewport::before,
     .freshFlightsViewport::after {
         content: '';
@@ -1724,11 +1720,7 @@
         will-change: transform;
     }
     .freshFlightsTrackAnimated {
-        animation: freshFlightsRoll 20s cubic-bezier(.45, 0, .2, 1) infinite;
-    }
-    .freshFlightsViewport:hover .freshFlightsTrackAnimated,
-    .freshFlightsViewport:focus-within .freshFlightsTrackAnimated {
-        animation-play-state: paused;
+        transition: transform 760ms cubic-bezier(.22, .72, .22, 1);
     }
     .freshFlightsPair {
         display: grid;

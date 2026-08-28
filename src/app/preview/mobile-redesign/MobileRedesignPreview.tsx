@@ -41,6 +41,8 @@ const RECENT_SEARCHES_KEY = 'tikitikit_recent_searches';
 const FLIGHT_REPORT_TTL_MS = 24 * 60 * 60 * 1000;
 const FRESH_MOBILE_ITEM_HEIGHT = 132;
 const FRESH_MOBILE_AUTO_ADVANCE_MS = 4_800;
+const FRESH_DESKTOP_PAIR_HEIGHT = 172;
+const FRESH_DESKTOP_AUTO_ADVANCE_MS = 5_000;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const DatePicker: any = dynamic(() => import('react-datepicker').then((mod: any) => mod.default), { ssr: false });
@@ -88,6 +90,12 @@ interface RouteAlertTarget {
 }
 
 interface FreshMobileDragState {
+    pointerId: number;
+    startY: number;
+    startedAt: number;
+}
+
+interface FreshDesktopDragState {
     pointerId: number;
     startY: number;
     startedAt: number;
@@ -797,6 +805,10 @@ export default function MobileRedesignPreview({
     const [freshMobileDragOffset, setFreshMobileDragOffset] = useState(0);
     const [freshMobileAnimating, setFreshMobileAnimating] = useState(true);
     const [freshMobileReduceMotion, setFreshMobileReduceMotion] = useState(false);
+    const [freshDesktopPosition, setFreshDesktopPosition] = useState(1);
+    const [freshDesktopDragOffset, setFreshDesktopDragOffset] = useState(0);
+    const [freshDesktopAnimating, setFreshDesktopAnimating] = useState(true);
+    const [freshDesktopDragging, setFreshDesktopDragging] = useState(false);
     const filterBarSlotRef = useRef<HTMLDivElement | null>(null);
     const desktopFilterRef = useRef<HTMLDivElement | null>(null);
     const desktopFilterTriggerRef = useRef<HTMLButtonElement | null>(null);
@@ -813,6 +825,8 @@ export default function MobileRedesignPreview({
     const urlInitializedRef = useRef(false);
     const freshMobileDragRef = useRef<FreshMobileDragState | null>(null);
     const freshMobileSuppressClickRef = useRef(false);
+    const freshDesktopDragRef = useRef<FreshDesktopDragState | null>(null);
+    const freshDesktopSuppressClickRef = useRef(false);
     const sharedFlightIdRef = useRef<string | null>(null);
     const sharedFallbackArrivalRef = useRef<string | null>(null);
     const filterDialogRef = useRef<HTMLElement | null>(null);
@@ -2002,11 +2016,20 @@ export default function MobileRedesignPreview({
         return {
             copyPrefix: targetDate === todayKey ? '오늘' : '최근',
             flights: evenFlights,
-            pairs: pairs.length > 1 ? [...fourSlots, fourSlots[0]] : pairs,
-            animated: pairs.length > 1,
+            pairs: pairs.length > 1 ? fourSlots : pairs,
         };
     }, [displayedFlights, query, sort]);
 
+    const freshDesktopPairs = useMemo(() => freshFlightsInsight?.pairs || [], [freshFlightsInsight]);
+    const freshDesktopPairCount = freshDesktopPairs.length;
+    const freshDesktopLoopingPairs = useMemo(() => {
+        if (freshDesktopPairCount <= 1) return freshDesktopPairs;
+        return [
+            freshDesktopPairs[freshDesktopPairCount - 1],
+            ...freshDesktopPairs,
+            freshDesktopPairs[0],
+        ];
+    }, [freshDesktopPairCount, freshDesktopPairs]);
     const freshMobileFlights = useMemo(() => freshFlightsInsight?.flights || [], [freshFlightsInsight]);
     const freshMobileFlightCount = freshMobileFlights.length;
     const freshMobileLoopingFlights = useMemo(() => {
@@ -2101,6 +2124,82 @@ export default function MobileRedesignPreview({
     const freshMobileActiveIndex = freshMobileFlightCount
         ? ((freshMobilePosition - 1 + freshMobileFlightCount) % freshMobileFlightCount)
         : 0;
+
+    useEffect(() => {
+        setFreshDesktopPosition(freshDesktopPairCount > 1 ? 1 : 0);
+        setFreshDesktopDragOffset(0);
+        setFreshDesktopDragging(false);
+    }, [freshDesktopPairCount]);
+
+    const moveFreshDesktopPair = useCallback((direction: -1 | 1) => {
+        if (freshDesktopPairCount <= 1) return;
+        setFreshDesktopAnimating(!freshMobileReduceMotion);
+        setFreshDesktopDragOffset(0);
+        setFreshDesktopPosition(current => current + direction);
+    }, [freshDesktopPairCount, freshMobileReduceMotion]);
+
+    useEffect(() => {
+        if (freshDesktopPairCount <= 1 || freshMobileReduceMotion || freshDesktopDragging) return;
+        const timer = window.setTimeout(() => {
+            if (!freshDesktopDragRef.current) moveFreshDesktopPair(1);
+        }, FRESH_DESKTOP_AUTO_ADVANCE_MS);
+        return () => window.clearTimeout(timer);
+    }, [freshDesktopDragging, freshDesktopPairCount, freshDesktopPosition, freshMobileReduceMotion, moveFreshDesktopPair]);
+
+    useEffect(() => {
+        if (freshDesktopPairCount <= 1) return;
+        const isLeadingClone = freshDesktopPosition <= 0;
+        const isTrailingClone = freshDesktopPosition >= freshDesktopPairCount + 1;
+        if (!isLeadingClone && !isTrailingClone) return;
+
+        const isExpectedClone = freshDesktopPosition === 0 || freshDesktopPosition === freshDesktopPairCount + 1;
+        const timer = window.setTimeout(() => {
+            setFreshDesktopAnimating(false);
+            setFreshDesktopPosition(isLeadingClone ? freshDesktopPairCount : 1);
+        }, isExpectedClone && !freshMobileReduceMotion ? 760 : 0);
+        return () => window.clearTimeout(timer);
+    }, [freshDesktopPairCount, freshDesktopPosition, freshMobileReduceMotion]);
+
+    const handleFreshDesktopPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+        if (freshDesktopPairCount <= 1 || (event.pointerType === 'mouse' && event.button !== 0)) return;
+        freshDesktopDragRef.current = {
+            pointerId: event.pointerId,
+            startY: event.clientY,
+            startedAt: performance.now(),
+        };
+        freshDesktopSuppressClickRef.current = false;
+        setFreshDesktopDragging(true);
+        setFreshDesktopAnimating(false);
+        setFreshDesktopDragOffset(0);
+        event.currentTarget.setPointerCapture(event.pointerId);
+    };
+
+    const handleFreshDesktopPointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+        const drag = freshDesktopDragRef.current;
+        if (!drag || drag.pointerId !== event.pointerId) return;
+        setFreshDesktopDragOffset(Math.max(-82, Math.min(82, event.clientY - drag.startY)));
+    };
+
+    const handleFreshDesktopPointerEnd = (event: ReactPointerEvent<HTMLDivElement>) => {
+        const drag = freshDesktopDragRef.current;
+        if (!drag || drag.pointerId !== event.pointerId) return;
+        const distance = event.clientY - drag.startY;
+        const elapsed = Math.max(1, performance.now() - drag.startedAt);
+        const velocity = Math.abs(distance) / elapsed;
+        freshDesktopDragRef.current = null;
+        setFreshDesktopDragging(false);
+
+        if (Math.abs(distance) >= 36 || velocity >= 0.42) {
+            freshDesktopSuppressClickRef.current = true;
+            window.setTimeout(() => {
+                freshDesktopSuppressClickRef.current = false;
+            }, 320);
+            moveFreshDesktopPair(distance < 0 ? 1 : -1);
+        } else {
+            setFreshDesktopAnimating(!freshMobileReduceMotion);
+            setFreshDesktopDragOffset(0);
+        }
+    };
 
     const departureFilterLabel = departure === '전체'
         ? '출발지'
@@ -3304,16 +3403,33 @@ export default function MobileRedesignPreview({
                                                 <footer className={styles.freshFlightsMobileFooter}>
                                                     <small>티켓을 누르면 일정과 가격을 바로 확인할 수 있어요.</small>
                                                 </footer>
-                                                <div className={styles.freshFlightsViewport} aria-label={`${freshFlightsInsight.copyPrefix} 처음 포착된 항공권`}>
-                                                    <div className={`${styles.freshFlightsTrack} ${freshFlightsInsight.animated ? styles.freshFlightsTrackAnimated : ''}`}>
-                                                        {freshFlightsInsight.pairs.map((pair, pairIndex) => (
+                                                <div
+                                                    className={styles.freshFlightsViewport}
+                                                    aria-label={`${freshFlightsInsight.copyPrefix} 처음 포착된 항공권. 마우스로 위아래로 드래그해 다른 항공권 보기`}
+                                                    onPointerDown={handleFreshDesktopPointerDown}
+                                                    onPointerMove={handleFreshDesktopPointerMove}
+                                                    onPointerUp={handleFreshDesktopPointerEnd}
+                                                    onPointerCancel={handleFreshDesktopPointerEnd}
+                                                >
+                                                    <div
+                                                        className={`${styles.freshFlightsTrack} ${freshDesktopAnimating ? styles.freshFlightsTrackAnimated : ''}`}
+                                                        style={{ transform: `translateY(${(-freshDesktopPosition * FRESH_DESKTOP_PAIR_HEIGHT) + freshDesktopDragOffset}px)` }}
+                                                    >
+                                                        {freshDesktopLoopingPairs.map((pair, pairIndex) => (
                                                             <div className={styles.freshFlightsPair} key={`fresh-flights-pair-${pairIndex}`}>
                                                                 {pair.map((freshFlight, ticketIndex) => (
                                                                     <button
                                                                         type="button"
                                                                         className={styles.freshFlightsTicket}
                                                                         key={`${freshFlight.id}-${pairIndex}-${ticketIndex}`}
-                                                                        onClick={() => openFlight(freshFlight, 'insight_new_flights')}
+                                                                        onClick={(event) => {
+                                                                            if (freshDesktopSuppressClickRef.current) {
+                                                                                event.preventDefault();
+                                                                                freshDesktopSuppressClickRef.current = false;
+                                                                                return;
+                                                                            }
+                                                                            openFlight(freshFlight, 'insight_new_flights');
+                                                                        }}
                                                                     >
                                                                         <span className={styles.freshFlightsTicketMain}>
                                                                             <span className={styles.freshFlightsPlace}>
