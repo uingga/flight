@@ -9,11 +9,12 @@ import type {
 } from './useAccount';
 import styles from './AccountSheet.module.css';
 import * as gtag from '@/lib/analytics';
-import { useDialogFocus } from '@/lib/hooks/use-dialog-focus';
 import { useSwipeToDismiss } from '@/lib/hooks/use-swipe-to-dismiss';
+import OverlayDialog from '@/components/ui/OverlayDialog';
 
 interface AccountSheetProps {
     open: boolean;
+    active?: boolean;
     onClose: () => void;
     account: AccountController;
     onApplySearch: (filters: AccountSearchFilters) => void;
@@ -73,7 +74,7 @@ function savedSearchDateLabel(filters: AccountSearchFilters) {
 }
 
 export default function AccountSheet({
-    open, onClose, account, onApplySearch, onOpenFlight, onOpenAlert, onFavoriteRemoved, guestFavorites = [], dealAlertsEnabled = true,
+    open, active = true, onClose, account, onApplySearch, onOpenFlight, onOpenAlert, onFavoriteRemoved, guestFavorites = [], dealAlertsEnabled = true,
 }: AccountSheetProps) {
     const [loginEmail, setLoginEmail] = useState('');
     const [code, setCode] = useState('');
@@ -83,7 +84,6 @@ export default function AccountSheet({
     const [tab, setTab] = useState<AccountTab>('favorites');
     const firstInputRef = useRef<HTMLInputElement>(null);
     const sheetRef = useRef<HTMLElement>(null);
-    useDialogFocus(open, sheetRef);
     const swipeHandle = useSwipeToDismiss({ open, sheetRef, onDismiss: onClose });
 
     useEffect(() => {
@@ -151,8 +151,15 @@ export default function AccountSheet({
     };
 
     return (
-        <div className={styles.overlay} role="presentation" onMouseDown={event => event.target === event.currentTarget && onClose()}>
-            <section ref={sheetRef} className={styles.sheet} role="dialog" aria-modal="true" aria-labelledby="account-title">
+        <OverlayDialog
+            open={open}
+            active={active}
+            dialogRef={sheetRef}
+            onClose={onClose}
+            overlayClassName={styles.overlay}
+            dialogClassName={styles.sheet}
+            ariaLabelledBy="account-title"
+        >
                 <div className={styles.handle} aria-hidden="true" {...swipeHandle} />
                 <header className={styles.header}>
                     <div>
@@ -305,7 +312,6 @@ export default function AccountSheet({
                         </div>
                     </div>
                 )}
-            </section>
-        </div>
+        </OverlayDialog>
     );
 }

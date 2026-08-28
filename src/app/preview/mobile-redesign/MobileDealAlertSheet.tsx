@@ -3,12 +3,13 @@
 import { useEffect, useRef, useState } from 'react';
 import * as gtag from '@/lib/analytics';
 import { dealAlertRegionLabel, type DealAlertRegion } from '@/lib/deal-alerts';
-import { useDialogFocus } from '@/lib/hooks/use-dialog-focus';
 import { useSwipeToDismiss } from '@/lib/hooks/use-swipe-to-dismiss';
+import OverlayDialog from '@/components/ui/OverlayDialog';
 import styles from './MobileDealAlertSheet.module.css';
 
 interface MobileDealAlertSheetProps {
     open: boolean;
+    active?: boolean;
     initialDeparture: string;
     initialRegion: string;
     initialMaxPrice: number;
@@ -108,6 +109,7 @@ const postAlert = async (payload: Record<string, unknown>) => {
 
 export default function MobileDealAlertSheet({
     open,
+    active = true,
     initialDeparture,
     initialRegion,
     initialMaxPrice,
@@ -128,7 +130,6 @@ export default function MobileDealAlertSheet({
     const [alertBusy, setAlertBusy] = useState<string | null>(null);
     const [managerMessage, setManagerMessage] = useState<string | null>(null);
     const sheetRef = useRef<HTMLElement>(null);
-    useDialogFocus(open, sheetRef);
     const swipeHandle = useSwipeToDismiss({ open, sheetRef, onDismiss: onClose });
 
     const loadManagedAlerts = async () => {
@@ -350,8 +351,15 @@ export default function MobileDealAlertSheet({
     };
 
     return (
-        <div className={styles.overlay} onClick={onClose}>
-            <section ref={sheetRef} className={styles.sheet} role="dialog" aria-modal="true" aria-labelledby="deal-alert-title" onClick={event => event.stopPropagation()}>
+        <OverlayDialog
+            open={open}
+            active={active}
+            dialogRef={sheetRef}
+            onClose={onClose}
+            overlayClassName={styles.overlay}
+            dialogClassName={styles.sheet}
+            ariaLabelledBy="deal-alert-title"
+        >
                 <div className={styles.handle} aria-hidden="true" {...swipeHandle} />
                 <header className={styles.header}>
                     <div>
@@ -515,7 +523,6 @@ export default function MobileDealAlertSheet({
                         )}
                     </div>
                 )}
-            </section>
-        </div>
+        </OverlayDialog>
     );
 }

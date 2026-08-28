@@ -1,0 +1,14 @@
+.backdrop {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    background: var(--overlay-scrim-current, var(--overlay-scrim-mobile, rgba(24, 27, 32, 0.4)));
+    backdrop-filter: var(--overlay-backdrop-filter-current, var(--overlay-backdrop-filter, blur(2px)));
+    -webkit-backdrop-filter: var(--overlay-backdrop-filter-current, var(--overlay-backdrop-filter, blur(2px)));
+}
+
+.surface:focus {
+    outline: none;
+}

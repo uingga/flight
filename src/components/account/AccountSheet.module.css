@@ -1,12 +1,8 @@
 .overlay {
-    position: fixed;
-    inset: 0;
     z-index: 10020;
-    display: flex;
     align-items: center;
-    justify-content: center;
     padding: 20px;
-    background: rgba(24, 27, 32, 0.2);
+    --overlay-scrim-current: var(--overlay-scrim-desktop, rgba(24, 27, 32, 0.2));
 }
 
 .sheet {
@@ -19,7 +15,7 @@
     max-height: min(760px, calc(100dvh - 40px));
     overflow: auto;
     border: 1px solid #e9e7e8;
-    border-radius: 24px;
+    border-radius: var(--radius-frame, 24px);
     background: #fff;
     box-shadow: 0 24px 80px rgba(18, 18, 22, 0.22);
     color: #19171a;
@@ -104,8 +100,8 @@
 .accountFooter a, .accountFooter button { border: 0; background: none; color: var(--account-text-muted); font-size: 11px; text-decoration: underline; cursor: pointer; }
 
 @media (max-width: 699px) {
-    .overlay { align-items: flex-end; padding: 0; background: rgba(24, 27, 32, 0.4); }
-    .sheet { width: 100%; max-height: 92dvh; border-width: 1px 0 0; border-radius: 22px 22px 0 0; }
+    .overlay { align-items: flex-end; padding: 0; --overlay-scrim-current: var(--overlay-scrim-mobile, rgba(24, 27, 32, 0.4)); }
+    .sheet { width: 100%; max-height: 92dvh; border-width: 1px 0 0; border-radius: var(--radius-dialog, 22px) var(--radius-dialog, 22px) 0 0; }
     .handle { width: 100%; height: 24px; display: flex; align-items: center; justify-content: center; touch-action: none; cursor: grab; }
     .handle::after { content: ''; width: 42px; height: 4px; border-radius: 999px; background: #d7d3d5; }
     .handle:active { cursor: grabbing; }

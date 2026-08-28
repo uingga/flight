@@ -6,6 +6,7 @@ import dynamic from 'next/dynamic';
 import { ko } from 'date-fns/locale';
 import 'react-datepicker/dist/react-datepicker.css';
 import Logo from '@/components/Logo';
+import OverlayDialog from '@/components/ui/OverlayDialog';
 import * as gtag from '@/lib/analytics';
 import { getDestinationContext } from '@/lib/destination-contexts';
 import {
@@ -17,8 +18,12 @@ import { CITY_TO_AIRPORT, calcFlightTiming, getNaverFlightUrl, normalizeAirline,
 import { getTripcomHotelUrl, getTripcomTrackingId } from '@/lib/utils/tripcom-helpers';
 import { getFlightBookingUrl } from '@/lib/utils/booking-url';
 import { encodeShareId } from '@/lib/share-code';
-import { useDialogFocus } from '@/lib/hooks/use-dialog-focus';
 import { useSwipeToDismiss } from '@/lib/hooks/use-swipe-to-dismiss';
+import {
+    dismissOverlayWithHistory,
+    historyOverlay,
+    showOverlayWithHistory,
+} from '@/lib/ui/overlay-history';
 import { checkIsMobile } from '@/lib/utils/mobile-url';
 import {
     getComparisonFreshness,
@@ -835,35 +840,51 @@ export default function MobileRedesignPreview({
     const serviceUpdateDialogRef = useRef<HTMLElement | null>(null);
     const historyUiStateRef = useRef({
         selectedFlight,
-        showContact,
-        showAccount,
         showDealAlert,
         flights,
         loading,
     });
     historyUiStateRef.current = {
         selectedFlight,
-        showContact,
-        showAccount,
         showDealAlert,
         flights,
         loading,
     };
     const Root = rootAs;
-    useDialogFocus(filterOpen, filterDialogRef);
-    useDialogFocus(
-        Boolean(selectedFlight),
-        detailDialogRef,
-        !showDealAlert && !showAccount && !showContact,
-    );
-    useDialogFocus(showContact, contactDialogRef);
-    useDialogFocus(showServiceUpdate, serviceUpdateDialogRef);
+    const activeOverlay = showAccount ? 'account'
+        : showServiceUpdate ? 'service-update'
+            : showContact ? 'contact'
+                : showDealAlert ? 'deal-alert'
+                    : selectedFlight ? 'flight'
+                        : filterOpen ? 'filter'
+                            : null;
 
     const dismissServiceUpdate = useCallback(() => {
         setShowServiceUpdate(false);
         try {
             window.localStorage.setItem(SERVICE_UPDATE_NOTICE_KEY, 'dismissed');
         } catch { }
+    }, []);
+
+    const openFilter = useCallback(() => {
+        showOverlayWithHistory('filter', () => setFilterOpen(true));
+    }, []);
+    const closeFilter = useCallback(() => {
+        dismissOverlayWithHistory('filter', () => setFilterOpen(false));
+    }, []);
+    const openAccount = useCallback(() => {
+        showOverlayWithHistory('account', () => setShowAccount(true));
+    }, []);
+    const closeAccount = useCallback(() => {
+        dismissOverlayWithHistory('account', () => setShowAccount(false));
+    }, []);
+    const openContact = useCallback(() => {
+        setContactStatus('idle');
+        setContactMessage('');
+        showOverlayWithHistory('contact', () => setShowContact(true));
+    }, []);
+    const closeContact = useCallback(() => {
+        dismissOverlayWithHistory('contact', () => setShowContact(false));
     }, []);
 
     const rememberSearch = useCallback((value: string) => {
@@ -941,7 +962,7 @@ export default function MobileRedesignPreview({
     const filterSwipe = useSwipeToDismiss({
         open: filterOpen,
         sheetRef: filterDialogRef,
-        onDismiss: () => setFilterOpen(false),
+        onDismiss: closeFilter,
     });
     const detailSwipe = useSwipeToDismiss({
         open: Boolean(selectedFlight),
@@ -956,7 +977,7 @@ export default function MobileRedesignPreview({
     const contactSwipe = useSwipeToDismiss({
         open: showContact,
         sheetRef: contactDialogRef,
-        onDismiss: () => setShowContact(false),
+        onDismiss: closeContact,
     });
 
     const loadFlights = useCallback(async (background = false) => {
@@ -1021,31 +1042,19 @@ export default function MobileRedesignPreview({
     }, []);
 
     useEffect(() => {
-        document.body.style.overflow = selectedFlight || filterOpen || showAccount || showDealAlert || showContact || showServiceUpdate ? 'hidden' : '';
-        return () => { document.body.style.overflow = ''; };
-    }, [selectedFlight, filterOpen, showAccount, showContact, showDealAlert, showServiceUpdate]);
-
-    useEffect(() => {
         if (!filterOpen) setAirlineMenuOpen(false);
     }, [filterOpen]);
 
     useEffect(() => {
-        const closeTopLayer = (event: KeyboardEvent) => {
+        if (!searchOpen) return;
+        const closeSearchWithKeyboard = (event: KeyboardEvent) => {
             if (event.key !== 'Escape') return;
-            if (showServiceUpdate) dismissServiceUpdate();
-            else if (showContact) setShowContact(false);
-            else if (showAccount) setShowAccount(false);
-            else if (showDealAlert) closeDealAlert();
-            else if (selectedFlight) closeSelectedFlight();
-            else if (filterOpen) setFilterOpen(false);
-            else if (searchOpen) {
-                setSearchOpen(false);
-                window.requestAnimationFrame(() => searchButtonRef.current?.focus());
-            }
+            setSearchOpen(false);
+            window.requestAnimationFrame(() => searchButtonRef.current?.focus());
         };
-        window.addEventListener('keydown', closeTopLayer);
-        return () => window.removeEventListener('keydown', closeTopLayer);
-    }, [closeDealAlert, closeSelectedFlight, dismissServiceUpdate, filterOpen, searchOpen, selectedFlight, showAccount, showContact, showDealAlert, showServiceUpdate]);
+        window.addEventListener('keydown', closeSearchWithKeyboard);
+        return () => window.removeEventListener('keydown', closeSearchWithKeyboard);
+    }, [searchOpen]);
 
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
@@ -1163,6 +1172,10 @@ export default function MobileRedesignPreview({
     useEffect(() => {
         const syncDetailFromHistory = () => {
             const historyUi = historyUiStateRef.current;
+            const overlay = historyOverlay();
+            setFilterOpen(overlay === 'filter');
+            setShowAccount(overlay === 'account');
+            setShowContact(overlay === 'contact');
             if (window.history.state?.tikitikitOverlay === 'deal-alert') {
                 alertClosePendingRef.current = false;
                 setAlertRouteTarget(window.history.state?.tikitikitAlertTarget || null);
@@ -1174,22 +1187,6 @@ export default function MobileRedesignPreview({
                 historyClosePendingRef.current = false;
                 setShowDealAlert(false);
                 setAlertRouteTarget(null);
-                return;
-            }
-            if (historyUi.selectedFlight && (historyUi.showContact || historyUi.showAccount)) {
-                if (historyUi.showContact) setShowContact(false);
-                else if (historyUi.showAccount) setShowAccount(false);
-                else {
-                    setShowDealAlert(false);
-                    setAlertRouteTarget(null);
-                }
-                const restoredUrl = new URL(window.location.href);
-                restoredUrl.searchParams.set('flight', historyUi.selectedFlight.id);
-                window.history.pushState(
-                    { ...window.history.state, tikitikitOverlay: 'flight' },
-                    '',
-                    `${restoredUrl.pathname}${restoredUrl.search}${restoredUrl.hash}`,
-                );
                 return;
             }
             historyClosePendingRef.current = false;
@@ -2405,7 +2402,7 @@ export default function MobileRedesignPreview({
     const toggleFavorite = (flight: Flight) => {
         const willFavorite = !favorites.has(flight.id);
         if (account.status !== 'authenticated') {
-            setShowAccount(true);
+            openAccount();
             setToast(account.status === 'unavailable'
                 ? '지금은 로그인 기능을 불러오지 못했어요. 잠시 후 다시 시도해주세요.'
                 : '찜은 로그인하면 저장할 수 있어요.');
@@ -2782,7 +2779,7 @@ export default function MobileRedesignPreview({
                         {PUBLIC_DEAL_ALERTS_ENABLED && (
                             <button type="button" className={styles.alertButton} onClick={() => openDealAlert(null)}>특가 알림</button>
                         )}
-                        <button type="button" className={styles.accountIconButton} onClick={() => { gtag.trackAccountAction('open', previewMode ? 'preview' : 'main'); setShowAccount(true); }} aria-label={account.status === 'authenticated' ? '내 여행 열기' : '로그인'}>
+                        <button type="button" className={styles.accountIconButton} onClick={() => { gtag.trackAccountAction('open', previewMode ? 'preview' : 'main'); openAccount(); }} aria-label={account.status === 'authenticated' ? '내 여행 열기' : '로그인'}>
                             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5" /><path d="M5.5 19c.6-3.5 3-5.4 6.5-5.4s5.9 1.9 6.5 5.4" /></svg>
                             <span className={styles.accountLabel}>{account.status === 'authenticated' ? '내 여행' : '로그인'}</span>
                         </button>
@@ -3015,7 +3012,7 @@ export default function MobileRedesignPreview({
                                         left: Math.max(24, Math.min(rect.right - panelWidth, window.innerWidth - panelWidth - 24)),
                                         maxHeight: Math.max(280, window.innerHeight - top - 24),
                                     });
-                                    setFilterOpen(true);
+                                    openFilter();
                                 }}
                             >
                                 <Icon name="sliders" />
@@ -3032,7 +3029,7 @@ export default function MobileRedesignPreview({
                             </button>
                         </div>
                         <div className={styles.quickFilterRow}>
-                        <button type="button" className={`${styles.filterButton} ${hasAdvancedFilter ? styles.filterHasValue : ''}`} onClick={() => setFilterOpen(true)}>
+                        <button type="button" className={`${styles.filterButton} ${hasAdvancedFilter ? styles.filterHasValue : ''}`} onClick={openFilter}>
                             <Icon name="sliders" />
                             필터
                         </button>
@@ -3087,17 +3084,17 @@ export default function MobileRedesignPreview({
                             aria-hidden={!filterBarPinned}
                         >
                             <div className={styles.conditionSummaryRow}>
-                                <button type="button" tabIndex={filterBarPinned ? 0 : -1} className={departure !== '전체' ? styles.conditionActive : ''} onClick={() => setFilterOpen(true)}>
+                                <button type="button" tabIndex={filterBarPinned ? 0 : -1} className={departure !== '전체' ? styles.conditionActive : ''} onClick={openFilter}>
                                     <span aria-hidden="true">✈️</span>
                                     출발 {departureFilterLabel === '출발지' ? '전체' : departureFilterLabel}
                                     <span className={styles.conditionChevron} aria-hidden="true"><Icon name="chevron" /></span>
                                 </button>
-                                <button type="button" tabIndex={filterBarPinned ? 0 : -1} className={region !== '전체' ? styles.conditionActive : ''} onClick={() => setFilterOpen(true)}>
+                                <button type="button" tabIndex={filterBarPinned ? 0 : -1} className={region !== '전체' ? styles.conditionActive : ''} onClick={openFilter}>
                                     <span aria-hidden="true">📍</span>
                                     도착 {destinationFilterLabel === '목적지' ? '전체' : destinationFilterLabel}
                                     <span className={styles.conditionChevron} aria-hidden="true"><Icon name="chevron" /></span>
                                 </button>
-                                <button type="button" tabIndex={filterBarPinned ? 0 : -1} className={datePeriod !== 'all' ? styles.conditionActive : ''} onClick={() => setFilterOpen(true)}>
+                                <button type="button" tabIndex={filterBarPinned ? 0 : -1} className={datePeriod !== 'all' ? styles.conditionActive : ''} onClick={openFilter}>
                                     <span aria-hidden="true">📅</span>
                                     {dateFilterLabel === '날짜' ? '일정 전체' : dateFilterLabel}
                                     <span className={styles.conditionChevron} aria-hidden="true"><Icon name="chevron" /></span>
@@ -3512,7 +3509,7 @@ export default function MobileRedesignPreview({
                         <nav aria-label="서비스 안내">
                             <a href="/terms">이용약관</a>
                             <a href="/privacy">개인정보처리방침</a>
-                            <button type="button" onClick={() => { setContactStatus('idle'); setContactMessage(''); setShowContact(true); }}>문의하기</button>
+                            <button type="button" onClick={openContact}>문의하기</button>
                         </nav>
                     </div>
                     {previewMode && (
@@ -3539,21 +3536,21 @@ export default function MobileRedesignPreview({
             )}
 
             {filterOpen && (
-                <div className={`${styles.sheetOverlay} ${styles.filterOverlay}`} onClick={() => setFilterOpen(false)}>
-                    <section
-                        ref={filterDialogRef}
-                        className={styles.bottomSheet}
-                        role="dialog"
-                        aria-modal="true"
-                        aria-label="항공권 필터"
-                        aria-labelledby="flight-filter-title"
-                        onClick={event => event.stopPropagation()}
-                        style={filterPopoverPosition && !isMobile ? {
+                <OverlayDialog
+                    open={filterOpen}
+                    active={activeOverlay === 'filter'}
+                    dialogRef={filterDialogRef}
+                    onClose={closeFilter}
+                    overlayClassName={`${styles.sheetOverlay} ${styles.filterOverlay}`}
+                    dialogClassName={styles.bottomSheet}
+                    ariaLabel="항공권 필터"
+                    ariaLabelledBy="flight-filter-title"
+                    dialogStyle={filterPopoverPosition && !isMobile ? {
                             top: filterPopoverPosition.top,
                             left: filterPopoverPosition.left,
                             maxHeight: filterPopoverPosition.maxHeight,
                         } : undefined}
-                    >
+                >
                         <div className={styles.sheetHandle} aria-hidden="true" {...filterSwipe} />
                         <div className={styles.sheetHeader}>
                             <h2 id="flight-filter-title">표 골라보기</h2>
@@ -3700,11 +3697,10 @@ export default function MobileRedesignPreview({
                             </div>
                         </div>
 
-                        <button type="button" className={`${styles.applyButton} ${(calendarOpen || airlineMenuOpen) ? styles.applyButtonCalendarOpen : ''}`} onClick={() => setFilterOpen(false)}>
+                        <button type="button" className={`${styles.applyButton} ${(calendarOpen || airlineMenuOpen) ? styles.applyButtonCalendarOpen : ''}`} onClick={closeFilter}>
                             {filteredFlights.length.toLocaleString('ko-KR')}개 항공권 보기
                         </button>
-                    </section>
-                </div>
+                </OverlayDialog>
             )}
 
             {selectedFlight && (() => {
@@ -3716,17 +3712,16 @@ export default function MobileRedesignPreview({
                 const reportCompleted = Boolean(recentFlightReports[selectedFlight.id])
                     || (flightReport?.flightId === selectedFlight.id && flightReport.status === 'sent');
                 return (
-                <div className={`${styles.sheetOverlay} ${styles.detailOverlay}`} onClick={closeSelectedFlight}>
-                    <section
-                        ref={detailDialogRef}
-                        className={`${styles.bottomSheet} ${styles.detailSheet}`}
-                        role="dialog"
-                        aria-modal={showDealAlert || showAccount || showContact ? undefined : true}
-                        aria-hidden={showDealAlert || showAccount || showContact ? true : undefined}
-                        aria-label="항공권 상세"
-                        aria-labelledby="flight-detail-title"
-                        onClick={event => event.stopPropagation()}
-                    >
+                <OverlayDialog
+                    open={Boolean(selectedFlight)}
+                    active={activeOverlay === 'flight'}
+                    dialogRef={detailDialogRef}
+                    onClose={closeSelectedFlight}
+                    overlayClassName={`${styles.sheetOverlay} ${styles.detailOverlay}`}
+                    dialogClassName={`${styles.bottomSheet} ${styles.detailSheet}`}
+                    ariaLabel="항공권 상세"
+                    ariaLabelledBy="flight-detail-title"
+                >
                         <div className={styles.sheetHandle} aria-hidden="true" {...detailSwipe} />
                         <div className={styles.detailHeader}>
                             <div className={styles.detailAgencyLine}>
@@ -4000,21 +3995,20 @@ export default function MobileRedesignPreview({
                                 <span>공유</span>
                             </button>
                         </div>
-                    </section>
-                </div>
+                </OverlayDialog>
                 );
             })()}
 
             {showServiceUpdate && (
-                <div className={`${styles.sheetOverlay} ${styles.serviceUpdateOverlay}`} onClick={dismissServiceUpdate}>
-                    <section
-                        ref={serviceUpdateDialogRef}
-                        className={`${styles.bottomSheet} ${styles.serviceUpdateSheet}`}
-                        role="dialog"
-                        aria-modal="true"
-                        aria-labelledby="service-update-title"
-                        onClick={event => event.stopPropagation()}
-                    >
+                <OverlayDialog
+                    open={showServiceUpdate}
+                    active={activeOverlay === 'service-update'}
+                    dialogRef={serviceUpdateDialogRef}
+                    onClose={dismissServiceUpdate}
+                    overlayClassName={`${styles.sheetOverlay} ${styles.serviceUpdateOverlay}`}
+                    dialogClassName={`${styles.bottomSheet} ${styles.serviceUpdateSheet}`}
+                    ariaLabelledBy="service-update-title"
+                >
                         <div className={styles.sheetHandle} aria-hidden="true" {...serviceUpdateSwipe} />
                         <p className={styles.serviceUpdateEyebrow}>서비스 안내</p>
                         <div className={styles.serviceUpdateNotice}>
@@ -4027,26 +4021,32 @@ export default function MobileRedesignPreview({
                             <p>항공권을 누르면 상세페이지 안에서 확인할 수 있어요. 이 기능은 8월 31일까지 제공되고 이후에는 종료돼요.</p>
                         </div>
                         <button type="button" className={styles.serviceUpdateConfirm} onClick={dismissServiceUpdate}>확인했어요</button>
-                    </section>
-                </div>
+                </OverlayDialog>
             )}
 
             {showContact && (
-                <div className={`${styles.sheetOverlay} ${styles.contactOverlay}`} onClick={() => setShowContact(false)}>
-                    <section ref={contactDialogRef} className={`${styles.bottomSheet} ${styles.contactSheet}`} role="dialog" aria-modal="true" aria-labelledby="contact-title" onClick={event => event.stopPropagation()}>
+                <OverlayDialog
+                    open={showContact}
+                    active={activeOverlay === 'contact'}
+                    dialogRef={contactDialogRef}
+                    onClose={closeContact}
+                    overlayClassName={`${styles.sheetOverlay} ${styles.contactOverlay}`}
+                    dialogClassName={`${styles.bottomSheet} ${styles.contactSheet}`}
+                    ariaLabelledBy="contact-title"
+                >
                         <div className={styles.sheetHandle} aria-hidden="true" {...contactSwipe} />
                         <div className={styles.contactHeader}>
                             <div>
                                 <span>티키티킷에 말해주세요</span>
                                 <h2 id="contact-title">문의하기</h2>
                             </div>
-                            <button type="button" onClick={() => setShowContact(false)} aria-label="닫기"><Icon name="close" /></button>
+                            <button type="button" onClick={closeContact} aria-label="닫기"><Icon name="close" /></button>
                         </div>
                         {contactStatus === 'sent' ? (
                             <div className={styles.contactSuccess}>
                                 <strong>잘 받았습니다.</strong>
                                 <span>{contactMessage}</span>
-                                <button type="button" onClick={() => setShowContact(false)}>확인</button>
+                                <button type="button" onClick={closeContact}>확인</button>
                             </div>
                         ) : (
                             <form className={styles.contactForm} onSubmit={submitContact}>
@@ -4068,13 +4068,13 @@ export default function MobileRedesignPreview({
                                 </button>
                             </form>
                         )}
-                    </section>
-                </div>
+                </OverlayDialog>
             )}
 
             <AccountSheet
                 open={showAccount}
-                onClose={() => setShowAccount(false)}
+                active={activeOverlay === 'account'}
+                onClose={closeAccount}
                 account={account}
                 onApplySearch={applyAccountSearch}
                 onOpenFlight={openAccountFlight}
@@ -4125,6 +4125,7 @@ export default function MobileRedesignPreview({
             {PUBLIC_DEAL_ALERTS_ENABLED && (
                 <MobileDealAlertSheet
                     open={showDealAlert}
+                    active={activeOverlay === 'deal-alert'}
                     initialDeparture={departure}
                     initialRegion={region}
                     initialMaxPrice={maxPrice || 200_000}

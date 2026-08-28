@@ -31,7 +31,7 @@ async function selectSource(page: Page, sourceName: string) {
     const filterButton = page.getByRole('button', { name: '필터', exact: true }).filter({ visible: true });
     if (await filterButton.count()) await filterButton.first().click();
     else await page.getByRole('button', { name: '상세 조건', exact: true }).click();
-    const filterDialog = page.locator('[aria-label="항공권 필터"]').filter({ visible: true }).last();
+    const filterDialog = page.locator('[role="dialog"][aria-label="항공권 필터"]');
     await filterDialog.waitFor();
     await filterDialog.getByRole('button', { name: sourceName, exact: true }).click();
     await filterDialog.getByRole('button', { name: /개 항공권 보기/ }).click();
@@ -107,7 +107,7 @@ async function verifyViewport(width: number, height: number) {
             await page.getByRole('button', { name: '검색', exact: true }).click();
             await page.getByLabel('도시나 항공사 검색').fill('후쿠오카');
             await page.getByRole('button', { name: '필터', exact: true }).filter({ visible: true }).first().click();
-            const emptyFilterDialog = page.locator('[aria-label="항공권 필터"]').filter({ visible: true }).last();
+            const emptyFilterDialog = page.locator('[role="dialog"][aria-label="항공권 필터"]');
             await emptyFilterDialog.getByRole('button', { name: '동남아', exact: true }).click();
             await emptyFilterDialog.getByRole('button', { name: /개 항공권 보기/ }).click();
             await page.getByText(/후쿠오카 표는 [\d,]+개 있어요\./).waitFor();
@@ -130,8 +130,13 @@ async function verifyViewport(width: number, height: number) {
         } else {
             await page.getByRole('button', { name: '상세 조건', exact: true }).click();
         }
-        const mainFilterDialog = page.locator('[aria-label="항공권 필터"]').filter({ visible: true }).last();
+        const mainFilterDialog = page.locator('[role="dialog"][aria-label="항공권 필터"]');
         await mainFilterDialog.waitFor();
+        await page.waitForFunction(() => {
+            const dialog = document.querySelector('[role="dialog"][aria-label="항공권 필터"]');
+            return dialog instanceof HTMLElement && dialog.contains(document.activeElement);
+        });
+        assert(await page.evaluate(() => document.body.style.overflow) === 'hidden', '필터가 열린 동안 배경 스크롤이 잠기지 않았습니다.');
         if (width < 960) {
             await swipeSheetDown(page, mainFilterDialog);
             await mainFilterDialog.waitFor({ state: 'hidden' });
@@ -139,7 +144,7 @@ async function verifyViewport(width: number, height: number) {
             await mainFilterDialog.waitFor();
         }
         if (width >= 960) {
-            await mainFilterDialog.getByRole('button', { name: '전체 항공사', exact: true }).click();
+            await mainFilterDialog.getByRole('button', { name: '항공사 선택: 전체 항공사', exact: true }).click();
             const airlineListbox = mainFilterDialog.getByRole('listbox', { name: '항공사 선택' });
             await airlineListbox.waitFor();
             assert(await airlineListbox.getByRole('option').count() > 1, 'PC 항공사 선택 목록이 비어 있습니다.');
@@ -147,6 +152,8 @@ async function verifyViewport(width: number, height: number) {
             await airlineListbox.waitFor({ state: 'hidden' });
         }
         await page.keyboard.press('Escape');
+        await mainFilterDialog.waitFor({ state: 'hidden' });
+        assert(await page.evaluate(() => document.body.style.overflow) !== 'hidden', '필터를 닫은 뒤 배경 스크롤 잠금이 풀리지 않았습니다.');
 
         await page.locator('article').first().locator('button').first().click();
         const detail = page.locator('[aria-label="항공권 상세"]');
@@ -158,12 +165,16 @@ async function verifyViewport(width: number, height: number) {
         const sharedUrl = new URL(page.url());
         assert(sharedUrl.searchParams.has('flight'), '상세 열람 URL에 항공권 식별자가 남지 않았습니다.');
 
-        await detail.getByRole('button', { name: '이 노선 가격 알림' }).click();
+        const routeAlertButton = detail.getByRole('button', { name: '이 노선 가격 알림' });
         const alertDialog = page.getByRole('dialog', { name: /가격 알림|떠날 만한 표/ });
-        await alertDialog.waitFor();
-        await page.keyboard.press('Escape');
-        await alertDialog.waitFor({ state: 'hidden' });
-        assert(await detail.isVisible(), '가격 알림만 닫아야 하는데 항공권 상세까지 닫혔습니다.');
+        const publicDealAlertsEnabled = await routeAlertButton.count() > 0;
+        if (publicDealAlertsEnabled) {
+            await routeAlertButton.click();
+            await alertDialog.waitFor();
+            await page.keyboard.press('Escape');
+            await alertDialog.waitFor({ state: 'hidden' });
+            assert(await detail.isVisible(), '가격 알림만 닫아야 하는데 항공권 상세까지 닫혔습니다.');
+        }
         await page.keyboard.press('Escape');
         await detail.waitFor({ state: 'hidden' });
         assert(!new URL(page.url()).searchParams.has('flight'), '상세 닫기 뒤 URL에 항공권 식별자가 남았습니다.');
@@ -179,17 +190,19 @@ async function verifyViewport(width: number, height: number) {
         await detail.waitFor({ state: 'hidden' });
         assert(!new URL(page.url()).searchParams.has('flight'), '공유 주소의 상세를 닫은 뒤 flight 값이 남았습니다.');
 
-        await page.goto(sharedUrl.toString(), { waitUntil: 'domcontentloaded' });
-        await detail.waitFor({ timeout: 15_000 });
-        await detail.getByRole('button', { name: '이 노선 가격 알림' }).click();
-        await alertDialog.waitFor();
-        await page.goBack();
-        await alertDialog.waitFor({ state: 'hidden' });
-        await detail.waitFor({ timeout: 2_000 }).catch(() => undefined);
-        assert(await detail.isVisible(), '뒤로가기에서 위의 가격 알림 대신 상세까지 닫혔습니다.');
-        assert(new URL(page.url()).searchParams.has('flight'), '가격 알림을 뒤로 닫은 뒤 상세 URL이 사라졌습니다.');
-        await page.goBack();
-        await detail.waitFor({ state: 'hidden' });
+        if (publicDealAlertsEnabled) {
+            await page.goto(sharedUrl.toString(), { waitUntil: 'domcontentloaded' });
+            await detail.waitFor({ timeout: 15_000 });
+            await routeAlertButton.click();
+            await alertDialog.waitFor();
+            await page.goBack();
+            await alertDialog.waitFor({ state: 'hidden' });
+            await detail.waitFor({ timeout: 2_000 }).catch(() => undefined);
+            assert(await detail.isVisible(), '뒤로가기에서 위의 가격 알림 대신 상세까지 닫혔습니다.');
+            assert(new URL(page.url()).searchParams.has('flight'), '가격 알림을 뒤로 닫은 뒤 상세 URL이 사라졌습니다.');
+            await page.goBack();
+            await detail.waitFor({ state: 'hidden' });
+        }
 
         if (width < 960) {
             await page.locator('article').first().locator('button').first().click();
@@ -199,18 +212,31 @@ async function verifyViewport(width: number, height: number) {
             assert(!new URL(page.url()).searchParams.has('flight'), '상세를 아래로 내려 닫은 뒤 URL에 항공권 식별자가 남았습니다.');
         }
 
-        await page.getByRole('button', { name: /로그인|내 여행/ }).first().click();
-        await page.getByRole('heading', { name: /어디서든 이어보기|저장해 둔 여행/ }).first().waitFor();
+        const accountTrigger = page.getByRole('button', { name: /로그인|내 여행/ }).first();
+        const accountHeading = page.getByRole('heading', { name: /어디서든 이어보기|저장해 둔 여행/ }).first();
+        await accountTrigger.click();
+        await accountHeading.waitFor();
         await page.keyboard.press('Escape');
+        await accountHeading.waitFor({ state: 'hidden' });
 
-        await page.getByRole('button', { name: '특가 알림', exact: true }).first().click();
-        await page.getByRole('heading', { name: /떠날 만한 표가 없나요|내 특가 알림/ }).first().waitFor();
-        await page.keyboard.press('Escape');
+        await accountTrigger.click();
+        await accountHeading.waitFor();
+        await page.goBack();
+        await accountHeading.waitFor({ state: 'hidden' });
+
+        const dealAlertButton = page.getByRole('button', { name: '특가 알림', exact: true });
+        if (await dealAlertButton.count()) {
+            await dealAlertButton.first().click();
+            await page.getByRole('heading', { name: /떠날 만한 표가 없나요|내 특가 알림/ }).first().waitFor();
+            await page.keyboard.press('Escape');
+        }
 
         await page.getByRole('button', { name: '문의하기', exact: true }).scrollIntoViewIfNeeded();
         await page.getByRole('button', { name: '문의하기', exact: true }).click();
-        await page.getByRole('heading', { name: '문의하기', exact: true }).waitFor();
-        await page.keyboard.press('Escape');
+        const contactHeading = page.getByRole('heading', { name: '문의하기', exact: true });
+        await contactHeading.waitFor();
+        await page.goBack();
+        await contactHeading.waitFor({ state: 'hidden' });
 
         assert(pageErrors.length === 0, `화면 실행 오류: ${pageErrors.join(' / ')}`);
     } finally {

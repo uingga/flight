@@ -250,7 +250,7 @@ select {
 /* ============================================
    Custom react-datepicker - Modern Soft Theme
    ============================================ */
-.react-datepicker {
+.legacy-dashboard .react-datepicker {
   font-family: inherit !important; /* --font-sans는 어디에도 정의돼 있지 않아 body 폰트를 상속 */
   border: 1px solid var(--color-border) !important;
   border-radius: var(--radius-xl) !important;
@@ -259,25 +259,25 @@ select {
   overflow: hidden;
 }
 
-.react-datepicker__header {
+.legacy-dashboard .react-datepicker__header {
   background: white !important;
   border-bottom: 1px solid var(--color-border) !important;
   padding-top: 12px !important;
 }
 
-.react-datepicker__current-month {
+.legacy-dashboard .react-datepicker__current-month {
   color: var(--color-text-primary) !important;
   font-weight: 700 !important;
   font-size: 1rem !important;
   margin-bottom: 8px;
 }
 
-.react-datepicker__day-names {
+.legacy-dashboard .react-datepicker__day-names {
   margin-top: 8px;
   border-bottom: 1px solid var(--color-border-light);
 }
 
-.react-datepicker__day-name {
+.legacy-dashboard .react-datepicker__day-name {
   color: var(--color-text-secondary) !important;
   font-weight: 600 !important;
   width: 2.5rem !important;
@@ -285,12 +285,12 @@ select {
   margin: 0 !important;
 }
 
-.react-datepicker__month {
+.legacy-dashboard .react-datepicker__month {
   margin: 0 !important;
   padding: 8px 0;
 }
 
-.react-datepicker__day {
+.legacy-dashboard .react-datepicker__day {
   width: 2.5rem !important;
   line-height: 2.5rem !important;
   margin: 0 !important;
@@ -304,20 +304,20 @@ select {
 
 
 /* Range Selection Styling - Critical Order */
-.react-datepicker__day--in-range {
+.legacy-dashboard .react-datepicker__day--in-range {
   background-color: #EEF2FF !important;
   /* Very light teal */
   color: var(--color-text-primary) !important;
   border-radius: 0 !important;
 }
 
-.react-datepicker__day--in-selecting-range:not(.react-datepicker__day--selecting-range-start) {
+.legacy-dashboard .react-datepicker__day--in-selecting-range:not(.react-datepicker__day--selecting-range-start) {
   background-color: #ecfdf5 !important;
   color: var(--color-text-primary) !important;
 }
 
 /* Selecting Start - 첫 번째 날짜 선택 시 동그라미 */
-.react-datepicker__day--selecting-range-start {
+.legacy-dashboard .react-datepicker__day--selecting-range-start {
   background-color: transparent !important;
   color: #fff !important;
   border-radius: 0 !important;
@@ -325,7 +325,7 @@ select {
   z-index: 1;
 }
 
-.react-datepicker__day--selecting-range-start::before {
+.legacy-dashboard .react-datepicker__day--selecting-range-start::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -339,8 +339,8 @@ select {
    ::before: Dark Circle (z-index -1)
    ::after: Light Strip (z-index -2)
 */
-.react-datepicker__day--range-start,
-.react-datepicker__day--range-end {
+.legacy-dashboard .react-datepicker__day--range-start,
+.legacy-dashboard .react-datepicker__day--range-end {
   background-color: transparent !important;
   /* Disable default bg to use layers */
   color: #fff !important;
@@ -350,8 +350,8 @@ select {
 }
 
 /* 1. Dark Blue Circle (Shared) */
-.react-datepicker__day--range-start::before,
-.react-datepicker__day--range-end::before {
+.legacy-dashboard .react-datepicker__day--range-start::before,
+.legacy-dashboard .react-datepicker__day--range-end::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -361,7 +361,7 @@ select {
 }
 
 /* 2. Light Strip for Start (Connects to Right) */
-.react-datepicker__day--range-start:not(.react-datepicker__day--range-end)::after {
+.legacy-dashboard .react-datepicker__day--range-start:not(.react-datepicker__day--range-end)::after {
   content: '';
   position: absolute;
   top: 0;
@@ -373,7 +373,7 @@ select {
 }
 
 /* 3. Light Strip for End (Connects to Left) */
-.react-datepicker__day--range-end:not(.react-datepicker__day--range-start)::after {
+.legacy-dashboard .react-datepicker__day--range-end:not(.react-datepicker__day--range-start)::after {
   content: '';
   position: absolute;
   top: 0;
@@ -385,7 +385,7 @@ select {
 }
 
 /* Overrides for today/keyboard selected to not break style */
-.react-datepicker__day--today {
+.legacy-dashboard .react-datepicker__day--today {
   font-weight: 800 !important;
   color: var(--color-primary) !important;
   border: none !important;
@@ -393,29 +393,29 @@ select {
   background-color: transparent !important;
 }
 
-.react-datepicker__day--keyboard-selected {
+.legacy-dashboard .react-datepicker__day--keyboard-selected {
   background-color: transparent !important;
   border: none !important;
   outline: none !important;
 }
 
 /* When today is in range, text is dark */
-.react-datepicker__day--today.react-datepicker__day--in-range {
+.legacy-dashboard .react-datepicker__day--today.react-datepicker__day--in-range {
   color: var(--color-text-primary) !important;
 }
 
 /* When today is start/end, text is white */
-.react-datepicker__day--today.react-datepicker__day--range-start,
-.react-datepicker__day--today.react-datepicker__day--range-end {
+.legacy-dashboard .react-datepicker__day--today.react-datepicker__day--range-start,
+.legacy-dashboard .react-datepicker__day--today.react-datepicker__day--range-end {
   color: white !important;
 }
 
-.react-datepicker-popper {
+.legacy-dashboard .react-datepicker-popper {
   z-index: 100 !important;
 }
 
 /* Hover - 레인지 밖 날짜 */
-.react-datepicker__day:hover:not(.react-datepicker__day--disabled):not(.react-datepicker__day--in-range):not(.react-datepicker__day--in-selecting-range):not(.react-datepicker__day--range-start):not(.react-datepicker__day--range-end) {
+.legacy-dashboard .react-datepicker__day:hover:not(.react-datepicker__day--disabled):not(.react-datepicker__day--in-range):not(.react-datepicker__day--in-selecting-range):not(.react-datepicker__day--range-start):not(.react-datepicker__day--range-end) {
   background-color: var(--color-secondary) !important;
   color: white !important;
   border-radius: 50% !important;
@@ -423,8 +423,8 @@ select {
 }
 
 /* Hover - 레인지 안 날짜: 하늘색 배경 유지 + 보라색 원 */
-.react-datepicker__day--in-range:hover:not(.react-datepicker__day--range-start):not(.react-datepicker__day--range-end),
-.react-datepicker__day--in-selecting-range:hover:not(.react-datepicker__day--range-start):not(.react-datepicker__day--range-end) {
+.legacy-dashboard .react-datepicker__day--in-range:hover:not(.react-datepicker__day--range-start):not(.react-datepicker__day--range-end),
+.legacy-dashboard .react-datepicker__day--in-selecting-range:hover:not(.react-datepicker__day--range-start):not(.react-datepicker__day--range-end) {
   background-color: #ecfdf5 !important;
   color: white !important;
   border-radius: 0 !important;
@@ -432,8 +432,8 @@ select {
   z-index: 2;
 }
 
-.react-datepicker__day--in-range:hover:not(.react-datepicker__day--range-start):not(.react-datepicker__day--range-end)::before,
-.react-datepicker__day--in-selecting-range:hover:not(.react-datepicker__day--range-start):not(.react-datepicker__day--range-end)::before {
+.legacy-dashboard .react-datepicker__day--in-range:hover:not(.react-datepicker__day--range-start):not(.react-datepicker__day--range-end)::before,
+.legacy-dashboard .react-datepicker__day--in-selecting-range:hover:not(.react-datepicker__day--range-start):not(.react-datepicker__day--range-end)::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -443,13 +443,13 @@ select {
 }
 
 /* 비활성 날짜 (오늘 이전) */
-.react-datepicker__day--disabled {
+.legacy-dashboard .react-datepicker__day--disabled {
   color: #d1d5db !important;
   cursor: not-allowed !important;
   opacity: 0.5;
 }
 
-.react-datepicker__day--disabled:hover {
+.legacy-dashboard .react-datepicker__day--disabled:hover {
   background-color: transparent !important;
   color: #d1d5db !important;
   border-radius: 0 !important;

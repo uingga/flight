@@ -2841,7 +2841,7 @@ export default function Dashboard() {
     );
 
     return (
-        <div className={styles.dashboard}>
+        <div className={`${styles.dashboard} legacy-dashboard`}>
             <header className={`${styles.header} ${(headerHidden || (isMobile && isScrolled)) ? styles.headerHidden : ''} ${headerScrolled ? styles.headerScrolled : ''}`}>
                 <div className={styles.headerContainer}>
                     <div className={styles.headerLeft}>

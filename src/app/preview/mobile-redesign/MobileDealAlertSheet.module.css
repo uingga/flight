@@ -1,11 +1,5 @@
 .overlay {
-    position: fixed;
     z-index: 120;
-    inset: 0;
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    background: rgba(24, 27, 32, 0.4);
     animation: overlayIn 160ms ease-out;
 }
 
@@ -16,9 +10,9 @@
     overflow-y: auto;
     border: 1px solid var(--line, #ddd);
     border-bottom: 0;
-    border-radius: 16px 16px 0 0;
+    border-radius: var(--radius-sheet-prominent, 16px) var(--radius-sheet-prominent, 16px) 0 0;
     background: var(--paper, #fff);
-    box-shadow: 0 -18px 48px rgba(0, 0, 0, 0.16);
+    box-shadow: var(--shadow-sheet, 0 -18px 48px rgba(0, 0, 0, 0.16));
     animation: sheetUp 220ms cubic-bezier(.2, .8, .2, 1);
 }
 
@@ -42,7 +36,7 @@
 .body fieldset { margin-top: 22px; border: 0; }
 .body legend { margin-bottom: 9px; color: #3f3f3f; font-size: 12px; font-weight: 700; }
 .options { display: flex; flex-wrap: wrap; gap: 7px; }
-.options button { min-height: 36px; padding: 0 13px; border: 1px solid var(--line, #ddd); border-radius: 10px; background: #fff; color: var(--ink, #222); font-size: 12px; font-weight: 600; }
+.options button { min-height: 36px; padding: 0 13px; border: 1px solid var(--line, #ddd); border-radius: var(--radius-control, 10px); background: #fff; color: var(--ink, #222); font-size: 12px; font-weight: 600; }
 .options .active { border-color: var(--brand, #ff385c); background: var(--brand, #ff385c); color: #fff; font-weight: 700; }
 .customPrice { width: min(240px, 100%); height: 42px; margin-top: 10px; padding: 0 12px; display: flex; align-items: center; border: 1px solid var(--line, #ddd); border-radius: 10px; }
 .customPrice input { width: 100%; min-width: 0; border: 0; outline: 0; color: var(--ink, #222); font-size: 14px; font-weight: 700; }
@@ -93,15 +87,15 @@
 @keyframes dialogIn { from { transform: translateY(8px) scale(.985); opacity: .6; } }
 
 @media (min-width: 700px) {
-    .overlay { align-items: center; padding: 24px; background: rgba(24, 27, 32, 0.2); }
+    .overlay { align-items: center; padding: 24px; --overlay-scrim-current: var(--overlay-scrim-desktop, rgba(24, 27, 32, 0.2)); }
     .sheet {
         width: min(520px, 100%);
         max-height: calc(100dvh - 48px);
         margin: 0;
         padding: 22px 26px 26px;
         border-bottom: 1px solid var(--line, #ddd);
-        border-radius: 22px;
-        box-shadow: 0 22px 70px rgba(0, 0, 0, .2);
+        border-radius: var(--radius-dialog, 22px);
+        box-shadow: var(--shadow-dialog, 0 22px 70px rgba(0, 0, 0, .2));
         animation: dialogIn 190ms cubic-bezier(.2, .8, .2, 1);
     }
     .handle { display: none; }

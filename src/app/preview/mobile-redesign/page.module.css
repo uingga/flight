@@ -1,7 +1,7 @@
 .previewPage {
     min-height: 100vh;
     background: var(--canvas);
-    color: #222222;
+    color: var(--ink);
     font-variant-numeric: normal;
     /* Redesign UI tokens: keep type weights aligned with the loaded Inter faces. */
     --canvas: #f3f3f3;
@@ -39,6 +39,34 @@
     --weight-medium: var(--weight-control);
     --weight-bold: var(--weight-heading);
     --weight-heavy: var(--weight-emphasis);
+    --radius-card: 10px;
+    --radius-control: 10px;
+    --radius-action: 13px;
+    --radius-sheet: 12px;
+    --radius-sheet-prominent: 16px;
+    --radius-dialog: 22px;
+    --radius-frame: 24px;
+    --radius-pill: 999px;
+    --overlay-scrim-mobile: rgba(24, 27, 32, 0.4);
+    --overlay-scrim-desktop: rgba(24, 27, 32, 0.2);
+    --overlay-backdrop-filter: blur(2px);
+    --shadow-sheet: 0 -18px 48px rgba(0, 0, 0, 0.16);
+    --shadow-dialog: 0 22px 70px rgba(0, 0, 0, 0.2);
+    --shadow-drawer: -24px 0 60px rgba(0, 0, 0, 0.18);
+
+    /* globals.css의 레거시 변수 기반 규칙이 자식에 적용돼도 바이올렛을 끌어오지 않는다. */
+    --color-primary: var(--brand);
+    --color-primary-dark: var(--brand-dark);
+    --color-secondary: var(--brand-dark);
+    --color-bg-body: var(--canvas);
+    --color-bg-primary: var(--paper);
+    --color-bg-secondary: var(--paper-soft);
+    --color-bg-tertiary: var(--brand-soft);
+    --color-text-primary: var(--ink);
+    --color-text-secondary: var(--text-secondary);
+    --color-text-muted: var(--text-muted);
+    --color-border: var(--line);
+    --color-border-light: var(--paper-soft);
 }
 
 .previewPage button {
@@ -94,7 +122,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
 }
 
 .iconButton { width: 36px; color: #35373e; }
@@ -339,7 +367,7 @@
     width: 148px;
     padding: 5px;
     border: 1px solid #e3e3e3;
-    border-radius: 10px;
+    border-radius: var(--radius-control);
     background: var(--paper);
     box-shadow: 0 10px 28px rgba(34, 34, 34, 0.13);
     animation: sortMenuIn 130ms ease-out;
@@ -384,7 +412,7 @@
     --ticket-border-width: 1px;
     --ticket-notch-offset: 17px;
     border: var(--ticket-border-width) solid var(--line);
-    border-radius: 10px;
+    border-radius: var(--radius-card);
     background: var(--paper);
     box-shadow: none;
 }
@@ -750,7 +778,7 @@
 .insightOpportunity .insightEyebrow::before { background: #d18a35; }
 .insightNew .insightEyebrow::before { background: #4b8f75; }
 
-.moreButton { width: 100%; height: 46px; margin-top: 14px; border: 1px solid var(--line); border-radius: 13px; background: var(--paper); color: var(--ink); font-size: var(--size-meta); font-weight: var(--weight-bold); }
+.moreButton { width: 100%; height: 46px; margin-top: 14px; border: 1px solid var(--line); border-radius: var(--radius-action); background: var(--paper); color: var(--ink); font-size: var(--size-meta); font-weight: var(--weight-bold); }
 
 .skeletonCard { height: 210px; border: 1px solid var(--line); border-radius: 8px; background: linear-gradient(90deg, var(--paper) 25%, var(--paper-soft) 50%, var(--paper) 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; }
 @keyframes shimmer { to { background-position: -200% 0; } }
@@ -825,13 +853,7 @@
 .scrollTopButton svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.8; }
 
 .sheetOverlay {
-    position: fixed;
     z-index: 100;
-    inset: 0;
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    background: rgba(24, 27, 32, 0.4);
     animation: overlayIn 160ms ease-out;
 }
 
@@ -842,9 +864,9 @@
     overflow-y: auto;
     border: 1px solid var(--line);
     border-bottom: 0;
-    border-radius: 12px 12px 0 0;
+    border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
     background: var(--paper);
-    box-shadow: 0 -18px 48px rgba(0, 0, 0, 0.16);
+    box-shadow: var(--shadow-sheet);
     animation: sheetUp 220ms cubic-bezier(.2, .8, .2, 1);
 }
 
@@ -866,16 +888,16 @@
 .filterGroup { margin-top: 22px; }
 .filterGroup h3 { margin-bottom: 9px; color: #3f3f3f; font-size: var(--size-meta); font-weight: var(--weight-bold); }
 .optionGrid { display: flex; flex-wrap: wrap; gap: 7px; }
-.optionGrid button { min-height: 36px; padding: 0 13px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); color: var(--ink); font-size: var(--size-meta); font-weight: var(--weight-medium); }
+.optionGrid button { min-height: 36px; padding: 0 13px; border: 1px solid var(--line); border-radius: var(--radius-control); background: var(--paper); color: var(--ink); font-size: var(--size-meta); font-weight: var(--weight-medium); }
 .optionGrid .optionActive { border-color: var(--brand); background: var(--brand); color: var(--on-brand); font-weight: var(--weight-bold); }
-.dateDirectButton { width: fit-content; min-height: 36px; margin-top: 9px; padding: 0 13px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); color: var(--ink); text-align: left; }
+.dateDirectButton { width: fit-content; min-height: 36px; margin-top: 9px; padding: 0 13px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: var(--radius-control); background: var(--paper); color: var(--ink); text-align: left; }
 .dateDirectButton span { flex: 0 0 auto; font-size: var(--size-body); }
 .dateDirectButton strong { font-size: var(--size-meta); font-weight: var(--weight-bold); }
 .dateDirectButton.dateDirectActive { border-color: var(--brand); color: var(--brand); }
 .dateCalendarWrap { margin-top: 8px; overflow: hidden; border: 1px solid var(--line); border-radius: 14px; background: var(--paper); }
 .dateCalendarWrap > p { margin: 0; padding: 0 12px 10px; color: var(--text-faint); font-size: var(--size-micro); text-align: center; }
 .advancedFilterGroup { padding-top: 21px; border-top: 1px solid #eeeeee; }
-.filterSelectRow { min-height: 44px; margin-top: 12px; padding: 0 12px; display: flex; align-items: center; justify-content: space-between; gap: 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); }
+.filterSelectRow { min-height: 44px; margin-top: 12px; padding: 0 12px; display: flex; align-items: center; justify-content: space-between; gap: 14px; border: 1px solid var(--line); border-radius: var(--radius-control); background: var(--paper); }
 .filterSelectRow > span { flex: 0 0 auto; color: var(--text-secondary); font-size: var(--size-meta); font-weight: var(--weight-bold); }
 .filterSelectRow select { min-width: 0; flex: 1; border: 0; outline: 0; background: transparent; color: var(--ink); font-size: var(--size-meta); font-weight: var(--weight-medium); text-align: right; }
 .filterSelectRow:focus-within { border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-soft); }
@@ -966,7 +988,7 @@
 .dateCalendar :global(.react-datepicker__day--today.react-datepicker__day--selecting-range-start),
 .dateCalendar :global(.react-datepicker__day--today.react-datepicker__day--range-start),
 .dateCalendar :global(.react-datepicker__day--today.react-datepicker__day--range-end) { color: var(--on-brand) !important; }
-.applyButton { position: sticky; bottom: 0; width: 100%; height: 50px; margin-top: 26px; border-radius: 13px; background: var(--brand); color: var(--on-brand); font-size: var(--size-body); font-weight: var(--weight-bold); box-shadow: none; }
+.applyButton { position: sticky; bottom: 0; width: 100%; height: 50px; margin-top: 26px; border-radius: var(--radius-action); background: var(--brand); color: var(--on-brand); font-size: var(--size-body); font-weight: var(--weight-bold); box-shadow: none; }
 .applyButtonCalendarOpen { position: static; }
 
 .detailSheet { overflow-y: auto; }
@@ -1043,10 +1065,10 @@
 .bookingButton svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; }
 .detailSecondaryActions { margin-top: 9px; display: grid; grid-template-columns: minmax(0, 1fr) 88px; align-items: stretch; gap: 8px; }
 .detailSecondaryActions > :only-child { grid-column: 1 / -1; }
-.detailShareButton { min-height: 50px; display: flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--line); border-radius: 13px; background: var(--paper); color: var(--text-secondary); font-size: var(--size-meta); font-weight: var(--weight-bold); }
+.detailShareButton { min-height: 50px; display: flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--line); border-radius: var(--radius-action); background: var(--paper); color: var(--text-secondary); font-size: var(--size-meta); font-weight: var(--weight-bold); }
 .detailShareButton:hover { border-color: #b8b8b8; color: #333333; }
 .detailShareButton svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; }
-.hotelCompareButton { min-height: 50px; padding: 8px 12px; display: flex; align-items: center; gap: 9px; border: 1px solid var(--line); border-radius: 13px; background: var(--paper); color: var(--ink); }
+.hotelCompareButton { min-height: 50px; padding: 8px 12px; display: flex; align-items: center; gap: 9px; border: 1px solid var(--line); border-radius: var(--radius-action); background: var(--paper); color: var(--ink); }
 .hotelCompareButton:hover { border-color: #b8b8b8; color: #222222; }
 .hotelIcon { flex: 0 0 auto; font-size: 16px; }
 .hotelButtonText { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
@@ -1061,7 +1083,7 @@
 .serviceUpdateNotice h2 { margin: 0; color: var(--ink); font-size: var(--size-body); line-height: 1.35; font-weight: var(--weight-bold); letter-spacing: -0.025em; }
 .serviceUpdateNotice p { margin: 7px 0 0; color: var(--text-muted); font-size: var(--size-meta); line-height: 1.55; word-break: keep-all; }
 .serviceUpdateDivider { height: 1px; margin: 15px 0; background: var(--line); }
-.serviceUpdateConfirm { width: 100%; height: 50px; margin-top: 20px; border: 0; border-radius: 13px; background: var(--brand-dark); color: var(--on-brand); font-size: var(--size-meta); font-weight: var(--weight-bold); }
+.serviceUpdateConfirm { width: 100%; height: 50px; margin-top: 20px; border: 0; border-radius: var(--radius-action); background: var(--brand-dark); color: var(--on-brand); font-size: var(--size-meta); font-weight: var(--weight-bold); }
 
 .contactOverlay { z-index: 125; }
 .contactSheet { padding-bottom: max(22px, env(safe-area-inset-bottom)); }
@@ -1081,12 +1103,12 @@
 .contactForm input:focus,
 .contactForm textarea:focus { border-color: var(--brand); box-shadow: 0 0 0 2px var(--brand-soft); }
 .contactError { color: #c83838; font-size: var(--size-caption); line-height: 1.45; }
-.contactSubmit { height: 50px; border-radius: 13px; background: var(--brand-dark); color: var(--on-brand); font-size: var(--size-body); font-weight: var(--weight-bold); }
+.contactSubmit { height: 50px; border-radius: var(--radius-action); background: var(--brand-dark); color: var(--on-brand); font-size: var(--size-body); font-weight: var(--weight-bold); }
 .contactSubmit:disabled { opacity: 0.55; }
 .contactSuccess { min-height: 270px; padding: 48px 18px 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
 .contactSuccess strong { color: var(--ink); font-size: var(--size-section); }
 .contactSuccess span { margin-top: 8px; color: var(--text-muted); font-size: var(--size-meta); line-height: 1.5; }
-.contactSuccess button { width: 100%; height: 48px; margin-top: 26px; border-radius: 13px; background: var(--brand-dark); color: var(--on-brand); font-size: var(--size-meta); font-weight: var(--weight-bold); }
+.contactSuccess button { width: 100%; height: 48px; margin-top: 26px; border-radius: var(--radius-action); background: var(--brand-dark); color: var(--on-brand); font-size: var(--size-meta); font-weight: var(--weight-bold); }
 
 .toast {
     position: fixed;
@@ -1111,8 +1133,8 @@
 @keyframes scrollTopIn { from { transform: translateY(6px); opacity: 0; } }
 
 @media (min-width: 700px) {
-    .sheetOverlay { background: rgba(24, 27, 32, 0.2); }
-    .phoneCanvas { min-height: calc(100vh - 48px); margin-top: 24px; margin-bottom: 24px; border-radius: 24px; overflow: hidden; }
+    .sheetOverlay { --overlay-scrim-current: var(--overlay-scrim-desktop); }
+    .phoneCanvas { min-height: calc(100vh - 48px); margin-top: 24px; margin-bottom: 24px; border-radius: var(--radius-frame); overflow: hidden; }
     .header { top: 0; }
     .searchRow { top: 58px; }
     .bottomSheet { margin-bottom: 24px; border-radius: 24px; }
@@ -1134,6 +1156,7 @@
         --size-panel-title: 23px;
         --size-detail-price: 25px;
         --size-display: 28px;
+        --radius-card: 12px;
     }
 
     .phoneCanvas {
@@ -1232,7 +1255,7 @@
         left: 0;
         padding: 9px;
         border: 1px solid #dfdfdf;
-        border-radius: 12px;
+        border-radius: var(--radius-sheet);
         background: #ffffff;
         box-shadow: 0 14px 34px rgba(34, 34, 34, 0.13);
     }
@@ -1555,7 +1578,7 @@
         --ticket-border: var(--desktop-card-line);
         --ticket-notch-offset: 18px;
         border-color: var(--desktop-card-line);
-        border-radius: 12px;
+        border-radius: var(--radius-card);
         box-shadow: 0 1px 2px rgba(34, 34, 34, 0.025);
         transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
     }
@@ -1887,15 +1910,16 @@
     .siteFooterGrid { grid-template-columns: 1.2fr 1fr 1fr; gap: 54px; }
     .siteFooterDisclaimer { max-width: 1144px; }
     .contactOverlay { align-items: center; padding: 24px; }
-    .contactOverlay .contactSheet { width: min(480px, 100%); max-height: calc(100dvh - 48px); margin: 0; padding: 24px 28px 28px; border-bottom: 1px solid var(--line); border-radius: 22px; }
+    .contactOverlay .contactSheet { width: min(480px, 100%); max-height: calc(100dvh - 48px); margin: 0; padding: 24px 28px 28px; border-bottom: 1px solid var(--line); border-radius: var(--radius-dialog); }
     .contactOverlay .sheetHandle { display: none; }
     .floatingActions { right: max(32px, calc((100vw - 1200px) / 2 + 32px)); }
 
     .filterOverlay {
+        --overlay-scrim-current: transparent;
+        --overlay-backdrop-filter-current: none;
         align-items: flex-start;
         justify-content: flex-start;
         padding: 0;
-        background: transparent;
     }
     .filterOverlay .bottomSheet {
         position: fixed;
@@ -2009,7 +2033,7 @@
         padding: 18px 26px 28px;
         border-bottom: 1px solid var(--line);
         border-radius: 24px 0 0 24px;
-        box-shadow: -24px 0 60px rgba(0, 0, 0, 0.18);
+        box-shadow: var(--shadow-drawer);
         animation: drawerIn 220ms cubic-bezier(.2, .8, .2, 1);
     }
     .detailOverlay .sheetHandle { display: none; }
