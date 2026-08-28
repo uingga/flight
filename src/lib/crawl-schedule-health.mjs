@@ -12,9 +12,9 @@ export const DAILY_CRAWL_CRONS = Object.freeze([
 ]);
 
 // GitHub 예약 실행이 45분 넘게 생성되지 않으면 운영실에 먼저 알리고,
-// 90분부터 watchdog이 workflow_dispatch 보조 실행을 요청한다.
+// 60분부터 watchdog이 workflow_dispatch 보조 실행을 요청한다.
 export const CRAWL_WARNING_MINUTES = 45;
-export const CRAWL_FALLBACK_MINUTES = 90;
+export const CRAWL_FALLBACK_MINUTES = 60;
 
 function toTimestamp(value) {
     const timestamp = value instanceof Date ? value.getTime() : new Date(value).getTime();

@@ -17,13 +17,13 @@ test('warns 45 minutes after an uncovered crawl slot', () => {
     assert.equal(health.delayMinutes, 47);
 });
 
-test('dispatch threshold starts at 90 minutes', () => {
+test('dispatch threshold starts at 60 minutes', () => {
     const health = getCrawlScheduleHealth('2026-08-27T15:50:00.000Z', {
-        now: '2026-08-28T00:43:00.000Z',
+        now: '2026-08-28T00:13:00.000Z',
     });
 
     assert.equal(health.status, 'overdue');
-    assert.equal(health.delayMinutes, 90);
+    assert.equal(health.delayMinutes, 60);
 });
 
 test('a newly due slot does not hide an older missed slot', () => {
