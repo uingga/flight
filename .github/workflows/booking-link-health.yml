@@ -29,6 +29,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Test no-request evidence validation
+        run: npm run test:booking-link-health
+
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
 

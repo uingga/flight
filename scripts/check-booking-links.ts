@@ -1,6 +1,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { chromium, type Page, type Response } from 'playwright';
+import {
+    DEFAULT_TTANG_EVIDENCE_MAX_AGE_HOURS,
+    verifyTtangBookingEvidence,
+    type BookingLinkProbeOutcome,
+} from '@/lib/booking-link-health';
 import { getFlightBookingUrl } from '@/lib/utils/booking-url';
 import type { Flight } from '@/types/flight';
 
@@ -34,16 +39,19 @@ interface ProbeResult {
     departureDate: string;
     checkedAt: string;
     stage: ProbeStage;
+    outcome: BookingLinkProbeOutcome;
     success: boolean;
     statusCode: number | null;
     finalUrl: string;
     reason: string | null;
     durationMs: number;
+    verificationMethod: 'browser_navigation' | 'crawl_evidence';
+    evidenceAt: string | null;
 }
 
 interface SourceResult {
     source: Flight['source'];
-    status: 'healthy' | 'recovered' | 'isolated_failure' | 'systemic_suspected' | 'not_checked';
+    status: 'healthy' | 'recovered' | 'isolated_failure' | 'systemic_suspected' | 'evidence_unavailable' | 'not_checked';
     availableFlights: number;
     checks: ProbeResult[];
 }
@@ -55,6 +63,7 @@ interface HealthEntry {
         scheduled: number;
         passed: number;
         failed: number;
+        unavailable: number;
         recovered: number;
         systemicSources: number;
         checkedSources: number;
@@ -178,12 +187,15 @@ async function probeFlight(page: Page, flight: Flight, stage: ProbeStage): Promi
             checkedAt,
             stage,
             success: true,
+            outcome: 'passed',
             statusCode,
             // 정상 링크의 긴 쿼리 주소는 장기 기록에 남길 필요가 없다.
             // 실패한 주소만 아래 catch에서 보관해 어드민의 직접 확인에 사용한다.
             finalUrl: '',
             reason: null,
             durationMs: Date.now() - startedAt,
+            verificationMethod: 'browser_navigation',
+            evidenceAt: null,
         };
     } catch (error) {
         finalUrl = page.url() === 'about:blank' ? finalUrl : page.url();
@@ -195,10 +207,13 @@ async function probeFlight(page: Page, flight: Flight, stage: ProbeStage): Promi
             checkedAt,
             stage,
             success: false,
+            outcome: 'failed',
             statusCode,
             finalUrl,
             reason: failureReason(error),
             durationMs: Date.now() - startedAt,
+            verificationMethod: 'browser_navigation',
+            evidenceAt: null,
         };
     }
 }
@@ -208,6 +223,11 @@ async function runProbe(
     flight: Flight,
     stage: ProbeStage,
 ): Promise<ProbeResult> {
+    // 땡처리닷컴은 GitHub 데이터센터 요청을 403으로 차단한다. 이 가드는 향후
+    // 분기 실수로도 예약 링크 점검에서 외부 요청이 나가지 않게 막는다.
+    if (flight.source === 'ttang') {
+        throw new Error('땡처리닷컴은 브라우저 탐색 대신 크롤 증거로만 검증해야 합니다.');
+    }
     const context = await browser.newContext({
         viewport: { width: 390, height: 844 },
         userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Version/17.0 Mobile/15E148 Safari/604.1',
@@ -235,7 +255,10 @@ function loadHealthFile(): HealthFile {
 }
 
 async function main(): Promise<void> {
-    const cache = JSON.parse(fs.readFileSync(CACHE_PATH, 'utf8')) as { flights?: Flight[] };
+    const cache = JSON.parse(fs.readFileSync(CACHE_PATH, 'utf8')) as {
+        flights?: Flight[];
+        sourceUpdatedAt?: Record<string, string>;
+    };
     const flights = Array.isArray(cache.flights) ? cache.flights : [];
     const dateKey = koreaDateKey();
     const checkedAt = new Date().toISOString();
@@ -251,6 +274,54 @@ async function main(): Promise<void> {
             let recovered = false;
 
             console.log(`\n[${SOURCE_NAMES[source]}] ${initial.length}개 표본 확인`);
+            if (source === 'ttang') {
+                const configuredMaxAge = Number(process.env.TTANG_EVIDENCE_MAX_AGE_HOURS);
+                const maxAgeHours = Number.isFinite(configuredMaxAge) && configuredMaxAge > 0
+                    ? configuredMaxAge
+                    : DEFAULT_TTANG_EVIDENCE_MAX_AGE_HOURS;
+                console.log(`  외부 접속 없이 ${maxAgeHours}시간 이내 정상 크롤 증거와 URL 구조만 확인`);
+                for (const flight of initial) {
+                    const startedAt = Date.now();
+                    const evidence = verifyTtangBookingEvidence(flight, cache.sourceUpdatedAt?.ttang, {
+                        now: new Date(checkedAt),
+                        maxAgeHours,
+                    });
+                    const check: ProbeResult = {
+                        source,
+                        flightId: flight.id,
+                        route: routeLabel(flight),
+                        departureDate: flight.departure.date,
+                        checkedAt: new Date().toISOString(),
+                        stage: 'initial',
+                        outcome: evidence.outcome,
+                        success: evidence.outcome === 'passed',
+                        statusCode: null,
+                        finalUrl: evidence.outcome === 'failed' ? evidence.bookingUrl : '',
+                        reason: evidence.reason,
+                        durationMs: Date.now() - startedAt,
+                        verificationMethod: 'crawl_evidence',
+                        evidenceAt: evidence.evidenceAt,
+                    };
+                    checks.push(check);
+                    const marker = check.outcome === 'passed' ? '✓' : check.outcome === 'unavailable' ? '–' : '✗';
+                    console.log(`  ${marker} ${check.route} ${check.reason || '최신 크롤 증거 확인'}`);
+                }
+
+                const failedCount = checks.filter(check => check.outcome === 'failed').length;
+                const unavailableCount = checks.filter(check => check.outcome === 'unavailable').length;
+                const status: SourceResult['status'] = initial.length === 0
+                    ? 'not_checked'
+                    : failedCount >= 2
+                        ? 'systemic_suspected'
+                        : failedCount === 1
+                            ? 'isolated_failure'
+                            : unavailableCount > 0
+                                ? 'evidence_unavailable'
+                                : 'healthy';
+                sources.push({ source, status, availableFlights: sourceFlights.length, checks });
+                continue;
+            }
+
             for (const flight of initial) {
                 const first = await runProbe(browser, flight, 'initial');
                 checks.push(first);
@@ -277,10 +348,10 @@ async function main(): Promise<void> {
                 }
             }
 
-            const distinctFailedFlights = new Set(checks.filter(check => !check.success).map(check => check.flightId));
+            const distinctFailedFlights = new Set(checks.filter(check => check.outcome === 'failed').map(check => check.flightId));
             const latestResultByFlight = new Map<string, ProbeResult>();
             for (const check of checks) latestResultByFlight.set(check.flightId, check);
-            const unresolvedDistinct = Array.from(latestResultByFlight.values()).filter(check => !check.success).length;
+            const unresolvedDistinct = Array.from(latestResultByFlight.values()).filter(check => check.outcome === 'failed').length;
             const status: SourceResult['status'] = initial.length === 0
                 ? 'not_checked'
                 : unresolvedDistinct >= 2
@@ -308,7 +379,8 @@ async function main(): Promise<void> {
         summary: {
             scheduled: sources.reduce((sum, source) => sum + Math.min(2, source.availableFlights), 0),
             passed: finalChecks.filter(check => check.success).length,
-            failed: finalChecks.filter(check => !check.success).length,
+            failed: finalChecks.filter(check => check.outcome === 'failed').length,
+            unavailable: finalChecks.filter(check => check.outcome === 'unavailable').length,
             recovered: sources.filter(source => source.status === 'recovered').length,
             systemicSources: sources.filter(source => source.status === 'systemic_suspected').length,
             checkedSources: sources.filter(source => source.status !== 'not_checked').length,
@@ -324,7 +396,7 @@ async function main(): Promise<void> {
         entries: entries.slice(-60),
     };
     fs.writeFileSync(OUTPUT_PATH, `${JSON.stringify(nextFile, null, 2)}\n`, 'utf8');
-    console.log(`\n예약 링크 점검 완료: 성공 ${entry.summary.passed}, 실패 ${entry.summary.failed}, 전체 문제 의심 ${entry.summary.systemicSources}곳`);
+    console.log(`\n예약 링크 점검 완료: 성공 ${entry.summary.passed}, 실패 ${entry.summary.failed}, 확인 보류 ${entry.summary.unavailable}, 전체 문제 의심 ${entry.summary.systemicSources}곳`);
     console.log(`기록: ${OUTPUT_PATH}`);
 }
 

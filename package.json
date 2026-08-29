@@ -28,6 +28,7 @@
     "test:redesign": "tsx scripts/verify-redesign.ts",
     "test:flight-diversity": "tsx scripts/test-flight-diversity.ts",
     "test:booking-url": "tsx scripts/test-booking-url.ts",
+    "test:booking-link-health": "tsx scripts/test-booking-link-health.ts",
     "test:alert-approval": "tsx scripts/test-alert-approval.ts",
     "check:booking-links": "tsx scripts/check-booking-links.ts",
     "deploy:mark": "node scripts/deploy-guard.mjs mark",

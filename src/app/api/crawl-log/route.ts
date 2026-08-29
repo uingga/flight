@@ -192,8 +192,8 @@ export async function GET(request: NextRequest) {
             }
         } catch { }
 
-        // 하루 한 번 여행사별 대표 링크만 실제로 열어본 결과.
-        // 가격을 다시 수집하는 크롤링이 아니라 예약 화면 연결이 통째로 깨졌는지 보는 표본 점검이다.
+        // 하루 한 번 여행사별 대표 링크를 확인한 결과. 땡처리닷컴은 GitHub 요청 차단을
+        // 유발하지 않도록 외부 접속 없이 최신 정상 크롤 증거와 예약 URL 구조만 확인한다.
         let bookingLinkHealth: Record<string, unknown> | null = null;
         try {
             const healthPath = path.join(process.cwd(), 'data', 'booking-link-health.json');

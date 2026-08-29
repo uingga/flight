@@ -25,11 +25,14 @@ interface BookingLinkProbe {
     departureDate: string;
     checkedAt: string;
     stage: 'initial' | 'retry' | 'confirmation';
+    outcome?: 'passed' | 'failed' | 'unavailable';
     success: boolean;
     statusCode: number | null;
     finalUrl: string;
     reason: string | null;
     durationMs: number;
+    verificationMethod?: 'browser_navigation' | 'crawl_evidence';
+    evidenceAt?: string | null;
 }
 
 interface BookingLinkHealthEntry {
@@ -39,13 +42,14 @@ interface BookingLinkHealthEntry {
         scheduled: number;
         passed: number;
         failed: number;
+        unavailable?: number;
         recovered: number;
         systemicSources: number;
         checkedSources: number;
     };
     sources: Array<{
         source: string;
-        status: 'healthy' | 'recovered' | 'isolated_failure' | 'systemic_suspected' | 'not_checked';
+        status: 'healthy' | 'recovered' | 'isolated_failure' | 'systemic_suspected' | 'evidence_unavailable' | 'not_checked';
         availableFlights: number;
         checks: BookingLinkProbe[];
     }>;
@@ -1428,6 +1432,7 @@ export default function AdminPage() {
     const latestBookingLinkHealth = bookingLinkEntries[bookingLinkEntries.length - 1] || null;
     const bookingLinkSystemicIssue = (latestBookingLinkHealth?.summary.systemicSources || 0) > 0;
     const bookingLinkHasFailure = (latestBookingLinkHealth?.summary.failed || 0) > 0;
+    const bookingLinkEvidenceUnavailable = (latestBookingLinkHealth?.summary.unavailable || 0) > 0;
     const bookingLinkChartPeak = Math.max(
         ...bookingLinkEntries.map(entry => entry.summary.passed + entry.summary.failed),
         1,
@@ -1437,7 +1442,7 @@ export default function AdminPage() {
         const latestByFlight = new Map<string, BookingLinkProbe>();
         source.checks.forEach(check => latestByFlight.set(check.flightId, check));
         return Array.from(latestByFlight.values())
-            .filter(check => !check.success)
+            .filter(check => !check.success && check.outcome !== 'unavailable')
             .map(check => ({ ...check, date: entry.date, sourceStatus: source.status }));
     })).slice(-12).reverse();
     const sourceIssueCount = allSources.filter(source => {
@@ -1937,7 +1942,7 @@ export default function AdminPage() {
                     <div className={styles.sectionHeading}>
                         <div>
                             <h2>예약 링크 연결 상태</h2>
-                            <p>가격은 다시 수집하지 않고, 여행사마다 대표 항공권 2개가 예약 화면까지 열리는지만 하루 한 번 확인합니다.</p>
+                            <p>5개 여행사는 대표 예약 화면을 열고, 땡처리닷컴은 차단 요청 없이 최신 정상 크롤 증거와 예약 URL 구조를 확인합니다.</p>
                         </div>
                         <span className={bookingLinkSystemicIssue ? styles.issueBadge : styles.nowBadge}>
                             {!latestBookingLinkHealth
@@ -1946,6 +1951,8 @@ export default function AdminPage() {
                                     ? `전체 문제 의심 ${latestBookingLinkHealth.summary.systemicSources}곳`
                                     : bookingLinkHasFailure
                                         ? '일부 링크 확인 필요'
+                                        : bookingLinkEvidenceUnavailable
+                                            ? '크롤 증거 확인 보류'
                                         : '정상'}
                         </span>
                     </div>
@@ -1963,8 +1970,12 @@ export default function AdminPage() {
                                     <strong>{latestBookingLinkHealth.summary.passed.toLocaleString()}개</strong>
                                 </div>
                                 <div className={latestBookingLinkHealth.summary.failed > 0 ? styles.linkHealthSummaryWarn : undefined}>
-                                    <span>열리지 않음</span>
+                                    <span>검증 실패</span>
                                     <strong>{latestBookingLinkHealth.summary.failed.toLocaleString()}개</strong>
+                                </div>
+                                <div>
+                                    <span>크롤 증거 확인 보류</span>
+                                    <strong>{(latestBookingLinkHealth.summary.unavailable || 0).toLocaleString()}개</strong>
                                 </div>
                                 <div>
                                     <span>재확인 후 정상</span>
@@ -1980,7 +1991,7 @@ export default function AdminPage() {
                                         <div
                                             key={`${entry.date}-${entry.checkedAt}`}
                                             className={styles.linkHealthDay}
-                                            title={`${entry.date} · 정상 ${entry.summary.passed} · 실패 ${entry.summary.failed} · 재확인 후 정상 ${entry.summary.recovered} · 전체 문제 의심 ${entry.summary.systemicSources}곳`}
+                                            title={`${entry.date} · 정상 ${entry.summary.passed} · 실패 ${entry.summary.failed} · 확인 보류 ${entry.summary.unavailable || 0} · 재확인 후 정상 ${entry.summary.recovered} · 전체 문제 의심 ${entry.summary.systemicSources}곳`}
                                         >
                                             <div className={styles.linkHealthBars}>
                                                 {entry.summary.passed > 0 && <span className={styles.linkHealthPass} style={{ height: `${Math.max(4, passHeight)}%` }} />}
