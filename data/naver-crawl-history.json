@@ -295,6 +295,28 @@
       "healthChecks": 1,
       "abortedEarly": true,
       "abortReason": "서로 다른 대조 노선 2개의 전송/API 장애"
+    },
+    {
+      "id": "2026-08-29T07:55:25.349Z-local-56096",
+      "timestamp": "2026-08-29T07:55:25.349Z",
+      "runner": "local",
+      "sourceFilter": "all",
+      "maxFlights": 280,
+      "needed": 380,
+      "attempted": 280,
+      "newRoutes": 155,
+      "newRoutesAttempted": 155,
+      "deferred": 100,
+      "deferredNeverChecked": 0,
+      "oldestDeferredHours": 49.8,
+      "success": 275,
+      "misses": 5,
+      "noResult": 0,
+      "routeErrors": 0,
+      "transientErrors": 5,
+      "blocked": 0,
+      "healthChecks": 0,
+      "abortedEarly": false
     }
   ]
 }
