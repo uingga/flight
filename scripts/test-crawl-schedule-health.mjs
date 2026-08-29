@@ -194,6 +194,9 @@ test('the Windows Naver task owns production collection with one guarded daily s
     assert.match(installer, /-Argument .* -Scheduled/);
     assert.match(installer, /System32\\WindowsPowerShell\\v1\.0\\powershell\.exe/);
     assert.doesNotMatch(installer, /-WorkingDirectory/);
+    assert.match(installer, /\$env:USERPROFILE 'Tikitikit\\naver-crawler'/);
+    assert.doesNotMatch(installer, /\$env:LOCALAPPDATA 'Tikitikit\\naver-crawler'/);
+    assert.match(installer, /\$RunnerPath = Join-Path \$AutomationDir/);
     assert.match(installer, /-MultipleInstances IgnoreNew/);
     assert.match(installer, /-ExecutionTimeLimit \(New-TimeSpan -Hours 5\)/);
     assert.match(installer, /-WakeToRun/);
@@ -206,6 +209,7 @@ test('the Windows Naver task owns production collection with one guarded daily s
     assert.match(runner, /\$env:MAX_HEALTH_CHECKS = '1'/);
     assert.match(runner, /\$env:REQUEST_DELAY_MIN_MS = '5000'/);
     assert.match(runner, /\$env:BATCH_REST_MAX_MS = '120000'/);
+    assert.match(runner, /npx\.cmd playwright install chromium/);
 });
 
 test('a successful Windows Naver filter repairs today pick with conflict-safe push retries', () => {

@@ -36,6 +36,12 @@ Task Scheduler의 `IgnoreNew`와 별도로 named mutex를 사용하므로 예약
 겹치지 않는다. 작업은 네트워크 연결을 요구하고 PC를 깨우며, 최대 5시간 뒤 종료된다. 브라우저가
 실제 화면을 사용하므로 Windows 사용자 세션은 로그인 상태여야 한다.
 
+이 PC의 Task Scheduler는 `%LOCALAPPDATA%` 아래 PowerShell 스크립트를 `0xFFFD0000`으로
+거부하고, Dropbox 개발 폴더는 실행 중인 Next.js 바이너리와 `npm ci`가 충돌할 수 있다. 설치
+스크립트는 `%USERPROFILE%\Tikitikit\naver-crawler`에 깨끗한 전용 체크아웃을 만들고 그 경로만
+작업 대상으로 등록한다. 실행기는 자동 `git pull --rebase --autostash origin main`과 경로 제한
+커밋으로 최신 데이터를 병합한다.
+
 성공한 가격은 최신 원격 네이버 데이터와 병합하고 최신 항공권 캐시를 다시 필터링해 커밋한다.
 
 네이버 수집·필터링 데이터가 `main`에 반영되고 운영 항공권 API가 해당 캐시 이상으로 올라온

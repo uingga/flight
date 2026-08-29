@@ -1,10 +1,10 @@
 # Install the Naver crawler in a dedicated clean checkout and point Windows Task
-# Scheduler at it. Keeping automation out of the developer checkout prevents
-# unrelated edits and newly tracked files from blocking git pull.
+# Scheduler at it. AppData is avoided because this PC's scheduler rejects scripts
+# there with 0xFFFD0000; the user-profile path remains isolated from active dev tools.
 
 [CmdletBinding()]
 param(
-    [string]$AutomationDir = (Join-Path $env:LOCALAPPDATA 'Tikitikit\naver-crawler'),
+    [string]$AutomationDir = (Join-Path $env:USERPROFILE 'Tikitikit\naver-crawler'),
     [switch]$RunNow
 )
 
@@ -54,6 +54,9 @@ try {
 }
 
 $RunnerPath = Join-Path $AutomationDir 'scripts\run-naver-crawl.ps1'
+if (-not (Test-Path $RunnerPath)) {
+    throw "Naver runner not found: $RunnerPath"
+}
 $PowerShellPath = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
 $Action = New-ScheduledTaskAction `
     -Execute $PowerShellPath `

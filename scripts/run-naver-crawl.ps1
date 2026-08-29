@@ -87,8 +87,8 @@ if (-not $RunPolicy.shouldRun) {
     exit 0
 }
 
-# Keep a dedicated automation checkout in sync with package-lock changes without
-# paying the npm ci cost on every run.
+# Keep the scheduled checkout in sync with package-lock changes without paying
+# the npm ci cost on every run.
 $DependencyMarker = Join-Path $ProjectDir 'node_modules\.tikitikit-package-lock.sha256'
 $PackageLockHash = (Get-FileHash -Algorithm SHA256 (Join-Path $ProjectDir 'package-lock.json')).Hash
 $InstalledPackageLockHash = if (Test-Path $DependencyMarker) {
@@ -103,6 +103,13 @@ if ($PackageLockHash -ne $InstalledPackageLockHash) {
     }
     if ($LASTEXITCODE -ne 0) {
         Log 'npm ci failed; stopping before the crawl'
+        exit 1
+    }
+    npx.cmd playwright install chromium 2>&1 | ForEach-Object {
+        "$_" | Add-Content -Encoding utf8 $LogFile
+    }
+    if ($LASTEXITCODE -ne 0) {
+        Log 'Playwright Chromium installation failed; stopping before the crawl'
         exit 1
     }
     $PackageLockHash | Set-Content -Encoding ascii $DependencyMarker
