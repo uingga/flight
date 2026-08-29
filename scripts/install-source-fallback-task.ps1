@@ -71,7 +71,7 @@ $Principal = New-ScheduledTaskPrincipal `
 Register-ScheduledTask `
     -TaskName $TaskName `
     -Action $Action `
-    -Triggers $Triggers `
+    -Trigger $Triggers `
     -Settings $Settings `
     -Principal $Principal `
     -Description 'GitHub 차단 휴식 중인 여행사만 PC 회선으로 대체 수집' `

@@ -242,6 +242,8 @@ test('the Windows blocked-source fallback uses the four general crawl slots', ()
         assert.match(installer, new RegExp(`New-ScheduledTaskTrigger -Daily -At '${time}'`));
     }
     assert.match(installer, /TikitikitBlockedSourceCrawl/);
+    assert.match(installer, /Register-ScheduledTask[\s\S]*?-Trigger \$Triggers/);
+    assert.doesNotMatch(installer, /-Triggers \$Triggers/);
     assert.match(installer, /-MultipleInstances IgnoreNew/);
     assert.match(runner, /LOCAL_SOURCE_FALLBACK = '1'/);
     assert.match(runner, /local-source-fallback-policy\.mjs check/);
