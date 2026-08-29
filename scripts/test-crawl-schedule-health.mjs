@@ -189,7 +189,7 @@ test('the Windows Naver task owns production collection with one guarded daily s
     const runner = fs.readFileSync('scripts/run-naver-crawl.ps1', 'utf8');
     const installer = fs.readFileSync('scripts/install-naver-crawl-task.ps1', 'utf8');
 
-    assert.match(installer, /New-ScheduledTaskTrigger -Daily -At '14:30'/);
+    assert.match(installer, /New-ScheduledTaskTrigger -Daily -At '12:00'/);
     assert.match(installer, /New-ScheduledTaskTrigger -Daily -At '20:30'/);
     assert.match(installer, /-Argument .* -Scheduled/);
     assert.match(installer, /System32\\WindowsPowerShell\\v1\.0\\powershell\.exe/);
@@ -198,7 +198,7 @@ test('the Windows Naver task owns production collection with one guarded daily s
     assert.doesNotMatch(installer, /\$env:LOCALAPPDATA 'Tikitikit\\naver-crawler'/);
     assert.match(installer, /\$RunnerPath = Join-Path \$AutomationDir/);
     assert.match(installer, /-MultipleInstances IgnoreNew/);
-    assert.match(installer, /-ExecutionTimeLimit \(New-TimeSpan -Hours 5\)/);
+    assert.match(installer, /-ExecutionTimeLimit \(New-TimeSpan -Hours 12\)/);
     assert.match(installer, /-WakeToRun/);
     assert.doesNotMatch(installer, /-RestartCount/);
     assert.match(runner, /\$env:SOURCE_FILTER = 'all'/);
@@ -206,6 +206,9 @@ test('the Windows Naver task owns production collection with one guarded daily s
     assert.match(runner, /git pull --rebase --autostash origin main/);
     assert.match(runner, /Local\\TikitikitNaverCrawl/);
     assert.match(runner, /local-naver-run-policy\.mjs check/);
+    assert.match(runner, /\$UpstreamPollSeconds = 120/);
+    assert.match(runner, /Start-Sleep -Seconds \$SleepSeconds/);
+    assert.match(runner, /Get-Random -Minimum 30 -Maximum 181/);
     assert.match(runner, /\$env:MAX_HEALTH_CHECKS = '1'/);
     assert.match(runner, /\$env:REQUEST_DELAY_MIN_MS = '5000'/);
     assert.match(runner, /\$env:BATCH_REST_MAX_MS = '120000'/);

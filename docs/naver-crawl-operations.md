@@ -5,7 +5,7 @@
 | 실행 위치 | 시각·조건 | 대상 | 최대 건수 | 역할 |
 |---|---|---:|---:|---|
 | GitHub Actions | 수동 진단만 | `myrealtrip` | 3 | 클라우드 접속 상태 확인(운영 반영 없음) |
-| Windows `TikitikitNaverCrawl` | 매일 14:30 KST, upstream 지연 시 20:30 재확인 | 전체 여행사 | 280 | 주거용 회선의 유일한 운영 네이버 수집 |
+| Windows `TikitikitNaverCrawl` | 12:00부터 11:56 회차 완료 대기, 완료 감지 즉시 실행 | 전체 여행사 | 280 | 주거용 회선의 유일한 운영 네이버 수집 |
 
 GitHub 호스팅 러너에서는 HTTP와 일부 GraphQL이 정상이어도 실제 운임 화면만 계속 로딩되는
 soft block이 반복됐다. 같은 코드로 2026-08-28 GitHub는 5/176건, Windows는 278/280건이
@@ -21,11 +21,12 @@ soft block이 반복됐다. 같은 코드로 2026-08-28 GitHub는 5/176건, Wind
 
 ## Windows 실행과 오늘의 표 복구
 
-Windows 작업은 `scripts/install-naver-crawl-task.ps1`이 14:30과 20:30 KST로 등록하고,
-`scripts/run-naver-crawl.ps1`이 실행 시작 시 최신 `main`을 받는다. 14:30에는 당일 오전
-마이리얼트립과 11:56 이후 일반 크롤이 모두 준비된 경우에만 브라우저를 연다. 아직 준비되지
-않았으면 네이버 요청 없이 종료하고 20:30에 다시 확인한다. 두 트리거가 있어도 로컬 상태 파일이
-하루 한 번만 브라우저 세션을 허용한다.
+Windows 작업은 `scripts/install-naver-crawl-task.ps1`이 12:00과 20:30 KST로 등록한다.
+`scripts/run-naver-crawl.ps1`은 12:00부터 2분 간격으로 최신 `main`만 확인하다가 당일 오전
+마이리얼트립과 11:56 이후 일반 크롤이 모두 반영되는 즉시 브라우저 회차를 시작한다. 완료 감지
+뒤에는 접속 시각 고정을 피하기 위한 30~180초의 짧은 무작위 지연만 둔다. 대기 확인 과정에서는
+네이버 페이지를 열지 않는다. 20:30까지 한 upstream만 준비된 경우의 기존 폴백과 하루 한 번만
+브라우저 세션을 허용하는 로컬 상태 파일은 그대로 유지한다.
 
 주거용 IP에서 `SOURCE_FILTER=all`, `MAX_FLIGHTS=280`으로 확인하되 검색 사이 5~10초,
 10건마다 60~120초를 추가로 쉰다. 대조 노선 확인은 회차당 한 번으로 제한한다. 403/429/CAPTCHA
@@ -33,7 +34,7 @@ Windows 작업은 `scripts/install-naver-crawl-task.ps1`이 14:30과 20:30 KST�
 쿨다운한다. 실패 뒤 같은 날 20:30 재시도나 Task Scheduler 자동 재시작은 하지 않는다.
 
 Task Scheduler의 `IgnoreNew`와 별도로 named mutex를 사용하므로 예약 실행 중 수동 실행도
-겹치지 않는다. 작업은 네트워크 연결을 요구하고 PC를 깨우며, 최대 5시간 뒤 종료된다. 브라우저가
+겹치지 않는다. 작업은 네트워크 연결을 요구하고 PC를 깨우며, 대기 시간을 포함해 최대 12시간 뒤 종료된다. 브라우저가
 실제 화면을 사용하므로 Windows 사용자 세션은 로그인 상태여야 한다.
 
 이 PC의 Task Scheduler는 `%LOCALAPPDATA%` 아래 PowerShell 스크립트를 `0xFFFD0000`으로

@@ -4,7 +4,7 @@
 # every agency. New or changed source flights refresh immediately, important routes
 # every two days, and unchanged standard routes every five days.
 #
-# Schedule: daily at 14:30, with a no-duplicate 20:30 fallback when upstream data is late
+# Schedule: wait from 12:00 for the post-11:56 crawl, with a no-duplicate 20:30 fallback
 # Manual:   powershell -File scripts\run-naver-crawl.ps1
 
 [CmdletBinding()]
@@ -51,40 +51,73 @@ if ($PreexistingManagedChanges) {
     exit 1
 }
 
-# Pull the latest GitHub data while preserving unrelated local changes. Naming
-# origin/main explicitly avoids repositories with multiple branch merge entries.
-$InitialPullOutput = & git pull --rebase --autostash origin main 2>&1
-$InitialPullExitCode = $LASTEXITCODE
-$InitialPullOutput | Add-Content -Encoding utf8 $LogFile
-if ($InitialPullExitCode -ne 0) {
-    Log 'Initial git pull failed; stopping before the crawl'
-    exit 1
-}
+# The scheduled task starts shortly after the 11:56 slot and waits locally for
+# both upstream commits. Polling only pulls Git data; it never opens Naver until
+# the completed cache is visible. The 20:30 fallback may use one ready upstream.
+# A successful or blocked browser session is never launched again that KST day.
+$UpstreamPollSeconds = 120
+$KstOffset = [TimeSpan]::FromHours(9)
+while ($true) {
+    # Naming origin/main explicitly avoids repositories with multiple branch
+    # merge entries. Scheduled pull failures are retried without browser traffic.
+    $PullOutput = & git pull --rebase --autostash origin main 2>&1
+    $PullExitCode = $LASTEXITCODE
+    $PullOutput | Add-Content -Encoding utf8 $LogFile
+    if ($PullExitCode -ne 0) {
+        if (-not $Scheduled) {
+            Log 'Initial git pull failed; stopping before the crawl'
+            exit 1
+        }
+        Log "Git pull failed while waiting for upstream; retrying in $UpstreamPollSeconds seconds"
+    } else {
+        $PolicyOutput = & node scripts/local-naver-run-policy.mjs check `
+            --cache 'data/all-flights-cache.json' `
+            --state $StateFile 2>&1
+        $PolicyExitCode = $LASTEXITCODE
+        $PolicyText = ($PolicyOutput | Out-String).Trim()
+        Log "run policy: $PolicyText"
+        if ($PolicyExitCode -ne 0) {
+            Log 'Unable to evaluate local Naver run policy; stopping before browser launch'
+            exit 1
+        }
+        try {
+            $RunPolicy = $PolicyText | ConvertFrom-Json
+        } catch {
+            Log "Invalid run policy output: $($_.Exception.Message)"
+            exit 1
+        }
+        if ($RunPolicy.shouldRun) {
+            break
+        }
+        if (-not $Scheduled -or $RunPolicy.reason -ne 'upstream_pending') {
+            Log "Browser launch skipped by policy ($($RunPolicy.reason))"
+            Log '=== Local Naver crawl finished without requests ==='
+            '' | Add-Content $LogFile
+            exit 0
+        }
+    }
 
-# The 14:30 trigger waits for both the post-11:56 general crawl and today's MRT
-# refresh. The 20:30 trigger may use whichever upstream is ready. A successful or
-# blocked browser session is never launched again on the same KST day.
-$PolicyOutput = & node scripts/local-naver-run-policy.mjs check `
-    --cache 'data/all-flights-cache.json' `
-    --state $StateFile 2>&1
-$PolicyExitCode = $LASTEXITCODE
-$PolicyText = ($PolicyOutput | Out-String).Trim()
-Log "run policy: $PolicyText"
-if ($PolicyExitCode -ne 0) {
-    Log 'Unable to evaluate local Naver run policy; stopping before browser launch'
-    exit 1
-}
-try {
-    $RunPolicy = $PolicyText | ConvertFrom-Json
-} catch {
-    Log "Invalid run policy output: $($_.Exception.Message)"
-    exit 1
-}
-if (-not $RunPolicy.shouldRun) {
-    Log "Browser launch skipped by policy ($($RunPolicy.reason))"
-    Log '=== Local Naver crawl finished without requests ==='
-    '' | Add-Content $LogFile
-    exit 0
+    $NowKst = [DateTimeOffset]::UtcNow.ToOffset($KstOffset)
+    $WaitDeadlineKst = [DateTimeOffset]::new(
+        $NowKst.Year,
+        $NowKst.Month,
+        $NowKst.Day,
+        20,
+        35,
+        0,
+        $KstOffset
+    )
+    if ($NowKst -ge $WaitDeadlineKst) {
+        Log 'Upstream was still unavailable after the 20:30 fallback window; stopping without Naver requests'
+        Log '=== Local Naver crawl finished without requests ==='
+        '' | Add-Content $LogFile
+        exit 0
+    }
+
+    $RemainingSeconds = [Math]::Max(1, [Math]::Floor(($WaitDeadlineKst - $NowKst).TotalSeconds))
+    $SleepSeconds = [Math]::Min($UpstreamPollSeconds, $RemainingSeconds)
+    Log "Upstream pending; checking again in $SleepSeconds seconds without Naver requests"
+    Start-Sleep -Seconds $SleepSeconds
 }
 
 # Keep the scheduled checkout in sync with package-lock changes without paying
@@ -115,10 +148,10 @@ if ($PackageLockHash -ne $InstalledPackageLockHash) {
     $PackageLockHash | Set-Content -Encoding ascii $DependencyMarker
 }
 
-# Fixed-time automation still gets a small random start offset, so requests do not
-# begin at the exact same second every day. The mutex remains held during the wait.
+# Keep a short random offset after upstream completion so Naver requests do not
+# begin at an identical clock second every day. The mutex remains held while waiting.
 if ($Scheduled) {
-    $StartJitterSeconds = Get-Random -Minimum 30 -Maximum 601
+    $StartJitterSeconds = Get-Random -Minimum 30 -Maximum 181
     Log "Scheduled start jitter: $StartJitterSeconds seconds"
     Start-Sleep -Seconds $StartJitterSeconds
 }
