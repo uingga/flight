@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {
     assertNoSourceAccessBlockText,
+    assertNoSourceResponseCollapse,
     SourceResponseError,
 } from '../src/lib/scrapers/source-response';
 import {
@@ -31,6 +32,25 @@ try {
     captchaError = error;
 }
 assert.equal(classifySourceAccessRestriction(captchaError)?.reason, 'blocked');
+
+let responseCollapseError: unknown;
+try {
+    assertNoSourceResponseCollapse('테스트 여행사', {
+        processed: 8,
+        succeeded: 0,
+        consecutiveFailures: 8,
+    });
+} catch (error) {
+    responseCollapseError = error;
+}
+assert.equal(responseCollapseError instanceof SourceResponseError, true);
+assert.equal((responseCollapseError as SourceResponseError).kind, 'soft-block');
+assert.equal(classifySourceAccessRestriction(responseCollapseError)?.reason, 'blocked');
+assert.doesNotThrow(() => assertNoSourceResponseCollapse('정상 여행사', {
+    processed: 20,
+    succeeded: 15,
+    consecutiveFailures: 1,
+}));
 
 const rateLimited = classifySourceAccessRestriction(
     new SourceResponseError('http-status', '온라인투어 HTTP 429', 429),

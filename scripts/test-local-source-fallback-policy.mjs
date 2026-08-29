@@ -98,6 +98,7 @@ test('source merge keeps the GitHub circuit while publishing the PC result', () 
         flights: [{ id: 'old', source: 'ttang' }, { id: 'other', source: 'ybtour' }],
         sources: { ttang: 1, ybtour: 1 },
         sourceCircuits: { ttang: baseCircuit },
+        integrityAlerts: ['⛔ 땡처리닷컴 이전 경고', '🚨 ybtour unrelated alert'],
     }));
     fs.writeFileSync(overlayPath, JSON.stringify({
         timestamp: '2026-08-30T02:25:00.000Z',
@@ -114,6 +115,7 @@ test('source merge keeps the GitHub circuit while publishing the PC result', () 
                 },
             },
         },
+        integrityAlerts: ['⛔ ttang PC 대체 수집 상태'],
     }));
 
     try {
@@ -128,6 +130,10 @@ test('source merge keeps the GitHub circuit while publishing the PC result', () 
         assert.equal(result.fullCrawlUpdatedAt, '2026-08-30T02:18:00.000Z');
         assert.equal(result.sourceCircuits.ttang.nextProbeAt, baseCircuit.nextProbeAt);
         assert.equal(result.sourceCircuits.ttang.localFallback.status, 'success');
+        assert.deepEqual(result.integrityAlerts, [
+            '🚨 ybtour unrelated alert',
+            '⛔ ttang PC 대체 수집 상태',
+        ]);
         assert.deepEqual(result.flights.map(flight => flight.id).sort(), ['new', 'other']);
     } finally {
         fs.rmSync(tempDir, { recursive: true, force: true });

@@ -7,6 +7,7 @@ export type SourceResponseFailureKind =
     | 'malformed-xml'
     | 'malformed-json'
     | 'api-error'
+    | 'soft-block'
     | 'snapshot-changed'
     | 'schema-mismatch';
 
@@ -48,6 +49,44 @@ export function assertNoSourceAccessBlockText(
         'text/html',
         undefined,
         finalUrl,
+    );
+}
+
+export interface SourceResponseCollapseStats {
+    processed: number;
+    succeeded: number;
+    consecutiveFailures: number;
+}
+
+export interface SourceResponseCollapseOptions {
+    maxConsecutiveFailures?: number;
+    minSamples?: number;
+    minSuccessRatio?: number;
+}
+
+/**
+ * HTTP 200이어도 실제 목록만 계속 비는 soft block을 회차 도중 발견한다.
+ * 초반 몇 건의 자연스러운 빈 결과는 허용하되, 연속 실패 또는 충분한 표본의
+ * 성공률 붕괴가 확인되면 남은 요청을 보내지 않는다.
+ */
+export function assertNoSourceResponseCollapse(
+    label: string,
+    stats: SourceResponseCollapseStats,
+    options: SourceResponseCollapseOptions = {},
+): void {
+    const maxConsecutiveFailures = Math.max(1, options.maxConsecutiveFailures ?? 8);
+    const minSamples = Math.max(1, options.minSamples ?? 20);
+    const minSuccessRatio = Math.min(1, Math.max(0, options.minSuccessRatio ?? 0.2));
+    const ratio = stats.processed > 0 ? stats.succeeded / stats.processed : 1;
+    const consecutiveCollapse = stats.consecutiveFailures >= maxConsecutiveFailures;
+    const sampledCollapse = stats.processed >= minSamples && ratio < minSuccessRatio;
+    if (!consecutiveCollapse && !sampledCollapse) return;
+
+    throw new SourceResponseError(
+        'soft-block',
+        `${label} 응답 급감: ${stats.processed}건 중 ${stats.succeeded}건 성공, `
+        + `연속 실패 ${stats.consecutiveFailures}건`,
+        200,
     );
 }
 

@@ -226,12 +226,19 @@ export async function fetchYbtourSchedules(
             if (attempt > 1) retryAttempts++;
             try {
                 const res = await page.evaluate(async (body: Record<string, string>) => {
-                    const r = await fetch('/booking/findDscInvSkdDetail.lts', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
-                        body: new URLSearchParams(body).toString(),
-                    });
-                    return { status: r.status, text: await r.text() };
+                    const controller = new AbortController();
+                    const timeout = setTimeout(() => controller.abort(), 15_000);
+                    try {
+                        const r = await fetch('/booking/findDscInvSkdDetail.lts', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+                            body: new URLSearchParams(body).toString(),
+                            signal: controller.signal,
+                        });
+                        return { status: r.status, text: await r.text() };
+                    } finally {
+                        clearTimeout(timeout);
+                    }
                 }, {
                     inmInhId: key.inhId,
                     inmSeqId: key.inmSeqId,
@@ -320,8 +327,11 @@ export async function fetchYbtourSchedules(
         if (idx < entries.length) {
             const wait = consecutiveFailures > 0
                 ? Math.min(2 * Math.pow(2, consecutiveFailures - 1), 30)
-                : 0.4;
+                : 1;
             await randomDelay(wait, wait * 1.8);
+            if (idx % 20 === 0) {
+                await randomDelay(10, 20);
+            }
         }
     }
 

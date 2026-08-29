@@ -21,6 +21,7 @@ import {
     type SourceCircuitState,
 } from '../src/lib/source-circuit';
 import { buildLifecycleIdentity } from './lib/flight-lifecycle';
+import { preserveCrawlCacheWithSafetyState } from '../src/lib/crawl-cache-safety';
 import fs from 'fs';
 import path from 'path';
 
@@ -624,9 +625,20 @@ async function main() {
         // 전체 결과가 이전 캐시의 50% 미만이면 이전 캐시 유지
         if (prevCache && prevCache.count > 0 && benchmarkedFlights.length < prevCache.count * 0.5) {
             console.log(`\n⚠️ 결과가 이전 캐시(${prevCache.count}개)의 50% 미만(${benchmarkedFlights.length}개) → 이전 캐시 유지`);
-            console.log('크롤링 결과를 저장하지 않습니다.');
+            console.log('항공권은 유지하고 차단 회로·실패 상태만 저장합니다.');
             savedFlights = prevCache.flights || [];
             cachePreservedGlobally = true;
+            const completedAt = new Date().toISOString();
+            const preservedCache = preserveCrawlCacheWithSafetyState({
+                previous: prevCache,
+                sourceCircuits: sourceCircuits as Record<string, unknown>,
+                staleStreak,
+                scrapedCounts,
+                integrityAlerts: integrityWarnings,
+                // 이미 실행된 예약 회차를 watchdog이 다시 보내 차단된 소스를 재요청하지 않게 한다.
+                fullCrawlCompletedAt: requestedSources ? undefined : completedAt,
+            });
+            fs.writeFileSync(cachePath, JSON.stringify(preservedCache, null, 2), 'utf-8');
         } else {
             // firstSeen 필드 추가: 이전 캐시와 비교하여 새 항공편 감지
             const prevFlightMap = new Map<string, string>();

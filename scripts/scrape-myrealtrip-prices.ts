@@ -3,6 +3,17 @@ import fs from 'fs';
 import path from 'path';
 import { scrapeMyrealtrip } from '../src/lib/scrapers/myrealtrip';
 import { getMyrealtripSearchPrice, type FlightResult } from './lib/myrealtrip-search-page';
+import {
+    assertNoSourceResponseCollapse,
+    SourceResponseError,
+} from '../src/lib/scrapers/source-response';
+import {
+    classifySourceAccessRestriction,
+    isSourceCircuitOpen,
+    openSourceCircuit,
+    SOURCE_ADAPTER_VERSIONS,
+    sourceCircuitLabel,
+} from '../src/lib/source-circuit';
 
 /**
  * 마이리얼트립 실제 가격 스크래핑 (Playwright)
@@ -31,6 +42,10 @@ interface CachedFlight {
 
 const delay = (ms: number) => new Promise(r => setTimeout(r, ms));
 const randomDelay = () => delay(4000 + Math.random() * 4000); // 4~8초 랜덤
+const CACHE_PATH = path.resolve(process.cwd(), 'data/all-flights-cache.json');
+const MIN_RUN_INTERVAL_MS = 6 * 60 * 60 * 1000;
+const BATCH_SIZE = 10;
+const batchRest = () => delay(30_000 + Math.random() * 30_000);
 function shuffle<T>(arr: T[]): T[] {
     const a = [...arr];
     for (let i = a.length - 1; i > 0; i--) {
@@ -78,34 +93,58 @@ async function worker(
     browser: Browser,
     tasks: { flight: CachedFlight; gid: number }[],
     results: Map<string, FlightResult>,
-    workerId: number
+    workerId: number,
+    enforceCollapse = true,
 ) {
     const page = await browser.newPage();
 
     await page.setExtraHTTPHeaders({ 'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8' });
+    let succeeded = 0;
+    let consecutiveEmpty = 0;
 
-    for (let i = 0; i < tasks.length; i++) {
-        const { flight, gid } = tasks[i];
-        const depDate = flight.departure.date;
-        const arrDate = flight.arrival.date;
+    try {
+        for (let i = 0; i < tasks.length; i++) {
+            const { flight, gid } = tasks[i];
+            const depDate = flight.departure.date;
+            const arrDate = flight.arrival.date;
 
-        if (!depDate || !arrDate) continue;
+            if (!depDate || !arrDate) continue;
 
-        const result = await getMyrealtripSearchPrice(page, gid, depDate, arrDate);
-        if (result) {
-            results.set(flight.id, result);
+            const result = await getMyrealtripSearchPrice(page, gid, depDate, arrDate);
+            if (result) {
+                results.set(flight.id, result);
+                succeeded++;
+                consecutiveEmpty = 0;
+            } else {
+                consecutiveEmpty++;
+            }
+
+            if (enforceCollapse) {
+                assertNoSourceResponseCollapse('마이리얼트립 실제 운임 화면', {
+                    processed: i + 1,
+                    succeeded,
+                    consecutiveFailures: consecutiveEmpty,
+                }, {
+                    maxConsecutiveFailures: 8,
+                    minSamples: 20,
+                    minSuccessRatio: 0.2,
+                });
+            }
+
+            // 진행률 (워커별)
+            if ((i + 1) % 20 === 0) {
+                console.log(`  [워커${workerId}] ${i + 1}/${tasks.length} 완료`);
+            }
+
+            await randomDelay();
+            if ((i + 1) % BATCH_SIZE === 0 && i + 1 < tasks.length) {
+                console.log(`  [워커${workerId}] ${BATCH_SIZE}건 처리 후 30~60초 휴식`);
+                await batchRest();
+            }
         }
-
-        // 진행률 (워커별)
-        if ((i + 1) % 20 === 0) {
-            console.log(`  [워커${workerId}] ${i + 1}/${tasks.length} 완료`);
-        }
-
-        // 랜덤 딜레이
-        await randomDelay();
+    } finally {
+        await page.close().catch(() => undefined);
     }
-
-    await page.close();
 }
 
 // ── 메인 ──────────────────────────────────────────
@@ -115,24 +154,45 @@ async function main() {
     console.log('=== 마이리얼트립 크롤링 시작 ===');
     console.log(`시작: ${new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })}\n`);
 
+    const cache = JSON.parse(fs.readFileSync(CACHE_PATH, 'utf8'));
+    const existingCircuit = cache.sourceCircuits?.myrealtrip;
+    if (isSourceCircuitOpen(existingCircuit, SOURCE_ADAPTER_VERSIONS.myrealtrip)) {
+        console.log(
+            `⏸️ 마이리얼트립 ${sourceCircuitLabel(existingCircuit)} 뒤 휴식 중 — `
+            + `${existingCircuit.nextProbeAt} 이후 한 번만 재탐색합니다.`,
+        );
+        return;
+    }
+
+    const lastSuccessAt = new Date(cache.sourceUpdatedAt?.myrealtrip || '').getTime();
+    if (
+        !['1', 'true'].includes(String(process.env.FORCE_MYREALTRIP || '').toLowerCase())
+        && Number.isFinite(lastSuccessAt)
+        && Date.now() - lastSuccessAt < MIN_RUN_INTERVAL_MS
+    ) {
+        console.log('⏭️ 마이리얼트립 최근 성공 후 6시간이 지나지 않아 중복 요청을 건너뜁니다.');
+        return;
+    }
+
     // ── 1단계: Calendar API로 항공편 목록 갱신 ──────────────────
     console.log('📡 1단계: Calendar API로 최신 항공편 목록 수집...\n');
     const freshFlights = await scrapeMyrealtrip();
     console.log(`\n📡 Calendar API 결과: ${freshFlights.length}개 항공편 수집`);
 
     // 캐시 로드 & MRT 데이터 교체
-    const cachePath = path.resolve(process.cwd(), 'data/all-flights-cache.json');
-    const cache = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
-
     const prevMrtCount = cache.flights.filter((f: any) => f.source === 'myrealtrip').length;
 
-    // 안전장치: Calendar API 결과가 기존 대비 50% 미만이면 교체하지 않음
-    if (freshFlights.length > 0 && (prevMrtCount === 0 || freshFlights.length >= prevMrtCount * 0.5)) {
+    // 안전장치: 공개 API 목록이 직전의 60% 미만이면 soft block으로 보고 페이지 요청도 시작하지 않는다.
+    if (freshFlights.length > 0 && (prevMrtCount === 0 || freshFlights.length >= prevMrtCount * 0.6)) {
         cache.flights = cache.flights.filter((f: any) => f.source !== 'myrealtrip');
         cache.flights.push(...freshFlights);
         console.log(`♻️ MRT 캐시 교체: ${prevMrtCount}개 → ${freshFlights.length}개`);
     } else {
-        console.log(`⚠️ Calendar API 결과(${freshFlights.length}개)가 기존(${prevMrtCount}개)의 50% 미만 → 교체 건너뜀, 기존 데이터 유지`);
+        throw new SourceResponseError(
+            'soft-block',
+            `마이리얼트립 공개 API 결과(${freshFlights.length}개)가 기존(${prevMrtCount}개)의 60% 미만입니다.`,
+            200,
+        );
     }
 
     // 출발일 60일 초과 마이리얼트립 항공편 제거 (티키티킷에 표시하지 않음)
@@ -197,7 +257,7 @@ async function main() {
     // 1차 실행
     try {
         await Promise.all(
-            chunks.map((chunk, i) => worker(browser, chunk, results, i + 1))
+            chunks.map((chunk, i) => worker(browser, chunk, results, i + 1, true))
         );
     } finally {
         await browser.close();
@@ -214,7 +274,7 @@ async function main() {
         shuffle(failedTasks).forEach((task, i) => retryChunks[i % WORKERS].push(task));
         try {
             await Promise.all(
-                retryChunks.map((chunk, i) => worker(retryBrowser, chunk, results, i + 10))
+                retryChunks.map((chunk, i) => worker(retryBrowser, chunk, results, i + 10, false))
             );
         } finally {
             await retryBrowser.close();
@@ -230,9 +290,11 @@ async function main() {
     const successRatio = results.size / tasks.length;
     const minSuccessRatio = Number(process.env.MIN_SUCCESS_RATIO || '0.5');
     if (successRatio < minSuccessRatio) {
-        throw new Error(
+        throw new SourceResponseError(
+            'soft-block',
             `마이리얼트립 대량 조회 실패: ${results.size}/${tasks.length}건 성공 ` +
-            `(${(successRatio * 100).toFixed(1)}%, 최소 ${(minSuccessRatio * 100).toFixed(0)}%). 기존 캐시를 보존합니다.`
+            `(${(successRatio * 100).toFixed(1)}%, 최소 ${(minSuccessRatio * 100).toFixed(0)}%). 기존 캐시를 보존합니다.`,
+            200,
         );
     }
 
@@ -372,7 +434,13 @@ async function main() {
         ...(cache.sourceUpdatedAt || {}),
         myrealtrip: cache.lastUpdated,
     };
-    fs.writeFileSync(cachePath, JSON.stringify(cache));
+    cache.sourceCircuits = { ...(cache.sourceCircuits || {}) };
+    delete cache.sourceCircuits.myrealtrip;
+    cache.staleStreak = { ...(cache.staleStreak || {}), myrealtrip: 0 };
+    cache.integrityAlerts = (cache.integrityAlerts || []).filter(
+        (alert: unknown) => !/myrealtrip|마이리얼트립/i.test(String(alert)),
+    );
+    fs.writeFileSync(CACHE_PATH, JSON.stringify(cache));
 
     const lifecycleObservationPath = process.env.LIFECYCLE_OBSERVATION_PATH;
     if (lifecycleObservationPath) {
@@ -412,5 +480,25 @@ async function main() {
 
 main().catch((error) => {
     console.error('\n❌ 마이리얼트립 스크래핑 중단:', error);
+    const restriction = classifySourceAccessRestriction(error);
+    if (restriction) {
+        try {
+            const cache = JSON.parse(fs.readFileSync(CACHE_PATH, 'utf8'));
+            const circuit = openSourceCircuit(restriction, SOURCE_ADAPTER_VERSIONS.myrealtrip);
+            cache.sourceCircuits = { ...(cache.sourceCircuits || {}), myrealtrip: circuit };
+            cache.staleStreak = {
+                ...(cache.staleStreak || {}),
+                myrealtrip: (cache.staleStreak?.myrealtrip || 0) + 1,
+            };
+            cache.integrityAlerts = Array.from(new Set([
+                ...(cache.integrityAlerts || []),
+                `⛔ myrealtrip ${sourceCircuitLabel(circuit)} 감지 — ${circuit.nextProbeAt}까지 자동 요청 중단`,
+            ]));
+            fs.writeFileSync(CACHE_PATH, JSON.stringify(cache, null, 2), 'utf8');
+            console.error(`⏸️ 마이리얼트립 차단 회로 저장: ${circuit.nextProbeAt}까지 요청 중단`);
+        } catch (persistError) {
+            console.error('마이리얼트립 차단 회로 저장 실패:', persistError);
+        }
+    }
     process.exitCode = 1;
 });

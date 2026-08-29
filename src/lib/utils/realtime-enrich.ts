@@ -270,7 +270,11 @@ export async function enrichWithRealtimeData(
         if (consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
             skipped = entries.length - idx;
             console.log(`[${label}] 연속 ${consecutiveFailures}건 실패 — 남은 ${skipped}개 노선은 건너뜁니다. 상대 서버가 막고 있을 가능성이 큽니다.`);
-            break;
+            throw new SourceResponseError(
+                'soft-block',
+                `${label} 실시간 보강 응답이 ${consecutiveFailures}건 연속 실패했습니다.`,
+                200,
+            );
         }
 
         // 요청 간격.
@@ -280,7 +284,7 @@ export async function enrichWithRealtimeData(
         if (idx < entries.length) {
             const wait = consecutiveFailures > 0
                 ? Math.min(2 * Math.pow(2, consecutiveFailures - 1), 30)
-                : 0.8;
+                : 1.2;
             await randomDelay(wait, wait * 1.6);
         }
     }

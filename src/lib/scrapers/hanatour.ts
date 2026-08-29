@@ -258,6 +258,8 @@ async function scrapeHanatourRegular(browser: any, prevFlights: any[] = []): Pro
                     );
                     continue;
                 }
+                const tabBodyText = await page.locator('body').innerText({ timeout: 5_000 }).catch(() => '');
+                assertNoSourceAccessBlockText(`하나투어 ${tab.name} 출발 탭`, tabBodyText, page.url());
 
                 const tabFlights = await page.evaluate((tabName: string) => {
                     const cards = document.querySelectorAll('.flight_list.special > ul > li');
@@ -401,6 +403,20 @@ async function scrapeHanatourRegular(browser: any, prevFlights: any[] = []): Pro
                         region: getRegionByCity(arrCity)
                     };
                 });
+
+                // 탭 전환이 실패하면 직전 탭 카드가 DOM에 남아 selector 대기는 통과한다.
+                // 현재 탭의 출발 공항과 실제 카드의 출발 공항을 맞대조해 stale 화면을 폐기한다.
+                const unexpectedDepartures = processedFlights.filter((flight: any) =>
+                    !flight.departure.airport || !tab.airports.includes(flight.departure.airport)
+                );
+                if (processedFlights.length === 0 || unexpectedDepartures.length > 0) {
+                    completeness.recordFailure(
+                        `${tab.name} 출발 목록 검증 `
+                        + `(수집 ${processedFlights.length}건, 다른 출발지 ${unexpectedDepartures.length}건)`,
+                        f => tab.airports.includes(f.departure?.airport || ''),
+                    );
+                    continue;
+                }
                 flights.push(...processedFlights);
                 totalFlights += tabFlights.length;
                 console.log(`${tab.name}: ${tabFlights.length}개 항목 발견 (누적: ${totalFlights}개)`);
@@ -410,6 +426,10 @@ async function scrapeHanatourRegular(browser: any, prevFlights: any[] = []): Pro
             } catch (error) {
                 if (classifySourceAccessRestriction(error)) throw error;
                 console.error(`${tab.name} 탭 오류:`, error instanceof Error ? error.message : error);
+                completeness.recordFailure(
+                    `${tab.name} 출발 탭 처리 오류`,
+                    f => tab.airports.includes(f.departure?.airport || ''),
+                );
             }
         }
 

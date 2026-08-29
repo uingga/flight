@@ -98,6 +98,28 @@ if (overlay.scrapedCounts?.[sourceKey] !== undefined) {
     };
 }
 
+// 병합 대상 소스의 경고만 overlay 상태로 교체한다. 전체 배열을 덮으면 이 작업이
+// 실행되는 동안 다른 크롤러가 새로 남긴 경고를 지울 수 있고, 반대로 이 처리를
+// 생략하면 차단 회로는 저장돼도 관리자 화면의 경고가 누락되거나 복구 후 남는다.
+const sourceAlertAliases = {
+    ybtour: ['ybtour', '노랑풍선'],
+    hanatour: ['hanatour', '하나투어'],
+    modetour: ['modetour', '모두투어'],
+    onlinetour: ['onlinetour', '온라인투어'],
+    ttang: ['ttang', '땡처리'],
+    myrealtrip: ['myrealtrip', '마이리얼트립'],
+};
+const alertAliases = sourceAlertAliases[sourceKey] || [sourceKey];
+const belongsToSource = (alert) => alertAliases.some(alias =>
+    String(alert || '').toLocaleLowerCase('ko-KR').includes(alias.toLocaleLowerCase('ko-KR'))
+);
+const targetAlerts = Array.isArray(target.integrityAlerts) ? target.integrityAlerts : [];
+const overlayAlerts = Array.isArray(overlay.integrityAlerts) ? overlay.integrityAlerts : [];
+target.integrityAlerts = Array.from(new Set([
+    ...targetAlerts.filter(alert => !belongsToSource(alert)),
+    ...overlayAlerts.filter(belongsToSource),
+]));
+
 fs.writeFileSync(targetPath, JSON.stringify(target, null, 2));
 console.log(
     `✅ ${sourceKey} 병합: target ${beforeCount}건(${sourceKey} ${replacedCount}) → ${target.count}건(${sourceKey} ${overlayFlights.length})`

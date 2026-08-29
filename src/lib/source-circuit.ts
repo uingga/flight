@@ -9,11 +9,12 @@ export const SOURCE_CIRCUIT_COOLDOWN_MS = 24 * 60 * 60 * 1000;
  * 24시간을 기다리지 않고 새 구현으로 한 번 검증할 수 있다.
  */
 export const SOURCE_ADAPTER_VERSIONS = {
-    ybtour: '2026-08-29.1',
-    hanatour: '2026-08-29.1',
-    modetour: '2026-08-29.1',
+    ybtour: '2026-08-30.2',
+    hanatour: '2026-08-30.2',
+    modetour: '2026-08-30.2',
     onlinetour: '2026-08-29.1',
-    ttang: '2026-08-29.1',
+    ttang: '2026-08-30.2',
+    myrealtrip: '2026-08-30.1',
 } as const;
 
 export interface SourceCircuitState {
@@ -69,7 +70,7 @@ export function classifySourceAccessRestriction(error: unknown): SourceAccessRes
 
     const blocked = status === 401
         || status === 403
-        || (error instanceof SourceResponseError && error.kind === 'html-response')
+        || (error instanceof SourceResponseError && (error.kind === 'html-response' || error.kind === 'soft-block'))
         || /(?:http\s*)?(?:401|403)\b|captcha|access denied|forbidden|접근\s*제한|차단/i.test(normalized);
     if (blocked) {
         return {

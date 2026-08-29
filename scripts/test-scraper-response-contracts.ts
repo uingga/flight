@@ -5,6 +5,11 @@ import {
 } from '../src/lib/scrapers/onlinetour.ts';
 import { fetchTtangPromotionInBrowser } from '../src/lib/scrapers/ttang.ts';
 import {
+    parseMyrealtripBulkPayload,
+    parseMyrealtripCalendarPayload,
+} from '../src/lib/scrapers/myrealtrip.ts';
+import { parseModetourRegionPayload } from '../src/lib/scrapers/modetour.ts';
+import {
     assertNoSourceAccessBlockText,
     isExplicitAccessRestrictionStatus,
     parseOnlineTourCities,
@@ -46,6 +51,13 @@ assertSourceError(
     'html-response',
 );
 assert.doesNotThrow(() => assertNoSourceAccessBlockText('정상 페이지', '<html>특가 항공권</html>'));
+assert.equal(parseMyrealtripBulkPayload({ lowestPriceInfoList: [{ arrivalCity: 'NRT' }] }).length, 1);
+assert.equal(parseMyrealtripCalendarPayload({ flightCalendarInfoResults: [{ date: '2026-09-01' }] }).length, 1);
+assertSourceError(() => parseMyrealtripBulkPayload({ result: [] }), 'schema-mismatch');
+assertSourceError(() => parseMyrealtripCalendarPayload({ result: [] }), 'schema-mismatch');
+assert.equal(parseModetourRegionPayload('{"result":[{"stockPackageNo":1}]}').length, 1);
+assertSourceError(() => parseModetourRegionPayload('{"rows":[]}'), 'schema-mismatch');
+assertSourceError(() => parseModetourRegionPayload('{broken}'), 'malformed-json');
 
 async function testTtangBrowserRequestContract() {
     const xml = '<RESPONSE><HEAD><error>false</error><message></message></HEAD><RESULT><RECORD><CONTENS><![CDATA[{"code":"OK","desc":"SUCCESS","response":[]}]]></CONTENS></RECORD></RESULT></RESPONSE>';

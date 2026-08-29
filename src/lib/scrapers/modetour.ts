@@ -3,9 +3,12 @@ import { getRegionByCity } from '@/lib/utils/region-mapper';
 import { IncompleteScrapeError, ScrapeCompleteness } from './scrape-errors';
 import {
     assertNoSourceAccessBlockText,
-    isExplicitAccessRestrictionStatus,
+    describeSourceError,
+    fetchSourceText,
+    retrySourceOperation,
     SourceResponseError,
 } from './source-response';
+import { classifySourceAccessRestriction } from '../source-circuit';
 // logCrawlResults moved to crawl-all.ts
 
 const randomDelay = (min: number, max: number) =>
@@ -53,13 +56,12 @@ const CONTINENT_REGIONS: Record<string, string[]> = {
     SOPA: ['남태평양'],
 };
 
-export async function scrapeModetour(prevFlights: any[] = []): Promise<Flight[]> {
-    try {
-        // 1단계: 모두투어 웹사이트에서 ApiKey 획득
-        console.log('모두투어 ApiKey 획득 중...');
-        let apiKey = '';
+async function fetchModetourLanding(): Promise<{ html: string; setCookies: string[] }> {
+    return retrySourceOperation('모두투어 초기 페이지', async () => {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 20_000);
         try {
-            const initRes = await fetch('https://www.modetour.com/flights/discount-flight', {
+            const response = await fetch('https://www.modetour.com/flights/discount-flight', {
                 method: 'GET',
                 headers: {
                     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
@@ -67,52 +69,117 @@ export async function scrapeModetour(prevFlights: any[] = []): Promise<Flight[]>
                     'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
                 },
                 redirect: 'follow',
+                signal: controller.signal,
             });
-            if (!initRes.ok) {
+            const html = await response.text();
+            if (!response.ok) {
                 throw new SourceResponseError(
                     'http-status',
-                    `모두투어 초기 페이지 HTTP ${initRes.status}`,
-                    initRes.status,
-                    initRes.headers.get('content-type') || '',
+                    `모두투어 초기 페이지 HTTP ${response.status}`,
+                    response.status,
+                    response.headers.get('content-type') || '',
                     undefined,
-                    initRes.url,
+                    response.url,
                 );
             }
+            assertNoSourceAccessBlockText('모두투어 초기 페이지', html, response.url);
+            return { html, setCookies: response.headers.getSetCookie?.() || [] };
+        } catch (error) {
+            if (error instanceof SourceResponseError) throw error;
+            throw new SourceResponseError(
+                'network',
+                `모두투어 초기 페이지 요청 실패: ${error instanceof Error ? error.message : String(error)}`,
+            );
+        } finally {
+            clearTimeout(timeout);
+        }
+    }, { maxAttempts: 2, delaysMs: [2_000] });
+}
 
-            // Set-Cookie 헤더에서 ModeEcommerceContext 추출
-            const setCookies = initRes.headers.getSetCookie?.() || [];
-            for (const cookie of setCookies) {
-                if (cookie.includes('ModeEcommerceContext')) {
-                    // 쿠키 값에서 apiKey 추출
-                    const match = cookie.match(/ModeEcommerceContext=([^;]+)/);
-                    if (match) {
-                        try {
-                            const decoded = decodeURIComponent(match[1]);
-                            const parsed = JSON.parse(decoded);
-                            apiKey = parsed.apiKey || parsed.ApiKey || '';
-                        } catch {
-                            // URL 인코딩이 아닌 경우 직접 파싱 시도
-                            const keyMatch = match[1].match(/[Aa]pi[Kk]ey["\s:]+["']?([^"',}]+)/);
-                            if (keyMatch) apiKey = keyMatch[1];
-                        }
+export function parseModetourRegionPayload(text: string, label = '모두투어 API'): any[] {
+    let data: any;
+    try {
+        data = JSON.parse(text);
+    } catch {
+        throw new SourceResponseError('malformed-json', `${label} JSON을 해석하지 못했습니다.`);
+    }
+    if (!data || typeof data !== 'object' || !Array.isArray(data.result)) {
+        throw new SourceResponseError('schema-mismatch', `${label} 응답에 result 배열이 없습니다.`);
+    }
+    return data.result;
+}
+
+async function fetchModetourRegionRows(
+    continentCode: string,
+    url: URL,
+    reqHeader: string,
+): Promise<any[]> {
+    const label = `모두투어 ${continentCode} API`;
+    return retrySourceOperation(label, async () => {
+        const response = await fetchSourceText(label, url, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json, text/plain, */*',
+                'Origin': 'https://www.modetour.com',
+                'Referer': 'https://www.modetour.com/',
+                'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+                'modewebapireqheader': reqHeader,
+                'x-platform': 'ModeEcommerce',
+                'x-salespartner': '2',
+                'x-userdepartment': 'ModeEcommerce',
+            },
+        }, 20_000);
+        assertNoSourceAccessBlockText(label, response.text, response.finalUrl);
+        if (!/json/i.test(response.contentType)) {
+            throw new SourceResponseError(
+                'unexpected-content',
+                `${label} 응답 형식이 JSON이 아닙니다: ${response.contentType || '없음'}`,
+                response.status,
+                response.contentType,
+                undefined,
+                response.finalUrl,
+            );
+        }
+
+        return parseModetourRegionPayload(response.text, label);
+    }, {
+        maxAttempts: 2,
+        delaysMs: [2_000],
+        onRetry: (error) => console.warn(`${label} 일시 오류 재시도: ${error.message}`),
+    });
+}
+export async function scrapeModetour(prevFlights: any[] = []): Promise<Flight[]> {
+    try {
+        // 1단계: 모두투어 웹사이트에서 ApiKey 획득
+        console.log('모두투어 ApiKey 획득 중...');
+        let apiKey = '';
+        const landing = await fetchModetourLanding();
+        // Set-Cookie 헤더에서 ModeEcommerceContext 추출
+        for (const cookie of landing.setCookies) {
+            if (cookie.includes('ModeEcommerceContext')) {
+                // 쿠키 값에서 apiKey 추출
+                const match = cookie.match(/ModeEcommerceContext=([^;]+)/);
+                if (match) {
+                    try {
+                        const decoded = decodeURIComponent(match[1]);
+                        const parsed = JSON.parse(decoded);
+                        apiKey = parsed.apiKey || parsed.ApiKey || '';
+                    } catch {
+                        // URL 인코딩이 아닌 경우 직접 파싱 시도
+                        const keyMatch = match[1].match(/[Aa]pi[Kk]ey["\s:]+["']?([^"',}]+)/);
+                        if (keyMatch) apiKey = keyMatch[1];
                     }
                 }
             }
-
-            if (!apiKey) {
-                // HTML에서 apiKey 추출 시도 (fallback)
-                const html = await initRes.text();
-                assertNoSourceAccessBlockText('모두투어 초기 페이지', html, initRes.url);
-                const keyMatch = html.match(/[Aa]pi[Kk]ey["\s:]+["']([^"']+)/);
-                if (keyMatch) apiKey = keyMatch[1];
-            }
-        } catch (e) {
-            if (e instanceof SourceResponseError) throw e;
-            console.error('모두투어 ApiKey 획득 실패:', e);
         }
 
         if (!apiKey) {
-            console.error('모두투어 ApiKey를 찾을 수 없습니다. 기본값으로 시도합니다.');
+            const keyMatch = landing.html.match(/[Aa]pi[Kk]ey["\s:]+["']([^"']+)/);
+            if (keyMatch) apiKey = keyMatch[1];
+        }
+        if (!apiKey) {
+            throw new SourceResponseError('schema-mismatch', '모두투어 ApiKey를 찾을 수 없습니다.');
         } else {
             console.log(`모두투어 ApiKey 획득 완료: ${apiKey.substring(0, 8)}...`);
         }
@@ -207,58 +274,21 @@ export async function scrapeModetour(prevFlights: any[] = []): Promise<Flight[]>
             url.searchParams.append('DepartureDate', formatDate(today));
             url.searchParams.append('ArrivalDate', formatDate(oneMonthLater));
 
-            const response = await fetch(url.toString(), {
-                method: 'GET',
-                headers: {
-                    'Accept': 'application/json, text/plain, */*',
-                    'Origin': 'https://www.modetour.com',
-                    'Referer': 'https://www.modetour.com/',
-                    'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-                    'modewebapireqheader': reqHeader,
-                    'x-platform': 'ModeEcommerce',
-                    'x-salespartner': '2',
-                    'x-userdepartment': 'ModeEcommerce',
-                },
-            });
-
-            if (!response.ok) {
-                console.error(`모두투어 ${continentCode} API 호출 실패:`, response.status);
-                if (isExplicitAccessRestrictionStatus(response.status)) {
-                    throw new SourceResponseError(
-                        'http-status',
-                        `모두투어 ${continentCode} API HTTP ${response.status}`,
-                        response.status,
-                        response.headers.get('content-type') || '',
-                        undefined,
-                        response.url,
-                    );
-                }
+            let rows: any[];
+            try {
+                rows = await fetchModetourRegionRows(continentCode, url, reqHeader);
+            } catch (error) {
+                if (classifySourceAccessRestriction(error)) throw error;
                 const regions = CONTINENT_REGIONS[continentCode] || [];
                 completeness.recordFailure(
-                    `${continentCode} (HTTP ${response.status})`,
+                    `${continentCode} (${describeSourceError(error)})`,
                     f => regions.includes(f.region || getRegionByCity(f.arrival?.city || '')),
                 );
-                continue; // 다음 대륙으로 계속
+                await randomDelay(2, 4);
+                continue;
             }
 
-            const contentType = response.headers.get('content-type') || '';
-            if (!/json/i.test(contentType)) {
-                const body = await response.text();
-                assertNoSourceAccessBlockText(`모두투어 ${continentCode} API`, body, response.url);
-                throw new SourceResponseError(
-                    'unexpected-content',
-                    `모두투어 ${continentCode} API 응답 형식이 JSON이 아닙니다: ${contentType || '없음'}`,
-                    response.status,
-                    contentType,
-                    undefined,
-                    response.url,
-                );
-            }
-            const data = await response.json();
-
-            if (data.result && Array.isArray(data.result)) {
-                data.result.forEach((item: any, index: number) => {
+            rows.forEach((item: any, index: number) => {
                     // 세금 포함 최종 가격 계산
                     const basePrice = parseInt(item.adult?.value || '0');
                     const tax1 = parseInt(item.adult?.tax || '0');
@@ -354,11 +384,10 @@ export async function scrapeModetour(prevFlights: any[] = []): Promise<Flight[]>
                             returnArrivalAirport: item.koreanArrival?.code || item.departure?.code || undefined,
                         },
                     });
-                });
-            }
+            });
 
-            console.log(`모두투어 ${continentCode}: ${data.result?.length || 0}개 항목 중 필터링 후 추가됨`);
-            await randomDelay(0.8, 1.8);
+            console.log(`모두투어 ${continentCode}: ${rows.length}개 항목 중 필터링 후 추가됨`);
+            await randomDelay(1.5, 3);
         }
 
         console.log(`모두투어에서 총 ${allFlights.length}개의 항공권을 가져왔습니다.`);

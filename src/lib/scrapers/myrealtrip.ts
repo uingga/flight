@@ -2,6 +2,13 @@ import { Flight } from '@/types/flight';
 import { lookupRegionByCity } from '@/lib/utils/region-mapper';
 import fs from 'fs';
 import path from 'path';
+import {
+    assertNoSourceAccessBlockText,
+    assertNoSourceResponseCollapse,
+    fetchSourceText,
+    retrySourceOperation,
+    SourceResponseError,
+} from './source-response';
 
 /**
  * 마이리얼트립 항공권 스크래퍼 v5 (최종)
@@ -92,7 +99,7 @@ const API_REGION_MAP: Record<string, string> = {
     '중남미': '미주', '아프리카': '기타', '중동': '기타',
 };
 
-interface BulkLowestFare {
+export interface BulkLowestFare {
     departureDate: string;
     arrivalDate: string;
     totalPrice: number;
@@ -107,7 +114,7 @@ interface BulkLowestFare {
     arrivalCountryNameEn: string;
 }
 
-interface CalendarPrice {
+export interface CalendarPrice {
     date: string;
     airline: string;
     price: number;
@@ -152,19 +159,59 @@ const ROUTE_GID_MAP = loadGidMap();
 
 // ── API 호출 ──────────────────────────────────────────
 
-async function fetchBulkLowestFares(departureCity: string): Promise<BulkLowestFare[]> {
-    try {
-        const response = await fetch(BULK_API_URL, {
+async function fetchMyrealtripJson(label: string, url: string, body: Record<string, unknown>): Promise<unknown> {
+    return retrySourceOperation(label, async () => {
+        const response = await fetchSourceText(label, url, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ departureCity, period: -1, airlines: ['ALL'], transfer: -1 }),
-        });
-        if (!response.ok) return [];
-        const data = await response.json();
-        return Array.isArray(data?.lowestPriceInfoList) ? data.lowestPriceInfoList : [];
-    } catch {
-        return [];
+            headers: {
+                'Content-Type': 'application/json; charset=UTF-8',
+                'Referer': 'https://flights.myrealtrip.com/',
+                'Accept': 'application/json, text/javascript, */*; q=0.01',
+            },
+            body: JSON.stringify(body),
+        }, 20_000);
+        assertNoSourceAccessBlockText(label, response.text, response.finalUrl);
+        try {
+            return JSON.parse(response.text);
+        } catch {
+            throw new SourceResponseError(
+                'malformed-json',
+                `${label} 응답 JSON을 해석하지 못했습니다.`,
+                response.status,
+                response.contentType,
+                undefined,
+                response.finalUrl,
+            );
+        }
+    }, {
+        maxAttempts: 2,
+        delaysMs: [2_000],
+        onRetry: (error) => console.warn(`[마이리얼트립] ${label} 일시 오류 재시도: ${error.message}`),
+    });
+}
+
+export function parseMyrealtripBulkPayload(data: unknown): BulkLowestFare[] {
+    if (!data || typeof data !== 'object' || !Array.isArray((data as any).lowestPriceInfoList)) {
+        throw new SourceResponseError('schema-mismatch', '마이리얼트립 Bulk API 응답 구조가 바뀌었습니다.');
     }
+    return (data as any).lowestPriceInfoList;
+}
+
+export function parseMyrealtripCalendarPayload(data: unknown): CalendarPrice[] {
+    if (!data || typeof data !== 'object' || !Array.isArray((data as any).flightCalendarInfoResults)) {
+        throw new SourceResponseError('schema-mismatch', '마이리얼트립 Calendar API 응답 구조가 바뀌었습니다.');
+    }
+    return (data as any).flightCalendarInfoResults;
+}
+
+async function fetchBulkLowestFares(departureCity: string): Promise<BulkLowestFare[]> {
+    const data = await fetchMyrealtripJson('마이리얼트립 Bulk API', BULK_API_URL, {
+        departureCity,
+        period: -1,
+        airlines: ['ALL'],
+        transfer: -1,
+    });
+    return parseMyrealtripBulkPayload(data);
 }
 
 /**
@@ -175,38 +222,17 @@ async function fetchCalendarPrices(
     fromCity: string,
     toCity: string,
     departureDate: string,
-    retryCount = 0
 ): Promise<CalendarPrice[]> {
-    try {
-        const response = await fetch(CALENDAR_API_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json; charset=UTF-8',
-                'Referer': 'https://flights.myrealtrip.com/',
-                'Accept': 'application/json, text/javascript, */*; q=0.01',
-            },
-            body: JSON.stringify({
-                from: fromCity,
-                to: toCity,
-                departureDate,
-                airlines: ['All'],
-                period: 30,
-                transfer: -1,
-                international: true,
-            }),
-        });
-
-        if (response.status === 429 && retryCount < 2) {
-            await delay(3000);
-            return fetchCalendarPrices(fromCity, toCity, departureDate, retryCount + 1);
-        }
-        if (!response.ok) return [];
-
-        const data = await response.json();
-        return Array.isArray(data?.flightCalendarInfoResults) ? data.flightCalendarInfoResults : [];
-    } catch {
-        return [];
-    }
+    const data = await fetchMyrealtripJson('마이리얼트립 Calendar API', CALENDAR_API_URL, {
+        from: fromCity,
+        to: toCity,
+        departureDate,
+        airlines: ['All'],
+        period: 30,
+        transfer: -1,
+        international: true,
+    });
+    return parseMyrealtripCalendarPayload(data);
 }
 
 // ── 링크 생성 ──────────────────────────────────────────
@@ -255,6 +281,9 @@ export async function scrapeMyrealtrip(): Promise<Flight[]> {
 
     const allFlights: Flight[] = [];
     const processedKeys = new Set<string>();
+    let calendarProcessed = 0;
+    let calendarSucceeded = 0;
+    let consecutiveCalendarEmpty = 0;
 
     for (const dep of DEPARTURE_CITIES) {
         console.log(`[마이리얼트립] ${dep.city}(${dep.cityCd}) 출발 조회 중...`);
@@ -262,8 +291,11 @@ export async function scrapeMyrealtrip(): Promise<Flight[]> {
         // 1단계: Bulk API로 도시 목록 가져오기
         const fares = await fetchBulkLowestFares(dep.cityCd);
         if (fares.length === 0) {
-            console.warn(`[마이리얼트립] ${dep.city} 출발 데이터 없음`);
-            continue;
+            throw new SourceResponseError(
+                'soft-block',
+                `마이리얼트립 ${dep.city} Bulk 목록이 0건입니다.`,
+                200,
+            );
         }
         console.log(`[마이리얼트립] ${dep.city}: ${fares.length}개 도시 발견`);
 
@@ -281,6 +313,24 @@ export async function scrapeMyrealtrip(): Promise<Flight[]> {
             if (!bulkDepDate) continue;
 
             const calPrices = await fetchCalendarPrices(dep.calendarFrom, fare.arrivalCity, today);
+            calendarProcessed++;
+            if (calPrices.length > 0) {
+                calendarSucceeded++;
+                consecutiveCalendarEmpty = 0;
+            } else {
+                consecutiveCalendarEmpty++;
+            }
+            assertNoSourceResponseCollapse('마이리얼트립 Calendar API', {
+                processed: calendarProcessed,
+                succeeded: calendarSucceeded,
+                consecutiveFailures: consecutiveCalendarEmpty,
+            }, {
+                maxConsecutiveFailures: 12,
+                minSamples: 20,
+                minSuccessRatio: 0.1,
+            });
+            // 가격 조건이나 필드 문제로 아래에서 건너뛰더라도 모든 API 요청 뒤에는 쉰다.
+            await delay(800 + Math.random() * 800);
 
             let price: number;
             let airline: string;
@@ -353,14 +403,14 @@ export async function scrapeMyrealtrip(): Promise<Flight[]> {
             allFlights.push(flight);
             collected++;
 
-            // API 호출 간 딜레이
-            await delay(300);
         }
 
         console.log(`[마이리얼트립] ${dep.city}: ${collected}개 수집, ${filtered}개 제외`);
         console.log(`  실시간 가격: ${calendarUsed}개 / Bulk 폴백: ${bulkFallback}개`);
 
-        if (dep !== DEPARTURE_CITIES[DEPARTURE_CITIES.length - 1]) await delay(500);
+        if (dep !== DEPARTURE_CITIES[DEPARTURE_CITIES.length - 1]) {
+            await delay(2_000 + Math.random() * 2_000);
+        }
     }
 
     console.log(`\n[마이리얼트립] 완료: ${allFlights.length}개 항공편 수집`);

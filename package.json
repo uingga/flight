@@ -16,6 +16,7 @@
     "test:ybtour-schedule": "tsx scripts/test-ybtour-schedule.ts",
     "test:scraper-contracts": "tsx scripts/test-scraper-response-contracts.ts",
     "test:source-circuit": "tsx scripts/test-source-circuit.ts",
+    "test:crawl-cache-safety": "tsx scripts/test-crawl-cache-safety.ts",
     "test:source-freshness": "tsx scripts/test-source-freshness.ts",
     "test:crawl-schedule": "node --test scripts/test-crawl-schedule-health.mjs",
     "test:naver-policy": "node --test scripts/test-local-naver-run-policy.mjs",

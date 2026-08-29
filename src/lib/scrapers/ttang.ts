@@ -8,12 +8,14 @@ import { survivingRouteMinPrice } from '@/lib/utils/route-min-price';
 import { normalizeAirline } from '@/lib/utils/flight-helpers';
 import {
     assertNoSourceAccessBlockText,
+    assertNoSourceResponseCollapse,
     describeSourceError,
     parseTtangPromotionXml,
     retrySourceOperation,
     SourceResponseError,
     TtangPromotionPayload,
 } from './source-response';
+import { classifySourceAccessRestriction } from '../source-circuit';
 
 const randomDelay = (min: number, max: number) =>
     new Promise(r => setTimeout(r, (Math.random() * (max - min) + min) * 1000));
@@ -179,6 +181,8 @@ export async function scrapeTtang(prevFlights: any[] = []): Promise<Flight[]> {
 
         const currentDate = new Date(today);
         let totalDays = 0;
+        let daysWithFlights = 0;
+        let consecutiveEmptyDays = 0;
 
         while (currentDate <= endDate) {
             const dateParam = formatDateParam(currentDate);
@@ -245,10 +249,24 @@ export async function scrapeTtang(prevFlights: any[] = []): Promise<Flight[]> {
                 }
 
                 if (dayCount > 0) {
+                    daysWithFlights++;
+                    consecutiveEmptyDays = 0;
                     console.log(`[땡처리] ${dateParam}: ${dayCount}개 항공편`);
+                } else {
+                    consecutiveEmptyDays++;
                 }
+                assertNoSourceResponseCollapse('땡처리닷컴 날짜별 프로모션 API', {
+                    processed: totalDays,
+                    succeeded: daysWithFlights,
+                    consecutiveFailures: consecutiveEmptyDays,
+                }, {
+                    maxConsecutiveFailures: 8,
+                    minSamples: 12,
+                    minSuccessRatio: 0.2,
+                });
             } catch (error) {
                 console.error(`[땡처리] ${dateParam} 실패: ${describeSourceError(error)}`);
+                if (classifySourceAccessRestriction(error)) throw error;
                 throw new IncompleteScrapeError(
                     `땡처리닷컴 브라우저 수집이 실패했습니다: ${dateParam} (${describeSourceError(error)})`,
                     [`${dateParam} 이후 전체 출발일`],
@@ -259,8 +277,8 @@ export async function scrapeTtang(prevFlights: any[] = []): Promise<Flight[]> {
             // 한 달치 날짜 API를 연속 발사하지 않는다. 매 요청 사이에 쉬고, 5일마다
             // 사람의 탐색처럼 조금 더 긴 간격을 둔다.
             if (currentDate <= endDate) {
-                await randomDelay(0.8, 1.6);
-                if (totalDays % 5 === 0) await randomDelay(2, 4);
+                await randomDelay(1.2, 2.4);
+                if (totalDays % 5 === 0) await randomDelay(3, 6);
             }
         }
 
@@ -333,6 +351,7 @@ export async function scrapeTtang(prevFlights: any[] = []): Promise<Flight[]> {
 
     } catch (error) {
         console.error('[땡처리] 크롤링 오류:', error);
+        if (classifySourceAccessRestriction(error)) throw error;
         // 불완전 수집은 호출부가 알아야 이전 캐시를 지킬 수 있으므로 삼키지 않는다
         if (error instanceof IncompleteScrapeError) throw error;
         throw new IncompleteScrapeError(
