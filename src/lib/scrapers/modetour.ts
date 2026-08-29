@@ -1,7 +1,15 @@
 import { Flight } from '@/types/flight';
 import { getRegionByCity } from '@/lib/utils/region-mapper';
 import { IncompleteScrapeError, ScrapeCompleteness } from './scrape-errors';
+import {
+    assertNoSourceAccessBlockText,
+    isExplicitAccessRestrictionStatus,
+    SourceResponseError,
+} from './source-response';
 // logCrawlResults moved to crawl-all.ts
+
+const randomDelay = (min: number, max: number) =>
+    new Promise(resolve => setTimeout(resolve, (Math.random() * (max - min) + min) * 1000));
 
 /**
  * 도착 공항코드 → 모두투어 대륙코드 매핑
@@ -60,6 +68,16 @@ export async function scrapeModetour(prevFlights: any[] = []): Promise<Flight[]>
                 },
                 redirect: 'follow',
             });
+            if (!initRes.ok) {
+                throw new SourceResponseError(
+                    'http-status',
+                    `모두투어 초기 페이지 HTTP ${initRes.status}`,
+                    initRes.status,
+                    initRes.headers.get('content-type') || '',
+                    undefined,
+                    initRes.url,
+                );
+            }
 
             // Set-Cookie 헤더에서 ModeEcommerceContext 추출
             const setCookies = initRes.headers.getSetCookie?.() || [];
@@ -84,10 +102,12 @@ export async function scrapeModetour(prevFlights: any[] = []): Promise<Flight[]>
             if (!apiKey) {
                 // HTML에서 apiKey 추출 시도 (fallback)
                 const html = await initRes.text();
+                assertNoSourceAccessBlockText('모두투어 초기 페이지', html, initRes.url);
                 const keyMatch = html.match(/[Aa]pi[Kk]ey["\s:]+["']([^"']+)/);
                 if (keyMatch) apiKey = keyMatch[1];
             }
         } catch (e) {
+            if (e instanceof SourceResponseError) throw e;
             console.error('모두투어 ApiKey 획득 실패:', e);
         }
 
@@ -204,6 +224,16 @@ export async function scrapeModetour(prevFlights: any[] = []): Promise<Flight[]>
 
             if (!response.ok) {
                 console.error(`모두투어 ${continentCode} API 호출 실패:`, response.status);
+                if (isExplicitAccessRestrictionStatus(response.status)) {
+                    throw new SourceResponseError(
+                        'http-status',
+                        `모두투어 ${continentCode} API HTTP ${response.status}`,
+                        response.status,
+                        response.headers.get('content-type') || '',
+                        undefined,
+                        response.url,
+                    );
+                }
                 const regions = CONTINENT_REGIONS[continentCode] || [];
                 completeness.recordFailure(
                     `${continentCode} (HTTP ${response.status})`,
@@ -212,6 +242,19 @@ export async function scrapeModetour(prevFlights: any[] = []): Promise<Flight[]>
                 continue; // 다음 대륙으로 계속
             }
 
+            const contentType = response.headers.get('content-type') || '';
+            if (!/json/i.test(contentType)) {
+                const body = await response.text();
+                assertNoSourceAccessBlockText(`모두투어 ${continentCode} API`, body, response.url);
+                throw new SourceResponseError(
+                    'unexpected-content',
+                    `모두투어 ${continentCode} API 응답 형식이 JSON이 아닙니다: ${contentType || '없음'}`,
+                    response.status,
+                    contentType,
+                    undefined,
+                    response.url,
+                );
+            }
             const data = await response.json();
 
             if (data.result && Array.isArray(data.result)) {
@@ -315,6 +358,7 @@ export async function scrapeModetour(prevFlights: any[] = []): Promise<Flight[]>
             }
 
             console.log(`모두투어 ${continentCode}: ${data.result?.length || 0}개 항목 중 필터링 후 추가됨`);
+            await randomDelay(0.8, 1.8);
         }
 
         console.log(`모두투어에서 총 ${allFlights.length}개의 항공권을 가져왔습니다.`);
@@ -328,7 +372,7 @@ export async function scrapeModetour(prevFlights: any[] = []): Promise<Flight[]>
     } catch (error) {
         console.error('모두투어 스크래핑 오류:', error);
         // 불완전 수집은 호출부가 알아야 이전 캐시를 지킬 수 있으므로 삼키지 않는다
-        if (error instanceof IncompleteScrapeError) throw error;
+        if (error instanceof IncompleteScrapeError || error instanceof SourceResponseError) throw error;
         return [];
     }
 }

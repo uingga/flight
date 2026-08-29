@@ -82,6 +82,16 @@ interface AdminData {
     sourceUpdatedAt?: Record<string, string>;
     /** 여행사별 연속 실패 횟수. 0이 아니면 그만큼 이전 데이터로 버티고 있다는 뜻이다. */
     staleStreak?: Record<string, number>;
+    /** 접근 거부·요청 제한 뒤 해당 여행사에 자동 요청을 쉬고 있는 상태. */
+    sourceCircuits?: Record<string, {
+        reason: 'blocked' | 'rate_limited';
+        openedAt: string;
+        nextProbeAt: string;
+        resumePolicy: 'cooldown_or_adapter_change';
+        adapterVersion: string;
+        status?: number;
+        detail: string;
+    }>;
     naverStatus?: {
         lastCrawledAt: string | null;
         ageDays: number | null;
@@ -292,6 +302,7 @@ interface FlightFilterSummary {
     excluded: number;
     reasons: {
         staleMyrealtrip: number;
+        staleOtherSources: number;
         reported: number;
         duplicate: number;
         naverExpensive: number;
@@ -1298,6 +1309,7 @@ export default function AdminPage() {
         { label: '네이버보다 10만원·20% 이상 비쌈', count: flightFilterSummary.reasons.naverExpensive },
         { label: '신고가 3건 이상 쌓여 임시 숨김', count: flightFilterSummary.reasons.reported },
         { label: '마이리얼트립 가격 확인이 하루 넘게 멈춤', count: flightFilterSummary.reasons.staleMyrealtrip },
+        { label: '일반 여행사 가격 확인이 이틀 넘게 멈춤', count: flightFilterSummary.reasons.staleOtherSources },
         { label: '출발일이 지남', count: flightFilterSummary.reasons.expired },
         { label: '출발일과 귀국일이 같음', count: flightFilterSummary.reasons.oneWay },
     ].filter(item => item.count > 0) : [];
@@ -1864,6 +1876,10 @@ export default function AdminPage() {
                             const updatedAt = data.sourceUpdatedAt?.[source];
                             const ageHours = updatedAt ? (Date.now() - new Date(updatedAt).getTime()) / 3_600_000 : null;
                             const staleCount = data.staleStreak?.[source] || 0;
+                            const circuit = data.sourceCircuits?.[source];
+                            const circuitOpen = Boolean(
+                                circuit && (!circuit.nextProbeAt || new Date(circuit.nextProbeAt).getTime() > Date.now()),
+                            );
                             const late = ageHours === null || ageHours > (STALE_AFTER_HOURS[source] ?? DEFAULT_STALE_AFTER_HOURS);
                             const visibleCount = sourceVisibleCounts[source] || 0;
                             const history = (data.crawlHistory || [])
@@ -1882,9 +1898,11 @@ export default function AdminPage() {
                             const median = pastValues.length ? pastValues[Math.floor(pastValues.length / 2)] : 0;
                             const latest = history[history.length - 1] || null;
                             const slumped = Boolean(latest && !latest.preserved && median >= 30 && latest.value < median * 0.6);
-                            const issue = staleCount > 0 || late || slumped;
+                            const issue = circuitOpen || staleCount > 0 || late || slumped;
                             const peak = Math.max(...history.map(entry => entry.value), 1);
-                            const statusText = staleCount > 0
+                            const statusText = circuitOpen
+                                ? circuit!.reason === 'rate_limited' ? '요청 제한으로 쉬는 중' : '접근 차단으로 쉬는 중'
+                                : staleCount > 0
                                 ? `이전 데이터 ${staleCount}회`
                                 : slumped
                                     ? '평소보다 너무 적음'
@@ -2560,6 +2578,10 @@ export default function AdminPage() {
                     {allSources.map(source => {
                         const updatedAt = data.sourceUpdatedAt?.[source];
                         const streak = data.staleStreak?.[source] || 0;
+                        const circuit = data.sourceCircuits?.[source];
+                        const circuitOpen = Boolean(
+                            circuit && (!circuit.nextProbeAt || new Date(circuit.nextProbeAt).getTime() > Date.now()),
+                        );
                         const staleAfter = STALE_AFTER_HOURS[source] ?? DEFAULT_STALE_AFTER_HOURS;
                         const ageHours = updatedAt ? (Date.now() - new Date(updatedAt).getTime()) / 3600000 : null;
                         const stale = ageHours === null || ageHours > staleAfter;
@@ -2584,7 +2606,7 @@ export default function AdminPage() {
                             latest && !latest.preserved && median >= 30 && latest.value < median * 0.6,
                         );
 
-                        const status = streak > 0 || slumped ? 'broken' : stale ? 'stale' : 'ok';
+                        const status = circuitOpen || streak > 0 || slumped ? 'broken' : stale ? 'stale' : 'ok';
                         const peak = Math.max(...history.map(h => h.value), 1);
                         const shown = flightFilterSummary?.visibleBySource?.[source] ?? 0;
 
@@ -2612,7 +2634,11 @@ export default function AdminPage() {
                                             status === 'stale' ? styles.statusBadgeStale : '',
                                         ].filter(Boolean).join(' ')}
                                     >
-                                        {streak > 0
+                                        {circuitOpen
+                                            ? circuit!.reason === 'rate_limited'
+                                                ? `요청 제한 · ${formatKST(circuit!.nextProbeAt)} 재탐색`
+                                                : `접근 차단 · ${formatKST(circuit!.nextProbeAt)} 재탐색`
+                                            : streak > 0
                                                 ? `이전 데이터 사용 ${streak}회`
                                             : slumped
                                                     ? `평소보다 너무 적음 (${median.toLocaleString()}건 수준)`

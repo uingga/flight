@@ -128,6 +128,20 @@ test('health schedule stays in sync with daily-crawl.yml', () => {
     const workflow = fs.readFileSync('.github/workflows/daily-crawl.yml', 'utf8');
     const workflowCrons = [...workflow.matchAll(/^\s*- cron: '([^']+)'/gm)].map(match => match[1]);
     assert.deepEqual([...DAILY_CRAWL_CRONS].sort(), workflowCrons.sort());
+    assert.equal(workflowCrons.length, 5);
+    assert.doesNotMatch(workflow, /37 15 \* \* \*/);
+});
+
+test('anti-block safeguards keep source starts distributed and MyRealTrip serialized', () => {
+    const crawler = fs.readFileSync('scripts/crawl-all.ts', 'utf8');
+    const myrealtrip = fs.readFileSync('scripts/scrape-myrealtrip-prices.ts', 'utf8');
+
+    assert.match(crawler, /process\.env\.CI[\s\S]*?90_000/);
+    assert.match(crawler, /openSourceCircuit/);
+    assert.match(crawler, /Promise\.allSettled\(activeTasks\.map\(async task/);
+    assert.match(myrealtrip, /const WORKERS = 1;/);
+    assert.match(myrealtrip, /const MAX_ISOLATED_RETRIES = 10;/);
+    assert.doesNotMatch(myrealtrip, /disable-blink-features=AutomationControlled/);
 });
 
 test('full crawls advance the marker while partial crawls preserve it', () => {

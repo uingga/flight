@@ -7,6 +7,7 @@ import { IncompleteScrapeError, ScrapeCompleteness } from './scrape-errors';
 import { survivingRouteMinPrice } from '@/lib/utils/route-min-price';
 import { normalizeAirline } from '@/lib/utils/flight-helpers';
 import {
+    assertNoSourceAccessBlockText,
     describeSourceError,
     parseTtangPromotionXml,
     retrySourceOperation,
@@ -154,6 +155,8 @@ export async function scrapeTtang(prevFlights: any[] = []): Promise<Flight[]> {
                 );
             }
             await browserState.page.waitForTimeout(1_500);
+            const landingText = await browserState.page.locator('body').innerText({ timeout: 5_000 }).catch(() => '');
+            assertNoSourceAccessBlockText('땡처리닷컴 브라우저 세션 페이지', landingText, browserState.page.url());
             return browserState.page;
         };
 
@@ -253,7 +256,12 @@ export async function scrapeTtang(prevFlights: any[] = []): Promise<Flight[]> {
             }
 
             currentDate.setDate(currentDate.getDate() + 1);
-            if (totalDays % 5 === 0) await randomDelay(0.3, 0.8);
+            // 한 달치 날짜 API를 연속 발사하지 않는다. 매 요청 사이에 쉬고, 5일마다
+            // 사람의 탐색처럼 조금 더 긴 간격을 둔다.
+            if (currentDate <= endDate) {
+                await randomDelay(0.8, 1.6);
+                if (totalDays % 5 === 0) await randomDelay(2, 4);
+            }
         }
 
         console.log(`[땡처리] Phase 1 완료: ${totalDays}일 순회, ${allFlights.length}개 수집`);

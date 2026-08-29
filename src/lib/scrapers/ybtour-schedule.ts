@@ -1,4 +1,9 @@
 import type { Page } from 'playwright';
+import {
+    assertNoSourceAccessBlockText,
+    isExplicitAccessRestrictionStatus,
+    SourceResponseError,
+} from './source-response';
 
 /**
  * 노랑풍선 항공권의 출발·도착 시각을 노랑풍선에서 직접 가져온다.
@@ -240,6 +245,15 @@ export async function fetchYbtourSchedules(
                     viewType: '',
                 });
 
+                if (isExplicitAccessRestrictionStatus(res.status)) {
+                    throw new SourceResponseError(
+                        'http-status',
+                        `노랑풍선 시간 상세 API HTTP ${res.status}`,
+                        res.status,
+                    );
+                }
+                assertNoSourceAccessBlockText('노랑풍선 시간 상세 API', res.text);
+
                 if (res.status === 200 && res.text) {
                     receivedResponse = true;
                     const parsed = parseScheduleDetailWithReason(res.text, key.depDate);
@@ -253,7 +267,14 @@ export async function fetchYbtourSchedules(
                         shape: describeScheduleResponse(res.text),
                     };
                 }
-            } catch {
+            } catch (error) {
+                // 명시적 차단 신호는 같은 상세 요청을 다시 보내거나 다음 항목으로 넘어가지 않는다.
+                if (
+                    error instanceof SourceResponseError
+                    && (isExplicitAccessRestrictionStatus(error.status) || error.kind === 'html-response')
+                ) {
+                    throw error;
+                }
                 // 같은 항목을 한 번 더 시도한 뒤 최종 실패로 센다.
             }
 

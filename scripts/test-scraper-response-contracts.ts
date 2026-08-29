@@ -5,6 +5,8 @@ import {
 } from '../src/lib/scrapers/onlinetour.ts';
 import { fetchTtangPromotionInBrowser } from '../src/lib/scrapers/ttang.ts';
 import {
+    assertNoSourceAccessBlockText,
+    isExplicitAccessRestrictionStatus,
     parseOnlineTourCities,
     parseOnlineTourJsonp,
     parseTtangPromotionXml,
@@ -36,6 +38,14 @@ assertSourceError(
     () => parseOnlineTourJsonp('<html>blocked</html>', 'tikitikitTest'),
     'malformed-jsonp',
 );
+assert.equal(isExplicitAccessRestrictionStatus(403), true);
+assert.equal(isExplicitAccessRestrictionStatus(429), true);
+assert.equal(isExplicitAccessRestrictionStatus(503), false);
+assertSourceError(
+    () => assertNoSourceAccessBlockText('테스트 페이지', '<html>비정상적인 접근이 감지되었습니다</html>'),
+    'html-response',
+);
+assert.doesNotThrow(() => assertNoSourceAccessBlockText('정상 페이지', '<html>특가 항공권</html>'));
 
 async function testTtangBrowserRequestContract() {
     const xml = '<RESPONSE><HEAD><error>false</error><message></message></HEAD><RESULT><RECORD><CONTENS><![CDATA[{"code":"OK","desc":"SUCCESS","response":[]}]]></CONTENS></RECORD></RESULT></RESPONSE>';
@@ -90,6 +100,16 @@ async function testSourceRetries() {
         error => error instanceof SourceResponseError && error.kind === 'schema-mismatch',
     );
     assert.equal(schemaAttempts, 1);
+
+    let rateLimitedAttempts = 0;
+    await assert.rejects(
+        retrySourceOperation('요청 제한 테스트', async () => {
+            rateLimitedAttempts++;
+            throw new SourceResponseError('http-status', 'HTTP 429', 429);
+        }, { maxAttempts: 3, delaysMs: [0, 0] }),
+        error => error instanceof SourceResponseError && error.status === 429,
+    );
+    assert.equal(rateLimitedAttempts, 1);
 }
 
 let apiError: SourceResponseError | null = null;

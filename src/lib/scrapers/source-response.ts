@@ -25,6 +25,32 @@ export class SourceResponseError extends Error {
     }
 }
 
+export function isExplicitAccessRestrictionStatus(status: unknown): boolean {
+    const numericStatus = Number(status || 0);
+    return numericStatus === 401 || numericStatus === 403 || numericStatus === 429;
+}
+
+/** HTTP 200으로 위장된 CAPTCHA·WAF 안내도 정상 목록으로 해석하지 않는다. */
+export function assertNoSourceAccessBlockText(
+    label: string,
+    text: string,
+    finalUrl?: string,
+): void {
+    const normalized = String(text || '').replace(/\s+/g, ' ').slice(0, 20_000);
+    if (!/(?:captcha|access denied|request blocked|temporarily blocked|unusual traffic|비정상(?:적인)?\s*접근|자동화(?:된)?\s*요청|접근이?\s*제한|서비스\s*이용이?\s*제한)/i.test(normalized)) {
+        return;
+    }
+
+    throw new SourceResponseError(
+        'html-response',
+        `${label} 접근 제한 안내가 반환되었습니다.`,
+        200,
+        'text/html',
+        undefined,
+        finalUrl,
+    );
+}
+
 function sourceErrorCause(error: unknown): { reason: string; code?: string } {
     const messages: string[] = [];
     const seen = new Set<unknown>();
@@ -117,7 +143,9 @@ export function isRetryableSourceError(error: unknown): error is SourceResponseE
     if (error.kind === 'network') return true;
     if (error.kind !== 'http-status' && error.kind !== 'api-error') return false;
     const status = Number(error.status || 0);
-    return status === 408 || status === 425 || status === 429 || status >= 500;
+    // 429는 단순 전송 오류가 아니라 여행사가 보내는 명시적인 감속 신호다.
+    // 같은 회차에서는 재시도하지 않고, 소스별 24시간 휴식 회로에 맡긴다.
+    return status === 408 || status === 425 || status >= 500;
 }
 
 /** 일시적인 전송/API 오류만 제한적으로 다시 시도하고, 형식 변경은 즉시 드러낸다. */

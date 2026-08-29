@@ -9,7 +9,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { Flight } from '@/types/flight';
 import { normalizeAirline, normalizeCity } from '@/lib/utils/flight-helpers';
-import { filterStaleMyrealtripFlights } from '@/lib/source-freshness';
+import { filterStaleSourceFlights } from '@/lib/source-freshness';
 import { deduplicateDisplayFlights } from '@/lib/flight-visibility';
 import { getComparisonFreshness } from '@/lib/price-quality';
 
@@ -82,7 +82,7 @@ export function loadActiveFlights(): Flight[] {
         const today = new Intl.DateTimeFormat('en-CA', {
             timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit',
         }).format(new Date());
-        const visible = filterStaleMyrealtripFlights(flights, sourceUpdatedAt)
+        const visible = filterStaleSourceFlights(flights, sourceUpdatedAt)
             .filter(flight => {
                 if (flight.price <= 0 || parseDate(flight.departure?.date) < today) return false;
                 if (parseDate(flight.departure?.date) === parseDate(flight.arrival?.date)) return false;

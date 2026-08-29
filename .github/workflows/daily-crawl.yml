@@ -4,7 +4,7 @@ run-name: Daily Flight Crawl · ${{ github.event.schedule || inputs.trigger_sour
 
 on:
   schedule:
-    # 하루 6회 (KST): GitHub Actions 정각 혼잡을 피해 분 단위로 분산한다.
+    # 하루 5회 (KST): GitHub Actions 정각 혼잡을 피해 분 단위로 분산한다.
     #
     # 21시는 뺐다. 최근 4주 23회차를 표 단위로 세어 보니 13회(57%)가 새 표를
     # 하나도 못 찾았고 중앙값이 0이었다. 여행사 사이트 이용자가 가장 많은
@@ -14,7 +14,6 @@ on:
     - cron: '56 2 * * *'     # 11:56 KST
     - cron: '17 6 * * *'     # 15:17 KST
     - cron: '29 9 * * *'     # 18:29 KST
-    - cron: '37 15 * * *'    # 00:37 KST
   workflow_dispatch:
     inputs:
       trigger_source:

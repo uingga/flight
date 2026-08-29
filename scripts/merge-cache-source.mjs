@@ -76,6 +76,28 @@ if (overlay.sourceUpdatedAt?.[sourceKey]) {
     };
 }
 
+// 접근 제한 휴식 상태도 소스 단위로 함께 옮긴다. 정상 복구 결과에 상태가 없으면
+// 원격 캐시에 남아 있던 낡은 휴식 상태를 지운다.
+target.sourceCircuits = { ...(target.sourceCircuits || {}) };
+if (overlay.sourceCircuits?.[sourceKey]) {
+    target.sourceCircuits[sourceKey] = overlay.sourceCircuits[sourceKey];
+} else {
+    delete target.sourceCircuits[sourceKey];
+}
+
+if (overlay.staleStreak?.[sourceKey] !== undefined) {
+    target.staleStreak = {
+        ...(target.staleStreak || {}),
+        [sourceKey]: overlay.staleStreak[sourceKey],
+    };
+}
+if (overlay.scrapedCounts?.[sourceKey] !== undefined) {
+    target.scrapedCounts = {
+        ...(target.scrapedCounts || {}),
+        [sourceKey]: overlay.scrapedCounts[sourceKey],
+    };
+}
+
 fs.writeFileSync(targetPath, JSON.stringify(target, null, 2));
 console.log(
     `✅ ${sourceKey} 병합: target ${beforeCount}건(${sourceKey} ${replacedCount}) → ${target.count}건(${sourceKey} ${overlayFlights.length})`

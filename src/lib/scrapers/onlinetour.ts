@@ -2,17 +2,21 @@ import { Flight } from '@/types/flight';
 import { getRegionByCity } from '@/lib/utils/region-mapper';
 import { ScrapeCompleteness } from './scrape-errors';
 import {
+    assertNoSourceAccessBlockText,
     describeSourceError,
     fetchSourceText,
     parseOnlineTourJsonp,
     retrySourceOperation,
     SourceResponseError,
 } from './source-response';
+import { classifySourceAccessRestriction } from '../source-circuit';
 
 const LIST_PAGE_URL = 'https://www.onlinetour.co.kr/flight/w/international/dcair/dcairList';
 const LIST_API_URL = 'https://api.onlinetour.co.kr/v2/flight/international/dcair/list';
 const PAGE_SIZE = 100;
 const MAX_PAGES = 20;
+const randomDelay = (min: number, max: number) =>
+    new Promise(resolve => setTimeout(resolve, (Math.random() * (max - min) + min) * 1000));
 const REQUEST_HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
     'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
@@ -209,6 +213,7 @@ async function fetchRegionRows(region: RegionDefinition): Promise<Record<string,
         const label = `온라인투어 ${region.name} 목록 ${pageNo}페이지`;
         const payload = await retrySourceOperation(label, async () => {
             const response = await fetchSourceText(label, url, { headers: REQUEST_HEADERS }, 20_000);
+            assertNoSourceAccessBlockText(label, response.text, response.finalUrl);
             if (!/javascript|json|text\/plain/i.test(response.contentType)) {
                 throw new SourceResponseError(
                     'unexpected-content',
@@ -288,6 +293,8 @@ async function fetchRegionRows(region: RegionDefinition): Promise<Record<string,
             }
             return rows;
         }
+
+        await randomDelay(0.8, 1.8);
     }
 
     throw new SourceResponseError('schema-mismatch', `온라인투어 ${region.name} 페이지 순회가 끝나지 않았습니다.`);
@@ -349,6 +356,9 @@ export async function scrapeOnlineTour(prevFlights: any[] = []): Promise<Flight[
             if (invalidRows > 0) console.warn(`    ${region.name}: 필수값이 없는 ${invalidRows}건 제외`);
             console.log(`    ${region.name}: ${regionCount}건 수집 (첫 출발월 ${currentRows.length}건 / 지역 원본 ${rows.length}건)`);
         } catch (error) {
+            // 한 지역에서 명시적인 401·403·429 또는 CAPTCHA가 확인되면 같은 회차의
+            // 나머지 지역까지 계속 요청하지 않는다. 통합 크롤러가 24시간 휴식 회로를 연다.
+            if (classifySourceAccessRestriction(error)) throw error;
             const detail = describeSourceError(error);
             console.error(`  ${region.name} 지역 실패: ${detail}`);
             completeness.recordFailure(
@@ -356,6 +366,8 @@ export async function scrapeOnlineTour(prevFlights: any[] = []): Promise<Flight[
                 flight => belongsToRegion(flight, region),
             );
         }
+
+        await randomDelay(1, 2.5);
     }
 
     console.log(`온라인투어 완료: 총 ${flights.length}건`);

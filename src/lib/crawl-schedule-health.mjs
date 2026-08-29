@@ -8,7 +8,6 @@ export const DAILY_CRAWL_CRONS = Object.freeze([
     '56 2 * * *',
     '17 6 * * *',
     '29 9 * * *',
-    '37 15 * * *',
 ]);
 
 // daily-crawl.yml에서 한 번에 확인하는 일반 여행사다. 마이리얼트립은 별도

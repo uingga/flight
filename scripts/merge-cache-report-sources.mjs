@@ -56,6 +56,12 @@ for (const source of sources) {
             [source]: overlay.staleStreak[source],
         };
     }
+    target.sourceCircuits = { ...(target.sourceCircuits || {}) };
+    if (overlay.sourceCircuits?.[source]) {
+        target.sourceCircuits[source] = overlay.sourceCircuits[source];
+    } else {
+        delete target.sourceCircuits[source];
+    }
 }
 
 target.count = target.flights.length;

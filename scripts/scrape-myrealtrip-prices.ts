@@ -10,8 +10,8 @@ import { getMyrealtripSearchPrice, type FlightResult } from './lib/myrealtrip-se
  * 1단계: Calendar API로 항공편 목록 갱신 (새 항공편 추가 + 없어진 항공편 제거)
  * 2단계: 마이리얼트립 검색 결과 카드에서 실제 최저가를 추출
  * - 선택 버튼의 "항공권 000원 선택" 값을 사용해 결제 가격을 정확히 읽음
- * - 2개 병렬 실행, 랜덤 딜레이 + 셔플로 감지 회피
- * - 하루 1회 새벽 3시 실행 권장
+ * - 단일 워커 직렬 실행, 노선 사이 랜덤 휴식
+ * - 자동 스케줄은 오전·오후 각 1회
  *
  * 사용법: npx tsx scripts/scrape-myrealtrip-prices.ts
  */
@@ -30,7 +30,7 @@ interface CachedFlight {
 // ── 유틸리티 ──────────────────────────────────────────
 
 const delay = (ms: number) => new Promise(r => setTimeout(r, ms));
-const randomDelay = () => delay(1000 + Math.random() * 4000); // 1~5초 랜덤
+const randomDelay = () => delay(4000 + Math.random() * 4000); // 4~8초 랜덤
 function shuffle<T>(arr: T[]): T[] {
     const a = [...arr];
     for (let i = a.length - 1; i > 0; i--) {
@@ -82,12 +82,6 @@ async function worker(
 ) {
     const page = await browser.newPage();
 
-    // 랜덤 User-Agent
-    const userAgents = [
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
-        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:128.0) Gecko/20100101 Firefox/128.0',
-    ];
     await page.setExtraHTTPHeaders({ 'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8' });
 
     for (let i = 0; i < tasks.length; i++) {
@@ -185,47 +179,50 @@ async function main() {
     if (tasks.length === 0) {
         throw new Error(`마이리얼트립 ${mrtFlights.length}건에 조회 가능한 gid/날짜 조합이 없어 작업을 중단합니다.`);
     }
-    // 셔플 (순서 랜덤화)
+    // 셔플 (매 회차 같은 노선이 항상 먼저 요청되지 않게 순서만 분산)
     const shuffled = shuffle(tasks);
 
-    // 2개 병렬로 분배
-    const WORKERS = 2;
+    // 한 회선에서 동시 요청을 만들지 않는다.
+    const WORKERS = 1;
     const chunks: typeof tasks[] = Array.from({ length: WORKERS }, () => []);
     shuffled.forEach((task, i) => chunks[i % WORKERS].push(task));
 
-    console.log(`병렬: ${WORKERS}개 워커 (각 ${chunks[0].length}~${chunks[chunks.length-1].length}개)\n`);
+    console.log(`직렬: ${WORKERS}개 워커 (${chunks[0].length}개)\n`);
 
     // 브라우저 실행
-    const browser = await chromium.launch({
-        headless: true,
-        args: ['--disable-blink-features=AutomationControlled'],
-    });
+    const browser = await chromium.launch({ headless: true });
 
     const results = new Map<string, FlightResult>();
 
     // 1차 실행
-    await Promise.all(
-        chunks.map((chunk, i) => worker(browser, chunk, results, i + 1))
-    );
-
-    await browser.close();
+    try {
+        await Promise.all(
+            chunks.map((chunk, i) => worker(browser, chunk, results, i + 1))
+        );
+    } finally {
+        await browser.close();
+    }
 
     // 2차 재시도: 실패한 노선만
     const failedTasks = tasks.filter(t => !results.has(t.flight.id));
-    if (failedTasks.length > 0) {
+    const MAX_ISOLATED_RETRIES = 10;
+    const isolatedRetryLimit = Math.min(MAX_ISOLATED_RETRIES, Math.ceil(tasks.length * 0.1));
+    if (failedTasks.length > 0 && failedTasks.length <= isolatedRetryLimit) {
         console.log(`\n🔄 ${failedTasks.length}개 실패 노선 재시도 중...\n`);
-        const retryBrowser = await chromium.launch({
-            headless: true,
-            args: ['--disable-blink-features=AutomationControlled'],
-        });
+        const retryBrowser = await chromium.launch({ headless: true });
         const retryChunks: typeof tasks[] = Array.from({ length: WORKERS }, () => []);
         shuffle(failedTasks).forEach((task, i) => retryChunks[i % WORKERS].push(task));
-        await Promise.all(
-            retryChunks.map((chunk, i) => worker(retryBrowser, chunk, results, i + 10))
-        );
-        await retryBrowser.close();
+        try {
+            await Promise.all(
+                retryChunks.map((chunk, i) => worker(retryBrowser, chunk, results, i + 10))
+            );
+        } finally {
+            await retryBrowser.close();
+        }
         const recovered = failedTasks.length - tasks.filter(t => !results.has(t.flight.id)).length;
         console.log(`✅ 재시도 결과: ${recovered}개 복구 성공`);
+    } else if (failedTasks.length > isolatedRetryLimit) {
+        console.log(`\n⏸️ 실패 ${failedTasks.length}개는 대량 재시도하지 않습니다 (단일 회차 재시도 한도 ${isolatedRetryLimit}개).`);
     }
 
     // 사이트 구조 변경·차단·브라우저 장애처럼 전 노선에 영향을 주는 실패를

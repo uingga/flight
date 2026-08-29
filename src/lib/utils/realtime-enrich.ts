@@ -1,5 +1,6 @@
 import { Page } from 'playwright';
 import { normalizeAirline } from './flight-helpers';
+import { isExplicitAccessRestrictionStatus, SourceResponseError } from '../scrapers/source-response';
 
 /**
  * 땡처리닷컴 realtime_V2 API를 활용한 시간/좌석 데이터 보강 유틸리티
@@ -154,37 +155,54 @@ export async function enrichWithRealtimeData(
             //
             // 어떤 경로로 끝나든 핸들러를 반드시 뗀다. 예전에는 응답을 받았을 때만 떼어서,
             // 시간 초과가 이어지면 페이지에 핸들러가 그대로 쌓였다 (118노선 연속 실패 시 118개).
-            const apiPromise = new Promise<string>((resolve) => {
+            const apiPromise = new Promise<{ status: number; text: string }>((resolve) => {
                 let settled = false;
                 let timer: ReturnType<typeof setTimeout> | undefined;
 
-                const finish = (text: string) => {
+                const finish = (status: number, text: string) => {
                     if (settled) return;
                     settled = true;
                     clearTimeout(timer);
                     page.off('response', handler);
-                    resolve(text);
+                    resolve({ status, text });
                 };
 
                 const handler = async (res: any) => {
                     if (!res.url().includes('listAct.do')) return;
                     try {
-                        finish(await res.text());
+                        finish(res.status(), await res.text());
                     } catch {
-                        finish('');
+                        finish(res.status(), '');
                     }
                 };
 
-                timer = setTimeout(() => finish(''), 12000);
+                timer = setTimeout(() => finish(0, ''), 12000);
                 page.on('response', handler);
             });
 
             const url = `https://mm.ttang.com/ttangair/search/realtime_V2/list.do?trip=RT&dep0=${route.depCode}&arr0=${route.arrCode}&depdate0=${depDateHyphen}&dep1=${route.arrCode}&arr1=${route.depCode}&depdate1=${arrDateHyphen}&adt=1&chd=0&inf=0&comp=Y`;
 
-            page.goto(url, { waitUntil: 'commit', timeout: 15000 }).catch(() => { });
+            const navigationResponse = await page.goto(url, { waitUntil: 'commit', timeout: 15000 }).catch(() => null);
             const apiResponse = await apiPromise;
+            if (navigationResponse && isExplicitAccessRestrictionStatus(navigationResponse.status())) {
+                throw new SourceResponseError(
+                    'http-status',
+                    `땡처리닷컴 실시간 페이지 HTTP ${navigationResponse.status()}`,
+                    navigationResponse.status(),
+                    navigationResponse.headers()['content-type'] || '',
+                    undefined,
+                    navigationResponse.url(),
+                );
+            }
+            if (isExplicitAccessRestrictionStatus(apiResponse.status)) {
+                throw new SourceResponseError(
+                    'http-status',
+                    `땡처리닷컴 실시간 API HTTP ${apiResponse.status}`,
+                    apiResponse.status,
+                );
+            }
 
-            const jsonMatch = apiResponse ? apiResponse.match(/\{[\s\S]*\}/) : null;
+            const jsonMatch = apiResponse.text ? apiResponse.text.match(/\{[\s\S]*\}/) : null;
             const data = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
 
             if (data?.code === 'OK') {
@@ -230,7 +248,10 @@ export async function enrichWithRealtimeData(
                     unmatched++;
                 }
             }
-        } catch {
+        } catch (error) {
+            if (error instanceof SourceResponseError && isExplicitAccessRestrictionStatus(error.status)) {
+                throw error;
+            }
             outcome = 'fail';
         }
 

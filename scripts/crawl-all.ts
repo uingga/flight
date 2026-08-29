@@ -8,6 +8,15 @@ import { scrapeMyrealtrip } from '../src/lib/scrapers/myrealtrip';
 import { scrapeInterparkBenchmark, resolveCityCode } from '../src/lib/scrapers/interpark';
 import { logCrawlResults, recordCrawlAlerts } from '../src/lib/utils/crawl-logger';
 import { getEffectivePrice } from '../src/lib/price-quality';
+import {
+    classifySourceAccessRestriction,
+    isSourceCircuitOpen,
+    openSourceCircuit,
+    pruneResolvedSourceCircuits,
+    SOURCE_ADAPTER_VERSIONS,
+    sourceCircuitLabel,
+    type SourceCircuitState,
+} from '../src/lib/source-circuit';
 import { buildLifecycleIdentity } from './lib/flight-lifecycle';
 import fs from 'fs';
 import path from 'path';
@@ -32,6 +41,8 @@ interface CacheData {
     scrapedCounts?: Record<string, number>;
     /** 이번 크롤에서 데이터를 폐기·유지한 이유 (어드민 상단 배너용) */
     integrityAlerts?: string[];
+    /** 명시적 차단·요청 제한 뒤 같은 여행사를 계속 두드리지 않기 위한 휴식 상태 */
+    sourceCircuits?: Record<string, SourceCircuitState>;
     sources: {
 
         ybtour: number;
@@ -46,6 +57,19 @@ interface CacheData {
 const sourceNames = ['ybtour', 'hanatour', 'modetour', 'onlinetour', 'ttang', 'myrealtrip'] as const;
 type SourceKey = typeof sourceNames[number];
 type CrawlableSourceKey = Exclude<SourceKey, 'myrealtrip'>;
+
+const parsedSourceStartJitter = Number.parseInt(process.env.SOURCE_START_JITTER_MAX_MS || '', 10);
+const sourceStartJitterMaxMs = Number.isFinite(parsedSourceStartJitter)
+    ? Math.max(0, parsedSourceStartJitter)
+    : process.env.CI
+        ? 90_000
+        : 0;
+
+function sourceCircuitPauseText(circuit: SourceCircuitState): string {
+    const nextProbe = new Date(circuit.nextProbeAt);
+    if (!Number.isFinite(nextProbe.getTime())) return '수집 방식 수정 전까지 휴식';
+    return `${nextProbe.toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })} 이후 단일 재탐색`;
+}
 
 /** 항공권 배열을 여행사별 개수로 집계한다. 캐시와 크롤 로그가 같은 기준을 쓰게 하는 용도. */
 function countBySource(flights: any[]): Record<string, number> {
@@ -96,6 +120,10 @@ async function main() {
     } catch { }
     const prevFlights = prevCache?.flights || [];
     const sourceUpdatedAt: Record<string, string> = { ...(prevCache?.sourceUpdatedAt || {}) };
+    const sourceCircuits = pruneResolvedSourceCircuits<CrawlableSourceKey>(
+        prevCache?.sourceCircuits as Partial<Record<CrawlableSourceKey, SourceCircuitState>> | undefined,
+        SOURCE_ADAPTER_VERSIONS,
+    );
     // 부분 복구에서 실행하지 않은 여행사는 이전 최종본을 그대로 붙인다.
     // 이미 필터를 통과한 데이터를 다시 가격 필터에 넣으면, 실제로 다시 긁지 않았는데도
     // 항공권이 빠질 수 있어 "선택한 여행사만 복구"라는 보장이 깨진다.
@@ -115,23 +143,53 @@ async function main() {
             // Bulk API는 시간/가격 정보가 부정확하므로 여기서 실행하지 않음
         ];
 
-        const activeTasks = requestedSources
+        const requestedTasks = requestedSources
             ? scraperTasks.filter(task => requestedSources.has(task.key))
             : scraperTasks;
-        const results = await Promise.allSettled(activeTasks.map(t => t.fn()));
+        const circuitSkipped = new Map<CrawlableSourceKey, SourceCircuitState>();
+        const activeTasks = requestedTasks.filter(task => {
+            const circuit = sourceCircuits[task.key];
+            if (!isSourceCircuitOpen(circuit, SOURCE_ADAPTER_VERSIONS[task.key])) return true;
+            circuitSkipped.set(task.key, circuit!);
+            console.warn(
+                `⏸️ ${task.name}: ${sourceCircuitLabel(circuit!)} 신호 뒤 휴식 중 `
+                + `(${sourceCircuitPauseText(circuit!)})`,
+            );
+            return false;
+        });
+        const results = await Promise.allSettled(activeTasks.map(async task => {
+            if (sourceStartJitterMaxMs > 0) {
+                const delayMs = Math.floor(Math.random() * (sourceStartJitterMaxMs + 1));
+                console.log(`⏳ ${task.name}: 시작 시각 ${Math.ceil(delayMs / 1000)}초 분산`);
+                if (delayMs > 0) await new Promise(resolve => setTimeout(resolve, delayMs));
+            }
+            return task.fn();
+        }));
 
         // 채택 여부는 아래 무결성 검사에서 정하므로, 여기서는 결과만 모아 둔다
         const scraped: Partial<Record<SourceKey, any[]>> = {};
         const scrapeFailures: Partial<Record<SourceKey, string>> = {};
-        const attempted = new Set<SourceKey>(activeTasks.map(t => t.key));
+        const attempted = new Set<SourceKey>(requestedTasks.map(t => t.key));
         results.forEach((result, i) => {
             const task = activeTasks[i];
             if (result.status === 'fulfilled') {
                 scraped[task.key] = result.value;
+                delete sourceCircuits[task.key];
                 console.log(`✅ ${task.name}: ${result.value.length}개`);
             } else {
                 const reason = result.reason instanceof Error ? result.reason.message : String(result.reason);
                 scrapeFailures[task.key] = reason;
+                const restriction = classifySourceAccessRestriction(result.reason);
+                if (restriction) {
+                    sourceCircuits[task.key] = openSourceCircuit(
+                        restriction,
+                        SOURCE_ADAPTER_VERSIONS[task.key],
+                    );
+                    console.warn(
+                        `⛔ ${task.name}: ${sourceCircuitLabel(sourceCircuits[task.key]!)} 신호 감지 — `
+                        + `자동 요청 중단 (${sourceCircuitPauseText(sourceCircuits[task.key]!)})`,
+                    );
+                }
                 console.error(`❌ ${task.name} 실패:`, reason);
             }
         });
@@ -139,7 +197,8 @@ async function main() {
         // 목록 수집은 정상이어도 상세 시간 응답만 대량으로 읽지 못할 수 있다.
         // 항공권은 그대로 살리고, 운영자가 페이지 구조 변경을 알아차릴 수 있게 별도 경고로 남긴다.
         const collectionWarnings: string[] = [];
-        const ybtourScheduleStats = attempted.has('ybtour') ? getLastYbtourScheduleStats() : null;
+        const ybtourExecuted = activeTasks.some(task => task.key === 'ybtour');
+        const ybtourScheduleStats = ybtourExecuted ? getLastYbtourScheduleStats() : null;
         if (ybtourScheduleStats?.degraded) {
             const reason = ybtourScheduleStats.stopReason === 'network'
                 ? `요청 연속 실패 ${ybtourScheduleStats.failed}건`
@@ -193,6 +252,23 @@ async function main() {
                 sources[src] = prevCount;
                 // sourceUpdatedAt은 갱신하지 않는다 — 어드민에서 "며칠째 안 갱신"이 보여야 한다
             };
+
+            const restingCircuit = circuitSkipped.get(src as CrawlableSourceKey);
+            if (restingCircuit) {
+                if (prevCount > 0) {
+                    keepPrevious(
+                        `${sourceCircuitLabel(restingCircuit)} 뒤 휴식 중`,
+                        `⛔ ${src} ${sourceCircuitLabel(restingCircuit)} 뒤 자동 요청 중단 `
+                        + `(${sourceCircuitPauseText(restingCircuit)}) — 이전 데이터 유지`,
+                    );
+                } else {
+                    integrityWarnings.push(
+                        `⛔ ${src} ${sourceCircuitLabel(restingCircuit)} 뒤 자동 요청 중단 `
+                        + `(${sourceCircuitPauseText(restingCircuit)}, 복구할 이전 데이터 없음)`,
+                    );
+                }
+                continue;
+            }
 
             // 여기서 안 돌린 소스(마이리얼트립)는 별도 워크플로우 담당이라 조용히 이어받는다
             if (!attempted.has(src)) {
@@ -526,6 +602,7 @@ async function main() {
                 staleStreak,
                 scrapedCounts: { ...(prevCache?.scrapedCounts || {}), ...scrapedCounts },
                 integrityAlerts: integrityWarnings,
+                sourceCircuits: sourceCircuits as Record<string, SourceCircuitState>,
             };
 
             // data 디렉토리 확인 및 생성

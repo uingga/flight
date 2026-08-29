@@ -6,7 +6,7 @@
 
 - **Stack**: Next.js 14 (App Router), TypeScript, CSS Modules, Playwright/Puppeteer
 - **Deploy**: Vercel (https://tikitikit.kr)
-- **Automation**: GitHub Actions — 일반 여행사 하루 6회 자동 크롤링 (`daily-crawl.yml`)
+- **Automation**: GitHub Actions — 일반 여행사 하루 5회 자동 크롤링 (`daily-crawl.yml`)
 - **Package Manager**: npm
 
 ## Data Sources (6 Travel Agencies)
@@ -52,7 +52,7 @@ src/components/Dashboard.tsx (client component)
 | `src/components/Dashboard.tsx` | Main UI (~2300 lines) | Very large file — target specific functions |
 | `src/components/Dashboard.module.css` | Dashboard styles (~64KB) | CSS Modules — use `styles.className` |
 | `scripts/crawl-all.ts` | Unified crawler (~360 lines) | Orchestrates all scrapers + filtering |
-| `.github/workflows/daily-crawl.yml` | GH Actions cron | 6 runs/day, auto-commit to `data/` |
+| `.github/workflows/daily-crawl.yml` | GH Actions cron | 5 runs/day, auto-commit to `data/` |
 | `data/all-flights-cache.json` | Core data file (~1MB) | Must be in git for Vercel deploy |
 
 ## MyRealTrip Integration

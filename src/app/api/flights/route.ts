@@ -4,7 +4,7 @@ import { Flight, FlightSearchParams } from '@/types/flight';
 import { resolveCityCode } from '@/lib/scrapers/interpark';
 import { getComparisonFreshness, getEffectivePrice } from '@/lib/price-quality';
 import { getUsableNaverComparison } from '@/lib/naver-comparison';
-import { filterStaleMyrealtripFlights, getMyrealtripFreshness } from '@/lib/source-freshness';
+import { filterStaleSourceFlights, getStaleSources } from '@/lib/source-freshness';
 import { deduplicateDisplayFlights } from '@/lib/flight-visibility';
 import { buildNaverPriceKey } from '@/lib/naver-route';
 import { normalizeCity } from '@/lib/utils/flight-helpers';
@@ -20,6 +20,7 @@ interface FlightFilterSummary {
     excluded: number;
     reasons: {
         staleMyrealtrip: number;
+        staleOtherSources: number;
         reported: number;
         duplicate: number;
         naverExpensive: number;
@@ -164,6 +165,7 @@ export async function GET(request: NextRequest) {
             excluded: 0,
             reasons: {
                 staleMyrealtrip: 0,
+                staleOtherSources: 0,
                 reported: 0,
                 duplicate: 0,
                 naverExpensive: 0,
@@ -205,15 +207,25 @@ export async function GET(request: NextRequest) {
             console.error('캐시 읽기 오류:', cacheError);
         }
 
-        // 마이리얼트립은 실제 예약 화면 가격을 별도 확인한다. 이 갱신이 하루 넘게
-        // 멈추면 Calendar API의 대략 가격이나 오래된 가격을 사용자에게 보여주지 않는다.
-        const beforeFreshnessFilter = allFlights.length;
-        allFlights = filterStaleMyrealtripFlights(allFlights, sourceUpdatedAt);
-        const hiddenCount = beforeFreshnessFilter - allFlights.length;
-        filterSummary.reasons.staleMyrealtrip = hiddenCount;
-        if (hiddenCount > 0) {
-            const freshness = getMyrealtripFreshness(sourceUpdatedAt);
-            console.warn(`마이리얼트립 가격 갱신이 ${freshness.maxAgeHours}시간 넘게 멈춰 ${hiddenCount}개를 숨겼습니다.`);
+        // 수집 실패 때 이전 데이터는 복구용으로 보존하지만, 확인 시각이 한도를 넘긴
+        // 여행사의 가격을 사용자에게 계속 보여주지는 않는다. 마이리얼트립은 24시간,
+        // 일반 여행사는 48시간이 기본값이다.
+        const staleSources = getStaleSources(sourceUpdatedAt);
+        if (staleSources.length > 0) {
+            const hiddenBySource = Object.fromEntries(staleSources.map(result => [
+                result.source,
+                allFlights.filter(flight => flight.source === result.source).length,
+            ])) as Record<string, number>;
+            allFlights = filterStaleSourceFlights(allFlights, sourceUpdatedAt);
+            filterSummary.reasons.staleMyrealtrip = hiddenBySource.myrealtrip || 0;
+            filterSummary.reasons.staleOtherSources = Object.entries(hiddenBySource)
+                .filter(([source]) => source !== 'myrealtrip')
+                .reduce((sum, [, count]) => sum + count, 0);
+            const hiddenSummary = staleSources
+                .filter(result => (hiddenBySource[result.source] || 0) > 0)
+                .map(result => `${result.source} ${hiddenBySource[result.source]}개`)
+                .join(', ');
+            if (hiddenSummary) console.warn(`가격 확인 시한을 넘겨 숨김: ${hiddenSummary}`);
         }
 
         const temporarilyHiddenIds = await loadHiddenFlightIds();

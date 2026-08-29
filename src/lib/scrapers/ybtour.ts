@@ -3,9 +3,11 @@ import { Flight } from '@/types/flight';
 import { getRegionByCity } from '@/lib/utils/region-mapper';
 // logCrawlResults moved to crawl-all.ts
 import { fetchYbtourSchedules, scheduleKeyOf, ScheduleFetchStats, ScheduleKey } from './ybtour-schedule';
-import { IncompleteScrapeError, ScrapeCompleteness } from './scrape-errors';
+import { ScrapeCompleteness } from './scrape-errors';
 import { survivingRouteMinPrice } from '@/lib/utils/route-min-price';
 import { buildStableFlightId, normalizeAirline } from '@/lib/utils/flight-helpers';
+import { assertNoSourceAccessBlockText, SourceResponseError } from './source-response';
+import { classifySourceAccessRestriction } from '../source-circuit';
 
 const randomDelay = (min: number, max: number) =>
     new Promise(r => setTimeout(r, (Math.random() * (max - min) + min) * 1000));
@@ -139,10 +141,22 @@ export async function scrapeYbtour(prevFlights: any[] = []): Promise<Flight[]> {
 
     try {
         // 메인 페이지 접속
-        await page.goto('https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV', {
+        const landingResponse = await page.goto('https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV', {
             waitUntil: 'domcontentloaded',
             timeout: 30000,
         });
+        if (landingResponse && !landingResponse.ok()) {
+            throw new SourceResponseError(
+                'http-status',
+                `노랑풍선 메인 페이지 HTTP ${landingResponse.status()}`,
+                landingResponse.status(),
+                landingResponse.headers()['content-type'] || '',
+                undefined,
+                landingResponse.url(),
+            );
+        }
+        const landingText = await page.locator('body').innerText({ timeout: 5_000 }).catch(() => '');
+        assertNoSourceAccessBlockText('노랑풍선 메인 페이지', landingText, page.url());
 
         // 페이지 로드 후 테이블 대기
         await page.waitForSelector('table tbody', { timeout: 10000 }).catch(() => { });
@@ -206,10 +220,22 @@ export async function scrapeYbtour(prevFlights: any[] = []): Promise<Flight[]> {
 
                     if (attempt < TAB_ATTEMPTS) {
                         console.log(`[RETRY ${attempt}/${TAB_ATTEMPTS - 1}] ${region.name} 탭 진입 실패 — 페이지 새로 열고 재시도`);
-                        await page.goto('https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV', {
+                        const retryResponse = await page.goto('https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV', {
                             waitUntil: 'domcontentloaded',
                             timeout: 30000,
-                        }).catch(() => { });
+                        });
+                        if (retryResponse && !retryResponse.ok()) {
+                            throw new SourceResponseError(
+                                'http-status',
+                                `노랑풍선 탭 복구 페이지 HTTP ${retryResponse.status()}`,
+                                retryResponse.status(),
+                                retryResponse.headers()['content-type'] || '',
+                                undefined,
+                                retryResponse.url(),
+                            );
+                        }
+                        const retryText = await page.locator('body').innerText({ timeout: 5_000 }).catch(() => '');
+                        assertNoSourceAccessBlockText('노랑풍선 탭 복구 페이지', retryText, page.url());
                         await page.waitForSelector('table tbody', { timeout: 10000 }).catch(() => { });
                         await randomDelay(2, 4);
                     }
@@ -435,6 +461,7 @@ export async function scrapeYbtour(prevFlights: any[] = []): Promise<Flight[]> {
                                     console.log(`  → ${mainInfo.airline} ${mainInfo.arrival}: ${cheapestFlights.length}건 (최저가 ${minPrice.toLocaleString()}원, 전체 ${validFlights.length}건 중)`);
                                 }
                             } catch (e) {
+                                if (classifySourceAccessRestriction(e)) throw e;
                                 console.error(`  [ERROR] 행 처리 실패:`, e instanceof Error ? e.message : e);
                             }
                         }
@@ -444,11 +471,13 @@ export async function scrapeYbtour(prevFlights: any[] = []): Promise<Flight[]> {
                         await randomDelay(1, 3);
 
                     } catch (error) {
+                        if (classifySourceAccessRestriction(error)) throw error;
                         console.error(`${city.name} 검색 오류:`, error instanceof Error ? error.message : error);
                     }
                 }
 
             } catch (error) {
+                if (classifySourceAccessRestriction(error)) throw error;
                 console.error(`${region.name} 지역 오류:`, error);
             }
         }
@@ -540,7 +569,7 @@ export async function scrapeYbtour(prevFlights: any[] = []): Promise<Flight[]> {
         console.error('노랑풍선 크롤링 실패:', error);
         // 불완전 수집은 호출부가 알아야 이전 캐시를 지킬 수 있으므로 삼키지 않는다
         // (브라우저는 아래 finally가 닫는다)
-        if (error instanceof IncompleteScrapeError) throw error;
+        throw error;
     } finally {
         await browser.close();
     }

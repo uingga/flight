@@ -1,4 +1,9 @@
 import type { Page } from 'playwright';
+import {
+    assertNoSourceAccessBlockText,
+    isExplicitAccessRestrictionStatus,
+    SourceResponseError,
+} from '../../src/lib/scrapers/source-response';
 
 export interface FlightResult {
     price: number;
@@ -58,9 +63,21 @@ export async function getMyrealtripSearchPrice(
     const url = `https://flights.myrealtrip.com/air/agent/b2c/AIR/AAA/offers.k1?gid=${gid}&depdt=${depDate}&arrdt=${arrDate}&cabin=Y&adult=1&child=0&infant=0`;
 
     try {
-        await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45000 });
+        const landingResponse = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45000 });
+        if (landingResponse && isExplicitAccessRestrictionStatus(landingResponse.status())) {
+            throw new SourceResponseError(
+                'http-status',
+                `마이리얼트립 검색 페이지 HTTP ${landingResponse.status()}`,
+                landingResponse.status(),
+                landingResponse.headers()['content-type'] || '',
+                undefined,
+                landingResponse.url(),
+            );
+        }
         const newResultCard = await page.waitForSelector(RESULT_BUTTON_SELECTOR, { timeout: 15000 })
             .catch(() => null);
+        const pageText = await page.locator('body').innerText({ timeout: 5_000 }).catch(() => '');
+        assertNoSourceAccessBlockText('마이리얼트립 검색 페이지', pageText, page.url());
 
         // 새 화면은 기본값이 추천순이라 화면에 아직 붙지 않은 더 싼 표가 있을 수 있다.
         // 가격 낮은 순으로 바꾼 뒤 읽어 첫 화면만 읽더라도 실제 최저가가 포함되게 한다.
@@ -222,6 +239,12 @@ export async function getMyrealtripSearchPrice(
 
         return results[0] || null;
     } catch (error) {
+        if (
+            error instanceof SourceResponseError
+            && (isExplicitAccessRestrictionStatus(error.status) || error.kind === 'html-response')
+        ) {
+            throw error;
+        }
         console.warn(
             `[마이리얼트립] 실제 가격 조회 실패: gid=${gid}, ${depDate}~${arrDate} -`,
             error instanceof Error ? error.message : error,

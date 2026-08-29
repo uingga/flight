@@ -1,8 +1,10 @@
 import { chromium } from 'playwright';
 import { Flight } from '@/types/flight';
-import { IncompleteScrapeError, ScrapeCompleteness } from './scrape-errors';
+import { ScrapeCompleteness } from './scrape-errors';
 import { getRegionByCity } from '@/lib/utils/region-mapper';
 import { buildStableFlightId } from '@/lib/utils/flight-helpers';
+import { assertNoSourceAccessBlockText, SourceResponseError } from './source-response';
+import { classifySourceAccessRestriction } from '../source-circuit';
 // logCrawlResults moved to crawl-all.ts
 
 const randomDelay = (min: number, max: number) =>
@@ -172,8 +174,7 @@ export async function scrapeHanatour(prevFlights: any[] = []): Promise<Flight[]>
 
     } catch (error) {
         console.error('하나투어 크롤링 실패:', error);
-        if (error instanceof IncompleteScrapeError) throw error;
-        return allFlights;
+        throw error;
     } finally {
         await browser.close();
     }
@@ -204,12 +205,24 @@ async function scrapeHanatourRegular(browser: any, prevFlights: any[] = []): Pro
     let totalFlights = 0;
 
     try {
-        await page.goto('https://www.hanatour.com/trp/air/CHPC0AIR0233M200', {
+        const landingResponse = await page.goto('https://www.hanatour.com/trp/air/CHPC0AIR0233M200', {
             waitUntil: 'domcontentloaded',
             timeout: 30000,
         });
+        if (landingResponse && !landingResponse.ok()) {
+            throw new SourceResponseError(
+                'http-status',
+                `하나투어 일반 페이지 HTTP ${landingResponse.status()}`,
+                landingResponse.status(),
+                landingResponse.headers()['content-type'] || '',
+                undefined,
+                landingResponse.url(),
+            );
+        }
 
         await page.waitForTimeout(3000);
+        const landingText = await page.locator('body').innerText({ timeout: 5_000 }).catch(() => '');
+        assertNoSourceAccessBlockText('하나투어 일반 페이지', landingText, page.url());
         console.log('일반 페이지 로드 완료');
 
         // 출발 탭 하나가 안 열리면 그 출발지 항공권이 통째로 빠진 채 정상 종료한다
@@ -395,6 +408,7 @@ async function scrapeHanatourRegular(browser: any, prevFlights: any[] = []): Pro
                 await page.waitForTimeout(500);
 
             } catch (error) {
+                if (classifySourceAccessRestriction(error)) throw error;
                 console.error(`${tab.name} 탭 오류:`, error instanceof Error ? error.message : error);
             }
         }
@@ -405,7 +419,7 @@ async function scrapeHanatourRegular(browser: any, prevFlights: any[] = []): Pro
     } catch (error) {
         console.error('일반 페이지 크롤링 실패:', error);
         // 불완전 수집은 호출부가 알아야 이전 캐시를 지킬 수 있으므로 삼키지 않는다
-        if (error instanceof IncompleteScrapeError) throw error;
+        throw error;
     }
 
     return flights;
