@@ -175,7 +175,7 @@ function scoreFlight(
     if (comparisonPrice) {
         const multiplier = comparisonMultiplier(effectivePrice, comparisonPrice);
         score *= multiplier;
-        factors.push({ rule: 'comparison-price', multiplier, detail: '3일 이내 외부 비교가 반영' });
+        factors.push({ rule: 'comparison-price', multiplier, detail: '24시간 이내 외부 비교가 반영' });
     }
 
     const freshness = getRecommendationFreshness(flight.priceCheckedAt, now);

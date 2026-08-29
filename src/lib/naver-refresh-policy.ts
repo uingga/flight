@@ -23,6 +23,7 @@ export interface NaverRefreshEntry {
     lastAttemptAt?: string;
     lastAttemptStatus?: string;
     sourceSignature?: string;
+    sourcePrice?: number;
 }
 
 export interface NaverRefreshConfig {
@@ -30,6 +31,8 @@ export interface NaverRefreshConfig {
     standardRefreshDays: number;
     priorityDepartureDays: number;
     priorityDiscountRate: number;
+    priceChangeAmount: number;
+    priceChangeRatio: number;
     missRetryHours: number;
     noResultRetryHours: number;
 }
@@ -70,27 +73,22 @@ const normalizeDate = (value: unknown): string => String(value || '')
 const normalizeText = (value: unknown): string => String(value || '').trim();
 
 /**
- * 네이버 비교가에 영향을 주는 여행사 쪽 최저가·편명·시간만 지문으로 만든다.
- * 잔여 좌석처럼 자주 바뀌지만 네이버 비교가를 다시 받을 이유가 없는 값은 제외한다.
+ * 같은 공항·날짜 검색키에서 여행사 실결제가가 달라졌는지만 판별한다.
+ * 항공사·편명·시간은 네이버의 해당 날짜 전체 최저가를 다시 받을 이유가 아니므로 제외한다.
  */
 export function buildNaverSourceSignature(flight: NaverRefreshFlight): string {
-    const payload = [
-        normalizeText(flight.source),
-        Number.isFinite(Number(flight.price)) ? Number(flight.price) : 0,
-        normalizeText(flight.airline),
-        normalizeText(flight.flightNumber),
-        normalizeDate(flight.departure.date),
-        normalizeText(flight.departure.time),
-        normalizeText(flight.departure.arrivalTime),
-        normalizeDate(flight.arrival.date),
-        normalizeText(flight.arrival.time),
-        normalizeText(flight.arrival.arrivalTime),
-    ];
+    const payload = [getNaverSourcePrice(flight)];
 
     return createHash('sha256')
         .update(JSON.stringify(payload))
         .digest('hex')
         .slice(0, 24);
+}
+
+/** 땡처리닷컴 발권수수료까지 포함해 네이버 비교 판단에 쓰는 여행사 실결제가. */
+export function getNaverSourcePrice(flight: NaverRefreshFlight): number {
+    const price = Number.isFinite(Number(flight.price)) ? Number(flight.price) : 0;
+    return price + (normalizeText(flight.source) === 'ttang' ? 20_000 : 0);
 }
 
 export function getNaverRefreshTier(
@@ -122,8 +120,32 @@ export function evaluateNaverRefresh(
         ? config.priorityRefreshDays
         : config.standardRefreshDays;
     const sourceSignature = buildNaverSourceSignature(flight);
+    const sourcePrice = getNaverSourcePrice(flight);
 
-    if (!entry) {
+    const hasSuccessfulPrice = Boolean(
+        entry
+        && Number.isFinite(new Date(entry.crawledAt || '').getTime())
+        && (!entry.lastAttemptStatus || entry.lastAttemptStatus === 'success'),
+    );
+    if (!entry || !hasSuccessfulPrice) {
+        if (entry?.lastAttemptStatus && entry.lastAttemptStatus !== 'success') {
+            const attemptedAt = new Date(entry.lastAttemptAt || entry.crawledAt || '').getTime();
+            if (Number.isFinite(attemptedAt)) {
+                const retryHours = entry.lastAttemptStatus === 'no_result'
+                    || entry.lastAttemptStatus === 'route_error'
+                    || entry.lastAttemptStatus === 'miss'
+                    ? config.noResultRetryHours
+                    : config.missRetryHours;
+                const fresh = now - attemptedAt < retryHours * HOUR_MS;
+                return {
+                    fresh,
+                    reason: fresh ? 'retry_wait' : 'retry_due',
+                    tier,
+                    refreshDays,
+                    sourceSignature,
+                };
+            }
+        }
         return { fresh: false, reason: 'new', tier, refreshDays, sourceSignature };
     }
 
@@ -149,7 +171,16 @@ export function evaluateNaverRefresh(
     }
 
     if (entry.sourceSignature && entry.sourceSignature !== sourceSignature) {
-        return { fresh: false, reason: 'source_changed', tier, refreshDays, sourceSignature };
+        const previousSourcePrice = Number(entry.sourcePrice);
+        const absoluteChange = Number.isFinite(previousSourcePrice)
+            ? Math.abs(sourcePrice - previousSourcePrice)
+            : Number.POSITIVE_INFINITY;
+        const relativeChange = Number.isFinite(previousSourcePrice) && previousSourcePrice > 0
+            ? absoluteChange / previousSourcePrice
+            : Number.POSITIVE_INFINITY;
+        if (absoluteChange >= config.priceChangeAmount || relativeChange >= config.priceChangeRatio) {
+            return { fresh: false, reason: 'source_changed', tier, refreshDays, sourceSignature };
+        }
     }
 
     const checkedAt = new Date(entry.crawledAt || '').getTime();

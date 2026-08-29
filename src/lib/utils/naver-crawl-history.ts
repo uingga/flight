@@ -13,6 +13,8 @@ export interface NaverCrawlHistoryEntry {
     newRoutesAttempted: number;
     changedRoutes?: number;
     periodicRoutes?: number;
+    priorityGroups?: Record<string, number>;
+    selectedPriorityGroups?: Record<string, number>;
     deferred: number;
     deferredNeverChecked: number;
     oldestDeferredHours: number | null;

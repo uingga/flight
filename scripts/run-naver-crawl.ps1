@@ -1,8 +1,8 @@
 # Naver flight crawler - Windows Task Scheduler entry point
 #
-# Pull GitHub data first, then fill up to 280 missing or stale routes across
-# every agency. New or changed source flights refresh immediately, important routes
-# every two days, and unchanged standard routes every five days.
+# Pull GitHub data first, then fill up to 200 priority routes across
+# every agency. The queue prioritizes seven-day deadlines, changed top candidates,
+# remaining top candidates, standard candidates, and low candidates in that order.
 #
 # Schedule: wait from 10:00 for the post-11:12 crawl, with a no-duplicate 20:30 fallback
 # Manual:   powershell -File scripts\run-naver-crawl.ps1
@@ -171,11 +171,16 @@ Log "circuit state: $(($RunningStateOutput | Out-String).Trim())"
 # browser session: GitHub Actions is limited to a read-only three-route diagnostic.
 $env:HIDE_WINDOW = '1'
 $env:SOURCE_FILTER = 'all'
-$env:MAX_FLIGHTS = '280'
-$env:STANDARD_REFRESH_DAYS = '5'
-$env:PRIORITY_REFRESH_DAYS = '2'
+$env:MAX_FLIGHTS = '200'
+$env:STANDARD_REFRESH_DAYS = '1'
+$env:PRIORITY_REFRESH_DAYS = '1'
 $env:PRIORITY_DEPARTURE_DAYS = '14'
 $env:PRIORITY_DISCOUNT_RATE = '20'
+$env:TOP_CANDIDATE_COUNT = '50'
+$env:LOW_CANDIDATE_RATIO = '0.3'
+$env:MAX_DEFER_DAYS = '7'
+$env:PRICE_CHANGE_AMOUNT = '10000'
+$env:PRICE_CHANGE_RATIO = '0.03'
 $env:MISS_RETRY_HOURS = '24'
 $env:ABORT_AFTER_MISSES = '3'
 $env:MAX_HEALTH_CHECKS = '1'

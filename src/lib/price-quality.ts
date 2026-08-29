@@ -4,6 +4,7 @@ import { getExactRouteAirports } from './naver-route';
 const HOUR = 3_600_000;
 const DAY = 24 * HOUR;
 const KST_OFFSET = 9 * HOUR;
+export const COMPARISON_MAX_AGE_HOURS = 24;
 
 const kstDayNumber = (timestamp: number): number =>
     Math.floor((timestamp + KST_OFFSET) / DAY);
@@ -14,8 +15,8 @@ export function getEffectivePrice(flight: Pick<Flight, 'price' | 'source'>): num
 }
 
 /**
- * 외부 비교가는 KST 날짜 기준 3일 전까지 동일하게 유효하다.
- * 전체 노선 갱신이 2~3일에 걸리므로 정확한 48시간 경계나 중간 감점은 사용하지 않는다.
+ * 네이버 비교가는 마지막 성공 후 정확히 24시간까지만 추천·표시·제거 판단에 사용한다.
+ * 그보다 오래된 값은 원본 기록에 보존하되 화면 순위에 영향을 주지 않는다.
  */
 export function getComparisonFreshness(checkedAt?: string, now = Date.now()) {
     if (!checkedAt) return { usable: false, ageHours: null, ageDays: null };
@@ -24,7 +25,7 @@ export function getComparisonFreshness(checkedAt?: string, now = Date.now()) {
 
     const ageHours = Math.max(0, (now - checkedTime) / HOUR);
     const ageDays = Math.max(0, kstDayNumber(now) - kstDayNumber(checkedTime));
-    return { usable: ageDays <= 3, ageHours, ageDays };
+    return { usable: ageHours <= COMPARISON_MAX_AGE_HOURS, ageHours, ageDays };
 }
 
 /** 추천순의 비교가 구간: 검증된 최저가 이하 → 비교 불가 → 검증된 최저가 초과. */

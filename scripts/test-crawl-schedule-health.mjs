@@ -221,7 +221,9 @@ test('the Windows Naver task owns production collection with one guarded daily s
     assert.match(installer, /-WakeToRun/);
     assert.doesNotMatch(installer, /-RestartCount/);
     assert.match(runner, /\$env:SOURCE_FILTER = 'all'/);
-    assert.match(runner, /\$env:MAX_FLIGHTS = '280'/);
+    assert.match(runner, /\$env:MAX_FLIGHTS = '200'/);
+    assert.match(runner, /\$env:TOP_CANDIDATE_COUNT = '50'/);
+    assert.match(runner, /\$env:MAX_DEFER_DAYS = '7'/);
     assert.match(runner, /git pull --rebase --autostash origin main/);
     assert.match(runner, /Local\\TikitikitNaverCrawl/);
     assert.match(runner, /local-naver-run-policy\.mjs check/);

@@ -145,7 +145,7 @@ export async function GET(request: NextRequest) {
         } catch { }
 
         // 네이버 비교가 갱신 상태 — 로컬 PC 예약 작업이 조용히 멈춰도 알아채기 위한 지표.
-        // 화면과 동일하게 3일 이내이며 최신 시도가 정상 빈 결과/노선 오류가 아닌 값만 센다.
+        // 화면과 동일하게 24시간 이내이며 최신 시도가 정상 빈 결과/노선 오류가 아닌 값만 센다.
         let naverStatus: {
             lastCrawledAt: string | null;
             ageDays: number | null;

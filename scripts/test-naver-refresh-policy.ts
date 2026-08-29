@@ -12,6 +12,8 @@ const config: NaverRefreshConfig = {
     standardRefreshDays: 5,
     priorityDepartureDays: 14,
     priorityDiscountRate: 20,
+    priceChangeAmount: 10_000,
+    priceChangeRatio: 0.03,
     missRetryHours: 24,
     noResultRetryHours: 24,
 };
@@ -48,7 +50,7 @@ assert.equal(buildNaverSourceSignature({ ...baseline, price: 230_000 }) === sign
 assert.equal(buildNaverSourceSignature({
     ...baseline,
     departure: { ...baseline.departure, time: '09:00' },
-}) === signature, false);
+}), signature);
 assert.equal(buildNaverSourceSignature({ ...baseline, discountRate: 30 }), signature);
 
 assert.equal(evaluateNaverRefresh(undefined, baseline, now, config).reason, 'new');
@@ -56,22 +58,32 @@ assert.equal(evaluateNaverRefresh({
     crawledAt: '2026-08-28T05:30:00Z',
     lastAttemptStatus: 'success',
     sourceSignature: signature,
+    sourcePrice: 220_000,
 }, baseline, now, config).reason, 'standard_fresh');
 assert.equal(evaluateNaverRefresh({
     crawledAt: '2026-08-24T05:30:00Z',
     lastAttemptStatus: 'success',
     sourceSignature: signature,
+    sourcePrice: 220_000,
 }, baseline, now, config).reason, 'standard_periodic');
 assert.equal(evaluateNaverRefresh({
     crawledAt: '2026-08-28T05:30:00Z',
     lastAttemptStatus: 'success',
     sourceSignature: signature,
+    sourcePrice: 220_000,
 }, { ...baseline, price: 230_000 }, now, config).reason, 'source_changed');
+assert.equal(evaluateNaverRefresh({
+    crawledAt: '2026-08-28T05:30:00Z',
+    lastAttemptStatus: 'success',
+    sourceSignature: signature,
+    sourcePrice: 220_000,
+}, { ...baseline, price: 225_000 }, now, config).reason, 'standard_fresh');
 assert.equal(evaluateNaverRefresh({
     crawledAt: '2026-08-25T05:30:00Z',
     lastAttemptAt: '2026-08-29T01:30:00Z',
     lastAttemptStatus: 'transient_error',
     sourceSignature: signature,
+    sourcePrice: 220_000,
 }, { ...baseline, price: 230_000 }, now, config).reason, 'retry_wait');
 
 console.log('Naver refresh policy tests passed');

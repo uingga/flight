@@ -181,6 +181,11 @@ assert.deepEqual(getUsableNaverComparison({
 }, comparisonNow), { price: 150_000, checkedAt: '2026-08-26T03:00:00Z' });
 assert.equal(getUsableNaverComparison({
     naverLowest: 150_000,
+    crawledAt: '2026-08-26T02:59:59Z',
+    lastAttemptStatus: 'success',
+}, comparisonNow), null);
+assert.equal(getUsableNaverComparison({
+    naverLowest: 150_000,
     crawledAt: '2026-08-26T03:00:00Z',
     lastAttemptStatus: 'no_result',
 }, comparisonNow), null);

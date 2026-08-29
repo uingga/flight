@@ -19,6 +19,7 @@
     "test:source-freshness": "tsx scripts/test-source-freshness.ts",
     "test:crawl-schedule": "node --test scripts/test-crawl-schedule-health.mjs",
     "test:naver-policy": "node --test scripts/test-local-naver-run-policy.mjs",
+    "test:naver-priority": "tsx scripts/test-naver-crawl-priority.ts && tsx scripts/test-naver-refresh-policy.ts",
     "test:source-fallback-policy": "node --test scripts/test-local-source-fallback-policy.mjs",
     "verify:scraper-sources": "tsx scripts/verify-source-scrapers.ts",
     "scrape:myrealtrip": "tsx scripts/scrape-myrealtrip-prices.ts",
