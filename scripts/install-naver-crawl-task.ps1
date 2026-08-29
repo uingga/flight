@@ -11,8 +11,11 @@ param(
 $ErrorActionPreference = 'Stop'
 $TaskName = 'TikitikitNaverCrawl'
 $SourceDir = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
-$RepoUrl = (& git -C $SourceDir remote get-url origin | Select-Object -First 1).Trim()
-if ($LASTEXITCODE -ne 0 -or -not $RepoUrl) {
+$RepoUrlOutput = & git -C $SourceDir remote get-url origin 2>&1
+$RepoUrlExitCode = $LASTEXITCODE
+$RepoUrl = [string]($RepoUrlOutput | Select-Object -First 1)
+$RepoUrl = $RepoUrl.Trim()
+if ($RepoUrlExitCode -ne 0 -or -not $RepoUrl) {
     throw 'Unable to determine the origin repository URL.'
 }
 
@@ -51,10 +54,10 @@ try {
 }
 
 $RunnerPath = Join-Path $AutomationDir 'scripts\run-naver-crawl.ps1'
+$PowerShellPath = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
 $Action = New-ScheduledTaskAction `
-    -Execute 'powershell.exe' `
-    -Argument "-NoProfile -ExecutionPolicy Bypass -File `"$RunnerPath`" -Scheduled" `
-    -WorkingDirectory $AutomationDir
+    -Execute $PowerShellPath `
+    -Argument "-NoProfile -ExecutionPolicy Bypass -File `"$RunnerPath`" -Scheduled"
 $Triggers = @(
     (New-ScheduledTaskTrigger -Daily -At '14:30'),
     (New-ScheduledTaskTrigger -Daily -At '20:30')

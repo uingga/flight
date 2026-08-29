@@ -192,6 +192,8 @@ test('the Windows Naver task owns production collection with one guarded daily s
     assert.match(installer, /New-ScheduledTaskTrigger -Daily -At '14:30'/);
     assert.match(installer, /New-ScheduledTaskTrigger -Daily -At '20:30'/);
     assert.match(installer, /-Argument .* -Scheduled/);
+    assert.match(installer, /System32\\WindowsPowerShell\\v1\.0\\powershell\.exe/);
+    assert.doesNotMatch(installer, /-WorkingDirectory/);
     assert.match(installer, /-MultipleInstances IgnoreNew/);
     assert.match(installer, /-ExecutionTimeLimit \(New-TimeSpan -Hours 5\)/);
     assert.match(installer, /-WakeToRun/);
