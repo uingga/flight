@@ -4336,24 +4336,30 @@
         top: 0;
         z-index: 20;
         display: grid;
-        grid-template-columns: repeat(5, minmax(max-content, 1fr));
+        grid-template-columns: repeat(5, minmax(0, 1fr));
         gap: 4px;
         margin: 0 0 10px;
         padding: 5px;
-        overflow-x: auto;
+        overflow-x: hidden;
         border-radius: 12px;
     }
 
     .tabBtn {
         width: auto;
-        min-width: 82px;
+        min-width: 0;
         min-height: 42px;
-        padding: 7px 9px;
+        padding: 7px 4px;
         align-items: center;
         text-align: center;
     }
 
-    .tabLabel { font-size: 0.78rem; }
+    .tabLabel {
+        display: block;
+        width: 100%;
+        font-size: clamp(0.7rem, 3vw, 0.78rem);
+        line-height: 1.15;
+        white-space: normal;
+    }
     .tabHint { display: none; }
     .threadsPostCard { padding: 15px; }
     .threadsMetricGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
