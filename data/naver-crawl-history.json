@@ -272,6 +272,29 @@
       "blocked": 0,
       "healthChecks": 0,
       "abortedEarly": false
+    },
+    {
+      "id": "2026-08-29T04:04:16.462Z-github-2851",
+      "timestamp": "2026-08-29T04:04:16.462Z",
+      "runner": "github",
+      "sourceFilter": "myrealtrip",
+      "maxFlights": 200,
+      "needed": 153,
+      "attempted": 7,
+      "newRoutes": 45,
+      "newRoutesAttempted": 5,
+      "deferred": 146,
+      "deferredNeverChecked": 40,
+      "oldestDeferredHours": 381.9,
+      "success": 4,
+      "misses": 3,
+      "noResult": 0,
+      "routeErrors": 0,
+      "transientErrors": 3,
+      "blocked": 0,
+      "healthChecks": 1,
+      "abortedEarly": true,
+      "abortReason": "서로 다른 대조 노선 2개의 전송/API 장애"
     }
   ]
 }
