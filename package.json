@@ -16,6 +16,7 @@
     "test:ybtour-schedule": "tsx scripts/test-ybtour-schedule.ts",
     "test:scraper-contracts": "tsx scripts/test-scraper-response-contracts.ts",
     "test:crawl-schedule": "node --test scripts/test-crawl-schedule-health.mjs",
+    "test:naver-policy": "node --test scripts/test-local-naver-run-policy.mjs",
     "verify:scraper-sources": "tsx scripts/verify-source-scrapers.ts",
     "scrape:myrealtrip": "tsx scripts/scrape-myrealtrip-prices.ts",
     "send:alerts": "tsx scripts/send-alerts.ts",

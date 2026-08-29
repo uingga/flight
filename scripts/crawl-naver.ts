@@ -51,17 +51,18 @@ const HIDE_WINDOW = process.env.HIDE_WINDOW === '1';                // 브라우
 const NAVER_WAIT_MS = 25000;        // 네이버 검색 결과 로딩 대기 (25초)
 const NAVER_EXTRA_WAIT_MS = 20000;  // API/로딩이 끝나지 않은 페이지만 추가 대기
 const NAVER_HEALTH_WAIT_MS = 20000; // 대조 노선은 가격이 아닌 API 도달 여부만 확인
-const MIN_DELAY = 1000;             // 최소 랜덤 딜레이 (ms)
-const MAX_DELAY = 3000;             // 최대 랜덤 딜레이 (ms)
-const BATCH_SIZE = 10;              // N건마다 휴식
-const BATCH_REST_MIN = 30000;       // 휴식 최소 (30초)
-const BATCH_REST_MAX = 60000;       // 휴식 최대 (60초)
+const REQUEST_DELAY_MIN_MS = parseInt(process.env.REQUEST_DELAY_MIN_MS || '2000', 10);
+const REQUEST_DELAY_MAX_MS = parseInt(process.env.REQUEST_DELAY_MAX_MS || '4000', 10);
+const BATCH_SIZE = parseInt(process.env.BATCH_SIZE || '10', 10);
+const BATCH_REST_MIN_MS = parseInt(process.env.BATCH_REST_MIN_MS || '30000', 10);
+const BATCH_REST_MAX_MS = parseInt(process.env.BATCH_REST_MAX_MS || '60000', 10);
+const MAX_HEALTH_CHECKS = parseInt(process.env.MAX_HEALTH_CHECKS || '1', 10);
 const DATA_DIR = path.join(process.cwd(), 'data');
 const OUTPUT_FILE = path.join(DATA_DIR, 'naver-prices.json');
 const ALL_FLIGHTS_FILE = path.join(DATA_DIR, 'all-flights-cache.json');
 
 // ─── 유틸리티 ───
-const humanDelay = (min = MIN_DELAY, max = MAX_DELAY) =>
+const humanDelay = (min = REQUEST_DELAY_MIN_MS, max = REQUEST_DELAY_MAX_MS) =>
     new Promise<void>(r => setTimeout(r, Math.random() * (max - min) + min));
 
 const normalizeDate = (dateStr: string): string => {
@@ -493,6 +494,12 @@ const freshnessHoursFor = (entry: NaverPriceEntry, _source: string): number => {
         // 애매한 실패가 연속돼도 바로 차단이라고 단정하지 않는다. 알려진 정상 노선을
         // 별도 페이지에서 한 번 확인해 서비스 전체가 막혔을 때만 조기 철수한다.
         if (consecutiveAmbiguousMisses >= ABORT_AFTER_MISSES) {
+            if (healthCheckCount >= MAX_HEALTH_CHECKS) {
+                abortReason = `일시 오류가 다시 ${consecutiveAmbiguousMisses}건 연속 발생했지만 대조 조회 한도 ${MAX_HEALTH_CHECKS}회를 이미 사용함`;
+                console.log(`\n🛑 ${abortReason} — 추가 대조 요청 없이 조기 철수합니다.`);
+                abortedEarly = true;
+                break;
+            }
             healthCheckCount++;
             console.log(`\n🩺 애매한 실패 ${consecutiveAmbiguousMisses}건 — 정상 대조 노선으로 접속 상태를 확인합니다.`);
             const availability = await probeNaverAvailability(context);
@@ -500,9 +507,12 @@ const freshnessHoursFor = (entry: NaverPriceEntry, _source: string): number => {
                 console.log('   ✅ 검색 API는 정상입니다. 노선별 실패로 기록하고 다음 항목을 계속 확인합니다.');
                 consecutiveAmbiguousMisses = 0;
             } else if (availability === 'unknown') {
-                // 가격이 없거나 한 번의 애매한 대조 결과만으로 전체 회차를 멈추지 않는다.
-                console.log('   ℹ️ 전체 장애라는 증거가 없어 다음 항목을 계속 확인합니다.');
-                consecutiveAmbiguousMisses = 0;
+                // 대조 결과가 불명확한 상태에서 새 노선을 계속 요청하면 soft block을
+                // 악화시킬 수 있다. 이 회차는 실패로 남기고 전역 쿨다운에 맡긴다.
+                abortReason = '연속 일시 오류 뒤 대조 노선 상태도 불확실함';
+                console.log(`   🛑 ${abortReason} — 추가 요청 없이 조기 철수합니다.`);
+                abortedEarly = true;
+                break;
             } else {
                 abortReason = availability === 'blocked'
                     ? '대조 노선에서 명시적 접근 제한 확인'
@@ -515,7 +525,7 @@ const freshnessHoursFor = (entry: NaverPriceEntry, _source: string): number => {
         }
 
         // 랜덤 딜레이 (사람처럼)
-        await humanDelay(2000, 4000);
+        await humanDelay();
         console.log('');
 
         // 10건마다 휴식 + 중간 저장
@@ -523,7 +533,7 @@ const freshnessHoursFor = (entry: NaverPriceEntry, _source: string): number => {
         if (completedCount > 0 && completedCount % BATCH_SIZE === 0 && completedCount < uniqueFlights.length) {
             // 중간 저장
             fs.writeFileSync(OUTPUT_FILE, JSON.stringify(naverPrices, null, 2), 'utf-8');
-            const restSeconds = Math.round((BATCH_REST_MIN + Math.random() * (BATCH_REST_MAX - BATCH_REST_MIN)) / 1000);
+            const restSeconds = Math.round((BATCH_REST_MIN_MS + Math.random() * (BATCH_REST_MAX_MS - BATCH_REST_MIN_MS)) / 1000);
             console.log(`☕ ${completedCount}건 완료! ${restSeconds}초 휴식 중...\n`);
             await new Promise<void>(r => setTimeout(r, restSeconds * 1000));
             console.log(`🔄 크롤링 재개!\n`);

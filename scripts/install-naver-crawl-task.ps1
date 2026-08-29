@@ -53,15 +53,20 @@ try {
 $RunnerPath = Join-Path $AutomationDir 'scripts\run-naver-crawl.ps1'
 $Action = New-ScheduledTaskAction `
     -Execute 'powershell.exe' `
-    -Argument "-NoProfile -ExecutionPolicy Bypass -File `"$RunnerPath`"" `
+    -Argument "-NoProfile -ExecutionPolicy Bypass -File `"$RunnerPath`" -Scheduled" `
     -WorkingDirectory $AutomationDir
-$Trigger = New-ScheduledTaskTrigger -Daily -At '14:30'
+$Triggers = @(
+    (New-ScheduledTaskTrigger -Daily -At '14:30'),
+    (New-ScheduledTaskTrigger -Daily -At '20:30')
+)
 $Settings = New-ScheduledTaskSettingsSet `
     -StartWhenAvailable `
     -MultipleInstances IgnoreNew `
-    -ExecutionTimeLimit (New-TimeSpan -Hours 4) `
-    -RestartCount 1 `
-    -RestartInterval (New-TimeSpan -Minutes 15)
+    -ExecutionTimeLimit (New-TimeSpan -Hours 5) `
+    -RunOnlyIfNetworkAvailable `
+    -WakeToRun `
+    -AllowStartIfOnBatteries `
+    -DontStopIfGoingOnBatteries
 $Principal = New-ScheduledTaskPrincipal `
     -UserId "$env:USERDOMAIN\$env:USERNAME" `
     -LogonType Interactive `
@@ -70,15 +75,15 @@ $Principal = New-ScheduledTaskPrincipal `
 Register-ScheduledTask `
     -TaskName $TaskName `
     -Action $Action `
-    -Trigger $Trigger `
+    -Trigger $Triggers `
     -Settings $Settings `
     -Principal $Principal `
-    -Description '네이버 항공권 가격 수집(전용 자동화 저장소)' `
+    -Description '네이버 항공권 가격 수집(주거용 IP, 하루 최대 1회, 차단 쿨다운)' `
     -Force | Out-Null
 
 Write-Output "Installed $TaskName"
 Write-Output "Automation checkout: $AutomationDir"
-Write-Output 'Schedule: daily at 14:30 KST'
+Write-Output 'Schedule: daily at 14:30 KST, with a no-duplicate 20:30 fallback'
 
 if ($RunNow) {
     Start-ScheduledTask -TaskName $TaskName

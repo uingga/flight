@@ -4,22 +4,39 @@
 
 | 실행 위치 | 시각·조건 | 대상 | 최대 건수 | 역할 |
 |---|---|---:|---:|---|
-| GitHub Actions | 매일 07:05 KST 마이리얼트립 예약 스크래핑 성공 후 | `myrealtrip` | 200 | 갱신된 마이리얼트립 노선 후속 확인 |
-| Windows `TikitikitNaverCrawl` | 매일 14:30 KST | 전체 여행사 | 280 | 11:56 일반 여행사 수집 결과 후속 확인 |
+| GitHub Actions | 수동 진단만 | `myrealtrip` | 3 | 클라우드 접속 상태 확인(운영 반영 없음) |
+| Windows `TikitikitNaverCrawl` | 매일 14:30 KST, upstream 지연 시 20:30 재확인 | 전체 여행사 | 280 | 주거용 회선의 유일한 운영 네이버 수집 |
 
-GitHub `naver-crawl.yml`에는 독립 예약이 없다. `myrealtrip-scrape.yml`의 07:05 예약 이벤트가
-성공했을 때만 호출하며, 스크래핑 결과에 데이터 변경이 없어도 실행한다. 18:03 예약 회차와
-수동 실행은 네이버 워크플로를 자동 호출하지 않는다. `SOURCE_FILTER=myrealtrip`을 바꾸지 않는다.
+GitHub 호스팅 러너에서는 HTTP와 일부 GraphQL이 정상이어도 실제 운임 화면만 계속 로딩되는
+soft block이 반복됐다. 같은 코드로 2026-08-28 GitHub는 5/176건, Windows는 278/280건이
+성공해 트리거가 아니라 데이터센터 실행 환경이 주원인으로 확인됐다. 과거에는 조기 중단 회차도
+워크플로가 초록색으로 표시돼 최근부터 갑자기 실패한 것처럼 보인 구간도 있었다.
+
+따라서 `myrealtrip-scrape.yml`을 포함한 어떤 GitHub 워크플로도 `naver-crawl.yml`을 자동 호출하지
+않는다. 이 워크플로는 선택 입력을 1건 또는 3건으로 제한하고, `contents: read`만 부여하며,
+가격·필터·실행 이력을 커밋하지 않는 수동 진단 전용이다.
 
 `daily-crawl.yml`의 11:56 일반 크롤은 GitHub 네이버 워크플로를 호출하지 않는다. 일반 여행사
 수집, 11:56 오늘의 표 신규 선정, 다른 회차의 오늘의 표 누락 복구는 기존대로 수행한다.
 
 ## Windows 실행과 오늘의 표 복구
 
-Windows 작업은 `scripts/install-naver-crawl-task.ps1`이 14:30 KST로 등록하고,
-`scripts/run-naver-crawl.ps1`이 실행 시작 시 최신 `main`을 받는다. 주거용 IP에서
-`SOURCE_FILTER=all`, `MAX_FLIGHTS=280`으로 확인한 뒤 최신 원격 네이버 데이터와 병합하고,
-최신 항공권 캐시를 다시 필터링해 커밋한다.
+Windows 작업은 `scripts/install-naver-crawl-task.ps1`이 14:30과 20:30 KST로 등록하고,
+`scripts/run-naver-crawl.ps1`이 실행 시작 시 최신 `main`을 받는다. 14:30에는 당일 오전
+마이리얼트립과 11:56 이후 일반 크롤이 모두 준비된 경우에만 브라우저를 연다. 아직 준비되지
+않았으면 네이버 요청 없이 종료하고 20:30에 다시 확인한다. 두 트리거가 있어도 로컬 상태 파일이
+하루 한 번만 브라우저 세션을 허용한다.
+
+주거용 IP에서 `SOURCE_FILTER=all`, `MAX_FLIGHTS=280`으로 확인하되 검색 사이 5~10초,
+10건마다 60~120초를 추가로 쉰다. 대조 노선 확인은 회차당 한 번으로 제한한다. 403/429/CAPTCHA
+등 명시적 제한이면 즉시 중단하고 24시간, 운임 경로의 시스템성 일시 오류면 12시간 전역
+쿨다운한다. 실패 뒤 같은 날 20:30 재시도나 Task Scheduler 자동 재시작은 하지 않는다.
+
+Task Scheduler의 `IgnoreNew`와 별도로 named mutex를 사용하므로 예약 실행 중 수동 실행도
+겹치지 않는다. 작업은 네트워크 연결을 요구하고 PC를 깨우며, 최대 5시간 뒤 종료된다. 브라우저가
+실제 화면을 사용하므로 Windows 사용자 세션은 로그인 상태여야 한다.
+
+성공한 가격은 최신 원격 네이버 데이터와 병합하고 최신 항공권 캐시를 다시 필터링해 커밋한다.
 
 네이버 수집·필터링 데이터가 `main`에 반영되고 운영 항공권 API가 해당 캐시 이상으로 올라온
 뒤에만 `node scripts/select-today-pick.mjs --repair`를 실행한다. 현재 오늘의 표가 오늘 날짜이며

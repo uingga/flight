@@ -66,15 +66,18 @@ src/components/Dashboard.tsx (client component)
 2. **가격·시간 갱신 (자동, 하루 2회 KST 07:05/18:03)**: `.github/workflows/myrealtrip-scrape.yml` →
    `scripts/scrape-myrealtrip-prices.ts`가 Playwright로 실제 예약 페이지(offers.k1)를 열어
    실시간 가격과 가는편·오는편 출발/도착 시간을 수집. 조회 실패 노선은 캐시에서 삭제.
-   07:05 예약 회차가 성공하면 변경 유무와 관계없이 `naver-crawl.yml`을 `max_flights=200`으로
-   호출해 마이리얼트립 노선만 확인한다. 18:03 회차와 수동 실행은 네이버를 자동 호출하지 않는다.
+   네이버 운영 수집은 호출하지 않는다. GitHub 호스팅 러너에서는 HTTP 200이어도 실제 운임만
+   사라지는 soft block이 반복돼 Windows 주거용 회선의 단일 자동 회차로 분리했다.
 
 ### Naver 비교가 확인 스케줄
 
-- GitHub `naver-crawl.yml`은 독립 cron 없이 07:05 마이리얼트립 성공 회차에서만 호출되며
-  `SOURCE_FILTER=myrealtrip`을 유지한다. 11:56 일반 크롤은 이 워크플로를 호출하지 않는다.
-- Windows `TikitikitNaverCrawl`은 매일 14:30 KST에 최신 `main`을 받은 뒤
-  `SOURCE_FILTER=all`, `MAX_FLIGHTS=280`으로 실행해 11:56 일반 여행사 수집 결과를 후속 확인한다.
+- GitHub `naver-crawl.yml`은 운영 데이터를 쓰지 않는 수동 진단 전용이다. `myrealtrip` 최대 3건만
+  확인하며 어떤 자동 워크플로도 이를 호출하지 않는다.
+- Windows `TikitikitNaverCrawl`은 14:30 KST에 최신 `main`과 오전 마이리얼트립·11:56 일반
+  크롤 완료 여부를 확인한 뒤 `SOURCE_FILTER=all`, `MAX_FLIGHTS=280`으로 하루 최대 한 번 실행한다.
+  upstream 지연 시 20:30에 요청 없이 상태만 다시 확인한다.
+- 명시적 접근 제한은 24시간, 시스템성 일시 오류는 12시간 전역 쿨다운한다. 같은 날 자동 재실행,
+  동시 수동 실행, Task Scheduler 재시작은 허용하지 않는다.
 - PC 네이버 필터가 성공해 운영 API에 반영된 뒤에는 `select-today-pick.mjs --repair`로
   기존 오늘의 표만 검증한다. 유효하면 유지하고, 사라졌거나 유효하지 않을 때만 복구한다.
 

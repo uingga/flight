@@ -2,15 +2,21 @@
 #
 # Pull GitHub data first, then fill up to 280 missing or stale routes across
 # every agency. Successful prices refresh by KST calendar date: MyRealTrip daily,
-# other agencies every two days. Failed searches retry after 6 hours.
+# other agencies every two days. A browser-session circuit breaker controls retries.
 #
-# Schedule: daily at 14:30 (Windows task TikitikitNaverCrawl; moved from 04:00 on 2026-08-18)
+# Schedule: daily at 14:30, with a no-duplicate 20:30 fallback when upstream data is late
 # Manual:   powershell -File scripts\run-naver-crawl.ps1
+
+[CmdletBinding()]
+param(
+    [switch]$Scheduled
+)
 
 $ErrorActionPreference = 'Continue'
 
 $ProjectDir = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 $LogFile = Join-Path $ProjectDir 'data\naver-crawl-local.log'
+$StateFile = Join-Path $env:LOCALAPPDATA 'Tikitikit\state\naver-crawl.json'
 $SessionCopy = Join-Path $env:TEMP 'tikitikit-naver-session.json'
 $HistorySessionCopy = Join-Path $env:TEMP 'tikitikit-naver-history-session.json'
 $NaverDataPaths = @('data/naver-prices.json', 'data/naver-crawl-history.json', 'data/all-flights-cache.json')
@@ -21,6 +27,14 @@ Set-Location $ProjectDir
 
 function Log($msg) {
     "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') $msg" | Add-Content -Encoding utf8 $LogFile
+}
+
+# Task Scheduler's IgnoreNew setting does not cover a manual PowerShell launch.
+# A named mutex keeps every entry point on this Windows session single-instance.
+$RunMutex = New-Object System.Threading.Mutex($false, 'Local\TikitikitNaverCrawl')
+if (-not $RunMutex.WaitOne(0)) {
+    Log 'Another local Naver crawl process is already active; duplicate launch skipped'
+    exit 0
 }
 
 Log '=== Local Naver crawl started ==='
@@ -37,11 +51,40 @@ if ($PreexistingManagedChanges) {
     exit 1
 }
 
-# Pull the latest GitHub data while preserving unrelated local changes.
-git pull --rebase --autostash 2>&1 | Add-Content -Encoding utf8 $LogFile
-if ($LASTEXITCODE -ne 0) {
+# Pull the latest GitHub data while preserving unrelated local changes. Naming
+# origin/main explicitly avoids repositories with multiple branch merge entries.
+$InitialPullOutput = & git pull --rebase --autostash origin main 2>&1
+$InitialPullExitCode = $LASTEXITCODE
+$InitialPullOutput | Add-Content -Encoding utf8 $LogFile
+if ($InitialPullExitCode -ne 0) {
     Log 'Initial git pull failed; stopping before the crawl'
     exit 1
+}
+
+# The 14:30 trigger waits for both the post-11:56 general crawl and today's MRT
+# refresh. The 20:30 trigger may use whichever upstream is ready. A successful or
+# blocked browser session is never launched again on the same KST day.
+$PolicyOutput = & node scripts/local-naver-run-policy.mjs check `
+    --cache 'data/all-flights-cache.json' `
+    --state $StateFile 2>&1
+$PolicyExitCode = $LASTEXITCODE
+$PolicyText = ($PolicyOutput | Out-String).Trim()
+Log "run policy: $PolicyText"
+if ($PolicyExitCode -ne 0) {
+    Log 'Unable to evaluate local Naver run policy; stopping before browser launch'
+    exit 1
+}
+try {
+    $RunPolicy = $PolicyText | ConvertFrom-Json
+} catch {
+    Log "Invalid run policy output: $($_.Exception.Message)"
+    exit 1
+}
+if (-not $RunPolicy.shouldRun) {
+    Log "Browser launch skipped by policy ($($RunPolicy.reason))"
+    Log '=== Local Naver crawl finished without requests ==='
+    '' | Add-Content $LogFile
+    exit 0
 }
 
 # Keep a dedicated automation checkout in sync with package-lock changes without
@@ -65,21 +108,74 @@ if ($PackageLockHash -ne $InstalledPackageLockHash) {
     $PackageLockHash | Set-Content -Encoding ascii $DependencyMarker
 }
 
-# Crawl all agencies using the residential IP, with KST calendar-day refresh rules.
+# Fixed-time automation still gets a small random start offset, so requests do not
+# begin at the exact same second every day. The mutex remains held during the wait.
+if ($Scheduled) {
+    $StartJitterSeconds = Get-Random -Minimum 30 -Maximum 601
+    Log "Scheduled start jitter: $StartJitterSeconds seconds"
+    Start-Sleep -Seconds $StartJitterSeconds
+}
+
+$RunningStateOutput = & node scripts/local-naver-run-policy.mjs mark `
+    --state $StateFile `
+    --outcome running `
+    --reason 'browser_session_started' 2>&1
+if ($LASTEXITCODE -ne 0) {
+    Log 'Unable to open the local Naver circuit state; stopping before browser launch'
+    exit 1
+}
+Log "circuit state: $(($RunningStateOutput | Out-String).Trim())"
+
+# Crawl all agencies using the residential IP. This is the only production Naver
+# browser session: GitHub Actions is limited to a read-only three-route diagnostic.
 $env:HIDE_WINDOW = '1'
 $env:SOURCE_FILTER = 'all'
 $env:MAX_FLIGHTS = '280'
 $env:REFRESH_DAYS = '2'
 $env:MYREALTRIP_REFRESH_DAYS = '1'
-$env:MISS_RETRY_HOURS = '6'
+$env:MISS_RETRY_HOURS = '24'
+$env:ABORT_AFTER_MISSES = '3'
+$env:MAX_HEALTH_CHECKS = '1'
+$env:REQUEST_DELAY_MIN_MS = '5000'
+$env:REQUEST_DELAY_MAX_MS = '10000'
+$env:BATCH_SIZE = '10'
+$env:BATCH_REST_MIN_MS = '60000'
+$env:BATCH_REST_MAX_MS = '120000'
 npx.cmd --no-install tsx scripts/crawl-naver.ts 2>&1 | ForEach-Object {
     # Add-Content per line keeps the log readable while the long crawl is running.
     "$_" | Add-Content -Encoding utf8 $LogFile
 }
 $CrawlerExitCode = $LASTEXITCODE
 $HistoryOnly = $CrawlerExitCode -ne 0
+$CircuitOutcome = 'success'
+$CircuitReason = 'crawler_completed'
 if ($HistoryOnly) {
     Log "Crawler exited abnormally (exit $CrawlerExitCode); partial prices will be discarded and history only will be preserved"
+    $CircuitOutcome = 'degraded'
+    $CircuitReason = "crawler_exit_$CrawlerExitCode"
+    try {
+        $LatestLocalEntry = (Get-Content -Raw -Encoding utf8 'data/naver-crawl-history.json' | ConvertFrom-Json).entries |
+            Where-Object { $_.runner -eq 'local' } |
+            Sort-Object { [DateTimeOffset]::Parse($_.timestamp) } |
+            Select-Object -Last 1
+        if (($LatestLocalEntry.blocked -as [int]) -gt 0 -or $LatestLocalEntry.abortReason -match '403|429|CAPTCHA|접근 제한') {
+            $CircuitOutcome = 'blocked'
+            $CircuitReason = [string]$LatestLocalEntry.abortReason
+        } elseif ($LatestLocalEntry.abortReason) {
+            $CircuitReason = [string]$LatestLocalEntry.abortReason
+        }
+    } catch {
+        Log "Unable to classify crawler failure for cooldown: $($_.Exception.Message)"
+    }
+}
+$FinishedStateOutput = & node scripts/local-naver-run-policy.mjs mark `
+    --state $StateFile `
+    --outcome $CircuitOutcome `
+    --reason $CircuitReason 2>&1
+if ($LASTEXITCODE -ne 0) {
+    Log 'Unable to persist the post-crawl circuit state; automatic retry remains disabled by the scheduled-task configuration'
+} else {
+    Log "circuit state: $(($FinishedStateOutput | Out-String).Trim())"
 }
 
 # Preserve this session, merge it onto the latest remote data, then push.
@@ -96,8 +192,10 @@ for ($attempt = 1; $attempt -le 2; $attempt++) {
     }
 
     git checkout -- $NaverDataPaths 2>$null
-    git pull --rebase --autostash 2>&1 | Add-Content -Encoding utf8 $LogFile
-    if ($LASTEXITCODE -ne 0) {
+    $MergePullOutput = & git pull --rebase --autostash origin main 2>&1
+    $MergePullExitCode = $LASTEXITCODE
+    $MergePullOutput | Add-Content -Encoding utf8 $LogFile
+    if ($MergePullExitCode -ne 0) {
         Log "Remote refresh failed (attempt $attempt); session copies were preserved"
         exit 1
     }
