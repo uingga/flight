@@ -45,8 +45,8 @@ jobs:
           CI: true
           MAX_FLIGHTS: ${{ inputs.max_flights }}
           SOURCE_FILTER: myrealtrip
-          REFRESH_DAYS: 0
-          MYREALTRIP_REFRESH_DAYS: 0
+          STANDARD_REFRESH_DAYS: 0
+          PRIORITY_REFRESH_DAYS: 0
           MISS_RETRY_HOURS: 0
           NO_RESULT_RETRY_HOURS: 0
           REQUEST_DELAY_MIN_MS: 5000

@@ -11,6 +11,8 @@ export interface NaverCrawlHistoryEntry {
     attempted: number;
     newRoutes: number;
     newRoutesAttempted: number;
+    changedRoutes?: number;
+    periodicRoutes?: number;
     deferred: number;
     deferredNeverChecked: number;
     oldestDeferredHours: number | null;

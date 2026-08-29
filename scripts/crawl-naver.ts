@@ -28,6 +28,12 @@ import {
     type NaverCrawlPageState,
     type NaverPageSnapshot,
 } from '../src/lib/naver-crawl-page-state';
+import {
+    buildNaverSourceSignature,
+    evaluateNaverRefresh,
+    type NaverRefreshConfig,
+    type NaverRefreshReason,
+} from '../src/lib/naver-refresh-policy';
 
 chromium.use(stealth());
 
@@ -36,8 +42,10 @@ const MAX_FLIGHTS = parseInt(process.env.MAX_FLIGHTS || '9999', 10); // 기본: 
 const MAX_DAYS_AHEAD = parseInt(process.env.MAX_DAYS_AHEAD || '60', 10); // 출발일 N일 이내만
 const SOURCE_FILTER_RAW = process.env.SOURCE_FILTER ?? 'myrealtrip';
 const SOURCE_FILTER = SOURCE_FILTER_RAW.toLowerCase() === 'all' ? '' : SOURCE_FILTER_RAW; // all이면 전체 소스
-const REFRESH_DAYS = parseInt(process.env.REFRESH_DAYS || '2', 10); // 기타 여행사는 KST 날짜 기준 이틀마다 갱신
-const MYREALTRIP_REFRESH_DAYS = parseInt(process.env.MYREALTRIP_REFRESH_DAYS || '1', 10); // 마이리얼트립은 KST 날짜 기준 매일 갱신
+const STANDARD_REFRESH_DAYS = parseInt(process.env.STANDARD_REFRESH_DAYS || process.env.REFRESH_DAYS || '5', 10);
+const PRIORITY_REFRESH_DAYS = parseInt(process.env.PRIORITY_REFRESH_DAYS || process.env.MYREALTRIP_REFRESH_DAYS || '2', 10);
+const PRIORITY_DEPARTURE_DAYS = parseInt(process.env.PRIORITY_DEPARTURE_DAYS || '14', 10);
+const PRIORITY_DISCOUNT_RATE = parseInt(process.env.PRIORITY_DISCOUNT_RATE || '20', 10);
 const MISS_RETRY_HOURS = parseInt(process.env.MISS_RETRY_HOURS || '6', 10); // 검색 실패 노선은 잠시 뒤 재시도
 const NO_RESULT_RETRY_HOURS = parseInt(process.env.NO_RESULT_RETRY_HOURS || '24', 10); // 정상 빈 노선은 하루 뒤 재확인
 const ABORT_AFTER_MISSES = parseInt(process.env.ABORT_AFTER_MISSES || '3', 10); // 연속 N건 일시 오류면 서비스 상태를 별도 확인
@@ -60,6 +68,14 @@ const MAX_HEALTH_CHECKS = parseInt(process.env.MAX_HEALTH_CHECKS || '1', 10);
 const DATA_DIR = path.join(process.cwd(), 'data');
 const OUTPUT_FILE = path.join(DATA_DIR, 'naver-prices.json');
 const ALL_FLIGHTS_FILE = path.join(DATA_DIR, 'all-flights-cache.json');
+const REFRESH_CONFIG: NaverRefreshConfig = {
+    priorityRefreshDays: PRIORITY_REFRESH_DAYS,
+    standardRefreshDays: STANDARD_REFRESH_DAYS,
+    priorityDepartureDays: PRIORITY_DEPARTURE_DAYS,
+    priorityDiscountRate: PRIORITY_DISCOUNT_RATE,
+    missRetryHours: MISS_RETRY_HOURS,
+    noResultRetryHours: NO_RESULT_RETRY_HOURS,
+};
 
 // ─── 유틸리티 ───
 const humanDelay = (min = REQUEST_DELAY_MIN_MS, max = REQUEST_DELAY_MAX_MS) =>
@@ -82,10 +98,11 @@ const normalizeDate = (dateStr: string): string => {
 };
 
 interface FlightData {
-    departure: { airport: string; city: string; date: string };
-    arrival: { airport: string; city: string; date: string };
+    departure: { airport: string; city: string; date: string; time?: string; arrivalTime?: string };
+    arrival: { airport: string; city: string; date: string; time?: string; arrivalTime?: string };
     price: number;
     airline: string;
+    flightNumber?: string;
     source: string;
     discountRate?: number;
     routeAirports?: {
@@ -106,40 +123,11 @@ interface NaverPriceEntry {
     lastAttemptStatus?: 'success' | 'miss' | Exclude<NaverCrawlPageState, 'results'>;
     lastAttemptDetail?: string;
     lastFinalUrl?: string;
+    sourceSignature?: string;
 }
 
 const HOUR_MS = 3_600_000;
-const DAY_MS = 24 * HOUR_MS;
 const KST_OFFSET_MS = 9 * HOUR_MS;
-
-const kstDayNumber = (timestamp: number): number =>
-    Math.floor((timestamp + KST_OFFSET_MS) / DAY_MS);
-
-const elapsedKstDays = (timestamp: number, now: number): number =>
-    kstDayNumber(now) - kstDayNumber(timestamp);
-
-const isAttemptFresh = (entry: NaverPriceEntry | undefined, source: string, now = Date.now()): boolean => {
-    if (!entry) return false;
-    const isMiss = Boolean(entry.lastAttemptStatus && entry.lastAttemptStatus !== 'success');
-    const timestamp = isMiss ? entry.lastAttemptAt : entry.crawledAt;
-    if (!timestamp) return false;
-    const attemptedAt = new Date(timestamp).getTime();
-    if (!Number.isFinite(attemptedAt)) return false;
-
-    // 실패 건은 차단이 풀릴 기회를 주기 위해 정확한 시간 간격으로 재시도한다.
-    if (isMiss) {
-        const retryHours = entry.lastAttemptStatus === 'no_result'
-            || entry.lastAttemptStatus === 'route_error'
-            || entry.lastAttemptStatus === 'miss'
-            ? NO_RESULT_RETRY_HOURS
-            : MISS_RETRY_HOURS;
-        return now - attemptedAt < retryHours * HOUR_MS;
-    }
-
-    // 성공 건은 실행 시각의 몇 분 차이 때문에 하루를 더 건너뛰지 않도록 KST 날짜로 판단한다.
-    const refreshDays = source === 'myrealtrip' ? MYREALTRIP_REFRESH_DAYS : REFRESH_DAYS;
-    return elapsedKstDays(attemptedAt, now) < refreshDays;
-};
 
 const attemptTimestamp = (entry: NaverPriceEntry): number =>
     new Date(entry.lastAttemptAt || entry.crawledAt).getTime();
@@ -207,20 +195,30 @@ const freshnessHoursFor = (entry: NaverPriceEntry, _source: string): number => {
         } catch { /* 새로 시작 */ }
     }
 
-    // 노선 중복 제거 + 신선한 항목 제외 + 우선순위 정렬
-    const { selected: uniqueFlights, pending: neededFlights, skippedFresh } = selectFlightsByPriority(rawData, naverPrices, MAX_FLIGHTS);
-    const newRouteCount = neededFlights.filter(f => !naverPrices[flightKey(f)]).length;
-    console.log(`⏭️ 갱신 주기 내 이미 시도된 노선 스킵: ${skippedFresh}건 (KST 기준 마이리얼트립 매일 / 기타 ${REFRESH_DAYS}일마다 / 빈 결과 ${NO_RESULT_RETRY_HOURS}시간 · 일시 오류 ${MISS_RETRY_HOURS}시간 후)`);
-    console.log(`📋 확인 필요 ${neededFlights.length}건 · 이번 실행 ${uniqueFlights.length}건 · 새 항공권 ${newRouteCount}건 · 다음 회차 ${Math.max(0, neededFlights.length - uniqueFlights.length)}건\n`);
+    // 노선 중복 제거 + 여행사 변경 감지 + 중요도별 정기 갱신 우선순위
+    const {
+        selected: uniqueFlights,
+        pending: neededFlights,
+        skippedFresh,
+        seededSignatures,
+        reasonCounts,
+    } = selectFlightsByPriority(rawData, naverPrices, MAX_FLIGHTS);
+    const newRouteCount = reasonCounts.new;
+    const changedRouteCount = reasonCounts.source_changed;
+    const periodicRouteCount = reasonCounts.priority_periodic + reasonCounts.standard_periodic + reasonCounts.retry_due;
+    if (seededSignatures > 0) {
+        console.log(`🧾 기존 네이버 기록 ${seededSignatures}건에 현재 여행사 가격·시간 기준선을 저장했습니다 (추가 네이버 요청 없음)`);
+    }
+    console.log(`⏭️ 변경 없음·갱신 주기 내 스킵: ${skippedFresh}건 (주요 ${PRIORITY_REFRESH_DAYS}일 / 일반 ${STANDARD_REFRESH_DAYS}일 / 실패 ${MISS_RETRY_HOURS}~${NO_RESULT_RETRY_HOURS}시간)`);
+    console.log(`📋 확인 필요 ${neededFlights.length}건 · 이번 실행 ${uniqueFlights.length}건 · 신규 ${newRouteCount}건 · 여행사 변경 ${changedRouteCount}건 · 정기 ${periodicRouteCount}건 · 다음 회차 ${Math.max(0, neededFlights.length - uniqueFlights.length)}건\n`);
 
     if (DRY_RUN) {
         console.log('=== DRY RUN: 검색 계획 (상위 20건) ===');
         uniqueFlights.slice(0, 20).forEach((f, i) => {
             const key = flightKey(f);
             const entry = naverPrices[key];
-            const reason = !entry
-                ? `신규 (할인율 ${f.discountRate ?? 0}%)`
-                : `${entry.lastAttemptStatus === 'miss' ? '마지막 실패' : '마지막 검색'} ${Math.round((Date.now() - attemptTimestamp(entry)) / 3600000)}시간 전`;
+            const decision = evaluateNaverRefresh(entry, f, Date.now(), REFRESH_CONFIG);
+            const reason = `${naverRefreshReasonLabel(decision.reason)} · ${entry ? `${Math.round((Date.now() - attemptTimestamp(entry)) / 3600000)}시간 전` : `할인율 ${f.discountRate ?? 0}%`}`;
             console.log(`  ${String(i + 1).padStart(2)}. ${f.departure.city}→${f.arrival.city} ${normalizeDate(f.departure.date)} — ${reason}`);
         });
         process.exit(0);
@@ -277,7 +275,7 @@ const freshnessHoursFor = (entry: NaverPriceEntry, _source: string): number => {
 
         // 신선한 데이터가 있으면 스킵 (선별 단계에서 걸러지지만 안전망으로 유지)
         const existingEntry = naverPrices[key];
-        if (isAttemptFresh(existingEntry, flight.source)) {
+        if (evaluateNaverRefresh(existingEntry, flight, Date.now(), REFRESH_CONFIG).fresh) {
             const freshnessHours = freshnessHoursFor(existingEntry, flight.source);
             const resultLabel = existingEntry.lastAttemptStatus && existingEntry.lastAttemptStatus !== 'success'
                 ? `최근 ${existingEntry.lastAttemptStatus === 'miss' ? '검색 결과 없음' : naverPageStateLabel(existingEntry.lastAttemptStatus)}`
@@ -398,6 +396,7 @@ const freshnessHoursFor = (entry: NaverPriceEntry, _source: string): number => {
                     retDate,
                     lastAttemptAt: new Date().toISOString(),
                     lastAttemptStatus: 'success',
+                    sourceSignature: buildNaverSourceSignature(flight),
                 };
 
                 const diff = flight.price - lowestPrice;
@@ -429,6 +428,7 @@ const freshnessHoursFor = (entry: NaverPriceEntry, _source: string): number => {
                     lastAttemptStatus: failureState,
                     lastAttemptDetail: `GraphQL 정상 ${graphqlSuccessCount}/${graphqlResponseCount}회 · 오류 ${graphqlErrorCount} · ${pageSnapshot.bodyText?.slice(0, 150) || '본문 없음'}`,
                     lastFinalUrl: pageSnapshot.url,
+                    sourceSignature: buildNaverSourceSignature(flight),
                 };
                 failCount++;
                 failureStateCounts[failureState]++;
@@ -455,6 +455,7 @@ const freshnessHoursFor = (entry: NaverPriceEntry, _source: string): number => {
                 lastAttemptStatus: 'transient_error',
                 lastAttemptDetail: String(err?.message || err).slice(0, 180),
                 lastFinalUrl: page.url(),
+                sourceSignature: buildNaverSourceSignature(flight),
             };
             failCount++;
             failureStateCounts.transient_error++;
@@ -581,6 +582,8 @@ const freshnessHoursFor = (entry: NaverPriceEntry, _source: string): number => {
         attempted: attemptedCount,
         newRoutes: newRouteCount,
         newRoutesAttempted,
+        changedRoutes: changedRouteCount,
+        periodicRoutes: periodicRouteCount,
         deferred: remaining.length,
         deferredNeverChecked,
         oldestDeferredHours,
@@ -619,9 +622,9 @@ function flightKey(f: FlightData): string {
 
 /**
  * 노선 중복 제거(같은 노선+날짜는 최저가 1건) 후,
- * KST 날짜 기준 갱신 주기 안의 노선을 제외하고 우선순위로 정렬한다.
+ * 여행사 가격·시간이 바뀐 노선과 KST 날짜 기준 갱신 주기가 지난 노선을 정렬한다.
  *
- * 우선순위: 신규(할인율 높은 순) 2건과 기존(마지막 검색이 오래된 순) 1건을 섞는다.
+ * 우선순위: 신규·변경 2건과 정기 갱신(마지막 검색이 오래된 순) 1건을 섞는다.
  *          같은 노선은 최대 2건까지만 연속시킨다.
  *
  * 차단으로 조기 철수하더라도 가치 있는 노선부터 커버되도록 하기 위함.
@@ -630,9 +633,15 @@ function selectFlightsByPriority(
     flights: FlightData[],
     naverPrices: Record<string, NaverPriceEntry>,
     limit: number
-): { selected: FlightData[]; pending: FlightData[]; skippedFresh: number } {
+): {
+    selected: FlightData[];
+    pending: FlightData[];
+    skippedFresh: number;
+    seededSignatures: number;
+    reasonCounts: Record<NaverRefreshReason, number>;
+} {
     const seen = new Set<string>();
-    const unique = flights
+    const unique = [...flights]
         .filter(f => f.price > 0 && Boolean(flightKey(f)))
         .sort((a, b) => a.price - b.price) // 같은 노선+날짜 중복 시 최저가 유지
         .filter(f => {
@@ -644,35 +653,83 @@ function selectFlightsByPriority(
 
     const now = Date.now();
     let skippedFresh = 0;
+    let seededSignatures = 0;
+    const reasonCounts: Record<NaverRefreshReason, number> = {
+        new: 0,
+        source_changed: 0,
+        retry_wait: 0,
+        retry_due: 0,
+        priority_fresh: 0,
+        priority_periodic: 0,
+        standard_fresh: 0,
+        standard_periodic: 0,
+    };
+    const decisions = new Map<string, ReturnType<typeof evaluateNaverRefresh>>();
+
+    // 기존 기록에는 여행사 쪽 기준값이 없으므로 현재 최저가 항공권을 기준선으로만
+    // 저장한다. crawledAt은 건드리지 않아 오래된 네이버 가격을 새것으로 가장하지 않는다.
+    for (const flight of unique) {
+        const key = flightKey(flight);
+        const entry = naverPrices[key];
+        if (entry && !entry.sourceSignature) {
+            entry.sourceSignature = buildNaverSourceSignature(flight);
+            seededSignatures++;
+        }
+    }
 
     const stale = unique.filter(f => {
-        const entry = naverPrices[flightKey(f)];
-        if (isAttemptFresh(entry, f.source, now)) {
+        const key = flightKey(f);
+        const decision = evaluateNaverRefresh(naverPrices[key], f, now, REFRESH_CONFIG);
+        decisions.set(key, decision);
+        reasonCounts[decision.reason]++;
+        if (decision.fresh) {
             skippedFresh++;
             return false;
         }
         return true;
     });
 
-    const newFlights = stale
-        .filter(f => !naverPrices[flightKey(f)])
-        .sort((a, b) => (b.discountRate ?? 0) - (a.discountRate ?? 0));
-    const existingFlights = stale
-        .filter(f => Boolean(naverPrices[flightKey(f)]))
+    const urgentFlights = stale
+        .filter(f => {
+            const reason = decisions.get(flightKey(f))?.reason;
+            return reason === 'new' || reason === 'source_changed';
+        })
+        .sort((a, b) => {
+            const tierDifference = Number(decisions.get(flightKey(b))?.tier === 'priority')
+                - Number(decisions.get(flightKey(a))?.tier === 'priority');
+            return tierDifference || (b.discountRate ?? 0) - (a.discountRate ?? 0);
+        });
+    const periodicFlights = stale
+        .filter(f => {
+            const reason = decisions.get(flightKey(f))?.reason;
+            return reason !== 'new' && reason !== 'source_changed';
+        })
         .sort((a, b) => (
             attemptTimestamp(naverPrices[flightKey(a)]) - attemptTimestamp(naverPrices[flightKey(b)])
         ));
 
-    // 신규만 앞세우면 새 표가 많은 날 오래된 비교가가 며칠씩 밀린다.
-    // 신규 2건마다 가장 오래된 기존 1건을 섞고, 같은 노선은 두 번까지만 연속시킨다.
+    // 변경분만 앞세우면 오래된 비교가가 계속 밀리므로 2:1로 섞는다.
     const blended: FlightData[] = [];
-    while (newFlights.length > 0 || existingFlights.length > 0) {
-        for (let count = 0; count < 2 && newFlights.length > 0; count++) blended.push(newFlights.shift()!);
-        if (existingFlights.length > 0) blended.push(existingFlights.shift()!);
+    while (urgentFlights.length > 0 || periodicFlights.length > 0) {
+        for (let count = 0; count < 2 && urgentFlights.length > 0; count++) blended.push(urgentFlights.shift()!);
+        if (periodicFlights.length > 0) blended.push(periodicFlights.shift()!);
     }
     const pending = spreadRepeatedRoutes(blended, 2);
 
-    return { selected: pending.slice(0, limit), pending, skippedFresh };
+    return { selected: pending.slice(0, limit), pending, skippedFresh, seededSignatures, reasonCounts };
+}
+
+function naverRefreshReasonLabel(reason: NaverRefreshReason): string {
+    switch (reason) {
+        case 'new': return '신규';
+        case 'source_changed': return '여행사 가격·시간 변경';
+        case 'retry_wait': return '실패 쿨다운';
+        case 'retry_due': return '실패 재확인';
+        case 'priority_fresh': return '주요 항공권 최신';
+        case 'priority_periodic': return '주요 항공권 정기 갱신';
+        case 'standard_fresh': return '일반 항공권 최신';
+        case 'standard_periodic': return '일반 항공권 정기 갱신';
+    }
 }
 
 function routeIdentity(flight: FlightData): string {

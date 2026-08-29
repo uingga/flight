@@ -1,8 +1,8 @@
 # Naver flight crawler - Windows Task Scheduler entry point
 #
 # Pull GitHub data first, then fill up to 280 missing or stale routes across
-# every agency. Successful prices refresh by KST calendar date: MyRealTrip daily,
-# other agencies every two days. A browser-session circuit breaker controls retries.
+# every agency. New or changed source flights refresh immediately, important routes
+# every two days, and unchanged standard routes every five days.
 #
 # Schedule: daily at 14:30, with a no-duplicate 20:30 fallback when upstream data is late
 # Manual:   powershell -File scripts\run-naver-crawl.ps1
@@ -138,8 +138,10 @@ Log "circuit state: $(($RunningStateOutput | Out-String).Trim())"
 $env:HIDE_WINDOW = '1'
 $env:SOURCE_FILTER = 'all'
 $env:MAX_FLIGHTS = '280'
-$env:REFRESH_DAYS = '2'
-$env:MYREALTRIP_REFRESH_DAYS = '1'
+$env:STANDARD_REFRESH_DAYS = '5'
+$env:PRIORITY_REFRESH_DAYS = '2'
+$env:PRIORITY_DEPARTURE_DAYS = '14'
+$env:PRIORITY_DISCOUNT_RATE = '20'
 $env:MISS_RETRY_HOURS = '24'
 $env:ABORT_AFTER_MISSES = '3'
 $env:MAX_HEALTH_CHECKS = '1'
