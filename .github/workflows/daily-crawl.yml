@@ -4,16 +4,11 @@ run-name: Daily Flight Crawl · ${{ github.event.schedule || inputs.trigger_sour
 
 on:
   schedule:
-    # 하루 5회 (KST): GitHub Actions 정각 혼잡을 피해 분 단위로 분산한다.
-    #
-    # 21시는 뺐다. 최근 4주 23회차를 표 단위로 세어 보니 13회(57%)가 새 표를
-    # 하나도 못 찾았고 중앙값이 0이었다. 여행사 사이트 이용자가 가장 많은
-    # 시간대이기도 해서, 얻는 것 없이 부담만 주는 자리였다.
-    - cron: '13 23 * * *'    # 08:13 KST
-    - cron: '53 0 * * *'     # 09:53 KST
-    - cron: '56 2 * * *'     # 11:56 KST
-    - cron: '17 6 * * *'     # 15:17 KST
-    - cron: '29 9 * * *'     # 18:29 KST
+    # 하루 4회 (KST): GitHub Actions 정각 혼잡을 피해 분 단위로 분산한다.
+    - cron: '17 23 * * *'    # 08:17 KST
+    - cron: '12 2 * * *'     # 11:12 KST
+    - cron: '23 5 * * *'     # 14:23 KST
+    - cron: '31 8 * * *'     # 17:31 KST
   workflow_dispatch:
     inputs:
       trigger_source:
@@ -154,7 +149,7 @@ jobs:
         if: steps.crawl.outcome == 'success'
         run: node scripts/wait-for-flight-api-cache.mjs
 
-      # 11:56 회차(정상 schedule과 watchdog 대체 실행 모두)는 새로 선정한다.
+      # 11:12 회차(정상 schedule과 watchdog 대체 실행 모두)는 새로 선정한다.
       # 나머지 크롤 뒤에는 기존 선정이 오늘 날짜이고 새 캐시에도 남아 있는지 확인하고,
       # 사라졌거나 오래됐을 때만 즉시 복구한다.
       - name: Refresh today's pick

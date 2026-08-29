@@ -3,11 +3,10 @@ const DAY_MS = 24 * 60 * MINUTE_MS;
 
 // daily-crawl.yml과 함께 유지해야 하는 일반 항공권 수집 시각(UTC)이다.
 export const DAILY_CRAWL_CRONS = Object.freeze([
-    '13 23 * * *',
-    '53 0 * * *',
-    '56 2 * * *',
-    '17 6 * * *',
-    '29 9 * * *',
+    '17 23 * * *',
+    '12 2 * * *',
+    '23 5 * * *',
+    '31 8 * * *',
 ]);
 
 // daily-crawl.yml에서 한 번에 확인하는 일반 여행사다. 마이리얼트립은 별도

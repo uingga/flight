@@ -37,8 +37,8 @@ export function evaluateLocalNaverRun({
     now = new Date(),
     cache,
     state = null,
-    fullCrawlHour = 9,
-    fullCrawlMinute = 53,
+    fullCrawlHour = 11,
+    fullCrawlMinute = 12,
     fallbackHour = 20,
     fallbackMinute = 30,
 }) {

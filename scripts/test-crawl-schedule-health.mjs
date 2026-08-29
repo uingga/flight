@@ -51,14 +51,14 @@ test('legacy caches use the oldest general-source update instead of a partial ca
 test('preflight and watchdog recover a slot hidden by a partial source refresh', () => {
     withTempCache({
         timestamp: '2026-08-28T09:54:18.225Z',
-        fullCrawlUpdatedAt: '2026-08-28T08:49:59.902Z',
+        fullCrawlUpdatedAt: '2026-08-28T07:49:59.902Z',
     }, cachePath => {
         const preflight = spawnSync(process.execPath, ['scripts/check-crawl-run.mjs'], {
             encoding: 'utf8',
             env: {
                 ...process.env,
                 TRIGGER_EVENT: 'schedule',
-                TRIGGER_SCHEDULE: '29 9 * * *',
+                TRIGGER_SCHEDULE: '31 8 * * *',
                 CHECK_CACHE: '1',
                 CHECK_NOW: '2026-08-28T10:45:00.000Z',
                 CRAWL_CACHE_PATH: cachePath,
@@ -66,7 +66,7 @@ test('preflight and watchdog recover a slot hidden by a partial source refresh',
         });
         assert.equal(preflight.status, 0, preflight.stderr);
         assert.match(preflight.stdout, /\[preflight\] cache_updated_at=2026-08-28T09:54:18\.225Z/);
-        assert.match(preflight.stdout, /\[preflight\] last_completed_at=2026-08-28T08:49:59\.902Z/);
+        assert.match(preflight.stdout, /\[preflight\] last_completed_at=2026-08-28T07:49:59\.902Z/);
         assert.match(preflight.stdout, /\[preflight\] should_run=true/);
 
         const watchdog = spawnSync(process.execPath, ['scripts/check-crawl-watchdog.mjs'], {
@@ -80,24 +80,24 @@ test('preflight and watchdog recover a slot hidden by a partial source refresh',
         assert.equal(watchdog.status, 0, watchdog.stderr);
         const health = JSON.parse(watchdog.stdout);
         assert.equal(health.status, 'overdue');
-        assert.equal(health.expectedAt, '2026-08-28T09:29:00.000Z');
+        assert.equal(health.expectedAt, '2026-08-28T08:31:00.000Z');
         assert.equal(health.shouldDispatch, true);
     });
 });
 
 test('warns 45 minutes after an uncovered crawl slot', () => {
     const health = getCrawlScheduleHealth('2026-08-27T15:50:00.000Z', {
-        now: '2026-08-28T00:00:00.000Z',
+        now: '2026-08-28T00:02:00.000Z',
     });
 
     assert.equal(health.status, 'late');
-    assert.equal(health.expectedAt, '2026-08-27T23:13:00.000Z');
-    assert.equal(health.delayMinutes, 47);
+    assert.equal(health.expectedAt, '2026-08-27T23:17:00.000Z');
+    assert.equal(health.delayMinutes, 45);
 });
 
 test('dispatch threshold starts at 60 minutes', () => {
     const health = getCrawlScheduleHealth('2026-08-27T15:50:00.000Z', {
-        now: '2026-08-28T00:13:00.000Z',
+        now: '2026-08-28T00:17:00.000Z',
     });
 
     assert.equal(health.status, 'overdue');
@@ -106,30 +106,35 @@ test('dispatch threshold starts at 60 minutes', () => {
 
 test('a newly due slot does not hide an older missed slot', () => {
     const health = getCrawlScheduleHealth('2026-08-27T15:50:00.000Z', {
-        now: '2026-08-28T00:55:00.000Z',
+        now: '2026-08-28T02:15:00.000Z',
     });
 
     assert.equal(health.status, 'overdue');
-    assert.equal(health.expectedAt, '2026-08-27T23:13:00.000Z');
+    assert.equal(health.expectedAt, '2026-08-27T23:17:00.000Z');
     assert.equal(health.pendingSlots, 2);
 });
 
 test('a completion covers all earlier slots and leaves only the next slot waiting', () => {
-    const health = getCrawlScheduleHealth('2026-08-28T00:50:00.000Z', {
-        now: '2026-08-28T00:55:00.000Z',
+    const health = getCrawlScheduleHealth('2026-08-28T02:10:00.000Z', {
+        now: '2026-08-28T02:15:00.000Z',
     });
 
     assert.equal(health.status, 'waiting');
-    assert.equal(health.expectedAt, '2026-08-28T00:53:00.000Z');
-    assert.equal(health.delayMinutes, 2);
+    assert.equal(health.expectedAt, '2026-08-28T02:12:00.000Z');
+    assert.equal(health.delayMinutes, 3);
 });
 
 test('health schedule stays in sync with daily-crawl.yml', () => {
     const workflow = fs.readFileSync('.github/workflows/daily-crawl.yml', 'utf8');
     const workflowCrons = [...workflow.matchAll(/^\s*- cron: '([^']+)'/gm)].map(match => match[1]);
-    assert.deepEqual([...DAILY_CRAWL_CRONS].sort(), workflowCrons.sort());
-    assert.equal(workflowCrons.length, 5);
-    assert.doesNotMatch(workflow, /37 15 \* \* \*/);
+    assert.deepEqual([...DAILY_CRAWL_CRONS].sort(), [...workflowCrons].sort());
+    assert.equal(workflowCrons.length, 4);
+    assert.deepEqual(workflowCrons, [
+        '17 23 * * *',
+        '12 2 * * *',
+        '23 5 * * *',
+        '31 8 * * *',
+    ]);
 });
 
 test('anti-block safeguards keep source starts distributed and MyRealTrip serialized', () => {
@@ -245,14 +250,14 @@ test('a successful Windows Naver filter repairs today pick with conflict-safe pu
     assert.match(runner, /git push origin main/);
 });
 
-test('watchdog fallback keeps the 11:56 today-pick slot identity', () => {
+test('watchdog fallback keeps the 11:12 today-pick slot identity', () => {
     const result = spawnSync(process.execPath, ['scripts/check-crawl-run.mjs'], {
         encoding: 'utf8',
         env: {
             ...process.env,
             TRIGGER_EVENT: 'workflow_dispatch',
             TRIGGER_SOURCE: 'watchdog',
-            EXPECTED_AT: '2026-08-28T02:56:00.000Z',
+            EXPECTED_AT: '2026-08-28T02:12:00.000Z',
             CHECK_NOW: '2026-08-28T04:30:00.000Z',
         },
     });

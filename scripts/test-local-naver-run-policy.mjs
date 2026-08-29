@@ -6,20 +6,20 @@ import {
 } from './local-naver-run-policy.mjs';
 
 const readyCache = {
-    fullCrawlUpdatedAt: '2026-08-29T02:10:00.000Z', // 11:10 KST
+    fullCrawlUpdatedAt: '2026-08-29T02:42:00.000Z', // 11:42 KST
     sourceUpdatedAt: { myrealtrip: '2026-08-28T09:57:00.000Z' },
 };
 
-test('runs as soon as the post-09:53 general crawl is ready', () => {
+test('runs as soon as the post-11:12 general crawl is ready', () => {
     const result = evaluateLocalNaverRun({
-        now: '2026-08-29T02:12:00.000Z', // 11:12 KST
+        now: '2026-08-29T02:44:00.000Z', // 11:44 KST
         cache: readyCache,
     });
     assert.equal(result.shouldRun, true);
     assert.equal(result.reason, 'general_crawl_ready');
 });
 
-test('waits after 10:00 when the post-09:53 full crawl is still pending', () => {
+test('waits after 10:00 when the post-11:12 full crawl is still pending', () => {
     const result = evaluateLocalNaverRun({
         now: '2026-08-29T01:12:00.000Z',
         cache: {
@@ -72,9 +72,9 @@ test('a completed session suppresses every later trigger on the same KST day', (
 
 test('a legacy success deadline does not delay the next day once upstream is ready', () => {
     const result = evaluateLocalNaverRun({
-        now: '2026-08-30T02:12:00.000Z', // 11:12 KST
+        now: '2026-08-30T02:44:00.000Z', // 11:44 KST
         cache: {
-            fullCrawlUpdatedAt: '2026-08-30T02:10:00.000Z',
+            fullCrawlUpdatedAt: '2026-08-30T02:42:00.000Z',
             sourceUpdatedAt: { myrealtrip: '2026-08-29T09:57:00.000Z' },
         },
         state: {

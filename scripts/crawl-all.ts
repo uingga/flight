@@ -10,6 +10,7 @@ import { logCrawlResults, recordCrawlAlerts } from '../src/lib/utils/crawl-logge
 import { getEffectivePrice } from '../src/lib/price-quality';
 import {
     classifySourceAccessRestriction,
+    classifySourceResponseDrop,
     isSourceCircuitOpen,
     openSourceCircuit,
     pruneResolvedSourceCircuits,
@@ -41,7 +42,7 @@ interface CacheData {
     scrapedCounts?: Record<string, number>;
     /** 이번 크롤에서 데이터를 폐기·유지한 이유 (어드민 상단 배너용) */
     integrityAlerts?: string[];
-    /** 명시적 차단·요청 제한 뒤 같은 여행사를 계속 두드리지 않기 위한 휴식 상태 */
+    /** 명시적 차단·요청 제한·soft block 의심 뒤 같은 여행사를 계속 두드리지 않기 위한 휴식 상태 */
     sourceCircuits?: Record<string, SourceCircuitState>;
     sources: {
 
@@ -292,7 +293,21 @@ async function main() {
 
             // 0건은 명백한 실패 — 예전부터 이전 데이터를 지켜 왔다
             if (freshCount === 0 && prevCount > 0) {
-                keepPrevious('0건 수집', `🚨 ${src} 0건 수집 — 스크래퍼 점검 필요`);
+                const restriction = classifySourceResponseDrop(freshCount, prevCount, {
+                    dropRatio: DROP_RATIO,
+                    minBaseline: MIN_BASELINE,
+                });
+                if (restriction) {
+                    const circuitSource = src as CrawlableSourceKey;
+                    sourceCircuits[circuitSource] = openSourceCircuit(
+                        restriction,
+                        SOURCE_ADAPTER_VERSIONS[circuitSource],
+                    );
+                }
+                keepPrevious(
+                    '0건 응답을 soft block으로 판정',
+                    `⛔ ${src} 0건 응답을 soft block으로 판정 — 이전 데이터 유지, 24시간 자동 요청 중단`,
+                );
                 continue;
             }
 
@@ -307,9 +322,20 @@ async function main() {
                 && prevScraped >= MIN_BASELINE
                 && freshCount < prevScraped * DROP_RATIO
             ) {
+                const restriction = classifySourceResponseDrop(freshCount, prevScraped, {
+                    dropRatio: DROP_RATIO,
+                    minBaseline: MIN_BASELINE,
+                });
+                if (restriction) {
+                    const circuitSource = src as CrawlableSourceKey;
+                    sourceCircuits[circuitSource] = openSourceCircuit(
+                        restriction,
+                        SOURCE_ADAPTER_VERSIONS[circuitSource],
+                    );
+                }
                 keepPrevious(
-                    `급감 의심 (수집 ${prevScraped}건 → ${freshCount}건)`,
-                    `🚨 ${src} 급감으로 새 데이터 폐기 (수집 ${prevScraped}건 → ${freshCount}건) — 스크래퍼 점검 필요`,
+                    `응답 급감을 soft block으로 판정 (수집 ${prevScraped}건 → ${freshCount}건)`,
+                    `⛔ ${src} 응답 급감을 soft block으로 판정 (수집 ${prevScraped}건 → ${freshCount}건) — 이전 데이터 유지, 24시간 자동 요청 중단`,
                 );
                 continue;
             }

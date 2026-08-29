@@ -89,7 +89,7 @@ Register-ScheduledTask `
 
 Write-Output "Installed $TaskName"
 Write-Output "Automation checkout: $AutomationDir"
-Write-Output 'Schedule: wait from 10:00 KST for the post-09:53 crawl, with a no-duplicate 20:30 fallback'
+Write-Output 'Schedule: wait from 10:00 KST for the post-11:12 crawl, with a no-duplicate 20:30 fallback'
 
 if ($RunNow) {
     Start-ScheduledTask -TaskName $TaskName

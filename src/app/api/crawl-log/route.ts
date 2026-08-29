@@ -138,7 +138,7 @@ export async function GET(request: NextRequest) {
             const logPath = path.join(process.cwd(), 'data', 'crawl-log.json');
             if (fs.existsSync(logPath)) {
                 const logData = JSON.parse(fs.readFileSync(logPath, 'utf-8'));
-                // 하루 5회 기준 30일치를 넉넉히 담는다. 7일이 지난 기록은 로거가
+                // 하루 4회 기준 30일치를 넉넉히 담는다. 7일이 지난 기록은 로거가
                 // 도시·지역 상세를 제거하므로 장기 보관해도 파일이 크게 불어나지 않는다.
                 crawlHistory = (logData.entries || []).slice(-200);
             }

@@ -32,6 +32,11 @@ export interface SourceAccessRestriction {
     detail: string;
 }
 
+export interface SourceResponseDropOptions {
+    dropRatio?: number;
+    minBaseline?: number;
+}
+
 function errorMessage(error: unknown): string {
     if (error instanceof Error) return error.message;
     return String(error || '알 수 없는 접근 제한');
@@ -65,6 +70,45 @@ export function classifySourceAccessRestriction(error: unknown): SourceAccessRes
             reason: 'blocked',
             status: status || undefined,
             detail: message,
+        };
+    }
+
+    return null;
+}
+
+/**
+ * HTTP 200이어도 목록이 사라지거나 급감하면 soft block일 수 있다.
+ * 작은 소스의 자연 변동은 제외하고, 이전 정상 원본 수량이 충분할 때만 급감으로 판정한다.
+ */
+export function classifySourceResponseDrop(
+    currentCount: number,
+    previousCount: number | null | undefined,
+    options: SourceResponseDropOptions = {},
+): SourceAccessRestriction | null {
+    const dropRatio = options.dropRatio ?? 0.6;
+    const minBaseline = options.minBaseline ?? 30;
+    if (
+        !Number.isFinite(currentCount)
+        || currentCount < 0
+        || previousCount === null
+        || previousCount === undefined
+        || !Number.isFinite(previousCount)
+        || previousCount <= 0
+    ) {
+        return null;
+    }
+
+    if (currentCount === 0) {
+        return {
+            reason: 'blocked',
+            detail: `soft block 의심: 응답 수량 ${previousCount}건에서 0건으로 감소`,
+        };
+    }
+
+    if (previousCount >= minBaseline && currentCount < previousCount * dropRatio) {
+        return {
+            reason: 'blocked',
+            detail: `soft block 의심: 응답 수량 ${previousCount}건에서 ${currentCount}건으로 급감`,
         };
     }
 

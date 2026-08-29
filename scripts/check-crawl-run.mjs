@@ -40,7 +40,7 @@ const expectedDate = expectedTimestamp === null ? null : new Date(expectedTimest
 const isTodayPickSlot = automatic
     && expectedDate !== null
     && expectedDate.getUTCHours() === 2
-    && expectedDate.getUTCMinutes() === 56;
+    && expectedDate.getUTCMinutes() === 12;
 const shouldRun = !checkCache
     || !automatic
     || expectedTimestamp === null

@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict';
-import { SourceResponseError } from '../src/lib/scrapers/source-response';
+import {
+    assertNoSourceAccessBlockText,
+    SourceResponseError,
+} from '../src/lib/scrapers/source-response';
 import {
     classifySourceAccessRestriction,
+    classifySourceResponseDrop,
     isSourceCircuitOpen,
     openSourceCircuit,
     pruneResolvedSourceCircuits,
@@ -18,6 +22,14 @@ assert.equal(
     'blocked',
 );
 
+let captchaError: unknown;
+try {
+    assertNoSourceAccessBlockText('테스트 여행사', '<html>Unusual traffic. CAPTCHA required.</html>');
+} catch (error) {
+    captchaError = error;
+}
+assert.equal(classifySourceAccessRestriction(captchaError)?.reason, 'blocked');
+
 const rateLimited = classifySourceAccessRestriction(
     new SourceResponseError('http-status', '온라인투어 HTTP 429', 429),
 );
@@ -25,6 +37,11 @@ assert.equal(rateLimited?.reason, 'rate_limited');
 
 assert.equal(classifySourceAccessRestriction(new Error('ECONNRESET')), null);
 assert.equal(classifySourceAccessRestriction(new Error('응답 스키마 변경')), null);
+
+assert.equal(classifySourceResponseDrop(0, 120)?.reason, 'blocked');
+assert.equal(classifySourceResponseDrop(59, 100)?.reason, 'blocked');
+assert.equal(classifySourceResponseDrop(60, 100), null);
+assert.equal(classifySourceResponseDrop(5, 20), null);
 
 const circuit = openSourceCircuit(blocked!, 'ttang-1', now);
 assert.equal(circuit.resumePolicy, 'cooldown_or_adapter_change');
