@@ -4,7 +4,7 @@
 # every agency. New or changed source flights refresh immediately, important routes
 # every two days, and unchanged standard routes every five days.
 #
-# Schedule: wait from 12:00 for the post-11:56 crawl, with a no-duplicate 20:30 fallback
+# Schedule: wait from 10:00 for the post-09:53 crawl, with a no-duplicate 20:30 fallback
 # Manual:   powershell -File scripts\run-naver-crawl.ps1
 
 [CmdletBinding()]
@@ -51,9 +51,10 @@ if ($PreexistingManagedChanges) {
     exit 1
 }
 
-# The scheduled task starts shortly after the 11:56 slot and waits locally for
-# both upstream commits. Polling only pulls Git data; it never opens Naver until
-# the completed cache is visible. The 20:30 fallback may use one ready upstream.
+# The scheduled task starts shortly after the 09:53 slot and waits locally for
+# that general-crawl commit. The latest MyRealTrip cache is included but does not
+# delay this run. Polling only pulls Git data; it never opens Naver until the
+# completed general cache is visible. The 20:30 fallback may use MyRealTrip alone.
 # A successful or blocked browser session is never launched again that KST day.
 $UpstreamPollSeconds = 120
 $KstOffset = [TimeSpan]::FromHours(9)

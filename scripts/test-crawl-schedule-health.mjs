@@ -189,7 +189,7 @@ test('the Windows Naver task owns production collection with one guarded daily s
     const runner = fs.readFileSync('scripts/run-naver-crawl.ps1', 'utf8');
     const installer = fs.readFileSync('scripts/install-naver-crawl-task.ps1', 'utf8');
 
-    assert.match(installer, /New-ScheduledTaskTrigger -Daily -At '12:00'/);
+    assert.match(installer, /New-ScheduledTaskTrigger -Daily -At '10:00'/);
     assert.match(installer, /New-ScheduledTaskTrigger -Daily -At '20:30'/);
     assert.match(installer, /-Argument .* -Scheduled/);
     assert.match(installer, /System32\\WindowsPowerShell\\v1\.0\\powershell\.exe/);

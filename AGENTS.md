@@ -73,10 +73,10 @@ src/components/Dashboard.tsx (client component)
 
 - GitHub `naver-crawl.yml`은 운영 데이터를 쓰지 않는 수동 진단 전용이다. `myrealtrip` 최대 3건만
   확인하며 어떤 자동 워크플로도 이를 호출하지 않는다.
-- Windows `TikitikitNaverCrawl`은 12:00 KST부터 최신 `main`의 오전 마이리얼트립·11:56 일반
-  크롤 완료 여부를 2분 간격으로 확인하고, 둘 다 반영되는 즉시 `SOURCE_FILTER=all`,
-  `MAX_FLIGHTS=280`으로 하루 최대 한 번 실행한다. 대기 확인은 네이버 요청을 만들지 않으며,
-  upstream 지연 시 20:30에 한쪽만 준비돼도 기존 폴백 정책을 적용한다.
+- Windows `TikitikitNaverCrawl`은 10:00 KST부터 최신 `main`의 09:53 일반 크롤 완료 여부를
+  2분 간격으로 확인하고, 반영되는 즉시 `SOURCE_FILTER=all`, `MAX_FLIGHTS=280`으로 하루 최대
+  한 번 실행한다. 마이리얼트립은 당시 최신 캐시를 포함하지만 완료를 기다려 시작을 늦추지 않는다.
+  대기 확인은 네이버 요청을 만들지 않으며, upstream 지연 시 20:30 폴백 정책을 적용한다.
 - 명시적 접근 제한은 24시간, 시스템성 일시 오류는 12시간 전역 쿨다운한다. 같은 날 자동 재실행,
   동시 수동 실행, Task Scheduler 재시작은 허용하지 않는다.
 - PC 네이버 필터가 성공해 운영 API에 반영된 뒤에는 `select-today-pick.mjs --repair`로

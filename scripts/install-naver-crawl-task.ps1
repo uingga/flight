@@ -62,7 +62,7 @@ $Action = New-ScheduledTaskAction `
     -Execute $PowerShellPath `
     -Argument "-NoProfile -ExecutionPolicy Bypass -File `"$RunnerPath`" -Scheduled"
 $Triggers = @(
-    (New-ScheduledTaskTrigger -Daily -At '12:00'),
+    (New-ScheduledTaskTrigger -Daily -At '10:00'),
     (New-ScheduledTaskTrigger -Daily -At '20:30')
 )
 $Settings = New-ScheduledTaskSettingsSet `
@@ -89,7 +89,7 @@ Register-ScheduledTask `
 
 Write-Output "Installed $TaskName"
 Write-Output "Automation checkout: $AutomationDir"
-Write-Output 'Schedule: wait from 12:00 KST for the post-11:56 crawl, with a no-duplicate 20:30 fallback'
+Write-Output 'Schedule: wait from 10:00 KST for the post-09:53 crawl, with a no-duplicate 20:30 fallback'
 
 if ($RunNow) {
     Start-ScheduledTask -TaskName $TaskName

@@ -37,8 +37,8 @@ export function evaluateLocalNaverRun({
     now = new Date(),
     cache,
     state = null,
-    fullCrawlHour = 11,
-    fullCrawlMinute = 56,
+    fullCrawlHour = 9,
+    fullCrawlMinute = 53,
     fallbackHour = 20,
     fallbackMinute = 30,
 }) {
@@ -52,7 +52,7 @@ export function evaluateLocalNaverRun({
     const nextEligibleAt = validTimestamp(state?.nextEligibleAt);
     // Successful runs are limited by their KST date below, not by the legacy
     // nextEligibleAt value. This lets an older 14:00 success marker migrate to
-    // the post-lunch completion watcher without delaying the following day.
+    // the pre-lunch completion watcher without delaying the following day.
     if (state?.phase !== 'success' && nextEligibleAt !== null && currentTimestamp < nextEligibleAt) {
         return {
             shouldRun: false,
@@ -85,9 +85,9 @@ export function evaluateLocalNaverRun({
         && (fullReady || myrealtripReady);
 
     return {
-        shouldRun: (fullReady && myrealtripReady) || fallbackReady,
-        reason: fullReady && myrealtripReady
-            ? 'upstreams_ready'
+        shouldRun: fullReady || fallbackReady,
+        reason: fullReady
+            ? 'general_crawl_ready'
             : fallbackReady
                 ? 'fallback_with_partial_upstream'
                 : 'upstream_pending',
@@ -119,7 +119,7 @@ export function buildLocalNaverState(outcome, { now = new Date(), reason = '' } 
             ? 12
             : 0;
     const nextEligibleAt = outcome === 'success'
-        ? nextKstTime(current, 12, 0)
+        ? nextKstTime(current, 10, 0)
         : new Date(current.getTime() + cooldownHours * HOUR_MS).toISOString();
 
     return {

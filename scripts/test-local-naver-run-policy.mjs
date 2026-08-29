@@ -6,25 +6,25 @@ import {
 } from './local-naver-run-policy.mjs';
 
 const readyCache = {
-    fullCrawlUpdatedAt: '2026-08-29T03:10:00.000Z', // 12:10 KST
-    sourceUpdatedAt: { myrealtrip: '2026-08-29T03:57:00.000Z' },
+    fullCrawlUpdatedAt: '2026-08-29T02:10:00.000Z', // 11:10 KST
+    sourceUpdatedAt: { myrealtrip: '2026-08-28T09:57:00.000Z' },
 };
 
-test('runs as soon as both same-day upstream crawls are ready', () => {
+test('runs as soon as the post-09:53 general crawl is ready', () => {
     const result = evaluateLocalNaverRun({
-        now: '2026-08-29T04:12:00.000Z', // 13:12 KST
+        now: '2026-08-29T02:12:00.000Z', // 11:12 KST
         cache: readyCache,
     });
     assert.equal(result.shouldRun, true);
-    assert.equal(result.reason, 'upstreams_ready');
+    assert.equal(result.reason, 'general_crawl_ready');
 });
 
-test('waits after noon when the post-11:56 full crawl is still pending', () => {
+test('waits after 10:00 when the post-09:53 full crawl is still pending', () => {
     const result = evaluateLocalNaverRun({
-        now: '2026-08-29T03:12:00.000Z',
+        now: '2026-08-29T01:12:00.000Z',
         cache: {
             ...readyCache,
-            fullCrawlUpdatedAt: '2026-08-29T02:11:00.000Z',
+            fullCrawlUpdatedAt: '2026-08-29T00:11:00.000Z',
         },
     });
     assert.equal(result.shouldRun, false);
@@ -36,7 +36,8 @@ test('the 20:30 fallback may use the ready upstream without a second browser ses
         now: '2026-08-29T11:30:00.000Z', // 20:30 KST
         cache: {
             ...readyCache,
-            fullCrawlUpdatedAt: '2026-08-29T02:11:00.000Z',
+            fullCrawlUpdatedAt: '2026-08-29T00:11:00.000Z',
+            sourceUpdatedAt: { myrealtrip: '2026-08-29T03:57:00.000Z' },
         },
     });
     assert.equal(result.shouldRun, true);
@@ -48,7 +49,8 @@ test('the partial-upstream fallback does not start before 20:30', () => {
         now: '2026-08-29T11:29:00.000Z', // 20:29 KST
         cache: {
             ...readyCache,
-            fullCrawlUpdatedAt: '2026-08-29T02:11:00.000Z',
+            fullCrawlUpdatedAt: '2026-08-29T00:11:00.000Z',
+            sourceUpdatedAt: { myrealtrip: '2026-08-29T03:57:00.000Z' },
         },
     });
     assert.equal(result.shouldRun, false);
@@ -70,10 +72,10 @@ test('a completed session suppresses every later trigger on the same KST day', (
 
 test('a legacy success deadline does not delay the next day once upstream is ready', () => {
     const result = evaluateLocalNaverRun({
-        now: '2026-08-30T04:12:00.000Z', // 13:12 KST
+        now: '2026-08-30T02:12:00.000Z', // 11:12 KST
         cache: {
-            fullCrawlUpdatedAt: '2026-08-30T03:10:00.000Z',
-            sourceUpdatedAt: { myrealtrip: '2026-08-30T03:57:00.000Z' },
+            fullCrawlUpdatedAt: '2026-08-30T02:10:00.000Z',
+            sourceUpdatedAt: { myrealtrip: '2026-08-29T09:57:00.000Z' },
         },
         state: {
             kstDate: '2026-08-29',
@@ -82,7 +84,7 @@ test('a legacy success deadline does not delay the next day once upstream is rea
         },
     });
     assert.equal(result.shouldRun, true);
-    assert.equal(result.reason, 'upstreams_ready');
+    assert.equal(result.reason, 'general_crawl_ready');
 });
 
 test('an explicit block opens the circuit for 24 hours', () => {
