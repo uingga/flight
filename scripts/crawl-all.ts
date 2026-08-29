@@ -11,9 +11,11 @@ import { getEffectivePrice } from '../src/lib/price-quality';
 import {
     classifySourceAccessRestriction,
     classifySourceResponseDrop,
+    isLocalSourceFallbackCoolingDown,
     isSourceCircuitOpen,
     openSourceCircuit,
     pruneResolvedSourceCircuits,
+    recordLocalSourceFallback,
     SOURCE_ADAPTER_VERSIONS,
     sourceCircuitLabel,
     type SourceCircuitState,
@@ -66,8 +68,12 @@ const sourceStartJitterMaxMs = Number.isFinite(parsedSourceStartJitter)
         ? 90_000
         : 0;
 
-function sourceCircuitPauseText(circuit: SourceCircuitState): string {
-    const nextProbe = new Date(circuit.nextProbeAt);
+function sourceCircuitPauseText(circuit: SourceCircuitState, localFallback = false): string {
+    const nextProbe = new Date(
+        localFallback
+            ? circuit.localFallback?.nextProbeAt || circuit.nextProbeAt
+            : circuit.nextProbeAt,
+    );
     if (!Number.isFinite(nextProbe.getTime())) return '수집 방식 수정 전까지 휴식';
     return `${nextProbe.toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })} 이후 단일 재탐색`;
 }
@@ -83,6 +89,7 @@ function countBySource(flights: any[]): Record<string, number> {
 }
 
 async function main() {
+    const localSourceFallback = process.env.LOCAL_SOURCE_FALLBACK === '1';
     const sourceArg = process.argv.find(arg => arg.startsWith('--sources='));
     const requestedSources = sourceArg
         ? new Set(sourceArg.slice('--sources='.length).split(',').map(value => value.trim()).filter(Boolean))
@@ -96,6 +103,9 @@ async function main() {
         }
         console.log(`🎯 선택 사이트 크롤링 시작: ${[...requestedSources].join(', ')}\n`);
     } else {
+        if (localSourceFallback) {
+            throw new Error('LOCAL_SOURCE_FALLBACK=1은 --sources와 함께 사용해야 합니다.');
+        }
         console.log('🚀 전체 사이트 크롤링 시작...\n');
     }
 
@@ -150,7 +160,20 @@ async function main() {
         const circuitSkipped = new Map<CrawlableSourceKey, SourceCircuitState>();
         const activeTasks = requestedTasks.filter(task => {
             const circuit = sourceCircuits[task.key];
-            if (!isSourceCircuitOpen(circuit, SOURCE_ADAPTER_VERSIONS[task.key])) return true;
+            const circuitOpen = isSourceCircuitOpen(circuit, SOURCE_ADAPTER_VERSIONS[task.key]);
+            if (localSourceFallback) {
+                if (!circuitOpen) {
+                    console.log(`⏭️ ${task.name}: GitHub 차단 회로가 열려 있지 않아 PC 대체 수집 생략`);
+                    return false;
+                }
+                if (isLocalSourceFallbackCoolingDown(circuit)) {
+                    console.warn(`⏸️ ${task.name}: PC에서도 차단 신호가 확인돼 대체 수집 휴식 중`);
+                    return false;
+                }
+                console.log(`🏠 ${task.name}: GitHub 휴식 기간 동안 PC 대체 수집 실행`);
+                return true;
+            }
+            if (!circuitOpen) return true;
             circuitSkipped.set(task.key, circuit!);
             console.warn(
                 `⏸️ ${task.name}: ${sourceCircuitLabel(circuit!)} 신호 뒤 휴식 중 `
@@ -170,25 +193,47 @@ async function main() {
         // 채택 여부는 아래 무결성 검사에서 정하므로, 여기서는 결과만 모아 둔다
         const scraped: Partial<Record<SourceKey, any[]>> = {};
         const scrapeFailures: Partial<Record<SourceKey, string>> = {};
-        const attempted = new Set<SourceKey>(requestedTasks.map(t => t.key));
+        const attempted = new Set<SourceKey>(
+            (localSourceFallback ? activeTasks : requestedTasks).map(t => t.key),
+        );
         results.forEach((result, i) => {
             const task = activeTasks[i];
             if (result.status === 'fulfilled') {
                 scraped[task.key] = result.value;
-                delete sourceCircuits[task.key];
+                if (localSourceFallback && sourceCircuits[task.key]) {
+                    sourceCircuits[task.key] = recordLocalSourceFallback(
+                        sourceCircuits[task.key]!,
+                        'success',
+                        `PC 대체 수집 ${result.value.length}건 완료`,
+                    );
+                } else {
+                    delete sourceCircuits[task.key];
+                }
                 console.log(`✅ ${task.name}: ${result.value.length}개`);
             } else {
                 const reason = result.reason instanceof Error ? result.reason.message : String(result.reason);
                 scrapeFailures[task.key] = reason;
                 const restriction = classifySourceAccessRestriction(result.reason);
                 if (restriction) {
-                    sourceCircuits[task.key] = openSourceCircuit(
-                        restriction,
-                        SOURCE_ADAPTER_VERSIONS[task.key],
-                    );
+                    sourceCircuits[task.key] = localSourceFallback && sourceCircuits[task.key]
+                        ? recordLocalSourceFallback(
+                            sourceCircuits[task.key]!,
+                            'blocked',
+                            restriction.detail,
+                        )
+                        : openSourceCircuit(
+                            restriction,
+                            SOURCE_ADAPTER_VERSIONS[task.key],
+                        );
                     console.warn(
                         `⛔ ${task.name}: ${sourceCircuitLabel(sourceCircuits[task.key]!)} 신호 감지 — `
-                        + `자동 요청 중단 (${sourceCircuitPauseText(sourceCircuits[task.key]!)})`,
+                        + `자동 요청 중단 (${sourceCircuitPauseText(sourceCircuits[task.key]!, localSourceFallback)})`,
+                    );
+                } else if (localSourceFallback && sourceCircuits[task.key]) {
+                    sourceCircuits[task.key] = recordLocalSourceFallback(
+                        sourceCircuits[task.key]!,
+                        'failed',
+                        reason,
                     );
                 }
                 console.error(`❌ ${task.name} 실패:`, reason);
@@ -299,10 +344,16 @@ async function main() {
                 });
                 if (restriction) {
                     const circuitSource = src as CrawlableSourceKey;
-                    sourceCircuits[circuitSource] = openSourceCircuit(
-                        restriction,
-                        SOURCE_ADAPTER_VERSIONS[circuitSource],
-                    );
+                    sourceCircuits[circuitSource] = localSourceFallback && sourceCircuits[circuitSource]
+                        ? recordLocalSourceFallback(
+                            sourceCircuits[circuitSource]!,
+                            'blocked',
+                            restriction.detail,
+                        )
+                        : openSourceCircuit(
+                            restriction,
+                            SOURCE_ADAPTER_VERSIONS[circuitSource],
+                        );
                 }
                 keepPrevious(
                     '0건 응답을 soft block으로 판정',
@@ -328,10 +379,16 @@ async function main() {
                 });
                 if (restriction) {
                     const circuitSource = src as CrawlableSourceKey;
-                    sourceCircuits[circuitSource] = openSourceCircuit(
-                        restriction,
-                        SOURCE_ADAPTER_VERSIONS[circuitSource],
-                    );
+                    sourceCircuits[circuitSource] = localSourceFallback && sourceCircuits[circuitSource]
+                        ? recordLocalSourceFallback(
+                            sourceCircuits[circuitSource]!,
+                            'blocked',
+                            restriction.detail,
+                        )
+                        : openSourceCircuit(
+                            restriction,
+                            SOURCE_ADAPTER_VERSIONS[circuitSource],
+                        );
                 }
                 keepPrevious(
                     `응답 급감을 soft block으로 판정 (수집 ${prevScraped}건 → ${freshCount}건)`,
@@ -482,7 +539,7 @@ async function main() {
                     const cached = JSON.parse(fs.readFileSync(benchmarkPath, 'utf-8'));
                     const cacheAge = Date.now() - new Date(cached.timestamp).getTime();
                     const maxAge = 24 * 60 * 60 * 1000; // 24시간
-                    if (cacheAge < maxAge && Object.keys(cached.prices || {}).length > 0) {
+                    if ((cacheAge < maxAge || localSourceFallback) && Object.keys(cached.prices || {}).length > 0) {
                         benchmark = cached;
                         console.log(`♻️ 인터파크 캐시 재사용 (${Math.round(cacheAge / 3600000)}시간 전 수집)`);
                     }

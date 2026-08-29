@@ -218,6 +218,12 @@ export async function GET(request: NextRequest) {
                 adapterVersion: string;
                 status?: number;
                 detail: string;
+                localFallback?: {
+                    status: 'success' | 'blocked' | 'failed';
+                    lastAttemptAt: string;
+                    nextProbeAt?: string;
+                    detail: string;
+                };
             }>,
             naverStatus,
             naverCrawlHistory,

@@ -39,6 +39,18 @@ Windows 작업은 `scripts/install-naver-crawl-task.ps1`이 10:00과 20:30 KST�
 의심 결과는 캐시에 반영하지 않고 이전 데이터를 유지하며, 해당 여행사는 24시간 뒤 단일
 재탐색 시점까지 자동 요청을 멈춘다.
 
+## 일반 여행사 PC 대체 수집
+
+`TikitikitBlockedSourceCrawl` 작업은 일반 크롤과 같은 08:17·11:12·14:23·17:31 KST에
+시작하고, 각 GitHub 회차가 `main`에 반영될 때까지 사이트 요청 없이 대기한다. 반영된 캐시에
+유효한 차단 회로가 있을 때만 해당 여행사를 골라 `%USERPROFILE%\Tikitikit\source-fallback-crawler`
+전용 체크아웃에서 부분 크롤한다. 차단되지 않은 여행사에는 PC 요청을 보내지 않는다.
+
+PC 수집이 성공해도 GitHub 실행 환경의 24시간 차단 회로는 그대로 유지한다. 따라서 휴식 기간에는
+PC 결과만 소스 단위로 최신 원격 캐시에 병합되고, 24시간 뒤 GitHub가 단일 재탐색한다. PC에서도
+403·429·CAPTCHA·0건·급감이 확인되면 PC 대체 수집만 별도로 24시간 멈춘다. 작업 설치·갱신은
+`scripts/install-source-fallback-task.ps1`로 수행한다.
+
 Task Scheduler의 `IgnoreNew`와 별도로 named mutex를 사용하므로 예약 실행 중 수동 실행도
 겹치지 않는다. 작업은 네트워크 연결을 요구하고 PC를 깨우며, 대기 시간을 포함해 최대 12시간 뒤 종료된다. 브라우저가
 실제 화면을 사용하므로 Windows 사용자 세션은 로그인 상태여야 한다.

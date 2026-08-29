@@ -77,6 +77,10 @@ src/components/Dashboard.tsx (client component)
   2분 간격으로 확인하고, 반영되는 즉시 `SOURCE_FILTER=all`, `MAX_FLIGHTS=280`으로 하루 최대
   한 번 실행한다. 마이리얼트립은 당시 최신 캐시를 포함하지만 완료를 기다려 시작을 늦추지 않는다.
   대기 확인은 네이버 요청을 만들지 않으며, upstream 지연 시 20:30 폴백 정책을 적용한다.
+- Windows `TikitikitBlockedSourceCrawl`은 일반 크롤과 같은 08:17/11:12/14:23/17:31 KST에
+  시작해 해당 회차의 `main` 반영을 기다린다. GitHub 차단 회로가 열린 일반 여행사만 PC
+  주거용 회선에서 부분 크롤하며, 성공해도 GitHub의 24시간 회로는 닫지 않는다. PC에서도
+  차단 신호가 나오면 그 여행사의 PC 대체 수집도 24시간 중단한다.
 - 명시적 접근 제한은 24시간, 시스템성 일시 오류는 12시간 전역 쿨다운한다. 같은 날 자동 재실행,
   동시 수동 실행, Task Scheduler 재시작은 허용하지 않는다.
 - PC 네이버 필터가 성공해 운영 API에 반영된 뒤에는 `select-today-pick.mjs --repair`로

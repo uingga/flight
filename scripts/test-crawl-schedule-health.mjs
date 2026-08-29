@@ -234,6 +234,22 @@ test('the Windows Naver task owns production collection with one guarded daily s
     assert.match(runner, /npx\.cmd playwright install chromium/);
 });
 
+test('the Windows blocked-source fallback uses the four general crawl slots', () => {
+    const installer = fs.readFileSync('scripts/install-source-fallback-task.ps1', 'utf8');
+    const runner = fs.readFileSync('scripts/run-source-fallback-crawl.ps1', 'utf8');
+
+    for (const time of ['08:17', '11:12', '14:23', '17:31']) {
+        assert.match(installer, new RegExp(`New-ScheduledTaskTrigger -Daily -At '${time}'`));
+    }
+    assert.match(installer, /TikitikitBlockedSourceCrawl/);
+    assert.match(installer, /-MultipleInstances IgnoreNew/);
+    assert.match(runner, /LOCAL_SOURCE_FALLBACK = '1'/);
+    assert.match(runner, /local-source-fallback-policy\.mjs check/);
+    assert.match(runner, /merge-cache-source\.mjs/);
+    assert.match(runner, /--sources=/);
+    assert.match(runner, /crawl-all\.ts \$SourceArgument/);
+});
+
 test('a successful Windows Naver filter repairs today pick with conflict-safe push retries', () => {
     const runner = fs.readFileSync('scripts/run-naver-crawl.ps1', 'utf8');
     const filterIndex = runner.indexOf('npx --no-install tsx scripts/filter-by-naver.ts');

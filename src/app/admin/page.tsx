@@ -91,6 +91,12 @@ interface AdminData {
         adapterVersion: string;
         status?: number;
         detail: string;
+        localFallback?: {
+            status: 'success' | 'blocked' | 'failed';
+            lastAttemptAt: string;
+            nextProbeAt?: string;
+            detail: string;
+        };
     }>;
     naverStatus?: {
         lastCrawledAt: string | null;
@@ -1778,6 +1784,29 @@ export default function AdminPage() {
                             <p>여행사 항공권과 네이버 가격 비교 수집을 시간순으로 확인합니다.</p>
                         </div>
                     </div>
+                    <div className={styles.crawlSchedule}>
+                        <div className={styles.crawlScheduleHead}>
+                            <strong>자동 크롤링 시간표</strong>
+                            <span>한국시간 KST</span>
+                        </div>
+                        <div className={styles.crawlScheduleGrid}>
+                            <article>
+                                <span><em>GitHub</em> 일반 여행사</span>
+                                <strong>08:17 · 11:12 · 14:23 · 17:31</strong>
+                                <small>하루 4회 · 차단된 여행사는 각 회차 반영 뒤 PC에서 대체 수집</small>
+                            </article>
+                            <article>
+                                <span><em>GitHub</em> 마이리얼트립</span>
+                                <strong>07:05 · 18:03</strong>
+                                <small>하루 2회 · 실제 예약 화면의 가격과 출·도착 시간 갱신</small>
+                            </article>
+                            <article>
+                                <span><em>내 PC</em> 네이버 가격 비교</span>
+                                <strong>11:12 수집 반영 직후</strong>
+                                <small>10:00부터 완료 대기 · 미실행 시 20:30 폴백 · 하루 최대 1회</small>
+                            </article>
+                        </div>
+                    </div>
                     {collectionTimeline.length === 0 ? (
                         <div className={styles.emptyState}>최근 24시간 수집 기록이 없습니다.</div>
                     ) : (
@@ -1901,7 +1930,11 @@ export default function AdminPage() {
                             const issue = circuitOpen || staleCount > 0 || late || slumped;
                             const peak = Math.max(...history.map(entry => entry.value), 1);
                             const statusText = circuitOpen
-                                ? circuit!.reason === 'rate_limited' ? '요청 제한으로 쉬는 중' : '접근 차단으로 쉬는 중'
+                                ? circuit!.localFallback?.status === 'success'
+                                    ? 'GitHub 휴식·PC 대체 정상'
+                                    : circuit!.localFallback?.status === 'blocked'
+                                        ? 'GitHub·PC 모두 휴식 중'
+                                        : circuit!.reason === 'rate_limited' ? '요청 제한으로 쉬는 중' : '접근 차단으로 쉬는 중'
                                 : staleCount > 0
                                 ? `이전 데이터 ${staleCount}회`
                                 : slumped
@@ -2635,9 +2668,13 @@ export default function AdminPage() {
                                         ].filter(Boolean).join(' ')}
                                     >
                                         {circuitOpen
-                                            ? circuit!.reason === 'rate_limited'
-                                                ? `요청 제한 · ${formatKST(circuit!.nextProbeAt)} 재탐색`
-                                                : `접근 차단 · ${formatKST(circuit!.nextProbeAt)} 재탐색`
+                                            ? circuit!.localFallback?.status === 'success'
+                                                ? `GitHub 휴식 · PC ${formatKST(circuit!.localFallback.lastAttemptAt)} 성공`
+                                                : circuit!.localFallback?.status === 'blocked'
+                                                    ? `PC도 차단 · ${formatKST(circuit!.localFallback.nextProbeAt || circuit!.nextProbeAt)} 재탐색`
+                                                    : circuit!.reason === 'rate_limited'
+                                                        ? `요청 제한 · ${formatKST(circuit!.nextProbeAt)} 재탐색`
+                                                        : `접근 차단 · ${formatKST(circuit!.nextProbeAt)} 재탐색`
                                             : streak > 0
                                                 ? `이전 데이터 사용 ${streak}회`
                                             : slumped

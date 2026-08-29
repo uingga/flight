@@ -6,9 +6,11 @@ import {
 import {
     classifySourceAccessRestriction,
     classifySourceResponseDrop,
+    isLocalSourceFallbackCoolingDown,
     isSourceCircuitOpen,
     openSourceCircuit,
     pruneResolvedSourceCircuits,
+    recordLocalSourceFallback,
 } from '../src/lib/source-circuit';
 
 const now = new Date('2026-08-29T00:00:00.000Z');
@@ -51,6 +53,19 @@ assert.equal(isSourceCircuitOpen(circuit, 'ttang-1', now), true);
 assert.equal(isSourceCircuitOpen(circuit, 'ttang-1', new Date('2026-08-29T23:59:59.999Z')), true);
 assert.equal(isSourceCircuitOpen(circuit, 'ttang-1', new Date('2026-08-30T00:00:00.000Z')), false);
 assert.equal(isSourceCircuitOpen(circuit, 'ttang-2', now), false);
+
+const localBlocked = recordLocalSourceFallback(circuit, 'blocked', 'CAPTCHA', now);
+assert.equal(localBlocked.nextProbeAt, circuit.nextProbeAt);
+assert.equal(localBlocked.localFallback?.status, 'blocked');
+assert.equal(localBlocked.localFallback?.nextProbeAt, '2026-08-30T00:00:00.000Z');
+assert.equal(isLocalSourceFallbackCoolingDown(localBlocked, now), true);
+assert.equal(
+    isLocalSourceFallbackCoolingDown(localBlocked, new Date('2026-08-30T00:00:00.000Z')),
+    false,
+);
+const localSuccess = recordLocalSourceFallback(localBlocked, 'success', '120건 완료', now);
+assert.equal(localSuccess.localFallback?.status, 'success');
+assert.equal(localSuccess.localFallback?.nextProbeAt, undefined);
 
 assert.deepEqual(
     pruneResolvedSourceCircuits({ ttang: circuit }, { ttang: 'ttang-1' }, now),

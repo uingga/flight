@@ -24,6 +24,12 @@ export interface SourceCircuitState {
     adapterVersion: string;
     status?: number;
     detail: string;
+    localFallback?: {
+        status: 'success' | 'blocked' | 'failed';
+        lastAttemptAt: string;
+        nextProbeAt?: string;
+        detail: string;
+    };
 }
 
 export interface SourceAccessRestriction {
@@ -145,6 +151,38 @@ export function isSourceCircuitOpen(
     // 손상된 상태를 보고 자동 요청을 재개하지 않는다. 구현 버전을 올리면 명시적으로 해제된다.
     if (!Number.isFinite(nowTimestamp) || !Number.isFinite(nextProbeTimestamp)) return true;
     return nowTimestamp < nextProbeTimestamp;
+}
+
+export function isLocalSourceFallbackCoolingDown(
+    circuit: SourceCircuitState | null | undefined,
+    now: Date | number = new Date(),
+): boolean {
+    if (!circuit?.localFallback?.nextProbeAt) return false;
+    const nowTimestamp = now instanceof Date ? now.getTime() : now;
+    const nextProbeTimestamp = new Date(circuit.localFallback.nextProbeAt).getTime();
+    if (!Number.isFinite(nowTimestamp) || !Number.isFinite(nextProbeTimestamp)) return true;
+    return nowTimestamp < nextProbeTimestamp;
+}
+
+export function recordLocalSourceFallback(
+    circuit: SourceCircuitState,
+    status: 'success' | 'blocked' | 'failed',
+    detail: string,
+    now = new Date(),
+    cooldownMs = SOURCE_CIRCUIT_COOLDOWN_MS,
+): SourceCircuitState {
+    const lastAttemptAt = now.toISOString();
+    return {
+        ...circuit,
+        localFallback: {
+            status,
+            lastAttemptAt,
+            ...(status === 'blocked'
+                ? { nextProbeAt: new Date(now.getTime() + cooldownMs).toISOString() }
+                : {}),
+            detail: detail.slice(0, 500),
+        },
+    };
 }
 
 export function pruneResolvedSourceCircuits<T extends string>(
