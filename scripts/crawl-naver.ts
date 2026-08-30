@@ -71,8 +71,10 @@ const MAX_SYSTEMIC_FAILURE_SUCCESS_RATE = parseFloat(process.env.MAX_SYSTEMIC_FA
 const DRY_RUN = process.env.DRY_RUN === '1';                        // 검색 계획만 출력하고 종료
 const MIN_VALID_PRICE = parseInt(process.env.MIN_VALID_PRICE || '60000', 10); // 국제선 왕복 최저 방어선 — 미만이면 오염 데이터로 보고 폐기
 const HIDE_WINDOW = process.env.HIDE_WINDOW === '1';                // 브라우저 창을 화면 밖에 배치 (로컬 스케줄 실행용)
-const NAVER_WAIT_MS = 25000;        // 네이버 검색 결과 로딩 대기 (25초)
-const NAVER_EXTRA_WAIT_MS = 20000;  // API/로딩이 끝나지 않은 페이지만 추가 대기
+const NAVER_MIN_WAIT_MS = 10000;    // 너무 이른 가격 확정을 막는 최소 대기
+const NAVER_MAX_WAIT_MS = 25000;    // 늦는 페이지도 이 시간까지만 기다림
+const NAVER_PRICE_STABLE_MS = 4000; // 로딩 완료 뒤 가격이 이 시간 동안 같으면 확정
+const NAVER_POLL_MS = 1000;         // 가격·로딩 상태 확인 간격
 const NAVER_HEALTH_WAIT_MS = 20000; // 대조 노선은 가격이 아닌 API 도달 여부만 확인
 const REQUEST_DELAY_MIN_MS = parseInt(process.env.REQUEST_DELAY_MIN_MS || '5000', 10);
 const REQUEST_DELAY_MAX_MS = parseInt(process.env.REQUEST_DELAY_MAX_MS || '10000', 10);
@@ -401,20 +403,34 @@ try {
             navigationCount++;
             const navigationResponse = await page.goto(naverUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
 
-            // 네이버 항공권은 여러 GDS/항공사에서 순차적으로 결과를 받으므로,
-            // 충분히 기다려야 최저가가 확정됨
-            console.log(`  ⏳ 네이버 검색 결과 대기 중 (${NAVER_WAIT_MS / 1000}초)...`);
-            await page.waitForTimeout(NAVER_WAIT_MS);
-
-            // DOM에서 가격 읽기 — 2026-07 네이버 개편 후 운임이 GraphQL로 오지 않아
-            // 실질적으로 이쪽이 주 소스다 (사용자가 화면에서 보는 가격과 동일)
-            let domPrice = await extractPriceFromDOM(page);
-            if (domPrice && (lowestPrice === null || domPrice < lowestPrice)) {
-                lowestPrice = domPrice;
-            }
-
+            // 네이버 항공권은 여러 GDS/항공사에서 결과가 순차적으로 도착한다.
+            // 25초를 무조건 채우는 대신 최소 10초는 기다리고, 화면 로딩이 끝난 뒤
+            // 최저가가 4초 동안 변하지 않으면 바로 다음 항공권으로 넘어간다.
+            // 늦는 페이지도 총 25초를 넘겨 기다리지 않는다.
+            console.log(`  ⏳ 네이버 검색 결과 확인 중 (최소 ${NAVER_MIN_WAIT_MS / 1000}초 · 최대 ${NAVER_MAX_WAIT_MS / 1000}초)...`);
+            const waitStartedAt = Date.now();
+            const waitDeadline = waitStartedAt + NAVER_MAX_WAIT_MS;
+            let observedPrice: number | null = null;
+            let lastPriceChangedAt = waitStartedAt;
+            let domPrice: number | null = null;
             let pageSnapshot: NaverPageSnapshot | null = null;
-            if (lowestPrice === null) {
+            let waitReason = '최대 대기 도달';
+
+            while (Date.now() < waitDeadline) {
+                await page.waitForTimeout(Math.min(NAVER_POLL_MS, waitDeadline - Date.now()));
+
+                // DOM에서 가격 읽기 — 2026-07 네이버 개편 후 운임이 GraphQL로 오지 않아
+                // 실질적으로 이쪽이 주 소스다 (사용자가 화면에서 보는 가격과 동일)
+                domPrice = await extractPriceFromDOM(page);
+                if (domPrice && (lowestPrice === null || domPrice < lowestPrice)) {
+                    lowestPrice = domPrice;
+                }
+
+                if (lowestPrice !== observedPrice) {
+                    observedPrice = lowestPrice;
+                    lastPriceChangedAt = Date.now();
+                }
+
                 pageSnapshot = await inspectNaverPage(page, navigationResponse?.status(), {
                     graphqlResponseCount,
                     graphqlSuccessCount,
@@ -422,32 +438,26 @@ try {
                     graphqlProblemStatus,
                 });
 
-                // 25초가 지났는데 API가 아직 안 왔거나 화면이 로딩 중일 때만 더 기다린다.
-                // 이미 정상 GraphQL이 끝난 빈 결과를 무조건 20초 더 기다리지는 않는다.
-                if (pageSnapshot.isLoading || graphqlSuccessCount === 0) {
-                    console.log(`  ⏳ 검색이 아직 끝나지 않아 최대 ${NAVER_EXTRA_WAIT_MS / 1000}초 더 확인합니다.`);
-                    const deadline = Date.now() + NAVER_EXTRA_WAIT_MS;
-                    while (Date.now() < deadline && lowestPrice === null) {
-                        await page.waitForTimeout(2_000);
-                        domPrice = await extractPriceFromDOM(page);
-                        if (domPrice && (lowestPrice === null || domPrice < lowestPrice)) {
-                            lowestPrice = domPrice;
-                            break;
-                        }
+                const now = Date.now();
+                const elapsed = now - waitStartedAt;
+                if (elapsed < NAVER_MIN_WAIT_MS) continue;
 
-                        pageSnapshot = await inspectNaverPage(page, navigationResponse?.status(), {
-                            graphqlResponseCount,
-                            graphqlSuccessCount,
-                            graphqlErrorCount,
-                            graphqlProblemStatus,
-                        });
-                        const settledState = classifyNaverPageState(pageSnapshot);
-                        if (settledState === 'blocked' || settledState === 'no_result' || settledState === 'route_error') {
-                            break;
-                        }
-                    }
+                const settledState = classifyNaverPageState(pageSnapshot);
+                if (settledState === 'blocked' || settledState === 'no_result' || settledState === 'route_error') {
+                    waitReason = naverPageStateLabel(settledState);
+                    break;
+                }
+
+                const priceStable = lowestPrice !== null
+                    && now - lastPriceChangedAt >= NAVER_PRICE_STABLE_MS;
+                if (!pageSnapshot.isLoading && priceStable) {
+                    waitReason = `로딩 완료 · 가격 ${NAVER_PRICE_STABLE_MS / 1000}초 안정`;
+                    break;
                 }
             }
+
+            const waitedSeconds = Math.round((Date.now() - waitStartedAt) / 100) / 10;
+            console.log(`  ⏱️ ${waitedSeconds}초 만에 확인 종료 (${waitReason})`);
 
             // 오염 방어선: 국제선 왕복이 이 값보다 쌀 수 없다 (호텔 가격 등 혼입 차단)
             if (lowestPrice !== null && lowestPrice < MIN_VALID_PRICE) {
