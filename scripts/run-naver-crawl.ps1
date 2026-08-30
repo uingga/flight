@@ -170,10 +170,13 @@ Log "circuit state: $(($RunningStateOutput | Out-String).Trim())"
 # Crawl all agencies using the residential IP. This is the only production Naver
 # browser session: GitHub Actions is limited to a read-only three-route diagnostic.
 $env:HIDE_WINDOW = '1'
+$env:NAVER_LIVE_RUN = '1'
 $env:SOURCE_FILTER = 'all'
 $env:MAX_FLIGHTS = '200'
-$env:STANDARD_REFRESH_DAYS = '1'
-$env:PRIORITY_REFRESH_DAYS = '1'
+$env:MAX_NAVIGATIONS = '200'
+$env:STANDARD_REFRESH_DAYS = '2'
+$env:PRIORITY_REFRESH_DAYS = '2'
+$env:MIN_SUCCESS_REFRESH_HOURS = '48'
 $env:PRIORITY_DEPARTURE_DAYS = '14'
 $env:PRIORITY_DISCOUNT_RATE = '20'
 $env:TOP_CANDIDATE_COUNT = '50'

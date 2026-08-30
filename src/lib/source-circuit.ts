@@ -12,9 +12,9 @@ export const SOURCE_ADAPTER_VERSIONS = {
     ybtour: '2026-08-30.2',
     hanatour: '2026-08-30.2',
     modetour: '2026-08-30.2',
-    onlinetour: '2026-08-29.1',
-    ttang: '2026-08-30.2',
-    myrealtrip: '2026-08-30.1',
+    onlinetour: '2026-08-30.2',
+    ttang: '2026-08-30.3',
+    myrealtrip: '2026-08-30.2',
 } as const;
 
 export interface SourceCircuitState {

@@ -46,12 +46,14 @@ import {
 chromium.use(stealth());
 
 // ─── 설정 ───
-const MAX_FLIGHTS = parseInt(process.env.MAX_FLIGHTS || '9999', 10); // 기본: 제한 없음
+const MAX_FLIGHTS = parseInt(process.env.MAX_FLIGHTS || '200', 10);
+const MAX_NAVIGATIONS = parseInt(process.env.MAX_NAVIGATIONS || String(MAX_FLIGHTS), 10);
 const MAX_DAYS_AHEAD = parseInt(process.env.MAX_DAYS_AHEAD || '60', 10); // 출발일 N일 이내만
 const SOURCE_FILTER_RAW = process.env.SOURCE_FILTER ?? 'myrealtrip';
 const SOURCE_FILTER = SOURCE_FILTER_RAW.toLowerCase() === 'all' ? '' : SOURCE_FILTER_RAW; // all이면 전체 소스
-const STANDARD_REFRESH_DAYS = parseInt(process.env.STANDARD_REFRESH_DAYS || process.env.REFRESH_DAYS || '1', 10);
-const PRIORITY_REFRESH_DAYS = parseInt(process.env.PRIORITY_REFRESH_DAYS || process.env.MYREALTRIP_REFRESH_DAYS || '1', 10);
+const STANDARD_REFRESH_DAYS = parseInt(process.env.STANDARD_REFRESH_DAYS || process.env.REFRESH_DAYS || '2', 10);
+const PRIORITY_REFRESH_DAYS = parseInt(process.env.PRIORITY_REFRESH_DAYS || process.env.MYREALTRIP_REFRESH_DAYS || '2', 10);
+const MIN_SUCCESS_REFRESH_HOURS = parseInt(process.env.MIN_SUCCESS_REFRESH_HOURS || '48', 10);
 const PRIORITY_DEPARTURE_DAYS = parseInt(process.env.PRIORITY_DEPARTURE_DAYS || '14', 10);
 const PRIORITY_DISCOUNT_RATE = parseInt(process.env.PRIORITY_DISCOUNT_RATE || '20', 10);
 const TOP_CANDIDATE_COUNT = parseInt(process.env.TOP_CANDIDATE_COUNT || '50', 10);
@@ -72,11 +74,11 @@ const HIDE_WINDOW = process.env.HIDE_WINDOW === '1';                // 브라우
 const NAVER_WAIT_MS = 25000;        // 네이버 검색 결과 로딩 대기 (25초)
 const NAVER_EXTRA_WAIT_MS = 20000;  // API/로딩이 끝나지 않은 페이지만 추가 대기
 const NAVER_HEALTH_WAIT_MS = 20000; // 대조 노선은 가격이 아닌 API 도달 여부만 확인
-const REQUEST_DELAY_MIN_MS = parseInt(process.env.REQUEST_DELAY_MIN_MS || '2000', 10);
-const REQUEST_DELAY_MAX_MS = parseInt(process.env.REQUEST_DELAY_MAX_MS || '4000', 10);
+const REQUEST_DELAY_MIN_MS = parseInt(process.env.REQUEST_DELAY_MIN_MS || '5000', 10);
+const REQUEST_DELAY_MAX_MS = parseInt(process.env.REQUEST_DELAY_MAX_MS || '10000', 10);
 const BATCH_SIZE = parseInt(process.env.BATCH_SIZE || '10', 10);
-const BATCH_REST_MIN_MS = parseInt(process.env.BATCH_REST_MIN_MS || '30000', 10);
-const BATCH_REST_MAX_MS = parseInt(process.env.BATCH_REST_MAX_MS || '60000', 10);
+const BATCH_REST_MIN_MS = parseInt(process.env.BATCH_REST_MIN_MS || '60000', 10);
+const BATCH_REST_MAX_MS = parseInt(process.env.BATCH_REST_MAX_MS || '120000', 10);
 const MAX_HEALTH_CHECKS = parseInt(process.env.MAX_HEALTH_CHECKS || '1', 10);
 const DATA_DIR = path.join(process.cwd(), 'data');
 const OUTPUT_FILE = path.join(DATA_DIR, 'naver-prices.json');
@@ -85,6 +87,7 @@ const INTERPARK_FILE = path.join(DATA_DIR, 'interpark-prices.json');
 const REFRESH_CONFIG: NaverRefreshConfig = {
     priorityRefreshDays: PRIORITY_REFRESH_DAYS,
     standardRefreshDays: STANDARD_REFRESH_DAYS,
+    minSuccessRefreshHours: MIN_SUCCESS_REFRESH_HOURS,
     priorityDepartureDays: PRIORITY_DEPARTURE_DAYS,
     priorityDiscountRate: PRIORITY_DISCOUNT_RATE,
     priceChangeAmount: PRICE_CHANGE_AMOUNT,
@@ -258,7 +261,7 @@ try {
     if (seededSignatures > 0) {
         console.log(`🧾 기존 네이버 기록 ${seededSignatures}건에 현재 여행사 실결제가 기준선을 저장했습니다 (추가 네이버 요청 없음)`);
     }
-    console.log(`⏭️ 오늘 이미 확인·실패 쿨다운 스킵: ${skippedFresh}건 (정상 1일 1회 / 실패 ${MISS_RETRY_HOURS}~${NO_RESULT_RETRY_HOURS}시간)`);
+    console.log(`⏭️ 최근 확인·실패 쿨다운 스킵: ${skippedFresh}건 (성공 최소 ${MIN_SUCCESS_REFRESH_HOURS}시간·정기 ${Math.min(PRIORITY_REFRESH_DAYS, STANDARD_REFRESH_DAYS)}일 / 실패 ${MISS_RETRY_HOURS}~${NO_RESULT_RETRY_HOURS}시간)`);
     console.log(`📋 확인 필요 ${neededFlights.length}건 · 이번 실행 ${uniqueFlights.length}건 · 신규 ${newRouteCount}건 · 여행사 변경 ${changedRouteCount}건 · 정기 ${periodicRouteCount}건 · 다음 회차 ${Math.max(0, neededFlights.length - uniqueFlights.length)}건\n`);
     console.log(`🎯 전체 우선순위: 7일 마감 ${groupCounts.deadline} · 신규·변경 상위 ${groupCounts.changed_top} · 상위 ${groupCounts.top} · 보통 ${groupCounts.standard} · 하위 ${groupCounts.low}`);
     console.log(`🚦 선택 ${MAX_FLIGHTS}건 기준: 7일 마감 ${selectedGroupCounts.deadline} · 신규·변경 상위 ${selectedGroupCounts.changed_top} · 상위 ${selectedGroupCounts.top} · 보통 ${selectedGroupCounts.standard} · 하위 ${selectedGroupCounts.low}\n`);
@@ -274,6 +277,13 @@ try {
             console.log(`  ${String(i + 1).padStart(2)}. ${f.departure.city}→${f.arrival.city} ${normalizeDate(f.departure.date)} — ${reason}`);
         });
         process.exit(0);
+    }
+
+    if (!['1', 'true'].includes(String(process.env.NAVER_LIVE_RUN || '').toLowerCase())) {
+        throw new Error(
+            '실제 네이버 요청은 안전 회로가 적용된 run-naver-crawl.ps1 또는 '
+            + 'NAVER_LIVE_RUN=1을 명시한 진단 워크플로에서만 허용됩니다.',
+        );
     }
 
     // 3. 브라우저 실행
@@ -299,6 +309,7 @@ try {
     let successCount = 0;
     let failCount = 0;
     let attemptedCount = 0;
+    let navigationCount = 0;
     let newRoutesAttempted = 0;
     // 가격이 없다는 것만으로 차단이라 하지 않는다. 애매한 실패가 이어질 때
     // 정상 대조 노선까지 실패하는지를 확인한 뒤에만 조기 종료한다.
@@ -315,6 +326,10 @@ try {
     let abortReason: string | undefined;
 
     for (let i = 0; i < uniqueFlights.length; i++) {
+        if (navigationCount >= MAX_NAVIGATIONS) {
+            console.log(`\n⏹️ 네이버 페이지 이동 상한 ${MAX_NAVIGATIONS}회에 도달해 정상 종료합니다.`);
+            break;
+        }
         const flight = uniqueFlights[i];
         const depDate = normalizeDate(flight.departure.date);
         const retDate = normalizeDate(flight.arrival.date);
@@ -383,6 +398,7 @@ try {
             };
             page.on('response', responseHandler);
 
+            navigationCount++;
             const navigationResponse = await page.goto(naverUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
 
             // 네이버 항공권은 여러 GDS/항공사에서 순차적으로 결과를 받으므로,
@@ -557,9 +573,16 @@ try {
                 abortedEarly = true;
                 break;
             }
+            const remainingNavigationBudget = Math.max(0, MAX_NAVIGATIONS - navigationCount);
+            if (remainingNavigationBudget === 0) {
+                console.log(`\n⏹️ 네이버 페이지 이동 상한 ${MAX_NAVIGATIONS}회에 도달해 대조 요청 없이 정상 종료합니다.`);
+                break;
+            }
             healthCheckCount++;
             console.log(`\n🩺 애매한 실패 ${consecutiveAmbiguousMisses}건 — 정상 대조 노선으로 접속 상태를 확인합니다.`);
-            const availability = await probeNaverAvailability(context);
+            const probe = await probeNaverAvailability(context, remainingNavigationBudget);
+            navigationCount += probe.navigations;
+            const availability = probe.availability;
             if (availability === 'available') {
                 console.log('   ✅ 검색 API는 정상입니다. 노선별 실패로 기록하고 다음 항목을 계속 확인합니다.');
                 consecutiveAmbiguousMisses = 0;
@@ -634,6 +657,7 @@ try {
         runner: process.env.CI ? 'github' : HIDE_WINDOW ? 'local' : 'manual',
         sourceFilter: SOURCE_FILTER || 'all',
         maxFlights: MAX_FLIGHTS,
+        navigations: navigationCount,
         needed: neededFlights.length,
         attempted: attemptedCount,
         newRoutes: newRouteCount,
@@ -662,6 +686,7 @@ try {
         console.log(`   결과 없음 ${failureStateCounts.no_result} · 노선 오류 ${failureStateCounts.route_error} · 일시 오류 ${failureStateCounts.transient_error} · 접근 제한 ${failureStateCounts.blocked}`);
     }
     if (healthCheckCount > 0) console.log(`🩺 정상 대조 노선 확인: ${healthCheckCount}회`);
+    console.log(`🧭 네이버 페이지 이동: ${navigationCount}/${MAX_NAVIGATIONS}회`);
     console.log(`📊 확인 필요 ${neededFlights.length}건 → 실제 확인 ${attemptedCount}건 → 다음 회차 ${remaining.length}건`);
     console.log(`🆕 새 항공권 ${newRouteCount}건 중 ${newRoutesAttempted}건 확인`);
     console.log(`⏳ 가장 오래 밀린 항목: ${deferredNeverChecked > 0 ? `아직 한 번도 확인하지 않은 항목 ${deferredNeverChecked}건` : oldestDeferredHours === null ? '없음' : `${oldestDeferredHours}시간`}`);
@@ -1096,7 +1121,10 @@ async function probeNaverRoute(context: any, route: NaverProbeRoute): Promise<Na
  * 가격이 없는 단일 노선을 서비스 장애 증거로 쓰지 않는다. 서로 다른 두 대조
  * 노선의 HTTP/GraphQL 전송 상태를 확인하고, 둘 다 실제로 닿지 않을 때만 멈춘다.
  */
-async function probeNaverAvailability(context: any): Promise<NaverAvailability> {
+async function probeNaverAvailability(
+    context: any,
+    maxNavigations: number,
+): Promise<{ availability: NaverAvailability; navigations: number }> {
     const routes: NaverProbeRoute[] = [
         {
             outboundDeparture: 'ICN',
@@ -1117,11 +1145,16 @@ async function probeNaverAvailability(context: any): Promise<NaverAvailability> 
     ];
     const results: NaverAvailability[] = [];
 
-    for (const route of routes) {
+    for (const route of routes.slice(0, Math.max(0, maxNavigations))) {
         const result = await probeNaverRoute(context, route);
         results.push(result);
-        if (result === 'available' || result === 'blocked') return result;
+        if (result === 'available' || result === 'blocked') {
+            return { availability: result, navigations: results.length };
+        }
     }
 
-    return combineNaverProbeResults(results);
+    return {
+        availability: results.length > 0 ? combineNaverProbeResults(results) : 'unknown',
+        navigations: results.length,
+    };
 }

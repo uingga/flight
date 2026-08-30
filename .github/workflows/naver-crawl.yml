@@ -14,6 +14,10 @@ on:
           - '1'
           - '3'
 
+concurrency:
+  group: naver-manual-diagnostic
+  cancel-in-progress: false
+
 jobs:
   naver-diagnostic:
     runs-on: ubuntu-latest
@@ -21,8 +25,51 @@ jobs:
 
     permissions:
       contents: read
+      actions: read
 
     steps:
+      - name: Enforce 24-hour diagnostic cooldown
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+            const runs = await github.paginate(github.rest.actions.listWorkflowRuns, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'naver-crawl.yml',
+              event: 'workflow_dispatch',
+              per_page: 100,
+            });
+            let recent = null;
+            for (const run of runs) {
+              if (
+                run.id !== context.runId
+                && new Date(run.updated_at || run.created_at).getTime() <= cutoff
+              ) continue;
+              const jobs = await github.paginate(github.rest.actions.listJobsForWorkflowRun, {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                run_id: run.id,
+                filter: 'all',
+                per_page: 100,
+              });
+              const sentRequest = jobs.some(job =>
+                (job.steps || []).some(step =>
+                  step.name === 'Run read-only Naver diagnostic'
+                  && step.conclusion !== 'skipped'
+                  && Boolean(step.started_at)
+                  && new Date(step.started_at).getTime() > cutoff
+                )
+              );
+              if (sentRequest) {
+                recent = run;
+                break;
+              }
+            }
+            if (recent) {
+              core.setFailed(`최근 24시간 내 네이버 진단 실행이 있어 요청을 시작하지 않습니다: ${recent.html_url}`);
+            }
+
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -43,10 +90,13 @@ jobs:
         run: xvfb-run --auto-servernum --server-args='-screen 0 1280x900x24' npx tsx scripts/crawl-naver.ts
         env:
           CI: true
+          NAVER_LIVE_RUN: '1'
           MAX_FLIGHTS: ${{ inputs.max_flights }}
+          MAX_NAVIGATIONS: ${{ inputs.max_flights }}
           SOURCE_FILTER: myrealtrip
           STANDARD_REFRESH_DAYS: 0
           PRIORITY_REFRESH_DAYS: 0
+          MIN_SUCCESS_REFRESH_HOURS: 48
           MISS_RETRY_HOURS: 0
           NO_RESULT_RETRY_HOURS: 0
           REQUEST_DELAY_MIN_MS: 5000

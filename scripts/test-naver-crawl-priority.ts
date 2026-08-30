@@ -14,6 +14,7 @@ const now = new Date('2026-08-30T03:00:00Z').getTime();
 const refreshConfig: NaverRefreshConfig = {
     priorityRefreshDays: 1,
     standardRefreshDays: 1,
+    minSuccessRefreshHours: 48,
     priorityDepartureDays: 14,
     priorityDiscountRate: 20,
     priceChangeAmount: 10_000,
@@ -51,11 +52,11 @@ const successEntry = (candidate: NaverCrawlPriorityCandidate<NaverRefreshFlight>
 });
 const entries = {
     'changed-top': {
-        ...successEntry(candidates[0], '2026-08-29T03:00:00Z'),
+        ...successEntry(candidates[0], '2026-08-28T03:00:00Z'),
         sourceSignature: buildNaverSourceSignature({ ...candidates[0].flight, price: 180_000 }),
         sourcePrice: 180_000,
     },
-    'stable-top': successEntry(candidates[1], '2026-08-29T03:00:00Z'),
+    'stable-top': successEntry(candidates[1], '2026-08-28T03:00:00Z'),
     'standard-a': successEntry(candidates[2], '2026-08-27T03:00:00Z'),
     'standard-b': successEntry(candidates[3], '2026-08-28T03:00:00Z'),
     deadline: {
@@ -89,7 +90,7 @@ assert.equal(selection.selected[1].group, 'changed_top');
 assert.equal(selection.selected[2].group, 'top');
 assert.equal(selection.pending.at(-1)?.key, 'low');
 assert.equal(selection.pending.at(-1)?.group, 'low');
-assert.equal(selection.skippedFresh, 1);
+assert.equal(selection.skippedFresh, 2);
 assert.equal(selection.eligible.length, selection.selected.length + selection.pending.length);
 
 console.log('Naver crawl priority tests passed');

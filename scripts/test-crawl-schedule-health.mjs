@@ -205,6 +205,14 @@ test('GitHub Naver is a read-only manual diagnostic capped at three routes', () 
     assert.doesNotMatch(workflow, /^\s+schedule:/m);
     assert.match(workflow, /^\s+SOURCE_FILTER:\s*myrealtrip\s*$/m);
     assert.match(workflow, /^\s+contents:\s*read\s*$/m);
+    assert.match(workflow, /^concurrency:\s*\n\s+group:\s*naver-manual-diagnostic/m);
+    assert.match(workflow, /Enforce 24-hour diagnostic cooldown/);
+    assert.match(workflow, /github\.paginate\(github\.rest\.actions\.listWorkflowRuns/);
+    assert.match(workflow, /github\.paginate\(github\.rest\.actions\.listJobsForWorkflowRun/);
+    assert.match(workflow, /filter:\s*'all'/);
+    assert.match(workflow, /new Date\(step\.started_at\)\.getTime\(\) > cutoff/);
+    assert.match(workflow, /^\s+NAVER_LIVE_RUN:\s*'1'\s*$/m);
+    assert.match(workflow, /^\s+MAX_NAVIGATIONS:\s*\$\{\{ inputs\.max_flights \}\}\s*$/m);
     assert.match(workflow, /^\s+default:\s*'3'\s*$/m);
     assert.match(workflow, /^\s+-\s*'3'\s*$/m);
     assert.doesNotMatch(workflow, /git push|filter-by-naver|Commit and push|Preserve failed run history/);
@@ -228,6 +236,8 @@ test('the Windows Naver task owns production collection with one guarded daily s
     assert.doesNotMatch(installer, /-RestartCount/);
     assert.match(runner, /\$env:SOURCE_FILTER = 'all'/);
     assert.match(runner, /\$env:MAX_FLIGHTS = '200'/);
+    assert.match(runner, /\$env:MAX_NAVIGATIONS = '200'/);
+    assert.match(runner, /\$env:MIN_SUCCESS_REFRESH_HOURS = '48'/);
     assert.match(runner, /\$env:TOP_CANDIDATE_COUNT = '50'/);
     assert.match(runner, /\$env:MAX_DEFER_DAYS = '7'/);
     assert.match(runner, /git pull --rebase --autostash origin main/);
@@ -239,6 +249,7 @@ test('the Windows Naver task owns production collection with one guarded daily s
     assert.match(runner, /\$env:MAX_HEALTH_CHECKS = '1'/);
     assert.match(runner, /\$env:REQUEST_DELAY_MIN_MS = '5000'/);
     assert.match(runner, /\$env:BATCH_REST_MAX_MS = '120000'/);
+    assert.match(runner, /\$env:NAVER_LIVE_RUN = '1'/);
     assert.match(runner, /npx\.cmd playwright install chromium/);
 });
 

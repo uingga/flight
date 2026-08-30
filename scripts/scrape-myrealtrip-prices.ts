@@ -1,7 +1,10 @@
 import { chromium, Browser } from 'playwright';
 import fs from 'fs';
 import path from 'path';
-import { scrapeMyrealtrip } from '../src/lib/scrapers/myrealtrip';
+import {
+    assertMyrealtripSeedReplacementSafe,
+    scrapeMyrealtripWithDiagnostics,
+} from '../src/lib/scrapers/myrealtrip';
 import { getMyrealtripSearchPrice, type FlightResult } from './lib/myrealtrip-search-page';
 import {
     assertNoSourceResponseCollapse,
@@ -176,24 +179,24 @@ async function main() {
 
     // ── 1단계: Calendar API로 항공편 목록 갱신 ──────────────────
     console.log('📡 1단계: Calendar API로 최신 항공편 목록 수집...\n');
-    const freshFlights = await scrapeMyrealtrip();
+    const seedResult = await scrapeMyrealtripWithDiagnostics();
+    const freshFlights = seedResult.flights;
     console.log(`\n📡 Calendar API 결과: ${freshFlights.length}개 항공편 수집`);
 
     // 캐시 로드 & MRT 데이터 교체
-    const prevMrtCount = cache.flights.filter((f: any) => f.source === 'myrealtrip').length;
+    const previousMrtFlights = cache.flights.filter((f: any) => f.source === 'myrealtrip');
+    const prevMrtCount = previousMrtFlights.length;
 
-    // 안전장치: 공개 API 목록이 직전의 60% 미만이면 soft block으로 보고 페이지 요청도 시작하지 않는다.
-    if (freshFlights.length > 0 && (prevMrtCount === 0 || freshFlights.length >= prevMrtCount * 0.6)) {
-        cache.flights = cache.flights.filter((f: any) => f.source !== 'myrealtrip');
-        cache.flights.push(...freshFlights);
-        console.log(`♻️ MRT 캐시 교체: ${prevMrtCount}개 → ${freshFlights.length}개`);
-    } else {
-        throw new SourceResponseError(
-            'soft-block',
-            `마이리얼트립 공개 API 결과(${freshFlights.length}개)가 기존(${prevMrtCount}개)의 60% 미만입니다.`,
-            200,
-        );
-    }
+    // 원래 0건인 출발지는 허용하되, 기존에 있던 출발지의 소실이나 전체 급감은
+    // Playwright를 열기 전에 중단해 이전 운영 캐시를 그대로 지킨다.
+    assertMyrealtripSeedReplacementSafe(
+        freshFlights,
+        previousMrtFlights,
+        seedResult.bulkCoverage,
+    );
+    cache.flights = cache.flights.filter((f: any) => f.source !== 'myrealtrip');
+    cache.flights.push(...freshFlights);
+    console.log(`♻️ MRT 캐시 교체: ${prevMrtCount}개 → ${freshFlights.length}개`);
 
     // 출발일 60일 초과 마이리얼트립 항공편 제거 (티키티킷에 표시하지 않음)
     const MAX_DAYS = parseInt(process.env.MAX_DAYS_AHEAD || '60', 10);

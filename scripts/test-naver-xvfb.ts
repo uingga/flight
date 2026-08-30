@@ -2,6 +2,10 @@ import { chromium } from 'playwright-extra';
 import stealth from 'puppeteer-extra-plugin-stealth';
 chromium.use(stealth());
 
+if (!['1', 'true'].includes(String(process.env.NAVER_LIVE_RUN || '').toLowerCase())) {
+    throw new Error('실제 네이버 진단은 NAVER_LIVE_RUN=1을 명시해야 합니다.');
+}
+
 /**
  * Xvfb(가상 디스플레이) 환경에서 headed 모드가 네이버 차단을 우회하는지 테스트
  */

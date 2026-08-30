@@ -226,10 +226,10 @@ async function fetchRegionRows(region: RegionDefinition): Promise<Record<string,
             }
             return parseOnlineTourJsonp(response.text, callback);
         }, {
-            maxAttempts: 3,
-            delaysMs: [500, 1_500],
+            maxAttempts: 2,
+            delaysMs: [3_000],
             onRetry: (error, nextAttempt) => {
-                console.warn(`    ${region.name} ${pageNo}페이지 일시 오류 — ${nextAttempt}/3 재시도 (${describeSourceError(error)})`);
+                console.warn(`    ${region.name} ${pageNo}페이지 일시 오류 — ${nextAttempt}/2 재시도 (${describeSourceError(error)})`);
             },
         });
 
@@ -294,7 +294,7 @@ async function fetchRegionRows(region: RegionDefinition): Promise<Record<string,
             return rows;
         }
 
-        await randomDelay(0.8, 1.8);
+        await randomDelay(2, 4);
     }
 
     throw new SourceResponseError('schema-mismatch', `온라인투어 ${region.name} 페이지 순회가 끝나지 않았습니다.`);
@@ -307,7 +307,8 @@ async function fetchStableRegionRows(region: RegionDefinition): Promise<Record<s
         if (!(error instanceof SourceResponseError) || error.kind !== 'snapshot-changed') throw error;
         // 판매 중인 목록은 페이지를 읽는 몇 초 사이에도 한 건이 추가·삭제될 수 있다.
         // 서로 다른 시점의 페이지를 섞지 않고 첫 결과를 버린 뒤 새 스냅샷으로 한 번만 다시 읽는다.
-        console.warn(`    ${region.name} 목록이 수집 중 바뀌어 지역 전체를 처음부터 한 번 다시 읽습니다.`);
+        console.warn(`    ${region.name} 목록이 수집 중 바뀌어 8~15초 쉰 뒤 지역 전체를 한 번만 다시 읽습니다.`);
+        await randomDelay(8, 15);
         return fetchRegionRows(region);
     }
 }
@@ -367,7 +368,7 @@ export async function scrapeOnlineTour(prevFlights: any[] = []): Promise<Flight[
             );
         }
 
-        await randomDelay(1, 2.5);
+        await randomDelay(3, 5);
     }
 
     console.log(`온라인투어 완료: 총 ${flights.length}건`);

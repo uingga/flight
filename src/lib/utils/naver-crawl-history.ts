@@ -9,6 +9,7 @@ export interface NaverCrawlHistoryEntry {
     maxFlights: number;
     needed: number;
     attempted: number;
+    navigations?: number;
     newRoutes: number;
     newRoutesAttempted: number;
     changedRoutes?: number;

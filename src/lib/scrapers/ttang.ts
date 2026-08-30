@@ -167,7 +167,7 @@ export async function scrapeTtang(prevFlights: any[] = []): Promise<Flight[]> {
             return retrySourceOperation(
                 `땡처리닷컴 ${dateParam} 브라우저 요청`,
                 () => fetchTtangPromotionInBrowser(page, dateParam),
-                { maxAttempts: 2, delaysMs: [700] },
+                { maxAttempts: 2, delaysMs: [3_000] },
             );
         };
 

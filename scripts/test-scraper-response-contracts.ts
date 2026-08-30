@@ -5,6 +5,7 @@ import {
 } from '../src/lib/scrapers/onlinetour.ts';
 import { fetchTtangPromotionInBrowser } from '../src/lib/scrapers/ttang.ts';
 import {
+    assertMyrealtripSeedReplacementSafe,
     parseMyrealtripBulkPayload,
     parseMyrealtripCalendarPayload,
 } from '../src/lib/scrapers/myrealtrip.ts';
@@ -55,6 +56,32 @@ assert.equal(parseMyrealtripBulkPayload({ lowestPriceInfoList: [{ arrivalCity: '
 assert.equal(parseMyrealtripCalendarPayload({ flightCalendarInfoResults: [{ date: '2026-09-01' }] }).length, 1);
 assertSourceError(() => parseMyrealtripBulkPayload({ result: [] }), 'schema-mismatch');
 assertSourceError(() => parseMyrealtripCalendarPayload({ result: [] }), 'schema-mismatch');
+assert.doesNotThrow(() => assertMyrealtripSeedReplacementSafe(
+    [{ departure: { airport: 'ICN' } }],
+    [{ departure: { airport: 'ICN' } }],
+    { successfulDepartureAirports: ['ICN'], emptyDepartureAirports: ['PUS'] },
+));
+assertSourceError(() => assertMyrealtripSeedReplacementSafe(
+    [],
+    [{ departure: { airport: 'ICN' } }],
+    { successfulDepartureAirports: [], emptyDepartureAirports: ['ICN', 'PUS'] },
+), 'soft-block');
+assertSourceError(() => assertMyrealtripSeedReplacementSafe(
+    [{ departure: { airport: 'ICN' } }],
+    [{ departure: { airport: 'ICN' } }, { departure: { airport: 'PUS' } }],
+    { successfulDepartureAirports: ['ICN'], emptyDepartureAirports: ['PUS'] },
+), 'api-error');
+assertSourceError(() => assertMyrealtripSeedReplacementSafe(
+    [
+        ...Array.from({ length: 50 }, () => ({ departure: { airport: 'ICN' } })),
+        ...Array.from({ length: 100 }, () => ({ departure: { airport: 'PUS' } })),
+    ],
+    [
+        ...Array.from({ length: 100 }, () => ({ departure: { airport: 'ICN' } })),
+        ...Array.from({ length: 100 }, () => ({ departure: { airport: 'PUS' } })),
+    ],
+    { successfulDepartureAirports: ['ICN', 'PUS'], emptyDepartureAirports: [] },
+), 'soft-block');
 assert.equal(parseModetourRegionPayload('{"result":[{"stockPackageNo":1}]}').length, 1);
 assertSourceError(() => parseModetourRegionPayload('{"rows":[]}'), 'schema-mismatch');
 assertSourceError(() => parseModetourRegionPayload('{broken}'), 'malformed-json');

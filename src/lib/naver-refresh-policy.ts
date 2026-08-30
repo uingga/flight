@@ -29,6 +29,7 @@ export interface NaverRefreshEntry {
 export interface NaverRefreshConfig {
     priorityRefreshDays: number;
     standardRefreshDays: number;
+    minSuccessRefreshHours: number;
     priorityDepartureDays: number;
     priorityDiscountRate: number;
     priceChangeAmount: number;
@@ -170,6 +171,22 @@ export function evaluateNaverRefresh(
         };
     }
 
+    // KST 날짜가 바뀌었다는 이유만으로 전날 늦은 회차의 동일 노선을 다시
+    // 요청하지 않는다. 의미 있는 여행사 가격 변경도 이 최소 휴식 뒤에만 반영한다.
+    const checkedAt = new Date(entry.crawledAt || '').getTime();
+    if (
+        Number.isFinite(checkedAt)
+        && now - checkedAt < Math.max(0, config.minSuccessRefreshHours) * HOUR_MS
+    ) {
+        return {
+            fresh: true,
+            reason: tier === 'priority' ? 'priority_fresh' : 'standard_fresh',
+            tier,
+            refreshDays,
+            sourceSignature,
+        };
+    }
+
     if (entry.sourceSignature && entry.sourceSignature !== sourceSignature) {
         const previousSourcePrice = Number(entry.sourcePrice);
         const absoluteChange = Number.isFinite(previousSourcePrice)
@@ -183,7 +200,6 @@ export function evaluateNaverRefresh(
         }
     }
 
-    const checkedAt = new Date(entry.crawledAt || '').getTime();
     const fresh = Number.isFinite(checkedAt)
         && kstDayNumber(now) - kstDayNumber(checkedAt) < refreshDays;
     const reason = tier === 'priority'

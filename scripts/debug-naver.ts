@@ -13,6 +13,10 @@ chromium.use(stealth());
 
 const DATA_DIR = path.join(process.cwd(), 'data');
 
+if (!['1', 'true'].includes(String(process.env.NAVER_LIVE_RUN || '').toLowerCase())) {
+    throw new Error('실제 네이버 디버그 요청은 NAVER_LIVE_RUN=1을 명시해야 합니다.');
+}
+
 (async () => {
     console.log('🔍 네이버 항공권 디버그 시작...\n');
 

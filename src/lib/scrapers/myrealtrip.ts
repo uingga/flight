@@ -120,6 +120,80 @@ export interface CalendarPrice {
     price: number;
 }
 
+export interface MyrealtripBulkCoverage {
+    successfulDepartureAirports: string[];
+    emptyDepartureAirports: string[];
+}
+
+export interface MyrealtripScrapeResult {
+    flights: Flight[];
+    bulkCoverage: MyrealtripBulkCoverage;
+}
+
+interface MyrealtripCoverageFlight {
+    departure?: { airport?: string };
+}
+
+/**
+ * 원래 비어 있는 출발지와 전체 API 응답 붕괴를 구분한다.
+ * 기존에 데이터가 있던 출발지만 사라진 경우에는 차단으로 단정하지 않고
+ * 불완전 응답으로 중단해 이전 캐시를 보존한다.
+ */
+export function assertMyrealtripSeedReplacementSafe(
+    freshFlights: MyrealtripCoverageFlight[],
+    previousFlights: MyrealtripCoverageFlight[],
+    bulkCoverage: MyrealtripBulkCoverage,
+    minRetentionRatio = 0.6,
+): void {
+    if (bulkCoverage.successfulDepartureAirports.length === 0) {
+        throw new SourceResponseError(
+            'soft-block',
+            '마이리얼트립 모든 출발지의 Bulk 목록이 0건입니다.',
+            200,
+        );
+    }
+
+    const emptySet = new Set(bulkCoverage.emptyDepartureAirports);
+    const missingPreviousCounts = new Map<string, number>();
+    for (const flight of previousFlights) {
+        const airport = flight.departure?.airport || '';
+        if (!emptySet.has(airport)) continue;
+        missingPreviousCounts.set(airport, (missingPreviousCounts.get(airport) || 0) + 1);
+    }
+    if (missingPreviousCounts.size > 0) {
+        const detail = Array.from(missingPreviousCounts.entries())
+            .map(([airport, count]) => `${airport} ${count}건→0건`)
+            .join(', ');
+        throw new SourceResponseError(
+            'api-error',
+            `마이리얼트립 출발지별 Bulk 응답이 불완전합니다: ${detail}. 기존 캐시를 보존합니다.`,
+            200,
+        );
+    }
+
+    if (freshFlights.length === 0) {
+        throw new SourceResponseError(
+            'soft-block',
+            '마이리얼트립 공개 API 결과가 전체 0건입니다.',
+            200,
+        );
+    }
+
+    // 한 출발지의 급감을 다른 출발지 신규 데이터가 상쇄하지 못하게 출발지별로 비교한다.
+    for (const airport of bulkCoverage.successfulDepartureAirports) {
+        const previousCount = previousFlights.filter(flight => flight.departure?.airport === airport).length;
+        if (previousCount === 0) continue;
+        const freshCount = freshFlights.filter(flight => flight.departure?.airport === airport).length;
+        if (freshCount >= previousCount * minRetentionRatio) continue;
+        throw new SourceResponseError(
+            'soft-block',
+            `마이리얼트립 ${airport} 공개 API 결과가 기준선의 ${Math.round(minRetentionRatio * 100)}% 미만입니다: `
+            + `${previousCount}건→${freshCount}건`,
+            200,
+        );
+    }
+}
+
 const delay = (ms: number) => new Promise(r => setTimeout(r, ms));
 
 // ── GID 매핑 ──────────────────────────────────────────
@@ -276,11 +350,13 @@ function getRegion(fare: BulkLowestFare, cityName: string): string {
 
 // ── 메인 크롤링 ──────────────────────────────────────────
 
-export async function scrapeMyrealtrip(): Promise<Flight[]> {
+export async function scrapeMyrealtripWithDiagnostics(): Promise<MyrealtripScrapeResult> {
     console.log('\n=== 마이리얼트립 크롤링 시작 (실시간 캘린더 API) ===');
 
     const allFlights: Flight[] = [];
     const processedKeys = new Set<string>();
+    const successfulDepartureAirports: string[] = [];
+    const emptyDepartureAirports: string[] = [];
     let calendarProcessed = 0;
     let calendarSucceeded = 0;
     let consecutiveCalendarEmpty = 0;
@@ -291,12 +367,14 @@ export async function scrapeMyrealtrip(): Promise<Flight[]> {
         // 1단계: Bulk API로 도시 목록 가져오기
         const fares = await fetchBulkLowestFares(dep.cityCd);
         if (fares.length === 0) {
-            throw new SourceResponseError(
-                'soft-block',
-                `마이리얼트립 ${dep.city} Bulk 목록이 0건입니다.`,
-                200,
-            );
+            emptyDepartureAirports.push(dep.cityCd);
+            console.warn(`[마이리얼트립] ${dep.city} Bulk 목록 0건 — 다른 출발지 결과와 함께 판정합니다.`);
+            if (dep !== DEPARTURE_CITIES[DEPARTURE_CITIES.length - 1]) {
+                await delay(2_000 + Math.random() * 2_000);
+            }
+            continue;
         }
+        successfulDepartureAirports.push(dep.cityCd);
         console.log(`[마이리얼트립] ${dep.city}: ${fares.length}개 도시 발견`);
 
         let collected = 0, filtered = 0, calendarUsed = 0, bulkFallback = 0;
@@ -413,6 +491,26 @@ export async function scrapeMyrealtrip(): Promise<Flight[]> {
         }
     }
 
+    const bulkCoverage = {
+        successfulDepartureAirports,
+        emptyDepartureAirports,
+    };
+    if (successfulDepartureAirports.length === 0) {
+        throw new SourceResponseError(
+            'soft-block',
+            '마이리얼트립 모든 출발지의 Bulk 목록이 0건입니다.',
+            200,
+        );
+    }
+
     console.log(`\n[마이리얼트립] 완료: ${allFlights.length}개 항공편 수집`);
-    return allFlights;
+    if (emptyDepartureAirports.length > 0) {
+        console.log(`[마이리얼트립] 원래 비어 있을 수 있는 출발지: ${emptyDepartureAirports.join(', ')}`);
+    }
+    return { flights: allFlights, bulkCoverage };
+}
+
+export async function scrapeMyrealtrip(): Promise<Flight[]> {
+    const result = await scrapeMyrealtripWithDiagnostics();
+    return result.flights;
 }

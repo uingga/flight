@@ -63,8 +63,9 @@ src/components/Dashboard.tsx (client component)
 
 1. **노선 시딩 (자동 회차 내부)**: `scripts/scrape-myrealtrip-prices.ts`가 먼저
    `src/lib/scrapers/myrealtrip.ts`의 공개 API로 노선·날짜·대략 가격을 메모리에 수집한다.
-   요청은 20초 제한·일시 오류 최대 1회 재시도·0.8~1.6초 간격을 적용하고, 429·CAPTCHA·연속 빈
-   응답이면 다음 노선을 계속 요청하지 않는다. **이 단계의 가격에는 시간 정보가 없다.**
+   요청은 20초 제한·일시 오류 최대 1회 재시도·0.8~1.6초 간격을 적용한다. 원래 비어 있는 개별
+   출발지는 허용하지만 모든 출발지가 0건이거나 기존에 있던 출발지가 사라지면 이전 캐시를
+   보존하며, 429·CAPTCHA·Calendar 응답 붕괴에는 다음 요청을 보내지 않는다. **이 단계의 가격에는 시간 정보가 없다.**
 2. **가격·시간 갱신 (자동, 하루 2회 KST 07:05/18:03)**: `.github/workflows/myrealtrip-scrape.yml` →
    `scripts/scrape-myrealtrip-prices.ts`가 Playwright로 실제 예약 페이지(offers.k1)를 열어
    실시간 가격과 가는편·오는편 출발/도착 시간을 수집. 조회 실패 노선은 캐시에서 삭제.
@@ -86,7 +87,8 @@ src/components/Dashboard.tsx (client component)
 ### Naver 비교가 확인 스케줄
 
 - GitHub `naver-crawl.yml`은 운영 데이터를 쓰지 않는 수동 진단 전용이다. `myrealtrip` 최대 3건만
-  확인하며 어떤 자동 워크플로도 이를 호출하지 않는다.
+  확인하며 대조 조회도 같은 상한에 포함한다. 실제 진단 뒤 24시간 재실행을 막고 어떤 자동
+  워크플로도 이를 호출하지 않는다.
 - Windows `TikitikitNaverCrawl`은 10:00 KST부터 최신 `main`의 11:12 일반 크롤 완료 여부를
   2분 간격으로 확인하고, 반영되는 즉시 `SOURCE_FILTER=all`, `MAX_FLIGHTS=200`으로 하루 최대
   한 번 실행한다. 마이리얼트립은 당시 최신 캐시를 포함하지만 완료를 기다려 시작을 늦추지 않는다.
@@ -97,6 +99,9 @@ src/components/Dashboard.tsx (client component)
   차단 신호가 나오면 그 여행사의 PC 대체 수집도 24시간 중단한다.
 - 명시적 접근 제한은 24시간, 시스템성 일시 오류는 12시간 전역 쿨다운한다. 같은 날 자동 재실행,
   동시 수동 실행, Task Scheduler 재시작은 허용하지 않는다.
+- 네이버 페이지 이동은 대조 노선을 포함해 하루 최대 200회다. 성공 키는 실제 48시간 동안
+  재조회하지 않고, 48시간 뒤 여행사 가격 변경 키를 우선 확인한다. 실제 브라우저 실행에는
+  `NAVER_LIVE_RUN=1`이 필요해 예약 실행기를 우회한 실수성 직접 실행을 막는다.
 - PC 네이버 필터가 성공해 운영 API에 반영된 뒤에는 `select-today-pick.mjs --repair`로
   기존 오늘의 표만 검증한다. 유효하면 유지하고, 사라졌거나 유효하지 않을 때만 복구한다.
 
@@ -109,7 +114,7 @@ src/components/Dashboard.tsx (client component)
 - **Public Calendar API**: `https://api3.myrealtrip.com/flight/api/price/calendar` — 노선별 일별 최저가
 - **인증**: 불필요 (공개 API) / 응답 필드는 날짜·항공사·가격뿐 (시간 없음)
 - **Coverage**: ICN/PUS → 전체 도시, today+60 days
-- **Rate limiting**: 300ms delay between requests, 3s retry on 429
+- **Rate limiting**: Calendar 요청 0.8~1.6초, 출발지 사이 2~4초. 429는 같은 회차에 재시도하지 않음
 - **파트너 딥링크**: `gid-map.json` 기반 생성, 파트너 링크 ID `1849392`
 
 ### Notes
