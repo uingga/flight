@@ -10,7 +10,7 @@ import {
 const config: NaverRefreshConfig = {
     priorityRefreshDays: 2,
     standardRefreshDays: 5,
-    minSuccessRefreshHours: 48,
+    minSuccessRefreshHours: 24,
     priorityDepartureDays: 14,
     priorityDiscountRate: 20,
     priceChangeAmount: 10_000,
@@ -68,13 +68,13 @@ assert.equal(evaluateNaverRefresh({
     sourcePrice: 220_000,
 }, baseline, now, config).reason, 'standard_periodic');
 assert.equal(evaluateNaverRefresh({
-    crawledAt: '2026-08-27T05:30:00Z',
+    crawledAt: '2026-08-28T05:30:00Z',
     lastAttemptStatus: 'success',
     sourceSignature: signature,
     sourcePrice: 220_000,
 }, { ...baseline, price: 230_000 }, now, config).reason, 'source_changed');
 assert.equal(evaluateNaverRefresh({
-    crawledAt: '2026-08-27T05:31:00Z',
+    crawledAt: '2026-08-28T05:31:00Z',
     lastAttemptStatus: 'success',
     sourceSignature: signature,
     sourcePrice: 220_000,

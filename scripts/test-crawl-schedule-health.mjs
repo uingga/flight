@@ -237,7 +237,7 @@ test('the Windows Naver task owns production collection with one guarded daily s
     assert.match(runner, /\$env:SOURCE_FILTER = 'all'/);
     assert.match(runner, /\$env:MAX_FLIGHTS = '200'/);
     assert.match(runner, /\$env:MAX_NAVIGATIONS = '200'/);
-    assert.match(runner, /\$env:MIN_SUCCESS_REFRESH_HOURS = '48'/);
+    assert.match(runner, /\$env:MIN_SUCCESS_REFRESH_HOURS = '24'/);
     assert.match(runner, /\$env:TOP_CANDIDATE_COUNT = '50'/);
     assert.match(runner, /\$env:MAX_DEFER_DAYS = '7'/);
     assert.match(runner, /git pull --rebase --autostash origin main/);

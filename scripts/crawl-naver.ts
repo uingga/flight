@@ -53,7 +53,7 @@ const SOURCE_FILTER_RAW = process.env.SOURCE_FILTER ?? 'myrealtrip';
 const SOURCE_FILTER = SOURCE_FILTER_RAW.toLowerCase() === 'all' ? '' : SOURCE_FILTER_RAW; // all이면 전체 소스
 const STANDARD_REFRESH_DAYS = parseInt(process.env.STANDARD_REFRESH_DAYS || process.env.REFRESH_DAYS || '2', 10);
 const PRIORITY_REFRESH_DAYS = parseInt(process.env.PRIORITY_REFRESH_DAYS || process.env.MYREALTRIP_REFRESH_DAYS || '2', 10);
-const MIN_SUCCESS_REFRESH_HOURS = parseInt(process.env.MIN_SUCCESS_REFRESH_HOURS || '48', 10);
+const MIN_SUCCESS_REFRESH_HOURS = parseInt(process.env.MIN_SUCCESS_REFRESH_HOURS || '24', 10);
 const PRIORITY_DEPARTURE_DAYS = parseInt(process.env.PRIORITY_DEPARTURE_DAYS || '14', 10);
 const PRIORITY_DISCOUNT_RATE = parseInt(process.env.PRIORITY_DISCOUNT_RATE || '20', 10);
 const TOP_CANDIDATE_COUNT = parseInt(process.env.TOP_CANDIDATE_COUNT || '50', 10);
