@@ -394,6 +394,21 @@ interface GaListItem {
     count: number;
 }
 
+interface GaHourlyBucket {
+    startHour: number;
+    endHour: number;
+    sessions: number;
+}
+
+interface GaHourlySessions {
+    timeZone: string;
+    timeZoneSource: 'property' | 'kst_fallback';
+    bucketHours: number;
+    today: GaHourlyBucket[];
+    recent7: GaHourlyBucket[];
+    current: GaHourlyBucket[];
+}
+
 interface GaStatsData {
     available: boolean;
     message?: string;
@@ -412,6 +427,7 @@ interface GaStatsData {
         recent7: GaActivityPeriod;
         current: GaActivityPeriod;
     };
+    hourlySessions?: GaHourlySessions;
     todayOverview?: {
         audience: { newUsers: number; returningUsers: number; rate: number | null };
         savedSearchUsers: number;
@@ -798,6 +814,148 @@ function VisitorTrendChart({ trend }: { trend: GaStatsData['trend'] }) {
                 ))}
             </div>
             <p className={styles.trendHint}>방문자는 사람 수, 접속은 같은 사람의 재방문을 포함한 횟수입니다.</p>
+        </div>
+    );
+}
+
+function hourRangeLabel(bucket: GaHourlyBucket) {
+    const hour = (value: number) => `${String(value).padStart(2, '0')}:00`;
+    return `${hour(bucket.startHour)}–${hour(bucket.endHour)}`;
+}
+
+function HourlyTimeZoneBadge({ data }: { data: GaHourlySessions }) {
+    const isKst = data.timeZone === 'Asia/Seoul';
+    const isFallback = data.timeZoneSource === 'kst_fallback';
+    const label = isFallback
+        ? '속성 시간대 미수신 · KST 임시 기준'
+        : isKst
+            ? 'GA4 속성 시간대 · KST (Asia/Seoul)'
+            : `GA4 속성 시간대 · ${data.timeZone} (KST 아님)`;
+
+    return (
+        <span className={isKst && !isFallback ? styles.hourlyTimeZone : `${styles.hourlyTimeZone} ${styles.hourlyTimeZoneWarn}`}>
+            {label}
+        </span>
+    );
+}
+
+function TodayHourlySessions({ data }: { data: GaHourlySessions }) {
+    const total = data.today.reduce((sum, bucket) => sum + bucket.sessions, 0);
+    const max = Math.max(...data.today.map(bucket => bucket.sessions), 1);
+    const peak = total > 0
+        ? data.today.reduce((best, bucket) => bucket.sessions > best.sessions ? bucket : best)
+        : null;
+
+    return (
+        <div className={styles.hourlyPanel}>
+            <div className={styles.hourlyPanelHead}>
+                <div className={styles.hourlyPeak}>
+                    <span>가장 붐빈 시간</span>
+                    <strong>{peak ? hourRangeLabel(peak) : '아직 없음'}</strong>
+                    <small>{peak ? `${peak.sessions.toLocaleString()}회 · 오늘 전체 ${total.toLocaleString()}회` : '오늘 시작된 접속이 아직 없습니다.'}</small>
+                </div>
+                <HourlyTimeZoneBadge data={data} />
+            </div>
+            <div className={styles.hourlyChartScroll}>
+                <div className={styles.hourlyChart} role="list" aria-label="오늘 1시간 단위 세션">
+                    {data.today.map(bucket => {
+                        const isPeak = peak?.startHour === bucket.startHour;
+                        return (
+                            <div
+                                key={bucket.startHour}
+                                className={isPeak ? `${styles.hourlyBarColumn} ${styles.hourlyBarColumnPeak}` : styles.hourlyBarColumn}
+                                role="listitem"
+                                aria-label={`${hourRangeLabel(bucket)}, 접속 ${bucket.sessions}회`}
+                                title={`${hourRangeLabel(bucket)} · ${bucket.sessions.toLocaleString()}회`}
+                            >
+                                <span className={styles.hourlyBarValue}>{bucket.sessions > 0 ? bucket.sessions.toLocaleString() : ''}</span>
+                                <span className={styles.hourlyBarTrack} aria-hidden="true">
+                                    <span
+                                        className={styles.hourlyBar}
+                                        style={{ height: bucket.sessions > 0 ? `${Math.max(6, (bucket.sessions / max) * 100)}%` : '0%' }}
+                                    />
+                                </span>
+                                <time className={styles.hourlyBarTime} dateTime={`${String(bucket.startHour).padStart(2, '0')}:00`}>
+                                    {bucket.startHour % 3 === 0 ? `${String(bucket.startHour).padStart(2, '0')}시` : ''}
+                                </time>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+            <p className={styles.hourlyFootnote}>세션은 해당 시간에 시작된 접속 횟수입니다. 아직 오지 않은 시간은 0으로 표시합니다.</p>
+        </div>
+    );
+}
+
+function HourlySessionsComparison({ data, days }: { data: GaHourlySessions; days: number }) {
+    const recent7Total = data.recent7.reduce((sum, bucket) => sum + bucket.sessions, 0);
+    const currentTotal = data.current.reduce((sum, bucket) => sum + bucket.sessions, 0);
+    const share = (sessions: number, total: number) => total > 0 ? (sessions / total) * 100 : 0;
+    const shareLabel = (sessions: number, total: number) => {
+        const value = share(sessions, total);
+        return `${Number(value.toFixed(1))}%`;
+    };
+    const peak = (buckets: GaHourlyBucket[], total: number) => total > 0
+        ? buckets.reduce((best, bucket) => bucket.sessions > best.sessions ? bucket : best)
+        : null;
+    const recent7Peak = peak(data.recent7, recent7Total);
+    const currentPeak = peak(data.current, currentTotal);
+    const maxShare = Math.max(
+        ...data.recent7.map(bucket => share(bucket.sessions, recent7Total)),
+        ...data.current.map(bucket => share(bucket.sessions, currentTotal)),
+        1,
+    );
+
+    const PeakCard = ({ label, bucket, total }: { label: string; bucket: GaHourlyBucket | null; total: number }) => (
+        <article className={styles.hourlyPeakCard}>
+            <span>{label}</span>
+            <strong>{bucket ? hourRangeLabel(bucket) : '아직 없음'}</strong>
+            <small>{bucket ? `${bucket.sessions.toLocaleString()}회 · 전체의 ${shareLabel(bucket.sessions, total)}` : '집계된 접속이 없습니다.'}</small>
+        </article>
+    );
+
+    return (
+        <div className={styles.hourlyComparePanel}>
+            <div className={styles.hourlyCompareTop}>
+                <div className={styles.hourlyPeakGrid}>
+                    <PeakCard label="최근 7일 피크" bucket={recent7Peak} total={recent7Total} />
+                    <PeakCard label={`최근 ${days}일 피크`} bucket={currentPeak} total={currentTotal} />
+                </div>
+                <HourlyTimeZoneBadge data={data} />
+            </div>
+            <div className={styles.hourlyCompareScroll}>
+                <div className={styles.hourlyCompareChart}>
+                    <div className={styles.hourlyCompareHead} aria-hidden="true">
+                        <span>시간</span>
+                        <span>최근 7일</span>
+                        <span>최근 {days}일</span>
+                    </div>
+                    {data.recent7.map((bucket, index) => {
+                        const current = data.current[index] || { ...bucket, sessions: 0 };
+                        const recent7Share = share(bucket.sessions, recent7Total);
+                        const currentShare = share(current.sessions, currentTotal);
+                        return (
+                            <div className={styles.hourlyCompareRow} key={bucket.startHour}>
+                                <time>{hourRangeLabel(bucket)}</time>
+                                <div className={styles.hourlyCompareMetric} aria-label={`최근 7일 ${hourRangeLabel(bucket)}, ${bucket.sessions}회, ${shareLabel(bucket.sessions, recent7Total)}`}>
+                                    <span className={styles.hourlyCompareTrack} aria-hidden="true">
+                                        <span className={styles.hourlyCompareBarRecent} style={{ width: `${(recent7Share / maxShare) * 100}%` }} />
+                                    </span>
+                                    <span>{shareLabel(bucket.sessions, recent7Total)} · {bucket.sessions.toLocaleString()}회</span>
+                                </div>
+                                <div className={styles.hourlyCompareMetric} aria-label={`최근 ${days}일 ${hourRangeLabel(current)}, ${current.sessions}회, ${shareLabel(current.sessions, currentTotal)}`}>
+                                    <span className={styles.hourlyCompareTrack} aria-hidden="true">
+                                        <span className={styles.hourlyCompareBarCurrent} style={{ width: `${(currentShare / maxShare) * 100}%` }} />
+                                    </span>
+                                    <span>{shareLabel(current.sessions, currentTotal)} · {current.sessions.toLocaleString()}회</span>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+            <p className={styles.hourlyFootnote}>어제까지 끝난 날짜만 3시간씩 묶었습니다. 기간 길이가 달라 막대는 각 기간 전체 세션에서 차지한 비중으로 비교합니다.</p>
         </div>
     );
 }
@@ -1693,6 +1851,24 @@ export default function AdminPage() {
                         <TodayBehaviorSummary data={gaActivity.today} sessions={gaStats.periods.today.sessions} />
                     ) : (
                         <div className={styles.dealReviewEmpty}>방문 통계를 불러오는 중입니다.</div>
+                    )}
+                </section>
+
+                <section className={styles.section} id="overview-hourly">
+                    <div className={styles.sectionHeading}>
+                        <div>
+                            <h2>오늘 시간대별 접속</h2>
+                            <p>오늘 세션이 시작된 시간을 1시간 단위로 보여줍니다.</p>
+                        </div>
+                    </div>
+                    {gaStatsError ? (
+                        <div className={styles.dealReviewEmpty}>{gaStatsError}</div>
+                    ) : !gaStats?.available ? (
+                        <div className={styles.dealReviewEmpty}>{gaStats?.message || '시간대별 접속을 불러오는 중입니다.'}</div>
+                    ) : gaStats.hourlySessions ? (
+                        <TodayHourlySessions data={gaStats.hourlySessions} />
+                    ) : (
+                        <div className={styles.dealReviewEmpty}>시간대별 접속을 아직 불러오지 못했습니다.</div>
                     )}
                 </section>
 
@@ -3505,6 +3681,20 @@ export default function AdminPage() {
                                 </div>
                             </div>
                             <VisitorTrendChart trend={gaStats.trend} />
+                        </section>
+
+                        <section className={styles.section} id="visitor-hours">
+                            <div className={styles.sectionHeading}>
+                                <div>
+                                    <h2>접속이 몰리는 시간</h2>
+                                    <p>최근 7일과 최근 {gaStats.days}일의 피크 시간을 3시간 구간으로 비교합니다.</p>
+                                </div>
+                            </div>
+                            {gaStats.hourlySessions ? (
+                                <HourlySessionsComparison data={gaStats.hourlySessions} days={gaStats.days} />
+                            ) : (
+                                <div className={styles.dealReviewEmpty}>시간대별 접속을 아직 불러오지 못했습니다.</div>
+                            )}
                         </section>
 
                         <section className={styles.section} id="visitor-segments">

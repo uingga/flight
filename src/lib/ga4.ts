@@ -88,6 +88,9 @@ export interface ReportRow {
 export interface ReportResponse {
     rows?: ReportRow[];
     totals?: ReportRow[];
+    metadata?: {
+        timeZone?: string;
+    };
 }
 
 export async function runReport(config: Ga4Config, request: ReportRequest): Promise<ReportResponse> {

@@ -6,6 +6,9 @@ import { ga4Config, runReport, eventNameFilter, dim, num, type Ga4Config, type R
 const ADMIN_KEY = process.env.ADMIN_KEY;
 const DEFAULT_DAYS = 30;
 const CACHE_TTL_MS = 10 * 60 * 1000;
+const KST_TIME_ZONE = 'Asia/Seoul';
+const HOURS_PER_DAY = 24;
+const HOURLY_BUCKET_SIZE = 3;
 
 /** 어드민에서 의미 있는 이벤트만 골라 한국어 이름을 붙인다. */
 const EVENT_LABELS: Record<string, string> = {
@@ -98,6 +101,7 @@ async function buildStats(config: Ga4Config, days: number) {
     const recent7DateRanges = [{ startDate: '7daysAgo', endDate: 'yesterday' }];
     const previous7DateRanges = [{ startDate: '14daysAgo', endDate: '8daysAgo' }];
     const todayDateRanges = [{ startDate: 'today', endDate: 'today' }];
+    const hourlyDateRanges = [{ startDate: `${days}daysAgo`, endDate: 'today' }];
     const warnings: string[] = [];
 
     const summaryRequest = (range: Array<{ startDate: string; endDate: string }>) => runReport(config, {
@@ -131,9 +135,10 @@ async function buildStats(config: Ga4Config, days: number) {
         metrics: [{ name: 'activeUsers' }],
     });
 
-    // 핵심 2개는 실패하면 그대로 에러 — 표준 측정기준만 쓰므로 실패 = 설정 문제
+    // 표준 측정기준 리포트는 실패하면 그대로 에러 — 여기서 실패하면 연결 또는 요청 자체의 문제다.
     const [
         trendReport,
+        hourlyReport,
         eventReport,
         recent7EventReport,
         todayEventReport,
@@ -157,6 +162,19 @@ async function buildStats(config: Ga4Config, days: number) {
             metricAggregations: ['TOTAL'],
             keepEmptyRows: true,
             limit: days,
+        }),
+        // 날짜와 시간을 한 번에 받아 오늘 1시간 단위, 최근 기간 3시간 단위를 모두 만든다.
+        // hour는 GA4 속성 시간대로 보고되며 sessions는 session_start가 발생한 횟수다.
+        runReport(config, {
+            dateRanges: hourlyDateRanges,
+            dimensions: [{ name: 'date' }, { name: 'hour' }],
+            metrics: [{ name: 'sessions' }],
+            orderBys: [
+                { dimension: { dimensionName: 'date' } },
+                { dimension: { dimensionName: 'hour' } },
+            ],
+            keepEmptyRows: true,
+            limit: (days + 1) * HOURS_PER_DAY,
         }),
         eventRequest(dateRanges),
         eventRequest(recent7DateRanges),
@@ -336,6 +354,71 @@ async function buildStats(config: Ga4Config, days: number) {
         const date = new Date(trendEndUtc - ((days - 1 - index) * 24 * 60 * 60 * 1000)).toISOString().slice(0, 10);
         return trendByDate.get(date) || { date, users: 0, pageViews: 0, sessions: 0 };
     });
+
+    const reportedTimeZone = hourlyReport.metadata?.timeZone?.trim() || '';
+    const validTimeZone = (() => {
+        if (!reportedTimeZone) return null;
+        try {
+            new Intl.DateTimeFormat('en-US', { timeZone: reportedTimeZone }).format(new Date());
+            return reportedTimeZone;
+        } catch {
+            return null;
+        }
+    })();
+    // 응답 메타데이터가 드물게 비어도 운영 화면은 KST 기준으로 안전하게 계산하되,
+    // 폴백 여부를 함께 보내 화면에서 GA4 속성 시간대로 오인하지 않게 한다.
+    const hourlyTimeZone = validTimeZone || KST_TIME_ZONE;
+    const propertyToday = (() => {
+        const parts = new Intl.DateTimeFormat('en-US', {
+            timeZone: hourlyTimeZone,
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+        }).formatToParts(new Date());
+        const value = (type: Intl.DateTimeFormatPartTypes) => parts.find(part => part.type === type)?.value || '';
+        return `${value('year')}-${value('month')}-${value('day')}`;
+    })();
+    const shiftDateKey = (dateKey: string, offsetDays: number) => {
+        const [year, month, day] = dateKey.split('-').map(Number);
+        return new Date(Date.UTC(year, month - 1, day + offsetDays)).toISOString().slice(0, 10);
+    };
+    const parsedHourlyRows = (hourlyReport.rows || []).flatMap(row => {
+        const rawDate = dim(row);
+        const date = /^\d{8}$/.test(rawDate)
+            ? `${rawDate.slice(0, 4)}-${rawDate.slice(4, 6)}-${rawDate.slice(6, 8)}`
+            : rawDate;
+        const hour = Number(dim(row, 1));
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !Number.isInteger(hour) || hour < 0 || hour >= HOURS_PER_DAY) {
+            return [];
+        }
+        return [{ date, hour, sessions: num(row, 0) }];
+    });
+    const hourlySeries = (startDate: string, endDate: string) => {
+        const sessions = Array.from({ length: HOURS_PER_DAY }, () => 0);
+        parsedHourlyRows.forEach(row => {
+            if (row.date >= startDate && row.date <= endDate) sessions[row.hour] += row.sessions;
+        });
+        return sessions.map((count, startHour) => ({
+            startHour,
+            endHour: startHour + 1,
+            sessions: count,
+        }));
+    };
+    const threeHourBuckets = (series: ReturnType<typeof hourlySeries>) =>
+        Array.from({ length: HOURS_PER_DAY / HOURLY_BUCKET_SIZE }, (_, index) => {
+            const startHour = index * HOURLY_BUCKET_SIZE;
+            return {
+                startHour,
+                endHour: startHour + HOURLY_BUCKET_SIZE,
+                sessions: series
+                    .slice(startHour, startHour + HOURLY_BUCKET_SIZE)
+                    .reduce((sum, point) => sum + point.sessions, 0),
+            };
+        });
+    const yesterday = shiftDateKey(propertyToday, -1);
+    const todayHourly = hourlySeries(propertyToday, propertyToday);
+    const recent7Hourly = threeHourBuckets(hourlySeries(shiftDateKey(propertyToday, -7), yesterday));
+    const currentHourly = threeHourBuckets(hourlySeries(shiftDateKey(propertyToday, -days), yesterday));
 
     const summary = (report: ReportResponse) => ({
         users: num(report.rows?.[0], 0),
@@ -599,6 +682,14 @@ async function buildStats(config: Ga4Config, days: number) {
             today: activity(todayEventReport, summary(todayReport), todayAlertIntentReport),
             recent7: activity(recent7EventReport, summary(recent7Report), recent7AlertIntentReport),
             current: activity(eventReport, totals, currentAlertIntentReport),
+        },
+        hourlySessions: {
+            timeZone: hourlyTimeZone,
+            timeZoneSource: validTimeZone ? 'property' : 'kst_fallback',
+            bucketHours: HOURLY_BUCKET_SIZE,
+            today: todayHourly,
+            recent7: recent7Hourly,
+            current: currentHourly,
         },
         todayOverview: {
             audience: returning(todayReturningReport),
