@@ -317,6 +317,45 @@
       "blocked": 0,
       "healthChecks": 0,
       "abortedEarly": false
+    },
+    {
+      "id": "2026-08-30T06:00:21.164Z-local-54216",
+      "timestamp": "2026-08-30T06:00:21.164Z",
+      "runner": "local",
+      "sourceFilter": "all",
+      "maxFlights": 200,
+      "navigations": 200,
+      "needed": 313,
+      "attempted": 200,
+      "newRoutes": 73,
+      "newRoutesAttempted": 36,
+      "changedRoutes": 0,
+      "periodicRoutes": 240,
+      "priorityGroups": {
+        "deadline": 5,
+        "changed_top": 4,
+        "top": 36,
+        "standard": 165,
+        "low": 103
+      },
+      "selectedPriorityGroups": {
+        "deadline": 5,
+        "changed_top": 4,
+        "top": 36,
+        "standard": 155,
+        "low": 0
+      },
+      "deferred": 113,
+      "deferredNeverChecked": 0,
+      "oldestDeferredHours": 108.3,
+      "success": 198,
+      "misses": 2,
+      "noResult": 0,
+      "routeErrors": 0,
+      "transientErrors": 2,
+      "blocked": 0,
+      "healthChecks": 0,
+      "abortedEarly": false
     }
   ]
 }
