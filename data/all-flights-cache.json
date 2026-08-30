@@ -18778,7 +18778,8 @@
     "hanatour": 0,
     "modetour": 0,
     "onlinetour": 0,
-    "ttang": 1
+    "ttang": 1,
+    "myrealtrip": 1
   },
   "scrapedCounts": {
     "modetour": 748,
@@ -18788,7 +18789,18 @@
     "onlinetour": 61
   },
   "integrityAlerts": [
-    "🚨 ttang 수집 실패로 이전 데이터 유지: 땡처리닷컴 브라우저 수집을 시작하거나 완료하지 못했습니다: [http-status] 땡처리닷컴 브라우저 세션 페이지 HTTP 403"
+    "🚨 ttang 수집 실패로 이전 데이터 유지: 땡처리닷컴 브라우저 수집을 시작하거나 완료하지 못했습니다: [http-status] 땡처리닷컴 브라우저 세션 페이지 HTTP 403",
+    "⛔ myrealtrip 접근 차단 감지 — 2026-08-31T00:13:33.646Z까지 자동 요청 중단"
   ],
-  "sourceCircuits": {}
+  "sourceCircuits": {
+    "myrealtrip": {
+      "reason": "blocked",
+      "openedAt": "2026-08-30T00:13:33.646Z",
+      "nextProbeAt": "2026-08-31T00:13:33.646Z",
+      "resumePolicy": "cooldown_or_adapter_change",
+      "adapterVersion": "2026-08-30.1",
+      "status": 200,
+      "detail": "마이리얼트립 부산 Bulk 목록이 0건입니다."
+    }
+  }
 }
