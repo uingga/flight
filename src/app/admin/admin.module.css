@@ -2686,6 +2686,81 @@
     border-radius: 0;
 }
 
+.crawlSchedule {
+    margin-bottom: 14px;
+    overflow: hidden;
+    border: 1px solid #e4e7ec;
+    border-radius: 13px;
+    background: #fbfcfd;
+}
+
+.crawlScheduleHead {
+    min-height: 42px;
+    padding: 9px 13px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border-bottom: 1px solid #e8ebef;
+}
+
+.crawlScheduleHead strong {
+    color: #27313f;
+    font-size: 0.79rem;
+}
+
+.crawlScheduleHead span {
+    color: #8c949f;
+    font-size: 0.62rem;
+}
+
+.crawlScheduleGrid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.crawlScheduleGrid article {
+    min-width: 0;
+    padding: 13px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    border-right: 1px solid #e8ebef;
+}
+
+.crawlScheduleGrid article:last-child { border-right: 0; }
+
+.crawlScheduleGrid article > span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #737d8b;
+    font-size: 0.65rem;
+}
+
+.crawlScheduleGrid article em {
+    padding: 3px 5px;
+    border-radius: 999px;
+    background: #eef1f5;
+    color: #697484;
+    font-size: 0.55rem;
+    font-style: normal;
+    font-weight: 700;
+}
+
+.crawlScheduleGrid article strong {
+    color: #202b3b;
+    font-size: 0.78rem;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+}
+
+.crawlScheduleGrid article small {
+    color: #8c949f;
+    font-size: 0.61rem;
+    line-height: 1.45;
+}
+
 .collectionTimeline {
     overflow: hidden;
     border: 1px solid #e4e7ec;
@@ -4429,6 +4504,13 @@
     .todaySignalGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .todayInsightGrid { grid-template-columns: 1fr; }
     .todayInsightCard:last-child { grid-column: auto; }
+    .crawlScheduleGrid { grid-template-columns: 1fr; }
+    .crawlScheduleGrid article {
+        padding: 12px;
+        border-right: 0;
+        border-bottom: 1px solid #e8ebef;
+    }
+    .crawlScheduleGrid article:last-child { border-bottom: 0; }
     .collectionTimelineRow {
         grid-template-columns: auto minmax(0, 1fr) auto;
         gap: 7px 9px;
