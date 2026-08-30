@@ -649,10 +649,11 @@
 }
 
 .freshFlightsMobileTicketMain {
+    width: 100%;
     min-width: 0;
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) max-content;
+    align-items: end;
     gap: 14px;
 }
 
@@ -663,6 +664,9 @@
     flex-direction: column;
     gap: 4px;
 }
+
+.freshFlightsMobilePlace { justify-self: start; }
+.freshFlightsMobilePrice { justify-self: end; }
 
 .freshFlightsMobilePlace > small,
 .freshFlightsMobilePrice > small {
@@ -1792,6 +1796,7 @@
         transition: transform 760ms cubic-bezier(.22, .72, .22, 1);
     }
     .freshFlightsPair {
+        width: 100%;
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         flex: 0 0 164px;
@@ -1828,10 +1833,11 @@
     .freshFlightsTicket:hover { opacity: .62; }
     .freshFlightsTicket:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; }
     .freshFlightsTicketMain {
-        display: flex;
-        align-items: flex-end;
-        justify-content: space-between;
+        width: 100%;
         min-width: 0;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) max-content;
+        align-items: end;
         gap: 14px;
     }
     .freshFlightsPlace,
@@ -1841,6 +1847,8 @@
         min-width: 0;
         gap: 5px;
     }
+    .freshFlightsPlace { justify-self: start; }
+    .freshFlightsPrice { justify-self: end; }
     .freshFlightsPlace > small,
     .freshFlightsPrice > small {
         color: #9298a1;
