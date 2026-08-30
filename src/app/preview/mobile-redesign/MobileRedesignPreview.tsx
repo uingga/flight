@@ -106,6 +106,14 @@ interface FreshDesktopDragState {
     startedAt: number;
 }
 
+interface FreshRouteResults {
+    route: string;
+    departure: string;
+    arrival: string;
+    targetDate: string;
+    copyPrefix: string;
+}
+
 interface FeedInsight {
     id: string;
     kind: 'price' | 'stay' | 'schedule' | 'timing' | 'airport' | 'discovery' | 'new' | 'opportunity';
@@ -834,7 +842,9 @@ export default function MobileRedesignPreview({
     const [freshDesktopDragOffset, setFreshDesktopDragOffset] = useState(0);
     const [freshDesktopAnimating, setFreshDesktopAnimating] = useState(true);
     const [freshDesktopDragging, setFreshDesktopDragging] = useState(false);
+    const [freshRouteResults, setFreshRouteResults] = useState<FreshRouteResults | null>(null);
     const filterBarSlotRef = useRef<HTMLDivElement | null>(null);
+    const feedSectionRef = useRef<HTMLElement | null>(null);
     const desktopFilterRef = useRef<HTMLDivElement | null>(null);
     const desktopFilterTriggerRef = useRef<HTMLButtonElement | null>(null);
     const sortMenuRef = useRef<HTMLDivElement | null>(null);
@@ -852,6 +862,7 @@ export default function MobileRedesignPreview({
     const freshMobileSuppressClickRef = useRef(false);
     const freshDesktopDragRef = useRef<FreshDesktopDragState | null>(null);
     const freshDesktopSuppressClickRef = useRef(false);
+    const freshRouteOriginScrollRef = useRef(0);
     const sharedFlightIdRef = useRef<string | null>(null);
     const sharedFlightScheduleRef = useRef<string | null>(null);
     const sharedFallbackArrivalRef = useRef<string | null>(null);
@@ -1424,6 +1435,10 @@ export default function MobileRedesignPreview({
     useEffect(() => {
         setVisibleCount(window.matchMedia('(min-width: 960px)').matches ? 36 : 18);
     }, [airlineFilter, region, departure, datePeriod, customStartDate, customEndDate, maxPrice, sort, query, sourceFilter]);
+
+    useEffect(() => {
+        setFreshRouteResults(null);
+    }, [airlineFilter, region, departure, datePeriod, customStartDate, customEndDate, maxPrice, query, sourceFilter]);
 
     useEffect(() => {
         if (!toast) return;
@@ -2099,25 +2114,55 @@ export default function MobileRedesignPreview({
         };
     }, [displayedFlights, query, sort]);
 
-    const selectedFreshSchedules = useMemo(() => {
-        if (!selectedFlight || !freshFlightsInsight) return [];
-        if (selectedFlight.firstSeen !== freshFlightsInsight.targetDate) return [];
+    const freshRouteResultFlights = useMemo(() => {
+        if (!freshRouteResults) return [];
+        const result = flights.filter(flight => (
+            flight.firstSeen === freshRouteResults.targetDate
+            && normalizedRoute(flight) === freshRouteResults.route
+            && effectivePrice(flight) > 0
+        ));
 
-        const selectedRoute = normalizedRoute(selectedFlight);
-        const selectedPrice = effectivePrice(selectedFlight);
-        return uniqueFlightSchedules(
-            freshFlightsInsight.targetFlights.filter(flight => (
-                normalizedRoute(flight) === selectedRoute
-                && effectivePrice(flight) === selectedPrice
-            )),
-        )
-            .sort((a, b) => (
-                a.departure.date.localeCompare(b.departure.date)
-                || a.arrival.date.localeCompare(b.arrival.date)
-                || a.departure.time.localeCompare(b.departure.time)
-                || a.source.localeCompare(b.source)
-            ));
-    }, [freshFlightsInsight, selectedFlight]);
+        return result.sort((a, b) => {
+            if (sort === 'price') return effectivePrice(a) - effectivePrice(b);
+            if (sort === 'date') {
+                return (parseDate(a.departure.date)?.getTime() || 0) - (parseDate(b.departure.date)?.getTime() || 0)
+                    || effectivePrice(a) - effectivePrice(b);
+            }
+            return compareRecommended(a, b)
+                || (parseDate(a.departure.date)?.getTime() || 0) - (parseDate(b.departure.date)?.getTime() || 0);
+        });
+    }, [compareRecommended, flights, freshRouteResults, sort]);
+    const feedFlights = freshRouteResults ? freshRouteResultFlights : displayedFlights;
+
+    const openFreshRouteResults = useCallback((flight: Flight) => {
+        if (!freshFlightsInsight) return;
+        freshRouteOriginScrollRef.current = window.scrollY;
+        setFreshRouteResults({
+            route: normalizedRoute(flight),
+            departure: departureName(flight),
+            arrival: stripAirport(flight.arrival.city),
+            targetDate: freshFlightsInsight.targetDate,
+            copyPrefix: freshFlightsInsight.copyPrefix,
+        });
+        setVisibleCount(window.matchMedia('(min-width: 960px)').matches ? 36 : 18);
+        gtag.event('insight_click', {
+            insight_type: 'new_flights',
+            insight_format: 'search_results',
+            destination: normalizeCity(flight.arrival.city),
+            flight_id: flight.id,
+        });
+        window.requestAnimationFrame(() => {
+            feedSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+    }, [freshFlightsInsight]);
+
+    const closeFreshRouteResults = useCallback(() => {
+        const previousScroll = freshRouteOriginScrollRef.current;
+        setFreshRouteResults(null);
+        window.requestAnimationFrame(() => {
+            window.scrollTo({ top: previousScroll, behavior: 'smooth' });
+        });
+    }, []);
 
     const freshDesktopPairs = useMemo(() => freshFlightsInsight?.pairs || [], [freshFlightsInsight]);
     const freshDesktopPairCount = freshDesktopPairs.length;
@@ -2754,6 +2799,7 @@ export default function MobileRedesignPreview({
         setAirlineFilter('all');
         setAirlineMenuOpen(false);
         setDesktopFilterOpen(null);
+        setFreshRouteResults(null);
     };
 
     const submitContact = async (event: FormEvent<HTMLFormElement>) => {
@@ -3211,46 +3257,57 @@ export default function MobileRedesignPreview({
                     </div>
                 </div>
 
-                <section className={styles.feedSection}>
-                    <div className={styles.feedHeading}>
+                <section className={styles.feedSection} ref={feedSectionRef}>
+                    <div className={`${styles.feedHeading} ${freshRouteResults ? styles.freshRouteHeading : ''}`}>
                         <div>
-                            <h2>{query ? `'${query}' 검색 결과` : region === '전체' ? '전체 항공권' : `${region} 항공권`}</h2>
+                            <h2>{freshRouteResults
+                                ? `${freshRouteResults.departure} → ${freshRouteResults.arrival}`
+                                : query ? `'${query}' 검색 결과` : region === '전체' ? '전체 항공권' : `${region} 항공권`}</h2>
                             <span>{loading
                                 ? '항공권 불러오는 중'
-                                : `${filteredFlights.length.toLocaleString('ko-KR')}개 · ${updatedLabel}`}</span>
+                                : freshRouteResults
+                                    ? `${freshRouteResults.copyPrefix} 들어온 항공권 ${feedFlights.length.toLocaleString('ko-KR')}개`
+                                    : `${filteredFlights.length.toLocaleString('ko-KR')}개 · ${updatedLabel}`}</span>
                         </div>
-                        <div className={styles.sortSelect} ref={sortMenuRef}>
-                            <button
-                                ref={sortTriggerRef}
-                                type="button"
-                                className={styles.sortTrigger}
-                                aria-label="항공권 정렬"
-                                aria-controls="flight-sort-options"
-                                aria-expanded={sortOpen}
-                                onClick={() => setSortOpen(value => !value)}
-                            >
-                                {SORT_OPTIONS.find(option => option.value === sort)?.label}
-                                <span className={`${styles.sortChevron} ${sortOpen ? styles.sortChevronOpen : ''}`} aria-hidden="true"><Icon name="chevron" /></span>
-                            </button>
-                            {sortOpen && (
-                                <div id="flight-sort-options" className={styles.sortMenu} role="group" aria-label="정렬 방식">
-                                    {SORT_OPTIONS.map(option => (
-                                        <button
-                                            type="button"
-                                            aria-pressed={sort === option.value}
-                                            className={`${styles.sortOption} ${sort === option.value ? styles.sortOptionSelected : ''}`}
-                                            key={option.value}
-                                            onClick={() => {
-                                                selectSort(option.value);
-                                                setSortOpen(false);
-                                            }}
-                                        >
-                                            <span>{option.label}</span>
-                                            {sort === option.value && <span className={styles.sortCheck} aria-hidden="true">✓</span>}
-                                        </button>
-                                    ))}
-                                </div>
+                        <div className={styles.feedHeadingActions}>
+                            {freshRouteResults && (
+                                <button type="button" className={styles.freshRouteResultBack} onClick={closeFreshRouteResults}>
+                                    <span aria-hidden="true">←</span> 전체 항공권
+                                </button>
                             )}
+                            <div className={styles.sortSelect} ref={sortMenuRef}>
+                                <button
+                                    ref={sortTriggerRef}
+                                    type="button"
+                                    className={styles.sortTrigger}
+                                    aria-label="항공권 정렬"
+                                    aria-controls="flight-sort-options"
+                                    aria-expanded={sortOpen}
+                                    onClick={() => setSortOpen(value => !value)}
+                                >
+                                    {SORT_OPTIONS.find(option => option.value === sort)?.label}
+                                    <span className={`${styles.sortChevron} ${sortOpen ? styles.sortChevronOpen : ''}`} aria-hidden="true"><Icon name="chevron" /></span>
+                                </button>
+                                {sortOpen && (
+                                    <div id="flight-sort-options" className={styles.sortMenu} role="group" aria-label="정렬 방식">
+                                        {SORT_OPTIONS.map(option => (
+                                            <button
+                                                type="button"
+                                                aria-pressed={sort === option.value}
+                                                className={`${styles.sortOption} ${sort === option.value ? styles.sortOptionSelected : ''}`}
+                                                key={option.value}
+                                                onClick={() => {
+                                                    selectSort(option.value);
+                                                    setSortOpen(false);
+                                                }}
+                                            >
+                                                <span>{option.label}</span>
+                                                {sort === option.value && <span className={styles.sortCheck} aria-hidden="true">✓</span>}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
 
@@ -3294,9 +3351,14 @@ export default function MobileRedesignPreview({
                         </div>
                     )}
 
-                    {!loading && !error && filteredFlights.length === 0 && (
+                    {!loading && !error && (freshRouteResults ? feedFlights.length === 0 : filteredFlights.length === 0) && (
                         <div className={styles.emptyState}>
-                            {emptyDiagnosis?.kind === 'filtered' ? (
+                            {freshRouteResults ? (
+                                <>
+                                    <strong>조금 전 본 표가 목록에서 내려갔어요.</strong>
+                                    <span>현재 예약할 수 있는 전체 항공권을 다시 보여드릴게요.</span>
+                                </>
+                            ) : emptyDiagnosis?.kind === 'filtered' ? (
                                 <>
                                     <strong>
                                         {query.trim()
@@ -3327,8 +3389,10 @@ export default function MobileRedesignPreview({
                                 </>
                             )}
                             <div className={styles.emptyStateActions}>
-                                <button type="button" onClick={resetFilters}>필터 초기화</button>
-                                {PUBLIC_DEAL_ALERTS_ENABLED && emptyRouteAlertTarget && (
+                                <button type="button" onClick={freshRouteResults ? closeFreshRouteResults : resetFilters}>
+                                    {freshRouteResults ? '전체 항공권 보기' : '필터 초기화'}
+                                </button>
+                                {!freshRouteResults && PUBLIC_DEAL_ALERTS_ENABLED && emptyRouteAlertTarget && (
                                     <button
                                         type="button"
                                         onClick={() => openDealAlert(emptyRouteAlertTarget)}
@@ -3339,13 +3403,13 @@ export default function MobileRedesignPreview({
                     )}
 
                     <div className={styles.cardList}>
-                        {displayedFlights.slice(0, visibleCount).map((flight, index) => {
+                        {feedFlights.slice(0, visibleCount).map((flight, index) => {
                             const seats = flight.availableSeats || Number.parseInt(flight.seats || '', 10) || 0;
                             const duration = tripLength(flight);
                             const destination = stripAirport(flight.arrival.city);
                             const price = effectivePrice(flight);
                             const averageDiscountRate = getAverageDiscountRate(flight, interparkPrices);
-                            const isTodayPick = isDefaultView && featuredPick?.flight.id === flight.id;
+                            const isTodayPick = !freshRouteResults && isDefaultView && featuredPick?.flight.id === flight.id;
                             const cardNumber = index + 1;
                             return (
                                 <Fragment key={flight.id}>
@@ -3356,7 +3420,11 @@ export default function MobileRedesignPreview({
                                             data-source={flight.source}
                                             data-tikit-drop={isTodayPick ? 'true' : undefined}
                                         >
-                                            <button type="button" className={styles.cardBody} onClick={() => openFlight(flight)}>
+                                            <button
+                                                type="button"
+                                                className={styles.cardBody}
+                                                onClick={() => openFlight(flight, freshRouteResults ? 'insight_new_flights_result' : 'card_body')}
+                                            >
                                                 {isTodayPick && (
                                                     <span className={styles.todayPickStrip}>
                                                         <strong>TIKIT DROP</strong>
@@ -3443,7 +3511,7 @@ export default function MobileRedesignPreview({
                                             </button>
                                         </article>
                                     </div>
-                                    {cardNumber === firstInsightCard && freshFlightsInsight && (
+                                    {!freshRouteResults && cardNumber === firstInsightCard && freshFlightsInsight && (
                                         <div className={styles.freshFlightsEntry}>
                                             <section
                                                 className={styles.freshFlightsBar}
@@ -3489,7 +3557,7 @@ export default function MobileRedesignPreview({
                                                                         freshMobileSuppressClickRef.current = false;
                                                                         return;
                                                                     }
-                                                                    openFlight(freshFlight, 'insight_new_flights');
+                                                                    openFreshRouteResults(freshFlight);
                                                                 }}
                                                             >
                                                                 <span className={styles.freshFlightsMobileTicketMain}>
@@ -3550,7 +3618,7 @@ export default function MobileRedesignPreview({
                                                                                 freshDesktopSuppressClickRef.current = false;
                                                                                 return;
                                                                             }
-                                                                            openFlight(freshFlight, 'insight_new_flights');
+                                                                            openFreshRouteResults(freshFlight);
                                                                         }}
                                                                     >
                                                                         <span className={styles.freshFlightsTicketMain}>
@@ -3588,7 +3656,7 @@ export default function MobileRedesignPreview({
                         })}
                     </div>
 
-                    {visibleCount < displayedFlights.length && (
+                    {visibleCount < feedFlights.length && (
                         <button
                             type="button"
                             className={styles.moreButton}
@@ -3877,38 +3945,6 @@ export default function MobileRedesignPreview({
                                 )}
                             </div>
                         </div>
-
-                        {selectedFreshSchedules.length > 1 && (
-                            <section
-                                className={styles.detailFreshSchedules}
-                                aria-labelledby="fresh-schedule-options-title"
-                                data-fresh-schedule-options={selectedFreshSchedules.length}
-                            >
-                                <header>
-                                    <strong id="fresh-schedule-options-title">
-                                        {freshFlightsInsight?.copyPrefix} 들어온 같은 가격 일정
-                                    </strong>
-                                    <span>{selectedFreshSchedules.length}개</span>
-                                </header>
-                                <div className={styles.detailFreshScheduleGrid}>
-                                    {selectedFreshSchedules.map(flight => {
-                                        const active = flightScheduleIdentity(flight) === flightScheduleIdentity(selectedFlight);
-                                        return (
-                                            <button
-                                                type="button"
-                                                className={active ? styles.detailFreshScheduleActive : undefined}
-                                                key={flightScheduleIdentity(flight)}
-                                                aria-pressed={active}
-                                                onClick={() => openFlight(flight, 'insight_new_flights_schedule')}
-                                            >
-                                                <strong>{cardDate(flight.departure.date)} — {cardDate(flight.arrival.date)}</strong>
-                                                <span>{tripLength(flight) || '일정 확인'} · {SOURCE_NAMES[flight.source]}</span>
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            </section>
-                        )}
 
                         <div className={styles.detailSchedule}>
                             <section className={styles.detailFlightLeg}>
