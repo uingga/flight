@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-08-30T06:58:41.476Z",
-  "fullCrawlUpdatedAt": "2026-08-30T06:58:41.476Z",
-  "count": 612,
+  "timestamp": "2026-08-30T09:55:35.058Z",
+  "fullCrawlUpdatedAt": "2026-08-30T09:55:35.058Z",
+  "count": 609,
   "flights": [
     {
       "id": "ybtour-euswuk",
@@ -1031,34 +1031,6 @@
       "firstSeen": "2026-08-24"
     },
     {
-      "id": "ybtour-syfknv",
-      "source": "ybtour",
-      "airline": "티웨이항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-09-15",
-        "time": "10:20",
-        "arrivalTime": "12:55"
-      },
-      "arrival": {
-        "city": "도쿄(나리타)",
-        "airport": "NRT",
-        "date": "2026-09-18",
-        "time": "14:20",
-        "arrivalTime": "17:05"
-      },
-      "price": 342040,
-      "currency": "KRW",
-      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=J1&inhId=TW0243ICNNRT-T4&depDate=20260915&efcCityCode=NRT",
-      "seats": "10석",
-      "availableSeats": 10,
-      "region": "일본",
-      "flightNumber": "TW0243",
-      "discountRate": -73,
-      "firstSeen": "2026-08-29"
-    },
-    {
       "id": "ybtour-1gqo0m3",
       "source": "ybtour",
       "airline": "티웨이항공",
@@ -1422,34 +1394,6 @@
       "flightNumber": "RF0521",
       "discountRate": 0,
       "firstSeen": "2026-08-21"
-    },
-    {
-      "id": "ybtour-9sidue",
-      "source": "ybtour",
-      "airline": "제주항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-09-13",
-        "time": "21:35",
-        "arrivalTime": "00:40"
-      },
-      "arrival": {
-        "city": "클락",
-        "airport": "CRK",
-        "date": "2026-09-17",
-        "time": "01:40",
-        "arrivalTime": "06:30"
-      },
-      "price": 409000,
-      "currency": "KRW",
-      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=A0%2FA3&inhId=7C2107ICNCRK-T4&depDate=20260913&efcCityCode=CRK",
-      "seats": "4석",
-      "availableSeats": 4,
-      "region": "동남아",
-      "flightNumber": "7C2107",
-      "discountRate": 0,
-      "firstSeen": "2026-08-27"
     },
     {
       "id": "ybtour-120y452",
@@ -8011,40 +7955,6 @@
       "firstSeen": "2026-08-30"
     },
     {
-      "id": "online-260831872522",
-      "source": "onlinetour",
-      "airline": "썬푸꾸옥",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-08-31",
-        "time": "12:35",
-        "arrivalTime": "16:15"
-      },
-      "arrival": {
-        "city": "푸꾸옥",
-        "airport": "PQC",
-        "date": "2026-09-04",
-        "time": "02:25",
-        "arrivalTime": "09:55"
-      },
-      "price": 278000,
-      "currency": "KRW",
-      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260831872522",
-      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=PQC&sCity2=PQC&eCity2=SEL&startDt=20260831&endDt=20260904&adt=1",
-      "region": "동남아",
-      "availableSeats": 2,
-      "seats": "2석",
-      "routeAirports": {
-        "outboundDeparture": "ICN",
-        "outboundArrival": "PQC",
-        "returnDeparture": "PQC",
-        "returnArrival": "ICN"
-      },
-      "discountRate": -44,
-      "firstSeen": "2026-08-20"
-    },
-    {
       "id": "online-260831912882",
       "source": "onlinetour",
       "airline": "티웨이항공",
@@ -11790,7 +11700,7 @@
       "arrival": {
         "city": "콜롬보(스리랑카)",
         "airport": "CMB",
-        "date": "2026-09-29",
+        "date": "2026-09-27",
         "time": "19:50",
         "arrivalTime": "07:35"
       },
@@ -11818,7 +11728,7 @@
       "arrival": {
         "city": "콜롬보(스리랑카)",
         "airport": "CMB",
-        "date": "2026-09-27",
+        "date": "2026-09-29",
         "time": "19:50",
         "arrivalTime": "07:35"
       },
@@ -19532,19 +19442,19 @@
     }
   ],
   "sources": {
-    "ybtour": 156,
+    "ybtour": 154,
     "hanatour": 20,
     "modetour": 69,
-    "onlinetour": 3,
+    "onlinetour": 2,
     "ttang": 184,
     "myrealtrip": 180
   },
   "sourceUpdatedAt": {
-    "ybtour": "2026-08-30T06:58:41.400Z",
-    "hanatour": "2026-08-30T06:58:41.402Z",
-    "modetour": "2026-08-30T06:58:41.402Z",
-    "onlinetour": "2026-08-30T06:58:41.402Z",
-    "ttang": "2026-08-30T06:58:41.402Z",
+    "ybtour": "2026-08-30T09:55:35.021Z",
+    "hanatour": "2026-08-30T09:55:35.021Z",
+    "modetour": "2026-08-30T09:55:35.021Z",
+    "onlinetour": "2026-08-30T09:55:35.021Z",
+    "ttang": "2026-08-30T09:55:35.021Z",
     "myrealtrip": "2026-08-30T03:45:58.255Z"
   },
   "staleStreak": {
@@ -19556,11 +19466,11 @@
     "myrealtrip": 0
   },
   "scrapedCounts": {
-    "modetour": 772,
+    "modetour": 771,
     "ttang": 1743,
-    "ybtour": 288,
-    "hanatour": 62,
-    "onlinetour": 117
+    "ybtour": 286,
+    "hanatour": 61,
+    "onlinetour": 115
   },
   "integrityAlerts": [],
   "sourceCircuits": {}
