@@ -33,7 +33,7 @@ jobs:
     outputs:
       should_run: ${{ steps.trigger.outputs.should_run }}
       expected_at: ${{ steps.trigger.outputs.expected_at }}
-      is_today_pick_slot: ${{ steps.trigger.outputs.is_today_pick_slot }}
+      is_morning_pick_slot: ${{ steps.trigger.outputs.is_morning_pick_slot }}
 
     steps:
       - name: Checkout code
@@ -149,15 +149,15 @@ jobs:
         if: steps.crawl.outcome == 'success'
         run: node scripts/wait-for-flight-api-cache.mjs
 
-      # 11:12 회차(정상 schedule과 watchdog 대체 실행 모두)는 새로 선정한다.
-      # 나머지 크롤 뒤에는 기존 선정이 오늘 날짜이고 새 캐시에도 남아 있는지 확인하고,
-      # 사라졌거나 오래됐을 때만 즉시 복구한다.
-      - name: Refresh today's pick
+      # 08:17 회차(정상 schedule과 watchdog 대체 실행 모두)는 아침 표를 새로 선정한다.
+      # 나머지 일반 크롤은 현재 표가 새 캐시에서 사라진 경우에만 복구한다.
+      # 오후 표 신규 선정은 PC 네이버 크롤링이 성공해 가격이 반영된 뒤 수행한다.
+      - name: Select or validate today's pick
         if: steps.crawl.outcome == 'success' && steps.flight_api.outcome == 'success'
         shell: bash
         run: |
           git pull --ff-only origin main
-          if [[ "${{ needs.preflight.outputs.is_today_pick_slot }}" == "true" ]]; then
+          if [[ "${{ needs.preflight.outputs.is_morning_pick_slot }}" == "true" ]]; then
             node scripts/select-today-pick.mjs
           else
             node scripts/select-today-pick.mjs --repair

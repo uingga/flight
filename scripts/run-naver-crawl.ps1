@@ -362,19 +362,19 @@ if ($HistoryOnly) {
 }
 
 if (-not $DataPublished) {
-    Log 'Naver data could not be published; today pick repair was skipped'
+    Log 'Naver data could not be published; today pick selection was skipped'
     '' | Add-Content $LogFile
     exit 1
 }
 
-# Validate the existing pick only after the successful Naver filter is on main
-# and the deployed API has caught up. A concurrent data commit causes the next
-# attempt to pull the new main and run --repair again instead of overwriting it.
-$TodayPickChecked = $false
-for ($repairAttempt = 1; $repairAttempt -le 2; $repairAttempt++) {
+# Select a new daily pick only after the successful Naver filter is on main and
+# the deployed API has caught up. A concurrent data commit causes the next attempt
+# to pull the new main and select again instead of overwriting newer crawl data.
+$TodayPickSelected = $false
+for ($selectionAttempt = 1; $selectionAttempt -le 2; $selectionAttempt++) {
     git pull --ff-only origin main 2>&1 | Add-Content -Encoding utf8 $LogFile
     if ($LASTEXITCODE -ne 0) {
-        Log "Unable to refresh main before today pick repair (attempt $repairAttempt)"
+        Log "Unable to refresh main before today pick selection (attempt $selectionAttempt)"
         exit 1
     }
 
@@ -382,23 +382,23 @@ for ($repairAttempt = 1; $repairAttempt -le 2; $repairAttempt++) {
         "$_" | Add-Content -Encoding utf8 $LogFile
     }
     if ($LASTEXITCODE -ne 0) {
-        Log 'The deployed flight API did not catch up; today pick repair was skipped'
+        Log 'The deployed flight API did not catch up; today pick selection was skipped'
         exit 1
     }
 
-    node scripts/select-today-pick.mjs --repair 2>&1 | ForEach-Object {
+    node scripts/select-today-pick.mjs 2>&1 | ForEach-Object {
         "$_" | Add-Content -Encoding utf8 $LogFile
     }
     if ($LASTEXITCODE -ne 0) {
         git checkout -- $TodayPickPath 2>$null
-        Log 'Today pick repair check failed; the existing selection was restored'
+        Log 'Today pick selection failed; the existing selection was restored'
         exit 1
     }
 
     $TodayPickDirty = git status --porcelain -- $TodayPickPath
     if (-not $TodayPickDirty) {
-        Log 'Today pick remains valid; repair commit skipped'
-        $TodayPickChecked = $true
+        Log 'Today pick selection produced no file change; commit skipped'
+        $TodayPickSelected = $true
         break
     }
 
@@ -406,26 +406,26 @@ for ($repairAttempt = 1; $repairAttempt -le 2; $repairAttempt++) {
     if ($LASTEXITCODE -ne 0) {
         git reset HEAD -- $TodayPickPath 2>$null
         git checkout -- $TodayPickPath 2>$null
-        Log 'Unable to stage today pick repair; the existing selection was restored'
+        Log 'Unable to stage today pick selection; the existing selection was restored'
         exit 1
     }
 
-    git commit --only -m 'chore(data): repair today pick after naver crawl [local]' -- $TodayPickPath 2>&1 | Add-Content -Encoding utf8 $LogFile
+    git commit --only -m 'chore(data): select today pick after naver crawl [local]' -- $TodayPickPath 2>&1 | Add-Content -Encoding utf8 $LogFile
     if ($LASTEXITCODE -ne 0) {
         git reset HEAD -- $TodayPickPath 2>$null
         git checkout -- $TodayPickPath 2>$null
-        Log 'Unable to commit today pick repair; the existing selection was restored'
+        Log 'Unable to commit today pick selection; the existing selection was restored'
         exit 1
     }
 
     git push origin main 2>&1 | Add-Content -Encoding utf8 $LogFile
     if ($LASTEXITCODE -eq 0) {
-        Log "Today pick repair commit and push completed (attempt $repairAttempt)"
-        $TodayPickChecked = $true
+        Log "Today pick selection commit and push completed (attempt $selectionAttempt)"
+        $TodayPickSelected = $true
         break
     }
 
-    Log "Today pick push failed (attempt $repairAttempt); refreshing main and checking again"
+    Log "Today pick push failed (attempt $selectionAttempt); refreshing main and selecting again"
     git reset --soft HEAD~1 2>&1 | Add-Content -Encoding utf8 $LogFile
     if ($LASTEXITCODE -ne 0) {
         Log 'Unable to undo the unpushed today pick commit'
@@ -434,13 +434,13 @@ for ($repairAttempt = 1; $repairAttempt -le 2; $repairAttempt++) {
     git reset HEAD -- $TodayPickPath 2>&1 | Add-Content -Encoding utf8 $LogFile
     git checkout -- $TodayPickPath 2>$null
     if ($LASTEXITCODE -ne 0) {
-        Log 'Unable to restore today pick before retry'
+        Log 'Unable to restore today pick before selection retry'
         exit 1
     }
 }
 
-if (-not $TodayPickChecked) {
-    Log 'Today pick repair could not be published after two attempts'
+if (-not $TodayPickSelected) {
+    Log 'Today pick selection could not be published after two attempts'
     '' | Add-Content $LogFile
     exit 1
 }

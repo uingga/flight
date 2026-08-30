@@ -173,9 +173,11 @@ test('watchdog dispatch inputs are declared by daily-crawl.yml', () => {
     }
 });
 
-test('today pick has a 06:17 KST selection slot', () => {
+test('the standalone today-pick workflow is manual-only', () => {
     const workflow = fs.readFileSync('.github/workflows/today-pick.yml', 'utf8');
-    assert.match(workflow, /^\s*- cron: '17 21 \* \* \*'/m);
+    assert.match(workflow, /^\s+workflow_dispatch:\s*$/m);
+    assert.doesNotMatch(workflow, /^\s+schedule:\s*$/m);
+    assert.doesNotMatch(workflow, /^\s*- cron:/m);
 });
 
 test('MyRealTrip runs once in the morning and once in the afternoon', () => {
@@ -271,23 +273,24 @@ test('the Windows blocked-source fallback uses the four general crawl slots', ()
     assert.match(runner, /crawl-all\.ts \$SourceArgument/);
 });
 
-test('a successful Windows Naver filter repairs today pick with conflict-safe push retries', () => {
+test('a successful Windows Naver filter selects today pick with conflict-safe push retries', () => {
     const runner = fs.readFileSync('scripts/run-naver-crawl.ps1', 'utf8');
     const filterIndex = runner.indexOf('npx --no-install tsx scripts/filter-by-naver.ts');
     const waitIndex = runner.indexOf('node scripts/wait-for-flight-api-cache.mjs');
-    const repairIndex = runner.indexOf('node scripts/select-today-pick.mjs --repair');
+    const selectionIndex = runner.indexOf('node scripts/select-today-pick.mjs 2>&1');
 
     assert.notEqual(filterIndex, -1);
     assert.ok(waitIndex > filterIndex);
-    assert.ok(repairIndex > waitIndex);
-    assert.match(runner, /if \(-not \$DataPublished\)[\s\S]*today pick repair was skipped/);
-    assert.match(runner, /for \(\$repairAttempt = 1; \$repairAttempt -le 2; \$repairAttempt\+\+\)/);
+    assert.ok(selectionIndex > waitIndex);
+    assert.doesNotMatch(runner, /select-today-pick\.mjs --repair/);
+    assert.match(runner, /if \(-not \$DataPublished\)[\s\S]*today pick selection was skipped/);
+    assert.match(runner, /for \(\$selectionAttempt = 1; \$selectionAttempt -le 2; \$selectionAttempt\+\+\)/);
     assert.match(runner, /git pull --ff-only origin main/);
-    assert.match(runner, /git commit --only -m 'chore\(data\): repair today pick after naver crawl \[local\]' -- \$TodayPickPath/);
+    assert.match(runner, /git commit --only -m 'chore\(data\): select today pick after naver crawl \[local\]' -- \$TodayPickPath/);
     assert.match(runner, /git push origin main/);
 });
 
-test('watchdog fallback keeps the 11:12 today-pick slot identity', () => {
+test('watchdog fallback keeps the missed crawl slot identity', () => {
     const result = spawnSync(process.execPath, ['scripts/check-crawl-run.mjs'], {
         encoding: 'utf8',
         env: {
@@ -300,14 +303,33 @@ test('watchdog fallback keeps the 11:12 today-pick slot identity', () => {
     });
 
     assert.equal(result.status, 0, result.stderr);
-    assert.match(result.stdout, /\[preflight\] is_today_pick_slot=true/);
+    assert.match(result.stdout, /\[trigger\] expected_at=2026-08-28T02:12:00\.000Z/);
 });
 
-test('every completed crawl validates today pick after the deployed cache catches up', () => {
+test('08:17 general crawl selects the morning pick and other slots only repair it', () => {
     const workflow = fs.readFileSync('.github/workflows/daily-crawl.yml', 'utf8');
-    assert.match(workflow, /^\s+is_today_pick_slot: \$\{\{ steps\.trigger\.outputs\.is_today_pick_slot \}\}/m);
+    assert.match(workflow, /^\s+is_morning_pick_slot: \$\{\{ steps\.trigger\.outputs\.is_morning_pick_slot \}\}/m);
     assert.match(workflow, /run: node scripts\/wait-for-flight-api-cache\.mjs/);
+    assert.match(workflow, /needs\.preflight\.outputs\.is_morning_pick_slot/);
+    assert.match(workflow, /node scripts\/select-today-pick\.mjs\s*\n\s*else/);
     assert.match(workflow, /node scripts\/select-today-pick\.mjs --repair/);
+    assert.doesNotMatch(workflow, /is_today_pick_slot/);
+});
+
+test('watchdog fallback preserves the 08:17 morning-pick slot identity', () => {
+    const result = spawnSync(process.execPath, ['scripts/check-crawl-run.mjs'], {
+        encoding: 'utf8',
+        env: {
+            ...process.env,
+            TRIGGER_EVENT: 'workflow_dispatch',
+            TRIGGER_SOURCE: 'watchdog',
+            EXPECTED_AT: '2026-08-27T23:17:00.000Z',
+            CHECK_NOW: '2026-08-28T01:30:00.000Z',
+        },
+    });
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /\[preflight\] is_morning_pick_slot=true/);
 });
 
 test('an active crawl blocks a fallback dispatch', () => {
