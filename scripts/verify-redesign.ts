@@ -85,6 +85,51 @@ async function verifyViewport(width: number, height: number) {
             );
             assert(previewData.myrealtrip > 0, '미리보기 최신 데이터에서 마이리얼트립 항공권이 모두 빠졌습니다.');
 
+            const freshPanel = page.locator('[data-fresh-route-count]');
+            if (await freshPanel.count()) {
+                const freshRouteCount = Number(await freshPanel.getAttribute('data-fresh-route-count'));
+                const freshTickets = await page.locator('button[data-fresh-flight-id]').evaluateAll(buttons => (
+                    buttons.map(button => ({
+                        id: button.getAttribute('data-fresh-flight-id'),
+                        count: Number(button.getAttribute('data-fresh-schedule-count')),
+                    }))
+                ));
+                assert(freshRouteCount > 0, '신규 항공권 패널의 노선 수가 비어 있습니다.');
+                assert(
+                    new Set(freshTickets.map(ticket => ticket.id)).size === freshRouteCount,
+                    '신규 항공권 패널에서 일부 노선이 누락되거나 중복됐습니다.',
+                );
+
+                const groupedFreshTicket = freshTickets.find(ticket => ticket.id && ticket.count > 1);
+                if (groupedFreshTicket) {
+                    const freshTicket = page.locator(`button[data-fresh-flight-id="${groupedFreshTicket.id}"]`).first();
+                    await freshTicket.evaluate(button => button.click());
+                    const freshDetail = page.locator('[aria-label="항공권 상세"]');
+                    await freshDetail.waitFor();
+                    const scheduleOptions = freshDetail.locator('[data-fresh-schedule-options]');
+                    await scheduleOptions.waitFor();
+                    const scheduleCount = Number(await scheduleOptions.getAttribute('data-fresh-schedule-options'));
+                    assert(
+                        scheduleCount === groupedFreshTicket.count,
+                        `신규 티켓의 일정 ${groupedFreshTicket.count}개 중 상세에는 ${scheduleCount}개만 표시됩니다.`,
+                    );
+                    assert(
+                        await scheduleOptions.locator('button').count() === scheduleCount,
+                        '같은 가격의 일부 신규 일정이 선택지에서 빠졌습니다.',
+                    );
+                    const initialScheduleUrl = page.url();
+                    await scheduleOptions.locator('button').nth(1).click();
+                    await page.waitForTimeout(100);
+                    assert(page.url() !== initialScheduleUrl, '다른 신규 일정을 선택해도 상세 URL이 바뀌지 않았습니다.');
+                    assert(
+                        await scheduleOptions.locator('button').nth(1).getAttribute('aria-pressed') === 'true',
+                        '선택한 신규 일정이 상세에 반영되지 않았습니다.',
+                    );
+                    await page.keyboard.press('Escape');
+                    await freshDetail.waitFor({ state: 'hidden' });
+                }
+            }
+
             await page.getByRole('button', { name: '로그인하고 찜하기' }).first().click();
             await page.getByRole('heading', { name: '어디서든 이어보기' }).waitFor();
             await page.keyboard.press('Escape');

@@ -263,6 +263,25 @@ const compactWon = (price: number) => {
 
 const normalizedRoute = (flight: Flight) => `${normalizeCity(flight.departure.city)}-${normalizeCity(flight.arrival.city)}`;
 
+const flightScheduleIdentity = (flight: Flight) => [
+    flight.id,
+    flight.departure.date,
+    flight.departure.time,
+    flight.arrival.date,
+    flight.arrival.time,
+].join('|');
+
+const flightScheduleToken = (flight: Flight) => [
+    flight.departure.date,
+    flight.departure.time,
+    flight.arrival.date,
+    flight.arrival.time,
+].join('|');
+
+const uniqueFlightSchedules = (flights: Flight[]) => Array.from(
+    new Map(flights.map(flight => [flightScheduleIdentity(flight), flight])).values(),
+);
+
 const normalizedHistory = (history: PriceHistory) => {
     const result: PriceHistory = {};
     Object.entries(history).forEach(([route, entries]) => {
@@ -834,6 +853,7 @@ export default function MobileRedesignPreview({
     const freshDesktopDragRef = useRef<FreshDesktopDragState | null>(null);
     const freshDesktopSuppressClickRef = useRef(false);
     const sharedFlightIdRef = useRef<string | null>(null);
+    const sharedFlightScheduleRef = useRef<string | null>(null);
     const sharedFallbackArrivalRef = useRef<string | null>(null);
     const filterDialogRef = useRef<HTMLElement | null>(null);
     const detailDialogRef = useRef<HTMLElement | null>(null);
@@ -928,6 +948,7 @@ export default function MobileRedesignPreview({
         setSelectedFlight(null);
         const nextUrl = new URL(window.location.href);
         nextUrl.searchParams.delete('flight');
+        nextUrl.searchParams.delete('schedule');
         const nextState = { ...window.history.state };
         delete nextState.tikitikitOverlay;
         window.history.replaceState(nextState, '', `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`);
@@ -1089,6 +1110,7 @@ export default function MobileRedesignPreview({
         const params = new URLSearchParams(window.location.search);
         const requestedFlight = params.get('flight');
         sharedFlightIdRef.current = requestedFlight;
+        sharedFlightScheduleRef.current = params.get('schedule');
         sharedFallbackArrivalRef.current = params.get('arr');
 
         const departureParam = params.get('dep');
@@ -1137,8 +1159,13 @@ export default function MobileRedesignPreview({
     useEffect(() => {
         if (loading || !sharedFlightIdRef.current) return;
         const flightId = sharedFlightIdRef.current;
+        const scheduleToken = sharedFlightScheduleRef.current;
         sharedFlightIdRef.current = null;
-        const sharedFlight = flights.find(flight => flight.id === flightId);
+        sharedFlightScheduleRef.current = null;
+        const sharedFlight = flights.find(flight => (
+            flight.id === flightId
+            && (!scheduleToken || flightScheduleToken(flight) === scheduleToken)
+        )) || flights.find(flight => flight.id === flightId);
         if (sharedFlight) {
             gtag.trackDetailOpen(
                 `${normalizeCity(sharedFlight.departure.city)}-${normalizeCity(sharedFlight.arrival.city)}`,
@@ -1157,6 +1184,7 @@ export default function MobileRedesignPreview({
         sharedFallbackArrivalRef.current = null;
         if (fallbackArrival) setQuery(fallbackArrival);
         params.delete('flight');
+        params.delete('schedule');
         const queryString = params.toString();
         const nextState = { ...window.history.state };
         delete nextState.tikitikitOverlay;
@@ -1189,7 +1217,10 @@ export default function MobileRedesignPreview({
         } else if (datePeriod !== 'all') {
             next.set('period', datePeriod);
         }
-        if (selectedFlight) next.set('flight', selectedFlight.id);
+        if (selectedFlight) {
+            next.set('flight', selectedFlight.id);
+            next.set('schedule', flightScheduleToken(selectedFlight));
+        }
         const queryString = next.toString();
         window.history.replaceState(
             window.history.state,
@@ -1219,20 +1250,27 @@ export default function MobileRedesignPreview({
                 return;
             }
             historyClosePendingRef.current = false;
-            const flightId = new URLSearchParams(window.location.search).get('flight');
+            const params = new URLSearchParams(window.location.search);
+            const flightId = params.get('flight');
+            const scheduleToken = params.get('schedule');
             if (!flightId) {
                 setSelectedFlight(null);
                 return;
             }
-            const flight = historyUi.flights.find(item => item.id === flightId);
+            const flight = historyUi.flights.find(item => (
+                item.id === flightId
+                && (!scheduleToken || flightScheduleToken(item) === scheduleToken)
+            )) || historyUi.flights.find(item => item.id === flightId);
             if (!flight) {
                 if (historyUi.loading) {
                     sharedFlightIdRef.current = flightId;
+                    sharedFlightScheduleRef.current = scheduleToken;
                     return;
                 }
                 setSelectedFlight(null);
                 const nextUrl = new URL(window.location.href);
                 nextUrl.searchParams.delete('flight');
+                nextUrl.searchParams.delete('schedule');
                 const nextState = { ...window.history.state };
                 delete nextState.tikitikitOverlay;
                 window.history.replaceState(nextState, '', `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`);
@@ -1248,7 +1286,9 @@ export default function MobileRedesignPreview({
 
     useEffect(() => {
         if (!selectedFlight || loading) return;
-        const refreshedFlight = flights.find(flight => flight.id === selectedFlight.id);
+        const selectedSchedule = flightScheduleIdentity(selectedFlight);
+        const refreshedFlight = flights.find(flight => flightScheduleIdentity(flight) === selectedSchedule)
+            || flights.find(flight => flight.id === selectedFlight.id);
         if (refreshedFlight) {
             if (refreshedFlight !== selectedFlight) setSelectedFlight(refreshedFlight);
             return;
@@ -2008,43 +2048,76 @@ export default function MobileRedesignPreview({
         let targetDate = todayKey;
         let targetFlights = datedFlights.filter(flight => flight.firstSeen === targetDate);
 
-        const countDestinations = (items: Flight[]) => new Set(
-            items.map(flight => normalizeCity(flight.arrival.city)),
+        const countRoutes = (items: Flight[]) => new Set(
+            items.map(flight => normalizedRoute(flight)),
         ).size;
-        if (countDestinations(targetFlights) < 2) {
+        if (countRoutes(targetFlights) === 0) {
             targetDate = latestSeen;
             targetFlights = datedFlights.filter(flight => flight.firstSeen === targetDate);
         }
-        if (!targetDate || targetFlights.length < 2) return null;
+        if (!targetDate || targetFlights.length === 0) return null;
 
-        const cheapestByDestination = new Map<string, Flight>();
+        const flightsByRoute = new Map<string, Flight[]>();
         targetFlights.forEach(flight => {
-            const destination = normalizeCity(flight.arrival.city);
-            const current = cheapestByDestination.get(destination);
-            if (!current || effectivePrice(flight) < effectivePrice(current)) {
-                cheapestByDestination.set(destination, flight);
-            }
+            const route = normalizedRoute(flight);
+            flightsByRoute.set(route, [...(flightsByRoute.get(route) || []), flight]);
         });
 
-        const freshFlights = Array.from(cheapestByDestination.values())
-            .sort((a, b) => effectivePrice(a) - effectivePrice(b))
-            .slice(0, 8);
-        const evenFlights = freshFlights.slice(0, freshFlights.length - (freshFlights.length % 2));
-        if (evenFlights.length < 2) return null;
+        const scheduleCountByFlightId = new Map<string, number>();
+        const freshFlights = Array.from(flightsByRoute.values())
+            .map(routeFlights => {
+                const lowestPrice = Math.min(...routeFlights.map(flight => effectivePrice(flight)));
+                const lowestPriceSchedules = uniqueFlightSchedules(
+                    routeFlights.filter(flight => effectivePrice(flight) === lowestPrice),
+                )
+                    .sort((a, b) => (
+                        a.departure.date.localeCompare(b.departure.date)
+                        || a.arrival.date.localeCompare(b.arrival.date)
+                        || a.departure.time.localeCompare(b.departure.time)
+                        || a.source.localeCompare(b.source)
+                    ));
+                const representative = lowestPriceSchedules[0];
+                scheduleCountByFlightId.set(representative.id, lowestPriceSchedules.length);
+                return representative;
+            })
+            .sort((a, b) => (
+                effectivePrice(a) - effectivePrice(b)
+                || normalizedRoute(a).localeCompare(normalizedRoute(b), 'ko')
+            ));
 
-        const pairs = Array.from({ length: evenFlights.length / 2 }, (_, index) => (
-            evenFlights.slice(index * 2, index * 2 + 2)
+        const pairs = Array.from({ length: Math.ceil(freshFlights.length / 2) }, (_, index) => (
+            freshFlights.slice(index * 2, index * 2 + 2)
         ));
-        const fourSlots = pairs.length === 3
-            ? [pairs[0], pairs[1], pairs[2], pairs[1]]
-            : Array.from({ length: 4 }, (_, index) => pairs[index % pairs.length]);
 
         return {
             copyPrefix: targetDate === todayKey ? '오늘' : '최근',
-            flights: evenFlights,
-            pairs: pairs.length > 1 ? fourSlots : pairs,
+            targetDate,
+            targetFlights,
+            flights: freshFlights,
+            pairs,
+            scheduleCountByFlightId,
         };
     }, [displayedFlights, query, sort]);
+
+    const selectedFreshSchedules = useMemo(() => {
+        if (!selectedFlight || !freshFlightsInsight) return [];
+        if (selectedFlight.firstSeen !== freshFlightsInsight.targetDate) return [];
+
+        const selectedRoute = normalizedRoute(selectedFlight);
+        const selectedPrice = effectivePrice(selectedFlight);
+        return uniqueFlightSchedules(
+            freshFlightsInsight.targetFlights.filter(flight => (
+                normalizedRoute(flight) === selectedRoute
+                && effectivePrice(flight) === selectedPrice
+            )),
+        )
+            .sort((a, b) => (
+                a.departure.date.localeCompare(b.departure.date)
+                || a.arrival.date.localeCompare(b.arrival.date)
+                || a.departure.time.localeCompare(b.departure.time)
+                || a.source.localeCompare(b.source)
+            ));
+    }, [freshFlightsInsight, selectedFlight]);
 
     const freshDesktopPairs = useMemo(() => freshFlightsInsight?.pairs || [], [freshFlightsInsight]);
     const freshDesktopPairCount = freshDesktopPairs.length;
@@ -2514,7 +2587,11 @@ export default function MobileRedesignPreview({
     };
 
     const openFlight = (flight: Flight, entry = 'card_body') => {
-        if (selectedFlight?.id === flight.id && window.history.state?.tikitikitOverlay === 'flight') return;
+        if (
+            selectedFlight
+            && flightScheduleIdentity(selectedFlight) === flightScheduleIdentity(flight)
+            && window.history.state?.tikitikitOverlay === 'flight'
+        ) return;
         gtag.trackDetailOpen(
             `${normalizeCity(flight.departure.city)}-${normalizeCity(flight.arrival.city)}`,
             effectivePrice(flight),
@@ -2524,6 +2601,7 @@ export default function MobileRedesignPreview({
         account.recordRecent(flight.id);
         const nextUrl = new URL(window.location.href);
         nextUrl.searchParams.set('flight', flight.id);
+        nextUrl.searchParams.set('schedule', flightScheduleToken(flight));
         const historyMethod = window.history.state?.tikitikitOverlay === 'flight'
             ? 'replaceState'
             : 'pushState';
@@ -3367,7 +3445,11 @@ export default function MobileRedesignPreview({
                                     </div>
                                     {cardNumber === firstInsightCard && freshFlightsInsight && (
                                         <div className={styles.freshFlightsEntry}>
-                                            <section className={styles.freshFlightsBar} aria-labelledby="fresh-flights-title">
+                                            <section
+                                                className={styles.freshFlightsBar}
+                                                aria-labelledby="fresh-flights-title"
+                                                data-fresh-route-count={freshMobileFlightCount}
+                                            >
                                                 <div className={styles.freshFlightsMobileTopline}>
                                                     <span>새로 발견</span>
                                                     {freshMobileFlightCount > 1 && (
@@ -3399,6 +3481,8 @@ export default function MobileRedesignPreview({
                                                                 type="button"
                                                                 className={styles.freshFlightsMobileTicket}
                                                                 key={`${freshFlight.id}-mobile-${ticketIndex}`}
+                                                                data-fresh-flight-id={freshFlight.id}
+                                                                data-fresh-schedule-count={freshFlightsInsight.scheduleCountByFlightId.get(freshFlight.id) || 1}
                                                                 onClick={(event) => {
                                                                     if (freshMobileSuppressClickRef.current) {
                                                                         event.preventDefault();
@@ -3420,7 +3504,14 @@ export default function MobileRedesignPreview({
                                                                 </span>
                                                                 <span className={styles.freshFlightsMobileSchedule}>
                                                                     <span>{cardDate(freshFlight.departure.date)} — {cardDate(freshFlight.arrival.date)}</span>
-                                                                    <small>{tripLength(freshFlight)}</small>
+                                                                    <small>
+                                                                        {[
+                                                                            tripLength(freshFlight),
+                                                                            (freshFlightsInsight.scheduleCountByFlightId.get(freshFlight.id) || 1) > 1
+                                                                                ? `같은 가격 일정 ${freshFlightsInsight.scheduleCountByFlightId.get(freshFlight.id)}개`
+                                                                                : null,
+                                                                        ].filter(Boolean).join(' · ')}
+                                                                    </small>
                                                                 </span>
                                                             </button>
                                                         ))}
@@ -3442,12 +3533,17 @@ export default function MobileRedesignPreview({
                                                         style={{ transform: `translateY(${(-freshDesktopPosition * FRESH_DESKTOP_PAIR_HEIGHT) + freshDesktopDragOffset}px)` }}
                                                     >
                                                         {freshDesktopLoopingPairs.map((pair, pairIndex) => (
-                                                            <div className={styles.freshFlightsPair} key={`fresh-flights-pair-${pairIndex}`}>
+                                                            <div
+                                                                className={`${styles.freshFlightsPair} ${pair.length === 1 ? styles.freshFlightsPairSingle : ''}`}
+                                                                key={`fresh-flights-pair-${pairIndex}`}
+                                                            >
                                                                 {pair.map((freshFlight, ticketIndex) => (
                                                                     <button
                                                                         type="button"
                                                                         className={styles.freshFlightsTicket}
                                                                         key={`${freshFlight.id}-${pairIndex}-${ticketIndex}`}
+                                                                        data-fresh-flight-id={freshFlight.id}
+                                                                        data-fresh-schedule-count={freshFlightsInsight.scheduleCountByFlightId.get(freshFlight.id) || 1}
                                                                         onClick={(event) => {
                                                                             if (freshDesktopSuppressClickRef.current) {
                                                                                 event.preventDefault();
@@ -3469,7 +3565,14 @@ export default function MobileRedesignPreview({
                                                                         </span>
                                                                         <span className={styles.freshFlightsSchedule}>
                                                                             <span>{cardDate(freshFlight.departure.date)} — {cardDate(freshFlight.arrival.date)}</span>
-                                                                            <small>{tripLength(freshFlight)}</small>
+                                                                            <small>
+                                                                                {[
+                                                                                    tripLength(freshFlight),
+                                                                                    (freshFlightsInsight.scheduleCountByFlightId.get(freshFlight.id) || 1) > 1
+                                                                                        ? `같은 가격 일정 ${freshFlightsInsight.scheduleCountByFlightId.get(freshFlight.id)}개`
+                                                                                        : null,
+                                                                                ].filter(Boolean).join(' · ')}
+                                                                            </small>
                                                                         </span>
                                                                     </button>
                                                                 ))}
@@ -3774,6 +3877,38 @@ export default function MobileRedesignPreview({
                                 )}
                             </div>
                         </div>
+
+                        {selectedFreshSchedules.length > 1 && (
+                            <section
+                                className={styles.detailFreshSchedules}
+                                aria-labelledby="fresh-schedule-options-title"
+                                data-fresh-schedule-options={selectedFreshSchedules.length}
+                            >
+                                <header>
+                                    <strong id="fresh-schedule-options-title">
+                                        {freshFlightsInsight?.copyPrefix} 들어온 같은 가격 일정
+                                    </strong>
+                                    <span>{selectedFreshSchedules.length}개</span>
+                                </header>
+                                <div className={styles.detailFreshScheduleGrid}>
+                                    {selectedFreshSchedules.map(flight => {
+                                        const active = flightScheduleIdentity(flight) === flightScheduleIdentity(selectedFlight);
+                                        return (
+                                            <button
+                                                type="button"
+                                                className={active ? styles.detailFreshScheduleActive : undefined}
+                                                key={flightScheduleIdentity(flight)}
+                                                aria-pressed={active}
+                                                onClick={() => openFlight(flight, 'insight_new_flights_schedule')}
+                                            >
+                                                <strong>{cardDate(flight.departure.date)} — {cardDate(flight.arrival.date)}</strong>
+                                                <span>{tripLength(flight) || '일정 확인'} · {SOURCE_NAMES[flight.source]}</span>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </section>
+                        )}
 
                         <div className={styles.detailSchedule}>
                             <section className={styles.detailFlightLeg}>
