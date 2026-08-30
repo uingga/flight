@@ -136,7 +136,7 @@ export function recordCrawlAlerts(alerts: string[]): void {
 
     const history = loadLogHistory();
     const now = new Date();
-    let currentEntry = history.entries.find(
+    let currentEntry = [...history.entries].reverse().find(
         e => now.getTime() - new Date(e.timestamp).getTime() < 30 * 60 * 1000,
     );
 
@@ -158,17 +158,27 @@ export function logCrawlResults(
     total: number,
     byRegion?: RegionStats,
     byCity?: CityStats,
-    meta?: { scraped?: number; preserved?: boolean; skipped?: boolean; added?: number; removed?: number },
+    meta?: {
+        scraped?: number;
+        preserved?: boolean;
+        skipped?: boolean;
+        added?: number;
+        removed?: number;
+        /** 다른 예약 작업과 시간이 겹쳐도 독립 회차로 남긴다. */
+        separateSession?: boolean;
+    },
 ): void {
     const history = loadLogHistory();
 
     // 현재 실행의 타임스탬프를 기준으로 새 엔트리 생성 또는
     // 같은 크롤 세션(5분 이내)에서 이미 만들어진 엔트리 업데이트
     const now = new Date();
-    let currentEntry = history.entries.find(e => {
-        const entryTime = new Date(e.timestamp);
-        return (now.getTime() - entryTime.getTime()) < 30 * 60 * 1000; // 30분 이내
-    });
+    let currentEntry = meta?.separateSession
+        ? undefined
+        : [...history.entries].reverse().find(e => {
+            const entryTime = new Date(e.timestamp);
+            return (now.getTime() - entryTime.getTime()) < 30 * 60 * 1000; // 30분 이내
+        });
 
     if (!currentEntry) {
         currentEntry = {

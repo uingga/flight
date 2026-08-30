@@ -100,20 +100,35 @@ interface AdminData {
     }>;
     naverStatus?: {
         lastCrawledAt: string | null;
+        lastAttemptAt: string | null;
         ageDays: number | null;
         freshEntries: number;
+        pricedEntries: number;
+        expiredEntries: number;
+        failedEntries: number;
+        neverCheckedEntries: number;
         totalEntries: number;
     } | null;
     naverCrawlHistory?: Array<{
         id: string;
         timestamp: string;
+        startedAt?: string;
+        durationSeconds?: number;
         runner: 'local' | 'github' | 'manual';
         sourceFilter: string;
         maxFlights: number;
+        navigationLimit?: number;
         needed: number;
         attempted: number;
+        navigations?: number;
+        skippedFresh?: number;
         newRoutes: number;
         newRoutesAttempted: number;
+        changedRoutes?: number;
+        periodicRoutes?: number;
+        reasonCounts?: Record<string, number>;
+        priorityGroups?: Record<string, number>;
+        selectedPriorityGroups?: Record<string, number>;
         deferred: number;
         deferredNeverChecked: number;
         oldestDeferredHours: number | null;
@@ -125,6 +140,7 @@ interface AdminData {
         blocked?: number;
         healthChecks?: number;
         abortedEarly: boolean;
+        abortReason?: string;
     }>;
     bookingLinkHealth?: {
         version: number;
@@ -570,6 +586,13 @@ const SOURCE_COLORS: Record<string, string> = {
     myrealtrip: '#2563eb',
 };
 const SOURCE_ORDER = ['ybtour', 'hanatour', 'modetour', 'onlinetour', 'ttang', 'myrealtrip'] as const;
+const NAVER_PRIORITY_LABELS: Record<string, string> = {
+    deadline: '7일 마감',
+    changed_top: '신규·변경 상위',
+    top: '추천 상위',
+    standard: '보통',
+    low: '추천 하위',
+};
 
 /**
  * 어드민 탭.
@@ -616,6 +639,16 @@ function timeAgo(iso: string): string {
     const hrs = Math.floor(mins / 60);
     if (hrs < 24) return `${hrs}시간 전`;
     return `${Math.floor(hrs / 24)}일 전`;
+}
+
+function formatDuration(seconds?: number): string {
+    if (!Number.isFinite(seconds) || Number(seconds) < 0) return '기록 없음';
+    const totalMinutes = Math.round(Number(seconds) / 60);
+    if (totalMinutes < 1) return `${Math.round(Number(seconds))}초`;
+    if (totalMinutes < 60) return `${totalMinutes}분`;
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    return minutes > 0 ? `${hours}시간 ${minutes}분` : `${hours}시간`;
 }
 
 function formatPrice(price: number): string {
@@ -1507,8 +1540,18 @@ export default function AdminPage() {
     const sumMetric = (sites: CrawlHistoryEntry['sites']): number =>
         Object.values(sites).reduce((acc, stat) => acc + (metricOf(stat) ?? 0), 0);
 
+    const sourceWasAttempted = (entry: CrawlHistoryEntry, source: string): boolean => {
+        const stat = entry.sites[source];
+        if (!stat || stat.skipped) return false;
+        // 2026-08-30 이전 일반 회차는 실행하지 않은 마이리얼트립 캐시를 성공처럼 기록했다.
+        // 원본 수집량도 실패 표식도 없는 마이리얼트립은 과거 기록에서도 시도로 세지 않는다.
+        if (source === 'myrealtrip' && stat.scraped === undefined && !stat.preserved) return false;
+        return true;
+    };
+
     const turnoverOf = (entry: CrawlHistoryEntry) => {
-        const stats = allSources.map(source => ({ source, stat: entry.sites[source] }));
+        const attemptedSources = allSources.filter(source => sourceWasAttempted(entry, source));
+        const stats = attemptedSources.map(source => ({ source, stat: entry.sites[source] }));
         const measured = stats.filter(({ stat }) => stat?.added !== undefined || stat?.removed !== undefined);
         if (measured.length === 0) return null;
 
@@ -1518,7 +1561,7 @@ export default function AdminPage() {
         const missingSources = stats
             .filter(({ stat }) => !stat || stat.skipped || (stat.added === undefined && stat.removed === undefined))
             .map(({ source }) => SOURCE_NAMES[source] || source);
-        const reliable = failedSources.length === 0 && missingSources.length === 0;
+        const reliable = attemptedSources.length > 0 && failedSources.length === 0 && missingSources.length === 0;
         const valid = measured.filter(({ stat }) => !stat?.preserved);
         const added = valid.reduce((sum, { stat }) => sum + (stat?.added || 0), 0);
         const removed = valid.reduce((sum, { stat }) => sum + (stat?.removed || 0), 0);
@@ -1562,35 +1605,89 @@ export default function AdminPage() {
     const crawl7 = crawlSummary(crawlPeriod(7));
     const crawl30 = crawlSummary(crawlPeriod(30));
     const crawl30RecordedDays = new Set(crawlPeriod(30).map(entry => koreaDateKey(entry.timestamp))).size;
+
+    const crawlRunRows = (data.crawlHistory || []).map(entry => {
+        const attemptedSources = allSources.filter(source => sourceWasAttempted(entry, source));
+        if (attemptedSources.length === 0) return null;
+        const failedSources = attemptedSources.filter(source => entry.sites[source]?.preserved);
+        const critical = entry.alerts.filter(alert => alert.startsWith('🚨'));
+        const successCount = Math.max(0, attemptedSources.length - failedSources.length);
+        const status: 'success' | 'partial' | 'failed' = failedSources.length === 0 && critical.length === 0
+            ? 'success'
+            : successCount > 0 ? 'partial' : 'failed';
+        const scrapedValues = attemptedSources
+            .map(source => entry.sites[source]?.scraped)
+            .filter((value): value is number => value !== undefined);
+        const scraped = scrapedValues.length > 0
+            ? scrapedValues.reduce((sum, value) => sum + value, 0)
+            : null;
+        const shown = attemptedSources.reduce((sum, source) => sum + (entry.sites[source]?.total || 0), 0);
+        const turnover = turnoverOf(entry);
+        const kind = attemptedSources.length === 1 && attemptedSources[0] === 'myrealtrip'
+            ? 'myrealtrip'
+            : 'regular';
+        return {
+            entry,
+            attemptedSources,
+            failedSources,
+            critical,
+            successCount,
+            status,
+            scraped,
+            shown,
+            turnover,
+            kind,
+            label: kind === 'myrealtrip' ? '마이리얼트립' : '일반 5개 여행사',
+        };
+    }).filter((row): row is NonNullable<typeof row> => row !== null);
+
+    const naverRunRows = (data.naverCrawlHistory || []).map(entry => {
+        const successRate = entry.attempted > 0 ? Math.round((entry.success / entry.attempted) * 100) : 0;
+        const status: 'success' | 'partial' | 'failed' = !entry.abortedEarly && entry.misses === 0
+            ? 'success'
+            : entry.success > 0 ? 'partial' : 'failed';
+        const errorParts = [
+            ['결과 없음', entry.noResult || 0],
+            ['노선 오류', entry.routeErrors || 0],
+            ['일시 오류', entry.transientErrors || 0],
+            ['접근 제한', entry.blocked || 0],
+        ].filter(([, count]) => Number(count) > 0) as Array<[string, number]>;
+        return {
+            entry,
+            status,
+            successRate,
+            errorSummary: errorParts.length > 0
+                ? errorParts.map(([label, count]) => `${label} ${count.toLocaleString()}`).join(' · ')
+                : '오류 없음',
+        };
+    });
+    const latestRegularCrawlRun = [...crawlRunRows].reverse().find(row => row.kind === 'regular') || null;
+    const latestMyrealtripCrawlRun = [...crawlRunRows].reverse().find(row => row.kind === 'myrealtrip') || null;
+    const latestNaverRun = naverRunRows[naverRunRows.length - 1] || null;
+
     const last24Hours = Date.now() - 24 * 60 * 60 * 1000;
     const collectionTimeline = [
-        ...(data.crawlHistory || [])
-            .filter(entry => new Date(entry.timestamp).getTime() >= last24Hours)
-            .map(entry => {
-                const attemptedSources = allSources.filter(source => entry.sites[source] && !entry.sites[source].skipped);
-                const failedSources = attemptedSources.filter(source => entry.sites[source]?.preserved);
-                const critical = entry.alerts.filter(alert => alert.startsWith('🚨'));
-                const successCount = Math.max(0, attemptedSources.length - failedSources.length);
-                const status = failedSources.length === 0 && critical.length === 0
-                    ? 'success'
-                    : successCount > 0 ? 'partial' : 'failed';
+        ...crawlRunRows
+            .filter(row => new Date(row.entry.timestamp).getTime() >= last24Hours)
+            .map(row => {
+                const changeText = row.turnover?.reliable
+                    ? `신규 ${row.turnover.added.toLocaleString()} · 제외 ${row.turnover.removed.toLocaleString()}`
+                    : '변화량 판단 제외';
                 return {
-                    id: `agency-${entry.timestamp}`,
-                    timestamp: entry.timestamp,
-                    title: '여행사 항공권 수집',
-                    status,
-                    summary: `${successCount}/${attemptedSources.length}곳 갱신`,
-                    detail: failedSources.length > 0
-                        ? `이전 데이터 유지: ${failedSources.map(source => SOURCE_NAMES[source] || source).join(', ')}`
-                        : critical[0]?.replace(/^🚨\s*/, '') || '모든 여행사 결과를 정상 반영했습니다.',
+                    id: `agency-${row.entry.timestamp}`,
+                    timestamp: row.entry.timestamp,
+                    title: row.label,
+                    status: row.status,
+                    summary: `${row.successCount}/${row.attemptedSources.length}곳 반영 · 원본 ${row.scraped?.toLocaleString() ?? '—'} → 노출 ${row.shown.toLocaleString()}`,
+                    detail: row.failedSources.length > 0
+                        ? `이전 데이터 유지: ${row.failedSources.map(source => SOURCE_NAMES[source] || source).join(', ')} · ${changeText}`
+                        : row.critical[0]?.replace(/^🚨\s*/, '') || changeText,
                 };
             }),
-        ...(data.naverCrawlHistory || [])
-            .filter(entry => new Date(entry.timestamp).getTime() >= last24Hours)
-            .map(entry => {
-                const status = entry.misses === 0 && !entry.abortedEarly
-                    ? 'success'
-                    : entry.success > 0 ? 'partial' : 'failed';
+        ...naverRunRows
+            .filter(row => new Date(row.entry.timestamp).getTime() >= last24Hours)
+            .map(row => {
+                const entry = row.entry;
                 const target = entry.sourceFilter === 'all'
                     ? '전체 노선'
                     : `${SOURCE_NAMES[entry.sourceFilter] || entry.sourceFilter} 노선`;
@@ -1598,9 +1695,11 @@ export default function AdminPage() {
                     id: `naver-${entry.id}`,
                     timestamp: entry.timestamp,
                     title: '네이버 가격 비교 수집',
-                    status,
-                    summary: `${entry.attempted.toLocaleString()}개 확인 · 성공 ${entry.success.toLocaleString()} · 실패 ${entry.misses.toLocaleString()}`,
-                    detail: `${target}${entry.abortedEarly ? ' · 중간 중단됨' : ''}`,
+                    status: row.status,
+                    summary: `${entry.success.toLocaleString()}/${entry.attempted.toLocaleString()}개 성공 (${row.successRate}%) · 이월 ${entry.deferred.toLocaleString()}`,
+                    detail: entry.abortedEarly
+                        ? `${target} · ${entry.abortReason || '안전장치로 조기 중단'} · ${row.errorSummary}`
+                        : `${target} · 페이지 이동 ${(entry.navigations ?? entry.attempted).toLocaleString()}회 · ${row.errorSummary}`,
                 };
             }),
     ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()).slice(0, 16);
@@ -1629,8 +1728,8 @@ export default function AdminPage() {
             || ageHours > (STALE_AFTER_HOURS[source] ?? DEFAULT_STALE_AFTER_HOURS);
     }).length;
     const naverNeedsAttention = !data.naverStatus
-        || data.naverStatus.ageDays === null
-        || data.naverStatus.ageDays > 3;
+        || !data.naverStatus.lastCrawledAt
+        || data.naverStatus.freshEntries === 0;
     const reportsToReview = flightReports?.summary?.needsReview || 0;
     const attentionItems = buildAdminAttentionItems({
         crawlSchedule: crawlScheduleHealth ? {
@@ -2088,7 +2187,7 @@ export default function AdminPage() {
                             const late = ageHours === null || ageHours > (STALE_AFTER_HOURS[source] ?? DEFAULT_STALE_AFTER_HOURS);
                             const visibleCount = sourceVisibleCounts[source] || 0;
                             const history = (data.crawlHistory || [])
-                                .filter(entry => !entry.sites[source]?.skipped)
+                                .filter(entry => sourceWasAttempted(entry, source))
                                 .slice(-16)
                                 .map(entry => ({
                                     timestamp: entry.timestamp,
@@ -2156,11 +2255,11 @@ export default function AdminPage() {
                     <div className={naverNeedsAttention ? `${styles.naverCompact} ${styles.naverCompactWarn}` : styles.naverCompact}>
                         <div>
                             <strong>가격 비교 데이터</strong>
-                            <span>{data.naverStatus?.lastCrawledAt ? `${timeAgo(data.naverStatus.lastCrawledAt)} 확인` : '확인 기록 없음'}</span>
+                            <span>{data.naverStatus?.lastCrawledAt ? `${timeAgo(data.naverStatus.lastCrawledAt)} 성공` : '24시간 내 성공 기록 없음'}</span>
                         </div>
                         <div>
                             <strong>{data.naverStatus ? `${data.naverStatus.freshEntries.toLocaleString()} / ${data.naverStatus.totalEntries.toLocaleString()}개` : '—'}</strong>
-                            <span>최근 가격 / 전체 비교값</span>
+                            <span>24시간 내 사용 가능 / 전체 대기열</span>
                         </div>
                     </div>
                 </section>
@@ -2330,28 +2429,181 @@ export default function AdminPage() {
                 <section className={`${styles.section} ${styles.operationsOrderHistory}`} id="operations-history">
                     <div className={styles.sectionHeading}>
                         <div>
-                            <h2>최근 수집 기록</h2>
-                            <p>실패로 이전 데이터를 쓴 회차는 변화량을 믿을 수 없다고 따로 표시합니다.</p>
+                            <h2>크롤링 실행 기록</h2>
+                            <p>항공권 수집과 네이버 가격 확인은 역할이 달라 각각의 성공 기준과 대기량을 따로 보여줍니다.</p>
                         </div>
                     </div>
-                    <RankList
-                        items={turnoverHistory.slice(-8).reverse().map(row => ({
-                            label: formatKST(row.entry.timestamp).replace(/:\d{2}$/, ''),
-                            value: row.reliable ? `+${row.added.toLocaleString()} · −${row.removed.toLocaleString()}` : '변화량 제외',
-                            note: row.reliable ? '새로 들어옴 · 사라짐' : [...row.failedSources, ...row.missingSources].join(', '),
-                        }))}
-                        empty="아직 변화 기록이 없어요."
-                    />
-                    {(data.naverCrawlHistory?.length || 0) > 0 && (
-                        <div className={`${styles.analysisPanel} ${styles.analysisPanelStandalone}`}>
-                            <h3>최근 가격 비교 확인 기록</h3>
-                            <RankList items={(data.naverCrawlHistory || []).slice(-8).reverse().map(item => ({
-                                label: `${formatKST(item.timestamp).replace(/:\d{2}$/, '')} · ${item.runner === 'local' ? '내 PC' : item.runner === 'github' ? '자동 실행' : '수동'}`,
-                                value: `${item.success.toLocaleString()}개 성공`,
-                                note: `시도 ${item.attempted.toLocaleString()} · 다음 회차 ${item.deferred.toLocaleString()}${item.abortedEarly ? ' · 조기 중단' : ''}`,
-                            }))} />
-                        </div>
-                    )}
+                    <div className={styles.crawlLedgerStack}>
+                        <article className={styles.crawlLedgerPanel}>
+                            <div className={styles.crawlLedgerHead}>
+                                <div>
+                                    <span className={styles.crawlLedgerEyebrow}>항공권 원본·노출 데이터</span>
+                                    <h3>여행사 항공권 수집</h3>
+                                    <p>일반 5개 여행사와 마이리얼트립의 실제 수집 결과입니다.</p>
+                                </div>
+                                <span className={latestRegularCrawlRun?.status === 'success' ? styles.statusGood : styles.statusWarn}>
+                                    {!latestRegularCrawlRun ? '기록 없음' : latestRegularCrawlRun.status === 'success' ? '최근 회차 정상' : '최근 회차 확인 필요'}
+                                </span>
+                            </div>
+
+                            <div className={styles.crawlLedgerSummary}>
+                                <div>
+                                    <span>일반 5개 여행사</span>
+                                    <strong>{latestRegularCrawlRun ? `${latestRegularCrawlRun.successCount}/${latestRegularCrawlRun.attemptedSources.length}곳 반영` : '—'}</strong>
+                                    <small>{latestRegularCrawlRun ? `${formatKST(latestRegularCrawlRun.entry.timestamp).replace(/:\d{2}$/, '')} 완료` : '완료 기록 없음'}</small>
+                                </div>
+                                <div>
+                                    <span>최근 원본 → 노출</span>
+                                    <strong>{latestRegularCrawlRun ? `${latestRegularCrawlRun.scraped?.toLocaleString() ?? '—'} → ${latestRegularCrawlRun.shown.toLocaleString()}` : '—'}</strong>
+                                    <small>필터 전 수집 → 사이트 반영</small>
+                                </div>
+                                <div>
+                                    <span>최근 표 교체</span>
+                                    <strong>{latestRegularCrawlRun?.turnover?.reliable
+                                        ? `+${latestRegularCrawlRun.turnover.added.toLocaleString()} · −${latestRegularCrawlRun.turnover.removed.toLocaleString()}`
+                                        : '판단 제외'}</strong>
+                                    <small>신규 · 사라짐</small>
+                                </div>
+                                <div>
+                                    <span>마이리얼트립</span>
+                                    <strong>{latestMyrealtripCrawlRun
+                                        ? latestMyrealtripCrawlRun.status === 'success' ? `${latestMyrealtripCrawlRun.shown.toLocaleString()}개 반영` : '이전 데이터 유지'
+                                        : data.sourceUpdatedAt?.myrealtrip ? `${timeAgo(data.sourceUpdatedAt.myrealtrip)} 갱신` : '별도 기록 대기'}</strong>
+                                    <small>{latestMyrealtripCrawlRun
+                                        ? `${formatKST(latestMyrealtripCrawlRun.entry.timestamp).replace(/:\d{2}$/, '')} 완료`
+                                        : '다음 전용 크롤부터 회차가 분리 기록됩니다.'}</small>
+                                </div>
+                            </div>
+
+                            <div className={styles.crawlLedgerList}>
+                                {crawlRunRows.length === 0 ? (
+                                    <div className={styles.emptyState}>아직 여행사 크롤링 기록이 없습니다.</div>
+                                ) : [...crawlRunRows].reverse().slice(0, 12).map(row => {
+                                    const turnoverText = row.turnover?.reliable
+                                        ? `신규 ${row.turnover.added.toLocaleString()} · 사라짐 ${row.turnover.removed.toLocaleString()}`
+                                        : '변화량 판단 제외';
+                                    const issueText = row.failedSources.length > 0
+                                        ? `${row.failedSources.map(source => SOURCE_NAMES[source] || source).join(', ')} 이전 데이터 유지`
+                                        : row.critical[0]?.replace(/^🚨\s*/, '') || '정상 반영';
+                                    return (
+                                        <div key={row.entry.timestamp} className={styles.crawlLedgerRow}>
+                                            <time dateTime={row.entry.timestamp}>{formatKST(row.entry.timestamp).replace(/:\d{2}$/, '')}</time>
+                                            <span className={`${styles.collectionStatus} ${styles[`collectionStatus_${row.status}`]}`}>
+                                                {row.status === 'success' ? '성공' : row.status === 'partial' ? '일부 실패' : '실패'}
+                                            </span>
+                                            <div className={styles.crawlLedgerMain}>
+                                                <strong>{row.label} · {row.successCount}/{row.attemptedSources.length}곳 반영</strong>
+                                                <small>{issueText}</small>
+                                            </div>
+                                            <div className={styles.crawlLedgerNumbers}>
+                                                <strong>원본 {row.scraped?.toLocaleString() ?? '—'} → 노출 {row.shown.toLocaleString()}</strong>
+                                                <small>{turnoverText}</small>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </article>
+
+                        <article className={styles.crawlLedgerPanel}>
+                            <div className={styles.crawlLedgerHead}>
+                                <div>
+                                    <span className={styles.crawlLedgerEyebrow}>추천·가격 비교 데이터</span>
+                                    <h3>네이버 가격 확인</h3>
+                                    <p>내 PC가 네이버를 실제로 연 횟수와 성공률, 미처리 대기열을 보여줍니다.</p>
+                                </div>
+                                <span className={latestNaverRun?.status === 'success' && !naverNeedsAttention ? styles.statusGood : styles.statusWarn}>
+                                    {!latestNaverRun ? '기록 없음' : latestNaverRun.status === 'success' && !naverNeedsAttention ? '최근 회차 정상' : '확인 필요'}
+                                </span>
+                            </div>
+
+                            <div className={styles.crawlLedgerSummary}>
+                                <div>
+                                    <span>24시간 내 사용 가능</span>
+                                    <strong>{data.naverStatus ? `${data.naverStatus.freshEntries.toLocaleString()} / ${data.naverStatus.totalEntries.toLocaleString()}` : '—'}</strong>
+                                    <small>추천과 가격 비교에 실제 사용</small>
+                                </div>
+                                <div>
+                                    <span>최근 실행 성공률</span>
+                                    <strong>{latestNaverRun ? `${latestNaverRun.entry.success.toLocaleString()}/${latestNaverRun.entry.attempted.toLocaleString()} · ${latestNaverRun.successRate}%` : '—'}</strong>
+                                    <small>{latestNaverRun ? `${formatKST(latestNaverRun.entry.timestamp).replace(/:\d{2}$/, '')} 완료` : '완료 기록 없음'}</small>
+                                </div>
+                                <div>
+                                    <span>페이지 이동</span>
+                                    <strong>{latestNaverRun
+                                        ? `${(latestNaverRun.entry.navigations ?? latestNaverRun.entry.attempted).toLocaleString()} / ${(latestNaverRun.entry.navigationLimit ?? latestNaverRun.entry.maxFlights).toLocaleString()}`
+                                        : '—'}</strong>
+                                    <small>{latestNaverRun?.entry.durationSeconds !== undefined ? `소요 ${formatDuration(latestNaverRun.entry.durationSeconds)}` : '소요 시간은 다음 실행부터 기록'}</small>
+                                </div>
+                                <div>
+                                    <span>다음 회차로 넘김</span>
+                                    <strong>{latestNaverRun ? `${latestNaverRun.entry.deferred.toLocaleString()}개` : '—'}</strong>
+                                    <small>{latestNaverRun
+                                        ? latestNaverRun.entry.deferredNeverChecked > 0
+                                            ? `한 번도 미확인 ${latestNaverRun.entry.deferredNeverChecked.toLocaleString()}개`
+                                            : latestNaverRun.entry.oldestDeferredHours === null
+                                                ? '밀린 항목 없음'
+                                                : `최장 ${latestNaverRun.entry.oldestDeferredHours >= 24 ? `${(latestNaverRun.entry.oldestDeferredHours / 24).toFixed(1)}일` : `${Math.round(latestNaverRun.entry.oldestDeferredHours)}시간`}`
+                                        : '대기열 기록 없음'}</small>
+                                </div>
+                            </div>
+
+                            {data.naverStatus && (
+                                <div className={styles.naverCoverageStrip}>
+                                    <span><b>{data.naverStatus.pricedEntries.toLocaleString()}</b> 가격 확인 이력</span>
+                                    <span><b>{data.naverStatus.expiredEntries.toLocaleString()}</b> 24시간 만료</span>
+                                    <span><b>{data.naverStatus.neverCheckedEntries.toLocaleString()}</b> 성공 이력 없음</span>
+                                    <span className={data.naverStatus.failedEntries > 0 ? styles.naverCoverageWarn : undefined}>
+                                        <b>{data.naverStatus.failedEntries.toLocaleString()}</b> 마지막 시도가 오류
+                                    </span>
+                                </div>
+                            )}
+
+                            {latestNaverRun?.entry.selectedPriorityGroups && (
+                                <div className={styles.naverPriorityStrip}>
+                                    <strong>최근 선택 구성 ({latestNaverRun.entry.maxFlights.toLocaleString()}건 한도)</strong>
+                                    <div>
+                                        {Object.entries(latestNaverRun.entry.selectedPriorityGroups).map(([group, count]) => (
+                                            <span key={group}>{NAVER_PRIORITY_LABELS[group] || group} <b>{count.toLocaleString()}</b></span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className={styles.crawlLedgerList}>
+                                {naverRunRows.length === 0 ? (
+                                    <div className={styles.emptyState}>아직 네이버 가격 확인 기록이 없습니다.</div>
+                                ) : [...naverRunRows].reverse().slice(0, 12).map(row => {
+                                    const entry = row.entry;
+                                    const runner = entry.runner === 'local' ? '내 PC' : entry.runner === 'github' ? 'GitHub 진단' : '수동';
+                                    const scope = entry.sourceFilter === 'all' ? '전체 여행사' : SOURCE_NAMES[entry.sourceFilter] || entry.sourceFilter;
+                                    const queueText = entry.deferredNeverChecked > 0
+                                        ? `이월 ${entry.deferred.toLocaleString()} · 미확인 ${entry.deferredNeverChecked.toLocaleString()}`
+                                        : `이월 ${entry.deferred.toLocaleString()} · 최장 ${entry.oldestDeferredHours === null ? '없음' : entry.oldestDeferredHours >= 24 ? `${(entry.oldestDeferredHours / 24).toFixed(1)}일` : `${Math.round(entry.oldestDeferredHours)}시간`}`;
+                                    return (
+                                        <div key={entry.id} className={styles.crawlLedgerRow}>
+                                            <time dateTime={entry.timestamp}>{formatKST(entry.timestamp).replace(/:\d{2}$/, '')}</time>
+                                            <span className={`${styles.collectionStatus} ${styles[`collectionStatus_${row.status}`]}`}>
+                                                {row.status === 'success' ? '성공' : row.status === 'partial' ? '일부 실패' : '실패'}
+                                            </span>
+                                            <div className={styles.crawlLedgerMain}>
+                                                <strong>{runner} · {scope} · {entry.success.toLocaleString()}/{entry.attempted.toLocaleString()} 성공 ({row.successRate}%)</strong>
+                                                <small>{entry.abortedEarly ? entry.abortReason || '안전장치로 조기 중단' : row.errorSummary}</small>
+                                            </div>
+                                            <div className={styles.crawlLedgerNumbers}>
+                                                <strong>
+                                                    이동 {(entry.navigations ?? entry.attempted).toLocaleString()}회 · 신규 {entry.newRoutesAttempted.toLocaleString()}/{entry.newRoutes.toLocaleString()}
+                                                    {entry.changedRoutes !== undefined ? ` · 가격 변경 ${entry.changedRoutes.toLocaleString()}` : ''}
+                                                    {entry.periodicRoutes !== undefined ? ` · 정기 ${entry.periodicRoutes.toLocaleString()}` : ''}
+                                                </strong>
+                                                <small>{queueText}{entry.durationSeconds !== undefined ? ` · ${formatDuration(entry.durationSeconds)}` : ''}</small>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </article>
+                    </div>
                 </section>
             </>)}
 
@@ -2796,7 +3048,7 @@ export default function AdminPage() {
                         const stale = ageHours === null || ageHours > staleAfter;
 
                         const history = (data.crawlHistory || [])
-                            .filter(e => !e.sites[source]?.skipped)
+                            .filter(e => sourceWasAttempted(e, source))
                             .slice(-16)
                             .map(e => ({
                                 ts: e.timestamp,
@@ -3120,20 +3372,20 @@ export default function AdminPage() {
             {/* 네이버 비교가 상태 — 로컬 크롤이 멈추면 추천 품질이 조용히 나빠지므로 눈에 띄게 둔다 */}
             <div id="collection-naver">
             {data.naverStatus && (() => {
-                const { lastCrawledAt, ageDays, freshEntries, totalEntries } = data.naverStatus;
-                const stale = ageDays === null || ageDays > 3;
+                const { lastCrawledAt, freshEntries, totalEntries } = data.naverStatus;
+                const stale = !lastCrawledAt || freshEntries === 0;
                 return (
                     <div className={stale ? `${styles.naverStatus} ${styles.naverStatusStale}` : styles.naverStatus}>
                         <strong>네이버 가격 확인</strong>
                         {lastCrawledAt ? (
                             <span>
                                 마지막 갱신 {formatKST(lastCrawledAt)} ({timeAgo(lastCrawledAt)}) ·
-                                {' '}최근 3일 안에 확인 {freshEntries.toLocaleString()}건 / 전체 {totalEntries.toLocaleString()}건
+                                {' '}최근 24시간 내 사용 가능 {freshEntries.toLocaleString()}건 / 전체 {totalEntries.toLocaleString()}건
                             </span>
                         ) : (
                             <span>갱신 기록이 없습니다.</span>
                         )}
-                        {stale && <em>3일 넘게 지난 가격은 추천 판단에 쓰지 않습니다. 자동 확인이 실행되는지 살펴보세요.</em>}
+                        {stale && <em>24시간 넘게 지난 가격은 추천 판단에 쓰지 않습니다. 자동 확인이 실행되는지 살펴보세요.</em>}
                     </div>
                 );
             })()}
@@ -3305,7 +3557,7 @@ export default function AdminPage() {
                         <div className={styles.summaryCard}>
                             <span className={styles.summaryLabel}>최근 네이버 가격 있음</span>
                             <span className={styles.summaryValue}>{flightFilterSummary.quality.freshNaverComparison.toLocaleString()}</span>
-                            <span className={styles.summaryHint}>최근 3일 안에 같은 일정·공항으로 확인</span>
+                            <span className={styles.summaryHint}>최근 24시간 안에 같은 일정·공항으로 확인</span>
                         </div>
                     </div>
                 ) : <div className={styles.dealReviewEmpty}>항공권 정보 상태를 불러오는 중입니다.</div>}

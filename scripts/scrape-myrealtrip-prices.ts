@@ -17,6 +17,7 @@ import {
     SOURCE_ADAPTER_VERSIONS,
     sourceCircuitLabel,
 } from '../src/lib/source-circuit';
+import { logCrawlResults, recordCrawlAlerts } from '../src/lib/utils/crawl-logger';
 
 /**
  * 마이리얼트립 실제 가격 스크래핑 (Playwright)
@@ -88,6 +89,24 @@ function cleanAirlineName(value: string | undefined): string {
     const name = (value || '').trim();
     if (!name || INVALID_AIRLINE_LABELS.has(name) || name.includes('항공권') || name.includes('제공요금') || name.length > 60) return '';
     return name;
+}
+
+function flightIdentity(flight: CachedFlight): string {
+    return [
+        flight.airline,
+        flight.departure?.airport || flight.departure?.city,
+        flight.arrival?.airport || flight.arrival?.city,
+        flight.departure?.date,
+        flight.arrival?.date,
+    ].join('|');
+}
+
+function countCities(flights: CachedFlight[]): Record<string, number> {
+    return flights.reduce<Record<string, number>>((counts, flight) => {
+        const city = flight.arrival?.city || '기타';
+        counts[city] = (counts[city] || 0) + 1;
+        return counts;
+    }, {});
 }
 
 // ── 병렬 워커 ──────────────────────────────────────────
@@ -422,7 +441,8 @@ async function main() {
     // console.log(`\n=== 네이버 최저가 비교 ===`);
     // 네이버 필터 일시 중단
 
-    const finalMrtCount = cache.flights.filter((flight: any) => flight.source === 'myrealtrip').length;
+    const finalMrtFlights = cache.flights.filter((flight: any) => flight.source === 'myrealtrip') as CachedFlight[];
+    const finalMrtCount = finalMrtFlights.length;
     if (finalMrtCount === 0) {
         throw new Error('가격 검증과 필터 적용 후 마이리얼트립 항공편이 0건이므로 기존 캐시를 보존합니다.');
     }
@@ -444,6 +464,17 @@ async function main() {
         (alert: unknown) => !/myrealtrip|마이리얼트립/i.test(String(alert)),
     );
     fs.writeFileSync(CACHE_PATH, JSON.stringify(cache));
+
+    const previousKeys = new Set(previousMrtFlights.map((flight: CachedFlight) => flightIdentity(flight)));
+    const finalKeys = new Set(finalMrtFlights.map(flightIdentity));
+    const added = [...finalKeys].filter(key => !previousKeys.has(key)).length;
+    const removed = [...previousKeys].filter(key => !finalKeys.has(key)).length;
+    logCrawlResults('myrealtrip', finalMrtCount, undefined, countCities(finalMrtFlights), {
+        scraped: results.size,
+        added,
+        removed,
+        separateSession: true,
+    });
 
     const lifecycleObservationPath = process.env.LIFECYCLE_OBSERVATION_PATH;
     if (lifecycleObservationPath) {
@@ -483,6 +514,21 @@ async function main() {
 
 main().catch((error) => {
     console.error('\n❌ 마이리얼트립 스크래핑 중단:', error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    try {
+        const preservedCache = JSON.parse(fs.readFileSync(CACHE_PATH, 'utf8'));
+        const preservedFlights = preservedCache.flights
+            .filter((flight: CachedFlight) => flight.source === 'myrealtrip') as CachedFlight[];
+        logCrawlResults('myrealtrip', preservedFlights.length, undefined, countCities(preservedFlights), {
+            preserved: true,
+            added: 0,
+            removed: 0,
+            separateSession: true,
+        });
+        recordCrawlAlerts([`🚨 마이리얼트립 수집 실패 — 이전 데이터 유지: ${errorMessage}`]);
+    } catch (logError) {
+        console.error('마이리얼트립 실패 기록 저장 실패:', logError);
+    }
     const restriction = classifySourceAccessRestriction(error);
     if (restriction) {
         try {

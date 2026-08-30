@@ -148,18 +148,43 @@ export async function GET(request: NextRequest) {
         // 화면과 동일하게 24시간 이내이며 최신 시도가 정상 빈 결과/노선 오류가 아닌 값만 센다.
         let naverStatus: {
             lastCrawledAt: string | null;
+            lastAttemptAt: string | null;
             ageDays: number | null;
             freshEntries: number;
+            pricedEntries: number;
+            expiredEntries: number;
+            failedEntries: number;
+            neverCheckedEntries: number;
             totalEntries: number;
         } | null = null;
         try {
             const naverPath = path.join(process.cwd(), 'data', 'naver-prices.json');
             if (fs.existsSync(naverPath)) {
-                const naverData = JSON.parse(fs.readFileSync(naverPath, 'utf-8')) as Record<string, NaverComparisonEntry>;
+                const naverData = JSON.parse(fs.readFileSync(naverPath, 'utf-8')) as Record<string, NaverComparisonEntry & {
+                    lastAttemptAt?: string;
+                    firstQueuedAt?: string;
+                }>;
                 const entries = Object.values(naverData);
                 let lastCrawledAt: string | null = null;
+                let lastAttemptAt: string | null = null;
                 let freshEntries = 0;
+                let pricedEntries = 0;
+                let expiredEntries = 0;
+                let failedEntries = 0;
+                let neverCheckedEntries = 0;
                 for (const entry of entries) {
+                    const price = Number(entry.naverLowest);
+                    const hasSuccessfulPrice = Number.isFinite(price) && price > 0 && Boolean(entry.crawledAt);
+                    if (hasSuccessfulPrice) {
+                        pricedEntries += 1;
+                        if (!getComparisonFreshness(entry.crawledAt).usable) expiredEntries += 1;
+                    } else {
+                        neverCheckedEntries += 1;
+                    }
+                    if (entry.lastAttemptStatus && entry.lastAttemptStatus !== 'success') failedEntries += 1;
+                    const attemptedAt = entry.lastAttemptAt || entry.crawledAt;
+                    if (attemptedAt && (!lastAttemptAt || attemptedAt > lastAttemptAt)) lastAttemptAt = attemptedAt;
+
                     const comparison = getUsableNaverComparison(entry);
                     if (!comparison) continue;
                     freshEntries += 1;
@@ -169,8 +194,13 @@ export async function GET(request: NextRequest) {
                 }
                 naverStatus = {
                     lastCrawledAt,
+                    lastAttemptAt,
                     ageDays: getComparisonFreshness(lastCrawledAt ?? undefined).ageDays,
                     freshEntries,
+                    pricedEntries,
+                    expiredEntries,
+                    failedEntries,
+                    neverCheckedEntries,
                     totalEntries: entries.length,
                 };
             }

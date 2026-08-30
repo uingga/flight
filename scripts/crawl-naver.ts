@@ -180,6 +180,8 @@ try {
 
 // ─── 메인 ───
 (async () => {
+    const runStartedAt = new Date().toISOString();
+    const runStartedMs = Date.now();
     console.log('🔍 네이버 항공권 최저가 크롤러 시작...\n');
 
     // 1. all-flights-cache.json에서 마이리얼트립 항공권 추출
@@ -664,16 +666,21 @@ try {
     recordNaverCrawlHistory({
         id: `${recordedAt}-${process.env.CI ? 'github' : HIDE_WINDOW ? 'local' : 'manual'}-${process.pid}`,
         timestamp: recordedAt,
+        startedAt: runStartedAt,
+        durationSeconds: Math.max(0, Math.round((Date.now() - runStartedMs) / 1000)),
         runner: process.env.CI ? 'github' : HIDE_WINDOW ? 'local' : 'manual',
         sourceFilter: SOURCE_FILTER || 'all',
         maxFlights: MAX_FLIGHTS,
+        navigationLimit: MAX_NAVIGATIONS,
         navigations: navigationCount,
         needed: neededFlights.length,
         attempted: attemptedCount,
+        skippedFresh,
         newRoutes: newRouteCount,
         newRoutesAttempted,
         changedRoutes: changedRouteCount,
         periodicRoutes: periodicRouteCount,
+        reasonCounts,
         priorityGroups: groupCounts,
         selectedPriorityGroups: selectedGroupCounts,
         deferred: remaining.length,
