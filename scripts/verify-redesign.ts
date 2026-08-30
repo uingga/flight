@@ -137,6 +137,7 @@ async function verifyViewport(width: number, height: number) {
             return dialog instanceof HTMLElement && dialog.contains(document.activeElement);
         });
         assert(await page.evaluate(() => document.body.style.overflow) === 'hidden', '필터가 열린 동안 배경 스크롤이 잠기지 않았습니다.');
+        assert(await page.evaluate(() => document.documentElement.style.overflow) === 'hidden', '필터가 열린 동안 루트 스크롤이 잠기지 않았습니다.');
         if (width < 960) {
             await swipeSheetDown(page, mainFilterDialog);
             await mainFilterDialog.waitFor({ state: 'hidden' });
@@ -154,16 +155,46 @@ async function verifyViewport(width: number, height: number) {
         await page.keyboard.press('Escape');
         await mainFilterDialog.waitFor({ state: 'hidden' });
         assert(await page.evaluate(() => document.body.style.overflow) !== 'hidden', '필터를 닫은 뒤 배경 스크롤 잠금이 풀리지 않았습니다.');
+        assert(await page.evaluate(() => document.documentElement.style.overflow) !== 'hidden', '필터를 닫은 뒤 루트 스크롤 잠금이 풀리지 않았습니다.');
 
         await page.locator('article').first().locator('button').first().click();
         const detail = page.locator('[aria-label="항공권 상세"]');
         await detail.waitFor();
+        const detailBackgroundScroll = await page.evaluate(() => Math.abs(Number.parseFloat(document.body.style.top) || 0));
+        const detailLockedTop = await page.evaluate(() => document.body.style.top);
+        const lockedWindowScroll = await page.evaluate(() => window.scrollY);
+        const detailBox = await detail.boundingBox();
+        assert(detailBox, '상세 화면의 위치를 찾지 못했습니다.');
+        const backdropPoint = detailBox.x > 1
+            ? { x: Math.max(1, detailBox.x / 2), y: height / 2 }
+            : { x: width / 2, y: Math.max(1, detailBox.y / 2) };
+        await page.mouse.move(backdropPoint.x, backdropPoint.y);
+        await page.mouse.wheel(0, 400);
+        await page.waitForTimeout(100);
+        assert(
+            Math.abs(await page.evaluate(() => window.scrollY) - lockedWindowScroll) < 1,
+            '상세 화면 뒤의 배경이 함께 스크롤됩니다.',
+        );
         const detailIsScrollable = await detail.evaluate(element => element.scrollHeight > element.clientHeight + 24);
         const detailScrollHint = page.locator('[data-detail-scroll-hint]');
         if (detailIsScrollable) {
             await detailScrollHint.waitFor({ state: 'visible' });
+            await page.mouse.move(detailBox.x + detailBox.width / 2, detailBox.y + Math.min(detailBox.height - 24, 160));
+            await page.mouse.wheel(0, 160);
+            await page.waitForTimeout(100);
+            assert(await detail.evaluate(element => element.scrollTop) > 0, '상세 화면 자체가 스크롤되지 않습니다.');
+            assert(
+                Math.abs(await page.evaluate(() => window.scrollY) - lockedWindowScroll) < 1,
+                '상세 화면을 스크롤할 때 배경이 함께 움직입니다.',
+            );
             await detail.evaluate(element => { element.scrollTop = element.scrollHeight; });
             await detailScrollHint.waitFor({ state: 'hidden' });
+            await page.mouse.wheel(0, 400);
+            await page.waitForTimeout(100);
+            assert(
+                Math.abs(await page.evaluate(() => window.scrollY) - lockedWindowScroll) < 1,
+                '상세 화면 끝에서 배경으로 스크롤이 이어집니다.',
+            );
         }
         const booking = detail.locator('a').filter({ hasText: /에서 확인하기/ });
         const bookingUrl = await booking.getAttribute('href');
@@ -181,9 +212,21 @@ async function verifyViewport(width: number, height: number) {
             await page.keyboard.press('Escape');
             await alertDialog.waitFor({ state: 'hidden' });
             assert(await detail.isVisible(), '가격 알림만 닫아야 하는데 항공권 상세까지 닫혔습니다.');
+            assert(
+                await page.evaluate(expectedTop => (
+                    document.body.style.position === 'fixed'
+                    && document.body.style.top === expectedTop
+                    && document.documentElement.style.overflow === 'hidden'
+                ), detailLockedTop),
+                '중첩 알림을 닫은 뒤 상세 화면의 배경 잠금이 풀렸습니다.',
+            );
         }
         await page.keyboard.press('Escape');
         await detail.waitFor({ state: 'hidden' });
+        assert(
+            Math.abs(await page.evaluate(() => window.scrollY) - detailBackgroundScroll) < 1,
+            '상세 화면을 닫은 뒤 기존 스크롤 위치가 복원되지 않았습니다.',
+        );
         assert(!new URL(page.url()).searchParams.has('flight'), '상세 닫기 뒤 URL에 항공권 식별자가 남았습니다.');
         await page.goForward();
         await detail.waitFor();

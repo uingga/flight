@@ -185,7 +185,8 @@ export default function Dashboard() {
 
     // 팝업이 열려 있는 동안 배경(body) 스크롤 잠금
     // (iOS Safari는 overflow:hidden만으로 안 막혀서 position:fixed 방식 사용)
-    const anyModalOpen = !!(modetourGuide || bookingDisclaimer || naverDisclaimer || ttangConfirmFlight || showContactModal || showPriceAlertManager || showDealAlertSetup || showAccount);
+    // AccountSheet는 공통 OverlayDialog가 별도로 잠그므로 여기서 중복 잠금하지 않는다.
+    const anyModalOpen = !!(modetourGuide || bookingDisclaimer || naverDisclaimer || ttangConfirmFlight || showContactModal || showPriceAlertManager || showDealAlertSetup);
     useEffect(() => {
         if (!anyModalOpen) return;
         const scrollY = window.scrollY;
