@@ -142,39 +142,6 @@ jobs:
             echo "ℹ️ No changes to commit."
           fi
 
-      # 데이터 커밋 직후에는 Vercel이 아직 이전 캐시를 제공할 수 있다. 운영 API가 이번
-      # 캐시 이상으로 올라온 것을 확인한 뒤에만 오늘의 표 유효성을 검사한다.
-      - name: Wait for updated flight API
-        id: flight_api
-        if: steps.crawl.outcome == 'success'
-        run: node scripts/wait-for-flight-api-cache.mjs
-
-      # 08:17 회차(정상 schedule과 watchdog 대체 실행 모두)는 아침 표를 새로 선정한다.
-      # 나머지 일반 크롤은 현재 표가 새 캐시에서 사라진 경우에만 복구한다.
-      # 오후 표 신규 선정은 PC 네이버 크롤링이 성공해 가격이 반영된 뒤 수행한다.
-      - name: Select or validate today's pick
-        if: steps.crawl.outcome == 'success' && steps.flight_api.outcome == 'success'
-        shell: bash
-        run: |
-          git pull --ff-only origin main
-          if [[ "${{ needs.preflight.outputs.is_morning_pick_slot }}" == "true" ]]; then
-            node scripts/select-today-pick.mjs
-          else
-            node scripts/select-today-pick.mjs --repair
-          fi
-
-      - name: Commit and push today's pick
-        if: steps.crawl.outcome == 'success' && steps.flight_api.outcome == 'success'
-        run: |
-          if [[ -z $(git status --porcelain -- data/today-pick.json) ]]; then
-            echo "No selection change"
-            exit 0
-          fi
-          git add data/today-pick.json
-          git commit -m "chore(data): select today pick"
-          git pull --rebase origin main
-          git push origin main
-
       - name: Archive long-term price history
         if: steps.crawl.outcome == 'success'
         continue-on-error: true

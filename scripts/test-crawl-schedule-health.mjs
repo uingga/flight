@@ -306,14 +306,15 @@ test('watchdog fallback keeps the missed crawl slot identity', () => {
     assert.match(result.stdout, /\[trigger\] expected_at=2026-08-28T02:12:00\.000Z/);
 });
 
-test('08:17 general crawl selects the morning pick and other slots only repair it', () => {
+test('general crawl never selects or repairs today pick', () => {
     const workflow = fs.readFileSync('.github/workflows/daily-crawl.yml', 'utf8');
+    const selector = fs.readFileSync('scripts/select-today-pick.mjs', 'utf8');
     assert.match(workflow, /^\s+is_morning_pick_slot: \$\{\{ steps\.trigger\.outputs\.is_morning_pick_slot \}\}/m);
-    assert.match(workflow, /run: node scripts\/wait-for-flight-api-cache\.mjs/);
-    assert.match(workflow, /needs\.preflight\.outputs\.is_morning_pick_slot/);
-    assert.match(workflow, /node scripts\/select-today-pick\.mjs\s*\n\s*else/);
-    assert.match(workflow, /node scripts\/select-today-pick\.mjs --repair/);
+    assert.doesNotMatch(workflow, /wait-for-flight-api-cache\.mjs/);
+    assert.doesNotMatch(workflow, /select-today-pick\.mjs/);
     assert.doesNotMatch(workflow, /is_today_pick_slot/);
+    assert.match(selector, /storedPick\?\.date === kstDate && storedPick\?\.flightId/);
+    assert.match(selector, /하루 1회 선정/);
 });
 
 test('watchdog fallback preserves the 08:17 morning-pick slot identity', () => {

@@ -367,9 +367,9 @@ if (-not $DataPublished) {
     exit 1
 }
 
-# Select a new daily pick only after the successful Naver filter is on main and
-# the deployed API has caught up. A concurrent data commit causes the next attempt
-# to pull the new main and select again instead of overwriting newer crawl data.
+# Select the daily pick only after the successful Naver filter is on main and
+# the deployed API has caught up. The selector keeps an existing same-day pick,
+# so retries cannot replace a selection that was already published today.
 $TodayPickSelected = $false
 for ($selectionAttempt = 1; $selectionAttempt -le 2; $selectionAttempt++) {
     git pull --ff-only origin main 2>&1 | Add-Content -Encoding utf8 $LogFile
