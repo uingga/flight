@@ -2,9 +2,8 @@ import { chromium } from 'playwright';
 import { Flight } from '@/types/flight';
 import { getRegionByCity } from '@/lib/utils/region-mapper';
 // logCrawlResults moved to crawl-all.ts
-import { fetchYbtourSchedules, scheduleKeyOf, ScheduleFetchStats, ScheduleKey } from './ybtour-schedule';
+import type { ScheduleKey } from './ybtour-schedule';
 import { ScrapeCompleteness } from './scrape-errors';
-import { survivingRouteMinPrice } from '@/lib/utils/route-min-price';
 import { buildStableFlightId, normalizeAirline } from '@/lib/utils/flight-helpers';
 import { assertNoSourceAccessBlockText, SourceResponseError } from './source-response';
 import { classifySourceAccessRestriction } from '../source-circuit';
@@ -12,11 +11,15 @@ import { classifySourceAccessRestriction } from '../source-circuit';
 const randomDelay = (min: number, max: number) =>
     new Promise(r => setTimeout(r, (Math.random() * (max - min) + min) * 1000));
 
-let lastScheduleStats: ScheduleFetchStats | null = null;
+// 스케줄 POST에 필요한 내부 키는 최종 필터까지 같은 객체를 따라가되 JSON 캐시에는 남기지 않는다.
+const scheduleKeyByFlight = new WeakMap<object, ScheduleKey>();
 
-/** 통합 크롤러가 시간 정보 수집 이상을 별도 경고로 남길 때 사용한다. */
-export function getLastYbtourScheduleStats(): ScheduleFetchStats | null {
-    return lastScheduleStats;
+export function rememberYbtourScheduleKey(flight: Flight, key: ScheduleKey): void {
+    scheduleKeyByFlight.set(flight, key);
+}
+
+export function getYbtourScheduleKey(flight: Flight): ScheduleKey | undefined {
+    return scheduleKeyByFlight.get(flight);
 }
 
 /**
@@ -112,7 +115,6 @@ const REGIONS = [
 
 export async function scrapeYbtour(prevFlights: any[] = []): Promise<Flight[]> {
     console.log('노랑풍선 크롤링 시작...');
-    lastScheduleStats = null;
 
     const browser = await chromium.launch({
         headless: !!process.env.CI,
@@ -136,7 +138,6 @@ export async function scrapeYbtour(prevFlights: any[] = []): Promise<Flight[]> {
     // page.on('console', msg => console.log(`[BROWSER] ${msg.text()}`));
 
     const flights: Flight[] = [];
-    const scheduleKeys: ScheduleKey[] = [];
     let totalFlights = 0;
 
     try {
@@ -449,9 +450,10 @@ export async function scrapeYbtour(prevFlights: any[] = []): Promise<Flight[]> {
                                     : 0;
                                 const cheapestFlights = validFlights.filter((f: any) => f.price === minPrice);
 
-                                // 조회 키는 따로 모으고 항공권 객체에서는 지운다 (캐시에 남기지 않는다)
+                                // 조회 키는 WeakMap에만 보관한다. crawl-all의 인터파크 필터까지
+                                // 같은 객체를 따라간 뒤 최종 노출 후보 시간 조회에 사용된다.
                                 for (const cf of cheapestFlights) {
-                                    scheduleKeys.push(cf._sk as ScheduleKey);
+                                    if (cf._sk) rememberYbtourScheduleKey(cf, cf._sk as ScheduleKey);
                                     delete cf._sk;
                                 }
                                 flights.push(...cheapestFlights);
@@ -487,7 +489,8 @@ export async function scrapeYbtour(prevFlights: any[] = []): Promise<Flight[]> {
         // 지역이 통째로 빠진 결과는 "적게 수집된 것"이 아니라 "믿을 수 없는 것"이다.
         completeness.assertComplete(flights.length);
 
-        // ===== Phase 2: 이전 캐시에서 시각 복사 + 신규만 노랑풍선 자체 조회 =====
+        // ===== Phase 2: 이전 캐시에서 검증된 시각만 복사 =====
+        // 네트워크 상세 조회는 crawl-all이 인터파크 필터까지 끝낸 뒤 실행한다.
         if (flights.length > 0) {
             // 복사 키에 항공사를 넣는다. 같은 노선·같은 날짜에 항공사가 둘이면
             // 엉뚱한 항공사의 시각이 붙는다.
@@ -513,14 +516,8 @@ export async function scrapeYbtour(prevFlights: any[] = []): Promise<Flight[]> {
                 });
 
             let carriedOver = 0;
-            const pendingKeys: ScheduleKey[] = [];
-            const pendingIndices: number[] = [];
 
-            // 최저가 필터에서 살아남을 표만 조회한다 (버려질 표까지 물으면 크롤이 늘어진다)
-            const survivors = survivingRouteMinPrice(flights);
-
-            for (let i = 0; i < flights.length; i++) {
-                const f = flights[i];
+            for (const f of flights) {
                 const prev = prevTimeMap.get(timeKeyOf(f));
 
                 if (prev?.departure?.time) {
@@ -531,36 +528,10 @@ export async function scrapeYbtour(prevFlights: any[] = []): Promise<Flight[]> {
                     if (prev.flightNumber) f.flightNumber = prev.flightNumber;
                     if (prev.minPax) f.minPax = prev.minPax;
                     carriedOver++;
-                } else if (scheduleKeys[i] && survivors.has(f)) {
-                    pendingKeys.push(scheduleKeys[i]);
-                    pendingIndices.push(i);
                 }
             }
 
-            console.log(`[노랑풍선] 이전 시각 복사: ${carriedOver}/${flights.length}개, 신규 조회 대상: ${pendingKeys.length}개 (최저가 생존 ${survivors.size}건 중)`);
-
-            if (pendingKeys.length > 0) {
-                // 노랑풍선 세션을 이미 쥐고 있는 페이지를 그대로 쓴다.
-                // 새 창도, 다른 여행사 사이트도 필요하지 않다.
-                const scheduleResult = await fetchYbtourSchedules(page, pendingKeys);
-                const schedules = scheduleResult.schedules;
-                lastScheduleStats = scheduleResult.stats;
-
-                let applied = 0;
-                for (let j = 0; j < pendingIndices.length; j++) {
-                    const data = schedules.get(scheduleKeyOf(pendingKeys[j]));
-                    if (!data) continue;
-                    const f = flights[pendingIndices[j]];
-                    f.departure.time = data.depTime;
-                    (f.departure as any).arrivalTime = data.arrTime;
-                    f.arrival.time = data.retDepTime;
-                    (f.arrival as any).arrivalTime = data.retArrTime;
-                    if (data.flightNumber) f.flightNumber = data.flightNumber;
-                    if (data.minPax > 1) f.minPax = data.minPax;
-                    applied++;
-                }
-                console.log(`[노랑풍선] 신규 시각 반영: ${applied}/${pendingKeys.length}개`);
-            }
+            console.log(`[노랑풍선] 이전 검증 시각 복사: ${carriedOver}/${flights.length}개`);
         }
 
         console.log(`\n노랑풍선 크롤링 완료: 총 ${flights.length}개 항공권`);

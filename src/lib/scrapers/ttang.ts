@@ -2,9 +2,7 @@ import { Browser, Page, chromium } from 'playwright';
 import { Flight } from '@/types/flight';
 import { getRegionByCity } from '@/lib/utils/region-mapper';
 // logCrawlResults moved to crawl-all.ts
-import { enrichWithRealtimeData, applyEnrichData, RouteKey } from '@/lib/utils/realtime-enrich';
 import { IncompleteScrapeError, ScrapeCompleteness } from './scrape-errors';
-import { survivingRouteMinPrice } from '@/lib/utils/route-min-price';
 import { normalizeAirline } from '@/lib/utils/flight-helpers';
 import {
     assertNoSourceAccessBlockText,
@@ -24,7 +22,7 @@ const randomDelay = (min: number, max: number) =>
  * 땡처리닷컴 크롤링 (2단계)
  *
  * Phase 1: 프로모션 API (allTtangListAct.do) → 기본 노선/가격 수집
- * Phase 2: realtime_V2 페이지 로드 → 시간/좌석 데이터 보강
+ * 시간/좌석 보강은 crawl-all이 최종 노출 후보를 정한 뒤 실행한다.
  *
  * skdset1Info: "20260415||0905||20260415||1050||PUS||FSZ||..." → 출발시간/도착시간
  * skdset1Detail: "BX||에어부산||1645||PUS||FSZ||...||G||4||..." → 좌석수
@@ -115,7 +113,6 @@ export async function scrapeTtang(prevFlights: any[] = []): Promise<Flight[]> {
     };
     const allFlights: Flight[] = [];
     const processedKeys = new Set<string>();
-    const routeKeys: RouteKey[] = [];
 
     try {
         // ===== Phase 1: 프로모션 API로 기본 데이터 수집 =====
@@ -207,10 +204,9 @@ export async function scrapeTtang(prevFlights: any[] = []): Promise<Flight[]> {
 
                     const depInfo = DEP_CITY_MAP[item.depCityCode] || { city: item.depCityDesc || '서울', airport: item.depCityCode || 'ICN' };
                     const depDateRaw = (item.departureDate || '').replace(/-/g, '');
-                    const arrDateRaw = (item.arrivalDate || '').replace(/-/g, '');
                     // 예약 링크는 해당 출발일의 "땡처리 특가" 목록으로 보낸다.
                     // 이 가격은 특가 API에서 온 것이라 일반 실시간 검색(realtime_V2)에는 없다 —
-                    // 실시간 검색으로 보내면 광고한 가격이 페이지에 존재하지 않는다. (시간 보강은 routeKeys로 별도 수행)
+                    // 실시간 검색으로 보내면 광고한 가격이 페이지에 존재하지 않는다.
                     const link = `https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=${depDateRaw}&adt=1&chd=0&inf=0&page=1&scale=200`;
                     const searchLink = link;
 
@@ -238,13 +234,6 @@ export async function scrapeTtang(prevFlights: any[] = []): Promise<Flight[]> {
                     };
 
                     allFlights.push(flight);
-                    routeKeys.push({
-                        depCode: item.depCityCode,
-                        arrCode: item.arrCityCode,
-                        depDate: depDateRaw,
-                        arrDate: arrDateRaw,
-                        airline: flight.airline,
-                    });
                     dayCount++;
                 }
 
@@ -285,9 +274,9 @@ export async function scrapeTtang(prevFlights: any[] = []): Promise<Flight[]> {
         console.log(`[땡처리] Phase 1 완료: ${totalDays}일 순회, ${allFlights.length}개 수집`);
         completeness.assertComplete(allFlights.length);
 
-        // ===== Phase 2: 이전 캐시에서 시간 복사 + 신규만 realtime_V2 보강 =====
+        // 이전에 확인한 시간은 목록 단계에서 먼저 복사한다. 신규·미확인 항공권의 네트워크
+        // 보강은 crawl-all의 최저가·만료·인터파크 필터가 모두 끝난 뒤에만 실행한다.
         if (allFlights.length > 0) {
-            // 이전 캐시에서 시간 데이터 복사
             // 이전 캐시에서 시각을 옮겨올 때 쓰는 키.
             //
             // 예전에는 노선과 날짜만 봤다. 같은 노선·같은 날짜에 항공사가 둘이면 엉뚱한
@@ -308,15 +297,7 @@ export async function scrapeTtang(prevFlights: any[] = []): Promise<Flight[]> {
             });
 
             let carriedOver = 0;
-            const newRouteKeys: RouteKey[] = [];
-            const newRouteIndices: number[] = [];
-
-            // 최저가 필터에서 살아남을 표만 보강한다 — 나머지는 crawl-all이 어차피 버리는데
-            // 노선당 실시간 페이지를 여는 비용이 커서 크롤 전체가 몇 시간씩 늘어졌다.
-            const survivors = survivingRouteMinPrice(allFlights);
-
-            for (let i = 0; i < allFlights.length; i++) {
-                const f = allFlights[i];
+            for (const f of allFlights) {
                 const prev = prevTimeMap.get(timeKeyOf(f));
 
                 if (prev?.departure?.time) {
@@ -329,22 +310,9 @@ export async function scrapeTtang(prevFlights: any[] = []): Promise<Flight[]> {
                         f.seats = prev.seats;
                     }
                     carriedOver++;
-                } else if (routeKeys[i] && survivors.has(f)) {
-                    newRouteKeys.push(routeKeys[i]);
-                    newRouteIndices.push(i);
                 }
             }
-
-            console.log(`[땅처리] 이전 시간 복사: ${carriedOver}/${allFlights.length}개, 신규 enrich 대상: ${newRouteKeys.length}개 (최저가 생존 ${survivors.size}건 중)`);
-
-            // 신규 노선만 realtime_V2로 보강
-            if (newRouteKeys.length > 0) {
-                const page = await ensureBrowserPage(formatDateParam(today));
-                const enrichMap = await enrichWithRealtimeData(page, newRouteKeys, '땅처리');
-                const newFlights = newRouteIndices.map(i => allFlights[i]);
-                const enrichedCount = applyEnrichData(newFlights, newRouteKeys, enrichMap);
-                console.log(`[땅처리] 신규 시간 보강: ${enrichedCount}/${newRouteKeys.length}개`);
-            }
+            console.log(`[땡처리] 이전 시간 복사: ${carriedOver}/${allFlights.length}개`);
         }
 
         // logCrawlResults moved to crawl-all.ts

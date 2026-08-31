@@ -14,7 +14,7 @@ import {
     excludePinnedDestination,
     sortFirstBlockByNewestArrival,
 } from '@/lib/flight-diversity';
-import { CITY_TO_AIRPORT, calcFlightTiming, getNaverFlightUrl, normalizeAirline, normalizeCity } from '@/lib/utils/flight-helpers';
+import { CITY_TO_AIRPORT, calcFlightTiming, formatAgencyFlightDuration, getNaverFlightUrl, normalizeAirline, normalizeCity } from '@/lib/utils/flight-helpers';
 import { getTripcomHotelUrl, getTripcomTrackingId } from '@/lib/utils/tripcom-helpers';
 import { getFlightBookingUrl } from '@/lib/utils/booking-url';
 import { encodeShareId } from '@/lib/share-code';
@@ -327,14 +327,6 @@ const airportLabel = (city: string, airport?: string) => (
     airport ? `${city}(${airport})` : city
 );
 
-const agencyFlightDuration = (value?: string) => {
-    const parsed = value?.match(/^(\d{1,2}):(\d{2})/);
-    if (!parsed) return null;
-    const hours = Number(parsed[1]);
-    const minutes = Number(parsed[2]);
-    return `${hours}시간${minutes > 0 ? ` ${minutes}분` : ''}`;
-};
-
 const legDetails = (flight: Flight, leg: 'outbound' | 'return') => {
     const detail = flight.modetourDetail;
     const routeAirports = flight.routeAirports;
@@ -352,7 +344,7 @@ const legDetails = (flight: Flight, leg: 'outbound' | 'return') => {
             arrivalTime: arrivalTime || '시간 확인',
             departureDate: shortDate(flight.departure.date),
             arrivalDate: shortDateWithOffset(flight.departure.date, timing?.arrivalDayOffset ?? fallbackDayOffset),
-            duration: timing?.duration || agencyFlightDuration(detail?.flyingTime),
+            duration: timing?.duration || formatAgencyFlightDuration(detail?.flyingTime),
         };
     }
 
@@ -367,7 +359,14 @@ const legDetails = (flight: Flight, leg: 'outbound' | 'return') => {
         arrivalTime: arrivalTime || '시간 확인',
         departureDate: shortDate(flight.arrival.date),
         arrivalDate: shortDateWithOffset(flight.arrival.date, timing?.arrivalDayOffset ?? fallbackDayOffset),
-        duration: timing?.duration || agencyFlightDuration(detail?.returnFlyingTime),
+        duration: timing?.duration
+            || formatAgencyFlightDuration(detail?.returnFlyingTime)
+            || (flight.id.startsWith('modetour-manual-') && detail?.isReturnDirect
+                ? (() => {
+                    const estimate = formatAgencyFlightDuration(detail.flyingTime);
+                    return estimate ? `약 ${estimate}` : null;
+                })()
+                : null),
     };
 };
 

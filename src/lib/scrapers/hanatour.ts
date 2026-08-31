@@ -309,16 +309,29 @@ async function scrapeHanatourRegular(browser: any, prevFlights: any[] = []): Pro
                             const priceText = priceElement?.textContent?.trim() || '';
                             const price = parseInt(priceText.replace(/[^0-9]/g, '')) || 0;
 
-                            const timeElements = card.querySelectorAll('.time');
-                            let depTime = '';
-                            let arrTime = '';
-
-                            if (timeElements.length >= 2) {
-                                const depTimeMatch = timeElements[0].textContent?.match(/(\d{2}:\d{2})/);
-                                const arrTimeMatch = timeElements[1].textContent?.match(/(\d{2}:\d{2})/);
-                                depTime = depTimeMatch ? depTimeMatch[1] : '';
-                                arrTime = arrTimeMatch ? arrTimeMatch[1] : '';
-                            }
+                            // 각 행은 출발·도착 시각을 하나씩 갖는다. 예전에는 카드 전체의
+                            // 앞 두 시각만 읽어 가는편 도착시각을 귀국편 출발시각으로 잘못
+                            // 저장했다. 행별로 나눠 네 시각을 정확한 필드에 넣는다.
+                            // page.evaluate 안에 이름 있는 보조 함수를 만들면 tsx의 __name 보조
+                            // 코드가 브라우저에 섞일 수 있어 두 행을 인라인으로 파싱한다.
+                            const outboundElementTimes = Array.from(outboundRow.querySelectorAll('.time'))
+                                .map(element => element.textContent?.match(/(\d{2}:\d{2})/)?.[1] || '')
+                                .filter(Boolean);
+                            const outboundTimes = outboundElementTimes.length >= 2
+                                ? outboundElementTimes.slice(0, 2)
+                                : Array.from(outboundRow.textContent?.matchAll(/\d{2}:\d{2}/g) || [])
+                                    .map(match => match[0])
+                                    .slice(0, 2);
+                            const inboundElementTimes = Array.from(inboundRow.querySelectorAll('.time'))
+                                .map(element => element.textContent?.match(/(\d{2}:\d{2})/)?.[1] || '')
+                                .filter(Boolean);
+                            const inboundTimes = inboundElementTimes.length >= 2
+                                ? inboundElementTimes.slice(0, 2)
+                                : Array.from(inboundRow.textContent?.matchAll(/\d{2}:\d{2}/g) || [])
+                                    .map(match => match[0])
+                                    .slice(0, 2);
+                            const [depTime = '', depArrivalTime = ''] = outboundTimes;
+                            const [returnDepartureTime = '', returnArrivalTime = ''] = inboundTimes;
 
                             // fareId로 다이렉트 예약 링크 생성
                             let fullLink = 'https://www.hanatour.com/trp/air/CHPC0AIR0233M200';
@@ -349,12 +362,14 @@ async function scrapeHanatourRegular(browser: any, prevFlights: any[] = []): Pro
                                         airport: (departureCity.match(/\(([A-Z]{3})\)/) || [])[1] || '',
                                         date: departureDate,
                                         time: depTime,
+                                        arrivalTime: depArrivalTime,
                                     },
                                     arrival: {
                                         city: arrivalCity,
                                         airport: (arrivalCity.match(/\(([A-Z]{3})\)/) || [])[1] || '',
                                         date: returnDate,
-                                        time: arrTime,
+                                        time: returnDepartureTime,
+                                        arrivalTime: returnArrivalTime,
                                     },
                                     price: price,
                                     currency: 'KRW',

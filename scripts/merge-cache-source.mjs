@@ -98,6 +98,16 @@ if (overlay.scrapedCounts?.[sourceKey] !== undefined) {
     };
 }
 
+// 땡처리 PC 대체 수집은 항공권과 함께 시간 조회 성공값·실패 쿨다운도 만든다.
+// 이 상태를 빼면 GitHub 캐시로 합친 직후 같은 실패 노선을 다시 신규처럼 조회한다.
+if (sourceKey === 'ttang' && overlay.ttangTimeEnrichment) {
+    target.ttangTimeEnrichment = overlay.ttangTimeEnrichment;
+}
+
+if (sourceKey === 'ybtour' && overlay.ybtourTimeEnrichment) {
+    target.ybtourTimeEnrichment = overlay.ybtourTimeEnrichment;
+}
+
 // 병합 대상 소스의 경고만 overlay 상태로 교체한다. 전체 배열을 덮으면 이 작업이
 // 실행되는 동안 다른 크롤러가 새로 남긴 경고를 지울 수 있고, 반대로 이 처리를
 // 생략하면 차단 회로는 저장돼도 관리자 화면의 경고가 누락되거나 복구 후 남는다.

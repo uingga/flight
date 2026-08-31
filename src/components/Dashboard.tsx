@@ -18,7 +18,7 @@ import AdCard from './AdCard';
 import {
     toDate, toStr, fmtDate, getDefaultStartDate, getDefaultEndDate,
     normalizeCity, normalizeAirline,
-    CITY_TO_AIRPORT, getAirportCode, calcFlightDuration,
+    CITY_TO_AIRPORT, getAirportCode, calcFlightDuration, formatAgencyFlightDuration,
     getNaverFlightUrl, getSkyscannerUrl,
 } from '@/lib/utils/flight-helpers';
 import {
@@ -3799,17 +3799,16 @@ export default function Dashboard() {
                 // 비행시간
                 // 여행사가 준 비행시간이 있으면 그대로, 없으면 현지 시각 차이에 시차를 보정해 계산한다.
                 // 같은 화면에 두 출처가 나란히 놓이므로 표기는 계산값 형식으로 맞춘다 ("05:40" → "5시간 40분")
-                const fmtAgencyFlyTime = (value: string) => {
-                    const parsed = value.match(/^(\d{1,2}):(\d{2})/);
-                    if (!parsed) return '';
-                    const hours = Number(parsed[1]);
-                    const minutes = Number(parsed[2]);
-                    return `${hours}시간${minutes > 0 ? ` ${minutes}분` : ''}`;
-                };
                 const flyTime = calcFlightDuration(depCity, depTime, depDate, arrCity, depArrTime)
-                    || (mdt?.flyingTime && fmtAgencyFlyTime(mdt.flyingTime)) || '';
+                    || formatAgencyFlightDuration(mdt?.flyingTime) || '';
                 const retFlyTime = calcFlightDuration(arrCity, retDepTime, arrDate, depCity, retArrTime)
-                    || (mdt?.returnFlyingTime && fmtAgencyFlyTime(mdt.returnFlyingTime)) || '';
+                    || formatAgencyFlightDuration(mdt?.returnFlyingTime)
+                    || (modetourGuide.id.startsWith('modetour-manual-') && mdt?.isReturnDirect
+                        ? (() => {
+                            const estimate = formatAgencyFlightDuration(mdt.flyingTime);
+                            return estimate ? `약 ${estimate}` : '';
+                        })()
+                        : '');
                 // 총 체류기간 (N박 M일)
                 const stayNights = (() => {
                     if (!depDate || !arrDate) return '';

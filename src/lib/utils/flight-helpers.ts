@@ -383,6 +383,22 @@ export interface FlightTiming {
     arrivalDayOffset: number;
 }
 
+/** 여행사 응답과 수동 캡처의 비행시간 표기를 화면용 형식으로 통일한다. */
+export const formatAgencyFlightDuration = (value?: string): string | null => {
+    const trimmed = String(value || '').trim();
+    if (!trimmed) return null;
+
+    const colon = trimmed.match(/^(\d{1,2}):(\d{2})/);
+    const korean = trimmed.match(/^(\d{1,2})\s*시간(?:\s*(\d{1,2})\s*분)?/);
+    const hours = Number(colon?.[1] ?? korean?.[1]);
+    const minutes = Number(colon?.[2] ?? korean?.[2] ?? 0);
+    if (!Number.isInteger(hours) || !Number.isInteger(minutes) || minutes > 59 || (hours === 0 && minutes === 0)) {
+        return null;
+    }
+
+    return `${hours}시간${minutes > 0 ? ` ${minutes}분` : ''}`;
+};
+
 /**
  * 실제 비행시간과 도착지 현지 날짜의 변경 일수.
  * 출·도착 시각이 각기 현지 시각이므로 UTC 오프셋 차이를 보정한다.

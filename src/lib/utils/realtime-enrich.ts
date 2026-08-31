@@ -1,6 +1,10 @@
 import { Page } from 'playwright';
 import { normalizeAirline } from './flight-helpers';
-import { isExplicitAccessRestrictionStatus, SourceResponseError } from '../scrapers/source-response';
+import {
+    assertNoSourceAccessBlockText,
+    isExplicitAccessRestrictionStatus,
+    SourceResponseError,
+} from '../scrapers/source-response';
 
 /**
  * 땡처리닷컴 realtime_V2 API를 활용한 시간/좌석 데이터 보강 유틸리티
@@ -100,6 +104,32 @@ export interface EnrichData {
     seats: number;
 }
 
+export type EnrichAttemptStatus =
+    | 'success'
+    | 'empty'
+    | 'airline_mismatch'
+    | 'transient_error'
+    | 'response_format';
+
+export interface EnrichAttempt {
+    status: EnrichAttemptStatus;
+    data?: EnrichData;
+}
+
+export interface RealtimeEnrichResult {
+    enrichMap: Map<string, EnrichData>;
+    attempts: Map<string, EnrichAttempt>;
+    stats: {
+        requestedRoutes: number;
+        processedRoutes: number;
+        enriched: number;
+        failed: number;
+        responseFormat: number;
+        empty: number;
+        unmatched: number;
+    };
+}
+
 /**
  * realtime_V2 페이지 로드를 통해 시간/좌석 데이터를 수집
  * @param page Playwright Page (ttang.com 세션이 확보된 상태)
@@ -110,8 +140,9 @@ export async function enrichWithRealtimeData(
     page: Page,
     routes: RouteKey[],
     label: string = '보강',
-): Promise<Map<string, EnrichData>> {
+): Promise<RealtimeEnrichResult> {
     const enrichMap = new Map<string, EnrichData>();
+    const attempts = new Map<string, EnrichAttempt>();
 
     // 같은 노선을 여러 항공사가 함께 요청할 수 있으므로 조회는 노선 단위로 한 번만 한다.
     const byRoute = new Map<string, { route: RouteKey; airlines: Set<string> }>();
@@ -126,6 +157,7 @@ export async function enrichWithRealtimeData(
 
     let enriched = 0;
     let failed = 0;
+    let responseFormat = 0;
     let unmatched = 0;
     let empty = 0;
     let idx = 0;
@@ -142,10 +174,16 @@ export async function enrichWithRealtimeData(
     for (const [routeId, { route, airlines }] of entries) {
         idx++;
 
-        // 'ok'   응답을 정상으로 받아 파싱했다
-        // 'empty' 응답은 정상인데 그 노선에 편이 없다 — 서버 잘못이 아니므로 실패로 세지 않는다
-        // 'fail'  응답이 없거나 읽을 수 없다 — 이것만 차단 판단에 쓴다
-        let outcome: 'ok' | 'empty' | 'fail' = 'fail';
+        const requestedKeys = airlines.size > 0
+            ? Array.from(airlines).map(airline => `${routeId}|${airline}`)
+            : [routeId];
+        const recordForRequested = (status: EnrichAttemptStatus) => {
+            requestedKeys.forEach(key => attempts.set(key, { status }));
+        };
+
+        // 빈 결과·항공사 불일치는 같은 요청을 매 회차 반복하지 않도록 호출부가 별도로
+        // 기억한다. 네트워크/응답 형식 오류만 연속 실패 차단 판단에 포함한다.
+        let outcome: 'ok' | 'empty' | 'mismatch' | 'transient_error' | 'response_format' = 'transient_error';
 
         try {
             const depDateHyphen = toHyphenDate(route.depDate);
@@ -202,61 +240,117 @@ export async function enrichWithRealtimeData(
                 );
             }
 
-            const jsonMatch = apiResponse.text ? apiResponse.text.match(/\{[\s\S]*\}/) : null;
-            const data = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
-
-            if (data?.code === 'OK') {
-                outcome = data.response?.length ? 'ok' : 'empty';
-            }
-
-            if (outcome === 'ok') {
-                // 응답 전체를 항공사별로 정리한다 (같은 항공사는 첫 번째 편을 쓴다)
-                const perAirline = new Map<string, EnrichData>();
-                for (const entry of data.response) {
-                    const info = entry.skdset1Info || '';
-                    const outbound = extractTimesFromInfo(info);
-                    if (!outbound.depTime) continue;
-                    const airline = normalizeAirline(extractAirlineFromInfo(info));
-                    if (!airline || perAirline.has(airline)) continue;
-                    const inbound = extractTimesFromInfo(entry.skdset2Info || '');
-                    perAirline.set(airline, {
-                        depTime: outbound.depTime,
-                        arrTime: outbound.arrTime,
-                        retDepTime: inbound.depTime,
-                        retArrTime: inbound.arrTime,
-                        seats: extractSeatsFromDetail(entry.skdset1Detail || ''),
-                    });
+            if (!apiResponse.text) {
+                outcome = 'transient_error';
+                recordForRequested('transient_error');
+            } else {
+                // 일부 WAF는 HTTP 200으로 CAPTCHA/접근 제한 HTML을 돌려준다. 형식 오류로
+                // 여러 건을 더 읽기 전에 첫 응답에서 즉시 소스 차단 회로로 넘긴다.
+                assertNoSourceAccessBlockText(
+                    '땡처리닷컴 실시간 API',
+                    apiResponse.text,
+                    url,
+                );
+                const jsonMatch = apiResponse.text.match(/\{[\s\S]*\}/);
+                let data: any = null;
+                try {
+                    data = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+                } catch {
+                    data = null;
                 }
 
-                if (airlines.size > 0) {
-                    // 항공사를 아는 경우: 그 항공사 편만 쓴다. 없으면 비워두는 편이
-                    // 다른 항공사의 시각을 잘못 붙이는 것보다 낫다.
-                    for (const airline of Array.from(airlines)) {
-                        const found = perAirline.get(airline);
-                        if (found) {
-                            enrichMap.set(`${routeId}|${airline}`, found);
-                            enriched++;
-                        } else {
-                            unmatched++;
-                        }
-                    }
-                } else if (perAirline.size === 1) {
-                    // 항공사를 모르는 경우엔 응답에 항공사가 하나뿐일 때만 안전하게 채운다.
-                    enrichMap.set(routeId, perAirline.values().next().value!);
-                    enriched++;
+                if (data?.code !== 'OK' || !Array.isArray(data.response)) {
+                    outcome = 'response_format';
+                    recordForRequested('response_format');
+                } else if (data.response.length === 0) {
+                    outcome = 'empty';
+                    recordForRequested('empty');
                 } else {
-                    unmatched++;
+                    outcome = 'ok';
+
+                    // 응답 전체를 항공사별로 정리한다 (같은 항공사는 첫 번째 편을 쓴다)
+                    const perAirline = new Map<string, EnrichData>();
+                    const partialAirlines = new Set<string>();
+                    for (const entry of data.response) {
+                        const info = entry.skdset1Info || '';
+                        const outbound = extractTimesFromInfo(info);
+                        if (!outbound.depTime) continue;
+                        const airline = normalizeAirline(extractAirlineFromInfo(info));
+                        if (!airline || perAirline.has(airline)) continue;
+                        const inbound = extractTimesFromInfo(entry.skdset2Info || '');
+                        const parsed = {
+                            depTime: outbound.depTime,
+                            arrTime: outbound.arrTime,
+                            retDepTime: inbound.depTime,
+                            retArrTime: inbound.arrTime,
+                            seats: extractSeatsFromDetail(entry.skdset1Detail || ''),
+                        };
+                        if (!parsed.arrTime || !parsed.retDepTime || !parsed.retArrTime) {
+                            partialAirlines.add(airline);
+                            continue;
+                        }
+                        perAirline.set(airline, parsed);
+                    }
+
+                    if (airlines.size > 0) {
+                        // 항공사를 아는 경우: 그 항공사 편만 쓴다. 없으면 비워두는 편이
+                        // 다른 항공사의 시각을 잘못 붙이는 것보다 낫다.
+                        for (const airline of Array.from(airlines)) {
+                            const found = perAirline.get(airline);
+                            if (found) {
+                                const key = `${routeId}|${airline}`;
+                                enrichMap.set(key, found);
+                                attempts.set(key, { status: 'success', data: found });
+                                enriched++;
+                            } else if (partialAirlines.has(airline)) {
+                                attempts.set(`${routeId}|${airline}`, { status: 'response_format' });
+                            } else {
+                                attempts.set(`${routeId}|${airline}`, { status: 'airline_mismatch' });
+                                unmatched++;
+                            }
+                        }
+                    } else if (perAirline.size === 1) {
+                        // 항공사를 모르는 경우엔 응답에 항공사가 하나뿐일 때만 안전하게 채운다.
+                        const found = perAirline.values().next().value!;
+                        enrichMap.set(routeId, found);
+                        attempts.set(routeId, { status: 'success', data: found });
+                        enriched++;
+                    } else {
+                        attempts.set(routeId, {
+                            status: partialAirlines.size > 0 ? 'response_format' : 'airline_mismatch',
+                        });
+                        if (partialAirlines.size === 0) unmatched++;
+                    }
+
+                    if (requestedKeys.some(key => attempts.get(key)?.status === 'response_format')) {
+                        outcome = 'response_format';
+                    } else if (requestedKeys.every(key => attempts.get(key)?.status === 'airline_mismatch')) {
+                        outcome = 'mismatch';
+                    } else {
+                        outcome = 'ok';
+                    }
                 }
             }
         } catch (error) {
-            if (error instanceof SourceResponseError && isExplicitAccessRestrictionStatus(error.status)) {
+            if (
+                error instanceof SourceResponseError
+                && (
+                    isExplicitAccessRestrictionStatus(error.status)
+                    || error.kind === 'html-response'
+                    || error.kind === 'soft-block'
+                )
+            ) {
                 throw error;
             }
-            outcome = 'fail';
+            outcome = 'transient_error';
+            recordForRequested('transient_error');
         }
 
-        if (outcome === 'fail') {
+        if (outcome === 'transient_error') {
             failed++;
+            consecutiveFailures++;
+        } else if (outcome === 'response_format') {
+            responseFormat++;
             consecutiveFailures++;
         } else {
             if (outcome === 'empty') empty++;
@@ -290,8 +384,20 @@ export async function enrichWithRealtimeData(
     }
 
     const skipNote = skipped > 0 ? `, 건너뜀 ${skipped}` : '';
-    console.log(`[${label}] 보강 완료: ${enriched}건 (조회 ${idx}/${entries.length}노선, 응답 실패 ${failed}, 편 없음 ${empty}, 항공사 불일치 ${unmatched}${skipNote})`);
-    return enrichMap;
+    console.log(`[${label}] 보강 완료: ${enriched}건 (조회 ${idx}/${entries.length}노선, 응답 실패 ${failed}, 형식 불일치 ${responseFormat}, 편 없음 ${empty}, 항공사 불일치 ${unmatched}${skipNote})`);
+    return {
+        enrichMap,
+        attempts,
+        stats: {
+            requestedRoutes: entries.length,
+            processedRoutes: idx,
+            enriched,
+            failed,
+            responseFormat,
+            empty,
+            unmatched,
+        },
+    };
 }
 
 /**

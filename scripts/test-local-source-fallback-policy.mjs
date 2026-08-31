@@ -153,6 +153,7 @@ test('source merge keeps the GitHub circuit while publishing the PC result', () 
         flights: [{ id: 'old', source: 'ttang' }, { id: 'other', source: 'ybtour' }],
         sources: { ttang: 1, ybtour: 1 },
         sourceCircuits: { ttang: baseCircuit },
+        ttangTimeEnrichment: { version: 1, entries: { old: { status: 'empty' } } },
         integrityAlerts: ['⛔ 땡처리닷컴 이전 경고', '🚨 ybtour unrelated alert'],
     }));
     fs.writeFileSync(overlayPath, JSON.stringify({
@@ -170,6 +171,7 @@ test('source merge keeps the GitHub circuit while publishing the PC result', () 
                 },
             },
         },
+        ttangTimeEnrichment: { version: 1, entries: { fresh: { status: 'success' } } },
         integrityAlerts: ['⛔ ttang PC 대체 수집 상태'],
     }));
 
@@ -185,11 +187,66 @@ test('source merge keeps the GitHub circuit while publishing the PC result', () 
         assert.equal(result.fullCrawlUpdatedAt, '2026-08-30T02:18:00.000Z');
         assert.equal(result.sourceCircuits.ttang.nextProbeAt, baseCircuit.nextProbeAt);
         assert.equal(result.sourceCircuits.ttang.localFallback.status, 'success');
+        assert.deepEqual(result.ttangTimeEnrichment, {
+            version: 1,
+            entries: { fresh: { status: 'success' } },
+        });
         assert.deepEqual(result.integrityAlerts, [
             '🚨 ybtour unrelated alert',
             '⛔ ttang PC 대체 수집 상태',
         ]);
         assert.deepEqual(result.flights.map(flight => flight.id).sort(), ['new', 'other']);
+    } finally {
+        fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+});
+
+test('ybtour source merge publishes the post-filter time state', () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'tikitikit-ybtour-fallback-'));
+    const targetPath = path.join(tempDir, 'target.json');
+    const overlayPath = path.join(tempDir, 'overlay.json');
+    const baseCircuit = circuit();
+    fs.writeFileSync(targetPath, JSON.stringify({
+        timestamp: '2026-08-30T02:18:00.000Z',
+        count: 2,
+        flights: [{ id: 'old-yb', source: 'ybtour' }, { id: 'other', source: 'ttang' }],
+        sources: { ybtour: 1, ttang: 1 },
+        sourceCircuits: { ybtour: baseCircuit },
+        ybtourTimeEnrichment: { version: 1, entries: { old: { status: 'response_format' } } },
+    }));
+    fs.writeFileSync(overlayPath, JSON.stringify({
+        timestamp: '2026-08-30T02:25:00.000Z',
+        count: 2,
+        flights: [{ id: 'new-yb', source: 'ybtour' }, { id: 'other', source: 'ttang' }],
+        sources: { ybtour: 1, ttang: 1 },
+        sourceCircuits: {
+            ybtour: {
+                ...baseCircuit,
+                localFallback: {
+                    status: 'success',
+                    lastAttemptAt: '2026-08-30T02:25:00.000Z',
+                    detail: 'PC 대체 수집 완료',
+                },
+            },
+        },
+        ybtourTimeEnrichment: { version: 1, entries: { fresh: { status: 'success' } } },
+    }));
+
+    try {
+        const merged = spawnSync(process.execPath, [
+            'scripts/merge-cache-source.mjs',
+            targetPath,
+            overlayPath,
+            'ybtour',
+        ], { encoding: 'utf8' });
+        assert.equal(merged.status, 0, merged.stderr);
+        const result = JSON.parse(fs.readFileSync(targetPath, 'utf8'));
+        assert.equal(result.sourceCircuits.ybtour.localFallback.status, 'success');
+        assert.deepEqual(result.ybtourTimeEnrichment, {
+            version: 1,
+            entries: { fresh: { status: 'success' } },
+        });
+        assert.deepEqual(result.flights.map(flight => flight.id).sort(), ['new-yb', 'other']);
     } finally {
         fs.rmSync(tempDir, { recursive: true, force: true });
     }

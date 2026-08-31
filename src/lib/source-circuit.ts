@@ -9,11 +9,11 @@ export const SOURCE_CIRCUIT_COOLDOWN_MS = 24 * 60 * 60 * 1000;
  * 24시간을 기다리지 않고 새 구현으로 한 번 검증할 수 있다.
  */
 export const SOURCE_ADAPTER_VERSIONS = {
-    ybtour: '2026-08-30.2',
-    hanatour: '2026-08-30.2',
+    ybtour: '2026-08-31.1',
+    hanatour: '2026-08-31.1',
     modetour: '2026-08-30.2',
     onlinetour: '2026-08-30.2',
-    ttang: '2026-08-30.3',
+    ttang: '2026-08-31.1',
     myrealtrip: '2026-08-30.2',
 } as const;
 

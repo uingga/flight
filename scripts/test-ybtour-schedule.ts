@@ -100,6 +100,7 @@ async function testNoImmediateRetry() {
     assert.equal(result.stats.ok, 0);
     assert.equal(result.stats.retryAttempts, 0);
     assert.equal(result.stats.rejected, 1);
+    assert.equal(result.attempts.values().next().value?.status, 'response_format');
 }
 
 async function testRequestLimit() {
@@ -129,6 +130,7 @@ async function testRequestLimit() {
     assert.equal(result.stats.skipped, 1);
     assert.equal(result.stats.stopReason, 'request-limit');
     assert.equal(result.stats.degraded, false);
+    assert.equal(result.attempts.size, 2);
 }
 
 Promise.all([testNoImmediateRetry(), testRequestLimit()])

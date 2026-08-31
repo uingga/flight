@@ -77,8 +77,18 @@ export interface ScheduleFetchStats {
     reasonCounts: Record<ScheduleParseFailureReason, number>;
 }
 
+export type ScheduleAttemptStatus = 'success' | 'transient_error' | 'response_format';
+
+export interface ScheduleAttempt {
+    status: ScheduleAttemptStatus;
+    data?: ScheduleData;
+    reason?: ScheduleParseFailureReason;
+}
+
 export interface ScheduleFetchResult {
     schedules: Map<string, ScheduleData>;
+    /** 실제 상세 요청을 보낸 항목만 기록한다. 상한 때문에 이월된 항목은 포함하지 않는다. */
+    attempts: Map<string, ScheduleAttempt>;
     stats: ScheduleFetchStats;
 }
 
@@ -165,7 +175,7 @@ export function parseScheduleDetail(html: string, expectedDepDate: string): Sche
  * 목록에서 사라지지 않고 다음 크롤에서 채워진다.
  */
 const MAX_CONSECUTIVE_FAILURES = 8;
-// 같은 항공권을 즉시 다시 묻지 않는다. 일시 실패는 다음 예약 회차에 자연스럽게 이어간다.
+// 같은 항공권을 한 회차에서 즉시 다시 묻지 않는다. 회차 간 재시도 시각은 후처리 상태가 관리한다.
 const MAX_ATTEMPTS_PER_SCHEDULE = 1;
 /** 하루 4회 기준 상세 POST를 최대 160회로 제한한다. */
 export const YBTOUR_SCHEDULE_REQUEST_LIMIT = 40;
@@ -192,6 +202,7 @@ export async function fetchYbtourSchedules(
     options: { requestLimit?: number } = {},
 ): Promise<ScheduleFetchResult> {
     const result = new Map<string, ScheduleData>();
+    const attempts = new Map<string, ScheduleAttempt>();
 
     // 같은 편을 두 번 묻지 않는다
     const unique = new Map<string, ScheduleKey>();
@@ -312,10 +323,12 @@ export async function fetchYbtourSchedules(
 
         if (parsedData) {
             result.set(id, parsedData);
+            attempts.set(id, { status: 'success', data: parsedData });
             ok++;
             if (successfulAttempt > 1) recoveredAfterRetry++;
             consecutiveFailures = 0;
         } else if (receivedResponse && parseFailure) {
+            attempts.set(id, { status: 'response_format', reason: parseFailure.reason });
             rejected++;
             reasonCounts[parseFailure.reason]++;
             if (rejectedSamples.length < 5) {
@@ -324,6 +337,7 @@ export async function fetchYbtourSchedules(
             // 서버 응답은 정상적으로 왔으므로 네트워크 차단의 연속 실패로 세지 않는다.
             consecutiveFailures = 0;
         } else {
+            attempts.set(id, { status: 'transient_error' });
             failed++;
             consecutiveFailures++;
         }
@@ -376,6 +390,7 @@ export async function fetchYbtourSchedules(
 
     return {
         schedules: result,
+        attempts,
         stats: {
             requested: entries.length,
             processed: idx,

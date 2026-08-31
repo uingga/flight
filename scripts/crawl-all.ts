@@ -1,5 +1,5 @@
 
-import { getLastYbtourScheduleStats, scrapeYbtour } from '../src/lib/scrapers/ybtour';
+import { scrapeYbtour } from '../src/lib/scrapers/ybtour';
 import { scrapeHanatour } from '../src/lib/scrapers/hanatour';
 import { scrapeModetour } from '../src/lib/scrapers/modetour';
 import { scrapeOnlineTour } from '../src/lib/scrapers/onlinetour';
@@ -8,6 +8,14 @@ import { scrapeMyrealtrip } from '../src/lib/scrapers/myrealtrip';
 import { scrapeInterparkBenchmark, resolveCityCode } from '../src/lib/scrapers/interpark';
 import { logCrawlResults, recordCrawlAlerts } from '../src/lib/utils/crawl-logger';
 import { getEffectivePrice } from '../src/lib/price-quality';
+import {
+    enrichVisibleTtangFlights,
+    type TtangTimeEnrichmentState,
+} from '../src/lib/ttang-time-enrichment';
+import {
+    enrichVisibleYbtourFlights,
+    type YbtourTimeEnrichmentState,
+} from '../src/lib/ybtour-time-enrichment';
 import {
     classifySourceAccessRestriction,
     classifySourceResponseDrop,
@@ -49,6 +57,10 @@ interface CacheData {
     integrityAlerts?: string[];
     /** 명시적 차단·요청 제한·soft block 의심 뒤 같은 여행사를 계속 두드리지 않기 위한 휴식 상태 */
     sourceCircuits?: Record<string, SourceCircuitState>;
+    /** 땡처리 실시간 시간 조회의 성공값·실패 유형·다음 재시도 시각 */
+    ttangTimeEnrichment?: TtangTimeEnrichmentState;
+    /** 노랑풍선 상세 시간 조회의 성공값·실패 유형·다음 재시도 시각 */
+    ybtourTimeEnrichment?: YbtourTimeEnrichmentState;
     sources: {
 
         ybtour: number;
@@ -149,6 +161,8 @@ async function main() {
         prevCache?.sourceCircuits as Partial<Record<CrawlableSourceKey, SourceCircuitState>> | undefined,
         SOURCE_ADAPTER_VERSIONS,
     );
+    let ttangTimeEnrichment = prevCache?.ttangTimeEnrichment;
+    let ybtourTimeEnrichment = prevCache?.ybtourTimeEnrichment;
     // 부분 복구에서 실행하지 않은 여행사는 이전 최종본을 그대로 붙인다.
     // 이미 필터를 통과한 데이터를 다시 가격 필터에 넣으면, 실제로 다시 긁지 않았는데도
     // 항공권이 빠질 수 있어 "선택한 여행사만 복구"라는 보장이 깨진다.
@@ -268,17 +282,6 @@ async function main() {
         // 목록 수집은 정상이어도 상세 시간 응답만 대량으로 읽지 못할 수 있다.
         // 항공권은 그대로 살리고, 운영자가 페이지 구조 변경을 알아차릴 수 있게 별도 경고로 남긴다.
         const collectionWarnings: string[] = [];
-        const ybtourExecuted = activeTasks.some(task => task.key === 'ybtour');
-        const ybtourScheduleStats = ybtourExecuted ? getLastYbtourScheduleStats() : null;
-        if (ybtourScheduleStats?.degraded) {
-            const reason = ybtourScheduleStats.stopReason === 'network'
-                ? `요청 연속 실패 ${ybtourScheduleStats.failed}건`
-                : `응답 읽기 실패 ${ybtourScheduleStats.rejected}/${ybtourScheduleStats.processed}건`;
-            collectionWarnings.push(
-                `⚠️ 시간 정보: 노랑풍선 상세 시간 수집 이상 (${reason}, 남은 ${ybtourScheduleStats.skipped}건 건너뜀) — 항공권 목록과 기존 시간은 유지`,
-            );
-        }
-
         // 소스별 무결성 검사 — 0건뿐 아니라 "급감"도 실패로 본다.
         //
         // 스크래퍼가 지역 탭 하나를 못 열면 그 지역만 통째로 빠진 채 정상 종료한다
@@ -475,19 +478,6 @@ async function main() {
             month: '2-digit',
             day: '2-digit',
         }).format(new Date());
-        const lifecycleFlights = allFlights.filter((f: any) => {
-            if (!Number.isFinite(Number(f.price)) || Number(f.price) <= 0) return false;
-            const departureDate = String(f.departure?.date || '').match(/(\d{4})[.\/-](\d{1,2})[.\/-](\d{1,2})/);
-            const normalizedDepartureDate = departureDate
-                ? `${departureDate[1]}-${departureDate[2].padStart(2, '0')}-${departureDate[3].padStart(2, '0')}`
-                : '';
-            if (normalizedDepartureDate && normalizedDepartureDate < todayKst) return false;
-            if (!String(f.arrival?.date || '').trim()) return false;
-            const departureCity = String(f.departure?.city || '').trim();
-            const arrivalCity = String(f.arrival?.city || '').trim();
-            return !!arrivalCity && departureCity !== arrivalCity;
-        });
-
         // 노선별 최저가 필터링 (각 업체별 같은 노선에서 최저가만 유지)
         console.log('\n=== 최저가 필터링 ===');
         console.log(`필터 전: ${allFlights.length}개`);
@@ -652,10 +642,140 @@ async function main() {
             console.error('⚠️ 인터파크 벤치마크 실패 (필터링 건너뜀):', error);
         }
 
+        // 노랑풍선 상세 POST도 실제 노출될 표가 정해진 뒤에만 실행한다. 기존 검증 시각과
+        // 성공 상태를 먼저 재사용하고, 한 번도 조회하지 않은 후보부터 최대 40건만 보강한다.
+        if (attempted.has('ybtour') && !preservedSources.has('ybtour')) {
+            try {
+                const ybtourResult = await enrichVisibleYbtourFlights(
+                    benchmarkedFlights.filter((flight: any) => flight.source === 'ybtour'),
+                    ybtourTimeEnrichment,
+                );
+                ybtourTimeEnrichment = ybtourResult.state;
+
+                if (ybtourResult.stats.fetch?.degraded) {
+                    const fetchStats = ybtourResult.stats.fetch;
+                    const warning = `⚠️ 시간 정보: 노랑풍선 상세 응답 읽기 실패 `
+                        + `${fetchStats.rejected}/${fetchStats.processed}건, 남은 ${fetchStats.skipped}건 이월 `
+                        + '— 항공권 목록과 기존 시간은 유지';
+                    collectionWarnings.push(warning);
+                    console.warn(warning);
+                    recordCrawlAlerts([warning]);
+                }
+            } catch (error) {
+                const reason = error instanceof Error ? error.message : String(error);
+                const restriction = classifySourceAccessRestriction(error);
+                if (restriction) {
+                    sourceCircuits.ybtour = localSourceFallback && sourceCircuits.ybtour
+                        ? recordPcFallback('ybtour', sourceCircuits.ybtour, 'blocked', restriction.detail)
+                        : openSourceCircuit(restriction, SOURCE_ADAPTER_VERSIONS.ybtour);
+                } else if (localSourceFallback && sourceCircuits.ybtour) {
+                    sourceCircuits.ybtour = recordPcFallback('ybtour', sourceCircuits.ybtour, 'failed', reason);
+                }
+
+                // 목록이 정상이어도 시간 단계에서 차단되면 그 회차의 노랑풍선 전체를 섞지
+                // 않고 이전 최종본을 유지한다. 열린 ybtour 회로는 PC의 ybtour 단독 수집으로 이어진다.
+                const previousYbtour = (prevCache?.flights || []).filter((flight: any) => flight.source === 'ybtour');
+                benchmarkedFlights = [
+                    ...benchmarkedFlights.filter((flight: any) => flight.source !== 'ybtour'),
+                    ...previousYbtour,
+                ];
+                const nonYbtourRaw = allFlights.filter((flight: any) => flight.source !== 'ybtour');
+                allFlights.splice(0, allFlights.length, ...nonYbtourRaw, ...previousYbtour);
+                preservedSources.add('ybtour');
+                missingDetectionSafeSources.delete('ybtour');
+                staleStreak.ybtour = (staleStreak.ybtour || 0) + 1;
+                sources.ybtour = previousYbtour.length;
+                const previousScraped = prevCache?.scrapedCounts?.ybtour;
+                if (previousScraped === undefined) delete scrapedCounts.ybtour;
+                else scrapedCounts.ybtour = previousScraped;
+                const previousUpdatedAt = prevCache?.sourceUpdatedAt?.ybtour;
+                if (previousUpdatedAt) sourceUpdatedAt.ybtour = previousUpdatedAt;
+                else delete sourceUpdatedAt.ybtour;
+                ybtourTimeEnrichment = prevCache?.ybtourTimeEnrichment;
+
+                const fallbackText = restriction
+                    ? localSourceFallback
+                        ? 'PC에서도 차단돼 PC ybtour 대체 수집을 24시간 중단'
+                        : 'GitHub ybtour 회로 개방, 다음 정규 회차에 PC가 ybtour만 대체 수집'
+                    : '이전 ybtour 데이터 유지';
+                const alert = `⛔ ybtour 시간 보강 실패: ${reason} — ${fallbackText}`;
+                integrityWarnings.push(alert);
+                console.warn(alert);
+                recordCrawlAlerts([alert]);
+            }
+        }
+
+        // 땡처리 시간 조회는 실제 노출될 표가 모두 정해진 뒤에만 실행한다. 원본 1천여 건이나
+        // 인터파크 필터에서 버릴 표를 위해 실시간 페이지를 열지 않는다.
+        if (attempted.has('ttang') && !preservedSources.has('ttang')) {
+            try {
+                const ttangResult = await enrichVisibleTtangFlights(
+                    benchmarkedFlights.filter((flight: any) => flight.source === 'ttang'),
+                    ttangTimeEnrichment,
+                );
+                ttangTimeEnrichment = ttangResult.state;
+            } catch (error) {
+                const reason = error instanceof Error ? error.message : String(error);
+                const restriction = classifySourceAccessRestriction(error);
+                if (restriction) {
+                    sourceCircuits.ttang = localSourceFallback && sourceCircuits.ttang
+                        ? recordPcFallback('ttang', sourceCircuits.ttang, 'blocked', restriction.detail)
+                        : openSourceCircuit(restriction, SOURCE_ADAPTER_VERSIONS.ttang);
+                } else if (localSourceFallback && sourceCircuits.ttang) {
+                    sourceCircuits.ttang = recordPcFallback('ttang', sourceCircuits.ttang, 'failed', reason);
+                }
+
+                // 시간 단계도 땡처리 소스의 일부다. 여기서 차단·치명 오류가 나면 목록만 새것으로
+                // 섞지 않고 기존 땡처리 최종본 전체를 유지한다. 열린 ttang 회로는 기존 정책대로
+                // Windows PC의 --sources=ttang 대체 수집 대상으로 이어진다.
+                const previousTtang = (prevCache?.flights || []).filter((flight: any) => flight.source === 'ttang');
+                benchmarkedFlights = [
+                    ...benchmarkedFlights.filter((flight: any) => flight.source !== 'ttang'),
+                    ...previousTtang,
+                ];
+                const nonTtangRaw = allFlights.filter((flight: any) => flight.source !== 'ttang');
+                allFlights.splice(0, allFlights.length, ...nonTtangRaw, ...previousTtang);
+                preservedSources.add('ttang');
+                missingDetectionSafeSources.delete('ttang');
+                staleStreak.ttang = (staleStreak.ttang || 0) + 1;
+                sources.ttang = previousTtang.length;
+                const previousScraped = prevCache?.scrapedCounts?.ttang;
+                if (previousScraped === undefined) delete scrapedCounts.ttang;
+                else scrapedCounts.ttang = previousScraped;
+                const previousUpdatedAt = prevCache?.sourceUpdatedAt?.ttang;
+                if (previousUpdatedAt) sourceUpdatedAt.ttang = previousUpdatedAt;
+                else delete sourceUpdatedAt.ttang;
+                ttangTimeEnrichment = prevCache?.ttangTimeEnrichment;
+
+                const fallbackText = restriction
+                    ? localSourceFallback
+                        ? 'PC에서도 차단돼 PC ttang 대체 수집을 24시간 중단'
+                        : 'GitHub ttang 회로 개방, 다음 정규 회차에 PC가 ttang만 대체 수집'
+                    : '이전 ttang 데이터 유지';
+                const alert = `⛔ ttang 시간 보강 실패: ${reason} — ${fallbackText}`;
+                integrityWarnings.push(alert);
+                console.warn(alert);
+                recordCrawlAlerts([alert]);
+            }
+        }
+
         if (requestedSources && untouchedFlights.length > 0) {
             benchmarkedFlights = [...benchmarkedFlights, ...untouchedFlights];
             console.log(`🔒 부분 크롤 미실행 여행사: 이전 최종 데이터 ${untouchedFlights.length}개 그대로 유지`);
         }
+
+        const lifecycleFlights = allFlights.filter((f: any) => {
+            if (!Number.isFinite(Number(f.price)) || Number(f.price) <= 0) return false;
+            const departureDate = String(f.departure?.date || '').match(/(\d{4})[.\/-](\d{1,2})[.\/-](\d{1,2})/);
+            const normalizedDepartureDate = departureDate
+                ? `${departureDate[1]}-${departureDate[2].padStart(2, '0')}-${departureDate[3].padStart(2, '0')}`
+                : '';
+            if (normalizedDepartureDate && normalizedDepartureDate < todayKst) return false;
+            if (!String(f.arrival?.date || '').trim()) return false;
+            const departureCity = String(f.departure?.city || '').trim();
+            const arrivalCity = String(f.arrival?.city || '').trim();
+            return !!arrivalCity && departureCity !== arrivalCity;
+        });
 
         // 크롤 로그에 남길 '실제로 사이트에 나가는 목록'.
         // 어느 경로로 끝나든 이 변수가 최종본을 가리킨다.
@@ -669,15 +789,19 @@ async function main() {
             savedFlights = prevCache.flights || [];
             cachePreservedGlobally = true;
             const completedAt = new Date().toISOString();
-            const preservedCache = preserveCrawlCacheWithSafetyState({
-                previous: prevCache,
-                sourceCircuits: sourceCircuits as Record<string, unknown>,
-                staleStreak,
-                scrapedCounts,
-                integrityAlerts: integrityWarnings,
-                // 이미 실행된 예약 회차를 watchdog이 다시 보내 차단된 소스를 재요청하지 않게 한다.
-                fullCrawlCompletedAt: requestedSources ? undefined : completedAt,
-            });
+            const preservedCache = {
+                ...preserveCrawlCacheWithSafetyState({
+                    previous: prevCache,
+                    sourceCircuits: sourceCircuits as Record<string, unknown>,
+                    staleStreak,
+                    scrapedCounts,
+                    integrityAlerts: integrityWarnings,
+                    // 이미 실행된 예약 회차를 watchdog이 다시 보내 차단된 소스를 재요청하지 않게 한다.
+                    fullCrawlCompletedAt: requestedSources ? undefined : completedAt,
+                }),
+                ttangTimeEnrichment,
+                ybtourTimeEnrichment,
+            };
             fs.writeFileSync(cachePath, JSON.stringify(preservedCache, null, 2), 'utf-8');
         } else {
             // firstSeen 필드 추가: 이전 캐시와 비교하여 새 항공편 감지
@@ -739,6 +863,8 @@ async function main() {
                 integrityAlerts: integrityWarnings,
                 sourceCircuits: sourceCircuits as Record<string, SourceCircuitState>,
                 manualCaptureStatus,
+                ttangTimeEnrichment,
+                ybtourTimeEnrichment,
             };
 
             // data 디렉토리 확인 및 생성
