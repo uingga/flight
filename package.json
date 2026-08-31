@@ -20,6 +20,7 @@
     "test:crawl-cache-safety": "tsx scripts/test-crawl-cache-safety.ts",
     "test:source-freshness": "tsx scripts/test-source-freshness.ts",
     "test:crawl-schedule": "node --test scripts/test-crawl-schedule-health.mjs",
+    "test:crawl-log-merge": "node --test scripts/test-merge-crawl-log.mjs",
     "test:naver-policy": "node --test scripts/test-local-naver-run-policy.mjs",
     "test:naver-priority": "tsx scripts/test-naver-crawl-priority.ts && tsx scripts/test-naver-refresh-policy.ts",
     "test:naver-nearby": "tsx scripts/test-naver-nearby-price.ts",

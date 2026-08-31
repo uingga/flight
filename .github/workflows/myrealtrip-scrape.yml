@@ -76,6 +76,7 @@ jobs:
           
           if [[ -n $(git status --porcelain data/) ]]; then
             cp data/all-flights-cache.json /tmp/mrt-session-cache.json
+            cp data/crawl-log.json /tmp/mrt-session-crawl-log.json 2>/dev/null || true
 
             git fetch origin main
             git reset --hard origin/main
@@ -85,11 +86,17 @@ jobs:
             #  최신 항공권 데이터를 파일 통째 덮어쓰기로 지우지 않기 위함)
             node scripts/merge-cache-source.mjs data/all-flights-cache.json /tmp/mrt-session-cache.json myrealtrip
 
-            if [[ -n $(git status --porcelain data/all-flights-cache.json) ]]; then
-              git add data/all-flights-cache.json
-              git commit -m "chore(data): update myrealtrip prices (Playwright)"
+            # 별도 마이리얼트립 회차가 만든 실제 수집량도 원격 최신 로그에 합친다.
+            # 파일 통째 복원은 같은 시간 일반 크롤이 남긴 기록을 지울 수 있으므로 금지한다.
+            if [[ -f /tmp/mrt-session-crawl-log.json ]]; then
+              node scripts/merge-crawl-log.mjs data/crawl-log.json /tmp/mrt-session-crawl-log.json myrealtrip
+            fi
+
+            if [[ -n $(git status --porcelain data/all-flights-cache.json data/crawl-log.json) ]]; then
+              git add data/all-flights-cache.json data/crawl-log.json
+              git commit -m "chore(data): update myrealtrip crawl"
               git push
-              echo "✅ 마이리얼트립 가격 업데이트 완료"
+              echo "✅ 마이리얼트립 가격·수집 기록 업데이트 완료"
             else
               echo "ℹ️ 병합 후 변경 없음"
             fi

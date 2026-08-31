@@ -184,6 +184,18 @@ test('MyRealTrip runs once in the morning and once in the afternoon', () => {
     const workflow = fs.readFileSync('.github/workflows/myrealtrip-scrape.yml', 'utf8');
     const workflowCrons = [...workflow.matchAll(/^\s*- cron: '([^']+)'/gm)].map(match => match[1]);
     assert.deepEqual(workflowCrons.sort(), ['5 22 * * *', '3 9 * * *'].sort());
+    assert.match(workflow, /cp data\/crawl-log\.json \/tmp\/mrt-session-crawl-log\.json/);
+    assert.match(workflow, /merge-crawl-log\.mjs data\/crawl-log\.json \/tmp\/mrt-session-crawl-log\.json myrealtrip/);
+    assert.match(workflow, /git add data\/all-flights-cache\.json data\/crawl-log\.json/);
+});
+
+test('general crawl merges its measured logs without overwriting MyRealTrip history', () => {
+    const workflow = fs.readFileSync('.github/workflows/daily-crawl.yml', 'utf8');
+    assert.match(
+        workflow,
+        /merge-crawl-log\.mjs data\/crawl-log\.json \/tmp\/crawl-log\.json ybtour,hanatour,modetour,onlinetour,ttang/,
+    );
+    assert.doesNotMatch(workflow, /cp \/tmp\/crawl-log\.json data\/crawl-log\.json/);
 });
 
 test('the general crawl never dispatches the GitHub Naver workflow', () => {
