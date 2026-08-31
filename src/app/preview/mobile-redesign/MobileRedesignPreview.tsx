@@ -32,6 +32,7 @@ import {
 import type { Flight } from '@/types/flight';
 import AccountSheet from '@/components/account/AccountSheet';
 import { useAccount, type AccountFlightSnapshot, type AccountSearchFilters } from '@/components/account/useAccount';
+import WeeklyDiscoveryInsight from '@/components/WeeklyDiscoveryInsight';
 import MobileDealAlertSheet, { type AlertSearchCondition } from './MobileDealAlertSheet';
 import RedesignAdSlot from './RedesignAdSlot';
 import styles from './page.module.css';
@@ -1176,6 +1177,9 @@ export default function MobileRedesignPreview({
 
     useEffect(() => {
         if (loading || !sharedFlightIdRef.current) return;
+        // 서버가 먼저 내려준 일부 목록만 보고 딥링크 항공권을 만료 처리하지 않는다.
+        // 전체 목록 갱신이 끝난 뒤 정확한 ID와 일정으로 상세를 연다.
+        if (initialSubsetActive) return;
         const flightId = sharedFlightIdRef.current;
         const scheduleToken = sharedFlightScheduleRef.current;
         sharedFlightIdRef.current = null;
@@ -1212,7 +1216,7 @@ export default function MobileRedesignPreview({
             `${window.location.pathname}${queryString ? `?${queryString}` : ''}${window.location.hash}`,
         );
         setExpiredShareNotice({ arrival: fallbackArrival });
-    }, [account, flights, loading]);
+    }, [account, flights, initialSubsetActive, loading]);
 
     useEffect(() => {
         if (!urlInitializedRef.current) return;
@@ -1654,6 +1658,9 @@ export default function MobileRedesignPreview({
             : pool;
         return pinnedFlight ? [pinnedFlight, ...diversified] : diversified;
     }, [featuredPick, filteredFlights, isDefaultView, query, sort]);
+    const weeklyDiscoveryFlights = useMemo(() => flights
+        .filter(flight => normalizeCity(flight.arrival.city) === '리장' && effectivePrice(flight) > 0)
+        .sort((a, b) => effectivePrice(a) - effectivePrice(b) || a.id.localeCompare(b.id)), [flights]);
     const feedInsights = useMemo<FeedInsight[]>(() => {
         if (sort !== 'recommended' || query.trim()) return [];
 
@@ -3618,6 +3625,12 @@ export default function MobileRedesignPreview({
                                             </section>
                                         </div>
                                     )}
+                                    {!freshRouteResults
+                                        && isDefaultView
+                                        && cardNumber === insightInterval
+                                        && weeklyDiscoveryFlights.length > 0 && (
+                                            <WeeklyDiscoveryInsight flights={weeklyDiscoveryFlights} />
+                                        )}
                                 </Fragment>
                             );
                         })}

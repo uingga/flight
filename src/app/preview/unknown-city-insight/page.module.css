@@ -425,13 +425,18 @@
     border-radius: 12px;
     background: #fff;
     color: #222;
+    font: inherit;
     text-align: left;
+    text-decoration: none;
     cursor: pointer;
 }
 
-.availableFlightCard:hover { border-color: #bfc3c8; background: #fafafa; }
+.availableFlightCard:visited { color: #222; }
+.availableFlightCard:hover { border-color: #bfc3c8; background: #fafafa; color: #222; }
+.availableFlightCard:hover .availableRoute strong,
+.availableFlightCard:focus-visible .availableRoute strong { color: var(--brand-dark); }
 .availableRoute { min-width: 0; display: flex; flex-direction: column; gap: 5px; }
-.availableRoute strong { font-size: 14px; font-weight: 700; }
+.availableRoute strong { font-size: 14px; font-weight: 700; transition: color .18s ease; }
 .availableRoute small { overflow: hidden; color: #707070; font-size: 11px; font-weight: 400; text-overflow: ellipsis; white-space: nowrap; }
 .availableFlightCard > strong { flex: 0 0 auto; color: var(--brand-dark); font-size: 18px; font-weight: 800; letter-spacing: -.035em; white-space: nowrap; }
 

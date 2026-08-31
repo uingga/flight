@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import type { Flight } from '@/types/flight';
+import flightCache from '../../../../data/all-flights-cache.json';
 import UnknownCityInsightPreview from './UnknownCityInsightPreview';
 
 export const metadata: Metadata = {
@@ -12,5 +14,9 @@ export const metadata: Metadata = {
 };
 
 export default function UnknownCityInsightPreviewPage() {
-    return <UnknownCityInsightPreview />;
+    const weeklyFlight = (flightCache.flights as unknown as Flight[])
+        .filter(flight => flight.arrival.city === '리장' && flight.price > 0 && flight.link)
+        .sort((a, b) => a.price - b.price)[0] || null;
+
+    return <UnknownCityInsightPreview weeklyFlight={weeklyFlight} />;
 }
