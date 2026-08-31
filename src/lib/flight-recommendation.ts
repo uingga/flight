@@ -8,6 +8,7 @@ import {
     getComparisonFreshness,
     getComparisonPriceTier,
     getEffectivePrice,
+    getRoutePriceCompetitivenessTier,
 } from './price-quality';
 import { normalizeCity } from './utils/flight-helpers';
 import { getRegionByCity } from './utils/region-mapper';
@@ -349,7 +350,7 @@ function scoreFlight(
     };
 }
 
-/** 가격 품질과 신선도 점수를 계산하고, 같은 노선 안의 가격 역전만 기존 방식대로 보정한다. */
+/** 가격 품질과 신선도 점수를 계산하고, 같은 노선·가격 경쟁력 구간 안의 가격 역전만 보정한다. */
 export function buildRecommendationScoreState(
     flights: Flight[],
     interparkPrices: InterparkPrices,
@@ -365,14 +366,16 @@ export function buildRecommendationScoreState(
         scores.set(flight.id, explanation.score);
     }
 
-    const byRoute = new Map<string, Flight[]>();
+    const byRouteAndCompetitiveness = new Map<string, Flight[]>();
     for (const flight of flights) {
-        const key = `${normalizeCity(flight.departure.city)}-${normalizeCity(flight.arrival.city)}`;
-        const group = byRoute.get(key);
+        const route = `${normalizeCity(flight.departure.city)}-${normalizeCity(flight.arrival.city)}`;
+        const competitiveness = getRoutePriceCompetitivenessTier(flight, now);
+        const key = `${route}|${competitiveness}`;
+        const group = byRouteAndCompetitiveness.get(key);
         if (group) group.push(flight);
-        else byRoute.set(key, [flight]);
+        else byRouteAndCompetitiveness.set(key, [flight]);
     }
-    for (const group of Array.from(byRoute.values())) {
+    for (const group of Array.from(byRouteAndCompetitiveness.values())) {
         if (group.length < 2) continue;
         const slots = group.map(flight => scores.get(flight.id)!).sort((a, b) => a - b);
         group.slice()
@@ -423,6 +426,17 @@ export function compareRecommendedFlights(
     now = Date.now(),
     explanations?: Map<string, RecommendationScoreExplanation>,
 ): number {
+    const sameRoute = normalizeCity(a.departure.city) === normalizeCity(b.departure.city)
+        && normalizeCity(a.arrival.city) === normalizeCity(b.arrival.city);
+    if (sameRoute) {
+        const competitiveness = getRoutePriceCompetitivenessTier(a, now)
+            - getRoutePriceCompetitivenessTier(b, now);
+        if (competitiveness !== 0) return competitiveness;
+
+        const priceComparison = getEffectivePrice(a) - getEffectivePrice(b);
+        if (priceComparison !== 0) return priceComparison;
+    }
+
     const tierComparison = (explanations?.get(a.id)?.topRecommendationTier ?? getComparisonPriceTier(a, now))
         - (explanations?.get(b.id)?.topRecommendationTier ?? getComparisonPriceTier(b, now));
     if (tierComparison !== 0) return tierComparison;
@@ -457,6 +471,7 @@ export function buildRecommendationPresentation(
             maxPerDestination: 2,
             leadingFlights: pinnedFlight ? [pinnedFlight] : [],
             scoreOf: flight => scoreState.scores.get(flight.id) ?? Infinity,
+            routeCompetitivenessTierOf: flight => getRoutePriceCompetitivenessTier(flight, now),
             balanceIncheon,
         });
         result.decisions.forEach(decision => diversityByFlightId.set(decision.flightId, decision));

@@ -14,6 +14,7 @@ import {
     compareRecommendedFlights,
     getAllowedNaverPriceGap,
 } from '../src/lib/flight-recommendation';
+import { getRoutePriceCompetitivenessTier } from '../src/lib/price-quality';
 import type { Flight } from '../src/types/flight';
 
 function flight(id: string, departureCity: string, arrivalCity: string, score: number): Flight & { testScore: number } {
@@ -159,8 +160,8 @@ assert.equal(
 );
 
 const differentTierSameRoute = diversifyRecommendationOrder([
-    { ...flight('tier-expensive', '인천', '사이판', 1), price: 379_000 },
-    flight('tier-cheap', '인천', '사이판', 20),
+    { ...flight('route-cheap-but-bad', '인천', '사이판', 1), price: 169_900 },
+    { ...flight('route-higher-but-competitive', '인천', '사이판', 20), price: 199_000 },
     ...Array.from({ length: 8 }, (_, index) => flight(
         `tier-other-${index + 1}`,
         '인천',
@@ -168,19 +169,20 @@ const differentTierSameRoute = diversifyRecommendationOrder([
         index + 2,
     )),
 ], {
-    tierOf: item => item.id === 'tier-cheap' ? 1 : 0,
+    tierOf: () => 0,
     scoreOf: item => (item as Flight & { testScore: number }).testScore,
+    routeCompetitivenessTierOf: item => item.id === 'route-cheap-but-bad' ? 2 : 0,
     balanceIncheon: false,
 });
 assert.equal(
-    differentTierSameRoute.slice(0, 9).some(item => item.id === 'tier-cheap'),
+    differentTierSameRoute.slice(0, 9).some(item => item.id === 'route-higher-but-competitive'),
     true,
-    '비교가 구간이 달라도 같은 노선의 최저가 대표가 첫 9개에 들어가야 한다.',
+    '같은 노선에서는 절대가격보다 네이버 가격 경쟁력이 좋은 일정이 첫 9개 대표가 되어야 한다.',
 );
 assert.equal(
-    differentTierSameRoute.slice(0, 9).some(item => item.id === 'tier-expensive'),
+    differentTierSameRoute.slice(0, 9).some(item => item.id === 'route-cheap-but-bad'),
     false,
-    '비교가 구간이 앞선다는 이유로 더 비싼 같은 노선 표를 첫 9개에 남기면 안 된다.',
+    '더 싸더라도 네이버보다 확실히 비싼 일정은 경쟁력 있는 같은 노선을 밀어내면 안 된다.',
 );
 
 const recentlyAddedCandidates = ordered.map((item, index) => ({
@@ -261,6 +263,100 @@ assert.deepEqual(
     ['verified-quality', 'unverified-cheap'],
     '검증된 외부 비교가 이하 구간은 점수가 더 낮은 비교 불가 표보다 먼저여야 한다.',
 );
+
+const routeCheapButBad = {
+    ...flight('route-cheap-but-bad-score', '인천', '후쿠오카', 0),
+    price: 169_900,
+    naverLowest: 128_540,
+    naverCheckedAt: '2026-08-28T08:00:00+09:00',
+    priceCheckedAt: '2026-08-28T08:00:00+09:00',
+};
+const routeHigherButCompetitive = {
+    ...flight('route-higher-but-competitive-score', '인천', '후쿠오카', 0),
+    price: 199_000,
+    naverLowest: 197_400,
+    naverCheckedAt: '2026-08-28T08:00:00+09:00',
+    priceCheckedAt: '2026-08-28T08:00:00+09:00',
+};
+const routeCompetitivenessState = buildRecommendationScoreState(
+    [routeCheapButBad, routeHigherButCompetitive],
+    {},
+    recommendationNow,
+);
+assert.equal(getRoutePriceCompetitivenessTier(routeCheapButBad, recommendationNow), 2);
+assert.equal(getRoutePriceCompetitivenessTier(routeHigherButCompetitive, recommendationNow), 0);
+assert.ok(
+    routeCompetitivenessState.scores.get(routeHigherButCompetitive.id)!
+        < routeCompetitivenessState.scores.get(routeCheapButBad.id)!,
+    '같은 노선의 싼 항공권이 네이버보다 확실히 비싸면 경쟁력 있는 다른 날짜의 점수를 가져가면 안 된다.',
+);
+assert.deepEqual(
+    [routeCheapButBad, routeHigherButCompetitive]
+        .sort((a, b) => compareRecommendedFlights(
+            a,
+            b,
+            routeCompetitivenessState.scores,
+            recommendationNow,
+            routeCompetitivenessState.explanations,
+        ))
+        .map(item => item.id),
+    [routeHigherButCompetitive.id, routeCheapButBad.id],
+    '같은 노선은 더 싼 날짜보다 네이버 가격 경쟁력이 좋은 날짜를 먼저 보여야 한다.',
+);
+
+const manadoLowerPrice = {
+    ...flight('manado-lower-price', '인천', '마나도', 0),
+    price: 495_000,
+    naverLowest: 510_000,
+    naverCheckedAt: '2026-08-28T08:00:00+09:00',
+    priceCheckedAt: '2026-08-28T08:00:00+09:00',
+};
+const manadoHigherPrice = {
+    ...flight('manado-higher-price', '인천', '마나도', 0),
+    price: 515_000,
+    naverLowest: 800_000,
+    naverCheckedAt: '2026-08-28T08:00:00+09:00',
+    priceCheckedAt: '2026-08-28T08:00:00+09:00',
+};
+const sameLaneRouteState = buildRecommendationScoreState(
+    [manadoLowerPrice, manadoHigherPrice],
+    {},
+    recommendationNow,
+);
+assert.ok(
+    sameLaneRouteState.scores.get(manadoLowerPrice.id)!
+        < sameLaneRouteState.scores.get(manadoHigherPrice.id)!,
+    '같은 노선·같은 경쟁력 구간에서는 49.5만원 항공권이 51.5만원 항공권보다 먼저여야 한다.',
+);
+assert.deepEqual(
+    [manadoHigherPrice, manadoLowerPrice]
+        .sort((a, b) => compareRecommendedFlights(
+            a,
+            b,
+            sameLaneRouteState.scores,
+            recommendationNow,
+            sameLaneRouteState.explanations,
+        ))
+        .map(item => item.id),
+    [manadoLowerPrice.id, manadoHigherPrice.id],
+    '같은 노선·같은 경쟁력 구간의 최종 추천순도 실제 가격이 낮은 항공권부터여야 한다.',
+);
+
+assert.equal(getRoutePriceCompetitivenessTier({
+    ...routeCheapButBad,
+    price: 150_000,
+    naverLowest: 135_000,
+}, recommendationNow), 0, '2만원 이내 차이는 비슷한 가격으로 본다.');
+assert.equal(getRoutePriceCompetitivenessTier({
+    ...routeCheapButBad,
+    price: 500_000,
+    naverLowest: 455_000,
+}, recommendationNow), 0, '10% 이내 차이는 비슷한 가격으로 본다.');
+assert.equal(getRoutePriceCompetitivenessTier({
+    ...routeCheapButBad,
+    price: 250_000,
+    naverLowest: 225_000,
+}, recommendationNow), 2, '2만원과 10%를 모두 넘으면 확실히 비싼 가격으로 본다.');
 
 const freshPrice = {
     ...flight('fresh-price', '인천', '싱가포르', 0),

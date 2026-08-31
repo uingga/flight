@@ -8,6 +8,7 @@ export interface FlightDiversityOptions {
     maxConsecutiveDestinations?: number;
     leadingFlights?: Flight[];
     scoreOf?: (flight: Flight) => number;
+    routeCompetitivenessTierOf?: (flight: Flight) => number;
     balanceIncheon?: boolean;
 }
 
@@ -70,21 +71,31 @@ function firstNineRouteKey(flight: Flight): string | null {
     return `${origin}|${destination}`;
 }
 
-/** 같은 출발권역·목적지에서는 실질 결제가가 최저가와 같은 카드만 첫 9개 대표가 된다. */
-function firstNineRouteRepresentativeIds(items: Flight[]): Set<string> {
-    const lowestByRoute = new Map<string, number>();
+/** 같은 노선에서는 가장 좋은 가격 경쟁력 구간을 먼저 고르고, 그 안의 최저가만 첫 9개 대표가 된다. */
+function firstNineRouteRepresentativeIds(
+    items: Flight[],
+    routeCompetitivenessTierOf: (flight: Flight) => number = () => 0,
+): Set<string> {
+    const bestTierByRoute = new Map<string, number>();
+    const lowestByRouteAndTier = new Map<string, number>();
     for (const flight of items) {
         const key = firstNineRouteKey(flight);
         if (!key) continue;
+        const tier = routeCompetitivenessTierOf(flight);
         const price = getEffectivePrice(flight);
-        const current = lowestByRoute.get(key);
-        if (current === undefined || price < current) lowestByRoute.set(key, price);
+        const bestTier = bestTierByRoute.get(key);
+        if (bestTier === undefined || tier < bestTier) bestTierByRoute.set(key, tier);
+        const routeTierKey = `${key}|${tier}`;
+        const current = lowestByRouteAndTier.get(routeTierKey);
+        if (current === undefined || price < current) lowestByRouteAndTier.set(routeTierKey, price);
     }
     return new Set(items
         .filter(flight => {
             const key = firstNineRouteKey(flight);
             if (!key) return false;
-            return getEffectivePrice(flight) === lowestByRoute.get(key);
+            const tier = routeCompetitivenessTierOf(flight);
+            return tier === bestTierByRoute.get(key)
+                && getEffectivePrice(flight) === lowestByRouteAndTier.get(`${key}|${tier}`);
         })
         .map(flight => flight.id));
 }
@@ -208,6 +219,7 @@ export function diversifyFlightDestinationsWithDecisions(
         maxConsecutiveDestinations = 2,
         leadingFlights = [],
         scoreOf,
+        routeCompetitivenessTierOf,
         balanceIncheon = true,
     } = options;
     const remaining = [...items];
@@ -215,7 +227,7 @@ export function diversifyFlightDestinationsWithDecisions(
     const decisions: FlightDiversityDecision[] = [];
     const sequence: Flight[] = [...leadingFlights];
     const topDestinationCounts = new Map<string, number>();
-    const representativeIds = firstNineRouteRepresentativeIds(items);
+    const representativeIds = firstNineRouteRepresentativeIds(items, routeCompetitivenessTierOf);
     const originalIndexes = new Map(items.map((flight, index) => [flight, index]));
 
     sequence.slice(0, topWindow).forEach(flight => {
@@ -404,12 +416,21 @@ export function diversifyRecommendationOrderWithDecisions(
         ...diversityOptions
     } = options;
     const originalIndexes = new Map(items.map((flight, index) => [flight.id, index]));
-    const rankedItems = items.slice().sort((a, b) => (
-        tierOf(a) - tierOf(b)
-        || ((diversityOptions.scoreOf?.(a) ?? Infinity) - (diversityOptions.scoreOf?.(b) ?? Infinity))
-        || ((originalIndexes.get(a.id) ?? 0) - (originalIndexes.get(b.id) ?? 0))
-    ));
-    const representativeIds = firstNineRouteRepresentativeIds(items);
+    const rankedItems = items.slice().sort((a, b) => {
+        const sameRoute = firstNineRouteKey(a) === firstNineRouteKey(b);
+        if (sameRoute && options.routeCompetitivenessTierOf) {
+            const competitiveness = options.routeCompetitivenessTierOf(a)
+                - options.routeCompetitivenessTierOf(b);
+            if (competitiveness !== 0) return competitiveness;
+
+            const priceComparison = getEffectivePrice(a) - getEffectivePrice(b);
+            if (priceComparison !== 0) return priceComparison;
+        }
+        return tierOf(a) - tierOf(b)
+            || ((diversityOptions.scoreOf?.(a) ?? Infinity) - (diversityOptions.scoreOf?.(b) ?? Infinity))
+            || ((originalIndexes.get(a.id) ?? 0) - (originalIndexes.get(b.id) ?? 0));
+    });
+    const representativeIds = firstNineRouteRepresentativeIds(items, options.routeCompetitivenessTierOf);
     const representativePool = rankedItems.filter(flight => representativeIds.has(flight.id));
     const representativeResult = diversifyFlightDestinationsWithDecisions(
         representativePool,
