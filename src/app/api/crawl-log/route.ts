@@ -255,6 +255,13 @@ export async function GET(request: NextRequest) {
                     detail: string;
                 };
             }>,
+            manualCaptureStatus: (cache.manualCaptureStatus || {}) as Record<string, {
+                capturedAt: string;
+                lastImportedAt: string;
+                accepted: number;
+                review: number;
+                filtered: number;
+            }>,
             naverStatus,
             naverCrawlHistory,
             bookingLinkHealth,

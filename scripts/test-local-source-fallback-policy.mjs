@@ -73,7 +73,7 @@ test('a PC-side block pauses only the local fallback', () => {
     assert.deepEqual(result.localCooldownSources, ['ttang']);
 });
 
-test('Modetour PC DOM runs only once on the same KST date', () => {
+test('Modetour is reported for manual capture and never returned to the PC crawler', () => {
     const result = evaluateLocalSourceFallback({
         now: '2026-08-30T05:30:00.000Z', // 14:30 KST
         cache: {
@@ -81,45 +81,51 @@ test('Modetour PC DOM runs only once on the same KST date', () => {
             sourceCircuits: {
                 modetour: circuit({
                     nextProbeAt: '2026-08-31T05:00:00.000Z',
-                    localFallback: {
-                        status: 'success',
-                        lastAttemptAt: '2026-08-30T02:25:00.000Z',
-                        method: 'modetour-dom',
-                        detail: 'DOM 수집 완료',
-                    },
                 }),
             },
         },
     });
 
     assert.equal(result.shouldRun, false);
-    assert.equal(result.reason, 'local_daily_limit');
-    assert.deepEqual(result.localDailyLimitSources, ['modetour']);
+    assert.equal(result.reason, 'manual_capture_required');
+    assert.deepEqual(result.sources, []);
+    assert.deepEqual(result.manualCaptureSources, ['modetour']);
 });
 
-test('Modetour PC DOM can run at the first slot of the next KST date', () => {
+test('other PC fallbacks still run while Modetour remains manual-only', () => {
     const result = evaluateLocalSourceFallback({
-        now: '2026-08-30T23:20:00.000Z', // 2026-08-31 08:20 KST
+        now: '2026-08-30T05:30:00.000Z',
         cache: {
-            fullCrawlUpdatedAt: '2026-08-30T23:18:00.000Z',
+            fullCrawlUpdatedAt: '2026-08-30T05:25:00.000Z',
             sourceCircuits: {
                 modetour: circuit({
-                    nextProbeAt: '2026-09-01T14:50:00.000Z',
-                    localFallback: {
-                        status: 'blocked',
-                        lastAttemptAt: '2026-08-30T14:50:00.000Z', // 23:50 KST
-                        nextProbeAt: '2026-08-31T14:50:00.000Z',
-                        method: 'source-default',
-                        detail: '예전 PC API 차단',
-                    },
+                    nextProbeAt: '2026-08-31T05:00:00.000Z',
                 }),
+                ttang: circuit({ nextProbeAt: '2026-08-31T05:00:00.000Z' }),
             },
         },
     });
 
     assert.equal(result.shouldRun, true);
     assert.equal(result.reason, 'active_github_circuit');
-    assert.deepEqual(result.sources, ['modetour']);
+    assert.deepEqual(result.sources, ['ttang']);
+    assert.deepEqual(result.manualCaptureSources, ['modetour']);
+});
+
+test('a non-blocking Modetour GitHub failure also requests manual capture', () => {
+    const result = evaluateLocalSourceFallback({
+        now: '2026-08-30T05:30:00.000Z',
+        cache: {
+            fullCrawlUpdatedAt: '2026-08-30T05:25:00.000Z',
+            staleStreak: { modetour: 1 },
+            sourceCircuits: {},
+        },
+    });
+
+    assert.equal(result.shouldRun, false);
+    assert.equal(result.reason, 'manual_capture_required');
+    assert.deepEqual(result.sources, []);
+    assert.deepEqual(result.manualCaptureSources, ['modetour']);
 });
 
 test('does nothing when no GitHub source circuit is active', () => {

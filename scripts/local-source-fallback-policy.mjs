@@ -7,19 +7,11 @@ import {
 } from '../src/lib/crawl-schedule-health.mjs';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
 const SOURCE_KEYS = ['ybtour', 'hanatour', 'modetour', 'onlinetour', 'ttang'];
 
 function timestamp(value) {
     const parsed = new Date(value || '').getTime();
     return Number.isFinite(parsed) ? parsed : null;
-}
-
-function kstDateKey(value) {
-    const parsed = timestamp(value);
-    return parsed === null
-        ? null
-        : new Date(parsed + KST_OFFSET_MS).toISOString().slice(0, 10);
 }
 
 function surroundingSlots(nowTimestamp, crons = DAILY_CRAWL_CRONS) {
@@ -73,43 +65,45 @@ export function evaluateLocalSourceFallback({
 
     const sources = [];
     const localCooldownSources = [];
-    const localDailyLimitSources = [];
+    const manualCaptureSources = [];
     for (const source of SOURCE_KEYS) {
         const circuit = cache.sourceCircuits?.[source];
         const githubNextProbeAt = timestamp(circuit?.nextProbeAt);
         if (githubNextProbeAt === null || nowTimestamp >= githubNextProbeAt) continue;
 
-        // 모두투어는 GitHub 차단 뒤 PC에서 API를 다시 시도하지 않고 공개 DOM만 본다.
-        // 성공·실패와 무관하게 KST 날짜당 한 번이며, 전날 차단 시각에서 정확히 24시간을
-        // 더하지 않는다. 다음 KST 날짜의 첫 정규 회차가 새 탐색 기회다.
-        if (
-            source === 'modetour'
-            && kstDateKey(circuit?.localFallback?.lastAttemptAt) === kstDateKey(nowTimestamp)
-        ) {
-            localDailyLimitSources.push(source);
+        // 모두투어는 GitHub 실패 뒤 PC 자동 수집으로 넘기지 않는다. 사용자가 일반 Chrome에서
+        // 화면을 확인해 캡처를 전달하고, 검증된 카드만 부분 병합한다.
+        if (source === 'modetour') {
+            manualCaptureSources.push(source);
             continue;
         }
 
         const localNextProbeAt = timestamp(circuit?.localFallback?.nextProbeAt);
-        if (source !== 'modetour' && localNextProbeAt !== null && nowTimestamp < localNextProbeAt) {
+        if (localNextProbeAt !== null && nowTimestamp < localNextProbeAt) {
             localCooldownSources.push(source);
             continue;
         }
         sources.push(source);
+    }
+    if (
+        Number(cache.staleStreak?.modetour || 0) > 0
+        && !manualCaptureSources.includes('modetour')
+    ) {
+        manualCaptureSources.push('modetour');
     }
 
     return {
         shouldRun: sources.length > 0,
         reason: sources.length > 0
             ? 'active_github_circuit'
+            : manualCaptureSources.length > 0
+                ? 'manual_capture_required'
             : localCooldownSources.length > 0
                 ? 'local_cooldown'
-                : localDailyLimitSources.length > 0
-                    ? 'local_daily_limit'
                 : 'no_active_circuits',
         sources,
+        manualCaptureSources,
         localCooldownSources,
-        localDailyLimitSources,
         fullCrawlUpdatedAt: new Date(fullCrawlAt).toISOString(),
         ...base,
     };

@@ -98,6 +98,13 @@ interface AdminData {
             detail: string;
         };
     }>;
+    manualCaptureStatus?: Record<string, {
+        capturedAt: string;
+        lastImportedAt: string;
+        accepted: number;
+        review: number;
+        filtered: number;
+    }>;
     naverStatus?: {
         lastCrawledAt: string | null;
         lastAttemptAt: string | null;
@@ -2184,6 +2191,7 @@ export default function AdminPage() {
                             const circuitOpen = Boolean(
                                 circuit && (!circuit.nextProbeAt || new Date(circuit.nextProbeAt).getTime() > Date.now()),
                             );
+                            const modetourManualNeeded = source === 'modetour' && (circuitOpen || staleCount > 0);
                             const late = ageHours === null || ageHours > (STALE_AFTER_HOURS[source] ?? DEFAULT_STALE_AFTER_HOURS);
                             const visibleCount = sourceVisibleCounts[source] || 0;
                             const history = (data.crawlHistory || [])
@@ -2204,7 +2212,9 @@ export default function AdminPage() {
                             const slumped = Boolean(latest && !latest.preserved && median >= 30 && latest.value < median * 0.6);
                             const issue = circuitOpen || staleCount > 0 || late || slumped;
                             const peak = Math.max(...history.map(entry => entry.value), 1);
-                            const statusText = circuitOpen
+                            const statusText = modetourManualNeeded
+                                ? '수동 캡처 필요'
+                                : circuitOpen
                                 ? circuit!.localFallback?.status === 'success'
                                     ? 'GitHub 휴식·PC 대체 정상'
                                     : circuit!.localFallback?.status === 'blocked'
@@ -3043,6 +3053,8 @@ export default function AdminPage() {
                         const circuitOpen = Boolean(
                             circuit && (!circuit.nextProbeAt || new Date(circuit.nextProbeAt).getTime() > Date.now()),
                         );
+                        const manualCapture = data.manualCaptureStatus?.[source];
+                        const modetourManualNeeded = source === 'modetour' && (circuitOpen || streak > 0);
                         const staleAfter = STALE_AFTER_HOURS[source] ?? DEFAULT_STALE_AFTER_HOURS;
                         const ageHours = updatedAt ? (Date.now() - new Date(updatedAt).getTime()) / 3600000 : null;
                         const stale = ageHours === null || ageHours > staleAfter;
@@ -3095,7 +3107,9 @@ export default function AdminPage() {
                                             status === 'stale' ? styles.statusBadgeStale : '',
                                         ].filter(Boolean).join(' ')}
                                     >
-                                        {circuitOpen
+                                        {modetourManualNeeded
+                                            ? 'GitHub 실패 · 수동 캡처 필요'
+                                            : circuitOpen
                                             ? circuit!.localFallback?.status === 'success'
                                                 ? `GitHub 휴식 · PC ${formatKST(circuit!.localFallback.lastAttemptAt)} 성공`
                                                 : circuit!.localFallback?.status === 'blocked'
@@ -3122,6 +3136,15 @@ export default function AdminPage() {
                                         : <span>갱신 기록 없음</span>}
                                     {latest && !latest.preserved && (
                                         <span>최근 수집 {latest.value.toLocaleString()}건 · 사이트 노출 {shown.toLocaleString()}건</span>
+                                    )}
+                                    {modetourManualNeeded && (
+                                        <span>PC 자동 접속 없음 · 일반 Chrome 결과 화면을 캡처해 전달</span>
+                                    )}
+                                    {source === 'modetour' && manualCapture && (
+                                        <span>
+                                            최근 수동 반영 {formatKST(manualCapture.lastImportedAt)} · 확정 {manualCapture.accepted}건
+                                            {manualCapture.review > 0 ? ` · 확인 필요 ${manualCapture.review}건` : ''}
+                                        </span>
                                     )}
                                 </div>
 

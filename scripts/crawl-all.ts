@@ -2,7 +2,6 @@
 import { getLastYbtourScheduleStats, scrapeYbtour } from '../src/lib/scrapers/ybtour';
 import { scrapeHanatour } from '../src/lib/scrapers/hanatour';
 import { scrapeModetour } from '../src/lib/scrapers/modetour';
-import { scrapeModetourDom } from '../src/lib/scrapers/modetour-dom';
 import { scrapeOnlineTour } from '../src/lib/scrapers/onlinetour';
 import { scrapeTtang } from '../src/lib/scrapers/ttang';
 import { scrapeMyrealtrip } from '../src/lib/scrapers/myrealtrip';
@@ -20,7 +19,6 @@ import {
     SOURCE_ADAPTER_VERSIONS,
     sourceCircuitLabel,
     type SourceCircuitState,
-    wasLocalSourceFallbackAttemptedOnKstDate,
 } from '../src/lib/source-circuit';
 import { buildLifecycleIdentity } from './lib/flight-lifecycle';
 import { preserveCrawlCacheWithSafetyState } from '../src/lib/crawl-cache-safety';
@@ -72,9 +70,6 @@ const sourceStartJitterMaxMs = Number.isFinite(parsedSourceStartJitter)
         : 0;
 
 function sourceCircuitPauseText(circuit: SourceCircuitState, localFallback = false): string {
-    if (localFallback && circuit.localFallback?.method === 'modetour-dom') {
-        return '오늘 PC DOM 재실행 없음, 다음 KST 날짜 첫 정규 회차에 단일 재탐색';
-    }
     const nextProbe = new Date(
         localFallback
             ? circuit.localFallback?.nextProbeAt || circuit.nextProbeAt
@@ -85,15 +80,13 @@ function sourceCircuitPauseText(circuit: SourceCircuitState, localFallback = fal
 }
 
 function recordPcFallback(
-    source: CrawlableSourceKey,
+    _source: CrawlableSourceKey,
     circuit: SourceCircuitState,
     status: 'success' | 'blocked' | 'failed',
     detail: string,
 ): SourceCircuitState {
     return recordLocalSourceFallback(circuit, status, detail, new Date(), {
-        // 모두투어 DOM은 정확한 24시간이 아니라 KST 날짜당 한 번으로 제한한다.
-        cooldownMs: source === 'modetour' ? null : undefined,
-        method: source === 'modetour' ? 'modetour-dom' : 'source-default',
+        method: 'source-default',
     });
 }
 
@@ -169,9 +162,7 @@ async function main() {
             {
                 name: '모두투어',
                 key: 'modetour' as const,
-                fn: () => localSourceFallback
-                    ? scrapeModetourDom(prevFlights)
-                    : scrapeModetour(prevFlights),
+                fn: () => scrapeModetour(prevFlights),
             },
             { name: '온라인투어', key: 'onlinetour' as const, fn: () => scrapeOnlineTour(prevFlights) },
             { name: '땡처리닷컴', key: 'ttang' as const, fn: () => scrapeTtang(prevFlights) },
@@ -187,18 +178,15 @@ async function main() {
             const circuit = sourceCircuits[task.key];
             const circuitOpen = isSourceCircuitOpen(circuit, SOURCE_ADAPTER_VERSIONS[task.key]);
             if (localSourceFallback) {
+                if (task.key === 'modetour') {
+                    console.warn('📷 모두투어: PC 자동 접속을 사용하지 않습니다. 일반 Chrome 수동 캡처가 필요합니다.');
+                    return false;
+                }
                 if (!circuitOpen) {
                     console.log(`⏭️ ${task.name}: GitHub 차단 회로가 열려 있지 않아 PC 대체 수집 생략`);
                     return false;
                 }
-                if (
-                    task.key === 'modetour'
-                    && wasLocalSourceFallbackAttemptedOnKstDate(circuit)
-                ) {
-                    console.warn('⏸️ 모두투어: PC DOM은 오늘 이미 1회 실행돼 다음 KST 날짜까지 생략');
-                    return false;
-                }
-                if (task.key !== 'modetour' && isLocalSourceFallbackCoolingDown(circuit)) {
+                if (isLocalSourceFallbackCoolingDown(circuit)) {
                     console.warn(`⏸️ ${task.name}: PC에서도 차단 신호가 확인돼 대체 수집 휴식 중`);
                     return false;
                 }
@@ -237,9 +225,7 @@ async function main() {
                         task.key,
                         sourceCircuits[task.key]!,
                         'success',
-                        task.key === 'modetour'
-                            ? `PC DOM 대체 수집 ${result.value.length}건 완료`
-                            : `PC 대체 수집 ${result.value.length}건 완료`,
+                        `PC 대체 수집 ${result.value.length}건 완료`,
                     );
                 } else {
                     delete sourceCircuits[task.key];
@@ -396,8 +382,8 @@ async function main() {
                 keepPrevious(
                     '0건 응답을 soft block으로 판정',
                     `⛔ ${src} 0건 응답을 soft block으로 판정 — 이전 데이터 유지, `
-                    + (localSourceFallback && src === 'modetour'
-                        ? '오늘 PC DOM 재실행 중단, 다음 KST 날짜 첫 정규 회차에 재탐색'
+                    + (src === 'modetour'
+                        ? 'PC 자동 접속 없음, 수동 캡처 필요'
                         : '24시간 자동 요청 중단'),
                 );
                 continue;
@@ -435,8 +421,8 @@ async function main() {
                 keepPrevious(
                     `응답 급감을 soft block으로 판정 (수집 ${prevScraped}건 → ${freshCount}건)`,
                     `⛔ ${src} 응답 급감을 soft block으로 판정 (수집 ${prevScraped}건 → ${freshCount}건) — 이전 데이터 유지, `
-                    + (localSourceFallback && src === 'modetour'
-                        ? '오늘 PC DOM 재실행 중단, 다음 KST 날짜 첫 정규 회차에 재탐색'
+                    + (src === 'modetour'
+                        ? 'PC 자동 접속 없음, 수동 캡처 필요'
                         : '24시간 자동 요청 중단'),
                 );
                 continue;

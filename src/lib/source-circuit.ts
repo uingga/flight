@@ -29,7 +29,7 @@ export interface SourceCircuitState {
         status: 'success' | 'blocked' | 'failed';
         lastAttemptAt: string;
         nextProbeAt?: string;
-        method?: 'source-default' | 'modetour-dom';
+        method?: 'source-default';
         detail: string;
     };
 }
@@ -166,32 +166,9 @@ export function isLocalSourceFallbackCoolingDown(
     return nowTimestamp < nextProbeTimestamp;
 }
 
-function kstDateKey(value: Date | number | string): string | null {
-    const timestamp = value instanceof Date
-        ? value.getTime()
-        : typeof value === 'number'
-            ? value
-            : new Date(value).getTime();
-    if (!Number.isFinite(timestamp)) return null;
-    return new Date(timestamp + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
-}
-
-/** 모두투어 PC DOM은 성공·실패와 무관하게 같은 KST 날짜에 한 번만 실행한다. */
-export function wasLocalSourceFallbackAttemptedOnKstDate(
-    circuit: SourceCircuitState | null | undefined,
-    now: Date | number = new Date(),
-): boolean {
-    const lastAttemptAt = circuit?.localFallback?.lastAttemptAt;
-    if (!lastAttemptAt) return false;
-    const currentKey = kstDateKey(now);
-    const attemptKey = kstDateKey(lastAttemptAt);
-    return currentKey !== null && currentKey === attemptKey;
-}
-
 export interface RecordLocalSourceFallbackOptions {
-    /** null이면 정확한 시간 쿨다운을 두지 않고 별도 예약 정책이 재실행 날짜를 정한다. */
-    cooldownMs?: number | null;
-    method?: 'source-default' | 'modetour-dom';
+    cooldownMs?: number;
+    method?: 'source-default';
 }
 
 export function recordLocalSourceFallback(
@@ -210,7 +187,7 @@ export function recordLocalSourceFallback(
         localFallback: {
             status,
             lastAttemptAt,
-            ...(status === 'blocked' && cooldownMs !== null
+            ...(status === 'blocked'
                 ? { nextProbeAt: new Date(now.getTime() + cooldownMs).toISOString() }
                 : {}),
             method: options.method || circuit.localFallback?.method || 'source-default',
