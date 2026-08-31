@@ -85,6 +85,10 @@ interface MobileRedesignPreviewProps {
     previewMode?: boolean;
     beforeFooter?: ReactNode;
     rootAs?: 'main' | 'div';
+    initialFlights?: Flight[];
+    initialFlightCount?: number;
+    initialLastUpdated?: string | null;
+    initialTodayPickId?: string | null;
 }
 
 interface RouteAlertTarget {
@@ -775,16 +779,24 @@ export default function MobileRedesignPreview({
     previewMode = true,
     beforeFooter,
     rootAs = 'main',
+    initialFlights = [],
+    initialFlightCount = 0,
+    initialLastUpdated = null,
+    initialTodayPickId = null,
 }: MobileRedesignPreviewProps) {
     const account = useAccount();
-    const [flights, setFlights] = useState<Flight[]>([]);
-    const [loading, setLoading] = useState(true);
+    const hasInitialFlights = initialFlights.length > 0;
+    const [flights, setFlights] = useState<Flight[]>(initialFlights);
+    const [loading, setLoading] = useState(!hasInitialFlights);
     const [error, setError] = useState('');
-    const [lastUpdated, setLastUpdated] = useState<string | null>(null);
-    const [todayPickId, setTodayPickId] = useState<string | null>(null);
+    const [lastUpdated, setLastUpdated] = useState<string | null>(initialLastUpdated);
+    const [todayPickId, setTodayPickId] = useState<string | null>(initialTodayPickId);
     const [todayPickRepeatOverride, setTodayPickRepeatOverride] = useState<TodayPickRepeatOverride | null>(null);
     const [priceHistory, setPriceHistory] = useState<PriceHistory>({});
     const [interparkPrices, setInterparkPrices] = useState<InterparkPrices>({});
+    const [initialSubsetActive, setInitialSubsetActive] = useState(
+        hasInitialFlights && initialFlightCount > initialFlights.length,
+    );
     const [passengers, setPassengers] = useState({ adult: 1, child: 0, infant: 0 });
     const [region, setRegion] = useState('전체');
     const [departure, setDeparture] = useState('전체');
@@ -1052,6 +1064,7 @@ export default function MobileRedesignPreview({
             // 추천·DROP 판단에 필요한 기준가를 먼저 넣은 뒤 목록을 연다. 상태 반영이
             // 나뉘는 브라우저에서도 첫 카드가 잠깐 다른 표로 보이지 않게 한다.
             setFlights(data.flights || []);
+            setInitialSubsetActive(false);
             setError('');
             lastFetchAtRef.current = Date.now();
         } catch (cause) {
@@ -1062,7 +1075,7 @@ export default function MobileRedesignPreview({
     }, [previewMode]);
 
     useEffect(() => {
-        void loadFlights();
+        void loadFlights(hasInitialFlights);
         const refreshTimer = window.setInterval(() => void loadFlights(true), 30 * 60 * 1000);
         const refreshVisiblePage = () => {
             if (document.visibilityState === 'visible' && Date.now() - lastFetchAtRef.current > 5 * 60 * 1000) {
@@ -1074,7 +1087,7 @@ export default function MobileRedesignPreview({
             window.clearInterval(refreshTimer);
             document.removeEventListener('visibilitychange', refreshVisiblePage);
         };
-    }, [loadFlights]);
+    }, [hasInitialFlights, loadFlights]);
 
     useEffect(() => {
         if (previewMode) return;
@@ -2124,6 +2137,9 @@ export default function MobileRedesignPreview({
         });
     }, [compareRecommended, flights, freshRouteResults, sort]);
     const feedFlights = freshRouteResults ? freshRouteResultFlights : displayedFlights;
+    const resultCount = initialSubsetActive && isDefaultView
+        ? initialFlightCount
+        : filteredFlights.length;
 
     const openFreshRouteResults = useCallback((flight: Flight) => {
         if (!freshFlightsInsight) return;
@@ -3218,7 +3234,7 @@ export default function MobileRedesignPreview({
                                 ? '항공권 불러오는 중'
                                 : freshRouteResults
                                     ? `${freshRouteResults.copyPrefix} 들어온 항공권 ${feedFlights.length.toLocaleString('ko-KR')}개`
-                                    : `${filteredFlights.length.toLocaleString('ko-KR')}개 · ${updatedLabel}`}</span>
+                                    : `${resultCount.toLocaleString('ko-KR')}개 · ${updatedLabel}`}</span>
                         </div>
                         <div className={styles.feedHeadingActions}>
                             {freshRouteResults && (

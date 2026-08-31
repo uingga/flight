@@ -59,7 +59,7 @@ function formatDate(value: string) {
 function buildInsights(history: Record<string, PricePoint[]>) {
     const allPoints = Object.values(history).flat();
     const latestDate = allPoints.map(point => point.date).sort().at(-1) || '';
-    const rows: RouteInsight[] = Object.entries(history).flatMap(([route, points]) => {
+    const candidates: RouteInsight[] = Object.entries(history).flatMap(([route, points]) => {
         const ordered = [...points].sort((a, b) => a.date.localeCompare(b.date));
         const first = ordered[0];
         const latest = ordered.at(-1);
@@ -82,7 +82,20 @@ function buildInsights(history: Record<string, PricePoint[]>) {
             change: latest.minPrice - first.minPrice,
             changeRate: ((latest.minPrice - first.minPrice) / first.minPrice) * 100,
         }];
-    }).sort((a, b) => a.changeRate - b.changeRate).slice(0, 8);
+    });
+    const byDisplayRoute = new Map<string, RouteInsight>();
+    for (const candidate of candidates) {
+        const key = `${candidate.departure}-${candidate.arrival}`;
+        const existing = byDisplayRoute.get(key);
+        if (!existing
+            || candidate.observations > existing.observations
+            || (candidate.observations === existing.observations && candidate.changeRate < existing.changeRate)) {
+            byDisplayRoute.set(key, candidate);
+        }
+    }
+    const rows = Array.from(byDisplayRoute.values())
+        .sort((a, b) => a.changeRate - b.changeRate)
+        .slice(0, 8);
 
     return {
         latestDate,
@@ -114,7 +127,7 @@ export default function PriceWatchPage() {
     return (
         <main className={styles.tipsPage}>
             <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(datasetJsonLd) }} />
-            <Link href="/tips" className={styles.backLink}>← 여행 팁 목록</Link>
+            <Link href="/" className={styles.backLink}>← 항공권 목록</Link>
             <article className={styles.article}>
                 <p className={styles.dataEyebrow}>TIKITIKIT PRICE NOTE</p>
                 <h1 className={styles.articleTitle}>최근 2~3주 기록에서 가격이 내려간 주요 노선</h1>

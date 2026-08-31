@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import fs from 'node:fs';
 import path from 'node:path';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import type { Flight } from '@/types/flight';
 import { filterStaleSourceFlights } from '@/lib/source-freshness';
 import { SITE_URL } from '@/lib/site';
@@ -101,6 +102,7 @@ export default function DropPage({ searchParams }: { searchParams?: { preview?: 
     const rawDrop = readJson<DropData>(previewProposal ? 'data/marketing/drop-proposal.json' : 'data/marketing/current-drop.json');
     const byId = new Map(loadFlights().map(flight => [flight.id, flight]));
     const drop = previewProposal || rawDrop?.deals.some(deal => byId.has(deal.flightId)) ? rawDrop : null;
+    if (!drop) redirect('/');
     const jsonLd = drop ? {
         '@context': 'https://schema.org',
         '@type': 'Article',

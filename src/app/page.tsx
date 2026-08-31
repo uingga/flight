@@ -4,6 +4,12 @@ import flightCacheJson from '../../data/all-flights-cache.json';
 import todayPickJson from '../../data/today-pick.json';
 import type { Flight } from '@/types/flight';
 import { SITE_URL } from '@/lib/site';
+import {
+    effectivePrice as staticEffectivePrice,
+    loadActiveFlights,
+    loadFlightCacheMeta,
+} from '@/lib/flight-static';
+import { getComparisonPriceTier } from '@/lib/price-quality';
 
 const SOURCE_NAMES: Record<string, string> = {
     hanatour: '하나투어',
@@ -78,9 +84,35 @@ export function generateMetadata(): Metadata {
 }
 
 export default function Home() {
+    const allFlights = loadActiveFlights();
+    const cacheMeta = loadFlightCacheMeta();
+    const todayKst = new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const initialTodayPickId = todayPickJson.date === todayKst
+        && typeof todayPickJson.flightId === 'string'
+        && allFlights.some(flight => flight.id === todayPickJson.flightId)
+        ? todayPickJson.flightId
+        : null;
+    const rankedFlights = [...allFlights].sort((left, right) => (
+        getComparisonPriceTier(left) - getComparisonPriceTier(right)
+        || staticEffectivePrice(left) - staticEffectivePrice(right)
+        || left.id.localeCompare(right.id)
+    ));
+    const pickedFlight = initialTodayPickId
+        ? rankedFlights.find(flight => flight.id === initialTodayPickId)
+        : undefined;
+    const initialFlights = [
+        ...(pickedFlight ? [pickedFlight] : []),
+        ...rankedFlights.filter(flight => flight.id !== initialTodayPickId),
+    ].slice(0, 72);
+
     return (
         <main>
-            <RedesignDashboard />
+            <RedesignDashboard
+                initialFlights={initialFlights}
+                initialFlightCount={allFlights.length}
+                initialLastUpdated={cacheMeta.timestamp || cacheMeta.lastUpdated || null}
+                initialTodayPickId={initialTodayPickId}
+            />
         </main>
     );
 }

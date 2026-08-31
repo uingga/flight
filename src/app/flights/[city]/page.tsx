@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { SITE_URL } from '@/lib/site';
 import {
     loadActiveFlights, groupByCity, effectivePrice, departureLabel, formatKoreanDate,
@@ -52,6 +52,9 @@ export function generateMetadata({ params }: { params: { city: string } }): Meta
 export default function CityFlightsPage({ params }: { params: { city: string } }) {
     const data = getCity(params.city);
     if (!data) notFound();
+    if (data.flights.length < MIN_INDEXABLE_CITY_FLIGHTS) {
+        redirect(`/?q=${encodeURIComponent(data.city)}`);
+    }
 
     const cacheMeta = loadFlightCacheMeta();
     const checkedAt = cacheMeta.timestamp || cacheMeta.lastUpdated;
