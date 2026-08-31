@@ -87,26 +87,45 @@ test('a legacy success deadline does not delay the next day once upstream is rea
     assert.equal(result.reason, 'general_crawl_ready');
 });
 
-test('an explicit block opens the circuit for 24 hours', () => {
+test('an explicit block waits only until the next scheduled KST-day run', () => {
     const state = buildLocalNaverState('blocked', {
         now: new Date('2026-08-29T11:30:00.000Z'),
         reason: '403',
     });
-    const duringCooldown = evaluateLocalNaverRun({
-        now: '2026-08-30T05:30:00.000Z',
+    const sameDay = evaluateLocalNaverRun({
+        now: '2026-08-29T11:31:00.000Z',
         cache: readyCache,
         state,
     });
-    assert.equal(duringCooldown.shouldRun, false);
-    assert.equal(duringCooldown.reason, 'cooldown');
+    assert.equal(sameDay.shouldRun, false);
+    assert.equal(sameDay.reason, 'already_attempted_today');
 
-    const afterCooldown = evaluateLocalNaverRun({
-        now: '2026-08-30T11:31:00.000Z',
+    const nextScheduledRun = evaluateLocalNaverRun({
+        // Only 15h 14m elapsed, but this is the next day's regular run.
+        now: '2026-08-30T02:44:00.000Z',
         cache: {
-            fullCrawlUpdatedAt: '2026-08-30T03:10:00.000Z',
-            sourceUpdatedAt: { myrealtrip: '2026-08-30T03:57:00.000Z' },
+            fullCrawlUpdatedAt: '2026-08-30T02:42:00.000Z',
+            sourceUpdatedAt: { myrealtrip: '2026-08-29T09:57:00.000Z' },
         },
         state,
     });
-    assert.equal(afterCooldown.shouldRun, true);
+    assert.equal(nextScheduledRun.shouldRun, true);
+    assert.equal(nextScheduledRun.reason, 'general_crawl_ready');
+});
+
+test('a legacy exact-24h block marker cannot skip the next scheduled run', () => {
+    const result = evaluateLocalNaverRun({
+        now: '2026-08-30T02:44:00.000Z',
+        cache: {
+            fullCrawlUpdatedAt: '2026-08-30T02:42:00.000Z',
+            sourceUpdatedAt: { myrealtrip: '2026-08-29T09:57:00.000Z' },
+        },
+        state: {
+            kstDate: '2026-08-29',
+            phase: 'blocked',
+            nextEligibleAt: '2026-08-30T11:30:00.000Z',
+        },
+    });
+    assert.equal(result.shouldRun, true);
+    assert.equal(result.reason, 'general_crawl_ready');
 });

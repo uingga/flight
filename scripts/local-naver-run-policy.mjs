@@ -50,10 +50,11 @@ export function evaluateLocalNaverRun({
     }
 
     const nextEligibleAt = validTimestamp(state?.nextEligibleAt);
-    // Successful runs are limited by their KST date below, not by the legacy
-    // nextEligibleAt value. This lets an older 14:00 success marker migrate to
-    // the pre-lunch completion watcher without delaying the following day.
-    if (state?.phase !== 'success' && nextEligibleAt !== null && currentTimestamp < nextEligibleAt) {
+    // Successful and blocked runs are limited by their KST date below, not by
+    // an exact-hour deadline. A blocked session may start a little later than
+    // usual, but it must still get one probe in the next scheduled KST-day run
+    // instead of skipping that whole day for being a few minutes short of 24h.
+    if (!['success', 'blocked'].includes(state?.phase) && nextEligibleAt !== null && currentTimestamp < nextEligibleAt) {
         return {
             shouldRun: false,
             reason: 'cooldown',
@@ -113,12 +114,10 @@ function nextKstTime(now, hour, minute) {
 
 export function buildLocalNaverState(outcome, { now = new Date(), reason = '' } = {}) {
     const current = now instanceof Date ? now : new Date(now);
-    const cooldownHours = outcome === 'blocked'
-        ? 24
-        : outcome === 'degraded' || outcome === 'running'
-            ? 12
-            : 0;
-    const nextEligibleAt = outcome === 'success'
+    const cooldownHours = outcome === 'degraded' || outcome === 'running'
+        ? 12
+        : 0;
+    const nextEligibleAt = outcome === 'success' || outcome === 'blocked'
         ? nextKstTime(current, 10, 0)
         : new Date(current.getTime() + cooldownHours * HOUR_MS).toISOString();
 
