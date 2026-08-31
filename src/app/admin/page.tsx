@@ -2196,7 +2196,7 @@ export default function AdminPage() {
                             const circuitOpen = Boolean(
                                 circuit && (!circuit.nextProbeAt || new Date(circuit.nextProbeAt).getTime() > Date.now()),
                             );
-                            const modetourManualNeeded = source === 'modetour' && (circuitOpen || staleCount > 0);
+                            const manualCapture = data.manualCaptureStatus?.[source];
                             const late = ageHours === null || ageHours > (STALE_AFTER_HOURS[source] ?? DEFAULT_STALE_AFTER_HOURS);
                             const visibleCount = sourceVisibleCounts[source] || 0;
                             const history = (data.crawlHistory || [])
@@ -2207,6 +2207,22 @@ export default function AdminPage() {
                                     value: entry.sites[source]?.scraped ?? entry.sites[source]?.total ?? 0,
                                     preserved: Boolean(entry.sites[source]?.preserved),
                                 }));
+                            const latestFailedAt = [...history].reverse().find(entry => entry.preserved)?.timestamp;
+                            const manualImportedAt = manualCapture
+                                ? new Date(manualCapture.lastImportedAt).getTime()
+                                : Number.NaN;
+                            const failureAt = Math.max(
+                                circuit?.openedAt ? new Date(circuit.openedAt).getTime() : 0,
+                                latestFailedAt ? new Date(latestFailedAt).getTime() : 0,
+                            );
+                            const modetourManualApplied = source === 'modetour'
+                                && Boolean(manualCapture)
+                                && (circuitOpen || staleCount > 0)
+                                && Number.isFinite(manualImportedAt)
+                                && manualImportedAt >= failureAt;
+                            const modetourManualNeeded = source === 'modetour'
+                                && (circuitOpen || staleCount > 0)
+                                && !modetourManualApplied;
                             const pastValues = history
                                 .slice(0, -1)
                                 .filter(entry => !entry.preserved)
@@ -2217,7 +2233,9 @@ export default function AdminPage() {
                             const slumped = Boolean(latest && !latest.preserved && median >= 30 && latest.value < median * 0.6);
                             const issue = circuitOpen || staleCount > 0 || late || slumped;
                             const peak = Math.max(...history.map(entry => entry.value), 1);
-                            const statusText = modetourManualNeeded
+                            const statusText = modetourManualApplied
+                                ? `수동 ${manualCapture!.accepted}건 반영${manualCapture!.naverPending ? ' · 네이버 대기' : ''}`
+                                : modetourManualNeeded
                                 ? '수동 캡처 필요'
                                 : circuitOpen
                                 ? circuit!.localFallback?.status === 'success'
@@ -3059,7 +3077,6 @@ export default function AdminPage() {
                             circuit && (!circuit.nextProbeAt || new Date(circuit.nextProbeAt).getTime() > Date.now()),
                         );
                         const manualCapture = data.manualCaptureStatus?.[source];
-                        const modetourManualNeeded = source === 'modetour' && (circuitOpen || streak > 0);
                         const staleAfter = STALE_AFTER_HOURS[source] ?? DEFAULT_STALE_AFTER_HOURS;
                         const ageHours = updatedAt ? (Date.now() - new Date(updatedAt).getTime()) / 3600000 : null;
                         const stale = ageHours === null || ageHours > staleAfter;
@@ -3072,6 +3089,22 @@ export default function AdminPage() {
                                 value: e.sites[source]?.scraped ?? e.sites[source]?.total ?? 0,
                                 preserved: Boolean(e.sites[source]?.preserved),
                             }));
+                        const latestFailedAt = [...history].reverse().find(entry => entry.preserved)?.ts;
+                        const manualImportedAt = manualCapture
+                            ? new Date(manualCapture.lastImportedAt).getTime()
+                            : Number.NaN;
+                        const failureAt = Math.max(
+                            circuit?.openedAt ? new Date(circuit.openedAt).getTime() : 0,
+                            latestFailedAt ? new Date(latestFailedAt).getTime() : 0,
+                        );
+                        const modetourManualApplied = source === 'modetour'
+                            && Boolean(manualCapture)
+                            && (circuitOpen || streak > 0)
+                            && Number.isFinite(manualImportedAt)
+                            && manualImportedAt >= failureAt;
+                        const modetourManualNeeded = source === 'modetour'
+                            && (circuitOpen || streak > 0)
+                            && !modetourManualApplied;
 
                         // 무결성 가드가 막지 못하고 통과한 반쪽 결과도 여기서는 보이게 한다.
                         // 가드는 직전 한 번과만 비교하므로, 반쪽 결과가 한 번 자리를 잡으면
@@ -3112,7 +3145,9 @@ export default function AdminPage() {
                                             status === 'stale' ? styles.statusBadgeStale : '',
                                         ].filter(Boolean).join(' ')}
                                     >
-                                        {modetourManualNeeded
+                                        {modetourManualApplied
+                                            ? `GitHub 실패 · 수동 ${manualCapture!.accepted}건 반영${manualCapture!.naverPending ? ' · 네이버 대기' : ''}`
+                                            : modetourManualNeeded
                                             ? 'GitHub 실패 · 수동 캡처 필요'
                                             : circuitOpen
                                             ? circuit!.localFallback?.status === 'success'
