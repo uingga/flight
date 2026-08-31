@@ -1489,12 +1489,14 @@
     .conditionFilterSlotPinned {
         position: fixed;
         z-index: 50;
-        top: 0;
+        top: 10px;
         left: 50%;
-        width: min(1144px, calc(100% - 56px));
+        width: min(1096px, calc(100% - 104px));
+        min-height: 49px;
         transform: translateX(-50%);
-        border-radius: 0 0 12px 12px;
-        box-shadow: 0 8px 22px rgba(34, 34, 34, 0.09);
+        border-color: rgba(216, 219, 224, 0.96);
+        border-radius: 12px;
+        box-shadow: 0 10px 28px rgba(34, 34, 34, 0.1), 0 2px 8px rgba(34, 34, 34, 0.05);
         backdrop-filter: blur(16px);
         -webkit-backdrop-filter: blur(16px);
     }
@@ -1502,7 +1504,7 @@
         position: relative;
         display: flex;
         align-items: stretch;
-        min-height: 53px;
+        min-height: 49px;
     }
     .desktopFilterControl {
         position: relative;
@@ -1512,7 +1514,7 @@
     .desktopFilterControl + .desktopFilterControl { border-left: 1px solid #eeeeee; }
     .desktopFilterSummary {
         width: 100%;
-        height: 53px;
+        height: 49px;
         padding: 0 17px;
         display: grid;
         grid-template-columns: max-content minmax(0, 1fr) 14px;
