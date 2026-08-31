@@ -1186,33 +1186,47 @@ function HourlySessionsComparison({ data, days }: { data: GaHourlySessions; days
             </div>
             <div className={styles.hourlyCompareScroll}>
                 <div className={styles.hourlyCompareChart}>
-                    <div className={styles.hourlyCompareHead} aria-hidden="true">
-                        <span>시간</span>
-                        <span>최근 7일</span>
-                        <span>최근 {days}일</span>
+                    <div className={styles.hourlyCompareLegend} aria-hidden="true">
+                        <span><i className={styles.hourlyCompareLegendRecent} />최근 7일</span>
+                        <span><i className={styles.hourlyCompareLegendCurrent} />최근 {days}일</span>
                     </div>
-                    {data.recent7.map((bucket, index) => {
-                        const current = data.current[index] || { ...bucket, sessions: 0 };
-                        const recent7Share = share(bucket.sessions, recent7Total);
-                        const currentShare = share(current.sessions, currentTotal);
-                        return (
-                            <div className={styles.hourlyCompareRow} key={bucket.startHour}>
-                                <time>{hourRangeLabel(bucket)}</time>
-                                <div className={styles.hourlyCompareMetric} aria-label={`최근 7일 ${hourRangeLabel(bucket)}, ${bucket.sessions}회, ${shareLabel(bucket.sessions, recent7Total)}`}>
-                                    <span className={styles.hourlyCompareTrack} aria-hidden="true">
-                                        <span className={styles.hourlyCompareBarRecent} style={{ width: `${(recent7Share / maxShare) * 100}%` }} />
-                                    </span>
-                                    <span>{shareLabel(bucket.sessions, recent7Total)} · {bucket.sessions.toLocaleString()}회</span>
+                    <div className={styles.hourlyCompareBars} role="list" aria-label={`최근 7일과 최근 ${days}일의 3시간대별 접속 비중`}>
+                        {data.recent7.map((bucket, index) => {
+                            const current = data.current[index] || { ...bucket, sessions: 0 };
+                            const recent7Share = share(bucket.sessions, recent7Total);
+                            const currentShare = share(current.sessions, currentTotal);
+                            const recent7Height = bucket.sessions > 0 ? Math.max(6, (recent7Share / maxShare) * 100) : 0;
+                            const currentHeight = current.sessions > 0 ? Math.max(6, (currentShare / maxShare) * 100) : 0;
+
+                            return (
+                                <div className={styles.hourlyCompareBarGroup} key={bucket.startHour} role="listitem">
+                                    <div className={styles.hourlyCompareBarPair}>
+                                        <div
+                                            className={styles.hourlyCompareBarColumn}
+                                            aria-label={`최근 7일 ${hourRangeLabel(bucket)}, ${bucket.sessions}회, ${shareLabel(bucket.sessions, recent7Total)}`}
+                                            title={`최근 7일 · ${hourRangeLabel(bucket)} · ${bucket.sessions.toLocaleString()}회 · ${shareLabel(bucket.sessions, recent7Total)}`}
+                                        >
+                                            <span className={styles.hourlyCompareBarValue}>{bucket.sessions > 0 ? shareLabel(bucket.sessions, recent7Total) : ''}</span>
+                                            <span className={styles.hourlyCompareBarTrack} aria-hidden="true">
+                                                <span className={styles.hourlyCompareBarRecent} style={{ height: `${recent7Height}%` }} />
+                                            </span>
+                                        </div>
+                                        <div
+                                            className={styles.hourlyCompareBarColumn}
+                                            aria-label={`최근 ${days}일 ${hourRangeLabel(current)}, ${current.sessions}회, ${shareLabel(current.sessions, currentTotal)}`}
+                                            title={`최근 ${days}일 · ${hourRangeLabel(current)} · ${current.sessions.toLocaleString()}회 · ${shareLabel(current.sessions, currentTotal)}`}
+                                        >
+                                            <span className={styles.hourlyCompareBarValue}>{current.sessions > 0 ? shareLabel(current.sessions, currentTotal) : ''}</span>
+                                            <span className={styles.hourlyCompareBarTrack} aria-hidden="true">
+                                                <span className={styles.hourlyCompareBarCurrent} style={{ height: `${currentHeight}%` }} />
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <time>{hourRangeLabel(bucket)}</time>
                                 </div>
-                                <div className={styles.hourlyCompareMetric} aria-label={`최근 ${days}일 ${hourRangeLabel(current)}, ${current.sessions}회, ${shareLabel(current.sessions, currentTotal)}`}>
-                                    <span className={styles.hourlyCompareTrack} aria-hidden="true">
-                                        <span className={styles.hourlyCompareBarCurrent} style={{ width: `${(currentShare / maxShare) * 100}%` }} />
-                                    </span>
-                                    <span>{shareLabel(current.sessions, currentTotal)} · {current.sessions.toLocaleString()}회</span>
-                                </div>
-                            </div>
-                        );
-                    })}
+                            );
+                        })}
+                    </div>
                 </div>
             </div>
             <p className={styles.hourlyFootnote}>어제까지 끝난 날짜만 3시간씩 묶었습니다. 기간 길이가 달라 막대는 각 기간 전체 세션에서 차지한 비중으로 비교합니다.</p>

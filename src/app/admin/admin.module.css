@@ -3051,76 +3051,114 @@
 }
 
 .hourlyCompareChart {
-    min-width: 690px;
+    min-width: 720px;
     padding: 12px 15px 10px;
 }
 
-.hourlyCompareHead,
-.hourlyCompareRow {
-    display: grid;
-    grid-template-columns: 94px minmax(0, 1fr) minmax(0, 1fr);
-    align-items: center;
-    gap: 14px;
-}
-
-.hourlyCompareHead {
+.hourlyCompareLegend {
     min-height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 14px;
     color: #707070;
     font-size: 0.63rem;
     font-weight: 600;
 }
 
-.hourlyCompareRow {
-    min-height: 38px;
-    border-top: 1px solid #eef0f3;
-}
-
-.hourlyCompareRow > time {
-    color: #5f5f5f;
-    font-size: 0.65rem;
-    font-weight: 600;
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-}
-
-.hourlyCompareMetric {
-    min-width: 0;
-    display: grid;
-    grid-template-columns: minmax(70px, 1fr) auto;
+.hourlyCompareLegend > span {
+    display: inline-flex;
     align-items: center;
+    gap: 5px;
+}
+
+.hourlyCompareLegend i {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+}
+
+.hourlyCompareLegendRecent { background: #ff385c; }
+.hourlyCompareLegendCurrent { background: #7e8998; }
+
+.hourlyCompareBars {
+    height: 174px;
+    padding-top: 8px;
+    display: grid;
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    align-items: end;
     gap: 8px;
 }
 
-.hourlyCompareTrack {
-    height: 8px;
+.hourlyCompareBarGroup {
+    height: 166px;
+    min-width: 0;
+    display: grid;
+    grid-template-rows: 145px 16px;
+    align-items: end;
+    gap: 5px;
+}
+
+.hourlyCompareBarPair {
+    height: 145px;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: end;
+    gap: 4px;
+}
+
+.hourlyCompareBarColumn {
+    height: 145px;
+    min-width: 0;
+    display: grid;
+    grid-template-rows: 18px 123px;
+    align-items: end;
+    gap: 4px;
+}
+
+.hourlyCompareBarValue {
+    align-self: center;
     overflow: hidden;
-    border-radius: 999px;
-    background: #eceff2;
+    color: #65707e;
+    font-size: 0.55rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.hourlyCompareBarTrack {
+    width: 100%;
+    max-width: 26px;
+    height: 123px;
+    justify-self: center;
+    display: flex;
+    align-items: flex-end;
+    overflow: hidden;
+    border-radius: 5px 5px 2px 2px;
+    background: #f0f2f4;
 }
 
 .hourlyCompareBarRecent,
 .hourlyCompareBarCurrent {
+    width: 100%;
+    min-height: 0;
     display: block;
-    height: 100%;
-    min-width: 0;
-    border-radius: inherit;
+    border-radius: 5px 5px 2px 2px;
 }
 
-.hourlyCompareBarRecent {
-    background: #ff385c;
-}
+.hourlyCompareBarRecent { background: #ff385c; }
+.hourlyCompareBarCurrent { background: #7e8998; }
 
-.hourlyCompareBarCurrent {
-    background: #7e8998;
-}
-
-.hourlyCompareMetric > span:last-child {
-    min-width: 72px;
-    color: #5f5f5f;
-    font-size: 0.61rem;
+.hourlyCompareBarGroup > time {
+    align-self: start;
+    color: #707070;
+    font-size: 0.57rem;
     font-weight: 600;
     font-variant-numeric: tabular-nums;
-    text-align: right;
+    text-align: center;
     white-space: nowrap;
 }
 
