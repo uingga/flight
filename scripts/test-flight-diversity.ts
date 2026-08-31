@@ -75,6 +75,71 @@ assert.equal(
     '출발지가 달라도 도착지가 같으면 같은 연속 목적지로 세야 한다.',
 );
 
+const sameOfferOnDifferentDates = [
+    {
+        ...flight('bandar-1', '인천', '반다르세리베가완', 1),
+        airline: '로열브루나이항공',
+        price: 469_900,
+        departure: { city: '인천', airport: 'ICN', date: '2026-09-15', time: '08:00' },
+        arrival: { city: '반다르세리베가완', airport: 'BWN', date: '2026-09-19', time: '18:00' },
+    },
+    {
+        ...flight('bandar-2', '인천', '반다르세리베가완', 2),
+        airline: '로열브루나이항공',
+        price: 469_900,
+        departure: { city: '인천', airport: 'ICN', date: '2026-10-13', time: '08:00' },
+        arrival: { city: '반다르세리베가완', airport: 'BWN', date: '2026-10-17', time: '18:00' },
+    },
+    ...Array.from({ length: 8 }, (_, index) => flight(
+        `different-${index + 1}`,
+        '인천',
+        `다른도시${index + 1}`,
+        index + 10,
+    )),
+];
+const deduplicatedFirstNine = diversifyFlightDestinations(sameOfferOnDifferentDates, {
+    scoreOf: item => (item as Flight & { testScore: number }).testScore,
+    balanceIncheon: false,
+});
+assert.equal(
+    deduplicatedFirstNine.slice(0, 9).filter(item => item.arrival.city === '반다르세리베가완').length,
+    1,
+    '출발지·목적지·가격·항공사·여행기간이 같고 날짜만 다른 표는 첫 9개에 대표 한 장만 보여야 한다.',
+);
+assert.equal(
+    deduplicatedFirstNine.findIndex(item => item.id === 'bandar-2'),
+    9,
+    '날짜만 다른 같은 표는 삭제하지 않고 첫 9개 뒤로 미뤄야 한다.',
+);
+
+const differentOriginSameDestination = diversifyFlightDestinations([
+    flight('taipei-incheon', '인천', '타이베이', 1),
+    flight('taipei-busan', '부산', '타이베이', 2),
+    flight('fukuoka', '인천', '후쿠오카', 3),
+], {
+    scoreOf: item => (item as Flight & { testScore: number }).testScore,
+    balanceIncheon: false,
+});
+assert.deepEqual(
+    differentOriginSameDestination.slice(0, 2).map(item => item.id),
+    ['taipei-incheon', 'taipei-busan'],
+    '목적지가 같아도 출발지가 다르면 서로 다른 선택지로 첫 9개에 함께 남아야 한다.',
+);
+
+const differentPriceSameDestination = diversifyFlightDestinations([
+    flight('osaka-cheap', '인천', '오사카', 1),
+    { ...flight('osaka-other-price', '인천', '오사카', 2), price: 129_000 },
+    flight('nagoya', '인천', '나고야', 3),
+], {
+    scoreOf: item => (item as Flight & { testScore: number }).testScore,
+    balanceIncheon: false,
+});
+assert.deepEqual(
+    differentPriceSameDestination.slice(0, 2).map(item => item.id),
+    ['osaka-cheap', 'osaka-other-price'],
+    '목적지가 같아도 가격이 다르면 서로 다른 선택지로 첫 9개에 함께 남아야 한다.',
+);
+
 const recentlyAddedCandidates = ordered.map((item, index) => ({
     ...item,
     firstSeen: index === 5 ? '2026-08-28' : index === 2 ? '2026-08-27' : index === 9 ? '2026-08-29' : '2026-08-26',

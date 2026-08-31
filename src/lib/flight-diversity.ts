@@ -46,6 +46,41 @@ export interface FlightDiversityResult {
     decisions: FlightDiversityDecision[];
 }
 
+function parseTravelDate(value: string): number | null {
+    const match = value
+        .replace(/\([^)]*\)/g, '')
+        .match(/(\d{4})[./-](\d{1,2})[./-](\d{1,2})/);
+    if (!match) return null;
+
+    const year = Number(match[1]);
+    const month = Number(match[2]);
+    const day = Number(match[3]);
+    const time = Date.UTC(year, month - 1, day);
+    const parsed = new Date(time);
+    if (
+        parsed.getUTCFullYear() !== year
+        || parsed.getUTCMonth() !== month - 1
+        || parsed.getUTCDate() !== day
+    ) return null;
+    return time;
+}
+
+/** 첫 9개에서 날짜만 바뀐 사실상 같은 표를 한 장으로 취급하기 위한 키다. */
+function firstNineNearDuplicateKey(flight: Flight): string | null {
+    const departureDate = parseTravelDate(flight.departure.date);
+    const returnDate = parseTravelDate(flight.arrival.date);
+    if (departureDate === null || returnDate === null || returnDate < departureDate) return null;
+
+    const origin = flight.departure.airport?.trim().toUpperCase()
+        || normalizeCity(flight.departure.city);
+    const destination = normalizeCity(flight.arrival.city);
+    const airline = flight.airline?.replace(/\s+/g, '').toLowerCase();
+    const tripDays = Math.round((returnDate - departureDate) / 86_400_000);
+    if (!origin || !destination || !airline || !Number.isFinite(flight.price)) return null;
+
+    return [origin, destination, flight.price, airline, tripDays].join('|');
+}
+
 function isIncheonAreaDeparture(flight: Flight): boolean {
     const airport = flight.departure.airport?.toUpperCase();
     return airport === 'ICN'
@@ -96,7 +131,8 @@ export function excludePinnedDestination(items: Flight[], pinnedFlight?: Flight)
  * 추천순 카드의 목적지 다양성을 조정한다.
  *
  * 같은 목적지는 두 장까지 연속으로 올 수 있다. 세 번째는 다른 목적지가 남아 있는 한
- * 뒤로 미루며, 대체 목적지가 전혀 없을 때만 목록을 버리지 않기 위해 최종 완화한다.
+ * 뒤로 미룬다. 첫 9개에서는 출발지·목적지·가격·항공사·여행기간이 모두 같은 표도
+ * 대표 한 장만 남긴다. 대체 표가 전혀 없을 때만 목록을 버리지 않기 위해 최종 완화한다.
  */
 export function diversifyFlightDestinations(
     items: Flight[],
@@ -128,11 +164,16 @@ export function diversifyFlightDestinationsWithDecisions(
     const decisions: FlightDiversityDecision[] = [];
     const sequence: Flight[] = [...leadingFlights];
     const topDestinationCounts = new Map<string, number>();
+    const firstNineNearDuplicateKeys = new Set<string>();
     const originalIndexes = new Map(items.map((flight, index) => [flight, index]));
 
     sequence.slice(0, topWindow).forEach(flight => {
         const destination = normalizeCity(flight.arrival.city);
         topDestinationCounts.set(destination, (topDestinationCounts.get(destination) || 0) + 1);
+    });
+    sequence.slice(0, 9).forEach(flight => {
+        const key = firstNineNearDuplicateKey(flight);
+        if (key) firstNineNearDuplicateKeys.add(key);
     });
 
     while (remaining.length > 0) {
@@ -162,11 +203,13 @@ export function diversifyFlightDestinationsWithDecisions(
                 .filter(index => {
                     const flight = remaining[index];
                     const destination = normalizeCity(flight.arrival.city);
+                    const nearDuplicateKey = firstNineNearDuplicateKey(flight);
                     const destinationStreak = trailingDestinationStreak(destinationSequence, destination);
                     const departsFromIncheonArea = isIncheonAreaDeparture(flight);
                     return destinationStreak < maxConsecutiveDestinations
                         && (!keepTopLimit || !insideTopWindow || (topDestinationCounts.get(destination) || 0) < maxPerDestination)
                         && (!keepFirstNineCap || sequence.length >= 9 || (topDestinationCounts.get(destination) || 0) < maxPerDestination)
+                        && (!keepFirstNineCap || sequence.length >= 9 || !nearDuplicateKey || !firstNineNearDuplicateKeys.has(nearDuplicateKey))
                         && (!keepDepartureBalance || !mustChooseIncheon || departsFromIncheonArea)
                         && (!keepDepartureBalance || incheonCount < 6 || !departsFromIncheonArea);
                 });
@@ -258,6 +301,10 @@ export function diversifyFlightDestinationsWithDecisions(
         });
         result.push(next);
         sequence.push(next);
+        if (sequence.length <= 9) {
+            const nearDuplicateKey = firstNineNearDuplicateKey(next);
+            if (nearDuplicateKey) firstNineNearDuplicateKeys.add(nearDuplicateKey);
+        }
         if (sequence.length <= topWindow) {
             topDestinationCounts.set(destination, (topDestinationCounts.get(destination) || 0) + 1);
         }
