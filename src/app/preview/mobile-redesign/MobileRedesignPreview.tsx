@@ -2249,13 +2249,15 @@ export default function MobileRedesignPreview({
         freshMobileSuppressClickRef.current = false;
         setFreshMobileAnimating(false);
         setFreshMobileDragOffset(0);
-        event.currentTarget.setPointerCapture(event.pointerId);
     };
 
     const handleFreshMobilePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
         const drag = freshMobileDragRef.current;
         if (!drag || drag.pointerId !== event.pointerId) return;
         const nextOffset = Math.max(-64, Math.min(64, event.clientY - drag.startY));
+        if (Math.abs(nextOffset) >= 4 && !event.currentTarget.hasPointerCapture(event.pointerId)) {
+            event.currentTarget.setPointerCapture(event.pointerId);
+        }
         setFreshMobileDragOffset(nextOffset);
     };
 
@@ -2329,13 +2331,16 @@ export default function MobileRedesignPreview({
         setFreshDesktopDragging(true);
         setFreshDesktopAnimating(false);
         setFreshDesktopDragOffset(0);
-        event.currentTarget.setPointerCapture(event.pointerId);
     };
 
     const handleFreshDesktopPointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
         const drag = freshDesktopDragRef.current;
         if (!drag || drag.pointerId !== event.pointerId) return;
-        setFreshDesktopDragOffset(Math.max(-82, Math.min(82, event.clientY - drag.startY)));
+        const nextOffset = Math.max(-82, Math.min(82, event.clientY - drag.startY));
+        if (Math.abs(nextOffset) >= 4 && !event.currentTarget.hasPointerCapture(event.pointerId)) {
+            event.currentTarget.setPointerCapture(event.pointerId);
+        }
+        setFreshDesktopDragOffset(nextOffset);
     };
 
     const handleFreshDesktopPointerEnd = (event: ReactPointerEvent<HTMLDivElement>) => {
