@@ -177,11 +177,16 @@ export default function Dashboard() {
     const priceAlertAreaRef = useRef<HTMLDivElement>(null);
     const observerRef = useRef<IntersectionObserver | null>(null);
     const loadMoreRef = useRef<HTMLDivElement | null>(null);
+    const impressionObserverRef = useRef<IntersectionObserver | null>(null);
+    const impressionPayloadsRef = useRef(new Map<Element, gtag.FlightImpressionDetails>());
+    const impressionTimersRef = useRef(new Map<Element, ReturnType<typeof setTimeout>>());
+    const recordedImpressionsRef = useRef(new Set<string>());
     const [headerHidden, setHeaderHidden] = useState(false);
     const [headerScrolled, setHeaderScrolled] = useState(false);
     const lastScrollY = useRef(0);
     const filterAreaRef = useRef<HTMLDivElement>(null);
     const mergedAccountRef = useRef<string | null>(null);
+    const lastDestinationSearchRef = useRef<string | null>(null);
 
     // 팝업이 열려 있는 동안 배경(body) 스크롤 잠금
     // (iOS Safari는 overflow:hidden만으로 안 막혀서 position:fixed 방식 사용)
@@ -290,7 +295,9 @@ export default function Dashboard() {
         };
     }, [showFilters]);
 
-    const toggleFavorite = (flightId: string, cityName: string) => {
+    const toggleFavorite = (flight: Flight) => {
+        const flightId = flight.id;
+        const cityName = normalizeCity(flight.arrival.city);
         setFavoriteFlights(prev => {
             const willFavorite = !prev.includes(flightId);
             const next = !willFavorite
@@ -302,6 +309,13 @@ export default function Dashboard() {
             } else {
                 setFavToast(`${cityName} 항공권 즐겨찾기 해제`);
             }
+            gtag.trackFavoriteChange(willFavorite ? 'add' : 'remove', {
+                flightId,
+                route: `${normalizeCity(flight.departure.city)}-${cityName}`,
+                destination: cityName,
+                source: flight.source,
+                price: flight.price,
+            });
             setTimeout(() => setFavToast(null), 2000);
             void account.setFavorite(flightId, willFavorite).catch(() => {
                 setFavToast('계정에는 저장하지 못했어요. 잠시 뒤 다시 시도해 주세요.');
@@ -622,7 +636,10 @@ export default function Dashboard() {
         const route = `${normalizeCity(flight.departure.city)}-${normalizeCity(flight.arrival.city)}`;
         try {
             await navigator.clipboard.writeText(clipboardText);
-            gtag.trackShare(route, 'clipboard');
+            gtag.trackShare(route, 'clipboard', {
+                flightId: flight.id,
+                destination: normalizeCity(flight.arrival.city),
+            });
             setShareToast('✅ 링크가 복사되었습니다!');
         } catch {
             setShareToast('링크를 복사하지 못했습니다. 다시 시도해주세요.');
@@ -1261,6 +1278,7 @@ export default function Dashboard() {
     };
 
     const revenueClickDetails = (flight: Flight, trackingId?: string) => ({
+        flightId: flight.id,
         departureDate: flight.departure.date,
         returnDate: flight.arrival.date,
         departureAirport: flight.routeAirports?.outboundDeparture || flight.departure.airport,
@@ -1279,6 +1297,10 @@ export default function Dashboard() {
             flight.price,
             flight.source,
             entry,
+            {
+                flightId: flight.id,
+                destination: normalizeCity(flight.arrival.city),
+            },
         );
         account.recordRecent(flight.id);
         setModetourGuide(flight);
@@ -2035,6 +2057,79 @@ export default function Dashboard() {
         ? [todayPick!.flight, ...displayedFlightsBase]
         : displayedFlightsBase;
     const hasMore = poolDisplayCount < diversifiedFlights.length;
+    const impressionSurface: gtag.FlightImpressionDetails['surface'] = sharedFlightId
+        ? 'shared_flight'
+        : favFilter
+            ? 'saved_flights'
+            : searchTerm.trim()
+                ? 'search_results'
+                : hasActiveFilters
+                    ? 'filtered_results'
+                    : 'recommendation';
+
+    const observeFlightCard = useCallback((
+        node: HTMLDivElement | null,
+        flight: Flight,
+        position: number,
+        surface: gtag.FlightImpressionDetails['surface'],
+    ) => {
+        if (!node || typeof IntersectionObserver === 'undefined') return;
+        const key = `${surface}:${flight.id}`;
+        if (node.dataset.impressionKey === key) return;
+        node.dataset.impressionKey = key;
+        impressionPayloadsRef.current.set(node, {
+            flightId: flight.id,
+            route: `${normalizeCity(flight.departure.city)}-${normalizeCity(flight.arrival.city)}`,
+            destination: normalizeCity(flight.arrival.city),
+            source: flight.source,
+            price: flight.price,
+            position,
+            surface,
+        });
+        if (!impressionObserverRef.current) {
+            impressionObserverRef.current = new IntersectionObserver(entries => {
+                entries.forEach(entry => {
+                    const existingTimer = impressionTimersRef.current.get(entry.target);
+                    if (!entry.isIntersecting || entry.intersectionRatio < 0.5) {
+                        if (existingTimer) clearTimeout(existingTimer);
+                        impressionTimersRef.current.delete(entry.target);
+                        return;
+                    }
+                    if (existingTimer) return;
+                    const timer = setTimeout(() => {
+                        impressionTimersRef.current.delete(entry.target);
+                        const payload = impressionPayloadsRef.current.get(entry.target);
+                        if (!payload) return;
+                        const impressionKey = `${payload.surface}:${payload.flightId}`;
+                        if (!recordedImpressionsRef.current.has(impressionKey)) {
+                            recordedImpressionsRef.current.add(impressionKey);
+                            gtag.trackFlightImpression(payload);
+                        }
+                        impressionObserverRef.current?.unobserve(entry.target);
+                    }, 1000);
+                    impressionTimersRef.current.set(entry.target, timer);
+                });
+            }, { threshold: [0, 0.5, 1] });
+        }
+        impressionObserverRef.current.observe(node);
+    }, []);
+
+    useEffect(() => () => {
+        impressionObserverRef.current?.disconnect();
+        impressionTimersRef.current.forEach(timer => clearTimeout(timer));
+        impressionTimersRef.current.clear();
+        impressionPayloadsRef.current.clear();
+    }, []);
+
+    const selectDestinationSearch = (city: string) => {
+        const destination = normalizeCity(city);
+        setSearchTerm(destination);
+        setShowSuggestions(false);
+        if (lastDestinationSearchRef.current === destination) return;
+        lastDestinationSearchRef.current = destination;
+        const resultCount = flights.filter(flight => normalizeCity(flight.arrival.city) === destination).length;
+        gtag.trackDestinationSearch(destination, resultCount);
+    };
 
     // 공유 링크로 들어오면 해당 항공권의 상세 팝업을 바로 연다.
     useEffect(() => {
@@ -3071,6 +3166,12 @@ export default function Dashboard() {
                                 placeholder="도시명으로 검색 (예: 다낭, 오사카)"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key !== 'Enter') return;
+                                    const typed = normalizeCity(searchTerm.trim());
+                                    const exact = flights.find(flight => normalizeCity(flight.arrival.city) === typed);
+                                    if (exact) selectDestinationSearch(exact.arrival.city);
+                                }}
                                 onFocus={() => setShowSuggestions(true)}
                                 onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                                 className={styles.searchInput}
@@ -3093,7 +3194,7 @@ export default function Dashboard() {
                                             <li className={styles.suggestionHeader}>검색 결과</li>
                                             {matches.map((item) => (
                                                 <li key={item} className={styles.suggestionItem}
-                                                    onMouseDown={(e) => { e.preventDefault(); setSearchTerm(item); setShowSuggestions(false); }}>
+                                                    onMouseDown={(e) => { e.preventDefault(); selectDestinationSearch(item); }}>
                                                     {item}
                                                 </li>
                                             ))}
@@ -3438,6 +3539,7 @@ export default function Dashboard() {
                                 items.push(
                                     <div
                                         key={flight.id}
+                                        ref={(node) => observeFlightCard(node, flight, index + 1, impressionSurface)}
                                         className={`card ${styles.flightCard} fade-in${isDefaultView && todayPick?.flight.id === flight.id ? ` ${styles.todayPickCard}` : ''}`}
                                         onClick={() => openFlightDetail(flight, isDefaultView && todayPick?.flight.id === flight.id ? 'today_pick' : 'card_body')}
                                         style={{ cursor: 'pointer' }}
@@ -3464,7 +3566,7 @@ export default function Dashboard() {
                                                     className={isFavoriteFlight(flight.id) ? styles.favBtnActive : styles.shareBtn}
                                                     onClick={(e) => {
                                                         e.preventDefault(); e.stopPropagation();
-                                                        toggleFavorite(flight.id, normalizeCity(flight.arrival.city));
+                                                        toggleFavorite(flight);
                                                     }}
                                                     title={isFavoriteFlight(flight.id) ? '즐겨찾기 해제' : '즐겨찾기'}
                                                 >

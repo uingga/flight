@@ -37,6 +37,7 @@ export const setAnalyticsExcluded = (excluded: boolean) => {
 };
 
 export interface RevenueClickDetails {
+    flightId?: string;
     departureDate?: string;
     returnDate?: string;
     departureAirport?: string;
@@ -62,6 +63,7 @@ export const event = (action: string, params?: Record<string, string | number | 
 };
 
 const revenueParams = (details: RevenueClickDetails) => defined({
+    flight_id: details.flightId,
     departure_date: details.departureDate,
     return_date: details.returnDate,
     departure_airport: details.departureAirport,
@@ -89,6 +91,7 @@ export const trackBookingClick = (
         ...revenueParams(details),
     };
     event('booking_click', { travel_agency: source, ...common });
+    if (details.destination) event('city_booking_click', { travel_agency: source, ...common });
     if (source === 'myrealtrip') event('affiliate_click', common);
 };
 
@@ -114,8 +117,23 @@ export const trackHotelAffiliateClick = (
 };
 
 /** Flight share */
-export const trackShare = (route: string, method: string) => {
-    event('share_flight', { route, share_method: method });
+export const trackShare = (
+    route: string,
+    method: string,
+    details: Pick<RevenueClickDetails, 'flightId' | 'destination'> = {},
+) => {
+    event('share_flight', {
+        route,
+        share_method: method,
+        ...revenueParams(details),
+    });
+    if (details.destination) {
+        event('city_share', {
+            route,
+            share_method: method,
+            ...revenueParams(details),
+        });
+    }
 };
 
 /** Price alert; entry identifies which CTA the subscription came from. */
@@ -163,8 +181,79 @@ export const trackCompareOutboundClick = (provider: 'naver' | 'skyscanner' | 'tr
  * Replaces the old `card_click` event (dropped 2026-08-14): back then a click on the card
  * body did nothing, so the event only ever measured dead clicks.
  */
-export const trackDetailOpen = (route: string, price: number, source: string, entry: string) => {
-    event('detail_open', { route, price, source, entry_point: entry, currency: 'KRW' });
+export const trackDetailOpen = (
+    route: string,
+    price: number,
+    source: string,
+    entry: string,
+    details: Pick<RevenueClickDetails, 'flightId' | 'destination'> = {},
+) => {
+    event('detail_open', {
+        route,
+        price,
+        source,
+        entry_point: entry,
+        currency: 'KRW',
+        ...revenueParams(details),
+    });
+    if (details.destination) {
+        event('city_detail_open', {
+            route,
+            price,
+            source,
+            entry_point: entry,
+            currency: 'KRW',
+            ...revenueParams(details),
+        });
+    }
+};
+
+export interface FlightImpressionDetails {
+    flightId: string;
+    route: string;
+    destination: string;
+    source: string;
+    price: number;
+    position: number;
+    surface: 'recommendation' | 'filtered_results' | 'search_results' | 'saved_flights' | 'shared_flight';
+}
+
+/** Card was actually visible, rather than merely fetched into the page. */
+export const trackFlightImpression = (details: FlightImpressionDetails) => {
+    event('flight_impression', {
+        flight_id: details.flightId,
+        route: details.route,
+        destination: details.destination,
+        travel_agency: details.source,
+        price: details.price,
+        currency: 'KRW',
+        list_position: details.position,
+        position_group: details.position <= 3 ? '1-3' : details.position <= 9 ? '4-9' : '10+',
+        surface: details.surface,
+    });
+};
+
+/** Saving and sharing mean different things, so favorites get their own event. */
+export const trackFavoriteChange = (
+    action: 'add' | 'remove',
+    details: Pick<FlightImpressionDetails, 'flightId' | 'route' | 'destination' | 'source' | 'price'>,
+) => {
+    event(action === 'add' ? 'favorite_add' : 'favorite_remove', {
+        flight_id: details.flightId,
+        route: details.route,
+        destination: details.destination,
+        travel_agency: details.source,
+        price: details.price,
+        currency: 'KRW',
+    });
+};
+
+/** Deliberate city selection from search, not every intermediate keystroke. */
+export const trackDestinationSearch = (destination: string, resultCount: number) => {
+    event('destination_search', {
+        destination,
+        result_count: resultCount,
+    });
 };
 
 export const trackFilterChange = (filterType: string, value: string) => {

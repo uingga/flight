@@ -861,6 +861,11 @@ export default function MobileRedesignPreview({
     const favoriteMutationVersionRef = useRef(new Map<string, number>());
     const favoriteIntentRef = useRef(new Map<string, boolean>());
     const confirmedAccountFavoritesRef = useRef(new Set<string>());
+    const impressionObserverRef = useRef<IntersectionObserver | null>(null);
+    const impressionPayloadsRef = useRef(new Map<Element, gtag.FlightImpressionDetails>());
+    const impressionTimersRef = useRef(new Map<Element, ReturnType<typeof setTimeout>>());
+    const recordedImpressionsRef = useRef(new Set<string>());
+    const lastTrackedDestinationSearchRef = useRef<string | null>(null);
     const historyClosePendingRef = useRef(false);
     const alertClosePendingRef = useRef(false);
     const lastFetchAtRef = useRef(0);
@@ -929,6 +934,12 @@ export default function MobileRedesignPreview({
     const rememberSearch = useCallback((value: string) => {
         const search = value.trim();
         if (!search) return;
+        const normalizedSearch = normalizeCity(search);
+        const matchingFlights = flights.filter(flight => normalizeCity(flight.arrival.city) === normalizedSearch);
+        if (matchingFlights.length > 0 && lastTrackedDestinationSearchRef.current !== normalizedSearch) {
+            lastTrackedDestinationSearchRef.current = normalizedSearch;
+            gtag.trackDestinationSearch(normalizedSearch, matchingFlights.length);
+        }
         setRecentSearches(current => {
             const normalized = search.toLocaleLowerCase('ko-KR');
             const next = [
@@ -938,7 +949,7 @@ export default function MobileRedesignPreview({
             try { window.localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(next)); } catch { }
             return next;
         });
-    }, []);
+    }, [flights]);
 
     const removeRecentSearch = useCallback((value: string) => {
         setRecentSearches(current => {
@@ -1194,6 +1205,10 @@ export default function MobileRedesignPreview({
                 effectivePrice(sharedFlight),
                 sharedFlight.source,
                 'shared_link',
+                {
+                    flightId: sharedFlight.id,
+                    destination: stripAirport(sharedFlight.arrival.city),
+                },
             );
             account.recordRecent(sharedFlight.id);
             setPassengers({ adult: Math.max(1, sharedFlight.minPax || 1), child: 0, infant: 0 });
@@ -2598,10 +2613,17 @@ export default function MobileRedesignPreview({
             try { localStorage.setItem('favoriteFlights', JSON.stringify(Array.from(nextGuestFavorites))); } catch { }
         }
         setToast(willFavorite
-            ? `${stripAirport(flight.arrival.city)} 표를 내 여행에 저장했어요.`
+            ? `${stripAirport(flight.arrival.city)} 항공권을 내 여행에 저장했어요.`
             : '찜에서 뺐어요.');
         void account.setFavorite(flight.id, willFavorite).then(() => {
             if (favoriteMutationVersionRef.current.get(flight.id) !== mutationVersion) return;
+            gtag.trackFavoriteChange(willFavorite ? 'add' : 'remove', {
+                flightId: flight.id,
+                route: normalizedRoute(flight),
+                destination: stripAirport(flight.arrival.city),
+                source: flight.source,
+                price: effectivePrice(flight),
+            });
             favoriteIntentRef.current.delete(flight.id);
         }).catch(() => {
             if (favoriteMutationVersionRef.current.get(flight.id) !== mutationVersion) return;
@@ -2670,6 +2692,10 @@ export default function MobileRedesignPreview({
             effectivePrice(flight),
             flight.source,
             entry,
+            {
+                flightId: flight.id,
+                destination: stripAirport(flight.arrival.city),
+            },
         );
         account.recordRecent(flight.id);
         const nextUrl = new URL(window.location.href);
@@ -2805,7 +2831,10 @@ export default function MobileRedesignPreview({
         const route = normalizedRoute(flight);
         try {
             await navigator.clipboard.writeText(`${text}\n${url}`);
-            gtag.trackShare(route, 'clipboard');
+            gtag.trackShare(route, 'clipboard', {
+                flightId: flight.id,
+                destination: stripAirport(flight.arrival.city),
+            });
             setToast('항공권 링크를 복사했어요.');
         } catch {
             setToast('링크를 복사하지 못했어요. 다시 시도해주세요.');
@@ -2829,6 +2858,66 @@ export default function MobileRedesignPreview({
         setDesktopFilterOpen(null);
         setFreshRouteResults(null);
     };
+
+    const impressionSurface: gtag.FlightImpressionDetails['surface'] = query.trim()
+        ? 'search_results'
+        : freshRouteResults || !isDefaultView
+            ? 'filtered_results'
+            : 'recommendation';
+
+    const observeFlightCard = useCallback((
+        node: HTMLElement | null,
+        flight: Flight,
+        position: number,
+        surface: gtag.FlightImpressionDetails['surface'],
+    ) => {
+        if (!node || typeof IntersectionObserver === 'undefined') return;
+        const key = `${surface}:${flight.id}`;
+        if (node.dataset.impressionKey === key) return;
+        node.dataset.impressionKey = key;
+        impressionPayloadsRef.current.set(node, {
+            flightId: flight.id,
+            route: normalizedRoute(flight),
+            destination: stripAirport(flight.arrival.city),
+            source: flight.source,
+            price: effectivePrice(flight),
+            position,
+            surface,
+        });
+        if (!impressionObserverRef.current) {
+            impressionObserverRef.current = new IntersectionObserver(entries => {
+                entries.forEach(entry => {
+                    const activeTimer = impressionTimersRef.current.get(entry.target);
+                    if (!entry.isIntersecting || entry.intersectionRatio < 0.5) {
+                        if (activeTimer) clearTimeout(activeTimer);
+                        impressionTimersRef.current.delete(entry.target);
+                        return;
+                    }
+                    if (activeTimer) return;
+                    const timer = setTimeout(() => {
+                        impressionTimersRef.current.delete(entry.target);
+                        const payload = impressionPayloadsRef.current.get(entry.target);
+                        if (!payload) return;
+                        const impressionKey = `${payload.surface}:${payload.flightId}`;
+                        if (!recordedImpressionsRef.current.has(impressionKey)) {
+                            recordedImpressionsRef.current.add(impressionKey);
+                            gtag.trackFlightImpression(payload);
+                        }
+                        impressionObserverRef.current?.unobserve(entry.target);
+                    }, 1000);
+                    impressionTimersRef.current.set(entry.target, timer);
+                });
+            }, { threshold: [0, 0.5, 1] });
+        }
+        impressionObserverRef.current.observe(node);
+    }, []);
+
+    useEffect(() => () => {
+        impressionObserverRef.current?.disconnect();
+        impressionTimersRef.current.forEach(timer => clearTimeout(timer));
+        impressionTimersRef.current.clear();
+        impressionPayloadsRef.current.clear();
+    }, []);
 
     const submitContact = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -2954,6 +3043,10 @@ export default function MobileRedesignPreview({
                             autoFocus
                             value={query}
                             onChange={event => setQuery(event.target.value)}
+                            onBlur={() => rememberSearch(query)}
+                            onKeyDown={event => {
+                                if (event.key === 'Enter') rememberSearch(query);
+                            }}
                             placeholder="도시나 항공사 검색"
                             aria-label="도시나 항공사 검색"
                         />
@@ -3403,6 +3496,7 @@ export default function MobileRedesignPreview({
                                 <Fragment key={flight.id}>
                                     <div className={styles.cardEntry}>
                                         <article
+                                            ref={node => observeFlightCard(node, flight, cardNumber, impressionSurface)}
                                             className={`${styles.flightCard} ${isTodayPick ? styles.todayPickCard : ''}`}
                                             data-flight-id={flight.id}
                                             data-source={flight.source}
@@ -4150,6 +4244,7 @@ export default function MobileRedesignPreview({
                                 normalizedRoute(selectedFlight),
                                 effectivePrice(selectedFlight),
                                 {
+                                    flightId: selectedFlight.id,
                                     departureDate: selectedFlight.departure.date,
                                     returnDate: selectedFlight.arrival.date,
                                     departureAirport: selectedFlight.routeAirports?.outboundDeparture || selectedFlight.departure.airport,

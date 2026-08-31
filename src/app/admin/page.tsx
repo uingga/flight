@@ -447,23 +447,67 @@ interface GaHourlySessions {
     current: GaHourlyBucket[];
 }
 
+interface GaCityAction {
+    events: number;
+    users: number;
+}
+
+interface GaCityInterestRow {
+    city: string;
+    impressions: GaCityAction;
+    details: GaCityAction;
+    saves: GaCityAction;
+    shares: GaCityAction;
+    bookings: GaCityAction;
+    searches: GaCityAction;
+    detailRate: number | null;
+    saveRate: number | null;
+    shareRate: number | null;
+    bookingRate: number | null;
+}
+
+interface GaPeriodSummary {
+    users: number;
+    pageViews: number;
+    sessions: number;
+    engagementSeconds?: number;
+    averageEngagementSeconds?: number | null;
+}
+
 interface GaStatsData {
     available: boolean;
     message?: string;
     generatedAt: string;
     days: number;
-    totals: { users: number; pageViews: number; sessions: number };
+    totals: GaPeriodSummary;
     periods: {
-        today: { users: number; pageViews: number; sessions: number };
-        recent7: { users: number; pageViews: number; sessions: number };
-        previous7: { users: number; pageViews: number; sessions: number };
-        current: { users: number; pageViews: number; sessions: number };
-        previous: { users: number; pageViews: number; sessions: number };
+        today: GaPeriodSummary;
+        recent7: GaPeriodSummary;
+        previous7: GaPeriodSummary;
+        current: GaPeriodSummary;
+        previous: GaPeriodSummary;
     };
     activityPeriods?: {
         today: GaActivityPeriod;
         recent7: GaActivityPeriod;
         current: GaActivityPeriod;
+    };
+    cityInterest?: {
+        basis: 'destination' | 'route_fallback';
+        periods: {
+            today: GaCityInterestRow[];
+            recent7: GaCityInterestRow[];
+            current: GaCityInterestRow[];
+        };
+        availability: {
+            trackedDays: number;
+            trackingStartedAt: string | null;
+            cities: Array<{
+                city: string;
+                daysWithFlights: number;
+                flightObservations: number;
+            }>;
+        } | null;
     };
     hourlySessions?: GaHourlySessions;
     todayOverview?: {
@@ -534,6 +578,7 @@ interface GaStatsData {
 interface GaActivityPeriod {
     visitors: number;
     detailOpenUsers: number;
+    detailOpenCount?: number;
     bookingClickUsers: number;
     alertSetupUsers: number;
     routeAlertSetupUsers: number;
@@ -543,6 +588,8 @@ interface GaActivityPeriod {
     bookingClickRate: number | null;
     alertSetupRate: number | null;
     detailToBookingRate: number | null;
+    averageEngagementSeconds?: number | null;
+    detailOpensPerSession?: number | null;
 }
 
 interface ThreadsAttribution {
@@ -827,6 +874,147 @@ function BehaviorSnapshot({ activity }: { activity: NonNullable<GaStatsData['act
         </div>
     );
 }
+
+function CityInterestDashboard({
+    data,
+    currentFlights,
+}: {
+    data: NonNullable<GaStatsData['cityInterest']>;
+    currentFlights: Record<string, number>;
+}) {
+    const [period, setPeriod] = useState<'today' | 'recent7' | 'current'>('recent7');
+    const rows = data.periods[period];
+    const availability = new Map((data.availability?.cities || []).map(row => [row.city, row]));
+    const minimumImpressions = 10;
+    const ranked = rows.slice().sort((left, right) => {
+        const leftQualified = left.impressions.users >= minimumImpressions;
+        const rightQualified = right.impressions.users >= minimumImpressions;
+        if (leftQualified !== rightQualified) return rightQualified ? 1 : -1;
+        if (leftQualified && rightQualified) return (right.detailRate || 0) - (left.detailRate || 0);
+        return right.details.users - left.details.users || right.searches.users - left.searches.users;
+    });
+    const maxBy = (value: (row: GaCityInterestRow) => number, candidates = rows) =>
+        candidates.reduce<GaCityInterestRow | null>((best, row) => (
+            !best || value(row) > value(best) ? row : best
+        ), null);
+    const rateCandidates = rows.filter(row => row.impressions.users >= minimumImpressions);
+    const directSearch = maxBy(row => row.searches.users);
+    const detailResponse = maxBy(row => row.detailRate || 0, rateCandidates);
+    const saved = maxBy(row => row.saves.users);
+    const shared = maxBy(row => row.shares.users);
+    const booked = maxBy(row => row.bookingRate || 0, rateCandidates);
+    const periodLabel = period === 'today' ? '오늘 현재까지' : period === 'recent7' ? '최근 7일' : '최근 30일';
+    const rateText = (value: number | null) => value === null ? '수집 전' : `${value}%`;
+
+    return (
+        <div className={styles.cityInterestDashboard}>
+            <div className={styles.cityInterestToolbar}>
+                <div>
+                    <strong>{periodLabel}</strong>
+                    <span>도시별 사용자 관심</span>
+                </div>
+                <div className={styles.cityInterestPeriods} aria-label="도시 관심 기간">
+                    {([
+                        ['today', '오늘'],
+                        ['recent7', '7일'],
+                        ['current', '30일'],
+                    ] as const).map(([key, label]) => (
+                        <button
+                            key={key}
+                            type="button"
+                            className={period === key ? styles.cityInterestPeriodActive : ''}
+                            onClick={() => setPeriod(key)}
+                        >{label}</button>
+                    ))}
+                </div>
+            </div>
+
+            <div className={styles.cityInterestHighlights}>
+                <article><span>직접 많이 찾음</span><strong>{directSearch?.searches.users ? directSearch.city : '아직 없음'}</strong><small>{directSearch?.searches.users ? `${directSearch.searches.users.toLocaleString()}명` : '도시 검색 수집 전'}</small></article>
+                <article><span>노출 대비 상세 반응</span><strong>{detailResponse?.city || '아직 없음'}</strong><small>{detailResponse ? rateText(detailResponse.detailRate) : '노출 10명 이상부터 비교'}</small></article>
+                <article><span>저장을 많이 한 도시</span><strong>{saved?.saves.users ? saved.city : '아직 없음'}</strong><small>{saved?.saves.users ? `${saved.saves.users.toLocaleString()}명` : '저장 수집 전'}</small></article>
+                <article><span>공유를 많이 한 도시</span><strong>{shared?.shares.users ? shared.city : '아직 없음'}</strong><small>{shared?.shares.users ? `${shared.shares.users.toLocaleString()}명` : '공유 없음'}</small></article>
+                <article><span>예약 이동률이 높은 도시</span><strong>{booked?.city || '아직 없음'}</strong><small>{booked ? rateText(booked.bookingRate) : '노출 10명 이상부터 비교'}</small></article>
+            </div>
+
+            {ranked.length === 0 ? (
+                <div className={styles.dealReviewEmpty}>도시별 항공권 노출을 새로 수집하기 시작했습니다. 데이터가 들어오면 이곳에 표시됩니다.</div>
+            ) : (
+                <div className={styles.cityInterestTableWrap}>
+                    <table className={styles.cityInterestTable}>
+                        <thead>
+                            <tr>
+                                <th>도시</th>
+                                <th>항공권 확인</th>
+                                <th>현재 항공권</th>
+                                <th>직접 검색</th>
+                                <th>실제 노출</th>
+                                <th>상세 열람</th>
+                                <th>저장</th>
+                                <th>공유</th>
+                                <th>예약 이동</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {ranked.slice(0, 30).map(row => {
+                                const frequency = availability.get(row.city);
+                                const enough = row.impressions.users >= minimumImpressions;
+                                return (
+                                    <tr key={row.city}>
+                                        <td><strong>{row.city}</strong>{!enough && row.impressions.users > 0 && <small>데이터 적음</small>}</td>
+                                        <td>{data.availability?.trackedDays
+                                            ? `${frequency?.daysWithFlights || 0}/${data.availability.trackedDays}일`
+                                            : '확인 전'}</td>
+                                        <td>{(currentFlights[row.city] || 0).toLocaleString()}개</td>
+                                        <td>{row.searches.users.toLocaleString()}명</td>
+                                        <td>{row.impressions.users.toLocaleString()}명</td>
+                                        <td>{row.details.users.toLocaleString()}명 <small>{rateText(row.detailRate)}</small></td>
+                                        <td>{row.saves.users.toLocaleString()}명 <small>{rateText(row.saveRate)}</small></td>
+                                        <td>{row.shares.users.toLocaleString()}명 <small>상세 대비 {rateText(row.shareRate)}</small></td>
+                                        <td>{row.bookings.users.toLocaleString()}명 <small>{rateText(row.bookingRate)}</small></td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+            <p className={styles.cityInterestFootnote}>
+                상세 열람·저장·예약 이동률은 실제로 항공권 카드를 본 사람 대비입니다. 공유율만 상세를 연 사람 대비입니다.
+                항공권 확인 일수는 장기 기록이 실제로 쌓인 날만 분모에 포함합니다.
+                {data.basis === 'route_fallback' && ' 현재는 출발지별 노선을 합산한 임시 집계라 일부 사용자가 중복될 수 있습니다.'}
+            </p>
+        </div>
+    );
+}
+
+function ExplorationDepth({ activity }: { activity: NonNullable<GaStatsData['activityPeriods']> }) {
+    const periods = [
+        ['오늘', activity.today],
+        ['7일', activity.recent7],
+        ['30일', activity.current],
+    ] as const;
+    const duration = (seconds: number | null | undefined) => {
+        if (seconds === null || seconds === undefined) return '—';
+        if (seconds < 60) return `${Math.round(seconds)}초`;
+        const minutes = Math.floor(seconds / 60);
+        const rest = Math.round(seconds % 60);
+        return rest ? `${minutes}분 ${rest}초` : `${minutes}분`;
+    };
+    return (
+        <div className={styles.explorationDepth}>
+            {periods.map(([label, period]) => (
+                <article key={label}>
+                    <header><strong>{label}</strong></header>
+                    <div><span>방문당 활성 시간</span><b>{duration(period.averageEngagementSeconds)}</b></div>
+                    <div><span>방문당 상세 열람</span><b>{period.detailOpensPerSession === null || period.detailOpensPerSession === undefined ? '—' : `${period.detailOpensPerSession}개`}</b></div>
+                </article>
+            ))}
+            <p>활성 시간은 화면을 실제로 보고 있던 시간입니다. 방문당 상세 열람은 체류시간과 함께 볼 때만 탐색 깊이를 판단하는 보조 지표로 사용합니다.</p>
+        </div>
+    );
+}
+
 
 function VisitorTrendChart({ trend }: { trend: GaStatsData['trend'] }) {
     const [selectedIndex, setSelectedIndex] = useState(() => Math.max(0, trend.length - 1));
@@ -4115,6 +4303,35 @@ export default function AdminPage() {
 
                 {gaStats?.available && (
                     <>
+                        <section className={styles.section} id="visitor-cities">
+                            <div className={styles.sectionHeading}>
+                                <div>
+                                    <h2>어느 도시에 관심이 모였나</h2>
+                                    <p>항공권이 많이 노출돼서 반응이 큰 도시와, 적게 노출돼도 관심을 받은 도시를 나눠 봅니다.</p>
+                                </div>
+                            </div>
+                            {gaStats.cityInterest ? (
+                                <CityInterestDashboard
+                                    data={gaStats.cityInterest}
+                                    currentFlights={flightFilterSummary?.visibleByCity || data.byCity}
+                                />
+                            ) : (
+                                <div className={styles.dealReviewEmpty}>도시별 관심 수집을 준비하고 있습니다.</div>
+                            )}
+                        </section>
+
+                        {gaStats.activityPeriods && (
+                            <section className={styles.section} id="visitor-depth">
+                                <div className={styles.sectionHeading}>
+                                    <div>
+                                        <h2>얼마나 깊게 둘러봤나</h2>
+                                        <p>오래 머문 것만으로 판단하지 않고, 한 번 방문에서 항공권 상세를 얼마나 열었는지 함께 봅니다.</p>
+                                    </div>
+                                </div>
+                                <ExplorationDepth activity={gaStats.activityPeriods} />
+                            </section>
+                        )}
+
                         <section className={styles.section} id="visitor-trend">
                             <div className={styles.sectionHeading}>
                                 <div>

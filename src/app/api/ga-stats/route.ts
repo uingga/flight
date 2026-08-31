@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ga4Config, runReport, eventNameFilter, dim, num, type Ga4Config, type ReportResponse } from '@/lib/ga4';
+import { getSupabaseServerHeaders } from '@/lib/server/supabase-rest';
+import { normalizeCity } from '@/lib/utils/flight-helpers';
 
 // 저장소가 공개라 코드에 박아 둔 기본값은 그대로 공개 열쇠가 된다.
 // 환경변수가 없으면 조용히 열리는 대신 인증을 전부 거부한다.
@@ -9,11 +11,26 @@ const CACHE_TTL_MS = 10 * 60 * 1000;
 const KST_TIME_ZONE = 'Asia/Seoul';
 const HOURS_PER_DAY = 24;
 const HOURLY_BUCKET_SIZE = 3;
+const CITY_INTEREST_EVENTS = [
+    'flight_impression',
+    'city_detail_open',
+    'favorite_add',
+    'city_share',
+    'city_booking_click',
+    'destination_search',
+] as const;
 
 /** 어드민에서 의미 있는 이벤트만 골라 한국어 이름을 붙인다. */
 const EVENT_LABELS: Record<string, string> = {
     booking_click: '예약 클릭',
+    flight_impression: '실제로 본 항공권',
+    city_detail_open: '도시별 상세 열람',
+    city_share: '도시별 공유',
+    city_booking_click: '도시별 예약 이동',
     detail_open: '항공권 상세 열기',
+    favorite_add: '항공권 저장',
+    favorite_remove: '항공권 저장 해제',
+    destination_search: '도시 직접 검색',
     alert_setup: '가격 알림 등록',
     deal_alert_setup: '조건형 알림 등록',
     blog_flight_link_open: '블로그 항공권 링크 열기',
@@ -42,7 +59,7 @@ const ENTRY_LABELS: Record<string, string> = {
     book_button: '카드의 예약 버튼',
     discovery_bar: '여행지 발견 바',
     shared_link: '공유 링크',
-    today_pick: '오늘의 표',
+    today_pick: 'TIKIT DROP',
 };
 
 const CHANNEL_LABELS: Record<string, string> = {
@@ -77,6 +94,65 @@ const inferChannelFromSource = (sourceValue: string, mediumValue: string): strin
 interface CachedPayload { at: number; days: number; body: unknown }
 let cache: CachedPayload | null = null;
 
+interface CityAvailabilityRow {
+    snapshot_date: string;
+    arrival_city: string;
+    flight_count: number;
+}
+
+async function loadCityAvailability() {
+    const url = process.env.SUPABASE_URL?.replace(/\/$/, '');
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!url || !key) return null;
+
+    const koreaToday = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit',
+    }).format(new Date());
+    const [year, month, day] = koreaToday.split('-').map(Number);
+    const since = new Date(Date.UTC(year, month - 1, day - 29)).toISOString().slice(0, 10);
+    const rows: CityAvailabilityRow[] = [];
+    const pageSize = 1000;
+
+    for (let offset = 0; offset < 10_000; offset += pageSize) {
+        const endpoint = new URL(`${url}/rest/v1/route_price_daily`);
+        endpoint.searchParams.set('select', 'snapshot_date,arrival_city,flight_count');
+        endpoint.searchParams.set('source', 'eq.all');
+        endpoint.searchParams.set('snapshot_date', `gte.${since}`);
+        endpoint.searchParams.set('order', 'snapshot_date.asc');
+        endpoint.searchParams.set('limit', String(pageSize));
+        endpoint.searchParams.set('offset', String(offset));
+        const response = await fetch(endpoint, {
+            headers: getSupabaseServerHeaders(key),
+            cache: 'no-store',
+        });
+        if (!response.ok) throw new Error(`City availability lookup failed (${response.status})`);
+        const batch = await response.json() as CityAvailabilityRow[];
+        rows.push(...batch);
+        if (batch.length < pageSize) break;
+    }
+
+    const dates = new Set<string>();
+    const byCity = new Map<string, { dates: Set<string>; observations: number }>();
+    rows.forEach(row => {
+        const city = normalizeCity(row.arrival_city || '').replace(/\([^)]+\)/g, '').trim();
+        if (!city || !row.snapshot_date) return;
+        dates.add(row.snapshot_date);
+        const current = byCity.get(city) || { dates: new Set<string>(), observations: 0 };
+        current.dates.add(row.snapshot_date);
+        current.observations += Number(row.flight_count) || 0;
+        byCity.set(city, current);
+    });
+    return {
+        trackedDays: dates.size,
+        trackingStartedAt: dates.size ? Array.from(dates).sort()[0] : null,
+        cities: Array.from(byCity.entries()).map(([city, value]) => ({
+            city,
+            daysWithFlights: value.dates.size,
+            flightObservations: value.observations,
+        })),
+    };
+}
+
 async function optional(
     label: string,
     warnings: string[],
@@ -106,7 +182,12 @@ async function buildStats(config: Ga4Config, days: number) {
 
     const summaryRequest = (range: Array<{ startDate: string; endDate: string }>) => runReport(config, {
         dateRanges: range,
-        metrics: [{ name: 'activeUsers' }, { name: 'screenPageViews' }, { name: 'sessions' }],
+        metrics: [
+            { name: 'activeUsers' },
+            { name: 'screenPageViews' },
+            { name: 'sessions' },
+            { name: 'userEngagementDuration' },
+        ],
     });
 
     const eventRequest = (range: Array<{ startDate: string; endDate: string }>) => runReport(config, {
@@ -135,7 +216,22 @@ async function buildStats(config: Ga4Config, days: number) {
         metrics: [{ name: 'activeUsers' }],
     });
 
-    // 표준 측정기준 리포트는 실패하면 그대로 에러 — 여기서 실패하면 연결 또는 요청 자체의 문제다.
+    const cityInterestRequest = (
+        range: Array<{ startDate: string; endDate: string }>,
+        dimension: 'customEvent:destination' | 'customEvent:route',
+    ) => runReport(config, {
+        dateRanges: range,
+        dimensions: [{ name: dimension }, { name: 'eventName' }],
+        metrics: [{ name: 'eventCount' }, { name: 'totalUsers' }],
+        dimensionFilter: {
+            orGroup: {
+                expressions: CITY_INTEREST_EVENTS.map(eventName => eventNameFilter(eventName)),
+            },
+        },
+        limit: 1000,
+    });
+
+    // 핵심 2개는 실패하면 그대로 에러 — 표준 측정기준만 쓰므로 실패 = 설정 문제
     const [
         trendReport,
         hourlyReport,
@@ -337,6 +433,35 @@ async function buildStats(config: Ga4Config, days: number) {
         })),
     ]);
 
+    const cityAvailabilityPromise = loadCityAvailability().catch(error => {
+        console.error('City availability lookup failed:', error);
+        warnings.push('도시별 항공권 확인 일수는 불러오지 못했습니다.');
+        return null;
+    });
+    let cityInterestBasis: 'destination' | 'route_fallback' = 'destination';
+    let cityInterestReports: [ReportResponse, ReportResponse, ReportResponse] | null = null;
+    try {
+        cityInterestReports = await Promise.all([
+            cityInterestRequest(todayDateRanges, 'customEvent:destination'),
+            cityInterestRequest(recent7DateRanges, 'customEvent:destination'),
+            cityInterestRequest(dateRanges, 'customEvent:destination'),
+        ]);
+    } catch (error) {
+        console.error('GA4 destination interest report failed, falling back to route:', error);
+        cityInterestBasis = 'route_fallback';
+        try {
+            cityInterestReports = await Promise.all([
+                cityInterestRequest(todayDateRanges, 'customEvent:route'),
+                cityInterestRequest(recent7DateRanges, 'customEvent:route'),
+                cityInterestRequest(dateRanges, 'customEvent:route'),
+            ]);
+        } catch (fallbackError) {
+            console.error('GA4 route interest report failed:', fallbackError);
+            warnings.push('도시별 관심은 불러오지 못했습니다. GA4 도시 측정기준을 확인해주세요.');
+        }
+    }
+    const cityAvailability = await cityAvailabilityPromise;
+
     // GA4는 방문이 0인 날짜를 종종 행 자체에서 빼므로, 그래프가 오늘까지 정확히 30칸이 되도록 채운다.
     const trendByDate = new Map((trendReport.rows || []).map(row => {
         const raw = dim(row);
@@ -365,8 +490,6 @@ async function buildStats(config: Ga4Config, days: number) {
             return null;
         }
     })();
-    // 응답 메타데이터가 드물게 비어도 운영 화면은 KST 기준으로 안전하게 계산하되,
-    // 폴백 여부를 함께 보내 화면에서 GA4 속성 시간대로 오인하지 않게 한다.
     const hourlyTimeZone = validTimeZone || KST_TIME_ZONE;
     const propertyToday = (() => {
         const parts = new Intl.DateTimeFormat('en-US', {
@@ -424,6 +547,10 @@ async function buildStats(config: Ga4Config, days: number) {
         users: num(report.rows?.[0], 0),
         pageViews: num(report.rows?.[0], 1),
         sessions: num(report.rows?.[0], 2),
+        engagementSeconds: num(report.rows?.[0], 3),
+        averageEngagementSeconds: num(report.rows?.[0], 2) > 0
+            ? Number((num(report.rows?.[0], 3) / num(report.rows?.[0], 2)).toFixed(1))
+            : null,
     });
     const totals = summary(currentReport);
 
@@ -453,6 +580,76 @@ async function buildStats(config: Ga4Config, days: number) {
 
     const events = parseEvents(eventReport);
 
+    const parseCityInterest = (report: ReportResponse | null) => {
+        if (!report) return [];
+        type CityAction = { events: number; users: number };
+        type CityRow = {
+            city: string;
+            impressions: CityAction;
+            details: CityAction;
+            saves: CityAction;
+            shares: CityAction;
+            bookings: CityAction;
+            searches: CityAction;
+        };
+        const blankAction = (): CityAction => ({ events: 0, users: 0 });
+        const cities = new Map<string, CityRow>();
+        const actionKey = ({
+            flight_impression: 'impressions',
+            city_detail_open: 'details',
+            favorite_add: 'saves',
+            city_share: 'shares',
+            city_booking_click: 'bookings',
+            destination_search: 'searches',
+        } as const);
+
+        (report.rows || []).forEach(row => {
+            const raw = dim(row).trim();
+            const eventName = dim(row, 1) as keyof typeof actionKey;
+            const key = actionKey[eventName];
+            if (!key || isUnsetDimension(raw)) return;
+            const rawCity = cityInterestBasis === 'destination'
+                ? raw
+                : raw.includes('-') ? raw.slice(raw.lastIndexOf('-') + 1) : raw;
+            const city = normalizeCity(rawCity).replace(/\([^)]+\)/g, '').trim();
+            if (!city) return;
+            const current = cities.get(city) || {
+                city,
+                impressions: blankAction(),
+                details: blankAction(),
+                saves: blankAction(),
+                shares: blankAction(),
+                bookings: blankAction(),
+                searches: blankAction(),
+            };
+            current[key].events += num(row, 0);
+            current[key].users += num(row, 1);
+            cities.set(city, current);
+        });
+
+        return Array.from(cities.values())
+            .map(row => ({
+                ...row,
+                detailRate: row.impressions.users > 0
+                    ? Number(((row.details.users / row.impressions.users) * 100).toFixed(1))
+                    : null,
+                saveRate: row.impressions.users > 0
+                    ? Number(((row.saves.users / row.impressions.users) * 100).toFixed(1))
+                    : null,
+                bookingRate: row.impressions.users > 0
+                    ? Number(((row.bookings.users / row.impressions.users) * 100).toFixed(1))
+                    : null,
+                shareRate: row.details.users > 0
+                    ? Number(((row.shares.users / row.details.users) * 100).toFixed(1))
+                    : null,
+            }))
+            .sort((left, right) => (
+                right.details.users - left.details.users
+                || right.searches.users - left.searches.users
+                || left.city.localeCompare(right.city, 'ko-KR')
+            ));
+    };
+
     const activity = (
         report: ReportResponse,
         periodSummary: ReturnType<typeof summary>,
@@ -460,7 +657,9 @@ async function buildStats(config: Ga4Config, days: number) {
     ) => {
         const periodEvents = parseEvents(report);
         const usersOf = (name: string) => periodEvents.find(entry => entry.name === name)?.users ?? 0;
+        const countOf = (name: string) => periodEvents.find(entry => entry.name === name)?.count ?? 0;
         const detailOpenUsers = usersOf('detail_open');
+        const detailOpenCount = countOf('detail_open');
         const bookingClickUsers = usersOf('booking_click');
         const routeAlertSetupUsers = usersOf('alert_setup');
         const dealAlertSetupUsers = usersOf('deal_alert_setup');
@@ -472,6 +671,7 @@ async function buildStats(config: Ga4Config, days: number) {
         return {
             visitors: periodSummary.users,
             detailOpenUsers,
+            detailOpenCount,
             bookingClickUsers,
             alertSetupUsers,
             routeAlertSetupUsers,
@@ -482,6 +682,10 @@ async function buildStats(config: Ga4Config, days: number) {
             alertSetupRate: visitorRate(alertSetupUsers),
             detailToBookingRate: detailOpenUsers > 0
                 ? Number(((bookingClickUsers / detailOpenUsers) * 100).toFixed(1))
+                : null,
+            averageEngagementSeconds: periodSummary.averageEngagementSeconds,
+            detailOpensPerSession: periodSummary.sessions > 0
+                ? Number((detailOpenCount / periodSummary.sessions).toFixed(2))
                 : null,
         };
     };
@@ -683,6 +887,15 @@ async function buildStats(config: Ga4Config, days: number) {
             recent7: activity(recent7EventReport, summary(recent7Report), recent7AlertIntentReport),
             current: activity(eventReport, totals, currentAlertIntentReport),
         },
+        cityInterest: {
+            basis: cityInterestBasis,
+            periods: {
+                today: parseCityInterest(cityInterestReports?.[0] || null),
+                recent7: parseCityInterest(cityInterestReports?.[1] || null),
+                current: parseCityInterest(cityInterestReports?.[2] || null),
+            },
+            availability: cityAvailability,
+        },
         hourlySessions: {
             timeZone: hourlyTimeZone,
             timeZoneSource: validTimeZone ? 'property' : 'kst_fallback',
@@ -715,8 +928,10 @@ async function buildStats(config: Ga4Config, days: number) {
             returningUsers: behavior(repeatGroups.returning),
         },
         trend,
-        events: events.filter(entry => entry.known),
-        otherEvents: events.filter(entry => !entry.known && !['page_view', 'session_start', 'first_visit', 'user_engagement', 'scroll', 'affiliate_click'].includes(entry.name)),
+        events: events.filter(entry => entry.known && !CITY_INTEREST_EVENTS.includes(entry.name as typeof CITY_INTEREST_EVENTS[number])),
+        otherEvents: events.filter(entry => !entry.known
+            && !CITY_INTEREST_EVENTS.includes(entry.name as typeof CITY_INTEREST_EVENTS[number])
+            && !['page_view', 'session_start', 'first_visit', 'user_engagement', 'scroll', 'affiliate_click'].includes(entry.name)),
         conversion: {
             detailOpenUsers: detailOpen?.users ?? 0,
             detailOpenRate: rate(detailOpen?.users ?? 0),
@@ -745,7 +960,7 @@ async function buildStats(config: Ga4Config, days: number) {
         dateFilter: {
             picks: dateFilter?.count ?? 0,
             emptyPicks: dateFilterEmpty?.count ?? 0,
-            // 고른 날짜에 표가 하나도 없던 비율 — 달력 표시가 잘 먹는지 보는 지표
+            // 고른 날짜에 항공권이 하나도 없던 비율 — 달력 표시가 잘 먹는지 보는 지표
             emptyRate: dateFilter?.count
                 ? Number((((dateFilterEmpty?.count ?? 0) / dateFilter.count) * 100).toFixed(1))
                 : null,
