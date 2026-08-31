@@ -788,6 +788,7 @@ export default function MobileRedesignPreview({
     const hasInitialFlights = initialFlights.length > 0;
     const [flights, setFlights] = useState<Flight[]>(initialFlights);
     const [loading, setLoading] = useState(!hasInitialFlights);
+    const [initialListSyncing, setInitialListSyncing] = useState(hasInitialFlights);
     const [error, setError] = useState('');
     const [lastUpdated, setLastUpdated] = useState<string | null>(initialLastUpdated);
     const [todayPickId, setTodayPickId] = useState<string | null>(initialTodayPickId);
@@ -1082,6 +1083,9 @@ export default function MobileRedesignPreview({
         } catch (cause) {
             if (!background) setError(cause instanceof Error ? cause.message : '항공권을 불러오지 못했습니다.');
         } finally {
+            // 정적 첫 목록과 운영 API의 필터 결과가 다를 수 있으므로 최초 동기화가
+            // 끝나기 전에는 정적 카드 대신 스켈레톤만 보여준다.
+            setInitialListSyncing(false);
             if (!background) setLoading(false);
         }
     }, [previewMode]);
@@ -2161,6 +2165,7 @@ export default function MobileRedesignPreview({
     const resultCount = initialSubsetActive && isDefaultView
         ? initialFlightCount
         : filteredFlights.length;
+    const listLoading = loading || initialListSyncing;
 
     const openFreshRouteResults = useCallback((flight: Flight) => {
         if (!freshFlightsInsight) return;
@@ -3335,7 +3340,7 @@ export default function MobileRedesignPreview({
                             <h2>{freshRouteResults
                                 ? `${freshRouteResults.departure} → ${freshRouteResults.arrival}`
                                 : query ? `'${query}' 검색 결과` : region === '전체' ? '전체 항공권' : `${region} 항공권`}</h2>
-                            <span>{loading
+                            <span>{listLoading
                                 ? '항공권 불러오는 중'
                                 : freshRouteResults
                                     ? `${freshRouteResults.copyPrefix} 들어온 항공권 ${feedFlights.length.toLocaleString('ko-KR')}개`
@@ -3409,7 +3414,7 @@ export default function MobileRedesignPreview({
                             </div>
                         )}
 
-                    {loading && (
+                    {listLoading && (
                         <div className={styles.loadingList} aria-label="항공권 불러오는 중">
                             {[0, 1, 2].map(item => <div className={styles.skeletonCard} key={item} />)}
                         </div>
@@ -3423,7 +3428,7 @@ export default function MobileRedesignPreview({
                         </div>
                     )}
 
-                    {!loading && !error && (freshRouteResults ? feedFlights.length === 0 : filteredFlights.length === 0) && (
+                    {!listLoading && !error && (freshRouteResults ? feedFlights.length === 0 : filteredFlights.length === 0) && (
                         <div className={styles.emptyState}>
                             {freshRouteResults ? (
                                 <>
@@ -3474,7 +3479,7 @@ export default function MobileRedesignPreview({
                         </div>
                     )}
 
-                    <div className={styles.cardList}>
+                    {!listLoading && !error && <div className={styles.cardList}>
                         {feedFlights.slice(0, visibleCount).map((flight, index) => {
                             const seats = flight.availableSeats || Number.parseInt(flight.seats || '', 10) || 0;
                             const duration = tripLength(flight);
@@ -3736,9 +3741,9 @@ export default function MobileRedesignPreview({
                                 </Fragment>
                             );
                         })}
-                    </div>
+                    </div>}
 
-                    {visibleCount < feedFlights.length && (
+                    {!listLoading && !error && visibleCount < feedFlights.length && (
                         <button
                             type="button"
                             className={styles.moreButton}
