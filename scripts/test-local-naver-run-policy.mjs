@@ -290,6 +290,31 @@ test('runs a capture imported after 14:23 in the 17:31 third phase', () => {
     assert.equal(result.navigationBudget, 50);
 });
 
+test('does not grant a new daily budget when a legacy completed state has no usage count', () => {
+    const cache = {
+        ...readyCache,
+        manualCaptureStatus: {
+            modetour: {
+                naverPending: true,
+                naverPendingAt: '2026-08-29T06:05:00.000Z',
+            },
+        },
+    };
+    const result = evaluateLocalNaverRun({
+        now: '2026-08-29T08:32:00.000Z',
+        cache,
+        state: {
+            version: 1,
+            kstDate: '2026-08-29',
+            phase: 'success',
+            updatedAt: '2026-08-29T07:00:00.000Z',
+        },
+    });
+    assert.equal(result.shouldRun, false);
+    assert.equal(result.reason, 'daily_budget_exhausted');
+    assert.equal(result.navigationBudget, 0);
+});
+
 test('keeps a manual capture pending when the Naver phase still has deferred routes', () => {
     const cache = {
         manualCaptureStatus: {

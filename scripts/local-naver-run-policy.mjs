@@ -109,6 +109,12 @@ function initialNavigationBudget(cache, runSources, pendingSources, totalBudget)
     return Math.max(1, totalBudget - reserve);
 }
 
+function usedNavigationBudget(state, totalBudget) {
+    const raw = Number(state?.navigationsUsed);
+    // 구형 상태에는 사용량이 없다. 이미 실행된 양을 알 수 없을 때 새 200회를 주지 않는다.
+    return Number.isFinite(raw) && raw >= 0 ? raw : totalBudget;
+}
+
 export function evaluateLocalNaverRun({
     now = new Date(),
     cache,
@@ -143,7 +149,7 @@ export function evaluateLocalNaverRun({
     const manualPending = pendingManualCapture(cache, 'modetour');
     const manualReady = manualCaptureReady(cache, 'modetour', current);
     if (sameDayState?.phase === 'success' && manualPending && manualReady) {
-        const navigationsUsed = Math.max(0, Number(sameDayState.navigationsUsed) || 0);
+        const navigationsUsed = usedNavigationBudget(sameDayState, totalNavigationBudget);
         const navigationBudget = Math.max(0, totalNavigationBudget - navigationsUsed);
         if (navigationBudget <= 0) {
             return {
@@ -205,7 +211,7 @@ export function evaluateLocalNaverRun({
             ...(sameDayState.pendingSources || []),
             ...(manualReady ? ['modetour'] : []),
         ]);
-        const navigationsUsed = Math.max(0, Number(sameDayState.navigationsUsed) || 0);
+        const navigationsUsed = usedNavigationBudget(sameDayState, totalNavigationBudget);
         const navigationBudget = Math.max(0, totalNavigationBudget - navigationsUsed);
         const recoveryReady = fullCrawlAt !== null && fullCrawlAt >= recoverySlotAt;
 
