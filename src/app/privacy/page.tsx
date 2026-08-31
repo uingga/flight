@@ -18,7 +18,7 @@ export default function PrivacyPage() {
             </Link>
 
             <h1 className={styles.pageTitle}>개인정보처리방침</h1>
-            <p className={styles.lastUpdated}>최종 수정일: 2026년 8월 24일</p>
+            <p className={styles.lastUpdated}>최종 수정일: 2026년 8월 31일</p>
 
             <div className={styles.section}>
                 <h2 className={styles.sectionTitle}>1. 개인정보 처리 목적</h2>
