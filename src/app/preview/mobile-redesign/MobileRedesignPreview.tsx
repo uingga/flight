@@ -2385,7 +2385,8 @@ export default function MobileRedesignPreview({
             ? '날짜'
             : DATE_PERIOD_OPTIONS.find(item => item.value === datePeriod)?.label || '날짜';
     const firstInsightCard = 9;
-    const insightInterval = 18;
+    const subsequentInsightInterval = 12;
+    const weeklyDiscoveryInsightCard = firstInsightCard + subsequentInsightInterval;
     const hasAdvancedFilter = departure !== '전체'
         || datePeriod !== 'all'
         || maxPrice > 0
@@ -3641,7 +3642,7 @@ export default function MobileRedesignPreview({
                                     )}
                                     {!freshRouteResults
                                         && isDefaultView
-                                        && cardNumber === insightInterval
+                                        && cardNumber === weeklyDiscoveryInsightCard
                                         && weeklyDiscoveryFlights.length > 0 && (
                                             <WeeklyDiscoveryInsight
                                                 flights={weeklyDiscoveryFlights}
