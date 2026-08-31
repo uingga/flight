@@ -158,12 +158,6 @@ export default function RootLayout({
                         </Script>
                     </>
                 )}
-                {/* Google AdSense — lazy loaded for performance */}
-                <Script
-                    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8329497855024061"
-                    strategy="lazyOnload"
-                    crossOrigin="anonymous"
-                />
                 {children}
                 <script
                     type="application/ld+json"

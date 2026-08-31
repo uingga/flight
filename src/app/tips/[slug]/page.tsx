@@ -461,9 +461,10 @@ export function generateMetadata({ params }: { params: { slug: string } }): Meta
     const tip = tips[params.slug];
     if (!tip) return { title: '팁을 찾을 수 없습니다' };
     return {
-        title: `${tip.title} | 티키티킷`,
+        title: tip.title,
         description: tip.desc,
         alternates: { canonical: `/tips/${params.slug}` },
+        robots: { index: false, follow: true },
     };
 }
 

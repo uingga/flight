@@ -65,10 +65,11 @@ function cleanDate(value: string): string {
 }
 
 export async function generateMetadata(): Promise<Metadata> {
-    const drop = readJson<DropData>('data/marketing/current-drop.json');
+    const rawDrop = readJson<DropData>('data/marketing/current-drop.json');
+    const byId = new Map(loadFlights().map(flight => [flight.id, flight]));
+    const drop = rawDrop?.deals.some(deal => byId.has(deal.flightId)) ? rawDrop : null;
     const title = drop ? `${drop.headline} | 티키티킷 드롭` : '티키티킷 드롭';
     const description = drop?.intro || '가격과 날짜, 항공 시간을 함께 보고 지금 소개할 이유가 있는 표만 고릅니다.';
-    const byId = new Map(loadFlights().map(flight => [flight.id, flight]));
     const imageParams = new URLSearchParams({ headline: drop?.headline || '티키티킷 드롭' });
     drop?.deals.forEach((deal, index) => {
         const flight = byId.get(deal.flightId);
@@ -79,6 +80,7 @@ export async function generateMetadata(): Promise<Metadata> {
         title,
         description,
         alternates: { canonical: '/drop' },
+        robots: { index: Boolean(drop), follow: true },
         openGraph: {
             title,
             description,
@@ -96,8 +98,9 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default function DropPage({ searchParams }: { searchParams?: { preview?: string } }) {
     const previewProposal = process.env.NODE_ENV !== 'production' && searchParams?.preview === 'proposal';
-    const drop = readJson<DropData>(previewProposal ? 'data/marketing/drop-proposal.json' : 'data/marketing/current-drop.json');
+    const rawDrop = readJson<DropData>(previewProposal ? 'data/marketing/drop-proposal.json' : 'data/marketing/current-drop.json');
     const byId = new Map(loadFlights().map(flight => [flight.id, flight]));
+    const drop = previewProposal || rawDrop?.deals.some(deal => byId.has(deal.flightId)) ? rawDrop : null;
     const jsonLd = drop ? {
         '@context': 'https://schema.org',
         '@type': 'Article',

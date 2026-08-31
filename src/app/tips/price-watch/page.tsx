@@ -28,7 +28,7 @@ interface RouteInsight {
 }
 
 export const metadata: Metadata = {
-    title: '최근 가격이 내려간 주요 땡처리 항공권 노선 | 티키티킷',
+    title: '최근 가격이 내려간 주요 땡처리 항공권 노선',
     description: '티키티킷이 최근 2~3주 동안 실제로 수집한 주요 노선별 최저가 기록을 확인하세요.',
     alternates: { canonical: '/tips/price-watch' },
 };

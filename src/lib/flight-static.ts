@@ -34,6 +34,13 @@ export interface FlightCacheMeta {
     sourceUpdatedAt: Record<string, string>;
 }
 
+/**
+ * 도시별 정적 페이지를 검색엔진에 적극 노출할 최소 항공권 수.
+ * 1~2장짜리 페이지는 사용자 검색 결과로는 계속 열 수 있지만, 비슷한 템플릿의
+ * 얇은 페이지가 대량 색인되지 않도록 sitemap/metadata에서 함께 사용한다.
+ */
+export const MIN_INDEXABLE_CITY_FLIGHTS = 3;
+
 export function loadFlightCacheMeta(): FlightCacheMeta {
     try {
         const raw = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'data', 'all-flights-cache.json'), 'utf8'));

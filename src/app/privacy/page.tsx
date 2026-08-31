@@ -137,6 +137,11 @@ export default function PrivacyPage() {
                                 <td>Google Analytics</td>
                             </tr>
                             <tr>
+                                <td>Google 광고 쿠키</td>
+                                <td>광고 제공, 노출 빈도 조절 및 광고 성과 측정</td>
+                                <td>Google AdSense</td>
+                            </tr>
+                            <tr>
                                 <td>__Host-tikitikit_session</td>
                                 <td>로그인 상태 유지 (자바스크립트에서 읽을 수 없는 보안 쿠키)</td>
                                 <td>티키티킷</td>
@@ -146,6 +151,19 @@ export default function PrivacyPage() {
                     <p>
                         브라우저 설정을 통해 쿠키 수집을 거부할 수 있습니다.
                         단, 이 경우 일부 서비스 이용에 제한이 있을 수 있습니다.
+                    </p>
+                    <p>
+                        Google을 포함한 제3자 광고 제공업체는 광고를 제공하고 성과를 측정하기 위해
+                        이용자의 브라우저에 쿠키를 저장하거나 기존 쿠키를 읽을 수 있으며,
+                        웹 비콘 또는 IP 주소 등의 정보를 사용할 수 있습니다. 자세한 내용은{' '}
+                        <a href="https://policies.google.com/technologies/partner-sites?hl=ko" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-primary)' }}>
+                            Google이 파트너 사이트의 정보를 사용하는 방식
+                        </a>
+                        에서 확인할 수 있습니다. 맞춤 광고는{' '}
+                        <a href="https://adssettings.google.com/" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-primary)' }}>
+                            Google 광고 설정
+                        </a>
+                        에서 관리할 수 있습니다.
                     </p>
                 </div>
             </div>

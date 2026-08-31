@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import { SITE_URL } from '@/lib/site';
 import {
     loadActiveFlights, groupByCity, effectivePrice, departureLabel, formatKoreanDate,
-    loadFlightCacheMeta, type CityDeals,
+    loadFlightCacheMeta, MIN_INDEXABLE_CITY_FLIGHTS, type CityDeals,
 } from '@/lib/flight-static';
 import { normalizeAirline } from '@/lib/utils/flight-helpers';
 import type { Flight } from '@/types/flight';
@@ -39,10 +39,12 @@ export function generateMetadata({ params }: { params: { city: string } }): Meta
     const title = `${data.city} 땡처리 항공권 최저가 ${data.minPrice.toLocaleString('ko-KR')}원`;
     const description = `${data.city}행 땡처리 항공권 ${data.flights.length}장 판매 중. 왕복 최저 ${data.minPrice.toLocaleString('ko-KR')}원, 출발일 ${formatKoreanDate(data.earliestDate)}~${formatKoreanDate(data.latestDate)}. 하루 여러 차례 갱신됩니다.`;
     const canonical = `/flights/${encodeURIComponent(data.city)}`;
+    const indexable = data.flights.length >= MIN_INDEXABLE_CITY_FLIGHTS;
     return {
         title,
         description,
         alternates: { canonical },
+        robots: { index: indexable, follow: true },
         openGraph: { title, description, type: 'website', url: canonical },
     };
 }

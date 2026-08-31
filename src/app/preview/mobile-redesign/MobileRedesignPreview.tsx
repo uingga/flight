@@ -33,6 +33,7 @@ import type { Flight } from '@/types/flight';
 import AccountSheet from '@/components/account/AccountSheet';
 import { useAccount, type AccountFlightSnapshot, type AccountSearchFilters } from '@/components/account/useAccount';
 import MobileDealAlertSheet, { type AlertSearchCondition } from './MobileDealAlertSheet';
+import RedesignAdSlot from './RedesignAdSlot';
 import styles from './page.module.css';
 
 type SortMode = 'recommended' | 'price' | 'date';
@@ -3614,6 +3615,10 @@ export default function MobileRedesignPreview({
                         >
                             특가 더 보기
                         </button>
+                    )}
+
+                    {isDefaultView && !freshRouteResults && feedFlights.length > 0 && (
+                        <RedesignAdSlot preview={previewMode} />
                     )}
                 </section>
 
