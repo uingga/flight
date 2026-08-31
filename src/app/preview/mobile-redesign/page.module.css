@@ -1,5 +1,6 @@
 .previewPage {
     min-height: 100vh;
+    min-height: 100dvh;
     background: var(--canvas);
     color: var(--ink);
     font-variant-numeric: normal;
@@ -87,7 +88,10 @@
     width: 100%;
     max-width: 480px;
     min-height: 100vh;
+    min-height: 100dvh;
     margin: 0 auto;
+    display: flex;
+    flex-direction: column;
     background: var(--paper);
     box-shadow: 0 0 48px rgba(34, 34, 34, 0.11);
 }
@@ -882,8 +886,14 @@
 .previewFooter { padding: 25px 18px 36px; display: flex; flex-direction: column; align-items: center; gap: 5px; color: var(--text-faint); font-size: var(--size-micro); }
 .previewFooter a { color: var(--brand-dark); font-weight: var(--weight-bold); }
 
+.footerSpacer {
+    min-height: 42px;
+    flex: 1 0 42px;
+    background: var(--paper);
+}
+
 .siteFooter {
-    margin-top: 42px;
+    margin-top: 0;
     padding: 30px 18px max(34px, calc(env(safe-area-inset-bottom) + 24px));
     border-top: 1px solid var(--line);
     background: #fafafa;
@@ -1239,7 +1249,7 @@
 
 @media (min-width: 700px) {
     .sheetOverlay { --overlay-scrim-current: var(--overlay-scrim-desktop); }
-    .phoneCanvas { min-height: calc(100vh - 48px); margin-top: 24px; margin-bottom: 24px; border-radius: var(--radius-frame); overflow: hidden; }
+    .phoneCanvas { min-height: calc(100vh - 48px); min-height: calc(100dvh - 48px); margin-top: 24px; margin-bottom: 24px; border-radius: var(--radius-frame); overflow: hidden; }
     .header { top: 0; }
     .searchRow { top: 58px; }
     .bottomSheet { margin-bottom: 24px; border-radius: 24px; }
@@ -1268,6 +1278,7 @@
         width: 100%;
         max-width: 1200px;
         min-height: 100vh;
+        min-height: 100dvh;
         margin-top: 0;
         margin-bottom: 0;
         padding-top: 0;

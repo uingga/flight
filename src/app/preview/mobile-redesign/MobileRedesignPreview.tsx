@@ -3669,6 +3669,7 @@ export default function MobileRedesignPreview({
                 </section>
 
                 {beforeFooter}
+                <div className={styles.footerSpacer} aria-hidden="true" />
                 <footer className={styles.siteFooter}>
                     <div className={styles.siteFooterGrid}>
                         <section className={styles.siteFooterBrand}>
