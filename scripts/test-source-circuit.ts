@@ -12,6 +12,7 @@ import {
     openSourceCircuit,
     pruneResolvedSourceCircuits,
     recordLocalSourceFallback,
+    wasLocalSourceFallbackAttemptedOnKstDate,
 } from '../src/lib/source-circuit';
 
 const now = new Date('2026-08-29T00:00:00.000Z');
@@ -78,6 +79,7 @@ const localBlocked = recordLocalSourceFallback(circuit, 'blocked', 'CAPTCHA', no
 assert.equal(localBlocked.nextProbeAt, circuit.nextProbeAt);
 assert.equal(localBlocked.localFallback?.status, 'blocked');
 assert.equal(localBlocked.localFallback?.nextProbeAt, '2026-08-30T00:00:00.000Z');
+assert.equal(localBlocked.localFallback?.method, 'source-default');
 assert.equal(isLocalSourceFallbackCoolingDown(localBlocked, now), true);
 assert.equal(
     isLocalSourceFallbackCoolingDown(localBlocked, new Date('2026-08-30T00:00:00.000Z')),
@@ -86,6 +88,28 @@ assert.equal(
 const localSuccess = recordLocalSourceFallback(localBlocked, 'success', '120건 완료', now);
 assert.equal(localSuccess.localFallback?.status, 'success');
 assert.equal(localSuccess.localFallback?.nextProbeAt, undefined);
+
+const modetourDomBlocked = recordLocalSourceFallback(circuit, 'blocked', 'DOM CAPTCHA', now, {
+    cooldownMs: null,
+    method: 'modetour-dom',
+});
+assert.equal(modetourDomBlocked.localFallback?.method, 'modetour-dom');
+assert.equal(modetourDomBlocked.localFallback?.nextProbeAt, undefined);
+assert.equal(wasLocalSourceFallbackAttemptedOnKstDate(modetourDomBlocked, now), true);
+assert.equal(
+    wasLocalSourceFallbackAttemptedOnKstDate(
+        modetourDomBlocked,
+        new Date('2026-08-29T14:59:59.999Z'), // 2026-08-29 23:59:59 KST
+    ),
+    true,
+);
+assert.equal(
+    wasLocalSourceFallbackAttemptedOnKstDate(
+        modetourDomBlocked,
+        new Date('2026-08-29T15:00:00.000Z'), // 2026-08-30 00:00:00 KST
+    ),
+    false,
+);
 
 assert.deepEqual(
     pruneResolvedSourceCircuits({ ttang: circuit }, { ttang: 'ttang-1' }, now),

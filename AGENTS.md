@@ -15,7 +15,7 @@
 |-----|--------|---------|------|
 | `ybtour` | 노랑풍선 | Playwright | `src/lib/scrapers/ybtour.ts` |
 | `hanatour` | 하나투어 | Playwright | `src/lib/scrapers/hanatour.ts` |
-| `modetour` | 모두투어 | API | `src/lib/scrapers/modetour.ts` |
+| `modetour` | 모두투어 | API (GitHub) / DOM (PC fallback) | `src/lib/scrapers/modetour.ts`, `src/lib/scrapers/modetour-dom.ts` |
 | `onlinetour` | 온라인투어 | Playwright | `src/lib/scrapers/onlinetour.ts` |
 | `ttang` | 땡처리닷컴 | Playwright | `src/lib/scrapers/ttang.ts` |
 | `myrealtrip` | 마이리얼트립 | Partner API (NEW, WIP) | `src/lib/scrapers/myrealtrip.ts` |
@@ -82,7 +82,9 @@ src/components/Dashboard.tsx (client component)
 - 전체 결과까지 폐기되는 회차에도 항공권 timestamp는 갱신하지 않되 차단 회로·실패 횟수와
   `fullCrawlUpdatedAt`은 저장해 watchdog이 같은 회차를 재요청하지 않게 한다.
 - 차단된 일반 여행사는 Windows PC가 해당 소스만 대체 수집한다. PC에서도 차단되면 그 소스의
-  PC 대체 수집을 24시간 중단한다. 상세 기준은 `docs/travel-agency-crawl-safety.md`를 따른다.
+  PC 대체 수집을 24시간 중단한다. 단, 모두투어는 GitHub 명시적 차단 뒤 PC에서 API를 다시
+  호출하지 않고 공개 DOM을 KST 날짜당 1회만 읽는다. 성공·실패 뒤 같은 날 재실행하지 않으며
+  다음 KST 날짜 첫 정규 회차에 재탐색한다. 상세 기준은 `docs/travel-agency-crawl-safety.md`를 따른다.
 
 ### Naver 비교가 확인 스케줄
 
@@ -96,7 +98,8 @@ src/components/Dashboard.tsx (client component)
 - Windows `TikitikitBlockedSourceCrawl`은 일반 크롤과 같은 08:17/11:12/14:23/17:31 KST에
   시작해 해당 회차의 `main` 반영을 기다린다. GitHub 차단 회로가 열린 일반 여행사만 PC
   주거용 회선에서 부분 크롤하며, 성공해도 GitHub의 24시간 회로는 닫지 않는다. PC에서도
-  차단 신호가 나오면 그 여행사의 PC 대체 수집도 24시간 중단한다.
+  차단 신호가 나오면 그 여행사의 PC 대체 수집도 24시간 중단한다. 모두투어 PC DOM만 위의
+  KST 날짜당 1회 정책을 적용한다.
 - 명시적 접근 제한은 같은 KST 날짜에 다시 실행하지 않고 다음 날 정규 네이버 회차에서 한 번
   재탐색한다. 정확히 24시간을 계산해 다음 날 회차까지 건너뛰지는 않는다. 같은 날 자동 재실행,
   동시 수동 실행, Task Scheduler 재시작은 허용하지 않는다.
