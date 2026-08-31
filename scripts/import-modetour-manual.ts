@@ -1,8 +1,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { Flight } from '../src/types/flight';
+import { getRegionByCity } from '../src/lib/utils/region-mapper';
 import {
+    MODETOUR_CONTINENT_CODES,
     ModetourManualCapture,
+    ModetourContinentCode,
     modetourManualMatchKey,
     validateModetourManualCard,
 } from '../src/lib/scrapers/modetour-manual';
@@ -36,6 +39,11 @@ export interface ModetourManualImportReport {
     accepted: number;
     inserted: number;
     updated: number;
+    removedByCompleteRegion: number;
+    expiredRemoved: number;
+    duplicatesRemoved: number;
+    completeRegionsApplied: ModetourContinentCode[];
+    completeRegionsSkipped: Array<{ region: ModetourContinentCode; review: number }>;
     review: Array<{ region: string; index: number; route: string; reasons: string[] }>;
     filteredByBenchmark: Array<{ route: string; price: number; average: number }>;
     duplicateCards: number;
@@ -72,6 +80,25 @@ function benchmarkFlight(
     };
 }
 
+const REGIONS_BY_CONTINENT: Record<ModetourContinentCode, string[]> = {
+    ASIA: ['동남아', '기타'],
+    JPN: ['일본'],
+    SOPA: ['남태평양'],
+    EUR: ['유럽'],
+    CHI: ['중국'],
+    AMCA: ['미주'],
+};
+
+function isExpiredFlight(flight: Flight, todayKst: string): boolean {
+    const match = String(flight.departure?.date || '').match(/^(\d{4})[-./](\d{2})[-./](\d{2})/);
+    if (!match) return false;
+    return `${match[1]}-${match[2]}-${match[3]}` < todayKst;
+}
+
+function routeKey(flight: Flight): string {
+    return `${flight.source}|${flight.departure?.city || ''}|${flight.arrival?.city || ''}`;
+}
+
 export function importModetourManualCapture({
     input,
     cache,
@@ -92,9 +119,16 @@ export function importModetourManualCapture({
     if (captureAgeMs > 36 * 60 * 60_000) throw new Error('36시간이 지난 캡처는 가격 자료로 반영할 수 없습니다.');
     if (!Array.isArray(input.regions) || input.regions.length === 0) throw new Error('regions가 비어 있습니다.');
 
+    const regionCodes = new Set(input.regions.map(region => region.continentCode));
+    const completeRegions = [...new Set(input.completeRegions || [])];
+    completeRegions.forEach(region => {
+        if (!MODETOUR_CONTINENT_CODES.includes(region)) throw new Error(`완전 캡처 지역 코드가 올바르지 않습니다: ${region}`);
+        if (!regionCodes.has(region)) throw new Error(`완전 캡처 지역 ${region}의 regions 항목이 없습니다.`);
+    });
+
     const review: ModetourManualImportReport['review'] = [];
     const filteredByBenchmark: ModetourManualImportReport['filteredByBenchmark'] = [];
-    const acceptedByKey = new Map<string, Flight>();
+    const validatedByRegion = new Map<string, Flight[]>();
     let duplicateCards = 0;
 
     input.regions.forEach(region => {
@@ -106,47 +140,69 @@ export function importModetourManualCapture({
                 review.push({ region: region.continentCode, index: index + 1, route, reasons: validation.reasons });
                 return;
             }
-            const benchmarkResult = benchmarkFlight(validation.flight, benchmark);
-            if (!benchmarkResult.keep) {
-                filteredByBenchmark.push({
-                    route,
-                    price: validation.flight.price,
-                    average: benchmarkResult.average || 0,
-                });
-                return;
-            }
-            validation.flight.discountRate = benchmarkResult.discountRate;
-            validation.flight.priceCheckedAt = capturedAt.toISOString();
-            const key = modetourManualMatchKey(validation.flight);
-            const duplicate = acceptedByKey.get(key);
-            if (duplicate) {
-                duplicateCards += 1;
-                if (validation.flight.price < duplicate.price) acceptedByKey.set(key, validation.flight);
-            } else {
-                acceptedByKey.set(key, validation.flight);
-            }
+            const validated = validatedByRegion.get(region.continentCode) || [];
+            validated.push(validation.flight);
+            validatedByRegion.set(region.continentCode, validated);
         });
     });
 
-    const flights = cache.flights.map(flight => ({ ...flight }));
-    const existingByKey = new Map<string, number>();
-    flights.forEach((flight, index) => {
+    // 정규 크롤과 동일하게 업체·출발지·도착지별 최저가만 남긴 뒤 벤치마크를 적용한다.
+    const routeMinPrices = new Map<string, number>();
+    for (const flights of validatedByRegion.values()) {
+        for (const flight of flights) {
+            const key = routeKey(flight);
+            const current = routeMinPrices.get(key);
+            if (current === undefined || flight.price < current) routeMinPrices.set(key, flight.price);
+        }
+    }
+
+    const acceptedByKey = new Map<string, Flight>();
+    const acceptedRegionByKey = new Map<string, string>();
+    input.regions.forEach(region => {
+        for (const flight of validatedByRegion.get(region.continentCode) || []) {
+            if (flight.price !== routeMinPrices.get(routeKey(flight))) continue;
+            const route = `${flight.departure.city}-${flight.arrival.city} ${flight.departure.date.slice(5).replace('-', '/')}`;
+            const benchmarkResult = benchmarkFlight(flight, benchmark);
+            if (!benchmarkResult.keep) {
+                filteredByBenchmark.push({
+                    route,
+                    price: flight.price,
+                    average: benchmarkResult.average || 0,
+                });
+                continue;
+            }
+            flight.discountRate = benchmarkResult.discountRate;
+            flight.priceCheckedAt = capturedAt.toISOString();
+            const key = modetourManualMatchKey(flight);
+            const duplicate = acceptedByKey.get(key);
+            if (duplicate) {
+                duplicateCards += 1;
+                if (flight.price < duplicate.price) acceptedByKey.set(key, flight);
+            } else {
+                acceptedByKey.set(key, flight);
+                acceptedRegionByKey.set(key, region.continentCode);
+            }
+        }
+    });
+
+    const existingByKey = new Map<string, Flight>();
+    cache.flights.forEach(flight => {
         if (flight.source === 'modetour' && !existingByKey.has(modetourManualMatchKey(flight))) {
-            existingByKey.set(modetourManualMatchKey(flight), index);
+            existingByKey.set(modetourManualMatchKey(flight), flight);
         }
     });
 
     let inserted = 0;
     let updated = 0;
+    const incomingFlights: Flight[] = [];
     for (const [key, incoming] of acceptedByKey) {
-        const existingIndex = existingByKey.get(key);
-        if (existingIndex === undefined) {
-            flights.push({ ...incoming, firstSeen: kstDateKey(capturedAt) });
+        const previous = existingByKey.get(key);
+        if (!previous) {
+            incomingFlights.push({ ...incoming, firstSeen: kstDateKey(capturedAt) });
             inserted += 1;
             continue;
         }
-        const previous = flights[existingIndex];
-        flights[existingIndex] = {
+        incomingFlights.push({
             ...previous,
             ...incoming,
             id: previous.id,
@@ -158,12 +214,71 @@ export function importModetourManualCapture({
                 ...previous.modetourDetail,
                 ...incoming.modetourDetail,
             },
-        };
+        });
         updated += 1;
     }
 
+    const reviewCounts = new Map<ModetourContinentCode, number>();
+    review.forEach(item => {
+        const code = item.region as ModetourContinentCode;
+        reviewCounts.set(code, (reviewCounts.get(code) || 0) + 1);
+    });
+    const completeRegionsApplied = completeRegions.filter(region => !reviewCounts.get(region));
+    const completeRegionsSkipped = completeRegions
+        .filter(region => Boolean(reviewCounts.get(region)))
+        .map(region => ({ region, review: reviewCounts.get(region) || 0 }));
+    const replacingSiteRegions = new Set(completeRegionsApplied.flatMap(region => REGIONS_BY_CONTINENT[region]));
+    const todayKst = kstDateKey(now);
+    let removedByCompleteRegion = 0;
+    let expiredRemoved = 0;
+    let duplicatesRemoved = 0;
+    const retainedFlights: Flight[] = [];
+    const retainedModetourKeys = new Set<string>();
+
+    for (const flight of cache.flights) {
+        if (flight.source !== 'modetour') {
+            retainedFlights.push({ ...flight });
+            continue;
+        }
+        const flightRegion = flight.region || getRegionByCity(flight.arrival?.city || '');
+        if (replacingSiteRegions.has(flightRegion)) {
+            removedByCompleteRegion += 1;
+            continue;
+        }
+        if (isExpiredFlight(flight, todayKst)) {
+            expiredRemoved += 1;
+            continue;
+        }
+        const key = modetourManualMatchKey(flight);
+        if (retainedModetourKeys.has(key)) {
+            duplicatesRemoved += 1;
+            continue;
+        }
+        retainedModetourKeys.add(key);
+        retainedFlights.push({ ...flight });
+    }
+
+    for (const [index, incoming] of incomingFlights.entries()) {
+        const key = modetourManualMatchKey(incoming);
+        const incomingRegion = acceptedRegionByKey.get(key) as ModetourContinentCode | undefined;
+        // 완전 캡처 지역은 전체 교체분을 넣고, 그 외 지역은 기존 키가 없을 때만 추가한다.
+        if (!incomingRegion || !completeRegionsApplied.includes(incomingRegion)) {
+            const existingIndex = retainedFlights.findIndex(flight => (
+                flight.source === 'modetour' && modetourManualMatchKey(flight) === key
+            ));
+            if (existingIndex >= 0) {
+                retainedFlights[existingIndex] = incoming;
+                continue;
+            }
+        }
+        retainedFlights.push(incomingFlights[index]);
+    }
+
+    const flights = retainedFlights;
+    const hasMutation = acceptedByKey.size > 0 || removedByCompleteRegion > 0 || expiredRemoved > 0 || duplicatesRemoved > 0;
+
     const importedAt = now.toISOString();
-    const nextCache: CacheData = acceptedByKey.size === 0
+    const nextCache: CacheData = !hasMutation
         ? cache
         : {
             ...cache,
@@ -188,7 +303,9 @@ export function importModetourManualCapture({
             },
             integrityAlerts: [
                 ...(cache.integrityAlerts || []).filter(alert => !alert.includes('모두투어 수동 캡처')),
-                `📷 모두투어 수동 캡처 ${acceptedByKey.size}건 반영 · 기존 데이터 삭제 없음`
+                `📷 모두투어 수동 캡처 ${acceptedByKey.size}건 반영`
+                + (completeRegionsApplied.length > 0 ? ` · 완전 캡처 ${completeRegionsApplied.join('/')} 교체` : '')
+                + (removedByCompleteRegion > 0 ? ` · 기존 ${removedByCompleteRegion}건 정리` : '')
                 + (review.length > 0 ? ` · 확인 필요 ${review.length}건` : ''),
             ],
         };
@@ -199,10 +316,15 @@ export function importModetourManualCapture({
             accepted: acceptedByKey.size,
             inserted,
             updated,
+            removedByCompleteRegion,
+            expiredRemoved,
+            duplicatesRemoved,
+            completeRegionsApplied,
+            completeRegionsSkipped,
             review,
             filteredByBenchmark,
             duplicateCards,
-            applied: apply && acceptedByKey.size > 0,
+            applied: apply && hasMutation,
         },
     };
 }
@@ -224,7 +346,7 @@ function main(): void {
     const benchmark = JSON.parse(fs.readFileSync(benchmarkPath, 'utf8')) as InterparkBenchmark;
     const result = importModetourManualCapture({ input, cache, benchmark, apply });
 
-    if (apply && result.report.accepted > 0) {
+    if (apply && result.report.applied) {
         fs.writeFileSync(cachePath, `${JSON.stringify(result.cache, null, 2)}\n`, 'utf8');
     }
     console.log(JSON.stringify(result.report, null, 2));

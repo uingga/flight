@@ -115,4 +115,32 @@ assert.equal(updated?.firstSeen, '2026-08-20');
 assert.equal(updated?.naverLowest, 200_000);
 assert.equal(result.cache.flights.find(flight => flight.id === otherFlight.id)?.price, 150_000);
 
-console.log('모두투어 수동 캡처 검증·부분 병합 테스트 통과');
+const completeResult = importModetourManualCapture({
+    input: {
+        capturedAt: capturedAt.toISOString(),
+        completeRegions: ['JPN'],
+        regions: [{ continentCode: 'JPN', cards: [kumamotoCard] }],
+    },
+    cache: {
+        timestamp: '2026-08-31T00:00:00.000Z',
+        count: 3,
+        flights: [
+            oldFlight,
+            {
+                ...oldFlight,
+                id: 'old-japan-flight-not-in-capture',
+                arrival: { city: '오사카', airport: 'KIX', date: '2026-09-20', time: '15:00' },
+            },
+            otherFlight,
+        ],
+    },
+    benchmark: { prices: { KMJ: { '2026-09': { lowest: 200_000, avg: 300_000 } } } },
+    now: new Date('2026-08-31T01:05:00.000Z'),
+    apply: true,
+});
+assert.deepEqual(completeResult.report.completeRegionsApplied, ['JPN']);
+assert.equal(completeResult.report.removedByCompleteRegion, 2);
+assert.equal(completeResult.cache.flights.filter(flight => flight.source === 'modetour').length, 1);
+assert.equal(completeResult.cache.flights.find(flight => flight.id === oldFlight.id)?.price, 194_000);
+
+console.log('모두투어 수동 캡처 검증·부분 병합·완전 지역 교체 테스트 통과');

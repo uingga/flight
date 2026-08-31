@@ -34,6 +34,11 @@ export interface ModetourManualRegion {
 
 export interface ModetourManualCapture {
     capturedAt: string;
+    /**
+     * 목록의 처음부터 끝까지 빠짐없이 캡처한 지역만 지정한다.
+     * 지정된 지역은 검증을 모두 통과했을 때 기존 캐시를 이번 캡처 결과로 교체한다.
+     */
+    completeRegions?: ModetourContinentCode[];
     regions: ModetourManualRegion[];
 }
 
