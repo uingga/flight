@@ -832,6 +832,7 @@ export default function MobileRedesignPreview({
     const [showScrollTop, setShowScrollTop] = useState(false);
     const [detailHasMoreBelow, setDetailHasMoreBelow] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
+    const [isDesktopViewport, setIsDesktopViewport] = useState(false);
     const [filterBarPinned, setFilterBarPinned] = useState(false);
     const [showAccount, setShowAccount] = useState(false);
     const [showContact, setShowContact] = useState(false);
@@ -1441,6 +1442,14 @@ export default function MobileRedesignPreview({
 
     useEffect(() => {
         setIsMobile(checkIsMobile());
+    }, []);
+
+    useEffect(() => {
+        const media = window.matchMedia('(min-width: 960px)');
+        const updateViewport = () => setIsDesktopViewport(media.matches);
+        updateViewport();
+        media.addEventListener('change', updateViewport);
+        return () => media.removeEventListener('change', updateViewport);
     }, []);
 
     useEffect(() => {
@@ -3905,6 +3914,7 @@ export default function MobileRedesignPreview({
                 <OverlayDialog
                     open={Boolean(selectedFlight)}
                     active={activeOverlay === 'flight'}
+                    modal={!isDesktopViewport}
                     dialogRef={detailDialogRef}
                     onClose={closeSelectedFlight}
                     overlayClassName={`${styles.sheetOverlay} ${styles.detailOverlay}`}

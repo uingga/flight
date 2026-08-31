@@ -7,6 +7,7 @@ import styles from './OverlayDialog.module.css';
 interface OverlayDialogProps {
     open: boolean;
     active?: boolean;
+    modal?: boolean;
     dialogRef: RefObject<HTMLElement>;
     onClose: () => void;
     overlayClassName?: string;
@@ -20,6 +21,7 @@ interface OverlayDialogProps {
 export default function OverlayDialog({
     open,
     active = true,
+    modal = true,
     dialogRef,
     onClose,
     overlayClassName = '',
@@ -29,7 +31,7 @@ export default function OverlayDialog({
     ariaLabelledBy,
     children,
 }: OverlayDialogProps) {
-    useOverlayDialog({ open, active, dialogRef, onClose });
+    useOverlayDialog({ open, active, modal, dialogRef, onClose });
     if (!open) return null;
 
     return (
@@ -37,7 +39,7 @@ export default function OverlayDialog({
             className={`${styles.backdrop} ${overlayClassName}`}
             role="presentation"
             onMouseDown={event => {
-                if (event.target === event.currentTarget) onClose();
+                if (modal && event.target === event.currentTarget) onClose();
             }}
         >
             <section
@@ -45,7 +47,7 @@ export default function OverlayDialog({
                 className={`${styles.surface} ${dialogClassName}`}
                 style={dialogStyle}
                 role="dialog"
-                aria-modal={active ? true : undefined}
+                aria-modal={active && modal ? true : undefined}
                 aria-hidden={active ? undefined : true}
                 aria-label={ariaLabel}
                 aria-labelledby={ariaLabelledBy}

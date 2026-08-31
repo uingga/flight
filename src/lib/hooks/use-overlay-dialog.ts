@@ -7,6 +7,7 @@ import { useDialogFocus } from './use-dialog-focus';
 interface OverlayDialogOptions {
     open: boolean;
     active?: boolean;
+    modal?: boolean;
     dialogRef: RefObject<HTMLElement>;
     onClose: () => void;
 }
@@ -110,17 +111,18 @@ function lockBodyScroll() {
 export function useOverlayDialog({
     open,
     active = true,
+    modal = true,
     dialogRef,
     onClose,
 }: OverlayDialogOptions) {
     const closeRef = useRef(onClose);
     closeRef.current = onClose;
-    useDialogFocus(open, dialogRef, active);
+    useDialogFocus(open, dialogRef, active && modal);
 
     useEffect(() => {
-        if (!open) return;
+        if (!open || !modal) return;
         return lockBodyScroll();
-    }, [open]);
+    }, [modal, open]);
 
     useEffect(() => {
         if (!open || !active) return;
