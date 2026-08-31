@@ -12,6 +12,16 @@ function urlBase64ToUint8Array(base64String: string) {
     return Uint8Array.from(rawData, character => character.charCodeAt(0));
 }
 
+function compactCircuitCause(circuit?: { reason: 'blocked' | 'rate_limited'; detail: string }): string {
+    if (!circuit) return '원인 확인 중';
+    if (circuit.reason === 'rate_limited') return '요청 제한';
+    if (/captcha/i.test(circuit.detail)) return 'CAPTCHA';
+    if (/접근 제한 안내/.test(circuit.detail)) return '접근 제한 안내';
+    if (/403/.test(circuit.detail)) return 'HTTP 403';
+    if (/aborted|요청 실패|요청 중단/i.test(circuit.detail)) return '요청 중단';
+    return '접근 차단';
+}
+
 interface CrawlHistoryEntry {
     timestamp: string;
     sites: Record<string, { total: number; scraped?: number; preserved?: boolean; skipped?: boolean; added?: number; removed?: number }>;
@@ -2233,6 +2243,7 @@ export default function AdminPage() {
                             const modetourManualNeeded = source === 'modetour'
                                 && (circuitOpen || staleCount > 0)
                                 && !modetourManualApplied;
+                            const modetourFailureLabel = staleCount > 0 ? `${staleCount}회 실패` : '실패';
                             const pastValues = history
                                 .slice(0, -1)
                                 .filter(entry => !entry.preserved && !entry.manual)
@@ -2244,9 +2255,9 @@ export default function AdminPage() {
                             const issue = circuitOpen || staleCount > 0 || late || slumped;
                             const peak = Math.max(...history.map(entry => entry.value), 1);
                             const statusText = modetourManualApplied
-                                ? `수동 ${manualCapture!.accepted}건 반영${manualCapture!.naverPending ? ' · 네이버 대기' : ''}`
+                                ? `${modetourFailureLabel} · 수동 ${manualCapture!.accepted}건 반영${manualCapture!.naverPending ? ' · 네이버 대기' : ''}`
                                 : modetourManualNeeded
-                                ? '수동 캡처 필요'
+                                ? `${modetourFailureLabel} · 수동 캡처 필요`
                                 : circuitOpen
                                 ? circuit!.localFallback?.status === 'success'
                                     ? 'GitHub 휴식·PC 대체 정상'
@@ -2291,7 +2302,9 @@ export default function AdminPage() {
                                     </div>
                                     <div className={styles.sourceTrendFoot}>
                                         <span>{history.length > 0 ? `최근 ${history.length}회` : '수집 기록 없음'}</span>
-                                        <span>{updatedAt ? `${timeAgo(updatedAt)} 갱신` : '정상 갱신 기록 없음'}</span>
+                                        <span>{source === 'modetour' && circuit
+                                            ? `원인 ${compactCircuitCause(circuit)}`
+                                            : updatedAt ? `${timeAgo(updatedAt)} 갱신` : '정상 갱신 기록 없음'}</span>
                                     </div>
                                 </article>
                             );
@@ -3127,6 +3140,7 @@ export default function AdminPage() {
                         const modetourManualNeeded = source === 'modetour'
                             && (circuitOpen || streak > 0)
                             && !modetourManualApplied;
+                        const modetourFailureLabel = streak > 0 ? `${streak}회 실패` : '실패';
 
                         // 무결성 가드가 막지 못하고 통과한 반쪽 결과도 여기서는 보이게 한다.
                         // 가드는 직전 한 번과만 비교하므로, 반쪽 결과가 한 번 자리를 잡으면
@@ -3168,9 +3182,9 @@ export default function AdminPage() {
                                         ].filter(Boolean).join(' ')}
                                     >
                                         {modetourManualApplied
-                                            ? `GitHub 실패 · 수동 ${manualCapture!.accepted}건 반영${manualCapture!.naverPending ? ' · 네이버 대기' : ''}`
+                                            ? `GitHub ${modetourFailureLabel} · 수동 ${manualCapture!.accepted}건 반영${manualCapture!.naverPending ? ' · 네이버 대기' : ''}`
                                             : modetourManualNeeded
-                                            ? 'GitHub 실패 · 수동 캡처 필요'
+                                            ? `GitHub ${modetourFailureLabel} · 수동 캡처 필요`
                                             : circuitOpen
                                             ? circuit!.localFallback?.status === 'success'
                                                 ? `GitHub 휴식 · PC ${formatKST(circuit!.localFallback.lastAttemptAt)} 성공`
@@ -3201,6 +3215,9 @@ export default function AdminPage() {
                                     )}
                                     {modetourManualNeeded && (
                                         <span>PC 자동 접속 없음 · 일반 Chrome 결과 화면을 캡처해 전달</span>
+                                    )}
+                                    {source === 'modetour' && circuit && (
+                                        <span>마지막 실제 실패 {formatKST(circuit.openedAt)} · 원인: {circuit.detail}</span>
                                     )}
                                     {source === 'modetour' && manualCapture && (
                                         <span>

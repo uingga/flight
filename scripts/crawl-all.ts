@@ -34,6 +34,8 @@ interface CacheData {
     sourceUpdatedAt?: Record<string, string>;
     /** 소스별 연속 실패 횟수 — 어드민이 "며칠째 고장"인지 보여주는 근거 */
     staleStreak?: Record<string, number>;
+    /** 운영자가 확인한 수동 캡처 반영 상태. 자동 회차가 성공할 때까지 유지한다. */
+    manualCaptureStatus?: Record<string, unknown>;
     /**
      * 여행사별 '이번에 긁어온 원본 개수'.
      *
@@ -291,6 +293,7 @@ async function main() {
         const MIN_BASELINE = 30;             // 원래 적은 소스는 흔들림이 커서 제외
         const integrityWarnings: string[] = [];
         const staleStreak: Record<string, number> = { ...(prevCache?.staleStreak || {}) };
+        const manualCaptureStatus: Record<string, unknown> = { ...(prevCache?.manualCaptureStatus || {}) };
         // 크롤 로그에 '이번에 긁어온 개수'와 '실패해서 물려받은 개수'를 구분해 남기기 위한 기록.
         // 이 둘을 한 칸에 뭉뚱그리면 보존된 숫자가 다음 크롤의 수집량과 맞비교되어
         // 일어나지도 않은 급감이 경보로 찍힌다.
@@ -305,16 +308,16 @@ async function main() {
             const freshCount = fresh?.length ?? 0;
             if (attempted.has(src)) scrapedCounts[src] = freshCount;
 
-            const keepPrevious = (reason: string, alertText?: string) => {
+            const keepPrevious = (reason: string, alertText?: string, incrementFailure = true) => {
                 preservedSources.add(src);
                 // 이번 결과를 버렸으므로 원본 기준선도 이전 값을 그대로 물려준다.
                 // 실패한 값으로 기준선을 낮추면 다음 회차부터 같은 붕괴를 정상으로 본다.
                 const carried = prevCache?.scrapedCounts?.[src];
                 if (carried !== undefined) scrapedCounts[src] = carried;
                 else delete scrapedCounts[src];
-                staleStreak[src] = (staleStreak[src] || 0) + 1;
-                const streak = staleStreak[src];
-                const suffix = streak > 1 ? ` — ${streak}회 연속` : '';
+                if (incrementFailure) staleStreak[src] = (staleStreak[src] || 0) + 1;
+                const streak = staleStreak[src] || 0;
+                const suffix = incrementFailure && streak > 1 ? ` — ${streak}회 연속` : '';
                 console.log(`⚠️ ${src} ${reason} → 이전 캐시 ${prevCount}개 유지${suffix}`);
                 if (alertText) integrityWarnings.push(`${alertText}${suffix}`);
                 allFlights.push(...srcPrevFlights);
@@ -329,6 +332,7 @@ async function main() {
                         `${sourceCircuitLabel(restingCircuit)} 뒤 휴식 중`,
                         `⛔ ${src} ${sourceCircuitLabel(restingCircuit)} 뒤 자동 요청 중단 `
                         + `(${sourceCircuitPauseText(restingCircuit)}) — 이전 데이터 유지`,
+                        false,
                     );
                 } else {
                     integrityWarnings.push(
@@ -435,6 +439,7 @@ async function main() {
             }
 
             staleStreak[src] = 0;
+            if (src === 'modetour') delete manualCaptureStatus.modetour;
             allFlights.push(...fresh);
             sources[src] = freshCount;
             // 화면 보존 기준(60%)보다 더 보수적으로 사라짐을 판정한다. 직전 원본보다
@@ -733,6 +738,7 @@ async function main() {
                 scrapedCounts: { ...(prevCache?.scrapedCounts || {}), ...scrapedCounts },
                 integrityAlerts: integrityWarnings,
                 sourceCircuits: sourceCircuits as Record<string, SourceCircuitState>,
+                manualCaptureStatus,
             };
 
             // data 디렉토리 확인 및 생성
@@ -801,10 +807,14 @@ async function main() {
         if (lifecycleObservationPath) {
             const visibleIds = new Set(benchmarkedFlights.map((f: any) => `${f.source}|${f.id}`));
             const sourceStatus = Object.fromEntries(sourceNames.map(src => [src, {
-                status: cachePreservedGlobally || preservedSources.has(src)
+                status: circuitSkipped.has(src as CrawlableSourceKey)
+                    ? 'skipped'
+                    : cachePreservedGlobally || preservedSources.has(src)
                     ? 'preserved'
                     : attempted.has(src) ? 'success' : 'skipped',
-                scraped: attempted.has(src) ? scrapedCounts[src] : undefined,
+                scraped: circuitSkipped.has(src as CrawlableSourceKey)
+                    ? undefined
+                    : attempted.has(src) ? scrapedCounts[src] : undefined,
                 allowMissing: missingDetectionSafeSources.has(src),
             }]));
             const observation = {
@@ -862,11 +872,11 @@ async function main() {
                 cityStats[city] = (cityStats[city] || 0) + 1;
             });
             logCrawlResults(src, finalCounts[src] || 0, undefined, cityStats, {
-                scraped: scrapedCounts[src],
+                scraped: circuitSkipped.has(src as CrawlableSourceKey) ? undefined : scrapedCounts[src],
                 preserved: preservedSources.has(src),
                 // 마이리얼트립은 전체 회차에서도 이 스크립트가 실행하지 않는다.
                 // 실제 시도 여부만 기준으로 삼아 일반 5개 여행사 성공 수에 끼지 않게 한다.
-                skipped: !attempted.has(src),
+                skipped: !attempted.has(src) || circuitSkipped.has(src as CrawlableSourceKey),
                 added: turnover[src]?.added,
                 removed: turnover[src]?.removed,
             });

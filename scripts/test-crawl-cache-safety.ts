@@ -8,6 +8,12 @@ const previous = {
     flights: [{ id: 'old-1' }, { id: 'old-2' }],
     scrapedCounts: { ybtour: 300, ttang: 1_600 },
     sourceCircuits: {},
+    manualCaptureStatus: {
+        modetour: {
+            lastImportedAt: '2026-08-30T06:00:00.000Z',
+            accepted: 60,
+        },
+    },
 };
 const circuit = {
     ttang: {
@@ -33,6 +39,7 @@ assert.deepEqual(preserved.sourceCircuits, circuit);
 assert.deepEqual(preserved.staleStreak, { ttang: 1 });
 assert.deepEqual(preserved.scrapedCounts, { ybtour: 300, ttang: 1_600 });
 assert.deepEqual(preserved.integrityAlerts, ['ttang 차단']);
+assert.deepEqual(preserved.manualCaptureStatus, previous.manualCaptureStatus);
 assert.equal(previous.fullCrawlUpdatedAt, '2026-08-29T00:00:00.000Z');
 
 console.log('전체 캐시 보존 시 차단 회로 유지 테스트 통과');
