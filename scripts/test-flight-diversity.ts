@@ -104,13 +104,13 @@ const deduplicatedFirstNine = diversifyFlightDestinations(sameOfferOnDifferentDa
 });
 assert.equal(
     deduplicatedFirstNine.slice(0, 9).filter(item => item.arrival.city === '반다르세리베가완').length,
-    1,
-    '같은 출발권역·목적지는 날짜가 달라도 첫 9개에 대표 한 장만 보여야 한다.',
+    2,
+    '같은 출발권역·목적지라도 최저가가 같으면 첫 9개에 두 일정까지 보여야 한다.',
 );
-assert.equal(
-    deduplicatedFirstNine.findIndex(item => item.id === 'bandar-2'),
-    9,
-    '날짜만 다른 같은 표는 삭제하지 않고 첫 9개 뒤로 미뤄야 한다.',
+assert.deepEqual(
+    deduplicatedFirstNine.slice(0, 2).map(item => item.id),
+    ['bandar-1', 'bandar-2'],
+    '같은 최저가의 다른 일정은 기존 추천순대로 연속 노출할 수 있어야 한다.',
 );
 
 const differentOriginSameDestination = diversifyFlightDestinations([

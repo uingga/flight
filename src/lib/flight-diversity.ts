@@ -69,18 +69,23 @@ function firstNineRouteKey(flight: Flight): string | null {
     return `${origin}|${destination}`;
 }
 
-/** 같은 출발권역·목적지에서는 실질 결제가가 가장 싼 카드만 첫 9개 대표가 된다. */
+/** 같은 출발권역·목적지에서는 실질 결제가가 최저가와 같은 카드만 첫 9개 대표가 된다. */
 function firstNineRouteRepresentativeIds(items: Flight[]): Set<string> {
-    const bestByRoute = new Map<string, Flight>();
+    const lowestByRoute = new Map<string, number>();
     for (const flight of items) {
         const key = firstNineRouteKey(flight);
         if (!key) continue;
-        const current = bestByRoute.get(key);
-        if (!current || getEffectivePrice(flight) < getEffectivePrice(current)) {
-            bestByRoute.set(key, flight);
-        }
+        const price = getEffectivePrice(flight);
+        const current = lowestByRoute.get(key);
+        if (current === undefined || price < current) lowestByRoute.set(key, price);
     }
-    return new Set(Array.from(bestByRoute.values(), flight => flight.id));
+    return new Set(items
+        .filter(flight => {
+            const key = firstNineRouteKey(flight);
+            if (!key) return false;
+            return getEffectivePrice(flight) === lowestByRoute.get(key);
+        })
+        .map(flight => flight.id));
 }
 
 function isIncheonAreaDeparture(flight: Flight): boolean {
@@ -133,8 +138,8 @@ export function excludePinnedDestination(items: Flight[], pinnedFlight?: Flight)
  * 추천순 카드의 목적지 다양성을 조정한다.
  *
  * 같은 목적지는 두 장까지 연속으로 올 수 있다. 세 번째는 다른 목적지가 남아 있는 한
- * 뒤로 미룬다. 첫 9개에서는 같은 출발권역·목적지의 실질 결제가가 가장 싼 표 한 장만
- * 대표로 남긴다. 다른 날짜·여행사 표는 삭제하지 않고 첫 9개 뒤에서 보여준다.
+ * 뒤로 미룬다. 첫 9개에서는 같은 출발권역·목적지의 실질 결제가가 최저가와 같은 표만
+ * 최대 두 장까지 남긴다. 더 비싼 날짜·여행사 표는 삭제하지 않고 첫 9개 뒤에서 보여준다.
  */
 export function diversifyFlightDestinations(
     items: Flight[],
@@ -166,7 +171,6 @@ export function diversifyFlightDestinationsWithDecisions(
     const decisions: FlightDiversityDecision[] = [];
     const sequence: Flight[] = [...leadingFlights];
     const topDestinationCounts = new Map<string, number>();
-    const firstNineRouteKeys = new Set<string>();
     const representativeIds = firstNineRouteRepresentativeIds(items);
     const originalIndexes = new Map(items.map((flight, index) => [flight, index]));
 
@@ -174,11 +178,6 @@ export function diversifyFlightDestinationsWithDecisions(
         const destination = normalizeCity(flight.arrival.city);
         topDestinationCounts.set(destination, (topDestinationCounts.get(destination) || 0) + 1);
     });
-    sequence.slice(0, 9).forEach(flight => {
-        const key = firstNineRouteKey(flight);
-        if (key) firstNineRouteKeys.add(key);
-    });
-
     while (remaining.length > 0) {
         const insideTopWindow = sequence.length < topWindow;
         const destinationSequence = sequence
@@ -212,10 +211,7 @@ export function diversifyFlightDestinationsWithDecisions(
                     return destinationStreak < maxConsecutiveDestinations
                         && (!keepTopLimit || !insideTopWindow || (topDestinationCounts.get(destination) || 0) < maxPerDestination)
                         && (!keepFirstNineCap || sequence.length >= 9 || (topDestinationCounts.get(destination) || 0) < maxPerDestination)
-                        && (!keepFirstNineCap || sequence.length >= 9 || !routeKey || (
-                            representativeIds.has(flight.id)
-                            && !firstNineRouteKeys.has(routeKey)
-                        ))
+                        && (!keepFirstNineCap || sequence.length >= 9 || !routeKey || representativeIds.has(flight.id))
                         && (!keepDepartureBalance || !mustChooseIncheon || departsFromIncheonArea)
                         && (!keepDepartureBalance || incheonCount < 6 || !departsFromIncheonArea);
                 });
@@ -307,10 +303,6 @@ export function diversifyFlightDestinationsWithDecisions(
         });
         result.push(next);
         sequence.push(next);
-        if (sequence.length <= 9) {
-            const routeKey = firstNineRouteKey(next);
-            if (routeKey) firstNineRouteKeys.add(routeKey);
-        }
         if (sequence.length <= topWindow) {
             topDestinationCounts.set(destination, (topDestinationCounts.get(destination) || 0) + 1);
         }
@@ -325,7 +317,7 @@ export interface RecommendationDiversityOptions extends FlightDiversityOptions {
 }
 
 /**
- * 비교가 구간 순서를 지키면서 첫 묶음은 노선별 최저가 대표만 구성한다.
+ * 비교가 구간 순서를 지키면서 첫 묶음은 노선별 최저가 일정만 구성한다.
  * 첫 묶음에 들지 않은 다른 일정은 같은 정렬 규칙으로 뒤에 이어 붙인다.
  */
 export function diversifyRecommendationOrderWithDecisions(
