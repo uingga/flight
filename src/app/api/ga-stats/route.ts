@@ -65,13 +65,13 @@ const inferChannelFromSource = (sourceValue: string, mediumValue: string): strin
     if (['google', 'naver', 'bing', 'daum'].some(value => source.includes(value))) return '검색';
     if (['instagram', 'threads', 'facebook', 'twitter', 'x.com', 't.co'].some(value => source.includes(value))) return 'SNS';
     if (isUnsetDimension(source)) return null;
-    if (isUnsetDimension(medium)) return '기타 유입';
+    if (isUnsetDimension(medium)) return '분류되지 않은 유입';
     if (medium.includes('organic')) return '검색';
     if (medium === 'referral') return '외부 링크';
     if (medium.includes('social')) return 'SNS';
     if (['cpc', 'ppc', 'paidsearch', 'paid_search'].includes(medium)) return '검색 광고';
     if (medium === 'email') return '이메일';
-    return '기타 유입';
+    return '분류되지 않은 유입';
 };
 
 interface CachedPayload { at: number; days: number; body: unknown }
@@ -245,7 +245,7 @@ async function buildStats(config: Ga4Config, days: number) {
             orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
             limit: 50,
         })),
-        optional('외부 유입 사이트', warnings, () => runReport(config, {
+        optional('외부 링크 유입처', warnings, () => runReport(config, {
             dateRanges,
             dimensions: [{ name: 'sessionSource' }],
             metrics: [{ name: 'sessions' }, { name: 'activeUsers' }],

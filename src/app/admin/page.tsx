@@ -2076,14 +2076,14 @@ export default function AdminPage() {
                             />
                         </article>
                         <article className={styles.todayInsightCard}>
-                            <header><strong>외부 사이트</strong><small>확인된 추천 링크</small></header>
+                            <header><strong>외부 링크 유입처</strong><small>확인된 추천 링크</small></header>
                             <RankList
                                 items={(gaStats?.todayOverview?.referrals || []).slice(0, 5).map(item => ({
                                     label: item.label,
                                     value: `${item.sessions.toLocaleString()}회`,
                                     note: `${item.users.toLocaleString()}명`,
                                 }))}
-                                empty="오늘 외부 사이트에서 들어온 기록이 없습니다."
+                                empty="오늘 외부 링크를 통해 들어온 기록이 없습니다."
                             />
                         </article>
                         <article className={styles.todayInsightCard}>
@@ -4223,7 +4223,7 @@ export default function AdminPage() {
                                 </div>
                                 {(gaStats.referrals || []).length > 0 && (
                                     <div className={`${styles.analysisPanel} ${styles.analysisPanelWide}`}>
-                                        <h3>외부 사이트에서 들어온 방문</h3>
+                                        <h3>외부 링크 유입처</h3>
                                         <RankList items={(gaStats.referrals || []).slice(0, 8).map(item => ({ label: item.label, value: `${item.users.toLocaleString()}명`, note: `방문 ${item.sessions.toLocaleString()}회` }))} />
                                     </div>
                                 )}
@@ -4446,7 +4446,7 @@ export default function AdminPage() {
                             </div>
 
                             <div>
-                                <h3 className={styles.userSubTitle}>어느 외부 사이트에서 왔나</h3>
+                                <h3 className={styles.userSubTitle}>외부 링크 유입처</h3>
                                 {gaStats.referrals === null ? (
                                     <div className={styles.dealReviewEmpty}>불러오지 못했습니다.</div>
                                 ) : gaStats.referrals.length === 0 ? (
