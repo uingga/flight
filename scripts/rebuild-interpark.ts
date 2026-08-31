@@ -16,11 +16,18 @@ async function main() {
     console.log(`전체 도착 도시 코드: ${arrCityCodes.size}개`);
     console.log([...arrCityCodes].sort().join(', '));
 
-    // 인터파크 벤치마크 수집
-    const benchmark = await scrapeInterparkBenchmark(Array.from(arrCityCodes));
+    const benchmarkPath = path.resolve(process.cwd(), 'data/interpark-prices.json');
+    const previousBenchmark = fs.existsSync(benchmarkPath)
+        ? JSON.parse(fs.readFileSync(benchmarkPath, 'utf8'))
+        : null;
+
+    // 전체를 한꺼번에 요청하지 않고 기존 값을 유지하며 오래된 25개 도시만 순환 갱신
+    const benchmark = await scrapeInterparkBenchmark(Array.from(arrCityCodes), {
+        previousBenchmark,
+        maxCitiesPerRun: 25,
+    });
 
     // 저장
-    const benchmarkPath = path.resolve(process.cwd(), 'data/interpark-prices.json');
     fs.writeFileSync(benchmarkPath, JSON.stringify(benchmark, null, 2), 'utf-8');
 
     const cityCount = Object.keys(benchmark.prices).length;
@@ -29,7 +36,7 @@ async function main() {
         monthCount += Object.keys(city).length;
     }
     console.log(`\n=== 결과 ===`);
-    console.log(`도시: ${cityCount}개 (기존 58개 → ${cityCount}개)`);
+    console.log(`도시: ${cityCount}개 (기존 값 보존 + 최대 25개 순환 갱신)`);
     console.log(`월별 가격: ${monthCount}개`);
 }
 

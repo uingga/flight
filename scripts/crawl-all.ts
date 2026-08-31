@@ -535,9 +535,11 @@ async function main() {
 
             // 기존 벤치마크가 24시간 이내면 재사용 (API 호출 최소화)
             let benchmark: any = null;
+            let cachedBenchmark: any = null;
             try {
                 if (fs.existsSync(benchmarkPath)) {
                     const cached = JSON.parse(fs.readFileSync(benchmarkPath, 'utf-8'));
+                    cachedBenchmark = cached;
                     const cacheAge = Date.now() - new Date(cached.timestamp).getTime();
                     const maxAge = 24 * 60 * 60 * 1000; // 24시간
                     if ((cacheAge < maxAge || localSourceFallback) && Object.keys(cached.prices || {}).length > 0) {
@@ -555,7 +557,10 @@ async function main() {
                     if (code) arrCityCodes.add(code);
                 });
 
-                benchmark = await scrapeInterparkBenchmark(Array.from(arrCityCodes));
+                benchmark = await scrapeInterparkBenchmark(Array.from(arrCityCodes), {
+                    previousBenchmark: cachedBenchmark,
+                    maxCitiesPerRun: 25,
+                });
                 fs.writeFileSync(benchmarkPath, JSON.stringify(benchmark, null, 2), 'utf-8');
                 console.log(`💾 인터파크 벤치마크 저장: ${benchmarkPath}`);
             }
