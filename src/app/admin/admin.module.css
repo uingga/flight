@@ -3050,36 +3050,58 @@
     line-height: 1.4;
 }
 
-.hourlyCompareChart {
-    min-width: 720px;
-    padding: 12px 15px 10px;
+.hourlyPeriodCharts {
+    padding: 12px 15px;
+    display: grid;
+    gap: 12px;
 }
 
-.hourlyCompareLegend {
-    min-height: 24px;
+.hourlyPeriodChart {
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid #e4e7ec;
+    border-radius: 10px;
+    background: #fff;
+}
+
+.hourlyPeriodChartHead {
+    min-height: 42px;
+    padding: 9px 12px;
     display: flex;
     align-items: center;
-    justify-content: flex-end;
-    gap: 14px;
-    color: #707070;
-    font-size: 0.63rem;
-    font-weight: 600;
+    justify-content: space-between;
+    gap: 12px;
+    border-bottom: 1px solid #edf0f3;
 }
 
-.hourlyCompareLegend > span {
+.hourlyPeriodChartHead strong {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
+    gap: 7px;
+    color: #2f343b;
+    font-size: 0.72rem;
+    font-weight: 700;
 }
 
-.hourlyCompareLegend i {
+.hourlyPeriodChartHead strong i {
     width: 8px;
     height: 8px;
     border-radius: 2px;
 }
 
-.hourlyCompareLegendRecent { background: #ff385c; }
-.hourlyCompareLegendCurrent { background: #7e8998; }
+.hourlyPeriodMarkerRecent { background: #ff385c; }
+.hourlyPeriodMarkerCurrent { background: #7e8998; }
+
+.hourlyPeriodChartHead > span {
+    color: #7a8491;
+    font-size: 0.61rem;
+    font-weight: 400;
+}
+
+.hourlyCompareChart {
+    min-width: 520px;
+    padding: 10px 12px 8px;
+}
 
 .hourlyCompareBars {
     height: 174px;
@@ -3097,15 +3119,6 @@
     grid-template-rows: 145px 16px;
     align-items: end;
     gap: 5px;
-}
-
-.hourlyCompareBarPair {
-    height: 145px;
-    min-width: 0;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    align-items: end;
-    gap: 4px;
 }
 
 .hourlyCompareBarColumn {
