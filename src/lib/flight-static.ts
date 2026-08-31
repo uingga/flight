@@ -12,6 +12,10 @@ import { normalizeAirline, normalizeCity } from '@/lib/utils/flight-helpers';
 import { filterStaleSourceFlights } from '@/lib/source-freshness';
 import { deduplicateDisplayFlights } from '@/lib/flight-visibility';
 import { getComparisonFreshness } from '@/lib/price-quality';
+import { resolveCityCode } from '@/lib/scrapers/interpark';
+
+export type StaticInterparkPrices = Record<string, Record<string, { avg: number; lowest: number }>>;
+export type StaticRecommendationPriceHistory = Record<string, Array<{ date: string; minPrice: number }>>;
 
 export interface CityDeals {
     /** 정규화된 도시명 (URL 슬러그로도 사용) */
@@ -103,6 +107,36 @@ export function loadActiveFlights(): Flight[] {
         return deduplicateDisplayFlights(visible);
     } catch {
         return [];
+    }
+}
+
+/** 서버 첫 화면도 클라이언트 추천순과 같은 인터파크 도시·월 기준을 사용한다. */
+export function loadStaticInterparkPrices(flights: Flight[]): StaticInterparkPrices {
+    try {
+        const raw = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'data', 'interpark-prices.json'), 'utf8'));
+        const prices = raw?.prices && typeof raw.prices === 'object' ? raw.prices : {};
+        const result: StaticInterparkPrices = {};
+        for (const flight of flights) {
+            const city = normalizeCity(flight.arrival.city || '').replace(/\([^)]*\)/g, '').trim();
+            const code = resolveCityCode(flight.arrival.city, flight.arrival.airport) || '';
+            const months = prices[code];
+            if (city && months && typeof months === 'object') {
+                result[city] = months as Record<string, { avg: number; lowest: number }>;
+            }
+        }
+        return result;
+    } catch {
+        return {};
+    }
+}
+
+/** 서버 첫 화면이 클라이언트 재조회 전에도 같은 노선 가격 이력을 사용하도록 한다. */
+export function loadStaticRecommendationPriceHistory(): StaticRecommendationPriceHistory {
+    try {
+        const raw = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'data', 'price-history.json'), 'utf8'));
+        return raw && typeof raw === 'object' ? raw : {};
+    } catch {
+        return {};
     }
 }
 

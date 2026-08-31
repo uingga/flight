@@ -10,10 +10,10 @@ import OverlayDialog from '@/components/ui/OverlayDialog';
 import * as gtag from '@/lib/analytics';
 import { getDestinationContext } from '@/lib/destination-contexts';
 import {
-    diversifyRecommendationOrder,
-    excludePinnedDestination,
-    sortFirstBlockByNewestArrival,
-} from '@/lib/flight-diversity';
+    buildRecommendationPresentation,
+    buildRecommendationScoreState,
+    compareRecommendedFlights,
+} from '@/lib/flight-recommendation';
 import { CITY_TO_AIRPORT, calcFlightTiming, formatAgencyFlightDuration, getNaverFlightUrl, normalizeAirline, normalizeCity } from '@/lib/utils/flight-helpers';
 import { getTripcomHotelUrl, getTripcomTrackingId } from '@/lib/utils/tripcom-helpers';
 import { getFlightBookingUrl } from '@/lib/utils/booking-url';
@@ -25,10 +25,7 @@ import {
     showOverlayWithHistory,
 } from '@/lib/ui/overlay-history';
 import { checkIsMobile } from '@/lib/utils/mobile-url';
-import {
-    getComparisonFreshness,
-    getComparisonPriceTier,
-} from '@/lib/price-quality';
+import { getComparisonFreshness } from '@/lib/price-quality';
 import type { Flight } from '@/types/flight';
 import AccountSheet from '@/components/account/AccountSheet';
 import { useAccount, type AccountFlightSnapshot, type AccountSearchFilters } from '@/components/account/useAccount';
@@ -457,17 +454,6 @@ const recommendedScore = (flight: Flight) => {
     const discount = Math.max(0, flight.discountRate || 0);
     const seatBonus = flight.availableSeats && flight.availableSeats <= 9 ? 8 : 0;
     return effectivePrice(flight) - discount * 2_500 - seatBonus * 1_000;
-};
-
-const priceFreshnessMultiplier = (checkedAt?: string) => {
-    if (!checkedAt) return 1.12;
-    const checkedTime = new Date(checkedAt).getTime();
-    if (!Number.isFinite(checkedTime)) return 1.12;
-    const ageHours = Math.max(0, (Date.now() - checkedTime) / 3_600_000);
-    if (ageHours <= 8) return 1;
-    if (ageHours <= 16) return 1.03;
-    if (ageHours <= 24) return 1.08;
-    return 1.35;
 };
 
 const seoulDateKey = (date = new Date()) => new Intl.DateTimeFormat('en-CA', {
@@ -1505,73 +1491,21 @@ export default function MobileRedesignPreview({
         flights.map(flight => normalizeAirline(flight.airline)).filter(Boolean),
     )).sort((a, b) => a.localeCompare(b, 'ko')), [flights]);
 
-    const recommendationScores = useMemo(() => {
-        const scores = new Map<string, number>();
-        for (const flight of flights) {
-            const price = effectivePrice(flight);
-            const city = stripAirport(flight.arrival.city);
-            const departureMonth = flight.departure.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 7);
-            const cityPrices = interparkPrices[city];
-            let benchmark = departureMonth ? cityPrices?.[departureMonth] : undefined;
-            if (!benchmark && cityPrices && departureMonth) {
-                const closestMonth = Object.keys(cityPrices).sort().reduce((best, month) => {
-                    const difference = monthDistance(month, departureMonth);
-                    const bestDifference = best ? monthDistance(best, departureMonth) : Infinity;
-                    return difference < bestDifference ? month : best;
-                }, '');
-                if (closestMonth) benchmark = cityPrices[closestMonth];
-            }
-
-            const comparisonUsable = !!flight.naverLowest
-                && flight.naverLowest > 0
-                && getComparisonFreshness(flight.naverCheckedAt).usable;
-            const comparisonPrice = comparisonUsable ? flight.naverLowest! : null;
-            const isComparisonCheaper = !!comparisonPrice && price <= comparisonPrice;
-            let score = price;
-
-            if (!benchmark) score *= 1.1;
-            else if (price <= benchmark.lowest) { /* 월간 최저가 이하는 그대로 둔다. */ }
-            else if (price <= benchmark.lowest * 1.2) score *= 1.15;
-            else if (price < benchmark.avg) score *= 1.3;
-            else score *= isComparisonCheaper ? 1.3 : 10;
-
-            if (comparisonPrice) {
-                const ratio = (price - comparisonPrice) / comparisonPrice;
-                if (ratio <= -0.20) score *= 0.3;
-                else if (ratio <= -0.15) score *= 0.375;
-                else if (ratio <= -0.10) score *= 0.45;
-                else if (ratio <= -0.05) score *= 0.55;
-                else if (ratio <= 0) score *= 0.65;
-                else if (ratio <= 0.05) score *= 1.05;
-                else if (ratio <= 0.10) score *= 1.15;
-                else if (ratio <= 0.15) score *= 1.3;
-                else if (ratio <= 0.20) score *= 1.5;
-                else score *= 2;
-            }
-            scores.set(flight.id, score * priceFreshnessMultiplier(flight.priceCheckedAt));
-        }
-
-        const flightsByRoute = new Map<string, Flight[]>();
-        for (const flight of flights) {
-            const route = normalizedRoute(flight);
-            flightsByRoute.set(route, [...(flightsByRoute.get(route) || []), flight]);
-        }
-        flightsByRoute.forEach(group => {
-            if (group.length < 2) return;
-            const slots = group.map(flight => scores.get(flight.id) ?? Infinity).sort((a, b) => a - b);
-            group.slice()
-                .sort((a, b) => effectivePrice(a) - effectivePrice(b) || (scores.get(a.id) ?? Infinity) - (scores.get(b.id) ?? Infinity))
-                .forEach((flight, index) => scores.set(flight.id, slots[index]));
-        });
-        return scores;
-    }, [flights, interparkPrices]);
+    const recommendationScoreState = useMemo(
+        () => buildRecommendationScoreState(flights, interparkPrices, Date.now(), priceHistory),
+        [flights, interparkPrices, priceHistory],
+    );
+    const recommendationScores = recommendationScoreState.scores;
 
     const compareRecommended = useCallback((a: Flight, b: Flight) => {
-        const tierDifference = getComparisonPriceTier(a) - getComparisonPriceTier(b);
-        if (tierDifference !== 0) return tierDifference;
-        return (recommendationScores.get(a.id) ?? Infinity) - (recommendationScores.get(b.id) ?? Infinity)
-            || a.id.localeCompare(b.id);
-    }, [recommendationScores]);
+        return compareRecommendedFlights(
+            a,
+            b,
+            recommendationScores,
+            Date.now(),
+            recommendationScoreState.explanations,
+        );
+    }, [recommendationScoreState, recommendationScores]);
 
     const filteredFlights = useMemo(() => {
         const referenceDate = new Date();
@@ -1659,23 +1593,19 @@ export default function MobileRedesignPreview({
     ), [compareRecommended, flights, interparkPrices, todayPickId, todayPickRepeatOverride]);
     const displayedFlights = useMemo(() => {
         const pinnedFlight = isDefaultView ? featuredPick?.flight : undefined;
-        const pool = excludePinnedDestination(filteredFlights, pinnedFlight);
-        const diversified = sort === 'recommended' && !query.trim()
-            ? (() => {
-                // DROP은 추천 배열 밖의 편집 카드이므로 첫 9개·연속 횟수 계산에도 넣지 않는다.
-                const result = diversifyRecommendationOrder(pool, {
-                    tierOf: flight => getComparisonPriceTier(flight),
-                    topWindow: 20,
-                    maxPerDestination: 2,
-                    maxConsecutiveDestinations: 2,
-                    scoreOf: flight => recommendationScores.get(flight.id) ?? Infinity,
-                    balanceIncheon: departure === '전체',
-                });
-                return sortFirstBlockByNewestArrival(result, 9);
-            })()
-            : pool;
-        return pinnedFlight ? [pinnedFlight, ...diversified] : diversified;
-    }, [featuredPick, filteredFlights, isDefaultView, query, sort]);
+        const presentation = buildRecommendationPresentation(
+            filteredFlights,
+            recommendationScoreState,
+            {
+                pinnedFlight,
+                diversify: sort === 'recommended' && !query.trim(),
+                balanceIncheon: departure === '전체',
+            },
+        );
+        return pinnedFlight
+            ? [pinnedFlight, ...presentation.orderedFlights]
+            : presentation.orderedFlights;
+    }, [departure, featuredPick, filteredFlights, isDefaultView, query, recommendationScoreState, sort]);
     const weeklyDiscoveryFlights = useMemo(() => flights
         .filter(flight => normalizeCity(flight.arrival.city) === '리장' && effectivePrice(flight) > 0)
         .sort((a, b) => effectivePrice(a) - effectivePrice(b) || a.id.localeCompare(b.id)), [flights]);

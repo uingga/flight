@@ -5,11 +5,16 @@ import todayPickJson from '../../data/today-pick.json';
 import type { Flight } from '@/types/flight';
 import { SITE_URL } from '@/lib/site';
 import {
-    effectivePrice as staticEffectivePrice,
     loadActiveFlights,
     loadFlightCacheMeta,
+    loadStaticInterparkPrices,
+    loadStaticRecommendationPriceHistory,
 } from '@/lib/flight-static';
-import { getComparisonPriceTier } from '@/lib/price-quality';
+import {
+    buildRecommendationPresentation,
+    buildRecommendationScoreState,
+    compareRecommendedFlights,
+} from '@/lib/flight-recommendation';
 
 const SOURCE_NAMES: Record<string, string> = {
     hanatour: '하나투어',
@@ -92,17 +97,31 @@ export default function Home() {
         && allFlights.some(flight => flight.id === todayPickJson.flightId)
         ? todayPickJson.flightId
         : null;
-    const rankedFlights = [...allFlights].sort((left, right) => (
-        getComparisonPriceTier(left) - getComparisonPriceTier(right)
-        || staticEffectivePrice(left) - staticEffectivePrice(right)
-        || left.id.localeCompare(right.id)
+    const recommendationNow = Date.now();
+    const recommendationState = buildRecommendationScoreState(
+        allFlights,
+        loadStaticInterparkPrices(allFlights),
+        recommendationNow,
+        loadStaticRecommendationPriceHistory(),
+    );
+    const rankedFlights = [...allFlights].sort((left, right) => compareRecommendedFlights(
+        left,
+        right,
+        recommendationState.scores,
+        recommendationNow,
+        recommendationState.explanations,
     ));
     const pickedFlight = initialTodayPickId
         ? rankedFlights.find(flight => flight.id === initialTodayPickId)
         : undefined;
+    const presentation = buildRecommendationPresentation(rankedFlights, recommendationState, {
+        pinnedFlight: pickedFlight,
+        balanceIncheon: true,
+        now: recommendationNow,
+    });
     const initialFlights = [
         ...(pickedFlight ? [pickedFlight] : []),
-        ...rankedFlights.filter(flight => flight.id !== initialTodayPickId),
+        ...presentation.orderedFlights,
     ].slice(0, 72);
 
     return (
