@@ -24,7 +24,7 @@ function compactCircuitCause(circuit?: { reason: 'blocked' | 'rate_limited'; det
 
 interface CrawlHistoryEntry {
     timestamp: string;
-    sites: Record<string, { total: number; scraped?: number; preserved?: boolean; skipped?: boolean; manual?: boolean; added?: number; removed?: number }>;
+    sites: Record<string, { total: number; scraped?: number; preserved?: boolean; skipped?: boolean; skippedUntil?: string; manual?: boolean; added?: number; removed?: number }>;
     alerts: string[];
 }
 
@@ -652,6 +652,23 @@ const DEAL_REJECTION_LABELS: Record<string, string> = {
 function formatKST(iso: string): string {
     const d = new Date(iso);
     return d.toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
+}
+
+function formatKSTMinute(iso: string): string {
+    return new Date(iso).toLocaleString('ko-KR', {
+        timeZone: 'Asia/Seoul',
+        year: 'numeric',
+        month: 'numeric',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+    });
+}
+
+function skippedUntilLabel(skippedUntil?: string): string {
+    return skippedUntil
+        ? `${formatKSTMinute(skippedUntil)}까지 건너뜀`
+        : '건너뜀 · 종료 시각 기록 없음';
 }
 
 function timeAgo(iso: string): string {
@@ -2230,6 +2247,7 @@ export default function AdminPage() {
                                     value: entry.sites[source]?.scraped ?? entry.sites[source]?.total ?? 0,
                                     preserved: Boolean(entry.sites[source]?.preserved),
                                     skipped: Boolean(entry.sites[source]?.skipped),
+                                    skippedUntil: entry.sites[source]?.skippedUntil,
                                     manual: Boolean(entry.sites[source]?.manual),
                                 }));
                             const hasCurrentManualLog = source === 'modetour' && Boolean(manualCapture) && loggedHistory.some(entry =>
@@ -2243,6 +2261,7 @@ export default function AdminPage() {
                                     value: manualCapture.accepted,
                                     preserved: false,
                                     skipped: false,
+                                    skippedUntil: undefined,
                                     manual: true,
                                 }] : []),
                             ]
@@ -2319,7 +2338,7 @@ export default function AdminPage() {
                                                                 : styles.sourceTrendBar}
                                                     style={{ height: entry.manual ? '24px' : entry.skipped ? '12px' : `${Math.max(5, Math.round((entry.value / peak) * 100))}%` }}
                                                     title={entry.skipped
-                                                        ? `${formatKST(entry.timestamp).replace(/\d{4}\. /, '')} · 건너뜀 (차단 휴식, 요청 없음)`
+                                                        ? `${formatKST(entry.timestamp).replace(/\d{4}\. /, '')} · ${skippedUntilLabel(entry.skippedUntil)} (차단 휴식, 요청 없음)`
                                                         : `${formatKST(entry.timestamp).replace(/\d{4}\. /, '')} · ${entry.value.toLocaleString()}개${entry.manual ? ' · 수동 캡처 성공' : entry.preserved ? ' · 수집 실패, 이전 데이터 사용' : ' · 자동 수집'}`}
                                                 >
                                                     {entry.manual ? '✓' : ''}
@@ -2329,8 +2348,10 @@ export default function AdminPage() {
                                     </div>
                                     <div className={styles.sourceTrendFoot}>
                                         <span>{history.length > 0 ? `최근 ${history.length}회` : '수집 기록 없음'}</span>
-                                        <span>{source === 'modetour' && circuit
-                                            ? `원인 ${compactCircuitCause(circuit)}`
+                                        <span>{circuit
+                                            ? `원인 ${compactCircuitCause(circuit)} · ${circuitOpen
+                                                ? `${formatKSTMinute(circuit.nextProbeAt)}까지 건너뜀`
+                                                : `${formatKSTMinute(circuit.nextProbeAt)}부터 재탐색 대기`}`
                                             : updatedAt ? `${timeAgo(updatedAt)} 갱신` : '정상 갱신 기록 없음'}</span>
                                     </div>
                                 </article>
@@ -3146,6 +3167,7 @@ export default function AdminPage() {
                                 value: entry.sites[source]?.scraped ?? entry.sites[source]?.total ?? 0,
                                 preserved: Boolean(entry.sites[source]?.preserved),
                                 skipped: Boolean(entry.sites[source]?.skipped),
+                                skippedUntil: entry.sites[source]?.skippedUntil,
                                 manual: Boolean(entry.sites[source]?.manual),
                             }));
                         const hasCurrentManualLog = source === 'modetour' && Boolean(manualCapture) && loggedHistory.some(entry =>
@@ -3159,6 +3181,7 @@ export default function AdminPage() {
                                 value: manualCapture.accepted,
                                 preserved: false,
                                 skipped: false,
+                                skippedUntil: undefined,
                                 manual: true,
                             }] : []),
                         ]
@@ -3259,6 +3282,14 @@ export default function AdminPage() {
                                     {source === 'modetour' && circuit && (
                                         <span>마지막 실제 실패 {formatKST(circuit.openedAt)} · 원인: {circuit.detail}</span>
                                     )}
+                                    {circuit && (
+                                        <span>
+                                            자동 요청 {circuitOpen
+                                                ? `${formatKSTMinute(circuit.nextProbeAt)}까지 건너뜀`
+                                                : `${formatKSTMinute(circuit.nextProbeAt)}부터 재탐색 대기`}
+                                            {' · '}이후 정규 회차에서 1회 확인
+                                        </span>
+                                    )}
                                     {source === 'modetour' && manualCapture && (
                                         <span>
                                             최근 수동 반영 {formatKST(manualCapture.lastImportedAt)} · 확정 {manualCapture.accepted}건
@@ -3284,7 +3315,7 @@ export default function AdminPage() {
                                                     : styles.sparkBar}
                                             style={{ height: h.manual ? '18px' : h.skipped ? '8px' : `${Math.max(4, Math.round((h.value / peak) * 100))}%` }}
                                             title={h.skipped
-                                                ? `${formatKST(h.ts).replace(/\d{4}\. /, '')} · 건너뜀 (차단 휴식, 요청 없음)`
+                                                ? `${formatKST(h.ts).replace(/\d{4}\. /, '')} · ${skippedUntilLabel(h.skippedUntil)} (차단 휴식, 요청 없음)`
                                                 : `${formatKST(h.ts).replace(/\d{4}\. /, '')} · ${h.value.toLocaleString()}건${h.manual ? ' (수동 캡처 성공)' : h.preserved ? ' (수집 실패, 이전 데이터 유지)' : ' (자동 수집)'}`}
                                         >
                                             {h.manual ? '✓' : ''}
@@ -3468,8 +3499,11 @@ export default function AdminPage() {
                                                             </span>
                                                         )}
                                                         {skipped && (
-                                                            <span className={styles.skippedDataBadge} title="차단 휴식 때문에 요청하지 않았으며 실패 횟수에 포함하지 않습니다.">
-                                                                건너뜀
+                                                            <span
+                                                                className={styles.skippedDataBadge}
+                                                                title="차단 휴식 때문에 요청하지 않았으며 실패 횟수에 포함하지 않습니다."
+                                                            >
+                                                                {skippedUntilLabel(stat?.skippedUntil)}
                                                             </span>
                                                         )}
                                                         {preserved && (

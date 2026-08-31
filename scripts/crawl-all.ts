@@ -877,6 +877,7 @@ async function main() {
                 // 마이리얼트립은 전체 회차에서도 이 스크립트가 실행하지 않는다.
                 // 실제 시도 여부만 기준으로 삼아 일반 5개 여행사 성공 수에 끼지 않게 한다.
                 skipped: !attempted.has(src) || circuitSkipped.has(src as CrawlableSourceKey),
+                skippedUntil: circuitSkipped.get(src as CrawlableSourceKey)?.nextProbeAt,
                 added: turnover[src]?.added,
                 removed: turnover[src]?.removed,
             });

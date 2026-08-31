@@ -18,6 +18,8 @@ interface SiteStats {
     preserved?: boolean;
     /** 부분 복구 크롤에서 이 여행사는 실행하지 않았다는 뜻. 실패나 측정값으로 세지 않는다. */
     skipped?: boolean;
+    /** 차단 휴식으로 건너뛴 경우 자동 요청을 다시 허용하는 시각. */
+    skippedUntil?: string;
     /** 운영자가 일반 브라우저 캡처를 검수해 반영한 별도 수집 기록이다. */
     manual?: boolean;
     /** 직전 크롤에 없던 표. 개수만 보면 표가 통째로 갈려도 0으로 보인다. */
@@ -164,6 +166,7 @@ export function logCrawlResults(
         scraped?: number;
         preserved?: boolean;
         skipped?: boolean;
+        skippedUntil?: string;
         manual?: boolean;
         added?: number;
         removed?: number;
@@ -198,6 +201,7 @@ export function logCrawlResults(
         scraped: meta?.scraped,
         preserved: meta?.preserved || undefined,
         skipped: meta?.skipped || undefined,
+        skippedUntil: meta?.skipped ? meta.skippedUntil : undefined,
         manual: meta?.manual || undefined,
         added: meta?.added,
         removed: meta?.removed,
