@@ -1595,13 +1595,13 @@
         border: 0;
         border-left: 1px solid #eeeeee;
         border-radius: 0 11px 11px 0;
-        background: #fff7f8;
-        color: var(--brand-dark);
+        background: #ffffff;
+        color: #555555;
         font-size: 12px;
         font-weight: var(--weight-medium);
         transition: background 150ms ease, color 150ms ease;
     }
-    .desktopFilterReset:hover:not(:disabled) { background: var(--brand-soft); }
+    .desktopFilterReset:hover:not(:disabled) { background: #f7f7f7; color: var(--ink); }
     .desktopFilterReset:disabled {
         background: #fcfcfc;
         color: #aaaaaa;
@@ -1620,7 +1620,7 @@
         gap: 6px;
         border: 0;
         border-left: 1px solid #eeeeee;
-        background: #fafafa;
+        background: #ffffff;
         color: #3f3f3f;
         font-size: 12px;
         font-weight: 600;
@@ -1636,7 +1636,7 @@
         stroke-linejoin: round;
     }
     .desktopAdvancedFilter:hover { background: #f5f5f5; color: var(--ink); }
-    .desktopAdvancedFilterActive { background: var(--brand-soft); color: var(--brand); }
+    .desktopAdvancedFilterActive { background: #ffffff; color: #3f3f3f; }
     .desktopAdvancedFilter > i { position: absolute; top: 11px; right: 9px; width: 5px; height: 5px; border-radius: 50%; background: var(--brand); }
     .desktopAdvancedFilterLabel { white-space: nowrap; }
     .quickFilterRow {
