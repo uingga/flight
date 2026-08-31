@@ -192,16 +192,24 @@ $env:REQUEST_DELAY_MAX_MS = '10000'
 $env:BATCH_SIZE = '10'
 $env:BATCH_REST_MIN_MS = '60000'
 $env:BATCH_REST_MAX_MS = '120000'
+$env:MAX_TRANSIENT_RESUMES = '1'
+$env:TRANSIENT_RESUME_MIN_MS = '600000'
+$env:TRANSIENT_RESUME_MAX_MS = '1200000'
 npx.cmd --no-install tsx scripts/crawl-naver.ts 2>&1 | ForEach-Object {
     # Add-Content per line keeps the log readable while the long crawl is running.
     "$_" | Add-Content -Encoding utf8 $LogFile
 }
 $CrawlerExitCode = $LASTEXITCODE
-$HistoryOnly = $CrawlerExitCode -ne 0
+$PartialPricesAllowed = $CrawlerExitCode -eq 2
+$HistoryOnly = $CrawlerExitCode -ne 0 -and -not $PartialPricesAllowed
 $CircuitOutcome = 'success'
 $CircuitReason = 'crawler_completed'
-if ($HistoryOnly) {
-    Log "Crawler exited abnormally (exit $CrawlerExitCode); partial prices will be discarded and history only will be preserved"
+if ($CrawlerExitCode -ne 0) {
+    if ($PartialPricesAllowed) {
+        Log "Crawler stopped after the allowed transient resume (exit $CrawlerExitCode); successful partial prices will be published"
+    } else {
+        Log "Crawler exited unsafely (exit $CrawlerExitCode); partial prices will be discarded and history only will be preserved"
+    }
     $CircuitOutcome = 'degraded'
     $CircuitReason = "crawler_exit_$CrawlerExitCode"
     try {
@@ -300,6 +308,8 @@ for ($attempt = 1; $attempt -le 2; $attempt++) {
     }
     $CommitMessage = if ($HistoryOnly) {
         'chore(data): record failed naver crawl [local]'
+    } elseif ($PartialPricesAllowed) {
+        'chore(data): publish partial naver prices [local]'
     } else {
         'chore(data): update naver prices + filter flights [local]'
     }
@@ -363,6 +373,12 @@ if ($HistoryOnly) {
 
 if (-not $DataPublished) {
     Log 'Naver data could not be published; today pick selection was skipped'
+    '' | Add-Content $LogFile
+    exit 1
+}
+
+if ($PartialPricesAllowed) {
+    Log '=== Local Naver crawl partially published after transient errors; today pick selection skipped ==='
     '' | Add-Content $LogFile
     exit 1
 }

@@ -223,6 +223,7 @@ test('GitHub Naver is a read-only manual diagnostic capped at three routes', () 
 test('the Windows Naver task owns production collection with one guarded daily session', () => {
     const runner = fs.readFileSync('scripts/run-naver-crawl.ps1', 'utf8');
     const installer = fs.readFileSync('scripts/install-naver-crawl-task.ps1', 'utf8');
+    const crawler = fs.readFileSync('scripts/crawl-naver.ts', 'utf8');
 
     assert.match(installer, /New-ScheduledTaskTrigger -Daily -At '10:00'/);
     assert.match(installer, /New-ScheduledTaskTrigger -Daily -At '20:30'/);
@@ -251,8 +252,18 @@ test('the Windows Naver task owns production collection with one guarded daily s
     assert.match(runner, /\$env:MAX_HEALTH_CHECKS = '1'/);
     assert.match(runner, /\$env:REQUEST_DELAY_MIN_MS = '5000'/);
     assert.match(runner, /\$env:BATCH_REST_MAX_MS = '120000'/);
+    assert.match(runner, /\$env:MAX_TRANSIENT_RESUMES = '1'/);
+    assert.match(runner, /\$env:TRANSIENT_RESUME_MIN_MS = '600000'/);
+    assert.match(runner, /\$env:TRANSIENT_RESUME_MAX_MS = '1200000'/);
+    assert.match(runner, /\$PartialPricesAllowed = \$CrawlerExitCode -eq 2/);
+    assert.match(runner, /publish partial naver prices \[local\]/);
+    assert.match(runner, /partially published after transient errors; today pick selection skipped/);
     assert.match(runner, /\$env:NAVER_LIVE_RUN = '1'/);
     assert.match(runner, /npx\.cmd playwright install chromium/);
+    assert.match(crawler, /pauseAndResumeAfterTransientFailure/);
+    assert.match(crawler, /fs\.writeFileSync\(OUTPUT_FILE[\s\S]*?쉬고 다음 항공권부터 이어갑니다/);
+    assert.match(crawler, /navigationCount >= MAX_NAVIGATIONS/);
+    assert.match(crawler, /process\.exitCode = !explicitBlockDetected && successCount > 0 \? 2 : 3/);
 });
 
 test('the Windows blocked-source fallback uses the four general crawl slots', () => {

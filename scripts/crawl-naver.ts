@@ -82,6 +82,9 @@ const BATCH_SIZE = parseInt(process.env.BATCH_SIZE || '10', 10);
 const BATCH_REST_MIN_MS = parseInt(process.env.BATCH_REST_MIN_MS || '60000', 10);
 const BATCH_REST_MAX_MS = parseInt(process.env.BATCH_REST_MAX_MS || '120000', 10);
 const MAX_HEALTH_CHECKS = parseInt(process.env.MAX_HEALTH_CHECKS || '1', 10);
+const MAX_TRANSIENT_RESUMES = parseInt(process.env.MAX_TRANSIENT_RESUMES || '1', 10);
+const TRANSIENT_RESUME_MIN_MS = parseInt(process.env.TRANSIENT_RESUME_MIN_MS || '600000', 10);
+const TRANSIENT_RESUME_MAX_MS = parseInt(process.env.TRANSIENT_RESUME_MAX_MS || '1200000', 10);
 const DATA_DIR = path.join(process.cwd(), 'data');
 const OUTPUT_FILE = path.join(DATA_DIR, 'naver-prices.json');
 const ALL_FLIGHTS_FILE = path.join(DATA_DIR, 'all-flights-cache.json');
@@ -308,7 +311,7 @@ try {
         // 자동화 탐지 신호가 된다. Playwright가 실제 브라우저 UA를 사용하게 둔다.
     });
 
-    const page = await context.newPage();
+    let page = await context.newPage();
 
     let successCount = 0;
     let failCount = 0;
@@ -328,6 +331,40 @@ try {
     let abortedEarly = false;
     let explicitBlockDetected = false;
     let abortReason: string | undefined;
+    let transientResumeCount = 0;
+    let segmentAttemptedCount = 0;
+    let segmentSuccessCount = 0;
+    let segmentTransientErrors = 0;
+    let segmentBlockedErrors = 0;
+
+    const pauseAndResumeAfterTransientFailure = async (reason: string): Promise<boolean> => {
+        if (
+            transientResumeCount >= Math.max(0, MAX_TRANSIENT_RESUMES)
+            || navigationCount >= MAX_NAVIGATIONS
+        ) return false;
+
+        transientResumeCount++;
+        fs.writeFileSync(OUTPUT_FILE, JSON.stringify(naverPrices, null, 2), 'utf-8');
+
+        const minPauseMs = Math.max(0, Math.min(TRANSIENT_RESUME_MIN_MS, TRANSIENT_RESUME_MAX_MS));
+        const maxPauseMs = Math.max(minPauseMs, TRANSIENT_RESUME_MIN_MS, TRANSIENT_RESUME_MAX_MS);
+        const pauseMs = Math.round(minPauseMs + Math.random() * (maxPauseMs - minPauseMs));
+        const pauseMinutes = Math.round(pauseMs / 6000) / 10;
+        console.log(`\n💾 진행 결과 저장: 성공 ${successCount}건 · 페이지 이동 ${navigationCount}/${MAX_NAVIGATIONS}회`);
+        console.log(`⏸️ ${reason} — ${pauseMinutes}분 쉬고 다음 항공권부터 이어갑니다. (${transientResumeCount}/${MAX_TRANSIENT_RESUMES}회)`);
+
+        try { await page.close(); } catch { /* stale page cleanup only */ }
+        await new Promise<void>(resolve => setTimeout(resolve, pauseMs));
+        page = await context.newPage();
+
+        consecutiveAmbiguousMisses = 0;
+        segmentAttemptedCount = 0;
+        segmentSuccessCount = 0;
+        segmentTransientErrors = 0;
+        segmentBlockedErrors = 0;
+        console.log('▶️ 휴식 완료 — 중단 지점 다음 항공권부터 재개합니다.\n');
+        return true;
+    };
 
     for (let i = 0; i < uniqueFlights.length; i++) {
         if (navigationCount >= MAX_NAVIGATIONS) {
@@ -356,6 +393,7 @@ try {
         }
 
         attemptedCount++;
+        segmentAttemptedCount++;
         if (!existingEntry?.crawledAt || !existingEntry.naverLowest) newRoutesAttempted++;
 
         let responseHandler: ((response: any) => Promise<void>) | null = null;
@@ -485,6 +523,7 @@ try {
                 const emoji = diff <= 0 ? '✅' : '⚠️';
                 console.log(`  ${emoji} 네이버 최저가: ${lowestPrice.toLocaleString()}원 (차이: ${diff >= 0 ? '+' : ''}${diff.toLocaleString()}원)`);
                 successCount++;
+                segmentSuccessCount++;
                 consecutiveAmbiguousMisses = 0;
             } else {
                 pageSnapshot = pageSnapshot || await inspectNaverPage(page, navigationResponse?.status(), {
@@ -517,8 +556,10 @@ try {
                 failureStateCounts[failureState]++;
                 if (failureState === 'blocked') {
                     explicitBlockDetected = true;
+                    segmentBlockedErrors++;
                 } else if (failureState === 'transient_error') {
                     consecutiveAmbiguousMisses++;
+                    segmentTransientErrors++;
                 } else {
                     // 정상 빈 결과와 잘못됐거나 미지원인 개별 노선은 서비스 차단 증거가 아니다.
                     consecutiveAmbiguousMisses = 0;
@@ -543,6 +584,7 @@ try {
             };
             failCount++;
             failureStateCounts.transient_error++;
+            segmentTransientErrors++;
             consecutiveAmbiguousMisses++;
         } finally {
             if (responseHandler) page.off('response', responseHandler);
@@ -550,7 +592,7 @@ try {
 
         if (explicitBlockDetected) {
             console.log('\n🛑 네이버 접근 제한 응답이 확인되어 추가 요청 없이 조기 철수합니다.');
-            console.log(`   (지금까지 수집한 ${successCount}건은 저장됨)`);
+            console.log(`   (지금까지 확인한 ${successCount}건은 체크포인트에 남기되 운영에는 반영하지 않음)`);
             abortReason = '명시적 접근 제한(403/429/CAPTCHA)';
             abortedEarly = true;
             break;
@@ -559,19 +601,21 @@ try {
         // 대조 노선이 메타데이터 GraphQL만 받고 정상으로 오판해도,
         // 실제 수집 품질이 붕괴한 회차를 수십 번 더 요청하지 않는 누적 안전장치다.
         if (shouldAbortNaverCrawlForSystemicFailures(
-            attemptedCount,
-            successCount,
-            failureStateCounts.transient_error,
-            failureStateCounts.blocked,
+            segmentAttemptedCount,
+            segmentSuccessCount,
+            segmentTransientErrors,
+            segmentBlockedErrors,
             MIN_SYSTEMIC_FAILURE_GUARD_ATTEMPTS,
             MIN_SYSTEMIC_FAILURE_RATE,
             MAX_SYSTEMIC_FAILURE_SUCCESS_RATE,
         )) {
-            const systemicFailures = failureStateCounts.transient_error + failureStateCounts.blocked;
-            const successRate = Math.round((successCount / attemptedCount) * 1000) / 10;
-            const failureRate = Math.round((systemicFailures / attemptedCount) * 1000) / 10;
-            abortReason = `${attemptedCount}건 중 성공 ${successCount}건(${successRate}%), 시스템성 오류 ${systemicFailures}건(${failureRate}%)`;
-            console.log(`\n🛑 ${abortReason} — 수집 품질 붕괴로 판정해 조기 철수합니다.`);
+            const systemicFailures = segmentTransientErrors + segmentBlockedErrors;
+            const successRate = Math.round((segmentSuccessCount / segmentAttemptedCount) * 1000) / 10;
+            const failureRate = Math.round((systemicFailures / segmentAttemptedCount) * 1000) / 10;
+            const systemicReason = `최근 구간 ${segmentAttemptedCount}건 중 성공 ${segmentSuccessCount}건(${successRate}%), 시스템성 오류 ${systemicFailures}건(${failureRate}%)`;
+            if (await pauseAndResumeAfterTransientFailure(systemicReason)) continue;
+            abortReason = `${systemicReason}; 허용된 이어하기 ${transientResumeCount}회 소진`;
+            console.log(`\n🛑 ${abortReason} — 저장된 부분 결과를 남기고 조기 종료합니다.`);
             abortedEarly = true;
             break;
         }
@@ -580,8 +624,10 @@ try {
         // 별도 페이지에서 한 번 확인해 서비스 전체가 막혔을 때만 조기 철수한다.
         if (consecutiveAmbiguousMisses >= ABORT_AFTER_MISSES) {
             if (healthCheckCount >= MAX_HEALTH_CHECKS) {
-                abortReason = `일시 오류가 다시 ${consecutiveAmbiguousMisses}건 연속 발생했지만 대조 조회 한도 ${MAX_HEALTH_CHECKS}회를 이미 사용함`;
-                console.log(`\n🛑 ${abortReason} — 추가 대조 요청 없이 조기 철수합니다.`);
+                const transientReason = `일시 오류가 다시 ${consecutiveAmbiguousMisses}건 연속 발생했고 대조 조회 한도 ${MAX_HEALTH_CHECKS}회를 이미 사용함`;
+                if (await pauseAndResumeAfterTransientFailure(transientReason)) continue;
+                abortReason = `${transientReason}; 허용된 이어하기 ${transientResumeCount}회 소진`;
+                console.log(`\n🛑 ${abortReason} — 저장된 부분 결과를 남기고 조기 종료합니다.`);
                 abortedEarly = true;
                 break;
             }
@@ -600,17 +646,26 @@ try {
                 consecutiveAmbiguousMisses = 0;
             } else if (availability === 'unknown') {
                 // 대조 결과가 불명확한 상태에서 새 노선을 계속 요청하면 soft block을
-                // 악화시킬 수 있다. 이 회차는 실패로 남기고 전역 쿨다운에 맡긴다.
-                abortReason = '연속 일시 오류 뒤 대조 노선 상태도 불확실함';
-                console.log(`   🛑 ${abortReason} — 추가 요청 없이 조기 철수합니다.`);
+                // 악화시킬 수 있다. 체크포인트를 남기고 긴 휴식 뒤 한 번만 이어간다.
+                const transientReason = '연속 일시 오류 뒤 대조 노선 상태도 불확실함';
+                if (await pauseAndResumeAfterTransientFailure(transientReason)) continue;
+                abortReason = `${transientReason}; 허용된 이어하기 ${transientResumeCount}회 소진`;
+                console.log(`   🛑 ${abortReason} — 저장된 부분 결과를 남기고 조기 종료합니다.`);
                 abortedEarly = true;
                 break;
             } else {
-                abortReason = availability === 'blocked'
-                    ? '대조 노선에서 명시적 접근 제한 확인'
-                    : '서로 다른 대조 노선 2개의 전송/API 장애';
+                if (availability !== 'blocked') {
+                    const transientReason = '서로 다른 대조 노선 2개의 전송/API 장애';
+                    if (await pauseAndResumeAfterTransientFailure(transientReason)) continue;
+                    abortReason = `${transientReason}; 허용된 이어하기 ${transientResumeCount}회 소진`;
+                    console.log(`   🛑 ${abortReason} — 저장된 부분 결과를 남기고 조기 종료합니다.`);
+                    abortedEarly = true;
+                    break;
+                }
+                explicitBlockDetected = true;
+                abortReason = '대조 노선에서 명시적 접근 제한 확인';
                 console.log(`   🛑 ${abortReason} — 추가 요청 없이 조기 철수합니다.`);
-                console.log(`   (지금까지 수집한 ${successCount}건은 저장됨)`);
+                console.log(`   (지금까지 확인한 ${successCount}건은 체크포인트에 남기되 운영에는 반영하지 않음)`);
                 abortedEarly = true;
                 break;
             }
@@ -693,8 +748,10 @@ try {
         transientErrors: failureStateCounts.transient_error,
         blocked: failureStateCounts.blocked,
         healthChecks: healthCheckCount,
+        transientResumes: transientResumeCount,
         abortedEarly,
         abortReason,
+        partialResultsPublishable: abortedEarly && !explicitBlockDetected && successCount > 0,
     });
 
     console.log('─'.repeat(50));
@@ -703,15 +760,16 @@ try {
         console.log(`   결과 없음 ${failureStateCounts.no_result} · 노선 오류 ${failureStateCounts.route_error} · 일시 오류 ${failureStateCounts.transient_error} · 접근 제한 ${failureStateCounts.blocked}`);
     }
     if (healthCheckCount > 0) console.log(`🩺 정상 대조 노선 확인: ${healthCheckCount}회`);
+    if (transientResumeCount > 0) console.log(`⏯️ 일시 오류 휴식 후 이어하기: ${transientResumeCount}회`);
     console.log(`🧭 네이버 페이지 이동: ${navigationCount}/${MAX_NAVIGATIONS}회`);
     console.log(`📊 확인 필요 ${neededFlights.length}건 → 실제 확인 ${attemptedCount}건 → 다음 회차 ${remaining.length}건`);
     console.log(`🆕 새 항공권 ${newRouteCount}건 중 ${newRoutesAttempted}건 확인`);
     console.log(`⏳ 가장 오래 밀린 항목: ${deferredNeverChecked > 0 ? `아직 한 번도 확인하지 않은 항목 ${deferredNeverChecked}건` : oldestDeferredHours === null ? '없음' : `${oldestDeferredHours}시간`}`);
     console.log(`📁 저장: ${OUTPUT_FILE}`);
     if (abortedEarly) {
-        // 부분 회차를 GitHub Actions의 성공으로 가장하지 않는다. 워크플로가 필터와
-        // 데이터 커밋을 건너뛰고 실패 원인을 운영자에게 보여주게 한다.
-        process.exitCode = 2;
+        // 코드 2는 시스템성 일시 오류 뒤에도 성공한 부분 가격을 운영에 반영한다.
+        // 명시적 차단 또는 성공 0건은 코드 3으로 남겨 가격 병합을 금지한다.
+        process.exitCode = !explicitBlockDetected && successCount > 0 ? 2 : 3;
     }
 })();
 

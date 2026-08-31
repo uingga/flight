@@ -31,8 +31,10 @@ export interface NaverCrawlHistoryEntry {
     transientErrors?: number;
     blocked?: number;
     healthChecks?: number;
+    transientResumes?: number;
     abortedEarly: boolean;
     abortReason?: string;
+    partialResultsPublishable?: boolean;
 }
 
 interface NaverCrawlHistoryFile {
