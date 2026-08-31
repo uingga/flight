@@ -149,6 +149,11 @@ test('anti-block safeguards keep source starts distributed and MyRealTrip serial
     assert.match(myrealtrip, /assertNoSourceResponseCollapse/);
     assert.match(myrealtrip, /const BATCH_SIZE = 10;/);
     assert.doesNotMatch(myrealtrip, /disable-blink-features=AutomationControlled/);
+    assert.ok(
+        myrealtrip.indexOf('isSourceCircuitOpen(existingCircuit')
+        < myrealtrip.indexOf('process.env.FORCE_MYREALTRIP'),
+        'scheduled duplicate bypass must not bypass an open source circuit',
+    );
 
     const workflow = fs.readFileSync('.github/workflows/myrealtrip-scrape.yml', 'utf8');
     assert.match(workflow, /^concurrency:\s*\n\s+group: myrealtrip-price-scrape/m);
@@ -180,10 +185,11 @@ test('the standalone today-pick workflow is manual-only', () => {
     assert.doesNotMatch(workflow, /^\s*- cron:/m);
 });
 
-test('MyRealTrip runs once in the morning and once in the afternoon', () => {
+test('MyRealTrip runs three scheduled crawls daily', () => {
     const workflow = fs.readFileSync('.github/workflows/myrealtrip-scrape.yml', 'utf8');
     const workflowCrons = [...workflow.matchAll(/^\s*- cron: '([^']+)'/gm)].map(match => match[1]);
-    assert.deepEqual(workflowCrons.sort(), ['5 22 * * *', '3 9 * * *'].sort());
+    assert.deepEqual(workflowCrons.sort(), ['5 22 * * *', '3 7 * * *', '59 10 * * *'].sort());
+    assert.match(workflow, /github\.event\.schedule == '59 10 \* \* \*'/);
     assert.match(workflow, /cp data\/crawl-log\.json \/tmp\/mrt-session-crawl-log\.json/);
     assert.match(workflow, /merge-crawl-log\.mjs data\/crawl-log\.json \/tmp\/mrt-session-crawl-log\.json myrealtrip/);
     assert.match(workflow, /git add data\/all-flights-cache\.json data\/crawl-log\.json/);

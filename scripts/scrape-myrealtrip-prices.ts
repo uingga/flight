@@ -26,7 +26,7 @@ import { logCrawlResults, recordCrawlAlerts } from '../src/lib/utils/crawl-logge
  * 2단계: 마이리얼트립 검색 결과 카드에서 실제 최저가를 추출
  * - 선택 버튼의 "항공권 000원 선택" 값을 사용해 결제 가격을 정확히 읽음
  * - 단일 워커 직렬 실행, 노선 사이 랜덤 휴식
- * - 자동 스케줄은 오전·오후 각 1회
+ * - 자동 스케줄은 오전 1회·오후 2회
  *
  * 사용법: npx tsx scripts/scrape-myrealtrip-prices.ts
  */

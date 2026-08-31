@@ -2325,8 +2325,8 @@ export default function AdminPage() {
                             </article>
                             <article>
                                 <span><em>GitHub</em> 마이리얼트립</span>
-                                <strong>07:05 · 18:03</strong>
-                                <small>하루 2회 · 실제 예약 화면의 가격과 출·도착 시간 갱신</small>
+                                <strong>07:05 · 16:03 · 19:59</strong>
+                                <small>하루 3회 · 실제 예약 화면의 가격과 출·도착 시간 갱신</small>
                             </article>
                             <article>
                                 <span><em>내 PC</em> 네이버 가격 비교</span>
