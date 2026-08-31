@@ -5,6 +5,8 @@ import {
     assertNoSourceAccessBlockText,
     describeSourceError,
     fetchSourceText,
+    OnlineTourCitySeed,
+    parseOnlineTourCities,
     parseOnlineTourJsonp,
     retrySourceOperation,
     SourceResponseError,
@@ -81,45 +83,6 @@ function numberField(item: Record<string, unknown>, key: string): number {
     return Number.isFinite(value) ? value : 0;
 }
 
-function destinationSearchCode(item: Record<string, unknown>): string {
-    // arr_city_code는 BOR·SIA처럼 온라인투어 검색창이 쓰는 여행지 코드다.
-    // 일부 푸꾸옥 상품은 이 값만 비어 있으므로 실제 도착 공항으로 같은 목적지에 묶는다.
-    return textField(item, 'arr_city_code') || textField(item, 'start_city_code2');
-}
-
-function departureMonth(item: Record<string, unknown>): string {
-    const match = textField(item, 'dep_start_date').match(/^(\d{6})\d{2}$/);
-    return match?.[1] || '';
-}
-
-/**
- * 기존 도시별 수집은 지역 HTML이 알려준 각 도시의 첫 출발월만 API에 요청했다.
- * 지역 API를 한 번에 읽더라도 같은 기간 범위를 유지해, 먼 훗날의 더 싼 일정이
- * 현재 달의 항공권을 노선 최저가 목록에서 밀어내지 않게 한다.
- */
-export function keepEarliestDepartureMonthByDestination(
-    rows: Record<string, unknown>[],
-): Record<string, unknown>[] {
-    const earliestMonth = new Map<string, string>();
-
-    for (const row of rows) {
-        const destination = destinationSearchCode(row);
-        const month = departureMonth(row);
-        if (!destination || !month) continue;
-
-        const current = earliestMonth.get(destination);
-        if (!current || month < current) earliestMonth.set(destination, month);
-    }
-
-    return rows.filter(row => {
-        const destination = destinationSearchCode(row);
-        const month = departureMonth(row);
-        // 필수값이 깨진 행은 여기서 숨기지 않고 변환 단계의 누락 검사에 맡긴다.
-        if (!destination || !month) return true;
-        return month === earliestMonth.get(destination);
-    });
-}
-
 export function mapOnlineTourFlight(item: Record<string, unknown>): Flight | null {
     const eventCode = textField(item, 'event_code');
     const departureDate = formatDate(item.dep_start_date);
@@ -185,19 +148,51 @@ export function mapOnlineTourFlight(item: Record<string, unknown>): Flight | nul
     };
 }
 
-async function fetchRegionRows(region: RegionDefinition): Promise<Record<string, unknown>[]> {
+async function fetchRegionCities(region: RegionDefinition): Promise<OnlineTourCitySeed[]> {
+    const url = new URL(LIST_PAGE_URL);
+    url.searchParams.set('TabGubun', region.code);
+    const label = `온라인투어 ${region.name} 공개 도시 목록`;
+    const response = await retrySourceOperation(label, async () => {
+        const result = await fetchSourceText(label, url, { headers: REQUEST_HEADERS }, 20_000);
+        assertNoSourceAccessBlockText(label, result.text, result.finalUrl);
+        if (!result.contentType.toLowerCase().includes('text/html')) {
+            throw new SourceResponseError(
+                'unexpected-content',
+                `${label} 응답 형식이 HTML이 아닙니다: ${result.contentType || '없음'}`,
+                result.status,
+                result.contentType,
+                undefined,
+                result.finalUrl,
+            );
+        }
+        return result;
+    }, {
+        maxAttempts: 2,
+        delaysMs: [3_000],
+        onRetry: (error, nextAttempt) => {
+            console.warn(`    ${region.name} 공개 도시 목록 일시 오류 — ${nextAttempt}/2 재시도 (${describeSourceError(error)})`);
+        },
+    });
+    return parseOnlineTourCities(response.text);
+}
+
+async function fetchCityRows(
+    region: RegionDefinition,
+    city: OnlineTourCitySeed,
+): Promise<Record<string, unknown>[]> {
     const rows: Record<string, unknown>[] = [];
     let expectedLastPage: number | null = null;
     let expectedTotalCount: number | null = null;
+    const eventStartMonth = city.firstDepartureDate.slice(0, 6);
 
     for (let pageNo = 1; pageNo <= MAX_PAGES; pageNo++) {
-        const callback = `tikitikitDcair${region.code}${pageNo}`;
+        const callback = `tikitikitDcair${region.code}${city.code}${pageNo}`;
         const url = new URL(LIST_API_URL);
         const params: Record<string, string> = {
             apiKey: '',
             transportStartCity: '',
-            transportEndCity: '',
-            eventStartMonth: '',
+            transportEndCity: city.code,
+            eventStartMonth,
             eventStartDate: '',
             areaCode: region.code,
             order: 'LP',
@@ -210,7 +205,7 @@ async function fetchRegionRows(region: RegionDefinition): Promise<Record<string,
         };
         Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, value));
 
-        const label = `온라인투어 ${region.name} 목록 ${pageNo}페이지`;
+        const label = `온라인투어 ${city.name} 공개 목록 ${pageNo}페이지`;
         const payload = await retrySourceOperation(label, async () => {
             const response = await fetchSourceText(label, url, { headers: REQUEST_HEADERS }, 20_000);
             assertNoSourceAccessBlockText(label, response.text, response.finalUrl);
@@ -229,7 +224,7 @@ async function fetchRegionRows(region: RegionDefinition): Promise<Record<string,
             maxAttempts: 2,
             delaysMs: [3_000],
             onRetry: (error, nextAttempt) => {
-                console.warn(`    ${region.name} ${pageNo}페이지 일시 오류 — ${nextAttempt}/2 재시도 (${describeSourceError(error)})`);
+                console.warn(`    ${city.name} ${pageNo}페이지 일시 오류 — ${nextAttempt}/2 재시도 (${describeSourceError(error)})`);
             },
         });
 
@@ -239,19 +234,19 @@ async function fetchRegionRows(region: RegionDefinition): Promise<Record<string,
         if (!Number.isInteger(currentPage) || currentPage !== pageNo) {
             throw new SourceResponseError(
                 'schema-mismatch',
-                `온라인투어 ${region.name} 현재 페이지가 요청과 다릅니다: 요청 ${pageNo}, 응답 ${currentPage}`,
+                `온라인투어 ${city.name} 현재 페이지가 요청과 다릅니다: 요청 ${pageNo}, 응답 ${currentPage}`,
             );
         }
         if (!Number.isInteger(lastPage) || lastPage < 1 || lastPage > MAX_PAGES) {
             throw new SourceResponseError(
                 'schema-mismatch',
-                `온라인투어 ${region.name} 페이지 수 ${lastPage}가 허용 범위 1~${MAX_PAGES}를 벗어났습니다.`,
+                `온라인투어 ${city.name} 페이지 수 ${lastPage}가 허용 범위 1~${MAX_PAGES}를 벗어났습니다.`,
             );
         }
         if (!Number.isInteger(totalCount) || totalCount < 0) {
             throw new SourceResponseError(
                 'schema-mismatch',
-                `온라인투어 ${region.name} 전체 항공권 수가 올바르지 않습니다: ${totalCount}`,
+                `온라인투어 ${city.name} 전체 항공권 수가 올바르지 않습니다: ${totalCount}`,
             );
         }
 
@@ -260,7 +255,7 @@ async function fetchRegionRows(region: RegionDefinition): Promise<Record<string,
         if (lastPage !== expectedLastPage || totalCount !== expectedTotalCount) {
             throw new SourceResponseError(
                 'snapshot-changed',
-                `온라인투어 ${region.name} 페이지를 읽는 동안 전체 건수가 바뀌었습니다.`,
+                `온라인투어 ${city.name} 페이지를 읽는 동안 전체 건수가 바뀌었습니다.`,
             );
         }
 
@@ -268,27 +263,27 @@ async function fetchRegionRows(region: RegionDefinition): Promise<Record<string,
         if (pageNo < lastPage && payload.data.list.length === 0) {
             throw new SourceResponseError(
                 'schema-mismatch',
-                `온라인투어 ${region.name} ${pageNo}페이지가 마지막 페이지 전에 비었습니다.`,
+                `온라인투어 ${city.name} ${pageNo}페이지가 마지막 페이지 전에 비었습니다.`,
             );
         }
         if (pageNo >= lastPage) {
             if (rows.length !== totalCount) {
                 throw new SourceResponseError(
                     'snapshot-changed',
-                    `온라인투어 ${region.name} 일부 페이지만 수집됐습니다: ${rows.length}/${totalCount}건`,
+                    `온라인투어 ${city.name} 일부 페이지만 수집됐습니다: ${rows.length}/${totalCount}건`,
                 );
             }
             const eventCodes = rows.map(row => textField(row, 'event_code'));
             if (eventCodes.some(code => !code)) {
                 throw new SourceResponseError(
                     'schema-mismatch',
-                    `온라인투어 ${region.name} 목록에 event_code가 없는 항목이 있습니다.`,
+                    `온라인투어 ${city.name} 목록에 event_code가 없는 항목이 있습니다.`,
                 );
             }
             if (new Set(eventCodes).size !== totalCount) {
                 throw new SourceResponseError(
                     'snapshot-changed',
-                    `온라인투어 ${region.name} 페이지 경계에서 항공권이 중복되거나 누락됐습니다.`,
+                    `온라인투어 ${city.name} 페이지 경계에서 항공권이 중복되거나 누락됐습니다.`,
                 );
             }
             return rows;
@@ -297,19 +292,22 @@ async function fetchRegionRows(region: RegionDefinition): Promise<Record<string,
         await randomDelay(2, 4);
     }
 
-    throw new SourceResponseError('schema-mismatch', `온라인투어 ${region.name} 페이지 순회가 끝나지 않았습니다.`);
+    throw new SourceResponseError('schema-mismatch', `온라인투어 ${city.name} 페이지 순회가 끝나지 않았습니다.`);
 }
 
-async function fetchStableRegionRows(region: RegionDefinition): Promise<Record<string, unknown>[]> {
+async function fetchStableCityRows(
+    region: RegionDefinition,
+    city: OnlineTourCitySeed,
+): Promise<Record<string, unknown>[]> {
     try {
-        return await fetchRegionRows(region);
+        return await fetchCityRows(region, city);
     } catch (error) {
         if (!(error instanceof SourceResponseError) || error.kind !== 'snapshot-changed') throw error;
         // 판매 중인 목록은 페이지를 읽는 몇 초 사이에도 한 건이 추가·삭제될 수 있다.
         // 서로 다른 시점의 페이지를 섞지 않고 첫 결과를 버린 뒤 새 스냅샷으로 한 번만 다시 읽는다.
-        console.warn(`    ${region.name} 목록이 수집 중 바뀌어 8~15초 쉰 뒤 지역 전체를 한 번만 다시 읽습니다.`);
+        console.warn(`    ${city.name} 목록이 수집 중 바뀌어 8~15초 쉰 뒤 공개 목록을 한 번만 다시 읽습니다.`);
         await randomDelay(8, 15);
-        return fetchRegionRows(region);
+        return fetchCityRows(region, city);
     }
 }
 
@@ -320,52 +318,74 @@ export async function scrapeOnlineTour(prevFlights: any[] = []): Promise<Flight[
     const completeness = new ScrapeCompleteness('온라인투어', 'onlinetour', prevFlights);
 
     for (const region of REGIONS) {
-        console.log(`\n=== ${region.name} (${region.code}) 직접 수집 ===`);
+        console.log(`\n=== ${region.name} (${region.code}) 공개 목록 수집 ===`);
 
+        let cities: OnlineTourCitySeed[];
         try {
-            const rows = await fetchStableRegionRows(region);
-            if (rows.length === 0) {
-                completeness.recordFailure(
-                    `${region.name} 지역 목록 0건`,
-                    flight => belongsToRegion(flight, region),
-                );
-                continue;
-            }
-
-            const currentRows = keepEarliestDepartureMonthByDestination(rows);
-
-            let regionCount = 0;
-            let invalidRows = 0;
-            for (const row of currentRows) {
-                const flight = mapOnlineTourFlight(row);
-                if (!flight) {
-                    invalidRows++;
-                    continue;
-                }
-                if (processedIds.has(flight.id)) continue;
-                processedIds.add(flight.id);
-                flights.push(flight);
-                regionCount++;
-            }
-
-            if (regionCount === 0) {
-                throw new SourceResponseError(
-                    'schema-mismatch',
-                    `온라인투어 ${region.name} 첫 출발월 응답 ${currentRows.length}건을 항공권으로 변환하지 못했습니다.`,
-                );
-            }
-            if (invalidRows > 0) console.warn(`    ${region.name}: 필수값이 없는 ${invalidRows}건 제외`);
-            console.log(`    ${region.name}: ${regionCount}건 수집 (첫 출발월 ${currentRows.length}건 / 지역 원본 ${rows.length}건)`);
+            cities = await fetchRegionCities(region);
         } catch (error) {
-            // 한 지역에서 명시적인 401·403·429 또는 CAPTCHA가 확인되면 같은 회차의
+            // 명시적인 401·403·429 또는 CAPTCHA가 확인되면 같은 회차의
             // 나머지 지역까지 계속 요청하지 않는다. 통합 크롤러가 24시간 휴식 회로를 연다.
             if (classifySourceAccessRestriction(error)) throw error;
             const detail = describeSourceError(error);
-            console.error(`  ${region.name} 지역 실패: ${detail}`);
+            console.error(`  ${region.name} 공개 도시 목록 실패: ${detail}`);
             completeness.recordFailure(
-                `${region.name} 지역 목록 — ${detail}`,
+                `${region.name} 공개 도시 목록 — ${detail}`,
                 flight => belongsToRegion(flight, region),
             );
+            continue;
+        }
+
+        console.log(`공개 도시: ${cities.length}개 - ${cities.map(city => city.name).join(', ')}`);
+        if (cities.length === 0) {
+            completeness.recordFailure(
+                `${region.name} 공개 도시 목록 0건`,
+                flight => belongsToRegion(flight, region),
+            );
+            continue;
+        }
+
+        await randomDelay(1, 2);
+        for (const city of cities) {
+            try {
+                const rows = await fetchStableCityRows(region, city);
+                if (rows.length === 0) {
+                    throw new SourceResponseError('schema-mismatch', `온라인투어 ${city.name} 공개 목록이 비었습니다.`);
+                }
+
+                let cityCount = 0;
+                let invalidRows = 0;
+                for (const row of rows) {
+                    const flight = mapOnlineTourFlight(row);
+                    if (!flight) {
+                        invalidRows++;
+                        continue;
+                    }
+                    if (processedIds.has(flight.id)) continue;
+                    processedIds.add(flight.id);
+                    flights.push(flight);
+                    cityCount++;
+                }
+
+                if (cityCount === 0) {
+                    throw new SourceResponseError(
+                        'schema-mismatch',
+                        `온라인투어 ${city.name} 공개 목록 ${rows.length}건을 항공권으로 변환하지 못했습니다.`,
+                    );
+                }
+                if (invalidRows > 0) console.warn(`    ${city.name}: 필수값이 없는 ${invalidRows}건 제외`);
+                console.log(`    ${city.name}: ${cityCount}건 수집 (공개 목록 ${rows.length}건)`);
+            } catch (error) {
+                if (classifySourceAccessRestriction(error)) throw error;
+                const detail = describeSourceError(error);
+                console.error(`    ${city.name}(${city.code}) 실패: ${detail}`);
+                completeness.recordFailure(
+                    `${city.name}(${city.code}) 공개 목록 — ${detail}`,
+                    flight => flight.arrival?.airport === city.code,
+                );
+            }
+
+            await randomDelay(2, 4);
         }
 
         await randomDelay(3, 5);

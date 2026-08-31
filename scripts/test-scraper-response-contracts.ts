@@ -1,8 +1,5 @@
 import assert from 'node:assert/strict';
-import {
-    keepEarliestDepartureMonthByDestination,
-    mapOnlineTourFlight,
-} from '../src/lib/scrapers/onlinetour.ts';
+import { mapOnlineTourFlight } from '../src/lib/scrapers/onlinetour.ts';
 import { fetchTtangPromotionInBrowser } from '../src/lib/scrapers/ttang.ts';
 import {
     assertMyrealtripSeedReplacementSafe,
@@ -188,41 +185,6 @@ const boracayDestination = mapOnlineTourFlight({
 });
 assert.equal(boracayDestination?.arrival.airport, 'BOR');
 assert.equal(boracayDestination?.routeAirports?.outboundArrival, 'KLO');
-
-const earliestMonthRows = keepEarliestDepartureMonthByDestination([
-    {
-        ...onlineTourBaseRow,
-        event_code: 'pqc-aug',
-        dep_start_date: '20260831',
-        adult_price: 300_000,
-        arr_city_code: 'PQC',
-    },
-    {
-        ...onlineTourBaseRow,
-        event_code: 'pqc-aug-no-search-code',
-        dep_start_date: '20260830',
-        adult_price: 310_000,
-        arr_city_code: null,
-    },
-    {
-        ...onlineTourBaseRow,
-        event_code: 'pqc-sep-cheaper',
-        dep_start_date: '20260901',
-        adult_price: 100_000,
-        arr_city_code: 'PQC',
-    },
-    {
-        ...onlineTourBaseRow,
-        event_code: 'ceb-sep',
-        dep_start_date: '20260923',
-        arr_city_code: 'CEB',
-        start_city_code2: 'CEB',
-    },
-]);
-assert.deepEqual(
-    earliestMonthRows.map(row => row.event_code),
-    ['pqc-aug', 'pqc-aug-no-search-code', 'ceb-sep'],
-);
 
 const ttangPayload = parseTtangPromotionXml(
     '<RESPONSE><HEAD><error>false</error><message></message></HEAD><RESULT><RECORD><CONTENS><![CDATA[{"code":"OK","desc":"SUCCESS","response":[]}]]></CONTENS></RECORD></RESULT></RESPONSE>',
