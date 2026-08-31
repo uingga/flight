@@ -16,7 +16,8 @@ import { getRegionByCity } from './utils/region-mapper';
 export type InterparkPrices = Record<string, Record<string, { avg: number; lowest: number }>>;
 export type RecommendationPriceHistory = Record<string, Array<{ date: string; minPrice: number }>>;
 
-export type TopRecommendationTier = 0 | 1 | 2;
+export type TopRecommendationTier = 0 | 1 | 2 | 3 | 4;
+export type PriceEvidenceStrength = 0 | 1 | 2;
 
 const MIN_REGION_SAMPLE_COUNT = 5;
 const MIN_ROUTE_HISTORY_SAMPLE_COUNT = 7;
@@ -31,6 +32,10 @@ export interface RecommendationScoreFactor {
         | 'interpark-average-or-higher'
         | 'comparison-price'
         | 'nearby-date-premium'
+        | 'naver-same-date'
+        | 'nearby-dates'
+        | 'interpark-month-lowest'
+        | 'route-history'
         | 'price-freshness';
     multiplier: number;
     detail: string;
@@ -41,6 +46,8 @@ export interface RecommendationScoreExplanation {
     comparisonTier: 0 | 1 | 2;
     comparisonPrice: number | null;
     interparkMonth: string | null;
+    interparkMonthlyLowest: number | null;
+    interparkMonthlyAverage: number | null;
     scoreBeforeRouteCorrection: number;
     score: number;
     routePriceCorrectionApplied: boolean;
@@ -50,6 +57,20 @@ export interface RecommendationScoreExplanation {
     priceAppealPercentile: number | null;
     priceAttractive: boolean;
     nearbyDateCompetitive: boolean | null;
+    naverCompetitivenessRank: TopRecommendationTier;
+    displayPriceBand: number;
+    routeEvidenceRank: number;
+    otherDateEvidenceRank: number;
+    historyEvidenceRank: number;
+    naverEvidenceStrength: PriceEvidenceStrength;
+    nearbyEvidenceStrength: PriceEvidenceStrength;
+    interparkEvidenceStrength: PriceEvidenceStrength;
+    otherDateEvidenceStrength: PriceEvidenceStrength;
+    historyEvidenceStrength: PriceEvidenceStrength;
+    goodPriceEvidenceCount: number;
+    strongPriceEvidenceCount: number;
+    monthWideDeal: boolean;
+    expensivePromotionEligible: boolean;
     naverAllowedGap: number;
     factors: RecommendationScoreFactor[];
 }
@@ -110,23 +131,57 @@ export function getRecommendationFreshness(checkedAt?: string, now = Date.now())
     return { multiplier: 1.35, label: `${Math.floor(ageHours / 24)}일 이상 전 확인`, ageHours };
 }
 
-function comparisonMultiplier(effectivePrice: number, comparisonPrice: number): number {
-    const ratio = (effectivePrice - comparisonPrice) / comparisonPrice;
-    if (ratio <= -0.20) return 0.3;
-    if (ratio <= -0.15) return 0.375;
-    if (ratio <= -0.10) return 0.45;
-    if (ratio <= -0.05) return 0.55;
-    if (ratio <= 0) return 0.65;
-    if (ratio <= 0.05) return 1.05;
-    if (ratio <= 0.10) return 1.15;
-    if (ratio <= 0.15) return 1.3;
-    if (ratio <= 0.20) return 1.5;
-    return 2;
+const NAVER_NEAR_AMOUNT = 20_000;
+const NAVER_NEAR_RATIO = 0.1;
+
+/** 네이버가 더 싸더라도 경쟁력이 비슷하다고 보는 최대 고정 차액이다. */
+export function getAllowedNaverPriceGap(): number {
+    return NAVER_NEAR_AMOUNT;
 }
 
-/** 네이버가 더 싸더라도 상단 후보를 유지할 수 있는 작은 가격 차이다. */
-export function getAllowedNaverPriceGap(effectivePrice: number): number {
-    return Math.min(20_000, Math.max(7_500, Math.round(effectivePrice * 0.05)));
+function displayPriceBand(effectivePrice: number): number {
+    if (effectivePrice < 150_000) return 0;
+    if (effectivePrice < 200_000) return 1;
+    if (effectivePrice < 250_000) return 2;
+    if (effectivePrice < 300_000) return 3;
+    if (effectivePrice < 400_000) return 4;
+    if (effectivePrice < 500_000) return 5;
+    return 6;
+}
+
+function medianOf(samples: number[], minimumSamples: number): number | null {
+    const sorted = samples.filter(sample => Number.isFinite(sample) && sample > 0).sort((a, b) => a - b);
+    if (sorted.length < minimumSamples) return null;
+    const middle = Math.floor(sorted.length / 2);
+    return sorted.length % 2 === 0
+        ? (sorted[middle - 1] + sorted[middle]) / 2
+        : sorted[middle];
+}
+
+function evidenceStrength(
+    effectivePrice: number,
+    baseline: number | null,
+    strongDiscountRatio: number,
+): PriceEvidenceStrength {
+    if (!baseline || baseline <= 0) return 0;
+    if (effectivePrice <= baseline * (1 - strongDiscountRatio)) return 2;
+    if (effectivePrice <= baseline) return 1;
+    return 0;
+}
+
+function naverCompetitiveness(
+    effectivePrice: number,
+    comparisonPrice: number | null,
+): { rank: TopRecommendationTier; strength: PriceEvidenceStrength } {
+    if (!comparisonPrice || comparisonPrice <= 0) return { rank: 3, strength: 0 };
+    const difference = effectivePrice - comparisonPrice;
+    const ratio = difference / comparisonPrice;
+    if (ratio <= -0.1) return { rank: 0, strength: 2 };
+    if (difference <= 0) return { rank: 1, strength: 1 };
+    if (difference <= NAVER_NEAR_AMOUNT || ratio <= NAVER_NEAR_RATIO) {
+        return { rank: 2, strength: 0 };
+    }
+    return { rank: 4, strength: 0 };
 }
 
 function departureAreaKey(flight: Flight): string {
@@ -202,9 +257,10 @@ function priceAppealForFlight(
         context.regionPrices.get(regionKey(flight)) || [],
         MIN_REGION_SAMPLE_COUNT,
     );
+    const routeHistorySamples = context.routeHistoryPrices.get(routeKey(flight)) || [];
     const routeHistoryPercentile = percentileOf(
         effectivePrice,
-        context.routeHistoryPrices.get(routeKey(flight)) || [],
+        routeHistorySamples,
         MIN_ROUTE_HISTORY_SAMPLE_COUNT,
     );
     const available = [regionPricePercentile, routeHistoryPercentile]
@@ -215,36 +271,37 @@ function priceAppealForFlight(
     return {
         regionPricePercentile,
         routeHistoryPercentile,
+        routeHistoryMedian: medianOf(routeHistorySamples, MIN_ROUTE_HISTORY_SAMPLE_COUNT),
         priceAppealPercentile,
         priceAttractive: priceAppealPercentile !== null
             && priceAppealPercentile <= ATTRACTIVE_PRICE_PERCENTILE,
     };
 }
 
-function getTopRecommendationTier(
-    effectivePrice: number,
-    comparisonPrice: number | null,
-    priceAttractive: boolean,
-    nearbyDateCompetitive: boolean | null,
-): { tier: TopRecommendationTier; naverAllowedGap: number } {
-    const naverAllowedGap = getAllowedNaverPriceGap(effectivePrice);
-    const naverCheaperOrEqual = comparisonPrice !== null && effectivePrice <= comparisonPrice;
-    const naverWithinTolerance = comparisonPrice !== null
-        && effectivePrice > comparisonPrice
-        && effectivePrice - comparisonPrice <= naverAllowedGap;
+function evidenceRank(strength: PriceEvidenceStrength, known: boolean): number {
+    if (strength === 2) return 0;
+    if (strength === 1) return 1;
+    return known ? 3 : 2;
+}
 
-    if (priceAttractive && nearbyDateCompetitive === true && naverCheaperOrEqual) {
-        return { tier: 0, naverAllowedGap };
-    }
-    if (
-        naverCheaperOrEqual
-        || (priceAttractive
-            && nearbyDateCompetitive === true
-            && (comparisonPrice === null || naverWithinTolerance))
-    ) {
-        return { tier: 1, naverAllowedGap };
-    }
-    return { tier: 2, naverAllowedGap };
+function combinedOtherDateEvidence(
+    nearbyStrength: PriceEvidenceStrength,
+    nearbyKnown: boolean,
+    interparkStrength: PriceEvidenceStrength,
+    interparkKnown: boolean,
+): { strength: PriceEvidenceStrength; rank: number } {
+    const goodCount = Number(nearbyStrength >= 1) + Number(interparkStrength >= 1);
+    const strength: PriceEvidenceStrength = nearbyStrength === 2
+        || interparkStrength === 2
+        || goodCount === 2
+        ? 2
+        : goodCount === 1
+            ? 1
+            : 0;
+    return {
+        strength,
+        rank: evidenceRank(strength, nearbyKnown || interparkKnown),
+    };
 }
 
 function closestInterparkMonth(
@@ -258,20 +315,8 @@ function closestInterparkMonth(
         .trim()
         .substring(0, 7);
     const cityData = interparkPrices[city];
-    let month = departureMonth || null;
-    let data = departureMonth ? cityData?.[departureMonth] : undefined;
-    if (!data && cityData && departureMonth) {
-        const closest = Object.keys(cityData).sort().reduce((best, candidateMonth) => {
-            const diff = Math.abs(candidateMonth.localeCompare(departureMonth));
-            const bestDiff = best ? Math.abs(best.localeCompare(departureMonth)) : Infinity;
-            return diff < bestDiff ? candidateMonth : best;
-        }, '' as string);
-        if (closest) {
-            month = closest;
-            data = cityData[closest];
-        }
-    }
-    return { month: data ? month : null, data: data || null };
+    const data = departureMonth ? cityData?.[departureMonth] : undefined;
+    return { month: data ? departureMonth : null, data: data || null };
 }
 
 function scoreFlight(
@@ -281,53 +326,105 @@ function scoreFlight(
     priceAppealContext: PriceAppealContext,
 ): RecommendationScoreExplanation {
     const effectivePrice = getEffectivePrice(flight);
-    const { month, data: interparkMonth } = closestInterparkMonth(flight, interparkPrices);
+    const interparkContext = departureAreaKey(flight) === 'SEOUL'
+        ? closestInterparkMonth(flight, interparkPrices)
+        : { month: null, data: null };
+    const { month, data: interparkMonth } = interparkContext;
     const comparisonUsable = Boolean(
         flight.naverLowest
         && flight.naverLowest > 0
         && getComparisonFreshness(flight.naverCheckedAt, now).usable,
     );
     const comparisonPrice = comparisonUsable ? flight.naverLowest! : null;
-    const isComparisonCheaper = Boolean(comparisonPrice && effectivePrice <= comparisonPrice);
     const factors: RecommendationScoreFactor[] = [];
     const priceAppeal = priceAppealForFlight(flight, effectivePrice, priceAppealContext);
+    const naver = naverCompetitiveness(effectivePrice, comparisonPrice);
     const nearbyBaseline = Number(flight.nearbyNaverBaseline);
-    const nearbyDateCompetitive = Number.isFinite(nearbyBaseline) && nearbyBaseline > 0
-        ? effectivePrice <= nearbyBaseline * 1.1
-        : null;
-    const topTier = getTopRecommendationTier(
-        effectivePrice,
-        comparisonPrice,
-        priceAppeal.priceAttractive,
-        nearbyDateCompetitive,
+    const nearbyKnown = Number(flight.nearbyNaverSampleCount || 0) >= 2
+        && Number.isFinite(nearbyBaseline)
+        && nearbyBaseline > 0;
+    const nearbyDateCompetitive = nearbyKnown ? effectivePrice <= nearbyBaseline * 1.1 : null;
+    const nearbyEvidenceStrength: PriceEvidenceStrength = !nearbyKnown
+        ? 0
+        : effectivePrice <= nearbyBaseline * 0.85
+            ? 2
+            : effectivePrice <= nearbyBaseline * 1.1
+                ? 1
+                : 0;
+    const interparkLowest = Number(interparkMonth?.lowest);
+    const interparkKnown = Number.isFinite(interparkLowest) && interparkLowest > 0;
+    const interparkDifference = effectivePrice - interparkLowest;
+    const interparkRatio = interparkKnown ? interparkDifference / interparkLowest : Infinity;
+    const interparkEvidenceStrength: PriceEvidenceStrength = !interparkKnown
+        ? 0
+        : interparkDifference <= 0
+            ? 2
+            : interparkDifference <= NAVER_NEAR_AMOUNT || interparkRatio <= NAVER_NEAR_RATIO
+                ? 1
+                : 0;
+    const otherDates = combinedOtherDateEvidence(
+        nearbyEvidenceStrength,
+        nearbyKnown,
+        interparkEvidenceStrength,
+        interparkKnown,
     );
+    let historyEvidenceStrength = evidenceStrength(
+        effectivePrice,
+        priceAppeal.routeHistoryMedian,
+        0.15,
+    );
+    const monthWideDeal = Boolean(
+        interparkEvidenceStrength >= 1
+        && priceAppeal.routeHistoryMedian
+        && effectivePrice <= priceAppeal.routeHistoryMedian,
+    );
+    if (monthWideDeal && historyEvidenceStrength === 0) historyEvidenceStrength = 1;
+    const historyKnown = Boolean(priceAppeal.routeHistoryMedian && priceAppeal.routeHistoryMedian > 0);
+    const historyEvidenceRank = evidenceRank(historyEvidenceStrength, historyKnown);
+    const priceEvidenceStrengths = [
+        naver.strength,
+        otherDates.strength,
+        historyEvidenceStrength,
+    ];
+    const goodPriceEvidenceCount = priceEvidenceStrengths.filter(strength => strength >= 1).length;
+    const strongPriceEvidenceCount = priceEvidenceStrengths.filter(strength => strength >= 2).length;
+    const expensivePromotionEligible = effectivePrice < 300_000
+        || (effectivePrice < 400_000 && goodPriceEvidenceCount >= 2)
+        || (effectivePrice < 500_000
+            && (goodPriceEvidenceCount === 3 || strongPriceEvidenceCount >= 2))
+        || (effectivePrice >= 500_000
+            && goodPriceEvidenceCount === 3
+            && strongPriceEvidenceCount >= 2);
 
-    let score = effectivePrice;
-    if (!interparkMonth) {
-        score *= 1.1;
-        factors.push({ rule: 'interpark-missing', multiplier: 1.1, detail: '월간 벤치마크 없음' });
-    } else if (effectivePrice <= interparkMonth.lowest) {
-        factors.push({ rule: 'interpark-monthly-lowest', multiplier: 1, detail: '월간 최저가 이하' });
-    } else if (effectivePrice <= interparkMonth.lowest * 1.2) {
-        score *= 1.15;
-        factors.push({ rule: 'interpark-near-lowest', multiplier: 1.15, detail: '월간 최저가의 120% 이하' });
-    } else if (effectivePrice < interparkMonth.avg) {
-        score *= 1.3;
-        factors.push({ rule: 'interpark-below-average', multiplier: 1.3, detail: '월간 평균 미만' });
-    } else {
-        const multiplier = isComparisonCheaper ? 1.3 : 10;
-        score *= multiplier;
+    const naverMultiplier = [0.65, 0.8, 1, 1.15, 1.6][naver.rank];
+    const otherDateMultiplier = [0.85, 0.95, 1.05, 1.15][otherDates.rank];
+    const historyMultiplier = [0.9, 0.97, 1.03, 1.1][historyEvidenceRank];
+    let score = effectivePrice * naverMultiplier * otherDateMultiplier * historyMultiplier;
+    factors.push({
+        rule: 'naver-same-date',
+        multiplier: naverMultiplier,
+        detail: comparisonPrice ? `동일 일정 ${comparisonPrice.toLocaleString()}원` : '동일 일정 비교가 없음',
+    });
+    if (nearbyKnown) {
         factors.push({
-            rule: 'interpark-average-or-higher',
-            multiplier,
-            detail: isComparisonCheaper ? '월간 평균 이상이지만 비교 최저가 이하' : '월간 평균 이상',
+            rule: 'nearby-dates',
+            multiplier: nearbyEvidenceStrength === 2 ? 0.85 : nearbyEvidenceStrength === 1 ? 0.95 : 1.15,
+            detail: `앞뒤 7일 ${flight.nearbyNaverSampleCount || 0}건 중간값 ${nearbyBaseline.toLocaleString()}원`,
         });
     }
-
-    if (comparisonPrice) {
-        const multiplier = comparisonMultiplier(effectivePrice, comparisonPrice);
-        score *= multiplier;
-        factors.push({ rule: 'comparison-price', multiplier, detail: '24시간 이내 외부 비교가 반영' });
+    if (interparkKnown) {
+        factors.push({
+            rule: 'interpark-month-lowest',
+            multiplier: interparkEvidenceStrength === 2 ? 0.85 : interparkEvidenceStrength === 1 ? 0.95 : 1.15,
+            detail: `${month} 월 최저 ${interparkLowest.toLocaleString()}원`,
+        });
+    }
+    if (historyKnown) {
+        factors.push({
+            rule: 'route-history',
+            multiplier: historyMultiplier,
+            detail: `최근 노선 중간값 ${Math.round(priceAppeal.routeHistoryMedian!).toLocaleString()}원`,
+        });
     }
 
     const freshness = getRecommendationFreshness(flight.priceCheckedAt, now);
@@ -339,18 +436,36 @@ function scoreFlight(
         comparisonTier: getComparisonPriceTier(flight, now),
         comparisonPrice,
         interparkMonth: month,
+        interparkMonthlyLowest: interparkKnown ? interparkLowest : null,
+        interparkMonthlyAverage: interparkKnown && Number(interparkMonth?.avg) > 0
+            ? Number(interparkMonth?.avg)
+            : null,
         scoreBeforeRouteCorrection: score,
         score,
         routePriceCorrectionApplied: false,
-        topRecommendationTier: topTier.tier,
+        topRecommendationTier: naver.rank,
         ...priceAppeal,
         nearbyDateCompetitive,
-        naverAllowedGap: topTier.naverAllowedGap,
+        naverCompetitivenessRank: naver.rank,
+        displayPriceBand: displayPriceBand(effectivePrice),
+        routeEvidenceRank: Math.min(3, otherDates.rank + historyEvidenceRank),
+        otherDateEvidenceRank: otherDates.rank,
+        historyEvidenceRank,
+        naverEvidenceStrength: naver.strength,
+        nearbyEvidenceStrength,
+        interparkEvidenceStrength,
+        otherDateEvidenceStrength: otherDates.strength,
+        historyEvidenceStrength,
+        goodPriceEvidenceCount,
+        strongPriceEvidenceCount,
+        monthWideDeal,
+        expensivePromotionEligible,
+        naverAllowedGap: NAVER_NEAR_AMOUNT,
         factors,
     };
 }
 
-/** 가격 품질과 신선도 점수를 계산하고, 같은 노선·가격 경쟁력 구간 안의 가격 역전만 보정한다. */
+/** 새 추천 근거를 한 번만 계산한다. 이전 인터파크 배수점수와 노선 점수 교환은 사용하지 않는다. */
 export function buildRecommendationScoreState(
     flights: Flight[],
     interparkPrices: InterparkPrices,
@@ -366,59 +481,15 @@ export function buildRecommendationScoreState(
         scores.set(flight.id, explanation.score);
     }
 
-    const byRouteAndCompetitiveness = new Map<string, Flight[]>();
-    for (const flight of flights) {
-        const route = `${normalizeCity(flight.departure.city)}-${normalizeCity(flight.arrival.city)}`;
-        const competitiveness = getRoutePriceCompetitivenessTier(flight, now);
-        const key = `${route}|${competitiveness}`;
-        const group = byRouteAndCompetitiveness.get(key);
-        if (group) group.push(flight);
-        else byRouteAndCompetitiveness.set(key, [flight]);
-    }
-    for (const group of Array.from(byRouteAndCompetitiveness.values())) {
-        if (group.length < 2) continue;
-        const slots = group.map(flight => scores.get(flight.id)!).sort((a, b) => a - b);
-        group.slice()
-            .sort((a, b) => getEffectivePrice(a) - getEffectivePrice(b) || scores.get(a.id)! - scores.get(b.id)!)
-            .forEach((flight, index) => {
-                const correctedScore = slots[index];
-                const explanation = explanations.get(flight.id)!;
-                scores.set(flight.id, correctedScore);
-                explanations.set(flight.id, {
-                    ...explanation,
-                    score: correctedScore,
-                    routePriceCorrectionApplied: correctedScore !== explanation.scoreBeforeRouteCorrection,
-                });
-            });
-    }
-
-    // 같은 노선 안의 가격 역전 보정을 마친 뒤 해당 일정의 날짜 프리미엄을 적용한다.
-    // 먼저 적용하면 다른 날짜의 점수 슬롯으로 감점이 이동할 수 있다.
-    for (const flight of flights) {
-        const multiplier = Number(flight.nearbyNaverRecommendationMultiplier || 1);
-        if (!Number.isFinite(multiplier) || multiplier <= 1) continue;
-        const currentScore = scores.get(flight.id) ?? Infinity;
-        const adjustedScore = currentScore * multiplier;
-        const explanation = explanations.get(flight.id)!;
-        scores.set(flight.id, adjustedScore);
-        explanations.set(flight.id, {
-            ...explanation,
-            score: adjustedScore,
-            factors: [
-                ...explanation.factors,
-                {
-                    rule: 'nearby-date-premium',
-                    multiplier,
-                    detail: `인접 일정 ${flight.nearbyNaverSampleCount || 0}건 기준보다 비쌈`,
-                },
-            ],
-        });
-    }
-
     return { scores, explanations };
 }
 
-/** 비교가 구간을 먼저, 같은 구간에서는 품질·신선도 점수를 적용하는 운영 추천 비교 함수다. */
+function firstSeenTimestamp(flight: Flight): number {
+    const timestamp = flight.firstSeen ? new Date(flight.firstSeen).getTime() : Number.NaN;
+    return Number.isFinite(timestamp) ? timestamp : Number.NEGATIVE_INFINITY;
+}
+
+/** 합의한 새 추천 근거를 순서대로 비교한다. 이전 추천 배수점수는 순위 결정에 사용하지 않는다. */
 export function compareRecommendedFlights(
     a: Flight,
     b: Flight,
@@ -437,10 +508,36 @@ export function compareRecommendedFlights(
         if (priceComparison !== 0) return priceComparison;
     }
 
-    const tierComparison = (explanations?.get(a.id)?.topRecommendationTier ?? getComparisonPriceTier(a, now))
-        - (explanations?.get(b.id)?.topRecommendationTier ?? getComparisonPriceTier(b, now));
-    if (tierComparison !== 0) return tierComparison;
-    return (scores.get(a.id) ?? Infinity) - (scores.get(b.id) ?? Infinity);
+    const aExplanation = explanations?.get(a.id);
+    const bExplanation = explanations?.get(b.id);
+    if (!aExplanation || !bExplanation) {
+        const tierComparison = getComparisonPriceTier(a, now) - getComparisonPriceTier(b, now);
+        return tierComparison || (scores.get(a.id) ?? Infinity) - (scores.get(b.id) ?? Infinity);
+    }
+
+    const naverComparison = aExplanation.naverCompetitivenessRank
+        - bExplanation.naverCompetitivenessRank;
+    if (naverComparison !== 0) return naverComparison;
+
+    const priceBandComparison = aExplanation.displayPriceBand - bExplanation.displayPriceBand;
+    if (priceBandComparison !== 0) return priceBandComparison;
+
+    const otherDatesComparison = aExplanation.otherDateEvidenceRank
+        - bExplanation.otherDateEvidenceRank;
+    if (otherDatesComparison !== 0) return otherDatesComparison;
+
+    const historyComparison = aExplanation.historyEvidenceRank
+        - bExplanation.historyEvidenceRank;
+    if (historyComparison !== 0) return historyComparison;
+
+    const newnessComparison = firstSeenTimestamp(b) - firstSeenTimestamp(a);
+    if (newnessComparison !== 0) return newnessComparison;
+
+    const priceComparison = getEffectivePrice(a) - getEffectivePrice(b);
+    if (priceComparison !== 0) return priceComparison;
+
+    return (scores.get(a.id) ?? Infinity) - (scores.get(b.id) ?? Infinity)
+        || a.id.localeCompare(b.id);
 }
 
 /**
@@ -472,6 +569,9 @@ export function buildRecommendationPresentation(
             leadingFlights: pinnedFlight ? [pinnedFlight] : [],
             scoreOf: flight => scoreState.scores.get(flight.id) ?? Infinity,
             routeCompetitivenessTierOf: flight => getRoutePriceCompetitivenessTier(flight, now),
+            expensivePromotionEligibleOf: flight => Boolean(
+                scoreState.explanations.get(flight.id)?.expensivePromotionEligible
+            ),
             balanceIncheon,
         });
         result.decisions.forEach(decision => diversityByFlightId.set(decision.flightId, decision));

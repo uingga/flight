@@ -1707,8 +1707,8 @@ export default function Dashboard() {
         </div>
     );
 
-    // 추천순(스마트 정렬) 점수 — 낮을수록 상위.
-    // 먼저 신선한 외부 비교가 기준으로 구간을 나누고, 구간 안에서는 실질 가격과 기존 벤치마크를 종합한다.
+    // 추천순 근거를 한 번 계산한다. 동일 일정 비교가 → 실질 가격대 → 다른 날짜·노선 이력 → 신규 등록순으로 본다.
+    // 인터파크 월 최저가는 출발지가 없는 자료라 서울권 항공권의 다른 날짜 근거를 보강할 때만 사용한다.
     const recommendScoreState = useMemo(
         () => buildRecommendationScoreState(flights, interparkPrices, Date.now(), priceHistory),
         [flights, interparkPrices, priceHistory],
@@ -1918,8 +1918,7 @@ export default function Dashboard() {
                 break;
             }
             case 'discount': {
-                // 추천순은 신선한 비교가 이하를 먼저, 비교 불가를 그다음,
-                // 신선한 비교가 초과를 마지막에 둔다. 각 그룹 안에서는 종합 품질점수를 유지한다.
+                // 합의한 가격 근거로 본체 순위를 만든 뒤 목적지·출발지·고가 특가 분산은 진열 단계에서 처리한다.
                 comparison = compareRecommendedFlights(
                     a,
                     b,

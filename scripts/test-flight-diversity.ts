@@ -107,13 +107,13 @@ const deduplicatedFirstNine = diversifyFlightDestinations(sameOfferOnDifferentDa
 });
 assert.equal(
     deduplicatedFirstNine.slice(0, 9).filter(item => item.arrival.city === '반다르세리베가완').length,
-    2,
-    '같은 출발권역·목적지라도 최저가가 같으면 첫 9개에 두 일정까지 보여야 한다.',
+    1,
+    '40만원 초과 항공권은 같은 최저가 일정이 여러 개여도 첫 9개에 한 장만 보여야 한다.',
 );
-assert.deepEqual(
-    deduplicatedFirstNine.slice(0, 2).map(item => item.id),
-    ['bandar-1', 'bandar-2'],
-    '같은 최저가의 다른 일정은 기존 추천순대로 연속 노출할 수 있어야 한다.',
+assert.equal(
+    deduplicatedFirstNine.find(item => item.arrival.city === '반다르세리베가완')?.id,
+    'bandar-1',
+    '40만원 초과 항공권 중에서는 기존 추천순이 가장 높은 한 장을 유지해야 한다.',
 );
 
 const differentOriginSameDestination = diversifyFlightDestinations([
@@ -214,8 +214,8 @@ const newlyArrivedRecommendation = diversifyRecommendationOrder(newlyArrivedUniq
 });
 assert.deepEqual(
     newlyArrivedRecommendation.slice(0, 2).map(item => item.id),
-    ['new-6', 'new-3'],
-    '첫 9개의 가격 품질 구성을 정한 뒤에는 새로 들어온 항공권을 위에 보여야 한다.',
+    ['new-1', 'new-2'],
+    '진열 단계는 추천 본체가 정한 후보 순서를 신규순으로 다시 뒤집으면 안 된다.',
 );
 assert.deepEqual(
     new Set(newlyArrivedRecommendation.slice(0, 9).map(item => item.id)),
@@ -323,11 +323,6 @@ const sameLaneRouteState = buildRecommendationScoreState(
     {},
     recommendationNow,
 );
-assert.ok(
-    sameLaneRouteState.scores.get(manadoLowerPrice.id)!
-        < sameLaneRouteState.scores.get(manadoHigherPrice.id)!,
-    '같은 노선·같은 경쟁력 구간에서는 49.5만원 항공권이 51.5만원 항공권보다 먼저여야 한다.',
-);
 assert.deepEqual(
     [manadoHigherPrice, manadoLowerPrice]
         .sort((a, b) => compareRecommendedFlights(
@@ -357,7 +352,6 @@ assert.equal(getRoutePriceCompetitivenessTier({
     price: 250_000,
     naverLowest: 225_000,
 }, recommendationNow), 2, '2만원과 10%를 모두 넘으면 확실히 비싼 가격으로 본다.');
-
 const freshPrice = {
     ...flight('fresh-price', '인천', '싱가포르', 0),
     price: 200_000,
@@ -407,9 +401,10 @@ assert.ok(
     '현재 일정만 유독 비싼 표는 동일 조건의 보통 표보다 추천 순위가 뒤로 가야 한다.',
 );
 assert.equal(
-    nearbyPremiumState.explanations.get('expensive-for-nearby-dates')?.factors.at(-1)?.rule,
-    'nearby-date-premium',
-    '인접 일정 가격 감점이 추천 점수 설명에 남아야 한다.',
+    nearbyPremiumState.explanations.get('expensive-for-nearby-dates')?.factors
+        .some(factor => factor.rule === 'nearby-dates'),
+    true,
+    '앞뒤 7일 가격 근거가 추천 설명에 남아야 한다.',
 );
 
 const departureBalanceCandidates = Array.from({ length: 12 }, (_, index) => ({
@@ -511,9 +506,7 @@ assert.deepEqual(
     'A-B-A-B 반복이 생길 때는 새로운 목적지를 먼저 보여야 한다.',
 );
 
-assert.equal(getAllowedNaverPriceGap(150_000), 7_500);
-assert.equal(getAllowedNaverPriceGap(200_000), 10_000);
-assert.equal(getAllowedNaverPriceGap(500_000), 20_000);
+assert.equal(getAllowedNaverPriceGap(), 20_000);
 
 const qualityCandidates = [
     {
@@ -566,10 +559,130 @@ const qualityState = buildRecommendationScoreState(
     recommendationNow,
     qualityHistory,
 );
-assert.equal(qualityState.explanations.get('quality-all-three')?.topRecommendationTier, 0);
-assert.equal(qualityState.explanations.get('quality-no-naver')?.topRecommendationTier, 1);
-assert.equal(qualityState.explanations.get('quality-small-gap')?.topRecommendationTier, 1);
+assert.equal(qualityState.explanations.get('quality-all-three')?.topRecommendationTier, 1);
+assert.equal(qualityState.explanations.get('quality-no-naver')?.topRecommendationTier, 3);
+assert.equal(qualityState.explanations.get('quality-small-gap')?.topRecommendationTier, 2);
 assert.equal(qualityState.explanations.get('quality-naver-only')?.topRecommendationTier, 1);
-assert.equal(qualityState.explanations.get('quality-other-dates-cheaper')?.topRecommendationTier, 2);
+assert.equal(qualityState.explanations.get('quality-other-dates-cheaper')?.topRecommendationTier, 3);
+
+const seoulInterparkCandidate = {
+    ...flight('seoul-interpark', '인천', '인터파크도시', 0),
+    price: 205_000,
+};
+const busanInterparkCandidate = {
+    ...flight('busan-interpark', '부산', '인터파크도시', 0),
+    price: 205_000,
+};
+const interparkState = buildRecommendationScoreState(
+    [seoulInterparkCandidate, busanInterparkCandidate],
+    {
+        인터파크도시: {
+            '2026-09': { lowest: 200_000, avg: 260_000 },
+        },
+    },
+    recommendationNow,
+);
+assert.equal(
+    interparkState.explanations.get('seoul-interpark')?.interparkEvidenceStrength,
+    1,
+    '서울권 항공권은 해당 출발 월 인터파크 최저가와 비슷하면 다른 날짜 근거로 사용해야 한다.',
+);
+assert.equal(
+    interparkState.explanations.get('busan-interpark')?.interparkMonthlyLowest,
+    null,
+    '출발지가 저장되지 않은 인터파크 기준을 부산 출발 항공권에 대입하면 안 된다.',
+);
+
+const olderSameGroup = {
+    ...flight('older-same-group', '인천', '새도시A', 0),
+    price: 180_000,
+    firstSeen: '2026-08-20',
+};
+const newerSameGroup = {
+    ...flight('newer-same-group', '인천', '새도시B', 0),
+    price: 190_000,
+    firstSeen: '2026-08-31',
+};
+const newnessState = buildRecommendationScoreState(
+    [olderSameGroup, newerSameGroup],
+    {},
+    recommendationNow,
+);
+assert.deepEqual(
+    [olderSameGroup, newerSameGroup]
+        .sort((a, b) => compareRecommendedFlights(
+            a,
+            b,
+            newnessState.scores,
+            recommendationNow,
+            newnessState.explanations,
+        ))
+        .map(item => item.id),
+    ['newer-same-group', 'older-same-group'],
+    '가격 근거와 가격 구간이 같은 다른 노선끼리만 신규 등록순을 적용해야 한다.',
+);
+
+const priceCompositionCandidates = [
+    ...Array.from({ length: 3 }, (_, index) => ({
+        ...flight(`over-400-${index}`, '인천', `고가도시${index}`, index),
+        price: 450_000,
+    })),
+    ...Array.from({ length: 3 }, (_, index) => ({
+        ...flight(`over-300-${index}`, '인천', `중가도시${index}`, index + 3),
+        price: 350_000,
+    })),
+    ...Array.from({ length: 14 }, (_, index) => ({
+        ...flight(`under-250-${index}`, '인천', `저가도시${index}`, index + 6),
+        price: 200_000 + index * 1_000,
+    })),
+];
+const priceCompositionOrder = diversifyRecommendationOrder(priceCompositionCandidates, {
+    tierOf: () => 0,
+    scoreOf: item => (item as Flight & { testScore: number }).testScore,
+    expensivePromotionEligibleOf: () => true,
+    balanceIncheon: false,
+    maxConsecutiveDestinations: 1,
+});
+const compositionFirstNine = priceCompositionOrder.slice(0, 9);
+assert.ok(
+    compositionFirstNine.filter(item => item.price <= 250_000).length >= 6,
+    '첫 9개에는 25만원 이하 항공권이 최소 6개 있어야 한다.',
+);
+assert.ok(
+    compositionFirstNine.filter(item => item.price >= 300_000 && item.price < 400_000).length <= 2,
+    '30만원대 특가는 9개 구간에 최대 2개까지만 보여야 한다.',
+);
+assert.ok(
+    compositionFirstNine.filter(item => item.price >= 400_000).length <= 1,
+    '첫 9개에서 40만원 초과 특가는 최대 1개까지만 보여야 한다.',
+);
+
+const compositionSecondNine = priceCompositionOrder.slice(9, 18);
+assert.ok(
+    compositionSecondNine.filter(item => item.price >= 400_000).length <= 1,
+    '두 번째 9개 구간도 40만원 초과 특가가 한꺼번에 몰리면 안 된다.',
+);
+assert.ok(
+    priceCompositionOrder.slice(0, 18).filter(item => item.price >= 500_000).length <= 1,
+    '50만원 이상 특가는 18개 구간에 최대 한 장만 보여야 한다.',
+);
+
+const consecutiveDestinationCandidates = [
+    { ...flight('same-destination-a', '인천', '연속도시', 0), price: 170_000 },
+    { ...flight('same-destination-b', '인천', '연속도시', 1), price: 175_000 },
+    { ...flight('different-destination', '인천', '다른도시', 2), price: 180_000 },
+];
+const consecutiveDestinationOrder = diversifyRecommendationOrder(consecutiveDestinationCandidates, {
+    tierOf: () => 0,
+    scoreOf: item => item.price,
+    expensivePromotionEligibleOf: () => true,
+    balanceIncheon: false,
+    maxConsecutiveDestinations: 1,
+});
+assert.deepEqual(
+    consecutiveDestinationOrder.slice(0, 3).map(item => item.arrival.city),
+    ['연속도시', '다른도시', '연속도시'],
+    '같은 목적지는 바로 이어 붙이지 않아야 한다.',
+);
 
 console.log('✅ 추천 후보 판정 · 가격/신선도 점수 · 오늘의 표/목적지/출발지 진열 설명');

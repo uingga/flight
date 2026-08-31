@@ -9,6 +9,7 @@ export interface FlightDiversityOptions {
     leadingFlights?: Flight[];
     scoreOf?: (flight: Flight) => number;
     routeCompetitivenessTierOf?: (flight: Flight) => number;
+    expensivePromotionEligibleOf?: (flight: Flight) => boolean;
     balanceIncheon?: boolean;
 }
 
@@ -125,40 +126,6 @@ export function createsAlternatingDestinationPattern(destinations: string[], can
         && destinations[last] !== candidate;
 }
 
-function firstSeenTime(flight: Flight): number {
-    const parsed = flight.firstSeen ? new Date(flight.firstSeen).getTime() : Number.NaN;
-    return Number.isFinite(parsed) ? parsed : Number.NEGATIVE_INFINITY;
-}
-
-/** 첫 묶음의 구성은 유지하고, 새 항공권을 우선하되 목적지 반복은 만들지 않는다. */
-function orderSelectedFirstBlockByNewest(items: Flight[], leadingFlights: Flight[]): Flight[] {
-    const remaining = items
-        .map((flight, index) => ({ flight, index }))
-        .sort((a, b) => firstSeenTime(b.flight) - firstSeenTime(a.flight) || a.index - b.index);
-    const result: Flight[] = [];
-    const destinations = leadingFlights.map(flight => normalizeCity(flight.arrival.city));
-
-    while (remaining.length > 0) {
-        const lastDestination = destinations[destinations.length - 1];
-        let nextIndex = remaining.findIndex(({ flight }) => {
-            const destination = normalizeCity(flight.arrival.city);
-            return destination !== lastDestination
-                && !createsAlternatingDestinationPattern(destinations, destination);
-        });
-        if (nextIndex < 0) {
-            nextIndex = remaining.findIndex(({ flight }) => (
-                normalizeCity(flight.arrival.city) !== lastDestination
-            ));
-        }
-        if (nextIndex < 0) nextIndex = 0;
-
-        const [{ flight }] = remaining.splice(nextIndex, 1);
-        result.push(flight);
-        destinations.push(normalizeCity(flight.arrival.city));
-    }
-    return result;
-}
-
 /** 다양성 규칙으로 뽑힌 첫 묶음의 구성은 유지하면서 새로 발견된 날짜순으로 정렬한다. */
 export function sortFirstBlockByNewestArrival(items: Flight[], blockSize = 9): Flight[] {
     const firstBlockSize = Math.min(Math.max(0, blockSize), items.length);
@@ -220,6 +187,7 @@ export function diversifyFlightDestinationsWithDecisions(
         leadingFlights = [],
         scoreOf,
         routeCompetitivenessTierOf,
+        expensivePromotionEligibleOf = () => false,
         balanceIncheon = true,
     } = options;
     const remaining = [...items];
@@ -251,11 +219,36 @@ export function diversifyFlightDestinationsWithDecisions(
             && canReachIncheonMinimum
             && incheonCount + positionsAfterNext < 6;
         const desiredIncheonCount = Math.floor(((blockPosition + 1) * 6) / 9);
+        const firstNine = sequence.length < 9;
+        const affordableCount = block.filter(isAffordableFirstScreenFlight).length;
+        const availableAffordable = remaining.filter(isAffordableFirstScreenFlight).length;
+        const canReachAffordableMinimum = affordableCount
+            + Math.min(availableAffordable, positionsAfterNext + 1) >= 6;
+        const mustChooseAffordable = firstNine
+            && canReachAffordableMinimum
+            && affordableCount + positionsAfterNext < 6;
+        const priceBandCounts = block.reduce((counts, flight) => {
+            const band = expensivePriceBand(flight);
+            counts[band] += 1;
+            return counts;
+        }, {
+            'under-300': 0,
+            '300-400': 0,
+            '400-500': 0,
+            '500-plus': 0,
+        });
+        const over400Count = priceBandCounts['400-500'] + priceBandCounts['500-plus'];
+        const eighteenBlockPosition = sequence.length % 18;
+        const eighteenBlock = sequence.slice(sequence.length - eighteenBlockPosition);
+        const fiveHundredPlusCount = eighteenBlock.filter(flight => (
+            expensivePriceBand(flight) === '500-plus'
+        )).length;
 
         const findCandidate = (
             keepTopLimit: boolean,
             keepFirstNineCap: boolean,
             keepDepartureBalance: boolean,
+            keepPriceComposition: boolean,
         ): { index: number; preferenceRule: FlightDiversityPreferenceRule } | null => {
             const eligibleIndexes = remaining
                 .map((_, index) => index)
@@ -265,12 +258,23 @@ export function diversifyFlightDestinationsWithDecisions(
                     const routeKey = firstNineRouteKey(flight);
                     const destinationStreak = trailingDestinationStreak(destinationSequence, destination);
                     const departsFromIncheonArea = isIncheonAreaDeparture(flight);
+                    const priceBand = expensivePriceBand(flight);
+                    const affordable = isAffordableFirstScreenFlight(flight);
+                    const priceCompositionAllowed = !keepPriceComposition || (
+                        (!mustChooseAffordable || affordable)
+                        && (getEffectivePrice(flight) < 300_000 || expensivePromotionEligibleOf(flight))
+                        && (priceBand !== '300-400' || priceBandCounts['300-400'] < 2)
+                        && (priceBand !== '400-500' || priceBandCounts['400-500'] < 1)
+                        && (priceBand !== '500-plus' || fiveHundredPlusCount < 1)
+                        && (getEffectivePrice(flight) < 400_000 || over400Count < 1)
+                    );
                     return destinationStreak < maxConsecutiveDestinations
                         && (!keepTopLimit || !insideTopWindow || (topDestinationCounts.get(destination) || 0) < maxPerDestination)
                         && (!keepFirstNineCap || sequence.length >= 9 || (topDestinationCounts.get(destination) || 0) < maxPerDestination)
                         && (!keepFirstNineCap || sequence.length >= 9 || !routeKey || representativeIds.has(flight.id))
                         && (!keepDepartureBalance || !mustChooseIncheon || departsFromIncheonArea)
-                        && (!keepDepartureBalance || incheonCount < 6 || !departsFromIncheonArea);
+                        && (!keepDepartureBalance || incheonCount < 6 || !departsFromIncheonArea)
+                        && priceCompositionAllowed;
                 });
             if (eligibleIndexes.length === 0) return null;
 
@@ -343,13 +347,14 @@ export function diversifyFlightDestinationsWithDecisions(
             keepTopLimit: boolean;
             keepFirstNineCap: boolean;
             keepDepartureBalance: boolean;
+            keepPriceComposition: boolean;
         }> = [
-            { rule: 'strict', keepTopLimit: true, keepFirstNineCap: true, keepDepartureBalance: true },
-            { rule: 'relaxed-top-window-limit', keepTopLimit: false, keepFirstNineCap: true, keepDepartureBalance: true },
-            { rule: 'relaxed-departure-balance', keepTopLimit: true, keepFirstNineCap: true, keepDepartureBalance: false },
-            { rule: 'relaxed-top-window-and-departure', keepTopLimit: false, keepFirstNineCap: true, keepDepartureBalance: false },
-            { rule: 'relaxed-first-nine-limit', keepTopLimit: true, keepFirstNineCap: false, keepDepartureBalance: true },
-            { rule: 'relaxed-all-limits', keepTopLimit: false, keepFirstNineCap: false, keepDepartureBalance: false },
+            { rule: 'strict', keepTopLimit: true, keepFirstNineCap: true, keepDepartureBalance: true, keepPriceComposition: true },
+            { rule: 'relaxed-top-window-limit', keepTopLimit: false, keepFirstNineCap: true, keepDepartureBalance: true, keepPriceComposition: true },
+            { rule: 'relaxed-departure-balance', keepTopLimit: true, keepFirstNineCap: true, keepDepartureBalance: false, keepPriceComposition: true },
+            { rule: 'relaxed-top-window-and-departure', keepTopLimit: false, keepFirstNineCap: true, keepDepartureBalance: false, keepPriceComposition: true },
+            { rule: 'relaxed-first-nine-limit', keepTopLimit: true, keepFirstNineCap: false, keepDepartureBalance: true, keepPriceComposition: true },
+            { rule: 'relaxed-all-limits', keepTopLimit: false, keepFirstNineCap: false, keepDepartureBalance: false, keepPriceComposition: false },
         ];
         let selection: { index: number; preferenceRule: FlightDiversityPreferenceRule } | null = null;
         let constraintRule: FlightDiversityConstraintRule = 'only-remaining-destination';
@@ -358,6 +363,7 @@ export function diversifyFlightDestinationsWithDecisions(
                 attempt.keepTopLimit,
                 attempt.keepFirstNineCap,
                 attempt.keepDepartureBalance,
+                attempt.keepPriceComposition,
             );
             if (selection) {
                 constraintRule = attempt.rule;
@@ -399,6 +405,18 @@ export interface RecommendationDiversityOptions extends FlightDiversityOptions {
     firstBlockSize?: number;
 }
 
+function isAffordableFirstScreenFlight(flight: Flight): boolean {
+    return getEffectivePrice(flight) <= 250_000;
+}
+
+function expensivePriceBand(flight: Flight): 'under-300' | '300-400' | '400-500' | '500-plus' {
+    const price = getEffectivePrice(flight);
+    if (price < 300_000) return 'under-300';
+    if (price < 400_000) return '300-400';
+    if (price < 500_000) return '400-500';
+    return '500-plus';
+}
+
 /**
  * 비교가 구간 순서를 지키면서 첫 묶음은 노선별 최저가 일정만 구성한다.
  * 첫 묶음에 들지 않은 다른 일정은 같은 정렬 규칙으로 뒤에 이어 붙인다.
@@ -410,26 +428,13 @@ export function diversifyRecommendationOrderWithDecisions(
     if (items.length === 0) return { flights: [], decisions: [] };
 
     const {
-        tierOf,
         firstBlockSize = 9,
         leadingFlights = [],
         ...diversityOptions
     } = options;
-    const originalIndexes = new Map(items.map((flight, index) => [flight.id, index]));
-    const rankedItems = items.slice().sort((a, b) => {
-        const sameRoute = firstNineRouteKey(a) === firstNineRouteKey(b);
-        if (sameRoute && options.routeCompetitivenessTierOf) {
-            const competitiveness = options.routeCompetitivenessTierOf(a)
-                - options.routeCompetitivenessTierOf(b);
-            if (competitiveness !== 0) return competitiveness;
-
-            const priceComparison = getEffectivePrice(a) - getEffectivePrice(b);
-            if (priceComparison !== 0) return priceComparison;
-        }
-        return tierOf(a) - tierOf(b)
-            || ((diversityOptions.scoreOf?.(a) ?? Infinity) - (diversityOptions.scoreOf?.(b) ?? Infinity))
-            || ((originalIndexes.get(a.id) ?? 0) - (originalIndexes.get(b.id) ?? 0));
-    });
+    // 추천 본체가 이미 가격 근거를 모두 반영해 정렬한 순서를 그대로 받는다.
+    // 진열 단계에서는 목적지·출발지·가격대 구성만 조정하고 추천 점수를 다시 계산하지 않는다.
+    const rankedItems = items.slice();
     const representativeIds = firstNineRouteRepresentativeIds(items, options.routeCompetitivenessTierOf);
     const representativePool = rankedItems.filter(flight => representativeIds.has(flight.id));
     const representativeResult = diversifyFlightDestinationsWithDecisions(
@@ -442,7 +447,7 @@ export function diversifyRecommendationOrderWithDecisions(
     );
     const availableSlots = Math.max(0, firstBlockSize - leadingFlights.length);
     const selectedFirstBlock = representativeResult.flights.slice(0, availableSlots);
-    const firstBlock = orderSelectedFirstBlockByNewest(selectedFirstBlock, leadingFlights);
+    const firstBlock = selectedFirstBlock;
     const firstBlockIds = new Set(firstBlock.map(flight => flight.id));
     const firstBlockDecisionById = new Map(
         representativeResult.decisions.map(decision => [decision.flightId, decision]),
