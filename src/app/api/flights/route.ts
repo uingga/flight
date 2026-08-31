@@ -7,6 +7,11 @@ import { getUsableNaverComparison } from '@/lib/naver-comparison';
 import { filterStaleSourceFlights, getStaleSources } from '@/lib/source-freshness';
 import { deduplicateDisplayFlights } from '@/lib/flight-visibility';
 import { buildNaverPriceKey } from '@/lib/naver-route';
+import {
+    buildNearbyNaverPriceIndex,
+    getNearbyNaverPriceContext,
+    getNearbyNaverRecommendationAdjustment,
+} from '@/lib/naver-nearby-price';
 import { normalizeCity } from '@/lib/utils/flight-helpers';
 import {
     compactPublicPriceHistory,
@@ -269,12 +274,22 @@ export async function GET(request: NextRequest) {
             const naverPath = path4.join(process.cwd(), 'data', 'naver-prices.json');
             if (fs4.existsSync(naverPath)) {
                 const naverPrices = JSON.parse(fs4.readFileSync(naverPath, 'utf-8'));
+                const nearbyNaverIndex = buildNearbyNaverPriceIndex(naverPrices);
 
                 let matched = 0;
                 for (const f of allFlights) {
                     // 캐시에 남은 과거 비교값이 새 실제 공항 조합에 붙지 않도록 먼저 비운다.
                     delete f.naverLowest;
                     delete f.naverCheckedAt;
+                    delete f.nearbyNaverBaseline;
+                    delete f.nearbyNaverSampleCount;
+                    delete f.nearbyNaverRecommendationMultiplier;
+                    delete f.nearbyNaverTodayPickExcluded;
+                    const nearbyContext = getNearbyNaverPriceContext(nearbyNaverIndex, f);
+                    f.nearbyNaverSampleCount = nearbyContext.sampleCount;
+                    if (nearbyContext.baseline) {
+                        f.nearbyNaverBaseline = nearbyContext.baseline;
+                    }
                     const exactKey = buildNaverPriceKey(f, f.departure?.date, f.arrival?.date);
                     if (exactKey) {
                         const matchedPrice = naverPrices[exactKey];
@@ -286,6 +301,13 @@ export async function GET(request: NextRequest) {
                             f.naverCheckedAt = comparison!.checkedAt;
                             matched++;
                         }
+                    }
+                    const nearbyAdjustment = getNearbyNaverRecommendationAdjustment(f);
+                    if (nearbyAdjustment.multiplier > 1) {
+                        f.nearbyNaverRecommendationMultiplier = nearbyAdjustment.multiplier;
+                    }
+                    if (nearbyAdjustment.todayPickExcluded) {
+                        f.nearbyNaverTodayPickExcluded = true;
                     }
                 }
                 const beforeNaverFilter = allFlights.length;

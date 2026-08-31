@@ -22,6 +22,7 @@
     "test:crawl-schedule": "node --test scripts/test-crawl-schedule-health.mjs",
     "test:naver-policy": "node --test scripts/test-local-naver-run-policy.mjs",
     "test:naver-priority": "tsx scripts/test-naver-crawl-priority.ts && tsx scripts/test-naver-refresh-policy.ts",
+    "test:naver-nearby": "tsx scripts/test-naver-nearby-price.ts",
     "test:source-fallback-policy": "node --test scripts/test-local-source-fallback-policy.mjs",
     "test:ttang-time": "tsx scripts/test-ttang-time-enrichment.ts",
     "test:modetour-manual": "tsx scripts/test-modetour-manual.ts",

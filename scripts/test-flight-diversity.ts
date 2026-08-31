@@ -213,6 +213,39 @@ assert.equal(
     '추천 점수 설명에 신선도 규칙이 명시돼야 한다.',
 );
 
+const ordinaryAdjacentPrice = {
+    ...flight('ordinary-adjacent-price', '인천', '구마모토', 0),
+    price: 180_000,
+    naverLowest: 200_000,
+    naverCheckedAt: '2026-08-28T08:00:00+09:00',
+    priceCheckedAt: '2026-08-28T08:00:00+09:00',
+};
+const expensiveForNearbyDates = {
+    ...flight('expensive-for-nearby-dates', '인천', '가고시마', 0),
+    price: 180_000,
+    naverLowest: 200_000,
+    naverCheckedAt: '2026-08-28T08:00:00+09:00',
+    priceCheckedAt: '2026-08-28T08:00:00+09:00',
+    nearbyNaverBaseline: 130_000,
+    nearbyNaverSampleCount: 4,
+    nearbyNaverRecommendationMultiplier: 1.3,
+};
+const nearbyPremiumState = buildRecommendationScoreState(
+    [expensiveForNearbyDates, ordinaryAdjacentPrice],
+    {},
+    recommendationNow,
+);
+assert.ok(
+    nearbyPremiumState.scores.get('expensive-for-nearby-dates')!
+        > nearbyPremiumState.scores.get('ordinary-adjacent-price')!,
+    '현재 일정만 유독 비싼 표는 동일 조건의 보통 표보다 추천 순위가 뒤로 가야 한다.',
+);
+assert.equal(
+    nearbyPremiumState.explanations.get('expensive-for-nearby-dates')?.factors.at(-1)?.rule,
+    'nearby-date-premium',
+    '인접 일정 가격 감점이 추천 점수 설명에 남아야 한다.',
+);
+
 const departureBalanceCandidates = Array.from({ length: 12 }, (_, index) => ({
     ...flight(
         `balance-${index + 1}`,

@@ -107,6 +107,11 @@ function recommendScore(flight, interparkPrices, now) {
         else score *= 2;
     }
 
+    const nearbyDateMultiplier = Number(flight.nearbyNaverRecommendationMultiplier || 1);
+    if (Number.isFinite(nearbyDateMultiplier) && nearbyDateMultiplier > 1) {
+        score *= nearbyDateMultiplier;
+    }
+
     return score * freshnessMultiplier(flight.priceCheckedAt, now);
 }
 
@@ -155,12 +160,17 @@ async function main() {
                 exceptional: isExceptionalCandidate(flight, data.interparkPrices || {}, now),
                 referencePrice: marketReference(flight, data.interparkPrices || {}, now),
                 repeat: recentRepeatDecision(flight, price, recentPicks),
+                datePremiumExcluded: flight.nearbyNaverTodayPickExcluded === true,
             };
         });
     const excludedRepeats = scored.filter(entry => entry.repeat.blocked);
-    const eligible = scored.filter(entry => !entry.repeat.blocked);
+    const excludedDatePremium = scored.filter(entry => entry.datePremiumExcluded);
+    const eligible = scored.filter(entry => !entry.repeat.blocked && !entry.datePremiumExcluded);
     if (excludedRepeats.length > 0) {
         console.log(`🚫 최근 7일과 같은 목적지 ${excludedRepeats.length}개 제외 (기간 최저 선정가보다 하락 시 예외)`);
+    }
+    if (excludedDatePremium.length > 0) {
+        console.log(`📅 인접 일정 기준보다 30%·5만원 이상 비싼 ${excludedDatePremium.length}개를 오늘의 표에서 제외`);
     }
 
     const exceptional = eligible

@@ -21,6 +21,7 @@ export interface RecommendationScoreFactor {
         | 'interpark-below-average'
         | 'interpark-average-or-higher'
         | 'comparison-price'
+        | 'nearby-date-premium'
         | 'price-freshness';
     multiplier: number;
     detail: string;
@@ -230,6 +231,29 @@ export function buildRecommendationScoreState(
                     routePriceCorrectionApplied: correctedScore !== explanation.scoreBeforeRouteCorrection,
                 });
             });
+    }
+
+    // 같은 노선 안의 가격 역전 보정을 마친 뒤 해당 일정의 날짜 프리미엄을 적용한다.
+    // 먼저 적용하면 다른 날짜의 점수 슬롯으로 감점이 이동할 수 있다.
+    for (const flight of flights) {
+        const multiplier = Number(flight.nearbyNaverRecommendationMultiplier || 1);
+        if (!Number.isFinite(multiplier) || multiplier <= 1) continue;
+        const currentScore = scores.get(flight.id) ?? Infinity;
+        const adjustedScore = currentScore * multiplier;
+        const explanation = explanations.get(flight.id)!;
+        scores.set(flight.id, adjustedScore);
+        explanations.set(flight.id, {
+            ...explanation,
+            score: adjustedScore,
+            factors: [
+                ...explanation.factors,
+                {
+                    rule: 'nearby-date-premium',
+                    multiplier,
+                    detail: `최근 14일 인접 일정 ${flight.nearbyNaverSampleCount || 0}건 기준보다 비쌈`,
+                },
+            ],
+        });
     }
 
     return { scores, explanations };
