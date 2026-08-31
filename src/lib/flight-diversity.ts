@@ -17,9 +17,9 @@ export type FlightDiversityConstraintRule =
     | 'strict'
     | 'relaxed-top-window-limit'
     | 'relaxed-departure-balance'
-    | 'relaxed-top-window-and-departure'
     | 'relaxed-first-nine-limit'
-    | 'relaxed-all-limits'
+    | 'relaxed-top-and-first-nine-limits'
+    | 'relaxed-price-composition'
     | 'only-remaining-destination';
 
 export type FlightDiversityPreferenceRule =
@@ -273,7 +273,7 @@ export function diversifyFlightDestinationsWithDecisions(
                         && (!keepFirstNineCap || sequence.length >= 9 || (topDestinationCounts.get(destination) || 0) < maxPerDestination)
                         && (!keepFirstNineCap || sequence.length >= 9 || !routeKey || representativeIds.has(flight.id))
                         && (!keepDepartureBalance || !mustChooseIncheon || departsFromIncheonArea)
-                        && (!keepDepartureBalance || incheonCount < 6 || !departsFromIncheonArea)
+                        && (!keepDepartureBalance || !balanceIncheon || incheonCount < 6 || !departsFromIncheonArea)
                         && priceCompositionAllowed;
                 });
             if (eligibleIndexes.length === 0) return null;
@@ -351,10 +351,10 @@ export function diversifyFlightDestinationsWithDecisions(
         }> = [
             { rule: 'strict', keepTopLimit: true, keepFirstNineCap: true, keepDepartureBalance: true, keepPriceComposition: true },
             { rule: 'relaxed-top-window-limit', keepTopLimit: false, keepFirstNineCap: true, keepDepartureBalance: true, keepPriceComposition: true },
-            { rule: 'relaxed-departure-balance', keepTopLimit: true, keepFirstNineCap: true, keepDepartureBalance: false, keepPriceComposition: true },
-            { rule: 'relaxed-top-window-and-departure', keepTopLimit: false, keepFirstNineCap: true, keepDepartureBalance: false, keepPriceComposition: true },
             { rule: 'relaxed-first-nine-limit', keepTopLimit: true, keepFirstNineCap: false, keepDepartureBalance: true, keepPriceComposition: true },
-            { rule: 'relaxed-all-limits', keepTopLimit: false, keepFirstNineCap: false, keepDepartureBalance: false, keepPriceComposition: false },
+            { rule: 'relaxed-top-and-first-nine-limits', keepTopLimit: false, keepFirstNineCap: false, keepDepartureBalance: true, keepPriceComposition: true },
+            { rule: 'relaxed-price-composition', keepTopLimit: false, keepFirstNineCap: false, keepDepartureBalance: true, keepPriceComposition: false },
+            { rule: 'relaxed-departure-balance', keepTopLimit: false, keepFirstNineCap: false, keepDepartureBalance: false, keepPriceComposition: false },
         ];
         let selection: { index: number; preferenceRule: FlightDiversityPreferenceRule } | null = null;
         let constraintRule: FlightDiversityConstraintRule = 'only-remaining-destination';

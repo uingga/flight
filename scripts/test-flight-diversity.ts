@@ -685,4 +685,37 @@ assert.deepEqual(
     '같은 목적지는 바로 이어 붙이지 않아야 한다.',
 );
 
+const nonSeoulPinned = {
+    ...flight('pinned-non-seoul', '대구', '고정도시', 0),
+    departure: { city: '대구', airport: 'TAE', date: '2026-09-01', time: '08:00' },
+    price: 190_000,
+};
+const pinnedDeparturePriorityCandidates = [
+    ...Array.from({ length: 8 }, (_, index) => ({
+        ...flight(`cheap-non-seoul-${index}`, '부산', `지방도시${index}`, index + 1),
+        price: 180_000 + index * 1_000,
+    })),
+    ...Array.from({ length: 6 }, (_, index) => ({
+        ...flight(`seoul-priority-${index}`, '인천', `서울도시${index}`, index + 9),
+        price: 350_000 + index * 1_000,
+    })),
+];
+const pinnedDeparturePriorityOrder = diversifyRecommendationOrder(
+    pinnedDeparturePriorityCandidates,
+    {
+        tierOf: () => 0,
+        scoreOf: item => item.price,
+        expensivePromotionEligibleOf: () => false,
+        leadingFlights: [nonSeoulPinned],
+        balanceIncheon: true,
+        maxConsecutiveDestinations: 1,
+    },
+);
+const visiblePriorityFirstNine = [nonSeoulPinned, ...pinnedDeparturePriorityOrder.slice(0, 8)];
+assert.equal(
+    visiblePriorityFirstNine.filter(item => item.departure.city === '인천').length,
+    6,
+    '비서울 TIKIT DROP이 고정돼도 가격 구성보다 인천·김포 6개 규칙을 먼저 지켜야 한다.',
+);
+
 console.log('✅ 추천 후보 판정 · 가격/신선도 점수 · 오늘의 표/목적지/출발지 진열 설명');
