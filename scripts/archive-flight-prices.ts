@@ -1,7 +1,7 @@
-import { createHash } from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import type { Flight } from '../src/types/flight';
+import { buildLifecycleIdentity } from './lib/flight-lifecycle';
 
 interface FlightCache {
     timestamp?: string;
@@ -95,23 +95,21 @@ function effectivePrice(flight: Flight): number {
 }
 
 function routeKey(flight: Flight): string {
-    const departure = normalizedAirport(flight.departure?.airport) || cleanText(flight.departure?.city) || 'UNKNOWN';
-    const arrival = normalizedAirport(flight.arrival?.airport) || cleanText(flight.arrival?.city) || 'UNKNOWN';
+    const departure = normalizedAirport(flight.routeAirports?.outboundDeparture)
+        || normalizedAirport(flight.departure?.airport)
+        || cleanText(flight.departure?.city)
+        || 'UNKNOWN';
+    const arrival = normalizedAirport(flight.routeAirports?.outboundArrival)
+        || normalizedAirport(flight.arrival?.airport)
+        || cleanText(flight.arrival?.city)
+        || 'UNKNOWN';
     return `${departure}-${arrival}`;
 }
 
 function stableFlightKey(flight: Flight): string {
-    const identity = [
-        flight.source,
-        cleanText(flight.id),
-        routeKey(flight),
-        cleanDate(flight.departure?.date),
-        cleanDate(flight.arrival?.date),
-        cleanText(flight.airline),
-        cleanText(flight.departure?.time),
-        cleanText(flight.arrival?.time),
-    ].join('|');
-    return createHash('sha256').update(identity).digest('hex');
+    // 일부 여행사는 항공권 ID에 가격을 포함한다. 생애 기록기와 같은 안정적인
+    // 판매 회차 키를 써야 가격 변경이 별도 항공권으로 중복 집계되지 않는다.
+    return buildLifecycleIdentity(flight).offerKey;
 }
 
 function loadCache(): FlightCache {
@@ -131,9 +129,11 @@ function buildRows(cache: FlightCache, now = new Date()): { flights: FlightDaily
             flight_id: cleanText(flight.id) || stableFlightKey(flight),
             source: flight.source,
             departure_city: cleanText(flight.departure?.city) || '알 수 없음',
-            departure_airport: normalizedAirport(flight.departure?.airport),
+            departure_airport: normalizedAirport(flight.routeAirports?.outboundDeparture)
+                || normalizedAirport(flight.departure?.airport),
             arrival_city: cleanText(flight.arrival?.city) || '알 수 없음',
-            arrival_airport: normalizedAirport(flight.arrival?.airport),
+            arrival_airport: normalizedAirport(flight.routeAirports?.outboundArrival)
+                || normalizedAirport(flight.arrival?.airport),
             departure_date: cleanDate(flight.departure?.date),
             return_date: cleanDate(flight.arrival?.date),
             outbound_time: cleanText(flight.departure?.time),

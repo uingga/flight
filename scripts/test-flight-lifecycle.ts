@@ -71,6 +71,21 @@ const comparedSnapshot = toLifecycleSnapshot(compared, true);
 assert.equal(comparedSnapshot.comparisonPrice, 188_000);
 assert.equal(comparedSnapshot.comparisonCheckedAt, '2026-08-24T01:00:00.000Z');
 
+const actualAirportSnapshot = toLifecycleSnapshot(flight({
+    routeAirports: {
+        outboundDeparture: 'GMP',
+        outboundArrival: 'MYJ',
+        returnDeparture: 'MYJ',
+        returnArrival: 'GMP',
+    },
+}), true);
+assert.equal(
+    actualAirportSnapshot.departureAirport,
+    'GMP',
+    '노선 분석에는 검색 대표 공항보다 예약 결과에서 확인한 실제 출발 공항을 기록해야 합니다.',
+);
+assert.equal(actualAirportSnapshot.arrivalAirport, 'MYJ');
+
 const shapedBatches = groupRowsByShape([
     { offer_key: 'new-1', price: 100_000 },
     { offer_key: 'existing-1', price: 110_000, created_at: '2026-08-24T00:00:00Z' },

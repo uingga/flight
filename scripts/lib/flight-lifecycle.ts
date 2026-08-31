@@ -167,15 +167,22 @@ export function toLifecycleSnapshot(flight: Flight, isVisible: boolean): Lifecyc
     const numbers = flightNumbers(flight);
     const seats = seatAvailability(flight);
     const comparisonPrice = Number(flight.naverLowest);
+    // 검색에 사용한 대표 공항보다 예약 결과에서 확인한 실제 공항을 우선한다.
+    // 식별 키는 기존 판매 회차와 이어지도록 그대로 두고, 분석용 노선 필드만
+    // 실제 왕복 여정 기준으로 기록한다.
+    const departureAirport = normalizedAirport(flight.routeAirports?.outboundDeparture)
+        || normalizedAirport(flight.departure?.airport);
+    const arrivalAirport = normalizedAirport(flight.routeAirports?.outboundArrival)
+        || normalizedAirport(flight.arrival?.airport);
     return {
         ...identity,
         identityVersion: LIFECYCLE_IDENTITY_VERSION,
         source: flight.source,
         sourceFlightId: cleanText(flight.id) || identity.offerKey,
         departureCity: cleanText(flight.departure?.city) || '알 수 없음',
-        departureAirport: normalizedAirport(flight.departure?.airport),
+        departureAirport,
         arrivalCity: cleanText(flight.arrival?.city) || '알 수 없음',
-        arrivalAirport: normalizedAirport(flight.arrival?.airport),
+        arrivalAirport,
         departureDate: cleanDate(flight.departure?.date),
         returnDate: cleanDate(flight.arrival?.date),
         outboundTime: cleanText(flight.departure?.time),
