@@ -1710,8 +1710,8 @@ export default function Dashboard() {
     // 추천순(스마트 정렬) 점수 — 낮을수록 상위.
     // 먼저 신선한 외부 비교가 기준으로 구간을 나누고, 구간 안에서는 실질 가격과 기존 벤치마크를 종합한다.
     const recommendScoreState = useMemo(
-        () => buildRecommendationScoreState(flights, interparkPrices),
-        [flights, interparkPrices],
+        () => buildRecommendationScoreState(flights, interparkPrices, Date.now(), priceHistory),
+        [flights, interparkPrices, priceHistory],
     );
     const recommendScores = recommendScoreState.scores;
 
@@ -1920,7 +1920,13 @@ export default function Dashboard() {
             case 'discount': {
                 // 추천순은 신선한 비교가 이하를 먼저, 비교 불가를 그다음,
                 // 신선한 비교가 초과를 마지막에 둔다. 각 그룹 안에서는 종합 품질점수를 유지한다.
-                comparison = compareRecommendedFlights(a, b, recommendScores);
+                comparison = compareRecommendedFlights(
+                    a,
+                    b,
+                    recommendScores,
+                    Date.now(),
+                    recommendScoreState.explanations,
+                );
                 break;
             }
         }

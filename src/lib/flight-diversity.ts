@@ -23,7 +23,8 @@ export type FlightDiversityConstraintRule =
 export type FlightDiversityPreferenceRule =
     | 'original-rank'
     | 'incheon-balance-within-15-percent'
-    | 'unseen-destination-within-15-percent';
+    | 'unseen-destination-within-15-percent'
+    | 'avoid-alternating-destinations';
 
 /** 추천 배열의 순서를 바꾸지 않고, 각 카드를 고를 때 실제 적용된 규칙만 기록한다. */
 export interface FlightDiversityDecision {
@@ -104,6 +105,49 @@ export function trailingDestinationStreak(destinations: string[], candidate: str
     return streak;
 }
 
+/** 후보를 붙였을 때 A-B-A-B 형태가 완성되는지 확인한다. */
+export function createsAlternatingDestinationPattern(destinations: string[], candidate: string): boolean {
+    if (destinations.length < 3) return false;
+    const last = destinations.length - 1;
+    return destinations[last - 2] === destinations[last]
+        && destinations[last - 1] === candidate
+        && destinations[last] !== candidate;
+}
+
+function firstSeenTime(flight: Flight): number {
+    const parsed = flight.firstSeen ? new Date(flight.firstSeen).getTime() : Number.NaN;
+    return Number.isFinite(parsed) ? parsed : Number.NEGATIVE_INFINITY;
+}
+
+/** 첫 묶음의 구성은 유지하고, 새 항공권을 우선하되 목적지 반복은 만들지 않는다. */
+function orderSelectedFirstBlockByNewest(items: Flight[], leadingFlights: Flight[]): Flight[] {
+    const remaining = items
+        .map((flight, index) => ({ flight, index }))
+        .sort((a, b) => firstSeenTime(b.flight) - firstSeenTime(a.flight) || a.index - b.index);
+    const result: Flight[] = [];
+    const destinations = leadingFlights.map(flight => normalizeCity(flight.arrival.city));
+
+    while (remaining.length > 0) {
+        const lastDestination = destinations[destinations.length - 1];
+        let nextIndex = remaining.findIndex(({ flight }) => {
+            const destination = normalizeCity(flight.arrival.city);
+            return destination !== lastDestination
+                && !createsAlternatingDestinationPattern(destinations, destination);
+        });
+        if (nextIndex < 0) {
+            nextIndex = remaining.findIndex(({ flight }) => (
+                normalizeCity(flight.arrival.city) !== lastDestination
+            ));
+        }
+        if (nextIndex < 0) nextIndex = 0;
+
+        const [{ flight }] = remaining.splice(nextIndex, 1);
+        result.push(flight);
+        destinations.push(normalizeCity(flight.arrival.city));
+    }
+    return result;
+}
+
 /** 다양성 규칙으로 뽑힌 첫 묶음의 구성은 유지하면서 새로 발견된 날짜순으로 정렬한다. */
 export function sortFirstBlockByNewestArrival(items: Flight[], blockSize = 9): Flight[] {
     const firstBlockSize = Math.min(Math.max(0, blockSize), items.length);
@@ -180,6 +224,7 @@ export function diversifyFlightDestinationsWithDecisions(
     });
     while (remaining.length > 0) {
         const insideTopWindow = sequence.length < topWindow;
+        const allDestinationSequence = sequence.map(flight => normalizeCity(flight.arrival.city));
         const destinationSequence = sequence
             .slice(-maxConsecutiveDestinations)
             .map(flight => normalizeCity(flight.arrival.city));
@@ -217,14 +262,30 @@ export function diversifyFlightDestinationsWithDecisions(
                 });
             if (eligibleIndexes.length === 0) return null;
 
-            const bestIndex = eligibleIndexes[0];
+            const nonAlternatingIndexes = eligibleIndexes.filter(index => (
+                !createsAlternatingDestinationPattern(
+                    allDestinationSequence,
+                    normalizeCity(remaining[index].arrival.city),
+                )
+            ));
+            const candidateIndexes = nonAlternatingIndexes.length > 0
+                ? nonAlternatingIndexes
+                : eligibleIndexes;
+            const avoidedAlternatingPattern = candidateIndexes[0] !== eligibleIndexes[0];
+
+            const bestIndex = candidateIndexes[0];
             const bestScore = scoreOf?.(remaining[bestIndex]);
             if (!insideTopWindow || !Number.isFinite(bestScore)) {
-                return { index: bestIndex, preferenceRule: 'original-rank' };
+                return {
+                    index: bestIndex,
+                    preferenceRule: avoidedAlternatingPattern
+                        ? 'avoid-alternating-destinations'
+                        : 'original-rank',
+                };
             }
 
             if (balanceIncheon && incheonCount < desiredIncheonCount) {
-                const incheonIndex = eligibleIndexes.find(index => {
+                const incheonIndex = candidateIndexes.find(index => {
                     const score = scoreOf?.(remaining[index]);
                     return isIncheonAreaDeparture(remaining[index])
                         && Number.isFinite(score)
@@ -239,10 +300,15 @@ export function diversifyFlightDestinationsWithDecisions(
             // 최고 후보가 직전 목적지와 같다면 두 번째 카드까지는 원래 순위를 존중한다.
             // 이 예외가 없으면 아래 unseen 우선순위가 사실상 같은 목적지 연속을 계속 막는다.
             if (trailingDestinationStreak(destinationSequence, bestDestination) === 1) {
-                return { index: bestIndex, preferenceRule: 'original-rank' };
+                return {
+                    index: bestIndex,
+                    preferenceRule: avoidedAlternatingPattern
+                        ? 'avoid-alternating-destinations'
+                        : 'original-rank',
+                };
             }
 
-            const unseenIndex = eligibleIndexes.find(index => {
+            const unseenIndex = candidateIndexes.find(index => {
                 const flight = remaining[index];
                 const destination = normalizeCity(flight.arrival.city);
                 const score = scoreOf?.(flight);
@@ -251,7 +317,12 @@ export function diversifyFlightDestinationsWithDecisions(
                     && score! <= bestScore! * 1.15;
             });
             return unseenIndex === undefined
-                ? { index: bestIndex, preferenceRule: 'original-rank' }
+                ? {
+                    index: bestIndex,
+                    preferenceRule: avoidedAlternatingPattern
+                        ? 'avoid-alternating-destinations'
+                        : 'original-rank',
+                }
                 : { index: unseenIndex, preferenceRule: 'unseen-destination-within-15-percent' };
         };
 
@@ -332,44 +403,53 @@ export function diversifyRecommendationOrderWithDecisions(
         leadingFlights = [],
         ...diversityOptions
     } = options;
+    const originalIndexes = new Map(items.map((flight, index) => [flight.id, index]));
+    const rankedItems = items.slice().sort((a, b) => (
+        tierOf(a) - tierOf(b)
+        || ((diversityOptions.scoreOf?.(a) ?? Infinity) - (diversityOptions.scoreOf?.(b) ?? Infinity))
+        || ((originalIndexes.get(a.id) ?? 0) - (originalIndexes.get(b.id) ?? 0))
+    ));
     const representativeIds = firstNineRouteRepresentativeIds(items);
-    const representativePool = items.filter(flight => representativeIds.has(flight.id));
-    const tiers = Array.from(new Set(items.map(tierOf))).sort((a, b) => a - b);
-
-    const diversifyByTier = (candidates: Flight[], leading: Flight[]): FlightDiversityResult => {
-        const flights: Flight[] = [];
-        const decisions: FlightDiversityDecision[] = [];
-        for (const tier of tiers) {
-            const group = diversifyFlightDestinationsWithDecisions(
-                candidates.filter(flight => tierOf(flight) === tier),
-                {
-                    ...diversityOptions,
-                    leadingFlights: [...leading, ...flights],
-                },
-            );
-            flights.push(...group.flights);
-            decisions.push(...group.decisions);
-        }
-        return { flights, decisions };
-    };
-
-    const representativeResult = diversifyByTier(representativePool, leadingFlights);
+    const representativePool = rankedItems.filter(flight => representativeIds.has(flight.id));
+    const representativeResult = diversifyFlightDestinationsWithDecisions(
+        representativePool,
+        {
+            ...diversityOptions,
+            topWindow: firstBlockSize,
+            leadingFlights,
+        },
+    );
     const availableSlots = Math.max(0, firstBlockSize - leadingFlights.length);
-    const firstBlock = representativeResult.flights.slice(0, availableSlots);
+    const selectedFirstBlock = representativeResult.flights.slice(0, availableSlots);
+    const firstBlock = orderSelectedFirstBlockByNewest(selectedFirstBlock, leadingFlights);
     const firstBlockIds = new Set(firstBlock.map(flight => flight.id));
     const firstBlockDecisionById = new Map(
         representativeResult.decisions.map(decision => [decision.flightId, decision]),
     );
-    const tailResult = diversifyByTier(
-        items.filter(flight => !firstBlockIds.has(flight.id)),
-        [...leadingFlights, ...firstBlock],
+    const tailResult = diversifyFlightDestinationsWithDecisions(
+        rankedItems.filter(flight => !firstBlockIds.has(flight.id)),
+        {
+            ...diversityOptions,
+            leadingFlights: [...leadingFlights, ...firstBlock],
+            topWindow: 0,
+            maxConsecutiveDestinations: 2,
+            balanceIncheon: false,
+        },
     );
 
     return {
         flights: [...firstBlock, ...tailResult.flights],
         decisions: [
-            ...firstBlock.map(flight => firstBlockDecisionById.get(flight.id)!),
-            ...tailResult.decisions,
+            ...firstBlock.map((flight, index) => ({
+                ...firstBlockDecisionById.get(flight.id)!,
+                selectionIndex: index,
+                firstNine: true,
+            })),
+            ...tailResult.decisions.map((decision, index) => ({
+                ...decision,
+                selectionIndex: firstBlock.length + index,
+                firstNine: false,
+            })),
         ],
     };
 }

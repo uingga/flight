@@ -10,8 +10,16 @@ import {
     getEffectivePrice,
 } from './price-quality';
 import { normalizeCity } from './utils/flight-helpers';
+import { getRegionByCity } from './utils/region-mapper';
 
 export type InterparkPrices = Record<string, Record<string, { avg: number; lowest: number }>>;
+export type RecommendationPriceHistory = Record<string, Array<{ date: string; minPrice: number }>>;
+
+export type TopRecommendationTier = 0 | 1 | 2;
+
+const MIN_REGION_SAMPLE_COUNT = 5;
+const MIN_ROUTE_HISTORY_SAMPLE_COUNT = 7;
+const ATTRACTIVE_PRICE_PERCENTILE = 0.5;
 
 export interface RecommendationScoreFactor {
     rule:
@@ -35,6 +43,13 @@ export interface RecommendationScoreExplanation {
     scoreBeforeRouteCorrection: number;
     score: number;
     routePriceCorrectionApplied: boolean;
+    topRecommendationTier: TopRecommendationTier;
+    regionPricePercentile: number | null;
+    routeHistoryPercentile: number | null;
+    priceAppealPercentile: number | null;
+    priceAttractive: boolean;
+    nearbyDateCompetitive: boolean | null;
+    naverAllowedGap: number;
     factors: RecommendationScoreFactor[];
 }
 
@@ -108,6 +123,129 @@ function comparisonMultiplier(effectivePrice: number, comparisonPrice: number): 
     return 2;
 }
 
+/** 네이버가 더 싸더라도 상단 후보를 유지할 수 있는 작은 가격 차이다. */
+export function getAllowedNaverPriceGap(effectivePrice: number): number {
+    return Math.min(20_000, Math.max(7_500, Math.round(effectivePrice * 0.05)));
+}
+
+function departureAreaKey(flight: Flight): string {
+    const airport = flight.departure.airport?.trim().toUpperCase();
+    if (airport === 'ICN' || airport === 'GMP') return 'SEOUL';
+    if (airport === 'PUS') return 'BUSAN';
+    if (airport === 'TAE') return 'DAEGU';
+    if (airport === 'CJJ') return 'CHEONGJU';
+    if (airport === 'CJU') return 'JEJU';
+    return normalizeCity(flight.departure.city) || airport || 'UNKNOWN';
+}
+
+function routeKey(flight: Flight): string {
+    return `${normalizeCity(flight.departure.city)}-${normalizeCity(flight.arrival.city)}`;
+}
+
+function regionKey(flight: Flight): string {
+    const region = flight.region || getRegionByCity(normalizeCity(flight.arrival.city));
+    return `${departureAreaKey(flight)}-${region}`;
+}
+
+function percentileOf(value: number, samples: number[], minimumSamples: number): number | null {
+    const sorted = samples.filter(sample => Number.isFinite(sample) && sample > 0).sort((a, b) => a - b);
+    if (sorted.length < minimumSamples) return null;
+    if (sorted.length === 1) return 0;
+
+    const lower = sorted.findIndex(sample => sample >= value);
+    if (lower < 0) return 1;
+    let upper = -1;
+    for (let index = sorted.length - 1; index >= 0; index -= 1) {
+        if (sorted[index] <= value) {
+            upper = index;
+            break;
+        }
+    }
+    return Math.max(0, Math.min(1, ((lower + Math.max(lower, upper)) / 2) / (sorted.length - 1)));
+}
+
+interface PriceAppealContext {
+    regionPrices: Map<string, number[]>;
+    routeHistoryPrices: Map<string, number[]>;
+}
+
+function buildPriceAppealContext(
+    flights: Flight[],
+    priceHistory: RecommendationPriceHistory,
+): PriceAppealContext {
+    const regionPrices = new Map<string, number[]>();
+    for (const flight of flights) {
+        const key = regionKey(flight);
+        const prices = regionPrices.get(key) || [];
+        prices.push(getEffectivePrice(flight));
+        regionPrices.set(key, prices);
+    }
+
+    const routeHistoryPrices = new Map<string, number[]>();
+    for (const [key, entries] of Object.entries(priceHistory)) {
+        routeHistoryPrices.set(
+            key,
+            entries.map(entry => Number(entry.minPrice)).filter(price => Number.isFinite(price) && price > 0),
+        );
+    }
+    return { regionPrices, routeHistoryPrices };
+}
+
+function priceAppealForFlight(
+    flight: Flight,
+    effectivePrice: number,
+    context: PriceAppealContext,
+) {
+    const regionPricePercentile = percentileOf(
+        effectivePrice,
+        context.regionPrices.get(regionKey(flight)) || [],
+        MIN_REGION_SAMPLE_COUNT,
+    );
+    const routeHistoryPercentile = percentileOf(
+        effectivePrice,
+        context.routeHistoryPrices.get(routeKey(flight)) || [],
+        MIN_ROUTE_HISTORY_SAMPLE_COUNT,
+    );
+    const available = [regionPricePercentile, routeHistoryPercentile]
+        .filter((value): value is number => value !== null);
+    const priceAppealPercentile = available.length
+        ? available.reduce((sum, value) => sum + value, 0) / available.length
+        : null;
+    return {
+        regionPricePercentile,
+        routeHistoryPercentile,
+        priceAppealPercentile,
+        priceAttractive: priceAppealPercentile !== null
+            && priceAppealPercentile <= ATTRACTIVE_PRICE_PERCENTILE,
+    };
+}
+
+function getTopRecommendationTier(
+    effectivePrice: number,
+    comparisonPrice: number | null,
+    priceAttractive: boolean,
+    nearbyDateCompetitive: boolean | null,
+): { tier: TopRecommendationTier; naverAllowedGap: number } {
+    const naverAllowedGap = getAllowedNaverPriceGap(effectivePrice);
+    const naverCheaperOrEqual = comparisonPrice !== null && effectivePrice <= comparisonPrice;
+    const naverWithinTolerance = comparisonPrice !== null
+        && effectivePrice > comparisonPrice
+        && effectivePrice - comparisonPrice <= naverAllowedGap;
+
+    if (priceAttractive && nearbyDateCompetitive === true && naverCheaperOrEqual) {
+        return { tier: 0, naverAllowedGap };
+    }
+    if (
+        naverCheaperOrEqual
+        || (priceAttractive
+            && nearbyDateCompetitive === true
+            && (comparisonPrice === null || naverWithinTolerance))
+    ) {
+        return { tier: 1, naverAllowedGap };
+    }
+    return { tier: 2, naverAllowedGap };
+}
+
 function closestInterparkMonth(
     flight: Flight,
     interparkPrices: InterparkPrices,
@@ -139,6 +277,7 @@ function scoreFlight(
     flight: Flight,
     interparkPrices: InterparkPrices,
     now: number,
+    priceAppealContext: PriceAppealContext,
 ): RecommendationScoreExplanation {
     const effectivePrice = getEffectivePrice(flight);
     const { month, data: interparkMonth } = closestInterparkMonth(flight, interparkPrices);
@@ -150,6 +289,17 @@ function scoreFlight(
     const comparisonPrice = comparisonUsable ? flight.naverLowest! : null;
     const isComparisonCheaper = Boolean(comparisonPrice && effectivePrice <= comparisonPrice);
     const factors: RecommendationScoreFactor[] = [];
+    const priceAppeal = priceAppealForFlight(flight, effectivePrice, priceAppealContext);
+    const nearbyBaseline = Number(flight.nearbyNaverBaseline);
+    const nearbyDateCompetitive = Number.isFinite(nearbyBaseline) && nearbyBaseline > 0
+        ? effectivePrice <= nearbyBaseline * 1.1
+        : null;
+    const topTier = getTopRecommendationTier(
+        effectivePrice,
+        comparisonPrice,
+        priceAppeal.priceAttractive,
+        nearbyDateCompetitive,
+    );
 
     let score = effectivePrice;
     if (!interparkMonth) {
@@ -191,6 +341,10 @@ function scoreFlight(
         scoreBeforeRouteCorrection: score,
         score,
         routePriceCorrectionApplied: false,
+        topRecommendationTier: topTier.tier,
+        ...priceAppeal,
+        nearbyDateCompetitive,
+        naverAllowedGap: topTier.naverAllowedGap,
         factors,
     };
 }
@@ -200,11 +354,13 @@ export function buildRecommendationScoreState(
     flights: Flight[],
     interparkPrices: InterparkPrices,
     now = Date.now(),
+    priceHistory: RecommendationPriceHistory = {},
 ): RecommendationScoreState {
     const explanations = new Map<string, RecommendationScoreExplanation>();
     const scores = new Map<string, number>();
+    const priceAppealContext = buildPriceAppealContext(flights, priceHistory);
     for (const flight of flights) {
-        const explanation = scoreFlight(flight, interparkPrices, now);
+        const explanation = scoreFlight(flight, interparkPrices, now, priceAppealContext);
         explanations.set(flight.id, explanation);
         scores.set(flight.id, explanation.score);
     }
@@ -250,7 +406,7 @@ export function buildRecommendationScoreState(
                 {
                     rule: 'nearby-date-premium',
                     multiplier,
-                    detail: `최근 14일 인접 일정 ${flight.nearbyNaverSampleCount || 0}건 기준보다 비쌈`,
+                    detail: `인접 일정 ${flight.nearbyNaverSampleCount || 0}건 기준보다 비쌈`,
                 },
             ],
         });
@@ -265,8 +421,10 @@ export function compareRecommendedFlights(
     b: Flight,
     scores: Map<string, number>,
     now = Date.now(),
+    explanations?: Map<string, RecommendationScoreExplanation>,
 ): number {
-    const tierComparison = getComparisonPriceTier(a, now) - getComparisonPriceTier(b, now);
+    const tierComparison = (explanations?.get(a.id)?.topRecommendationTier ?? getComparisonPriceTier(a, now))
+        - (explanations?.get(b.id)?.topRecommendationTier ?? getComparisonPriceTier(b, now));
     if (tierComparison !== 0) return tierComparison;
     return (scores.get(a.id) ?? Infinity) - (scores.get(b.id) ?? Infinity);
 }
@@ -292,10 +450,12 @@ export function buildRecommendationPresentation(
 
     if (diversify) {
         const result = diversifyRecommendationOrderWithDecisions(pool, {
-            tierOf: flight => getComparisonPriceTier(flight, now),
-            maxConsecutiveDestinations: 2,
-            topWindow: 20,
+            tierOf: flight => scoreState.explanations.get(flight.id)?.topRecommendationTier
+                ?? getComparisonPriceTier(flight, now),
+            maxConsecutiveDestinations: 1,
+            topWindow: 9,
             maxPerDestination: 2,
+            leadingFlights: pinnedFlight ? [pinnedFlight] : [],
             scoreOf: flight => scoreState.scores.get(flight.id) ?? Infinity,
             balanceIncheon,
         });

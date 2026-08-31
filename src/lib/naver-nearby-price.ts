@@ -3,10 +3,11 @@ import { buildNaverPriceKey, normalizeComparisonDate } from './naver-route';
 import { getComparisonFreshness, getEffectivePrice } from './price-quality';
 
 const DAY_MS = 86_400_000;
-const LOOKBACK_DAYS = 14;
-const DEPARTURE_WINDOW_DAYS = 7;
+const LOOKBACK_DAYS = 60;
+const PRIMARY_DEPARTURE_WINDOW_DAYS = 30;
+const FALLBACK_DEPARTURE_WINDOW_DAYS = 60;
 const DURATION_TOLERANCE_DAYS = 1;
-const MIN_SAMPLE_COUNT = 3;
+const MIN_SAMPLE_COUNT = 5;
 
 export interface NearbyNaverPriceEntry {
     naverLowest?: unknown;
@@ -73,8 +74,8 @@ const routeKeyFromFlight = (flight: Flight): {
 };
 
 /**
- * 최근 14일 안에 정상 수집된 인접 일정 네이버 가격을 동일 가중치로 색인한다.
- * 0~7일과 8~14일 표본 사이에 시간 감쇠를 두지 않는다.
+ * 최근 60일 안에 정상 수집된 인접 일정 네이버 가격을 동일 가중치로 색인한다.
+ * 먼저 출발일 ±30일을 보고, 표본이 부족할 때만 ±60일까지 넓힌다.
  */
 export function buildNearbyNaverPriceIndex(
     entries: Record<string, NearbyNaverPriceEntry | undefined>,
@@ -104,27 +105,33 @@ export function buildNearbyNaverPriceIndex(
     return { byRoute };
 }
 
-/** 같은 노선·출발일 ±7일·여행기간 ±1일의 하위 25% 가격을 반환한다. */
+/** 같은 노선·여행기간 ±1일에서 출발일 ±30일, 부족하면 ±60일의 하위 25% 가격을 반환한다. */
 export function getNearbyNaverPriceContext(
     index: NearbyNaverPriceIndex,
     flight: Flight,
 ): NearbyNaverPriceContext {
     const route = routeKeyFromFlight(flight);
     if (!route) return { baseline: null, sampleCount: 0 };
-    const prices = (index.byRoute.get(route.routeKey) || [])
+    const comparableSamples = (index.byRoute.get(route.routeKey) || [])
         .filter(sample => (
             sample.key !== route.exactKey
-            && Math.abs(sample.departureDay - route.departureDay) <= DEPARTURE_WINDOW_DAYS
             && Math.abs(sample.durationDays - route.durationDays) <= DURATION_TOLERANCE_DAYS
+            && Math.abs(sample.departureDay - route.departureDay) <= FALLBACK_DEPARTURE_WINDOW_DAYS
+        ));
+    const primaryPrices = comparableSamples
+        .filter(sample => (
+            Math.abs(sample.departureDay - route.departureDay) <= PRIMARY_DEPARTURE_WINDOW_DAYS
         ))
-        .map(sample => sample.price)
+        .map(sample => sample.price);
+    const prices = (primaryPrices.length >= MIN_SAMPLE_COUNT
+        ? primaryPrices
+        : comparableSamples.map(sample => sample.price))
         .sort((left, right) => left - right);
 
     if (prices.length < MIN_SAMPLE_COUNT) {
         return { baseline: null, sampleCount: prices.length };
     }
-    // 표본이 3~4개일 때 최저가 한 건이 그대로 기준이 되지 않도록
-    // 25백분위 위치의 양옆 가격을 선형 보간한다.
+    // 최저가 한 건이 그대로 기준이 되지 않도록 25백분위 위치의 양옆 가격을 선형 보간한다.
     const quartilePosition = (prices.length - 1) * 0.25;
     const lowerIndex = Math.floor(quartilePosition);
     const upperIndex = Math.ceil(quartilePosition);

@@ -3,6 +3,7 @@ import {
     diversifyFlightDestinations,
     diversifyFlightDestinationsWithDecisions,
     diversifyRecommendationOrder,
+    createsAlternatingDestinationPattern,
     excludePinnedDestination,
     sortFirstBlockByNewestArrival,
     trailingDestinationStreak,
@@ -11,6 +12,7 @@ import {
     buildRecommendationPresentation,
     buildRecommendationScoreState,
     compareRecommendedFlights,
+    getAllowedNaverPriceGap,
 } from '../src/lib/flight-recommendation';
 import type { Flight } from '../src/types/flight';
 
@@ -198,6 +200,27 @@ assert.deepEqual(
 );
 assert.equal(recentlyAddedFirst[9].id, ordered[9].id, '첫 9개 밖의 순서는 바꾸면 안 된다.');
 
+const newlyArrivedUniqueCandidates = Array.from({ length: 10 }, (_, index) => ({
+    ...flight(`new-${index + 1}`, '인천', `신규도시${index + 1}`, index + 1),
+    firstSeen: index === 5 ? '2026-08-30' : index === 2 ? '2026-08-29' : '2026-08-20',
+}));
+const newlyArrivedRecommendation = diversifyRecommendationOrder(newlyArrivedUniqueCandidates, {
+    tierOf: () => 0,
+    scoreOf: item => (item as Flight & { testScore: number }).testScore,
+    balanceIncheon: false,
+    maxConsecutiveDestinations: 1,
+});
+assert.deepEqual(
+    newlyArrivedRecommendation.slice(0, 2).map(item => item.id),
+    ['new-6', 'new-3'],
+    '첫 9개의 가격 품질 구성을 정한 뒤에는 새로 들어온 항공권을 위에 보여야 한다.',
+);
+assert.deepEqual(
+    new Set(newlyArrivedRecommendation.slice(0, 9).map(item => item.id)),
+    new Set(newlyArrivedUniqueCandidates.slice(0, 9).map(item => item.id)),
+    '최신 등록 우선은 가격 품질로 선발한 첫 9개의 구성 자체를 바꾸면 안 된다.',
+);
+
 const onlyOneDestination = diversifyFlightDestinations(candidates.slice(0, 3), {
     scoreOf: item => (item as Flight & { testScore: number }).testScore,
     balanceIncheon: false,
@@ -226,7 +249,13 @@ const unverifiedCheap = {
 };
 const tierState = buildRecommendationScoreState([unverifiedCheap, verifiedQuality], {}, recommendationNow);
 const tierRanked = [unverifiedCheap, verifiedQuality]
-    .sort((a, b) => compareRecommendedFlights(a, b, tierState.scores, recommendationNow));
+    .sort((a, b) => compareRecommendedFlights(
+        a,
+        b,
+        tierState.scores,
+        recommendationNow,
+        tierState.explanations,
+    ));
 assert.deepEqual(
     tierRanked.map(item => item.id),
     ['verified-quality', 'unverified-cheap'],
@@ -306,7 +335,13 @@ const departureBalanceCandidates = Array.from({ length: 12 }, (_, index) => ({
 const balanceState = buildRecommendationScoreState(departureBalanceCandidates, {}, recommendationNow);
 const balanceRanked = departureBalanceCandidates
     .slice()
-    .sort((a, b) => compareRecommendedFlights(a, b, balanceState.scores, recommendationNow));
+    .sort((a, b) => compareRecommendedFlights(
+        a,
+        b,
+        balanceState.scores,
+        recommendationNow,
+        balanceState.explanations,
+    ));
 const balancePresentation = buildRecommendationPresentation(balanceRanked, balanceState, {
     balanceIncheon: true,
     now: recommendationNow,
@@ -349,5 +384,96 @@ assert.equal(
     false,
     '오늘의 표는 일반 추천 배열에 중복되면 안 된다.',
 );
+
+const visiblePinnedFirstNine = [balanceRanked[0], ...pinnedPresentation.orderedFlights.slice(0, 8)];
+assert.equal(
+    visiblePinnedFirstNine.filter(item => item.departure.airport === 'ICN').length,
+    6,
+    'TIKIT DROP도 첫 9개에 포함해 세었을 때 인천권 항공권이 6개여야 한다.',
+);
+
+const alternatingCandidates = [
+    flight('alt-a1', '인천', '오사카', 1),
+    flight('alt-b1', '인천', '후쿠오카', 2),
+    flight('alt-a2', '부산', '오사카', 3),
+    flight('alt-b2', '부산', '후쿠오카', 4),
+    flight('alt-c1', '인천', '도쿄', 5),
+];
+const alternatingOrder = diversifyFlightDestinations(alternatingCandidates, {
+    topWindow: 0,
+    maxConsecutiveDestinations: 1,
+    balanceIncheon: false,
+    scoreOf: item => (item as Flight & { testScore: number }).testScore,
+});
+assert.equal(
+    createsAlternatingDestinationPattern(['오사카', '후쿠오카', '오사카'], '후쿠오카'),
+    true,
+);
+assert.deepEqual(
+    alternatingOrder.map(item => item.id),
+    ['alt-a1', 'alt-b1', 'alt-a2', 'alt-c1', 'alt-b2'],
+    'A-B-A-B 반복이 생길 때는 새로운 목적지를 먼저 보여야 한다.',
+);
+
+assert.equal(getAllowedNaverPriceGap(150_000), 7_500);
+assert.equal(getAllowedNaverPriceGap(200_000), 10_000);
+assert.equal(getAllowedNaverPriceGap(500_000), 20_000);
+
+const qualityCandidates = [
+    {
+        ...flight('quality-all-three', '인천', '오사카', 1),
+        price: 150_000,
+        naverLowest: 160_000,
+        naverCheckedAt: '2026-08-28T08:00:00+09:00',
+        nearbyNaverBaseline: 155_000,
+        nearbyNaverSampleCount: 5,
+    },
+    {
+        ...flight('quality-no-naver', '인천', '도쿄', 2),
+        price: 155_000,
+        nearbyNaverBaseline: 160_000,
+        nearbyNaverSampleCount: 5,
+    },
+    {
+        ...flight('quality-small-gap', '인천', '나고야', 3),
+        price: 157_500,
+        naverLowest: 150_000,
+        naverCheckedAt: '2026-08-28T08:00:00+09:00',
+        nearbyNaverBaseline: 160_000,
+        nearbyNaverSampleCount: 5,
+    },
+    {
+        ...flight('quality-naver-only', '인천', '삿포로', 4),
+        price: 300_000,
+        naverLowest: 310_000,
+        naverCheckedAt: '2026-08-28T08:00:00+09:00',
+        nearbyNaverBaseline: 100_000,
+        nearbyNaverSampleCount: 5,
+    },
+    {
+        ...flight('quality-other-dates-cheaper', '인천', '후쿠오카', 5),
+        price: 160_000,
+        nearbyNaverBaseline: 100_000,
+        nearbyNaverSampleCount: 5,
+    },
+];
+const qualityHistory = Object.fromEntries(qualityCandidates.map((item, index) => [
+    `인천-${item.arrival.city}`,
+    Array.from({ length: 7 }, (_, historyIndex) => ({
+        date: `2026-08-${String(historyIndex + 1).padStart(2, '0')}`,
+        minPrice: index === 3 ? 100_000 + historyIndex * 10_000 : item.price + 10_000 + historyIndex * 10_000,
+    })),
+]));
+const qualityState = buildRecommendationScoreState(
+    qualityCandidates,
+    {},
+    recommendationNow,
+    qualityHistory,
+);
+assert.equal(qualityState.explanations.get('quality-all-three')?.topRecommendationTier, 0);
+assert.equal(qualityState.explanations.get('quality-no-naver')?.topRecommendationTier, 1);
+assert.equal(qualityState.explanations.get('quality-small-gap')?.topRecommendationTier, 1);
+assert.equal(qualityState.explanations.get('quality-naver-only')?.topRecommendationTier, 1);
+assert.equal(qualityState.explanations.get('quality-other-dates-cheaper')?.topRecommendationTier, 2);
 
 console.log('✅ 추천 후보 판정 · 가격/신선도 점수 · 오늘의 표/목적지/출발지 진열 설명');
