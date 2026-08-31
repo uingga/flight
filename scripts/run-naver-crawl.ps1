@@ -19,6 +19,7 @@ $LogFile = Join-Path $ProjectDir 'data\naver-crawl-local.log'
 $StateFile = Join-Path $env:LOCALAPPDATA 'Tikitikit\state\naver-crawl.json'
 $SessionCopy = Join-Path $env:TEMP 'tikitikit-naver-session.json'
 $HistorySessionCopy = Join-Path $env:TEMP 'tikitikit-naver-history-session.json'
+$RunStatusFile = Join-Path $env:TEMP 'tikitikit-naver-run-status.json'
 $NaverDataPaths = @('data/naver-prices.json', 'data/naver-crawl-history.json', 'data/all-flights-cache.json')
 $TodayPickPath = 'data/today-pick.json'
 $ManagedPaths = $NaverDataPaths + $TodayPickPath
@@ -195,11 +196,40 @@ $env:BATCH_REST_MAX_MS = '120000'
 $env:MAX_TRANSIENT_RESUMES = '1'
 $env:TRANSIENT_RESUME_MIN_MS = '600000'
 $env:TRANSIENT_RESUME_MAX_MS = '1200000'
-npx.cmd --no-install tsx scripts/crawl-naver.ts 2>&1 | ForEach-Object {
-    # Add-Content per line keeps the log readable while the long crawl is running.
-    "$_" | Add-Content -Encoding utf8 $LogFile
+$env:NAVER_RUN_STATUS_FILE = $RunStatusFile
+$CrawlerAttempt = 0
+$PreRequestRetryCount = 0
+while ($true) {
+    $CrawlerAttempt++
+    Remove-Item -LiteralPath $RunStatusFile -Force -ErrorAction SilentlyContinue
+    npx.cmd --no-install tsx scripts/crawl-naver.ts 2>&1 | ForEach-Object {
+        # Add-Content per line keeps the log readable while the long crawl is running.
+        "$_" | Add-Content -Encoding utf8 $LogFile
+    }
+    $CrawlerExitCode = $LASTEXITCODE
+
+    $RequestsStarted = $null
+    try {
+        if (Test-Path -LiteralPath $RunStatusFile) {
+            $RunStatus = Get-Content -Raw -Encoding utf8 $RunStatusFile | ConvertFrom-Json
+            $RequestsStarted = $RunStatus.requestsStarted -as [int]
+            Log "crawler attempt $CrawlerAttempt status: stage=$($RunStatus.stage), requestsStarted=$RequestsStarted, exit=$CrawlerExitCode"
+        }
+    } catch {
+        Log "Unable to read crawler run status: $($_.Exception.Message)"
+    }
+
+    $CanRetryBeforeRequest = $CrawlerExitCode -ne 0 `
+        -and $RequestsStarted -eq 0 `
+        -and $PreRequestRetryCount -lt 1
+    if (-not $CanRetryBeforeRequest) { break }
+
+    $PreRequestRetryCount++
+    $RetryDelaySeconds = Get-Random -Minimum 900 -Maximum 1801
+    Log "Crawler failed before any Naver request; retrying once in $RetryDelaySeconds seconds"
+    Start-Sleep -Seconds $RetryDelaySeconds
 }
-$CrawlerExitCode = $LASTEXITCODE
+Remove-Item -LiteralPath $RunStatusFile -Force -ErrorAction SilentlyContinue
 $PartialPricesAllowed = $CrawlerExitCode -eq 2
 $HistoryOnly = $CrawlerExitCode -ne 0 -and -not $PartialPricesAllowed
 $CircuitOutcome = 'success'

@@ -255,12 +255,18 @@ test('the Windows Naver task owns production collection with one guarded daily s
     assert.match(runner, /\$env:MAX_TRANSIENT_RESUMES = '1'/);
     assert.match(runner, /\$env:TRANSIENT_RESUME_MIN_MS = '600000'/);
     assert.match(runner, /\$env:TRANSIENT_RESUME_MAX_MS = '1200000'/);
+    assert.match(runner, /\$env:NAVER_RUN_STATUS_FILE = \$RunStatusFile/);
+    assert.match(runner, /\$RequestsStarted -eq 0/);
+    assert.match(runner, /\$PreRequestRetryCount -lt 1/);
+    assert.match(runner, /Get-Random -Minimum 900 -Maximum 1801/);
     assert.match(runner, /\$PartialPricesAllowed = \$CrawlerExitCode -eq 2/);
     assert.match(runner, /publish partial naver prices \[local\]/);
     assert.match(runner, /partially published after transient errors; today pick selection skipped/);
     assert.match(runner, /\$env:NAVER_LIVE_RUN = '1'/);
     assert.match(runner, /npx\.cmd playwright install chromium/);
     assert.match(crawler, /pauseAndResumeAfterTransientFailure/);
+    assert.match(crawler, /writeRunStatus\('preparing', 0\)/);
+    assert.match(crawler, /writeRunStatus\('naver_request_started', navigationCount, routeLabel\)/);
     assert.match(crawler, /fs\.writeFileSync\(OUTPUT_FILE[\s\S]*?쉬고 다음 항공권부터 이어갑니다/);
     assert.match(crawler, /navigationCount >= MAX_NAVIGATIONS/);
     assert.match(crawler, /process\.exitCode = !explicitBlockDetected && successCount > 0 \? 2 : 3/);

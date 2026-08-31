@@ -85,6 +85,7 @@ const MAX_HEALTH_CHECKS = parseInt(process.env.MAX_HEALTH_CHECKS || '1', 10);
 const MAX_TRANSIENT_RESUMES = parseInt(process.env.MAX_TRANSIENT_RESUMES || '1', 10);
 const TRANSIENT_RESUME_MIN_MS = parseInt(process.env.TRANSIENT_RESUME_MIN_MS || '600000', 10);
 const TRANSIENT_RESUME_MAX_MS = parseInt(process.env.TRANSIENT_RESUME_MAX_MS || '1200000', 10);
+const RUN_STATUS_FILE = process.env.NAVER_RUN_STATUS_FILE || '';
 const DATA_DIR = path.join(process.cwd(), 'data');
 const OUTPUT_FILE = path.join(DATA_DIR, 'naver-prices.json');
 const ALL_FLIGHTS_FILE = path.join(DATA_DIR, 'all-flights-cache.json');
@@ -104,6 +105,28 @@ const REFRESH_CONFIG: NaverRefreshConfig = {
 // ─── 유틸리티 ───
 const humanDelay = (min = REQUEST_DELAY_MIN_MS, max = REQUEST_DELAY_MAX_MS) =>
     new Promise<void>(r => setTimeout(r, Math.random() * (max - min) + min));
+
+const writeRunStatus = (
+    stage: 'preparing' | 'data_ready' | 'browser_ready' | 'naver_request_started' | 'completed',
+    requestsStarted: number,
+    detail = '',
+) => {
+    if (!RUN_STATUS_FILE) return;
+    try {
+        fs.mkdirSync(path.dirname(RUN_STATUS_FILE), { recursive: true });
+        const temporaryPath = `${RUN_STATUS_FILE}.${process.pid}.tmp`;
+        fs.writeFileSync(temporaryPath, JSON.stringify({
+            version: 1,
+            stage,
+            requestsStarted: Math.max(0, requestsStarted),
+            updatedAt: new Date().toISOString(),
+            ...(detail ? { detail } : {}),
+        }), 'utf-8');
+        fs.renameSync(temporaryPath, RUN_STATUS_FILE);
+    } catch (error) {
+        console.warn(`⚠️ 네이버 실행 상태 파일 기록 실패: ${String((error as Error)?.message || error)}`);
+    }
+};
 
 const normalizeDate = (dateStr: string): string => {
     // 다양한 날짜 포맷을 YYYY-MM-DD로 통일
@@ -185,6 +208,7 @@ try {
 (async () => {
     const runStartedAt = new Date().toISOString();
     const runStartedMs = Date.now();
+    writeRunStatus('preparing', 0);
     console.log('🔍 네이버 항공권 최저가 크롤러 시작...\n');
 
     // 1. all-flights-cache.json에서 마이리얼트립 항공권 추출
@@ -286,6 +310,8 @@ try {
         process.exit(0);
     }
 
+    writeRunStatus('data_ready', 0);
+
     if (!['1', 'true'].includes(String(process.env.NAVER_LIVE_RUN || '').toLowerCase())) {
         throw new Error(
             '실제 네이버 요청은 안전 회로가 적용된 run-naver-crawl.ps1 또는 '
@@ -312,6 +338,7 @@ try {
     });
 
     let page = await context.newPage();
+    writeRunStatus('browser_ready', 0);
 
     let successCount = 0;
     let failCount = 0;
@@ -441,6 +468,7 @@ try {
             page.on('response', responseHandler);
 
             navigationCount++;
+            writeRunStatus('naver_request_started', navigationCount, routeLabel);
             const navigationResponse = await page.goto(naverUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
 
             // 네이버 항공권은 여러 GDS/항공사에서 결과가 순차적으로 도착한다.
@@ -638,6 +666,7 @@ try {
             }
             healthCheckCount++;
             console.log(`\n🩺 애매한 실패 ${consecutiveAmbiguousMisses}건 — 정상 대조 노선으로 접속 상태를 확인합니다.`);
+            writeRunStatus('naver_request_started', navigationCount + 1, 'availability_probe');
             const probe = await probeNaverAvailability(context, remainingNavigationBudget);
             navigationCount += probe.navigations;
             const availability = probe.availability;
@@ -766,6 +795,7 @@ try {
     console.log(`🆕 새 항공권 ${newRouteCount}건 중 ${newRoutesAttempted}건 확인`);
     console.log(`⏳ 가장 오래 밀린 항목: ${deferredNeverChecked > 0 ? `아직 한 번도 확인하지 않은 항목 ${deferredNeverChecked}건` : oldestDeferredHours === null ? '없음' : `${oldestDeferredHours}시간`}`);
     console.log(`📁 저장: ${OUTPUT_FILE}`);
+    writeRunStatus('completed', navigationCount, abortReason || 'crawler_completed');
     if (abortedEarly) {
         // 코드 2는 시스템성 일시 오류 뒤에도 성공한 부분 가격을 운영에 반영한다.
         // 명시적 차단 또는 성공 0건은 코드 3으로 남겨 가격 병합을 금지한다.
