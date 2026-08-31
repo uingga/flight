@@ -16028,7 +16028,7 @@
   },
   "integrityAlerts": [
     "🚨 modetour 수집 실패로 이전 데이터 유지: 모두투어 초기 페이지 접근 제한 안내가 반환되었습니다. — 2회 연속",
-    "📷 모두투어 수동 캡처 60건 반영 · 완전 캡처 ASIA/JPN/SOPA 교체 · 기존 67건 정리"
+    "📷 모두투어 수동 캡처 60건 반영 · 완전 캡처 ASIA/JPN/SOPA/EUR/AMCA 교체 · 빈 결과 EUR/AMCA · 검수 제외 CHI · 기존 67건 정리"
   ],
   "sourceCircuits": {
     "modetour": {
@@ -16047,7 +16047,23 @@
       "lastImportedAt": "2026-08-31T06:03:22.321Z",
       "accepted": 60,
       "review": 0,
-      "filtered": 23
+      "filtered": 23,
+      "completeRegions": [
+        "ASIA",
+        "JPN",
+        "SOPA",
+        "EUR",
+        "AMCA"
+      ],
+      "emptyRegions": [
+        "EUR",
+        "AMCA"
+      ],
+      "excludedRegions": [
+        "CHI"
+      ],
+      "naverPending": true,
+      "naverPendingAt": "2026-08-31T06:03:22.321Z"
     }
   }
 }

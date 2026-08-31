@@ -27,6 +27,14 @@ interface CacheData {
         accepted: number;
         review: number;
         filtered: number;
+        completeRegions?: ModetourContinentCode[];
+        emptyRegions?: ModetourContinentCode[];
+        excludedRegions?: ModetourContinentCode[];
+        naverPending?: boolean;
+        naverPendingAt?: string;
+        naverLastAttemptAt?: string;
+        naverProcessedAt?: string;
+        naverDeferred?: number;
     }>;
     [key: string]: unknown;
 }
@@ -121,9 +129,14 @@ export function importModetourManualCapture({
 
     const regionCodes = new Set(input.regions.map(region => region.continentCode));
     const completeRegions = [...new Set(input.completeRegions || [])];
+    const excludedRegions = [...new Set(input.excludedRegions || [])];
     completeRegions.forEach(region => {
         if (!MODETOUR_CONTINENT_CODES.includes(region)) throw new Error(`완전 캡처 지역 코드가 올바르지 않습니다: ${region}`);
         if (!regionCodes.has(region)) throw new Error(`완전 캡처 지역 ${region}의 regions 항목이 없습니다.`);
+    });
+    excludedRegions.forEach(region => {
+        if (!MODETOUR_CONTINENT_CODES.includes(region)) throw new Error(`제외 지역 코드가 올바르지 않습니다: ${region}`);
+        if (completeRegions.includes(region)) throw new Error(`${region}은 완전 캡처와 제외 지역에 동시에 지정할 수 없습니다.`);
     });
 
     const review: ModetourManualImportReport['review'] = [];
@@ -227,6 +240,12 @@ export function importModetourManualCapture({
     const completeRegionsSkipped = completeRegions
         .filter(region => Boolean(reviewCounts.get(region)))
         .map(region => ({ region, review: reviewCounts.get(region) || 0 }));
+    const acceptedRegionCounts = new Map<ModetourContinentCode, number>();
+    for (const region of acceptedRegionByKey.values()) {
+        const code = region as ModetourContinentCode;
+        acceptedRegionCounts.set(code, (acceptedRegionCounts.get(code) || 0) + 1);
+    }
+    const emptyRegions = completeRegionsApplied.filter(region => (acceptedRegionCounts.get(region) || 0) === 0);
     const replacingSiteRegions = new Set(completeRegionsApplied.flatMap(region => REGIONS_BY_CONTINENT[region]));
     const todayKst = kstDateKey(now);
     let removedByCompleteRegion = 0;
@@ -275,9 +294,15 @@ export function importModetourManualCapture({
     }
 
     const flights = retainedFlights;
-    const hasMutation = acceptedByKey.size > 0 || removedByCompleteRegion > 0 || expiredRemoved > 0 || duplicatesRemoved > 0;
+    // 결과가 0건인 완전 캡처도 기존 지역을 비우고 검수 사실을 기록하는 유효한 반영이다.
+    const hasMutation = completeRegionsApplied.length > 0
+        || acceptedByKey.size > 0
+        || removedByCompleteRegion > 0
+        || expiredRemoved > 0
+        || duplicatesRemoved > 0;
 
     const importedAt = now.toISOString();
+    const previousManualStatus = cache.manualCaptureStatus?.modetour;
     const nextCache: CacheData = !hasMutation
         ? cache
         : {
@@ -299,12 +324,22 @@ export function importModetourManualCapture({
                     accepted: acceptedByKey.size,
                     review: review.length,
                     filtered: filteredByBenchmark.length,
+                    completeRegions: completeRegionsApplied,
+                    emptyRegions,
+                    excludedRegions,
+                    naverPending: acceptedByKey.size > 0 ? true : previousManualStatus?.naverPending,
+                    naverPendingAt: acceptedByKey.size > 0 ? importedAt : previousManualStatus?.naverPendingAt,
+                    naverLastAttemptAt: previousManualStatus?.naverLastAttemptAt,
+                    naverProcessedAt: previousManualStatus?.naverProcessedAt,
+                    naverDeferred: previousManualStatus?.naverDeferred,
                 },
             },
             integrityAlerts: [
                 ...(cache.integrityAlerts || []).filter(alert => !alert.includes('모두투어 수동 캡처')),
                 `📷 모두투어 수동 캡처 ${acceptedByKey.size}건 반영`
                 + (completeRegionsApplied.length > 0 ? ` · 완전 캡처 ${completeRegionsApplied.join('/')} 교체` : '')
+                + (emptyRegions.length > 0 ? ` · 빈 결과 ${emptyRegions.join('/')}` : '')
+                + (excludedRegions.length > 0 ? ` · 검수 제외 ${excludedRegions.join('/')}` : '')
                 + (removedByCompleteRegion > 0 ? ` · 기존 ${removedByCompleteRegion}건 정리` : '')
                 + (review.length > 0 ? ` · 확인 필요 ${review.length}건` : ''),
             ],

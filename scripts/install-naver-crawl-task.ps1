@@ -90,7 +90,7 @@ Register-ScheduledTask `
 
 Write-Output "Installed $TaskName"
 Write-Output "Automation checkout: $AutomationDir"
-Write-Output 'Schedule: 11:12 initial pass, 14:23 recovery pass, 17:31 startup fallback'
+Write-Output 'Schedule: 11:12 initial pass, 14:23 recovery pass, 17:31 startup/manual-capture fallback'
 
 if ($RunNow) {
     Start-ScheduledTask -TaskName $TaskName

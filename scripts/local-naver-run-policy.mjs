@@ -8,6 +8,7 @@ const GENERAL_SOURCES = ['ybtour', 'hanatour', 'modetour', 'onlinetour', 'ttang'
 const TOTAL_NAVIGATION_BUDGET = 200;
 const INITIAL_SLOT = { hour: 11, minute: 12 };
 const RECOVERY_SLOT = { hour: 14, minute: 23 };
+const FINAL_SLOT = { hour: 17, minute: 31 };
 const TERMINAL_SAME_DAY_PHASES = new Set(['running', 'success', 'blocked', 'degraded']);
 
 function validTimestamp(value) {
@@ -40,7 +41,47 @@ function sourceTimestamp(cache, source) {
     return validTimestamp(cache?.sourceUpdatedAt?.[source]);
 }
 
+function pendingManualCapture(cache, source) {
+    if (source !== 'modetour') return null;
+    const status = cache?.manualCaptureStatus?.modetour;
+    if (!status?.naverPending) return null;
+    const pendingAt = validTimestamp(status.naverPendingAt || status.lastImportedAt);
+    if (pendingAt === null) return null;
+    return {
+        pendingAt,
+        lastAttemptAt: validTimestamp(status.naverLastAttemptAt),
+    };
+}
+
+function nextManualSlot(cache, source, now) {
+    const pending = pendingManualCapture(cache, source);
+    if (!pending) return null;
+    const eventAt = pending.lastAttemptAt ?? pending.pendingAt;
+    const strictAfter = pending.lastAttemptAt !== null;
+    const shifted = new Date(eventAt + KST_OFFSET_MS);
+    const slots = [INITIAL_SLOT, RECOVERY_SLOT, FINAL_SLOT];
+    for (let dayOffset = 0; dayOffset <= 1; dayOffset++) {
+        for (const slot of slots) {
+            const timestamp = Date.UTC(
+                shifted.getUTCFullYear(),
+                shifted.getUTCMonth(),
+                shifted.getUTCDate() + dayOffset,
+                slot.hour - 9,
+                slot.minute,
+            );
+            if (strictAfter ? timestamp > eventAt : timestamp >= eventAt) return timestamp;
+        }
+    }
+    return kstSlotTimestamp(now, INITIAL_SLOT.hour, INITIAL_SLOT.minute);
+}
+
+function manualCaptureReady(cache, source, now) {
+    const slot = nextManualSlot(cache, source, now);
+    return slot !== null && now.getTime() >= slot;
+}
+
 function sourceIsFreshAfter(cache, source, cutoff) {
+    if (pendingManualCapture(cache, source)) return true;
     const updatedAt = sourceTimestamp(cache, source);
     return updatedAt !== null && updatedAt >= cutoff;
 }
@@ -99,6 +140,49 @@ export function evaluateLocalNaverRun({
         };
     }
 
+    const manualPending = pendingManualCapture(cache, 'modetour');
+    const manualReady = manualCaptureReady(cache, 'modetour', current);
+    if (sameDayState?.phase === 'success' && manualPending && manualReady) {
+        const navigationsUsed = Math.max(0, Number(sameDayState.navigationsUsed) || 0);
+        const navigationBudget = Math.max(0, totalNavigationBudget - navigationsUsed);
+        if (navigationBudget <= 0) {
+            return {
+                shouldRun: false,
+                shouldFinalize: false,
+                reason: 'daily_budget_exhausted',
+                kstDate: currentKstDate,
+                runPhase: 'manual_recovery',
+                navigationBudget,
+                navigationsUsed,
+            };
+        }
+        const completedSources = uniqueSources(sameDayState.completedSources || []);
+        return {
+            shouldRun: true,
+            shouldFinalize: false,
+            shouldFinalizeAfterRun: true,
+            reason: 'manual_capture_ready',
+            kstDate: currentKstDate,
+            runPhase: 'manual_recovery',
+            sources: ['modetour'],
+            pendingSources: [],
+            completedSources,
+            navigationBudget,
+            navigationsUsed,
+            allowedTodayPickSources: uniqueSources([...completedSources, 'modetour']),
+        };
+    }
+
+    if (sameDayState?.phase === 'success' && manualPending && !manualReady) {
+        return {
+            shouldRun: false,
+            shouldFinalize: false,
+            reason: 'manual_capture_waiting_for_next_slot',
+            kstDate: currentKstDate,
+            nextManualSlotAt: new Date(nextManualSlot(cache, 'modetour', current)).toISOString(),
+        };
+    }
+
     if (sameDayState && TERMINAL_SAME_DAY_PHASES.has(sameDayState.phase)) {
         return {
             shouldRun: false,
@@ -117,7 +201,10 @@ export function evaluateLocalNaverRun({
 
     if (sameDayState?.phase === 'partial_waiting') {
         const completedSources = uniqueSources(sameDayState.completedSources || []);
-        const pendingSources = uniqueSources(sameDayState.pendingSources || []);
+        const pendingSources = uniqueSources([
+            ...(sameDayState.pendingSources || []),
+            ...(manualReady ? ['modetour'] : []),
+        ]);
         const navigationsUsed = Math.max(0, Number(sameDayState.navigationsUsed) || 0);
         const navigationBudget = Math.max(0, totalNavigationBudget - navigationsUsed);
         const recoveryReady = fullCrawlAt !== null && fullCrawlAt >= recoverySlotAt;
@@ -288,6 +375,59 @@ export function buildLocalNaverState(outcome, {
     };
 }
 
+function sourceFilterContains(sourceFilter, source) {
+    const values = uniqueSources(String(sourceFilter || '').split(','));
+    return values.includes('all') || values.includes(source);
+}
+
+export function completePendingManualCapture({ cache, history, sources = [] }) {
+    const runSources = uniqueSources(sources);
+    const status = cache?.manualCaptureStatus?.modetour;
+    if (!runSources.includes('modetour')) return { cache, changed: false, reason: 'modetour_not_run' };
+    if (!status?.naverPending) return { cache, changed: false, reason: 'no_pending_manual_capture' };
+
+    const pendingAt = validTimestamp(status.naverPendingAt || status.lastImportedAt);
+    const entries = Array.isArray(history?.entries) ? history.entries : [];
+    const latest = entries
+        .filter(entry => entry?.runner === 'local'
+            && sourceFilterContains(entry.sourceFilter, 'modetour')
+            && validTimestamp(entry.timestamp) !== null
+            && (pendingAt === null || validTimestamp(entry.timestamp) >= pendingAt))
+        .sort((left, right) => validTimestamp(right.timestamp) - validTimestamp(left.timestamp))[0];
+    if (!latest) return { cache, changed: false, reason: 'matching_history_missing' };
+    if (latest.abortedEarly || Number(latest.blocked || 0) > 0) {
+        return { cache, changed: false, reason: 'unsafe_naver_run' };
+    }
+
+    const deferred = Math.max(0, Number(latest.deferred) || 0);
+    const nextStatus = deferred > 0
+        ? {
+            ...status,
+            naverPending: true,
+            naverLastAttemptAt: latest.timestamp,
+            naverDeferred: deferred,
+        }
+        : {
+            ...status,
+            naverPending: false,
+            naverLastAttemptAt: latest.timestamp,
+            naverProcessedAt: latest.timestamp,
+            naverDeferred: 0,
+        };
+    return {
+        cache: {
+            ...cache,
+            manualCaptureStatus: {
+                ...(cache.manualCaptureStatus || {}),
+                modetour: nextStatus,
+            },
+        },
+        changed: true,
+        reason: deferred > 0 ? 'manual_capture_deferred' : 'manual_capture_completed',
+        deferred,
+    };
+}
+
 function readJson(filePath) {
     if (!filePath || !fs.existsSync(filePath)) return null;
     return JSON.parse(fs.readFileSync(filePath, 'utf8'));
@@ -360,7 +500,20 @@ function runCli() {
         return;
     }
 
-    throw new Error('usage: local-naver-run-policy.mjs check|mark ...');
+    if (command === 'complete-manual-capture') {
+        const cachePath = readOption(args, '--cache');
+        const historyPath = readOption(args, '--history');
+        const sources = csvOption(args, '--sources');
+        if (!cachePath || !historyPath) throw new Error('complete-manual-capture requires --cache and --history');
+        const cache = readJson(cachePath);
+        const history = readJson(historyPath);
+        const result = completePendingManualCapture({ cache, history, sources });
+        if (result.changed) writeJsonAtomic(cachePath, result.cache);
+        console.log(JSON.stringify({ changed: result.changed, reason: result.reason, deferred: result.deferred || 0 }));
+        return;
+    }
+
+    throw new Error('usage: local-naver-run-policy.mjs check|mark|complete-manual-capture ...');
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url))) {

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
     buildLocalNaverState,
+    completePendingManualCapture,
     evaluateLocalNaverRun,
 } from './local-naver-run-policy.mjs';
 
@@ -217,4 +218,131 @@ test('an explicit block prevents the recovery phase but allows the next KST day'
         state,
     });
     assert.equal(nextDay.shouldRun, true);
+});
+
+test('includes a pending manual Modetour capture in the initial phase', () => {
+    const cache = {
+        ...readyCache,
+        sourceUpdatedAt: {
+            ...readyCache.sourceUpdatedAt,
+            modetour: '2026-08-28T02:40:00.000Z',
+        },
+        manualCaptureStatus: {
+            modetour: {
+                naverPending: true,
+                naverPendingAt: '2026-08-29T01:30:00.000Z', // 10:30 KST
+            },
+        },
+    };
+    const result = evaluateLocalNaverRun({
+        now: '2026-08-29T02:44:00.000Z',
+        cache,
+    });
+    assert.equal(result.shouldRun, true);
+    assert.equal(result.sources.includes('modetour'), true);
+});
+
+test('runs a capture imported after the first phase in the 14:23 phase', () => {
+    const state = buildLocalNaverState('success', {
+        now: new Date('2026-08-29T03:00:00.000Z'), // 12:00 KST
+        completedSources: ['ybtour', 'hanatour', 'onlinetour', 'ttang'],
+        navigationIncrement: 120,
+    });
+    const cache = {
+        ...readyCache,
+        manualCaptureStatus: {
+            modetour: {
+                naverPending: true,
+                naverPendingAt: '2026-08-29T03:30:00.000Z', // 12:30 KST
+            },
+        },
+    };
+    const beforeSlot = evaluateLocalNaverRun({ now: '2026-08-29T05:22:00.000Z', cache, state });
+    assert.equal(beforeSlot.shouldRun, false);
+    assert.equal(beforeSlot.reason, 'manual_capture_waiting_for_next_slot');
+
+    const atSlot = evaluateLocalNaverRun({ now: '2026-08-29T05:24:00.000Z', cache, state });
+    assert.equal(atSlot.shouldRun, true);
+    assert.equal(atSlot.runPhase, 'manual_recovery');
+    assert.deepEqual(atSlot.sources, ['modetour']);
+    assert.equal(atSlot.navigationBudget, 80);
+});
+
+test('runs a capture imported after 14:23 in the 17:31 third phase', () => {
+    const state = buildLocalNaverState('success', {
+        now: new Date('2026-08-29T06:00:00.000Z'), // 15:00 KST
+        completedSources: generalSources,
+        navigationIncrement: 150,
+    });
+    const cache = {
+        ...readyCache,
+        manualCaptureStatus: {
+            modetour: {
+                naverPending: true,
+                naverPendingAt: '2026-08-29T06:05:00.000Z', // 15:05 KST
+            },
+        },
+    };
+    const result = evaluateLocalNaverRun({ now: '2026-08-29T08:32:00.000Z', cache, state });
+    assert.equal(result.shouldRun, true);
+    assert.equal(result.runPhase, 'manual_recovery');
+    assert.deepEqual(result.sources, ['modetour']);
+    assert.equal(result.navigationBudget, 50);
+});
+
+test('keeps a manual capture pending when the Naver phase still has deferred routes', () => {
+    const cache = {
+        manualCaptureStatus: {
+            modetour: {
+                naverPending: true,
+                naverPendingAt: '2026-08-29T06:05:00.000Z',
+            },
+        },
+    };
+    const result = completePendingManualCapture({
+        cache,
+        sources: ['modetour'],
+        history: {
+            entries: [{
+                runner: 'local',
+                sourceFilter: 'modetour',
+                timestamp: '2026-08-29T08:40:00.000Z',
+                deferred: 17,
+                blocked: 0,
+                abortedEarly: false,
+            }],
+        },
+    });
+    assert.equal(result.changed, true);
+    assert.equal(result.cache.manualCaptureStatus.modetour.naverPending, true);
+    assert.equal(result.cache.manualCaptureStatus.modetour.naverDeferred, 17);
+    assert.equal(result.cache.manualCaptureStatus.modetour.naverLastAttemptAt, '2026-08-29T08:40:00.000Z');
+});
+
+test('clears a manual capture only after every eligible route is processed', () => {
+    const cache = {
+        manualCaptureStatus: {
+            modetour: {
+                naverPending: true,
+                naverPendingAt: '2026-08-29T06:05:00.000Z',
+            },
+        },
+    };
+    const result = completePendingManualCapture({
+        cache,
+        sources: ['modetour'],
+        history: {
+            entries: [{
+                runner: 'local',
+                sourceFilter: 'ybtour,modetour',
+                timestamp: '2026-08-29T08:40:00.000Z',
+                deferred: 0,
+                blocked: 0,
+                abortedEarly: false,
+            }],
+        },
+    });
+    assert.equal(result.changed, true);
+    assert.equal(result.cache.manualCaptureStatus.modetour.naverPending, false);
+    assert.equal(result.cache.manualCaptureStatus.modetour.naverProcessedAt, '2026-08-29T08:40:00.000Z');
 });

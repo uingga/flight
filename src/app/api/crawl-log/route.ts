@@ -261,6 +261,14 @@ export async function GET(request: NextRequest) {
                 accepted: number;
                 review: number;
                 filtered: number;
+                completeRegions?: string[];
+                emptyRegions?: string[];
+                excludedRegions?: string[];
+                naverPending?: boolean;
+                naverPendingAt?: string;
+                naverLastAttemptAt?: string;
+                naverProcessedAt?: string;
+                naverDeferred?: number;
             }>,
             naverStatus,
             naverCrawlHistory,

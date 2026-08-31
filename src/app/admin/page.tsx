@@ -104,6 +104,11 @@ interface AdminData {
         accepted: number;
         review: number;
         filtered: number;
+        completeRegions?: string[];
+        emptyRegions?: string[];
+        excludedRegions?: string[];
+        naverPending?: boolean;
+        naverDeferred?: number;
     }>;
     naverStatus?: {
         lastCrawledAt: string | null;
@@ -2084,8 +2089,8 @@ export default function AdminPage() {
                             </article>
                             <article>
                                 <span><em>내 PC</em> 네이버 가격 비교</span>
-                                <strong>11:12 1차 · 14:23 보완</strong>
-                                <small>정상 수집된 여행사부터 확인 · 두 단계 합계 하루 최대 200회</small>
+                                <strong>11:12 1차 · 14:23 보완 · 17:31 수동 보완</strong>
+                                <small>17:31은 14:23 미기동 안전망 + 늦게 반영된 모두투어 수동 캡처 확인 · 하루 합계 최대 200회</small>
                             </article>
                         </div>
                     </div>
@@ -3144,6 +3149,10 @@ export default function AdminPage() {
                                         <span>
                                             최근 수동 반영 {formatKST(manualCapture.lastImportedAt)} · 확정 {manualCapture.accepted}건
                                             {manualCapture.review > 0 ? ` · 확인 필요 ${manualCapture.review}건` : ''}
+                                            {manualCapture.emptyRegions?.length ? ` · 빈 지역 ${manualCapture.emptyRegions.join('/')}` : ''}
+                                            {manualCapture.naverPending
+                                                ? ` · 네이버 확인 대기${manualCapture.naverDeferred ? ` ${manualCapture.naverDeferred}건` : ''}`
+                                                : ''}
                                         </span>
                                     )}
                                 </div>

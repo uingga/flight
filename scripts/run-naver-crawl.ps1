@@ -1,9 +1,9 @@
 # Naver flight crawler - Windows Task Scheduler entry point
 #
 # Pull GitHub data first, then share one 200-navigation KST-day budget across
-# the fresh 11:12 sources and a 14:23 recovery pass for sources that failed.
+# the fresh 11:12 sources, the 14:23 recovery pass, and a manual-only 17:31 pass.
 #
-# Schedule: 11:12 initial pass, 14:23 recovery pass, 17:31 startup fallback
+# Schedule: 11:12 initial pass, 14:23 recovery pass, 17:31 startup/manual-capture fallback
 # Manual:   powershell -File scripts\run-naver-crawl.ps1
 
 [CmdletBinding()]
@@ -357,6 +357,19 @@ for ($attempt = 1; $attempt -le 2; $attempt++) {
             git checkout -- $NaverDataPaths 2>$null
             Log 'Filtering failed; managed data files were restored and session copies were preserved'
             exit 1
+        }
+        if ($CrawlerExitCode -eq 0 -and $RunSources -contains 'modetour') {
+            $ManualCaptureOutput = & node scripts/local-naver-run-policy.mjs complete-manual-capture `
+                --cache 'data/all-flights-cache.json' `
+                --history 'data/naver-crawl-history.json' `
+                --sources $RunSourceCsv 2>&1
+            $ManualCaptureExitCode = $LASTEXITCODE
+            Log "manual capture naver state: $((($ManualCaptureOutput | Out-String).Trim()))"
+            if ($ManualCaptureExitCode -ne 0) {
+                git checkout -- $NaverDataPaths 2>$null
+                Log 'Unable to update the manual capture Naver queue state; managed files were restored'
+                exit 1
+            }
         }
     }
 

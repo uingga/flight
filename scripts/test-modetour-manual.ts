@@ -142,5 +142,37 @@ assert.deepEqual(completeResult.report.completeRegionsApplied, ['JPN']);
 assert.equal(completeResult.report.removedByCompleteRegion, 2);
 assert.equal(completeResult.cache.flights.filter(flight => flight.source === 'modetour').length, 1);
 assert.equal(completeResult.cache.flights.find(flight => flight.id === oldFlight.id)?.price, 194_000);
+assert.equal(completeResult.cache.manualCaptureStatus?.modetour.naverPending, true);
+
+const emptyEuropeResult = importModetourManualCapture({
+    input: {
+        capturedAt: capturedAt.toISOString(),
+        completeRegions: ['EUR'],
+        excludedRegions: ['CHI'],
+        regions: [{ continentCode: 'EUR', cards: [] }],
+    },
+    cache: {
+        timestamp: '2026-08-31T00:00:00.000Z',
+        count: 2,
+        flights: [
+            {
+                ...oldFlight,
+                id: 'old-europe-flight',
+                arrival: { city: '파리', airport: 'CDG', date: '2026-09-20', time: '15:00' },
+                region: '유럽',
+            },
+            otherFlight,
+        ],
+    },
+    benchmark: {},
+    now: new Date('2026-08-31T01:05:00.000Z'),
+    apply: true,
+});
+assert.equal(emptyEuropeResult.report.accepted, 0);
+assert.equal(emptyEuropeResult.report.removedByCompleteRegion, 1);
+assert.deepEqual(emptyEuropeResult.report.completeRegionsApplied, ['EUR']);
+assert.deepEqual(emptyEuropeResult.cache.manualCaptureStatus?.modetour.emptyRegions, ['EUR']);
+assert.deepEqual(emptyEuropeResult.cache.manualCaptureStatus?.modetour.excludedRegions, ['CHI']);
+assert.equal(emptyEuropeResult.cache.flights.some(flight => flight.id === 'old-europe-flight'), false);
 
 console.log('모두투어 수동 캡처 검증·부분 병합·완전 지역 교체 테스트 통과');

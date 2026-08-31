@@ -39,6 +39,8 @@ export interface ModetourManualCapture {
      * 지정된 지역은 검증을 모두 통과했을 때 기존 캐시를 이번 캡처 결과로 교체한다.
      */
     completeRegions?: ModetourContinentCode[];
+    /** 화면 오류 등으로 이번 반영에서 의도적으로 제외한 지역. */
+    excludedRegions?: ModetourContinentCode[];
     regions: ModetourManualRegion[];
 }
 
