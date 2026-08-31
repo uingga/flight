@@ -356,6 +356,61 @@
       "blocked": 0,
       "healthChecks": 0,
       "abortedEarly": false
+    },
+    {
+      "id": "2026-08-31T07:18:44.167Z-local-49056",
+      "timestamp": "2026-08-31T07:18:44.167Z",
+      "startedAt": "2026-08-31T05:00:10.881Z",
+      "durationSeconds": 8313,
+      "runner": "local",
+      "sourceFilter": "all",
+      "maxFlights": 200,
+      "navigationLimit": 200,
+      "navigations": 200,
+      "needed": 343,
+      "attempted": 200,
+      "skippedFresh": 92,
+      "newRoutes": 106,
+      "newRoutesAttempted": 41,
+      "changedRoutes": 22,
+      "periodicRoutes": 215,
+      "reasonCounts": {
+        "new": 106,
+        "source_changed": 22,
+        "retry_wait": 1,
+        "retry_due": 36,
+        "priority_fresh": 20,
+        "priority_periodic": 59,
+        "standard_fresh": 71,
+        "standard_periodic": 120
+      },
+      "priorityGroups": {
+        "deadline": 18,
+        "changed_top": 14,
+        "top": 10,
+        "standard": 176,
+        "low": 125
+      },
+      "selectedPriorityGroups": {
+        "deadline": 18,
+        "changed_top": 14,
+        "top": 10,
+        "standard": 158,
+        "low": 0
+      },
+      "deferred": 149,
+      "deferredNeverChecked": 0,
+      "oldestDeferredHours": 133.9,
+      "success": 199,
+      "misses": 1,
+      "noResult": 0,
+      "routeErrors": 0,
+      "transientErrors": 1,
+      "blocked": 0,
+      "healthChecks": 0,
+      "transientResumes": 0,
+      "abortedEarly": false,
+      "partialResultsPublishable": false
     }
   ]
 }
