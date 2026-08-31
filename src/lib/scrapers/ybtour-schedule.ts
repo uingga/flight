@@ -63,6 +63,9 @@ export interface ScheduleResponseShape {
 export interface ScheduleFetchStats {
     requested: number;
     processed: number;
+    /** 실제로 노랑풍선 상세 API에 보낸 POST 수. */
+    httpRequests: number;
+    requestLimit: number;
     ok: number;
     failed: number;
     rejected: number;
@@ -70,7 +73,7 @@ export interface ScheduleFetchStats {
     recoveredAfterRetry: number;
     skipped: number;
     degraded: boolean;
-    stopReason?: 'network' | 'response-format';
+    stopReason?: 'network' | 'response-format' | 'request-limit';
     reasonCounts: Record<ScheduleParseFailureReason, number>;
 }
 
@@ -162,7 +165,10 @@ export function parseScheduleDetail(html: string, expectedDepDate: string): Sche
  * 목록에서 사라지지 않고 다음 크롤에서 채워진다.
  */
 const MAX_CONSECUTIVE_FAILURES = 8;
-const MAX_ATTEMPTS_PER_SCHEDULE = 2;
+// 같은 항공권을 즉시 다시 묻지 않는다. 일시 실패는 다음 예약 회차에 자연스럽게 이어간다.
+const MAX_ATTEMPTS_PER_SCHEDULE = 1;
+/** 하루 4회 기준 상세 POST를 최대 160회로 제한한다. */
+export const YBTOUR_SCHEDULE_REQUEST_LIMIT = 40;
 const MAX_REJECTED_RESPONSES = 20;
 const MIN_RATE_SAMPLE = 30;
 const MAX_REJECTED_RATE = 0.1;
@@ -183,6 +189,7 @@ const REASON_LABELS: Record<ScheduleParseFailureReason, string> = {
 export async function fetchYbtourSchedules(
     page: Page,
     keys: ScheduleKey[],
+    options: { requestLimit?: number } = {},
 ): Promise<ScheduleFetchResult> {
     const result = new Map<string, ScheduleData>();
 
@@ -193,11 +200,17 @@ export async function fetchYbtourSchedules(
     }
 
     const entries = Array.from(unique.entries());
-    console.log(`[노랑풍선] 자체 스케줄 조회: ${entries.length}개`);
+    // 테스트는 더 작은 상한을 줄 수 있지만 운영 상한보다 높일 수는 없다.
+    const requestLimit = Math.min(
+        YBTOUR_SCHEDULE_REQUEST_LIMIT,
+        Math.max(1, Math.floor(options.requestLimit ?? YBTOUR_SCHEDULE_REQUEST_LIMIT)),
+    );
+    console.log(`[노랑풍선] 자체 스케줄 조회 후보: ${entries.length}개 (이번 회차 상세 요청 최대 ${requestLimit}회)`);
 
     let ok = 0;
     let failed = 0;
     let rejected = 0;
+    let httpRequests = 0;
     let retryAttempts = 0;
     let recoveredAfterRetry = 0;
     let consecutiveFailures = 0;
@@ -216,6 +229,11 @@ export async function fetchYbtourSchedules(
     }> = [];
 
     for (const [id, key] of entries) {
+        if (httpRequests >= requestLimit) {
+            stopReason = 'request-limit';
+            break;
+        }
+
         idx++;
         let parsedData: ScheduleData | null = null;
         let parseFailure: { reason: ScheduleParseFailureReason; shape: ScheduleResponseShape } | null = null;
@@ -223,7 +241,9 @@ export async function fetchYbtourSchedules(
         let successfulAttempt = 0;
 
         for (let attempt = 1; attempt <= MAX_ATTEMPTS_PER_SCHEDULE; attempt++) {
+            if (httpRequests >= requestLimit) break;
             if (attempt > 1) retryAttempts++;
+            httpRequests++;
             try {
                 const res = await page.evaluate(async (body: Record<string, string>) => {
                     const controller = new AbortController();
@@ -324,6 +344,12 @@ export async function fetchYbtourSchedules(
             break;
         }
 
+        if (httpRequests >= requestLimit && idx < entries.length) {
+            console.log(`[노랑풍선] 시간 상세 요청 상한 ${requestLimit}회 도달 — 남은 ${entries.length - idx}개는 다음 회차로 넘깁니다`);
+            stopReason = 'request-limit';
+            break;
+        }
+
         if (idx < entries.length) {
             const wait = consecutiveFailures > 0
                 ? Math.min(2 * Math.pow(2, consecutiveFailures - 1), 30)
@@ -346,20 +372,23 @@ export async function fetchYbtourSchedules(
             console.log(`[노랑풍선]   읽기 실패 표본 ${sample.id}: ${REASON_LABELS[sample.reason]} · 문자 ${shape.characters}, 출국 ${shape.hasOutbound ? '있음' : '없음'}, 귀국 ${shape.hasInbound ? '있음' : '없음'}, 구간 ${shape.legMatches}, 로그인 화면 ${shape.looksLikeLogin ? '의심' : '아님'}`);
         });
     }
-    console.log(`[노랑풍선] 자체 스케줄 완료: ${ok}건 (조회 ${idx}/${entries.length}, 요청 실패 ${failed}, 응답 읽기 실패 ${rejected}, 재시도 복구 ${recoveredAfterRetry})`);
+    console.log(`[노랑풍선] 자체 스케줄 완료: ${ok}건 (후보 처리 ${idx}/${entries.length}, 실제 상세 요청 ${httpRequests}/${requestLimit}, 요청 실패 ${failed}, 응답 읽기 실패 ${rejected})`);
 
     return {
         schedules: result,
         stats: {
             requested: entries.length,
             processed: idx,
+            httpRequests,
+            requestLimit,
             ok,
             failed,
             rejected,
             retryAttempts,
             recoveredAfterRetry,
             skipped: entries.length - idx,
-            degraded: stopReason !== undefined,
+            // 의도한 요청 상한은 장애가 아니다. 남은 항목은 다음 회차에서 채운다.
+            degraded: stopReason !== undefined && stopReason !== 'request-limit',
             stopReason,
             reasonCounts,
         },

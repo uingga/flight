@@ -74,13 +74,17 @@ assert.equal(isScheduleResponseFailureSpike(30, 3), false);
 assert.equal(isScheduleResponseFailureSpike(30, 4), true);
 assert.equal(isScheduleResponseFailureSpike(200, 20), true);
 
-async function testRetryRecovery() {
+async function testNoImmediateRetry() {
+    let calls = 0;
     const responses = [
         { status: 200, text: '로그인 페이지' },
         { status: 200, text: validHtml },
     ];
     const fakePage = {
-        evaluate: async () => responses.shift() || { status: 500, text: '' },
+        evaluate: async () => {
+            calls++;
+            return responses.shift() || { status: 500, text: '' };
+        },
     };
     const result = await fetchYbtourSchedules(fakePage as never, [{
         inhId: 'TW0101ICNBKK-T3',
@@ -91,15 +95,44 @@ async function testRetryRecovery() {
         remainingSeat: '4',
     }]);
 
-    assert.equal(result.schedules.size, 1);
-    assert.equal(result.stats.ok, 1);
-    assert.equal(result.stats.retryAttempts, 1);
-    assert.equal(result.stats.recoveredAfterRetry, 1);
-    assert.equal(result.stats.rejected, 0);
+    assert.equal(calls, 1);
+    assert.equal(result.schedules.size, 0);
+    assert.equal(result.stats.ok, 0);
+    assert.equal(result.stats.retryAttempts, 0);
+    assert.equal(result.stats.rejected, 1);
 }
 
-testRetryRecovery()
-    .then(() => console.log('✅ 노랑풍선 시간 상세 응답 파서·재시도 테스트 통과'))
+async function testRequestLimit() {
+    let calls = 0;
+    const fakePage = {
+        evaluate: async () => {
+            calls++;
+            return { status: 200, text: validHtml };
+        },
+    };
+    const keys = ['A', 'B', 'C'].map(inhId => ({
+        inhId,
+        inmSeqId: '1',
+        inpId: '1',
+        depDate: '20260821',
+        bookingCls: 'T',
+        remainingSeat: '4',
+    }));
+    const result = await fetchYbtourSchedules(fakePage as never, keys, { requestLimit: 2 });
+
+    assert.equal(calls, 2);
+    assert.equal(result.schedules.size, 2);
+    assert.equal(result.stats.requested, 3);
+    assert.equal(result.stats.processed, 2);
+    assert.equal(result.stats.httpRequests, 2);
+    assert.equal(result.stats.requestLimit, 2);
+    assert.equal(result.stats.skipped, 1);
+    assert.equal(result.stats.stopReason, 'request-limit');
+    assert.equal(result.stats.degraded, false);
+}
+
+Promise.all([testNoImmediateRetry(), testRequestLimit()])
+    .then(() => console.log('✅ 노랑풍선 시간 상세 응답 파서·요청 상한 테스트 통과'))
     .catch(error => {
         console.error(error);
         process.exitCode = 1;
