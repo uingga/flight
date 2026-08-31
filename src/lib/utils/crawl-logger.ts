@@ -18,6 +18,8 @@ interface SiteStats {
     preserved?: boolean;
     /** 부분 복구 크롤에서 이 여행사는 실행하지 않았다는 뜻. 실패나 측정값으로 세지 않는다. */
     skipped?: boolean;
+    /** 운영자가 일반 브라우저 캡처를 검수해 반영한 별도 수집 기록이다. */
+    manual?: boolean;
     /** 직전 크롤에 없던 표. 개수만 보면 표가 통째로 갈려도 0으로 보인다. */
     added?: number;
     /** 직전 크롤에 있다가 사라진 표. */
@@ -80,8 +82,8 @@ function generateAlerts(
     if (!previous) return alerts;
 
     for (const siteName of Object.keys(current)) {
-        // 부분 복구 크롤에서 실행하지 않은 여행사는 측정치가 아니다.
-        if (current[siteName].skipped) continue;
+        // 건너뜀과 수동 캡처는 정규 자동 수집량 비교 기준이 아니다.
+        if (current[siteName].skipped || current[siteName].manual) continue;
 
         // 보존된 값은 측정치가 아니라 직전 캐시를 옮겨 적은 숫자다. 이것을 수집량과
         // 맞비교하면 '2082 → 246 (-88%)' 처럼 실제로는 없었던 감소가 보고된다.
@@ -162,6 +164,7 @@ export function logCrawlResults(
         scraped?: number;
         preserved?: boolean;
         skipped?: boolean;
+        manual?: boolean;
         added?: number;
         removed?: number;
         /** 다른 예약 작업과 시간이 겹쳐도 독립 회차로 남긴다. */
@@ -195,6 +198,7 @@ export function logCrawlResults(
         scraped: meta?.scraped,
         preserved: meta?.preserved || undefined,
         skipped: meta?.skipped || undefined,
+        manual: meta?.manual || undefined,
         added: meta?.added,
         removed: meta?.removed,
         byRegion,
@@ -208,7 +212,7 @@ export function logCrawlResults(
     for (const siteName of Object.keys(currentEntry.sites)) {
         for (let i = history.entries.length - 2; i >= 0; i--) {
             const candidate = history.entries[i].sites[siteName];
-            if (candidate && !candidate.skipped) {
+            if (candidate && !candidate.skipped && !candidate.manual) {
                 previousMeasuredSites[siteName] = candidate;
                 break;
             }
@@ -253,7 +257,9 @@ export function logCrawlResults(
 
     // 요약 출력
     console.log(`\n📊 ${siteName} 크롤링 로그 저장됨`);
-    console.log(meta?.preserved
+    console.log(meta?.manual
+        ? `   총: ${total}개 (수동 캡처 ${meta.scraped ?? 0}개 검수 반영)`
+        : meta?.preserved
         ? `   총: ${total}개 (이번 수집 ${meta.scraped ?? 0}개가 실패해 이전 데이터를 유지함)`
         : meta?.skipped
             ? `   총: ${total}개 (부분 크롤에서 실행하지 않음)`

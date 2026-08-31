@@ -24,7 +24,7 @@ function compactCircuitCause(circuit?: { reason: 'blocked' | 'rate_limited'; det
 
 interface CrawlHistoryEntry {
     timestamp: string;
-    sites: Record<string, { total: number; scraped?: number; preserved?: boolean; skipped?: boolean; added?: number; removed?: number }>;
+    sites: Record<string, { total: number; scraped?: number; preserved?: boolean; skipped?: boolean; manual?: boolean; added?: number; removed?: number }>;
     alerts: string[];
 }
 
@@ -1564,11 +1564,16 @@ export default function AdminPage() {
 
     const sourceWasAttempted = (entry: CrawlHistoryEntry, source: string): boolean => {
         const stat = entry.sites[source];
-        if (!stat || stat.skipped) return false;
+        if (!stat || stat.skipped || stat.manual) return false;
         // 2026-08-30 이전 일반 회차는 실행하지 않은 마이리얼트립 캐시를 성공처럼 기록했다.
         // 원본 수집량도 실패 표식도 없는 마이리얼트립은 과거 기록에서도 시도로 세지 않는다.
         if (source === 'myrealtrip' && stat.scraped === undefined && !stat.preserved) return false;
         return true;
+    };
+
+    const sourceHasHistoryEvent = (entry: CrawlHistoryEntry, source: string): boolean => {
+        const stat = entry.sites[source];
+        return Boolean(stat && (stat.skipped || stat.manual || sourceWasAttempted(entry, source)));
     };
 
     const turnoverOf = (entry: CrawlHistoryEntry) => {
@@ -1609,15 +1614,18 @@ export default function AdminPage() {
             && timestamp < periodStart(0);
     });
     const crawlSummary = (entries: CrawlHistoryEntry[]) => {
-        const failed = entries.filter(entry =>
+        const automaticEntries = entries.filter(entry =>
+            Object.values(entry.sites).some(site => !site.manual),
+        );
+        const failed = automaticEntries.filter(entry =>
             entry.alerts.some(alert => alert.startsWith('🚨'))
-            || Object.values(entry.sites).some(site => site.preserved),
+            || Object.values(entry.sites).some(site => site.preserved && !site.skipped),
         ).length;
-        const reliableChanges = entries
+        const reliableChanges = automaticEntries
             .map(turnoverOf)
             .filter((row): row is NonNullable<ReturnType<typeof turnoverOf>> => Boolean(row?.reliable));
         return {
-            runs: entries.length,
+            runs: automaticEntries.length,
             failed,
             added: reliableChanges.reduce((sum, row) => sum + row.added, 0),
             removed: reliableChanges.reduce((sum, row) => sum + row.removed, 0),
@@ -2169,8 +2177,14 @@ export default function AdminPage() {
                     <div className={styles.sectionHeading}>
                         <div>
                             <h2>여행사별 수집 상태</h2>
-                            <p>각 여행사의 최근 16회 수집량을 보여줍니다. 초록색은 정상 수집, 노란색은 수집 실패로 이전 데이터를 사용한 회차입니다.</p>
+                            <p>최근 16회의 자동 수집·수동 캡처·건너뜀을 서로 다른 표식으로 보여줍니다.</p>
                         </div>
+                    </div>
+                    <div className={styles.sourceGraphLegend} aria-label="수집 그래프 범례">
+                        <span><i className={styles.sourceLegendAuto} />자동 수집</span>
+                        <span><i className={styles.sourceLegendFailed} />수집 실패</span>
+                        <span><i className={styles.sourceLegendManual} />수동 캡처 성공</span>
+                        <span><i className={styles.sourceLegendSkipped} />건너뜀</span>
                     </div>
                     {crawlScheduleHealth && (
                         <div className={crawlScheduleIssue ? `${styles.naverCompact} ${styles.naverCompactWarn}` : styles.naverCompact}>
@@ -2209,25 +2223,32 @@ export default function AdminPage() {
                             const manualCapture = data.manualCaptureStatus?.[source];
                             const late = ageHours === null || ageHours > (STALE_AFTER_HOURS[source] ?? DEFAULT_STALE_AFTER_HOURS);
                             const visibleCount = sourceVisibleCounts[source] || 0;
-                            const history = [
-                                ...(data.crawlHistory || [])
-                                    .filter(entry => sourceWasAttempted(entry, source))
-                                    .map(entry => ({
+                            const loggedHistory = (data.crawlHistory || [])
+                                .filter(entry => sourceHasHistoryEvent(entry, source))
+                                .map(entry => ({
                                     timestamp: entry.timestamp,
                                     value: entry.sites[source]?.scraped ?? entry.sites[source]?.total ?? 0,
                                     preserved: Boolean(entry.sites[source]?.preserved),
-                                    manual: false,
-                                })),
-                                ...(source === 'modetour' && manualCapture ? [{
+                                    skipped: Boolean(entry.sites[source]?.skipped),
+                                    manual: Boolean(entry.sites[source]?.manual),
+                                }));
+                            const hasCurrentManualLog = source === 'modetour' && Boolean(manualCapture) && loggedHistory.some(entry =>
+                                entry.manual
+                                && Math.abs(new Date(entry.timestamp).getTime() - new Date(manualCapture!.lastImportedAt).getTime()) < 5 * 60_000,
+                            );
+                            const history = [
+                                ...loggedHistory,
+                                ...(source === 'modetour' && manualCapture && !hasCurrentManualLog ? [{
                                     timestamp: manualCapture.lastImportedAt,
                                     value: manualCapture.accepted,
                                     preserved: false,
+                                    skipped: false,
                                     manual: true,
                                 }] : []),
                             ]
                                 .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
                                 .slice(-16);
-                            const latestFailedAt = [...history].reverse().find(entry => entry.preserved)?.timestamp;
+                            const latestFailedAt = [...history].reverse().find(entry => entry.preserved && !entry.skipped)?.timestamp;
                             const manualImportedAt = manualCapture
                                 ? new Date(manualCapture.lastImportedAt).getTime()
                                 : Number.NaN;
@@ -2246,14 +2267,14 @@ export default function AdminPage() {
                             const modetourFailureLabel = staleCount > 0 ? `${staleCount}회 실패` : '실패';
                             const pastValues = history
                                 .slice(0, -1)
-                                .filter(entry => !entry.preserved && !entry.manual)
+                                .filter(entry => !entry.preserved && !entry.manual && !entry.skipped)
                                 .map(entry => entry.value)
                                 .sort((a, b) => a - b);
                             const median = pastValues.length ? pastValues[Math.floor(pastValues.length / 2)] : 0;
-                            const latest = history[history.length - 1] || null;
-                            const slumped = Boolean(latest && !latest.preserved && !latest.manual && median >= 30 && latest.value < median * 0.6);
+                            const latestMeasured = [...history].reverse().find(entry => !entry.skipped) || null;
+                            const slumped = Boolean(latestMeasured && !latestMeasured.preserved && !latestMeasured.manual && median >= 30 && latestMeasured.value < median * 0.6);
                             const issue = circuitOpen || staleCount > 0 || late || slumped;
-                            const peak = Math.max(...history.map(entry => entry.value), 1);
+                            const peak = Math.max(...history.filter(entry => !entry.skipped).map(entry => entry.value), 1);
                             const statusText = modetourManualApplied
                                 ? `${modetourFailureLabel} · 수동 ${manualCapture!.accepted}건 반영${manualCapture!.naverPending ? ' · 네이버 대기' : ''}`
                                 : modetourManualNeeded
@@ -2277,9 +2298,9 @@ export default function AdminPage() {
                                     </div>
                                     <div className={styles.sourceTrendSummary}>
                                         <div><strong>{visibleCount.toLocaleString()}</strong><span>사이트 노출</span></div>
-                                        <div><strong>{latest ? latest.value.toLocaleString() : '—'}</strong><span>최근 수집</span></div>
+                                        <div><strong>{latestMeasured ? latestMeasured.value.toLocaleString() : '—'}</strong><span>최근 실제 수집</span></div>
                                     </div>
-                                    <div className={styles.sourceTrendBars} role="img" aria-label={`${SOURCE_NAMES[source]} 최근 ${history.length}회 수집량 변화`}>
+                                    <div className={styles.sourceTrendBars} role="img" aria-label={`${SOURCE_NAMES[source]} 최근 ${history.length}회 자동·수동 수집 및 건너뜀 기록`}>
                                         {history.map((entry, index) => {
                                             const isLatest = index === history.length - 1;
                                             return (
@@ -2287,6 +2308,8 @@ export default function AdminPage() {
                                                     key={`${entry.timestamp}-${index}`}
                                                     className={entry.manual
                                                         ? styles.sourceTrendBarManual
+                                                        : entry.skipped
+                                                        ? styles.sourceTrendBarSkipped
                                                         : entry.preserved
                                                         ? styles.sourceTrendBarPreserved
                                                         : isLatest && slumped
@@ -2294,9 +2317,13 @@ export default function AdminPage() {
                                                             : isLatest
                                                                 ? styles.sourceTrendBarLatest
                                                                 : styles.sourceTrendBar}
-                                                    style={{ height: `${Math.max(5, Math.round((entry.value / peak) * 100))}%` }}
-                                                    title={`${formatKST(entry.timestamp).replace(/\d{4}\. /, '')} · ${entry.value.toLocaleString()}개${entry.manual ? ' · 수동 캡처 반영' : entry.preserved ? ' · 수집 실패, 이전 데이터 사용' : ''}`}
-                                                />
+                                                    style={{ height: entry.manual ? '24px' : entry.skipped ? '12px' : `${Math.max(5, Math.round((entry.value / peak) * 100))}%` }}
+                                                    title={entry.skipped
+                                                        ? `${formatKST(entry.timestamp).replace(/\d{4}\. /, '')} · 건너뜀 (차단 휴식, 요청 없음)`
+                                                        : `${formatKST(entry.timestamp).replace(/\d{4}\. /, '')} · ${entry.value.toLocaleString()}개${entry.manual ? ' · 수동 캡처 성공' : entry.preserved ? ' · 수집 실패, 이전 데이터 사용' : ' · 자동 수집'}`}
+                                                >
+                                                    {entry.manual ? '✓' : ''}
+                                                </span>
                                             );
                                         })}
                                     </div>
@@ -3091,8 +3118,14 @@ export default function AdminPage() {
                 <h2>여행사별 수집 상태</h2>
                 <p className={styles.sectionHelp}>
                     큰 숫자는 필터를 거쳐 지금 사이트에 실제로 보이는 항공권 수이고, 막대는 최근 수집에서 여행사로부터 가져온 양의 추이입니다.
-                    노란 막대는 수집에 실패해 이전 데이터를 그대로 유지한 회차이고, 청록색 막대는 운영자가 확인해 반영한 수동 캡처입니다.
+                    건너뜀은 차단 휴식 때문에 요청 자체를 하지 않은 회차이며 실패 횟수나 수집량으로 계산하지 않습니다.
                 </p>
+                <div className={styles.sourceGraphLegend} aria-label="수집 그래프 범례">
+                    <span><i className={styles.sourceLegendAuto} />자동 수집</span>
+                    <span><i className={styles.sourceLegendFailed} />수집 실패</span>
+                    <span><i className={styles.sourceLegendManual} />수동 캡처 성공</span>
+                    <span><i className={styles.sourceLegendSkipped} />건너뜀</span>
+                </div>
                 <div className={styles.sourceGrid}>
                     {allSources.map(source => {
                         const updatedAt = data.sourceUpdatedAt?.[source];
@@ -3106,25 +3139,32 @@ export default function AdminPage() {
                         const ageHours = updatedAt ? (Date.now() - new Date(updatedAt).getTime()) / 3600000 : null;
                         const stale = ageHours === null || ageHours > staleAfter;
 
+                        const loggedHistory = (data.crawlHistory || [])
+                            .filter(entry => sourceHasHistoryEvent(entry, source))
+                            .map(entry => ({
+                                ts: entry.timestamp,
+                                value: entry.sites[source]?.scraped ?? entry.sites[source]?.total ?? 0,
+                                preserved: Boolean(entry.sites[source]?.preserved),
+                                skipped: Boolean(entry.sites[source]?.skipped),
+                                manual: Boolean(entry.sites[source]?.manual),
+                            }));
+                        const hasCurrentManualLog = source === 'modetour' && Boolean(manualCapture) && loggedHistory.some(entry =>
+                            entry.manual
+                            && Math.abs(new Date(entry.ts).getTime() - new Date(manualCapture!.lastImportedAt).getTime()) < 5 * 60_000,
+                        );
                         const history = [
-                            ...(data.crawlHistory || [])
-                                .filter(e => sourceWasAttempted(e, source))
-                                .map(e => ({
-                                ts: e.timestamp,
-                                value: e.sites[source]?.scraped ?? e.sites[source]?.total ?? 0,
-                                preserved: Boolean(e.sites[source]?.preserved),
-                                manual: false,
-                            })),
-                            ...(source === 'modetour' && manualCapture ? [{
+                            ...loggedHistory,
+                            ...(source === 'modetour' && manualCapture && !hasCurrentManualLog ? [{
                                 ts: manualCapture.lastImportedAt,
                                 value: manualCapture.accepted,
                                 preserved: false,
+                                skipped: false,
                                 manual: true,
                             }] : []),
                         ]
                             .sort((a, b) => new Date(a.ts).getTime() - new Date(b.ts).getTime())
                             .slice(-16);
-                        const latestFailedAt = [...history].reverse().find(entry => entry.preserved)?.ts;
+                        const latestFailedAt = [...history].reverse().find(entry => entry.preserved && !entry.skipped)?.ts;
                         const manualImportedAt = manualCapture
                             ? new Date(manualCapture.lastImportedAt).getTime()
                             : Number.NaN;
@@ -3146,15 +3186,15 @@ export default function AdminPage() {
                         // 가드는 직전 한 번과만 비교하므로, 반쪽 결과가 한 번 자리를 잡으면
                         // 그 다음부터는 그 낮은 값이 기준이 되어 조용해진다(노랑풍선 89건이 그랬다).
                         // 최근 중앙값과 견주면 그렇게 굳어버린 상태도 드러난다.
-                        const past = history.slice(0, -1).filter(h => !h.preserved && !h.manual).map(h => h.value).sort((a, b) => a - b);
+                        const past = history.slice(0, -1).filter(h => !h.preserved && !h.manual && !h.skipped).map(h => h.value).sort((a, b) => a - b);
                         const median = past.length ? past[Math.floor(past.length / 2)] : 0;
-                        const latest = history.length ? history[history.length - 1] : null;
+                        const latestMeasured = [...history].reverse().find(entry => !entry.skipped) || null;
                         const slumped = Boolean(
-                            latest && !latest.preserved && !latest.manual && median >= 30 && latest.value < median * 0.6,
+                            latestMeasured && !latestMeasured.preserved && !latestMeasured.manual && median >= 30 && latestMeasured.value < median * 0.6,
                         );
 
                         const status = circuitOpen || streak > 0 || slumped ? 'broken' : stale ? 'stale' : 'ok';
-                        const peak = Math.max(...history.map(h => h.value), 1);
+                        const peak = Math.max(...history.filter(entry => !entry.skipped).map(h => h.value), 1);
                         const shown = flightFilterSummary?.visibleBySource?.[source] ?? 0;
 
                         return (
@@ -3210,8 +3250,8 @@ export default function AdminPage() {
                                     {updatedAt
                                         ? <span>마지막 갱신 {timeAgo(updatedAt)}</span>
                                         : <span>갱신 기록 없음</span>}
-                                    {latest && !latest.preserved && (
-                                        <span>최근 수집 {latest.value.toLocaleString()}건 · 사이트 노출 {shown.toLocaleString()}건</span>
+                                    {latestMeasured && !latestMeasured.preserved && !latestMeasured.manual && (
+                                        <span>최근 자동 수집 {latestMeasured.value.toLocaleString()}건 · 사이트 노출 {shown.toLocaleString()}건</span>
                                     )}
                                     {modetourManualNeeded && (
                                         <span>PC 자동 접속 없음 · 일반 Chrome 결과 화면을 캡처해 전달</span>
@@ -3231,18 +3271,24 @@ export default function AdminPage() {
                                     )}
                                 </div>
 
-                                <div className={styles.sparkBars} aria-hidden="true">
+                                <div className={styles.sparkBars} role="img" aria-label={`${SOURCE_NAMES[source]} 최근 ${history.length}회 자동·수동 수집 및 건너뜀 기록`}>
                                     {history.map((h, i) => (
                                         <span
                                             key={i}
                                             className={h.manual
                                                 ? `${styles.sparkBar} ${styles.sparkBarManual}`
+                                                : h.skipped
+                                                    ? `${styles.sparkBar} ${styles.sparkBarSkipped}`
                                                 : h.preserved
                                                     ? `${styles.sparkBar} ${styles.sparkBarPreserved}`
                                                     : styles.sparkBar}
-                                            style={{ height: `${Math.max(4, Math.round((h.value / peak) * 100))}%` }}
-                                            title={`${formatKST(h.ts).replace(/\d{4}\. /, '')} · ${h.value.toLocaleString()}건${h.manual ? ' (수동 캡처 반영)' : h.preserved ? ' (수집 실패, 이전 데이터 유지)' : ''}`}
-                                        />
+                                            style={{ height: h.manual ? '18px' : h.skipped ? '8px' : `${Math.max(4, Math.round((h.value / peak) * 100))}%` }}
+                                            title={h.skipped
+                                                ? `${formatKST(h.ts).replace(/\d{4}\. /, '')} · 건너뜀 (차단 휴식, 요청 없음)`
+                                                : `${formatKST(h.ts).replace(/\d{4}\. /, '')} · ${h.value.toLocaleString()}건${h.manual ? ' (수동 캡처 성공)' : h.preserved ? ' (수집 실패, 이전 데이터 유지)' : ' (자동 수집)'}`}
+                                        >
+                                            {h.manual ? '✓' : ''}
+                                        </span>
                                     ))}
                                 </div>
                             </div>
@@ -3356,6 +3402,11 @@ export default function AdminPage() {
                         <span className={styles.previousDataNoticeBadge}>⚠ 이전 데이터 사용</span>
                         <span>이번 수집에 문제가 있어 새 값 대신 직전 정상 데이터를 표시한다는 뜻입니다.</span>
                     </div>
+                    <div className={styles.collectionStateNotice} role="note">
+                        <span className={styles.manualDataBadge}>✓ 수동 캡처 성공</span>
+                        <span className={styles.skippedDataBadge}>건너뜀</span>
+                        <span>수동 반영과 요청 자체를 하지 않은 회차를 자동 수집 실패와 분리해 표시합니다.</span>
+                    </div>
                     <div className={styles.cityDetail} style={{ overflowX: 'auto' }}>
                         <table className={styles.cityTable} style={{ minWidth: '500px' }}>
                             <thead>
@@ -3374,7 +3425,9 @@ export default function AdminPage() {
                                     const prev = arr[idx + 1];
                                     const total = sumMetric(entry.sites);
                                     const prevTotal = prev ? sumMetric(prev.sites) : null;
-                                    const totalDiff = prevTotal !== null ? total - prevTotal : null;
+                                    const manualEntry = Object.values(entry.sites).some(stat => stat.manual);
+                                    const previousManualEntry = prev ? Object.values(prev.sites).some(stat => stat.manual) : false;
+                                    const totalDiff = !manualEntry && !previousManualEntry && prevTotal !== null ? total - prevTotal : null;
 
                                     return (
                                         <tr key={entry.timestamp}>
@@ -3388,19 +3441,37 @@ export default function AdminPage() {
                                                 const prevCount = metricOf(prevStat);
                                                 // 수집에 실패해 이전 데이터를 물려받은 칸은 측정치가 아니다.
                                                 // 여기에 증감을 붙이면 일어나지 않은 변화를 읽게 된다.
-                                                const preserved = Boolean(stat?.preserved);
-                                                const diff = !preserved && !prevStat?.preserved && prevCount !== null && count !== null
+                                                const skipped = Boolean(stat?.skipped);
+                                                const manual = Boolean(stat?.manual);
+                                                const preserved = Boolean(stat?.preserved && !skipped);
+                                                const diff = !preserved && !skipped && !manual
+                                                    && !prevStat?.preserved && !prevStat?.skipped && !prevStat?.manual
+                                                    && prevCount !== null && count !== null
                                                     ? count - prevCount
                                                     : null;
                                                 return (
                                                     <td
                                                         key={source}
-                                                        className={preserved ? styles.previousDataCell : undefined}
+                                                        className={manual
+                                                            ? styles.manualDataCell
+                                                            : skipped
+                                                                ? styles.skippedDataCell
+                                                                : preserved ? styles.previousDataCell : undefined}
                                                         style={{ textAlign: 'center' }}
                                                     >
                                                         <span className={preserved ? styles.previousDataValue : undefined}>
                                                             {count === null ? '—' : count.toLocaleString()}
                                                         </span>
+                                                        {manual && (
+                                                            <span className={styles.manualDataBadge} title="운영자가 일반 브라우저 캡처를 검수해 반영한 값입니다.">
+                                                                ✓ 수동 성공
+                                                            </span>
+                                                        )}
+                                                        {skipped && (
+                                                            <span className={styles.skippedDataBadge} title="차단 휴식 때문에 요청하지 않았으며 실패 횟수에 포함하지 않습니다.">
+                                                                건너뜀
+                                                            </span>
+                                                        )}
                                                         {preserved && (
                                                             <span
                                                                 className={styles.previousDataBadge}

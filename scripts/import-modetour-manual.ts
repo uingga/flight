@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { Flight } from '../src/types/flight';
 import { getRegionByCity } from '../src/lib/utils/region-mapper';
+import { logCrawlResults } from '../src/lib/utils/crawl-logger';
 import {
     MODETOUR_CONTINENT_CODES,
     ModetourManualCapture,
@@ -372,7 +373,8 @@ function argValue(name: string): string | null {
 function main(): void {
     const inputPath = argValue('--input');
     if (!inputPath) throw new Error('사용법: tsx scripts/import-modetour-manual.ts --input <capture.json> [--apply]');
-    const cachePath = argValue('--cache') || path.join(process.cwd(), 'data', 'all-flights-cache.json');
+    const defaultCachePath = path.join(process.cwd(), 'data', 'all-flights-cache.json');
+    const cachePath = argValue('--cache') || defaultCachePath;
     const benchmarkPath = argValue('--benchmark') || path.join(process.cwd(), 'data', 'interpark-prices.json');
     const apply = process.argv.includes('--apply');
 
@@ -383,6 +385,19 @@ function main(): void {
 
     if (apply && result.report.applied) {
         fs.writeFileSync(cachePath, `${JSON.stringify(result.cache, null, 2)}\n`, 'utf8');
+        if (path.resolve(cachePath) === path.resolve(defaultCachePath)) {
+            const modetourFlights = result.cache.flights.filter(flight => flight.source === 'modetour');
+            const byCity = modetourFlights.reduce<Record<string, number>>((counts, flight) => {
+                const city = flight.arrival?.city || '기타';
+                counts[city] = (counts[city] || 0) + 1;
+                return counts;
+            }, {});
+            logCrawlResults('modetour', modetourFlights.length, undefined, byCity, {
+                scraped: result.report.accepted,
+                manual: true,
+                separateSession: true,
+            });
+        }
     }
     console.log(JSON.stringify(result.report, null, 2));
     if (!apply) console.log('검토만 완료했습니다. 실제 반영에는 --apply가 필요합니다.');

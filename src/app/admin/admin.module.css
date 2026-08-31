@@ -1244,6 +1244,50 @@
     cursor: help;
 }
 
+.collectionStateNotice {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 7px 9px;
+    margin: -7px 0 14px;
+    color: #94a3b8;
+    font-size: 0.76rem;
+    line-height: 1.45;
+}
+
+.manualDataBadge,
+.skippedDataBadge {
+    display: inline-flex;
+    align-items: center;
+    width: max-content;
+    padding: 2px 7px;
+    border-radius: 999px;
+    font-size: 0.66rem;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.manualDataBadge {
+    border: 1px solid rgba(45, 212, 191, 0.48);
+    background: rgba(15, 159, 152, 0.2);
+    color: #5eead4;
+}
+
+.skippedDataBadge {
+    border: 1px dashed rgba(148, 163, 184, 0.7);
+    background: rgba(71, 85, 105, 0.3);
+    color: #cbd5e1;
+}
+
+.manualDataCell { background: rgba(15, 159, 152, 0.1); }
+.skippedDataCell { background: rgba(71, 85, 105, 0.18); }
+
+.manualDataCell .manualDataBadge,
+.skippedDataCell .skippedDataBadge {
+    margin: 3px auto 0;
+    cursor: help;
+}
+
 /* 제외 사유 칩 무리 앞에 붙는 설명 — 칩과 구분되게 배경 없이 */
 .dealRejections .dealRejectionsLabel {
     padding: 4px 0;
@@ -1528,7 +1572,20 @@
 
 .sparkBarManual,
 .sparkBarManual:last-child {
-    background: #0f9f98;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #2dd4bf;
+    background: repeating-linear-gradient(135deg, #0f9f98 0 4px, #2dd4bf 4px 6px);
+    color: #fff;
+    font-size: 0.55rem;
+    font-weight: 800;
+}
+
+.sparkBarSkipped,
+.sparkBarSkipped:last-child {
+    border: 1px dashed #94a3b8;
+    background: repeating-linear-gradient(135deg, #475569 0 2px, #94a3b8 2px 3px);
 }
 
 /* ── 표시 기준 토글 ─────────────────────────────────── */
@@ -3500,6 +3557,40 @@
     color: #c43d30;
 }
 
+.sourceGraphLegend {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 7px 14px;
+    margin: -2px 0 14px;
+    color: #7a8491;
+    font-size: 0.7rem;
+}
+
+.sourceGraphLegend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.sourceGraphLegend i {
+    display: inline-block;
+    width: 11px;
+    height: 11px;
+    border-radius: 3px;
+}
+
+.sourceLegendAuto { background: #4c9a70; }
+.sourceLegendFailed { background: #e7a93c; }
+.sourceLegendManual {
+    border: 1px solid #0f9f98;
+    background: repeating-linear-gradient(135deg, #0f9f98 0 4px, #65d8d0 4px 6px);
+}
+.sourceLegendSkipped {
+    border: 1px dashed #8a96a5;
+    background: repeating-linear-gradient(135deg, #d6dbe1 0 2px, #f5f6f8 2px 4px);
+}
+
 .sourceTrendGrid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -3585,6 +3676,7 @@
 .sourceTrendBarLatest,
 .sourceTrendBarPreserved,
 .sourceTrendBarManual,
+.sourceTrendBarSkipped,
 .sourceTrendBarBroken {
     flex: 1;
     min-width: 4px;
@@ -3599,7 +3691,21 @@
     background: #e7a93c;
 }
 
-.sourceTrendBarManual { background: #0f9f98; }
+.sourceTrendBarManual {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #0f9f98;
+    background: repeating-linear-gradient(135deg, #0f9f98 0 5px, #65d8d0 5px 7px);
+    color: #fff;
+    font-size: 0.62rem;
+    font-weight: 800;
+}
+
+.sourceTrendBarSkipped {
+    border: 1px dashed #8a96a5;
+    background: repeating-linear-gradient(135deg, #cbd2da 0 2px, #f5f6f8 2px 4px);
+}
 
 .sourceTrendBarBroken { background: #d85c4d; }
 
