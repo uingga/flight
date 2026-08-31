@@ -10,7 +10,7 @@ import OverlayDialog from '@/components/ui/OverlayDialog';
 import * as gtag from '@/lib/analytics';
 import { getDestinationContext } from '@/lib/destination-contexts';
 import {
-    diversifyFlightDestinations,
+    diversifyRecommendationOrder,
     excludePinnedDestination,
     sortFirstBlockByNewestArrival,
 } from '@/lib/flight-diversity';
@@ -1658,24 +1658,15 @@ export default function MobileRedesignPreview({
         const pool = excludePinnedDestination(filteredFlights, pinnedFlight);
         const diversified = sort === 'recommended' && !query.trim()
             ? (() => {
-                const result: Flight[] = [];
                 // DROP은 추천 배열 밖의 편집 카드이므로 첫 9개·연속 횟수 계산에도 넣지 않는다.
-                const leadingFlights: Flight[] = [];
-                for (const tier of [0, 1, 2] as const) {
-                    const group = diversifyFlightDestinations(
-                        pool.filter(flight => getComparisonPriceTier(flight) === tier),
-                        {
-                            topWindow: 20,
-                            maxPerDestination: 2,
-                            maxConsecutiveDestinations: 2,
-                            leadingFlights,
-                            scoreOf: flight => recommendationScores.get(flight.id) ?? Infinity,
-                            balanceIncheon: departure === '전체',
-                        },
-                    );
-                    result.push(...group);
-                    leadingFlights.push(...group);
-                }
+                const result = diversifyRecommendationOrder(pool, {
+                    tierOf: flight => getComparisonPriceTier(flight),
+                    topWindow: 20,
+                    maxPerDestination: 2,
+                    maxConsecutiveDestinations: 2,
+                    scoreOf: flight => recommendationScores.get(flight.id) ?? Infinity,
+                    balanceIncheon: departure === '전체',
+                });
                 return sortFirstBlockByNewestArrival(result, 9);
             })()
             : pool;

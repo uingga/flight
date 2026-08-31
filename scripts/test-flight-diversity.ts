@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {
     diversifyFlightDestinations,
     diversifyFlightDestinationsWithDecisions,
+    diversifyRecommendationOrder,
     excludePinnedDestination,
     sortFirstBlockByNewestArrival,
     trailingDestinationStreak,
@@ -104,7 +105,7 @@ const deduplicatedFirstNine = diversifyFlightDestinations(sameOfferOnDifferentDa
 assert.equal(
     deduplicatedFirstNine.slice(0, 9).filter(item => item.arrival.city === '반다르세리베가완').length,
     1,
-    '출발지·목적지·가격·항공사·여행기간이 같고 날짜만 다른 표는 첫 9개에 대표 한 장만 보여야 한다.',
+    '같은 출발권역·목적지는 날짜가 달라도 첫 9개에 대표 한 장만 보여야 한다.',
 );
 assert.equal(
     deduplicatedFirstNine.findIndex(item => item.id === 'bandar-2'),
@@ -127,17 +128,57 @@ assert.deepEqual(
 );
 
 const differentPriceSameDestination = diversifyFlightDestinations([
-    flight('osaka-cheap', '인천', '오사카', 1),
-    { ...flight('osaka-other-price', '인천', '오사카', 2), price: 129_000 },
-    flight('nagoya', '인천', '나고야', 3),
+    { ...flight('osaka-expensive', '인천', '오사카', 1), price: 129_000 },
+    flight('osaka-cheap', '인천', '오사카', 2),
+    ...Array.from({ length: 8 }, (_, index) => flight(
+        `price-different-${index + 1}`,
+        '인천',
+        `가격다른도시${index + 1}`,
+        index + 3,
+    )),
 ], {
     scoreOf: item => (item as Flight & { testScore: number }).testScore,
     balanceIncheon: false,
 });
-assert.deepEqual(
-    differentPriceSameDestination.slice(0, 2).map(item => item.id),
-    ['osaka-cheap', 'osaka-other-price'],
-    '목적지가 같아도 가격이 다르면 서로 다른 선택지로 첫 9개에 함께 남아야 한다.',
+assert.equal(
+    differentPriceSameDestination.slice(0, 9).some(item => item.id === 'osaka-cheap'),
+    true,
+    '같은 출발권역·목적지에서는 추천 점수가 뒤여도 가장 싼 표를 대표로 보여야 한다.',
+);
+assert.equal(
+    differentPriceSameDestination.slice(0, 9).some(item => item.id === 'osaka-expensive'),
+    false,
+    '가격이 다르다는 이유만으로 더 비싼 같은 노선 표를 첫 9개에 넣으면 안 된다.',
+);
+assert.equal(
+    differentPriceSameDestination.findIndex(item => item.id === 'osaka-expensive'),
+    9,
+    '더 비싼 같은 노선 표는 삭제하지 않고 첫 9개 뒤에서 보여야 한다.',
+);
+
+const differentTierSameRoute = diversifyRecommendationOrder([
+    { ...flight('tier-expensive', '인천', '사이판', 1), price: 379_000 },
+    flight('tier-cheap', '인천', '사이판', 20),
+    ...Array.from({ length: 8 }, (_, index) => flight(
+        `tier-other-${index + 1}`,
+        '인천',
+        `구간다른도시${index + 1}`,
+        index + 2,
+    )),
+], {
+    tierOf: item => item.id === 'tier-cheap' ? 1 : 0,
+    scoreOf: item => (item as Flight & { testScore: number }).testScore,
+    balanceIncheon: false,
+});
+assert.equal(
+    differentTierSameRoute.slice(0, 9).some(item => item.id === 'tier-cheap'),
+    true,
+    '비교가 구간이 달라도 같은 노선의 최저가 대표가 첫 9개에 들어가야 한다.',
+);
+assert.equal(
+    differentTierSameRoute.slice(0, 9).some(item => item.id === 'tier-expensive'),
+    false,
+    '비교가 구간이 앞선다는 이유로 더 비싼 같은 노선 표를 첫 9개에 남기면 안 된다.',
 );
 
 const recentlyAddedCandidates = ordered.map((item, index) => ({

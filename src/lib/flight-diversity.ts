@@ -1,4 +1,5 @@
 import type { Flight } from '@/types/flight';
+import { getEffectivePrice } from '@/lib/price-quality';
 import { normalizeCity } from '@/lib/utils/flight-helpers';
 
 export interface FlightDiversityOptions {
@@ -46,39 +47,40 @@ export interface FlightDiversityResult {
     decisions: FlightDiversityDecision[];
 }
 
-function parseTravelDate(value: string): number | null {
-    const match = value
-        .replace(/\([^)]*\)/g, '')
-        .match(/(\d{4})[./-](\d{1,2})[./-](\d{1,2})/);
-    if (!match) return null;
+function departureAreaKey(flight: Flight): string {
+    const airport = flight.departure.airport?.trim().toUpperCase();
+    if (airport === 'ICN' || airport === 'GMP') return 'SEOUL';
+    if (airport === 'PUS') return 'BUSAN';
+    if (airport === 'TAE') return 'DAEGU';
+    if (airport === 'CJJ') return 'CHEONGJU';
+    if (airport === 'CJU') return 'JEJU';
 
-    const year = Number(match[1]);
-    const month = Number(match[2]);
-    const day = Number(match[3]);
-    const time = Date.UTC(year, month - 1, day);
-    const parsed = new Date(time);
-    if (
-        parsed.getUTCFullYear() !== year
-        || parsed.getUTCMonth() !== month - 1
-        || parsed.getUTCDate() !== day
-    ) return null;
-    return time;
+    const city = normalizeCity(flight.departure.city);
+    if (/서울|인천|김포/.test(city)) return 'SEOUL';
+    if (/부산|김해/.test(city)) return 'BUSAN';
+    return airport || city;
 }
 
-/** 첫 9개에서 날짜만 바뀐 사실상 같은 표를 한 장으로 취급하기 위한 키다. */
-function firstNineNearDuplicateKey(flight: Flight): string | null {
-    const departureDate = parseTravelDate(flight.departure.date);
-    const returnDate = parseTravelDate(flight.arrival.date);
-    if (departureDate === null || returnDate === null || returnDate < departureDate) return null;
-
-    const origin = flight.departure.airport?.trim().toUpperCase()
-        || normalizeCity(flight.departure.city);
+/** 첫 9개에서 같은 출발권역·목적지를 한 선택지로 묶는 키다. */
+function firstNineRouteKey(flight: Flight): string | null {
+    const origin = departureAreaKey(flight);
     const destination = normalizeCity(flight.arrival.city);
-    const airline = flight.airline?.replace(/\s+/g, '').toLowerCase();
-    const tripDays = Math.round((returnDate - departureDate) / 86_400_000);
-    if (!origin || !destination || !airline || !Number.isFinite(flight.price)) return null;
+    if (!origin || !destination) return null;
+    return `${origin}|${destination}`;
+}
 
-    return [origin, destination, flight.price, airline, tripDays].join('|');
+/** 같은 출발권역·목적지에서는 실질 결제가가 가장 싼 카드만 첫 9개 대표가 된다. */
+function firstNineRouteRepresentativeIds(items: Flight[]): Set<string> {
+    const bestByRoute = new Map<string, Flight>();
+    for (const flight of items) {
+        const key = firstNineRouteKey(flight);
+        if (!key) continue;
+        const current = bestByRoute.get(key);
+        if (!current || getEffectivePrice(flight) < getEffectivePrice(current)) {
+            bestByRoute.set(key, flight);
+        }
+    }
+    return new Set(Array.from(bestByRoute.values(), flight => flight.id));
 }
 
 function isIncheonAreaDeparture(flight: Flight): boolean {
@@ -131,8 +133,8 @@ export function excludePinnedDestination(items: Flight[], pinnedFlight?: Flight)
  * 추천순 카드의 목적지 다양성을 조정한다.
  *
  * 같은 목적지는 두 장까지 연속으로 올 수 있다. 세 번째는 다른 목적지가 남아 있는 한
- * 뒤로 미룬다. 첫 9개에서는 출발지·목적지·가격·항공사·여행기간이 모두 같은 표도
- * 대표 한 장만 남긴다. 대체 표가 전혀 없을 때만 목록을 버리지 않기 위해 최종 완화한다.
+ * 뒤로 미룬다. 첫 9개에서는 같은 출발권역·목적지의 실질 결제가가 가장 싼 표 한 장만
+ * 대표로 남긴다. 다른 날짜·여행사 표는 삭제하지 않고 첫 9개 뒤에서 보여준다.
  */
 export function diversifyFlightDestinations(
     items: Flight[],
@@ -164,7 +166,8 @@ export function diversifyFlightDestinationsWithDecisions(
     const decisions: FlightDiversityDecision[] = [];
     const sequence: Flight[] = [...leadingFlights];
     const topDestinationCounts = new Map<string, number>();
-    const firstNineNearDuplicateKeys = new Set<string>();
+    const firstNineRouteKeys = new Set<string>();
+    const representativeIds = firstNineRouteRepresentativeIds(items);
     const originalIndexes = new Map(items.map((flight, index) => [flight, index]));
 
     sequence.slice(0, topWindow).forEach(flight => {
@@ -172,8 +175,8 @@ export function diversifyFlightDestinationsWithDecisions(
         topDestinationCounts.set(destination, (topDestinationCounts.get(destination) || 0) + 1);
     });
     sequence.slice(0, 9).forEach(flight => {
-        const key = firstNineNearDuplicateKey(flight);
-        if (key) firstNineNearDuplicateKeys.add(key);
+        const key = firstNineRouteKey(flight);
+        if (key) firstNineRouteKeys.add(key);
     });
 
     while (remaining.length > 0) {
@@ -203,13 +206,16 @@ export function diversifyFlightDestinationsWithDecisions(
                 .filter(index => {
                     const flight = remaining[index];
                     const destination = normalizeCity(flight.arrival.city);
-                    const nearDuplicateKey = firstNineNearDuplicateKey(flight);
+                    const routeKey = firstNineRouteKey(flight);
                     const destinationStreak = trailingDestinationStreak(destinationSequence, destination);
                     const departsFromIncheonArea = isIncheonAreaDeparture(flight);
                     return destinationStreak < maxConsecutiveDestinations
                         && (!keepTopLimit || !insideTopWindow || (topDestinationCounts.get(destination) || 0) < maxPerDestination)
                         && (!keepFirstNineCap || sequence.length >= 9 || (topDestinationCounts.get(destination) || 0) < maxPerDestination)
-                        && (!keepFirstNineCap || sequence.length >= 9 || !nearDuplicateKey || !firstNineNearDuplicateKeys.has(nearDuplicateKey))
+                        && (!keepFirstNineCap || sequence.length >= 9 || !routeKey || (
+                            representativeIds.has(flight.id)
+                            && !firstNineRouteKeys.has(routeKey)
+                        ))
                         && (!keepDepartureBalance || !mustChooseIncheon || departsFromIncheonArea)
                         && (!keepDepartureBalance || incheonCount < 6 || !departsFromIncheonArea);
                 });
@@ -302,8 +308,8 @@ export function diversifyFlightDestinationsWithDecisions(
         result.push(next);
         sequence.push(next);
         if (sequence.length <= 9) {
-            const nearDuplicateKey = firstNineNearDuplicateKey(next);
-            if (nearDuplicateKey) firstNineNearDuplicateKeys.add(nearDuplicateKey);
+            const routeKey = firstNineRouteKey(next);
+            if (routeKey) firstNineRouteKeys.add(routeKey);
         }
         if (sequence.length <= topWindow) {
             topDestinationCounts.set(destination, (topDestinationCounts.get(destination) || 0) + 1);
@@ -311,4 +317,74 @@ export function diversifyFlightDestinationsWithDecisions(
     }
 
     return { flights: result, decisions };
+}
+
+export interface RecommendationDiversityOptions extends FlightDiversityOptions {
+    tierOf: (flight: Flight) => number;
+    firstBlockSize?: number;
+}
+
+/**
+ * 비교가 구간 순서를 지키면서 첫 묶음은 노선별 최저가 대표만 구성한다.
+ * 첫 묶음에 들지 않은 다른 일정은 같은 정렬 규칙으로 뒤에 이어 붙인다.
+ */
+export function diversifyRecommendationOrderWithDecisions(
+    items: Flight[],
+    options: RecommendationDiversityOptions,
+): FlightDiversityResult {
+    if (items.length === 0) return { flights: [], decisions: [] };
+
+    const {
+        tierOf,
+        firstBlockSize = 9,
+        leadingFlights = [],
+        ...diversityOptions
+    } = options;
+    const representativeIds = firstNineRouteRepresentativeIds(items);
+    const representativePool = items.filter(flight => representativeIds.has(flight.id));
+    const tiers = Array.from(new Set(items.map(tierOf))).sort((a, b) => a - b);
+
+    const diversifyByTier = (candidates: Flight[], leading: Flight[]): FlightDiversityResult => {
+        const flights: Flight[] = [];
+        const decisions: FlightDiversityDecision[] = [];
+        for (const tier of tiers) {
+            const group = diversifyFlightDestinationsWithDecisions(
+                candidates.filter(flight => tierOf(flight) === tier),
+                {
+                    ...diversityOptions,
+                    leadingFlights: [...leading, ...flights],
+                },
+            );
+            flights.push(...group.flights);
+            decisions.push(...group.decisions);
+        }
+        return { flights, decisions };
+    };
+
+    const representativeResult = diversifyByTier(representativePool, leadingFlights);
+    const availableSlots = Math.max(0, firstBlockSize - leadingFlights.length);
+    const firstBlock = representativeResult.flights.slice(0, availableSlots);
+    const firstBlockIds = new Set(firstBlock.map(flight => flight.id));
+    const firstBlockDecisionById = new Map(
+        representativeResult.decisions.map(decision => [decision.flightId, decision]),
+    );
+    const tailResult = diversifyByTier(
+        items.filter(flight => !firstBlockIds.has(flight.id)),
+        [...leadingFlights, ...firstBlock],
+    );
+
+    return {
+        flights: [...firstBlock, ...tailResult.flights],
+        decisions: [
+            ...firstBlock.map(flight => firstBlockDecisionById.get(flight.id)!),
+            ...tailResult.decisions,
+        ],
+    };
+}
+
+export function diversifyRecommendationOrder(
+    items: Flight[],
+    options: RecommendationDiversityOptions,
+): Flight[] {
+    return diversifyRecommendationOrderWithDecisions(items, options).flights;
 }

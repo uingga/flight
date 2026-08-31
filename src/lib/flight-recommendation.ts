@@ -1,6 +1,6 @@
 import type { Flight } from '../types/flight';
 import {
-    diversifyFlightDestinationsWithDecisions,
+    diversifyRecommendationOrderWithDecisions,
     excludePinnedDestination,
     type FlightDiversityDecision,
 } from './flight-diversity';
@@ -291,25 +291,16 @@ export function buildRecommendationPresentation(
     let orderedFlights = pool;
 
     if (diversify) {
-        const result: Flight[] = [];
-        const leadingFlights: Flight[] = [];
-        for (const tier of [0, 1, 2] as const) {
-            const group = diversifyFlightDestinationsWithDecisions(
-                pool.filter(flight => getComparisonPriceTier(flight, now) === tier),
-                {
-                    maxConsecutiveDestinations: 2,
-                    topWindow: 20,
-                    maxPerDestination: 2,
-                    leadingFlights,
-                    scoreOf: flight => scoreState.scores.get(flight.id) ?? Infinity,
-                    balanceIncheon,
-                },
-            );
-            result.push(...group.flights);
-            group.decisions.forEach(decision => diversityByFlightId.set(decision.flightId, decision));
-            leadingFlights.push(...group.flights);
-        }
-        orderedFlights = result;
+        const result = diversifyRecommendationOrderWithDecisions(pool, {
+            tierOf: flight => getComparisonPriceTier(flight, now),
+            maxConsecutiveDestinations: 2,
+            topWindow: 20,
+            maxPerDestination: 2,
+            scoreOf: flight => scoreState.scores.get(flight.id) ?? Infinity,
+            balanceIncheon,
+        });
+        result.decisions.forEach(decision => diversityByFlightId.set(decision.flightId, decision));
+        orderedFlights = result.flights;
     }
 
     const pinnedDestination = pinnedFlight ? normalizeCity(pinnedFlight.arrival.city) : null;
