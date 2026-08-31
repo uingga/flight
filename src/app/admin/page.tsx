@@ -2199,14 +2199,24 @@ export default function AdminPage() {
                             const manualCapture = data.manualCaptureStatus?.[source];
                             const late = ageHours === null || ageHours > (STALE_AFTER_HOURS[source] ?? DEFAULT_STALE_AFTER_HOURS);
                             const visibleCount = sourceVisibleCounts[source] || 0;
-                            const history = (data.crawlHistory || [])
-                                .filter(entry => sourceWasAttempted(entry, source))
-                                .slice(-16)
-                                .map(entry => ({
+                            const history = [
+                                ...(data.crawlHistory || [])
+                                    .filter(entry => sourceWasAttempted(entry, source))
+                                    .map(entry => ({
                                     timestamp: entry.timestamp,
                                     value: entry.sites[source]?.scraped ?? entry.sites[source]?.total ?? 0,
                                     preserved: Boolean(entry.sites[source]?.preserved),
-                                }));
+                                    manual: false,
+                                })),
+                                ...(source === 'modetour' && manualCapture ? [{
+                                    timestamp: manualCapture.lastImportedAt,
+                                    value: manualCapture.accepted,
+                                    preserved: false,
+                                    manual: true,
+                                }] : []),
+                            ]
+                                .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+                                .slice(-16);
                             const latestFailedAt = [...history].reverse().find(entry => entry.preserved)?.timestamp;
                             const manualImportedAt = manualCapture
                                 ? new Date(manualCapture.lastImportedAt).getTime()
@@ -2225,12 +2235,12 @@ export default function AdminPage() {
                                 && !modetourManualApplied;
                             const pastValues = history
                                 .slice(0, -1)
-                                .filter(entry => !entry.preserved)
+                                .filter(entry => !entry.preserved && !entry.manual)
                                 .map(entry => entry.value)
                                 .sort((a, b) => a - b);
                             const median = pastValues.length ? pastValues[Math.floor(pastValues.length / 2)] : 0;
                             const latest = history[history.length - 1] || null;
-                            const slumped = Boolean(latest && !latest.preserved && median >= 30 && latest.value < median * 0.6);
+                            const slumped = Boolean(latest && !latest.preserved && !latest.manual && median >= 30 && latest.value < median * 0.6);
                             const issue = circuitOpen || staleCount > 0 || late || slumped;
                             const peak = Math.max(...history.map(entry => entry.value), 1);
                             const statusText = modetourManualApplied
@@ -2264,7 +2274,9 @@ export default function AdminPage() {
                                             return (
                                                 <span
                                                     key={`${entry.timestamp}-${index}`}
-                                                    className={entry.preserved
+                                                    className={entry.manual
+                                                        ? styles.sourceTrendBarManual
+                                                        : entry.preserved
                                                         ? styles.sourceTrendBarPreserved
                                                         : isLatest && slumped
                                                             ? styles.sourceTrendBarBroken
@@ -2272,7 +2284,7 @@ export default function AdminPage() {
                                                                 ? styles.sourceTrendBarLatest
                                                                 : styles.sourceTrendBar}
                                                     style={{ height: `${Math.max(5, Math.round((entry.value / peak) * 100))}%` }}
-                                                    title={`${formatKST(entry.timestamp).replace(/\d{4}\. /, '')} · ${entry.value.toLocaleString()}개${entry.preserved ? ' · 수집 실패, 이전 데이터 사용' : ''}`}
+                                                    title={`${formatKST(entry.timestamp).replace(/\d{4}\. /, '')} · ${entry.value.toLocaleString()}개${entry.manual ? ' · 수동 캡처 반영' : entry.preserved ? ' · 수집 실패, 이전 데이터 사용' : ''}`}
                                                 />
                                             );
                                         })}
@@ -3066,7 +3078,7 @@ export default function AdminPage() {
                 <h2>여행사별 수집 상태</h2>
                 <p className={styles.sectionHelp}>
                     큰 숫자는 필터를 거쳐 지금 사이트에 실제로 보이는 항공권 수이고, 막대는 최근 수집에서 여행사로부터 가져온 양의 추이입니다.
-                    노란 막대는 수집에 실패해 이전 데이터를 그대로 유지한 회차입니다.
+                    노란 막대는 수집에 실패해 이전 데이터를 그대로 유지한 회차이고, 청록색 막대는 운영자가 확인해 반영한 수동 캡처입니다.
                 </p>
                 <div className={styles.sourceGrid}>
                     {allSources.map(source => {
@@ -3081,14 +3093,24 @@ export default function AdminPage() {
                         const ageHours = updatedAt ? (Date.now() - new Date(updatedAt).getTime()) / 3600000 : null;
                         const stale = ageHours === null || ageHours > staleAfter;
 
-                        const history = (data.crawlHistory || [])
-                            .filter(e => sourceWasAttempted(e, source))
-                            .slice(-16)
-                            .map(e => ({
+                        const history = [
+                            ...(data.crawlHistory || [])
+                                .filter(e => sourceWasAttempted(e, source))
+                                .map(e => ({
                                 ts: e.timestamp,
                                 value: e.sites[source]?.scraped ?? e.sites[source]?.total ?? 0,
                                 preserved: Boolean(e.sites[source]?.preserved),
-                            }));
+                                manual: false,
+                            })),
+                            ...(source === 'modetour' && manualCapture ? [{
+                                ts: manualCapture.lastImportedAt,
+                                value: manualCapture.accepted,
+                                preserved: false,
+                                manual: true,
+                            }] : []),
+                        ]
+                            .sort((a, b) => new Date(a.ts).getTime() - new Date(b.ts).getTime())
+                            .slice(-16);
                         const latestFailedAt = [...history].reverse().find(entry => entry.preserved)?.ts;
                         const manualImportedAt = manualCapture
                             ? new Date(manualCapture.lastImportedAt).getTime()
@@ -3110,11 +3132,11 @@ export default function AdminPage() {
                         // 가드는 직전 한 번과만 비교하므로, 반쪽 결과가 한 번 자리를 잡으면
                         // 그 다음부터는 그 낮은 값이 기준이 되어 조용해진다(노랑풍선 89건이 그랬다).
                         // 최근 중앙값과 견주면 그렇게 굳어버린 상태도 드러난다.
-                        const past = history.slice(0, -1).filter(h => !h.preserved).map(h => h.value).sort((a, b) => a - b);
+                        const past = history.slice(0, -1).filter(h => !h.preserved && !h.manual).map(h => h.value).sort((a, b) => a - b);
                         const median = past.length ? past[Math.floor(past.length / 2)] : 0;
                         const latest = history.length ? history[history.length - 1] : null;
                         const slumped = Boolean(
-                            latest && !latest.preserved && median >= 30 && latest.value < median * 0.6,
+                            latest && !latest.preserved && !latest.manual && median >= 30 && latest.value < median * 0.6,
                         );
 
                         const status = circuitOpen || streak > 0 || slumped ? 'broken' : stale ? 'stale' : 'ok';
@@ -3196,9 +3218,13 @@ export default function AdminPage() {
                                     {history.map((h, i) => (
                                         <span
                                             key={i}
-                                            className={h.preserved ? `${styles.sparkBar} ${styles.sparkBarPreserved}` : styles.sparkBar}
+                                            className={h.manual
+                                                ? `${styles.sparkBar} ${styles.sparkBarManual}`
+                                                : h.preserved
+                                                    ? `${styles.sparkBar} ${styles.sparkBarPreserved}`
+                                                    : styles.sparkBar}
                                             style={{ height: `${Math.max(4, Math.round((h.value / peak) * 100))}%` }}
-                                            title={`${formatKST(h.ts).replace(/\d{4}\. /, '')} · ${h.value.toLocaleString()}건${h.preserved ? ' (수집 실패, 이전 데이터 유지)' : ''}`}
+                                            title={`${formatKST(h.ts).replace(/\d{4}\. /, '')} · ${h.value.toLocaleString()}건${h.manual ? ' (수동 캡처 반영)' : h.preserved ? ' (수집 실패, 이전 데이터 유지)' : ''}`}
                                         />
                                     ))}
                                 </div>

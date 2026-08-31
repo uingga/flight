@@ -1526,6 +1526,11 @@
     background: #f59e0b;
 }
 
+.sparkBarManual,
+.sparkBarManual:last-child {
+    background: #0f9f98;
+}
+
 /* ── 표시 기준 토글 ─────────────────────────────────── */
 .metricToggle {
     display: flex;
@@ -3579,6 +3584,7 @@
 .sourceTrendBar,
 .sourceTrendBarLatest,
 .sourceTrendBarPreserved,
+.sourceTrendBarManual,
 .sourceTrendBarBroken {
     flex: 1;
     min-width: 4px;
@@ -3592,6 +3598,8 @@
 .sourceTrendBarPreserved {
     background: #e7a93c;
 }
+
+.sourceTrendBarManual { background: #0f9f98; }
 
 .sourceTrendBarBroken { background: #d85c4d; }
 
