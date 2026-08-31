@@ -607,13 +607,6 @@ const harshScheduleDetail = (flight: Flight) => {
     return null;
 };
 
-// 상단 경보는 평범한 오늘의 표가 아니라, 가격과 할인폭이 함께 드문 경우에만 켠다.
-const isTickerWorthyDrop = (flight: Flight) => {
-    const price = effectivePrice(flight);
-    const discount = Math.max(0, flight.discountRate || 0);
-    return price <= 140_000 || (price <= 180_000 && discount >= 25);
-};
-
 const describeDropCard = (flight: Flight, averageDiscountRate = 0, trustFirst = true) => {
     const seats = flight.availableSeats || Number.parseInt(flight.seats || '', 10) || 0;
     const departureDate = parseDate(flight.departure.date);
@@ -1619,9 +1612,6 @@ export default function MobileRedesignPreview({
             } : null;
         })()
     ), [compareRecommended, flights, interparkPrices, todayPickId, todayPickRepeatOverride]);
-    const dropAlertFlight = useMemo(() => (
-        featuredPick && isTickerWorthyDrop(featuredPick.flight) ? featuredPick.flight : null
-    ), [featuredPick]);
     const displayedFlights = useMemo(() => {
         const pinnedFlight = isDefaultView ? featuredPick?.flight : undefined;
         const pool = excludePinnedDestination(filteredFlights, pinnedFlight);
@@ -2833,28 +2823,8 @@ export default function MobileRedesignPreview({
                 if (event.key === 'Tab') setKeyboardNavigation(true);
             }}
         >
-            {isDefaultView && dropAlertFlight && (
-                <div
-                    className={`${styles.dropTicker} ${styles.desktopDropTicker}`}
-                    data-drop-alert-flight-id={dropAlertFlight.id}
-                    role="status"
-                    aria-label={`특가 경보. ${stripAirport(dropAlertFlight.arrival.city)} 왕복 ${priceText(dropAlertFlight.price)}`}
-                >
-                    <div className={styles.dropTickerTrack}>
-                        {[0, 1, 2, 3].map(copyIndex => (
-                            <div className={styles.dropTickerContent} aria-hidden={copyIndex > 0 || undefined} key={copyIndex}>
-                                <span className={styles.tickerEmergency}><i aria-hidden="true">🚨</i><b>비상!! 비상!!</b></span>
-                                <span>{stripAirport(dropAlertFlight.arrival.city)} 왕복 {priceText(dropAlertFlight.price)}</span>
-                                <span>🤯 담당자가 미쳤어요</span>
-                                <span>{stripAirport(dropAlertFlight.arrival.city)} 왕복 {priceText(dropAlertFlight.price)}</span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-
             <div className={styles.phoneCanvas}>
-                <header className={`${styles.header} ${isDefaultView && dropAlertFlight ? styles.headerWithMobileTicker : ''}`}>
+                <header className={styles.header}>
                     <a href={previewMode ? '/preview/mobile-redesign' : '/'} className={styles.logoLink} aria-label="티키티킷 홈">
                         <Logo size={0.84} />
                     </a>
@@ -2938,26 +2908,6 @@ export default function MobileRedesignPreview({
                         </button>
                     </div>
                 </header>
-
-                {isDefaultView && dropAlertFlight && (
-                    <div
-                        className={`${styles.dropTicker} ${styles.mobileDropTicker}`}
-                        data-drop-alert-flight-id={dropAlertFlight.id}
-                        role="status"
-                        aria-label={`특가 경보. ${stripAirport(dropAlertFlight.arrival.city)} 왕복 ${priceText(dropAlertFlight.price)}`}
-                    >
-                        <div className={styles.dropTickerTrack}>
-                            {[0, 1, 2, 3].map(copyIndex => (
-                                <div className={styles.dropTickerContent} aria-hidden={copyIndex > 0 || undefined} key={copyIndex}>
-                                    <span className={styles.tickerEmergency}><i aria-hidden="true">🚨</i><b>비상!! 비상!!</b></span>
-                                    <span>{stripAirport(dropAlertFlight.arrival.city)} 왕복 {priceText(dropAlertFlight.price)}</span>
-                                    <span>🤯 담당자가 미쳤어요</span>
-                                    <span>{stripAirport(dropAlertFlight.arrival.city)} 왕복 {priceText(dropAlertFlight.price)}</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
 
                 {searchOpen && (
                     <div className={styles.searchRow}>
