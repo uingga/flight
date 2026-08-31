@@ -43,7 +43,13 @@ function scheduleKey(flight: Flight) {
     ].join('|');
 }
 
-export default function WeeklyDiscoveryInsight({ flights }: { flights: Flight[] }) {
+export default function WeeklyDiscoveryInsight({
+    flights,
+    onOpen,
+}: {
+    flights: Flight[];
+    onOpen?: () => void;
+}) {
     const [open, setOpen] = useState(false);
     const scheduleFlights = Array.from(flights.reduce((bySchedule, flight) => {
         const key = scheduleKey(flight);
@@ -69,7 +75,10 @@ export default function WeeklyDiscoveryInsight({ flights }: { flights: Flight[] 
                 className={styles.bar}
                 aria-haspopup="dialog"
                 aria-label="리장 입문 자세히 보기"
-                onClick={() => setOpen(true)}
+                onClick={() => {
+                    onOpen?.();
+                    setOpen(true);
+                }}
             >
                 <div className={styles.intro}>
                     <span>이번 주 낯선 도시</span>

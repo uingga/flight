@@ -52,7 +52,7 @@
     --overlay-backdrop-filter: blur(2px);
     --shadow-sheet: 0 -18px 48px rgba(0, 0, 0, 0.16);
     --shadow-dialog: 0 22px 70px rgba(0, 0, 0, 0.2);
-    --shadow-drawer: -24px 0 60px rgba(0, 0, 0, 0.18);
+    --shadow-drawer: -10px 0 28px rgba(24, 27, 32, 0.08);
 
     /* globals.css의 레거시 변수 기반 규칙이 자식에 적용돼도 바이올렛을 끌어오지 않는다. */
     --color-primary: var(--brand);
@@ -2149,8 +2149,9 @@
         max-height: 100dvh;
         margin: 0;
         padding: 18px 26px 28px;
-        border-bottom: 1px solid var(--line);
-        border-radius: 24px 0 0 24px;
+        border: 0;
+        border-left: 1px solid rgba(34, 34, 34, 0.1);
+        border-radius: 0;
         box-shadow: var(--shadow-drawer);
         pointer-events: auto;
         animation: drawerIn 220ms cubic-bezier(.2, .8, .2, 1);

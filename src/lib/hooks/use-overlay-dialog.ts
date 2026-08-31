@@ -125,6 +125,34 @@ export function useOverlayDialog({
     }, [modal, open]);
 
     useEffect(() => {
+        if (!open || !active || modal) return;
+
+        const closeFromBlankArea = (event: PointerEvent) => {
+            const target = event.target;
+            if (!(target instanceof Element) || dialogRef.current?.contains(target)) return;
+
+            const interactiveTarget = target.closest([
+                'a',
+                'button',
+                'input',
+                'select',
+                'textarea',
+                'label',
+                'summary',
+                '[role="button"]',
+                '[role="link"]',
+                '[contenteditable="true"]',
+            ].join(','));
+            if (interactiveTarget) return;
+
+            closeRef.current();
+        };
+
+        document.addEventListener('pointerdown', closeFromBlankArea, true);
+        return () => document.removeEventListener('pointerdown', closeFromBlankArea, true);
+    }, [active, dialogRef, modal, open]);
+
+    useEffect(() => {
         if (!open || !active) return;
         const closeWithEscape = (event: KeyboardEvent) => {
             if (event.key !== 'Escape') return;

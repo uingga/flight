@@ -3643,7 +3643,10 @@ export default function MobileRedesignPreview({
                                         && isDefaultView
                                         && cardNumber === insightInterval
                                         && weeklyDiscoveryFlights.length > 0 && (
-                                            <WeeklyDiscoveryInsight flights={weeklyDiscoveryFlights} />
+                                            <WeeklyDiscoveryInsight
+                                                flights={weeklyDiscoveryFlights}
+                                                onOpen={closeSelectedFlight}
+                                            />
                                         )}
                                 </Fragment>
                             );
