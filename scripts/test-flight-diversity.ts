@@ -718,4 +718,27 @@ assert.equal(
     '비서울 TIKIT DROP이 고정돼도 가격 구성보다 인천·김포 6개 규칙을 먼저 지켜야 한다.',
 );
 
+const firstBlockBoundaryCandidates = [
+    ...Array.from({ length: 8 }, (_, index) => ({
+        ...flight(`boundary-unique-${index}`, '인천', `경계전도시${index}`, index),
+        price: 150_000 + index * 1_000,
+    })),
+    { ...flight('boundary-route-first', '인천', '경계도시', 9), price: 170_000 },
+    { ...flight('boundary-route-second', '인천', '경계도시', 10), price: 171_000 },
+    { ...flight('boundary-alternative', '인천', '경계대안', 11), price: 172_000 },
+];
+const firstBlockBoundaryOrder = diversifyRecommendationOrder(firstBlockBoundaryCandidates, {
+    tierOf: () => 0,
+    scoreOf: item => item.testScore,
+    expensivePromotionEligibleOf: () => true,
+    balanceIncheon: false,
+    maxConsecutiveDestinations: 1,
+});
+assert.equal(firstBlockBoundaryOrder[8].arrival.city, '경계도시');
+assert.equal(
+    firstBlockBoundaryOrder[9].arrival.city,
+    '경계대안',
+    '첫 9개 마지막 카드와 이후 첫 카드도 같은 목적지가 연속되면 안 된다.',
+);
+
 console.log('✅ 추천 후보 판정 · 가격/신선도 점수 · 오늘의 표/목적지/출발지 진열 설명');

@@ -458,7 +458,6 @@ export function diversifyRecommendationOrderWithDecisions(
             ...diversityOptions,
             leadingFlights: [...leadingFlights, ...firstBlock],
             topWindow: 0,
-            maxConsecutiveDestinations: 2,
             balanceIncheon: false,
         },
     );
