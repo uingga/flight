@@ -62,8 +62,9 @@ $Action = New-ScheduledTaskAction `
     -Execute $PowerShellPath `
     -Argument "-NoProfile -ExecutionPolicy Bypass -File `"$RunnerPath`" -Scheduled"
 $Triggers = @(
-    (New-ScheduledTaskTrigger -Daily -At '10:00'),
-    (New-ScheduledTaskTrigger -Daily -At '20:30')
+    (New-ScheduledTaskTrigger -Daily -At '11:12'),
+    (New-ScheduledTaskTrigger -Daily -At '14:23'),
+    (New-ScheduledTaskTrigger -Daily -At '17:31')
 )
 $Settings = New-ScheduledTaskSettingsSet `
     -StartWhenAvailable `
@@ -84,12 +85,12 @@ Register-ScheduledTask `
     -Trigger $Triggers `
     -Settings $Settings `
     -Principal $Principal `
-    -Description '네이버 항공권 가격 수집(주거용 IP, 하루 최대 1회, 차단 쿨다운)' `
+    -Description '네이버 항공권 가격 수집(주거용 IP, 소스별 2단계, KST 하루 합산 200회)' `
     -Force | Out-Null
 
 Write-Output "Installed $TaskName"
 Write-Output "Automation checkout: $AutomationDir"
-Write-Output 'Schedule: wait from 10:00 KST for the post-11:12 crawl, with a no-duplicate 20:30 fallback'
+Write-Output 'Schedule: 11:12 initial pass, 14:23 recovery pass, 17:31 startup fallback'
 
 if ($RunNow) {
     Start-ScheduledTask -TaskName $TaskName

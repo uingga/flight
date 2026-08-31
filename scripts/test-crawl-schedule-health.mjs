@@ -220,13 +220,15 @@ test('GitHub Naver is a read-only manual diagnostic capped at three routes', () 
     assert.doesNotMatch(workflow, /git push|filter-by-naver|Commit and push|Preserve failed run history/);
 });
 
-test('the Windows Naver task owns production collection with one guarded daily session', () => {
+test('the Windows Naver task splits fresh and recovered sources under one daily budget', () => {
     const runner = fs.readFileSync('scripts/run-naver-crawl.ps1', 'utf8');
     const installer = fs.readFileSync('scripts/install-naver-crawl-task.ps1', 'utf8');
     const crawler = fs.readFileSync('scripts/crawl-naver.ts', 'utf8');
 
-    assert.match(installer, /New-ScheduledTaskTrigger -Daily -At '10:00'/);
-    assert.match(installer, /New-ScheduledTaskTrigger -Daily -At '20:30'/);
+    for (const time of ['11:12', '14:23', '17:31']) {
+        assert.match(installer, new RegExp(`New-ScheduledTaskTrigger -Daily -At '${time}'`));
+    }
+    assert.doesNotMatch(installer, /New-ScheduledTaskTrigger -Daily -At '20:30'/);
     assert.match(installer, /-Argument .* -Scheduled/);
     assert.match(installer, /System32\\WindowsPowerShell\\v1\.0\\powershell\.exe/);
     assert.doesNotMatch(installer, /-WorkingDirectory/);
@@ -237,9 +239,12 @@ test('the Windows Naver task owns production collection with one guarded daily s
     assert.match(installer, /-ExecutionTimeLimit \(New-TimeSpan -Hours 12\)/);
     assert.match(installer, /-WakeToRun/);
     assert.doesNotMatch(installer, /-RestartCount/);
-    assert.match(runner, /\$env:SOURCE_FILTER = 'all'/);
-    assert.match(runner, /\$env:MAX_FLIGHTS = '200'/);
-    assert.match(runner, /\$env:MAX_NAVIGATIONS = '200'/);
+    assert.match(runner, /\$env:SOURCE_FILTER = \$RunSourceCsv/);
+    assert.match(runner, /\$env:MAX_FLIGHTS = \[string\]\$RunPolicy\.navigationBudget/);
+    assert.match(runner, /\$env:MAX_NAVIGATIONS = \[string\]\$RunPolicy\.navigationBudget/);
+    assert.match(runner, /--navigation-increment \$NavigationIncrement/);
+    assert.match(runner, /waiting_for_14_23_recovery/);
+    assert.match(runner, /\$env:TODAY_PICK_SOURCE_FILTER = \$AllowedTodayPickSources -join ','/);
     assert.match(runner, /\$env:MIN_SUCCESS_REFRESH_HOURS = '24'/);
     assert.match(runner, /\$env:TOP_CANDIDATE_COUNT = '50'/);
     assert.match(runner, /\$env:MAX_DEFER_DAYS = '7'/);

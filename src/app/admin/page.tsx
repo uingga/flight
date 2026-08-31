@@ -2077,8 +2077,8 @@ export default function AdminPage() {
                             </article>
                             <article>
                                 <span><em>내 PC</em> 네이버 가격 비교</span>
-                                <strong>11:12 수집 반영 직후</strong>
-                                <small>10:00부터 완료 대기 · 미실행 시 20:30 폴백 · 하루 최대 1회</small>
+                                <strong>11:12 1차 · 14:23 보완</strong>
+                                <small>정상 수집된 여행사부터 확인 · 두 단계 합계 하루 최대 200회</small>
                             </article>
                         </div>
                     </div>

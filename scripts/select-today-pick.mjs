@@ -17,6 +17,12 @@ const DEEP_DROP_MAX = 200_000;
 const DEEP_DROP_RATIO = 0.75;
 const COMPARISON_TOLERANCE = 1.05;
 const repairOnly = process.argv.includes('--repair');
+const sourceFilter = new Set(
+    String(process.env.TODAY_PICK_SOURCE_FILTER || '')
+        .split(',')
+        .map(source => source.trim())
+        .filter(Boolean),
+);
 
 const effectivePrice = (flight) => flight.price + (flight.source === 'ttang' ? 20_000 : 0);
 const kstDayNumber = (timestamp) => Math.floor((timestamp + KST_OFFSET) / DAY);
@@ -113,8 +119,14 @@ async function main() {
     const response = await fetch(`${SITE_URL}/api/flights`);
     if (!response.ok) throw new Error(`항공권 API 응답 실패: ${response.status}`);
     const data = await response.json();
-    const flights = Array.isArray(data.flights) ? data.flights : [];
+    const allFlights = Array.isArray(data.flights) ? data.flights : [];
+    const flights = sourceFilter.size > 0
+        ? allFlights.filter(flight => sourceFilter.has(flight.source))
+        : allFlights;
     if (flights.length === 0) throw new Error('선정할 항공권이 없습니다. 기존 오늘의 표를 유지합니다.');
+    if (sourceFilter.size > 0) {
+        console.log(`🔎 오늘의 표 최신 수집 여행사 제한: ${[...sourceFilter].join(', ')} (${flights.length}/${allFlights.length}개)`);
+    }
 
     const now = Date.now();
     const kstDate = new Date(now + KST_OFFSET).toISOString().slice(0, 10);

@@ -1,10 +1,9 @@
 # Naver flight crawler - Windows Task Scheduler entry point
 #
-# Pull GitHub data first, then fill up to 200 priority routes across
-# every agency. The queue prioritizes seven-day deadlines, changed top candidates,
-# remaining top candidates, standard candidates, and low candidates in that order.
+# Pull GitHub data first, then share one 200-navigation KST-day budget across
+# the fresh 11:12 sources and a 14:23 recovery pass for sources that failed.
 #
-# Schedule: wait from 10:00 for the post-11:12 crawl, with a no-duplicate 20:30 fallback
+# Schedule: 11:12 initial pass, 14:23 recovery pass, 17:31 startup fallback
 # Manual:   powershell -File scripts\run-naver-crawl.ps1
 
 [CmdletBinding()]
@@ -52,13 +51,12 @@ if ($PreexistingManagedChanges) {
     exit 1
 }
 
-# The scheduled task starts before the 11:12 slot and waits locally for
-# that general-crawl commit. The latest MyRealTrip cache is included but does not
-# delay this run. Polling only pulls Git data; it never opens Naver until the
-# completed general cache is visible. The 20:30 fallback may use MyRealTrip alone.
-# A successful or blocked browser session is never launched again that KST day.
+# Each trigger waits for its matching general-crawl commit. The first pass crawls
+# only sources refreshed after 11:12. Preserved sources wait for the 14:23 crawl
+# and share the original daily navigation budget. Polling never opens Naver.
 $UpstreamPollSeconds = 120
 $KstOffset = [TimeSpan]::FromHours(9)
+$FinalizeOnly = $false
 while ($true) {
     # Naming origin/main explicitly avoids repositories with multiple branch
     # merge entries. Scheduled pull failures are retried without browser traffic.
@@ -91,7 +89,12 @@ while ($true) {
         if ($RunPolicy.shouldRun) {
             break
         }
-        if (-not $Scheduled -or $RunPolicy.reason -ne 'upstream_pending') {
+        if ($RunPolicy.shouldFinalize) {
+            $FinalizeOnly = $true
+            Log "No recovery browser session needed; finalizing with sources: $($RunPolicy.allowedTodayPickSources -join ',')"
+            break
+        }
+        if (-not $Scheduled -or $RunPolicy.reason -notin @('upstream_pending', 'recovery_upstream_pending', 'no_fresh_sources')) {
             Log "Browser launch skipped by policy ($($RunPolicy.reason))"
             Log '=== Local Naver crawl finished without requests ==='
             '' | Add-Content $LogFile
@@ -104,13 +107,13 @@ while ($true) {
         $NowKst.Year,
         $NowKst.Month,
         $NowKst.Day,
-        20,
-        35,
+        18,
+        30,
         0,
         $KstOffset
     )
     if ($NowKst -ge $WaitDeadlineKst) {
-        Log 'Upstream was still unavailable after the 20:30 fallback window; stopping without Naver requests'
+        Log 'No usable general-crawl result was available after the 17:31 final slot; stopping without Naver requests'
         Log '=== Local Naver crawl finished without requests ==='
         '' | Add-Content $LogFile
         exit 0
@@ -121,6 +124,31 @@ while ($true) {
     Log "Upstream pending; checking again in $SleepSeconds seconds without Naver requests"
     Start-Sleep -Seconds $SleepSeconds
 }
+
+$RunSources = @($RunPolicy.sources | Where-Object { $_ })
+$PendingSources = @($RunPolicy.pendingSources | Where-Object { $_ })
+$PreviouslyCompletedSources = @($RunPolicy.completedSources | Where-Object { $_ })
+$AllowedTodayPickSources = @($RunPolicy.allowedTodayPickSources | Where-Object { $_ })
+$RunSourceCsv = $RunSources -join ','
+$PendingSourceCsv = $PendingSources -join ','
+$PreviouslyCompletedSourceCsv = $PreviouslyCompletedSources -join ','
+
+if ($FinalizeOnly) {
+    $FinishedStateOutput = & node scripts/local-naver-run-policy.mjs mark `
+        --state $StateFile `
+        --outcome success `
+        --reason $RunPolicy.reason `
+        --completed-sources $PreviouslyCompletedSourceCsv `
+        --pending-sources $PendingSourceCsv 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        Log 'Unable to finalize the split Naver state without a browser session'
+        exit 1
+    }
+    Log "circuit state: $(($FinishedStateOutput | Out-String).Trim())"
+    $DataPublished = $true
+    $PartialPricesAllowed = $false
+    $HistoryOnly = $false
+} else {
 
 # Keep the scheduled checkout in sync with package-lock changes without paying
 # the npm ci cost on every run.
@@ -161,20 +189,22 @@ if ($Scheduled) {
 $RunningStateOutput = & node scripts/local-naver-run-policy.mjs mark `
     --state $StateFile `
     --outcome running `
-    --reason 'browser_session_started' 2>&1
+    --reason "browser_session_started_$($RunPolicy.runPhase)" `
+    --completed-sources $PreviouslyCompletedSourceCsv `
+    --pending-sources $PendingSourceCsv 2>&1
 if ($LASTEXITCODE -ne 0) {
     Log 'Unable to open the local Naver circuit state; stopping before browser launch'
     exit 1
 }
 Log "circuit state: $(($RunningStateOutput | Out-String).Trim())"
 
-# Crawl all agencies using the residential IP. This is the only production Naver
-# browser session: GitHub Actions is limited to a read-only three-route diagnostic.
+# Crawl only the sources selected for this phase. GitHub Actions remains limited
+# to a read-only three-route diagnostic.
 $env:HIDE_WINDOW = '1'
 $env:NAVER_LIVE_RUN = '1'
-$env:SOURCE_FILTER = 'all'
-$env:MAX_FLIGHTS = '200'
-$env:MAX_NAVIGATIONS = '200'
+$env:SOURCE_FILTER = $RunSourceCsv
+$env:MAX_FLIGHTS = [string]$RunPolicy.navigationBudget
+$env:MAX_NAVIGATIONS = [string]$RunPolicy.navigationBudget
 $env:STANDARD_REFRESH_DAYS = '2'
 $env:PRIORITY_REFRESH_DAYS = '2'
 $env:MIN_SUCCESS_REFRESH_HOURS = '24'
@@ -257,10 +287,22 @@ if ($CrawlerExitCode -ne 0) {
         Log "Unable to classify crawler failure for cooldown: $($_.Exception.Message)"
     }
 }
+$StateCompletedSourceCsv = $PreviouslyCompletedSourceCsv
+if ($CircuitOutcome -eq 'success') {
+    $StateCompletedSourceCsv = @($PreviouslyCompletedSources + $RunSources | Select-Object -Unique) -join ','
+    if ($RunPolicy.deferTodayPick) {
+        $CircuitOutcome = 'partial_waiting'
+        $CircuitReason = 'waiting_for_14_23_recovery'
+    }
+}
+$NavigationIncrement = if ($null -eq $RequestsStarted) { 0 } else { [Math]::Max(0, [int]$RequestsStarted) }
 $FinishedStateOutput = & node scripts/local-naver-run-policy.mjs mark `
     --state $StateFile `
     --outcome $CircuitOutcome `
-    --reason $CircuitReason 2>&1
+    --reason $CircuitReason `
+    --completed-sources $StateCompletedSourceCsv `
+    --pending-sources $PendingSourceCsv `
+    --navigation-increment $NavigationIncrement 2>&1
 if ($LASTEXITCODE -ne 0) {
     Log 'Unable to persist the post-crawl circuit state; automatic retry remains disabled by the scheduled-task configuration'
 } else {
@@ -413,10 +455,19 @@ if ($PartialPricesAllowed) {
     exit 1
 }
 
+if ($RunPolicy.deferTodayPick) {
+    Log "=== Initial Naver phase finished; waiting for 14:23 sources: $PendingSourceCsv ==="
+    '' | Add-Content $LogFile
+    exit 0
+}
+}
+
 # Select the daily pick only after the successful Naver filter is on main and
 # the deployed API has caught up. The selector keeps an existing same-day pick,
 # so retries cannot replace a selection that was already published today.
 $TodayPickSelected = $false
+$env:TODAY_PICK_SOURCE_FILTER = $AllowedTodayPickSources -join ','
+Log "Today pick source filter: $env:TODAY_PICK_SOURCE_FILTER"
 for ($selectionAttempt = 1; $selectionAttempt -le 2; $selectionAttempt++) {
     git pull --ff-only origin main 2>&1 | Add-Content -Encoding utf8 $LogFile
     if ($LASTEXITCODE -ne 0) {

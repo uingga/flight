@@ -50,7 +50,10 @@ const MAX_FLIGHTS = parseInt(process.env.MAX_FLIGHTS || '200', 10);
 const MAX_NAVIGATIONS = parseInt(process.env.MAX_NAVIGATIONS || String(MAX_FLIGHTS), 10);
 const MAX_DAYS_AHEAD = parseInt(process.env.MAX_DAYS_AHEAD || '60', 10); // 출발일 N일 이내만
 const SOURCE_FILTER_RAW = process.env.SOURCE_FILTER ?? 'myrealtrip';
-const SOURCE_FILTER = SOURCE_FILTER_RAW.toLowerCase() === 'all' ? '' : SOURCE_FILTER_RAW; // all이면 전체 소스
+const SOURCE_FILTERS = SOURCE_FILTER_RAW.toLowerCase() === 'all'
+    ? new Set<string>()
+    : new Set(SOURCE_FILTER_RAW.split(',').map(source => source.trim()).filter(Boolean));
+const SOURCE_FILTER_LABEL = SOURCE_FILTERS.size > 0 ? [...SOURCE_FILTERS].join(',') : 'all';
 const STANDARD_REFRESH_DAYS = parseInt(process.env.STANDARD_REFRESH_DAYS || process.env.REFRESH_DAYS || '2', 10);
 const PRIORITY_REFRESH_DAYS = parseInt(process.env.PRIORITY_REFRESH_DAYS || process.env.MYREALTRIP_REFRESH_DAYS || '2', 10);
 const MIN_SUCCESS_REFRESH_HOURS = parseInt(process.env.MIN_SUCCESS_REFRESH_HOURS || '24', 10);
@@ -240,10 +243,10 @@ try {
     if (airportFilled > 0) console.log(`🧩 도시명에서 공항 코드 보정: ${airportFilled}건`);
 
     // 소스 필터링 (기본: myrealtrip)
-    if (SOURCE_FILTER) {
+    if (SOURCE_FILTERS.size > 0) {
         const before = rawData.length;
-        rawData = rawData.filter(f => f.source === SOURCE_FILTER);
-        console.log(`🎯 소스 필터: ${SOURCE_FILTER} (${rawData.length}/${before}건)`);
+        rawData = rawData.filter(f => SOURCE_FILTERS.has(f.source));
+        console.log(`🎯 소스 필터: ${SOURCE_FILTER_LABEL} (${rawData.length}/${before}건)`);
     }
 
     // 이미 지난 항공편과 지나치게 먼 출발일은 제외
@@ -753,7 +756,7 @@ try {
         startedAt: runStartedAt,
         durationSeconds: Math.max(0, Math.round((Date.now() - runStartedMs) / 1000)),
         runner: process.env.CI ? 'github' : HIDE_WINDOW ? 'local' : 'manual',
-        sourceFilter: SOURCE_FILTER || 'all',
+        sourceFilter: SOURCE_FILTER_LABEL,
         maxFlights: MAX_FLIGHTS,
         navigationLimit: MAX_NAVIGATIONS,
         navigations: navigationCount,
