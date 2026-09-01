@@ -198,7 +198,8 @@ export const CITY_TO_AIRPORT: Record<string, string> = {
     '괌': 'GUM', '사이판': 'SPN', '사이판(SPN)': 'SPN',
     '시드니': 'SYD', '브리즈번': 'BNE',
     '두바이': 'DXB', '아부다비': 'AUH',
-    '로마': 'FCO', '이스탄불': 'IST', '트라브존': 'TZX', '취리히': 'ZRH',
+    '로마': 'FCO', '이스탄불': 'IST', '이즈미르': 'ADB', '헬싱키': 'HEL',
+    '트라브존': 'TZX', '취리히': 'ZRH',
     // 추가 누락 도시
     '보라카이': 'KLO', '호치민': 'SGN', '호치민(SGN)': 'SGN',
     '상해': 'PVG', '상하이': 'PVG', '칭다오': 'TAO', '청도': 'TAO',

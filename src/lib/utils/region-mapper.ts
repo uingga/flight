@@ -83,6 +83,7 @@ const CITY_REGION_MAP: Record<string, string> = {
     '프랑크푸르트': REGION_KOREAN.EUROPE, '바르셀로나': REGION_KOREAN.EUROPE, '마드리드': REGION_KOREAN.EUROPE,
     '프라하': REGION_KOREAN.EUROPE, '비엔나': REGION_KOREAN.EUROPE, '취리히': REGION_KOREAN.EUROPE,
     '암스테르담': REGION_KOREAN.EUROPE, '이스탄불': REGION_KOREAN.EUROPE,
+    '이즈미르': REGION_KOREAN.EUROPE, '헬싱키': REGION_KOREAN.EUROPE,
     '트라브존': REGION_KOREAN.EUROPE, '마르세유': REGION_KOREAN.EUROPE,
 
     // 일본 (누락분 추가)

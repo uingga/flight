@@ -43,6 +43,22 @@ const europeLongHaul = validateModetourManualCard({
 }, 'EUR', capturedAt);
 assert.equal(europeLongHaul.status, 'accepted');
 
+for (const [arrivalCity, airport] of [['이즈미르', 'ADB'], ['헬싱키', 'HEL']] as const) {
+    const europeCapture = validateModetourManualCard({
+        ...kumamotoCard,
+        departureCity: '인천',
+        arrivalCity,
+        price: 1_490_000,
+        normalPrice: undefined,
+        sourceDiscountRate: undefined,
+    }, 'EUR', capturedAt);
+    assert.equal(europeCapture.status, 'accepted');
+    if (europeCapture.status === 'accepted') {
+        assert.equal(europeCapture.flight.arrival.airport, airport);
+        assert.equal(europeCapture.flight.region, '유럽');
+    }
+}
+
 const unknownCity = validateModetourManualCard({
     ...kumamotoCard,
     arrivalCity: '글자가 흐린 도시',
