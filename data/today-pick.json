@@ -1,22 +1,30 @@
 {
-  "date": "2026-08-31",
-  "selectedAt": "2026-08-31T07:21:02.145Z",
-  "flightId": "ttang-TAE-DYG-RT-0-5-ZE-2026-09-04",
-  "source": "ttang",
-  "arrivalCity": "장가계(다융)",
-  "destinationKey": "DYG",
-  "effectivePrice": 215000,
-  "selectionMode": "recommend-score",
-  "referencePrice": 427400,
+  "date": "2026-09-01",
+  "selectedAt": "2026-09-01T08:59:19.809Z",
+  "flightId": "modetour-manual-z3zer8",
+  "source": "modetour",
+  "arrivalCity": "푸꾸옥",
+  "destinationKey": "PQC",
+  "effectivePrice": 143800,
+  "selectionMode": "exceptional-price",
+  "referencePrice": 193300,
   "previousPick": {
-    "date": "2026-08-30",
-    "flightId": "modetour-JPN-19904553",
-    "source": "modetour",
-    "arrivalCity": "구마모토",
-    "destinationKey": "KMJ",
-    "effectivePrice": 194000
+    "date": "2026-08-31",
+    "flightId": "ttang-TAE-DYG-RT-0-5-ZE-2026-09-04",
+    "source": "ttang",
+    "arrivalCity": "장가계",
+    "destinationKey": "DYG",
+    "effectivePrice": 215000
   },
   "recentPicks": [
+    {
+      "date": "2026-08-31",
+      "flightId": "ttang-TAE-DYG-RT-0-5-ZE-2026-09-04",
+      "source": "ttang",
+      "arrivalCity": "장가계",
+      "destinationKey": "DYG",
+      "effectivePrice": 215000
+    },
     {
       "date": "2026-08-30",
       "flightId": "modetour-JPN-19904553",
@@ -42,10 +50,5 @@
       "effectivePrice": 219000
     }
   ],
-  "repeatOverride": {
-    "previousEffectivePrice": 219000,
-    "previousDate": "2026-08-28",
-    "currentEffectivePrice": 215000,
-    "dropAmount": 4000
-  }
+  "repeatOverride": null
 }
