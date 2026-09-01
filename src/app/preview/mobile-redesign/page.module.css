@@ -1087,6 +1087,31 @@
 .applyButtonCalendarOpen { position: static; }
 
 .detailSheet { overflow-y: auto; }
+@media (max-width: 959px) {
+    .detailStickyHeader {
+        position: sticky;
+        z-index: 4;
+        top: -8px;
+        margin-right: -18px;
+        margin-left: -18px;
+        padding-right: 18px;
+        padding-left: 18px;
+        background: var(--paper);
+    }
+    .detailStickyHeader::after {
+        content: '';
+        position: absolute;
+        right: 0;
+        bottom: -26px;
+        left: 0;
+        height: 26px;
+        background: linear-gradient(to bottom, var(--paper) 0%, var(--paper) 58%, rgba(255, 255, 255, 0.78) 76%, rgba(255, 255, 255, 0) 100%);
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 180ms ease;
+    }
+    .detailStickyHeaderScrolled::after { opacity: 1; }
+}
 .detailScrollFade {
     position: fixed;
     z-index: 102;

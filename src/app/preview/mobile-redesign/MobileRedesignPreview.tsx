@@ -817,6 +817,7 @@ export default function MobileRedesignPreview({
     const [expiredShareNotice, setExpiredShareNotice] = useState<{ arrival: string | null } | null>(null);
     const [showScrollTop, setShowScrollTop] = useState(false);
     const [detailHasMoreBelow, setDetailHasMoreBelow] = useState(false);
+    const [detailHasScrolled, setDetailHasScrolled] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
     const [isDesktopViewport, setIsDesktopViewport] = useState(false);
     const [filterBarPinned, setFilterBarPinned] = useState(false);
@@ -1016,6 +1017,7 @@ export default function MobileRedesignPreview({
         const detailSheet = detailDialogRef.current;
         if (!selectedFlight || !detailSheet) {
             setDetailHasMoreBelow(false);
+            setDetailHasScrolled(false);
             return;
         }
 
@@ -1023,6 +1025,7 @@ export default function MobileRedesignPreview({
         const updateDetailScrollHint = () => {
             const remainingScroll = detailSheet.scrollHeight - detailSheet.scrollTop - detailSheet.clientHeight;
             setDetailHasMoreBelow(remainingScroll > 24);
+            setDetailHasScrolled(detailSheet.scrollTop > 8);
         };
         const firstCheck = window.requestAnimationFrame(updateDetailScrollHint);
         const settledCheck = window.setTimeout(updateDetailScrollHint, 120);
@@ -3950,14 +3953,16 @@ export default function MobileRedesignPreview({
                     ariaLabel="항공권 상세"
                     ariaLabelledBy="flight-detail-title"
                 >
-                        <div className={styles.sheetHandle} aria-hidden="true" {...detailSwipe} />
-                        <div className={styles.detailHeader}>
-                            <div className={styles.detailAgencyLine}>
-                                <span className={`${styles.sourceBadge} ${styles[selectedFlight.source]}`}>{SOURCE_NAMES[selectedFlight.source]}</span>
-                                <span className={styles.detailAirline}>{selectedFlight.airline || '항공사 확인'}</span>
-                                {detailSeats > 0 && <span className={styles.detailSeatCount}>{detailSeats}석 남음</span>}
+                        <div className={`${styles.detailStickyHeader} ${detailHasScrolled ? styles.detailStickyHeaderScrolled : ''}`}>
+                            <div className={styles.sheetHandle} aria-hidden="true" {...detailSwipe} />
+                            <div className={styles.detailHeader}>
+                                <div className={styles.detailAgencyLine}>
+                                    <span className={`${styles.sourceBadge} ${styles[selectedFlight.source]}`}>{SOURCE_NAMES[selectedFlight.source]}</span>
+                                    <span className={styles.detailAirline}>{selectedFlight.airline || '항공사 확인'}</span>
+                                    {detailSeats > 0 && <span className={styles.detailSeatCount}>{detailSeats}석 남음</span>}
+                                </div>
+                                <button type="button" onClick={closeSelectedFlight} aria-label="닫기"><Icon name="close" /></button>
                             </div>
-                            <button type="button" onClick={closeSelectedFlight} aria-label="닫기"><Icon name="close" /></button>
                         </div>
 
                         <div className={styles.detailTitle}>
