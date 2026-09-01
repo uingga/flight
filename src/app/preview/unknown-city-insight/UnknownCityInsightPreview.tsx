@@ -24,6 +24,7 @@ export type Discovery = {
     location: string;
     summary: string;
     detail: string;
+    story?: string[];
     latitude: number;
     longitude: number;
     image: string;
@@ -39,7 +40,7 @@ const FLIGHTS: FlightCard[] = [
 ];
 
 const DISCOVERIES: Discovery[] = [
-    { city: '리장', location: '중국 윈난', summary: '오래된 골목을 걷고, 가까운 설산까지 하루에 이어 볼 수 있어요.', detail: '익숙한 대도시보다 풍경의 변화가 크고, 고성과 자연을 한 일정에 함께 보기 좋아요.', latitude: 26.855, longitude: 100.227, image: '/images/cities/lijiang.png' },
+    { city: '리장', location: '중국 윈난', summary: '골목 끝에 설산이 나오는 곳.', detail: '해발 2,400m의 오래된 도시 사이로 물길이 흐릅니다.', story: ['리장은 사진 한 장 안에 오래된 골목과 설산이 함께 들어오는 도시입니다. 해발 2,400m의 고성 사이로 설산에서 시작된 물길이 흐르고, 집과 골목, 작은 다리가 그 물길을 따라 이어집니다. 12세기부터 차마고도의 교역지였고, 지금도 나시족의 문화와 오래된 목조 건물이 도시 곳곳에 남아 있습니다.', '보통 오래된 도시와 큰 자연을 보려면 일정을 따로 잡아야 합니다. 리장에서는 골목을 걷던 여행이 그대로 설산으로 이어집니다. 처음에는 ‘리장이 어디지?’ 하고 눌렀다가, 나갈 때는 항공권 날짜를 확인하게 되는 곳. 티키티킷이 이번 주 이 도시를 꺼내놓은 이유입니다.'], latitude: 26.855, longitude: 100.227, image: '/images/cities/lijiang.png' },
     { city: '옌타이', location: '중국 산둥', summary: '해안 산책과 와이너리를 함께 즐기기 좋아 짧은 일정에도 여유가 있어요.', detail: '도시와 바다가 가깝고 이동 동선이 단순해 천천히 둘러보기 좋아요.', latitude: 37.4645, longitude: 121.4479, image: '/images/cities/yantai.png' },
     { city: '웨이하이', location: '중국 산둥', summary: '붐비지 않는 해변과 산책로가 많아 조용히 쉬어 가기 좋은 도시예요.', detail: '유명 관광지를 빠르게 도는 여행보다 바닷가에 머물며 쉬는 일정에 잘 맞아요.', latitude: 37.5131, longitude: 122.1204, image: '/images/cities/weihai.png' },
     { city: '마쓰야마', location: '일본 시코쿠', summary: '도고온천과 오래된 전차가 이어져 차 없이도 천천히 둘러보기 좋아요.', detail: '온천과 성, 오래된 상점가가 가까워 짧은 일정에도 소도시의 분위기를 충분히 느낄 수 있어요.', latitude: 33.8392, longitude: 132.7657, image: '/images/cities/matsuyama.png' },
@@ -334,7 +335,9 @@ export function DiscoveryDetail({ item, flight, flights = [flight], onClose }: {
 
                 <section className={styles.cityStory}>
                     <h3>{item.city}, 이런 곳이에요</h3>
-                    <p>{item.summary} {item.detail}</p>
+                    {(item.story || [`${item.summary} ${item.detail}`]).map(paragraph => (
+                        <p key={paragraph}>{paragraph}</p>
+                    ))}
                 </section>
 
                 <section className={styles.availableFlights}>

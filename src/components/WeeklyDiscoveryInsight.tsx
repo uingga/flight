@@ -74,7 +74,7 @@ export default function WeeklyDiscoveryInsight({
                 type="button"
                 className={styles.bar}
                 aria-haspopup="dialog"
-                aria-label="리장 입문 자세히 보기"
+                aria-label="리장 여행지 자세히 보기"
                 onClick={() => {
                     onOpen?.();
                     setOpen(true);
@@ -82,20 +82,20 @@ export default function WeeklyDiscoveryInsight({
             >
                 <div className={styles.intro}>
                     <span>이번 주 낯선 도시</span>
-                    <h2>🧭 리장 입문</h2>
+                    <h2>🧭 리장이 어디냐고요?</h2>
                     <p>{locationMeta}</p>
                 </div>
                 <div className={styles.content}>
                     <div className={styles.topline}>
                         <span className={styles.theme}>
-                            <strong>고성과 설산을 함께</strong>
+                            <strong>골목 끝에 설산이 나오는 곳</strong>
                         </span>
                         <span className={styles.price}>
                             <small>{priceLabel}</small>
                             <strong>{price}</strong>
                         </span>
                     </div>
-                    <p>오래된 골목을 걷고, 가까운 설산까지 하루에 이어 볼 수 있어요. 고성과 자연을 한 일정에 함께 보기 좋은 도시예요.</p>
+                    <p>해발 2,400m의 오래된 도시 사이로 물길이 흐릅니다. 이름은 낯선데, 풍경은 한 번에 기억납니다.</p>
                     <div className={styles.schedule}>{schedule}</div>
                     <div className={styles.mobileFooter}>
                         <span className={styles.mobileSchedule}>{schedule}</span>

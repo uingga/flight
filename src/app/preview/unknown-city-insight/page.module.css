@@ -409,6 +409,7 @@
 .cityStory h3,
 .availableHeading h3 { margin: 0; color: #222; font-size: 18px; line-height: 1.35; font-weight: 700; letter-spacing: -.03em; }
 .cityStory p { margin: 9px 0 0; color: #5f5f5f; font-size: 14px; line-height: 1.65; word-break: keep-all; }
+.cityStory p + p { margin-top: 13px; }
 
 .availableFlights { margin-top: 4px; }
 .availableHeading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
