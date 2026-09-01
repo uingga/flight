@@ -3957,14 +3957,12 @@ export default function MobileRedesignPreview({
                                                                 </span>
                                                                 <span className={styles.freshFlightsMobileSchedule}>
                                                                     <span>{cardDate(freshFlight.departure.date)} → {cardDate(freshFlight.arrival.date)}</span>
-                                                                    <small>
-                                                                        {[
-                                                                            tripLength(freshFlight),
-                                                                            (freshFlightsInsight.scheduleCountByFlightId.get(freshFlight.id) || 1) > 1
-                                                                                ? `같은 가격 일정 ${freshFlightsInsight.scheduleCountByFlightId.get(freshFlight.id)}개`
-                                                                                : null,
-                                                                        ].filter(Boolean).join(' · ')}
-                                                                    </small>
+                                                                    <small>{tripLength(freshFlight)}</small>
+                                                                    {(freshFlightsInsight.scheduleCountByFlightId.get(freshFlight.id) || 1) > 1 ? (
+                                                                        <small className={styles.freshFlightsMobileScheduleCount}>
+                                                                            이 가격의 다른 일정 {(freshFlightsInsight.scheduleCountByFlightId.get(freshFlight.id) || 1) - 1}개
+                                                                        </small>
+                                                                    ) : null}
                                                                 </span>
                                                             </button>
                                                         ))}

@@ -63,6 +63,7 @@ export default function WeeklyDiscoveryInsight({
     const departure = departureName(flight.departure.city);
     const price = `${flight.price.toLocaleString('ko-KR')}원`;
     const schedule = `${departure} 출발 · ${formatDate(flight.departure.date)} — ${formatDate(flight.arrival.date)} · ${tripLength(flight)}`;
+    const mobileDateRange = `${departure} 출발 · ${formatDate(flight.departure.date)} → ${formatDate(flight.arrival.date)}`;
     const locationMeta = scheduleFlights.length > 1
         ? `중국 윈난 · 일정 ${scheduleFlights.length}개`
         : '중국 윈난';
@@ -82,8 +83,34 @@ export default function WeeklyDiscoveryInsight({
             >
                 <div className={styles.intro}>
                     <span>이번 주 낯선 도시</span>
-                    <h2>🧭 리장이 어디냐고요?</h2>
+                    <h2>
+                        <span>🧭 리장이 어디냐고요?</span>
+                        <i className={styles.mobileTitleArrow} aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <path d="m9 6 6 6-6 6" />
+                            </svg>
+                        </i>
+                    </h2>
                     <p>{locationMeta}</p>
+                </div>
+                <div className={styles.mobileCompact}>
+                    <p className={styles.mobileSummary}>
+                        <strong>중국 윈난</strong>
+                        <span>골목 끝에 설산이 나오는 곳</span>
+                    </p>
+                    <p className={styles.mobileDescription}>
+                        해발 2,400m의 오래된 도시 사이로 물길이 흐릅니다. 이름은 낯선데, 풍경은 한 번에 기억납니다.
+                    </p>
+                    <div className={styles.mobileDeal}>
+                        <span className={styles.mobileSchedule}>
+                            <span>{mobileDateRange}</span>
+                            <small>{tripLength(flight)}</small>
+                        </span>
+                        <span className={styles.mobilePrice}>
+                            <small>{priceLabel}</small>
+                            <strong>{price}</strong>
+                        </span>
+                    </div>
                 </div>
                 <div className={styles.content}>
                     <div className={styles.topline}>
@@ -97,13 +124,6 @@ export default function WeeklyDiscoveryInsight({
                     </div>
                     <p>해발 2,400m의 오래된 도시 사이로 물길이 흐릅니다. 이름은 낯선데, 풍경은 한 번에 기억납니다.</p>
                     <div className={styles.schedule}>{schedule}</div>
-                    <div className={styles.mobileFooter}>
-                        <span className={styles.mobileSchedule}>{schedule}</span>
-                        <span className={styles.mobilePrice}>
-                            <small>{priceLabel}</small>
-                            <strong>{price}</strong>
-                        </span>
-                    </div>
                 </div>
             </button>
 
