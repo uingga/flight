@@ -96,9 +96,6 @@ jobs:
           SOURCE_FILTER: myrealtrip
           STANDARD_REFRESH_DAYS: 0
           PRIORITY_REFRESH_DAYS: 0
-          MIN_SUCCESS_REFRESH_HOURS: 24
-          MISS_RETRY_HOURS: 0
-          NO_RESULT_RETRY_HOURS: 0
           REQUEST_DELAY_MIN_MS: 5000
           REQUEST_DELAY_MAX_MS: 10000
           MAX_HEALTH_CHECKS: 1

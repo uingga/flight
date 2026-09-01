@@ -10,13 +10,10 @@ import {
 const config: NaverRefreshConfig = {
     priorityRefreshDays: 2,
     standardRefreshDays: 5,
-    minSuccessRefreshHours: 24,
     priorityDepartureDays: 14,
     priorityDiscountRate: 20,
     priceChangeAmount: 10_000,
     priceChangeRatio: 0.03,
-    missRetryHours: 24,
-    noResultRetryHours: 24,
 };
 const now = new Date('2026-08-29T05:30:00Z').getTime();
 
@@ -84,9 +81,9 @@ assert.equal(evaluateNaverRefresh({
     lastAttemptStatus: 'success',
     sourceSignature: signature,
     sourcePrice: 220_000,
-}, { ...baseline, price: 230_000 }, now, config).reason, 'standard_fresh');
+}, { ...baseline, price: 230_000 }, now, config).reason, 'source_changed');
 assert.equal(evaluateNaverRefresh({
-    crawledAt: '2026-08-28T12:30:00Z',
+    crawledAt: '2026-08-29T01:30:00Z',
     lastAttemptStatus: 'success',
     sourceSignature: signature,
     sourcePrice: 220_000,
@@ -104,5 +101,13 @@ assert.equal(evaluateNaverRefresh({
     sourceSignature: signature,
     sourcePrice: 220_000,
 }, { ...baseline, price: 230_000 }, now, config).reason, 'retry_wait');
+
+assert.equal(evaluateNaverRefresh({
+    crawledAt: '2026-08-25T05:30:00Z',
+    lastAttemptAt: '2026-08-28T12:30:00Z',
+    lastAttemptStatus: 'transient_error',
+    sourceSignature: signature,
+    sourcePrice: 220_000,
+}, { ...baseline, price: 230_000 }, now, config).reason, 'retry_due');
 
 console.log('Naver refresh policy tests passed');

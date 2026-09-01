@@ -32,13 +32,10 @@ export interface NaverRefreshEntry {
 export interface NaverRefreshConfig {
     priorityRefreshDays: number;
     standardRefreshDays: number;
-    minSuccessRefreshHours: number;
     priorityDepartureDays: number;
     priorityDiscountRate: number;
     priceChangeAmount: number;
     priceChangeRatio: number;
-    missRetryHours: number;
-    noResultRetryHours: number;
 }
 
 export type NaverRefreshTier = 'priority' | 'standard';
@@ -136,12 +133,7 @@ export function evaluateNaverRefresh(
         if (entry?.lastAttemptStatus && entry.lastAttemptStatus !== 'success') {
             const attemptedAt = new Date(entry.lastAttemptAt || entry.crawledAt || '').getTime();
             if (Number.isFinite(attemptedAt)) {
-                const retryHours = entry.lastAttemptStatus === 'no_result'
-                    || entry.lastAttemptStatus === 'route_error'
-                    || entry.lastAttemptStatus === 'miss'
-                    ? config.noResultRetryHours
-                    : config.missRetryHours;
-                const fresh = now - attemptedAt < retryHours * HOUR_MS;
+                const fresh = kstDayNumber(now) === kstDayNumber(attemptedAt);
                 return {
                     fresh,
                     reason: fresh ? 'retry_wait' : 'retry_due',
@@ -160,12 +152,7 @@ export function evaluateNaverRefresh(
 
     // 접근 이상 뒤에는 여행사 가격이 바뀌어도 쿨다운을 우선한다.
     if (isMiss && Number.isFinite(attemptedAt)) {
-        const retryHours = entry.lastAttemptStatus === 'no_result'
-            || entry.lastAttemptStatus === 'route_error'
-            || entry.lastAttemptStatus === 'miss'
-            ? config.noResultRetryHours
-            : config.missRetryHours;
-        const fresh = now - attemptedAt < retryHours * HOUR_MS;
+        const fresh = kstDayNumber(now) === kstDayNumber(attemptedAt);
         return {
             fresh,
             reason: fresh ? 'retry_wait' : 'retry_due',
@@ -175,12 +162,12 @@ export function evaluateNaverRefresh(
         };
     }
 
-    // KST 날짜가 바뀌었다는 이유만으로 전날 늦은 회차의 동일 노선을 다시
-    // 요청하지 않는다. 의미 있는 여행사 가격 변경도 이 최소 휴식 뒤에만 반영한다.
+    // 같은 KST 날짜에는 한 번 확인한 키를 다시 열지 않는다. 다음 날짜가 되면
+    // 정확히 24시간이 지나지 않았더라도 가격 변경·정기 갱신 후보가 될 수 있다.
     const checkedAt = new Date(entry.crawledAt || '').getTime();
     if (
         Number.isFinite(checkedAt)
-        && now - checkedAt < Math.max(0, config.minSuccessRefreshHours) * HOUR_MS
+        && kstDayNumber(now) === kstDayNumber(checkedAt)
     ) {
         return {
             fresh: true,

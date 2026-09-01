@@ -166,11 +166,7 @@ test('anti-block safeguards keep source starts distributed and MyRealTrip serial
     assert.match(myrealtrip, /assertNoSourceResponseCollapse/);
     assert.match(myrealtrip, /const BATCH_SIZE = 10;/);
     assert.doesNotMatch(myrealtrip, /disable-blink-features=AutomationControlled/);
-    assert.ok(
-        myrealtrip.indexOf('isSourceCircuitOpen(existingCircuit')
-        < myrealtrip.indexOf('process.env.FORCE_MYREALTRIP'),
-        'scheduled duplicate bypass must not bypass an open source circuit',
-    );
+    assert.doesNotMatch(myrealtrip, /FORCE_MYREALTRIP|MIN_RUN_INTERVAL_MS/);
 
     const workflow = fs.readFileSync('.github/workflows/myrealtrip-scrape.yml', 'utf8');
     assert.match(workflow, /^concurrency:\s*\n\s+group: myrealtrip-price-scrape/m);
@@ -202,12 +198,12 @@ test('the standalone today-pick workflow is manual-only', () => {
     assert.doesNotMatch(workflow, /^\s*- cron:/m);
 });
 
-test('MyRealTrip runs two scheduled crawls daily without a scheduled FORCE bypass', () => {
+test('MyRealTrip runs two scheduled crawls daily and manual runs need no force bypass', () => {
     const workflow = fs.readFileSync('.github/workflows/myrealtrip-scrape.yml', 'utf8');
     const workflowCrons = [...workflow.matchAll(/^\s*- cron: '([^']+)'/gm)].map(match => match[1]);
     assert.deepEqual(workflowCrons.sort(), ['5 22 * * *', '3 7 * * *'].sort());
     assert.doesNotMatch(workflow, /github\.event\.schedule\s*==/);
-    assert.match(workflow, /FORCE_MYREALTRIP:\s*\$\{\{\s*inputs\.force\s*&&\s*'1'\s*\|\|\s*'0'\s*\}\}/);
+    assert.doesNotMatch(workflow, /FORCE_MYREALTRIP|inputs\.force/);
     assert.match(workflow, /cp data\/crawl-log\.json \/tmp\/mrt-session-crawl-log\.json/);
     assert.match(workflow, /merge-crawl-log\.mjs data\/crawl-log\.json \/tmp\/mrt-session-crawl-log\.json myrealtrip/);
     assert.match(workflow, /git add data\/all-flights-cache\.json data\/crawl-log\.json/);
@@ -281,7 +277,7 @@ test('the Windows Naver task splits fresh and recovered sources under one daily 
     assert.match(runner, /--navigation-increment \$NavigationIncrement/);
     assert.match(runner, /waiting_for_14_23_recovery/);
     assert.match(runner, /\$env:TODAY_PICK_SOURCE_FILTER = \$AllowedTodayPickSources -join ','/);
-    assert.match(runner, /\$env:MIN_SUCCESS_REFRESH_HOURS = '24'/);
+    assert.doesNotMatch(runner, /MIN_SUCCESS_REFRESH_HOURS|MISS_RETRY_HOURS|NO_RESULT_RETRY_HOURS/);
     assert.match(runner, /\$env:TOP_CANDIDATE_COUNT = '50'/);
     assert.match(runner, /\$env:MAX_DEFER_DAYS = '7'/);
     assert.match(runner, /git pull --rebase --autostash origin main/);

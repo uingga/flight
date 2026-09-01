@@ -14,13 +14,10 @@ const now = new Date('2026-08-30T03:00:00Z').getTime();
 const refreshConfig: NaverRefreshConfig = {
     priorityRefreshDays: 1,
     standardRefreshDays: 1,
-    minSuccessRefreshHours: 24,
     priorityDepartureDays: 14,
     priorityDiscountRate: 20,
     priceChangeAmount: 10_000,
     priceChangeRatio: 0.03,
-    missRetryHours: 24,
-    noResultRetryHours: 24,
 };
 
 const flight = (key: string, score: number): NaverCrawlPriorityCandidate<NaverRefreshFlight> => {

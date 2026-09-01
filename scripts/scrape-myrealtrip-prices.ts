@@ -56,7 +56,6 @@ const delay = (ms: number) => new Promise(r => setTimeout(r, ms));
 const randomDelay = () => delay(4000 + Math.random() * 4000); // 4~8초 랜덤
 const CACHE_PATH = path.resolve(process.cwd(), 'data/all-flights-cache.json');
 const INTERPARK_BENCHMARK_PATH = path.resolve(process.cwd(), 'data/interpark-prices.json');
-const MIN_RUN_INTERVAL_MS = 6 * 60 * 60 * 1000;
 const BATCH_SIZE = 10;
 const batchRest = () => delay(30_000 + Math.random() * 30_000);
 function shuffle<T>(arr: T[]): T[] {
@@ -208,16 +207,6 @@ async function main() {
             `⏸️ 마이리얼트립 ${sourceCircuitLabel(existingCircuit)} 뒤 휴식 중 — `
             + `${existingCircuit.nextProbeAt} 이후 한 번만 재탐색합니다.`,
         );
-        return;
-    }
-
-    const lastSuccessAt = new Date(cache.sourceUpdatedAt?.myrealtrip || '').getTime();
-    if (
-        !['1', 'true'].includes(String(process.env.FORCE_MYREALTRIP || '').toLowerCase())
-        && Number.isFinite(lastSuccessAt)
-        && Date.now() - lastSuccessAt < MIN_RUN_INTERVAL_MS
-    ) {
-        console.log('⏭️ 마이리얼트립 최근 성공 후 6시간이 지나지 않아 중복 요청을 건너뜁니다.');
         return;
     }
 

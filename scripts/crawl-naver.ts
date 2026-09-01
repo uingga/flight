@@ -67,7 +67,6 @@ const SOURCE_FILTERS = SOURCE_FILTER_RAW.toLowerCase() === 'all'
 const SOURCE_FILTER_LABEL = SOURCE_FILTERS.size > 0 ? [...SOURCE_FILTERS].join(',') : 'all';
 const STANDARD_REFRESH_DAYS = parseInt(process.env.STANDARD_REFRESH_DAYS || process.env.REFRESH_DAYS || '2', 10);
 const PRIORITY_REFRESH_DAYS = parseInt(process.env.PRIORITY_REFRESH_DAYS || process.env.MYREALTRIP_REFRESH_DAYS || '2', 10);
-const MIN_SUCCESS_REFRESH_HOURS = parseInt(process.env.MIN_SUCCESS_REFRESH_HOURS || '24', 10);
 const PRIORITY_DEPARTURE_DAYS = parseInt(process.env.PRIORITY_DEPARTURE_DAYS || '14', 10);
 const PRIORITY_DISCOUNT_RATE = parseInt(process.env.PRIORITY_DISCOUNT_RATE || '20', 10);
 const TOP_CANDIDATE_COUNT = parseInt(process.env.TOP_CANDIDATE_COUNT || '50', 10);
@@ -75,8 +74,6 @@ const LOW_CANDIDATE_RATIO = parseFloat(process.env.LOW_CANDIDATE_RATIO || '0.3')
 const MAX_DEFER_DAYS = parseInt(process.env.MAX_DEFER_DAYS || '7', 10);
 const PRICE_CHANGE_AMOUNT = parseInt(process.env.PRICE_CHANGE_AMOUNT || '10000', 10);
 const PRICE_CHANGE_RATIO = parseFloat(process.env.PRICE_CHANGE_RATIO || '0.03');
-const MISS_RETRY_HOURS = parseInt(process.env.MISS_RETRY_HOURS || '6', 10); // 검색 실패 노선은 잠시 뒤 재시도
-const NO_RESULT_RETRY_HOURS = parseInt(process.env.NO_RESULT_RETRY_HOURS || '24', 10); // 정상 빈 노선은 하루 뒤 재확인
 const ABORT_AFTER_MISSES = parseInt(process.env.ABORT_AFTER_MISSES || '3', 10); // 연속 N건 일시 오류면 서비스 상태를 별도 확인
 const MIN_ZERO_SUCCESS_GUARD_ATTEMPTS = parseInt(process.env.MIN_ZERO_SUCCESS_GUARD_ATTEMPTS || '10', 10); // 추출기 전면 변경 방어선
 const MIN_SYSTEMIC_FAILURE_GUARD_ATTEMPTS = parseInt(process.env.MIN_SYSTEMIC_FAILURE_GUARD_ATTEMPTS || '20', 10);
@@ -107,13 +104,10 @@ const INTERPARK_FILE = path.join(DATA_DIR, 'interpark-prices.json');
 const REFRESH_CONFIG: NaverRefreshConfig = {
     priorityRefreshDays: PRIORITY_REFRESH_DAYS,
     standardRefreshDays: STANDARD_REFRESH_DAYS,
-    minSuccessRefreshHours: MIN_SUCCESS_REFRESH_HOURS,
     priorityDepartureDays: PRIORITY_DEPARTURE_DAYS,
     priorityDiscountRate: PRIORITY_DISCOUNT_RATE,
     priceChangeAmount: PRICE_CHANGE_AMOUNT,
     priceChangeRatio: PRICE_CHANGE_RATIO,
-    missRetryHours: MISS_RETRY_HOURS,
-    noResultRetryHours: NO_RESULT_RETRY_HOURS,
 };
 
 // ─── 유틸리티 ───
@@ -308,7 +302,7 @@ try {
     if (seededSignatures > 0) {
         console.log(`🧾 기존 네이버 기록 ${seededSignatures}건에 현재 여행사 실결제가 기준선을 저장했습니다 (추가 네이버 요청 없음)`);
     }
-    console.log(`⏭️ 최근 확인·실패 쿨다운 스킵: ${skippedFresh}건 (성공 최소 ${MIN_SUCCESS_REFRESH_HOURS}시간·정기 ${Math.min(PRIORITY_REFRESH_DAYS, STANDARD_REFRESH_DAYS)}일 / 실패 ${MISS_RETRY_HOURS}~${NO_RESULT_RETRY_HOURS}시간)`);
+    console.log(`⏭️ 최근 확인·실패 스킵: ${skippedFresh}건 (같은 KST 날짜 재조회 없음 · 변경 없는 성공 키는 정기 ${Math.min(PRIORITY_REFRESH_DAYS, STANDARD_REFRESH_DAYS)}일)`);
     console.log(`📋 확인 필요 ${neededFlights.length}건 · 이번 실행 ${uniqueFlights.length}건 · 신규 ${newRouteCount}건 · 여행사 변경 ${changedRouteCount}건 · 정기 ${periodicRouteCount}건 · 다음 회차 ${Math.max(0, neededFlights.length - uniqueFlights.length)}건\n`);
     console.log(`🎯 전체 우선순위: 7일 마감 ${groupCounts.deadline} · 신규·변경 상위 ${groupCounts.changed_top} · 상위 ${groupCounts.top} · 보통 ${groupCounts.standard} · 하위 ${groupCounts.low}`);
     console.log(`🚦 선택 ${MAX_FLIGHTS}건 기준: 7일 마감 ${selectedGroupCounts.deadline} · 신규·변경 상위 ${selectedGroupCounts.changed_top} · 상위 ${selectedGroupCounts.top} · 보통 ${selectedGroupCounts.standard} · 하위 ${selectedGroupCounts.low}\n`);
