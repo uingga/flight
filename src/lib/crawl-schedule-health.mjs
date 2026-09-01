@@ -25,10 +25,10 @@ export const FULL_CRAWL_SOURCE_KEYS = Object.freeze([
     'ttang',
 ]);
 
-// GitHub 예약 실행이 45분 넘게 생성되지 않으면 운영실에 먼저 알리고,
-// 60분부터 watchdog이 workflow_dispatch 보조 실행을 요청한다.
-export const CRAWL_WARNING_MINUTES = 45;
-export const CRAWL_FALLBACK_MINUTES = 60;
+// 외부 watchdog은 5분 간격으로 확인한다. 예약 시각을 3분 넘기면 먼저 경고하고,
+// 5분부터 workflow_dispatch 보조 실행을 요청한다.
+export const CRAWL_WARNING_MINUTES = 3;
+export const CRAWL_FALLBACK_MINUTES = 5;
 
 function toTimestamp(value) {
     if (value === null || value === undefined || value === '') return null;

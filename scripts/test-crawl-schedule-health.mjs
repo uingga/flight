@@ -87,23 +87,23 @@ test('preflight and watchdog recover a slot hidden by a partial source refresh',
     });
 });
 
-test('warns 45 minutes after an uncovered crawl slot', () => {
+test('warns 3 minutes after an uncovered crawl slot', () => {
     const health = getCrawlScheduleHealth('2026-08-27T15:50:00.000Z', {
-        now: '2026-08-28T00:02:00.000Z',
+        now: '2026-08-27T23:20:00.000Z',
     });
 
     assert.equal(health.status, 'late');
     assert.equal(health.expectedAt, '2026-08-27T23:17:00.000Z');
-    assert.equal(health.delayMinutes, 45);
+    assert.equal(health.delayMinutes, 3);
 });
 
-test('dispatch threshold starts at 60 minutes', () => {
+test('dispatch threshold starts at 5 minutes', () => {
     const health = getCrawlScheduleHealth('2026-08-27T15:50:00.000Z', {
-        now: '2026-08-28T00:17:00.000Z',
+        now: '2026-08-27T23:22:00.000Z',
     });
 
     assert.equal(health.status, 'overdue');
-    assert.equal(health.delayMinutes, 60);
+    assert.equal(health.delayMinutes, 5);
 });
 
 test('a newly due slot does not hide an older missed slot', () => {
@@ -121,7 +121,7 @@ test('a completion covers all earlier slots and leaves only the next slot waitin
         now: '2026-08-28T02:15:00.000Z',
     });
 
-    assert.equal(health.status, 'waiting');
+    assert.equal(health.status, 'late');
     assert.equal(health.expectedAt, '2026-08-28T02:12:00.000Z');
     assert.equal(health.delayMinutes, 3);
 });
@@ -449,5 +449,58 @@ test('an old fallback or a different slot does not block recovery', () => {
 
     assert.equal(getCrawlDispatchBlocker(runs, '2026-08-28T06:17:00.000Z', {
         now: '2026-08-28T07:20:00.000Z',
+    }), null);
+});
+
+test('the watchdog clock is external while MyRealTrip completion remains a secondary check', () => {
+    const workflow = fs.readFileSync('.github/workflows/crawl-watchdog.yml', 'utf8');
+    assert.doesNotMatch(workflow, /^\s+schedule:\s*$/m);
+    assert.doesNotMatch(workflow, /^\s+- cron:/m);
+    assert.match(workflow, /^\s+workflow_run:\s*$/m);
+    assert.match(workflow, /^\s+workflow_dispatch:\s*$/m);
+});
+
+test('a successful scheduled run for the same cron blocks a deploy-gap duplicate', () => {
+    const blocker = getCrawlDispatchBlocker([
+        {
+            id: 105,
+            status: 'completed',
+            conclusion: 'success',
+            event: 'schedule',
+            created_at: '2026-08-28T06:20:00.000Z',
+            display_title: 'Daily Flight Crawl · 17 23 * * * · scheduled',
+        },
+    ], '2026-08-28T06:17:00.000Z', {
+        now: '2026-08-28T06:30:00.000Z',
+        expectedCron: '17 23 * * *',
+    });
+
+    assert.equal(blocker?.reason, 'recent_scheduled_run');
+    assert.equal(blocker?.runId, 105);
+});
+
+test('a failed or different scheduled cron does not block recovery', () => {
+    const runs = [
+        {
+            id: 106,
+            status: 'completed',
+            conclusion: 'failure',
+            event: 'schedule',
+            created_at: '2026-08-28T06:20:00.000Z',
+            display_title: 'Daily Flight Crawl · 17 23 * * * · scheduled',
+        },
+        {
+            id: 107,
+            status: 'completed',
+            conclusion: 'success',
+            event: 'schedule',
+            created_at: '2026-08-28T06:20:00.000Z',
+            display_title: 'Daily Flight Crawl · 12 2 * * * · scheduled',
+        },
+    ];
+
+    assert.equal(getCrawlDispatchBlocker(runs, '2026-08-28T06:17:00.000Z', {
+        now: '2026-08-28T06:30:00.000Z',
+        expectedCron: '17 23 * * *',
     }), null);
 });

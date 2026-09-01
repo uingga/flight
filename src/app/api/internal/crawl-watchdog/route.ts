@@ -77,6 +77,7 @@ export async function GET(request: NextRequest) {
         const runsPayload = await runsResponse.json() as { workflow_runs?: GitHubWorkflowRunSummary[] };
         const blocker = getCrawlDispatchBlocker(runsPayload.workflow_runs || [], health.expectedAt, {
             now: checkedAt,
+            expectedCron: health.expectedCron || undefined,
         });
         if (blocker) {
             return json({ ok: true, action: 'skipped', blocker, ...result });
