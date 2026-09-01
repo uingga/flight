@@ -27,7 +27,7 @@ const getContinentByArrivalCode = (code: string): string | null => {
     const CHI_CODES = [
         'PEK', 'PVG', 'SHA', 'CAN', 'HKG', 'MFM', 'TPE', 'TSA', 'RMQ', 'KHH',
         'TAO', 'YNT', 'WEH', 'TNA', 'SYX', 'KWL', 'DLC', 'HRB', 'SHE', 'HGH',
-        'CGQ', 'XMN', 'YNJ', 'CTU', 'CKG',
+        'CGQ', 'XMN', 'YNJ', 'CTU', 'TFU', 'CKG', 'DYG',
     ];
     const SOPA_CODES = ['GUM', 'SPN', 'SYD', 'BNE', 'AKL'];
     const EUR_CODES = ['CDG', 'LHR', 'FCO', 'FRA', 'BCN', 'IST', 'TZX'];
@@ -55,6 +55,28 @@ const CONTINENT_REGIONS: Record<string, string[]> = {
     AMCA: ['미주'],
     SOPA: ['남태평양'],
 };
+
+/**
+ * 모두투어 중국 탭은 2026-09-01부터 `전체` 조회가 빈 결과/오류를 반환한다.
+ * 화면에 노출되는 도시를 개별 선택했을 때만 결과가 나오므로 같은 도시 코드로 나눠 조회한다.
+ */
+export const MODETOUR_CHINA_DESTINATIONS = [
+    { code: 'TPE', name: '타이베이-타오위안' },
+    { code: 'TNA', name: '제남' },
+    { code: 'RMQ', name: '타이중' },
+    { code: 'KHH', name: '가오슝' },
+    { code: 'TSA', name: '타이페이-쑹산' },
+    { code: 'CAN', name: '광저우' },
+    { code: 'TFU', name: '텐푸' },
+    { code: 'DYG', name: '장가계' },
+    { code: 'HKG', name: '홍콩' },
+    { code: 'TAO', name: '청도' },
+] as const;
+
+export function getModetourQueryTargets(continentCode: string): Array<{ code: string; name: string }> {
+    if (continentCode === 'CHI') return [...MODETOUR_CHINA_DESTINATIONS];
+    return [{ code: '', name: continentCode }];
+}
 
 async function fetchModetourLanding(): Promise<{ html: string; setCookies: string[] }> {
     return retrySourceOperation('모두투어 초기 페이지', async () => {
@@ -110,11 +132,11 @@ export function parseModetourRegionPayload(text: string, label = '모두투어 A
 }
 
 async function fetchModetourRegionRows(
-    continentCode: string,
+    queryLabel: string,
     url: URL,
     reqHeader: string,
 ): Promise<any[]> {
-    const label = `모두투어 ${continentCode} API`;
+    const label = `모두투어 ${queryLabel} API`;
     return retrySourceOperation(label, async () => {
         const response = await fetchSourceText(label, url, {
             method: 'GET',
@@ -265,27 +287,38 @@ export async function scrapeModetour(prevFlights: any[] = []): Promise<Flight[]>
         for (const continentCode of continentCodes) {
             console.log(`모두투어 ${continentCode} 지역 크롤링 중...`);
 
-            const url = new URL('https://b2c-api.modetour.com/DiscountFlight/GetList');
-            url.searchParams.append('Page', '1');
-            url.searchParams.append('ItemCount', '500');
-            url.searchParams.append('DepartureCity', '');
-            url.searchParams.append('ContinentCode', continentCode);
-            url.searchParams.append('ArrivalCity', '');
-            url.searchParams.append('DepartureDate', formatDate(today));
-            url.searchParams.append('ArrivalDate', formatDate(oneMonthLater));
+            const rows: any[] = [];
+            const queryTargets = getModetourQueryTargets(continentCode);
 
-            let rows: any[];
-            try {
-                rows = await fetchModetourRegionRows(continentCode, url, reqHeader);
-            } catch (error) {
-                if (classifySourceAccessRestriction(error)) throw error;
-                const regions = CONTINENT_REGIONS[continentCode] || [];
-                completeness.recordFailure(
-                    `${continentCode} (${describeSourceError(error)})`,
-                    f => regions.includes(f.region || getRegionByCity(f.arrival?.city || '')),
-                );
-                await randomDelay(2, 4);
-                continue;
+            for (const target of queryTargets) {
+                const url = new URL('https://b2c-api.modetour.com/DiscountFlight/GetList');
+                url.searchParams.append('Page', '1');
+                url.searchParams.append('ItemCount', '500');
+                url.searchParams.append('DepartureCity', '');
+                url.searchParams.append('ContinentCode', continentCode);
+                url.searchParams.append('ArrivalCity', target.code);
+                url.searchParams.append('DepartureDate', formatDate(today));
+                url.searchParams.append('ArrivalDate', formatDate(oneMonthLater));
+
+                const queryLabel = target.code ? `${continentCode}/${target.code}` : continentCode;
+                try {
+                    const targetRows = await fetchModetourRegionRows(queryLabel, url, reqHeader);
+                    rows.push(...targetRows);
+                    if (target.code) {
+                        console.log(`모두투어 중국 ${target.name}(${target.code}): ${targetRows.length}개 항목`);
+                    }
+                } catch (error) {
+                    if (classifySourceAccessRestriction(error)) throw error;
+                    const regions = CONTINENT_REGIONS[continentCode] || [];
+                    completeness.recordFailure(
+                        `${queryLabel} (${describeSourceError(error)})`,
+                        target.code
+                            ? f => String(f.arrival?.airport || '').toUpperCase() === target.code
+                            : f => regions.includes(f.region || getRegionByCity(f.arrival?.city || '')),
+                    );
+                }
+
+                if (target.code) await randomDelay(0.8, 1.6);
             }
 
             rows.forEach((item: any, index: number) => {

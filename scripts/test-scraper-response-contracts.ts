@@ -6,7 +6,11 @@ import {
     parseMyrealtripBulkPayload,
     parseMyrealtripCalendarPayload,
 } from '../src/lib/scrapers/myrealtrip.ts';
-import { parseModetourRegionPayload } from '../src/lib/scrapers/modetour.ts';
+import {
+    getModetourQueryTargets,
+    MODETOUR_CHINA_DESTINATIONS,
+    parseModetourRegionPayload,
+} from '../src/lib/scrapers/modetour.ts';
 import {
     assertNoSourceAccessBlockText,
     isExplicitAccessRestrictionStatus,
@@ -82,6 +86,12 @@ assertSourceError(() => assertMyrealtripSeedReplacementSafe(
 assert.equal(parseModetourRegionPayload('{"result":[{"stockPackageNo":1}]}').length, 1);
 assertSourceError(() => parseModetourRegionPayload('{"rows":[]}'), 'schema-mismatch');
 assertSourceError(() => parseModetourRegionPayload('{broken}'), 'malformed-json');
+assert.deepEqual(
+    getModetourQueryTargets('CHI').map(target => target.code),
+    ['TPE', 'TNA', 'RMQ', 'KHH', 'TSA', 'CAN', 'TFU', 'DYG', 'HKG', 'TAO'],
+);
+assert.equal(MODETOUR_CHINA_DESTINATIONS.every(target => target.code.length === 3), true);
+assert.deepEqual(getModetourQueryTargets('JPN'), [{ code: '', name: 'JPN' }]);
 
 async function testTtangBrowserRequestContract() {
     const xml = '<RESPONSE><HEAD><error>false</error><message></message></HEAD><RESULT><RECORD><CONTENS><![CDATA[{"code":"OK","desc":"SUCCESS","response":[]}]]></CONTENS></RECORD></RESULT></RESPONSE>';
