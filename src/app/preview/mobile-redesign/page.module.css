@@ -1198,7 +1198,11 @@
 .serviceUpdateNotice h2 { margin: 0; color: var(--ink); font-size: var(--size-body); line-height: 1.35; font-weight: var(--weight-bold); letter-spacing: -0.025em; }
 .serviceUpdateNotice p { margin: 7px 0 0; color: var(--text-muted); font-size: var(--size-meta); line-height: 1.55; word-break: keep-all; }
 .serviceUpdateDivider { height: 1px; margin: 15px 0; background: var(--line); }
-.serviceUpdateConfirm { width: 100%; height: 50px; margin-top: 20px; border: 0; border-radius: var(--radius-action); background: var(--brand-dark); color: var(--on-brand); font-size: var(--size-meta); font-weight: var(--weight-bold); }
+.serviceUpdateActions { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 8px; margin-top: 20px; }
+.serviceUpdateClose,
+.serviceUpdateConfirm { height: 50px; border-radius: var(--radius-action); font-size: var(--size-meta); font-weight: var(--weight-bold); }
+.serviceUpdateClose { border: 1px solid var(--line); background: var(--paper); color: var(--text-secondary); }
+.serviceUpdateConfirm { border: 0; background: var(--brand-dark); color: var(--on-brand); }
 
 .contactOverlay { z-index: 125; }
 .contactSheet { padding-bottom: max(22px, env(safe-area-inset-bottom)); }

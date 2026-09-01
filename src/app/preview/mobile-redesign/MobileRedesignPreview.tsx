@@ -745,7 +745,7 @@ function Icon({ name }: { name: 'sliders' | 'search' | 'star' | 'bookmark' | 'sh
     return <svg viewBox="0 0 24 24" aria-hidden="true">{paths[name]}</svg>;
 }
 
-const SERVICE_UPDATE_NOTICE_KEY = 'tikitikit-service-update-20260826-v2';
+const SERVICE_UPDATE_NOTICE_KEY = 'tikitikit-service-update-20260901-fuel-surcharge-v2';
 // Push alerts stay implemented while the public entry points remain hidden until
 // account-linked delivery history and device recovery are ready.
 const PUBLIC_DEAL_ALERTS_ENABLED = false;
@@ -890,12 +890,16 @@ export default function MobileRedesignPreview({
                         : filterOpen ? 'filter'
                             : null;
 
-    const dismissServiceUpdate = useCallback(() => {
+    const closeServiceUpdate = useCallback(() => {
         setShowServiceUpdate(false);
+    }, []);
+
+    const dismissServiceUpdate = useCallback(() => {
+        closeServiceUpdate();
         try {
             window.localStorage.setItem(SERVICE_UPDATE_NOTICE_KEY, 'dismissed');
         } catch { }
-    }, []);
+    }, [closeServiceUpdate]);
 
     const openFilter = useCallback(() => {
         showOverlayWithHistory('filter', () => setFilterOpen(true));
@@ -1038,7 +1042,7 @@ export default function MobileRedesignPreview({
     const serviceUpdateSwipe = useSwipeToDismiss({
         open: showServiceUpdate,
         sheetRef: serviceUpdateDialogRef,
-        onDismiss: dismissServiceUpdate,
+        onDismiss: closeServiceUpdate,
     });
     const contactSwipe = useSwipeToDismiss({
         open: showContact,
@@ -4237,23 +4241,21 @@ export default function MobileRedesignPreview({
                     open={showServiceUpdate}
                     active={activeOverlay === 'service-update'}
                     dialogRef={serviceUpdateDialogRef}
-                    onClose={dismissServiceUpdate}
+                    onClose={closeServiceUpdate}
                     overlayClassName={`${styles.sheetOverlay} ${styles.serviceUpdateOverlay}`}
                     dialogClassName={`${styles.bottomSheet} ${styles.serviceUpdateSheet}`}
                     ariaLabelledBy="service-update-title"
                 >
                         <div className={styles.sheetHandle} aria-hidden="true" {...serviceUpdateSwipe} />
-                        <p className={styles.serviceUpdateEyebrow}>서비스 안내</p>
+                        <p className={styles.serviceUpdateEyebrow}>9월 발권 안내</p>
                         <div className={styles.serviceUpdateNotice}>
-                            <h2 id="service-update-title">🔐 로그인 기능이 생겼어요</h2>
-                            <p>찜한 표를 다른 기기에서도 이어볼 수 있어요. 지금은 보안을 위해 이메일 인증만 지원해요.</p>
+                            <h2 id="service-update-title">⛽ 9월 유류할증료가 올랐어요</h2>
+                            <p>항공유 가격 상승으로 국내선·국제선 모두 4개월 만에 인상됐어요. 9월 1일 이후 발권분에 적용되며, 항공사·노선별 금액은 예약 단계에서 확인해 주세요.</p>
                         </div>
-                        <div className={styles.serviceUpdateDivider} />
-                        <div className={styles.serviceUpdateNotice}>
-                            <h2>🔎 네이버 비교는 상세페이지로 옮겼어요</h2>
-                            <p>항공권을 누르면 상세페이지 안에서 확인할 수 있어요. 이 기능은 8월 31일까지 제공되고 이후에는 종료돼요.</p>
+                        <div className={styles.serviceUpdateActions}>
+                            <button type="button" className={styles.serviceUpdateClose} onClick={closeServiceUpdate}>닫기</button>
+                            <button type="button" className={styles.serviceUpdateConfirm} onClick={dismissServiceUpdate}>다시 보지 않기</button>
                         </div>
-                        <button type="button" className={styles.serviceUpdateConfirm} onClick={dismissServiceUpdate}>확인했어요</button>
                 </OverlayDialog>
             )}
 
