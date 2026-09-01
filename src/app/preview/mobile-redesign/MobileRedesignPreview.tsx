@@ -529,7 +529,7 @@ function WeekendFlightsInsight({
                     </span>
                 </span>
                 <span className={isMobileTicket ? styles.freshFlightsMobileSchedule : styles.freshFlightsSchedule}>
-                    <span>{cardDate(flight.departure.date)} — {cardDate(flight.arrival.date)}</span>
+                    <span>{cardDate(flight.departure.date)} {isMobileTicket ? '→' : '—'} {cardDate(flight.arrival.date)}</span>
                     <small>{tripLength(flight)}</small>
                 </span>
             </button>
@@ -3948,7 +3948,7 @@ export default function MobileRedesignPreview({
                                                                     </span>
                                                                 </span>
                                                                 <span className={styles.freshFlightsMobileSchedule}>
-                                                                    <span>{cardDate(freshFlight.departure.date)} — {cardDate(freshFlight.arrival.date)}</span>
+                                                                    <span>{cardDate(freshFlight.departure.date)} → {cardDate(freshFlight.arrival.date)}</span>
                                                                     <small>
                                                                         {[
                                                                             tripLength(freshFlight),
