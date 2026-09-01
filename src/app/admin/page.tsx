@@ -476,6 +476,23 @@ interface GaPeriodSummary {
     averageEngagementSeconds?: number | null;
 }
 
+interface GaCampaignPerformance {
+    name: string;
+    source: string;
+    label: string;
+    sessions: number;
+    users: number;
+    engagedSessions: number;
+    engagementRate: number | null;
+    averageSessionDuration: number;
+    detailOpenUsers: number | null;
+    detailOpenRate: number | null;
+    bookingClicks: number | null;
+    bookingClickUsers: number | null;
+    bookingClickRate: number | null;
+    interestCities: Array<{ city: string; users: number }> | null;
+}
+
 interface GaStatsData {
     available: boolean;
     message?: string;
@@ -557,14 +574,8 @@ interface GaStatsData {
     detailByEntry: GaListItem[] | null;
     channels: Array<{ label: string; sessions: number; users: number; note?: string }> | null;
     referrals: Array<{ source: string; label: string; sessions: number; users: number }> | null;
-    campaigns: Array<{
-        name: string;
-        source: string;
-        label: string;
-        sessions: number;
-        users: number;
-        bookingClicks: number | null;
-    }> | null;
+    campaigns: GaCampaignPerformance[] | null;
+    blogCampaigns?: GaCampaignPerformance[] | null;
     dateFilter: {
         picks: number;
         emptyPicks: number;
@@ -1283,6 +1294,78 @@ function RankList({
                     <strong>{item.value}</strong>
                 </div>
             ))}
+        </div>
+    );
+}
+
+function BlogCampaignPerformance({
+    campaigns,
+    days,
+}: {
+    campaigns?: GaCampaignPerformance[] | null;
+    days: number;
+}) {
+    const rate = (value: number | null) => value === null ? '—' : `${value}%`;
+
+    return (
+        <div className={styles.blogPerformance}>
+            <header className={styles.blogPerformanceHeader}>
+                <div>
+                    <h3>네이버 블로그 성과</h3>
+                    <small>최근 {days}일 · 글마다 다른 추적 링크로 구분</small>
+                </div>
+            </header>
+            {!campaigns ? (
+                <div className={styles.emptyState}>블로그 성과를 불러오지 못했습니다.</div>
+            ) : campaigns.length === 0 ? (
+                <div className={styles.emptyState}>아직 추적 링크로 들어온 블로그 방문이 없어요.</div>
+            ) : (
+                <div className={styles.blogPerformanceList}>
+                    {campaigns.map(campaign => (
+                        <article className={styles.blogPerformanceRow} key={`${campaign.name}-${campaign.source}`}>
+                            <div className={styles.blogCampaignName}>
+                                <strong>{campaign.label.replace(/ · 네이버 블로그$/, '')}</strong>
+                                <small>{campaign.name}</small>
+                            </div>
+                            <dl className={styles.blogMetric}>
+                                <dt>유입자</dt>
+                                <dd>{campaign.users.toLocaleString()}명</dd>
+                            </dl>
+                            <dl className={styles.blogMetric}>
+                                <dt>참여 유입률</dt>
+                                <dd>{rate(campaign.engagementRate)}</dd>
+                            </dl>
+                            <dl className={styles.blogMetric}>
+                                <dt>상세 열람</dt>
+                                <dd>
+                                    {campaign.detailOpenUsers === null ? '—' : `${campaign.detailOpenUsers.toLocaleString()}명`}
+                                    <small>{rate(campaign.detailOpenRate)}</small>
+                                </dd>
+                            </dl>
+                            <dl className={styles.blogMetric}>
+                                <dt>예약 이동</dt>
+                                <dd>
+                                    {campaign.bookingClickUsers === null ? '—' : `${campaign.bookingClickUsers.toLocaleString()}명`}
+                                    <small>{rate(campaign.bookingClickRate)}</small>
+                                </dd>
+                            </dl>
+                            <div className={styles.blogCampaignContext}>
+                                <span>평균 체류 <strong>{formatDuration(campaign.averageSessionDuration)}</strong></span>
+                                <span>
+                                    상세로 본 도시{' '}
+                                    <strong>
+                                        {campaign.interestCities === null
+                                            ? '집계 불가'
+                                            : campaign.interestCities.length > 0
+                                                ? campaign.interestCities.map(item => `${item.city} ${item.users}명`).join(' · ')
+                                                : '아직 없음'}
+                                    </strong>
+                                </span>
+                            </div>
+                        </article>
+                    ))}
+                </div>
+            )}
         </div>
     );
 }
@@ -4485,14 +4568,11 @@ export default function AdminPage() {
                                     <p>긴 원본 표 대신 상위 5개만 보여드립니다.</p>
                                 </div>
                             </div>
+                            <BlogCampaignPerformance campaigns={gaStats.blogCampaigns} days={gaStats.days} />
                             <div className={styles.analysisGrid}>
                                 <div className={styles.analysisPanel}>
                                     <h3>들어온 경로</h3>
                                     <RankList items={(gaStats.channels || []).slice(0, 5).map(item => ({ label: item.label, value: `${item.users.toLocaleString()}명`, note: item.note ? `${item.note} · 방문 ${item.sessions.toLocaleString()}회` : `방문 ${item.sessions.toLocaleString()}회` }))} empty="유입 경로가 아직 없어요." />
-                                </div>
-                                <div className={styles.analysisPanel}>
-                                    <h3>홍보글·캠페인</h3>
-                                    <RankList items={(gaStats.campaigns || []).slice(0, 5).map(item => ({ label: item.label, value: `${item.users.toLocaleString()}명`, note: item.bookingClicks === null ? undefined : `예약 이동 ${item.bookingClicks.toLocaleString()}회` }))} empty="추적 링크로 들어온 방문이 아직 없어요." />
                                 </div>
                                 <div className={styles.analysisPanel}>
                                     <h3>예약 이동이 많은 노선</h3>

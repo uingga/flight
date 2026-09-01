@@ -155,13 +155,22 @@ export const trackDealAlertSetup = (departure: string, region: string, maxPrice:
     });
 };
 
-/** Successful arrivals from the two link types used in a Naver DROP article. */
-export const trackBlogLinkOpen = (type: 'flight' | 'alert', campaign: string) => {
-    event(type === 'flight' ? 'blog_flight_link_open' : 'blog_alert_link_open', {
+/** Successful arrivals from a tracked Naver Blog link. Link position is retained for later analysis. */
+export const trackBlogLinkOpen = (
+    type: 'flight' | 'alert' | 'article',
+    campaign: string,
+    linkPosition?: string,
+) => {
+    const params = {
         campaign_name: campaign,
         content_source: 'naver_blog',
         link_type: type,
-    });
+        ...(linkPosition ? { link_position: linkPosition } : {}),
+    };
+    event('blog_link_open', params);
+    // Keep the two original events so historical DROP reports remain continuous.
+    if (type === 'flight') event('blog_flight_link_open', params);
+    if (type === 'alert') event('blog_alert_link_open', params);
 };
 
 /** Price-comparison link (Naver/Skyscanner) */

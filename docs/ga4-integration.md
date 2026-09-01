@@ -219,3 +219,17 @@ Vercel 대시보드 → 프로젝트 → **Settings → Environment Variables** 
 열람 수와 함께 보조 지표로만 표시하며, 체류시간이 길다는 이유만으로 좋은 방문이라고
 판정하지 않는다. 최근 항공권 확인 일수는 Supabase `route_price_daily`에서 실제 기록이
 존재하는 날만 센다.
+
+### 네이버 블로그 유입 성과 (2026-09-01)
+
+블로그 글별 링크는 다음 규칙으로 만든다.
+
+```text
+?utm_source=naver_blog&utm_medium=referral&utm_campaign=tikitikit_blog_001&utm_content=flight_1
+```
+
+- `utm_campaign`: 글마다 다른 `tikitikit_blog_NNN` 값. 기존 DROP은 `tikitikit_drop_NNN`을 유지한다.
+- `utm_content`: `top_link`, `flight_1`, `bottom_link` 등 링크 위치. 지금부터 기록하되 화면에는 아직 노출하지 않는다.
+- 어드민에는 유입자, 참여 유입률, 상세 열람률, 예약 이동률, 실제 상세로 본 도시를 핵심 지표로 보여준다.
+- 평균 체류시간은 보조 지표로만 보여준다.
+- 상세로 본 도시는 항공권 노출이 아니라 `city_detail_open`이 발생한 도시만 집계한다.

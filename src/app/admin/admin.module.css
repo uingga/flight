@@ -4147,6 +4147,118 @@
     gap: 12px;
 }
 
+.blogPerformance {
+    margin-bottom: 12px;
+    overflow: hidden;
+    border: 1px solid #e2e6eb;
+    border-radius: 14px;
+    background: #fff;
+}
+
+.blogPerformanceHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 14px 16px;
+    border-bottom: 1px solid #eceef1;
+}
+
+.blogPerformanceHeader h3 {
+    margin: 0;
+    color: #25303e;
+    font-size: 0.86rem;
+    font-weight: 720;
+}
+
+.blogPerformanceHeader small {
+    display: block;
+    margin-top: 4px;
+    color: #7b8490;
+    font-size: 0.68rem;
+}
+
+.blogPerformanceList {
+    display: grid;
+}
+
+.blogPerformanceRow {
+    display: grid;
+    grid-template-columns: minmax(180px, 1.55fr) repeat(4, minmax(74px, 0.7fr));
+    align-items: center;
+    gap: 10px 16px;
+    padding: 15px 16px 13px;
+}
+
+.blogPerformanceRow + .blogPerformanceRow {
+    border-top: 1px solid #eceef1;
+}
+
+.blogCampaignName,
+.blogMetric {
+    min-width: 0;
+}
+
+.blogCampaignName strong {
+    display: block;
+    overflow: hidden;
+    color: #202a37;
+    font-size: 0.79rem;
+    font-weight: 710;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.blogCampaignName small {
+    display: block;
+    margin-top: 4px;
+    overflow: hidden;
+    color: #9299a3;
+    font-size: 0.62rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.blogMetric {
+    margin: 0;
+}
+
+.blogMetric dt {
+    color: #858d98;
+    font-size: 0.63rem;
+    font-weight: 620;
+}
+
+.blogMetric dd {
+    margin: 4px 0 0;
+    color: #25303e;
+    font-size: 0.87rem;
+    font-weight: 720;
+}
+
+.blogMetric dd small {
+    margin-left: 4px;
+    color: #8b939d;
+    font-size: 0.61rem;
+    font-weight: 590;
+}
+
+.blogCampaignContext {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px 18px;
+    padding-top: 10px;
+    border-top: 1px dashed #e4e7eb;
+    color: #747d89;
+    font-size: 0.67rem;
+}
+
+.blogCampaignContext strong {
+    color: #505a67;
+    font-weight: 650;
+}
+
 .analysisPanel {
     min-width: 0;
     padding: 15px;
@@ -5081,6 +5193,21 @@
     .threadsSiteFlow { grid-template-columns: 1fr; gap: 8px; }
     .threadsSiteFlow > span { display: none; }
 
+    .blogPerformanceRow {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 13px 10px;
+        padding: 14px;
+    }
+
+    .blogCampaignName,
+    .blogCampaignContext {
+        grid-column: 1 / -1;
+    }
+
+    .blogCampaignName strong {
+        white-space: normal;
+    }
+
     .overviewHero,
     .tabIntro,
     .section {
@@ -5244,6 +5371,7 @@
     .alertApprovalActions { justify-content: flex-end; }
     .recipientConditions > div { grid-template-columns: minmax(0, 1fr) auto; }
     .recipientConditions div > span { grid-column: 1 / -1; grid-row: 2; }
+
 }
 
 .cityInterestDashboard {

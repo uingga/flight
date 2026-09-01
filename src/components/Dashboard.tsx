@@ -426,9 +426,11 @@ export default function Dashboard() {
         const flightId = params.get('flight');
         const campaign = params.get('utm_campaign') || '';
         const content = params.get('utm_content');
-        if (params.get('utm_source') === 'naver_blog' && /^tikitikit_drop_\d+$/.test(campaign)) {
-            if (content === 'drop_deal') gtag.trackBlogLinkOpen('flight', campaign);
-            if (content === 'alert_cta') gtag.trackBlogLinkOpen('alert', campaign);
+        if (params.get('utm_source') === 'naver_blog' && campaign.startsWith('tikitikit_')) {
+            const linkType = content === 'alert_cta'
+                ? 'alert'
+                : content === 'drop_deal' || Boolean(flightId) ? 'flight' : 'article';
+            gtag.trackBlogLinkOpen(linkType, campaign, content || undefined);
         }
         if (flightId) {
             setSharedFlightId(flightId);

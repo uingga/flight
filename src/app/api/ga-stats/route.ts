@@ -35,6 +35,7 @@ const EVENT_LABELS: Record<string, string> = {
     deal_alert_setup: '조건형 알림 등록',
     blog_flight_link_open: '블로그 항공권 링크 열기',
     blog_alert_link_open: '블로그 특가 알림 링크 열기',
+    blog_link_open: '블로그 링크 열기',
     // 2026-08-14에 중단. 그전까지 카드 본문 클릭은 아무 동작도 하지 않았으므로 헛클릭 지표였다
     card_click: '카드 빈 곳 클릭 (8/14 이전, 반응 없던 클릭)',
     compare_click: '네이버 가격비교 열기',
@@ -288,7 +289,7 @@ async function buildStats(config: Ga4Config, days: number) {
         returningRequest(todayDateRanges),
     ]);
 
-    const [agencyReport, routeReport, entryReport, detailEntryReport, channelReport, unassignedChannelReport, referralReport, campaignTrafficReport, campaignBookingReport, leadTimeReport, rangeReport, dateMethodReport, presetReport, repeatBehaviorReport, todayRouteReport, todayAcquisitionReport] = await Promise.all([
+    const [agencyReport, routeReport, entryReport, detailEntryReport, channelReport, unassignedChannelReport, referralReport, campaignTrafficReport, campaignActionReport, campaignCityReport, leadTimeReport, rangeReport, dateMethodReport, presetReport, repeatBehaviorReport, todayRouteReport, todayAcquisitionReport] = await Promise.all([
         optional('여행사별 예약 클릭', warnings, () => runReport(config, {
             dateRanges,
             dimensions: [{ name: 'customEvent:travel_agency' }],
@@ -357,17 +358,38 @@ async function buildStats(config: Ga4Config, days: number) {
         optional('콘텐츠별 유입', warnings, () => runReport(config, {
             dateRanges,
             dimensions: [{ name: 'sessionCampaignName' }, { name: 'sessionSource' }],
-            metrics: [{ name: 'sessions' }, { name: 'activeUsers' }],
+            metrics: [
+                { name: 'sessions' },
+                { name: 'activeUsers' },
+                { name: 'engagedSessions' },
+                { name: 'averageSessionDuration' },
+            ],
             orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
             limit: 50,
         })),
-        optional('콘텐츠별 예약 클릭', warnings, () => runReport(config, {
+        optional('콘텐츠별 주요 행동', warnings, () => runReport(config, {
             dateRanges,
-            dimensions: [{ name: 'sessionCampaignName' }, { name: 'sessionSource' }],
-            metrics: [{ name: 'eventCount' }],
-            dimensionFilter: eventNameFilter('booking_click'),
+            dimensions: [{ name: 'sessionCampaignName' }, { name: 'sessionSource' }, { name: 'eventName' }],
+            metrics: [{ name: 'eventCount' }, { name: 'totalUsers' }],
+            dimensionFilter: {
+                orGroup: {
+                    expressions: ['detail_open', 'booking_click'].map(eventName => eventNameFilter(eventName)),
+                },
+            },
             orderBys: [{ metric: { metricName: 'eventCount' }, desc: true }],
-            limit: 50,
+            limit: 200,
+        })),
+        optional('블로그 유입 후 상세로 본 도시', warnings, () => runReport(config, {
+            dateRanges,
+            dimensions: [
+                { name: 'sessionCampaignName' },
+                { name: 'sessionSource' },
+                { name: 'customEvent:destination' },
+            ],
+            metrics: [{ name: 'totalUsers' }],
+            dimensionFilter: eventNameFilter('city_detail_open'),
+            orderBys: [{ metric: { metricName: 'totalUsers' }, desc: true }],
+            limit: 300,
         })),
         // 날짜 필터를 쓴 사람들이 언제 떠나려는지 — 2026-08-19에 측정기준을 등록해 그 이후 데이터만 있다
         optional('출발까지 남은 일수', warnings, () => runReport(config, {
@@ -727,7 +749,9 @@ async function buildStats(config: Ga4Config, days: number) {
     const campaignLabel = (name: string) => {
         if (name === 'tikitikit_user_share') return '사용자 공유 항공권';
         const drop = name.match(/^tikitikit_drop_(\d+)$/);
-        return drop ? `티키티킷 드롭 ${Number(drop[1])}` : name;
+        if (drop) return `티키티킷 드롭 ${Number(drop[1])}`;
+        const blog = name.match(/^tikitikit_blog_(\d+)$/);
+        return blog ? `네이버 블로그 글 ${Number(blog[1])}` : name;
     };
     const contentSourceLabel = (source: string) => ({
         naver_blog: '네이버 블로그',
@@ -766,23 +790,63 @@ async function buildStats(config: Ga4Config, days: number) {
             users: num(row, 1),
         }))
         .sort((a, b) => b.sessions - a.sessions);
-    const campaignBookings = new Map(
-        (campaignBookingReport?.rows || []).map(row => [`${dim(row)}|${dim(row, 1)}`, num(row, 0)]),
-    );
+    const campaignActions = new Map<string, { events: number; users: number }>();
+    (campaignActionReport?.rows || []).forEach(row => {
+        campaignActions.set(`${dim(row)}|${dim(row, 1)}|${dim(row, 2)}`, {
+            events: num(row, 0),
+            users: num(row, 1),
+        });
+    });
+    const campaignCities = new Map<string, Map<string, number>>();
+    (campaignCityReport?.rows || []).forEach(row => {
+        const campaign = dim(row);
+        const source = dim(row, 1);
+        const city = normalizeCity(dim(row, 2)).replace(/\([^)]+\)/g, '').trim();
+        if (!campaign || !city || isUnsetDimension(city)) return;
+        const key = `${campaign}|${source}`;
+        const cities = campaignCities.get(key) || new Map<string, number>();
+        cities.set(city, (cities.get(city) || 0) + num(row, 0));
+        campaignCities.set(key, cities);
+    });
     const campaigns = campaignTrafficReport === null ? null : (campaignTrafficReport.rows || [])
         .map(row => {
             const name = dim(row);
             const source = dim(row, 1);
+            const sessions = num(row, 0);
+            const users = num(row, 1);
+            const engagedSessions = num(row, 2);
+            const detail = campaignActions.get(`${name}|${source}|detail_open`);
+            const booking = campaignActions.get(`${name}|${source}|booking_click`);
             return {
                 name,
                 source,
                 label: `${campaignLabel(name)} · ${contentSourceLabel(source)}`,
-                sessions: num(row, 0),
-                users: num(row, 1),
-                bookingClicks: campaignBookingReport === null ? null : (campaignBookings.get(`${name}|${source}`) || 0),
+                sessions,
+                users,
+                engagedSessions,
+                engagementRate: sessions > 0 ? Number(((engagedSessions / sessions) * 100).toFixed(1)) : null,
+                averageSessionDuration: Number(num(row, 3).toFixed(1)),
+                detailOpenUsers: campaignActionReport === null ? null : (detail?.users || 0),
+                detailOpenRate: campaignActionReport === null || users === 0
+                    ? null
+                    : Number((((detail?.users || 0) / users) * 100).toFixed(1)),
+                bookingClicks: campaignActionReport === null ? null : (booking?.events || 0),
+                bookingClickUsers: campaignActionReport === null ? null : (booking?.users || 0),
+                bookingClickRate: campaignActionReport === null || users === 0
+                    ? null
+                    : Number((((booking?.users || 0) / users) * 100).toFixed(1)),
+                interestCities: campaignCityReport === null
+                    ? null
+                    : Array.from(campaignCities.get(`${name}|${source}`)?.entries() || [])
+                        .map(([city, cityUsers]) => ({ city, users: cityUsers }))
+                        .sort((left, right) => right.users - left.users || left.city.localeCompare(right.city, 'ko-KR'))
+                        .slice(0, 4),
             };
         })
         .filter(item => item.name.startsWith('tikitikit_'));
+    const blogCampaigns = campaigns === null
+        ? null
+        : campaigns.filter(item => item.source.toLowerCase() === 'naver_blog');
 
     // 며칠 뒤 출발인지를 그대로 나열하면 90줄이 되므로 읽을 수 있는 구간으로 묶는다.
     // `(not set)` 같은 비수치 값은 버린다 — 측정기준 등록 전 데이터가 이렇게 들어온다.
@@ -957,6 +1021,7 @@ async function buildStats(config: Ga4Config, days: number) {
             users: num(row, 1),
         })),
         campaigns,
+        blogCampaigns,
         dateFilter: {
             picks: dateFilter?.count ?? 0,
             emptyPicks: dateFilterEmpty?.count ?? 0,
