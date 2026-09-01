@@ -23,6 +23,9 @@ interface InterparkMonthlyPrice {
 
 export interface InterparkBenchmark {
     timestamp: string;
+    /** 출발지를 받지 않는 공식 추천 API의 화면상 기준. 기존 캐시에는 없을 수 있다. */
+    originCity?: 'SEL';
+    originAirports?: ['ICN', 'GMP'];
     prices: Record<string, Record<string, { lowest: number; avg: number; depDate: string; arrDate: string }>>;
     /** 도시별 월평균가를 마지막으로 정상 갱신한 시각 */
     cityUpdatedAt?: Record<string, string>;
@@ -420,6 +423,8 @@ export async function scrapeInterparkBenchmark(
 
     const benchmark: InterparkBenchmark = {
         timestamp: nowIso,
+        originCity: 'SEL',
+        originAirports: ['ICN', 'GMP'],
         prices,
         cityUpdatedAt,
         cityCheckedAt,

@@ -4,6 +4,11 @@ import { Flight } from '../src/types/flight';
 import { getRegionByCity } from '../src/lib/utils/region-mapper';
 import { logCrawlResults } from '../src/lib/utils/crawl-logger';
 import {
+    clearUnsupportedInterparkDiscount,
+    evaluateInterparkBenchmark,
+    type InterparkBenchmarkLike,
+} from '../src/lib/interpark-benchmark';
+import {
     MODETOUR_CONTINENT_CODES,
     ModetourManualCapture,
     ModetourContinentCode,
@@ -40,10 +45,6 @@ interface CacheData {
     [key: string]: unknown;
 }
 
-interface InterparkBenchmark {
-    prices?: Record<string, Record<string, { lowest?: number; avg?: number }>>;
-}
-
 export interface ModetourManualImportReport {
     accepted: number;
     inserted: number;
@@ -72,20 +73,13 @@ function sourceCounts(flights: Flight[]): Record<string, number> {
 
 function benchmarkFlight(
     flight: Flight,
-    benchmark: InterparkBenchmark,
+    benchmark: InterparkBenchmarkLike,
 ): { keep: boolean; average?: number; discountRate: number } {
-    const cityCode = flight.arrival.airport;
-    const yearMonth = flight.departure.date.slice(0, 7);
-    const month = benchmark.prices?.[cityCode]?.[yearMonth];
-    if (!month || !Number.isFinite(month.avg)) return { keep: true, discountRate: 0 };
-
-    const average = Number(month.avg);
-    if (flight.price > average) return { keep: false, average, discountRate: 0 };
-    const lowest = Number(month.lowest || 0);
+    const evaluation = evaluateInterparkBenchmark(flight, benchmark);
     return {
-        keep: true,
-        average,
-        discountRate: lowest > 0 ? Math.round((1 - flight.price / lowest) * 100) : 0,
+        keep: evaluation.keep,
+        ...(evaluation.average ? { average: evaluation.average } : {}),
+        discountRate: evaluation.discountRate,
     };
 }
 
@@ -295,6 +289,7 @@ export function importModetourManualCapture({
     }
 
     const flights = retainedFlights;
+    flights.forEach(flight => clearUnsupportedInterparkDiscount(flight));
     // 결과가 0건인 완전 캡처도 기존 지역을 비우고 검수 사실을 기록하는 유효한 반영이다.
     const hasMutation = completeRegionsApplied.length > 0
         || acceptedByKey.size > 0
@@ -380,7 +375,7 @@ function main(): void {
 
     const input = JSON.parse(fs.readFileSync(inputPath, 'utf8')) as ModetourManualCapture;
     const cache = JSON.parse(fs.readFileSync(cachePath, 'utf8')) as CacheData;
-    const benchmark = JSON.parse(fs.readFileSync(benchmarkPath, 'utf8')) as InterparkBenchmark;
+    const benchmark = JSON.parse(fs.readFileSync(benchmarkPath, 'utf8')) as InterparkBenchmarkLike;
     const result = importModetourManualCapture({ input, cache, benchmark, apply });
 
     if (apply && result.report.applied) {

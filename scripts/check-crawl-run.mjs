@@ -4,6 +4,7 @@ import {
     getFullCrawlUpdatedAt,
     getCrawlScheduleHealth,
     getScheduledAtForCron,
+    isTtangCrawlSlot,
 } from '../src/lib/crawl-schedule-health.mjs';
 
 const eventName = process.env.TRIGGER_EVENT || 'manual';
@@ -41,6 +42,11 @@ const isMorningPickSlot = automatic
     && expectedDate !== null
     && expectedDate.getUTCHours() === 23
     && expectedDate.getUTCMinutes() === 17;
+const skipSources = automatic
+    && expectedDate !== null
+    && !isTtangCrawlSlot(expectedDate)
+    ? 'ttang'
+    : '';
 const shouldRun = !checkCache
     || !automatic
     || expectedTimestamp === null
@@ -66,6 +72,7 @@ if (checkCache) {
 }
 console.log(`[preflight] should_run=${shouldRun}`);
 console.log(`[preflight] is_morning_pick_slot=${isMorningPickSlot}`);
+console.log(`[preflight] skip_sources=${skipSources || 'none'}`);
 console.log(`[preflight] reason=${reason}`);
 
 const outputPath = process.env.GITHUB_OUTPUT;
@@ -73,6 +80,7 @@ if (outputPath) {
     fs.appendFileSync(outputPath, [
         `should_run=${shouldRun}`,
         `is_morning_pick_slot=${isMorningPickSlot}`,
+        `skip_sources=${skipSources}`,
         `expected_at=${expectedAt || ''}`,
         `delay_minutes=${delayMinutes ?? ''}`,
         `last_completed_at=${lastCompletedAt || ''}`,
@@ -94,6 +102,7 @@ if (summaryPath) {
             `- Last completed at: \`${lastCompletedAt || 'none'}\``,
             `- Crawl required: \`${shouldRun}\` (${reason})`,
             `- Morning pick slot: \`${isMorningPickSlot}\``,
+            `- Scheduled source skips: \`${skipSources || 'none'}\``,
         ] : []),
         '',
     ].join('\n'));

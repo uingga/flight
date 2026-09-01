@@ -9,6 +9,12 @@ export const DAILY_CRAWL_CRONS = Object.freeze([
     '31 8 * * *',
 ]);
 
+// 땡처리닷컴은 차단 위험을 낮추기 위해 일반 4개 회차 중 08:17·14:23 KST만 수집한다.
+export const TTANG_CRAWL_CRONS = Object.freeze([
+    '17 23 * * *',
+    '23 5 * * *',
+]);
+
 // daily-crawl.yml에서 한 번에 확인하는 일반 여행사다. 마이리얼트립은 별도
 // 워크플로우 소스이므로 전체 일반 크롤 완료 시각을 복원할 때 포함하지 않는다.
 export const FULL_CRAWL_SOURCE_KEYS = Object.freeze([
@@ -57,6 +63,19 @@ export function parseDailyCron(cron) {
     const hour = Number(match[2]);
     if (minute < 0 || minute > 59 || hour < 0 || hour > 23) return null;
     return { minute, hour };
+}
+
+/** 예약 회차 시각이 땡처리닷컴 수집 허용 회차인지 확인한다. */
+export function isTtangCrawlSlot(expectedAt) {
+    const expectedTimestamp = toTimestamp(expectedAt);
+    if (expectedTimestamp === null) return false;
+    const expected = new Date(expectedTimestamp);
+    return TTANG_CRAWL_CRONS.some(cron => {
+        const parsed = parseDailyCron(cron);
+        return parsed
+            && expected.getUTCHours() === parsed.hour
+            && expected.getUTCMinutes() === parsed.minute;
+    });
 }
 
 /** 해당 일일 cron 식이 now 이전에 가장 최근에 예정됐던 시각을 반환한다. */

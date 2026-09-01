@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import type { Flight } from '@/types/flight';
+import { isInterparkBenchmarkApplicable } from '@/lib/interpark-benchmark';
 import styles from './page.module.css';
 
 interface FlightsResponse {
@@ -306,7 +307,7 @@ export default function TicketCatalogPreview() {
                                         <div className={styles.cardPriceRow}>
                                             <span>{seatCount(flight) ? `${seatCount(flight)}석 남음` : '좌석 확인'}</span>
                                             <div>
-                                                {flight.discountRate && flight.discountRate > 0 ? <small>-{Math.round(flight.discountRate)}%</small> : null}
+                                                {isInterparkBenchmarkApplicable(flight) && flight.discountRate && flight.discountRate > 0 ? <small>-{Math.round(flight.discountRate)}%</small> : null}
                                                 <strong>{formatPrice(flight.price)}</strong>
                                             </div>
                                         </div>

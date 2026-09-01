@@ -64,10 +64,22 @@ function resolveCityCode(city, airport) {
     return null;
 }
 
+function isInterparkBenchmarkApplicable(flight) {
+    const airport = String(flight.departure?.airport || '').trim().toUpperCase();
+    if (airport === 'ICN' || airport === 'GMP') return true;
+    if (/^[A-Z]{3}$/.test(airport)) return false;
+    return /서울|인천|김포/.test(String(flight.departure?.city || '').replace(/\s+/g, ''));
+}
+
 let updated = 0;
 let noData = 0;
 
 for (const f of cache.flights) {
+    if (!isInterparkBenchmarkApplicable(f)) {
+        f.discountRate = 0;
+        noData++;
+        continue;
+    }
     const cityCode = resolveCityCode(f.arrival?.city || '', f.arrival?.airport);
     if (!cityCode) { f.discountRate = 0; noData++; continue; }
 

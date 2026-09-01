@@ -13,6 +13,7 @@ import {
     getNearbyNaverRecommendationAdjustment,
 } from '@/lib/naver-nearby-price';
 import { normalizeCity } from '@/lib/utils/flight-helpers';
+import { isInterparkBenchmarkApplicable } from '@/lib/interpark-benchmark';
 import {
     compactPublicPriceHistory,
     publicFlightRouteKey,
@@ -247,6 +248,9 @@ export async function GET(request: NextRequest) {
         // 항공사명 정규화
         allFlights = allFlights.map(f => ({
             ...f,
+            // 인터파크 추천 가격은 서울(SEL) 출발 기준이다. 다음 크롤 전까지 남아 있을 수 있는
+            // 과거 지방 출발 할인율도 API 응답에서 즉시 무효화한다.
+            discountRate: isInterparkBenchmarkApplicable(f) ? f.discountRate : 0,
             // 신고 후 한 항공권만 다시 확인한 경우에는 그 항공권의 시각이 여행사 전체
             // 크롤 시각보다 정확하다. 개별 확인값을 지우지 않고 우선 사용한다.
             priceCheckedAt: f.priceCheckedAt || sourceUpdatedAt[f.source] || lastUpdated || undefined,
@@ -492,6 +496,7 @@ export async function GET(request: NextRequest) {
                 const codeToCityName: Record<string, string> = {};
                 const allCityNames = new Set<string>();
                 allFlights.forEach(f => {
+                    if (!isInterparkBenchmarkApplicable(f)) return;
                     if (f.arrival?.city) {
                         const code = resolveCityCode(f.arrival.city, f.arrival.airport);
                         const cityName = f.arrival.city.replace(/\([^)]+\)/, '').trim();
@@ -540,6 +545,10 @@ export async function GET(request: NextRequest) {
             count: allFlights.length,
             flights: allFlights,
             interparkPrices,
+            interparkBenchmarkScope: {
+                originCity: 'SEL',
+                originAirports: ['ICN', 'GMP'],
+            },
             sources: {
 
                 ybtour: allFlights.filter(f => f.source === 'ybtour').length,

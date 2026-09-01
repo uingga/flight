@@ -6,7 +6,7 @@
 
 - **Stack**: Next.js 14 (App Router), TypeScript, CSS Modules, Playwright/Puppeteer
 - **Deploy**: Vercel (https://tikitikit.kr)
-- **Automation**: GitHub Actions — 일반 여행사 하루 4회 자동 크롤링 (`daily-crawl.yml`)
+- **Automation**: GitHub Actions — 일반 워크플로 하루 4회. 땡처리닷컴은 그중 08:17·14:23 KST 2회만 수집 (`daily-crawl.yml`)
 - **Package Manager**: npm
 
 ## Data Sources (6 Travel Agencies)
@@ -77,7 +77,10 @@ src/components/Dashboard.tsx (client component)
 
 ### 일반 여행사 차단 보호
 
-- 일반 5개 여행사는 하루 4회만 실행하며 워크플로 시작 0~5분, 소스 시작 최대 90초를 분산한다.
+- 일반 워크플로는 하루 4회 실행한다. 노랑풍선·하나투어·모두투어·온라인투어는 4회 모두,
+  땡처리닷컴은 08:17·14:23 KST 2회만 요청한다. 11:12·17:31의 땡처리 데이터는 이전 정상본을
+  보존하고 `일정상 미실행`으로 기록하며 실패 횟수에 넣지 않는다. 워크플로 시작 0~5분,
+  실제 소스 시작 최대 90초를 분산한다.
 - 401·403·429·CAPTCHA, 원본 0건, 직전 정상 원본의 60% 미만 급감은 소스별 차단으로 판정해
   이전 항공권을 유지하고 GitHub 요청을 24시간 중단한다.
 - 전체 결과까지 폐기되는 회차에도 항공권 timestamp는 갱신하지 않되 차단 회로·실패 횟수와
@@ -90,6 +93,9 @@ src/components/Dashboard.tsx (client component)
   처리한다. 빈 결과는 3일 뒤, 반복 빈 결과는 7일 뒤 재확인하고 항공사·응답 형식 불일치는
   어댑터가 바뀔 때만 다시 본다. 시간 단계의 차단도 `ttang` 소스 차단으로 처리해 GitHub의
   `ttang`만 쉬고 PC가 `--sources=ttang`으로 대체한다.
+- 인터파크 월별·인기 최저가 추천 API는 공식 화면의 서울(`SEL`, 인천·김포) 출발 기준으로만
+  사용한다. 지방 출발 항공권은 이 값으로 제거하거나 할인율을 계산하지 않으며, 과거 캐시에
+  남은 지방 출발 `discountRate`도 저장·API 응답 시 0으로 정규화한다.
 - 노랑풍선 상세 시간 POST도 최종 노출 필터 뒤에 신규 미조회 항공권부터 회차당 최대 40건만
   처리한다. 성공값과 마지막 시도 상태를 저장하고 일시 오류는 2시간, 형식 불일치는 3일·반복
   7일 간격으로 늦춘다. 시간 단계 차단은 `ybtour` 소스만 쉬고 PC가 `--sources=ybtour`로 대체한다.
@@ -113,6 +119,8 @@ src/components/Dashboard.tsx (client component)
   자동 대상에서 제외하며 어드민에 수동 캡처 필요 상태만 표시한다. PC 자동 대체 대상은 각
   여행사의 GitHub 실패 회차를 PC로 대체하고 다음 회차는 쉰 뒤 그다음 회차를 다시 수집하는
   방식으로, GitHub 차단 회로가 열린 24시간 동안 소스별 수집·휴식을 번갈아 적용한다.
+  땡처리닷컴 PC 대체는 08:17·14:23 회차에만 허용하고, 같은 KST 날짜 앞 허용 회차에서 이미
+  성공했거나 PC 차단 회로가 열렸다면 다시 요청하지 않는다.
 - 명시적 접근 제한은 같은 KST 날짜에 다시 실행하지 않고 다음 날 정규 네이버 회차에서 한 번
   재탐색한다. 정확히 24시간을 계산해 다음 날 회차까지 건너뛰지는 않는다. 같은 날 자동 재실행,
   동시 수동 실행, Task Scheduler 재시작은 허용하지 않는다.

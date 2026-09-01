@@ -20,6 +20,8 @@ interface SiteStats {
     skipped?: boolean;
     /** 차단 휴식으로 건너뛴 경우 자동 요청을 다시 허용하는 시각. */
     skippedUntil?: string;
+    /** 예약 정책·차단 회로·부분 실행 중 어느 이유로 요청하지 않았는지 구분한다. */
+    skipReason?: 'schedule' | 'circuit' | 'not-requested';
     /** 운영자가 일반 브라우저 캡처를 검수해 반영한 별도 수집 기록이다. */
     manual?: boolean;
     /** GitHub 차단 회로가 열린 소스를 Windows PC에서 대체 수집한 기록이다. */
@@ -170,6 +172,7 @@ export function logCrawlResults(
         preserved?: boolean;
         skipped?: boolean;
         skippedUntil?: string;
+        skipReason?: 'schedule' | 'circuit' | 'not-requested';
         manual?: boolean;
         localFallback?: boolean;
         added?: number;
@@ -206,6 +209,7 @@ export function logCrawlResults(
         preserved: meta?.preserved || undefined,
         skipped: meta?.skipped || undefined,
         skippedUntil: meta?.skipped ? meta.skippedUntil : undefined,
+        skipReason: meta?.skipped ? meta.skipReason : undefined,
         manual: meta?.manual || undefined,
         localFallback: meta?.localFallback || undefined,
         added: meta?.added,
@@ -274,7 +278,7 @@ export function logCrawlResults(
         : meta?.localFallback
         ? `   총: ${total}개 (PC 대체 수집 ${meta.scraped ?? 0}개)`
         : meta?.skipped
-            ? `   총: ${total}개 (부분 크롤에서 실행하지 않음)`
+            ? `   총: ${total}개 (${meta.skipReason === 'schedule' ? '예약 정책상 미실행, 기존 데이터 보존' : '요청 없이 건너뜀'})`
         : `   총: ${total}개`);
     if (byCity) {
         const topCities = Object.entries(byCity)

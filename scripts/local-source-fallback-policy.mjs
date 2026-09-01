@@ -3,6 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
     DAILY_CRAWL_CRONS,
+    isTtangCrawlSlot,
     parseDailyCron,
 } from '../src/lib/crawl-schedule-health.mjs';
 
@@ -63,6 +64,14 @@ function isPcFallbackCollectionSlot(circuit, expectedAt, crons = DAILY_CRAWL_CRO
     return distance !== null && distance % 2 === 0;
 }
 
+function kstDate(timestampValue) {
+    const value = timestamp(timestampValue);
+    if (value === null) return null;
+    return new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit',
+    }).format(new Date(value));
+}
+
 export function evaluateLocalSourceFallback({
     now = new Date(),
     cache,
@@ -113,6 +122,17 @@ export function evaluateLocalSourceFallback({
         if (localNextProbeAt !== null && nowTimestamp < localNextProbeAt) {
             localCooldownSources.push(source);
             continue;
+        }
+        // 땡처리닷컴은 정규 수집과 같은 08:17·14:23 KST 회차만 PC 대체를 허용한다.
+        // 같은 KST 날짜 앞 허용 회차에서 이미 성공했다면 두 번째 중복 접속도 하지 않는다.
+        if (source === 'ttang') {
+            const previousLocal = circuit?.localFallback;
+            const alreadySucceededToday = previousLocal?.status === 'success'
+                && kstDate(previousLocal.lastAttemptAt) === kstDate(expectedAt);
+            if (!isTtangCrawlSlot(expectedAt) || alreadySucceededToday) {
+                scheduleThrottledSources.push(source);
+                continue;
+            }
         }
         // GitHub 실패가 발생한 회차는 PC가 대체하고, 그 다음 회차는 쉬는 식으로
         // 소스별 차단 회로가 열려 있는 24시간 동안 수집/휴식을 번갈아 적용한다.

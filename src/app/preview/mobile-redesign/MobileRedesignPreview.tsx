@@ -26,6 +26,7 @@ import {
 } from '@/lib/ui/overlay-history';
 import { checkIsMobile } from '@/lib/utils/mobile-url';
 import { getComparisonFreshness } from '@/lib/price-quality';
+import { isInterparkBenchmarkApplicable } from '@/lib/interpark-benchmark';
 import type { Flight } from '@/types/flight';
 import AccountSheet from '@/components/account/AccountSheet';
 import { useAccount, type AccountFlightSnapshot, type AccountSearchFilters } from '@/components/account/useAccount';
@@ -180,6 +181,9 @@ const departureName = (flight: Flight) => {
 };
 
 const effectivePrice = (flight: Flight) => flight.price + (flight.source === 'ttang' ? TTANG_TICKETING_FEE : 0);
+const storedInterparkDiscountRate = (flight: Flight) => (
+    isInterparkBenchmarkApplicable(flight) ? Math.max(0, flight.discountRate || 0) : 0
+);
 
 const toAccountSnapshot = (flight: Flight): AccountFlightSnapshot => ({
     id: flight.id,
@@ -752,7 +756,7 @@ const datePeriodMatches = (
 };
 
 const recommendedScore = (flight: Flight) => {
-    const discount = Math.max(0, flight.discountRate || 0);
+    const discount = storedInterparkDiscountRate(flight);
     const seatBonus = flight.availableSeats && flight.availableSeats <= 9 ? 8 : 0;
     return effectivePrice(flight) - discount * 2_500 - seatBonus * 1_000;
 };
@@ -789,6 +793,7 @@ const monthDistance = (first: string, second: string) => {
 };
 
 const getAverageDiscountRate = (flight: Flight, benchmarks: InterparkPrices) => {
+    if (!isInterparkBenchmarkApplicable(flight)) return 0;
     const city = stripAirport(flight.arrival.city);
     const departureMonth = flight.departure.date
         ?.replace(/\./g, '-')
@@ -1983,7 +1988,7 @@ export default function MobileRedesignPreview({
 
         const harshCandidates = displayedFlights.flatMap(flight => {
             const detail = harshScheduleDetail(flight);
-            const attractive = effectivePrice(flight) <= 220_000 || Math.max(0, flight.discountRate || 0) >= 20;
+            const attractive = effectivePrice(flight) <= 220_000 || storedInterparkDiscountRate(flight) >= 20;
             return detail && attractive ? [{ flight, detail }] : [];
         }).sort((a, b) => recommendedScore(a.flight) - recommendedScore(b.flight));
 
@@ -2206,7 +2211,7 @@ export default function MobileRedesignPreview({
             const homeDate = returnArrivalDate(harshCandidate.flight);
             const nextDayArrival = !!returnDate && !!homeDate && homeDate.getTime() > returnDate.getTime();
             editorialCandidates.push({
-                score: 76 + Math.max(0, harshCandidate.flight.discountRate || 0),
+                score: 76 + storedInterparkDiscountRate(harshCandidate.flight),
                 lane: 'trip',
                 insight: {
                     id: 'editorial-harsh-time',
@@ -2712,12 +2717,16 @@ export default function MobileRedesignPreview({
         const hasUnfilteredFlight = flights.some(flight => normalizeCity(flight.arrival.city) === arrivalCity);
         if (hasUnfilteredFlight) return null;
 
-        const months = Object.values(interparkPrices[arrivalCity] || {});
+        const departureCity = departure === '전체' ? '인천' : departure.replace('/김포', '').replace('/김해', '');
+        const canUseInterpark = isInterparkBenchmarkApplicable({
+            departure: { city: departureCity },
+        });
+        const months = canUseInterpark ? Object.values(interparkPrices[arrivalCity] || {}) : [];
         const suggestedPrice = months.length
             ? Math.round(months.reduce((sum, month) => sum + month.avg, 0) / months.length / 10_000) * 10_000
             : undefined;
         return {
-            departureCity: departure === '전체' ? '인천' : departure.replace('/김포', '').replace('/김해', ''),
+            departureCity,
             arrivalCity,
             suggestedPrice,
         };

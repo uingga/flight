@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { isInterparkBenchmarkApplicable } from './interpark-benchmark';
 
 export interface NaverRefreshFlight {
     source: string;
@@ -7,6 +8,8 @@ export interface NaverRefreshFlight {
     flightNumber?: string;
     discountRate?: number;
     departure: {
+        airport?: string;
+        city?: string;
         date: string;
         time?: string;
         arrivalTime?: string;
@@ -105,7 +108,8 @@ export function getNaverRefreshTier(
         ? kstDayNumber(departureTimestamp) - kstDayNumber(now)
         : Number.POSITIVE_INFINITY;
     const departsSoon = daysUntilDeparture >= 0 && daysUntilDeparture <= config.priorityDepartureDays;
-    const highDiscount = Number(flight.discountRate || 0) >= config.priorityDiscountRate;
+    const highDiscount = isInterparkBenchmarkApplicable(flight)
+        && Number(flight.discountRate || 0) >= config.priorityDiscountRate;
 
     return departsSoon || highDiscount ? 'priority' : 'standard';
 }

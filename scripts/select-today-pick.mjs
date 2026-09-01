@@ -42,7 +42,15 @@ function freshnessMultiplier(checkedAt, now) {
     return 1.35;
 }
 
+function isInterparkBenchmarkApplicable(flight) {
+    const airport = String(flight.departure?.airport || '').trim().toUpperCase();
+    if (airport === 'ICN' || airport === 'GMP') return true;
+    if (/^[A-Z]{3}$/.test(airport)) return false;
+    return /서울|인천|김포/.test(String(flight.departure?.city || '').replace(/\s+/g, ''));
+}
+
 function interparkMonthData(flight, interparkPrices) {
+    if (!isInterparkBenchmarkApplicable(flight)) return null;
     const city = (flight.arrival?.city || '').replace(/\([^)]+\)/, '').trim();
     const depMonth = (flight.departure?.date || '').replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 7);
     const cityData = interparkPrices[city];

@@ -19,6 +19,7 @@ import {
     type NaverSellerProbePage,
 } from '../src/lib/naver-seller-probe';
 import { resolveCityCode } from '../src/lib/scrapers/interpark';
+import { isInterparkBenchmarkApplicable } from '../src/lib/interpark-benchmark';
 import { getRecommendationFreshness } from '../src/lib/flight-recommendation';
 import {
     buildNaverPriceKey,
@@ -314,7 +315,10 @@ try {
             const entry = naverPrices[key];
             const decision = evaluateNaverRefresh(entry, f, Date.now(), REFRESH_CONFIG);
             const priority = priorityByKey.get(key);
-            const reason = `${priority ? naverCrawlPriorityGroupLabel(priority) : naverRefreshReasonLabel(decision.reason)} · ${entry ? `${Math.round((Date.now() - attemptTimestamp(entry)) / 3600000)}시간 전` : `할인율 ${f.discountRate ?? 0}%`}`;
+            const initialContext = isInterparkBenchmarkApplicable(f)
+                ? `할인율 ${f.discountRate ?? 0}%`
+                : '서울 기준 할인율 미적용';
+            const reason = `${priority ? naverCrawlPriorityGroupLabel(priority) : naverRefreshReasonLabel(decision.reason)} · ${entry ? `${Math.round((Date.now() - attemptTimestamp(entry)) / 3600000)}시간 전` : initialContext}`;
             console.log(`  ${String(i + 1).padStart(2)}. ${f.departure.city}→${f.arrival.city} ${normalizeDate(f.departure.date)} — ${reason}`);
         });
         process.exit(0);
@@ -843,7 +847,9 @@ function provisionalRecommendationScore(flight: FlightData): number {
         route?.outboundArrival || flight.arrival.airport,
     );
     const departureMonth = normalizeDate(flight.departure.date).substring(0, 7);
-    const cityData = cityCode ? interparkPrices[cityCode] : undefined;
+    const cityData = isInterparkBenchmarkApplicable(flight) && cityCode
+        ? interparkPrices[cityCode]
+        : undefined;
     let benchmark = cityData?.[departureMonth];
     if (!benchmark && cityData) {
         const closestMonth = Object.keys(cityData).sort().reduce((best, candidateMonth) => {

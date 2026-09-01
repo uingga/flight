@@ -43,21 +43,29 @@ test('alternates PC collection and rest from each source failure slot', () => {
             now: '2026-08-30T02:20:00.000Z',
             fullCrawlUpdatedAt: '2026-08-30T02:18:00.000Z',
             shouldRun: true,
+            sources: ['ybtour', 'hanatour', 'onlinetour'],
+            throttled: ['ttang'],
         },
         {
             now: '2026-08-30T05:30:00.000Z',
             fullCrawlUpdatedAt: '2026-08-30T05:25:00.000Z',
             shouldRun: false,
+            sources: [],
+            throttled: ['ybtour', 'hanatour', 'onlinetour', 'ttang'],
         },
         {
             now: '2026-08-30T08:40:00.000Z',
             fullCrawlUpdatedAt: '2026-08-30T08:35:00.000Z',
             shouldRun: true,
+            sources: ['ybtour', 'hanatour', 'onlinetour'],
+            throttled: ['ttang'],
         },
         {
             now: '2026-08-30T23:25:00.000Z',
             fullCrawlUpdatedAt: '2026-08-30T23:23:00.000Z',
             shouldRun: false,
+            sources: [],
+            throttled: ['ybtour', 'hanatour', 'onlinetour', 'ttang'],
         },
     ]) {
         const result = evaluateLocalSourceFallback({
@@ -80,13 +88,48 @@ test('alternates PC collection and rest from each source failure slot', () => {
         );
         assert.deepEqual(
             result.sources,
-            sample.shouldRun ? ['ybtour', 'hanatour', 'onlinetour', 'ttang'] : []
+            sample.sources,
         );
         assert.deepEqual(
             result.scheduleThrottledSources,
-            sample.shouldRun ? [] : ['ybtour', 'hanatour', 'onlinetour', 'ttang']
+            sample.throttled,
         );
     }
+});
+
+test('Ttang PC fallback runs only at 08:17 or 14:23 and does not repeat after a same-day success', () => {
+    const active = circuit({
+        openedAt: '2026-08-30T05:25:00.000Z',
+        nextProbeAt: '2026-08-31T05:25:00.000Z',
+    });
+    const evening = evaluateLocalSourceFallback({
+        now: '2026-08-30T08:40:00.000Z', // 17:31 KST slot
+        cache: {
+            fullCrawlUpdatedAt: '2026-08-30T08:35:00.000Z',
+            sourceCircuits: { ttang: active },
+        },
+    });
+    assert.equal(evening.shouldRun, false);
+    assert.deepEqual(evening.scheduleThrottledSources, ['ttang']);
+
+    const secondAllowedSlot = evaluateLocalSourceFallback({
+        now: '2026-08-30T05:30:00.000Z', // 14:23 KST slot
+        cache: {
+            fullCrawlUpdatedAt: '2026-08-30T05:25:00.000Z',
+            sourceCircuits: {
+                ttang: {
+                    ...active,
+                    localFallback: {
+                        status: 'success',
+                        lastAttemptAt: '2026-08-29T23:25:00.000Z', // 같은 KST 날짜 08:25 성공
+                        detail: 'PC 대체 수집 성공',
+                    },
+                },
+            },
+        },
+    });
+    assert.equal(secondAllowedSlot.shouldRun, false);
+    assert.deepEqual(secondAllowedSlot.scheduleThrottledSources, ['ttang']);
 });
 
 test('anchors alternating PC slots independently for each failed source', () => {

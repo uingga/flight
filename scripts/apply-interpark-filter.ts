@@ -1,6 +1,9 @@
 import fs from 'fs';
 import path from 'path';
-import { resolveCityCode } from '../src/lib/scrapers/interpark';
+import {
+    clearUnsupportedInterparkDiscount,
+    evaluateInterparkBenchmark,
+} from '../src/lib/interpark-benchmark';
 
 const cachePath = path.resolve(process.cwd(), 'data/all-flights-cache.json');
 const benchmarkPath = path.resolve(process.cwd(), 'data/interpark-prices.json');
@@ -17,34 +20,17 @@ console.log(`마이리얼트립 필터 전: ${mrtBefore}건`);
 let removed = 0;
 cache.flights = cache.flights.filter((f: any) => {
     if (f.source !== 'myrealtrip') return true;
-
-    const cityCode = resolveCityCode(f.arrival?.city || '', f.arrival?.airport);
-    if (!cityCode) return true;
-
-    const depDate = f.departure?.date || '';
-    const dateStr = depDate.replace(/[^0-9\-\.]/g, '').replace(/\./g, '-').replace(/-+$/, '');
-    const dateMatch = dateStr.match(/^(\d{4})-(\d{2})/);
-    if (!dateMatch) return true;
-
-    const yearMonth = `${dateMatch[1]}-${dateMatch[2]}`;
-    const cityPrices = benchmark.prices?.[cityCode];
-    if (!cityPrices || !cityPrices[yearMonth]) return true;
-
-    const interparkAvg = cityPrices[yearMonth].avg;
-    if (f.price > interparkAvg) {
-        console.log(`  ❌ ${f.arrival?.city} ${yearMonth} ${f.price.toLocaleString()}원 > 평균 ${interparkAvg.toLocaleString()}원`);
+    const evaluation = evaluateInterparkBenchmark(f, benchmark);
+    f.discountRate = evaluation.discountRate;
+    if (!evaluation.keep) {
+        console.log(`  ❌ ${f.arrival?.city} ${evaluation.yearMonth} ${f.price.toLocaleString()}원 > 평균 ${evaluation.average?.toLocaleString()}원`);
         removed++;
         return false;
     }
-
-    // 할인율 계산
-    const interparkLowest = cityPrices[yearMonth].lowest;
-    f.discountRate = interparkLowest > 0
-        ? Math.round((1 - f.price / interparkLowest) * 100)
-        : 0;
-
     return true;
 });
+
+cache.flights.forEach((flight: any) => clearUnsupportedInterparkDiscount(flight));
 
 const mrtAfter = cache.flights.filter((f: any) => f.source === 'myrealtrip').length;
 console.log(`\n제거: ${removed}건`);

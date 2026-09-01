@@ -8,6 +8,8 @@ import {
     DAILY_CRAWL_CRONS,
     getCrawlScheduleHealth,
     getFullCrawlUpdatedAt,
+    isTtangCrawlSlot,
+    TTANG_CRAWL_CRONS,
 } from '../src/lib/crawl-schedule-health.mjs';
 import { getCrawlDispatchBlocker } from '../src/lib/crawl-watchdog-dispatch.mjs';
 
@@ -135,6 +137,21 @@ test('health schedule stays in sync with daily-crawl.yml', () => {
         '23 5 * * *',
         '31 8 * * *',
     ]);
+});
+
+test('Ttang is scheduled only for the 08:17 and 14:23 general slots', () => {
+    assert.deepEqual([...TTANG_CRAWL_CRONS], ['17 23 * * *', '23 5 * * *']);
+    assert.equal(isTtangCrawlSlot('2026-08-28T23:17:00.000Z'), true);
+    assert.equal(isTtangCrawlSlot('2026-08-28T05:23:00.000Z'), true);
+    assert.equal(isTtangCrawlSlot('2026-08-28T02:12:00.000Z'), false);
+    assert.equal(isTtangCrawlSlot('2026-08-28T08:31:00.000Z'), false);
+
+    const workflow = fs.readFileSync('.github/workflows/daily-crawl.yml', 'utf8');
+    const crawler = fs.readFileSync('scripts/crawl-all.ts', 'utf8');
+    assert.match(workflow, /--skip-sources=\$SCHEDULED_SKIP_SOURCES/);
+    assert.match(workflow, /CRAWL_EXPECTED_AT: \$\{\{ needs\.preflight\.outputs\.expected_at \}\}/);
+    assert.match(crawler, /scheduledSkippedSources/);
+    assert.match(crawler, /skipReason: scheduledSkip \? 'schedule'/);
 });
 
 test('anti-block safeguards keep source starts distributed and MyRealTrip serialized', () => {
@@ -353,6 +370,7 @@ test('watchdog fallback keeps the missed crawl slot identity', () => {
 
     assert.equal(result.status, 0, result.stderr);
     assert.match(result.stdout, /\[trigger\] expected_at=2026-08-28T02:12:00\.000Z/);
+    assert.match(result.stdout, /\[preflight\] skip_sources=ttang/);
 });
 
 test('general crawl never selects or repairs today pick', () => {
@@ -380,6 +398,7 @@ test('watchdog fallback preserves the 08:17 morning-pick slot identity', () => {
 
     assert.equal(result.status, 0, result.stderr);
     assert.match(result.stdout, /\[preflight\] is_morning_pick_slot=true/);
+    assert.match(result.stdout, /\[preflight\] skip_sources=none/);
 });
 
 test('an active crawl blocks a fallback dispatch', () => {

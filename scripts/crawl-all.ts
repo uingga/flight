@@ -6,6 +6,10 @@ import { scrapeOnlineTour } from '../src/lib/scrapers/onlinetour';
 import { scrapeTtang } from '../src/lib/scrapers/ttang';
 import { scrapeMyrealtrip } from '../src/lib/scrapers/myrealtrip';
 import { scrapeInterparkBenchmark, resolveCityCode } from '../src/lib/scrapers/interpark';
+import {
+    clearUnsupportedInterparkDiscount,
+    evaluateInterparkBenchmark,
+} from '../src/lib/interpark-benchmark';
 import { logCrawlResults, recordCrawlAlerts } from '../src/lib/utils/crawl-logger';
 import { getEffectivePrice } from '../src/lib/price-quality';
 import {
@@ -83,6 +87,20 @@ const sourceStartJitterMaxMs = Number.isFinite(parsedSourceStartJitter)
         ? 90_000
         : 0;
 
+function nextTtangCrawlAt(expectedAt: string | undefined): string | undefined {
+    const expectedTimestamp = new Date(expectedAt || '').getTime();
+    if (!Number.isFinite(expectedTimestamp)) return undefined;
+    const dayStart = Math.floor(expectedTimestamp / 86_400_000) * 86_400_000;
+    const candidates: number[] = [];
+    for (let dayOffset = 0; dayOffset <= 2; dayOffset++) {
+        const day = dayStart + dayOffset * 86_400_000;
+        candidates.push(day + (5 * 60 + 23) * 60_000); // 14:23 KST
+        candidates.push(day + (23 * 60 + 17) * 60_000); // 다음 KST 날짜 08:17
+    }
+    const next = candidates.filter(timestamp => timestamp > expectedTimestamp).sort((a, b) => a - b)[0];
+    return next === undefined ? undefined : new Date(next).toISOString();
+}
+
 function sourceCircuitPauseText(circuit: SourceCircuitState, localFallback = false): string {
     const nextProbe = new Date(
         localFallback
@@ -117,11 +135,22 @@ function countBySource(flights: any[]): Record<string, number> {
 async function main() {
     const localSourceFallback = process.env.LOCAL_SOURCE_FALLBACK === '1';
     const sourceArg = process.argv.find(arg => arg.startsWith('--sources='));
+    const skipSourceArg = process.argv.find(arg => arg.startsWith('--skip-sources='));
     const requestedSources = sourceArg
         ? new Set(sourceArg.slice('--sources='.length).split(',').map(value => value.trim()).filter(Boolean))
         : null;
+    const scheduledSkippedSources = skipSourceArg
+        ? new Set(skipSourceArg.slice('--skip-sources='.length).split(',').map(value => value.trim()).filter(Boolean))
+        : new Set<string>();
     const crawlableSources = new Set<CrawlableSourceKey>(['ybtour', 'hanatour', 'modetour', 'onlinetour', 'ttang']);
 
+    const invalidSkippedSources = [...scheduledSkippedSources].filter(source => !crawlableSources.has(source as CrawlableSourceKey));
+    if (invalidSkippedSources.length > 0) {
+        throw new Error(`--skip-sources에 잘못된 값이 있습니다: ${invalidSkippedSources.join(', ')}`);
+    }
+    if (requestedSources && scheduledSkippedSources.size > 0) {
+        throw new Error('--sources와 --skip-sources는 함께 사용할 수 없습니다.');
+    }
     if (requestedSources) {
         const invalidSources = [...requestedSources].filter(source => !crawlableSources.has(source as CrawlableSourceKey));
         if (requestedSources.size === 0 || invalidSources.length > 0) {
@@ -133,6 +162,9 @@ async function main() {
             throw new Error('LOCAL_SOURCE_FALLBACK=1은 --sources와 함께 사용해야 합니다.');
         }
         console.log('🚀 전체 사이트 크롤링 시작...\n');
+        if (scheduledSkippedSources.size > 0) {
+            console.log(`⏭️ 예약 정책상 미실행: ${[...scheduledSkippedSources].join(', ')} (기존 운영 데이터 보존)\n`);
+        }
     }
 
     const allFlights: any[] = [];
@@ -170,7 +202,10 @@ async function main() {
 
     try {
         // 전체 또는 선택한 사이트 병렬 크롤링
-        console.log(`🔄 ${requestedSources ? requestedSources.size : 5}개 사이트 병렬 크롤링 시작...\n`);
+        const plannedSourceCount = requestedSources
+            ? requestedSources.size
+            : 5 - scheduledSkippedSources.size;
+        console.log(`🔄 ${plannedSourceCount}개 사이트 병렬 크롤링 시작...\n`);
 
         const scraperTasks = [
             { name: '노랑풍선', key: 'ybtour' as const, fn: () => scrapeYbtour(prevFlights) },
@@ -188,7 +223,7 @@ async function main() {
 
         const requestedTasks = requestedSources
             ? scraperTasks.filter(task => requestedSources.has(task.key))
-            : scraperTasks;
+            : scraperTasks.filter(task => !scheduledSkippedSources.has(task.key));
         const circuitSkipped = new Map<CrawlableSourceKey, SourceCircuitState>();
         const activeTasks = requestedTasks.filter(task => {
             const circuit = sourceCircuits[task.key];
@@ -590,48 +625,16 @@ async function main() {
                 console.log(`💾 인터파크 벤치마크 저장: ${benchmarkPath}`);
             }
 
-            // 인터파크 월 평균가보다 비싼 항공편 필터링
+            // 인터파크 월 평균가는 공식 화면의 서울(SEL) 출발 기준이다.
+            // 지방 출발에는 제거·할인율 계산을 적용하지 않는다.
             const beforeBenchmark = validRouteFlights.length;
             benchmarkedFlights = validRouteFlights.filter((f: any) => {
-                // 도착 도시 코드 추출 (resolveCityCode로 모든 형식 지원)
-                const cityCode = resolveCityCode(f.arrival?.city || '', f.arrival?.airport);
-                if (!cityCode) {
-                    f.discountRate = 0;
-                    return true; // 코드 없으면 유지
-                }
-
-                // 출발월 추출
-                const depDate = f.departure?.date || '';
-                const dateStr = depDate.replace(/[^0-9\-\.]/g, '').replace(/\./g, '-').replace(/-+$/, '');
-                const dateMatch = dateStr.match(/^(\d{4})-(\d{2})/);
-                if (!dateMatch) {
-                    f.discountRate = 0;
-                    return true; // 날짜 파싱 불가하면 유지
-                }
-
-                const yearMonth = `${dateMatch[1]}-${dateMatch[2]}`;
-
-                // 인터파크 월 평균가 조회
-                const cityPrices = benchmark.prices[cityCode];
-                if (!cityPrices || !cityPrices[yearMonth]) {
-                    f.discountRate = 0;
-                    return true; // 비교 데이터 없으면 유지
-                }
-
-                const interparkAvg = cityPrices[yearMonth].avg;
-
-                // 인터파크 월 평균가보다 비싸면 제거
-                if (f.price > interparkAvg) {
-                    console.log(`  ❌ 필터: ${f.arrival?.city} ${yearMonth} ${f.price.toLocaleString()}원 > 인터파크 평균 ${interparkAvg.toLocaleString()}원 (${f.source})`);
+                const evaluation = evaluateInterparkBenchmark(f, benchmark);
+                f.discountRate = evaluation.discountRate;
+                if (!evaluation.keep) {
+                    console.log(`  ❌ 필터: ${f.arrival?.city} ${evaluation.yearMonth} ${f.price.toLocaleString()}원 > 인터파크 평균 ${evaluation.average?.toLocaleString()}원 (${f.source})`);
                     return false;
                 }
-
-                // 인터파크 최저가 대비 할인율 계산
-                const interparkLowest = cityPrices[yearMonth].lowest;
-                f.discountRate = interparkLowest > 0
-                    ? Math.round((1 - f.price / interparkLowest) * 100)
-                    : 0;
-
                 return true;
             });
 
@@ -763,6 +766,9 @@ async function main() {
             benchmarkedFlights = [...benchmarkedFlights, ...untouchedFlights];
             console.log(`🔒 부분 크롤 미실행 여행사: 이전 최종 데이터 ${untouchedFlights.length}개 그대로 유지`);
         }
+
+        // 부분 크롤에서 이전 캐시를 그대로 붙인 경우에도 과거에 잘못 계산된 지방 출발 할인율을 남기지 않는다.
+        benchmarkedFlights.forEach((flight: any) => clearUnsupportedInterparkDiscount(flight));
 
         const lifecycleFlights = allFlights.filter((f: any) => {
             if (!Number.isFinite(Number(f.price)) || Number(f.price) <= 0) return false;
@@ -999,13 +1005,17 @@ async function main() {
                 cityStats[city] = (cityStats[city] || 0) + 1;
             });
             const isLocalFallbackAttempt = localSourceFallback && attempted.has(src);
+            const scheduledSkip = scheduledSkippedSources.has(src);
             logCrawlResults(src, finalCounts[src] || 0, undefined, cityStats, {
                 scraped: circuitSkipped.has(src as CrawlableSourceKey) ? undefined : scrapedCounts[src],
                 preserved: preservedSources.has(src),
                 // 마이리얼트립은 전체 회차에서도 이 스크립트가 실행하지 않는다.
                 // 실제 시도 여부만 기준으로 삼아 일반 5개 여행사 성공 수에 끼지 않게 한다.
                 skipped: !attempted.has(src) || circuitSkipped.has(src as CrawlableSourceKey),
-                skippedUntil: circuitSkipped.get(src as CrawlableSourceKey)?.nextProbeAt,
+                skippedUntil: scheduledSkip && src === 'ttang'
+                    ? nextTtangCrawlAt(process.env.CRAWL_EXPECTED_AT)
+                    : circuitSkipped.get(src as CrawlableSourceKey)?.nextProbeAt,
+                skipReason: scheduledSkip ? 'schedule' : circuitSkipped.has(src as CrawlableSourceKey) ? 'circuit' : 'not-requested',
                 localFallback: isLocalFallbackAttempt,
                 // 직전 GitHub 회차와 30분 안에 이어져도 별도 PC 회차로 남긴다.
                 // 첫 PC 소스가 새 엔트리를 만들고 같은 실행의 나머지 소스는 그 엔트리에 합쳐진다.

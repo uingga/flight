@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 /**
- * 원격 최신 크롤 로그에 이번 세션이 실제로 측정한 소스 기록만 합친다.
+ * 원격 최신 크롤 로그에 이번 세션이 측정했거나 명시적으로 건너뛴 소스 기록만 합친다.
  *
  *   node scripts/merge-crawl-log.mjs <target.json> <overlay.json> <source[,source...]>
  *
  * 긴 크롤 도중 다른 워크플로우가 남긴 로그를 파일 통째 복원으로 지우지 않도록
- * timestamp와 source 단위로 병합한다. scraped가 없고 preserved도 아닌 값은 다른
- * 워크플로우가 캐시를 단순 승계한 기록이므로 실제 실행으로 가져오지 않는다.
+ * timestamp와 source 단위로 병합한다. 예약 정책상 건너뜀은 어드민에서 실패와 구분해야
+ * 하므로 함께 옮기고, 아무 상태도 없는 단순 캐시 승계값만 제외한다.
  */
 
 import fs from 'node:fs';
@@ -17,9 +17,8 @@ const RETENTION_MS = 31 * 86_400_000;
 
 const isObject = (value) => Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 
-const wasMeasured = (stat) => isObject(stat)
-    && stat.skipped !== true
-    && (stat.scraped !== undefined || stat.preserved === true);
+const hasSessionEvent = (stat) => isObject(stat)
+    && (stat.skipped === true || stat.scraped !== undefined || stat.preserved === true);
 
 const timestampOf = (entry) => typeof entry?.timestamp === 'string'
     ? new Date(entry.timestamp).getTime()
@@ -47,7 +46,7 @@ export function mergeCrawlLogHistories(target, overlay, sourceKeys, now = Date.n
         if (!Number.isFinite(timestampOf(entry)) || !isObject(entry?.sites)) continue;
         const measuredSites = Object.fromEntries(
             selectedSources
-                .filter(source => wasMeasured(entry.sites[source]))
+                .filter(source => hasSessionEvent(entry.sites[source]))
                 .map(source => [source, { ...entry.sites[source] }]),
         );
         if (Object.keys(measuredSites).length === 0) continue;

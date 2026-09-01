@@ -79,7 +79,7 @@ Register-ScheduledTask `
 
 Write-Output "Installed $TaskName"
 Write-Output "Automation checkout: $AutomationDir"
-Write-Output 'Schedule: 08:17, 11:12, 14:23, 17:31 KST; active GitHub circuits only'
+Write-Output 'Schedule: 08:17, 11:12, 14:23, 17:31 KST; Ttang eligible only at 08:17 and 14:23'
 
 if ($RunNow) {
     Start-ScheduledTask -TaskName $TaskName

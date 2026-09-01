@@ -25,7 +25,7 @@ function compactCircuitCause(circuit?: { reason: 'blocked' | 'rate_limited'; det
 interface CrawlHistoryEntry {
     timestamp: string;
     runKind?: 'pc_fallback';
-    sites: Record<string, { total: number; scraped?: number; preserved?: boolean; skipped?: boolean; skippedUntil?: string; manual?: boolean; localFallback?: boolean; added?: number; removed?: number }>;
+    sites: Record<string, { total: number; scraped?: number; preserved?: boolean; skipped?: boolean; skippedUntil?: string; skipReason?: 'schedule' | 'circuit' | 'not-requested'; manual?: boolean; localFallback?: boolean; added?: number; removed?: number }>;
     alerts: string[];
 }
 
@@ -713,10 +713,19 @@ function formatKSTMinute(iso: string): string {
     });
 }
 
-function skippedUntilLabel(skippedUntil?: string): string {
+function skippedUntilLabel(
+    skippedUntil?: string,
+    skipReason?: 'schedule' | 'circuit' | 'not-requested',
+): string {
+    if (skipReason === 'schedule') {
+        return skippedUntil
+            ? `일정상 미실행 · 다음 수집 ${formatKSTMinute(skippedUntil)}`
+            : '일정상 미실행';
+    }
+    if (skipReason === 'not-requested') return '이 회차 미실행';
     return skippedUntil
-        ? `${formatKSTMinute(skippedUntil)}까지 건너뜀`
-        : '건너뜀 · 종료 시각 기록 없음';
+        ? `${formatKSTMinute(skippedUntil)}까지 차단 휴식`
+        : '차단 휴식 · 종료 시각 기록 없음';
 }
 
 function timeAgo(iso: string): string {
@@ -2461,6 +2470,7 @@ export default function AdminPage() {
                                     preserved: Boolean(entry.sites[source]?.preserved),
                                     skipped: Boolean(entry.sites[source]?.skipped),
                                     skippedUntil: entry.sites[source]?.skippedUntil,
+                                    skipReason: entry.sites[source]?.skipReason,
                                     manual: Boolean(entry.sites[source]?.manual),
                                     localFallback: Boolean(entry.sites[source]?.localFallback),
                                 }));
@@ -2476,6 +2486,7 @@ export default function AdminPage() {
                                     preserved: false,
                                     skipped: false,
                                     skippedUntil: undefined,
+                                    skipReason: undefined,
                                     manual: true,
                                     localFallback: false,
                                 }] : []),
@@ -2555,7 +2566,7 @@ export default function AdminPage() {
                                                                 : styles.sourceTrendBar}
                                                     style={{ height: entry.manual ? '24px' : entry.skipped ? '12px' : `${Math.max(5, Math.round((entry.value / peak) * 100))}%` }}
                                                     title={entry.skipped
-                                                        ? `${formatKST(entry.timestamp).replace(/\d{4}\. /, '')} · ${skippedUntilLabel(entry.skippedUntil)} (차단 휴식, 요청 없음)`
+                                                        ? `${formatKST(entry.timestamp).replace(/\d{4}\. /, '')} · ${skippedUntilLabel(entry.skippedUntil, entry.skipReason)} (요청 없음, 실패 아님)`
                                                         : `${formatKST(entry.timestamp).replace(/\d{4}\. /, '')} · ${entry.value.toLocaleString()}개${entry.manual ? ' · 수동 캡처 성공' : entry.preserved ? entry.localFallback ? ' · PC 대체 실패, 이전 데이터 사용' : ' · 수집 실패, 이전 데이터 사용' : entry.localFallback ? ' · PC 대체 수집 성공' : ' · 자동 수집'}`}
                                                 >
                                                     {entry.manual ? '✓' : entry.localFallback && !entry.preserved ? 'P' : ''}
@@ -3386,6 +3397,7 @@ export default function AdminPage() {
                                 preserved: Boolean(entry.sites[source]?.preserved),
                                 skipped: Boolean(entry.sites[source]?.skipped),
                                 skippedUntil: entry.sites[source]?.skippedUntil,
+                                skipReason: entry.sites[source]?.skipReason,
                                 manual: Boolean(entry.sites[source]?.manual),
                                 localFallback: Boolean(entry.sites[source]?.localFallback),
                             }));
@@ -3401,6 +3413,7 @@ export default function AdminPage() {
                                 preserved: false,
                                 skipped: false,
                                 skippedUntil: undefined,
+                                skipReason: undefined,
                                 manual: true,
                                 localFallback: false,
                             }] : []),
@@ -3537,7 +3550,7 @@ export default function AdminPage() {
                                                     : styles.sparkBar}
                                             style={{ height: h.manual ? '18px' : h.skipped ? '8px' : `${Math.max(4, Math.round((h.value / peak) * 100))}%` }}
                                             title={h.skipped
-                                                ? `${formatKST(h.ts).replace(/\d{4}\. /, '')} · ${skippedUntilLabel(h.skippedUntil)} (차단 휴식, 요청 없음)`
+                                                ? `${formatKST(h.ts).replace(/\d{4}\. /, '')} · ${skippedUntilLabel(h.skippedUntil, h.skipReason)} (요청 없음, 실패 아님)`
                                                 : `${formatKST(h.ts).replace(/\d{4}\. /, '')} · ${h.value.toLocaleString()}건${h.manual ? ' (수동 캡처 성공)' : h.preserved ? h.localFallback ? ' (PC 대체 실패, 이전 데이터 유지)' : ' (수집 실패, 이전 데이터 유지)' : h.localFallback ? ' (PC 대체 수집 성공)' : ' (자동 수집)'}`}
                                         >
                                             {h.manual ? '✓' : h.localFallback && !h.preserved ? 'P' : ''}
@@ -3723,9 +3736,11 @@ export default function AdminPage() {
                                                         {skipped && (
                                                             <span
                                                                 className={styles.skippedDataBadge}
-                                                                title="차단 휴식 때문에 요청하지 않았으며 실패 횟수에 포함하지 않습니다."
+                                                                title={stat?.skipReason === 'schedule'
+                                                                    ? '정규 수집 정책상 이 회차에는 요청하지 않았으며 기존 데이터를 보존했습니다. 실패 횟수에 포함하지 않습니다.'
+                                                                    : '요청하지 않은 회차이며 실패 횟수에 포함하지 않습니다.'}
                                                             >
-                                                                {skippedUntilLabel(stat?.skippedUntil)}
+                                                                {skippedUntilLabel(stat?.skippedUntil, stat?.skipReason)}
                                                             </span>
                                                         )}
                                                         {preserved && (

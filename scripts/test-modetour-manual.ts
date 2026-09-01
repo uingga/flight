@@ -111,22 +111,26 @@ const result = importModetourManualCapture({
     apply: true,
 });
 
-assert.equal(result.report.accepted, 1);
+// 인터파크 월평균가는 서울 출발 기준이므로 부산 출발 오사카 표도 제거하지 않는다.
+assert.equal(result.report.accepted, 2);
 assert.equal(result.report.updated, 1);
-assert.equal(result.report.inserted, 0);
+assert.equal(result.report.inserted, 1);
 assert.equal(result.report.review.length, 1);
-assert.equal(result.report.filteredByBenchmark.length, 1);
+assert.equal(result.report.filteredByBenchmark.length, 0);
 assert.equal(result.cache.fullCrawlUpdatedAt, '2026-08-31T00:00:00.000Z');
 assert.equal(result.cache.sourceUpdatedAt?.modetour, '2026-08-30T00:00:00.000Z');
 assert.equal(result.cache.staleStreak?.modetour, 2);
 assert.equal(result.cache.scrapedCounts?.modetour, 771);
 assert.ok(result.cache.sourceCircuits?.modetour);
-assert.equal(result.cache.flights.length, 2);
+assert.equal(result.cache.flights.length, 3);
 const updated = result.cache.flights.find(flight => flight.id === oldFlight.id);
 assert.equal(updated?.price, 194_000);
 assert.equal(updated?.firstSeen, '2026-08-20');
 assert.equal(updated?.naverLowest, 200_000);
 assert.equal(result.cache.flights.find(flight => flight.id === otherFlight.id)?.price, 150_000);
+const regionalOsaka = result.cache.flights.find(flight => flight.arrival.airport === 'KIX');
+assert.equal(regionalOsaka?.price, 430_000);
+assert.equal(regionalOsaka?.discountRate, 0);
 
 const completeResult = importModetourManualCapture({
     input: {

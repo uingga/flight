@@ -36,6 +36,14 @@ const BLOG_SCORE_WEIGHTS = {
     naver: 0.30,
 };
 
+function interparkDiscountRate(flight) {
+    const airport = String(flight.departure?.airport || '').trim().toUpperCase();
+    const seoulDeparture = airport === 'ICN' || airport === 'GMP'
+        || (!/^[A-Z]{3}$/.test(airport)
+            && /서울|인천|김포/.test(String(flight.departure?.city || '').replace(/\s+/g, '')));
+    return seoulDeparture ? Math.max(0, flight.discountRate || 0) : 0;
+}
+
 // ===== 프로덕션 API에서 항공편 가져오기 =====
 function fetchProductionFlights() {
     return new Promise((resolve, reject) => {
@@ -785,7 +793,7 @@ function rankBlogFlights(candidates, statsFlights = candidates) {
 
     const byPrice = [...candidates].sort((a, b) => getEffectiveBlogPrice(a) - getEffectiveBlogPrice(b));
     const priceRanks = new Map(byPrice.map((flight, index) => [flight.id, index]));
-    const maxDiscount = Math.max(1, ...candidates.map(flight => Math.max(0, flight.discountRate || 0)));
+    const maxDiscount = Math.max(1, ...candidates.map(interparkDiscountRate));
     const maxFlightCount = Math.max(1, ...Array.from(destinationStats.values()).map(stats => stats.flightCount));
     const maxSourceCount = Math.max(1, ...Array.from(destinationStats.values()).map(stats => stats.sources.size));
 
@@ -794,7 +802,7 @@ function rankBlogFlights(candidates, statsFlights = candidates) {
         const stats = destinationStats.get(dest) || { flightCount: 0, sources: new Set() };
         const rank = priceRanks.get(flight.id) || 0;
         const priceScore = candidates.length === 1 ? 100 : 100 * (1 - rank / (candidates.length - 1));
-        const discountScore = 100 * Math.max(0, flight.discountRate || 0) / maxDiscount;
+        const discountScore = 100 * interparkDiscountRate(flight) / maxDiscount;
         const volumeScore = 100 * Math.log1p(stats.flightCount) / Math.log1p(maxFlightCount);
         const sourceScore = 100 * stats.sources.size / maxSourceCount;
         const popularityScore = volumeScore * 0.6 + sourceScore * 0.4;

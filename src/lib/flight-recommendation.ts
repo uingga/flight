@@ -12,6 +12,7 @@ import {
 } from './price-quality';
 import { normalizeCity } from './utils/flight-helpers';
 import { getRegionByCity } from './utils/region-mapper';
+import { isInterparkBenchmarkApplicable } from './interpark-benchmark';
 
 export type InterparkPrices = Record<string, Record<string, { avg: number; lowest: number }>>;
 export type RecommendationPriceHistory = Record<string, Array<{ date: string; minPrice: number }>>;
@@ -326,7 +327,7 @@ function scoreFlight(
     priceAppealContext: PriceAppealContext,
 ): RecommendationScoreExplanation {
     const effectivePrice = getEffectivePrice(flight);
-    const interparkContext = departureAreaKey(flight) === 'SEOUL'
+    const interparkContext = isInterparkBenchmarkApplicable(flight)
         ? closestInterparkMonth(flight, interparkPrices)
         : { month: null, data: null };
     const { month, data: interparkMonth } = interparkContext;

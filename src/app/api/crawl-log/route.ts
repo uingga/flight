@@ -132,7 +132,7 @@ export async function GET(request: NextRequest) {
         let crawlHistory: Array<{
             timestamp: string;
             runKind?: 'pc_fallback';
-            sites: Record<string, { total: number; scraped?: number; preserved?: boolean; skipped?: boolean; skippedUntil?: string; manual?: boolean; localFallback?: boolean; added?: number; removed?: number }>;
+            sites: Record<string, { total: number; scraped?: number; preserved?: boolean; skipped?: boolean; skippedUntil?: string; skipReason?: 'schedule' | 'circuit' | 'not-requested'; manual?: boolean; localFallback?: boolean; added?: number; removed?: number }>;
             alerts: string[];
         }> = [];
         try {

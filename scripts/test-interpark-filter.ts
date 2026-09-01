@@ -1,4 +1,5 @@
 import { scrapeInterparkBenchmark, resolveCityCode } from '../src/lib/scrapers/interpark';
+import { evaluateInterparkBenchmark } from '../src/lib/interpark-benchmark';
 import fs from 'fs';
 
 async function test() {
@@ -15,24 +16,10 @@ async function test() {
 
     let removed = 0, kept = 0, noData = 0;
     flights.forEach((f: any) => {
-        const cityCode = resolveCityCode(f.arrival?.city || '');
-        if (!cityCode) { noData++; return; }
-
-        const depDate = f.departure?.date || '';
-        const dateStr = depDate.replace(/[^0-9\-\.]/g, '').replace(/\./g, '-').replace(/-+$/, '');
-        const dateMatch = dateStr.match(/^(\d{4})-(\d{2})/);
-        if (!dateMatch) { noData++; return; }
-
-        const yearMonth = `${dateMatch[1]}-${dateMatch[2]}`;
-        const cityPrices = benchmark.prices[cityCode];
-        if (!cityPrices || !cityPrices[yearMonth]) { noData++; return; }
-
-        // 월 평균가 기준
-        if (f.price > cityPrices[yearMonth].avg) {
-            removed++;
-        } else {
-            kept++;
-        }
+        const evaluation = evaluateInterparkBenchmark(f, benchmark);
+        if (!evaluation.applicable || !evaluation.average) noData++;
+        if (evaluation.keep) kept++;
+        else removed++;
     });
 
     console.log(`\n=== 월 평균가 기준 ===`);

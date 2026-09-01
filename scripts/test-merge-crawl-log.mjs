@@ -77,6 +77,30 @@ test('same timestamp merges source fields and alerts idempotently', () => {
     assert.deepEqual(second.entries[0].alerts, ['일반 경고', 'MRT 경고']);
 });
 
+test('scheduled source skips are merged as explicit non-failure events', () => {
+    const timestamp = '2026-08-31T02:20:00Z';
+    const session = {
+        entries: [entry(timestamp, {
+            ttang: {
+                total: 91,
+                skipped: true,
+                skipReason: 'schedule',
+                skippedUntil: '2026-08-31T05:23:00.000Z',
+            },
+        })],
+    };
+    const { history, mergedSessions } = mergeCrawlLogHistories(
+        { entries: [] },
+        session,
+        ['ttang'],
+        NOW,
+    );
+    assert.equal(mergedSessions, 1);
+    assert.equal(history.entries[0].sites.ttang.skipped, true);
+    assert.equal(history.entries[0].sites.ttang.skipReason, 'schedule');
+    assert.equal(history.entries[0].sites.ttang.preserved, undefined);
+});
+
 test('PC fallback session keeps its runner marker and source result', () => {
     const timestamp = '2026-08-31T09:05:00Z';
     const session = {

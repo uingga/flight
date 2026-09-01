@@ -27,6 +27,8 @@ const flight = (overrides: Partial<NaverRefreshFlight> = {}): NaverRefreshFlight
     flightNumber: 'TK101',
     discountRate: 10,
     departure: {
+        airport: 'ICN',
+        city: '인천',
         date: '2026-09-20',
         time: '08:00',
         arrivalTime: '10:00',
@@ -42,7 +44,11 @@ const flight = (overrides: Partial<NaverRefreshFlight> = {}): NaverRefreshFlight
 assert.equal(getNaverRefreshTier(flight(), now, config), 'standard');
 assert.equal(getNaverRefreshTier(flight({ discountRate: 20 }), now, config), 'priority');
 assert.equal(getNaverRefreshTier(flight({
-    departure: { date: '2026-09-10', time: '08:00', arrivalTime: '10:00' },
+    discountRate: 20,
+    departure: { airport: 'PUS', city: '부산', date: '2026-09-20' },
+}), now, config), 'standard');
+assert.equal(getNaverRefreshTier(flight({
+    departure: { airport: 'ICN', city: '인천', date: '2026-09-10', time: '08:00', arrivalTime: '10:00' },
 }), now, config), 'priority');
 
 const baseline = flight();
