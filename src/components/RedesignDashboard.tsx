@@ -8,6 +8,9 @@ interface RedesignDashboardProps {
     initialFlightCount?: number;
     initialLastUpdated?: string | null;
     initialTodayPickId?: string | null;
+    initialSharedFlightIds?: string[];
+    initialSharedDeparture?: string | null;
+    initialSharedArrival?: string | null;
 }
 
 /**
@@ -21,6 +24,9 @@ export default function RedesignDashboard({
     initialFlightCount,
     initialLastUpdated,
     initialTodayPickId,
+    initialSharedFlightIds,
+    initialSharedDeparture,
+    initialSharedArrival,
 }: RedesignDashboardProps) {
     return (
         <MobileRedesignPreview
@@ -31,6 +37,9 @@ export default function RedesignDashboard({
             initialFlightCount={initialFlightCount}
             initialLastUpdated={initialLastUpdated}
             initialTodayPickId={initialTodayPickId}
+            initialSharedFlightIds={initialSharedFlightIds}
+            initialSharedDeparture={initialSharedDeparture}
+            initialSharedArrival={initialSharedArrival}
         />
     );
 }

@@ -91,6 +91,9 @@ interface MobileRedesignPreviewProps {
     initialFlightCount?: number;
     initialLastUpdated?: string | null;
     initialTodayPickId?: string | null;
+    initialSharedFlightIds?: string[];
+    initialSharedDeparture?: string | null;
+    initialSharedArrival?: string | null;
 }
 
 interface RouteAlertTarget {
@@ -1090,6 +1093,9 @@ export default function MobileRedesignPreview({
     initialFlightCount = 0,
     initialLastUpdated = null,
     initialTodayPickId = null,
+    initialSharedFlightIds = [],
+    initialSharedDeparture = null,
+    initialSharedArrival = null,
 }: MobileRedesignPreviewProps) {
     const account = useAccount();
     const hasInitialFlights = initialFlights.length > 0;
@@ -1136,6 +1142,7 @@ export default function MobileRedesignPreview({
     const [visibleCount, setVisibleCount] = useState(18);
     const [toast, setToast] = useState('');
     const [expiredShareNotice, setExpiredShareNotice] = useState<{ arrival: string | null } | null>(null);
+    const [sharedFlightIds, setSharedFlightIds] = useState<string[]>(initialSharedFlightIds);
     const [showScrollTop, setShowScrollTop] = useState(false);
     const [detailHasMoreBelow, setDetailHasMoreBelow] = useState(false);
     const [detailHasScrolled, setDetailHasScrolled] = useState(false);
@@ -1854,6 +1861,13 @@ export default function MobileRedesignPreview({
     }, [recommendationScoreState, recommendationScores]);
 
     const filteredFlights = useMemo(() => {
+        if (sharedFlightIds.length > 0) {
+            const flightsById = new Map(flights.map(flight => [flight.id, flight]));
+            return sharedFlightIds
+                .map(flightId => flightsById.get(flightId))
+                .filter((flight): flight is Flight => Boolean(flight));
+        }
+
         const referenceDate = new Date();
         const result = flights.filter(flight => {
             const matchesQuery = searchQueryMatches(flight, query);
@@ -1871,9 +1885,10 @@ export default function MobileRedesignPreview({
             if (sort === 'date') return (parseDate(a.departure.date)?.getTime() || 0) - (parseDate(b.departure.date)?.getTime() || 0);
             return compareRecommended(a, b);
         });
-    }, [airlineFilter, compareRecommended, customEndDate, customStartDate, datePeriod, departure, flights, maxPrice, query, region, sort, sourceFilter]);
+    }, [airlineFilter, compareRecommended, customEndDate, customStartDate, datePeriod, departure, flights, maxPrice, query, region, sharedFlightIds, sort, sourceFilter]);
 
-    const isDefaultView = region === '전체'
+    const isDefaultView = sharedFlightIds.length === 0
+        && region === '전체'
         && departure === '전체'
         && sourceFilter === 'all'
         && airlineFilter === 'all'
@@ -1901,6 +1916,8 @@ export default function MobileRedesignPreview({
         })()
     ), [flights, interparkPrices, todayPickId, todayPickRepeatOverride]);
     const displayedFlights = useMemo(() => {
+        if (sharedFlightIds.length > 0) return filteredFlights;
+
         const pinnedFlight = isDefaultView ? featuredPick?.flight : undefined;
         const presentation = buildRecommendationPresentation(
             filteredFlights,
@@ -1914,12 +1931,12 @@ export default function MobileRedesignPreview({
         return pinnedFlight
             ? [pinnedFlight, ...presentation.orderedFlights]
             : presentation.orderedFlights;
-    }, [departure, featuredPick, filteredFlights, isDefaultView, query, recommendationScoreState, sort]);
+    }, [departure, featuredPick, filteredFlights, isDefaultView, query, recommendationScoreState, sharedFlightIds.length, sort]);
     const weeklyDiscoveryFlights = useMemo(() => flights
         .filter(flight => normalizeCity(flight.arrival.city) === '리장' && effectivePrice(flight) > 0)
         .sort((a, b) => effectivePrice(a) - effectivePrice(b) || a.id.localeCompare(b.id)), [flights]);
     const feedInsights = useMemo<FeedInsight[]>(() => {
-        if (sort !== 'recommended' || query.trim()) return [];
+        if (sharedFlightIds.length > 0 || sort !== 'recommended' || query.trim()) return [];
 
         type PriceDropCandidate = {
             flight: Flight;
@@ -2318,10 +2335,10 @@ export default function MobileRedesignPreview({
             selectCandidate(candidate);
         }
         return selectedInsights.slice(0, 5);
-    }, [displayedFlights, insightDateKey, lastUpdated, maxPrice, priceHistory, query, sort]);
+    }, [displayedFlights, insightDateKey, lastUpdated, maxPrice, priceHistory, query, sharedFlightIds.length, sort]);
 
     const freshFlightsInsight = useMemo(() => {
-        if (sort !== 'recommended' || query.trim()) return null;
+        if (sharedFlightIds.length > 0 || sort !== 'recommended' || query.trim()) return null;
 
         const datedFlights = displayedFlights.filter(flight => flight.firstSeen && effectivePrice(flight) > 0);
         const todayKey = seoulDateKey();
@@ -2380,7 +2397,7 @@ export default function MobileRedesignPreview({
             pairs,
             scheduleCountByFlightId,
         };
-    }, [displayedFlights, query, sort]);
+    }, [displayedFlights, query, sharedFlightIds.length, sort]);
 
     const weekendFlights = useMemo(() => {
         if (sort !== 'recommended' || query.trim()) return [];
@@ -3163,7 +3180,21 @@ export default function MobileRedesignPreview({
         setFreshRouteResults(null);
     };
 
-    const impressionSurface: gtag.FlightImpressionDetails['surface'] = query.trim()
+    const showAllFlightsFromSharedGroup = () => {
+        setSharedFlightIds([]);
+        setQuery('');
+        resetFilters();
+    };
+
+    const showSharedRouteAlternatives = () => {
+        setSharedFlightIds([]);
+        resetFilters();
+        if (initialSharedArrival) setQuery(initialSharedArrival);
+    };
+
+    const impressionSurface: gtag.FlightImpressionDetails['surface'] = sharedFlightIds.length > 0
+        ? 'shared_flight'
+        : query.trim()
         ? 'search_results'
         : freshRouteResults || !isDefaultView
             ? 'filtered_results'
@@ -3645,7 +3676,9 @@ export default function MobileRedesignPreview({
                 <section className={styles.feedSection} ref={feedSectionRef}>
                     <div className={`${styles.feedHeading} ${freshRouteResults ? styles.freshRouteHeading : ''}`}>
                         <div>
-                            <h2>{freshRouteResults
+                            <h2>{sharedFlightIds.length > 0
+                                ? `${initialSharedDeparture || '인천'} → ${initialSharedArrival || '공유 항공권'}`
+                                : freshRouteResults
                                 ? `${freshRouteResults.departure} → ${freshRouteResults.arrival}`
                                 : query ? `'${query}' 검색 결과` : region === '전체' ? '전체 항공권' : `${region} 항공권`}</h2>
                             <span>{listLoading
@@ -3655,6 +3688,11 @@ export default function MobileRedesignPreview({
                                     : `${resultCount.toLocaleString('ko-KR')}개 · ${updatedLabel}`}</span>
                         </div>
                         <div className={styles.feedHeadingActions}>
+                            {sharedFlightIds.length > 0 && (
+                                <button type="button" className={styles.freshRouteResultBack} onClick={showAllFlightsFromSharedGroup}>
+                                    <span aria-hidden="true">←</span> 전체 항공권
+                                </button>
+                            )}
                             {freshRouteResults && (
                                 <button type="button" className={styles.freshRouteResultBack} onClick={closeFreshRouteResults}>
                                     <span aria-hidden="true">←</span> 전체 항공권
@@ -3738,7 +3776,17 @@ export default function MobileRedesignPreview({
 
                     {!listLoading && !error && (freshRouteResults ? feedFlights.length === 0 : filteredFlights.length === 0) && (
                         <div className={styles.emptyState}>
-                            {freshRouteResults ? (
+                            {sharedFlightIds.length > 0 ? (
+                                <>
+                                    <strong>아, 조금 늦었네요.</strong>
+                                    <span>
+                                        공유된 표는 판매가 종료됐어요.<br />
+                                        {initialSharedArrival
+                                            ? `${stripAirport(initialSharedArrival)}의 현재 항공권을 대신 볼 수 있어요.`
+                                            : '지금 예약할 수 있는 항공권을 대신 볼 수 있어요.'}
+                                    </span>
+                                </>
+                            ) : freshRouteResults ? (
                                 <>
                                     <strong>조금 전 본 표가 목록에서 내려갔어요.</strong>
                                     <span>현재 예약할 수 있는 전체 항공권을 다시 보여드릴게요.</span>
@@ -3774,8 +3822,12 @@ export default function MobileRedesignPreview({
                                 </>
                             )}
                             <div className={styles.emptyStateActions}>
-                                <button type="button" onClick={freshRouteResults ? closeFreshRouteResults : resetFilters}>
-                                    {freshRouteResults ? '전체 항공권 보기' : '필터 초기화'}
+                                <button type="button" onClick={sharedFlightIds.length > 0
+                                    ? showSharedRouteAlternatives
+                                    : freshRouteResults ? closeFreshRouteResults : resetFilters}>
+                                    {sharedFlightIds.length > 0
+                                        ? `${initialSharedArrival ? stripAirport(initialSharedArrival) : '현재'} 항공권 보기`
+                                        : freshRouteResults ? '전체 항공권 보기' : '필터 초기화'}
                                 </button>
                                 {!freshRouteResults && PUBLIC_DEAL_ALERTS_ENABLED && emptyRouteAlertTarget && (
                                     <button
