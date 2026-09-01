@@ -527,7 +527,7 @@
 .priceBlock { min-width: 0; min-height: 34px; flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; justify-content: center; text-align: right; }
 .priceLine { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
 .priceDiscountBadge { height: 18px; padding: 1px 5px 0; display: inline-flex; align-items: center; border: 1px solid #f2c7d0; border-radius: 5px; background: var(--brand-soft); color: var(--brand-dark); font-size: 10px; line-height: 1; font-weight: var(--weight-bold); letter-spacing: -0.025em; white-space: nowrap; }
-.priceBlock strong { display: block; color: var(--ink); font-size: var(--size-card); line-height: 1.25; font-weight: var(--weight-bold); letter-spacing: -0.04em; }
+.priceBlock strong { display: block; color: var(--ink); font-size: var(--size-title); line-height: 1.25; font-weight: var(--weight-bold); letter-spacing: -0.04em; }
 .todayPickCard .priceBlock strong { color: var(--brand-dark); }
 .priceBlock strong small { margin-left: 2px; color: var(--text-secondary); font-size: .58em; font-weight: var(--weight-regular); letter-spacing: -0.02em; }
 
@@ -700,7 +700,7 @@
 
 .freshFlightsMobilePrice > strong {
     color: var(--brand-dark);
-    font-size: var(--size-card);
+    font-size: var(--size-title);
     line-height: 1.15;
     font-weight: var(--weight-bold);
     letter-spacing: -0.04em;
@@ -1961,7 +1961,7 @@
     }
     .freshFlightsPrice > strong {
         color: var(--brand-dark);
-        font-size: 23px;
+        font-size: 20px;
         line-height: 1.15;
         font-weight: 700;
         letter-spacing: -0.04em;

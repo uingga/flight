@@ -293,6 +293,307 @@ const uniqueFlightSchedules = (flights: Flight[]) => Array.from(
     new Map(flights.map(flight => [flightScheduleIdentity(flight), flight])).values(),
 );
 
+const tripSpansFullWeekend = (flight: Flight) => {
+    const departure = parseDate(flight.departure.date);
+    const arrival = parseDate(flight.arrival.date);
+    if (!departure || !arrival || arrival < departure) return false;
+    const nights = Math.round((arrival.getTime() - departure.getTime()) / 86_400_000);
+    if (nights < 2 || nights > 5) return false;
+
+    let includesSaturday = false;
+    let includesSunday = false;
+    const cursor = new Date(departure);
+    while (cursor <= arrival) {
+        if (cursor.getDay() === 6) includesSaturday = true;
+        if (cursor.getDay() === 0) includesSunday = true;
+        cursor.setDate(cursor.getDate() + 1);
+    }
+    return includesSaturday && includesSunday;
+};
+
+function WeekendFlightsInsight({
+    flights,
+    onOpen,
+}: {
+    flights: Flight[];
+    onOpen: (flight: Flight) => void;
+}) {
+    const mobileFlights = useMemo(() => flights, [flights]);
+    const mobileCount = mobileFlights.length;
+    const mobileLoop = useMemo(() => (
+        mobileCount <= 1
+            ? mobileFlights
+            : [mobileFlights[mobileCount - 1], ...mobileFlights, mobileFlights[0]]
+    ), [mobileCount, mobileFlights]);
+    const desktopPairs = useMemo(() => Array.from(
+        { length: Math.ceil(flights.length / 2) },
+        (_, index) => flights.slice(index * 2, index * 2 + 2),
+    ), [flights]);
+    const desktopPairCount = desktopPairs.length;
+    const desktopLoop = useMemo(() => (
+        desktopPairCount <= 1
+            ? desktopPairs
+            : [desktopPairs[desktopPairCount - 1], ...desktopPairs, desktopPairs[0]]
+    ), [desktopPairCount, desktopPairs]);
+
+    const [reduceMotion, setReduceMotion] = useState(false);
+    const [mobilePosition, setMobilePosition] = useState(1);
+    const [mobileOffset, setMobileOffset] = useState(0);
+    const [mobileAnimating, setMobileAnimating] = useState(true);
+    const [desktopPosition, setDesktopPosition] = useState(1);
+    const [desktopOffset, setDesktopOffset] = useState(0);
+    const [desktopAnimating, setDesktopAnimating] = useState(true);
+    const [desktopDragging, setDesktopDragging] = useState(false);
+    const mobileDragRef = useRef<FreshMobileDragState | null>(null);
+    const desktopDragRef = useRef<FreshDesktopDragState | null>(null);
+    const mobileSuppressClickRef = useRef(false);
+    const desktopSuppressClickRef = useRef(false);
+
+    useEffect(() => {
+        const media = window.matchMedia('(prefers-reduced-motion: reduce)');
+        const updatePreference = () => setReduceMotion(media.matches);
+        updatePreference();
+        media.addEventListener('change', updatePreference);
+        return () => media.removeEventListener('change', updatePreference);
+    }, []);
+
+    useEffect(() => {
+        if (window.location.hash !== '#weekend-flights-insight') return;
+        const frame = window.requestAnimationFrame(() => {
+            document.getElementById('weekend-flights-insight')?.scrollIntoView({ block: 'center' });
+        });
+        return () => window.cancelAnimationFrame(frame);
+    }, []);
+
+    useEffect(() => {
+        setMobilePosition(mobileCount > 1 ? 1 : 0);
+        setMobileOffset(0);
+        setDesktopPosition(desktopPairCount > 1 ? 1 : 0);
+        setDesktopOffset(0);
+        setDesktopDragging(false);
+    }, [desktopPairCount, mobileCount]);
+
+    const moveMobile = useCallback((direction: -1 | 1) => {
+        if (mobileCount <= 1) return;
+        setMobileAnimating(!reduceMotion);
+        setMobileOffset(0);
+        setMobilePosition(current => current + direction);
+    }, [mobileCount, reduceMotion]);
+
+    const moveDesktop = useCallback((direction: -1 | 1) => {
+        if (desktopPairCount <= 1) return;
+        setDesktopAnimating(!reduceMotion);
+        setDesktopOffset(0);
+        setDesktopPosition(current => current + direction);
+    }, [desktopPairCount, reduceMotion]);
+
+    useEffect(() => {
+        if (mobileCount <= 1 || reduceMotion || mobileDragRef.current) return;
+        const timer = window.setTimeout(() => moveMobile(1), FRESH_MOBILE_AUTO_ADVANCE_MS + 400);
+        return () => window.clearTimeout(timer);
+    }, [mobileCount, mobilePosition, moveMobile, reduceMotion]);
+
+    useEffect(() => {
+        if (mobileCount <= 1) return;
+        const isLeadingClone = mobilePosition <= 0;
+        const isTrailingClone = mobilePosition >= mobileCount + 1;
+        if (!isLeadingClone && !isTrailingClone) return;
+        const timer = window.setTimeout(() => {
+            setMobileAnimating(false);
+            setMobilePosition(isLeadingClone ? mobileCount : 1);
+        }, reduceMotion ? 0 : 760);
+        return () => window.clearTimeout(timer);
+    }, [mobileCount, mobilePosition, reduceMotion]);
+
+    useEffect(() => {
+        if (desktopPairCount <= 1 || reduceMotion || desktopDragging || desktopDragRef.current) return;
+        const timer = window.setTimeout(() => moveDesktop(1), FRESH_DESKTOP_AUTO_ADVANCE_MS + 400);
+        return () => window.clearTimeout(timer);
+    }, [desktopDragging, desktopPairCount, desktopPosition, moveDesktop, reduceMotion]);
+
+    useEffect(() => {
+        if (desktopPairCount <= 1) return;
+        const isLeadingClone = desktopPosition <= 0;
+        const isTrailingClone = desktopPosition >= desktopPairCount + 1;
+        if (!isLeadingClone && !isTrailingClone) return;
+        const timer = window.setTimeout(() => {
+            setDesktopAnimating(false);
+            setDesktopPosition(isLeadingClone ? desktopPairCount : 1);
+        }, reduceMotion ? 0 : 760);
+        return () => window.clearTimeout(timer);
+    }, [desktopPairCount, desktopPosition, reduceMotion]);
+
+    const handleMobilePointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+        if (mobileCount <= 1 || (event.pointerType === 'mouse' && event.button !== 0)) return;
+        mobileDragRef.current = { pointerId: event.pointerId, startY: event.clientY, startedAt: performance.now() };
+        mobileSuppressClickRef.current = false;
+        setMobileAnimating(false);
+        setMobileOffset(0);
+    };
+
+    const handleMobilePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+        const drag = mobileDragRef.current;
+        if (!drag || drag.pointerId !== event.pointerId) return;
+        const nextOffset = Math.max(-64, Math.min(64, event.clientY - drag.startY));
+        if (Math.abs(nextOffset) >= 4 && !event.currentTarget.hasPointerCapture(event.pointerId)) {
+            event.currentTarget.setPointerCapture(event.pointerId);
+        }
+        setMobileOffset(nextOffset);
+    };
+
+    const handleMobilePointerEnd = (event: ReactPointerEvent<HTMLDivElement>) => {
+        const drag = mobileDragRef.current;
+        if (!drag || drag.pointerId !== event.pointerId) return;
+        const distance = event.clientY - drag.startY;
+        const velocity = Math.abs(distance) / Math.max(1, performance.now() - drag.startedAt);
+        mobileDragRef.current = null;
+        if (Math.abs(distance) >= 30 || velocity >= 0.42) {
+            mobileSuppressClickRef.current = true;
+            window.setTimeout(() => { mobileSuppressClickRef.current = false; }, 320);
+            moveMobile(distance < 0 ? 1 : -1);
+        } else {
+            setMobileAnimating(!reduceMotion);
+            setMobileOffset(0);
+        }
+    };
+
+    const handleDesktopPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+        if (desktopPairCount <= 1 || (event.pointerType === 'mouse' && event.button !== 0)) return;
+        desktopDragRef.current = { pointerId: event.pointerId, startY: event.clientY, startedAt: performance.now() };
+        desktopSuppressClickRef.current = false;
+        setDesktopDragging(true);
+        setDesktopAnimating(false);
+        setDesktopOffset(0);
+    };
+
+    const handleDesktopPointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+        const drag = desktopDragRef.current;
+        if (!drag || drag.pointerId !== event.pointerId) return;
+        const nextOffset = Math.max(-82, Math.min(82, event.clientY - drag.startY));
+        if (Math.abs(nextOffset) >= 4 && !event.currentTarget.hasPointerCapture(event.pointerId)) {
+            event.currentTarget.setPointerCapture(event.pointerId);
+        }
+        setDesktopOffset(nextOffset);
+    };
+
+    const handleDesktopPointerEnd = (event: ReactPointerEvent<HTMLDivElement>) => {
+        const drag = desktopDragRef.current;
+        if (!drag || drag.pointerId !== event.pointerId) return;
+        const distance = event.clientY - drag.startY;
+        const velocity = Math.abs(distance) / Math.max(1, performance.now() - drag.startedAt);
+        desktopDragRef.current = null;
+        setDesktopDragging(false);
+        if (Math.abs(distance) >= 36 || velocity >= 0.42) {
+            desktopSuppressClickRef.current = true;
+            window.setTimeout(() => { desktopSuppressClickRef.current = false; }, 320);
+            moveDesktop(distance < 0 ? 1 : -1);
+        } else {
+            setDesktopAnimating(!reduceMotion);
+            setDesktopOffset(0);
+        }
+    };
+
+    if (!flights.length) return null;
+    const activeMobileIndex = ((mobilePosition - 1 + mobileCount) % mobileCount);
+
+    const renderTicket = (flight: Flight, mode: 'mobile' | 'desktop', key: string) => {
+        const isMobileTicket = mode === 'mobile';
+        const suppressClickRef = isMobileTicket ? mobileSuppressClickRef : desktopSuppressClickRef;
+        return (
+            <button
+                type="button"
+                className={isMobileTicket ? styles.freshFlightsMobileTicket : styles.freshFlightsTicket}
+                key={key}
+                data-weekend-flight-id={flight.id}
+                onClick={(event) => {
+                    if (suppressClickRef.current) {
+                        event.preventDefault();
+                        suppressClickRef.current = false;
+                        return;
+                    }
+                    onOpen(flight);
+                }}
+            >
+                <span className={isMobileTicket ? styles.freshFlightsMobileTicketMain : styles.freshFlightsTicketMain}>
+                    <span className={isMobileTicket ? styles.freshFlightsMobilePlace : styles.freshFlightsPlace}>
+                        <small>{departureName(flight)} 출발</small>
+                        <strong>{stripAirport(flight.arrival.city)}</strong>
+                    </span>
+                    <span className={isMobileTicket ? styles.freshFlightsMobilePrice : styles.freshFlightsPrice}>
+                        <small>왕복 총액</small>
+                        <strong>{effectivePrice(flight).toLocaleString('ko-KR')}<i>원</i></strong>
+                    </span>
+                </span>
+                <span className={isMobileTicket ? styles.freshFlightsMobileSchedule : styles.freshFlightsSchedule}>
+                    <span>{cardDate(flight.departure.date)} — {cardDate(flight.arrival.date)}</span>
+                    <small>{tripLength(flight)}</small>
+                </span>
+            </button>
+        );
+    };
+
+    return (
+        <div className={styles.freshFlightsEntry} id="weekend-flights-insight">
+            <section
+                className={styles.freshFlightsBar}
+                aria-labelledby="weekend-flights-title"
+                data-weekend-route-count={mobileCount}
+            >
+                <div className={styles.freshFlightsMobileTopline}>
+                    <span>주말 일정</span>
+                    {mobileCount > 1 && <span aria-hidden="true">{activeMobileIndex + 1} / {mobileCount}</span>}
+                </div>
+                <div className={styles.freshFlightsCopy}>
+                    <span className={styles.freshFlightsDesktopEyebrow}>주말 일정</span>
+                    <strong id="weekend-flights-title">주말이 아까운 사람에게</strong>
+                    <p>토·일이 여행 일정에 들어간 항공권만 골랐어요.</p>
+                </div>
+                <div
+                    className={styles.freshFlightsMobileViewport}
+                    aria-label="주말 포함 항공권. 위아래로 밀어 다른 항공권 보기"
+                    onPointerDown={handleMobilePointerDown}
+                    onPointerMove={handleMobilePointerMove}
+                    onPointerUp={handleMobilePointerEnd}
+                    onPointerCancel={handleMobilePointerEnd}
+                >
+                    <div
+                        className={`${styles.freshFlightsMobileTrack} ${mobileAnimating ? styles.freshFlightsMobileTrackAnimated : ''}`}
+                        style={{ transform: `translateY(${(-mobilePosition * FRESH_MOBILE_ITEM_HEIGHT) + mobileOffset}px)` }}
+                    >
+                        {mobileLoop.map((flight, index) => renderTicket(flight, 'mobile', `${flight.id}-weekend-mobile-${index}`))}
+                    </div>
+                </div>
+                <div
+                    className={styles.freshFlightsViewport}
+                    aria-label="주말 포함 항공권. 마우스로 위아래로 드래그해 다른 항공권 보기"
+                    onPointerDown={handleDesktopPointerDown}
+                    onPointerMove={handleDesktopPointerMove}
+                    onPointerUp={handleDesktopPointerEnd}
+                    onPointerCancel={handleDesktopPointerEnd}
+                >
+                    <div
+                        className={`${styles.freshFlightsTrack} ${desktopAnimating ? styles.freshFlightsTrackAnimated : ''}`}
+                        style={{ transform: `translateY(${(-desktopPosition * FRESH_DESKTOP_PAIR_HEIGHT) + desktopOffset}px)` }}
+                    >
+                        {desktopLoop.map((pair, pairIndex) => (
+                            <div
+                                className={`${styles.freshFlightsPair} ${pair.length === 1 ? styles.freshFlightsPairSingle : ''}`}
+                                key={`weekend-pair-${pairIndex}`}
+                            >
+                                {pair.map((flight, ticketIndex) => renderTicket(
+                                    flight,
+                                    'desktop',
+                                    `${flight.id}-weekend-desktop-${pairIndex}-${ticketIndex}`,
+                                ))}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+        </div>
+    );
+}
+
 const normalizedHistory = (history: PriceHistory) => {
     const result: PriceHistory = {};
     Object.entries(history).forEach(([route, entries]) => {
@@ -894,6 +1195,7 @@ export default function MobileRedesignPreview({
         flights,
         loading,
     };
+
     const Root = rootAs;
     const activeOverlay = showAccount ? 'account'
         : showServiceUpdate ? 'service-update'
@@ -1492,7 +1794,8 @@ export default function MobileRedesignPreview({
     }, []);
 
     useEffect(() => {
-        setVisibleCount(window.matchMedia('(min-width: 960px)').matches ? 36 : 18);
+        const weekendPreview = window.location.hash === '#weekend-flights-insight';
+        setVisibleCount(weekendPreview || window.matchMedia('(min-width: 960px)').matches ? 36 : 18);
     }, [airlineFilter, region, departure, datePeriod, customStartDate, customEndDate, maxPrice, sort, query, sourceFilter]);
 
     useEffect(() => {
@@ -2071,6 +2374,32 @@ export default function MobileRedesignPreview({
         };
     }, [displayedFlights, query, sort]);
 
+    const weekendFlights = useMemo(() => {
+        if (sort !== 'recommended' || query.trim()) return [];
+        const routeFlights = new Map<string, Flight>();
+
+        displayedFlights
+            .filter(flight => effectivePrice(flight) > 0 && tripSpansFullWeekend(flight))
+            .forEach(flight => {
+                const route = normalizedRoute(flight);
+                const current = routeFlights.get(route);
+                if (!current
+                    || effectivePrice(flight) < effectivePrice(current)
+                    || (effectivePrice(flight) === effectivePrice(current)
+                        && flight.departure.date.localeCompare(current.departure.date) < 0)) {
+                    routeFlights.set(route, flight);
+                }
+            });
+
+        return Array.from(routeFlights.values())
+            .sort((a, b) => (
+                effectivePrice(a) - effectivePrice(b)
+                || a.departure.date.localeCompare(b.departure.date)
+                || normalizedRoute(a).localeCompare(normalizedRoute(b), 'ko')
+            ))
+            .slice(0, 12);
+    }, [displayedFlights, query, sort]);
+
     const freshRouteResultFlights = useMemo(() => {
         if (!freshRouteResults) return [];
         const result = flights.filter(flight => (
@@ -2325,6 +2654,7 @@ export default function MobileRedesignPreview({
     const firstInsightCard = 9;
     const subsequentInsightInterval = 12;
     const weeklyDiscoveryInsightCard = firstInsightCard + subsequentInsightInterval;
+    const weekendFlightsInsightCard = weeklyDiscoveryInsightCard + subsequentInsightInterval;
     const hasAdvancedFilter = departure !== '전체'
         || datePeriod !== 'all'
         || maxPrice > 0
@@ -2658,6 +2988,16 @@ export default function MobileRedesignPreview({
         }
 
         openFreshRouteResults(flight);
+    };
+
+    const openWeekendFlight = (flight: Flight) => {
+        gtag.event('insight_click', {
+            insight_type: 'weekend_flights',
+            insight_format: 'flight_detail',
+            destination: normalizeCity(flight.arrival.city),
+            flight_id: flight.id,
+        });
+        openFlight(flight, 'insight_weekend_flights');
     };
 
     const openInsight = (insight: FeedInsight) => {
@@ -3683,6 +4023,15 @@ export default function MobileRedesignPreview({
                                             <WeeklyDiscoveryInsight
                                                 flights={weeklyDiscoveryFlights}
                                                 onOpen={closeSelectedFlight}
+                                            />
+                                        )}
+                                    {!freshRouteResults
+                                        && isDefaultView
+                                        && cardNumber === weekendFlightsInsightCard
+                                        && weekendFlights.length > 0 && (
+                                            <WeekendFlightsInsight
+                                                flights={weekendFlights}
+                                                onOpen={openWeekendFlight}
                                             />
                                         )}
                                 </Fragment>
