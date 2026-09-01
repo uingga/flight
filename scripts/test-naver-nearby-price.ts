@@ -28,29 +28,30 @@ function sample(price: number, crawledAt: string, status = 'success'): NearbyNav
 }
 
 const index = buildNearbyNaverPriceIndex({
-    // 출발일 앞뒤 7일은 여행 기간이 달라도 모두 비교한다.
+    // 출발일 앞뒤 14일은 거리에 따른 감쇠 없이 여행 기간이 달라도 모두 비교한다.
     'ICN-TST_2026-09-08_2026-09-11': sample(100_000, '2026-08-30T12:00:00+09:00'),
     'ICN-TST_2026-09-11_2026-09-18': sample(200_000, '2026-08-21T12:00:00+09:00'),
     'ICN-TST_2026-09-15_2026-09-16': sample(300_000, '2026-08-17T13:00:00+09:00'),
+    'ICN-TST_2026-09-22_2026-09-27': sample(400_000, '2026-08-17T13:00:00+09:00'),
     // 정확한 동일 일정은 인접 일정 표본에서 제외
     'ICN-TST_2026-09-10_2026-09-13': sample(90_000, '2026-08-31T08:00:00+09:00'),
-    // 60일을 넘긴 수집값, 다른 노선, 출발일이 7일 밖인 표본은 제외
+    // 60일을 넘긴 수집값, 다른 노선, 출발일이 14일 밖인 표본은 제외
     'ICN-TST_2026-09-09_2026-09-12': sample(1, '2026-06-30T11:59:59+09:00'),
     'ICN-OTHER_2026-09-10_2026-09-13': sample(1, '2026-08-31T08:00:00+09:00'),
-    'ICN-TST_2026-09-18_2026-09-20': sample(1, '2026-08-31T08:00:00+09:00'),
+    'ICN-TST_2026-09-25_2026-09-27': sample(1, '2026-08-31T08:00:00+09:00'),
 }, now);
 
 const context = getNearbyNaverPriceContext(index, flight());
-assert.equal(context.sampleCount, 3, '출발일 앞뒤 7일의 일정은 여행 기간과 관계없이 포함해야 한다.');
+assert.equal(context.sampleCount, 4, '출발일 앞뒤 14일의 일정은 거리 감쇠 없이 포함해야 한다.');
 assert.equal(
     context.baseline,
-    200_000,
-    '인접 일정 세 건의 중간값인 200,000원을 기준가로 사용해야 한다.',
+    250_000,
+    '인접 일정 네 건의 중간값인 250,000원을 기준가로 사용해야 한다.',
 );
 
 const adjustment = getNearbyNaverRecommendationAdjustment(flight({
-    price: 300_000,
-    naverLowest: 400_000,
+    price: 400_000,
+    naverLowest: 500_000,
     naverCheckedAt: '2026-08-31T08:00:00+09:00',
     nearbyNaverBaseline: context.baseline || undefined,
     nearbyNaverSampleCount: context.sampleCount,
@@ -81,4 +82,4 @@ const twoSampleContext = getNearbyNaverPriceContext(twoSampleIndex, flight());
 assert.equal(twoSampleContext.sampleCount, 2);
 assert.equal(twoSampleContext.baseline, 200_000, '표본 두 건부터 중간값을 정식 가격 근거로 사용해야 한다.');
 
-console.log('✅ 출발일 ±7일 · 여행 기간 무관 · 2건 중간값 · 1건 약한 참고');
+console.log('✅ 출발일 ±14일 동일 가중치 · 여행 기간 무관 · 2건 중간값 · 1건 약한 참고');

@@ -4,7 +4,7 @@ import { getComparisonFreshness, getEffectivePrice } from './price-quality';
 
 const DAY_MS = 86_400_000;
 const LOOKBACK_DAYS = 60;
-const DEPARTURE_WINDOW_DAYS = 7;
+const DEPARTURE_WINDOW_DAYS = 14;
 const MIN_STRONG_SAMPLE_COUNT = 2;
 
 export interface NearbyNaverPriceEntry {
@@ -73,7 +73,8 @@ const routeKeyFromFlight = (flight: Flight): {
 
 /**
  * 최근 60일 안에 정상 수집된 인접 일정 네이버 가격을 동일 가중치로 색인한다.
- * 실제 비교 범위는 후보 출발일 앞뒤 7일이며 여행 기간은 제한하지 않는다.
+ * 실제 비교 범위는 후보 출발일 앞뒤 14일이며 1~14일 표본을 동일 가중치로 쓴다.
+ * 여행 기간은 제한하지 않는다.
  */
 export function buildNearbyNaverPriceIndex(
     entries: Record<string, NearbyNaverPriceEntry | undefined>,
@@ -103,7 +104,7 @@ export function buildNearbyNaverPriceIndex(
     return { byRoute };
 }
 
-/** 같은 노선의 출발일 앞뒤 7일 가격 중간값을 반환한다. 여행 기간은 달라도 된다. */
+/** 같은 노선의 출발일 앞뒤 14일 가격 중간값을 반환한다. 여행 기간은 달라도 된다. */
 export function getNearbyNaverPriceContext(
     index: NearbyNaverPriceIndex,
     flight: Flight,

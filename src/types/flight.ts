@@ -29,8 +29,8 @@ export interface Flight {
     discountRate?: number; // 서울(인천·김포) 출발만 인터파크 최저가 대비 할인율 (%); 지방 출발은 0
     naverLowest?: number;  // 네이버 항공권 최저가 (동일 구간+날짜)
     naverCheckedAt?: string; // 네이버 동일 구간+날짜 가격을 확인한 시각
-    nearbyNaverBaseline?: number; // 최근 60일에 확인한 같은 노선·출발일 앞뒤 7일 네이버 가격 중간값
-    nearbyNaverSampleCount?: number; // 같은 노선·출발일 앞뒤 7일 표본 수 (여행 기간 제한 없음)
+    nearbyNaverBaseline?: number; // 최근 60일에 확인한 같은 노선·출발일 앞뒤 14일 네이버 가격 중간값
+    nearbyNaverSampleCount?: number; // 같은 노선·출발일 앞뒤 14일 표본 수 (1~14일 동일 가중치, 여행 기간 제한 없음)
     nearbyNaverRecommendationMultiplier?: number; // 날짜 프리미엄에 따른 느슨한 추천 감점
     nearbyNaverTodayPickExcluded?: boolean; // 인접 기준보다 30%·5만원 이상 비싸 오늘의 표에서 제외
     priceCheckedAt?: string; // 해당 여행사 가격을 마지막으로 정상 확인한 시각

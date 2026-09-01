@@ -404,7 +404,7 @@ assert.equal(
     nearbyPremiumState.explanations.get('expensive-for-nearby-dates')?.factors
         .some(factor => factor.rule === 'nearby-dates'),
     true,
-    '앞뒤 7일 가격 근거가 추천 설명에 남아야 한다.',
+    '앞뒤 14일 가격 근거가 추천 설명에 남아야 한다.',
 );
 
 const departureBalanceCandidates = Array.from({ length: 12 }, (_, index) => ({

@@ -413,7 +413,7 @@ function scoreFlight(
         factors.push({
             rule: 'nearby-dates',
             multiplier: nearbyEvidenceStrength === 2 ? 0.85 : nearbyEvidenceStrength === 1 ? 0.95 : 1.15,
-            detail: `앞뒤 7일 ${flight.nearbyNaverSampleCount || 0}건 중간값 ${nearbyBaseline.toLocaleString()}원`,
+            detail: `앞뒤 14일 ${flight.nearbyNaverSampleCount || 0}건 중간값 ${nearbyBaseline.toLocaleString()}원`,
         });
     }
     if (interparkKnown) {
