@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import type { NaverSellerProbeSummary } from '../naver-seller-probe';
 
 export interface NaverCrawlHistoryEntry {
     id: string;
@@ -35,6 +36,7 @@ export interface NaverCrawlHistoryEntry {
     abortedEarly: boolean;
     abortReason?: string;
     partialResultsPublishable?: boolean;
+    sellerProbe?: NaverSellerProbeSummary;
 }
 
 interface NaverCrawlHistoryFile {

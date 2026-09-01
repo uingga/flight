@@ -11,6 +11,13 @@ import stealth from 'puppeteer-extra-plugin-stealth';
 import * as fs from 'fs';
 import * as path from 'path';
 import { recordNaverCrawlHistory } from '../src/lib/utils/naver-crawl-history';
+import {
+    appendNaverSellerProbePage,
+    createNaverSellerProbeSummary,
+    inspectNaverGraphqlSellerHints,
+    type NaverGraphqlSellerHints,
+    type NaverSellerProbePage,
+} from '../src/lib/naver-seller-probe';
 import { resolveCityCode } from '../src/lib/scrapers/interpark';
 import { getRecommendationFreshness } from '../src/lib/flight-recommendation';
 import {
@@ -348,6 +355,7 @@ try {
     let attemptedCount = 0;
     let navigationCount = 0;
     let newRoutesAttempted = 0;
+    let sellerProbeSummary = createNaverSellerProbeSummary();
     // 가격이 없다는 것만으로 차단이라 하지 않는다. 애매한 실패가 이어질 때
     // 정상 대조 노선까지 실패하는지를 확인한 뒤에만 조기 종료한다.
     let consecutiveAmbiguousMisses = 0;
@@ -438,6 +446,11 @@ try {
             let graphqlSuccessCount = 0;
             let graphqlErrorCount = 0;
             let graphqlProblemStatus: number | null = null;
+            const graphqlSellerHints: NaverGraphqlSellerHints = {
+                fieldNames: [],
+                sellerSamples: [],
+                priceLinkedSellerSamples: [],
+            };
 
             // flight-api 응답 가로채기
             responseHandler = async (response) => {
@@ -463,6 +476,10 @@ try {
                                 lowestPrice = p;
                             }
                         }
+                        const sellerHints = inspectNaverGraphqlSellerHints(json);
+                        graphqlSellerHints.fieldNames.push(...sellerHints.fieldNames);
+                        graphqlSellerHints.sellerSamples.push(...sellerHints.sellerSamples);
+                        graphqlSellerHints.priceLinkedSellerSamples.push(...sellerHints.priceLinkedSellerSamples);
                     } catch {
                         if (status >= 200 && status < 400) graphqlErrorCount++;
                     }
@@ -529,6 +546,11 @@ try {
 
             const waitedSeconds = Math.round((Date.now() - waitStartedAt) / 100) / 10;
             console.log(`  ⏱️ ${waitedSeconds}초 만에 확인 종료 (${waitReason})`);
+
+            // 판매처 표시 가능성 진단: 이미 로드된 DOM과 GraphQL 응답만 읽는다.
+            // 클릭·펼치기·추가 페이지 이동이나 요청은 하지 않는다.
+            const sellerProbePage = await inspectPassiveSellerProbe(page, lowestPrice, graphqlSellerHints);
+            sellerProbeSummary = appendNaverSellerProbePage(sellerProbeSummary, sellerProbePage);
 
             // 오염 방어선: 국제선 왕복이 이 값보다 쌀 수 없다 (호텔 가격 등 혼입 차단)
             if (lowestPrice !== null && lowestPrice < MIN_VALID_PRICE) {
@@ -784,6 +806,7 @@ try {
         abortedEarly,
         abortReason,
         partialResultsPublishable: abortedEarly && !explicitBlockDetected && successCount > 0,
+        sellerProbe: sellerProbeSummary,
     });
 
     console.log('─'.repeat(50));
@@ -1076,6 +1099,93 @@ async function extractPriceFromDOM(page: any): Promise<number | null> {
         return priceText;
     } catch {
         return null;
+    }
+}
+
+// 이미 로드된 화면과 응답에 판매처 단서가 있는지만 확인한다.
+// page.evaluate에서 네트워크 API, 클릭, 스크롤, DOM 변경을 사용하지 않는다.
+async function inspectPassiveSellerProbe(
+    page: any,
+    lowestPrice: number | null,
+    graphqlHints: NaverGraphqlSellerHints,
+): Promise<NaverSellerProbePage> {
+    const graphql: NaverGraphqlSellerHints = {
+        fieldNames: Array.from(new Set(graphqlHints.fieldNames)),
+        sellerSamples: Array.from(new Set(graphqlHints.sellerSamples)),
+        priceLinkedSellerSamples: Array.from(new Set(graphqlHints.priceLinkedSellerSamples)),
+    };
+    try {
+        const dom = await page.evaluate((targetPrice: number | null) => {
+            const priceSelectors = [
+                '[class*="item_num"]',
+                '[class*="price"]',
+                '[class*="Price"]',
+                '[class*="fare"]',
+                '[data-testid*="price"]',
+            ];
+            const sellerSelectors = [
+                '[data-seller]', '[data-provider]', '[data-agency]', '[data-merchant]',
+                '[data-testid*="seller"]', '[data-testid*="provider"]', '[data-testid*="agency"]',
+                '[class*="seller"]', '[class*="Seller"]',
+                '[class*="provider"]', '[class*="Provider"]',
+                '[class*="agency"]', '[class*="Agency"]',
+                '[class*="merchant"]', '[class*="Merchant"]',
+                '[class*="vendor"]', '[class*="Vendor"]',
+                '[class*="mall"]', '[class*="Mall"]',
+            ];
+            const clean = (value: string | null | undefined) => (value || '').replace(/\s+/g, ' ').trim();
+            const sellerNodes = Array.from(document.querySelectorAll(sellerSelectors.join(',')))
+                .filter(node => clean((node as HTMLElement).innerText || node.textContent).length > 0);
+            const sellerSamples = Array.from(new Set(sellerNodes
+                .map(node => clean((node as HTMLElement).innerText || node.textContent))
+                .filter(text => text.length >= 2 && text.length <= 80)))
+                .slice(0, 8);
+
+            const exactPriceNodes = targetPrice === null
+                ? []
+                : Array.from(document.querySelectorAll(priceSelectors.join(','))).filter(node => {
+                    const amounts = (node.textContent || '').replace(/,/g, '').match(/\d{4,}/g) || [];
+                    return amounts.some(amount => Number(amount) === targetPrice);
+                });
+
+            let exactPriceSellerRows = 0;
+            const priceContextSamples: string[] = [];
+            for (const priceNode of exactPriceNodes.slice(0, 10)) {
+                let ancestor: Element | null = priceNode;
+                for (let depth = 0; ancestor && depth < 6; depth++, ancestor = ancestor.parentElement) {
+                    const seller = ancestor.querySelector(sellerSelectors.join(','));
+                    if (seller && clean((seller as HTMLElement).innerText || seller.textContent)) {
+                        exactPriceSellerRows++;
+                        break;
+                    }
+                }
+                let context: Element | null = priceNode;
+                for (let depth = 0; context?.parentElement && depth < 3; depth++) context = context.parentElement;
+                if (context) {
+                    const className = typeof context.className === 'string' ? context.className : '';
+                    const text = clean((context as HTMLElement).innerText || context.textContent).slice(0, 180);
+                    const sample = `${context.tagName.toLowerCase()}.${className.slice(0, 80)} | ${text}`.slice(0, 280);
+                    if (sample && !priceContextSamples.includes(sample)) priceContextSamples.push(sample);
+                }
+                if (priceContextSamples.length >= 4) break;
+            }
+
+            return {
+                explicitSellerNodeCount: sellerNodes.length,
+                exactPriceSellerRows,
+                sellerSamples,
+                priceContextSamples,
+            };
+        }, lowestPrice);
+        return { ...dom, graphql };
+    } catch {
+        return {
+            explicitSellerNodeCount: 0,
+            exactPriceSellerRows: 0,
+            sellerSamples: [],
+            priceContextSamples: [],
+            graphql,
+        };
     }
 }
 
