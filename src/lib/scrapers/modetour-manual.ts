@@ -85,15 +85,11 @@ function validTime(value: string): boolean {
     return Boolean(match && Number(match[1]) < 24 && Number(match[2]) < 60);
 }
 
-function getMaxPriceForDestination(destination: string): number {
-    const dest = destination.toUpperCase();
-    if (/도쿄|오사카|후쿠오카|나고야|삿포로|TOKYO|OSAKA|NRT|KIX|FUK|NGO/.test(dest)) return 450_000;
-    if (/방콕|푸켓|다낭|호치민|세부|마닐라|싱가포르|BANGKOK|DANANG|CEBU|SINGAPORE/.test(dest)) return 500_000;
-    if (/베이징|상하이|광저우|BEIJING|SHANGHAI|PEK|PVG/.test(dest)) return 500_000;
-    if (/괌|사이판|하와이|GUAM|SAIPAN|HAWAII|GUM|HNL/.test(dest)) return 800_000;
-    if (/파리|런던|로마|프랑크푸르트|PARIS|LONDON|ROME|CDG|LHR|FCO/.test(dest)) return 1_000_000;
-    if (/뉴욕|LA|시애틀|밴쿠버|토론토|NEW YORK|LOS ANGELES|JFK|LAX|YVR/.test(dest)) return 1_000_000;
-    return 1_000_000;
+function getMaxPriceForContinent(continentCode: string): number {
+    // 가격 상한은 OCR 자릿수 오인 방지용이다. 실제 비싼 표 제외는 아래 벤치마크 단계가 맡는다.
+    if (continentCode === 'EUR' || continentCode === 'AMCA') return 5_000_000;
+    if (continentCode === 'SOPA') return 3_000_000;
+    return 2_000_000;
 }
 
 function buildBookingLink(
@@ -101,15 +97,14 @@ function buildBookingLink(
     departureAirport: string,
     arrivalAirport: string,
     departureDate: string,
+    returnDate: string,
 ): string {
-    const nextDay = new Date(`${departureDate}T00:00:00+09:00`);
-    nextDay.setDate(nextDay.getDate() + 1);
     const query = JSON.stringify({
         departureCity: departureAirport,
         continentCode,
         arrivalCity: arrivalAirport,
         departureDate,
-        arrivalDate: nextDay.toISOString().slice(0, 10),
+        arrivalDate: returnDate,
         page: 1,
         itemCount: 200,
         sort: 'Lowest',
@@ -148,7 +143,7 @@ export function validateModetourManualCard(
     if (!returnDate) reasons.push('귀국일 판독 불가');
     if (departureDate && returnDate && returnDate <= departureDate) reasons.push('귀국일이 출발일보다 늦지 않음');
     if (!Number.isInteger(price) || price <= 0) reasons.push('가격 판독 불가');
-    if (Number.isInteger(price) && price > getMaxPriceForDestination(arrivalCity)) reasons.push('운영 가격 상한 초과');
+    if (Number.isInteger(price) && price > getMaxPriceForContinent(continentCode)) reasons.push('운영 가격 상한 초과');
     if (typeof card.isDirect !== 'boolean') reasons.push('직항 여부 판독 불가');
     if (card.seats !== undefined && (!Number.isInteger(card.seats) || card.seats <= 0 || card.seats > 999)) {
         reasons.push('좌석 수 판독 불가');
@@ -199,7 +194,7 @@ export function validateModetourManualCard(
             },
             price,
             currency: 'KRW',
-            link: buildBookingLink(continentCode, departureAirport, arrivalAirport, departureDate),
+            link: buildBookingLink(continentCode, departureAirport, arrivalAirport, departureDate, returnDate),
             availableSeats: card.seats,
             region: getRegionByCity(arrivalCity),
             modetourDetail: {

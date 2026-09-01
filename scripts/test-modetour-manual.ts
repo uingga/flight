@@ -28,7 +28,20 @@ if (accepted.status === 'accepted') {
     assert.equal(accepted.flight.departure.date, '2026-09-16');
     assert.equal(accepted.flight.arrival.date, '2026-09-19');
     assert.match(accepted.flight.link, /modetour\.com\/flights\/discount-flight/);
+    const query = JSON.parse(decodeURIComponent(accepted.flight.link.split('query=')[1]));
+    assert.equal(query.departureDate, '2026-09-16');
+    assert.equal(query.arrivalDate, '2026-09-19');
 }
+
+const europeLongHaul = validateModetourManualCard({
+    ...kumamotoCard,
+    departureCity: '인천',
+    arrivalCity: '이스탄불',
+    price: 1_320_000,
+    normalPrice: undefined,
+    sourceDiscountRate: undefined,
+}, 'EUR', capturedAt);
+assert.equal(europeLongHaul.status, 'accepted');
 
 const unknownCity = validateModetourManualCard({
     ...kumamotoCard,
