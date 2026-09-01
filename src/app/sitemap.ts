@@ -1,7 +1,8 @@
 import { MetadataRoute } from 'next';
 import { SITE_URL } from '@/lib/site';
 import {
-    loadActiveFlights, groupByCity, loadFlightCacheMeta, MIN_INDEXABLE_CITY_FLIGHTS,
+    loadActiveFlights, groupByCity, loadFlightCacheMeta, loadStaticRecommendationPriceHistory,
+    MIN_INDEXABLE_CITY_FLIGHTS,
 } from '@/lib/flight-static';
 import currentDropJson from '../../data/marketing/current-drop.json';
 
@@ -25,6 +26,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
     const cacheMeta = loadFlightCacheMeta();
     const cacheModified = safeDate(cacheMeta.timestamp || cacheMeta.lastUpdated);
     const dropModified = safeDate(currentDrop.updatedAt || currentDrop.publishedAt);
+    const priceHistoryLatest = Object.values(loadStaticRecommendationPriceHistory())
+        .flat()
+        .map(point => point.date)
+        .filter(Boolean)
+        .sort()
+        .at(-1);
+    const priceHistoryModified = safeDate(priceHistoryLatest
+        ? `${priceHistoryLatest}T00:00:00+09:00`
+        : undefined);
 
     return [
         {
@@ -47,7 +57,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
         }] : []),
         {
             url: `${SITE_URL}/tips/price-watch`,
-            changeFrequency: 'monthly' as const,
+            lastModified: priceHistoryModified,
+            changeFrequency: 'daily' as const,
             priority: 0.8,
         },
         // 1~2장뿐인 도시는 사용자 검색으로는 열어두되 대량 색인은 피한다.

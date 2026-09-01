@@ -4091,7 +4091,18 @@ export default function MobileRedesignPreview({
                             <strong>어디로 갈까요?</strong>
                             <div className={styles.siteFooterDestinations}>
                                 {['오사카', '도쿄', '후쿠오카', '다낭', '방콕', '세부', '괌', '타이베이'].map(city => (
-                                    <button type="button" key={city} onClick={() => { setQuery(city); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>{city}</button>
+                                    <a
+                                        key={city}
+                                        href={`/flights/${encodeURIComponent(city)}`}
+                                        onClick={(event) => {
+                                            if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+                                            event.preventDefault();
+                                            setQuery(city);
+                                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                                        }}
+                                    >
+                                        {city}
+                                    </a>
                                 ))}
                             </div>
                         </section>

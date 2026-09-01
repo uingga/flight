@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import Script from 'next/script';
 import { SITE_URL } from '@/lib/site';
+import { SITE_ALTERNATE_NAME, SITE_DESCRIPTION, SITE_NAME } from '@/lib/seo';
 import './globals.css';
 
 const BASE_URL = SITE_URL;
@@ -27,15 +28,7 @@ export const metadata: Metadata = {
         template: '%s | 티키티킷',
         default: '지금 나온 땡처리 항공권 | 티키티킷',
     },
-    description: '6개 여행사의 땡처리 항공권 가격과 일정을 한곳에서 비교하세요.',
-    keywords: [
-        '땡처리항공권', '특가항공권', '해외여행', '항공권비교', '티키티킷', 'tikitikit',
-        '항공권특가', '해외항공권', '항공권최저가', '저가항공',
-        '하나투어특가', '모두투어특가', '노랑풍선특가', '온라인투어특가', '땡처리닷컴',
-        '일본항공권', '오사카항공권', '도쿄항공권', '후쿠오카항공권',
-        '동남아항공권', '다낭항공권', '방콕항공권', '세부항공권', '나트랑항공권',
-        '대만항공권', '홍콩항공권', '괌항공권',
-    ],
+    description: SITE_DESCRIPTION,
     authors: [{ name: '티키티킷' }],
     creator: '티키티킷',
     publisher: '티키티킷',
@@ -50,9 +43,9 @@ export const metadata: Metadata = {
     },
     openGraph: {
         title: '땡처리 항공권은 여기서 먼저 봅니다 | 티키티킷',
-        description: '6개 여행사의 땡처리 항공권 가격과 일정을 한곳에서 비교하세요.',
+        description: SITE_DESCRIPTION,
         url: BASE_URL,
-        siteName: '티키티킷',
+        siteName: SITE_NAME,
         images: [
             {
                 url: '/opengraph-image',
@@ -67,7 +60,7 @@ export const metadata: Metadata = {
     twitter: {
         card: 'summary_large_image',
         title: '땡처리 항공권은 여기서 먼저 봅니다 | 티키티킷',
-        description: '6개 여행사의 땡처리 항공권 가격과 일정을 한곳에서 비교하세요.',
+        description: SITE_DESCRIPTION,
         images: ['/opengraph-image'],
     },
     robots: {
@@ -167,49 +160,24 @@ export default function RootLayout({
                             '@graph': [
                                 {
                                     '@type': 'WebSite',
-                                    name: '티키티킷',
+                                    '@id': `${BASE_URL}/#website`,
+                                    name: SITE_NAME,
+                                    alternateName: SITE_ALTERNATE_NAME,
                                     url: BASE_URL,
-                                    description: '6개 여행사의 땡처리 항공권 가격과 일정을 한곳에서 비교하는 서비스',
-                                    inLanguage: 'ko',
-                                    potentialAction: {
-                                        '@type': 'SearchAction',
-                                        target: `${BASE_URL}/?q={search_term_string}`,
-                                        'query-input': 'required name=search_term_string',
-                                    },
+                                    description: SITE_DESCRIPTION,
+                                    inLanguage: 'ko-KR',
+                                    publisher: { '@id': `${BASE_URL}/#organization` },
                                 },
                                 {
                                     '@type': 'Organization',
                                     '@id': `${BASE_URL}/#organization`,
-                                    name: '티키티킷',
-                                    alternateName: 'TikiTikit',
+                                    name: SITE_NAME,
+                                    alternateName: SITE_ALTERNATE_NAME,
                                     url: BASE_URL,
                                     logo: `${BASE_URL}/icon.svg`,
-                                    description: '여러 여행사의 저렴한 땡처리 항공권을 모아 보여주는 서비스',
+                                    description: SITE_DESCRIPTION,
                                     sameAs: ['https://blog.naver.com/mytikit'],
                                     knowsAbout: ['땡처리 항공권', '특가 항공권', '항공권 가격 비교'],
-                                },
-                                {
-                                    '@type': 'BreadcrumbList',
-                                    itemListElement: [
-                                        {
-                                            '@type': 'ListItem',
-                                            position: 1,
-                                            name: '홈',
-                                            item: BASE_URL,
-                                        },
-                                    ],
-                                },
-                                {
-                                    '@type': 'SoftwareApplication',
-                                    name: '티키티킷',
-                                    applicationCategory: 'TravelApplication',
-                                    operatingSystem: 'Web',
-                                    offers: {
-                                        '@type': 'Offer',
-                                        price: '0',
-                                        priceCurrency: 'KRW',
-                                    },
-                                    description: '여러 여행사의 저렴한 땡처리 항공권을 모아 보여주는 무료 웹 서비스',
                                 },
                             ],
                         }),

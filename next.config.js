@@ -31,6 +31,21 @@ const nextConfig = {
             "form-action 'self'",
         ].join('; ');
 
+        const noIndexHeaders = [
+            '/blog-post-:path*',
+            '/blog-thumbnail-:path*',
+            '/blog-assets.html',
+            '/blog12-tables.html',
+            '/profile-render.html',
+            '/schedule-sample.html',
+            '/tables-capture.html',
+            '/demo-redirect.html',
+            '/preview/:path*',
+        ].map(source => ({
+            source,
+            headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow, noarchive' }],
+        }));
+
         return [{
             source: '/:path*',
             headers: [
@@ -43,7 +58,7 @@ const nextConfig = {
                 { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), payment=()' },
                 { key: 'Content-Security-Policy-Report-Only', value: csp },
             ],
-        }];
+        }, ...noIndexHeaders];
     },
 }
 

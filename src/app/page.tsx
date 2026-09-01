@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
 import RedesignDashboard from '@/components/RedesignDashboard';
-import flightCacheJson from '../../data/all-flights-cache.json';
 import todayPickJson from '../../data/today-pick.json';
-import type { Flight } from '@/types/flight';
 import { SITE_URL } from '@/lib/site';
+import { SITE_DESCRIPTION, SITE_NAME } from '@/lib/seo';
 import {
+    effectivePrice,
     loadActiveFlights,
     loadFlightCacheMeta,
     loadStaticInterparkPrices,
@@ -42,25 +42,31 @@ function shortDate(dateText: string | undefined) {
 }
 
 function getFeaturedFlight() {
-    const cache = flightCacheJson as unknown as { flights: Flight[] };
+    const flights = loadActiveFlights();
     const todayPick = todayPickJson as { date?: string; flightId?: string };
     const todayKst = new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
     const currentPickId = todayPick.date === todayKst ? todayPick.flightId : null;
-    return cache.flights.find((flight) => flight.id === currentPickId)
-        || cache.flights.filter((flight) => flight.price > 0).sort((a, b) => a.price - b.price)[0];
+    return flights.find((flight) => flight.id === currentPickId)
+        || [...flights].sort((a, b) => effectivePrice(a) - effectivePrice(b))[0];
 }
 
 export function generateMetadata(): Metadata {
     const flight = getFeaturedFlight();
-    if (!flight) return {};
+    if (!flight) {
+        return {
+            title: { absolute: HOME_TITLE },
+            description: SITE_DESCRIPTION,
+            alternates: { canonical: '/' },
+        };
+    }
 
     const dep = cleanCity(flight.departure.city, '서울');
     const arr = cleanCity(flight.arrival.city, '지금 싼 곳');
-    const priceText = `${flight.price.toLocaleString('ko-KR')}원`;
+    const priceText = `${effectivePrice(flight).toLocaleString('ko-KR')}원`;
     const routeTitle = `${dep} → ${arr} 왕복 ${priceText}`;
     const rawSeatText = flight.seats || (flight.availableSeats ? `${flight.availableSeats}석 남음` : '');
     const seatText = rawSeatText && !rawSeatText.includes('남음') ? `${rawSeatText} 남음` : rawSeatText;
-    const description = [
+    const shareDescription = [
         [shortDate(flight.departure.date), shortDate(flight.arrival.date)].filter(Boolean).join('–'),
         flight.airline,
         SOURCE_NAMES[flight.source] || flight.source,
@@ -70,13 +76,13 @@ export function generateMetadata(): Metadata {
 
     return {
         title: { absolute: HOME_TITLE },
-        description,
+        description: SITE_DESCRIPTION,
         alternates: { canonical: '/' },
         openGraph: {
             title: fullTitle,
-            description,
+            description: shareDescription,
             url: SITE_URL,
-            siteName: '티키티킷',
+            siteName: SITE_NAME,
             images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: routeTitle }],
             locale: 'ko_KR',
             type: 'website',
@@ -84,7 +90,7 @@ export function generateMetadata(): Metadata {
         twitter: {
             card: 'summary_large_image',
             title: fullTitle,
-            description,
+            description: shareDescription,
             images: ['/opengraph-image'],
         },
     };
