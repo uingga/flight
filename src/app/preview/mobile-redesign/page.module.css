@@ -457,7 +457,7 @@
     color: inherit;
 }
 
-.todayPickStrip { height: 32px; padding: 0 11px; display: flex; align-items: center; border-radius: 9px 9px 0 0; background: var(--spectrum); color: var(--on-brand); line-height: 1; }
+.todayPickStrip { height: 32px; padding: 0 11px; display: flex; align-items: center; border-radius: 9px 9px 0 0; background: linear-gradient(100deg, var(--brand) 0%, var(--brand-dark) 100%); color: var(--on-brand); line-height: 1; }
 .todayPickStrip strong { font-size: var(--size-caption); font-weight: var(--weight-heavy); letter-spacing: 0.02em; }
 .todayPickCard .favoriteButton { top: 40px; }
 
@@ -1721,9 +1721,9 @@
         position: absolute;
         z-index: 4;
         top: 17px;
-        left: -26px;
-        width: 26px;
-        height: 82px;
+        left: -22px;
+        width: 22px;
+        height: 70px;
         padding: 0;
         display: inline-flex;
         align-items: center;
@@ -1732,7 +1732,7 @@
         border-radius: 0 6px 6px 0;
         background: var(--spectrum);
         color: var(--on-brand);
-        font-size: 11px;
+        font-size: 10px;
         line-height: 1;
         font-weight: 700;
         letter-spacing: 0.03em;
