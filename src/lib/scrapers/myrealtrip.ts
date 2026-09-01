@@ -9,6 +9,10 @@ import {
     retrySourceOperation,
     SourceResponseError,
 } from './source-response';
+import {
+    normalizePopularLowestRoutes,
+    type InterparkBenchmark,
+} from './interpark';
 
 /**
  * 마이리얼트립 항공권 스크래퍼 v5 (최종)
@@ -128,6 +132,21 @@ export interface MyrealtripBulkCoverage {
 export interface MyrealtripScrapeResult {
     flights: Flight[];
     bulkCoverage: MyrealtripBulkCoverage;
+    quickDepartureSeedCount: number;
+}
+
+export interface MyrealtripDateSeedCandidate {
+    originCityCode: 'SEL';
+    destinationCityCode: string;
+    destinationCityName: string;
+    departureDate: string;
+    returnDate: string;
+    referencePrice: number;
+    observedAt: string;
+}
+
+export interface MyrealtripScrapeOptions {
+    dateCandidates?: MyrealtripDateSeedCandidate[];
 }
 
 interface MyrealtripCoverageFlight {
@@ -230,6 +249,212 @@ function loadGidMap(): Record<string, number> {
 }
 
 const ROUTE_GID_MAP = loadGidMap();
+
+const INTERPARK_TO_MYREALTRIP_DESTINATION: Record<string, string> = {
+    SPK: 'CTS',
+    NHA: 'CXR',
+};
+
+const DESTINATION_AIRPORT_GROUPS: Record<string, string[]> = {
+    OSA: ['KIX', 'ITM', 'UKB'],
+    TYO: ['NRT', 'HND'],
+    SPK: ['CTS', 'OKD'],
+    NHA: ['CXR'],
+    BJS: ['PEK', 'PKX'],
+    SHA: ['PVG', 'SHA'],
+};
+
+const QUICK_DEPARTURE_SEED_PREFIX = 'mrt-quick-';
+const DEFAULT_QUICK_DEPARTURE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+const DEFAULT_QUICK_DEPARTURE_MAX_CANDIDATES = 8;
+const DEFAULT_QUICK_DEPARTURE_MAX_DAYS_AHEAD = 60;
+
+function formatKstDate(date: Date): string {
+    return date.toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' });
+}
+
+function resolveMyrealtripDestinationCode(interparkCode: string): string {
+    return INTERPARK_TO_MYREALTRIP_DESTINATION[interparkCode] || interparkCode;
+}
+
+function canonicalDestinationCode(code: string): string {
+    const upper = code.toUpperCase();
+    for (const [cityCode, airports] of Object.entries(DESTINATION_AIRPORT_GROUPS)) {
+        if (upper === cityCode || airports.includes(upper)) return cityCode;
+    }
+    return upper;
+}
+
+function dateSeedIdentity(
+    departureAirport: string,
+    destinationCode: string,
+    departureDate: string,
+    returnDate: string,
+): string {
+    return [
+        departureAirport === 'GMP' ? 'SEL' : departureAirport === 'ICN' ? 'SEL' : departureAirport,
+        canonicalDestinationCode(destinationCode),
+        departureDate,
+        returnDate,
+    ].join('|');
+}
+
+export function selectInterparkMyrealtripDateCandidates(
+    benchmark: Pick<InterparkBenchmark, 'popularLowestRoutes' | 'popularUpdatedAt'> | null | undefined,
+    options: {
+        now?: Date;
+        maxAgeMs?: number;
+        maxCandidates?: number;
+        maxDaysAhead?: number;
+    } = {},
+): MyrealtripDateSeedCandidate[] {
+    const now = options.now || new Date();
+    const observedAt = benchmark?.popularUpdatedAt || '';
+    const observedAtMs = new Date(observedAt).getTime();
+    const maxAgeMs = options.maxAgeMs ?? DEFAULT_QUICK_DEPARTURE_MAX_AGE_MS;
+    if (!Number.isFinite(observedAtMs) || now.getTime() - observedAtMs > maxAgeMs) return [];
+
+    const today = formatKstDate(now);
+    const cutoffDate = new Date(now.getTime() + (
+        options.maxDaysAhead ?? DEFAULT_QUICK_DEPARTURE_MAX_DAYS_AHEAD
+    ) * 24 * 60 * 60 * 1000);
+    const cutoff = formatKstDate(cutoffDate);
+    const configuredMaxCandidates = options.maxCandidates ?? DEFAULT_QUICK_DEPARTURE_MAX_CANDIDATES;
+    const maxCandidates = Number.isFinite(configuredMaxCandidates)
+        ? Math.max(
+            0,
+            Math.min(DEFAULT_QUICK_DEPARTURE_MAX_CANDIDATES, Math.floor(configuredMaxCandidates)),
+        )
+        : DEFAULT_QUICK_DEPARTURE_MAX_CANDIDATES;
+
+    const selected = new Map<string, MyrealtripDateSeedCandidate>();
+    for (const route of normalizePopularLowestRoutes(benchmark?.popularLowestRoutes)) {
+        const destinationCode = resolveMyrealtripDestinationCode(route.destinationCity.code);
+        if (!ROUTE_GID_MAP[destinationCode]
+            || route.outboundDate < today
+            || route.outboundDate > cutoff
+            || route.inboundDate <= route.outboundDate) {
+            continue;
+        }
+
+        const candidate: MyrealtripDateSeedCandidate = {
+            originCityCode: 'SEL',
+            destinationCityCode: destinationCode,
+            destinationCityName: route.destinationCity.name,
+            departureDate: route.outboundDate,
+            returnDate: route.inboundDate,
+            referencePrice: route.price,
+            observedAt,
+        };
+        const key = dateSeedIdentity('ICN', destinationCode, route.outboundDate, route.inboundDate);
+        const previous = selected.get(key);
+        if (!previous || candidate.referencePrice < previous.referencePrice) selected.set(key, candidate);
+    }
+
+    return Array.from(selected.values())
+        .sort((a, b) => a.departureDate.localeCompare(b.departureDate) || a.referencePrice - b.referencePrice)
+        .slice(0, maxCandidates);
+}
+
+export function appendMyrealtripDateSeedFlights(
+    flights: Flight[],
+    candidates: MyrealtripDateSeedCandidate[],
+): Flight[] {
+    const existingKeys = new Set(flights.map(flight => dateSeedIdentity(
+        flight.departure.airport,
+        flight.arrival.airport,
+        flight.departure.date,
+        flight.arrival.date,
+    )));
+    const added: Flight[] = [];
+
+    for (const candidate of candidates) {
+        const key = dateSeedIdentity(
+            'ICN',
+            candidate.destinationCityCode,
+            candidate.departureDate,
+            candidate.returnDate,
+        );
+        if (existingKeys.has(key)) continue;
+
+        const cityName = CITY_NAME_MAP[candidate.destinationCityCode]
+            || candidate.destinationCityName
+            || candidate.destinationCityCode;
+        const flight: Flight = {
+            id: `${QUICK_DEPARTURE_SEED_PREFIX}ICN-${candidate.destinationCityCode}-${candidate.departureDate.replace(/-/g, '')}-${candidate.returnDate.replace(/-/g, '')}`,
+            source: 'myrealtrip',
+            airline: '항공사 미정',
+            departure: {
+                city: '서울(인천)',
+                airport: 'ICN',
+                date: candidate.departureDate,
+                time: '',
+            },
+            arrival: {
+                city: cityName,
+                airport: candidate.destinationCityCode,
+                date: candidate.returnDate,
+                time: '',
+            },
+            price: candidate.referencePrice,
+            currency: 'KRW',
+            link: buildPartnerLink(
+                candidate.destinationCityCode,
+                candidate.departureDate,
+                candidate.returnDate,
+            ),
+            searchLink: buildPartnerLink(
+                candidate.destinationCityCode,
+                candidate.departureDate,
+                candidate.returnDate,
+            ),
+            region: lookupRegionByCity(cityName.replace(/\([^)]+\)/g, '').trim()) || '기타',
+        };
+        flights.push(flight);
+        added.push(flight);
+        existingKeys.add(key);
+    }
+
+    return added;
+}
+
+export function isMyrealtripQuickDepartureSeed(flight: { id?: string }): boolean {
+    return String(flight.id || '').startsWith(QUICK_DEPARTURE_SEED_PREFIX);
+}
+
+export function matchesMyrealtripQuickDepartureRoute(
+    flight: { arrival: { airport: string } },
+    result: {
+        isDirect?: boolean;
+        depTime?: string;
+        arrTime?: string;
+        retDepTime?: string;
+        retArrTime?: string;
+        routeAirports?: {
+            outboundDeparture: string;
+            outboundArrival: string;
+            returnDeparture: string;
+            returnArrival: string;
+        };
+    },
+): boolean {
+    if (!result.isDirect
+        || !result.routeAirports
+        || !result.depTime
+        || !result.arrTime
+        || !result.retDepTime
+        || !result.retArrTime) {
+        return false;
+    }
+    const expectedDestination = canonicalDestinationCode(flight.arrival.airport);
+    const actualOutbound = canonicalDestinationCode(result.routeAirports.outboundArrival);
+    const actualReturn = canonicalDestinationCode(result.routeAirports.returnDeparture);
+    const validOriginAirports = new Set(['ICN', 'GMP']);
+    return validOriginAirports.has(result.routeAirports.outboundDeparture)
+        && validOriginAirports.has(result.routeAirports.returnArrival)
+        && actualOutbound === expectedDestination
+        && actualReturn === expectedDestination;
+}
 
 // ── API 호출 ──────────────────────────────────────────
 
@@ -350,7 +575,9 @@ function getRegion(fare: BulkLowestFare, cityName: string): string {
 
 // ── 메인 크롤링 ──────────────────────────────────────────
 
-export async function scrapeMyrealtripWithDiagnostics(): Promise<MyrealtripScrapeResult> {
+export async function scrapeMyrealtripWithDiagnostics(
+    options: MyrealtripScrapeOptions = {},
+): Promise<MyrealtripScrapeResult> {
     console.log('\n=== 마이리얼트립 크롤링 시작 (실시간 캘린더 API) ===');
 
     const allFlights: Flight[] = [];
@@ -503,11 +730,25 @@ export async function scrapeMyrealtripWithDiagnostics(): Promise<MyrealtripScrap
         );
     }
 
+    const quickDepartureSeeds = appendMyrealtripDateSeedFlights(
+        allFlights,
+        options.dateCandidates || [],
+    );
+    if (quickDepartureSeeds.length > 0) {
+        console.log(
+            `[마이리얼트립] 빠른 출발 후보 ${quickDepartureSeeds.length}개를 실제 예약 화면 검증 대상으로 추가`,
+        );
+    }
+
     console.log(`\n[마이리얼트립] 완료: ${allFlights.length}개 항공편 수집`);
     if (emptyDepartureAirports.length > 0) {
         console.log(`[마이리얼트립] 원래 비어 있을 수 있는 출발지: ${emptyDepartureAirports.join(', ')}`);
     }
-    return { flights: allFlights, bulkCoverage };
+    return {
+        flights: allFlights,
+        bulkCoverage,
+        quickDepartureSeedCount: quickDepartureSeeds.length,
+    };
 }
 
 export async function scrapeMyrealtrip(): Promise<Flight[]> {

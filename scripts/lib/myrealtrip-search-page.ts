@@ -8,6 +8,7 @@ import {
 export interface FlightResult {
     price: number;
     airline: string;
+    isDirect: boolean;
     availableSeats?: number;
     depTime: string;
     arrTime: string;
@@ -114,6 +115,7 @@ export async function getMyrealtripSearchPrice(
                     returnDeparture: string;
                     returnArrival: string;
                 };
+                isDirect: boolean;
             };
 
             const directFlights: ParsedFlight[] = [];
@@ -143,9 +145,11 @@ export async function getMyrealtripSearchPrice(
                     .map(line => line.trim().match(airportPattern)?.[1])
                     .filter((code): code is string => Boolean(code));
 
+                const isDirect = summaryText.includes('직항') && !/경유|[12]회/.test(summaryText);
                 const flight = {
                     price,
                     airline,
+                    isDirect,
                     availableSeats: Number.isInteger(parsedSeats) && parsedSeats > 0 && parsedSeats <= 999
                         ? parsedSeats
                         : undefined,
@@ -162,7 +166,6 @@ export async function getMyrealtripSearchPrice(
                         returnArrival: airportCodes[3],
                     } : undefined,
                 };
-                const isDirect = summaryText.includes('직항') && !/경유|[12]회/.test(summaryText);
                 if (isDirect && !directFlights.some(item => item.price === flight.price)) {
                     directFlights.push(flight);
                 }
@@ -199,9 +202,11 @@ export async function getMyrealtripSearchPrice(
                         .map(line => line.trim().match(airportPattern)?.[1])
                         .filter((code): code is string => Boolean(code));
 
+                    const isDirect = text.includes('직항') && !/경유|[12]회/.test(text);
                     const flight = {
                         price,
                         airline,
+                        isDirect,
                         availableSeats: Number.isInteger(parsedSeats) && parsedSeats > 0 && parsedSeats <= 999
                             ? parsedSeats
                             : undefined,
@@ -218,7 +223,6 @@ export async function getMyrealtripSearchPrice(
                             returnArrival: airportCodes[3],
                         } : undefined,
                     };
-                    const isDirect = text.includes('직항') && !/경유|[12]회/.test(text);
                     if (isDirect && !directFlights.some(item => item.price === flight.price)) {
                         directFlights.push(flight);
                     }

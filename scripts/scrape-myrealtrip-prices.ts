@@ -2,8 +2,11 @@ import { chromium, Browser } from 'playwright';
 import fs from 'fs';
 import path from 'path';
 import {
+    isMyrealtripQuickDepartureSeed,
+    matchesMyrealtripQuickDepartureRoute,
     assertMyrealtripSeedReplacementSafe,
     scrapeMyrealtripWithDiagnostics,
+    selectInterparkMyrealtripDateCandidates,
 } from '../src/lib/scrapers/myrealtrip';
 import { getMyrealtripSearchPrice, type FlightResult } from './lib/myrealtrip-search-page';
 import {
@@ -22,6 +25,7 @@ import {
     clearUnsupportedInterparkDiscount,
     evaluateInterparkBenchmark,
 } from '../src/lib/interpark-benchmark';
+import { fetchInterparkPopularLowestRoutes } from '../src/lib/scrapers/interpark';
 
 /**
  * 마이리얼트립 실제 가격 스크래핑 (Playwright)
@@ -51,6 +55,7 @@ interface CachedFlight {
 const delay = (ms: number) => new Promise(r => setTimeout(r, ms));
 const randomDelay = () => delay(4000 + Math.random() * 4000); // 4~8초 랜덤
 const CACHE_PATH = path.resolve(process.cwd(), 'data/all-flights-cache.json');
+const INTERPARK_BENCHMARK_PATH = path.resolve(process.cwd(), 'data/interpark-prices.json');
 const MIN_RUN_INTERVAL_MS = 6 * 60 * 60 * 1000;
 const BATCH_SIZE = 10;
 const batchRest = () => delay(30_000 + Math.random() * 30_000);
@@ -117,7 +122,7 @@ function countCities(flights: CachedFlight[]): Record<string, number> {
 
 async function worker(
     browser: Browser,
-    tasks: { flight: CachedFlight; gid: number }[],
+    tasks: { flight: CachedFlight; gid: number; optionalQuickSeed: boolean }[],
     results: Map<string, FlightResult>,
     workerId: number,
     enforceCollapse = true,
@@ -127,27 +132,43 @@ async function worker(
     await page.setExtraHTTPHeaders({ 'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8' });
     let succeeded = 0;
     let consecutiveEmpty = 0;
+    let requiredProcessed = 0;
 
     try {
         for (let i = 0; i < tasks.length; i++) {
-            const { flight, gid } = tasks[i];
+            const { flight, gid, optionalQuickSeed } = tasks[i];
             const depDate = flight.departure.date;
             const arrDate = flight.arrival.date;
 
             if (!depDate || !arrDate) continue;
 
-            const result = await getMyrealtripSearchPrice(page, gid, depDate, arrDate);
+            let result = await getMyrealtripSearchPrice(page, gid, depDate, arrDate);
+            if (result && optionalQuickSeed && !matchesMyrealtripQuickDepartureRoute(flight, result)) {
+                console.warn(
+                    `[마이리얼트립] 빠른 출발 후보 경로 불일치 또는 직항 미확인 — `
+                    + `${flight.departure.airport}→${flight.arrival.airport} ${depDate}~${arrDate}`,
+                );
+                result = null;
+            }
             if (result) {
                 results.set(flight.id, result);
-                succeeded++;
-                consecutiveEmpty = 0;
-            } else {
-                consecutiveEmpty++;
             }
 
-            if (enforceCollapse) {
+            // 빠른 출발 후보는 없어도 정상인 보조 탐색이다. 후보 실패를 사이트 전체
+            // 응답 붕괴로 계산하면 정상 정규 수집까지 폐기될 수 있으므로 분리한다.
+            if (!optionalQuickSeed) {
+                requiredProcessed++;
+                if (result) {
+                    succeeded++;
+                    consecutiveEmpty = 0;
+                } else {
+                    consecutiveEmpty++;
+                }
+            }
+
+            if (enforceCollapse && !optionalQuickSeed) {
                 assertNoSourceResponseCollapse('마이리얼트립 실제 운임 화면', {
-                    processed: i + 1,
+                    processed: requiredProcessed,
                     succeeded,
                     consecutiveFailures: consecutiveEmpty,
                 }, {
@@ -200,9 +221,55 @@ async function main() {
         return;
     }
 
+    const MAX_DAYS = parseInt(process.env.MAX_DAYS_AHEAD || '60', 10);
+    let interparkBenchmark: any = null;
+    try {
+        if (fs.existsSync(INTERPARK_BENCHMARK_PATH)) {
+            interparkBenchmark = JSON.parse(fs.readFileSync(INTERPARK_BENCHMARK_PATH, 'utf8'));
+        }
+    } catch (error) {
+        console.warn(
+            '⚠️ 인터파크 월별 기준가 파일을 읽지 못했습니다. 이번 회차의 월별 기준가 필터를 건너뜁니다:',
+            error instanceof Error ? error.message : String(error),
+        );
+    }
+
+    // 빠른 출발 목록은 월별 기준가 캐시를 재사용하지 않는다. 오전·오후 마이리얼트립
+    // 정규 회차가 시작될 때마다 바로 새로 읽고, 실패하면 이번 회차의 추가 후보만 생략한다.
+    let quickDepartureSnapshot: {
+        popularUpdatedAt: string;
+        popularLowestRoutes: Awaited<ReturnType<typeof fetchInterparkPopularLowestRoutes>>;
+    } | null = null;
+    try {
+        console.log('🧭 인터파크 빠르게 떠나는 최저가 수집...');
+        const popularLowestRoutes = await fetchInterparkPopularLowestRoutes();
+        quickDepartureSnapshot = {
+            popularUpdatedAt: new Date().toISOString(),
+            popularLowestRoutes,
+        };
+        console.log(`🧭 인터파크 빠른 출발 목록 ${popularLowestRoutes.length}개 수집 완료`);
+    } catch (error) {
+        console.warn(
+            '⚠️ 인터파크 빠른 출발 목록을 받지 못해 이번 회차의 추가 후보만 건너뜁니다:',
+            error instanceof Error ? error.message : String(error),
+        );
+    }
+
+    const quickDepartureCandidates = selectInterparkMyrealtripDateCandidates(quickDepartureSnapshot, {
+        maxCandidates: Number(process.env.MRT_QUICK_DEPARTURE_MAX_CANDIDATES || '8'),
+        maxDaysAhead: MAX_DAYS,
+    });
+    console.log(
+        quickDepartureCandidates.length > 0
+            ? `🧭 인터파크 빠른 출발 일정 ${quickDepartureCandidates.length}개를 추가 검증 후보로 사용`
+            : '🧭 사용할 수 있는 최신 빠른 출발 일정 없음',
+    );
+
     // ── 1단계: Calendar API로 항공편 목록 갱신 ──────────────────
     console.log('📡 1단계: Calendar API로 최신 항공편 목록 수집...\n');
-    const seedResult = await scrapeMyrealtripWithDiagnostics();
+    const seedResult = await scrapeMyrealtripWithDiagnostics({
+        dateCandidates: quickDepartureCandidates,
+    });
     const freshFlights = seedResult.flights;
     console.log(`\n📡 Calendar API 결과: ${freshFlights.length}개 항공편 수집`);
 
@@ -222,7 +289,6 @@ async function main() {
     console.log(`♻️ MRT 캐시 교체: ${prevMrtCount}개 → ${freshFlights.length}개`);
 
     // 출발일 60일 초과 마이리얼트립 항공편 제거 (티키티킷에 표시하지 않음)
-    const MAX_DAYS = parseInt(process.env.MAX_DAYS_AHEAD || '60', 10);
     const nowDate = new Date();
     const cutoff = new Date(nowDate.getTime() + MAX_DAYS * 24 * 60 * 60 * 1000);
     const beforeCutoff = cache.flights.length;
@@ -256,7 +322,11 @@ async function main() {
             if (depDate < now) return false;       // 이미 지난 항공편 제외
             return true;
         })
-        .map(f => ({ flight: f, gid: gidMap[f.arrival.airport] }));
+        .map(f => ({
+            flight: f,
+            gid: gidMap[f.arrival.airport],
+            optionalQuickSeed: isMyrealtripQuickDepartureSeed(f),
+        }));
 
     console.log(`대상: ${tasks.length}개 노선 (gid 있는 마이리얼트립 항공편)`);
     if (mrtFlights.length === 0) {
@@ -265,8 +335,12 @@ async function main() {
     if (tasks.length === 0) {
         throw new Error(`마이리얼트립 ${mrtFlights.length}건에 조회 가능한 gid/날짜 조합이 없어 작업을 중단합니다.`);
     }
-    // 셔플 (매 회차 같은 노선이 항상 먼저 요청되지 않게 순서만 분산)
-    const shuffled = shuffle(tasks);
+    // 정규 항공권을 먼저 안전하게 확인하고, 없어도 정상인 빠른 출발 후보는 뒤에서
+    // 별도로 검증한다. 각 묶음 안의 순서만 분산한다.
+    const regularTasks = tasks.filter(task => !task.optionalQuickSeed);
+    const quickSeedTasks = tasks.filter(task => task.optionalQuickSeed);
+    const shuffled = [...shuffle(regularTasks), ...shuffle(quickSeedTasks)];
+    console.log(`  정규 ${regularTasks.length}개 / 빠른 출발 추가 후보 ${quickSeedTasks.length}개`);
 
     // 한 회선에서 동시 요청을 만들지 않는다.
     const WORKERS = 1;
@@ -290,7 +364,7 @@ async function main() {
     }
 
     // 2차 재시도: 실패한 노선만
-    const failedTasks = tasks.filter(t => !results.has(t.flight.id));
+    const failedTasks = regularTasks.filter(t => !results.has(t.flight.id));
     const MAX_ISOLATED_RETRIES = 10;
     const isolatedRetryLimit = Math.min(MAX_ISOLATED_RETRIES, Math.ceil(tasks.length * 0.1));
     if (failedTasks.length > 0 && failedTasks.length <= isolatedRetryLimit) {
@@ -305,7 +379,7 @@ async function main() {
         } finally {
             await retryBrowser.close();
         }
-        const recovered = failedTasks.length - tasks.filter(t => !results.has(t.flight.id)).length;
+        const recovered = failedTasks.length - regularTasks.filter(t => !results.has(t.flight.id)).length;
         console.log(`✅ 재시도 결과: ${recovered}개 복구 성공`);
     } else if (failedTasks.length > isolatedRetryLimit) {
         console.log(`\n⏸️ 실패 ${failedTasks.length}개는 대량 재시도하지 않습니다 (단일 회차 재시도 한도 ${isolatedRetryLimit}개).`);
@@ -313,12 +387,13 @@ async function main() {
 
     // 사이트 구조 변경·차단·브라우저 장애처럼 전 노선에 영향을 주는 실패를
     // 개별 항공권 매진으로 오판하지 않는다. 이 경우 파일을 쓰지 않고 실패로 종료한다.
-    const successRatio = results.size / tasks.length;
+    const regularSuccessCount = regularTasks.filter(task => results.has(task.flight.id)).length;
+    const successRatio = regularSuccessCount / regularTasks.length;
     const minSuccessRatio = Number(process.env.MIN_SUCCESS_RATIO || '0.5');
     if (successRatio < minSuccessRatio) {
         throw new SourceResponseError(
             'soft-block',
-            `마이리얼트립 대량 조회 실패: ${results.size}/${tasks.length}건 성공 ` +
+            `마이리얼트립 대량 조회 실패: ${regularSuccessCount}/${regularTasks.length}건 성공 ` +
             `(${(successRatio * 100).toFixed(1)}%, 최소 ${(minSuccessRatio * 100).toFixed(0)}%). 기존 캐시를 보존합니다.`,
             200,
         );
@@ -345,6 +420,15 @@ async function main() {
         const idx = cache.flights.findIndex((f: any) => f.id === flightId);
         if (idx >= 0) {
             const oldPrice = cache.flights[idx].price;
+            if (isMyrealtripQuickDepartureSeed(cache.flights[idx])) {
+                const difference = result.price - oldPrice;
+                console.log(
+                    `  🧭 빠른 출발 후보 확인: ${cache.flights[idx].arrival?.city} `
+                    + `${cache.flights[idx].departure?.date}~${cache.flights[idx].arrival?.date} `
+                    + `참고 ${oldPrice.toLocaleString()}원 → 마이리얼트립 ${result.price.toLocaleString()}원 `
+                    + `(${difference >= 0 ? '+' : ''}${difference.toLocaleString()}원)`,
+                );
+            }
             cache.flights[idx].price = result.price;
             cache.flights[idx].airline = cleanAirlineName(result.airline)
                 || cleanAirlineName(cache.flights[idx].airline)
@@ -391,11 +475,10 @@ async function main() {
 
     // ── 인터파크 벤치마크 필터링 ──────────────────────────────
     console.log(`\n=== 인터파크 가격 벤치마크 ===`);
-    const benchmarkPath = path.resolve(process.cwd(), 'data/interpark-prices.json');
     let benchmarkFiltered = 0;
     try {
-        if (fs.existsSync(benchmarkPath)) {
-            const benchmark = JSON.parse(fs.readFileSync(benchmarkPath, 'utf8'));
+        if (interparkBenchmark) {
+            const benchmark = interparkBenchmark;
             const cacheAge = Date.now() - new Date(benchmark.timestamp).getTime();
             console.log(`♻️ 인터파크 캐시 사용 (${Math.round(cacheAge / 3600000)}시간 전)`);
 
@@ -419,7 +502,10 @@ async function main() {
         console.error('⚠️ 인터파크 벤치마크 실패:', e);
     }
     // 벤치마크 파일이 없거나 읽기에 실패해도 과거 캐시에 저장된 지방 출발 할인율은 제거한다.
-    cache.flights.forEach((flight: CachedFlight) => clearUnsupportedInterparkDiscount(flight));
+    cache.flights.forEach((flight: CachedFlight) => clearUnsupportedInterparkDiscount(
+        flight,
+        interparkBenchmark,
+    ));
 
     // ── 네이버 최저가 비교 필터링 (비활성화) ──────────────────────────────
     // console.log(`\n=== 네이버 최저가 비교 ===`);
@@ -489,7 +575,9 @@ async function main() {
     const elapsed = ((Date.now() - startTime) / 60000).toFixed(1);
     console.log(`\n=== 스크래핑 완료 ===`);
     console.log(`소요: ${elapsed}분`);
-    console.log(`검증: ${results.size}/${tasks.length}개 성공`);
+    const verifiedQuickSeeds = quickSeedTasks.filter(task => results.has(task.flight.id)).length;
+    console.log(`검증: 정규 ${regularSuccessCount}/${regularTasks.length}개 성공`);
+    console.log(`빠른 출발 추가: ${verifiedQuickSeeds}/${quickSeedTasks.length}개 실제 예약 화면 확인`);
     console.log(`보정: ${updated}개 (↑${priceUp} ↓${priceDown})`);
     console.log(`잔여 좌석: ${seatsUpdated}/${updated}개 확인`);
     console.log(`표시 제외: ${unverifiedRemoved}개`);

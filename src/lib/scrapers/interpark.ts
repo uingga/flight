@@ -54,12 +54,9 @@ export interface InterparkBenchmark {
     pairUpdatedAt?: Record<string, string>;
     /** 빈 응답·일시 오류를 포함한 출발지별 마지막 확인 시각. 키 형식: SEL|FUK */
     pairCheckedAt?: Record<string, string>;
-    /**
-     * 인터파크 메인의 '빠르게 떠나는 최저가 해외항공' 원본.
-     * 월평균·월최저가와 성격이 다르므로 prices에 합치지 않는다.
-     * 향후 실제 날짜가 일치하는 추가 수집 후보를 고를 때만 별도로 사용한다.
-     */
+    /** 과거 캐시 호환용. 새 수집은 이 값을 월별 기준가 파일에 저장하지 않는다. */
     popularLowestRoutes?: InterparkPopularLowestRoute[];
+    /** 과거 캐시 호환용. */
     popularUpdatedAt?: string;
     refresh?: {
         planned: number;
@@ -67,7 +64,6 @@ export interface InterparkBenchmark {
         succeeded: number;
         empty: number;
         failed: number;
-        popularRequested: boolean;
         stoppedReason?: 'access-restriction' | 'consecutive-failures' | 'response-collapse';
     };
 }
@@ -79,7 +75,6 @@ export interface InterparkRefreshOptions {
     maxCitiesPerRun?: number;
     now?: Date;
     pairTtlMs?: number;
-    popularTtlMs?: number;
 }
 
 export interface InterparkRouteTarget {
@@ -89,7 +84,6 @@ export interface InterparkRouteTarget {
 
 const DEFAULT_MAX_PAIRS_PER_REFRESH = 5;
 export const DEFAULT_INTERPARK_PAIR_TTL_MS = 14 * 24 * 60 * 60 * 1000;
-export const DEFAULT_INTERPARK_POPULAR_TTL_MS = 24 * 60 * 60 * 1000;
 const MAX_CONSECUTIVE_FAILURES = 3;
 const randomDelay = (minSeconds: number, maxSeconds: number) =>
     new Promise(resolve => setTimeout(
@@ -304,7 +298,11 @@ export function normalizePopularLowestRoutes(value: unknown): InterparkPopularLo
     return Array.from(routes.values());
 }
 
-async function fetchPopularLowestPrices(): Promise<InterparkPopularLowestRoute[]> {
+/**
+ * 인터파크 메인의 '빠르게 떠나는 최저가 해외항공'을 그 시점에 한 번 읽는다.
+ * 월별 기준가와 합치거나 파일에 저장하지 않고, 마이리얼트립 회차의 추가 날짜 후보로만 쓴다.
+ */
+export async function fetchInterparkPopularLowestRoutes(): Promise<InterparkPopularLowestRoute[]> {
     const url = 'https://travel.interpark.com/air/air-api/inpark-air/search/international/recommendations/popular-cities/lowest-price';
     const response = await fetchSourceText('인터파크 인기 도시 묶음 최저가', url, {
         headers: {
@@ -581,27 +579,6 @@ export async function scrapeInterparkBenchmark(
         }
     }
 
-    // 빠른 출발 후보는 월별 기준가와 별개다. 최신성이 더 중요하지만 회차마다 요청할 필요는 없어 하루 1회만 갱신한다.
-    let popularLowestRoutes = previous?.popularLowestRoutes;
-    let popularUpdatedAt = previous?.popularUpdatedAt;
-    let popularRequested = false;
-    const popularUpdatedMs = new Date(popularUpdatedAt || '').getTime();
-    const popularTtlMs = options.popularTtlMs ?? DEFAULT_INTERPARK_POPULAR_TTL_MS;
-    const popularDue = !Number.isFinite(popularUpdatedMs) || now.getTime() - popularUpdatedMs >= popularTtlMs;
-    if (!stoppedReason && popularDue) {
-        try {
-            await randomDelay(3, 6);
-            popularRequested = true;
-            popularLowestRoutes = await fetchPopularLowestPrices();
-            popularUpdatedAt = nowIso;
-        } catch (error) {
-            console.warn(
-                '[인터파크] 인기 도시 묶음 갱신 실패 — 기존 값 유지: '
-                + (error instanceof Error ? error.message : String(error)),
-            );
-        }
-    }
-
     const benchmark: InterparkBenchmark = {
         timestamp: nowIso,
         originCity: 'SEL',
@@ -612,15 +589,12 @@ export async function scrapeInterparkBenchmark(
         cityCheckedAt,
         pairUpdatedAt,
         pairCheckedAt,
-        ...(popularLowestRoutes ? { popularLowestRoutes } : {}),
-        ...(popularUpdatedAt ? { popularUpdatedAt } : {}),
         refresh: {
             planned: plannedPairs.length,
             attempted: attemptedCount,
             succeeded: successCount,
             empty: emptyCount,
             failed: failedCount,
-            popularRequested,
             ...(stoppedReason ? { stoppedReason } : {}),
         },
     };
@@ -628,7 +602,7 @@ export async function scrapeInterparkBenchmark(
     console.log(
         `[인터파크] 순환 갱신 완료: 계획 ${plannedPairs.length}개, 실제 조합 요청 ${attemptedCount}, `
         + `성공 ${successCount}, 빈 응답 ${emptyCount}, 실패 ${failedCount}, `
-        + `인기 도시 요청 ${popularRequested ? 1 : 0}, 전체 보존 ${Object.values(pricesByOrigin).reduce((sum, value) => sum + Object.keys(value).length, 0)}개 조합`,
+        + `전체 보존 ${Object.values(pricesByOrigin).reduce((sum, value) => sum + Object.keys(value).length, 0)}개 조합`,
     );
 
     // 요약 출력
