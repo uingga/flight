@@ -33,7 +33,7 @@ test('waits until the matching GitHub crawl slot is complete', () => {
     assert.equal(result.nextExpectedAt, '2026-08-30T05:23:00.000Z');
 });
 
-test('runs only sources whose GitHub circuit is active', () => {
+test('skips the ttang PC fallback in the 11:12 KST rest slot', () => {
     const result = evaluateLocalSourceFallback({
         now: '2026-08-30T02:20:00.000Z',
         cache: {
@@ -45,9 +45,56 @@ test('runs only sources whose GitHub circuit is active', () => {
         },
     });
 
+    assert.equal(result.shouldRun, false);
+    assert.equal(result.reason, 'source_schedule_throttled');
+    assert.deepEqual(result.sources, []);
+    assert.deepEqual(result.scheduleThrottledSources, ['ttang']);
+});
+
+test('runs the ttang PC fallback in the 08:17 and 14:23 KST collection slots', () => {
+    for (const sample of [
+        {
+            now: '2026-08-29T23:25:00.000Z',
+            fullCrawlUpdatedAt: '2026-08-29T23:23:00.000Z',
+        },
+        {
+            now: '2026-08-30T05:30:00.000Z',
+            fullCrawlUpdatedAt: '2026-08-30T05:25:00.000Z',
+        },
+    ]) {
+        const result = evaluateLocalSourceFallback({
+            now: sample.now,
+            cache: {
+                fullCrawlUpdatedAt: sample.fullCrawlUpdatedAt,
+                sourceCircuits: {
+                    ttang: circuit({ nextProbeAt: '2026-08-31T06:00:00.000Z' }),
+                },
+            },
+        });
+
+        assert.equal(result.shouldRun, true);
+        assert.equal(result.reason, 'active_github_circuit');
+        assert.deepEqual(result.sources, ['ttang']);
+        assert.deepEqual(result.scheduleThrottledSources, []);
+    }
+});
+
+test('skips only ttang in rest slots while another blocked source can still run', () => {
+    const result = evaluateLocalSourceFallback({
+        now: '2026-08-30T08:40:00.000Z', // 17:40 KST, 17:31 slot
+        cache: {
+            fullCrawlUpdatedAt: '2026-08-30T08:35:00.000Z',
+            sourceCircuits: {
+                ttang: circuit({ nextProbeAt: '2026-08-31T09:00:00.000Z' }),
+                ybtour: circuit({ nextProbeAt: '2026-08-31T09:00:00.000Z' }),
+            },
+        },
+    });
+
     assert.equal(result.shouldRun, true);
     assert.equal(result.reason, 'active_github_circuit');
-    assert.deepEqual(result.sources, ['ttang']);
+    assert.deepEqual(result.sources, ['ybtour']);
+    assert.deepEqual(result.scheduleThrottledSources, ['ttang']);
 });
 
 test('a PC-side block pauses only the local fallback', () => {

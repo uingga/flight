@@ -8,6 +8,13 @@ import {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const SOURCE_KEYS = ['ybtour', 'hanatour', 'modetour', 'onlinetour', 'ttang'];
+// 땡처리닷컴은 GitHub 차단 회로가 열린 동안에도 PC 회선을 과도하게 쓰지 않도록
+// 일반 4개 회차 가운데 08:17/14:23 KST에만 대체 수집한다. 작업 자체는 다른
+// 차단 소스를 위해 네 회차 모두 기동하므로 여기서 소스 단위로 제한한다.
+const TTANG_PC_FALLBACK_SLOT_MINUTES_UTC = new Set([
+    23 * 60 + 17, // 08:17 KST
+    5 * 60 + 23,  // 14:23 KST
+]);
 
 function timestamp(value) {
     const parsed = new Date(value || '').getTime();
@@ -31,6 +38,14 @@ function surroundingSlots(nowTimestamp, crons = DAILY_CRAWL_CRONS) {
         ? null
         : slots.find(slot => slot > expectedAt) ?? null;
     return { expectedAt, nextExpectedAt };
+}
+
+function isTtangPcFallbackSlot(expectedAt) {
+    if (expectedAt === null) return false;
+    const slot = new Date(expectedAt);
+    return TTANG_PC_FALLBACK_SLOT_MINUTES_UTC.has(
+        slot.getUTCHours() * 60 + slot.getUTCMinutes()
+    );
 }
 
 export function evaluateLocalSourceFallback({
@@ -66,6 +81,7 @@ export function evaluateLocalSourceFallback({
     const sources = [];
     const localCooldownSources = [];
     const manualCaptureSources = [];
+    const scheduleThrottledSources = [];
     for (const source of SOURCE_KEYS) {
         const circuit = cache.sourceCircuits?.[source];
         const githubNextProbeAt = timestamp(circuit?.nextProbeAt);
@@ -81,6 +97,10 @@ export function evaluateLocalSourceFallback({
         const localNextProbeAt = timestamp(circuit?.localFallback?.nextProbeAt);
         if (localNextProbeAt !== null && nowTimestamp < localNextProbeAt) {
             localCooldownSources.push(source);
+            continue;
+        }
+        if (source === 'ttang' && !isTtangPcFallbackSlot(expectedAt)) {
+            scheduleThrottledSources.push(source);
             continue;
         }
         sources.push(source);
@@ -100,10 +120,13 @@ export function evaluateLocalSourceFallback({
                 ? 'manual_capture_required'
             : localCooldownSources.length > 0
                 ? 'local_cooldown'
+                : scheduleThrottledSources.length > 0
+                    ? 'source_schedule_throttled'
                 : 'no_active_circuits',
         sources,
         manualCaptureSources,
         localCooldownSources,
+        scheduleThrottledSources,
         fullCrawlUpdatedAt: new Date(fullCrawlAt).toISOString(),
         ...base,
     };
