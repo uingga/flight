@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import todayPick from '../../../../data/today-pick.json';
 import { Flight, FlightSearchParams } from '@/types/flight';
-import { resolveCityCode } from '@/lib/scrapers/interpark';
 import { getComparisonFreshness, getEffectivePrice } from '@/lib/price-quality';
 import { getUsableNaverComparison } from '@/lib/naver-comparison';
 import { filterStaleSourceFlights, getStaleSources } from '@/lib/source-freshness';
@@ -13,7 +12,11 @@ import {
     getNearbyNaverRecommendationAdjustment,
 } from '@/lib/naver-nearby-price';
 import { normalizeCity } from '@/lib/utils/flight-helpers';
-import { isInterparkBenchmarkApplicable } from '@/lib/interpark-benchmark';
+import {
+    getInterparkRouteMonths,
+    interparkClientPriceKey,
+    isInterparkBenchmarkApplicable,
+} from '@/lib/interpark-benchmark';
 import {
     compactPublicPriceHistory,
     publicFlightRouteKey,
@@ -248,9 +251,8 @@ export async function GET(request: NextRequest) {
         // 항공사명 정규화
         allFlights = allFlights.map(f => ({
             ...f,
-            // 인터파크 추천 가격은 서울(SEL) 출발 기준이다. 다음 크롤 전까지 남아 있을 수 있는
-            // 과거 지방 출발 할인율도 API 응답에서 즉시 무효화한다.
-            discountRate: isInterparkBenchmarkApplicable(f) ? f.discountRate : 0,
+            // 크롤 단계에서 같은 출발 권역·도착 도시 기준가가 있을 때만 계산된 값이다.
+            discountRate: isInterparkBenchmarkApplicable(f) ? (f.discountRate || 0) : 0,
             // 신고 후 한 항공권만 다시 확인한 경우에는 그 항공권의 시각이 여행사 전체
             // 크롤 시각보다 정확하다. 개별 확인값을 지우지 않고 우선 사용한다.
             priceCheckedAt: f.priceCheckedAt || sourceUpdatedAt[f.source] || lastUpdated || undefined,
@@ -492,50 +494,17 @@ export async function GET(request: NextRequest) {
             const ipPath = path3.join(process.cwd(), 'data', 'interpark-prices.json');
             if (fs3.existsSync(ipPath)) {
                 const ipData = JSON.parse(fs3.readFileSync(ipPath, 'utf-8'));
-                // 도시코드 → 도시명 역매핑 생성
-                const codeToCityName: Record<string, string> = {};
-                const allCityNames = new Set<string>();
                 allFlights.forEach(f => {
                     if (!isInterparkBenchmarkApplicable(f)) return;
                     if (f.arrival?.city) {
-                        const code = resolveCityCode(f.arrival.city, f.arrival.airport);
-                        const cityName = f.arrival.city.replace(/\([^)]+\)/, '').trim();
-                        if (code && !codeToCityName[code]) {
-                            codeToCityName[code] = cityName;
+                        const cityName = normalizeCity(f.arrival.city).replace(/\([^)]+\)/, '').trim();
+                        const key = interparkClientPriceKey(f, cityName);
+                        const months = getInterparkRouteMonths(f, ipData);
+                        if (key && months && typeof months === 'object') {
+                            interparkPrices[key] = months as Record<string, { avg: number; lowest: number }>;
                         }
-                        allCityNames.add(cityName);
                     }
                 });
-                // 인터파크 가격을 도시명 기준으로 변환
-                if (ipData.prices) {
-                    for (const [cityCode, months] of Object.entries(ipData.prices)) {
-                        const cityName = codeToCityName[cityCode];
-                        if (cityName && typeof months === 'object') {
-                            interparkPrices[cityName] = months as Record<string, { avg: number; lowest: number }>;
-                        }
-                    }
-                }
-                // 도시명 별칭 매핑: 같은 공항코드를 공유하는 별칭들에도 동일 데이터 적용
-                const cityAliases: Record<string, string[]> = {
-                    'HKT': ['푸켓', '푸껫'],
-                    'TAG': ['보홀', '보홀팡라오'],
-                    'TPE': ['타이페이', '타이베이', '대만'],
-                    'RMQ': ['타이중'],
-                    'SPK': ['삿포로', '치토세'],
-                    'KHH': ['가오슝', '카오슝'],
-                    'KLO': ['칼리보', '보라카이'],
-                    'HIJ': ['히로시마'],
-                };
-                for (const [code, aliases] of Object.entries(cityAliases)) {
-                    const data = ipData.prices?.[code];
-                    if (data && typeof data === 'object') {
-                        for (const alias of aliases) {
-                            if (allCityNames.has(alias) && !interparkPrices[alias]) {
-                                interparkPrices[alias] = data as Record<string, { avg: number; lowest: number }>;
-                            }
-                        }
-                    }
-                }
                 console.log(`인터파크 벤치마크: ${Object.keys(interparkPrices).length}개 도시 로드`);
             }
         } catch (e) { }
@@ -546,8 +515,8 @@ export async function GET(request: NextRequest) {
             flights: allFlights,
             interparkPrices,
             interparkBenchmarkScope: {
-                originCity: 'SEL',
-                originAirports: ['ICN', 'GMP'],
+                originCities: ['SEL', 'PUS', 'CJJ', 'TAE', 'CJU', 'MWX'],
+                pairTtlDays: 14,
             },
             sources: {
 

@@ -19,7 +19,10 @@ import {
     type NaverSellerProbePage,
 } from '../src/lib/naver-seller-probe';
 import { resolveCityCode } from '../src/lib/scrapers/interpark';
-import { isInterparkBenchmarkApplicable } from '../src/lib/interpark-benchmark';
+import {
+    getInterparkRouteMonths,
+    isInterparkBenchmarkApplicable,
+} from '../src/lib/interpark-benchmark';
 import { getRecommendationFreshness } from '../src/lib/flight-recommendation';
 import {
     buildNaverPriceKey,
@@ -205,11 +208,13 @@ interface InterparkMonthPrice {
     lowest: number;
 }
 
-let interparkPrices: Record<string, Record<string, InterparkMonthPrice>> = {};
+let interparkBenchmark: {
+    prices?: Record<string, Record<string, InterparkMonthPrice>>;
+    pricesByOrigin?: Record<string, Record<string, Record<string, InterparkMonthPrice>>>;
+} = {};
 try {
     if (fs.existsSync(INTERPARK_FILE)) {
-        const parsed = JSON.parse(fs.readFileSync(INTERPARK_FILE, 'utf-8'));
-        interparkPrices = parsed?.prices || {};
+        interparkBenchmark = JSON.parse(fs.readFileSync(INTERPARK_FILE, 'utf-8'));
     }
 } catch {
     console.warn('⚠️ 인터파크 기준가를 읽지 못해 실결제가 중심으로 임시 추천순을 계산합니다.');
@@ -848,7 +853,7 @@ function provisionalRecommendationScore(flight: FlightData): number {
     );
     const departureMonth = normalizeDate(flight.departure.date).substring(0, 7);
     const cityData = isInterparkBenchmarkApplicable(flight) && cityCode
-        ? interparkPrices[cityCode]
+        ? getInterparkRouteMonths(flight, interparkBenchmark) as Record<string, InterparkMonthPrice> | undefined
         : undefined;
     let benchmark = cityData?.[departureMonth];
     if (!benchmark && cityData) {

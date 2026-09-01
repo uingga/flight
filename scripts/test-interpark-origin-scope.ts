@@ -26,19 +26,31 @@ const benchmark = {
 assert.equal(isInterparkBenchmarkApplicable(flight('ICN', '인천')), true);
 assert.equal(isInterparkBenchmarkApplicable(flight('GMP', '김포')), true);
 for (const [airport, city] of [['PUS', '부산'], ['TAE', '대구'], ['CJJ', '청주'], ['CJU', '제주']]) {
-    assert.equal(isInterparkBenchmarkApplicable(flight(airport, city)), false, `${airport}는 서울 기준가 적용 대상이 아님`);
+    assert.equal(isInterparkBenchmarkApplicable(flight(airport, city)), true, `${airport}는 출발지별 기준가 수집 대상임`);
 }
 assert.equal(isInterparkBenchmarkApplicable({ departure: { city: '서울' } }), true);
-assert.equal(isInterparkBenchmarkApplicable({ departure: { city: '부산' } }), false);
+assert.equal(isInterparkBenchmarkApplicable({ departure: { city: '부산' } }), true);
 
 const expensiveSeoul = evaluateInterparkBenchmark(flight('ICN', '인천'), benchmark);
 assert.equal(expensiveSeoul.applicable, true);
 assert.equal(expensiveSeoul.keep, false);
 
 const expensiveBusan = evaluateInterparkBenchmark(flight('PUS', '부산'), benchmark);
-assert.equal(expensiveBusan.applicable, false);
+assert.equal(expensiveBusan.applicable, true);
 assert.equal(expensiveBusan.keep, true);
 assert.equal(expensiveBusan.discountRate, 0);
+
+const busanBenchmark = {
+    ...benchmark,
+    pricesByOrigin: {
+        PUS: {
+            FUK: { '2026-09': { avg: 300_000, lowest: 200_000 } },
+        },
+    },
+};
+const expensiveBusanWithPrice = evaluateInterparkBenchmark(flight('PUS', '부산'), busanBenchmark);
+assert.equal(expensiveBusanWithPrice.applicable, true);
+assert.equal(expensiveBusanWithPrice.keep, false);
 
 const cheapSeoul = evaluateInterparkBenchmark(flight('ICN', '인천', 150_000), benchmark);
 assert.equal(cheapSeoul.keep, true);
@@ -46,12 +58,12 @@ assert.equal(cheapSeoul.discountRate, 25);
 
 const staleBusanDiscount = flight('PUS', '부산', 150_000);
 staleBusanDiscount.discountRate = 42;
-clearUnsupportedInterparkDiscount(staleBusanDiscount);
+clearUnsupportedInterparkDiscount(staleBusanDiscount, benchmark);
 assert.equal(staleBusanDiscount.discountRate, 0);
 
 const validSeoulDiscount = flight('ICN', '인천', 150_000);
 validSeoulDiscount.discountRate = 25;
-clearUnsupportedInterparkDiscount(validSeoulDiscount);
+clearUnsupportedInterparkDiscount(validSeoulDiscount, benchmark);
 assert.equal(validSeoulDiscount.discountRate, 25);
 
-console.log('인터파크 서울 출발 기준 범위 테스트 통과');
+console.log('인터파크 출발지별 기준 범위 테스트 통과');

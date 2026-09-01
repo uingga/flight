@@ -12,7 +12,10 @@ import {
 } from './price-quality';
 import { normalizeCity } from './utils/flight-helpers';
 import { getRegionByCity } from './utils/region-mapper';
-import { isInterparkBenchmarkApplicable } from './interpark-benchmark';
+import {
+    getInterparkClientMonths,
+    isInterparkBenchmarkApplicable,
+} from './interpark-benchmark';
 
 export type InterparkPrices = Record<string, Record<string, { avg: number; lowest: number }>>;
 export type RecommendationPriceHistory = Record<string, Array<{ date: string; minPrice: number }>>;
@@ -315,7 +318,7 @@ function closestInterparkMonth(
         .replace(/\(.*\)/g, '')
         .trim()
         .substring(0, 7);
-    const cityData = interparkPrices[city];
+    const cityData = getInterparkClientMonths(flight, interparkPrices, city);
     const data = departureMonth ? cityData?.[departureMonth] : undefined;
     return { month: data ? departureMonth : null, data: data || null };
 }

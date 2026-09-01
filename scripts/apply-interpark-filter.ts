@@ -30,7 +30,7 @@ cache.flights = cache.flights.filter((f: any) => {
     return true;
 });
 
-cache.flights.forEach((flight: any) => clearUnsupportedInterparkDiscount(flight));
+cache.flights.forEach((flight: any) => clearUnsupportedInterparkDiscount(flight, benchmark));
 
 const mrtAfter = cache.flights.filter((f: any) => f.source === 'myrealtrip').length;
 console.log(`\n제거: ${removed}건`);

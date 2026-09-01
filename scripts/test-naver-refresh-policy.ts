@@ -46,7 +46,7 @@ assert.equal(getNaverRefreshTier(flight({ discountRate: 20 }), now, config), 'pr
 assert.equal(getNaverRefreshTier(flight({
     discountRate: 20,
     departure: { airport: 'PUS', city: '부산', date: '2026-09-20' },
-}), now, config), 'standard');
+}), now, config), 'priority');
 assert.equal(getNaverRefreshTier(flight({
     departure: { airport: 'ICN', city: '인천', date: '2026-09-10', time: '08:00', arrivalTime: '10:00' },
 }), now, config), 'priority');

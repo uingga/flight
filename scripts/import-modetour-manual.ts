@@ -289,7 +289,7 @@ export function importModetourManualCapture({
     }
 
     const flights = retainedFlights;
-    flights.forEach(flight => clearUnsupportedInterparkDiscount(flight));
+    flights.forEach(flight => clearUnsupportedInterparkDiscount(flight, benchmark));
     // 결과가 0건인 완전 캡처도 기존 지역을 비우고 검수 사실을 기록하는 유효한 반영이다.
     const hasMutation = completeRegionsApplied.length > 0
         || acceptedByKey.size > 0

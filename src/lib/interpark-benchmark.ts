@@ -1,4 +1,7 @@
-import { resolveCityCode } from './scrapers/interpark';
+import {
+    resolveCityCode,
+    resolveInterparkOriginCityCode,
+} from './scrapers/interpark';
 
 export interface InterparkComparableFlight {
     price?: number;
@@ -21,6 +24,7 @@ export interface InterparkMonthBenchmark {
 
 export interface InterparkBenchmarkLike {
     prices?: Record<string, Record<string, InterparkMonthBenchmark>>;
+    pricesByOrigin?: Record<string, Record<string, Record<string, InterparkMonthBenchmark>>>;
 }
 
 export interface InterparkBenchmarkEvaluation {
@@ -29,23 +33,63 @@ export interface InterparkBenchmarkEvaluation {
     discountRate: number;
     average?: number;
     lowest?: number;
+    originCity?: string;
     cityCode?: string;
     yearMonth?: string;
 }
 
 /**
- * 인터파크 월별/인기 최저가 API는 출발지를 받지 않으며 공식 화면에서 서울(SEL) 기준으로 노출된다.
- * 따라서 인천·김포 출발만 이 가격과 비교할 수 있다. 공항 코드가 없거나 깨진 예전 데이터만 도시명으로 보완한다.
+ * 인터파크 월별 API가 지원하고 실제 수집 대상으로 삼는 국내 출발 권역인지 확인한다.
+ * 비교 데이터가 아직 없는 신규 권역은 적용 가능하되 중립 처리한다.
  */
 export function isInterparkBenchmarkApplicable(
     flight: Pick<InterparkComparableFlight, 'departure'>,
 ): boolean {
-    const airport = String(flight.departure?.airport || '').trim().toUpperCase();
-    if (airport === 'ICN' || airport === 'GMP') return true;
-    if (/^[A-Z]{3}$/.test(airport)) return false;
+    return Boolean(resolveInterparkOriginCityCode(
+        String(flight.departure?.city || ''),
+        String(flight.departure?.airport || ''),
+    ));
+}
 
-    const city = String(flight.departure?.city || '').replace(/\s+/g, '');
-    return /서울|인천|김포/.test(city);
+export function getInterparkRouteMonths(
+    flight: Pick<InterparkComparableFlight, 'departure' | 'arrival'>,
+    benchmark: InterparkBenchmarkLike,
+): Record<string, InterparkMonthBenchmark> | undefined {
+    const originCity = resolveInterparkOriginCityCode(
+        String(flight.departure?.city || ''),
+        String(flight.departure?.airport || ''),
+    );
+    const cityCode = resolveCityCode(
+        String(flight.arrival?.city || ''),
+        String(flight.arrival?.airport || ''),
+    );
+    if (!originCity || !cityCode) return undefined;
+    return benchmark.pricesByOrigin?.[originCity]?.[cityCode]
+        || (originCity === 'SEL' ? benchmark.prices?.[cityCode] : undefined);
+}
+
+export function interparkClientPriceKey(
+    flight: Pick<InterparkComparableFlight, 'departure' | 'arrival'>,
+    normalizedArrivalCity?: string,
+): string | null {
+    const originCity = resolveInterparkOriginCityCode(
+        String(flight.departure?.city || ''),
+        String(flight.departure?.airport || ''),
+    );
+    const arrivalCity = (normalizedArrivalCity
+        || String(flight.arrival?.city || '').replace(/\([^)]+\)/g, '').trim());
+    if (!originCity || !arrivalCity) return null;
+    return originCity === 'SEL' ? arrivalCity : `${originCity}|${arrivalCity}`;
+}
+
+export function getInterparkClientMonths<T>(
+    flight: Pick<InterparkComparableFlight, 'departure' | 'arrival'>,
+    prices: Record<string, T>,
+    normalizedArrivalCity?: string,
+): T | undefined {
+    const key = interparkClientPriceKey(flight, normalizedArrivalCity);
+    if (!key) return undefined;
+    return prices[key];
 }
 
 function departureYearMonth(flight: InterparkComparableFlight): string | null {
@@ -70,7 +114,11 @@ export function evaluateInterparkBenchmark(
         String(flight.arrival?.airport || ''),
     );
     const yearMonth = departureYearMonth(flight);
-    const month = cityCode && yearMonth ? benchmark.prices?.[cityCode]?.[yearMonth] : undefined;
+    const originCity = resolveInterparkOriginCityCode(
+        String(flight.departure?.city || ''),
+        String(flight.departure?.airport || ''),
+    );
+    const month = yearMonth ? getInterparkRouteMonths(flight, benchmark)?.[yearMonth] : undefined;
     const average = Number(month?.avg);
     const lowest = Number(month?.lowest);
     const price = Number(flight.price);
@@ -82,6 +130,7 @@ export function evaluateInterparkBenchmark(
             discountRate: 0,
             ...(cityCode ? { cityCode } : {}),
             ...(yearMonth ? { yearMonth } : {}),
+            ...(originCity ? { originCity } : {}),
         };
     }
 
@@ -95,10 +144,17 @@ export function evaluateInterparkBenchmark(
         ...(Number.isFinite(lowest) && lowest > 0 ? { lowest } : {}),
         cityCode,
         yearMonth,
+        ...(originCity ? { originCity } : {}),
     };
 }
 
-/** 이전 캐시에 잘못 저장된 지방 출발 인터파크 할인율도 다음 저장 때 제거한다. */
-export function clearUnsupportedInterparkDiscount(flight: InterparkComparableFlight): void {
-    if (!isInterparkBenchmarkApplicable(flight)) flight.discountRate = 0;
+/** 지원하지 않거나 해당 출발지 기준가가 없는 과거 할인율을 다음 저장 때 제거한다. */
+export function clearUnsupportedInterparkDiscount(
+    flight: InterparkComparableFlight,
+    benchmark?: InterparkBenchmarkLike | null,
+): void {
+    if (!isInterparkBenchmarkApplicable(flight)
+        || (benchmark && !getInterparkRouteMonths(flight, benchmark))) {
+        flight.discountRate = 0;
+    }
 }

@@ -41,7 +41,10 @@ import {
     compareRecommendedFlights,
     getRecommendationFreshness,
 } from '@/lib/flight-recommendation';
-import { isInterparkBenchmarkApplicable } from '@/lib/interpark-benchmark';
+import {
+    getInterparkClientMonths,
+    isInterparkBenchmarkApplicable,
+} from '@/lib/interpark-benchmark';
 import {
     getDestinationContext,
     getItineraryContext,
@@ -1709,7 +1712,7 @@ export default function Dashboard() {
     );
 
     // 추천순 근거를 한 번 계산한다. 동일 일정 비교가 → 실질 가격대 → 다른 날짜·노선 이력 → 신규 등록순으로 본다.
-    // 인터파크 월 최저가는 출발지가 없는 자료라 서울권 항공권의 다른 날짜 근거를 보강할 때만 사용한다.
+    // 인터파크 월 최저가는 출발 권역과 도착 도시가 모두 맞는 자료만 다른 날짜 근거로 사용한다.
     const recommendScoreState = useMemo(
         () => buildRecommendationScoreState(flights, interparkPrices, Date.now(), priceHistory),
         [flights, interparkPrices, priceHistory],
@@ -1818,7 +1821,7 @@ export default function Dashboard() {
             if (!isInterparkBenchmarkApplicable(flight)) return null;
             const city = flight.arrival.city?.replace(/\([^)]+\)/, '').trim();
             const depMonth = flight.departure.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 7);
-            const cityData = interparkPrices[city];
+            const cityData = getInterparkClientMonths(flight, interparkPrices, city);
             let monthData = cityData?.[depMonth];
             if (!monthData && cityData && depMonth) {
                 const closest = Object.keys(cityData).sort().reduce((best, month) => {
@@ -1911,7 +1914,7 @@ export default function Dashboard() {
                     if (!isInterparkBenchmarkApplicable(f)) return -999;
                     const city = f.arrival.city?.replace(/\([^)]+\)/, '').trim();
                     const depMonth = f.departure.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 7);
-                    const ipMonthData = interparkPrices[city]?.[depMonth];
+                    const ipMonthData = getInterparkClientMonths(f, interparkPrices, city)?.[depMonth];
                     if (ipMonthData?.avg && f.price > 0) {
                         return ((ipMonthData.avg - f.price) / ipMonthData.avg) * 100;
                     }
@@ -2017,9 +2020,11 @@ export default function Dashboard() {
         if (!CITY_TO_AIRPORT[term] && !CITY_TO_AIRPORT[arrivalCity]) return null;
         const departureCity = departureFilter === 'all' ? '인천' : normalizeCity(departureFilter);
         // 보여줄 항공권이 없으니 기준가는 인터파크 월평균이 있으면 쓰고, 없으면 직접 입력받는다
-        const months = isInterparkBenchmarkApplicable({ departure: { city: departureCity } }) && interparkPrices[arrivalCity]
-            ? Object.values(interparkPrices[arrivalCity])
-            : [];
+        const route = { departure: { city: departureCity }, arrival: { city: arrivalCity } };
+        const routePrices = isInterparkBenchmarkApplicable(route)
+            ? getInterparkClientMonths(route, interparkPrices, arrivalCity)
+            : undefined;
+        const months = Object.values(routePrices || {});
         const avg = months.length ? Math.round(months.reduce((s, m) => s + m.avg, 0) / months.length / 10000) * 10000 : null;
         return { mode: 'empty' as const, departureCity, arrivalCity, price: avg, flightId: null };
     }, [searchTerm, filteredFlights, sharedFlightId, favFilter, emptyDiagnosis, departureFilter, interparkPrices]);
@@ -2528,7 +2533,7 @@ export default function Dashboard() {
                     if (!isInterparkBenchmarkApplicable(f)) return;
                     const city = f.arrival.city?.replace(/\([^)]+\)/, '').trim();
                     const depMonth = f.departure.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 7);
-                    const ipMonthData = interparkPrices[city]?.[depMonth];
+                    const ipMonthData = getInterparkClientMonths(f, interparkPrices, city)?.[depMonth];
                     if (ipMonthData?.avg && f.price > 0) {
                         const percent = ((ipMonthData.avg - f.price) / ipMonthData.avg) * 100;
                         if (percent >= 10) {
@@ -3635,7 +3640,11 @@ export default function Dashboard() {
                                                         if (!isInterparkBenchmarkApplicable(flight)) return null;
                                                         const city = flight.arrival.city?.replace(/\([^)]+\)/, '').trim();
                                                         const depMonth = flight.departure.date?.replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 7);
-                                                        const ipCityData = interparkPrices[city];
+                                                        const ipCityData = getInterparkClientMonths(
+                                                            flight,
+                                                            interparkPrices,
+                                                            city,
+                                                        );
                                                         const ipMonthData = ipCityData?.[depMonth];
                                                         if (ipMonthData?.avg && flight.price > 0) {
                                                             const percent = ((ipMonthData.avg - flight.price) / ipMonthData.avg) * 100;

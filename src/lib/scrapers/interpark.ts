@@ -21,16 +21,45 @@ interface InterparkMonthlyPrice {
     };
 }
 
+export interface InterparkPopularLowestRoute {
+    originCity: {
+        code: 'SEL';
+        name: string;
+    };
+    destinationCity: {
+        code: string;
+        name: string;
+    };
+    tripType: 'ROUND_TRIP';
+    isDirect: boolean;
+    outboundDate: string;
+    inboundDate: string;
+    airlineCode: string;
+    price: number;
+}
+
 export interface InterparkBenchmark {
     timestamp: string;
-    /** 출발지를 받지 않는 공식 추천 API의 화면상 기준. 기존 캐시에는 없을 수 있다. */
+    /** 이전 서울 전용 캐시·소비자 호환용. 새 수집은 pricesByOrigin.SEL에도 같은 값을 둔다. */
     originCity?: 'SEL';
     originAirports?: ['ICN', 'GMP'];
     prices: Record<string, Record<string, { lowest: number; avg: number; depDate: string; arrDate: string }>>;
+    /** 출발 권역별 월별 가격. 키 형식: 출발 도시 코드 → 도착 도시 코드 → YYYY-MM. */
+    pricesByOrigin?: Record<string, InterparkBenchmark['prices']>;
     /** 도시별 월평균가를 마지막으로 정상 갱신한 시각 */
     cityUpdatedAt?: Record<string, string>;
     /** 빈 응답·일시 오류를 포함해 마지막으로 확인을 시도한 시각 */
     cityCheckedAt?: Record<string, string>;
+    /** 출발지까지 포함한 마지막 정상 갱신 시각. 키 형식: SEL|FUK */
+    pairUpdatedAt?: Record<string, string>;
+    /** 빈 응답·일시 오류를 포함한 출발지별 마지막 확인 시각. 키 형식: SEL|FUK */
+    pairCheckedAt?: Record<string, string>;
+    /**
+     * 인터파크 메인의 '빠르게 떠나는 최저가 해외항공' 원본.
+     * 월평균·월최저가와 성격이 다르므로 prices에 합치지 않는다.
+     * 향후 실제 날짜가 일치하는 추가 수집 후보를 고를 때만 별도로 사용한다.
+     */
+    popularLowestRoutes?: InterparkPopularLowestRoute[];
     popularUpdatedAt?: string;
     refresh?: {
         planned: number;
@@ -45,11 +74,22 @@ export interface InterparkBenchmark {
 
 export interface InterparkRefreshOptions {
     previousBenchmark?: InterparkBenchmark | null;
+    maxPairsPerRun?: number;
+    /** @deprecated maxPairsPerRun을 사용한다. 기존 호출 호환용. */
     maxCitiesPerRun?: number;
     now?: Date;
+    pairTtlMs?: number;
+    popularTtlMs?: number;
 }
 
-const DEFAULT_MAX_CITIES_PER_REFRESH = 25;
+export interface InterparkRouteTarget {
+    originCity: string;
+    destinationCity: string;
+}
+
+const DEFAULT_MAX_PAIRS_PER_REFRESH = 5;
+export const DEFAULT_INTERPARK_PAIR_TTL_MS = 14 * 24 * 60 * 60 * 1000;
+export const DEFAULT_INTERPARK_POPULAR_TTL_MS = 24 * 60 * 60 * 1000;
 const MAX_CONSECUTIVE_FAILURES = 3;
 const randomDelay = (minSeconds: number, maxSeconds: number) =>
     new Promise(resolve => setTimeout(
@@ -162,32 +202,44 @@ const CITY_NAME_TO_CODE: Record<string, string> = {
 /**
  * 인터파크 월별 최저가 API 호출
  */
-async function fetchMonthlyPrices(cityCode: string): Promise<InterparkMonthlyPrice[]> {
-    const url = `https://travel.interpark.com/air/air-api/inpark-air-web-api/recommendations/cities/monthly-prices?destinationCity=${cityCode}`;
-    const response = await fetchSourceText(`인터파크 ${cityCode} 월평균가`, url, {
+async function fetchMonthlyPrices(originCity: string, cityCode: string): Promise<InterparkMonthlyPrice[]> {
+    const params = new URLSearchParams({ originCity, destinationCity: cityCode });
+    const url = `https://travel.interpark.com/air/air-api/inpark-air-web-api/recommendations/cities/monthly-prices?${params}`;
+    const label = `인터파크 ${originCity}→${cityCode} 월평균가`;
+    const response = await fetchSourceText(label, url, {
         headers: {
             'Accept': 'application/json',
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
         },
     }, 20_000);
-    assertNoSourceAccessBlockText(`인터파크 ${cityCode} 월평균가`, response.text, response.finalUrl);
+    assertNoSourceAccessBlockText(label, response.text, response.finalUrl);
 
     try {
         const data = JSON.parse(response.text);
         if (!Array.isArray(data)) {
             throw new SourceResponseError(
                 'schema-mismatch',
-                `인터파크 ${cityCode} 월평균가 응답이 배열이 아닙니다.`,
+                `${label} 응답이 배열이 아닙니다.`,
                 response.status,
                 response.contentType,
             );
         }
-        return data;
+        return data.filter((item): item is InterparkMonthlyPrice => {
+            if (!item || typeof item !== 'object') return false;
+            const row = item as InterparkMonthlyPrice;
+            return /^\d{4}-\d{2}$/.test(String(row.yearMonth || ''))
+                && Number.isFinite(Number(row.averagePrice))
+                && Number(row.averagePrice) > 0
+                && Number.isFinite(Number(row.lowestPrice?.price))
+                && Number(row.lowestPrice?.price) > 0
+                && /^\d{4}-\d{2}-\d{2}$/.test(String(row.lowestPrice?.departureDate || ''))
+                && /^\d{4}-\d{2}-\d{2}$/.test(String(row.lowestPrice?.arrivalDate || ''));
+        });
     } catch (error) {
         if (error instanceof SourceResponseError) throw error;
         throw new SourceResponseError(
             'malformed-json',
-            `인터파크 ${cityCode} 월평균가 JSON을 해석하지 못했습니다.`,
+            `${label} JSON을 해석하지 못했습니다.`,
             response.status,
             response.contentType,
         );
@@ -197,7 +249,62 @@ async function fetchMonthlyPrices(cityCode: string): Promise<InterparkMonthlyPri
 /**
  * 인터파크 인기 도시 최저가 API 호출
  */
-async function fetchPopularLowestPrices(): Promise<any[]> {
+export function normalizePopularLowestRoutes(value: unknown): InterparkPopularLowestRoute[] {
+    if (!Array.isArray(value)) return [];
+
+    const routes = new Map<string, InterparkPopularLowestRoute>();
+    for (const raw of value) {
+        if (!raw || typeof raw !== 'object') continue;
+        const item = raw as Record<string, unknown>;
+        const originCity = item.originCity as Record<string, unknown> | undefined;
+        const destinationCity = item.destinationCity as Record<string, unknown> | undefined;
+        const outboundDate = typeof item.outboundDate === 'string' ? item.outboundDate : '';
+        const inboundDate = typeof item.inboundDate === 'string' ? item.inboundDate : '';
+        const airlineCode = typeof item.airlineCode === 'string' ? item.airlineCode.trim() : '';
+        const price = typeof item.price === 'number' ? item.price : Number.NaN;
+
+        if (originCity?.code !== 'SEL'
+            || typeof originCity.name !== 'string'
+            || typeof destinationCity?.code !== 'string'
+            || typeof destinationCity.name !== 'string'
+            || item.tripType !== 'ROUND_TRIP'
+            || typeof item.isDirect !== 'boolean'
+            || !/^\d{4}-\d{2}-\d{2}$/.test(outboundDate)
+            || !/^\d{4}-\d{2}-\d{2}$/.test(inboundDate)
+            || !airlineCode
+            || !Number.isFinite(price)
+            || price <= 0) {
+            continue;
+        }
+
+        const route: InterparkPopularLowestRoute = {
+            originCity: { code: 'SEL', name: originCity.name },
+            destinationCity: {
+                code: destinationCity.code,
+                name: destinationCity.name,
+            },
+            tripType: 'ROUND_TRIP',
+            isDirect: item.isDirect,
+            outboundDate,
+            inboundDate,
+            airlineCode,
+            price,
+        };
+        const key = [
+            route.originCity.code,
+            route.destinationCity.code,
+            route.outboundDate,
+            route.inboundDate,
+            route.airlineCode,
+        ].join('|');
+        const previous = routes.get(key);
+        if (!previous || route.price < previous.price) routes.set(key, route);
+    }
+
+    return Array.from(routes.values());
+}
+
+async function fetchPopularLowestPrices(): Promise<InterparkPopularLowestRoute[]> {
     const url = 'https://travel.interpark.com/air/air-api/inpark-air/search/international/recommendations/popular-cities/lowest-price';
     const response = await fetchSourceText('인터파크 인기 도시 묶음 최저가', url, {
         headers: {
@@ -217,7 +324,16 @@ async function fetchPopularLowestPrices(): Promise<any[]> {
                 response.contentType,
             );
         }
-        return json.data;
+        const routes = normalizePopularLowestRoutes(json.data);
+        if (json.data.length === 0 || routes.length === 0) {
+            throw new SourceResponseError(
+                'schema-mismatch',
+                '인터파크 인기 도시 묶음 응답에 사용할 수 있는 왕복 항공권이 없습니다.',
+                response.status,
+                response.contentType,
+            );
+        }
+        return routes;
     } catch (error) {
         if (error instanceof SourceResponseError) throw error;
         throw new SourceResponseError(
@@ -229,28 +345,77 @@ async function fetchPopularLowestPrices(): Promise<any[]> {
     }
 }
 
-function checkedAtMillis(benchmark: InterparkBenchmark | null | undefined, cityCode: string): number {
-    const checkedAt = benchmark?.cityCheckedAt?.[cityCode]
-        || (benchmark?.prices?.[cityCode] ? benchmark.timestamp : '');
-    const parsed = new Date(checkedAt).getTime();
+export function interparkPairKey(originCity: string, destinationCity: string): string {
+    return `${originCity.trim().toUpperCase()}|${destinationCity.trim().toUpperCase()}`;
+}
+
+function routePrices(
+    benchmark: InterparkBenchmark | null | undefined,
+    originCity: string,
+    destinationCity: string,
+) {
+    return benchmark?.pricesByOrigin?.[originCity]?.[destinationCity]
+        || (originCity === 'SEL' ? benchmark?.prices?.[destinationCity] : undefined);
+}
+
+function checkedAtMillis(
+    benchmark: InterparkBenchmark | null | undefined,
+    target: InterparkRouteTarget,
+): number {
+    const key = interparkPairKey(target.originCity, target.destinationCity);
+    const checkedAt = benchmark?.pairCheckedAt?.[key]
+        || (target.originCity === 'SEL' ? benchmark?.cityCheckedAt?.[target.destinationCity] : '')
+        || (routePrices(benchmark, target.originCity, target.destinationCity) ? benchmark?.timestamp : '');
+    const parsed = new Date(checkedAt || '').getTime();
     return Number.isFinite(parsed) ? parsed : 0;
 }
 
-/** 기존 데이터가 없는 도시를 먼저, 그다음 가장 오래 확인하지 않은 도시부터 고른다. */
+/** 신규 조합을 먼저, 이후 14일이 지난 조합을 가장 오래 확인하지 않은 순서로 고른다. */
+export function planInterparkPairRefresh(
+    routeTargets: InterparkRouteTarget[],
+    previousBenchmark?: InterparkBenchmark | null,
+    maxPairsPerRun = DEFAULT_MAX_PAIRS_PER_REFRESH,
+    now = new Date(),
+    pairTtlMs = DEFAULT_INTERPARK_PAIR_TTL_MS,
+): InterparkRouteTarget[] {
+    const uniqueByKey = new Map<string, InterparkRouteTarget>();
+    for (const raw of routeTargets) {
+        const originCity = String(raw.originCity || '').trim().toUpperCase();
+        const destinationCity = airportToCityCode(String(raw.destinationCity || '').trim().toUpperCase());
+        if (!originCity || !destinationCity || originCity === destinationCity) continue;
+        uniqueByKey.set(interparkPairKey(originCity, destinationCity), { originCity, destinationCity });
+    }
+    const unique = Array.from(uniqueByKey.values()).filter(target => {
+        if (!routePrices(previousBenchmark, target.originCity, target.destinationCity)) return true;
+        const checkedAt = checkedAtMillis(previousBenchmark, target);
+        return checkedAt <= 0 || now.getTime() - checkedAt >= pairTtlMs;
+    });
+    unique.sort((a, b) => {
+        const aMissing = routePrices(previousBenchmark, a.originCity, a.destinationCity) ? 0 : 1;
+        const bMissing = routePrices(previousBenchmark, b.originCity, b.destinationCity) ? 0 : 1;
+        if (aMissing !== bMissing) return bMissing - aMissing;
+        const checkedDiff = checkedAtMillis(previousBenchmark, a) - checkedAtMillis(previousBenchmark, b);
+        return checkedDiff || interparkPairKey(a.originCity, a.destinationCity)
+            .localeCompare(interparkPairKey(b.originCity, b.destinationCity));
+    });
+    return unique.slice(0, Math.max(0, Math.floor(maxPairsPerRun)));
+}
+
+/** 기존 서울 전용 호출·테스트 호환용. */
 export function planInterparkCityRefresh(
     destinationCityCodes: string[],
     previousBenchmark?: InterparkBenchmark | null,
-    maxCitiesPerRun = DEFAULT_MAX_CITIES_PER_REFRESH,
+    maxCitiesPerRun = DEFAULT_MAX_PAIRS_PER_REFRESH,
+    now = new Date(),
+    pairTtlMs = DEFAULT_INTERPARK_PAIR_TTL_MS,
 ): string[] {
-    const unique = Array.from(new Set(destinationCityCodes.filter(Boolean)));
-    unique.sort((a, b) => {
-        const aMissing = previousBenchmark?.prices?.[a] ? 0 : 1;
-        const bMissing = previousBenchmark?.prices?.[b] ? 0 : 1;
-        if (aMissing !== bMissing) return bMissing - aMissing;
-        const checkedDiff = checkedAtMillis(previousBenchmark, a) - checkedAtMillis(previousBenchmark, b);
-        return checkedDiff || a.localeCompare(b);
-    });
-    return unique.slice(0, Math.max(1, Math.floor(maxCitiesPerRun)));
+    return planInterparkPairRefresh(
+        destinationCityCodes.map(destinationCity => ({ originCity: 'SEL', destinationCity })),
+        previousBenchmark,
+        maxCitiesPerRun,
+        now,
+        pairTtlMs,
+    ).map(target => target.destinationCity);
 }
 
 function isAccessRestriction(error: unknown): boolean {
@@ -264,56 +429,79 @@ function clonePrices(prices: InterparkBenchmark['prices'] | undefined): Interpar
     return JSON.parse(JSON.stringify(prices || {}));
 }
 
+function clonePricesByOrigin(previous?: InterparkBenchmark | null): NonNullable<InterparkBenchmark['pricesByOrigin']> {
+    const cloned = JSON.parse(JSON.stringify(previous?.pricesByOrigin || {}));
+    cloned.SEL = { ...clonePrices(previous?.prices), ...(cloned.SEL || {}) };
+    return cloned;
+}
+
 /**
  * 인터파크 가격 벤치마크 순환 갱신.
  * 기존 도시 가격은 보존하고 한 회차에 오래된 일부 도시만 천천히 다시 확인한다.
  */
 export async function scrapeInterparkBenchmark(
-    destinationCityCodes?: string[],
+    routeTargets?: InterparkRouteTarget[] | string[],
     options: InterparkRefreshOptions = {},
 ): Promise<InterparkBenchmark> {
     console.log('\n=== 인터파크 가격 벤치마크 수집 시작 ===');
 
-    // 크롤링 대상 도시 결정 (중복 제거)
-    const targetCities = new Set<string>();
-
-    if (destinationCityCodes && destinationCityCodes.length > 0) {
-        // 제공된 공항코드를 인터파크 도시코드로 변환
-        for (const code of destinationCityCodes) {
-            const cityCode = AIRPORT_TO_CITY[code] || code;
-            targetCities.add(cityCode);
+    const targets: InterparkRouteTarget[] = [];
+    if (routeTargets && routeTargets.length > 0) {
+        for (const target of routeTargets) {
+            if (typeof target === 'string') {
+                targets.push({ originCity: 'SEL', destinationCity: airportToCityCode(target) });
+            } else {
+                targets.push({
+                    originCity: target.originCity,
+                    destinationCity: airportToCityCode(target.destinationCity),
+                });
+            }
         }
     } else {
-        // 기본: 매핑된 모든 도시
-        Object.values(AIRPORT_TO_CITY).forEach(c => targetCities.add(c));
+        Object.values(AIRPORT_TO_CITY).forEach(destinationCity => {
+            targets.push({ originCity: 'SEL', destinationCity });
+        });
     }
 
     const previous = options.previousBenchmark || null;
     const now = options.now || new Date();
     const nowIso = now.toISOString();
-    const configuredLimit = options.maxCitiesPerRun
-        ?? Number(process.env.INTERPARK_MAX_CITIES_PER_REFRESH || DEFAULT_MAX_CITIES_PER_REFRESH);
-    const maxCitiesPerRun = Number.isFinite(configuredLimit)
+    const configuredLimit = options.maxPairsPerRun
+        ?? options.maxCitiesPerRun
+        ?? Number(process.env.INTERPARK_MAX_PAIRS_PER_REFRESH || DEFAULT_MAX_PAIRS_PER_REFRESH);
+    const maxPairsPerRun = Number.isFinite(configuredLimit)
         ? Math.max(1, Math.floor(configuredLimit))
-        : DEFAULT_MAX_CITIES_PER_REFRESH;
-    const plannedCities = planInterparkCityRefresh(
-        Array.from(targetCities),
+        : DEFAULT_MAX_PAIRS_PER_REFRESH;
+    const pairTtlMs = options.pairTtlMs ?? DEFAULT_INTERPARK_PAIR_TTL_MS;
+    const plannedPairs = planInterparkPairRefresh(
+        targets,
         previous,
-        maxCitiesPerRun,
+        maxPairsPerRun,
+        now,
+        pairTtlMs,
     );
+    const targetPairCount = new Set(targets.map(target => interparkPairKey(
+        target.originCity,
+        airportToCityCode(target.destinationCity),
+    ))).size;
 
     console.log(
-        `[인터파크] 전체 ${targetCities.size}개 중 오래된 ${plannedCities.length}개만 순환 갱신: `
-        + plannedCities.join(', '),
+        `[인터파크] 전체 ${targetPairCount}개 출발지·도착지 조합 중 갱신 대상 ${plannedPairs.length}개: `
+        + (plannedPairs.map(target => interparkPairKey(target.originCity, target.destinationCity)).join(', ') || '없음'),
     );
 
-    const prices: InterparkBenchmark['prices'] = clonePrices(previous?.prices);
+    const pricesByOrigin = clonePricesByOrigin(previous);
+    const prices: InterparkBenchmark['prices'] = pricesByOrigin.SEL;
     const cityUpdatedAt: Record<string, string> = { ...(previous?.cityUpdatedAt || {}) };
     const cityCheckedAt: Record<string, string> = { ...(previous?.cityCheckedAt || {}) };
+    const pairUpdatedAt: Record<string, string> = { ...(previous?.pairUpdatedAt || {}) };
+    const pairCheckedAt: Record<string, string> = { ...(previous?.pairCheckedAt || {}) };
     if (previous?.timestamp) {
         for (const cityCode of Object.keys(previous.prices || {})) {
             cityUpdatedAt[cityCode] ||= previous.timestamp;
             cityCheckedAt[cityCode] ||= previous.timestamp;
+            pairUpdatedAt[interparkPairKey('SEL', cityCode)] ||= cityUpdatedAt[cityCode];
+            pairCheckedAt[interparkPairKey('SEL', cityCode)] ||= cityCheckedAt[cityCode];
         }
     }
 
@@ -325,22 +513,23 @@ export async function scrapeInterparkBenchmark(
     let consecutiveKnownEmpty = 0;
     let stoppedReason: 'access-restriction' | 'consecutive-failures' | 'response-collapse' | undefined;
 
-    // 한 번에 25개만 순차 호출하고, 매 요청과 10개 단위 사이에 충분히 쉰다.
-    for (let index = 0; index < plannedCities.length; index++) {
-        const cityCode = plannedCities[index];
+    for (let index = 0; index < plannedPairs.length; index++) {
+        const { originCity, destinationCity: cityCode } = plannedPairs[index];
+        const pairKey = interparkPairKey(originCity, cityCode);
         attemptedCount++;
-        cityCheckedAt[cityCode] = nowIso;
+        pairCheckedAt[pairKey] = nowIso;
+        if (originCity === 'SEL') cityCheckedAt[cityCode] = nowIso;
         try {
-            const monthlyPrices = await fetchMonthlyPrices(cityCode);
+            const monthlyPrices = await fetchMonthlyPrices(originCity, cityCode);
             if (monthlyPrices.length === 0) {
                 emptyCount++;
-                const hadPreviousData = Boolean(previous?.prices?.[cityCode]);
+                const hadPreviousData = Boolean(routePrices(previous, originCity, cityCode));
                 consecutiveFailures = 0;
                 consecutiveKnownEmpty = hadPreviousData ? consecutiveKnownEmpty + 1 : 0;
-                console.log(`[인터파크] ${cityCode}: 월평균가 없음 — 기존 값 유지`);
+                console.log(`[인터파크] ${pairKey}: 월평균가 없음 — 기존 값 유지`);
                 if (consecutiveKnownEmpty >= MAX_CONSECUTIVE_FAILURES) {
                     stoppedReason = 'response-collapse';
-                    console.warn('[인터파크] 기존 데이터가 있던 3개 도시가 연속으로 비었습니다 — 남은 요청을 중단합니다.');
+                    console.warn('[인터파크] 기존 데이터가 있던 3개 조합이 연속으로 비었습니다 — 남은 요청을 중단합니다.');
                     break;
                 }
             } else {
@@ -355,8 +544,10 @@ export async function scrapeInterparkBenchmark(
                     };
                 }
                 if (Object.keys(nextCityPrices).length > 0) {
-                    prices[cityCode] = nextCityPrices;
-                    cityUpdatedAt[cityCode] = nowIso;
+                    pricesByOrigin[originCity] ||= {};
+                    pricesByOrigin[originCity][cityCode] = nextCityPrices;
+                    pairUpdatedAt[pairKey] = nowIso;
+                    if (originCity === 'SEL') cityUpdatedAt[cityCode] = nowIso;
                     successCount++;
                 } else {
                     emptyCount++;
@@ -369,7 +560,7 @@ export async function scrapeInterparkBenchmark(
             consecutiveFailures++;
             consecutiveKnownEmpty = 0;
             console.warn(
-                `[인터파크] ${cityCode} 갱신 실패 — 기존 값 유지: `
+                `[인터파크] ${pairKey} 갱신 실패 — 기존 값 유지: `
                 + (error instanceof Error ? error.message : String(error)),
             );
             if (isAccessRestriction(error)) {
@@ -379,39 +570,29 @@ export async function scrapeInterparkBenchmark(
             }
             if (consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
                 stoppedReason = 'consecutive-failures';
-                console.warn(`[인터파크] ${MAX_CONSECUTIVE_FAILURES}개 도시 연속 실패 — 남은 요청을 중단합니다.`);
+                console.warn(`[인터파크] ${MAX_CONSECUTIVE_FAILURES}개 조합 연속 실패 — 남은 요청을 중단합니다.`);
                 break;
             }
         }
 
-        if (index < plannedCities.length - 1) {
+        if (index < plannedPairs.length - 1) {
             await randomDelay(1.2, 2.4);
             if ((index + 1) % 10 === 0) await randomDelay(8, 15);
         }
     }
 
-    // 여러 인기 도시를 한 응답으로 주는 묶음 API다. 접근 제한 신호가 없을 때만 딱 한 번 호출한다.
+    // 빠른 출발 후보는 월별 기준가와 별개다. 최신성이 더 중요하지만 회차마다 요청할 필요는 없어 하루 1회만 갱신한다.
+    let popularLowestRoutes = previous?.popularLowestRoutes;
     let popularUpdatedAt = previous?.popularUpdatedAt;
     let popularRequested = false;
-    if (!stoppedReason) {
+    const popularUpdatedMs = new Date(popularUpdatedAt || '').getTime();
+    const popularTtlMs = options.popularTtlMs ?? DEFAULT_INTERPARK_POPULAR_TTL_MS;
+    const popularDue = !Number.isFinite(popularUpdatedMs) || now.getTime() - popularUpdatedMs >= popularTtlMs;
+    if (!stoppedReason && popularDue) {
         try {
             await randomDelay(3, 6);
             popularRequested = true;
-            const popularPrices = await fetchPopularLowestPrices();
-            for (const pp of popularPrices) {
-                const cityCode = pp.destinationCity?.code;
-                if (cityCode && prices[cityCode]) {
-                    const yearMonth = pp.outboundDate?.substring(0, 7);
-                    if (yearMonth && prices[cityCode][yearMonth]) {
-                        const existingLowest = prices[cityCode][yearMonth].lowest;
-                        if (pp.price < existingLowest) {
-                            prices[cityCode][yearMonth].lowest = pp.price;
-                            prices[cityCode][yearMonth].depDate = pp.outboundDate;
-                            prices[cityCode][yearMonth].arrDate = pp.inboundDate;
-                        }
-                    }
-                }
-            }
+            popularLowestRoutes = await fetchPopularLowestPrices();
             popularUpdatedAt = nowIso;
         } catch (error) {
             console.warn(
@@ -426,11 +607,15 @@ export async function scrapeInterparkBenchmark(
         originCity: 'SEL',
         originAirports: ['ICN', 'GMP'],
         prices,
+        pricesByOrigin,
         cityUpdatedAt,
         cityCheckedAt,
+        pairUpdatedAt,
+        pairCheckedAt,
+        ...(popularLowestRoutes ? { popularLowestRoutes } : {}),
         ...(popularUpdatedAt ? { popularUpdatedAt } : {}),
         refresh: {
-            planned: plannedCities.length,
+            planned: plannedPairs.length,
             attempted: attemptedCount,
             succeeded: successCount,
             empty: emptyCount,
@@ -441,15 +626,15 @@ export async function scrapeInterparkBenchmark(
     };
 
     console.log(
-        `[인터파크] 순환 갱신 완료: 계획 ${plannedCities.length}개, 실제 도시 요청 ${attemptedCount}, `
+        `[인터파크] 순환 갱신 완료: 계획 ${plannedPairs.length}개, 실제 조합 요청 ${attemptedCount}, `
         + `성공 ${successCount}, 빈 응답 ${emptyCount}, 실패 ${failedCount}, `
-        + `인기 도시 요청 ${popularRequested ? 1 : 0}, 전체 보존 ${Object.keys(prices).length}개 도시`,
+        + `인기 도시 요청 ${popularRequested ? 1 : 0}, 전체 보존 ${Object.values(pricesByOrigin).reduce((sum, value) => sum + Object.keys(value).length, 0)}개 조합`,
     );
 
     // 요약 출력
     let totalRoutes = 0;
-    for (const city of Object.keys(prices)) {
-        totalRoutes += Object.keys(prices[city]).length;
+    for (const originPrices of Object.values(pricesByOrigin)) {
+        for (const city of Object.keys(originPrices)) totalRoutes += Object.keys(originPrices[city]).length;
     }
     console.log(`[인터파크] 총 ${totalRoutes}개 월별 가격 데이터 수집`);
 
@@ -502,4 +687,24 @@ export function resolveCityCode(cityString: string, airportCode?: string): strin
  */
 export function airportToCityCode(airportCode: string): string {
     return AIRPORT_TO_CITY[airportCode] || airportCode;
+}
+
+/** 인터파크 월별 API가 받는 국내 출발 도시 코드로 정규화한다. */
+export function resolveInterparkOriginCityCode(
+    departureCity?: string,
+    departureAirport?: string,
+): string | null {
+    const airport = String(departureAirport || '').trim().toUpperCase();
+    if (airport === 'ICN' || airport === 'GMP' || airport === 'SEL') return 'SEL';
+    if (['PUS', 'CJJ', 'TAE', 'CJU', 'MWX'].includes(airport)) return airport;
+    if (/^[A-Z]{3}$/.test(airport)) return null;
+
+    const city = String(departureCity || '').replace(/\s+/g, '');
+    if (/서울|인천|김포/.test(city)) return 'SEL';
+    if (/부산|김해/.test(city)) return 'PUS';
+    if (/청주/.test(city)) return 'CJJ';
+    if (/대구/.test(city)) return 'TAE';
+    if (/제주/.test(city)) return 'CJU';
+    if (/무안/.test(city)) return 'MWX';
+    return null;
 }

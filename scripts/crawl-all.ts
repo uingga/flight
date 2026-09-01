@@ -5,7 +5,12 @@ import { scrapeModetour } from '../src/lib/scrapers/modetour';
 import { scrapeOnlineTour } from '../src/lib/scrapers/onlinetour';
 import { scrapeTtang } from '../src/lib/scrapers/ttang';
 import { scrapeMyrealtrip } from '../src/lib/scrapers/myrealtrip';
-import { scrapeInterparkBenchmark, resolveCityCode } from '../src/lib/scrapers/interpark';
+import {
+    scrapeInterparkBenchmark,
+    resolveCityCode,
+    resolveInterparkOriginCityCode,
+    type InterparkRouteTarget,
+} from '../src/lib/scrapers/interpark';
 import {
     clearUnsupportedInterparkDiscount,
     evaluateInterparkBenchmark,
@@ -589,11 +594,13 @@ async function main() {
         // 인터파크 벤치마크 기반 필터링
         console.log('\n=== 인터파크 가격 벤치마크 ===');
         let benchmarkedFlights = validRouteFlights;
+        let activeInterparkBenchmark: any = null;
         try {
             const dataDir = path.join(process.cwd(), 'data');
             const benchmarkPath = path.join(dataDir, 'interpark-prices.json');
 
-            // 기존 벤치마크가 24시간 이내면 재사용 (API 호출 최소화)
+            // 출발지·도착지 조합별 14일 TTL은 스크래퍼가 판정한다.
+            // PC 부분 대체 수집에서는 여행사만 복구하고 인터파크에는 새 요청을 보내지 않는다.
             let benchmark: any = null;
             let cachedBenchmark: any = null;
             try {
@@ -601,32 +608,38 @@ async function main() {
                     const cached = JSON.parse(fs.readFileSync(benchmarkPath, 'utf-8'));
                     cachedBenchmark = cached;
                     const cacheAge = Date.now() - new Date(cached.timestamp).getTime();
-                    const maxAge = 24 * 60 * 60 * 1000; // 24시간
-                    if ((cacheAge < maxAge || localSourceFallback) && Object.keys(cached.prices || {}).length > 0) {
+                    if (localSourceFallback && Object.keys(cached.prices || {}).length > 0) {
                         benchmark = cached;
-                        console.log(`♻️ 인터파크 캐시 재사용 (${Math.round(cacheAge / 3600000)}시간 전 수집)`);
+                        console.log(`♻️ PC 부분 수집: 인터파크 캐시 재사용 (${Math.round(cacheAge / 3600000)}시간 전 저장)`);
                     }
                 }
             } catch { }
 
             // 캐시가 없거나 오래되었으면 새로 수집
             if (!benchmark) {
-                const arrCityCodes = new Set<string>();
+                const routeTargets = new Map<string, InterparkRouteTarget>();
                 validRouteFlights.forEach((f: any) => {
-                    const code = resolveCityCode(f.arrival?.city || '', f.arrival?.airport);
-                    if (code) arrCityCodes.add(code);
+                    const originCity = resolveInterparkOriginCityCode(
+                        f.departure?.city,
+                        f.departure?.airport,
+                    );
+                    const destinationCity = resolveCityCode(f.arrival?.city || '', f.arrival?.airport);
+                    if (originCity && destinationCity) {
+                        routeTargets.set(`${originCity}|${destinationCity}`, { originCity, destinationCity });
+                    }
                 });
 
-                benchmark = await scrapeInterparkBenchmark(Array.from(arrCityCodes), {
+                benchmark = await scrapeInterparkBenchmark(Array.from(routeTargets.values()), {
                     previousBenchmark: cachedBenchmark,
-                    maxCitiesPerRun: 25,
+                    maxPairsPerRun: 5,
                 });
                 fs.writeFileSync(benchmarkPath, JSON.stringify(benchmark, null, 2), 'utf-8');
                 console.log(`💾 인터파크 벤치마크 저장: ${benchmarkPath}`);
             }
+            activeInterparkBenchmark = benchmark;
 
-            // 인터파크 월 평균가는 공식 화면의 서울(SEL) 출발 기준이다.
-            // 지방 출발에는 제거·할인율 계산을 적용하지 않는다.
+            // 출발 권역과 도착 도시가 모두 맞는 월평균만 필터·할인율 계산에 사용한다.
+            // 아직 순환 수집 전인 조합은 중립 통과한다.
             const beforeBenchmark = validRouteFlights.length;
             benchmarkedFlights = validRouteFlights.filter((f: any) => {
                 const evaluation = evaluateInterparkBenchmark(f, benchmark);
@@ -767,8 +780,13 @@ async function main() {
             console.log(`🔒 부분 크롤 미실행 여행사: 이전 최종 데이터 ${untouchedFlights.length}개 그대로 유지`);
         }
 
-        // 부분 크롤에서 이전 캐시를 그대로 붙인 경우에도 과거에 잘못 계산된 지방 출발 할인율을 남기지 않는다.
-        benchmarkedFlights.forEach((flight: any) => clearUnsupportedInterparkDiscount(flight));
+        // 부분 크롤에서 이전 캐시를 그대로 붙인 경우에도 대응 기준가가 없는 과거 할인율을 남기지 않는다.
+        if (activeInterparkBenchmark) {
+            benchmarkedFlights.forEach((flight: any) => clearUnsupportedInterparkDiscount(
+                flight,
+                activeInterparkBenchmark,
+            ));
+        }
 
         const lifecycleFlights = allFlights.filter((f: any) => {
             if (!Number.isFinite(Number(f.price)) || Number(f.price) <= 0) return false;

@@ -44,16 +44,32 @@ function freshnessMultiplier(checkedAt, now) {
 
 function isInterparkBenchmarkApplicable(flight) {
     const airport = String(flight.departure?.airport || '').trim().toUpperCase();
-    if (airport === 'ICN' || airport === 'GMP') return true;
-    if (/^[A-Z]{3}$/.test(airport)) return false;
-    return /서울|인천|김포/.test(String(flight.departure?.city || '').replace(/\s+/g, ''));
+    return ['ICN', 'GMP', 'PUS', 'CJJ', 'TAE', 'CJU', 'MWX'].includes(airport)
+        || /서울|인천|김포|부산|김해|청주|대구|제주|무안/.test(
+            String(flight.departure?.city || '').replace(/\s+/g, ''),
+        );
+}
+
+function interparkOriginCity(flight) {
+    const airport = String(flight.departure?.airport || '').trim().toUpperCase();
+    if (airport === 'ICN' || airport === 'GMP') return 'SEL';
+    if (['PUS', 'CJJ', 'TAE', 'CJU', 'MWX'].includes(airport)) return airport;
+    const city = String(flight.departure?.city || '').replace(/\s+/g, '');
+    if (/서울|인천|김포/.test(city)) return 'SEL';
+    if (/부산|김해/.test(city)) return 'PUS';
+    if (/청주/.test(city)) return 'CJJ';
+    if (/대구/.test(city)) return 'TAE';
+    if (/제주/.test(city)) return 'CJU';
+    if (/무안/.test(city)) return 'MWX';
+    return null;
 }
 
 function interparkMonthData(flight, interparkPrices) {
     if (!isInterparkBenchmarkApplicable(flight)) return null;
     const city = (flight.arrival?.city || '').replace(/\([^)]+\)/, '').trim();
     const depMonth = (flight.departure?.date || '').replace(/\./g, '-').replace(/\(.*\)/g, '').trim().substring(0, 7);
-    const cityData = interparkPrices[city];
+    const originCity = interparkOriginCity(flight);
+    const cityData = interparkPrices[originCity === 'SEL' ? city : `${originCity}|${city}`];
     let monthData = cityData?.[depMonth];
     if (!monthData && cityData && depMonth) {
         const closest = Object.keys(cityData).sort().reduce((best, month) => {

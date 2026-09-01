@@ -26,7 +26,10 @@ import {
 } from '@/lib/ui/overlay-history';
 import { checkIsMobile } from '@/lib/utils/mobile-url';
 import { getComparisonFreshness } from '@/lib/price-quality';
-import { isInterparkBenchmarkApplicable } from '@/lib/interpark-benchmark';
+import {
+    getInterparkClientMonths,
+    isInterparkBenchmarkApplicable,
+} from '@/lib/interpark-benchmark';
 import type { Flight } from '@/types/flight';
 import AccountSheet from '@/components/account/AccountSheet';
 import { useAccount, type AccountFlightSnapshot, type AccountSearchFilters } from '@/components/account/useAccount';
@@ -800,7 +803,7 @@ const getAverageDiscountRate = (flight: Flight, benchmarks: InterparkPrices) => 
         .replace(/\(.*\)/g, '')
         .trim()
         .substring(0, 7);
-    const cityPrices = benchmarks[city];
+    const cityPrices = getInterparkClientMonths(flight, benchmarks, city);
     if (!cityPrices || !departureMonth) return 0;
 
     let benchmark = cityPrices[departureMonth];
@@ -2718,10 +2721,15 @@ export default function MobileRedesignPreview({
         if (hasUnfilteredFlight) return null;
 
         const departureCity = departure === '전체' ? '인천' : departure.replace('/김포', '').replace('/김해', '');
-        const canUseInterpark = isInterparkBenchmarkApplicable({
+        const route = {
             departure: { city: departureCity },
-        });
-        const months = canUseInterpark ? Object.values(interparkPrices[arrivalCity] || {}) : [];
+            arrival: { city: arrivalCity },
+        };
+        const canUseInterpark = isInterparkBenchmarkApplicable(route);
+        const routePrices = canUseInterpark
+            ? getInterparkClientMonths(route, interparkPrices, arrivalCity)
+            : undefined;
+        const months = Object.values(routePrices || {});
         const suggestedPrice = months.length
             ? Math.round(months.reduce((sum, month) => sum + month.avg, 0) / months.length / 10_000) * 10_000
             : undefined;

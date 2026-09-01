@@ -12,9 +12,10 @@ import { normalizeAirline, normalizeCity } from '@/lib/utils/flight-helpers';
 import { filterStaleSourceFlights } from '@/lib/source-freshness';
 import { deduplicateDisplayFlights } from '@/lib/flight-visibility';
 import { getComparisonFreshness } from '@/lib/price-quality';
-import { resolveCityCode } from '@/lib/scrapers/interpark';
 import {
     clearUnsupportedInterparkDiscount,
+    getInterparkRouteMonths,
+    interparkClientPriceKey,
     isInterparkBenchmarkApplicable,
 } from '@/lib/interpark-benchmark';
 
@@ -93,7 +94,15 @@ export function loadActiveFlights(): Flight[] {
     try {
         const raw = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'data', 'all-flights-cache.json'), 'utf8'));
         const flights: Flight[] = Array.isArray(raw) ? raw : raw.flights || [];
-        flights.forEach(clearUnsupportedInterparkDiscount);
+        try {
+            const benchmark = JSON.parse(fs.readFileSync(
+                path.join(process.cwd(), 'data', 'interpark-prices.json'),
+                'utf8',
+            ));
+            flights.forEach(flight => clearUnsupportedInterparkDiscount(flight, benchmark));
+        } catch {
+            flights.forEach(flight => clearUnsupportedInterparkDiscount(flight));
+        }
         const sourceUpdatedAt = Array.isArray(raw) ? {} : raw.sourceUpdatedAt || {};
         const today = new Intl.DateTimeFormat('en-CA', {
             timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit',
@@ -119,15 +128,14 @@ export function loadActiveFlights(): Flight[] {
 export function loadStaticInterparkPrices(flights: Flight[]): StaticInterparkPrices {
     try {
         const raw = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'data', 'interpark-prices.json'), 'utf8'));
-        const prices = raw?.prices && typeof raw.prices === 'object' ? raw.prices : {};
         const result: StaticInterparkPrices = {};
         for (const flight of flights) {
             if (!isInterparkBenchmarkApplicable(flight)) continue;
             const city = normalizeCity(flight.arrival.city || '').replace(/\([^)]*\)/g, '').trim();
-            const code = resolveCityCode(flight.arrival.city, flight.arrival.airport) || '';
-            const months = prices[code];
-            if (city && months && typeof months === 'object') {
-                result[city] = months as Record<string, { avg: number; lowest: number }>;
+            const key = interparkClientPriceKey(flight, city);
+            const months = getInterparkRouteMonths(flight, raw);
+            if (key && months && typeof months === 'object') {
+                result[key] = months as Record<string, { avg: number; lowest: number }>;
             }
         }
         return result;
