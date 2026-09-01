@@ -97,7 +97,7 @@ test('alternates PC collection and rest from each source failure slot', () => {
     }
 });
 
-test('Ttang PC fallback runs only at 08:17 or 14:23 and does not repeat after a same-day success', () => {
+test('Ttang PC fallback runs only at 08:17 or 14:23 with at least five hours between successes', () => {
     const active = circuit({
         openedAt: '2026-08-30T05:25:00.000Z',
         nextProbeAt: '2026-08-31T05:25:00.000Z',
@@ -128,8 +128,27 @@ test('Ttang PC fallback runs only at 08:17 or 14:23 and does not repeat after a 
             },
         },
     });
-    assert.equal(secondAllowedSlot.shouldRun, false);
-    assert.deepEqual(secondAllowedSlot.scheduleThrottledSources, ['ttang']);
+    assert.equal(secondAllowedSlot.shouldRun, true);
+    assert.deepEqual(secondAllowedSlot.sources, ['ttang']);
+
+    const delayedMorningRun = evaluateLocalSourceFallback({
+        now: '2026-08-30T05:30:00.000Z', // 14:30 KST
+        cache: {
+            fullCrawlUpdatedAt: '2026-08-30T05:25:00.000Z',
+            sourceCircuits: {
+                ttang: {
+                    ...active,
+                    localFallback: {
+                        status: 'success',
+                        lastAttemptAt: '2026-08-30T01:00:00.000Z', // 10:00 KST, 4시간 30분 전
+                        detail: 'PC 대체 수집 성공',
+                    },
+                },
+            },
+        },
+    });
+    assert.equal(delayedMorningRun.shouldRun, false);
+    assert.deepEqual(delayedMorningRun.scheduleThrottledSources, ['ttang']);
 });
 
 test('anchors alternating PC slots independently for each failed source', () => {

@@ -8,6 +8,7 @@ import {
 } from '../src/lib/crawl-schedule-health.mjs';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+const TTANG_PC_MIN_INTERVAL_MS = 5 * 60 * 60 * 1000;
 const SOURCE_KEYS = ['ybtour', 'hanatour', 'modetour', 'onlinetour', 'ttang'];
 
 function timestamp(value) {
@@ -64,14 +65,6 @@ function isPcFallbackCollectionSlot(circuit, expectedAt, crons = DAILY_CRAWL_CRO
     return distance !== null && distance % 2 === 0;
 }
 
-function kstDate(timestampValue) {
-    const value = timestamp(timestampValue);
-    if (value === null) return null;
-    return new Intl.DateTimeFormat('en-CA', {
-        timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit',
-    }).format(new Date(value));
-}
-
 export function evaluateLocalSourceFallback({
     now = new Date(),
     cache,
@@ -124,12 +117,15 @@ export function evaluateLocalSourceFallback({
             continue;
         }
         // 땡처리닷컴은 정규 수집과 같은 08:17·14:23 KST 회차만 PC 대체를 허용한다.
-        // 같은 KST 날짜 앞 허용 회차에서 이미 성공했다면 두 번째 중복 접속도 하지 않는다.
+        // 오전 회차가 늦게 끝나 오후 회차와 가까워진 날에는 실제 성공 시각부터 5시간을 보장한다.
         if (source === 'ttang') {
             const previousLocal = circuit?.localFallback;
-            const alreadySucceededToday = previousLocal?.status === 'success'
-                && kstDate(previousLocal.lastAttemptAt) === kstDate(expectedAt);
-            if (!isTtangCrawlSlot(expectedAt) || alreadySucceededToday) {
+            const previousSuccessAt = previousLocal?.status === 'success'
+                ? timestamp(previousLocal.lastAttemptAt)
+                : null;
+            const tooSoonAfterSuccess = previousSuccessAt !== null
+                && nowTimestamp - previousSuccessAt < TTANG_PC_MIN_INTERVAL_MS;
+            if (!isTtangCrawlSlot(expectedAt) || tooSoonAfterSuccess) {
                 scheduleThrottledSources.push(source);
                 continue;
             }
