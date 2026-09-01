@@ -688,6 +688,23 @@ const TAB_STORAGE = 'tikitikit_admin_tab';
 const STALE_AFTER_HOURS: Record<string, number> = { myrealtrip: 20 };
 const DEFAULT_STALE_AFTER_HOURS = 8;
 
+/**
+ * 자동 수집 성공 시각은 품질 가드용 원본으로 유지하되, 어드민의 "마지막 갱신"은
+ * 실제 항공권 데이터가 바뀐 가장 최근 시각을 보여준다. 모두투어 수동 캡처는
+ * sourceUpdatedAt을 의도적으로 건드리지 않으므로 여기서만 더 최근 값을 합친다.
+ */
+function effectiveSourceUpdatedAt(data: AdminData, source: string): string | undefined {
+    const automatic = data.sourceUpdatedAt?.[source];
+    const manual = source === 'modetour'
+        ? data.manualCaptureStatus?.modetour?.lastImportedAt
+        : undefined;
+    const candidates = [automatic, manual]
+        .filter((value): value is string => Boolean(value))
+        .filter(value => Number.isFinite(new Date(value).getTime()));
+
+    return candidates.sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0];
+}
+
 const DEAL_REJECTION_LABELS: Record<string, string> = {
     otherDeparture: '출발지가 다름',
     otherRegion: '지역이 다름',
@@ -1990,7 +2007,7 @@ export default function AdminPage() {
             .map(check => ({ ...check, date: entry.date, sourceStatus: source.status }));
     })).slice(-12).reverse();
     const sourceIssueCount = allSources.filter(source => {
-        const updatedAt = data.sourceUpdatedAt?.[source];
+        const updatedAt = effectiveSourceUpdatedAt(data, source);
         const ageHours = updatedAt ? (Date.now() - new Date(updatedAt).getTime()) / 3_600_000 : null;
         return (data.staleStreak?.[source] || 0) > 0
             || ageHours === null
@@ -2453,7 +2470,7 @@ export default function AdminPage() {
                     )}
                     <div className={styles.sourceTrendGrid}>
                         {allSources.map(source => {
-                            const updatedAt = data.sourceUpdatedAt?.[source];
+                            const updatedAt = effectiveSourceUpdatedAt(data, source);
                             const ageHours = updatedAt ? (Date.now() - new Date(updatedAt).getTime()) / 3_600_000 : null;
                             const staleCount = data.staleStreak?.[source] || 0;
                             const circuit = data.sourceCircuits?.[source];
@@ -3380,7 +3397,7 @@ export default function AdminPage() {
                 </div>
                 <div className={styles.sourceGrid}>
                     {allSources.map(source => {
-                        const updatedAt = data.sourceUpdatedAt?.[source];
+                        const updatedAt = effectiveSourceUpdatedAt(data, source);
                         const streak = data.staleStreak?.[source] || 0;
                         const circuit = data.sourceCircuits?.[source];
                         const circuitOpen = Boolean(
