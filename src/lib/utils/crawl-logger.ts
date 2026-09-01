@@ -22,6 +22,8 @@ interface SiteStats {
     skippedUntil?: string;
     /** 운영자가 일반 브라우저 캡처를 검수해 반영한 별도 수집 기록이다. */
     manual?: boolean;
+    /** GitHub 차단 회로가 열린 소스를 Windows PC에서 대체 수집한 기록이다. */
+    localFallback?: boolean;
     /** 직전 크롤에 없던 표. 개수만 보면 표가 통째로 갈려도 0으로 보인다. */
     added?: number;
     /** 직전 크롤에 있다가 사라진 표. */
@@ -32,6 +34,7 @@ interface SiteStats {
 
 interface CrawlLogEntry {
     timestamp: string;
+    runKind?: 'pc_fallback';
     sites: {
         [siteName: string]: SiteStats;
     };
@@ -168,6 +171,7 @@ export function logCrawlResults(
         skipped?: boolean;
         skippedUntil?: string;
         manual?: boolean;
+        localFallback?: boolean;
         added?: number;
         removed?: number;
         /** 다른 예약 작업과 시간이 겹쳐도 독립 회차로 남긴다. */
@@ -203,11 +207,13 @@ export function logCrawlResults(
         skipped: meta?.skipped || undefined,
         skippedUntil: meta?.skipped ? meta.skippedUntil : undefined,
         manual: meta?.manual || undefined,
+        localFallback: meta?.localFallback || undefined,
         added: meta?.added,
         removed: meta?.removed,
         byRegion,
         byCity
     };
+    if (meta?.localFallback) currentEntry.runKind = 'pc_fallback';
 
     // 이전 엔트리와 비교하여 경고 생성
     // 직전 엔트리가 부분 크롤이면 해당 여행사의 마지막 실제 측정치를 더 거슬러 올라가 찾는다.
@@ -264,7 +270,9 @@ export function logCrawlResults(
     console.log(meta?.manual
         ? `   총: ${total}개 (수동 캡처 ${meta.scraped ?? 0}개 검수 반영)`
         : meta?.preserved
-        ? `   총: ${total}개 (이번 수집 ${meta.scraped ?? 0}개가 실패해 이전 데이터를 유지함)`
+        ? `   총: ${total}개 (${meta.localFallback ? 'PC 대체 수집' : '이번 수집'} ${meta.scraped ?? 0}개가 실패해 이전 데이터를 유지함)`
+        : meta?.localFallback
+        ? `   총: ${total}개 (PC 대체 수집 ${meta.scraped ?? 0}개)`
         : meta?.skipped
             ? `   총: ${total}개 (부분 크롤에서 실행하지 않음)`
         : `   총: ${total}개`);

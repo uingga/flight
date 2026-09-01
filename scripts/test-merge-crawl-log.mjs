@@ -77,6 +77,29 @@ test('same timestamp merges source fields and alerts idempotently', () => {
     assert.deepEqual(second.entries[0].alerts, ['일반 경고', 'MRT 경고']);
 });
 
+test('PC fallback session keeps its runner marker and source result', () => {
+    const timestamp = '2026-08-31T09:05:00Z';
+    const session = {
+        entries: [{
+            ...entry(timestamp, {
+                ttang: { total: 91, scraped: 730, localFallback: true, added: 4, removed: 2 },
+            }),
+            runKind: 'pc_fallback',
+        }],
+    };
+
+    const { history, mergedSessions } = mergeCrawlLogHistories(
+        { entries: [] },
+        session,
+        ['ttang'],
+        NOW,
+    );
+    assert.equal(mergedSessions, 1);
+    assert.equal(history.entries[0].runKind, 'pc_fallback');
+    assert.equal(history.entries[0].sites.ttang.localFallback, true);
+    assert.equal(history.entries[0].sites.ttang.scraped, 730);
+});
+
 test('entries older than 31 days are not revived from a session snapshot', () => {
     const old = entry('2026-07-01T00:00:00Z', { myrealtrip: { total: 100, scraped: 100 } });
     const fresh = entry('2026-08-31T09:00:00Z', { myrealtrip: { total: 186, scraped: 214 } });

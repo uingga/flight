@@ -14,6 +14,7 @@ $LogFile = Join-Path $ProjectDir 'data\source-fallback-local.log'
 $CachePath = 'data/all-flights-cache.json'
 $ManagedPaths = @($CachePath, 'data/crawl-log.json', 'data/interpark-prices.json')
 $SessionCopy = Join-Path $env:TEMP "tikitikit-source-fallback-$PID.json"
+$LogSessionCopy = Join-Path $env:TEMP "tikitikit-source-fallback-log-$PID.json"
 
 Set-Location $ProjectDir
 
@@ -128,6 +129,7 @@ if ($CrawlerExitCode -ne 0) {
 
 try {
     Copy-Item -LiteralPath $CachePath -Destination $SessionCopy -Force -ErrorAction Stop
+    Copy-Item -LiteralPath 'data/crawl-log.json' -Destination $LogSessionCopy -Force -ErrorAction Stop
 } catch {
     git checkout -- $ManagedPaths 2>$null
     Log "Unable to preserve fallback result: $($_.Exception.Message)"
@@ -155,22 +157,30 @@ for ($Attempt = 1; $Attempt -le 2; $Attempt++) {
         }
     }
 
-    $Dirty = git status --porcelain -- $CachePath
+    & node scripts/merge-crawl-log.mjs 'data/crawl-log.json' $LogSessionCopy ($Sources -join ',') 2>&1 |
+        ForEach-Object { "$_" | Add-Content -Encoding utf8 $LogFile }
+    if ($LASTEXITCODE -ne 0) {
+        git checkout -- $ManagedPaths 2>$null
+        Log 'PC fallback crawl-log merge failed'
+        exit 1
+    }
+
+    $Dirty = git status --porcelain -- $CachePath 'data/crawl-log.json'
     if (-not $Dirty) {
-        Log 'Merged cache is unchanged; commit skipped'
+        Log 'Merged cache and crawl log are unchanged; commit skipped'
         $Published = $true
         break
     }
 
     git config user.name 'tikitikit-local-crawler'
     git config user.email 'local-crawler@tikitikit.invalid'
-    git add -- $CachePath
-    git commit --only -m 'chore(data): refresh blocked sources from PC [local]' -- $CachePath 2>&1 |
+    git add -- $CachePath 'data/crawl-log.json'
+    git commit --only -m 'chore(data): refresh blocked sources from PC [local]' -- $CachePath 'data/crawl-log.json' 2>&1 |
         ForEach-Object { "$_" | Add-Content -Encoding utf8 $LogFile }
     if ($LASTEXITCODE -ne 0) {
-        git reset HEAD -- $CachePath 2>$null
+        git reset HEAD -- $CachePath 'data/crawl-log.json' 2>$null
         git checkout -- $ManagedPaths 2>$null
-        Log 'Unable to commit fallback cache'
+        Log 'Unable to commit fallback cache and crawl log'
         exit 1
     }
 
@@ -185,12 +195,13 @@ for ($Attempt = 1; $Attempt -le 2; $Attempt++) {
     if ($Attempt -lt 2) {
         git reset --soft HEAD~1 2>&1 | Add-Content -Encoding utf8 $LogFile
         if ($LASTEXITCODE -ne 0) { exit 1 }
-        git reset HEAD -- $CachePath 2>&1 | Add-Content -Encoding utf8 $LogFile
+        git reset HEAD -- $CachePath 'data/crawl-log.json' 2>&1 | Add-Content -Encoding utf8 $LogFile
         if ($LASTEXITCODE -ne 0) { exit 1 }
     }
 }
 
 Remove-Item -LiteralPath $SessionCopy -Force -ErrorAction SilentlyContinue
+Remove-Item -LiteralPath $LogSessionCopy -Force -ErrorAction SilentlyContinue
 if (-not $Published) {
     Log 'Fallback result could not be published'
     exit 1

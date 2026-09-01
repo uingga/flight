@@ -988,6 +988,7 @@ async function main() {
             const src = String(k).split('|')[0];
             if (turnover[src] && !nowKeys.has(k)) turnover[src].removed++;
         }
+        let localFallbackSessionStarted = false;
         for (const src of sourceNames) {
             const srcFlights = savedFlights.filter((f: any) => f.source === src);
             if (srcFlights.length === 0 && scrapedCounts[src] === undefined) continue;
@@ -997,6 +998,7 @@ async function main() {
                 const city = f.arrival?.city || '기타';
                 cityStats[city] = (cityStats[city] || 0) + 1;
             });
+            const isLocalFallbackAttempt = localSourceFallback && attempted.has(src);
             logCrawlResults(src, finalCounts[src] || 0, undefined, cityStats, {
                 scraped: circuitSkipped.has(src as CrawlableSourceKey) ? undefined : scrapedCounts[src],
                 preserved: preservedSources.has(src),
@@ -1004,9 +1006,14 @@ async function main() {
                 // 실제 시도 여부만 기준으로 삼아 일반 5개 여행사 성공 수에 끼지 않게 한다.
                 skipped: !attempted.has(src) || circuitSkipped.has(src as CrawlableSourceKey),
                 skippedUntil: circuitSkipped.get(src as CrawlableSourceKey)?.nextProbeAt,
+                localFallback: isLocalFallbackAttempt,
+                // 직전 GitHub 회차와 30분 안에 이어져도 별도 PC 회차로 남긴다.
+                // 첫 PC 소스가 새 엔트리를 만들고 같은 실행의 나머지 소스는 그 엔트리에 합쳐진다.
+                separateSession: isLocalFallbackAttempt && !localFallbackSessionStarted,
                 added: turnover[src]?.added,
                 removed: turnover[src]?.removed,
             });
+            if (isLocalFallbackAttempt) localFallbackSessionStarted = true;
         }
 
     } catch (error) {

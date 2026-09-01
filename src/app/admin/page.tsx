@@ -24,7 +24,8 @@ function compactCircuitCause(circuit?: { reason: 'blocked' | 'rate_limited'; det
 
 interface CrawlHistoryEntry {
     timestamp: string;
-    sites: Record<string, { total: number; scraped?: number; preserved?: boolean; skipped?: boolean; skippedUntil?: string; manual?: boolean; added?: number; removed?: number }>;
+    runKind?: 'pc_fallback';
+    sites: Record<string, { total: number; scraped?: number; preserved?: boolean; skipped?: boolean; skippedUntil?: string; manual?: boolean; localFallback?: boolean; added?: number; removed?: number }>;
     alerts: string[];
 }
 
@@ -1876,9 +1877,12 @@ export default function AdminPage() {
             : null;
         const shown = attemptedSources.reduce((sum, source) => sum + (entry.sites[source]?.total || 0), 0);
         const turnover = turnoverOf(entry);
-        const kind = attemptedSources.length === 1 && attemptedSources[0] === 'myrealtrip'
-            ? 'myrealtrip'
-            : 'regular';
+        const localFallbackSources = attemptedSources.filter(source => entry.sites[source]?.localFallback);
+        const kind = localFallbackSources.length > 0
+            ? 'pc_fallback'
+            : attemptedSources.length === 1 && attemptedSources[0] === 'myrealtrip'
+                ? 'myrealtrip'
+                : 'regular';
         return {
             entry,
             attemptedSources,
@@ -1890,7 +1894,9 @@ export default function AdminPage() {
             shown,
             turnover,
             kind,
-            label: kind === 'myrealtrip' ? '마이리얼트립' : '일반 5개 여행사',
+            label: kind === 'pc_fallback'
+                ? `PC 대체 수집 · ${localFallbackSources.map(source => SOURCE_NAMES[source] || source).join(', ')}`
+                : kind === 'myrealtrip' ? '마이리얼트립' : '일반 5개 여행사',
         };
     }).filter((row): row is NonNullable<typeof row> => row !== null);
 
@@ -1933,7 +1939,7 @@ export default function AdminPage() {
                     status: row.status,
                     summary: `${row.successCount}/${row.attemptedSources.length}곳 반영 · 원본 ${row.scraped?.toLocaleString() ?? '—'} → 노출 ${row.shown.toLocaleString()}`,
                     detail: row.failedSources.length > 0
-                        ? `이전 데이터 유지: ${row.failedSources.map(source => SOURCE_NAMES[source] || source).join(', ')} · ${changeText}`
+                        ? `${row.kind === 'pc_fallback' ? 'PC 대체 실패' : '이전 데이터 유지'}: ${row.failedSources.map(source => SOURCE_NAMES[source] || source).join(', ')} · ${changeText}`
                         : row.critical[0]?.replace(/^🚨\s*/, '') || changeText,
                 };
             }),
@@ -2400,11 +2406,12 @@ export default function AdminPage() {
                     <div className={styles.sectionHeading}>
                         <div>
                             <h2>여행사별 수집 상태</h2>
-                            <p>최근 16회의 자동 수집·수동 캡처·건너뜀을 서로 다른 표식으로 보여줍니다.</p>
+                            <p>최근 16회의 자동 수집·PC 대체·수동 캡처·건너뜀을 서로 다른 표식으로 보여줍니다.</p>
                         </div>
                     </div>
                     <div className={styles.sourceGraphLegend} aria-label="수집 그래프 범례">
                         <span><i className={styles.sourceLegendAuto} />자동 수집</span>
+                        <span><i className={styles.sourceLegendPc} />PC 대체 성공</span>
                         <span><i className={styles.sourceLegendFailed} />수집 실패</span>
                         <span><i className={styles.sourceLegendManual} />수동 캡처 성공</span>
                         <span><i className={styles.sourceLegendSkipped} />건너뜀</span>
@@ -2455,6 +2462,7 @@ export default function AdminPage() {
                                     skipped: Boolean(entry.sites[source]?.skipped),
                                     skippedUntil: entry.sites[source]?.skippedUntil,
                                     manual: Boolean(entry.sites[source]?.manual),
+                                    localFallback: Boolean(entry.sites[source]?.localFallback),
                                 }));
                             const hasCurrentManualLog = source === 'modetour' && Boolean(manualCapture) && loggedHistory.some(entry =>
                                 entry.manual
@@ -2469,6 +2477,7 @@ export default function AdminPage() {
                                     skipped: false,
                                     skippedUntil: undefined,
                                     manual: true,
+                                    localFallback: false,
                                 }] : []),
                             ]
                                 .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
@@ -2525,7 +2534,7 @@ export default function AdminPage() {
                                         <div><strong>{visibleCount.toLocaleString()}</strong><span>사이트 노출</span></div>
                                         <div><strong>{latestMeasured ? latestMeasured.value.toLocaleString() : '—'}</strong><span>최근 실제 수집</span></div>
                                     </div>
-                                    <div className={styles.sourceTrendBars} role="img" aria-label={`${SOURCE_NAMES[source]} 최근 ${history.length}회 자동·수동 수집 및 건너뜀 기록`}>
+                                    <div className={styles.sourceTrendBars} role="img" aria-label={`${SOURCE_NAMES[source]} 최근 ${history.length}회 자동·PC 대체·수동 수집 및 건너뜀 기록`}>
                                         {history.map((entry, index) => {
                                             const isLatest = index === history.length - 1;
                                             return (
@@ -2537,6 +2546,8 @@ export default function AdminPage() {
                                                         ? styles.sourceTrendBarSkipped
                                                         : entry.preserved
                                                         ? styles.sourceTrendBarPreserved
+                                                        : entry.localFallback
+                                                        ? styles.sourceTrendBarPc
                                                         : isLatest && slumped
                                                             ? styles.sourceTrendBarBroken
                                                             : isLatest
@@ -2545,9 +2556,9 @@ export default function AdminPage() {
                                                     style={{ height: entry.manual ? '24px' : entry.skipped ? '12px' : `${Math.max(5, Math.round((entry.value / peak) * 100))}%` }}
                                                     title={entry.skipped
                                                         ? `${formatKST(entry.timestamp).replace(/\d{4}\. /, '')} · ${skippedUntilLabel(entry.skippedUntil)} (차단 휴식, 요청 없음)`
-                                                        : `${formatKST(entry.timestamp).replace(/\d{4}\. /, '')} · ${entry.value.toLocaleString()}개${entry.manual ? ' · 수동 캡처 성공' : entry.preserved ? ' · 수집 실패, 이전 데이터 사용' : ' · 자동 수집'}`}
+                                                        : `${formatKST(entry.timestamp).replace(/\d{4}\. /, '')} · ${entry.value.toLocaleString()}개${entry.manual ? ' · 수동 캡처 성공' : entry.preserved ? entry.localFallback ? ' · PC 대체 실패, 이전 데이터 사용' : ' · 수집 실패, 이전 데이터 사용' : entry.localFallback ? ' · PC 대체 수집 성공' : ' · 자동 수집'}`}
                                                 >
-                                                    {entry.manual ? '✓' : ''}
+                                                    {entry.manual ? '✓' : entry.localFallback && !entry.preserved ? 'P' : ''}
                                                 </span>
                                             );
                                         })}
@@ -3349,6 +3360,7 @@ export default function AdminPage() {
                 </p>
                 <div className={styles.sourceGraphLegend} aria-label="수집 그래프 범례">
                     <span><i className={styles.sourceLegendAuto} />자동 수집</span>
+                    <span><i className={styles.sourceLegendPc} />PC 대체 성공</span>
                     <span><i className={styles.sourceLegendFailed} />수집 실패</span>
                     <span><i className={styles.sourceLegendManual} />수동 캡처 성공</span>
                     <span><i className={styles.sourceLegendSkipped} />건너뜀</span>
@@ -3375,6 +3387,7 @@ export default function AdminPage() {
                                 skipped: Boolean(entry.sites[source]?.skipped),
                                 skippedUntil: entry.sites[source]?.skippedUntil,
                                 manual: Boolean(entry.sites[source]?.manual),
+                                localFallback: Boolean(entry.sites[source]?.localFallback),
                             }));
                         const hasCurrentManualLog = source === 'modetour' && Boolean(manualCapture) && loggedHistory.some(entry =>
                             entry.manual
@@ -3389,6 +3402,7 @@ export default function AdminPage() {
                                 skipped: false,
                                 skippedUntil: undefined,
                                 manual: true,
+                                localFallback: false,
                             }] : []),
                         ]
                             .sort((a, b) => new Date(a.ts).getTime() - new Date(b.ts).getTime())
@@ -3508,7 +3522,7 @@ export default function AdminPage() {
                                     )}
                                 </div>
 
-                                <div className={styles.sparkBars} role="img" aria-label={`${SOURCE_NAMES[source]} 최근 ${history.length}회 자동·수동 수집 및 건너뜀 기록`}>
+                                <div className={styles.sparkBars} role="img" aria-label={`${SOURCE_NAMES[source]} 최근 ${history.length}회 자동·PC 대체·수동 수집 및 건너뜀 기록`}>
                                     {history.map((h, i) => (
                                         <span
                                             key={i}
@@ -3518,13 +3532,15 @@ export default function AdminPage() {
                                                     ? `${styles.sparkBar} ${styles.sparkBarSkipped}`
                                                 : h.preserved
                                                     ? `${styles.sparkBar} ${styles.sparkBarPreserved}`
+                                                    : h.localFallback
+                                                        ? `${styles.sparkBar} ${styles.sparkBarPc}`
                                                     : styles.sparkBar}
                                             style={{ height: h.manual ? '18px' : h.skipped ? '8px' : `${Math.max(4, Math.round((h.value / peak) * 100))}%` }}
                                             title={h.skipped
                                                 ? `${formatKST(h.ts).replace(/\d{4}\. /, '')} · ${skippedUntilLabel(h.skippedUntil)} (차단 휴식, 요청 없음)`
-                                                : `${formatKST(h.ts).replace(/\d{4}\. /, '')} · ${h.value.toLocaleString()}건${h.manual ? ' (수동 캡처 성공)' : h.preserved ? ' (수집 실패, 이전 데이터 유지)' : ' (자동 수집)'}`}
+                                                : `${formatKST(h.ts).replace(/\d{4}\. /, '')} · ${h.value.toLocaleString()}건${h.manual ? ' (수동 캡처 성공)' : h.preserved ? h.localFallback ? ' (PC 대체 실패, 이전 데이터 유지)' : ' (수집 실패, 이전 데이터 유지)' : h.localFallback ? ' (PC 대체 수집 성공)' : ' (자동 수집)'}`}
                                         >
-                                            {h.manual ? '✓' : ''}
+                                            {h.manual ? '✓' : h.localFallback && !h.preserved ? 'P' : ''}
                                         </span>
                                     ))}
                                 </div>

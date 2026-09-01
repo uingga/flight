@@ -309,6 +309,8 @@ test('the Windows blocked-source fallback uses the four general crawl slots', ()
     assert.match(runner, /LOCAL_SOURCE_FALLBACK = '1'/);
     assert.match(runner, /local-source-fallback-policy\.mjs check/);
     assert.match(runner, /merge-cache-source\.mjs/);
+    assert.match(runner, /merge-crawl-log\.mjs/);
+    assert.match(runner, /data\/crawl-log\.json/);
     assert.match(runner, /--sources=/);
     assert.match(runner, /crawl-all\.ts \$SourceArgument/);
 });

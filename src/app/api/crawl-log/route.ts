@@ -131,7 +131,8 @@ export async function GET(request: NextRequest) {
         // 크롤링 히스토리 로드
         let crawlHistory: Array<{
             timestamp: string;
-            sites: Record<string, { total: number; scraped?: number; preserved?: boolean; skipped?: boolean; skippedUntil?: string; manual?: boolean; added?: number; removed?: number }>;
+            runKind?: 'pc_fallback';
+            sites: Record<string, { total: number; scraped?: number; preserved?: boolean; skipped?: boolean; skippedUntil?: string; manual?: boolean; localFallback?: boolean; added?: number; removed?: number }>;
             alerts: string[];
         }> = [];
         try {

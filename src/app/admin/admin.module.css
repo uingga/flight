@@ -1582,6 +1582,18 @@
     font-weight: 800;
 }
 
+.sparkBarPc,
+.sparkBarPc:last-child {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #4f73c8;
+    background: #4f73c8;
+    color: #fff;
+    font-size: 0.55rem;
+    font-weight: 800;
+}
+
 .sparkBarSkipped,
 .sparkBarSkipped:last-child {
     border: 1px dashed #94a3b8;
@@ -3632,6 +3644,7 @@
 }
 
 .sourceLegendAuto { background: #4c9a70; }
+.sourceLegendPc { background: #4f73c8; }
 .sourceLegendFailed { background: #e7a93c; }
 .sourceLegendManual {
     border: 1px solid #0f9f98;
@@ -3727,6 +3740,7 @@
 .sourceTrendBarLatest,
 .sourceTrendBarPreserved,
 .sourceTrendBarManual,
+.sourceTrendBarPc,
 .sourceTrendBarSkipped,
 .sourceTrendBarBroken {
     flex: 1;
@@ -3748,6 +3762,17 @@
     justify-content: center;
     border: 1px solid #0f9f98;
     background: #0f9f98;
+    color: #fff;
+    font-size: 0.62rem;
+    font-weight: 800;
+}
+
+.sourceTrendBarPc {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #4f73c8;
+    background: #4f73c8;
     color: #fff;
     font-size: 0.62rem;
     font-weight: 800;
