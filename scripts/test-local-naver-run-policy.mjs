@@ -4,6 +4,7 @@ import {
     buildLocalNaverState,
     completePendingManualCapture,
     evaluateLocalNaverRun,
+    planInterruptedNaverRecovery,
     readOption,
 } from './local-naver-run-policy.mjs';
 
@@ -22,6 +23,105 @@ test('does not consume the next option when a PowerShell argument is empty', () 
     const args = ['--completed-sources', '--pending-sources', 'ttang'];
     assert.equal(readOption(args, '--completed-sources'), undefined);
     assert.equal(readOption(args, '--pending-sources'), 'ttang');
+});
+
+test('persists running sources so an interrupted phase can restore its queue', () => {
+    const state = buildLocalNaverState('running', {
+        now: new Date('2026-08-29T03:30:00.000Z'),
+        completedSources: ['ybtour'],
+        pendingSources: ['ttang'],
+        runningSources: ['hanatour', 'modetour', 'myrealtrip'],
+        navigationIncrement: 20,
+        reason: 'browser_session_started_recovery',
+    });
+    assert.deepEqual(state.runningSources, ['hanatour', 'modetour', 'myrealtrip']);
+
+    const plan = planInterruptedNaverRecovery({ state, requestsStarted: 0 });
+    assert.equal(plan.outcome, 'partial_waiting');
+    assert.equal(plan.reason, 'interrupted_recovery_before_requests');
+    assert.deepEqual(plan.completedSources, ['ybtour']);
+    assert.deepEqual(plan.pendingSources, ['ttang', 'hanatour', 'modetour', 'myrealtrip']);
+    assert.equal(plan.navigationIncrement, 20);
+});
+
+test('returns interrupted initial sources to the next phase and keeps the used budget', () => {
+    const state = buildLocalNaverState('running', {
+        now: new Date('2026-08-29T03:30:00.000Z'),
+        pendingSources: ['ttang'],
+        runningSources: ['ybtour', 'hanatour', 'modetour', 'onlinetour', 'myrealtrip'],
+        reason: 'browser_session_started_initial',
+    });
+    const plan = planInterruptedNaverRecovery({ state, requestsStarted: 20 });
+    assert.equal(plan.outcome, 'partial_waiting');
+    assert.equal(plan.reason, 'interrupted_initial_after_20_requests');
+    assert.deepEqual(plan.pendingSources, [
+        'ttang',
+        'ybtour',
+        'hanatour',
+        'modetour',
+        'onlinetour',
+        'myrealtrip',
+    ]);
+    assert.equal(plan.navigationIncrement, 20);
+});
+
+test('keeps a recovery interruption terminal after Naver requests already started', () => {
+    const state = buildLocalNaverState('running', {
+        now: new Date('2026-08-29T06:00:00.000Z'),
+        pendingSources: ['ttang'],
+        runningSources: ['modetour'],
+        navigationIncrement: 120,
+        reason: 'browser_session_started_recovery',
+    });
+    const plan = planInterruptedNaverRecovery({ state, requestsStarted: 3 });
+    assert.equal(plan.outcome, 'degraded');
+    assert.equal(plan.reason, 'interrupted_recovery_after_3_requests');
+    assert.deepEqual(plan.pendingSources, ['ttang']);
+    assert.equal(plan.navigationIncrement, 123);
+});
+
+test('does not retry when an interrupted request count is unavailable', () => {
+    const state = buildLocalNaverState('running', {
+        now: new Date('2026-08-29T06:00:00.000Z'),
+        pendingSources: ['ttang'],
+        runningSources: ['modetour'],
+        navigationIncrement: 120,
+        reason: 'browser_session_started_recovery',
+    });
+    const plan = planInterruptedNaverRecovery({ state });
+    assert.equal(plan.outcome, 'degraded');
+    assert.equal(plan.reason, 'interrupted_recovery_requests_unknown');
+    assert.deepEqual(plan.pendingSources, ['ttang']);
+    assert.equal(plan.navigationIncrement, 200);
+});
+
+test('repairs a legacy interrupted initial state that did not save running sources', () => {
+    const cache = {
+        ...readyCache,
+        fullCrawlUpdatedAt: '2026-08-29T05:45:00.000Z',
+        sourceUpdatedAt: {
+            ...readyCache.sourceUpdatedAt,
+            ttang: '2026-08-28T02:40:00.000Z',
+        },
+    };
+    const state = {
+        version: 2,
+        kstDate: '2026-08-29',
+        phase: 'partial_waiting',
+        updatedAt: '2026-08-29T04:00:00.000Z',
+        navigationsUsed: 20,
+        completedSources: [],
+        pendingSources: ['ttang'],
+        reason: 'interrupted_initial_after_20_requests',
+    };
+    const result = evaluateLocalNaverRun({
+        now: '2026-08-29T05:46:00.000Z',
+        cache,
+        state,
+    });
+    assert.equal(result.shouldRun, true);
+    assert.deepEqual(result.sources, ['ybtour', 'hanatour', 'modetour', 'onlinetour', 'myrealtrip']);
+    assert.equal(result.navigationBudget, 180);
 });
 
 test('runs every fresh source as soon as the post-11:12 crawl is ready', () => {

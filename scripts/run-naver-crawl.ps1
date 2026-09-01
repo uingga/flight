@@ -40,23 +40,40 @@ function Restore-InterruptedRunState {
     }
     if ($ExistingState.phase -ne 'running') { return $true }
 
-    $RequestsStarted = 0
+    $RequestsStarted = $null
     try {
         if (Test-Path -LiteralPath $RunStatusFile) {
             $InterruptedStatus = Get-Content -Raw -Encoding utf8 $RunStatusFile | ConvertFrom-Json
-            $RequestsStarted = [Math]::Max(0, [int]$InterruptedStatus.requestsStarted)
+            if ($null -ne $InterruptedStatus.requestsStarted) {
+                $RequestsStarted = [Math]::Max(0, [int]$InterruptedStatus.requestsStarted)
+            }
         }
     } catch {
-        Log "Unable to read the interrupted crawler status; recovering with zero additional requests: $($_.Exception.Message)"
+        Log "Unable to read the interrupted crawler status; request count remains unknown: $($_.Exception.Message)"
     }
 
-    $PreviousNavigations = [Math]::Max(0, [int]$ExistingState.navigationsUsed)
-    $RecoveredNavigations = [Math]::Min(200, $PreviousNavigations + $RequestsStarted)
-    $KnownSources = @('ybtour', 'hanatour', 'modetour', 'onlinetour', 'ttang', 'myrealtrip')
-    $CompletedSources = @($ExistingState.completedSources | Where-Object { $KnownSources -contains [string]$_ })
-    $PendingSources = @($ExistingState.pendingSources | Where-Object { $KnownSources -contains [string]$_ })
-    $CompletedSourceCsv = $CompletedSources -join ','
-    $PendingSourceCsv = $PendingSources -join ','
+    $RecoveryPlanArgs = @(
+        'scripts/local-naver-run-policy.mjs',
+        'interrupted-plan',
+        '--state', $StateFile
+    )
+    if ($null -ne $RequestsStarted) {
+        $RecoveryPlanArgs += @('--requests-started', [string]$RequestsStarted)
+    }
+    $RecoveryPlanOutput = & node @RecoveryPlanArgs 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        Log "Unable to plan interrupted Naver recovery: $((($RecoveryPlanOutput | Out-String).Trim()))"
+        return $false
+    }
+    try {
+        $RecoveryPlan = ($RecoveryPlanOutput | Out-String).Trim() | ConvertFrom-Json
+    } catch {
+        Log "Invalid interrupted Naver recovery plan: $($_.Exception.Message)"
+        return $false
+    }
+    $RecoveredNavigations = [Math]::Max(0, [int]$RecoveryPlan.navigationIncrement)
+    $CompletedSourceCsv = @($RecoveryPlan.completedSources | Where-Object { $_ }) -join ','
+    $PendingSourceCsv = @($RecoveryPlan.pendingSources | Where-Object { $_ }) -join ','
 
     # The scheduled checkout owns these generated files. A terminated browser can
     # leave partial prices behind, so discard them before the next scheduled phase.
@@ -75,19 +92,12 @@ function Restore-InterruptedRunState {
         return $true
     }
 
-    $InterruptedInitialPhase = [string]$ExistingState.reason -match 'browser_session_started_initial$'
-    $RecoveredOutcome = if ($InterruptedInitialPhase) { 'partial_waiting' } else { 'degraded' }
-    $RecoveredReason = if ($InterruptedInitialPhase) {
-        "interrupted_initial_after_$($RequestsStarted)_requests"
-    } else {
-        "interrupted_$([string]$ExistingState.reason)_after_$($RequestsStarted)_requests"
-    }
     $MarkArgs = @(
         'scripts/local-naver-run-policy.mjs',
         'mark',
         '--state', $StateFile,
-        '--outcome', $RecoveredOutcome,
-        '--reason', $RecoveredReason,
+        '--outcome', [string]$RecoveryPlan.outcome,
+        '--reason', [string]$RecoveryPlan.reason,
         '--navigation-increment', [string]$RecoveredNavigations
     )
     if ($CompletedSourceCsv) { $MarkArgs += @('--completed-sources', $CompletedSourceCsv) }
@@ -262,12 +272,16 @@ if ($Scheduled) {
     Start-Sleep -Seconds $StartJitterSeconds
 }
 
+# A previous process must not leave a stale request count that could be mistaken
+# for this browser session if Windows terminates us before crawl-naver.ts starts.
+Remove-Item -LiteralPath $RunStatusFile -Force -ErrorAction SilentlyContinue
 $RunningStateOutput = & node scripts/local-naver-run-policy.mjs mark `
     --state $StateFile `
     --outcome running `
     --reason "browser_session_started_$($RunPolicy.runPhase)" `
     --completed-sources $PreviouslyCompletedSourceCsv `
-    --pending-sources $PendingSourceCsv 2>&1
+    --pending-sources $PendingSourceCsv `
+    --running-sources $RunSourceCsv 2>&1
 if ($LASTEXITCODE -ne 0) {
     Log 'Unable to open the local Naver circuit state; stopping before browser launch'
     exit 1

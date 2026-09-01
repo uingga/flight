@@ -270,7 +270,10 @@ test('the Windows Naver task splits fresh and recovered sources under one daily 
     assert.match(runner, /Local\\TikitikitNaverCrawl/);
     assert.match(runner, /Restore-InterruptedRunState/);
     assert.match(runner, /git restore --source=HEAD --worktree -- \$ManagedPaths/);
-    assert.match(runner, /interrupted_initial_after_/);
+    assert.match(runner, /['"]interrupted-plan['"]/);
+    assert.match(runner, /\$null -ne \$RequestsStarted/);
+    assert.match(runner, /@\('--requests-started', \[string\]\$RequestsStarted\)/);
+    assert.match(runner, /--running-sources \$RunSourceCsv/);
     assert.match(runner, /local-naver-run-policy\.mjs check/);
     assert.match(runner, /\$UpstreamPollSeconds = 120/);
     assert.match(runner, /Start-Sleep -Seconds \$SleepSeconds/);

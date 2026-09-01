@@ -207,10 +207,22 @@ export function evaluateLocalNaverRun({
 
     if (sameDayState?.phase === 'partial_waiting') {
         const completedSources = uniqueSources(sameDayState.completedSources || []);
+        // 2026-09-01 이전 복구 상태에는 실행 중이던 소스 목록이 없었다.
+        // 최초 회차가 강제 종료된 경우 당시 정상 갱신된 소스를 다시 추론해
+        // 14:23/17:31 회차에서 조용히 빠지지 않게 한다.
+        const legacyInterruptedInitial = /^interrupted_initial_after_\d+_requests$/
+            .test(String(sameDayState.reason || ''));
+        const inferredInterruptedSources = legacyInterruptedInitial
+            ? uniqueSources([
+                ...GENERAL_SOURCES.filter(source => sourceIsFreshAfter(cache, source, initialSlotAt)),
+                ...(myrealtripReady ? ['myrealtrip'] : []),
+            ])
+            : [];
         const pendingSources = uniqueSources([
             ...(sameDayState.pendingSources || []),
+            ...inferredInterruptedSources,
             ...(manualReady ? ['modetour'] : []),
-        ]);
+        ]).filter(source => !completedSources.includes(source));
         const navigationsUsed = usedNavigationBudget(sameDayState, totalNavigationBudget);
         const navigationBudget = Math.max(0, totalNavigationBudget - navigationsUsed);
         const recoveryReady = fullCrawlAt !== null && fullCrawlAt >= recoverySlotAt;
@@ -232,7 +244,11 @@ export function evaluateLocalNaverRun({
         // A PC fallback may recover a blocked source between 11:12 and 14:23.
         // Wait for the 14:23 decision point, but accept any source that became
         // fresh after the initial slot rather than requiring another fetch.
-        const recoveredSources = pendingSources.filter(source => sourceIsFreshAfter(cache, source, initialSlotAt));
+        const recoveredSources = pendingSources.filter(source => (
+            source === 'myrealtrip'
+                ? myrealtripReady
+                : sourceIsFreshAfter(cache, source, initialSlotAt)
+        ));
         const stillPendingSources = pendingSources.filter(source => !recoveredSources.includes(source));
         if (navigationBudget <= 0 || recoveredSources.length === 0) {
             return {
@@ -346,6 +362,7 @@ export function buildLocalNaverState(outcome, {
     previousState = null,
     completedSources = [],
     pendingSources = [],
+    runningSources = [],
     navigationIncrement = 0,
 } = {}) {
     const current = now instanceof Date ? now : new Date(now);
@@ -361,6 +378,9 @@ export function buildLocalNaverState(outcome, {
     ]);
     const normalizedPendingSources = uniqueSources(pendingSources)
         .filter(source => !mergedCompletedSources.includes(source));
+    const normalizedRunningSources = outcome === 'running'
+        ? uniqueSources(runningSources).filter(source => !mergedCompletedSources.includes(source))
+        : [];
     const cooldownHours = outcome === 'degraded' || outcome === 'running' ? 12 : 0;
     const nextEligibleAt = outcome === 'partial_waiting'
         ? sameDayKstTime(current, RECOVERY_SLOT.hour, RECOVERY_SLOT.minute)
@@ -369,7 +389,7 @@ export function buildLocalNaverState(outcome, {
             : new Date(current.getTime() + cooldownHours * HOUR_MS).toISOString();
 
     return {
-        version: 2,
+        version: 3,
         kstDate: kstDateKey(current),
         phase: outcome,
         updatedAt: current.toISOString(),
@@ -377,7 +397,47 @@ export function buildLocalNaverState(outcome, {
         navigationsUsed,
         completedSources: mergedCompletedSources,
         pendingSources: normalizedPendingSources,
+        runningSources: normalizedRunningSources,
         ...(reason ? { reason } : {}),
+    };
+}
+
+export function planInterruptedNaverRecovery({ state, requestsStarted = null }) {
+    const knownSources = new Set([...GENERAL_SOURCES, 'myrealtrip']);
+    const normalizeKnownSources = values => uniqueSources(values || [])
+        .filter(source => knownSources.has(source));
+    const completedSources = normalizeKnownSources(state?.completedSources);
+    const pendingSources = normalizeKnownSources(state?.pendingSources);
+    const runningSources = normalizeKnownSources(state?.runningSources);
+    const requestsKnown = requestsStarted !== null
+        && requestsStarted !== undefined
+        && Number.isFinite(Number(requestsStarted));
+    const normalizedRequests = requestsKnown ? Math.max(0, Number(requestsStarted)) : 0;
+    const previousNavigations = Math.max(0, Number(state?.navigationsUsed) || 0);
+    // 요청 수를 읽지 못했다면 새 일일 예산을 부여하지 않는다. 실제 요청이
+    // 있었을 가능성을 보수적으로 취급해 당일 재실행을 차단한다.
+    const navigationIncrement = requestsKnown
+        ? Math.min(TOTAL_NAVIGATION_BUDGET, previousNavigations + normalizedRequests)
+        : TOTAL_NAVIGATION_BUDGET;
+    const runPhase = String(state?.reason || '').replace(/^browser_session_started_/, '') || 'unknown';
+    const resumeAtNextSlot = requestsKnown
+        && (runPhase === 'initial' || normalizedRequests === 0);
+
+    return {
+        outcome: resumeAtNextSlot ? 'partial_waiting' : 'degraded',
+        reason: !requestsKnown
+            ? `interrupted_${runPhase}_requests_unknown`
+            : runPhase === 'initial'
+            ? `interrupted_initial_after_${normalizedRequests}_requests`
+            : normalizedRequests === 0
+                ? `interrupted_${runPhase}_before_requests`
+                : `interrupted_${runPhase}_after_${normalizedRequests}_requests`,
+        completedSources,
+        pendingSources: resumeAtNextSlot
+            ? uniqueSources([...pendingSources, ...runningSources])
+                .filter(source => !completedSources.includes(source))
+            : pendingSources,
+        navigationIncrement,
     };
 }
 
@@ -489,6 +549,7 @@ function runCli() {
         const reason = readOption(args, '--reason') || '';
         const completedSources = csvOption(args, '--completed-sources');
         const pendingSources = csvOption(args, '--pending-sources');
+        const runningSources = csvOption(args, '--running-sources');
         const navigationIncrement = Number(readOption(args, '--navigation-increment') || 0);
         if (!statePath || !['running', 'partial_waiting', 'success', 'blocked', 'degraded'].includes(outcome)) {
             throw new Error('mark requires --state and --outcome running|partial_waiting|success|blocked|degraded');
@@ -500,10 +561,22 @@ function runCli() {
             previousState,
             completedSources,
             pendingSources,
+            runningSources,
             navigationIncrement,
         });
         writeJsonAtomic(statePath, state);
         console.log(JSON.stringify(state));
+        return;
+    }
+
+    if (command === 'interrupted-plan') {
+        const statePath = readOption(args, '--state');
+        const requestsValue = readOption(args, '--requests-started');
+        const requestsStarted = requestsValue === undefined ? null : Number(requestsValue);
+        if (!statePath) throw new Error('interrupted-plan requires --state');
+        const state = readJson(statePath);
+        if (state?.phase !== 'running') throw new Error('interrupted-plan requires a running state');
+        console.log(JSON.stringify(planInterruptedNaverRecovery({ state, requestsStarted })));
         return;
     }
 
@@ -520,7 +593,7 @@ function runCli() {
         return;
     }
 
-    throw new Error('usage: local-naver-run-policy.mjs check|mark|complete-manual-capture ...');
+    throw new Error('usage: local-naver-run-policy.mjs check|mark|interrupted-plan|complete-manual-capture ...');
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url))) {
