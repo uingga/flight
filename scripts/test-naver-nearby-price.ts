@@ -6,6 +6,7 @@ import {
     type NearbyNaverPriceEntry,
 } from '../src/lib/naver-nearby-price';
 import type { Flight } from '../src/types/flight';
+import { buildRecommendationScoreState } from '../src/lib/flight-recommendation';
 
 const now = new Date('2026-08-31T12:00:00+09:00').getTime();
 
@@ -82,4 +83,21 @@ const twoSampleContext = getNearbyNaverPriceContext(twoSampleIndex, flight());
 assert.equal(twoSampleContext.sampleCount, 2);
 assert.equal(twoSampleContext.baseline, 200_000, '표본 두 건부터 중간값을 정식 가격 근거로 사용해야 한다.');
 
-console.log('✅ 출발일 ±14일 동일 가중치 · 여행 기간 무관 · 2건 중간값 · 1건 약한 참고');
+const recommendationFlight = flight({
+    price: 200_000,
+    naverLowest: 300_000,
+    priceCheckedAt: '2026-08-31T11:00:00+09:00',
+});
+const recommendationRank = (checkedAt: string) => buildRecommendationScoreState([
+    { ...recommendationFlight, naverCheckedAt: checkedAt },
+], {}, now).explanations.get('candidate')!;
+const freshRecommendation = recommendationRank('2026-08-30T12:00:00+09:00');
+const graceRecommendation = recommendationRank('2026-08-29T00:00:00+09:00');
+const expiredRecommendation = recommendationRank('2026-08-28T11:59:59+09:00');
+assert.equal(freshRecommendation.naverCompetitivenessRank, 0, '48시간 이내 비교가는 원래 최상위 근거를 유지해야 한다.');
+assert.equal(graceRecommendation.naverCompetitivenessRank, 1, '48~72시간 비교가는 한 단계 낮춰 반영해야 한다.');
+assert.equal(graceRecommendation.naverEvidenceStrength, 1, '완화 구간의 강한 근거는 보통 근거로 낮춰야 한다.');
+assert.equal(expiredRecommendation.naverCompetitivenessRank, 3, '72시간을 넘기면 동일 일정 비교가 없음으로 처리해야 한다.');
+assert.equal(expiredRecommendation.comparisonPrice, null);
+
+console.log('✅ 출발일 ±14일 · 네이버 비교가 48시간 정상/72시간 완화 · 제거 필터 24시간 유지');

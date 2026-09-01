@@ -5,9 +5,9 @@ import {
     type FlightDiversityDecision,
 } from './flight-diversity';
 import {
-    getComparisonFreshness,
     getComparisonPriceTier,
     getEffectivePrice,
+    getRecommendationComparisonFreshness,
     getRoutePriceCompetitivenessTier,
 } from './price-quality';
 import { normalizeCity } from './utils/flight-helpers';
@@ -188,6 +188,17 @@ function naverCompetitiveness(
     return { rank: 4, strength: 0 };
 }
 
+/** 48~72시간 비교가는 저렴함만 한 단계 낮춰 인정하고, 비쌈은 불이익 근거로 쓰지 않는다. */
+function reduceNaverConfidence(
+    result: { rank: TopRecommendationTier; strength: PriceEvidenceStrength },
+    reducedStrength: boolean,
+): { rank: TopRecommendationTier; strength: PriceEvidenceStrength } {
+    if (!reducedStrength) return result;
+    if (result.rank === 0) return { rank: 1, strength: 1 };
+    if (result.rank === 1) return { rank: 2, strength: 0 };
+    return { rank: 3, strength: 0 };
+}
+
 function departureAreaKey(flight: Flight): string {
     const airport = flight.departure.airport?.trim().toUpperCase();
     if (airport === 'ICN' || airport === 'GMP') return 'SEOUL';
@@ -334,15 +345,19 @@ function scoreFlight(
         ? closestInterparkMonth(flight, interparkPrices)
         : { month: null, data: null };
     const { month, data: interparkMonth } = interparkContext;
+    const comparisonFreshness = getRecommendationComparisonFreshness(flight.naverCheckedAt, now);
     const comparisonUsable = Boolean(
         flight.naverLowest
         && flight.naverLowest > 0
-        && getComparisonFreshness(flight.naverCheckedAt, now).usable,
+        && comparisonFreshness.usable,
     );
     const comparisonPrice = comparisonUsable ? flight.naverLowest! : null;
     const factors: RecommendationScoreFactor[] = [];
     const priceAppeal = priceAppealForFlight(flight, effectivePrice, priceAppealContext);
-    const naver = naverCompetitiveness(effectivePrice, comparisonPrice);
+    const naver = reduceNaverConfidence(
+        naverCompetitiveness(effectivePrice, comparisonPrice),
+        comparisonFreshness.reducedStrength,
+    );
     const nearbyBaseline = Number(flight.nearbyNaverBaseline);
     const nearbyKnown = Number(flight.nearbyNaverSampleCount || 0) >= 2
         && Number.isFinite(nearbyBaseline)
@@ -407,7 +422,9 @@ function scoreFlight(
     factors.push({
         rule: 'naver-same-date',
         multiplier: naverMultiplier,
-        detail: comparisonPrice ? `동일 일정 ${comparisonPrice.toLocaleString()}원` : '동일 일정 비교가 없음',
+        detail: comparisonPrice
+            ? `동일 일정 ${comparisonPrice.toLocaleString()}원${comparisonFreshness.reducedStrength ? ' · 48시간 경과로 완화 반영' : ''}`
+            : '동일 일정 비교가 없음',
     });
     if (nearbyKnown) {
         factors.push({

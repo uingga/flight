@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import * as fs from 'fs';
 import * as path from 'path';
-import { getComparisonFreshness } from '@/lib/price-quality';
-import { getUsableNaverComparison, type NaverComparisonEntry } from '@/lib/naver-comparison';
+import { getRecommendationComparisonFreshness } from '@/lib/price-quality';
+import { getRecommendationNaverComparison, type NaverComparisonEntry } from '@/lib/naver-comparison';
 import type { NaverCrawlHistoryEntry } from '@/lib/utils/naver-crawl-history';
 import { getCrawlScheduleHealth, getFullCrawlUpdatedAt } from '@/lib/crawl-schedule-health.mjs';
 
@@ -146,12 +146,14 @@ export async function GET(request: NextRequest) {
         } catch { }
 
         // 네이버 비교가 갱신 상태 — 로컬 PC 예약 작업이 조용히 멈춰도 알아채기 위한 지표.
-        // 화면과 동일하게 24시간 이내이며 최신 시도가 정상 빈 결과/노선 오류가 아닌 값만 센다.
+        // 추천 화면과 동일하게 72시간 이내이며 최신 시도가 정상 빈 결과/노선 오류가 아닌 값만 센다.
+        // 그중 48~72시간은 한 단계 완화되는 구간으로 따로 표시한다.
         let naverStatus: {
             lastCrawledAt: string | null;
             lastAttemptAt: string | null;
             ageDays: number | null;
             freshEntries: number;
+            graceEntries: number;
             pricedEntries: number;
             expiredEntries: number;
             failedEntries: number;
@@ -169,6 +171,7 @@ export async function GET(request: NextRequest) {
                 let lastCrawledAt: string | null = null;
                 let lastAttemptAt: string | null = null;
                 let freshEntries = 0;
+                let graceEntries = 0;
                 let pricedEntries = 0;
                 let expiredEntries = 0;
                 let failedEntries = 0;
@@ -178,7 +181,9 @@ export async function GET(request: NextRequest) {
                     const hasSuccessfulPrice = Number.isFinite(price) && price > 0 && Boolean(entry.crawledAt);
                     if (hasSuccessfulPrice) {
                         pricedEntries += 1;
-                        if (!getComparisonFreshness(entry.crawledAt).usable) expiredEntries += 1;
+                        const freshness = getRecommendationComparisonFreshness(entry.crawledAt);
+                        if (!freshness.usable) expiredEntries += 1;
+                        else if (freshness.reducedStrength) graceEntries += 1;
                     } else {
                         neverCheckedEntries += 1;
                     }
@@ -186,7 +191,7 @@ export async function GET(request: NextRequest) {
                     const attemptedAt = entry.lastAttemptAt || entry.crawledAt;
                     if (attemptedAt && (!lastAttemptAt || attemptedAt > lastAttemptAt)) lastAttemptAt = attemptedAt;
 
-                    const comparison = getUsableNaverComparison(entry);
+                    const comparison = getRecommendationNaverComparison(entry);
                     if (!comparison) continue;
                     freshEntries += 1;
                     if (!lastCrawledAt || comparison.checkedAt > lastCrawledAt) {
@@ -196,8 +201,9 @@ export async function GET(request: NextRequest) {
                 naverStatus = {
                     lastCrawledAt,
                     lastAttemptAt,
-                    ageDays: getComparisonFreshness(lastCrawledAt ?? undefined).ageDays,
+                    ageDays: getRecommendationComparisonFreshness(lastCrawledAt ?? undefined).ageDays,
                     freshEntries,
+                    graceEntries,
                     pricedEntries,
                     expiredEntries,
                     failedEntries,

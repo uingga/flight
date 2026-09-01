@@ -126,6 +126,7 @@ interface AdminData {
         lastAttemptAt: string | null;
         ageDays: number | null;
         freshEntries: number;
+        graceEntries: number;
         pricedEntries: number;
         expiredEntries: number;
         failedEntries: number;
@@ -2589,11 +2590,11 @@ export default function AdminPage() {
                     <div className={naverNeedsAttention ? `${styles.naverCompact} ${styles.naverCompactWarn}` : styles.naverCompact}>
                         <div>
                             <strong>가격 비교 데이터</strong>
-                            <span>{data.naverStatus?.lastCrawledAt ? `${timeAgo(data.naverStatus.lastCrawledAt)} 성공` : '24시간 내 성공 기록 없음'}</span>
+                            <span>{data.naverStatus?.lastCrawledAt ? `${timeAgo(data.naverStatus.lastCrawledAt)} 성공` : '72시간 내 성공 기록 없음'}</span>
                         </div>
                         <div>
                             <strong>{data.naverStatus ? `${data.naverStatus.freshEntries.toLocaleString()} / ${data.naverStatus.totalEntries.toLocaleString()}개` : '—'}</strong>
-                            <span>24시간 내 사용 가능 / 전체 대기열</span>
+                            <span>72시간 내 추천 사용 가능 / 전체 대기열</span>
                         </div>
                     </div>
                 </section>
@@ -2853,9 +2854,9 @@ export default function AdminPage() {
 
                             <div className={styles.crawlLedgerSummary}>
                                 <div>
-                                    <span>24시간 내 사용 가능</span>
+                                    <span>72시간 내 추천 사용 가능</span>
                                     <strong>{data.naverStatus ? `${data.naverStatus.freshEntries.toLocaleString()} / ${data.naverStatus.totalEntries.toLocaleString()}` : '—'}</strong>
-                                    <small>추천과 가격 비교에 실제 사용</small>
+                                    <small>{data.naverStatus ? `48~72시간 완화 반영 ${data.naverStatus.graceEntries.toLocaleString()}개` : '추천과 가격 비교에 실제 사용'}</small>
                                 </div>
                                 <div>
                                     <span>최근 실행 성공률</span>
@@ -2885,7 +2886,8 @@ export default function AdminPage() {
                             {data.naverStatus && (
                                 <div className={styles.naverCoverageStrip}>
                                     <span><b>{data.naverStatus.pricedEntries.toLocaleString()}</b> 가격 확인 이력</span>
-                                    <span><b>{data.naverStatus.expiredEntries.toLocaleString()}</b> 24시간 만료</span>
+                                    <span><b>{data.naverStatus.graceEntries.toLocaleString()}</b> 48~72시간 완화</span>
+                                    <span><b>{data.naverStatus.expiredEntries.toLocaleString()}</b> 72시간 만료</span>
                                     <span><b>{data.naverStatus.neverCheckedEntries.toLocaleString()}</b> 성공 이력 없음</span>
                                     <span className={data.naverStatus.failedEntries > 0 ? styles.naverCoverageWarn : undefined}>
                                         <b>{data.naverStatus.failedEntries.toLocaleString()}</b> 마지막 시도가 오류
@@ -3832,12 +3834,12 @@ export default function AdminPage() {
                         {lastCrawledAt ? (
                             <span>
                                 마지막 갱신 {formatKST(lastCrawledAt)} ({timeAgo(lastCrawledAt)}) ·
-                                {' '}최근 24시간 내 사용 가능 {freshEntries.toLocaleString()}건 / 전체 {totalEntries.toLocaleString()}건
+                                {' '}최근 72시간 내 추천 사용 가능 {freshEntries.toLocaleString()}건 / 전체 {totalEntries.toLocaleString()}건
                             </span>
                         ) : (
                             <span>갱신 기록이 없습니다.</span>
                         )}
-                        {stale && <em>24시간 넘게 지난 가격은 추천 판단에 쓰지 않습니다. 자동 확인이 실행되는지 살펴보세요.</em>}
+                        {stale && <em>72시간 넘게 지난 가격은 추천 판단에 쓰지 않습니다. 자동 확인이 실행되는지 살펴보세요.</em>}
                     </div>
                 );
             })()}

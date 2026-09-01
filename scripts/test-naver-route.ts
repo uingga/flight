@@ -13,7 +13,14 @@ import {
     shouldAbortNaverCrawlForSystemicFailures,
     shouldAbortNaverCrawlForZeroSuccess,
 } from '../src/lib/naver-crawl-page-state';
-import { getUsableNaverComparison } from '../src/lib/naver-comparison';
+import {
+    getRecommendationNaverComparison,
+    getUsableNaverComparison,
+} from '../src/lib/naver-comparison';
+import {
+    getComparisonFreshness,
+    getRecommendationComparisonFreshness,
+} from '../src/lib/price-quality';
 
 const symmetricSummary = [
     '이스타항공',
@@ -184,6 +191,46 @@ assert.equal(getUsableNaverComparison({
     crawledAt: '2026-08-26T02:59:59Z',
     lastAttemptStatus: 'success',
 }, comparisonNow), null);
+assert.equal(
+    getComparisonFreshness('2026-08-26T02:59:59Z', comparisonNow).usable,
+    false,
+    '항공권 제거용 네이버 가격은 24시간을 넘기면 계속 무효여야 한다.',
+);
+assert.deepEqual(getRecommendationNaverComparison({
+    naverLowest: 150_000,
+    crawledAt: '2026-08-24T15:00:00Z',
+    lastAttemptStatus: 'success',
+}, comparisonNow), { price: 150_000, checkedAt: '2026-08-24T15:00:00Z' });
+assert.equal(
+    getRecommendationComparisonFreshness('2026-08-24T15:00:00Z', comparisonNow).reducedStrength,
+    true,
+    '48~72시간 네이버 가격은 추천에서 한 단계 완화해야 한다.',
+);
+assert.equal(
+    getRecommendationComparisonFreshness('2026-08-25T03:00:00Z', comparisonNow).fullStrength,
+    true,
+    '정확히 48시간까지는 원래 추천 신뢰도를 유지해야 한다.',
+);
+assert.equal(
+    getRecommendationComparisonFreshness('2026-08-25T02:59:59Z', comparisonNow).reducedStrength,
+    true,
+    '48시간을 넘긴 직후부터 완화 구간이어야 한다.',
+);
+assert.equal(
+    getRecommendationComparisonFreshness('2026-08-24T03:00:00Z', comparisonNow).usable,
+    true,
+    '정확히 72시간까지는 추천 비교가를 유지해야 한다.',
+);
+assert.equal(getRecommendationNaverComparison({
+    naverLowest: 150_000,
+    crawledAt: '2026-08-24T02:59:59Z',
+    lastAttemptStatus: 'success',
+}, comparisonNow), null, '72시간을 넘긴 네이버 가격은 추천에도 사용하지 않아야 한다.');
+assert.equal(getRecommendationNaverComparison({
+    naverLowest: 150_000,
+    crawledAt: '2026-08-24T15:00:00Z',
+    lastAttemptStatus: 'no_result',
+}, comparisonNow), null, '정상 빈 결과 뒤에는 72시간 안이어도 과거 가격을 사용하지 않아야 한다.');
 assert.equal(getUsableNaverComparison({
     naverLowest: 150_000,
     crawledAt: '2026-08-26T03:00:00Z',
