@@ -3702,7 +3702,7 @@ export default function MobileRedesignPreview({
                             <div>
                                 <a href="/drop">TIKIT DROP</a>
                                 <a href="/tips">가격 기록과 여행 팁</a>
-                                <a href="/about">서비스와 수집 기준</a>
+                                <a href="/about">티키티킷 안내</a>
                             </div>
                         </section>
                         <section>

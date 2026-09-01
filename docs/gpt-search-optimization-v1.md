@@ -22,7 +22,7 @@
 - `robots.txt`, `sitemap.xml` 정상 응답
 - 도시별 서버 렌더링 페이지 `/flights/[city]`
 - 최근 가격 기록 `/tips/price-watch`
-- 사람과 크롤러가 함께 읽는 서비스·수집 기준 `/about`
+- 사람과 검색 서비스가 함께 읽는 티키티킷 이용 안내 `/about`
 - 메인 HTML에 실제 수집 건수, 수집 시각, 목적지별 최저가 노출
 - 공유 URL은 `noindex, follow`, 미리보기 URL은 robots 차단
 - 메인·도시 페이지·사이트맵의 수정 시각을 실제 수집 시각과 연결
