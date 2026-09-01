@@ -8,13 +8,6 @@ import {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const SOURCE_KEYS = ['ybtour', 'hanatour', 'modetour', 'onlinetour', 'ttang'];
-// 땡처리닷컴은 GitHub 차단 회로가 열린 동안에도 PC 회선을 과도하게 쓰지 않도록
-// 일반 4개 회차 가운데 08:17/14:23 KST에만 대체 수집한다. 작업 자체는 다른
-// 차단 소스를 위해 네 회차 모두 기동하므로 여기서 소스 단위로 제한한다.
-const TTANG_PC_FALLBACK_SLOT_MINUTES_UTC = new Set([
-    23 * 60 + 17, // 08:17 KST
-    5 * 60 + 23,  // 14:23 KST
-]);
 
 function timestamp(value) {
     const parsed = new Date(value || '').getTime();
@@ -40,12 +33,34 @@ function surroundingSlots(nowTimestamp, crons = DAILY_CRAWL_CRONS) {
     return { expectedAt, nextExpectedAt };
 }
 
-function isTtangPcFallbackSlot(expectedAt) {
+function scheduledSlotDistance(anchorAt, currentAt, crons = DAILY_CRAWL_CRONS) {
+    if (anchorAt === null || currentAt === null || currentAt < anchorAt) return null;
+
+    const firstDay = Math.floor(anchorAt / DAY_MS) * DAY_MS;
+    const lastDay = Math.floor(currentAt / DAY_MS) * DAY_MS;
+    let distance = 0;
+    for (let day = firstDay; day <= lastDay; day += DAY_MS) {
+        for (const cron of crons) {
+            const parsed = parseDailyCron(cron);
+            if (!parsed) continue;
+            const slot = day + (parsed.hour * 60 + parsed.minute) * 60_000;
+            if (slot > anchorAt && slot <= currentAt) distance += 1;
+        }
+    }
+    return distance;
+}
+
+function isPcFallbackCollectionSlot(circuit, expectedAt, crons = DAILY_CRAWL_CRONS) {
     if (expectedAt === null) return false;
-    const slot = new Date(expectedAt);
-    return TTANG_PC_FALLBACK_SLOT_MINUTES_UTC.has(
-        slot.getUTCHours() * 60 + slot.getUTCMinutes()
-    );
+
+    const nextProbeAt = timestamp(circuit?.nextProbeAt);
+    const openedAt = timestamp(circuit?.openedAt)
+        ?? (nextProbeAt === null ? null : nextProbeAt - DAY_MS);
+    if (openedAt === null) return false;
+
+    const anchorAt = surroundingSlots(openedAt, crons).expectedAt;
+    const distance = scheduledSlotDistance(anchorAt, expectedAt, crons);
+    return distance !== null && distance % 2 === 0;
 }
 
 export function evaluateLocalSourceFallback({
@@ -99,7 +114,9 @@ export function evaluateLocalSourceFallback({
             localCooldownSources.push(source);
             continue;
         }
-        if (source === 'ttang' && !isTtangPcFallbackSlot(expectedAt)) {
+        // GitHub 실패가 발생한 회차는 PC가 대체하고, 그 다음 회차는 쉬는 식으로
+        // 소스별 차단 회로가 열려 있는 24시간 동안 수집/휴식을 번갈아 적용한다.
+        if (!isPcFallbackCollectionSlot(circuit, expectedAt, crons)) {
             scheduleThrottledSources.push(source);
             continue;
         }

@@ -33,33 +33,31 @@ test('waits until the matching GitHub crawl slot is complete', () => {
     assert.equal(result.nextExpectedAt, '2026-08-30T05:23:00.000Z');
 });
 
-test('skips the ttang PC fallback in the 11:12 KST rest slot', () => {
-    const result = evaluateLocalSourceFallback({
-        now: '2026-08-30T02:20:00.000Z',
-        cache: {
-            fullCrawlUpdatedAt: '2026-08-30T02:18:00.000Z',
-            sourceCircuits: {
-                ttang: circuit(),
-                modetour: circuit({ nextProbeAt: '2026-08-30T02:19:59.000Z' }),
-            },
-        },
+test('alternates PC collection and rest from each source failure slot', () => {
+    const activeCircuit = circuit({
+        openedAt: '2026-08-30T02:18:00.000Z', // 11:12 KST failure slot
+        nextProbeAt: '2026-08-31T02:18:00.000Z',
     });
-
-    assert.equal(result.shouldRun, false);
-    assert.equal(result.reason, 'source_schedule_throttled');
-    assert.deepEqual(result.sources, []);
-    assert.deepEqual(result.scheduleThrottledSources, ['ttang']);
-});
-
-test('runs the ttang PC fallback in the 08:17 and 14:23 KST collection slots', () => {
     for (const sample of [
         {
-            now: '2026-08-29T23:25:00.000Z',
-            fullCrawlUpdatedAt: '2026-08-29T23:23:00.000Z',
+            now: '2026-08-30T02:20:00.000Z',
+            fullCrawlUpdatedAt: '2026-08-30T02:18:00.000Z',
+            shouldRun: true,
         },
         {
             now: '2026-08-30T05:30:00.000Z',
             fullCrawlUpdatedAt: '2026-08-30T05:25:00.000Z',
+            shouldRun: false,
+        },
+        {
+            now: '2026-08-30T08:40:00.000Z',
+            fullCrawlUpdatedAt: '2026-08-30T08:35:00.000Z',
+            shouldRun: true,
+        },
+        {
+            now: '2026-08-30T23:25:00.000Z',
+            fullCrawlUpdatedAt: '2026-08-30T23:23:00.000Z',
+            shouldRun: false,
         },
     ]) {
         const result = evaluateLocalSourceFallback({
@@ -67,34 +65,56 @@ test('runs the ttang PC fallback in the 08:17 and 14:23 KST collection slots', (
             cache: {
                 fullCrawlUpdatedAt: sample.fullCrawlUpdatedAt,
                 sourceCircuits: {
-                    ttang: circuit({ nextProbeAt: '2026-08-31T06:00:00.000Z' }),
+                    ybtour: activeCircuit,
+                    hanatour: activeCircuit,
+                    onlinetour: activeCircuit,
+                    ttang: activeCircuit,
                 },
             },
         });
 
-        assert.equal(result.shouldRun, true);
-        assert.equal(result.reason, 'active_github_circuit');
-        assert.deepEqual(result.sources, ['ttang']);
-        assert.deepEqual(result.scheduleThrottledSources, []);
+        assert.equal(result.shouldRun, sample.shouldRun);
+        assert.equal(
+            result.reason,
+            sample.shouldRun ? 'active_github_circuit' : 'source_schedule_throttled'
+        );
+        assert.deepEqual(
+            result.sources,
+            sample.shouldRun ? ['ybtour', 'hanatour', 'onlinetour', 'ttang'] : []
+        );
+        assert.deepEqual(
+            result.scheduleThrottledSources,
+            sample.shouldRun ? [] : ['ybtour', 'hanatour', 'onlinetour', 'ttang']
+        );
     }
 });
 
-test('skips only ttang in rest slots while another blocked source can still run', () => {
+test('anchors alternating PC slots independently for each failed source', () => {
     const result = evaluateLocalSourceFallback({
-        now: '2026-08-30T08:40:00.000Z', // 17:40 KST, 17:31 slot
+        now: '2026-08-30T05:30:00.000Z', // 14:30 KST, 14:23 slot
         cache: {
-            fullCrawlUpdatedAt: '2026-08-30T08:35:00.000Z',
+            fullCrawlUpdatedAt: '2026-08-30T05:25:00.000Z',
             sourceCircuits: {
-                ttang: circuit({ nextProbeAt: '2026-08-31T09:00:00.000Z' }),
-                ybtour: circuit({ nextProbeAt: '2026-08-31T09:00:00.000Z' }),
+                ybtour: circuit({
+                    openedAt: '2026-08-30T02:18:00.000Z', // previous slot: rest now
+                    nextProbeAt: '2026-08-31T02:18:00.000Z',
+                }),
+                hanatour: circuit({
+                    openedAt: '2026-08-30T05:25:00.000Z', // current slot: collect now
+                    nextProbeAt: '2026-08-31T05:25:00.000Z',
+                }),
+                ttang: circuit({
+                    openedAt: '2026-08-29T23:20:00.000Z', // two slots ago: collect now
+                    nextProbeAt: '2026-08-30T23:20:00.000Z',
+                }),
             },
         },
     });
 
     assert.equal(result.shouldRun, true);
     assert.equal(result.reason, 'active_github_circuit');
-    assert.deepEqual(result.sources, ['ybtour']);
-    assert.deepEqual(result.scheduleThrottledSources, ['ttang']);
+    assert.deepEqual(result.sources, ['hanatour', 'ttang']);
+    assert.deepEqual(result.scheduleThrottledSources, ['ybtour']);
 });
 
 test('a PC-side block pauses only the local fallback', () => {
