@@ -1136,8 +1136,10 @@
 .detailAgencyLine .sourceBadge { height: 20px; font-size: var(--size-meta); }
 .detailAirline { min-width: 0; height: 20px; display: inline-flex; align-items: center; overflow: hidden; color: var(--text-secondary); font-size: var(--size-meta); line-height: 20px; font-weight: var(--weight-medium); text-overflow: ellipsis; white-space: nowrap; }
 .detailSeatCount { height: 20px; padding: 0 7px; flex: 0 0 auto; display: inline-flex; align-items: center; border-radius: 999px; background: var(--urgent-soft); color: var(--urgent-dark); font-size: var(--size-caption); line-height: 20px; font-weight: var(--weight-bold); white-space: nowrap; }
-.detailHeader > button { width: 34px; height: 34px; display: grid; place-items: center; color: #6a6a6a; }
-.detailHeader > button svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; }
+.detailHeaderActions { flex: 0 0 auto; display: flex; align-items: center; gap: 3px; }
+.detailHeaderShareButton { display: none; }
+.detailCloseButton { width: 34px; height: 34px; display: grid; place-items: center; color: #6a6a6a; }
+.detailCloseButton svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; }
 .detailTitle { margin-top: 13px; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .detailTitle p { color: var(--muted); font-size: var(--size-meta); }
 .detailTitle h2 { margin-top: 1px; font-size: var(--size-display); line-height: 1.22; font-weight: var(--weight-bold); letter-spacing: -0.05em; }
@@ -1200,14 +1202,15 @@
 .passengerRow button:disabled { opacity: .35; }
 .passengerRow > div strong { font-size: var(--size-meta); font-weight: var(--weight-bold); }
 .passengerRows > p { margin: 4px 0 0; color: var(--text-faint); font-size: var(--size-micro); line-height: 1.45; }
-.bookingButton { height: 54px; margin-top: 14px; display: flex; align-items: center; justify-content: center; gap: 6px; border-radius: 14px; background: var(--brand-dark); color: var(--on-brand); font-size: var(--size-body); font-weight: var(--weight-bold); box-shadow: none; }
+.detailPrimaryActions { margin-top: 14px; display: grid; grid-template-columns: 96px minmax(0, 1fr); align-items: stretch; gap: 8px; }
+.bookingButton { height: 54px; display: flex; align-items: center; justify-content: center; gap: 6px; border-radius: 14px; background: var(--brand-dark); color: var(--on-brand); font-size: var(--size-body); font-weight: var(--weight-bold); box-shadow: none; }
 .bookingButton:hover { color: var(--on-brand); }
 .bookingButton svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; }
+.detailMobileShareButton { min-height: 54px; display: flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--line); border-radius: 14px; background: var(--paper); color: var(--text-secondary); font-size: var(--size-meta); font-weight: var(--weight-bold); }
+.detailMobileShareButton:hover { border-color: #b8b8b8; color: #333333; }
+.detailMobileShareButton svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; }
 .detailSecondaryActions { margin-top: 9px; display: grid; grid-template-columns: minmax(0, 1fr) 88px; align-items: stretch; gap: 8px; }
 .detailSecondaryActions > :only-child { grid-column: 1 / -1; }
-.detailShareButton { min-height: 50px; display: flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--line); border-radius: var(--radius-action); background: var(--paper); color: var(--text-secondary); font-size: var(--size-meta); font-weight: var(--weight-bold); }
-.detailShareButton:hover { border-color: #b8b8b8; color: #333333; }
-.detailShareButton svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; }
 .hotelCompareButton { min-height: 50px; padding: 8px 12px; display: flex; align-items: center; gap: 9px; border: 1px solid var(--line); border-radius: var(--radius-action); background: var(--paper); color: var(--ink); }
 .hotelCompareButton:hover { border-color: #b8b8b8; color: #222222; }
 .hotelIcon { flex: 0 0 auto; font-size: 16px; }
@@ -2207,6 +2210,11 @@
     }
     .detailOverlay .sheetHandle { display: none; }
     .detailHeader { min-height: 42px; }
+    .detailHeaderShareButton { height: 34px; padding: 0 9px; display: inline-flex; align-items: center; justify-content: center; gap: 5px; border-radius: 8px; color: var(--text-secondary); font-size: var(--size-caption); font-weight: var(--weight-medium); }
+    .detailHeaderShareButton:hover { background: #f5f5f5; color: var(--ink); }
+    .detailHeaderShareButton svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; }
+    .detailPrimaryActions { display: block; }
+    .detailMobileShareButton { display: none; }
     .detailSchedule { padding: 19px; }
     .toast {
         top: 24px;

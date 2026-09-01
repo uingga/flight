@@ -3955,13 +3955,23 @@ export default function MobileRedesignPreview({
                 >
                         <div className={`${styles.detailStickyHeader} ${detailHasScrolled ? styles.detailStickyHeaderScrolled : ''}`}>
                             <div className={styles.sheetHandle} aria-hidden="true" {...detailSwipe} />
-                            <div className={styles.detailHeader}>
-                                <div className={styles.detailAgencyLine}>
-                                    <span className={`${styles.sourceBadge} ${styles[selectedFlight.source]}`}>{SOURCE_NAMES[selectedFlight.source]}</span>
-                                    <span className={styles.detailAirline}>{selectedFlight.airline || '항공사 확인'}</span>
-                                    {detailSeats > 0 && <span className={styles.detailSeatCount}>{detailSeats}석 남음</span>}
-                                </div>
-                                <button type="button" onClick={closeSelectedFlight} aria-label="닫기"><Icon name="close" /></button>
+                        <div className={styles.detailHeader}>
+                            <div className={styles.detailAgencyLine}>
+                                <span className={`${styles.sourceBadge} ${styles[selectedFlight.source]}`}>{SOURCE_NAMES[selectedFlight.source]}</span>
+                                <span className={styles.detailAirline}>{selectedFlight.airline || '항공사 확인'}</span>
+                                {detailSeats > 0 && <span className={styles.detailSeatCount}>{detailSeats}석 남음</span>}
+                            </div>
+                            <div className={styles.detailHeaderActions}>
+                                <button
+                                    className={styles.detailHeaderShareButton}
+                                    type="button"
+                                    onClick={() => shareFlight(selectedFlight)}
+                                >
+                                    <Icon name="share" />
+                                    <span>공유</span>
+                                </button>
+                                <button className={styles.detailCloseButton} type="button" onClick={closeSelectedFlight} aria-label="닫기"><Icon name="close" /></button>
+                            </div>
                             </div>
                         </div>
 
@@ -4169,28 +4179,38 @@ export default function MobileRedesignPreview({
                             </div>
                         )}
 
-                        <a
-                            className={styles.bookingButton}
-                            href={selectedBookingUrl}
-                            target="_blank"
-                            rel={selectedFlight.source === 'myrealtrip' ? 'sponsored noopener noreferrer' : 'noopener noreferrer'}
-                            onClick={() => gtag.trackBookingClick(
-                                selectedFlight.source,
-                                normalizedRoute(selectedFlight),
-                                effectivePrice(selectedFlight),
-                                {
-                                    flightId: selectedFlight.id,
-                                    departureDate: selectedFlight.departure.date,
-                                    returnDate: selectedFlight.arrival.date,
-                                    departureAirport: selectedFlight.routeAirports?.outboundDeparture || selectedFlight.departure.airport,
-                                    arrivalAirport: selectedFlight.routeAirports?.outboundArrival || selectedFlight.arrival.airport,
-                                    airline: selectedFlight.airline,
-                                    destination: stripAirport(selectedFlight.arrival.city),
-                                },
-                            )}
-                        >
-                            {SOURCE_NAMES[selectedFlight.source]}에서 확인하기 <Icon name="arrow" />
-                        </a>
+                        <div className={styles.detailPrimaryActions}>
+                            <button
+                                className={styles.detailMobileShareButton}
+                                type="button"
+                                onClick={() => shareFlight(selectedFlight)}
+                            >
+                                <Icon name="share" />
+                                <span>공유</span>
+                            </button>
+                            <a
+                                className={styles.bookingButton}
+                                href={selectedBookingUrl}
+                                target="_blank"
+                                rel={selectedFlight.source === 'myrealtrip' ? 'sponsored noopener noreferrer' : 'noopener noreferrer'}
+                                onClick={() => gtag.trackBookingClick(
+                                    selectedFlight.source,
+                                    normalizedRoute(selectedFlight),
+                                    effectivePrice(selectedFlight),
+                                    {
+                                        flightId: selectedFlight.id,
+                                        departureDate: selectedFlight.departure.date,
+                                        returnDate: selectedFlight.arrival.date,
+                                        departureAirport: selectedFlight.routeAirports?.outboundDeparture || selectedFlight.departure.airport,
+                                        arrivalAirport: selectedFlight.routeAirports?.outboundArrival || selectedFlight.arrival.airport,
+                                        airline: selectedFlight.airline,
+                                        destination: stripAirport(selectedFlight.arrival.city),
+                                    },
+                                )}
+                            >
+                                {SOURCE_NAMES[selectedFlight.source]}에서 확인하기 <Icon name="arrow" />
+                            </a>
+                        </div>
                         {selectedFlight.source === 'myrealtrip' && (
                             <p className={styles.affiliateDisclosure}>제휴 링크를 통해 예약되면 티키티킷이 수수료를 받을 수 있어요.</p>
                         )}
@@ -4224,10 +4244,6 @@ export default function MobileRedesignPreview({
                                     <Icon name="arrow" />
                                 </a>
                             )}
-                            <button className={styles.detailShareButton} type="button" onClick={() => shareFlight(selectedFlight)}>
-                                <Icon name="share" />
-                                <span>공유</span>
-                            </button>
                         </div>
                 </OverlayDialog>
                 <div
