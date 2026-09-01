@@ -247,10 +247,13 @@
 .discoverySchedule > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .detailOverlay {
+    --overlay-scrim-current: transparent;
+    --overlay-backdrop-filter-current: none;
     z-index: 100;
     align-items: stretch;
     justify-content: flex-end;
-    background: var(--overlay-scrim-desktop);
+    background: transparent;
+    pointer-events: none;
 }
 
 .detailPanel {
@@ -264,6 +267,7 @@
     background: var(--paper);
     color: #222;
     box-shadow: var(--shadow-drawer, -10px 0 28px rgba(24, 27, 32, .08));
+    pointer-events: auto;
     animation: detailPanelIn 280ms cubic-bezier(.22, .72, .22, 1);
 }
 
@@ -509,7 +513,14 @@
     }
     .discoverySchedule { font-size: var(--size-body); font-weight: var(--weight-regular); }
 
-    .detailOverlay { align-items: flex-end; justify-content: center; background: var(--overlay-scrim-mobile); }
+    .detailOverlay {
+        --overlay-scrim-current: var(--overlay-scrim-mobile);
+        --overlay-backdrop-filter-current: var(--overlay-backdrop-filter);
+        align-items: flex-end;
+        justify-content: center;
+        background: var(--overlay-scrim-mobile);
+        pointer-events: auto;
+    }
     .detailPanel {
         width: 100%;
         height: min(90dvh, 760px);

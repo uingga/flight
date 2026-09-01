@@ -304,14 +304,26 @@ function CityMap({ item }: { item: Discovery }) {
 
 export function DiscoveryDetail({ item, flight, flights = [flight], onClose }: { item: Discovery; flight: Flight; flights?: Flight[]; onClose: () => void }) {
     const dialogRef = useRef<HTMLElement>(null);
+    const [isDesktopViewport, setIsDesktopViewport] = useState(() => (
+        typeof window !== 'undefined' && window.matchMedia('(min-width: 681px)').matches
+    ));
     const titleId = `discovery-detail-${item.city}`;
     const availableFlights = [...(flights.length > 0 ? flights : [flight])]
         .sort((a, b) => a.price - b.price);
     const availableScheduleCount = new Set(availableFlights.map(flightScheduleKey)).size;
 
+    useEffect(() => {
+        const media = window.matchMedia('(min-width: 681px)');
+        const updateViewport = () => setIsDesktopViewport(media.matches);
+        updateViewport();
+        media.addEventListener('change', updateViewport);
+        return () => media.removeEventListener('change', updateViewport);
+    }, []);
+
     return (
         <OverlayDialog
             open
+            modal={!isDesktopViewport}
             dialogRef={dialogRef}
             onClose={onClose}
             overlayClassName={styles.detailOverlay}
