@@ -463,6 +463,18 @@ const seoulDateKey = (date = new Date()) => new Intl.DateTimeFormat('en-CA', {
     day: '2-digit',
 }).format(date);
 
+const millisecondsUntilNextSeoulDay = () => {
+    const now = Date.now();
+    const kstOffset = 9 * 60 * 60 * 1000;
+    const seoulNow = new Date(now + kstOffset);
+    const nextMidnight = Date.UTC(
+        seoulNow.getUTCFullYear(),
+        seoulNow.getUTCMonth(),
+        seoulNow.getUTCDate() + 1,
+    ) - kstOffset;
+    return Math.max(1_000, nextMidnight - now + 1_000);
+};
+
 const monthDistance = (first: string, second: string) => {
     const toIndex = (value: string) => {
         const match = value.match(/^(\d{4})-(\d{2})$/);
@@ -1063,8 +1075,10 @@ export default function MobileRedesignPreview({
             if (!data.success) throw new Error('항공권을 불러오지 못했습니다.');
             setLastUpdated(data.lastUpdated || null);
             setInsightDateKey(data.lastUpdated ? seoulDateKey(new Date(data.lastUpdated)) : seoulDateKey());
-            setTodayPickId(typeof data.todayPickId === 'string' ? data.todayPickId : null);
-            setTodayPickRepeatOverride(data.todayPickRepeatOverride || null);
+            const hasCurrentTodayPick = data.todayPickDate === seoulDateKey()
+                && typeof data.todayPickId === 'string';
+            setTodayPickId(hasCurrentTodayPick ? data.todayPickId! : null);
+            setTodayPickRepeatOverride(hasCurrentTodayPick ? data.todayPickRepeatOverride || null : null);
             setPriceHistory(data.priceHistory || {});
             setInterparkPrices(data.interparkPrices || {});
             // 추천·DROP 판단에 필요한 기준가를 먼저 넣은 뒤 목록을 연다. 상태 반영이
@@ -1097,6 +1111,20 @@ export default function MobileRedesignPreview({
             document.removeEventListener('visibilitychange', refreshVisiblePage);
         };
     }, [hasInitialFlights, loadFlights]);
+
+    useEffect(() => {
+        let midnightTimer = 0;
+        const expireTodayPickAtMidnight = () => {
+            midnightTimer = window.setTimeout(() => {
+                setTodayPickId(null);
+                setTodayPickRepeatOverride(null);
+                void loadFlights(true);
+                expireTodayPickAtMidnight();
+            }, millisecondsUntilNextSeoulDay());
+        };
+        expireTodayPickAtMidnight();
+        return () => window.clearTimeout(midnightTimer);
+    }, [loadFlights]);
 
     useEffect(() => {
         if (previewMode) return;
@@ -1544,60 +1572,23 @@ export default function MobileRedesignPreview({
         && sort === 'recommended';
     const featuredPick = useMemo(() => (
         (() => {
-            const absoluteDropMax = 150_000;
-            const deepDropMax = 200_000;
-            const comparisonTolerance = 1.05;
-            const deepDropRatio = 0.75;
-            const marketReference = (flight: Flight) => {
-                if (flight.naverLowest && flight.naverLowest > 0
-                    && getComparisonFreshness(flight.naverCheckedAt).usable) {
-                    return flight.naverLowest;
-                }
-                const city = stripAirport(flight.arrival.city);
-                const month = flight.departure.date
-                    ?.replace(/\./g, '-')
-                    .replace(/\(.*\)/g, '')
-                    .trim()
-                    .substring(0, 7);
-                const months = interparkPrices[city];
-                if (!months || !month) return null;
-                const exact = months[month];
-                if (exact?.lowest) return exact.lowest;
-                const closest = Object.keys(months).sort().reduce((best, candidate) => {
-                    const difference = monthDistance(candidate, month);
-                    const bestDifference = best ? monthDistance(best, month) : Infinity;
-                    return difference < bestDifference ? candidate : best;
-                }, '');
-                return closest ? months[closest]?.lowest || null : null;
-            };
-            const exceptional = (flight: Flight) => {
-                const price = effectivePrice(flight);
-                if (price <= 0 || price > deepDropMax) return false;
-                const reference = marketReference(flight);
-                return (price <= absoluteDropMax && (!reference || price <= reference * comparisonTolerance))
-                    || (!!reference && price <= reference * deepDropRatio);
-            };
-            // 자동 선정 파일에 고정된 오늘의 표를 먼저 사용한다. 현재 캐시에서 사라졌을
-            // 때만 즉석 후보를 골라, 크롤 직후에도 DROP 자리가 비지 않게 한다.
+            // API가 KST 날짜를 확인해 오늘 선정된 ID만 내려준다. 선정되지 않았거나
+            // 자정이 지나 ID가 사라지면 임의의 항공권으로 DROP 자리를 채우지 않는다.
             const fixedTodayPick = flights.find(item => item.id === todayPickId);
-            const flight = fixedTodayPick
-                || flights
-                    .filter(exceptional)
-                    .sort((a, b) => effectivePrice(a) - effectivePrice(b) || compareRecommended(a, b))[0]
-                || flights.slice().sort(compareRecommended)[0];
+            if (!fixedTodayPick) return null;
             const repeatPriceDropReason = fixedTodayPick
                 && todayPickRepeatOverride?.dropAmount
                 ? `어제보다 ${todayPickRepeatOverride.dropAmount >= 10_000
                     ? compactWon(todayPickRepeatOverride.dropAmount)
                     : priceText(todayPickRepeatOverride.dropAmount)} 내려 다시 선정`
                 : null;
-            return flight ? {
-                flight,
-                reason: repeatPriceDropReason || describeDropCard(flight, getAverageDiscountRate(flight, interparkPrices)),
+            return {
+                flight: fixedTodayPick,
+                reason: repeatPriceDropReason || describeDropCard(fixedTodayPick, getAverageDiscountRate(fixedTodayPick, interparkPrices)),
                 repeatPriceDrop: Boolean(repeatPriceDropReason),
-            } : null;
+            };
         })()
-    ), [compareRecommended, flights, interparkPrices, todayPickId, todayPickRepeatOverride]);
+    ), [flights, interparkPrices, todayPickId, todayPickRepeatOverride]);
     const displayedFlights = useMemo(() => {
         const pinnedFlight = isDefaultView ? featuredPick?.flight : undefined;
         const presentation = buildRecommendationPresentation(

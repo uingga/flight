@@ -43,8 +43,10 @@ function shortDate(dateText: string | undefined) {
 
 function getFeaturedFlight() {
     const cache = flightCacheJson as unknown as { flights: Flight[] };
-    const todayPick = todayPickJson as { flightId?: string };
-    return cache.flights.find((flight) => flight.id === todayPick.flightId)
+    const todayPick = todayPickJson as { date?: string; flightId?: string };
+    const todayKst = new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const currentPickId = todayPick.date === todayKst ? todayPick.flightId : null;
+    return cache.flights.find((flight) => flight.id === currentPickId)
         || cache.flights.filter((flight) => flight.price > 0).sort((a, b) => a.price - b.price)[0];
 }
 
