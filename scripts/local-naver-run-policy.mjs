@@ -446,9 +446,10 @@ function writeJsonAtomic(filePath, value) {
     fs.renameSync(temporaryPath, filePath);
 }
 
-function readOption(args, name) {
+export function readOption(args, name) {
     const index = args.indexOf(name);
-    return index >= 0 ? args[index + 1] : undefined;
+    const value = index >= 0 ? args[index + 1] : undefined;
+    return typeof value === 'string' && !value.startsWith('--') ? value : undefined;
 }
 
 function csvOption(args, name) {

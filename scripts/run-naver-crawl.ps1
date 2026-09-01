@@ -29,6 +29,78 @@ function Log($msg) {
     "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') $msg" | Add-Content -Encoding utf8 $LogFile
 }
 
+function Restore-InterruptedRunState {
+    if (-not (Test-Path -LiteralPath $StateFile)) { return $true }
+
+    try {
+        $ExistingState = Get-Content -Raw -Encoding utf8 $StateFile | ConvertFrom-Json
+    } catch {
+        Log "Unable to read the existing Naver state: $($_.Exception.Message)"
+        return $false
+    }
+    if ($ExistingState.phase -ne 'running') { return $true }
+
+    $RequestsStarted = 0
+    try {
+        if (Test-Path -LiteralPath $RunStatusFile) {
+            $InterruptedStatus = Get-Content -Raw -Encoding utf8 $RunStatusFile | ConvertFrom-Json
+            $RequestsStarted = [Math]::Max(0, [int]$InterruptedStatus.requestsStarted)
+        }
+    } catch {
+        Log "Unable to read the interrupted crawler status; recovering with zero additional requests: $($_.Exception.Message)"
+    }
+
+    $PreviousNavigations = [Math]::Max(0, [int]$ExistingState.navigationsUsed)
+    $RecoveredNavigations = [Math]::Min(200, $PreviousNavigations + $RequestsStarted)
+    $KnownSources = @('ybtour', 'hanatour', 'modetour', 'onlinetour', 'ttang', 'myrealtrip')
+    $CompletedSources = @($ExistingState.completedSources | Where-Object { $KnownSources -contains [string]$_ })
+    $PendingSources = @($ExistingState.pendingSources | Where-Object { $KnownSources -contains [string]$_ })
+    $CompletedSourceCsv = $CompletedSources -join ','
+    $PendingSourceCsv = $PendingSources -join ','
+
+    # The scheduled checkout owns these generated files. A terminated browser can
+    # leave partial prices behind, so discard them before the next scheduled phase.
+    git restore --source=HEAD --worktree -- $ManagedPaths
+    if ($LASTEXITCODE -ne 0) {
+        Log 'Unable to restore managed data after an interrupted Naver crawl'
+        return $false
+    }
+
+    Remove-Item -LiteralPath $StateFile -Force
+    Remove-Item -LiteralPath $RunStatusFile -Force -ErrorAction SilentlyContinue
+
+    $NowKstDate = [DateTimeOffset]::UtcNow.ToOffset([TimeSpan]::FromHours(9)).ToString('yyyy-MM-dd')
+    if ([string]$ExistingState.kstDate -ne $NowKstDate) {
+        Log "Removed stale Naver running state from $($ExistingState.kstDate); partial generated data was discarded"
+        return $true
+    }
+
+    $InterruptedInitialPhase = [string]$ExistingState.reason -match 'browser_session_started_initial$'
+    $RecoveredOutcome = if ($InterruptedInitialPhase) { 'partial_waiting' } else { 'degraded' }
+    $RecoveredReason = if ($InterruptedInitialPhase) {
+        "interrupted_initial_after_$($RequestsStarted)_requests"
+    } else {
+        "interrupted_$([string]$ExistingState.reason)_after_$($RequestsStarted)_requests"
+    }
+    $MarkArgs = @(
+        'scripts/local-naver-run-policy.mjs',
+        'mark',
+        '--state', $StateFile,
+        '--outcome', $RecoveredOutcome,
+        '--reason', $RecoveredReason,
+        '--navigation-increment', [string]$RecoveredNavigations
+    )
+    if ($CompletedSourceCsv) { $MarkArgs += @('--completed-sources', $CompletedSourceCsv) }
+    if ($PendingSourceCsv) { $MarkArgs += @('--pending-sources', $PendingSourceCsv) }
+    $RecoveredStateOutput = & node @MarkArgs 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        Log 'Unable to persist the recovered Naver state after an interrupted run'
+        return $false
+    }
+    Log "Recovered interrupted Naver crawl state: $(($RecoveredStateOutput | Out-String).Trim())"
+    return $true
+}
+
 # Task Scheduler's IgnoreNew setting does not cover a manual PowerShell launch.
 # A named mutex keeps every entry point on this Windows session single-instance.
 $RunMutex = New-Object System.Threading.Mutex($false, 'Local\TikitikitNaverCrawl')
@@ -38,6 +110,10 @@ if (-not $RunMutex.WaitOne(0)) {
 }
 
 Log '=== Local Naver crawl started ==='
+
+if (-not (Restore-InterruptedRunState)) {
+    exit 1
+}
 
 # These files are owned by this scheduled task. Refuse to run when they already
 # contain local edits so the crawler cannot overwrite a user's in-progress work.

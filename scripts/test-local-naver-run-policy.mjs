@@ -4,6 +4,7 @@ import {
     buildLocalNaverState,
     completePendingManualCapture,
     evaluateLocalNaverRun,
+    readOption,
 } from './local-naver-run-policy.mjs';
 
 const generalSources = ['ybtour', 'hanatour', 'modetour', 'onlinetour', 'ttang'];
@@ -16,6 +17,12 @@ const readyCache = {
     },
     flights: generalSources.flatMap(source => Array.from({ length: 20 }, (_, index) => ({ source, id: `${source}-${index}` }))),
 };
+
+test('does not consume the next option when a PowerShell argument is empty', () => {
+    const args = ['--completed-sources', '--pending-sources', 'ttang'];
+    assert.equal(readOption(args, '--completed-sources'), undefined);
+    assert.equal(readOption(args, '--pending-sources'), 'ttang');
+});
 
 test('runs every fresh source as soon as the post-11:12 crawl is ready', () => {
     const result = evaluateLocalNaverRun({

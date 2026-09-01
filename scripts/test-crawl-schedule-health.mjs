@@ -268,6 +268,9 @@ test('the Windows Naver task splits fresh and recovered sources under one daily 
     assert.match(runner, /\$env:MAX_DEFER_DAYS = '7'/);
     assert.match(runner, /git pull --rebase --autostash origin main/);
     assert.match(runner, /Local\\TikitikitNaverCrawl/);
+    assert.match(runner, /Restore-InterruptedRunState/);
+    assert.match(runner, /git restore --source=HEAD --worktree -- \$ManagedPaths/);
+    assert.match(runner, /interrupted_initial_after_/);
     assert.match(runner, /local-naver-run-policy\.mjs check/);
     assert.match(runner, /\$UpstreamPollSeconds = 120/);
     assert.match(runner, /Start-Sleep -Seconds \$SleepSeconds/);
