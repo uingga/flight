@@ -4,14 +4,11 @@ run-name: MyRealTrip Price Scraping · ${{ github.event.schedule || github.event
 
 on:
   schedule:
-    # 오전 1회·오후 2회. GitHub Actions 정각 혼잡을 피하도록 분산한다.
+    # 오전 1회·오후 1회. GitHub Actions 정각 혼잡을 피하도록 분산한다.
     # 매일 오전 7시 5분 KST (22:05 UTC 전날)
     - cron: '5 22 * * *'
     # 매일 오후 4시 3분 KST (07:03 UTC)
     - cron: '3 7 * * *'
-    # 매일 세 번째 정규 회차. 차단 회로는 존중하되 최근 6시간 중복 방지만 해제한다.
-    # 매일 오후 7시 59분 KST (10:59 UTC)
-    - cron: '59 10 * * *'
   workflow_dispatch:
     inputs:
       force:
@@ -68,7 +65,7 @@ jobs:
         env:
           CI: true
           LIFECYCLE_OBSERVATION_PATH: /tmp/tikitikit-mrt-lifecycle-observation.json
-          FORCE_MYREALTRIP: ${{ (inputs.force || github.event.schedule == '59 10 * * *') && '1' || '0' }}
+          FORCE_MYREALTRIP: ${{ inputs.force && '1' || '0' }}
 
       # 차단을 감지해 스크래퍼가 실패해도 항공권은 그대로 둔 채 24시간 회로는 반드시 저장한다.
       - name: Commit cache or circuit changes

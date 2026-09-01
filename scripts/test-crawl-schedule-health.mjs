@@ -185,11 +185,12 @@ test('the standalone today-pick workflow is manual-only', () => {
     assert.doesNotMatch(workflow, /^\s*- cron:/m);
 });
 
-test('MyRealTrip runs three scheduled crawls daily', () => {
+test('MyRealTrip runs two scheduled crawls daily without a scheduled FORCE bypass', () => {
     const workflow = fs.readFileSync('.github/workflows/myrealtrip-scrape.yml', 'utf8');
     const workflowCrons = [...workflow.matchAll(/^\s*- cron: '([^']+)'/gm)].map(match => match[1]);
-    assert.deepEqual(workflowCrons.sort(), ['5 22 * * *', '3 7 * * *', '59 10 * * *'].sort());
-    assert.match(workflow, /github\.event\.schedule == '59 10 \* \* \*'/);
+    assert.deepEqual(workflowCrons.sort(), ['5 22 * * *', '3 7 * * *'].sort());
+    assert.doesNotMatch(workflow, /github\.event\.schedule\s*==/);
+    assert.match(workflow, /FORCE_MYREALTRIP:\s*\$\{\{\s*inputs\.force\s*&&\s*'1'\s*\|\|\s*'0'\s*\}\}/);
     assert.match(workflow, /cp data\/crawl-log\.json \/tmp\/mrt-session-crawl-log\.json/);
     assert.match(workflow, /merge-crawl-log\.mjs data\/crawl-log\.json \/tmp\/mrt-session-crawl-log\.json myrealtrip/);
     assert.match(workflow, /git add data\/all-flights-cache\.json data\/crawl-log\.json/);
