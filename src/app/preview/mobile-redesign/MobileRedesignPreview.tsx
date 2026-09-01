@@ -2646,6 +2646,29 @@ export default function MobileRedesignPreview({
         setSelectedFlight(flight);
     };
 
+    const openFreshFlight = (flight: Flight) => {
+        if (!freshFlightsInsight) return;
+        const route = normalizedRoute(flight);
+        const sameDateFlights = freshFlightsInsight.targetFlights.filter(candidate => (
+            normalizedRoute(candidate) === route
+            && candidate.departure.date === flight.departure.date
+            && effectivePrice(candidate) > 0
+        ));
+
+        if (sameDateFlights.length === 1) {
+            gtag.event('insight_click', {
+                insight_type: 'new_flights',
+                insight_format: 'flight_detail',
+                destination: normalizeCity(flight.arrival.city),
+                flight_id: flight.id,
+            });
+            openFlight(sameDateFlights[0], 'insight_new_flights');
+            return;
+        }
+
+        openFreshRouteResults(flight);
+    };
+
     const openInsight = (insight: FeedInsight) => {
         gtag.event('insight_click', {
             insight_type: insight.kind,
@@ -3545,7 +3568,6 @@ export default function MobileRedesignPreview({
                                                     <span className={styles.freshFlightsDesktopEyebrow}>새로 발견</span>
                                                     <strong id="fresh-flights-title">{freshFlightsInsight.copyPrefix} 새로 뜬 항공권</strong>
                                                     <p>{freshFlightsInsight.copyPrefix} 처음 포착된 항공권을 보여드려요.</p>
-                                                    <small className={styles.freshFlightsDesktopHint}>티켓을 누르면 일정과 가격을 바로 확인할 수 있어요.</small>
                                                 </div>
                                                 <div
                                                     className={styles.freshFlightsMobileViewport}
@@ -3572,7 +3594,7 @@ export default function MobileRedesignPreview({
                                                                         freshMobileSuppressClickRef.current = false;
                                                                         return;
                                                                     }
-                                                                    openFreshRouteResults(freshFlight);
+                                                                    openFreshFlight(freshFlight);
                                                                 }}
                                                             >
                                                                 <span className={styles.freshFlightsMobileTicketMain}>
@@ -3600,9 +3622,6 @@ export default function MobileRedesignPreview({
                                                         ))}
                                                     </div>
                                                 </div>
-                                                <footer className={styles.freshFlightsMobileFooter}>
-                                                    <small>티켓을 누르면 일정과 가격을 바로 확인할 수 있어요.</small>
-                                                </footer>
                                                 <div
                                                     className={styles.freshFlightsViewport}
                                                     aria-label={`${freshFlightsInsight.copyPrefix} 처음 포착된 항공권. 마우스로 위아래로 드래그해 다른 항공권 보기`}
@@ -3633,7 +3652,7 @@ export default function MobileRedesignPreview({
                                                                                 freshDesktopSuppressClickRef.current = false;
                                                                                 return;
                                                                             }
-                                                                            openFreshRouteResults(freshFlight);
+                                                                            openFreshFlight(freshFlight);
                                                                         }}
                                                                     >
                                                                         <span className={styles.freshFlightsTicketMain}>

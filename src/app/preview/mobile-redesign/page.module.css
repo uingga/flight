@@ -574,8 +574,7 @@
     margin-top: 5px;
 }
 
-.freshFlightsDesktopEyebrow,
-.freshFlightsDesktopHint { display: none; }
+.freshFlightsDesktopEyebrow { display: none; }
 
 .freshFlightsCopy > strong {
     display: block;
@@ -743,21 +742,6 @@
     border-radius: 50%;
     background: #b8bdc4;
     content: '';
-}
-
-.freshFlightsMobileFooter {
-    min-height: 25px;
-    padding-top: 9px;
-    display: flex;
-    align-items: flex-end;
-    border-top: 1px solid #f0f1f3;
-}
-
-.freshFlightsMobileFooter small {
-    color: #969ca5;
-    font-size: var(--size-micro);
-    line-height: 1.4;
-    font-weight: var(--weight-regular);
 }
 
 .freshFlightsViewport { display: none; }
@@ -1801,8 +1785,7 @@
         grid-column: 1 / -1;
     }
     .freshFlightsMobileTopline,
-    .freshFlightsMobileViewport,
-    .freshFlightsMobileFooter { display: none; }
+    .freshFlightsMobileViewport { display: none; }
     .freshFlightsBar {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
