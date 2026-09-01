@@ -9,7 +9,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { Flight } from '@/types/flight';
 import { normalizeAirline, normalizeCity } from '@/lib/utils/flight-helpers';
-import { filterStaleSourceFlights } from '@/lib/source-freshness';
+import { filterStaleSourceFlights, getEffectiveSourceUpdatedAt } from '@/lib/source-freshness';
 import { deduplicateDisplayFlights } from '@/lib/flight-visibility';
 import { getComparisonFreshness } from '@/lib/price-quality';
 import {
@@ -103,7 +103,9 @@ export function loadActiveFlights(): Flight[] {
         } catch {
             flights.forEach(flight => clearUnsupportedInterparkDiscount(flight));
         }
-        const sourceUpdatedAt = Array.isArray(raw) ? {} : raw.sourceUpdatedAt || {};
+        const sourceUpdatedAt = Array.isArray(raw)
+            ? {}
+            : getEffectiveSourceUpdatedAt(raw.sourceUpdatedAt, raw.manualCaptureStatus);
         const today = new Intl.DateTimeFormat('en-CA', {
             timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit',
         }).format(new Date());

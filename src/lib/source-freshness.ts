@@ -11,6 +11,31 @@ export interface SourceFreshness {
     updatedAt: string | null;
 }
 
+interface ManualCaptureStatus {
+    modetour?: {
+        capturedAt?: string;
+    };
+}
+
+/**
+ * 자동 수집 성공 시각은 운영 상태 판단용으로 그대로 두되, 사용자가 직접 확인한
+ * 모두투어 캡처가 더 최근이면 가격 노출 시한에는 그 확인 시각을 사용한다.
+ */
+export function getEffectiveSourceUpdatedAt(
+    sourceUpdatedAt: Record<string, string> | undefined,
+    manualCaptureStatus: ManualCaptureStatus | undefined,
+): Record<string, string> {
+    const effective = { ...(sourceUpdatedAt || {}) };
+    const capturedAt = manualCaptureStatus?.modetour?.capturedAt;
+    const capturedMs = Date.parse(capturedAt || '');
+    const automaticMs = Date.parse(effective.modetour || '');
+
+    if (Number.isFinite(capturedMs) && (!Number.isFinite(automaticMs) || capturedMs > automaticMs)) {
+        effective.modetour = capturedAt!;
+    }
+    return effective;
+}
+
 function configuredMaxAgeHours(source: Flight['source']): number {
     const fallback = source === 'myrealtrip'
         ? DEFAULT_MYREALTRIP_MAX_AGE_HOURS

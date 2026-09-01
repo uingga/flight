@@ -3,7 +3,11 @@ import todayPick from '../../../../data/today-pick.json';
 import { Flight, FlightSearchParams } from '@/types/flight';
 import { getComparisonFreshness, getEffectivePrice } from '@/lib/price-quality';
 import { getRecommendationNaverComparison } from '@/lib/naver-comparison';
-import { filterStaleSourceFlights, getStaleSources } from '@/lib/source-freshness';
+import {
+    filterStaleSourceFlights,
+    getEffectiveSourceUpdatedAt,
+    getStaleSources,
+} from '@/lib/source-freshness';
 import { deduplicateDisplayFlights } from '@/lib/flight-visibility';
 import { buildNaverPriceKey } from '@/lib/naver-route';
 import {
@@ -168,6 +172,7 @@ export async function GET(request: NextRequest) {
         let allFlights: Flight[] = [];
         let lastUpdated: string | null = null;
         let sourceUpdatedAt: Record<string, string> = {};
+        let freshnessUpdatedAt: Record<string, string> = {};
         const filterSummary: FlightFilterSummary = {
             collected: 0,
             visible: 0,
@@ -207,6 +212,10 @@ export async function GET(request: NextRequest) {
                 filterSummary.collected = allFlights.length;
                 lastUpdated = cacheData.lastUpdated || cacheData.timestamp || null;
                 sourceUpdatedAt = cacheData.sourceUpdatedAt || {};
+                freshnessUpdatedAt = getEffectiveSourceUpdatedAt(
+                    sourceUpdatedAt,
+                    cacheData.manualCaptureStatus,
+                );
                 console.log(`통합 캐시에서 ${allFlights.length}개 항공권 로드`);
                 console.log(`소스별: 노랑풍선=${cacheData.sources?.ybtour || 0}, 하나투어=${cacheData.sources?.hanatour || 0}, 모두투어=${cacheData.sources?.modetour || 0}, 온라인투어=${cacheData.sources?.onlinetour || 0}, 마이리얼트립=${cacheData.sources?.myrealtrip || 0}`);
             } else {
@@ -219,13 +228,13 @@ export async function GET(request: NextRequest) {
         // 수집 실패 때 이전 데이터는 복구용으로 보존하지만, 확인 시각이 한도를 넘긴
         // 여행사의 가격을 사용자에게 계속 보여주지는 않는다. 마이리얼트립은 24시간,
         // 일반 여행사는 48시간이 기본값이다.
-        const staleSources = getStaleSources(sourceUpdatedAt);
+        const staleSources = getStaleSources(freshnessUpdatedAt);
         if (staleSources.length > 0) {
             const hiddenBySource = Object.fromEntries(staleSources.map(result => [
                 result.source,
                 allFlights.filter(flight => flight.source === result.source).length,
             ])) as Record<string, number>;
-            allFlights = filterStaleSourceFlights(allFlights, sourceUpdatedAt);
+            allFlights = filterStaleSourceFlights(allFlights, freshnessUpdatedAt);
             filterSummary.reasons.staleMyrealtrip = hiddenBySource.myrealtrip || 0;
             filterSummary.reasons.staleOtherSources = Object.entries(hiddenBySource)
                 .filter(([source]) => source !== 'myrealtrip')
@@ -255,7 +264,7 @@ export async function GET(request: NextRequest) {
             discountRate: isInterparkBenchmarkApplicable(f) ? (f.discountRate || 0) : 0,
             // 신고 후 한 항공권만 다시 확인한 경우에는 그 항공권의 시각이 여행사 전체
             // 크롤 시각보다 정확하다. 개별 확인값을 지우지 않고 우선 사용한다.
-            priceCheckedAt: f.priceCheckedAt || sourceUpdatedAt[f.source] || lastUpdated || undefined,
+            priceCheckedAt: f.priceCheckedAt || freshnessUpdatedAt[f.source] || lastUpdated || undefined,
             airline: normalizeAirline(f.airline),
             // 모두투어 예약 링크에서 departureCity SEL → ICN 보정 (SEL은 모두투어 웹에서 미인식)
             link: (f.source === 'modetour' && f.link?.includes('%22SEL%22'))

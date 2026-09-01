@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {
     filterStaleSourceFlights,
+    getEffectiveSourceUpdatedAt,
     getSourceFreshness,
     getStaleSources,
 } from '../src/lib/source-freshness';
@@ -27,5 +28,18 @@ const flights = [
     { source: 'onlinetour' as const, id: 'stale' },
 ];
 assert.deepEqual(filterStaleSourceFlights(flights, sourceUpdatedAt, now), [flights[0]]);
+
+const manualFreshness = getEffectiveSourceUpdatedAt(
+    { ...sourceUpdatedAt, modetour: '2026-08-26T10:00:00.000Z' },
+    { modetour: { capturedAt: '2026-08-29T09:00:00.000Z' } },
+);
+assert.equal(manualFreshness.modetour, '2026-08-29T09:00:00.000Z');
+assert.equal(getSourceFreshness('modetour', manualFreshness, now).fresh, true);
+
+const olderManualCapture = getEffectiveSourceUpdatedAt(
+    sourceUpdatedAt,
+    { modetour: { capturedAt: '2026-08-28T09:00:00.000Z' } },
+);
+assert.equal(olderManualCapture.modetour, sourceUpdatedAt.modetour);
 
 console.log('여행사 가격 확인 시한 테스트 통과');
