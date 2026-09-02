@@ -477,6 +477,72 @@
         "graphqlFieldNames": [],
         "graphqlPriceLinkedSellerSamples": []
       }
+    },
+    {
+      "id": "2026-09-02T04:14:54.777Z-local-23832",
+      "timestamp": "2026-09-02T04:14:54.777Z",
+      "startedAt": "2026-09-02T02:33:09.278Z",
+      "durationSeconds": 6105,
+      "runner": "local",
+      "sourceFilter": "ybtour,hanatour,modetour,myrealtrip",
+      "maxFlights": 148,
+      "navigationLimit": 148,
+      "navigations": 148,
+      "needed": 291,
+      "attempted": 148,
+      "skippedFresh": 98,
+      "newRoutes": 147,
+      "newRoutesAttempted": 47,
+      "changedRoutes": 28,
+      "periodicRoutes": 116,
+      "reasonCounts": {
+        "new": 147,
+        "source_changed": 28,
+        "retry_wait": 0,
+        "retry_due": 28,
+        "priority_fresh": 28,
+        "priority_periodic": 31,
+        "standard_fresh": 70,
+        "standard_periodic": 57
+      },
+      "priorityGroups": {
+        "deadline": 10,
+        "changed_top": 21,
+        "top": 9,
+        "standard": 141,
+        "low": 110
+      },
+      "selectedPriorityGroups": {
+        "deadline": 10,
+        "changed_top": 21,
+        "top": 9,
+        "standard": 108,
+        "low": 0
+      },
+      "deferred": 143,
+      "deferredNeverChecked": 0,
+      "oldestDeferredHours": 140.6,
+      "success": 148,
+      "misses": 0,
+      "noResult": 0,
+      "routeErrors": 0,
+      "transientErrors": 0,
+      "blocked": 0,
+      "healthChecks": 0,
+      "transientResumes": 0,
+      "abortedEarly": false,
+      "partialResultsPublishable": false,
+      "sellerProbe": {
+        "mode": "passive_only",
+        "pagesInspected": 148,
+        "pagesWithExplicitSellerNodes": 0,
+        "pagesWithExactPriceSellerRows": 0,
+        "graphqlSellerFieldHits": 0,
+        "sellerSamples": [],
+        "priceContextSamples": [],
+        "graphqlFieldNames": [],
+        "graphqlPriceLinkedSellerSamples": []
+      }
     }
   ]
 }
