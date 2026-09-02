@@ -38,7 +38,7 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
     const destination = new URL(`/share-group/${encodeURIComponent(groupCode)}`, request.url);
     destination.searchParams.set('utm_source', trackedLink?.source || 'te31');
     destination.searchParams.set('utm_medium', trackedLink?.medium || 'community');
-    destination.searchParams.set('utm_campaign', trackedLink?.campaign || 'tikitikit_te31');
+    destination.searchParams.set('utm_campaign', trackedLink?.campaign || `tikitikit_te31_${groupCode}`);
     destination.searchParams.set('utm_content', `share_group_${groupCode}`);
     request.nextUrl.searchParams.forEach((value, key) => destination.searchParams.set(key, value));
 

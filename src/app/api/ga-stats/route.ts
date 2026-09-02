@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ga4Config, runReport, eventNameFilter, dim, num, type Ga4Config, type ReportResponse } from '@/lib/ga4';
 import { getSupabaseServerHeaders } from '@/lib/server/supabase-rest';
 import { normalizeCity } from '@/lib/utils/flight-helpers';
+import { SHARE_GROUPS } from '@/lib/share-groups';
 
 // 저장소가 공개라 코드에 박아 둔 기본값은 그대로 공개 열쇠가 된다.
 // 환경변수가 없으면 조용히 열리는 대신 인증을 전부 거부한다.
@@ -173,6 +174,8 @@ async function buildStats(config: Ga4Config, days: number) {
     // 7일·30일 수치는 아직 덜 쌓인 오늘을 빼고 어제까지의 완결된 날짜만 쓴다.
     // 오늘은 별도 열의 잠정 수치와 일별 추이의 마지막 막대에서 보여준다.
     const dateRanges = [{ startDate: `${days}daysAgo`, endDate: 'yesterday' }];
+    // 홍보 링크는 발행 직후 확인해야 하므로 오늘을 포함한다. 오늘 수치는 GA4 처리가 끝나기 전까지 잠정치다.
+    const campaignDateRanges = [{ startDate: `${Math.max(days - 1, 0)}daysAgo`, endDate: 'today' }];
     const trendDateRanges = [{ startDate: `${days - 1}daysAgo`, endDate: 'today' }];
     const previousDateRanges = [{ startDate: `${days * 2}daysAgo`, endDate: `${days + 1}daysAgo` }];
     const recent7DateRanges = [{ startDate: '7daysAgo', endDate: 'yesterday' }];
@@ -356,7 +359,7 @@ async function buildStats(config: Ga4Config, days: number) {
             limit: 30,
         })),
         optional('콘텐츠별 유입', warnings, () => runReport(config, {
-            dateRanges,
+            dateRanges: campaignDateRanges,
             dimensions: [{ name: 'sessionCampaignName' }, { name: 'sessionSource' }],
             metrics: [
                 { name: 'sessions' },
@@ -368,7 +371,7 @@ async function buildStats(config: Ga4Config, days: number) {
             limit: 50,
         })),
         optional('콘텐츠별 주요 행동', warnings, () => runReport(config, {
-            dateRanges,
+            dateRanges: campaignDateRanges,
             dimensions: [{ name: 'sessionCampaignName' }, { name: 'sessionSource' }, { name: 'eventName' }],
             metrics: [{ name: 'eventCount' }, { name: 'totalUsers' }],
             dimensionFilter: {
@@ -380,7 +383,7 @@ async function buildStats(config: Ga4Config, days: number) {
             limit: 200,
         })),
         optional('블로그 유입 후 상세로 본 도시', warnings, () => runReport(config, {
-            dateRanges,
+            dateRanges: campaignDateRanges,
             dimensions: [
                 { name: 'sessionCampaignName' },
                 { name: 'sessionSource' },
@@ -751,7 +754,13 @@ async function buildStats(config: Ga4Config, days: number) {
         const drop = name.match(/^tikitikit_drop_(\d+)$/);
         if (drop) return `티키티킷 드롭 ${Number(drop[1])}`;
         const blog = name.match(/^tikitikit_blog_(\d+)$/);
-        return blog ? `네이버 블로그 글 ${Number(blog[1])}` : name;
+        if (blog) return `네이버 블로그 글 ${Number(blog[1])}`;
+        const te31 = name.match(/^tikitikit_te31(?:_(.+))?$/);
+        if (te31) {
+            const group = te31[1] ? SHARE_GROUPS[te31[1]] : null;
+            return group ? `${group.departure} → ${group.arrival}` : 'TE31 홍보글';
+        }
+        return name;
     };
     const contentSourceLabel = (source: string) => ({
         naver_blog: '네이버 블로그',
@@ -847,6 +856,9 @@ async function buildStats(config: Ga4Config, days: number) {
     const blogCampaigns = campaigns === null
         ? null
         : campaigns.filter(item => item.source.toLowerCase() === 'naver_blog');
+    const promotionCampaigns = campaigns === null
+        ? null
+        : campaigns.filter(item => ['naver_blog', 'te31'].includes(item.source.toLowerCase()));
 
     // 며칠 뒤 출발인지를 그대로 나열하면 90줄이 되므로 읽을 수 있는 구간으로 묶는다.
     // `(not set)` 같은 비수치 값은 버린다 — 측정기준 등록 전 데이터가 이렇게 들어온다.
@@ -1022,6 +1034,7 @@ async function buildStats(config: Ga4Config, days: number) {
         })),
         campaigns,
         blogCampaigns,
+        promotionCampaigns,
         dateFilter: {
             picks: dateFilter?.count ?? 0,
             emptyPicks: dateFilterEmpty?.count ?? 0,

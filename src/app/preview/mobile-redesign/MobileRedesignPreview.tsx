@@ -1518,10 +1518,12 @@ export default function MobileRedesignPreview({
 
         if (PUBLIC_DEAL_ALERTS_ENABLED && params.get('dealAlert') === '1') openDealAlert(null);
         const campaign = params.get('utm_campaign') || '';
-        if (params.get('utm_source') === 'naver_blog' && /^tikitikit_drop_\d+$/.test(campaign)) {
+        if (params.get('utm_source') === 'naver_blog' && campaign.startsWith('tikitikit_')) {
             const content = params.get('utm_content');
-            if (content === 'drop_deal') gtag.trackBlogLinkOpen('flight', campaign);
-            if (content === 'alert_cta') gtag.trackBlogLinkOpen('alert', campaign);
+            const linkType = content === 'alert_cta'
+                ? 'alert'
+                : content === 'drop_deal' || Boolean(sharedFlightIdRef.current) ? 'flight' : 'article';
+            gtag.trackBlogLinkOpen(linkType, campaign, content || undefined);
         }
 
         const readyTimer = window.setTimeout(() => { urlInitializedRef.current = true; }, 0);

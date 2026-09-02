@@ -576,6 +576,7 @@ interface GaStatsData {
     referrals: Array<{ source: string; label: string; sessions: number; users: number }> | null;
     campaigns: GaCampaignPerformance[] | null;
     blogCampaigns?: GaCampaignPerformance[] | null;
+    promotionCampaigns?: GaCampaignPerformance[] | null;
     dateFilter: {
         picks: number;
         emptyPicks: number;
@@ -1298,7 +1299,7 @@ function RankList({
     );
 }
 
-function BlogCampaignPerformance({
+function PromotionCampaignPerformance({
     campaigns,
     days,
 }: {
@@ -1311,20 +1312,20 @@ function BlogCampaignPerformance({
         <div className={styles.blogPerformance}>
             <header className={styles.blogPerformanceHeader}>
                 <div>
-                    <h3>네이버 블로그 성과</h3>
-                    <small>최근 {days}일 · 글마다 다른 추적 링크로 구분</small>
+                    <h3>홍보 채널별 글 성과</h3>
+                    <small>최근 {days}일 · 오늘 수치는 잠정치</small>
                 </div>
             </header>
             {!campaigns ? (
-                <div className={styles.emptyState}>블로그 성과를 불러오지 못했습니다.</div>
+                <div className={styles.emptyState}>홍보 링크 성과를 불러오지 못했습니다.</div>
             ) : campaigns.length === 0 ? (
-                <div className={styles.emptyState}>아직 추적 링크로 들어온 블로그 방문이 없어요.</div>
+                <div className={styles.emptyState}>아직 추적 링크로 들어온 방문이 없어요.</div>
             ) : (
                 <div className={styles.blogPerformanceList}>
                     {campaigns.map(campaign => (
                         <article className={styles.blogPerformanceRow} key={`${campaign.name}-${campaign.source}`}>
                             <div className={styles.blogCampaignName}>
-                                <strong>{campaign.label.replace(/ · 네이버 블로그$/, '')}</strong>
+                                <strong>{campaign.label}</strong>
                                 <small>{campaign.name}</small>
                             </div>
                             <dl className={styles.blogMetric}>
@@ -4568,7 +4569,7 @@ export default function AdminPage() {
                                     <p>긴 원본 표 대신 상위 5개만 보여드립니다.</p>
                                 </div>
                             </div>
-                            <BlogCampaignPerformance campaigns={gaStats.blogCampaigns} days={gaStats.days} />
+                            <PromotionCampaignPerformance campaigns={gaStats.promotionCampaigns} days={gaStats.days} />
                             <div className={styles.analysisGrid}>
                                 <div className={styles.analysisPanel}>
                                     <h3>들어온 경로</h3>
