@@ -3,7 +3,10 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { getRecommendationComparisonFreshness } from '@/lib/price-quality';
 import { getRecommendationNaverComparison, type NaverComparisonEntry } from '@/lib/naver-comparison';
-import type { NaverCrawlHistoryEntry } from '@/lib/utils/naver-crawl-history';
+import {
+    normalizeNaverCrawlHistoryEntry,
+    type NaverCrawlHistoryEntry,
+} from '@/lib/utils/naver-crawl-history';
 import { getCrawlScheduleHealth, getFullCrawlUpdatedAt } from '@/lib/crawl-schedule-health.mjs';
 
 const CACHE_FILE_PATH = path.join(process.cwd(), 'data', 'all-flights-cache.json');
@@ -224,7 +227,9 @@ export async function GET(request: NextRequest) {
                 const parsed = JSON.parse(fs.readFileSync(historyPath, 'utf-8'));
                 if (Array.isArray(parsed?.entries)) {
                     // 하루 여러 회차가 쌓여도 60일 기록은 충분히 볼 수 있도록 넉넉히 반환한다.
-                    naverCrawlHistory = parsed.entries.slice(-180);
+                    naverCrawlHistory = parsed.entries
+                        .slice(-180)
+                        .map((entry: NaverCrawlHistoryEntry) => normalizeNaverCrawlHistoryEntry(entry));
                 }
             }
         } catch { }

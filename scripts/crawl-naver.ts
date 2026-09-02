@@ -49,6 +49,7 @@ import {
     type NaverRefreshReason,
 } from '../src/lib/naver-refresh-policy';
 import {
+    hasNaverCrawlAttempt,
     naverCrawlPriorityGroupLabel,
     selectNaverCrawlCandidates,
     type NaverCrawlPriorityGroup,
@@ -765,7 +766,11 @@ try {
     // 실행 뒤에도 확인이 필요한 항목을 다시 계산해야 조기 철수와 실패 재시도까지
     // 반영된 정확한 이월 수를 남길 수 있다.
     const remaining = selectFlightsByPriority(rawData, naverPrices, Number.MAX_SAFE_INTEGER).pending;
-    const deferredNeverChecked = remaining.filter(f => !naverPrices[flightKey(f)]).length;
+    // 모든 후보에는 7일 마감 승격을 위한 빈 대기열 레코드가 생긴다.
+    // 레코드 존재 여부가 아니라 실제 요청/성공 시각으로 최초 미조회 건을 센다.
+    const deferredNeverChecked = remaining.filter(
+        f => !hasNaverCrawlAttempt(naverPrices[flightKey(f)]),
+    ).length;
     const deferredAges = remaining
         .map(f => naverPrices[flightKey(f)])
         .filter((entry): entry is NaverPriceEntry => Boolean(entry))

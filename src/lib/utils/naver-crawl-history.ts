@@ -46,6 +46,30 @@ interface NaverCrawlHistoryFile {
 const HISTORY_FILE = path.join(process.cwd(), 'data', 'naver-crawl-history.json');
 const RETENTION_DAYS = 60;
 
+/**
+ * 빈 대기열 레코드 때문에 0으로 저장된 구버전 이력도 보정한다.
+ * 신규 후보 중 실제 시도하지 못한 수는 최소한 신규 수 - 신규 시도 수다.
+ */
+export function getEffectiveDeferredNeverChecked(
+    entry: Pick<NaverCrawlHistoryEntry, 'deferredNeverChecked' | 'newRoutes' | 'newRoutesAttempted'>,
+): number {
+    const recorded = Math.max(0, Number(entry.deferredNeverChecked) || 0);
+    const inferred = Math.max(
+        0,
+        (Number(entry.newRoutes) || 0) - (Number(entry.newRoutesAttempted) || 0),
+    );
+    return Math.max(recorded, inferred);
+}
+
+export function normalizeNaverCrawlHistoryEntry(
+    entry: NaverCrawlHistoryEntry,
+): NaverCrawlHistoryEntry {
+    return {
+        ...entry,
+        deferredNeverChecked: getEffectiveDeferredNeverChecked(entry),
+    };
+}
+
 export function recordNaverCrawlHistory(entry: NaverCrawlHistoryEntry): void {
     let history: NaverCrawlHistoryFile = { entries: [] };
     try {
@@ -61,7 +85,7 @@ export function recordNaverCrawlHistory(entry: NaverCrawlHistoryEntry): void {
     const byId = new Map<string, NaverCrawlHistoryEntry>();
     for (const item of [...history.entries, entry]) {
         if (!item?.id || new Date(item.timestamp).getTime() < cutoff) continue;
-        byId.set(item.id, item);
+        byId.set(item.id, normalizeNaverCrawlHistoryEntry(item));
     }
 
     history.entries = Array.from(byId.values())

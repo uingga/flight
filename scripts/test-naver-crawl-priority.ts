@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import {
+    hasNaverCrawlAttempt,
     selectNaverCrawlCandidates,
     type NaverCrawlPriorityCandidate,
 } from '../src/lib/naver-crawl-priority';
@@ -9,6 +10,7 @@ import {
     type NaverRefreshConfig,
     type NaverRefreshFlight,
 } from '../src/lib/naver-refresh-policy';
+import { getEffectiveDeferredNeverChecked } from '../src/lib/utils/naver-crawl-history';
 
 const now = new Date('2026-08-30T03:00:00Z').getTime();
 const refreshConfig: NaverRefreshConfig = {
@@ -89,5 +91,25 @@ assert.equal(selection.pending.at(-1)?.key, 'low');
 assert.equal(selection.pending.at(-1)?.group, 'low');
 assert.equal(selection.skippedFresh, 1);
 assert.equal(selection.eligible.length, selection.selected.length + selection.pending.length);
+
+assert.equal(hasNaverCrawlAttempt(undefined), false);
+assert.equal(hasNaverCrawlAttempt({ firstQueuedAt: '2026-08-30T03:00:00Z' }), false);
+assert.equal(hasNaverCrawlAttempt({
+    firstQueuedAt: '2026-08-30T03:00:00Z',
+    lastAttemptAt: '2026-08-30T04:00:00Z',
+    lastAttemptStatus: 'transient_error',
+}), true);
+assert.equal(hasNaverCrawlAttempt({ crawledAt: '2026-08-30T05:00:00Z' }), true);
+assert.equal(hasNaverCrawlAttempt({ lastAttemptAt: 'invalid-date' }), false);
+assert.equal(getEffectiveDeferredNeverChecked({
+    deferredNeverChecked: 0,
+    newRoutes: 147,
+    newRoutesAttempted: 47,
+}), 100);
+assert.equal(getEffectiveDeferredNeverChecked({
+    deferredNeverChecked: 12,
+    newRoutes: 10,
+    newRoutesAttempted: 10,
+}), 12);
 
 console.log('Naver crawl priority tests passed');

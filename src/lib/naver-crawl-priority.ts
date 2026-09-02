@@ -52,6 +52,15 @@ export interface NaverCrawlPrioritySelection<T extends NaverRefreshFlight> {
     reasonCounts: Record<NaverRefreshReason, number>;
 }
 
+/** 대기열용 빈 레코드가 아니라 실제 네이버 조회를 한 적이 있는지 판별한다. */
+export function hasNaverCrawlAttempt(
+    entry: NaverCrawlPriorityEntry | undefined,
+): boolean {
+    if (!entry) return false;
+    return [entry.lastAttemptAt, entry.crawledAt]
+        .some(value => Number.isFinite(new Date(value || '').getTime()));
+}
+
 const DAY_MS = 86_400_000;
 const KST_OFFSET_MS = 9 * 3_600_000;
 
