@@ -4,7 +4,7 @@ import {
     diversifyFlightDestinationsWithDecisions,
     diversifyRecommendationOrder,
     createsAlternatingDestinationPattern,
-    excludePinnedDestination,
+    excludePinnedFlight,
     sortFirstBlockByNewestArrival,
     trailingDestinationStreak,
 } from '../src/lib/flight-diversity';
@@ -231,9 +231,9 @@ assert.equal(onlyOneDestination.length, 3, '대체 목적지가 없을 때도 �
 
 const todayPick = flight('today-pick', '인천', '오사카', 0);
 assert.deepEqual(
-    excludePinnedDestination(candidates, todayPick).map(item => item.id),
-    ['b-1', 'c-1', 'd-1', 'e-1', 'f-1', 'g-1', 'h-1'],
-    '오늘의 표와 같은 정규화 목적지는 일반 추천 배열에서 모두 제외해야 한다.',
+    excludePinnedFlight(candidates, todayPick).map(item => item.id),
+    ['a-1', 'a-2', 'a-3', 'b-1', 'c-1', 'd-1', 'e-1', 'f-1', 'g-1', 'h-1'],
+    '오늘의 표와 정확히 같은 항공권만 일반 추천 배열에서 제외해야 한다.',
 );
 
 const recommendationNow = new Date('2026-08-28T12:00:00+09:00').getTime();
@@ -474,6 +474,86 @@ assert.equal(
     pinnedPresentation.orderedFlights.some(item => item.id === balanceRanked[0].id),
     false,
     '오늘의 표는 일반 추천 배열에 중복되면 안 된다.',
+);
+
+const pinnedDestination = flight('pinned-destination', '인천', '푸꾸옥', 0);
+const samePinnedDestination = {
+    ...flight('same-pinned-destination', '인천', '푸꾸옥', 1),
+    departure: { city: '인천', airport: 'ICN', date: '2026-09-14', time: '08:00' },
+    arrival: { city: '푸꾸옥', airport: 'PQC', date: '2026-09-18', time: '18:00' },
+};
+const pinnedDestinationCandidates = [
+    pinnedDestination,
+    samePinnedDestination,
+    ...Array.from({ length: 8 }, (_, index) => flight(
+        `pinned-other-${index + 1}`,
+        '인천',
+        `고정외도시${index + 1}`,
+        index + 2,
+    )),
+];
+const pinnedDestinationState = buildRecommendationScoreState(
+    pinnedDestinationCandidates,
+    {},
+    recommendationNow,
+);
+const pinnedDestinationRanked = pinnedDestinationCandidates.slice().sort((a, b) => (
+    compareRecommendedFlights(
+        a,
+        b,
+        pinnedDestinationState.scores,
+        recommendationNow,
+        pinnedDestinationState.explanations,
+    )
+));
+const pinnedDestinationPresentation = buildRecommendationPresentation(
+    pinnedDestinationRanked,
+    pinnedDestinationState,
+    {
+        pinnedFlight: pinnedDestination,
+        balanceIncheon: false,
+        now: recommendationNow,
+    },
+);
+assert.equal(
+    pinnedDestinationPresentation.orderedFlights.some(item => item.id === pinnedDestination.id),
+    false,
+    '오늘의 표와 정확히 같은 항공권은 전체 일반 목록에서 중복 제거해야 한다.',
+);
+assert.equal(
+    pinnedDestinationPresentation.orderedFlights.slice(0, 8)
+        .some(item => item.arrival.city === '푸꾸옥'),
+    false,
+    '오늘의 표와 같은 목적지는 오늘의 표를 포함한 첫 9장에서 중복 노출하면 안 된다.',
+);
+assert.ok(
+    pinnedDestinationPresentation.orderedFlights.findIndex(item => item.id === samePinnedDestination.id) >= 8,
+    '오늘의 표와 같은 목적지의 다른 일정은 10번째 이후 일반 목록에 다시 보여야 한다.',
+);
+assert.equal(
+    pinnedDestinationPresentation.explanations.get(samePinnedDestination.id)?.candidate.rule,
+    'same-destination-after-first-nine',
+    '같은 목적지가 삭제된 것이 아니라 첫 9장 뒤로 이동했음을 설명해야 한다.',
+);
+assert.equal(
+    pinnedDestinationPresentation.explanations.get(samePinnedDestination.id)?.candidate.eligibleForRegularList,
+    true,
+    '오늘의 표와 같은 목적지의 다른 일정도 일반 추천 후보 자격을 유지해야 한다.',
+);
+const pinnedDestinationPriceSortPresentation = buildRecommendationPresentation(
+    pinnedDestinationRanked,
+    pinnedDestinationState,
+    {
+        pinnedFlight: pinnedDestination,
+        diversify: false,
+        balanceIncheon: false,
+        now: recommendationNow,
+    },
+);
+assert.ok(
+    pinnedDestinationPriceSortPresentation.orderedFlights
+        .findIndex(item => item.id === samePinnedDestination.id) >= 8,
+    '다른 정렬에서도 오늘의 표와 같은 목적지는 첫 9장 뒤에서 다시 보여야 한다.',
 );
 
 const visiblePinnedFirstNine = [balanceRanked[0], ...pinnedPresentation.orderedFlights.slice(0, 8)];

@@ -146,14 +146,10 @@ export function sortFirstBlockByNewestArrival(items: Flight[], blockSize = 9): F
     return [...firstBlock, ...items.slice(firstBlockSize)];
 }
 
-/** 오늘의 표와 같은 목적지는 기본 추천 배열에서 분리해 특별 카드의 의미를 지킨다. */
-export function excludePinnedDestination(items: Flight[], pinnedFlight?: Flight): Flight[] {
+/** 오늘의 표와 정확히 같은 항공권만 일반 추천 배열에서 중복 제거한다. */
+export function excludePinnedFlight(items: Flight[], pinnedFlight?: Flight): Flight[] {
     if (!pinnedFlight) return items;
-    const pinnedDestination = normalizeCity(pinnedFlight.arrival.city);
-    return items.filter(flight => (
-        flight.id !== pinnedFlight.id
-        && normalizeCity(flight.arrival.city) !== pinnedDestination
-    ));
+    return items.filter(flight => flight.id !== pinnedFlight.id);
 }
 
 /**
@@ -403,6 +399,8 @@ export function diversifyFlightDestinationsWithDecisions(
 export interface RecommendationDiversityOptions extends FlightDiversityOptions {
     tierOf: (flight: Flight) => number;
     firstBlockSize?: number;
+    /** 오늘의 표 목적지는 첫 화면에서만 빼고 이후 목록에는 다시 합친다. */
+    firstBlockExcludedDestination?: string;
 }
 
 function isAffordableFirstScreenFlight(flight: Flight): boolean {
@@ -430,13 +428,18 @@ export function diversifyRecommendationOrderWithDecisions(
     const {
         firstBlockSize = 9,
         leadingFlights = [],
+        firstBlockExcludedDestination,
         ...diversityOptions
     } = options;
     // 추천 본체가 이미 가격 근거를 모두 반영해 정렬한 순서를 그대로 받는다.
     // 진열 단계에서는 목적지·출발지·가격대 구성만 조정하고 추천 점수를 다시 계산하지 않는다.
     const rankedItems = items.slice();
     const representativeIds = firstNineRouteRepresentativeIds(items, options.routeCompetitivenessTierOf);
-    const representativePool = rankedItems.filter(flight => representativeIds.has(flight.id));
+    const representativePool = rankedItems.filter(flight => (
+        representativeIds.has(flight.id)
+        && (!firstBlockExcludedDestination
+            || normalizeCity(flight.arrival.city) !== firstBlockExcludedDestination)
+    ));
     const representativeResult = diversifyFlightDestinationsWithDecisions(
         representativePool,
         {

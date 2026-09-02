@@ -1,7 +1,7 @@
 import type { Flight } from '../types/flight';
 import {
     diversifyRecommendationOrderWithDecisions,
-    excludePinnedDestination,
+    excludePinnedFlight,
     type FlightDiversityDecision,
 } from './flight-diversity';
 import {
@@ -87,7 +87,7 @@ export interface RecommendationScoreState {
 export type RecommendationCandidateRule =
     | 'passed-current-filters'
     | 'today-pick-pinned'
-    | 'same-destination-as-today-pick';
+    | 'same-destination-after-first-nine';
 
 export interface RecommendationPlacementExplanation {
     flightId: string;
@@ -576,7 +576,7 @@ export function buildRecommendationPresentation(
         balanceIncheon = true,
         now = Date.now(),
     } = options;
-    const pool = excludePinnedDestination(rankedCandidates, pinnedFlight);
+    const pool = excludePinnedFlight(rankedCandidates, pinnedFlight);
     const diversityByFlightId = new Map<string, FlightDiversityDecision>();
     let orderedFlights = pool;
 
@@ -594,9 +594,23 @@ export function buildRecommendationPresentation(
                 scoreState.explanations.get(flight.id)?.expensivePromotionEligible
             ),
             balanceIncheon,
+            firstBlockExcludedDestination: pinnedFlight
+                ? normalizeCity(pinnedFlight.arrival.city)
+                : undefined,
         });
         result.decisions.forEach(decision => diversityByFlightId.set(decision.flightId, decision));
         orderedFlights = result.flights;
+    } else if (pinnedFlight) {
+        // 가격순 등 다른 정렬에서도 오늘의 표 목적지는 첫 9장 뒤에서 다시 합친다.
+        const pinnedDestination = normalizeCity(pinnedFlight.arrival.city);
+        const firstBlock = pool
+            .filter(flight => normalizeCity(flight.arrival.city) !== pinnedDestination)
+            .slice(0, 8);
+        const firstBlockIds = new Set(firstBlock.map(flight => flight.id));
+        orderedFlights = [
+            ...firstBlock,
+            ...pool.filter(flight => !firstBlockIds.has(flight.id)),
+        ];
     }
 
     const pinnedDestination = pinnedFlight ? normalizeCity(pinnedFlight.arrival.city) : null;
@@ -614,13 +628,13 @@ export function buildRecommendationPresentation(
         const candidateRule: RecommendationCandidateRule = isPinned
             ? 'today-pick-pinned'
             : samePinnedDestination
-                ? 'same-destination-as-today-pick'
+                ? 'same-destination-after-first-nine'
                 : 'passed-current-filters';
         explanations.set(flight.id, {
             flightId: flight.id,
             candidate: {
                 inputPosition: index + 1,
-                eligibleForRegularList: !isPinned && !samePinnedDestination,
+                eligibleForRegularList: !isPinned,
                 rule: candidateRule,
             },
             score,
