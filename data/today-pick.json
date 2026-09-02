@@ -1,22 +1,30 @@
 {
-  "date": "2026-09-01",
-  "selectedAt": "2026-09-01T08:59:19.809Z",
-  "flightId": "modetour-manual-z3zer8",
+  "date": "2026-09-02",
+  "selectedAt": "2026-09-02T06:22:25.331Z",
+  "flightId": "modetour-CHI-20079725",
   "source": "modetour",
-  "arrivalCity": "푸꾸옥",
-  "destinationKey": "PQC",
-  "effectivePrice": 143800,
+  "arrivalCity": "장가계",
+  "destinationKey": "DYG",
+  "effectivePrice": 195000,
   "selectionMode": "exceptional-price",
-  "referencePrice": 193300,
+  "referencePrice": 399900,
   "previousPick": {
-    "date": "2026-08-31",
-    "flightId": "ttang-TAE-DYG-RT-0-5-ZE-2026-09-04",
-    "source": "ttang",
-    "arrivalCity": "장가계",
-    "destinationKey": "DYG",
-    "effectivePrice": 215000
+    "date": "2026-09-01",
+    "flightId": "modetour-manual-z3zer8",
+    "source": "modetour",
+    "arrivalCity": "푸꾸옥",
+    "destinationKey": "PQC",
+    "effectivePrice": 143800
   },
   "recentPicks": [
+    {
+      "date": "2026-09-01",
+      "flightId": "modetour-manual-z3zer8",
+      "source": "modetour",
+      "arrivalCity": "푸꾸옥",
+      "destinationKey": "PQC",
+      "effectivePrice": 143800
+    },
     {
       "date": "2026-08-31",
       "flightId": "ttang-TAE-DYG-RT-0-5-ZE-2026-09-04",
@@ -50,5 +58,10 @@
       "effectivePrice": 219000
     }
   ],
-  "repeatOverride": null
+  "repeatOverride": {
+    "previousEffectivePrice": 215000,
+    "previousDate": "2026-08-31",
+    "currentEffectivePrice": 195000,
+    "dropAmount": 20000
+  }
 }
