@@ -8,7 +8,8 @@ export interface FlightDiversityOptions {
     maxConsecutiveDestinations?: number;
     leadingFlights?: Flight[];
     scoreOf?: (flight: Flight) => number;
-    routeCompetitivenessTierOf?: (flight: Flight) => number;
+    tierOf?: (flight: Flight) => number;
+    maxTierGap?: number;
     expensivePromotionEligibleOf?: (flight: Flight) => boolean;
     balanceIncheon?: boolean;
 }
@@ -72,31 +73,21 @@ function firstNineRouteKey(flight: Flight): string | null {
     return `${origin}|${destination}`;
 }
 
-/** 같은 노선에서는 가장 좋은 가격 경쟁력 구간을 먼저 고르고, 그 안의 최저가만 첫 9개 대표가 된다. */
-function firstNineRouteRepresentativeIds(
-    items: Flight[],
-    routeCompetitivenessTierOf: (flight: Flight) => number = () => 0,
-): Set<string> {
-    const bestTierByRoute = new Map<string, number>();
-    const lowestByRouteAndTier = new Map<string, number>();
+/** 같은 노선에서는 실질 결제가가 가장 싼 표만 첫 9개 대표가 된다. */
+function firstNineRouteRepresentativeIds(items: Flight[]): Set<string> {
+    const lowestByRoute = new Map<string, number>();
     for (const flight of items) {
         const key = firstNineRouteKey(flight);
         if (!key) continue;
-        const tier = routeCompetitivenessTierOf(flight);
         const price = getEffectivePrice(flight);
-        const bestTier = bestTierByRoute.get(key);
-        if (bestTier === undefined || tier < bestTier) bestTierByRoute.set(key, tier);
-        const routeTierKey = `${key}|${tier}`;
-        const current = lowestByRouteAndTier.get(routeTierKey);
-        if (current === undefined || price < current) lowestByRouteAndTier.set(routeTierKey, price);
+        const current = lowestByRoute.get(key);
+        if (current === undefined || price < current) lowestByRoute.set(key, price);
     }
     return new Set(items
         .filter(flight => {
             const key = firstNineRouteKey(flight);
             if (!key) return false;
-            const tier = routeCompetitivenessTierOf(flight);
-            return tier === bestTierByRoute.get(key)
-                && getEffectivePrice(flight) === lowestByRouteAndTier.get(`${key}|${tier}`);
+            return getEffectivePrice(flight) === lowestByRoute.get(key);
         })
         .map(flight => flight.id));
 }
@@ -182,7 +173,8 @@ export function diversifyFlightDestinationsWithDecisions(
         maxConsecutiveDestinations = 2,
         leadingFlights = [],
         scoreOf,
-        routeCompetitivenessTierOf,
+        tierOf,
+        maxTierGap = tierOf ? 1 : Number.POSITIVE_INFINITY,
         expensivePromotionEligibleOf = () => false,
         balanceIncheon = true,
     } = options;
@@ -191,7 +183,7 @@ export function diversifyFlightDestinationsWithDecisions(
     const decisions: FlightDiversityDecision[] = [];
     const sequence: Flight[] = [...leadingFlights];
     const topDestinationCounts = new Map<string, number>();
-    const representativeIds = firstNineRouteRepresentativeIds(items, routeCompetitivenessTierOf);
+    const representativeIds = firstNineRouteRepresentativeIds(items);
     const originalIndexes = new Map(items.map((flight, index) => [flight, index]));
 
     sequence.slice(0, topWindow).forEach(flight => {
@@ -239,6 +231,7 @@ export function diversifyFlightDestinationsWithDecisions(
         const fiveHundredPlusCount = eighteenBlock.filter(flight => (
             expensivePriceBand(flight) === '500-plus'
         )).length;
+        const anchorTier = tierOf ? tierOf(remaining[0]) : null;
 
         const findCandidate = (
             keepTopLimit: boolean,
@@ -256,6 +249,10 @@ export function diversifyFlightDestinationsWithDecisions(
                     const departsFromIncheonArea = isIncheonAreaDeparture(flight);
                     const priceBand = expensivePriceBand(flight);
                     const affordable = isAffordableFirstScreenFlight(flight);
+                    const candidateTier = tierOf?.(flight);
+                    const tierAllowed = anchorTier === null
+                        || candidateTier === undefined
+                        || candidateTier <= anchorTier + maxTierGap;
                     const priceCompositionAllowed = !keepPriceComposition || (
                         (!mustChooseAffordable || affordable)
                         && (getEffectivePrice(flight) < 300_000 || expensivePromotionEligibleOf(flight))
@@ -265,6 +262,7 @@ export function diversifyFlightDestinationsWithDecisions(
                         && (getEffectivePrice(flight) < 400_000 || over400Count < 1)
                     );
                     return destinationStreak < maxConsecutiveDestinations
+                        && tierAllowed
                         && (!keepTopLimit || !insideTopWindow || (topDestinationCounts.get(destination) || 0) < maxPerDestination)
                         && (!keepFirstNineCap || sequence.length >= 9 || (topDestinationCounts.get(destination) || 0) < maxPerDestination)
                         && (!keepFirstNineCap || sequence.length >= 9 || !routeKey || representativeIds.has(flight.id))
@@ -416,6 +414,36 @@ function expensivePriceBand(flight: Flight): 'under-300' | '300-400' | '400-500'
 }
 
 /**
+ * 목적지·출발지 다양화로 확보한 자리 구성은 유지하되, 같은 출발권역·목적지의 카드가 차지한
+ * 자리끼리는 실질 결제가가 싼 순서로 바꾼다. 같은 노선의 더 비싼 표가 먼저 보이지 않게 하는
+ * 최종 안전장치다.
+ */
+function enforceSameRoutePriceOrder(items: Flight[]): Flight[] {
+    const routeQueues = new Map<string, Flight[]>();
+    const originalIndexes = new Map(items.map((flight, index) => [flight.id, index]));
+    for (const flight of items) {
+        const key = firstNineRouteKey(flight);
+        if (!key) continue;
+        const routeItems = routeQueues.get(key) || [];
+        routeItems.push(flight);
+        routeQueues.set(key, routeItems);
+    }
+    routeQueues.forEach(routeItems => routeItems.sort((a, b) => (
+        getEffectivePrice(a) - getEffectivePrice(b)
+        || (originalIndexes.get(a.id) ?? 0) - (originalIndexes.get(b.id) ?? 0)
+    )));
+
+    const nextIndexByRoute = new Map<string, number>();
+    return items.map(flight => {
+        const key = firstNineRouteKey(flight);
+        if (!key) return flight;
+        const index = nextIndexByRoute.get(key) || 0;
+        nextIndexByRoute.set(key, index + 1);
+        return routeQueues.get(key)?.[index] || flight;
+    });
+}
+
+/**
  * 비교가 구간 순서를 지키면서 첫 묶음은 노선별 최저가 일정만 구성한다.
  * 첫 묶음에 들지 않은 다른 일정은 같은 정렬 규칙으로 뒤에 이어 붙인다.
  */
@@ -434,7 +462,7 @@ export function diversifyRecommendationOrderWithDecisions(
     // 추천 본체가 이미 가격 근거를 모두 반영해 정렬한 순서를 그대로 받는다.
     // 진열 단계에서는 목적지·출발지·가격대 구성만 조정하고 추천 점수를 다시 계산하지 않는다.
     const rankedItems = items.slice();
-    const representativeIds = firstNineRouteRepresentativeIds(items, options.routeCompetitivenessTierOf);
+    const representativeIds = firstNineRouteRepresentativeIds(items);
     const representativePool = rankedItems.filter(flight => (
         representativeIds.has(flight.id)
         && (!firstBlockExcludedDestination
@@ -465,20 +493,29 @@ export function diversifyRecommendationOrderWithDecisions(
         },
     );
 
+    const diversityOrderedFlights = [...firstBlock, ...tailResult.flights];
+    const diversityDecisions = [
+        ...firstBlock.map((flight, index) => ({
+            ...firstBlockDecisionById.get(flight.id)!,
+            selectionIndex: index,
+            firstNine: true,
+        })),
+        ...tailResult.decisions.map((decision, index) => ({
+            ...decision,
+            selectionIndex: firstBlock.length + index,
+            firstNine: false,
+        })),
+    ];
+    const flights = enforceSameRoutePriceOrder(diversityOrderedFlights);
+    const originalIndexById = new Map(items.map((flight, index) => [flight.id, index]));
+
     return {
-        flights: [...firstBlock, ...tailResult.flights],
-        decisions: [
-            ...firstBlock.map((flight, index) => ({
-                ...firstBlockDecisionById.get(flight.id)!,
-                selectionIndex: index,
-                firstNine: true,
-            })),
-            ...tailResult.decisions.map((decision, index) => ({
-                ...decision,
-                selectionIndex: firstBlock.length + index,
-                firstNine: false,
-            })),
-        ],
+        flights,
+        decisions: diversityDecisions.map((decision, index) => ({
+            ...decision,
+            flightId: flights[index].id,
+            originalIndex: originalIndexById.get(flights[index].id) ?? -1,
+        })),
     };
 }
 

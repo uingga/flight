@@ -14,7 +14,6 @@ import {
     compareRecommendedFlights,
     getAllowedNaverPriceGap,
 } from '../src/lib/flight-recommendation';
-import { getRoutePriceCompetitivenessTier } from '../src/lib/price-quality';
 import type { Flight } from '../src/types/flight';
 
 function flight(id: string, departureCity: string, arrivalCity: string, score: number): Flight & { testScore: number } {
@@ -169,20 +168,19 @@ const differentTierSameRoute = diversifyRecommendationOrder([
         index + 2,
     )),
 ], {
-    tierOf: () => 0,
+    tierOf: item => item.id === 'route-cheap-but-bad' ? 4 : 1,
     scoreOf: item => (item as Flight & { testScore: number }).testScore,
-    routeCompetitivenessTierOf: item => item.id === 'route-cheap-but-bad' ? 2 : 0,
     balanceIncheon: false,
 });
 assert.equal(
-    differentTierSameRoute.slice(0, 9).some(item => item.id === 'route-higher-but-competitive'),
+    differentTierSameRoute.slice(0, 9).some(item => item.id === 'route-cheap-but-bad'),
     true,
-    '같은 노선에서는 절대가격보다 네이버 가격 경쟁력이 좋은 일정이 첫 9개 대표가 되어야 한다.',
+    '같은 노선에서는 비교 등급과 관계없이 실질 가격이 가장 싼 표가 첫 9개 대표가 되어야 한다.',
 );
 assert.equal(
-    differentTierSameRoute.slice(0, 9).some(item => item.id === 'route-cheap-but-bad'),
+    differentTierSameRoute.slice(0, 9).some(item => item.id === 'route-higher-but-competitive'),
     false,
-    '더 싸더라도 네이버보다 확실히 비싼 일정은 경쟁력 있는 같은 노선을 밀어내면 안 된다.',
+    '같은 노선의 더 비싼 표는 대체 검증 등급이 좋아도 싼 표를 밀어내면 안 된다.',
 );
 
 const recentlyAddedCandidates = ordered.map((item, index) => ({
@@ -283,8 +281,6 @@ const routeCompetitivenessState = buildRecommendationScoreState(
     {},
     recommendationNow,
 );
-assert.equal(getRoutePriceCompetitivenessTier(routeCheapButBad, recommendationNow), 2);
-assert.equal(getRoutePriceCompetitivenessTier(routeHigherButCompetitive, recommendationNow), 0);
 assert.ok(
     routeCompetitivenessState.scores.get(routeHigherButCompetitive.id)!
         < routeCompetitivenessState.scores.get(routeCheapButBad.id)!,
@@ -300,8 +296,8 @@ assert.deepEqual(
             routeCompetitivenessState.explanations,
         ))
         .map(item => item.id),
-    [routeHigherButCompetitive.id, routeCheapButBad.id],
-    '같은 노선은 더 싼 날짜보다 네이버 가격 경쟁력이 좋은 날짜를 먼저 보여야 한다.',
+    [routeCheapButBad.id, routeHigherButCompetitive.id],
+    '같은 출발권역·목적지는 네이버 비교 등급보다 실질 가격이 싼 표를 먼저 보여야 한다.',
 );
 
 const manadoLowerPrice = {
@@ -337,21 +333,6 @@ assert.deepEqual(
     '같은 노선·같은 경쟁력 구간의 최종 추천순도 실제 가격이 낮은 항공권부터여야 한다.',
 );
 
-assert.equal(getRoutePriceCompetitivenessTier({
-    ...routeCheapButBad,
-    price: 150_000,
-    naverLowest: 135_000,
-}, recommendationNow), 0, '2만원 이내 차이는 비슷한 가격으로 본다.');
-assert.equal(getRoutePriceCompetitivenessTier({
-    ...routeCheapButBad,
-    price: 500_000,
-    naverLowest: 455_000,
-}, recommendationNow), 0, '10% 이내 차이는 비슷한 가격으로 본다.');
-assert.equal(getRoutePriceCompetitivenessTier({
-    ...routeCheapButBad,
-    price: 250_000,
-    naverLowest: 225_000,
-}, recommendationNow), 2, '2만원과 10%를 모두 넘으면 확실히 비싼 가격으로 본다.');
 const freshPrice = {
     ...flight('fresh-price', '인천', '싱가포르', 0),
     price: 200_000,
@@ -586,7 +567,28 @@ assert.deepEqual(
     'A-B-A-B 반복이 생길 때는 새로운 목적지를 먼저 보여야 한다.',
 );
 
-assert.equal(getAllowedNaverPriceGap(), 20_000);
+const tierLimitedDiversityCandidates = [
+    { ...flight('tier-limit-a1', '인천', '등급도시A', 100), price: 180_000 },
+    { ...flight('tier-limit-b1', '인천', '등급도시B', 101), price: 181_000 },
+    { ...flight('tier-limit-a2', '부산', '등급도시A', 102), price: 182_000 },
+    { ...flight('tier-limit-c4', '인천', '등급도시C', 105), price: 183_000 },
+    { ...flight('tier-limit-d1', '인천', '등급도시D', 110), price: 184_000 },
+];
+const tierLimitedDiversityOrder = diversifyRecommendationOrder(tierLimitedDiversityCandidates, {
+    tierOf: item => item.id.endsWith('c4') ? 4 : item.id.endsWith('d1') ? 1 : 0,
+    maxTierGap: 1,
+    scoreOf: item => item.testScore,
+    expensivePromotionEligibleOf: () => true,
+    balanceIncheon: false,
+    maxConsecutiveDestinations: 1,
+});
+assert.deepEqual(
+    tierLimitedDiversityOrder.slice(0, 3).map(item => item.id),
+    ['tier-limit-a1', 'tier-limit-b1', 'tier-limit-d1'],
+    '새 목적지를 고르더라도 현재 최상위 후보보다 두 등급 이상 낮은 표를 앞으로 당기면 안 된다.',
+);
+
+assert.equal(getAllowedNaverPriceGap(), 5_000);
 
 const qualityCandidates = [
     {
@@ -640,10 +642,67 @@ const qualityState = buildRecommendationScoreState(
     qualityHistory,
 );
 assert.equal(qualityState.explanations.get('quality-all-three')?.topRecommendationTier, 1);
-assert.equal(qualityState.explanations.get('quality-no-naver')?.topRecommendationTier, 3);
-assert.equal(qualityState.explanations.get('quality-small-gap')?.topRecommendationTier, 2);
+assert.equal(qualityState.explanations.get('quality-no-naver')?.topRecommendationTier, 2);
+assert.equal(qualityState.explanations.get('quality-no-naver')?.recommendationEvidenceSource, 'alternative');
+assert.equal(qualityState.explanations.get('quality-small-gap')?.topRecommendationTier, 4);
 assert.equal(qualityState.explanations.get('quality-naver-only')?.topRecommendationTier, 1);
 assert.equal(qualityState.explanations.get('quality-other-dates-cheaper')?.topRecommendationTier, 3);
+
+const alternativeStrongCheap = {
+    ...flight('alternative-strong-cheap', '인천', '대체강함도시', 0),
+    price: 140_000,
+    nearbyNaverBaseline: 200_000,
+    nearbyNaverSampleCount: 5,
+};
+const alternativeExpensive = {
+    ...flight('alternative-expensive', '인천', '대체비쌈도시', 0),
+    price: 300_000,
+    nearbyNaverBaseline: 150_000,
+    nearbyNaverSampleCount: 5,
+};
+const alternativeInsufficient = {
+    ...flight('alternative-insufficient', '인천', '대체부족도시', 0),
+    price: 140_000,
+    nearbyNaverBaseline: 200_000,
+    nearbyNaverSampleCount: 5,
+};
+const reducedSameDate = {
+    ...flight('reduced-same-date', '인천', '오래된비교도시', 0),
+    price: 200_000,
+    naverLowest: 300_000,
+    naverCheckedAt: '2026-08-26T00:00:00+09:00',
+};
+const alternativeEvidenceHistory = {
+    '인천-대체강함도시': Array.from({ length: 7 }, (_, index) => ({
+        date: `2026-08-${String(index + 1).padStart(2, '0')}`,
+        minPrice: 200_000,
+    })),
+    '인천-대체비쌈도시': Array.from({ length: 7 }, (_, index) => ({
+        date: `2026-08-${String(index + 1).padStart(2, '0')}`,
+        minPrice: 150_000,
+    })),
+};
+const alternativeEvidenceState = buildRecommendationScoreState(
+    [alternativeStrongCheap, alternativeExpensive, alternativeInsufficient, reducedSameDate],
+    {},
+    recommendationNow,
+    alternativeEvidenceHistory,
+);
+assert.equal(alternativeEvidenceState.explanations.get('alternative-strong-cheap')?.topRecommendationTier, 0);
+assert.equal(alternativeEvidenceState.explanations.get('alternative-strong-cheap')?.alternativeStrongEvidenceCount, 2);
+assert.equal(alternativeEvidenceState.explanations.get('alternative-expensive')?.topRecommendationTier, 4);
+assert.equal(alternativeEvidenceState.explanations.get('alternative-expensive')?.alternativeExpensiveEvidenceCount, 2);
+assert.equal(alternativeEvidenceState.explanations.get('alternative-insufficient')?.topRecommendationTier, 3);
+assert.equal(alternativeEvidenceState.explanations.get('alternative-insufficient')?.recommendationEvidenceSource, 'insufficient');
+assert.equal(
+    alternativeEvidenceState.explanations.get('reduced-same-date')?.topRecommendationTier,
+    3,
+    '48~72시간 동일 일정 비교가는 단독 승격 근거로 쓰지 않아야 한다.',
+);
+assert.equal(
+    alternativeEvidenceState.explanations.get('reduced-same-date')?.recommendationEvidenceSource,
+    'insufficient',
+);
 
 const seoulInterparkCandidate = {
     ...flight('seoul-interpark', '인천', '인터파크도시', 0),

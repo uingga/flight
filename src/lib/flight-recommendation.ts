@@ -8,7 +8,6 @@ import {
     getComparisonPriceTier,
     getEffectivePrice,
     getRecommendationComparisonFreshness,
-    getRoutePriceCompetitivenessTier,
 } from './price-quality';
 import { normalizeCity } from './utils/flight-helpers';
 import { getRegionByCity } from './utils/region-mapper';
@@ -56,6 +55,7 @@ export interface RecommendationScoreExplanation {
     score: number;
     routePriceCorrectionApplied: boolean;
     topRecommendationTier: TopRecommendationTier;
+    recommendationEvidenceSource: 'same-date' | 'alternative' | 'insufficient';
     regionPricePercentile: number | null;
     routeHistoryPercentile: number | null;
     priceAppealPercentile: number | null;
@@ -73,6 +73,10 @@ export interface RecommendationScoreExplanation {
     historyEvidenceStrength: PriceEvidenceStrength;
     goodPriceEvidenceCount: number;
     strongPriceEvidenceCount: number;
+    alternativeEvidenceKnownCount: number;
+    alternativeGoodEvidenceCount: number;
+    alternativeStrongEvidenceCount: number;
+    alternativeExpensiveEvidenceCount: number;
     monthWideDeal: boolean;
     expensivePromotionEligible: boolean;
     naverAllowedGap: number;
@@ -137,10 +141,12 @@ export function getRecommendationFreshness(checkedAt?: string, now = Date.now())
 
 const NAVER_NEAR_AMOUNT = 20_000;
 const NAVER_NEAR_RATIO = 0.1;
+const NAVER_SAME_DATE_NEAR_AMOUNT = 5_000;
+const NAVER_SAME_DATE_NEAR_RATIO = 0.03;
 
 /** 네이버가 더 싸더라도 경쟁력이 비슷하다고 보는 최대 고정 차액이다. */
 export function getAllowedNaverPriceGap(): number {
-    return NAVER_NEAR_AMOUNT;
+    return NAVER_SAME_DATE_NEAR_AMOUNT;
 }
 
 function displayPriceBand(effectivePrice: number): number {
@@ -182,10 +188,43 @@ function naverCompetitiveness(
     const ratio = difference / comparisonPrice;
     if (ratio <= -0.1) return { rank: 0, strength: 2 };
     if (difference <= 0) return { rank: 1, strength: 1 };
-    if (difference <= NAVER_NEAR_AMOUNT || ratio <= NAVER_NEAR_RATIO) {
+    if (difference <= NAVER_SAME_DATE_NEAR_AMOUNT && ratio <= NAVER_SAME_DATE_NEAR_RATIO) {
         return { rank: 2, strength: 0 };
     }
     return { rank: 4, strength: 0 };
+}
+
+function alternativeRecommendationTier(
+    effectivePrice: number,
+    evidence: Array<{ known: boolean; strength: PriceEvidenceStrength }>,
+): {
+    tier: TopRecommendationTier;
+    source: 'alternative' | 'insufficient';
+    knownCount: number;
+    goodCount: number;
+    strongCount: number;
+    expensiveCount: number;
+} {
+    const knownEvidence = evidence.filter(item => item.known);
+    const knownCount = knownEvidence.length;
+    const goodCount = knownEvidence.filter(item => item.strength >= 1).length;
+    const strongCount = knownEvidence.filter(item => item.strength === 2).length;
+    const expensiveCount = knownCount - goodCount;
+    const source = knownCount >= 2 ? 'alternative' : 'insufficient';
+
+    if (strongCount >= 2 && displayPriceBand(effectivePrice) === 0) {
+        return { tier: 0, source, knownCount, goodCount, strongCount, expensiveCount };
+    }
+    if (strongCount >= 2) {
+        return { tier: 1, source, knownCount, goodCount, strongCount, expensiveCount };
+    }
+    if (goodCount >= 2 && strongCount >= 1) {
+        return { tier: 2, source, knownCount, goodCount, strongCount, expensiveCount };
+    }
+    if (expensiveCount >= 2) {
+        return { tier: 4, source, knownCount, goodCount, strongCount, expensiveCount };
+    }
+    return { tier: 3, source, knownCount, goodCount, strongCount, expensiveCount };
 }
 
 /** 48~72시간 비교가는 저렴함만 한 단계 낮춰 인정하고, 비쌈은 불이익 근거로 쓰지 않는다. */
@@ -400,6 +439,21 @@ function scoreFlight(
     if (monthWideDeal && historyEvidenceStrength === 0) historyEvidenceStrength = 1;
     const historyKnown = Boolean(priceAppeal.routeHistoryMedian && priceAppeal.routeHistoryMedian > 0);
     const historyEvidenceRank = evidenceRank(historyEvidenceStrength, historyKnown);
+    const alternativeRecommendation = alternativeRecommendationTier(effectivePrice, [
+        { known: nearbyKnown, strength: nearbyEvidenceStrength },
+        { known: interparkKnown, strength: interparkEvidenceStrength },
+        { known: historyKnown, strength: historyEvidenceStrength },
+    ]);
+    const hasFullStrengthSameDateComparison = Boolean(
+        comparisonPrice
+        && comparisonFreshness.fullStrength,
+    );
+    const topRecommendationTier = hasFullStrengthSameDateComparison
+        ? naver.rank
+        : alternativeRecommendation.tier;
+    const recommendationEvidenceSource = hasFullStrengthSameDateComparison
+        ? 'same-date' as const
+        : alternativeRecommendation.source;
     const priceEvidenceStrengths = [
         naver.strength,
         otherDates.strength,
@@ -464,7 +518,8 @@ function scoreFlight(
         scoreBeforeRouteCorrection: score,
         score,
         routePriceCorrectionApplied: false,
-        topRecommendationTier: naver.rank,
+        topRecommendationTier,
+        recommendationEvidenceSource,
         ...priceAppeal,
         nearbyDateCompetitive,
         naverCompetitivenessRank: naver.rank,
@@ -479,9 +534,13 @@ function scoreFlight(
         historyEvidenceStrength,
         goodPriceEvidenceCount,
         strongPriceEvidenceCount,
+        alternativeEvidenceKnownCount: alternativeRecommendation.knownCount,
+        alternativeGoodEvidenceCount: alternativeRecommendation.goodCount,
+        alternativeStrongEvidenceCount: alternativeRecommendation.strongCount,
+        alternativeExpensiveEvidenceCount: alternativeRecommendation.expensiveCount,
         monthWideDeal,
         expensivePromotionEligible,
-        naverAllowedGap: NAVER_NEAR_AMOUNT,
+        naverAllowedGap: NAVER_SAME_DATE_NEAR_AMOUNT,
         factors,
     };
 }
@@ -518,13 +577,9 @@ export function compareRecommendedFlights(
     now = Date.now(),
     explanations?: Map<string, RecommendationScoreExplanation>,
 ): number {
-    const sameRoute = normalizeCity(a.departure.city) === normalizeCity(b.departure.city)
+    const sameRoute = departureAreaKey(a) === departureAreaKey(b)
         && normalizeCity(a.arrival.city) === normalizeCity(b.arrival.city);
     if (sameRoute) {
-        const competitiveness = getRoutePriceCompetitivenessTier(a, now)
-            - getRoutePriceCompetitivenessTier(b, now);
-        if (competitiveness !== 0) return competitiveness;
-
         const priceComparison = getEffectivePrice(a) - getEffectivePrice(b);
         if (priceComparison !== 0) return priceComparison;
     }
@@ -536,9 +591,9 @@ export function compareRecommendedFlights(
         return tierComparison || (scores.get(a.id) ?? Infinity) - (scores.get(b.id) ?? Infinity);
     }
 
-    const naverComparison = aExplanation.naverCompetitivenessRank
-        - bExplanation.naverCompetitivenessRank;
-    if (naverComparison !== 0) return naverComparison;
+    const recommendationTierComparison = aExplanation.topRecommendationTier
+        - bExplanation.topRecommendationTier;
+    if (recommendationTierComparison !== 0) return recommendationTierComparison;
 
     const priceBandComparison = aExplanation.displayPriceBand - bExplanation.displayPriceBand;
     if (priceBandComparison !== 0) return priceBandComparison;
@@ -589,10 +644,10 @@ export function buildRecommendationPresentation(
             maxPerDestination: 2,
             leadingFlights: pinnedFlight ? [pinnedFlight] : [],
             scoreOf: flight => scoreState.scores.get(flight.id) ?? Infinity,
-            routeCompetitivenessTierOf: flight => getRoutePriceCompetitivenessTier(flight, now),
             expensivePromotionEligibleOf: flight => Boolean(
                 scoreState.explanations.get(flight.id)?.expensivePromotionEligible
             ),
+            maxTierGap: 1,
             balanceIncheon,
             firstBlockExcludedDestination: pinnedFlight
                 ? normalizeCity(pinnedFlight.arrival.city)
