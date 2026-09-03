@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import styles from './admin.module.css';
 import { isAnalyticsExcluded, setAnalyticsExcluded } from '@/lib/analytics';
 import { buildAdminAttentionItems } from '@/lib/admin-attention';
+import AdminTodayPick from '@/components/AdminTodayPick';
 
 function urlBase64ToUint8Array(base64String: string) {
     const padding = '='.repeat((4 - base64String.length % 4) % 4);
@@ -2273,6 +2274,8 @@ export default function AdminPage() {
             </nav>
 
             {tab === 'overview' && (<>
+                <AdminTodayPick adminKey={key} />
+
                 <section className={styles.section} id="overview-actions">
                     <div className={styles.sectionHeading}>
                         <div>

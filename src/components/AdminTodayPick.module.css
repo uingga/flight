@@ -1,0 +1,287 @@
+.section {
+    margin-bottom: 14px;
+    padding: 20px;
+    border: 1px solid #e4e7ec;
+    border-radius: 15px;
+    background: #fff;
+    color: #172033;
+}
+
+.heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+    margin-bottom: 16px;
+}
+
+.eyebrow {
+    display: block;
+    margin-bottom: 5px;
+    color: #d92b4c;
+    font-size: 0.64rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+}
+
+.heading h2 {
+    margin: 0;
+    font-size: 1.02rem;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+}
+
+.heading p {
+    margin: 5px 0 0;
+    color: #78818d;
+    font-size: 0.72rem;
+    line-height: 1.5;
+}
+
+.refreshButton,
+.candidateList button {
+    border: 1px solid #d9dee5;
+    border-radius: 9px;
+    background: #fff;
+    color: #35404d;
+    font-size: 0.69rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.refreshButton {
+    flex: 0 0 auto;
+    padding: 8px 11px;
+}
+
+.refreshButton:disabled,
+.candidateList button:disabled {
+    cursor: wait;
+    opacity: 0.55;
+}
+
+.currentCard {
+    display: grid;
+    grid-template-columns: 110px minmax(0, 1fr);
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 14px;
+    padding: 14px;
+    border: 1px solid #f1bdc8;
+    border-radius: 12px;
+    background: #fff7f9;
+}
+
+.currentCard > span {
+    color: #bc2444;
+    font-size: 0.68rem;
+    font-weight: 700;
+}
+
+.currentCard > div {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: 4px 12px;
+}
+
+.currentCard strong {
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+.currentCard b {
+    color: #d92b4c;
+    font-size: 0.92rem;
+    font-weight: 700;
+}
+
+.currentCard small {
+    grid-column: 1 / -1;
+    color: #7d6570;
+    font-size: 0.64rem;
+}
+
+.currentCard p {
+    margin: 0;
+    color: #7d6570;
+    font-size: 0.72rem;
+}
+
+.toolbar {
+    display: grid;
+    grid-template-columns: auto minmax(180px, 420px) auto;
+    align-items: center;
+    gap: 10px;
+    margin: 15px 0 10px;
+}
+
+.toolbar label {
+    color: #4b5664;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.toolbar input {
+    min-width: 0;
+    padding: 9px 11px;
+    border: 1px solid #dce1e7;
+    border-radius: 9px;
+    background: #fbfcfd;
+    color: #222b39;
+    font: inherit;
+    font-size: 0.72rem;
+    outline: none;
+}
+
+.toolbar input:focus {
+    border-color: #e68197;
+    box-shadow: 0 0 0 3px rgba(217, 43, 76, 0.08);
+}
+
+.toolbar > span {
+    color: #89919d;
+    font-size: 0.63rem;
+}
+
+.candidateList {
+    overflow: hidden;
+    border: 1px solid #e4e7eb;
+    border-radius: 12px;
+}
+
+.candidateList article {
+    display: grid;
+    grid-template-columns: 68px minmax(0, 1fr) 150px 58px;
+    align-items: center;
+    gap: 12px;
+    min-height: 68px;
+    padding: 11px 13px;
+    border-bottom: 1px solid #edf0f2;
+    background: #fff;
+}
+
+.candidateList article:last-child { border-bottom: 0; }
+.candidateList article:hover { background: #fbfcfd; }
+.candidateList .selectedCandidate { background: #fff7f9; }
+
+.rank {
+    color: #7c8592;
+    font-size: 0.64rem;
+    font-weight: 600;
+}
+
+.route {
+    min-width: 0;
+}
+
+.route strong,
+.route span,
+.route small {
+    display: block;
+}
+
+.route strong {
+    overflow: hidden;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.route span,
+.route small {
+    margin-top: 3px;
+    color: #7e8793;
+    font-size: 0.61rem;
+}
+
+.route small { color: #576273; }
+
+.price {
+    text-align: right;
+}
+
+.price strong {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.tier {
+    display: inline-flex;
+    margin-top: 4px;
+    padding: 3px 6px;
+    border-radius: 999px;
+    background: #f0f2f5;
+    color: #697382;
+    font-size: 0.58rem;
+    font-weight: 600;
+}
+
+.tier0,
+.tier1 { background: #e9f7ef; color: #187747; }
+.tier2 { background: #edf3ff; color: #315fbb; }
+.tier3 { background: #f1f2f4; color: #747d89; }
+.tier4 { background: #fff0f0; color: #b83a3a; }
+
+.candidateList button {
+    min-height: 32px;
+    padding: 6px 9px;
+}
+
+.candidateList button:not(:disabled):hover {
+    border-color: #d92b4c;
+    color: #d92b4c;
+}
+
+.success,
+.error,
+.empty {
+    margin: 10px 0;
+    padding: 11px 12px;
+    border-radius: 9px;
+    font-size: 0.68rem;
+    line-height: 1.5;
+}
+
+.success { background: #eaf8f0; color: #176b43; }
+.error { background: #fff0f0; color: #a92f2f; }
+.empty { background: #f6f7f9; color: #737d89; }
+
+.note {
+    margin: 11px 0 0;
+    color: #7d8692;
+    font-size: 0.62rem;
+    line-height: 1.55;
+}
+
+.note code {
+    color: #596475;
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+
+@media (max-width: 720px) {
+    .heading,
+    .toolbar {
+        align-items: stretch;
+        grid-template-columns: 1fr;
+    }
+
+    .heading { flex-direction: column; }
+    .refreshButton { align-self: flex-start; }
+    .currentCard { grid-template-columns: 1fr; gap: 6px; }
+    .candidateList article {
+        grid-template-columns: 56px minmax(0, 1fr) 52px;
+        gap: 8px;
+    }
+    .price {
+        grid-column: 2;
+        text-align: left;
+    }
+    .candidateList button {
+        grid-column: 3;
+        grid-row: 1 / 3;
+    }
+}
