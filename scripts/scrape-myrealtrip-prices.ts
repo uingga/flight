@@ -524,14 +524,34 @@ async function main() {
     );
     fs.writeFileSync(CACHE_PATH, JSON.stringify(cache));
 
-    const previousKeys = new Set(previousMrtFlights.map((flight: CachedFlight) => flightIdentity(flight)));
-    const finalKeys = new Set(finalMrtFlights.map(flightIdentity));
+    const previousFlightByKey = new Map(previousMrtFlights.map((flight: CachedFlight) => [flightIdentity(flight), flight]));
+    const finalFlightByKey = new Map(finalMrtFlights.map((flight: CachedFlight) => [flightIdentity(flight), flight]));
+    const previousKeys = new Set(previousFlightByKey.keys());
+    const finalKeys = new Set(finalFlightByKey.keys());
     const added = [...finalKeys].filter(key => !previousKeys.has(key)).length;
     const removed = [...previousKeys].filter(key => !finalKeys.has(key)).length;
+    const summarizeTurnoverFlight = (flight: CachedFlight) => ({
+        id: String(flight.id || flightIdentity(flight)),
+        airline: String(flight.airline || '항공사 미상'),
+        route: `${flight.departure?.city || flight.departure?.airport || '출발지'} → ${flight.arrival?.city || flight.arrival?.airport || '도착지'}`,
+        departureDate: String(flight.departure?.date || ''),
+        returnDate: String(flight.arrival?.date || ''),
+        price: Number(flight.price) || 0,
+    });
+    const addedFlights = [...finalKeys]
+        .filter(key => !previousKeys.has(key))
+        .slice(0, 100)
+        .map(key => summarizeTurnoverFlight(finalFlightByKey.get(key)!));
+    const removedFlights = [...previousKeys]
+        .filter(key => !finalKeys.has(key))
+        .slice(0, 100)
+        .map(key => summarizeTurnoverFlight(previousFlightByKey.get(key)!));
     logCrawlResults('myrealtrip', finalMrtCount, undefined, countCities(finalMrtFlights), {
         scraped: results.size,
         added,
         removed,
+        addedFlights,
+        removedFlights,
         separateSession: true,
     });
 

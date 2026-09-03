@@ -376,6 +376,7 @@ function main(): void {
     const input = JSON.parse(fs.readFileSync(inputPath, 'utf8')) as ModetourManualCapture;
     const cache = JSON.parse(fs.readFileSync(cachePath, 'utf8')) as CacheData;
     const benchmark = JSON.parse(fs.readFileSync(benchmarkPath, 'utf8')) as InterparkBenchmarkLike;
+    const previousModetourFlights = cache.flights.filter(flight => flight.source === 'modetour');
     const result = importModetourManualCapture({ input, cache, benchmark, apply });
 
     if (apply && result.report.applied) {
@@ -387,9 +388,25 @@ function main(): void {
                 counts[city] = (counts[city] || 0) + 1;
                 return counts;
             }, {});
+            const previousByKey = new Map(previousModetourFlights.map(flight => [modetourManualMatchKey(flight), flight]));
+            const currentByKey = new Map(modetourFlights.map(flight => [modetourManualMatchKey(flight), flight]));
+            const summarizeTurnoverFlight = (flight: Flight) => ({
+                id: String(flight.id || modetourManualMatchKey(flight)),
+                airline: String(flight.airline || '항공사 미상'),
+                route: `${flight.departure?.city || flight.departure?.airport || '출발지'} → ${flight.arrival?.city || flight.arrival?.airport || '도착지'}`,
+                departureDate: String(flight.departure?.date || ''),
+                returnDate: String(flight.arrival?.date || ''),
+                price: Number(flight.price) || 0,
+            });
+            const addedKeys = [...currentByKey.keys()].filter(key => !previousByKey.has(key));
+            const removedKeys = [...previousByKey.keys()].filter(key => !currentByKey.has(key));
             logCrawlResults('modetour', modetourFlights.length, undefined, byCity, {
                 scraped: result.report.accepted,
                 manual: true,
+                added: addedKeys.length,
+                removed: removedKeys.length,
+                addedFlights: addedKeys.slice(0, 100).map(key => summarizeTurnoverFlight(currentByKey.get(key)!)),
+                removedFlights: removedKeys.slice(0, 100).map(key => summarizeTurnoverFlight(previousByKey.get(key)!)),
                 separateSession: true,
             });
         }

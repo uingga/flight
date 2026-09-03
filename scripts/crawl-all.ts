@@ -1000,17 +1000,42 @@ async function main() {
             f.arrival?.airport || f.arrival?.city,
             f.departure?.date, f.arrival?.date,
         ].join('|');
-        const prevKeys = new Set((prevCache?.flights || []).map(turnoverKey));
-        const nowKeys = new Set(savedFlights.map(turnoverKey));
+        const previousFlights = prevCache?.flights || [];
+        const previousFlightByKey = new Map(previousFlights.map((flight: any) => [turnoverKey(flight), flight]));
+        const currentFlightByKey = new Map(savedFlights.map((flight: any) => [turnoverKey(flight), flight]));
+        const prevKeys = new Set(previousFlightByKey.keys());
+        const nowKeys = new Set(currentFlightByKey.keys());
         const turnover: Record<string, { added: number; removed: number }> = {};
+        const turnoverDetails: Record<string, { added: any[]; removed: any[] }> = {};
         for (const src of sourceNames) turnover[src] = { added: 0, removed: 0 };
+        for (const src of sourceNames) turnoverDetails[src] = { added: [], removed: [] };
+        const summarizeTurnoverFlight = (flight: any) => ({
+            id: String(flight.id || turnoverKey(flight)),
+            airline: String(flight.airline || '항공사 미상'),
+            route: `${flight.departure?.city || flight.departure?.airport || '출발지'} → ${flight.arrival?.city || flight.arrival?.airport || '도착지'}`,
+            departureDate: String(flight.departure?.date || ''),
+            returnDate: String(flight.arrival?.date || ''),
+            price: Number(flight.price) || 0,
+        });
         for (const k of Array.from(nowKeys)) {
             const src = String(k).split('|')[0];
-            if (turnover[src] && !prevKeys.has(k)) turnover[src].added++;
+            if (turnover[src] && !prevKeys.has(k)) {
+                turnover[src].added++;
+                if (turnoverDetails[src].added.length < 100) {
+                    const flight = currentFlightByKey.get(k);
+                    if (flight) turnoverDetails[src].added.push(summarizeTurnoverFlight(flight));
+                }
+            }
         }
         for (const k of Array.from(prevKeys)) {
             const src = String(k).split('|')[0];
-            if (turnover[src] && !nowKeys.has(k)) turnover[src].removed++;
+            if (turnover[src] && !nowKeys.has(k)) {
+                turnover[src].removed++;
+                if (turnoverDetails[src].removed.length < 100) {
+                    const flight = previousFlightByKey.get(k);
+                    if (flight) turnoverDetails[src].removed.push(summarizeTurnoverFlight(flight));
+                }
+            }
         }
         let localFallbackSessionStarted = false;
         for (const src of sourceNames) {
@@ -1040,6 +1065,8 @@ async function main() {
                 separateSession: isLocalFallbackAttempt && !localFallbackSessionStarted,
                 added: turnover[src]?.added,
                 removed: turnover[src]?.removed,
+                addedFlights: turnoverDetails[src]?.added,
+                removedFlights: turnoverDetails[src]?.removed,
             });
             if (isLocalFallbackAttempt) localFallbackSessionStarted = true;
         }

@@ -9,6 +9,15 @@ interface RegionStats {
     [regionName: string]: CityStats;
 }
 
+export interface TurnoverFlightSummary {
+    id: string;
+    airline: string;
+    route: string;
+    departureDate: string;
+    returnDate: string;
+    price: number;
+}
+
 interface SiteStats {
     /** 이번 크롤이 끝난 뒤 캐시에 실제로 담긴 개수. 보존된 경우 이전 값과 같다. */
     total: number;
@@ -30,6 +39,10 @@ interface SiteStats {
     added?: number;
     /** 직전 크롤에 있다가 사라진 표. */
     removed?: number;
+    /** 신규 표 상세. 로그 비대화를 막기 위해 호출부가 최대 100건만 전달한다. */
+    addedFlights?: TurnoverFlightSummary[];
+    /** 제외 표 상세. 로그 비대화를 막기 위해 호출부가 최대 100건만 전달한다. */
+    removedFlights?: TurnoverFlightSummary[];
     byRegion?: RegionStats;
     byCity?: CityStats;
 }
@@ -177,6 +190,8 @@ export function logCrawlResults(
         localFallback?: boolean;
         added?: number;
         removed?: number;
+        addedFlights?: TurnoverFlightSummary[];
+        removedFlights?: TurnoverFlightSummary[];
         /** 다른 예약 작업과 시간이 겹쳐도 독립 회차로 남긴다. */
         separateSession?: boolean;
     },
@@ -214,6 +229,8 @@ export function logCrawlResults(
         localFallback: meta?.localFallback || undefined,
         added: meta?.added,
         removed: meta?.removed,
+        addedFlights: meta?.addedFlights,
+        removedFlights: meta?.removedFlights,
         byRegion,
         byCity
     };
@@ -261,7 +278,13 @@ export function logCrawlResults(
                 ...entry,
                 sites: Object.fromEntries(Object.entries(entry.sites).map(([site, stats]) => [
                     site,
-                    { ...stats, byRegion: undefined, byCity: undefined },
+                    {
+                        ...stats,
+                        byRegion: undefined,
+                        byCity: undefined,
+                        addedFlights: undefined,
+                        removedFlights: undefined,
+                    },
                 ])),
             };
         });

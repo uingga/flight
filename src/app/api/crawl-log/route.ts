@@ -10,6 +10,8 @@ import {
 import { getCrawlScheduleHealth, getFullCrawlUpdatedAt } from '@/lib/crawl-schedule-health.mjs';
 
 const CACHE_FILE_PATH = path.join(process.cwd(), 'data', 'all-flights-cache.json');
+const GITHUB_REPOSITORY = 'uingga/flight';
+const GENERAL_CRAWL_WORKFLOW = 'daily-crawl.yml';
 // 저장소가 공개라 코드에 박아 둔 기본값은 그대로 공개 열쇠가 된다.
 // 환경변수가 없으면 조용히 열리는 대신 인증을 전부 거부한다.
 const ADMIN_KEY = process.env.ADMIN_KEY;
@@ -24,6 +26,113 @@ interface Flight {
     currency: string;
     seats: string;
     region: string;
+}
+
+interface GitHubWorkflowRun {
+    id: number;
+    status: 'queued' | 'in_progress' | 'completed' | string;
+    conclusion: string | null;
+    event: string;
+    display_title?: string;
+    created_at: string;
+    run_started_at?: string;
+    updated_at: string;
+    html_url: string;
+}
+
+interface GitHubWorkflowJob {
+    name: string;
+    status: string;
+    conclusion: string | null;
+    started_at?: string;
+    completed_at?: string;
+    steps?: Array<{
+        name: string;
+        status: string;
+        conclusion: string | null;
+    }>;
+}
+
+function githubHeaders(token?: string): Record<string, string> {
+    return {
+        Accept: 'application/vnd.github+json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        'X-GitHub-Api-Version': '2022-11-28',
+    };
+}
+
+function scheduledSkipSources(run: GitHubWorkflowRun): string[] {
+    const title = run.display_title || '';
+    if (title.includes('12 2 * * *') || title.includes('31 8 * * *')) return ['ttang'];
+
+    const expectedAt = title.match(/(20\d{2}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z)/)?.[1];
+    if (!expectedAt) return [];
+    const parts = new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'Asia/Seoul',
+        hour: '2-digit',
+        minute: '2-digit',
+        hourCycle: 'h23',
+    }).formatToParts(new Date(expectedAt));
+    const hour = parts.find(part => part.type === 'hour')?.value;
+    const minute = parts.find(part => part.type === 'minute')?.value;
+    return hour && minute && ['11:12', '17:31'].includes(`${hour}:${minute}`) ? ['ttang'] : [];
+}
+
+async function readCurrentGeneralCrawlRun() {
+    try {
+        const token = process.env.GH_PAT;
+        const runsResponse = await fetch(
+            `https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/workflows/${GENERAL_CRAWL_WORKFLOW}/runs?branch=main&per_page=10`,
+            {
+                headers: githubHeaders(token),
+                cache: 'no-store',
+                signal: AbortSignal.timeout(5_000),
+            },
+        );
+        if (!runsResponse.ok) return null;
+        const payload = await runsResponse.json() as { workflow_runs?: GitHubWorkflowRun[] };
+        const runs = payload.workflow_runs || [];
+        const run = runs.find(candidate => candidate.status === 'in_progress')
+            || runs.find(candidate => candidate.status === 'queued');
+        if (!run) return null;
+
+        const jobsResponse = await fetch(
+            `https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs/${run.id}/jobs?per_page=20`,
+            {
+                headers: githubHeaders(token),
+                cache: 'no-store',
+                signal: AbortSignal.timeout(5_000),
+            },
+        );
+        const jobsPayload = jobsResponse.ok
+            ? await jobsResponse.json() as { jobs?: GitHubWorkflowJob[] }
+            : { jobs: [] as GitHubWorkflowJob[] };
+        const jobs = jobsPayload.jobs || [];
+        const crawlJob = jobs.find(job => job.name.toLowerCase() === 'crawl');
+        const crawlerStep = crawlJob?.steps?.find(step => step.name === 'Run crawler');
+        const publishStep = crawlJob?.steps?.find(step => step.name === 'Commit and push changes');
+
+        let stage: 'queued' | 'preparing' | 'crawling' | 'publishing' = 'queued';
+        if (crawlerStep?.status === 'in_progress') stage = 'crawling';
+        else if (publishStep?.status === 'in_progress' || crawlerStep?.conclusion === 'success') stage = 'publishing';
+        else if (crawlJob?.status === 'in_progress') stage = 'preparing';
+
+        return {
+            id: run.id,
+            title: run.display_title || 'Daily Flight Crawl',
+            status: run.status,
+            stage,
+            event: run.event,
+            startedAt: run.run_started_at || run.created_at,
+            updatedAt: run.updated_at,
+            url: run.html_url,
+            plannedSources: ['ybtour', 'hanatour', 'modetour', 'onlinetour', 'ttang'],
+            skippedSources: scheduledSkipSources(run),
+        };
+    } catch {
+        // GitHub 상태를 읽지 못해도 저장된 크롤 결과 화면은 정상 제공한다.
+        return null;
+    }
 }
 
 // 항공사명 정규화 맵 (flights/route.ts와 동일)
@@ -135,7 +244,20 @@ export async function GET(request: NextRequest) {
         let crawlHistory: Array<{
             timestamp: string;
             runKind?: 'pc_fallback';
-            sites: Record<string, { total: number; scraped?: number; preserved?: boolean; skipped?: boolean; skippedUntil?: string; skipReason?: 'schedule' | 'circuit' | 'not-requested'; manual?: boolean; localFallback?: boolean; added?: number; removed?: number }>;
+            sites: Record<string, {
+                total: number;
+                scraped?: number;
+                preserved?: boolean;
+                skipped?: boolean;
+                skippedUntil?: string;
+                skipReason?: 'schedule' | 'circuit' | 'not-requested';
+                manual?: boolean;
+                localFallback?: boolean;
+                added?: number;
+                removed?: number;
+                addedFlights?: Array<{ id: string; airline: string; route: string; departureDate: string; returnDate: string; price: number }>;
+                removedFlights?: Array<{ id: string; airline: string; route: string; departureDate: string; returnDate: string; price: number }>;
+            }>;
             alerts: string[];
         }> = [];
         try {
@@ -245,6 +367,8 @@ export async function GET(request: NextRequest) {
             }
         } catch { }
 
+        const currentCrawlRun = await readCurrentGeneralCrawlRun();
+
         return NextResponse.json({
             timestamp,
             totalFlights: flights.length,
@@ -295,6 +419,7 @@ export async function GET(request: NextRequest) {
             cheapest,
             crawlHistory,
             crawlScheduleHealth,
+            currentCrawlRun,
         });
     } catch (error) {
         return NextResponse.json({ error: 'Failed to read cache data' }, { status: 500 });
