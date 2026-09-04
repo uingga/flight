@@ -229,7 +229,13 @@ export async function scrapeTtang(prevFlights: any[] = []): Promise<Flight[]> {
                     };
 
                     const minimumText = String(
-                        item.minimumCnt ?? item.minimumCount ?? item.minAdtCnt ?? '',
+                        item.minimumCnt
+                        ?? item.minimumcnt
+                        ?? item.minimumCount
+                        ?? item.minimumcount
+                        ?? item.minAdtCnt
+                        ?? item.minadtcnt
+                        ?? '',
                     );
                     const minimumCount = Number.parseInt(minimumText.match(/\d+/)?.[0] || '', 10);
                     if (Number.isFinite(minimumCount) && minimumCount > 1) {

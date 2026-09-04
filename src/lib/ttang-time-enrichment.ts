@@ -29,7 +29,7 @@ const SUCCESS_REFRESH_MS = 3 * DAY_MS;
 /** 실시간 페이지 이동 수의 회차당 절대 상한. 환경변수는 이 값을 낮출 수만 있다. */
 export const TTANG_TIME_REQUEST_LIMIT = 20;
 /** 파서·항공사 매핑을 고치면 올려서 형식/항공사 불일치 항목을 한 번 다시 검증한다. */
-export const TTANG_TIME_ADAPTER_VERSION = '2026-09-04.1';
+export const TTANG_TIME_ADAPTER_VERSION = '2026-09-04.2';
 
 export interface TtangTimeEnrichmentEntry {
     status: EnrichAttemptStatus;
@@ -122,6 +122,9 @@ function productOf(flight: Flight): TtangProductReference | undefined {
     return {
         masterId,
         fareId,
+        departureDate: ymd(flight.departure.date),
+        returnDate: ymd(flight.arrival.date),
+        adultCount: Math.max(1, Math.trunc(Number(flight.minPax) || 1)),
         ...(flight.ttangProduct?.tripDayLabel
             ? { tripDayLabel: flight.ttangProduct.tripDayLabel }
             : {}),
@@ -455,13 +458,25 @@ export async function enrichVisibleTtangFlights(
                     );
                     throw error;
                 }
-                const status: EnrichAttemptStatus = 'transient_error';
-                attempts.set(candidate.key, { status });
-                consecutiveFailures++;
-                console.warn(
-                    `[땡처리] hanaFareId ${candidate.product!.fareId} 상세 실패 `
-                    + `(${status}, 연속 ${consecutiveFailures}건)`,
-                );
+                if (
+                    error instanceof SourceResponseError
+                    && (error.causeCode === 'E001' || error.causeCode === 'FARE_NOT_FOUND')
+                ) {
+                    attempts.set(candidate.key, { status: 'empty' });
+                    consecutiveFailures++;
+                    console.warn(
+                        `[땡처리] hanaFareId ${candidate.product!.fareId} 상세 상품 없음 `
+                        + `(${error.causeCode}, 연속 ${consecutiveFailures}건)`,
+                    );
+                } else {
+                    const status: EnrichAttemptStatus = 'transient_error';
+                    attempts.set(candidate.key, { status });
+                    consecutiveFailures++;
+                    console.warn(
+                        `[땡처리] hanaFareId ${candidate.product!.fareId} 상세 실패 `
+                        + `(${status}, 연속 ${consecutiveFailures}건)`,
+                    );
+                }
             }
 
             if (consecutiveFailures >= 8) {

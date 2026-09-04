@@ -1,5 +1,8 @@
 import assert from 'node:assert/strict';
-import { parseTtangProductSchedule } from '../src/lib/ttang-product-schedule';
+import {
+    buildTtangProductDetailUrl,
+    parseTtangProductSchedule,
+} from '../src/lib/ttang-product-schedule';
 
 const payload = JSON.stringify({
     code: 'OK',
@@ -33,8 +36,28 @@ assert.throws(
     /요청한 hanaFareId/,
 );
 assert.throws(
+    () => parseTtangProductSchedule(JSON.stringify({ code: 'E001', desc: 'invalid request', response: [] }), '19858335'),
+    (error: any) => error?.kind === 'api-error' && error?.causeCode === 'E001',
+);
+assert.throws(
     () => parseTtangProductSchedule('<html>CAPTCHA access denied</html>', '19858335'),
     /접근 제한 안내/,
 );
+
+const detailUrl = new URL(buildTtangProductDetailUrl({
+    masterId: 'PUS-FUK-RT-0-3-BX',
+    fareId: '19858335',
+    departureDate: '2026-09-15',
+    returnDate: '2026-09-17',
+    adultCount: 2,
+}));
+assert.equal(detailUrl.pathname, '/ttangair/search/city/detail.do');
+assert.equal(detailUrl.searchParams.get('tripType'), 'RT');
+assert.equal(detailUrl.searchParams.get('fromSupplyDate'), '20260915');
+assert.equal(detailUrl.searchParams.get('toSupplyDate'), '20260917');
+assert.equal(detailUrl.searchParams.get('adtCnt'), '2');
+assert.equal(detailUrl.searchParams.get('minAdtCnt'), '2');
+assert.equal(detailUrl.searchParams.get('masterId'), 'PUS-FUK-RT-0-3-BX');
+assert.equal(detailUrl.searchParams.get('hanaFareId'), '19858335');
 
 console.log('✅ 땡처리 상품 일정 파서 테스트 통과');
