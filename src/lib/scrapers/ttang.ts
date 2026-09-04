@@ -1,4 +1,4 @@
-import { Browser, Page, chromium } from 'playwright';
+import type { Page } from 'playwright';
 import { Flight } from '@/types/flight';
 import { getRegionByCity } from '@/lib/utils/region-mapper';
 // logCrawlResults moved to crawl-all.ts
@@ -14,6 +14,7 @@ import {
     TtangPromotionPayload,
 } from './source-response';
 import { classifySourceAccessRestriction } from '../source-circuit';
+import { openTtangBrowserSession, type TtangBrowserSession } from '../ttang-browser-session';
 
 const randomDelay = (min: number, max: number) =>
     new Promise(r => setTimeout(r, (Math.random() * (max - min) + min) * 1000));
@@ -107,8 +108,8 @@ export async function fetchTtangPromotionInBrowser(
 
 export async function scrapeTtang(prevFlights: any[] = []): Promise<Flight[]> {
     console.log('\n=== 땡처리닷컴 크롤링 시작 ===');
-    const browserState: { browser: Browser | null; page: Page | null } = {
-        browser: null,
+    const browserState: { session: TtangBrowserSession | null; page: Page | null } = {
+        session: null,
         page: null,
     };
     const allFlights: Flight[] = [];
@@ -125,20 +126,9 @@ export async function scrapeTtang(prevFlights: any[] = []): Promise<Flight[]> {
         const ensureBrowserPage = async (dateParam: string): Promise<Page> => {
             if (browserState.page) return browserState.page;
 
-            browserState.browser = await chromium.launch({
-                headless: true,
-                args: ['--no-sandbox', '--disable-setuid-sandbox'],
-            });
-            const context = await browserState.browser.newContext({
-                userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-                viewport: { width: 1200, height: 800 },
-                locale: 'ko-KR',
-                extraHTTPHeaders: {
-                    Referer: 'https://mm.ttang.com/',
-                    'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
-                },
-            });
-            browserState.page = await context.newPage();
+            browserState.session = await openTtangBrowserSession();
+            browserState.page = browserState.session.page;
+            console.log(`[땡처리] 브라우저 모드: ${browserState.session.mode}`);
             const landingResponse = await browserState.page.goto(
                 `${TTANG_PROMOTION_PAGE}?trip=RT&depdate0=${dateParam}&adt=1&chd=0&inf=0&page=1&scale=5`,
                 { waitUntil: 'domcontentloaded', timeout: 30_000 },
@@ -198,6 +188,8 @@ export async function scrapeTtang(prevFlights: any[] = []): Promise<Flight[]> {
                     if (!depDate || !arrDate || price <= 0) continue;
                     if (depDate === arrDate) continue;
 
+                    const masterId = String(item.masterId || '').trim();
+                    const fareId = String(item.hanaFareId ?? item.hanafareId ?? '').trim();
                     const key = `${item.tktCarDesc}|${depDate}|${arrDate}|${price}|${item.depCityDesc}|${item.arrCityDesc}`;
                     if (processedKeys.has(key)) continue;
                     processedKeys.add(key);
@@ -211,7 +203,9 @@ export async function scrapeTtang(prevFlights: any[] = []): Promise<Flight[]> {
                     const searchLink = link;
 
                     const flight: Flight = {
-                        id: `ttang-${item.masterId}-${depDate}`,
+                        // 공개 ID는 기존 찜과의 호환성을 지킨다. 서로 다른 실제 요금 상품은
+                        // 아래 ttangProduct.fareId와 상세 상태 키에서 정확히 구분한다.
+                        id: `ttang-${masterId}-${depDate}`,
                         source: 'ttang',
                         airline: item.tktCarDesc || '알 수 없음',
                         departure: {
@@ -231,7 +225,24 @@ export async function scrapeTtang(prevFlights: any[] = []): Promise<Flight[]> {
                         link,
                         searchLink,
                         region: getRegionByCity(item.arrCityDesc || '') || '',
+                        priceCheckedAt: new Date().toISOString(),
                     };
+
+                    const minimumText = String(
+                        item.minimumCnt ?? item.minimumCount ?? item.minAdtCnt ?? '',
+                    );
+                    const minimumCount = Number.parseInt(minimumText.match(/\d+/)?.[0] || '', 10);
+                    if (Number.isFinite(minimumCount) && minimumCount > 1) {
+                        flight.minPax = minimumCount;
+                    }
+                    if (masterId && fareId) {
+                        const tripDayLabel = String(item.tripDay || item.tripday || '').trim();
+                        flight.ttangProduct = {
+                            masterId,
+                            fareId,
+                            ...(tripDayLabel ? { tripDayLabel } : {}),
+                        };
+                    }
 
                     allFlights.push(flight);
                     dayCount++;
@@ -292,13 +303,27 @@ export async function scrapeTtang(prevFlights: any[] = []): Promise<Flight[]> {
             ].join('|');
 
             const prevTimeMap = new Map<string, any>();
+            const prevProductMap = new Map<string, any>();
             prevFlights.filter((f: any) => f.source === 'ttang' && f.departure?.time).forEach((f: any) => {
                 prevTimeMap.set(timeKeyOf(f), f);
+                if (f.ttangProduct?.masterId && f.ttangProduct?.fareId) {
+                    prevProductMap.set(
+                        `${f.ttangProduct.masterId}|${f.ttangProduct.fareId}|${f.departure?.date || ''}`,
+                        f,
+                    );
+                }
             });
 
             let carriedOver = 0;
             for (const f of allFlights) {
-                const prev = prevTimeMap.get(timeKeyOf(f));
+                const productKey = f.ttangProduct
+                    ? `${f.ttangProduct.masterId}|${f.ttangProduct.fareId}|${f.departure.date}`
+                    : '';
+                // hanaFareId가 있는 새 항공권에는 동일 상품의 상세값만 옮긴다. 노선·항공사가
+                // 같다는 이유로 다른 요금 상품의 좌석을 붙이지 않는다.
+                const prev = productKey
+                    ? prevProductMap.get(productKey)
+                    : prevTimeMap.get(timeKeyOf(f));
 
                 if (prev?.departure?.time) {
                     f.departure.time = prev.departure.time;
@@ -309,6 +334,7 @@ export async function scrapeTtang(prevFlights: any[] = []): Promise<Flight[]> {
                         f.availableSeats = prev.availableSeats;
                         f.seats = prev.seats;
                     }
+                    if (prev.detailCheckedAt) f.detailCheckedAt = prev.detailCheckedAt;
                     carriedOver++;
                 }
             }
@@ -327,7 +353,7 @@ export async function scrapeTtang(prevFlights: any[] = []): Promise<Flight[]> {
             ['전체 출발일'],
         );
     } finally {
-        await browserState.browser?.close();
+        await browserState.session?.close();
     }
 
     return allFlights;

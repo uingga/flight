@@ -34,7 +34,14 @@ export interface Flight {
     nearbyNaverRecommendationMultiplier?: number; // 날짜 프리미엄에 따른 느슨한 추천 감점
     nearbyNaverTodayPickExcluded?: boolean; // 인접 기준보다 30%·5만원 이상 비싸 오늘의 표에서 제외
     priceCheckedAt?: string; // 해당 여행사 가격을 마지막으로 정상 확인한 시각
+    detailCheckedAt?: string; // 시간·좌석 등 상세 정보를 마지막으로 정상 확인한 시각
     firstSeen?: string; // 이 항공권을 캐시에서 처음 발견한 날짜
+    /** 땡처리닷컴에서 동일 노선·날짜의 서로 다른 실제 요금 상품을 구분한다. */
+    ttangProduct?: {
+        masterId: string;
+        fareId: string; // 목록/일정 API의 hanaFareId
+        tripDayLabel?: string; // 원문 검토용. 화면 숙박일수 계산에는 사용하지 않는다.
+    };
     /** 예약 결과에서 확인한 실제 가는편·오는편 공항. 도시 검색 코드를 공항으로 오인하지 않기 위해 사용한다. */
     routeAirports?: {
         outboundDeparture: string;

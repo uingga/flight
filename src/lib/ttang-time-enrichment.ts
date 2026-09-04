@@ -1,4 +1,3 @@
-import { chromium } from 'playwright';
 import type { Flight } from '@/types/flight';
 import { normalizeAirline } from '@/lib/utils/flight-helpers';
 import {
@@ -11,19 +10,26 @@ import {
 } from '@/lib/utils/realtime-enrich';
 import {
     assertNoSourceAccessBlockText,
+    isExplicitAccessRestrictionStatus,
     SourceResponseError,
 } from '@/lib/scrapers/source-response';
+import { openTtangBrowserSession } from '@/lib/ttang-browser-session';
+import {
+    fetchTtangProductScheduleInBrowser,
+    type TtangProductReference,
+} from '@/lib/ttang-product-schedule';
 
 const TTANG_PROMOTION_PAGE = 'https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do';
 const DAY_MS = 24 * 60 * 60 * 1000;
 const TRANSIENT_RETRY_MS = 2 * 60 * 60 * 1000;
 const FIRST_EMPTY_RETRY_MS = 3 * DAY_MS;
 const REPEATED_EMPTY_RETRY_MS = 7 * DAY_MS;
+const SUCCESS_REFRESH_MS = 3 * DAY_MS;
 
 /** 실시간 페이지 이동 수의 회차당 절대 상한. 환경변수는 이 값을 낮출 수만 있다. */
 export const TTANG_TIME_REQUEST_LIMIT = 20;
 /** 파서·항공사 매핑을 고치면 올려서 형식/항공사 불일치 항목을 한 번 다시 검증한다. */
-export const TTANG_TIME_ADAPTER_VERSION = '2026-08-31.1';
+export const TTANG_TIME_ADAPTER_VERSION = '2026-09-04.1';
 
 export interface TtangTimeEnrichmentEntry {
     status: EnrichAttemptStatus;
@@ -32,11 +38,13 @@ export interface TtangTimeEnrichmentEntry {
     attemptCount: number;
     adapterVersion: string;
     departureDate: string;
+    /** 상세값을 마지막으로 정상 확인한 시각. 실패한 재확인과 분리한다. */
+    lastSuccessAt?: string;
     data?: EnrichData;
 }
 
 export interface TtangTimeEnrichmentState {
-    version: 1;
+    version: 2;
     updatedAt?: string;
     entries: Record<string, TtangTimeEnrichmentEntry>;
 }
@@ -60,10 +68,14 @@ export interface TtangTimeCandidate {
     key: string;
     routeId: string;
     route: RouteKey;
+    product?: TtangProductReference;
     flights: Flight[];
     priority: number;
     lastAttemptAt: number;
 }
+
+const randomDelay = (min: number, max: number) =>
+    new Promise(resolve => setTimeout(resolve, (Math.random() * (max - min) + min) * 1000));
 
 export interface TtangTimeQueue {
     state: TtangTimeEnrichmentState;
@@ -103,6 +115,28 @@ function routeIdOf(route: RouteKey): string {
     return `${route.depCode}|${route.arrCode}|${route.depDate}|${route.arrDate}`;
 }
 
+function productOf(flight: Flight): TtangProductReference | undefined {
+    const masterId = String(flight.ttangProduct?.masterId || '').trim();
+    const fareId = String(flight.ttangProduct?.fareId || '').trim();
+    if (!masterId || !fareId) return undefined;
+    return {
+        masterId,
+        fareId,
+        ...(flight.ttangProduct?.tripDayLabel
+            ? { tripDayLabel: flight.ttangProduct.tripDayLabel }
+            : {}),
+    };
+}
+
+/** 새 데이터는 실제 요금 상품, 과거 데이터는 기존 노선·항공사 키로 호환한다. */
+export function ttangTimeKeyOf(flight: Flight): string {
+    const product = productOf(flight);
+    if (product) {
+        return `product|${product.masterId}|${product.fareId}|${ymd(flight.departure.date)}`;
+    }
+    return enrichKeyOf(ttangRouteKeyOf(flight));
+}
+
 function completeTime(flight: Flight): boolean {
     return Boolean(
         flight.departure.time
@@ -123,15 +157,16 @@ function flightData(flight: Flight): EnrichData | null {
     };
 }
 
-function applyData(flight: Flight, data: EnrichData): void {
+function applyData(flight: Flight, data: EnrichData, checkedAt?: string): void {
     flight.departure.time = data.depTime;
     flight.departure.arrivalTime = data.arrTime;
     flight.arrival.time = data.retDepTime;
     flight.arrival.arrivalTime = data.retArrTime;
-    if (data.seats > 0 && !flight.availableSeats) {
+    if (data.seats > 0) {
         flight.availableSeats = data.seats;
         flight.seats = `${data.seats}석`;
     }
+    if (checkedAt) flight.detailCheckedAt = checkedAt;
 }
 
 function cleanState(
@@ -149,17 +184,20 @@ function cleanState(
         if (!statuses.has(value.status) || !value.lastAttemptAt || !Number.isFinite(Number(value.attemptCount))) continue;
         entries[key] = { ...value };
     }
-    return { version: 1, updatedAt: input?.updatedAt, entries };
+    return { version: 2, updatedAt: input?.updatedAt, entries };
 }
 
 function retryPriority(entry: TtangTimeEnrichmentEntry | undefined, nowMs: number): number | null {
     if (!entry) return 0; // 한 번도 조회하지 않은 신규 항공권이 최우선
     if (entry.adapterVersion !== TTANG_TIME_ADAPTER_VERSION) return 1;
-    if (entry.status === 'success') return null;
+    if (entry.status === 'success') {
+        const lastSuccess = timestamp(entry.lastSuccessAt || entry.lastAttemptAt);
+        return lastSuccess !== null && nowMs - lastSuccess >= SUCCESS_REFRESH_MS ? 2 : null;
+    }
     if (entry.status === 'airline_mismatch' || entry.status === 'response_format') return null;
     const next = timestamp(entry.nextAttemptAt);
     if (next !== null && nowMs < next) return null;
-    return entry.status === 'transient_error' ? 2 : 3;
+    return entry.status === 'transient_error' ? 3 : 4;
 }
 
 function statusCounts(attempts: EnrichAttempt[]): Pick<
@@ -194,14 +232,13 @@ export function prepareTtangTimeQueue(
     const visible = flights.filter(flight => flight.source === 'ttang');
     let restoredFromState = 0;
 
-    // 상태에 저장된 성공값을 먼저 복구한다. 최종 필터에서 잠시 빠졌다 다시 나타난 표도
-    // 네트워크를 다시 열지 않고 같은 시간을 쓸 수 있다.
+    // 상태에 저장된 마지막 성공값을 먼저 복구한다. 직전 재확인이 실패했더라도 data와
+    // lastSuccessAt은 남겨 기존 시간·좌석을 잃지 않는다.
     for (const flight of visible) {
         if (completeTime(flight)) continue;
-        const route = ttangRouteKeyOf(flight);
-        const entry = state.entries[enrichKeyOf(route)];
-        if (entry?.status === 'success' && entry.data) {
-            applyData(flight, entry.data);
+        const entry = state.entries[ttangTimeKeyOf(flight)];
+        if (entry?.data) {
+            applyData(flight, entry.data, entry.lastSuccessAt || entry.lastAttemptAt);
             restoredFromState++;
         }
     }
@@ -211,11 +248,13 @@ export function prepareTtangTimeQueue(
         const data = flightData(flight);
         if (!data) continue;
         const route = ttangRouteKeyOf(flight);
-        const key = enrichKeyOf(route);
-        if (state.entries[key]?.status === 'success' && state.entries[key]?.data) continue;
+        const key = ttangTimeKeyOf(flight);
+        if (state.entries[key]?.data) continue;
+        const checkedAt = flight.detailCheckedAt || state.entries[key]?.lastSuccessAt || now.toISOString();
         state.entries[key] = {
             status: 'success',
-            lastAttemptAt: state.entries[key]?.lastAttemptAt || now.toISOString(),
+            lastAttemptAt: state.entries[key]?.lastAttemptAt || checkedAt,
+            lastSuccessAt: checkedAt,
             attemptCount: Math.max(1, state.entries[key]?.attemptCount || 0),
             adapterVersion: TTANG_TIME_ADAPTER_VERSION,
             departureDate: route.depDate,
@@ -225,10 +264,9 @@ export function prepareTtangTimeQueue(
 
     const byKey = new Map<string, TtangTimeCandidate>();
     for (const flight of visible) {
-        if (completeTime(flight)) continue;
         const route = ttangRouteKeyOf(flight);
         if (!route.depCode || !route.arrCode || route.depDate.length !== 8 || route.arrDate.length !== 8) continue;
-        const key = enrichKeyOf(route);
+        const key = ttangTimeKeyOf(flight);
         const entry = state.entries[key];
         const priority = retryPriority(entry, nowMs);
         if (priority === null) continue;
@@ -241,6 +279,7 @@ export function prepareTtangTimeQueue(
             key,
             routeId: routeIdOf(route),
             route,
+            product: productOf(flight),
             flights: [flight],
             priority,
             lastAttemptAt: timestamp(entry?.lastAttemptAt) ?? 0,
@@ -256,13 +295,10 @@ export function prepareTtangTimeQueue(
     const parsedLimit = Math.floor(options.requestLimit ?? TTANG_TIME_REQUEST_LIMIT);
     const requestedLimit = Number.isFinite(parsedLimit) ? parsedLimit : TTANG_TIME_REQUEST_LIMIT;
     const requestLimit = Math.max(1, Math.min(TTANG_TIME_REQUEST_LIMIT, requestedLimit));
-    const selected: TtangTimeCandidate[] = [];
-    const selectedRoutes = new Set<string>();
-    for (const candidate of eligible) {
-        if (!selectedRoutes.has(candidate.routeId) && selectedRoutes.size >= requestLimit) continue;
-        selected.push(candidate);
-        selectedRoutes.add(candidate.routeId);
-    }
+    // hanaFareId 상품은 각각 한 번의 요청이므로 단순히 요청 수 자체를 제한한다.
+    // 과거 상품 식별자가 없는 항목도 같은 상한 안에서만 보강한다.
+    const selected = eligible.slice(0, requestLimit);
+    const selectedRoutes = new Set(selected.map(candidate => candidate.routeId));
 
     return {
         state,
@@ -274,7 +310,7 @@ export function prepareTtangTimeQueue(
             eligible: eligible.length,
             selected: selected.length,
             selectedRoutes: selectedRoutes.size,
-            deferred: eligible.length - selected.length,
+            deferred: Math.max(0, eligible.length - selected.length),
             succeeded: 0,
             empty: 0,
             airlineMismatch: 0,
@@ -291,7 +327,7 @@ export function recordTtangTimeAttempts(
     now = new Date(),
 ): TtangTimeEnrichmentState {
     const next: TtangTimeEnrichmentState = {
-        version: 1,
+        version: 2,
         updatedAt: now.toISOString(),
         entries: { ...state.entries },
     };
@@ -311,22 +347,34 @@ export function recordTtangTimeAttempts(
         };
 
         if (attempt.status === 'success' && attempt.data) {
-            next.entries[key] = { ...base, data: attempt.data };
+            next.entries[key] = {
+                ...base,
+                lastSuccessAt: now.toISOString(),
+                data: attempt.data,
+            };
         } else if (attempt.status === 'empty') {
             const delay = previous?.status === 'empty' ? REPEATED_EMPTY_RETRY_MS : FIRST_EMPTY_RETRY_MS;
             next.entries[key] = {
                 ...base,
+                lastSuccessAt: previous?.lastSuccessAt,
+                data: previous?.data,
                 nextAttemptAt: new Date(now.getTime() + delay).toISOString(),
             };
         } else if (attempt.status === 'transient_error') {
             next.entries[key] = {
                 ...base,
+                lastSuccessAt: previous?.lastSuccessAt,
+                data: previous?.data,
                 nextAttemptAt: new Date(now.getTime() + TRANSIENT_RETRY_MS).toISOString(),
             };
         } else {
             // 항공사/응답 형식 불일치는 같은 구현으로 반복해도 결과가 같으므로
             // adapterVersion이 바뀔 때만 다시 후보가 된다.
-            next.entries[key] = base;
+            next.entries[key] = {
+                ...base,
+                lastSuccessAt: previous?.lastSuccessAt,
+                data: previous?.data,
+            };
         }
     }
     return next;
@@ -347,24 +395,13 @@ export async function enrichVisibleTtangFlights(
 
     console.log(
         `[땡처리] 최종 노출 ${queue.stats.visible}건 · 시간 조회 후보 ${queue.stats.eligible}건 `
-        + `· 이번 회차 ${queue.stats.selectedRoutes}/${TTANG_TIME_REQUEST_LIMIT}개 노선 · 이월 ${queue.stats.deferred}건`,
+        + `· 이번 회차 ${queue.stats.selected}/${TTANG_TIME_REQUEST_LIMIT}개 상품 · 이월 ${queue.stats.deferred}건`,
     );
 
-    const browser = await chromium.launch({
-        headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox'],
-    });
+    const session = await openTtangBrowserSession();
     try {
-        const context = await browser.newContext({
-            userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-            viewport: { width: 1200, height: 800 },
-            locale: 'ko-KR',
-            extraHTTPHeaders: {
-                Referer: 'https://mm.ttang.com/',
-                'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
-            },
-        });
-        const page = await context.newPage();
+        const page = session.page;
+        console.log(`[땡처리] 상세 브라우저 모드: ${session.mode}`);
         const first = queue.selected[0].route;
         const landingResponse = await page.goto(
             `${TTANG_PROMOTION_PAGE}?trip=RT&depdate0=${first.depDate}&adt=1&chd=0&inf=0&page=1&scale=5`,
@@ -384,19 +421,71 @@ export async function enrichVisibleTtangFlights(
         const landingText = await page.locator('body').innerText({ timeout: 5_000 }).catch(() => '');
         assertNoSourceAccessBlockText('땡처리닷컴 시간 보강 세션 페이지', landingText, page.url());
 
-        const result = await enrichWithRealtimeData(
-            page,
-            queue.selected.map(candidate => candidate.route),
-            '땡처리',
-        );
-        for (const candidate of queue.selected) {
-            const data = result.enrichMap.get(candidate.key);
-            if (!data) continue;
-            candidate.flights.forEach(flight => applyData(flight, data));
+        const attempts = new Map<string, EnrichAttempt>();
+        const productCandidates = queue.selected.filter(candidate => candidate.product);
+        const legacyCandidates = queue.selected.filter(candidate => !candidate.product);
+        let consecutiveFailures = 0;
+
+        for (let index = 0; index < productCandidates.length; index++) {
+            const candidate = productCandidates[index];
+            try {
+                const data = await fetchTtangProductScheduleInBrowser(page, candidate.product!);
+                attempts.set(candidate.key, { status: 'success', data });
+                candidate.flights.forEach(flight => applyData(flight, data, now.toISOString()));
+                consecutiveFailures = 0;
+            } catch (error) {
+                if (
+                    error instanceof SourceResponseError
+                    && (
+                        isExplicitAccessRestrictionStatus(error.status)
+                        || error.kind === 'html-response'
+                        || error.kind === 'soft-block'
+                    )
+                ) {
+                    throw error;
+                }
+                const status: EnrichAttemptStatus = error instanceof SourceResponseError
+                    && (error.kind === 'schema-mismatch' || error.kind === 'malformed-json')
+                    ? 'response_format'
+                    : 'transient_error';
+                attempts.set(candidate.key, { status });
+                consecutiveFailures++;
+                console.warn(
+                    `[땡처리] hanaFareId ${candidate.product!.fareId} 상세 실패 `
+                    + `(${status}, 연속 ${consecutiveFailures}건)`,
+                );
+            }
+
+            if (consecutiveFailures >= 8) {
+                throw new SourceResponseError(
+                    'soft-block',
+                    '땡처리닷컴 상품 일정 응답이 8건 연속 실패했습니다.',
+                    200,
+                );
+            }
+            if (index < productCandidates.length - 1 || legacyCandidates.length > 0) {
+                await randomDelay(4, 8);
+                if ((index + 1) % 10 === 0) await randomDelay(30, 60);
+            }
         }
 
-        const state = recordTtangTimeAttempts(queue.state, queue.selected, result.attempts, now);
-        const counts = statusCounts(Array.from(result.attempts.values()));
+        if (legacyCandidates.length > 0) {
+            // hanaFareId가 저장되기 전의 과거 항공권만 기존 노선·항공사 보강으로 처리한다.
+            const legacyResult = await enrichWithRealtimeData(
+                page,
+                legacyCandidates.map(candidate => candidate.route),
+                '땡처리(과거 데이터)',
+            );
+            legacyResult.attempts.forEach((attempt, key) => attempts.set(key, attempt));
+            for (const candidate of legacyCandidates) {
+                const data = legacyResult.enrichMap.get(candidate.key);
+                if (!data) continue;
+                candidate.flights.forEach(flight => applyData(flight, data, now.toISOString()));
+            }
+        }
+
+        const state = recordTtangTimeAttempts(queue.state, queue.selected, attempts, now);
+        const counts = statusCounts(Array.from(attempts.values()));
         const stats = { ...queue.stats, ...counts };
         console.log(
             `[땡처리] 시간 보강 결과: 성공 ${stats.succeeded}, 빈 결과 ${stats.empty}, `
@@ -404,6 +493,6 @@ export async function enrichVisibleTtangFlights(
         );
         return { state, stats };
     } finally {
-        await browser.close();
+        await session.close();
     }
 }

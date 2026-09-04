@@ -132,6 +132,10 @@ src/components/Dashboard.tsx (client component)
   땡처리닷컴 PC 대체는 08:17·14:23 회차에만 허용하고, 앞 허용 회차의 실제 성공 시각부터
   5시간이 지나면 오후 회차를 다시 수집한다. 5시간이 지나지 않았거나 PC 차단 회로가 열렸다면
   다시 요청하지 않는다.
+- 땡처리닷컴의 새 로컬 브라우저 수집은 `scripts/run-ttang-browser-scheduled.ps1`가 기존 PC
+  대체 정책을 먼저 통과한 경우에만 실행한다. 별도 Chrome 프로필의 `127.0.0.1:9222`에 CDP로
+  연결하고, 결과는 `.local-crawler/staging/`에만 남긴다. 검증 전에는 이 결과를 자동 병합·커밋·
+  푸시하지 않는다. 상세 기준은 `docs/ttang-local-browser-crawler.md`를 따른다.
 - 명시적 접근 제한은 같은 KST 날짜에 다시 실행하지 않고 다음 날 정규 네이버 회차에서 한 번
   재탐색한다. 정확히 24시간을 계산해 다음 날 회차까지 건너뛰지는 않는다. 같은 날 자동 재실행,
   동시 수동 실행, Task Scheduler 재시작은 허용하지 않는다.

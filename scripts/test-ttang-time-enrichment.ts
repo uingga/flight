@@ -3,6 +3,7 @@ import type { Flight } from '../src/types/flight';
 import {
     prepareTtangTimeQueue,
     recordTtangTimeAttempts,
+    ttangTimeKeyOf,
     TTANG_TIME_ADAPTER_VERSION,
     TTANG_TIME_REQUEST_LIMIT,
     type TtangTimeEnrichmentState,
@@ -50,7 +51,23 @@ function flight(index: number, overrides: Partial<Flight> = {}): Flight {
 }
 
 function emptyState(): TtangTimeEnrichmentState {
-    return { version: 1, entries: {} };
+    return { version: 2, entries: {} };
+}
+
+// 같은 노선·날짜·항공사라도 hanaFareId가 다르면 서로 다른 상세 상품이다.
+{
+    const cheaper = flight(30, {
+        id: 'ttang-shared-100-2026-09-10',
+        ttangProduct: { masterId: 'shared', fareId: '100' },
+    });
+    const expensive = flight(30, {
+        id: 'ttang-shared-200-2026-09-10',
+        price: 200_000,
+        ttangProduct: { masterId: 'shared', fareId: '200' },
+    });
+    assert.notEqual(ttangTimeKeyOf(cheaper), ttangTimeKeyOf(expensive));
+    const queue = prepareTtangTimeQueue([cheaper, expensive], emptyState(), { now: NOW });
+    assert.equal(queue.selected.length, 2);
 }
 
 // 신규(상태 없음)는 재시도 가능 시각이 된 기존 실패보다 먼저 처리한다.
@@ -89,6 +106,36 @@ function emptyState(): TtangTimeEnrichmentState {
     assert.equal(restored.stats.restoredFromState, 1);
     assert.equal(reappeared.departure.arrivalTime, '10:30');
     assert.equal(reappeared.arrival.arrivalTime, '19:30');
+}
+
+// 성공한 상세도 3일 뒤에는 다시 확인하고, 재확인이 실패해도 마지막 성공값은 보존한다.
+{
+    const target = flight(31, {
+        ttangProduct: { masterId: 'refresh', fareId: '310' },
+    });
+    const first = prepareTtangTimeQueue([target], emptyState(), { now: NOW });
+    const key = first.selected[0].key;
+    const success = recordTtangTimeAttempts(first.state, first.selected, new Map([
+        [key, { status: 'success', data }],
+    ]), NOW);
+    assert.equal(prepareTtangTimeQueue([flight(31, {
+        ttangProduct: { masterId: 'refresh', fareId: '310' },
+    })], success, {
+        now: new Date('2026-09-02T03:00:00.000Z'),
+    }).selected.length, 0);
+
+    const staleFlight = flight(31, {
+        ttangProduct: { masterId: 'refresh', fareId: '310' },
+    });
+    const due = prepareTtangTimeQueue([staleFlight], success, {
+        now: new Date('2026-09-03T03:00:00.000Z'),
+    });
+    assert.equal(due.selected.length, 1);
+    const failed = recordTtangTimeAttempts(due.state, due.selected, new Map([
+        [key, { status: 'transient_error' }],
+    ]), new Date('2026-09-03T03:00:00.000Z'));
+    assert.deepEqual(failed.entries[key].data, data);
+    assert.equal(failed.entries[key].lastSuccessAt, NOW.toISOString());
 }
 
 // 빈 결과는 처음 3일, 반복 확인 뒤에는 7일 동안 다시 조회하지 않는다.
