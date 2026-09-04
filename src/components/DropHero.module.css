@@ -173,12 +173,12 @@
     white-space: nowrap;
 }
 
-/* 주요 버튼: --radius-action, 700. 크기는 .moreButton과 같은 메타 12/13. */
+/* 주요 버튼: 상세 하단 .bookingButton과 같은 본문 14/15, 700, 높이 54. */
 .cta {
     width: 100%;
-    min-height: 46px;
+    min-height: 54px;
     margin-top: 16px;
-    padding: 0 15px;
+    padding: 0 18px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -188,7 +188,7 @@
     background: var(--paper, #fff);
     color: var(--ink, #222);
     font: inherit;
-    font-size: var(--size-meta, 12px);
+    font-size: var(--size-body, 14px);
     line-height: 1;
     font-weight: var(--weight-bold, 700);
     box-shadow: 0 4px 14px rgba(0, 0, 0, .14);
