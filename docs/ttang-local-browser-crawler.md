@@ -21,9 +21,13 @@ GitHub 실행 환경에서 땡처리닷컴 접근 제한이 확인됐을 때, �
 
 다른 PC의 저장소에서 의존성을 설치한 뒤 다음 명령 하나를 실행한다.
 
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts/run-ttang-browser-pilot.ps1
+```bash
+npm run crawl:ttang:browser:pilot
 ```
+
+Windows 보안 제품이 `ExecutionPolicy Bypass`와 Chrome 실행을 결합한 PowerShell을 악성 행위로
+오인하지 않도록, 실행 과정에는 PowerShell을 사용하지 않는다. Node.js가 Chrome을 직접 실행하고
+같은 Node.js staging 수집기로 이어간다. 백신 예외 등록은 필요하지 않다.
 
 이 명령은 다음 순서로 동작한다.
 
@@ -37,7 +41,7 @@ powershell -ExecutionPolicy Bypass -File scripts/run-ttang-browser-pilot.ps1
 
 GitHub 땡처리 회로가 실제로 열린 경우만 확인하는 예약용 명령은 다음과 같다.
 
-```powershell
+```bash
 npm run crawl:ttang:browser:scheduled
 ```
 

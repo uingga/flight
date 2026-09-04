@@ -101,6 +101,9 @@ src/components/Dashboard.tsx (client component)
   처리한다. 빈 결과는 3일 뒤, 반복 빈 결과는 7일 뒤 재확인하고 항공사·응답 형식 불일치는
   어댑터가 바뀔 때만 다시 본다. 시간 단계의 차단도 `ttang` 소스 차단으로 처리해 GitHub의
   `ttang`만 쉬고 PC가 `--sources=ttang`으로 대체한다.
+- 로컬 땡처리 브라우저 staging은 PowerShell 실행 정책 우회를 사용하지 않는다.
+  `npm run crawl:ttang:browser:pilot` 또는 `npm run crawl:ttang:browser:scheduled`로 Node.js 실행기를
+  사용하며, 디버그 Chrome은 기존 전용 프로필과 `127.0.0.1:9222`만 사용한다.
 - 인터파크 월별 기준가는 `출발 권역|도착 도시` 조합으로 수집한다. 인천·김포는 `SEL`로 묶고
   부산·청주·대구·제주·무안은 각 출발 코드로 분리한다. 모든 조합은 한 대기열에서 14일 TTL,
   일반 크롤 회차당 최대 5개씩 갱신한다. 아직 기준가가 없는 조합은 제거·감점하지 않는다.
