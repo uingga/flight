@@ -34,7 +34,7 @@ Windows 보안 제품이 `ExecutionPolicy Bypass`와 Chrome 실행을 결합한 
 1. 기존 `~/tmp/chrome-debug` 프로필과 Chrome 설치 여부를 확인한다.
 2. 필요한 경우 최소 플래그로 보이는 Chrome을 실행한다.
 3. 운영 `data/`를 `.local-crawler/staging/ttang-<시각>/`에 복사한다.
-4. 복사본만 대상으로 땡처리 목록과 상세를 수집한다.
+4. 복사본만 대상으로 땡처리 목록과 상세 3건을 시험 수집한다.
 5. `summary.json`과 검토용 `all-flights-cache.json`을 남긴다.
 6. 수집이 끝나면 전용 디버그 Chrome의 CDP 연결과 브라우저를 닫아 프로세스를 종료한다.
 

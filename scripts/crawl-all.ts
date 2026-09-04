@@ -742,6 +742,9 @@ async function main() {
                 const ttangResult = await enrichVisibleTtangFlights(
                     benchmarkedFlights.filter((flight: any) => flight.source === 'ttang'),
                     ttangTimeEnrichment,
+                    // pilot은 요청 형식과 결과 품질을 보는 단계다. 상세 20건을 모두 열기 전에
+                    // 서로 다른 후보 3건만 확인하고, 예약 대체 회차에서만 기존 상한을 쓴다.
+                    localBrowserPilot ? { requestLimit: 3 } : {},
                 );
                 ttangTimeEnrichment = ttangResult.state;
             } catch (error) {
