@@ -67,7 +67,31 @@ Chrome과 staging 수집기를 실행한다. 실행 전 다른 PC의 저장소�
 - 상품 일정의 JSON 구조가 예상과 다르면 같은 요청을 반복하지 않고 첫 건에서 중단한다. 이는
   차단으로 기록하지 않고 어댑터 확인이 필요한 실패로 구분한다.
 
-## 안티그래비티 운영 전 확인 순서
+## Hermes 원격 봇 운영
+
+실제 Chrome과 수집 프로세스는 메인 작업 PC가 아니라 전용 크롤링 PC에서 실행한다. 메인 PC의
+Hermes는 크롤링 PC에 등록된 원격 Bot에게 요청하고 결과만 받는다. 크롤링 PC의 Bot은 프로젝트
+스킬 `.agents/skills/tikitikit-ttang-crawler/SKILL.md`를 사용하며, 직접 하위 명령을 조합하지 않고
+다음 운영자 명령만 사용한다.
+
+```bash
+npm run hermes:ttang:enroll     # 크롤링 PC에서 최초 1회
+npm run hermes:ttang:status     # 읽기 전용 상태 확인
+npm run hermes:ttang:pilot      # 명시적으로 요청받은 시험 1회
+npm run hermes:ttang:scheduled  # 차단 회로가 허용할 때만 예약 대체 수집
+```
+
+작업자 등록표와 동시 실행 잠금, 최근 결과는 `.local-crawler/hermes/`에만 저장한다. 실행 전 호스트
+이름이 등록표와 같은지 확인하므로, 저장소가 다른 PC로 복사돼도 그 PC에서 자동 실행되지 않는다.
+또한 실행 전후 운영 캐시 해시를 비교해 staging 외 데이터 변경을 안전 위반으로 보고한다.
+
+Hermes Desktop에서 다른 PC의 Bot을 사용하려면 크롤링 PC의 Hermes backend를 그 PC의 로그인된
+사용자 세션에서 실행하고, 메인 PC의 Settings → Connections에 원격 gateway로 등록한다. Chrome이
+화면에 보여야 하므로 Windows 서비스의 비대화형 세션이나 SSH terminal backend에서 Chrome을
+실행하지 않는다. 원격 연결은 공개 인터넷에 직접 노출하지 않고 Tailscale 같은 사설망을 사용한다.
+PC별 준비와 연결 순서는 `docs/hermes-remote-crawler.md`를 따른다.
+
+## 자동 운영 전 확인 순서
 
 1. 수동 staging 실행 한 번으로 `productIdentified`, `timeVerified`, `seatVerified`를 확인한다.
 2. 선택한 항공권 한 건의 시간·좌석·가격을 실제 화면과 대조한다.
@@ -75,3 +99,4 @@ Chrome과 staging 수집기를 실행한다. 실행 전 다른 PC의 저장소�
 4. 검증 전에는 자동 병합·커밋·푸시를 추가하지 않는다.
 5. 안정화 뒤에도 예약 작업은 먼저 GitHub 회차 상태를 확인하고, 땡처리 회로가 열린 경우에만
    이 수집기를 호출하도록 구성한다.
+6. 검증이 끝나기 전에는 Hermes cron을 만들지 않고 사용자가 요청한 pilot만 한 번씩 실행한다.

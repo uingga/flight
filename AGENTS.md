@@ -104,6 +104,9 @@ src/components/Dashboard.tsx (client component)
 - 로컬 땡처리 브라우저 staging은 PowerShell 실행 정책 우회를 사용하지 않는다.
   `npm run crawl:ttang:browser:pilot` 또는 `npm run crawl:ttang:browser:scheduled`로 Node.js 실행기를
   사용하며, 디버그 Chrome은 기존 전용 프로필과 `127.0.0.1:9222`만 사용한다.
+- Hermes에서 땡처리 로컬 브라우저 수집을 요청할 때는 등록된 크롤링 PC의 원격 Bot만
+  `.agents/skills/tikitikit-ttang-crawler/SKILL.md`와 `npm run hermes:ttang:*` 명령을 사용한다.
+  결과는 staging에만 저장하고 자동 병합·커밋·푸시·배포로 이어가지 않는다.
 - 인터파크 월별 기준가는 `출발 권역|도착 도시` 조합으로 수집한다. 인천·김포는 `SEL`로 묶고
   부산·청주·대구·제주·무안은 각 출발 코드로 분리한다. 모든 조합은 한 대기열에서 14일 TTL,
   일반 크롤 회차당 최대 5개씩 갱신한다. 아직 기준가가 없는 조합은 제거·감점하지 않는다.
