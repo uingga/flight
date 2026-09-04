@@ -77,11 +77,18 @@ async function verifyHeroPreview(page: Page) {
 
     const hero = page.locator('[data-drop-hero-flight-id="drop-flight"]');
     await hero.waitFor({ state: 'visible' });
-    assert(await hero.getByText(`TIKIT DROP · ${month}/${day}`, { exact: true }).count() === 1, 'DROP 날짜 눈썹이 올바르지 않습니다.');
-    assert(await hero.getByRole('heading', { name: '현재 7석', exact: true }).count() === 1, 'describeDropCard 근거 문장이 그대로 표시되지 않습니다.');
+    assert(await hero.getByText('TIKIT DROP', { exact: true }).count() === 1, 'TIKIT DROP 눈썹이 올바르지 않습니다.');
+    assert(await hero.getByText(`${month}/${day}`, { exact: true }).count() === 1, 'DROP 날짜가 올바르지 않습니다.');
+    assert(await hero.getByRole('heading', { name: '후쿠오카', exact: true }).count() === 1, '목적지가 제목으로 표시되지 않습니다.');
+    assert(await hero.getByText('179,000원', { exact: true }).count() === 1, '가격이 표시되지 않습니다.');
+    assert(await hero.getByText('현재 7석', { exact: true }).count() === 1, 'describeDropCard 근거 문장이 그대로 표시되지 않습니다.');
     assert(
-        await hero.getByText('인천 · 10.10(토) — 10.13(화) · 진에어 · 노랑풍선', { exact: true }).count() === 1,
-        '출발지·날짜·항공사·판매처 메타 정보가 올바르지 않습니다.',
+        await hero.getByText('인천 출발 · 10.10(토) — 10.13(화) · 3박 4일', { exact: true }).count() === 1,
+        '출발지·날짜·여정 정보가 올바르지 않습니다.',
+    );
+    assert(
+        await hero.getByText('진에어 · 노랑풍선 · 7석 남음', { exact: true }).count() === 1,
+        '항공사·판매처·좌석 정보가 올바르지 않습니다.',
     );
     assert(await hero.getByRole('button', { name: '항공권 상세 열기', exact: true }).count() === 1, '상세 열기 CTA가 하나가 아닙니다.');
     const backgroundImage = await hero.evaluate(element => getComputedStyle(element).backgroundImage);

@@ -3876,6 +3876,9 @@ export default function MobileRedesignPreview({
                             flight={dropHeroPick.flight}
                             pickDate={todayPickDate!}
                             reason={dropHeroPick.reason}
+                            price={dropHeroPick.flight.source === 'ttang' ? dropHeroPick.flight.price : effectivePrice(dropHeroPick.flight)}
+                            discountRate={dropHeroPick.repeatPriceDrop ? 0 : getAverageDiscountRate(dropHeroPick.flight, interparkPrices)}
+                            duration={tripLength(dropHeroPick.flight)}
                             onOpen={() => openFlight(dropHeroPick.flight, 'drop_hero')}
                         />
                     )}
