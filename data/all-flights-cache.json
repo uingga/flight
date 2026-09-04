@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-09-04T23:45:23.948Z",
-  "fullCrawlUpdatedAt": "2026-09-04T23:41:04.366Z",
+  "timestamp": "2026-09-04T23:53:24.796Z",
+  "fullCrawlUpdatedAt": "2026-09-04T23:53:24.796Z",
   "count": 573,
   "flights": [
     {
@@ -9395,6 +9395,40 @@
       "firstSeen": "2026-09-04"
     },
     {
+      "id": "online-260908744348",
+      "source": "onlinetour",
+      "airline": "티웨이항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-09-08",
+        "time": "12:35",
+        "arrivalTime": "19:15"
+      },
+      "arrival": {
+        "city": "로마",
+        "airport": "ROM",
+        "date": "2026-09-15",
+        "time": "21:15",
+        "arrivalTime": "16:10"
+      },
+      "price": 990000,
+      "currency": "KRW",
+      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260908744348",
+      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=ROM&sCity2=ROM&eCity2=SEL&startDt=20260908&endDt=20260915&adt=1",
+      "region": "유럽",
+      "availableSeats": 1,
+      "seats": "1석",
+      "routeAirports": {
+        "outboundDeparture": "ICN",
+        "outboundArrival": "FCO",
+        "returnDeparture": "FCO",
+        "returnArrival": "ICN"
+      },
+      "discountRate": 6,
+      "firstSeen": "2026-09-04"
+    },
+    {
       "id": "ttang-LJ0061PUSCEB-G10-2026-09-08",
       "source": "ttang",
       "airline": "진에어",
@@ -10577,32 +10611,6 @@
       "firstSeen": "2026-08-28"
     },
     {
-      "id": "ttang-PUS-GUM-RT-0-6-BX-2026-09-20",
-      "source": "ttang",
-      "airline": "에어부산",
-      "departure": {
-        "city": "부산",
-        "airport": "PUS",
-        "date": "2026-09-20",
-        "time": "19:50",
-        "arrivalTime": "01:10"
-      },
-      "arrival": {
-        "city": "괌",
-        "airport": "GUM",
-        "date": "2026-09-25",
-        "time": "02:40",
-        "arrivalTime": "06:20"
-      },
-      "price": 283000,
-      "currency": "KRW",
-      "link": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260920&adt=1&chd=0&inf=0&page=1&scale=200",
-      "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260920&adt=1&chd=0&inf=0&page=1&scale=200",
-      "region": "남태평양",
-      "discountRate": -6,
-      "firstSeen": "2026-09-01"
-    },
-    {
       "id": "ttang-PUS-GUM-RT-0-5-BX-2026-09-20",
       "source": "ttang",
       "airline": "에어부산",
@@ -10619,6 +10627,32 @@
         "date": "2026-09-24",
         "time": "03:30",
         "arrivalTime": "06:50"
+      },
+      "price": 283000,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260920&adt=1&chd=0&inf=0&page=1&scale=200",
+      "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260920&adt=1&chd=0&inf=0&page=1&scale=200",
+      "region": "남태평양",
+      "discountRate": -6,
+      "firstSeen": "2026-09-01"
+    },
+    {
+      "id": "ttang-PUS-GUM-RT-0-6-BX-2026-09-20",
+      "source": "ttang",
+      "airline": "에어부산",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-09-20",
+        "time": "19:50",
+        "arrivalTime": "01:10"
+      },
+      "arrival": {
+        "city": "괌",
+        "airport": "GUM",
+        "date": "2026-09-25",
+        "time": "02:40",
+        "arrivalTime": "06:20"
       },
       "price": 283000,
       "currency": "KRW",
@@ -12953,7 +12987,7 @@
       "firstSeen": "2026-09-01"
     },
     {
-      "id": "ttang-RF0324CJJNRT-G15-2026-09-30",
+      "id": "ttang-RF0392CJJNRT-G7-2026-09-30",
       "source": "ttang",
       "airline": "에어로케이",
       "departure": {
@@ -12978,7 +13012,7 @@
       "availableSeats": 1,
       "seats": "1석",
       "discountRate": 63,
-      "firstSeen": "2026-09-05"
+      "firstSeen": "2026-09-03"
     },
     {
       "id": "ttang-ICN-CRK-RT-0-5-LJ-2026-09-30",
@@ -18649,40 +18683,6 @@
       "availableSeats": 9,
       "seats": "9석 남음",
       "discountRate": -24
-    },
-    {
-      "id": "online-260908744348",
-      "source": "onlinetour",
-      "airline": "티웨이항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-09-08",
-        "time": "12:35",
-        "arrivalTime": "19:15"
-      },
-      "arrival": {
-        "city": "로마",
-        "airport": "ROM",
-        "date": "2026-09-15",
-        "time": "21:15",
-        "arrivalTime": "16:10"
-      },
-      "price": 990000,
-      "currency": "KRW",
-      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260908744348",
-      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=ROM&sCity2=ROM&eCity2=SEL&startDt=20260908&endDt=20260915&adt=1",
-      "region": "유럽",
-      "availableSeats": 1,
-      "seats": "1석",
-      "routeAirports": {
-        "outboundDeparture": "ICN",
-        "outboundArrival": "FCO",
-        "returnDeparture": "FCO",
-        "returnArrival": "ICN"
-      },
-      "discountRate": 6,
-      "firstSeen": "2026-09-04"
     }
   ],
   "sources": {
@@ -18694,11 +18694,11 @@
     "myrealtrip": 152
   },
   "sourceUpdatedAt": {
-    "ybtour": "2026-09-04T23:39:08.798Z",
-    "hanatour": "2026-09-04T23:39:08.798Z",
-    "modetour": "2026-09-04T23:39:08.798Z",
-    "onlinetour": "2026-09-04T23:45:23.929Z",
-    "ttang": "2026-09-04T23:39:08.798Z",
+    "ybtour": "2026-09-04T23:51:26.118Z",
+    "hanatour": "2026-09-04T23:51:26.119Z",
+    "modetour": "2026-09-04T23:51:26.119Z",
+    "onlinetour": "2026-09-04T05:49:59.352Z",
+    "ttang": "2026-09-04T23:51:26.119Z",
     "myrealtrip": "2026-09-04T13:21:32.324Z"
   },
   "staleStreak": {
@@ -18714,9 +18714,11 @@
     "ttang": 1213,
     "ybtour": 270,
     "hanatour": 99,
-    "onlinetour": 108
+    "onlinetour": 112
   },
-  "integrityAlerts": [],
+  "integrityAlerts": [
+    "⛔ onlinetour 접근 차단 뒤 자동 요청 중단 (2026. 9. 5. PM 2:42:13 이후 단일 재탐색) — 이전 데이터 유지"
+  ],
   "sourceCircuits": {
     "onlinetour": {
       "reason": "blocked",
@@ -18727,16 +18729,16 @@
       "detail": "soft block 의심: 응답 수량 111건에서 39건으로 급감",
       "localFallback": {
         "status": "success",
-        "lastAttemptAt": "2026-09-04T23:45:23.928Z",
+        "lastAttemptAt": "2026-09-04T05:49:59.350Z",
         "method": "source-default",
-        "detail": "PC 대체 수집 108건 완료"
+        "detail": "PC 대체 수집 112건 완료"
       }
     }
   },
   "manualCaptureStatus": {},
   "ttangTimeEnrichment": {
     "version": 1,
-    "updatedAt": "2026-09-04T23:39:25.827Z",
+    "updatedAt": "2026-09-04T23:51:40.592Z",
     "entries": {
       "ICN|UKB|20260905|20260907|제주항공": {
         "status": "success",
@@ -22095,7 +22097,7 @@
       },
       "PUS|FUK|20260919|20260922|티웨이항공": {
         "status": "success",
-        "lastAttemptAt": "2026-09-04T23:39:25.827Z",
+        "lastAttemptAt": "2026-09-04T23:51:40.592Z",
         "attemptCount": 1,
         "adapterVersion": "2026-08-31.1",
         "departureDate": "20260919",
@@ -22109,7 +22111,7 @@
       },
       "PUS|FUK|20260920|20260923|티웨이항공": {
         "status": "success",
-        "lastAttemptAt": "2026-09-04T23:39:25.827Z",
+        "lastAttemptAt": "2026-09-04T23:51:40.592Z",
         "attemptCount": 1,
         "adapterVersion": "2026-08-31.1",
         "departureDate": "20260920",
@@ -22123,7 +22125,7 @@
       },
       "PUS|MYJ|20260922|20260924|에어부산": {
         "status": "success",
-        "lastAttemptAt": "2026-09-04T23:39:25.827Z",
+        "lastAttemptAt": "2026-09-04T23:51:40.592Z",
         "attemptCount": 1,
         "adapterVersion": "2026-08-31.1",
         "departureDate": "20260922",
@@ -22137,21 +22139,21 @@
       },
       "CJJ|IBR|20260926|20260929|에어로케이": {
         "status": "airline_mismatch",
-        "lastAttemptAt": "2026-09-04T23:39:25.827Z",
+        "lastAttemptAt": "2026-09-04T23:51:40.592Z",
         "attemptCount": 1,
         "adapterVersion": "2026-08-31.1",
         "departureDate": "20260926"
       },
       "CJJ|IBR|20260929|20261003|에어로케이": {
         "status": "airline_mismatch",
-        "lastAttemptAt": "2026-09-04T23:39:25.827Z",
+        "lastAttemptAt": "2026-09-04T23:51:40.592Z",
         "attemptCount": 1,
         "adapterVersion": "2026-08-31.1",
         "departureDate": "20260929"
       },
       "GMP|TSA|20260929|20261001|이스타항공": {
         "status": "success",
-        "lastAttemptAt": "2026-09-04T23:39:25.827Z",
+        "lastAttemptAt": "2026-09-04T23:51:40.592Z",
         "attemptCount": 1,
         "adapterVersion": "2026-08-31.1",
         "departureDate": "20260929",
@@ -22165,7 +22167,7 @@
       },
       "ICN|PQC|20260929|20261002|썬푸꾸옥항공": {
         "status": "success",
-        "lastAttemptAt": "2026-09-04T23:39:25.827Z",
+        "lastAttemptAt": "2026-09-04T23:51:40.592Z",
         "attemptCount": 1,
         "adapterVersion": "2026-08-31.1",
         "departureDate": "20260929",
@@ -22179,7 +22181,7 @@
       },
       "PUS|KMJ|20260929|20261002|이스타항공": {
         "status": "success",
-        "lastAttemptAt": "2026-09-04T23:39:25.827Z",
+        "lastAttemptAt": "2026-09-04T23:51:40.592Z",
         "attemptCount": 1,
         "adapterVersion": "2026-08-31.1",
         "departureDate": "20260929",
@@ -22193,7 +22195,7 @@
       },
       "ICN|PQC|20260930|20261003|썬푸꾸옥항공": {
         "status": "success",
-        "lastAttemptAt": "2026-09-04T23:39:25.827Z",
+        "lastAttemptAt": "2026-09-04T23:51:40.592Z",
         "attemptCount": 1,
         "adapterVersion": "2026-08-31.1",
         "departureDate": "20260930",
@@ -22207,7 +22209,7 @@
       },
       "PUS|KMJ|20260930|20261003|이스타항공": {
         "status": "success",
-        "lastAttemptAt": "2026-09-04T23:39:25.827Z",
+        "lastAttemptAt": "2026-09-04T23:51:40.592Z",
         "attemptCount": 1,
         "adapterVersion": "2026-08-31.1",
         "departureDate": "20260930",
@@ -22221,7 +22223,7 @@
       },
       "ICN|PVG|20261001|20261004|중국남방항공": {
         "status": "success",
-        "lastAttemptAt": "2026-09-04T23:39:25.827Z",
+        "lastAttemptAt": "2026-09-04T23:51:40.592Z",
         "attemptCount": 1,
         "adapterVersion": "2026-08-31.1",
         "departureDate": "20261001",
@@ -22235,7 +22237,7 @@
       },
       "ICN|PVG|20261002|20261005|중국남방항공": {
         "status": "success",
-        "lastAttemptAt": "2026-09-04T23:39:25.827Z",
+        "lastAttemptAt": "2026-09-04T23:51:40.592Z",
         "attemptCount": 1,
         "adapterVersion": "2026-08-31.1",
         "departureDate": "20261002",
@@ -22249,7 +22251,7 @@
       },
       "ICN|TAK|20261002|20261005|에어서울": {
         "status": "success",
-        "lastAttemptAt": "2026-09-04T23:39:25.827Z",
+        "lastAttemptAt": "2026-09-04T23:51:40.592Z",
         "attemptCount": 1,
         "adapterVersion": "2026-08-31.1",
         "departureDate": "20261002",
@@ -22263,14 +22265,14 @@
       },
       "ICN|YGJ|20261002|20261005|에어서울": {
         "status": "airline_mismatch",
-        "lastAttemptAt": "2026-09-04T23:39:25.827Z",
+        "lastAttemptAt": "2026-09-04T23:51:40.592Z",
         "attemptCount": 1,
         "adapterVersion": "2026-08-31.1",
         "departureDate": "20261002"
       },
       "ICN|KWL|20261003|20261008|제주항공": {
         "status": "success",
-        "lastAttemptAt": "2026-09-04T23:39:25.827Z",
+        "lastAttemptAt": "2026-09-04T23:51:40.592Z",
         "attemptCount": 1,
         "adapterVersion": "2026-08-31.1",
         "departureDate": "20261003",
@@ -22284,7 +22286,7 @@
       },
       "PUS|IBR|20261003|20261006|에어부산": {
         "status": "success",
-        "lastAttemptAt": "2026-09-04T23:39:25.827Z",
+        "lastAttemptAt": "2026-09-04T23:51:40.592Z",
         "attemptCount": 1,
         "adapterVersion": "2026-08-31.1",
         "departureDate": "20261003",
@@ -22298,7 +22300,7 @@
       },
       "CJJ|CXR|20261004|20261009|티웨이항공": {
         "status": "success",
-        "lastAttemptAt": "2026-09-04T23:39:25.827Z",
+        "lastAttemptAt": "2026-09-04T23:51:40.592Z",
         "attemptCount": 1,
         "adapterVersion": "2026-08-31.1",
         "departureDate": "20261004",
@@ -22312,14 +22314,14 @@
       },
       "CJJ|HIJ|20261004|20261007|에어로케이": {
         "status": "airline_mismatch",
-        "lastAttemptAt": "2026-09-04T23:39:25.827Z",
+        "lastAttemptAt": "2026-09-04T23:51:40.592Z",
         "attemptCount": 1,
         "adapterVersion": "2026-08-31.1",
         "departureDate": "20261004"
       },
       "ICN|KWL|20261004|20261009|제주항공": {
         "status": "success",
-        "lastAttemptAt": "2026-09-04T23:39:25.827Z",
+        "lastAttemptAt": "2026-09-04T23:51:40.592Z",
         "attemptCount": 1,
         "adapterVersion": "2026-08-31.1",
         "departureDate": "20261004",
@@ -22333,7 +22335,7 @@
       },
       "ICN|MDC|20261004|20261008|이스타항공": {
         "status": "success",
-        "lastAttemptAt": "2026-09-04T23:39:25.827Z",
+        "lastAttemptAt": "2026-09-04T23:51:40.592Z",
         "attemptCount": 1,
         "adapterVersion": "2026-08-31.1",
         "departureDate": "20261004",
@@ -22349,7 +22351,7 @@
   },
   "ybtourTimeEnrichment": {
     "version": 1,
-    "updatedAt": "2026-09-04T23:39:17.552Z",
+    "updatedAt": "2026-09-04T23:51:32.742Z",
     "entries": {
       "에어서울|ICN|KIX|20260927|20260929": {
         "status": "success",
@@ -26933,7 +26935,7 @@
       },
       "썬 푸꾸옥항공|ICN|PQC|20260916|20260920": {
         "status": "success",
-        "lastAttemptAt": "2026-09-04T23:39:17.552Z",
+        "lastAttemptAt": "2026-09-04T23:51:32.742Z",
         "attemptCount": 1,
         "adapterVersion": "2026-08-31.1",
         "departureDate": "20260916",
@@ -26949,7 +26951,7 @@
       },
       "썬 푸꾸옥항공|ICN|PQC|20260918|20260922": {
         "status": "success",
-        "lastAttemptAt": "2026-09-04T23:39:17.552Z",
+        "lastAttemptAt": "2026-09-04T23:51:32.742Z",
         "attemptCount": 1,
         "adapterVersion": "2026-08-31.1",
         "departureDate": "20260918",
@@ -26965,7 +26967,7 @@
       },
       "에어서울|ICN|YGJ|20261002|20261005": {
         "status": "success",
-        "lastAttemptAt": "2026-09-04T23:39:17.552Z",
+        "lastAttemptAt": "2026-09-04T23:51:32.742Z",
         "attemptCount": 1,
         "adapterVersion": "2026-08-31.1",
         "departureDate": "20261002",
