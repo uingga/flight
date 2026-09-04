@@ -1,5 +1,11 @@
 # AGENTS.md — Tikitikit Flight Dashboard
 
+## Hermes Project Handoff
+
+- Hermes가 이 프로젝트 전체를 이어서 작업할 때는 루트의 `HERMES_START_HERE.md`부터 읽는다.
+- `docs/hermes-context/`는 2026-09-04 시점의 가변적인 상황 스냅숏이며 영구 규칙이 아니다.
+- 사용자의 최신 지시, 실제 운영 코드, 새로 확인한 데이터가 인수인계 스냅숏보다 우선한다.
+
 ## Project Overview
 
 **티키티킷(tikitikit.kr)** — 한국 6개 여행사의 땡처리 항공권을 비교하는 Next.js 14 대시보드.
