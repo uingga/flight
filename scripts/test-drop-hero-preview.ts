@@ -87,9 +87,10 @@ async function verifyHeroPreview(page: Page) {
         '출발지·날짜·여정 정보가 올바르지 않습니다.',
     );
     assert(
-        await hero.getByText('진에어 · 노랑풍선 · 7석 남음', { exact: true }).count() === 1,
-        '항공사·판매처·좌석 정보가 올바르지 않습니다.',
+        await hero.getByText('노랑풍선 · 진에어', { exact: true }).count() === 1,
+        '여행사·항공사 정보가 올바르지 않습니다.',
     );
+    assert(await hero.getByText('7석 남음', { exact: true }).count() === 1, '좌석 상태가 표시되지 않습니다.');
     assert(await hero.getByRole('button', { name: '항공권 상세 열기', exact: true }).count() === 1, '상세 열기 CTA가 하나가 아닙니다.');
     const backgroundImage = await hero.evaluate(element => getComputedStyle(element).backgroundImage);
     assert(backgroundImage.includes('/images/cities/fukuoka.png'), `후쿠오카 도시 사진이 적용되지 않았습니다: ${backgroundImage}`);

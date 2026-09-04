@@ -71,16 +71,12 @@ export default function DropHero({
         : undefined;
     const seats = flight.availableSeats || Number.parseInt(flight.seats || '', 10) || 0;
     const showDiscount = discountRate >= 5;
-    const schedule = [
+    const journey = [
         `${departureName(flight)} 출발`,
         `${scheduleDate(flight.departure.date)} — ${scheduleDate(flight.arrival.date)}`,
         duration,
     ].filter(Boolean).join(' · ');
-    const seller = [
-        flight.airline || '항공사 확인',
-        SOURCE_NAMES[flight.source],
-        seats > 0 ? `${seats}석 남음` : null,
-    ].filter(Boolean).join(' · ');
+    const seller = [SOURCE_NAMES[flight.source], flight.airline || '항공사 확인'].join(' · ');
 
     return (
         <section
@@ -111,18 +107,15 @@ export default function DropHero({
                             -{discountRate}%
                         </span>
                     )}
+                    {seats > 0 && (
+                        <span className={`${styles.seats} ${seats <= 4 ? styles.seatsLow : ''}`}>
+                            {seats}석 남음
+                        </span>
+                    )}
                 </p>
                 <p className={styles.reason}>{reason}</p>
-                <dl className={styles.meta}>
-                    <div>
-                        <dt>일정</dt>
-                        <dd>{schedule}</dd>
-                    </div>
-                    <div>
-                        <dt>판매</dt>
-                        <dd>{seller}</dd>
-                    </div>
-                </dl>
+                <p className={styles.journey}>{journey}</p>
+                <p className={styles.seller}>{seller}</p>
                 <button type="button" className={styles.cta} onClick={onOpen}>
                     항공권 상세 열기
                     <span aria-hidden="true">→</span>

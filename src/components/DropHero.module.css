@@ -124,6 +124,29 @@
     font-variant-numeric: tabular-nums;
 }
 
+/* 재고 상태. 카드의 footerStatus / footerStatusLow와 같은 규칙: 4석 이하는 긴급색. */
+.seats {
+    height: 20px;
+    padding: 0 6px;
+    display: inline-flex;
+    align-items: center;
+    align-self: center;
+    border-radius: var(--radius-pill, 999px);
+    background: rgba(255, 255, 255, .16);
+    color: rgba(255, 255, 255, .92);
+    font-size: var(--size-caption, 11px);
+    line-height: 1;
+    font-weight: var(--weight-control, 600);
+    letter-spacing: -.01em;
+    white-space: nowrap;
+}
+
+.seatsLow {
+    background: var(--urgent-soft, #fff0f2);
+    color: var(--urgent-dark, #cf2f1c);
+    font-weight: var(--weight-bold, 700);
+}
+
 /* 3순위: 왜 오늘의 표인지 — 기존 근거 문장 그대로. 본문 14/15. */
 .reason {
     margin: 6px 0 0;
@@ -137,40 +160,27 @@
     white-space: nowrap;
 }
 
-/* 4순위: 일정·판매. 항목명은 캡션 600, 값은 메타 400. */
-.meta {
-    margin: 14px 0 0;
-    display: grid;
-    gap: 4px;
-}
-
-.meta > div {
-    min-width: 0;
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
-}
-
-.meta dt {
-    flex: 0 0 auto;
-    color: rgba(255, 255, 255, .6);
-    font-size: var(--size-caption, 11px);
-    line-height: 1.4;
-    font-weight: var(--weight-control, 600);
-    letter-spacing: .02em;
-}
-
-.meta dd {
-    min-width: 0;
+/* 4순위: 여정(출발지·날짜·기간), 판매(여행사·항공사). 카드와 같은 메타 12/13, 400. */
+.journey,
+.seller {
     margin: 0;
     overflow: hidden;
-    color: rgba(255, 255, 255, .88);
+    color: rgba(255, 255, 255, .84);
     font-size: var(--size-meta, 12px);
     line-height: 1.4;
     font-weight: var(--weight-regular, 400);
     letter-spacing: -.01em;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.journey {
+    margin-top: 14px;
+}
+
+.seller {
+    margin-top: 3px;
+    color: rgba(255, 255, 255, .68);
 }
 
 /* 주요 버튼: 상세 하단 .bookingButton과 같은 본문 14/15, 700, 높이 54. */
@@ -247,9 +257,12 @@
         margin-top: 8px;
     }
 
-    .meta {
+    .journey {
         margin-top: 18px;
-        gap: 5px;
+    }
+
+    .seller {
+        margin-top: 4px;
     }
 
     .cta {
