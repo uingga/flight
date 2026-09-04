@@ -66,6 +66,23 @@ function responseFareId(entry: any): string {
     return '';
 }
 
+function responseShape(payload: any, text: string): string {
+    if (!String(text || '').trim()) return 'empty-body';
+    if (!payload) return `non-json,length=${text.length}`;
+    const rootType = Array.isArray(payload) ? 'array' : typeof payload;
+    const rootKeys = payload && typeof payload === 'object'
+        ? Object.keys(payload).slice(0, 10).join(',') || 'none'
+        : 'none';
+    const response = payload?.response;
+    const responseType = Array.isArray(response)
+        ? `array(${response.length})`
+        : response === null ? 'null' : typeof response;
+    const firstKeys = Array.isArray(response) && response[0] && typeof response[0] === 'object'
+        ? Object.keys(response[0]).slice(0, 15).join(',') || 'none'
+        : 'none';
+    return `root=${rootType};keys=${rootKeys};code=${String(payload?.code ?? 'none')};response=${responseType};firstKeys=${firstKeys}`;
+}
+
 /** scheduleAct.do 응답 한 건을 요청한 실제 요금 상품과 대조해 파싱한다. */
 export function parseTtangProductSchedule(text: string, expectedFareId: string): EnrichData {
     assertNoSourceAccessBlockText('땡처리닷컴 상품 일정 API', text, TTANG_SCHEDULE_API);
@@ -73,16 +90,22 @@ export function parseTtangProductSchedule(text: string, expectedFareId: string):
     if (!payload || payload.code !== 'OK' || !Array.isArray(payload.response)) {
         throw new SourceResponseError(
             'schema-mismatch',
-            '땡처리닷컴 상품 일정 응답 형식이 바뀌었습니다.',
+            `땡처리닷컴 상품 일정 응답 형식이 바뀌었습니다 (${responseShape(payload, text)}).`,
         );
     }
 
     const expected = String(expectedFareId);
     const exact = payload.response.find((entry: any) => responseFareId(entry) === expected);
     if (!exact) {
+        const returnedFareIds = payload.response
+            .map((entry: any) => responseFareId(entry))
+            .filter(Boolean)
+            .slice(0, 5)
+            .join(',') || 'none';
         throw new SourceResponseError(
             'schema-mismatch',
-            `땡처리닷컴 상품 일정 응답에 요청한 hanaFareId(${expected})가 없습니다.`,
+            `땡처리닷컴 상품 일정 응답에 요청한 hanaFareId(${expected})가 없습니다 `
+            + `(returned=${returnedFareIds}).`,
         );
     }
 

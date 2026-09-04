@@ -26,6 +26,7 @@ import {
     type YbtourTimeEnrichmentState,
 } from '../src/lib/ybtour-time-enrichment';
 import { getCrawlDataDir } from '../src/lib/crawl-data-dir';
+import { shutdownTtangExternalBrowserSessions } from '../src/lib/ttang-browser-session';
 import {
     classifySourceAccessRestriction,
     classifySourceResponseDrop,
@@ -1086,9 +1087,14 @@ async function main() {
 
     } catch (error) {
         console.error('\n❌ 크롤링 실패:', error);
-        process.exit(1);
+        process.exitCode = 1;
     }
 }
 
 // 스크립트 실행
-main();
+main()
+    .finally(() => shutdownTtangExternalBrowserSessions())
+    .catch(error => {
+        console.error('\n❌ 땡처리 외부 Chrome 종료 실패:', error);
+        process.exitCode = 1;
+    });

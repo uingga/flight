@@ -1,6 +1,7 @@
 import { chromium, type Browser, type BrowserContext, type Page } from 'playwright';
 
 const DEFAULT_CDP_ENDPOINT = 'http://127.0.0.1:9222';
+const externalBrowserConnections = new Set<Browser>();
 
 export interface TtangBrowserSession {
     page: Page;
@@ -35,8 +36,11 @@ export async function openTtangBrowserSession(): Promise<TtangBrowserSession> {
 
         const context: BrowserContext | undefined = browser.contexts()[0];
         if (!context) {
+            await browser.close().catch(() => undefined);
             throw new Error('땡처리 로컬 Chrome에 사용할 브라우저 컨텍스트가 없습니다.');
         }
+        externalBrowserConnections.add(browser);
+        browser.once('disconnected', () => externalBrowserConnections.delete(browser));
         const page = await context.newPage();
         return {
             page,
@@ -66,4 +70,16 @@ export async function openTtangBrowserSession(): Promise<TtangBrowserSession> {
         mode: 'managed-headless',
         close: async () => browser.close(),
     };
+}
+
+/**
+ * connectOverCDP 연결은 탭만 닫아도 Node 이벤트 루프를 붙잡는다. 한 크롤 회차의 모든
+ * 단계가 끝난 뒤 전용 디버그 Chrome과 연결을 함께 닫아 예약 프로세스가 반드시 종료되게 한다.
+ */
+export async function shutdownTtangExternalBrowserSessions(): Promise<void> {
+    const browsers = Array.from(externalBrowserConnections);
+    externalBrowserConnections.clear();
+    for (const browser of browsers) {
+        await browser.close({ reason: 'Ttang crawl completed' }).catch(() => undefined);
+    }
 }

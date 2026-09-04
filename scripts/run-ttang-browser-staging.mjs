@@ -68,6 +68,9 @@ if (!fs.existsSync(tsxCli)) {
 const result = spawnSync(process.execPath, [tsxCli, 'scripts/crawl-all.ts', '--sources=ttang'], {
     cwd: ROOT,
     stdio: 'inherit',
+    // 외부 브라우저나 사이트 응답이 예상 밖으로 열린 채 남더라도 예약 작업을 무기한 붙잡지 않는다.
+    timeout: 30 * 60 * 1_000,
+    killSignal: 'SIGTERM',
     env: {
         ...process.env,
         TIKITIKIT_DATA_DIR: stagingDir,
@@ -86,7 +89,9 @@ if (result.status !== 0) {
         stagingDir,
         mode: fallbackMode ? 'fallback' : 'pilot',
         exitCode: result.status,
-        error: result.error?.message,
+        error: result.error?.code === 'ETIMEDOUT'
+            ? '땡처리 staging이 30분 안에 종료되지 않아 중단했습니다.'
+            : result.error?.message,
         operationalDataChanged: false,
     };
     fs.writeFileSync(path.join(stagingDir, 'summary.json'), JSON.stringify(summary, null, 2));

@@ -444,10 +444,18 @@ export async function enrichVisibleTtangFlights(
                 ) {
                     throw error;
                 }
-                const status: EnrichAttemptStatus = error instanceof SourceResponseError
+                // 형식 불일치는 같은 API를 더 호출해도 고쳐지지 않는다. 첫 건에서 즉시 멈춰
+                // 불필요한 7건 요청을 없애고, 접근 차단이 아닌 어댑터 문제로 보고한다.
+                if (
+                    error instanceof SourceResponseError
                     && (error.kind === 'schema-mismatch' || error.kind === 'malformed-json')
-                    ? 'response_format'
-                    : 'transient_error';
+                ) {
+                    console.warn(
+                        `[땡처리] hanaFareId ${candidate.product!.fareId} 상세 형식 불일치: ${error.message}`,
+                    );
+                    throw error;
+                }
+                const status: EnrichAttemptStatus = 'transient_error';
                 attempts.set(candidate.key, { status });
                 consecutiveFailures++;
                 console.warn(
