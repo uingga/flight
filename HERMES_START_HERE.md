@@ -83,10 +83,18 @@ Hermes는 크롤링 전용 도구가 아니라 티키티킷 프로젝트 전체�
 - 원격 운영 기준: `origin/main`의 `1371183e`
 - 로컬 `main`: `31ab5294`, 원격보다 3커밋 뒤
 - 현재 작업 브랜치: `codex/ttang-browser-runner`
-- 현재 브랜치 HEAD: `b89760ca`
 - `b89760ca`에는 Hermes용 땡처리닷컴 원격 실행자와 문서가 들어 있다.
+- 그 뒤 같은 브랜치에 이 인수인계 문서가 추가됐다. 정확한 HEAD는 작업 시작 시 다시 확인한다.
 - 이 브랜치는 원격에 푸시됐지만 `main`에 합쳐지거나 운영 배포되지는 않았다.
 - 기존에 보관한 WIP 브랜치는 자동 병합 대상이 아니다.
+
+## Hermes 연결 확인
+
+- Hermes 프로젝트 slug `tikitikit`을 만들고 현재 저장소를 primary folder로 연결했다.
+- Hermes가 이 문서와 `docs/hermes-context/`의 네 문서를 읽기 전용으로 읽은 뒤 제품·운영·브랜드·원격
+  크롤러 역할을 정확히 요약하는 1차 인수인계 시험을 통과했다.
+- 설치된 `hermes.exe` 런처는 `ModuleNotFoundError: hermes_cli`가 나지만, 설치 소스와 venv를 통한
+  CLI 진입은 동작한다. 런처 문제와 Hermes 프로젝트·게이트웨이 동작을 같은 장애로 취급하지 않는다.
 
 ## 작업을 시작하는 기본 절차
 
