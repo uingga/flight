@@ -125,14 +125,19 @@ if (-not (Restore-InterruptedRunState)) {
     exit 1
 }
 
-# These files are owned by this scheduled task. Refuse to run when they already
-# contain local edits so the crawler cannot overwrite a user's in-progress work.
-$PreexistingManagedChanges = git status --porcelain -- $ManagedPaths
-if ($LASTEXITCODE -ne 0) {
-    Log 'Unable to inspect managed data files; stopping before the crawl'
+# These files are owned by this scheduled task. Refuse to run only when their
+# actual content differs from HEAD. `git status` can briefly report a restored
+# large JSON file as modified when only its index metadata is stale, which must
+# not block recovery after an interrupted crawl.
+git diff --quiet -- $ManagedPaths
+$WorktreeDiffExitCode = $LASTEXITCODE
+git diff --cached --quiet -- $ManagedPaths
+$IndexDiffExitCode = $LASTEXITCODE
+if ($WorktreeDiffExitCode -gt 1 -or $IndexDiffExitCode -gt 1) {
+    Log 'Unable to inspect managed data file contents; stopping before the crawl'
     exit 1
 }
-if ($PreexistingManagedChanges) {
+if ($WorktreeDiffExitCode -eq 1 -or $IndexDiffExitCode -eq 1) {
     Log 'Managed data files already contain local changes; stopping without modifying them'
     exit 1
 }
