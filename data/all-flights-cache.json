@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-09-04T05:44:35.270Z",
+  "timestamp": "2026-09-04T05:49:59.424Z",
   "fullCrawlUpdatedAt": "2026-09-04T05:44:35.270Z",
   "count": 618,
   "flights": [
@@ -10284,40 +10284,6 @@
       "firstSeen": "2026-09-04"
     },
     {
-      "id": "online-260908744348",
-      "source": "onlinetour",
-      "airline": "티웨이항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-09-08",
-        "time": "12:35",
-        "arrivalTime": "19:15"
-      },
-      "arrival": {
-        "city": "로마",
-        "airport": "ROM",
-        "date": "2026-09-15",
-        "time": "21:15",
-        "arrivalTime": "16:10"
-      },
-      "price": 990000,
-      "currency": "KRW",
-      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260908744348",
-      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=ROM&sCity2=ROM&eCity2=SEL&startDt=20260908&endDt=20260915&adt=1",
-      "region": "유럽",
-      "availableSeats": 1,
-      "seats": "1석",
-      "routeAirports": {
-        "outboundDeparture": "ICN",
-        "outboundArrival": "FCO",
-        "returnDeparture": "FCO",
-        "returnArrival": "ICN"
-      },
-      "discountRate": 6,
-      "firstSeen": "2026-09-04"
-    },
-    {
       "id": "ttang-LJ0061PUSCEB-G10-2026-09-08",
       "source": "ttang",
       "airline": "진에어",
@@ -20104,6 +20070,40 @@
       "availableSeats": 9,
       "seats": "9석 남음",
       "discountRate": -26
+    },
+    {
+      "id": "online-260908744348",
+      "source": "onlinetour",
+      "airline": "티웨이항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-09-08",
+        "time": "12:35",
+        "arrivalTime": "19:15"
+      },
+      "arrival": {
+        "city": "로마",
+        "airport": "ROM",
+        "date": "2026-09-15",
+        "time": "21:15",
+        "arrivalTime": "16:10"
+      },
+      "price": 990000,
+      "currency": "KRW",
+      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260908744348",
+      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=ROM&sCity2=ROM&eCity2=SEL&startDt=20260908&endDt=20260915&adt=1",
+      "region": "유럽",
+      "availableSeats": 1,
+      "seats": "1석",
+      "routeAirports": {
+        "outboundDeparture": "ICN",
+        "outboundArrival": "FCO",
+        "returnDeparture": "FCO",
+        "returnArrival": "ICN"
+      },
+      "discountRate": 6,
+      "firstSeen": "2026-09-04"
     }
   ],
   "sources": {
@@ -20118,7 +20118,7 @@
     "ybtour": "2026-09-04T05:42:13.608Z",
     "hanatour": "2026-09-04T05:42:13.608Z",
     "modetour": "2026-09-04T05:42:13.608Z",
-    "onlinetour": "2026-09-04T02:35:51.040Z",
+    "onlinetour": "2026-09-04T05:49:59.352Z",
     "ttang": "2026-09-04T05:42:13.609Z",
     "myrealtrip": "2026-09-04T01:17:22.843Z"
   },
@@ -20126,7 +20126,7 @@
     "ybtour": 0,
     "hanatour": 0,
     "modetour": 0,
-    "onlinetour": 1,
+    "onlinetour": 0,
     "ttang": 0,
     "myrealtrip": 0
   },
@@ -20135,11 +20135,9 @@
     "ttang": 1237,
     "ybtour": 308,
     "hanatour": 98,
-    "onlinetour": 111
+    "onlinetour": 112
   },
-  "integrityAlerts": [
-    "⛔ onlinetour 응답 급감을 soft block으로 판정 (수집 111건 → 39건) — 이전 데이터 유지, 24시간 자동 요청 중단"
-  ],
+  "integrityAlerts": [],
   "sourceCircuits": {
     "onlinetour": {
       "reason": "blocked",
@@ -20147,7 +20145,13 @@
       "nextProbeAt": "2026-09-05T05:42:13.608Z",
       "resumePolicy": "cooldown_or_adapter_change",
       "adapterVersion": "2026-08-30.2",
-      "detail": "soft block 의심: 응답 수량 111건에서 39건으로 급감"
+      "detail": "soft block 의심: 응답 수량 111건에서 39건으로 급감",
+      "localFallback": {
+        "status": "success",
+        "lastAttemptAt": "2026-09-04T05:49:59.350Z",
+        "method": "source-default",
+        "detail": "PC 대체 수집 112건 완료"
+      }
     }
   },
   "manualCaptureStatus": {},
