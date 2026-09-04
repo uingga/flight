@@ -33,6 +33,7 @@ import {
 import type { Flight } from '@/types/flight';
 import AccountSheet from '@/components/account/AccountSheet';
 import { useAccount, type AccountFlightSnapshot, type AccountSearchFilters } from '@/components/account/useAccount';
+import DropHero from '@/components/DropHero';
 import WeeklyDiscoveryInsight from '@/components/WeeklyDiscoveryInsight';
 import MobileDealAlertSheet, { type AlertSearchCondition } from './MobileDealAlertSheet';
 import RedesignAdSlot from './RedesignAdSlot';
@@ -85,12 +86,18 @@ type InterparkPrices = Record<string, Record<string, { avg: number; lowest: numb
 
 interface MobileRedesignPreviewProps {
     previewMode?: boolean;
+    dropHeroPreviewMode?: boolean;
+    dropHeroPreviewFallback?: {
+        flightId: string;
+        date: string;
+    } | null;
     beforeFooter?: ReactNode;
     rootAs?: 'main' | 'div';
     initialFlights?: Flight[];
     initialFlightCount?: number;
     initialLastUpdated?: string | null;
     initialTodayPickId?: string | null;
+    initialTodayPickDate?: string | null;
     initialSharedFlightIds?: string[];
     initialSharedDeparture?: string | null;
     initialSharedArrival?: string | null;
@@ -1087,12 +1094,15 @@ const EMERGENCY_SHARE_COPY = [
 
 export default function MobileRedesignPreview({
     previewMode = true,
+    dropHeroPreviewMode = false,
+    dropHeroPreviewFallback = null,
     beforeFooter,
     rootAs = 'main',
     initialFlights = [],
     initialFlightCount = 0,
     initialLastUpdated = null,
     initialTodayPickId = null,
+    initialTodayPickDate = null,
     initialSharedFlightIds = [],
     initialSharedDeparture = null,
     initialSharedArrival = null,
@@ -1105,6 +1115,7 @@ export default function MobileRedesignPreview({
     const [error, setError] = useState('');
     const [lastUpdated, setLastUpdated] = useState<string | null>(initialLastUpdated);
     const [todayPickId, setTodayPickId] = useState<string | null>(initialTodayPickId);
+    const [todayPickDate, setTodayPickDate] = useState<string | null>(initialTodayPickDate);
     const [todayPickRepeatOverride, setTodayPickRepeatOverride] = useState<TodayPickRepeatOverride | null>(null);
     const [priceHistory, setPriceHistory] = useState<PriceHistory>({});
     const [interparkPrices, setInterparkPrices] = useState<InterparkPrices>({});
@@ -1394,7 +1405,16 @@ export default function MobileRedesignPreview({
             setInsightDateKey(data.lastUpdated ? seoulDateKey(new Date(data.lastUpdated)) : seoulDateKey());
             const hasCurrentTodayPick = data.todayPickDate === seoulDateKey()
                 && typeof data.todayPickId === 'string';
-            setTodayPickId(hasCurrentTodayPick ? data.todayPickId! : null);
+            const hasPreviewFallbackPick = !hasCurrentTodayPick
+                && dropHeroPreviewMode
+                && dropHeroPreviewFallback
+                && data.flights.some(flight => flight.id === dropHeroPreviewFallback.flightId);
+            setTodayPickId(hasCurrentTodayPick
+                ? data.todayPickId!
+                : hasPreviewFallbackPick ? dropHeroPreviewFallback.flightId : null);
+            setTodayPickDate(hasCurrentTodayPick
+                ? data.todayPickDate!
+                : hasPreviewFallbackPick ? dropHeroPreviewFallback.date : null);
             setTodayPickRepeatOverride(hasCurrentTodayPick ? data.todayPickRepeatOverride || null : null);
             setPriceHistory(data.priceHistory || {});
             setInterparkPrices(data.interparkPrices || {});
@@ -1412,7 +1432,7 @@ export default function MobileRedesignPreview({
             setInitialListSyncing(false);
             if (!background) setLoading(false);
         }
-    }, [previewMode]);
+    }, [dropHeroPreviewFallback, dropHeroPreviewMode, previewMode]);
 
     useEffect(() => {
         void loadFlights(hasInitialFlights);
@@ -1434,6 +1454,7 @@ export default function MobileRedesignPreview({
         const expireTodayPickAtMidnight = () => {
             midnightTimer = window.setTimeout(() => {
                 setTodayPickId(null);
+                setTodayPickDate(null);
                 setTodayPickRepeatOverride(null);
                 void loadFlights(true);
                 expireTodayPickAtMidnight();
@@ -2446,6 +2467,15 @@ export default function MobileRedesignPreview({
         });
     }, [compareRecommended, flights, freshRouteResults, sort]);
     const feedFlights = freshRouteResults ? freshRouteResultFlights : displayedFlights;
+    const dropHeroPick = dropHeroPreviewMode
+        && !freshRouteResults
+        && isDefaultView
+        && todayPickDate
+        ? featuredPick
+        : null;
+    const ordinaryFeedFlights = dropHeroPick
+        ? feedFlights.filter(flight => flight.id !== dropHeroPick.flight.id)
+        : feedFlights;
     const resultCount = initialSubsetActive && isDefaultView
         ? initialFlightCount
         : filteredFlights.length;
@@ -3841,8 +3871,17 @@ export default function MobileRedesignPreview({
                         </div>
                     )}
 
+                    {!listLoading && !error && dropHeroPick && (
+                        <DropHero
+                            flight={dropHeroPick.flight}
+                            pickDate={todayPickDate!}
+                            reason={dropHeroPick.reason}
+                            onOpen={() => openFlight(dropHeroPick.flight, 'drop_hero')}
+                        />
+                    )}
+
                     {!listLoading && !error && <div className={styles.cardList}>
-                        {feedFlights.slice(0, visibleCount).map((flight, index) => {
+                        {ordinaryFeedFlights.slice(0, visibleCount).map((flight, index) => {
                             const seats = flight.availableSeats || Number.parseInt(flight.seats || '', 10) || 0;
                             const duration = tripLength(flight);
                             const destination = stripAirport(flight.arrival.city);
@@ -4108,7 +4147,7 @@ export default function MobileRedesignPreview({
                         })}
                     </div>}
 
-                    {!listLoading && !error && visibleCount < feedFlights.length && (
+                    {!listLoading && !error && visibleCount < ordinaryFeedFlights.length && (
                         <button
                             type="button"
                             className={styles.moreButton}

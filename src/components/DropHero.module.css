@@ -1,0 +1,146 @@
+.hero {
+    position: relative;
+    min-height: 260px;
+    margin-bottom: 14px;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-end;
+    border: 1px solid rgba(34, 34, 34, .12);
+    border-radius: var(--radius-card, 10px);
+    background-color: #29343d;
+    background-position: center;
+    background-size: cover;
+    color: #fff;
+    isolation: isolate;
+}
+
+.heroFallback {
+    background: #29343d;
+}
+
+.scrim {
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    background: linear-gradient(90deg, rgba(12, 18, 24, .82) 0%, rgba(12, 18, 24, .58) 62%, rgba(12, 18, 24, .32) 100%);
+}
+
+.content {
+    width: 100%;
+    min-width: 0;
+    padding: 24px 20px 20px;
+}
+
+.eyebrow {
+    margin: 0 0 10px;
+    color: rgba(255, 255, 255, .88);
+    font-size: 11px;
+    line-height: 1.2;
+    font-weight: 700;
+    letter-spacing: .045em;
+}
+
+.content h2 {
+    width: 100%;
+    margin: 0;
+    overflow: hidden;
+    color: #fff;
+    font-size: 26px;
+    line-height: 1.22;
+    font-weight: 800;
+    letter-spacing: -.04em;
+    text-overflow: ellipsis;
+    text-shadow: 0 1px 12px rgba(0, 0, 0, .24);
+    white-space: nowrap;
+}
+
+.metadata {
+    width: 100%;
+    margin: 11px 0 0;
+    overflow: hidden;
+    color: rgba(255, 255, 255, .82);
+    font-size: 12px;
+    line-height: 1.4;
+    font-weight: 600;
+    letter-spacing: -.01em;
+    text-overflow: ellipsis;
+    text-shadow: 0 1px 8px rgba(0, 0, 0, .22);
+    white-space: nowrap;
+}
+
+.content button {
+    min-height: 42px;
+    margin-top: 22px;
+    padding: 0 15px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    border: 1px solid rgba(255, 255, 255, .58);
+    border-radius: var(--radius-action, 13px);
+    background: rgba(255, 255, 255, .96);
+    color: #222;
+    font: inherit;
+    font-size: 13px;
+    line-height: 1;
+    font-weight: 700;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, .12);
+    transition: background-color 150ms ease, transform 150ms ease;
+}
+
+.content button:hover {
+    background: #fff;
+}
+
+.content button:active {
+    transform: scale(.985);
+}
+
+.content button:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 3px;
+}
+
+.content button span {
+    font-size: 16px;
+    line-height: 1;
+}
+
+@media (min-width: 960px) {
+    .hero {
+        min-height: 300px;
+        margin-bottom: 18px;
+        border-radius: var(--radius-card, 12px);
+        background-position: center 48%;
+    }
+
+    .scrim {
+        background: linear-gradient(90deg, rgba(12, 18, 24, .84) 0%, rgba(12, 18, 24, .57) 48%, rgba(12, 18, 24, .18) 82%);
+    }
+
+    .content {
+        max-width: 760px;
+        padding: 38px 42px 34px;
+    }
+
+    .eyebrow {
+        margin-bottom: 12px;
+        font-size: 12px;
+    }
+
+    .content h2 {
+        font-size: 36px;
+    }
+
+    .metadata {
+        margin-top: 13px;
+        font-size: 13px;
+    }
+
+    .content button {
+        min-height: 44px;
+        margin-top: 28px;
+        padding: 0 18px;
+        font-size: 14px;
+    }
+}
