@@ -1547,6 +1547,7 @@
 
 /* 최근 크롤의 수집량 추이. 여행사마다 규모가 크게 달라 각 카드가 자기 최대값을 기준으로 그린다. */
 .sparkBars {
+    position: relative;
     display: flex;
     align-items: flex-end;
     gap: 2px;
@@ -1598,6 +1599,59 @@
 .sparkBarSkipped:last-child {
     border: 1px dashed #94a3b8;
     background: #64748b;
+}
+
+/* 회차 축 칸: 막대(i)와 툴팁을 감싼다. 크기는 예전 막대와 같다. */
+.sparkBarSlot {
+    position: static;
+    display: flex;
+    flex: 1;
+    align-items: flex-end;
+    min-width: 3px;
+    height: 100%;
+    cursor: pointer;
+    outline: none;
+}
+
+.sparkBarSlot > i {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    font-style: normal;
+}
+
+.sparkBarSlot:last-child > .sparkBar:not(.sparkBarManual):not(.sparkBarPc):not(.sparkBarSkipped):not(.sparkBarPreserved):not(.sparkBarUnscheduled):not(.sparkBarPending):not(.sparkBarMissing) { background: #818cf8; }
+
+.sparkBarUnscheduled,
+.sparkBarUnscheduled:last-child {
+    background: repeating-linear-gradient(135deg, rgba(148, 163, 184, 0.28) 0 2px, transparent 2px 5px);
+    border: 0;
+}
+
+.sparkBarPending,
+.sparkBarPending:last-child {
+    border: 1px dashed #818cf8;
+    background: rgba(129, 140, 248, 0.16);
+    animation: sparkPendingPulse 1.6s ease-in-out infinite;
+}
+
+.sparkBarMissing,
+.sparkBarMissing:last-child {
+    border: 1px dashed #f59e0b;
+    background: rgba(245, 158, 11, 0.12);
+}
+
+@keyframes sparkPendingPulse {
+    0%, 100% { opacity: 0.55; }
+    50% { opacity: 1; }
+}
+
+.sparkBarSlot:hover > i,
+.sparkBarSlot:focus-visible > i,
+.sparkBarSlotActive > i {
+    filter: brightness(1.12);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.55);
 }
 
 /* ── 표시 기준 토글 ─────────────────────────────────── */
@@ -4169,6 +4223,7 @@
 }
 
 .sourceTrendBars {
+    position: relative;
     display: flex;
     align-items: flex-end;
     gap: 3px;
@@ -4228,6 +4283,113 @@
 }
 
 .sourceTrendBarBroken { background: #d85c4d; }
+
+/* ── 회차 축 막대 칸 + 툴팁 ─────────────────────────── */
+.sourceTrendBarSlot {
+    position: static;
+    display: flex;
+    flex: 1;
+    align-items: flex-end;
+    min-width: 4px;
+    max-width: 22px;
+    height: 100%;
+    cursor: pointer;
+    outline: none;
+}
+
+.sourceTrendBarSlot > i {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    font-style: normal;
+}
+
+.sourceTrendBarUnscheduled {
+    background: repeating-linear-gradient(135deg, rgba(138, 150, 165, 0.35) 0 2px, transparent 2px 5px);
+    border: 0;
+}
+
+.sourceTrendBarPending {
+    border: 1px dashed #3e8d63;
+    background: rgba(62, 141, 99, 0.14);
+    animation: sourcePendingPulse 1.6s ease-in-out infinite;
+}
+
+.sourceTrendBarMissing {
+    border: 1px dashed #e7a93c;
+    background: rgba(231, 169, 60, 0.14);
+}
+
+@keyframes sourcePendingPulse {
+    0%, 100% { opacity: 0.55; }
+    50% { opacity: 1; }
+}
+
+.sourceTrendBarSlot:hover > i,
+.sourceTrendBarSlot:focus-visible > i,
+.sourceTrendBarSlotActive > i {
+    filter: brightness(1.08);
+    box-shadow: 0 0 0 2px rgba(23, 32, 51, 0.16);
+}
+
+.sourceLegendPending {
+    border: 1px dashed #3e8d63;
+    background: rgba(62, 141, 99, 0.14);
+}
+
+.sourceLegendUnscheduled {
+    background: repeating-linear-gradient(135deg, rgba(138, 150, 165, 0.35) 0 2px, transparent 2px 5px);
+}
+
+.sourceLegendMissing {
+    border: 1px dashed #e7a93c;
+    background: rgba(231, 169, 60, 0.14);
+}
+
+.sourceSlotTooltip {
+    position: absolute;
+    left: 0;
+    bottom: calc(100% + 8px);
+    z-index: 20;
+    display: none;
+    flex-direction: column;
+    gap: 3px;
+    box-sizing: border-box;
+    width: min(280px, 100%);
+    padding: 9px 11px;
+    border-radius: 9px;
+    background: #172033;
+    color: #f5f7fa;
+    font-size: 0.7rem;
+    line-height: 1.4;
+    text-align: left;
+    white-space: normal;
+    box-shadow: 0 6px 18px rgba(23, 32, 51, 0.22);
+    pointer-events: none;
+}
+
+.sourceSlotTooltip strong {
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+
+.sourceSlotTooltip span {
+    color: #c9d1dc;
+}
+
+.sourceTrendBarSlotActive .sourceSlotTooltip,
+.sparkBarSlotActive .sourceSlotTooltip {
+    display: flex;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sourceTrendBarPending,
+    .sparkBarPending {
+        animation: none;
+    }
+}
+
 
 .sourceTrendFoot {
     margin-top: 7px;
