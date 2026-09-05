@@ -1,22 +1,30 @@
 {
-  "date": "2026-09-04",
-  "selectedAt": "2026-09-04T08:05:19.624Z",
-  "flightId": "modetour-CHI-19734178",
+  "date": "2026-09-05",
+  "selectedAt": "2026-09-05T06:15:45.193Z",
+  "flightId": "modetour-CHI-20081236",
   "source": "modetour",
-  "arrivalCity": "타이베이",
-  "destinationKey": "TPE",
-  "effectivePrice": 230000,
+  "arrivalCity": "광저우",
+  "destinationKey": "CAN",
+  "effectivePrice": 280000,
   "selectionMode": "recommend-score",
-  "referencePrice": 322084,
+  "referencePrice": 466300,
   "previousPick": {
-    "date": "2026-09-03",
-    "flightId": "modetour-CHI-20107438",
+    "date": "2026-09-04",
+    "flightId": "modetour-CHI-19734178",
     "source": "modetour",
-    "arrivalCity": "타이중",
-    "destinationKey": "RMQ",
-    "effectivePrice": 258000
+    "arrivalCity": "타이베이",
+    "destinationKey": "TPE",
+    "effectivePrice": 230000
   },
   "recentPicks": [
+    {
+      "date": "2026-09-04",
+      "flightId": "modetour-CHI-19734178",
+      "source": "modetour",
+      "arrivalCity": "타이베이",
+      "destinationKey": "TPE",
+      "effectivePrice": 230000
+    },
     {
       "date": "2026-09-03",
       "flightId": "modetour-CHI-20107438",
@@ -64,14 +72,6 @@
       "arrivalCity": "다카마츠",
       "destinationKey": "TAK",
       "effectivePrice": 177900
-    },
-    {
-      "date": "2026-08-28",
-      "flightId": "ttang-7C8253PUSDYG-G11-2026-09-15",
-      "source": "ttang",
-      "arrivalCity": "장가계",
-      "destinationKey": "DYG",
-      "effectivePrice": 219000
     }
   ],
   "repeatOverride": null
