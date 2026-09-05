@@ -225,7 +225,8 @@
         min-height: 320px;
         margin-bottom: 18px;
         border-radius: var(--radius-card, 12px);
-        background-position: center 45%;
+        /* 정사각 도시 사진에서 세로 30%만 보인다. 스카이라인이 보통 55~75%에 있어 아래쪽을 잡는다. */
+        background-position: center 65%;
     }
 
     /* PC는 가로가 넓으니 왼쪽만 눌러 오른쪽 사진을 살린다. */
