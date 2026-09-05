@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-09-05T08:56:40.997Z",
-  "fullCrawlUpdatedAt": "2026-09-05T08:52:49.360Z",
-  "count": 559,
+  "timestamp": "2026-09-05T23:38:26.740Z",
+  "fullCrawlUpdatedAt": "2026-09-05T23:38:26.740Z",
+  "count": 585,
   "flights": [
     {
       "id": "ybtour-xyjhlc",
@@ -234,32 +234,116 @@
       "firstSeen": "2026-09-04"
     },
     {
-      "id": "ybtour-126dgdr",
+      "id": "ybtour-1w7um3f",
       "source": "ybtour",
       "airline": "이스타항공",
       "departure": {
         "city": "부산",
         "airport": "PUS",
-        "date": "2026-09-22",
+        "date": "2026-09-27",
         "time": "12:30",
         "arrivalTime": "13:50"
       },
       "arrival": {
         "city": "쿠마모토",
         "airport": "KMJ",
-        "date": "2026-09-25",
+        "date": "2026-09-30",
         "time": "14:50",
         "arrivalTime": "15:55"
       },
-      "price": 220000,
+      "price": 230000,
       "currency": "KRW",
-      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=J1&inhId=ZE0967PUSKMJ-T4&depDate=20260922&efcCityCode=KMJ",
-      "seats": "12석",
-      "availableSeats": 12,
+      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=J1&inhId=ZE0967PUSKMJ-T4&depDate=20260927&efcCityCode=KMJ",
+      "seats": "16석",
+      "availableSeats": 16,
       "region": "일본",
+      "discountRate": -41,
       "flightNumber": "ZE0967",
-      "discountRate": -34,
-      "firstSeen": "2026-09-01"
+      "firstSeen": "2026-09-06"
+    },
+    {
+      "id": "ybtour-lose02",
+      "source": "ybtour",
+      "airline": "이스타항공",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-09-28",
+        "time": "12:30",
+        "arrivalTime": "13:50"
+      },
+      "arrival": {
+        "city": "쿠마모토",
+        "airport": "KMJ",
+        "date": "2026-10-01",
+        "time": "14:50",
+        "arrivalTime": "15:55"
+      },
+      "price": 230000,
+      "currency": "KRW",
+      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=J1&inhId=ZE0967PUSKMJ-T4&depDate=20260928&efcCityCode=KMJ",
+      "seats": "16석",
+      "availableSeats": 16,
+      "region": "일본",
+      "discountRate": -41,
+      "flightNumber": "ZE0967",
+      "firstSeen": "2026-09-06"
+    },
+    {
+      "id": "ybtour-1dx84aq",
+      "source": "ybtour",
+      "airline": "이스타항공",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-09-29",
+        "time": "12:30",
+        "arrivalTime": "13:50"
+      },
+      "arrival": {
+        "city": "쿠마모토",
+        "airport": "KMJ",
+        "date": "2026-10-02",
+        "time": "14:50",
+        "arrivalTime": "15:55"
+      },
+      "price": 230000,
+      "currency": "KRW",
+      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=J1&inhId=ZE0967PUSKMJ-T4&depDate=20260929&efcCityCode=KMJ",
+      "seats": "16석",
+      "availableSeats": 16,
+      "region": "일본",
+      "discountRate": -41,
+      "flightNumber": "ZE0967",
+      "firstSeen": "2026-09-06"
+    },
+    {
+      "id": "ybtour-1v1qhmf",
+      "source": "ybtour",
+      "airline": "이스타항공",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-09-30",
+        "time": "12:30",
+        "arrivalTime": "13:50"
+      },
+      "arrival": {
+        "city": "쿠마모토",
+        "airport": "KMJ",
+        "date": "2026-10-03",
+        "time": "14:50",
+        "arrivalTime": "15:55"
+      },
+      "price": 230000,
+      "currency": "KRW",
+      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=J1&inhId=ZE0967PUSKMJ-T4&depDate=20260930&efcCityCode=KMJ",
+      "seats": "14석",
+      "availableSeats": 14,
+      "region": "일본",
+      "discountRate": -41,
+      "flightNumber": "ZE0967",
+      "firstSeen": "2026-09-06"
     },
     {
       "id": "ybtour-ngrfu7",
@@ -639,34 +723,6 @@
       "firstSeen": "2026-09-02"
     },
     {
-      "id": "ybtour-1k9gm1j",
-      "source": "ybtour",
-      "airline": "에어로케이항공",
-      "departure": {
-        "city": "청주",
-        "airport": "CJJ",
-        "date": "2026-09-20",
-        "time": "12:45",
-        "arrivalTime": "14:35"
-      },
-      "arrival": {
-        "city": "도야마",
-        "airport": "TOY",
-        "date": "2026-09-23",
-        "time": "13:55",
-        "arrivalTime": "15:45"
-      },
-      "price": 275000,
-      "currency": "KRW",
-      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=J1&inhId=RF3983CJJTOY-T1&depDate=20260920&efcCityCode=TOY",
-      "seats": "10석",
-      "availableSeats": 10,
-      "region": "일본",
-      "discountRate": 91,
-      "flightNumber": "RF3983",
-      "firstSeen": "2026-09-05"
-    },
-    {
       "id": "ybtour-2znp76",
       "source": "ybtour",
       "airline": "이스타항공",
@@ -746,8 +802,8 @@
       "seats": "4석",
       "availableSeats": 4,
       "region": "일본",
-      "discountRate": 68,
       "flightNumber": "RF0352",
+      "discountRate": 68,
       "firstSeen": "2026-09-05"
     },
     {
@@ -774,8 +830,8 @@
       "seats": "4석",
       "availableSeats": 4,
       "region": "일본",
-      "discountRate": -81,
       "flightNumber": "TW0285",
+      "discountRate": -81,
       "firstSeen": "2026-09-05"
     },
     {
@@ -914,8 +970,8 @@
       "seats": "4석",
       "availableSeats": 4,
       "region": "일본",
-      "discountRate": -81,
       "flightNumber": "TW0285",
+      "discountRate": -81,
       "firstSeen": "2026-09-05"
     },
     {
@@ -1004,34 +1060,6 @@
       "firstSeen": "2026-08-31"
     },
     {
-      "id": "ybtour-z6gu96",
-      "source": "ybtour",
-      "airline": "에어로케이항공",
-      "departure": {
-        "city": "청주",
-        "airport": "CJJ",
-        "date": "2026-09-20",
-        "time": "17:40",
-        "arrivalTime": "19:30"
-      },
-      "arrival": {
-        "city": "나고야",
-        "airport": "NGO",
-        "date": "2026-09-23",
-        "time": "20:30",
-        "arrivalTime": "22:15"
-      },
-      "price": 320000,
-      "currency": "KRW",
-      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=J1&inhId=RF0342CJJNGO-T1&depDate=20260920&efcCityCode=NGO",
-      "seats": "10석",
-      "availableSeats": 10,
-      "region": "일본",
-      "discountRate": 81,
-      "flightNumber": "RF0342",
-      "firstSeen": "2026-09-05"
-    },
-    {
       "id": "ybtour-1rewkju",
       "source": "ybtour",
       "airline": "에어로케이항공",
@@ -1055,8 +1083,8 @@
       "seats": "10석",
       "availableSeats": 10,
       "region": "일본",
-      "discountRate": 81,
       "flightNumber": "RF0342",
+      "discountRate": 81,
       "firstSeen": "2026-09-05"
     },
     {
@@ -1285,34 +1313,6 @@
       "minPax": 2,
       "discountRate": 0,
       "firstSeen": "2026-09-04"
-    },
-    {
-      "id": "ybtour-7z4ll3",
-      "source": "ybtour",
-      "airline": "이스타항공",
-      "departure": {
-        "city": "부산",
-        "airport": "PUS",
-        "date": "2026-09-22",
-        "time": "08:00",
-        "arrivalTime": "10:00"
-      },
-      "arrival": {
-        "city": "오키나와",
-        "airport": "OKA",
-        "date": "2026-09-24",
-        "time": "11:00",
-        "arrivalTime": "13:00"
-      },
-      "price": 361000,
-      "currency": "KRW",
-      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=J1&inhId=ZE0963PUSOKA-T7&depDate=20260922&efcCityCode=OKA",
-      "seats": "8석",
-      "availableSeats": 8,
-      "region": "일본",
-      "flightNumber": "ZE0963",
-      "discountRate": -64,
-      "firstSeen": "2026-09-02"
     },
     {
       "id": "ybtour-18pwrsl",
@@ -1594,8 +1594,8 @@
       "price": 308400,
       "currency": "KRW",
       "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=A0%2FA3&inhId=ZE0981PUSPQC-T5&depDate=20260920&efcCityCode=PQC",
-      "seats": "4석",
-      "availableSeats": 4,
+      "seats": "1석",
+      "availableSeats": 1,
       "region": "동남아",
       "flightNumber": "ZE0981",
       "discountRate": -15,
@@ -2073,9 +2073,9 @@
       "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=A0%2FA3&inhId=TW0033ICNCXR-T3&depDate=20260927&efcCityCode=CXR",
       "seats": "0석",
       "region": "동남아",
-      "discountRate": -36,
       "flightNumber": "TW0033",
       "minPax": 2,
+      "discountRate": -36,
       "firstSeen": "2026-09-05"
     },
     {
@@ -2270,9 +2270,9 @@
       "seats": "6석",
       "availableSeats": 6,
       "region": "동남아",
-      "discountRate": -29,
       "flightNumber": "BX0781",
       "minPax": 2,
+      "discountRate": -29,
       "firstSeen": "2026-09-05"
     },
     {
@@ -2299,9 +2299,9 @@
       "seats": "6석",
       "availableSeats": 6,
       "region": "동남아",
-      "discountRate": -29,
       "flightNumber": "BX0781",
       "minPax": 2,
+      "discountRate": -29,
       "firstSeen": "2026-09-05"
     },
     {
@@ -2443,8 +2443,8 @@
       "seats": "8석",
       "availableSeats": 8,
       "region": "중국",
-      "discountRate": -47,
       "flightNumber": "RF0511",
+      "discountRate": -47,
       "firstSeen": "2026-09-05"
     },
     {
@@ -2752,9 +2752,9 @@
       "seats": "4석",
       "availableSeats": 4,
       "region": "동남아",
-      "discountRate": -30,
       "flightNumber": "LJ0021",
       "minPax": 2,
+      "discountRate": -30,
       "firstSeen": "2026-09-05"
     },
     {
@@ -4295,7 +4295,7 @@
       "price": 208000,
       "currency": "KRW",
       "link": "https://www.hanatour.com/com/pmt/CHPC0PMT0011M200?fareId=RTF%5E3149077%5E7C1621ICNUKB-H2%5E7C1621ICNUKB-5%5E20260909%5ET%5EKRW%5E6479803%5E5317077%5E%5E1%5E0%5E0&psngrCntLst=%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D&selectedCard=%7B%7D",
-      "availableSeats": 2,
+      "availableSeats": 1,
       "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22SEL%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22UKB%22%2C%22depDt%22%3A%2220260909%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22UKB%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22SEL%22%2C%22depDt%22%3A%2220260911%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
       "region": "일본",
       "discountRate": 0,
@@ -7716,7 +7716,7 @@
       "firstSeen": "2026-09-04"
     },
     {
-      "id": "modetour-ASIA-19855232",
+      "id": "modetour-ASIA-20138115",
       "source": "modetour",
       "airline": "티웨이항공",
       "departure": {
@@ -7728,13 +7728,13 @@
       "arrival": {
         "city": "나트랑",
         "airport": "CXR",
-        "date": "2026-10-08",
+        "date": "2026-10-09",
         "time": "01:45"
       },
-      "price": 354600,
+      "price": 319600,
       "currency": "KRW",
       "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22CJJ%22%2C%22continentCode%22%3A%22ASIA%22%2C%22arrivalCity%22%3A%22CXR%22%2C%22departureDate%22%3A%222026-10-04%22%2C%22arrivalDate%22%3A%222026-10-05%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
-      "availableSeats": 26,
+      "availableSeats": 6,
       "flightNumber": "TW045 / TW046",
       "region": "동남아",
       "modetourDetail": {
@@ -7744,10 +7744,10 @@
         "departureArrivalTime": "00:45",
         "returnDepartureTime": "01:45",
         "returnArrivalTime": "09:05",
-        "baseFare": 105000,
+        "baseFare": 70000,
         "tax": 202600,
         "tax2": 47000,
-        "childBaseFare": 105000,
+        "childBaseFare": 70000,
         "childTax": 202600,
         "childTax2": 39000,
         "infantFare": 120000,
@@ -7756,8 +7756,8 @@
         "returnDepartureAirport": "CXR",
         "returnArrivalAirport": "CJJ"
       },
-      "discountRate": -4,
-      "firstSeen": "2026-09-04"
+      "discountRate": 7,
+      "firstSeen": "2026-09-06"
     },
     {
       "id": "modetour-JPN-19560847",
@@ -8712,7 +8712,7 @@
         "returnDepartureAirport": "TPE",
         "returnArrivalAirport": "TAE"
       },
-      "discountRate": 0,
+      "discountRate": -2,
       "firstSeen": "2026-09-04"
     },
     {
@@ -9558,7 +9558,7 @@
       "price": 999000,
       "currency": "KRW",
       "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22ICN%22%2C%22continentCode%22%3A%22SOPA%22%2C%22arrivalCity%22%3A%22SYD%22%2C%22departureDate%22%3A%222026-10-04%22%2C%22arrivalDate%22%3A%222026-10-05%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
-      "availableSeats": 4,
+      "availableSeats": 2,
       "flightNumber": "JQ048 / JQ047",
       "region": "남태평양",
       "modetourDetail": {
@@ -9579,6 +9579,40 @@
         "returnArrivalAirport": "ICN"
       },
       "discountRate": -18,
+      "firstSeen": "2026-09-04"
+    },
+    {
+      "id": "online-260908744348",
+      "source": "onlinetour",
+      "airline": "티웨이항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-09-08",
+        "time": "12:35",
+        "arrivalTime": "19:15"
+      },
+      "arrival": {
+        "city": "로마",
+        "airport": "ROM",
+        "date": "2026-09-15",
+        "time": "21:15",
+        "arrivalTime": "16:10"
+      },
+      "price": 990000,
+      "currency": "KRW",
+      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260908744348",
+      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=ROM&sCity2=ROM&eCity2=SEL&startDt=20260908&endDt=20260915&adt=1",
+      "region": "유럽",
+      "availableSeats": 1,
+      "seats": "1석",
+      "routeAirports": {
+        "outboundDeparture": "ICN",
+        "outboundArrival": "FCO",
+        "returnDeparture": "FCO",
+        "returnArrival": "ICN"
+      },
+      "discountRate": 6,
       "firstSeen": "2026-09-04"
     },
     {
@@ -9607,10 +9641,7 @@
       "availableSeats": 9,
       "seats": "9석",
       "discountRate": -10,
-      "firstSeen": "2026-09-02",
-      "naverLowest": 277300,
-      "naverCheckedAt": "2026-09-04T07:32:59.016Z",
-      "naverDiscount": 3
+      "firstSeen": "2026-09-02"
     },
     {
       "id": "ttang-7C3211ICNSPN-G2-2026-09-10",
@@ -9638,10 +9669,35 @@
       "availableSeats": 9,
       "seats": "9석",
       "discountRate": -10,
-      "firstSeen": "2026-09-02",
-      "naverLowest": 259300,
-      "naverCheckedAt": "2026-09-04T07:33:34.151Z",
-      "naverDiscount": -4
+      "firstSeen": "2026-09-02"
+    },
+    {
+      "id": "ttang-BX3835PUSTFU-G1-2026-09-10",
+      "source": "ttang",
+      "airline": "에어부산",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-09-10",
+        "time": "21:10",
+        "arrivalTime": "00:15"
+      },
+      "arrival": {
+        "city": "청두(성도/톈푸 국제공항)",
+        "airport": "TFU",
+        "date": "2026-09-14",
+        "time": "02:05",
+        "arrivalTime": "07:00"
+      },
+      "price": 440000,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260910&adt=1&chd=0&inf=0&page=1&scale=200",
+      "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260910&adt=1&chd=0&inf=0&page=1&scale=200",
+      "region": "중국",
+      "discountRate": 0,
+      "availableSeats": 4,
+      "seats": "4석",
+      "firstSeen": "2026-09-06"
     },
     {
       "id": "ttang-VJ0835ICNCXR-G110-2026-09-11",
@@ -9669,10 +9725,7 @@
       "availableSeats": 4,
       "seats": "4석",
       "discountRate": -6,
-      "firstSeen": "2026-09-04",
-      "naverLowest": 308800,
-      "naverCheckedAt": "2026-09-05T05:51:58.690Z",
-      "naverDiscount": 13
+      "firstSeen": "2026-09-04"
     },
     {
       "id": "ttang-7C3211ICNSPN-G2-2026-09-12",
@@ -9700,10 +9753,7 @@
       "availableSeats": 9,
       "seats": "9석",
       "discountRate": -10,
-      "firstSeen": "2026-09-02",
-      "naverLowest": 276600,
-      "naverCheckedAt": "2026-09-05T04:15:07.844Z",
-      "naverDiscount": 3
+      "firstSeen": "2026-09-02"
     },
     {
       "id": "ttang-MM0712ICNKIX-G63-2026-09-12",
@@ -9755,10 +9805,7 @@
       "availableSeats": 9,
       "seats": "9석",
       "discountRate": -12,
-      "firstSeen": "2026-09-02",
-      "naverLowest": 216500,
-      "naverCheckedAt": "2026-09-04T07:51:13.160Z",
-      "naverDiscount": -41
+      "firstSeen": "2026-09-02"
     },
     {
       "id": "ttang-TW0125ICNKLO-G11-2026-09-12",
@@ -9786,10 +9833,7 @@
       "availableSeats": 9,
       "seats": "9석",
       "discountRate": -10,
-      "firstSeen": "2026-09-03",
-      "naverLowest": 345561,
-      "naverCheckedAt": "2026-09-04T06:14:58.345Z",
-      "naverDiscount": 10
+      "firstSeen": "2026-09-03"
     },
     {
       "id": "ttang-7C2551PUSBKK-G16-2026-09-12",
@@ -9817,10 +9861,7 @@
       "availableSeats": 9,
       "seats": "9석",
       "discountRate": 0,
-      "firstSeen": "2026-09-03",
-      "naverLowest": 266300,
-      "naverCheckedAt": "2026-09-04T07:10:58.116Z",
-      "naverDiscount": -18
+      "firstSeen": "2026-09-03"
     },
     {
       "id": "ttang-7C3211ICNSPN-G2-2026-09-13",
@@ -9848,10 +9889,7 @@
       "availableSeats": 9,
       "seats": "9석",
       "discountRate": -10,
-      "firstSeen": "2026-09-02",
-      "naverLowest": 258600,
-      "naverCheckedAt": "2026-09-05T04:17:35.883Z",
-      "naverDiscount": -4
+      "firstSeen": "2026-09-02"
     },
     {
       "id": "ttang-LJ0061PUSCEB-G10-2026-09-13",
@@ -9879,10 +9917,7 @@
       "availableSeats": 9,
       "seats": "9석",
       "discountRate": -12,
-      "firstSeen": "2026-09-02",
-      "naverLowest": 210766,
-      "naverCheckedAt": "2026-09-04T07:52:19.949Z",
-      "naverDiscount": -45
+      "firstSeen": "2026-09-02"
     },
     {
       "id": "ttang-7C2551PUSBKK-G16-2026-09-13",
@@ -9910,10 +9945,7 @@
       "availableSeats": 9,
       "seats": "9석",
       "discountRate": 0,
-      "firstSeen": "2026-09-03",
-      "naverLowest": 265300,
-      "naverCheckedAt": "2026-09-04T07:11:33.198Z",
-      "naverDiscount": -18
+      "firstSeen": "2026-09-03"
     },
     {
       "id": "ttang-7C1501ICNCTS-G3-2026-09-13",
@@ -9941,10 +9973,7 @@
       "availableSeats": 9,
       "seats": "9석",
       "discountRate": -8,
-      "firstSeen": "2026-09-04",
-      "naverLowest": 387100,
-      "naverCheckedAt": "2026-09-05T05:59:58.130Z",
-      "naverDiscount": 18
+      "firstSeen": "2026-09-04"
     },
     {
       "id": "ttang-BX3835PUSTFU-G1-2026-09-13",
@@ -9972,10 +10001,7 @@
       "availableSeats": 4,
       "seats": "4석",
       "discountRate": 0,
-      "firstSeen": "2026-09-03",
-      "naverLowest": 423300,
-      "naverCheckedAt": "2026-09-05T03:30:34.777Z",
-      "naverDiscount": -9
+      "firstSeen": "2026-09-03"
     },
     {
       "id": "ttang-LJ0061PUSCEB-G10-2026-09-14",
@@ -10003,10 +10029,7 @@
       "availableSeats": 9,
       "seats": "9석",
       "discountRate": -12,
-      "firstSeen": "2026-09-02",
-      "naverLowest": 207100,
-      "naverCheckedAt": "2026-09-05T05:57:10.374Z",
-      "naverDiscount": -47
+      "firstSeen": "2026-09-02"
     },
     {
       "id": "ttang-ICN-BKI-RT-0-6-LJ-2026-09-14",
@@ -10032,10 +10055,31 @@
       "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260914&adt=1&chd=0&inf=0&page=1&scale=200",
       "region": "동남아",
       "discountRate": -45,
-      "firstSeen": "2026-09-03",
-      "naverLowest": 296222,
-      "naverCheckedAt": "2026-09-05T03:33:12.153Z",
-      "naverDiscount": -9
+      "firstSeen": "2026-09-03"
+    },
+    {
+      "id": "ttang-ZE0985PUSYNJ-G12-2026-09-14",
+      "source": "ttang",
+      "airline": "이스타항공",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-09-14",
+        "time": ""
+      },
+      "arrival": {
+        "city": "연길(옌지)",
+        "airport": "YNJ",
+        "date": "2026-09-18",
+        "time": ""
+      },
+      "price": 580000,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260914&adt=1&chd=0&inf=0&page=1&scale=200",
+      "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260914&adt=1&chd=0&inf=0&page=1&scale=200",
+      "region": "중국",
+      "discountRate": -48,
+      "firstSeen": "2026-09-06"
     },
     {
       "id": "ttang-TAE-DYG-RT-0-4-ZE-2026-09-15",
@@ -10061,10 +10105,7 @@
       "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260915&adt=1&chd=0&inf=0&page=1&scale=200",
       "region": "중국",
       "discountRate": 56,
-      "firstSeen": "2026-08-27",
-      "naverLowest": 399900,
-      "naverCheckedAt": "2026-09-05T02:52:37.680Z",
-      "naverDiscount": 46
+      "firstSeen": "2026-08-27"
     },
     {
       "id": "ttang-7C8253PUSDYG-G11-2026-09-15",
@@ -10092,10 +10133,7 @@
       "availableSeats": 4,
       "seats": "4석",
       "discountRate": 55,
-      "firstSeen": "2026-08-15",
-      "naverLowest": 526200,
-      "naverCheckedAt": "2026-09-04T06:58:59.919Z",
-      "naverDiscount": 58
+      "firstSeen": "2026-08-15"
     },
     {
       "id": "ttang-LJ0061PUSCEB-G10-2026-09-15",
@@ -10123,10 +10161,7 @@
       "availableSeats": 9,
       "seats": "9석",
       "discountRate": -12,
-      "firstSeen": "2026-09-02",
-      "naverLowest": 217200,
-      "naverCheckedAt": "2026-09-04T07:52:50.232Z",
-      "naverDiscount": -40
+      "firstSeen": "2026-09-02"
     },
     {
       "id": "ttang-ICN-VTE-RT-0-4-QV-2026-09-15",
@@ -10150,10 +10185,61 @@
       "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260915&adt=1&chd=0&inf=0&page=1&scale=200",
       "region": "동남아",
       "discountRate": -35,
-      "firstSeen": "2026-08-26",
-      "naverLowest": 405900,
-      "naverCheckedAt": "2026-09-05T03:41:24.619Z",
-      "naverDiscount": 17
+      "firstSeen": "2026-08-26"
+    },
+    {
+      "id": "ttang-ICN-MDC-RT-0-5-ZE-2026-09-15",
+      "source": "ttang",
+      "airline": "이스타항공",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-09-15",
+        "time": "20:25",
+        "arrivalTime": "01:15"
+      },
+      "arrival": {
+        "city": "마나도(인도네시아)",
+        "airport": "MDC",
+        "date": "2026-09-19",
+        "time": "02:20",
+        "arrivalTime": "08:40"
+      },
+      "price": 495000,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260915&adt=1&chd=0&inf=0&page=1&scale=200",
+      "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260915&adt=1&chd=0&inf=0&page=1&scale=200",
+      "region": "동남아",
+      "discountRate": 33,
+      "firstSeen": "2026-09-06"
+    },
+    {
+      "id": "ttang-ZE0831CJJYNJ-G5-2026-09-15",
+      "source": "ttang",
+      "airline": "이스타항공",
+      "departure": {
+        "city": "청주",
+        "airport": "CJJ",
+        "date": "2026-09-15",
+        "time": "11:20",
+        "arrivalTime": "12:45"
+      },
+      "arrival": {
+        "city": "연길(옌지)",
+        "airport": "YNJ",
+        "date": "2026-09-19",
+        "time": "13:45",
+        "arrivalTime": "18:05"
+      },
+      "price": 570000,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260915&adt=1&chd=0&inf=0&page=1&scale=200",
+      "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260915&adt=1&chd=0&inf=0&page=1&scale=200",
+      "region": "중국",
+      "discountRate": -22,
+      "availableSeats": 5,
+      "seats": "5석",
+      "firstSeen": "2026-09-06"
     },
     {
       "id": "ttang-ICN-FCO-RT-0-8-TW-2026-09-15",
@@ -10209,10 +10295,7 @@
       "availableSeats": 9,
       "seats": "9석",
       "discountRate": -9,
-      "firstSeen": "2026-09-02",
-      "naverLowest": 176400,
-      "naverCheckedAt": "2026-09-04T07:05:45.381Z",
-      "naverDiscount": -30
+      "firstSeen": "2026-09-02"
     },
     {
       "id": "ttang-7C3211ICNSPN-G2-2026-09-16",
@@ -10240,10 +10323,7 @@
       "availableSeats": 9,
       "seats": "9석",
       "discountRate": -10,
-      "firstSeen": "2026-09-02",
-      "naverLowest": 258600,
-      "naverCheckedAt": "2026-09-05T05:51:27.944Z",
-      "naverDiscount": -4
+      "firstSeen": "2026-09-02"
     },
     {
       "id": "ttang-PUS-CTS-RT-0-4-LJ-2026-09-16",
@@ -10271,10 +10351,7 @@
       "availableSeats": 9,
       "seats": "9석",
       "discountRate": -13,
-      "firstSeen": "2026-09-04",
-      "naverLowest": 407000,
-      "naverCheckedAt": "2026-09-05T06:00:31.205Z",
-      "naverDiscount": 30
+      "firstSeen": "2026-09-04"
     },
     {
       "id": "ttang-TAE-TPE-RT-0-5-TW-2026-09-17",
@@ -10301,11 +10378,8 @@
       "region": "중국",
       "availableSeats": 6,
       "seats": "6석",
-      "discountRate": 0,
-      "firstSeen": "2026-09-04",
-      "naverLowest": 235330,
-      "naverCheckedAt": "2026-09-05T05:44:32.440Z",
-      "naverDiscount": -6
+      "discountRate": -2,
+      "firstSeen": "2026-09-04"
     },
     {
       "id": "ttang-7C3211ICNSPN-G2-2026-09-17",
@@ -10333,10 +10407,7 @@
       "availableSeats": 9,
       "seats": "9석",
       "discountRate": -10,
-      "firstSeen": "2026-09-02",
-      "naverLowest": 277300,
-      "naverCheckedAt": "2026-09-04T07:38:15.779Z",
-      "naverDiscount": 3
+      "firstSeen": "2026-09-02"
     },
     {
       "id": "ttang-PUS-TPE-RT-0-5-LJ-2026-09-17",
@@ -10361,13 +10432,10 @@
       "link": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260917&adt=1&chd=0&inf=0&page=1&scale=200",
       "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260917&adt=1&chd=0&inf=0&page=1&scale=200",
       "region": "중국",
-      "discountRate": -25,
       "availableSeats": 9,
       "seats": "9석",
-      "firstSeen": "2026-09-05",
-      "naverLowest": 180000,
-      "naverCheckedAt": "2026-09-05T05:58:16.713Z",
-      "naverDiscount": -54
+      "discountRate": -25,
+      "firstSeen": "2026-09-05"
     },
     {
       "id": "ttang-7C2157PUSTAG-G17-2026-09-17",
@@ -10393,10 +10461,35 @@
       "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260917&adt=1&chd=0&inf=0&page=1&scale=200",
       "region": "동남아",
       "discountRate": 0,
-      "firstSeen": "2026-09-03",
-      "naverLowest": 259000,
-      "naverCheckedAt": "2026-09-04T07:51:44.781Z",
-      "naverDiscount": -22
+      "firstSeen": "2026-09-03"
+    },
+    {
+      "id": "ttang-PUS-CXR-RT-0-5-VJ-2026-09-17",
+      "source": "ttang",
+      "airline": "비엣젯항공",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-09-17",
+        "time": "10:55",
+        "arrivalTime": "13:35"
+      },
+      "arrival": {
+        "city": "나트랑(깜란)",
+        "airport": "CXR",
+        "date": "2026-09-21",
+        "time": "03:10",
+        "arrivalTime": "09:50"
+      },
+      "price": 380000,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260917&adt=1&chd=0&inf=0&page=1&scale=200",
+      "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260917&adt=1&chd=0&inf=0&page=1&scale=200",
+      "region": "동남아",
+      "discountRate": -32,
+      "availableSeats": 4,
+      "seats": "4석",
+      "firstSeen": "2026-09-06"
     },
     {
       "id": "ttang-TAE-DYG-RT-0-5-ZE-2026-09-18",
@@ -10422,10 +10515,35 @@
       "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260918&adt=1&chd=0&inf=0&page=1&scale=200",
       "region": "중국",
       "discountRate": 56,
-      "firstSeen": "2026-09-02",
-      "naverLowest": 399900,
-      "naverCheckedAt": "2026-09-05T05:43:27.944Z",
-      "naverDiscount": 46
+      "firstSeen": "2026-09-02"
+    },
+    {
+      "id": "ttang-PUS-CXR-RT-0-5-VJ-2026-09-18",
+      "source": "ttang",
+      "airline": "비엣젯항공",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-09-18",
+        "time": "10:55",
+        "arrivalTime": "13:35"
+      },
+      "arrival": {
+        "city": "나트랑(깜란)",
+        "airport": "CXR",
+        "date": "2026-09-22",
+        "time": "03:10",
+        "arrivalTime": "09:50"
+      },
+      "price": 380000,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260918&adt=1&chd=0&inf=0&page=1&scale=200",
+      "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260918&adt=1&chd=0&inf=0&page=1&scale=200",
+      "region": "동남아",
+      "discountRate": -32,
+      "availableSeats": 4,
+      "seats": "4석",
+      "firstSeen": "2026-09-06"
     },
     {
       "id": "ttang-ZE0985PUSYNJ-G12-2026-09-18",
@@ -10481,10 +10599,7 @@
       "availableSeats": 4,
       "seats": "4석",
       "discountRate": -2,
-      "firstSeen": "2026-09-05",
-      "naverLowest": 141693,
-      "naverCheckedAt": "2026-09-05T02:51:29.478Z",
-      "naverDiscount": -31
+      "firstSeen": "2026-09-05"
     },
     {
       "id": "ttang-7C8253PUSDYG-G10-2026-09-19",
@@ -10512,10 +10627,7 @@
       "availableSeats": 9,
       "seats": "9석",
       "discountRate": 55,
-      "firstSeen": "2026-08-19",
-      "naverLowest": 438700,
-      "naverCheckedAt": "2026-09-04T06:59:33.793Z",
-      "naverDiscount": 50
+      "firstSeen": "2026-08-19"
     },
     {
       "id": "ttang-7C3211ICNSPN-G2-2026-09-19",
@@ -10543,10 +10655,7 @@
       "availableSeats": 7,
       "seats": "7석",
       "discountRate": -10,
-      "firstSeen": "2026-08-28",
-      "naverLowest": 295300,
-      "naverCheckedAt": "2026-09-04T07:38:49.472Z",
-      "naverDiscount": 9
+      "firstSeen": "2026-08-28"
     },
     {
       "id": "ttang-LJ0061PUSCEB-G10-2026-09-19",
@@ -10574,10 +10683,7 @@
       "availableSeats": 9,
       "seats": "9석",
       "discountRate": -12,
-      "firstSeen": "2026-09-02",
-      "naverLowest": 223300,
-      "naverCheckedAt": "2026-09-04T07:53:56.295Z",
-      "naverDiscount": -37
+      "firstSeen": "2026-09-02"
     },
     {
       "id": "ttang-LJ0251PUSKIX-G21-2026-09-20",
@@ -10605,10 +10711,7 @@
       "availableSeats": 8,
       "seats": "8석",
       "discountRate": 4,
-      "firstSeen": "2026-09-01",
-      "naverLowest": 176600,
-      "naverCheckedAt": "2026-09-04T06:55:02.995Z",
-      "naverDiscount": -2
+      "firstSeen": "2026-09-01"
     },
     {
       "id": "ttang-PUS-FUK-RT-0-4-TW-2026-09-20",
@@ -10636,10 +10739,7 @@
       "availableSeats": 9,
       "seats": "9석",
       "discountRate": -2,
-      "firstSeen": "2026-09-05",
-      "naverLowest": 139508,
-      "naverCheckedAt": "2026-09-05T02:52:03.030Z",
-      "naverDiscount": -33
+      "firstSeen": "2026-09-05"
     },
     {
       "id": "ttang-7C3211ICNSPN-G2-2026-09-20",
@@ -10667,10 +10767,7 @@
       "availableSeats": 7,
       "seats": "7석",
       "discountRate": -10,
-      "firstSeen": "2026-08-28",
-      "naverLowest": 313300,
-      "naverCheckedAt": "2026-09-04T07:39:59.288Z",
-      "naverDiscount": 14
+      "firstSeen": "2026-08-28"
     },
     {
       "id": "ttang-PUS-GUM-RT-0-6-BX-2026-09-20",
@@ -10696,10 +10793,7 @@
       "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260920&adt=1&chd=0&inf=0&page=1&scale=200",
       "region": "남태평양",
       "discountRate": -6,
-      "firstSeen": "2026-09-01",
-      "naverLowest": 244300,
-      "naverCheckedAt": "2026-09-05T05:56:39.019Z",
-      "naverDiscount": -24
+      "firstSeen": "2026-09-01"
     },
     {
       "id": "ttang-PUS-GUM-RT-0-5-BX-2026-09-20",
@@ -10725,10 +10819,7 @@
       "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260920&adt=1&chd=0&inf=0&page=1&scale=200",
       "region": "남태평양",
       "discountRate": -6,
-      "firstSeen": "2026-09-01",
-      "naverLowest": 249700,
-      "naverCheckedAt": "2026-09-05T05:56:07.000Z",
-      "naverDiscount": -21
+      "firstSeen": "2026-09-01"
     },
     {
       "id": "ttang-LJ0061PUSCEB-G10-2026-09-20",
@@ -10756,41 +10847,35 @@
       "availableSeats": 9,
       "seats": "9석",
       "discountRate": -12,
-      "firstSeen": "2026-09-03",
-      "naverLowest": 217200,
-      "naverCheckedAt": "2026-09-04T07:54:28.480Z",
-      "naverDiscount": -40
+      "firstSeen": "2026-09-03"
     },
     {
-      "id": "ttang-RF0394CJJOKA-G9-2026-09-20",
+      "id": "ttang-PUS-DAD-RT-0-6-VJ-2026-09-20",
       "source": "ttang",
-      "airline": "에어로케이",
+      "airline": "비엣젯항공",
       "departure": {
-        "city": "청주",
-        "airport": "CJJ",
+        "city": "부산",
+        "airport": "PUS",
         "date": "2026-09-20",
-        "time": "06:55",
-        "arrivalTime": "09:05"
+        "time": "07:45",
+        "arrivalTime": "10:10"
       },
       "arrival": {
-        "city": "오키나와",
-        "airport": "OKA",
-        "date": "2026-09-23",
-        "time": "09:50",
-        "arrivalTime": "12:00"
+        "city": "다낭",
+        "airport": "DAD",
+        "date": "2026-09-25",
+        "time": "00:30",
+        "arrivalTime": "06:40"
       },
-      "price": 350500,
+      "price": 320000,
       "currency": "KRW",
       "link": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260920&adt=1&chd=0&inf=0&page=1&scale=200",
       "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260920&adt=1&chd=0&inf=0&page=1&scale=200",
-      "region": "일본",
+      "region": "동남아",
+      "discountRate": -15,
       "availableSeats": 4,
       "seats": "4석",
-      "discountRate": 0,
-      "firstSeen": "2026-08-26",
-      "naverLowest": 326100,
-      "naverCheckedAt": "2026-09-04T08:00:29.146Z",
-      "naverDiscount": -14
+      "firstSeen": "2026-09-06"
     },
     {
       "id": "ttang-ICN-MDC-RT-0-5-ZE-2026-09-20",
@@ -10816,41 +10901,7 @@
       "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260920&adt=1&chd=0&inf=0&page=1&scale=200",
       "region": "동남아",
       "discountRate": 33,
-      "firstSeen": "2026-08-21",
-      "naverLowest": 545000,
-      "naverCheckedAt": "2026-09-05T03:06:31.831Z",
-      "naverDiscount": 6
-    },
-    {
-      "id": "ttang-RF0374CJJKKJ-G5-2026-09-21",
-      "source": "ttang",
-      "airline": "에어로케이",
-      "departure": {
-        "city": "청주",
-        "airport": "CJJ",
-        "date": "2026-09-21",
-        "time": "08:10",
-        "arrivalTime": "09:15"
-      },
-      "arrival": {
-        "city": "기타큐슈",
-        "airport": "KKJ",
-        "date": "2026-09-23",
-        "time": "11:55",
-        "arrivalTime": "13:10"
-      },
-      "price": 229200,
-      "currency": "KRW",
-      "link": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260921&adt=1&chd=0&inf=0&page=1&scale=200",
-      "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260921&adt=1&chd=0&inf=0&page=1&scale=200",
-      "region": "일본",
-      "availableSeats": 4,
-      "seats": "4석",
-      "discountRate": 0,
-      "firstSeen": "2026-08-24",
-      "naverLowest": 175200,
-      "naverCheckedAt": "2026-09-04T07:25:13.044Z",
-      "naverDiscount": -42
+      "firstSeen": "2026-08-21"
     },
     {
       "id": "ttang-ICN-MDC-RT-0-5-ZE-2026-09-21",
@@ -10876,10 +10927,7 @@
       "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260921&adt=1&chd=0&inf=0&page=1&scale=200",
       "region": "동남아",
       "discountRate": 33,
-      "firstSeen": "2026-08-21",
-      "naverLowest": 545000,
-      "naverCheckedAt": "2026-09-05T03:09:04.380Z",
-      "naverDiscount": 6
+      "firstSeen": "2026-08-21"
     },
     {
       "id": "ttang-ZE0985PUSYNJ-G12-2026-09-21",
@@ -10931,10 +10979,7 @@
       "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260921&adt=1&chd=0&inf=0&page=1&scale=200",
       "region": "유럽",
       "discountRate": -13,
-      "firstSeen": "2026-09-05",
-      "naverLowest": 1020900,
-      "naverCheckedAt": "2026-09-05T06:09:54.363Z",
-      "naverDiscount": 14
+      "firstSeen": "2026-09-05"
     },
     {
       "id": "ttang-RF0374CJJKKJ-G5-2026-09-22",
@@ -10962,10 +11007,7 @@
       "availableSeats": 4,
       "seats": "4석",
       "discountRate": 0,
-      "firstSeen": "2026-08-24",
-      "naverLowest": 222300,
-      "naverCheckedAt": "2026-09-04T07:26:14.053Z",
-      "naverDiscount": -12
+      "firstSeen": "2026-08-24"
     },
     {
       "id": "ttang-PUS-MYJ-RT-0-3-BX-2026-09-22",
@@ -10993,10 +11035,7 @@
       "availableSeats": 9,
       "seats": "9석",
       "discountRate": -47,
-      "firstSeen": "2026-09-05",
-      "naverLowest": 342400,
-      "naverCheckedAt": "2026-09-05T06:07:46.507Z",
-      "naverDiscount": 4
+      "firstSeen": "2026-09-05"
     },
     {
       "id": "ttang-RF0394CJJOKA-G9-2026-09-22",
@@ -11024,10 +11063,7 @@
       "availableSeats": 2,
       "seats": "2석",
       "discountRate": 0,
-      "firstSeen": "2026-08-26",
-      "naverLowest": 404500,
-      "naverCheckedAt": "2026-09-04T08:01:01.634Z",
-      "naverDiscount": 8
+      "firstSeen": "2026-08-26"
     },
     {
       "id": "ttang-GMP-TSA-RT-0-3-ZE-2026-09-22",
@@ -11053,10 +11089,7 @@
       "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260922&adt=1&chd=0&inf=0&page=1&scale=200",
       "region": "중국",
       "discountRate": 0,
-      "firstSeen": "2026-09-04",
-      "naverLowest": 485212,
-      "naverCheckedAt": "2026-09-05T06:06:12.094Z",
-      "naverDiscount": 15
+      "firstSeen": "2026-09-04"
     },
     {
       "id": "ttang-ZE0831CJJYNJ-G5-2026-09-22",
@@ -11084,10 +11117,7 @@
       "availableSeats": 9,
       "seats": "9석",
       "discountRate": -22,
-      "firstSeen": "2026-09-01",
-      "naverLowest": 568125,
-      "naverCheckedAt": "2026-09-05T06:12:40.474Z",
-      "naverDiscount": -4
+      "firstSeen": "2026-09-01"
     },
     {
       "id": "ttang-RS0741ICNTAK-G24-2026-09-25",
@@ -11115,10 +11145,7 @@
       "availableSeats": 4,
       "seats": "4석",
       "discountRate": -100,
-      "firstSeen": "2026-09-04",
-      "naverLowest": 369300,
-      "naverCheckedAt": "2026-09-05T06:04:04.895Z",
-      "naverDiscount": 14
+      "firstSeen": "2026-09-04"
     },
     {
       "id": "ttang-ZE0985PUSYNJ-G12-2026-09-25",
@@ -11198,10 +11225,7 @@
       "availableSeats": 3,
       "seats": "3석",
       "discountRate": 55,
-      "firstSeen": "2026-08-26",
-      "naverLowest": 593700,
-      "naverCheckedAt": "2026-09-04T07:02:27.689Z",
-      "naverDiscount": 63
+      "firstSeen": "2026-08-26"
     },
     {
       "id": "ttang-RF0384CJJIBR-G11-2026-09-26",
@@ -11225,10 +11249,7 @@
       "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260926&adt=1&chd=0&inf=0&page=1&scale=200",
       "region": "일본",
       "discountRate": 0,
-      "firstSeen": "2026-09-05",
-      "naverLowest": 326100,
-      "naverCheckedAt": "2026-09-05T05:42:22.955Z",
-      "naverDiscount": 10
+      "firstSeen": "2026-09-05"
     },
     {
       "id": "ttang-7C5257PUSUBN-G23-2026-09-26",
@@ -11252,10 +11273,7 @@
       "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260926&adt=1&chd=0&inf=0&page=1&scale=200",
       "region": "기타",
       "discountRate": 0,
-      "firstSeen": "2026-09-02",
-      "naverLowest": 514900,
-      "naverCheckedAt": "2026-09-04T07:47:08.313Z",
-      "naverDiscount": 40
+      "firstSeen": "2026-09-02"
     },
     {
       "id": "ttang-7C2157PUSTAG-G17-2026-09-26",
@@ -11283,10 +11301,7 @@
       "availableSeats": 9,
       "seats": "9석",
       "discountRate": 0,
-      "firstSeen": "2026-09-03",
-      "naverLowest": 258300,
-      "naverCheckedAt": "2026-09-05T03:19:56.050Z",
-      "naverDiscount": -22
+      "firstSeen": "2026-09-03"
     },
     {
       "id": "ttang-PUS-NRT-RT-0-4-BX-2026-09-26",
@@ -11314,10 +11329,35 @@
       "availableSeats": 9,
       "seats": "9석",
       "discountRate": -31,
-      "firstSeen": "2026-09-02",
-      "naverLowest": 306200,
-      "naverCheckedAt": "2026-09-05T03:43:32.004Z",
-      "naverDiscount": -13
+      "firstSeen": "2026-09-02"
+    },
+    {
+      "id": "ttang-ICN-TAG-RT-0-5-LJ-2026-09-26",
+      "source": "ttang",
+      "airline": "진에어",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-09-26",
+        "time": "21:00",
+        "arrivalTime": "00:45"
+      },
+      "arrival": {
+        "city": "보홀(필리핀)",
+        "airport": "TAG",
+        "date": "2026-09-30",
+        "time": "01:45",
+        "arrivalTime": "07:25"
+      },
+      "price": 337500,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260926&adt=1&chd=0&inf=0&page=1&scale=200",
+      "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260926&adt=1&chd=0&inf=0&page=1&scale=200",
+      "region": "동남아",
+      "discountRate": -58,
+      "availableSeats": 9,
+      "seats": "9석",
+      "firstSeen": "2026-09-06"
     },
     {
       "id": "ttang-TAE-KIX-RT-0-4-TW-2026-09-26",
@@ -11345,10 +11385,7 @@
       "availableSeats": 6,
       "seats": "6석",
       "discountRate": -82,
-      "firstSeen": "2026-09-04",
-      "naverLowest": 314540,
-      "naverCheckedAt": "2026-09-05T06:05:41.522Z",
-      "naverDiscount": -22
+      "firstSeen": "2026-09-04"
     },
     {
       "id": "ttang-ICN-CNX-RT-0-6-BX-2026-09-26",
@@ -11376,10 +11413,35 @@
       "availableSeats": 9,
       "seats": "9석",
       "discountRate": -42,
-      "firstSeen": "2026-09-03",
-      "naverLowest": 291600,
-      "naverCheckedAt": "2026-09-05T03:39:45.114Z",
-      "naverDiscount": -32
+      "firstSeen": "2026-09-03"
+    },
+    {
+      "id": "ttang-TAE-DAD-RT-0-5-TW-2026-09-26",
+      "source": "ttang",
+      "airline": "티웨이항공",
+      "departure": {
+        "city": "대구",
+        "airport": "TAE",
+        "date": "2026-09-26",
+        "time": "21:10",
+        "arrivalTime": "23:55"
+      },
+      "arrival": {
+        "city": "다낭",
+        "airport": "DAD",
+        "date": "2026-09-30",
+        "time": "01:30",
+        "arrivalTime": "08:15"
+      },
+      "price": 368000,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260926&adt=1&chd=0&inf=0&page=1&scale=200",
+      "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260926&adt=1&chd=0&inf=0&page=1&scale=200",
+      "region": "동남아",
+      "discountRate": -21,
+      "availableSeats": 9,
+      "seats": "9석",
+      "firstSeen": "2026-09-06"
     },
     {
       "id": "ttang-PUS-SIN-RT-0-5-7C-2026-09-26",
@@ -11407,10 +11469,35 @@
       "availableSeats": 4,
       "seats": "4석",
       "discountRate": -25,
-      "firstSeen": "2026-08-31",
-      "naverLowest": 340500,
-      "naverCheckedAt": "2026-09-05T04:03:33.644Z",
-      "naverDiscount": -20
+      "firstSeen": "2026-08-31"
+    },
+    {
+      "id": "ttang-GMP-TSA-RT-0-4-ZE-2026-09-26",
+      "source": "ttang",
+      "airline": "이스타항공",
+      "departure": {
+        "city": "서울(김포)",
+        "airport": "GMP",
+        "date": "2026-09-26",
+        "time": "11:15",
+        "arrivalTime": "12:55"
+      },
+      "arrival": {
+        "city": "타이페이(송산)",
+        "airport": "TSA",
+        "date": "2026-09-29",
+        "time": "14:00",
+        "arrivalTime": "17:25"
+      },
+      "price": 390300,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260926&adt=1&chd=0&inf=0&page=1&scale=200",
+      "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260926&adt=1&chd=0&inf=0&page=1&scale=200",
+      "region": "중국",
+      "discountRate": 0,
+      "availableSeats": 9,
+      "seats": "9석",
+      "firstSeen": "2026-09-06"
     },
     {
       "id": "ttang-BX3115PUSCAN-G1-2026-09-26",
@@ -11438,10 +11525,7 @@
       "availableSeats": 4,
       "seats": "4석",
       "discountRate": -29,
-      "firstSeen": "2026-09-01",
-      "naverLowest": 468553,
-      "naverCheckedAt": "2026-09-05T03:09:38.335Z",
-      "naverDiscount": 8
+      "firstSeen": "2026-09-01"
     },
     {
       "id": "ttang-PUS-KMJ-RT-0-4-ZE-2026-09-27",
@@ -11467,10 +11551,7 @@
       "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260927&adt=1&chd=0&inf=0&page=1&scale=200",
       "region": "일본",
       "discountRate": -25,
-      "firstSeen": "2026-09-04",
-      "naverLowest": 185426,
-      "naverCheckedAt": "2026-09-05T05:45:03.943Z",
-      "naverDiscount": -21
+      "firstSeen": "2026-09-04"
     },
     {
       "id": "ttang-ICN-HAN-RT-0-4-9G-2026-09-27",
@@ -11498,10 +11579,7 @@
       "availableSeats": 9,
       "seats": "9석",
       "discountRate": -11,
-      "firstSeen": "2026-08-31",
-      "naverLowest": 247300,
-      "naverCheckedAt": "2026-09-05T05:46:06.588Z",
-      "naverDiscount": 7
+      "firstSeen": "2026-08-31"
     },
     {
       "id": "ttang-ICN-PQC-RT-0-4-9G-2026-09-27",
@@ -11529,10 +11607,7 @@
       "availableSeats": 9,
       "seats": "9석",
       "discountRate": -24,
-      "firstSeen": "2026-09-04",
-      "naverLowest": 230081,
-      "naverCheckedAt": "2026-09-05T04:08:25.684Z",
-      "naverDiscount": -13
+      "firstSeen": "2026-09-04"
     },
     {
       "id": "ttang-LJ0061PUSCEB-G10-2026-09-27",
@@ -11560,10 +11635,7 @@
       "availableSeats": 9,
       "seats": "9석",
       "discountRate": -12,
-      "firstSeen": "2026-09-02",
-      "naverLowest": 209358,
-      "naverCheckedAt": "2026-09-05T05:57:44.561Z",
-      "naverDiscount": -46
+      "firstSeen": "2026-09-02"
     },
     {
       "id": "ttang-7C2157PUSTAG-G17-2026-09-27",
@@ -11591,10 +11663,63 @@
       "availableSeats": 9,
       "seats": "9석",
       "discountRate": 0,
-      "firstSeen": "2026-09-03",
-      "naverLowest": 252000,
-      "naverCheckedAt": "2026-09-05T03:20:31.109Z",
-      "naverDiscount": -25
+      "firstSeen": "2026-09-03"
+    },
+    {
+      "id": "ttang-RF0342CJJNGO-G17-2026-09-27",
+      "source": "ttang",
+      "airline": "에어로케이",
+      "departure": {
+        "city": "청주",
+        "airport": "CJJ",
+        "date": "2026-09-27",
+        "time": "17:40",
+        "arrivalTime": "19:30"
+      },
+      "arrival": {
+        "city": "나고야",
+        "airport": "NGO",
+        "date": "2026-09-30",
+        "time": "20:30",
+        "arrivalTime": "22:15"
+      },
+      "price": 333100,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260927&adt=1&chd=0&inf=0&page=1&scale=200",
+      "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260927&adt=1&chd=0&inf=0&page=1&scale=200",
+      "region": "일본",
+      "discountRate": 80,
+      "availableSeats": 4,
+      "seats": "4석",
+      "firstSeen": "2026-09-06"
+    },
+    {
+      "id": "ttang-ICN-TAG-RT-0-5-LJ-2026-09-27",
+      "source": "ttang",
+      "airline": "진에어",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-09-27",
+        "time": "21:00",
+        "arrivalTime": "00:45"
+      },
+      "arrival": {
+        "city": "보홀(필리핀)",
+        "airport": "TAG",
+        "date": "2026-10-01",
+        "time": "01:45",
+        "arrivalTime": "07:25"
+      },
+      "price": 337500,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260927&adt=1&chd=0&inf=0&page=1&scale=200",
+      "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260927&adt=1&chd=0&inf=0&page=1&scale=200",
+      "region": "동남아",
+      "discountRate": -58,
+      "availableSeats": 9,
+      "seats": "9석",
+      "firstSeen": "2026-09-06"
     },
     {
       "id": "ttang-ICN-CNX-RT-0-6-BX-2026-09-27",
@@ -11622,10 +11747,35 @@
       "availableSeats": 9,
       "seats": "9석",
       "discountRate": -42,
-      "firstSeen": "2026-08-30",
-      "naverLowest": 300200,
-      "naverCheckedAt": "2026-09-05T03:53:36.009Z",
-      "naverDiscount": -28
+      "firstSeen": "2026-08-30"
+    },
+    {
+      "id": "ttang-TAE-DAD-RT-0-5-TW-2026-09-27",
+      "source": "ttang",
+      "airline": "티웨이항공",
+      "departure": {
+        "city": "대구",
+        "airport": "TAE",
+        "date": "2026-09-27",
+        "time": "21:10",
+        "arrivalTime": "23:55"
+      },
+      "arrival": {
+        "city": "다낭",
+        "airport": "DAD",
+        "date": "2026-10-01",
+        "time": "01:30",
+        "arrivalTime": "08:15"
+      },
+      "price": 368000,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260927&adt=1&chd=0&inf=0&page=1&scale=200",
+      "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260927&adt=1&chd=0&inf=0&page=1&scale=200",
+      "region": "동남아",
+      "discountRate": -21,
+      "availableSeats": 9,
+      "seats": "9석",
+      "firstSeen": "2026-09-06"
     },
     {
       "id": "ttang-TAE-BKK-RT-0-5-TW-2026-09-27",
@@ -11653,10 +11803,7 @@
       "availableSeats": 9,
       "seats": "9석",
       "discountRate": -20,
-      "firstSeen": "2026-09-01",
-      "naverLowest": 297070,
-      "naverCheckedAt": "2026-09-05T03:02:10.069Z",
-      "naverDiscount": -32
+      "firstSeen": "2026-09-01"
     },
     {
       "id": "ttang-RF0318CJJKIX-G21-2026-09-27",
@@ -11712,10 +11859,7 @@
       "availableSeats": 4,
       "seats": "4석",
       "discountRate": -25,
-      "firstSeen": "2026-08-31",
-      "naverLowest": 411361,
-      "naverCheckedAt": "2026-09-05T04:04:38.266Z",
-      "naverDiscount": 1
+      "firstSeen": "2026-08-31"
     },
     {
       "id": "ttang-RF0392CJJNRT-G7-2026-09-27",
@@ -11739,10 +11883,35 @@
       "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260927&adt=1&chd=0&inf=0&page=1&scale=200",
       "region": "일본",
       "discountRate": 63,
-      "firstSeen": "2026-09-01",
-      "naverLowest": 392100,
-      "naverCheckedAt": "2026-09-04T08:02:06.558Z",
-      "naverDiscount": -4
+      "firstSeen": "2026-09-01"
+    },
+    {
+      "id": "ttang-PUS-KMJ-RT-0-4-ZE-2026-09-28",
+      "source": "ttang",
+      "airline": "이스타항공",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-09-28",
+        "time": "12:30",
+        "arrivalTime": "13:50"
+      },
+      "arrival": {
+        "city": "구마모토",
+        "airport": "KMJ",
+        "date": "2026-10-01",
+        "time": "14:50",
+        "arrivalTime": "15:55"
+      },
+      "price": 205000,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260928&adt=1&chd=0&inf=0&page=1&scale=200",
+      "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260928&adt=1&chd=0&inf=0&page=1&scale=200",
+      "region": "일본",
+      "discountRate": -25,
+      "availableSeats": 9,
+      "seats": "9석",
+      "firstSeen": "2026-09-06"
     },
     {
       "id": "ttang-ICN-HAN-RT-0-4-9G-2026-09-28",
@@ -11770,10 +11939,7 @@
       "availableSeats": 6,
       "seats": "6석",
       "discountRate": -11,
-      "firstSeen": "2026-08-31",
-      "naverLowest": 240500,
-      "naverCheckedAt": "2026-09-05T05:48:44.947Z",
-      "naverDiscount": 4
+      "firstSeen": "2026-08-31"
     },
     {
       "id": "ttang-RF0374CJJKKJ-G5-2026-09-28",
@@ -11801,10 +11967,7 @@
       "availableSeats": 4,
       "seats": "4석",
       "discountRate": 0,
-      "firstSeen": "2026-08-28",
-      "naverLowest": 228900,
-      "naverCheckedAt": "2026-09-04T07:26:46.151Z",
-      "naverDiscount": -9
+      "firstSeen": "2026-08-28"
     },
     {
       "id": "ttang-ICN-PQC-RT-0-4-9G-2026-09-28",
@@ -11832,10 +11995,7 @@
       "availableSeats": 9,
       "seats": "9석",
       "discountRate": -24,
-      "firstSeen": "2026-09-04",
-      "naverLowest": 228282,
-      "naverCheckedAt": "2026-09-05T05:53:04.281Z",
-      "naverDiscount": -14
+      "firstSeen": "2026-09-04"
     },
     {
       "id": "ttang-CJJ-DAD-RT-0-6-TW-2026-09-28",
@@ -11863,10 +12023,7 @@
       "availableSeats": 9,
       "seats": "9석",
       "discountRate": 3,
-      "firstSeen": "2026-09-04",
-      "naverLowest": 265600,
-      "naverCheckedAt": "2026-09-05T03:10:12.236Z",
-      "naverDiscount": -14
+      "firstSeen": "2026-09-04"
     },
     {
       "id": "ttang-LJ0061PUSCEB-G10-2026-09-28",
@@ -11894,10 +12051,7 @@
       "availableSeats": 9,
       "seats": "9석",
       "discountRate": -12,
-      "firstSeen": "2026-09-02",
-      "naverLowest": 216400,
-      "naverCheckedAt": "2026-09-05T05:58:49.828Z",
-      "naverDiscount": -41
+      "firstSeen": "2026-09-02"
     },
     {
       "id": "ttang-7C2157PUSTAG-G17-2026-09-28",
@@ -11925,10 +12079,91 @@
       "availableSeats": 9,
       "seats": "9석",
       "discountRate": 0,
-      "firstSeen": "2026-09-03",
-      "naverLowest": 252000,
-      "naverCheckedAt": "2026-09-05T03:23:27.997Z",
-      "naverDiscount": -25
+      "firstSeen": "2026-09-03"
+    },
+    {
+      "id": "ttang-RF0342CJJNGO-G17-2026-09-28",
+      "source": "ttang",
+      "airline": "에어로케이",
+      "departure": {
+        "city": "청주",
+        "airport": "CJJ",
+        "date": "2026-09-28",
+        "time": "17:40",
+        "arrivalTime": "19:30"
+      },
+      "arrival": {
+        "city": "나고야",
+        "airport": "NGO",
+        "date": "2026-10-01",
+        "time": "20:30",
+        "arrivalTime": "22:15"
+      },
+      "price": 333100,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260928&adt=1&chd=0&inf=0&page=1&scale=200",
+      "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260928&adt=1&chd=0&inf=0&page=1&scale=200",
+      "region": "일본",
+      "discountRate": 80,
+      "availableSeats": 4,
+      "seats": "4석",
+      "firstSeen": "2026-09-06"
+    },
+    {
+      "id": "ttang-ICN-TAG-RT-0-5-LJ-2026-09-28",
+      "source": "ttang",
+      "airline": "진에어",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-09-28",
+        "time": "21:00",
+        "arrivalTime": "00:45"
+      },
+      "arrival": {
+        "city": "보홀(필리핀)",
+        "airport": "TAG",
+        "date": "2026-10-02",
+        "time": "01:45",
+        "arrivalTime": "07:25"
+      },
+      "price": 337500,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260928&adt=1&chd=0&inf=0&page=1&scale=200",
+      "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260928&adt=1&chd=0&inf=0&page=1&scale=200",
+      "region": "동남아",
+      "discountRate": -58,
+      "availableSeats": 9,
+      "seats": "9석",
+      "firstSeen": "2026-09-06"
+    },
+    {
+      "id": "ttang-TAE-DAD-RT-0-5-TW-2026-09-28",
+      "source": "ttang",
+      "airline": "티웨이항공",
+      "departure": {
+        "city": "대구",
+        "airport": "TAE",
+        "date": "2026-09-28",
+        "time": "21:10",
+        "arrivalTime": "23:55"
+      },
+      "arrival": {
+        "city": "다낭",
+        "airport": "DAD",
+        "date": "2026-10-02",
+        "time": "01:30",
+        "arrivalTime": "08:15"
+      },
+      "price": 368000,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260928&adt=1&chd=0&inf=0&page=1&scale=200",
+      "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260928&adt=1&chd=0&inf=0&page=1&scale=200",
+      "region": "동남아",
+      "discountRate": -21,
+      "availableSeats": 9,
+      "seats": "9석",
+      "firstSeen": "2026-09-06"
     },
     {
       "id": "ttang-TAE-BKK-RT-0-5-TW-2026-09-28",
@@ -11956,10 +12191,7 @@
       "availableSeats": 9,
       "seats": "9석",
       "discountRate": -20,
-      "firstSeen": "2026-09-01",
-      "naverLowest": 297070,
-      "naverCheckedAt": "2026-09-04T07:57:41.738Z",
-      "naverDiscount": -32
+      "firstSeen": "2026-09-01"
     },
     {
       "id": "ttang-RF0318CJJKIX-G21-2026-09-28",
@@ -12015,10 +12247,7 @@
       "availableSeats": 9,
       "seats": "9석",
       "discountRate": -25,
-      "firstSeen": "2026-08-31",
-      "naverLowest": 412900,
-      "naverCheckedAt": "2026-09-05T04:05:09.191Z",
-      "naverDiscount": 1
+      "firstSeen": "2026-08-31"
     },
     {
       "id": "ttang-RF0392CJJNRT-G7-2026-09-28",
@@ -12042,10 +12271,7 @@
       "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260928&adt=1&chd=0&inf=0&page=1&scale=200",
       "region": "일본",
       "discountRate": 63,
-      "firstSeen": "2026-09-01",
-      "naverLowest": 373300,
-      "naverCheckedAt": "2026-09-04T08:02:40.105Z",
-      "naverDiscount": -9
+      "firstSeen": "2026-09-01"
     },
     {
       "id": "ttang-PUS-PQC-RT-0-5-VJ-2026-09-28",
@@ -12076,6 +12302,34 @@
       "firstSeen": "2026-09-01"
     },
     {
+      "id": "ttang-RF0352CJJCTS-G18-2026-09-28",
+      "source": "ttang",
+      "airline": "에어로케이",
+      "departure": {
+        "city": "청주",
+        "airport": "CJJ",
+        "date": "2026-09-28",
+        "time": "08:25",
+        "arrivalTime": "10:55"
+      },
+      "arrival": {
+        "city": "삿포로(치토세)",
+        "airport": "CTS",
+        "date": "2026-10-01",
+        "time": "11:55",
+        "arrivalTime": "14:45"
+      },
+      "price": 462300,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260928&adt=1&chd=0&inf=0&page=1&scale=200",
+      "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260928&adt=1&chd=0&inf=0&page=1&scale=200",
+      "region": "일본",
+      "discountRate": 67,
+      "availableSeats": 4,
+      "seats": "4석",
+      "firstSeen": "2026-09-06"
+    },
+    {
       "id": "ttang-ZE0985PUSYNJ-G12-2026-09-28",
       "source": "ttang",
       "airline": "이스타항공",
@@ -12104,6 +12358,34 @@
       "firstSeen": "2026-09-01"
     },
     {
+      "id": "ttang-PUS-KMJ-RT-0-4-ZE-2026-09-29",
+      "source": "ttang",
+      "airline": "이스타항공",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-09-29",
+        "time": "12:30",
+        "arrivalTime": "13:50"
+      },
+      "arrival": {
+        "city": "구마모토",
+        "airport": "KMJ",
+        "date": "2026-10-02",
+        "time": "14:50",
+        "arrivalTime": "16:00"
+      },
+      "price": 205000,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260929&adt=1&chd=0&inf=0&page=1&scale=200",
+      "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260929&adt=1&chd=0&inf=0&page=1&scale=200",
+      "region": "일본",
+      "discountRate": -25,
+      "availableSeats": 9,
+      "seats": "9석",
+      "firstSeen": "2026-09-06"
+    },
+    {
       "id": "ttang-ICN-HAN-RT-0-4-9G-2026-09-29",
       "source": "ttang",
       "airline": "썬푸꾸옥항공",
@@ -12129,10 +12411,7 @@
       "availableSeats": 9,
       "seats": "9석",
       "discountRate": -11,
-      "firstSeen": "2026-08-31",
-      "naverLowest": 229400,
-      "naverCheckedAt": "2026-09-05T05:49:17.630Z",
-      "naverDiscount": 0
+      "firstSeen": "2026-08-31"
     },
     {
       "id": "ttang-RF0374CJJKKJ-G5-2026-09-29",
@@ -12160,10 +12439,7 @@
       "availableSeats": 4,
       "seats": "4석",
       "discountRate": 0,
-      "firstSeen": "2026-08-31",
-      "naverLowest": 175200,
-      "naverCheckedAt": "2026-09-04T07:29:40.680Z",
-      "naverDiscount": -42
+      "firstSeen": "2026-08-31"
     },
     {
       "id": "ttang-ICN-PQC-RT-0-4-9G-2026-09-29",
@@ -12191,10 +12467,7 @@
       "availableSeats": 9,
       "seats": "9석",
       "discountRate": -24,
-      "firstSeen": "2026-09-04",
-      "naverLowest": 239300,
-      "naverCheckedAt": "2026-09-05T04:10:38.575Z",
-      "naverDiscount": -9
+      "firstSeen": "2026-09-04"
     },
     {
       "id": "ttang-RF0384CJJIBR-G14-2026-09-29",
@@ -12218,10 +12491,7 @@
       "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260929&adt=1&chd=0&inf=0&page=1&scale=200",
       "region": "일본",
       "discountRate": 0,
-      "firstSeen": "2026-09-05",
-      "naverLowest": 247900,
-      "naverCheckedAt": "2026-09-05T05:52:33.674Z",
-      "naverDiscount": -19
+      "firstSeen": "2026-09-05"
     },
     {
       "id": "ttang-LJ0061PUSCEB-G10-2026-09-29",
@@ -12246,13 +12516,10 @@
       "link": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260929&adt=1&chd=0&inf=0&page=1&scale=200",
       "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260929&adt=1&chd=0&inf=0&page=1&scale=200",
       "region": "동남아",
-      "discountRate": -12,
       "availableSeats": 9,
       "seats": "9석",
-      "firstSeen": "2026-09-05",
-      "naverLowest": 208500,
-      "naverCheckedAt": "2026-09-05T05:59:24.396Z",
-      "naverDiscount": -46
+      "discountRate": -12,
+      "firstSeen": "2026-09-05"
     },
     {
       "id": "ttang-PUS-TAK-RT-0-4-BX-2026-09-29",
@@ -12280,10 +12547,7 @@
       "availableSeats": 9,
       "seats": "9석",
       "discountRate": -35,
-      "firstSeen": "2026-08-29",
-      "naverLowest": 229600,
-      "naverCheckedAt": "2026-09-05T06:03:30.237Z",
-      "naverDiscount": -35
+      "firstSeen": "2026-08-29"
     },
     {
       "id": "ttang-7C2157PUSTAG-G17-2026-09-29",
@@ -12309,10 +12573,119 @@
       "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260929&adt=1&chd=0&inf=0&page=1&scale=200",
       "region": "동남아",
       "discountRate": 0,
-      "firstSeen": "2026-09-03",
-      "naverLowest": 269000,
-      "naverCheckedAt": "2026-09-05T03:23:59.631Z",
-      "naverDiscount": -17
+      "firstSeen": "2026-09-03"
+    },
+    {
+      "id": "ttang-RF0342CJJNGO-G17-2026-09-29",
+      "source": "ttang",
+      "airline": "에어로케이",
+      "departure": {
+        "city": "청주",
+        "airport": "CJJ",
+        "date": "2026-09-29",
+        "time": "17:40",
+        "arrivalTime": "19:30"
+      },
+      "arrival": {
+        "city": "나고야",
+        "airport": "NGO",
+        "date": "2026-10-02",
+        "time": "20:30",
+        "arrivalTime": "22:15"
+      },
+      "price": 333100,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260929&adt=1&chd=0&inf=0&page=1&scale=200",
+      "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260929&adt=1&chd=0&inf=0&page=1&scale=200",
+      "region": "일본",
+      "discountRate": 80,
+      "availableSeats": 4,
+      "seats": "4석",
+      "firstSeen": "2026-09-06"
+    },
+    {
+      "id": "ttang-ICN-TAG-RT-0-5-LJ-2026-09-29",
+      "source": "ttang",
+      "airline": "진에어",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-09-29",
+        "time": "21:00",
+        "arrivalTime": "00:45"
+      },
+      "arrival": {
+        "city": "보홀(필리핀)",
+        "airport": "TAG",
+        "date": "2026-10-03",
+        "time": "01:45",
+        "arrivalTime": "07:25"
+      },
+      "price": 337500,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260929&adt=1&chd=0&inf=0&page=1&scale=200",
+      "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260929&adt=1&chd=0&inf=0&page=1&scale=200",
+      "region": "동남아",
+      "discountRate": -58,
+      "availableSeats": 9,
+      "seats": "9석",
+      "firstSeen": "2026-09-06"
+    },
+    {
+      "id": "ttang-RF0394CJJOKA-G9-2026-09-29",
+      "source": "ttang",
+      "airline": "에어로케이",
+      "departure": {
+        "city": "청주",
+        "airport": "CJJ",
+        "date": "2026-09-29",
+        "time": "06:55",
+        "arrivalTime": "09:05"
+      },
+      "arrival": {
+        "city": "오키나와",
+        "airport": "OKA",
+        "date": "2026-10-02",
+        "time": "09:50",
+        "arrivalTime": "12:00"
+      },
+      "price": 350500,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260929&adt=1&chd=0&inf=0&page=1&scale=200",
+      "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260929&adt=1&chd=0&inf=0&page=1&scale=200",
+      "region": "일본",
+      "discountRate": 0,
+      "availableSeats": 2,
+      "seats": "2석",
+      "firstSeen": "2026-09-06"
+    },
+    {
+      "id": "ttang-TAE-DAD-RT-0-5-TW-2026-09-29",
+      "source": "ttang",
+      "airline": "티웨이항공",
+      "departure": {
+        "city": "대구",
+        "airport": "TAE",
+        "date": "2026-09-29",
+        "time": "21:10",
+        "arrivalTime": "23:55"
+      },
+      "arrival": {
+        "city": "다낭",
+        "airport": "DAD",
+        "date": "2026-10-03",
+        "time": "01:30",
+        "arrivalTime": "08:15"
+      },
+      "price": 368000,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260929&adt=1&chd=0&inf=0&page=1&scale=200",
+      "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260929&adt=1&chd=0&inf=0&page=1&scale=200",
+      "region": "동남아",
+      "discountRate": -21,
+      "availableSeats": 9,
+      "seats": "9석",
+      "firstSeen": "2026-09-06"
     },
     {
       "id": "ttang-TAE-BKK-RT-0-5-TW-2026-09-29",
@@ -12340,10 +12713,35 @@
       "availableSeats": 9,
       "seats": "9석",
       "discountRate": -20,
-      "firstSeen": "2026-09-03",
-      "naverLowest": 297070,
-      "naverCheckedAt": "2026-09-04T07:58:14.198Z",
-      "naverDiscount": -32
+      "firstSeen": "2026-09-03"
+    },
+    {
+      "id": "ttang-PUS-SIN-RT-0-5-7C-2026-09-29",
+      "source": "ttang",
+      "airline": "제주항공",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-09-29",
+        "time": "17:40",
+        "arrivalTime": "23:25"
+      },
+      "arrival": {
+        "city": "싱가포르",
+        "airport": "SIN",
+        "date": "2026-10-03",
+        "time": "00:25",
+        "arrivalTime": "08:10"
+      },
+      "price": 387000,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260929&adt=1&chd=0&inf=0&page=1&scale=200",
+      "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260929&adt=1&chd=0&inf=0&page=1&scale=200",
+      "region": "동남아",
+      "discountRate": -25,
+      "availableSeats": 6,
+      "seats": "6석",
+      "firstSeen": "2026-09-06"
     },
     {
       "id": "ttang-RF0324CJJNRT-G15-2026-09-29",
@@ -12367,10 +12765,7 @@
       "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260929&adt=1&chd=0&inf=0&page=1&scale=200",
       "region": "일본",
       "discountRate": 63,
-      "firstSeen": "2026-09-04",
-      "naverLowest": 393300,
-      "naverCheckedAt": "2026-09-04T07:12:34.352Z",
-      "naverDiscount": -4
+      "firstSeen": "2026-09-04"
     },
     {
       "id": "ttang-GMP-TSA-RT-0-3-ZE-2026-09-29",
@@ -12396,10 +12791,7 @@
       "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260929&adt=1&chd=0&inf=0&page=1&scale=200",
       "region": "중국",
       "discountRate": 0,
-      "firstSeen": "2026-09-04",
-      "naverLowest": 352400,
-      "naverCheckedAt": "2026-09-05T06:06:43.322Z",
-      "naverDiscount": -16
+      "firstSeen": "2026-09-04"
     },
     {
       "id": "ttang-PUS-PQC-RT-0-4-VJ-2026-09-29",
@@ -12455,10 +12847,7 @@
       "availableSeats": 9,
       "seats": "9석",
       "discountRate": -22,
-      "firstSeen": "2026-09-01",
-      "naverLowest": 559311,
-      "naverCheckedAt": "2026-09-05T06:13:46.403Z",
-      "naverDiscount": -5
+      "firstSeen": "2026-09-01"
     },
     {
       "id": "ttang-PUS-KMJ-RT-0-4-ZE-2026-09-30",
@@ -12486,10 +12875,7 @@
       "availableSeats": 9,
       "seats": "9석",
       "discountRate": -25,
-      "firstSeen": "2026-09-04",
-      "naverLowest": 126100,
-      "naverCheckedAt": "2026-09-05T05:47:10.728Z",
-      "naverDiscount": -78
+      "firstSeen": "2026-09-04"
     },
     {
       "id": "ttang-ICN-HAN-RT-0-4-9G-2026-09-30",
@@ -12517,10 +12903,7 @@
       "availableSeats": 2,
       "seats": "2석",
       "discountRate": -11,
-      "firstSeen": "2026-08-31",
-      "naverLowest": 236300,
-      "naverCheckedAt": "2026-09-05T05:50:26.578Z",
-      "naverDiscount": 3
+      "firstSeen": "2026-08-31"
     },
     {
       "id": "ttang-TAE-FUK-RT-0-3-TW-2026-09-30",
@@ -12548,10 +12931,7 @@
       "availableSeats": 9,
       "seats": "9석",
       "discountRate": -7,
-      "firstSeen": "2026-08-30",
-      "naverLowest": 213678,
-      "naverCheckedAt": "2026-09-05T05:43:59.082Z",
-      "naverDiscount": -14
+      "firstSeen": "2026-08-30"
     },
     {
       "id": "ttang-RF0374CJJKKJ-G5-2026-09-30",
@@ -12579,10 +12959,7 @@
       "availableSeats": 4,
       "seats": "4석",
       "discountRate": 0,
-      "firstSeen": "2026-08-30",
-      "naverLowest": 175200,
-      "naverCheckedAt": "2026-09-04T07:30:13.359Z",
-      "naverDiscount": -42
+      "firstSeen": "2026-08-30"
     },
     {
       "id": "ttang-ICN-PQC-RT-0-4-9G-2026-09-30",
@@ -12610,10 +12987,7 @@
       "availableSeats": 9,
       "seats": "9석",
       "discountRate": -24,
-      "firstSeen": "2026-09-04",
-      "naverLowest": 239300,
-      "naverCheckedAt": "2026-09-05T04:11:45.907Z",
-      "naverDiscount": -9
+      "firstSeen": "2026-09-04"
     },
     {
       "id": "ttang-RF0332CJJFUK-G10-2026-09-30",
@@ -12637,10 +13011,35 @@
       "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260930&adt=1&chd=0&inf=0&page=1&scale=200",
       "region": "일본",
       "discountRate": -23,
-      "firstSeen": "2026-08-30",
-      "naverLowest": 244000,
-      "naverCheckedAt": "2026-09-04T07:55:36.939Z",
-      "naverDiscount": -22
+      "firstSeen": "2026-08-30"
+    },
+    {
+      "id": "ttang-PUS-FSZ-RT-0-3-BX-2026-09-30",
+      "source": "ttang",
+      "airline": "에어부산",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-09-30",
+        "time": "09:05",
+        "arrivalTime": "10:50"
+      },
+      "arrival": {
+        "city": "시즈오카",
+        "airport": "FSZ",
+        "date": "2026-10-02",
+        "time": "11:50",
+        "arrivalTime": "14:00"
+      },
+      "price": 287000,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260930&adt=1&chd=0&inf=0&page=1&scale=200",
+      "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260930&adt=1&chd=0&inf=0&page=1&scale=200",
+      "region": "일본",
+      "discountRate": -34,
+      "availableSeats": 9,
+      "seats": "9석",
+      "firstSeen": "2026-09-06"
     },
     {
       "id": "ttang-7C8351PUSPVG-G17-2026-09-30",
@@ -12668,10 +13067,35 @@
       "availableSeats": 9,
       "seats": "9석",
       "discountRate": 0,
-      "firstSeen": "2026-09-02",
-      "naverLowest": 311765,
-      "naverCheckedAt": "2026-09-04T07:48:44.757Z",
-      "naverDiscount": 0
+      "firstSeen": "2026-09-02"
+    },
+    {
+      "id": "ttang-RF0342CJJNGO-G17-2026-09-30",
+      "source": "ttang",
+      "airline": "에어로케이",
+      "departure": {
+        "city": "청주",
+        "airport": "CJJ",
+        "date": "2026-09-30",
+        "time": "17:40",
+        "arrivalTime": "19:30"
+      },
+      "arrival": {
+        "city": "나고야",
+        "airport": "NGO",
+        "date": "2026-10-03",
+        "time": "20:30",
+        "arrivalTime": "22:15"
+      },
+      "price": 333100,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260930&adt=1&chd=0&inf=0&page=1&scale=200",
+      "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260930&adt=1&chd=0&inf=0&page=1&scale=200",
+      "region": "일본",
+      "discountRate": 80,
+      "availableSeats": 4,
+      "seats": "4석",
+      "firstSeen": "2026-09-06"
     },
     {
       "id": "ttang-RF0394CJJOKA-G9-2026-09-30",
@@ -12695,10 +13119,7 @@
       "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260930&adt=1&chd=0&inf=0&page=1&scale=200",
       "region": "일본",
       "discountRate": 0,
-      "firstSeen": "2026-08-30",
-      "naverLowest": 377500,
-      "naverCheckedAt": "2026-09-04T07:18:58.497Z",
-      "naverDiscount": 2
+      "firstSeen": "2026-08-30"
     },
     {
       "id": "ttang-RF0318CJJKIX-G21-2026-09-30",
@@ -12729,7 +13150,7 @@
       "firstSeen": "2026-09-01"
     },
     {
-      "id": "ttang-RF0324CJJNRT-G15-2026-09-30",
+      "id": "ttang-RF0392CJJNRT-G7-2026-09-30",
       "source": "ttang",
       "airline": "에어로케이",
       "departure": {
@@ -12754,10 +13175,35 @@
       "availableSeats": 1,
       "seats": "1석",
       "discountRate": 63,
-      "firstSeen": "2026-09-05",
-      "naverLowest": 393400,
-      "naverCheckedAt": "2026-09-04T07:13:07.288Z",
-      "naverDiscount": -4
+      "firstSeen": "2026-09-06"
+    },
+    {
+      "id": "ttang-ICN-CRK-RT-0-5-LJ-2026-09-30",
+      "source": "ttang",
+      "airline": "진에어",
+      "departure": {
+        "city": "서울",
+        "airport": "ICN",
+        "date": "2026-09-30",
+        "time": "21:25",
+        "arrivalTime": "00:25"
+      },
+      "arrival": {
+        "city": "클락(앙헬레스)",
+        "airport": "CRK",
+        "date": "2026-10-04",
+        "time": "01:35",
+        "arrivalTime": "06:30"
+      },
+      "price": 556000,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260930&adt=1&chd=0&inf=0&page=1&scale=200",
+      "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20260930&adt=1&chd=0&inf=0&page=1&scale=200",
+      "region": "동남아",
+      "discountRate": 0,
+      "availableSeats": 9,
+      "seats": "9석",
+      "firstSeen": "2026-09-06"
     },
     {
       "id": "ttang-HX0627ICNHKG-G1-2026-10-01",
@@ -12785,10 +13231,7 @@
       "availableSeats": 9,
       "seats": "9석",
       "discountRate": -36,
-      "firstSeen": "2026-09-04",
-      "naverLowest": 266900,
-      "naverCheckedAt": "2026-09-05T06:10:27.653Z",
-      "naverDiscount": -33
+      "firstSeen": "2026-09-04"
     },
     {
       "id": "ttang-CZ0370ICNPVG-G1-2026-10-01",
@@ -12844,10 +13287,7 @@
       "availableSeats": 4,
       "seats": "4석",
       "discountRate": -36,
-      "firstSeen": "2026-09-04",
-      "naverLowest": 576300,
-      "naverCheckedAt": "2026-09-05T06:04:38.883Z",
-      "naverDiscount": 45
+      "firstSeen": "2026-09-04"
     },
     {
       "id": "ttang-RS0745ICNYGJ-G40-2026-10-02",
@@ -12871,10 +13311,7 @@
       "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20261002&adt=1&chd=0&inf=0&page=1&scale=200",
       "region": "일본",
       "discountRate": -78,
-      "firstSeen": "2026-09-02",
-      "naverLowest": 635200,
-      "naverCheckedAt": "2026-09-05T06:11:01.482Z",
-      "naverDiscount": 34
+      "firstSeen": "2026-09-02"
     },
     {
       "id": "ttang-CZ0370ICNPVG-G1-2026-10-02",
@@ -12930,10 +13367,7 @@
       "availableSeats": 7,
       "seats": "7석",
       "discountRate": 13,
-      "firstSeen": "2026-09-03",
-      "naverLowest": 357500,
-      "naverCheckedAt": "2026-09-05T05:49:52.238Z",
-      "naverDiscount": 15
+      "firstSeen": "2026-09-03"
     },
     {
       "id": "ttang-BX9115PUSIBR-G1-2026-10-03",
@@ -12961,10 +13395,7 @@
       "availableSeats": 9,
       "seats": "9석",
       "discountRate": 43,
-      "firstSeen": "2026-09-03",
-      "naverLowest": 669600,
-      "naverCheckedAt": "2026-09-05T06:05:10.967Z",
-      "naverDiscount": 37
+      "firstSeen": "2026-09-03"
     },
     {
       "id": "ttang-7C8611ICNKWL-G3-2026-10-04",
@@ -12992,10 +13423,7 @@
       "availableSeats": 8,
       "seats": "8석",
       "discountRate": 13,
-      "firstSeen": "2026-09-04",
-      "naverLowest": 381500,
-      "naverCheckedAt": "2026-09-05T05:50:57.458Z",
-      "naverDiscount": 20
+      "firstSeen": "2026-09-04"
     },
     {
       "id": "ttang-CJJ-CXR-RT-0-6-TW-2026-10-04",
@@ -13023,10 +13451,31 @@
       "availableSeats": 9,
       "seats": "9석",
       "discountRate": 7,
-      "firstSeen": "2026-09-04",
-      "naverLowest": 395800,
-      "naverCheckedAt": "2026-09-05T05:53:39.125Z",
-      "naverDiscount": 14
+      "firstSeen": "2026-09-04"
+    },
+    {
+      "id": "ttang-RF0386CJJHIJ-G16-2026-10-04",
+      "source": "ttang",
+      "airline": "에어로케이",
+      "departure": {
+        "city": "청주",
+        "airport": "CJJ",
+        "date": "2026-10-04",
+        "time": ""
+      },
+      "arrival": {
+        "city": "히로시마",
+        "airport": "HIJ",
+        "date": "2026-10-07",
+        "time": ""
+      },
+      "price": 327800,
+      "currency": "KRW",
+      "link": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20261004&adt=1&chd=0&inf=0&page=1&scale=200",
+      "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20261004&adt=1&chd=0&inf=0&page=1&scale=200",
+      "region": "일본",
+      "discountRate": 84,
+      "firstSeen": "2026-09-06"
     },
     {
       "id": "ttang-PUS-CXR-RT-0-5-VJ-2026-10-04",
@@ -13103,13 +13552,10 @@
       "link": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20261005&adt=1&chd=0&inf=0&page=1&scale=200",
       "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20261005&adt=1&chd=0&inf=0&page=1&scale=200",
       "region": "동남아",
-      "discountRate": 17,
       "availableSeats": 9,
       "seats": "9석",
-      "firstSeen": "2026-09-05",
-      "naverLowest": 259300,
-      "naverCheckedAt": "2026-09-05T05:42:55.328Z",
-      "naverDiscount": 11
+      "discountRate": 17,
+      "firstSeen": "2026-09-05"
     },
     {
       "id": "ttang-CJJ-TPE-RT-0-5-ZE-2026-10-05",
@@ -13135,10 +13581,7 @@
       "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20261005&adt=1&chd=0&inf=0&page=1&scale=200",
       "region": "중국",
       "discountRate": -32,
-      "firstSeen": "2026-09-05",
-      "naverLowest": 402211,
-      "naverCheckedAt": "2026-09-05T06:09:22.335Z",
-      "naverDiscount": 16
+      "firstSeen": "2026-09-05"
     },
     {
       "id": "ttang-PUS-CXR-RT-0-5-VJ-2026-10-05",
@@ -13163,9 +13606,9 @@
       "link": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20261005&adt=1&chd=0&inf=0&page=1&scale=200",
       "searchLink": "https://mm.ttang.com/ttangair/search/promotion/ttangIndex.do?trip=RT&depdate0=20261005&adt=1&chd=0&inf=0&page=1&scale=200",
       "region": "동남아",
-      "discountRate": -36,
       "availableSeats": 4,
       "seats": "4석",
+      "discountRate": -36,
       "firstSeen": "2026-09-05"
     },
     {
@@ -13193,40 +13636,6 @@
       "region": "동남아",
       "discountRate": 25,
       "firstSeen": "2026-09-05"
-    },
-    {
-      "id": "online-260908744348",
-      "source": "onlinetour",
-      "airline": "티웨이항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-09-08",
-        "time": "12:35",
-        "arrivalTime": "19:15"
-      },
-      "arrival": {
-        "city": "로마",
-        "airport": "ROM",
-        "date": "2026-09-15",
-        "time": "21:15",
-        "arrivalTime": "16:10"
-      },
-      "price": 990000,
-      "currency": "KRW",
-      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260908744348",
-      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=ROM&sCity2=ROM&eCity2=SEL&startDt=20260908&endDt=20260915&adt=1",
-      "region": "유럽",
-      "availableSeats": 1,
-      "seats": "1석",
-      "routeAirports": {
-        "outboundDeparture": "ICN",
-        "outboundArrival": "FCO",
-        "returnDeparture": "FCO",
-        "returnArrival": "ICN"
-      },
-      "discountRate": 6,
-      "firstSeen": "2026-09-04"
     },
     {
       "id": "mrt-ICN-ADD-20261104-1447200",
@@ -18659,15 +19068,15 @@
     "hanatour": 29,
     "modetour": 102,
     "onlinetour": 1,
-    "ttang": 121,
+    "ttang": 147,
     "myrealtrip": 155
   },
   "sourceUpdatedAt": {
-    "ybtour": "2026-09-05T08:52:40.611Z",
-    "hanatour": "2026-09-05T08:52:40.611Z",
-    "modetour": "2026-09-05T08:52:40.611Z",
+    "ybtour": "2026-09-05T23:37:46.616Z",
+    "hanatour": "2026-09-05T23:37:46.616Z",
+    "modetour": "2026-09-05T23:37:46.616Z",
     "onlinetour": "2026-09-05T08:56:40.978Z",
-    "ttang": "2026-09-05T05:39:27.892Z",
+    "ttang": "2026-09-05T23:37:46.617Z",
     "myrealtrip": "2026-09-05T12:29:53.116Z"
   },
   "staleStreak": {
@@ -18679,13 +19088,15 @@
     "myrealtrip": 0
   },
   "scrapedCounts": {
-    "modetour": 726,
-    "ttang": 1303,
-    "ybtour": 273,
+    "modetour": 722,
+    "ttang": 1284,
+    "ybtour": 275,
     "hanatour": 98,
     "onlinetour": 105
   },
-  "integrityAlerts": [],
+  "integrityAlerts": [
+    "⛔ onlinetour 접근 차단 뒤 자동 요청 중단 (2026. 9. 6. PM 5:52:40 이후 단일 재탐색) — 이전 데이터 유지"
+  ],
   "sourceCircuits": {
     "onlinetour": {
       "reason": "blocked",
@@ -18705,22 +19116,8 @@
   "manualCaptureStatus": {},
   "ttangTimeEnrichment": {
     "version": 1,
-    "updatedAt": "2026-09-05T05:39:37.433Z",
+    "updatedAt": "2026-09-05T23:38:04.351Z",
     "entries": {
-      "ICN|UKB|20260905|20260907|제주항공": {
-        "status": "success",
-        "lastAttemptAt": "2026-08-31T09:52:29.174Z",
-        "attemptCount": 1,
-        "adapterVersion": "2026-08-31.1",
-        "departureDate": "20260905",
-        "data": {
-          "depTime": "13:20",
-          "arrTime": "15:00",
-          "retDepTime": "16:00",
-          "retArrTime": "18:00",
-          "seats": 8
-        }
-      },
       "ICN|DAD|20260906|20260910|에어서울": {
         "status": "success",
         "lastAttemptAt": "2026-08-31T09:52:29.174Z",
@@ -22383,12 +22780,68 @@
           "retArrTime": "09:50",
           "seats": 4
         }
+      },
+      "CJJ|NGO|20260927|20260930|에어로케이": {
+        "status": "success",
+        "lastAttemptAt": "2026-09-05T23:38:04.351Z",
+        "attemptCount": 1,
+        "adapterVersion": "2026-08-31.1",
+        "departureDate": "20260927",
+        "data": {
+          "depTime": "17:40",
+          "arrTime": "19:30",
+          "retDepTime": "20:30",
+          "retArrTime": "22:15",
+          "seats": 4
+        }
+      },
+      "CJJ|NGO|20260928|20261001|에어로케이": {
+        "status": "success",
+        "lastAttemptAt": "2026-09-05T23:38:04.351Z",
+        "attemptCount": 1,
+        "adapterVersion": "2026-08-31.1",
+        "departureDate": "20260928",
+        "data": {
+          "depTime": "17:40",
+          "arrTime": "19:30",
+          "retDepTime": "20:30",
+          "retArrTime": "22:15",
+          "seats": 4
+        }
+      },
+      "CJJ|NGO|20260929|20261002|에어로케이": {
+        "status": "success",
+        "lastAttemptAt": "2026-09-05T23:38:04.351Z",
+        "attemptCount": 1,
+        "adapterVersion": "2026-08-31.1",
+        "departureDate": "20260929",
+        "data": {
+          "depTime": "17:40",
+          "arrTime": "19:30",
+          "retDepTime": "20:30",
+          "retArrTime": "22:15",
+          "seats": 4
+        }
+      },
+      "CJJ|NGO|20260930|20261003|에어로케이": {
+        "status": "success",
+        "lastAttemptAt": "2026-09-05T23:38:04.351Z",
+        "attemptCount": 1,
+        "adapterVersion": "2026-08-31.1",
+        "departureDate": "20260930",
+        "data": {
+          "depTime": "17:40",
+          "arrTime": "19:30",
+          "retDepTime": "20:30",
+          "retArrTime": "22:15",
+          "seats": 4
+        }
       }
     }
   },
   "ybtourTimeEnrichment": {
     "version": 1,
-    "updatedAt": "2026-09-05T08:52:49.333Z",
+    "updatedAt": "2026-09-05T23:37:54.470Z",
     "entries": {
       "에어서울|ICN|KIX|20260927|20260929": {
         "status": "success",
@@ -23475,22 +23928,6 @@
           "retDepTime": "03:00",
           "retArrTime": "07:00",
           "minPax": 2,
-          "baggage": ""
-        }
-      },
-      "제주항공|ICN|SPN|20260905|20260910": {
-        "status": "success",
-        "lastAttemptAt": "2026-08-31T09:51:16.295Z",
-        "attemptCount": 1,
-        "adapterVersion": "2026-08-31.1",
-        "departureDate": "20260905",
-        "data": {
-          "flightNumber": "7C3211",
-          "depTime": "20:20",
-          "arrTime": "02:00",
-          "retDepTime": "03:05",
-          "retArrTime": "06:50",
-          "minPax": 1,
           "baggage": ""
         }
       },
@@ -27062,6 +27499,70 @@
           "arrTime": "12:20",
           "retDepTime": "13:15",
           "retArrTime": "16:40",
+          "minPax": 1,
+          "baggage": "15 Kg"
+        }
+      },
+      "이스타항공|PUS|KMJ|20260927|20260930": {
+        "status": "success",
+        "lastAttemptAt": "2026-09-05T23:37:54.470Z",
+        "attemptCount": 1,
+        "adapterVersion": "2026-08-31.1",
+        "departureDate": "20260927",
+        "data": {
+          "flightNumber": "ZE0967",
+          "depTime": "12:30",
+          "arrTime": "13:50",
+          "retDepTime": "14:50",
+          "retArrTime": "15:55",
+          "minPax": 1,
+          "baggage": "15 Kg"
+        }
+      },
+      "이스타항공|PUS|KMJ|20260928|20261001": {
+        "status": "success",
+        "lastAttemptAt": "2026-09-05T23:37:54.470Z",
+        "attemptCount": 1,
+        "adapterVersion": "2026-08-31.1",
+        "departureDate": "20260928",
+        "data": {
+          "flightNumber": "ZE0967",
+          "depTime": "12:30",
+          "arrTime": "13:50",
+          "retDepTime": "14:50",
+          "retArrTime": "15:55",
+          "minPax": 1,
+          "baggage": "15 Kg"
+        }
+      },
+      "이스타항공|PUS|KMJ|20260929|20261002": {
+        "status": "success",
+        "lastAttemptAt": "2026-09-05T23:37:54.470Z",
+        "attemptCount": 1,
+        "adapterVersion": "2026-08-31.1",
+        "departureDate": "20260929",
+        "data": {
+          "flightNumber": "ZE0967",
+          "depTime": "12:30",
+          "arrTime": "13:50",
+          "retDepTime": "14:50",
+          "retArrTime": "15:55",
+          "minPax": 1,
+          "baggage": "15 Kg"
+        }
+      },
+      "이스타항공|PUS|KMJ|20260930|20261003": {
+        "status": "success",
+        "lastAttemptAt": "2026-09-05T23:37:54.470Z",
+        "attemptCount": 1,
+        "adapterVersion": "2026-08-31.1",
+        "departureDate": "20260930",
+        "data": {
+          "flightNumber": "ZE0967",
+          "depTime": "12:30",
+          "arrTime": "13:50",
+          "retDepTime": "14:50",
+          "retArrTime": "15:55",
           "minPax": 1,
           "baggage": "15 Kg"
         }
