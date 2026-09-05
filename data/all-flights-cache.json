@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-09-04T23:53:24.796Z",
-  "fullCrawlUpdatedAt": "2026-09-04T23:53:24.796Z",
-  "count": 581,
+  "timestamp": "2026-09-05T02:31:23.537Z",
+  "fullCrawlUpdatedAt": "2026-09-05T02:31:23.537Z",
+  "count": 588,
   "flights": [
     {
       "id": "ybtour-xyjhlc",
@@ -1338,9 +1338,9 @@
       "seats": "4석",
       "availableSeats": 4,
       "region": "일본",
-      "discountRate": -114,
       "flightNumber": "RS0745",
       "minPax": 2,
+      "discountRate": -114,
       "firstSeen": "2026-09-05"
     },
     {
@@ -1570,8 +1570,8 @@
       "seats": "4석",
       "availableSeats": 4,
       "region": "동남아",
-      "discountRate": -39,
       "flightNumber": "9G0451",
+      "discountRate": -39,
       "firstSeen": "2026-09-05"
     },
     {
@@ -1598,8 +1598,8 @@
       "seats": "4석",
       "availableSeats": 4,
       "region": "동남아",
-      "discountRate": -39,
       "flightNumber": "9G0451",
+      "discountRate": -39,
       "firstSeen": "2026-09-05"
     },
     {
@@ -2334,32 +2334,203 @@
       "firstSeen": "2026-09-03"
     },
     {
-      "id": "ybtour-88cow9",
+      "id": "ybtour-1yq3j2v",
+      "source": "ybtour",
+      "airline": "티웨이항공",
+      "departure": {
+        "city": "대구",
+        "airport": "TAE",
+        "date": "2026-09-26",
+        "time": "19:50",
+        "arrivalTime": "22:50"
+      },
+      "arrival": {
+        "city": "나트랑(깜랑)",
+        "airport": "CXR",
+        "date": "2026-09-30",
+        "time": "00:05",
+        "arrivalTime": "07:05"
+      },
+      "price": 400000,
+      "currency": "KRW",
+      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=A0%2FA3&inhId=TW0037TAECXR-T4&depDate=20260926&efcCityCode=CXR",
+      "seats": "8석",
+      "availableSeats": 8,
+      "region": "동남아",
+      "discountRate": 0,
+      "flightNumber": "TW0037",
+      "minPax": 2,
+      "firstSeen": "2026-09-05"
+    },
+    {
+      "id": "ybtour-o71azi",
+      "source": "ybtour",
+      "airline": "티웨이항공",
+      "departure": {
+        "city": "대구",
+        "airport": "TAE",
+        "date": "2026-09-27",
+        "time": "19:50",
+        "arrivalTime": "22:50"
+      },
+      "arrival": {
+        "city": "나트랑(깜랑)",
+        "airport": "CXR",
+        "date": "2026-10-01",
+        "time": "00:05",
+        "arrivalTime": "07:05"
+      },
+      "price": 400000,
+      "currency": "KRW",
+      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=A0%2FA3&inhId=TW0037TAECXR-T4&depDate=20260927&efcCityCode=CXR",
+      "seats": "8석",
+      "availableSeats": 8,
+      "region": "동남아",
+      "discountRate": 0,
+      "flightNumber": "TW0037",
+      "minPax": 2,
+      "firstSeen": "2026-09-05"
+    },
+    {
+      "id": "ybtour-1gfh1a6",
+      "source": "ybtour",
+      "airline": "티웨이항공",
+      "departure": {
+        "city": "대구",
+        "airport": "TAE",
+        "date": "2026-09-28",
+        "time": "19:50",
+        "arrivalTime": "22:50"
+      },
+      "arrival": {
+        "city": "나트랑(깜랑)",
+        "airport": "CXR",
+        "date": "2026-10-02",
+        "time": "00:05",
+        "arrivalTime": "07:05"
+      },
+      "price": 400000,
+      "currency": "KRW",
+      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=A0%2FA3&inhId=TW0037TAECXR-T4&depDate=20260928&efcCityCode=CXR",
+      "seats": "8석",
+      "availableSeats": 8,
+      "region": "동남아",
+      "discountRate": 0,
+      "flightNumber": "TW0037",
+      "minPax": 2,
+      "firstSeen": "2026-09-05"
+    },
+    {
+      "id": "ybtour-9msplq",
+      "source": "ybtour",
+      "airline": "티웨이항공",
+      "departure": {
+        "city": "대구",
+        "airport": "TAE",
+        "date": "2026-09-29",
+        "time": "19:50",
+        "arrivalTime": "22:50"
+      },
+      "arrival": {
+        "city": "나트랑(깜랑)",
+        "airport": "CXR",
+        "date": "2026-10-03",
+        "time": "00:05",
+        "arrivalTime": "07:05"
+      },
+      "price": 400000,
+      "currency": "KRW",
+      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=A0%2FA3&inhId=TW0037TAECXR-T4&depDate=20260929&efcCityCode=CXR",
+      "seats": "8석",
+      "availableSeats": 8,
+      "region": "동남아",
+      "discountRate": 0,
+      "flightNumber": "TW0037",
+      "firstSeen": "2026-09-05"
+    },
+    {
+      "id": "ybtour-jkxhla",
       "source": "ybtour",
       "airline": "에어로케이항공",
       "departure": {
         "city": "청주",
         "airport": "CJJ",
-        "date": "2026-09-12",
+        "date": "2026-09-14",
         "time": "10:30",
         "arrivalTime": "12:20"
       },
       "arrival": {
         "city": "대만(타이페이)",
         "airport": "TPE",
-        "date": "2026-09-15",
+        "date": "2026-09-17",
         "time": "13:15",
         "arrivalTime": "16:40"
       },
-      "price": 358400,
+      "price": 360000,
       "currency": "KRW",
-      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=A0%2FA3&inhId=RF0511CJJTPE-T4&depDate=20260912&efcCityCode=TPE",
+      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=A0%2FA3&inhId=RF0511CJJTPE-T4&depDate=20260914&efcCityCode=TPE",
       "seats": "8석",
       "availableSeats": 8,
       "region": "중국",
-      "flightNumber": "RF0511",
       "discountRate": -47,
-      "firstSeen": "2026-09-01"
+      "flightNumber": "RF0511",
+      "firstSeen": "2026-09-05"
+    },
+    {
+      "id": "ybtour-1btd7vy",
+      "source": "ybtour",
+      "airline": "에어로케이항공",
+      "departure": {
+        "city": "청주",
+        "airport": "CJJ",
+        "date": "2026-09-15",
+        "time": "10:30",
+        "arrivalTime": "12:20"
+      },
+      "arrival": {
+        "city": "대만(타이페이)",
+        "airport": "TPE",
+        "date": "2026-09-18",
+        "time": "13:15",
+        "arrivalTime": "16:40"
+      },
+      "price": 360000,
+      "currency": "KRW",
+      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=A0%2FA3&inhId=RF0511CJJTPE-T4&depDate=20260915&efcCityCode=TPE",
+      "seats": "8석",
+      "availableSeats": 8,
+      "region": "중국",
+      "discountRate": -47,
+      "flightNumber": "RF0511",
+      "firstSeen": "2026-09-05"
+    },
+    {
+      "id": "ybtour-ssxc5q",
+      "source": "ybtour",
+      "airline": "에어로케이항공",
+      "departure": {
+        "city": "청주",
+        "airport": "CJJ",
+        "date": "2026-09-21",
+        "time": "10:30",
+        "arrivalTime": "12:20"
+      },
+      "arrival": {
+        "city": "대만(타이페이)",
+        "airport": "TPE",
+        "date": "2026-09-24",
+        "time": "13:15",
+        "arrivalTime": "16:40"
+      },
+      "price": 360000,
+      "currency": "KRW",
+      "link": "https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV&efcBannerCode=A0%2FA3&inhId=RF0511CJJTPE-T4&depDate=20260921&efcCityCode=TPE",
+      "seats": "8석",
+      "availableSeats": 8,
+      "region": "중국",
+      "discountRate": -47,
+      "flightNumber": "RF0511",
+      "firstSeen": "2026-09-05"
     },
     {
       "id": "ybtour-uk1mbm",
@@ -4287,7 +4458,7 @@
       "price": 1110000,
       "currency": "KRW",
       "link": "https://www.hanatour.com/com/pmt/CHPC0PMT0011M200?fareId=RTF%5E3006753%5EJQ0048ICNSYD-H16%5EJQ0048ICNSYD-21%5E20260917%5ET%5EKRW%5E6451191%5E5256738%5E%5E1%5E0%5E0&psngrCntLst=%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D&selectedCard=%7B%7D",
-      "availableSeats": 3,
+      "availableSeats": 2,
       "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22SEL%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22SYD%22%2C%22depDt%22%3A%2220260917%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22SYD%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22SEL%22%2C%22depDt%22%3A%2220260923%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
       "region": "남태평양",
       "discountRate": -31,
@@ -7727,7 +7898,7 @@
       "price": 264000,
       "currency": "KRW",
       "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22PUS%22%2C%22continentCode%22%3A%22JPN%22%2C%22arrivalCity%22%3A%22CTS%22%2C%22departureDate%22%3A%222026-09-16%22%2C%22arrivalDate%22%3A%222026-09-17%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
-      "availableSeats": 10,
+      "availableSeats": 8,
       "flightNumber": "LJ311 / LJ312",
       "region": "일본",
       "modetourDetail": {
@@ -8615,6 +8786,50 @@
       },
       "discountRate": -25,
       "firstSeen": "2026-09-04"
+    },
+    {
+      "id": "modetour-CHI-19721199",
+      "source": "modetour",
+      "airline": "이스타항공",
+      "departure": {
+        "city": "청주",
+        "airport": "CJJ",
+        "date": "2026-10-05",
+        "time": "23:40"
+      },
+      "arrival": {
+        "city": "타이베이",
+        "airport": "TPE",
+        "date": "2026-10-09",
+        "time": "02:40"
+      },
+      "price": 316000,
+      "currency": "KRW",
+      "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22CJJ%22%2C%22continentCode%22%3A%22CHI%22%2C%22arrivalCity%22%3A%22TPE%22%2C%22departureDate%22%3A%222026-10-05%22%2C%22arrivalDate%22%3A%222026-10-06%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
+      "availableSeats": 6,
+      "flightNumber": "ZE781 / ZE782",
+      "region": "중국",
+      "modetourDetail": {
+        "flyingTime": "02:25",
+        "isDirect": true,
+        "isReturnDirect": true,
+        "departureArrivalTime": "01:10",
+        "returnDepartureTime": "02:40",
+        "returnArrivalTime": "06:05",
+        "baseFare": 140000,
+        "tax": 119000,
+        "tax2": 57000,
+        "childBaseFare": 140000,
+        "childTax": 119000,
+        "childTax2": 49000,
+        "infantFare": 150000,
+        "departureFlightNo": "ZE781",
+        "returnFlightNo": "ZE782",
+        "returnDepartureAirport": "TPE",
+        "returnArrivalAirport": "CJJ"
+      },
+      "discountRate": -32,
+      "firstSeen": "2026-09-05"
     },
     {
       "id": "modetour-CHI-20107438",
@@ -18966,17 +19181,17 @@
     }
   ],
   "sources": {
-    "ybtour": 145,
+    "ybtour": 151,
     "hanatour": 30,
-    "modetour": 101,
+    "modetour": 102,
     "onlinetour": 1,
     "ttang": 144,
     "myrealtrip": 160
   },
   "sourceUpdatedAt": {
-    "ybtour": "2026-09-04T23:51:26.118Z",
-    "hanatour": "2026-09-04T23:51:26.119Z",
-    "modetour": "2026-09-04T23:51:26.119Z",
+    "ybtour": "2026-09-05T02:31:03.967Z",
+    "hanatour": "2026-09-05T02:31:03.967Z",
+    "modetour": "2026-09-05T02:31:03.967Z",
     "onlinetour": "2026-09-04T05:49:59.352Z",
     "ttang": "2026-09-04T23:51:26.119Z",
     "myrealtrip": "2026-09-05T01:10:11.347Z"
@@ -18990,9 +19205,9 @@
     "myrealtrip": 0
   },
   "scrapedCounts": {
-    "modetour": 699,
+    "modetour": 725,
     "ttang": 1213,
-    "ybtour": 270,
+    "ybtour": 274,
     "hanatour": 99,
     "onlinetour": 112
   },
@@ -22631,7 +22846,7 @@
   },
   "ybtourTimeEnrichment": {
     "version": 1,
-    "updatedAt": "2026-09-04T23:51:32.742Z",
+    "updatedAt": "2026-09-05T02:31:14.446Z",
     "entries": {
       "에어서울|ICN|KIX|20260927|20260929": {
         "status": "success",
@@ -27258,6 +27473,54 @@
           "retDepTime": "15:50",
           "retArrTime": "17:45",
           "minPax": 2,
+          "baggage": "15 Kg"
+        }
+      },
+      "에어로케이|CJJ|TPE|20260914|20260917": {
+        "status": "success",
+        "lastAttemptAt": "2026-09-05T02:31:14.446Z",
+        "attemptCount": 1,
+        "adapterVersion": "2026-08-31.1",
+        "departureDate": "20260914",
+        "data": {
+          "flightNumber": "RF0511",
+          "depTime": "10:30",
+          "arrTime": "12:20",
+          "retDepTime": "13:15",
+          "retArrTime": "16:40",
+          "minPax": 1,
+          "baggage": "15 Kg"
+        }
+      },
+      "에어로케이|CJJ|TPE|20260915|20260918": {
+        "status": "success",
+        "lastAttemptAt": "2026-09-05T02:31:14.446Z",
+        "attemptCount": 1,
+        "adapterVersion": "2026-08-31.1",
+        "departureDate": "20260915",
+        "data": {
+          "flightNumber": "RF0511",
+          "depTime": "10:30",
+          "arrTime": "12:20",
+          "retDepTime": "13:15",
+          "retArrTime": "16:40",
+          "minPax": 1,
+          "baggage": "15 Kg"
+        }
+      },
+      "에어로케이|CJJ|TPE|20260921|20260924": {
+        "status": "success",
+        "lastAttemptAt": "2026-09-05T02:31:14.446Z",
+        "attemptCount": 1,
+        "adapterVersion": "2026-08-31.1",
+        "departureDate": "20260921",
+        "data": {
+          "flightNumber": "RF0511",
+          "depTime": "10:30",
+          "arrTime": "12:20",
+          "retDepTime": "13:15",
+          "retArrTime": "16:40",
+          "minPax": 1,
           "baggage": "15 Kg"
         }
       }
