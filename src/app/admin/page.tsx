@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import styles from './admin.module.css';
 import { isAnalyticsExcluded, setAnalyticsExcluded } from '@/lib/analytics';
+import { buildSourceSlotBars, type SlotStatus, type SourceSlotBar, type SourceSlotEvent } from '@/lib/admin-source-slots';
 import { buildAdminAttentionItems } from '@/lib/admin-attention';
 import AdminTodayPick from '@/components/AdminTodayPick';
 
@@ -781,6 +782,91 @@ function skippedUntilLabel(
         : '차단 휴식 · 종료 시각 기록 없음';
 }
 
+const SLOT_STATUS_LABELS: Record<SlotStatus, string> = {
+    auto: '자동 수집 성공',
+    pc: 'PC 대체 수집 성공',
+    manual: '수동 캡처 성공',
+    failed: '수집 실패 · 이전 데이터 유지',
+    skipped: '건너뜀 (요청 없음, 실패 아님)',
+    unscheduled: '이 회차 예정 없음',
+    running: '진행 중 · 결과 대기',
+    pending: '시작·결과 대기',
+    missing: '기록 없음',
+};
+
+function slotEventLabel(event: SourceSlotEvent): string {
+    if (event.manual) return `수동 캡처 ${event.value.toLocaleString()}건`;
+    if (event.skipped) return skippedUntilLabel(event.skippedUntil, event.skipReason);
+    if (event.preserved) return event.localFallback ? 'PC 대체 실패' : '자동 수집 실패';
+    if (event.localFallback) return `PC 대체 ${event.countKind === 'shown' ? '노출 ' : ''}${event.value.toLocaleString()}건`;
+    return `자동 ${event.countKind === 'shown' ? '노출 ' : ''}${event.value.toLocaleString()}건`;
+}
+
+/** 여행사별 수집 상태 막대의 회차 라벨. `9. 5. 14:23` 형태. */
+function slotTimeLabel(iso: string): string {
+    return formatKSTMinute(iso).replace(/^\d{4}\. /, '');
+}
+
+function slotBarTooltip(bar: SourceSlotBar, sourceName: string): { title: string; lines: string[] } {
+    const lines: string[] = [];
+    if (bar.value !== null) lines.push(`${bar.final?.countKind === 'shown' ? bar.status === 'failed' ? '보존된 노출' : '필터 후 노출' : bar.status === 'manual' ? '수동 확인' : '수집'} ${bar.value.toLocaleString()}건`);
+    if (bar.final?.skipped) lines.push(skippedUntilLabel(bar.final.skippedUntil, bar.final.skipReason));
+    if (bar.final && !bar.final.skipped) lines.push(`기록 시각 ${slotTimeLabel(bar.final.timestamp)}`);
+    if (bar.status === 'failed') lines.push(bar.final?.reason || '실패 사유 기록 없음 · 이전 데이터 유지');
+    if (bar.status === 'running') lines.push(`${bar.runStage === 'preparing' ? '실행 준비 중' : bar.runStage === 'publishing' ? '결과 반영 중' : '자동 수집 중'} · 이 여행사 결과를 기다립니다`);
+    if (bar.status === 'pending') lines.push('예약 시각 경과 · 실행 여부 또는 결과가 아직 확인되지 않았습니다');
+    if (bar.status === 'missing') lines.push('회차가 끝났는데 이 여행사 기록이 없습니다');
+    if (bar.events.length > 1) {
+        lines.push(`흐름: ${bar.events.map(event => `${slotTimeLabel(event.timestamp).replace(/^\d+\. \d+\. /, '')} ${slotEventLabel(event)}`).join(' → ')}`);
+    }
+    return { title: `${slotTimeLabel(bar.slotAt)} 회차 · ${sourceName} · ${SLOT_STATUS_LABELS[bar.status]}`, lines };
+}
+
+/** crawlHistory 항목을 막대 계산용 이벤트로 바꾼다. 수동 캡처 상태도 같은 형태로 합친다. */
+function collectSourceSlotEvents(
+    data: AdminData,
+    source: string,
+    hasHistoryEvent: (entry: CrawlHistoryEntry, source: string) => boolean,
+): SourceSlotEvent[] {
+    const manualCapture = data.manualCaptureStatus?.[source];
+    const logged: SourceSlotEvent[] = (data.crawlHistory || [])
+        .filter(entry => hasHistoryEvent(entry, source))
+        .map(entry => ({
+            timestamp: entry.timestamp,
+            value: entry.sites[source]?.scraped ?? entry.sites[source]?.total ?? 0,
+            countKind: entry.sites[source]?.manual ? 'manual' : entry.sites[source]?.scraped !== undefined ? 'scraped' : 'shown',
+            reason: entry.sites[source]?.localFallback
+                ? entry.sites[source]?.preserved && data.sourceCircuits?.[source]?.localFallback
+                    && Math.abs(Date.parse(entry.timestamp) - Date.parse(data.sourceCircuits[source].localFallback!.lastAttemptAt)) < 5 * 60_000
+                    ? data.sourceCircuits[source].localFallback!.detail : undefined
+                : entry.sites[source]?.preserved && data.sourceCircuits?.[source]
+                && Math.abs(Date.parse(entry.timestamp) - Date.parse(data.sourceCircuits[source].openedAt)) < 5 * 60_000
+                ? data.sourceCircuits[source].detail : undefined,
+            preserved: Boolean(entry.sites[source]?.preserved),
+            skipped: Boolean(entry.sites[source]?.skipped),
+            skippedUntil: entry.sites[source]?.skippedUntil,
+            skipReason: entry.sites[source]?.skipReason,
+            manual: Boolean(entry.sites[source]?.manual),
+            localFallback: Boolean(entry.sites[source]?.localFallback),
+        }));
+    const hasCurrentManualLog = source === 'modetour' && Boolean(manualCapture) && logged.some(event =>
+        event.manual
+        && Math.abs(new Date(event.timestamp).getTime() - new Date(manualCapture!.lastImportedAt).getTime()) < 5 * 60_000,
+    );
+    if (source === 'modetour' && manualCapture && !hasCurrentManualLog) {
+        logged.push({
+            timestamp: manualCapture.lastImportedAt,
+            value: manualCapture.accepted,
+            countKind: 'manual',
+            preserved: false,
+            skipped: false,
+            manual: true,
+            localFallback: false,
+        });
+    }
+    return logged;
+}
+
 function timeAgo(iso: string): string {
     const diff = Date.now() - new Date(iso).getTime();
     const mins = Math.floor(diff / 60000);
@@ -1532,6 +1618,22 @@ export default function AdminPage() {
     const [userStatsError, setUserStatsError] = useState<string | null>(null);
     const [gaStats, setGaStats] = useState<GaStatsData | null>(null);
     const [gaStatsError, setGaStatsError] = useState<string | null>(null);
+    // 여행사별 수집 상태 막대 툴팁. PC는 hover, 모바일은 탭으로 열고 바깥 탭으로 닫는다.
+    const [activeSlotBar, setActiveSlotBar] = useState<{ source: string; index: number } | null>(null);
+    const [slotNow, setSlotNow] = useState(() => Date.now());
+    useEffect(() => {
+        const timer = window.setInterval(() => setSlotNow(Date.now()), 30_000);
+        return () => window.clearInterval(timer);
+    }, []);
+    useEffect(() => {
+        if (!activeSlotBar) return;
+        const close = (event: PointerEvent) => {
+            if ((event.target as Element | null)?.closest?.('[data-slot-bar]')) return;
+            setActiveSlotBar(null);
+        };
+        document.addEventListener('pointerdown', close);
+        return () => document.removeEventListener('pointerdown', close);
+    }, [activeSlotBar]);
     const [threadsInsights, setThreadsInsights] = useState<ThreadsInsightsData | null>(null);
     const [threadsInsightsError, setThreadsInsightsError] = useState<string | null>(null);
     const [flightReports, setFlightReports] = useState<FlightReportAdminData | null>(null);
@@ -2687,7 +2789,7 @@ export default function AdminPage() {
                     <div className={styles.sectionHeading}>
                         <div>
                             <h2>여행사별 수집 상태</h2>
-                            <p>최근 16회의 자동 수집·PC 대체·수동 캡처·건너뜀을 서로 다른 표식으로 보여줍니다.</p>
+                            <p>최근 16회차를 같은 축으로 봅니다. 맨 오른쪽이 최신 예약 회차입니다. 막대에 마우스를 올리거나 탭하면 상세가 보입니다.</p>
                         </div>
                     </div>
                     <div className={styles.sourceGraphLegend} aria-label="수집 그래프 범례">
@@ -2696,6 +2798,9 @@ export default function AdminPage() {
                         <span><i className={styles.sourceLegendFailed} />수집 실패</span>
                         <span><i className={styles.sourceLegendManual} />수동 캡처 성공</span>
                         <span><i className={styles.sourceLegendSkipped} />건너뜀</span>
+                        <span><i className={styles.sourceLegendPending} />진행·대기</span>
+                        <span><i className={styles.sourceLegendUnscheduled} />예정 없음</span>
+                        <span><i className={styles.sourceLegendMissing} />기록 없음</span>
                     </div>
                     {crawlScheduleHealth && (
                         <div className={crawlScheduleIssue ? `${styles.naverCompact} ${styles.naverCompactWarn}` : styles.naverCompact}>
@@ -2734,35 +2839,18 @@ export default function AdminPage() {
                             const manualCapture = data.manualCaptureStatus?.[source];
                             const late = ageHours === null || ageHours > (STALE_AFTER_HOURS[source] ?? DEFAULT_STALE_AFTER_HOURS);
                             const visibleCount = sourceVisibleCounts[source] || 0;
-                            const loggedHistory = (data.crawlHistory || [])
-                                .filter(entry => sourceHasHistoryEvent(entry, source))
-                                .map(entry => ({
-                                    timestamp: entry.timestamp,
-                                    value: entry.sites[source]?.scraped ?? entry.sites[source]?.total ?? 0,
-                                    preserved: Boolean(entry.sites[source]?.preserved),
-                                    skipped: Boolean(entry.sites[source]?.skipped),
-                                    skippedUntil: entry.sites[source]?.skippedUntil,
-                                    skipReason: entry.sites[source]?.skipReason,
-                                    manual: Boolean(entry.sites[source]?.manual),
-                                    localFallback: Boolean(entry.sites[source]?.localFallback),
-                                }));
-                            const hasCurrentManualLog = source === 'modetour' && Boolean(manualCapture) && loggedHistory.some(entry =>
-                                entry.manual
-                                && Math.abs(new Date(entry.timestamp).getTime() - new Date(manualCapture!.lastImportedAt).getTime()) < 5 * 60_000,
-                            );
-                            const history = [
-                                ...loggedHistory,
-                                ...(source === 'modetour' && manualCapture && !hasCurrentManualLog ? [{
-                                    timestamp: manualCapture.lastImportedAt,
-                                    value: manualCapture.accepted,
-                                    preserved: false,
-                                    skipped: false,
-                                    skippedUntil: undefined,
-                                    skipReason: undefined,
-                                    manual: true,
-                                    localFallback: false,
-                                }] : []),
-                            ]
+                            const slotEvents = collectSourceSlotEvents(data, source, sourceHasHistoryEvent);
+                            const slotBars = buildSourceSlotBars({
+                                source,
+                                events: slotEvents,
+                                now: slotNow,
+                                currentRun: data.currentCrawlRun,
+                                completedThrough: crawlScheduleHealth?.lastCompletedAt
+                                    ? new Date(crawlScheduleHealth.lastCompletedAt).getTime()
+                                    : null,
+                            });
+                            // 상태 문구·중앙값 계산은 예전처럼 최근 이벤트 16개를 본다. 막대만 회차 축을 쓴다.
+                            const history = [...slotEvents]
                                 .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
                                 .slice(-16);
                             const latestFailedAt = [...history].reverse().find(entry => entry.preserved && !entry.skipped)?.timestamp;
@@ -2791,7 +2879,7 @@ export default function AdminPage() {
                             const latestMeasured = [...history].reverse().find(entry => !entry.skipped) || null;
                             const slumped = Boolean(latestMeasured && !latestMeasured.preserved && !latestMeasured.manual && median >= 30 && latestMeasured.value < median * 0.6);
                             const issue = circuitOpen || staleCount > 0 || late || slumped;
-                            const peak = Math.max(...history.filter(entry => !entry.skipped).map(entry => entry.value), 1);
+                            const peak = Math.max(...slotBars.filter(bar => bar.status !== 'failed').map(bar => bar.value ?? 0), 1);
                             const statusText = modetourManualApplied
                                 ? `${modetourFailureLabel} · 수동 ${manualCapture!.accepted}건 반영${manualCapture!.naverPending ? ' · 네이버 대기' : ''}`
                                 : modetourManualNeeded
@@ -2817,37 +2905,71 @@ export default function AdminPage() {
                                         <div><strong>{visibleCount.toLocaleString()}</strong><span>사이트 노출</span></div>
                                         <div><strong>{latestMeasured ? latestMeasured.value.toLocaleString() : '—'}</strong><span>최근 실제 수집</span></div>
                                     </div>
-                                    <div className={styles.sourceTrendBars} role="img" aria-label={`${SOURCE_NAMES[source]} 최근 ${history.length}회 자동·PC 대체·수동 수집 및 건너뜀 기록`}>
-                                        {history.map((entry, index) => {
-                                            const isLatest = index === history.length - 1;
+                                    <div className={styles.sourceTrendBars} role="group" aria-label={`${SOURCE_NAMES[source]} 최근 ${slotBars.length}회차 자동·PC 대체·수동 수집 및 건너뜀 기록`}>
+                                        {slotBars.map((bar, index) => {
+                                            const tooltip = slotBarTooltip(bar, SOURCE_NAMES[source] || source);
+                                            const active = activeSlotBar?.source === `ops:${source}` && activeSlotBar.index === index;
+                                            const className = bar.status === 'manual'
+                                                ? styles.sourceTrendBarManual
+                                                : bar.status === 'skipped'
+                                                ? styles.sourceTrendBarSkipped
+                                                : bar.status === 'failed'
+                                                ? styles.sourceTrendBarPreserved
+                                                : bar.status === 'pc'
+                                                ? styles.sourceTrendBarPc
+                                                : bar.status === 'unscheduled'
+                                                ? styles.sourceTrendBarUnscheduled
+                                                : bar.status === 'pending' || bar.status === 'running'
+                                                ? styles.sourceTrendBarPending
+                                                : bar.status === 'missing'
+                                                ? styles.sourceTrendBarMissing
+                                                : bar.isLatest && slumped
+                                                    ? styles.sourceTrendBarBroken
+                                                    : bar.isLatest
+                                                        ? styles.sourceTrendBarLatest
+                                                        : styles.sourceTrendBar;
+                                            const height = bar.status === 'skipped' || bar.status === 'failed'
+                                                    ? '12px'
+                                                    : bar.status === 'unscheduled' || bar.status === 'pending' || bar.status === 'running' || bar.status === 'missing'
+                                                        ? '100%'
+                                                        : `${Math.max(5, Math.round(((bar.value || 0) / peak) * 100))}%`;
                                             return (
                                                 <span
-                                                    key={`${entry.timestamp}-${index}`}
-                                                    className={entry.manual
-                                                        ? styles.sourceTrendBarManual
-                                                        : entry.skipped
-                                                        ? styles.sourceTrendBarSkipped
-                                                        : entry.preserved
-                                                        ? styles.sourceTrendBarPreserved
-                                                        : entry.localFallback
-                                                        ? styles.sourceTrendBarPc
-                                                        : isLatest && slumped
-                                                            ? styles.sourceTrendBarBroken
-                                                            : isLatest
-                                                                ? styles.sourceTrendBarLatest
-                                                                : styles.sourceTrendBar}
-                                                    style={{ height: entry.manual ? '24px' : entry.skipped ? '12px' : `${Math.max(5, Math.round((entry.value / peak) * 100))}%` }}
-                                                    title={entry.skipped
-                                                        ? `${formatKST(entry.timestamp).replace(/\d{4}\. /, '')} · ${skippedUntilLabel(entry.skippedUntil, entry.skipReason)} (요청 없음, 실패 아님)`
-                                                        : `${formatKST(entry.timestamp).replace(/\d{4}\. /, '')} · ${entry.value.toLocaleString()}개${entry.manual ? ' · 수동 캡처 성공' : entry.preserved ? entry.localFallback ? ' · PC 대체 실패, 이전 데이터 사용' : ' · 수집 실패, 이전 데이터 사용' : entry.localFallback ? ' · PC 대체 수집 성공' : ' · 자동 수집'}`}
+                                                    key={bar.slotAt}
+                                                    data-slot-bar=""
+                                                    data-slot-at={bar.slotAt}
+                                                    data-slot-status={bar.status}
+                                                    className={active ? `${styles.sourceTrendBarSlot} ${styles.sourceTrendBarSlotActive}` : styles.sourceTrendBarSlot}
+                                                    tabIndex={0}
+                                                    role="button"
+                                                    aria-label={`${tooltip.title}${tooltip.lines.length ? ` · ${tooltip.lines.join(' · ')}` : ''}`}
+                                                    onClick={() => setActiveSlotBar(active ? null : { source: `ops:${source}`, index })}
+                                                    aria-expanded={active}
+                                                    onPointerEnter={event => { if (event.pointerType === 'mouse') setActiveSlotBar({ source: `ops:${source}`, index }); }}
+                                                    onPointerLeave={event => { if (event.pointerType === 'mouse') setActiveSlotBar(null); }}
+                                                    onFocus={event => { if (event.currentTarget.matches(':focus-visible')) setActiveSlotBar({ source: `ops:${source}`, index }); }}
+                                                    onBlur={() => setActiveSlotBar(null)}
+                                                    onKeyDown={event => {
+                                                        if (event.key === 'Enter' || event.key === ' ') {
+                                                            event.preventDefault();
+                                                            setActiveSlotBar(active ? null : { source: `ops:${source}`, index });
+                                                        }
+                                                        if (event.key === 'Escape') setActiveSlotBar(null);
+                                                    }}
                                                 >
-                                                    {entry.manual ? '✓' : entry.localFallback && !entry.preserved ? 'P' : ''}
+                                                    <i className={className} style={{ height }}>
+                                                        {bar.status === 'manual' ? '✓' : bar.status === 'pc' ? 'P' : ''}
+                                                    </i>
+                                                    <span className={styles.sourceSlotTooltip} role="tooltip">
+                                                        <strong>{tooltip.title}</strong>
+                                                        {tooltip.lines.map(line => <span key={line}>{line}</span>)}
+                                                    </span>
                                                 </span>
                                             );
                                         })}
                                     </div>
                                     <div className={styles.sourceTrendFoot}>
-                                        <span>{history.length > 0 ? `최근 ${history.length}회` : '수집 기록 없음'}</span>
+                                        <span>{slotBars.length > 0 ? `최근 ${slotBars.length}회차 · ${slotTimeLabel(slotBars[0].slotAt)}부터` : '수집 기록 없음'}</span>
                                         <span>{circuit
                                             ? `원인 ${compactCircuitCause(circuit)} · ${circuitOpen
                                                 ? `${formatKSTMinute(circuit.nextProbeAt)}까지 건너뜀`
@@ -3671,6 +3793,9 @@ export default function AdminPage() {
                     <span><i className={styles.sourceLegendFailed} />수집 실패</span>
                     <span><i className={styles.sourceLegendManual} />수동 캡처 성공</span>
                     <span><i className={styles.sourceLegendSkipped} />건너뜀</span>
+                    <span><i className={styles.sourceLegendPending} />진행·대기</span>
+                    <span><i className={styles.sourceLegendUnscheduled} />예정 없음</span>
+                        <span><i className={styles.sourceLegendMissing} />기록 없음</span>
                 </div>
                 <div className={styles.sourceGrid}>
                     {allSources.map(source => {
@@ -3685,35 +3810,18 @@ export default function AdminPage() {
                         const ageHours = updatedAt ? (Date.now() - new Date(updatedAt).getTime()) / 3600000 : null;
                         const stale = ageHours === null || ageHours > staleAfter;
 
-                        const loggedHistory = (data.crawlHistory || [])
-                            .filter(entry => sourceHasHistoryEvent(entry, source))
-                            .map(entry => ({
-                                ts: entry.timestamp,
-                                value: entry.sites[source]?.scraped ?? entry.sites[source]?.total ?? 0,
-                                preserved: Boolean(entry.sites[source]?.preserved),
-                                skipped: Boolean(entry.sites[source]?.skipped),
-                                skippedUntil: entry.sites[source]?.skippedUntil,
-                                skipReason: entry.sites[source]?.skipReason,
-                                manual: Boolean(entry.sites[source]?.manual),
-                                localFallback: Boolean(entry.sites[source]?.localFallback),
-                            }));
-                        const hasCurrentManualLog = source === 'modetour' && Boolean(manualCapture) && loggedHistory.some(entry =>
-                            entry.manual
-                            && Math.abs(new Date(entry.ts).getTime() - new Date(manualCapture!.lastImportedAt).getTime()) < 5 * 60_000,
-                        );
-                        const history = [
-                            ...loggedHistory,
-                            ...(source === 'modetour' && manualCapture && !hasCurrentManualLog ? [{
-                                ts: manualCapture.lastImportedAt,
-                                value: manualCapture.accepted,
-                                preserved: false,
-                                skipped: false,
-                                skippedUntil: undefined,
-                                skipReason: undefined,
-                                manual: true,
-                                localFallback: false,
-                            }] : []),
-                        ]
+                        const slotEvents = collectSourceSlotEvents(data, source, sourceHasHistoryEvent);
+                        const slotBars = buildSourceSlotBars({
+                            source,
+                            events: slotEvents,
+                            now: slotNow,
+                                currentRun: data.currentCrawlRun,
+                            completedThrough: crawlScheduleHealth?.lastCompletedAt
+                                ? new Date(crawlScheduleHealth.lastCompletedAt).getTime()
+                                : null,
+                        });
+                        const history = [...slotEvents]
+                            .map(event => ({ ...event, ts: event.timestamp }))
                             .sort((a, b) => new Date(a.ts).getTime() - new Date(b.ts).getTime())
                             .slice(-16);
                         const latestFailedAt = [...history].reverse().find(entry => entry.preserved && !entry.skipped)?.ts;
@@ -3746,7 +3854,7 @@ export default function AdminPage() {
                         );
 
                         const status = circuitOpen || streak > 0 || slumped ? 'broken' : stale ? 'stale' : 'ok';
-                        const peak = Math.max(...history.filter(entry => !entry.skipped).map(h => h.value), 1);
+                        const peak = Math.max(...slotBars.filter(bar => bar.status !== 'failed').map(bar => bar.value ?? 0), 1);
                         const shown = flightFilterSummary?.visibleBySource?.[source] ?? 0;
 
                         return (
@@ -3831,27 +3939,64 @@ export default function AdminPage() {
                                     )}
                                 </div>
 
-                                <div className={styles.sparkBars} role="img" aria-label={`${SOURCE_NAMES[source]} 최근 ${history.length}회 자동·PC 대체·수동 수집 및 건너뜀 기록`}>
-                                    {history.map((h, i) => (
-                                        <span
-                                            key={i}
-                                            className={h.manual
-                                                ? `${styles.sparkBar} ${styles.sparkBarManual}`
-                                                : h.skipped
-                                                    ? `${styles.sparkBar} ${styles.sparkBarSkipped}`
-                                                : h.preserved
-                                                    ? `${styles.sparkBar} ${styles.sparkBarPreserved}`
-                                                    : h.localFallback
-                                                        ? `${styles.sparkBar} ${styles.sparkBarPc}`
-                                                    : styles.sparkBar}
-                                            style={{ height: h.manual ? '18px' : h.skipped ? '8px' : `${Math.max(4, Math.round((h.value / peak) * 100))}%` }}
-                                            title={h.skipped
-                                                ? `${formatKST(h.ts).replace(/\d{4}\. /, '')} · ${skippedUntilLabel(h.skippedUntil, h.skipReason)} (요청 없음, 실패 아님)`
-                                                : `${formatKST(h.ts).replace(/\d{4}\. /, '')} · ${h.value.toLocaleString()}건${h.manual ? ' (수동 캡처 성공)' : h.preserved ? h.localFallback ? ' (PC 대체 실패, 이전 데이터 유지)' : ' (수집 실패, 이전 데이터 유지)' : h.localFallback ? ' (PC 대체 수집 성공)' : ' (자동 수집)'}`}
-                                        >
-                                            {h.manual ? '✓' : h.localFallback && !h.preserved ? 'P' : ''}
-                                        </span>
-                                    ))}
+                                <div className={styles.sparkBars} role="group" aria-label={`${SOURCE_NAMES[source]} 최근 ${slotBars.length}회차 자동·PC 대체·수동 수집 및 건너뜀 기록`}>
+                                    {slotBars.map((bar, index) => {
+                                        const tooltip = slotBarTooltip(bar, SOURCE_NAMES[source] || source);
+                                        const active = activeSlotBar?.source === `col:${source}` && activeSlotBar.index === index;
+                                        const className = bar.status === 'manual'
+                                            ? `${styles.sparkBar} ${styles.sparkBarManual}`
+                                            : bar.status === 'skipped'
+                                                ? `${styles.sparkBar} ${styles.sparkBarSkipped}`
+                                            : bar.status === 'failed'
+                                                ? `${styles.sparkBar} ${styles.sparkBarPreserved}`
+                                                : bar.status === 'pc'
+                                                    ? `${styles.sparkBar} ${styles.sparkBarPc}`
+                                                : bar.status === 'unscheduled'
+                                                    ? `${styles.sparkBar} ${styles.sparkBarUnscheduled}`
+                                                : bar.status === 'pending' || bar.status === 'running'
+                                                    ? `${styles.sparkBar} ${styles.sparkBarPending}`
+                                                : bar.status === 'missing'
+                                                    ? `${styles.sparkBar} ${styles.sparkBarMissing}`
+                                                : styles.sparkBar;
+                                        const height = bar.status === 'skipped' || bar.status === 'failed'
+                                                ? '8px'
+                                                : bar.status === 'unscheduled' || bar.status === 'pending' || bar.status === 'running' || bar.status === 'missing'
+                                                    ? '100%'
+                                                    : `${Math.max(4, Math.round(((bar.value || 0) / peak) * 100))}%`;
+                                        return (
+                                            <span
+                                                key={bar.slotAt}
+                                                data-slot-bar=""
+                                                data-slot-at={bar.slotAt}
+                                                data-slot-status={bar.status}
+                                                className={active ? `${styles.sparkBarSlot} ${styles.sparkBarSlotActive}` : styles.sparkBarSlot}
+                                                tabIndex={0}
+                                                role="button"
+                                                aria-label={`${tooltip.title}${tooltip.lines.length ? ` · ${tooltip.lines.join(' · ')}` : ''}`}
+                                                onClick={() => setActiveSlotBar(active ? null : { source: `col:${source}`, index })}
+                                                aria-expanded={active}
+                                                onPointerEnter={event => { if (event.pointerType === 'mouse') setActiveSlotBar({ source: `col:${source}`, index }); }}
+                                                onPointerLeave={event => { if (event.pointerType === 'mouse') setActiveSlotBar(null); }}
+                                                onFocus={event => { if (event.currentTarget.matches(':focus-visible')) setActiveSlotBar({ source: `col:${source}`, index }); }}
+                                                onBlur={() => setActiveSlotBar(null)}
+                                                onKeyDown={event => {
+                                                    if (event.key === 'Enter' || event.key === ' ') {
+                                                        event.preventDefault();
+                                                        setActiveSlotBar(active ? null : { source: `col:${source}`, index });
+                                                    }
+                                                    if (event.key === 'Escape') setActiveSlotBar(null);
+                                                }}
+                                            >
+                                                <i className={className} style={{ height }}>
+                                                    {bar.status === 'manual' ? '✓' : bar.status === 'pc' ? 'P' : ''}
+                                                </i>
+                                                <span className={styles.sourceSlotTooltip} role="tooltip">
+                                                    <strong>{tooltip.title}</strong>
+                                                    {tooltip.lines.map(line => <span key={line}>{line}</span>)}
+                                                </span>
+                                            </span>
+                                        );
+                                    })}
                                 </div>
                             </div>
                         );
