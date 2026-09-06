@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import { getCrawlDataDir } from '../crawl-data-dir';
 
 interface CityStats {
     [cityName: string]: number;
@@ -61,7 +62,7 @@ interface CrawlLogHistory {
     lastEntry?: CrawlLogEntry;
 }
 
-const LOG_FILE_PATH = path.join(process.cwd(), 'data', 'crawl-log.json');
+const LOG_FILE_PATH = path.join(getCrawlDataDir(), 'crawl-log.json');
 const ALERT_THRESHOLD = 0.3; // 30% 감소 시 경고
 
 /**

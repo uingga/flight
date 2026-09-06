@@ -19,12 +19,16 @@ import { logCrawlResults, recordCrawlAlerts } from '../src/lib/utils/crawl-logge
 import { getEffectivePrice } from '../src/lib/price-quality';
 import {
     enrichVisibleTtangFlights,
+    TTANG_TIME_ADAPTER_VERSION,
     type TtangTimeEnrichmentState,
 } from '../src/lib/ttang-time-enrichment';
 import {
     enrichVisibleYbtourFlights,
     type YbtourTimeEnrichmentState,
 } from '../src/lib/ybtour-time-enrichment';
+import { TtangDetailCheckpoint } from '../src/lib/ttang-detail-checkpoint';
+import { getCrawlDataDir } from '../src/lib/crawl-data-dir';
+import { shutdownTtangExternalBrowserSessions } from '../src/lib/ttang-browser-session';
 import {
     classifySourceAccessRestriction,
     classifySourceResponseDrop,
@@ -139,6 +143,7 @@ function countBySource(flights: any[]): Record<string, number> {
 
 async function main() {
     const localSourceFallback = process.env.LOCAL_SOURCE_FALLBACK === '1';
+    const localBrowserPilot = process.env.LOCAL_BROWSER_PILOT === '1';
     const sourceArg = process.argv.find(arg => arg.startsWith('--sources='));
     const skipSourceArg = process.argv.find(arg => arg.startsWith('--skip-sources='));
     const requestedSources = sourceArg
@@ -184,7 +189,24 @@ async function main() {
     };
 
     // 이전 캐시 로드 (시간 데이터 이어받기 위해)
-    const dataDir = path.join(process.cwd(), 'data');
+    const dataDir = getCrawlDataDir();
+    if (
+        localBrowserPilot
+        && path.resolve(dataDir) === path.resolve(process.cwd(), 'data')
+    ) {
+        throw new Error('LOCAL_BROWSER_PILOT은 운영 data/에서 실행할 수 없습니다. TIKITIKIT_DATA_DIR staging 경로가 필요합니다.');
+    }
+    const ttangDetailCheckpoint = process.env.TTANG_DETAIL_CHECKPOINT === '1'
+        ? new TtangDetailCheckpoint(
+            process.cwd(), dataDir, process.env.TTANG_STAGING_RUN_ID || '',
+            new Date(process.env.TTANG_STAGING_STARTED_AT || ''), TTANG_TIME_ADAPTER_VERSION,
+        )
+        : undefined;
+    const ttangAllDetails = process.argv.includes('--ttang-all-details');
+    if (ttangAllDetails && (!localBrowserPilot || localSourceFallback || !ttangDetailCheckpoint
+        || requestedSources?.size !== 1 || !requestedSources.has('ttang'))) {
+        throw new Error('--ttang-all-details는 체크포인트가 있는 ttang 단독 staging 파일럿 전용입니다.');
+    }
     const cachePath = path.join(dataDir, 'all-flights-cache.json');
     let prevCache: CacheData | null = null;
     try {
@@ -233,6 +255,12 @@ async function main() {
         const activeTasks = requestedTasks.filter(task => {
             const circuit = sourceCircuits[task.key];
             const circuitOpen = isSourceCircuitOpen(circuit, SOURCE_ADAPTER_VERSIONS[task.key]);
+            // 격리된 staging 복사본에서만 쓰는 수동 검증 모드다. 운영 캐시에는 이 플래그를
+            // 사용하지 않으며 땡처리 외 다른 여행사의 회로도 우회하지 않는다.
+            if (localBrowserPilot && task.key === 'ttang') {
+                console.log('🧪 땡처리닷컴: 로컬 브라우저 staging 검증 실행');
+                return true;
+            }
             if (localSourceFallback) {
                 if (task.key === 'modetour') {
                     console.warn('📷 모두투어: PC 자동 접속을 사용하지 않습니다. 일반 Chrome 수동 캡처가 필요합니다.');
@@ -596,7 +624,6 @@ async function main() {
         let benchmarkedFlights = validRouteFlights;
         let activeInterparkBenchmark: any = null;
         try {
-            const dataDir = path.join(process.cwd(), 'data');
             const benchmarkPath = path.join(dataDir, 'interpark-prices.json');
 
             // 출발지·도착지 조합별 14일 TTL은 스크래퍼가 판정한다.
@@ -608,15 +635,15 @@ async function main() {
                     const cached = JSON.parse(fs.readFileSync(benchmarkPath, 'utf-8'));
                     cachedBenchmark = cached;
                     const cacheAge = Date.now() - new Date(cached.timestamp).getTime();
-                    if (localSourceFallback && Object.keys(cached.prices || {}).length > 0) {
+                    if ((localSourceFallback || localBrowserPilot) && Object.keys(cached.prices || {}).length > 0) {
                         benchmark = cached;
-                        console.log(`♻️ PC 부분 수집: 인터파크 캐시 재사용 (${Math.round(cacheAge / 3600000)}시간 전 저장)`);
+                        console.log(`♻️ PC 브라우저 부분 수집: 인터파크 캐시 재사용 (${Math.round(cacheAge / 3600000)}시간 전 저장)`);
                     }
                 }
             } catch { }
 
             // 캐시가 없거나 오래되었으면 새로 수집
-            if (!benchmark) {
+            if (!benchmark && !localSourceFallback && !localBrowserPilot) {
                 const routeTargets = new Map<string, InterparkRouteTarget>();
                 validRouteFlights.forEach((f: any) => {
                     const originCity = resolveInterparkOriginCityCode(
@@ -728,6 +755,7 @@ async function main() {
                 const ttangResult = await enrichVisibleTtangFlights(
                     benchmarkedFlights.filter((flight: any) => flight.source === 'ttang'),
                     ttangTimeEnrichment,
+                    { checkpoint: ttangDetailCheckpoint, allEligible: ttangAllDetails },
                 );
                 ttangTimeEnrichment = ttangResult.state;
             } catch (error) {
@@ -1073,9 +1101,14 @@ async function main() {
 
     } catch (error) {
         console.error('\n❌ 크롤링 실패:', error);
-        process.exit(1);
+        process.exitCode = 1;
     }
 }
 
 // 스크립트 실행
-main();
+main()
+    .finally(() => shutdownTtangExternalBrowserSessions())
+    .catch(error => {
+        console.error('\n❌ 땡처리 외부 Chrome 종료 실패:', error);
+        process.exitCode = 1;
+    });
