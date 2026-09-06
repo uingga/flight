@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-05T08:19:26.433Z",
+  "updatedAt": "2026-09-06T08:38:17.640Z",
   "entries": [
     {
       "date": "2026-08-27",
@@ -2167,6 +2167,239 @@
               "finalUrl": "",
               "reason": null,
               "durationMs": 9885,
+              "verificationMethod": "browser_navigation",
+              "evidenceAt": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "date": "2026-09-06",
+      "checkedAt": "2026-09-06T08:37:20.651Z",
+      "summary": {
+        "scheduled": 11,
+        "passed": 11,
+        "failed": 0,
+        "unavailable": 0,
+        "recovered": 0,
+        "systemicSources": 0,
+        "checkedSources": 6
+      },
+      "sources": [
+        {
+          "source": "ybtour",
+          "status": "healthy",
+          "availableFlights": 150,
+          "checks": [
+            {
+              "source": "ybtour",
+              "flightId": "ybtour-1dx84aq",
+              "route": "부산 → 쿠마모토",
+              "departureDate": "2026-09-29",
+              "checkedAt": "2026-09-06T08:37:22.005Z",
+              "stage": "initial",
+              "success": true,
+              "outcome": "passed",
+              "statusCode": 200,
+              "finalUrl": "",
+              "reason": null,
+              "durationMs": 7174,
+              "verificationMethod": "browser_navigation",
+              "evidenceAt": null
+            },
+            {
+              "source": "ybtour",
+              "flightId": "ybtour-3h03ya",
+              "route": "인천 → 마나도",
+              "departureDate": "2026-11-15",
+              "checkedAt": "2026-09-06T08:37:29.231Z",
+              "stage": "initial",
+              "success": true,
+              "outcome": "passed",
+              "statusCode": 200,
+              "finalUrl": "",
+              "reason": null,
+              "durationMs": 6141,
+              "verificationMethod": "browser_navigation",
+              "evidenceAt": null
+            }
+          ]
+        },
+        {
+          "source": "hanatour",
+          "status": "healthy",
+          "availableFlights": 29,
+          "checks": [
+            {
+              "source": "hanatour",
+              "flightId": "hanatour-9insht",
+              "route": "부산(PUS) → 나트랑(CXR)",
+              "departureDate": "2026.10.10(토)",
+              "checkedAt": "2026-09-06T08:37:35.415Z",
+              "stage": "initial",
+              "success": true,
+              "outcome": "passed",
+              "statusCode": 200,
+              "finalUrl": "",
+              "reason": null,
+              "durationMs": 6896,
+              "verificationMethod": "browser_navigation",
+              "evidenceAt": null
+            },
+            {
+              "source": "hanatour",
+              "flightId": "hanatour-h77nc7",
+              "route": "서울(ICN) → 고베(UKB)",
+              "departureDate": "2026.09.09(수)",
+              "checkedAt": "2026-09-06T08:37:42.354Z",
+              "stage": "initial",
+              "success": true,
+              "outcome": "passed",
+              "statusCode": 200,
+              "finalUrl": "",
+              "reason": null,
+              "durationMs": 4916,
+              "verificationMethod": "browser_navigation",
+              "evidenceAt": null
+            }
+          ]
+        },
+        {
+          "source": "modetour",
+          "status": "healthy",
+          "availableFlights": 95,
+          "checks": [
+            {
+              "source": "modetour",
+              "flightId": "modetour-ASIA-20138115",
+              "route": "청주 → 나트랑",
+              "departureDate": "2026-10-04",
+              "checkedAt": "2026-09-06T08:37:47.314Z",
+              "stage": "initial",
+              "success": true,
+              "outcome": "passed",
+              "statusCode": 200,
+              "finalUrl": "",
+              "reason": null,
+              "durationMs": 5321,
+              "verificationMethod": "browser_navigation",
+              "evidenceAt": null
+            },
+            {
+              "source": "modetour",
+              "flightId": "modetour-ASIA-19942646",
+              "route": "부산 → 푸꾸옥",
+              "departureDate": "2026-09-28",
+              "checkedAt": "2026-09-06T08:37:52.678Z",
+              "stage": "initial",
+              "success": true,
+              "outcome": "passed",
+              "statusCode": 200,
+              "finalUrl": "",
+              "reason": null,
+              "durationMs": 3896,
+              "verificationMethod": "browser_navigation",
+              "evidenceAt": null
+            }
+          ]
+        },
+        {
+          "source": "onlinetour",
+          "status": "healthy",
+          "availableFlights": 1,
+          "checks": [
+            {
+              "source": "onlinetour",
+              "flightId": "online-260908744348",
+              "route": "인천 → 로마",
+              "departureDate": "2026-09-08",
+              "checkedAt": "2026-09-06T08:37:56.621Z",
+              "stage": "initial",
+              "success": true,
+              "outcome": "passed",
+              "statusCode": 200,
+              "finalUrl": "",
+              "reason": null,
+              "durationMs": 6386,
+              "verificationMethod": "browser_navigation",
+              "evidenceAt": null
+            }
+          ]
+        },
+        {
+          "source": "ttang",
+          "status": "healthy",
+          "availableFlights": 152,
+          "checks": [
+            {
+              "source": "ttang",
+              "flightId": "ttang-BX3835PUSTFU-G1-2026-09-10",
+              "route": "부산 → 청두(성도/톈푸 국제공항)",
+              "departureDate": "2026-09-10",
+              "checkedAt": "2026-09-06T08:38:03.027Z",
+              "stage": "initial",
+              "outcome": "passed",
+              "success": true,
+              "statusCode": null,
+              "finalUrl": "",
+              "reason": null,
+              "durationMs": 8,
+              "verificationMethod": "crawl_evidence",
+              "evidenceAt": "2026-09-06T05:44:32.952Z"
+            },
+            {
+              "source": "ttang",
+              "flightId": "ttang-ICN-MDC-RT-0-5-ZE-2026-09-15",
+              "route": "서울 → 마나도(인도네시아)",
+              "departureDate": "2026-09-15",
+              "checkedAt": "2026-09-06T08:38:03.027Z",
+              "stage": "initial",
+              "outcome": "passed",
+              "success": true,
+              "statusCode": null,
+              "finalUrl": "",
+              "reason": null,
+              "durationMs": 0,
+              "verificationMethod": "crawl_evidence",
+              "evidenceAt": "2026-09-06T05:44:32.952Z"
+            }
+          ]
+        },
+        {
+          "source": "myrealtrip",
+          "status": "healthy",
+          "availableFlights": 151,
+          "checks": [
+            {
+              "source": "myrealtrip",
+              "flightId": "mrt-ICN-ADD-20261104-1447200",
+              "route": "서울(인천) → 아디스아바바",
+              "departureDate": "2026-11-04",
+              "checkedAt": "2026-09-06T08:38:03.060Z",
+              "stage": "initial",
+              "success": true,
+              "outcome": "passed",
+              "statusCode": 200,
+              "finalUrl": "",
+              "reason": null,
+              "durationMs": 6144,
+              "verificationMethod": "browser_navigation",
+              "evidenceAt": null
+            },
+            {
+              "source": "myrealtrip",
+              "flightId": "mrt-ICN-IST-20261024-838100",
+              "route": "서울(인천) → 이스탄불",
+              "departureDate": "2026-10-24",
+              "checkedAt": "2026-09-06T08:38:09.267Z",
+              "stage": "initial",
+              "success": true,
+              "outcome": "passed",
+              "statusCode": 200,
+              "finalUrl": "",
+              "reason": null,
+              "durationMs": 8334,
               "verificationMethod": "browser_navigation",
               "evidenceAt": null
             }
