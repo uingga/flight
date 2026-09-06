@@ -2796,6 +2796,7 @@ export default function AdminPage() {
                         <span><i className={styles.sourceLegendAuto} />자동 수집</span>
                         <span><i className={styles.sourceLegendPc} />PC 대체 성공</span>
                         <span><i className={styles.sourceLegendFailed} />수집 실패</span>
+                        <span><b className={styles.sourceLegendRecovered}>×</b>실패 후 복구</span>
                         <span><i className={styles.sourceLegendManual} />수동 캡처 성공</span>
                         <span><i className={styles.sourceLegendSkipped} />건너뜀</span>
                         <span><i className={styles.sourceLegendPending} />진행·대기</span>
@@ -2958,7 +2959,10 @@ export default function AdminPage() {
                                                     }}
                                                 >
                                                     <i className={className} style={{ height }}>
-                                                        {bar.status === 'manual' ? '✓' : bar.status === 'pc' ? 'P' : ''}
+                                                        {bar.status === 'manual' ? '✓' : bar.status === 'pc' ? 'P' : bar.status === 'failed' ? '×' : ''}
+                                                        {bar.status !== 'failed' && bar.events.some(event => event.preserved && !event.skipped && !event.manual) && (
+                                                            <b className={styles.sourceSlotFailureMarker} data-slot-failure-marker="" aria-hidden="true">×</b>
+                                                        )}
                                                     </i>
                                                     <span className={styles.sourceSlotTooltip} role="tooltip">
                                                         <strong>{tooltip.title}</strong>
@@ -3791,6 +3795,7 @@ export default function AdminPage() {
                     <span><i className={styles.sourceLegendAuto} />자동 수집</span>
                     <span><i className={styles.sourceLegendPc} />PC 대체 성공</span>
                     <span><i className={styles.sourceLegendFailed} />수집 실패</span>
+                        <span><b className={styles.sourceLegendRecovered}>×</b>실패 후 복구</span>
                     <span><i className={styles.sourceLegendManual} />수동 캡처 성공</span>
                     <span><i className={styles.sourceLegendSkipped} />건너뜀</span>
                     <span><i className={styles.sourceLegendPending} />진행·대기</span>
@@ -3988,7 +3993,10 @@ export default function AdminPage() {
                                                 }}
                                             >
                                                 <i className={className} style={{ height }}>
-                                                    {bar.status === 'manual' ? '✓' : bar.status === 'pc' ? 'P' : ''}
+                                                    {bar.status === 'manual' ? '✓' : bar.status === 'pc' ? 'P' : bar.status === 'failed' ? '×' : ''}
+                                                        {bar.status !== 'failed' && bar.events.some(event => event.preserved && !event.skipped && !event.manual) && (
+                                                            <b className={styles.sourceSlotFailureMarker} data-slot-failure-marker="" aria-hidden="true">×</b>
+                                                        )}
                                                 </i>
                                                 <span className={styles.sourceSlotTooltip} role="tooltip">
                                                     <strong>{tooltip.title}</strong>

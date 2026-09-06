@@ -4297,6 +4297,46 @@
     outline: none;
 }
 
+.sourceTrendBarSlot > i,
+.sparkBarSlot > i {
+    position: relative;
+}
+
+.sourceLegendRecovered {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #d85c4d;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+/* Final method stays visible; the badge preserves prior failure history. */
+.sourceSlotFailureMarker {
+    position: absolute;
+    top: -7px;
+    right: -3px;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 12px;
+    height: 12px;
+    border: 1px solid #fff;
+    border-radius: 50%;
+    background: #d85c4d;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+    pointer-events: none;
+}
+
 .sourceTrendBarSlot > i {
     display: flex;
     align-items: center;

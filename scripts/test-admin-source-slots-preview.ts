@@ -26,6 +26,10 @@ async function run() {
         sourceCircuits: { ttang: { reason: 'blocked', openedAt: kst('14:25:00'), nextProbeAt: '2026-09-06T14:25:00+09:00', detail: 'TEST FIXTURE: HTTP 403', localFallback: { status: 'failed', lastAttemptAt: kst('14:27:00'), detail: 'TEST FIXTURE: PC response unavailable' } } },
         manualCaptureStatus: {},
         crawlHistory: [
+            { timestamp: kst('08:25:00'), sites: { hanatour: { total: 20, preserved: true, skipped: true, skipReason: 'circuit' } }, alerts: [] },
+            { timestamp: kst('08:40:00'), sites: { hanatour: { total: 20, scraped: 100, localFallback: true } }, alerts: [] },
+            { timestamp: kst('14:25:00'), sites: { hanatour: { total: 20, preserved: true } }, alerts: [] },
+            { timestamp: kst('14:40:00'), sites: { hanatour: { total: 20, scraped: 100, localFallback: true } }, alerts: [] },
             { timestamp: kst('08:30:00'), sites: { modetour: { total: 20, scraped: 200 } }, alerts: [] },
             { timestamp: kst('12:00:00'), sites: { modetour: { total: 20, scraped: 100, manual: true } }, alerts: [] },
             { timestamp: kst('14:25:00'), sites: { modetour: { total: 20, preserved: true }, ttang: { total: 42, preserved: true }, onlinetour: { total: 1, skipped: true, skipReason: 'circuit', skippedUntil: '2026-09-06T14:25:00+09:00' } }, alerts: [] },
@@ -90,12 +94,20 @@ async function run() {
                     let target = cards.first().locator('[data-slot-bar]').last();
                     if (scenario === 'FIXTURE') {
                         const latest = await cards.evaluateAll(nodes => nodes.map(card => card.querySelector('[data-slot-bar]:last-child')?.getAttribute('data-slot-status')));
-                        assert.deepEqual(latest, ['running', 'pending', 'manual', 'skipped', 'failed', 'unscheduled']);
+                        assert.deepEqual(latest, ['running', 'pc', 'manual', 'skipped', 'failed', 'unscheduled']);
+                        const pc = cards.nth(1).locator('[data-slot-status="pc"]');
+                        assert.equal(await pc.last().locator('[data-slot-failure-marker]').count(), 1, 'PC recovery keeps failure');
+                        assert.equal(await pc.first().locator('[data-slot-failure-marker]').count(), 0, 'circuit skip is not failure');
+                        await section.screenshot({ path: path.join(outDir, `FIXTURE-${name}-failure-markers.png`) });
                         const manual = cards.nth(2).locator('[data-slot-status="manual"]');
                         assert.equal(await manual.count(), 2);
                         const heights = await manual.locator('i').evaluateAll(nodes => nodes.map(node => node.getBoundingClientRect().height));
                         assert.ok(heights[1] > heights[0] * 3.5, 'manual 100/400 counts scale, not fixed markers');
                         target = manual.last();
+                        const marker = target.locator('[data-slot-failure-marker]');
+                        assert.equal(await marker.count(), 1, 'recovered slot keeps a visible failure marker');
+                        assert.ok(await marker.isVisible(), 'failure must be visible without opening tooltip');
+                        assert.equal(await manual.first().locator('[data-slot-failure-marker]').count(), 0, 'success-only slot has no false failure');
                         const manualTip = await open(target);
                         assert.match(await manualTip.innerText(), /수동 확인 400건/);
                         assert.match(await manualTip.innerText(), /자동 수집 실패.*수동 캡처/s);
