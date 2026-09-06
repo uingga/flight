@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-09-06T02:33:36.327Z",
+  "timestamp": "2026-09-06T02:41:31.109Z",
   "fullCrawlUpdatedAt": "2026-09-06T02:33:36.327Z",
   "count": 584,
   "flights": [
@@ -9582,40 +9582,6 @@
       "firstSeen": "2026-09-04"
     },
     {
-      "id": "online-260908744348",
-      "source": "onlinetour",
-      "airline": "티웨이항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-09-08",
-        "time": "12:35",
-        "arrivalTime": "19:15"
-      },
-      "arrival": {
-        "city": "로마",
-        "airport": "ROM",
-        "date": "2026-09-15",
-        "time": "21:15",
-        "arrivalTime": "16:10"
-      },
-      "price": 990000,
-      "currency": "KRW",
-      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260908744348",
-      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=ROM&sCity2=ROM&eCity2=SEL&startDt=20260908&endDt=20260915&adt=1",
-      "region": "유럽",
-      "availableSeats": 1,
-      "seats": "1석",
-      "routeAirports": {
-        "outboundDeparture": "ICN",
-        "outboundArrival": "FCO",
-        "returnDeparture": "FCO",
-        "returnArrival": "ICN"
-      },
-      "discountRate": 6,
-      "firstSeen": "2026-09-04"
-    },
-    {
       "id": "ttang-7C3211ICNSPN-G2-2026-09-09",
       "source": "ttang",
       "airline": "제주항공",
@@ -19026,6 +18992,40 @@
       "availableSeats": 9,
       "seats": "9석 남음",
       "discountRate": -25
+    },
+    {
+      "id": "online-260908744348",
+      "source": "onlinetour",
+      "airline": "티웨이항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-09-08",
+        "time": "12:35",
+        "arrivalTime": "19:15"
+      },
+      "arrival": {
+        "city": "로마",
+        "airport": "ROM",
+        "date": "2026-09-15",
+        "time": "21:15",
+        "arrivalTime": "16:10"
+      },
+      "price": 990000,
+      "currency": "KRW",
+      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260908744348",
+      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=ROM&sCity2=ROM&eCity2=SEL&startDt=20260908&endDt=20260915&adt=1",
+      "region": "유럽",
+      "availableSeats": 1,
+      "seats": "1석",
+      "routeAirports": {
+        "outboundDeparture": "ICN",
+        "outboundArrival": "FCO",
+        "returnDeparture": "FCO",
+        "returnArrival": "ICN"
+      },
+      "discountRate": 6,
+      "firstSeen": "2026-09-04"
     }
   ],
   "sources": {
@@ -19048,7 +19048,7 @@
     "ybtour": 0,
     "hanatour": 0,
     "modetour": 1,
-    "onlinetour": 0,
+    "onlinetour": 1,
     "ttang": 0,
     "myrealtrip": 0
   },
@@ -19061,7 +19061,7 @@
   },
   "integrityAlerts": [
     "🚨 modetour 수집 실패로 이전 데이터 유지: 모두투어 수집 실패 구간: ASIA ([network] 모두투어 ASIA API 요청 실패: fetch failed <- Connect Timeout Error (attempted address: b2c-api.modetour.com:443, timeout: 10000ms) · 원인 UND_ERR_CONNECT_TIMEOUT · 2회 시도), JPN ([network] 모두투어 JPN API 요청 실패: fetch failed <- Connect Timeout Error (attempted address: b2c-api.modetour.com:443, timeout: 10000ms) · 원인 UND_ERR_CONNECT_TIMEOUT · 2회 시도), CHI/TPE ([network] 모두투어 CHI/TPE API 요청 실패: fetch failed <- Connect Timeout Error (attempted address: b2c-api.modetour.com:443, timeout: 10000ms) · 원인 UND_ERR_CONNECT_TIMEOUT · 2회 시도), CHI/RMQ ([network] 모두투어 CHI/RMQ API 요청 실패: fetch failed <- Connect Timeout Error (attempted address: b2c-api.modetour.com:443, timeout: 10000ms) · 원인 UND_ERR_CONNECT_TIMEOUT · 2회 시도), CHI/CAN ([network] 모두투어 CHI/CAN API 요청 실패: fetch failed <- Connect Timeout Error (attempted address: b2c-api.modetour.com:443, timeout: 10000ms) · 원인 UND_ERR_CONNECT_TIMEOUT · 2회 시도), CHI/TFU ([network] 모두투어 CHI/TFU API 요청 실패: fetch failed <- Connect Timeout Error (attempted address: b2c-api.modetour.com:443, timeout: 10000ms) · 원인 UND_ERR_CONNECT_TIMEOUT · 2회 시도), CHI/DYG ([network] 모두투어 CHI/DYG API 요청 실패: fetch failed <- Connect Timeout Error (attempted address: b2c-api.modetour.com:443, timeout: 10000ms) · 원인 UND_ERR_CONNECT_TIMEOUT · 2회 시도), SOPA ([network] 모두투어 SOPA API 요청 실패: fetch failed <- Connect Timeout Error (attempted address: b2c-api.modetour.com:443, timeout: 10000ms) · 원인 UND_ERR_CONNECT_TIMEOUT · 2회 시도) (수집된 0건은 불완전해 폐기)",
-    "⛔ onlinetour 접근 차단 뒤 자동 요청 중단 (2026. 9. 6. PM 5:52:40 이후 단일 재탐색) — 이전 데이터 유지"
+    "🚨 onlinetour 수집 실패로 이전 데이터 유지: 온라인투어 수집 실패 구간: 유럽 공개 도시 목록 — [network] 온라인투어 유럽 공개 도시 목록 요청 실패: This operation was aborted · 2회 시도 (수집된 0건은 불완전해 폐기)"
   ],
   "sourceCircuits": {
     "onlinetour": {
@@ -19072,10 +19072,10 @@
       "adapterVersion": "2026-08-30.2",
       "detail": "soft block 의심: 응답 수량 107건에서 37건으로 급감",
       "localFallback": {
-        "status": "success",
-        "lastAttemptAt": "2026-09-05T08:56:40.977Z",
+        "status": "failed",
+        "lastAttemptAt": "2026-09-06T02:41:31.084Z",
         "method": "source-default",
-        "detail": "PC 대체 수집 105건 완료"
+        "detail": "온라인투어 수집 실패 구간: 유럽 공개 도시 목록 — [network] 온라인투어 유럽 공개 도시 목록 요청 실패: This operation was aborted · 2회 시도 (수집된 0건은 불완전해 폐기)"
       }
     }
   },
