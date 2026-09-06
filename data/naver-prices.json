@@ -998,17 +998,17 @@
     "retDate": "2026-09-04"
   },
   "ICN-KIX_2026-09-16_2026-09-22": {
-    "naverLowest": 155600,
-    "crawledAt": "2026-09-04T06:22:29.161Z",
+    "naverLowest": 149100,
+    "crawledAt": "2026-09-06T03:07:05.510Z",
     "route": "ICN-KIX",
     "depDate": "2026-09-16",
     "retDate": "2026-09-22",
-    "lastAttemptAt": "2026-09-04T06:22:29.161Z",
+    "lastAttemptAt": "2026-09-06T03:07:05.510Z",
     "lastAttemptStatus": "success",
     "lastAttemptDetail": "GraphQL 정상 2/2회 · 오류 0 · Naver 사용자 링크 로그인 서비스 더보기 여행상품 여행정보 0 로그인 후 등급확인 마이페이지 여행핫딜 항공 호텔 패키지 For U 55 왕복 편도 다구간 인천 ICN 인천국제공항 오사카 KIX 간사이국제공항 09.16.수 09.22.화 성인 1명 일반석 직항만 검색",
     "lastFinalUrl": "https://flight.naver.com/flights/international/ICN-KIX-20260916/KIX-ICN-20260922?adult=1&fareType=Y",
-    "sourceSignature": "ddb5c4357395cb92b80404b3",
-    "sourcePrice": 189500
+    "sourceSignature": "bc0c4bb3604ed29fc116daea",
+    "sourcePrice": 189580
   },
   "ICN-TAO_2026-09-14_2026-09-18": {
     "naverLowest": 189900,
@@ -1601,12 +1601,12 @@
     "retDate": "2026-09-20"
   },
   "ICN-TKS_2026-09-17_2026-09-22": {
-    "naverLowest": 190300,
-    "crawledAt": "2026-09-04T07:06:50.056Z",
+    "naverLowest": 196600,
+    "crawledAt": "2026-09-06T03:11:27.246Z",
     "route": "ICN-TKS",
     "depDate": "2026-09-17",
     "retDate": "2026-09-22",
-    "lastAttemptAt": "2026-09-04T07:06:50.056Z",
+    "lastAttemptAt": "2026-09-06T03:11:27.246Z",
     "lastAttemptStatus": "success",
     "sourceSignature": "cb24f2ba3335786cb41bbd49",
     "sourcePrice": 208100
@@ -1822,22 +1822,22 @@
   },
   "ICN-BWN_2026-09-15_2026-09-19": {
     "naverLowest": 469900,
-    "crawledAt": "2026-09-02T03:35:15.366Z",
+    "crawledAt": "2026-09-06T03:15:13.300Z",
     "route": "ICN-BWN",
     "depDate": "2026-09-15",
     "retDate": "2026-09-19",
-    "lastAttemptAt": "2026-09-02T03:35:15.366Z",
+    "lastAttemptAt": "2026-09-06T03:15:13.300Z",
     "lastAttemptStatus": "success",
     "sourceSignature": "14725352cca2c24f519bd04d",
     "sourcePrice": 469900
   },
   "ICN-BWN_2026-09-29_2026-10-03": {
     "naverLowest": 469900,
-    "crawledAt": "2026-09-02T03:36:18.491Z",
+    "crawledAt": "2026-09-06T03:15:46.507Z",
     "route": "ICN-BWN",
     "depDate": "2026-09-29",
     "retDate": "2026-10-03",
-    "lastAttemptAt": "2026-09-02T03:36:18.491Z",
+    "lastAttemptAt": "2026-09-06T03:15:46.507Z",
     "lastAttemptStatus": "success",
     "sourceSignature": "14725352cca2c24f519bd04d",
     "sourcePrice": 469900
@@ -3879,13 +3879,15 @@
     "lastAttemptStatus": "success"
   },
   "ICN-TAO_2026-09-16_2026-09-19": {
-    "naverLowest": 191700,
-    "crawledAt": "2026-08-23T02:02:07.900Z",
+    "naverLowest": 188302,
+    "crawledAt": "2026-09-06T02:37:10.128Z",
     "route": "ICN-TAO",
     "depDate": "2026-09-16",
     "retDate": "2026-09-19",
-    "lastAttemptAt": "2026-08-23T02:02:07.900Z",
-    "lastAttemptStatus": "success"
+    "lastAttemptAt": "2026-09-06T02:37:10.128Z",
+    "lastAttemptStatus": "success",
+    "sourceSignature": "28c6c3657ca31649c4ba4909",
+    "sourcePrice": 208500
   },
   "ICN-OKJ_2026-08-23_2026-08-26": {
     "naverLowest": 227100,
@@ -4006,11 +4008,15 @@
     "lastAttemptStatus": "success"
   },
   "ICN-INC_2026-09-12_2026-09-17": {
-    "naverLowest": 284996,
-    "crawledAt": "2026-08-13T04:20:10.003Z",
+    "naverLowest": 291152,
+    "crawledAt": "2026-09-06T02:35:27.036Z",
     "route": "ICN-INC",
     "depDate": "2026-09-12",
-    "retDate": "2026-09-17"
+    "retDate": "2026-09-17",
+    "sourceSignature": "1a904111ff0d7418d75959d3",
+    "sourcePrice": 398200,
+    "lastAttemptAt": "2026-09-06T02:35:27.036Z",
+    "lastAttemptStatus": "success"
   },
   "ICN-KKJ_2026-09-01_2026-09-03": {
     "naverLowest": 142900,
@@ -4085,15 +4091,15 @@
     "lastAttemptStatus": "success"
   },
   "ICN-FUK_2026-09-16_2026-09-22": {
-    "naverLowest": 160207,
-    "crawledAt": "2026-09-04T06:12:14.002Z",
+    "naverLowest": 160100,
+    "crawledAt": "2026-09-06T03:05:59.479Z",
     "route": "ICN-FUK",
     "depDate": "2026-09-16",
     "retDate": "2026-09-22",
-    "lastAttemptAt": "2026-09-04T06:12:14.002Z",
+    "lastAttemptAt": "2026-09-06T03:05:59.479Z",
     "lastAttemptStatus": "success",
-    "sourceSignature": "0f666fc6cf27faef04aea23f",
-    "sourcePrice": 179100
+    "sourceSignature": "303c2fc021671468ab8d212e",
+    "sourcePrice": 179420
   },
   "ICN-WEH_2026-09-15_2026-09-17": {
     "naverLowest": 183111,
@@ -4824,15 +4830,15 @@
     "lastAttemptStatus": "success"
   },
   "PUS-BKK_2026-09-13_2026-09-18": {
-    "naverLowest": 265300,
-    "crawledAt": "2026-09-04T07:11:33.198Z",
+    "naverLowest": 304500,
+    "crawledAt": "2026-09-06T03:36:52.410Z",
     "route": "PUS-BKK",
     "depDate": "2026-09-13",
     "retDate": "2026-09-18",
-    "lastAttemptAt": "2026-09-04T07:11:33.198Z",
+    "lastAttemptAt": "2026-09-06T03:36:52.410Z",
     "lastAttemptStatus": "success",
-    "sourceSignature": "9e698690306c13622d8060c4",
-    "sourcePrice": 313200
+    "sourceSignature": "1ced855088f2ac7668b97d5a",
+    "sourcePrice": 379000
   },
   "ICN-KIJ_2026-09-03_2026-09-07": {
     "naverLowest": 263800,
@@ -5419,13 +5425,15 @@
     "lastAttemptStatus": "success"
   },
   "ICN-DLI_2026-09-09_2026-09-14": {
-    "naverLowest": 301100,
-    "crawledAt": "2026-08-27T02:21:42.792Z",
+    "naverLowest": 395800,
+    "crawledAt": "2026-09-06T02:39:25.439Z",
     "route": "ICN-DLI",
     "depDate": "2026-09-09",
     "retDate": "2026-09-14",
-    "lastAttemptAt": "2026-08-27T02:21:42.792Z",
-    "lastAttemptStatus": "success"
+    "lastAttemptAt": "2026-09-06T02:39:25.439Z",
+    "lastAttemptStatus": "success",
+    "sourceSignature": "2a068d810ec41c143f37357f",
+    "sourcePrice": 420700
   },
   "ICN-HET_2026-09-08_2026-09-12": {
     "naverLowest": 287800,
@@ -5655,12 +5663,12 @@
     "lastAttemptStatus": "success"
   },
   "PUS-KIX_2026-09-20_2026-09-23": {
-    "naverLowest": 176600,
-    "crawledAt": "2026-09-04T06:55:02.995Z",
+    "naverLowest": 174149,
+    "crawledAt": "2026-09-06T03:05:27.691Z",
     "route": "PUS-KIX",
     "depDate": "2026-09-20",
     "retDate": "2026-09-23",
-    "lastAttemptAt": "2026-09-04T06:55:02.995Z",
+    "lastAttemptAt": "2026-09-06T03:05:27.691Z",
     "lastAttemptStatus": "success",
     "sourceSignature": "ee3850e67849ae93858ccece",
     "sourcePrice": 179000
@@ -5879,15 +5887,15 @@
     "sourcePrice": 275800
   },
   "PUS-CEB_2026-09-14_2026-09-18": {
-    "naverLowest": 207100,
-    "crawledAt": "2026-09-05T05:57:10.374Z",
+    "naverLowest": 213900,
+    "crawledAt": "2026-09-06T02:58:07.787Z",
     "route": "PUS-CEB",
     "depDate": "2026-09-14",
     "retDate": "2026-09-18",
-    "lastAttemptAt": "2026-09-05T05:57:10.374Z",
+    "lastAttemptAt": "2026-09-06T02:58:07.787Z",
     "lastAttemptStatus": "success",
-    "sourceSignature": "d727d3ade9a28aeea57c2e21",
-    "sourcePrice": 305000
+    "sourceSignature": "2336ef45e5589f1852b10283",
+    "sourcePrice": 269900
   },
   "PUS-CEB_2026-09-15_2026-09-19": {
     "naverLowest": 217200,
@@ -5994,14 +6002,14 @@
   },
   "CJJ-DAD_2026-09-28_2026-10-03": {
     "naverLowest": 265600,
-    "crawledAt": "2026-09-05T03:10:12.236Z",
+    "crawledAt": "2026-09-06T03:49:59.593Z",
     "route": "CJJ-DAD",
     "depDate": "2026-09-28",
     "retDate": "2026-10-03",
-    "lastAttemptAt": "2026-09-05T03:10:12.236Z",
+    "lastAttemptAt": "2026-09-06T03:49:59.593Z",
     "lastAttemptStatus": "success",
-    "sourceSignature": "a94410983ce5468da54f9112",
-    "sourcePrice": 282600
+    "sourceSignature": "99f1bae2735f5c76a35eb964",
+    "sourcePrice": 320000
   },
   "PUS-DAD_2026-09-14_2026-09-18": {
     "naverLowest": 203700,
@@ -6674,22 +6682,26 @@
     "lastAttemptStatus": "success"
   },
   "PUS-TAG_2026-09-12_2026-09-17": {
-    "naverLowest": 228000,
-    "crawledAt": "2026-08-22T07:22:34.860Z",
+    "naverLowest": 252000,
+    "crawledAt": "2026-09-06T02:36:35.889Z",
     "route": "PUS-TAG",
     "depDate": "2026-09-12",
     "retDate": "2026-09-17",
-    "lastAttemptAt": "2026-08-22T07:22:34.860Z",
-    "lastAttemptStatus": "success"
+    "lastAttemptAt": "2026-09-06T02:36:35.889Z",
+    "lastAttemptStatus": "success",
+    "sourceSignature": "fd243a3acee51bfaa74ace54",
+    "sourcePrice": 309000
   },
   "PUS-TAG_2026-09-13_2026-09-18": {
-    "naverLowest": 221300,
-    "crawledAt": "2026-08-23T06:15:39.568Z",
+    "naverLowest": 257500,
+    "crawledAt": "2026-09-06T02:37:44.352Z",
     "route": "PUS-TAG",
     "depDate": "2026-09-13",
     "retDate": "2026-09-18",
-    "lastAttemptAt": "2026-08-23T06:15:39.568Z",
-    "lastAttemptStatus": "success"
+    "lastAttemptAt": "2026-09-06T02:37:44.352Z",
+    "lastAttemptStatus": "success",
+    "sourceSignature": "fd243a3acee51bfaa74ace54",
+    "sourcePrice": 309000
   },
   "PUS-SIN_2026-09-13_2026-09-17": {
     "naverLowest": 288600,
@@ -6917,15 +6929,15 @@
     "lastAttemptStatus": "success"
   },
   "ICN-SIN_2026-09-09_2026-09-13": {
-    "naverLowest": 337591,
-    "crawledAt": "2026-09-02T03:39:00.087Z",
+    "naverLowest": 354200,
+    "crawledAt": "2026-09-06T03:20:27.522Z",
     "route": "ICN-SIN",
     "depDate": "2026-09-09",
     "retDate": "2026-09-13",
-    "lastAttemptAt": "2026-09-02T03:39:00.087Z",
+    "lastAttemptAt": "2026-09-06T03:20:27.522Z",
     "lastAttemptStatus": "success",
-    "sourceSignature": "86dde6e0094acefbf2cb7b0b",
-    "sourcePrice": 369000
+    "sourceSignature": "e11dc2736dab50bcdf8a11c6",
+    "sourcePrice": 427200
   },
   "ICN-VTE_2026-09-01_2026-09-05": {
     "naverLowest": 379900,
@@ -7847,11 +7859,11 @@
   },
   "ICN-BWN_2026-10-13_2026-10-17": {
     "naverLowest": 469900,
-    "crawledAt": "2026-09-02T03:36:51.296Z",
+    "crawledAt": "2026-09-06T03:18:21.564Z",
     "route": "ICN-BWN",
     "depDate": "2026-10-13",
     "retDate": "2026-10-17",
-    "lastAttemptAt": "2026-09-02T03:36:51.296Z",
+    "lastAttemptAt": "2026-09-06T03:18:21.564Z",
     "lastAttemptStatus": "success",
     "sourceSignature": "14725352cca2c24f519bd04d",
     "sourcePrice": 469900
@@ -8214,12 +8226,12 @@
     "sourcePrice": 310000
   },
   "ICN-KLO_2026-09-18_2026-09-21": {
-    "naverLowest": 319000,
-    "crawledAt": "2026-09-04T07:19:30.445Z",
+    "naverLowest": 286293,
+    "crawledAt": "2026-09-06T03:33:02.212Z",
     "route": "ICN-KLO",
     "depDate": "2026-09-18",
     "retDate": "2026-09-21",
-    "lastAttemptAt": "2026-09-04T07:19:30.445Z",
+    "lastAttemptAt": "2026-09-06T03:33:02.212Z",
     "lastAttemptStatus": "success",
     "sourceSignature": "1afd8fa532590f97f14dd11c",
     "sourcePrice": 319000
@@ -8546,14 +8558,14 @@
   },
   "PUS-TAG_2026-09-27_2026-10-01": {
     "naverLowest": 252000,
-    "crawledAt": "2026-09-05T03:20:31.109Z",
+    "crawledAt": "2026-09-06T03:50:31.139Z",
     "route": "PUS-TAG",
     "depDate": "2026-09-27",
     "retDate": "2026-10-01",
-    "lastAttemptAt": "2026-09-05T03:20:31.109Z",
+    "lastAttemptAt": "2026-09-06T03:50:31.139Z",
     "lastAttemptStatus": "success",
-    "sourceSignature": "fd243a3acee51bfaa74ace54",
-    "sourcePrice": 309000
+    "sourceSignature": "5cab39aa8ee2d3cdf62e185c",
+    "sourcePrice": 322500
   },
   "PUS-TAG_2026-09-28_2026-10-02": {
     "naverLowest": 252000,
@@ -9193,15 +9205,15 @@
     "lastAttemptStatus": "success"
   },
   "ICN-CTS_2026-09-16_2026-09-22": {
-    "naverLowest": 236000,
-    "crawledAt": "2026-09-05T02:49:16.920Z",
+    "naverLowest": 223600,
+    "crawledAt": "2026-09-06T02:52:11.606Z",
     "route": "ICN-CTS",
     "depDate": "2026-09-16",
     "retDate": "2026-09-22",
-    "lastAttemptAt": "2026-09-05T02:49:16.920Z",
+    "lastAttemptAt": "2026-09-06T02:52:11.606Z",
     "lastAttemptStatus": "success",
-    "sourceSignature": "d6e007e86470d7beb4f41ce0",
-    "sourcePrice": 269300
+    "sourceSignature": "84ceb28bea10e822d7014aad",
+    "sourcePrice": 251300
   },
   "ICN-BNE_2026-09-01_2026-09-03": {
     "naverLowest": 839500,
@@ -9296,12 +9308,12 @@
     "sourcePrice": 379500
   },
   "ICN-KMJ_2026-09-29_2026-10-01": {
-    "naverLowest": 203010,
-    "crawledAt": "2026-09-04T06:45:36.382Z",
+    "naverLowest": 203110,
+    "crawledAt": "2026-09-06T03:08:42.957Z",
     "route": "ICN-KMJ",
     "depDate": "2026-09-29",
     "retDate": "2026-10-01",
-    "lastAttemptAt": "2026-09-04T06:45:36.382Z",
+    "lastAttemptAt": "2026-09-06T03:08:42.957Z",
     "lastAttemptStatus": "success",
     "sourceSignature": "1443c8f129874b219407ec91",
     "sourcePrice": 208510
@@ -9859,13 +9871,15 @@
     "lastAttemptStatus": "miss"
   },
   "ICN-SGN_2026-09-09_2026-09-15": {
-    "naverLowest": 0,
-    "crawledAt": "2026-08-16T03:14:52.275Z",
+    "naverLowest": 233900,
+    "crawledAt": "2026-09-06T02:36:01.926Z",
     "route": "ICN-SGN",
     "depDate": "2026-09-09",
     "retDate": "2026-09-15",
-    "lastAttemptAt": "2026-08-16T03:14:52.275Z",
-    "lastAttemptStatus": "miss"
+    "lastAttemptAt": "2026-09-06T02:36:01.926Z",
+    "lastAttemptStatus": "success",
+    "sourceSignature": "9c77c971ec4cbef20f4e717b",
+    "sourcePrice": 264600
   },
   "ICN-KKJ_2026-09-16_2026-09-22": {
     "naverLowest": 143200,
@@ -9942,15 +9956,15 @@
     "lastAttemptStatus": "success"
   },
   "ICN-MYJ_2026-09-16_2026-09-22": {
-    "naverLowest": 149300,
-    "crawledAt": "2026-09-04T06:52:08.293Z",
+    "naverLowest": 151500,
+    "crawledAt": "2026-09-06T02:50:33.506Z",
     "route": "ICN-MYJ",
     "depDate": "2026-09-16",
     "retDate": "2026-09-22",
-    "lastAttemptAt": "2026-09-04T06:52:08.293Z",
+    "lastAttemptAt": "2026-09-06T02:50:33.506Z",
     "lastAttemptStatus": "success",
-    "sourceSignature": "b7d577bb5425af4089ca5216",
-    "sourcePrice": 160400
+    "sourceSignature": "8e53abe393ef1244ba424ff0",
+    "sourcePrice": 168900
   },
   "ICN-SGN_2026-09-21_2026-09-24": {
     "naverLowest": 217800,
@@ -10101,15 +10115,15 @@
     "lastAttemptStatus": "success"
   },
   "ICN-SDJ_2026-09-16_2026-09-21": {
-    "naverLowest": 324200,
-    "crawledAt": "2026-09-01T07:06:37.235Z",
+    "naverLowest": 336494,
+    "crawledAt": "2026-09-06T03:14:09.915Z",
     "route": "ICN-SDJ",
     "depDate": "2026-09-16",
     "retDate": "2026-09-21",
-    "lastAttemptAt": "2026-09-01T07:06:37.235Z",
+    "lastAttemptAt": "2026-09-06T03:14:09.915Z",
     "lastAttemptStatus": "success",
-    "sourceSignature": "f4fceb18019c705cb07ed602",
-    "sourcePrice": 360600
+    "sourceSignature": "6d688895bebcd96ac36a9281",
+    "sourcePrice": 361600
   },
   "ICN-HUI_2026-09-15_2026-09-18": {
     "naverLowest": 297600,
@@ -10334,12 +10348,12 @@
     "lastAttemptStatus": "success"
   },
   "PUS-CTS_2026-09-16_2026-09-18": {
-    "naverLowest": 309500,
-    "crawledAt": "2026-09-02T03:31:24.039Z",
+    "naverLowest": 326100,
+    "crawledAt": "2026-09-06T03:17:50.029Z",
     "route": "PUS-CTS",
     "depDate": "2026-09-16",
     "retDate": "2026-09-18",
-    "lastAttemptAt": "2026-09-02T03:31:24.039Z",
+    "lastAttemptAt": "2026-09-06T03:17:50.029Z",
     "lastAttemptStatus": "success",
     "sourceSignature": "80d546aad20d4187ee1ebd06",
     "sourcePrice": 403000
@@ -11880,12 +11894,12 @@
     "lastAttemptStatus": "success"
   },
   "ICN-UKB_2026-09-09_2026-09-11": {
-    "naverLowest": 200500,
-    "crawledAt": "2026-09-04T06:44:30.206Z",
+    "naverLowest": 208000,
+    "crawledAt": "2026-09-06T03:08:09.767Z",
     "route": "ICN-UKB",
     "depDate": "2026-09-09",
     "retDate": "2026-09-11",
-    "lastAttemptAt": "2026-09-04T06:44:30.206Z",
+    "lastAttemptAt": "2026-09-06T03:08:09.767Z",
     "lastAttemptStatus": "success",
     "sourceSignature": "d2862a08dab1c670929d1786",
     "sourcePrice": 208000
@@ -12531,45 +12545,45 @@
     "lastAttemptStatus": "success"
   },
   "PUS-TAG_2026-09-19_2026-09-24": {
-    "naverLowest": 257500,
-    "crawledAt": "2026-09-05T03:26:42.282Z",
+    "naverLowest": 263800,
+    "crawledAt": "2026-09-06T03:48:53.318Z",
     "route": "PUS-TAG",
     "depDate": "2026-09-19",
     "retDate": "2026-09-24",
-    "lastAttemptAt": "2026-09-05T03:26:42.282Z",
+    "lastAttemptAt": "2026-09-06T03:48:53.318Z",
     "lastAttemptStatus": "success",
-    "sourceSignature": "5cab39aa8ee2d3cdf62e185c",
-    "sourcePrice": 322500
+    "sourceSignature": "fd243a3acee51bfaa74ace54",
+    "sourcePrice": 309000
   },
   "PUS-TAG_2026-09-20_2026-09-25": {
     "naverLowest": 252000,
-    "crawledAt": "2026-09-05T03:29:31.483Z",
+    "crawledAt": "2026-09-06T03:49:27.871Z",
     "route": "PUS-TAG",
     "depDate": "2026-09-20",
     "retDate": "2026-09-25",
-    "lastAttemptAt": "2026-09-05T03:29:31.483Z",
+    "lastAttemptAt": "2026-09-06T03:49:27.871Z",
     "lastAttemptStatus": "success",
-    "sourceSignature": "5cab39aa8ee2d3cdf62e185c",
-    "sourcePrice": 322500
+    "sourceSignature": "fd243a3acee51bfaa74ace54",
+    "sourcePrice": 309000
   },
   "TAE-BKK_2026-09-28_2026-10-02": {
     "naverLowest": 297070,
-    "crawledAt": "2026-09-04T07:57:41.738Z",
+    "crawledAt": "2026-09-06T03:31:54.889Z",
     "route": "TAE-BKK",
     "depDate": "2026-09-28",
     "retDate": "2026-10-02",
-    "lastAttemptAt": "2026-09-04T07:57:41.738Z",
+    "lastAttemptAt": "2026-09-06T03:31:54.889Z",
     "lastAttemptStatus": "success",
     "sourceSignature": "a81c99b0bbc78b6b1295cf35",
     "sourcePrice": 351800
   },
   "TAE-BKK_2026-09-29_2026-10-03": {
     "naverLowest": 297070,
-    "crawledAt": "2026-09-04T07:58:14.198Z",
+    "crawledAt": "2026-09-06T03:32:28.735Z",
     "route": "TAE-BKK",
     "depDate": "2026-09-29",
     "retDate": "2026-10-03",
-    "lastAttemptAt": "2026-09-04T07:58:14.198Z",
+    "lastAttemptAt": "2026-09-06T03:32:28.735Z",
     "lastAttemptStatus": "success",
     "sourceSignature": "a81c99b0bbc78b6b1295cf35",
     "sourcePrice": 351800
@@ -13319,12 +13333,12 @@
     "sourcePrice": 370500
   },
   "PUS-TAK_2026-09-20_2026-09-22": {
-    "naverLowest": 160400,
-    "crawledAt": "2026-09-04T06:55:36.997Z",
+    "naverLowest": 160800,
+    "crawledAt": "2026-09-06T03:06:30.788Z",
     "route": "PUS-TAK",
     "depDate": "2026-09-20",
     "retDate": "2026-09-22",
-    "lastAttemptAt": "2026-09-04T06:55:36.997Z",
+    "lastAttemptAt": "2026-09-06T03:06:30.788Z",
     "lastAttemptStatus": "success",
     "sourceSignature": "2642b4b042e5c40db439cad8",
     "sourcePrice": 209000
@@ -13451,11 +13465,11 @@
   },
   "ICN-BWN_2026-10-20_2026-10-24": {
     "naverLowest": 469900,
-    "crawledAt": "2026-09-02T03:37:55.976Z",
+    "crawledAt": "2026-09-06T03:18:51.881Z",
     "route": "ICN-BWN",
     "depDate": "2026-10-20",
     "retDate": "2026-10-24",
-    "lastAttemptAt": "2026-09-02T03:37:55.976Z",
+    "lastAttemptAt": "2026-09-06T03:18:51.881Z",
     "lastAttemptStatus": "success",
     "sourceSignature": "14725352cca2c24f519bd04d",
     "sourcePrice": 469900
@@ -13867,15 +13881,15 @@
     "lastAttemptStatus": "success"
   },
   "ICN-NQZ_2026-10-15_2026-10-17": {
-    "naverLowest": 700300,
-    "crawledAt": "2026-08-30T03:42:23.939Z",
+    "naverLowest": 697200,
+    "crawledAt": "2026-09-06T02:47:44.518Z",
     "route": "ICN-NQZ",
     "depDate": "2026-10-15",
     "retDate": "2026-10-17",
-    "lastAttemptAt": "2026-08-30T03:42:23.939Z",
+    "lastAttemptAt": "2026-09-06T02:47:44.518Z",
     "lastAttemptStatus": "success",
-    "sourceSignature": "648329f5ee8167de6f8fbba9",
-    "sourcePrice": 731200
+    "sourceSignature": "635707f9fa1cffca1c09b185",
+    "sourcePrice": 865000
   },
   "ICN-KTM_2026-09-01_2026-09-06": {
     "naverLowest": 532569,
@@ -14286,12 +14300,12 @@
     "sourcePrice": 681400
   },
   "ICN-TAK_2026-09-17_2026-09-22": {
-    "naverLowest": 145300,
-    "crawledAt": "2026-09-04T06:50:34.629Z",
+    "naverLowest": 169100,
+    "crawledAt": "2026-09-06T03:10:52.267Z",
     "route": "ICN-TAK",
     "depDate": "2026-09-17",
     "retDate": "2026-09-22",
-    "lastAttemptAt": "2026-09-04T06:50:34.629Z",
+    "lastAttemptAt": "2026-09-06T03:10:52.267Z",
     "lastAttemptStatus": "success",
     "lastAttemptDetail": "GraphQL 정상 2/2회 · 오류 0 · Naver 사용자 링크 로그인 서비스 더보기 여행상품 여행정보 0 로그인 후 등급확인 마이페이지 여행핫딜 항공 호텔 패키지 For U 55 왕복 편도 다구간 인천 ICN 인천국제공항 다카마쓰 TAK 다카마쓰공항 09.17.목 09.22.화 성인 1명 일반석 직항만 검색",
     "lastFinalUrl": "https://flight.naver.com/flights/international/ICN-TAK-20260917/TAK-ICN-20260922?adult=1&fareType=Y",
@@ -15474,37 +15488,37 @@
     "sourcePrice": 300000
   },
   "ICN-CXR_2026-09-27_2026-10-01": {
-    "naverLowest": 216590,
-    "crawledAt": "2026-09-05T04:14:02.198Z",
+    "naverLowest": 218433,
+    "crawledAt": "2026-09-06T03:53:47.884Z",
     "route": "ICN-CXR",
     "depDate": "2026-09-27",
     "retDate": "2026-10-01",
-    "lastAttemptAt": "2026-09-05T04:14:02.198Z",
+    "lastAttemptAt": "2026-09-06T03:53:47.884Z",
     "lastAttemptStatus": "success",
-    "sourceSignature": "ca50000f14ad35bb62e6ab1b",
-    "sourcePrice": 296200
+    "sourceSignature": "99f1bae2735f5c76a35eb964",
+    "sourcePrice": 320000
   },
   "ICN-CXR_2026-09-28_2026-10-02": {
-    "naverLowest": 239000,
-    "crawledAt": "2026-09-05T04:14:34.693Z",
+    "naverLowest": 223762,
+    "crawledAt": "2026-09-06T03:54:18.832Z",
     "route": "ICN-CXR",
     "depDate": "2026-09-28",
     "retDate": "2026-10-02",
-    "lastAttemptAt": "2026-09-05T04:14:34.693Z",
+    "lastAttemptAt": "2026-09-06T03:54:18.832Z",
     "lastAttemptStatus": "success",
-    "sourceSignature": "ca50000f14ad35bb62e6ab1b",
-    "sourcePrice": 296200
+    "sourceSignature": "99f1bae2735f5c76a35eb964",
+    "sourcePrice": 320000
   },
   "ICN-CXR_2026-09-29_2026-10-03": {
-    "naverLowest": 241113,
-    "crawledAt": "2026-09-05T04:15:39.284Z",
+    "naverLowest": 242967,
+    "crawledAt": "2026-09-06T03:55:24.119Z",
     "route": "ICN-CXR",
     "depDate": "2026-09-29",
     "retDate": "2026-10-03",
-    "lastAttemptAt": "2026-09-05T04:15:39.284Z",
+    "lastAttemptAt": "2026-09-06T03:55:24.119Z",
     "lastAttemptStatus": "success",
-    "sourceSignature": "ca50000f14ad35bb62e6ab1b",
-    "sourcePrice": 296200
+    "sourceSignature": "99f1bae2735f5c76a35eb964",
+    "sourcePrice": 320000
   },
   "PUS-KHH_2026-10-20_2026-10-22": {
     "naverLowest": 267758,
@@ -16133,16 +16147,17 @@
     "lastAttemptStatus": "success"
   },
   "ICN-BDL_2026-10-01_2026-10-06": {
-    "naverLowest": 1332700,
-    "crawledAt": "2026-08-27T03:40:46.854Z",
+    "naverLowest": 1481900,
+    "crawledAt": "2026-09-06T02:43:16.907Z",
     "route": "ICN-BDL",
     "depDate": "2026-10-01",
     "retDate": "2026-10-06",
-    "lastAttemptAt": "2026-08-28T03:24:35.835Z",
-    "lastAttemptStatus": "transient_error",
+    "lastAttemptAt": "2026-09-06T02:43:16.907Z",
+    "lastAttemptStatus": "success",
     "lastAttemptDetail": "GraphQL 정상 2/2회 · 오류 0 · Naver 사용자 링크 로그인 서비스 더보기 여행상품 여행정보 0 로그인 후 등급확인 마이페이지 여행핫딜 항공 호텔 패키지 For U 55 왕복 편도 다구간 인천 ICN 인천국제공항 하트포드 BDL 브레들리국제공항 10.01.목 10.06.화 성인 1명 일반석 직항만 ",
     "lastFinalUrl": "https://flight.naver.com/flights/international/ICN-BDL-20261001/BDL-ICN-20261006?adult=1&fareType=Y",
-    "sourceSignature": "c7f9587a2ce2d4b86b8e9290"
+    "sourceSignature": "82bb328feaad233e9c0a536c",
+    "sourcePrice": 1569800
   },
   "ICN-URA_2026-10-08_2026-10-13": {
     "naverLowest": 1099273,
@@ -16319,17 +16334,17 @@
     "sourcePrice": 350400
   },
   "ICN-KIX_2026-09-17_2026-09-22": {
-    "naverLowest": 164692,
-    "crawledAt": "2026-09-04T06:43:21.539Z",
+    "naverLowest": 157700,
+    "crawledAt": "2026-09-06T03:07:38.855Z",
     "route": "ICN-KIX",
     "depDate": "2026-09-17",
     "retDate": "2026-09-22",
-    "lastAttemptAt": "2026-09-04T06:43:21.539Z",
+    "lastAttemptAt": "2026-09-06T03:07:38.855Z",
     "lastAttemptStatus": "success",
     "lastAttemptDetail": "GraphQL 정상 2/2회 · 오류 0 · Naver 사용자 링크 로그인 서비스 더보기 여행상품 여행정보 0 로그인 후 등급확인 마이페이지 여행핫딜 항공 호텔 패키지 For U 55 왕복 편도 다구간 인천 ICN 인천국제공항 오사카 KIX 간사이국제공항 09.17.목 09.22.화 성인 1명 일반석 직항만 검색",
     "lastFinalUrl": "https://flight.naver.com/flights/international/ICN-KIX-20260917/KIX-ICN-20260922?adult=1&fareType=Y",
-    "sourceSignature": "964346bcfc3df2ad926b249f",
-    "sourcePrice": 189680
+    "sourceSignature": "bc0c4bb3604ed29fc116daea",
+    "sourcePrice": 189580
   },
   "ICN-HKG_2026-09-10_2026-09-14": {
     "naverLowest": 257700,
@@ -16507,13 +16522,15 @@
     "lastAttemptStatus": "success"
   },
   "ICN-HET_2026-10-17_2026-10-21": {
-    "naverLowest": 285000,
-    "crawledAt": "2026-08-23T16:49:46.856Z",
+    "naverLowest": 298000,
+    "crawledAt": "2026-09-06T02:38:18.909Z",
     "route": "ICN-HET",
     "depDate": "2026-10-17",
     "retDate": "2026-10-21",
-    "lastAttemptAt": "2026-08-23T16:49:46.856Z",
-    "lastAttemptStatus": "success"
+    "lastAttemptAt": "2026-09-06T02:38:18.909Z",
+    "lastAttemptStatus": "success",
+    "sourceSignature": "9476f1e704f432a9412729f5",
+    "sourcePrice": 328300
   },
   "ICN-HAN_2026-09-07_2026-09-12": {
     "naverLowest": 188000,
@@ -16586,13 +16603,15 @@
     "lastAttemptStatus": "success"
   },
   "ICN-OKJ_2026-09-20_2026-09-25": {
-    "naverLowest": 225285,
-    "crawledAt": "2026-08-28T07:42:54.572Z",
+    "naverLowest": 247577,
+    "crawledAt": "2026-09-06T02:40:30.019Z",
     "route": "ICN-OKJ",
     "depDate": "2026-09-20",
     "retDate": "2026-09-25",
-    "lastAttemptAt": "2026-08-28T07:42:54.572Z",
-    "lastAttemptStatus": "success"
+    "lastAttemptAt": "2026-09-06T02:40:30.019Z",
+    "lastAttemptStatus": "success",
+    "sourceSignature": "bc5b5b04ef1f6904c8af9907",
+    "sourcePrice": 267700
   },
   "ICN-TFU_2026-10-11_2026-10-13": {
     "naverLowest": 272827,
@@ -17457,23 +17476,23 @@
     "sourceSignature": "f98adaec4a587bdcf8270e9a"
   },
   "CJJ-KIX_2026-09-20_2026-09-22": {
-    "naverLowest": 245800,
-    "crawledAt": "2026-09-04T07:22:29.257Z",
+    "naverLowest": 268775,
+    "crawledAt": "2026-09-06T03:28:50.880Z",
     "route": "CJJ-KIX",
     "depDate": "2026-09-20",
     "retDate": "2026-09-22",
-    "lastAttemptAt": "2026-09-04T07:22:29.257Z",
+    "lastAttemptAt": "2026-09-06T03:28:50.880Z",
     "lastAttemptStatus": "success",
     "sourceSignature": "f98adaec4a587bdcf8270e9a",
     "sourcePrice": 299000
   },
   "CJJ-KIX_2026-09-21_2026-09-23": {
-    "naverLowest": 213600,
-    "crawledAt": "2026-09-04T07:23:02.596Z",
+    "naverLowest": 268800,
+    "crawledAt": "2026-09-06T03:29:24.765Z",
     "route": "CJJ-KIX",
     "depDate": "2026-09-21",
     "retDate": "2026-09-23",
-    "lastAttemptAt": "2026-09-04T07:23:02.596Z",
+    "lastAttemptAt": "2026-09-06T03:29:24.765Z",
     "lastAttemptStatus": "success",
     "sourceSignature": "f98adaec4a587bdcf8270e9a",
     "sourcePrice": 299000
@@ -17714,15 +17733,15 @@
     "lastAttemptStatus": "success"
   },
   "ICN-TAC_2026-09-17_2026-09-19": {
-    "naverLowest": 337912,
-    "crawledAt": "2026-08-30T05:39:45.814Z",
+    "naverLowest": 443700,
+    "crawledAt": "2026-09-06T02:46:01.553Z",
     "route": "ICN-TAC",
     "depDate": "2026-09-17",
     "retDate": "2026-09-19",
-    "lastAttemptAt": "2026-08-30T05:39:45.814Z",
+    "lastAttemptAt": "2026-09-06T02:46:01.553Z",
     "lastAttemptStatus": "success",
-    "sourceSignature": "1776c6e0bdb69b5f0f2607a7",
-    "sourcePrice": 367600
+    "sourceSignature": "47ff768c29c459ec0f4c12cf",
+    "sourcePrice": 498900
   },
   "ICN-PPS_2026-10-14_2026-10-16": {
     "naverLowest": 341200,
@@ -18013,17 +18032,17 @@
     "lastAttemptStatus": "success"
   },
   "ICN-TPE_2026-09-26_2026-10-02": {
-    "naverLowest": 220495,
-    "crawledAt": "2026-09-04T07:31:22.555Z",
+    "naverLowest": 229870,
+    "crawledAt": "2026-09-06T03:12:31.272Z",
     "route": "ICN-TPE",
     "depDate": "2026-09-26",
     "retDate": "2026-10-02",
-    "lastAttemptAt": "2026-09-04T07:31:22.555Z",
+    "lastAttemptAt": "2026-09-06T03:12:31.272Z",
     "lastAttemptStatus": "success",
     "lastAttemptDetail": "GraphQL 정상 2/2회 · 오류 0 · Naver 사용자 링크 로그인 서비스 더보기 여행상품 여행정보 0 로그인 후 등급확인 마이페이지 여행핫딜 항공 호텔 패키지 For U 55 왕복 편도 다구간 인천 ICN 인천국제공항 타이베이 TPE 타이완타오위안국제공항 09.26.토 10.02.금 성인 1명 일반석 직",
     "lastFinalUrl": "https://flight.naver.com/flights/international/ICN-TPE-20260926/TPE-ICN-20261002?adult=1&fareType=Y",
-    "sourceSignature": "fdb9c0689f98b5765771a4e7",
-    "sourcePrice": 260500
+    "sourceSignature": "f052bb5d561e6413e0c2809a",
+    "sourcePrice": 259800
   },
   "ICN-KCH_2026-09-11_2026-09-17": {
     "naverLowest": 488146,
@@ -18093,15 +18112,15 @@
     "lastAttemptStatus": "success"
   },
   "ICN-KUL_2026-09-09_2026-09-14": {
-    "naverLowest": 354400,
-    "crawledAt": "2026-09-05T02:58:41.277Z",
+    "naverLowest": 329977,
+    "crawledAt": "2026-09-06T03:57:37.823Z",
     "route": "ICN-KUL",
     "depDate": "2026-09-09",
     "retDate": "2026-09-14",
-    "lastAttemptAt": "2026-09-05T02:58:41.277Z",
+    "lastAttemptAt": "2026-09-06T03:57:37.823Z",
     "lastAttemptStatus": "success",
-    "sourceSignature": "db913fbda8916e9f6179c269",
-    "sourcePrice": 439400
+    "sourceSignature": "fe4258e053a92c2fdf199d1c",
+    "sourcePrice": 416800
   },
   "ICN-MLE_2026-09-11_2026-09-13": {
     "naverLowest": 797500,
@@ -18171,12 +18190,12 @@
     "sourcePrice": 226400
   },
   "PUS-CTS_2026-09-30_2026-10-02": {
-    "naverLowest": 258800,
-    "crawledAt": "2026-09-02T03:31:56.411Z",
+    "naverLowest": 255100,
+    "crawledAt": "2026-09-06T03:19:26.334Z",
     "route": "PUS-CTS",
     "depDate": "2026-09-30",
     "retDate": "2026-10-02",
-    "lastAttemptAt": "2026-09-02T03:31:56.411Z",
+    "lastAttemptAt": "2026-09-06T03:19:26.334Z",
     "lastAttemptStatus": "success",
     "sourceSignature": "80d546aad20d4187ee1ebd06",
     "sourcePrice": 403000
@@ -18845,14 +18864,15 @@
     "lastAttemptStatus": "success"
   },
   "ICN-ATH_2026-10-13_2026-10-16": {
-    "naverLowest": 595400,
-    "crawledAt": "2026-08-29T06:55:32.460Z",
+    "naverLowest": 623800,
+    "crawledAt": "2026-09-06T02:44:25.782Z",
     "route": "ICN-ATH",
     "depDate": "2026-10-13",
     "retDate": "2026-10-16",
-    "lastAttemptAt": "2026-08-29T06:55:32.460Z",
+    "lastAttemptAt": "2026-09-06T02:44:25.782Z",
     "lastAttemptStatus": "success",
-    "sourceSignature": "4e8ec659b2f8e9c9a90521ee"
+    "sourceSignature": "5ac1fcfd12b765412425cd19",
+    "sourcePrice": 728000
   },
   "ICN-FRA_2026-10-20_2026-10-25": {
     "naverLowest": 732500,
@@ -19467,12 +19487,12 @@
     "sourceSignature": "53aa4a39848d4e80dfd84087"
   },
   "CJJ-CRK_2026-09-26_2026-10-01": {
-    "naverLowest": 281400,
-    "crawledAt": "2026-09-04T07:12:03.996Z",
+    "naverLowest": 278800,
+    "crawledAt": "2026-09-06T03:27:14.347Z",
     "route": "CJJ-CRK",
     "depDate": "2026-09-26",
     "retDate": "2026-10-01",
-    "lastAttemptAt": "2026-09-04T07:12:03.996Z",
+    "lastAttemptAt": "2026-09-06T03:27:14.347Z",
     "lastAttemptStatus": "success",
     "sourceSignature": "996a1ecc1fb9844219934b48",
     "sourcePrice": 330000
@@ -19724,13 +19744,15 @@
     "lastAttemptStatus": "success"
   },
   "ICN-UIH_2026-09-09_2026-09-15": {
-    "naverLowest": 300470,
-    "crawledAt": "2026-08-27T07:42:38.513Z",
+    "naverLowest": 393580,
+    "crawledAt": "2026-09-06T02:39:59.008Z",
     "route": "ICN-UIH",
     "depDate": "2026-09-09",
     "retDate": "2026-09-15",
-    "lastAttemptAt": "2026-08-27T07:42:38.513Z",
-    "lastAttemptStatus": "success"
+    "lastAttemptAt": "2026-09-06T02:39:59.008Z",
+    "lastAttemptStatus": "success",
+    "sourceSignature": "c80a5859ecc79b604cf1fffb",
+    "sourcePrice": 437300
   },
   "ICN-KWL_2026-09-15_2026-09-20": {
     "naverLowest": 298500,
@@ -19902,15 +19924,15 @@
     "sourcePrice": 165900
   },
   "PUS-GUM_2026-09-20_2026-09-24": {
-    "naverLowest": 249700,
-    "crawledAt": "2026-09-05T05:56:07.000Z",
+    "naverLowest": 250190,
+    "crawledAt": "2026-09-06T02:58:38.343Z",
     "route": "PUS-GUM",
     "depDate": "2026-09-20",
     "retDate": "2026-09-24",
-    "lastAttemptAt": "2026-09-05T05:56:07.000Z",
+    "lastAttemptAt": "2026-09-06T02:58:38.343Z",
     "lastAttemptStatus": "success",
-    "sourceSignature": "09877c6701ec280382f82d0b",
-    "sourcePrice": 303000
+    "sourceSignature": "21cb61e33064544944747646",
+    "sourcePrice": 275800
   },
   "PUS-GUM_2026-09-20_2026-09-25": {
     "naverLowest": 244300,
@@ -19973,12 +19995,12 @@
     "sourcePrice": 165900
   },
   "PUS-FUK_2026-09-20_2026-09-22": {
-    "naverLowest": 144700,
-    "crawledAt": "2026-09-04T06:42:18.663Z",
+    "naverLowest": 138347,
+    "crawledAt": "2026-09-06T03:04:55.110Z",
     "route": "PUS-FUK",
     "depDate": "2026-09-20",
     "retDate": "2026-09-22",
-    "lastAttemptAt": "2026-09-04T06:42:18.663Z",
+    "lastAttemptAt": "2026-09-06T03:04:55.110Z",
     "lastAttemptStatus": "success",
     "sourceSignature": "b69eec3c271d0e28ed212264",
     "sourcePrice": 155900
@@ -20031,14 +20053,14 @@
   },
   "CJJ-TPE_2026-09-14_2026-09-17": {
     "naverLowest": 258500,
-    "crawledAt": "2026-09-04T07:15:45.133Z",
+    "crawledAt": "2026-09-06T03:35:14.904Z",
     "route": "CJJ-TPE",
     "depDate": "2026-09-14",
     "retDate": "2026-09-17",
-    "lastAttemptAt": "2026-09-04T07:15:45.133Z",
+    "lastAttemptAt": "2026-09-06T03:35:14.904Z",
     "lastAttemptStatus": "success",
-    "sourceSignature": "a4b6fe22c3127987e28ebf1e",
-    "sourcePrice": 326000
+    "sourceSignature": "cb24850c21f6ee3d0edb95a8",
+    "sourcePrice": 360000
   },
   "CJJ-TPE_2026-09-20_2026-09-23": {
     "naverLowest": 219700,
@@ -20864,17 +20886,17 @@
     "sourcePrice": 268400
   },
   "ICN-MFM_2026-10-01_2026-10-07": {
-    "naverLowest": 256700,
-    "crawledAt": "2026-09-04T07:40:32.714Z",
+    "naverLowest": 255900,
+    "crawledAt": "2026-09-06T03:25:02.900Z",
     "route": "ICN-MFM",
     "depDate": "2026-10-01",
     "retDate": "2026-10-07",
-    "lastAttemptAt": "2026-09-04T07:40:32.714Z",
+    "lastAttemptAt": "2026-09-06T03:25:02.900Z",
     "lastAttemptStatus": "success",
     "lastAttemptDetail": "GraphQL 정상 2/2회 · 오류 0 · Naver 사용자 링크 로그인 서비스 더보기 여행상품 여행정보 0 로그인 후 등급확인 마이페이지 여행핫딜 항공 호텔 패키지 For U 55 왕복 편도 다구간 인천 ICN 인천국제공항 마카오 MFM 마카오국제공항 10.01.목 10.07.수 성인 1명 일반석 직항만 검색",
     "lastFinalUrl": "https://flight.naver.com/flights/international/ICN-MFM-20261001/MFM-ICN-20261007?adult=1&fareType=Y",
-    "sourceSignature": "b324df1e57650d0e2bcb86cb",
-    "sourcePrice": 280100
+    "sourceSignature": "e2ab2f0d2ff31ced403dd2ec",
+    "sourcePrice": 279300
   },
   "ICN-DPS_2026-10-20_2026-10-22": {
     "naverLowest": 407200,
@@ -20976,13 +20998,15 @@
     "sourcePrice": 218300
   },
   "ICN-CXR_2026-09-13_2026-09-17": {
-    "naverLowest": 196200,
-    "crawledAt": "2026-08-27T05:57:08.946Z",
+    "naverLowest": 231684,
+    "crawledAt": "2026-09-06T02:38:52.761Z",
     "route": "ICN-CXR",
     "depDate": "2026-09-13",
     "retDate": "2026-09-17",
-    "lastAttemptAt": "2026-08-27T05:57:08.946Z",
-    "lastAttemptStatus": "success"
+    "lastAttemptAt": "2026-09-06T02:38:52.761Z",
+    "lastAttemptStatus": "success",
+    "sourceSignature": "c19581f1473f0483e5163a4b",
+    "sourcePrice": 295000
   },
   "ICN-PVG_2026-09-16_2026-09-18": {
     "naverLowest": 261900,
@@ -21716,15 +21740,17 @@
     "lastFinalUrl": "https://flight.naver.com/flights/international/ICN-TFU-20260901/TFU-ICN-20260904?adult=1&fareType=Y"
   },
   "ICN-YIW_2026-10-15_2026-10-18": {
-    "naverLowest": 0,
-    "crawledAt": "2026-08-28T01:44:44.350Z",
+    "naverLowest": 316600,
+    "crawledAt": "2026-09-06T02:42:41.827Z",
     "route": "ICN-YIW",
     "depDate": "2026-10-15",
     "retDate": "2026-10-18",
-    "lastAttemptAt": "2026-08-28T01:44:44.350Z",
-    "lastAttemptStatus": "transient_error",
+    "lastAttemptAt": "2026-09-06T02:42:41.827Z",
+    "lastAttemptStatus": "success",
     "lastAttemptDetail": "GraphQL 정상 1/1회 · 오류 0 · Naver 사용자 링크 로그인 서비스 더보기 여행상품 여행정보 0 로그인 후 등급확인 마이페이지 여행핫딜 항공 호텔 패키지 For U 55 왕복 편도 다구간 인천 ICN 인천국제공항 이우 YIW 이우공항 10.15.목 10.18.일 성인 1명 일반석 직항만 검색 왕복 ",
-    "lastFinalUrl": "https://flight.naver.com/flights/international/ICN-YIW-20261015/YIW-ICN-20261018?adult=1&fareType=Y"
+    "lastFinalUrl": "https://flight.naver.com/flights/international/ICN-YIW-20261015/YIW-ICN-20261018?adult=1&fareType=Y",
+    "sourceSignature": "e4f07094cbc0d3867681705f",
+    "sourcePrice": 362100
   },
   "ICN-DGT_2026-09-17_2026-09-23": {
     "naverLowest": 0,
@@ -22208,17 +22234,17 @@
     "lastFinalUrl": "https://flight.naver.com/flights/international/ICN-VIE-20261022/VIE-GMP-20261026?adult=1&fareType=Y"
   },
   "ICN-YGJ_2026-09-17_2026-09-23": {
-    "naverLowest": 167780,
-    "crawledAt": "2026-09-04T07:25:43.489Z",
+    "naverLowest": 167680,
+    "crawledAt": "2026-09-06T03:12:00.271Z",
     "route": "ICN-YGJ",
     "depDate": "2026-09-17",
     "retDate": "2026-09-23",
-    "lastAttemptAt": "2026-09-04T07:25:43.489Z",
+    "lastAttemptAt": "2026-09-06T03:12:00.271Z",
     "lastAttemptStatus": "success",
     "lastAttemptDetail": "GraphQL 정상 2/2회 · 오류 0 · Naver 사용자 링크 로그인 서비스 더보기 여행상품 여행정보 0 로그인 후 등급확인 마이페이지 여행핫딜 항공 호텔 패키지 For U 55 왕복 편도 다구간 인천 ICN 인천국제공항 요나고 YGJ 요나고공항 09.17.목 09.23.수 성인 1명 일반석 직항만 검색 왕",
     "lastFinalUrl": "https://flight.naver.com/flights/international/ICN-YGJ-20260917/YGJ-ICN-20260923?adult=1&fareType=Y",
-    "sourceSignature": "d0a8ccd416ea4e8219c8e84d",
-    "sourcePrice": 213300
+    "sourceSignature": "04d65399eafc5d25b349e0ed",
+    "sourcePrice": 213700
   },
   "ICN-WUX_2026-09-03_2026-09-08": {
     "naverLowest": 0,
@@ -22302,11 +22328,11 @@
   },
   "ICN-BWN_2026-10-27_2026-10-31": {
     "naverLowest": 469900,
-    "crawledAt": "2026-09-02T03:38:29.259Z",
+    "crawledAt": "2026-09-06T03:19:57.008Z",
     "route": "ICN-BWN",
     "depDate": "2026-10-27",
     "retDate": "2026-10-31",
-    "lastAttemptAt": "2026-09-02T03:38:29.259Z",
+    "lastAttemptAt": "2026-09-06T03:19:57.008Z",
     "lastAttemptStatus": "success",
     "sourceSignature": "14725352cca2c24f519bd04d",
     "sourcePrice": 469900
@@ -22538,15 +22564,15 @@
     "sourceSignature": "0d4aa132cc45840c4269213c"
   },
   "ICN-HKG_2026-09-12_2026-09-14": {
-    "naverLowest": 222316,
-    "crawledAt": "2026-08-31T05:51:57.522Z",
+    "naverLowest": 259200,
+    "crawledAt": "2026-09-06T03:13:35.594Z",
     "route": "ICN-HKG",
     "depDate": "2026-09-12",
     "retDate": "2026-09-14",
-    "lastAttemptAt": "2026-08-31T05:51:57.522Z",
+    "lastAttemptAt": "2026-09-06T03:13:35.594Z",
     "lastAttemptStatus": "success",
-    "sourceSignature": "c8fa213f18b074361aeecc02",
-    "sourcePrice": 237670
+    "sourceSignature": "d05856747d4aa25962846cb6",
+    "sourcePrice": 283550
   },
   "ICN-YNT_2026-09-05_2026-09-08": {
     "naverLowest": 148100,
@@ -22878,15 +22904,15 @@
     "sourcePrice": 370300
   },
   "PUS-SHI_2026-09-27_2026-10-01": {
-    "naverLowest": 342700,
-    "crawledAt": "2026-09-04T07:59:54.578Z",
+    "naverLowest": 346900,
+    "crawledAt": "2026-09-06T03:29:57.816Z",
     "route": "PUS-SHI",
     "depDate": "2026-09-27",
     "retDate": "2026-10-01",
-    "lastAttemptAt": "2026-09-04T07:59:54.578Z",
+    "lastAttemptAt": "2026-09-06T03:29:57.816Z",
     "lastAttemptStatus": "success",
-    "sourceSignature": "652c681dd601d5cf0fd97201",
-    "sourcePrice": 357000
+    "sourceSignature": "681d4e8f0e6eb02fb9a7c5aa",
+    "sourcePrice": 359900
   },
   "ICN-DGT_2026-09-26_2026-09-30": {
     "naverLowest": 340100,
@@ -23069,15 +23095,15 @@
     "lastAttemptStatus": "success"
   },
   "ICN-CXR_2026-09-26_2026-09-30": {
-    "naverLowest": 247964,
-    "crawledAt": "2026-09-04T07:09:21.845Z",
+    "naverLowest": 240061,
+    "crawledAt": "2026-09-06T03:27:45.082Z",
     "route": "ICN-CXR",
     "depDate": "2026-09-26",
     "retDate": "2026-09-30",
-    "lastAttemptAt": "2026-09-04T07:09:21.845Z",
+    "lastAttemptAt": "2026-09-06T03:27:45.082Z",
     "lastAttemptStatus": "success",
-    "sourceSignature": "98a31d17c0164a93242bdadd",
-    "sourcePrice": 298500
+    "sourceSignature": "c19581f1473f0483e5163a4b",
+    "sourcePrice": 295000
   },
   "ICN-KIJ_2026-09-01_2026-09-04": {
     "naverLowest": 250200,
@@ -23199,14 +23225,15 @@
     "sourcePrice": 226600
   },
   "ICN-MXP_2026-10-16_2026-10-21": {
-    "naverLowest": 582700,
-    "crawledAt": "2026-08-29T06:13:37.495Z",
+    "naverLowest": 581100,
+    "crawledAt": "2026-09-06T02:43:50.829Z",
     "route": "ICN-MXP",
     "depDate": "2026-10-16",
     "retDate": "2026-10-21",
-    "lastAttemptAt": "2026-08-29T06:13:37.495Z",
+    "lastAttemptAt": "2026-09-06T02:43:50.829Z",
     "lastAttemptStatus": "success",
-    "sourceSignature": "95f6bdb13853e8d984b0877d"
+    "sourceSignature": "7be49e64021bf4de1665a690",
+    "sourcePrice": 667300
   },
   "ICN-CXR_2026-09-08_2026-09-10": {
     "naverLowest": 230000,
@@ -23552,12 +23579,12 @@
     "sourcePrice": 211000
   },
   "PUS-MYJ_2026-10-06_2026-10-08": {
-    "naverLowest": 260820,
-    "crawledAt": "2026-09-04T07:31:55.957Z",
+    "naverLowest": 261220,
+    "crawledAt": "2026-09-06T03:13:05.002Z",
     "route": "PUS-MYJ",
     "depDate": "2026-10-06",
     "retDate": "2026-10-08",
-    "lastAttemptAt": "2026-09-04T07:31:55.957Z",
+    "lastAttemptAt": "2026-09-06T03:13:05.002Z",
     "lastAttemptStatus": "success",
     "sourceSignature": "016a1882639ffc12ebc47afe",
     "sourcePrice": 264900
@@ -23660,12 +23687,12 @@
     "sourcePrice": 335900
   },
   "PUS-CTS_2026-09-29_2026-10-02": {
-    "naverLowest": 249200,
-    "crawledAt": "2026-09-04T07:58:45.461Z",
+    "naverLowest": 255100,
+    "crawledAt": "2026-09-06T03:28:17.593Z",
     "route": "PUS-CTS",
     "depDate": "2026-09-29",
     "retDate": "2026-10-02",
-    "lastAttemptAt": "2026-09-04T07:58:45.461Z",
+    "lastAttemptAt": "2026-09-06T03:28:17.593Z",
     "lastAttemptStatus": "success",
     "sourceSignature": "964cd754bb61736a0ff9aa88",
     "sourcePrice": 297900
@@ -24231,15 +24258,15 @@
     "firstQueuedAt": "2026-08-30T03:41:57.063Z"
   },
   "ICN-NRT_2026-09-20_2026-09-23": {
-    "naverLowest": 226410,
+    "naverLowest": 209896,
     "route": "ICN-NRT",
     "depDate": "2026-09-20",
     "retDate": "2026-09-23",
-    "sourceSignature": "5ece2a297f2ef8f13f432829",
-    "sourcePrice": 342040,
+    "sourceSignature": "9fd80cd1d724533bcd74cc71",
+    "sourcePrice": 248900,
     "firstQueuedAt": "2026-08-30T03:41:57.063Z",
-    "crawledAt": "2026-09-02T03:32:29.165Z",
-    "lastAttemptAt": "2026-09-02T03:32:29.165Z",
+    "crawledAt": "2026-09-06T03:14:42.678Z",
+    "lastAttemptAt": "2026-09-06T03:14:42.678Z",
     "lastAttemptStatus": "success"
   },
   "ICN-NRT_2026-09-21_2026-09-24": {
@@ -24358,11 +24385,11 @@
     "route": "ICN-RXS",
     "depDate": "2026-10-08",
     "retDate": "2026-10-11",
-    "sourceSignature": "1776c6e0bdb69b5f0f2607a7",
-    "sourcePrice": 367600,
+    "sourceSignature": "47ff768c29c459ec0f4c12cf",
+    "sourcePrice": 498900,
     "firstQueuedAt": "2026-08-30T03:41:57.063Z",
     "crawledAt": "2026-08-30T05:55:13.548Z",
-    "lastAttemptAt": "2026-08-30T05:55:13.548Z",
+    "lastAttemptAt": "2026-09-06T02:45:31.227Z",
     "lastAttemptStatus": "transient_error",
     "lastAttemptDetail": "GraphQL 정상 0/0회 · 오류 0 · Naver 사용자 링크 로그인 서비스 더보기 여행상품 여행정보 0 로그인 후 등급확인 마이페이지 여행핫딜 항공 호텔 패키지 For U 일시적으로 서비스를 이용할 수 없습니다 예상치 못한 원인으로 서비스 이용에 제한이 발생했습니다. 이용에 불편을 드려 죄송합니다. 항공권",
     "lastFinalUrl": "https://flight.naver.com/error"
@@ -24443,13 +24470,16 @@
     "lastAttemptStatus": "success"
   },
   "ICN-BMV_2026-10-08_2026-10-13": {
-    "naverLowest": 0,
+    "naverLowest": 412680,
     "route": "ICN-BMV",
     "depDate": "2026-10-08",
     "retDate": "2026-10-13",
-    "sourceSignature": "3824babf4b26594fc3a4190d",
-    "sourcePrice": 470900,
-    "firstQueuedAt": "2026-08-30T03:41:57.063Z"
+    "sourceSignature": "ee3332f64996251cf2cd94ee",
+    "sourcePrice": 435400,
+    "firstQueuedAt": "2026-08-30T03:41:57.063Z",
+    "crawledAt": "2026-09-06T02:44:59.144Z",
+    "lastAttemptAt": "2026-09-06T02:44:59.144Z",
+    "lastAttemptStatus": "success"
   },
   "ICN-UBP_2026-09-16_2026-09-20": {
     "naverLowest": 0,
@@ -24572,22 +24602,28 @@
     "firstQueuedAt": "2026-08-30T03:41:57.063Z"
   },
   "ICN-MLE_2026-10-20_2026-10-22": {
-    "naverLowest": 0,
+    "naverLowest": 833300,
     "route": "ICN-MLE",
     "depDate": "2026-10-20",
     "retDate": "2026-10-22",
-    "sourceSignature": "034e004b8255db68abe3e208",
-    "sourcePrice": 844300,
-    "firstQueuedAt": "2026-08-30T03:41:57.063Z"
+    "sourceSignature": "11360e1bfaabdd7d43d07345",
+    "sourcePrice": 835700,
+    "firstQueuedAt": "2026-08-30T03:41:57.063Z",
+    "crawledAt": "2026-09-06T02:46:34.936Z",
+    "lastAttemptAt": "2026-09-06T02:46:34.936Z",
+    "lastAttemptStatus": "success"
   },
   "ICN-LHE_2026-10-28_2026-11-03": {
-    "naverLowest": 0,
+    "naverLowest": 803200,
     "route": "ICN-LHE",
     "depDate": "2026-10-28",
     "retDate": "2026-11-03",
-    "sourceSignature": "8c38723eaa13d1d1e79df342",
-    "sourcePrice": 869600,
-    "firstQueuedAt": "2026-08-30T03:41:57.063Z"
+    "sourceSignature": "974f65752f9d5761fcca826f",
+    "sourcePrice": 860700,
+    "firstQueuedAt": "2026-08-30T03:41:57.063Z",
+    "crawledAt": "2026-09-06T02:47:09.453Z",
+    "lastAttemptAt": "2026-09-06T02:47:09.453Z",
+    "lastAttemptStatus": "success"
   },
   "ICN-LAX_2026-09-10_2026-09-14": {
     "naverLowest": 0,
@@ -24644,13 +24680,16 @@
     "firstQueuedAt": "2026-08-30T03:41:57.063Z"
   },
   "ICN-SLC_2026-10-16_2026-10-20": {
-    "naverLowest": 0,
+    "naverLowest": 1288500,
     "route": "ICN-SLC",
     "depDate": "2026-10-16",
     "retDate": "2026-10-20",
-    "sourceSignature": "20a580d246b8c720880611c8",
-    "sourcePrice": 1396400,
-    "firstQueuedAt": "2026-08-30T03:41:57.063Z"
+    "sourceSignature": "216c04dd13ff1c7261537479",
+    "sourcePrice": 1541300,
+    "firstQueuedAt": "2026-08-30T03:41:57.063Z",
+    "crawledAt": "2026-09-06T02:50:00.367Z",
+    "lastAttemptAt": "2026-09-06T02:50:00.367Z",
+    "lastAttemptStatus": "success"
   },
   "ICN-TUS_2026-09-20_2026-09-24": {
     "naverLowest": 0,
@@ -24707,15 +24746,15 @@
     "lastAttemptStatus": "success"
   },
   "ICN-KHH_2026-09-10_2026-09-12": {
-    "naverLowest": 210919,
+    "naverLowest": 209235,
     "route": "ICN-KHH",
     "depDate": "2026-09-10",
     "retDate": "2026-09-12",
-    "sourceSignature": "b146dc4bf3c0902e0568fb1a",
-    "sourcePrice": 242030,
+    "sourceSignature": "14ba991f83d2bd90b71a1c30",
+    "sourcePrice": 250530,
     "firstQueuedAt": "2026-08-31T05:00:10.909Z",
-    "crawledAt": "2026-09-04T07:37:45.430Z",
-    "lastAttemptAt": "2026-09-04T07:37:45.430Z",
+    "crawledAt": "2026-09-06T03:25:34.676Z",
+    "lastAttemptAt": "2026-09-06T03:25:34.676Z",
     "lastAttemptStatus": "success"
   },
   "ICN-TNA_2026-09-06_2026-09-08": {
@@ -26315,15 +26354,15 @@
     "lastAttemptStatus": "success"
   },
   "CJJ-CXR_2026-10-04_2026-10-08": {
-    "naverLowest": 315480,
+    "naverLowest": 301329,
     "route": "CJJ-CXR",
     "depDate": "2026-10-04",
     "retDate": "2026-10-08",
-    "sourceSignature": "8e69d9332667bcba61902046",
-    "sourcePrice": 354600,
+    "sourceSignature": "98d5f9736de15ea65d83ba66",
+    "sourcePrice": 404100,
     "firstQueuedAt": "2026-09-01T06:55:40.562Z",
-    "crawledAt": "2026-09-04T08:01:32.152Z",
-    "lastAttemptAt": "2026-09-04T08:01:32.152Z",
+    "crawledAt": "2026-09-06T03:34:41.562Z",
+    "lastAttemptAt": "2026-09-06T03:34:41.562Z",
     "lastAttemptStatus": "success"
   },
   "ICN-CNX_2026-09-17_2026-09-21": {
@@ -27222,8 +27261,8 @@
     "sourceSignature": "f98adaec4a587bdcf8270e9a",
     "sourcePrice": 299000,
     "firstQueuedAt": "2026-09-02T02:33:09.297Z",
-    "crawledAt": "2026-09-04T07:48:11.479Z",
-    "lastAttemptAt": "2026-09-04T07:48:11.479Z",
+    "crawledAt": "2026-09-06T03:26:41.157Z",
+    "lastAttemptAt": "2026-09-06T03:26:41.157Z",
     "lastAttemptStatus": "success"
   },
   "ICN-MNL_2026-09-16_2026-09-21": {
@@ -28161,11 +28200,11 @@
     "route": "ICN-MYJ",
     "depDate": "2026-09-20",
     "retDate": "2026-09-22",
-    "sourceSignature": "b7d577bb5425af4089ca5216",
-    "sourcePrice": 160400,
+    "sourceSignature": "beb9fd286bc0689b11f123a5",
+    "sourcePrice": 246500,
     "firstQueuedAt": "2026-09-03T03:03:20.152Z",
-    "crawledAt": "2026-09-05T02:44:53.741Z",
-    "lastAttemptAt": "2026-09-05T02:44:53.741Z",
+    "crawledAt": "2026-09-06T03:43:26.701Z",
+    "lastAttemptAt": "2026-09-06T03:43:26.701Z",
     "lastAttemptStatus": "success"
   },
   "PUS-FUK_2026-10-05_2026-10-07": {
@@ -28268,15 +28307,15 @@
     "lastAttemptStatus": "success"
   },
   "ICN-DAD_2026-09-30_2026-10-02": {
-    "naverLowest": 204332,
+    "naverLowest": 203545,
     "route": "ICN-DAD",
     "depDate": "2026-09-30",
     "retDate": "2026-10-02",
-    "sourceSignature": "a616e5625bf9a67e0035779d",
-    "sourcePrice": 249400,
+    "sourceSignature": "338caa1568e2f82e619ff7b3",
+    "sourcePrice": 259900,
     "firstQueuedAt": "2026-09-03T03:03:20.152Z",
-    "crawledAt": "2026-09-05T03:15:36.688Z",
-    "lastAttemptAt": "2026-09-05T03:15:36.688Z",
+    "crawledAt": "2026-09-06T03:46:09.147Z",
+    "lastAttemptAt": "2026-09-06T03:46:09.147Z",
     "lastAttemptStatus": "success"
   },
   "ICN-CTS_2026-09-17_2026-09-22": {
@@ -28304,13 +28343,16 @@
     "lastAttemptStatus": "success"
   },
   "ICN-SPN_2026-09-12_2026-09-14": {
-    "naverLowest": 0,
+    "naverLowest": 246500,
     "route": "ICN-SPN",
     "depDate": "2026-09-12",
     "retDate": "2026-09-14",
-    "sourceSignature": "1b742be74fac64bb9607a6f1",
-    "sourcePrice": 277100,
-    "firstQueuedAt": "2026-09-03T03:03:20.152Z"
+    "sourceSignature": "d67b30a4f45ed65a39ded469",
+    "sourcePrice": 274900,
+    "firstQueuedAt": "2026-09-03T03:03:20.152Z",
+    "crawledAt": "2026-09-06T03:21:31.184Z",
+    "lastAttemptAt": "2026-09-06T03:21:31.184Z",
+    "lastAttemptStatus": "success"
   },
   "ICN-TSN_2026-10-18_2026-10-20": {
     "naverLowest": 268300,
@@ -28580,13 +28622,16 @@
     "firstQueuedAt": "2026-09-03T03:03:20.152Z"
   },
   "ICN-SYX_2026-09-11_2026-09-16": {
-    "naverLowest": 0,
+    "naverLowest": 313900,
     "route": "ICN-SYX",
     "depDate": "2026-09-11",
     "retDate": "2026-09-16",
-    "sourceSignature": "78d41f061f376d47ad90807a",
-    "sourcePrice": 333300,
-    "firstQueuedAt": "2026-09-03T03:03:20.152Z"
+    "sourceSignature": "054280099c47b6245e547081",
+    "sourcePrice": 331500,
+    "firstQueuedAt": "2026-09-03T03:03:20.152Z",
+    "crawledAt": "2026-09-06T03:20:59.769Z",
+    "lastAttemptAt": "2026-09-06T03:20:59.769Z",
+    "lastAttemptStatus": "success"
   },
   "ICN-TAG_2026-09-26_2026-09-30": {
     "naverLowest": 245000,
@@ -28629,11 +28674,11 @@
     "route": "ICN-TAG",
     "depDate": "2026-09-29",
     "retDate": "2026-10-03",
-    "sourceSignature": "18b14b58281d26010031e301",
-    "sourcePrice": 357500,
+    "sourceSignature": "acd5d4bb637bbb619a33de99",
+    "sourcePrice": 228900,
     "firstQueuedAt": "2026-09-03T03:03:20.152Z",
-    "crawledAt": "2026-09-05T06:07:15.496Z",
-    "lastAttemptAt": "2026-09-05T06:07:15.496Z",
+    "crawledAt": "2026-09-06T02:52:44.945Z",
+    "lastAttemptAt": "2026-09-06T02:52:44.946Z",
     "lastAttemptStatus": "success"
   },
   "ICN-NGB_2026-09-21_2026-09-23": {
@@ -28811,13 +28856,16 @@
     "lastAttemptStatus": "success"
   },
   "ICN-HUI_2026-09-14_2026-09-17": {
-    "naverLowest": 0,
+    "naverLowest": 371643,
     "route": "ICN-HUI",
     "depDate": "2026-09-14",
     "retDate": "2026-09-17",
-    "sourceSignature": "9d488f4ad135353b1f143494",
-    "sourcePrice": 391900,
-    "firstQueuedAt": "2026-09-03T03:03:20.152Z"
+    "sourceSignature": "db337f597c3583fe89613ae1",
+    "sourcePrice": 409800,
+    "firstQueuedAt": "2026-09-03T03:03:20.152Z",
+    "crawledAt": "2026-09-06T03:22:02.939Z",
+    "lastAttemptAt": "2026-09-06T03:22:02.939Z",
+    "lastAttemptStatus": "success"
   },
   "ICN-INC_2026-09-08_2026-09-13": {
     "naverLowest": 0,
@@ -28829,13 +28877,16 @@
     "firstQueuedAt": "2026-09-03T03:03:20.152Z"
   },
   "ICN-VDH_2026-10-15_2026-10-19": {
-    "naverLowest": 0,
+    "naverLowest": 389400,
     "route": "ICN-VDH",
     "depDate": "2026-10-15",
     "retDate": "2026-10-19",
-    "sourceSignature": "632bee47a7eca700432a3f35",
-    "sourcePrice": 404200,
-    "firstQueuedAt": "2026-09-03T03:03:20.152Z"
+    "sourceSignature": "6f495337f33ebf91aca57583",
+    "sourcePrice": 430600,
+    "firstQueuedAt": "2026-09-03T03:03:20.152Z",
+    "crawledAt": "2026-09-06T03:22:37.730Z",
+    "lastAttemptAt": "2026-09-06T03:22:37.730Z",
+    "lastAttemptStatus": "success"
   },
   "ICN-CEB_2026-10-22_2026-10-26": {
     "naverLowest": 0,
@@ -29117,13 +29168,16 @@
     "lastAttemptStatus": "success"
   },
   "ICN-NGO_2026-09-16_2026-09-21": {
-    "naverLowest": 0,
+    "naverLowest": 203200,
     "route": "ICN-NGO",
     "depDate": "2026-09-16",
     "retDate": "2026-09-21",
-    "sourceSignature": "f4e26ad3fccead807b6403eb",
-    "sourcePrice": 241700,
-    "firstQueuedAt": "2026-09-04T06:11:46.960Z"
+    "sourceSignature": "85cb6e9d122d6ef18c40e169",
+    "sourcePrice": 240000,
+    "firstQueuedAt": "2026-09-04T06:11:46.960Z",
+    "crawledAt": "2026-09-06T02:53:20.112Z",
+    "lastAttemptAt": "2026-09-06T02:53:20.112Z",
+    "lastAttemptStatus": "success"
   },
   "TAE-FUK_2026-10-05_2026-10-07": {
     "naverLowest": 249000,
@@ -29147,25 +29201,28 @@
     "firstQueuedAt": "2026-09-04T06:11:46.960Z"
   },
   "ICN-PQC_2026-09-12_2026-09-15": {
-    "naverLowest": 223900,
+    "naverLowest": 199000,
     "route": "ICN-PQC",
     "depDate": "2026-09-12",
     "retDate": "2026-09-15",
-    "sourceSignature": "54193f3b7a2af2ca19d51c1e",
-    "sourcePrice": 253400,
+    "sourceSignature": "31bdeb5a98de74aab8105bb1",
+    "sourcePrice": 214600,
     "firstQueuedAt": "2026-09-04T06:11:46.960Z",
-    "crawledAt": "2026-09-05T04:12:20.600Z",
-    "lastAttemptAt": "2026-09-05T04:12:20.600Z",
+    "crawledAt": "2026-09-06T02:51:40.063Z",
+    "lastAttemptAt": "2026-09-06T02:51:40.063Z",
     "lastAttemptStatus": "success"
   },
   "ICN-PQC_2026-09-10_2026-09-13": {
-    "naverLowest": 0,
+    "naverLowest": 223900,
     "route": "ICN-PQC",
     "depDate": "2026-09-10",
     "retDate": "2026-09-13",
-    "sourceSignature": "2f3ebc98803051cd04736cc4",
-    "sourcePrice": 254300,
-    "firstQueuedAt": "2026-09-04T06:11:46.960Z"
+    "sourceSignature": "446f12a67baf57f199406aff",
+    "sourcePrice": 232200,
+    "firstQueuedAt": "2026-09-04T06:11:46.960Z",
+    "crawledAt": "2026-09-06T02:54:52.415Z",
+    "lastAttemptAt": "2026-09-06T02:54:52.415Z",
+    "lastAttemptStatus": "success"
   },
   "ICN-SGN_2026-09-11_2026-09-15": {
     "naverLowest": 176900,
@@ -29201,13 +29258,16 @@
     "lastAttemptStatus": "success"
   },
   "ICN-CTS_2026-09-16_2026-09-21": {
-    "naverLowest": 0,
+    "naverLowest": 258900,
     "route": "ICN-CTS",
     "depDate": "2026-09-16",
     "retDate": "2026-09-21",
-    "sourceSignature": "67fad7cf77778626f9046925",
-    "sourcePrice": 286900,
-    "firstQueuedAt": "2026-09-04T06:11:46.960Z"
+    "sourceSignature": "76952dac4bf1f7309aa27a72",
+    "sourcePrice": 287400,
+    "firstQueuedAt": "2026-09-04T06:11:46.960Z",
+    "crawledAt": "2026-09-06T03:26:09.677Z",
+    "lastAttemptAt": "2026-09-06T03:26:09.677Z",
+    "lastAttemptStatus": "success"
   },
   "ICN-TSN_2026-10-18_2026-10-22": {
     "naverLowest": 0,
@@ -29348,13 +29408,16 @@
     "lastAttemptStatus": "success"
   },
   "CJJ-TPE_2026-09-15_2026-09-18": {
-    "naverLowest": 0,
+    "naverLowest": 279100,
     "route": "CJJ-TPE",
     "depDate": "2026-09-15",
     "retDate": "2026-09-18",
-    "sourceSignature": "a4b6fe22c3127987e28ebf1e",
-    "sourcePrice": 326000,
-    "firstQueuedAt": "2026-09-04T06:11:46.960Z"
+    "sourceSignature": "cb24850c21f6ee3d0edb95a8",
+    "sourcePrice": 360000,
+    "firstQueuedAt": "2026-09-04T06:11:46.960Z",
+    "crawledAt": "2026-09-06T03:35:49.379Z",
+    "lastAttemptAt": "2026-09-06T03:35:49.379Z",
+    "lastAttemptStatus": "success"
   },
   "ICN-LJG_2026-10-13_2026-10-16": {
     "naverLowest": 0,
@@ -29459,22 +29522,28 @@
     "lastAttemptStatus": "success"
   },
   "ICN-CTS_2026-09-26_2026-09-29": {
-    "naverLowest": 0,
+    "naverLowest": 329000,
     "route": "ICN-CTS",
     "depDate": "2026-09-26",
     "retDate": "2026-09-29",
     "sourceSignature": "0199ad2032695f67ad75552f",
     "sourcePrice": 349000,
-    "firstQueuedAt": "2026-09-04T06:11:46.960Z"
+    "firstQueuedAt": "2026-09-04T06:11:46.960Z",
+    "crawledAt": "2026-09-06T03:33:34.230Z",
+    "lastAttemptAt": "2026-09-06T03:33:34.230Z",
+    "lastAttemptStatus": "success"
   },
   "ICN-CTS_2026-09-28_2026-10-01": {
-    "naverLowest": 0,
+    "naverLowest": 318900,
     "route": "ICN-CTS",
     "depDate": "2026-09-28",
     "retDate": "2026-10-01",
     "sourceSignature": "0199ad2032695f67ad75552f",
     "sourcePrice": 349000,
-    "firstQueuedAt": "2026-09-04T06:11:46.960Z"
+    "firstQueuedAt": "2026-09-04T06:11:46.960Z",
+    "crawledAt": "2026-09-06T03:34:09.345Z",
+    "lastAttemptAt": "2026-09-06T03:34:09.345Z",
+    "lastAttemptStatus": "success"
   },
   "ICN-KWL_2026-09-07_2026-09-09": {
     "naverLowest": 0,
@@ -29498,13 +29567,16 @@
     "lastAttemptStatus": "success"
   },
   "ICN-VCA_2026-09-14_2026-09-18": {
-    "naverLowest": 0,
+    "naverLowest": 343800,
     "route": "ICN-VCA",
     "depDate": "2026-09-14",
     "retDate": "2026-09-18",
-    "sourceSignature": "3b40938b683058d2fa5aaa07",
-    "sourcePrice": 376000,
-    "firstQueuedAt": "2026-09-04T06:11:46.960Z"
+    "sourceSignature": "9c8821316270045a8b94d8ff",
+    "sourcePrice": 375100,
+    "firstQueuedAt": "2026-09-04T06:11:46.960Z",
+    "crawledAt": "2026-09-06T03:36:20.752Z",
+    "lastAttemptAt": "2026-09-06T03:36:20.752Z",
+    "lastAttemptStatus": "success"
   },
   "ICN-SPN_2026-10-04_2026-10-08": {
     "naverLowest": 0,
@@ -29534,49 +29606,64 @@
     "firstQueuedAt": "2026-09-04T06:11:46.960Z"
   },
   "ICN-CEB_2026-10-06_2026-10-09": {
-    "naverLowest": 0,
+    "naverLowest": 399900,
     "route": "ICN-CEB",
     "depDate": "2026-10-06",
     "retDate": "2026-10-09",
     "sourceSignature": "f707c296d3d4f3eb8dfdeb3c",
     "sourcePrice": 399900,
-    "firstQueuedAt": "2026-09-04T06:11:46.960Z"
+    "firstQueuedAt": "2026-09-04T06:11:46.960Z",
+    "crawledAt": "2026-09-06T03:39:03.159Z",
+    "lastAttemptAt": "2026-09-06T03:39:03.159Z",
+    "lastAttemptStatus": "success"
   },
   "ICN-CEB_2026-10-29_2026-11-01": {
-    "naverLowest": 0,
+    "naverLowest": 326893,
     "route": "ICN-CEB",
     "depDate": "2026-10-29",
     "retDate": "2026-11-01",
     "sourceSignature": "f707c296d3d4f3eb8dfdeb3c",
     "sourcePrice": 399900,
-    "firstQueuedAt": "2026-09-04T06:11:46.960Z"
+    "firstQueuedAt": "2026-09-04T06:11:46.960Z",
+    "crawledAt": "2026-09-06T03:39:35.658Z",
+    "lastAttemptAt": "2026-09-06T03:39:35.658Z",
+    "lastAttemptStatus": "success"
   },
   "TAE-CXR_2026-09-26_2026-09-30": {
-    "naverLowest": 0,
+    "naverLowest": 293536,
     "route": "TAE-CXR",
     "depDate": "2026-09-26",
     "retDate": "2026-09-30",
     "sourceSignature": "fee0a9f4c1680fc712bf0c2b",
     "sourcePrice": 400000,
-    "firstQueuedAt": "2026-09-04T06:11:46.960Z"
+    "firstQueuedAt": "2026-09-04T06:11:46.960Z",
+    "crawledAt": "2026-09-06T03:40:07.672Z",
+    "lastAttemptAt": "2026-09-06T03:40:07.672Z",
+    "lastAttemptStatus": "success"
   },
   "TAE-CXR_2026-09-28_2026-10-02": {
-    "naverLowest": 0,
+    "naverLowest": 281894,
     "route": "TAE-CXR",
     "depDate": "2026-09-28",
     "retDate": "2026-10-02",
     "sourceSignature": "fee0a9f4c1680fc712bf0c2b",
     "sourcePrice": 400000,
-    "firstQueuedAt": "2026-09-04T06:11:46.960Z"
+    "firstQueuedAt": "2026-09-04T06:11:46.960Z",
+    "crawledAt": "2026-09-06T03:40:41.115Z",
+    "lastAttemptAt": "2026-09-06T03:40:41.115Z",
+    "lastAttemptStatus": "success"
   },
   "TAE-CXR_2026-09-29_2026-10-03": {
-    "naverLowest": 0,
+    "naverLowest": 340290,
     "route": "TAE-CXR",
     "depDate": "2026-09-29",
     "retDate": "2026-10-03",
     "sourceSignature": "fee0a9f4c1680fc712bf0c2b",
     "sourcePrice": 400000,
-    "firstQueuedAt": "2026-09-04T06:11:46.960Z"
+    "firstQueuedAt": "2026-09-04T06:11:46.960Z",
+    "crawledAt": "2026-09-06T03:41:45.801Z",
+    "lastAttemptAt": "2026-09-06T03:41:45.801Z",
+    "lastAttemptStatus": "success"
   },
   "GMP-TSA_2026-09-22_2026-09-24": {
     "naverLowest": 485212,
@@ -29615,22 +29702,28 @@
     "lastAttemptStatus": "success"
   },
   "ICN-URC_2026-10-20_2026-10-24": {
-    "naverLowest": 0,
+    "naverLowest": 296200,
     "route": "ICN-URC",
     "depDate": "2026-10-20",
     "retDate": "2026-10-24",
-    "sourceSignature": "bd7a5dd46cdeb36978896989",
-    "sourcePrice": 432700,
-    "firstQueuedAt": "2026-09-04T06:11:46.960Z"
+    "sourceSignature": "519b334022b132ed93c14b75",
+    "sourcePrice": 432000,
+    "firstQueuedAt": "2026-09-04T06:11:46.960Z",
+    "crawledAt": "2026-09-06T03:38:31.773Z",
+    "lastAttemptAt": "2026-09-06T03:38:31.773Z",
+    "lastAttemptStatus": "success"
   },
   "ICN-VII_2026-09-12_2026-09-16": {
-    "naverLowest": 0,
+    "naverLowest": 403600,
     "route": "ICN-VII",
     "depDate": "2026-09-12",
     "retDate": "2026-09-16",
-    "sourceSignature": "1885f19d24b2b0fee3843cee",
-    "sourcePrice": 432800,
-    "firstQueuedAt": "2026-09-04T06:11:46.960Z"
+    "sourceSignature": "fbec51fa1660fb162cf79f66",
+    "sourcePrice": 431600,
+    "firstQueuedAt": "2026-09-04T06:11:46.960Z",
+    "crawledAt": "2026-09-06T03:41:13.326Z",
+    "lastAttemptAt": "2026-09-06T03:41:13.326Z",
+    "lastAttemptStatus": "success"
   },
   "CJJ-CTS_2026-10-04_2026-10-07": {
     "naverLowest": 0,
@@ -30014,13 +30107,16 @@
     "lastAttemptStatus": "success"
   },
   "ICN-TAK_2026-10-07_2026-10-10": {
-    "naverLowest": 0,
+    "naverLowest": 362800,
     "route": "ICN-TAK",
     "depDate": "2026-10-07",
     "retDate": "2026-10-10",
     "sourceSignature": "2f90af28aec3ea8fbcb34a7d",
     "sourcePrice": 249000,
-    "firstQueuedAt": "2026-09-05T02:34:06.817Z"
+    "firstQueuedAt": "2026-09-05T02:34:06.817Z",
+    "crawledAt": "2026-09-06T02:53:50.701Z",
+    "lastAttemptAt": "2026-09-06T02:53:50.701Z",
+    "lastAttemptStatus": "success"
   },
   "ICN-HAN_2026-09-12_2026-09-15": {
     "naverLowest": 0,
@@ -30041,13 +30137,16 @@
     "firstQueuedAt": "2026-09-05T02:34:06.817Z"
   },
   "ICN-YNJ_2026-10-24_2026-10-28": {
-    "naverLowest": 0,
+    "naverLowest": 257300,
     "route": "ICN-YNJ",
     "depDate": "2026-10-24",
     "retDate": "2026-10-28",
-    "sourceSignature": "63a333c3eaa425001753cc20",
-    "sourcePrice": 263500,
-    "firstQueuedAt": "2026-09-05T02:34:06.817Z"
+    "sourceSignature": "ee565bb3d9ff381aeb46648c",
+    "sourcePrice": 264200,
+    "firstQueuedAt": "2026-09-05T02:34:06.817Z",
+    "crawledAt": "2026-09-06T02:57:03.151Z",
+    "lastAttemptAt": "2026-09-06T02:57:03.151Z",
+    "lastAttemptStatus": "success"
   },
   "ICN-SGN_2026-09-08_2026-09-11": {
     "naverLowest": 0,
@@ -30059,31 +30158,40 @@
     "firstQueuedAt": "2026-09-05T02:34:06.817Z"
   },
   "ICN-PQC_2026-09-16_2026-09-20": {
-    "naverLowest": 0,
+    "naverLowest": 198100,
     "route": "ICN-PQC",
     "depDate": "2026-09-16",
     "retDate": "2026-09-20",
     "sourceSignature": "02ee092b14cb1c9d0f3d7bdf",
     "sourcePrice": 269000,
-    "firstQueuedAt": "2026-09-05T02:34:06.817Z"
+    "firstQueuedAt": "2026-09-05T02:34:06.817Z",
+    "crawledAt": "2026-09-06T03:47:17.091Z",
+    "lastAttemptAt": "2026-09-06T03:47:17.091Z",
+    "lastAttemptStatus": "success"
   },
   "ICN-BKI_2026-09-10_2026-09-14": {
-    "naverLowest": 0,
+    "naverLowest": 242400,
     "route": "ICN-BKI",
     "depDate": "2026-09-10",
     "retDate": "2026-09-14",
     "sourceSignature": "5525d82c13d9645016680308",
     "sourcePrice": 271900,
-    "firstQueuedAt": "2026-09-05T02:34:06.817Z"
+    "firstQueuedAt": "2026-09-05T02:34:06.817Z",
+    "crawledAt": "2026-09-06T03:48:21.262Z",
+    "lastAttemptAt": "2026-09-06T03:48:21.262Z",
+    "lastAttemptStatus": "success"
   },
   "ICN-MNL_2026-09-12_2026-09-16": {
-    "naverLowest": 0,
+    "naverLowest": 286500,
     "route": "ICN-MNL",
     "depDate": "2026-09-12",
     "retDate": "2026-09-16",
-    "sourceSignature": "723fb1001051b4bd0fc4dfb8",
-    "sourcePrice": 274300,
-    "firstQueuedAt": "2026-09-05T02:34:06.817Z"
+    "sourceSignature": "411b628993b3e36d8c2ce2ab",
+    "sourcePrice": 305700,
+    "firstQueuedAt": "2026-09-05T02:34:06.817Z",
+    "crawledAt": "2026-09-06T03:47:49.503Z",
+    "lastAttemptAt": "2026-09-06T03:47:49.503Z",
+    "lastAttemptStatus": "success"
   },
   "ICN-SPN_2026-09-12_2026-09-18": {
     "naverLowest": 0,
@@ -30095,103 +30203,136 @@
     "firstQueuedAt": "2026-09-05T02:34:06.817Z"
   },
   "PUS-GUM_2026-09-27_2026-10-01": {
-    "naverLowest": 0,
+    "naverLowest": 250190,
     "route": "PUS-GUM",
     "depDate": "2026-09-27",
     "retDate": "2026-10-01",
     "sourceSignature": "21cb61e33064544944747646",
     "sourcePrice": 275800,
-    "firstQueuedAt": "2026-09-05T02:34:06.817Z"
+    "firstQueuedAt": "2026-09-05T02:34:06.817Z",
+    "crawledAt": "2026-09-06T02:59:12.614Z",
+    "lastAttemptAt": "2026-09-06T02:59:12.614Z",
+    "lastAttemptStatus": "success"
   },
   "PUS-GUM_2026-09-29_2026-10-03": {
-    "naverLowest": 0,
+    "naverLowest": 387800,
     "route": "PUS-GUM",
     "depDate": "2026-09-29",
     "retDate": "2026-10-03",
     "sourceSignature": "21cb61e33064544944747646",
     "sourcePrice": 275800,
-    "firstQueuedAt": "2026-09-05T02:34:06.817Z"
+    "firstQueuedAt": "2026-09-05T02:34:06.817Z",
+    "crawledAt": "2026-09-06T02:59:44.062Z",
+    "lastAttemptAt": "2026-09-06T02:59:44.062Z",
+    "lastAttemptStatus": "success"
   },
   "PUS-GUM_2026-10-06_2026-10-10": {
-    "naverLowest": 0,
+    "naverLowest": 311500,
     "route": "PUS-GUM",
     "depDate": "2026-10-06",
     "retDate": "2026-10-10",
     "sourceSignature": "21cb61e33064544944747646",
     "sourcePrice": 275800,
-    "firstQueuedAt": "2026-09-05T02:34:06.817Z"
+    "firstQueuedAt": "2026-09-05T02:34:06.817Z",
+    "crawledAt": "2026-09-06T03:00:14.955Z",
+    "lastAttemptAt": "2026-09-06T03:00:14.955Z",
+    "lastAttemptStatus": "success"
   },
   "PUS-GUM_2026-10-10_2026-10-14": {
-    "naverLowest": 0,
+    "naverLowest": 347300,
     "route": "PUS-GUM",
     "depDate": "2026-10-10",
     "retDate": "2026-10-14",
     "sourceSignature": "21cb61e33064544944747646",
     "sourcePrice": 275800,
-    "firstQueuedAt": "2026-09-05T02:34:06.817Z"
+    "firstQueuedAt": "2026-09-05T02:34:06.817Z",
+    "crawledAt": "2026-09-06T03:00:47.997Z",
+    "lastAttemptAt": "2026-09-06T03:00:47.997Z",
+    "lastAttemptStatus": "success"
   },
   "PUS-GUM_2026-10-11_2026-10-15": {
-    "naverLowest": 0,
+    "naverLowest": 250190,
     "route": "PUS-GUM",
     "depDate": "2026-10-11",
     "retDate": "2026-10-15",
     "sourceSignature": "21cb61e33064544944747646",
     "sourcePrice": 275800,
-    "firstQueuedAt": "2026-09-05T02:34:06.817Z"
+    "firstQueuedAt": "2026-09-05T02:34:06.817Z",
+    "crawledAt": "2026-09-06T03:01:19.506Z",
+    "lastAttemptAt": "2026-09-06T03:01:19.506Z",
+    "lastAttemptStatus": "success"
   },
   "PUS-GUM_2026-10-12_2026-10-16": {
-    "naverLowest": 0,
+    "naverLowest": 318800,
     "route": "PUS-GUM",
     "depDate": "2026-10-12",
     "retDate": "2026-10-16",
     "sourceSignature": "21cb61e33064544944747646",
     "sourcePrice": 275800,
-    "firstQueuedAt": "2026-09-05T02:34:06.817Z"
+    "firstQueuedAt": "2026-09-05T02:34:06.817Z",
+    "crawledAt": "2026-09-06T03:01:53.727Z",
+    "lastAttemptAt": "2026-09-06T03:01:53.727Z",
+    "lastAttemptStatus": "success"
   },
   "PUS-GUM_2026-10-13_2026-10-17": {
-    "naverLowest": 0,
+    "naverLowest": 300400,
     "route": "PUS-GUM",
     "depDate": "2026-10-13",
     "retDate": "2026-10-17",
     "sourceSignature": "21cb61e33064544944747646",
     "sourcePrice": 275800,
-    "firstQueuedAt": "2026-09-05T02:34:06.817Z"
+    "firstQueuedAt": "2026-09-05T02:34:06.817Z",
+    "crawledAt": "2026-09-06T03:03:48.609Z",
+    "lastAttemptAt": "2026-09-06T03:03:48.609Z",
+    "lastAttemptStatus": "success"
   },
   "PUS-GUM_2026-10-17_2026-10-21": {
-    "naverLowest": 0,
+    "naverLowest": 300400,
     "route": "PUS-GUM",
     "depDate": "2026-10-17",
     "retDate": "2026-10-21",
     "sourceSignature": "21cb61e33064544944747646",
     "sourcePrice": 275800,
-    "firstQueuedAt": "2026-09-05T02:34:06.817Z"
+    "firstQueuedAt": "2026-09-05T02:34:06.817Z",
+    "crawledAt": "2026-09-06T03:04:22.960Z",
+    "lastAttemptAt": "2026-09-06T03:04:22.960Z",
+    "lastAttemptStatus": "success"
   },
   "PUS-GUM_2026-10-18_2026-10-22": {
-    "naverLowest": 0,
+    "naverLowest": 250190,
     "route": "PUS-GUM",
     "depDate": "2026-10-18",
     "retDate": "2026-10-22",
     "sourceSignature": "21cb61e33064544944747646",
     "sourcePrice": 275800,
-    "firstQueuedAt": "2026-09-05T02:34:06.817Z"
+    "firstQueuedAt": "2026-09-05T02:34:06.817Z",
+    "crawledAt": "2026-09-06T03:42:20.689Z",
+    "lastAttemptAt": "2026-09-06T03:42:20.689Z",
+    "lastAttemptStatus": "success"
   },
   "PUS-GUM_2026-10-19_2026-10-23": {
-    "naverLowest": 0,
+    "naverLowest": 300400,
     "route": "PUS-GUM",
     "depDate": "2026-10-19",
     "retDate": "2026-10-23",
     "sourceSignature": "21cb61e33064544944747646",
     "sourcePrice": 275800,
-    "firstQueuedAt": "2026-09-05T02:34:06.817Z"
+    "firstQueuedAt": "2026-09-05T02:34:06.817Z",
+    "crawledAt": "2026-09-06T03:42:53.340Z",
+    "lastAttemptAt": "2026-09-06T03:42:53.340Z",
+    "lastAttemptStatus": "success"
   },
   "PUS-GUM_2026-10-20_2026-10-24": {
-    "naverLowest": 0,
+    "naverLowest": 300400,
     "route": "PUS-GUM",
     "depDate": "2026-10-20",
     "retDate": "2026-10-24",
     "sourceSignature": "21cb61e33064544944747646",
     "sourcePrice": 275800,
-    "firstQueuedAt": "2026-09-05T02:34:06.817Z"
+    "firstQueuedAt": "2026-09-05T02:34:06.817Z",
+    "crawledAt": "2026-09-06T03:45:34.708Z",
+    "lastAttemptAt": "2026-09-06T03:45:34.708Z",
+    "lastAttemptStatus": "success"
   },
   "ICN-HKG_2026-09-11_2026-09-14": {
     "naverLowest": 0,
@@ -30203,22 +30344,28 @@
     "firstQueuedAt": "2026-09-05T02:34:06.817Z"
   },
   "ICN-DAD_2026-11-01_2026-11-06": {
-    "naverLowest": 0,
+    "naverLowest": 255700,
     "route": "ICN-DAD",
     "depDate": "2026-11-01",
     "retDate": "2026-11-06",
     "sourceSignature": "230825b06663e96ae93d5c05",
     "sourcePrice": 300600,
-    "firstQueuedAt": "2026-09-05T02:34:06.817Z"
+    "firstQueuedAt": "2026-09-05T02:34:06.817Z",
+    "crawledAt": "2026-09-06T03:46:42.560Z",
+    "lastAttemptAt": "2026-09-06T03:46:42.560Z",
+    "lastAttemptStatus": "success"
   },
   "ICN-NRT_2026-09-27_2026-09-30": {
-    "naverLowest": 0,
+    "naverLowest": 301400,
     "route": "ICN-NRT",
     "depDate": "2026-09-27",
     "retDate": "2026-09-30",
     "sourceSignature": "fd243a3acee51bfaa74ace54",
     "sourcePrice": 309000,
-    "firstQueuedAt": "2026-09-05T02:34:06.817Z"
+    "firstQueuedAt": "2026-09-05T02:34:06.817Z",
+    "crawledAt": "2026-09-06T03:53:16.436Z",
+    "lastAttemptAt": "2026-09-06T03:53:16.436Z",
+    "lastAttemptStatus": "success"
   },
   "PUS-MYJ_2026-09-22_2026-09-24": {
     "naverLowest": 342400,
@@ -30254,22 +30401,28 @@
     "lastAttemptStatus": "success"
   },
   "ICN-FSZ_2026-09-28_2026-10-01": {
-    "naverLowest": 0,
+    "naverLowest": 321100,
     "route": "ICN-FSZ",
     "depDate": "2026-09-28",
     "retDate": "2026-10-01",
     "sourceSignature": "c2de353b4974202cc0b4b30d",
     "sourcePrice": 325400,
-    "firstQueuedAt": "2026-09-05T02:34:06.817Z"
+    "firstQueuedAt": "2026-09-05T02:34:06.817Z",
+    "crawledAt": "2026-09-06T03:54:50.960Z",
+    "lastAttemptAt": "2026-09-06T03:54:50.960Z",
+    "lastAttemptStatus": "success"
   },
   "ICN-FSZ_2026-09-29_2026-10-02": {
-    "naverLowest": 0,
+    "naverLowest": 245100,
     "route": "ICN-FSZ",
     "depDate": "2026-09-29",
     "retDate": "2026-10-02",
     "sourceSignature": "c2de353b4974202cc0b4b30d",
     "sourcePrice": 325400,
-    "firstQueuedAt": "2026-09-05T02:34:06.817Z"
+    "firstQueuedAt": "2026-09-05T02:34:06.817Z",
+    "crawledAt": "2026-09-06T03:55:59.030Z",
+    "lastAttemptAt": "2026-09-06T03:55:59.030Z",
+    "lastAttemptStatus": "success"
   },
   "ICN-KHN_2026-09-11_2026-09-16": {
     "naverLowest": 0,
@@ -30290,13 +30443,16 @@
     "firstQueuedAt": "2026-09-05T02:34:06.817Z"
   },
   "ICN-TYN_2026-09-17_2026-09-21": {
-    "naverLowest": 0,
+    "naverLowest": 300200,
     "route": "ICN-TYN",
     "depDate": "2026-09-17",
     "retDate": "2026-09-21",
     "sourceSignature": "29e9e156d91180e7e3e9f039",
     "sourcePrice": 346500,
-    "firstQueuedAt": "2026-09-05T02:34:06.817Z"
+    "firstQueuedAt": "2026-09-05T02:34:06.817Z",
+    "crawledAt": "2026-09-06T03:52:41.905Z",
+    "lastAttemptAt": "2026-09-06T03:52:41.905Z",
+    "lastAttemptStatus": "success"
   },
   "ICN-KWL_2026-09-08_2026-09-10": {
     "naverLowest": 0,
@@ -30326,22 +30482,28 @@
     "firstQueuedAt": "2026-09-05T02:34:06.817Z"
   },
   "CJJ-TPE_2026-09-21_2026-09-24": {
-    "naverLowest": 0,
+    "naverLowest": 334850,
     "route": "CJJ-TPE",
     "depDate": "2026-09-21",
     "retDate": "2026-09-24",
     "sourceSignature": "cb24850c21f6ee3d0edb95a8",
     "sourcePrice": 360000,
-    "firstQueuedAt": "2026-09-05T02:34:06.817Z"
+    "firstQueuedAt": "2026-09-05T02:34:06.817Z",
+    "crawledAt": "2026-09-06T03:57:03.041Z",
+    "lastAttemptAt": "2026-09-06T03:57:03.041Z",
+    "lastAttemptStatus": "success"
   },
   "ICN-JJN_2026-09-11_2026-09-15": {
-    "naverLowest": 0,
+    "naverLowest": 342900,
     "route": "ICN-JJN",
     "depDate": "2026-09-11",
     "retDate": "2026-09-15",
     "sourceSignature": "e20aa2d2c14735ca27325414",
     "sourcePrice": 373100,
-    "firstQueuedAt": "2026-09-05T02:34:06.817Z"
+    "firstQueuedAt": "2026-09-05T02:34:06.817Z",
+    "crawledAt": "2026-09-06T03:56:31.520Z",
+    "lastAttemptAt": "2026-09-06T03:56:31.520Z",
+    "lastAttemptStatus": "success"
   },
   "ICN-SIN_2026-09-12_2026-09-14": {
     "naverLowest": 0,
@@ -30681,5 +30843,329 @@
     "sourceSignature": "fa5adaed4e757129564b8fbd",
     "sourcePrice": 515000,
     "firstQueuedAt": "2026-09-05T05:41:56.757Z"
+  },
+  "ICN-KKJ_2026-09-20_2026-09-23": {
+    "naverLowest": 152600,
+    "route": "ICN-KKJ",
+    "depDate": "2026-09-20",
+    "retDate": "2026-09-23",
+    "sourceSignature": "308cced82f15c5196be5e5bf",
+    "sourcePrice": 170900,
+    "firstQueuedAt": "2026-09-06T02:35:00.373Z",
+    "crawledAt": "2026-09-06T02:51:07.060Z",
+    "lastAttemptAt": "2026-09-06T02:51:07.060Z",
+    "lastAttemptStatus": "success"
+  },
+  "ICN-TSN_2026-10-28_2026-10-30": {
+    "naverLowest": 0,
+    "route": "ICN-TSN",
+    "depDate": "2026-10-28",
+    "retDate": "2026-10-30",
+    "sourceSignature": "1f100e81c2035683b9ebf933",
+    "sourcePrice": 285600,
+    "firstQueuedAt": "2026-09-06T02:35:00.373Z"
+  },
+  "ICN-OIT_2026-10-10_2026-10-15": {
+    "naverLowest": 279000,
+    "route": "ICN-OIT",
+    "depDate": "2026-10-10",
+    "retDate": "2026-10-15",
+    "sourceSignature": "e5df1c1bbe77a73e340ee947",
+    "sourcePrice": 287100,
+    "firstQueuedAt": "2026-09-06T02:35:00.373Z",
+    "crawledAt": "2026-09-06T02:54:21.053Z",
+    "lastAttemptAt": "2026-09-06T02:54:21.053Z",
+    "lastAttemptStatus": "success"
+  },
+  "ICN-KIJ_2026-09-19_2026-09-25": {
+    "naverLowest": 0,
+    "route": "ICN-KIJ",
+    "depDate": "2026-09-19",
+    "retDate": "2026-09-25",
+    "sourceSignature": "b9772369bc1e004e13c580dd",
+    "sourcePrice": 296400,
+    "firstQueuedAt": "2026-09-06T02:35:00.373Z"
+  },
+  "ICN-ISG_2026-09-15_2026-09-17": {
+    "naverLowest": 305600,
+    "route": "ICN-ISG",
+    "depDate": "2026-09-15",
+    "retDate": "2026-09-17",
+    "sourceSignature": "4e2b4f28ad04174c473bec61",
+    "sourcePrice": 307500,
+    "firstQueuedAt": "2026-09-06T02:35:00.373Z",
+    "crawledAt": "2026-09-06T02:57:34.554Z",
+    "lastAttemptAt": "2026-09-06T02:57:34.554Z",
+    "lastAttemptStatus": "success"
+  },
+  "ICN-TFU_2026-11-03_2026-11-09": {
+    "naverLowest": 0,
+    "route": "ICN-TFU",
+    "depDate": "2026-11-03",
+    "retDate": "2026-11-09",
+    "sourceSignature": "b3c437dc1244ba4f2e78f3a7",
+    "sourcePrice": 311400,
+    "firstQueuedAt": "2026-09-06T02:35:00.373Z"
+  },
+  "ICN-TFU_2026-10-27_2026-11-01": {
+    "naverLowest": 0,
+    "route": "ICN-TFU",
+    "depDate": "2026-10-27",
+    "retDate": "2026-11-01",
+    "sourceSignature": "e71ca96a84c0a9ef35c61030",
+    "sourcePrice": 311500,
+    "firstQueuedAt": "2026-09-06T02:35:00.373Z"
+  },
+  "ICN-VTE_2026-09-14_2026-09-20": {
+    "naverLowest": 0,
+    "route": "ICN-VTE",
+    "depDate": "2026-09-14",
+    "retDate": "2026-09-20",
+    "sourceSignature": "6478e713c75605a9fdf2b6f7",
+    "sourcePrice": 324000,
+    "firstQueuedAt": "2026-09-06T02:35:00.373Z"
+  },
+  "ICN-LJG_2026-10-18_2026-10-23": {
+    "naverLowest": 0,
+    "route": "ICN-LJG",
+    "depDate": "2026-10-18",
+    "retDate": "2026-10-23",
+    "sourceSignature": "59e9ecd0effc6af9938624fa",
+    "sourcePrice": 329700,
+    "firstQueuedAt": "2026-09-06T02:35:00.373Z"
+  },
+  "ICN-XNN_2026-09-12_2026-09-16": {
+    "naverLowest": 0,
+    "route": "ICN-XNN",
+    "depDate": "2026-09-12",
+    "retDate": "2026-09-16",
+    "sourceSignature": "59e9ecd0effc6af9938624fa",
+    "sourcePrice": 329700,
+    "firstQueuedAt": "2026-09-06T02:35:00.373Z"
+  },
+  "ICN-NGB_2026-10-13_2026-10-15": {
+    "naverLowest": 0,
+    "route": "ICN-NGB",
+    "depDate": "2026-10-13",
+    "retDate": "2026-10-15",
+    "sourceSignature": "005ff98c255438d0ba915f39",
+    "sourcePrice": 339400,
+    "firstQueuedAt": "2026-09-06T02:35:00.373Z"
+  },
+  "ICN-KHN_2026-09-11_2026-09-14": {
+    "naverLowest": 0,
+    "route": "ICN-KHN",
+    "depDate": "2026-09-11",
+    "retDate": "2026-09-14",
+    "sourceSignature": "77e9aa6221fb0252b43b955a",
+    "sourcePrice": 344200,
+    "firstQueuedAt": "2026-09-06T02:35:00.373Z"
+  },
+  "ICN-KWL_2026-10-11_2026-10-13": {
+    "naverLowest": 0,
+    "route": "ICN-KWL",
+    "depDate": "2026-10-11",
+    "retDate": "2026-10-13",
+    "sourceSignature": "3efdbab1b3870dcb209a1612",
+    "sourcePrice": 351900,
+    "firstQueuedAt": "2026-09-06T02:35:00.373Z"
+  },
+  "ICN-SWA_2026-10-15_2026-10-18": {
+    "naverLowest": 0,
+    "route": "ICN-SWA",
+    "depDate": "2026-10-15",
+    "retDate": "2026-10-18",
+    "sourceSignature": "cca087bfb1b72b5ce5fbeae1",
+    "sourcePrice": 357900,
+    "firstQueuedAt": "2026-09-06T02:35:00.373Z"
+  },
+  "ICN-WNZ_2026-10-23_2026-10-25": {
+    "naverLowest": 0,
+    "route": "ICN-WNZ",
+    "depDate": "2026-10-23",
+    "retDate": "2026-10-25",
+    "sourceSignature": "d5862e60a418918cdc3c3a07",
+    "sourcePrice": 364600,
+    "firstQueuedAt": "2026-09-06T02:35:00.373Z"
+  },
+  "ICN-DLU_2026-10-29_2026-11-02": {
+    "naverLowest": 0,
+    "route": "ICN-DLU",
+    "depDate": "2026-10-29",
+    "retDate": "2026-11-02",
+    "sourceSignature": "523e0f18ae5cf3fdae77c6ae",
+    "sourcePrice": 465500,
+    "firstQueuedAt": "2026-09-06T02:35:00.373Z"
+  },
+  "ICN-KTI_2026-09-09_2026-09-14": {
+    "naverLowest": 0,
+    "route": "ICN-KTI",
+    "depDate": "2026-09-09",
+    "retDate": "2026-09-14",
+    "sourceSignature": "92b4e1a9d81e63f1c9bc45fa",
+    "sourcePrice": 469500,
+    "firstQueuedAt": "2026-09-06T02:35:00.373Z"
+  },
+  "ICN-BWN_2026-11-03_2026-11-07": {
+    "naverLowest": 0,
+    "route": "ICN-BWN",
+    "depDate": "2026-11-03",
+    "retDate": "2026-11-07",
+    "sourceSignature": "14725352cca2c24f519bd04d",
+    "sourcePrice": 469900,
+    "firstQueuedAt": "2026-09-06T02:35:00.373Z"
+  },
+  "GMP-AXT_2026-09-09_2026-09-12": {
+    "naverLowest": 0,
+    "route": "GMP-AXT",
+    "depDate": "2026-09-09",
+    "retDate": "2026-09-12",
+    "sourceSignature": "5cd1a3a485c6631eccec75a2",
+    "sourcePrice": 528000,
+    "firstQueuedAt": "2026-09-06T02:35:00.373Z"
+  },
+  "ICN-BUD_2026-10-29_2026-11-01": {
+    "naverLowest": 0,
+    "route": "ICN-BUD",
+    "depDate": "2026-10-29",
+    "retDate": "2026-11-01",
+    "sourceSignature": "44365c54563ffd5fce0a8718",
+    "sourcePrice": 593700,
+    "firstQueuedAt": "2026-09-06T02:35:00.373Z"
+  },
+  "ICN-MAD_2026-10-15_2026-10-21": {
+    "naverLowest": 0,
+    "route": "ICN-MAD",
+    "depDate": "2026-10-15",
+    "retDate": "2026-10-21",
+    "sourceSignature": "4aa5d51da8003a5e2a476acc",
+    "sourcePrice": 617800,
+    "firstQueuedAt": "2026-09-06T02:35:00.373Z"
+  },
+  "ICN-AMD_2026-10-22_2026-10-25": {
+    "naverLowest": 0,
+    "route": "ICN-AMD",
+    "depDate": "2026-10-22",
+    "retDate": "2026-10-25",
+    "sourceSignature": "74d1ba663705ad179ee92424",
+    "sourcePrice": 620300,
+    "firstQueuedAt": "2026-09-06T02:35:00.373Z"
+  },
+  "ICN-VIE_2026-10-28_2026-10-31": {
+    "naverLowest": 0,
+    "route": "ICN-VIE",
+    "depDate": "2026-10-28",
+    "retDate": "2026-10-31",
+    "sourceSignature": "83411924b7b9659ec50ec3a1",
+    "sourcePrice": 630300,
+    "firstQueuedAt": "2026-09-06T02:35:00.373Z"
+  },
+  "ICN-KKC_2026-09-14_2026-09-20": {
+    "naverLowest": 0,
+    "route": "ICN-KKC",
+    "depDate": "2026-09-14",
+    "retDate": "2026-09-20",
+    "sourceSignature": "de315dca5c71652ac4f26455",
+    "sourcePrice": 642100,
+    "firstQueuedAt": "2026-09-06T02:35:00.373Z"
+  },
+  "ICN-GVA_2026-10-22_2026-10-26": {
+    "naverLowest": 0,
+    "route": "ICN-GVA",
+    "depDate": "2026-10-22",
+    "retDate": "2026-10-26",
+    "sourceSignature": "782efee71caf2291faabcd02",
+    "sourcePrice": 682400,
+    "firstQueuedAt": "2026-09-06T02:35:00.373Z"
+  },
+  "ICN-MXP_2026-10-16_2026-10-18": {
+    "naverLowest": 0,
+    "route": "ICN-MXP",
+    "depDate": "2026-10-16",
+    "retDate": "2026-10-18",
+    "sourceSignature": "6215dd0d11e08a69c92edb5d",
+    "sourcePrice": 752000,
+    "firstQueuedAt": "2026-09-06T02:35:00.373Z"
+  },
+  "GMP-BCN__BCN-ICN_2026-10-20_2026-10-22": {
+    "naverLowest": 0,
+    "route": "GMP-BCN/BCN-ICN",
+    "depDate": "2026-10-20",
+    "retDate": "2026-10-22",
+    "sourceSignature": "6dbe978876ffc77222915dab",
+    "sourcePrice": 760900,
+    "firstQueuedAt": "2026-09-06T02:35:00.373Z"
+  },
+  "ICN-FCO_2026-10-18_2026-10-22": {
+    "naverLowest": 0,
+    "route": "ICN-FCO",
+    "depDate": "2026-10-18",
+    "retDate": "2026-10-22",
+    "sourceSignature": "36232ae1ce89745b92518d80",
+    "sourcePrice": 840300,
+    "firstQueuedAt": "2026-09-06T02:35:00.373Z"
+  },
+  "ICN-DNH_2026-10-12_2026-10-16": {
+    "naverLowest": 0,
+    "route": "ICN-DNH",
+    "depDate": "2026-10-12",
+    "retDate": "2026-10-16",
+    "sourceSignature": "dd87e2547dc9e1b8af9961d9",
+    "sourcePrice": 859800,
+    "firstQueuedAt": "2026-09-06T02:35:00.373Z"
+  },
+  "ICN-SYD_2026-10-17_2026-10-21": {
+    "naverLowest": 0,
+    "route": "ICN-SYD",
+    "depDate": "2026-10-17",
+    "retDate": "2026-10-21",
+    "sourceSignature": "a1ee97aa4bde38953926d4c1",
+    "sourcePrice": 875600,
+    "firstQueuedAt": "2026-09-06T02:35:00.373Z"
+  },
+  "ICN-CPH_2026-10-25_2026-10-28": {
+    "naverLowest": 0,
+    "route": "ICN-CPH",
+    "depDate": "2026-10-25",
+    "retDate": "2026-10-28",
+    "sourceSignature": "d3ae3f8b3bb090668971d637",
+    "sourcePrice": 899800,
+    "firstQueuedAt": "2026-09-06T02:35:00.373Z"
+  },
+  "ICN-AKL_2026-09-09_2026-09-14": {
+    "naverLowest": 0,
+    "route": "ICN-AKL",
+    "depDate": "2026-09-09",
+    "retDate": "2026-09-14",
+    "sourceSignature": "327addef142831de6ac8a51b",
+    "sourcePrice": 1207400,
+    "firstQueuedAt": "2026-09-06T02:35:00.373Z"
+  },
+  "GMP-ADL__ADL-ICN_2026-10-29_2026-11-01": {
+    "naverLowest": 0,
+    "route": "GMP-ADL/ADL-ICN",
+    "depDate": "2026-10-29",
+    "retDate": "2026-11-01",
+    "sourceSignature": "92c9a9d92856bc2425154988",
+    "sourcePrice": 1277900,
+    "firstQueuedAt": "2026-09-06T02:35:00.373Z"
+  },
+  "ICN-VAR_2026-11-04_2026-11-10": {
+    "naverLowest": 0,
+    "route": "ICN-VAR",
+    "depDate": "2026-11-04",
+    "retDate": "2026-11-10",
+    "sourceSignature": "a39ea4368e433c840ad60fe9",
+    "sourcePrice": 1412800,
+    "firstQueuedAt": "2026-09-06T02:35:00.373Z"
+  },
+  "ICN-ANC_2026-10-26_2026-10-31": {
+    "naverLowest": 0,
+    "route": "ICN-ANC",
+    "depDate": "2026-10-26",
+    "retDate": "2026-10-31",
+    "sourceSignature": "5c7de20152d41fdd921ddd66",
+    "sourcePrice": 1616600,
+    "firstQueuedAt": "2026-09-06T02:35:00.373Z"
   }
 }
