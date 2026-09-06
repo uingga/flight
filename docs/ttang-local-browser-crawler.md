@@ -1,0 +1,102 @@
+# 땡처리닷컴 로컬 브라우저 수집기
+
+## 목적
+
+GitHub 실행 환경에서 땡처리닷컴 접근 제한이 확인됐을 때, 다른 Windows PC의 일반 Chrome
+네트워크와 독립 프로필을 사용해 해당 소스만 안전하게 검증한다. 초기 운영은 결과를 곧바로
+배포하지 않고 staging 파일과 변경 요약만 만든다.
+
+## chacha95/automation에서 유지한 의도
+
+- 평소 Chrome 사용자 데이터에서 한 번 준비한 별도 프로필을 계속 재사용한다.
+- 원래 Chrome과 충돌하지 않는 로컬 디버그 포트(`127.0.0.1:9222`)를 사용한다.
+- 사람이 브라우저 상태를 볼 수 있는 일반 Chrome을 실행한다.
+- Playwright는 새 브라우저를 가장하지 않고 이미 열린 Chrome에 CDP로 연결한다.
+
+사이트를 속이기 위한 `AutomationControlled` 관련 플래그, 매 실행 프로필 재복사, 개인 Chrome
+프로필에 직접 연결하는 방식은 사용하지 않는다. Google 로그인이 복제되지 않아도 땡처리닷컴
+수집에는 필요하지 않으므로 로그인을 강제하지 않는다.
+
+## 현재 실행 방법
+
+다른 PC의 저장소에서 의존성을 설치한 뒤 다음 명령 하나를 실행한다.
+
+```bash
+npm run crawl:ttang:browser:pilot
+```
+
+Windows 보안 제품이 `ExecutionPolicy Bypass`와 Chrome 실행을 결합한 PowerShell을 악성 행위로
+오인하지 않도록, 실행 과정에는 PowerShell을 사용하지 않는다. Node.js가 Chrome을 직접 실행하고
+같은 Node.js staging 수집기로 이어간다. 백신 예외 등록은 필요하지 않다.
+
+이 명령은 다음 순서로 동작한다.
+
+1. 기존 `~/tmp/chrome-debug` 프로필과 Chrome 설치 여부를 확인한다.
+2. 필요한 경우 최소 플래그로 보이는 Chrome을 실행한다.
+3. 운영 `data/`를 `.local-crawler/staging/ttang-<시각>/`에 복사한다.
+4. 복사본만 대상으로 땡처리 목록과 상세 3건을 시험 수집한다.
+5. `summary.json`과 검토용 `all-flights-cache.json`을 남긴다.
+6. 수집이 끝나면 전용 디버그 Chrome의 CDP 연결과 브라우저를 닫아 프로세스를 종료한다.
+
+하위 수집기는 30분 안에 끝나지 않으면 실패 요약을 남기고 중단한다. 상품 일정 응답 형식이
+달라지면 응답 원문 대신 최상위 키·응답 배열 여부·상품 식별자처럼 비민감 구조 정보만 로그에
+남겨 한 건으로 원인을 확인할 수 있게 한다.
+
+운영 `data/all-flights-cache.json`, Git 브랜치, 원격 저장소는 변경하지 않는다.
+
+GitHub 땡처리 회로가 실제로 열린 경우만 확인하는 예약용 명령은 다음과 같다.
+
+```bash
+npm run crawl:ttang:browser:scheduled
+```
+
+이 명령은 기존 `local-source-fallback-policy.mjs`가 현재 회차의 땡처리 대체 수집을 허용할 때만
+Chrome과 staging 수집기를 실행한다. 실행 전 다른 PC의 저장소가 최신 `main`을 받은 상태여야 한다.
+
+## 상품 식별과 요청량
+
+- 목록 카드의 `masterId`와 `hanaFareId`를 함께 저장한다.
+- 같은 노선·날짜·항공사라도 `hanaFareId`가 다르면 다른 요금 상품으로 취급한다.
+- 목록은 한 번 연 페이지 안에서 날짜별 API를 호출한다.
+- 상세는 최종 필터를 통과한 신규·재확인 대상 중 최대 20개만 조회한다.
+- 상품별 상세 화면을 먼저 열어 최소 인원과 상품 문맥을 확인한 뒤 `scheduleAct.do` 한 번으로
+  시간과 좌석을 함께 확인한다. 상세 화면을 생략한 첫 pilot에서 `E001`이 확인되어 실제 화면
+  순서를 유지한다.
+- 상세 요청 사이는 4~8초, 10건 뒤에는 30~60초를 추가로 쉰다.
+- 401·403·429·CAPTCHA 또는 8건 연속 실패가 확인되면 남은 요청을 중단한다.
+- 상품 일정의 JSON 구조가 예상과 다르면 같은 요청을 반복하지 않고 첫 건에서 중단한다. 이는
+  차단으로 기록하지 않고 어댑터 확인이 필요한 실패로 구분한다.
+
+## Hermes 원격 봇 운영
+
+실제 Chrome과 수집 프로세스는 메인 작업 PC가 아니라 전용 크롤링 PC에서 실행한다. 메인 PC의
+Hermes는 크롤링 PC에 등록된 원격 Bot에게 요청하고 결과만 받는다. 크롤링 PC의 Bot은 프로젝트
+스킬 `.agents/skills/tikitikit-ttang-crawler/SKILL.md`를 사용하며, 직접 하위 명령을 조합하지 않고
+다음 운영자 명령만 사용한다.
+
+```bash
+npm run hermes:ttang:enroll     # 크롤링 PC에서 최초 1회
+npm run hermes:ttang:status     # 읽기 전용 상태 확인
+npm run hermes:ttang:pilot      # 명시적으로 요청받은 시험 1회
+npm run hermes:ttang:scheduled  # 차단 회로가 허용할 때만 예약 대체 수집
+```
+
+작업자 등록표와 동시 실행 잠금, 최근 결과는 `.local-crawler/hermes/`에만 저장한다. 실행 전 호스트
+이름이 등록표와 같은지 확인하므로, 저장소가 다른 PC로 복사돼도 그 PC에서 자동 실행되지 않는다.
+또한 실행 전후 운영 캐시 해시를 비교해 staging 외 데이터 변경을 안전 위반으로 보고한다.
+
+Hermes Desktop에서 다른 PC의 Bot을 사용하려면 크롤링 PC의 Hermes backend를 그 PC의 로그인된
+사용자 세션에서 실행하고, 메인 PC의 Settings → Connections에 원격 gateway로 등록한다. Chrome이
+화면에 보여야 하므로 Windows 서비스의 비대화형 세션이나 SSH terminal backend에서 Chrome을
+실행하지 않는다. 원격 연결은 공개 인터넷에 직접 노출하지 않고 Tailscale 같은 사설망을 사용한다.
+PC별 준비와 연결 순서는 `docs/hermes-remote-crawler.md`를 따른다.
+
+## 자동 운영 전 확인 순서
+
+1. 수동 staging 실행 한 번으로 `productIdentified`, `timeVerified`, `seatVerified`를 확인한다.
+2. 선택한 항공권 한 건의 시간·좌석·가격을 실제 화면과 대조한다.
+3. 최소 여러 회차 동안 운영 데이터와 staging 결과를 비교한다.
+4. 검증 전에는 자동 병합·커밋·푸시를 추가하지 않는다.
+5. 안정화 뒤에도 예약 작업은 먼저 GitHub 회차 상태를 확인하고, 땡처리 회로가 열린 경우에만
+   이 수집기를 호출하도록 구성한다.
+6. 검증이 끝나기 전에는 Hermes cron을 만들지 않고 사용자가 요청한 pilot만 한 번씩 실행한다.

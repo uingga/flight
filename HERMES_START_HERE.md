@@ -80,14 +80,15 @@ Hermes는 크롤링 전용 도구가 아니라 티키티킷 프로젝트 전체�
 
 ## 현재 Git 상태
 
-2026-09-04 점검 당시 상태다. 작업을 시작할 때 반드시 다시 확인한다.
+2026-09-06 점검 기준이다. 작업을 시작할 때 반드시 다시 확인한다. 그 사이 3일간의 진행과
+열린 과제는 `docs/hermes-context/handoff-20260906.md`에 있다 — **이 문서 다음에 그것을 읽는다.**
 
-- 원격 운영 기준: `origin/main`의 `1371183e`
-- 로컬 `main`: `31ab5294`, 원격보다 3커밋 뒤
-- 현재 작업 브랜치: `codex/ttang-browser-runner`
-- `b89760ca`에는 Hermes용 땡처리닷컴 원격 실행자와 문서가 들어 있다.
-- 그 뒤 같은 브랜치에 이 인수인계 문서가 추가됐다. 정확한 HEAD는 작업 시작 시 다시 확인한다.
-- 이 브랜치는 원격에 푸시됐지만 `main`에 합쳐지거나 운영 배포되지는 않았다.
+- 원격 운영 기준: `origin/main` (`2c57c68f`, 기능 커밋은 `6d49bb97` 어드민 수집 그래프까지)
+- `origin/codex/ttang-browser-runner` (`f33bd746`): 땡처리 로컬 브라우저 크롤러(`b89760ca`), DROP 히어로
+  미리보기, 도시 이미지. main보다 약 25커밋 앞이고 `main`에 합쳐지거나 운영 배포되지 않았다.
+  이 브랜치의 `src/app/admin/*`은 main보다 오래됐으므로 병합 시 어드민 파일은 main을 유지한다.
+- 크롤러 PC(티보)의 땡처리 상세 조회 수정본은 **아직 어떤 브랜치에도 푸시되지 않았다** (handoff 문서 3절).
+- `origin/sam/admin-source-slot-axis`, `origin/docs/bot-roles-20260905`는 main에 반영 완료 — 삭제 가능.
 - 기존에 보관한 WIP 브랜치는 자동 병합 대상이 아니다.
 
 ## Hermes 연결 확인
@@ -145,6 +146,7 @@ Hermes는 크롤링 전용 도구가 아니라 티키티킷 프로젝트 전체�
 
 ## 주제별 현재 문서
 
+- [2026-09-04~06 진행·열린 과제 인수인계](docs/hermes-context/handoff-20260906.md) — **먼저**
 - [제품·UI 현재 맥락](docs/hermes-context/current-product.md)
 - [데이터·크롤링·운영 현재 맥락](docs/hermes-context/data-and-operations.md)
 - [브랜드·콘텐츠 현재 맥락](docs/hermes-context/brand-and-content.md)
