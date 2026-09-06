@@ -19,13 +19,16 @@ import { logCrawlResults, recordCrawlAlerts } from '../src/lib/utils/crawl-logge
 import { getEffectivePrice } from '../src/lib/price-quality';
 import {
     enrichVisibleTtangFlights,
+    TTANG_TIME_ADAPTER_VERSION,
     type TtangTimeEnrichmentState,
 } from '../src/lib/ttang-time-enrichment';
 import {
     enrichVisibleYbtourFlights,
     type YbtourTimeEnrichmentState,
 } from '../src/lib/ybtour-time-enrichment';
+import { TtangDetailCheckpoint } from '../src/lib/ttang-detail-checkpoint';
 import { getCrawlDataDir } from '../src/lib/crawl-data-dir';
+import { shutdownTtangExternalBrowserSessions } from '../src/lib/ttang-browser-session';
 import {
     classifySourceAccessRestriction,
     classifySourceResponseDrop,
@@ -192,6 +195,17 @@ async function main() {
         && path.resolve(dataDir) === path.resolve(process.cwd(), 'data')
     ) {
         throw new Error('LOCAL_BROWSER_PILOT은 운영 data/에서 실행할 수 없습니다. TIKITIKIT_DATA_DIR staging 경로가 필요합니다.');
+    }
+    const ttangDetailCheckpoint = process.env.TTANG_DETAIL_CHECKPOINT === '1'
+        ? new TtangDetailCheckpoint(
+            process.cwd(), dataDir, process.env.TTANG_STAGING_RUN_ID || '',
+            new Date(process.env.TTANG_STAGING_STARTED_AT || ''), TTANG_TIME_ADAPTER_VERSION,
+        )
+        : undefined;
+    const ttangAllDetails = process.argv.includes('--ttang-all-details');
+    if (ttangAllDetails && (!localBrowserPilot || localSourceFallback || !ttangDetailCheckpoint
+        || requestedSources?.size !== 1 || !requestedSources.has('ttang'))) {
+        throw new Error('--ttang-all-details는 체크포인트가 있는 ttang 단독 staging 파일럿 전용입니다.');
     }
     const cachePath = path.join(dataDir, 'all-flights-cache.json');
     let prevCache: CacheData | null = null;
@@ -741,6 +755,7 @@ async function main() {
                 const ttangResult = await enrichVisibleTtangFlights(
                     benchmarkedFlights.filter((flight: any) => flight.source === 'ttang'),
                     ttangTimeEnrichment,
+                    { checkpoint: ttangDetailCheckpoint, allEligible: ttangAllDetails },
                 );
                 ttangTimeEnrichment = ttangResult.state;
             } catch (error) {
@@ -1086,9 +1101,14 @@ async function main() {
 
     } catch (error) {
         console.error('\n❌ 크롤링 실패:', error);
-        process.exit(1);
+        process.exitCode = 1;
     }
 }
 
 // 스크립트 실행
-main();
+main()
+    .finally(() => shutdownTtangExternalBrowserSessions())
+    .catch(error => {
+        console.error('\n❌ 땡처리 외부 Chrome 종료 실패:', error);
+        process.exitCode = 1;
+    });

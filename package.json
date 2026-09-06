@@ -29,6 +29,8 @@
     "test:naver-seller-probe": "tsx scripts/test-naver-seller-probe.ts",
     "test:source-fallback-policy": "node --test scripts/test-local-source-fallback-policy.mjs",
     "test:ttang-time": "tsx scripts/test-ttang-time-enrichment.ts && tsx scripts/test-ttang-product-schedule.ts",
+    "test:ttang-partial": "tsx --test scripts/test-ttang-detail-checkpoint.ts scripts/test-ttang-partial-enrichment.ts",
+    "test:ttang-staging": "node --test scripts/test-ttang-staging-validation.mjs scripts/test-ttang-staging-wrapper.mjs",
     "test:modetour-manual": "tsx scripts/test-modetour-manual.ts",
     "test:interpark-refresh": "tsx scripts/test-interpark-refresh-policy.ts",
     "test:interpark-origin": "tsx scripts/test-interpark-origin-scope.ts",

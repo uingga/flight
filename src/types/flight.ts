@@ -39,7 +39,9 @@ export interface Flight {
     /** 땡처리닷컴에서 동일 노선·날짜의 서로 다른 실제 요금 상품을 구분한다. */
     ttangProduct?: {
         masterId: string;
-        fareId: string; // 목록/일정 API의 hanaFareId
+        fareId: string; // 목록 API의 hanaFareId. 일정 API에는 fareRec1으로 전달한다.
+        fareType?: string; // 목록 API의 gubun. 과거 캐시에는 없을 수 있다.
+        carrierCode?: string; // 목록 API의 tktCar. 과거 캐시에는 없을 수 있다.
         tripDayLabel?: string; // 원문 검토용. 화면 숙박일수 계산에는 사용하지 않는다.
     };
     /** 예약 결과에서 확인한 실제 가는편·오는편 공항. 도시 검색 코드를 공항으로 오인하지 않기 위해 사용한다. */

@@ -1,3 +1,8 @@
 {
-    "buildCommand": "rm -rf .next/cache && next build"
+    "buildCommand": "rm -rf .next/cache && next build",
+    "git": {
+        "deploymentEnabled": {
+            "tibo/ttang-schedule-fix": false
+        }
+    }
 }

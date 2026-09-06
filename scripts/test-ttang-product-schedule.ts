@@ -1,5 +1,38 @@
 import assert from 'node:assert/strict';
-import { parseTtangProductSchedule } from '../src/lib/ttang-product-schedule';
+import {
+    buildTtangProductScheduleRequest,
+    parseTtangProductSchedule,
+} from '../src/lib/ttang-product-schedule';
+
+const request = new URLSearchParams(buildTtangProductScheduleRequest({
+    masterId: '7C3211ICNSPN-G2',
+    fareId: '189418',
+    fareType: 'VV',
+    carrierCode: '7C',
+    depCode: 'ICN',
+    arrCode: 'SPN',
+    departureDate: '2026-09-10',
+    arrivalDate: '2026-09-14',
+}));
+assert.deepEqual(Object.fromEntries(request), {
+    fareType: 'VV',
+    trip: 'RT',
+    dep0: 'ICN',
+    arr0: 'SPN',
+    dep1: 'SPN',
+    arr1: 'ICN',
+    fareRec1: '189418',
+    depdate0: '20260910',
+    depdate1: '20260914',
+    hanaFareId: '',
+    adt: '1',
+    chd: '0',
+    inf: '0',
+    comp: 'Y',
+    car: '7C',
+    invArrDateType: 'ALL',
+    popularGubun: '',
+});
 
 const payload = JSON.stringify({
     code: 'OK',
@@ -28,9 +61,42 @@ assert.deepEqual(result, {
     seats: 10,
 });
 
+const emptyXml = '<RESPONSE><RESULT><RECORD><CONTENS><![CDATA['
+    + '{"code":"OK","desc":"SUCCESS","response":[]}'
+    + ']]></CONTENS></RECORD></RESULT></RESPONSE>';
+assert.equal(parseTtangProductSchedule(emptyXml, '189418'), null);
+
+for (const invalidPayload of [
+    [],
+    { response: [] },
+    { code: '', response: [] },
+    { code: 123, response: [] },
+    { code: 'OK' },
+]) {
+    assert.throws(
+        () => parseTtangProductSchedule(JSON.stringify(invalidPayload), '189418'),
+        (error: any) => {
+            assert.equal(error.kind, 'schema-mismatch');
+            return true;
+        },
+    );
+}
+
+assert.throws(
+    () => parseTtangProductSchedule(JSON.stringify({
+        code: 'E001',
+        desc: 'INVALID REQUEST',
+    }), '189418'),
+    (error: any) => {
+        assert.equal(error.kind, 'api-error');
+        assert.equal(error.causeCode, 'E001');
+        return true;
+    },
+);
+
 assert.throws(
     () => parseTtangProductSchedule(payload, 'missing'),
-    /요청한 hanaFareId/,
+    /요청한 fareRec1\(missing\)/,
 );
 assert.throws(
     () => parseTtangProductSchedule('<html>CAPTCHA access denied</html>', '19858335'),

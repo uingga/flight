@@ -237,9 +237,13 @@ export async function scrapeTtang(prevFlights: any[] = []): Promise<Flight[]> {
                     }
                     if (masterId && fareId) {
                         const tripDayLabel = String(item.tripDay || item.tripday || '').trim();
+                        const fareType = String(item.gubun || '').trim();
+                        const carrierCode = String(item.tktCar || '').trim();
                         flight.ttangProduct = {
                             masterId,
                             fareId,
+                            ...(fareType ? { fareType } : {}),
+                            ...(carrierCode ? { carrierCode } : {}),
                             ...(tripDayLabel ? { tripDayLabel } : {}),
                         };
                     }
