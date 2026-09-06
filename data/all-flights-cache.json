@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-09-05T23:38:26.740Z",
-  "fullCrawlUpdatedAt": "2026-09-05T23:38:26.740Z",
+  "timestamp": "2026-09-06T02:33:36.327Z",
+  "fullCrawlUpdatedAt": "2026-09-06T02:33:36.327Z",
   "count": 584,
   "flights": [
     {
@@ -257,8 +257,8 @@
       "seats": "16석",
       "availableSeats": 16,
       "region": "일본",
-      "discountRate": -41,
       "flightNumber": "ZE0967",
+      "discountRate": -41,
       "firstSeen": "2026-09-06"
     },
     {
@@ -285,8 +285,8 @@
       "seats": "16석",
       "availableSeats": 16,
       "region": "일본",
-      "discountRate": -41,
       "flightNumber": "ZE0967",
+      "discountRate": -41,
       "firstSeen": "2026-09-06"
     },
     {
@@ -313,8 +313,8 @@
       "seats": "16석",
       "availableSeats": 16,
       "region": "일본",
-      "discountRate": -41,
       "flightNumber": "ZE0967",
+      "discountRate": -41,
       "firstSeen": "2026-09-06"
     },
     {
@@ -341,8 +341,8 @@
       "seats": "14석",
       "availableSeats": 14,
       "region": "일본",
-      "discountRate": -41,
       "flightNumber": "ZE0967",
+      "discountRate": -41,
       "firstSeen": "2026-09-06"
     },
     {
@@ -4916,7 +4916,7 @@
       "price": 249000,
       "currency": "KRW",
       "link": "https://www.hanatour.com/com/pmt/CHPC0PMT0011M200?fareId=RTF%5E3167671%5ETW0215TAEFUK-H6%5ETW0215TAEFUK-1%5E20261005%5ET%5EKRW%5E6496861%5E5355259%5E%5E1%5E0%5E0&psngrCntLst=%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D&selectedCard=%7B%7D",
-      "availableSeats": 4,
+      "availableSeats": 1,
       "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22TAE%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22FUK%22%2C%22depDt%22%3A%2220261005%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22FUK%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22TAE%22%2C%22depDt%22%3A%2220261007%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
       "region": "일본",
       "discountRate": -7,
@@ -5027,7 +5027,7 @@
       "availableSeats": 4,
       "searchLink": "https://hope.hanatour.com/trp/air/CHPC0AIR0200M200?searchCond=%7B%22itnrLst%22%3A%5B%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22TAE%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22TYO%22%2C%22depDt%22%3A%2220260927%22%7D%2C%7B%22depPlcDvCd%22%3A%22C%22%2C%22depPlcCd%22%3A%22TYO%22%2C%22arrPlcDvCd%22%3A%22C%22%2C%22arrPlcCd%22%3A%22TAE%22%2C%22depDt%22%3A%2220260929%22%7D%5D%2C%22psngrCntLst%22%3A%5B%7B%22ageDvCd%22%3A%22A%22%2C%22psngrCnt%22%3A1%7D%5D%2C%22itnrTypeCd%22%3A%22RT%22%7D",
       "region": "일본",
-      "discountRate": 0,
+      "discountRate": -42,
       "firstSeen": "2026-09-05"
     },
     {
@@ -19037,8 +19037,8 @@
     "myrealtrip": 154
   },
   "sourceUpdatedAt": {
-    "ybtour": "2026-09-05T23:37:46.616Z",
-    "hanatour": "2026-09-05T23:37:46.616Z",
+    "ybtour": "2026-09-06T02:33:26.454Z",
+    "hanatour": "2026-09-06T02:33:26.454Z",
     "modetour": "2026-09-05T23:37:46.616Z",
     "onlinetour": "2026-09-05T08:56:40.978Z",
     "ttang": "2026-09-05T23:37:46.617Z",
@@ -19047,7 +19047,7 @@
   "staleStreak": {
     "ybtour": 0,
     "hanatour": 0,
-    "modetour": 0,
+    "modetour": 1,
     "onlinetour": 0,
     "ttang": 0,
     "myrealtrip": 0
@@ -19055,11 +19055,12 @@
   "scrapedCounts": {
     "modetour": 722,
     "ttang": 1284,
-    "ybtour": 275,
+    "ybtour": 274,
     "hanatour": 98,
     "onlinetour": 105
   },
   "integrityAlerts": [
+    "🚨 modetour 수집 실패로 이전 데이터 유지: 모두투어 수집 실패 구간: ASIA ([network] 모두투어 ASIA API 요청 실패: fetch failed <- Connect Timeout Error (attempted address: b2c-api.modetour.com:443, timeout: 10000ms) · 원인 UND_ERR_CONNECT_TIMEOUT · 2회 시도), JPN ([network] 모두투어 JPN API 요청 실패: fetch failed <- Connect Timeout Error (attempted address: b2c-api.modetour.com:443, timeout: 10000ms) · 원인 UND_ERR_CONNECT_TIMEOUT · 2회 시도), CHI/TPE ([network] 모두투어 CHI/TPE API 요청 실패: fetch failed <- Connect Timeout Error (attempted address: b2c-api.modetour.com:443, timeout: 10000ms) · 원인 UND_ERR_CONNECT_TIMEOUT · 2회 시도), CHI/RMQ ([network] 모두투어 CHI/RMQ API 요청 실패: fetch failed <- Connect Timeout Error (attempted address: b2c-api.modetour.com:443, timeout: 10000ms) · 원인 UND_ERR_CONNECT_TIMEOUT · 2회 시도), CHI/CAN ([network] 모두투어 CHI/CAN API 요청 실패: fetch failed <- Connect Timeout Error (attempted address: b2c-api.modetour.com:443, timeout: 10000ms) · 원인 UND_ERR_CONNECT_TIMEOUT · 2회 시도), CHI/TFU ([network] 모두투어 CHI/TFU API 요청 실패: fetch failed <- Connect Timeout Error (attempted address: b2c-api.modetour.com:443, timeout: 10000ms) · 원인 UND_ERR_CONNECT_TIMEOUT · 2회 시도), CHI/DYG ([network] 모두투어 CHI/DYG API 요청 실패: fetch failed <- Connect Timeout Error (attempted address: b2c-api.modetour.com:443, timeout: 10000ms) · 원인 UND_ERR_CONNECT_TIMEOUT · 2회 시도), SOPA ([network] 모두투어 SOPA API 요청 실패: fetch failed <- Connect Timeout Error (attempted address: b2c-api.modetour.com:443, timeout: 10000ms) · 원인 UND_ERR_CONNECT_TIMEOUT · 2회 시도) (수집된 0건은 불완전해 폐기)",
     "⛔ onlinetour 접근 차단 뒤 자동 요청 중단 (2026. 9. 6. PM 5:52:40 이후 단일 재탐색) — 이전 데이터 유지"
   ],
   "sourceCircuits": {
@@ -22806,7 +22807,7 @@
   },
   "ybtourTimeEnrichment": {
     "version": 1,
-    "updatedAt": "2026-09-05T23:37:54.470Z",
+    "updatedAt": "2026-09-06T02:33:36.304Z",
     "entries": {
       "에어서울|ICN|KIX|20260927|20260929": {
         "status": "success",
