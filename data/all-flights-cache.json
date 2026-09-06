@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-09-06T08:50:54.678Z",
+  "timestamp": "2026-09-06T08:57:29.195Z",
   "fullCrawlUpdatedAt": "2026-09-06T08:50:54.678Z",
   "count": 578,
   "flights": [
@@ -9361,40 +9361,6 @@
         "returnArrivalAirport": "ICN"
       },
       "discountRate": -18,
-      "firstSeen": "2026-09-04"
-    },
-    {
-      "id": "online-260908744348",
-      "source": "onlinetour",
-      "airline": "티웨이항공",
-      "departure": {
-        "city": "인천",
-        "airport": "ICN",
-        "date": "2026-09-08",
-        "time": "12:35",
-        "arrivalTime": "19:15"
-      },
-      "arrival": {
-        "city": "로마",
-        "airport": "ROM",
-        "date": "2026-09-15",
-        "time": "21:15",
-        "arrivalTime": "16:10"
-      },
-      "price": 990000,
-      "currency": "KRW",
-      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260908744348",
-      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=ROM&sCity2=ROM&eCity2=SEL&startDt=20260908&endDt=20260915&adt=1",
-      "region": "유럽",
-      "availableSeats": 1,
-      "seats": "1석",
-      "routeAirports": {
-        "outboundDeparture": "ICN",
-        "outboundArrival": "FCO",
-        "returnDeparture": "FCO",
-        "returnArrival": "ICN"
-      },
-      "discountRate": 6,
       "firstSeen": "2026-09-04"
     },
     {
@@ -18999,6 +18965,40 @@
       "naverLowest": 240061,
       "naverCheckedAt": "2026-09-06T03:27:45.082Z",
       "naverDiscount": -23
+    },
+    {
+      "id": "online-260908744348",
+      "source": "onlinetour",
+      "airline": "티웨이항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-09-08",
+        "time": "12:35",
+        "arrivalTime": "19:15"
+      },
+      "arrival": {
+        "city": "로마",
+        "airport": "ROM",
+        "date": "2026-09-15",
+        "time": "21:15",
+        "arrivalTime": "16:10"
+      },
+      "price": 990000,
+      "currency": "KRW",
+      "link": "https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=260908744348",
+      "searchLink": "https://www.onlinetour.co.kr/flight/w/international/booking/flightInterFareSearch?trip=RT&sCity1=SEL&eCity1=ROM&sCity2=ROM&eCity2=SEL&startDt=20260908&endDt=20260915&adt=1",
+      "region": "유럽",
+      "availableSeats": 1,
+      "seats": "1석",
+      "routeAirports": {
+        "outboundDeparture": "ICN",
+        "outboundArrival": "FCO",
+        "returnDeparture": "FCO",
+        "returnArrival": "ICN"
+      },
+      "discountRate": 6,
+      "firstSeen": "2026-09-04"
     }
   ],
   "sources": {
@@ -19021,7 +19021,7 @@
     "ybtour": 0,
     "hanatour": 0,
     "modetour": 3,
-    "onlinetour": 0,
+    "onlinetour": 1,
     "ttang": 0,
     "myrealtrip": 0
   },
@@ -19034,7 +19034,7 @@
   },
   "integrityAlerts": [
     "🚨 modetour 수집 실패로 이전 데이터 유지: 모두투어 수집 실패 구간: CHI/TPE ([http-status] 모두투어 CHI/TPE API HTTP 500 (content-type: application/json) · 2회 시도) (수집된 697건은 불완전해 폐기) — 3회 연속",
-    "⛔ onlinetour 접근 차단 뒤 자동 요청 중단 (2026. 9. 6. PM 5:52:40 이후 단일 재탐색) — 이전 데이터 유지"
+    "🚨 onlinetour 수집 실패로 이전 데이터 유지: 온라인투어 수집 실패 구간: 유럽 공개 도시 목록 — [network] 온라인투어 유럽 공개 도시 목록 요청 실패: This operation was aborted · 2회 시도 (수집된 0건은 불완전해 폐기)"
   ],
   "sourceCircuits": {
     "onlinetour": {
@@ -19045,10 +19045,10 @@
       "adapterVersion": "2026-08-30.2",
       "detail": "soft block 의심: 응답 수량 107건에서 37건으로 급감",
       "localFallback": {
-        "status": "success",
-        "lastAttemptAt": "2026-09-05T08:56:40.977Z",
+        "status": "failed",
+        "lastAttemptAt": "2026-09-06T08:57:29.167Z",
         "method": "source-default",
-        "detail": "PC 대체 수집 105건 완료"
+        "detail": "온라인투어 수집 실패 구간: 유럽 공개 도시 목록 — [network] 온라인투어 유럽 공개 도시 목록 요청 실패: This operation was aborted · 2회 시도 (수집된 0건은 불완전해 폐기)"
       }
     },
     "ttang": {
