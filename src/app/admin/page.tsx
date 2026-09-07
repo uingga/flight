@@ -709,6 +709,7 @@ const NAVER_PRIORITY_LABELS: Record<string, string> = {
  */
 const TABS = [
     { id: 'overview', label: '오늘', hint: '지금 볼 것' },
+    { id: 'flight-order', label: '노출 순서', hint: '가격 비교·순서 편집' },
     { id: 'threads', label: 'Threads', hint: '글·유입·예약' },
     { id: 'visitors', label: '방문·예약', hint: '유입·행동·관심' },
     { id: 'operations', label: '항공권·수집', hint: '품질·변화·갱신' },
@@ -1642,6 +1643,11 @@ export default function AdminPage() {
     const [flightReportAction, setFlightReportAction] = useState<string | null>(null);
     const [flightFilterSummary, setFlightFilterSummary] = useState<FlightFilterSummary | null>(null);
     const [tab, setTab] = useState<TabId>('overview');
+    const [flightOrderOpened, setFlightOrderOpened] = useState(false);
+
+    useEffect(() => {
+        if (tab === 'flight-order') setFlightOrderOpened(true);
+    }, [tab]);
     const [crawlLogView, setCrawlLogView] = useState<'agency' | 'naver'>('agency');
     // 크롤 히스토리 표가 무엇을 세는지: 사이트에 나가는 수(shown)인지 긁어온 원본 수(scraped)인지
     const [crawlMetric, setCrawlMetric] = useState<'shown' | 'scraped' | 'turnover'>('shown');
@@ -1961,7 +1967,7 @@ export default function AdminPage() {
                 </header>
                 <div className={styles.loadingLayout} aria-hidden="true">
                     <nav className={styles.loadingNav} aria-label="관리자 메뉴를 준비하는 중">
-                        {['오늘', '방문·예약', '항공권·수집', '고객·알림'].map((label, index) => (
+                        {TABS.map(({ label }, index) => (
                             <div key={label} className={index === 0 ? `${styles.loadingNavItem} ${styles.loadingNavItemActive}` : styles.loadingNavItem}>
                                 <span>{label}</span>
                                 <i />
@@ -2543,9 +2549,14 @@ export default function AdminPage() {
                 ))}
             </nav>
 
+            {(tab === 'flight-order' || flightOrderOpened) && (
+                <div className={styles.flightOrderPanel} hidden={tab !== 'flight-order'}>
+                    <AdminFlightOrder adminKey={key} />
+                </div>
+            )}
+
             {tab === 'overview' && (<>
                 <AdminTodayPick adminKey={key} />
-                <AdminFlightOrder adminKey={key} />
 
                 <section className={styles.section} id="overview-actions">
                     <div className={styles.sectionHeading}>
