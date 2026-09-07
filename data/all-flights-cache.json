@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-09-07T08:53:42.045Z",
+  "timestamp": "2026-09-07T08:57:25.415Z",
   "fullCrawlUpdatedAt": "2026-09-07T08:53:42.045Z",
   "count": 578,
   "flights": [
@@ -18961,7 +18961,7 @@
     "ybtour": 0,
     "hanatour": 0,
     "modetour": 7,
-    "onlinetour": 0,
+    "onlinetour": 1,
     "ttang": 0,
     "myrealtrip": 0
   },
@@ -18973,7 +18973,8 @@
     "onlinetour": 95
   },
   "integrityAlerts": [
-    "🚨 modetour 수집 실패로 이전 데이터 유지: 모두투어 수집 실패 구간: CHI/TPE ([http-status] 모두투어 CHI/TPE API HTTP 500 (content-type: application/json) · 2회 시도) (수집된 697건은 불완전해 폐기) — 7회 연속"
+    "🚨 modetour 수집 실패로 이전 데이터 유지: 모두투어 수집 실패 구간: CHI/TPE ([http-status] 모두투어 CHI/TPE API HTTP 500 (content-type: application/json) · 2회 시도) (수집된 697건은 불완전해 폐기) — 7회 연속",
+    "🚨 onlinetour 수집 실패로 이전 데이터 유지: 온라인투어 B PC 수집 실패: require_exactly_one_existing_list_tab"
   ],
   "sourceCircuits": {},
   "manualCaptureStatus": {},
@@ -27971,5 +27972,11 @@
         }
       }
     }
+  },
+  "onlinePrimary": {
+    "status": "failed",
+    "lastAttemptAt": "2026-09-07T08:57:25.411Z",
+    "failureOpenedAt": "2026-09-07T08:57:25.411Z",
+    "githubFallbackSafe": false
   }
 }
