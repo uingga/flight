@@ -38,9 +38,8 @@ export const metadata: Metadata = {
         telephone: false,
     },
     metadataBase: new URL(BASE_URL),
-    alternates: {
-        canonical: '/',
-    },
+    // Each indexable page declares its own canonical. Do not make unknown URLs
+    // and redirect pages inherit the homepage as their representative URL.
     openGraph: {
         title: '땡처리 항공권은 여기서 먼저 봅니다 | 티키티킷',
         description: SITE_DESCRIPTION,
