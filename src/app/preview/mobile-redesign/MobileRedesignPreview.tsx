@@ -19,6 +19,7 @@ import { getTripcomHotelUrl, getTripcomTrackingId } from '@/lib/utils/tripcom-he
 import { getFlightBookingUrl } from '@/lib/utils/booking-url';
 import { encodeShareId } from '@/lib/share-code';
 import { useSwipeToDismiss } from '@/lib/hooks/use-swipe-to-dismiss';
+import { useAdminAccess } from '@/lib/hooks/use-admin-access';
 import {
     dismissOverlayWithHistory,
     historyOverlay,
@@ -1098,6 +1099,7 @@ export default function MobileRedesignPreview({
     initialSharedArrival = null,
 }: MobileRedesignPreviewProps) {
     const account = useAccount();
+    const hasAdminAccess = useAdminAccess();
     const hasInitialFlights = initialFlights.length > 0;
     const [flights, setFlights] = useState<Flight[]>(initialFlights);
     const [loading, setLoading] = useState(!hasInitialFlights);
@@ -2720,7 +2722,7 @@ export default function MobileRedesignPreview({
     const selectedBookingUrl = selectedFlight
         ? getFlightBookingUrl(selectedFlight, passengers, isMobile)
         : '';
-    const selectedNaverUrl = selectedFlight && !(selectedFlight.source === 'myrealtrip' && !selectedFlight.routeAirports)
+    const selectedNaverUrl = hasAdminAccess && selectedFlight && !(selectedFlight.source === 'myrealtrip' && !selectedFlight.routeAirports)
         ? getNaverFlightUrl(
             selectedFlight.departure.city,
             selectedFlight.arrival.city,
