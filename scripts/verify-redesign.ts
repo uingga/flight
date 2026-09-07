@@ -204,7 +204,7 @@ async function verifyViewport(width: number, height: number) {
         await detail.waitFor();
         const detailBackgroundScroll = await page.evaluate(() => Math.abs(Number.parseFloat(document.body.style.top) || 0));
         const detailLockedTop = await page.evaluate(() => document.body.style.top);
-        const lockedWindowScroll = await page.evaluate(() => window.scrollY);
+        let lockedWindowScroll = await page.evaluate(() => window.scrollY);
         const detailBox = await detail.boundingBox();
         assert(detailBox, '상세 화면의 위치를 찾지 못했습니다.');
         const backdropPoint = detailBox.x > 1
@@ -213,14 +213,20 @@ async function verifyViewport(width: number, height: number) {
         await page.mouse.move(backdropPoint.x, backdropPoint.y);
         await page.mouse.wheel(0, 400);
         await page.waitForTimeout(100);
-        assert(
+        // Desktop detail is intentionally a non-modal right panel; only mobile locks the page.
+        if (width < 960) assert(
             Math.abs(await page.evaluate(() => window.scrollY) - lockedWindowScroll) < 1,
             '상세 화면 뒤의 배경이 함께 스크롤됩니다.',
         );
+        else {
+            assert(await detail.getAttribute('aria-modal') !== 'true', 'PC 상세는 비모달 패널이어야 합니다.');
+            assert(await page.evaluate(() => document.body.style.position) !== 'fixed', 'PC 상세가 배경을 잠갔습니다.');
+            lockedWindowScroll = await page.evaluate(() => window.scrollY);
+        }
         const detailIsScrollable = await detail.evaluate(element => element.scrollHeight > element.clientHeight + 24);
         const detailScrollHint = page.locator('[data-detail-scroll-hint]');
         if (detailIsScrollable) {
-            await detailScrollHint.waitFor({ state: 'visible' });
+            if (width < 960) await detailScrollHint.waitFor({ state: 'visible' });
             await page.mouse.move(detailBox.x + detailBox.width / 2, detailBox.y + Math.min(detailBox.height - 24, 160));
             await page.mouse.wheel(0, 160);
             await page.waitForTimeout(100);
@@ -254,7 +260,7 @@ async function verifyViewport(width: number, height: number) {
             await page.keyboard.press('Escape');
             await alertDialog.waitFor({ state: 'hidden' });
             assert(await detail.isVisible(), '가격 알림만 닫아야 하는데 항공권 상세까지 닫혔습니다.');
-            assert(
+            if (width < 960) assert(
                 await page.evaluate(expectedTop => (
                     document.body.style.position === 'fixed'
                     && document.body.style.top === expectedTop
@@ -265,7 +271,7 @@ async function verifyViewport(width: number, height: number) {
         }
         await page.keyboard.press('Escape');
         await detail.waitFor({ state: 'hidden' });
-        assert(
+        if (width < 960) assert(
             Math.abs(await page.evaluate(() => window.scrollY) - detailBackgroundScroll) < 1,
             '상세 화면을 닫은 뒤 기존 스크롤 위치가 복원되지 않았습니다.',
         );

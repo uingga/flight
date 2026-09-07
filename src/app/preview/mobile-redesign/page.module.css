@@ -297,6 +297,10 @@
 .feedHeading h2 { font-size: var(--size-body); line-height: 1.35; font-weight: var(--weight-bold); letter-spacing: -0.02em; }
 .feedHeading div span { color: var(--text-faint); font-size: var(--size-caption); }
 .feedHeading .feedHeadingActions { flex: 0 0 auto; align-items: center; gap: 2px; }
+.feedHeadingWithRecent { gap: 8px; }
+.feedHeadingWithRecent > div:first-child { flex-wrap: wrap; min-width: 0; row-gap: 2px; }
+.feedHeadingWithRecent > div:first-child h2,
+.feedHeadingWithRecent > div:first-child > span { white-space: nowrap; }
 .freshRouteHeading { align-items: flex-start; }
 .freshRouteHeading > div:first-child { min-width: 0; flex-direction: column; align-items: flex-start; gap: 1px; }
 .freshRouteHeading .feedHeadingActions { align-self: center; }

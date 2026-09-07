@@ -7,6 +7,8 @@ import { ko } from 'date-fns/locale';
 import 'react-datepicker/dist/react-datepicker.css';
 import Logo from '@/components/Logo';
 import OverlayDialog from '@/components/ui/OverlayDialog';
+import RecentFlights from '@/components/RecentFlights';
+import { useRecentFlights } from '@/lib/hooks/use-recent-flights';
 import * as gtag from '@/lib/analytics';
 import { getDestinationContext } from '@/lib/destination-contexts';
 import {
@@ -1141,6 +1143,8 @@ export default function MobileRedesignPreview({
     const [showDealAlert, setShowDealAlert] = useState(false);
     const [alertRouteTarget, setAlertRouteTarget] = useState<RouteAlertTarget | null>(null);
     const [selectedFlight, setSelectedFlight] = useState<Flight | null>(null);
+    const recentHistory = useRecentFlights(selectedFlight);
+    const [showRecentFlights, setShowRecentFlights] = useState(false);
     const [favorites, setFavorites] = useState<Set<string>>(new Set());
     const [guestFavorites, setGuestFavorites] = useState<Set<string>>(new Set());
     const [flightReport, setFlightReport] = useState<{ flightId: string; status: FlightReportStatus } | null>(null);
@@ -1218,7 +1222,7 @@ export default function MobileRedesignPreview({
     };
 
     const Root = rootAs;
-    const activeOverlay = showAccount ? 'account'
+    const activeOverlay = showRecentFlights ? 'recent-flights' : showAccount ? 'account'
         : showServiceUpdate ? 'service-update'
             : showContact ? 'contact'
                 : showDealAlert ? 'deal-alert'
@@ -3683,7 +3687,7 @@ export default function MobileRedesignPreview({
                 </div>
 
                 <section className={styles.feedSection} ref={feedSectionRef}>
-                    <div className={`${styles.feedHeading} ${freshRouteResults ? styles.freshRouteHeading : ''}`}>
+                    <div className={`${styles.feedHeading} ${freshRouteResults ? styles.freshRouteHeading : ''} ${recentHistory.records.length ? styles.feedHeadingWithRecent : ''}`}>
                         <div>
                             <h2>{sharedFlightIds.length > 0
                                 ? `${initialSharedDeparture || '인천'} → ${initialSharedArrival || '공유 항공권'}`
@@ -3697,6 +3701,11 @@ export default function MobileRedesignPreview({
                                     : `${resultCount.toLocaleString('ko-KR')}개 · ${updatedLabel}`}</span>
                         </div>
                         <div className={styles.feedHeadingActions}>
+                            <RecentFlights records={recentHistory.records} flights={flights}
+                                loading={loading || initialListSyncing || initialSubsetActive}
+                                storageUnavailable={recentHistory.storageUnavailable}
+                                open={showRecentFlights} onOpenChange={setShowRecentFlights}
+                                onClear={recentHistory.clear} onOpen={flight => openFlight(flight, 'recent_flights')} />
                             {sharedFlightIds.length > 0 && (
                                 <button type="button" className={styles.freshRouteResultBack} onClick={showAllFlightsFromSharedGroup}>
                                     <span aria-hidden="true">←</span> 전체 항공권
