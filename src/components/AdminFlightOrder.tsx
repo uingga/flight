@@ -143,6 +143,11 @@ export default function AdminFlightOrder({ adminKey }: { adminKey: string }) {
                     <div className={styles.agency}><span>{agencies[flight.source]}</span><small>{flight.airline}</small></div>
                     <div className={styles.price}><strong>{getEffectivePrice(flight).toLocaleString('ko-KR')}원</strong><small>{flight.seats || (flight.availableSeats ? `잔여 ${flight.availableSeats}석` : '좌석 확인 필요')}</small></div>
                     <div className={styles.comparison}>
+                        {Number.isFinite(flight.naverLowest) && flight.naverLowest! > 0
+                            ? <strong className={styles.naverPrice} title={`저장된 네이버 최저가${flight.naverCheckedAt ? ` · ${new Date(flight.naverCheckedAt).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })} 확인` : ''}`}>
+                                {flight.naverLowest!.toLocaleString('ko-KR')}원
+                            </strong>
+                            : <span className={styles.naverMissing}>가격 미확인</span>}
                         {naverUrl ? <a href={naverUrl} target="_blank" rel="noopener noreferrer" draggable={false}
                             aria-label={`${flight.departure.city} → ${flight.arrival.city} ${dateLabel(flight.departure.date)}~${dateLabel(flight.arrival.date)} 네이버 비교 (새 탭)`}
                             onDragStart={event => event.stopPropagation()}>
@@ -163,7 +168,7 @@ export default function AdminFlightOrder({ adminKey }: { adminKey: string }) {
     return (
         <section className={styles.editor} aria-label="항공권 노출 순서 편집">
             <header className={styles.heading}>
-                <div><span className={styles.eyebrow}>추천순 관리</span><h2>보여주고 싶은 표를 앞쪽으로</h2><p>몇 장만 직접 배치하면, 나머지는 자동 추천순을 유지해요.</p></div>
+                <h2>노출 순서 관리</h2>
                 <span className={styles.count}>직접 배치 {draft.length}/30</span>
             </header>
             {data?.mode === 'preview' && <p className={styles.isolation}>격리 미리보기 · 여기서 적용하거나 복원해도 운영 사이트는 바뀌지 않습니다.</p>}
