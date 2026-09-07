@@ -132,7 +132,10 @@ async function verifyViewport(width: number, height: number) {
             await page.locator('article[data-source="hanatour"]').first().locator('button').first().click();
             let detailForPassenger = page.locator('[aria-label="항공권 상세"]');
             await detailForPassenger.getByText('탑승 인원', { exact: true }).waitFor();
-            assert(await detailForPassenger.locator('details[open]').count() > 0, '지원 여행사의 탑승 인원 선택이 펼쳐져 있지 않습니다.');
+            const passengerPicker = detailForPassenger.locator('details').filter({ hasText: '탑승 인원' });
+            assert(await passengerPicker.getAttribute('open') === null, '탑승 인원 선택이 기본적으로 접혀 있지 않습니다.');
+            await passengerPicker.locator('summary').click();
+            assert(await passengerPicker.getAttribute('open') !== null, '탑승 인원 변경을 펼칠 수 없습니다.');
             await page.keyboard.press('Escape');
 
             await selectSource(page, '모두투어');

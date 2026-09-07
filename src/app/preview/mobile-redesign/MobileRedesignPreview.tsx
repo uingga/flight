@@ -20,6 +20,7 @@ import { getFlightBookingUrl } from '@/lib/utils/booking-url';
 import { encodeShareId } from '@/lib/share-code';
 import { useSwipeToDismiss } from '@/lib/hooks/use-swipe-to-dismiss';
 import { useAdminAccess } from '@/lib/hooks/use-admin-access';
+import { usePassengerSelection } from '@/lib/hooks/use-passenger-selection';
 import { applyManualFlightOrder, type FlightPlacement } from '@/lib/manual-flight-order';
 import {
     dismissOverlayWithHistory,
@@ -1116,7 +1117,7 @@ export default function MobileRedesignPreview({
     const [initialSubsetActive, setInitialSubsetActive] = useState(
         hasInitialFlights && initialFlightCount > initialFlights.length,
     );
-    const [passengers, setPassengers] = useState({ adult: 1, child: 0, infant: 0 });
+    const [passengers, setPassengers] = usePassengerSelection();
     const [region, setRegion] = useState('전체');
     const [departure, setDeparture] = useState('전체');
     const [sourceFilter, setSourceFilter] = useState<'all' | Flight['source']>('all');
@@ -1561,7 +1562,6 @@ export default function MobileRedesignPreview({
                 },
             );
             account.recordRecent(sharedFlight.id);
-            setPassengers({ adult: Math.max(1, sharedFlight.minPax || 1), child: 0, infant: 0 });
             setSelectedFlight(sharedFlight);
             return;
         }
@@ -1664,7 +1664,6 @@ export default function MobileRedesignPreview({
                 setToast('이 표는 현재 목록에서 내려갔어요.');
                 return;
             }
-            setPassengers({ adult: Math.max(1, flight.minPax || 1), child: 0, infant: 0 });
             setSelectedFlight(flight);
         };
         window.addEventListener('popstate', syncDetailFromHistory);
@@ -3008,7 +3007,6 @@ export default function MobileRedesignPreview({
             '',
             `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`,
         );
-        setPassengers({ adult: Math.max(1, flight.minPax || 1), child: 0, infant: 0 });
         setSelectedFlight(flight);
     };
 
@@ -4503,13 +4501,14 @@ export default function MobileRedesignPreview({
                         {selectedFlight.source !== 'modetour'
                             && selectedFlight.source !== 'onlinetour'
                             && selectedFlight.source !== 'ttang' && (
-                            <details className={styles.passengerPicker} open>
+                            <details className={styles.passengerPicker} key={selectedFlight.id}>
                                 <summary>
                                     <span>탑승 인원</span>
                                     <strong>
                                         성인 {passengers.adult}명
                                         {passengers.child > 0 ? ` · 소아 ${passengers.child}명` : ''}
                                         {passengers.infant > 0 ? ` · 유아 ${passengers.infant}명` : ''}
+                                        {' · 변경'}
                                     </strong>
                                     <Icon name="chevron" />
                                 </summary>
@@ -4519,10 +4518,7 @@ export default function MobileRedesignPreview({
                                         { key: 'child', label: '소아', age: '만 2~11세', min: 0, max: 9 },
                                         { key: 'infant', label: '유아', age: '만 2세 미만', min: 0, max: Math.min(4, passengers.adult) },
                                     ] as const).map(item => {
-                                        const seatPassengers = passengers.adult + passengers.child;
-                                        const minimumPassengers = Math.max(1, selectedFlight.minPax || 1);
-                                        const decrementDisabled = passengers[item.key] <= item.min
-                                            || (item.key !== 'infant' && seatPassengers <= minimumPassengers);
+                                        const decrementDisabled = passengers[item.key] <= item.min;
                                         return (
                                         <div className={styles.passengerRow} key={item.key}>
                                             <span><strong>{item.label}</strong><small>{item.age}</small></span>
