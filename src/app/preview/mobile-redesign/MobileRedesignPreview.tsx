@@ -4714,6 +4714,12 @@ export default function MobileRedesignPreview({
                             <h2 id="service-update-title">⛽ 9월 유류할증료가 올랐어요</h2>
                             <p>항공유 가격 상승으로 국내선·국제선 모두 4개월 만에 인상됐어요. 9월 1일 이후 발권분에 적용되며, 항공사·노선별 금액은 예약 단계에서 확인해 주세요.</p>
                         </div>
+                        <div className={styles.serviceUpdateDivider} aria-hidden="true" />
+                        <div className={styles.serviceUpdateNotice}>
+                            <h2>네이버 비교 버튼 안내</h2>
+                            <p>서비스 운영 방침에 따라 네이버 가격 비교 버튼 제공을 종료했어요.</p>
+                            <p>버튼은 하나 줄었지만, 눌러볼 만한 항공권은 앞으로 더 늘려갈게요.</p>
+                        </div>
                         <div className={styles.serviceUpdateActions}>
                             <button type="button" className={styles.serviceUpdateClose} onClick={closeServiceUpdate}>닫기</button>
                             <button type="button" className={styles.serviceUpdateConfirm} onClick={dismissServiceUpdate}>다시 보지 않기</button>
