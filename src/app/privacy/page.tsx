@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import AnalyticsPreference from '@/components/AnalyticsPreference';
 import styles from '../legal.module.css';
 
 export const metadata: Metadata = {
@@ -18,7 +19,7 @@ export default function PrivacyPage() {
             </Link>
 
             <h1 className={styles.pageTitle}>개인정보처리방침</h1>
-            <p className={styles.lastUpdated}>최종 수정일: 2026년 8월 31일</p>
+            <p className={styles.lastUpdated}>최종 수정일: 2026년 9월 7일</p>
 
             <div className={styles.section}>
                 <h2 className={styles.sectionTitle}>1. 개인정보 처리 목적</h2>
@@ -51,6 +52,16 @@ export default function PrivacyPage() {
                             </tr>
                         </thead>
                         <tbody>
+                            <tr>
+                                <td>임의 브라우저 식별자를 변환한 값, 방문 식별자·시각, 유입 경로 분류, 상세 열람·예약 이동 여부</td>
+                                <td>자체 방문 통계의 검증 및 서비스 개선 (활성화 시)</td>
+                                <td>90일 보관 후 매시간 정리 (정리 지연 최대 1시간)</td>
+                            </tr>
+                            <tr>
+                                <td>날짜별로 달라지는 IP 변환값과 요청 횟수</td>
+                                <td>방문 통계 API 남용 방지. 방문 기록과 분리 보관</td>
+                                <td>24시간 후 매시간 정리 (정리 지연 최대 1시간)</td>
+                            </tr>
                             <tr>
                                 <td>방문 페이지, 체류 시간, 브라우저 종류</td>
                                 <td>서비스 이용 통계 (Google Analytics)</td>
@@ -97,8 +108,11 @@ export default function PrivacyPage() {
             </div>
 
             <div className={styles.section}>
-                <h2 className={styles.sectionTitle}>3. Google Analytics 사용</h2>
+                <h2 className={styles.sectionTitle}>3. 방문 통계</h2>
                 <div className={styles.sectionContent}>
+                    <p>자체 방문 기록을 활성화한 경우, 방문 횟수와 유입 경로가 같은 기준으로 집계되는지 검증합니다. 임의 브라우저 식별자는 로그인 계정·이메일과 연결하지 않으며, 방문 기록에는 IP 원문·URL·검색어·상세 항공권 정보를 저장하지 않습니다.</p>
+                    <p>브라우저 저장소에 임의 식별자와 현재 방문 정보를 보관합니다. 임의 식별자는 생성 후 90일이 지난 다음 접속에서 교체하며, 방문은 30분간 활동이 없거나 한국 시간 날짜가 바뀌면 새로 구분합니다. 브라우저 추적 거부 신호(DNT·GPC)가 있으면 자체 방문 기록을 수집하지 않습니다.</p>
+                    <AnalyticsPreference />
                     <p>
                         본 서비스는 웹사이트 이용 현황을 분석하기 위해 <strong>Google Analytics 4 (GA4)</strong>를 사용합니다.
                     </p>

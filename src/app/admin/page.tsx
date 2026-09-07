@@ -6,6 +6,7 @@ import { isAnalyticsExcluded, setAnalyticsExcluded } from '@/lib/analytics';
 import { buildSourceSlotBars, type SlotStatus, type SourceSlotBar, type SourceSlotEvent } from '@/lib/admin-source-slots';
 import { buildAdminAttentionItems } from '@/lib/admin-attention';
 import AdminTodayPick from '@/components/AdminTodayPick';
+import AdminVisitComparison from '@/components/AdminVisitComparison';
 import AdminFlightOrder from '@/components/AdminFlightOrder';
 import AdminFlightInterest from '@/components/AdminFlightInterest';
 import type { FlightInterestData } from '@/lib/flight-interest';
@@ -2524,6 +2525,11 @@ export default function AdminPage() {
                         <div className={styles.dealReviewEmpty}>시간대별 접속을 아직 불러오지 못했습니다.</div>
                     )}
                 </section>
+
+                <AdminVisitComparison adminKey={key} ga={gaStats?.available && gaActivity ? {
+                    users:gaActivity.today.visitors, sessions:gaStats.periods.today.sessions,
+                    detailUsers:gaActivity.today.detailOpenUsers, bookingUsers:gaActivity.today.bookingClickUsers,
+                } : undefined} />
 
                 <section className={styles.section} id="overview-people">
                     <div className={styles.sectionHeading}>

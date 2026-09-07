@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import Script from 'next/script';
+import VisitAnalytics from '@/components/VisitAnalytics';
 import { SITE_URL } from '@/lib/site';
 import { SITE_ALTERNATE_NAME, SITE_DESCRIPTION, SITE_NAME } from '@/lib/seo';
 import './globals.css';
@@ -124,6 +125,7 @@ export default function RootLayout({
                 {/* AdSense meta only - script loaded lazily in body */}
             </head>
             <body className="antialiased">
+                <VisitAnalytics />
                 {/* GA4 Analytics */}
                 {GA_ID && !GA_ID.startsWith('G-XXXX') && (
                     <>

@@ -1,7 +1,25 @@
 import { chromium, type Locator, type Page } from 'playwright';
+import { readFileSync } from 'node:fs';
+import type { Flight } from '../src/types/flight';
 
 const baseUrl = process.argv[2] || 'http://localhost:3002/preview/mobile-redesign';
 const isLocalPreview = ['localhost', '127.0.0.1', '::1'].includes(new URL(baseUrl).hostname);
+const useFixture = process.argv.includes('--fixture');
+if (useFixture && !isLocalPreview) throw new Error('Fixture mode is local-only.');
+
+function flightFixture() {
+    const cache = JSON.parse(readFileSync('data/all-flights-cache.json', 'utf8')) as { flights: Flight[] };
+    const now = new Date();
+    const today = new Date(now.getTime() + 9 * 3600000).toISOString().slice(0, 10);
+    const earliest = Math.min(...cache.flights.map(flight => Date.parse(flight.departure.date)));
+    const shift = Date.parse(today) + 7 * 86400000 - earliest;
+    const moveDate = (value: string) => new Date(Date.parse(value) + shift).toISOString().slice(0, 10);
+    return { success: true, lastUpdated: now.toISOString(), flights: cache.flights.map(flight => ({
+        ...flight, firstSeen: today,
+        departure: { ...flight.departure, date: moveDate(flight.departure.date) },
+        arrival: { ...flight.arrival, date: moveDate(flight.arrival.date) },
+    })) };
+}
 
 function assert(condition: unknown, message: string): asserts condition {
     if (!condition) throw new Error(message);
@@ -43,6 +61,14 @@ async function verifyViewport(width: number, height: number) {
     const page = await browser.newPage({ viewport: { width, height } });
     const pageErrors: string[] = [];
     page.on('pageerror', error => pageErrors.push(error.message));
+    if (useFixture) {
+        const payload = flightFixture();
+        await page.route('**/*', route => new URL(route.request().url()).origin === new URL(baseUrl).origin
+            ? route.continue() : route.abort());
+        await page.route('**/api/preview-flights?*', route => route.fulfill({
+            json: payload, headers: { 'x-tikitikit-preview-data': 'local-fixture' },
+        }));
+    }
 
     try {
         await page.goto(baseUrl, { waitUntil: 'domcontentloaded' });
@@ -80,7 +106,8 @@ async function verifyViewport(width: number, height: number) {
                 };
             });
             assert(
-                previewData.source === 'live' || (isLocalPreview && ['branch-fallback', 'isolated'].includes(previewData.source || '')),
+                previewData.source === 'live' || (isLocalPreview && ['branch-fallback', 'isolated'].includes(previewData.source || ''))
+                    || (useFixture && previewData.source === 'local-fixture'),
                 `미리보기가 운영 데이터 대신 ${previewData.source || '알 수 없는 데이터'}를 사용합니다.`,
             );
             assert(previewData.myrealtrip > 0, '미리보기 최신 데이터에서 마이리얼트립 항공권이 모두 빠졌습니다.');
@@ -106,8 +133,8 @@ async function verifyViewport(width: number, height: number) {
                     await freshTicket.evaluate(button => button.click());
                     const freshDetail = page.locator('[aria-label="항공권 상세"]');
                     // A single departure now opens detail; multiple departures open the route feed.
-                    const backToAll = page.getByRole('button', { name: '← 전체 항공권', exact: true });
-                    await Promise.race([freshDetail.waitFor(), backToAll.waitFor()]);
+                    const backToAll = page.getByRole('button', { name: '전체 항공권', exact: true });
+                    await freshDetail.or(backToAll).first().waitFor();
                     if (await freshDetail.isVisible()) {
                         assert(Boolean(new URL(page.url()).searchParams.get('flight')), '신규 항공권 상세 URL에 식별자가 없습니다.');
                         await page.keyboard.press('Escape');

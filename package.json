@@ -66,6 +66,8 @@
     "test:flight-diversity": "tsx scripts/test-flight-diversity.ts",
     "test:manual-today-pick": "tsx scripts/test-manual-today-pick.ts",
     "test:booking-url": "tsx scripts/test-booking-url.ts",
+    "test:visits": "tsx scripts/test-visit-analytics.ts && node scripts/test-visit-analytics-http.cjs && node scripts/test-visit-analytics-browser.cjs",
+    "test:visit-sql": "node scripts/test-visit-analytics-sql.cjs",
     "test:booking-link-health": "tsx scripts/test-booking-link-health.ts",
     "test:alert-approval": "tsx scripts/test-alert-approval.ts",
     "check:booking-links": "tsx scripts/check-booking-links.ts",

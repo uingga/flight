@@ -1,5 +1,6 @@
 // GA4 Analytics utilities
 // Revenue-related clicks are measured in GA4 and reconciled with partner dashboards.
+import { clearVisitAnalytics, trackVisitAction } from './visit-analytics-client';
 
 declare global {
     interface Window {
@@ -31,6 +32,7 @@ export const setAnalyticsExcluded = (excluded: boolean) => {
     } catch {
         // GA's disable flag still works for the current page if storage is unavailable.
     }
+    if (excluded) clearVisitAnalytics();
     if (GA_ID) {
         (window as unknown as Record<string, unknown>)[`ga-disable-${GA_ID}`] = excluded;
     }
@@ -80,6 +82,7 @@ export const trackBookingClick = (
     price: number,
     details: RevenueClickDetails = {},
 ) => {
+    trackVisitAction('booking');
     const common = {
         partner: source,
         product_type: 'flight',
@@ -197,6 +200,7 @@ export const trackDetailOpen = (
     entry: string,
     details: Pick<RevenueClickDetails, 'flightId' | 'destination'> = {},
 ) => {
+    trackVisitAction('detail');
     event('detail_open', {
         route,
         price,
