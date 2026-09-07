@@ -9,6 +9,8 @@
     "lint": "next lint",
     "preview:flight-order": "node scripts/dev-flight-order-preview.mjs",
     "test:flight-order": "tsx scripts/test-manual-flight-order.ts",
+    "test:flight-interest": "tsx scripts/test-flight-interest.ts",
+    "test:flight-interest-ui": "node scripts/test-admin-flight-interest-ui.mjs",
     "test:flight-order-api": "node scripts/test-admin-flight-order-api.mjs",
     "test:flight-order-store": "node scripts/test-flight-order-store.mjs",
     "test:flight-order-ui": "node scripts/test-admin-flight-order-ui.mjs",
