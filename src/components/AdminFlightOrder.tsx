@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Flight } from '@/types/flight';
 import { applyManualFlightOrder, emptyFlightOrder, moveFlightPlacement, type FlightPlacement, type ManualFlightOrder } from '@/lib/manual-flight-order';
 import { getEffectivePrice } from '@/lib/price-quality';
+import { buildNaverSearchUrl, getExactRouteAirports } from '@/lib/naver-route';
 import styles from './AdminFlightOrder.module.css';
 
 interface EditorData {
@@ -107,6 +108,8 @@ export default function AdminFlightOrder({ adminKey }: { adminKey: string }) {
         const key = flight.manualOrderKey || '';
         const manual = draft.some(item => item.key === key);
         const movable = !isDrop && keyCounts.get(key) === 1;
+        const exactRoute = getExactRouteAirports(flight);
+        const naverUrl = exactRoute ? buildNaverSearchUrl(exactRoute, flight.departure.date, flight.arrival.date) : null;
         return (
             <article key={flight.id} data-order-card={flight.id} data-order-key={key} data-position={isDrop ? 'drop' : index + 1}
                 className={`${styles.card} ${manual ? styles.manual : ''} ${isDrop ? styles.dropCard : ''} ${dropKey === key ? styles.dropTarget : ''}`}
@@ -139,6 +142,13 @@ export default function AdminFlightOrder({ adminKey }: { adminKey: string }) {
                     </div>
                     <div className={styles.agency}><span>{agencies[flight.source]}</span><small>{flight.airline}</small></div>
                     <div className={styles.price}><strong>{getEffectivePrice(flight).toLocaleString('ko-KR')}원</strong><small>{flight.seats || (flight.availableSeats ? `잔여 ${flight.availableSeats}석` : '좌석 확인 필요')}</small></div>
+                    <div className={styles.comparison}>
+                        {naverUrl ? <a href={naverUrl} target="_blank" rel="noopener noreferrer" draggable={false}
+                            aria-label={`${flight.departure.city} → ${flight.arrival.city} ${dateLabel(flight.departure.date)}~${dateLabel(flight.arrival.date)} 네이버 비교 (새 탭)`}
+                            onDragStart={event => event.stopPropagation()}>
+                            네이버 비교 <span aria-hidden="true">↗</span>
+                        </a> : <span title="정확한 왕복 공항을 확인하지 못해 비교 링크를 제공하지 않습니다.">공항 확인 필요</span>}
+                    </div>
                     {!isDrop && !preview && <div className={styles.moves}>
                         <button type="button" disabled={editingDisabled || !movable || index === 0} onClick={() => move(key, 0)} aria-label={`${flight.arrival.city} 맨 위로`}>맨 위로</button>
                         <button type="button" disabled={editingDisabled || !movable || index === 0} onClick={() => move(key, index - 1)} aria-label={`${flight.arrival.city} 위로`}>위로 ↑</button>
