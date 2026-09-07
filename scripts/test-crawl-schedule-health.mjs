@@ -160,7 +160,9 @@ test('anti-block safeguards keep source starts distributed and MyRealTrip serial
 
     assert.match(crawler, /process\.env\.CI[\s\S]*?90_000/);
     assert.match(crawler, /openSourceCircuit/);
-    assert.match(crawler, /Promise\.allSettled\(activeTasks\.map\(async task/);
+    assert.match(crawler, /Promise\.allSettled\(activeTasks\.map\(task/);
+    assert.match(crawler, /if \(!localSourceFallback\) return execute\(\)/);
+    assert.match(crawler, /localQueue\.then\(execute\)/);
     assert.match(myrealtrip, /const WORKERS = 1;/);
     assert.match(myrealtrip, /const MAX_ISOLATED_RETRIES = 10;/);
     assert.match(myrealtrip, /assertNoSourceResponseCollapse/);

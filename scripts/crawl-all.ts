@@ -44,12 +44,14 @@ import {
 import { buildLifecycleIdentity } from './lib/flight-lifecycle';
 import { preserveCrawlCacheWithSafetyState } from '../src/lib/crawl-cache-safety';
 import fs from 'fs';
-import { ONLINE_BROWSER_PRIMARY } from '../src/lib/browser-primary-config.mjs';
+import { ONLINE_BROWSER_PRIMARY, MODE_BROWSER_PRIMARY } from '../src/lib/browser-primary-config.mjs';
+import type { scrapeModetourRemote } from '../src/lib/scrapers/modetour-remote';
 import { assertOnlineGithubClaim } from './online-github-fallback-policy.mjs';
 import { createDepartureWindow, eligibleDepartures } from '../src/lib/onlinetour-departure-window';
 import path from 'path';
 
 interface CacheData {
+    modetourPrimary?: {status:'success'|'partial'|'failed';lastAttemptAt:string;capturedAt?:string;scopeCounts?:Record<string,number>;detail?:string};
     onlinePrimary?: {status:'success'|'failed';lastAttemptAt:string;failureOpenedAt?:string;circuit?:SourceCircuitState;githubAttemptAt?:string;githubClaim?:{runId:string;expectedAt:string};githubFallbackSafe?:boolean};
     timestamp: string;
     /** 일반 여행사 5곳을 모두 시도한 마지막 전체 크롤 완료 시각 */
@@ -149,6 +151,7 @@ async function main() {
     const localSourceFallback = process.env.LOCAL_SOURCE_FALLBACK === '1';
     const onlineGithubFallback = process.env.ONLINETOUR_GITHUB_FALLBACK === '1';
     const onlinePcPrimary = ONLINE_BROWSER_PRIMARY.enabled && localSourceFallback;
+    const modePcPrimary = MODE_BROWSER_PRIMARY.enabled && localSourceFallback;
     const localBrowserPilot = process.env.LOCAL_BROWSER_PILOT === '1';
     const sourceArg = process.argv.find(arg => arg.startsWith('--sources='));
     const skipSourceArg = process.argv.find(arg => arg.startsWith('--skip-sources='));
@@ -172,6 +175,10 @@ async function main() {
         throw new Error('GitHub 대체 수집은 검증된 온라인투어 전용 예약 워크플로에서만 허용됩니다.');
     }
     // Primary PC ownership: GitHub and legacy/manual source paths cannot double-collect.
+    if (MODE_BROWSER_PRIMARY.enabled && !localSourceFallback) {
+        if (requestedSources?.has('modetour')) throw new Error('모두투어 주 수집은 B PC 예약 실행기가 담당합니다.');
+        if (!requestedSources) scheduledSkippedSources.add('modetour');
+    }
     if (ONLINE_BROWSER_PRIMARY.enabled && !localSourceFallback) {
         if (requestedSources?.has('onlinetour') && !onlineGithubFallback) throw new Error('온라인투어 주 수집은 B PC 예약 실행기가 담당합니다.');
         if (!requestedSources) scheduledSkippedSources.add('onlinetour');
@@ -234,6 +241,8 @@ async function main() {
     if (onlineGithubFallback) assertOnlineGithubClaim({cache:prevCache,expectedAt:process.env.CRAWL_EXPECTED_AT,
         runId:process.env.GITHUB_RUN_ID,runAttempt:process.env.GITHUB_RUN_ATTEMPT});
     let onlinePrimary = prevCache?.onlinePrimary;
+    let modetourPrimary = prevCache?.modetourPrimary;
+    let modeResult: Awaited<ReturnType<typeof scrapeModetourRemote>> | undefined;
     let onlineGithubFallbackSafe = false;
     const sourceCircuits = pruneResolvedSourceCircuits<CrawlableSourceKey>(
         prevCache?.sourceCircuits as Partial<Record<CrawlableSourceKey, SourceCircuitState>> | undefined,
@@ -264,7 +273,14 @@ async function main() {
             {
                 name: '모두투어',
                 key: 'modetour' as const,
-                fn: () => scrapeModetour(prevFlights),
+                fn: async () => {
+                    if (modePcPrimary) {
+                        const { scrapeModetourRemote } = await import('../src/lib/scrapers/modetour-remote');
+                        modeResult = await scrapeModetourRemote(prevCache);
+                        return modeResult.flights;
+                    }
+                    return scrapeModetour(prevFlights);
+                },
             },
             { name: '온라인투어', key: 'onlinetour' as const, fn: async () => {
                 if (ONLINE_BROWSER_PRIMARY.enabled && !onlineGithubFallback && process.env.ONLINETOUR_BROWSER_REMOTE !== '1') {
@@ -297,6 +313,13 @@ async function main() {
         const activeTasks = requestedTasks.filter(task => {
             const circuit = sourceCircuits[task.key];
             const circuitOpen = isSourceCircuitOpen(circuit, SOURCE_ADAPTER_VERSIONS[task.key]);
+            if (modePcPrimary && task.key === 'modetour') {
+                if (circuitOpen || isLocalSourceFallbackCoolingDown(circuit)) {
+                    circuitSkipped.set(task.key,circuit!); return false;
+                }
+                console.log('모두투어: B PC Chrome 주 수집 실행');
+                return true;
+            }
             if (ONLINE_BROWSER_PRIMARY.enabled && task.key === 'onlinetour' && localSourceFallback) {
                 if (circuitOpen || isLocalSourceFallbackCoolingDown(circuit)) {
                     circuitSkipped.set(task.key,circuit!); return false;
@@ -334,13 +357,21 @@ async function main() {
             );
             return false;
         });
-        const results = await Promise.allSettled(activeTasks.map(async task => {
+        // PC sources share a signed-in browser. Serialize locally; GitHub remains parallel.
+        let localQueue: Promise<unknown> = Promise.resolve();
+        const results = await Promise.allSettled(activeTasks.map(task => {
+            const execute = async () => {
             if (sourceStartJitterMaxMs > 0) {
                 const delayMs = Math.floor(Math.random() * (sourceStartJitterMaxMs + 1));
                 console.log(`⏳ ${task.name}: 시작 시각 ${Math.ceil(delayMs / 1000)}초 분산`);
                 if (delayMs > 0) await new Promise(resolve => setTimeout(resolve, delayMs));
             }
             return task.fn();
+            };
+            if (!localSourceFallback) return execute();
+            const result = localQueue.then(execute);
+            localQueue = result.catch(() => {});
+            return result;
         }));
 
         // 채택 여부는 아래 무결성 검사에서 정하므로, 여기서는 결과만 모아 둔다
@@ -561,6 +592,10 @@ async function main() {
             staleStreak[src] = 0;
             if (src === 'modetour') delete manualCaptureStatus.modetour;
             allFlights.push(...fresh);
+            if (src === 'modetour' && modeResult) {
+                untouchedFlights.push(...modeResult.retained);
+                if (modeResult.partial) integrityWarnings.push(`⚠️ 모두투어 부분 성공: ${modeResult.detail}`);
+            }
             sources[src] = freshCount;
             // 화면 보존 기준(60%)보다 더 보수적으로 사라짐을 판정한다. 직전 원본보다
             // 15% 넘게 줄어든 회차는 관측된 가격·좌석만 기록하고, 안 보인 표를
@@ -573,6 +608,10 @@ async function main() {
                 missingDetectionSafeSources.add(src);
             }
             if (freshCount > 0) sourceUpdatedAt[src] = new Date().toISOString();
+            if (src === 'modetour' && modeResult) {
+                sourceUpdatedAt[src] = modeResult.capturedAt;
+                if (modeResult.partial) missingDetectionSafeSources.delete(src);
+            }
         }
 
         if (integrityWarnings.length > 0) {
@@ -882,6 +921,13 @@ async function main() {
         // 어느 경로로 끝나든 이 변수가 최종본을 가리킨다.
         let savedFlights: any[] = benchmarkedFlights;
         let cachePreservedGlobally = false;
+        if (modePcPrimary && attempted.has('modetour')) {
+            const failed = preservedSources.has('modetour') || (prevCache && benchmarkedFlights.length < prevCache.count * 0.5);
+            modetourPrimary = { ...prevCache?.modetourPrimary, status: failed ? 'failed' : modeResult?.partial ? 'partial' : 'success',
+                lastAttemptAt: new Date().toISOString(),
+                ...(failed ? {detail:scrapeFailures.modetour || '수집 실패 — 이전 데이터 보존'} : {
+                    scopeCounts:modeResult?.scopeCounts,capturedAt:modeResult?.capturedAt,detail:modeResult?.detail}) };
+        }
         if (onlinePcPrimary) {
             if (attempted.has('onlinetour')) {
                 const failed = preservedSources.has('onlinetour') || (prevCache && benchmarkedFlights.length < prevCache.count * 0.5);
@@ -915,6 +961,7 @@ async function main() {
                     fullCrawlCompletedAt: requestedSources ? undefined : completedAt,
                 }),
                 onlinePrimary,
+                modetourPrimary,
                 ttangTimeEnrichment,
                 ybtourTimeEnrichment,
             };
@@ -936,6 +983,7 @@ async function main() {
                 // firstSeen 같은 필드를 여기서 새로 붙이면 "선택한 소스만 교체"가 아니게 되고,
                 // 별도 워크플로가 관리하는 마이리얼트립 데이터까지 조용히 바뀐다.
                 if (requestedSources && !requestedSources.has(f.source)) return;
+                if (modeResult?.retained.includes(f)) return;
                 const prevFirstSeen = prevFlightMap.get(buildLifecycleIdentity(f).offerKey);
                 if (prevFirstSeen) {
                     f.firstSeen = prevFirstSeen; // 기존 항공편: firstSeen 이어받기
@@ -962,6 +1010,7 @@ async function main() {
 
             const cacheUpdatedAt = new Date().toISOString();
             const cacheData: CacheData = {
+                modetourPrimary,
                 onlinePrimary,
                 timestamp: cacheUpdatedAt,
                 // 부분 복구가 최신 캐시 timestamp를 바꿔도 다음 예약 전체 크롤을
@@ -1141,8 +1190,9 @@ async function main() {
                 cityStats[city] = (cityStats[city] || 0) + 1;
             });
             const isOnlinePrimaryAttempt = onlinePcPrimary && src === 'onlinetour' && attempted.has(src);
+            const isModePrimaryAttempt = modePcPrimary && src === 'modetour' && attempted.has(src);
             const isGithubFallbackAttempt = onlineGithubFallback && src === 'onlinetour' && attempted.has(src);
-            const isLocalFallbackAttempt = localSourceFallback && attempted.has(src) && !isOnlinePrimaryAttempt;
+            const isLocalFallbackAttempt = localSourceFallback && attempted.has(src) && !isOnlinePrimaryAttempt && !isModePrimaryAttempt;
             const scheduledSkip = scheduledSkippedSources.has(src);
             logCrawlResults(src, finalCounts[src] || 0, undefined, cityStats, {
                 scraped: circuitSkipped.has(src as CrawlableSourceKey) ? undefined : scrapedCounts[src],
@@ -1155,16 +1205,18 @@ async function main() {
                     : circuitSkipped.get(src as CrawlableSourceKey)?.nextProbeAt,
                 skipReason: scheduledSkip ? 'schedule' : circuitSkipped.has(src as CrawlableSourceKey) ? 'circuit' : 'not-requested',
                 localFallback: isLocalFallbackAttempt,
-                collectionMode: isOnlinePrimaryAttempt ? 'pc_primary' : isGithubFallbackAttempt ? 'github_fallback' : undefined,
+                partial: isModePrimaryAttempt && !preservedSources.has(src) && modeResult?.partial,
+                detail: isModePrimaryAttempt ? modetourPrimary?.detail : undefined,
+                collectionMode: isOnlinePrimaryAttempt || isModePrimaryAttempt ? 'pc_primary' : isGithubFallbackAttempt ? 'github_fallback' : undefined,
                 // 직전 GitHub 회차와 30분 안에 이어져도 별도 PC 회차로 남긴다.
                 // 첫 PC 소스가 새 엔트리를 만들고 같은 실행의 나머지 소스는 그 엔트리에 합쳐진다.
-                separateSession: (isLocalFallbackAttempt || isOnlinePrimaryAttempt || isGithubFallbackAttempt) && !localFallbackSessionStarted,
+                separateSession: (isLocalFallbackAttempt || isOnlinePrimaryAttempt || isModePrimaryAttempt || isGithubFallbackAttempt) && !localFallbackSessionStarted,
                 added: turnover[src]?.added,
                 removed: turnover[src]?.removed,
                 addedFlights: turnoverDetails[src]?.added,
                 removedFlights: turnoverDetails[src]?.removed,
             });
-            if (isLocalFallbackAttempt || isOnlinePrimaryAttempt || isGithubFallbackAttempt) localFallbackSessionStarted = true;
+            if (isLocalFallbackAttempt || isOnlinePrimaryAttempt || isModePrimaryAttempt || isGithubFallbackAttempt) localFallbackSessionStarted = true;
         }
 
     } catch (error) {

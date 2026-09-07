@@ -76,6 +76,12 @@ if (overlay.sourceUpdatedAt?.[sourceKey]) {
     };
 }
 if (sourceKey === 'onlinetour' && overlay.onlinePrimary) target.onlinePrimary = overlay.onlinePrimary;
+if (sourceKey === 'modetour' && overlay.modetourPrimary) {
+    target.modetourPrimary = overlay.modetourPrimary;
+    target.manualCaptureStatus = { ...(target.manualCaptureStatus || {}) };
+    if (overlay.manualCaptureStatus?.modetour) target.manualCaptureStatus.modetour = overlay.manualCaptureStatus.modetour;
+    else delete target.manualCaptureStatus.modetour;
+}
 
 // 접근 제한 휴식 상태도 소스 단위로 함께 옮긴다. 정상 복구 결과에 상태가 없으면
 // 원격 캐시에 남아 있던 낡은 휴식 상태를 지운다.

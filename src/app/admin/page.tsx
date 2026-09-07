@@ -39,7 +39,7 @@ interface CrawlTurnoverFlight {
 interface CrawlHistoryEntry {
     timestamp: string;
     runKind?: 'pc_fallback' | 'pc_primary' | 'github_fallback';
-    sites: Record<string, { total: number; scraped?: number; preserved?: boolean; skipped?: boolean; skippedUntil?: string; skipReason?: 'schedule' | 'circuit' | 'not-requested'; manual?: boolean; localFallback?: boolean; added?: number; removed?: number; addedFlights?: CrawlTurnoverFlight[]; removedFlights?: CrawlTurnoverFlight[] }>;
+    sites: Record<string, { total: number; scraped?: number; partial?: boolean; detail?: string; preserved?: boolean; skipped?: boolean; skippedUntil?: string; skipReason?: 'schedule' | 'circuit' | 'not-requested'; manual?: boolean; localFallback?: boolean; added?: number; removed?: number; addedFlights?: CrawlTurnoverFlight[]; removedFlights?: CrawlTurnoverFlight[] }>;
     alerts: string[];
 }
 
@@ -2019,7 +2019,7 @@ export default function AdminPage() {
         const failedSources = attemptedSources.filter(source => entry.sites[source]?.preserved);
         const critical = entry.alerts.filter(alert => alert.startsWith('🚨'));
         const successCount = Math.max(0, attemptedSources.length - failedSources.length);
-        const status: 'success' | 'partial' | 'failed' = failedSources.length === 0 && critical.length === 0
+        const status: 'success' | 'partial' | 'failed' = failedSources.length === 0 && critical.length === 0 && !attemptedSources.some(s => entry.sites[s]?.partial)
             ? 'success'
             : successCount > 0 ? 'partial' : 'failed';
         const scrapedValues = attemptedSources
@@ -2050,7 +2050,7 @@ export default function AdminPage() {
             shown,
             turnover,
             kind,
-            label: kind === 'pc_primary' ? 'PC 주 수집 · 온라인투어'
+            label: kind === 'pc_primary' ? `PC 주 수집 · ${attemptedSources.map(s => SOURCE_NAMES[s] || s).join(', ')}`
                 : kind === 'github_fallback' ? 'GitHub 대체 수집 · 온라인투어'
                 : kind === 'pc_fallback'
                 ? `PC 대체 수집 · ${localFallbackSources.map(source => SOURCE_NAMES[source] || source).join(', ')}`
@@ -2101,7 +2101,7 @@ export default function AdminPage() {
             const stat = entry.sites[source];
             return Boolean(stat && !stat.manual && stat.skipReason !== 'not-requested');
         });
-        return scheduledEvents.length >= 4;
+        return scheduledEvents.length >= 4 || entry.runKind === 'pc_primary';
     });
     const latestCompletedGeneralEntry = generalRoundEntries[generalRoundEntries.length - 1]
         || [...(data.crawlHistory || [])].reverse().find(entry => generalSources.some(source => sourceWasAttempted(entry, source)))
@@ -2152,7 +2152,7 @@ export default function AdminPage() {
         const status = !stat || notRequested ? 'unknown'
             : scheduledSkip ? 'skipped'
                 : failed ? 'failed'
-                    : 'success';
+                    : stat?.partial ? 'partial' : 'success';
         const circuit = data.sourceCircuits?.[source];
         const reason = failed
             ? alertForSource(latestCompletedGeneralEntry, source)
@@ -2160,18 +2160,19 @@ export default function AdminPage() {
                 || '수집 결과가 안전 기준을 통과하지 못했습니다.'
             : scheduledSkip ? '이 회차는 예약 정책상 수집하지 않았습니다.'
                 : !stat || notRequested ? '이 회차의 결과 기록이 없습니다.'
-                    : null;
+                    : stat?.partial ? stat.detail || '일부 목적지 실패 — 해당 목적지 이전 데이터 유지' : null;
         const handling = failed
             ? stat?.localFallback ? 'PC 대체 수집도 반영하지 않고 이전 데이터 유지' : '새 결과를 폐기하고 이전 정상 데이터 유지'
             : scheduledSkip ? '직전 정상 데이터를 그대로 사용'
                 : stat?.localFallback ? 'PC 대체 수집 결과를 운영 데이터에 반영'
                     : stat?.manual ? '검수한 수동 캡처 결과를 부분 반영'
+                        : stat?.partial ? stat.detail || '정상 목적지만 반영, 실패 목적지 이전 데이터 유지'
                         : status === 'success' ? '새 수집 결과를 운영 데이터에 반영'
                             : '운영 데이터 변경 없음';
         return {
             source,
-            status: status as 'success' | 'failed' | 'skipped' | 'unknown',
-            statusLabel: status === 'success' ? '성공'
+            status: status as 'success' | 'partial' | 'failed' | 'skipped' | 'unknown',
+            statusLabel: status === 'partial' ? '부분 성공' : status === 'success' ? '성공'
                 : status === 'failed' ? '실패'
                     : status === 'skipped' ? '예약상 미실행'
                         : '기록 없음',
@@ -2183,6 +2184,7 @@ export default function AdminPage() {
     });
     const currentRoundSuccessful = currentRoundSources.filter(row => row.status === 'success').length;
     const currentRoundFailed = currentRoundSources.filter(row => row.status === 'failed').length;
+    const currentRoundPartial = currentRoundSources.filter(row => row.status === 'partial').length;
     const currentRoundSkipped = currentRoundSources.filter(row => row.status === 'skipped').length;
     const currentRoundAdded = currentRoundSources.reduce((sum, row) => sum + (row.stat?.added || 0), 0);
     const currentRoundRemoved = currentRoundSources.reduce((sum, row) => sum + (row.stat?.removed || 0), 0);
@@ -2192,6 +2194,7 @@ export default function AdminPage() {
         ? activeGeneralRun.stage === 'crawling' ? 'running'
             : activeGeneralRun.stage === 'publishing' ? 'publishing'
                 : 'waiting'
+        : currentRoundSources.some(row => row.status === 'partial') ? 'partial'
         : currentRoundFailed > 0 ? (currentRoundSuccessful > 0 ? 'partial' : 'failed')
             : currentRoundSuccessful > 0 ? 'success'
                 : 'unknown';
@@ -3114,7 +3117,7 @@ export default function AdminPage() {
                                 </header>
 
                                 <div className={styles.crawlRoundMetrics}>
-                                    <div><span>여행사 결과</span><strong>{activeGeneralRun ? `${currentRoundSources.filter(row => row.status === 'running' || row.status === 'publishing' || row.status === 'waiting').length}곳 처리 중` : `${currentRoundSuccessful} 성공 · ${currentRoundFailed} 실패${currentRoundSkipped ? ` · ${currentRoundSkipped} 미실행` : ''}`}</strong></div>
+                                    <div><span>여행사 결과</span><strong>{activeGeneralRun ? `${currentRoundSources.filter(row => row.status === 'running' || row.status === 'publishing' || row.status === 'waiting').length}곳 처리 중` : `${currentRoundSuccessful} 성공${currentRoundPartial ? ` · ${currentRoundPartial} 부분 성공` : ''} · ${currentRoundFailed} 실패${currentRoundSkipped ? ` · ${currentRoundSkipped} 미실행` : ''}`}</strong></div>
                                     <div><span>표 총개수</span><strong>{activeGeneralRun ? `${currentRoundAfter.toLocaleString()}개 · 집계 대기` : `${currentRoundBefore.toLocaleString()} → ${currentRoundAfter.toLocaleString()}`}</strong></div>
                                     <div className={styles.crawlMetricAdded}><span>신규 표</span><strong>{activeGeneralRun ? '집계 중' : `+${currentRoundAdded.toLocaleString()}`}</strong></div>
                                     <div className={styles.crawlMetricRemoved}><span>제외 표</span><strong>{activeGeneralRun ? '집계 중' : `-${currentRoundRemoved.toLocaleString()}`}</strong></div>
@@ -3195,13 +3198,14 @@ export default function AdminPage() {
                                             const added = generalSources.reduce((sum, source) => sum + (entry.sites[source]?.added || 0), 0);
                                             const removed = generalSources.reduce((sum, source) => sum + (entry.sites[source]?.removed || 0), 0);
                                             const total = generalSources.reduce((sum, source) => sum + (entry.sites[source]?.total || 0), 0);
-                                            const status = failed.length > 0 ? (attempted.length > failed.length ? 'partial' : 'failed') : 'success';
+                                            const partial = attempted.filter(source => entry.sites[source]?.partial);
+                                            const status = failed.length > 0 ? (attempted.length > failed.length ? 'partial' : 'failed') : partial.length ? 'partial' : 'success';
                                             return (
                                                 <details key={`${entry.timestamp}-${index}`} className={styles.crawlRunItem}>
                                                     <summary className={styles.crawlRunSummary}>
-                                                        <span className={styles.crawlRunWhen}><time dateTime={entry.timestamp}>{formatKST(entry.timestamp).replace(/:\d{2}$/, '')}</time><small>일반 여행사 정규 회차</small></span>
+                                                        <span className={styles.crawlRunWhen}><time dateTime={entry.timestamp}>{formatKST(entry.timestamp).replace(/:\d{2}$/, '')}</time><small>{entry.runKind === 'pc_primary' ? 'PC Chrome 주 수집' : '일반 여행사 정규 회차'}</small></span>
                                                         <span className={`${styles.collectionStatus} ${styles[`collectionStatus_${status}`]}`}>{status === 'success' ? '성공' : status === 'partial' ? '일부 실패' : '실패'}</span>
-                                                        <span className={styles.crawlRunResult}><strong>{attempted.length - failed.length}곳 성공 · {failed.length}곳 실패</strong><small>{failed.length ? `${failed.map(source => SOURCE_NAMES[source]).join(', ')} 이전 데이터 유지` : '모든 수집 결과 정상 반영'}</small></span>
+                                                        <span className={styles.crawlRunResult}><strong>{attempted.length - failed.length - partial.length}곳 성공 · {partial.length}곳 부분 성공 · {failed.length}곳 실패</strong><small>{partial.length ? partial.map(source => entry.sites[source].detail).join(' / ') : failed.length ? `${failed.map(source => SOURCE_NAMES[source]).join(', ')} 이전 데이터 유지` : '모든 수집 결과 정상 반영'}</small></span>
                                                         <span className={styles.crawlRunMetrics}><strong>총 {total.toLocaleString()}개</strong><small>신규 +{added.toLocaleString()} · 제외 -{removed.toLocaleString()}{skipped.length ? ` · 미실행 ${skipped.length}곳` : ''}</small></span>
                                                         <span className={styles.crawlRunMore}>상세</span>
                                                     </summary>
@@ -3209,7 +3213,7 @@ export default function AdminPage() {
                                                         <div className={styles.crawlRunBreakdown}>
                                                             {generalSources.map(source => {
                                                                 const stat = entry.sites[source];
-                                                                const state = !stat ? '기록 없음' : stat.preserved ? '실패·이전 유지' : stat.skipped ? '미실행·이전 유지' : '성공·반영';
+                                                                const state = !stat ? '기록 없음' : stat.preserved ? '실패·이전 유지' : stat.skipped ? '미실행·이전 유지' : stat.partial ? `부분 성공 · ${stat.detail || '실패 목적지 이전 유지'}` : '성공·반영';
                                                                 return <div key={source}><span>{SOURCE_NAMES[source]}</span><strong>{state}<br />{stat ? `${stat.total.toLocaleString()}개 · +${(stat.added || 0).toLocaleString()} / -${(stat.removed || 0).toLocaleString()}` : '—'}</strong></div>;
                                                             })}
                                                         </div>

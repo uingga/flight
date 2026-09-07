@@ -8,7 +8,7 @@ const config={enabled:true,slotsPerDay:4};
 const expectedAt='2026-09-07T05:23:00.000Z',now=new Date('2026-09-07T06:00:00Z');
 const base=()=>({fullCrawlUpdatedAt:'2026-09-07T05:40:00Z',sourceCircuits:{},onlinePrimary:{
     status:'failed',lastAttemptAt:'2026-09-07T05:55:00Z',failureOpenedAt:'2026-09-07T05:55:00Z',githubFallbackSafe:true}});
-const policy=(cache=base(),time=now)=>evaluatePcCollection({cache,now:time,config});
+const policy=(cache=base(),time=now)=>evaluatePcCollection({cache,now:time,config,modeConfig:{enabled:false,slotsPerDay:4}});
 
 test('late PC failure belongs to current slot and dispatches GitHub, not PC',()=>{
     assert.equal(policy().githubFallbackDue,true);

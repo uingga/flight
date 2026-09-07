@@ -25,6 +25,8 @@
     "crawl:ybtour": "tsx scripts/crawl-ybtour.ts",
     "crawl:hanatour": "tsx scripts/crawl-hanatour.ts",
     "crawl:modetour": "tsx scripts/crawl-modetour.ts",
+    "crawl:modetour:browser:plan": "tsx scripts/crawl-modetour-browser.ts --plan",
+    "test:modetour-browser": "tsx --test scripts/test-modetour-browser.ts && tsc -p tsconfig.modetour-browser.json",
     "crawl:onlinetour": "tsx scripts/crawl-onlinetour.ts",
     "crawl:all": "tsx scripts/crawl-all.ts",
     "test:ybtour-schedule": "tsx scripts/test-ybtour-schedule.ts",

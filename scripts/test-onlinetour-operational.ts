@@ -49,8 +49,8 @@ test('refuses tampered flight fields and raw collapse',()=>{
 test('primary PC collects without a GitHub failure, only at chosen slots',()=>{
     const cache={fullCrawlUpdatedAt:'2026-09-07T05:40:00Z',sourceCircuits:{}};
     const config={enabled:true,slotsPerDay:2};
-    assert.deepEqual(evaluatePcCollection({cache,now:new Date(now),config}).sources,['onlinetour']);
-    assert.equal(evaluatePcCollection({cache:{...cache,fullCrawlUpdatedAt:'2026-09-07T08:40:00Z'},now:new Date('2026-09-07T08:50:00Z'),config}).shouldRun,false);
+    assert.deepEqual(evaluatePcCollection({cache,now:new Date(now),config}).sources,['onlinetour','modetour']);
+    assert.deepEqual(evaluatePcCollection({cache:{...cache,fullCrawlUpdatedAt:'2026-09-07T08:40:00Z'},now:new Date('2026-09-07T08:50:00Z'),config}).sources,['modetour']);
     assert.equal(evaluatePcCollection({cache:{...cache,fullCrawlUpdatedAt:'2026-09-07T08:40:00Z'},now:new Date('2026-09-07T08:50:00Z'),config:{...config,slotsPerDay:4}}).shouldRun,true);
 });
 test('primary PC waits upstream and honors both cooldowns and already attempted slot',()=>{

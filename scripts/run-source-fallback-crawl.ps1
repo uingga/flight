@@ -119,6 +119,7 @@ if ($Scheduled) {
 
 $env:LOCAL_SOURCE_FALLBACK = '1'
 $env:ONLINETOUR_BROWSER_REMOTE = if (Test-Path -LiteralPath (Join-Path $ProjectDir '.local-crawler\onlinetour-remote.json')) { '1' } else { '0' }
+$env:MODETOUR_BROWSER_REMOTE = if (Test-Path -LiteralPath (Join-Path $ProjectDir '.local-crawler\modetour-remote.json')) { '1' } else { '0' }
 $env:SOURCE_START_JITTER_MAX_MS = '90000'
 $SourceArgument = "--sources=$($Sources -join ',')"
 Log "PC fallback sources: $($Sources -join ', ')"

@@ -20,6 +20,8 @@ export interface TurnoverFlightSummary {
 }
 
 interface SiteStats {
+    partial?: boolean;
+    detail?: string;
     /** 이번 크롤이 끝난 뒤 캐시에 실제로 담긴 개수. 보존된 경우 이전 값과 같다. */
     total: number;
     /** 스크래퍼가 이번에 실제로 긁어온 개수. 보존과 수집을 구분하려고 따로 남긴다. */
@@ -183,6 +185,8 @@ export function logCrawlResults(
     byRegion?: RegionStats,
     byCity?: CityStats,
     meta?: {
+        partial?: boolean;
+        detail?: string;
         scraped?: number;
         preserved?: boolean;
         skipped?: boolean;
@@ -222,6 +226,8 @@ export function logCrawlResults(
 
     // 사이트 통계 저장
     currentEntry.sites[siteName] = {
+        partial: meta?.partial || undefined,
+        detail: meta?.detail,
         total,
         scraped: meta?.scraped,
         preserved: meta?.preserved || undefined,
