@@ -1,35 +1,35 @@
 {
   "modetourPrimary": {
     "status": "partial",
-    "lastAttemptAt": "2026-09-07T09:41:45.173Z",
+    "lastAttemptAt": "2026-09-07T23:45:01.730Z",
     "scopeCounts": {
       "ASIA/": 497,
-      "JPN/": 238,
-      "SOPA/": 57,
+      "JPN/": 230,
+      "SOPA/": 60,
       "EUR/": 15,
       "AMCA/": 0,
       "CHI/TNA": 0,
-      "CHI/RMQ": 18,
+      "CHI/RMQ": 19,
       "CHI/KHH": 0,
       "CHI/TSA": 6,
       "CHI/CAN": 7,
       "CHI/TFU": 6,
-      "CHI/DYG": 12,
-      "CHI/HKG": 9,
+      "CHI/DYG": 9,
+      "CHI/HKG": 8,
       "CHI/TAO": 2
     },
-    "capturedAt": "2026-09-07T09:17:05.382Z",
+    "capturedAt": "2026-09-07T23:43:47.918Z",
     "detail": "타오위안(TPE) HTTP 500 — 기존 4건 유지, 나머지 14구간 반영"
   },
   "onlinePrimary": {
     "status": "success",
-    "lastAttemptAt": "2026-09-07T10:08:51.312Z",
+    "lastAttemptAt": "2026-09-07T23:45:01.730Z",
     "githubFallbackSafe": true,
-    "detail": "B PC Chrome 수집 175건 완료 — 최저가 후보 52건 모두 인터파크 월평균 초과, 필터 후 0건 반영"
+    "detail": "B PC Chrome 수집 0건 완료 — 필터 후 0건 반영"
   },
-  "timestamp": "2026-09-07T23:39:26.574Z",
+  "timestamp": "2026-09-07T23:45:01.734Z",
   "fullCrawlUpdatedAt": "2026-09-07T23:39:26.574Z",
-  "count": 614,
+  "count": 610,
   "flights": [
     {
       "id": "ybtour-xyjhlc",
@@ -16100,51 +16100,6 @@
       "discountRate": -23
     },
     {
-      "id": "modetour-ASIA-20024180",
-      "source": "modetour",
-      "airline": "티웨이항공",
-      "departure": {
-        "city": "청주",
-        "airport": "CJJ",
-        "date": "2026-09-14",
-        "time": "21:00"
-      },
-      "arrival": {
-        "city": "다낭",
-        "airport": "DAD",
-        "date": "2026-09-19",
-        "time": "00:50"
-      },
-      "price": 282600,
-      "currency": "KRW",
-      "availableSeats": 6,
-      "region": "동남아",
-      "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22CJJ%22%2C%22continentCode%22%3A%22ASIA%22%2C%22arrivalCity%22%3A%22DAD%22%2C%22departureDate%22%3A%222026-09-14%22%2C%22arrivalDate%22%3A%222026-09-15%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
-      "modetourDetail": {
-        "baseFare": 20000,
-        "tax": 202600,
-        "tax2": 60000,
-        "departureArrivalTime": "23:50",
-        "normalPrice": 1400000,
-        "sourceDiscountRate": 98,
-        "returnDepartureTime": "00:50",
-        "returnArrivalTime": "07:35",
-        "isDirect": true,
-        "returnDepartureAirport": "DAD",
-        "returnArrivalAirport": "CJJ",
-        "departureFlightNo": "TW025",
-        "returnFlightNo": "TW026",
-        "flyingTime": "05:20",
-        "childBaseFare": 20000,
-        "childTax": 202600,
-        "childTax2": 58000,
-        "infantFare": 100000
-      },
-      "flightNumber": "TW025 / TW026",
-      "discountRate": 3,
-      "firstSeen": "2026-09-07"
-    },
-    {
       "id": "modetour-ASIA-19544475",
       "source": "modetour",
       "airline": "라오항공",
@@ -16276,51 +16231,6 @@
       },
       "flightNumber": "LJ131 / LJ132",
       "discountRate": -54,
-      "firstSeen": "2026-09-07"
-    },
-    {
-      "id": "modetour-ASIA-19767163",
-      "source": "modetour",
-      "airline": "비엣젯항공",
-      "departure": {
-        "city": "부산",
-        "airport": "PUS",
-        "date": "2026-09-18",
-        "time": "10:55"
-      },
-      "arrival": {
-        "city": "나트랑",
-        "airport": "CXR",
-        "date": "2026-09-22",
-        "time": "03:10"
-      },
-      "price": 380000,
-      "currency": "KRW",
-      "availableSeats": 16,
-      "region": "동남아",
-      "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22PUS%22%2C%22continentCode%22%3A%22ASIA%22%2C%22arrivalCity%22%3A%22CXR%22%2C%22departureDate%22%3A%222026-09-18%22%2C%22arrivalDate%22%3A%222026-09-19%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
-      "modetourDetail": {
-        "baseFare": 260000,
-        "tax": 120000,
-        "tax2": 0,
-        "departureArrivalTime": "13:35",
-        "normalPrice": 990000,
-        "sourceDiscountRate": 73,
-        "returnDepartureTime": "03:10",
-        "returnArrivalTime": "09:50",
-        "isDirect": true,
-        "returnDepartureAirport": "CXR",
-        "returnArrivalAirport": "PUS",
-        "departureFlightNo": "VJ919",
-        "returnFlightNo": "VJ918",
-        "flyingTime": "04:40",
-        "childBaseFare": 260000,
-        "childTax": 120000,
-        "childTax2": 0,
-        "infantFare": 30000
-      },
-      "flightNumber": "VJ919 / VJ918",
-      "discountRate": -32,
       "firstSeen": "2026-09-07"
     },
     {
@@ -18830,51 +18740,6 @@
       "firstSeen": "2026-09-04"
     },
     {
-      "id": "modetour-ASIA-19767179",
-      "source": "modetour",
-      "airline": "비엣젯항공",
-      "departure": {
-        "city": "부산",
-        "airport": "PUS",
-        "date": "2026-10-04",
-        "time": "10:55"
-      },
-      "arrival": {
-        "city": "나트랑",
-        "airport": "CXR",
-        "date": "2026-10-08",
-        "time": "03:10"
-      },
-      "price": 380000,
-      "currency": "KRW",
-      "availableSeats": 12,
-      "region": "동남아",
-      "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22PUS%22%2C%22continentCode%22%3A%22ASIA%22%2C%22arrivalCity%22%3A%22CXR%22%2C%22departureDate%22%3A%222026-10-04%22%2C%22arrivalDate%22%3A%222026-10-05%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
-      "modetourDetail": {
-        "baseFare": 260000,
-        "tax": 120000,
-        "tax2": 0,
-        "departureArrivalTime": "13:35",
-        "normalPrice": 990000,
-        "sourceDiscountRate": 73,
-        "returnDepartureTime": "03:10",
-        "returnArrivalTime": "09:50",
-        "isDirect": true,
-        "returnDepartureAirport": "CXR",
-        "returnArrivalAirport": "PUS",
-        "departureFlightNo": "VJ919",
-        "returnFlightNo": "VJ918",
-        "flyingTime": "04:40",
-        "childBaseFare": 260000,
-        "childTax": 120000,
-        "childTax2": 0,
-        "infantFare": 30000
-      },
-      "flightNumber": "VJ919 / VJ918",
-      "discountRate": -36,
-      "firstSeen": "2026-09-04"
-    },
-    {
       "id": "modetour-ASIA-20138115",
       "source": "modetour",
       "airline": "티웨이항공",
@@ -19008,49 +18873,94 @@
       "firstSeen": "2026-09-07"
     },
     {
-      "id": "modetour-JPN-19857694",
+      "id": "modetour-ASIA-20135786",
       "source": "modetour",
-      "airline": "티웨이항공",
+      "airline": "썬푸꾸옥항공",
       "departure": {
         "city": "인천",
         "airport": "ICN",
-        "date": "2026-09-14",
-        "time": "08:10"
+        "date": "2026-10-05",
+        "time": "00:15"
       },
       "arrival": {
-        "city": "사가",
-        "airport": "HSG",
-        "date": "2026-09-16",
-        "time": "10:40"
+        "city": "하노이",
+        "airport": "HAN",
+        "date": "2026-10-08",
+        "time": "16:20"
       },
-      "price": 190000,
+      "price": 210000,
       "currency": "KRW",
-      "availableSeats": 6,
-      "region": "일본",
-      "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22ICN%22%2C%22continentCode%22%3A%22JPN%22%2C%22arrivalCity%22%3A%22HSG%22%2C%22departureDate%22%3A%222026-09-14%22%2C%22arrivalDate%22%3A%222026-09-15%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
+      "availableSeats": 4,
+      "region": "동남아",
+      "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22ICN%22%2C%22continentCode%22%3A%22ASIA%22%2C%22arrivalCity%22%3A%22HAN%22%2C%22departureDate%22%3A%222026-10-05%22%2C%22arrivalDate%22%3A%222026-10-06%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
       "modetourDetail": {
-        "baseFare": 60600,
-        "tax": 72400,
-        "tax2": 57000,
-        "departureArrivalTime": "09:40",
-        "normalPrice": 160000,
-        "sourceDiscountRate": 62,
-        "returnDepartureTime": "10:40",
-        "returnArrivalTime": "12:15",
+        "baseFare": 210000,
+        "tax": 0,
+        "tax2": 0,
+        "departureArrivalTime": "03:10",
+        "normalPrice": 840000,
+        "sourceDiscountRate": 75,
+        "returnDepartureTime": "16:20",
+        "returnArrivalTime": "22:45",
         "isDirect": true,
-        "returnDepartureAirport": "HSG",
+        "returnDepartureAirport": "HAN",
         "returnArrivalAirport": "ICN",
-        "departureFlightNo": "TW285",
-        "returnFlightNo": "TW286",
-        "flyingTime": "01:30",
-        "childBaseFare": 60600,
-        "childTax": 72400,
-        "childTax2": 57000,
-        "infantFare": 40000
+        "departureFlightNo": "9G411",
+        "returnFlightNo": "9G410",
+        "flyingTime": "04:55",
+        "childBaseFare": 210000,
+        "childTax": 0,
+        "childTax2": 0,
+        "infantFare": 100000
       },
-      "flightNumber": "TW285 / TW286",
-      "discountRate": -27,
-      "firstSeen": "2026-09-04"
+      "flightNumber": "9G411 / 9G410",
+      "discountRate": 17,
+      "firstSeen": "2026-09-08"
+    },
+    {
+      "id": "modetour-ASIA-20136581",
+      "source": "modetour",
+      "airline": "썬푸꾸옥항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-10-05",
+        "time": "00:10"
+      },
+      "arrival": {
+        "city": "호치민",
+        "airport": "SGN",
+        "date": "2026-10-08",
+        "time": "15:25"
+      },
+      "price": 210000,
+      "currency": "KRW",
+      "availableSeats": 4,
+      "region": "동남아",
+      "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22ICN%22%2C%22continentCode%22%3A%22ASIA%22%2C%22arrivalCity%22%3A%22SGN%22%2C%22departureDate%22%3A%222026-10-05%22%2C%22arrivalDate%22%3A%222026-10-06%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
+      "modetourDetail": {
+        "baseFare": 210000,
+        "tax": 0,
+        "tax2": 0,
+        "departureArrivalTime": "03:35",
+        "normalPrice": 840000,
+        "sourceDiscountRate": 75,
+        "returnDepartureTime": "15:25",
+        "returnArrivalTime": "22:40",
+        "isDirect": true,
+        "returnDepartureAirport": "SGN",
+        "returnArrivalAirport": "ICN",
+        "departureFlightNo": "9G401",
+        "returnFlightNo": "9G400",
+        "flyingTime": "05:25",
+        "childBaseFare": 210000,
+        "childTax": 0,
+        "childTax2": 0,
+        "infantFare": 100000
+      },
+      "flightNumber": "9G401 / 9G400",
+      "discountRate": 29,
+      "firstSeen": "2026-09-08"
     },
     {
       "id": "modetour-JPN-20095731",
@@ -19096,6 +19006,51 @@
       "flightNumber": "TW251 / TW252",
       "discountRate": -88,
       "firstSeen": "2026-09-07"
+    },
+    {
+      "id": "modetour-JPN-19857695",
+      "source": "modetour",
+      "airline": "티웨이항공",
+      "departure": {
+        "city": "인천",
+        "airport": "ICN",
+        "date": "2026-09-16",
+        "time": "08:10"
+      },
+      "arrival": {
+        "city": "사가",
+        "airport": "HSG",
+        "date": "2026-09-18",
+        "time": "10:40"
+      },
+      "price": 214400,
+      "currency": "KRW",
+      "availableSeats": 6,
+      "region": "일본",
+      "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22ICN%22%2C%22continentCode%22%3A%22JPN%22%2C%22arrivalCity%22%3A%22HSG%22%2C%22departureDate%22%3A%222026-09-16%22%2C%22arrivalDate%22%3A%222026-09-17%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
+      "modetourDetail": {
+        "baseFare": 85000,
+        "tax": 72400,
+        "tax2": 57000,
+        "departureArrivalTime": "09:40",
+        "normalPrice": 450000,
+        "sourceDiscountRate": 81,
+        "returnDepartureTime": "10:40",
+        "returnArrivalTime": "12:15",
+        "isDirect": true,
+        "returnDepartureAirport": "HSG",
+        "returnArrivalAirport": "ICN",
+        "departureFlightNo": "TW285",
+        "returnFlightNo": "TW286",
+        "flyingTime": "01:30",
+        "childBaseFare": 85000,
+        "childTax": 72400,
+        "childTax2": 57000,
+        "infantFare": 40000
+      },
+      "flightNumber": "TW285 / TW286",
+      "discountRate": -44,
+      "firstSeen": "2026-09-08"
     },
     {
       "id": "modetour-JPN-19901715",
@@ -19681,51 +19636,6 @@
       "firstSeen": "2026-09-02"
     },
     {
-      "id": "modetour-JPN-19737124",
-      "source": "modetour",
-      "airline": "티웨이항공",
-      "departure": {
-        "city": "대구",
-        "airport": "TAE",
-        "date": "2026-09-30",
-        "time": "10:40"
-      },
-      "arrival": {
-        "city": "도쿄",
-        "airport": "NRT",
-        "date": "2026-10-02",
-        "time": "13:45"
-      },
-      "price": 520000,
-      "currency": "KRW",
-      "availableSeats": 4,
-      "region": "일본",
-      "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22TAE%22%2C%22continentCode%22%3A%22JPN%22%2C%22arrivalCity%22%3A%22NRT%22%2C%22departureDate%22%3A%222026-09-30%22%2C%22arrivalDate%22%3A%222026-10-01%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
-      "modetourDetail": {
-        "baseFare": 310000,
-        "tax": 125000,
-        "tax2": 85000,
-        "departureArrivalTime": "12:45",
-        "normalPrice": 500000,
-        "sourceDiscountRate": 38,
-        "returnDepartureTime": "13:45",
-        "returnArrivalTime": "16:00",
-        "isDirect": true,
-        "returnDepartureAirport": "NRT",
-        "returnArrivalAirport": "TAE",
-        "departureFlightNo": "TW251",
-        "returnFlightNo": "TW252",
-        "flyingTime": "02:05",
-        "childBaseFare": 310000,
-        "childTax": 125000,
-        "childTax2": 85000,
-        "infantFare": 80000
-      },
-      "flightNumber": "TW251 / TW252",
-      "discountRate": -88,
-      "firstSeen": "2026-09-07"
-    },
-    {
       "id": "modetour-JPN-19904561",
       "source": "modetour",
       "airline": "이스타항공",
@@ -19906,96 +19816,6 @@
       "firstSeen": "2026-09-07"
     },
     {
-      "id": "modetour-SOPA-19716723",
-      "source": "modetour",
-      "airline": "에어부산",
-      "departure": {
-        "city": "부산",
-        "airport": "PUS",
-        "date": "2026-09-20",
-        "time": "19:50"
-      },
-      "arrival": {
-        "city": "괌",
-        "airport": "GUM",
-        "date": "2026-09-24",
-        "time": "03:30"
-      },
-      "price": 283000,
-      "currency": "KRW",
-      "availableSeats": 26,
-      "region": "남태평양",
-      "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22PUS%22%2C%22continentCode%22%3A%22SOPA%22%2C%22arrivalCity%22%3A%22GUM%22%2C%22departureDate%22%3A%222026-09-20%22%2C%22arrivalDate%22%3A%222026-09-21%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
-      "modetourDetail": {
-        "baseFare": 20000,
-        "tax": 203000,
-        "tax2": 60000,
-        "departureArrivalTime": "01:10",
-        "normalPrice": 700000,
-        "sourceDiscountRate": 97,
-        "returnDepartureTime": "03:30",
-        "returnArrivalTime": "06:50",
-        "isDirect": true,
-        "returnDepartureAirport": "GUM",
-        "returnArrivalAirport": "PUS",
-        "departureFlightNo": "BX614",
-        "returnFlightNo": "BX613",
-        "flyingTime": "04:20",
-        "childBaseFare": 20000,
-        "childTax": 203000,
-        "childTax2": 60000,
-        "infantFare": 100000
-      },
-      "flightNumber": "BX614 / BX613",
-      "discountRate": -6,
-      "firstSeen": "2026-09-02"
-    },
-    {
-      "id": "modetour-SOPA-19952722",
-      "source": "modetour",
-      "airline": "에어부산",
-      "departure": {
-        "city": "부산",
-        "airport": "PUS",
-        "date": "2026-09-20",
-        "time": "19:50"
-      },
-      "arrival": {
-        "city": "괌",
-        "airport": "GUM",
-        "date": "2026-09-25",
-        "time": "02:40"
-      },
-      "price": 283000,
-      "currency": "KRW",
-      "availableSeats": 30,
-      "region": "남태평양",
-      "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22PUS%22%2C%22continentCode%22%3A%22SOPA%22%2C%22arrivalCity%22%3A%22GUM%22%2C%22departureDate%22%3A%222026-09-20%22%2C%22arrivalDate%22%3A%222026-09-21%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
-      "modetourDetail": {
-        "baseFare": 20000,
-        "tax": 203000,
-        "tax2": 60000,
-        "departureArrivalTime": "01:10",
-        "normalPrice": 700000,
-        "sourceDiscountRate": 97,
-        "returnDepartureTime": "02:40",
-        "returnArrivalTime": "06:20",
-        "isDirect": true,
-        "returnDepartureAirport": "GUM",
-        "returnArrivalAirport": "PUS",
-        "departureFlightNo": "BX614",
-        "returnFlightNo": "BX613",
-        "flyingTime": "04:20",
-        "childBaseFare": 20000,
-        "childTax": 203000,
-        "childTax2": 60000,
-        "infantFare": 100000
-      },
-      "flightNumber": "BX614 / BX613",
-      "discountRate": -6,
-      "firstSeen": "2026-09-02"
-    },
-    {
       "id": "modetour-SOPA-19881781",
       "source": "modetour",
       "airline": "젯스타 항공",
@@ -20013,7 +19833,7 @@
       },
       "price": 999000,
       "currency": "KRW",
-      "availableSeats": 3,
+      "availableSeats": 4,
       "region": "남태평양",
       "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22ICN%22%2C%22continentCode%22%3A%22SOPA%22%2C%22arrivalCity%22%3A%22SYD%22%2C%22departureDate%22%3A%222026-09-30%22%2C%22arrivalDate%22%3A%222026-10-01%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
       "modetourDetail": {
@@ -20082,6 +19902,51 @@
       "flightNumber": "JQ048 / JQ047",
       "discountRate": -18,
       "firstSeen": "2026-09-04"
+    },
+    {
+      "id": "modetour-SOPA-20180662",
+      "source": "modetour",
+      "airline": "에어부산",
+      "departure": {
+        "city": "부산",
+        "airport": "PUS",
+        "date": "2026-10-09",
+        "time": "18:55"
+      },
+      "arrival": {
+        "city": "괌",
+        "airport": "GUM",
+        "date": "2026-10-12",
+        "time": "02:55"
+      },
+      "price": 279900,
+      "currency": "KRW",
+      "availableSeats": 30,
+      "region": "남태평양",
+      "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22PUS%22%2C%22continentCode%22%3A%22SOPA%22%2C%22arrivalCity%22%3A%22GUM%22%2C%22departureDate%22%3A%222026-10-09%22%2C%22arrivalDate%22%3A%222026-10-10%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
+      "modetourDetail": {
+        "baseFare": 16900,
+        "tax": 203000,
+        "tax2": 60000,
+        "departureArrivalTime": "00:10",
+        "normalPrice": 700000,
+        "sourceDiscountRate": 97,
+        "returnDepartureTime": "02:55",
+        "returnArrivalTime": "06:20",
+        "isDirect": true,
+        "returnDepartureAirport": "GUM",
+        "returnArrivalAirport": "PUS",
+        "departureFlightNo": "BX614",
+        "returnFlightNo": "BX613",
+        "flyingTime": "04:15",
+        "childBaseFare": 16900,
+        "childTax": 203000,
+        "childTax2": 60000,
+        "infantFare": 100000
+      },
+      "flightNumber": "BX614 / BX613",
+      "discountRate": -10,
+      "firstSeen": "2026-09-08"
     },
     {
       "id": "modetour-EUR-19802509",
@@ -20923,50 +20788,6 @@
       "firstSeen": "2026-09-02"
     },
     {
-      "id": "modetour-CHI-20079742",
-      "source": "modetour",
-      "airline": "이스타항공",
-      "departure": {
-        "city": "대구",
-        "airport": "TAE",
-        "date": "2026-09-18",
-        "time": "11:15"
-      },
-      "arrival": {
-        "city": "장가계",
-        "airport": "DYG",
-        "date": "2026-09-22",
-        "time": "14:35"
-      },
-      "price": 195000,
-      "currency": "KRW",
-      "availableSeats": 1,
-      "region": "중국",
-      "link": "https://www.modetour.com/flights/discount-flight?query=%7B%22departureCity%22%3A%22TAE%22%2C%22continentCode%22%3A%22CHI%22%2C%22arrivalCity%22%3A%22DYG%22%2C%22departureDate%22%3A%222026-09-18%22%2C%22arrivalDate%22%3A%222026-09-19%22%2C%22page%22%3A1%2C%22itemCount%22%3A200%2C%22sort%22%3A%22Lowest%22%7D",
-      "modetourDetail": {
-        "baseFare": 150000,
-        "tax": 0,
-        "tax2": 45000,
-        "departureArrivalTime": "13:35",
-        "normalPrice": 0,
-        "returnDepartureTime": "14:35",
-        "returnArrivalTime": "18:35",
-        "isDirect": true,
-        "returnDepartureAirport": "DYG",
-        "returnArrivalAirport": "TAE",
-        "departureFlightNo": "ZE351",
-        "returnFlightNo": "ZE352",
-        "flyingTime": "03:20",
-        "childBaseFare": 150000,
-        "childTax": 0,
-        "childTax2": 45000,
-        "infantFare": 100000
-      },
-      "flightNumber": "ZE351 / ZE352",
-      "discountRate": 56,
-      "firstSeen": "2026-09-02"
-    },
-    {
       "id": "modetour-CHI-20073931",
       "source": "modetour",
       "airline": "스쿠트",
@@ -21144,14 +20965,14 @@
   "sources": {
     "ybtour": 173,
     "hanatour": 32,
-    "modetour": 113,
+    "modetour": 109,
     "ttang": 143,
     "myrealtrip": 153
   },
   "sourceUpdatedAt": {
     "ybtour": "2026-09-07T23:35:43.004Z",
     "hanatour": "2026-09-07T23:35:43.004Z",
-    "modetour": "2026-09-07T09:17:05.382Z",
+    "modetour": "2026-09-07T23:43:47.918Z",
     "onlinetour": "2026-09-07T10:08:51.297Z",
     "ttang": "2026-09-07T23:35:43.005Z",
     "myrealtrip": "2026-09-07T14:38:53.656Z"
@@ -21165,13 +20986,16 @@
     "myrealtrip": 0
   },
   "scrapedCounts": {
-    "modetour": 867,
+    "modetour": 859,
     "ttang": 1348,
     "ybtour": 284,
     "hanatour": 104,
-    "onlinetour": 175
+    "onlinetour": 0
   },
-  "integrityAlerts": [],
+  "integrityAlerts": [
+    "🚨 onlinetour 수집 실패 (복구할 이전 데이터 없음): 온라인투어 B PC 수집 실패: unexpected_api_query",
+    "⚠️ 모두투어 부분 성공: 타오위안(TPE) HTTP 500 — 기존 4건 유지, 나머지 14구간 반영"
+  ],
   "sourceCircuits": {},
   "manualCaptureStatus": {},
   "ttangTimeEnrichment": {
