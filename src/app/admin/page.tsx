@@ -713,7 +713,7 @@ const NAVER_PRIORITY_LABELS: Record<string, string> = {
  */
 const TABS = [
     { id: 'overview', label: '오늘', hint: '지금 볼 것' },
-    { id: 'flight-order', label: '노출 순서', hint: '가격 비교·순서 편집' },
+    { id: 'flight-order', label: '노출 순서', hint: '오늘의 표·순서 편집' },
     { id: 'threads', label: 'Threads', hint: '글·유입·예약' },
     { id: 'visitors', label: '방문·예약', hint: '유입·행동·관심' },
     { id: 'operations', label: '항공권·수집', hint: '품질·변화·갱신' },
@@ -2442,13 +2442,12 @@ export default function AdminPage() {
 
             {(tab === 'flight-order' || flightOrderOpened) && (
                 <div className={styles.flightOrderPanel} hidden={tab !== 'flight-order'}>
+                    {tab === 'flight-order' && <AdminTodayPick adminKey={key} />}
                     <AdminFlightOrder adminKey={key} />
                 </div>
             )}
 
             {tab === 'overview' && (<>
-                <AdminTodayPick adminKey={key} />
-
                 <section className={styles.section} id="overview-actions">
                     <div className={styles.sectionHeading}>
                         <div>
@@ -2498,6 +2497,10 @@ export default function AdminPage() {
                         <div className={styles.dealReviewEmpty}>방문 통계를 불러오는 중입니다.</div>
                     )}
                 </section>
+
+                <div className={styles.flightOrderPanel}>
+                    <AdminTodayPick adminKey={key} readOnly onManage={() => selectTab('flight-order')} />
+                </div>
 
                 <section className={styles.section} id="overview-hourly">
                     <div className={styles.sectionHeading}>

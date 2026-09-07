@@ -1,6 +1,8 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import OverlayDialog from '@/components/ui/OverlayDialog';
+import { dismissOverlayWithHistory, historyOverlay, showOverlayWithHistory } from '@/lib/ui/overlay-history';
 import styles from './AdminTodayPick.module.css';
 
 interface TodayPickCandidate {
@@ -61,13 +63,28 @@ function naverComparisonLabel(candidate: TodayPickCandidate): string {
         : `네이버보다 ${difference} 비쌈`;
 }
 
-export default function AdminTodayPick({ adminKey }: { adminKey: string }) {
+export default function AdminTodayPick({ adminKey, readOnly = false, onManage }: {
+    adminKey: string;
+    readOnly?: boolean;
+    onManage?: () => void;
+}) {
     const [data, setData] = useState<TodayPickAdminData | null>(null);
     const [search, setSearch] = useState('');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [message, setMessage] = useState<string | null>(null);
     const [selectingId, setSelectingId] = useState<string | null>(null);
+    const [panelOpen, setPanelOpen] = useState(false);
+    const [page, setPage] = useState(1);
+    const dialogRef = useRef<HTMLElement>(null);
+    const listRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (readOnly) return;
+        const syncPanel = () => setPanelOpen(historyOverlay() === 'admin-today-pick');
+        window.addEventListener('popstate', syncPanel);
+        return () => window.removeEventListener('popstate', syncPanel);
+    }, [readOnly]);
 
     async function load() {
         setLoading(true);
@@ -92,7 +109,7 @@ export default function AdminTodayPick({ adminKey }: { adminKey: string }) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [adminKey]);
 
-    const visibleCandidates = useMemo(() => {
+    const filteredCandidates = useMemo(() => {
         const query = search.trim().toLocaleLowerCase('ko-KR');
         const filtered = !query
             ? data?.candidates || []
@@ -101,8 +118,27 @@ export default function AdminTodayPick({ adminKey }: { adminKey: string }) {
                 candidate.arrivalCity,
                 candidate.id,
             ].some(value => value.toLocaleLowerCase('ko-KR').includes(query)));
-        return filtered.slice(0, 30);
+        return filtered;
     }, [data?.candidates, search]);
+
+    const pageCount = Math.max(1, Math.ceil(filteredCandidates.length / 10));
+    const currentPage = Math.min(page, pageCount);
+    const visibleCandidates = filteredCandidates.slice((currentPage - 1) * 10, currentPage * 10);
+
+    function openPanel() {
+        setSearch('');
+        setPage(1);
+        showOverlayWithHistory('admin-today-pick', () => setPanelOpen(true));
+    }
+
+    function closePanel() {
+        dismissOverlayWithHistory('admin-today-pick', () => setPanelOpen(false));
+    }
+
+    function changePage(nextPage: number) {
+        setPage(nextPage);
+        listRef.current?.scrollTo({ top: 0 });
+    }
 
     async function selectCandidate(candidate: TodayPickCandidate) {
         const confirmed = window.confirm([
@@ -141,26 +177,22 @@ export default function AdminTodayPick({ adminKey }: { adminKey: string }) {
     }
 
     return (
-        <section className={styles.section} id="overview-tikit-drop">
+        <section className={styles.section} id={readOnly ? 'overview-tikit-drop' : 'flight-order-tikit-drop'}>
             <div className={styles.heading}>
                 <div>
                     <span className={styles.eyebrow}>TIKIT DROP</span>
-                    <h2>오늘의 표 직접 선정</h2>
-                    <p>현재 판매 중인 항공권에서 골라 메인 첫 카드로 지정합니다.</p>
+                    <h2>{readOnly ? '오늘 선정한 항공권' : '오늘의 표 선정'}</h2>
                 </div>
-                <button type="button" className={styles.refreshButton} onClick={load} disabled={loading}>
-                    {loading ? '불러오는 중' : '새로고침'}
-                </button>
+                {readOnly ? (
+                    <button type="button" className={styles.refreshButton} onClick={onManage}>노출순서에서 관리</button>
+                ) : <button type="button" className={styles.refreshButton} onClick={openPanel} aria-haspopup="dialog">
+                    선정·변경
+                </button>}
             </div>
-
-            {loading && !data ? (
-                <div className={styles.empty}>현재 DROP과 후보를 불러오는 중입니다.</div>
-            ) : error && !data ? (
-                <div className={styles.error} role="alert">{error}</div>
-            ) : data ? (
-                <>
+            {loading && !data ? <p className={styles.empty} role="status">선정 상태를 불러오는 중입니다.</p>
+                : !data ? <div className={styles.error} role="alert">{error || '선정 상태를 확인하지 못했습니다.'}</div>
+                    : <>
                     <div className={styles.currentCard}>
-                        <span>현재 TIKIT DROP</span>
                         {data.current ? (
                             <div>
                                 <strong>{data.current.departureCity} → {data.current.arrivalCity}</strong>
@@ -171,26 +203,44 @@ export default function AdminTodayPick({ adminKey }: { adminKey: string }) {
                                 </small>
                             </div>
                         ) : (
-                            <p>오늘 선정된 표가 없습니다.</p>
+                            <p>오늘 선정된 항공권이 없습니다.</p>
                         )}
                     </div>
-
                     {!data.available && <div className={styles.error} role="alert">{data.message}</div>}
+                    {!panelOpen && message && <div className={styles.success} role="status">{message}</div>}
+                    {!panelOpen && error && <div className={styles.error} role="alert">{error}</div>}
+                    </>}
+            {!readOnly && <OverlayDialog
+                open={panelOpen}
+                dialogRef={dialogRef}
+                onClose={closePanel}
+                ariaLabelledBy="today-pick-panel-title"
+                overlayClassName={styles.overlay}
+                dialogClassName={styles.panel}
+            >
+                <header className={styles.panelHeading}>
+                    <div><h2 id="today-pick-panel-title">TIKIT DROP 선정·변경</h2><p>현재 판매 중인 항공권에서 선정합니다.</p></div>
+                    <button type="button" className={styles.refreshButton} onClick={closePanel} aria-label="선정 패널 닫기">닫기</button>
+                </header>
+                <div className={styles.panelBody} ref={listRef}>
                     {message && <div className={styles.success} role="status">{message}</div>}
                     {error && <div className={styles.error} role="alert">{error}</div>}
-
+                    {data && !data.available && <div className={styles.error} role="alert">{data.message}</div>}
+                    <button type="button" className={styles.refreshButton} onClick={load} disabled={loading || Boolean(selectingId)}>
+                        {loading ? '불러오는 중' : '새로고침'}
+                    </button>
                     <div className={styles.toolbar}>
                         <label htmlFor="today-pick-search">항공권 찾기</label>
                         <input
                             id="today-pick-search"
                             value={search}
-                            onChange={event => setSearch(event.target.value)}
+                            onChange={event => { setSearch(event.target.value); setPage(1); }}
                             placeholder="도착지, 출발지 또는 항공권 ID"
                         />
-                        <span>{search ? `${visibleCandidates.length}개 표시` : '추천순 상위 30개'}</span>
+                        <span role="status">{filteredCandidates.length}개{search ? ' 검색됨' : ' · 추천순'}</span>
                     </div>
-
-                    {visibleCandidates.length > 0 ? (
+                    {loading && !data ? <div className={styles.empty} role="status">후보를 불러오는 중입니다.</div>
+                        : !data ? null : visibleCandidates.length > 0 ? (
                         <div className={styles.candidateList}>
                             {visibleCandidates.map(candidate => (
                                 <article key={candidate.id} className={candidate.selected ? styles.selectedCandidate : undefined}>
@@ -209,7 +259,7 @@ export default function AdminTodayPick({ adminKey }: { adminKey: string }) {
                                     <button
                                         type="button"
                                         onClick={() => selectCandidate(candidate)}
-                                        disabled={!data.available || candidate.selected || Boolean(selectingId)}
+                                        disabled={loading || !data.available || candidate.selected || Boolean(selectingId)}
                                     >
                                         {selectingId === candidate.id ? '저장 중' : candidate.selected ? '선정됨' : '선정'}
                                     </button>
@@ -217,14 +267,19 @@ export default function AdminTodayPick({ adminKey }: { adminKey: string }) {
                             ))}
                         </div>
                     ) : (
-                        <div className={styles.empty}>검색 조건에 맞는 항공권이 없습니다.</div>
+                        <div className={styles.empty} role="status">{search ? '검색 조건에 맞는 항공권이 없습니다.' : '현재 선정 가능한 항공권이 없습니다.'}</div>
                     )}
                     <p className={styles.note}>
-                        선정하면 <code>today-pick.json</code>만 저장되고 자동 배포가 시작됩니다.
-                        같은 날 자동 선정기는 직접 고른 표를 덮어쓰지 않습니다.
+                        선정하면 메인에 반영되기까지 배포 시간이 걸립니다.
+                        같은 날 자동 선정은 직접 고른 항공권을 덮어쓰지 않습니다.
                     </p>
-                </>
-            ) : null}
+                </div>
+                <nav className={styles.pagination} aria-label="후보 페이지">
+                    <button type="button" className={styles.refreshButton} disabled={currentPage === 1} onClick={() => changePage(currentPage - 1)}>이전</button>
+                    <span role="status">{currentPage} / {pageCount} 페이지</span>
+                    <button type="button" className={styles.refreshButton} disabled={currentPage === pageCount} onClick={() => changePage(currentPage + 1)}>다음</button>
+                </nav>
+            </OverlayDialog>}
         </section>
     );
 }
