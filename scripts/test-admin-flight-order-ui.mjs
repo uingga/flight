@@ -40,7 +40,8 @@ try {
         const initialIds = await cards.evaluateAll(nodes => nodes.map(node => node.dataset.orderCard));
         if (width >= 960) {
             await cards.first().evaluate(element => element.scrollIntoView({ block: 'start' }));
-            await target.dragTo(cards.first(), { sourcePosition: { x: 40, y: 100 }, targetPosition: { x: 40, y: 150 } });
+            await page.evaluate(() => scrollBy(0, -120));
+            await target.dragTo(cards.first(), { sourcePosition: { x: 14, y: 24 }, targetPosition: { x: 14, y: 30 } });
         }
         else {
             await target.getByRole('button', { name: /맨 위로/ }).click();

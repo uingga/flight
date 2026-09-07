@@ -129,15 +129,21 @@ export default function AdminFlightOrder({ adminKey }: { adminKey: string }) {
             >
                 <div className={styles.rank}><span>{isDrop ? 'DROP' : index + 1}</span>{desktop && movable && !preview && <small aria-hidden="true">⠿</small>}</div>
                 <div className={styles.cardContent}>
-                    <div className={styles.cardTop}><span>{agencies[flight.source]} · {flight.airline}</span><span className={styles.badge}>{isDrop ? '기존 고정 유지' : manual ? '직접 배치' : '자동 추천'}</span></div>
-                    <h3>{flight.departure.city} <span aria-hidden="true">→</span> {flight.arrival.city}</h3>
-                    <p>{dateLabel(flight.departure.date)} {flight.departure.time} — {dateLabel(flight.arrival.date)} {flight.arrival.time}</p>
-                    <div className={styles.cardBottom}><span>왕복 · {flight.seats || (flight.availableSeats ? `잔여 ${flight.availableSeats}석` : '좌석은 예약 시 확인')}</span><strong>{getEffectivePrice(flight).toLocaleString('ko-KR')}원</strong></div>
+                    <div className={styles.route}>
+                        <h3>{flight.departure.city} <span aria-hidden="true">→</span> {flight.arrival.city}</h3>
+                        {(isDrop || manual) && <span className={styles.badge}>{isDrop ? '기존 고정 유지' : '직접 배치'}</span>}
+                    </div>
+                    <div className={styles.schedule}>
+                        <span>{dateLabel(flight.departure.date)} — {dateLabel(flight.arrival.date)} <small>왕복</small></span>
+                        <small>가는 {flight.departure.time || '미확인'} · 오는 {flight.arrival.time || '미확인'}</small>
+                    </div>
+                    <div className={styles.agency}><span>{agencies[flight.source]}</span><small>{flight.airline}</small></div>
+                    <div className={styles.price}><strong>{getEffectivePrice(flight).toLocaleString('ko-KR')}원</strong><small>{flight.seats || (flight.availableSeats ? `잔여 ${flight.availableSeats}석` : '좌석 확인 필요')}</small></div>
                     {!isDrop && !preview && <div className={styles.moves}>
                         <button type="button" disabled={editingDisabled || !movable || index === 0} onClick={() => move(key, 0)} aria-label={`${flight.arrival.city} 맨 위로`}>맨 위로</button>
                         <button type="button" disabled={editingDisabled || !movable || index === 0} onClick={() => move(key, index - 1)} aria-label={`${flight.arrival.city} 위로`}>위로 ↑</button>
                         <button type="button" disabled={editingDisabled || !movable || index === ordered.length - 1} onClick={() => move(key, index + 1)} aria-label={`${flight.arrival.city} 아래로`}>아래로 ↓</button>
-                        {manual && <button type="button" disabled={editingDisabled} onClick={() => { setDraft(current => current.filter(item => item.key !== key)); setMessage('자동 배치로 돌렸습니다. 확인 후 적용해 주세요.'); }}>자동 배치</button>}
+                        {manual && <button type="button" className={styles.release} disabled={editingDisabled} onClick={() => { setDraft(current => current.filter(item => item.key !== key)); setMessage('자동 배치로 돌렸습니다. 확인 후 적용해 주세요.'); }}>자동 배치</button>}
                         {!movable && <small>같은 상품 식별이 겹쳐 직접 이동할 수 없습니다.</small>}
                     </div>}
                 </div>
