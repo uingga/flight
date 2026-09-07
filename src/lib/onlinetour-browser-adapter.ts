@@ -18,6 +18,7 @@ export interface PartialPageEvidence {
 }
 
 export interface BrowserSnapshot {
+    region: string;
     currentScope: ListScope; availableScopes: ListScope[]; nextPageNo: number;
     nextPageAvailable: boolean; restricted: boolean;
     preflight: { googleHomeTabPresent: true; evidence: 'tab_url_metadata_only_not_session_guarantee' };
@@ -174,11 +175,14 @@ function prepare(dom: DomState): { snapshot: BrowserSnapshot; controls: { scope:
     }
     const availableScopes = [currentScope];
     for (const control of controls) if (!availableScopes.some(s => same(s, control.scope))) availableScopes.push(control.scope);
-    return { snapshot: { currentScope, availableScopes, nextPageNo: Number(dom.pageNo), nextPageAvailable: dom.more,
+    return { snapshot: { region: v.TabGubun, currentScope, availableScopes, nextPageNo: Number(dom.pageNo), nextPageAvailable: dom.more,
         restricted: dom.bodyRestricted, preflight: { googleHomeTabPresent: true, evidence: 'tab_url_metadata_only_not_session_guarantee' } }, controls };
 }
 
-export async function createOnlineTourBrowserAdapter(client: CdpClient) {
+export async function createOnlineTourBrowserAdapter(client: CdpClient,
+    options: { seed?: { scope: ListScope; page: ListPage } } = {}) {
+    // Only the same-process region collector supplies this just-observed page. No CLI/file seed.
+    let seed = options.seed ? JSON.parse(JSON.stringify(options.seed)) as NonNullable<typeof options.seed> : undefined;
     const diagnostics = { actions: 0, productRequests: 0, documentRequests: 0,
         permittedProductRequests: 0, blockedProductRequests: 0 };
     let productRequestCap: number | undefined;
@@ -417,6 +421,17 @@ export async function createOnlineTourBrowserAdapter(client: CdpClient) {
             const prepared = prepare(dom);
             if (dom.loading || !dom.ready) throw failure('validation', 'list_not_idle');
             const current = same(scope, prepared.snapshot.currentScope);
+            if (seed && pageNo === 1 && attempt === 1 && same(scope, seed.scope)) {
+                if (!current || dom.pageNo !== '2' || seed.page.pageNo !== 1
+                    || seed.page.nextPageAvailable !== dom.more) {
+                    validationLatched = true;
+                    throw failure('validation', 'seed_screen_changed');
+                }
+                const page = seed.page; seed = undefined;
+                return page;
+            }
+            // A page belongs to the screen that produced it; never reuse it after other actions.
+            seed = undefined;
             const choices = prepared.controls.filter(c => same(c.scope, scope));
             if (pageNo > 1 && !current) throw failure('validation', 'scope_changed');
             const pagination = JSON.stringify([dom.pageNo, dom.pageSize, dom.more, dom.moreOnclick]);

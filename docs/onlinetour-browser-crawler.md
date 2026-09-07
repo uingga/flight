@@ -1,5 +1,9 @@
 # 온라인투어 일반 Chrome 수집 — staging 전용
 
+> 2026-09-07: 전체 순회용 검토 실행기와 A/B 오프라인 검증을 추가했다.
+> [최신 검증 진행](crawler-validation-20260907.md)을 참고한다. Chrome 연결이 받아들여지지 않아
+> 보조 프레임 문제의 실제 원인 확인과 신규 전체 실수집은 아직 완료하지 않았다.
+
 > 기존 첫 페이지 pilot과 별도 목록 순회 CLI를 구분한다. `crawl-onlinetour-browser.ts`는 종전 단일 reload 경계를 유지한다. 새 `crawl-onlinetour-browser-lists.ts`는 현재 화면 읽기 또는 명시한 범위·예산 안의 목록 순회용이며, 전체 실사이트 수집과 운영 반영은 별도 승인 대상이다.
 
 ## A PC 인수인계 시 주의 — 보관 브랜치

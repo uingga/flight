@@ -12,7 +12,7 @@ export interface RegionDiagnostics {
     actions: number; documentRequests: number; permittedDocumentRequests: number;
     productRequests: number; permittedProductRequests: number; blockedRequests: number;
 }
-export interface RegionFirstPage { scope: ListScope; pageNo: 1; totalCount: number; lastPage: number; rawProducts: Record<string, unknown>[]; }
+export interface RegionFirstPage { scope: ListScope; pageNo: 1; totalCount: number; lastPage: number; rawProducts: Record<string, unknown>[]; nextPageAvailable?: boolean; }
 export interface RegionDiscoveryResult { snapshot: RegionSnapshot; firstPage: RegionFirstPage | null; }
 export interface RegionFailure { reason: string; phase: 'discovery' | 'cleanup'; region: string | null; }
 export class RegionDiscoveryError extends Error {
@@ -24,6 +24,17 @@ const API = 'https://api.onlinetour.co.kr/v2/flight/international/dcair/list';
 const ACCESS = /captcha|access denied|request blocked|temporarily blocked|unusual traffic|비정상(?:적인)?\s*접근|자동화(?:된)?\s*요청|접근이?\s*제한|서비스\s*이용이?\s*제한/i;
 const matches = (raw: string, expected: string) => { try { const u = new URL(raw); return !u.username && !u.password && u.origin + u.pathname === expected; } catch { return false; } };
 const monthOK = (s: string) => /^[1-9]\d{3}(0[1-9]|1[0-2])$/.test(s);
+/** Diagnostic locator only. Never retain query values, fragments or credentials. */
+export function describeRejectedLocation(raw: unknown): Record<string, string | boolean> {
+    try {
+        const u = new URL(typeof raw === 'string' ? raw : '');
+        if (u.username || u.password || !['https:', 'http:'].includes(u.protocol)) return { locationKind: 'redacted' };
+        // Only short static path segments are useful for classifying embedded resources.
+        // Dynamic identifiers and arbitrary long paths remain redacted.
+        const staticPath = u.pathname.length <= 160 && /^\/[a-zA-Z_./-]*$/.test(u.pathname);
+        return { origin: u.origin, path: staticPath ? u.pathname : '[redacted]', hasQuery: !!u.search };
+    } catch { return { locationKind: 'invalid' }; }
+}
 const DOM_READ = String.raw`(() => {
     const u = new URL(location.href);
     if (u.username || u.password || u.origin + u.pathname !== 'https://www.onlinetour.co.kr/flight/w/international/dcair/dcairList') return { outside: true };
@@ -43,12 +54,14 @@ const DOM_READ = String.raw`(() => {
         filters[name] = { safe: !selected.length || total, values: total ? inputs.filter(e => e.value !== 'total').map(e => e.value) : [] };
     }
     return { vars, filters, pageNo: document.querySelector('#pageNo')?.value, pageSize: document.querySelector('#pageSize')?.value,
+        more: enabled(document.querySelector('#btn_more')),
         ready: document.readyState === 'complete', loading: Array.from(document.querySelectorAll('[class*="loading"], [id*="loading"]')).some(visible) || /조회중입니다/.test(document.body?.innerText || ''),
         restricted: /captcha|access denied|request blocked|temporarily blocked|unusual traffic|비정상(?:적인)?\s*접근|자동화(?:된)?\s*요청|접근이?\s*제한|서비스\s*이용이?\s*제한/i.test(document.body?.innerText || ''),
         controls: Array.from(document.querySelectorAll('[onclick]')).filter(enabled).map(e => ({tag: e.tagName, name: e.getAttribute('name'), onclick: e.getAttribute('onclick')})) };
 })()`;
 interface Dom {
     outside?: boolean; vars: Record<string, string | null>; ready: boolean; loading: boolean; restricted: boolean;
+    more: boolean;
     filters: Record<string, { safe: boolean; values: string[] }>; pageNo: string; pageSize: string;
     controls: { tag: string; name: string | null; onclick: string }[];
 }
@@ -177,11 +190,12 @@ export async function createOnlineTourRegionDiscovery(client: CdpClient, options
                 a.records.set(p.networkId, r);
             } catch (error) {
                 const reason = error instanceof RegionDiscoveryError ? error.reason : 'invalid_request';
-                // Structural flags only: never persist URL/query, IDs, headers or request body.
+                // Structural flags and sanitized locator only: no query values, IDs or credentials.
                 if (!lastRejectedRequest) lastRejectedRequest = { reason, mainFrame: p.frameId === frameId,
                     networkIdPresent: !!p.networkId, redirected: !!p.redirectedRequestId, responseStage: p.responseStatusCode !== undefined,
                     method: ['GET','POST'].includes(p.request?.method) ? p.request.method : 'other', bodyPresent: !!p.request?.postData,
-                    urlKind: matches(p.request?.url, LIST) ? 'list' : matches(p.request?.url, API) ? 'api' : 'other', resourceKind: doc ? 'document' : 'product' };
+                    urlKind: matches(p.request?.url, LIST) ? 'list' : matches(p.request?.url, API) ? 'api' : 'other', resourceKind: doc ? 'document' : 'product',
+                    ...describeRejectedLocation(p.request?.url) };
                 diagnostics.blockedRequests++; fail(reason);
             }
             job(send(r ? 'Fetch.continueRequest' : 'Fetch.failRequest', r ? { requestId: p.requestId } : { requestId: p.requestId, errorReason: 'Aborted' })
@@ -272,7 +286,11 @@ export async function createOnlineTourRegionDiscovery(client: CdpClient, options
                                 || ['ck_dep','ck_status'].some((k,i) => !dom.filters[k].safe || dom.filters[k].values.slice().sort().join(',') !== apiState.filters![i])) throw new RegionDiscoveryError('final_scope_mismatch');
                         } else if (a.apiCount || observed.currentScope || observed.cities.length || dom.vars.SelectedCityCd !== '') { idleSince = 0; await new Promise(resolve => setTimeout(resolve, 25)); continue; }
                         if (!idleSince) idleSince = Date.now();
-                        if (Date.now() - idleSince >= 250) { check(); return { snapshot: observed, firstPage: a.firstPage }; }
+                        if (Date.now() - idleSince >= 250) {
+                            check();
+                            if (a.firstPage) a.firstPage.nextPageAvailable = dom.more;
+                            return { snapshot: observed, firstPage: a.firstPage };
+                        }
                     } else idleSince = 0;
                 }
                 await new Promise(resolve => setTimeout(resolve, 25));

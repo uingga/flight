@@ -281,10 +281,18 @@ test('rejected request diagnostics distinguish frame and shape without retaining
     const a = await mod.createOnlineTourRegionDiscovery(c, { maxNavigations: 1, maxProductRequests: 1 });
     try {
         await assert.rejects(a.visitRegion('CH'), /invalid_paused_request/);
-        assert.deepEqual((a as any).lastRejectedRequest, { reason: 'invalid_paused_request', mainFrame: false, networkIdPresent: true, redirected: false, responseStage: false, method: 'POST', bodyPresent: true, urlKind: 'other', resourceKind: 'document' });
+        assert.deepEqual((a as any).lastRejectedRequest, { reason: 'invalid_paused_request', mainFrame: false, networkIdPresent: true, redirected: false, responseStage: false, method: 'POST', bodyPresent: true, urlKind: 'other', resourceKind: 'document', origin: 'https://example.com', path: '/', hasQuery: true });
         assert.ok(!JSON.stringify((a as any).lastRejectedRequest).includes('SECRET'));
         assert.equal(a.diagnostics.permittedDocumentRequests, 0); assert.equal(a.diagnostics.blockedRequests, 1);
     } finally { await a.close(); }
+});
+test('rejected locator drops query values, fragments, credentials and dynamic paths', async () => {
+    assert.deepEqual(mod.describeRejectedLocation('https://example.com/static/frame.html?token=SECRET#SECRET'), {
+        origin: 'https://example.com', path: '/static/frame.html', hasQuery: true,
+    });
+    for (const raw of ['https://user:SECRET@example.com/', 'data:text/html,SECRET', 'not a URL'])
+        assert.ok(!JSON.stringify(mod.describeRejectedLocation(raw)).includes('SECRET'));
+    assert.equal(mod.describeRejectedLocation('https://example.com/user/12345?session=SECRET').path, '[redacted]');
 });
 async function main() { for (const [name, run] of tests) { await run(); console.log('PASS', name); } console.log(`${tests.length} offline region-discovery cases passed; site requests=0`); }
 main().catch(e => { console.error(e); process.exitCode = 1; });
