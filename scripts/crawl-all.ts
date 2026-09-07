@@ -19,12 +19,16 @@ import { logCrawlResults, recordCrawlAlerts } from '../src/lib/utils/crawl-logge
 import { getEffectivePrice } from '../src/lib/price-quality';
 import {
     enrichVisibleTtangFlights,
+    TTANG_TIME_ADAPTER_VERSION,
     type TtangTimeEnrichmentState,
 } from '../src/lib/ttang-time-enrichment';
 import {
     enrichVisibleYbtourFlights,
     type YbtourTimeEnrichmentState,
 } from '../src/lib/ybtour-time-enrichment';
+import { TtangDetailCheckpoint } from '../src/lib/ttang-detail-checkpoint';
+import { getCrawlDataDir } from '../src/lib/crawl-data-dir';
+import { shutdownTtangExternalBrowserSessions } from '../src/lib/ttang-browser-session';
 import {
     classifySourceAccessRestriction,
     classifySourceResponseDrop,
@@ -40,9 +44,13 @@ import {
 import { buildLifecycleIdentity } from './lib/flight-lifecycle';
 import { preserveCrawlCacheWithSafetyState } from '../src/lib/crawl-cache-safety';
 import fs from 'fs';
+import { ONLINE_BROWSER_PRIMARY } from '../src/lib/browser-primary-config.mjs';
+import { assertOnlineGithubClaim } from './online-github-fallback-policy.mjs';
+import { createDepartureWindow, eligibleDepartures } from '../src/lib/onlinetour-departure-window';
 import path from 'path';
 
 interface CacheData {
+    onlinePrimary?: {status:'success'|'failed';lastAttemptAt:string;failureOpenedAt?:string;circuit?:SourceCircuitState;githubAttemptAt?:string;githubClaim?:{runId:string;expectedAt:string};githubFallbackSafe?:boolean};
     timestamp: string;
     /** 일반 여행사 5곳을 모두 시도한 마지막 전체 크롤 완료 시각 */
     fullCrawlUpdatedAt?: string;
@@ -139,6 +147,9 @@ function countBySource(flights: any[]): Record<string, number> {
 
 async function main() {
     const localSourceFallback = process.env.LOCAL_SOURCE_FALLBACK === '1';
+    const onlineGithubFallback = process.env.ONLINETOUR_GITHUB_FALLBACK === '1';
+    const onlinePcPrimary = ONLINE_BROWSER_PRIMARY.enabled && localSourceFallback;
+    const localBrowserPilot = process.env.LOCAL_BROWSER_PILOT === '1';
     const sourceArg = process.argv.find(arg => arg.startsWith('--sources='));
     const skipSourceArg = process.argv.find(arg => arg.startsWith('--skip-sources='));
     const requestedSources = sourceArg
@@ -155,6 +166,15 @@ async function main() {
     }
     if (requestedSources && scheduledSkippedSources.size > 0) {
         throw new Error('--sources와 --skip-sources는 함께 사용할 수 없습니다.');
+    }
+    if (onlineGithubFallback && (!ONLINE_BROWSER_PRIMARY.enabled || localSourceFallback || localBrowserPilot
+        || process.env.GITHUB_ACTIONS !== 'true' || requestedSources?.size !== 1 || !requestedSources.has('onlinetour'))) {
+        throw new Error('GitHub 대체 수집은 검증된 온라인투어 전용 예약 워크플로에서만 허용됩니다.');
+    }
+    // Primary PC ownership: GitHub and legacy/manual source paths cannot double-collect.
+    if (ONLINE_BROWSER_PRIMARY.enabled && !localSourceFallback) {
+        if (requestedSources?.has('onlinetour') && !onlineGithubFallback) throw new Error('온라인투어 주 수집은 B PC 예약 실행기가 담당합니다.');
+        if (!requestedSources) scheduledSkippedSources.add('onlinetour');
     }
     if (requestedSources) {
         const invalidSources = [...requestedSources].filter(source => !crawlableSources.has(source as CrawlableSourceKey));
@@ -184,7 +204,24 @@ async function main() {
     };
 
     // 이전 캐시 로드 (시간 데이터 이어받기 위해)
-    const dataDir = path.join(process.cwd(), 'data');
+    const dataDir = getCrawlDataDir();
+    if (
+        localBrowserPilot
+        && path.resolve(dataDir) === path.resolve(process.cwd(), 'data')
+    ) {
+        throw new Error('LOCAL_BROWSER_PILOT은 운영 data/에서 실행할 수 없습니다. TIKITIKIT_DATA_DIR staging 경로가 필요합니다.');
+    }
+    const ttangDetailCheckpoint = process.env.TTANG_DETAIL_CHECKPOINT === '1'
+        ? new TtangDetailCheckpoint(
+            process.cwd(), dataDir, process.env.TTANG_STAGING_RUN_ID || '',
+            new Date(process.env.TTANG_STAGING_STARTED_AT || ''), TTANG_TIME_ADAPTER_VERSION,
+        )
+        : undefined;
+    const ttangAllDetails = process.argv.includes('--ttang-all-details');
+    if (ttangAllDetails && (!localBrowserPilot || localSourceFallback || !ttangDetailCheckpoint
+        || requestedSources?.size !== 1 || !requestedSources.has('ttang'))) {
+        throw new Error('--ttang-all-details는 체크포인트가 있는 ttang 단독 staging 파일럿 전용입니다.');
+    }
     const cachePath = path.join(dataDir, 'all-flights-cache.json');
     let prevCache: CacheData | null = null;
     try {
@@ -194,10 +231,19 @@ async function main() {
     } catch { }
     const prevFlights = prevCache?.flights || [];
     const sourceUpdatedAt: Record<string, string> = { ...(prevCache?.sourceUpdatedAt || {}) };
+    if (onlineGithubFallback) assertOnlineGithubClaim({cache:prevCache,expectedAt:process.env.CRAWL_EXPECTED_AT,
+        runId:process.env.GITHUB_RUN_ID,runAttempt:process.env.GITHUB_RUN_ATTEMPT});
+    let onlinePrimary = prevCache?.onlinePrimary;
+    let onlineGithubFallbackSafe = false;
     const sourceCircuits = pruneResolvedSourceCircuits<CrawlableSourceKey>(
         prevCache?.sourceCircuits as Partial<Record<CrawlableSourceKey, SourceCircuitState>> | undefined,
         SOURCE_ADAPTER_VERSIONS,
     );
+    // Separate PC-primary and GitHub-backup circuits. Never clear one by succeeding on the other.
+    if (onlinePcPrimary) {
+        if (onlinePrimary?.circuit) sourceCircuits.onlinetour = onlinePrimary.circuit;
+        else delete sourceCircuits.onlinetour;
+    }
     let ttangTimeEnrichment = prevCache?.ttangTimeEnrichment;
     let ybtourTimeEnrichment = prevCache?.ybtourTimeEnrichment;
     // 부분 복구에서 실행하지 않은 여행사는 이전 최종본을 그대로 붙인다.
@@ -220,7 +266,25 @@ async function main() {
                 key: 'modetour' as const,
                 fn: () => scrapeModetour(prevFlights),
             },
-            { name: '온라인투어', key: 'onlinetour' as const, fn: () => scrapeOnlineTour(prevFlights) },
+            { name: '온라인투어', key: 'onlinetour' as const, fn: async () => {
+                if (ONLINE_BROWSER_PRIMARY.enabled && !onlineGithubFallback && process.env.ONLINETOUR_BROWSER_REMOTE !== '1') {
+                    onlineGithubFallbackSafe = true; // Configuration failure, before contacting B.
+                    throw new Error('온라인투어 B PC 연결 설정 없음 — 기존 데이터 보존');
+                }
+                if (localSourceFallback && process.env.ONLINETOUR_BROWSER_REMOTE === '1') {
+                    const { scrapeOnlineTourRemote } = await import('../src/lib/scrapers/onlinetour-remote');
+                    try {
+                        const flights = await scrapeOnlineTourRemote();
+                        onlineGithubFallbackSafe = true;
+                        return flights;
+                    } catch (error) {
+                        onlineGithubFallbackSafe = (error as {githubFallbackSafe?:boolean})?.githubFallbackSafe === true;
+                        throw error;
+                    }
+                }
+                const flights = await scrapeOnlineTour(prevFlights);
+                return onlineGithubFallback ? eligibleDepartures(flights,createDepartureWindow()) : flights;
+            } },
             { name: '땡처리닷컴', key: 'ttang' as const, fn: () => scrapeTtang(prevFlights) },
             // 마이리얼트립은 별도 Playwright 워크플로우(myrealtrip-scrape.yml)에서 처리
             // Bulk API는 시간/가격 정보가 부정확하므로 여기서 실행하지 않음
@@ -233,6 +297,19 @@ async function main() {
         const activeTasks = requestedTasks.filter(task => {
             const circuit = sourceCircuits[task.key];
             const circuitOpen = isSourceCircuitOpen(circuit, SOURCE_ADAPTER_VERSIONS[task.key]);
+            if (ONLINE_BROWSER_PRIMARY.enabled && task.key === 'onlinetour' && localSourceFallback) {
+                if (circuitOpen || isLocalSourceFallbackCoolingDown(circuit)) {
+                    circuitSkipped.set(task.key,circuit!); return false;
+                }
+                console.log('온라인투어: B PC Chrome 주 수집 실행');
+                return true;
+            }
+            // 격리된 staging 복사본에서만 쓰는 수동 검증 모드다. 운영 캐시에는 이 플래그를
+            // 사용하지 않으며 땡처리 외 다른 여행사의 회로도 우회하지 않는다.
+            if (localBrowserPilot && task.key === 'ttang') {
+                console.log('🧪 땡처리닷컴: 로컬 브라우저 staging 검증 실행');
+                return true;
+            }
             if (localSourceFallback) {
                 if (task.key === 'modetour') {
                     console.warn('📷 모두투어: PC 자동 접속을 사용하지 않습니다. 일반 Chrome 수동 캡처가 필요합니다.');
@@ -596,7 +673,6 @@ async function main() {
         let benchmarkedFlights = validRouteFlights;
         let activeInterparkBenchmark: any = null;
         try {
-            const dataDir = path.join(process.cwd(), 'data');
             const benchmarkPath = path.join(dataDir, 'interpark-prices.json');
 
             // 출발지·도착지 조합별 14일 TTL은 스크래퍼가 판정한다.
@@ -608,15 +684,15 @@ async function main() {
                     const cached = JSON.parse(fs.readFileSync(benchmarkPath, 'utf-8'));
                     cachedBenchmark = cached;
                     const cacheAge = Date.now() - new Date(cached.timestamp).getTime();
-                    if (localSourceFallback && Object.keys(cached.prices || {}).length > 0) {
+                    if ((localSourceFallback || localBrowserPilot || onlineGithubFallback) && Object.keys(cached.prices || {}).length > 0) {
                         benchmark = cached;
-                        console.log(`♻️ PC 부분 수집: 인터파크 캐시 재사용 (${Math.round(cacheAge / 3600000)}시간 전 저장)`);
+                        console.log(`♻️ PC 브라우저 부분 수집: 인터파크 캐시 재사용 (${Math.round(cacheAge / 3600000)}시간 전 저장)`);
                     }
                 }
             } catch { }
 
             // 캐시가 없거나 오래되었으면 새로 수집
-            if (!benchmark) {
+            if (!benchmark && !localSourceFallback && !localBrowserPilot && !onlineGithubFallback) {
                 const routeTargets = new Map<string, InterparkRouteTarget>();
                 validRouteFlights.forEach((f: any) => {
                     const originCity = resolveInterparkOriginCityCode(
@@ -728,6 +804,7 @@ async function main() {
                 const ttangResult = await enrichVisibleTtangFlights(
                     benchmarkedFlights.filter((flight: any) => flight.source === 'ttang'),
                     ttangTimeEnrichment,
+                    { checkpoint: ttangDetailCheckpoint, allEligible: ttangAllDetails },
                 );
                 ttangTimeEnrichment = ttangResult.state;
             } catch (error) {
@@ -805,6 +882,20 @@ async function main() {
         // 어느 경로로 끝나든 이 변수가 최종본을 가리킨다.
         let savedFlights: any[] = benchmarkedFlights;
         let cachePreservedGlobally = false;
+        if (onlinePcPrimary) {
+            if (attempted.has('onlinetour')) {
+                const failed = preservedSources.has('onlinetour') || (prevCache && benchmarkedFlights.length < prevCache.count * 0.5);
+                const lastAttemptAt = new Date().toISOString();
+                onlinePrimary = {...prevCache?.onlinePrimary,status:failed?'failed':'success',lastAttemptAt,
+                    failureOpenedAt:failed?(prevCache?.onlinePrimary?.failureOpenedAt || lastAttemptAt):undefined,
+                    circuit:sourceCircuits.onlinetour,githubAttemptAt:prevCache?.onlinePrimary?.githubAttemptAt,
+                    githubFallbackSafe:onlineGithubFallbackSafe};
+            }
+            if (prevCache?.sourceCircuits?.onlinetour) sourceCircuits.onlinetour=prevCache.sourceCircuits.onlinetour;
+            else delete sourceCircuits.onlinetour;
+        }
+        if (onlineGithubFallback && onlinePrimary && attempted.has('onlinetour'))
+            onlinePrimary = {...onlinePrimary,githubAttemptAt:new Date().toISOString()};
 
         // 전체 결과가 이전 캐시의 50% 미만이면 이전 캐시 유지
         if (prevCache && prevCache.count > 0 && benchmarkedFlights.length < prevCache.count * 0.5) {
@@ -823,6 +914,7 @@ async function main() {
                     // 이미 실행된 예약 회차를 watchdog이 다시 보내 차단된 소스를 재요청하지 않게 한다.
                     fullCrawlCompletedAt: requestedSources ? undefined : completedAt,
                 }),
+                onlinePrimary,
                 ttangTimeEnrichment,
                 ybtourTimeEnrichment,
             };
@@ -870,6 +962,7 @@ async function main() {
 
             const cacheUpdatedAt = new Date().toISOString();
             const cacheData: CacheData = {
+                onlinePrimary,
                 timestamp: cacheUpdatedAt,
                 // 부분 복구가 최신 캐시 timestamp를 바꿔도 다음 예약 전체 크롤을
                 // 완료된 것으로 오인하지 않도록 독립된 완료 표식을 유지한다.
@@ -1047,7 +1140,9 @@ async function main() {
                 const city = f.arrival?.city || '기타';
                 cityStats[city] = (cityStats[city] || 0) + 1;
             });
-            const isLocalFallbackAttempt = localSourceFallback && attempted.has(src);
+            const isOnlinePrimaryAttempt = onlinePcPrimary && src === 'onlinetour' && attempted.has(src);
+            const isGithubFallbackAttempt = onlineGithubFallback && src === 'onlinetour' && attempted.has(src);
+            const isLocalFallbackAttempt = localSourceFallback && attempted.has(src) && !isOnlinePrimaryAttempt;
             const scheduledSkip = scheduledSkippedSources.has(src);
             logCrawlResults(src, finalCounts[src] || 0, undefined, cityStats, {
                 scraped: circuitSkipped.has(src as CrawlableSourceKey) ? undefined : scrapedCounts[src],
@@ -1060,22 +1155,28 @@ async function main() {
                     : circuitSkipped.get(src as CrawlableSourceKey)?.nextProbeAt,
                 skipReason: scheduledSkip ? 'schedule' : circuitSkipped.has(src as CrawlableSourceKey) ? 'circuit' : 'not-requested',
                 localFallback: isLocalFallbackAttempt,
+                collectionMode: isOnlinePrimaryAttempt ? 'pc_primary' : isGithubFallbackAttempt ? 'github_fallback' : undefined,
                 // 직전 GitHub 회차와 30분 안에 이어져도 별도 PC 회차로 남긴다.
                 // 첫 PC 소스가 새 엔트리를 만들고 같은 실행의 나머지 소스는 그 엔트리에 합쳐진다.
-                separateSession: isLocalFallbackAttempt && !localFallbackSessionStarted,
+                separateSession: (isLocalFallbackAttempt || isOnlinePrimaryAttempt || isGithubFallbackAttempt) && !localFallbackSessionStarted,
                 added: turnover[src]?.added,
                 removed: turnover[src]?.removed,
                 addedFlights: turnoverDetails[src]?.added,
                 removedFlights: turnoverDetails[src]?.removed,
             });
-            if (isLocalFallbackAttempt) localFallbackSessionStarted = true;
+            if (isLocalFallbackAttempt || isOnlinePrimaryAttempt || isGithubFallbackAttempt) localFallbackSessionStarted = true;
         }
 
     } catch (error) {
         console.error('\n❌ 크롤링 실패:', error);
-        process.exit(1);
+        process.exitCode = 1;
     }
 }
 
 // 스크립트 실행
-main();
+main()
+    .finally(() => shutdownTtangExternalBrowserSessions())
+    .catch(error => {
+        console.error('\n❌ 땡처리 외부 Chrome 종료 실패:', error);
+        process.exitCode = 1;
+    });

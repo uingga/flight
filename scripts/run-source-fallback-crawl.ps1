@@ -49,7 +49,7 @@ while ($true) {
         }
         Log "Git pull failed while waiting; retrying in $PollSeconds seconds"
     } else {
-        $PolicyOutput = & node scripts/local-source-fallback-policy.mjs check --cache $CachePath 2>&1
+        $PolicyOutput = & node scripts/pc-collection-policy.mjs check --cache $CachePath 2>&1
         $PolicyExitCode = $LASTEXITCODE
         $PolicyText = ($PolicyOutput | Out-String).Trim()
         Log "fallback policy: $PolicyText"
@@ -68,6 +68,10 @@ while ($true) {
             break
         }
         if (-not $Scheduled -or $Policy.reason -ne 'upstream_pending') {
+            if ($Policy.githubFallbackDue) {
+                & node scripts/dispatch-online-github-fallback.mjs 2>&1 | ForEach-Object { "$_" | Add-Content -Encoding utf8 $LogFile }
+                if ($LASTEXITCODE -ne 0) { Log 'GitHub fallback dispatch failed'; exit 1 }
+            }
             Log "Fallback skipped by policy ($($Policy.reason))"
             Log '=== Local blocked-source fallback finished without requests ==='
             '' | Add-Content $LogFile
@@ -114,6 +118,7 @@ if ($Scheduled) {
 }
 
 $env:LOCAL_SOURCE_FALLBACK = '1'
+$env:ONLINETOUR_BROWSER_REMOTE = if (Test-Path -LiteralPath (Join-Path $ProjectDir '.local-crawler\onlinetour-remote.json')) { '1' } else { '0' }
 $env:SOURCE_START_JITTER_MAX_MS = '90000'
 $SourceArgument = "--sources=$($Sources -join ',')"
 Log "PC fallback sources: $($Sources -join ', ')"
@@ -207,5 +212,7 @@ if (-not $Published) {
     exit 1
 }
 
-Log '=== Local blocked-source fallback completed ==='
+& node scripts/dispatch-online-github-fallback.mjs 2>&1 | ForEach-Object { "$_" | Add-Content -Encoding utf8 $LogFile }
+if ($LASTEXITCODE -ne 0) { Log 'GitHub fallback dispatch failed after PC outcome publication'; exit 1 }
+Log '=== Local PC collection completed ==='
 '' | Add-Content $LogFile

@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "incremental": false, "noEmit": true, "target": "ES2022" },
+  "include": [
+    "next-env.d.ts",
+    "scripts/crawl-all.ts",
+    "scripts/onlinetour-remote-worker.ts",
+    "scripts/test-onlinetour-operational.ts",
+    "scripts/verify-onlinetour-status-recovery.ts"
+  ],
+  "exclude": ["node_modules"]
+}

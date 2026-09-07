@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import { getCrawlDataDir } from '../crawl-data-dir';
 
 interface CityStats {
     [cityName: string]: number;
@@ -35,6 +36,7 @@ interface SiteStats {
     manual?: boolean;
     /** GitHub 차단 회로가 열린 소스를 Windows PC에서 대체 수집한 기록이다. */
     localFallback?: boolean;
+    collectionMode?: 'pc_primary' | 'github_fallback';
     /** 직전 크롤에 없던 표. 개수만 보면 표가 통째로 갈려도 0으로 보인다. */
     added?: number;
     /** 직전 크롤에 있다가 사라진 표. */
@@ -49,7 +51,7 @@ interface SiteStats {
 
 interface CrawlLogEntry {
     timestamp: string;
-    runKind?: 'pc_fallback';
+    runKind?: 'pc_fallback' | 'pc_primary' | 'github_fallback';
     sites: {
         [siteName: string]: SiteStats;
     };
@@ -61,7 +63,7 @@ interface CrawlLogHistory {
     lastEntry?: CrawlLogEntry;
 }
 
-const LOG_FILE_PATH = path.join(process.cwd(), 'data', 'crawl-log.json');
+const LOG_FILE_PATH = path.join(getCrawlDataDir(), 'crawl-log.json');
 const ALERT_THRESHOLD = 0.3; // 30% 감소 시 경고
 
 /**
@@ -188,6 +190,7 @@ export function logCrawlResults(
         skipReason?: 'schedule' | 'circuit' | 'not-requested';
         manual?: boolean;
         localFallback?: boolean;
+        collectionMode?: 'pc_primary' | 'github_fallback';
         added?: number;
         removed?: number;
         addedFlights?: TurnoverFlightSummary[];
@@ -227,6 +230,7 @@ export function logCrawlResults(
         skipReason: meta?.skipped ? meta.skipReason : undefined,
         manual: meta?.manual || undefined,
         localFallback: meta?.localFallback || undefined,
+        collectionMode: meta?.collectionMode,
         added: meta?.added,
         removed: meta?.removed,
         addedFlights: meta?.addedFlights,
@@ -235,6 +239,7 @@ export function logCrawlResults(
         byCity
     };
     if (meta?.localFallback) currentEntry.runKind = 'pc_fallback';
+    if (meta?.collectionMode) currentEntry.runKind = meta.collectionMode;
 
     // 이전 엔트리와 비교하여 경고 생성
     // 직전 엔트리가 부분 크롤이면 해당 여행사의 마지막 실제 측정치를 더 거슬러 올라가 찾는다.
