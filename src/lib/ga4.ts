@@ -76,6 +76,7 @@ export interface ReportRequest {
     dimensionFilter?: unknown;
     orderBys?: unknown[];
     limit?: number;
+    offset?: number;
     metricAggregations?: string[];
     keepEmptyRows?: boolean;
 }
@@ -86,10 +87,14 @@ export interface ReportRow {
 }
 
 export interface ReportResponse {
+    rowCount?: number;
     rows?: ReportRow[];
     totals?: ReportRow[];
     metadata?: {
         timeZone?: string;
+        dataLossFromOtherRow?: boolean;
+        subjectToThresholding?: boolean;
+        samplingMetadatas?: unknown[];
     };
 }
 

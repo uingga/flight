@@ -9,6 +9,12 @@ const LIVE_FLIGHTS_URL = 'https://www.tikitikit.kr/api/flights';
  * without copying crawler commits into the preview branch after every run.
  */
 export async function GET(request: NextRequest) {
+    // The order editor uses its own branch snapshot and isolated store for all preview reads.
+    if (process.env.FLIGHT_ORDER_PREVIEW_DIR && !process.env.VERCEL) {
+        const local = await getLocalFlights(request);
+        local.headers.set('X-Tikitikit-Preview-Data', 'isolated');
+        return local;
+    }
     const liveUrl = new URL(LIVE_FLIGHTS_URL);
     request.nextUrl.searchParams.forEach((value, key) => liveUrl.searchParams.append(key, value));
 

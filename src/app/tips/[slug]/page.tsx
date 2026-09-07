@@ -8,6 +8,7 @@ export function generateStaticParams() {
 export function generateMetadata(): Metadata {
     return {
         title: '항공권 가격 기록',
+        alternates: { canonical: '/tips/price-watch' },
         robots: { index: false, follow: true },
     };
 }

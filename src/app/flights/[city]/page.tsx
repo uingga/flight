@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { notFound, redirect } from 'next/navigation';
+import { notFound, permanentRedirect, redirect } from 'next/navigation';
 import { SITE_URL } from '@/lib/site';
 import {
     loadActiveFlights, groupByCity, effectivePrice, departureLabel, formatKoreanDate,
-    loadFlightCacheMeta, MIN_INDEXABLE_CITY_FLIGHTS, type CityDeals,
+    loadFlightCacheMeta, MIN_INDEXABLE_CITY_FLIGHTS, displayCity, decodeCitySlug, type CityDeals,
 } from '@/lib/flight-static';
 import { normalizeAirline } from '@/lib/utils/flight-helpers';
 import type { Flight } from '@/types/flight';
@@ -24,7 +24,7 @@ const SOURCE_NAMES: Record<string, string> = {
 const MAX_LISTED = 5;
 
 function getCity(cityParam: string): CityDeals | undefined {
-    const city = decodeURIComponent(cityParam);
+    const city = displayCity(decodeCitySlug(cityParam));
     return groupByCity(loadActiveFlights()).find(c => c.city === city);
 }
 
@@ -34,7 +34,7 @@ export function generateStaticParams() {
 
 export function generateMetadata({ params }: { params: { city: string } }): Metadata {
     const data = getCity(params.city);
-    if (!data) return { title: '땡처리 항공권' };
+    if (!data) return { title: '항공권을 찾을 수 없습니다', robots: { index: false, follow: true } };
     // 레이아웃 템플릿이 "| 티키티킷"을 붙이므로 여기서는 넣지 않는다
     const title = `${data.city} 땡처리 항공권 최저가 ${data.minPrice.toLocaleString('ko-KR')}원`;
     const description = `${data.city}행 땡처리 항공권 ${data.flights.length}장 판매 중. 왕복 최저 ${data.minPrice.toLocaleString('ko-KR')}원, 출발일 ${formatKoreanDate(data.earliestDate)}~${formatKoreanDate(data.latestDate)}. 하루 여러 차례 갱신됩니다.`;
@@ -50,6 +50,11 @@ export function generateMetadata({ params }: { params: { city: string } }): Meta
 }
 
 export default function CityFlightsPage({ params }: { params: { city: string } }) {
+    const requestedCity = decodeCitySlug(params.city);
+    const canonicalCity = displayCity(requestedCity);
+    if (canonicalCity && requestedCity !== canonicalCity) {
+        permanentRedirect(`/flights/${encodeURIComponent(canonicalCity)}`);
+    }
     const data = getCity(params.city);
     if (!data) notFound();
     if (data.flights.length < MIN_INDEXABLE_CITY_FLIGHTS) {
@@ -64,7 +69,7 @@ export default function CityFlightsPage({ params }: { params: { city: string } }
     }).format(checkedDate);
     const listed = data.flights.slice(0, MAX_LISTED);
     const others = groupByCity(loadActiveFlights())
-        .filter(c => c.city !== data.city)
+        .filter(c => c.city !== data.city && c.flights.length >= MIN_INDEXABLE_CITY_FLIGHTS)
         .slice(0, 8);
 
     const jsonLd = {

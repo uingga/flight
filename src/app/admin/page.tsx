@@ -6,6 +6,9 @@ import { isAnalyticsExcluded, setAnalyticsExcluded } from '@/lib/analytics';
 import { buildSourceSlotBars, type SlotStatus, type SourceSlotBar, type SourceSlotEvent } from '@/lib/admin-source-slots';
 import { buildAdminAttentionItems } from '@/lib/admin-attention';
 import AdminTodayPick from '@/components/AdminTodayPick';
+import AdminFlightOrder from '@/components/AdminFlightOrder';
+import AdminFlightInterest from '@/components/AdminFlightInterest';
+import type { FlightInterestData } from '@/lib/flight-interest';
 
 function urlBase64ToUint8Array(base64String: string) {
     const padding = '='.repeat((4 - base64String.length % 4) % 4);
@@ -518,6 +521,7 @@ interface GaCampaignPerformance {
 }
 
 interface GaStatsData {
+    flightInterest?: FlightInterestData;
     available: boolean;
     message?: string;
     generatedAt: string;
@@ -537,6 +541,7 @@ interface GaStatsData {
     };
     cityInterest?: {
         basis: 'destination' | 'route_fallback';
+        availablePeriods: Record<'today' | 'recent7' | 'current', boolean>;
         periods: {
             today: GaCityInterestRow[];
             recent7: GaCityInterestRow[];
@@ -708,6 +713,7 @@ const NAVER_PRIORITY_LABELS: Record<string, string> = {
  */
 const TABS = [
     { id: 'overview', label: '오늘', hint: '지금 볼 것' },
+    { id: 'flight-order', label: '노출 순서', hint: '가격 비교·순서 편집' },
     { id: 'threads', label: 'Threads', hint: '글·유입·예약' },
     { id: 'visitors', label: '방문·예약', hint: '유입·행동·관심' },
     { id: 'operations', label: '항공권·수집', hint: '품질·변화·갱신' },
@@ -1019,119 +1025,6 @@ function BehaviorSnapshot({ activity }: { activity: NonNullable<GaStatsData['act
             <p className={styles.behaviorFootnote}>
                 상세 열람은 방문자 대비, 예약 이동 아래 비율은 상세 열람자 대비입니다.
                 마지막 ‘방문 → 예약’이 전체 방문자 중 여행사 예약 페이지까지 이동한 비율입니다.
-            </p>
-        </div>
-    );
-}
-
-function CityInterestDashboard({
-    data,
-    currentFlights,
-}: {
-    data: NonNullable<GaStatsData['cityInterest']>;
-    currentFlights: Record<string, number>;
-}) {
-    const [period, setPeriod] = useState<'today' | 'recent7' | 'current'>('recent7');
-    const rows = data.periods[period];
-    const availability = new Map((data.availability?.cities || []).map(row => [row.city, row]));
-    const minimumImpressions = 10;
-    const ranked = rows.slice().sort((left, right) => {
-        const leftQualified = left.impressions.users >= minimumImpressions;
-        const rightQualified = right.impressions.users >= minimumImpressions;
-        if (leftQualified !== rightQualified) return rightQualified ? 1 : -1;
-        if (leftQualified && rightQualified) return (right.detailRate || 0) - (left.detailRate || 0);
-        return right.details.users - left.details.users || right.searches.users - left.searches.users;
-    });
-    const maxBy = (value: (row: GaCityInterestRow) => number, candidates = rows) =>
-        candidates.reduce<GaCityInterestRow | null>((best, row) => (
-            !best || value(row) > value(best) ? row : best
-        ), null);
-    const rateCandidates = rows.filter(row => row.impressions.users >= minimumImpressions);
-    const directSearch = maxBy(row => row.searches.users);
-    const detailResponse = maxBy(row => row.detailRate || 0, rateCandidates);
-    const saved = maxBy(row => row.saves.users);
-    const shared = maxBy(row => row.shares.users);
-    const booked = maxBy(row => row.bookingRate || 0, rateCandidates);
-    const periodLabel = period === 'today' ? '오늘 현재까지' : period === 'recent7' ? '최근 7일' : '최근 30일';
-    const rateText = (value: number | null) => value === null ? '수집 전' : `${value}%`;
-
-    return (
-        <div className={styles.cityInterestDashboard}>
-            <div className={styles.cityInterestToolbar}>
-                <div>
-                    <strong>{periodLabel}</strong>
-                    <span>도시별 사용자 관심</span>
-                </div>
-                <div className={styles.cityInterestPeriods} aria-label="도시 관심 기간">
-                    {([
-                        ['today', '오늘'],
-                        ['recent7', '7일'],
-                        ['current', '30일'],
-                    ] as const).map(([key, label]) => (
-                        <button
-                            key={key}
-                            type="button"
-                            className={period === key ? styles.cityInterestPeriodActive : ''}
-                            onClick={() => setPeriod(key)}
-                        >{label}</button>
-                    ))}
-                </div>
-            </div>
-
-            <div className={styles.cityInterestHighlights}>
-                <article><span>직접 많이 찾음</span><strong>{directSearch?.searches.users ? directSearch.city : '아직 없음'}</strong><small>{directSearch?.searches.users ? `${directSearch.searches.users.toLocaleString()}명` : '도시 검색 수집 전'}</small></article>
-                <article><span>노출 대비 상세 반응</span><strong>{detailResponse?.city || '아직 없음'}</strong><small>{detailResponse ? rateText(detailResponse.detailRate) : '노출 10명 이상부터 비교'}</small></article>
-                <article><span>저장을 많이 한 도시</span><strong>{saved?.saves.users ? saved.city : '아직 없음'}</strong><small>{saved?.saves.users ? `${saved.saves.users.toLocaleString()}명` : '저장 수집 전'}</small></article>
-                <article><span>공유를 많이 한 도시</span><strong>{shared?.shares.users ? shared.city : '아직 없음'}</strong><small>{shared?.shares.users ? `${shared.shares.users.toLocaleString()}명` : '공유 없음'}</small></article>
-                <article><span>예약 이동률이 높은 도시</span><strong>{booked?.city || '아직 없음'}</strong><small>{booked ? rateText(booked.bookingRate) : '노출 10명 이상부터 비교'}</small></article>
-            </div>
-
-            {ranked.length === 0 ? (
-                <div className={styles.dealReviewEmpty}>도시별 항공권 노출을 새로 수집하기 시작했습니다. 데이터가 들어오면 이곳에 표시됩니다.</div>
-            ) : (
-                <div className={styles.cityInterestTableWrap}>
-                    <table className={styles.cityInterestTable}>
-                        <thead>
-                            <tr>
-                                <th>도시</th>
-                                <th>항공권 확인</th>
-                                <th>현재 항공권</th>
-                                <th>직접 검색</th>
-                                <th>실제 노출</th>
-                                <th>상세 열람</th>
-                                <th>저장</th>
-                                <th>공유</th>
-                                <th>예약 이동</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {ranked.slice(0, 30).map(row => {
-                                const frequency = availability.get(row.city);
-                                const enough = row.impressions.users >= minimumImpressions;
-                                return (
-                                    <tr key={row.city}>
-                                        <td><strong>{row.city}</strong>{!enough && row.impressions.users > 0 && <small>데이터 적음</small>}</td>
-                                        <td>{data.availability?.trackedDays
-                                            ? `${frequency?.daysWithFlights || 0}/${data.availability.trackedDays}일`
-                                            : '확인 전'}</td>
-                                        <td>{(currentFlights[row.city] || 0).toLocaleString()}개</td>
-                                        <td>{row.searches.users.toLocaleString()}명</td>
-                                        <td>{row.impressions.users.toLocaleString()}명</td>
-                                        <td>{row.details.users.toLocaleString()}명 <small>{rateText(row.detailRate)}</small></td>
-                                        <td>{row.saves.users.toLocaleString()}명 <small>{rateText(row.saveRate)}</small></td>
-                                        <td>{row.shares.users.toLocaleString()}명 <small>상세 대비 {rateText(row.shareRate)}</small></td>
-                                        <td>{row.bookings.users.toLocaleString()}명 <small>{rateText(row.bookingRate)}</small></td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-                </div>
-            )}
-            <p className={styles.cityInterestFootnote}>
-                상세 열람·저장·예약 이동률은 실제로 항공권 카드를 본 사람 대비입니다. 공유율만 상세를 연 사람 대비입니다.
-                항공권 확인 일수는 장기 기록이 실제로 쌓인 날만 분모에 포함합니다.
-                {data.basis === 'route_fallback' && ' 현재는 출발지별 노선을 합산한 임시 집계라 일부 사용자가 중복될 수 있습니다.'}
             </p>
         </div>
     );
@@ -1641,6 +1534,11 @@ export default function AdminPage() {
     const [flightReportAction, setFlightReportAction] = useState<string | null>(null);
     const [flightFilterSummary, setFlightFilterSummary] = useState<FlightFilterSummary | null>(null);
     const [tab, setTab] = useState<TabId>('overview');
+    const [flightOrderOpened, setFlightOrderOpened] = useState(false);
+
+    useEffect(() => {
+        if (tab === 'flight-order') setFlightOrderOpened(true);
+    }, [tab]);
     const [crawlLogView, setCrawlLogView] = useState<'agency' | 'naver'>('agency');
     // 크롤 히스토리 표가 무엇을 세는지: 사이트에 나가는 수(shown)인지 긁어온 원본 수(scraped)인지
     const [crawlMetric, setCrawlMetric] = useState<'shown' | 'scraped' | 'turnover'>('shown');
@@ -1960,7 +1858,7 @@ export default function AdminPage() {
                 </header>
                 <div className={styles.loadingLayout} aria-hidden="true">
                     <nav className={styles.loadingNav} aria-label="관리자 메뉴를 준비하는 중">
-                        {['오늘', '방문·예약', '항공권·수집', '고객·알림'].map((label, index) => (
+                        {TABS.map(({ label }, index) => (
                             <div key={label} className={index === 0 ? `${styles.loadingNavItem} ${styles.loadingNavItemActive}` : styles.loadingNavItem}>
                                 <span>{label}</span>
                                 <i />
@@ -2543,6 +2441,12 @@ export default function AdminPage() {
                     </button>
                 ))}
             </nav>
+
+            {(tab === 'flight-order' || flightOrderOpened) && (
+                <div className={styles.flightOrderPanel} hidden={tab !== 'flight-order'}>
+                    <AdminFlightOrder adminKey={key} />
+                </div>
+            )}
 
             {tab === 'overview' && (<>
                 <AdminTodayPick adminKey={key} />
@@ -4806,18 +4710,11 @@ export default function AdminPage() {
                         <section className={styles.section} id="visitor-cities">
                             <div className={styles.sectionHeading}>
                                 <div>
-                                    <h2>어느 도시에 관심이 모였나</h2>
-                                    <p>항공권이 많이 노출돼서 반응이 큰 도시와, 적게 노출돼도 관심을 받은 도시를 나눠 봅니다.</p>
+                                    <h2>어떤 항공권을 눌렀나</h2>
+                                    <p>상세 조회와 여행사 예약 페이지로 이동한 횟수를 확인합니다.</p>
                                 </div>
                             </div>
-                            {gaStats.cityInterest ? (
-                                <CityInterestDashboard
-                                    data={gaStats.cityInterest}
-                                    currentFlights={flightFilterSummary?.visibleByCity || data.byCity}
-                                />
-                            ) : (
-                                <div className={styles.dealReviewEmpty}>도시별 관심 수집을 준비하고 있습니다.</div>
-                            )}
+                            <AdminFlightInterest data={gaStats.flightInterest} cities={gaStats.cityInterest} />
                         </section>
 
                         {gaStats.activityPeriods && (

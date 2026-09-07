@@ -18,20 +18,24 @@ const flight: Flight = {
 };
 
 const normalized = normalizeBookingPassengers(flight, { adult: 1, child: 0, infant: 0 });
-assert(normalized.adult === 2, '최소 2인 항공권이 1인 예약 상태로 남았습니다.');
+assert(normalized.adult === 1, '최소 인원 조건이 사용자가 선택한 성인 1명을 변경했습니다.');
 
 const mixedParty = normalizeBookingPassengers(flight, { adult: 1, child: 1, infant: 0 });
 assert(mixedParty.adult === 1 && mixedParty.child === 1, '이미 최소 인원을 충족한 구성을 바꿨습니다.');
 
 const infantParty = normalizeBookingPassengers(flight, { adult: 1, child: 0, infant: 1 });
 assert(
-    infantParty.adult === 2 && infantParty.infant === 1,
-    '좌석을 점유하지 않는 유아가 최소 예약 인원에 포함됐습니다.',
+    infantParty.adult === 1 && infantParty.infant === 1,
+    '최소 인원 조건이 성인·유아 구성을 변경했습니다.',
 );
 
 const bookingUrl = new URL(getFlightBookingUrl(flight, { adult: 1, child: 0, infant: 0 }));
-assert(bookingUrl.searchParams.get('adt') === '2', '노랑풍선 예약 주소의 성인 인원이 최소 인원을 반영하지 않았습니다.');
-assert(bookingUrl.searchParams.get('AdultCount') === '2', '노랑풍선 보조 인원 값이 최소 인원을 반영하지 않았습니다.');
+assert(bookingUrl.searchParams.get('adt') === '1', '노랑풍선 예약 주소가 선택한 성인 1명을 유지하지 않았습니다.');
+assert(bookingUrl.searchParams.get('AdultCount') === '1', '노랑풍선 보조 인원 값이 선택한 성인 1명을 유지하지 않았습니다.');
+const selectedTwo = new URL(getFlightBookingUrl(flight, { adult: 2, child: 0, infant: 0 }));
+assert(selectedTwo.searchParams.get('adt') === '2', '사용자가 선택한 성인 2명이 유지되지 않았습니다.');
+const validParty = normalizeBookingPassengers(flight, { adult: 0, child: -1, infant: 3 });
+assert(validParty.adult === 1 && validParty.child === 0 && validParty.infant === 1, '기본 인원 범위 검증이 유지되지 않았습니다.');
 
 const sampleFlight = (source: Flight['source'], link: string): Flight => ({
     ...flight,

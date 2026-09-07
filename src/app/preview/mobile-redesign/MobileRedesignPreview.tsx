@@ -7,6 +7,8 @@ import { ko } from 'date-fns/locale';
 import 'react-datepicker/dist/react-datepicker.css';
 import Logo from '@/components/Logo';
 import OverlayDialog from '@/components/ui/OverlayDialog';
+import RecentFlights from '@/components/RecentFlights';
+import { useRecentFlights } from '@/lib/hooks/use-recent-flights';
 import * as gtag from '@/lib/analytics';
 import { getDestinationContext } from '@/lib/destination-contexts';
 import {
@@ -19,6 +21,9 @@ import { getTripcomHotelUrl, getTripcomTrackingId } from '@/lib/utils/tripcom-he
 import { getFlightBookingUrl } from '@/lib/utils/booking-url';
 import { encodeShareId } from '@/lib/share-code';
 import { useSwipeToDismiss } from '@/lib/hooks/use-swipe-to-dismiss';
+import { useAdminAccess } from '@/lib/hooks/use-admin-access';
+import { usePassengerSelection } from '@/lib/hooks/use-passenger-selection';
+import { applyManualFlightOrder, type FlightPlacement } from '@/lib/manual-flight-order';
 import {
     dismissOverlayWithHistory,
     historyOverlay,
@@ -57,6 +62,7 @@ const DatePicker: any = dynamic(() => import('react-datepicker').then((mod: any)
 
 interface FlightsResponse {
     success: boolean;
+    manualFlightOrder?: { placements: FlightPlacement[] };
     count: number;
     flights: Flight[];
     lastUpdated?: string | null;
@@ -1098,6 +1104,8 @@ export default function MobileRedesignPreview({
     initialSharedArrival = null,
 }: MobileRedesignPreviewProps) {
     const account = useAccount();
+    const hasAdminAccess = useAdminAccess();
+    const [manualPlacements, setManualPlacements] = useState<FlightPlacement[]>([]);
     const hasInitialFlights = initialFlights.length > 0;
     const [flights, setFlights] = useState<Flight[]>(initialFlights);
     const [loading, setLoading] = useState(!hasInitialFlights);
@@ -1111,7 +1119,7 @@ export default function MobileRedesignPreview({
     const [initialSubsetActive, setInitialSubsetActive] = useState(
         hasInitialFlights && initialFlightCount > initialFlights.length,
     );
-    const [passengers, setPassengers] = useState({ adult: 1, child: 0, infant: 0 });
+    const [passengers, setPassengers] = usePassengerSelection();
     const [region, setRegion] = useState('전체');
     const [departure, setDeparture] = useState('전체');
     const [sourceFilter, setSourceFilter] = useState<'all' | Flight['source']>('all');
@@ -1135,6 +1143,8 @@ export default function MobileRedesignPreview({
     const [showDealAlert, setShowDealAlert] = useState(false);
     const [alertRouteTarget, setAlertRouteTarget] = useState<RouteAlertTarget | null>(null);
     const [selectedFlight, setSelectedFlight] = useState<Flight | null>(null);
+    const recentHistory = useRecentFlights(selectedFlight);
+    const [showRecentFlights, setShowRecentFlights] = useState(false);
     const [favorites, setFavorites] = useState<Set<string>>(new Set());
     const [guestFavorites, setGuestFavorites] = useState<Set<string>>(new Set());
     const [flightReport, setFlightReport] = useState<{ flightId: string; status: FlightReportStatus } | null>(null);
@@ -1212,7 +1222,7 @@ export default function MobileRedesignPreview({
     };
 
     const Root = rootAs;
-    const activeOverlay = showAccount ? 'account'
+    const activeOverlay = showRecentFlights ? 'recent-flights' : showAccount ? 'account'
         : showServiceUpdate ? 'service-update'
             : showContact ? 'contact'
                 : showDealAlert ? 'deal-alert'
@@ -1398,6 +1408,7 @@ export default function MobileRedesignPreview({
             setTodayPickRepeatOverride(hasCurrentTodayPick ? data.todayPickRepeatOverride || null : null);
             setPriceHistory(data.priceHistory || {});
             setInterparkPrices(data.interparkPrices || {});
+            setManualPlacements(data.manualFlightOrder?.placements || []);
             // 추천·DROP 판단에 필요한 기준가를 먼저 넣은 뒤 목록을 연다. 상태 반영이
             // 나뉘는 브라우저에서도 첫 카드가 잠깐 다른 표로 보이지 않게 한다.
             setFlights(data.flights || []);
@@ -1555,7 +1566,6 @@ export default function MobileRedesignPreview({
                 },
             );
             account.recordRecent(sharedFlight.id);
-            setPassengers({ adult: Math.max(1, sharedFlight.minPax || 1), child: 0, infant: 0 });
             setSelectedFlight(sharedFlight);
             return;
         }
@@ -1658,7 +1668,6 @@ export default function MobileRedesignPreview({
                 setToast('이 표는 현재 목록에서 내려갔어요.');
                 return;
             }
-            setPassengers({ adult: Math.max(1, flight.minPax || 1), child: 0, infant: 0 });
             setSelectedFlight(flight);
         };
         window.addEventListener('popstate', syncDetailFromHistory);
@@ -1930,10 +1939,11 @@ export default function MobileRedesignPreview({
                 balanceIncheon: departure === '전체',
             },
         );
-        return pinnedFlight
+        const automatic = pinnedFlight
             ? [pinnedFlight, ...presentation.orderedFlights]
             : presentation.orderedFlights;
-    }, [departure, featuredPick, filteredFlights, isDefaultView, query, recommendationScoreState, sharedFlightIds.length, sort]);
+        return applyManualFlightOrder(automatic, manualPlacements, { sort, pinnedId: pinnedFlight?.id });
+    }, [departure, featuredPick, filteredFlights, isDefaultView, manualPlacements, query, recommendationScoreState, sharedFlightIds.length, sort]);
     const weeklyDiscoveryFlights = useMemo(() => flights
         .filter(flight => normalizeCity(flight.arrival.city) === '리장' && effectivePrice(flight) > 0)
         .sort((a, b) => effectivePrice(a) - effectivePrice(b) || a.id.localeCompare(b.id)), [flights]);
@@ -2445,7 +2455,9 @@ export default function MobileRedesignPreview({
                 || (parseDate(a.departure.date)?.getTime() || 0) - (parseDate(b.departure.date)?.getTime() || 0);
         });
     }, [compareRecommended, flights, freshRouteResults, sort]);
-    const feedFlights = freshRouteResults ? freshRouteResultFlights : displayedFlights;
+    const feedFlights = freshRouteResults
+        ? applyManualFlightOrder(freshRouteResultFlights, manualPlacements, { sort })
+        : displayedFlights;
     const resultCount = initialSubsetActive && isDefaultView
         ? initialFlightCount
         : filteredFlights.length;
@@ -2720,7 +2732,7 @@ export default function MobileRedesignPreview({
     const selectedBookingUrl = selectedFlight
         ? getFlightBookingUrl(selectedFlight, passengers, isMobile)
         : '';
-    const selectedNaverUrl = selectedFlight && !(selectedFlight.source === 'myrealtrip' && !selectedFlight.routeAirports)
+    const selectedNaverUrl = hasAdminAccess && selectedFlight && !(selectedFlight.source === 'myrealtrip' && !selectedFlight.routeAirports)
         ? getNaverFlightUrl(
             selectedFlight.departure.city,
             selectedFlight.arrival.city,
@@ -2999,7 +3011,6 @@ export default function MobileRedesignPreview({
             '',
             `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`,
         );
-        setPassengers({ adult: Math.max(1, flight.minPax || 1), child: 0, infant: 0 });
         setSelectedFlight(flight);
     };
 
@@ -3676,7 +3687,7 @@ export default function MobileRedesignPreview({
                 </div>
 
                 <section className={styles.feedSection} ref={feedSectionRef}>
-                    <div className={`${styles.feedHeading} ${freshRouteResults ? styles.freshRouteHeading : ''}`}>
+                    <div className={`${styles.feedHeading} ${freshRouteResults ? styles.freshRouteHeading : ''} ${recentHistory.records.length ? styles.feedHeadingWithRecent : ''}`}>
                         <div>
                             <h2>{sharedFlightIds.length > 0
                                 ? `${initialSharedDeparture || '인천'} → ${initialSharedArrival || '공유 항공권'}`
@@ -3690,6 +3701,11 @@ export default function MobileRedesignPreview({
                                     : `${resultCount.toLocaleString('ko-KR')}개 · ${updatedLabel}`}</span>
                         </div>
                         <div className={styles.feedHeadingActions}>
+                            <RecentFlights records={recentHistory.records} flights={flights}
+                                loading={loading || initialListSyncing || initialSubsetActive}
+                                storageUnavailable={recentHistory.storageUnavailable}
+                                open={showRecentFlights} onOpenChange={setShowRecentFlights}
+                                onClear={recentHistory.clear} onOpen={flight => openFlight(flight, 'recent_flights')} />
                             {sharedFlightIds.length > 0 && (
                                 <button type="button" className={styles.freshRouteResultBack} onClick={showAllFlightsFromSharedGroup}>
                                     <span aria-hidden="true">←</span> 전체 항공권
@@ -4494,13 +4510,14 @@ export default function MobileRedesignPreview({
                         {selectedFlight.source !== 'modetour'
                             && selectedFlight.source !== 'onlinetour'
                             && selectedFlight.source !== 'ttang' && (
-                            <details className={styles.passengerPicker} open>
+                            <details className={styles.passengerPicker} key={selectedFlight.id}>
                                 <summary>
                                     <span>탑승 인원</span>
                                     <strong>
                                         성인 {passengers.adult}명
                                         {passengers.child > 0 ? ` · 소아 ${passengers.child}명` : ''}
                                         {passengers.infant > 0 ? ` · 유아 ${passengers.infant}명` : ''}
+                                        {' · 변경'}
                                     </strong>
                                     <Icon name="chevron" />
                                 </summary>
@@ -4510,10 +4527,7 @@ export default function MobileRedesignPreview({
                                         { key: 'child', label: '소아', age: '만 2~11세', min: 0, max: 9 },
                                         { key: 'infant', label: '유아', age: '만 2세 미만', min: 0, max: Math.min(4, passengers.adult) },
                                     ] as const).map(item => {
-                                        const seatPassengers = passengers.adult + passengers.child;
-                                        const minimumPassengers = Math.max(1, selectedFlight.minPax || 1);
-                                        const decrementDisabled = passengers[item.key] <= item.min
-                                            || (item.key !== 'infant' && seatPassengers <= minimumPassengers);
+                                        const decrementDisabled = passengers[item.key] <= item.min;
                                         return (
                                         <div className={styles.passengerRow} key={item.key}>
                                             <span><strong>{item.label}</strong><small>{item.age}</small></span>
@@ -4711,6 +4725,12 @@ export default function MobileRedesignPreview({
                         <div className={styles.serviceUpdateNotice}>
                             <h2 id="service-update-title">⛽ 9월 유류할증료가 올랐어요</h2>
                             <p>항공유 가격 상승으로 국내선·국제선 모두 4개월 만에 인상됐어요. 9월 1일 이후 발권분에 적용되며, 항공사·노선별 금액은 예약 단계에서 확인해 주세요.</p>
+                        </div>
+                        <div className={styles.serviceUpdateDivider} aria-hidden="true" />
+                        <div className={styles.serviceUpdateNotice}>
+                            <h2>네이버 비교 버튼 안내</h2>
+                            <p>서비스 운영 방침에 따라 네이버 가격 비교 버튼 제공을 종료했어요.</p>
+                            <p>버튼은 하나 줄었지만, 눌러볼 만한 항공권은 앞으로 더 늘려갈게요.</p>
                         </div>
                         <div className={styles.serviceUpdateActions}>
                             <button type="button" className={styles.serviceUpdateClose} onClick={closeServiceUpdate}>닫기</button>

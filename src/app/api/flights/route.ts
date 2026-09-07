@@ -16,6 +16,9 @@ import {
     getNearbyNaverRecommendationAdjustment,
 } from '@/lib/naver-nearby-price';
 import { normalizeCity } from '@/lib/utils/flight-helpers';
+import { flightOrderKey } from '@/lib/server/flight-order-identity';
+import { readFlightOrder } from '@/lib/server/flight-order-store';
+import { emptyFlightOrder } from '@/lib/manual-flight-order';
 import {
     getInterparkRouteMonths,
     interparkClientPriceKey,
@@ -520,6 +523,9 @@ export async function GET(request: NextRequest) {
             }
         } catch (e) { }
 
+        const manualFlightOrder = await readFlightOrder().catch(() => emptyFlightOrder());
+        allFlights = allFlights.map(flight => ({ ...flight, manualOrderKey: flightOrderKey(flight) }));
+
         return NextResponse.json({
             success: true,
             count: allFlights.length,
@@ -542,8 +548,9 @@ export async function GET(request: NextRequest) {
             todayPickId,
             todayPickDate,
             todayPickRepeatOverride,
+            manualFlightOrder,
             filterSummary,
-        });
+        }, { headers: { 'Cache-Control': 'no-store' } });
     } catch (error) {
         console.error('항공권 데이터 수집 오류:', error);
         return NextResponse.json(

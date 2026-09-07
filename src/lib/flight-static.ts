@@ -77,7 +77,18 @@ export function effectivePrice(flight: Flight): number {
  * 도쿄(나리타)·도쿄(하네다)는 "도쿄" 한 페이지로 묶인다.
  */
 export function displayCity(raw: string): string {
-    return normalizeCity((raw || '').trim()).replace(/\([^)]*\)/g, '').trim();
+    const city = normalizeCity((raw || '').trim()).replace(/\([^)]*\)/g, '').trim();
+    // Both labels occur with YNJ in the source cache. Keep the established URL.
+    return city === '옌지' ? '연길' : city;
+}
+
+/** Accept encoded route params as well as build-time city names. */
+export function decodeCitySlug(value: string): string {
+    try {
+        return decodeURIComponent(value);
+    } catch {
+        return value;
+    }
 }
 
 export function departureLabel(flight: Flight): string {

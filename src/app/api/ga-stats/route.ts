@@ -3,6 +3,8 @@ import { ga4Config, runReport, eventNameFilter, dim, num, type Ga4Config, type R
 import { getSupabaseServerHeaders } from '@/lib/server/supabase-rest';
 import { normalizeCity } from '@/lib/utils/flight-helpers';
 import { SHARE_GROUPS } from '@/lib/share-groups';
+import { loadFlightInterest, FLIGHT_INTEREST_RANGES } from '@/lib/server/flight-interest-report';
+import { isCompleteInterestReport } from '@/lib/flight-interest';
 
 // 저장소가 공개라 코드에 박아 둔 기본값은 그대로 공개 열쇠가 된다.
 // 환경변수가 없으면 조용히 열리는 대신 인증을 전부 거부한다.
@@ -13,7 +15,6 @@ const KST_TIME_ZONE = 'Asia/Seoul';
 const HOURS_PER_DAY = 24;
 const HOURLY_BUCKET_SIZE = 3;
 const CITY_INTEREST_EVENTS = [
-    'flight_impression',
     'city_detail_open',
     'favorite_add',
     'city_share',
@@ -171,6 +172,7 @@ async function optional(
 }
 
 async function buildStats(config: Ga4Config, days: number) {
+    const flightInterestPromise = loadFlightInterest(config);
     // 7일·30일 수치는 아직 덜 쌓인 오늘을 빼고 어제까지의 완결된 날짜만 쓴다.
     // 오늘은 별도 열의 잠정 수치와 일별 추이의 마지막 막대에서 보여준다.
     const dateRanges = [{ startDate: `${days}daysAgo`, endDate: 'yesterday' }];
@@ -469,7 +471,7 @@ async function buildStats(config: Ga4Config, days: number) {
         cityInterestReports = await Promise.all([
             cityInterestRequest(todayDateRanges, 'customEvent:destination'),
             cityInterestRequest(recent7DateRanges, 'customEvent:destination'),
-            cityInterestRequest(dateRanges, 'customEvent:destination'),
+            cityInterestRequest([...FLIGHT_INTEREST_RANGES.current], 'customEvent:destination'),
         ]);
     } catch (error) {
         console.error('GA4 destination interest report failed, falling back to route:', error);
@@ -478,7 +480,7 @@ async function buildStats(config: Ga4Config, days: number) {
             cityInterestReports = await Promise.all([
                 cityInterestRequest(todayDateRanges, 'customEvent:route'),
                 cityInterestRequest(recent7DateRanges, 'customEvent:route'),
-                cityInterestRequest(dateRanges, 'customEvent:route'),
+                cityInterestRequest([...FLIGHT_INTEREST_RANGES.current], 'customEvent:route'),
             ]);
         } catch (fallbackError) {
             console.error('GA4 route interest report failed:', fallbackError);
@@ -963,8 +965,14 @@ async function buildStats(config: Ga4Config, days: number) {
             recent7: activity(recent7EventReport, summary(recent7Report), recent7AlertIntentReport),
             current: activity(eventReport, totals, currentAlertIntentReport),
         },
+        flightInterest: await flightInterestPromise,
         cityInterest: {
             basis: cityInterestBasis,
+            availablePeriods: {
+                today: isCompleteInterestReport(cityInterestReports?.[0]),
+                recent7: isCompleteInterestReport(cityInterestReports?.[1]),
+                current: isCompleteInterestReport(cityInterestReports?.[2]),
+            },
             periods: {
                 today: parseCityInterest(cityInterestReports?.[0] || null),
                 recent7: parseCityInterest(cityInterestReports?.[1] || null),

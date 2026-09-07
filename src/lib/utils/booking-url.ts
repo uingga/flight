@@ -73,7 +73,7 @@ function buildMyRealTripBookingUrl(
 }
 
 export function normalizeBookingPassengers(
-    flight: Flight,
+    _flight: Flight,
     passengers: BookingPassengers,
 ): BookingPassengers {
     const normalized = {
@@ -81,12 +81,7 @@ export function normalizeBookingPassengers(
         child: Math.max(0, Math.floor(passengers.child || 0)),
         infant: Math.max(0, Math.floor(passengers.infant || 0)),
     };
-    const minimumPassengers = Math.max(1, Math.floor(flight.minPax || 1));
-    // 좌석을 점유하지 않는 유아는 여행사의 최소 예약 인원에 포함하지 않는다.
-    const seatPassengers = normalized.adult + normalized.child;
-    if (seatPassengers < minimumPassengers) {
-        normalized.adult += minimumPassengers - seatPassengers;
-    }
+    // 여행사 최소 인원 조건으로 사용자가 선택한 인원을 자동 변경하지 않는다.
     normalized.infant = Math.min(normalized.infant, normalized.adult);
     return normalized;
 }
