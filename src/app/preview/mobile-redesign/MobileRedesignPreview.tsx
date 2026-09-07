@@ -20,6 +20,7 @@ import { getFlightBookingUrl } from '@/lib/utils/booking-url';
 import { encodeShareId } from '@/lib/share-code';
 import { useSwipeToDismiss } from '@/lib/hooks/use-swipe-to-dismiss';
 import { useAdminAccess } from '@/lib/hooks/use-admin-access';
+import { applyManualFlightOrder, type FlightPlacement } from '@/lib/manual-flight-order';
 import {
     dismissOverlayWithHistory,
     historyOverlay,
@@ -58,6 +59,7 @@ const DatePicker: any = dynamic(() => import('react-datepicker').then((mod: any)
 
 interface FlightsResponse {
     success: boolean;
+    manualFlightOrder?: { placements: FlightPlacement[] };
     count: number;
     flights: Flight[];
     lastUpdated?: string | null;
@@ -1100,6 +1102,7 @@ export default function MobileRedesignPreview({
 }: MobileRedesignPreviewProps) {
     const account = useAccount();
     const hasAdminAccess = useAdminAccess();
+    const [manualPlacements, setManualPlacements] = useState<FlightPlacement[]>([]);
     const hasInitialFlights = initialFlights.length > 0;
     const [flights, setFlights] = useState<Flight[]>(initialFlights);
     const [loading, setLoading] = useState(!hasInitialFlights);
@@ -1400,6 +1403,7 @@ export default function MobileRedesignPreview({
             setTodayPickRepeatOverride(hasCurrentTodayPick ? data.todayPickRepeatOverride || null : null);
             setPriceHistory(data.priceHistory || {});
             setInterparkPrices(data.interparkPrices || {});
+            setManualPlacements(data.manualFlightOrder?.placements || []);
             // 추천·DROP 판단에 필요한 기준가를 먼저 넣은 뒤 목록을 연다. 상태 반영이
             // 나뉘는 브라우저에서도 첫 카드가 잠깐 다른 표로 보이지 않게 한다.
             setFlights(data.flights || []);
@@ -1932,10 +1936,11 @@ export default function MobileRedesignPreview({
                 balanceIncheon: departure === '전체',
             },
         );
-        return pinnedFlight
+        const automatic = pinnedFlight
             ? [pinnedFlight, ...presentation.orderedFlights]
             : presentation.orderedFlights;
-    }, [departure, featuredPick, filteredFlights, isDefaultView, query, recommendationScoreState, sharedFlightIds.length, sort]);
+        return applyManualFlightOrder(automatic, manualPlacements, { sort, pinnedId: pinnedFlight?.id });
+    }, [departure, featuredPick, filteredFlights, isDefaultView, manualPlacements, query, recommendationScoreState, sharedFlightIds.length, sort]);
     const weeklyDiscoveryFlights = useMemo(() => flights
         .filter(flight => normalizeCity(flight.arrival.city) === '리장' && effectivePrice(flight) > 0)
         .sort((a, b) => effectivePrice(a) - effectivePrice(b) || a.id.localeCompare(b.id)), [flights]);
@@ -2447,7 +2452,9 @@ export default function MobileRedesignPreview({
                 || (parseDate(a.departure.date)?.getTime() || 0) - (parseDate(b.departure.date)?.getTime() || 0);
         });
     }, [compareRecommended, flights, freshRouteResults, sort]);
-    const feedFlights = freshRouteResults ? freshRouteResultFlights : displayedFlights;
+    const feedFlights = freshRouteResults
+        ? applyManualFlightOrder(freshRouteResultFlights, manualPlacements, { sort })
+        : displayedFlights;
     const resultCount = initialSubsetActive && isDefaultView
         ? initialFlightCount
         : filteredFlights.length;

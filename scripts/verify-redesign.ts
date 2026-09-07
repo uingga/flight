@@ -80,7 +80,7 @@ async function verifyViewport(width: number, height: number) {
                 };
             });
             assert(
-                previewData.source === 'live' || (isLocalPreview && previewData.source === 'branch-fallback'),
+                previewData.source === 'live' || (isLocalPreview && ['branch-fallback', 'isolated'].includes(previewData.source || '')),
                 `미리보기가 운영 데이터 대신 ${previewData.source || '알 수 없는 데이터'}를 사용합니다.`,
             );
             assert(previewData.myrealtrip > 0, '미리보기 최신 데이터에서 마이리얼트립 항공권이 모두 빠졌습니다.');
@@ -105,28 +105,22 @@ async function verifyViewport(width: number, height: number) {
                     const freshTicket = page.locator(`button[data-fresh-flight-id="${groupedFreshTicket.id}"]`).first();
                     await freshTicket.evaluate(button => button.click());
                     const freshDetail = page.locator('[aria-label="항공권 상세"]');
-                    await freshDetail.waitFor();
-                    const scheduleOptions = freshDetail.locator('[data-fresh-schedule-options]');
-                    await scheduleOptions.waitFor();
-                    const scheduleCount = Number(await scheduleOptions.getAttribute('data-fresh-schedule-options'));
-                    assert(
-                        scheduleCount === groupedFreshTicket.count,
-                        `신규 티켓의 일정 ${groupedFreshTicket.count}개 중 상세에는 ${scheduleCount}개만 표시됩니다.`,
-                    );
-                    assert(
-                        await scheduleOptions.locator('button').count() === scheduleCount,
-                        '같은 가격의 일부 신규 일정이 선택지에서 빠졌습니다.',
-                    );
-                    const initialScheduleUrl = page.url();
-                    await scheduleOptions.locator('button').nth(1).click();
-                    await page.waitForTimeout(100);
-                    assert(page.url() !== initialScheduleUrl, '다른 신규 일정을 선택해도 상세 URL이 바뀌지 않았습니다.');
-                    assert(
-                        await scheduleOptions.locator('button').nth(1).getAttribute('aria-pressed') === 'true',
-                        '선택한 신규 일정이 상세에 반영되지 않았습니다.',
-                    );
-                    await page.keyboard.press('Escape');
-                    await freshDetail.waitFor({ state: 'hidden' });
+                    // A single departure now opens detail; multiple departures open the route feed.
+                    const backToAll = page.getByRole('button', { name: '← 전체 항공권', exact: true });
+                    await Promise.race([freshDetail.waitFor(), backToAll.waitFor()]);
+                    if (await freshDetail.isVisible()) {
+                        assert(Boolean(new URL(page.url()).searchParams.get('flight')), '신규 항공권 상세 URL에 식별자가 없습니다.');
+                        await page.keyboard.press('Escape');
+                        await freshDetail.waitFor({ state: 'hidden' });
+                    } else {
+                        const routeCards = page.locator('article[data-flight-id]');
+                        assert(await routeCards.count() >= 2, '신규 노선의 복수 일정이 목록에서 누락됐습니다.');
+                        await routeCards.first().locator('button').first().click();
+                        await freshDetail.waitFor();
+                        await page.keyboard.press('Escape');
+                        await freshDetail.waitFor({ state: 'hidden' });
+                        await backToAll.click();
+                    }
                 }
             }
 

@@ -6,6 +6,7 @@ import { isAnalyticsExcluded, setAnalyticsExcluded } from '@/lib/analytics';
 import { buildSourceSlotBars, type SlotStatus, type SourceSlotBar, type SourceSlotEvent } from '@/lib/admin-source-slots';
 import { buildAdminAttentionItems } from '@/lib/admin-attention';
 import AdminTodayPick from '@/components/AdminTodayPick';
+import AdminFlightOrder from '@/components/AdminFlightOrder';
 
 function urlBase64ToUint8Array(base64String: string) {
     const padding = '='.repeat((4 - base64String.length % 4) % 4);
@@ -2544,6 +2545,7 @@ export default function AdminPage() {
 
             {tab === 'overview' && (<>
                 <AdminTodayPick adminKey={key} />
+                <AdminFlightOrder adminKey={key} />
 
                 <section className={styles.section} id="overview-actions">
                     <div className={styles.sectionHeading}>
