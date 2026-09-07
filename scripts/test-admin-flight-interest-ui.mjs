@@ -15,6 +15,8 @@ try {
     assert.equal(await page.getByRole('button', { name: '7일', exact: true }).getAttribute('aria-pressed'), 'true');
     assert.match(await page.locator('tbody tr').first().innerText(), /demo-7days-1/);
     assert.match(await page.locator('tbody tr').first().innerText(), /39회/);
+    assert.equal(await page.locator('tbody tr').first().locator('td').nth(1).innerText(), '30회 · 1명');
+    assert.equal(await page.locator('tbody tr').first().locator('td').nth(2).innerText(), '39회 · 1명');
     await page.getByRole('button', { name: '10개 더 보기' }).click();
     assert.equal(await count(), 12);
     assert.equal(await page.getByRole('button', { name: '10개 더 보기' }).count(), 0);
@@ -42,6 +44,11 @@ try {
         assert.equal(await page.getByRole('button', { name: '10개 더 보기' }).count(), 0);
         assert.match(await page.getByRole('status').innerText(), state === 'empty' ? /미수집 기록은 0회로 추정하지 않습니다/ : /GA4 항공권 ID 측정기준/);
     }
+    await page.goto(`${base}/preview/flight-interest?state=users-unavailable`);
+    assert.equal(await count(), 10);
+    assert.equal(await page.locator('tbody tr').first().locator('td').nth(1).innerText(), '30회 · 인원 미확인');
+    assert.match(await page.getByRole('status').innerText(), /횟수로 인원수를 추정하지 않습니다/);
+    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
     assert.deepEqual(errors, []);
     console.log('PASS: default 10, show more, all periods, booking order, city fallback, missing states, 390px/320px layouts, no browser errors');
 } finally { await browser.close(); }

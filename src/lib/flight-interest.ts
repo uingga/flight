@@ -6,11 +6,14 @@ export interface FlightInterestRow {
     route: string | null;
     detailOpens: number;
     bookingClicks: number;
+    detailUsers?: number | null;
+    bookingUsers?: number | null;
     recorded?: { agency: string | null; departureDate: string | null; returnDate: string | null; airline: string | null; minPrice: number | null; maxPrice: number | null };
 }
 export interface FlightInterestPeriod {
     available: boolean;
     message?: string;
+    usersMessage?: string;
     rows: FlightInterestRow[];
     unidentified: { detailOpens: number; bookingClicks: number };
 }
@@ -63,4 +66,34 @@ export function parseFlightInterest(report: ReportResponse): FlightInterestPerio
     })
         .sort((a, b) => b.bookingClicks - a.bookingClicks || b.detailOpens - a.detailOpens || a.flightId.localeCompare(b.flightId));
     return result;
+}
+
+/** User counts are non-additive. Accept only one GA row per event and flight ID. */
+export function attachFlightUsers(result: FlightInterestPeriod, report?: ReportResponse): FlightInterestPeriod {
+    if (!result.available) return result;
+    const users = new Map<string, { count: number; users: number } | null>();
+    if (isCompleteInterestReport(report)) {
+        for (const row of report?.rows || []) {
+            const [event, id = ''] = (row.dimensionValues || []).map(value => value.value);
+            if (!['detail_open', 'booking_click'].includes(event) || !known(id)) continue;
+            const key = `${event}|${id}`;
+            const count = Number(row.metricValues?.[0]?.value);
+            const unique = Number(row.metricValues?.[1]?.value);
+            const valid = Number.isSafeInteger(count) && Number.isSafeInteger(unique) && count > 0 && unique > 0 && unique <= count;
+            users.set(key, !users.has(key) && valid ? { count, users: unique } : null);
+        }
+    }
+    const getUsers = (event: string, id: string, count: number): number | null => {
+        if (!isCompleteInterestReport(report)) return null;
+        const value = users.get(`${event}|${id}`);
+        if (count === 0 && !users.has(`${event}|${id}`)) return 0;
+        // Today may change between queries. Do not combine inconsistent snapshots.
+        return value && value.count === count ? value.users : null;
+    };
+    const rows = result.rows.map(row => ({ ...row,
+        detailUsers: getUsers('detail_open', row.flightId, row.detailOpens),
+        bookingUsers: getUsers('booking_click', row.flightId, row.bookingClicks),
+    }));
+    return { ...result, rows, usersMessage: rows.some(row => row.detailUsers === null || row.bookingUsers === null)
+        ? '일부 인원수는 조회 실패·데이터 제한 또는 집계 시점 차이로 확인하지 못했습니다. 횟수로 인원수를 추정하지 않습니다.' : undefined };
 }

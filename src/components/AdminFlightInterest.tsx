@@ -48,7 +48,8 @@ export default function AdminFlightInterest({ data, cities }: {
                                 {row.recorded.minPrice !== null && <> · 기록 가격 {row.recorded.minPrice.toLocaleString()}{row.recorded.maxPrice !== row.recorded.minPrice && `~${row.recorded.maxPrice?.toLocaleString()}`}원</>}
                             </small>}
                             <small>항공권 ID: {row.flightId}</small></td>
-                        <td>{row.detailOpens.toLocaleString()}회</td><td>{row.bookingClicks.toLocaleString()}회</td>
+                        <td>{row.detailOpens.toLocaleString()}회 · {row.detailUsers == null ? '인원 미확인' : `${row.detailUsers.toLocaleString()}명`}</td>
+                        <td>{row.bookingClicks.toLocaleString()}회 · {row.bookingUsers == null ? '인원 미확인' : `${row.bookingUsers.toLocaleString()}명`}</td>
                     </tr>)}</tbody>
                 </table></div>}
             {report?.available && report.rows.length > 0 && <div className={styles.more}>
@@ -58,7 +59,8 @@ export default function AdminFlightInterest({ data, cities }: {
             {report?.available && (report.unidentified.detailOpens > 0 || report.unidentified.bookingClicks > 0) && <p className={styles.note}>
                 항공권 ID 미수집으로 순위에서 제외: 상세 조회 {report.unidentified.detailOpens.toLocaleString()}회 · 예약 클릭 {report.unidentified.bookingClicks.toLocaleString()}회
             </p>}
-            <p className={styles.note}>기록된 항공권 ID별 횟수입니다. 같은 사람의 반복 클릭도 포함하며, 화면 노출은 집계하지 않습니다. 예약 클릭은 여행사로 이동한 횟수로 구매 완료를 뜻하지 않습니다.</p>
+            {report?.usersMessage && <p className={styles.note} role="status">{report.usersMessage}</p>}
+            <p className={styles.note}>횟수는 반복 클릭을 포함하고, 인원은 선택 기간·항공권·행동별 중복을 제외한 GA4 사용자 수입니다. 같은 사람이 다른 기기·브라우저를 쓰면 별도로 잡힐 수 있으며 상세 조회 인원과 예약 클릭 인원은 서로 겹칠 수 있습니다. 화면 노출은 집계하지 않고, 예약 클릭은 여행사 이동으로 구매 완료를 뜻하지 않습니다.</p>
             <p className={styles.note}>수집·측정기준 등록 이후 확인되는 기록만 표시합니다. 과거 일정·가격을 현재 항공권 정보로 채우거나, 다른 ID의 항공권 기록을 추정해 합치지 않습니다.</p>
         </> : <>
             {!cities?.availablePeriods[period] ? <p role="status">도시별 전체 집계를 확인하지 못했습니다. 조회 실패·제한된 기록을 0회로 표시하지 않습니다.</p> : cityRows.length === 0 ? <p role="status">이 기간에 확인되는 도시별 행동 기록이 없습니다.</p>

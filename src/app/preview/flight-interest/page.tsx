@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { headers } from 'next/headers';
 import AdminFlightInterest from '@/components/AdminFlightInterest';
 import { flightOrderStorageMode } from '@/lib/server/flight-order-store';
-import { parseFlightInterest, unavailableFlightInterest } from '@/lib/flight-interest';
+import { parseFlightInterest, unavailableFlightInterest, attachFlightUsers } from '@/lib/flight-interest';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: '항공권 클릭 통계 미리보기', robots: { index: false, follow: false } };
@@ -15,9 +15,15 @@ export default function FlightInterestPreview({ searchParams }: { searchParams: 
         metricValues: [{ value: String((12 - index + 1) * multiplier) }],
     })).concat(Array.from({ length: 12 }, (_, index) => ({
         dimensionValues: ['detail_open', `demo-${label}-${index + 1}`, `인천-${['도쿄', '오사카', '후쿠오카', '방콕'][index % 4]}`].map(value => ({ value })),
-        metricValues: [{ value: String((index + 1) * multiplier) }],
+        metricValues: [{ value: String(index === 0 ? 30 : (index + 1) * multiplier) }],
     }))) });
     const data = { today: demo('today', 1), recent7: demo('7days', 3), current: demo('30days', 7) };
+    for (const key of ['today', 'recent7', 'current'] as const) data[key] = attachFlightUsers(data[key], searchParams.state === 'users-unavailable' ? undefined : {
+        rows: data[key].rows.flatMap((row, index) => [['detail_open', row.detailOpens], ['booking_click', row.bookingClicks]].map(([event, count]) => ({
+            dimensionValues: [String(event), row.flightId].map(value => ({ value })),
+            metricValues: [Number(count), index === 0 ? 1 : Math.min(Number(count), 3)].map(value => ({ value: String(value) })),
+        }))),
+    });
     if (searchParams.state === 'empty') for (const key of ['today', 'recent7', 'current'] as const) data[key] = parseFlightInterest({});
     if (searchParams.state === 'unavailable') for (const key of ['today', 'recent7', 'current'] as const) data[key] = unavailableFlightInterest('항공권별 기록을 불러오지 못했습니다. GA4 항공권 ID 측정기준 설정과 조회 상태를 확인해 주세요.');
     const cities = [
