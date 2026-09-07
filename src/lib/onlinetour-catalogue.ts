@@ -43,6 +43,7 @@ export function parseCataloguePlan(value: unknown): CataloguePlan {
         ...(p.excludeCities ? {excludeCities:[...p.excludeCities]} : {}) };
 }
 interface RegionAdapter {
+    enterFirstList?(): Promise<RegionDiscoveryResult>;
     inspect(): Promise<RegionSnapshot>;
     visitRegion(region: string): Promise<RegionDiscoveryResult>;
     reloadExistingRegion?(region: string): Promise<RegionDiscoveryResult>;
@@ -63,6 +64,8 @@ interface ListsAdapter {
     readonly diagnostics: { permittedProductRequests: number; documentRequests: number; actions: number };
 }
 export interface CatalogueBackend {
+    openInitialRegion?(): Promise<RegionAdapter>;
+    close?(): Promise<void>;
     openRegion(navigations: number, products: number): Promise<RegionAdapter>;
     openLists(products: number, seed?: { scope: ListScope; page: ListPage }): Promise<ListsAdapter>;
     wait(ms: number): Promise<void>;
@@ -115,8 +118,14 @@ export async function collectOnlineTourCatalogue(input: CataloguePlan, backend: 
             if (remaining() <= 0) throw new Error('product_budget_exhausted');
             let discovery: RegionAdapter | undefined, observed: RegionDiscoveryResult | undefined;
             let resetStart = false;
+            const ownedEntry = !started && !resume && !!backend.openInitialRegion;
             try {
                 if (!started && resume) observed = { snapshot: resume.snapshot, firstPage: null };
+                else if (ownedEntry) {
+                    discovery = await backend.openInitialRegion!();
+                    if (!discovery.enterFirstList) throw new Error('initial_entry_unavailable');
+                    observed = await discovery.enterFirstList();
+                }
                 else {
                 const firstGate = !started && plan.reloadStart;
                 discovery = await backend.openRegion(firstGate ? 1 : plan.maxRegionalNavigations - result.regionalNavigations,
@@ -142,7 +151,7 @@ export async function collectOnlineTourCatalogue(input: CataloguePlan, backend: 
             } finally {
                 if (discovery) {
                     try { await discovery.close(); } catch { result.cleanupConfirmed = false; }
-                    if (resetStart) result.listDocumentRequests += discovery.diagnostics.permittedDocumentRequests;
+                    if (resetStart || ownedEntry) result.listDocumentRequests += discovery.diagnostics.permittedDocumentRequests;
                     else result.regionalNavigations += discovery.diagnostics.permittedDocumentRequests;
                     result.productRequests += discovery.diagnostics.permittedProductRequests;
                     result.lastRejectedRequest = discovery.lastRejectedRequest || result.lastRejectedRequest;
@@ -157,7 +166,7 @@ export async function collectOnlineTourCatalogue(input: CataloguePlan, backend: 
             if (!started && resume) {
                 result.firstPageVerified = true;
                 progress({ stage: 'verified_checkpoint_reused', rows: resume.initialEvidence.rawProducts.length, productRequests: result.productRequests });
-            } else if (!started && plan.reloadStart) {
+            } else if (!started && (plan.reloadStart || ownedEntry)) {
                 const first = observed.firstPage;
                 if (!first?.rawProducts.length) throw new Error('empty_or_invalid_first_page');
                 const checked = validatePilotResponse('gate(' + JSON.stringify({ status: 200, data: { list: first.rawProducts } }) + ');', 'gate');

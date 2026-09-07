@@ -384,10 +384,7 @@ test('first-entry duplicate product is blocked rather than spending a second que
     assert.ok(a.diagnostics.permittedProductRequests <= 1); assert.ok(a.diagnostics.blockedRequests >= 1);
     await a.close();
 });
-test('first-entry refuses existing list, changed blank, and expanded budget before navigation', async () => {
-    const existing = new Fake();
-    await assert.rejects(mod.createOnlineTourRegionDiscovery(existing, { maxNavigations: 1, maxProductRequests: 1 }, true));
-    assert.ok(!existing.calls.some(x => x.method === 'Target.createTarget'));
+test('first-entry refuses changed blank and expanded budget before navigation', async () => {
     const changed = new FirstEntry(); changed.url = 'https://unrelated.example/';
     const a = await mod.createOnlineTourRegionDiscovery(changed, { maxNavigations: 1, maxProductRequests: 1 }, true);
     await assert.rejects(a.enterFirstList(), /first_entry_target_changed/);

@@ -29,16 +29,36 @@ export async function executeCatalogue(root: string, plan: CataloguePlan, backen
 }
 
 /** Connections never overlap; each transfer closes its old adapter before the next opens. */
-export async function createLiveCatalogueBackend(): Promise<CatalogueBackend> {
+export async function createLiveCatalogueBackend(ownedTab = false): Promise<CatalogueBackend> {
     const { connectDedicatedChrome, createOnlineTourBrowserAdapter } = await import('../src/lib/onlinetour-browser-adapter');
     const { createOnlineTourRegionDiscovery } = await import('../src/lib/onlinetour-region-discovery');
+    let targetId: string | undefined;
     return {
+        ...(ownedTab ? {
+            async openInitialRegion() {
+                if (targetId) throw new Error('initial_entry_already_created');
+                const region = await createOnlineTourRegionDiscovery(await connectDedicatedChrome(), {maxNavigations:1,maxProductRequests:1}, true);
+                targetId = region.targetId;
+                return region;
+            },
+            async close() {
+                if (!targetId) return;
+                const client = await connectDedicatedChrome();
+                try {
+                    const result = await client.send('Target.closeTarget', {targetId});
+                    if (!result.success) throw new Error('owned_tab_cleanup_failed');
+                    targetId = undefined;
+                } finally { await client.close(); }
+            },
+        } : {}),
         wait: ms => new Promise(resolve => setTimeout(resolve, ms)),
         async openRegion(navigations, products) {
-            return createOnlineTourRegionDiscovery(await connectDedicatedChrome(), { maxNavigations: navigations, maxProductRequests: products });
+            if (ownedTab && !targetId) throw new Error('owned_tab_not_ready');
+            return createOnlineTourRegionDiscovery(await connectDedicatedChrome(), { maxNavigations: navigations, maxProductRequests: products }, false, targetId);
         },
         async openLists(products, seed) {
-            const a = await createOnlineTourBrowserAdapter(await connectDedicatedChrome(), { seed });
+            if (ownedTab && !targetId) throw new Error('owned_tab_not_ready');
+            const a = await createOnlineTourBrowserAdapter(await connectDedicatedChrome(), { seed, targetId });
             try { a.authorizeProductRequests(products); return a; }
             catch (error) { await a.close().catch(() => {}); throw error; }
         },

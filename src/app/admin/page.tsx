@@ -2155,7 +2155,7 @@ export default function AdminPage() {
                     : stat?.partial ? 'partial' : 'success';
         const circuit = data.sourceCircuits?.[source];
         const reason = failed
-            ? alertForSource(latestCompletedGeneralEntry, source)
+            ? stat?.detail || alertForSource(latestCompletedGeneralEntry, source)
                 || circuit?.detail
                 || '수집 결과가 안전 기준을 통과하지 못했습니다.'
             : scheduledSkip ? '이 회차는 예약 정책상 수집하지 않았습니다.'

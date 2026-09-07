@@ -52,7 +52,7 @@ import path from 'path';
 
 interface CacheData {
     modetourPrimary?: {status:'success'|'partial'|'failed';lastAttemptAt:string;capturedAt?:string;scopeCounts?:Record<string,number>;detail?:string};
-    onlinePrimary?: {status:'success'|'failed';lastAttemptAt:string;failureOpenedAt?:string;circuit?:SourceCircuitState;githubAttemptAt?:string;githubClaim?:{runId:string;expectedAt:string};githubFallbackSafe?:boolean};
+    onlinePrimary?: {status:'success'|'failed';lastAttemptAt:string;failureOpenedAt?:string;circuit?:SourceCircuitState;githubAttemptAt?:string;githubClaim?:{runId:string;expectedAt:string};githubFallbackSafe?:boolean;detail?:string};
     timestamp: string;
     /** 일반 여행사 5곳을 모두 시도한 마지막 전체 크롤 완료 시각 */
     fullCrawlUpdatedAt?: string;
@@ -162,6 +162,8 @@ async function main() {
         ? new Set(skipSourceArg.slice('--skip-sources='.length).split(',').map(value => value.trim()).filter(Boolean))
         : new Set<string>();
     const crawlableSources = new Set<CrawlableSourceKey>(['ybtour', 'hanatour', 'modetour', 'onlinetour', 'ttang']);
+    if (process.env.ONLINETOUR_MANUAL_ONCE === '1' && (!localSourceFallback || onlineGithubFallback
+        || requestedSources?.size !== 1 || !requestedSources.has('onlinetour'))) throw new Error('manual_online_source_only');
 
     const invalidSkippedSources = [...scheduledSkippedSources].filter(source => !crawlableSources.has(source as CrawlableSourceKey));
     if (invalidSkippedSources.length > 0) {
@@ -451,6 +453,8 @@ async function main() {
         const preservedSources = new Set<SourceKey>();
         const missingDetectionSafeSources = new Set<SourceKey>();
         const scrapedCounts: Record<string, number> = {};
+        // Observation counts are separate from the last-good baseline retained by keepPrevious.
+        const observedCounts = Object.fromEntries([...attempted].map(src => [src, scraped[src]?.length ?? 0]));
 
         for (const src of sourceNames) {
             const fresh = scraped[src];
@@ -935,7 +939,9 @@ async function main() {
                 onlinePrimary = {...prevCache?.onlinePrimary,status:failed?'failed':'success',lastAttemptAt,
                     failureOpenedAt:failed?(prevCache?.onlinePrimary?.failureOpenedAt || lastAttemptAt):undefined,
                     circuit:sourceCircuits.onlinetour,githubAttemptAt:prevCache?.onlinePrimary?.githubAttemptAt,
-                    githubFallbackSafe:onlineGithubFallbackSafe};
+                    githubFallbackSafe:onlineGithubFallbackSafe,
+                    detail:failed?(scrapeFailures.onlinetour || '수집 실패 — 이전 데이터 보존')
+                        :`B PC Chrome 수집 ${observedCounts.onlinetour ?? 0}건 완료 — 필터 후 ${benchmarkedFlights.filter(f=>f.source==='onlinetour').length}건 반영`};
             }
             if (prevCache?.sourceCircuits?.onlinetour) sourceCircuits.onlinetour=prevCache.sourceCircuits.onlinetour;
             else delete sourceCircuits.onlinetour;
@@ -1106,7 +1112,7 @@ async function main() {
                     : attempted.has(src) ? 'success' : 'skipped',
                 scraped: circuitSkipped.has(src as CrawlableSourceKey)
                     ? undefined
-                    : attempted.has(src) ? scrapedCounts[src] : undefined,
+                    : attempted.has(src) ? observedCounts[src] : undefined,
                 allowMissing: missingDetectionSafeSources.has(src),
             }]));
             const observation = {
@@ -1195,7 +1201,7 @@ async function main() {
             const isLocalFallbackAttempt = localSourceFallback && attempted.has(src) && !isOnlinePrimaryAttempt && !isModePrimaryAttempt;
             const scheduledSkip = scheduledSkippedSources.has(src);
             logCrawlResults(src, finalCounts[src] || 0, undefined, cityStats, {
-                scraped: circuitSkipped.has(src as CrawlableSourceKey) ? undefined : scrapedCounts[src],
+                scraped: circuitSkipped.has(src as CrawlableSourceKey) ? undefined : observedCounts[src],
                 preserved: preservedSources.has(src),
                 // 마이리얼트립은 전체 회차에서도 이 스크립트가 실행하지 않는다.
                 // 실제 시도 여부만 기준으로 삼아 일반 5개 여행사 성공 수에 끼지 않게 한다.
@@ -1206,7 +1212,7 @@ async function main() {
                 skipReason: scheduledSkip ? 'schedule' : circuitSkipped.has(src as CrawlableSourceKey) ? 'circuit' : 'not-requested',
                 localFallback: isLocalFallbackAttempt,
                 partial: isModePrimaryAttempt && !preservedSources.has(src) && modeResult?.partial,
-                detail: isModePrimaryAttempt ? modetourPrimary?.detail : undefined,
+                detail: isModePrimaryAttempt ? modetourPrimary?.detail : isOnlinePrimaryAttempt ? onlinePrimary?.detail : undefined,
                 collectionMode: isOnlinePrimaryAttempt || isModePrimaryAttempt ? 'pc_primary' : isGithubFallbackAttempt ? 'github_fallback' : undefined,
                 // 직전 GitHub 회차와 30분 안에 이어져도 별도 PC 회차로 남긴다.
                 // 첫 PC 소스가 새 엔트리를 만들고 같은 실행의 나머지 소스는 그 엔트리에 합쳐진다.

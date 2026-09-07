@@ -187,7 +187,7 @@ function prepare(dom: DomState): { snapshot: BrowserSnapshot; controls: { scope:
 }
 
 export async function createOnlineTourBrowserAdapter(client: CdpClient,
-    options: { seed?: { scope: ListScope; page: ListPage } } = {}) {
+    options: { seed?: { scope: ListScope; page: ListPage }; targetId?: string } = {}) {
     // Only the same-process region collector supplies this just-observed page. No CLI/file seed.
     let seed = options.seed ? JSON.parse(JSON.stringify(options.seed)) as NonNullable<typeof options.seed> : undefined;
     const diagnostics = { actions: 0, productRequests: 0, documentRequests: 0,
@@ -209,7 +209,7 @@ export async function createOnlineTourBrowserAdapter(client: CdpClient,
     let accessLatched = false;
     try {
         const targets = (await client.send('Target.getTargets')).targetInfos as { type: string; url: string; targetId: string }[];
-        const pages = targets.filter(t => t.type === 'page' && matches(t.url, ONLINE_LIST_URL));
+        const pages = targets.filter(t => t.type === 'page' && matches(t.url, ONLINE_LIST_URL) && (!options.targetId || t.targetId === options.targetId));
         if (pages.length !== 1) throw failure('validation', 'require_exactly_one_existing_list_tab');
         targetId = pages[0].targetId;
         sessionId = (await client.send('Target.attachToTarget', { targetId, flatten: true })).sessionId;

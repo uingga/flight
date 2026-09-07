@@ -16,23 +16,25 @@ export async function scrapeOnlineTourRemote() {
         || config.workerRoot!=='C:/Users/ynal/AppData/Local/Tikitikit/crawler-validation-20260907') throw Error('invalid_remote_source_config');
     const cache=JSON.parse(fs.readFileSync(path.join(getCrawlDataDir(),'all-flights-cache.json'),'utf8'));
     const policy=evaluatePcCollection({cache});
-    if(!policy.shouldRun || !policy.sources.includes('onlinetour')) throw Error('source_not_eligible');
+    // Explicit operator request only; never set by the scheduled launcher. B retains a one-shot daily marker.
+    const manualOnce=process.env.ONLINETOUR_MANUAL_ONCE==='1';
+    if(!manualOnce && (!policy.shouldRun || !policy.sources.includes('onlinetour'))) throw Error('source_not_eligible');
     const id=randomUUID();
-    const payload={protocol:ONLINE_REMOTE_PROTOCOL,id,createdAt:new Date().toISOString(),expectedAt:policy.expectedAt,
+    const payload={protocol:ONLINE_REMOTE_PROTOCOL,id,createdAt:new Date().toISOString(),expectedAt:policy.expectedAt,manualOnce,
         cache:{fullCrawlUpdatedAt:cache.fullCrawlUpdatedAt,sourceCircuits:{onlinetour:cache.sourceCircuits?.onlinetour},
             scrapedCounts:{onlinetour:cache.scrapedCounts?.onlinetour},onlinePrimary:cache.onlinePrimary}};
     remoteStarted=true;
     const reply:any=await new Promise((resolve,reject)=> {
         const child=spawn('ssh',['-o','BatchMode=yes','-o','ConnectTimeout=15',config.host,'node',
-            config.workerRoot+'/node_modules/tsx/dist/cli.mjs','--tsconfig',config.workerRoot+'/tsconfig.json',config.workerRoot+'/scripts/onlinetour-remote-worker.ts','--scheduled'],{windowsHide:true});
-        let output='',size=0,finished=false;
+            config.workerRoot+'/node_modules/tsx/dist/cli.mjs','--tsconfig',config.workerRoot+'/tsconfig.json',config.workerRoot+'/scripts/onlinetour-remote-worker.ts',manualOnce?'--manual-once':'--scheduled'],{windowsHide:true});
+        const output:Buffer[]=[]; let size=0,finished=false;
         const fail=()=>{if(!finished){finished=true;clearTimeout(timer);child.kill();reject(Error('remote_worker_transport_failed'));}};
         const timer=setTimeout(fail,45*60_000);
         child.on('error',fail); child.stdin.on('error',fail);
-        child.stdout.on('data',chunk=>{size+=chunk.length;if(size>2000000){fail();return;}output+=chunk.toString('utf8');});
+        child.stdout.on('data',chunk=>{size+=chunk.length;if(size>2000000){fail();return;}output.push(Buffer.from(chunk));});
         // Drain progress, but never surface raw SSH/profile errors or unbounded output.
         child.stderr.on('data',()=>{});
-        child.on('close',()=>{if(finished)return;finished=true;clearTimeout(timer);try{resolve(JSON.parse(output));}catch{reject(Error('remote_worker_invalid_result'));}});
+        child.on('close',()=>{if(finished)return;finished=true;clearTimeout(timer);try{resolve(JSON.parse(Buffer.concat(output).toString('utf8')));}catch{reject(Error('remote_worker_invalid_result'));}});
         child.stdin.end(JSON.stringify(payload));
     });
     if(reply.protocol!==ONLINE_REMOTE_PROTOCOL || reply.id!==id) throw Error('remote_worker_identity_mismatch');

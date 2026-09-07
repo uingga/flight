@@ -111,22 +111,21 @@ function prepare(d: Dom): RegionSnapshot {
         ...(emptyInventoryVerified ? {emptyInventoryVerified:true as const} : {}) };
 }
 /** Existing exact tab, or explicitly bounded blank-first entry. Inspect never performs actions. */
-export async function createOnlineTourRegionDiscovery(client: CdpClient, options: RegionDiscoveryOptions, firstEntry = false) {
+export async function createOnlineTourRegionDiscovery(client: CdpClient, options: RegionDiscoveryOptions, firstEntry = false, selectedTargetId?: string) {
     options = { ...options };
     if (![options.maxNavigations, options.maxProductRequests].every(n => Number.isSafeInteger(n) && n >= 0 && n <= 6)) throw new RegionDiscoveryError('invalid_budget');
     if (firstEntry && (options.maxNavigations !== 1 || options.maxProductRequests !== 1)) throw new RegionDiscoveryError('invalid_first_entry_budget');
     const diagnostics: RegionDiagnostics = { actions: 0, documentRequests: 0, permittedDocumentRequests: 0, productRequests: 0, permittedProductRequests: 0, blockedRequests: 0, suppressedAuxiliaryDocuments: 0 };
-    let sessionId: string | undefined, frameId = '', closed = false, cleanupExpired = false;
+    let sessionId: string | undefined, frameId = '', closed = false, cleanupExpired = false, targetId = '';
     const send = (method: string, params: Record<string, unknown> = {}, browser = false): Promise<any> => new Promise((resolve, reject) => {
         const timer = setTimeout(() => reject(new RegionDiscoveryError('cdp_deadline')), method === 'Page.stopLoading' ? 1000 : 15000);
         Promise.resolve().then(() => { if (closed || cleanupExpired) throw new RegionDiscoveryError('closed'); return client.send(method, params, browser ? undefined : sessionId); }).then(resolve, () => reject(new RegionDiscoveryError('cdp_failed'))).finally(() => clearTimeout(timer));
     });
     try {
         const targets = (await send('Target.getTargets', {}, true)).targetInfos as { type: string; targetId: string; url: string }[];
-        const pages = targets.filter(t => t.type === 'page' && matches(t.url, LIST));
-        let targetId: string;
+        const pages = targets.filter(t => t.type === 'page' && matches(t.url, LIST) && (!selectedTargetId || t.targetId === selectedTargetId));
         if (firstEntry) {
-            if (pages.length !== 0) throw new RegionDiscoveryError('first_entry_requires_missing_list_tab');
+            if (selectedTargetId) throw new RegionDiscoveryError('invalid_first_entry_target');
             // Blank first: arm the existing request guard BEFORE the first website navigation.
             targetId = (await send('Target.createTarget', { url: 'about:blank', background: true }, true)).targetId;
             if (!targetId) throw new RegionDiscoveryError('blank_target_creation_failed');
@@ -137,7 +136,9 @@ export async function createOnlineTourRegionDiscovery(client: CdpClient, options
         sessionId = (await send('Target.attachToTarget', { targetId, flatten: true }, true)).sessionId;
         if (!sessionId) throw new RegionDiscoveryError('attachment_failed');
         await send('Page.enable'); await send('Network.enable', { maxResourceBufferSize: 2097152, maxTotalBufferSize: 6291456 });
-    } catch (e) { if (sessionId) await send('Target.detachFromTarget', { sessionId }, true).catch(() => {}); await client.close().catch(() => {}); throw e; }
+    } catch (e) { if (sessionId) await send('Target.detachFromTarget', { sessionId }, true).catch(() => {});
+        if (firstEntry && targetId) await send('Target.closeTarget', { targetId }, true).catch(() => {});
+        await client.close().catch(() => {}); throw e; }
     async function readDom(): Promise<Dom> {
         if (closed) throw new RegionDiscoveryError('closed');
         const tree = await send('Page.getFrameTree');
@@ -422,6 +423,7 @@ export async function createOnlineTourRegionDiscovery(client: CdpClient, options
         return closePromise;
     }
     return { inspect, resetExistingRegion:(code:string)=>performRegion(code,false,false,undefined,true), visitEmptyMonth: (code:string,month:string) => performRegion(code,false,false,month), enterFirstList: () => performRegion('AS', false, true), visitRegion: (code: string) => performRegion(code, false), reloadExistingRegion: (code: string) => performRegion(code, true), close, get diagnostics() { return { ...diagnostics }; }, partialEvidence, get failure() { return latched?.reason || null; },
+        get targetId() { return targetId; },
         get lastRejectedRequest() { return lastRejectedRequest ? { ...lastRejectedRequest } : null; },
         get lastFailure(): RegionFailure | null { return latched ? { reason: latched.reason, phase: closing ? 'cleanup' : 'discovery', region: active?.region || lastSnapshot?.region || null } : null; } };
 }

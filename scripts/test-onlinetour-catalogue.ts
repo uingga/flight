@@ -14,6 +14,20 @@ import type { Flight } from '../src/types/flight';
 
 const plan: CataloguePlan = { schemaVersion: 1, regions: ['AS','CH'], throughMonth: '202610',
     maxProductRequests: 8, maxRegionalNavigations: 1, maxPagesPerScope: 2, maxMonthsPerCity: 2 };
+test('owned initial entry consumes shared product budget and reuses its first page without reload', async () => {
+    const f = fixture();
+    f.backend.openInitialRegion = async () => {
+        const region = await f.backend.openRegion(1,1);
+        return {...region, enterFirstList:()=>region.reloadExistingRegion!('AS')};
+    };
+    const result = await collectOnlineTourCatalogue(plan,f.backend);
+    assert.equal(result.status,'review_ready');
+    assert.equal(result.firstPageVerified,true);
+    assert.equal(result.productRequests,4);
+    assert.equal(result.regionalNavigations,1);
+    assert.equal(f.requests.filter(r=>r==='reload:AS').length,1);
+    assert.equal(f.requests.filter(r=>r==='PQC:202609:1').length,0);
+});
 test('60-day departure window uses KST and crosses months/years/leap day exactly', () => {
     assert.deepEqual(createDepartureWindow(Date.parse('2026-09-06T15:00:00Z')), {from:'2026-09-07',through:'2026-11-06'});
     assert.equal(createDepartureWindow(Date.parse('2026-12-31T15:00:00Z')).through,'2027-03-02');
