@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-06T08:38:17.640Z",
+  "updatedAt": "2026-09-07T09:16:57.209Z",
   "entries": [
     {
       "date": "2026-08-27",
@@ -2400,6 +2400,239 @@
               "finalUrl": "",
               "reason": null,
               "durationMs": 8334,
+              "verificationMethod": "browser_navigation",
+              "evidenceAt": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "date": "2026-09-07",
+      "checkedAt": "2026-09-07T09:16:01.599Z",
+      "summary": {
+        "scheduled": 11,
+        "passed": 9,
+        "failed": 0,
+        "unavailable": 2,
+        "recovered": 0,
+        "systemicSources": 0,
+        "checkedSources": 6
+      },
+      "sources": [
+        {
+          "source": "ybtour",
+          "status": "healthy",
+          "availableFlights": 165,
+          "checks": [
+            {
+              "source": "ybtour",
+              "flightId": "ybtour-10zf00d",
+              "route": "부산 → 시모지시마(SHI)",
+              "departureDate": "2026-10-25",
+              "checkedAt": "2026-09-07T09:16:01.911Z",
+              "stage": "initial",
+              "success": true,
+              "outcome": "passed",
+              "statusCode": 200,
+              "finalUrl": "",
+              "reason": null,
+              "durationMs": 6815,
+              "verificationMethod": "browser_navigation",
+              "evidenceAt": null
+            },
+            {
+              "source": "ybtour",
+              "flightId": "ybtour-y73wqd",
+              "route": "인천 → 반다르세리베가완(브루나이)",
+              "departureDate": "2026-10-27",
+              "checkedAt": "2026-09-07T09:16:08.775Z",
+              "stage": "initial",
+              "success": true,
+              "outcome": "passed",
+              "statusCode": 200,
+              "finalUrl": "",
+              "reason": null,
+              "durationMs": 5008,
+              "verificationMethod": "browser_navigation",
+              "evidenceAt": null
+            }
+          ]
+        },
+        {
+          "source": "hanatour",
+          "status": "healthy",
+          "availableFlights": 32,
+          "checks": [
+            {
+              "source": "hanatour",
+              "flightId": "hanatour-10yv1hi",
+              "route": "부산(PUS) → 후쿠오카(FUK)",
+              "departureDate": "2026.09.28(월)",
+              "checkedAt": "2026-09-07T09:16:13.838Z",
+              "stage": "initial",
+              "success": true,
+              "outcome": "passed",
+              "statusCode": 200,
+              "finalUrl": "",
+              "reason": null,
+              "durationMs": 10091,
+              "verificationMethod": "browser_navigation",
+              "evidenceAt": null
+            },
+            {
+              "source": "hanatour",
+              "flightId": "hanatour-1if4k9o",
+              "route": "서울(ICN) → 싱가포르(SIN)",
+              "departureDate": "2026.10.09(금)",
+              "checkedAt": "2026-09-07T09:16:23.982Z",
+              "stage": "initial",
+              "success": true,
+              "outcome": "passed",
+              "statusCode": 200,
+              "finalUrl": "",
+              "reason": null,
+              "durationMs": 8106,
+              "verificationMethod": "browser_navigation",
+              "evidenceAt": null
+            }
+          ]
+        },
+        {
+          "source": "modetour",
+          "status": "healthy",
+          "availableFlights": 95,
+          "checks": [
+            {
+              "source": "modetour",
+              "flightId": "modetour-ASIA-20138115",
+              "route": "청주 → 나트랑",
+              "departureDate": "2026-10-04",
+              "checkedAt": "2026-09-07T09:16:32.131Z",
+              "stage": "initial",
+              "success": true,
+              "outcome": "passed",
+              "statusCode": 200,
+              "finalUrl": "",
+              "reason": null,
+              "durationMs": 3095,
+              "verificationMethod": "browser_navigation",
+              "evidenceAt": null
+            },
+            {
+              "source": "modetour",
+              "flightId": "modetour-CHI-19734176",
+              "route": "대구 → 타이베이",
+              "departureDate": "2026-09-17",
+              "checkedAt": "2026-09-07T09:16:35.278Z",
+              "stage": "initial",
+              "success": true,
+              "outcome": "passed",
+              "statusCode": 200,
+              "finalUrl": "",
+              "reason": null,
+              "durationMs": 2489,
+              "verificationMethod": "browser_navigation",
+              "evidenceAt": null
+            }
+          ]
+        },
+        {
+          "source": "onlinetour",
+          "status": "healthy",
+          "availableFlights": 1,
+          "checks": [
+            {
+              "source": "onlinetour",
+              "flightId": "online-260908744348",
+              "route": "인천 → 로마",
+              "departureDate": "2026-09-08",
+              "checkedAt": "2026-09-07T09:16:37.822Z",
+              "stage": "initial",
+              "success": true,
+              "outcome": "passed",
+              "statusCode": 200,
+              "finalUrl": "",
+              "reason": null,
+              "durationMs": 4845,
+              "verificationMethod": "browser_navigation",
+              "evidenceAt": null
+            }
+          ]
+        },
+        {
+          "source": "ttang",
+          "status": "evidence_unavailable",
+          "availableFlights": 145,
+          "checks": [
+            {
+              "source": "ttang",
+              "flightId": "ttang-ICN-HAN-RT-0-4-9G-2026-10-07",
+              "route": "서울 → 하노이",
+              "departureDate": "2026-10-07",
+              "checkedAt": "2026-09-07T09:16:42.686Z",
+              "stage": "initial",
+              "outcome": "unavailable",
+              "success": false,
+              "statusCode": null,
+              "finalUrl": "",
+              "reason": "땡처리의 마지막 정상 크롤이 9시간 전이라 검증을 보류함",
+              "durationMs": 6,
+              "verificationMethod": "crawl_evidence",
+              "evidenceAt": "2026-09-06T23:44:37.138Z"
+            },
+            {
+              "source": "ttang",
+              "flightId": "ttang-RS0741ICNTAK-G24-2026-09-25",
+              "route": "서울 → 다카마츠",
+              "departureDate": "2026-09-25",
+              "checkedAt": "2026-09-07T09:16:42.686Z",
+              "stage": "initial",
+              "outcome": "unavailable",
+              "success": false,
+              "statusCode": null,
+              "finalUrl": "",
+              "reason": "땡처리의 마지막 정상 크롤이 9시간 전이라 검증을 보류함",
+              "durationMs": 0,
+              "verificationMethod": "crawl_evidence",
+              "evidenceAt": "2026-09-06T23:44:37.138Z"
+            }
+          ]
+        },
+        {
+          "source": "myrealtrip",
+          "status": "healthy",
+          "availableFlights": 140,
+          "checks": [
+            {
+              "source": "myrealtrip",
+              "flightId": "mrt-ICN-ADL-20261029-1146300",
+              "route": "서울(인천) → 애들레이드",
+              "departureDate": "2026-10-29",
+              "checkedAt": "2026-09-07T09:16:42.723Z",
+              "stage": "initial",
+              "success": true,
+              "outcome": "passed",
+              "statusCode": 200,
+              "finalUrl": "",
+              "reason": null,
+              "durationMs": 8838,
+              "verificationMethod": "browser_navigation",
+              "evidenceAt": null
+            },
+            {
+              "source": "myrealtrip",
+              "flightId": "mrt-ICN-TKS-20260917-580700",
+              "route": "서울(인천) → 도쿠시마",
+              "departureDate": "2026-09-17",
+              "checkedAt": "2026-09-07T09:16:51.612Z",
+              "stage": "initial",
+              "success": true,
+              "outcome": "passed",
+              "statusCode": 200,
+              "finalUrl": "",
+              "reason": null,
+              "durationMs": 5549,
               "verificationMethod": "browser_navigation",
               "evidenceAt": null
             }
