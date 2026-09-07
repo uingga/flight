@@ -15,6 +15,18 @@ const scope: ListScope = { departure: 'ICN', city: 'PQC', month: '202609' };
 const page = (pageNo: number, ids: string[], totalCount: number, lastPage: number, nextPageAvailable = pageNo < lastPage): ListPage =>
     ({ pageNo, totalCount, lastPage, nextPageAvailable, rawProducts: ids.map(id => row(id)) });
 const offline = { wait: async (_ms: number) => {} };
+
+test('mixed 00/01 statuses traverse, while rejected rows retain safe field-level reasons', async () => {
+    const { traverseOnlineTourLists }=await engine();
+    const good=await traverseOnlineTourLists([scope],async()=>({...page(1,[],2,1,false),
+        rawProducts:[row('a'),row('b',{event_status_code:'01',res_cnt:'2'})]}),offline);
+    assert.equal(good.status,'review_ready');assert.equal(good.uniqueCount,2);
+    const bad=await traverseOnlineTourLists([scope],async()=>({...page(1,[],2,1,false),
+        rawProducts:[row('c',{event_status_code:'05'}),row('d',{dep_start_time:'secret-not-a-time'})]}),offline);
+    assert.equal(bad.status,'failed');assert.equal(bad.failedRowCount,2);
+    assert.deepEqual(bad.issues.map(i=>i.validationReasons),[['unsupported_event_status'],['invalid_dep_start_time']]);
+    assert.ok(!JSON.stringify(bad.issues).includes('secret-not-a-time'));
+});
 test('validated rows dedupe across pages/scopes with first record atomic and detached from input', async () => {
     const { traverseOnlineTourLists } = await engine();
     const original: Record<string, unknown> = row('A', { nested: { keep: true } });

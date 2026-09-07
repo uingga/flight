@@ -277,8 +277,21 @@ test('redirect to login never reads private document DOM', async () => {
     assert.ok(!client.calls.some(c => c.method === 'Runtime.evaluate'));
     assert.equal(adapter.diagnostics.actions, 0); await adapter.close();
 });
-test('connector exports real normal-Chrome entrypoint', async () => {
-    assert.equal(typeof adapterModule.connectNormalChrome, 'function');
+test('connector exports dedicated-Chrome entrypoint only', async () => {
+    assert.equal(typeof adapterModule.connectDedicatedChrome, 'function');
+    assert.equal('connectNormalChrome' in adapterModule, false);
+});
+test('existing list needs no Google account tab and remains read-only', async () => {
+    const client = new FakeCdp(), original = client.send.bind(client);
+    client.send = (method, params, sessionId) => method === 'Target.getTargets'
+        ? Promise.resolve({ targetInfos: [{ targetId: 'target', type: 'page', url: listUrl }] })
+        : original(method, params, sessionId);
+    const adapter = await adapterModule.createOnlineTourBrowserAdapter(client);
+    assert.equal((await adapter.inspect()).preflight.existingListTabPresent, true);
+    assert.equal(adapter.diagnostics.actions, 0);
+    assert.equal(adapter.diagnostics.productRequests, 0);
+    assert.ok(!client.calls.some(c => c.method === 'Fetch.enable' || c.method === 'Page.reload'));
+    await adapter.close();
 });
 
 test('pending body command is bounded and cannot mutate finalized result', async () => fastDeadlines(async () => {

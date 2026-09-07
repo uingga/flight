@@ -1,9 +1,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { collectOnlineTourCatalogue, parseCataloguePlan, type CatalogueBackend, type CataloguePlan } from '../src/lib/onlinetour-catalogue';
+import { collectOnlineTourCatalogue, parseCataloguePlan, type CatalogueBackend, type CataloguePlan, type CatalogueResume } from '../src/lib/onlinetour-catalogue';
 import { createStagingRun } from '../src/lib/onlinetour-browser-collector';
+import { eligibleDepartures } from '../src/lib/onlinetour-departure-window';
 
-export async function executeCatalogue(root: string, plan: CataloguePlan, backend: CatalogueBackend, offlineOnly: boolean) {
+export async function executeCatalogue(root: string, plan: CataloguePlan, backend: CatalogueBackend, offlineOnly: boolean,
+    progress: (event: Record<string, unknown>) => void = () => {}, resume?: CatalogueResume) {
     const parsed = parseCataloguePlan(plan); // Validate before creating files or connecting.
     const run = createStagingRun(root), checkpoints: string[] = [];
     const startedAt = new Date().toISOString();
@@ -13,26 +15,30 @@ export async function executeCatalogue(root: string, plan: CataloguePlan, backen
         child.write('raw-products.json', rawProducts); child.write('flights.json', flights);
         child.write('summary.json', { ...metadata, offlineOnly, parentRunId: run.runId });
         checkpoints.push(child.runId);
-    });
+    }, progress, resume);
     const { rawProducts, flights, traversals, ...metadata } = result;
+    // Keep original evidence intact; a separate candidate file applies the departure window.
+    const eligible = parsed.departureWindow ? eligibleDepartures(flights, parsed.departureWindow) : flights;
     const summary = { ...metadata, runId: run.runId, offlineOnly, checkpoints,
         scopeResults: traversals.map(({ rawProducts: _raw, flights: _flights, ...m }) => m),
-        uniqueCount: flights.length, startedAt, finishedAt: new Date().toISOString() };
+        uniqueCount: flights.length, eligibleCount: eligible.length, outsideDepartureWindowCount: flights.length - eligible.length,
+        startedAt, finishedAt: new Date().toISOString() };
+    if (parsed.departureWindow) run.write('eligible-flights.json', eligible);
     run.write('raw-products.json', rawProducts); run.write('flights.json', flights); run.write('summary.json', summary);
     return summary;
 }
 
 /** Connections never overlap; each transfer closes its old adapter before the next opens. */
 export async function createLiveCatalogueBackend(): Promise<CatalogueBackend> {
-    const { connectNormalChrome, createOnlineTourBrowserAdapter } = await import('../src/lib/onlinetour-browser-adapter');
+    const { connectDedicatedChrome, createOnlineTourBrowserAdapter } = await import('../src/lib/onlinetour-browser-adapter');
     const { createOnlineTourRegionDiscovery } = await import('../src/lib/onlinetour-region-discovery');
     return {
         wait: ms => new Promise(resolve => setTimeout(resolve, ms)),
         async openRegion(navigations, products) {
-            return createOnlineTourRegionDiscovery(await connectNormalChrome(), { maxNavigations: navigations, maxProductRequests: products });
+            return createOnlineTourRegionDiscovery(await connectDedicatedChrome(), { maxNavigations: navigations, maxProductRequests: products });
         },
         async openLists(products, seed) {
-            const a = await createOnlineTourBrowserAdapter(await connectNormalChrome(), { seed });
+            const a = await createOnlineTourBrowserAdapter(await connectDedicatedChrome(), { seed });
             try { a.authorizeProductRequests(products); return a; }
             catch (error) { await a.close().catch(() => {}); throw error; }
         },
@@ -62,7 +68,7 @@ async function main() {
     if (args.mode === 'help') {
         console.log('Staging only. No scheduled/operational mode.\n--check-plan --plan <local.json> (offline)\n'
             + '--run --consent-confirmed --plan <approved-local.json>\n'
-            + 'Existing normal Chrome consent, current local PC cooldown state, explicit regions/month/request budget required.');
+            + 'Existing dedicated Chrome (loopback 9222), current local PC cooldown state, explicit regions/month/request budget required.');
         return;
     }
     const stat = fs.lstatSync(args.file);

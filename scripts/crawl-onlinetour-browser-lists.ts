@@ -140,7 +140,7 @@ async function main(): Promise<void> {
     try { args = parseBrowserArgs(process.argv.slice(2)); }
     catch { console.error('Refused: explicit consent, scope file and request budget required. Use --help.'); process.exitCode = 2; return; }
     if (args.mode === 'help') {
-        console.log('Normal signed-in Chrome, OnlineTour existing tab only. Staging only.\n'
+        console.log('Existing dedicated Chrome (loopback 9222), OnlineTour existing tab only. Staging only.\n'
             + '--inspect --consent-confirmed : read current controls, NO page navigation/reload/product requests\n'
             + '--run --consent-confirmed --scopes <plan.json> --max-requests <1..100> --max-pages <1..20>\n'
             + 'Run requires separately approved finite scope and budget. No launch, endpoint override, direct API fetch, or operational merge.');
@@ -152,8 +152,8 @@ async function main(): Promise<void> {
         if (!stat.isFile() || stat.isSymbolicLink() || stat.size > 100000) throw new Error('invalid_plan_file');
         scopes = parseBrowserPlan(JSON.parse(fs.readFileSync(file, 'utf8')));
     }
-    const { connectNormalChrome, createOnlineTourBrowserAdapter } = await import('../src/lib/onlinetour-browser-adapter');
-    const client = await connectNormalChrome();
+    const { connectDedicatedChrome, createOnlineTourBrowserAdapter } = await import('../src/lib/onlinetour-browser-adapter');
+    const client = await connectDedicatedChrome();
     let adapter: Awaited<ReturnType<typeof createOnlineTourBrowserAdapter>>;
     try { adapter = await createOnlineTourBrowserAdapter(client); }
     catch (error) { await client.close().catch(() => {}); throw error; }

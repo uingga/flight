@@ -1,4 +1,9 @@
-# 온라인투어 일반 Chrome 수집 — staging 전용
+# 온라인투어 Chrome 수집 — staging 전용
+
+> **2026-09-07 연결 방식 변경:** 현재 실행기는 [기존 개인 프로필 복사본 기반 전용 Chrome](onlinetour-dedicated-chrome.md)을 사용한다.
+> 개인 Chrome의 `DevToolsActivePort`/매 연결 동의 방식과 Google 홈 탭 필수 조건은 제거했다.
+> 아래 일반 Chrome 연결·승인 관련 설명과 실사이트 성과는 **변경 전 기록**이며 현재 연결 절차가 아니다.
+> 전용 프로필 방식의 신규 실수집·B PC 설치·운영 연결·배포는 별도 검증/승인 전이다.
 
 > 2026-09-07: 전체 순회용 검토 실행기와 A/B 오프라인 검증을 추가했다.
 > [최신 검증 진행](crawler-validation-20260907.md)을 참고한다. 후속 사용자 동의 후 B 일반 Chrome

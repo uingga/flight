@@ -15,6 +15,9 @@ export class ListReadError extends Error {
 }
 export interface TraversalOptions {
     maxRequests?: number; maxPagesPerScope?: number; requestDelayMs?: number; retryDelayMs?: number;
+    maxRetries?: 0 | 1;
+    /** Legacy page-one evidence, freshly matched to the same live document. No invented totals. */
+    initialEvidence?: { scope: ListScope; rawProducts: Record<string, unknown>[]; nextPageAvailable: boolean };
     wait?: (ms: number) => Promise<void>;
 }
 export interface TraversalScopeResult {
@@ -33,7 +36,7 @@ export interface TraversalResult {
     failedRowCount: number; failedRequestCount: number; failedPageCount: number;
     rawProducts: Record<string, unknown>[]; flights: Flight[];
     scopes: TraversalScopeResult[];
-    issues: { reason: string; scopeKey: string | null; pageNo: number | null; row: number | null; severity: 'error' | 'warning' }[];
+    issues: { reason: string; validationReasons?: string[]; scopeKey: string | null; pageNo: number | null; row: number | null; severity: 'error' | 'warning' }[];
 }
 
 // Source evidence must actually be JSON, not values JSON.stringify would drop/coerce
@@ -83,8 +86,10 @@ export async function traverseOnlineTourLists(scopes: ListScope[],
     const maxPages = options?.maxPagesPerScope ?? 20;
     const requestDelay = options?.requestDelayMs ?? 5000;
     const retryDelay = options?.retryDelayMs ?? 10000;
+    const maxRetries = options?.maxRetries ?? 1;
     if (!options || !Number.isSafeInteger(maxRequests) || maxRequests < 1
         || !Number.isSafeInteger(maxPages) || maxPages < 1
+        || ![0, 1].includes(maxRetries)
         || !Number.isSafeInteger(requestDelay) || requestDelay < 0 || requestDelay > 2147483647
         || !Number.isSafeInteger(retryDelay) || retryDelay < 0 || retryDelay > 2147483647
         || (options.wait !== undefined && typeof options.wait !== 'function') || typeof readPage !== 'function') {
@@ -115,10 +120,29 @@ export async function traverseOnlineTourLists(scopes: ListScope[],
             result.issues.push({ reason, scopeKey: record.key, pageNo, row: null, severity: 'error' });
             return result;
         };
-        for (let p = 1; ; p++) {
+        const initial = options.initialEvidence;
+        if (initial) {
+            if (scopes.length !== 1 || !initial.scope || initial.scope.departure !== scope.departure
+                || initial.scope.city !== scope.city || initial.scope.month !== scope.month
+                || typeof initial.nextPageAvailable !== 'boolean' || !Array.isArray(initial.rawProducts)
+                || initial.rawProducts.length < 1 || initial.rawProducts.length > 20) return fail('invalid_initial_evidence', 1);
+            try {
+                assertJson(initial.rawProducts);
+                const v = validatePilotResponse('restored(' + JSON.stringify({ status: 200, data: { list: initial.rawProducts } }) + ');', 'restored');
+                if (v.status !== 'pilot_ready_for_review') return fail('invalid_initial_evidence', 1);
+                result.rawProducts.push(...v.rawProducts as Record<string, unknown>[]); result.flights.push(...v.flights);
+                for (const f of v.flights) { ids.add(f.id); scopeIds.add(f.id); }
+                record.pagesRead = 1; record.rawCount = record.uniqueCount = v.flights.length;
+                result.rawCount = result.uniqueCount = v.flights.length;
+                // The old writer omitted page-one totals. They stay null, not retrospectively invented.
+                record.metadataChanged = true; warn('initial_metadata_unavailable', 1);
+                if (!initial.nextPageAvailable) { record.terminalVerified = true; continue; }
+            } catch { return fail('invalid_initial_evidence', 1); }
+        }
+        for (let p = record.pagesRead + 1; ; p++) {
             if (record.pagesRead >= maxPages) return fail('page_budget_exhausted', p);
             let data!: ListPage;
-            for (let attempt = 1; attempt <= 2; attempt++) {
+            for (let attempt = 1; attempt <= maxRetries + 1; attempt++) {
                 if (result.requestCount >= maxRequests) return fail('request_budget_exhausted', p);
                 try { if (result.requestCount) await wait(attempt === 2 ? retryDelay : requestDelay); }
                 catch { return fail('wait_failed', p); }
@@ -129,7 +153,7 @@ export async function traverseOnlineTourLists(scopes: ListScope[],
                     result.failedRequestCount++;
                     // Never expose adapter messages, URLs, tokens, or unclassified error properties.
                     const kind = error instanceof ListReadError ? error.kind : 'unknown';
-                    if (kind === 'transient' && attempt === 1) continue;
+                    if (kind === 'transient' && attempt <= maxRetries) continue;
                     result.status = 'failed'; record.status = 'failed'; result.failedPageCount++;
                     const reason = kind === 'access' ? 'read_access' : kind === 'validation' ? 'read_validation'
                         : kind === 'transient' ? 'read_transient_exhausted' : 'read_unknown';
@@ -141,7 +165,8 @@ export async function traverseOnlineTourLists(scopes: ListScope[],
             // Empty terminal confirmation and an observed shrink are not empty-scope claims.
             // Neither permits an empty intermediate page or an arbitrary pageNo mismatch.
             const emptyTerminal = data && p > 1 && data.nextPageAvailable === false
-                && ((record.confirmationPage === p && data.lastPage < p)
+                && ((!!initial && p === 2 && data.lastPage < p)
+                    || (record.confirmationPage === p && data.lastPage < p)
                     || (record.firstTotalCount !== null && data.totalCount < record.firstTotalCount && data.lastPage < p));
             if (!data || typeof data !== 'object' || data.pageNo !== p
                 || !Number.isSafeInteger(data.totalCount) || data.totalCount < 0
@@ -157,6 +182,7 @@ export async function traverseOnlineTourLists(scopes: ListScope[],
             for (let index = 0; index < data.rawProducts.length; index++) {
                 const raw = data.rawProducts[index];
                 result.rawCount++; record.rawCount++;
+                let validationReasons: string[] | undefined;
                 try {
                     assertJson(raw);
                     if (!raw || Array.isArray(raw) || typeof raw.event_code !== 'string'
@@ -165,7 +191,11 @@ export async function traverseOnlineTourLists(scopes: ListScope[],
                     // Each occurrence is validated, including changed duplicate values. The
                     // pilot's strict validator stays unchanged; singleton batches avoid its duplicate gate.
                     const validated = validatePilotResponse(`offlineList(${JSON.stringify({ status: 200, data: { list: [raw] } })});`, 'offlineList');
-                    if (validated.status !== 'pilot_ready_for_review') throw new Error('invalid_row');
+                    if (validated.status !== 'pilot_ready_for_review') {
+                        // Keep only the validator's fixed diagnostic codes, never transport messages or raw values.
+                        validationReasons = validated.issues.map(issue=>issue.reason).filter(reason=>/^(?:invalid_(?:dep_start_time|dep_end_time|arr_start_time|arr_end_time|date_format|price|seats|date|mapped_price)|unsupported_event_status|unmapped_row|duplicate_id)$/.test(reason));
+                        throw new Error('invalid_row');
+                    }
                     const flight = validated.flights[0];
                     if (flight.id !== `online-${raw.event_code}`) throw new Error('invalid_row');
                     if (!scopeIds.has(flight.id)) { record.uniqueCount++; scopeIds.add(flight.id); }
@@ -182,12 +212,14 @@ export async function traverseOnlineTourLists(scopes: ListScope[],
                     }
                 } catch {
                     result.failedRowCount++; result.status = 'failed'; record.status = 'failed';
-                    result.issues.push({ reason: 'invalid_row', scopeKey: record.key, pageNo: p, row: index, severity: 'error' });
+                    result.issues.push({ reason: 'invalid_row', ...(validationReasons?.length ? {validationReasons} : {}),
+                        scopeKey: record.key, pageNo: p, row: index, severity: 'error' });
                 }
             }
             if (result.status === 'failed') { result.failedPageCount++; return result; }
             if (record.plannedLastPage === null) {
-                record.plannedLastPage = data.lastPage; record.firstTotalCount = data.totalCount;
+                record.plannedLastPage = data.lastPage;
+                if (!initial) record.firstTotalCount = data.totalCount;
             } else if (data.totalCount !== record.latestTotalCount || data.lastPage !== record.latestLastPage) {
                 record.metadataChanged = true; warn('list_metadata_changed', p);
             }
@@ -196,6 +228,8 @@ export async function traverseOnlineTourLists(scopes: ListScope[],
                 beyondBoundaryRows = true; warn('products_beyond_planned_boundary', p);
             }
             if (!data.nextPageAvailable || record.confirmationPage === p) {
+                if (initial && !data.nextPageAvailable && (record.rawCount !== data.totalCount || p < data.lastPage))
+                    return fail('restored_count_mismatch', p);
                 record.terminalVerified = !data.nextPageAvailable;
                 if (data.nextPageAvailable) { record.deferredGrowth = true; warn('growth_deferred', p); }
                 if (!record.metadataChanged) {

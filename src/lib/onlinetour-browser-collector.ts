@@ -4,20 +4,7 @@ import { randomUUID } from 'node:crypto';
 import type { Flight } from '../types/flight';
 import { mapOnlineTourFlight } from './scrapers/onlinetour';
 import { parseOnlineTourJsonp } from './scrapers/source-response';
-
-export function parseDevToolsActivePort(text: string): string {
-    const match = /^([1-9]\d{0,4})\r?\n(\/devtools\/browser\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})(?:\r?\n)?$/.exec(text);
-    if (!match || Number(match[1]) > 65535) throw new Error('invalid_devtools_discovery');
-    return `ws://127.0.0.1:${match[1]}${match[2]}`;
-}
-
-export function discoverNormalChromeEndpoint(localAppData = process.env.LOCALAPPDATA): string {
-    if (!localAppData || !path.isAbsolute(localAppData)) throw new Error('missing_localappdata');
-    const file = path.join(localAppData, 'Google', 'Chrome', 'User Data', 'DevToolsActivePort');
-    const stat = fs.lstatSync(file);
-    if (!stat.isFile() || stat.isSymbolicLink() || stat.size > 256) throw new Error('invalid_devtools_discovery');
-    return parseDevToolsActivePort(fs.readFileSync(file, 'utf8'));
-}
+import { ONLINE_CHROME_PREFLIGHT } from './onlinetour-dedicated-chrome';
 
 // Reject links/junctions along the entire path, not just the last component.
 function assertCanonicalDirectory(directory: string): void {
@@ -47,8 +34,8 @@ export function createStagingRun(repositoryRoot: string) {
     assertCanonicalDirectory(directory);
     return {
         runId, directory,
-        write(name: 'raw-products.json' | 'flights.json' | 'summary.json', value: unknown): void {
-            if (!['raw-products.json', 'flights.json', 'summary.json'].includes(name)) throw new Error('unsafe_staging_filename');
+        write(name: 'raw-products.json' | 'flights.json' | 'summary.json' | 'eligible-flights.json', value: unknown): void {
+            if (!['raw-products.json', 'flights.json', 'summary.json', 'eligible-flights.json'].includes(name)) throw new Error('unsafe_staging_filename');
             assertCanonicalDirectory(directory);
             fs.writeFileSync(path.join(directory, name), JSON.stringify(value, null, 2) + '\n', { flag: 'wx', mode: 0o600 });
         },
@@ -96,7 +83,9 @@ export function validatePilotResponse(text: string, callback: string): PilotVali
             const seats = integerField(raw.res_cnt);
             if (price === null || fee === null || price <= 0) throw new Error('invalid_price');
             if (seats === null) throw new Error('invalid_seats');
-            if (raw.event_status_code !== '00') throw new Error('unsupported_event_status');
+            // The public DYG list renders both 00 and 01 as reservable (verified against
+            // visible card IDs on 2026-09-07). 03/05 and unobserved codes stay rejected.
+            if (raw.event_status_code !== '00' && raw.event_status_code !== '01') throw new Error('unsupported_event_status');
             // The browser card displays adult_price total. Neutralize legacy fee subtraction
             // only in this mapper input; the untouched raw response retains its actual fee.
             const flight = mapOnlineTourFlight({ ...raw, adult_fee_price: 0 });
@@ -139,7 +128,7 @@ export interface PilotSummary {
     rawCount: number;
     mappedCount: number;
     issues: PilotValidation['issues'];
-    preflight: { googleHomeTabPresent: boolean; evidence: 'tab_url_metadata_only_not_session_guarantee' };
+    preflight: { existingListTabPresent: boolean; evidence: typeof ONLINE_CHROME_PREFLIGHT.evidence };
     startedAt: string;
     finishedAt: string;
     diagnostics: PilotDiagnostics;
@@ -170,7 +159,7 @@ export async function collectBrowserPilot(browser: import('playwright').Browser,
         productionReady: false, scope: 'existing_current_list_first_response_max20_site_defaults',
         rawCount: 0, mappedCount: 0, issues: [], startedAt: new Date().toISOString(), finishedAt: '',
         diagnostics: { stages: {}, http: { document: null, api: null }, waitingAtFailure: [] },
-        preflight: { googleHomeTabPresent: false, evidence: 'tab_url_metadata_only_not_session_guarantee' } };
+        preflight: { existingListTabPresent: false, evidence: ONLINE_CHROME_PREFLIGHT.evidence } };
     let page: import('playwright').Page | undefined;
     let session: import('playwright').CDPSession | undefined;
     let active = true;
@@ -204,8 +193,7 @@ export async function collectBrowserPilot(browser: import('playwright').Browser,
         const targets = browser.contexts().flatMap(context => context.pages()).filter(candidate => matchesPage(candidate.url(), ONLINE_LIST_URL));
         if (targets.length !== 1) throw new PilotFailure('failed_preflight', 'require_exactly_one_existing_list_tab');
         page = targets[0];
-        summary.preflight.googleHomeTabPresent = page.context().pages().some(candidate => matchesPage(candidate.url(), 'https://myaccount.google.com/'));
-        if (!summary.preflight.googleHomeTabPresent) throw new PilotFailure('failed_preflight', 'require_existing_google_home_tab');
+        summary.preflight.existingListTabPresent = true;
         const target = page;
         const operation = async (): Promise<PilotValidation> => {
             mark('attach_started');

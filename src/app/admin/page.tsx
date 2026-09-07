@@ -35,7 +35,7 @@ interface CrawlTurnoverFlight {
 
 interface CrawlHistoryEntry {
     timestamp: string;
-    runKind?: 'pc_fallback';
+    runKind?: 'pc_fallback' | 'pc_primary' | 'github_fallback';
     sites: Record<string, { total: number; scraped?: number; preserved?: boolean; skipped?: boolean; skippedUntil?: string; skipReason?: 'schedule' | 'circuit' | 'not-requested'; manual?: boolean; localFallback?: boolean; added?: number; removed?: number; addedFlights?: CrawlTurnoverFlight[]; removedFlights?: CrawlTurnoverFlight[] }>;
     alerts: string[];
 }
@@ -2133,7 +2133,7 @@ export default function AdminPage() {
         const shown = attemptedSources.reduce((sum, source) => sum + (entry.sites[source]?.total || 0), 0);
         const turnover = turnoverOf(entry);
         const localFallbackSources = attemptedSources.filter(source => entry.sites[source]?.localFallback);
-        const kind = localFallbackSources.length > 0
+        const kind = entry.runKind === 'pc_primary' || entry.runKind === 'github_fallback' ? entry.runKind : localFallbackSources.length > 0
             ? 'pc_fallback'
             : attemptedSources.length === 1 && attemptedSources[0] === 'myrealtrip'
                 ? 'myrealtrip'
@@ -2152,7 +2152,9 @@ export default function AdminPage() {
             shown,
             turnover,
             kind,
-            label: kind === 'pc_fallback'
+            label: kind === 'pc_primary' ? 'PC 주 수집 · 온라인투어'
+                : kind === 'github_fallback' ? 'GitHub 대체 수집 · 온라인투어'
+                : kind === 'pc_fallback'
                 ? `PC 대체 수집 · ${localFallbackSources.map(source => SOURCE_NAMES[source] || source).join(', ')}`
                 : kind === 'myrealtrip' ? '마이리얼트립 전용 수집' : regularLabel,
         };

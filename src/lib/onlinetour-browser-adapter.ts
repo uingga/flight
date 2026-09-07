@@ -7,9 +7,11 @@ interface RawSocket {
     close(): void; terminate(): void;
 }
 const WebSocket = require('ws') as { new(endpoint: string, options: Record<string, unknown>): RawSocket; OPEN: number; CLOSED: number };
-import { discoverNormalChromeEndpoint, ONLINE_LIST_URL, validatePilotResponse } from './onlinetour-browser-collector';
+import { ONLINE_LIST_URL, validatePilotResponse } from './onlinetour-browser-collector';
+import { discoverDedicatedChromeEndpoint, ONLINE_CHROME_CONNECT_TIMEOUT_MS, ONLINE_CHROME_PREFLIGHT } from './onlinetour-dedicated-chrome';
 import { ListReadError, type ListPage, type ListScope } from './onlinetour-list-traversal';
 import { parseOnlineTourJsonp } from './scrapers/source-response';
+import { followingMonth, nativeMonthUrl } from './onlinetour-month-navigation';
 
 export interface PartialPageEvidence {
     scope: ListScope; pageNo: number; attempt: number;
@@ -21,19 +23,19 @@ export interface BrowserSnapshot {
     region: string;
     currentScope: ListScope; availableScopes: ListScope[]; nextPageNo: number;
     nextPageAvailable: boolean; restricted: boolean;
-    preflight: { googleHomeTabPresent: true; evidence: 'tab_url_metadata_only_not_session_guarantee' };
+    preflight: typeof ONLINE_CHROME_PREFLIGHT;
 }
 export interface CdpClient {
     send(method: string, params?: Record<string, unknown>, sessionId?: string): Promise<any>;
     onEvent(listener: (event: { method: string; params: any; sessionId?: string }) => void): () => void;
     close(): Promise<void>;
 }
-export async function connectNormalChrome(): Promise<CdpClient> {
+export async function connectDedicatedChrome(): Promise<CdpClient> {
     let endpoint: string;
-    try { endpoint = discoverNormalChromeEndpoint(); }
-    catch { throw failure('validation', 'normal_chrome_discovery_failed'); }
-    // Official, existing normal profile discovery only. No HTTP endpoint probing or browser launch.
-    const socket = new WebSocket(endpoint, { handshakeTimeout: 180_000, maxPayload: 4 * 1024 * 1024, perMessageDeflate: false });
+    try { endpoint = await discoverDedicatedChromeEndpoint(); }
+    catch { throw failure('validation', 'dedicated_chrome_discovery_failed'); }
+    // Verified persistent profile at loopback 9222 only. No personal-browser fallback or launch.
+    const socket = new WebSocket(endpoint, { handshakeTimeout: ONLINE_CHROME_CONNECT_TIMEOUT_MS, maxPayload: 4 * 1024 * 1024, perMessageDeflate: false });
     return connectRawCdpSocket(socket);
 }
 
@@ -66,7 +68,7 @@ export async function connectRawCdpSocket(socket: RawSocket): Promise<CdpClient>
     if (socket.readyState !== WebSocket.OPEN) {
         try {
             await new Promise<void>((resolve, reject) => {
-                const timer = setTimeout(() => finish(failure('transient', 'cdp_connect_deadline')), 180_000);
+                const timer = setTimeout(() => finish(failure('transient', 'cdp_connect_deadline')), ONLINE_CHROME_CONNECT_TIMEOUT_MS);
                 const opened = () => finish();
                 const failed = () => finish(failure('transient', 'cdp_connect_failed'));
                 function finish(error?: Error) {
@@ -143,6 +145,7 @@ const DOM_READ = String.raw`(() => {
     }
     const more = document.querySelector('#btn_more');
     return { url: location.href, vars, filters,
+        nextMonthSource:typeof window.nextMonth==='function'?Function.prototype.toString.call(window.nextMonth):null,
         pageNo: document.querySelector('#pageNo')?.value,
         pageSize: document.querySelector('#pageSize')?.value,
         more: enabled(more), moreOnclick: more?.getAttribute('onclick'),
@@ -153,17 +156,18 @@ const DOM_READ = String.raw`(() => {
             tag: e.tagName, name: e.getAttribute('name'), onclick: e.getAttribute('onclick') })) };
 })()`;
 interface DomState {
+    nextMonthSource?: string;
     url: string; vars: Record<string, string>; filters: Record<string, { safe: boolean; values: string[] }>;
     pageNo: string; pageSize: string; more: boolean; moreOnclick: string; bodyRestricted: boolean;
     ready: boolean; loading: boolean; controls: { tag: string; name: string; onclick: string }[];
 }
-function prepare(dom: DomState): { snapshot: BrowserSnapshot; controls: { scope: ListScope; onclick: string }[] } {
+function prepare(dom: DomState): { snapshot: BrowserSnapshot; controls: { scope: ListScope; onclick: string; url?:string }[] } {
     const v = dom.vars;
     const currentScope: ListScope = { departure: v.airSect, city: v.SelectedCityCd, month: v.nowYear + v.nowMonth };
     if (!validScope(currentScope) || !/^[A-Z]{2,3}$/.test(v.TabGubun) || v.nowDay !== '' || v.order !== 'LP' || v.view !== ''
         || !dom.filters.ck_dep.safe || !dom.filters.ck_status.safe || dom.pageSize !== '20'
         || !/^[1-9]\d*$/.test(dom.pageNo) || !Number.isSafeInteger(Number(dom.pageNo))) throw failure('validation', 'unsupported_list_state');
-    const controls: { scope: ListScope; onclick: string }[] = [];
+    const controls: { scope: ListScope; onclick: string; url?:string }[] = [];
     for (const control of dom.controls) {
         const city = /^(?:javascript:)?goSelectedCity\(\s*'([A-Z]{3})'\s*,\s*'(\d{8})'\s*\);?$/.exec(control.onclick);
         const month = /^(?:javascript:)?(?:nextMonth|prevMonth)\(\s*([1-9]\d{3})\s*,\s*(\d{1,2})\s*\);?$/.exec(control.onclick);
@@ -173,10 +177,13 @@ function prepare(dom: DomState): { snapshot: BrowserSnapshot; controls: { scope:
         if (month && control.tag === 'BUTTON') target = { ...currentScope, month: month[1] + month[2].padStart(2, '0') };
         if (target && validScope(target)) controls.push({ scope: target, onclick: control.onclick });
     }
+    const next = {...currentScope,month:followingMonth(currentScope.month)};
+    const url = nativeMonthUrl(dom.nextMonthSource,dom.vars,next.month);
+    if (url && !controls.some(c=>same(c.scope,next))) controls.push({scope:next,onclick:'',url});
     const availableScopes = [currentScope];
     for (const control of controls) if (!availableScopes.some(s => same(s, control.scope))) availableScopes.push(control.scope);
     return { snapshot: { region: v.TabGubun, currentScope, availableScopes, nextPageNo: Number(dom.pageNo), nextPageAvailable: dom.more,
-        restricted: dom.bodyRestricted, preflight: { googleHomeTabPresent: true, evidence: 'tab_url_metadata_only_not_session_guarantee' } }, controls };
+        restricted: dom.bodyRestricted, preflight: { ...ONLINE_CHROME_PREFLIGHT } }, controls };
 }
 
 export async function createOnlineTourBrowserAdapter(client: CdpClient,
@@ -204,8 +211,6 @@ export async function createOnlineTourBrowserAdapter(client: CdpClient,
         const targets = (await client.send('Target.getTargets')).targetInfos as { type: string; url: string; targetId: string }[];
         const pages = targets.filter(t => t.type === 'page' && matches(t.url, ONLINE_LIST_URL));
         if (pages.length !== 1) throw failure('validation', 'require_exactly_one_existing_list_tab');
-        if (!targets.some(t => t.type === 'page' && matches(t.url, 'https://myaccount.google.com/')))
-            throw failure('validation', 'require_existing_google_home_tab');
         targetId = pages[0].targetId;
         sessionId = (await client.send('Target.attachToTarget', { targetId, flatten: true })).sessionId;
         if (!sessionId) throw failure('validation', 'attachment_failed');
@@ -468,6 +473,13 @@ export async function createOnlineTourBrowserAdapter(client: CdpClient,
             action.started = true;
             diagnostics.actions++;
             if (pageNo === 1 && current) await send('Page.reload', { ignoreCache: false });
+            else if (pageNo === 1 && choices[0]?.url) {
+                const again = await readDom();
+                if (!again.ready || again.loading || again.bodyRestricted || nativeMonthUrl(again.nextMonthSource,again.vars,scope.month) !== choices[0].url)
+                    throw failure('validation','month_navigation_changed');
+                const navigation = await send('Page.navigate',{url:choices[0].url});
+                if (navigation.errorText) throw failure('validation','month_navigation_failed');
+            }
             else {
                 const expected = { vars: dom.vars, pageNo: dom.pageNo, onclick: pageNo > 1 ? dom.moreOnclick : choices[0].onclick, more: pageNo > 1 };
                 // Only click the exact already observed handler; never eval handler text, set hidden inputs, or call site API.

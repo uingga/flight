@@ -1,16 +1,20 @@
 import type { CdpClient } from './onlinetour-browser-adapter';
-export { connectNormalChrome } from './onlinetour-browser-adapter';
+export { connectDedicatedChrome } from './onlinetour-browser-adapter';
 import { validatePilotResponse } from './onlinetour-browser-collector';
 import type { ListScope } from './onlinetour-list-traversal';
+import { nativeMonthUrl } from './onlinetour-month-navigation';
 
 export interface RegionSnapshot {
     region: string; cities: { code: string; firstDepartureDate: string }[];
     monthCandidates: string[]; availableRegions: string[]; currentScope: ListScope | null; restricted: boolean;
+    emptyInventoryVerified?: true;
+    inventoryMonth?: string;
 }
 export interface RegionDiscoveryOptions { maxNavigations: number; maxProductRequests: number; }
 export interface RegionDiagnostics {
     actions: number; documentRequests: number; permittedDocumentRequests: number;
     productRequests: number; permittedProductRequests: number; blockedRequests: number;
+    suppressedAuxiliaryDocuments?: number;
 }
 export interface RegionFirstPage { scope: ListScope; pageNo: 1; totalCount: number; lastPage: number; rawProducts: Record<string, unknown>[]; nextPageAvailable?: boolean; }
 export interface RegionDiscoveryResult { snapshot: RegionSnapshot; firstPage: RegionFirstPage | null; }
@@ -21,6 +25,8 @@ export class RegionDiscoveryError extends Error {
 }
 const LIST = 'https://www.onlinetour.co.kr/flight/w/international/dcair/dcairList';
 const API = 'https://api.onlinetour.co.kr/v2/flight/international/dcair/list';
+const BLOCKED_AD_FRAME = 'https://gum.criteo.com/syncframe';
+const BLOCKED_TRACKING_FRAME = 'https://www.facebook.com/tr/';
 const ACCESS = /captcha|access denied|request blocked|temporarily blocked|unusual traffic|비정상(?:적인)?\s*접근|자동화(?:된)?\s*요청|접근이?\s*제한|서비스\s*이용이?\s*제한/i;
 const matches = (raw: string, expected: string) => { try { const u = new URL(raw); return !u.username && !u.password && u.origin + u.pathname === expected; } catch { return false; } };
 const monthOK = (s: string) => /^[1-9]\d{3}(0[1-9]|1[0-2])$/.test(s);
@@ -53,7 +59,15 @@ const DOM_READ = String.raw`(() => {
         const total = selected.some(e => e.value === 'total');
         filters[name] = { safe: !selected.length || total, values: total ? inputs.filter(e => e.value !== 'total').map(e => e.value) : [] };
     }
-    return { vars, filters, pageNo: document.querySelector('#pageNo')?.value, pageSize: document.querySelector('#pageSize')?.value,
+    return { vars, filters, nextMonthSource:typeof window.nextMonth==='function'?Function.prototype.toString.call(window.nextMonth):null,
+        pageNo: document.querySelector('#pageNo')?.value, pageSize: document.querySelector('#pageSize')?.value,
+        emptyInventoryDocument: (() => {
+            if (document.querySelectorAll('input[name=city]').length || !document.querySelector('#data_list')
+                || document.querySelector('#data_list').children.length) return false;
+            const scripts = Array.from(document.scripts || []).filter(s => !s.src && /var dCairAllListStr\s*=/.test(s.textContent || ''));
+            if (scripts.length !== 1) return false;
+            return /var dCairAllListStr\s*=\s*'\[\]'\s*;/.test(scripts[0].textContent || '');
+        })(),
         more: enabled(document.querySelector('#btn_more')),
         ready: document.readyState === 'complete', loading: Array.from(document.querySelectorAll('[class*="loading"], [id*="loading"]')).some(visible) || /조회중입니다/.test(document.body?.innerText || ''),
         restricted: /captcha|access denied|request blocked|temporarily blocked|unusual traffic|비정상(?:적인)?\s*접근|자동화(?:된)?\s*요청|접근이?\s*제한|서비스\s*이용이?\s*제한/i.test(document.body?.innerText || ''),
@@ -62,6 +76,8 @@ const DOM_READ = String.raw`(() => {
 interface Dom {
     outside?: boolean; vars: Record<string, string | null>; ready: boolean; loading: boolean; restricted: boolean;
     more: boolean;
+    emptyInventoryDocument?: boolean;
+    nextMonthSource?: string;
     filters: Record<string, { safe: boolean; values: string[] }>; pageNo: string; pageSize: string;
     controls: { tag: string; name: string | null; onclick: string }[];
 }
@@ -69,9 +85,9 @@ const regionControl = (c: Dom['controls'][number]) => c.tag === 'A' ? /^(?:javas
 function prepare(d: Dom): RegionSnapshot {
     if (d.outside || !d.vars || !/^[A-Z]{2}$/.test(d.vars.TabGubun || '')) throw new RegionDiscoveryError('invalid_region_dom');
     const v = d.vars, month = (v.nowYear || '') + (v.nowMonth || '');
-    const scope = v.airSect === 'ICN' && /^[A-Z]{3}$/.test(v.SelectedCityCd || '') && monthOK(month) && v.nowDay === '' && v.order === 'LP' && v.view === ''
+    const scope = ['ICN','GMP'].includes(v.airSect || '') && /^[A-Z]{3}$/.test(v.SelectedCityCd || '') && monthOK(month) && v.nowDay === '' && v.order === 'LP' && v.view === ''
         && d.filters.ck_dep.safe && d.filters.ck_status.safe && d.pageSize === '20'
-        ? { departure: 'ICN', city: v.SelectedCityCd!, month } : null;
+        ? { departure: v.airSect!, city: v.SelectedCityCd!, month } : null;
     const cities: RegionSnapshot['cities'] = [], months: string[] = scope ? [month] : [], regions: string[] = [];
     for (const c of d.controls) {
         const r = regionControl(c); if (r && !regions.includes(r[1])) regions.push(r[1]);
@@ -85,13 +101,21 @@ function prepare(d: Dom): RegionSnapshot {
         const candidate = m ? m[1] + m[2].padStart(2,'0') : '';
         if (c.tag === 'BUTTON' && monthOK(candidate) && !months.includes(candidate)) months.push(candidate);
     }
-    return { region: v.TabGubun!, cities, monthCandidates: months, availableRegions: regions, currentScope: scope, restricted: d.restricted };
+    const emptyInventoryVerified = !scope && !cities.length && v.SelectedCityCd === '' && d.emptyInventoryDocument === true
+        && ['ICN','GMP'].includes(v.airSect || '') && monthOK(month) && v.nowDay === '' && v.order === 'LP' && v.view === ''
+        // The observed empty HN document leaves an inert more button visible after the rejected API.
+        // Inventory proof comes from the server's explicit [] and zero city/card nodes, not this button.
+        && d.filters.ck_dep.safe && d.filters.ck_status.safe && d.pageSize === '20' && !d.restricted && d.ready && !d.loading;
+    return { region: v.TabGubun!, cities, monthCandidates: months, availableRegions: regions, currentScope: scope, restricted: d.restricted,
+        ...(monthOK(month) ? {inventoryMonth:month} : {}),
+        ...(emptyInventoryVerified ? {emptyInventoryVerified:true as const} : {}) };
 }
-/** Existing exact tab only. Inspect never enables interception or performs actions. */
-export async function createOnlineTourRegionDiscovery(client: CdpClient, options: RegionDiscoveryOptions) {
+/** Existing exact tab, or explicitly bounded blank-first entry. Inspect never performs actions. */
+export async function createOnlineTourRegionDiscovery(client: CdpClient, options: RegionDiscoveryOptions, firstEntry = false) {
     options = { ...options };
     if (![options.maxNavigations, options.maxProductRequests].every(n => Number.isSafeInteger(n) && n >= 0 && n <= 6)) throw new RegionDiscoveryError('invalid_budget');
-    const diagnostics: RegionDiagnostics = { actions: 0, documentRequests: 0, permittedDocumentRequests: 0, productRequests: 0, permittedProductRequests: 0, blockedRequests: 0 };
+    if (firstEntry && (options.maxNavigations !== 1 || options.maxProductRequests !== 1)) throw new RegionDiscoveryError('invalid_first_entry_budget');
+    const diagnostics: RegionDiagnostics = { actions: 0, documentRequests: 0, permittedDocumentRequests: 0, productRequests: 0, permittedProductRequests: 0, blockedRequests: 0, suppressedAuxiliaryDocuments: 0 };
     let sessionId: string | undefined, frameId = '', closed = false, cleanupExpired = false;
     const send = (method: string, params: Record<string, unknown> = {}, browser = false): Promise<any> => new Promise((resolve, reject) => {
         const timer = setTimeout(() => reject(new RegionDiscoveryError('cdp_deadline')), method === 'Page.stopLoading' ? 1000 : 15000);
@@ -100,9 +124,17 @@ export async function createOnlineTourRegionDiscovery(client: CdpClient, options
     try {
         const targets = (await send('Target.getTargets', {}, true)).targetInfos as { type: string; targetId: string; url: string }[];
         const pages = targets.filter(t => t.type === 'page' && matches(t.url, LIST));
-        if (pages.length !== 1) throw new RegionDiscoveryError('require_exactly_one_existing_list_tab');
-        if (!targets.some(t => t.type === 'page' && matches(t.url, 'https://myaccount.google.com/'))) throw new RegionDiscoveryError('require_existing_google_home_tab');
-        sessionId = (await send('Target.attachToTarget', { targetId: pages[0].targetId, flatten: true }, true)).sessionId;
+        let targetId: string;
+        if (firstEntry) {
+            if (pages.length !== 0) throw new RegionDiscoveryError('first_entry_requires_missing_list_tab');
+            // Blank first: arm the existing request guard BEFORE the first website navigation.
+            targetId = (await send('Target.createTarget', { url: 'about:blank', background: true }, true)).targetId;
+            if (!targetId) throw new RegionDiscoveryError('blank_target_creation_failed');
+        } else {
+            if (pages.length !== 1) throw new RegionDiscoveryError('require_exactly_one_existing_list_tab');
+            targetId = pages[0].targetId;
+        }
+        sessionId = (await send('Target.attachToTarget', { targetId, flatten: true }, true)).sessionId;
         if (!sessionId) throw new RegionDiscoveryError('attachment_failed');
         await send('Page.enable'); await send('Network.enable', { maxResourceBufferSize: 2097152, maxTotalBufferSize: 6291456 });
     } catch (e) { if (sessionId) await send('Target.detachFromTarget', { sessionId }, true).catch(() => {}); await client.close().catch(() => {}); throw e; }
@@ -121,7 +153,7 @@ export async function createOnlineTourRegionDiscovery(client: CdpClient, options
     const visited = new Set<string>(), jobs = new Set<Promise<void>>(), paused = new Set<string>();
     const partialEvidence: RegionFirstPage[] = [];
     interface RecordState { api: boolean; url: string; status?: number; done: boolean; scope?: ListScope; callback?: string; filters?: string[]; }
-    interface Action { region: string; started: boolean; documentCount: number; apiCount: number; documentDone: boolean; finished: boolean; records: Map<string, RecordState>; firstPage: RegionFirstPage | null; }
+    interface Action { region: string; month?: string; monthUrl?: string; started: boolean; documentCount: number; apiCount: number; documentDone: boolean; finished: boolean; records: Map<string, RecordState>; firstPage: RegionFirstPage | null; }
     let active: Action | undefined;
     let stopJob: Promise<any> | undefined;
     function stop() { return stopJob ?? (stopJob = send('Page.stopLoading').catch(() => {})); }
@@ -136,14 +168,24 @@ export async function createOnlineTourRegionDiscovery(client: CdpClient, options
     function apiRecord(raw: string, region: string): RecordState {
         if (!matches(raw, API)) throw new RegionDiscoveryError('outside_api');
         const u = new URL(raw), q = u.searchParams;
-        const wanted: Record<string, string> = { areaCode: region, transportStartCity: 'ICN', eventStartDate: '', order: 'LP', pageNo: '1', pageSize: '20', pageYn: 'Y' };
-        const allowed = [...Object.keys(wanted), 'transportEndCity','eventStartMonth','callback','depPyunStr','statusStr','_'];
+        // Both initial origins have been observed on the real public region pages.
+        // Never rewrite the request. The final DOM scope must equal this response scope.
+        const departure = q.get('transportStartCity') || '';
+        if (!['ICN','GMP'].includes(departure)) throw new RegionDiscoveryError('unexpected_departure');
+        const wanted: Record<string, string> = { areaCode: region, transportStartCity: departure, eventStartDate: '', order: 'LP', pageNo: '1', pageSize: '20', pageYn: 'Y' };
+        const allowed = [...Object.keys(wanted), 'transportEndCity','eventStartMonth','callback','depPyunStr','statusStr','_','apiKey'];
         if (u.hash || Array.from(q.keys()).some(k => !allowed.includes(k) || q.getAll(k).length !== 1) || Object.keys(wanted).some(k => q.get(k) !== wanted[k])) throw new RegionDiscoveryError('unexpected_api_query');
         const city = q.get('transportEndCity') || '', month = q.get('eventStartMonth') || '', callback = q.get('callback') || '';
-        if (!/^[A-Z]{3}$/.test(city) || !monthOK(month) || !/^[A-Za-z_$][\w$]{0,127}$/.test(callback)) throw new RegionDiscoveryError('invalid_api_scope');
+        // Observed HN document has no cities and emits an explicit empty city. Never invent it.
+        // Such a response must be empty and agree with the independently checked final document.
+        if ((!/^[A-Z]{3}$/.test(city) && q.get('transportEndCity') !== '') || !monthOK(month) || !/^[A-Za-z_$][\w$]{0,127}$/.test(callback)) throw new RegionDiscoveryError('invalid_api_scope');
         const filters = ['depPyunStr','statusStr'].map(k => { const v = q.get(k); if (v === null || !/^[A-Za-z0-9_,]*$/.test(v) || v.length > 500) throw new RegionDiscoveryError('invalid_api_filters'); return v.split(',').filter(Boolean).sort().join(','); });
         if (q.has('_') && !/^\d{1,20}$/.test(q.get('_')!)) throw new RegionDiscoveryError('invalid_cache_buster');
-        return { api: true, url: raw, done: false, callback, scope: { departure: 'ICN', city, month }, filters };
+        // The public list page supplies this opaque field itself. Continue the original
+        // browser request only; never invent, replace, log or persist its value.
+        // The observed public page sends an empty value; it is not a missing credential error.
+        if (q.has('apiKey') && !/^[\x21-\x7e]{0,512}$/.test(q.get('apiKey')!)) throw new RegionDiscoveryError('invalid_api_key_shape');
+        return { api: true, url: raw, done: false, callback, scope: { departure, city, month }, filters };
     }
     function parsePage(text: string, r: RecordState): RegionFirstPage {
         const wrapper = /^\s*([A-Za-z_$][\w$]*)\s*\(([\s\S]*)\)\s*;?\s*$/.exec(text);
@@ -153,6 +195,7 @@ export async function createOnlineTourRegionDiscovery(client: CdpClient, options
         const data = p.data, paging = data?.paging, count = paging?.totalCount ?? data?.count, last = paging?.totalLastPage;
         if (!Array.isArray(data?.list) || data.list.length > 20 || paging?.curPage !== 1 || !Number.isSafeInteger(count) || count < 0 || !Number.isSafeInteger(last) || last < 0
             || count < data.list.length || (count > 0 && last < 1) || data.list.some((x: any) => !x || typeof x !== 'object' || Array.isArray(x))) throw new RegionDiscoveryError('invalid_first_page');
+        if (r.scope?.city === '' && (data.list.length || count !== 0 || last > 1)) throw new RegionDiscoveryError('empty_inventory_mismatch');
         if (data.list.length && validatePilotResponse(text, r.callback!).status !== 'pilot_ready_for_review') throw new RegionDiscoveryError('invalid_product_rows');
         // Public product-field projection, not the response envelope. Validate the projection too
         // so every emitted raw row remains reusable by the strict existing product mapper.
@@ -176,15 +219,32 @@ export async function createOnlineTourRegionDiscovery(client: CdpClient, options
             let r: RecordState | undefined;
             const doc = p.resourceType === 'Document';
             if (doc) diagnostics.documentRequests++; else diagnostics.productRequests++;
+            // Observed external advertising iframe only: abort before transmission without
+            // treating that successful abort as a failed flight query. Never allow the frame,
+            // a main-frame navigation, a redirect or any unknown auxiliary document through.
+            if (armed && !closing && !latched && a?.started && !a.finished && a.documentCount === 1
+                && doc && typeof p.frameId === 'string' && p.frameId && p.frameId !== frameId
+                && p.networkId && p.responseStatusCode === undefined && !p.redirectedRequestId
+                && ((p.request?.method === 'GET' && !p.request.postData && matches(p.request.url, BLOCKED_AD_FRAME))
+                    || (p.request?.method === 'POST' && !!p.request.postData && matches(p.request.url, BLOCKED_TRACKING_FRAME)
+                        && !new URL(p.request.url).search))
+                && !new URL(p.request.url).hash) {
+                diagnostics.blockedRequests++; diagnostics.suppressedAuxiliaryDocuments!++;
+                job(send('Fetch.failRequest', { requestId: p.requestId, errorReason: 'Aborted' })
+                    .then(() => { paused.delete(p.requestId); }, () => { fail('guard_command_failed'); }));
+                return;
+            }
             try {
                 if (!armed || closing || latched || !a?.started || a.finished) throw new RegionDiscoveryError('off_action_request');
                 if (p.responseStatusCode !== undefined || p.redirectedRequestId || !p.networkId || p.frameId !== frameId || p.request?.method !== 'GET' || p.request?.postData) throw new RegionDiscoveryError('invalid_paused_request');
                 if (doc) {
-                    if (a.documentCount || diagnostics.permittedDocumentRequests >= options.maxNavigations || !documentMatches(p.request.url, a.region)) throw new RegionDiscoveryError('unexpected_document');
+                    if (a.documentCount || diagnostics.permittedDocumentRequests >= options.maxNavigations || (a.monthUrl ? p.request.url !== a.monthUrl : !documentMatches(p.request.url, a.region))) throw new RegionDiscoveryError('unexpected_document');
                     a.documentCount++; diagnostics.permittedDocumentRequests++; r = { api: false, url: p.request.url, done: false };
                 } else {
                     if (!a.documentCount || a.apiCount || diagnostics.permittedProductRequests >= options.maxProductRequests) throw new RegionDiscoveryError('product_budget_or_multiple');
-                    r = apiRecord(p.request.url, a.region); a.apiCount++; diagnostics.permittedProductRequests++;
+                    r = apiRecord(p.request.url, a.region);
+                    if (a.month && r.scope?.month !== a.month) throw new RegionDiscoveryError('month_response_mismatch');
+                    a.apiCount++; diagnostics.permittedProductRequests++;
                 }
                 // Reserve synchronously; concurrent pauses cannot share the last permission.
                 a.records.set(p.networkId, r);
@@ -235,34 +295,55 @@ export async function createOnlineTourRegionDiscovery(client: CdpClient, options
         try { const snapshot = prepare(await readDom()); if (snapshot.restricted) fail('restricted_dom'); lastSnapshot = snapshot; return { ...snapshot, restricted: snapshot.restricted || !!latched }; }
         catch (error) { fail(error instanceof RegionDiscoveryError ? error.reason : 'inspection_failed'); throw latched; }
     }
-    async function performRegion(code: string, reload: boolean): Promise<RegionDiscoveryResult> {
+    async function performRegion(code: string, reload: boolean, initial = false, month?: string, reset = false): Promise<RegionDiscoveryResult> {
         if (busy) { fail('concurrent_action'); throw latched; }
         check(); busy = true;
         let a: Action | undefined;
         try {
-            if (!/^[A-Z]{2}$/.test(code) || visited.has(code)) throw new RegionDiscoveryError('region_already_visited_or_invalid');
-            visited.add(code); // Every call is one-shot, including validation failures.
+            if (initial !== firstEntry || initial && (code !== 'AS' || reload)) throw new RegionDiscoveryError('invalid_first_entry_action');
+            const visitKey = code + (month ? '|'+month : '');
+            if (!/^[A-Z]{2}$/.test(code) || visited.has(visitKey)) throw new RegionDiscoveryError('region_already_visited_or_invalid');
+            visited.add(visitKey); // Every call is one-shot, including validation failures.
             if (diagnostics.actions >= options.maxNavigations || diagnostics.permittedProductRequests >= options.maxProductRequests) throw new RegionDiscoveryError('budget_exhausted');
             const delay = Math.max(0, 5000 - (Date.now() - lastActionAt)); if (delay) await new Promise(resolve => setTimeout(resolve, delay));
             check();
-            const before = await readDom();
-            if (before.restricted || !before.ready || before.loading) throw new RegionDiscoveryError('initial_state_not_safe');
-            if (reload) {
+            let before: Dom | undefined;
+            if (initial) {
+                const tree = await send('Page.getFrameTree');
+                if (tree.frameTree?.frame?.url !== 'about:blank' || !tree.frameTree.frame.id || diagnostics.actions !== 0)
+                    throw new RegionDiscoveryError('first_entry_target_changed');
+                frameId = tree.frameTree.frame.id;
+            } else {
+                before = await readDom();
+                if (before.restricted || !before.ready || before.loading) throw new RegionDiscoveryError('initial_state_not_safe');
+            }
+            if (!initial && reload) {
                 const tree = await send('Page.getFrameTree');
                 if (diagnostics.actions !== 0 || !documentMatches(tree.frameTree?.frame?.url, code)) throw new RegionDiscoveryError('recovery_scope_changed');
-            } else {
-                const snapshot = prepare(before); lastSnapshot = snapshot;
-                if (snapshot.region === code) throw new RegionDiscoveryError('initial_state_not_safe');
+            } else if (!initial) {
+                const snapshot = prepare(before!); lastSnapshot = snapshot;
+                if (month ? snapshot.region !== code || !snapshot.emptyInventoryVerified : reset ? snapshot.region !== code : snapshot.region === code) throw new RegionDiscoveryError('initial_state_not_safe');
             }
-            const choices = before.controls.filter(c => regionControl(c)?.[1] === code);
-            if (!reload && choices.length !== 1) throw new RegionDiscoveryError('region_control_not_unique');
-            a = { region: code, started: false, finished: false, documentCount: 0, apiCount: 0, documentDone: false, records: new Map(), firstPage: null }; active = a; stopJob = undefined;
+            const choices = before?.controls.filter(c => regionControl(c)?.[1] === code) || [];
+            const monthUrl = month && before ? nativeMonthUrl(before.nextMonthSource,before.vars,month) : null;
+            if (month && !monthUrl) throw new RegionDiscoveryError('month_navigation_unverified');
+            if (!initial && !reload && !month && choices.length !== 1) throw new RegionDiscoveryError('region_control_not_unique');
+            a = { region: code, ...(month ? {month,monthUrl:monthUrl!} : {}), started: false, finished: false, documentCount: 0, apiCount: 0, documentDone: false, records: new Map(), firstPage: null }; active = a; stopJob = undefined;
             if (!armed) { armed = true; await send('Fetch.enable', { patterns: [{ urlPattern: '*', resourceType: 'Document', requestStage: 'Request' }, { urlPattern: API, requestStage: 'Request' }, { urlPattern: API + '\\?*', requestStage: 'Request' }] }); }
             check(); a.started = true; diagnostics.actions++; lastActionAt = Date.now();
-            if (reload) await send('Page.reload', { ignoreCache: false });
+            if (initial) {
+                const navigation = await send('Page.navigate', { url: LIST + '?TabGubun=AS&SelectedCityCd=' });
+                if (navigation.errorText) throw new RegionDiscoveryError('first_entry_navigation_failed');
+            } else if (reload) await send('Page.reload', { ignoreCache: false });
+            else if (monthUrl) {
+                const again = await readDom();
+                if (!again.ready || again.loading || again.restricted || nativeMonthUrl(again.nextMonthSource,again.vars,month!) !== monthUrl) throw new RegionDiscoveryError('month_navigation_changed');
+                const navigation = await send('Page.navigate',{url:monthUrl});
+                if (navigation.errorText) throw new RegionDiscoveryError('month_navigation_failed');
+            }
             else {
             const expression = `(() => { const state = ${DOM_READ};
-                if (state.outside || state.restricted || !state.ready || state.loading || JSON.stringify(state.vars) !== ${JSON.stringify(JSON.stringify(before.vars))}) return false;
+                if (state.outside || state.restricted || !state.ready || state.loading || JSON.stringify(state.vars) !== ${JSON.stringify(JSON.stringify(before!.vars))}) return false;
                 const nodes = Array.from(document.querySelectorAll('[onclick]')).filter(e => e.tagName === 'A' && e.getAttribute('onclick') === ${JSON.stringify(choices[0].onclick)} && !e.hidden && !e.disabled && e.getAttribute('aria-disabled') !== 'true' && e.getClientRects().length > 0 && getComputedStyle(e).display !== 'none' && getComputedStyle(e).visibility !== 'hidden');
                 if (nodes.length !== 1) return false; nodes[0].click(); return true; })()`;
             const clicked = await send('Runtime.evaluate', { expression, returnByValue: true });
@@ -279,17 +360,25 @@ export async function createOnlineTourRegionDiscovery(client: CdpClient, options
                     if (!dom.ready) { idleSince = 0; await new Promise(resolve => setTimeout(resolve, 25)); continue; }
                     const observed = prepare(dom); lastSnapshot = observed;
                     if (observed.region !== code) throw new RegionDiscoveryError('final_region_mismatch');
+                    if (month && observed.inventoryMonth !== month) throw new RegionDiscoveryError('month_response_mismatch');
                     if (dom.ready && !dom.loading && !jobs.size) {
                         const apiState = Array.from(a.records.values()).find(r => r.api);
-                        if (a.firstPage) {
+                        const emptyResponse = a.firstPage?.scope.city === '';
+                        if (emptyResponse) {
+                            if (!observed.emptyInventoryVerified || !apiState || dom.pageNo !== '2'
+                                || dom.vars.airSect !== a.firstPage!.scope.departure
+                                || (dom.vars.nowYear || '') + (dom.vars.nowMonth || '') !== a.firstPage!.scope.month
+                                || ['ck_dep','ck_status'].some((k,i) => !dom.filters[k].safe || dom.filters[k].values.slice().sort().join(',') !== apiState.filters![i]))
+                                throw new RegionDiscoveryError('empty_inventory_mismatch');
+                        } else if (a.firstPage) {
                             if (JSON.stringify(observed.currentScope) !== JSON.stringify(a.firstPage.scope) || dom.pageNo !== '2' || !apiState
                                 || ['ck_dep','ck_status'].some((k,i) => !dom.filters[k].safe || dom.filters[k].values.slice().sort().join(',') !== apiState.filters![i])) throw new RegionDiscoveryError('final_scope_mismatch');
-                        } else if (a.apiCount || observed.currentScope || observed.cities.length || dom.vars.SelectedCityCd !== '') { idleSince = 0; await new Promise(resolve => setTimeout(resolve, 25)); continue; }
+                        } else if (a.apiCount || !observed.emptyInventoryVerified) { idleSince = 0; await new Promise(resolve => setTimeout(resolve, 25)); continue; }
                         if (!idleSince) idleSince = Date.now();
                         if (Date.now() - idleSince >= 250) {
                             check();
                             if (a.firstPage) a.firstPage.nextPageAvailable = dom.more;
-                            return { snapshot: observed, firstPage: a.firstPage };
+                            return { snapshot: observed, firstPage: emptyResponse ? null : a.firstPage };
                         }
                     } else idleSince = 0;
                 }
@@ -332,7 +421,7 @@ export async function createOnlineTourRegionDiscovery(client: CdpClient, options
         })();
         return closePromise;
     }
-    return { inspect, visitRegion: (code: string) => performRegion(code, false), reloadExistingRegion: (code: string) => performRegion(code, true), close, get diagnostics() { return { ...diagnostics }; }, partialEvidence, get failure() { return latched?.reason || null; },
+    return { inspect, resetExistingRegion:(code:string)=>performRegion(code,false,false,undefined,true), visitEmptyMonth: (code:string,month:string) => performRegion(code,false,false,month), enterFirstList: () => performRegion('AS', false, true), visitRegion: (code: string) => performRegion(code, false), reloadExistingRegion: (code: string) => performRegion(code, true), close, get diagnostics() { return { ...diagnostics }; }, partialEvidence, get failure() { return latched?.reason || null; },
         get lastRejectedRequest() { return lastRejectedRequest ? { ...lastRejectedRequest } : null; },
         get lastFailure(): RegionFailure | null { return latched ? { reason: latched.reason, phase: closing ? 'cleanup' : 'discovery', region: active?.region || lastSnapshot?.region || null } : null; } };
 }

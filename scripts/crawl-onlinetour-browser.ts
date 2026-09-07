@@ -1,13 +1,14 @@
 import path from 'node:path';
-import { collectBrowserPilot, createStagingRun, discoverNormalChromeEndpoint } from '../src/lib/onlinetour-browser-collector';
+import { collectBrowserPilot, createStagingRun } from '../src/lib/onlinetour-browser-collector';
+import { discoverDedicatedChromeEndpoint, ONLINE_CHROME_CONNECT_TIMEOUT_MS } from '../src/lib/onlinetour-dedicated-chrome';
 
 async function main(): Promise<void> {
     const args = process.argv.slice(2);
     if (args.length === 1 && args[0] === '--help') {
         console.log('OnlineTour staging-only partial pilot (one reload, first response, max20).\n'
             + 'Usage: npx --no-install tsx scripts/crawl-onlinetour-browser.ts --consent-confirmed\n'
-            + 'Consent flag confirms operator authorization, NOT Chrome dialog approval.\n'
-            + 'Keep normal Chrome Google account home and exactly one OnlineTour list tab open.\n'
+            + 'Consent flag confirms operator authorization for this bounded test.\n'
+            + 'Keep dedicated Chrome (loopback 9222) with exactly one OnlineTour list tab open.\n'
             + 'No endpoint/output/profile options; no browser launch or automatic retries.');
         return;
     }
@@ -17,19 +18,19 @@ async function main(): Promise<void> {
         return;
     }
     // Fixed repository root, not cwd and not caller-supplied output paths.
-    const endpoint = discoverNormalChromeEndpoint();
+    const endpoint = await discoverDedicatedChromeEndpoint();
     const run = createStagingRun(path.resolve(__dirname, '..'));
     const { chromium } = await import('playwright');
     let browser;
     try {
-        console.log('Waiting for normal Chrome connection consent; no navigation until preflight passes.');
-        browser = await chromium.connectOverCDP(endpoint, { timeout: 180_000 });
+        console.log('Connecting to verified dedicated Chrome; no navigation until preflight passes.');
+        browser = await chromium.connectOverCDP(endpoint, { timeout: ONLINE_CHROME_CONNECT_TIMEOUT_MS });
     } catch {
         // No raw browser error: Playwright diagnostics can include connection URLs/profile metadata.
         run.write('summary.json', { runId: run.runId, status: 'failed_preflight', partialScope: true,
-            productionReady: false, rawCount: 0, mappedCount: 0, reason: 'chrome_attach_or_consent_failed',
+            productionReady: false, rawCount: 0, mappedCount: 0, reason: 'dedicated_chrome_attach_failed',
             finishedAt: new Date().toISOString() });
-        console.error(`Chrome attach/consent failed; no retry. Staging run: ${run.runId}`);
+        console.error(`Dedicated Chrome attach failed; no retry. Staging run: ${run.runId}`);
         process.exitCode = 1;
         return;
     }

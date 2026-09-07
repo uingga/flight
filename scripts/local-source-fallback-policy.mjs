@@ -16,7 +16,7 @@ function timestamp(value) {
     return Number.isFinite(parsed) ? parsed : null;
 }
 
-function surroundingSlots(nowTimestamp, crons = DAILY_CRAWL_CRONS) {
+export function surroundingSlots(nowTimestamp, crons = DAILY_CRAWL_CRONS) {
     const dayStart = Math.floor(nowTimestamp / DAY_MS) * DAY_MS;
     const slots = [];
     for (let dayOffset = -1; dayOffset <= 1; dayOffset++) {
@@ -35,7 +35,7 @@ function surroundingSlots(nowTimestamp, crons = DAILY_CRAWL_CRONS) {
     return { expectedAt, nextExpectedAt };
 }
 
-function scheduledSlotDistance(anchorAt, currentAt, crons = DAILY_CRAWL_CRONS) {
+export function scheduledSlotDistance(anchorAt, currentAt, crons = DAILY_CRAWL_CRONS) {
     if (anchorAt === null || currentAt === null || currentAt < anchorAt) return null;
 
     const firstDay = Math.floor(anchorAt / DAY_MS) * DAY_MS;

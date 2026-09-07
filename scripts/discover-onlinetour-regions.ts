@@ -90,7 +90,7 @@ export async function executeRegionDiscovery(adapter: DiscoveryAdapter, root: st
 async function main() {
     const args = process.argv.slice(2);
     if (args.length === 1 && args[0] === '--help') {
-        console.log('Existing normal Chrome only; regional inventory, NOT full product collection.\n'
+        console.log('Existing dedicated Chrome (loopback 9222) only; regional inventory, NOT full product collection.\n'
             + '--run --consent-confirmed --plan <approved-local.json>\n'
             + 'At most 6 regional clicks/documents/product requests; 5s pacing; no retries; staging only.');
         return;
@@ -102,9 +102,9 @@ async function main() {
         if (!stat.isFile() || stat.isSymbolicLink() || stat.size > 10000) throw new Error('invalid_plan_file');
         plan = parseDiscoveryPlan(JSON.parse(fs.readFileSync(file, 'utf8')));
     } catch { console.error('Refused: explicit consent and valid bounded local plan required. Use --help.'); process.exitCode = 2; return; }
-    const { connectNormalChrome } = await import('../src/lib/onlinetour-browser-adapter');
+    const { connectDedicatedChrome } = await import('../src/lib/onlinetour-browser-adapter');
     const { createOnlineTourRegionDiscovery } = await import('../src/lib/onlinetour-region-discovery');
-    const client = await connectNormalChrome();
+    const client = await connectDedicatedChrome();
     let adapter: DiscoveryAdapter | undefined;
     try {
         adapter = await createOnlineTourRegionDiscovery(client, { maxNavigations: plan.maxNavigations, maxProductRequests: plan.maxProductRequests });

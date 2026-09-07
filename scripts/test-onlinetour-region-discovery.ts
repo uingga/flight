@@ -16,8 +16,12 @@ class Element {
 class Fake implements CdpClient {
     calls: { method: string; params: any; sessionId?: string }[] = [];
     listeners = new Set<(e: any) => void>();
-    url = LIST; region = 'AS'; city = 'PQC'; body = '목록'; loading = false; ready = 'complete'; page = '2'; closed = false;
+    url = LIST; region = 'AS'; city = 'PQC'; departure = 'ICN'; body = '목록'; loading = false; ready = 'complete'; page = '2'; closed = false;
     onClick: (region: string) => void = () => {};
+    embeddedEmpty = true;
+    month = '09';
+    onNavigate: (url:string)=>void = ()=>{};
+    moreVisible = false;
     elements = ['AS','CH','JA','EU','HN','US','GS'].map(code => new Element('A', { onclick: `goDcair('${code}');` }, () => this.onClick(code)));
     context: vm.Context;
     bodies = new Map<string, string>();
@@ -30,8 +34,9 @@ class Fake implements CdpClient {
             location: { get href() { return self.url; } },
             document: {
                 get readyState() { return self.ready; }, get body() { return { innerText: self.body }; },
-                querySelector(s: string) { if (s === '#pageNo') return { value: self.page }; if (s === '#pageSize') return { value: '20' }; return null; },
-                querySelectorAll(s: string) { if (s === '[onclick]') return self.elements; if (s.includes('loading')) return self.loading ? [new Element('DIV', {})] : []; return []; },
+                get scripts() { return self.embeddedEmpty ? [{src:'',textContent:"var dCairAllListStr = '[]';"}] : []; },
+                querySelector(s: string) { if(s === '#btn_more' && self.moreVisible)return new Element('BUTTON',{}); if (s === '#data_list') return {children:self.city ? [{}] : []}; if (s === '#pageNo') return { value: self.page }; if (s === '#pageSize') return { value: '20' }; return null; },
+                querySelectorAll(s: string) { if (s === 'input[name=city]') return self.elements.filter(e=>e.tagName==='INPUT' && e.attrs.name==='city'); if (s === '[onclick]') return self.elements; if (s.includes('loading')) return self.loading ? [new Element('DIV', {})] : []; return []; },
             }, getComputedStyle: (e: Element) => ({ display: e.hidden ? 'none' : 'block', visibility: 'visible' }),
         });
         vm.runInContext('window = globalThis', this.context);
@@ -39,11 +44,13 @@ class Fake implements CdpClient {
     emit(method: string, params: any, sessionId = 'session') { Array.from(this.listeners).forEach(fn => fn({ method, params, sessionId })); }
     async send(method: string, params: any = {}, sessionId?: string): Promise<any> {
         this.calls.push({ method, params, sessionId });
-        if (method === 'Target.getTargets') return { targetInfos: [{ type: 'page', targetId: 'target', url: this.url }, { type: 'page', targetId: 'private', url: 'https://myaccount.google.com/' }] };
+        // Dedicated profile needs no Google login/home tab. Unrelated tabs remain untouched.
+        if (method === 'Target.getTargets') return { targetInfos: [{ type: 'page', targetId: 'target', url: this.url }, { type: 'page', targetId: 'private', url: 'https://unrelated.example/' }] };
         if (method === 'Target.attachToTarget') { assert.equal(params.targetId, 'target'); return { sessionId: 'session' }; }
         if (method === 'Page.getFrameTree') return { frameTree: { frame: { id: 'main', url: this.url } } };
+        if (method === 'Page.navigate') {this.onNavigate(params.url);return {};}
         if (method === 'Runtime.evaluate') {
-            vm.runInContext(`getDcairMainList = function() { var TabGubun = '${this.region}'; var airSect = 'ICN'; var SelectedCityCd = '${this.city}'; var nowYear = '2026'; var nowMonth = '09'; var nowDay = ''; var order = 'LP'; var view = ''; throw Error('must never execute source'); }`, this.context);
+            vm.runInContext(`getDcairMainList = function() { var TabGubun = '${this.region}'; var airSect = '${this.departure}'; var SelectedCityCd = '${this.city}'; var nowYear = '2026'; var nowMonth = '${this.month}'; var nowDay = ''; var order = 'LP'; var view = ''; throw Error('must never execute source'); }`, this.context);
             return { result: { value: vm.runInContext(params.expression, this.context) } };
         }
         if (method === 'Fetch.continueRequest') { assert.deepEqual(Object.keys(params), ['requestId']); const next = this.pending.get(params.requestId); this.pending.delete(params.requestId); next?.(); }
@@ -77,7 +84,7 @@ test('read-only real VM inspection, exact controls, nullable empty scope, privat
     assert.equal(a.diagnostics.actions, 0); await a.close(); assert.ok(c.closed);
     assert.ok(!c.calls.some(x => /closeTarget|Browser.close|createTarget/.test(x.method)));
 });
-function api(region: string, change: Record<string, string> = {}) { return API + '?' + new URLSearchParams({ transportStartCity: 'ICN', transportEndCity: 'PQC', eventStartMonth: '202609', eventStartDate: '', areaCode: region, order: 'LP', pageNo: '1', pageSize: '20', pageYn: 'Y', depPyunStr: '', statusStr: '', callback: 'cb', ...change }); }
+function api(region: string, change: Record<string, string> = {}) { return API + '?' + new URLSearchParams({ transportStartCity: 'ICN', transportEndCity: 'PQC', eventStartMonth: '202609', eventStartDate: '', areaCode: region, order: 'LP', pageNo: '1', pageSize: '20', pageYn: 'Y', depPyunStr: '', statusStr: '', callback: 'cb', apiKey: 'OFFLINE_ONLY_SITE_KEY', ...change }); }
 let sequence = 0;
 function request(c: Fake, url: string, type: string, body: string, after = () => {}, status = 200) {
     const id = 'r' + ++sequence;
@@ -92,6 +99,33 @@ function request(c: Fake, url: string, type: string, body: string, after = () =>
 }
 const payload = 'cb(' + JSON.stringify({ status: 200, data: { list: [{ event_code: 'offline-1', adult_price: 90000, cookie: 'secret-cookie', link: 'https://example.com/?token=secret' }], paging: { curPage: 1, totalLastPage: 2, totalCount: 21 } } }) + ');';
 const malformedPayload = payload;
+test('next scheduled run resets an old future-month tab using the observed region link',async()=>{
+    const c=new Fake();c.month='11';
+    c.onClick=code=>{c.month='09';navigate(c,code);};
+    const a=await mod.createOnlineTourRegionDiscovery(c,{maxNavigations:1,maxProductRequests:1});
+    const r=await a.resetExistingRegion('AS');
+    assert.equal(r.snapshot.inventoryMonth,'202609');assert.equal(a.diagnostics.permittedProductRequests,1);
+    await a.close();
+});
+test('empty month without a button follows only verified native document and rejects wrong response month',async()=>{
+    for(const wrongMonth of [false,true]) {
+        const c=new Fake();c.region='GS';c.city='';c.elements=c.elements.filter(e=>e.tagName==='A');
+        vm.runInContext(`nextMonth = function nextMonth(year, month){var TabGubun = 'GS';var airSect = 'ICN';var SelectedCityCd = '';location.href="/flight/w/international/dcair/dcairList?TabGubun="+TabGubun+"&nowMonth="+month+"&nowYear="+year+"&SelectedCityCd="+SelectedCityCd+"&airSect="+airSect;}`,c.context);
+        c.onNavigate=url=>request(c,url,'Document','<html></html>',()=>{
+            c.url=url;c.month='10';
+            request(c,api('GS',{transportEndCity:'',eventStartMonth:wrongMonth?'202609':'202610'}),'Script',
+                'cb('+JSON.stringify({status:200,data:{list:[],paging:{curPage:1,totalCount:0,totalLastPage:0}}})+');');
+        });
+        const a=await mod.createOnlineTourRegionDiscovery(c,{maxNavigations:1,maxProductRequests:1});
+        if(wrongMonth)await assert.rejects(a.visitEmptyMonth('GS','202610'),/month_response_mismatch/);
+        else {
+            const r=await a.visitEmptyMonth('GS','202610');assert.equal(r.snapshot.inventoryMonth,'202610');
+            assert.equal(r.snapshot.emptyInventoryVerified,true);assert.equal(r.firstPage,null);
+        }
+        assert.equal(a.diagnostics.permittedProductRequests,wrongMonth?0:1);
+        await a.close();
+    }
+});
 const goodPayload = 'cb(' + JSON.stringify({ status: 200, data: { list: [{ ...validRow('offline-1'), cookie: 'secret-cookie', link: 'https://example.com/?token=secret' }], paging: { curPage: 1, totalLastPage: 2, totalCount: 21 } } }) + ');';
 function navigate(c: Fake, region: string, empty = false) {
     request(c, LIST + '?TabGubun=' + region + '&SelectedCityCd=', 'Document', '<!doctype html><html><body>목록</body></html>', () => {
@@ -107,7 +141,8 @@ test('one observed region click yields validated document and sanitized first-pa
     assert.equal(result.snapshot.region, 'CH'); assert.equal(result.firstPage?.totalCount, 21); assert.equal(result.firstPage?.pageNo, 1);
     assert.equal(result.firstPage?.rawProducts[0].event_code, 'offline-1');
     assert.ok(!JSON.stringify(result).includes('secret'));
-    assert.deepEqual(a.diagnostics, { actions: 1, documentRequests: 1, permittedDocumentRequests: 1, productRequests: 1, permittedProductRequests: 1, blockedRequests: 0 });
+    assert.ok(!JSON.stringify({ result, diagnostics: a.diagnostics, failure: a.lastRejectedRequest }).includes('OFFLINE_ONLY_SITE_KEY'));
+    assert.deepEqual(a.diagnostics, { actions: 1, documentRequests: 1, permittedDocumentRequests: 1, productRequests: 1, permittedProductRequests: 1, blockedRequests: 0, suppressedAuxiliaryDocuments: 0 });
     assert.equal(c.elements[1].clicked, 1);
     const patterns = c.calls.find(x => x.method === 'Fetch.enable')!.params.patterns;
     assert.ok(patterns.some((x: any) => x.resourceType === 'Document' && x.urlPattern === '*'));
@@ -118,6 +153,26 @@ test('genuinely empty region succeeds without invented city or product request',
     const a = await mod.createOnlineTourRegionDiscovery(c, { maxNavigations: 6, maxProductRequests: 6 });
     const result = await a.visitRegion('EU'); assert.equal(result.firstPage, null); assert.equal(result.snapshot.currentScope, null); assert.deepEqual(result.snapshot.cities, []);
     assert.equal(a.diagnostics.permittedProductRequests, 0); await a.close();
+});
+test('observed empty-city request requires empty API plus independently empty document', async () => {
+    for (const variant of ['valid','empty_with_more','rows','missing_document','hidden_city','restricted','wrong_month','missing_city']) {
+        const c=new Fake();
+        c.onClick=code=>request(c,LIST+'?TabGubun='+code+'&SelectedCityCd=','Document','<html></html>',()=>{
+            c.region=code;c.city='';c.elements=c.elements.filter(e=>e.tagName==='A');
+            c.moreVisible=variant==='empty_with_more';
+            if(variant==='missing_document')c.embeddedEmpty=false;
+            if(variant==='hidden_city'){const e=new Element('INPUT',{name:'city',onclick:"goSelectedCity('HNL','20260907')"});e.hidden=true;c.elements.push(e);}
+            if(variant==='restricted')c.body='CAPTCHA';
+            let url=api(code,{transportEndCity:'',eventStartMonth:variant==='wrong_month'?'202610':'202609'});
+            if(variant==='missing_city'){const u=new URL(url);u.searchParams.delete('transportEndCity');url=u.toString();}
+            const empty='cb('+JSON.stringify({status:200,data:{list:[],paging:{curPage:1,totalLastPage:0,totalCount:0}}})+');';
+            request(c,url,'Script',variant==='rows'?goodPayload:empty);
+        });
+        const a=await mod.createOnlineTourRegionDiscovery(c,{maxNavigations:1,maxProductRequests:1});
+        if(variant==='valid' || variant==='empty_with_more'){const r=await a.visitRegion('HN');assert.equal(r.firstPage,null);assert.equal(r.snapshot.emptyInventoryVerified,true);assert.equal(a.diagnostics.permittedProductRequests,1);}
+        else await assert.rejects(a.visitRegion('HN'));
+        assert.ok(a.diagnostics.permittedProductRequests<=1);await a.close();
+    }
 });
 test('malformed product rows fail rather than becoming successful evidence', async () => {
     const c = new Fake(); c.onClick = code => {
@@ -293,6 +348,175 @@ test('rejected locator drops query values, fragments, credentials and dynamic pa
     for (const raw of ['https://user:SECRET@example.com/', 'data:text/html,SECRET', 'not a URL'])
         assert.ok(!JSON.stringify(mod.describeRejectedLocation(raw)).includes('SECRET'));
     assert.equal(mod.describeRejectedLocation('https://example.com/user/12345?session=SECRET').path, '[redacted]');
+});
+class FirstEntry extends Fake {
+    url = 'about:blank';
+    duplicateProduct = false;
+    async send(method: string, p: any = {}, s?: string): Promise<any> {
+        if (method === 'Target.getTargets') return { targetInfos: [] };
+        if (method === 'Target.createTarget') { this.calls.push({ method, params: p }); assert.deepEqual(p, { url: 'about:blank', background: true }); return { targetId: 'target' }; }
+        if (method === 'Page.navigate') {
+            this.calls.push({ method, params: p, sessionId: s });
+            assert.equal(p.url, LIST + '?TabGubun=AS&SelectedCityCd=');
+            assert.ok(this.calls.some(x => x.method === 'Fetch.enable'), 'guard must be armed before first navigation');
+            navigate(this, 'AS');
+            if (this.duplicateProduct) request(this, api('AS'), 'Script', goodPayload);
+            return {};
+        }
+        return super.send(method, p, s);
+    }
+}
+test('first entry creates only blank, guards the first navigation, and cannot run twice', async () => {
+    const c = new FirstEntry();
+    const a = await mod.createOnlineTourRegionDiscovery(c, { maxNavigations: 1, maxProductRequests: 1 }, true);
+    const result = await a.enterFirstList();
+    assert.equal(result.firstPage?.rawProducts.length, 1);
+    assert.equal(a.diagnostics.permittedDocumentRequests, 1); assert.equal(a.diagnostics.permittedProductRequests, 1);
+    await assert.rejects(a.enterFirstList());
+    assert.equal(c.calls.filter(x => x.method === 'Page.navigate').length, 1);
+    await a.close();
+    assert.ok(!c.calls.some(x => /Page.reload|Browser.close|Target.closeTarget/.test(x.method)));
+});
+test('first-entry duplicate product is blocked rather than spending a second query', async () => {
+    const c = new FirstEntry(); c.duplicateProduct = true;
+    const a = await mod.createOnlineTourRegionDiscovery(c, { maxNavigations: 1, maxProductRequests: 1 }, true);
+    await assert.rejects(a.enterFirstList());
+    assert.ok(a.diagnostics.permittedProductRequests <= 1); assert.ok(a.diagnostics.blockedRequests >= 1);
+    await a.close();
+});
+test('first-entry refuses existing list, changed blank, and expanded budget before navigation', async () => {
+    const existing = new Fake();
+    await assert.rejects(mod.createOnlineTourRegionDiscovery(existing, { maxNavigations: 1, maxProductRequests: 1 }, true));
+    assert.ok(!existing.calls.some(x => x.method === 'Target.createTarget'));
+    const changed = new FirstEntry(); changed.url = 'https://unrelated.example/';
+    const a = await mod.createOnlineTourRegionDiscovery(changed, { maxNavigations: 1, maxProductRequests: 1 }, true);
+    await assert.rejects(a.enterFirstList(), /first_entry_target_changed/);
+    assert.ok(!changed.calls.some(x => x.method === 'Page.navigate')); await a.close();
+    await assert.rejects(mod.createOnlineTourRegionDiscovery(new FirstEntry(), { maxNavigations: 2, maxProductRequests: 1 }, true));
+});
+function adPause(c: Fake, overrides: Record<string, unknown> = {}) {
+    c.emit('Fetch.requestPaused', { requestId: 'ad', networkId: 'ad-network', frameId: 'child', resourceType: 'Document',
+        request: { method: 'GET', url: 'https://gum.criteo.com/syncframe?token=SECRET' }, ...overrides });
+}
+test('observed ad iframe is aborted without permitting it or failing the product query', async () => {
+    const c = new FirstEntry(), send = c.send.bind(c);
+    c.send = async (m, p = {}, s) => { const result = await send(m, p, s); if (m === 'Page.navigate') adPause(c); return result; };
+    const a = await mod.createOnlineTourRegionDiscovery(c, { maxNavigations: 1, maxProductRequests: 1 }, true);
+    const result = await a.enterFirstList();
+    assert.equal(result.firstPage?.rawProducts.length, 1); assert.equal(a.failure, null);
+    assert.equal(a.diagnostics.permittedDocumentRequests, 1); assert.equal(a.diagnostics.permittedProductRequests, 1);
+    assert.equal(a.diagnostics.suppressedAuxiliaryDocuments, 1); assert.equal(a.diagnostics.blockedRequests, 1);
+    assert.ok(c.calls.some(x => x.method === 'Fetch.failRequest' && x.params.requestId === 'ad'));
+    assert.ok(!c.calls.some(x => x.method === 'Fetch.continueRequest' && x.params.requestId === 'ad'));
+    assert.ok(!JSON.stringify(a.diagnostics).includes('SECRET')); await a.close();
+});
+test('ad exception never covers main frames, redirects, other URLs, methods or response stages', async () => {
+    for (const overrides of [
+        { frameId: 'main' }, { frameId: '' }, { redirectedRequestId: 'prior' }, { responseStatusCode: 403 },
+        { request: { method: 'POST', url: 'https://gum.criteo.com/syncframe' } },
+        ...['https://gum.criteo.com/other','https://other.example/syncframe','https://gum.criteo.com.evil.example/syncframe',
+            'https://user:SECRET@gum.criteo.com/syncframe','https://gum.criteo.com/syncframe#fragment', API]
+            .map(url => ({ request: { method: 'GET', url } })),
+    ]) {
+        const c = new Fake(); c.onClick = code => { navigate(c, code); adPause(c, overrides); };
+        const a = await mod.createOnlineTourRegionDiscovery(c, { maxNavigations: 1, maxProductRequests: 1 });
+        await assert.rejects(a.visitRegion('CH'));
+        assert.equal(a.diagnostics.suppressedAuxiliaryDocuments, 0); assert.ok(a.failure);
+        assert.ok(!c.calls.some(x => x.method === 'Fetch.continueRequest' && x.params.requestId === 'ad')); await a.close();
+    }
+});
+test('failure to abort the ad remains terminal and cannot release pending requests in cleanup', async () => {
+    const c = new Fake(), send = c.send.bind(c); c.onClick = code => { navigate(c, code); adPause(c); };
+    c.send = async (m, p = {}, s) => { if (m === 'Fetch.failRequest' && p.requestId === 'ad') throw Error('failed'); return send(m, p, s); };
+    const a = await mod.createOnlineTourRegionDiscovery(c, { maxNavigations: 1, maxProductRequests: 1 });
+    await assert.rejects(a.visitRegion('CH'), /guard_command_failed/); await assert.rejects(a.close(), /cleanup_failed/);
+    assert.ok(!c.calls.some(x => x.method === 'Fetch.disable'));
+});
+test('observed Facebook tracking form is aborted without transmission or discarding flight data', async () => {
+    const c = new Fake(); c.onClick = code => {
+        navigate(c, code); adPause(c, { request: { method: 'POST', url: 'https://www.facebook.com/tr/', postData: 'PRIVATE_TRACKING' } });
+    };
+    const a = await mod.createOnlineTourRegionDiscovery(c, { maxNavigations: 1, maxProductRequests: 1 });
+    const result = await a.visitRegion('CH');
+    assert.equal(result.firstPage?.rawProducts.length, 1); assert.equal(a.diagnostics.suppressedAuxiliaryDocuments, 1);
+    assert.equal(a.diagnostics.permittedProductRequests, 1); assert.equal(a.diagnostics.permittedDocumentRequests, 1);
+    assert.ok(c.calls.some(x => x.method === 'Fetch.failRequest' && x.params.requestId === 'ad'));
+    assert.ok(!c.calls.some(x => x.method === 'Fetch.continueRequest' && x.params.requestId === 'ad'));
+    assert.ok(!JSON.stringify(a.diagnostics).includes('PRIVATE_TRACKING')); await a.close(); assert.equal(a.failure, null);
+});
+test('tracking suppression never covers main frames, redirects, response failures or unrelated forms', async () => {
+    const req = { method: 'POST', url: 'https://www.facebook.com/tr/', postData: 'PRIVATE_TRACKING' };
+    for (const override of [{ frameId: 'main' }, { frameId: '' }, { redirectedRequestId: 'prior' },
+        { responseStatusCode: 403 }, { request: { ...req, method: 'GET' } }, { request: { ...req, postData: '' } },
+        ...['https://www.facebook.com/other/', 'https://www.facebook.com/tr/?x=y', 'https://www.facebook.com/tr/#x',
+            'https://www.facebook.com.evil.example/tr/', 'https://user:secret@www.facebook.com/tr/', API]
+            .map(url => ({ request: { ...req, url } }))]) {
+        const c = new Fake(); c.onClick = code => { navigate(c, code); adPause(c, { request: req, ...override }); };
+        const a = await mod.createOnlineTourRegionDiscovery(c, { maxNavigations: 1, maxProductRequests: 1 });
+        await assert.rejects(a.visitRegion('CH')); assert.ok(a.failure);
+        assert.equal(a.diagnostics.suppressedAuxiliaryDocuments, 0);
+        assert.ok(!c.calls.some(x => x.method === 'Fetch.continueRequest' && x.params.requestId === 'ad')); await a.close();
+    }
+});
+test('a blocked ad never suppresses a real access restriction or allows another product request', async () => {
+    for (const scenario of ['http', 'captcha', 'duplicate']) {
+        const c = new Fake(); c.onClick = code => {
+            navigate(c, code); adPause(c);
+            if (scenario === 'http') c.emit('Network.responseReceived', { requestId: 'late', type: 'Script', response: { url: API, status: 429 } });
+            if (scenario === 'captcha') c.body = 'CAPTCHA';
+            if (scenario === 'duplicate') queueMicrotask(() => request(c, api(code), 'Script', goodPayload));
+        };
+        const a = await mod.createOnlineTourRegionDiscovery(c, { maxNavigations: 1, maxProductRequests: 1 });
+        await assert.rejects(a.visitRegion('CH')); assert.ok(a.failure); assert.ok(a.diagnostics.permittedProductRequests <= 1);
+        await a.close();
+    }
+});
+test('site-supplied key is opaque, bounded, single-valued and never written into continuation params', async () => {
+    for (const key of ['x'.repeat(513), 'has space', 'newline\n']) {
+        const c = new Fake(); c.onClick = code => request(c, LIST + '?TabGubun=' + code + '&SelectedCityCd=', 'Document', '<html></html>', () => {
+            c.region = code; request(c, api(code, { apiKey: key }), 'Script', goodPayload);
+        });
+        const a = await mod.createOnlineTourRegionDiscovery(c, { maxNavigations: 1, maxProductRequests: 1 });
+        await assert.rejects(a.visitRegion('CH'), /invalid_api_key_shape/);
+        assert.equal(a.diagnostics.permittedProductRequests, 0); await a.close();
+    }
+    const c = new Fake(); c.onClick = code => request(c, LIST + '?TabGubun=' + code + '&SelectedCityCd=', 'Document', '<html></html>', () => {
+        c.region = code; request(c, api(code) + '&apiKey=SECOND', 'Script', goodPayload);
+    });
+    const a = await mod.createOnlineTourRegionDiscovery(c, { maxNavigations: 1, maxProductRequests: 1 });
+    await assert.rejects(a.visitRegion('CH'), /unexpected_api_query/);
+    assert.equal(a.diagnostics.permittedProductRequests, 0); await a.close();
+});
+test('observed public empty apiKey is continued unchanged without synthesizing authentication', async () => {
+    const c = new Fake(); c.onClick = code => request(c, LIST + '?TabGubun=' + code + '&SelectedCityCd=', 'Document', '<html></html>', () => {
+        c.region = code; request(c, api(code, { apiKey: '' }), 'Script', goodPayload);
+    });
+    const a = await mod.createOnlineTourRegionDiscovery(c, { maxNavigations: 1, maxProductRequests: 1 });
+    const result = await a.visitRegion('CH');
+    assert.ok(result.firstPage?.rawProducts.length); assert.equal(a.diagnostics.permittedProductRequests, 1);
+    for (const call of c.calls.filter(x => x.method === 'Fetch.continueRequest'))
+        assert.deepEqual(Object.keys(call.params || {}), ['requestId']);
+    await a.close(); assert.equal(a.failure, null);
+});
+test('observed GMP region origin is retained and still must match final screen', async () => {
+    for (const mismatch of [false,true]) {
+        const c = new Fake(); c.onClick = code => request(c, LIST + '?TabGubun=' + code + '&SelectedCityCd=', 'Document', '<html></html>', () => {
+            c.region = code; c.departure = mismatch ? 'ICN' : 'GMP';
+            request(c, api(code,{transportStartCity:'GMP'}), 'Script', goodPayload);
+        });
+        const a = await mod.createOnlineTourRegionDiscovery(c,{maxNavigations:1,maxProductRequests:1});
+        if (mismatch) await assert.rejects(a.visitRegion('JA'),/final_scope_mismatch/);
+        else { const r = await a.visitRegion('JA'); assert.equal(r.firstPage?.scope.departure,'GMP'); assert.equal(r.snapshot.currentScope?.departure,'GMP'); }
+        assert.equal(a.diagnostics.permittedProductRequests,1); await a.close();
+    }
+});
+test('unobserved origin is not silently permitted by the regional guard', async () => {
+    const c = new Fake(); c.onClick = code => request(c, LIST + '?TabGubun=' + code + '&SelectedCityCd=', 'Document', '<html></html>', () => {
+        c.region = code; request(c, api(code,{transportStartCity:'LAX'}), 'Script', goodPayload);
+    });
+    const a = await mod.createOnlineTourRegionDiscovery(c,{maxNavigations:1,maxProductRequests:1});
+    await assert.rejects(a.visitRegion('JA'),/unexpected_departure/);
+    assert.equal(a.diagnostics.permittedProductRequests,0); await a.close();
 });
 async function main() { for (const [name, run] of tests) { await run(); console.log('PASS', name); } console.log(`${tests.length} offline region-discovery cases passed; site requests=0`); }
 main().catch(e => { console.error(e); process.exitCode = 1; });

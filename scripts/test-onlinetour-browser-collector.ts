@@ -21,6 +21,33 @@ const sample = {
 const jsonp = (rows: unknown[] = [sample], status = 200) =>
     `siteCallback(${JSON.stringify({ status, data: { list: rows } })});`;
 
+test('observed DYG status 01 maps exactly like reservable 00, preserving the raw code', () => {
+    // Public inline record matched to card 260911116702 (2026-09-07), not an invented live result.
+    const row={...sample,event_code:'260911116702',event_status_code:'01',dep_start_date:'20260911',arr_start_date:'20260915',
+        dep_start_time:'21:50',dep_end_time:'23:55',arr_start_time:'16:20',arr_end_time:'18:30',
+        adult_price:'660000',res_cnt:'2',start_city_code2:'DYG',start_city_code_name2:'장가계',
+        end_city_code:'DYG',arr_city_code:'DYG',arr_city_code_name:'장가계',transport_detail_name:'사천항공'};
+    const result=collector.validatePilotResponse(jsonp([row]),'siteCallback');
+    assert.equal(result.status,'pilot_ready_for_review');assert.deepEqual(result.issues,[]);
+    assert.deepEqual(result.rawProducts,[row]);
+    assert.equal(result.flights[0].price,660000);assert.equal(result.flights[0].availableSeats,2);
+    assert.equal(new URL(result.flights[0].link).searchParams.get('eventCode'),row.event_code);
+    assert.equal(result.flights[0].departure.time,'21:50');assert.equal(result.flights[0].arrival.time,'16:20');
+    const reference=collector.validatePilotResponse(jsonp([{...row,event_status_code:'00'}]),'siteCallback');
+    assert.deepEqual(result.flights,reference.flights);
+});
+for(const status of ['02','03','05','99','',null,1])test(`unsupported status ${JSON.stringify(status)} still fails closed`,()=>{
+    const result=collector.validatePilotResponse(jsonp([{...sample,event_status_code:status}]),'siteCallback');
+    assert.equal(result.status,'failed_validation');assert.equal(result.flights.length,0);
+    assert.equal(result.issues[0].reason,'unsupported_event_status');
+});
+test('status 01 does not bypass time, date, price or seat validation',()=>{
+    for(const invalid of [{dep_start_time:'29:00'},{arr_start_date:'bad'},{adult_price:'NaN'},{res_cnt:'-1'}]) {
+        const result=collector.validatePilotResponse(jsonp([{...sample,event_status_code:'01',...invalid}]),'siteCallback');
+        assert.equal(result.status,'failed_validation');assert.equal(result.flights.length,0);
+    }
+});
+
 test('real-sample JSONP maps without losing raw fields; always partial pilot', () => {
     assert.equal(typeof collector.validatePilotResponse, 'function', 'pilot validator must exist');
     const result = collector.validatePilotResponse(jsonp(), 'siteCallback');
@@ -61,28 +88,7 @@ test('zero known seats remains zero, never unknown', () => {
     assert.equal(result.flights[0].availableSeats, 0);
 });
 
-const wsPath = '/devtools/browser/12345678-1234-4abc-8abc-123456789abc';
-test('DevToolsActivePort accepts only strict port and browser UUID path', () => {
-    assert.equal(typeof collector.parseDevToolsActivePort, 'function');
-    assert.equal(collector.parseDevToolsActivePort(`54321\r\n${wsPath}\r\n`), `ws://127.0.0.1:54321${wsPath}`);
-    for (const value of [`0\n${wsPath}`, `65536\n${wsPath}`, `080\n${wsPath}`, ` 54321\n${wsPath}`,
-        `54321\nws://evil.test${wsPath}`, `54321\n${wsPath}?token=x`, `54321\n${wsPath}/../page`,
-        `54321\n${wsPath}\nextra`, `54321\n/devtools/page/1234`, `-1\n${wsPath}`]) {
-        assert.throws(() => collector.parseDevToolsActivePort(value));
-    }
-});
 function temporaryRepo() { return fs.mkdtempSync(path.join(os.tmpdir(), 'onlinetour-offline-test-')); }
-test('discovery reads only normal User Data discovery file, no endpoint override', () => {
-    assert.equal(typeof collector.discoverNormalChromeEndpoint, 'function');
-    const root = temporaryRepo();
-    try {
-        const dir = path.join(root, 'Google', 'Chrome', 'User Data');
-        fs.mkdirSync(dir, { recursive: true });
-        fs.writeFileSync(path.join(dir, 'DevToolsActivePort'), `54321\n${wsPath}`);
-        assert.equal(collector.discoverNormalChromeEndpoint(root), `ws://127.0.0.1:54321${wsPath}`);
-        assert.throws(() => collector.discoverNormalChromeEndpoint('relative'));
-    } finally { fs.rmSync(root, { recursive: true, force: true }); }
-});
 test('staging uses UUID directories and exclusive fixed filenames, never operational writes', () => {
     assert.equal(typeof collector.createStagingRun, 'function');
     const root = temporaryRepo();
@@ -278,11 +284,22 @@ test('one existing-tab reload captures first site JSONP to staging, disconnects 
         assert.equal(summary.status, 'pilot_ready_for_review');
         assert.equal(summary.rawCount, 1); assert.equal(summary.mappedCount, 1);
         assert.equal(summary.partialScope, true); assert.equal(summary.productionReady, false);
-        assert.equal(summary.preflight.googleHomeTabPresent, true);
+        assert.equal(summary.preflight.existingListTabPresent, true);
         assert.deepEqual(mock.counts, { reload: 1, stop: 1, disconnect: 1, detach: 1, text: 1 });
         assert.equal(mock.page.listenerCount('response'), 0);
         assert.deepEqual(fs.readdirSync(run.directory).sort(), ['flights.json', 'raw-products.json', 'summary.json']);
         assert.deepEqual(JSON.parse(fs.readFileSync(path.join(run.directory, 'raw-products.json'), 'utf8')), [sample]);
+    } finally { fs.rmSync(root, { recursive: true, force: true }); }
+});
+
+test('dedicated-profile pilot does not require Google login or inspect its account content', async () => {
+    const root = temporaryRepo();
+    const mock = browserFixture({ google: 'https://unrelated.example/' });
+    try {
+        const summary = await collector.collectBrowserPilot(mock.browser, collector.createStagingRun(root), 1000);
+        assert.equal(summary.status, 'pilot_ready_for_review');
+        assert.deepEqual(summary.preflight, { existingListTabPresent: true,
+            evidence: 'existing_list_tab_only_not_authentication_guarantee' });
     } finally { fs.rmSync(root, { recursive: true, force: true }); }
 });
 
@@ -302,8 +319,6 @@ for (const [name, options, status] of [
     ['wrong page size', { api: apiUrl.replace('pageSize=20', 'pageSize=100') }, 'failed_validation'],
     ['wrong page', { api: apiUrl.replace('pageNo=1', 'pageNo=2') }, 'failed_validation'],
     ['wrong host', { api: apiUrl.replace('api.onlinetour.co.kr', 'evil.test') }, 'failed_timeout'],
-    ['no Google home', { google: 'https://accounts.google.com/login' }, 'failed_preflight'],
-    ['Google intro not home', { google: 'https://myaccount.google.com/intro' }, 'failed_preflight'],
     ['wrong target path', { target: listUrl + '/other' }, 'failed_preflight'],
     ['duplicate target', { duplicate: true }, 'failed_preflight'],
 ] as const) {
@@ -360,7 +375,7 @@ test('displayed total adult_price never subtracts fee, including a fee exceeding
     }
 });
 test('unknown/nonbookable status is an explicit invalid row, never a bookable flight', () => {
-    for (const status of ['01', '99', null, undefined]) {
+    for (const status of ['03', '05', '99', null, undefined]) {
         const result = collector.validatePilotResponse(jsonp([{ ...sample, event_status_code: status }]), 'siteCallback');
         assert.equal(result.status, 'failed_validation');
         assert.equal(result.flights.length, 0);
