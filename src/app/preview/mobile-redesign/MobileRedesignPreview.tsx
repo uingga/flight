@@ -1,4 +1,5 @@
 'use client';
+import { shareGroupDepartureFilter } from '@/lib/share-group-departure';
 
 import { Fragment, type FormEvent, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
@@ -3246,10 +3247,11 @@ export default function MobileRedesignPreview({
         setFreshRouteResults(null);
     };
 
-    const showAllFlightsFromSharedGroup = () => {
+    const showAllFlightsFromSharedGroup = (keepDeparture = false) => {
         setSharedFlightIds([]);
         setQuery('');
         resetFilters();
+        if (keepDeparture) setDeparture(shareGroupDepartureFilter(initialSharedDeparture));
     };
 
     const showSharedRouteAlternatives = () => {
@@ -3760,7 +3762,7 @@ export default function MobileRedesignPreview({
                                 open={showRecentFlights} onOpenChange={setShowRecentFlights}
                                 onClear={recentHistory.clear} onOpen={flight => openFlight(flight, 'recent_flights')} />
                             {sharedFlightIds.length > 0 && (
-                                <button type="button" className={styles.freshRouteResultBack} onClick={showAllFlightsFromSharedGroup}>
+                                <button type="button" className={styles.freshRouteResultBack} onClick={() => showAllFlightsFromSharedGroup()}>
                                     <span aria-hidden="true">←</span> 전체 항공권
                                 </button>
                             )}
@@ -4193,7 +4195,7 @@ export default function MobileRedesignPreview({
 
                     {!listLoading && !error && sharedFlightIds.length > 0 && (
                         <button type="button" className={styles.moreButton} onClick={() => {
-                            showAllFlightsFromSharedGroup();
+                            showAllFlightsFromSharedGroup(true);
                             feedSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                         }}>
                             안 살 거지만 더 보기 <span aria-hidden="true">→</span>
