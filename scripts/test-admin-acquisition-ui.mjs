@@ -1,28 +1,29 @@
 import assert from 'node:assert/strict';
 import {chromium} from 'playwright';
-const browser=await chromium.launch({headless:true});
+const browser=await chromium.launch();
 try {
  const page=await browser.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.route('**/*',r=>new URL(r.request().url()).hostname==='127.0.0.1'?r.continue():r.abort());
  await page.goto('http://127.0.0.1:31862/preview/acquisition');
- await page.getByRole('heading',{name:'유입 유형과 출처'}).waitFor();
- assert.equal(await page.locator('ul > li > div').count(),6);
- const search=page.locator('li').filter({has:page.getByText('검색',{exact:true})}).first();
- assert.match(await search.locator('div').first().innerText(),/5회\s*3명/);
- assert.match(await search.innerText(),/네이버 검색/);assert.match(await search.innerText(),/구글/);
- const keep=page.locator('li').filter({has:page.getByText('기타 외부 링크',{exact:true})}).first();
- assert.match(await keep.innerText(),/네이버 Keep/);
- assert.equal(await page.getByText('TE31',{exact:false}).count(),1);
- for(const width of [1200,390,320]) {
-  await page.setViewportSize({width,height:900});
-  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
-  await page.screenshot({path:`tmp/acquisition-${width}.png`,fullPage:true});
+ await page.getByRole('heading',{name:'방문 흐름 요약'}).waitFor();
+ const source=page.locator('#visitor-acquisition article').first();const routes=page.locator('#visitor-acquisition article').nth(1);
+ assert.equal(await source.locator('tbody tr').count(),5);
+ assert.match(await source.locator('tbody tr').first().innerText(),/TE31.*커뮤니티/s);
+ assert.equal(await source.locator('tbody tr').first().locator('td').nth(1).innerText(),'8회');
+ assert.match(await source.innerText(),/출처 확인 불가/);
+ assert.equal(await source.locator('tbody tr').filter({hasText:'출처 확인 불가'}).count(),0);
+ for(const width of [1440,390,320]) {
+  await page.setViewportSize({width,height:1000});
+  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),String(width));
+  const a=await source.boundingBox(),b=await routes.boundingBox();
+  if(width===1440)assert.ok(Math.abs(a.y-b.y)<2);else assert.ok(b.y>=a.y+a.height);
+  const order=await page.locator('#visitor-flow,#visitor-acquisition,#visitor-promotion,#visitor-cities').evaluateAll(nodes=>nodes.map(n=>n.id));
+  assert.deepEqual(order,['visitor-flow','visitor-acquisition','visitor-promotion','visitor-cities']);
+  await page.screenshot({path:`tmp/acquisition-layout-${width}.png`,fullPage:true});
  }
- for(const state of ['empty','unavailable']) {
-  await page.goto('http://127.0.0.1:31862/preview/acquisition?state='+state);
-  assert.equal(await page.locator('ul').count(),0);
-  assert.equal(await page.getByRole('status').count(),1);
- }
- assert.deepEqual(errors,[]);console.log('PASS: nested sources, deduplicated total display, Keep separation, empty/error states, desktop and 390/320px mobile');
-} finally {await browser.close()}
-
+ await source.getByRole('button',{name:'유입처 1개 더 보기'}).click();assert.equal(await source.locator('tbody tr').count(),6);
+ await source.getByRole('button',{name:'접기',exact:true}).click();assert.equal(await source.locator('tbody tr').count(),5);
+ assert.equal(await page.locator('#visitor-secondary').getAttribute('open'),null);
+ for(const state of ['empty','unavailable']) {await page.goto('http://127.0.0.1:31862/preview/acquisition?state='+state);assert.equal(await source.locator('tbody tr').count(),0);assert.equal(await source.getByRole('status').count(),1);}
+ assert.deepEqual(errors,[]);console.log('PASS: source-first table, unknown summary, wider overview composition, mobile stacking, section order and collapsed logs');
+}finally{await browser.close()}

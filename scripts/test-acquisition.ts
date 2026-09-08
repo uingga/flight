@@ -38,5 +38,8 @@ assert.equal(mismatch.groups.find(g=>g.label==='검색')!.users,null);
 for(const metadata of [{subjectToThresholding:true},{dataLossFromOtherRow:true},{samplingMetadatas:[{}]}])assert.equal((await loadAcquisition(config,[],async()=>({rows:raw,metadata}))).available,false);
 assert.equal((await loadAcquisition(config,[],async()=>({rowCount:5,rows:[]}))).available,false);
 assert.deepEqual((await loadAcquisition(config,[],async()=>({rows:[]}))).groups,[]);
+const cross=await loadAcquisition(config,[],async(_,req)=>req.dimensions?.length===3?{rows:[row('Organic Search','google','organic',4,2),row('Paid Search','google','cpc',2,2)]}:{rows:[{dimensionValues:[{value:'google'}],metricValues:[{value:'6'},{value:'3'}]}]});
+assert.equal(cross.sourceRows?.length,1);assert.equal(cross.sourceRows?.[0].sessions,6);assert.equal(cross.sourceRows?.[0].users,3);
+assert.deepEqual(cross.sourceRows?.[0].categories,['검색','검색 광고']);
 console.log('PASS: source classification, exact filters, pagination, deduplicated users, missing/limited reports, snapshot mismatch and empty state');
 })().catch(e=>{console.error(e);process.exitCode=1});

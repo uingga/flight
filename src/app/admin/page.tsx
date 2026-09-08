@@ -9,6 +9,7 @@ import AdminTodayPick from '@/components/AdminTodayPick';
 import AdminVisitComparison from '@/components/AdminVisitComparison';
 import AdminFlightOrder from '@/components/AdminFlightOrder';
 import AdminFlightInterest from '@/components/AdminFlightInterest';
+import AdminTrafficOverview from '@/components/AdminTrafficOverview';
 import AdminAcquisition from '@/components/AdminAcquisition';
 import type { AcquisitionData } from '@/lib/acquisition';
 import AdminThreadsPosts from '@/components/AdminThreadsPosts';
@@ -4685,6 +4686,55 @@ export default function AdminPage() {
 
                 {gaStats?.available && (
                     <>
+                        <section className={styles.section} id="visitor-acquisition">
+                            <div className={styles.sectionHeading}>
+                                <div>
+                                    <h2>어디서 와서 무엇을 눌렀나</h2>
+                                    <p>최근 {gaStats.days}일 유입처와 예약 이동 상위 노선을 비교합니다. 출처별 예약 전환을 뜻하지는 않습니다.</p>
+                                </div>
+                            </div>
+                            <AdminTrafficOverview data={gaStats.acquisition} routes={gaStats.bookingByRoute} />
+                            <details className={styles.openDisclosure}>
+                                <summary>여행사별 예약 이동 · 알림 등록 위치</summary>
+                            <div className={styles.analysisGrid}>
+                                <div className={styles.analysisPanel}>
+                                    <h3>예약 이동이 많은 여행사</h3>
+                                    <RankList items={(gaStats.bookingByAgency || []).slice(0, 5).map(item => ({ label: SOURCE_NAMES[item.label] || item.label, value: `${item.count.toLocaleString()}회` }))} empty="아직 예약 이동이 없어요." />
+                                </div>
+                                <div className={styles.analysisPanel}>
+                                    <h3>알림 등록을 시작한 위치</h3>
+                                    <RankList items={(gaStats.alertByEntry || []).slice(0, 5).map(item => ({ label: item.label, value: `${item.count.toLocaleString()}회` }))} empty="알림 등록 위치가 아직 기록되지 않았어요." />
+                                </div>
+
+                            </div>
+                            </details>
+                            {gaStats.warnings.length > 0 && (
+                                <div className={styles.dataGap}>{gaStats.warnings.join(' · ')}</div>
+                            )}
+                            <div className={styles.openDisclosure}>
+                                <h3>통계 설정과 내 방문 제외</h3>
+                                <div className={styles.openDisclosureBody}>
+                                    <p>실제 구매 완료와 매출은 여행사 제휴 정산 화면에서 따로 확인해야 합니다.</p>
+                                    <a href="https://analytics.google.com/" target="_blank" rel="noopener noreferrer">Google Analytics 열기 →</a>
+                                    <button
+                                        type="button"
+                                        className={styles.analyticsToggle}
+                                        onClick={() => {
+                                            const next = !analyticsExcluded;
+                                            setAnalyticsExcluded(next);
+                                            setAnalyticsExcludedState(next);
+                                        }}
+                                    >
+                                        {analyticsExcluded ? '이 브라우저 방문을 다시 포함하기' : '이 브라우저 방문 제외하기'}
+                                    </button>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section className={styles.section} id="visitor-promotion">
+                            <PromotionCampaignPerformance campaigns={gaStats.promotionCampaigns} days={gaStats.days} />
+                        </section>
+
                         <section className={styles.section} id="visitor-cities">
                             <div className={styles.sectionHeading}>
                                 <div>
@@ -4783,56 +4833,6 @@ export default function AdminPage() {
                             ) : (
                                 <div className={styles.dealReviewEmpty}>신규·재방문 행동 구분을 위한 통계 설정이 아직 필요합니다.</div>
                             )}
-                        </section>
-
-                        <section className={styles.section} id="visitor-acquisition">
-                            <div className={styles.sectionHeading}>
-                                <div>
-                                    <h2>어디서 와서 무엇을 눌렀나</h2>
-                                    <p>긴 원본 표 대신 상위 5개만 보여드립니다.</p>
-                                </div>
-                            </div>
-                            <PromotionCampaignPerformance campaigns={gaStats.promotionCampaigns} days={gaStats.days} />
-                            <div className={styles.analysisGrid}>
-                                <div className={styles.analysisPanel}>
-                                    <h3>유입 유형과 출처</h3>
-                                    <AdminAcquisition data={gaStats.acquisition} />
-                                </div>
-                                <div className={styles.analysisPanel}>
-                                    <h3>예약 이동이 많은 노선</h3>
-                                    <RankList items={(gaStats.bookingByRoute || []).slice(0, 5).map(item => ({ label: item.label, value: `${item.count.toLocaleString()}회` }))} empty="아직 예약 이동이 없어요." />
-                                </div>
-                                <div className={styles.analysisPanel}>
-                                    <h3>예약 이동이 많은 여행사</h3>
-                                    <RankList items={(gaStats.bookingByAgency || []).slice(0, 5).map(item => ({ label: SOURCE_NAMES[item.label] || item.label, value: `${item.count.toLocaleString()}회` }))} empty="아직 예약 이동이 없어요." />
-                                </div>
-                                <div className={styles.analysisPanel}>
-                                    <h3>알림 등록을 시작한 위치</h3>
-                                    <RankList items={(gaStats.alertByEntry || []).slice(0, 5).map(item => ({ label: item.label, value: `${item.count.toLocaleString()}회` }))} empty="알림 등록 위치가 아직 기록되지 않았어요." />
-                                </div>
-
-                            </div>
-                            {gaStats.warnings.length > 0 && (
-                                <div className={styles.dataGap}>{gaStats.warnings.join(' · ')}</div>
-                            )}
-                            <div className={styles.openDisclosure}>
-                                <h3>통계 설정과 내 방문 제외</h3>
-                                <div className={styles.openDisclosureBody}>
-                                    <p>실제 구매 완료와 매출은 여행사 제휴 정산 화면에서 따로 확인해야 합니다.</p>
-                                    <a href="https://analytics.google.com/" target="_blank" rel="noopener noreferrer">Google Analytics 열기 →</a>
-                                    <button
-                                        type="button"
-                                        className={styles.analyticsToggle}
-                                        onClick={() => {
-                                            const next = !analyticsExcluded;
-                                            setAnalyticsExcluded(next);
-                                            setAnalyticsExcludedState(next);
-                                        }}
-                                    >
-                                        {analyticsExcluded ? '이 브라우저 방문을 다시 포함하기' : '이 브라우저 방문 제외하기'}
-                                    </button>
-                                </div>
-                            </div>
                         </section>
 
                         <section className={styles.section} id="visitor-dates">

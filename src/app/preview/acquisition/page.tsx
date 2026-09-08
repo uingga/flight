@@ -1,7 +1,8 @@
 import { notFound } from 'next/navigation';
 import { headers } from 'next/headers';
 import { flightOrderStorageMode } from '@/lib/server/flight-order-store';
-import AdminAcquisition from '@/components/AdminAcquisition';
+import AdminTrafficOverview from '@/components/AdminTrafficOverview';
+import styles from '@/app/admin/admin.module.css';
 import type { AcquisitionData } from '@/lib/acquisition';
 export const dynamic = 'force-dynamic';
 export const metadata = { title: '유입 유형과 출처 미리보기', robots: {index:false,follow:false} };
@@ -17,5 +18,12 @@ export default function Preview({searchParams}:{searchParams:{state?:string}}) {
     ]};
     if(searchParams.state==='empty') data.groups=[];
     if(searchParams.state==='unavailable') { data.available=false;data.groups=[]; }
-    return <main style={{maxWidth:650,margin:'0 auto',padding:16}}><p>설명용 예시 수치 · 운영 통계가 아닙니다</p><section style={{background:'#fff',border:'1px solid #edf0f3',borderRadius:16,overflow:'hidden'}}><h1 style={{fontSize:20,padding:'0 20px'}}>유입 유형과 출처</h1><AdminAcquisition data={data}/></section></main>;
+    return <main className={styles.container}>
+        <header className={styles.header}><h1>티키티킷 운영실</h1><p>방문·예약 상단 배치 미리보기 · 모든 수치는 예시입니다</p></header>
+        <nav className={styles.tabNav} aria-label="미리보기 메뉴">{['오늘','노출 순서','홍보 성과','방문·예약','항공권·수집','고객·알림'].map((label,i)=><button type="button" key={label} className={i===3?styles.tabBtnActive:styles.tabBtn} disabled={i!==3}><span className={styles.tabLabel}>{label}</span></button>)}</nav>
+        <section className={styles.section} id="visitor-flow"><div className={styles.sectionHeading}><div><h2>방문 흐름 요약</h2><p>방문 → 상세 열람 → 예약 페이지 이동을 사람 수로 비교합니다.</p></div></div><div className={styles.signalGridFour}>{[['방문한 사람','12명'],['상세를 연 사람','6명'],['예약 페이지로 이동한 사람','2명']].map(([label,n])=><article className={styles.signalCard} key={label}><span>{label}</span><strong>{n}</strong><small>최근 30일 · 예시</small></article>)}</div></section>
+        <section className={styles.section} id="visitor-acquisition"><div className={styles.sectionHeading}><div><h2>어디서 와서 무엇을 눌렀나</h2><p>최근 30일 유입처와 예약 이동 상위 노선을 비교합니다. 출처별 예약 전환을 뜻하지는 않습니다.</p></div></div><AdminTrafficOverview data={data} routes={[{label:'부산-시즈오카',count:5},{label:'부산-타이중',count:4},{label:'인천-고베',count:3},{label:'청주-이바라키',count:2},{label:'부산-오사카',count:1}]}/><details className={styles.openDisclosure} id="visitor-secondary"><summary>여행사별 예약 이동 · 알림 등록 위치</summary><div className={styles.analysisGrid}><div className={styles.analysisPanel}><h3>예약 이동이 많은 여행사</h3><p>모두투어 8회 · 땡처리닷컴 4회</p></div><div className={styles.analysisPanel}><h3>알림 등록을 시작한 위치</h3><p>검색 결과 2회</p></div></div></details></section>
+        <section className={styles.section} id="visitor-promotion"><div className={styles.sectionHeading}><div><h2>홍보 채널별 글 성과</h2><p>이 아래에 기존 홍보 글 성과 표가 이어집니다.</p></div></div></section>
+        <section className={styles.section} id="visitor-cities"><div className={styles.sectionHeading}><div><h2>어떤 항공권을 눌렀나</h2><p>기존 항공권별 상세·예약·공유 분석이 이어집니다.</p></div></div><p>이후 탐색 깊이 → 방문자 추이 → 접속 시간 → 신규·재방문 → 검색 조건 순서로 유지합니다.</p></section>
+    </main>;
 }

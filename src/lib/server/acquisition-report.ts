@@ -49,6 +49,19 @@ export async function loadAcquisition(config: Ga4Config, dateRanges: ReportReque
             result.sources.sort((a,b)=>b.sessions-a.sessions||a.source.localeCompare(b.source));
             return result;
         }));
-        return {available:true,groups:groups.sort((a,b)=>b.sessions-a.sessions||a.label.localeCompare(b.label))};
+        const sourceRows=Array.from(new Set(groups.flatMap(g=>g.sources.map(s=>s.source)))).map(source=>{
+            const entries=groups.flatMap(g=>g.sources.filter(s=>s.source===source).map(s=>({...s,category:g.label})));
+            return {source,label:entries[0].label,sessions:entries.reduce((n,s)=>n+s.sessions,0),users:entries.length===1?entries[0].users:null,categories:entries.map(s=>s.category)};
+        });
+        if(sourceRows.some(s=>s.categories.length>1)) try {
+            const report=await query(config,{dateRanges,dimensions:[{name:'sessionSource'}],metrics,limit:10000});
+            if(completeAcquisitionReport(report)) for(const source of sourceRows) {
+                const matches=(report.rows||[]).filter(r=>r.dimensionValues?.[0]?.value===source.source);
+                const users=Number(matches[0]?.metricValues?.[1]?.value);
+                if(matches.length===1 && Number(matches[0].metricValues?.[0]?.value)===source.sessions && Number.isSafeInteger(users)&&users>=0) source.users=users;
+            }
+        } catch { /* Never sum people across categories. */ }
+        sourceRows.sort((a,b)=>b.sessions-a.sessions||a.source.localeCompare(b.source));
+        return {available:true,sourceRows,groups:groups.sort((a,b)=>b.sessions-a.sessions||a.label.localeCompare(b.label))};
     } catch { return unavailable(); }
 }

@@ -1,7 +1,7 @@
 import type { ReportResponse } from './ga4';
 export interface AcquisitionSource { source: string; label: string; sessions: number; users: number | null }
 export interface AcquisitionGroup { label: string; sessions: number; users: number | null; sources: AcquisitionSource[] }
-export interface AcquisitionData { available: boolean; groups: AcquisitionGroup[]; message?: string }
+export interface AcquisitionData { available: boolean; groups: AcquisitionGroup[]; sourceRows?: Array<AcquisitionSource & { categories: string[] }>; message?: string }
 const missing = (s: string) => ['', '(not set)', '(none)', '(other)', '(empty)'].includes(s.trim().toLowerCase());
 const host = (s: string) => s.trim().toLowerCase().replace(/^https?:\/\//, '').split('/')[0].replace(/^www\./, '');
 const domain = (s: string, d: string) => s === d || s.endsWith('.' + d);
