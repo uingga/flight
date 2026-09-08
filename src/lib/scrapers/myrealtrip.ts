@@ -2,6 +2,7 @@ import { Flight } from '@/types/flight';
 import { lookupRegionByCity } from '@/lib/utils/region-mapper';
 import fs from 'fs';
 import path from 'path';
+import { myrealtripSkipReason, myrealtripCalendarOnce, type MyrealtripEligibility } from '../myrealtrip-prefilter';
 import {
     assertNoSourceAccessBlockText,
     assertNoSourceResponseCollapse,
@@ -147,6 +148,7 @@ export interface MyrealtripDateSeedCandidate {
 
 export interface MyrealtripScrapeOptions {
     dateCandidates?: MyrealtripDateSeedCandidate[];
+    eligibility?: MyrealtripEligibility;
 }
 
 interface MyrealtripCoverageFlight {
@@ -587,6 +589,7 @@ export async function scrapeMyrealtripWithDiagnostics(
     let calendarProcessed = 0;
     let calendarSucceeded = 0;
     let consecutiveCalendarEmpty = 0;
+    const calendarCache = new Map<string, CalendarPrice[]>();
 
     for (const dep of DEPARTURE_CITIES) {
         console.log(`[마이리얼트립] ${dep.city}(${dep.cityCd}) 출발 조회 중...`);
@@ -605,6 +608,8 @@ export async function scrapeMyrealtripWithDiagnostics(
         console.log(`[마이리얼트립] ${dep.city}: ${fares.length}개 도시 발견`);
 
         let collected = 0, filtered = 0, calendarUsed = 0, bulkFallback = 0;
+        const skipped = { date: 0, link: 0, duplicate: 0 };
+        const calendarStart = calendarProcessed;
         const today = new Date().toISOString().split('T')[0];
 
         // 2단계: 각 도시별 Calendar API로 실시간 최저가 조회
@@ -616,26 +621,36 @@ export async function scrapeMyrealtripWithDiagnostics(
             const bulkDepDate = fare.departureDate || '';
             const bulkArrDate = fare.arrivalDate || '';
             if (!bulkDepDate) continue;
+            const skipReason = options.eligibility
+                ? myrealtripSkipReason(bulkDepDate, fare.arrivalCity, options.eligibility) : null;
+            if (skipReason) { skipped[skipReason]++; continue; }
+            const key = `mrt|${dep.cityCd}|${fare.arrivalCity}`;
+            if (processedKeys.has(key)) { skipped.duplicate++; continue; }
 
-            const calPrices = await fetchCalendarPrices(dep.calendarFrom, fare.arrivalCity, today);
-            calendarProcessed++;
-            if (calPrices.length > 0) {
-                calendarSucceeded++;
-                consecutiveCalendarEmpty = 0;
-            } else {
-                consecutiveCalendarEmpty++;
+            const calendarKey = `${dep.calendarFrom}|${fare.arrivalCity}|${today}`;
+            const reused = calendarCache.has(calendarKey);
+            const calPrices = await myrealtripCalendarOnce(calendarCache, calendarKey,
+                () => fetchCalendarPrices(dep.calendarFrom, fare.arrivalCity, today));
+            if (!reused) {
+                calendarProcessed++;
+                if (calPrices.length > 0) {
+                    calendarSucceeded++;
+                    consecutiveCalendarEmpty = 0;
+                } else {
+                    consecutiveCalendarEmpty++;
+                }
+                assertNoSourceResponseCollapse('마이리얼트립 Calendar API', {
+                    processed: calendarProcessed,
+                    succeeded: calendarSucceeded,
+                    consecutiveFailures: consecutiveCalendarEmpty,
+                }, {
+                    maxConsecutiveFailures: 12,
+                    minSamples: 20,
+                    minSuccessRatio: 0.1,
+                });
+                // 가격 조건이나 필드 문제로 아래에서 건너뛰더라도 모든 API 요청 뒤에는 쉰다.
+                await delay(800 + Math.random() * 800);
             }
-            assertNoSourceResponseCollapse('마이리얼트립 Calendar API', {
-                processed: calendarProcessed,
-                succeeded: calendarSucceeded,
-                consecutiveFailures: consecutiveCalendarEmpty,
-            }, {
-                maxConsecutiveFailures: 12,
-                minSamples: 20,
-                minSuccessRatio: 0.1,
-            });
-            // 가격 조건이나 필드 문제로 아래에서 건너뛰더라도 모든 API 요청 뒤에는 쉰다.
-            await delay(800 + Math.random() * 800);
 
             let price: number;
             let airline: string;
@@ -678,8 +693,6 @@ export async function scrapeMyrealtripWithDiagnostics(
                 arrDate = depD.toISOString().split('T')[0];
             }
 
-            const key = `mrt|${dep.cityCd}|${fare.arrivalCity}`;
-            if (processedKeys.has(key)) continue;
             processedKeys.add(key);
 
             const flight: Flight = {
@@ -712,6 +725,7 @@ export async function scrapeMyrealtripWithDiagnostics(
 
         console.log(`[마이리얼트립] ${dep.city}: ${collected}개 수집, ${filtered}개 제외`);
         console.log(`  실시간 가격: ${calendarUsed}개 / Bulk 폴백: ${bulkFallback}개`);
+        console.log(`  달력 조회: ${calendarProcessed - calendarStart}개 / 사전 제외: 날짜 ${skipped.date}, 링크 ${skipped.link}, 중복 ${skipped.duplicate}`);
 
         if (dep !== DEPARTURE_CITIES[DEPARTURE_CITIES.length - 1]) {
             await delay(2_000 + Math.random() * 2_000);

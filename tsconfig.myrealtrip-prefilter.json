@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "target": "ES2020", "noEmit": true, "incremental": false },
+  "include": [
+    "src/lib/myrealtrip-prefilter.ts",
+    "src/lib/scrapers/myrealtrip.ts",
+    "scripts/scrape-myrealtrip-prices.ts",
+    "scripts/test-myrealtrip-prefilter.ts"
+  ],
+  "exclude": ["node_modules", "output"]
+}

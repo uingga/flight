@@ -256,8 +256,12 @@ async function main() {
 
     // ── 1단계: Calendar API로 항공편 목록 갱신 ──────────────────
     console.log('📡 1단계: Calendar API로 최신 항공편 목록 수집...\n');
+    const gidMap = loadGidMap();
+    const eligibility = { nowMs: Date.now(), maxDays: MAX_DAYS, gidMap };
+    if (Object.keys(gidMap).length === 0) throw new Error('예약 GID 매핑이 없어 API 조회 전에 중단합니다.');
     const seedResult = await scrapeMyrealtripWithDiagnostics({
         dateCandidates: quickDepartureCandidates,
+        eligibility,
     });
     const freshFlights = seedResult.flights;
     console.log(`\n📡 Calendar API 결과: ${freshFlights.length}개 항공편 수집`);
@@ -278,7 +282,7 @@ async function main() {
     console.log(`♻️ MRT 캐시 교체: ${prevMrtCount}개 → ${freshFlights.length}개`);
 
     // 출발일 60일 초과 마이리얼트립 항공편 제거 (티키티킷에 표시하지 않음)
-    const nowDate = new Date();
+    const nowDate = new Date(eligibility.nowMs);
     const cutoff = new Date(nowDate.getTime() + MAX_DAYS * 24 * 60 * 60 * 1000);
     const beforeCutoff = cache.flights.length;
     cache.flights = cache.flights.filter((f: any) => {
@@ -299,10 +303,9 @@ async function main() {
     console.log('🎭 2단계: Playwright로 실제 가격 보정 시작...\n');
 
     const mrtFlights: CachedFlight[] = cache.flights.filter((f: any) => f.source === 'myrealtrip');
-    const gidMap = loadGidMap();
 
     // gid 있는 노선만 (링크가 정확한 노선)
-    const now = new Date();
+    const now = nowDate;
 
     const tasks = mrtFlights
         .filter(f => {
@@ -524,7 +527,7 @@ async function main() {
     );
     fs.writeFileSync(CACHE_PATH, JSON.stringify(cache));
 
-    const previousFlightByKey = new Map(previousMrtFlights.map((flight: CachedFlight) => [flightIdentity(flight), flight]));
+    const previousFlightByKey = new Map<string, CachedFlight>(previousMrtFlights.map((flight: CachedFlight) => [flightIdentity(flight), flight]));
     const finalFlightByKey = new Map(finalMrtFlights.map((flight: CachedFlight) => [flightIdentity(flight), flight]));
     const previousKeys = new Set(previousFlightByKey.keys());
     const finalKeys = new Set(finalFlightByKey.keys());
