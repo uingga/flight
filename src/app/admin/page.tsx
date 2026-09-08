@@ -9,6 +9,7 @@ import AdminTodayPick from '@/components/AdminTodayPick';
 import AdminVisitComparison from '@/components/AdminVisitComparison';
 import AdminFlightOrder from '@/components/AdminFlightOrder';
 import AdminFlightInterest from '@/components/AdminFlightInterest';
+import AdminThreadsPosts from '@/components/AdminThreadsPosts';
 import AdminFilterDemand from '@/components/AdminFilterDemand';
 import type { FilterDemandData } from '@/lib/filter-demand';
 import type { FlightInterestData } from '@/lib/flight-interest';
@@ -4633,61 +4634,14 @@ export default function AdminPage() {
                         </div>
                     </div>
                     {threadsInsights?.available && threadsInsights.posts.length > 0 ? (
-                        <div className={styles.threadsPostList}>
-                            {threadsInsights.posts.map(post => {
-                                const site = post.attribution;
-                                return (
-                                    <article className={styles.threadsPostCard} key={post.id}>
-                                        <div className={styles.threadsPostHead}>
-                                            <time dateTime={post.timestamp}>{post.timestamp ? formatKST(post.timestamp) : '게시 시각 없음'}</time>
-                                            {post.permalink && <a href={post.permalink} target="_blank" rel="noopener noreferrer">Threads에서 보기 →</a>}
-                                        </div>
-                                        <p className={styles.threadsPostText}>{post.text || '(본문 없음)'}</p>
-                                        <dl className={styles.threadsMetricGrid}>
-                                            <div><dt>조회</dt><dd>{post.metrics.views.toLocaleString()}</dd></div>
-                                            <div><dt>좋아요</dt><dd>{post.metrics.likes.toLocaleString()}</dd></div>
-                                            <div><dt>답글</dt><dd>{post.metrics.replies.toLocaleString()}</dd></div>
-                                            <div><dt>재게시</dt><dd>{post.metrics.reposts.toLocaleString()}</dd></div>
-                                            <div><dt>인용</dt><dd>{post.metrics.quotes.toLocaleString()}</dd></div>
-                                            <div><dt>공유</dt><dd>{post.metrics.shares.toLocaleString()}</dd></div>
-                                            <div><dt>반응률</dt><dd>{post.engagementRate === null ? '—' : `${post.engagementRate}%`}</dd></div>
-                                        </dl>
-                                        <div className={styles.threadsSiteFlow}>
-                                            {site ? (
-                                                <>
-                                                    <div><span>사이트 방문</span><strong>{site.users.toLocaleString()}명</strong><small>{site.sessions.toLocaleString()}회</small></div>
-                                                    <span aria-hidden="true">→</span>
-                                                    <div><span>상세 열람</span><strong>{site.detailUsers.toLocaleString()}명</strong><small>{site.detailOpens.toLocaleString()}회</small></div>
-                                                    <span aria-hidden="true">→</span>
-                                                    <div><span>예약 이동</span><strong>{site.bookingUsers.toLocaleString()}명</strong><small>{site.bookingClicks.toLocaleString()}회</small></div>
-                                                </>
-                                            ) : post.trackingContent ? (
-                                                <p>추적 링크는 확인됐지만 최근 30일 사이트 방문은 아직 없습니다.</p>
-                                            ) : post.trackingIssue === 'replies-unavailable' ? (
-                                                <p>이어 쓴 글의 링크를 확인하지 못했습니다. Threads 답글 조회 권한 또는 조회 상태를 확인해주세요.</p>
-                                            ) : post.trackingIssue === 'multiple-links' ? (
-                                                <p>이어 쓴 글에 서로 다른 추적 링크가 있어 하나의 글별 통계로 연결하지 않았습니다.</p>
-                                            ) : (
-                                                <p>본문과 확인된 본인 답글에 추적 가능한 티키티킷 링크가 없어 사이트 행동을 글별로 나눌 수 없습니다.</p>
-                                            )}
-                                        </div>
-                                        {post.attributionShared && (
-                                            <small className={styles.threadsTrackingHint}>같은 공유 링크가 여러 Threads 글에 있어 이 숫자는 해당 글들에 함께 표시됩니다.</small>
-                                        )}
-                                        {Boolean(post.trackingReplyIds?.length) && (
-                                            <small className={styles.threadsTrackingHint}>이어 쓴 본인 글의 링크로 연결한 사이트 통계입니다. 전체 합계에는 같은 링크를 한 번만 반영합니다.</small>
-                                        )}
-                                    </article>
-                                );
-                            })}
-                        </div>
+                        <AdminThreadsPosts posts={threadsInsights.posts} attributionAvailable={threadsInsights.attribution.available} />
                     ) : !threadsInsightsError && (
                         <div className={styles.dealReviewEmpty}>불러온 Threads 글이 없습니다.</div>
                     )}
                 </section>
 
                 <section className={styles.section} id="threads-attribution">
-                    <h2>Threads 링크별 사이트 이동</h2>
+                    <details><summary style={{ cursor: 'pointer', fontWeight: 600 }}>링크별 집계 자세히 보기</summary>
                     <p className={styles.sectionHelp}>Threads 출처를 우선 사용하고, 출처가 사라진 클릭은 글 속 공유 링크 코드로 자동 보완합니다. 같은 링크를 다른 채널에도 보냈다면 일부가 함께 잡힐 수 있습니다.</p>
                     {threadsInsights?.available && threadsInsights.attribution.rows.length > 0 ? (
                         <div className={styles.cityDetail}>
@@ -4708,6 +4662,7 @@ export default function AdminPage() {
                     ) : (
                         <div className={styles.dealReviewEmpty}>Threads 추적 링크로 들어온 방문이 아직 없습니다.</div>
                     )}
+                    </details>
                 </section>
             </>)}
 

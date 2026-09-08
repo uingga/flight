@@ -1,0 +1,38 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import { chromium } from 'playwright';
+const browser = await chromium.launch({ headless: true });
+try {
+    const page = await browser.newPage({ viewport: { width: 1280, height: 1000 } });
+    const errors = [];
+    page.on('pageerror', error => errors.push(error.message));
+    await page.route('**/*', route => new URL(route.request().url()).hostname === '127.0.0.1' ? route.continue() : route.abort());
+    await page.goto('http://127.0.0.1:31859/preview/threads-posts');
+    const rows = page.locator('tbody > tr');
+    assert.equal(await rows.count(), 12);
+    assert.equal(await rows.first().locator('td').nth(1).innerText(), '123');
+    assert.ok((await rows.first().boundingBox()).height < 110);
+    await page.getByRole('button', { name: '조회', exact: false }).click();
+    assert.equal(await rows.first().locator('td').nth(1).innerText(), '1,476');
+    await page.getByRole('button', { name: '조회', exact: false }).click();
+    assert.equal(await rows.first().locator('td').nth(1).innerText(), '123');
+    await rows.first().getByRole('button').click();
+    assert.equal(await rows.count(), 13);
+    assert.match(await rows.nth(1).innerText(), /좋아요/);
+    await rows.first().getByRole('button').click();
+    assert.equal(await rows.count(), 12);
+    await page.getByRole('button', { name: '예약 이동', exact: false }).click();
+    assert.match(await rows.first().locator('td').last().innerText(), /11명/);
+    assert.equal(await rows.last().locator('td').last().innerText(), '—');
+    assert.equal(await page.getByText('공유 링크 중복', {exact:true}).count(), 2);
+    await page.setViewportSize({width:390,height:844});
+    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+    await page.setViewportSize({width:1280,height:1000});
+    await page.getByRole('button', { name:'글 · 게시일',exact:false }).click();
+    fs.mkdirSync('tmp/threads-verification',{recursive:true});
+    await page.screenshot({path:'tmp/threads-verification/desktop.png',fullPage:true});
+    await page.goto('http://127.0.0.1:31859/preview/threads-posts?state=unavailable');
+    assert.equal(await rows.first().locator('td').last().innerText(),'—');
+    assert.deepEqual(errors,[]);
+    console.log('Threads table: compact rows, sorting, expansion, missing attribution and mobile overflow passed.');
+} finally { await browser.close(); }
