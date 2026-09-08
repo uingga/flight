@@ -14,7 +14,7 @@ const DEFAULT_DAYS = 30;
 const CACHE_TTL_MS = 10 * 60 * 1000;
 const KST_TIME_ZONE = 'Asia/Seoul';
 const HOURS_PER_DAY = 24;
-const HOURLY_BUCKET_SIZE = 3;
+const HOURLY_BUCKET_SIZE = 1;
 const CITY_INTEREST_EVENTS = [
     'city_detail_open',
     'favorite_add',
@@ -267,7 +267,7 @@ async function buildStats(config: Ga4Config, days: number) {
             keepEmptyRows: true,
             limit: days,
         }),
-        // 날짜와 시간을 한 번에 받아 오늘 1시간 단위, 최근 기간 3시간 단위를 모두 만든다.
+        // 날짜와 시간을 한 번에 받아 오늘과 최근 기간을 모두 1시간 단위로 만든다.
         // hour는 GA4 속성 시간대로 보고되며 sessions는 session_start가 발생한 횟수다.
         runReport(config, {
             dateRanges: hourlyDateRanges,
@@ -556,21 +556,10 @@ async function buildStats(config: Ga4Config, days: number) {
             sessions: count,
         }));
     };
-    const threeHourBuckets = (series: ReturnType<typeof hourlySeries>) =>
-        Array.from({ length: HOURS_PER_DAY / HOURLY_BUCKET_SIZE }, (_, index) => {
-            const startHour = index * HOURLY_BUCKET_SIZE;
-            return {
-                startHour,
-                endHour: startHour + HOURLY_BUCKET_SIZE,
-                sessions: series
-                    .slice(startHour, startHour + HOURLY_BUCKET_SIZE)
-                    .reduce((sum, point) => sum + point.sessions, 0),
-            };
-        });
     const yesterday = shiftDateKey(propertyToday, -1);
     const todayHourly = hourlySeries(propertyToday, propertyToday);
-    const recent7Hourly = threeHourBuckets(hourlySeries(shiftDateKey(propertyToday, -7), yesterday));
-    const currentHourly = threeHourBuckets(hourlySeries(shiftDateKey(propertyToday, -days), yesterday));
+    const recent7Hourly = hourlySeries(shiftDateKey(propertyToday, -7), yesterday);
+    const currentHourly = hourlySeries(shiftDateKey(propertyToday, -days), yesterday);
 
     const summary = (report: ReportResponse) => ({
         users: num(report.rows?.[0], 0),

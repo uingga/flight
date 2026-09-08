@@ -1236,11 +1236,11 @@ function HourlySessionsComparison({ data, days }: { data: GaHourlySessions; days
             <section className={styles.hourlyPeriodChart}>
                 <header className={styles.hourlyPeriodChartHead}>
                     <strong><i className={markerClass} aria-hidden="true" />{label}</strong>
-                    <span>3시간대별 접속 비중</span>
+                    <span>1시간대별 접속 비중</span>
                 </header>
                 <div className={styles.hourlyCompareScroll}>
                     <div className={styles.hourlyCompareChart}>
-                        <div className={styles.hourlyCompareBars} role="list" aria-label={`${label} 3시간대별 접속 비중`}>
+                        <div className={styles.hourlyCompareBars} role="list" aria-label={`${label} 1시간대별 접속 비중`}>
                             {buckets.map(bucket => {
                                 const bucketShare = share(bucket.sessions, total);
                                 const barHeight = bucket.sessions > 0 ? Math.max(6, (bucketShare / periodMaxShare) * 100) : 0;
@@ -1257,7 +1257,7 @@ function HourlySessionsComparison({ data, days }: { data: GaHourlySessions; days
                                                 <span className={barClass} style={{ height: `${barHeight}%` }} />
                                             </span>
                                         </div>
-                                        <time>{hourRangeLabel(bucket)}</time>
+                                        <time dateTime={`${String(bucket.startHour).padStart(2, '0')}:00`}>{String(bucket.startHour).padStart(2, '0')}시</time>
                                     </div>
                                 );
                             })}
@@ -1281,7 +1281,7 @@ function HourlySessionsComparison({ data, days }: { data: GaHourlySessions; days
                 <PeriodChart label="최근 7일" buckets={data.recent7} total={recent7Total} tone="recent" />
                 <PeriodChart label={`최근 ${days}일`} buckets={data.current} total={currentTotal} tone="current" />
             </div>
-            <p className={styles.hourlyFootnote}>어제까지 끝난 날짜만 3시간씩 묶었습니다. 기간 길이가 달라 막대는 각 기간 전체 세션에서 차지한 비중으로 비교합니다.</p>
+            <p className={styles.hourlyFootnote}>어제까지 끝난 날짜의 접속을 1시간 간격으로 집계합니다. 비중은 각 기간 전체 세션 기준이며, 막대에 마우스를 올리면 접속 횟수를 볼 수 있습니다.</p>
         </div>
     );
 }
@@ -4793,7 +4793,7 @@ export default function AdminPage() {
                             <div className={styles.sectionHeading}>
                                 <div>
                                     <h2>접속이 몰리는 시간</h2>
-                                    <p>최근 7일과 최근 {gaStats.days}일의 피크 시간을 3시간 구간으로 비교합니다.</p>
+                                    <p>최근 7일과 최근 {gaStats.days}일의 피크 시간을 1시간 구간으로 비교합니다.</p>
                                 </div>
                             </div>
                             {gaStats.hourlySessions ? (

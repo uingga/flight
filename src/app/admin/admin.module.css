@@ -3610,7 +3610,7 @@
 }
 
 .hourlyCompareChart {
-    min-width: 520px;
+    min-width: 960px;
     padding: 10px 12px 8px;
 }
 
@@ -3618,7 +3618,7 @@
     height: 174px;
     padding-top: 8px;
     display: grid;
-    grid-template-columns: repeat(8, minmax(0, 1fr));
+    grid-template-columns: repeat(24, minmax(0, 1fr));
     align-items: end;
     gap: 8px;
 }
