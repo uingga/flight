@@ -1,3 +1,4 @@
+import { Ga4RequestQueue } from '@/lib/ga4-request-queue';
 import { loadAcquisition } from '@/lib/server/acquisition-report';
 import { NextRequest, NextResponse } from 'next/server';
 import { ga4Config, runReport, eventNameFilter, dim, num, type Ga4Config, type ReportResponse } from '@/lib/ga4';
@@ -72,6 +73,7 @@ const isUnsetDimension = (value: string) => UNSET_DIMENSION_VALUES.has(value.tri
 
 interface CachedPayload { at: number; days: number; body: unknown }
 let cache: CachedPayload | null = null;
+const statsQueue = new Ga4RequestQueue(1);
 
 interface CityAvailabilityRow {
     snapshot_date: string;
@@ -927,7 +929,7 @@ export async function GET(request: NextRequest) {
     }
 
     try {
-        const body = await buildStats(config, days);
+        const body = await statsQueue.run(String(days), () => buildStats(config, days));
         cache = { at: Date.now(), days, body };
         return NextResponse.json(body);
     } catch (error) {

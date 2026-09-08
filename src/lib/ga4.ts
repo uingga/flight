@@ -2,6 +2,9 @@
 // 서비스 계정 JWT를 Node 내장 crypto로 직접 서명한다 (googleapis 의존성 없음).
 
 import * as crypto from 'crypto';
+import { Ga4RequestQueue } from './ga4-request-queue';
+const reportQueue = new Ga4RequestQueue(2);
+const tokenQueue = new Ga4RequestQueue(1);
 
 const TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const SCOPE = 'https://www.googleapis.com/auth/analytics.readonly';
@@ -99,19 +102,31 @@ export interface ReportResponse {
 }
 
 export async function runReport(config: Ga4Config, request: ReportRequest): Promise<ReportResponse> {
-    const token = await accessToken(config);
-    const response = await fetch(`${DATA_API}/properties/${config.propertyId}:runReport`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(request),
-        cache: 'no-store',
+    const identity = crypto.createHash('sha256').update(JSON.stringify(config)).digest('hex');
+    return reportQueue.run(identity + JSON.stringify(request), async () => {
+        const token = await tokenQueue.run(identity, () => accessToken(config));
+        for (let attempt = 0; ; attempt += 1) {
+            const response = await fetch(DATA_API + '/properties/' + config.propertyId + ':runReport', {
+                method: 'POST',
+                headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+                body: JSON.stringify(request),
+                cache: 'no-store',
+                signal: AbortSignal.timeout(20_000),
+            });
+            if (!response.ok) {
+                const detail = await response.text();
+                if (response.status === 429) {
+                    if (/concurrent requests quota/i.test(detail) && attempt < 2) {
+                        await new Promise(resolve => setTimeout(resolve, 1000 * (2 ** attempt) + Math.random() * 500));
+                        continue;
+                    }
+                    throw new Error('통계 조회 요청이 몰려 일부 항목을 불러오지 못했습니다. 잠시 후 다시 확인해 주세요.');
+                }
+                throw new Error('GA4 리포트 실패 (' + response.status + '): ' + detail.slice(0, 300));
+            }
+            return await response.json() as ReportResponse;
+        }
     });
-
-    if (!response.ok) {
-        const detail = await response.text();
-        throw new Error(`GA4 리포트 실패 (${response.status}): ${detail.slice(0, 300)}`);
-    }
-    return await response.json() as ReportResponse;
 }
 
 /** eventName == value 필터 */
