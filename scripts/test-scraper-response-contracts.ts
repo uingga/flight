@@ -181,6 +181,14 @@ const onlineTourBaseRow = {
     transport_detail_name: '테스트항공',
 };
 const fallbackDestination = mapOnlineTourFlight(onlineTourBaseRow);
+for (const res_cnt of [0, '0']) {
+    const flight = mapOnlineTourFlight({ ...onlineTourBaseRow, res_cnt });
+    assert.equal(flight?.availableSeats, 0);
+    assert.equal(flight?.seats, '0석');
+}
+for (const res_cnt of [null, undefined, '', '문의']) {
+    assert.equal(mapOnlineTourFlight({ ...onlineTourBaseRow, res_cnt })?.availableSeats, undefined);
+}
 assert.equal(fallbackDestination?.arrival.airport, 'PQC');
 assert.equal(fallbackDestination?.arrival.city, '푸꾸옥');
 

@@ -1,4 +1,5 @@
 import type { Page } from 'playwright';
+import { hasSellableSeats } from './flight-seats';
 import type { TtangDetailCheckpoint } from './ttang-detail-checkpoint';
 import type { Flight } from '@/types/flight';
 import { normalizeAirline } from '@/lib/utils/flight-helpers';
@@ -216,7 +217,9 @@ function applyData(flight: Flight, data: EnrichData, checkedAt?: string): void {
     flight.departure.arrivalTime = data.arrTime;
     flight.arrival.time = data.retDepTime;
     flight.arrival.arrivalTime = data.retArrTime;
-    if (data.seats > 0) {
+    if (!hasSellableSeats(flight)) {
+        // Timing/state restoration must not erase explicit sold-out inventory.
+    } else if (data.seats > 0) {
         flight.availableSeats = data.seats;
         flight.seats = `${data.seats}석`;
     } else {

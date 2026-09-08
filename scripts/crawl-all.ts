@@ -1,5 +1,6 @@
 
 import { scrapeYbtour } from '../src/lib/scrapers/ybtour';
+import { hasSellableSeats } from '../src/lib/flight-seats';
 import { scrapeHanatour } from '../src/lib/scrapers/hanatour';
 import { scrapeModetour } from '../src/lib/scrapers/modetour';
 import { scrapeOnlineTour } from '../src/lib/scrapers/onlinetour';
@@ -643,7 +644,7 @@ async function main() {
         console.log(`필터 전: ${allFlights.length}개`);
 
         const routeMinPrices: Record<string, number> = {};
-        allFlights.forEach((f: any) => {
+        allFlights.filter(hasSellableSeats).forEach((f: any) => {
             const key = `${f.source}|${f.departure?.city || ''}|${f.arrival?.city || ''}`;
             if (f.price > 0) {
                 if (!routeMinPrices[key] || f.price < routeMinPrices[key]) {
@@ -653,6 +654,7 @@ async function main() {
         });
 
         const filteredFlights = allFlights.filter((f: any) => {
+            if (!hasSellableSeats(f)) return false;
             if (f.price <= 0) return false;
             // 마이리얼트립은 별도 워크플로우에서 자체 필터링하므로 여기서 제외
             if (f.source === 'myrealtrip') return true;

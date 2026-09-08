@@ -3,6 +3,7 @@ import 'server-only';
 import fs from 'fs';
 import path from 'path';
 import type { Flight } from '@/types/flight';
+import { filterSeatAvailableFlights } from '@/lib/flight-seats';
 
 export interface AccountFlightSnapshot {
     id: string;
@@ -27,7 +28,7 @@ function getFlightMap() {
     const stat = fs.statSync(cachePath);
     if (cache?.mtimeMs === stat.mtimeMs) return cache.flights;
     const parsed = JSON.parse(fs.readFileSync(cachePath, 'utf8')) as { flights?: Flight[] };
-    const flights = new Map((parsed.flights || []).map(flight => [flight.id, flight]));
+    const flights = new Map(filterSeatAvailableFlights(parsed.flights || []).map(flight => [flight.id, flight]));
     cache = { mtimeMs: stat.mtimeMs, flights };
     return flights;
 }

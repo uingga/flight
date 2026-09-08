@@ -3,6 +3,7 @@ import flightCacheJson from '../../data/all-flights-cache.json';
 import todayPickJson from '../../data/today-pick.json';
 import { FlightOgCard } from './api/og/FlightOgCard';
 import type { Flight } from '@/types/flight';
+import { filterSeatAvailableFlights } from '@/lib/flight-seats';
 
 export const runtime = 'edge';
 export const alt = '티키티킷 오늘의 땡처리 항공권';
@@ -50,9 +51,10 @@ export default async function Image() {
     const todayPick = todayPickJson as { date?: string; flightId?: string };
     const todayKst = new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
     const currentPickId = todayPick.date === todayKst ? todayPick.flightId : null;
+    const availableFlights = filterSeatAvailableFlights(cache.flights);
     const selectedFlight =
-        cache.flights.find((flight) => flight.id === currentPickId)
-        || cache.flights.filter((flight) => flight.price > 0).sort((a, b) => a.price - b.price)[0];
+        availableFlights.find((flight) => flight.id === currentPickId)
+        || availableFlights.filter((flight) => flight.price > 0).sort((a, b) => a.price - b.price)[0];
 
     const dep = cleanCity(selectedFlight?.departure.city, '서울');
     const arr = cleanCity(selectedFlight?.arrival.city, '지금 싼 곳');

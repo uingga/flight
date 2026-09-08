@@ -1,4 +1,5 @@
 import { Flight } from '@/types/flight';
+import { parseSeatCount } from '../flight-seats';
 import { getRegionByCity } from '@/lib/utils/region-mapper';
 import { ScrapeCompleteness } from './scrape-errors';
 import {
@@ -101,7 +102,7 @@ export function mapOnlineTourFlight(item: Record<string, unknown>): Flight | nul
     if (!eventCode || !departureDate || !returnDate || !departureAirport || !destinationCode || price <= 0) return null;
     if (departureDate === returnDate) return null;
 
-    const seats = numberField(item, 'res_cnt');
+    const seats = parseSeatCount(item.res_cnt);
     const depCodeForSearch = departureAirport === 'GMP' || departureAirport === 'ICN'
         ? 'SEL'
         : departureAirport;
@@ -136,7 +137,7 @@ export function mapOnlineTourFlight(item: Record<string, unknown>): Flight | nul
         link: `https://www.onlinetour.co.kr/flight/w/international/dcair/dcairReservation?eventCode=${eventCode}`,
         searchLink,
         region: getRegionByCity(arrivalCity),
-        ...(seats > 0 ? { availableSeats: seats, seats: `${seats}석` } : {}),
+        ...(seats !== undefined ? { availableSeats: seats, seats: `${seats}석` } : {}),
         ...(actualOutboundArrival && actualReturnDeparture && actualReturnArrival ? {
             routeAirports: {
                 outboundDeparture: departureAirport,

@@ -9,6 +9,7 @@ import {
     getStaleSources,
 } from '@/lib/source-freshness';
 import { deduplicateDisplayFlights } from '@/lib/flight-visibility';
+import { filterSeatAvailableFlights } from '@/lib/flight-seats';
 import { buildNaverPriceKey } from '@/lib/naver-route';
 import {
     buildNearbyNaverPriceIndex,
@@ -42,6 +43,7 @@ interface FlightFilterSummary {
         naverExpensive: number;
         expired: number;
         oneWay: number;
+        soldOut: number;
     };
     visibleBySource: Record<string, number>;
     visibleByRegion: Record<string, number>;
@@ -188,6 +190,7 @@ export async function GET(request: NextRequest) {
                 naverExpensive: 0,
                 expired: 0,
                 oneWay: 0,
+                soldOut: 0,
             },
             visibleBySource: {},
             visibleByRegion: {},
@@ -213,6 +216,8 @@ export async function GET(request: NextRequest) {
                 const cacheData = JSON.parse(fs.readFileSync(cachePath, 'utf-8'));
                 allFlights = cacheData.flights || [];
                 filterSummary.collected = allFlights.length;
+                allFlights = filterSeatAvailableFlights(allFlights);
+                filterSummary.reasons.soldOut = filterSummary.collected - allFlights.length;
                 lastUpdated = cacheData.lastUpdated || cacheData.timestamp || null;
                 sourceUpdatedAt = cacheData.sourceUpdatedAt || {};
                 freshnessUpdatedAt = getEffectiveSourceUpdatedAt(

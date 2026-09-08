@@ -11,6 +11,7 @@ import type { Flight } from '@/types/flight';
 import { normalizeAirline, normalizeCity } from '@/lib/utils/flight-helpers';
 import { filterStaleSourceFlights, getEffectiveSourceUpdatedAt } from '@/lib/source-freshness';
 import { deduplicateDisplayFlights } from '@/lib/flight-visibility';
+import { filterSeatAvailableFlights } from '@/lib/flight-seats';
 import { getComparisonFreshness } from '@/lib/price-quality';
 import {
     clearUnsupportedInterparkDiscount,
@@ -169,7 +170,7 @@ export function loadStaticRecommendationPriceHistory(): StaticRecommendationPric
 
 export function groupByCity(flights: Flight[]): CityDeals[] {
     const groups = new Map<string, Flight[]>();
-    for (const f of flights) {
+    for (const f of filterSeatAvailableFlights(flights)) {
         const city = displayCity(f.arrival?.city || '');
         if (!city) continue;
         if (!groups.has(city)) groups.set(city, []);

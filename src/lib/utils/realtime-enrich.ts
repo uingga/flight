@@ -1,4 +1,5 @@
 import { Page } from 'playwright';
+import { resolveFlightSeats } from '../flight-seats';
 import { normalizeAirline } from './flight-helpers';
 import {
     assertNoSourceAccessBlockText,
@@ -423,7 +424,7 @@ export function applyEnrichData(
                 flights[i].arrival.time = data.retDepTime;       // 오는편 출발시간
                 flights[i].arrival.arrivalTime = data.retArrTime; // 오는편 도착시간
             }
-            if (data.seats > 0 && !flights[i].availableSeats) {
+            if (data.seats > 0 && resolveFlightSeats(flights[i]).count === undefined) {
                 flights[i].availableSeats = data.seats;
                 flights[i].seats = `${data.seats}석`;
             }

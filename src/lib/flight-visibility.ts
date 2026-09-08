@@ -1,6 +1,7 @@
 import type { Flight } from '../types/flight';
 import { normalizeCity } from './utils/flight-helpers';
 import { getEffectivePrice } from './price-quality';
+import { filterSeatAvailableFlights } from './flight-seats';
 
 const normalizeDate = (value?: string): string => {
     if (!value) return '';
@@ -34,7 +35,7 @@ export function buildFlightDisplayKey(flight: Flight): string {
 export function deduplicateDisplayFlights<T extends Flight>(flights: T[]): T[] {
     const dedupMap = new Map<string, T>();
 
-    for (const flight of flights) {
+    for (const flight of filterSeatAvailableFlights(flights)) {
         const key = buildFlightDisplayKey(flight);
         const existing = dedupMap.get(key);
         if (!existing) {

@@ -1,5 +1,7 @@
 import { Metadata } from 'next';
 import { SITE_URL } from '@/lib/site';
+import { filterSeatAvailableFlights } from '@/lib/flight-seats';
+import type { Flight } from '@/types/flight';
 import shareSnapshots from '../../../../data/share-snapshots.json';
 
 type Props = {
@@ -41,7 +43,7 @@ async function getFlightById(id: string) {
 
         if (res.ok) {
             const data = await res.json();
-            const flights = data.flights || [];
+            const flights = filterSeatAvailableFlights<Flight>(data.flights || []);
             return flights.find((f: { id: string }) => f.id === id) || null;
         }
     } catch (e) {

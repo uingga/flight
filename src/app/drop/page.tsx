@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation';
 import type { Flight } from '@/types/flight';
 import { filterStaleSourceFlights } from '@/lib/source-freshness';
 import { SITE_URL } from '@/lib/site';
+import { filterSeatAvailableFlights } from '@/lib/flight-seats';
 import styles from './drop.module.css';
 
 interface DropData {
@@ -41,7 +42,7 @@ function loadFlights(): Flight[] {
     const parsed = readJson<Flight[] | { flights?: Flight[]; sourceUpdatedAt?: Record<string, string> }>('data/all-flights-cache.json');
     const flights = Array.isArray(parsed) ? parsed : parsed?.flights || [];
     const sourceUpdatedAt = Array.isArray(parsed) ? {} : parsed?.sourceUpdatedAt || {};
-    return filterStaleSourceFlights(flights, sourceUpdatedAt);
+    return filterSeatAvailableFlights(filterStaleSourceFlights(flights, sourceUpdatedAt));
 }
 
 function cleanCity(value: string): string {

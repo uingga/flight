@@ -344,10 +344,10 @@ async function scrapeHanatourRegular(browser: any, prevFlights: any[] = []): Pro
 
                             if (price > 0 && arrivalCity && departureDate && returnDate) {
                                 // fareId에서 availCnt 추출
-                                let availCnt = 0;
-                                if (fareAligned && fareLst[index] && fareLst[index].availCnt) {
-                                    availCnt = parseInt(fareLst[index].availCnt) || 0;
-                                }
+                                const rawSeats = fareAligned ? fareLst[index]?.availCnt : undefined;
+                                const availCnt = (typeof rawSeats === 'number' || typeof rawSeats === 'string')
+                                    && /^\d+$/.test(String(rawSeats).trim()) && Number.isSafeInteger(Number(rawSeats))
+                                    ? Number(rawSeats) : undefined;
 
                                 results.push({
                                     // ID는 page.evaluate 밖(Node.js)에서 만든다. tsx가 브라우저에 없는
@@ -374,7 +374,7 @@ async function scrapeHanatourRegular(browser: any, prevFlights: any[] = []): Pro
                                     price: price,
                                     currency: 'KRW',
                                     link: fullLink,
-                                    availableSeats: availCnt || undefined,
+                                    availableSeats: availCnt,
                                 });
                             }
                         } catch (error) {

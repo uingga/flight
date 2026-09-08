@@ -397,7 +397,7 @@ export async function scrapeYbtour(prevFlights: any[] = []): Promise<Flight[]> {
                                                 currency: 'KRW',
                                                 link: flightLink,
                                                 seats: seats ? seats + '석' : '',
-                                                availableSeats: seats ? parseInt(seats) || undefined : undefined,
+                                                availableSeats: /^\d+$/.test(seats.trim()) && Number.isSafeInteger(Number(seats)) ? Number(seats) : undefined,
                                                 // 캐시에 남기지 않는다. 아래에서 뽑아 쓴 뒤 지운다.
                                                 _sk: {
                                                     inhId,
