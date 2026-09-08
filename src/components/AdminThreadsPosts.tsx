@@ -4,6 +4,7 @@ import { Fragment, useState } from 'react';
 import styles from './AdminThreadsPosts.module.css';
 
 interface Post {
+    trackingIssue?: string | null; trackingReplyIds?: string[];
     id: string; text: string; timestamp: string; permalink: string;
     metrics: { views: number; likes: number; replies: number; reposts: number; quotes: number; shares: number };
     engagementRate: number | null; trackingContent: string | null; attributionShared: boolean;
@@ -47,8 +48,9 @@ export default function AdminThreadsPosts({ posts, attributionAvailable }: { pos
                     {expanded === post.id && <tr id={`threads-detail-${post.id}`} className={styles.detail}><td colSpan={7}>
                         <p className={styles.body}>{post.text || '(본문 없음)'}</p>
                         <dl>{([['좋아요', post.metrics.likes], ['답글', post.metrics.replies], ['재게시', post.metrics.reposts], ['인용', post.metrics.quotes], ['공유', post.metrics.shares]] as const).map(([label, count]) => <div key={label}><dt>{label}</dt><dd>{count.toLocaleString()}</dd></div>)}</dl>
-                        {!attributionAvailable ? <p>사이트 통계를 불러오지 못했습니다.</p> : !post.attribution && <p>{post.trackingContent ? '추적 링크는 확인됐지만 최근 30일 확인되는 방문 기록이 없습니다.' : '추적 가능한 링크가 없어 사이트 행동을 글별로 구분할 수 없습니다.'}</p>}
+                        {!attributionAvailable ? <p>사이트 통계를 불러오지 못했습니다.</p> : !post.attribution && <p>{post.trackingContent ? '추적 링크는 확인됐지만 최근 30일 확인되는 방문 기록이 없습니다.' : post.trackingIssue === 'replies-unavailable' ? '이어 쓴 글의 링크를 확인하지 못했습니다. Threads 답글 조회 권한 또는 조회 상태를 확인해주세요.' : post.trackingIssue === 'multiple-links' ? '이어 쓴 글에 서로 다른 추적 링크가 있어 하나의 글별 통계로 연결하지 않았습니다.' : '본문과 확인된 본인 답글에 추적 가능한 링크가 없어 사이트 행동을 글별로 구분할 수 없습니다.'}</p>}
                         {post.attributionShared && <p>같은 링크를 쓴 여러 글에 동일한 사이트 수치가 표시됩니다. 글별 성과로 분리하거나 합산하지 마세요.</p>}
+                        {Boolean(post.trackingReplyIds?.length) && <p>이어 쓴 본인 글의 링크로 연결한 사이트 통계입니다. 전체 합계에는 같은 링크를 한 번만 반영합니다.</p>}
                         {post.permalink && <a href={post.permalink} target="_blank" rel="noopener noreferrer">Threads 원문 보기 ↗</a>}
                     </td></tr>}
                 </Fragment>)}</tbody>
