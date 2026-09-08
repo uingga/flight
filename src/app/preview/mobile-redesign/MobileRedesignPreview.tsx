@@ -4186,6 +4186,15 @@ export default function MobileRedesignPreview({
                         </button>
                     )}
 
+                    {!listLoading && !error && sharedFlightIds.length > 0 && (
+                        <button type="button" className={styles.moreButton} onClick={() => {
+                            showAllFlightsFromSharedGroup();
+                            feedSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }}>
+                            안 살 거지만 더 보기 <span aria-hidden="true">→</span>
+                        </button>
+                    )}
+
                     {isDefaultView && !freshRouteResults && feedFlights.length > 0 && (
                         <RedesignAdSlot preview={previewMode} />
                     )}
