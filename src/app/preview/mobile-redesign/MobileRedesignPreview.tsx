@@ -20,6 +20,8 @@ import { CITY_TO_AIRPORT, calcFlightTiming, formatAgencyFlightDuration, getNaver
 import { getTripcomHotelUrl, getTripcomTrackingId } from '@/lib/utils/tripcom-helpers';
 import { getFlightBookingUrl } from '@/lib/utils/booking-url';
 import { encodeShareId } from '@/lib/share-code';
+import { findSharedFlight, flightScheduleToken, prioritizeSharedPrice, readSharedContext,
+    sharedCity, sharedDeparture, writeSharedContext, type SharedFlightContext } from '@/lib/shared-flight-context';
 import { useSwipeToDismiss } from '@/lib/hooks/use-swipe-to-dismiss';
 import { useAdminAccess } from '@/lib/hooks/use-admin-access';
 import { usePassengerSelection } from '@/lib/hooks/use-passenger-selection';
@@ -292,13 +294,6 @@ const normalizedRoute = (flight: Flight) => `${normalizeCity(flight.departure.ci
 
 const flightScheduleIdentity = (flight: Flight) => [
     flight.id,
-    flight.departure.date,
-    flight.departure.time,
-    flight.arrival.date,
-    flight.arrival.time,
-].join('|');
-
-const flightScheduleToken = (flight: Flight) => [
     flight.departure.date,
     flight.departure.time,
     flight.arrival.date,
@@ -1130,6 +1125,9 @@ export default function MobileRedesignPreview({
     const [calendarOpen, setCalendarOpen] = useState(false);
     const [maxPrice, setMaxPrice] = useState(0);
     const [sort, setSort] = useState<SortMode>('recommended');
+    const [sharedContext, setSharedContext] = useState<SharedFlightContext | null>(null);
+    const sharedEntryRef = useRef(false);
+    const resolvedSharedContextRef = useRef<SharedFlightContext | null>(null);
     const [sortOpen, setSortOpen] = useState(false);
     const [query, setQuery] = useState('');
     const [searchOpen, setSearchOpen] = useState(false);
@@ -1492,6 +1490,10 @@ export default function MobileRedesignPreview({
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const requestedFlight = params.get('flight');
+        sharedEntryRef.current = params.get('shared') === '1';
+        const restoredContext = readSharedContext(params);
+        resolvedSharedContextRef.current = restoredContext;
+        setSharedContext(restoredContext);
         sharedFlightIdRef.current = requestedFlight;
         sharedFlightScheduleRef.current = params.get('schedule');
         sharedFallbackArrivalRef.current = params.get('arr');
@@ -1550,11 +1552,47 @@ export default function MobileRedesignPreview({
         const scheduleToken = sharedFlightScheduleRef.current;
         sharedFlightIdRef.current = null;
         sharedFlightScheduleRef.current = null;
-        const sharedFlight = flights.find(flight => (
-            flight.id === flightId
-            && (!scheduleToken || flightScheduleToken(flight) === scheduleToken)
-        )) || flights.find(flight => flight.id === flightId);
+        const sharedFlight = findSharedFlight(flights, flightId, scheduleToken);
         if (sharedFlight) {
+            const initializeSharedContext = sharedEntryRef.current && !resolvedSharedContextRef.current;
+            if (initializeSharedContext) {
+                const context = {
+                    departure: sharedDeparture(sharedFlight.departure.city),
+                    arrival: sharedCity(sharedFlight.arrival.city),
+                    price: effectivePrice(sharedFlight),
+                };
+                resolvedSharedContextRef.current = context;
+                setSharedContext(context);
+                setDeparture(context.departure);
+                setQuery(context.arrival);
+                setRegion('전체');
+                setSourceFilter('all');
+                setAirlineFilter('all');
+                setDatePeriod('all');
+                setCustomStartDate(null);
+                setCustomEndDate(null);
+                setMaxPrice(0);
+                setSort('recommended');
+            }
+            if (sharedEntryRef.current && window.history.state?.tikitikitOverlay !== 'flight') {
+                const context = resolvedSharedContextRef.current!;
+                // Create a list entry behind the initial detail, so browser Back
+                // closes the detail without losing the shared route or campaign.
+                const listUrl = new URL(window.location.href);
+                const resetKeys = initializeSharedContext
+                    ? ['flight', 'schedule', 'arr', 'date', 'from', 'to', 'period', 'source', 'airline', 'max', 'sort', 'region']
+                    : ['flight', 'schedule', 'arr', 'date'];
+                for (const key of resetKeys) listUrl.searchParams.delete(key);
+                listUrl.searchParams.set('dep', context.departure.replace('/김포', '').replace('/김해', ''));
+                listUrl.searchParams.set('q', context.arrival);
+                writeSharedContext(listUrl.searchParams, context);
+                const listState = { ...window.history.state };
+                delete listState.tikitikitOverlay;
+                window.history.replaceState(listState, '', `${listUrl.pathname}${listUrl.search}`);
+                listUrl.searchParams.set('flight', sharedFlight.id);
+                listUrl.searchParams.set('schedule', flightScheduleToken(sharedFlight));
+                window.history.pushState({ ...listState, tikitikitOverlay: 'flight' }, '', `${listUrl.pathname}${listUrl.search}`);
+            }
             gtag.trackDetailOpen(
                 `${normalizeCity(sharedFlight.departure.city)}-${normalizeCity(sharedFlight.arrival.city)}`,
                 effectivePrice(sharedFlight),
@@ -1589,8 +1627,12 @@ export default function MobileRedesignPreview({
 
     useEffect(() => {
         if (!urlInitializedRef.current) return;
+        if (sharedFlightIdRef.current) return; // Keep entry parameters until the full list resolves.
         const current = new URLSearchParams(window.location.search);
         const next = new URLSearchParams();
+        if (sharedContext && departure === sharedContext.departure && sharedCity(query) === sharedContext.arrival) {
+            writeSharedContext(next, sharedContext);
+        }
         for (const key of ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term']) {
             const value = current.get(key);
             if (value) next.set(key, value);
@@ -1618,7 +1660,7 @@ export default function MobileRedesignPreview({
             '',
             `${window.location.pathname}${queryString ? `?${queryString}` : ''}`,
         );
-    }, [airlineFilter, customEndDate, customStartDate, datePeriod, departure, maxPrice, query, region, selectedFlight, sort, sourceFilter]);
+    }, [airlineFilter, customEndDate, customStartDate, datePeriod, departure, maxPrice, query, region, selectedFlight, sharedContext, sort, sourceFilter]);
 
     useEffect(() => {
         const syncDetailFromHistory = () => {
@@ -1648,10 +1690,7 @@ export default function MobileRedesignPreview({
                 setSelectedFlight(null);
                 return;
             }
-            const flight = historyUi.flights.find(item => (
-                item.id === flightId
-                && (!scheduleToken || flightScheduleToken(item) === scheduleToken)
-            )) || historyUi.flights.find(item => item.id === flightId);
+            const flight = findSharedFlight(historyUi.flights, flightId, scheduleToken);
             if (!flight) {
                 if (historyUi.loading) {
                     sharedFlightIdRef.current = flightId;
@@ -1678,7 +1717,7 @@ export default function MobileRedesignPreview({
         if (!selectedFlight || loading) return;
         const selectedSchedule = flightScheduleIdentity(selectedFlight);
         const refreshedFlight = flights.find(flight => flightScheduleIdentity(flight) === selectedSchedule)
-            || flights.find(flight => flight.id === selectedFlight.id);
+            || (!sharedEntryRef.current ? flights.find(flight => flight.id === selectedFlight.id) : undefined);
         if (refreshedFlight) {
             if (refreshedFlight !== selectedFlight) setSelectedFlight(refreshedFlight);
             return;
@@ -1871,6 +1910,9 @@ export default function MobileRedesignPreview({
         );
     }, [recommendationScoreState, recommendationScores]);
 
+    const activeSharedContext = sharedContext && departure === sharedContext.departure
+        && sharedCity(query) === sharedContext.arrival ? sharedContext : null;
+
     const filteredFlights = useMemo(() => {
         if (sharedFlightIds.length > 0) {
             const flightsById = new Map(flights.map(flight => [flight.id, flight]));
@@ -1881,7 +1923,9 @@ export default function MobileRedesignPreview({
 
         const referenceDate = new Date();
         const result = flights.filter(flight => {
-            const matchesQuery = searchQueryMatches(flight, query);
+            const matchesQuery = activeSharedContext
+                ? sharedCity(flight.arrival.city) === activeSharedContext.arrival
+                : searchQueryMatches(flight, query);
             return matchesQuery
                 && regionMatches(flight, region)
                 && departureMatches(flight, departure)
@@ -1896,7 +1940,7 @@ export default function MobileRedesignPreview({
             if (sort === 'date') return (parseDate(a.departure.date)?.getTime() || 0) - (parseDate(b.departure.date)?.getTime() || 0);
             return compareRecommended(a, b);
         });
-    }, [airlineFilter, compareRecommended, customEndDate, customStartDate, datePeriod, departure, flights, maxPrice, query, region, sharedFlightIds, sort, sourceFilter]);
+    }, [activeSharedContext, airlineFilter, compareRecommended, customEndDate, customStartDate, datePeriod, departure, flights, maxPrice, query, region, sharedFlightIds, sort, sourceFilter]);
 
     const isDefaultView = sharedFlightIds.length === 0
         && region === '전체'
@@ -1942,8 +1986,10 @@ export default function MobileRedesignPreview({
         const automatic = pinnedFlight
             ? [pinnedFlight, ...presentation.orderedFlights]
             : presentation.orderedFlights;
-        return applyManualFlightOrder(automatic, manualPlacements, { sort, pinnedId: pinnedFlight?.id });
-    }, [departure, featuredPick, filteredFlights, isDefaultView, manualPlacements, query, recommendationScoreState, sharedFlightIds.length, sort]);
+        const ordered = applyManualFlightOrder(automatic, manualPlacements, { sort, pinnedId: pinnedFlight?.id });
+        return activeSharedContext && sort === 'recommended'
+            ? prioritizeSharedPrice(ordered, activeSharedContext.price, effectivePrice) : ordered;
+    }, [activeSharedContext, departure, featuredPick, filteredFlights, isDefaultView, manualPlacements, query, recommendationScoreState, sharedFlightIds.length, sort]);
     const weeklyDiscoveryFlights = useMemo(() => flights
         .filter(flight => normalizeCity(flight.arrival.city) === '리장' && effectivePrice(flight) > 0)
         .sort((a, b) => effectivePrice(a) - effectivePrice(b) || a.id.localeCompare(b.id)), [flights]);

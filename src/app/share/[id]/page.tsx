@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import { SITE_URL } from '@/lib/site';
+import { findSharedFlight } from '@/lib/shared-flight-context';
 import { filterSeatAvailableFlights } from '@/lib/flight-seats';
 import type { Flight } from '@/types/flight';
 import shareSnapshots from '../../../../data/share-snapshots.json';
@@ -34,7 +35,7 @@ function getShareSnapshot(id: string): ShareSnapshot | null {
 }
 
 // 캐시에서 항공편 조회
-async function getFlightById(id: string) {
+async function getFlightById(id: string, schedule: string | null = null) {
     try {
         const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || SITE_URL;
         const res = await fetch(`${baseUrl}/api/flights`, {
@@ -44,7 +45,7 @@ async function getFlightById(id: string) {
         if (res.ok) {
             const data = await res.json();
             const flights = filterSeatAvailableFlights<Flight>(data.flights || []);
-            return flights.find((f: { id: string }) => f.id === id) || null;
+            return findSharedFlight(flights, id, schedule) || null;
         }
     } catch (e) {
         console.error('Flight lookup error:', e);
@@ -133,7 +134,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     const { id } = await params;
     const sp = await searchParams;
     const decodedId = decodeURIComponent(id);
-    const flight = await getFlightById(resolveShareId(decodedId));
+    const flight = await getFlightById(resolveShareId(decodedId), typeof sp.schedule === 'string' ? sp.schedule : null);
     const archivedFlight = flight ? null : await getArchivedFlightById(resolveShareId(decodedId));
 
     if (!flight) {
@@ -249,7 +250,7 @@ export default async function SharePage({ params, searchParams }: Props) {
     const sp = await searchParams;
     const decodedId = decodeURIComponent(id);
     const resolvedId = resolveShareId(decodedId);
-    const flight = await getFlightById(resolvedId);
+    const flight = await getFlightById(resolvedId, typeof sp.schedule === 'string' ? sp.schedule : null);
     const snapshot = getShareSnapshot(decodedId);
     const archivedFlight = flight ? null : await getArchivedFlightById(resolvedId);
 
@@ -257,6 +258,8 @@ export default async function SharePage({ params, searchParams }: Props) {
     // 소스 우선순위: 1) URL 쿼리 파라미터 (공유 시 삽입됨) 2) API에서 조회한 flight 데이터
     const fallbackParams = new URLSearchParams();
     fallbackParams.set('flight', resolvedId);
+    fallbackParams.set('shared', '1');
+    if (typeof sp.schedule === 'string' && sp.schedule) fallbackParams.set('schedule', sp.schedule);
 
     const dep = (sp.dep as string)
         || flight?.departure?.city?.replace(/\([^)]+\)/g, '').trim()
