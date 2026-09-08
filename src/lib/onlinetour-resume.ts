@@ -90,6 +90,7 @@ export async function inspectResumeCheckpoint(summary: any, raw: Record<string, 
         || validation.flights.some(f=>f.departure.airport!==scope.departure||f.arrival.airport!==scope.city||f.departure.date.replace(/-/g,'').slice(0,6)!==scope.month)
         || !snapshot.cities.some(city=>city.code===scope.city&&city.firstDepartureDate.slice(0,6)===scope.month)) throw Error('resume_scope_changed');
     const resume:CatalogueResume={parentRunId:summary.runId,productRequests:summary.productRequests,regionalNavigations:summary.regionalNavigations,
-        snapshot,initialEvidence:{scope,rawProducts:raw,nextPageAvailable:state.more}};
+        snapshot,initialEvidence:{scope,rawProducts:raw,nextPageAvailable:state.more},
+        ...(plan.orderSeed ? {orderSeed:plan.orderSeed} : {})};
     return {resume,identity};
 }

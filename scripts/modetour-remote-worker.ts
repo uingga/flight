@@ -36,9 +36,9 @@ async function main() {
         const slot = createHash('sha256').update(request.expectedAt).digest('hex');
         fs.writeFileSync(path.join(state, `scheduled-${slot}.json`), JSON.stringify({ id: request.id, expectedAt: request.expectedAt }), { flag: 'wx' });
         fs.mkdirSync(output, { recursive: true });
-        const plan = modeBrowserPlan(), raw: Record<string, unknown[]> = {};
+        const plan = modeBrowserPlan(new Date(now), request.id), raw: Record<string, unknown[]> = {};
         fs.writeFileSync(path.join(output,'plan.json'), JSON.stringify(plan));
-        browser = await openModeBrowser();
+        browser = await openModeBrowser(plan.maxListRequests);
         const result = await collectModeBrowser(plan, browser, async (scope, rows) => {
             const key = modeScopeKey(scope); raw[key] = rows;
             fs.writeFileSync(path.join(output, key.replace('/','-') + '.json'), JSON.stringify(rows));

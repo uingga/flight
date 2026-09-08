@@ -121,8 +121,12 @@ $env:LOCAL_SOURCE_FALLBACK = '1'
 $env:ONLINETOUR_BROWSER_REMOTE = if (Test-Path -LiteralPath (Join-Path $ProjectDir '.local-crawler\onlinetour-remote.json')) { '1' } else { '0' }
 $env:MODETOUR_BROWSER_REMOTE = if (Test-Path -LiteralPath (Join-Path $ProjectDir '.local-crawler\modetour-remote.json')) { '1' } else { '0' }
 $env:SOURCE_START_JITTER_MAX_MS = '90000'
-$SourceArgument = "--sources=$($Sources -join ',')"
+$TtangPrimaryEnabled = (& node --input-type=module -e "import {TTANG_BROWSER_PRIMARY as p} from './src/lib/browser-primary-config.mjs';console.log(p.enabled ? '1' : '0')") -eq '1'
+if ($LASTEXITCODE -ne 0) { Log 'Unable to read Ttang ownership config'; exit 1 }
+$LegacySources = @($Sources | Where-Object { $_ -ne 'ttang' -or -not $TtangPrimaryEnabled })
+$SourceArgument = "--sources=$($LegacySources -join ',')"
 Log "PC fallback sources: $($Sources -join ', ')"
+if ($LegacySources.Count -gt 0) {
 & npx.cmd --no-install tsx scripts/crawl-all.ts $SourceArgument 2>&1 | ForEach-Object {
     "$_" | Add-Content -Encoding utf8 $LogFile
 }
@@ -131,6 +135,13 @@ if ($CrawlerExitCode -ne 0) {
     git checkout -- $ManagedPaths 2>$null
     Log "Crawler failed (exit $CrawlerExitCode); local result discarded"
     exit 1
+}
+}
+if ($TtangPrimaryEnabled -and $Sources -contains 'ttang') {
+    & npx.cmd --no-install tsx scripts/run-ttang-remote-primary.ts --scheduled 2>&1 | ForEach-Object {
+        "$_" | Add-Content -Encoding utf8 $LogFile
+    }
+    if ($LASTEXITCODE -ne 0) { Log 'Ttang worker preflight failed; result retained locally'; exit 1 }
 }
 
 try {

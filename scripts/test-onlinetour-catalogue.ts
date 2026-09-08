@@ -53,12 +53,14 @@ test('window plan refuses mismatched month, duplicate exclusions and follow-up b
         {...p,reloadStart:true}, {...p,maxRetries:1}]) assert.throws(() => validateCombinedPlan(bad));
 });
 function fixture(options: { departure?: string; lateAccess?: boolean; regionFailure?: boolean; transient?: boolean; duplicate?: boolean;
-    extraCities?: boolean; emptyFirst?: boolean; gateLateAccess?: boolean } = {}) {
+    extraCities?: boolean; extraCityCount?: number; emptyFirst?: boolean; gateLateAccess?: boolean } = {}) {
     let region = 'AS', scope = { departure: options.departure || 'ICN', city: 'PQC', month: '202609' }, open = false, calls = 0;
     const requests: string[] = [], caps: number[] = [];
     const city = () => region === 'AS' ? 'PQC' : 'TAO';
     const regionSnapshot = () => ({ region, currentScope: { ...scope }, restricted: false,
-        cities: [city(), ...(options.extraCities ? ['DAD','BKK','CEB'] : [])].map(code => ({ code, firstDepartureDate: '20260907' })),
+        cities: [city(), ...(options.extraCities ? ['DAD','BKK','CEB'] : []),
+            ...Array.from({length:options.extraCityCount || 0},(_,i)=>(region==='AS'?'XA':'YA')+String.fromCharCode(65+i))]
+            .map(code => ({ code, firstDepartureDate: '20260907' })),
         monthCandidates: ['202609','202610'], availableRegions: ['AS','CH'] });
     const page = () => ({ pageNo: 1, totalCount: 1, lastPage: 1, nextPageAvailable: false,
         rawProducts: [validRow(options.duplicate ? 'duplicate' : region + scope.city + scope.month)] });
@@ -121,6 +123,24 @@ test('whole run shares request budget, visits visible months and reuses region f
     assert.equal(r.flights.length, 4); assert.deepEqual(f.caps, [8,5]);
     assert.deepEqual(f.requests, ['PQC:202609:1','PQC:202610:1','region:CH','TAO:202610:1']);
     assert.equal(r.productionReady, false); assert.equal(r.fullCatalogueComplete, false);
+});
+test('shuffled complete catalogue passes 40 requests, preserves month order, no duplicate requests', async () => {
+    const run = async (seed: string) => {
+        const f = fixture({extraCityCount:12});
+        const r = await collectOnlineTourCatalogue({...plan,maxProductRequests:100,orderSeed:seed,maxRetries:0},f.backend);
+        assert.equal(r.status,'review_ready'); assert.equal(r.plannedCoverageCompleted,true);
+        assert.equal(r.traversals.length,52); assert.equal(r.productRequests,52);
+        assert.equal(r.requestBudget.cityMonthPages,52); assert.equal(r.requestBudget.completeEstimate,true);
+        assert.equal(new Set(f.requests).size,f.requests.length);
+        for (let i=0;i<r.traversals.length;i+=2) {
+            assert.equal(r.traversals[i].scopes[0].scope.month,'202609');
+            assert.equal(r.traversals[i+1].scopes[0].scope.month,'202610');
+            assert.equal(r.traversals[i].scopes[0].scope.city,r.traversals[i+1].scopes[0].scope.city);
+        }
+        return f.requests;
+    };
+    assert.deepEqual(await run('round-a'),await run('round-a'));
+    assert.notDeepEqual(await run('round-a'),await run('round-b'));
 });
 test('exhausted global budget stops before additional region or month', async () => {
     for (const cap of [1,2,3]) {

@@ -39,6 +39,7 @@ export interface Flight {
     detailCheckedAt?: string; // 시간·좌석 등 상세 정보를 마지막으로 정상 확인한 시각
     firstSeen?: string; // 이 항공권을 캐시에서 처음 발견한 날짜
     /** 땡처리닷컴에서 동일 노선·날짜의 서로 다른 실제 요금 상품을 구분한다. */
+    ttangTimeProvenance?: { kind: 'legacy-cache' | 'product-cache'; sourceFlightId: string; checkedAt?: string };
     ttangProduct?: {
         masterId: string;
         fareId: string; // 목록 API의 hanaFareId. 일정 API에는 fareRec1으로 전달한다.

@@ -7,6 +7,14 @@ import { validateModeBundle, MODE_REMOTE_PROTOCOL } from '../src/lib/modetour-op
 import { evaluatePcCollection } from './pc-collection-policy.mjs';
 
 const plan = modeBrowserPlan(new Date('2026-09-07T00:00:00Z'));
+test('shuffled operational bundle validates on A, not only on B', async () => {
+    const shuffled=modeBrowserPlan(new Date('2026-09-07T00:00:00Z'),'round-a');
+    const raw=Object.fromEntries(shuffled.scopes.map(s=>[s.continent+'/'+s.city,s.continent==='JPN'?[row()]:[]]));
+    const result=await collectModeBrowser(shuffled,backend(),async()=>{},[],{cached:raw,failed:[],previousRequests:15});
+    const now=Date.parse('2026-09-07T05:40:00Z');
+    const checked=await validateModeBundle({protocol:MODE_REMOTE_PROTOCOL,capturedAt:new Date(now).toISOString(),plan:shuffled,raw,result},[],{},now);
+    assert.equal(checked.flights.length,1);
+});
 test('operational bundle revalidates raw rows, retains only TPE and rejects missing scopes or tampering', async () => {
     const raw=Object.fromEntries(plan.scopes.filter(s=>s.city!=='TPE').map(s=>[s.continent+'/'+s.city,s.continent==='JPN'?[row()]:[]]));
     const result=await collectModeBrowser(plan,backend(),async()=>{},[],{cached:raw,failed:[{scope:'CHI/TPE',status:500}],previousRequests:15});
@@ -25,7 +33,7 @@ test('PC primary waits for upstream, runs four slots once and never overrides a 
     const onlineOff={enabled:false,slotsPerDay:4};
     for(const hour of ['2026-09-07T00:00:00Z','2026-09-07T03:00:00Z','2026-09-07T06:00:00Z','2026-09-07T09:00:00Z']) {
         const cache:any={fullCrawlUpdatedAt:hour,sourceCircuits:{}};
-        const check=()=>evaluatePcCollection({cache,now:hour,config:onlineOff});
+        const check=()=>evaluatePcCollection({cache,now:hour,config:onlineOff,ttangConfig:{enabled:false,slotsPerDay:2}});
         assert.deepEqual(check().sources,['modetour']);
         cache.modetourPrimary={lastAttemptAt:hour}; assert.deepEqual(check().sources,[]);
         delete cache.modetourPrimary; cache.sourceCircuits.modetour={nextProbeAt:'2026-09-08T00:00:00Z'};

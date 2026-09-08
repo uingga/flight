@@ -1,7 +1,28 @@
 import { chromium, type Browser, type BrowserContext, type Page } from 'playwright';
+import fs from 'node:fs';
+import path from 'node:path';
+import { getCrawlDataDir } from './crawl-data-dir';
+import { createTtangRequestAudit } from './ttang-request-audit.mjs';
+import { openTtangIsolatedChrome } from './ttang-isolated-chrome';
 
 const DEFAULT_CDP_ENDPOINT = 'http://127.0.0.1:9222';
 const externalBrowserConnections = new Set<Browser>();
+let externalCleanupFailed = false;
+const requestAudits: ReturnType<typeof createTtangRequestAudit>[] = [];
+
+function trackOwnPage(page: Page) {
+    if (process.env.TTANG_BROWSER_WORKER !== '1') return () => {};
+    const audit = createTtangRequestAudit();
+    requestAudits.push(audit);
+    const save = () => fs.writeFileSync(path.join(getCrawlDataDir(), 'ttang-request-audit.json'),
+        JSON.stringify({ version: 1, scope: 'owned-page-http-events', sessions: requestAudits.map(a => a.snapshot()) }));
+    page.on('request', req => { audit.request(req); save(); });
+    page.on('response', res => { audit.response(res); save(); });
+    page.on('requestfinished', req => { audit.finished(req); save(); });
+    page.on('requestfailed', req => { audit.failed(req); save(); });
+    save();
+    return save;
+}
 
 export interface TtangBrowserSession {
     page: Page;
@@ -23,6 +44,17 @@ function configuredCdpEndpoint(): string | null {
 export async function openTtangBrowserSession(): Promise<TtangBrowserSession> {
     const cdpEndpoint = configuredCdpEndpoint();
     if (cdpEndpoint) {
+        if (process.env.TTANG_BROWSER_WORKER === '1') {
+            let isolated;
+            try { isolated = await openTtangIsolatedChrome(); }
+            catch (e) { if (String(e).includes('cleanup')) externalCleanupFailed = true; throw e; }
+            const saveAudit = trackOwnPage(isolated.page);
+            return { page: isolated.page, mode: 'external-chrome', close: async () => {
+                try { await isolated.close(); }
+                catch { externalCleanupFailed = true; throw new Error('ttang_owned_tab_cleanup_failed'); }
+                finally { saveAudit(); }
+            } };
+        }
         let browser: Browser;
         try {
             browser = await chromium.connectOverCDP(cdpEndpoint, { timeout: 10_000 });
@@ -42,11 +74,14 @@ export async function openTtangBrowserSession(): Promise<TtangBrowserSession> {
         externalBrowserConnections.add(browser);
         browser.once('disconnected', () => externalBrowserConnections.delete(browser));
         const page = await context.newPage();
+        const saveAudit = trackOwnPage(page);
         return {
             page,
             mode: 'external-chrome',
             close: async () => {
-                await page.close({ runBeforeUnload: false }).catch(() => undefined);
+                try { await page.close({ runBeforeUnload: false }); }
+                catch { externalCleanupFailed = true; throw new Error('ttang_owned_tab_cleanup_failed'); }
+                finally { saveAudit(); }
                 // connectOverCDP로 붙은 Chrome은 사용자가 확인할 수 있게 그대로 둔다.
             },
         };
@@ -65,10 +100,11 @@ export async function openTtangBrowserSession(): Promise<TtangBrowserSession> {
         },
     });
     const page = await context.newPage();
+    const saveAudit = trackOwnPage(page);
     return {
         page,
         mode: 'managed-headless',
-        close: async () => browser.close(),
+        close: async () => { try { await browser.close(); } finally { saveAudit(); } },
     };
 }
 
@@ -77,6 +113,8 @@ export async function shutdownTtangExternalBrowserSessions(): Promise<void> {
     const browsers = Array.from(externalBrowserConnections);
     externalBrowserConnections.clear();
     for (const browser of browsers) {
-        await browser.close({ reason: 'Ttang crawl completed' }).catch(() => undefined);
+        try { await browser.close({ reason: 'Ttang crawl completed' }); }
+        catch { externalCleanupFailed = true; }
     }
+    if (externalCleanupFailed) throw new Error('ttang_browser_cleanup_unconfirmed');
 }

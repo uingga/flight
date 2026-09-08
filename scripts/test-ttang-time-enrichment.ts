@@ -30,6 +30,16 @@ const data: EnrichData = {
 
 assert.deepEqual(ttangScheduleAttempt(null), { status: 'empty' });
 
+// Displaying historical times must not manufacture a successful query for a new product key.
+{
+    const f = flight(1, { ttangProduct: { masterId:'legacy-master', fareId:'new-fare', fareType:'VV', carrierCode:'7C' },
+        ttangTimeProvenance: { kind:'legacy-cache', sourceFlightId:'legacy-flight' } });
+    f.departure.time='09:00'; f.departure.arrivalTime='10:30'; f.arrival.time='18:00'; f.arrival.arrivalTime='19:30';
+    const queue=prepareTtangTimeQueue([f],undefined,{now:NOW});
+    assert.equal(queue.state.entries[ttangTimeKeyOf(f)],undefined);
+    assert.equal(queue.selected.length,1);
+}
+
 // 동일한 결정적 API 오류는 세 번째 응답에서 남은 상세 요청을 중단한다.
 {
     let guard: ReturnType<typeof nextTtangProductFailureGuard>['state'] | undefined;

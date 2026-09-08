@@ -13,7 +13,9 @@ export async function validateModeBundle(bundle: ModeBundle, previous: Flight[] 
     if (bundle?.protocol !== MODE_REMOTE_PROTOCOL || !Number.isFinite(age) || age < -60000 || age > 6 * 3600000)
         throw new Error('stale_modetour_evidence');
     validateModePlan(bundle.plan);
-    if (JSON.stringify(bundle.plan) !== JSON.stringify(modeBrowserPlan(new Date(now)))) throw new Error('modetour_window_mismatch');
+    const expectedPlan = modeBrowserPlan(new Date(now));
+    if (bundle.plan.from !== expectedPlan.from || bundle.plan.through !== expectedPlan.through)
+        throw new Error('modetour_window_mismatch');
     const failed = bundle.result?.failed;
     if (!Array.isArray(failed) || failed.length > 1 || failed.some(f => f.scope !== 'CHI/TPE' || f.status !== 500)
         || bundle.result.listRequests !== 15 || !bundle.raw || typeof bundle.raw !== 'object') throw new Error('incomplete_modetour_evidence');

@@ -1,20 +1,28 @@
 import { evaluateLocalSourceFallback, scheduledSlotDistance, surroundingSlots } from './local-source-fallback-policy.mjs';
 import { isTtangCrawlSlot } from '../src/lib/crawl-schedule-health.mjs';
-import { ONLINE_BROWSER_PRIMARY, MODE_BROWSER_PRIMARY } from '../src/lib/browser-primary-config.mjs';
+import { ONLINE_BROWSER_PRIMARY, MODE_BROWSER_PRIMARY, TTANG_BROWSER_PRIMARY } from '../src/lib/browser-primary-config.mjs';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
 /**
- * @param {{cache?: any, now?: Date|string, config?: {enabled:boolean,slotsPerDay:number}, modeConfig?: {enabled:boolean,slotsPerDay:number}}} options
+ * @param {{cache?: any, now?: Date|string, config?: {enabled:boolean,slotsPerDay:number}, modeConfig?: {enabled:boolean,slotsPerDay:number}, ttangConfig?: {enabled:boolean,slotsPerDay:number}}} options
  * @returns {{sources:string[],shouldRun:boolean,reason:string,expectedAt:string|null,nextExpectedAt:string|null,githubFallbackDue?:boolean}}
  */
-export function evaluatePcCollection({cache,now=new Date(),config=ONLINE_BROWSER_PRIMARY,modeConfig=MODE_BROWSER_PRIMARY}={}) {
+export function evaluatePcCollection({cache,now=new Date(),config=ONLINE_BROWSER_PRIMARY,modeConfig=MODE_BROWSER_PRIMARY,ttangConfig=TTANG_BROWSER_PRIMARY}={}) {
     const base={expectedAt:null,nextExpectedAt:null,...evaluateLocalSourceFallback({cache,now})};
-    if(!config.enabled && !modeConfig.enabled)return base;
-    const sources=base.sources.filter(s=>s!=='onlinetour');
+    if(!config.enabled && !modeConfig.enabled && !ttangConfig.enabled)return base;
+    const sources=base.sources.filter(s=>s!=='onlinetour' && !(ttangConfig.enabled && s==='ttang'));
     const ms=new Date(now).getTime(), expectedAt='expectedAt' in base?base.expectedAt:null, slot=Date.parse(expectedAt || '');
     const future=value=>value!=null && (!Number.isFinite(Date.parse(value)) || Date.parse(value)>ms);
+    const tc=cache?.sourceCircuits?.ttang;
+    const previousTtangSuccess=Date.parse(cache?.ttangPrimary?.lastSuccessAt || cache?.sourceUpdatedAt?.ttang || '');
+    if(ttangConfig.enabled && Number.isFinite(ms) && Number.isFinite(slot) && isTtangCrawlSlot(slot)
+        && Date.parse(cache?.fullCrawlUpdatedAt)>=slot
+        && !future(tc?.nextProbeAt) && !future(tc?.localFallback?.nextProbeAt)
+        && !future(cache?.ttangPrimary?.nextProbeAt)
+        && !(Date.parse(cache?.ttangPrimary?.lastAttemptAt)>=slot)
+        && (!Number.isFinite(previousTtangSuccess) || ms-previousTtangSuccess>=5*3600000)) sources.push('ttang');
     const online=cache?.onlinePrimary?.circuit;
     const eligible=Number.isFinite(ms) && Number.isFinite(slot) && Date.parse(cache?.fullCrawlUpdatedAt)>=slot
         && (config.slotsPerDay===4 || isTtangCrawlSlot(slot))

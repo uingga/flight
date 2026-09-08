@@ -64,7 +64,7 @@ async function main() {
         }
         if(continuation && (snapshot.region!=='HN' || !snapshot.emptyInventoryVerified))throw Error('continuation_start_changed');
         if(continuation)mark();
-        const plan=suffixPlan || operationalPlan(snapshot.region);
+        const plan=suffixPlan || operationalPlan(snapshot.region, now, ownedTab ? request.id : undefined);
         cleanupConfirmed=false;
         summary=await executeCatalogue(root,plan,backend,false,event=>process.stderr.write(JSON.stringify(event)+'\n'));
         cleanupConfirmed=summary.cleanupConfirmed===true;

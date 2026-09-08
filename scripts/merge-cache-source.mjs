@@ -76,6 +76,7 @@ if (overlay.sourceUpdatedAt?.[sourceKey]) {
     };
 }
 if (sourceKey === 'onlinetour' && overlay.onlinePrimary) target.onlinePrimary = overlay.onlinePrimary;
+if (sourceKey === 'ttang' && overlay.ttangPrimary) target.ttangPrimary = overlay.ttangPrimary;
 if (sourceKey === 'modetour' && overlay.modetourPrimary) {
     target.modetourPrimary = overlay.modetourPrimary;
     target.manualCaptureStatus = { ...(target.manualCaptureStatus || {}) };

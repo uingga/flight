@@ -1,9 +1,15 @@
 import type { Page } from 'playwright';
+import fs from 'node:fs';
+import path from 'node:path';
+import { ttangDatePlan } from '../../../scripts/ttang-primary-policy.mjs';
+import { getCrawlDataDir } from '../crawl-data-dir';
+import { ttangListPageEvidence } from '../ttang-request-audit.mjs';
+import { carryTtangTimes } from '../ttang-time-carry.mjs';
+import { crawlOrder, finiteListBudget } from '../crawl-order.mjs';
 import { Flight } from '@/types/flight';
 import { getRegionByCity } from '@/lib/utils/region-mapper';
 // logCrawlResults moved to crawl-all.ts
 import { IncompleteScrapeError, ScrapeCompleteness } from './scrape-errors';
-import { normalizeAirline } from '@/lib/utils/flight-helpers';
 import {
     assertNoSourceAccessBlockText,
     assertNoSourceResponseCollapse,
@@ -149,34 +155,53 @@ export async function scrapeTtang(prevFlights: any[] = []): Promise<Flight[]> {
             return browserState.page;
         };
 
+        const worker = process.env.TTANG_BROWSER_WORKER === '1';
+        const orderSeed = worker ? process.env.TTANG_STAGING_RUN_ID : undefined;
+        if (worker && !orderSeed) throw new Error('missing_order_seed');
+        const datePlan = crawlOrder(ttangDatePlan(new Date(process.env.TTANG_STAGING_STARTED_AT || Date.now())), orderSeed);
+        const maxListRequests = finiteListBudget(datePlan.length, 2, 64);
+        const evidence = { status: 'running', coverage: 'unverified', dates: [] as string[], rawCount: 0,
+            ...(orderSeed ? {orderSeed} : {}), plannedDates: datePlan, plannedRequests: datePlan.length, maxListRequests,
+            attempts: 0, pages: [] as ReturnType<typeof ttangListPageEvidence>[] };
+        const saveEvidence = () => {
+            if (process.env.TTANG_BROWSER_WORKER === '1')
+                fs.writeFileSync(path.join(getCrawlDataDir(),'ttang-list-evidence.json'),JSON.stringify(evidence));
+        };
+        // A process restart must not silently overwrite an interrupted run and requery its dates.
+        if (worker && fs.existsSync(path.join(getCrawlDataDir(), 'ttang-list-evidence.json')))
+            throw new Error('existing_list_checkpoint_requires_review');
+        saveEvidence();
         const loadInBrowser = async (dateParam: string) => {
             const page = await ensureBrowserPage(dateParam);
+            let attempt = 0;
             return retrySourceOperation(
                 `땡처리닷컴 ${dateParam} 브라우저 요청`,
-                () => fetchTtangPromotionInBrowser(page, dateParam),
+                async () => {
+                    if (evidence.attempts >= maxListRequests) throw new Error('list_budget_exceeded');
+                    attempt++; evidence.attempts++; saveEvidence();
+                    const data = await fetchTtangPromotionInBrowser(page, dateParam);
+                    evidence.pages.push(ttangListPageEvidence(dateParam, data.response.length, attempt));
+                    saveEvidence();
+                    return data;
+                },
                 { maxAttempts: 2, delaysMs: [3_000] },
             );
         };
 
-        const today = new Date();
-        const endDate = new Date(today);
-        endDate.setMonth(endDate.getMonth() + 1);
-
         // GitHub 실행 환경에서 일반 Node.js 요청이 403으로 차단된 이력이 있어
         // 처음부터 실제 브라우저 세션을 확보한다. 차단 확인용 직접 요청은 보내지 않는다.
-        await ensureBrowserPage(formatDateParam(today));
-
-        const currentDate = new Date(today);
+        await ensureBrowserPage(datePlan[0]);
         let totalDays = 0;
         let daysWithFlights = 0;
         let consecutiveEmptyDays = 0;
 
-        while (currentDate <= endDate) {
-            const dateParam = formatDateParam(currentDate);
+        for (const dateParam of datePlan) {
             totalDays++;
 
             try {
                 const apiData = await loadInBrowser(dateParam);
+                // The observed site paginates RESPONSE_DATA in the browser, not at the API.
+                // Keep per-date parsing/completeness checks; do not infer truncation at scale.
 
                 let dayCount = 0;
                 for (const rawItem of apiData.response) {
@@ -268,6 +293,9 @@ export async function scrapeTtang(prevFlights: any[] = []): Promise<Flight[]> {
                     minSamples: 12,
                     minSuccessRatio: 0.2,
                 });
+                evidence.dates.push(dateParam);
+                evidence.rawCount=allFlights.length;
+                saveEvidence();
             } catch (error) {
                 console.error(`[땡처리] ${dateParam} 실패: ${describeSourceError(error)}`);
                 if (classifySourceAccessRestriction(error)) throw error;
@@ -277,10 +305,9 @@ export async function scrapeTtang(prevFlights: any[] = []): Promise<Flight[]> {
                 );
             }
 
-            currentDate.setDate(currentDate.getDate() + 1);
             // 한 달치 날짜 API를 연속 발사하지 않는다. 매 요청 사이에 쉬고, 5일마다
             // 사람의 탐색처럼 조금 더 긴 간격을 둔다.
-            if (currentDate <= endDate) {
+            if (totalDays < datePlan.length) {
                 await randomDelay(1.2, 2.4);
                 if (totalDays % 5 === 0) await randomDelay(3, 6);
             }
@@ -288,60 +315,12 @@ export async function scrapeTtang(prevFlights: any[] = []): Promise<Flight[]> {
 
         console.log(`[땡처리] Phase 1 완료: ${totalDays}일 순회, ${allFlights.length}개 수집`);
         completeness.assertComplete(allFlights.length);
+        evidence.status='completed'; evidence.coverage='verified'; saveEvidence();
 
         // 이전에 확인한 시간은 목록 단계에서 먼저 복사한다. 신규·미확인 항공권의 네트워크
         // 보강은 crawl-all의 최저가·만료·인터파크 필터가 모두 끝난 뒤에만 실행한다.
         if (allFlights.length > 0) {
-            // 이전 캐시에서 시각을 옮겨올 때 쓰는 키.
-            //
-            // 예전에는 노선과 날짜만 봤다. 같은 노선·같은 날짜에 항공사가 둘이면 엉뚱한
-            // 항공사의 출발 시각이 붙는다. 실시간 보강 쪽은 이미 항공사까지 대조하는데
-            // (enrichKeyOf) 복사 쪽만 빠져 있었다. 가격과 노선은 맞고 시각만 틀리므로
-            // 아무도 알아채지 못한 채 남는다.
-            const timeKeyOf = (f: any) => [
-                normalizeAirline(f.airline || ''),
-                f.departure?.airport || '',
-                f.arrival?.airport || '',
-                f.departure?.date || '',
-                f.arrival?.date || '',
-            ].join('|');
-
-            const prevTimeMap = new Map<string, any>();
-            const prevProductMap = new Map<string, any>();
-            prevFlights.filter((f: any) => f.source === 'ttang' && f.departure?.time).forEach((f: any) => {
-                prevTimeMap.set(timeKeyOf(f), f);
-                if (f.ttangProduct?.masterId && f.ttangProduct?.fareId) {
-                    prevProductMap.set(
-                        `${f.ttangProduct.masterId}|${f.ttangProduct.fareId}|${f.departure?.date || ''}`,
-                        f,
-                    );
-                }
-            });
-
-            let carriedOver = 0;
-            for (const f of allFlights) {
-                const productKey = f.ttangProduct
-                    ? `${f.ttangProduct.masterId}|${f.ttangProduct.fareId}|${f.departure.date}`
-                    : '';
-                // hanaFareId가 있는 새 항공권에는 동일 상품의 상세값만 옮긴다. 노선·항공사가
-                // 같다는 이유로 다른 요금 상품의 좌석을 붙이지 않는다.
-                const prev = productKey
-                    ? prevProductMap.get(productKey)
-                    : prevTimeMap.get(timeKeyOf(f));
-
-                if (prev?.departure?.time) {
-                    f.departure.time = prev.departure.time;
-                    if ((prev.departure as any).arrivalTime) (f.departure as any).arrivalTime = (prev.departure as any).arrivalTime;
-                    if (prev.arrival?.time) f.arrival.time = prev.arrival.time;
-                    if ((prev.arrival as any)?.arrivalTime) (f.arrival as any).arrivalTime = (prev.arrival as any).arrivalTime;
-                    if (prev.availableSeats && !f.availableSeats) {
-                        f.availableSeats = prev.availableSeats;
-                        f.seats = prev.seats;
-                    }
-                    if (prev.detailCheckedAt) f.detailCheckedAt = prev.detailCheckedAt;
-                    carriedOver++;
-                }
-            }
+            const carriedOver = carryTtangTimes(allFlights, prevFlights);
             console.log(`[땡처리] 이전 시간 복사: ${carriedOver}/${allFlights.length}개`);
         }
 

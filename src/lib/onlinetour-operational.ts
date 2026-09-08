@@ -6,6 +6,7 @@ import { SourceResponseError } from './scrapers/source-response';
 import type { CataloguePlan } from './onlinetour-catalogue';
 import type { Flight } from '../types/flight';
 import { followingMonth } from './onlinetour-month-navigation';
+import { crawlOrder } from './crawl-order.mjs';
 
 export const ONLINE_REMOTE_PROTOCOL = '20260907.1';
 export const ONLINE_REGIONS = ['AS', 'JA', 'CH', 'EU', 'HN', 'US', 'GS'];
@@ -22,25 +23,27 @@ export function statusFixValidationSlot(parent: any, now = Date.now()): string {
     assert.equal(last.scopes[0].scope.city,'DYG');
     return 'validation-after-status-fix-'+STATUS_FIX_PARENT;
 }
-export function operationalPlan(currentRegion: string, now = Date.now()): CataloguePlan {
+export const ONLINE_LIST_SAFETY_LIMIT = 100;
+export function operationalPlan(currentRegion: string, now = Date.now(), orderSeed?: string): CataloguePlan {
     if (!ONLINE_REGIONS.includes(currentRegion)) throw Error('unknown_initial_region');
     const departureWindow = createDepartureWindow(now);
-    return {schemaVersion:1, regions:[currentRegion,...ONLINE_REGIONS.filter(r=>r!==currentRegion)],
+    return {schemaVersion:1, regions:[currentRegion,...crawlOrder(ONLINE_REGIONS.filter(r=>r!==currentRegion), orderSeed)],
         departureWindow, throughMonth:departureWindow.through.slice(0,7).replace('-',''),
-        maxProductRequests:40, maxRegionalNavigations:6, maxPagesPerScope:20, maxMonthsPerCity:3, maxRetries:0};
+        maxProductRequests:ONLINE_LIST_SAFETY_LIMIT, maxRegionalNavigations:6, maxPagesPerScope:20, maxMonthsPerCity:3, maxRetries:0,
+        ...(orderSeed ? {orderSeed} : {})};
 }
 export function isOnlineAccessFailure(reason: unknown): boolean {
     return ['access_restriction','http_access_status','access_body','restricted_dom',
         'empty_or_invalid_first_page','empty_catalogue'].includes(String(reason));
 }
 /** Full planned inventory only. A sampled/failed run can never become operational input. */
-export function validateOperationalCatalogue(summary: any, raw: any[], saved: Flight[], now = Date.now(), baseline?: number, validationLimit:20|30|40=40): Flight[] {
+export function validateOperationalCatalogue(summary: any, raw: any[], saved: Flight[], now = Date.now(), baseline?: number, validationLimit:20|30|40|100=100): Flight[] {
     if (isOnlineAccessFailure(summary?.failure)) throw new SourceResponseError('soft-block','온라인투어 PC 접근 제한 또는 빈 응답');
     assert.ok(summary && summary.offlineOnly === false && ['review_ready','review_ready_with_changes'].includes(summary.status));
     assert.equal(summary.failure,null); assert.equal(summary.cleanupConfirmed,true); assert.equal(summary.plannedCoverageCompleted,true);
     const plan = summary.plan;
-    assert.ok([20,30,40].includes(validationLimit));
-    assert.deepEqual(plan,{...operationalPlan(plan?.regions?.[0],now),maxProductRequests:validationLimit});
+    assert.ok([20,30,40,100].includes(validationLimit));
+    assert.deepEqual(plan,{...operationalPlan(plan?.regions?.[0],now,plan?.orderSeed),maxProductRequests:validationLimit});
     assert.ok(Date.parse(summary.startedAt) <= Date.parse(summary.finishedAt));
     assert.ok(Date.parse(summary.finishedAt) <= now && now-Date.parse(summary.startedAt) <= 60*60_000);
     assert.equal(summary.incompletePageCount,0);

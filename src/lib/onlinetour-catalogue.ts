@@ -5,6 +5,7 @@ import { traverseOnlineTourLists, type ListPage, type ListScope, type TraversalR
 import { validatePilotResponse } from './onlinetour-browser-collector';
 import { validateDepartureWindow, type DepartureWindow } from './onlinetour-departure-window';
 import { followingMonth } from './onlinetour-month-navigation';
+import { crawlOrder } from './crawl-order.mjs';
 
 const REGIONS = ['AS', 'CH', 'JA', 'EU', 'HN', 'US', 'GS'];
 const monthOK = (v: unknown): v is string => typeof v === 'string' && /^[1-9]\d{3}(0[1-9]|1[0-2])$/.test(v);
@@ -13,11 +14,12 @@ export interface CataloguePlan {
     maxProductRequests: number; maxRegionalNavigations: number; maxPagesPerScope: number; maxMonthsPerCity: number;
     reloadStart?: true; maxCitiesPerRegion?: number; maxRetries?: 0 | 1;
     departureWindow?: DepartureWindow; excludeCities?: string[];
+    orderSeed?: string;
 }
 export function parseCataloguePlan(value: unknown): CataloguePlan {
     const p = value as CataloguePlan;
     const required = ['maxMonthsPerCity','maxPagesPerScope','maxProductRequests','maxRegionalNavigations','regions','schemaVersion','throughMonth'];
-    const optional = ['reloadStart','maxCitiesPerRegion','maxRetries','departureWindow','excludeCities'];
+    const optional = ['reloadStart','maxCitiesPerRegion','maxRetries','departureWindow','excludeCities','orderSeed'];
     if (!p || typeof p !== 'object' || Array.isArray(p)
         || required.some(k => !Object.hasOwn(p, k)) || Object.keys(p).some(k => !required.includes(k) && !optional.includes(k))
         || p.schemaVersion !== 1 || !Array.isArray(p.regions) || !p.regions.length || p.regions.length > 7
@@ -39,6 +41,7 @@ export function parseCataloguePlan(value: unknown): CataloguePlan {
         const window = validateDepartureWindow(p.departureWindow);
         if (p.throughMonth !== window.through.slice(0,7).replace('-','')) throw new Error('departure_window_month_mismatch');
     }
+    if (p.orderSeed !== undefined && (typeof p.orderSeed !== 'string' || !/^[A-Za-z0-9_-]{1,80}$/.test(p.orderSeed))) throw new Error('invalid_order_seed');
     return { ...p, regions: [...p.regions], ...(p.departureWindow ? { departureWindow: {...p.departureWindow} } : {}),
         ...(p.excludeCities ? {excludeCities:[...p.excludeCities]} : {}) };
 }
@@ -71,9 +74,22 @@ export interface CatalogueBackend {
     wait(ms: number): Promise<void>;
 }
 const key = (s: ListScope) => [s.departure, s.city, s.month].join('|');
+/** No extra requests: count every visible city-month; page totals refine this as responses arrive. */
+export function inventoryListRequests(cities: RegionSnapshot['cities'], throughMonth: string): number {
+    let count = 0;
+    for (const city of cities) {
+        let month = city.firstDepartureDate.slice(0,6);
+        if (!monthOK(month) || !monthOK(throughMonth)) throw new Error('invalid_city_inventory');
+        for (; month <= throughMonth; month = followingMonth(month)) {
+            if (++count > 1000) throw new Error('planned_inventory_too_large');
+        }
+    }
+    return count;
+}
 export interface CatalogueResume {
     parentRunId: string; productRequests: number; regionalNavigations: number;
     snapshot: RegionSnapshot; initialEvidence: NonNullable<TraversalOptions['initialEvidence']>;
+    orderSeed?: string;
 }
 /** One finite run. No scheduler, API fetch, profile creation or operational merge. */
 export async function collectOnlineTourCatalogue(input: CataloguePlan, backend: CatalogueBackend,
@@ -91,6 +107,8 @@ export async function collectOnlineTourCatalogue(input: CataloguePlan, backend: 
         regions: [] as { region: string; cities: RegionSnapshot['cities']; completed: boolean; emptyInventoryVerified?: true; checkedEmptyMonths:string[] }[],
         traversals: [] as TraversalResult[], flights: [] as Flight[], rawProducts: [] as Record<string, unknown>[],
         incompletePageCount: 0, duplicateCount: 0,
+        requestBudget: { safetyCeiling: plan.maxProductRequests, cityMonthPages: 0, observedExtraPages: 0,
+            unknownRegions: plan.regions.length, completeEstimate: false },
         deferred: [] as { region: string; city: string; reason: string }[],
         lastRejectedRequest: null as Record<string, string | boolean> | null,
     };
@@ -110,6 +128,7 @@ export async function collectOnlineTourCatalogue(input: CataloguePlan, backend: 
     const safeReason = (v: unknown) => typeof v === 'string' && /^[a-z_]{1,80}$/.test(v) ? v : 'catalogue_step_failed';
     let started = false;
     try {
+        if (resume && resume.orderSeed !== plan.orderSeed) throw new Error('resume_order_changed');
         if (resume && (!Number.isSafeInteger(resume.productRequests) || resume.productRequests < 1
             || resume.productRequests >= plan.maxProductRequests || !Number.isSafeInteger(resume.regionalNavigations)
             || resume.regionalNavigations < 0 || resume.regionalNavigations > plan.maxRegionalNavigations
@@ -209,7 +228,8 @@ export async function collectOnlineTourCatalogue(input: CataloguePlan, backend: 
                 observed = next;
                 progress({stage:'empty_region_month_checked',region,month:nextMonth,cities:next.snapshot.cities.length,productRequests:result.productRequests});
             }
-            const inventory = observed.snapshot.cities.map(c => ({ ...c }));
+            const inventory = crawlOrder(observed.snapshot.cities.map(c => ({ ...c })), plan.orderSeed,
+                (c: RegionSnapshot['cities'][number]) => region + '|' + c.code);
             const regionResult = { region, cities: inventory, completed: false, checkedEmptyMonths,
                 ...(observed.snapshot.emptyInventoryVerified ? {emptyInventoryVerified:true as const} : {}) }; result.regions.push(regionResult);
             if (!inventory.length) {
@@ -224,6 +244,9 @@ export async function collectOnlineTourCatalogue(input: CataloguePlan, backend: 
             for (const city of inventory.filter(city => plan.excludeCities?.includes(city.code)))
                 result.deferred.push({ region, city: city.code, reason: 'excluded_by_plan_no_requery' });
             const selected = plan.maxCitiesPerRegion ? candidates.slice(0, plan.maxCitiesPerRegion) : candidates;
+            result.requestBudget.cityMonthPages += inventoryListRequests(selected, plan.throughMonth);
+            result.requestBudget.unknownRegions = plan.regions.length - result.regions.length;
+            progress({stage: 'request_budget_calculated', ...result.requestBudget, productRequests: result.productRequests});
             for (const city of candidates.slice(selected.length)) result.deferred.push({ region, city: city.code, reason: 'outside_city_sample' });
             progress({ stage: 'region_sample_selected', region, cities: selected.map(c => c.code), throughMonth: plan.throughMonth });
             if (!selected.length) { regionResult.completed = true; continue; }
@@ -255,6 +278,8 @@ export async function collectOnlineTourCatalogue(input: CataloguePlan, backend: 
                             initialEvidence: resume && key(scope) === key(resume.initialEvidence.scope) && result.traversals.length === 0 ? resume.initialEvidence : undefined,
                         });
                         result.readAttempts += traversal.requestCount;
+                        result.requestBudget.observedExtraPages += traversal.scopes.reduce((n, s) =>
+                            n + Math.max(0, (s.latestLastPage ?? s.plannedLastPage ?? 1) - 1), 0);
                         result.traversals.push(traversal); preserve(traversal.rawProducts);
                         // Persist completed/partial pages before requesting another city or month.
                         await checkpoint(traversal);
@@ -292,6 +317,8 @@ export async function collectOnlineTourCatalogue(input: CataloguePlan, backend: 
         }
         if (!result.flights.length) throw new Error('empty_catalogue');
         result.plannedCoverageCompleted = true;
+        result.requestBudget.unknownRegions = 0;
+        result.requestBudget.completeEstimate = true;
         if (result.duplicateCount && result.status === 'review_ready') result.status = 'review_ready_with_changes';
     } catch (error) { result.status = 'failed'; result.failure = safeReason((error as Error).message); }
     if (result.productRequests > plan.maxProductRequests || result.regionalNavigations > plan.maxRegionalNavigations) {

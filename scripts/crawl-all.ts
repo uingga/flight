@@ -45,13 +45,14 @@ import {
 import { buildLifecycleIdentity } from './lib/flight-lifecycle';
 import { preserveCrawlCacheWithSafetyState } from '../src/lib/crawl-cache-safety';
 import fs from 'fs';
-import { ONLINE_BROWSER_PRIMARY, MODE_BROWSER_PRIMARY } from '../src/lib/browser-primary-config.mjs';
+import { ONLINE_BROWSER_PRIMARY, MODE_BROWSER_PRIMARY, TTANG_BROWSER_PRIMARY } from '../src/lib/browser-primary-config.mjs';
 import type { scrapeModetourRemote } from '../src/lib/scrapers/modetour-remote';
 import { assertOnlineGithubClaim } from './online-github-fallback-policy.mjs';
 import { createDepartureWindow, eligibleDepartures } from '../src/lib/onlinetour-departure-window';
 import path from 'path';
 
 interface CacheData {
+    ttangPrimary?: Record<string, unknown>;
     modetourPrimary?: {status:'success'|'partial'|'failed';lastAttemptAt:string;capturedAt?:string;scopeCounts?:Record<string,number>;detail?:string};
     onlinePrimary?: {status:'success'|'failed';lastAttemptAt:string;failureOpenedAt?:string;circuit?:SourceCircuitState;githubAttemptAt?:string;githubClaim?:{runId:string;expectedAt:string};githubFallbackSafe?:boolean;detail?:string};
     timestamp: string;
@@ -178,6 +179,10 @@ async function main() {
         throw new Error('GitHub 대체 수집은 검증된 온라인투어 전용 예약 워크플로에서만 허용됩니다.');
     }
     // Primary PC ownership: GitHub and legacy/manual source paths cannot double-collect.
+    if (TTANG_BROWSER_PRIMARY.enabled && !localBrowserPilot) {
+        if (requestedSources?.has('ttang')) throw new Error('땡처리 주 수집은 B PC 전용 실행기가 담당합니다.');
+        if (!requestedSources) scheduledSkippedSources.add('ttang');
+    }
     if (MODE_BROWSER_PRIMARY.enabled && !localSourceFallback) {
         if (requestedSources?.has('modetour')) throw new Error('모두투어 주 수집은 B PC 예약 실행기가 담당합니다.');
         if (!requestedSources) scheduledSkippedSources.add('modetour');
@@ -1018,6 +1023,7 @@ async function main() {
 
             const cacheUpdatedAt = new Date().toISOString();
             const cacheData: CacheData = {
+                ttangPrimary: prevCache?.ttangPrimary,
                 modetourPrimary,
                 onlinePrimary,
                 timestamp: cacheUpdatedAt,

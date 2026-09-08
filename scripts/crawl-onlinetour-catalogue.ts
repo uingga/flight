@@ -3,11 +3,14 @@ import path from 'node:path';
 import { collectOnlineTourCatalogue, parseCataloguePlan, type CatalogueBackend, type CataloguePlan, type CatalogueResume } from '../src/lib/onlinetour-catalogue';
 import { createStagingRun } from '../src/lib/onlinetour-browser-collector';
 import { eligibleDepartures } from '../src/lib/onlinetour-departure-window';
+import { crawlWaitMs } from '../src/lib/crawl-order.mjs';
 
 export async function executeCatalogue(root: string, plan: CataloguePlan, backend: CatalogueBackend, offlineOnly: boolean,
     progress: (event: Record<string, unknown>) => void = () => {}, resume?: CatalogueResume) {
     const parsed = parseCataloguePlan(plan); // Validate before creating files or connecting.
     const run = createStagingRun(root), checkpoints: string[] = [];
+    // Save the seed and scope plan before the first network action, including interrupted runs.
+    fs.writeFileSync(path.join(run.directory, 'plan.json'), JSON.stringify(parsed), {flag: 'wx'});
     const startedAt = new Date().toISOString();
     const result = await collectOnlineTourCatalogue(parsed, backend, async traversal => {
         const child = createStagingRun(root);
@@ -51,7 +54,7 @@ export async function createLiveCatalogueBackend(ownedTab = false): Promise<Cata
                 } finally { await client.close(); }
             },
         } : {}),
-        wait: ms => new Promise(resolve => setTimeout(resolve, ms)),
+        wait: ms => new Promise(resolve => setTimeout(resolve, crawlWaitMs(ms))),
         async openRegion(navigations, products) {
             if (ownedTab && !targetId) throw new Error('owned_tab_not_ready');
             return createOnlineTourRegionDiscovery(await connectDedicatedChrome(), { maxNavigations: navigations, maxProductRequests: products }, false, targetId);

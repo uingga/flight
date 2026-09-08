@@ -55,7 +55,7 @@ jobs:
     if: needs.preflight.outputs.should_run == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 180
-    
+
     permissions:
       contents: write # 리포지토리 커밋 권한 필요
       # 실패 알림이 이슈를 만든다. 이 권한이 없어 지금까지 403으로 조용히 실패했다.
@@ -112,7 +112,7 @@ jobs:
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          
+
           # 변경된 파일이 있는지 확인
           if [[ -n $(git status --porcelain data/) ]]; then
             # 크롤링 결과 데이터 파일을 임시 보관
@@ -122,11 +122,11 @@ jobs:
             cp data/interpark-prices.json /tmp/interpark-prices.json 2>/dev/null || true
             # 주의: naver-prices.json은 네이버 워크플로우 소유 파일이므로 보관/복원하지 않는다.
             # (여기서 복원하면 크롤링 도중 커밋된 최신 네이버 데이터를 낡은 사본으로 덮어씀)
-            
+
             # 원격 최신 코드를 강제로 가져와서 로컬을 동기화 (충돌 원천 차단)
             git fetch origin main
             git reset --hard origin/main
-            
+
             # 원격의 캐시를 백업 (크롤링 사이에 커밋된 최신 마이리얼트립 데이터가 있을 수 있음)
             cp data/all-flights-cache.json /tmp/origin-cache.json 2>/dev/null || true
 
@@ -146,13 +146,16 @@ jobs:
               if node --input-type=module -e "import {MODE_BROWSER_PRIMARY as p} from './src/lib/browser-primary-config.mjs';process.exit(p.enabled?0:1)"; then
                 node scripts/merge-cache-source.mjs data/all-flights-cache.json /tmp/origin-cache.json modetour
               fi
+              if node --input-type=module -e "import {TTANG_BROWSER_PRIMARY as p} from './src/lib/browser-primary-config.mjs';process.exit(p.enabled?0:1)"; then
+                node scripts/merge-cache-source.mjs data/all-flights-cache.json /tmp/origin-cache.json ttang
+              fi
 
             # 이번 일반 회차에서 시도했거나 예약 정책상 명시적으로 건너뛴 여행사 기록만 합친다.
             # 이렇게 해야 동시에 끝난 마이리얼트립의 별도 회차 기록을 지우지 않는다.
             if [[ -f /tmp/crawl-log.json ]]; then
               node scripts/merge-crawl-log.mjs data/crawl-log.json /tmp/crawl-log.json ybtour,hanatour,modetour,onlinetour,ttang
             fi
-            
+
             git add data/all-flights-cache.json
             git add data/price-history.json 2>/dev/null || true
             git add data/crawl-log.json 2>/dev/null || true
@@ -201,7 +204,7 @@ jobs:
               '',
               '수동으로 확인해주세요: `npm run crawl:all`',
             ].join('\n');
-            
+
             await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,

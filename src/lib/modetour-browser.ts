@@ -1,4 +1,5 @@
 import type { Flight } from '../types/flight';
+import { crawlOrder, finiteListBudget } from './crawl-order.mjs';
 import { getRegionByCity } from './utils/region-mapper';
 import { MODETOUR_CHINA_DESTINATIONS, parseModetourRegionPayload } from './scrapers/modetour';
 import { assertNoSourceAccessBlockText } from './scrapers/source-response';
@@ -20,12 +21,12 @@ function validDate(value: unknown): value is string {
     return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)
         && Number.isFinite(Date.parse(value)) && new Date(value).toISOString().slice(0, 10) === value;
 }
-export function modeBrowserPlan(now = new Date()): ModePlan {
+export function modeBrowserPlan(now = new Date(), orderSeed?: string): ModePlan {
     const from = new Date(now.getTime() + 9 * 3_600_000 + day).toISOString().slice(0, 10);
-    return { from, through: modeNextMonth(from),
-        scopes: ['ASIA', 'JPN', 'SOPA', 'EUR', 'AMCA'].map(continent => ({ continent, city: '' }))
-            .concat(MODETOUR_CHINA_DESTINATIONS.map(c => ({ continent: 'CHI', city: c.code }))),
-        maxListRequests: 15 };
+    const scopes = ['ASIA', 'JPN', 'SOPA', 'EUR', 'AMCA'].map(continent => ({ continent, city: '' }))
+        .concat(MODETOUR_CHINA_DESTINATIONS.map(c => ({ continent: 'CHI', city: c.code })));
+    return { from, through: modeNextMonth(from), scopes: crawlOrder(scopes, orderSeed, modeScopeKey),
+        maxListRequests: finiteListBudget(scopes.length, 1, 15) };
 }
 function modeNextMonth(from: string): string {
     const d = new Date(from), y = d.getUTCFullYear(), m = d.getUTCMonth();
@@ -36,7 +37,7 @@ export function validateModePlan(plan: ModePlan): void {
     if (!validDate(plan.from) || !validDate(plan.through) || plan.through !== modeNextMonth(plan.from))
         throw new Error('invalid_departure_window');
     const expected = modeBrowserPlan().scopes.map(modeScopeKey).sort();
-    if (plan.maxListRequests !== 15 || JSON.stringify(plan.scopes.map(modeScopeKey).sort()) !== JSON.stringify(expected))
+    if (plan.maxListRequests !== finiteListBudget(expected.length, 1, 15) || JSON.stringify(plan.scopes.map(modeScopeKey).sort()) !== JSON.stringify(expected))
         throw new Error('incomplete_scope_plan');
 }
 export function modePageUrl(plan: ModePlan, scope: ModeScope): string {

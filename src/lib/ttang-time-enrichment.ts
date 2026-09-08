@@ -1,5 +1,6 @@
 import type { Page } from 'playwright';
 import { hasSellableSeats } from './flight-seats';
+import { crawlOrder } from './crawl-order.mjs';
 import type { TtangDetailCheckpoint } from './ttang-detail-checkpoint';
 import type { Flight } from '@/types/flight';
 import { normalizeAirline } from '@/lib/utils/flight-helpers';
@@ -213,6 +214,7 @@ function flightData(flight: Flight): EnrichData | null {
 }
 
 function applyData(flight: Flight, data: EnrichData, checkedAt?: string): void {
+    delete flight.ttangTimeProvenance;
     flight.departure.time = data.depTime;
     flight.departure.arrivalTime = data.arrTime;
     flight.arrival.time = data.retDepTime;
@@ -327,6 +329,9 @@ export function prepareTtangTimeQueue(
 
     // 캐시에서 물려받은 정확한 시간도 성공 상태로 시드한다.
     for (const flight of visible) {
+        // Legacy schedule carry is not a successful query for the new fare ID.
+        if (flight.ttangTimeProvenance?.kind === 'legacy-cache'
+            || (flight.ttangTimeProvenance && !flight.detailCheckedAt)) continue;
         const data = flightData(flight);
         if (!data) continue;
         const route = ttangRouteKeyOf(flight);
@@ -368,11 +373,12 @@ export function prepareTtangTimeQueue(
         });
     }
 
-    const eligible = Array.from(byKey.values()).sort((a, b) => (
+    const eligible = crawlOrder(Array.from(byKey.values()),
+        process.env.TTANG_BROWSER_WORKER === '1' ? process.env.TTANG_STAGING_RUN_ID : undefined,
+        (candidate: TtangTimeCandidate) => candidate.key).sort((a, b) => (
         a.priority - b.priority
         || a.lastAttemptAt - b.lastAttemptAt
-        || a.route.depDate.localeCompare(b.route.depDate)
-        || a.key.localeCompare(b.key)
+        || (process.env.TTANG_BROWSER_WORKER === '1' ? 0 : a.route.depDate.localeCompare(b.route.depDate) || a.key.localeCompare(b.key))
     ));
     const parsedLimit = Math.floor(options.requestLimit ?? TTANG_TIME_REQUEST_LIMIT);
     const requestedLimit = Number.isFinite(parsedLimit) ? parsedLimit : TTANG_TIME_REQUEST_LIMIT;
