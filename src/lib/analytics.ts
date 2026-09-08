@@ -123,11 +123,12 @@ export const trackHotelAffiliateClick = (
 export const trackShare = (
     route: string,
     method: string,
-    details: Pick<RevenueClickDetails, 'flightId' | 'destination'> = {},
+    details: RevenueClickDetails & { agency?: string; price?: number } = {},
 ) => {
     event('share_flight', {
         route,
         share_method: method,
+        ...defined({ travel_agency: details.agency, price: details.price }),
         ...revenueParams(details),
     });
     if (details.destination) {

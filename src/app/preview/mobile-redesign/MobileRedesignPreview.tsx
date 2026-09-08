@@ -3215,6 +3215,11 @@ export default function MobileRedesignPreview({
             await navigator.clipboard.writeText(`${text}\n${url}`);
             gtag.trackShare(route, 'clipboard', {
                 flightId: flight.id,
+                agency: flight.source,
+                price: flight.source === 'ttang' ? flight.price : effectivePrice(flight),
+                departureDate: flight.departure.date,
+                returnDate: flight.arrival.date,
+                airline: flight.airline,
                 destination: stripAirport(flight.arrival.city),
             });
             setToast('항공권 링크를 복사했어요.');

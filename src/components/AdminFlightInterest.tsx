@@ -19,15 +19,23 @@ export default function AdminFlightInterest({ data, cities }: {
     cities?: { basis: string; periods: Record<InterestPeriod, CityRow[]>; availablePeriods: Record<InterestPeriod, boolean> };
 }) {
     const [period, setPeriod] = useState<InterestPeriod>('recent7');
-    const [view, setView] = useState<'flights' | 'cities'>('flights');
+    const [view, setView] = useState<'flights' | 'shares' | 'cities'>('flights');
     const [visibleCount, setVisibleCount] = useState(10);
-    const report = data?.[period];
+    const sharing = view === 'shares';
+    const shareReport = data?.[period]?.shares;
+    const report = sharing ? shareReport && {
+        ...shareReport,
+        rows: shareReport.rows.map(row => ({ ...row, bookingClicks: row.attempts, bookingUsers: row.users, detailOpens: 0, detailUsers: null })),
+        unidentified: { bookingClicks: shareReport.unidentified, detailOpens: 0 },
+    } : data?.[period];
+    const rows = (report?.rows || []).filter(row => sharing || row.detailOpens > 0 || row.bookingClicks > 0);
     const cityRows = (cities?.periods[period] || []).filter(row => [row.details, row.bookings, row.searches, row.saves, row.shares].some(action => action.events > 0))
         .slice().sort((a, b) => b.bookings.events - a.bookings.events || b.details.events - a.details.events || a.city.localeCompare(b.city));
     return <div className={styles.panel}>
         <div className={styles.toolbar}>
             <div role="group" aria-label="집계 보기">
-                <button type="button" aria-pressed={view === 'flights'} onClick={() => setView('flights')}>항공권별</button>
+                <button type="button" aria-pressed={view === 'flights'} onClick={() => { setView('flights'); setVisibleCount(10); }}>조회·예약</button>
+                <button type="button" aria-pressed={sharing} onClick={() => { setView('shares'); setVisibleCount(10); }}>공유</button>
                 <button type="button" aria-pressed={view === 'cities'} onClick={() => setView('cities')}>도시별 집계</button>
             </div>
             <div role="group" aria-label="항공권 행동 집계 기간">
@@ -35,31 +43,33 @@ export default function AdminFlightInterest({ data, cities }: {
                     <button type="button" key={key} aria-pressed={period === key} onClick={() => { setPeriod(key); setVisibleCount(10); }}>{label}</button>)}
             </div>
         </div>
-        <p className={styles.note}>{period === 'today' ? '오늘 현재까지 · 처리 지연이 있는 잠정 수치' : `어제까지 최근 ${period === 'recent7' ? 7 : 30}일`} · 예약 클릭순{view === 'flights' ? ' · 기본 10개' : ' 상위 30개'}</p>
-        {view === 'flights' ? <>
+        <p className={styles.note}>{period === 'today' ? '오늘 현재까지 · 처리 지연이 있는 잠정 수치' : `어제까지 최근 ${period === 'recent7' ? 7 : 30}일`} · {sharing ? '공유 횟수순' : '예약 클릭순'}{view !== 'cities' ? ' · 기본 10개' : ' 상위 30개'}</p>
+        {view !== 'cities' ? <>
+            {sharing && <h3>어떤 항공권을 공유하려 했나</h3>}
             {!report?.available ? <p role="status">{report?.message || '항공권별 기록을 아직 조회하지 못했습니다.'}</p>
-                : report.rows.length === 0 ? <p role="status">이 기간에 항공권 ID로 확인되는 상세 조회·예약 클릭 기록이 없습니다. 미수집 기록은 0회로 추정하지 않습니다.</p>
+                : rows.length === 0 ? <p role="status">이 기간에 항공권 ID로 확인되는 {sharing ? '공유' : '상세 조회·예약 클릭'} 기록이 없습니다. 미수집 기록은 0회로 추정하지 않습니다.</p>
                 : <div className={styles.tableWrap}><table>
-                    <thead><tr><th>항공권</th><th>상세 조회</th><th>예약 클릭</th></tr></thead>
-                    <tbody>{report.rows.slice(0, visibleCount).map(row => <tr key={row.flightId}>
+                    <thead><tr><th>항공권</th>{!sharing && <th>상세 조회</th>}<th>{sharing ? '공유 시도' : '예약 클릭'}</th></tr></thead>
+                    <tbody>{rows.slice(0, visibleCount).map(row => <tr key={row.flightId}>
                         <td><strong>{row.route || '노선 미수집'}</strong>
                             {row.recorded && <small>{[row.recorded.agency && (agencyNames[row.recorded.agency] || row.recorded.agency), row.recorded.airline].filter(Boolean).join(' · ')}
                                 {(row.recorded.departureDate || row.recorded.returnDate) && <> · {row.recorded.departureDate || '출발일 미수집'} ~ {row.recorded.returnDate || '귀국일 미수집'}</>}
                                 {row.recorded.minPrice !== null && <> · 기록 가격 {row.recorded.minPrice.toLocaleString()}{row.recorded.maxPrice !== row.recorded.minPrice && `~${row.recorded.maxPrice?.toLocaleString()}`}원</>}
                             </small>}
                             <small>항공권 ID: {row.flightId}</small></td>
-                        <td>{row.detailOpens.toLocaleString()}회 · {row.detailUsers == null ? '인원 미확인' : `${row.detailUsers.toLocaleString()}명`}</td>
+                        {!sharing && <td>{row.detailOpens.toLocaleString()}회 · {row.detailUsers == null ? '인원 미확인' : `${row.detailUsers.toLocaleString()}명`}</td>}
                         <td>{row.bookingClicks.toLocaleString()}회 · {row.bookingUsers == null ? '인원 미확인' : `${row.bookingUsers.toLocaleString()}명`}</td>
                     </tr>)}</tbody>
                 </table></div>}
-            {report?.available && report.rows.length > 0 && <div className={styles.more}>
-                <span>{Math.min(visibleCount, report.rows.length)} / {report.rows.length.toLocaleString()}개 항공권</span>
-                {report.rows.length > visibleCount && <button type="button" onClick={() => setVisibleCount(count => count + 10)}>10개 더 보기</button>}
+            {report?.available && rows.length > 0 && <div className={styles.more}>
+                <span>{Math.min(visibleCount, rows.length)} / {rows.length.toLocaleString()}개 항공권</span>
+                {rows.length > visibleCount && <button type="button" onClick={() => setVisibleCount(count => count + 10)}>10개 더 보기</button>}
             </div>}
             {report?.available && (report.unidentified.detailOpens > 0 || report.unidentified.bookingClicks > 0) && <p className={styles.note}>
-                항공권 ID 미수집으로 순위에서 제외: 상세 조회 {report.unidentified.detailOpens.toLocaleString()}회 · 예약 클릭 {report.unidentified.bookingClicks.toLocaleString()}회
+                항공권 ID 미수집으로 순위에서 제외: {!sharing && <>상세 조회 {report.unidentified.detailOpens.toLocaleString()}회 · </>}{sharing ? '공유 시도' : '예약 클릭'} {report.unidentified.bookingClicks.toLocaleString()}회
             </p>}
             {report?.usersMessage && <p className={styles.note} role="status">{report.usersMessage}</p>}
+            {sharing && <p className={styles.note}>링크 복사 등 공유 기능 사용 기록입니다. 실제로 다른 사람에게 전송했는지는 확인할 수 없습니다. 공유 당시 일정·가격이 수집되지 않은 기록은 해당 정보를 표시하지 않습니다.</p>}
             <p className={styles.note}>횟수는 반복 클릭을 포함하고, 인원은 선택 기간·항공권·행동별 중복을 제외한 GA4 사용자 수입니다. 같은 사람이 다른 기기·브라우저를 쓰면 별도로 잡힐 수 있으며 상세 조회 인원과 예약 클릭 인원은 서로 겹칠 수 있습니다. 화면 노출은 집계하지 않고, 예약 클릭은 여행사 이동으로 구매 완료를 뜻하지 않습니다.</p>
             <p className={styles.note}>수집·측정기준 등록 이후 확인되는 기록만 표시합니다. 과거 일정·가격을 현재 항공권 정보로 채우거나, 다른 ID의 항공권 기록을 추정해 합치지 않습니다.</p>
         </> : <>

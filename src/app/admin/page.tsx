@@ -4691,7 +4691,7 @@ export default function AdminPage() {
                             <div className={styles.sectionHeading}>
                                 <div>
                                     <h2>어떤 항공권을 눌렀나</h2>
-                                    <p>상세 조회와 여행사 예약 페이지로 이동한 횟수를 확인합니다.</p>
+                                    <p>상세 조회·예약 이동과 공유 기능 사용 기록을 확인합니다.</p>
                                 </div>
                             </div>
                             <AdminFlightInterest data={gaStats.flightInterest} cities={gaStats.cityInterest} />

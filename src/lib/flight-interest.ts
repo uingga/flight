@@ -11,6 +11,7 @@ export interface FlightInterestRow {
     recorded?: { agency: string | null; departureDate: string | null; returnDate: string | null; airline: string | null; minPrice: number | null; maxPrice: number | null };
 }
 export interface FlightInterestPeriod {
+    shares?: import('./flight-shares').FlightSharePeriod;
     available: boolean;
     message?: string;
     usersMessage?: string;

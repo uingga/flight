@@ -1,3 +1,4 @@
+import { parseFlightShares } from '../flight-shares';
 import { runReport, eventNameFilter, type Ga4Config, type ReportRequest, type ReportResponse } from '../ga4';
 import { parseFlightInterest, unavailableFlightInterest, attachFlightUsers, type FlightInterestData, type FlightInterestPeriod } from '../flight-interest';
 
@@ -7,8 +8,9 @@ export const FLIGHT_INTEREST_RANGES = {
     current: [{ startDate: '30daysAgo', endDate: 'yesterday' }],
 } as const;
 
-async function withUsers(result: FlightInterestPeriod, config: Ga4Config, range: ReportRequest['dateRanges'], query: typeof runReport) {
-    if (!result.available || !result.rows.length) return result;
+async function withUsers(result: FlightInterestPeriod, config: Ga4Config, range: ReportRequest['dateRanges'], query: typeof runReport, actions: ReportResponse) {
+    result = { ...result, shares: parseFlightShares(actions) };
+    if (!result.available || (!result.rows.length && !result.shares?.rows.length)) return result;
     const combined: ReportResponse = { rows: [] };
     try {
         for (let page = 0; page < 20; page++) {
@@ -17,14 +19,14 @@ async function withUsers(result: FlightInterestPeriod, config: Ga4Config, range:
                 dateRanges: range,
                 dimensions: [{ name: 'eventName' }, { name: 'customEvent:flight_id' }],
                 metrics: [{ name: 'eventCount' }, { name: 'totalUsers' }],
-                dimensionFilter: { orGroup: { expressions: ['detail_open', 'booking_click'].map(eventNameFilter) } },
+                dimensionFilter: { orGroup: { expressions: ['detail_open', 'booking_click', 'share_flight'].map(eventNameFilter) } },
                 orderBys: ['eventName', 'customEvent:flight_id'].map(dimensionName => ({ dimension: { dimensionName } })),
                 limit: 10000, offset: combined.rows!.length,
             });
             if (report.metadata?.dataLossFromOtherRow || report.metadata?.subjectToThresholding || report.metadata?.samplingMetadatas?.length) break;
             combined.rows!.push(...report.rows || []);
             combined.rowCount = report.rowCount;
-            if (combined.rows!.length >= (report.rowCount ?? combined.rows!.length)) return attachFlightUsers(result, combined);
+            if (combined.rows!.length >= (report.rowCount ?? combined.rows!.length)) return { ...attachFlightUsers(result, combined), shares: parseFlightShares(actions, combined) };
             if (!report.rows?.length) break;
         }
     } catch { /* Keep verified event counts when the optional user report fails. */ }
@@ -38,7 +40,7 @@ export async function loadFlightInterest(config: Ga4Config, query: typeof runRep
                 dateRanges: [...range],
                 dimensions: ['eventName', 'customEvent:flight_id', 'customEvent:route', 'customEvent:travel_agency', 'customEvent:departure_date', 'customEvent:return_date', 'customEvent:airline', 'customEvent:price'].map(name => ({ name })),
                 metrics: [{ name: 'eventCount' }],
-                dimensionFilter: { orGroup: { expressions: ['detail_open', 'booking_click'].map(eventNameFilter) } },
+                dimensionFilter: { orGroup: { expressions: ['detail_open', 'booking_click', 'share_flight'].map(eventNameFilter) } },
                 // Deterministic pagination; rank after combining every action for each flight.
                 orderBys: ['eventName', 'customEvent:flight_id', 'customEvent:route', 'customEvent:travel_agency', 'customEvent:departure_date', 'customEvent:return_date', 'customEvent:airline', 'customEvent:price'].map(dimensionName => ({ dimension: { dimensionName } })),
                 limit: 10000,
@@ -49,7 +51,7 @@ export async function loadFlightInterest(config: Ga4Config, query: typeof runRep
                 if (report.metadata?.dataLossFromOtherRow || report.metadata?.subjectToThresholding || report.metadata?.samplingMetadatas?.length) return [period, parseFlightInterest(report)];
                 combined.rows!.push(...report.rows || []);
                 combined.rowCount = report.rowCount;
-                if (combined.rows!.length >= (report.rowCount ?? combined.rows!.length)) return [period, await withUsers(parseFlightInterest(combined), config, [...range], query)];
+                if (combined.rows!.length >= (report.rowCount ?? combined.rows!.length)) return [period, await withUsers(parseFlightInterest(combined), config, [...range], query, combined)];
                 if (!report.rows?.length) break;
             }
             return [period, unavailableFlightInterest('전체 기록을 불러오지 못했습니다. 일부 데이터로 순위를 추정하지 않습니다.')];

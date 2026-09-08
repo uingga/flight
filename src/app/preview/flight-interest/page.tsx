@@ -1,3 +1,4 @@
+import { parseFlightShares } from '@/lib/flight-shares';
 import { notFound } from 'next/navigation';
 import { headers } from 'next/headers';
 import AdminFlightInterest from '@/components/AdminFlightInterest';
@@ -24,7 +25,16 @@ export default function FlightInterestPreview({ searchParams }: { searchParams: 
             metricValues: [Number(count), index === 0 ? 1 : Math.min(Number(count), 3)].map(value => ({ value: String(value) })),
         }))),
     });
-    if (searchParams.state === 'empty') for (const key of ['today', 'recent7', 'current'] as const) data[key] = parseFlightInterest({});
+    for (const key of ['today', 'recent7', 'current'] as const) {
+        const rows = Array.from({ length: 12 }, (_, i) => ({
+            dimensionValues: ['share_flight', 'shared-' + key + '-' + i, '부산-오사카', ...(i === 0 ? [] : ['modetour', '2026-09-20', '2026-09-23', '진에어', '199900'])].map(value => ({ value })),
+            metricValues: [{ value: String(i === 0 ? 30 : 12 - i) }],
+        }));
+        data[key].shares = parseFlightShares({ rows }, searchParams.state === 'users-unavailable' ? undefined : { rows: rows.map(row => ({
+            dimensionValues: row.dimensionValues.slice(0, 2), metricValues: [...row.metricValues, { value: '1' }],
+        })) });
+    }
+    if (searchParams.state === 'empty') for (const key of ['today', 'recent7', 'current'] as const) data[key] = { ...parseFlightInterest({}), shares: parseFlightShares({}) };
     if (searchParams.state === 'unavailable') for (const key of ['today', 'recent7', 'current'] as const) data[key] = unavailableFlightInterest('항공권별 기록을 불러오지 못했습니다. GA4 항공권 ID 측정기준 설정과 조회 상태를 확인해 주세요.');
     const cities = [
         { city: '도쿄', details: { events: 20 }, bookings: { events: 5 }, searches: { events: 3 }, saves: { events: 2 }, shares: { events: 1 } },

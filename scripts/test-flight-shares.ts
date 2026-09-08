@@ -1,0 +1,22 @@
+import assert from 'node:assert/strict';
+import { parseFlightShares } from '../src/lib/flight-shares';
+import { loadFlightInterest } from '../src/lib/server/flight-interest-report';
+const row = (event: string, id: string, count: number, extra: string[] = []) => ({ dimensionValues: [event, id, '부산-오사카', ...extra].map(value=>({value})), metricValues: [{value:String(count)}] });
+const rows=[row('share_flight','a',20),row('share_flight','a',10),row('share_flight','b',2,['modetour','2026-09-20','2026-09-23','진에어','199900']),row('share_flight','(not set)',4),row('booking_click','a',100,['modetour','2026-09-20','2026-09-23','진에어','999999']),row('flight_impression','seen',1000),row('city_share','a',30)];
+const users={rows:[['a',30,1],['b',2,2]].map(([id,count,users])=>({dimensionValues:[{value:'share_flight'},{value:String(id)}],metricValues:[{value:String(count)},{value:String(users)}]}))};
+const result=parseFlightShares({rows},users);
+assert.deepEqual(result.rows.map(r=>[r.flightId,r.attempts,r.users]),[['a',30,1],['b',2,2]]);
+assert.equal(result.rows[0].recorded,undefined);
+assert.equal(result.rows[1].recorded?.minPrice,199900);
+assert.equal(result.unidentified,4);
+assert.equal(parseFlightShares({rows}).rows[0].users,null);
+assert.equal(parseFlightShares({rows,rowCount:100}).available,false);
+assert.equal(parseFlightShares({rows,metadata:{subjectToThresholding:true}}).available,false);
+assert.equal(parseFlightShares({rows},{...users,rowCount:100}).rows[0].users,null);
+assert.equal(parseFlightShares({rows},{rows:[users.rows[0],users.rows[0]]}).rows[0].users,null);
+(async()=>{
+const loaded=await loadFlightInterest({propertyId:'test',clientEmail:'test',privateKey:'test'},async(_,req)=>req.dimensions?.length===2?users:{rows:rows.filter(r=>r.dimensionValues[0].value==='share_flight')});
+assert.equal(loaded.today.rows.length,0);
+assert.equal(loaded.today.shares?.rows[0].users,1);
+console.log('Share-only loading, exact IDs, 30 repeats / 1 user, isolated metadata, exclusions and unavailable reports passed.');
+})().catch(e=>{console.error(e);process.exitCode=1});

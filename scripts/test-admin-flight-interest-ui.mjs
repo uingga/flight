@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
-const base = 'http://127.0.0.1:31848';
+const base = process.env.ADMIN_PREVIEW_URL || 'http://127.0.0.1:31848';
 const browser = await chromium.launch({ headless: true });
 try {
     const page = await browser.newPage({ viewport: { width: 1200, height: 900 } });
@@ -33,7 +33,7 @@ try {
     assert.equal(await page.getByRole('columnheader', { name: '실제 노출' }).count(), 0);
     for (const width of [390, 320]) {
         await page.setViewportSize({ width, height: 844 });
-        for (const view of ['항공권별', '도시별 집계']) {
+        for (const view of ['조회·예약', '공유', '도시별 집계']) {
             await page.getByRole('button', { name: view, exact: true }).click();
             assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `${view} must not overflow viewport at ${width}px`);
         }
@@ -49,6 +49,27 @@ try {
     assert.equal(await page.locator('tbody tr').first().locator('td').nth(1).innerText(), '30회 · 인원 미확인');
     assert.match(await page.getByRole('status').innerText(), /횟수로 인원수를 추정하지 않습니다/);
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
+    await page.getByRole('button', { name: '공유', exact: true }).click();
+    assert.equal(await page.locator('tbody tr').first().locator('td').nth(1).innerText(), '30회 · 인원 미확인');
+    await page.goto(base + '/preview/flight-interest');
+    await page.getByRole('button', { name: '공유', exact: true }).click();
+    await page.getByRole('heading', { name: '어떤 항공권을 공유하려 했나' }).waitFor();
+    assert.equal(await count(), 10);
+    assert.equal(await page.locator('tbody tr').first().locator('td').nth(1).innerText(), '30회 · 1명');
+    assert.ok(!(await page.locator('tbody tr').first().innerText()).includes('기록 가격'));
+    await page.getByRole('button', { name: '10개 더 보기' }).click();
+    assert.equal(await count(), 12);
+    for (const label of ['오늘', '30일', '7일']) {
+        await page.getByRole('button', { name: label, exact: true }).click();
+        assert.equal(await count(), 10);
+    }
+    await page.screenshot({path:'tmp/share-interest-mobile.png',fullPage:true});
+    for (const state of ['empty', 'unavailable']) {
+        await page.goto(base + '/preview/flight-interest?state=' + state);
+        await page.getByRole('button', { name: '공유', exact: true }).click();
+        assert.equal(await count(), 0);
+        assert.equal(await page.getByRole('status').count(), 1);
+    }
     assert.deepEqual(errors, []);
     console.log('PASS: default 10, show more, all periods, booking order, city fallback, missing states, 390px/320px layouts, no browser errors');
 } finally { await browser.close(); }

@@ -68,7 +68,7 @@ async function main() {
         const uniqueReport = call.metrics.some(metric => metric.name === 'totalUsers');
         assert.deepEqual(call.dimensions?.map(dimension => dimension.name), uniqueReport ? ['eventName', 'customEvent:flight_id'] : ['eventName', 'customEvent:flight_id', 'customEvent:route', 'customEvent:travel_agency', 'customEvent:departure_date', 'customEvent:return_date', 'customEvent:airline', 'customEvent:price']);
         assert.deepEqual(call.metrics, uniqueReport ? [{ name: 'eventCount' }, { name: 'totalUsers' }] : [{ name: 'eventCount' }]);
-        assert.deepEqual((call.dimensionFilter as any).orGroup.expressions.map((expression: any) => expression.filter.stringFilter.value), ['detail_open', 'booking_click']);
+        assert.deepEqual((call.dimensionFilter as any).orGroup.expressions.map((expression: any) => expression.filter.stringFilter.value), ['detail_open', 'booking_click', 'share_flight']);
     }
     const incomplete = await loadFlightInterest(config, async () => ({ rowCount: 3, rows: [] }));
     const described = parseFlightInterest({ rows: [
