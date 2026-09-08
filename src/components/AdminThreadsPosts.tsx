@@ -34,14 +34,15 @@ export default function AdminThreadsPosts({ posts, attributionAvailable }: { pos
         ? <><strong>{post.attribution[users].toLocaleString()}명</strong><small>{post.attribution[count].toLocaleString()}회</small></> : <span title={!attributionAvailable ? '사이트 통계 조회 불가' : post.trackingContent ? '확인되는 방문 기록 없음' : '글별 추적 링크 없음'}>—</span>;
     return <div className={styles.panel}>
         <div className={styles.help}><span>{posts.length}개 글 · 열 제목을 누르면 정렬</span><span>Threads 누적 반응 / 사이트 최근 30일</span></div>
+        <div className={styles.mobileSort}><label>정렬 <select aria-label="정렬" value={sort} onChange={event => { setSort(event.target.value as SortKey); setAscending(false); }}>{columns.map(([key, label]) => <option value={key} key={key}>{key === 'date' ? '게시일' : label}</option>)}</select></label><button type="button" onClick={() => setAscending(value => !value)}>{ascending ? '오름차순 ↑' : '내림차순 ↓'}</button></div>
         <div className={styles.scroll} tabIndex={0} role="region" aria-label="Threads 글별 성과 비교">
             <table className={styles.table}>
                 <thead><tr>{columns.map(([key, label]) => <th key={key} scope="col" aria-sort={sort === key ? ascending ? 'ascending' : 'descending' : 'none'}><button type="button" onClick={() => { setSort(key); setAscending(sort === key ? !ascending : false); }}>{label}<span aria-hidden="true">{sort === key ? ascending ? ' ↑' : ' ↓' : ' ↕'}</span></button></th>)}</tr></thead>
                 <tbody>{sorted.map(post => <Fragment key={post.id}>
                     <tr>
                         <td><button type="button" className={styles.post} aria-expanded={expanded === post.id} aria-controls={`threads-detail-${post.id}`} onClick={() => setExpanded(expanded === post.id ? null : post.id)}><span className={styles.excerpt}>{post.text || '(본문 없음)'}</span><span className={styles.meta}><time dateTime={post.timestamp}>{dateLabel(post.timestamp)}</time><span>{expanded === post.id ? '접기 −' : '상세 +'}</span></span></button>{post.attributionShared && <small className={styles.shared}>공유 링크 중복</small>}</td>
-                        <td>{post.metrics.views.toLocaleString()}</td><td>{reactions(post).toLocaleString()}</td><td>{post.engagementRate === null ? '—' : `${post.engagementRate}%`}</td>
-                        <td>{siteCell(post, 'users', 'sessions')}</td><td>{siteCell(post, 'detailUsers', 'detailOpens')}</td><td>{siteCell(post, 'bookingUsers', 'bookingClicks')}</td>
+                        <td data-label="조회">{post.metrics.views.toLocaleString()}</td><td data-label="반응">{reactions(post).toLocaleString()}</td><td data-label="반응률">{post.engagementRate === null ? '—' : `${post.engagementRate}%`}</td>
+                        <td data-label="방문">{siteCell(post, 'users', 'sessions')}</td><td data-label="상세">{siteCell(post, 'detailUsers', 'detailOpens')}</td><td data-label="예약 이동">{siteCell(post, 'bookingUsers', 'bookingClicks')}</td>
                     </tr>
                     {expanded === post.id && <tr id={`threads-detail-${post.id}`} className={styles.detail}><td colSpan={7}>
                         <p className={styles.body}>{post.text || '(본문 없음)'}</p>

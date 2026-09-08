@@ -27,6 +27,18 @@ try {
     assert.equal(await page.getByText('공유 링크 중복', {exact:true}).count(), 2);
     await page.setViewportSize({width:390,height:844});
     assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+    await page.getByLabel('정렬', {exact:true}).selectOption('views');
+    assert.equal(await rows.first().locator('td').nth(1).innerText(),'1,476');
+    await page.getByRole('button',{name:'내림차순 ↓',exact:true}).click();
+    assert.equal(await rows.first().locator('td').nth(1).innerText(),'123');
+    assert.equal(await rows.first().locator('td[data-label]').count(),6);
+    await rows.first().getByRole('button').click();
+    assert.match(await rows.nth(1).innerText(),/좋아요/);
+    await rows.first().getByRole('button').click();
+    fs.mkdirSync('tmp/threads-verification',{recursive:true});
+    await page.screenshot({path:'tmp/threads-verification/mobile.png'});
+    await page.setViewportSize({width:320,height:844});
+    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
     await page.setViewportSize({width:1280,height:1000});
     await page.getByRole('button', { name:'글 · 게시일',exact:false }).click();
     fs.mkdirSync('tmp/threads-verification',{recursive:true});

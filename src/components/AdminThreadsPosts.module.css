@@ -25,3 +25,25 @@
 .detail a { color: #344b70; font-weight: 600; }
 .note { color: #657082; font-size: 12px; line-height: 1.6; margin-top: 12px; }
 .panel button:focus-visible, .scroll:focus-visible { outline: 2px solid #ff385c; outline-offset: 2px; }
+.mobileSort { display: none; }
+@media (max-width: 720px) {
+    .help > span:first-child { display: none; }
+    .mobileSort { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; font-size: 13px; }
+    .mobileSort select, .mobileSort button { font: inherit; color: #202938; background: white; border: 1px solid #dfe3e8; border-radius: 7px; padding: 10px; }
+    .mobileSort select { margin-left: 5px; }
+    .scroll { border: 0; border-radius: 0; overflow: visible; }
+    .table { display: block; min-width: 0; background: none; }
+    .table thead { display: none; }
+    .table tbody { display: grid; gap: 12px; }
+    .table tbody > tr { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); background: white; border: 1px solid #e0e5eb; border-radius: 10px; overflow: hidden; }
+    .table td:first-child { grid-column: 1 / -1; border: 0; padding: 14px; }
+    .table td[data-label] { display: block; text-align: left; padding: 10px 14px; font-size: 14px; }
+    .table td[data-label]::before { content: attr(data-label); display: block; color: #657082; font-size: 11px; margin-bottom: 5px; }
+    .table td small { font-size: 11px; }
+    .excerpt { font-size: 14px; }
+    .meta { font-size: 12px; margin-top: 8px; }
+    .table tbody > tr.detail { margin-top: -12px; border-top: 0; border-radius: 0 0 10px 10px; }
+    .detail td { min-width: 0; }
+    .detail dl { gap: 10px 16px; }
+    .note { font-size: 11px; }
+}
