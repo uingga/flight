@@ -1,7 +1,8 @@
 import 'server-only';
+import { connectOwnReplyTracking, extractTracking, type OwnReply } from '@/lib/threads-tracking';
 
 const THREADS_API_BASE = 'https://graph.threads.net/v1.0';
-const POST_FIELDS = 'id,text,timestamp,permalink,media_type,shortcode,is_quote_post';
+const POST_FIELDS = 'id,text,timestamp,permalink,media_type,shortcode,is_quote_post,link_attachment_url';
 const POST_METRICS = ['views', 'likes', 'replies', 'reposts', 'quotes', 'shares'] as const;
 
 type PostMetric = typeof POST_METRICS[number];
@@ -22,6 +23,7 @@ interface ThreadsMedia {
     media_type?: string;
     shortcode?: string;
     is_quote_post?: boolean;
+    link_attachment_url?: string;
 }
 
 interface ThreadsMediaList extends ThreadsApiErrorBody {
@@ -54,6 +56,8 @@ export interface ThreadsPostInsight {
     engagementRate: number | null;
     trackingContent: string | null;
     shareCode: string | null;
+    trackingReplyIds?: string[];
+    trackingIssue?: string | null;
 }
 
 export class ThreadsApiError extends Error {
@@ -99,21 +103,27 @@ function insightValue(insight: ThreadsInsight | undefined): number {
     return (insight.values || []).reduce((sum, item) => sum + (Number(item.value) || 0), 0);
 }
 
-function extractTracking(text: string): { trackingContent: string | null; shareCode: string | null } {
-    const urlMatch = text.match(/https?:\/\/(?:www\.)?tikitikit\.kr\/(?:s|t)\/([^\s?#]+)/i);
-    if (!urlMatch) return { trackingContent: null, shareCode: null };
-
-    const shareCode = decodeURIComponent(urlMatch[1]);
-    const fullUrlMatch = text.match(/https?:\/\/(?:www\.)?tikitikit\.kr\/(?:s|t)\/[^\s]+/i)?.[0];
-    if (fullUrlMatch) {
-        try {
-            const content = new URL(fullUrlMatch).searchParams.get('utm_content');
-            if (content) return { trackingContent: content, shareCode };
-        } catch {
-            // 줄바꿈이나 문장부호가 URL 끝에 붙어도 공유 코드만으로 추적할 수 있다.
+async function ownReplies(since?: string): Promise<{ replies: OwnReply[]; complete: boolean }> {
+    const replies: OwnReply[] = [];
+    let after: string | undefined;
+    try {
+        // Bounded, cached by the admin API; never fetch replies once per displayed post.
+        for (let page = 0; page < 3; page++) {
+            const response = await threadsGet<ThreadsApiErrorBody & {
+                data?: OwnReply[]; paging?: { next?: string; cursors?: { after?: string } };
+            }>('me/replies', {
+                fields: 'id,text,link_attachment_url,is_reply_owned_by_me,root_post,replied_to',
+                limit: '50', ...(since ? { since } : {}), ...(after ? { after } : {}),
+            });
+            replies.push(...response.data || []);
+            if (!response.paging?.next) return { replies, complete: true };
+            after = response.paging.cursors?.after;
+            if (!after) break;
         }
+    } catch {
+        // Missing read-replies permission or a transient API failure is not "no link".
     }
-    return { trackingContent: `share_${shareCode}`, shareCode };
+    return { replies, complete: false };
 }
 
 async function postInsights(post: ThreadsMedia): Promise<ThreadsPostInsight> {
@@ -133,7 +143,7 @@ async function postInsights(post: ThreadsMedia): Promise<ThreadsPostInsight> {
         insightValue((response.data || []).find(item => item.name === name)),
     ])) as Record<PostMetric, number>;
     const interactions = metrics.likes + metrics.replies + metrics.reposts + metrics.quotes + metrics.shares;
-    const tracking = extractTracking(post.text || '');
+    const tracking = extractTracking(`${post.text || ''}\n${post.link_attachment_url || ''}`);
 
     return {
         id: post.id,
@@ -167,7 +177,7 @@ export async function getThreadsPostInsights(limit = 30): Promise<ThreadsPostIns
                 return;
             }
             const post = batch[batchIndex];
-            const tracking = extractTracking(post.text || '');
+            const tracking = extractTracking(`${post.text || ''}\n${post.link_attachment_url || ''}`);
             results.push({
                 id: post.id,
                 text: post.text || '',
@@ -182,5 +192,10 @@ export async function getThreadsPostInsights(limit = 30): Promise<ThreadsPostIns
             });
         });
     }
-    return results.sort((a, b) => Date.parse(b.timestamp) - Date.parse(a.timestamp));
+    const sorted = results.sort((a, b) => Date.parse(b.timestamp) - Date.parse(a.timestamp));
+    if (sorted.every(post => post.trackingContent)) return sorted;
+    const dates = sorted.map(post => Date.parse(post.timestamp)).filter(Number.isFinite);
+    const since = dates.length ? String(Math.floor(Math.min(...dates) / 1000)) : undefined;
+    const { replies, complete } = await ownReplies(since);
+    return connectOwnReplyTracking(sorted, replies, complete);
 }

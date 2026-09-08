@@ -671,6 +671,8 @@ interface ThreadsInsightsData {
         };
         engagementRate: number | null;
         trackingContent: string | null;
+        trackingReplyIds?: string[];
+        trackingIssue?: string | null;
         shareCode: string | null;
         attribution: ThreadsAttribution | null;
         attributionShared: boolean;
@@ -4661,12 +4663,19 @@ export default function AdminPage() {
                                                 </>
                                             ) : post.trackingContent ? (
                                                 <p>추적 링크는 확인됐지만 최근 30일 사이트 방문은 아직 없습니다.</p>
+                                            ) : post.trackingIssue === 'replies-unavailable' ? (
+                                                <p>이어 쓴 글의 링크를 확인하지 못했습니다. Threads 답글 조회 권한 또는 조회 상태를 확인해주세요.</p>
+                                            ) : post.trackingIssue === 'multiple-links' ? (
+                                                <p>이어 쓴 글에 서로 다른 추적 링크가 있어 하나의 글별 통계로 연결하지 않았습니다.</p>
                                             ) : (
-                                                <p>이 글에는 추적 가능한 티키티킷 링크가 없어 사이트 행동을 글별로 나눌 수 없습니다.</p>
+                                                <p>본문과 확인된 본인 답글에 추적 가능한 티키티킷 링크가 없어 사이트 행동을 글별로 나눌 수 없습니다.</p>
                                             )}
                                         </div>
                                         {post.attributionShared && (
                                             <small className={styles.threadsTrackingHint}>같은 공유 링크가 여러 Threads 글에 있어 이 숫자는 해당 글들에 함께 표시됩니다.</small>
+                                        )}
+                                        {Boolean(post.trackingReplyIds?.length) && (
+                                            <small className={styles.threadsTrackingHint}>이어 쓴 본인 글의 링크로 연결한 사이트 통계입니다. 전체 합계에는 같은 링크를 한 번만 반영합니다.</small>
                                         )}
                                     </article>
                                 );
