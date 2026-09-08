@@ -3,8 +3,7 @@ import { redirect } from 'next/navigation';
 import RedesignDashboard from '@/components/RedesignDashboard';
 import { SITE_URL } from '@/lib/site';
 import { loadActiveFlights, loadFlightCacheMeta } from '@/lib/flight-static';
-import { SHARE_GROUPS, type ShareGroup } from '@/lib/share-groups';
-import type { Flight } from '@/types/flight';
+import { SHARE_GROUPS, resolveShareGroupFlights, type ShareGroup } from '@/lib/share-groups';
 
 type Props = {
     params: Promise<{ code: string }>;
@@ -28,7 +27,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     }
 
     const priceText = `${group.price.toLocaleString('ko-KR')}원`;
-    const title = `${group.departure} → ${group.arrival} 왕복 ${priceText} | 티키티킷`;
+    const title = group.title ? `${group.title} | 티키티킷` : `${group.departure} → ${group.arrival} 왕복 ${priceText} | 티키티킷`;
     const description = `${group.dateText} · ${group.airline} · ${group.source}`;
     const ogParams = new URLSearchParams({
         dep: group.departure,
@@ -38,6 +37,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         v: `group-${code}`,
     });
     const ogImageUrl = `${SITE_URL}/api/og?${ogParams.toString()}`;
+    const groupOgImageUrl = group.title ? `${SITE_URL}/api/og?group=${encodeURIComponent(code)}` : ogImageUrl;
 
     return {
         title: { absolute: title },
@@ -47,7 +47,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         openGraph: {
             title,
             description,
-            images: [{ url: ogImageUrl, width: 1200, height: 630 }],
+            images: [{ url: groupOgImageUrl, width: 1200, height: 630 }],
             type: 'website',
             siteName: '티키티킷',
         },
@@ -55,7 +55,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
             card: 'summary_large_image',
             title,
             description,
-            images: [ogImageUrl],
+            images: [groupOgImageUrl],
         },
     };
 }
@@ -70,10 +70,7 @@ export default async function ShareGroupPage({ params, searchParams }: Props) {
     // on the visible URL while this page renders the selected cards directly.
     await searchParams;
     const allFlights = loadActiveFlights();
-    const flightsById = new Map(allFlights.map(flight => [flight.id, flight]));
-    const groupedFlights = group.flightIds
-        .map(flightId => flightsById.get(flightId))
-        .filter((flight): flight is Flight => Boolean(flight));
+    const groupedFlights = resolveShareGroupFlights(group, allFlights);
     const cacheMeta = loadFlightCacheMeta();
 
     return (
@@ -85,7 +82,8 @@ export default async function ShareGroupPage({ params, searchParams }: Props) {
                 initialTodayPickId={null}
                 initialSharedFlightIds={group.flightIds}
                 initialSharedDeparture={group.departure}
-                initialSharedArrival={group.arrival}
+                initialSharedArrival={group.routes ? null : group.arrival}
+                initialSharedGroup={group.routes ? { title: group.title || `${group.departure} 출발 항공권`, routes: group.routes } : undefined}
             />
         </main>
     );

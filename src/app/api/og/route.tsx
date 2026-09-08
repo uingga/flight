@@ -1,6 +1,7 @@
 import { ImageResponse } from 'next/og';
 import { NextRequest } from 'next/server';
 import { FlightOgCard } from './FlightOgCard';
+import { SHARE_GROUPS } from '@/lib/share-groups';
 
 export const runtime = 'edge';
 
@@ -28,6 +29,7 @@ export async function GET(request: NextRequest) {
     const price = Number.parseInt(searchParams.get('price') || '', 10);
     const priceText = Number.isFinite(price) ? `${price.toLocaleString('ko-KR')}원` : '';
     const dateText = searchParams.get('date') || '';
+    const group = SHARE_GROUPS[searchParams.get('group') || ''];
     const fontData = await getFontData(request.nextUrl.origin).catch((error) => {
         console.error('Font load error:', error);
         return null;
@@ -35,7 +37,12 @@ export async function GET(request: NextRequest) {
 
     return new ImageResponse(
         (
-            <FlightOgCard
+            group?.title ? <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', background: '#ff385c', color: 'white', padding: '70px', fontFamily: 'Pretendard' }}>
+                <div style={{ display: 'flex', fontSize: 30, fontWeight: 600 }}>티키티킷 · 함께 보는 항공권</div>
+                <div style={{ display: 'flex', fontSize: 72, fontWeight: 800, marginTop: 32 }}>{group.title}</div>
+                <div style={{ display: 'flex', fontSize: 32, marginTop: 28 }}>{group.arrival}</div>
+                <div style={{ display: 'flex', fontSize: 26, marginTop: 28 }}>소개한 노선 모음 · 현재 가능한 일정은 페이지에서 확인</div>
+            </div> : <FlightOgCard
                 dep={dep}
                 arr={arr}
                 priceText={priceText}

@@ -433,6 +433,9 @@
 .loadingList { display: grid; gap: 12px; }
 
 .cardEntry { display: grid; }
+.sharedRouteHeading { grid-column: 1 / -1; margin: 20px 0 0; font-size: 18px; font-weight: 700; color: var(--text, #222); }
+.feedHeading.sharedGroupHeading { flex-wrap: wrap; gap: 8px 20px; }
+.sharedGroupHeading > div:first-child { flex: 1 0 240px; }
 
 .flightCard {
     position: relative;

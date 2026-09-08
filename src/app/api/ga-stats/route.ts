@@ -762,7 +762,7 @@ async function buildStats(config: Ga4Config, days: number) {
         const te31 = name.match(/^tikitikit_te31(?:_(.+))?$/);
         if (te31) {
             const group = te31[1] ? SHARE_GROUPS[te31[1]] : null;
-            return group ? `${group.departure} → ${group.arrival}` : 'TE31 홍보글';
+            return group ? group.title || `${group.departure} → ${group.arrival}` : 'TE31 홍보글';
         }
         return name;
     };

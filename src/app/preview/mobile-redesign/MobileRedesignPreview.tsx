@@ -102,6 +102,7 @@ interface MobileRedesignPreviewProps {
     initialSharedFlightIds?: string[];
     initialSharedDeparture?: string | null;
     initialSharedArrival?: string | null;
+    initialSharedGroup?: { title: string; routes: Array<{ label: string; flightIds: string[] }> };
 }
 
 interface RouteAlertTarget {
@@ -1097,6 +1098,7 @@ export default function MobileRedesignPreview({
     initialSharedFlightIds = [],
     initialSharedDeparture = null,
     initialSharedArrival = null,
+    initialSharedGroup,
 }: MobileRedesignPreviewProps) {
     const account = useAccount();
     const hasAdminAccess = useAdminAccess();
@@ -3733,10 +3735,10 @@ export default function MobileRedesignPreview({
                 </div>
 
                 <section className={styles.feedSection} ref={feedSectionRef}>
-                    <div className={`${styles.feedHeading} ${freshRouteResults ? styles.freshRouteHeading : ''} ${recentHistory.records.length ? styles.feedHeadingWithRecent : ''}`}>
+                    <div className={`${styles.feedHeading} ${initialSharedGroup && sharedFlightIds.length > 0 ? styles.sharedGroupHeading : ''} ${freshRouteResults ? styles.freshRouteHeading : ''} ${recentHistory.records.length ? styles.feedHeadingWithRecent : ''}`}>
                         <div>
                             <h2>{sharedFlightIds.length > 0
-                                ? `${initialSharedDeparture || '인천'} → ${initialSharedArrival || '공유 항공권'}`
+                                ? initialSharedGroup?.title || `${initialSharedDeparture || '인천'} → ${initialSharedArrival || '공유 항공권'}`
                                 : freshRouteResults
                                 ? `${freshRouteResults.departure} → ${freshRouteResults.arrival}`
                                 : query ? `'${query}' 검색 결과` : region === '전체' ? '전체 항공권' : `${region} 항공권`}</h2>
@@ -3914,6 +3916,10 @@ export default function MobileRedesignPreview({
                             const cardNumber = index + 1;
                             return (
                                 <Fragment key={flight.id}>
+                                    {sharedFlightIds.length > 0 && initialSharedGroup?.routes.map(route => {
+                                        const first = feedFlights.find(item => route.flightIds.includes(item.id));
+                                        return first?.id === flight.id ? <h3 className={styles.sharedRouteHeading} key={route.label}>{route.label}</h3> : null;
+                                    })}
                                     <div className={styles.cardEntry}>
                                         <article
                                             ref={node => observeFlightCard(node, flight, cardNumber, impressionSurface)}

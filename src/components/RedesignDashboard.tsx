@@ -11,6 +11,7 @@ interface RedesignDashboardProps {
     initialSharedFlightIds?: string[];
     initialSharedDeparture?: string | null;
     initialSharedArrival?: string | null;
+    initialSharedGroup?: { title: string; routes: Array<{ label: string; flightIds: string[] }> };
 }
 
 /**
@@ -27,6 +28,7 @@ export default function RedesignDashboard({
     initialSharedFlightIds,
     initialSharedDeparture,
     initialSharedArrival,
+    initialSharedGroup,
 }: RedesignDashboardProps) {
     return (
         <MobileRedesignPreview
@@ -40,6 +42,7 @@ export default function RedesignDashboard({
             initialSharedFlightIds={initialSharedFlightIds}
             initialSharedDeparture={initialSharedDeparture}
             initialSharedArrival={initialSharedArrival}
+            initialSharedGroup={initialSharedGroup}
         />
     );
 }
