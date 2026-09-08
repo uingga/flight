@@ -26,6 +26,9 @@
 .note { color: #657082; font-size: 12px; line-height: 1.6; margin-top: 12px; }
 .panel button:focus-visible, .scroll:focus-visible { outline: 2px solid #ff385c; outline-offset: 2px; }
 .mobileSort { display: none; }
+.trackingDetails { font-size: 12px; line-height: 1.6; margin-top: 10px; overflow-wrap: anywhere; }
+.trackingDetails summary { cursor: pointer; color: #657082; }
+.trackingDetails code { white-space: normal; overflow-wrap: anywhere; }
 @media (max-width: 720px) {
     .help > span:first-child { display: none; }
     .mobileSort { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; font-size: 13px; }

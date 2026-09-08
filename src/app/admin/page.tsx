@@ -10,6 +10,7 @@ import AdminVisitComparison from '@/components/AdminVisitComparison';
 import AdminFlightOrder from '@/components/AdminFlightOrder';
 import AdminFlightInterest from '@/components/AdminFlightInterest';
 import AdminThreadsPosts from '@/components/AdminThreadsPosts';
+import AdminTe31Posts from '@/components/AdminTe31Posts';
 import AdminFilterDemand from '@/components/AdminFilterDemand';
 import type { FilterDemandData } from '@/lib/filter-demand';
 import type { FlightInterestData } from '@/lib/flight-interest';
@@ -721,7 +722,7 @@ const NAVER_PRIORITY_LABELS: Record<string, string> = {
 const TABS = [
     { id: 'overview', label: '오늘', hint: '지금 볼 것' },
     { id: 'flight-order', label: '노출 순서', hint: '오늘의 표·순서 편집' },
-    { id: 'threads', label: 'Threads', hint: '글·유입·예약' },
+    { id: 'threads', label: '홍보 성과', hint: 'Threads·TE31' },
     { id: 'visitors', label: '방문·예약', hint: '유입·행동·관심' },
     { id: 'operations', label: '항공권·수집', hint: '품질·변화·갱신' },
     { id: 'audience', label: '고객·알림', hint: '가입·수요·발송' },
@@ -1535,6 +1536,7 @@ export default function AdminPage() {
         return () => document.removeEventListener('pointerdown', close);
     }, [activeSlotBar]);
     const [threadsInsights, setThreadsInsights] = useState<ThreadsInsightsData | null>(null);
+    const [promotionChannel, setPromotionChannel] = useState<'threads' | 'te31'>('threads');
     const [threadsInsightsError, setThreadsInsightsError] = useState<string | null>(null);
     const [flightReports, setFlightReports] = useState<FlightReportAdminData | null>(null);
     const [flightReportsError, setFlightReportsError] = useState<string | null>(null);
@@ -4567,6 +4569,19 @@ export default function AdminPage() {
             </>)}
 
             {tab === 'threads' && (<>
+                <section className={styles.section} aria-label="홍보 채널">
+                    <div className={styles.sectionHeading}>
+                        <h2>홍보 성과</h2>
+                        <div style={{ display: 'flex', gap: 8 }}>
+                            <button type="button" className={styles.analyticsToggle} aria-pressed={promotionChannel === 'threads'} onClick={() => setPromotionChannel('threads')}>Threads {promotionChannel === 'threads' ? '✓' : ''}</button>
+                            <button type="button" className={styles.analyticsToggle} aria-pressed={promotionChannel === 'te31'} onClick={() => setPromotionChannel('te31')}>TE31 {promotionChannel === 'te31' ? '✓' : ''}</button>
+                        </div>
+                    </div>
+                </section>
+                {promotionChannel === 'te31' ? <section className={styles.section}>
+                    <div className={styles.sectionHeading}><div><h2>TE31 글별 성과</h2><p>게시글 반응과 전용 링크의 사이트 행동을 나란히 봅니다.</p></div><button type="button" className={styles.analyticsToggle} onClick={() => fetchData(key)}>사이트 통계 새로고침</button></div>
+                    <AdminTe31Posts campaigns={gaStats?.promotionCampaigns} available={Boolean(gaStats?.available)} days={gaStats?.days || 30} generatedAt={gaStats?.generatedAt} error={gaStatsError || gaStats?.message} />
+                </section> : <>
                 <div className={styles.tabIntro}>
                     <div>
                         <span className={styles.eyebrow}>THREADS</span>
@@ -4664,6 +4679,7 @@ export default function AdminPage() {
                     )}
                     </details>
                 </section>
+                </>}
             </>)}
 
             {tab === 'visitors' && (<>
