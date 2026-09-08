@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-07T09:16:57.209Z",
+  "updatedAt": "2026-09-08T08:50:10.184Z",
   "entries": [
     {
       "date": "2026-08-27",
@@ -2633,6 +2633,222 @@
               "finalUrl": "",
               "reason": null,
               "durationMs": 5549,
+              "verificationMethod": "browser_navigation",
+              "evidenceAt": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "date": "2026-09-08",
+      "checkedAt": "2026-09-08T08:49:19.815Z",
+      "summary": {
+        "scheduled": 10,
+        "passed": 10,
+        "failed": 0,
+        "unavailable": 0,
+        "recovered": 0,
+        "systemicSources": 0,
+        "checkedSources": 5
+      },
+      "sources": [
+        {
+          "source": "ybtour",
+          "status": "healthy",
+          "availableFlights": 165,
+          "checks": [
+            {
+              "source": "ybtour",
+              "flightId": "ybtour-125d3uw",
+              "route": "부산 → 오키나와",
+              "departureDate": "2026-11-15",
+              "checkedAt": "2026-09-08T08:49:21.662Z",
+              "stage": "initial",
+              "success": true,
+              "outcome": "passed",
+              "statusCode": 200,
+              "finalUrl": "",
+              "reason": null,
+              "durationMs": 6934,
+              "verificationMethod": "browser_navigation",
+              "evidenceAt": null
+            },
+            {
+              "source": "ybtour",
+              "flightId": "ybtour-3h03ya",
+              "route": "인천 → 마나도",
+              "departureDate": "2026-11-15",
+              "checkedAt": "2026-09-08T08:49:28.637Z",
+              "stage": "initial",
+              "success": true,
+              "outcome": "passed",
+              "statusCode": 200,
+              "finalUrl": "",
+              "reason": null,
+              "durationMs": 5804,
+              "verificationMethod": "browser_navigation",
+              "evidenceAt": null
+            }
+          ]
+        },
+        {
+          "source": "hanatour",
+          "status": "healthy",
+          "availableFlights": 29,
+          "checks": [
+            {
+              "source": "hanatour",
+              "flightId": "hanatour-184p83o",
+              "route": "부산(PUS) → 오키나와(OKA)",
+              "departureDate": "2026.09.27(일)",
+              "checkedAt": "2026-09-08T08:49:34.476Z",
+              "stage": "initial",
+              "success": true,
+              "outcome": "passed",
+              "statusCode": 200,
+              "finalUrl": "",
+              "reason": null,
+              "durationMs": 6414,
+              "verificationMethod": "browser_navigation",
+              "evidenceAt": null
+            },
+            {
+              "source": "hanatour",
+              "flightId": "hanatour-f4hpi1",
+              "route": "부산(PUS) → 보홀(TAG)",
+              "departureDate": "2026.09.20(일)",
+              "checkedAt": "2026-09-08T08:49:40.921Z",
+              "stage": "initial",
+              "success": true,
+              "outcome": "passed",
+              "statusCode": 200,
+              "finalUrl": "",
+              "reason": null,
+              "durationMs": 4728,
+              "verificationMethod": "browser_navigation",
+              "evidenceAt": null
+            }
+          ]
+        },
+        {
+          "source": "modetour",
+          "status": "healthy",
+          "availableFlights": 107,
+          "checks": [
+            {
+              "source": "modetour",
+              "flightId": "modetour-ASIA-19719126",
+              "route": "인천 → 마나도",
+              "departureDate": "2026-10-06",
+              "checkedAt": "2026-09-08T08:49:45.679Z",
+              "stage": "initial",
+              "success": true,
+              "outcome": "passed",
+              "statusCode": 200,
+              "finalUrl": "",
+              "reason": null,
+              "durationMs": 6652,
+              "verificationMethod": "browser_navigation",
+              "evidenceAt": null
+            },
+            {
+              "source": "modetour",
+              "flightId": "modetour-ASIA-19773364",
+              "route": "인천 → 코타키나발루",
+              "departureDate": "2026-09-27",
+              "checkedAt": "2026-09-08T08:49:52.362Z",
+              "stage": "initial",
+              "success": true,
+              "outcome": "passed",
+              "statusCode": 200,
+              "finalUrl": "",
+              "reason": null,
+              "durationMs": 3680,
+              "verificationMethod": "browser_navigation",
+              "evidenceAt": null
+            }
+          ]
+        },
+        {
+          "source": "onlinetour",
+          "status": "not_checked",
+          "availableFlights": 0,
+          "checks": []
+        },
+        {
+          "source": "ttang",
+          "status": "healthy",
+          "availableFlights": 121,
+          "checks": [
+            {
+              "source": "ttang",
+              "flightId": "ttang-7C1501ICNCTS-G3-2026-09-14",
+              "route": "서울 → 삿포로(치토세)",
+              "departureDate": "2026-09-14",
+              "checkedAt": "2026-09-08T08:49:56.054Z",
+              "stage": "initial",
+              "outcome": "passed",
+              "success": true,
+              "statusCode": null,
+              "finalUrl": "",
+              "reason": null,
+              "durationMs": 4,
+              "verificationMethod": "crawl_evidence",
+              "evidenceAt": "2026-09-08T05:52:16.985Z"
+            },
+            {
+              "source": "ttang",
+              "flightId": "ttang-CJJ-CXR-RT-0-6-TW-2026-10-04",
+              "route": "청주 → 나트랑(깜란)",
+              "departureDate": "2026-10-04",
+              "checkedAt": "2026-09-08T08:49:56.055Z",
+              "stage": "initial",
+              "outcome": "passed",
+              "success": true,
+              "statusCode": null,
+              "finalUrl": "",
+              "reason": null,
+              "durationMs": 1,
+              "verificationMethod": "crawl_evidence",
+              "evidenceAt": "2026-09-08T05:52:16.985Z"
+            }
+          ]
+        },
+        {
+          "source": "myrealtrip",
+          "status": "healthy",
+          "availableFlights": 146,
+          "checks": [
+            {
+              "source": "myrealtrip",
+              "flightId": "mrt-ICN-ADD-20261106-1437700",
+              "route": "서울(인천) → 아디스아바바",
+              "departureDate": "2026-11-06",
+              "checkedAt": "2026-09-08T08:49:56.080Z",
+              "stage": "initial",
+              "success": true,
+              "outcome": "passed",
+              "statusCode": 200,
+              "finalUrl": "",
+              "reason": null,
+              "durationMs": 6298,
+              "verificationMethod": "browser_navigation",
+              "evidenceAt": null
+            },
+            {
+              "source": "myrealtrip",
+              "flightId": "mrt-ICN-KUL-20260913-561800",
+              "route": "서울(인천) → 쿠알라룸푸르",
+              "departureDate": "2026-09-13",
+              "checkedAt": "2026-09-08T08:50:02.409Z",
+              "stage": "initial",
+              "success": true,
+              "outcome": "passed",
+              "statusCode": 200,
+              "finalUrl": "",
+              "reason": null,
+              "durationMs": 7747,
               "verificationMethod": "browser_navigation",
               "evidenceAt": null
             }
