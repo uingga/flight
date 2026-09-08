@@ -1,6 +1,6 @@
 name: MyRealTrip Price Scraping
 
-run-name: MyRealTrip Price Scraping · ${{ github.event.schedule || github.event_name }}
+run-name: MyRealTrip Price Scraping · ${{ inputs.trigger_source || github.event.schedule || github.event_name }} · ${{ inputs.expected_at || 'scheduled' }}
 
 on:
   schedule:
@@ -10,6 +10,16 @@ on:
     # 매일 오후 4시 3분 KST (07:03 UTC)
     - cron: '3 7 * * *'
   workflow_dispatch:
+    inputs:
+      trigger_source:
+        description: 'manual or watchdog'
+        type: choice
+        options: [manual, watchdog]
+        default: manual
+      expected_at:
+        description: 'Scheduled UTC slot (empty uses latest slot)'
+        type: string
+        default: ''
 
 # 수동 실행과 예약 실행이 겹쳐 같은 회선에서 동시에 요청하지 않는다.
 concurrency:
@@ -28,32 +38,48 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Reserve MyRealTrip slot
+        id: slot
+        run: node scripts/check-myrealtrip-slot.mjs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          TRIGGER_SCHEDULE: ${{ github.event.schedule }}
+          EXPECTED_AT: ${{ inputs.expected_at }}
 
       - name: Record trigger metadata
+        if: steps.slot.outputs.should_run == 'true'
         run: node scripts/check-crawl-run.mjs
         env:
           TRIGGER_EVENT: ${{ github.event_name }}
           TRIGGER_SCHEDULE: ${{ github.event.schedule }}
 
       - name: Setup Node.js
+        if: steps.slot.outputs.should_run == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
 
       - name: Install dependencies
+        if: steps.slot.outputs.should_run == 'true'
         run: npm ci
 
       - name: Install Playwright browsers
+        if: steps.slot.outputs.should_run == 'true'
         run: npx playwright install --with-deps chromium
 
       - name: Random delay (0~3분)
+        if: steps.slot.outputs.should_run == 'true'
         run: |
           DELAY=$((RANDOM % 180))
           echo "⏳ ${DELAY}초 대기 후 스크래핑 시작..."
           sleep $DELAY
 
       - name: Run MyRealTrip price scraping
+        if: steps.slot.outputs.should_run == 'true'
         id: scrape
         run: npx tsx scripts/scrape-myrealtrip-prices.ts
         env:
@@ -62,7 +88,7 @@ jobs:
 
       # 차단을 감지해 스크래퍼가 실패해도 항공권은 그대로 둔 채 24시간 회로는 반드시 저장한다.
       - name: Commit cache or circuit changes
-        if: always() && steps.scrape.outcome != 'skipped'
+        if: always() && steps.slot.outputs.should_run == 'true' && (steps.scrape.outcome == 'success' || steps.scrape.outcome == 'failure')
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
@@ -98,7 +124,7 @@ jobs:
           fi
 
       - name: Record MyRealTrip lifecycle changes
-        if: success()
+        if: success() && steps.scrape.outcome == 'success'
         continue-on-error: true
         run: npm run record:lifecycle -- --source=myrealtrip
         env:

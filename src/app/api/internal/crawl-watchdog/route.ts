@@ -4,9 +4,11 @@ import path from 'node:path';
 import { NextRequest, NextResponse } from 'next/server';
 import { getCrawlDispatchBlocker, type GitHubWorkflowRunSummary } from '@/lib/crawl-watchdog-dispatch.mjs';
 import { getCrawlScheduleHealth, getFullCrawlUpdatedAt } from '@/lib/crawl-schedule-health.mjs';
+import { checkMrtWatchdog, githubMrtClient } from '@/lib/myrealtrip-schedule.mjs';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
 
 const GITHUB_REPOSITORY = 'uingga/flight';
 const CRAWL_WORKFLOW = 'daily-crawl.yml';
@@ -49,17 +51,23 @@ export async function GET(request: NextRequest) {
     if (!authorized(request, secret)) return json({ ok: false, error: 'unauthorized' }, 401);
 
     try {
+        // Both checks share the existing external five-minute clock, but failures are isolated.
+        const token = process.env.GH_PAT;
+        const myrealtrip = token
+            ? await checkMrtWatchdog(githubMrtClient(token), checkedAt.getTime())
+                .catch((error: Error) => ({ action: 'error', reason: error.message }))
+            : { action: 'error', reason: 'github_dispatch_not_configured' };
         const health = getCrawlScheduleHealth(readLastCompletedAt(), { now: checkedAt });
         const result = {
             checkedAt: checkedAt.toISOString(),
             health,
+            myrealtrip,
         };
 
         if (health.status !== 'overdue' || !health.expectedAt) {
             return json({ ok: true, action: 'none', ...result });
         }
 
-        const token = process.env.GH_PAT;
         if (!token) return json({ ok: false, error: 'github_dispatch_not_configured', ...result }, 503);
 
         const runsResponse = await fetch(

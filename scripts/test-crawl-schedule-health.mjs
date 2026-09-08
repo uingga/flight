@@ -172,7 +172,7 @@ test('anti-block safeguards keep source starts distributed and MyRealTrip serial
 
     const workflow = fs.readFileSync('.github/workflows/myrealtrip-scrape.yml', 'utf8');
     assert.match(workflow, /^concurrency:\s*\n\s+group: myrealtrip-price-scrape/m);
-    assert.match(workflow, /if: always\(\) && steps\.scrape\.outcome != 'skipped'/);
+    assert.match(workflow, /if: always\(\) && steps\.slot\.outputs\.should_run == 'true' && \(steps\.scrape\.outcome == 'success' \|\| steps\.scrape\.outcome == 'failure'\)/);
 });
 
 test('full crawls advance the marker while partial crawls preserve it', () => {
