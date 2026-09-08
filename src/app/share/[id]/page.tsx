@@ -123,7 +123,9 @@ function ogShortDate(dateStr: string): string {
     const match = dateStr.match(/(\d{4})[.-]?(\d{2})[.-]?(\d{2})/);
     if (!match) return dateStr;
     const [, year, month, day] = match;
-    const weekday = WEEKDAYS[new Date(`${year}-${month}-${day}T00:00:00+09:00`).getDay()];
+    // Flight dates are calendar dates, not instants. Keep both parsing and weekday
+    // lookup in UTC so a UTC-hosted server cannot shift KST midnight to yesterday.
+    const weekday = WEEKDAYS[new Date(`${year}-${month}-${day}T00:00:00Z`).getUTCDay()];
     return `${parseInt(month)}.${parseInt(day)}(${weekday})`;
 }
 
