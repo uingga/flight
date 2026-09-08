@@ -5,6 +5,7 @@ import { normalizeCity } from '@/lib/utils/flight-helpers';
 import { SHARE_GROUPS } from '@/lib/share-groups';
 import { loadFlightInterest, FLIGHT_INTEREST_RANGES } from '@/lib/server/flight-interest-report';
 import { isCompleteInterestReport } from '@/lib/flight-interest';
+import { loadFilterDemand } from '@/lib/server/filter-demand-report';
 
 // 저장소가 공개라 코드에 박아 둔 기본값은 그대로 공개 열쇠가 된다.
 // 환경변수가 없으면 조용히 열리는 대신 인증을 전부 거부한다.
@@ -173,6 +174,7 @@ async function optional(
 
 async function buildStats(config: Ga4Config, days: number) {
     const flightInterestPromise = loadFlightInterest(config);
+    const filterDemandPromise = loadFilterDemand(config, days);
     // 7일·30일 수치는 아직 덜 쌓인 오늘을 빼고 어제까지의 완결된 날짜만 쓴다.
     // 오늘은 별도 열의 잠정 수치와 일별 추이의 마지막 막대에서 보여준다.
     const dateRanges = [{ startDate: `${days}daysAgo`, endDate: 'yesterday' }];
@@ -868,10 +870,11 @@ async function buildStats(config: Ga4Config, days: number) {
         report: ReportResponse | null,
         buckets: Array<{ label: string; max: number }>,
     ) => {
-        if (report === null) return null;
+        if (!isCompleteInterestReport(report)) return null;
         const totals = new Map(buckets.map(b => [b.label, 0]));
         let counted = 0;
-        (report.rows || []).forEach(row => {
+        (report?.rows || []).forEach(row => {
+            if (!dim(row).trim()) return;
             const value = Number(dim(row));
             if (!Number.isFinite(value)) return;
             const bucket = buckets.find(b => value <= b.max) || buckets[buckets.length - 1];
@@ -966,6 +969,7 @@ async function buildStats(config: Ga4Config, days: number) {
             current: activity(eventReport, totals, currentAlertIntentReport),
         },
         flightInterest: await flightInterestPromise,
+        filterDemand: await filterDemandPromise,
         cityInterest: {
             basis: cityInterestBasis,
             availablePeriods: {
@@ -1065,8 +1069,8 @@ async function buildStats(config: Ga4Config, days: number) {
                 { label: '2주 이상', max: Infinity },
             ]),
             // 측정기준 등록 전 이벤트는 `(not set)`으로 뭉쳐 오므로 버린다 — 세는 의미가 없다
-            method: measured(list(dateMethodReport, { calendar: '달력에서 직접', preset: '빠른 선택 칩' })),
-            presets: measured(list(presetReport)),
+            method: isCompleteInterestReport(dateMethodReport) ? measured(list(dateMethodReport, { calendar: '달력에서 직접', preset: '빠른 선택 칩' })) : null,
+            presets: isCompleteInterestReport(presetReport) ? measured(list(presetReport)) : null,
         },
         warnings,
     };

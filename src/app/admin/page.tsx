@@ -9,6 +9,8 @@ import AdminTodayPick from '@/components/AdminTodayPick';
 import AdminVisitComparison from '@/components/AdminVisitComparison';
 import AdminFlightOrder from '@/components/AdminFlightOrder';
 import AdminFlightInterest from '@/components/AdminFlightInterest';
+import AdminFilterDemand from '@/components/AdminFilterDemand';
+import type { FilterDemandData } from '@/lib/filter-demand';
 import type { FlightInterestData } from '@/lib/flight-interest';
 
 function urlBase64ToUint8Array(base64String: string) {
@@ -522,6 +524,7 @@ interface GaCampaignPerformance {
 }
 
 interface GaStatsData {
+    filterDemand?: FilterDemandData;
     flightInterest?: FlightInterestData;
     available: boolean;
     message?: string;
@@ -4878,17 +4881,11 @@ export default function AdminPage() {
                         <section className={styles.section} id="visitor-dates">
                             <div className={styles.sectionHeading}>
                                 <div>
-                                    <h2>사람들이 언제 떠나려 했나</h2>
-                                    <p>검색 수요와 현재 항공권 공급이 어긋나는 구간을 찾는 데 쓰는 정보입니다.</p>
+                                    <h2>사람들이 어떤 조건으로 찾았나</h2>
+                                    <p>출발지·도착지부터 가격과 날짜까지, 직접 고른 검색 조건을 비교합니다.</p>
                                 </div>
                             </div>
-                            <div className={styles.donutGrid}>
-                                <DonutBreakdown title="출발까지 남은 기간" items={gaStats.dateFilter.leadTime} />
-                                <DonutBreakdown title="고른 여행 기간" items={gaStats.dateFilter.range} />
-                                <DonutBreakdown title="날짜를 고른 방식" items={gaStats.dateFilter.method} />
-                                <DonutBreakdown title="누른 빠른 선택" items={gaStats.dateFilter.presets} />
-                            </div>
-                            <p className={styles.dataFootnote}>2026년 8월 19일 이후 수집된 날짜 선택만 반영합니다.</p>
+                            <AdminFilterDemand data={gaStats.filterDemand} dates={gaStats.dateFilter} days={gaStats.days} />
                         </section>
                     </>
                 )}
