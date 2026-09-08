@@ -9,6 +9,8 @@ import AdminTodayPick from '@/components/AdminTodayPick';
 import AdminVisitComparison from '@/components/AdminVisitComparison';
 import AdminFlightOrder from '@/components/AdminFlightOrder';
 import AdminFlightInterest from '@/components/AdminFlightInterest';
+import AdminAcquisition from '@/components/AdminAcquisition';
+import type { AcquisitionData } from '@/lib/acquisition';
 import AdminThreadsPosts from '@/components/AdminThreadsPosts';
 import AdminTe31Posts from '@/components/AdminTe31Posts';
 import AdminFilterDemand from '@/components/AdminFilterDemand';
@@ -568,8 +570,7 @@ interface GaStatsData {
         audience: { newUsers: number; returningUsers: number; rate: number | null };
         savedSearchUsers: number;
         topRoutes: GaListItem[] | null;
-        channels: Array<{ label: string; sessions: number; users: number }> | null;
-        referrals: Array<{ source: string; label: string; sessions: number; users: number }> | null;
+        acquisition?: AcquisitionData;
     };
     returning: {
         current: { newUsers: number; returningUsers: number; rate: number | null };
@@ -607,8 +608,7 @@ interface GaStatsData {
     bookingByRoute: GaListItem[] | null;
     alertByEntry: GaListItem[] | null;
     detailByEntry: GaListItem[] | null;
-    channels: Array<{ label: string; sessions: number; users: number; note?: string }> | null;
-    referrals: Array<{ source: string; label: string; sessions: number; users: number }> | null;
+    acquisition?: AcquisitionData;
     campaigns: GaCampaignPerformance[] | null;
     blogCampaigns?: GaCampaignPerformance[] | null;
     promotionCampaigns?: GaCampaignPerformance[] | null;
@@ -2586,26 +2586,8 @@ export default function AdminPage() {
                     </div>
                     <div className={styles.todayInsightGrid}>
                         <article className={styles.todayInsightCard}>
-                            <header><strong>들어온 경로</strong><small>방문 횟수</small></header>
-                            <RankList
-                                items={(gaStats?.todayOverview?.channels || []).slice(0, 5).map(item => ({
-                                    label: item.label,
-                                    value: `${item.sessions.toLocaleString()}회`,
-                                    note: `${item.users.toLocaleString()}명`,
-                                }))}
-                                empty="오늘 집계된 유입 경로가 없습니다."
-                            />
-                        </article>
-                        <article className={styles.todayInsightCard}>
-                            <header><strong>외부 링크 유입처</strong><small>확인된 추천 링크</small></header>
-                            <RankList
-                                items={(gaStats?.todayOverview?.referrals || []).slice(0, 5).map(item => ({
-                                    label: item.label,
-                                    value: `${item.sessions.toLocaleString()}회`,
-                                    note: `${item.users.toLocaleString()}명`,
-                                }))}
-                                empty="오늘 외부 링크를 통해 들어온 기록이 없습니다."
-                            />
+                            <header><strong>유입 유형과 출처</strong><small>방문 횟수 · 인원</small></header>
+                            <AdminAcquisition data={gaStats?.todayOverview?.acquisition} />
                         </article>
                         <article className={styles.todayInsightCard}>
                             <header><strong>많이 누른 노선</strong><small>상세 열람 횟수</small></header>
@@ -4813,8 +4795,8 @@ export default function AdminPage() {
                             <PromotionCampaignPerformance campaigns={gaStats.promotionCampaigns} days={gaStats.days} />
                             <div className={styles.analysisGrid}>
                                 <div className={styles.analysisPanel}>
-                                    <h3>들어온 경로</h3>
-                                    <RankList items={(gaStats.channels || []).slice(0, 5).map(item => ({ label: item.label, value: `${item.users.toLocaleString()}명`, note: item.note ? `${item.note} · 방문 ${item.sessions.toLocaleString()}회` : `방문 ${item.sessions.toLocaleString()}회` }))} empty="유입 경로가 아직 없어요." />
+                                    <h3>유입 유형과 출처</h3>
+                                    <AdminAcquisition data={gaStats.acquisition} />
                                 </div>
                                 <div className={styles.analysisPanel}>
                                     <h3>예약 이동이 많은 노선</h3>
@@ -4828,12 +4810,7 @@ export default function AdminPage() {
                                     <h3>알림 등록을 시작한 위치</h3>
                                     <RankList items={(gaStats.alertByEntry || []).slice(0, 5).map(item => ({ label: item.label, value: `${item.count.toLocaleString()}회` }))} empty="알림 등록 위치가 아직 기록되지 않았어요." />
                                 </div>
-                                {(gaStats.referrals || []).length > 0 && (
-                                    <div className={`${styles.analysisPanel} ${styles.analysisPanelWide}`}>
-                                        <h3>외부 링크 유입처</h3>
-                                        <RankList items={(gaStats.referrals || []).slice(0, 8).map(item => ({ label: item.label, value: `${item.users.toLocaleString()}명`, note: `방문 ${item.sessions.toLocaleString()}회` }))} />
-                                    </div>
-                                )}
+
                             </div>
                             {gaStats.warnings.length > 0 && (
                                 <div className={styles.dataGap}>{gaStats.warnings.join(' · ')}</div>
@@ -5023,54 +5000,8 @@ export default function AdminPage() {
                             </div>
 
                             <div id="marketing-acquisition">
-                                <h3 className={styles.userSubTitle}>어디서 들어왔나 — 큰 분류</h3>
-                                {gaStats.channels === null ? (
-                                    <div className={styles.dealReviewEmpty}>불러오지 못했습니다.</div>
-                                ) : gaStats.channels.length === 0 ? (
-                                    <div className={styles.dealReviewEmpty}>집계된 유입이 없습니다.</div>
-                                ) : (
-                                    <div className={styles.cityDetail}>
-                                        <table className={styles.cityTable}>
-                                            <thead><tr><th>경로</th><th>방문</th><th>사람</th></tr></thead>
-                                            <tbody>
-                                                {gaStats.channels.map(item => (
-                                                    <tr key={item.label}>
-                                                        <td>{item.label}</td>
-                                                        <td>{item.sessions.toLocaleString()}회</td>
-                                                        <td>{item.users.toLocaleString()}명</td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                )}
-                            </div>
-
-                            <div>
-                                <h3 className={styles.userSubTitle}>외부 링크 유입처</h3>
-                                {gaStats.referrals === null ? (
-                                    <div className={styles.dealReviewEmpty}>불러오지 못했습니다.</div>
-                                ) : gaStats.referrals.length === 0 ? (
-                                    <div className={styles.dealReviewEmpty}>출처가 확인된 외부 링크 방문이 없습니다.</div>
-                                ) : (
-                                    <div className={styles.cityDetail}>
-                                        <table className={styles.cityTable}>
-                                            <thead><tr><th>사이트</th><th>방문</th><th>사람</th></tr></thead>
-                                            <tbody>
-                                                {gaStats.referrals.map(item => (
-                                                    <tr key={item.source}>
-                                                        <td>{item.label}</td>
-                                                        <td>{item.sessions.toLocaleString()}회</td>
-                                                        <td>{item.users.toLocaleString()}명</td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                )}
-                                <p className={styles.gaHint}>
-                                    게시판이 출처를 숨기지 않은 방문만 표시됩니다. 앞으로 홍보 링크에 UTM을 붙이면 아래 콘텐츠 표에서 예약 클릭까지 정확히 구분됩니다.
-                                </p>
+                                <h3 className={styles.userSubTitle}>유입 유형과 출처</h3>
+                                <AdminAcquisition data={gaStats.acquisition} />
                             </div>
 
                             <div>

@@ -1,3 +1,4 @@
+import { loadAcquisition } from '@/lib/server/acquisition-report';
 import { NextRequest, NextResponse } from 'next/server';
 import { ga4Config, runReport, eventNameFilter, dim, num, type Ga4Config, type ReportResponse } from '@/lib/ga4';
 import { getSupabaseServerHeaders } from '@/lib/server/supabase-rest';
@@ -66,34 +67,8 @@ const ENTRY_LABELS: Record<string, string> = {
     today_pick: 'TIKIT DROP',
 };
 
-const CHANNEL_LABELS: Record<string, string> = {
-    'Organic Search': '검색',
-    'Direct': '직접 방문',
-    'Referral': '외부 링크',
-    'Organic Social': 'SNS',
-    'Paid Search': '검색 광고',
-    'Email': '이메일',
-    'Unassigned': '출처 확인 불가',
-};
-
 const UNSET_DIMENSION_VALUES = new Set(['', '(not set)', '(값 없음)', '(none)']);
 const isUnsetDimension = (value: string) => UNSET_DIMENSION_VALUES.has(value.trim().toLowerCase());
-
-const inferChannelFromSource = (sourceValue: string, mediumValue: string): string | null => {
-    const source = sourceValue.trim().toLowerCase();
-    const medium = mediumValue.trim().toLowerCase();
-    if (source === '(direct)' && (medium === '(none)' || medium === '(not set)')) return '직접 방문';
-    if (['google', 'naver', 'bing', 'daum'].some(value => source.includes(value))) return '검색';
-    if (['instagram', 'threads', 'facebook', 'twitter', 'x.com', 't.co'].some(value => source.includes(value))) return 'SNS';
-    if (isUnsetDimension(source)) return null;
-    if (isUnsetDimension(medium)) return '분류되지 않은 유입';
-    if (medium.includes('organic')) return '검색';
-    if (medium === 'referral') return '외부 링크';
-    if (medium.includes('social')) return 'SNS';
-    if (['cpc', 'ppc', 'paidsearch', 'paid_search'].includes(medium)) return '검색 광고';
-    if (medium === 'email') return '이메일';
-    return '분류되지 않은 유입';
-};
 
 interface CachedPayload { at: number; days: number; body: unknown }
 let cache: CachedPayload | null = null;
@@ -296,7 +271,7 @@ async function buildStats(config: Ga4Config, days: number) {
         returningRequest(todayDateRanges),
     ]);
 
-    const [agencyReport, routeReport, entryReport, detailEntryReport, channelReport, unassignedChannelReport, referralReport, campaignTrafficReport, campaignActionReport, campaignCityReport, leadTimeReport, rangeReport, dateMethodReport, presetReport, repeatBehaviorReport, todayRouteReport, todayAcquisitionReport] = await Promise.all([
+    const [agencyReport, routeReport, entryReport, detailEntryReport, acquisition, campaignTrafficReport, campaignActionReport, campaignCityReport, leadTimeReport, rangeReport, dateMethodReport, presetReport, repeatBehaviorReport, todayRouteReport, todayAcquisition] = await Promise.all([
         optional('여행사별 예약 클릭', warnings, () => runReport(config, {
             dateRanges,
             dimensions: [{ name: 'customEvent:travel_agency' }],
@@ -329,39 +304,7 @@ async function buildStats(config: Ga4Config, days: number) {
             orderBys: [{ metric: { metricName: 'eventCount' }, desc: true }],
             limit: 15,
         })),
-        optional('유입 경로', warnings, () => runReport(config, {
-            dateRanges,
-            dimensions: [{ name: 'sessionDefaultChannelGroup' }],
-            metrics: [{ name: 'sessions' }, { name: 'activeUsers' }],
-            orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
-            limit: 12,
-        })),
-        optional('출처 확인 불가 원인', warnings, () => runReport(config, {
-            dateRanges,
-            dimensions: [{ name: 'sessionDefaultChannelGroup' }, { name: 'sessionSource' }, { name: 'sessionMedium' }],
-            metrics: [{ name: 'sessions' }, { name: 'activeUsers' }],
-            dimensionFilter: {
-                filter: {
-                    fieldName: 'sessionDefaultChannelGroup',
-                    stringFilter: { value: 'Unassigned', matchType: 'EXACT', caseSensitive: false },
-                },
-            },
-            orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
-            limit: 50,
-        })),
-        optional('외부 링크 유입처', warnings, () => runReport(config, {
-            dateRanges,
-            dimensions: [{ name: 'sessionSource' }],
-            metrics: [{ name: 'sessions' }, { name: 'activeUsers' }],
-            dimensionFilter: {
-                filter: {
-                    fieldName: 'sessionMedium',
-                    stringFilter: { value: 'referral', matchType: 'EXACT', caseSensitive: false },
-                },
-            },
-            orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
-            limit: 30,
-        })),
+        loadAcquisition(config, dateRanges),
         optional('콘텐츠별 유입', warnings, () => runReport(config, {
             dateRanges: campaignDateRanges,
             dimensions: [{ name: 'sessionCampaignName' }, { name: 'sessionSource' }],
@@ -449,17 +392,7 @@ async function buildStats(config: Ga4Config, days: number) {
             orderBys: [{ metric: { metricName: 'eventCount' }, desc: true }],
             limit: 8,
         })),
-        optional('오늘 유입 경로', warnings, () => runReport(config, {
-            dateRanges: todayDateRanges,
-            dimensions: [
-                { name: 'sessionDefaultChannelGroup' },
-                { name: 'sessionSource' },
-                { name: 'sessionMedium' },
-            ],
-            metrics: [{ name: 'sessions' }, { name: 'activeUsers' }],
-            orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
-            limit: 50,
-        })),
+        loadAcquisition(config, todayDateRanges),
     ]);
 
     const cityAvailabilityPromise = loadCityAvailability().catch(error => {
@@ -761,37 +694,6 @@ async function buildStats(config: Ga4Config, days: number) {
         te31: 'TE31',
         user_share: '사용자 공유',
     }[source] || source);
-    const referralSourceLabel = (source: string) => {
-        const normalized = source.toLowerCase().replace(/^www\./, '');
-        if (normalized === 'te31.com') return 'TE31';
-        return source || '(출처 없음)';
-    };
-    const todayChannels = (() => {
-        if (todayAcquisitionReport === null) return null;
-        const grouped = new Map<string, { label: string; sessions: number; users: number }>();
-        (todayAcquisitionReport.rows || []).forEach(row => {
-            const rawChannel = dim(row);
-            const label = rawChannel === 'Unassigned' || isUnsetDimension(rawChannel)
-                ? inferChannelFromSource(dim(row, 1), dim(row, 2)) || '출처 확인 불가'
-                : CHANNEL_LABELS[rawChannel] || rawChannel;
-            const previous = grouped.get(label);
-            grouped.set(label, {
-                label,
-                sessions: (previous?.sessions || 0) + num(row, 0),
-                users: (previous?.users || 0) + num(row, 1),
-            });
-        });
-        return Array.from(grouped.values()).sort((a, b) => b.sessions - a.sessions);
-    })();
-    const todayReferrals = todayAcquisitionReport === null ? null : (todayAcquisitionReport.rows || [])
-        .filter(row => dim(row, 2).toLowerCase() === 'referral' && !isUnsetDimension(dim(row, 1)))
-        .map(row => ({
-            source: dim(row, 1),
-            label: referralSourceLabel(dim(row, 1)),
-            sessions: num(row, 0),
-            users: num(row, 1),
-        }))
-        .sort((a, b) => b.sessions - a.sessions);
     const campaignActions = new Map<string, { events: number; users: number }>();
     (campaignActionReport?.rows || []).forEach(row => {
         campaignActions.set(`${dim(row)}|${dim(row, 1)}|${dim(row, 2)}`, {
@@ -877,66 +779,6 @@ async function buildStats(config: Ga4Config, days: number) {
     const measured = (items: Array<{ label: string; count: number }> | null) =>
         items === null ? null : items.filter(item => !isUnsetDimension(item.label));
 
-    const channels = (() => {
-        if (channelReport === null) return null;
-        const grouped = new Map<string, { label: string; sessions: number; users: number; note?: string }>();
-        const add = (label: string, sessions: number, users: number, note?: string) => {
-            const previous = grouped.get(label);
-            grouped.set(label, {
-                label,
-                sessions: (previous?.sessions || 0) + sessions,
-                users: (previous?.users || 0) + users,
-                note: previous?.note || note,
-            });
-        };
-
-        let rawUnassignedSessions = 0;
-        let rawUnassignedUsers = 0;
-        (channelReport.rows || []).forEach(row => {
-            const rawChannel = dim(row);
-            if (rawChannel === 'Unassigned' || isUnsetDimension(rawChannel)) {
-                rawUnassignedSessions += num(row, 0);
-                rawUnassignedUsers += num(row, 1);
-                return;
-            }
-            add(CHANNEL_LABELS[rawChannel] || rawChannel, num(row, 0), num(row, 1));
-        });
-
-        if (rawUnassignedSessions > 0) {
-            if (unassignedChannelReport === null || !(unassignedChannelReport.rows || []).length) {
-                add('출처 확인 불가', rawUnassignedSessions, rawUnassignedUsers, '브라우저·앱에서 출처 정보가 전달되지 않음');
-            } else {
-                const inferredBuckets = new Map<string, { sessions: number; note?: string }>();
-                (unassignedChannelReport.rows || []).forEach(row => {
-                    const label = inferChannelFromSource(dim(row, 1), dim(row, 2)) || '출처 확인 불가';
-                    const previous = inferredBuckets.get(label);
-                    inferredBuckets.set(label, {
-                        sessions: (previous?.sessions || 0) + num(row, 0),
-                        note: label === '출처 확인 불가' ? '브라우저·앱에서 출처 정보가 전달되지 않음' : undefined,
-                    });
-                });
-                const buckets = Array.from(inferredBuckets.entries());
-                const detailSessions = buckets.reduce((sum, [, bucket]) => sum + bucket.sessions, 0);
-                let remainingSessions = rawUnassignedSessions;
-                let remainingUsers = rawUnassignedUsers;
-                buckets.forEach(([label, bucket], index) => {
-                    const isLast = index === buckets.length - 1;
-                    const ratio = detailSessions > 0 ? bucket.sessions / detailSessions : 0;
-                    const sessions = isLast ? remainingSessions : Math.min(remainingSessions, Math.round(rawUnassignedSessions * ratio));
-                    const users = isLast ? remainingUsers : Math.min(remainingUsers, Math.round(rawUnassignedUsers * ratio));
-                    add(label, sessions, users, bucket.note);
-                    remainingSessions -= sessions;
-                    remainingUsers -= users;
-                });
-                if (buckets.length === 0) {
-                    add('출처 확인 불가', rawUnassignedSessions, rawUnassignedUsers, '브라우저·앱에서 출처 정보가 전달되지 않음');
-                }
-            }
-        }
-
-        return Array.from(grouped.values()).sort((a, b) => b.sessions - a.sessions);
-    })();
-
     const dateFilterEmpty = events.find(entry => entry.name === 'date_filter_empty');
     const dateFilter = events.find(entry => entry.name === 'date_filter');
 
@@ -986,8 +828,7 @@ async function buildStats(config: Ga4Config, days: number) {
             savedSearchUsers: parseEvents(todayEventReport)
                 .find(entry => entry.name === 'saved_search_create')?.users ?? 0,
             topRoutes: measured(list(todayRouteReport)),
-            channels: todayChannels,
-            referrals: todayReferrals,
+            acquisition: todayAcquisition,
         },
         returning: {
             current: returning(returningReport),
@@ -1026,13 +867,7 @@ async function buildStats(config: Ga4Config, days: number) {
         bookingByRoute: measured(list(routeReport)),
         alertByEntry: measured(list(entryReport, ENTRY_LABELS)),
         detailByEntry: measured(list(detailEntryReport, ENTRY_LABELS)),
-        channels,
-        referrals: referralReport === null ? null : (referralReport.rows || []).map(row => ({
-            source: dim(row),
-            label: referralSourceLabel(dim(row)),
-            sessions: num(row, 0),
-            users: num(row, 1),
-        })),
+        acquisition,
         campaigns,
         blogCampaigns,
         promotionCampaigns,
