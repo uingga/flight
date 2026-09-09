@@ -1,22 +1,30 @@
 {
-  "date": "2026-09-08",
-  "selectedAt": "2026-09-08T06:42:57.046Z",
-  "flightId": "modetour-ASIA-20136575",
+  "date": "2026-09-09",
+  "selectedAt": "2026-09-09T06:13:16.328Z",
+  "flightId": "modetour-CHI-20081236",
   "source": "modetour",
-  "arrivalCity": "호치민",
-  "destinationKey": "SGN",
-  "effectivePrice": 210000,
-  "selectionMode": "recommend-score",
-  "referencePrice": 251490,
+  "arrivalCity": "광저우",
+  "destinationKey": "CAN",
+  "effectivePrice": 199000,
+  "selectionMode": "exceptional-price",
+  "referencePrice": 370800,
   "previousPick": {
-    "date": "2026-09-07",
-    "flightId": "ybtour-19da8wx",
-    "source": "ybtour",
-    "arrivalCity": "괌",
-    "destinationKey": "GUM",
-    "effectivePrice": 275800
+    "date": "2026-09-08",
+    "flightId": "modetour-ASIA-20136575",
+    "source": "modetour",
+    "arrivalCity": "호치민",
+    "destinationKey": "SGN",
+    "effectivePrice": 210000
   },
   "recentPicks": [
+    {
+      "date": "2026-09-08",
+      "flightId": "modetour-ASIA-20136575",
+      "source": "modetour",
+      "arrivalCity": "호치민",
+      "destinationKey": "SGN",
+      "effectivePrice": 210000
+    },
     {
       "date": "2026-09-07",
       "flightId": "ybtour-19da8wx",
@@ -64,15 +72,12 @@
       "arrivalCity": "장가계",
       "destinationKey": "DYG",
       "effectivePrice": 195000
-    },
-    {
-      "date": "2026-09-01",
-      "flightId": "modetour-manual-z3zer8",
-      "source": "modetour",
-      "arrivalCity": "푸꾸옥",
-      "destinationKey": "PQC",
-      "effectivePrice": 143800
     }
   ],
-  "repeatOverride": null
+  "repeatOverride": {
+    "previousEffectivePrice": 280000,
+    "previousDate": "2026-09-05",
+    "currentEffectivePrice": 199000,
+    "dropAmount": 81000
+  }
 }
