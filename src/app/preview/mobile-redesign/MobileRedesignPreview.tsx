@@ -196,6 +196,8 @@ const departureName = (flight: Flight) => {
     return stripAirport(flight.departure.city);
 };
 
+const displayedFlightPrice = (flight: Flight) => flight.price;
+
 const effectivePrice = (flight: Flight) => flight.price + (flight.source === 'ttang' ? TTANG_TICKETING_FEE : 0);
 const storedInterparkDiscountRate = (flight: Flight) => (
     isInterparkBenchmarkApplicable(flight) ? Math.max(0, flight.discountRate || 0) : 0
@@ -534,7 +536,7 @@ function WeekendFlightsInsight({
                     </span>
                     <span className={isMobileTicket ? styles.freshFlightsMobilePrice : styles.freshFlightsPrice}>
                         <small>왕복 총액</small>
-                        <strong>{effectivePrice(flight).toLocaleString('ko-KR')}<i>원</i></strong>
+                        <strong>{displayedFlightPrice(flight).toLocaleString('ko-KR')}<i>원</i></strong>
                     </span>
                 </span>
                 <span className={isMobileTicket ? styles.freshFlightsMobileSchedule : styles.freshFlightsSchedule}>
@@ -4007,7 +4009,7 @@ export default function MobileRedesignPreview({
                                                                 </span>
                                                             )}
                                                             <strong>
-                                                                {(flight.source === 'ttang' ? flight.price : price).toLocaleString('ko-KR')}
+                                                                {displayedFlightPrice(flight).toLocaleString('ko-KR')}
                                                                 <small>원</small>
                                                             </strong>
                                                         </div>
@@ -4081,7 +4083,7 @@ export default function MobileRedesignPreview({
                                                                     </span>
                                                                     <span className={styles.freshFlightsMobilePrice}>
                                                                         <small>왕복 총액</small>
-                                                                        <strong>{effectivePrice(freshFlight).toLocaleString('ko-KR')}<i>원</i></strong>
+                                                                        <strong>{displayedFlightPrice(freshFlight).toLocaleString('ko-KR')}<i>원</i></strong>
                                                                     </span>
                                                                 </span>
                                                                 <span className={styles.freshFlightsMobileSchedule}>
@@ -4137,7 +4139,7 @@ export default function MobileRedesignPreview({
                                                                             </span>
                                                                             <span className={styles.freshFlightsPrice}>
                                                                                 <small>왕복 총액</small>
-                                                                                <strong>{effectivePrice(freshFlight).toLocaleString('ko-KR')}<i>원</i></strong>
+                                                                                <strong>{displayedFlightPrice(freshFlight).toLocaleString('ko-KR')}<i>원</i></strong>
                                                                             </span>
                                                                         </span>
                                                                         <span className={styles.freshFlightsSchedule}>
