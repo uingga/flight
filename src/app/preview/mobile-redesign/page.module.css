@@ -1816,6 +1816,7 @@
     .freshFlightsMobileTopline,
     .freshFlightsMobileViewport { display: none; }
     .freshFlightsBar {
+        position: relative;
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
         align-items: stretch;
@@ -2266,8 +2267,11 @@
 @media (min-width: 960px) {
     .freshFlightsCount {
         display: block;
-        grid-column: 2 / -1;
-        padding: 0 28px 6px;
+        position: absolute;
+        right: 28px;
+        bottom: 12px;
+        z-index: 5;
+        pointer-events: none;
         text-align: right;
         color: var(--text-muted);
         font-size: var(--size-micro);
