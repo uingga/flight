@@ -16,14 +16,18 @@ export function extractTracking(text: string): Tracking {
             const match = url.pathname.match(/^\/(?:s|t)\/([^/]+)\/?$/);
             if (!match) continue;
             const shareCode = decodeURIComponent(match[1]);
-            return { shareCode, trackingContent: url.searchParams.get('utm_content') || `share_${shareCode}` };
+            // /t/g-* redirects use share_group_*, not share_g-*.
+            const isGroup = url.pathname.startsWith('/t/') && shareCode.startsWith('g-');
+            if (isGroup && shareCode.length === 2) continue;
+            return { shareCode, trackingContent: url.searchParams.get('utm_content')
+                || (isGroup ? `share_group_${shareCode.slice(2)}` : `share_${shareCode}`) };
         } catch { /* A malformed URL must not break insights for the whole post. */ }
     }
     return { trackingContent: null, shareCode: null };
 }
 
 export function connectOwnReplyTracking<T extends Tracking & { id: string }>(
-    posts: T[], replies: OwnReply[], complete: boolean,
+    posts: T[], replies: OwnReply[], complete: boolean, incompleteIssue = 'replies-unavailable',
 ) {
     return posts.map(post => {
         if (post.trackingContent) return { ...post, trackingReplyIds: [] as string[], trackingIssue: null };
@@ -33,7 +37,7 @@ export function connectOwnReplyTracking<T extends Tracking & { id: string }>(
             .filter(reply => reply.trackingContent);
         const contents = new Set(candidates.map(reply => reply.trackingContent));
         // Do not guess a single link when collection is incomplete or a thread has multiple campaigns.
-        const issue = !complete ? 'replies-unavailable' : contents.size > 1 ? 'multiple-links' : null;
+        const issue = contents.size > 1 ? 'multiple-links' : !complete ? incompleteIssue : null;
         const match = !issue && contents.size === 1 ? candidates[0] : null;
         return {
             ...post,

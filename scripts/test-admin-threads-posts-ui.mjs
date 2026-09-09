@@ -8,6 +8,7 @@ try {
     page.on('pageerror', error => errors.push(error.message));
     await page.route('**/*', route => new URL(route.request().url()).hostname === '127.0.0.1' ? route.continue() : route.abort());
     await page.goto('http://127.0.0.1:31859/preview/threads-posts');
+    assert.ok(await page.getByText('실시간 통계가 아닙니다.', { exact: true }).isVisible());
     const rows = page.locator('tbody > tr');
     assert.equal(await rows.count(), 12);
     assert.equal(await rows.first().locator('td').nth(1).innerText(), '123');

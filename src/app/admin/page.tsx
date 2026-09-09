@@ -2383,7 +2383,7 @@ export default function AdminPage() {
                     </button>
                 </div>
                 <span className={styles.lastUpdated}>
-                    항공권 데이터 기준: {formatKST(data.timestamp)} ({timeAgo(data.timestamp)})
+                    항공권 목록 기준: {formatKST(data.timestamp)} ({timeAgo(data.timestamp)}) · 방문 통계와 별도
                 </span>
             </header>
 
@@ -4606,12 +4606,12 @@ export default function AdminPage() {
                                         <small>좋아요·답글·재게시·인용·공유</small>
                                     </div>
                                     <div className={styles.signalCard}>
-                                        <span>사이트 방문</span>
+                                        <span>링크별 방문 인원 합계</span>
                                         <strong>{site.users.toLocaleString()}명</strong>
-                                        <small>출처 확인 {threadsInsights.attribution.verifiedTotals.users.toLocaleString()}명 · 링크 코드 자동 보완</small>
+                                        <small>출처 확인 {threadsInsights.attribution.verifiedTotals.users.toLocaleString()}명 · 링크 간 동일인 중복 가능</small>
                                     </div>
                                     <div className={styles.signalCard}>
-                                        <span>예약 페이지 이동</span>
+                                        <span>링크별 예약 이동 인원 합계</span>
                                         <strong>{site.bookingUsers.toLocaleString()}명</strong>
                                         <small>{site.bookingClicks.toLocaleString()}회 이동</small>
                                     </div>
@@ -4632,7 +4632,7 @@ export default function AdminPage() {
                         </div>
                     </div>
                     {threadsInsights?.available && threadsInsights.posts.length > 0 ? (
-                        <AdminThreadsPosts posts={threadsInsights.posts} attributionAvailable={threadsInsights.attribution.available} />
+                        <AdminThreadsPosts posts={threadsInsights.posts} attributionAvailable={threadsInsights.attribution.available} generatedAt={threadsInsights.generatedAt} />
                     ) : !threadsInsightsError && (
                         <div className={styles.dealReviewEmpty}>불러온 Threads 글이 없습니다.</div>
                     )}

@@ -112,7 +112,7 @@ async function getAttribution(): Promise<AttributionReports> {
     try {
         const [threadsTraffic, threadsEvents, contentTraffic, contentEvents] = await Promise.all([
             runReport(config, {
-                dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
+                dateRanges: [{ startDate: '29daysAgo', endDate: 'today' }],
                 dimensions: [{ name: 'sessionManualAdContent' }],
                 metrics: [{ name: 'sessions' }, { name: 'activeUsers' }],
                 dimensionFilter: threadsSourceFilter,
@@ -120,7 +120,7 @@ async function getAttribution(): Promise<AttributionReports> {
                 limit: 100,
             }),
             runReport(config, {
-                dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
+                dateRanges: [{ startDate: '29daysAgo', endDate: 'today' }],
                 dimensions: [{ name: 'sessionManualAdContent' }, { name: 'eventName' }],
                 metrics: [{ name: 'eventCount' }, { name: 'totalUsers' }],
                 dimensionFilter: {
@@ -135,7 +135,7 @@ async function getAttribution(): Promise<AttributionReports> {
             }),
             // Threads 앱이 referrer를 지워도 글 본문의 /s/ 코드와 같은 utm_content로 보완한다.
             runReport(config, {
-                dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
+                dateRanges: [{ startDate: '29daysAgo', endDate: 'today' }],
                 dimensions: [{ name: 'sessionManualAdContent' }],
                 metrics: [{ name: 'sessions' }, { name: 'activeUsers' }],
                 dimensionFilter: trackedContentFilter,
@@ -143,7 +143,7 @@ async function getAttribution(): Promise<AttributionReports> {
                 limit: 300,
             }),
             runReport(config, {
-                dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
+                dateRanges: [{ startDate: '29daysAgo', endDate: 'today' }],
                 dimensions: [{ name: 'sessionManualAdContent' }, { name: 'eventName' }],
                 metrics: [{ name: 'eventCount' }, { name: 'totalUsers' }],
                 dimensionFilter: {

@@ -2,9 +2,11 @@
 
 import { Fragment, useState } from 'react';
 import styles from './AdminThreadsPosts.module.css';
+import AdminAnalyticsFreshness from './AdminAnalyticsFreshness';
 
 interface Post {
     trackingIssue?: string | null; trackingReplyIds?: string[];
+    trackingSource?: 'verified-link'; trackingVerifiedReplyUrl?: string;
     id: string; text: string; timestamp: string; permalink: string;
     metrics: { views: number; likes: number; replies: number; reposts: number; quotes: number; shares: number };
     engagementRate: number | null; trackingContent: string | null; attributionShared: boolean;
@@ -13,7 +15,17 @@ interface Post {
 type SortKey = 'date' | 'views' | 'reactions' | 'rate' | 'users' | 'details' | 'bookings';
 const reactions = (post: Post) => post.metrics.likes + post.metrics.replies + post.metrics.reposts + post.metrics.quotes + post.metrics.shares;
 const dateLabel = (value: string) => value && Number.isFinite(Date.parse(value)) ? new Intl.DateTimeFormat('ko-KR', { timeZone: 'Asia/Seoul', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(value)) : '게시 시각 없음';
-export default function AdminThreadsPosts({ posts, attributionAvailable }: { posts: Post[]; attributionAvailable: boolean }) {
+const REPLY_ISSUES: Record<string, string> = {
+    'replies-unavailable': 'Threads 댓글 링크를 확인하지 못했습니다. 댓글 조회 권한 또는 조회 상태를 확인해주세요.',
+    'replies-permission-denied': 'Threads 댓글 조회가 거부됐습니다. 연결 토큰의 threads_read_replies 권한과 앱 접근 권한을 확인해주세요.',
+    'replies-token-expired': 'Threads 댓글 조회 토큰이 만료됐거나 유효하지 않습니다. 연결 토큰을 확인해주세요.',
+    'replies-request-failed': 'Threads 댓글 API 요청에 실패했습니다. 방문이 없다는 뜻이 아닙니다. 다음 조회에서도 계속되면 연결 상태를 확인해주세요.',
+    'replies-incomplete': 'Threads 댓글을 끝까지 확인하지 못해 자동 연결을 보류했습니다.',
+    'multiple-links': '이어 쓴 글에 서로 다른 추적 링크가 있어 하나의 글별 통계로 연결하지 않았습니다.',
+};
+const replyIssueMessage = (issue?: string | null) => REPLY_ISSUES[issue || ''] || '본문과 확인된 본인 답글에 추적 가능한 링크가 없어 사이트 행동을 글별로 구분할 수 없습니다.';
+
+export default function AdminThreadsPosts({ posts, attributionAvailable, generatedAt }: { posts: Post[]; attributionAvailable: boolean; generatedAt?: string }) {
     const [sort, setSort] = useState<SortKey>('date');
     const [ascending, setAscending] = useState(false);
     const [expanded, setExpanded] = useState<string | null>(null);
@@ -34,6 +46,7 @@ export default function AdminThreadsPosts({ posts, attributionAvailable }: { pos
     const siteCell = (post: Post, users: 'users' | 'detailUsers' | 'bookingUsers', count: 'sessions' | 'detailOpens' | 'bookingClicks') => attributionAvailable && post.attribution
         ? <><strong>{post.attribution[users].toLocaleString()}명</strong><small>{post.attribution[count].toLocaleString()}회</small></> : <span title={!attributionAvailable ? '사이트 통계 조회 불가' : post.trackingContent ? '확인되는 방문 기록 없음' : '글별 추적 링크 없음'}>—</span>;
     return <div className={styles.panel}>
+        <AdminAnalyticsFreshness generatedAt={generatedAt} />
         <div className={styles.help}><span>{posts.length}개 글 · 열 제목을 누르면 정렬</span><span>Threads 누적 반응 / 사이트 최근 30일</span></div>
         <div className={styles.mobileSort}><label>정렬 <select aria-label="정렬" value={sort} onChange={event => { setSort(event.target.value as SortKey); setAscending(false); }}>{columns.map(([key, label]) => <option value={key} key={key}>{key === 'date' ? '게시일' : label}</option>)}</select></label><button type="button" onClick={() => setAscending(value => !value)}>{ascending ? '오름차순 ↑' : '내림차순 ↓'}</button></div>
         <div className={styles.scroll} tabIndex={0} role="region" aria-label="Threads 글별 성과 비교">
@@ -48,7 +61,8 @@ export default function AdminThreadsPosts({ posts, attributionAvailable }: { pos
                     {expanded === post.id && <tr id={`threads-detail-${post.id}`} className={styles.detail}><td colSpan={7}>
                         <p className={styles.body}>{post.text || '(본문 없음)'}</p>
                         <dl>{([['좋아요', post.metrics.likes], ['답글', post.metrics.replies], ['재게시', post.metrics.reposts], ['인용', post.metrics.quotes], ['공유', post.metrics.shares]] as const).map(([label, count]) => <div key={label}><dt>{label}</dt><dd>{count.toLocaleString()}</dd></div>)}</dl>
-                        {!attributionAvailable ? <p>사이트 통계를 불러오지 못했습니다.</p> : !post.attribution && <p>{post.trackingContent ? '추적 링크는 확인됐지만 최근 30일 확인되는 방문 기록이 없습니다.' : post.trackingIssue === 'replies-unavailable' ? '이어 쓴 글의 링크를 확인하지 못했습니다. Threads 답글 조회 권한 또는 조회 상태를 확인해주세요.' : post.trackingIssue === 'multiple-links' ? '이어 쓴 글에 서로 다른 추적 링크가 있어 하나의 글별 통계로 연결하지 않았습니다.' : '본문과 확인된 본인 답글에 추적 가능한 링크가 없어 사이트 행동을 글별로 구분할 수 없습니다.'}</p>}
+                        {!attributionAvailable ? <p>사이트 통계를 불러오지 못했습니다.</p> : !post.attribution && <p>{post.trackingContent ? '추적 링크는 확인됐지만 최근 30일 확인되는 방문 기록이 없습니다.' : replyIssueMessage(post.trackingIssue)}</p>}
+                        {post.trackingSource === 'verified-link' && <p>원문에서 확인해 등록한 댓글 링크로 연결했습니다. {post.trackingIssue && replyIssueMessage(post.trackingIssue)} {post.trackingVerifiedReplyUrl && <a href={post.trackingVerifiedReplyUrl} target="_blank" rel="noopener noreferrer">확인한 댓글 보기 ↗</a>}</p>}
                         {post.attributionShared && <p>같은 링크를 쓴 여러 글에 동일한 사이트 수치가 표시됩니다. 글별 성과로 분리하거나 합산하지 마세요.</p>}
                         {Boolean(post.trackingReplyIds?.length) && <p>이어 쓴 본인 글의 링크로 연결한 사이트 통계입니다. 전체 합계에는 같은 링크를 한 번만 반영합니다.</p>}
                         {post.permalink && <a href={post.permalink} target="_blank" rel="noopener noreferrer">Threads 원문 보기 ↗</a>}

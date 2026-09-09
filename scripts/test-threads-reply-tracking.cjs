@@ -13,6 +13,7 @@ function load(file, mocks = {}, extras = {}, append = '') {
     return module.exports;
 }
 const helper = load('src/lib/threads-tracking.ts');
+const verified = load('src/lib/threads-post-links.ts', { './threads-tracking': helper });
 const root = { id: 'root', trackingContent: null, shareCode: null };
 const link = 'https://tikitikit.kr/s/xmodetour-CHI-20107439';
 const reply = { id: 'reply', text: link, root_post: { id: 'root' }, replied_to: { id: 'middle' }, is_reply_owned_by_me: true };
@@ -30,6 +31,17 @@ assert.equal(helper.extractTracking(`${link}?utm_content=explicit`).trackingCont
 assert.equal(helper.extractTracking('https://tikitikit.kr.evil.test/s/code').trackingContent, null);
 assert.equal(helper.extractTracking('https://tikitikit.kr/s/%ZZ').trackingContent, null);
 assert.equal(helper.extractTracking(`${link}).`).shareCode, 'xmodetour-CHI-20107439');
+assert.equal(helper.extractTracking('https://www.tikitikit.kr/t/g-pqc1438').trackingContent, 'share_group_pqc1438');
+assert.equal(helper.extractTracking('https://www.tikitikit.kr/t/g-pqc1438?utm_content=custom').trackingContent, 'custom');
+assert.equal(helper.extractTracking('https://www.tikitikit.kr/t/g-').trackingContent, null);
+const audited = { ...root, id: '18338163979251867', permalink: 'https://www.threads.com/@tikitikit.kr/post/DdAzc1RD1sp', trackingIssue: 'replies-permission-denied' };
+assert.equal(verified.connectVerifiedPostLinks([audited])[0].trackingContent, connected.trackingContent);
+assert.equal(verified.connectVerifiedPostLinks([audited])[0].trackingIssue, 'replies-permission-denied');
+assert.equal(verified.connectVerifiedPostLinks([{ ...audited, id: 'different' }])[0].trackingContent, null);
+assert.equal(verified.connectVerifiedPostLinks([{ ...audited, permalink: 'https://evil.test/@tikitikit.kr/post/DdAzc1RD1sp' }])[0].trackingContent, null);
+assert.equal(verified.connectVerifiedPostLinks([{ ...audited, trackingIssue: 'multiple-links' }])[0].trackingContent, null);
+assert.equal(verified.connectVerifiedPostLinks([{ ...audited, trackingContent: 'api-link' }])[0].trackingContent, 'api-link');
+assert.equal(helper.connectOwnReplyTracking([root], [reply, { ...reply, text: 'https://tikitikit.kr/s/another' }], false)[0].trackingIssue, 'multiple-links');
 
 async function integration(mode) {
     let replyCalls = 0;
@@ -41,14 +53,17 @@ async function integration(mode) {
         replyCalls++;
         assert.equal(url.searchParams.get('since'), '1788829200');
         if (mode === 'denied') return { ok: false, status: 403, json: async () => ({ error: { code: 10, message: 'permission' } }) };
+        if (mode === 'token') return { ok: false, status: 400, json: async () => ({ error: { code: 190, message: 'secret must not leak' } }) };
+        if (mode === 'failed') throw new Error('https://secret-token.example');
         const next = mode === 'capped' || replyCalls === 1;
         return { ok: true, json: async () => ({ data: replyCalls === 2 ? [reply] : [], ...(next ? { paging: { next: 'unused', cursors: { after: `page${replyCalls}` } } } : {}) }) };
     };
-    const server = load('src/lib/server/threads-insights.ts', { 'server-only': {}, '@/lib/threads-tracking': helper }, { fetch });
+    const server = load('src/lib/server/threads-insights.ts', { 'server-only': {}, '@/lib/threads-tracking': helper, '@/lib/threads-post-links': verified }, { fetch });
     const posts = await server.getThreadsPostInsights();
     assert.equal(posts[0].metrics.views, 286);
     if (mode === 'ok') { assert.equal(posts[0].trackingContent, connected.trackingContent); assert.equal(replyCalls, 2); }
-    else { assert.equal(posts[0].trackingContent, null); assert.equal(posts[0].trackingIssue, 'replies-unavailable'); }
+    else { assert.equal(posts[0].trackingContent, null); assert.equal(posts[0].trackingIssue, { denied: 'replies-permission-denied', token: 'replies-token-expired', failed: 'replies-request-failed', capped: 'replies-incomplete' }[mode]); }
+    assert.ok(!JSON.stringify(posts).includes('secret'));
     if (mode === 'capped') assert.equal(replyCalls, 3);
     return posts;
 }
@@ -56,6 +71,8 @@ async function integration(mode) {
     const posts = await integration('ok');
     await integration('denied');
     await integration('capped');
+    await integration('token');
+    await integration('failed');
     const api = load('src/app/api/threads-insights/route.ts', {
         'next/server': {}, '@/lib/ga4': {}, '@/lib/server/threads-insights': {},
     }, {}, '\nexport { attachAttribution, visibleAttribution, sumAttribution };');
@@ -67,5 +84,18 @@ async function integration(mode) {
     const visible = api.visibleAttribution(duplicatedPosts, { contentRows: [row], threadsRows: [row] });
     assert.equal(visible.length, 1);
     assert.equal(api.sumAttribution(visible).sessions, 3);
+    // Compare the parser with the real redirect handler, not another copy of its algorithm.
+    const redirect = load('src/app/t/[code]/route.ts', {
+        'next/server': { NextResponse: { redirect: url => url } },
+        '@/lib/share-code': load('src/lib/share-code.ts'),
+    });
+    for (const code of ['g-pqc1438', 'xmodetour-CHI-20107439']) {
+        for (const suffix of ['', '?utm_content=explicit&utm_campaign=keep']) {
+            const url = new URL(`https://www.tikitikit.kr/t/${code}${suffix}`);
+            const destination = await redirect.GET({ url: url.href, nextUrl: url }, { params: Promise.resolve({ code }) });
+            assert.equal(helper.extractTracking(url.href).trackingContent, destination.searchParams.get('utm_content'));
+            if (suffix) assert.equal(destination.searchParams.get('utm_campaign'), 'keep');
+        }
+    }
     console.log('PASS: root/self-reply mapping, nested replies, ownership, attachments, UTM, malformed URLs, ambiguity, direct precedence, pagination, permissions, request cap, original metrics, deduplicated attribution totals');
 })().catch(error => { console.error(error); process.exitCode = 1; });

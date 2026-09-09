@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { chromium } from 'playwright';
+const baseUrl = process.env.PREVIEW_BASE_URL || 'http://127.0.0.1:31860';
 const browser = await chromium.launch({ headless: true });
 try {
     const page = await browser.newPage();
@@ -9,7 +10,9 @@ try {
     await page.route('**/*', route => new URL(route.request().url()).hostname === '127.0.0.1' ? route.continue() : route.abort());
     for (const width of [1440, 390, 320]) {
         await page.setViewportSize({ width, height: 900 });
-        await page.goto('http://127.0.0.1:31860/preview/te31-posts');
+        await page.goto(`${baseUrl}/preview/te31-posts`);
+        assert.ok(await page.getByText('TE31 반응은 수동 기록입니다.', { exact: true }).isVisible());
+        assert.ok(await page.getByText('실시간 통계가 아닙니다.', { exact: true }).isVisible());
         const rows = page.locator('tbody > tr');
         assert.equal(await rows.count(), 5);
         assert.match(await rows.nth(0).locator('[data-label="방문"]').innerText(), /3명/);
@@ -23,10 +26,10 @@ try {
         fs.mkdirSync('tmp/te31-verification', { recursive: true });
         await page.screenshot({ path: `tmp/te31-verification/${width}.png`, fullPage: true });
     }
-    await page.goto('http://127.0.0.1:31860/preview/te31-posts?state=unavailable');
+    await page.goto(`${baseUrl}/preview/te31-posts?state=unavailable`);
     assert.equal(await page.getByText('사이트 통계 확인 불가', { exact: true }).count(), 2);
     assert.equal(await page.locator('tbody tr').first().locator('[data-label="방문"]').innerText(), '—');
-    await page.goto('http://127.0.0.1:31860/preview/te31-posts?state=empty');
+    await page.goto(`${baseUrl}/preview/te31-posts?state=empty`);
     assert.equal(await page.getByText('집계 기록 없음', { exact: true }).count(), 2);
     assert.deepEqual(errors, []);
     console.log('TE31 UI: desktop/mobile, unknown vs zero, empty/unavailable passed');

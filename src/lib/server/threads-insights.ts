@@ -1,5 +1,6 @@
 import 'server-only';
 import { connectOwnReplyTracking, extractTracking, type OwnReply } from '@/lib/threads-tracking';
+import { connectVerifiedPostLinks } from '@/lib/threads-post-links';
 
 const THREADS_API_BASE = 'https://graph.threads.net/v1.0';
 const POST_FIELDS = 'id,text,timestamp,permalink,media_type,shortcode,is_quote_post,link_attachment_url';
@@ -58,6 +59,8 @@ export interface ThreadsPostInsight {
     shareCode: string | null;
     trackingReplyIds?: string[];
     trackingIssue?: string | null;
+    trackingSource?: 'verified-link';
+    trackingVerifiedReplyUrl?: string;
 }
 
 export class ThreadsApiError extends Error {
@@ -103,7 +106,7 @@ function insightValue(insight: ThreadsInsight | undefined): number {
     return (insight.values || []).reduce((sum, item) => sum + (Number(item.value) || 0), 0);
 }
 
-async function ownReplies(since?: string): Promise<{ replies: OwnReply[]; complete: boolean }> {
+async function ownReplies(since?: string): Promise<{ replies: OwnReply[]; complete: boolean; issue?: string }> {
     const replies: OwnReply[] = [];
     let after: string | undefined;
     try {
@@ -120,10 +123,15 @@ async function ownReplies(since?: string): Promise<{ replies: OwnReply[]; comple
             after = response.paging.cursors?.after;
             if (!after) break;
         }
-    } catch {
-        // Missing read-replies permission or a transient API failure is not "no link".
+    } catch (error) {
+        // Return only safe diagnostic codes, never Graph error bodies, URLs or tokens.
+        const issue = error instanceof ThreadsApiError && [190, 102].includes(error.code || 0)
+            ? 'replies-token-expired'
+            : error instanceof ThreadsApiError && ([10, 200].includes(error.code || 0) || error.status === 403)
+                ? 'replies-permission-denied' : 'replies-request-failed';
+        return { replies, complete: false, issue };
     }
-    return { replies, complete: false };
+    return { replies, complete: false, issue: 'replies-incomplete' };
 }
 
 async function postInsights(post: ThreadsMedia): Promise<ThreadsPostInsight> {
@@ -196,6 +204,6 @@ export async function getThreadsPostInsights(limit = 30): Promise<ThreadsPostIns
     if (sorted.every(post => post.trackingContent)) return sorted;
     const dates = sorted.map(post => Date.parse(post.timestamp)).filter(Number.isFinite);
     const since = dates.length ? String(Math.floor(Math.min(...dates) / 1000)) : undefined;
-    const { replies, complete } = await ownReplies(since);
-    return connectOwnReplyTracking(sorted, replies, complete);
+    const { replies, complete, issue } = await ownReplies(since);
+    return connectVerifiedPostLinks(connectOwnReplyTracking(sorted, replies, complete, issue));
 }
