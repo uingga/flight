@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import todayPick from '../../../../data/today-pick.json';
 import { Flight, FlightSearchParams } from '@/types/flight';
 import { getComparisonFreshness, getEffectivePrice } from '@/lib/price-quality';
+import { isNaverPriceOverLimit } from '@/lib/naver-price-filter';
 import { getRecommendationNaverComparison } from '@/lib/naver-comparison';
 import {
     filterStaleSourceFlights,
@@ -341,14 +342,12 @@ export async function GET(request: NextRequest) {
                     // 오래된 낮은 네이버 가격으로 현재 항공권을 제거하지 않도록 24시간 값만 사용한다.
                     if (!getComparisonFreshness(f.naverCheckedAt).usable) return true;
                     const effectivePrice = getEffectivePrice(f);
-                    const difference = effectivePrice - f.naverLowest;
-                    const moreExpensiveRatio = difference / f.naverLowest;
-                    return difference < 100000 || moreExpensiveRatio < 0.2;
+                    return !isNaverPriceOverLimit(effectivePrice, f.naverLowest);
                 });
                 const removed = beforeNaverFilter - allFlights.length;
                 filterSummary.reasons.naverExpensive = removed;
                 if (matched > 0) console.log(`네이버 최저가 매칭: ${matched}/${allFlights.length}건`);
-                if (removed > 0) console.log(`네이버보다 10만원·20% 이상 비싼 항공권 제거: ${removed}건`);
+                if (removed > 0) console.log(`네이버보다 20% 이상 또는 10만원 이상 비싼 항공권 제거: ${removed}건`);
             }
         } catch (e) { }
 

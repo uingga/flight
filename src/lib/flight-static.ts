@@ -13,6 +13,7 @@ import { filterStaleSourceFlights, getEffectiveSourceUpdatedAt } from '@/lib/sou
 import { deduplicateDisplayFlights } from '@/lib/flight-visibility';
 import { filterSeatAvailableFlights } from '@/lib/flight-seats';
 import { getComparisonFreshness } from '@/lib/price-quality';
+import { isNaverPriceOverLimit } from '@/lib/naver-price-filter';
 import {
     clearUnsupportedInterparkDiscount,
     getInterparkRouteMonths,
@@ -127,8 +128,7 @@ export function loadActiveFlights(): Flight[] {
                 if (parseDate(flight.departure?.date) === parseDate(flight.arrival?.date)) return false;
                 if (!flight.naverLowest || flight.naverLowest <= 0
                     || !getComparisonFreshness(flight.naverCheckedAt).usable) return true;
-                const difference = effectivePrice(flight) - flight.naverLowest;
-                return difference < 100_000 || difference / flight.naverLowest < 0.2;
+                return !isNaverPriceOverLimit(effectivePrice(flight), flight.naverLowest);
             });
         // 메인 API와 같은 중복 제거 규칙을 써 정적 도시 페이지의 장수·최저가가
         // 실제 목록보다 부풀어 보이지 않게 한다.
