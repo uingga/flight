@@ -20,6 +20,22 @@ export function resolveShareGroupFlights(group: ShareGroup, flights: Flight[]): 
 }
 
 export const SHARE_GROUPS: Record<string, ShareGroup> = {
+    'icn-260909': {
+        title: '인천 출발 항공권 3개',
+        departure: '인천', arrival: '나트랑·삿포로·하노이',
+        price: 170000, dateText: '9월 출발 · 노선별 일정 확인',
+        airline: '비엣젯항공·제주항공·썬푸꾸옥항공', source: '땡처리닷컴·모두투어',
+        flightIds: [
+            'ttang-VJ0835ICNCXR-G110-2026-09-13',
+            'ttang-7C1501ICNCTS-G3-2026-09-18',
+            'modetour-ASIA-20135807',
+        ],
+        routes: [
+            { label: '인천 → 나트랑', flightIds: ['ttang-VJ0835ICNCXR-G110-2026-09-13'] },
+            { label: '인천 → 삿포로', flightIds: ['ttang-7C1501ICNCTS-G3-2026-09-18'] },
+            { label: '인천 → 하노이', flightIds: ['modetour-ASIA-20135807'] },
+        ],
+    },
     'pus-260908': {
         title: '부산 출발 특가 5개',
         departure: '부산', arrival: '장가계·오사카·타이중·시즈오카·광저우',
