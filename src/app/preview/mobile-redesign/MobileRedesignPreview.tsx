@@ -44,6 +44,7 @@ import type { Flight } from '@/types/flight';
 import AccountSheet from '@/components/account/AccountSheet';
 import { useAccount, type AccountFlightSnapshot, type AccountSearchFilters } from '@/components/account/useAccount';
 import WeeklyDiscoveryInsight from '@/components/WeeklyDiscoveryInsight';
+import { matchesDiscoveryFlight } from '@/lib/weekly-discovery';
 import MobileDealAlertSheet, { type AlertSearchCondition } from './MobileDealAlertSheet';
 import RedesignAdSlot from './RedesignAdSlot';
 import styles from './page.module.css';
@@ -2003,7 +2004,7 @@ export default function MobileRedesignPreview({
             ? prioritizeSharedPrice(ordered, activeSharedContext.price, effectivePrice) : ordered;
     }, [activeSharedContext, departure, featuredPick, filteredFlights, isDefaultView, manualPlacements, query, recommendationScoreState, sharedFlightIds.length, sort]);
     const weeklyDiscoveryFlights = useMemo(() => flights
-        .filter(flight => normalizeCity(flight.arrival.city) === '리장' && effectivePrice(flight) > 0)
+        .filter(flight => matchesDiscoveryFlight(flight) && effectivePrice(flight) > 0)
         .sort((a, b) => effectivePrice(a) - effectivePrice(b) || a.id.localeCompare(b.id)), [flights]);
     const feedInsights = useMemo<FeedInsight[]>(() => {
         if (sharedFlightIds.length > 0 || sort !== 'recommended' || query.trim()) return [];

@@ -5,6 +5,7 @@ import type { Flight } from '@/types/flight';
 import {
     DiscoveryDetail,
     WEEKLY_DISCOVERY,
+    type Discovery,
 } from '@/app/preview/unknown-city-insight/UnknownCityInsightPreview';
 import styles from './WeeklyDiscoveryInsight.module.css';
 
@@ -46,9 +47,11 @@ function scheduleKey(flight: Flight) {
 export default function WeeklyDiscoveryInsight({
     flights,
     onOpen,
+    item = WEEKLY_DISCOVERY,
 }: {
     flights: Flight[];
     onOpen?: () => void;
+    item?: Discovery;
 }) {
     const [open, setOpen] = useState(false);
     const scheduleFlights = Array.from(flights.reduce((bySchedule, flight) => {
@@ -62,12 +65,15 @@ export default function WeeklyDiscoveryInsight({
 
     const departure = departureName(flight.departure.city);
     const price = `${flight.price.toLocaleString('ko-KR')}원`;
-    const schedule = `${departure} 출발 · ${formatDate(flight.departure.date)} — ${formatDate(flight.arrival.date)} · ${tripLength(flight)}`;
+    const hasMultipleSchedules = scheduleFlights.length > 1;
+    const departureDates = Array.from(new Set(scheduleFlights.map(item => item.departure.date))).sort();
+    const departureDateLabels = departureDates.map(date => `${formatDate(date)} 출발`);
+    const schedule = hasMultipleSchedules
+        ? `${departure} · ${departureDateLabels.join(' · ')} · 일정 ${scheduleFlights.length}개`
+        : `${departure} 출발 · ${formatDate(flight.departure.date)} — ${formatDate(flight.arrival.date)} · ${tripLength(flight)}`;
     const mobileDateRange = `${departure} 출발 · ${formatDate(flight.departure.date)} → ${formatDate(flight.arrival.date)}`;
-    const locationMeta = scheduleFlights.length > 1
-        ? `중국 윈난 · 일정 ${scheduleFlights.length}개`
-        : '중국 윈난';
-    const priceLabel = scheduleFlights.length > 1 ? '왕복 최저가' : '왕복';
+    const locationMeta = `${item.city} · ${item.location}`;
+    const priceLabel = '왕복';
 
     return (
         <>
@@ -75,7 +81,7 @@ export default function WeeklyDiscoveryInsight({
                 type="button"
                 className={styles.bar}
                 aria-haspopup="dialog"
-                aria-label="리장 여행지 자세히 보기"
+                aria-label={`${item.city} 여행지 자세히 보기`}
                 onClick={() => {
                     onOpen?.();
                     setOpen(true);
@@ -84,7 +90,7 @@ export default function WeeklyDiscoveryInsight({
                 <div className={styles.intro}>
                     <span>이번 주 낯선 도시</span>
                     <h2>
-                        <span>🧭 리장이 어디냐고요?</span>
+                        <span>{item.headline || item.city}</span>
                         <i className={styles.mobileTitleArrow} aria-hidden="true">
                             <svg viewBox="0 0 24 24">
                                 <path d="m9 6 6 6-6 6" />
@@ -95,16 +101,28 @@ export default function WeeklyDiscoveryInsight({
                 </div>
                 <div className={styles.mobileCompact}>
                     <p className={styles.mobileSummary}>
-                        <strong>중국 윈난</strong>
-                        <span>골목 끝에 설산이 나오는 곳</span>
+                        <strong>{item.city}</strong>
+                        <span>{item.summary}</span>
                     </p>
                     <p className={styles.mobileDescription}>
-                        해발 2,400m의 오래된 도시 사이로 물길이 흐릅니다. 이름은 낯선데, 풍경은 한 번에 기억납니다.
+                        {item.detail}
                     </p>
                     <div className={styles.mobileDeal}>
                         <span className={styles.mobileSchedule}>
-                            <span>{mobileDateRange}</span>
-                            <small>{tripLength(flight)}</small>
+                            {hasMultipleSchedules ? (
+                                <>
+                                    <small>{departure} 출발</small>
+                                    <span className={styles.departureDates}>
+                                        {departureDateLabels.map(label => <span key={label}>{label}</span>)}
+                                        <span>· 일정 {scheduleFlights.length}개</span>
+                                    </span>
+                                </>
+                            ) : (
+                                <>
+                                    <span>{mobileDateRange}</span>
+                                    <small>{tripLength(flight)}</small>
+                                </>
+                            )}
                         </span>
                         <span className={styles.mobilePrice}>
                             <small>{priceLabel}</small>
@@ -115,21 +133,21 @@ export default function WeeklyDiscoveryInsight({
                 <div className={styles.content}>
                     <div className={styles.topline}>
                         <span className={styles.theme}>
-                            <strong>골목 끝에 설산이 나오는 곳</strong>
+                            <strong>{item.summary}</strong>
                         </span>
                         <span className={styles.price}>
                             <small>{priceLabel}</small>
                             <strong>{price}</strong>
                         </span>
                     </div>
-                    <p>해발 2,400m의 오래된 도시 사이로 물길이 흐릅니다. 이름은 낯선데, 풍경은 한 번에 기억납니다.</p>
+                    <p>{item.detail}</p>
                     <div className={styles.schedule}>{schedule}</div>
                 </div>
             </button>
 
             {open && (
                 <DiscoveryDetail
-                    item={WEEKLY_DISCOVERY}
+                    item={item}
                     flight={flight}
                     flights={flights}
                     onClose={() => setOpen(false)}

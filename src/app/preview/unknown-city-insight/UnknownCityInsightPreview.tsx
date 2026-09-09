@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import Logo from '@/components/Logo';
 import OverlayDialog from '@/components/ui/OverlayDialog';
 import type { Flight } from '@/types/flight';
@@ -19,16 +19,8 @@ type FlightCard = {
     price: string;
 };
 
-export type Discovery = {
-    city: string;
-    location: string;
-    summary: string;
-    detail: string;
-    story?: string[];
-    latitude: number;
-    longitude: number;
-    image: string;
-};
+import { WEEKLY_DISCOVERY, type Discovery } from '@/lib/weekly-discovery';
+export { WEEKLY_DISCOVERY, LIJIANG_DISCOVERY, IBARAKI_DISCOVERY, matchesDiscoveryFlight, type Discovery } from '@/lib/weekly-discovery';
 
 const FLIGHTS: FlightCard[] = [
     { source: '노랑풍선', airline: '에어로케이', departure: '청주', arrival: '클락', departDate: '9.19(토)', returnDate: '9.24(목)', duration: '5박 6일', seats: '15석 남음', price: '222,000원' },
@@ -39,16 +31,6 @@ const FLIGHTS: FlightCard[] = [
     { source: '모두투어', airline: '이스타항공', departure: '인천', arrival: '푸꾸옥', departDate: '9.20(일)', returnDate: '9.24(목)', duration: '4박 5일', seats: '5석 남음', price: '289,000원' },
 ];
 
-const DISCOVERIES: Discovery[] = [
-    { city: '리장', location: '중국 윈난', summary: '골목 끝에 설산이 나오는 곳.', detail: '해발 2,400m의 오래된 도시 사이로 물길이 흐릅니다.', story: ['리장은 사진 한 장 안에 오래된 골목과 설산이 함께 들어오는 도시입니다. 해발 2,400m의 고성 사이로 설산에서 시작된 물길이 흐르고, 집과 골목, 작은 다리가 그 물길을 따라 이어집니다. 12세기부터 차마고도의 교역지였고, 지금도 나시족의 문화와 오래된 목조 건물이 도시 곳곳에 남아 있습니다.', '보통 오래된 도시와 큰 자연을 보려면 일정을 따로 잡아야 합니다. 리장에서는 골목을 걷던 여행이 그대로 설산으로 이어집니다. 처음에는 ‘리장이 어디지?’ 하고 눌렀다가, 나갈 때는 항공권 날짜를 확인하게 되는 곳. 티키티킷이 이번 주 이 도시를 꺼내놓은 이유입니다.'], latitude: 26.855, longitude: 100.227, image: '/images/cities/lijiang.png' },
-    { city: '옌타이', location: '중국 산둥', summary: '해안 산책과 와이너리를 함께 즐기기 좋아 짧은 일정에도 여유가 있어요.', detail: '도시와 바다가 가깝고 이동 동선이 단순해 천천히 둘러보기 좋아요.', latitude: 37.4645, longitude: 121.4479, image: '/images/cities/yantai.png' },
-    { city: '웨이하이', location: '중국 산둥', summary: '붐비지 않는 해변과 산책로가 많아 조용히 쉬어 가기 좋은 도시예요.', detail: '유명 관광지를 빠르게 도는 여행보다 바닷가에 머물며 쉬는 일정에 잘 맞아요.', latitude: 37.5131, longitude: 122.1204, image: '/images/cities/weihai.png' },
-    { city: '마쓰야마', location: '일본 시코쿠', summary: '도고온천과 오래된 전차가 이어져 차 없이도 천천히 둘러보기 좋아요.', detail: '온천과 성, 오래된 상점가가 가까워 짧은 일정에도 소도시의 분위기를 충분히 느낄 수 있어요.', latitude: 33.8392, longitude: 132.7657, image: '/images/cities/matsuyama.png' },
-    { city: '구마모토', location: '일본 규슈', summary: '성과 정원이 도심에 모여 있고, 근교 온천까지 함께 묶기 좋아요.', detail: '후쿠오카와는 다른 차분한 규슈 여행을 원할 때 고르기 좋은 목적지예요.', latitude: 32.8031, longitude: 130.7079, image: '/images/cities/kumamoto.png' },
-    { city: '타이중', location: '대만 중부', summary: '시장과 카페를 즐기고 근교 호수와 산지까지 하루 코스로 다녀오기 좋아요.', detail: '도심에서 먹고 쉬는 날과 근교 풍경을 보는 날을 나누기 좋은 도시예요.', latitude: 24.1477, longitude: 120.6736, image: '/images/cities/taichung.png' },
-];
-
-export const WEEKLY_DISCOVERY = DISCOVERIES[0];
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 const MAP_ZOOM_DELAY_MS = 500;
@@ -228,6 +210,17 @@ function CityMap({ item }: { item: Discovery }) {
         let animationFrame = 0;
         let zoomDelayTimer = 0;
         let tilesListener: { remove: () => void } | null = null;
+        let interactionStarted = false;
+        const element = mapElementRef.current;
+        const stopIntroAnimation = () => {
+            interactionStarted = true;
+            if (zoomDelayTimer) window.clearTimeout(zoomDelayTimer);
+            if (animationFrame) cancelAnimationFrame(animationFrame);
+            setStatus('ready');
+        };
+        element.addEventListener('pointerdown', stopIntroAnimation);
+        element.addEventListener('wheel', stopIntroAnimation, { passive: true });
+        element.addEventListener('keydown', stopIntroAnimation);
 
         loadGoogleMaps(apiKey)
             .then(google => {
@@ -237,9 +230,10 @@ function CityMap({ item }: { item: Discovery }) {
                     center: target,
                     zoom: 2,
                     disableDefaultUI: true,
-                    gestureHandling: 'none',
+                    gestureHandling: 'cooperative',
+                    zoomControl: true,
                     clickableIcons: false,
-                    keyboardShortcuts: false,
+                    keyboardShortcuts: true,
                     mapTypeControl: false,
                     streetViewControl: false,
                     fullscreenControl: false,
@@ -251,12 +245,12 @@ function CityMap({ item }: { item: Discovery }) {
 
                 new google.maps.Marker({ map, position: target, title: `${item.city} · ${item.location}` });
                 tilesListener = google.maps.event.addListenerOnce(map, 'tilesloaded', () => {
-                    if (cancelled) return;
+                    if (cancelled || interactionStarted) return;
                     zoomDelayTimer = window.setTimeout(() => {
-                        if (cancelled) return;
+                        if (cancelled || interactionStarted) return;
                         const startedAt = performance.now();
                         const animate = (now: number) => {
-                            if (cancelled) return;
+                            if (cancelled || interactionStarted) return;
                             const raw = Math.min(1, (now - startedAt) / MAP_ZOOM_DURATION_MS);
                             const eased = 1 - Math.pow(1 - raw, 3);
                             map.moveCamera({ center: target, zoom: 2 + 5 * eased });
@@ -274,6 +268,9 @@ function CityMap({ item }: { item: Discovery }) {
         return () => {
             cancelled = true;
             tilesListener?.remove();
+            element.removeEventListener('pointerdown', stopIntroAnimation);
+            element.removeEventListener('wheel', stopIntroAnimation);
+            element.removeEventListener('keydown', stopIntroAnimation);
             if (zoomDelayTimer) window.clearTimeout(zoomDelayTimer);
             if (animationFrame) cancelAnimationFrame(animationFrame);
         };
@@ -341,8 +338,11 @@ export function DiscoveryDetail({ item, flight, flights = [flight], onClose }: {
             <div className={styles.detailScroll}>
                 <CityMap item={item} />
 
-                <figure className={styles.cityImage}>
-                    <Image src={item.image} alt={`${item.city} 여행지 풍경`} fill sizes="(max-width: 680px) 100vw, 520px" priority />
+                <figure className={styles.cityFigure}>
+                    <div className={styles.cityImage}>
+                        <Image src={item.image} alt={`${item.city} 여행지 풍경`} fill sizes="(max-width: 680px) 100vw, 520px" priority />
+                    </div>
+                    {item.imageCaption && <figcaption className={styles.imageCaption}>{item.imageCaption}</figcaption>}
                 </figure>
 
                 <section className={styles.cityStory}>
@@ -392,9 +392,7 @@ export function DiscoveryDetail({ item, flight, flights = [flight], onClose }: {
     );
 }
 
-export default function UnknownCityInsightPreview({ weeklyFlight }: { weeklyFlight: Flight | null }) {
-    const [selectedDiscovery, setSelectedDiscovery] = useState<Discovery | null>(null);
-
+export default function UnknownCityInsightPreview({ children }: { children: ReactNode }) {
     return (
         <div className={styles.previewPage}>
             <header className={styles.header}>
@@ -414,12 +412,11 @@ export default function UnknownCityInsightPreview({ weeklyFlight }: { weeklyFlig
 
                 <div className={styles.feed}>
                     {FLIGHTS.slice(0, 3).map((flight) => <TicketCard flight={flight} key={`${flight.departure}-${flight.arrival}`} />)}
-                    <DiscoveryBar flight={weeklyFlight} onSelect={setSelectedDiscovery} />
+                    {children}
                     {FLIGHTS.slice(3).map((flight) => <TicketCard flight={flight} key={`${flight.departure}-${flight.arrival}`} />)}
                 </div>
             </main>
 
-            {selectedDiscovery && weeklyFlight && <DiscoveryDetail item={selectedDiscovery} flight={weeklyFlight} onClose={() => setSelectedDiscovery(null)} />}
         </div>
     );
 }

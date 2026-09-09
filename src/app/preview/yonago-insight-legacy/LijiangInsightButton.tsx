@@ -3,7 +3,7 @@
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import type { Flight } from '@/types/flight';
-import { DiscoveryDetail, WEEKLY_DISCOVERY } from '../unknown-city-insight/UnknownCityInsightPreview';
+import { DiscoveryDetail, LIJIANG_DISCOVERY } from '../unknown-city-insight/UnknownCityInsightPreview';
 import styles from './page.module.css';
 
 export default function LijiangInsightButton({ flights, children }: { flights: Flight[]; children: ReactNode }) {
@@ -24,7 +24,7 @@ export default function LijiangInsightButton({ flights, children }: { flights: F
             </button>
             {open && flight && (
                 <DiscoveryDetail
-                    item={WEEKLY_DISCOVERY}
+                    item={LIJIANG_DISCOVERY}
                     flight={flight}
                     flights={flights}
                     onClose={() => setOpen(false)}
