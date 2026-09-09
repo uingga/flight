@@ -68,14 +68,14 @@ export default function AdminAcquisition({ data }: { data?: AcquisitionData }) {
 
     return <div className={styles.panel}>
         {emptyMessage ? <p className={styles.note} role="status">{emptyMessage}</p> : <>
-            <div className={styles.toolbar}>{filter('summary-filter')}<span className={styles.meta}>방문 많은 순 · 상위 5개</span></div>
-            <SourceTable rows={rows.slice(0, 5)} />
+            <div className={styles.toolbar}>{filter('summary-filter')}<span className={styles.meta}>방문 많은 순 · {rows.length}개 출처</span></div>
+            <SourceTable rows={rows} />
             <div className={styles.footer}>
                 <Help />
                 <button type="button" className={styles.allButton} aria-haspopup="dialog" onClick={() => {
                     setQuery(''); setPage(1);
                     showOverlayWithHistory(overlayKey, () => setOpen(true));
-                }}>전체 보기 <span>{rows.length}</span><span aria-hidden="true"> ›</span></button>
+                }}>출처 검색 <span>{rows.length}</span><span aria-hidden="true"> ›</span></button>
             </div>
         </>}
         <OverlayDialog open={open} dialogRef={dialogRef} onClose={close} ariaLabelledBy={`${id}-title`}

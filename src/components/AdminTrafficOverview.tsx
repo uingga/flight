@@ -1,4 +1,4 @@
-import AdminAcquisition from './AdminAcquisitionSources';
+import AdminAcquisition from './AdminAcquisition';
 import type { AcquisitionData } from '@/lib/acquisition';
 import styles from './AdminTrafficOverview.module.css';
 export default function AdminTrafficOverview({data,routes}:{data?:AcquisitionData;routes?:Array<{label:string;count:number}>|null}) {

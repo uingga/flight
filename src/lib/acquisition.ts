@@ -15,7 +15,7 @@ export function classifyAcquisition(channel: string, source: string, medium: str
     if (channel === 'Paid Social') return 'SNS 광고';
     if (domain(s, 'keep.naver.com')) return '기타 외부 링크';
     if (s === 'naver_blog' || domain(s, 'blog.naver.com')) return '블로그';
-    if (['chatgpt.com', 'perplexity.ai', 'claude.ai', 'copilot.microsoft.com', 'gemini.google.com'].some(d => domain(s, d)) || channel === 'AI Assistant') return 'AI 서비스';
+    if (['chat.openai.com', 'chatgpt.com', 'perplexity.ai', 'claude.ai', 'copilot.microsoft.com', 'gemini.google.com'].some(d => domain(s, d)) || ['chatgpt', 'gemini'].includes(s) || channel === 'AI Assistant') return 'AI 서비스';
     if (['instagram.com', 'threads.net', 'threads.com', 'facebook.com', 'twitter.com', 'x.com', 't.co'].some(d => domain(s, d)) || ['instagram','threads','facebook','twitter'].includes(s) || m.includes('social') || channel === 'Organic Social') return 'SNS';
     if (m === 'email' || channel === 'Email') return '이메일';
     if (m === 'organic' || channel === 'Organic Search' || ['naver','google','bing','daum'].includes(s) || domain(s, 'search.naver.com')) return '검색';
@@ -32,8 +32,13 @@ export function acquisitionSourceLabel(source: string): string {
     if (domain(s, 'keep.naver.com')) return '네이버 Keep';
     if (domain(s, 'search.naver.com') || s === 'naver') return '네이버 검색';
     if (s === 'naver_blog' || domain(s, 'blog.naver.com')) return '네이버 블로그';
+    if (domain(s, 'chatgpt.com') || domain(s, 'chat.openai.com') || s === 'chatgpt') return 'ChatGPT';
+    if (domain(s, 'gemini.google.com') || s === 'gemini') return 'Gemini';
+    if (domain(s, 'perplexity.ai')) return 'Perplexity';
+    if (domain(s, 'claude.ai')) return 'Claude';
+    if (domain(s, 'copilot.microsoft.com')) return 'Copilot';
     if (s === '(direct)') return '직접 방문';
     if (missing(s)) return '출처 정보 없음';
-    return ({google:'구글',bing:'빙',daum:'다음',threads:'Threads',instagram:'인스타그램'} as Record<string,string>)[s] || source;
+    return ({google:'구글 검색',bing:'빙',daum:'다음',threads:'Threads',instagram:'인스타그램'} as Record<string,string>)[s] || source;
 }
 export const completeAcquisitionReport = (r: ReportResponse) => !r.metadata?.dataLossFromOtherRow && !r.metadata?.subjectToThresholding && !r.metadata?.samplingMetadatas?.length && (r.rowCount ?? 0) <= (r.rows?.length ?? 0);
