@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import type { Flight } from '@/types/flight';
-import { parseRecentFlights, rememberFlight, RECENT_FLIGHTS_KEY, type RecentFlight } from '@/lib/recent-flights';
+import { parseRecentFlights, recentFlightKey, rememberFlight, RECENT_FLIGHTS_KEY, type RecentFlight } from '@/lib/recent-flights';
 
 export function useRecentFlights(selectedFlight: Flight | null) {
     const [records, setRecords] = useState<RecentFlight[]>([]);
@@ -39,5 +39,14 @@ export function useRecentFlights(selectedFlight: Flight | null) {
         try { localStorage.removeItem(RECENT_FLIGHTS_KEY); }
         catch { setStorageUnavailable(true); }
     }, []);
-    return { records, clear, storageUnavailable };
+    const remove = useCallback((key: string) => {
+        let next = records.filter(record => recentFlightKey(record.flight) !== key);
+        try {
+            next = parseRecentFlights(localStorage.getItem(RECENT_FLIGHTS_KEY))
+                .filter(record => recentFlightKey(record.flight) !== key);
+            localStorage.setItem(RECENT_FLIGHTS_KEY, JSON.stringify(next));
+        } catch { setStorageUnavailable(true); }
+        setRecords(next);
+    }, [records]);
+    return { records, clear, remove, storageUnavailable };
 }

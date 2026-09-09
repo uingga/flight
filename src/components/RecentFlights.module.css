@@ -9,9 +9,9 @@
 .meta { display: flex; justify-content: space-between; gap: 8px; margin: 24px 0 12px; font-size: var(--size-caption, 11px); color: var(--text-secondary, #5f5f5f); }
 .meta button { font: inherit; color: inherit; border: 0; background: none; text-decoration: underline; cursor: pointer; }
 .list { display: flex; flex-direction: column; gap: 10px; }
-.card { border: 1px solid var(--line, #ddd); border-radius: var(--radius-card, 12px); overflow: hidden; }
-.card > button { display: flex; flex-direction: column; align-items: stretch; gap: 8px; width: 100%; padding: 16px; border: 0; background: transparent; color: inherit; text-align: left; cursor: pointer; }
-.card > button:disabled { cursor: default; background: var(--paper-soft, #f7f7f7); }
+.card { position: relative; border: 1px solid var(--line, #ddd); border-radius: var(--radius-card, 12px); overflow: hidden; }
+.cardContent > .openCard { display: flex; flex-direction: column; align-items: stretch; gap: 8px; width: 100%; padding: 16px 60px 16px 16px; border: 0; background: transparent; color: inherit; text-align: left; cursor: pointer; }
+.cardContent > .openCard:disabled { cursor: default; background: var(--paper-soft, #f7f7f7); }
 .route { font-size: var(--size-section, 16px); font-weight: 700; }
 .schedule, .status { font-size: var(--size-meta, 12px); color: var(--text-secondary, #5f5f5f); line-height: 1.5; }
 .price { font-size: 20px; font-weight: 800; }
@@ -24,4 +24,20 @@
 @media (max-width: 600px) {
     .overlay { align-items: flex-end; }
     .sheet { width: 100%; max-height: 88dvh; padding: 22px 18px max(24px, env(safe-area-inset-bottom)); border-radius: 16px 16px 0 0; }
+}
+
+.remove { position: absolute; right: 4px; top: 4px; width: 44px; height: 44px; border: 0; border-radius: 8px; background: transparent; color: var(--text-secondary, #5f5f5f); font-size: 22px; cursor: pointer; }
+.remove:hover { background: var(--paper-soft, #f7f7f7); }
+.remove:focus-visible { outline: 2px solid var(--ink, #222); outline-offset: -3px; }
+
+.cardContent { position: relative; background: var(--paper, white); }
+.removeMobile, .swipeHint { display: none; }
+@media (max-width: 600px) {
+    .cardContent { z-index: 1; transform: translateX(var(--swipe-offset, 0px)); touch-action: pan-y; }
+    .cardContent > .openCard { padding-right: 16px; }
+    .remove { top: 0; right: 0; bottom: 0; width: 80px; height: 100%; border-radius: 0; background: #be2842; color: white; font-size: 14px; font-weight: 600; }
+    .remove:hover { background: #a71f36; }
+    .removeDesktop { display: none; }
+    .removeMobile { display: inline; }
+    .swipeHint { display: block; margin: 0 0 12px; color: var(--text-secondary, #5f5f5f); font-size: 12px; }
 }

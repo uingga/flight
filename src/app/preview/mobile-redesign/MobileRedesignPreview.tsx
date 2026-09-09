@@ -3762,7 +3762,7 @@ export default function MobileRedesignPreview({
                                 loading={loading || initialListSyncing || initialSubsetActive}
                                 storageUnavailable={recentHistory.storageUnavailable}
                                 open={showRecentFlights} onOpenChange={setShowRecentFlights}
-                                onClear={recentHistory.clear} onOpen={flight => openFlight(flight, 'recent_flights')} />
+                                onClear={recentHistory.clear} onRemove={recentHistory.remove} onOpen={flight => openFlight(flight, 'recent_flights')} />
                             {sharedFlightIds.length > 0 && (
                                 <button type="button" className={styles.freshRouteResultBack} onClick={() => showAllFlightsFromSharedGroup()}>
                                     <span aria-hidden="true">←</span> 전체 항공권

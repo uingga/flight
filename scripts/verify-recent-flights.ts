@@ -18,6 +18,15 @@ async function main() {
                 return route.continue();
             });
             const page = await context.newPage();
+            const cdp = await context.newCDPSession(page);
+            const swipe = async (card: import('playwright').Locator, dx: number, dy = 0) => {
+                await card.scrollIntoViewIfNeeded();
+                const box = (await card.boundingBox())!;
+                const x = box.x + box.width * 0.7, y = box.y + box.height / 2;
+                await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{x,y}] });
+                for(let i=1;i<=5;i++) await cdp.send('Input.dispatchTouchEvent', {type:'touchMove',touchPoints:[{x:x+dx*i/5,y:y+dy*i/5}]});
+                await cdp.send('Input.dispatchTouchEvent', {type:'touchEnd',touchPoints:[]});
+            };
             const errors: string[] = [];
             page.on('pageerror', error => errors.push(error.message));
             await page.goto(base, { waitUntil: 'networkidle' });
@@ -85,14 +94,40 @@ async function main() {
             const secondTab = await context.newPage();
             await secondTab.goto(base, { waitUntil: 'networkidle' });
             await secondTab.getByRole('button', { name: /^최근 본 표 2/ }).waitFor();
-            await recent.getByRole('button', { name: '기록 비우기' }).click();
+            // Removing an unavailable ticket must leave the active ticket and keep this dialog open.
+            const removers = recent.locator('[data-remove-recent]');
+            assert.equal(await removers.count(), 2);
+            if (width < 600) {
+                const row = recent.locator('[data-recent-card]').last();
+                await swipe(row, 0, -45);
+                assert.equal(await row.getAttribute('data-revealed'), 'false');
+                await swipe(row, -100);
+                assert.equal(await row.getAttribute('data-revealed'), 'true');
+                assert.equal(await detail.isVisible(), false);
+                await page.screenshot({path:'output/recent-flights/swipe-'+width+'.png'});
+                await swipe(row, 100);
+                assert.equal(await row.getAttribute('data-revealed'), 'false');
+                await swipe(row, -100);
+            }
+            await removers.last().click();
+            await secondTab.getByRole('button', { name: /^최근 본 표 1/ }).waitFor();
+            assert.equal(await removers.count(), 1);
+            assert.equal(await recent.locator('button:disabled').count(), 0);
+            assert.equal(await detail.isVisible(), false);
+            assert.equal(await page.evaluate(key => JSON.parse(localStorage.getItem(key) || '[]').length, key), 1);
+            await page.reload({ waitUntil: 'networkidle' });
+            await trigger.click();
+            await recent.waitFor();
+            assert.equal(await recent.locator('[data-remove-recent]').count(), 1);
+            if (width < 600) await swipe(recent.locator('[data-recent-card]'), -100);
+            await recent.locator('[data-remove-recent]').click();
             await recent.getByText('아직 본 표가 없어요', { exact: true }).waitFor();
             await page.keyboard.press('Escape');
             await recent.waitFor({ state: 'hidden' });
             assert.equal(await trigger.count(), 0);
             await secondTab.getByRole('button', { name: /^최근 본 표 \d+/ }).waitFor({ state: 'hidden' });
             assert.deepEqual(errors, []);
-            console.log('PASS ' + width + 'px: real feed, retained count/time, recent beside sort, view/back/persist/clear, unavailable, focus, no errors');
+            console.log('PASS ' + width + 'px: real feed, retained count/time, recent beside sort, view/back/persist/remove individual+last, unavailable, focus, no errors');
             await context.close();
         }
     } finally { await browser.close(); }
