@@ -69,6 +69,7 @@ interface FlightFilterSummary {
 }
 
 interface TodayPickRepeatOverride {
+    previousDate?: string;
     previousEffectivePrice: number;
     currentEffectivePrice: number;
     dropAmount: number;
@@ -499,6 +500,7 @@ export async function GET(request: NextRequest) {
             && Number(rawRepeatOverride.dropAmount) > 0
             ? {
                 previousEffectivePrice: Number(rawRepeatOverride.previousEffectivePrice),
+                previousDate: typeof rawRepeatOverride.previousDate === 'string' ? rawRepeatOverride.previousDate : undefined,
                 currentEffectivePrice: Number(rawRepeatOverride.currentEffectivePrice),
                 dropAmount: Number(rawRepeatOverride.dropAmount),
             }

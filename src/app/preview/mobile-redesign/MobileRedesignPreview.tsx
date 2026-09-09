@@ -7,6 +7,8 @@ import dynamic from 'next/dynamic';
 import { ko } from 'date-fns/locale';
 import 'react-datepicker/dist/react-datepicker.css';
 import Logo from '@/components/Logo';
+import { buildDropCardReason } from '@/lib/drop-card-reason';
+import { resolveFlightSeats } from '@/lib/flight-seats';
 import OverlayDialog from '@/components/ui/OverlayDialog';
 import RecentFlights from '@/components/RecentFlights';
 import { useRecentFlights } from '@/lib/hooks/use-recent-flights';
@@ -77,6 +79,7 @@ interface FlightsResponse {
 }
 
 interface TodayPickRepeatOverride {
+    previousDate?: string;
     previousEffectivePrice: number;
     currentEffectivePrice: number;
     dropAmount: number;
@@ -936,9 +939,12 @@ const describeDropCard = (flight: Flight, averageDiscountRate = 0, trustFirst = 
     const discountRate = Math.round(Math.max(0, averageDiscountRate));
 
     if (trustFirst) {
-        if (discountRate >= 5) return '동일 목적지 월평균가 대비';
-        if (seats > 0) return `현재 ${seats}석`;
-        return '가격·일정을 비교해 고른 표';
+        return buildDropCardReason({
+            origin: stripAirport(flight.departure.city), destination,
+            price: effectivePrice(flight), departureDate: flight.departure.date,
+            today: seoulDateKey(), seats: resolveFlightSeats(flight).count,
+            averageDiscountRate: discountRate,
+        });
     }
 
     const harshDetail = harshScheduleDetail(flight);
@@ -1962,16 +1968,17 @@ export default function MobileRedesignPreview({
             // 자정이 지나 ID가 사라지면 임의의 항공권으로 DROP 자리를 채우지 않는다.
             const fixedTodayPick = flights.find(item => item.id === todayPickId);
             if (!fixedTodayPick) return null;
-            const repeatPriceDropReason = fixedTodayPick
-                && todayPickRepeatOverride?.dropAmount
-                ? `어제보다 ${todayPickRepeatOverride.dropAmount >= 10_000
-                    ? compactWon(todayPickRepeatOverride.dropAmount)
-                    : priceText(todayPickRepeatOverride.dropAmount)} 내려 다시 선정`
-                : null;
             return {
                 flight: fixedTodayPick,
-                reason: repeatPriceDropReason || describeDropCard(fixedTodayPick, getAverageDiscountRate(fixedTodayPick, interparkPrices)),
-                repeatPriceDrop: Boolean(repeatPriceDropReason),
+                reason: buildDropCardReason({
+                    origin: stripAirport(fixedTodayPick.departure.city),
+                    destination: stripAirport(fixedTodayPick.arrival.city),
+                    price: effectivePrice(fixedTodayPick),
+                    departureDate: fixedTodayPick.departure.date, today: seoulDateKey(),
+                    seats: resolveFlightSeats(fixedTodayPick).count,
+                    averageDiscountRate: getAverageDiscountRate(fixedTodayPick, interparkPrices),
+                    repeat: todayPickRepeatOverride,
+                }),
             };
         })()
     ), [flights, interparkPrices, todayPickId, todayPickRepeatOverride]);
@@ -3983,14 +3990,6 @@ export default function MobileRedesignPreview({
                                                             <span className={`${styles.footerStatus} ${styles.todayPickStatus}`}>
                                                                 <span className={styles.dropMessageMobile}>{compactDropCardMessage(featuredPick?.reason || '')}</span>
                                                                 <span className={styles.dropMessageDesktop}>{featuredPick?.reason}</span>
-                                                                {!featuredPick?.repeatPriceDrop && averageDiscountRate >= 5 && (
-                                                                    <span
-                                                                        className={styles.dropDiscountInline}
-                                                                        aria-label={`${averageDiscountRate}% 낮음`}
-                                                                    >
-                                                                        <span aria-hidden="true">↓</span>{averageDiscountRate}%
-                                                                    </span>
-                                                                )}
                                                             </span>
                                                         ) : seats > 0 && (
                                                             <span className={`${styles.footerStatus} ${seats <= 4 ? styles.footerStatusLow : ''}`}>

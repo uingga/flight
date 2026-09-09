@@ -30,7 +30,15 @@ test('TIKIT DROP card does not add an unrequested today-pick label', () => {
 
 test('a repeated pick selected after a price drop exposes and displays that reason', () => {
     assert.match(apiRoute, /todayPickRepeatOverride/);
-    assert.match(feed, /어제보다 \$\{todayPickRepeatOverride\.dropAmount/);
-    assert.match(feed, /내려 다시 선정/);
-    assert.match(feed, /!featuredPick\?\.repeatPriceDrop && averageDiscountRate >= 5/);
+    assert.match(feed, /reason: buildDropCardReason\(/);
+    assert.match(feed, /repeat: todayPickRepeatOverride/);
+    assert.match(apiRoute, /previousDate: typeof rawRepeatOverride.previousDate/);
+    assert.doesNotMatch(feed, /어제보다|내려 다시 선정/);
+    assert.doesNotMatch(feed, /className=\{styles.dropDiscountInline\}/);
+});
+
+test('active DROP reasons use conversational copy without changing the evidence conditions', () => {
+    assert.match(feed, /seats: resolveFlightSeats\(fixedTodayPick\).count/);
+    assert.match(feed, /price: effectivePrice\(fixedTodayPick\)/);
+    assert.match(feed, /averageDiscountRate: getAverageDiscountRate\(fixedTodayPick, interparkPrices\)/);
 });
