@@ -1,13 +1,14 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { chromium } from 'playwright';
+const baseUrl = process.env.PREVIEW_BASE_URL || 'http://127.0.0.1:31859';
 const browser = await chromium.launch({ headless: true });
 try {
     const page = await browser.newPage({ viewport: { width: 1280, height: 1000 } });
     const errors = [];
     page.on('pageerror', error => errors.push(error.message));
     await page.route('**/*', route => new URL(route.request().url()).hostname === '127.0.0.1' ? route.continue() : route.abort());
-    await page.goto('http://127.0.0.1:31859/preview/threads-posts');
+    await page.goto(`${baseUrl}/preview/threads-posts`);
     assert.ok(await page.getByText('실시간 통계가 아닙니다.', { exact: true }).isVisible());
     const rows = page.locator('tbody > tr');
     assert.equal(await rows.count(), 12);
@@ -44,7 +45,7 @@ try {
     await page.getByRole('button', { name:'글 · 게시일',exact:false }).click();
     fs.mkdirSync('tmp/threads-verification',{recursive:true});
     await page.screenshot({path:'tmp/threads-verification/desktop.png',fullPage:true});
-    await page.goto('http://127.0.0.1:31859/preview/threads-posts?state=unavailable');
+    await page.goto(`${baseUrl}/preview/threads-posts?state=unavailable`);
     assert.equal(await rows.first().locator('td').last().innerText(),'—');
     assert.deepEqual(errors,[]);
     console.log('Threads table: compact rows, sorting, expansion, missing attribution and mobile overflow passed.');

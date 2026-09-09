@@ -109,6 +109,7 @@ function insightValue(insight: ThreadsInsight | undefined): number {
 async function ownReplies(since?: string): Promise<{ replies: OwnReply[]; complete: boolean; issue?: string }> {
     const replies: OwnReply[] = [];
     let after: string | undefined;
+    const seenCursors = new Set<string>();
     try {
         // Bounded, cached by the admin API; never fetch replies once per displayed post.
         for (let page = 0; page < 3; page++) {
@@ -118,10 +119,12 @@ async function ownReplies(since?: string): Promise<{ replies: OwnReply[]; comple
                 fields: 'id,text,link_attachment_url,is_reply_owned_by_me,root_post,replied_to',
                 limit: '50', ...(since ? { since } : {}), ...(after ? { after } : {}),
             });
-            replies.push(...response.data || []);
+            if (!Array.isArray(response.data)) return { replies, complete: false, issue: 'replies-request-failed' };
+            replies.push(...response.data);
             if (!response.paging?.next) return { replies, complete: true };
             after = response.paging.cursors?.after;
-            if (!after) break;
+            if (!after || seenCursors.has(after)) break;
+            seenCursors.add(after);
         }
     } catch (error) {
         // Return only safe diagnostic codes, never Graph error bodies, URLs or tokens.

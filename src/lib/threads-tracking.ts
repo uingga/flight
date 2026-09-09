@@ -33,7 +33,8 @@ export function connectOwnReplyTracking<T extends Tracking & { id: string }>(
         if (post.trackingContent) return { ...post, trackingReplyIds: [] as string[], trackingIssue: null };
         const candidates = replies.filter(reply => reply.is_reply_owned_by_me === true
             && (reply.root_post?.id || reply.replied_to?.id) === post.id)
-            .map(reply => ({ id: reply.id, ...extractTracking(`${reply.text || ''}\n${reply.link_attachment_url || ''}`) }))
+            .flatMap(reply => (`${reply.text || ''}\n${reply.link_attachment_url || ''}`.match(/https?:\/\/[^\s]+/gi) || [])
+                .map(url => ({ id: reply.id, ...extractTracking(url) })))
             .filter(reply => reply.trackingContent);
         const contents = new Set(candidates.map(reply => reply.trackingContent));
         // Do not guess a single link when collection is incomplete or a thread has multiple campaigns.

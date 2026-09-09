@@ -26,6 +26,8 @@ assert.equal(helper.connectOwnReplyTracking([root], [reply], false)[0].trackingI
 assert.equal(helper.connectOwnReplyTracking([root], [reply, { ...reply, id: 'r2', text: 'https://tikitikit.kr/s/another' }], true)[0].trackingIssue, 'multiple-links');
 assert.equal(helper.connectOwnReplyTracking([{ ...root, trackingContent: 'direct' }], [reply], false)[0].trackingContent, 'direct');
 assert.equal(helper.connectOwnReplyTracking([root], [{ ...reply, text: '', link_attachment_url: link }], true)[0].trackingContent, connected.trackingContent);
+assert.equal(helper.connectOwnReplyTracking([root], [{ ...reply, text: link+' https://tikitikit.kr/s/another' }], true)[0].trackingIssue, 'multiple-links');
+assert.equal(helper.connectOwnReplyTracking([root], [{ ...reply, text: link, link_attachment_url: 'https://tikitikit.kr/s/another' }], true)[0].trackingIssue, 'multiple-links');
 assert.equal(helper.connectOwnReplyTracking([root], [reply, reply], true)[0].trackingReplyIds.length, 1);
 assert.equal(helper.extractTracking(`${link}?utm_content=explicit`).trackingContent, 'explicit');
 assert.equal(helper.extractTracking('https://tikitikit.kr.evil.test/s/code').trackingContent, null);
@@ -55,16 +57,20 @@ async function integration(mode) {
         if (mode === 'denied') return { ok: false, status: 403, json: async () => ({ error: { code: 10, message: 'permission' } }) };
         if (mode === 'token') return { ok: false, status: 400, json: async () => ({ error: { code: 190, message: 'secret must not leak' } }) };
         if (mode === 'failed') throw new Error('https://secret-token.example');
-        const next = mode === 'capped' || replyCalls === 1;
-        return { ok: true, json: async () => ({ data: replyCalls === 2 ? [reply] : [], ...(next ? { paging: { next: 'unused', cursors: { after: `page${replyCalls}` } } } : {}) }) };
+        if (mode === 'partial-failed' && replyCalls === 2) throw new Error('private token in failure');
+        if (mode === 'malformed') return { ok: true, json: async () => ({}) };
+        if (mode === 'invalid-field') return { ok: false, status: 400, json: async () => ({ error: { code: 100, message: 'Unsupported field' } }) };
+        const next = ['capped','cursor-loop'].includes(mode) || replyCalls === 1;
+        return { ok: true, json: async () => ({ data: replyCalls === 2 || mode === 'partial-failed' ? [reply] : [], ...(next ? { paging: { next: 'unused', cursors: { after: mode === 'cursor-loop' ? 'same-cursor' : `page${replyCalls}` } } } : {}) }) };
     };
     const server = load('src/lib/server/threads-insights.ts', { 'server-only': {}, '@/lib/threads-tracking': helper, '@/lib/threads-post-links': verified }, { fetch });
     const posts = await server.getThreadsPostInsights();
     assert.equal(posts[0].metrics.views, 286);
     if (mode === 'ok') { assert.equal(posts[0].trackingContent, connected.trackingContent); assert.equal(replyCalls, 2); }
-    else { assert.equal(posts[0].trackingContent, null); assert.equal(posts[0].trackingIssue, { denied: 'replies-permission-denied', token: 'replies-token-expired', failed: 'replies-request-failed', capped: 'replies-incomplete' }[mode]); }
+    else { assert.equal(posts[0].trackingContent, null); assert.equal(posts[0].trackingIssue, { denied: 'replies-permission-denied', token: 'replies-token-expired', failed: 'replies-request-failed', capped: 'replies-incomplete', 'cursor-loop': 'replies-incomplete', 'partial-failed': 'replies-request-failed', malformed: 'replies-request-failed', 'invalid-field': 'replies-request-failed' }[mode]); }
     assert.ok(!JSON.stringify(posts).includes('secret'));
     if (mode === 'capped') assert.equal(replyCalls, 3);
+    if (mode === 'cursor-loop' || mode === 'partial-failed') assert.equal(replyCalls, 2);
     return posts;
 }
 (async () => {
@@ -73,6 +79,7 @@ async function integration(mode) {
     await integration('capped');
     await integration('token');
     await integration('failed');
+    for (const mode of ['partial-failed','malformed','cursor-loop','invalid-field']) await integration(mode);
     const api = load('src/app/api/threads-insights/route.ts', {
         'next/server': {}, '@/lib/ga4': {}, '@/lib/server/threads-insights': {},
     }, {}, '\nexport { attachAttribution, visibleAttribution, sumAttribution };');
