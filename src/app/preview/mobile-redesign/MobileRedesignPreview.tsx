@@ -1169,6 +1169,9 @@ export default function MobileRedesignPreview({
     const [isMobile, setIsMobile] = useState(false);
     const [isDesktopViewport, setIsDesktopViewport] = useState(false);
     const [filterBarPinned, setFilterBarPinned] = useState(false);
+    const [filterBarExiting, setFilterBarExiting] = useState(false);
+    const [filterBarReturning, setFilterBarReturning] = useState(false);
+    const [filterBarLeaving, setFilterBarLeaving] = useState(false);
     const [showAccount, setShowAccount] = useState(false);
     const [showContact, setShowContact] = useState(false);
     const [showServiceUpdate, setShowServiceUpdate] = useState(false);
@@ -1886,17 +1889,63 @@ export default function MobileRedesignPreview({
     }, [toast]);
 
     useEffect(() => {
+        let pinned = false;
+        let enterTimer: number | undefined;
+        let exitTimer: number | undefined;
+        const finishExit = () => {
+            exitTimer = undefined;
+            pinned = false;
+            setFilterBarPinned(false);
+            setFilterBarExiting(false);
+            setFilterBarLeaving(false);
+            setFilterBarReturning(window.matchMedia('(min-width: 960px)').matches
+                && !window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+        };
         const updateScrollState = () => {
             const scrollY = Math.max(0, window.scrollY);
             setShowScrollTop(scrollY > Math.max(900, window.innerHeight * 1.25));
             const filterTop = filterBarSlotRef.current?.getBoundingClientRect().top;
-            const isPastFilters = typeof filterTop === 'number' && filterTop <= 0;
-            setFilterBarPinned(isPastFilters);
+            // Separate thresholds prevent tiny scroll reversals from retriggering the bar.
+            const shouldPin = typeof filterTop === 'number' && filterTop < (pinned ? 16 : -8);
+            const animate = window.matchMedia('(min-width: 960px)').matches
+                && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            if (shouldPin) {
+                if (exitTimer !== undefined) window.clearTimeout(exitTimer);
+                exitTimer = undefined;
+                setFilterBarReturning(false);
+                setFilterBarExiting(false);
+                if (!pinned) {
+                    pinned = true;
+                    if (animate) {
+                        setFilterBarLeaving(true);
+                        enterTimer = window.setTimeout(() => {
+                            enterTimer = undefined;
+                            setFilterBarLeaving(false);
+                            setFilterBarPinned(true);
+                        }, 100);
+                    } else {
+                        setFilterBarPinned(true);
+                    }
+                }
+            } else if (pinned && exitTimer === undefined) {
+                if (enterTimer !== undefined) {
+                    window.clearTimeout(enterTimer);
+                    enterTimer = undefined;
+                    finishExit();
+                } else if (animate) {
+                    setFilterBarExiting(true);
+                    exitTimer = window.setTimeout(finishExit, 100);
+                } else {
+                    finishExit();
+                }
+            }
         };
         updateScrollState();
         window.addEventListener('scroll', updateScrollState, { passive: true });
         window.addEventListener('resize', updateScrollState);
         return () => {
+            if (enterTimer !== undefined) window.clearTimeout(enterTimer);
+            if (exitTimer !== undefined) window.clearTimeout(exitTimer);
             window.removeEventListener('scroll', updateScrollState);
             window.removeEventListener('resize', updateScrollState);
         };
@@ -3475,7 +3524,12 @@ export default function MobileRedesignPreview({
                 </section>
 
                 <div className={styles.conditionFilterAnchor} ref={filterBarSlotRef}>
-                    <div className={`${styles.conditionFilterSlot} ${filterBarPinned ? styles.conditionFilterSlotPinned : ''}`}>
+                    <div
+                        className={`${styles.conditionFilterSlot} ${filterBarPinned ? styles.conditionFilterSlotPinned : ''} ${filterBarExiting ? styles.conditionFilterSlotExiting : ''} ${filterBarReturning ? styles.conditionFilterSlotReturning : ''} ${filterBarLeaving ? styles.conditionFilterSlotLeaving : ''}`}
+                        onAnimationEnd={event => {
+                            if (event.target === event.currentTarget) setFilterBarReturning(false);
+                        }}
+                    >
                         <div className={styles.desktopFilterPanel} aria-label="항공권 필터" ref={desktopFilterRef}>
                             <div className={styles.desktopFilterControl}>
                                 <button
