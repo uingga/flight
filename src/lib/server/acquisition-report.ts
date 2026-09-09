@@ -1,5 +1,5 @@
 import { runReport, type Ga4Config, type ReportRequest, type ReportResponse } from '../ga4';
-import { classifyAcquisition, acquisitionSourceLabel, completeAcquisitionReport, type AcquisitionData, type AcquisitionGroup } from '../acquisition';
+import { classifyAcquisition, acquisitionSourceKey, acquisitionSourceLabel, completeAcquisitionReport, type AcquisitionData, type AcquisitionGroup, type AcquisitionSource } from '../acquisition';
 const dimensions = ['sessionDefaultChannelGroup', 'sessionSource', 'sessionMedium'];
 const metrics = [{name:'sessions'}, {name:'activeUsers'}];
 const unavailable = (): AcquisitionData => ({available:false,groups:[],message:'유입 기록을 온전히 확인하지 못했습니다. 제한되거나 일부만 조회된 기록으로 순위를 추정하지 않습니다.'});
@@ -61,7 +61,40 @@ export async function loadAcquisition(config: Ga4Config, dateRanges: ReportReque
                 if(matches.length===1 && Number(matches[0].metricValues?.[0]?.value)===source.sessions && Number.isSafeInteger(users)&&users>=0) source.users=users;
             }
         } catch { /* Never sum people across categories. */ }
-        sourceRows.sort((a,b)=>b.sessions-a.sessions||a.source.localeCompare(b.source));
-        return {available:true,sourceRows,groups:groups.sort((a,b)=>b.sessions-a.sessions||a.label.localeCompare(b.label))};
+        // Several GA source strings can describe one service. Query their exact union:
+        // adding user counts (or sessions spanning source rows) would overcount.
+        const mergedTotals = new Map<string, Promise<{sessions:number;users:number}>>();
+        const normalize = async <T extends AcquisitionSource>(entries:T[], category?:string):Promise<T[]> => {
+            const aliases = new Map<string,T[]>();
+            for (const entry of entries) {
+                const key=acquisitionSourceKey(entry.source);
+                aliases.set(key,[...(aliases.get(key)||[]),entry]);
+            }
+            const result:T[]=[];
+            for(const [key,items] of Array.from(aliases)) {
+                const rawSources=Array.from(new Set(items.map(item=>item.source)));
+                const merged={...items[0],source:key,label:acquisitionSourceLabel(key),rawSources};
+                if ('categories' in merged) (merged as T & {categories:string[]}).categories=Array.from(new Set(items.flatMap(item=>(item as T & {categories:string[]}).categories)));
+                if(items.length>1) {
+                    const tuples=Array.from(buckets).filter(([label])=>!category||label===category).flatMap(([,rows])=>rows).filter(row=>rawSources.includes(row.tuple[1])).map(row=>row.tuple);
+                    const identity=JSON.stringify(tuples);
+                    if(!mergedTotals.has(identity)) mergedTotals.set(identity,(async()=>{
+                        if(tuples.length>500)throw Error('Alias group exceeds exact aggregation limit');
+                        const report=await query(config,{dateRanges,metrics,limit:1,
+                            dimensionFilter:{orGroup:{expressions:tuples.map(tuple=>({andGroup:{expressions:tuple.map((value,i)=>({filter:{fieldName:dimensions[i],stringFilter:{value,matchType:'EXACT',caseSensitive:true}}}))}}))}}});
+                        if(!completeAcquisitionReport(report)||report.rows?.length!==1)throw Error('Incomplete alias totals');
+                        const [sessions,users]=report.rows[0].metricValues?.map(v=>Number(v.value))||[];
+                        if(!Number.isSafeInteger(sessions)||sessions<Math.max(...items.map(i=>i.sessions))||sessions>items.reduce((n,i)=>n+i.sessions,0)||!Number.isSafeInteger(users)||users<0)throw Error('Invalid alias totals');
+                        return {sessions,users};
+                    })());
+                    Object.assign(merged,await mergedTotals.get(identity));
+                }
+                result.push(merged);
+            }
+            return result.sort((a,b)=>b.sessions-a.sessions||a.source.localeCompare(b.source));
+        }
+        const normalizedSources=await normalize(sourceRows);
+        for(const group of groups)group.sources=await normalize(group.sources,group.label);
+        return {available:true,sourceRows:normalizedSources,groups:groups.sort((a,b)=>b.sessions-a.sessions||a.label.localeCompare(b.label))};
     } catch { return unavailable(); }
 }

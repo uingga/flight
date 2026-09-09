@@ -10,12 +10,12 @@ export default function Preview({searchParams}:{searchParams:{state?:string}}) {
     if (!['localhost','127.0.0.1'].includes(headers().get('host')?.split(':')[0] || '') || process.env.VERCEL || flightOrderStorageMode()!=='preview' || !process.env.ADMIN_KEY) notFound();
     const data:AcquisitionData={available:true,groups:[
         {label:'커뮤니티',sessions:8,users:6,sources:[{source:'te31',label:'TE31',sessions:8,users:6}]},
-        {label:'검색',sessions:5,users:3,sources:[{source:'m.search.naver.com',label:'네이버 검색',sessions:4,users:3},{source:'google',label:'구글 검색',sessions:1,users:1}]},
+        {label:'검색',sessions:5,users:3,sources:[{source:'naver',label:'네이버 검색',sessions:4,users:3,rawSources:['naver','m.search.naver.com']},{source:'google',label:'구글 검색',sessions:1,users:1}]},
         {label:'사용자 공유',sessions:2,users:2,sources:[{source:'user_share',label:'항공권 공유 링크',sessions:2,users:2}]},
         {label:'기타 외부 링크',sessions:1,users:1,sources:[{source:'m.keep.naver.com',label:'네이버 Keep',sessions:1,users:1}]},
-        {label:'블로그',sessions:1,users:1,sources:[{source:'blog.naver.com',label:'네이버 블로그',sessions:1,users:1}]},
+        {label:'블로그',sessions:1,users:1,sources:[{source:'naver_blog',label:'네이버 블로그',sessions:1,users:1,rawSources:['naver_blog','blog.naver.com']}]},
         {label:'AI 서비스',sessions:2,users:2,sources:[{source:'chatgpt.com',label:'ChatGPT',sessions:1,users:1},{source:'gemini.google.com',label:'Gemini',sessions:1,users:1}]},
-        {label:'유형 미분류',sessions:1,users:null,sources:[{source:'unknown-source.example',label:'unknown-source.example',sessions:1,users:null}]},
+        {label:'유형 미분류',sessions:2,users:null,sources:[{source:'hanatour',label:'hanatour (출처 확인 필요)',sessions:1,users:1},{source:'unknown-source.example',label:'unknown-source.example',sessions:1,users:null}]},
         {label:'출처 확인 불가',sessions:1,users:1,sources:[{source:'(not set)',label:'출처 정보 없음',sessions:1,users:1}]},
     ]};
     if(searchParams.state==='empty') data.groups=[];

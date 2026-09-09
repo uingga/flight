@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { acquisitionRows } from '../src/lib/acquisition-display';
+import { acquisitionRows, acquisitionSourceIssues } from '../src/lib/acquisition-display';
 import type { AcquisitionData } from '../src/lib/acquisition';
 const data: AcquisitionData = { available: true, groups: [
     { label: '검색', sessions: 12, users: 7, sources: [{ source: 'google', label: '구글', sessions: 12, users: 7 }] },
@@ -20,3 +20,11 @@ assert.equal(sorted.at(-1)?.users, 0);
 assert.equal(sorted.slice(0, 5).length, 5);
 assert.equal(sorted.slice(30, 40).length, 7);
 console.log('PASS: source totals, category-specific counts, null/zero users, 37-source sorting and pagination.');
+
+const historical:AcquisitionData={available:true,groups:[{label:'유형 미분류',sessions:3,users:null,sources:[{source:'hanatour',label:'hanatour (출처 확인 필요)',sessions:2,users:1},{source:'hanatour.com',label:'hanatour.com',sessions:1,users:1}]}]};
+const original=JSON.stringify(historical);
+assert.deepEqual(acquisitionRows(historical).map(s=>s.source),['hanatour.com']);
+assert.equal(acquisitionSourceIssues(historical)[0].sessions,2);
+assert.equal(acquisitionSourceIssues(historical)[0].users,1);
+assert.equal(JSON.stringify(historical),original);
+assert.deepEqual(acquisitionSourceIssues({...historical,available:false}),[]);

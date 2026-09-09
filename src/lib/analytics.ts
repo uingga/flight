@@ -1,3 +1,4 @@
+import { isAgencySourceCode } from './acquisition';
 // GA4 Analytics utilities
 // Revenue-related clicks are measured in GA4 and reconciled with partner dashboards.
 import { clearVisitAnalytics, trackVisitAction } from './visit-analytics-client';
@@ -61,7 +62,16 @@ export const pageview = (url: string) => {
 /** GA4 custom event */
 export const event = (action: string, params?: Record<string, string | number | boolean>) => {
     if (!GA_ID || !window.gtag || isAnalyticsExcluded()) return;
-    window.gtag('event', action, params);
+    // Agency metadata must never be sent using a traffic-source field, even by a legacy caller.
+    const safeParams = params && { ...params };
+    if (safeParams) for (const key of ['source', 'campaign_source']) {
+        const value = safeParams[key];
+        if (typeof value === 'string' && isAgencySourceCode(value)) {
+            safeParams.travel_agency ??= value;
+            delete safeParams[key];
+        }
+    }
+    window.gtag('event', action, safeParams);
 };
 
 const revenueParams = (details: RevenueClickDetails) => defined({

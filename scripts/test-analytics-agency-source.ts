@@ -5,7 +5,7 @@ async function main() {
  const events: unknown[][]=[];let excluded=false;
  (globalThis as any).window={gtag:(...args:unknown[])=>events.push(args),localStorage:{getItem:()=>excluded?'true':null}};
  globalThis.fetch=async()=>{throw Error('Test must not send requests');};
- const {trackDetailOpen,trackBookingClick}=await import('../src/lib/analytics');
+ const {trackDetailOpen,trackBookingClick,event}=await import('../src/lib/analytics');
  for(const agency of ['hanatour','modetour','myrealtrip','ybtour','ttang','onlinetour']) {
   const start=events.length;
   trackDetailOpen('부산-괌',200000,agency,'card_body',{flightId:'test-'+agency,destination:'괌'});
@@ -19,6 +19,13 @@ async function main() {
   }
   for(const event of received)for(const key of ['source','medium','campaign_source','campaign_medium'])assert.ok(!(key in (event[2] as object)));
  }
+ for(const key of ['source','campaign_source']) {
+  const params={ [key]:'hanatour',price:200000 };
+  event('legacy_detail',params);
+  const actual=events.at(-1)![2] as Record<string,unknown>;
+  assert.equal(actual.travel_agency,'hanatour');assert.ok(!(key in actual));assert.equal(params[key],'hanatour');
+ }
+ event('campaign_test',{source:'te31'});assert.equal((events.at(-1)![2] as any).source,'te31');
  const before=events.length;excluded=true;trackDetailOpen('부산-괌',200000,'ttang','card_body');assert.equal(events.length,before);
  console.log('PASS: six agencies use travel_agency, no traffic-source fields, detail/booking metadata and owner exclusion preserved; no network');
 }
