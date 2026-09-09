@@ -62,9 +62,9 @@ $Action = New-ScheduledTaskAction `
     -Execute $PowerShellPath `
     -Argument "-NoProfile -ExecutionPolicy Bypass -File `"$RunnerPath`" -Scheduled"
 $Triggers = @(
-    (New-ScheduledTaskTrigger -Daily -At '11:12'),
-    (New-ScheduledTaskTrigger -Daily -At '14:23'),
-    (New-ScheduledTaskTrigger -Daily -At '17:31')
+    (New-ScheduledTaskTrigger -Daily -At '10:12'),
+    (New-ScheduledTaskTrigger -Daily -At '13:23'),
+    (New-ScheduledTaskTrigger -Daily -At '16:31')
 )
 $Settings = New-ScheduledTaskSettingsSet `
     -StartWhenAvailable `
@@ -90,7 +90,7 @@ Register-ScheduledTask `
 
 Write-Output "Installed $TaskName"
 Write-Output "Automation checkout: $AutomationDir"
-Write-Output 'Schedule: 11:12 initial pass, 14:23 recovery pass, 17:31 startup/manual-capture fallback'
+Write-Output 'Schedule: 10:12 initial pass, 13:23 recovery pass, 16:31 startup/manual-capture fallback'
 
 if ($RunNow) {
     Start-ScheduledTask -TaskName $TaskName

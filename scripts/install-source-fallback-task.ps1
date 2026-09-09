@@ -50,10 +50,10 @@ $Action = New-ScheduledTaskAction `
     -Execute $PowerShellPath `
     -Argument "-NoProfile -ExecutionPolicy Bypass -File `"$RunnerPath`" -Scheduled"
 $Triggers = @(
-    (New-ScheduledTaskTrigger -Daily -At '08:17'),
-    (New-ScheduledTaskTrigger -Daily -At '11:12'),
-    (New-ScheduledTaskTrigger -Daily -At '14:23'),
-    (New-ScheduledTaskTrigger -Daily -At '17:31')
+    (New-ScheduledTaskTrigger -Daily -At '06:17'),
+    (New-ScheduledTaskTrigger -Daily -At '10:12'),
+    (New-ScheduledTaskTrigger -Daily -At '13:23'),
+    (New-ScheduledTaskTrigger -Daily -At '16:31')
 )
 $Settings = New-ScheduledTaskSettingsSet `
     -StartWhenAvailable `
@@ -79,7 +79,7 @@ Register-ScheduledTask `
 
 Write-Output "Installed $TaskName"
 Write-Output "Automation checkout: $AutomationDir"
-Write-Output 'Schedule: 08:17, 11:12, 14:23, 17:31 KST; Ttang eligible only at 08:17 and 14:23'
+Write-Output 'Schedule: 06:17, 10:12, 13:23, 16:31 KST; Ttang eligible only at 06:17 and 13:23'
 
 if ($RunNow) {
     Start-ScheduledTask -TaskName $TaskName

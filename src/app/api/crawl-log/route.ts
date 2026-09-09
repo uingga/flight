@@ -63,7 +63,7 @@ function githubHeaders(token?: string): Record<string, string> {
 
 function scheduledSkipSources(run: GitHubWorkflowRun): string[] {
     const title = run.display_title || '';
-    if (title.includes('12 2 * * *') || title.includes('31 8 * * *')) return ['ttang'];
+    if (title.includes('12 1 * * *') || title.includes('31 7 * * *')) return ['ttang'];
 
     const expectedAt = title.match(/(20\d{2}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z)/)?.[1];
     if (!expectedAt) return [];
@@ -75,7 +75,7 @@ function scheduledSkipSources(run: GitHubWorkflowRun): string[] {
     }).formatToParts(new Date(expectedAt));
     const hour = parts.find(part => part.type === 'hour')?.value;
     const minute = parts.find(part => part.type === 'minute')?.value;
-    return hour && minute && ['11:12', '17:31'].includes(`${hour}:${minute}`) ? ['ttang'] : [];
+    return hour && minute && ['10:12', '16:31'].includes(`${hour}:${minute}`) ? ['ttang'] : [];
 }
 
 async function readCurrentGeneralCrawlRun() {

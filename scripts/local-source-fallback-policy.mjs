@@ -116,7 +116,7 @@ export function evaluateLocalSourceFallback({
             localCooldownSources.push(source);
             continue;
         }
-        // 땡처리닷컴은 정규 수집과 같은 08:17·14:23 KST 회차만 PC 대체를 허용한다.
+        // 땡처리닷컴은 정규 수집과 같은 06:17·13:23 KST 회차만 PC 대체를 허용한다.
         // 오전 회차가 늦게 끝나 오후 회차와 가까워진 날에는 실제 성공 시각부터 5시간을 보장한다.
         if (source === 'ttang') {
             const previousLocal = circuit?.localFallback;

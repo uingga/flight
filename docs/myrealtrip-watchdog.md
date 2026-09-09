@@ -1,7 +1,7 @@
 # MyRealTrip scheduled-slot recovery
 
 The existing authenticated `/api/internal/crawl-watchdog` endpoint, called by the external
-five-minute clock, independently checks MyRealTrip's 07:05 and 16:03 KST slots.
+five-minute clock, independently checks MyRealTrip's 06:05 and 15:03 KST slots.
 After five minutes it dispatches an unstarted latest slot. Active runs, recent dispatches,
 legacy successful runs and persistent reservations suppress dispatch. Failure of this
 check does not stop the existing general-crawl watchdog.

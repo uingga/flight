@@ -9,8 +9,8 @@ import { evaluateLocalSourceFallback } from './local-source-fallback-policy.mjs'
 function circuit(overrides = {}) {
     return {
         reason: 'blocked',
-        openedAt: '2026-08-30T01:00:00.000Z',
-        nextProbeAt: '2026-08-31T01:00:00.000Z',
+        openedAt: '2026-08-30T00:00:00.000Z',
+        nextProbeAt: '2026-08-31T00:00:00.000Z',
         resumePolicy: 'cooldown_or_adapter_change',
         adapterVersion: 'test-1',
         detail: 'soft block',
@@ -20,49 +20,49 @@ function circuit(overrides = {}) {
 
 test('waits until the matching GitHub crawl slot is complete', () => {
     const result = evaluateLocalSourceFallback({
-        now: '2026-08-30T02:20:00.000Z', // 11:20 KST, 11:12 slot
+        now: '2026-08-30T01:20:00.000Z', // 11:20 KST, 10:12 slot
         cache: {
-            fullCrawlUpdatedAt: '2026-08-30T01:50:00.000Z',
+            fullCrawlUpdatedAt: '2026-08-30T00:50:00.000Z',
             sourceCircuits: { ttang: circuit() },
         },
     });
 
     assert.equal(result.shouldRun, false);
     assert.equal(result.reason, 'upstream_pending');
-    assert.equal(result.expectedAt, '2026-08-30T02:12:00.000Z');
-    assert.equal(result.nextExpectedAt, '2026-08-30T05:23:00.000Z');
+    assert.equal(result.expectedAt, '2026-08-30T01:12:00.000Z');
+    assert.equal(result.nextExpectedAt, '2026-08-30T04:23:00.000Z');
 });
 
 test('alternates PC collection and rest from each source failure slot', () => {
     const activeCircuit = circuit({
-        openedAt: '2026-08-30T02:18:00.000Z', // 11:12 KST failure slot
-        nextProbeAt: '2026-08-31T02:18:00.000Z',
+        openedAt: '2026-08-30T01:18:00.000Z', // 10:12 KST failure slot
+        nextProbeAt: '2026-08-31T01:18:00.000Z',
     });
     for (const sample of [
         {
-            now: '2026-08-30T02:20:00.000Z',
-            fullCrawlUpdatedAt: '2026-08-30T02:18:00.000Z',
+            now: '2026-08-30T01:20:00.000Z',
+            fullCrawlUpdatedAt: '2026-08-30T01:18:00.000Z',
             shouldRun: true,
             sources: ['ybtour', 'hanatour', 'onlinetour'],
             throttled: ['ttang'],
         },
         {
-            now: '2026-08-30T05:30:00.000Z',
-            fullCrawlUpdatedAt: '2026-08-30T05:25:00.000Z',
+            now: '2026-08-30T04:30:00.000Z',
+            fullCrawlUpdatedAt: '2026-08-30T04:25:00.000Z',
             shouldRun: false,
             sources: [],
             throttled: ['ybtour', 'hanatour', 'onlinetour', 'ttang'],
         },
         {
-            now: '2026-08-30T08:40:00.000Z',
-            fullCrawlUpdatedAt: '2026-08-30T08:35:00.000Z',
+            now: '2026-08-30T07:40:00.000Z',
+            fullCrawlUpdatedAt: '2026-08-30T07:35:00.000Z',
             shouldRun: true,
             sources: ['ybtour', 'hanatour', 'onlinetour'],
             throttled: ['ttang'],
         },
         {
-            now: '2026-08-30T23:25:00.000Z',
-            fullCrawlUpdatedAt: '2026-08-30T23:23:00.000Z',
+            now: '2026-08-30T21:25:00.000Z',
+            fullCrawlUpdatedAt: '2026-08-30T21:23:00.000Z',
             shouldRun: false,
             sources: [],
             throttled: ['ybtour', 'hanatour', 'onlinetour', 'ttang'],
@@ -97,15 +97,15 @@ test('alternates PC collection and rest from each source failure slot', () => {
     }
 });
 
-test('Ttang PC fallback runs only at 08:17 or 14:23 with at least five hours between successes', () => {
+test('Ttang PC fallback runs only at 06:17 or 13:23 with at least five hours between successes', () => {
     const active = circuit({
-        openedAt: '2026-08-30T05:25:00.000Z',
-        nextProbeAt: '2026-08-31T05:25:00.000Z',
+        openedAt: '2026-08-30T04:25:00.000Z',
+        nextProbeAt: '2026-08-31T04:25:00.000Z',
     });
     const evening = evaluateLocalSourceFallback({
-        now: '2026-08-30T08:40:00.000Z', // 17:31 KST slot
+        now: '2026-08-30T07:40:00.000Z', // 16:31 KST slot
         cache: {
-            fullCrawlUpdatedAt: '2026-08-30T08:35:00.000Z',
+            fullCrawlUpdatedAt: '2026-08-30T07:35:00.000Z',
             sourceCircuits: { ttang: active },
         },
     });
@@ -113,15 +113,15 @@ test('Ttang PC fallback runs only at 08:17 or 14:23 with at least five hours bet
     assert.deepEqual(evening.scheduleThrottledSources, ['ttang']);
 
     const secondAllowedSlot = evaluateLocalSourceFallback({
-        now: '2026-08-30T05:30:00.000Z', // 14:23 KST slot
+        now: '2026-08-30T04:30:00.000Z', // 13:23 KST slot
         cache: {
-            fullCrawlUpdatedAt: '2026-08-30T05:25:00.000Z',
+            fullCrawlUpdatedAt: '2026-08-30T04:25:00.000Z',
             sourceCircuits: {
                 ttang: {
                     ...active,
                     localFallback: {
                         status: 'success',
-                        lastAttemptAt: '2026-08-29T23:25:00.000Z', // 같은 KST 날짜 08:25 성공
+                        lastAttemptAt: '2026-08-29T21:25:00.000Z', // 같은 KST 날짜 08:25 성공
                         detail: 'PC 대체 수집 성공',
                     },
                 },
@@ -132,15 +132,15 @@ test('Ttang PC fallback runs only at 08:17 or 14:23 with at least five hours bet
     assert.deepEqual(secondAllowedSlot.sources, ['ttang']);
 
     const delayedMorningRun = evaluateLocalSourceFallback({
-        now: '2026-08-30T05:30:00.000Z', // 14:30 KST
+        now: '2026-08-30T04:30:00.000Z', // 14:30 KST
         cache: {
-            fullCrawlUpdatedAt: '2026-08-30T05:25:00.000Z',
+            fullCrawlUpdatedAt: '2026-08-30T04:25:00.000Z',
             sourceCircuits: {
                 ttang: {
                     ...active,
                     localFallback: {
                         status: 'success',
-                        lastAttemptAt: '2026-08-30T01:00:00.000Z', // 10:00 KST, 4시간 30분 전
+                        lastAttemptAt: '2026-08-30T00:00:00.000Z', // 10:00 KST, 4시간 30분 전
                         detail: 'PC 대체 수집 성공',
                     },
                 },
@@ -153,21 +153,21 @@ test('Ttang PC fallback runs only at 08:17 or 14:23 with at least five hours bet
 
 test('anchors alternating PC slots independently for each failed source', () => {
     const result = evaluateLocalSourceFallback({
-        now: '2026-08-30T05:30:00.000Z', // 14:30 KST, 14:23 slot
+        now: '2026-08-30T04:30:00.000Z', // 14:30 KST, 13:23 slot
         cache: {
-            fullCrawlUpdatedAt: '2026-08-30T05:25:00.000Z',
+            fullCrawlUpdatedAt: '2026-08-30T04:25:00.000Z',
             sourceCircuits: {
                 ybtour: circuit({
-                    openedAt: '2026-08-30T02:18:00.000Z', // previous slot: rest now
-                    nextProbeAt: '2026-08-31T02:18:00.000Z',
+                    openedAt: '2026-08-30T01:18:00.000Z', // previous slot: rest now
+                    nextProbeAt: '2026-08-31T01:18:00.000Z',
                 }),
                 hanatour: circuit({
-                    openedAt: '2026-08-30T05:25:00.000Z', // current slot: collect now
-                    nextProbeAt: '2026-08-31T05:25:00.000Z',
+                    openedAt: '2026-08-30T04:25:00.000Z', // current slot: collect now
+                    nextProbeAt: '2026-08-31T04:25:00.000Z',
                 }),
                 ttang: circuit({
-                    openedAt: '2026-08-29T23:20:00.000Z', // two slots ago: collect now
-                    nextProbeAt: '2026-08-30T23:20:00.000Z',
+                    openedAt: '2026-08-29T21:20:00.000Z', // two slots ago: collect now
+                    nextProbeAt: '2026-08-30T21:20:00.000Z',
                 }),
             },
         },
@@ -181,15 +181,15 @@ test('anchors alternating PC slots independently for each failed source', () => 
 
 test('a PC-side block pauses only the local fallback', () => {
     const result = evaluateLocalSourceFallback({
-        now: '2026-08-30T02:20:00.000Z',
+        now: '2026-08-30T01:20:00.000Z',
         cache: {
-            fullCrawlUpdatedAt: '2026-08-30T02:18:00.000Z',
+            fullCrawlUpdatedAt: '2026-08-30T01:18:00.000Z',
             sourceCircuits: {
                 ttang: circuit({
                     localFallback: {
                         status: 'blocked',
-                        lastAttemptAt: '2026-08-30T02:19:00.000Z',
-                        nextProbeAt: '2026-08-31T02:19:00.000Z',
+                        lastAttemptAt: '2026-08-30T01:19:00.000Z',
+                        nextProbeAt: '2026-08-31T01:19:00.000Z',
                         detail: 'CAPTCHA',
                     },
                 }),
@@ -204,12 +204,12 @@ test('a PC-side block pauses only the local fallback', () => {
 
 test('Modetour is reported for manual capture and never returned to the PC crawler', () => {
     const result = evaluateLocalSourceFallback({
-        now: '2026-08-30T05:30:00.000Z', // 14:30 KST
+        now: '2026-08-30T04:30:00.000Z', // 14:30 KST
         cache: {
-            fullCrawlUpdatedAt: '2026-08-30T05:25:00.000Z',
+            fullCrawlUpdatedAt: '2026-08-30T04:25:00.000Z',
             sourceCircuits: {
                 modetour: circuit({
-                    nextProbeAt: '2026-08-31T05:00:00.000Z',
+                    nextProbeAt: '2026-08-31T04:00:00.000Z',
                 }),
             },
         },
@@ -223,14 +223,14 @@ test('Modetour is reported for manual capture and never returned to the PC crawl
 
 test('other PC fallbacks still run while Modetour remains manual-only', () => {
     const result = evaluateLocalSourceFallback({
-        now: '2026-08-30T05:30:00.000Z',
+        now: '2026-08-30T04:30:00.000Z',
         cache: {
-            fullCrawlUpdatedAt: '2026-08-30T05:25:00.000Z',
+            fullCrawlUpdatedAt: '2026-08-30T04:25:00.000Z',
             sourceCircuits: {
                 modetour: circuit({
-                    nextProbeAt: '2026-08-31T05:00:00.000Z',
+                    nextProbeAt: '2026-08-31T04:00:00.000Z',
                 }),
-                ttang: circuit({ nextProbeAt: '2026-08-31T05:00:00.000Z' }),
+                ttang: circuit({ nextProbeAt: '2026-08-31T04:00:00.000Z' }),
             },
         },
     });
@@ -243,9 +243,9 @@ test('other PC fallbacks still run while Modetour remains manual-only', () => {
 
 test('a non-blocking Modetour GitHub failure also requests manual capture', () => {
     const result = evaluateLocalSourceFallback({
-        now: '2026-08-30T05:30:00.000Z',
+        now: '2026-08-30T04:30:00.000Z',
         cache: {
-            fullCrawlUpdatedAt: '2026-08-30T05:25:00.000Z',
+            fullCrawlUpdatedAt: '2026-08-30T04:25:00.000Z',
             staleStreak: { modetour: 1 },
             sourceCircuits: {},
         },
@@ -259,9 +259,9 @@ test('a non-blocking Modetour GitHub failure also requests manual capture', () =
 
 test('does nothing when no GitHub source circuit is active', () => {
     const result = evaluateLocalSourceFallback({
-        now: '2026-08-30T02:20:00.000Z',
+        now: '2026-08-30T01:20:00.000Z',
         cache: {
-            fullCrawlUpdatedAt: '2026-08-30T02:18:00.000Z',
+            fullCrawlUpdatedAt: '2026-08-30T01:18:00.000Z',
             sourceCircuits: {},
         },
     });
@@ -276,8 +276,8 @@ test('source merge keeps the GitHub circuit while publishing the PC result', () 
     const overlayPath = path.join(tempDir, 'overlay.json');
     const baseCircuit = circuit();
     fs.writeFileSync(targetPath, JSON.stringify({
-        timestamp: '2026-08-30T02:18:00.000Z',
-        fullCrawlUpdatedAt: '2026-08-30T02:18:00.000Z',
+        timestamp: '2026-08-30T01:18:00.000Z',
+        fullCrawlUpdatedAt: '2026-08-30T01:18:00.000Z',
         count: 2,
         flights: [{ id: 'old', source: 'ttang' }, { id: 'other', source: 'ybtour' }],
         sources: { ttang: 1, ybtour: 1 },
@@ -286,7 +286,7 @@ test('source merge keeps the GitHub circuit while publishing the PC result', () 
         integrityAlerts: ['⛔ 땡처리닷컴 이전 경고', '🚨 ybtour unrelated alert'],
     }));
     fs.writeFileSync(overlayPath, JSON.stringify({
-        timestamp: '2026-08-30T02:25:00.000Z',
+        timestamp: '2026-08-30T01:25:00.000Z',
         count: 2,
         flights: [{ id: 'new', source: 'ttang' }, { id: 'other', source: 'ybtour' }],
         sources: { ttang: 1, ybtour: 1 },
@@ -295,7 +295,7 @@ test('source merge keeps the GitHub circuit while publishing the PC result', () 
                 ...baseCircuit,
                 localFallback: {
                     status: 'success',
-                    lastAttemptAt: '2026-08-30T02:25:00.000Z',
+                    lastAttemptAt: '2026-08-30T01:25:00.000Z',
                     detail: 'PC 대체 수집 완료',
                 },
             },
@@ -313,7 +313,7 @@ test('source merge keeps the GitHub circuit while publishing the PC result', () 
         ], { encoding: 'utf8' });
         assert.equal(merged.status, 0, merged.stderr);
         const result = JSON.parse(fs.readFileSync(targetPath, 'utf8'));
-        assert.equal(result.fullCrawlUpdatedAt, '2026-08-30T02:18:00.000Z');
+        assert.equal(result.fullCrawlUpdatedAt, '2026-08-30T01:18:00.000Z');
         assert.equal(result.sourceCircuits.ttang.nextProbeAt, baseCircuit.nextProbeAt);
         assert.equal(result.sourceCircuits.ttang.localFallback.status, 'success');
         assert.deepEqual(result.ttangTimeEnrichment, {
@@ -336,7 +336,7 @@ test('ybtour source merge publishes the post-filter time state', () => {
     const overlayPath = path.join(tempDir, 'overlay.json');
     const baseCircuit = circuit();
     fs.writeFileSync(targetPath, JSON.stringify({
-        timestamp: '2026-08-30T02:18:00.000Z',
+        timestamp: '2026-08-30T01:18:00.000Z',
         count: 2,
         flights: [{ id: 'old-yb', source: 'ybtour' }, { id: 'other', source: 'ttang' }],
         sources: { ybtour: 1, ttang: 1 },
@@ -344,7 +344,7 @@ test('ybtour source merge publishes the post-filter time state', () => {
         ybtourTimeEnrichment: { version: 1, entries: { old: { status: 'response_format' } } },
     }));
     fs.writeFileSync(overlayPath, JSON.stringify({
-        timestamp: '2026-08-30T02:25:00.000Z',
+        timestamp: '2026-08-30T01:25:00.000Z',
         count: 2,
         flights: [{ id: 'new-yb', source: 'ybtour' }, { id: 'other', source: 'ttang' }],
         sources: { ybtour: 1, ttang: 1 },
@@ -353,7 +353,7 @@ test('ybtour source merge publishes the post-filter time state', () => {
                 ...baseCircuit,
                 localFallback: {
                     status: 'success',
-                    lastAttemptAt: '2026-08-30T02:25:00.000Z',
+                    lastAttemptAt: '2026-08-30T01:25:00.000Z',
                     detail: 'PC 대체 수집 완료',
                 },
             },

@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {
+    DAILY_CRAWL_CRONS,
     getFullCrawlUpdatedAt,
     getCrawlScheduleHealth,
     getScheduledAtForCron,
@@ -40,18 +41,19 @@ const automatic = eventName === 'schedule' || triggerSource === 'watchdog';
 const expectedDate = expectedTimestamp === null ? null : new Date(expectedTimestamp);
 const isMorningPickSlot = automatic
     && expectedDate !== null
-    && expectedDate.getUTCHours() === 23
+    && expectedDate.getUTCHours() === 21
     && expectedDate.getUTCMinutes() === 17;
 const skipSources = automatic
     && expectedDate !== null
     && !isTtangCrawlSlot(expectedDate)
     ? 'ttang'
     : '';
-const shouldRun = !checkCache
+const obsoleteSchedule = eventName === 'schedule' && triggerSchedule && !DAILY_CRAWL_CRONS.includes(triggerSchedule);
+const shouldRun = !obsoleteSchedule && (!checkCache
     || !automatic
     || expectedTimestamp === null
     || lastCompletedAt === null
-    || new Date(lastCompletedAt).getTime() < expectedTimestamp;
+    || new Date(lastCompletedAt).getTime() < expectedTimestamp);
 const expectedAt = expectedTimestamp === null ? null : new Date(expectedTimestamp).toISOString();
 const delayMinutes = expectedTimestamp === null
     ? null

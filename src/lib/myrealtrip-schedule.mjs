@@ -1,6 +1,6 @@
 import { getScheduledAtForCron } from './crawl-schedule-health.mjs';
 
-export const MRT_CRONS = ['5 22 * * *', '3 7 * * *'];
+export const MRT_CRONS = ['5 21 * * *', '3 6 * * *'];
 export const MRT_WORKFLOW = 'myrealtrip-scrape.yml';
 export function latestMrtSlot(now = Date.now()) {
     const slots = MRT_CRONS.map(cron => ({ cron, at: getScheduledAtForCron(cron, now) }));
@@ -11,6 +11,7 @@ export function mrtClaimRef(expectedAt) {
     return `tags/mrt-slot/${expectedAt.replace(/[-:.]/g, '')}`;
 }
 export function resolveMrtSlot({ schedule, expectedAt, createdAt, now = Date.now() }) {
+    if (schedule && !MRT_CRONS.includes(schedule)) return null;
     const latest = latestMrtSlot(now);
     const resolved = expectedAt || (schedule && MRT_CRONS.includes(schedule)
         ? new Date(getScheduledAtForCron(schedule, createdAt)).toISOString() : latest.expectedAt);

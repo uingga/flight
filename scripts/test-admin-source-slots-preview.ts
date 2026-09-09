@@ -21,8 +21,8 @@ async function run() {
     const real = await response.json();
     const fixture = {
         ...real,
-        currentCrawlRun: { id: 1, title: 'TEST FIXTURE', status: 'in_progress', stage: 'crawling', event: 'schedule', startedAt: kst('14:23:30'), updatedAt: kst('14:24:00'), url: '', plannedSources: ['ybtour'], skippedSources: [] },
-        crawlScheduleHealth: { ...real.crawlScheduleHealth, lastCompletedAt: kst('11:30:00'), expectedAt: kst('14:23:00'), status: 'waiting' },
+        currentCrawlRun: { id: 1, title: 'TEST FIXTURE', status: 'in_progress', stage: 'crawling', event: 'schedule', startedAt: kst('13:23:30'), updatedAt: kst('14:24:00'), url: '', plannedSources: ['ybtour'], skippedSources: [] },
+        crawlScheduleHealth: { ...real.crawlScheduleHealth, lastCompletedAt: kst('11:30:00'), expectedAt: kst('13:23:00'), status: 'waiting' },
         sourceCircuits: { ttang: { reason: 'blocked', openedAt: kst('14:25:00'), nextProbeAt: '2026-09-06T14:25:00+09:00', detail: 'TEST FIXTURE: HTTP 403', localFallback: { status: 'failed', lastAttemptAt: kst('14:27:00'), detail: 'TEST FIXTURE: PC response unavailable' } } },
         manualCaptureStatus: {},
         crawlHistory: [

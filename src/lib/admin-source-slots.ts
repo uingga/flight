@@ -3,13 +3,13 @@
  *
  * 예전에는 여행사마다 자기 기록만 모아 마지막 16개를 그려서, 카드마다 막대 축이 달랐다
  * (땡처리는 하루 2회, 진행 중 회차는 막대 없음, PC 대체가 끼면 막대 하나 더).
- * 여기서는 예약 회차(08:17·11:12·14:23·17:31 KST)를 축으로 고정하고, 각 여행사 이벤트를
+ * 여기서는 예약 회차(06:17·10:12·13:23·16:31 KST)를 축으로 고정하고, 각 여행사 이벤트를
  * "그 회차 시각부터 다음 회차 시각 전까지" 창에 귀속시켜 회차당 막대 하나로 합친다.
  * 회차 시작 0~5분 랜덤 지연, 수집 소요 시간, PC 대체·수동 캡처의 늦은 반영은 모두 이 창 안에
  * 들어오므로 예약 시각으로 정규화된다.
  */
 
-export const CRAWL_SLOT_MINUTES_KST = [8 * 60 + 17, 11 * 60 + 12, 14 * 60 + 23, 17 * 60 + 31] as const;
+export const CRAWL_SLOT_MINUTES_KST = [6 * 60 + 17, 10 * 60 + 12, 13 * 60 + 23, 16 * 60 + 31] as const;
 export const SLOT_AXIS_LENGTH = 16;
 
 const KST_OFFSET_MS = 9 * 60 * 60_000;
@@ -68,7 +68,7 @@ export function recentSlotTimes(now: number, length = SLOT_AXIS_LENGTH): number[
     return slots.slice(-length);
 }
 
-/** 여행사가 이 회차에 원래 수집 예정인지. 땡처리는 08:17·14:23만, 마이리얼트립은 별도 워크플로. */
+/** 여행사가 이 회차에 원래 수집 예정인지. 땡처리는 06:17·13:23만, 마이리얼트립은 별도 워크플로. */
 export function isSourceScheduledAt(source: string, slotAt: number): boolean {
     if (source === 'myrealtrip') return false;
     if (source === 'ttang') {

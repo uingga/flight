@@ -26,80 +26,89 @@ function withTempCache(cache, callback) {
 
 test('an explicit full-crawl marker is not replaced by a newer partial cache timestamp', () => {
     const result = getFullCrawlUpdatedAt({
-        timestamp: '2026-08-28T09:54:18.225Z',
-        fullCrawlUpdatedAt: '2026-08-28T08:49:59.902Z',
-        sourceUpdatedAt: { ttang: '2026-08-28T09:54:18.205Z' },
+        timestamp: '2026-08-28T08:54:18.225Z',
+        fullCrawlUpdatedAt: '2026-08-28T07:49:59.902Z',
+        sourceUpdatedAt: { ttang: '2026-08-28T08:54:18.205Z' },
     });
 
-    assert.equal(result, '2026-08-28T08:49:59.902Z');
+    assert.equal(result, '2026-08-28T07:49:59.902Z');
 });
 
 test('legacy caches use the oldest general-source update instead of a partial cache timestamp', () => {
     const result = getFullCrawlUpdatedAt({
-        timestamp: '2026-08-28T09:54:18.225Z',
+        timestamp: '2026-08-28T08:54:18.225Z',
         sourceUpdatedAt: {
-            ybtour: '2026-08-28T08:48:58.176Z',
-            hanatour: '2026-08-28T08:48:58.176Z',
-            modetour: '2026-08-28T08:48:58.176Z',
-            onlinetour: '2026-08-28T08:48:58.176Z',
-            ttang: '2026-08-28T09:54:18.205Z',
-            myrealtrip: '2026-08-28T01:24:45.202Z',
+            ybtour: '2026-08-28T07:48:58.176Z',
+            hanatour: '2026-08-28T07:48:58.176Z',
+            modetour: '2026-08-28T07:48:58.176Z',
+            onlinetour: '2026-08-28T07:48:58.176Z',
+            ttang: '2026-08-28T08:54:18.205Z',
+            myrealtrip: '2026-08-28T00:24:45.202Z',
         },
     });
 
-    assert.equal(result, '2026-08-28T08:48:58.176Z');
+    assert.equal(result, '2026-08-28T07:48:58.176Z');
 });
 
 test('preflight and watchdog recover a slot hidden by a partial source refresh', () => {
     withTempCache({
-        timestamp: '2026-08-28T09:54:18.225Z',
-        fullCrawlUpdatedAt: '2026-08-28T07:49:59.902Z',
+        timestamp: '2026-08-28T08:54:18.225Z',
+        fullCrawlUpdatedAt: '2026-08-28T06:49:59.902Z',
     }, cachePath => {
         const preflight = spawnSync(process.execPath, ['scripts/check-crawl-run.mjs'], {
             encoding: 'utf8',
             env: {
                 ...process.env,
                 TRIGGER_EVENT: 'schedule',
-                TRIGGER_SCHEDULE: '31 8 * * *',
+                TRIGGER_SCHEDULE: '31 7 * * *',
                 CHECK_CACHE: '1',
-                CHECK_NOW: '2026-08-28T10:45:00.000Z',
+                CHECK_NOW: '2026-08-28T09:45:00.000Z',
                 CRAWL_CACHE_PATH: cachePath,
             },
         });
         assert.equal(preflight.status, 0, preflight.stderr);
-        assert.match(preflight.stdout, /\[preflight\] cache_updated_at=2026-08-28T09:54:18\.225Z/);
-        assert.match(preflight.stdout, /\[preflight\] last_completed_at=2026-08-28T07:49:59\.902Z/);
+        assert.match(preflight.stdout, /\[preflight\] cache_updated_at=2026-08-28T08:54:18\.225Z/);
+        assert.match(preflight.stdout, /\[preflight\] last_completed_at=2026-08-28T06:49:59\.902Z/);
         assert.match(preflight.stdout, /\[preflight\] should_run=true/);
 
         const watchdog = spawnSync(process.execPath, ['scripts/check-crawl-watchdog.mjs'], {
             encoding: 'utf8',
             env: {
                 ...process.env,
-                WATCHDOG_NOW: '2026-08-28T10:45:00.000Z',
+                WATCHDOG_NOW: '2026-08-28T09:45:00.000Z',
                 CRAWL_CACHE_PATH: cachePath,
             },
         });
         assert.equal(watchdog.status, 0, watchdog.stderr);
         const health = JSON.parse(watchdog.stdout);
         assert.equal(health.status, 'overdue');
-        assert.equal(health.expectedAt, '2026-08-28T08:31:00.000Z');
+        assert.equal(health.expectedAt, '2026-08-28T07:31:00.000Z');
         assert.equal(health.shouldDispatch, true);
     });
 });
 
+test('old schedule events cannot reopen a moved slot', () => {
+    const result = spawnSync(process.execPath, ['scripts/check-crawl-run.mjs'], {
+        encoding: 'utf8', env: { ...process.env, TRIGGER_EVENT: 'schedule',
+            TRIGGER_SCHEDULE: '31 8 * * *', CHECK_CACHE: '0' },
+    });
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /should_run=false/);
+});
+
 test('warns 3 minutes after an uncovered crawl slot', () => {
-    const health = getCrawlScheduleHealth('2026-08-27T15:50:00.000Z', {
-        now: '2026-08-27T23:20:00.000Z',
+    const health = getCrawlScheduleHealth('2026-08-27T14:50:00.000Z', {
+        now: '2026-08-27T21:20:00.000Z',
     });
 
     assert.equal(health.status, 'late');
-    assert.equal(health.expectedAt, '2026-08-27T23:17:00.000Z');
+    assert.equal(health.expectedAt, '2026-08-27T21:17:00.000Z');
     assert.equal(health.delayMinutes, 3);
 });
 
 test('dispatch threshold starts at 5 minutes', () => {
-    const health = getCrawlScheduleHealth('2026-08-27T15:50:00.000Z', {
-        now: '2026-08-27T23:22:00.000Z',
+    const health = getCrawlScheduleHealth('2026-08-27T14:50:00.000Z', {
+        now: '2026-08-27T21:22:00.000Z',
     });
 
     assert.equal(health.status, 'overdue');
@@ -107,22 +116,22 @@ test('dispatch threshold starts at 5 minutes', () => {
 });
 
 test('a newly due slot does not hide an older missed slot', () => {
-    const health = getCrawlScheduleHealth('2026-08-27T15:50:00.000Z', {
-        now: '2026-08-28T02:15:00.000Z',
+    const health = getCrawlScheduleHealth('2026-08-27T14:50:00.000Z', {
+        now: '2026-08-28T01:15:00.000Z',
     });
 
     assert.equal(health.status, 'overdue');
-    assert.equal(health.expectedAt, '2026-08-27T23:17:00.000Z');
+    assert.equal(health.expectedAt, '2026-08-27T21:17:00.000Z');
     assert.equal(health.pendingSlots, 2);
 });
 
 test('a completion covers all earlier slots and leaves only the next slot waiting', () => {
-    const health = getCrawlScheduleHealth('2026-08-28T02:10:00.000Z', {
-        now: '2026-08-28T02:15:00.000Z',
+    const health = getCrawlScheduleHealth('2026-08-28T01:10:00.000Z', {
+        now: '2026-08-28T01:15:00.000Z',
     });
 
     assert.equal(health.status, 'late');
-    assert.equal(health.expectedAt, '2026-08-28T02:12:00.000Z');
+    assert.equal(health.expectedAt, '2026-08-28T01:12:00.000Z');
     assert.equal(health.delayMinutes, 3);
 });
 
@@ -132,19 +141,19 @@ test('health schedule stays in sync with daily-crawl.yml', () => {
     assert.deepEqual([...DAILY_CRAWL_CRONS].sort(), [...workflowCrons].sort());
     assert.equal(workflowCrons.length, 4);
     assert.deepEqual(workflowCrons, [
-        '17 23 * * *',
-        '12 2 * * *',
-        '23 5 * * *',
-        '31 8 * * *',
+        '17 21 * * *',
+        '12 1 * * *',
+        '23 4 * * *',
+        '31 7 * * *',
     ]);
 });
 
-test('Ttang is scheduled only for the 08:17 and 14:23 general slots', () => {
-    assert.deepEqual([...TTANG_CRAWL_CRONS], ['17 23 * * *', '23 5 * * *']);
-    assert.equal(isTtangCrawlSlot('2026-08-28T23:17:00.000Z'), true);
-    assert.equal(isTtangCrawlSlot('2026-08-28T05:23:00.000Z'), true);
-    assert.equal(isTtangCrawlSlot('2026-08-28T02:12:00.000Z'), false);
-    assert.equal(isTtangCrawlSlot('2026-08-28T08:31:00.000Z'), false);
+test('Ttang is scheduled only for the 06:17 and 13:23 general slots', () => {
+    assert.deepEqual([...TTANG_CRAWL_CRONS], ['17 21 * * *', '23 4 * * *']);
+    assert.equal(isTtangCrawlSlot('2026-08-28T21:17:00.000Z'), true);
+    assert.equal(isTtangCrawlSlot('2026-08-28T04:23:00.000Z'), true);
+    assert.equal(isTtangCrawlSlot('2026-08-28T01:12:00.000Z'), false);
+    assert.equal(isTtangCrawlSlot('2026-08-28T07:31:00.000Z'), false);
 
     const workflow = fs.readFileSync('.github/workflows/daily-crawl.yml', 'utf8');
     const crawler = fs.readFileSync('scripts/crawl-all.ts', 'utf8');
@@ -203,7 +212,7 @@ test('the standalone today-pick workflow is manual-only', () => {
 test('MyRealTrip runs two scheduled crawls daily and manual runs need no force bypass', () => {
     const workflow = fs.readFileSync('.github/workflows/myrealtrip-scrape.yml', 'utf8');
     const workflowCrons = [...workflow.matchAll(/^\s*- cron: '([^']+)'/gm)].map(match => match[1]);
-    assert.deepEqual(workflowCrons.sort(), ['5 22 * * *', '3 7 * * *'].sort());
+    assert.deepEqual(workflowCrons.sort(), ['5 21 * * *', '3 6 * * *'].sort());
     assert.doesNotMatch(workflow, /github\.event\.schedule\s*==/);
     assert.doesNotMatch(workflow, /FORCE_MYREALTRIP|inputs\.force/);
     assert.match(workflow, /cp data\/crawl-log\.json \/tmp\/mrt-session-crawl-log\.json/);
@@ -259,7 +268,7 @@ test('the Windows Naver task splits fresh and recovered sources under one daily 
     const installer = fs.readFileSync('scripts/install-naver-crawl-task.ps1', 'utf8');
     const crawler = fs.readFileSync('scripts/crawl-naver.ts', 'utf8');
 
-    for (const time of ['11:12', '14:23', '17:31']) {
+    for (const time of ['10:12', '13:23', '16:31']) {
         assert.match(installer, new RegExp(`New-ScheduledTaskTrigger -Daily -At '${time}'`));
     }
     assert.doesNotMatch(installer, /New-ScheduledTaskTrigger -Daily -At '20:30'/);
@@ -290,7 +299,7 @@ test('the Windows Naver task splits fresh and recovered sources under one daily 
     assert.match(runner, /\$null -ne \$RequestsStarted/);
     assert.match(runner, /@\('--requests-started', \[string\]\$RequestsStarted\)/);
     assert.match(runner, /--running-sources \$RunSourceCsv/);
-    assert.match(runner, /local-naver-run-policy\.mjs check/);
+    assert.match(runner, /local-naver-run-policy\.mjs', 'check'/);
     assert.match(runner, /\$UpstreamPollSeconds = 120/);
     assert.match(runner, /Start-Sleep -Seconds \$SleepSeconds/);
     assert.match(runner, /Get-Random -Minimum 30 -Maximum 181/);
@@ -321,7 +330,7 @@ test('the Windows blocked-source fallback uses the four general crawl slots', ()
     const installer = fs.readFileSync('scripts/install-source-fallback-task.ps1', 'utf8');
     const runner = fs.readFileSync('scripts/run-source-fallback-crawl.ps1', 'utf8');
 
-    for (const time of ['08:17', '11:12', '14:23', '17:31']) {
+    for (const time of ['06:17', '10:12', '13:23', '16:31']) {
         assert.match(installer, new RegExp(`New-ScheduledTaskTrigger -Daily -At '${time}'`));
     }
     assert.match(installer, /TikitikitBlockedSourceCrawl/);
@@ -362,13 +371,13 @@ test('watchdog fallback keeps the missed crawl slot identity', () => {
             ...process.env,
             TRIGGER_EVENT: 'workflow_dispatch',
             TRIGGER_SOURCE: 'watchdog',
-            EXPECTED_AT: '2026-08-28T02:12:00.000Z',
-            CHECK_NOW: '2026-08-28T04:30:00.000Z',
+            EXPECTED_AT: '2026-08-28T01:12:00.000Z',
+            CHECK_NOW: '2026-08-28T03:30:00.000Z',
         },
     });
 
     assert.equal(result.status, 0, result.stderr);
-    assert.match(result.stdout, /\[trigger\] expected_at=2026-08-28T02:12:00\.000Z/);
+    assert.match(result.stdout, /\[trigger\] expected_at=2026-08-28T01:12:00\.000Z/);
     assert.match(result.stdout, /\[preflight\] skip_sources=ttang/);
 });
 
@@ -383,15 +392,15 @@ test('general crawl never selects or repairs today pick', () => {
     assert.match(selector, /하루 1회 선정/);
 });
 
-test('watchdog fallback preserves the 08:17 morning-pick slot identity', () => {
+test('watchdog fallback preserves the 06:17 morning-pick slot identity', () => {
     const result = spawnSync(process.execPath, ['scripts/check-crawl-run.mjs'], {
         encoding: 'utf8',
         env: {
             ...process.env,
             TRIGGER_EVENT: 'workflow_dispatch',
             TRIGGER_SOURCE: 'watchdog',
-            EXPECTED_AT: '2026-08-27T23:17:00.000Z',
-            CHECK_NOW: '2026-08-28T01:30:00.000Z',
+            EXPECTED_AT: '2026-08-27T21:17:00.000Z',
+            CHECK_NOW: '2026-08-28T00:30:00.000Z',
         },
     });
 
@@ -403,8 +412,8 @@ test('watchdog fallback preserves the 08:17 morning-pick slot identity', () => {
 test('an active crawl blocks a fallback dispatch', () => {
     const blocker = getCrawlDispatchBlocker([
         { id: 101, status: 'in_progress', html_url: 'https://example.com/runs/101' },
-    ], '2026-08-28T06:17:00.000Z', {
-        now: '2026-08-28T07:20:00.000Z',
+    ], '2026-08-28T05:17:00.000Z', {
+        now: '2026-08-28T06:20:00.000Z',
     });
 
     assert.equal(blocker?.reason, 'active_run');
@@ -417,11 +426,11 @@ test('a recent fallback for the same slot blocks a duplicate dispatch', () => {
             id: 102,
             status: 'completed',
             event: 'workflow_dispatch',
-            created_at: '2026-08-28T07:10:00.000Z',
-            display_title: 'Daily Flight Crawl · watchdog · 2026-08-28T06:17:00.000Z',
+            created_at: '2026-08-28T06:10:00.000Z',
+            display_title: 'Daily Flight Crawl · watchdog · 2026-08-28T05:17:00.000Z',
         },
-    ], '2026-08-28T06:17:00.000Z', {
-        now: '2026-08-28T07:20:00.000Z',
+    ], '2026-08-28T05:17:00.000Z', {
+        now: '2026-08-28T06:20:00.000Z',
     });
 
     assert.equal(blocker?.reason, 'recent_fallback');
@@ -434,20 +443,20 @@ test('an old fallback or a different slot does not block recovery', () => {
             id: 103,
             status: 'completed',
             event: 'workflow_dispatch',
-            created_at: '2026-08-28T06:20:00.000Z',
-            display_title: 'Daily Flight Crawl · watchdog · 2026-08-28T06:17:00.000Z',
+            created_at: '2026-08-28T05:20:00.000Z',
+            display_title: 'Daily Flight Crawl · watchdog · 2026-08-28T05:17:00.000Z',
         },
         {
             id: 104,
             status: 'completed',
             event: 'workflow_dispatch',
-            created_at: '2026-08-28T07:15:00.000Z',
-            display_title: 'Daily Flight Crawl · watchdog · 2026-08-28T02:56:00.000Z',
+            created_at: '2026-08-28T06:15:00.000Z',
+            display_title: 'Daily Flight Crawl · watchdog · 2026-08-28T01:56:00.000Z',
         },
     ];
 
-    assert.equal(getCrawlDispatchBlocker(runs, '2026-08-28T06:17:00.000Z', {
-        now: '2026-08-28T07:20:00.000Z',
+    assert.equal(getCrawlDispatchBlocker(runs, '2026-08-28T05:17:00.000Z', {
+        now: '2026-08-28T06:20:00.000Z',
     }), null);
 });
 
@@ -466,12 +475,12 @@ test('a successful scheduled run for the same cron blocks a deploy-gap duplicate
             status: 'completed',
             conclusion: 'success',
             event: 'schedule',
-            created_at: '2026-08-28T06:20:00.000Z',
-            display_title: 'Daily Flight Crawl · 17 23 * * * · scheduled',
+            created_at: '2026-08-28T05:20:00.000Z',
+            display_title: 'Daily Flight Crawl · 17 21 * * * · scheduled',
         },
-    ], '2026-08-28T06:17:00.000Z', {
-        now: '2026-08-28T06:30:00.000Z',
-        expectedCron: '17 23 * * *',
+    ], '2026-08-28T05:17:00.000Z', {
+        now: '2026-08-28T05:30:00.000Z',
+        expectedCron: '17 21 * * *',
     });
 
     assert.equal(blocker?.reason, 'recent_scheduled_run');
@@ -485,21 +494,21 @@ test('a failed or different scheduled cron does not block recovery', () => {
             status: 'completed',
             conclusion: 'failure',
             event: 'schedule',
-            created_at: '2026-08-28T06:20:00.000Z',
-            display_title: 'Daily Flight Crawl · 17 23 * * * · scheduled',
+            created_at: '2026-08-28T05:20:00.000Z',
+            display_title: 'Daily Flight Crawl · 17 21 * * * · scheduled',
         },
         {
             id: 107,
             status: 'completed',
             conclusion: 'success',
             event: 'schedule',
-            created_at: '2026-08-28T06:20:00.000Z',
-            display_title: 'Daily Flight Crawl · 12 2 * * * · scheduled',
+            created_at: '2026-08-28T05:20:00.000Z',
+            display_title: 'Daily Flight Crawl · 12 1 * * * · scheduled',
         },
     ];
 
-    assert.equal(getCrawlDispatchBlocker(runs, '2026-08-28T06:17:00.000Z', {
-        now: '2026-08-28T06:30:00.000Z',
-        expectedCron: '17 23 * * *',
+    assert.equal(getCrawlDispatchBlocker(runs, '2026-08-28T05:17:00.000Z', {
+        now: '2026-08-28T05:30:00.000Z',
+        expectedCron: '17 21 * * *',
     }), null);
 });

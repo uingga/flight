@@ -6,9 +6,9 @@ const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
 const HOUR_MS = 60 * 60 * 1000;
 const GENERAL_SOURCES = ['ybtour', 'hanatour', 'modetour', 'onlinetour', 'ttang'];
 const TOTAL_NAVIGATION_BUDGET = 200;
-const INITIAL_SLOT = { hour: 11, minute: 12 };
-const RECOVERY_SLOT = { hour: 14, minute: 23 };
-const FINAL_SLOT = { hour: 17, minute: 31 };
+const INITIAL_SLOT = { hour: 10, minute: 12 };
+const RECOVERY_SLOT = { hour: 13, minute: 23 };
+const FINAL_SLOT = { hour: 16, minute: 31 };
 const TERMINAL_SAME_DAY_PHASES = new Set(['running', 'success', 'blocked', 'degraded']);
 
 function validTimestamp(value) {
@@ -231,7 +231,7 @@ export function evaluateLocalNaverRun({
         const completedSources = uniqueSources(sameDayState.completedSources || []);
         // 2026-09-01 이전 복구 상태에는 실행 중이던 소스 목록이 없었다.
         // 최초 회차가 강제 종료된 경우 당시 정상 갱신된 소스를 다시 추론해
-        // 14:23/17:31 회차에서 조용히 빠지지 않게 한다.
+        // 13:23/16:31 회차에서 조용히 빠지지 않게 한다.
         const legacyInterruptedInitial = /^interrupted_initial_after_\d+_requests$/
             .test(String(sameDayState.reason || ''));
         const inferredInterruptedSources = legacyInterruptedInitial
@@ -263,8 +263,8 @@ export function evaluateLocalNaverRun({
             };
         }
 
-        // A PC fallback may recover a blocked source between 11:12 and 14:23.
-        // Wait for the 14:23 decision point, but accept any source that became
+        // A PC fallback may recover a blocked source between 10:12 and 13:23.
+        // Wait for the 13:23 decision point, but accept any source that became
         // fresh after the initial slot rather than requiring another fetch.
         const recoveredSources = pendingSources.filter(source => (
             source === 'myrealtrip'
@@ -341,7 +341,7 @@ export function evaluateLocalNaverRun({
         };
     }
 
-    // If the first usable full crawl is already the 14:23 recovery slot (or later),
+    // If the first usable full crawl is already the 13:23 recovery slot (or later),
     // stale sources have had their extra chance. Run the fresh subset and finalize.
     const recoveryWindowReached = fullCrawlAt >= recoverySlotAt;
     const deferTodayPick = pendingSources.length > 0 && !recoveryWindowReached;

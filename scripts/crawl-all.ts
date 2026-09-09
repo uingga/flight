@@ -111,8 +111,8 @@ function nextTtangCrawlAt(expectedAt: string | undefined): string | undefined {
     const candidates: number[] = [];
     for (let dayOffset = 0; dayOffset <= 2; dayOffset++) {
         const day = dayStart + dayOffset * 86_400_000;
-        candidates.push(day + (5 * 60 + 23) * 60_000); // 14:23 KST
-        candidates.push(day + (23 * 60 + 17) * 60_000); // 다음 KST 날짜 08:17
+        candidates.push(day + (4 * 60 + 23) * 60_000); // 13:23 KST
+        candidates.push(day + (21 * 60 + 17) * 60_000); // 다음 KST 날짜 06:17
     }
     const next = candidates.filter(timestamp => timestamp > expectedTimestamp).sort((a, b) => a - b)[0];
     return next === undefined ? undefined : new Date(next).toISOString();

@@ -1,9 +1,9 @@
 # Naver flight crawler - Windows Task Scheduler entry point
 #
 # Pull GitHub data first, then share one 200-navigation KST-day budget across
-# the fresh 11:12 sources, the 14:23 recovery pass, and a manual-only 17:31 pass.
+# the fresh 10:12 sources, the 13:23 recovery pass, and a manual-only 16:31 pass.
 #
-# Schedule: 11:12 initial pass, 14:23 recovery pass, 17:31 startup/manual-capture fallback
+# Schedule: 10:12 initial pass, 13:23 recovery pass, 16:31 startup/manual-capture fallback
 # Manual:   powershell -File scripts\run-naver-crawl.ps1
 
 [CmdletBinding()]
@@ -144,7 +144,7 @@ if ($WorktreeDiffExitCode -eq 1 -or $IndexDiffExitCode -eq 1) {
 }
 
 # Each trigger waits for its matching general-crawl commit. The first pass crawls
-# only sources refreshed after 11:12. Preserved sources wait for the 14:23 crawl
+# only sources refreshed after 10:12. Preserved sources wait for the 13:23 crawl
 # and share the original daily navigation budget. Polling never opens Naver.
 $UpstreamPollSeconds = 120
 $KstOffset = [TimeSpan]::FromHours(9)
@@ -156,7 +156,7 @@ while ($true) {
         $PcTask = Get-ScheduledTask -TaskName 'TikitikitBlockedSourceCrawl' -ErrorAction Stop
         $PcInfo = $PcTask | Get-ScheduledTaskInfo -ErrorAction Stop
         $PolicyNowKst = [DateTimeOffset]::UtcNow.ToOffset($KstOffset)
-        $PcSlot = $PolicyNowKst.Date.AddHours(14).AddMinutes(23)
+        $PcSlot = $PolicyNowKst.Date.AddHours(13).AddMinutes(23)
         $PcCollectionPending = [string]$PcTask.State -in @('Running', 'Queued') `
             -or ($PolicyNowKst.DateTime -ge $PcSlot -and $PcInfo.LastRunTime -lt $PcSlot)
     } catch {
@@ -219,7 +219,7 @@ while ($true) {
         $KstOffset
     )
     if ($NowKst -ge $WaitDeadlineKst) {
-        Log 'No usable general-crawl result was available after the 17:31 final slot; stopping without Naver requests'
+        Log 'No usable general-crawl result was available after the 16:31 final slot; stopping without Naver requests'
         Log '=== Local Naver crawl finished without requests ==='
         '' | Add-Content $LogFile
         exit 0
@@ -577,7 +577,7 @@ if ($PartialPricesAllowed) {
 }
 
 if ($RunPolicy.deferTodayPick) {
-    Log "=== Initial Naver phase finished; waiting for 14:23 sources: $PendingSourceCsv ==="
+    Log "=== Initial Naver phase finished; waiting for 13:23 sources: $PendingSourceCsv ==="
     '' | Add-Content $LogFile
     exit 0
 }
