@@ -19,6 +19,42 @@ const readyCache = {
     flights: generalSources.flatMap(source => Array.from({ length: 20 }, (_, index) => ({ source, id: `${source}-${index}` }))),
 };
 
+test('waits for PC completion before freezing recovery sources, then includes ttang', () => {
+    const now = new Date('2026-08-29T05:43:00Z');
+    const state = { kstDate: '2026-08-29', phase: 'partial_waiting', navigationsUsed: 120,
+        completedSources: ['ybtour', 'hanatour', 'myrealtrip'], pendingSources: ['modetour', 'ttang'] };
+    const cache = { ...readyCache, fullCrawlUpdatedAt: '2026-08-29T05:41:00Z',
+        sourceUpdatedAt: { ...readyCache.sourceUpdatedAt, ttang: '2026-08-29T00:00:00Z' } };
+    const waiting = evaluateLocalNaverRun({ now, cache, state, pcCollectionPending: true });
+    assert.equal(waiting.reason, 'recovery_pc_pending');
+    assert.equal(waiting.shouldRun, false);
+    assert.equal(waiting.shouldFinalize, false);
+    cache.sourceUpdatedAt.ttang = '2026-08-29T05:51:00Z';
+    const ready = evaluateLocalNaverRun({ now: new Date('2026-08-29T05:52:00Z'), cache, state });
+    assert.deepEqual(ready.sources, ['modetour', 'ttang']);
+    assert.equal(ready.navigationBudget, 80);
+});
+
+test('approved late recovery retains 159 used, selects only pending ttang and leaves today pick', () => {
+    const state = { kstDate: '2026-08-29', phase: 'success', navigationsUsed: 159,
+        completedSources: ['ybtour', 'hanatour', 'myrealtrip', 'modetour'], pendingSources: ['ttang', 'onlinetour'] };
+    const cache = { ...readyCache, sourceUpdatedAt: { ...readyCache.sourceUpdatedAt, ttang: '2026-08-29T05:51:00Z' } };
+    const input = { now: new Date('2026-08-29T06:20:00Z'), cache, state, approvedRecoverySources: ['ttang'] };
+    const result = evaluateLocalNaverRun(input);
+    assert.equal(result.shouldRun, true);
+    assert.deepEqual(result.sources, ['ttang']);
+    assert.equal(result.navigationBudget, 41);
+    assert.equal(result.skipTodayPick, true);
+    assert.equal(evaluateLocalNaverRun({ ...input, approvedRecoverySources: ['modetour'] }).shouldRun, false);
+    assert.equal(evaluateLocalNaverRun({ ...input, pcCollectionPending: true }).shouldRun, false);
+    for (const phase of ['blocked', 'degraded', 'running']) {
+        assert.equal(evaluateLocalNaverRun({ ...input, state: { ...state, phase } }).shouldRun, false);
+    }
+    assert.equal(evaluateLocalNaverRun({ ...input, state: { ...state, navigationsUsed: 200 } }).shouldRun, false);
+    assert.equal(evaluateLocalNaverRun({ ...input, state: { ...state, navigationsUsed: undefined } }).shouldRun, false);
+    assert.equal(evaluateLocalNaverRun({ ...input, state: { ...state, kstDate: '2026-08-28' } }).shouldRun, false);
+});
+
 test('does not consume the next option when a PowerShell argument is empty', () => {
     const args = ['--completed-sources', '--pending-sources', 'ttang'];
     assert.equal(readOption(args, '--completed-sources'), undefined);

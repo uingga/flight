@@ -119,6 +119,8 @@ export function evaluateLocalNaverRun({
     now = new Date(),
     cache,
     state = null,
+    pcCollectionPending = false,
+    approvedRecoverySources = [],
     totalNavigationBudget = TOTAL_NAVIGATION_BUDGET,
 }) {
     const current = now instanceof Date ? now : new Date(now);
@@ -133,6 +135,26 @@ export function evaluateLocalNaverRun({
     }
 
     const sameDayState = state?.kstDate === currentKstDate ? state : null;
+    // Explicit operator recovery never resets the circuit, consumed budget or completed sources.
+    if (approvedRecoverySources.length > 0) {
+        const completedSources = uniqueSources(sameDayState?.completedSources || []);
+        const pendingSources = uniqueSources(sameDayState?.pendingSources || []);
+        const sources = uniqueSources(approvedRecoverySources);
+        const navigationsUsed = usedNavigationBudget(sameDayState, totalNavigationBudget);
+        const navigationBudget = Math.max(0, totalNavigationBudget - navigationsUsed);
+        const safe = sameDayState?.phase === 'success' && navigationBudget > 0
+            && !pcCollectionPending && sources.every(source => GENERAL_SOURCES.includes(source)
+                && pendingSources.includes(source) && !completedSources.includes(source)
+                && sourceIsFreshAfter(cache, source, kstSlotTimestamp(current, RECOVERY_SLOT.hour, RECOVERY_SLOT.minute)));
+        return {
+            shouldRun: safe, shouldFinalize: false, skipTodayPick: true,
+            reason: safe ? 'approved_pending_source_recovery' : 'approved_recovery_not_safe',
+            kstDate: currentKstDate, runPhase: 'approved_recovery',
+            sources: safe ? sources : [], completedSources,
+            pendingSources: pendingSources.filter(source => !safe || !sources.includes(source)),
+            navigationBudget, navigationsUsed, allowedTodayPickSources: completedSources,
+        };
+    }
     const nextEligibleAt = validTimestamp(sameDayState?.nextEligibleAt);
     if (!['success', 'blocked', 'partial_waiting'].includes(sameDayState?.phase)
         && nextEligibleAt !== null
@@ -250,6 +272,14 @@ export function evaluateLocalNaverRun({
                 : sourceIsFreshAfter(cache, source, initialSlotAt)
         ));
         const stillPendingSources = pendingSources.filter(source => !recoveredSources.includes(source));
+        // GitHub completion is not PC completion: wait before freezing the recovery source list.
+        if (navigationBudget > 0 && pcCollectionPending) {
+            return {
+                shouldRun: false, shouldFinalize: false, reason: 'recovery_pc_pending',
+                kstDate: currentKstDate, runPhase: 'recovery', pendingSources,
+                completedSources, navigationsUsed, navigationBudget,
+            };
+        }
         if (navigationBudget <= 0 || recoveredSources.length === 0) {
             return {
                 shouldRun: false,
@@ -539,7 +569,10 @@ function runCli() {
             process.exitCode = 2;
             return;
         }
-        console.log(JSON.stringify(evaluateLocalNaverRun({ now, cache, state })));
+        console.log(JSON.stringify(evaluateLocalNaverRun({ now, cache, state,
+            pcCollectionPending: args.includes('--pc-collection-pending'),
+            approvedRecoverySources: csvOption(args, '--approved-recovery-sources'),
+        })));
         return;
     }
 

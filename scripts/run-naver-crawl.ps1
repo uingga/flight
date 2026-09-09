@@ -8,7 +8,8 @@
 
 [CmdletBinding()]
 param(
-    [switch]$Scheduled
+    [switch]$Scheduled,
+    [string]$ApprovedRecoverySources = ''
 )
 
 $ErrorActionPreference = 'Continue'
@@ -149,6 +150,18 @@ $UpstreamPollSeconds = 120
 $KstOffset = [TimeSpan]::FromHours(9)
 $FinalizeOnly = $false
 while ($true) {
+    # Observe PC status before pulling, so a completed PC publish is included in this snapshot.
+    $PcCollectionPending = $true
+    try {
+        $PcTask = Get-ScheduledTask -TaskName 'TikitikitBlockedSourceCrawl' -ErrorAction Stop
+        $PcInfo = $PcTask | Get-ScheduledTaskInfo -ErrorAction Stop
+        $PolicyNowKst = [DateTimeOffset]::UtcNow.ToOffset($KstOffset)
+        $PcSlot = $PolicyNowKst.Date.AddHours(14).AddMinutes(23)
+        $PcCollectionPending = [string]$PcTask.State -in @('Running', 'Queued') `
+            -or ($PolicyNowKst.DateTime -ge $PcSlot -and $PcInfo.LastRunTime -lt $PcSlot)
+    } catch {
+        Log 'PC collection status unavailable; recovery waits without Naver requests'
+    }
     # Naming origin/main explicitly avoids repositories with multiple branch
     # merge entries. Scheduled pull failures are retried without browser traffic.
     $PullOutput = & git pull --rebase --autostash origin main 2>&1
@@ -161,9 +174,11 @@ while ($true) {
         }
         Log "Git pull failed while waiting for upstream; retrying in $UpstreamPollSeconds seconds"
     } else {
-        $PolicyOutput = & node scripts/local-naver-run-policy.mjs check `
-            --cache 'data/all-flights-cache.json' `
-            --state $StateFile 2>&1
+        $PolicyArgs = @('scripts/local-naver-run-policy.mjs', 'check',
+            '--cache', 'data/all-flights-cache.json', '--state', $StateFile)
+        if ($PcCollectionPending) { $PolicyArgs += '--pc-collection-pending' }
+        if ($ApprovedRecoverySources) { $PolicyArgs += @('--approved-recovery-sources', $ApprovedRecoverySources) }
+        $PolicyOutput = & node @PolicyArgs 2>&1
         $PolicyExitCode = $LASTEXITCODE
         $PolicyText = ($PolicyOutput | Out-String).Trim()
         Log "run policy: $PolicyText"
@@ -185,7 +200,7 @@ while ($true) {
             Log "No recovery browser session needed; finalizing with sources: $($RunPolicy.allowedTodayPickSources -join ',')"
             break
         }
-        if (-not $Scheduled -or $RunPolicy.reason -notin @('upstream_pending', 'recovery_upstream_pending', 'no_fresh_sources')) {
+        if (-not $Scheduled -or $RunPolicy.reason -notin @('upstream_pending', 'recovery_upstream_pending', 'recovery_pc_pending', 'no_fresh_sources')) {
             Log "Browser launch skipped by policy ($($RunPolicy.reason))"
             Log '=== Local Naver crawl finished without requests ==='
             '' | Add-Content $LogFile
@@ -569,6 +584,11 @@ if ($RunPolicy.deferTodayPick) {
 }
 
 # Select the daily pick only after the successful Naver filter is on main and
+if ($RunPolicy.skipTodayPick) {
+    Log 'Approved pending-source recovery completed; existing today pick left unchanged'
+    exit 0
+}
+
 # the deployed API has caught up. The selector keeps an existing same-day pick,
 # so retries cannot replace a selection that was already published today.
 $TodayPickSelected = $false
