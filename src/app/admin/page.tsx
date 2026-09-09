@@ -11,6 +11,7 @@ import AdminFlightOrder from '@/components/AdminFlightOrder';
 import AdminFlightInterest from '@/components/AdminFlightInterest';
 import AdminTrafficOverview from '@/components/AdminTrafficOverview';
 import AdminAcquisition from '@/components/AdminAcquisition';
+import type { DeviceTrafficData } from '@/lib/device-traffic';
 import type { AcquisitionData } from '@/lib/acquisition';
 import AdminThreadsPosts from '@/components/AdminThreadsPosts';
 import AdminTe31Posts from '@/components/AdminTe31Posts';
@@ -610,6 +611,7 @@ interface GaStatsData {
     alertByEntry: GaListItem[] | null;
     detailByEntry: GaListItem[] | null;
     acquisition?: AcquisitionData;
+    deviceTraffic?: DeviceTrafficData;
     campaigns: GaCampaignPerformance[] | null;
     blogCampaigns?: GaCampaignPerformance[] | null;
     promotionCampaigns?: GaCampaignPerformance[] | null;
@@ -4693,7 +4695,7 @@ export default function AdminPage() {
                                     <p>최근 {gaStats.days}일 유입처와 예약 이동 상위 노선을 비교합니다. 출처별 예약 전환을 뜻하지는 않습니다.</p>
                                 </div>
                             </div>
-                            <AdminTrafficOverview data={gaStats.acquisition} routes={gaStats.bookingByRoute} />
+                            <AdminTrafficOverview data={gaStats.acquisition} routes={gaStats.bookingByRoute} devices={gaStats.deviceTraffic} />
                             <details className={styles.openDisclosure}>
                                 <summary>여행사별 예약 이동 · 알림 등록 위치</summary>
                             <div className={styles.analysisGrid}>

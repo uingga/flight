@@ -1,4 +1,5 @@
 import { Ga4RequestQueue } from '@/lib/ga4-request-queue';
+import { loadDeviceTraffic } from '@/lib/server/device-traffic-report';
 import { loadAcquisition } from '@/lib/server/acquisition-report';
 import { NextRequest, NextResponse } from 'next/server';
 import { ga4Config, runReport, eventNameFilter, dim, num, type Ga4Config, type ReportResponse } from '@/lib/ga4';
@@ -150,6 +151,7 @@ async function optional(
 }
 
 async function buildStats(config: Ga4Config, days: number) {
+    const deviceTrafficPromise = loadDeviceTraffic(config);
     const flightInterestPromise = loadFlightInterest(config);
     const filterDemandPromise = loadFilterDemand(config, days);
     // 7일·30일 수치는 아직 덜 쌓인 오늘을 빼고 어제까지의 완결된 날짜만 쓴다.
@@ -870,6 +872,7 @@ async function buildStats(config: Ga4Config, days: number) {
         alertByEntry: measured(list(entryReport, ENTRY_LABELS)),
         detailByEntry: measured(list(detailEntryReport, ENTRY_LABELS)),
         acquisition,
+        deviceTraffic: await deviceTrafficPromise,
         campaigns,
         blogCampaigns,
         promotionCampaigns,
