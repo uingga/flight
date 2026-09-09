@@ -1,7 +1,7 @@
 import { runReport, type Ga4Config, type ReportRequest, type ReportResponse } from '../ga4';
 import { classifyAcquisition, acquisitionSourceKey, acquisitionSourceLabel, completeAcquisitionReport, type AcquisitionData, type AcquisitionGroup, type AcquisitionSource } from '../acquisition';
 const dimensions = ['sessionDefaultChannelGroup', 'sessionSource', 'sessionMedium'];
-const metrics = [{name:'sessions'}, {name:'activeUsers'}];
+const metrics = [{name:'sessions'}, {name:'totalUsers'}];
 const unavailable = (): AcquisitionData => ({available:false,groups:[],message:'유입 기록을 온전히 확인하지 못했습니다. 제한되거나 일부만 조회된 기록으로 순위를 추정하지 않습니다.'});
 export async function loadAcquisition(config: Ga4Config, dateRanges: ReportRequest['dateRanges'], query: typeof runReport = runReport): Promise<AcquisitionData> {
     try {

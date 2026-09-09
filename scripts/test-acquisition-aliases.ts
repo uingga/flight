@@ -24,6 +24,7 @@ async function main(){
  assert.equal(data.sourceRows!.find(s=>s.source==='keep.naver.com')!.sessions,1);
  assert.equal(data.sourceRows!.find(s=>s.source==='hanatour')!.sessions,1); // Do not delete historical visits without evidence.
  assert.equal(data.sourceRows!.find(s=>s.source==='hanatour.com')!.label,'hanatour.com');
+ for(const req of calls) assert.deepEqual(req.metrics.map(m=>m.name),['sessions','totalUsers']);
  const unions=calls.filter(c=>!c.dimensions);assert.equal(unions.length,2); // Reuse totals across summary/category, no duplicate API calls.
  for(const req of unions){const filters=(req.dimensionFilter as any).orGroup.expressions;assert.equal(filters.length,2);for(const t of filters)assert.deepEqual(t.andGroup.expressions.map((f:any)=>f.filter.fieldName),['sessionDefaultChannelGroup','sessionSource','sessionMedium']);}
  for(const failure of ['throw','partial','invalid'] as const){

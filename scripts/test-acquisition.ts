@@ -36,6 +36,16 @@ assert.equal(data.available,true);const search=data.groups.find(g=>g.label==='�
 assert.equal(search.users,3);assert.equal(search.sources.reduce((s,r)=>s+(r.users||0),0),4);assert.equal(search.sessions,5);
 assert.equal(data.groups.reduce((s,g)=>s+g.sessions,0),8);
 assert.equal(calls.length,3);assert.match(JSON.stringify(calls[2].dimensionFilter),/sessionMedium/);
+for(const req of calls) assert.deepEqual(req.metrics.map(m=>m.name),['sessions','totalUsers']);
+// A brief visit can have zero active users while still having one total user.
+const briefVisit=await loadAcquisition(config,[],async(_,req)=>({rows:[{
+ dimensionValues:['Referral','chatgpt.com','referral'].map(value=>({value})),
+ metricValues:req.metrics.map(metric=>({value:String(({sessions:1,totalUsers:1,activeUsers:0} as Record<string,number>)[metric.name])})),
+}]}));
+assert.equal(briefVisit.available,true);
+assert.equal(briefVisit.sourceRows?.[0].label,'ChatGPT');
+assert.equal(briefVisit.sourceRows?.[0].sessions,1);
+assert.equal(briefVisit.sourceRows?.[0].users,1);
 const failed=await loadAcquisition(config,[],async(_,req)=>{if(req.dimensions?.length===1)throw Error('failed');return {rows:raw}});
 assert.equal(failed.groups.find(g=>g.label==='검색')!.users,null);
 const mismatch=await loadAcquisition(config,[],async(_,req)=>req.dimensions?.length===3?{rows:raw}:{rows:[],totals:[{metricValues:[{value:'6'},{value:'3'}]}]});

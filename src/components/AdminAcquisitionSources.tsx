@@ -12,6 +12,6 @@ export default function AdminAcquisitionSources({data}:{data?:AcquisitionData}) 
  return <div className={styles.panel}>
  {known.length ? <table className={styles.table}><thead><tr><th>유입처</th><th>방문</th><th>인원</th></tr></thead><tbody>{(all?known:known.slice(0,5)).map(row=><tr key={row.source}><td><strong title={row.source}>{row.label}</strong><small>{row.categories.join(' · ')}</small></td><td>{row.sessions.toLocaleString()}회</td><td>{people(row.users)}</td></tr>)}</tbody></table> : <p className={styles.note} role="status">확인되는 유입처가 없습니다.</p>}
  {unknown && <div className={styles.unknown}><span>출처 확인 불가</span><span>{unknown.sessions.toLocaleString()}회 · {people(unknown.users)}</span></div>}
- <div className={styles.footer}>{known.length>5 && <button type="button" aria-expanded={all} onClick={()=>setAll(!all)}>{all?'접기':`유입처 ${known.length-5}개 더 보기`}</button>}<details><summary>집계 기준</summary><p>방문은 세션, 인원은 GA4 활성 사용자 기준입니다. 동일 출처의 인원은 중복을 제외하며, 출처별 인원은 서로 겹칠 수 있습니다. 미확인 인원은 추정하지 않습니다.</p></details></div>
+ <div className={styles.footer}>{known.length>5 && <button type="button" aria-expanded={all} onClick={()=>setAll(!all)}>{all?'접기':`유입처 ${known.length-5}개 더 보기`}</button>}<details><summary>집계 기준</summary><p>방문은 세션, 인원은 GA4 전체 사용자 기준입니다. 동일 출처의 인원은 중복을 제외하며, 출처별 인원은 서로 겹칠 수 있습니다. 미확인 인원은 추정하지 않습니다.</p></details></div>
  </div>;
 }
