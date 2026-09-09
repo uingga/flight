@@ -397,6 +397,9 @@ export function diversifyFlightDestinationsWithDecisions(
 export interface RecommendationDiversityOptions extends FlightDiversityOptions {
     tierOf: (flight: Flight) => number;
     firstBlockSize?: number;
+    /** The first screen keeps its existing selection; only the remainder uses this order. */
+    tailCompare?: (a: Flight, b: Flight) => number;
+    tailScoreOf?: (flight: Flight) => number;
     /** 오늘의 표 목적지는 첫 화면에서만 빼고 이후 목록에는 다시 합친다. */
     firstBlockExcludedDestination?: string;
 }
@@ -414,38 +417,8 @@ function expensivePriceBand(flight: Flight): 'under-300' | '300-400' | '400-500'
 }
 
 /**
- * 목적지·출발지 다양화로 확보한 자리 구성은 유지하되, 같은 출발권역·목적지의 카드가 차지한
- * 자리끼리는 실질 결제가가 싼 순서로 바꾼다. 같은 노선의 더 비싼 표가 먼저 보이지 않게 하는
- * 최종 안전장치다.
- */
-function enforceSameRoutePriceOrder(items: Flight[]): Flight[] {
-    const routeQueues = new Map<string, Flight[]>();
-    const originalIndexes = new Map(items.map((flight, index) => [flight.id, index]));
-    for (const flight of items) {
-        const key = firstNineRouteKey(flight);
-        if (!key) continue;
-        const routeItems = routeQueues.get(key) || [];
-        routeItems.push(flight);
-        routeQueues.set(key, routeItems);
-    }
-    routeQueues.forEach(routeItems => routeItems.sort((a, b) => (
-        getEffectivePrice(a) - getEffectivePrice(b)
-        || (originalIndexes.get(a.id) ?? 0) - (originalIndexes.get(b.id) ?? 0)
-    )));
-
-    const nextIndexByRoute = new Map<string, number>();
-    return items.map(flight => {
-        const key = firstNineRouteKey(flight);
-        if (!key) return flight;
-        const index = nextIndexByRoute.get(key) || 0;
-        nextIndexByRoute.set(key, index + 1);
-        return routeQueues.get(key)?.[index] || flight;
-    });
-}
-
-/**
  * 비교가 구간 순서를 지키면서 첫 묶음은 노선별 최저가 일정만 구성한다.
- * 첫 묶음에 들지 않은 다른 일정은 같은 정렬 규칙으로 뒤에 이어 붙인다.
+ * 이후 일정은 별도 가격 평가순을 지원하며, 마지막 노선별 가격 교환을 하지 않는다.
  */
 export function diversifyRecommendationOrderWithDecisions(
     items: Flight[],
@@ -457,6 +430,8 @@ export function diversifyRecommendationOrderWithDecisions(
         firstBlockSize = 9,
         leadingFlights = [],
         firstBlockExcludedDestination,
+        tailCompare,
+        tailScoreOf,
         ...diversityOptions
     } = options;
     // 추천 본체가 이미 가격 근거를 모두 반영해 정렬한 순서를 그대로 받는다.
@@ -483,13 +458,18 @@ export function diversifyRecommendationOrderWithDecisions(
     const firstBlockDecisionById = new Map(
         representativeResult.decisions.map(decision => [decision.flightId, decision]),
     );
+    const tailCandidates = rankedItems.filter(flight => !firstBlockIds.has(flight.id));
+    if (tailCompare) tailCandidates.sort(tailCompare);
     const tailResult = diversifyFlightDestinationsWithDecisions(
-        rankedItems.filter(flight => !firstBlockIds.has(flight.id)),
+        tailCandidates,
         {
             ...diversityOptions,
             leadingFlights: [...leadingFlights, ...firstBlock],
             topWindow: 0,
             balanceIncheon: false,
+            // A hard tier gate here would reintroduce the price cliff removed by tailCompare.
+            ...(tailCompare ? { tierOf: undefined, maxTierGap: Infinity } : {}),
+            ...(tailScoreOf ? { scoreOf: tailScoreOf } : {}),
         },
     );
 
@@ -506,7 +486,7 @@ export function diversifyRecommendationOrderWithDecisions(
             firstNine: false,
         })),
     ];
-    const flights = enforceSameRoutePriceOrder(diversityOrderedFlights);
+    const flights = diversityOrderedFlights;
     const originalIndexById = new Map(items.map((flight, index) => [flight.id, index]));
 
     return {

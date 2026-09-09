@@ -108,6 +108,8 @@ export interface RecommendationPlacementExplanation {
         displayPosition: number | null;
         rule: 'today-pick-pinned' | 'comparison-tier-then-score' | 'destination-diversity' | 'excluded';
         diversityDecision?: FlightDiversityDecision;
+        /** Effective score for the post-first-screen ranking, when applicable. */
+        tailScore?: number;
     };
 }
 
@@ -569,6 +571,36 @@ function firstSeenTimestamp(flight: Flight): number {
     return Number.isFinite(timestamp) ? timestamp : Number.NEGATIVE_INFINITY;
 }
 
+/** Approved strong curve for fresh same-date premiums; no threshold discontinuity. */
+export function getRecommendationPremiumMultiplier(premiumRatio: number): number {
+    const ratio = Math.max(0, premiumRatio);
+    return 0.8 + 2 * ratio + 24 * ratio * ratio;
+}
+
+/** Keep every existing evidence factor and only replace the fresh Naver premium factor. */
+export function getRecommendationTailScore(explanation: RecommendationScoreExplanation): number {
+    const comparison = explanation.comparisonPrice;
+    if (explanation.recommendationEvidenceSource !== 'same-date'
+        || !comparison || comparison <= 0 || explanation.effectivePrice <= comparison) {
+        return explanation.score;
+    }
+    const previousMultiplier = explanation.factors.find(factor => factor.rule === 'naver-same-date')?.multiplier;
+    if (!previousMultiplier || previousMultiplier <= 0) return explanation.score;
+    const premiumRatio = (explanation.effectivePrice - comparison) / comparison;
+    return explanation.score / previousMultiplier * getRecommendationPremiumMultiplier(premiumRatio);
+}
+
+export function compareRecommendationTailFlights(
+    a: Flight,
+    b: Flight,
+    scores: Map<string, number>,
+): number {
+    return (scores.get(a.id) ?? Infinity) - (scores.get(b.id) ?? Infinity)
+        || firstSeenTimestamp(b) - firstSeenTimestamp(a)
+        || getEffectivePrice(a) - getEffectivePrice(b)
+        || a.id.localeCompare(b.id);
+}
+
 /** 합의한 새 추천 근거를 순서대로 비교한다. 이전 추천 배수점수는 순위 결정에 사용하지 않는다. */
 export function compareRecommendedFlights(
     a: Flight,
@@ -633,9 +665,14 @@ export function buildRecommendationPresentation(
     } = options;
     const pool = excludePinnedFlight(rankedCandidates, pinnedFlight);
     const diversityByFlightId = new Map<string, FlightDiversityDecision>();
+    const tailScores = new Map<string, number>();
     let orderedFlights = pool;
 
     if (diversify) {
+        pool.forEach(flight => {
+            const explanation = scoreState.explanations.get(flight.id);
+            if (explanation) tailScores.set(flight.id, getRecommendationTailScore(explanation));
+        });
         const result = diversifyRecommendationOrderWithDecisions(pool, {
             tierOf: flight => scoreState.explanations.get(flight.id)?.topRecommendationTier
                 ?? getComparisonPriceTier(flight, now),
@@ -648,6 +685,8 @@ export function buildRecommendationPresentation(
                 scoreState.explanations.get(flight.id)?.expensivePromotionEligible
             ),
             maxTierGap: 1,
+            tailCompare: (a, b) => compareRecommendationTailFlights(a, b, tailScores),
+            tailScoreOf: flight => tailScores.get(flight.id) ?? Infinity,
             balanceIncheon,
             firstBlockExcludedDestination: pinnedFlight
                 ? normalizeCity(pinnedFlight.arrival.city)
@@ -708,6 +747,8 @@ export function buildRecommendationPresentation(
                             ? 'destination-diversity'
                             : 'comparison-tier-then-score',
                 diversityDecision: diversityByFlightId.get(flight.id),
+                tailScore: diversityByFlightId.get(flight.id)?.firstNine === false
+                    ? tailScores.get(flight.id) : undefined,
             },
         });
     });
