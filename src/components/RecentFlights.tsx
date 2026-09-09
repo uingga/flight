@@ -127,10 +127,20 @@ export default function RecentFlights({ records, flights, loading, storageUnavai
                                     row.dataset.removing = 'true';
                                     const height = row.getBoundingClientRect().height;
                                     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-                                    const animation = row.animate([
+                                    const desktop = window.matchMedia('(min-width: 601px)').matches;
+                                    const frames: Keyframe[] = desktop ? [
+                                        { height: height + 'px', opacity: 1, transform: 'scale(1)', marginBottom: '0px', offset: 0 },
+                                        { height: height + 'px', opacity: 0.25, transform: 'scale(0.98)', marginBottom: '0px', offset: 0.4 },
+                                        { height: '0px', opacity: 0, transform: 'scale(0.98)', marginBottom: '-10px', borderWidth: '0px', offset: 1 },
+                                    ] : [
                                         { height: height + 'px', opacity: 1, marginBottom: '0px' },
                                         { height: '0px', opacity: 0, marginBottom: '-10px', borderWidth: '0px' },
-                                    ], { duration: reduced ? 0 : 220, easing: 'cubic-bezier(0.25, 0.8, 0.25, 1)', fill: 'forwards' });
+                                    ];
+                                    const animation = row.animate(frames, {
+                                        duration: reduced ? 0 : desktop ? 380 : 220,
+                                        easing: desktop ? 'ease-in-out' : 'cubic-bezier(0.25, 0.8, 0.25, 1)',
+                                        fill: 'forwards',
+                                    });
                                     await animation.finished.catch(() => {});
                                 }
                                 setRevealedKey(null);
