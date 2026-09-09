@@ -2546,6 +2546,11 @@ export default function MobileRedesignPreview({
 
     const freshDesktopPairs = useMemo(() => freshFlightsInsight?.pairs || [], [freshFlightsInsight]);
     const freshDesktopPairCount = freshDesktopPairs.length;
+    const freshDesktopActiveIndex = freshDesktopPairCount > 1
+        ? ((freshDesktopPosition - 1) % freshDesktopPairCount + freshDesktopPairCount) % freshDesktopPairCount : 0;
+    const freshDesktopTotal = freshDesktopPairs.reduce((total, pair) => total + pair.length, 0);
+    const freshDesktopFirst = freshDesktopPairs.slice(0, freshDesktopActiveIndex).reduce((total, pair) => total + pair.length, 0) + 1;
+    const freshDesktopLast = freshDesktopFirst + (freshDesktopPairs[freshDesktopActiveIndex]?.length || 0) - 1;
     const freshDesktopLoopingPairs = useMemo(() => {
         if (freshDesktopPairCount <= 1) return freshDesktopPairs;
         return [
@@ -4158,6 +4163,9 @@ export default function MobileRedesignPreview({
                                                             </div>
                                                         ))}
                                                     </div>
+                                                </div>
+                                                <div className={styles.freshFlightsDesktopCount} data-fresh-desktop-count>
+                                                    {freshDesktopFirst === freshDesktopLast ? freshDesktopFirst : freshDesktopFirst + '–' + freshDesktopLast} / 총 {freshDesktopTotal}개
                                                 </div>
                                             </section>
                                         </div>

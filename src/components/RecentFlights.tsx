@@ -26,7 +26,7 @@ export default function RecentFlights({ records, flights, loading, storageUnavai
     const portalRoot = useRef<Element | null>(null);
     const [revealedKey, setRevealedKey] = useState<string | null>(null);
     const [dragOffset, setDragOffset] = useState<number | null>(null);
-    const gesture = useRef<{ key: string; x: number; y: number; start: number; offset: number; axis: 'pending' | 'x' | 'y' } | null>(null);
+    const gesture = useRef<{ key: string; x: number; y: number; start: number; offset: number; lastX: number; lastTime: number; velocity: number; axis: 'pending' | 'x' | 'y' } | null>(null);
     const suppressClick = useRef(false);
     useEffect(() => { if (!open) { setRevealedKey(null); setDragOffset(null); gesture.current = null; } }, [open]);
     const close = () => dismissOverlayWithHistory('recent-flights', () => onOpenChange(false));
@@ -59,13 +59,16 @@ export default function RecentFlights({ records, flights, loading, storageUnavai
                     const key = recentFlightKey(record.flight);
                     const revealed = revealedKey === key;
                     const offset = gesture.current?.key === key && dragOffset !== null ? dragOffset : revealed ? -80 : 0;
-                    return <div className={styles.card} key={key} data-recent-card data-revealed={revealed}
+                    return <div className={styles.card} key={key} data-recent-card data-revealed={revealed} data-dragging={gesture.current?.key === key && dragOffset !== null}
                         style={{ '--swipe-offset': offset + 'px' } as CSSProperties}>
                         <div className={styles.cardContent} data-recent-swipe
                             onPointerDown={event => {
                                 if (event.pointerType === 'mouse' || !event.isPrimary || !window.matchMedia('(max-width: 600px)').matches) return;
                                 suppressClick.current = false;
-                                gesture.current = { key, x: event.clientX, y: event.clientY, start: revealed ? -80 : 0, offset: revealed ? -80 : 0, axis: 'pending' };
+                                const transform = getComputedStyle(event.currentTarget).transform;
+                                const start = transform === 'none' ? 0 : new DOMMatrixReadOnly(transform).m41;
+                                gesture.current = { key, x: event.clientX, y: event.clientY, start, offset: start, lastX: event.clientX, lastTime: event.timeStamp, velocity: 0, axis: 'pending' };
+                                setDragOffset(start);
                             }}
                             onPointerMove={event => {
                                 const g = gesture.current;
@@ -77,13 +80,21 @@ export default function RecentFlights({ records, flights, loading, storageUnavai
                                 }
                                 if (g.axis !== 'x') return;
                                 suppressClick.current = true;
-                                g.offset = Math.max(-80, Math.min(0, g.start + dx));
+                                const elapsed = event.timeStamp - g.lastTime;
+                                if (elapsed > 0) g.velocity = (event.clientX - g.lastX) / elapsed;
+                                g.lastX = event.clientX; g.lastTime = event.timeStamp;
+                                const rawOffset = g.start + dx;
+                                // Resistance beyond the action width keeps the edge from feeling like a wall.
+                                g.offset = rawOffset < -80 ? -80 - Math.min(24, (-80 - rawOffset) * 0.2) : Math.min(0, rawOffset);
                                 setRevealedKey(key); setDragOffset(g.offset);
                             }}
-                            onPointerUp={() => {
+                            onPointerUp={event => {
                                 const g = gesture.current;
                                 if (!g || g.key !== key) return;
-                                if (g.axis === 'x') setRevealedKey(g.offset <= -40 ? key : null);
+                                if (g.axis === 'x') {
+                                    const velocity = event.timeStamp - g.lastTime < 100 ? g.velocity : 0;
+                                    setRevealedKey(g.offset + velocity * 110 <= -40 ? key : null);
+                                }
                                 gesture.current = null; setDragOffset(null);
                             }}
                             onPointerCancel={() => { gesture.current = null; setDragOffset(null); setRevealedKey(null); }}
@@ -108,10 +119,23 @@ export default function RecentFlights({ records, flights, loading, storageUnavai
                         <button type="button" className={styles.remove} data-remove-recent
                             aria-label={display.departure.city + ' → ' + display.arrival.city + ' ' + shortDate(display.departure.date) + ' 기록 삭제'}
                             onFocus={() => { if (window.matchMedia('(max-width: 600px)').matches) setRevealedKey(key); }}
-                            onClick={event => {
+                            onClick={async event => {
+                                const button = event.currentTarget;
+                                const row = button.closest<HTMLElement>('[data-recent-card]');
+                                if (row?.dataset.removing === 'true') return;
+                                if (row) {
+                                    row.dataset.removing = 'true';
+                                    const height = row.getBoundingClientRect().height;
+                                    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                                    const animation = row.animate([
+                                        { height: height + 'px', opacity: 1, marginBottom: '0px' },
+                                        { height: '0px', opacity: 0, marginBottom: '-10px', borderWidth: '0px' },
+                                    ], { duration: reduced ? 0 : 220, easing: 'cubic-bezier(0.25, 0.8, 0.25, 1)', fill: 'forwards' });
+                                    await animation.finished.catch(() => {});
+                                }
                                 setRevealedKey(null);
                                 const buttons = Array.from(dialogRef.current?.querySelectorAll<HTMLButtonElement>('[data-remove-recent]') || []);
-                                const index = buttons.indexOf(event.currentTarget);
+                                const index = buttons.indexOf(button);
                                 onRemove(recentFlightKey(record.flight));
                                 requestAnimationFrame(() => {
                                     const remaining = dialogRef.current?.querySelectorAll<HTMLButtonElement>('[data-remove-recent]');
