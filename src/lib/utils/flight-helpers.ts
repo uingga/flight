@@ -33,6 +33,9 @@ export const getDefaultEndDate = () => {
 // 도시명 정규화: "서울(ICN)" → "인천", "서울(GMP)" → "김포", "서울" → "인천"
 export const normalizeCity = (city: string): string => {
     const trimmed = city.trim();
+    // TTang's Chinese city alias must be resolved before generic parentheses removal.
+    // Bare 광주 and 광주(KWJ) remain the Korean city.
+    if (/^광주\s*\(\s*광저우\s*\)$/.test(trimmed)) return '광저우';
     // 도시명 표기 통일 매핑
     const cityNameMap: Record<string, string> = {
         '푸껫': '푸켓',
@@ -69,6 +72,7 @@ export const normalizeCity = (city: string): string => {
         else if (code === 'TAE') result = '대구';
         else if (code === 'CJJ') result = '청주';
         else if (code === 'CJU') result = '제주';
+        else if (code === 'CAN') result = '광저우';
         else if (code === 'NRT') result = '도쿄(나리타)';
         else if (code === 'HND') result = '도쿄(하네다)';
         else if (code === 'KIX') result = '오사카(간사이)';
