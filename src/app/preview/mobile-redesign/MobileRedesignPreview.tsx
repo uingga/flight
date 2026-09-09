@@ -3987,7 +3987,8 @@ export default function MobileRedesignPreview({
                             const cardNumber = index + 1;
                             return (
                                 <Fragment key={flight.id}>
-                                    {sharedFlightIds.length > 0 && initialSharedGroup?.routes.map(route => {
+                                    {/* Single-ticket routes already identify themselves on each card. */}
+                                    {sharedFlightIds.length > 0 && initialSharedGroup?.routes.some(route => route.flightIds.length > 1) && initialSharedGroup.routes.map(route => {
                                         const first = feedFlights.find(item => route.flightIds.includes(item.id));
                                         return first?.id === flight.id ? <h3 className={styles.sharedRouteHeading} key={route.label}>{route.label}</h3> : null;
                                     })}

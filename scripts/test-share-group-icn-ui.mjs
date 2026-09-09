@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import { chromium } from 'playwright';
 
 const base = process.env.TEST_BASE_URL || 'http://127.0.0.1:31861';
@@ -16,7 +17,7 @@ try {
     await cards.first().waitFor();
     assert.deepEqual(await cards.evaluateAll(items => items.map(item => item.dataset.flightId)), ids);
     for (const city of ['나트랑', '삿포로', '하노이']) {
-        assert.equal(await page.getByRole('heading', { name: `인천 → ${city}`, exact: true }).count(), 1);
+        assert.equal(await page.getByRole('heading', { name: `인천 → ${city}`, exact: true }).count(), 0);
     }
     // Preserve the site's current base-fare display; ttang fees are explained in details.
     for (const [index, price] of ['150,000', '249,000', '210,000'].entries()) {
@@ -25,9 +26,22 @@ try {
     const tracked = new URL(page.url());
     assert.equal(tracked.searchParams.get('utm_content'), 'share_group_icn-260909');
     assert.equal(await page.locator('meta[property="og:title"]').getAttribute('content'), '인천 출발 항공권 3개 | 티키티킷');
-    for (const width of [1200, 390]) {
+    fs.mkdirSync('tmp/share-group-icn-verification', { recursive: true });
+    for (const width of [1200, 960, 390, 360]) {
         await page.setViewportSize({ width, height: 900 });
         assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+        const boxes = await cards.evaluateAll(items => items.map(item => {
+            const rect = item.getBoundingClientRect();
+            return { x: rect.x, y: rect.y, right: rect.right, bottom: rect.bottom };
+        }));
+        if (width >= 960) {
+            assert.ok(boxes.every(box => Math.abs(box.y - boxes[0].y) < 2), 'Desktop cards share one row');
+            assert.ok(boxes[0].right < boxes[1].x && boxes[1].right < boxes[2].x);
+        } else {
+            assert.ok(boxes.every(box => Math.abs(box.x - boxes[0].x) < 2), 'Mobile cards share one column');
+            assert.ok(boxes[0].bottom < boxes[1].y && boxes[1].bottom < boxes[2].y);
+        }
+        await page.screenshot({ path: `tmp/share-group-icn-verification/${width}.png`, fullPage: true });
         for (const id of ids) {
             await page.locator(`article[data-flight-id="${id}"]`).getByRole('button').first().click();
             const link = page.getByRole('link', { name: /에서 확인하기/ });
@@ -48,6 +62,14 @@ try {
     const og = await page.request.get(`${base}/api/og?group=icn-260909`);
     assert.equal(og.status(), 200);
     assert.match(og.headers()['content-type'], /image/);
+    await page.setViewportSize({ width: 1200, height: 900 });
+    await page.goto(`${base}/c/te31-pus-260908`);
+    await cards.first().waitFor();
+    // The older collection may lose tickets to availability filters over time.
+    assert.ok((await cards.count()) > 0 && (await cards.count()) <= 12);
+    for (const city of ['장가계', '오사카', '타이중', '시즈오카', '광저우']) {
+        assert.equal(await page.getByRole('heading', { name: `부산 → ${city}`, exact: true }).count(), 1);
+    }
     assert.deepEqual(errors, []);
     console.log('ICN collection: exact 3 flights, base fares and fee notice, desktop/mobile details, back navigation, UTM and OG passed.');
 } finally {
