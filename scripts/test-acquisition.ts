@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { classifyAcquisition } from '../src/lib/acquisition';
+import { classifyAcquisition, acquisitionSourceLabel } from '../src/lib/acquisition';
 import { loadAcquisition } from '../src/lib/server/acquisition-report';
 import type { ReportRow, ReportRequest } from '../src/lib/ga4';
 for(const [channel,source,medium,expected] of [
@@ -17,6 +17,9 @@ for(const [channel,source,medium,expected] of [
  ['Unassigned','chatgpt.com','referral','AI 서비스'],
  ['Unassigned','threads.com','referral','SNS'],
 ]) assert.equal(classifyAcquisition(channel,source,medium),expected,source);
+assert.equal(acquisitionSourceLabel('hanatour'), 'hanatour (출처 확인 필요)');
+assert.equal(acquisitionSourceLabel('hanatour.com'), 'hanatour.com');
+assert.equal(classifyAcquisition('Unassigned','hanatour','(not set)'), '유형 미분류');
 const row=(channel:string,source:string,medium:string,sessions:number,users:number):ReportRow=>({dimensionValues:[channel,source,medium].map(value=>({value})),metricValues:[sessions,users].map(v=>({value:String(v)}))});
 const raw=[row('Organic Search','naver','organic',4,3),row('Organic Search','google','organic',1,1),row('Unassigned','user_share','referral',2,2),row('Referral','m.keep.naver.com','referral',1,1)];
 const config={propertyId:'test',clientEmail:'test',privateKey:'test'};

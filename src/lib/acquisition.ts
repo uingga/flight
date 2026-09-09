@@ -24,6 +24,9 @@ export function classifyAcquisition(channel: string, source: string, medium: str
 }
 export function acquisitionSourceLabel(source: string): string {
     const s = host(source);
+    const agencyCodes = ['hanatour', 'modetour', 'myrealtrip', 'ybtour', 'ttang', 'onlinetour'];
+    // Preserve historical counts and raw source; never assume these are agency visitors.
+    if (agencyCodes.includes(s)) return source + ' (출처 확인 필요)';
     if (s === 'te31' || domain(s, 'te31.com')) return 'TE31';
     if (s === 'user_share') return '항공권 공유 링크';
     if (domain(s, 'keep.naver.com')) return '네이버 Keep';

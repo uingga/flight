@@ -202,10 +202,11 @@ export const trackDetailOpen = (
     details: Pick<RevenueClickDetails, 'flightId' | 'destination'> = {},
 ) => {
     trackVisitAction('detail');
+    // Keep agency metadata separate from GA4 traffic-source fields.
     event('detail_open', {
         route,
         price,
-        source,
+        travel_agency: source,
         entry_point: entry,
         currency: 'KRW',
         ...revenueParams(details),
@@ -214,7 +215,7 @@ export const trackDetailOpen = (
         event('city_detail_open', {
             route,
             price,
-            source,
+            travel_agency: source,
             entry_point: entry,
             currency: 'KRW',
             ...revenueParams(details),
