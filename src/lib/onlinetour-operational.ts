@@ -47,7 +47,7 @@ export function validateOperationalCatalogue(summary: any, raw: any[], saved: Fl
     assert.ok(Date.parse(summary.startedAt) <= Date.parse(summary.finishedAt));
     assert.ok(Date.parse(summary.finishedAt) <= now && now-Date.parse(summary.startedAt) <= 60*60_000);
     assert.equal(summary.incompletePageCount,0);
-    assert.ok(Number.isSafeInteger(summary.productRequests) && summary.productRequests > 0 && summary.productRequests <= plan.maxProductRequests);
+    assert.ok(Number.isSafeInteger(summary.productRequests) && summary.productRequests >= 0 && summary.productRequests <= plan.maxProductRequests);
     assert.ok(summary.regionalNavigations <= plan.maxRegionalNavigations);
     assert.deepEqual(summary.regions.map((r:any)=>r.region),plan.regions);
     assert.ok(summary.regions.every((r:any)=>r.completed === true));
@@ -72,7 +72,10 @@ export function validateOperationalCatalogue(summary: any, raw: any[], saved: Fl
             assert.ok(scopes.some((s:any)=>s.scope.city === city.code && s.scope.month === m),'missing city month '+city.code+'|'+m);
       }
     }
-    assert.ok(Array.isArray(raw) && raw.length > 0 && raw.length <= validationLimit*20);
+    assert.ok(Array.isArray(raw) && raw.length <= validationLimit*20);
+    const verifiedEmpty = raw.length === 0 && summary.regions.every((r:any) => r.cities.length === 0 && r.emptyInventoryVerified === true);
+    assert.ok(raw.length > 0 || verifiedEmpty);
+    assert.ok(summary.productRequests > 0 || verifiedEmpty);
     const mapped: Flight[] = [];
     for(let offset=0;offset<raw.length;offset+=20) {
         const checked=validatePilotResponse('verify('+JSON.stringify({status:200,data:{list:raw.slice(offset,offset+20)}})+');','verify');
@@ -80,10 +83,10 @@ export function validateOperationalCatalogue(summary: any, raw: any[], saved: Fl
     }
     assert.equal(new Set(mapped.map(f=>f.id)).size,mapped.length);
     assert.deepEqual(saved,mapped); assert.equal(summary.uniqueCount,mapped.length);
-    const drop=classifySourceResponseDrop(mapped.length,baseline);
+    const drop=verifiedEmpty ? null : classifySourceResponseDrop(mapped.length,baseline);
     if(drop) throw new SourceResponseError('soft-block',drop.detail);
     const eligible=eligibleDepartures(mapped,plan.departureWindow!);
-    assert.ok(eligible.length > 0); assert.equal(summary.eligibleCount,eligible.length);
+    assert.ok(eligible.length > 0 || verifiedEmpty); assert.equal(summary.eligibleCount,eligible.length);
     assert.equal(summary.outsideDepartureWindowCount,mapped.length-eligible.length);
     return eligible;
 }

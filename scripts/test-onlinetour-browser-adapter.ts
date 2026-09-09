@@ -146,7 +146,7 @@ const apiUrl = (pageNo: number, requested = scope) => 'https://api.onlinetour.co
     eventStartDate: '', areaCode: 'AS', order: 'LP', pageNo: String(pageNo), pageSize: '20', pageYn: 'Y',
     depPyunStr: '', statusStr: '', callback: 'offlineCallback',
 });
-export function respond(client: FakeCdp, pageNo: number, options: { requested?: typeof scope; status?: number; text?: string; document?: boolean; next?: boolean; noRequest?: boolean } = {}) {
+export function respond(client: FakeCdp, pageNo: number, options: { requested?: typeof scope; status?: number; text?: string; document?: boolean; next?: boolean; noRequest?: boolean; modern?: boolean } = {}) {
     const requested = options.requested || scope;
     if (options.document) {
         client.emit('Network.requestWillBeSent', { requestId: 'document', frameId: 'main', type: 'Document', request: { method: 'GET', url: listUrl } });
@@ -154,7 +154,9 @@ export function respond(client: FakeCdp, pageNo: number, options: { requested?: 
         client.emit('Network.responseReceived', { requestId: 'document', frameId: 'main', type: 'Document', response: { url: listUrl, status: 200, headers: { 'content-type': 'text/html' } } });
         client.emit('Network.loadingFinished', { requestId: 'document', encodedDataLength: 80 });
     }
-    const url = apiUrl(pageNo, requested);
+    const modern = new URL(apiUrl(pageNo, requested));
+    if (options.modern) for (const [k,v] of Object.entries({order:'LOW',searchStartDate:'',searchEndDate:'',useYn:'N'})) modern.searchParams.set(k,v);
+    const url = modern.href;
     if (!options.noRequest) client.emit('Network.requestWillBeSent', { requestId: 'api', type: 'Script', frameId: 'main', request: { method: 'GET', url } });
     client.bodies.set('api', options.text ?? `offlineCallback(${JSON.stringify({ status: 200, data: { list: [{ event_code: 'offline-only' }], paging: { curPage: pageNo, totalLastPage: 2, totalCount: 21 } } })});`);
     client.emit('Network.responseReceived', { requestId: 'api', type: 'Script', frameId: 'main', response: { url, status: options.status ?? 200, headers: { 'content-type': 'text/javascript' } } });
@@ -178,6 +180,16 @@ test('real more DOM click captures correlated JSONP and terminal screen state', 
 async function expectKind(fn: () => Promise<unknown>, kind: string, reason?: string) {
     await assert.rejects(fn, (e: any) => e.kind === kind && (!reason || e.message === reason));
 }
+test('modern LOW query also works through the subsequent-page adapter', async () => {
+    const client = new FakeCdp();
+    const source = vm.runInContext('getDcairMainList.toString()',client.context).replace("order = 'LP'", "order = 'LOW'");
+    vm.runInContext(`getDcairMainList = (${source})`,client.context);
+    const adapter = await authorizedAdapter(client);
+    client.onAction = () => respond(client,2,{next:false,modern:true});
+    const result = await adapter.readPage(scope,2,1);
+    assert.equal(result.rawProducts.length,1); assert.equal(adapter.diagnostics.permittedProductRequests,1);
+    await adapter.close();
+});
 async function fastDeadlines(fn: () => Promise<void>) {
     const original = globalThis.setTimeout;
     globalThis.setTimeout = ((callback: any, ms?: number, ...args: any[]) => original(callback, ms === 90_000 || ms === 5000 || ms === 15_000 ? 15 : ms, ...args)) as typeof setTimeout;

@@ -3,6 +3,7 @@ export { connectDedicatedChrome } from './onlinetour-browser-adapter';
 import { validatePilotResponse } from './onlinetour-browser-collector';
 import type { ListScope } from './onlinetour-list-traversal';
 import { nativeMonthUrl } from './onlinetour-month-navigation';
+import { isOnlineLowestOrder, ONLINE_EXTRA_QUERY_KEYS, validOnlineExtraQuery } from './onlinetour-query-contract';
 
 export interface RegionSnapshot {
     region: string; cities: { code: string; firstDepartureDate: string }[];
@@ -85,7 +86,7 @@ const regionControl = (c: Dom['controls'][number]) => c.tag === 'A' ? /^(?:javas
 function prepare(d: Dom): RegionSnapshot {
     if (d.outside || !d.vars || !/^[A-Z]{2}$/.test(d.vars.TabGubun || '')) throw new RegionDiscoveryError('invalid_region_dom');
     const v = d.vars, month = (v.nowYear || '') + (v.nowMonth || '');
-    const scope = ['ICN','GMP'].includes(v.airSect || '') && /^[A-Z]{3}$/.test(v.SelectedCityCd || '') && monthOK(month) && v.nowDay === '' && v.order === 'LP' && v.view === ''
+    const scope = ['ICN','GMP'].includes(v.airSect || '') && /^[A-Z]{3}$/.test(v.SelectedCityCd || '') && monthOK(month) && v.nowDay === '' && isOnlineLowestOrder(v.order) && v.view === ''
         && d.filters.ck_dep.safe && d.filters.ck_status.safe && d.pageSize === '20'
         ? { departure: v.airSect!, city: v.SelectedCityCd!, month } : null;
     const cities: RegionSnapshot['cities'] = [], months: string[] = scope ? [month] : [], regions: string[] = [];
@@ -102,7 +103,7 @@ function prepare(d: Dom): RegionSnapshot {
         if (c.tag === 'BUTTON' && monthOK(candidate) && !months.includes(candidate)) months.push(candidate);
     }
     const emptyInventoryVerified = !scope && !cities.length && v.SelectedCityCd === '' && d.emptyInventoryDocument === true
-        && ['ICN','GMP'].includes(v.airSect || '') && monthOK(month) && v.nowDay === '' && v.order === 'LP' && v.view === ''
+        && ['ICN','GMP'].includes(v.airSect || '') && monthOK(month) && v.nowDay === '' && isOnlineLowestOrder(v.order) && v.view === ''
         // The observed empty HN document leaves an inert more button visible after the rejected API.
         // Inventory proof comes from the server's explicit [] and zero city/card nodes, not this button.
         && d.filters.ck_dep.safe && d.filters.ck_status.safe && d.pageSize === '20' && !d.restricted && d.ready && !d.loading;
@@ -153,7 +154,7 @@ export async function createOnlineTourRegionDiscovery(client: CdpClient, options
     let lastSnapshot: RegionSnapshot | null = null, lastActionAt = 0;
     const visited = new Set<string>(), jobs = new Set<Promise<void>>(), paused = new Set<string>();
     const partialEvidence: RegionFirstPage[] = [];
-    interface RecordState { api: boolean; url: string; status?: number; done: boolean; scope?: ListScope; callback?: string; filters?: string[]; }
+    interface RecordState { api: boolean; url: string; status?: number; done: boolean; scope?: ListScope; callback?: string; filters?: string[]; order?: string; }
     interface Action { region: string; month?: string; monthUrl?: string; started: boolean; documentCount: number; apiCount: number; documentDone: boolean; finished: boolean; records: Map<string, RecordState>; firstPage: RegionFirstPage | null; }
     let active: Action | undefined;
     let stopJob: Promise<any> | undefined;
@@ -173,9 +174,10 @@ export async function createOnlineTourRegionDiscovery(client: CdpClient, options
         // Never rewrite the request. The final DOM scope must equal this response scope.
         const departure = q.get('transportStartCity') || '';
         if (!['ICN','GMP'].includes(departure)) throw new RegionDiscoveryError('unexpected_departure');
-        const wanted: Record<string, string> = { areaCode: region, transportStartCity: departure, eventStartDate: '', order: 'LP', pageNo: '1', pageSize: '20', pageYn: 'Y' };
-        const allowed = [...Object.keys(wanted), 'transportEndCity','eventStartMonth','callback','depPyunStr','statusStr','_','apiKey'];
-        if (u.hash || Array.from(q.keys()).some(k => !allowed.includes(k) || q.getAll(k).length !== 1) || Object.keys(wanted).some(k => q.get(k) !== wanted[k])) throw new RegionDiscoveryError('unexpected_api_query');
+        const wanted: Record<string, string> = { areaCode: region, transportStartCity: departure, eventStartDate: '', pageNo: '1', pageSize: '20', pageYn: 'Y' };
+        const allowed = [...Object.keys(wanted), 'order', ...ONLINE_EXTRA_QUERY_KEYS, 'transportEndCity','eventStartMonth','callback','depPyunStr','statusStr','_','apiKey'];
+        if (u.hash || !isOnlineLowestOrder(q.get('order')) || !validOnlineExtraQuery(q)
+            || Array.from(q.keys()).some(k => !allowed.includes(k) || q.getAll(k).length !== 1) || Object.keys(wanted).some(k => q.get(k) !== wanted[k])) throw new RegionDiscoveryError('unexpected_api_query');
         const city = q.get('transportEndCity') || '', month = q.get('eventStartMonth') || '', callback = q.get('callback') || '';
         // Observed HN document has no cities and emits an explicit empty city. Never invent it.
         // Such a response must be empty and agree with the independently checked final document.
@@ -186,7 +188,7 @@ export async function createOnlineTourRegionDiscovery(client: CdpClient, options
         // browser request only; never invent, replace, log or persist its value.
         // The observed public page sends an empty value; it is not a missing credential error.
         if (q.has('apiKey') && !/^[\x21-\x7e]{0,512}$/.test(q.get('apiKey')!)) throw new RegionDiscoveryError('invalid_api_key_shape');
-        return { api: true, url: raw, done: false, callback, scope: { departure, city, month }, filters };
+        return { api: true, url: raw, done: false, callback, scope: { departure, city, month }, filters, order: q.get('order')! };
     }
     function parsePage(text: string, r: RecordState): RegionFirstPage {
         const wrapper = /^\s*([A-Za-z_$][\w$]*)\s*\(([\s\S]*)\)\s*;?\s*$/.exec(text);
@@ -364,6 +366,7 @@ export async function createOnlineTourRegionDiscovery(client: CdpClient, options
                     if (month && observed.inventoryMonth !== month) throw new RegionDiscoveryError('month_response_mismatch');
                     if (dom.ready && !dom.loading && !jobs.size) {
                         const apiState = Array.from(a.records.values()).find(r => r.api);
+                        if (apiState && apiState.order !== dom.vars.order) throw new RegionDiscoveryError('final_order_mismatch');
                         const emptyResponse = a.firstPage?.scope.city === '';
                         if (emptyResponse) {
                             if (!observed.emptyInventoryVerified || !apiState || dom.pageNo !== '2'

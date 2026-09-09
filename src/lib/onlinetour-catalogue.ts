@@ -315,7 +315,8 @@ export async function collectOnlineTourCatalogue(input: CataloguePlan, backend: 
             }
             regionResult.completed = true;
         }
-        if (!result.flights.length) throw new Error('empty_catalogue');
+        if (!result.flights.length && !(result.regions.length === plan.regions.length
+            && result.regions.every(r => r.completed && !r.cities.length && r.emptyInventoryVerified))) throw new Error('empty_catalogue');
         result.plannedCoverageCompleted = true;
         result.requestBudget.unknownRegions = 0;
         result.requestBudget.completeEstimate = true;

@@ -4,9 +4,10 @@ import { ONLINE_BROWSER_PRIMARY, MODE_BROWSER_PRIMARY, TTANG_BROWSER_PRIMARY } f
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { onlineCollectionInterval } from './online-collection-interval.mjs';
 
 /**
- * @param {{cache?: any, now?: Date|string, config?: {enabled:boolean,slotsPerDay:number}, modeConfig?: {enabled:boolean,slotsPerDay:number}, ttangConfig?: {enabled:boolean,slotsPerDay:number}}} options
+ * @param {{cache?: any, now?: Date|string, config?: {enabled:boolean,slotsPerDay:number,randomDayInterval?:boolean}, modeConfig?: {enabled:boolean,slotsPerDay:number}, ttangConfig?: {enabled:boolean,slotsPerDay:number}}} options
  * @returns {{sources:string[],shouldRun:boolean,reason:string,expectedAt:string|null,nextExpectedAt:string|null,githubFallbackDue?:boolean}}
  */
 export function evaluatePcCollection({cache,now=new Date(),config=ONLINE_BROWSER_PRIMARY,modeConfig=MODE_BROWSER_PRIMARY,ttangConfig=TTANG_BROWSER_PRIMARY}={}) {
@@ -24,7 +25,10 @@ export function evaluatePcCollection({cache,now=new Date(),config=ONLINE_BROWSER
         && !(Date.parse(cache?.ttangPrimary?.lastAttemptAt)>=slot)
         && (!Number.isFinite(previousTtangSuccess) || ms-previousTtangSuccess>=5*3600000)) sources.push('ttang');
     const online=cache?.onlinePrimary?.circuit;
+    const interval = onlineCollectionInterval(cache, now);
+    const intervalDue = !config.randomDayInterval || interval.due;
     const eligible=Number.isFinite(ms) && Number.isFinite(slot) && Date.parse(cache?.fullCrawlUpdatedAt)>=slot
+        && intervalDue
         && (config.slotsPerDay===4 || isTtangCrawlSlot(slot))
         && !future(online?.nextProbeAt) && !future(online?.localFallback?.nextProbeAt)
         && !(Date.parse(cache?.onlinePrimary?.lastAttemptAt)>=slot);
@@ -40,10 +44,13 @@ export function evaluatePcCollection({cache,now=new Date(),config=ONLINE_BROWSER
     const github=cache?.sourceCircuits?.onlinetour;
     const pcFinished=Date.parse(cache?.onlinePrimary?.lastAttemptAt)>=slot || future(online?.nextProbeAt) || future(online?.localFallback?.nextProbeAt);
     const githubFallbackDue=cache?.onlinePrimary?.status==='failed' && cache?.onlinePrimary?.githubFallbackSafe===true
+        && intervalDue
         && pcFinished && Number.isFinite(slot)
         && distance!==null && distance%2===0 && Date.parse(cache?.fullCrawlUpdatedAt)>=slot
         && !future(github?.nextProbeAt) && !(Date.parse(cache?.onlinePrimary?.githubAttemptAt)>=slot);
     return {...base,expectedAt,sources,shouldRun:sources.length>0,githubFallbackDue,
+        onlineNextCollectionAt:config.randomDayInterval?interval.nextCollectionAt:null,
+        onlineIntervalDays:config.randomDayInterval?interval.intervalDays:null,
         manualCaptureSources:modeConfig.enabled?(base.manualCaptureSources || []).filter(s=>s!=='modetour'):base.manualCaptureSources,
         reason:sources.length?'pc_collection_due':base.reason==='upstream_pending'?base.reason:'primary_not_due'};
 }

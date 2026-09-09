@@ -20,6 +20,7 @@ class Fake implements CdpClient {
     onClick: (region: string) => void = () => {};
     embeddedEmpty = true;
     month = '09';
+    order = 'LP';
     onNavigate: (url:string)=>void = ()=>{};
     moreVisible = false;
     elements = ['AS','CH','JA','EU','HN','US','GS'].map(code => new Element('A', { onclick: `goDcair('${code}');` }, () => this.onClick(code)));
@@ -50,7 +51,7 @@ class Fake implements CdpClient {
         if (method === 'Page.getFrameTree') return { frameTree: { frame: { id: 'main', url: this.url } } };
         if (method === 'Page.navigate') {this.onNavigate(params.url);return {};}
         if (method === 'Runtime.evaluate') {
-            vm.runInContext(`getDcairMainList = function() { var TabGubun = '${this.region}'; var airSect = '${this.departure}'; var SelectedCityCd = '${this.city}'; var nowYear = '2026'; var nowMonth = '${this.month}'; var nowDay = ''; var order = 'LP'; var view = ''; throw Error('must never execute source'); }`, this.context);
+            vm.runInContext(`getDcairMainList = function() { var TabGubun = '${this.region}'; var airSect = '${this.departure}'; var SelectedCityCd = '${this.city}'; var nowYear = '2026'; var nowMonth = '${this.month}'; var nowDay = ''; var order = '${this.order}'; var view = ''; throw Error('must never execute source'); }`, this.context);
             return { result: { value: vm.runInContext(params.expression, this.context) } };
         }
         if (method === 'Fetch.continueRequest') { assert.deepEqual(Object.keys(params), ['requestId']); const next = this.pending.get(params.requestId); this.pending.delete(params.requestId); next?.(); }
@@ -514,6 +515,22 @@ test('unobserved origin is not silently permitted by the regional guard', async 
     const a = await mod.createOnlineTourRegionDiscovery(c,{maxNavigations:1,maxProductRequests:1});
     await assert.rejects(a.visitRegion('JA'),/unexpected_departure/);
     assert.equal(a.diagnostics.permittedProductRequests,0); await a.close();
+});
+for (const variant of ['modern','date_filter','missing_field','use_yn','order_mismatch']) test('September 9 public query '+variant,async()=>{
+    const c=new Fake(); c.order='LOW';
+    c.onClick=code=>request(c,LIST+'?TabGubun='+code+'&SelectedCityCd=','Document','<html></html>',()=>{
+        c.region=code;
+        const u=new URL(api(code,{order:variant==='order_mismatch'?'LP':'LOW',searchStartDate:'',searchEndDate:'',useYn:'N'}));
+        if(variant==='date_filter')u.searchParams.set('searchStartDate','20260920');
+        if(variant==='missing_field')u.searchParams.delete('searchEndDate');
+        if(variant==='use_yn')u.searchParams.set('useYn','Y');
+        request(c,u.href,'Script',goodPayload);
+    });
+    const a=await mod.createOnlineTourRegionDiscovery(c,{maxNavigations:1,maxProductRequests:1});
+    if(variant==='modern')assert.equal((await a.visitRegion('CH')).firstPage?.totalCount,21);
+    else await assert.rejects(a.visitRegion('CH'),variant==='order_mismatch'?/final_order_mismatch/:/unexpected_api_query/);
+    assert.equal(a.diagnostics.permittedProductRequests,['modern','order_mismatch'].includes(variant)?1:0);
+    await a.close();
 });
 async function main() { for (const [name, run] of tests) { await run(); console.log('PASS', name); } console.log(`${tests.length} offline region-discovery cases passed; site requests=0`); }
 main().catch(e => { console.error(e); process.exitCode = 1; });

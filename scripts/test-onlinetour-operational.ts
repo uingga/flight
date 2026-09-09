@@ -31,6 +31,22 @@ test('complete bounded evidence validates without mutating source evidence',()=>
     const f=fixture(), before=JSON.stringify(f);assert.equal(validateOperationalCatalogue(f.summary,f.raw,f.flights,now).length,1);
     assert.equal(JSON.stringify(f),before);
 });
+test('zero is normal only when every region and every month is independently verified empty',()=>{
+    const f=fixture();
+    f.raw=[]; f.flights=[];
+    Object.assign(f.summary,{productRequests:0,uniqueCount:0,eligibleCount:0,outsideDepartureWindowCount:0,scopeResults:[]});
+    f.summary.regions=f.summary.plan.regions.map((region:string)=>({region,completed:true,cities:[],emptyInventoryVerified:true,checkedEmptyMonths:['202609','202610','202611']}));
+    assert.deepEqual(validateOperationalCatalogue(f.summary,f.raw,f.flights,now,195),[]);
+    const base=JSON.stringify(f.summary);
+    for(const change of [
+        (s:any)=>s.regions[0].checkedEmptyMonths.pop(),
+        (s:any)=>{s.regions[0].emptyInventoryVerified=false;},
+        (s:any)=>{s.regions[0].cities=[{code:'PQC',firstDepartureDate:'20260907'}];},
+        (s:any)=>{s.cleanupConfirmed=false;},
+        (s:any)=>{s.failure='unexpected_api_query';},
+        (s:any)=>{s.incompletePageCount=1;},
+    ]) {const s=JSON.parse(base);change(s);assert.throws(()=>validateOperationalCatalogue(s,[],[],now,195));}
+});
 for(const [name,change] of Object.entries({
     sampled:(s:any)=>{s.plan.maxCitiesPerRegion=1;},excluded:(s:any)=>{s.plan.excludeCities=['PQC'];},
     failed:(s:any)=>{s.failure='validation';},cleanup:(s:any)=>{s.cleanupConfirmed=false;},

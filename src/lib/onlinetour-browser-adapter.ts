@@ -12,6 +12,7 @@ import { discoverDedicatedChromeEndpoint, ONLINE_CHROME_CONNECT_TIMEOUT_MS, ONLI
 import { ListReadError, type ListPage, type ListScope } from './onlinetour-list-traversal';
 import { parseOnlineTourJsonp } from './scrapers/source-response';
 import { followingMonth, nativeMonthUrl } from './onlinetour-month-navigation';
+import { isOnlineLowestOrder, validOnlineExtraQuery } from './onlinetour-query-contract';
 
 export interface PartialPageEvidence {
     scope: ListScope; pageNo: number; attempt: number;
@@ -117,7 +118,7 @@ function matches(raw: string, expected: string): boolean {
 const failure = (kind: ListReadError['kind'], reason: string) => new ListReadError(kind, reason);
 const same = (a: ListScope, b: ListScope) => a.departure === b.departure && a.city === b.city && a.month === b.month;
 const validScope = (s: ListScope) => s && /^[A-Z]{3}$/.test(s.departure) && /^[A-Z]{3}$/.test(s.city)
-    && /^[1-9]\d{3}(0[1-9]|1[0-2])$/.test(s.month) && (s.sort === undefined || s.sort === 'LP')
+    && /^[1-9]\d{3}(0[1-9]|1[0-2])$/.test(s.month) && (s.sort === undefined || isOnlineLowestOrder(s.sort))
     && (s.filter === undefined || s.filter === '');
 
 // Static, read-only script: never execute the function source or return its API key.
@@ -164,7 +165,7 @@ interface DomState {
 function prepare(dom: DomState): { snapshot: BrowserSnapshot; controls: { scope: ListScope; onclick: string; url?:string }[] } {
     const v = dom.vars;
     const currentScope: ListScope = { departure: v.airSect, city: v.SelectedCityCd, month: v.nowYear + v.nowMonth };
-    if (!validScope(currentScope) || !/^[A-Z]{2,3}$/.test(v.TabGubun) || v.nowDay !== '' || v.order !== 'LP' || v.view !== ''
+    if (!validScope(currentScope) || !/^[A-Z]{2,3}$/.test(v.TabGubun) || v.nowDay !== '' || !isOnlineLowestOrder(v.order) || v.view !== ''
         || !dom.filters.ck_dep.safe || !dom.filters.ck_status.safe || dom.pageSize !== '20'
         || !/^[1-9]\d*$/.test(dom.pageNo) || !Number.isSafeInteger(Number(dom.pageNo))) throw failure('validation', 'unsupported_list_state');
     const controls: { scope: ListScope; onclick: string; url?:string }[] = [];
@@ -293,9 +294,9 @@ export async function createOnlineTourBrowserAdapter(client: CdpClient,
     function requestMatches(url: string, method: string, a: Action): string {
         const q = new URL(url).searchParams;
         const wanted: Record<string, string> = { transportStartCity: a.scope.departure, transportEndCity: a.scope.city,
-            eventStartMonth: a.scope.month, eventStartDate: '', areaCode: a.dom.vars.TabGubun, order: 'LP',
+            eventStartMonth: a.scope.month, eventStartDate: '', areaCode: a.dom.vars.TabGubun, order: a.dom.vars.order,
             pageNo: String(a.pageNo), pageSize: '20', pageYn: 'Y' };
-        if (method !== 'GET' || Object.keys(wanted).some(k => q.getAll(k).length !== 1 || q.get(k) !== wanted[k]))
+        if (method !== 'GET' || !validOnlineExtraQuery(q) || Object.keys(wanted).some(k => q.getAll(k).length !== 1 || q.get(k) !== wanted[k]))
             throw failure('validation', 'unexpected_api_scope');
         for (const [key, filter] of [['depPyunStr', 'ck_dep'], ['statusStr', 'ck_status']]) {
             const values = (q.get(key) || '').split(',').filter(Boolean).sort();

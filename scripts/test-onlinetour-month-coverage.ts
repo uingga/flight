@@ -33,7 +33,8 @@ const plan={schemaVersion:1 as const,regions:['GS'],throughMonth:'202611',maxPro
 test('September empty checks October AND November without visible month buttons',async()=>{
     const f=fixture(),r=await collectOnlineTourCatalogue(plan,f.backend);
     assert.deepEqual(f.requested,['202610','202611']);
-    assert.equal(r.failure,'empty_catalogue'); // Entire empty catalogue remains protected, not promoted to production.
+    assert.equal(r.failure,null); // Complete empty-month evidence is normal; operational validation still requires all seven regions.
+    assert.equal(r.plannedCoverageCompleted,true);
     assert.deepEqual(r.regions[0].checkedEmptyMonths,['202609','202610','202611']);
     assert.equal(r.productRequests,2);assert.equal(r.regionalNavigations,0);assert.equal(r.listDocumentRequests,2);
 });

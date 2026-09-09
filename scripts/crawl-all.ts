@@ -252,6 +252,7 @@ async function main() {
     let modetourPrimary = prevCache?.modetourPrimary;
     let modeResult: Awaited<ReturnType<typeof scrapeModetourRemote>> | undefined;
     let onlineGithubFallbackSafe = false;
+    let onlineVerifiedEmpty = false;
     const sourceCircuits = pruneResolvedSourceCircuits<CrawlableSourceKey>(
         prevCache?.sourceCircuits as Partial<Record<CrawlableSourceKey, SourceCircuitState>> | undefined,
         SOURCE_ADAPTER_VERSIONS,
@@ -299,6 +300,8 @@ async function main() {
                     const { scrapeOnlineTourRemote } = await import('../src/lib/scrapers/onlinetour-remote');
                     try {
                         const flights = await scrapeOnlineTourRemote();
+                        // Remote validator accepts zero only with every region/month explicitly verified empty.
+                        onlineVerifiedEmpty = flights.length === 0;
                         onlineGithubFallbackSafe = true;
                         return flights;
                     } catch (error) {
@@ -516,16 +519,15 @@ async function main() {
 
             // 스크래퍼가 예외로 끝남 (불완전 수집 포함) — 데이터를 믿을 수 없다
             if (fresh === undefined) {
-                if (prevCount > 0) {
-                    keepPrevious('수집 실패', `🚨 ${src} 수집 실패로 이전 데이터 유지: ${scrapeFailures[src] || '알 수 없는 오류'}`);
-                } else {
-                    integrityWarnings.push(`🚨 ${src} 수집 실패 (복구할 이전 데이터 없음): ${scrapeFailures[src] || '알 수 없는 오류'}`);
-                }
+                // Failure is independent of how many old flights remain. Keep the failure marker even at zero.
+                keepPrevious('수집 실패', prevCount > 0
+                    ? `🚨 ${src} 수집 실패로 이전 데이터 유지: ${scrapeFailures[src] || '알 수 없는 오류'}`
+                    : `🚨 ${src} 수집 실패 (복구할 이전 데이터 없음): ${scrapeFailures[src] || '알 수 없는 오류'}`);
                 continue;
             }
 
             // 0건은 명백한 실패 — 예전부터 이전 데이터를 지켜 왔다
-            if (freshCount === 0 && prevCount > 0) {
+            if (freshCount === 0 && prevCount > 0 && !(src === 'onlinetour' && onlineVerifiedEmpty)) {
                 const restriction = classifySourceResponseDrop(freshCount, prevCount, {
                     dropRatio: DROP_RATIO,
                     minBaseline: MIN_BASELINE,
@@ -617,7 +619,7 @@ async function main() {
             ) {
                 missingDetectionSafeSources.add(src);
             }
-            if (freshCount > 0) sourceUpdatedAt[src] = new Date().toISOString();
+            if (freshCount > 0 || (src === 'onlinetour' && onlineVerifiedEmpty)) sourceUpdatedAt[src] = new Date().toISOString();
             if (src === 'modetour' && modeResult) {
                 sourceUpdatedAt[src] = modeResult.capturedAt;
                 if (modeResult.partial) missingDetectionSafeSources.delete(src);
@@ -948,6 +950,7 @@ async function main() {
                     circuit:sourceCircuits.onlinetour,githubAttemptAt:prevCache?.onlinePrimary?.githubAttemptAt,
                     githubFallbackSafe:onlineGithubFallbackSafe,
                     detail:failed?(scrapeFailures.onlinetour || '수집 실패 — 이전 데이터 보존')
+                        :onlineVerifiedEmpty ? '전체 지역·월 확인 완료 — 판매 상품 없음(0건)'
                         :`B PC Chrome 수집 ${observedCounts.onlinetour ?? 0}건 완료 — 필터 후 ${benchmarkedFlights.filter(f=>f.source==='onlinetour').length}건 반영`};
             }
             if (prevCache?.sourceCircuits?.onlinetour) sourceCircuits.onlinetour=prevCache.sourceCircuits.onlinetour;

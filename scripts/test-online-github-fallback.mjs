@@ -2,10 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { evaluatePcCollection } from './pc-collection-policy.mjs';
+import { surroundingSlots } from './local-source-fallback-policy.mjs';
 import { assertOnlineGithubFallback,claimOnlineGithubFallback,assertOnlineGithubClaim } from './online-github-fallback-policy.mjs';
 
 const config={enabled:true,slotsPerDay:4};
-const expectedAt='2026-09-07T05:23:00.000Z',now=new Date('2026-09-07T06:00:00Z');
+const now=new Date('2026-09-07T06:00:00Z');
+const expectedAt=new Date(surroundingSlots(now.getTime()).expectedAt).toISOString();
 const base=()=>({fullCrawlUpdatedAt:'2026-09-07T05:40:00Z',sourceCircuits:{},onlinePrimary:{
     status:'failed',lastAttemptAt:'2026-09-07T05:55:00Z',failureOpenedAt:'2026-09-07T05:55:00Z',githubFallbackSafe:true}});
 const policy=(cache=base(),time=now)=>evaluatePcCollection({cache,now:time,config,modeConfig:{enabled:false,slotsPerDay:4},ttangConfig:{enabled:false,slotsPerDay:2}});
