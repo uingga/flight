@@ -90,6 +90,14 @@ async function main() {
             await page.goForward();
             await detail.waitFor();
             assert.equal(new URL(page.url()).searchParams.get('schedule'), token);
+            const browseMore = detail.getByRole('button', { name: '안 살 거지만 더 보기' });
+            await browseMore.click();
+            await detail.waitFor({ state: 'hidden' });
+            await expectList();
+            assert.equal(new URL(page.url()).searchParams.get('flight'), null);
+            await page.goForward();
+            await detail.waitFor();
+            assert.equal(new URL(page.url()).searchParams.get('schedule'), token);
             await detail.getByRole('button', { name: '닫기', exact: true }).click();
             await detail.waitFor({ state: 'hidden' });
             await page.reload();
@@ -118,6 +126,11 @@ async function main() {
             await page.goto(origin);
             await page.waitForFunction(() => document.querySelectorAll('article[data-flight-id]').length === 6);
             assert.equal(new URL(page.url()).searchParams.get('shared'), null);
+            await page.locator(`article[data-flight-id="${seed.id}"] button`).first().click();
+            await detail.waitFor();
+            assert.equal(await browseMore.count(), 0, 'Ordinary home details must not gain a shared-entry CTA');
+            await detail.getByRole('button', { name: '닫기', exact: true }).click();
+            await detail.waitFor({ state: 'hidden' });
             await page.goto(`${origin}/?dep=부산&sort=price&max=250000&${campaign}`);
             await page.waitForFunction(() => document.querySelectorAll('article[data-flight-id]').length === 1);
             assert.deepEqual(await ids(), ['cheaper']);
@@ -126,7 +139,7 @@ async function main() {
             await page.waitForURL(url => url.pathname === '/', { timeout: 60000 });
             await page.waitForFunction(() => !new URL(location.href).searchParams.has('flight'));
             assert.equal(await detail.count(), 0, 'Do not open a different schedule on mismatch');
-            console.log(`PASS ${width}px: redirect chain, exact detail, route/price context, UTM, close, back/forward, reload, alternate date, explicit sort, ordinary filters, missing schedule`);
+            console.log(`PASS ${width}px: redirect chain, exact detail, route/price context, UTM, browse CTA, close, back/forward, reload, alternate date, explicit sort, ordinary detail without CTA, ordinary filters, missing schedule`);
             await page.close();
         }
     } catch (error) { console.error(logs.slice(-6000)); throw error; }

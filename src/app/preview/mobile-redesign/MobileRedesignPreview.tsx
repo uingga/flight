@@ -4796,6 +4796,11 @@ export default function MobileRedesignPreview({
                         {selectedFlight.source === 'myrealtrip' && (
                             <p className={styles.affiliateDisclosure}>제휴 링크를 통해 예약되면 티키티킷이 수수료를 받을 수 있어요.</p>
                         )}
+                        {sharedEntryRef.current && (
+                            <button type="button" className={styles.moreButton} onClick={closeSelectedFlight}>
+                                안 살 거지만 더 보기 <span aria-hidden="true">→</span>
+                            </button>
+                        )}
                         <div className={styles.detailSecondaryActions}>
                             {selectedHotelUrl && (
                                 <a
