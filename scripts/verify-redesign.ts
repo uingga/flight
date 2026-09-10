@@ -179,8 +179,9 @@ async function verifyViewport(width: number, height: number) {
             const emptyFilterDialog = page.locator('[role="dialog"][aria-label="항공권 필터"]');
             await emptyFilterDialog.getByRole('button', { name: '동남아', exact: true }).click();
             await emptyFilterDialog.getByRole('button', { name: /개 항공권 보기/ }).click();
-            await page.getByText(/후쿠오카 표는 [\d,]+개 있어요\./).waitFor();
-            await page.locator('[class*="emptyBlockers"] button').first().waitFor();
+            await page.getByText('선택한 조건에 맞는 항공권이 없어요.', { exact: true }).waitFor();
+            await page.getByRole('button', { name: /동남아 조건 해제 · [\d,]+개/ }).waitFor();
+            await page.getByText('나머지 조건은 유지됩니다.', { exact: true }).waitFor();
 
             await page.goto(baseUrl, { waitUntil: 'domcontentloaded' });
             await waitForFlights(page);

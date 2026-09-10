@@ -2890,22 +2890,22 @@ export default function MobileRedesignPreview({
 
         const referenceDate = new Date();
         const activeFilters: Array<{ id: EmptyFilterId; label: string }> = [];
-        if (region !== '전체') activeFilters.push({ id: 'region', label: `도착 지역 · ${region}` });
-        if (departure !== '전체') activeFilters.push({ id: 'departure', label: `출발지 · ${departure}` });
+        if (region !== '전체') activeFilters.push({ id: 'region', label: region });
+        if (departure !== '전체') activeFilters.push({ id: 'departure', label: departure });
         if (datePeriod !== 'all') {
             const label = datePeriod === 'custom'
                 ? `${customStartDate ? cardDate(dateKey(customStartDate)) : '시작일'}~${customEndDate ? cardDate(dateKey(customEndDate)) : ''}`
                 : DATE_PERIOD_OPTIONS.find(item => item.value === datePeriod)?.label || '선택 날짜';
-            activeFilters.push({ id: 'date', label: `출발일 · ${label}` });
+            activeFilters.push({ id: 'date', label });
         }
         if (maxPrice) {
             activeFilters.push({
                 id: 'price',
-                label: `가격 · ${PRICE_OPTIONS.find(item => item.value === maxPrice)?.label || priceText(maxPrice)}`,
+                label: PRICE_OPTIONS.find(item => item.value === maxPrice)?.label || priceText(maxPrice),
             });
         }
-        if (sourceFilter !== 'all') activeFilters.push({ id: 'source', label: `여행사 · ${SOURCE_NAMES[sourceFilter]}` });
-        if (airlineFilter !== 'all') activeFilters.push({ id: 'airline', label: `항공사 · ${airlineFilter}` });
+        if (sourceFilter !== 'all') activeFilters.push({ id: 'source', label: SOURCE_NAMES[sourceFilter] });
+        if (airlineFilter !== 'all') activeFilters.push({ id: 'airline', label: airlineFilter });
 
         const matchesAllExcept = (flight: Flight, except: EmptyFilterId) => (
             (except === 'region' || regionMatches(flight, region))
@@ -3933,7 +3933,9 @@ export default function MobileRedesignPreview({
                                 <>
                                     <strong>선택한 조건에 맞는 항공권이 없어요.</strong>
                                     <span>{emptyDiagnosis.blockers.some(blocker => blocker.revealedCount > 0)
-                                        ? '아래 버튼은 해당 조건만 해제해요. 나머지 조건은 유지됩니다.'
+                                        ? emptyDiagnosis.blockers.every(blocker => blocker.id === 'region' || blocker.id === 'departure')
+                                            ? '출발지나 도착 지역을 바꿔보세요.'
+                                            : '선택한 조건을 하나씩 해제해 보세요.'
                                         : '조건 하나만 해제해도 결과가 없어요. 두 개 이상 바꾸거나 초기화해 보세요.'}</span>
                                     {emptyDiagnosis.blockers.length > 0 && (
                                         <div className={styles.emptyBlockers}>
@@ -3944,10 +3946,13 @@ export default function MobileRedesignPreview({
                                                     onClick={() => clearEmptyBlocker(blocker.id)}
                                                 >
                                                     <span>{blocker.label} 조건 해제</span>
-                                                    {blocker.revealedCount > 0 && <small>{blocker.id === 'departure' ? '다른 출발지 항공권 ' : '해제하면 항공권 '}{blocker.revealedCount.toLocaleString('ko-KR')}개 보기</small>}
+                                                    {blocker.revealedCount > 0 && <small> · {blocker.revealedCount.toLocaleString('ko-KR')}개</small>}
                                                 </button>
                                             ))}
                                         </div>
+                                    )}
+                                    {emptyDiagnosis.blockers.length > 0 && (
+                                        <span className={styles.emptyBlockersHint}>나머지 조건은 유지됩니다.</span>
                                     )}
                                 </>
                             ) : (
