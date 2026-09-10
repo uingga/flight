@@ -55,6 +55,7 @@ export function mergeCrawlLogHistories(target, overlay, sourceKeys, now = Date.n
         byTimestamp.set(entry.timestamp, {
             ...(current || {}),
             ...(entry.runKind ? { runKind: entry.runKind } : {}),
+            ...(entry.sessionId ? { sessionId: entry.sessionId } : {}),
             timestamp: entry.timestamp,
             sites: {
                 ...(current?.sites || {}),

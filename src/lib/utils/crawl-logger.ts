@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import { randomUUID } from 'node:crypto';
 import { getCrawlDataDir } from '../crawl-data-dir';
 
 interface CityStats {
@@ -53,6 +54,7 @@ interface SiteStats {
 
 interface CrawlLogEntry {
     timestamp: string;
+    sessionId?: string;
     runKind?: 'pc_fallback' | 'pc_primary' | 'github_fallback';
     sites: {
         [siteName: string]: SiteStats;
@@ -67,6 +69,21 @@ interface CrawlLogHistory {
 
 const LOG_FILE_PATH = path.join(getCrawlDataDir(), 'crawl-log.json');
 const ALERT_THRESHOLD = 0.3; // 30% 감소 시 경고
+
+// 시간 간격은 실행 식별자가 아니다. 같은 프로세스의 결과/경고만 묶는다.
+let sessionId = randomUUID();
+function getSessionEntry(history: CrawlLogHistory, separateSession = false): CrawlLogEntry {
+    if (separateSession) sessionId = randomUUID();
+    const existing = history.entries.find(entry => entry.sessionId === sessionId);
+    if (existing) return existing;
+    // 기존 병합 도구가 timestamp를 키로 쓰므로 같은 밀리초 실행도 구분한다.
+    let at = Date.now();
+    const timestamps = new Set(history.entries.map(entry => entry.timestamp));
+    while (timestamps.has(new Date(at).toISOString())) at += 1;
+    const entry: CrawlLogEntry = { timestamp: new Date(at).toISOString(), sessionId, sites: {}, alerts: [] };
+    history.entries.push(entry);
+    return entry;
+}
 
 /**
  * 이전 크롤링 로그 로드
@@ -161,15 +178,7 @@ export function recordCrawlAlerts(alerts: string[]): void {
     if (alerts.length === 0) return;
 
     const history = loadLogHistory();
-    const now = new Date();
-    let currentEntry = [...history.entries].reverse().find(
-        e => now.getTime() - new Date(e.timestamp).getTime() < 30 * 60 * 1000,
-    );
-
-    if (!currentEntry) {
-        currentEntry = { timestamp: now.toISOString(), sites: {}, alerts: [] };
-        history.entries.push(currentEntry);
-    }
+    const currentEntry = getSessionEntry(history);
 
     currentEntry.alerts = Array.from(new Set([...currentEntry.alerts, ...alerts]));
     history.lastEntry = currentEntry;
@@ -205,24 +214,7 @@ export function logCrawlResults(
 ): void {
     const history = loadLogHistory();
 
-    // 현재 실행의 타임스탬프를 기준으로 새 엔트리 생성 또는
-    // 같은 크롤 세션(5분 이내)에서 이미 만들어진 엔트리 업데이트
-    const now = new Date();
-    let currentEntry = meta?.separateSession
-        ? undefined
-        : [...history.entries].reverse().find(e => {
-            const entryTime = new Date(e.timestamp);
-            return (now.getTime() - entryTime.getTime()) < 30 * 60 * 1000; // 30분 이내
-        });
-
-    if (!currentEntry) {
-        currentEntry = {
-            timestamp: now.toISOString(),
-            sites: {},
-            alerts: []
-        };
-        history.entries.push(currentEntry);
-    }
+    const currentEntry = getSessionEntry(history, meta?.separateSession);
 
     // 사이트 통계 저장
     currentEntry.sites[siteName] = {
@@ -252,7 +244,7 @@ export function logCrawlResults(
     // 그렇지 않으면 다음 전체 크롤이 '건너뜀' 값을 기준선으로 삼게 된다.
     const previousMeasuredSites: Record<string, SiteStats> = {};
     for (const siteName of Object.keys(currentEntry.sites)) {
-        for (let i = history.entries.length - 2; i >= 0; i--) {
+        for (let i = history.entries.indexOf(currentEntry) - 1; i >= 0; i--) {
             const candidate = history.entries[i].sites[siteName];
             if (candidate && !candidate.skipped && !candidate.manual) {
                 previousMeasuredSites[siteName] = candidate;
