@@ -51,6 +51,10 @@ async function selectSource(page: Page, sourceName: string) {
     else await page.getByRole('button', { name: '상세 조건', exact: true }).click();
     const filterDialog = page.locator('[role="dialog"][aria-label="항공권 필터"]');
     await filterDialog.waitFor();
+    const advancedToggle = filterDialog.locator('button[aria-controls="advanced-filter-options"]');
+    if (await advancedToggle.isVisible() && await advancedToggle.getAttribute('aria-expanded') === 'false') {
+        await advancedToggle.click();
+    }
     await filterDialog.getByRole('button', { name: sourceName, exact: true }).click();
     await filterDialog.getByRole('button', { name: /개 항공권 보기/ }).click();
     await page.locator('article').first().waitFor();

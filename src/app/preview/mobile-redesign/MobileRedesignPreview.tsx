@@ -1147,6 +1147,11 @@ export default function MobileRedesignPreview({
     const [recentSearches, setRecentSearches] = useState<string[]>([]);
     const [desktopSearchFocused, setDesktopSearchFocused] = useState(false);
     const [filterOpen, setFilterOpen] = useState(false);
+    const [mobileAdvancedOpen, setMobileAdvancedOpen] = useState(false);
+    const [filterHasScrolled, setFilterHasScrolled] = useState(false);
+    const [filterHasMoreBelow, setFilterHasMoreBelow] = useState(false);
+    const filterScrollRef = useRef<HTMLDivElement | null>(null);
+    const filterContentRef = useRef<HTMLDivElement | null>(null);
     const [filterPopoverPosition, setFilterPopoverPosition] = useState<{ top: number; left: number; maxHeight: number } | null>(null);
     const [airlineMenuOpen, setAirlineMenuOpen] = useState(false);
     const [desktopFilterOpen, setDesktopFilterOpen] = useState<DesktopFilterKey | null>(null);
@@ -1256,6 +1261,7 @@ export default function MobileRedesignPreview({
     }, [closeServiceUpdate]);
 
     const openFilter = useCallback(() => {
+        setMobileAdvancedOpen(false);
         showOverlayWithHistory('filter', () => setFilterOpen(true));
     }, []);
     const closeFilter = useCallback(() => {
@@ -1360,6 +1366,30 @@ export default function MobileRedesignPreview({
         sheetRef: filterDialogRef,
         onDismiss: closeFilter,
     });
+    useEffect(() => {
+        const scrollArea = filterScrollRef.current;
+        const content = filterContentRef.current;
+        if (!filterOpen || isDesktopViewport || !scrollArea || !content) {
+            setFilterHasScrolled(false);
+            setFilterHasMoreBelow(false);
+            return;
+        }
+        scrollArea.scrollTop = 0;
+        const updateScrollEdges = () => {
+            setFilterHasScrolled(scrollArea.scrollTop > 8);
+            setFilterHasMoreBelow(scrollArea.scrollHeight - scrollArea.scrollTop - scrollArea.clientHeight > 8);
+        };
+        const frame = window.requestAnimationFrame(updateScrollEdges);
+        const observer = new ResizeObserver(updateScrollEdges);
+        observer.observe(scrollArea);
+        observer.observe(content);
+        scrollArea.addEventListener('scroll', updateScrollEdges, { passive: true });
+        return () => {
+            window.cancelAnimationFrame(frame);
+            observer.disconnect();
+            scrollArea.removeEventListener('scroll', updateScrollEdges);
+        };
+    }, [filterOpen, isDesktopViewport]);
     const detailSwipe = useSwipeToDismiss({
         open: Boolean(selectedFlight),
         sheetRef: detailDialogRef,
@@ -2803,6 +2833,7 @@ export default function MobileRedesignPreview({
     const subsequentInsightInterval = 12;
     const weeklyDiscoveryInsightCard = firstInsightCard + subsequentInsightInterval;
     const weekendFlightsInsightCard = weeklyDiscoveryInsightCard + subsequentInsightInterval;
+    const advancedSelectionCount = Number(sourceFilter !== 'all') + Number(airlineFilter !== 'all');
     const hasAdvancedFilter = departure !== '전체'
         || datePeriod !== 'all'
         || maxPrice > 0
@@ -3658,6 +3689,11 @@ export default function MobileRedesignPreview({
                                                         }
                                                     }}
                                                     locale={ko}
+                                                    dateFormatCalendar="yyyy년 M월"
+                                                    previousMonthButtonLabel="이전 달"
+                                                    nextMonthButtonLabel="다음 달"
+                                                    previousMonthAriaLabel="이전 달"
+                                                    nextMonthAriaLabel="다음 달"
                                                     inline
                                                     minDate={new Date()}
                                                     calendarClassName={styles.dateCalendar}
@@ -4358,7 +4394,7 @@ export default function MobileRedesignPreview({
                     dialogRef={filterDialogRef}
                     onClose={closeFilter}
                     overlayClassName={`${styles.sheetOverlay} ${styles.filterOverlay}`}
-                    dialogClassName={styles.bottomSheet}
+                    dialogClassName={`${styles.bottomSheet} ${styles.filterSheet}`}
                     ariaLabel="항공권 필터"
                     ariaLabelledBy="flight-filter-title"
                     dialogStyle={filterPopoverPosition && !isMobile ? {
@@ -4367,12 +4403,16 @@ export default function MobileRedesignPreview({
                             maxHeight: filterPopoverPosition.maxHeight,
                         } : undefined}
                 >
+                        <div className={styles.filterStickyHeader} data-scrolled={filterHasScrolled}>
                         <div className={styles.sheetHandle} aria-hidden="true" {...filterSwipe} />
                         <div className={styles.sheetHeader}>
                             <h2 id="flight-filter-title">표 골라보기</h2>
                             <button type="button" onClick={resetFilters}>초기화</button>
                         </div>
+                        </div>
 
+                        <div className={styles.filterScrollArea} ref={filterScrollRef}>
+                        <div className={styles.filterScrollContent} ref={filterContentRef}>
                         <div className={styles.filterGroup}>
                             <h3>출발지</h3>
                             <div className={styles.optionGrid}>
@@ -4440,6 +4480,11 @@ export default function MobileRedesignPreview({
                                             if (end) window.setTimeout(() => setCalendarOpen(false), 250);
                                         }}
                                         locale={ko}
+                                        dateFormatCalendar="yyyy년 M월"
+                                        previousMonthButtonLabel="이전 달"
+                                        nextMonthButtonLabel="다음 달"
+                                        previousMonthAriaLabel="이전 달"
+                                        nextMonthAriaLabel="다음 달"
                                         inline
                                         minDate={new Date()}
                                         calendarClassName={styles.dateCalendar}
@@ -4450,72 +4495,88 @@ export default function MobileRedesignPreview({
                         </div>
 
                         <div className={`${styles.filterGroup} ${styles.advancedFilterGroup}`}>
-                            <h3>여행사</h3>
-                            <div className={styles.optionGrid}>
-                                {SOURCE_OPTIONS.map(item => (
-                                    <button
-                                        type="button"
-                                        key={item.value}
-                                        className={sourceFilter === item.value ? styles.optionActive : ''}
-                                        onClick={() => selectSourceFilter(item.value)}
-                                    >
-                                        {item.label}
-                                    </button>
-                                ))}
-                            </div>
-                            <label className={`${styles.filterSelectRow} ${styles.mobileAirlineSelect}`}>
-                                <span>항공사</span>
-                                <select value={airlineFilter} onChange={event => selectAirlineFilter(event.target.value)}>
-                                    <option value="all">전체 항공사</option>
-                                    {uniqueAirlines.map(airline => <option value={airline} key={airline}>{airline}</option>)}
-                                </select>
-                            </label>
-                            <h3 className={styles.desktopAirlineHeading}>항공사</h3>
-                            <div className={styles.desktopAirlineSelect}>
-                                <div className={`${styles.desktopAirlineSelectControl} ${airlineMenuOpen ? styles.desktopAirlineSelectControlOpen : ''}`}>
-                                    <button
-                                        type="button"
-                                        aria-haspopup="listbox"
-                                        aria-expanded={airlineMenuOpen}
-                                        aria-label={`항공사 선택: ${airlineFilter === 'all' ? '전체 항공사' : airlineFilter}`}
-                                        onClick={() => setAirlineMenuOpen(open => !open)}
-                                    >
-                                        <strong>{airlineFilter === 'all' ? '전체 항공사' : airlineFilter}</strong>
-                                        <span className={`${styles.desktopAirlineChevron} ${airlineMenuOpen ? styles.desktopAirlineChevronOpen : ''}`}>
-                                            <Icon name="chevron" />
-                                        </span>
-                                    </button>
+                            <button
+                                type="button"
+                                className={styles.mobileAdvancedToggle}
+                                aria-expanded={mobileAdvancedOpen}
+                                aria-controls="advanced-filter-options"
+                                onClick={() => setMobileAdvancedOpen(open => !open)}
+                            >
+                                <span>여행사·항공사{advancedSelectionCount > 0 && <span className={styles.advancedSelectionCount}> · {advancedSelectionCount}개 선택</span>}</span>
+                                <span className={styles.mobileAdvancedChevron} aria-hidden="true"><Icon name="chevron" /></span>
+                            </button>
+                            <div id="advanced-filter-options" className={styles.advancedFilterContent} data-expanded={mobileAdvancedOpen}>
+                                <h3>여행사</h3>
+                                <div className={styles.optionGrid}>
+                                    {SOURCE_OPTIONS.map(item => (
+                                        <button
+                                            type="button"
+                                            key={item.value}
+                                            className={sourceFilter === item.value ? styles.optionActive : ''}
+                                            onClick={() => selectSourceFilter(item.value)}
+                                        >
+                                            {item.label}
+                                        </button>
+                                    ))}
                                 </div>
-                                {airlineMenuOpen && (
-                                    <div className={styles.desktopAirlineMenu} role="listbox" aria-label="항공사 선택">
-                                        {['all', ...uniqueAirlines].map(airline => {
-                                            const label = airline === 'all' ? '전체 항공사' : airline;
-                                            const active = airlineFilter === airline;
-                                            return (
-                                                <button
-                                                    type="button"
-                                                    role="option"
-                                                    aria-selected={active}
-                                                    className={active ? styles.desktopAirlineOptionActive : ''}
-                                                    key={airline}
-                                                    onClick={() => {
-                                                        selectAirlineFilter(airline);
-                                                        setAirlineMenuOpen(false);
-                                                    }}
-                                                >
-                                                    <span>{label}</span>
-                                                    {active && <span aria-hidden="true">✓</span>}
-                                                </button>
-                                            );
-                                        })}
+                                <label className={`${styles.filterSelectRow} ${styles.mobileAirlineSelect}`}>
+                                    <span>항공사</span>
+                                    <select value={airlineFilter} onChange={event => selectAirlineFilter(event.target.value)}>
+                                        <option value="all">전체 항공사</option>
+                                        {uniqueAirlines.map(airline => <option value={airline} key={airline}>{airline}</option>)}
+                                    </select>
+                                </label>
+                                <h3 className={styles.desktopAirlineHeading}>항공사</h3>
+                                <div className={styles.desktopAirlineSelect}>
+                                    <div className={`${styles.desktopAirlineSelectControl} ${airlineMenuOpen ? styles.desktopAirlineSelectControlOpen : ''}`}>
+                                        <button
+                                            type="button"
+                                            aria-haspopup="listbox"
+                                            aria-expanded={airlineMenuOpen}
+                                            aria-label={`항공사 선택: ${airlineFilter === 'all' ? '전체 항공사' : airlineFilter}`}
+                                            onClick={() => setAirlineMenuOpen(open => !open)}
+                                        >
+                                            <strong>{airlineFilter === 'all' ? '전체 항공사' : airlineFilter}</strong>
+                                            <span className={`${styles.desktopAirlineChevron} ${airlineMenuOpen ? styles.desktopAirlineChevronOpen : ''}`}>
+                                                <Icon name="chevron" />
+                                            </span>
+                                        </button>
                                     </div>
-                                )}
+                                    {airlineMenuOpen && (
+                                        <div className={styles.desktopAirlineMenu} role="listbox" aria-label="항공사 선택">
+                                            {['all', ...uniqueAirlines].map(airline => {
+                                                const label = airline === 'all' ? '전체 항공사' : airline;
+                                                const active = airlineFilter === airline;
+                                                return (
+                                                    <button
+                                                        type="button"
+                                                        role="option"
+                                                        aria-selected={active}
+                                                        className={active ? styles.desktopAirlineOptionActive : ''}
+                                                        key={airline}
+                                                        onClick={() => {
+                                                            selectAirlineFilter(airline);
+                                                            setAirlineMenuOpen(false);
+                                                        }}
+                                                    >
+                                                        <span>{label}</span>
+                                                        {active && <span aria-hidden="true">✓</span>}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
 
+                        </div>
+                        </div>
+                        <div className={styles.filterFooter} data-more-below={filterHasMoreBelow}>
                         <button type="button" className={`${styles.applyButton} ${(calendarOpen || airlineMenuOpen) ? styles.applyButtonCalendarOpen : ''}`} onClick={closeFilter}>
                             {filteredFlights.length.toLocaleString('ko-KR')}개 항공권 보기
                         </button>
+                        </div>
                 </OverlayDialog>
             )}
 
