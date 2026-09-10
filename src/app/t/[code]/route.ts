@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { decodeShareCode } from '@/lib/share-code';
+import { THREADS_SHARE_GROUP_OVERRIDES } from '@/lib/share-groups';
 
 type RouteContext = {
     params: Promise<{ code: string }>;
@@ -25,7 +26,10 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
     const flightId = decodeShareCode(decodeURIComponent(code));
     if (!flightId) return NextResponse.redirect(new URL('/', request.url), 302);
 
-    const destination = new URL(`/share/${encodeURIComponent(flightId)}`, request.url);
+    const groupCode = THREADS_SHARE_GROUP_OVERRIDES[flightId];
+    const destination = new URL(groupCode
+        ? `/share-group/${encodeURIComponent(groupCode)}`
+        : `/share/${encodeURIComponent(flightId)}`, request.url);
     destination.searchParams.set('utm_source', 'threads');
     destination.searchParams.set('utm_medium', 'social');
     destination.searchParams.set('utm_campaign', 'tikitikit_threads');

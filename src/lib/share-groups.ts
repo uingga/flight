@@ -19,7 +19,25 @@ export function resolveShareGroupFlights(group: ShareGroup, flights: Flight[]): 
     return Array.from(new Set(group.flightIds)).flatMap(id => byId.has(id) ? [byId.get(id)!] : []);
 }
 
+/** Published Threads links explicitly upgraded from a single flight to a collection. */
+export const THREADS_SHARE_GROUP_OVERRIDES: Record<string, string> = {
+    'ttang-RF0384CJJIBR-G13-2026-10-10': 'ibr-260910',
+};
+
 export const SHARE_GROUPS: Record<string, ShareGroup> = {
+    'ibr-260910': {
+        departure: '청주',
+        arrival: '이바라키',
+        price: 169000,
+        dateText: '9.26–9.29 · 9.29–10.3 · 10.10–10.13',
+        airline: '에어로케이',
+        source: '땡처리닷컴',
+        flightIds: [
+            'ttang-RF0384CJJIBR-G11-2026-09-26',
+            'ttang-RF0384CJJIBR-G14-2026-09-29',
+            'ttang-RF0384CJJIBR-G13-2026-10-10',
+        ],
+    },
     'icn-260909': {
         title: '인천 출발 항공권 3개',
         departure: '인천', arrival: '나트랑·삿포로·하노이',
