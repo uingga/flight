@@ -894,9 +894,9 @@
 .emptyStateActions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
 .emptyStateActions button + button { border: 1px solid var(--brand); background: var(--paper); }
 .emptyBlockers { width: min(100%, 560px); margin-top: 18px; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
-.emptyBlockers button { margin: 0; padding: 8px 10px; display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); font-weight: var(--weight-medium); }
+.emptyBlockers button { margin: 0; padding: 8px 10px; display: inline-flex; flex-direction: column; align-items: flex-start; gap: 4px; max-width: 100%; text-align: left; border: 1px solid var(--line); background: var(--paper); color: var(--ink); font-weight: var(--weight-medium); }
 .emptyBlockers button small { color: var(--brand-dark); font-size: 0.74rem; font-weight: var(--weight-bold); }
-.emptyBlockers button b { color: var(--muted); font-size: 1rem; font-weight: var(--weight-medium); line-height: 1; }
+.emptyBlockers button > span { font-size: 0.86rem; color: var(--ink); }
 
 .previewFooter { padding: 25px 18px 36px; display: flex; flex-direction: column; align-items: center; gap: 5px; color: var(--text-faint); font-size: var(--size-micro); }
 .previewFooter a { color: var(--brand-dark); font-weight: var(--weight-bold); }

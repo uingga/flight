@@ -3931,12 +3931,10 @@ export default function MobileRedesignPreview({
                                 </>
                             ) : emptyDiagnosis?.kind === 'filtered' ? (
                                 <>
-                                    <strong>
-                                        {query.trim()
-                                            ? `${query.trim()} 표는 ${emptyDiagnosis.available.toLocaleString('ko-KR')}개 있어요.`
-                                            : '표는 있지만 조건이 서로 겹쳤어요.'}
-                                    </strong>
-                                    <span>아래 조건을 하나씩 풀어보세요.</span>
+                                    <strong>선택한 조건에 맞는 항공권이 없어요.</strong>
+                                    <span>{emptyDiagnosis.blockers.some(blocker => blocker.revealedCount > 0)
+                                        ? '아래 버튼은 해당 조건만 해제해요. 나머지 조건은 유지됩니다.'
+                                        : '조건 하나만 해제해도 결과가 없어요. 두 개 이상 바꾸거나 초기화해 보세요.'}</span>
                                     {emptyDiagnosis.blockers.length > 0 && (
                                         <div className={styles.emptyBlockers}>
                                             {emptyDiagnosis.blockers.map(blocker => (
@@ -3945,9 +3943,8 @@ export default function MobileRedesignPreview({
                                                     key={blocker.id}
                                                     onClick={() => clearEmptyBlocker(blocker.id)}
                                                 >
-                                                    {blocker.label}
-                                                    {blocker.revealedCount > 0 && <small>{blocker.revealedCount.toLocaleString('ko-KR')}개 보기</small>}
-                                                    <b aria-hidden="true">×</b>
+                                                    <span>{blocker.label} 조건 해제</span>
+                                                    {blocker.revealedCount > 0 && <small>{blocker.id === 'departure' ? '다른 출발지 항공권 ' : '해제하면 항공권 '}{blocker.revealedCount.toLocaleString('ko-KR')}개 보기</small>}
                                                 </button>
                                             ))}
                                         </div>
