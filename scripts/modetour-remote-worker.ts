@@ -42,8 +42,6 @@ async function main() {
         const result = await collectModeBrowser(plan, browser, async (scope, rows) => {
             const key = modeScopeKey(scope); raw[key] = rows;
             fs.writeFileSync(path.join(output, key.replace('/','-') + '.json'), JSON.stringify(rows));
-            if (request.cache.modetourPrimary?.scopeCounts?.[key] > 0 && rows.length < request.cache.modetourPrimary.scopeCounts[key]*0.6)
-                throw new Error('source_count_collapse');
         }, [], { cached: {}, failed: [], previousRequests: 0 });
         const bundle = { protocol: MODE_REMOTE_PROTOCOL, capturedAt: new Date().toISOString(), plan, raw, result };
         await validateModeBundle(bundle, [], request.cache.modetourPrimary?.scopeCounts);
@@ -52,7 +50,7 @@ async function main() {
         process.stdout.write(JSON.stringify({ protocol: MODE_REMOTE_PROTOCOL, id: request.id, status: 'verified', bundle }));
     } catch (error) {
         const reason = /^[a-z_]+$/.test((error as Error).message) ? (error as Error).message : 'worker_failed';
-        const restricted = ['access_restriction','source_count_collapse','empty_catalogue'].includes(reason);
+        const restricted = reason === 'access_restriction';
         if (restricted) fs.writeFileSync(cooldown, JSON.stringify({ reason, nextProbeAt: new Date(Date.now()+86400000).toISOString() }));
         if (fs.existsSync(output)) fs.writeFileSync(path.join(output,'failure.json'), JSON.stringify({reason, diagnostics:browser?.diagnostics()}));
         process.stdout.write(JSON.stringify({ protocol: MODE_REMOTE_PROTOCOL, id: request.id, status: 'failed', reason, restricted }));

@@ -563,6 +563,7 @@ async function main() {
             const prevScraped = prevCache?.scrapedCounts?.[src];
             if (
                 freshCount > 0
+                && !(src === 'modetour' && modeResult)
                 && prevScraped !== undefined
                 && prevScraped >= MIN_BASELINE
                 && freshCount < prevScraped * DROP_RATIO

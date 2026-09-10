@@ -129,7 +129,7 @@ async function main() {
             reusedScopes: result.reusedScopes, failed: result.failed, productionReady: false }));
     } catch (e) {
         const reason = e instanceof Error && /^[a-z_]+$/.test(e.message) ? e.message : 'staging_failed';
-        if (['access_restriction', 'empty_catalogue', 'source_count_collapse'].includes(reason)) fs.writeFileSync(cooldownPath,
+        if (reason === 'access_restriction') fs.writeFileSync(cooldownPath,
             JSON.stringify({ reason, nextProbeAt: new Date(Date.now() + 86_400_000).toISOString() }));
         if (fs.existsSync(output)) fs.writeFileSync(path.join(output, 'failure.json'), JSON.stringify({ runId, reason,
             diagnostics: browser?.diagnostics(), productionReady: false }));

@@ -38,7 +38,8 @@ export async function scrapeModetourRemote(cache: any) {
     if (reply.protocol !== MODE_REMOTE_PROTOCOL || reply.id !== id) throw new Error('remote_identity_mismatch');
     if (reply.status !== 'verified') {
         if (reply.restricted) throw new SourceResponseError('soft-block','모두투어 B PC 접근 제한 — 이전 데이터 보존');
-        throw new Error('모두투어 B PC 수집 실패 — 이전 데이터 보존');
+        const reason = typeof reply.reason === 'string' && /^[a-z_]+$/.test(reply.reason) ? reply.reason : 'unknown_failure';
+        throw new Error(`모두투어 B PC 수집 실패 (${reason}) — 이전 데이터 보존`);
     }
     return validateModeBundle(reply.bundle, cache?.flights || [], cache?.modetourPrimary?.scopeCounts);
 }

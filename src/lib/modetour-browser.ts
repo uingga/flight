@@ -180,16 +180,8 @@ export async function collectModeBrowser(plan: ModePlan, backend: ModeBackend,
         // A full page is not proof of the end. Do not silently publish the first 500 products.
         if (rows.length >= size) throw new Error('pagination_requires_review');
         await checkpoint(scope, rows);
-        const previous = previousFlights.filter(f => {
-            if (f.source !== 'modetour' || f.departure.date < plan.from || f.departure.date > plan.through) return false;
-            if (scope.city) return f.arrival.airport === scope.city;
-            try {
-                const u = new URL(f.link);
-                return u.origin + u.pathname === MODE_BROWSER_URL
-                    && JSON.parse(u.searchParams.get('query') || '{}').continentCode === scope.continent;
-            } catch { return false; }
-        }).length;
-        if (previous && rows.length < previous * 0.6) throw new Error('source_count_collapse');
+        // Complete, validated responses may legitimately shrink as inventory is withdrawn.
+        // Scope coverage, pagination, schema and access checks remain authoritative.
         for (const row of rows) {
             const f = modeRowToFlight(row, scope, plan);
             if (!f) { excludedCount++; continue; }

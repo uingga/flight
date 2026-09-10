@@ -27,7 +27,9 @@ test('operational bundle revalidates raw rows, retains only TPE and rejects miss
         (b:any)=>b.result.failed[0].scope='CHI/KHH',(b:any)=>b.capturedAt='2026-09-06T00:00:00Z']) {
         const bad=JSON.parse(JSON.stringify(bundle));change(bad); await assert.rejects(validateModeBundle(bad,[],{},now));
     }
-    await assert.rejects(validateModeBundle(bundle,[],{'JPN/':30},now),/source_count_collapse/);
+    const reduced = await validateModeBundle(bundle,[],{'JPN/':30},now);
+    assert.equal(reduced.scopeCounts['JPN/'], 1);
+    assert.equal(reduced.flights.length, 1);
 });
 test('PC primary waits for upstream, runs four slots once and never overrides a cooldown',()=>{
     const onlineOff={enabled:false,slotsPerDay:4};
@@ -186,11 +188,15 @@ test('active or malformed GitHub/PC cooldown blocks and never mutates state', ()
     checkModeCooldown({ flights: [], sourceCircuits: {} }, null);
     assert.throws(() => checkModeCooldown({}, null));
 });
-test('previously present city/region cannot silently become empty; stop before more requests', async () => {
+test('empty individual region is valid, but an entirely empty catalogue still fails', async () => {
     const f = modeRowToFlight(row(), plan.scopes[0], plan)!;
     const b = backend();
-    await assert.rejects(collectModeBrowser(plan, b, async () => {}, [f]), /source_count_collapse/);
-    assert.equal(b.calls, 1);
+    await assert.rejects(collectModeBrowser(plan, b, async () => {}, [f]), /empty_catalogue/);
+    assert.equal(b.calls, 15);
+    const remaining = backend(s => s.continent === 'JPN' ? [row()] : []);
+    const result = await collectModeBrowser(plan, remaining, async () => {}, [f]);
+    assert.equal(result.listRequests, 15);
+    assert.equal(result.flights.length, 1);
 });
 test('reported count mismatch requires pagination review even under the page size', async () => {
     const b = { wait: async () => {}, read: async (s: ModeScope) => ({ url: listUrl(s), status: 200,

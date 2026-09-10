@@ -23,7 +23,6 @@ export async function validateModeBundle(bundle: ModeBundle, previous: Flight[] 
     if (JSON.stringify(keys) !== JSON.stringify(bundle.plan.scopes.map(modeScopeKey).sort())) throw new Error('missing_modetour_scopes');
     for (const [key, rows] of Object.entries(bundle.raw)) {
         if (!Array.isArray(rows) || rows.length >= 500) throw new Error('invalid_modetour_checkpoint');
-        if (baseline[key] > 0 && rows.length < baseline[key] * 0.6) throw new Error('source_count_collapse');
     }
     const rebuilt = await collectModeBrowser(bundle.plan, {
         read: async () => { throw new Error('offline_evidence_must_not_fetch'); }, wait: async () => {},
