@@ -1,22 +1,30 @@
 {
-  "date": "2026-09-09",
-  "selectedAt": "2026-09-09T06:13:16.328Z",
-  "flightId": "modetour-CHI-20081236",
-  "source": "modetour",
-  "arrivalCity": "광저우",
-  "destinationKey": "CAN",
-  "effectivePrice": 199000,
+  "date": "2026-09-10",
+  "selectedAt": "2026-09-10T05:39:02.077Z",
+  "flightId": "ttang-TAE-DYG-RT-0-4-ZE-2026-09-15",
+  "source": "ttang",
+  "arrivalCity": "장가계(다융)",
+  "destinationKey": "DYG",
+  "effectivePrice": 165000,
   "selectionMode": "exceptional-price",
-  "referencePrice": 370800,
+  "referencePrice": 395200,
   "previousPick": {
-    "date": "2026-09-08",
-    "flightId": "modetour-ASIA-20136575",
+    "date": "2026-09-09",
+    "flightId": "modetour-CHI-20081236",
     "source": "modetour",
-    "arrivalCity": "호치민",
-    "destinationKey": "SGN",
-    "effectivePrice": 210000
+    "arrivalCity": "광저우",
+    "destinationKey": "CAN",
+    "effectivePrice": 199000
   },
   "recentPicks": [
+    {
+      "date": "2026-09-09",
+      "flightId": "modetour-CHI-20081236",
+      "source": "modetour",
+      "arrivalCity": "광저우",
+      "destinationKey": "CAN",
+      "effectivePrice": 199000
+    },
     {
       "date": "2026-09-08",
       "flightId": "modetour-ASIA-20136575",
@@ -64,20 +72,7 @@
       "arrivalCity": "타이중",
       "destinationKey": "RMQ",
       "effectivePrice": 258000
-    },
-    {
-      "date": "2026-09-02",
-      "flightId": "modetour-CHI-20079725",
-      "source": "modetour",
-      "arrivalCity": "장가계",
-      "destinationKey": "DYG",
-      "effectivePrice": 195000
     }
   ],
-  "repeatOverride": {
-    "previousEffectivePrice": 280000,
-    "previousDate": "2026-09-05",
-    "currentEffectivePrice": 199000,
-    "dropAmount": 81000
-  }
+  "repeatOverride": null
 }
