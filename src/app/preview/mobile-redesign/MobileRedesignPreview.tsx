@@ -20,6 +20,7 @@ import {
     compareRecommendedFlights,
 } from '@/lib/flight-recommendation';
 import { CITY_TO_AIRPORT, calcFlightTiming, formatAgencyFlightDuration, getNaverFlightUrl, normalizeAirline, normalizeCity } from '@/lib/utils/flight-helpers';
+import { cityDetailName, cityDisplayName, citySearchMatches } from '@/lib/utils/city-display';
 import { getTripcomHotelUrl, getTripcomTrackingId } from '@/lib/utils/tripcom-helpers';
 import { getFlightBookingUrl } from '@/lib/utils/booking-url';
 import { encodeShareId } from '@/lib/share-code';
@@ -191,7 +192,7 @@ const SORT_OPTIONS: Array<{ label: string; value: SortMode }> = [
     { label: '빠른 출발순', value: 'date' },
 ];
 
-const stripAirport = (city: string) => city.replace(/\([^)]*\)/g, '').trim();
+const stripAirport = cityDisplayName;
 
 const departureName = (flight: Flight) => {
     if (flight.departure.airport === 'ICN') return '인천';
@@ -707,7 +708,7 @@ const searchQueryMatches = (flight: Flight, query: string) => {
     if (!normalizedQuery) return true;
 
     const routeMatches = [flight.departure.city, flight.arrival.city]
-        .some(value => value.toLocaleLowerCase('ko-KR').includes(normalizedQuery));
+        .some(value => citySearchMatches(value, normalizedQuery));
     const providerMatches = [flight.airline, SOURCE_NAMES[flight.source]]
         .some(value => value.toLocaleLowerCase('ko-KR').startsWith(normalizedQuery));
 
@@ -4561,7 +4562,7 @@ export default function MobileRedesignPreview({
 
                         <div className={styles.detailTitle}>
                             <div>
-                                <h2 id="flight-detail-title">{departureName(selectedFlight)} ↔ {stripAirport(selectedFlight.arrival.city)}</h2>
+                                <h2 id="flight-detail-title">{departureName(selectedFlight)} ↔ {cityDetailName(selectedFlight.arrival.city)}</h2>
                             </div>
                             <div>
                                 <strong>{priceText(selectedFlight.source === 'ttang' ? selectedFlight.price : effectivePrice(selectedFlight))}</strong>
