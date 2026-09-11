@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import styles from './admin.module.css';
 import { isAnalyticsExcluded, setAnalyticsExcluded } from '@/lib/analytics';
 import { buildSourceSlotBars, type SlotStatus, type SourceSlotBar, type SourceSlotEvent } from '@/lib/admin-source-slots';
+import { buildAdminCrawlRounds } from '@/lib/admin-crawl-rounds';
 import { buildAdminAttentionItems } from '@/lib/admin-attention';
 import AdminTodayPick from '@/components/AdminTodayPick';
 import AdminVisitComparison from '@/components/AdminVisitComparison';
@@ -2105,18 +2106,10 @@ export default function AdminPage() {
     });
     const latestNaverRun = naverRunRows[naverRunRows.length - 1] || null;
 
-    // 정규 일반 회차는 5개 일반 여행사 중 4곳 이상이 실제 시도되었거나 예약/차단 정책으로
-    // 명시적으로 건너뛴 엔트리다. 단일 소스 수동 복구가 최신이어도 현재 회차판을 덮지 않는다.
+    // GitHub와 PC 단독 실행은 원본 기록을 유지하고, 같은 예약 회차에서 여행사별로 합친다.
     const generalSources = allSources.filter(source => source !== 'myrealtrip');
-    const generalRoundEntries = (data.crawlHistory || []).filter(entry => {
-        const scheduledEvents = generalSources.filter(source => {
-            const stat = entry.sites[source];
-            return Boolean(stat && !stat.manual && stat.skipReason !== 'not-requested');
-        });
-        return scheduledEvents.length >= 4 || entry.runKind === 'pc_primary';
-    });
+    const generalRoundEntries = buildAdminCrawlRounds(data.crawlHistory || [], generalSources);
     const latestCompletedGeneralEntry = generalRoundEntries[generalRoundEntries.length - 1]
-        || [...(data.crawlHistory || [])].reverse().find(entry => generalSources.some(source => sourceWasAttempted(entry, source)))
         || null;
     const latestMrtEntry = [...(data.crawlHistory || [])].reverse().find(entry => sourceWasAttempted(entry, 'myrealtrip')) || null;
     const activeGeneralRun = data.currentCrawlRun || null;
@@ -2167,7 +2160,7 @@ export default function AdminPage() {
                     : stat?.partial ? 'partial' : 'success';
         const circuit = data.sourceCircuits?.[source];
         const reason = failed
-            ? stat?.detail || alertForSource(latestCompletedGeneralEntry, source)
+            ? stat?.detail || alertForSource(latestCompletedGeneralEntry?.sourceEntries[source] || null, source)
                 || circuit?.detail
                 || '수집 결과가 안전 기준을 통과하지 못했습니다.'
             : scheduledSkip ? '이 회차는 예약 정책상 수집하지 않았습니다.'
@@ -3094,13 +3087,13 @@ export default function AdminPage() {
                                         <h3>{activeGeneralRun
                                             ? `${formatKST(activeGeneralRun.startedAt).replace(/:\d{2}$/, '')} 시작`
                                             : latestCompletedGeneralEntry
-                                                ? formatKST(latestCompletedGeneralEntry.timestamp).replace(/:\d{2}$/, '')
+                                                ? `${formatKST(latestCompletedGeneralEntry.slotAt).replace(/:\d{2}$/, '')} 예약 회차`
                                                 : '완료 기록 없음'}</h3>
                                         <p>{activeGeneralRun
                                             ? activeGeneralRun.stage === 'crawling' ? '여행사들이 병렬로 수집 중입니다. 완료되면 여행사별 성공·실패를 판정합니다.'
                                                 : activeGeneralRun.stage === 'publishing' ? '수집은 끝났고 운영 데이터 반영과 저장을 진행 중입니다.'
                                                     : '브라우저와 수집 환경을 준비하고 있습니다.'
-                                            : '실패한 여행사는 새 결과를 버리고 직전 정상 데이터를 유지합니다.'}</p>
+                                            : '같은 예약 회차의 GitHub·PC 결과를 여행사별로 합칩니다. 실패한 여행사는 직전 정상 데이터를 유지합니다.'}</p>
                                     </div>
                                     <div className={styles.crawlRoundHeaderStatus}>
                                         <span className={`${styles.collectionStatus} ${styles[`collectionStatus_${currentRoundStatus}`]}`}>
@@ -3185,7 +3178,7 @@ export default function AdminPage() {
 
                             <div className={styles.crawlLogPanel} id="crawl-run-list">
                                 <div className={styles.crawlLogToolbar}>
-                                    <div><span>지난 회차</span><h3>일반 여행사 완료 기록</h3><p>이전 회차는 요약만 두고, 필요한 경우에만 펼쳐봅니다.</p></div>
+                                    <div><span>지난 회차</span><h3>일반 여행사 완료 기록</h3><p>예약 회차별 통합 결과입니다. 개별 실행 기록은 전체 타임라인에서 확인할 수 있습니다.</p></div>
                                     <span className={styles.crawlLogCount}>최근 8회</span>
                                 </div>
                                 <div className={styles.crawlRunList}>
@@ -3202,7 +3195,7 @@ export default function AdminPage() {
                                             return (
                                                 <details key={`${entry.timestamp}-${index}`} className={styles.crawlRunItem}>
                                                     <summary className={styles.crawlRunSummary}>
-                                                        <span className={styles.crawlRunWhen}><time dateTime={entry.timestamp}>{formatKST(entry.timestamp).replace(/:\d{2}$/, '')}</time><small>{entry.runKind === 'pc_primary' ? 'PC Chrome 주 수집' : '일반 여행사 정규 회차'}</small></span>
+                                                        <span className={styles.crawlRunWhen}><time dateTime={entry.slotAt}>{formatKST(entry.slotAt).replace(/:\d{2}$/, '')}</time><small>예약 회차 · {entry.entries.length}개 실행 통합</small></span>
                                                         <span className={`${styles.collectionStatus} ${styles[`collectionStatus_${status}`]}`}>{status === 'success' ? '성공' : status === 'partial' ? '일부 실패' : '실패'}</span>
                                                         <span className={styles.crawlRunResult}><strong>{attempted.length - failed.length - partial.length}곳 성공 · {partial.length}곳 부분 성공 · {failed.length}곳 실패</strong><small>{partial.length ? partial.map(source => entry.sites[source].detail).join(' / ') : failed.length ? `${failed.map(source => SOURCE_NAMES[source]).join(', ')} 이전 데이터 유지` : '모든 수집 결과 정상 반영'}</small></span>
                                                         <span className={styles.crawlRunMetrics}><strong>총 {total.toLocaleString()}개</strong><small>신규 +{added.toLocaleString()} · 제외 -{removed.toLocaleString()}{skipped.length ? ` · 미실행 ${skipped.length}곳` : ''}</small></span>
