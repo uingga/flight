@@ -1,22 +1,30 @@
 {
-  "date": "2026-09-10",
-  "selectedAt": "2026-09-10T05:39:02.077Z",
-  "flightId": "ttang-TAE-DYG-RT-0-4-ZE-2026-09-15",
+  "date": "2026-09-11",
+  "selectedAt": "2026-09-11T05:50:08.570Z",
+  "flightId": "ttang-RF0384CJJIBR-G14-2026-09-29",
   "source": "ttang",
-  "arrivalCity": "장가계(다융)",
-  "destinationKey": "DYG",
-  "effectivePrice": 165000,
+  "arrivalCity": "이바라키",
+  "destinationKey": "IBR",
+  "effectivePrice": 189000,
   "selectionMode": "exceptional-price",
-  "referencePrice": 395200,
+  "referencePrice": 255300,
   "previousPick": {
-    "date": "2026-09-09",
-    "flightId": "modetour-CHI-20081236",
-    "source": "modetour",
-    "arrivalCity": "광저우",
-    "destinationKey": "CAN",
-    "effectivePrice": 199000
+    "date": "2026-09-10",
+    "flightId": "ttang-TAE-DYG-RT-0-4-ZE-2026-09-15",
+    "source": "ttang",
+    "arrivalCity": "장가계",
+    "destinationKey": "DYG",
+    "effectivePrice": 165000
   },
   "recentPicks": [
+    {
+      "date": "2026-09-10",
+      "flightId": "ttang-TAE-DYG-RT-0-4-ZE-2026-09-15",
+      "source": "ttang",
+      "arrivalCity": "장가계",
+      "destinationKey": "DYG",
+      "effectivePrice": 165000
+    },
     {
       "date": "2026-09-09",
       "flightId": "modetour-CHI-20081236",
@@ -64,14 +72,6 @@
       "arrivalCity": "타이베이",
       "destinationKey": "TPE",
       "effectivePrice": 230000
-    },
-    {
-      "date": "2026-09-03",
-      "flightId": "modetour-CHI-20107438",
-      "source": "modetour",
-      "arrivalCity": "타이중",
-      "destinationKey": "RMQ",
-      "effectivePrice": 258000
     }
   ],
   "repeatOverride": null
