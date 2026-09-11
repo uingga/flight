@@ -4,7 +4,7 @@ import type { AcquisitionData } from '@/lib/acquisition';
 
 export const metadata: Metadata = { title: '유입 출처 표 미리보기', robots: { index: false, follow: false } };
 const sources = [
-    { source: '(not set)', label: '출처 정보 없음', sessions: 12, users: 11, category: '출처 확인 불가' },
+    { source: '(not set)', label: '출처 미확인', sessions: 12, users: 11, category: '출처 확인 불가' },
     { source: 'te31', label: 'TE31', sessions: 5, users: 5, category: '커뮤니티' },
     { source: 'google', label: '구글', sessions: 2, users: 2, category: '검색' },
     { source: 'naver', label: '네이버 검색', sessions: 1, users: 1, category: '검색' },

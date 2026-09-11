@@ -16,8 +16,9 @@ export default function Preview({searchParams}:{searchParams:{state?:string}}) {
         {label:'기타 외부 링크',sessions:1,users:1,sources:[{source:'m.keep.naver.com',label:'네이버 Keep',sessions:1,users:1}]},
         {label:'블로그',sessions:1,users:1,sources:[{source:'naver_blog',label:'네이버 블로그',sessions:1,users:1,rawSources:['naver_blog','blog.naver.com']}]},
         {label:'AI 서비스',sessions:2,users:2,sources:[{source:'chatgpt.com',label:'ChatGPT',sessions:1,users:1},{source:'gemini.google.com',label:'Gemini',sessions:1,users:1}]},
-        {label:'유형 미분류',sessions:2,users:null,sources:[{source:'hanatour',label:'hanatour (출처 확인 필요)',sessions:1,users:1},{source:'unknown-source.example',label:'unknown-source.example',sessions:1,users:null}]},
-        {label:'출처 확인 불가',sessions:1,users:1,sources:[{source:'(not set)',label:'출처 정보 없음',sessions:1,users:1}]},
+        {label:'유형 미분류',sessions:3,users:null,sources:[{source:'(data not available)',label:'데이터 제공 불가',sessions:1,users:1},{source:'hanatour',label:'hanatour (출처 확인 필요)',sessions:1,users:1},{source:'unknown-source.example',label:'unknown-source.example',sessions:1,users:null}]},
+        {label:'직접 방문',sessions:3,users:2,sources:[{source:'(direct)',label:'직접 방문',sessions:3,users:2}]},
+        {label:'출처 확인 불가',sessions:1,users:1,sources:[{source:'(not set)',label:'출처 미확인',sessions:1,users:1}]},
     ]};
     if(searchParams.state==='empty') data.groups=[];
     if(searchParams.state==='unavailable') { data.available=false;data.groups=[]; }

@@ -49,8 +49,9 @@ export function acquisitionSourceLabel(source: string): string {
     if (domain(s, 'perplexity.ai')) return 'Perplexity';
     if (domain(s, 'claude.ai')) return 'Claude';
     if (domain(s, 'copilot.microsoft.com')) return 'Copilot';
-    if (s === '(direct)') return '직접 방문 · 출처 미전달';
-    if (missing(s)) return '출처 정보 없음';
+    if (s === '(direct)') return '직접 방문';
+    if (s === '(data not available)') return '데이터 제공 불가';
+    if (missing(s)) return '출처 미확인';
     return ({google:'구글 검색',bing:'빙',daum:'다음',threads:'Threads',instagram:'인스타그램'} as Record<string,string>)[s] || source;
 }
 export const completeAcquisitionReport = (r: ReportResponse) => !r.metadata?.dataLossFromOtherRow && !r.metadata?.subjectToThresholding && !r.metadata?.samplingMetadatas?.length && (r.rowCount ?? 0) <= (r.rows?.length ?? 0);

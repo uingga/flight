@@ -37,7 +37,7 @@ async function main(){
  }
  assert.equal(acquisitionSourceKey('notnaver.example'),'notnaver.example');
  assert.notEqual(acquisitionSourceKey('m.keep.naver.com'),acquisitionSourceKey('m.search.naver.com'));
- assert.equal(acquisitionSourceLabel('(direct)'),'직접 방문 · 출처 미전달');
+ assert.equal(acquisitionSourceLabel('(direct)'),'직접 방문');
  console.log('PASS: source aliases, exact GA union counts, retained raw sources, separate Keep/agency domains, shared query, unavailable totals');
 }
 main().catch(e=>{console.error(e);process.exitCode=1});
