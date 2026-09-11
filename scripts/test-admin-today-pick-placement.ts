@@ -2,6 +2,7 @@
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
 import fs from 'node:fs';
+import history from '../data/today-pick-history.json';
 import os from 'node:os';
 import path from 'node:path';
 
@@ -33,7 +34,7 @@ async function main() {
             const page = await context.newPage();
             const errors: string[] = [];
             page.on('pageerror', e => errors.push(e.message));
-            let payload: { available: boolean; message: string | null; current: object | null; candidates: typeof candidates } = { available: true, message: null, current: null, candidates };
+            let payload: { available: boolean; message: string | null; current: object | null; candidates: typeof candidates; history?: typeof history } = { available: true, message: null, current: null, candidates, history };
             let getFails = false;
             let saveFails = true;
             let posts = 0;
@@ -64,7 +65,7 @@ async function main() {
             await page.goto(`${base}/admin?key=mock-only`);
             let summary = page.locator('#overview-tikit-drop');
             await summary.getByText('오늘 선정된 항공권이 없습니다.').waitFor();
-            assert.equal(await summary.locator('article').count(), 0, 'initial overview has no candidates');
+            assert.equal(await summary.locator('article:visible').count(), 0, 'initial overview has no candidates');
             const summaryBox = await summary.boundingBox();
             const performanceBox = await page.locator('#overview-performance').boundingBox();
             assert.ok(summaryBox && performanceBox && Math.abs(summaryBox.width - performanceBox.width) < 2, JSON.stringify({ summaryBox, performanceBox, width }));
@@ -75,6 +76,13 @@ async function main() {
             assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'overview fits width');
             await page.screenshot({ path: path.join(out, `overview-${width}.png`), fullPage: true });
             assert.equal(await summary.getByRole('button', { name: '선정·변경', exact: true }).count(), 0);
+            await summary.locator('summary').click();
+            assert.equal(await summary.locator('article').count(), 10);
+            assert.ok((await summary.innerText()).includes(history[0].arrivalCity!));
+            await summary.getByRole('button', {name: '다음', exact: true}).click();
+            assert.ok((await summary.innerText()).includes(history[10].date));
+            assert.ok(await summary.evaluate(el => el.scrollWidth <= el.clientWidth), 'history fits the card');
+            await summary.screenshot({path: path.join(out, `history-${width}.png`)});
             await summary.getByRole('button', { name: '노출순서에서 관리' }).click();
             summary = page.locator('#flight-order-tikit-drop');
             await summary.getByText('오늘 선정된 항공권이 없습니다.').waitFor();
@@ -141,7 +149,7 @@ async function main() {
             await summary.getByText('모의 조회 실패').waitFor();
             await open(); await dialog.waitFor();
             getFails = false;
-            payload = { available: false, message: '모의 권한: 선정 불가', current: null, candidates };
+            payload = { available: false, message: '모의 권한: 선정 불가', current: null, candidates, history };
             await dialog.getByRole('button', { name: '새로고침', exact: true }).click();
             await dialog.getByText('모의 권한: 선정 불가').waitFor();
             assert.ok(await rows.first().getByRole('button', { name: '선정', exact: true }).isDisabled());

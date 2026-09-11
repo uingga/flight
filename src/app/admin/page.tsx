@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import styles from './admin.module.css';
+import VisitorTrendChart from '@/components/VisitorTrendChart';
 import { isAnalyticsExcluded, setAnalyticsExcluded } from '@/lib/analytics';
 import { buildSourceSlotBars, type SlotStatus, type SourceSlotBar, type SourceSlotEvent } from '@/lib/admin-source-slots';
 import { buildAdminCrawlRounds } from '@/lib/admin-crawl-rounds';
@@ -597,6 +598,7 @@ interface GaStatsData {
         returningUsers: GaStatsData['monitoring']['newUsers'];
     };
     trend: Array<{ date: string; users: number; pageViews: number; sessions: number }>;
+    returningTrend?: { available: boolean; trend: Array<{date: string; users: number}> };
     events: Array<{ name: string; label: string; count: number; users: number }>;
     otherEvents: Array<{ name: string; label: string; count: number; users: number }>;
     conversion: {
@@ -1071,67 +1073,6 @@ function ExplorationDepth({ activity }: { activity: NonNullable<GaStatsData['act
 }
 
 
-function VisitorTrendChart({ trend }: { trend: GaStatsData['trend'] }) {
-    const [selectedIndex, setSelectedIndex] = useState(() => Math.max(0, trend.length - 1));
-
-    useEffect(() => {
-        setSelectedIndex(Math.max(0, trend.length - 1));
-    }, [trend.length]);
-
-    if (trend.length === 0) return <div className={styles.emptyState}>일별 방문 기록이 아직 없어요.</div>;
-
-    const max = Math.max(...trend.map(point => point.users), 1);
-    const selected = trend[Math.min(selectedIndex, trend.length - 1)];
-    const tickIndexes = new Set([0, 7, 14, 21, trend.length - 1].filter(index => index < trend.length));
-    const shortDate = (date: string) => {
-        const [, month, day] = date.split('-').map(Number);
-        return `${month}/${day}`;
-    };
-    const selectedDate = shortDate(selected.date).replace('/', '월 ') + '일';
-
-    return (
-        <div className={styles.visitorTrend}>
-            <div className={styles.visitorTrendSelected} aria-live="polite">
-                <span>{selectedDate}</span>
-                <strong>{selected.users.toLocaleString()}명</strong>
-                <small>· 재방문 포함 총 {selected.sessions.toLocaleString()}회 접속</small>
-            </div>
-            <div className={`${styles.trendChart} ${styles.desktopVisitorTrend}`} aria-label="최근 30일 일별 방문자">
-                {trend.map((point, index) => (
-                    <button
-                        key={point.date}
-                        type="button"
-                        className={index === selectedIndex ? `${styles.trendCol} ${styles.trendColSelected}` : styles.trendCol}
-                        onClick={() => setSelectedIndex(index)}
-                        aria-label={`${point.date}, 방문자 ${point.users}명`}
-                        aria-pressed={index === selectedIndex}
-                    >
-                        <span className={styles.trendValue}>{point.users.toLocaleString()}명</span>
-                        <span className={styles.trendTrack}>
-                            <span className={styles.trendBar} style={{ height: `${Math.max(3, (point.users / max) * 100)}%` }} />
-                        </span>
-                        <span className={styles.trendDate}>{tickIndexes.has(index) ? shortDate(point.date) : ''}</span>
-                    </button>
-                ))}
-            </div>
-            <div className={styles.verticalTrend} aria-label="최근 30일 일별 방문자">
-                {[...trend].reverse().map(point => (
-                    <div key={point.date} className={styles.verticalTrendRow}>
-                        <time dateTime={point.date}>{shortDate(point.date)}</time>
-                        <div className={styles.verticalTrendTrack} aria-hidden="true">
-                            <div
-                                className={styles.verticalTrendBar}
-                                style={{ width: `${Math.max(2, (point.users / max) * 100)}%` }}
-                            />
-                        </div>
-                        <strong>{point.users.toLocaleString()}명</strong>
-                    </div>
-                ))}
-            </div>
-            <p className={styles.trendHint}>방문자는 사람 수, 접속은 같은 사람의 재방문을 포함한 횟수입니다.</p>
-        </div>
-    );
-}
 
 function hourRangeLabel(bucket: GaHourlyBucket) {
     const hour = (value: number) => `${String(value).padStart(2, '0')}:00`;
@@ -4786,7 +4727,12 @@ export default function AdminPage() {
                                     <small>{gaStats.dateFilter.picks.toLocaleString()}번 선택 중 {gaStats.dateFilter.emptyPicks.toLocaleString()}번</small>
                                 </div>
                             </div>
+                            <h3 className={styles.userSubTitle}>전체 방문자</h3>
                             <VisitorTrendChart trend={gaStats.trend} />
+                            <h3 className={styles.userSubTitle}>다시 온 사람</h3>
+                            {gaStats.returningTrend?.available
+                                ? <VisitorTrendChart trend={gaStats.returningTrend.trend} returning />
+                                : <p role="status">재방문자 추이를 불러오지 못했습니다.</p>}
                         </section>
 
                         <section className={styles.section} id="visitor-hours">

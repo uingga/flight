@@ -1,3 +1,4 @@
+import {loadReturningTrend} from '@/lib/server/returning-trend-report';
 import { Ga4RequestQueue } from '@/lib/ga4-request-queue';
 import { loadDeviceTraffic } from '@/lib/server/device-traffic-report';
 import { loadAcquisition } from '@/lib/server/acquisition-report';
@@ -850,6 +851,7 @@ async function buildStats(config: Ga4Config, days: number) {
             returningUsers: behavior(repeatGroups.returning),
         },
         trend,
+        returningTrend: await loadReturningTrend(config, trend.map(point => point.date)),
         events: events.filter(entry => entry.known && !CITY_INTEREST_EVENTS.includes(entry.name as typeof CITY_INTEREST_EVENTS[number])),
         otherEvents: events.filter(entry => !entry.known
             && !CITY_INTEREST_EVENTS.includes(entry.name as typeof CITY_INTEREST_EVENTS[number])

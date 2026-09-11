@@ -1,3 +1,4 @@
+import { collectTodayPickArchive } from './today-pick-history.mjs';
 import type { Flight } from '@/types/flight';
 import { getEffectivePrice, getRecommendationComparisonFreshness } from '@/lib/price-quality';
 
@@ -19,6 +20,7 @@ export interface StoredTodayPick extends Partial<TodayPickRecord> {
     referencePrice?: number | null;
     previousPick?: TodayPickRecord | null;
     recentPicks?: TodayPickRecord[];
+    history?: TodayPickRecord[];
     repeatOverride?: {
         previousEffectivePrice?: number;
         previousDate?: string;
@@ -34,6 +36,7 @@ export interface ManualTodayPick extends TodayPickRecord {
     referencePrice: number | null;
     previousPick: TodayPickRecord | null;
     recentPicks: TodayPickRecord[];
+    history: TodayPickRecord[];
     repeatOverride: null;
     selectedBy: 'admin';
 }
@@ -131,6 +134,7 @@ export function buildManualTodayPick(
         referencePrice: usableNaverPrice ? naverPrice : null,
         previousPick: recentPicks[0] || null,
         recentPicks,
+        history: collectTodayPickArchive(storedPick),
         repeatOverride: null,
         selectedBy: 'admin',
     };

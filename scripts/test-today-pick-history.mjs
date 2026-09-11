@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import { collectTodayPickArchive } from '../src/lib/today-pick-history.mjs';
+const old={date:'2026-01-01',flightId:'gone',arrivalCity:'괌',source:'ybtour',effectivePrice:100000};
+const changed={...old,effectivePrice:90000};
+const current={...old,date:'2026-09-11',flightId:'new',history:[old,changed],recentPicks:[old],previousPick:old};
+const rows=collectTodayPickArchive(current,[old]);
+assert.equal(rows.length,3);
+assert.equal(rows[0].date,'2026-09-11');
+assert.deepEqual(rows.slice(1).map(p=>p.effectivePrice),[100000,90000]);
+assert.equal(collectTodayPickArchive({history:rows}).length,3);
+assert.deepEqual(collectTodayPickArchive({effectivePrice:0}),[]);
+console.log('PASS: retains old/removed flights, historical prices and same-day changes; deduplicates snapshots');

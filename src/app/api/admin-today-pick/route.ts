@@ -1,3 +1,5 @@
+import { collectTodayPickArchive } from '@/lib/today-pick-history.mjs';
+import archivedPicks from '../../../../data/today-pick-history.json';
 import fs from 'node:fs';
 import path from 'node:path';
 import { NextRequest, NextResponse } from 'next/server';
@@ -202,6 +204,7 @@ export async function GET(request: NextRequest) {
             selectedAt: currentPick.selectedAt || null,
             selectionMode: currentPick.selectionMode || null,
         } : null,
+        history: collectTodayPickArchive(currentPick, archivedPicks),
         candidates: candidatePayload(flights, currentPick),
     });
 }

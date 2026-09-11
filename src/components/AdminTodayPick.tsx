@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import OverlayDialog from '@/components/ui/OverlayDialog';
 import { dismissOverlayWithHistory, historyOverlay, showOverlayWithHistory } from '@/lib/ui/overlay-history';
 import styles from './AdminTodayPick.module.css';
+import type { TodayPickRecord } from '@/lib/manual-today-pick';
 
 interface TodayPickCandidate {
     id: string;
@@ -35,6 +36,7 @@ interface TodayPickAdminData {
     message: string | null;
     current: CurrentTodayPick | null;
     candidates: TodayPickCandidate[];
+    history?: TodayPickRecord[];
 }
 
 const TIER_LABELS: Record<number, string> = {
@@ -76,6 +78,7 @@ export default function AdminTodayPick({ adminKey, readOnly = false, onManage }:
     const [selectingId, setSelectingId] = useState<string | null>(null);
     const [panelOpen, setPanelOpen] = useState(false);
     const [page, setPage] = useState(1);
+    const [historyPage, setHistoryPage] = useState(1);
     const dialogRef = useRef<HTMLElement>(null);
     const listRef = useRef<HTMLDivElement>(null);
 
@@ -206,6 +209,28 @@ export default function AdminTodayPick({ adminKey, readOnly = false, onManage }:
                             <p>오늘 선정된 항공권이 없습니다.</p>
                         )}
                     </div>
+                    <details className={styles.history}>
+                        <summary>지난 선정 내역 <span>{data.history?.length || 0}건</span></summary>
+                        <p className={styles.note}>최신 선정일부터 표시합니다. 가격은 선정 당시 기록이며 현재 판매가와 다를 수 있습니다. 같은 날 변경한 표도 포함합니다.</p>
+                        {(data.history?.length || 0) > 0 ? <>
+                            <div className={styles.historyList}>
+                                {data.history!.slice((historyPage - 1) * 10, historyPage * 10).map(pick => (
+                                    <article key={`${pick.date}|${pick.flightId}|${pick.effectivePrice}`}>
+                                        <time dateTime={pick.date}>{pick.date}</time>
+                                        <div><strong>{pick.arrivalCity || pick.destinationKey || '도착지 기록 없음'}</strong>
+                                            <small>{({ttang: '땡처리닷컴', modetour: '모두투어', ybtour: '노랑풍선', hanatour: '하나투어', onlinetour: '온라인투어', myrealtrip: '마이리얼트립'} as Record<string, string>)[pick.source || ''] || pick.source || '여행사 기록 없음'}</small>
+                                        </div>
+                                        <b>{formatPrice(pick.effectivePrice)}</b>
+                                    </article>
+                                ))}
+                            </div>
+                            {data.history!.length > 10 && <nav className={styles.pagination} aria-label="선정 내역 페이지">
+                                <button type="button" className={styles.refreshButton} disabled={historyPage === 1} onClick={() => setHistoryPage(historyPage - 1)}>이전</button>
+                                <span>{historyPage} / {Math.ceil(data.history!.length / 10)}</span>
+                                <button type="button" className={styles.refreshButton} disabled={historyPage * 10 >= data.history!.length} onClick={() => setHistoryPage(historyPage + 1)}>다음</button>
+                            </nav>}
+                        </> : <p className={styles.empty}>저장된 선정 내역이 없습니다.</p>}
+                    </details>
                     {!data.available && <div className={styles.error} role="alert">{data.message}</div>}
                     {!panelOpen && message && <div className={styles.success} role="status">{message}</div>}
                     {!panelOpen && error && <div className={styles.error} role="alert">{error}</div>}

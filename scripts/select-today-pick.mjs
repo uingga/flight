@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import fs from 'node:fs';
+import { collectTodayPickArchive } from '../src/lib/today-pick-history.mjs';
 import path from 'node:path';
 import {
     collectRecentPicks,
@@ -219,6 +220,7 @@ async function main() {
         referencePrice: selected.referencePrice || null,
         previousPick: recentPicks[0] || null,
         recentPicks,
+        history: collectTodayPickArchive(storedPick),
         repeatOverride: selected.repeat.priceDropped ? {
             previousEffectivePrice: selected.repeat.previousEffectivePrice,
             previousDate: selected.repeat.previousDate,
