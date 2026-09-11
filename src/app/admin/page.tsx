@@ -16,6 +16,7 @@ import type { DeviceTrafficData } from '@/lib/device-traffic';
 import type { AcquisitionData } from '@/lib/acquisition';
 import AdminThreadsPosts from '@/components/AdminThreadsPosts';
 import AdminTe31Posts from '@/components/AdminTe31Posts';
+import AdminPromotionDaily from '@/components/AdminPromotionDaily';
 import AdminFilterDemand from '@/components/AdminFilterDemand';
 import type { FilterDemandData } from '@/lib/filter-demand';
 import type { FlightInterestData } from '@/lib/flight-interest';
@@ -4547,6 +4548,7 @@ export default function AdminPage() {
             </>)}
 
             {tab === 'threads' && (<>
+                <AdminPromotionDaily authKey={key} />
                 <section className={styles.section} aria-label="홍보 채널">
                     <div className={styles.sectionHeading}>
                         <h2>홍보 성과</h2>
@@ -4558,7 +4560,7 @@ export default function AdminPage() {
                 </section>
                 {promotionChannel === 'te31' ? <section className={styles.section}>
                     <div className={styles.sectionHeading}><div><h2>TE31 글별 성과</h2><p>게시글 반응과 전용 링크의 사이트 행동을 나란히 봅니다.</p></div><button type="button" className={styles.analyticsToggle} onClick={() => fetchData(key)}>사이트 통계 새로고침</button></div>
-                    <AdminTe31Posts campaigns={gaStats?.promotionCampaigns} available={Boolean(gaStats?.available)} days={gaStats?.days || 30} generatedAt={gaStats?.generatedAt} error={gaStatsError || gaStats?.message} />
+                    <AdminTe31Posts dailyMode campaigns={gaStats?.promotionCampaigns} available={Boolean(gaStats?.available)} days={gaStats?.days || 30} generatedAt={gaStats?.generatedAt} error={gaStatsError || gaStats?.message} />
                 </section> : <>
                 <div className={styles.tabIntro}>
                     <div>

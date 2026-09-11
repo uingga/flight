@@ -1,0 +1,6 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "target": "ES2020", "incremental": false },
+  "include": ["scripts/test-promotion-daily.ts", "scripts/test-promotion-remote.ts", "scripts/collect-promotion-daily.ts", "scripts/validate-te31-listing.ts", "src/app/api/internal/promotion-source/route.ts"],
+  "exclude": ["node_modules"]
+}

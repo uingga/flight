@@ -95,6 +95,7 @@ async function integration(mode) {
     const redirect = load('src/app/t/[code]/route.ts', {
         'next/server': { NextResponse: { redirect: url => url } },
         '@/lib/share-code': load('src/lib/share-code.ts'),
+        '@/lib/share-groups': load('src/lib/share-groups.ts'),
     });
     for (const code of ['g-pqc1438', 'xmodetour-CHI-20107439']) {
         for (const suffix of ['', '?utm_content=explicit&utm_campaign=keep']) {

@@ -1,0 +1,34 @@
+name: Daily promotion performance
+on:
+  workflow_dispatch:
+    inputs:
+      day:
+        description: 'KST collection day (YYYY-MM-DD); empty uses current KST day'
+        required: false
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: promotion-daily
+  cancel-in-progress: false
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 23
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npx tsx scripts/collect-promotion-daily.ts
+        env:
+          PROMOTION_LIVE_RUN: '1'
+          PROMOTION_RUN_DAY: ${{ inputs.day }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          PROMOTION_JOB_SECRET: ${{ secrets.PROMOTION_JOB_SECRET }}
+          PROMOTION_TE31_LISTING_VERIFIED: ${{ vars.PROMOTION_TE31_LISTING_VERIFIED }}

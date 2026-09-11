@@ -1,0 +1,40 @@
+{
+  "sourceUrl": "https://te31.com/rgr/zboard.php?id=freead",
+  "observedAt": "2026-09-11T05:19:59.813919+00:00",
+  "sourceBytes": 88344,
+  "sourceSha256": "80ed1df679486e6d6d8d1041fdc41669b4711184b0fef5b779e87ab402bd6d76",
+  "sourceContentType": "text/html",
+  "sourceHtmlCharset": "euc-kr",
+  "decodedWith": "cp949 (EUC-KR-compatible Windows-949)",
+  "fixtureEncoding": "cp949",
+  "fixtureSha256": "7ef9df77bb0f321f5ca77c06e6513a7fbaf0ab1d3961b33cafaeec3e2c4353c3",
+  "originalHeaderSha256": "7383c065e14eb06c37270a8ebf504c11b1f8637c96f0ac2c4714fb94b771f359",
+  "originalRowSha256": {
+    "5235": "a825a75550258504d1806d36e7706dc81fce5ff1271ad2c1670219cb20cae124",
+    "5232": "a4f15b557de6bf8bf2e5eb5b434d5374574bf89831dead7f38f66f42a4cb969e",
+    "5211": "dbea1a6c26282a7ad6f38e44508a6480a54e06f75d5803656a4c7a8bfa63807c"
+  },
+  "transformations": [
+    "Retain only main table header and registered rows 5235, 5232, 5211; drop other rows, page scripts, ads and navigation.",
+    "Preserve disabled checkbox/header comments and all table cells, count markup and registered article links.",
+    "Remove executable on* handlers; preserve comment target as inert data-original-comment-target attribute."
+  ],
+  "parentRequests": 1,
+  "articlePagesOpened": 0,
+  "locallyFetched": false,
+  "expected": {
+    "5235": {
+      "views": 114,
+      "comments": 1
+    },
+    "5232": {
+      "views": 133,
+      "comments": 0
+    },
+    "5211": {
+      "views": 179,
+      "comments": 5
+    }
+  },
+  "notes": "5232 zero applies only to a present empty comment TD in the verified 9-cell board schema; no recommendations column. Other registered IDs are outside this one-page evidence, not parser failures."
+}
