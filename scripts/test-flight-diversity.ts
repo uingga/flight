@@ -853,9 +853,20 @@ const pinnedDeparturePriorityOrder = diversifyRecommendationOrder(
 const visiblePriorityFirstNine = [nonSeoulPinned, ...pinnedDeparturePriorityOrder.slice(0, 8)];
 assert.equal(
     visiblePriorityFirstNine.filter(item => item.departure.city === '인천').length,
-    6,
-    '비서울 TIKIT DROP이 고정돼도 가격 구성보다 인천·김포 6개 규칙을 먼저 지켜야 한다.',
+    0,
+    '인천·김포 6개를 채우려고 가격 매력이 없는 고가 표를 첫 화면으로 복구하면 안 된다.',
 );
+const qualifiedDepartureOrder = diversifyRecommendationOrder(pinnedDeparturePriorityCandidates, {
+    tierOf: () => 0,
+    scoreOf: item => item.price,
+    expensivePromotionEligibleOf: () => true,
+    leadingFlights: [nonSeoulPinned],
+    balanceIncheon: true,
+    maxConsecutiveDestinations: 1,
+});
+assert.equal([nonSeoulPinned, ...qualifiedDepartureOrder.slice(0, 8)]
+    .filter(item => item.departure.city === '인천').length, 6,
+    '가격 근거를 갖춘 후보가 충분하면 기존 인천·김포 6개 배분을 유지한다.');
 
 const firstBlockBoundaryCandidates = [
     ...Array.from({ length: 8 }, (_, index) => ({

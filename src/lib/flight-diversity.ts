@@ -440,6 +440,11 @@ export function diversifyRecommendationOrderWithDecisions(
     const representativeIds = firstNineRouteRepresentativeIds(items);
     const representativePool = rankedItems.filter(flight => (
         representativeIds.has(flight.id)
+        // 첫 화면 후보에서 먼저 보류해야 등급 제한/출발지 비율 폴백이 다시 끌어올리지 않는다.
+        // 점수·등급은 바꾸지 않으며, 보류한 표는 아래 tailCandidates에서 모두 복구한다.
+        && (!diversityOptions.expensivePromotionEligibleOf
+            || getEffectivePrice(flight) < 300_000
+            || diversityOptions.expensivePromotionEligibleOf(flight))
         && (!firstBlockExcludedDestination
             || normalizeCity(flight.arrival.city) !== firstBlockExcludedDestination)
     ));
