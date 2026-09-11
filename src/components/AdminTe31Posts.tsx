@@ -18,7 +18,7 @@ export default function AdminTe31Posts({ campaigns, available, days, generatedAt
     return <div className={styles.panel}>
         <AdminAnalyticsFreshness generatedAt={generatedAt} />
         <div className={styles.help}><span>수동 등록 글 {TE31_POSTS.length}개 · 최신 게시일 순</span><span>사이트 최근 {days}일 · 오늘 포함 잠정치</span></div>
-        <p className={styles.note}><strong>TE31 반응은 수동 기록입니다.</strong> 조회·댓글·추천 확인: <time dateTime={TE31_OBSERVED_AT}>{formatAnalyticsTime(TE31_OBSERVED_AT)}</time>. 새로고침은 사이트 통계만 다시 조회하며 TE31 글 목록과 반응 수치는 자동 갱신되지 않습니다.</p>
+        <p className={styles.note}><strong>TE31 반응은 수동 기록입니다.</strong> 최근 조회·댓글 확인: <time dateTime={TE31_OBSERVED_AT}>{formatAnalyticsTime(TE31_OBSERVED_AT)}</time>경. 글별 확인 시각은 다르며 추천 확인 시각은 추적 기준에서 볼 수 있습니다. 새로고침은 사이트 통계만 다시 조회하며 TE31 글 목록과 반응 수치는 자동 갱신되지 않습니다.</p>
         {!ready && <p role="status">{error || '사이트 통계를 아직 확인할 수 없습니다. 아래 외부 관측값만 표시합니다.'}</p>}
         <div className={styles.scroll} tabIndex={0} role="region" aria-label="TE31 글별 성과 비교">
             <table className={styles.table}>
@@ -28,7 +28,8 @@ export default function AdminTe31Posts({ campaigns, available, days, generatedAt
                     const status = !post.campaign ? '글별 추적 불가' : !ready ? '사이트 통계 확인 불가' : !row ? '집계 기록 없음' : '전용 링크로 연결';
                     return <tr key={post.id}>
                         <td><a href={`https://te31.com/rgr/view.php?id=freead&no=${post.id}`} target="_blank" rel="noopener noreferrer" className={styles.post}>{post.title} ↗</a><span className={styles.meta}><time dateTime={post.date}>{post.date}</time><span>{status}</span></span>
-                            <details className={styles.trackingDetails}><summary>추적 기준</summary>{post.campaign ? <><p>출처 te31 + 캠페인 <code>{post.campaign}</code> 일치 기준입니다. 링크를 다른 곳에 재공유한 방문도 포함될 수 있습니다.</p><p>게시 링크: <code>{post.link}</code></p>{!row && <p>기록이 없거나 조회할 수 없는 경우 0명으로 추정하지 않습니다.</p>}</> : <p>글 전용 추적 코드가 확인되지 않아 과거 사이트 행동을 이 글에 소급 배정하지 않습니다.</p>}</details>
+                            <span className={styles.meta}>조회·댓글 확인: <time dateTime={post.observedAt}>{formatAnalyticsTime(post.observedAt)}경</time></span>
+                            <details className={styles.trackingDetails}><summary>추적 기준</summary>{post.campaign ? <><p>출처 te31 + 캠페인 <code>{post.campaign}</code> 일치 기준입니다. 링크를 다른 곳에 재공유한 방문도 포함될 수 있습니다.</p><p>게시 링크: <code>{post.link}</code></p>{!row && <p>기록이 없거나 조회할 수 없는 경우 0명으로 추정하지 않습니다.</p>}</> : <p>글 전용 추적 코드가 확인되지 않아 과거 사이트 행동을 이 글에 소급 배정하지 않습니다.</p>}{post.recommendationsObservedAt && <p>추천 확인: <time dateTime={post.recommendationsObservedAt}>{formatAnalyticsTime(post.recommendationsObservedAt)}경</time>. 조회·댓글과 확인 시각이 다를 수 있습니다.</p>}{post.commentNote && <p>{post.commentNote}</p>}</details>
                         </td>
                         <td data-label="조회">{post.views}</td><td data-label="댓글">{post.comments}</td><td data-label="추천">{post.recommendations ?? '—'}</td>
                         <td data-label="방문"><strong>{people(row?.users)}</strong>{row && <small>{row.sessions.toLocaleString()}회 접속</small>}</td>
