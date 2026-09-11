@@ -29,6 +29,7 @@ export async function GET(request: NextRequest) {
     const price = Number.parseInt(searchParams.get('price') || '', 10);
     const priceText = Number.isFinite(price) ? `${price.toLocaleString('ko-KR')}원` : '';
     const dateText = searchParams.get('date') || '';
+    const blog = searchParams.get('format') === 'blog';
     const group = SHARE_GROUPS[searchParams.get('group') || ''];
     const fontData = await getFontData(request.nextUrl.origin).catch((error) => {
         console.error('Font load error:', error);
@@ -47,11 +48,13 @@ export async function GET(request: NextRequest) {
                 arr={arr}
                 priceText={priceText}
                 dateText={dateText}
+                format={blog ? 'blog' : 'default'}
+                priceNote={blog && searchParams.get('fee') === 'included' ? '발권수수료 포함' : ''}
             />
         ),
         {
             width: 1200,
-            height: 630,
+            height: blog ? 800 : 630,
             ...(fontData
                 ? {
                     fonts: [

@@ -133,6 +133,7 @@ function ogShortDate(dateStr: string): string {
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
     const { id } = await params;
     const sp = await searchParams;
+    const blog = sp.utm_source === 'naver_blog';
     const decodedId = decodeURIComponent(id);
     const flight = await getFlightById(resolveShareId(decodedId), typeof sp.schedule === 'string' ? sp.schedule : null);
     const archivedFlight = flight ? null : await getArchivedFlightById(resolveShareId(decodedId));
@@ -164,6 +165,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
                 sourceName || '지금 발견한 땡처리 항공권',
             ].filter(Boolean).join(' · ');
             const ogParams = new URLSearchParams({ dep: fallbackDep || '서울', arr: fallbackArr });
+            if (blog) ogParams.set('format', 'blog');
             if (fallbackPrice > 0) ogParams.set('price', String(fallbackPrice));
             if (fallbackDate) ogParams.set('date', fallbackDate);
             if (typeof sp.v === 'string' && sp.v) ogParams.set('v', sp.v);
@@ -177,7 +179,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
                 openGraph: {
                     title,
                     description,
-                    images: [{ url: ogImageUrl, width: 1200, height: 630 }],
+                    images: [{ url: ogImageUrl, width: 1200, height: blog ? 800 : 630 }],
                     type: 'website',
                     siteName: '티키티킷',
                 },
@@ -194,7 +196,8 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
 
     const dep = flight.departure?.city?.replace(/\([^)]+\)/g, '').trim() || '서울';
     const arr = flight.arrival?.city?.replace(/\([^)]+\)/g, '').trim() || '';
-    const priceText = formatPrice(flight.price);
+    const sharedPrice = flight.price + (blog && flight.source === 'ttang' ? 20_000 : 0);
+    const priceText = formatPrice(sharedPrice);
     const depDate = shortDate(flight.departure?.date);
     const arrDate = shortDate(flight.arrival?.date);
     const dateRange = arrDate ? `${depDate}~${arrDate}` : depDate;
@@ -214,7 +217,11 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     const ogParams = new URLSearchParams();
     ogParams.set('dep', dep);
     if (arr) ogParams.set('arr', arr);
-    if (flight.price) ogParams.set('price', String(flight.price));
+    if (flight.price) ogParams.set('price', String(sharedPrice));
+    if (blog) {
+        ogParams.set('format', 'blog');
+        if (flight.source === 'ttang') ogParams.set('fee', 'included');
+    }
     const ogDateRange = [ogShortDate(flight.departure?.date), ogShortDate(flight.arrival?.date)].filter(Boolean).join('–');
     if (ogDateRange) ogParams.set('date', ogDateRange);
     if (typeof sp.v === 'string' && sp.v) ogParams.set('v', sp.v);
@@ -232,7 +239,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
         openGraph: {
             title,
             description,
-            images: [{ url: ogImageUrl, width: 1200, height: 630 }],
+            images: [{ url: ogImageUrl, width: 1200, height: blog ? 800 : 630 }],
             type: 'website',
             siteName: '티키티킷',
         },
