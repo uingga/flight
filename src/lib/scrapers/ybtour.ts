@@ -6,7 +6,7 @@ import type { ScheduleKey } from './ybtour-schedule';
 import { ScrapeCompleteness } from './scrape-errors';
 import { buildStableFlightId, normalizeAirline } from '@/lib/utils/flight-helpers';
 import { assertNoSourceAccessBlockText, SourceResponseError } from './source-response';
-import { classifySourceAccessRestriction } from '../source-circuit';
+import { failYbtourInteraction, YbtourInteractionGuard } from './ybtour-interaction';
 
 const randomDelay = (min: number, max: number) =>
     new Promise(r => setTimeout(r, (Math.random() * (max - min) + min) * 1000));
@@ -130,9 +130,9 @@ export async function scrapeYbtour(prevFlights: any[] = []): Promise<Flight[]> {
     });
 
     const page = await context.newPage();
-    await page.addInitScript(() => {
-        Object.defineProperty(navigator, 'webdriver', { get: () => false });
-    });
+    const interaction = new YbtourInteractionGuard(page);
+    // Keep the existing initialization browser-native (tsx may inject a Node-only __name helper).
+    await page.addInitScript("Object.defineProperty(navigator, 'webdriver', { get: () => false });");
 
     // 브라우저 콘솔 로그 비활성화 (HTML dump가 출력을 가림)
     // page.on('console', msg => console.log(`[BROWSER] ${msg.text()}`));
@@ -189,7 +189,7 @@ export async function scrapeYbtour(prevFlights: any[] = []): Promise<Flight[]> {
                     const tabVisible = await regionTab.isVisible().catch(() => false);
 
                     if (tabVisible) {
-                        await regionTab.click({ timeout: 5000 }).catch(() => { });
+                        await interaction.click(`${region.name} 지역 탭`, () => regionTab.click({ timeout: 5000 }));
                         await page.waitForSelector('ul.ctab_list', { state: 'visible', timeout: 5000 }).catch(() => { });
                         await randomDelay(1, 3);
 
@@ -256,7 +256,8 @@ export async function scrapeYbtour(prevFlights: any[] = []): Promise<Flight[]> {
                 // 각 도시별로 크롤링
                 for (const city of dynamicCities) {
                     console.log(`${city.name}(${city.code}) 검색 중...`);
-
+                    const cityCheckpoint = flights.length;
+                    for (let cityAttempt = 0; cityAttempt < 2; cityAttempt++) {
                     try {
                         const citySelector = `#cityCode_${city.code} a`;
                         const cityButton = page.locator(citySelector);
@@ -264,12 +265,11 @@ export async function scrapeYbtour(prevFlights: any[] = []): Promise<Flight[]> {
                         const isVisible = await cityButton.isVisible().catch(() => false);
 
                         if (!isVisible) {
-                            console.log(`[SKIP] ${city.name} 버튼을 찾을 수 없음 (${citySelector})`);
-                            continue;
+                            failYbtourInteraction(`${city.name}(${city.code})`, new Error(`도시 버튼을 찾을 수 없음 (${citySelector})`));
                         }
 
                         await cityButton.scrollIntoViewIfNeeded();
-                        await cityButton.click({ timeout: 5000 });
+                        await interaction.click(`${city.name}(${city.code}) 도시`, () => cityButton.click({ timeout: 5000 }));
                         await page.waitForSelector('table tbody tr', { timeout: 5000 });
                         await page.waitForTimeout(1500);
 
@@ -318,9 +318,9 @@ export async function scrapeYbtour(prevFlights: any[] = []): Promise<Flight[]> {
 
                                 // 조회 버튼 클릭
                                 const searchBtn = await mainRows[rowIdx].$('a[onclick*="listActive"]');
-                                if (!searchBtn) continue;
+                                if (!searchBtn) failYbtourInteraction(`${city.name} 행 ${rowIdx}`, new Error('조회 버튼 누락'));
 
-                                await searchBtn.click({ timeout: 5000 });
+                                await interaction.click(`${city.name} 행 ${rowIdx} 조회`, () => searchBtn.click({ timeout: 5000 }));
 
                                 // DOM 업데이트 대기
                                 await randomDelay(2, 4);
@@ -463,24 +463,26 @@ export async function scrapeYbtour(prevFlights: any[] = []): Promise<Flight[]> {
                                     console.log(`  → ${mainInfo.airline} ${mainInfo.arrival}: ${cheapestFlights.length}건 (최저가 ${minPrice.toLocaleString()}원, 전체 ${validFlights.length}건 중)`);
                                 }
                             } catch (e) {
-                                if (classifySourceAccessRestriction(e)) throw e;
-                                console.error(`  [ERROR] 행 처리 실패:`, e instanceof Error ? e.message : e);
+                                failYbtourInteraction(`${region.name}/${city.name} 행 ${rowIdx}`, e);
                             }
                         }
 
                         console.log(`${city.name}: ${totalFlights}건 수집`);
 
                         await randomDelay(1, 3);
-
+                        break;
                     } catch (error) {
-                        if (classifySourceAccessRestriction(error)) throw error;
-                        console.error(`${city.name} 검색 오류:`, error instanceof Error ? error.message : error);
+                        // Roll back only this city's partial rows before replaying it; earlier cities survive.
+                        flights.length = cityCheckpoint;
+                        totalFlights = flights.length;
+                        if (cityAttempt === 0 && await interaction.recoverCity(error, region.tabId, city.code)) continue;
+                        failYbtourInteraction(`${region.name}/${city.name}(${city.code})`, error);
+                    }
                     }
                 }
 
             } catch (error) {
-                if (classifySourceAccessRestriction(error)) throw error;
-                console.error(`${region.name} 지역 오류:`, error);
+                failYbtourInteraction(`${region.name} 지역`, error);
             }
         }
 
