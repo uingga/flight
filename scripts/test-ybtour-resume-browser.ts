@@ -25,7 +25,7 @@ test('collector finishes after a persistent Asia mask, preserving earlier cities
           <a id="bannerCode_P1" onclick="region('GUM')">괌/사이판</a>
           <a id="bannerCode_P0" onclick="region('SYD')">남태평양</a>
           <a id="bannerCode_E0/B1/F0" onclick="region('BCN')">유럽</a>
-          <ul class="ctab_list"></ul><table><tbody id="fares"></tbody></table><div id="schedules"></div>
+          <ul class="ctab_list"></ul><table id="totalFareTable" onePageCnt="1"><tbody id="fares"></tbody></table><span id="pageList"></span><div id="schedules"></div>
           <script>
           function region(code) {
             document.querySelector('.ctab_list').innerHTML='<li id="cityCode_'+code+'"><a>'+code+'</a></li>';
@@ -34,9 +34,15 @@ test('collector finishes after a persistent Asia mask, preserving earlier cities
           }
           function city(code) {
             document.getElementById('schedules').innerHTML='';
+            document.getElementById('totalFareTable').setAttribute('fareTotCnt',code==='DAD'?'2':'1');
             document.getElementById('fares').innerHTML=Array.from({length:code==='DAD'?2:1}, (_,i)=>
-              '<tr><td>진에어</td><td>'+(i?'부산':'인천')+'</td><td>'+code+'</td><td>왕복</td><td><a>조회</a></td></tr>').join('');
+              '<tr id="fareListSeq_'+(i+1)+'"><td>진에어</td><td>'+(i?'부산':'인천')+'</td><td>'+code+'</td><td>왕복</td><td><a>조회</a></td></tr>').join('');
             document.querySelectorAll('#fares a').forEach((a,i)=>a.setAttribute('onclick','listActive('+JSON.stringify(code)+','+i+')'));
+            changePage(1);
+          }
+          function changePage(p) {
+            document.querySelectorAll('#fares tr').forEach((r,i)=>r.style.display=i===p-1?'':'none');
+            document.getElementById('pageList').innerHTML='<strong>'+p+'</strong>'+(p===1?'<a href="#" onclick="changePage(2)">2</a>':'');
           }
           function listActive(code,i) {
             console.log('QUERY:'+code+':'+i);

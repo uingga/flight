@@ -281,7 +281,7 @@ export async function scrapeYbtour(prevFlights: any[] = []): Promise<Flight[]> {
 
                         for (let i = 0; i < mainRows.length; i++) {
                             const isMainRow = await mainRows[i].evaluate((row) => {
-                                const cells = row.querySelectorAll('td');
+                                const cells = row.querySelectorAll(':scope > td');
                                 return cells.length >= 5;
                             });
                             if (isMainRow) mainRowIndices.push(i);
@@ -294,7 +294,7 @@ export async function scrapeYbtour(prevFlights: any[] = []): Promise<Flight[]> {
                         const rowsToProcess: number[] = [];
                         for (const idx of mainRowIndices) {
                             const dep = await mainRows[idx].evaluate((row) => {
-                                const cells = row.querySelectorAll('td');
+                                const cells = row.querySelectorAll(':scope > td');
                                 return cells[1]?.textContent?.trim() || '';
                             });
                             if (!seenDepartures.has(dep)) {
@@ -306,7 +306,7 @@ export async function scrapeYbtour(prevFlights: any[] = []): Promise<Flight[]> {
                             try {
                                 // 메인 행 정보 추출
                                 const mainInfo = await mainRows[rowIdx].evaluate((row) => {
-                                    const cells = row.querySelectorAll('td');
+                                    const cells = row.querySelectorAll(':scope > td');
                                     return {
                                         airline: cells[0]?.textContent?.trim() || '',
                                         departure: cells[1]?.textContent?.trim() || '',
@@ -315,6 +315,9 @@ export async function scrapeYbtour(prevFlights: any[] = []): Promise<Flight[]> {
                                 });
 
                                 if (!mainInfo.airline) continue;
+
+                                // Later departure cities can first occur on page 2+. Hidden is not sold out.
+                                await interaction.revealFareRow(mainRows[rowIdx], `${city.name} 행 ${rowIdx}`);
 
                                 // 조회 버튼 클릭
                                 const searchBtn = await mainRows[rowIdx].$('a[onclick*="listActive"]');

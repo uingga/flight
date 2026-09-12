@@ -1,4 +1,4 @@
-import type { Page } from 'playwright';
+import type { ElementHandle, Page } from 'playwright';
 import { IncompleteScrapeError } from './scrape-errors';
 import { assertNoSourceAccessBlockText, SourceResponseError } from './source-response';
 import { classifySourceAccessRestriction } from '../source-circuit';
@@ -21,6 +21,45 @@ export class YbtourInteractionGuard {
     private reloadedForRecovery = false;
 
     constructor(private readonly page: Page, private readonly overlayTimeout = 8_000) {}
+
+    /** Fare rows are preloaded but only one page is visible. Use the site's pager, not a forced click. */
+    async revealFareRow(row: ElementHandle<SVGElement | HTMLElement>, label: string): Promise<void> {
+        if (await row.isVisible()) return;
+        try {
+            await this.assertAccess(label);
+            const id = await row.getAttribute('id');
+            const sequence = Number(/^fareListSeq_(\d+)$/.exec(id || '')?.[1]);
+            const table = this.page.locator('#totalFareTable');
+            const pageSize = Number(await table.getAttribute('onePageCnt'));
+            const total = Number(await table.getAttribute('fareTotCnt'));
+            if (![sequence, pageSize, total].every(n => Number.isSafeInteger(n) && n > 0) || sequence > total) {
+                throw new Error('숨겨진 운임 행의 페이지 정보를 확인할 수 없음');
+            }
+            const targetPage = Math.ceil(sequence / pageSize);
+            const pageCount = Math.ceil(total / pageSize);
+            for (let steps = 0; steps < pageCount; steps++) {
+                const current = Number(await this.page.locator('#pageList strong').innerText());
+                if (!Number.isSafeInteger(current) || current < 1 || current > pageCount) throw new Error('현재 운임 페이지 확인 실패');
+                if (current === targetPage) {
+                    await row.waitForElementState('visible', { timeout: 5_000 });
+                    return;
+                }
+                const direct = this.page.locator(`#pageList a[onclick="changePage(${targetPage})"]`);
+                const control = await direct.isVisible() ? direct : this.page.locator(targetPage > current ? '#pageNext' : '#pagePrev');
+                await this.click(`${label} ${targetPage}페이지 이동`, () => control.click({ timeout: 5_000 }));
+                await this.assertAccess(label);
+                const next = Number(await this.page.locator('#pageList strong').innerText());
+                if (!Number.isSafeInteger(next) || next < 1 || next > pageCount || next === current
+                    || (targetPage > current ? next > targetPage || next < current : next < targetPage || next > current)) {
+                    throw new Error('운임 페이지 이동 실패 — 재클릭하지 않음');
+                }
+                console.log(`[PAGE] 노랑풍선 ${label}: ${current} → ${next}페이지`);
+            }
+            throw new Error('운임 페이지 이동 상한 초과');
+        } catch (error) {
+            failYbtourInteraction(label, error);
+        }
+    }
 
     /** Restore only the failed city's region; never replay completed cities or reset the budget. */
     async recoverCity(error: unknown, regionTabId: string, cityCode: string): Promise<boolean> {
