@@ -18568,10 +18568,10 @@
       "adapterVersion": "2026-08-31.1",
       "detail": "soft block 의심: 응답 수량 285건에서 144건으로 급감",
       "localFallback": {
-        "status": "success",
-        "lastAttemptAt": "2026-09-12T08:03:40.466Z",
+        "status": "failed",
+        "lastAttemptAt": "2026-09-12T15:03:06.036Z",
         "method": "source-default",
-        "detail": "PC 대체 수집 281건 완료"
+        "detail": "노랑풍선 다낭 행 33 조회 화면 조작 실패 — 불완전 결과 폐기: elementHandle.click: Timeout 5000ms exceeded."
       }
     }
   },
