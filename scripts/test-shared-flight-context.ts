@@ -91,7 +91,8 @@ async function main() {
             await detail.waitFor();
             assert.equal(new URL(page.url()).searchParams.get('schedule'), token);
             const browseMore = detail.getByRole('button', { name: '안 살 거지만 더 보기' });
-            await browseMore.click();
+            assert.equal(await browseMore.count(), 0, 'Browse-more belongs to the list, not the detail');
+            await detail.getByRole('button', { name: '닫기', exact: true }).click();
             await detail.waitFor({ state: 'hidden' });
             await expectList();
             assert.equal(new URL(page.url()).searchParams.get('flight'), null);
