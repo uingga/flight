@@ -2762,8 +2762,17 @@ export default function MobileRedesignPreview({
         flushSync(() => setFreshRouteResults(next));
         if (typeof returnScroll === 'number') {
             window.scrollTo({ top: returnScroll, behavior: 'instant' });
-        } else {
-            section?.scrollIntoView({ behavior: 'instant', block: 'start' });
+        } else if (section) {
+            // Keep the route heading below the fixed filters, including before they enter.
+            const desktop = window.matchMedia('(min-width: 960px)').matches;
+            const filter = desktop
+                ? filterBarSlotRef.current?.querySelector<HTMLElement>(`.${styles.conditionFilterSlot}`)
+                : document.querySelector<HTMLElement>(`.${styles.conditionFilterBarPinned}`);
+            const clearance = (filter?.offsetHeight ?? 0) + (desktop ? 10 : 0) + 16;
+            window.scrollTo({
+                top: Math.max(0, window.scrollY + section.getBoundingClientRect().top - clearance),
+                behavior: 'instant',
+            });
         }
         dropTransitionRef.current?.cancel();
         if (section && !reduced) {

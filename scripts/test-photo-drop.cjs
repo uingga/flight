@@ -36,6 +36,17 @@ const { chromium } = require('playwright');
             await hero.locator('[class*="cardAction"]').click();
             await hero.waitFor({ state: 'hidden' });
             const cards = page.locator('article[data-flight-id]');
+            await page.waitForTimeout(400);
+            const placement = await page.evaluate(() => {
+                const heading = document.querySelector('[class*="feedHeading"]');
+                const filters = [...document.querySelectorAll('[class*="conditionFilter"]')]
+                    .filter(el => getComputedStyle(el).position === 'fixed' && getComputedStyle(el).visibility !== 'hidden');
+                return { headingTop: heading.getBoundingClientRect().top,
+                    filterBottom: Math.max(0, ...filters.map(el => el.getBoundingClientRect().bottom)),
+                    cardBottom: document.querySelector('article[data-flight-id]').getBoundingClientRect().bottom };
+            });
+            assert.ok(placement.headingTop >= placement.filterBottom + 12, JSON.stringify(placement));
+            assert.ok(placement.cardBottom <= 960, JSON.stringify(placement));
             assert.equal(await cards.count(), total);
             assert.equal(await page.locator('#fresh-flights-insight, [class*="weeklyDiscovery"], [aria-label*="주말 포함 항공권"]').count(), 0);
             assert.ok((await cards.allTextContents()).every(text => text.includes('호치민') && !text.includes('요나고')));
