@@ -1590,7 +1590,7 @@ export default function Dashboard() {
     // 검색은 도시명만 본다. 항공사명까지 훑으면 도시명이 사명에 들어간 경우
     // (푸꾸옥/썬푸꾸옥항공, 부산/에어부산) 엉뚱한 노선이 섞인다. 항공사는 별도 드롭다운으로 고른다.
     const matchesSearchTerm = (flight: Flight) => {
-        const term = searchTerm.toLowerCase();
+        const term = searchTerm.toLowerCase().replace(/마츠야마/g, '마쓰야마');
         return flight.departure.city.toLowerCase().includes(term) ||
             flight.arrival.city.toLowerCase().includes(term) ||
             normalizeCity(flight.departure.city).toLowerCase().includes(term) ||
@@ -2172,7 +2172,7 @@ export default function Dashboard() {
             // Japan
             '오사카': 'osaka', '도쿄': 'tokyo', '후쿠오카': 'fukuoka', '삿포로': 'sapporo',
             '나고야': 'nagoya', '나가사키': 'nagasaki', '구마모토': 'kumamoto',
-            '다카마쓰': 'takamatsu', '다카마츠': 'takamatsu', '마츠야마': 'matsuyama',
+            '다카마쓰': 'takamatsu', '다카마츠': 'takamatsu', '마쓰야마': 'matsuyama', '마츠야마': 'matsuyama',
             '오키나와': 'okinawa', '미야코지마': 'miyakojima', '이시가키': 'ishigaki',
             '시모지시마': 'shimojishima', '시즈오카': 'shizuoka', '나라': 'nara',
             '도야마': 'toyama', '하나마키': 'hanamaki', '하코다테': 'hakodate',
@@ -3197,7 +3197,7 @@ export default function Dashboard() {
                             {showSuggestions && (() => {
                                 // 검색어 입력 중이면 데이터에서 매칭되는 도시 제안
                                 if (searchTerm) {
-                                    const term = searchTerm.toLowerCase();
+                                    const term = searchTerm.toLowerCase().replace(/마츠야마/g, '마쓰야마');
                                     const matchCities = new Set<string>();
                                     flights.forEach(f => {
                                         const dep = normalizeCity(f.departure.city);

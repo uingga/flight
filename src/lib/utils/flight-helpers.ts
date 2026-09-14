@@ -38,6 +38,7 @@ export const normalizeCity = (city: string): string => {
     if (/^광주\s*\(\s*광저우\s*\)$/.test(trimmed)) return '광저우';
     // 도시명 표기 통일 매핑
     const cityNameMap: Record<string, string> = {
+        '마츠야마': '마쓰야마',
         '푸껫': '푸켓',
         '청도': '칭다오',
         '연태': '옌타이',
@@ -180,7 +181,7 @@ export const CITY_TO_AIRPORT: Record<string, string> = {
     '후쿠오카': 'FUK', '삿포로(치토세)': 'CTS', '삿포로(CTS)': 'CTS', '치토세': 'CTS',
     '나고야': 'NGO', '오키나와': 'OKA', '오키나와(OKA)': 'OKA',
     '나가사키': 'NGS', '가고시마': 'KOJ', '가고시마(KOJ)': 'KOJ',
-    '구마모토': 'KMJ', '마츠야마': 'MYJ', '다카마쓰': 'TAK',
+    '구마모토': 'KMJ', '마츠야마': 'MYJ', '마쓰야마': 'MYJ', '다카마쓰': 'TAK',
     '시즈오카': 'FSZ',
     // 동남아
     '방콕': 'BKK', '방콕(BKK)': 'BKK', '방콕(수완나폼)': 'BKK', '방콕(돈무앙)': 'DMK',
@@ -269,7 +270,7 @@ export const CITY_TIMEZONES: Record<string, string> = {
     '도쿄': 'Asia/Tokyo', '오사카': 'Asia/Tokyo', '후쿠오카': 'Asia/Tokyo', '삿포로': 'Asia/Tokyo',
     '나고야': 'Asia/Tokyo', '오키나와': 'Asia/Tokyo', '구마모토': 'Asia/Tokyo', '기타큐슈': 'Asia/Tokyo',
     '가고시마': 'Asia/Tokyo', '나가사키': 'Asia/Tokyo', '니가타': 'Asia/Tokyo', '다카마쓰': 'Asia/Tokyo',
-    '도쿠시마': 'Asia/Tokyo', '마츠야마': 'Asia/Tokyo', '미야자키': 'Asia/Tokyo', '미야코지마': 'Asia/Tokyo',
+    '도쿠시마': 'Asia/Tokyo', '마츠야마': 'Asia/Tokyo', '마쓰야마': 'Asia/Tokyo', '미야자키': 'Asia/Tokyo', '미야코지마': 'Asia/Tokyo',
     '사가': 'Asia/Tokyo', '센다이': 'Asia/Tokyo', '시모지시마': 'Asia/Tokyo', '시즈오카': 'Asia/Tokyo',
     '오이타': 'Asia/Tokyo', '요나고': 'Asia/Tokyo', '이시가키': 'Asia/Tokyo', '히로시마': 'Asia/Tokyo',
     '고베': 'Asia/Tokyo', '오카야마': 'Asia/Tokyo', '오비히로': 'Asia/Tokyo', '아사히카와': 'Asia/Tokyo',

@@ -437,7 +437,7 @@ export async function GET(request: NextRequest) {
         }
         if (params.arrivalCity) {
             allFlights = allFlights.filter(f =>
-                f.arrival.city.includes(params.arrivalCity!)
+                normalizeCity(f.arrival.city).includes(normalizeCity(params.arrivalCity!))
             );
         }
         if (params.minPrice) {
