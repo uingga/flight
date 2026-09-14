@@ -3,6 +3,12 @@ import { extractTracking, type Tracking } from './threads-tracking';
 // Explicit, audited relationships only. Never infer a post from a city, price or traffic count.
 // Verified in the public root thread and its own reply on 2026-09-09.
 export const VERIFIED_THREADS_POST_LINKS = [{
+    postId: null,
+    postPath: '/@tikitikit.kr/post/DdQkTQYD99a',
+    replyUrl: undefined,
+    url: 'https://www.tikitikit.kr/t/m20136580',
+    verifiedOn: '2026-09-14',
+}, {
     postId: '18338163979251867',
     postPath: '/@tikitikit.kr/post/DdAzc1RD1sp',
     replyUrl: 'https://www.threads.com/@tikitikit.kr/post/DdAzdN9j4m3',
@@ -22,7 +28,7 @@ export function connectVerifiedPostLinks<T extends Tracking & {
             if (!['threads.com', 'www.threads.com', 'threads.net', 'www.threads.net'].includes(url.hostname)) return post;
             path = url.pathname.replace(/\/$/, '');
         } catch { return post; }
-        const verified = VERIFIED_THREADS_POST_LINKS.find(item => item.postId === post.id && item.postPath === path);
+        const verified = VERIFIED_THREADS_POST_LINKS.find(item => (item.postId === null || item.postId === post.id) && item.postPath === path);
         if (!verified) return post;
         return { ...post, ...extractTracking(verified.url), trackingSource: 'verified-link' as const,
             trackingVerifiedReplyUrl: verified.replyUrl };

@@ -599,6 +599,7 @@ interface GaStatsData {
     };
     trend: Array<{ date: string; users: number; pageViews: number; sessions: number }>;
     returningTrend?: { available: boolean; trend: Array<{date: string; users: number}> };
+    shareDiscovery?: import('@/lib/server/share-discovery-report').ShareDiscoveryReport;
     events: Array<{ name: string; label: string; count: number; users: number }>;
     otherEvents: Array<{ name: string; label: string; count: number; users: number }>;
     conversion: {
@@ -4733,6 +4734,24 @@ export default function AdminPage() {
                             {gaStats.returningTrend?.available
                                 ? <VisitorTrendChart trend={gaStats.returningTrend.trend} returning />
                                 : <p role="status">재방문자 추이를 불러오지 못했습니다.</p>}
+                        </section>
+
+                        <section className={styles.section} id="shared-discovery">
+                            <div className={styles.sectionHeading}><div>
+                                <h2>공유 글에서 다른 항공권까지</h2>
+                                <p>오늘 포함 최근 {gaStats.days}일 · 글별 탐색 단계</p>
+                            </div></div>
+                            {!gaStats.shareDiscovery?.available ? <p role="status">공유 탐색 통계를 불러오지 못했습니다.</p>
+                                : !gaStats.shareDiscovery.hasData ? <p role="status">아직 수집된 기록이 없습니다. 배포 이후부터 측정하며 GA4 반영에는 시간이 걸릴 수 있습니다.</p>
+                                : gaStats.shareDiscovery.rows.map(row => <div key={row.key}>
+                                    <h3 className={styles.userSubTitle}>{row.source === 'te31' ? 'TE31' : 'Threads'} · {row.title}</h3>
+                                    <small>{row.content}</small>
+                                    <div className={styles.signalGridFour}>{row.stages.map((stage, index) => <div className={styles.signalCard} key={stage.event}>
+                                        <span>{['공유 목록 열람', '더 보기', '목록 밖 항공권 상세', '목록 밖 예약 이동'][index]}</span>
+                                        <strong>{stage.users.toLocaleString()}명</strong><small>{stage.count.toLocaleString()}회</small>
+                                    </div>)}</div>
+                                </div>)}
+                            <p>같은 글의 각 단계는 탭 기준 30분 동안 한 번만 기록합니다. 묶음 안의 다른 일정은 목록 밖 탐색에서 제외합니다. 인원은 단계 간 중복되며 예약 이동은 구매 완료가 아닙니다. 과거 기록은 추정하지 않습니다.</p>
                         </section>
 
                         <section className={styles.section} id="visitor-hours">

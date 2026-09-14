@@ -1,4 +1,5 @@
 'use client';
+import { createShareFunnel } from '@/lib/share-funnel';
 import { flushSync } from 'react-dom';
 import DropHero from '@/components/DropHero';
 import { dropHeroAlternatives } from '@/lib/drop-hero-schedules';
@@ -1164,6 +1165,13 @@ export default function MobileRedesignPreview({
     const sharedEntryRef = useRef(false);
     const resolvedSharedContextRef = useRef<SharedFlightContext | null>(null);
     const sharedViewedFlightsRef = useRef(new Set<string>());
+    const shareFunnelRef = useRef<ReturnType<typeof createShareFunnel>>(null);
+    useEffect(() => {
+        let storage: Storage | null = null;
+        try { storage = window.sessionStorage; } catch {}
+        shareFunnelRef.current = createShareFunnel(window.location.href, storage, gtag.event);
+        shareFunnelRef.current?.view();
+    }, []);
     useEffect(() => {
         if (!selectedFlight || (!sharedEntryRef.current && initialSharedFlightIds.length === 0)) return;
         const seen = sharedViewedFlightsRef.current;
@@ -3257,6 +3265,7 @@ export default function MobileRedesignPreview({
             && flightScheduleIdentity(selectedFlight) === flightScheduleIdentity(flight)
             && window.history.state?.tikitikitOverlay === 'flight'
         ) return;
+        shareFunnelRef.current?.detail(flight, flights);
         gtag.trackDetailOpen(
             `${normalizeCity(flight.departure.city)}-${normalizeCity(flight.arrival.city)}`,
             effectivePrice(flight),
@@ -3475,6 +3484,7 @@ export default function MobileRedesignPreview({
 
     const browseNewFlightsFromShare = () => {
         setShowSharedWelcome(false);
+        shareFunnelRef.current?.more();
         gtag.event('shared_browse_main', { entry: 'detail_discovery' });
         showAllFlightsFromSharedGroup();
         setSort('recommended');
@@ -4487,6 +4497,7 @@ export default function MobileRedesignPreview({
 
                     {!listLoading && !error && sharedFlightIds.length > 0 && (
                         <button type="button" className={styles.moreButton} onClick={() => {
+                            shareFunnelRef.current?.more();
                             showAllFlightsFromSharedGroup(true);
                             feedSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                         }}>
@@ -5037,7 +5048,7 @@ export default function MobileRedesignPreview({
                                 href={selectedBookingUrl}
                                 target="_blank"
                                 rel={selectedFlight.source === 'myrealtrip' ? 'sponsored noopener noreferrer' : 'noopener noreferrer'}
-                                onClick={() => gtag.trackBookingClick(
+                                onClick={() => { shareFunnelRef.current?.booking(selectedFlight, flights); gtag.trackBookingClick(
                                     selectedFlight.source,
                                     normalizedRoute(selectedFlight),
                                     effectivePrice(selectedFlight),
@@ -5050,7 +5061,7 @@ export default function MobileRedesignPreview({
                                         airline: selectedFlight.airline,
                                         destination: stripAirport(selectedFlight.arrival.city),
                                     },
-                                )}
+                                ); }}
                             >
                                 {SOURCE_NAMES[selectedFlight.source]}에서 확인하기 <Icon name="arrow" />
                             </a>

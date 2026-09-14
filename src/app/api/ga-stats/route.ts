@@ -1,4 +1,5 @@
 import {loadReturningTrend} from '@/lib/server/returning-trend-report';
+import { loadShareDiscovery } from '@/lib/server/share-discovery-report';
 import { Ga4RequestQueue } from '@/lib/ga4-request-queue';
 import { loadDeviceTraffic } from '@/lib/server/device-traffic-report';
 import { loadAcquisition } from '@/lib/server/acquisition-report';
@@ -154,6 +155,7 @@ async function optional(
 async function buildStats(config: Ga4Config, days: number) {
     const deviceTrafficPromise = loadDeviceTraffic(config);
     const flightInterestPromise = loadFlightInterest(config);
+    const shareDiscoveryPromise = loadShareDiscovery(config, days);
     const filterDemandPromise = loadFilterDemand(config, days);
     // 7일·30일 수치는 아직 덜 쌓인 오늘을 빼고 어제까지의 완결된 날짜만 쓴다.
     // 오늘은 별도 열의 잠정 수치와 일별 추이의 마지막 막대에서 보여준다.
@@ -852,6 +854,7 @@ async function buildStats(config: Ga4Config, days: number) {
         },
         trend,
         returningTrend: await loadReturningTrend(config, trend.map(point => point.date)),
+        shareDiscovery: await shareDiscoveryPromise,
         events: events.filter(entry => entry.known && !CITY_INTEREST_EVENTS.includes(entry.name as typeof CITY_INTEREST_EVENTS[number])),
         otherEvents: events.filter(entry => !entry.known
             && !CITY_INTEREST_EVENTS.includes(entry.name as typeof CITY_INTEREST_EVENTS[number])

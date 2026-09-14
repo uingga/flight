@@ -17,7 +17,19 @@
 - `shared_second_ticket_open`: 해당 페이지를 떠나거나 새로고침하기 전 서로 다른 두 번째 운항 일정을 연 경우, 한 번만 발생.
 - 동일 운항의 여행사 중복·재열람은 두 번째 항공권으로 세지 않는다.
 - 추천 카드 클릭은 기존 `detail_open`의 entry에 `share_discovery_same_destination` 또는 `share_discovery_same_departure`를 전달한다.
-- 기존 GA 제외 브라우저 설정을 적용한다. 현재 어드민에 새 지표를 추가하지는 않았다.
+- 기존 GA 제외 브라우저 설정을 적용한다. 어드민 집계 추가 상태는 아래 기록을 따른다.
 - 두 이벤트는 페이지 내 탐색 지표다. 세션 단위 재방문율이나 예약·결제 전환율로 해석하지 않는다. GA 수집 차단·설정 부재에서는 수집되지 않는다.
 
-검증: `npx tsx scripts/test-share-discovery.ts`, `npm run test:redesign -- http://localhost:3014/preview/mobile-redesign --fixture`, `npm run build`.
+## 글별 목록 밖 탐색 (미배포)
+
+- `shared_collection_view` → `shared_collection_more` → `shared_outside_detail` → `shared_outside_booking`을 새로 계측한다. 과거 기록으로 소급하지 않는다.
+- TE31/Threads의 UTM이 있는 등록된 share-group 진입에서만 시작한다. 메인 일반 방문은 제외한다. 더 보기 이후 원래 묶음 밖 상세를 열고 그 상세의 예약 링크를 누른 경우만 다음 단계로 인정한다.
+- 원래 묶음의 모든 ID와 현재 목록에서 확인 가능한 동일 운항 일정은 제외한다. 다른 날짜라도 원래 묶음에 들어 있으면 제외한다.
+- 각 단계는 같은 탭·출처·캠페인·콘텐츠 기준 30분에 한 번 기록한다. sessionStorage로 새로고침/뒤로가기를 중복 제거한다. 저장소 사용 불가 시 페이지 내 메모리만 사용한다. 새 탭 중복을 제거하는 사용자 식별자는 만들지 않는다.
+- 전용 네 이벤트의 page_location만 원래 공유 URL(등록 경로와 UTM만 남긴 주소)로 고정한다. 실제 주소/기존 page_view/detail_open/booking_click은 바꾸지 않는다. GA4 기본 eventName/pageLocation 차원으로 조회해 맞춤 차원 등록이 필요 없다.
+- 어드민 ‘공유 글에서 다른 항공권까지’는 출처·campaign·content별 사용자/횟수다. 기간 경계·반영 지연으로 단계 인원이 일시적으로 역전될 수 있어 전환율은 계산하지 않는다. 예약 이동은 구매가 아니다.
+- GA4 실패·임계 처리·불완전 응답은 조회 불가, 정상 빈 응답은 아직 수집된 기록 없음이다. 다른 출처의 같은 content는 합치지 않는다.
+- TE31 5248: 공개 목록에서 2026-09-14 제목과 게시물 링크를 확인했다. /c/te31-vietnam-260914 연결. 조회·댓글·추천 수는 미확인으로 유지한다. 실제 글: https://te31.com/rgr/view.php?id=freead&page=1&sn1=&divpage=1&sn=off&ss=on&sc=on&select_arrange=headnum&desc=asc&no=5248
+- Threads DdQkTQYD99a ↔ /t/m20136580은 전달받은 확인된 관계로 등록했다. API 조회 실패 상태는 유지하고 등록 링크로 보완한다. 여러 링크의 모호성이 있으면 보완하지 않는다. 댓글 자체 URL과 API 숫자 ID는 추정하지 않는다.
+
+검증: 로컬 모의 이벤트/보고서 테스트, 기존 공유·Threads 회귀 검사, 빌드. 운영 GA4 실제 수집 여부는 배포 후 별도 확인한다.

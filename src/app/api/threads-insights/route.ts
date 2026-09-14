@@ -138,7 +138,7 @@ async function getAttribution(): Promise<AttributionReports> {
                 dateRanges: [{ startDate: '29daysAgo', endDate: 'today' }],
                 dimensions: [{ name: 'sessionManualAdContent' }],
                 metrics: [{ name: 'sessions' }, { name: 'activeUsers' }],
-                dimensionFilter: trackedContentFilter,
+                dimensionFilter: { andGroup: { expressions: [trackedContentFilter, threadsSourceFilter] } },
                 orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
                 limit: 300,
             }),
@@ -147,7 +147,7 @@ async function getAttribution(): Promise<AttributionReports> {
                 dimensions: [{ name: 'sessionManualAdContent' }, { name: 'eventName' }],
                 metrics: [{ name: 'eventCount' }, { name: 'totalUsers' }],
                 dimensionFilter: {
-                    andGroup: { expressions: [trackedContentFilter, behaviorFilter] },
+                    andGroup: { expressions: [trackedContentFilter, threadsSourceFilter, behaviorFilter] },
                 },
                 limit: 600,
             }),
