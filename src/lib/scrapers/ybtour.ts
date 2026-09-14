@@ -7,6 +7,7 @@ import { buildStableFlightId, normalizeAirline } from '@/lib/utils/flight-helper
 import { assertNoSourceAccessBlockText, SourceResponseError } from './source-response';
 import { failYbtourInteraction, YbtourInteractionGuard } from './ybtour-interaction';
 import { selectYbtourRegion } from './ybtour-region';
+import { selectYbtourCity, openYbtourFare } from './ybtour-ajax';
 
 const randomDelay = (min: number, max: number) =>
     new Promise(r => setTimeout(r, (Math.random() * (max - min) + min) * 1000));
@@ -196,11 +197,10 @@ export async function scrapeYbtour(prevFlights: any[] = []): Promise<Flight[]> {
                         }
 
                         await cityButton.scrollIntoViewIfNeeded();
-                        await interaction.click(`${city.name}(${city.code}) 도시`, () => cityButton.click({ timeout: 5000 }));
-                        await page.waitForSelector('table tbody tr', { timeout: 5000 });
-                        await page.waitForTimeout(1500);
-
                         const bannerCode = region.tabId.replace('bannerCode_', '');
+                        await selectYbtourCity(page, bannerCode, city.code,
+                            () => interaction.click(`${city.name}(${city.code}) 도시`, () => cityButton.click({ timeout: 5000 })));
+                        await randomDelay(1, 2);
 
                         // 메인 행에서 항공사/출발/도착 추출 (5개 이상 td를 가진 행만)
                         const mainRows = await page.$$('table tbody tr');
@@ -250,9 +250,9 @@ export async function scrapeYbtour(prevFlights: any[] = []): Promise<Flight[]> {
                                 const searchBtn = await mainRows[rowIdx].$('a[onclick*="listActive"]');
                                 if (!searchBtn) failYbtourInteraction(`${city.name} 행 ${rowIdx}`, new Error('조회 버튼 누락'));
 
-                                await interaction.click(`${city.name} 행 ${rowIdx} 조회`, () => searchBtn.click({ timeout: 5000 }));
-
-                                // DOM 업데이트 대기
+                                await openYbtourFare(page, await searchBtn.getAttribute('onclick') || '',
+                                    () => interaction.click(`${city.name} 행 ${rowIdx} 조회`, () => searchBtn.click({ timeout: 5000 })));
+                                // Keep pacing after confirmed rendering, not instead of waiting for it.
                                 await randomDelay(2, 4);
 
                                 // td.link 안의 hidden input에서 개별 스케줄 데이터 추출 (전체 스캔, 중복은 processedKeys로 제거)

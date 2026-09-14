@@ -16,8 +16,14 @@ test('collector finishes after a persistent Asia mask, preserving earlier cities
         });
     });
     await context.route('**/*', async route => {
-        assert.match(route.request().url(), /^https:\/\/fly\.ybtour\.co\.kr\/booking\/findDiscountAir\.lts/);
+        assert.match(route.request().url(), /^https:\/\/fly\.ybtour\.co\.kr\/booking\/(findDiscountAir|findListDscInvSkdFare)\.lts/);
         if (route.request().method() === 'POST') {
+            const params = new URLSearchParams(route.request().postData() || '');
+            if (params.get('svcTpCode') !== 'CITY') {
+                await new Promise(resolve => setTimeout(resolve, 2200));
+                await route.fulfill({ contentType: 'text/html', body: '<div>local response</div>' });
+                return;
+            }
             const region = new URLSearchParams(route.request().postData() || '').get('efcBannerCode');
             const cities: Record<string, string> = { J1: 'NRT', 'A0/A3': 'DAD', P1: 'GUM', P0: 'SYD', 'E0/B1/F0': 'BCN' };
             const code = cities[region || ''];
@@ -42,22 +48,27 @@ test('collector finishes after a persistent Asia mask, preserving earlier cities
             document.querySelector('.ctab_list').innerHTML=html;
             document.getElementById('fares').innerHTML=''; document.getElementById('schedules').innerHTML='';
           }
-          function city(code) {
+          async function city(code) {
+            const regions={NRT:'J1',DAD:'A0/A3',GUM:'P1',SYD:'P0',BCN:'E0/B1/F0'};
+            await (await fetch('/booking/findDiscountAir.lts',{method:'POST',body:new URLSearchParams({svcTpCode:'FARE',efcBannerCode:regions[code],efcCityCode:code})})).text();
             document.getElementById('schedules').innerHTML='';
+            document.getElementById('totalFareTable').outerHTML='<table id="totalFareTable" onePageCnt="1"><tbody id="fares"></tbody></table>';
             document.getElementById('totalFareTable').setAttribute('fareTotCnt',code==='DAD'?'2':'1');
             document.getElementById('fares').innerHTML=Array.from({length:code==='DAD'?2:1}, (_,i)=>
               '<tr id="fareListSeq_'+(i+1)+'"><td>진에어</td><td>'+(i?'부산':'인천')+'</td><td>'+code+'</td><td>왕복</td><td><a>조회</a></td></tr>').join('');
-            document.querySelectorAll('#fares a').forEach((a,i)=>a.setAttribute('onclick','listActive('+JSON.stringify(code)+','+i+')'));
+            document.querySelectorAll('#fares a').forEach((a,i)=>a.setAttribute('onclick','listActive('+(i+1)+','+JSON.stringify(code+i)+')'));
             changePage(1);
           }
           function changePage(p) {
             document.querySelectorAll('#fares tr').forEach((r,i)=>r.style.display=i===p-1?'':'none');
             document.getElementById('pageList').innerHTML='<strong>'+p+'</strong>'+(p===1?'<a href="#" onclick="changePage(2)">2</a>':'');
           }
-          function listActive(code,i) {
+          async function listActive(seq,inhId) {
+            const code=inhId.slice(0,-1),i=Number(inhId.slice(-1));
             console.log('QUERY:'+code+':'+i);
+            await (await fetch('/booking/findListDscInvSkdFare.lts',{method:'POST',body:new URLSearchParams({loc:String(seq),inhId})})).text();
             const input=(key,value)=>'<input id="x_'+key+'_1" value="'+value+'">';
-            document.getElementById('schedules').innerHTML='<table><tbody><tr><td class="link"></td></tr></tbody></table>';
+            document.getElementById('schedules').innerHTML='<div id="cont_detail_'+seq+'"><table><tbody><tr><td class="link"></td></tr></tbody></table></div>';
             const link=document.createElement('a'); link.setAttribute('onclick','selectFareINV()');
             link.innerHTML=input('depDate','20260920')+input('inmRetDate','20260924')+input('inhId',code+i)
               +input('inpArrApCode',code)+input('inpDepApCode',i?'PUS':'ICN')+input('remainingSeat','4')
