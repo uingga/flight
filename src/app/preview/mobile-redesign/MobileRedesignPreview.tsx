@@ -3,6 +3,7 @@ import { flushSync } from 'react-dom';
 import DropHero from '@/components/DropHero';
 import { dropHeroAlternatives } from '@/lib/drop-hero-schedules';
 import { getCityImagePath } from '@/lib/city-image';
+import { priceDropKey, priceDropDay, priceDropLabel, priceDropAmountLabel, type PriceDropRecord } from '@/lib/price-drop-insight';
 import { shareGroupDepartureFilter } from '@/lib/share-group-departure';
 
 import { Fragment, type FormEvent, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -342,10 +343,14 @@ const tripSpansFullWeekend = (flight: Flight) => {
 function WeekendFlightsInsight({
     flights,
     onOpen,
+    priceDrops,
 }: {
     flights: Flight[];
     onOpen: (flight: Flight) => void;
+    priceDrops?: Record<string, PriceDropRecord>;
 }) {
+    const insightId = priceDrops ? 'price-drop-flights-insight' : 'weekend-flights-insight';
+    const eyebrow = priceDrops ? '가격 하락' : '주말 일정';
     const mobileFlights = useMemo(() => flights, [flights]);
     const mobileCount = mobileFlights.length;
     const mobileLoop = useMemo(() => (
@@ -525,6 +530,7 @@ function WeekendFlightsInsight({
     const activeMobileIndex = ((mobilePosition - 1 + mobileCount) % mobileCount);
 
     const renderTicket = (flight: Flight, mode: 'mobile' | 'desktop', key: string) => {
+        const drop = priceDrops?.[priceDropKey(flight)];
         const isMobileTicket = mode === 'mobile';
         const suppressClickRef = isMobileTicket ? mobileSuppressClickRef : desktopSuppressClickRef;
         return (
@@ -548,7 +554,9 @@ function WeekendFlightsInsight({
                         <strong>{stripAirport(flight.arrival.city)}</strong>
                     </span>
                     <span className={isMobileTicket ? styles.freshFlightsMobilePrice : styles.freshFlightsPrice}>
-                        <small>왕복 총액</small>
+                        <small className={drop ? styles.priceDropAmount : undefined}>
+                            {drop ? <>{priceDropLabel(drop)} <span className={styles.priceDropDelta}><span aria-hidden="true">↓</span> {priceDropAmountLabel(drop.amount)}</span></> : '왕복 총액'}
+                        </small>
                         <strong>{displayedFlightPrice(flight).toLocaleString('ko-KR')}<i>원</i></strong>
                     </span>
                 </span>
@@ -561,24 +569,24 @@ function WeekendFlightsInsight({
     };
 
     return (
-        <div className={styles.freshFlightsEntry} id="weekend-flights-insight">
+        <div className={styles.freshFlightsEntry} id={insightId}>
             <section
                 className={styles.freshFlightsBar}
-                aria-labelledby="weekend-flights-title"
+                aria-labelledby={`${insightId}-title`}
                 data-weekend-route-count={mobileCount}
             >
                 <div className={styles.freshFlightsMobileTopline}>
-                    <span>주말 일정</span>
-                    {mobileCount > 1 && <span aria-hidden="true">{activeMobileIndex + 1} / {mobileCount}</span>}
+                    <span>{eyebrow}</span>
+                    {priceDrops ? <span>총 {mobileCount}개</span> : mobileCount > 1 && <span aria-hidden="true">{activeMobileIndex + 1} / {mobileCount}</span>}
                 </div>
                 <div className={styles.freshFlightsCopy}>
-                    <span className={styles.freshFlightsDesktopEyebrow}>주말 일정</span>
-                    <strong id="weekend-flights-title">주말이 아까운 사람에게</strong>
-                    <p>토·일이 여행 일정에 들어간 항공권만 골랐어요.</p>
+                    <span className={styles.freshFlightsDesktopEyebrow}>{eyebrow}</span>
+                    <strong id={`${insightId}-title`}>{priceDrops ? '기다린 보람이 있네요' : '주말이 아까운 사람에게'}</strong>
+                    <p>{priceDrops ? '최근 가격이 내려간 항공권을 모았어요.' : '토·일이 여행 일정에 들어간 항공권만 골랐어요.'}</p>
                 </div>
                 <div
                     className={styles.freshFlightsMobileViewport}
-                    aria-label="주말 포함 항공권. 위아래로 밀어 다른 항공권 보기"
+                    aria-label={`${eyebrow} 항공권. 위아래로 밀어 다른 항공권 보기`}
                     onPointerDown={handleMobilePointerDown}
                     onPointerMove={handleMobilePointerMove}
                     onPointerUp={handleMobilePointerEnd}
@@ -593,7 +601,7 @@ function WeekendFlightsInsight({
                 </div>
                 <div
                     className={styles.freshFlightsViewport}
-                    aria-label="주말 포함 항공권. 마우스로 위아래로 드래그해 다른 항공권 보기"
+                    aria-label={`${eyebrow} 항공권. 마우스로 위아래로 드래그해 다른 항공권 보기`}
                     onPointerDown={handleDesktopPointerDown}
                     onPointerMove={handleDesktopPointerMove}
                     onPointerUp={handleDesktopPointerEnd}
@@ -617,6 +625,7 @@ function WeekendFlightsInsight({
                         ))}
                     </div>
                 </div>
+                {priceDrops && <div className={styles.freshFlightsCount}>총 {mobileCount}개</div>}
             </section>
         </div>
     );
@@ -2633,6 +2642,28 @@ export default function MobileRedesignPreview({
     const feedFlights = freshRouteResults
         ? applyManualFlightOrder(freshRouteResultFlights, manualPlacements, { sort })
         : displayedFlights;
+    const [priceDrops, setPriceDrops] = useState<Record<string, PriceDropRecord>>({});
+    useEffect(() => {
+        const controller = new AbortController();
+        void fetch('/api/price-drop-flights', { signal: controller.signal })
+            .then(response => response.ok ? response.json() : null)
+            .then(data => {
+                if (controller.signal.aborted) return;
+                const records: PriceDropRecord[] = data?.available && data.asOf === priceDropDay(Date.now()) ? data.records : [];
+                setPriceDrops(Object.fromEntries(records.map(record => [record.key, record])));
+            }).catch(() => { if (!controller.signal.aborted) setPriceDrops({}); });
+        return () => controller.abort();
+    }, [flights]);
+    const priceDropFlights = useMemo(() => {
+        const seen = new Set<string>();
+        return feedFlights.filter(flight => {
+            const key = priceDropKey(flight);
+            const drop = priceDrops[key];
+            if (!drop || drop.currentPrice !== displayedFlightPrice(flight) || seen.has(key)) return false;
+            seen.add(key);
+            return true;
+        }).sort((a, b) => priceDrops[priceDropKey(b)].amount - priceDrops[priceDropKey(a)].amount);
+    }, [feedFlights, priceDrops]);
     const dropHeroPick = !freshRouteResults && isDefaultView && todayPickId
         && featuredPick && getCityImagePath(featuredPick.flight.arrival.city) ? featuredPick : null;
     const ordinaryFeedFlights = dropHeroPick ? feedFlights.filter(flight => flight.id !== dropHeroPick.flight.id) : feedFlights;
@@ -2926,7 +2957,8 @@ export default function MobileRedesignPreview({
             : DATE_PERIOD_OPTIONS.find(item => item.value === datePeriod)?.label || '날짜';
     const firstInsightCard = 9;
     const subsequentInsightInterval = 12;
-    const weeklyDiscoveryInsightCard = firstInsightCard + subsequentInsightInterval;
+    const priceDropInsightCard = firstInsightCard + subsequentInsightInterval;
+    const weeklyDiscoveryInsightCard = priceDropInsightCard + (priceDropFlights.length ? subsequentInsightInterval : 0);
     const weekendFlightsInsightCard = weeklyDiscoveryInsightCard + subsequentInsightInterval;
     const advancedSelectionCount = Number(sourceFilter !== 'all') + Number(airlineFilter !== 'all');
     const hasAdvancedFilter = departure !== '전체'
@@ -4279,6 +4311,9 @@ export default function MobileRedesignPreview({
                                             </button>
                                         </article>
                                     </div>
+                                    {!freshRouteResults && isDefaultView && cardNumber === priceDropInsightCard && priceDropFlights.length > 0 && (
+                                        <WeekendFlightsInsight flights={priceDropFlights} priceDrops={priceDrops} onOpen={flight => openFlight(flight, 'insight_price_drop')} />
+                                    )}
                                     {!freshRouteResults && cardNumber === firstInsightCard && freshFlightsInsight && (
                                         <div className={styles.freshFlightsEntry}>
                                             <section

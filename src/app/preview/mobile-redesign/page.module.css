@@ -734,6 +734,18 @@
     font-weight: var(--weight-regular);
 }
 
+.freshFlightsMobilePrice > small.priceDropAmount,
+.freshFlightsPrice > small.priceDropAmount {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: var(--size-micro);
+    font-weight: var(--weight-control);
+    line-height: 1.3;
+}
+
+.priceDropDelta { color: var(--brand-dark); }
+
 .freshFlightsMobileSchedule {
     width: 100%;
     min-width: 0;
