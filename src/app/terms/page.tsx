@@ -83,7 +83,7 @@ export default function TermsPage() {
             </div>
 
             <div className={styles.section}>
-                <h2 className={styles.sectionTitle}>제5조 (지적재산권)</h2>
+                <h2 id="intellectual-property" className={styles.sectionTitle}>제5조 (지적재산권)</h2>
                 <div className={styles.sectionContent}>
                     <p>
                         본 서비스의 디자인, 로고, 소프트웨어, 콘텐츠 등에 대한 저작권 및 지적재산권은
