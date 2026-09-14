@@ -1157,7 +1157,7 @@ export default function MobileRedesignPreview({
     const [maxPrice, setMaxPrice] = useState(0);
     const [sort, setSort] = useState<SortMode>('recommended');
     const [sharedContext, setSharedContext] = useState<SharedFlightContext | null>(null);
-    const [selectedFlight, setSelectedFlight] = useState<Flight | null>(null);
+    const [selectedFlight, commitSelectedFlight] = useState<Flight | null>(null);
     const [showSharedWelcome, setShowSharedWelcome] = useState(false);
     useEffect(() => {
         if (!selectedFlight) setShowSharedWelcome(false);
@@ -1271,6 +1271,47 @@ export default function MobileRedesignPreview({
     const sharedFallbackArrivalRef = useRef<string | null>(null);
     const filterDialogRef = useRef<HTMLElement | null>(null);
     const detailDialogRef = useRef<HTMLElement | null>(null);
+    const detailExitRef = useRef<Animation[] | null>(null);
+    const setSelectedFlight = useCallback((flight: Flight | null) => {
+        if (flight) {
+            const previous = detailExitRef.current;
+            detailExitRef.current = null;
+            previous?.forEach(animation => animation.cancel());
+            commitSelectedFlight(flight);
+            return;
+        }
+        if (detailExitRef.current) return;
+        const panel = detailDialogRef.current;
+        if (!panel || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            commitSelectedFlight(null);
+            return;
+        }
+        // Retain the dialog (and its focus/scroll lock) until all close paths finish animating.
+        // A swipe already moves the sheet offscreen; continue from that position, never jump back.
+        const current = getComputedStyle(panel);
+        const matrix = new DOMMatrixReadOnly(current.transform);
+        const desktop = window.matchMedia('(min-width: 960px)').matches;
+        const animations = [panel.animate([
+            { transform: current.transform, opacity: current.opacity },
+            { transform: `translate(${matrix.m41 + (desktop ? 34 : 0)}px, ${matrix.m42 + (desktop ? 0 : 24)}px)`, opacity: 0 },
+        ], { duration: 180, easing: 'ease-in', fill: 'forwards' })];
+        if (panel.parentElement) animations.push(panel.parentElement.animate(
+            [{ opacity: 1 }, { opacity: 0 }],
+            { duration: 180, easing: 'ease-in', fill: 'forwards' },
+        ));
+        detailExitRef.current = animations;
+        void Promise.all(animations.map(animation => animation.finished.catch(() => {}))).then(() => {
+            if (detailExitRef.current !== animations) return;
+            detailExitRef.current = null;
+            flushSync(() => commitSelectedFlight(null));
+            animations.forEach(animation => animation.cancel());
+        });
+    }, []);
+    useEffect(() => () => {
+        const animations = detailExitRef.current;
+        detailExitRef.current = null;
+        animations?.forEach(animation => animation.cancel());
+    }, []);
     const contactDialogRef = useRef<HTMLElement | null>(null);
     const serviceUpdateDialogRef = useRef<HTMLElement | null>(null);
     const historyUiStateRef = useRef({
