@@ -3561,7 +3561,13 @@ export default function MobileRedesignPreview({
         >
             <div className={styles.phoneCanvas}>
                 <header className={styles.header}>
-                    <a href={previewMode ? '/preview/mobile-redesign' : '/'} className={styles.logoLink} aria-label="티키티킷 홈">
+                    <a href={previewMode ? '/preview/mobile-redesign' : '/'} className={styles.logoLink} aria-label="티키티킷 홈" onClick={event => {
+                        if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+                        const state = { ...window.history.state };
+                        delete state.tikitikitDropResults;
+                        delete state.tikitikitDropOriginY;
+                        window.history.replaceState(state, '', window.location.href);
+                    }}>
                         <Logo size={0.84} />
                     </a>
                     <div className={styles.headerActions}>
@@ -3984,7 +3990,7 @@ export default function MobileRedesignPreview({
                                     <span aria-hidden="true">←</span> 전체 항공권
                                 </button>
                             )}
-                            {freshRouteResults && (
+                            {freshRouteResults && !freshRouteResults.dropFlightIds && (
                                 <button type="button" className={styles.freshRouteResultBack} onClick={closeFreshRouteResults}>
                                     <span aria-hidden="true">←</span> 전체 항공권
                                 </button>
@@ -4176,7 +4182,7 @@ export default function MobileRedesignPreview({
                             const isTodayPick = !freshRouteResults && isDefaultView && featuredPick?.flight.id === flight.id;
                             const cardNumber = index + 1;
                             return (
-                                <Fragment key={flight.id}>
+                                <Fragment key={`${flight.id}|${flight.departure.date}|${flight.departure.time || ''}|${flight.arrival.date}|${flight.arrival.time || ''}`}>
                                     {/* Single-ticket routes already identify themselves on each card. */}
                                     {sharedFlightIds.length > 0 && initialSharedGroup?.routes.some(route => route.flightIds.length > 1) && initialSharedGroup.routes.map(route => {
                                         const first = feedFlights.find(item => route.flightIds.includes(item.id));
@@ -4449,6 +4455,12 @@ export default function MobileRedesignPreview({
                             showAllFlightsFromSharedGroup(true);
                             feedSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                         }}>
+                            안 살 거지만 더 보기 <span aria-hidden="true">→</span>
+                        </button>
+                    )}
+
+                    {!listLoading && !error && freshRouteResults?.dropFlightIds && (
+                        <button type="button" className={styles.moreButton} onClick={closeFreshRouteResults}>
                             안 살 거지만 더 보기 <span aria-hidden="true">→</span>
                         </button>
                     )}
