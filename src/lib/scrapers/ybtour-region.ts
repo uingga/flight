@@ -13,7 +13,11 @@ export async function selectYbtourRegion(
     })));
     const check = async () => assertNoSourceAccessBlockText('노랑풍선 지역 전환', await page.locator('body').innerText(), page.url());
     await check();
-    const alreadySelected = await page.locator(`[id="${tabId}"]`).evaluate(el => el.classList.contains('on'));
+    const alreadySelected = await page.locator(`[id="${tabId}"]`).evaluate(el => {
+        // getFare returns without requesting when this state matches, even if its CSS marker is absent.
+        const selectedCode = (window as unknown as { selEfcBannerCode?: string }).selEfcBannerCode;
+        return typeof selectedCode === 'string' ? selectedCode === el.id.replace('bannerCode_', '') : el.classList.contains('on');
+    });
     let expected: string[];
     if (alreadySelected) {
         // Initial landing is already on Japan. Clicking the active tab sends no request.
@@ -63,7 +67,9 @@ export async function selectYbtourRegion(
     }
     try {
         await page.waitForFunction(({ tabId, expected, selector }) => {
-            const selected = document.getElementById(tabId)?.classList.contains('on');
+            const selectedCode = (window as unknown as { selEfcBannerCode?: string }).selEfcBannerCode;
+            const selected = typeof selectedCode === 'string' ? selectedCode === tabId.replace('bannerCode_', '')
+                : document.getElementById(tabId)?.classList.contains('on');
             const mask = Array.from(document.querySelectorAll('.dimBox.bg')).some(el =>
                 el.getClientRects().length > 0 && getComputedStyle(el).visibility !== 'hidden');
             const items = Array.from(document.querySelectorAll(selector));

@@ -33,6 +33,13 @@ test('region transitions correlate new CITY responses and wait for the matching 
         await reset();
         assert.equal((await selectYbtourRegion(page, 'bannerCode_J1', ['NRT'], async () => assert.fail('no active-tab click')))[0].code, 'NRT');
         assert.equal(requests, 0);
+        await page.evaluate(() => {
+            document.getElementById('bannerCode_J1')!.className = '';
+            (window as unknown as { selEfcBannerCode: string }).selEfcBannerCode = 'J1';
+        });
+        assert.equal((await selectYbtourRegion(page, 'bannerCode_J1', ['NRT'], async () => assert.fail('active internal state sends no request')))[0].code, 'NRT');
+        assert.equal(requests, 0);
+        await reset();
         delay = 3200;
         assert.equal((await selectYbtourRegion(page, 'bannerCode_A0/A3', ['DAD'], click('A0/A3'), 5000))[0].code, 'DAD');
         assert.equal(requests, 1, 'slow response must not trigger reloads/retries');

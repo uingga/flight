@@ -20104,7 +20104,7 @@
     "myrealtrip": "2026-09-13T22:30:53.789Z"
   },
   "staleStreak": {
-    "ybtour": 2,
+    "ybtour": 3,
     "hanatour": 0,
     "modetour": 0,
     "onlinetour": 1,
@@ -20119,9 +20119,9 @@
     "onlinetour": 0
   },
   "integrityAlerts": [
-    "🚨 ybtour 수집 실패로 이전 데이터 유지: 노랑풍선 후쿠오카 행 0 조회 화면 조작 실패 — 불완전 결과 폐기: elementHandle.click: Element is not attached to the DOM — 2회 연속",
     "🚨 onlinetour 수집 실패 (복구할 이전 데이터 없음): 온라인투어 B PC 수집 실패: invalid_first_page",
-    "⚠️ 모두투어 부분 성공: 타오위안(TPE) HTTP 500 — 기존 3건 유지, 나머지 14구간 반영"
+    "⚠️ 모두투어 부분 성공: 타오위안(TPE) HTTP 500 — 기존 3건 유지, 나머지 14구간 반영",
+    "🚨 ybtour 수집 실패로 이전 데이터 유지: 노랑풍선 요청한 지역 응답 대기 실패 — 3회 연속"
   ],
   "sourceCircuits": {},
   "manualCaptureStatus": {},
