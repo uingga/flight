@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { unstable_cache } from 'next/cache';
 import { loadActiveFlights } from '@/lib/flight-static';
-import { hasSupabaseServerConfig, supabaseRest } from '@/lib/server/supabase-rest';
+import { hasSupabaseServerConfig, supabaseRest, SupabaseRestError } from '@/lib/server/supabase-rest';
 import { matchPriceDrop, priceDropDay, type HistoricalFlightPrice } from '@/lib/price-drop-insight';
 import { buildLifecycleIdentity } from '../../../../scripts/lib/flight-lifecycle';
 
@@ -41,9 +41,14 @@ export async function GET() {
         return NextResponse.json({ available: true, asOf: today, records }, {
             headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=60' },
         });
-    } catch {
+    } catch (error) {
         // Never substitute examples, route averages or stale discounts after a read failure.
-        console.error('Price-drop insight history unavailable');
+        console.error('Price-drop insight history unavailable', {
+            type: error instanceof Error ? error.name : 'unknown',
+            status: error instanceof SupabaseRestError ? error.status : undefined,
+            // Only a fixed, non-sensitive diagnostic category is logged.
+            pageLimit: error instanceof Error && error.message === 'Price history page limit exceeded',
+        });
         return NextResponse.json({ available: false, records: [] });
     }
 }
