@@ -26,6 +26,17 @@ export const THREADS_SHARE_GROUP_OVERRIDES: Record<string, string> = {
 };
 
 export const SHARE_GROUPS: Record<string, ShareGroup> = {
+    'vietnam-260914': {
+        title: '인천 출발 호치민·하노이',
+        departure: '인천', arrival: '호치민·하노이',
+        price: 210000, dateText: '10.5–10.8 · 10.6–10.9',
+        airline: '썬푸꾸옥항공', source: '모두투어',
+        flightIds: ['modetour-ASIA-20136581', 'modetour-ASIA-20136580', 'modetour-ASIA-20135786'],
+        routes: [
+            { label: '인천 → 호치민', flightIds: ['modetour-ASIA-20136581', 'modetour-ASIA-20136580'] },
+            { label: '인천 → 하노이', flightIds: ['modetour-ASIA-20135786'] },
+        ],
+    },
     'sgn-260914': {
         departure: '인천',
         arrival: '호치민',
