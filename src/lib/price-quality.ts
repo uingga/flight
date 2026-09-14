@@ -4,7 +4,7 @@ import { getExactRouteAirports } from './naver-route';
 const HOUR = 3_600_000;
 const DAY = 24 * HOUR;
 const KST_OFFSET = 9 * HOUR;
-/** 오래된 네이버 가격으로 항공권을 제거하지 않기 위한 엄격한 필터 상한. */
+/** 알림 등 최신 가격이 필요한 판단의 상한. */
 export const COMPARISON_MAX_AGE_HOURS = 24;
 /** 추천순에서 동일 일정 비교가를 원래 신뢰도로 쓰는 상한. */
 export const RECOMMENDATION_COMPARISON_FULL_AGE_HOURS = 48;
@@ -20,7 +20,7 @@ export function getEffectivePrice(flight: Pick<Flight, 'price' | 'source'>): num
 }
 
 /**
- * 오래된 네이버 가격으로 항공권을 제거하거나 알림을 만들지 않도록 하는 엄격한 24시간 기준.
+ * 오래된 네이버 가격으로 알림 등을 만들지 않도록 하는 엄격한 24시간 기준.
  * 추천순의 완충 유효기간은 getRecommendationComparisonFreshness에서 별도로 판단한다.
  */
 export function getComparisonFreshness(checkedAt?: string, now = Date.now()) {
@@ -36,7 +36,7 @@ export function getComparisonFreshness(checkedAt?: string, now = Date.now()) {
 /**
  * 모든 일정을 매일 다시 조회하지 않는 네이버 수집 주기에 맞춘 추천 전용 유효기간.
  * 48시간까지는 정상 근거, 48~72시간은 한 단계 낮춘 근거, 이후에는 비교 불가다.
- * 제거 필터와 알림 발송은 이 완충값이 아니라 getComparisonFreshness의 24시간을 유지한다.
+ * 제거 필터는 같은 72시간 상한을 쓰고, 알림 발송은 24시간을 유지한다.
  */
 export function getRecommendationComparisonFreshness(checkedAt?: string, now = Date.now()) {
     const checkedTime = checkedAt ? new Date(checkedAt).getTime() : Number.NaN;
@@ -61,6 +61,11 @@ export function getRecommendationComparisonFreshness(checkedAt?: string, now = D
         ageHours,
         ageDays,
     };
+}
+
+/** 부분 재조회 주기에 맞춰 표시와 동일한 72시간까지 비싼 표를 제외한다. */
+export function getPriceExclusionFreshness(checkedAt?: string, now = Date.now()) {
+    return getRecommendationComparisonFreshness(checkedAt, now);
 }
 
 /** 추천순의 비교가 구간: 검증된 최저가 이하 → 비교 불가 → 검증된 최저가 초과. */

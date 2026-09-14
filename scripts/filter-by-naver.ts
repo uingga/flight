@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { buildNaverPriceKey } from '../src/lib/naver-route';
-import { getUsableNaverComparison } from '../src/lib/naver-comparison';
+import { getPriceExclusionNaverComparison } from '../src/lib/naver-comparison';
 import { getEffectivePrice } from '../src/lib/price-quality';
 import { isNaverPriceOverLimit } from '../src/lib/naver-price-filter';
 
@@ -48,7 +48,7 @@ cache.flights = cache.flights.filter((f: any) => {
         return true;
     }
     const naverEntry = naverPrices[naverKey];
-    const comparison = getUsableNaverComparison(naverEntry);
+    const comparison = getPriceExclusionNaverComparison(naverEntry);
     const bestNaverPrice: number | null = comparison?.price || null;
 
     if (!bestNaverPrice) {

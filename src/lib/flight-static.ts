@@ -12,7 +12,7 @@ import { normalizeAirline, normalizeCity } from '@/lib/utils/flight-helpers';
 import { filterStaleSourceFlights, getEffectiveSourceUpdatedAt } from '@/lib/source-freshness';
 import { deduplicateDisplayFlights } from '@/lib/flight-visibility';
 import { filterSeatAvailableFlights } from '@/lib/flight-seats';
-import { getComparisonFreshness } from '@/lib/price-quality';
+import { getPriceExclusionFreshness } from '@/lib/price-quality';
 import { isNaverPriceOverLimit } from '@/lib/naver-price-filter';
 import {
     clearUnsupportedInterparkDiscount,
@@ -127,7 +127,7 @@ export function loadActiveFlights(): Flight[] {
                 if (flight.price <= 0 || parseDate(flight.departure?.date) < today) return false;
                 if (parseDate(flight.departure?.date) === parseDate(flight.arrival?.date)) return false;
                 if (!flight.naverLowest || flight.naverLowest <= 0
-                    || !getComparisonFreshness(flight.naverCheckedAt).usable) return true;
+                    || !getPriceExclusionFreshness(flight.naverCheckedAt).usable) return true;
                 return !isNaverPriceOverLimit(effectivePrice(flight), flight.naverLowest);
             });
         // 메인 API와 같은 중복 제거 규칙을 써 정적 도시 페이지의 장수·최저가가

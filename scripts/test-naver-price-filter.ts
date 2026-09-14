@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { isNaverPriceOverLimit } from '../src/lib/naver-price-filter';
-import { getEffectivePrice } from '../src/lib/price-quality';
-import { getUsableNaverComparison } from '../src/lib/naver-comparison';
+import { getEffectivePrice, getComparisonFreshness, getPriceExclusionFreshness } from '../src/lib/price-quality';
+import { getPriceExclusionNaverComparison } from '../src/lib/naver-comparison';
 
 const now = Date.parse('2026-09-09T05:00:00Z');
 const checkedAt = new Date(now).toISOString();
@@ -36,20 +36,42 @@ for (const entry of [
     undefined,
     { naverLowest: null, crawledAt: checkedAt },
     { naverLowest: 100_000 },
-    { naverLowest: 100_000, crawledAt: new Date(now - 24 * 3600_000 - 1).toISOString() },
+    { naverLowest: 100_000, crawledAt: new Date(now - 72 * 3600_000 - 1).toISOString() },
+    { naverLowest: 100_000, crawledAt: 'invalid' },
     ...['no_result', 'route_error', 'miss'].map(lastAttemptStatus => ({
         naverLowest: 100_000, crawledAt: checkedAt, lastAttemptStatus,
     })),
 ]) {
-    assert.equal(getUsableNaverComparison(entry, now), null);
+    assert.equal(getPriceExclusionNaverComparison(entry, now), null);
 }
-assert.equal(getUsableNaverComparison({ naverLowest: 100_000, crawledAt: checkedAt }, now)?.price, 100_000);
+assert.equal(getPriceExclusionNaverComparison({ naverLowest: 100_000, crawledAt: checkedAt }, now)?.price, 100_000);
+
+for (const hours of [24, 27, 30, 48, 72]) {
+    const timestamp = new Date(now - hours * 3600_000).toISOString();
+    assert.equal(getPriceExclusionFreshness(timestamp, now).usable, true);
+    assert.equal(getPriceExclusionNaverComparison({ naverLowest: 100_000, crawledAt: timestamp }, now)?.price, 100_000);
+}
+assert.equal(getPriceExclusionFreshness(new Date(now - 72 * 3600_000 - 1).toISOString(), now).usable, false);
+assert.equal(getPriceExclusionFreshness(undefined, now).usable, false);
+assert.equal(getComparisonFreshness(new Date(now - 24 * 3600_000 - 1).toISOString(), now).usable, false);
+
+// Reported tickets remain excluded beyond 24h, including the Ttang issuance fee.
+for (const [source, price, comparison, hours] of [
+    ['myrealtrip', 903_600, 680_293, 30],
+    ['myrealtrip', 907_900, 700_696, 30],
+    ['ttang', 285_000, 195_800, 27],
+] as const) {
+    const timestamp = new Date(now - hours * 3600_000).toISOString();
+    const entry = getPriceExclusionNaverComparison({ naverLowest: comparison, crawledAt: timestamp }, now);
+    assert.ok(entry);
+    assert.equal(isNaverPriceOverLimit(getEffectivePrice({ source, price }), entry.price), true);
+}
 
 // All three exclusion entry points must use the same policy and retain freshness checks.
 for (const file of ['scripts/filter-by-naver.ts', 'src/app/api/flights/route.ts', 'src/lib/flight-static.ts']) {
     const source = readFileSync(file, 'utf8');
     assert.match(source, /isNaverPriceOverLimit\(/, file);
-    assert.match(source, /getUsableNaverComparison\(|getComparisonFreshness\(/, file);
+    assert.match(source, /getPriceExclusionNaverComparison\(|getPriceExclusionFreshness\(/, file);
     assert.doesNotMatch(source, /difference < 100_?000|diff >= 100000|10만원·20%/, file);
 }
 console.log('PASS: Naver 20% OR KRW 100,000 thresholds, fees, missing/stale comparisons, and three entry-point contracts');

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import todayPick from '../../../../data/today-pick.json';
 import { Flight, FlightSearchParams } from '@/types/flight';
-import { getComparisonFreshness, getEffectivePrice } from '@/lib/price-quality';
+import { getComparisonFreshness, getEffectivePrice, getPriceExclusionFreshness } from '@/lib/price-quality';
 import { isNaverPriceOverLimit } from '@/lib/naver-price-filter';
 import { getRecommendationNaverComparison } from '@/lib/naver-comparison';
 import {
@@ -319,7 +319,7 @@ export async function GET(request: NextRequest) {
                     if (exactKey) {
                         const matchedPrice = naverPrices[exactKey];
                         // 추천·표시는 부분 재수집 간격을 고려해 72시간까지 전달한다.
-                        // 아래 제거 필터는 별도로 24시간 유효값만 사용한다.
+                        // 아래 제거 필터도 동일한 72시간 상한을 사용한다.
                         const comparison = getRecommendationNaverComparison(matchedPrice);
                         const bestPrice: number | null = comparison?.price || null;
 
@@ -340,8 +340,8 @@ export async function GET(request: NextRequest) {
                 const beforeNaverFilter = allFlights.length;
                 allFlights = allFlights.filter(f => {
                     if (!f.naverLowest || f.naverLowest <= 0) return true;
-                    // 오래된 낮은 네이버 가격으로 현재 항공권을 제거하지 않도록 24시간 값만 사용한다.
-                    if (!getComparisonFreshness(f.naverCheckedAt).usable) return true;
+                    // 표시와 동일하게 72시간까지 적용하고, 이후에는 오래된 비교가로 제거하지 않는다.
+                    if (!getPriceExclusionFreshness(f.naverCheckedAt).usable) return true;
                     const effectivePrice = getEffectivePrice(f);
                     return !isNaverPriceOverLimit(effectivePrice, f.naverLowest);
                 });
