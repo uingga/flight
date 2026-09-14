@@ -3,10 +3,10 @@ import { Flight } from '@/types/flight';
 import { getRegionByCity } from '@/lib/utils/region-mapper';
 // logCrawlResults moved to crawl-all.ts
 import type { ScheduleKey } from './ybtour-schedule';
-import { ScrapeCompleteness } from './scrape-errors';
 import { buildStableFlightId, normalizeAirline } from '@/lib/utils/flight-helpers';
 import { assertNoSourceAccessBlockText, SourceResponseError } from './source-response';
 import { failYbtourInteraction, YbtourInteractionGuard } from './ybtour-interaction';
+import { selectYbtourRegion } from './ybtour-region';
 
 const randomDelay = (min: number, max: number) =>
     new Promise(r => setTimeout(r, (Math.random() * (max - min) + min) * 1000));
@@ -35,9 +35,6 @@ export function getYbtourScheduleKey(flight: Flight): ScheduleKey | undefined {
  * - 기존: 출발기간 범위(26/03/03~26/03/24)를 출발/도착일로 오인
  * - 수정: 개별 스케줄 행의 inv_depDate, inv_inmRetDate에서 정확한 날짜 추출
  */
-
-// 지역 탭 진입 시도 횟수 (첫 시도 + 재시도). 탭 하나가 실패하면 그 지역 전체가 누락된다.
-const TAB_ATTEMPTS = 3;
 
 // 지역 및 도시 코드 매핑 (ID 기반)
 const REGIONS = [
@@ -166,11 +163,7 @@ export async function scrapeYbtour(prevFlights: any[] = []): Promise<Flight[]> {
         console.log('노랑풍선 페이지 로드 완료');
 
         // 각 지역별로 크롤링
-        const completeness = new ScrapeCompleteness('노랑풍선', 'ybtour', prevFlights);
-        // 탭 클릭이 먹지 않으면 화면에 직전 지역의 도시 목록이 그대로 남는다.
-        // 목록이 비어 있지 않다는 이유로 성공 처리하면 그 지역이 통째로 빠지므로
-        // 직전에 본 목록과 같은지까지 확인한다. (2026-08-20 아시아 탭 실패의 원인)
-        let lastDetectedKey = '';
+        // Match each region's own response and rendered cities before continuing.
         for (const region of REGIONS) {
             console.log(`\n=== ${region.name} 지역 크롤링 ===`);
 
@@ -180,76 +173,10 @@ export async function scrapeYbtour(prevFlights: any[] = []): Promise<Flight[]> {
                     ? `a[id="${region.tabId}"]`
                     : `#${region.tabId}`;
 
-                // 탭 하나가 안 열리면 그 지역이 통째로 빠진 채 크롤이 "성공"으로 끝난다.
-                // 아시아 탭이 전체의 3분의 2를 차지해 이 침묵이 특히 비쌌으므로,
-                // 탭 노출·도시 목록까지 확인하고 안 되면 페이지를 다시 띄워 재시도한다.
-                let dynamicCities: { code: string; name: string }[] = [];
-                for (let attempt = 1; attempt <= TAB_ATTEMPTS; attempt++) {
-                    const regionTab = page.locator(tabSelector);
-                    const tabVisible = await regionTab.isVisible().catch(() => false);
-
-                    if (tabVisible) {
-                        await interaction.click(`${region.name} 지역 탭`, () => regionTab.click({ timeout: 5000 }));
-                        await page.waitForSelector('ul.ctab_list', { state: 'visible', timeout: 5000 }).catch(() => { });
-                        await randomDelay(1, 3);
-
-                        // 페이지에서 도시 버튼을 동적으로 감지 (하드코딩 불필요)
-                        dynamicCities = await page.$$eval('ul.ctab_list li[id^="cityCode_"]', (items) =>
-                            items.map(li => ({
-                                code: li.id.replace('cityCode_', ''),
-                                name: (li.querySelector('a')?.textContent?.trim() || li.id.replace('cityCode_', '')),
-                            })).filter(c => c.code)
-                        ).catch(() => [] as { code: string; name: string }[]);
-
-                        if (dynamicCities.length > 0) {
-                            const detectedKey = dynamicCities.map(c => c.code).sort().join(',');
-                            const regionCityCodes = new Set(region.cities.map(c => c.code));
-                            const belongsHere = dynamicCities.some(c => regionCityCodes.has(c.code));
-
-                            // 이 지역의 알려진 도시가 하나라도 있으면 제대로 열린 것이다.
-                            // 없더라도 직전과 다른 목록이면 받아들인다 — 여행사가 취항지를
-                            // 바꿔 우리 목록이 낡았을 뿐일 수 있어 섣불리 실패로 몰지 않는다.
-                            if (belongsHere || detectedKey !== lastDetectedKey) {
-                                lastDetectedKey = detectedKey;
-                                break;
-                            }
-
-                            console.log(`[STALE] ${region.name} 탭을 눌렀지만 직전 지역의 도시 목록이 그대로입니다 (${dynamicCities.slice(0, 4).map(c => c.code).join(', ')} …)`);
-                            dynamicCities = [];
-                        }
-                    }
-
-                    if (attempt < TAB_ATTEMPTS) {
-                        console.log(`[RETRY ${attempt}/${TAB_ATTEMPTS - 1}] ${region.name} 탭 진입 실패 — 페이지 새로 열고 재시도`);
-                        const retryResponse = await page.goto('https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV', {
-                            waitUntil: 'domcontentloaded',
-                            timeout: 30000,
-                        });
-                        if (retryResponse && !retryResponse.ok()) {
-                            throw new SourceResponseError(
-                                'http-status',
-                                `노랑풍선 탭 복구 페이지 HTTP ${retryResponse.status()}`,
-                                retryResponse.status(),
-                                retryResponse.headers()['content-type'] || '',
-                                undefined,
-                                retryResponse.url(),
-                            );
-                        }
-                        const retryText = await page.locator('body').innerText({ timeout: 5_000 }).catch(() => '');
-                        assertNoSourceAccessBlockText('노랑풍선 탭 복구 페이지', retryText, page.url());
-                        await page.waitForSelector('table tbody', { timeout: 10000 }).catch(() => { });
-                        await randomDelay(2, 4);
-                    }
-                }
-
-                if (dynamicCities.length === 0) {
-                    const regionCityCodes = new Set(region.cities.map(c => c.code));
-                    completeness.recordFailure(
-                        `${region.name} 지역 (${TAB_ATTEMPTS}회 시도)`,
-                        f => regionCityCodes.has(f.arrival?.airport),
-                    );
-                    continue;
-                }
+                // Fail closed instead of reloading or accepting a late response from another region.
+                const regionTab = page.locator(tabSelector);
+                const dynamicCities = await selectYbtourRegion(page, region.tabId, region.cities.map(city => city.code),
+                    () => interaction.click(`${region.name} 지역 탭`, () => regionTab.click({ timeout: 5000 })));
 
                 console.log(`${region.name}: ${dynamicCities.length}개 도시 감지 (${dynamicCities.map(c => c.code).join(', ')})`);
 
@@ -490,9 +417,6 @@ export async function scrapeYbtour(prevFlights: any[] = []): Promise<Flight[]> {
         }
 
         console.log(`\n노랑풍선 Phase 1 완료: 총 ${flights.length}개 항공권`);
-
-        // 지역이 통째로 빠진 결과는 "적게 수집된 것"이 아니라 "믿을 수 없는 것"이다.
-        completeness.assertComplete(flights.length);
 
         // ===== Phase 2: 이전 캐시에서 검증된 시각만 복사 =====
         // 네트워크 상세 조회는 crawl-all이 인터파크 필터까지 끝낸 뒤 실행한다.

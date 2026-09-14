@@ -111,7 +111,8 @@ test('nested row/city/region catches retain the original incomplete failure', ()
 });
 test('collector wires all three clicks and propagates all three nested failures', () => {
     const source = readFileSync('src/lib/scrapers/ybtour.ts', 'utf8');
-    assert.equal((source.match(/await interaction\.click\(/g) || []).length, 3);
+    assert.equal((source.match(/interaction\.click\(/g) || []).length, 3);
+    assert.ok(source.includes('await selectYbtourRegion('));
     assert.ok(source.includes('failYbtourInteraction(`${region.name}/${city.name} 행 ${rowIdx}`, e)'));
     assert.ok(source.includes('failYbtourInteraction(`${region.name}/${city.name}(${city.code})`, error)'));
     assert.ok(source.includes('failYbtourInteraction(`${region.name} 지역`, error)'));
@@ -123,6 +124,8 @@ test('region recovery has one navigation budget and does not recover unknown fai
         let navigations = 0; let regionClicks = 0;
         const page = {
             url: () => 'about:blank',
+            $$eval: async () => [{ code: 'DAD', name: '다낭' }],
+            waitForFunction: async () => {},
             goto: async () => {
                 navigations++;
                 return { ok: () => scenario !== 'http403', status: () => 403, headers: () => ({}), url: () => 'about:blank' };
@@ -131,6 +134,7 @@ test('region recovery has one navigation budget and does not recover unknown fai
                 const locator = {
                     first: () => locator,
                     isVisible: async () => false,
+                    evaluate: async () => true,
                     waitFor: async () => {},
                     click: async () => { assert.equal(selector, '[id="bannerCode_A0/A3"]'); regionClicks++; },
                     innerText: async () => scenario === 'captchaBefore' || (scenario === 'captchaAfter' && navigations > 0) ? 'CAPTCHA' : '항공권 목록',
@@ -143,7 +147,7 @@ test('region recovery has one navigation budget and does not recover unknown fai
         if (scenario === 'success') {
             assert.equal(await guard.recoverCity(error, 'bannerCode_A0/A3', 'DAD'), true);
             assert.equal(await guard.recoverCity(error, 'bannerCode_A0/A3', 'DAD'), false);
-            assert.equal(navigations, 1); assert.equal(regionClicks, 1);
+            assert.equal(navigations, 1); assert.equal(regionClicks, 0, 'already selected region must not be clicked again');
         } else if (scenario === 'ordinary') {
             assert.equal(await guard.recoverCity(error, 'bannerCode_A0/A3', 'DAD'), false);
             assert.equal(navigations, 0);

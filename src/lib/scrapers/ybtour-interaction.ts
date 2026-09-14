@@ -2,6 +2,7 @@ import type { ElementHandle, Page } from 'playwright';
 import { IncompleteScrapeError } from './scrape-errors';
 import { assertNoSourceAccessBlockText, SourceResponseError } from './source-response';
 import { classifySourceAccessRestriction } from '../source-circuit';
+import { selectYbtourRegion } from './ybtour-region';
 
 export const YBTOUR_LIST_URL = 'https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV';
 
@@ -75,7 +76,8 @@ export class YbtourInteractionGuard {
         await this.assertAccess(cityCode);
         await this.page.locator('table tbody').first().waitFor({ state: 'attached', timeout: 10_000 });
         const tab = this.page.locator(`[id="${regionTabId}"]`);
-        await this.click(`${cityCode} 지역 복원`, () => tab.click({ timeout: 5_000 }));
+        await selectYbtourRegion(this.page, regionTabId, [cityCode],
+            () => this.click(`${cityCode} 지역 복원`, () => tab.click({ timeout: 5_000 })));
         await this.page.locator(`#cityCode_${cityCode} a`).waitFor({ state: 'visible', timeout: 5_000 });
         return true;
     }

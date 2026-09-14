@@ -16,7 +16,15 @@ test('collector finishes after a persistent Asia mask, preserving earlier cities
         });
     });
     await context.route('**/*', async route => {
-        assert.match(route.request().url(), /^https:\/\/fly\.ybtour\.co\.kr\/booking\/findDiscountAir\.lts\?/);
+        assert.match(route.request().url(), /^https:\/\/fly\.ybtour\.co\.kr\/booking\/findDiscountAir\.lts/);
+        if (route.request().method() === 'POST') {
+            const region = new URLSearchParams(route.request().postData() || '').get('efcBannerCode');
+            const cities: Record<string, string> = { J1: 'NRT', 'A0/A3': 'DAD', P1: 'GUM', P0: 'SYD', 'E0/B1/F0': 'BCN' };
+            const code = cities[region || ''];
+            assert.ok(code);
+            await route.fulfill({ contentType: 'text/html', body: '<li id="cityCode_'+code+'"><a onclick="city(\''+code+'\')">'+code+'</a></li>' });
+            return;
+        }
         loads++;
         await route.fulfill({ contentType: 'text/html; charset=utf-8', body: `<!doctype html><meta charset="utf-8">
           <style>.dimBox {position:fixed;inset:0;z-index:999;background:#ccc} a {display:inline-block;padding:8px}</style>
@@ -25,11 +33,13 @@ test('collector finishes after a persistent Asia mask, preserving earlier cities
           <a id="bannerCode_P1" onclick="region('GUM')">괌/사이판</a>
           <a id="bannerCode_P0" onclick="region('SYD')">남태평양</a>
           <a id="bannerCode_E0/B1/F0" onclick="region('BCN')">유럽</a>
-          <ul class="ctab_list"></ul><table id="totalFareTable" onePageCnt="1"><tbody id="fares"></tbody></table><span id="pageList"></span><div id="schedules"></div>
+          <div id="div_citylist"><ul class="ctab_list"></ul></div><table id="totalFareTable" onePageCnt="1"><tbody id="fares"></tbody></table><span id="pageList"></span><div id="schedules"></div>
           <script>
-          function region(code) {
-            document.querySelector('.ctab_list').innerHTML='<li id="cityCode_'+code+'"><a>'+code+'</a></li>';
-            document.querySelector('.ctab_list a').setAttribute('onclick','city('+JSON.stringify(code)+')');
+          async function region(code, initial=false) {
+            const regions={NRT:'J1',DAD:'A0/A3',GUM:'P1',SYD:'P0',BCN:'E0/B1/F0'};
+            document.querySelectorAll('[id^="bannerCode_"]').forEach(a=>a.className=a.id==='bannerCode_'+regions[code]?'on':'');
+            const html=initial?'<li id="cityCode_NRT"><a onclick="city(&quot;NRT&quot;)">NRT</a></li>':await (await fetch('/booking/findDiscountAir.lts', {method:'POST',body:new URLSearchParams({svcTpCode:'CITY',efcBannerCode:regions[code]})})).text();
+            document.querySelector('.ctab_list').innerHTML=html;
             document.getElementById('fares').innerHTML=''; document.getElementById('schedules').innerHTML='';
           }
           function city(code) {
@@ -55,7 +65,7 @@ test('collector finishes after a persistent Asia mask, preserving earlier cities
             document.querySelector('td.link').appendChild(link);
             if (${loads} === 1 && code==='DAD' && i===0) document.body.insertAdjacentHTML('beforeend','<div class="dimBox bg"></div>');
           }
-          region('NRT');
+          region('NRT',true);
           </script>` });
     });
     // The scraper gets a real, isolated browser context, with no route allowed to reach the agency.
