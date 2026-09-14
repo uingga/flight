@@ -1,0 +1,20 @@
+.discovery { border-top: 1px solid var(--line, #ddd); margin-top: 24px; padding-top: 24px; color: var(--ink, #222); }
+.group + .group { margin-top: 24px; }
+.browse { margin-top: 20px; }
+.browse p { margin: 0 0 10px; font-size: 14px; color: var(--text-secondary, #5f5f5f); }
+.browse button { width: 100%; padding: 14px 16px; border: 1px solid var(--line, #ddd); border-radius: var(--radius-action, 13px); background: var(--paper-soft, #f7f7f7); color: var(--ink, #222); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.browse button span { margin-left: 8px; }
+.browse button:focus-visible { outline: 2px solid var(--brand, #ff385c); outline-offset: 2px; }
+.group h3 { margin: 0 0 12px; font-size: 16px; font-weight: 700; }
+.list { display: grid; gap: 8px; }
+.card { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 12px; width: 100%; padding: 14px; text-align: left; background: var(--paper, #fff); border: 1px solid var(--line, #ddd); border-radius: var(--radius-card, 10px); color: inherit; font: inherit; cursor: pointer; box-shadow: var(--shadow-surface); }
+.card:hover { background: var(--paper-soft, #f7f7f7); }
+.card:focus-visible { outline: 2px solid var(--brand, #ff385c); outline-offset: 2px; }
+.route { font-size: 14px; font-weight: 600; }
+.dates { grid-column: 1 / -1; grid-row: 2; font-size: 12px; color: var(--text-secondary, #5f5f5f); line-height: 1.5; }
+.price { grid-column: 2; grid-row: 1; font-size: 12px; white-space: nowrap; }
+.price strong { font-size: 18px; font-weight: 800; }
+.price > span { margin-left: 6px; }
+.fee { grid-column: 1 / -1; font-size: 11px; color: var(--text-muted, #707070); }
+@media (min-width: 768px) { .group h3 { font-size: 18px; } .dates { font-size: 13px; } .fee { font-size: 12px; } }
+@media (max-width: 360px) { .price { grid-column: 1; grid-row: 3; } }

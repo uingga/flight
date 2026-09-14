@@ -11,6 +11,8 @@ import { buildDropCardReason } from '@/lib/drop-card-reason';
 import { resolveFlightSeats } from '@/lib/flight-seats';
 import OverlayDialog from '@/components/ui/OverlayDialog';
 import RecentFlights from '@/components/RecentFlights';
+import ShareDiscovery from '@/components/ShareDiscovery';
+import { discoveryIdentity } from '@/lib/share-discovery';
 import { useRecentFlights } from '@/lib/hooks/use-recent-flights';
 import * as gtag from '@/lib/analytics';
 import { getDestinationContext } from '@/lib/destination-contexts';
@@ -1139,8 +1141,27 @@ export default function MobileRedesignPreview({
     const [maxPrice, setMaxPrice] = useState(0);
     const [sort, setSort] = useState<SortMode>('recommended');
     const [sharedContext, setSharedContext] = useState<SharedFlightContext | null>(null);
+    const [selectedFlight, setSelectedFlight] = useState<Flight | null>(null);
+    const [showSharedWelcome, setShowSharedWelcome] = useState(false);
+    useEffect(() => {
+        if (!selectedFlight) setShowSharedWelcome(false);
+    }, [selectedFlight]);
     const sharedEntryRef = useRef(false);
     const resolvedSharedContextRef = useRef<SharedFlightContext | null>(null);
+    const sharedViewedFlightsRef = useRef(new Set<string>());
+    useEffect(() => {
+        if (!selectedFlight || (!sharedEntryRef.current && initialSharedFlightIds.length === 0)) return;
+        const seen = sharedViewedFlightsRef.current;
+        const identity = discoveryIdentity(selectedFlight);
+        if (seen.has(identity)) return;
+        seen.add(identity);
+        if (seen.size === 1 || seen.size === 2) {
+            gtag.event(seen.size === 1 ? 'shared_detail_start' : 'shared_second_ticket_open', {
+                flight_id: selectedFlight.id,
+                route: `${sharedCity(selectedFlight.departure.city)}-${sharedCity(selectedFlight.arrival.city)}`,
+            });
+        }
+    }, [selectedFlight, initialSharedFlightIds.length]);
     const [sortOpen, setSortOpen] = useState(false);
     const [query, setQuery] = useState('');
     const [searchOpen, setSearchOpen] = useState(false);
@@ -1158,7 +1179,6 @@ export default function MobileRedesignPreview({
     const [regionMoreOpen, setRegionMoreOpen] = useState(false);
     const [showDealAlert, setShowDealAlert] = useState(false);
     const [alertRouteTarget, setAlertRouteTarget] = useState<RouteAlertTarget | null>(null);
-    const [selectedFlight, setSelectedFlight] = useState<Flight | null>(null);
     const recentHistory = useRecentFlights(selectedFlight);
     const [showRecentFlights, setShowRecentFlights] = useState(false);
     const [favorites, setFavorites] = useState<Set<string>>(new Set());
@@ -1319,6 +1339,7 @@ export default function MobileRedesignPreview({
     }, []);
 
     const closeSelectedFlight = useCallback(() => {
+        setShowSharedWelcome(false);
         if (window.history.state?.tikitikitOverlay === 'flight') {
             if (historyClosePendingRef.current) return;
             historyClosePendingRef.current = true;
@@ -1600,6 +1621,7 @@ export default function MobileRedesignPreview({
         sharedFlightScheduleRef.current = null;
         const sharedFlight = findSharedFlight(flights, flightId, scheduleToken);
         if (sharedFlight) {
+            setShowSharedWelcome(sharedEntryRef.current);
             const initializeSharedContext = sharedEntryRef.current && !resolvedSharedContextRef.current;
             if (initializeSharedContext) {
                 const context = {
@@ -3124,6 +3146,7 @@ export default function MobileRedesignPreview({
     };
 
     const openFlight = (flight: Flight, entry = 'card_body') => {
+        setShowSharedWelcome(false);
         if (
             selectedFlight
             && flightScheduleIdentity(selectedFlight) === flightScheduleIdentity(flight)
@@ -3343,6 +3366,25 @@ export default function MobileRedesignPreview({
         setQuery('');
         resetFilters();
         if (keepDeparture) setDeparture(shareGroupDepartureFilter(initialSharedDeparture));
+    };
+
+    const browseNewFlightsFromShare = () => {
+        setShowSharedWelcome(false);
+        gtag.event('shared_browse_main', { entry: 'detail_discovery' });
+        showAllFlightsFromSharedGroup();
+        setSort('recommended');
+        setSharedContext(null);
+        resolvedSharedContextRef.current = null;
+        setSelectedFlight(null);
+        const url = new URL(window.location.href);
+        for (const key of ['flight', 'schedule', 'shareDep', 'shareArr', 'sharePrice', 'q', 'dep']) url.searchParams.delete(key);
+        const state = { ...window.history.state };
+        delete state.tikitikitOverlay;
+        window.history.replaceState(state, '', `${url.pathname}${url.search}`);
+        window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
+            const target = document.getElementById('fresh-flights-insight') || feedSectionRef.current;
+            target?.scrollIntoView({ block: 'start', behavior: 'auto' });
+        }));
     };
 
     const showSharedRouteAlternatives = () => {
@@ -4891,6 +4933,14 @@ export default function MobileRedesignPreview({
                                 </a>
                             )}
                         </div>
+                        {showSharedWelcome && (
+                            <ShareDiscovery flights={flights} selected={selectedFlight} compare={compareRecommended}
+                                onBrowse={browseNewFlightsFromShare}
+                                onOpen={(flight, entry) => {
+                                    openFlight(flight, entry);
+                                    detailDialogRef.current?.scrollTo({ top: 0 });
+                                }} />
+                        )}
                 </OverlayDialog>
                 <div
                     className={detailHasMoreBelow
