@@ -1,4 +1,8 @@
 'use client';
+import { flushSync } from 'react-dom';
+import DropHero from '@/components/DropHero';
+import { dropHeroAlternatives } from '@/lib/drop-hero-schedules';
+import { getCityImagePath } from '@/lib/city-image';
 import { shareGroupDepartureFilter } from '@/lib/share-group-departure';
 
 import { Fragment, type FormEvent, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -134,6 +138,8 @@ interface FreshDesktopDragState {
 }
 
 interface FreshRouteResults {
+    dropFlightIds?: string[];
+    dropPrice?: number;
     route: string;
     departure: string;
     arrival: string;
@@ -1240,6 +1246,9 @@ export default function MobileRedesignPreview({
     const freshDesktopDragRef = useRef<FreshDesktopDragState | null>(null);
     const freshDesktopSuppressClickRef = useRef(false);
     const freshRouteOriginScrollRef = useRef(0);
+    const dropResultsTargetRef = useRef<FreshRouteResults | null>(null);
+    const dropTransitionRef = useRef<Animation | null>(null);
+    const dropTransitionVersionRef = useRef(0);
     const sharedFlightIdRef = useRef<string | null>(null);
     const sharedFlightScheduleRef = useRef<string | null>(null);
     const sharedFallbackArrivalRef = useRef<string | null>(null);
@@ -2600,6 +2609,11 @@ export default function MobileRedesignPreview({
 
     const freshRouteResultFlights = useMemo(() => {
         if (!freshRouteResults) return [];
+        if (freshRouteResults.dropFlightIds) {
+            const ids = new Set(freshRouteResults.dropFlightIds);
+            return flights.filter(flight => ids.has(flight.id) && displayedFlightPrice(flight) === freshRouteResults.dropPrice)
+                .sort((a, b) => a.departure.date.localeCompare(b.departure.date));
+        }
         const result = flights.filter(flight => (
             flight.firstSeen === freshRouteResults.targetDate
             && normalizedRoute(flight) === freshRouteResults.route
@@ -2619,6 +2633,13 @@ export default function MobileRedesignPreview({
     const feedFlights = freshRouteResults
         ? applyManualFlightOrder(freshRouteResultFlights, manualPlacements, { sort })
         : displayedFlights;
+    const dropHeroPick = !freshRouteResults && isDefaultView && todayPickId
+        && featuredPick && getCityImagePath(featuredPick.flight.arrival.city) ? featuredPick : null;
+    const ordinaryFeedFlights = dropHeroPick ? feedFlights.filter(flight => flight.id !== dropHeroPick.flight.id) : feedFlights;
+    const dropHeroSchedules = dropHeroPick ? dropHeroAlternatives(flights, dropHeroPick.flight, displayedFlightPrice)
+        .map(flight => ({ flight, duration: tripLength(flight) })) : [];
+    const dropHeroRepresentative = dropHeroPick ? [dropHeroPick.flight, ...dropHeroSchedules.map(option => option.flight)]
+        .sort((a, b) => b.departure.date.localeCompare(a.departure.date) || b.departure.time.localeCompare(a.departure.time))[0] : null;
     const resultCount = initialSubsetActive && isDefaultView
         ? initialFlightCount
         : filteredFlights.length;
@@ -2646,7 +2667,59 @@ export default function MobileRedesignPreview({
         });
     }, [freshFlightsInsight]);
 
+    const transitionDropResults = useCallback(async (next: FreshRouteResults | null, returnScroll?: number) => {
+        const version = ++dropTransitionVersionRef.current;
+        dropResultsTargetRef.current = next;
+        dropTransitionRef.current?.cancel();
+        const section = feedSectionRef.current;
+        const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (section && !reduced) {
+            const outgoing = section.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 100, easing: 'ease', fill: 'forwards' });
+            dropTransitionRef.current = outgoing;
+            await outgoing.finished.catch(() => {});
+            if (version !== dropTransitionVersionRef.current) return;
+        }
+        flushSync(() => setFreshRouteResults(next));
+        if (typeof returnScroll === 'number') {
+            window.scrollTo({ top: returnScroll, behavior: 'instant' });
+        } else {
+            section?.scrollIntoView({ behavior: 'instant', block: 'start' });
+        }
+        dropTransitionRef.current?.cancel();
+        if (section && !reduced) {
+            const incoming = section.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 180, easing: 'ease' });
+            dropTransitionRef.current = incoming;
+            await incoming.finished.catch(() => {});
+        }
+        if (version === dropTransitionVersionRef.current) dropTransitionRef.current = null;
+    }, []);
+
+    useEffect(() => {
+        const syncDropResults = () => {
+            const next = window.history.state?.tikitikitDropResults as FreshRouteResults | undefined;
+            const valid = next && Array.isArray(next.dropFlightIds) ? next : null;
+            if (JSON.stringify(valid) === JSON.stringify(dropResultsTargetRef.current)) return;
+            void transitionDropResults(valid, valid ? undefined : window.history.state?.tikitikitDropOriginY ?? freshRouteOriginScrollRef.current);
+        };
+        // Restore the list on refresh without replaying an entrance animation.
+        const saved = window.history.state?.tikitikitDropResults as FreshRouteResults | undefined;
+        if (saved && Array.isArray(saved.dropFlightIds)) {
+            dropResultsTargetRef.current = saved;
+            setFreshRouteResults(saved);
+        }
+        window.addEventListener('popstate', syncDropResults);
+        return () => {
+            window.removeEventListener('popstate', syncDropResults);
+            ++dropTransitionVersionRef.current;
+            dropTransitionRef.current?.cancel();
+        };
+    }, [transitionDropResults]);
+
     const closeFreshRouteResults = useCallback(() => {
+        if (window.history.state?.tikitikitDropResults) {
+            window.history.back();
+            return;
+        }
         const previousScroll = freshRouteOriginScrollRef.current;
         setFreshRouteResults(null);
         window.requestAnimationFrame(() => {
@@ -3895,7 +3968,9 @@ export default function MobileRedesignPreview({
                             <span>{listLoading
                                 ? '항공권 불러오는 중'
                                 : freshRouteResults
-                                    ? `${freshRouteResults.copyPrefix} 들어온 항공권 ${feedFlights.length.toLocaleString('ko-KR')}개`
+                                    ? freshRouteResults.dropFlightIds
+                                        ? `TIKIT DROP · 같은 가격의 일정 ${feedFlights.length.toLocaleString('ko-KR')}개`
+                                        : `${freshRouteResults.copyPrefix} 들어온 항공권 ${feedFlights.length.toLocaleString('ko-KR')}개`
                                     : `${resultCount.toLocaleString('ko-KR')}개 · ${updatedLabel}`}</span>
                         </div>
                         <div className={styles.feedHeadingActions}>
@@ -4057,8 +4132,42 @@ export default function MobileRedesignPreview({
                         </div>
                     )}
 
+                    {!listLoading && !error && dropHeroPick && dropHeroRepresentative && (
+                        <DropHero
+                            flight={dropHeroRepresentative}
+                            pickDate={seoulDateKey()}
+                            reason={dropHeroPick.reason}
+                            price={displayedFlightPrice(dropHeroPick.flight)}
+                            discountRate={todayPickRepeatOverride ? 0 : getAverageDiscountRate(dropHeroRepresentative, interparkPrices)}
+                            duration={tripLength(dropHeroRepresentative)}
+                            alternatives={[{ flight: dropHeroPick.flight, duration: tripLength(dropHeroPick.flight) }, ...dropHeroSchedules]
+                                .filter(option => option.flight.id !== dropHeroRepresentative.id)}
+                            onOpen={() => {
+                                if (dropHeroSchedules.length === 0) {
+                                    openFlight(dropHeroPick.flight, 'drop_hero');
+                                    return;
+                                }
+                                freshRouteOriginScrollRef.current = window.scrollY;
+                                if (window.history.state?.tikitikitDropResults) return;
+                                const results: FreshRouteResults = {
+                                    route: normalizedRoute(dropHeroPick.flight),
+                                    departure: departureName(dropHeroPick.flight),
+                                    arrival: stripAirport(dropHeroPick.flight.arrival.city),
+                                    targetDate: seoulDateKey(),
+                                    copyPrefix: 'TIKIT DROP',
+                                    dropFlightIds: [dropHeroPick.flight.id, ...dropHeroSchedules.map(option => option.flight.id)],
+                                    dropPrice: displayedFlightPrice(dropHeroPick.flight),
+                                };
+                                const originState = { ...window.history.state, tikitikitDropOriginY: window.scrollY };
+                                window.history.replaceState(originState, '', window.location.href);
+                                window.history.pushState({ ...originState, tikitikitDropResults: results }, '', window.location.href);
+                                setVisibleCount(Math.max(36, dropHeroSchedules.length + 1));
+                                void transitionDropResults(results);
+                            }}
+                        />
+                    )}
                     {!listLoading && !error && <div className={styles.cardList}>
-                        {feedFlights.slice(0, visibleCount).map((flight, index) => {
+                        {ordinaryFeedFlights.slice(0, visibleCount).map((flight, index) => {
                             const seats = flight.availableSeats || Number.parseInt(flight.seats || '', 10) || 0;
                             const duration = tripLength(flight);
                             const destination = stripAirport(flight.arrival.city);
