@@ -21,10 +21,20 @@ export function resolveShareGroupFlights(group: ShareGroup, flights: Flight[]): 
 
 /** Published Threads links explicitly upgraded from a single flight to a collection. */
 export const THREADS_SHARE_GROUP_OVERRIDES: Record<string, string> = {
+    'modetour-ASIA-20136580': 'sgn-260914',
     'ttang-RF0384CJJIBR-G13-2026-10-10': 'ibr-260910',
 };
 
 export const SHARE_GROUPS: Record<string, ShareGroup> = {
+    'sgn-260914': {
+        departure: '인천',
+        arrival: '호치민',
+        price: 210000,
+        dateText: '10.5–10.8 · 10.6–10.9',
+        airline: '썬푸꾸옥항공',
+        source: '모두투어',
+        flightIds: ['modetour-ASIA-20136581', 'modetour-ASIA-20136580'],
+    },
     'ibr-260910': {
         departure: '청주',
         arrival: '이바라키',
