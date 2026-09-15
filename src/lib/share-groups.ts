@@ -26,6 +26,15 @@ export const THREADS_SHARE_GROUP_OVERRIDES: Record<string, string> = {
 };
 
 export const SHARE_GROUPS: Record<string, ShareGroup> = {
+    'cts-260915': {
+        departure: '인천',
+        arrival: '삿포로',
+        price: 199000,
+        dateText: '9.20(일)–9.23(수)',
+        airline: '제주항공',
+        source: '땡처리닷컴 · 발권수수료 20,000원 별도',
+        flightIds: ['ttang-7C1501ICNCTS-G3-2026-09-20'],
+    },
     'vietnam-260914': {
         title: '인천 출발 호치민·하노이',
         departure: '인천', arrival: '호치민·하노이',
