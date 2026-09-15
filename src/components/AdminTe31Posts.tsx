@@ -1,4 +1,6 @@
 'use client';
+import { Fragment, useState } from 'react';
+import { PostDailyHistory } from './PromotionHistory';
 
 import { TE31_POSTS, TE31_OBSERVED_AT, matchTe31Campaign, unmatchedTe31Campaigns, type Te31Campaign } from '@/lib/te31-posts';
 import styles from './AdminThreadsPosts.module.css';
@@ -15,11 +17,12 @@ export default function AdminTe31Posts({ campaigns, available, days, generatedAt
     error?: string | null;
 }) {
     const ready = available && campaigns != null && !error;
+    const [expanded, setExpanded] = useState<string | null>(null);
     const unmatched = unmatchedTe31Campaigns(campaigns);
     return <div className={styles.panel}>
         <AdminAnalyticsFreshness generatedAt={generatedAt} />
         <div className={styles.help}><span>수동 등록 글 {TE31_POSTS.length}개 · 최신 게시일 순</span><span>사이트 최근 {days}일 · 오늘 포함 잠정치</span></div>
-        {dailyMode ? <p className={styles.note}>외부 반응은 위의 일별 저장 기록에서 확인합니다. 아래는 기존 최근 {days}일 사이트 통계이며 하루 방문 수가 아닙니다.</p> : <p className={styles.note}><strong>TE31 반응은 수동 기록입니다.</strong> 최근 조회·댓글 확인: <time dateTime={TE31_OBSERVED_AT}>{formatAnalyticsTime(TE31_OBSERVED_AT)}</time>경. 글별 확인 시각은 다르며 추천 확인 시각은 추적 기준에서 볼 수 있습니다. 새로고침은 사이트 통계만 다시 조회하며 TE31 글 목록과 반응 수치는 자동 갱신되지 않습니다.</p>}
+        {dailyMode ? <p className={styles.note}>사이트 통계는 최근 {days}일 기준입니다. 글을 누르면 외부 반응과 날짜별 사이트 행동의 저장 기록을 확인할 수 있습니다.</p> : <p className={styles.note}><strong>TE31 반응은 수동 기록입니다.</strong> 최근 조회·댓글 확인: <time dateTime={TE31_OBSERVED_AT}>{formatAnalyticsTime(TE31_OBSERVED_AT)}</time>경. 글별 확인 시각은 다르며 추천 확인 시각은 추적 기준에서 볼 수 있습니다. 새로고침은 사이트 통계만 다시 조회하며 TE31 글 목록과 반응 수치는 자동 갱신되지 않습니다.</p>}
         {!ready && <p role="status">{error || (dailyMode ? '사이트 통계를 아직 확인할 수 없습니다.' : '사이트 통계를 아직 확인할 수 없습니다. 아래 외부 관측값만 표시합니다.')}</p>}
         <div className={styles.scroll} tabIndex={0} role="region" aria-label="TE31 글별 성과 비교">
             <table className={styles.table}>
@@ -27,8 +30,8 @@ export default function AdminTe31Posts({ campaigns, available, days, generatedAt
                 <tbody>{TE31_POSTS.map(post => {
                     const row = ready ? matchTe31Campaign(post.campaign, campaigns) : null;
                     const status = !post.campaign ? '글별 추적 불가' : !ready ? '사이트 통계 확인 불가' : !row ? '집계 기록 없음' : '전용 링크로 연결';
-                    return <tr key={post.id}>
-                        <td><a href={`https://te31.com/rgr/view.php?id=freead&no=${post.id}`} target="_blank" rel="noopener noreferrer" className={styles.post}>{post.title} ↗</a><span className={styles.meta}><time dateTime={post.date}>{post.date}</time><span>{status}</span></span>
+                    return <Fragment key={post.id}><tr>
+                        <td><button type="button" className={styles.post} aria-expanded={expanded === String(post.id)} aria-controls={`te31-detail-${post.id}`} onClick={() => setExpanded(expanded === String(post.id) ? null : String(post.id))}><span className={styles.excerpt}>{post.title}</span><span className={styles.meta}><time dateTime={post.date}>{post.date}</time><span>{expanded === String(post.id) ? '접기 −' : '상세 +'}</span></span></button><span className={styles.meta}>{status}</span>
                             {!dailyMode && post.views !== null && <span className={styles.meta}>조회·댓글 확인: <time dateTime={post.observedAt}>{formatAnalyticsTime(post.observedAt)}경</time></span>}
                             <details className={styles.trackingDetails}><summary>추적 기준</summary>{post.campaign ? <><p>출처 te31 + 캠페인 <code>{post.campaign}</code> 일치 기준입니다. 링크를 다른 곳에 재공유한 방문도 포함될 수 있습니다.</p><p>게시 링크: <code>{post.link}</code></p>{!row && <p>기록이 없거나 조회할 수 없는 경우 0명으로 추정하지 않습니다.</p>}</> : <p>글 전용 추적 코드가 확인되지 않아 과거 사이트 행동을 이 글에 소급 배정하지 않습니다.</p>}{!dailyMode && post.recommendationsObservedAt && <p>추천 확인: <time dateTime={post.recommendationsObservedAt}>{formatAnalyticsTime(post.recommendationsObservedAt)}경</time>. 조회·댓글과 확인 시각이 다를 수 있습니다.</p>}{!dailyMode && post.commentNote && <p>{post.commentNote}</p>}</details>
                         </td>
@@ -36,7 +39,7 @@ export default function AdminTe31Posts({ campaigns, available, days, generatedAt
                         <td data-label="방문"><strong>{people(row?.users)}</strong>{row && <small>{row.sessions.toLocaleString()}회 접속</small>}</td>
                         <td data-label="상세">{people(row?.detailOpenUsers)}</td>
                         <td data-label="예약 이동"><strong>{people(row?.bookingClickUsers)}</strong>{row?.bookingClicks != null && <small>{row.bookingClicks.toLocaleString()}회 이동</small>}</td>
-                    </tr>;
+                    </tr>{expanded === String(post.id) && <tr id={`te31-detail-${post.id}`} className={styles.detail}><td colSpan={dailyMode ? 4 : 7}><p className={styles.body}>{post.title}</p><a href={`https://te31.com/rgr/view.php?id=freead&no=${post.id}`} target="_blank" rel="noopener noreferrer">TE31 원문 보기 ↗</a><PostDailyHistory platform="te31" postId={String(post.id)} /></td></tr>}</Fragment>;
                 })}</tbody>
             </table>
         </div>

@@ -1,0 +1,21 @@
+.panel { margin-top:20px; color:var(--ink,#222); font-size:13px; }
+.panel h4 { margin:0 0 12px; font-size:16px; font-weight:700; }
+.group { margin:16px 0; }
+.group h5 { margin:0 0 8px; font-size:13px; font-weight:600; }
+.group p,.group small,.group details,.status { color:var(--text-muted,#707070); font-size:12px; }
+.scroll { overflow-x:auto; }
+.panel .scroll table { display:table; min-width:0; }
+.panel .scroll table thead { display:table-header-group; }
+.panel .scroll table tbody { display:table-row-group; }
+.panel .scroll table tr { display:table-row; border:0; border-radius:0; }
+.panel .scroll table th,.panel .scroll table td { display:table-cell; padding:10px 8px; background:white; text-align:right; }
+.panel .scroll table th:first-child { text-align:left; padding:10px 8px; }
+.scroll table { width:100%; border-collapse:collapse; table-layout:fixed; background:white; }
+.scroll th,.scroll td { padding:10px 8px; border-bottom:1px solid var(--line,#ddd); text-align:right; font-variant-numeric:tabular-nums; }
+.scroll th:first-child { text-align:left; width:96px; font-weight:400; }
+.scroll thead th { background:var(--paper-soft,#f7f7f7); font-size:12px; font-weight:600; }
+.scroll small { display:block; font-weight:400; }
+.panel summary,.status summary { cursor:pointer; padding:8px 0; }
+.panel ul { margin:6px 0 12px; padding-left:18px; }
+.status { margin:16px 0; line-height:1.6; }
+@media(max-width:720px) { .scroll th,.scroll td { padding:8px 4px; font-size:12px; } .scroll th:first-child { width:78px; } .scroll small { font-size:11px; } }

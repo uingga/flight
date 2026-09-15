@@ -3,6 +3,7 @@
 import { Fragment, useState } from 'react';
 import styles from './AdminThreadsPosts.module.css';
 import AdminAnalyticsFreshness from './AdminAnalyticsFreshness';
+import { PostDailyHistory } from './PromotionHistory';
 
 interface Post {
     trackingIssue?: string | null; trackingReplyIds?: string[];
@@ -66,6 +67,7 @@ export default function AdminThreadsPosts({ posts, attributionAvailable, generat
                         {post.attributionShared && <p>같은 링크를 쓴 여러 글에 동일한 사이트 수치가 표시됩니다. 글별 성과로 분리하거나 합산하지 마세요.</p>}
                         {Boolean(post.trackingReplyIds?.length) && <p>이어 쓴 본인 글의 링크로 연결한 사이트 통계입니다. 전체 합계에는 같은 링크를 한 번만 반영합니다.</p>}
                         {post.permalink && <a href={post.permalink} target="_blank" rel="noopener noreferrer">Threads 원문 보기 ↗</a>}
+                        <PostDailyHistory platform="threads" postId={post.id} />
                     </td></tr>}
                 </Fragment>)}</tbody>
             </table>

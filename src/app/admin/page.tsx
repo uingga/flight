@@ -17,7 +17,7 @@ import type { DeviceTrafficData } from '@/lib/device-traffic';
 import type { AcquisitionData } from '@/lib/acquisition';
 import AdminThreadsPosts from '@/components/AdminThreadsPosts';
 import AdminTe31Posts from '@/components/AdminTe31Posts';
-import AdminPromotionDaily from '@/components/AdminPromotionDaily';
+import { PromotionHistoryProvider, PromotionHistoryStatus } from '@/components/PromotionHistory';
 import AdminFilterDemand from '@/components/AdminFilterDemand';
 import type { FilterDemandData } from '@/lib/filter-demand';
 import type { FlightInterestData } from '@/lib/flight-interest';
@@ -4489,8 +4489,7 @@ export default function AdminPage() {
 
             </>)}
 
-            {tab === 'threads' && (<>
-                <AdminPromotionDaily authKey={key} />
+            {tab === 'threads' && (<PromotionHistoryProvider authKey={key}>
                 <section className={styles.section} aria-label="홍보 채널">
                     <div className={styles.sectionHeading}>
                         <h2>홍보 성과</h2>
@@ -4602,7 +4601,8 @@ export default function AdminPage() {
                     </details>
                 </section>
                 </>}
-            </>)}
+                <PromotionHistoryStatus />
+            </PromotionHistoryProvider>)}
 
             {tab === 'visitors' && (<>
                 <section className={styles.section} id="visitor-flow">

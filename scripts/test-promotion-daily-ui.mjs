@@ -13,15 +13,19 @@ try {
     assert.equal((await page.request.post(`${base}/api/internal/promotion-daily`)).status(),401);
     assert.equal((await page.request.get(`${base}/api/admin/promotion-daily`, {headers:{Authorization:'Bearer flight-order-local-preview'}})).status(),503);
     for (const width of [1440,390,320]) {
-        await page.setViewportSize({width,height:900}); await page.goto(`${base}/preview/promotion-daily`);
+        await page.setViewportSize({width,height:900}); await page.goto(`${base}/preview/promotion-daily?layout=daily`);
         assert.ok(await page.getByText('합성 예시 데이터 · 실시간 통계가 아닙니다.',{exact:true}).isVisible());
         await page.getByLabel('성과 채널 선택').getByRole('button', {name:/TE31/}).click();
+        await page.getByText('일부 확인 · 최신 확인 필요',{exact:true}).waitFor();
         assert.ok(await page.getByText('일부 확인 · 최신 확인 필요',{exact:true}).isVisible());
         assert.ok(await page.getByText('전날 대비 +2',{exact:true}).first().isVisible());
         assert.ok(await page.getByText('확인값 없음',{exact:true}).count()>0);
-        assert.ok(await page.getByText('전날 비교 없음',{exact:true}).count()>0);
         assert.ok(await page.getByText('0',{exact:true}).count()>0);
+        await page.getByLabel('성과 채널 선택').getByRole('button', {name:/Threads/}).click();
+        await page.getByText('전날 비교 없음',{exact:true}).first().waitFor();
+        assert.ok(await page.getByText('전날 비교 없음',{exact:true}).count()>0);
         await page.getByLabel('성과 채널 선택').getByRole('button', {name:/사이트 행동/}).click();
+        await page.getByText('3',{exact:true}).first().waitFor();
         assert.ok(await page.getByText('3',{exact:true}).count()>0);
         assert.equal(await page.getByText('조회(수동)',{exact:true}).count(),0);
         assert.equal(await page.getByText('114',{exact:true}).count(),0);
@@ -32,7 +36,7 @@ try {
         fs.mkdirSync('.local-crawler/promotion-ui',{recursive:true});
         await page.screenshot({path:`.local-crawler/promotion-ui/${width}.png`,fullPage:true});
     }
-    await page.goto(`${base}/preview/promotion-daily?state=empty`);
+    await page.goto(`${base}/preview/promotion-daily?layout=daily&state=empty`);
     assert.ok(await page.getByText('아직 저장된 일별 성과가 없습니다.',{exact:true}).isVisible());
     assert.deepEqual(errors,[]);
     console.log('PASS promotion daily UI: 1440/390/320, sparse values, true zero, delta, stale, incomplete, empty, no duplicate manual TE31 counts, no page overflow');

@@ -7,7 +7,7 @@ const { chromium } = require('playwright');
             const page = await browser.newPage({ viewport: { width, height: 900 } });
             const errors = [];
             page.on('pageerror', error => errors.push(error.message));
-            await page.goto((process.env.PREVIEW_BASE_URL || 'http://127.0.0.1:3509') + '/preview/promotion-daily');
+            await page.goto((process.env.PREVIEW_BASE_URL || 'http://127.0.0.1:3509') + '/preview/promotion-daily?layout=daily');
             const channels = page.getByLabel('성과 채널 선택');
             for (const name of ['Threads', 'TE31', '사이트 행동']) {
                 await channels.getByRole('button', { name: new RegExp(name) }).click();
