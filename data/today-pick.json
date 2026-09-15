@@ -1,22 +1,30 @@
 {
-  "date": "2026-09-14",
-  "selectedAt": "2026-09-14T07:50:45.411Z",
-  "flightId": "modetour-ASIA-20136580",
+  "date": "2026-09-15",
+  "selectedAt": "2026-09-15T05:53:02.735Z",
+  "flightId": "modetour-CHI-20081221",
   "source": "modetour",
-  "arrivalCity": "호치민",
-  "destinationKey": "SGN",
-  "effectivePrice": 210000,
-  "selectionMode": "manual",
-  "referencePrice": 272893,
+  "arrivalCity": "성도",
+  "destinationKey": "TFU",
+  "effectivePrice": 190000,
+  "selectionMode": "exceptional-price",
+  "referencePrice": 566800,
   "previousPick": {
-    "date": "2026-09-13",
-    "flightId": "modetour-CHI-20107438",
+    "date": "2026-09-14",
+    "flightId": "modetour-ASIA-20136580",
     "source": "modetour",
-    "arrivalCity": "타이중",
-    "destinationKey": "RMQ",
-    "effectivePrice": 258000
+    "arrivalCity": "호치민",
+    "destinationKey": "SGN",
+    "effectivePrice": 210000
   },
   "recentPicks": [
+    {
+      "date": "2026-09-14",
+      "flightId": "modetour-ASIA-20136580",
+      "source": "modetour",
+      "arrivalCity": "호치민",
+      "destinationKey": "SGN",
+      "effectivePrice": 210000
+    },
     {
       "date": "2026-09-13",
       "flightId": "modetour-CHI-20107438",
@@ -64,17 +72,17 @@
       "arrivalCity": "호치민",
       "destinationKey": "SGN",
       "effectivePrice": 210000
-    },
-    {
-      "date": "2026-09-07",
-      "flightId": "ybtour-19da8wx",
-      "source": "ybtour",
-      "arrivalCity": "괌",
-      "destinationKey": "GUM",
-      "effectivePrice": 275800
     }
   ],
   "history": [
+    {
+      "date": "2026-09-14",
+      "flightId": "modetour-ASIA-20136580",
+      "source": "modetour",
+      "arrivalCity": "호치민",
+      "destinationKey": "SGN",
+      "effectivePrice": 210000
+    },
     {
       "date": "2026-09-14",
       "flightId": "modetour-CHI-20081221",
@@ -164,6 +172,5 @@
       "effectivePrice": 230000
     }
   ],
-  "repeatOverride": null,
-  "selectedBy": "admin"
+  "repeatOverride": null
 }
