@@ -1,31 +1,10 @@
+import { buildInsights, splitRoute, type PricePoint } from '@/lib/price-watch-insights';
 import type { Metadata } from 'next';
 import fs from 'node:fs';
 import path from 'node:path';
 import Link from 'next/link';
 import { SITE_URL } from '@/lib/site';
 import styles from '../tips.module.css';
-
-interface PricePoint {
-    date: string;
-    minPrice: number;
-    avgPrice: number;
-    count: number;
-}
-
-interface RouteInsight {
-    route: string;
-    departure: string;
-    arrival: string;
-    observations: number;
-    firstDate: string;
-    latestDate: string;
-    firstPrice: number;
-    latestPrice: number;
-    low: number;
-    high: number;
-    change: number;
-    changeRate: number;
-}
 
 export const metadata: Metadata = {
     title: '최근 가격이 내려간 주요 땡처리 항공권 노선',
@@ -41,12 +20,6 @@ function loadHistory(): Record<string, PricePoint[]> {
     }
 }
 
-function splitRoute(route: string) {
-    const [departure, ...arrival] = route.split('-');
-    const clean = (value: string) => value.replace(/\([A-Z]{3}\)/g, '').replace('서울(인천)', '인천');
-    return { departure: clean(departure), arrival: clean(arrival.join('-')) };
-}
-
 function formatPrice(value: number) {
     return `${value.toLocaleString('ko-KR')}원`;
 }
@@ -54,55 +27,6 @@ function formatPrice(value: number) {
 function formatDate(value: string) {
     const [, month, day] = value.split('-');
     return `${Number(month)}/${Number(day)}`;
-}
-
-function buildInsights(history: Record<string, PricePoint[]>) {
-    const allPoints = Object.values(history).flat();
-    const latestDate = allPoints.map(point => point.date).sort().at(-1) || '';
-    const candidates: RouteInsight[] = Object.entries(history).flatMap(([route, points]) => {
-        const ordered = [...points].sort((a, b) => a.date.localeCompare(b.date));
-        const first = ordered[0];
-        const latest = ordered.at(-1);
-        const windowDays = first && latest ? (Date.parse(latest.date) - Date.parse(first.date)) / 86_400_000 : Infinity;
-        const { departure, arrival } = splitRoute(route);
-        const featuredDestination = /호치민|오키나와|오사카|사이판|자카르타|하노이|푸꾸옥|후쿠오카|클락|보라카이/.test(arrival);
-        if (!first || !latest || latest.date !== latestDate || ordered.length < 7 || latest.minPrice >= first.minPrice || windowDays > 20 || !featuredDestination) return [];
-        const prices = ordered.map(point => point.minPrice).filter(price => price > 0);
-        return [{
-            route,
-            departure,
-            arrival,
-            observations: ordered.length,
-            firstDate: first.date,
-            latestDate: latest.date,
-            firstPrice: first.minPrice,
-            latestPrice: latest.minPrice,
-            low: Math.min(...prices),
-            high: Math.max(...prices),
-            change: latest.minPrice - first.minPrice,
-            changeRate: ((latest.minPrice - first.minPrice) / first.minPrice) * 100,
-        }];
-    });
-    const byDisplayRoute = new Map<string, RouteInsight>();
-    for (const candidate of candidates) {
-        const key = `${candidate.departure}-${candidate.arrival}`;
-        const existing = byDisplayRoute.get(key);
-        if (!existing
-            || candidate.observations > existing.observations
-            || (candidate.observations === existing.observations && candidate.changeRate < existing.changeRate)) {
-            byDisplayRoute.set(key, candidate);
-        }
-    }
-    const rows = Array.from(byDisplayRoute.values())
-        .sort((a, b) => a.changeRate - b.changeRate)
-        .slice(0, 8);
-
-    return {
-        latestDate,
-        rows,
-        trackedRoutes: Object.keys(history).length,
-        currentRoutes: Object.values(history).filter(points => points.at(-1)?.date === latestDate).length,
-    };
 }
 
 export default function PriceWatchPage() {
@@ -142,7 +66,7 @@ export default function PriceWatchPage() {
                 {data.latestDate && <p className={styles.articleDesc}>마지막 기록일: <time dateTime={data.latestDate}>{data.latestDate}</time></p>}
 
                 <div className={styles.dataSummary}>
-                    <div><strong>{data.trackedRoutes.toLocaleString()}</strong><span>가격 기록이 있는 노선</span></div>
+                    <div><strong>{data.trackedRoutes.toLocaleString()}</strong><span>비교 가능한 노선 기록</span></div>
                     <div><strong>{data.currentRoutes.toLocaleString()}</strong><span>{data.latestDate ? `${formatDate(data.latestDate)} 기록이 있는 노선` : '최근 기록 노선'}</span></div>
                     <div><strong>최대 14회</strong><span>노선별 비교 기록</span></div>
                 </div>
@@ -151,16 +75,17 @@ export default function PriceWatchPage() {
                     {data.rows.map(item => {
                         const range = item.high - item.low;
                         const position = range > 0 ? Math.max(3, Math.min(100, ((item.latestPrice - item.low) / range) * 100)) : 3;
-                        const query = new URLSearchParams({ dep: item.departure, arr: item.arrival });
+                        const query = new URLSearchParams({ dep: item.departure, q: item.arrival });
                         return (
                             <div className={styles.insightCard} key={item.route}>
                                 <div className={styles.insightHeader}>
                                     <div>
                                         <span>{item.observations}회 기록</span>
-                                        <h2>{item.departure} → {item.arrival}</h2>
+                                        <h2>{item.departure} → {item.arrival}{splitRoute(item.route)?.airport ? ` (${splitRoute(item.route)!.airport})` : ''}</h2>
                                     </div>
-                                    <strong>{Math.abs(Math.round(item.changeRate))}% 내려감</strong>
+                                    <strong>노선 최저가 {Math.abs(Math.round(item.changeRate))}% 하락</strong>
                                 </div>
+                                <p className={styles.comparisonNote}>수집된 상품 중 노선 최저가 비교예요. 날짜별 상품 구성이 달라 동일 항공권의 할인율은 아닙니다.</p>
                                 <div className={styles.priceComparison}>
                                     <div><span>{formatDate(item.firstDate)}</span><del>{formatPrice(item.firstPrice)}</del></div>
                                     <b>→</b>
@@ -176,8 +101,10 @@ export default function PriceWatchPage() {
                     })}
                 </section>
 
+                {data.rows.length === 0 && <p>현재 비교 조건을 충족하는 가격 하락 기록이 없습니다.</p>}
                 <div className={styles.methodBox}>
                     <h2>이 숫자를 보는 법</h2>
+                    <p>같은 노선의 표기가 여러 개면 최근 기록일과 기록 수를 기준으로 한 기록 묶음을 선택합니다. 과거 값을 합산하지 않으며, 출발 공항이나 보라카이의 도착 공항이 불명확한 기록은 비교에서 제외합니다.</p>
                     <p>각 값은 해당 날짜에 티키티킷이 수집한 여행사 상품 중 노선별 최저 표시 가격입니다. 동일한 항공편이나 동일한 출발일을 계속 추적한 값은 아닙니다.</p>
                     <p>시장 전체 평균이나 미래 가격 예측이 아닙니다. 현재 판매 가격과 좌석은 여행사 예약 화면에서 다시 확인해야 합니다.</p>
                 </div>

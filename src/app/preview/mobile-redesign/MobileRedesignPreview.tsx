@@ -1551,8 +1551,7 @@ export default function MobileRedesignPreview({
         } catch (cause) {
             if (!background) setError(cause instanceof Error ? cause.message : '항공권을 불러오지 못했습니다.');
         } finally {
-            // 정적 첫 목록과 운영 API의 필터 결과가 다를 수 있으므로 최초 동기화가
-            // 끝나기 전에는 정적 카드 대신 스켈레톤만 보여준다.
+            // Finish background synchronization after preserving the initial public snapshot.
             setInitialListSyncing(false);
             if (!background) setLoading(false);
         }
@@ -2167,6 +2166,11 @@ export default function MobileRedesignPreview({
     ), [flights, interparkPrices, todayPickId, todayPickRepeatOverride]);
     const displayedFlights = useMemo(() => {
         if (sharedFlightIds.length > 0) return filteredFlights;
+        // The server already ranked this snapshot. Keep its order while refreshing.
+        if (initialListSyncing && isDefaultView) {
+            const visible = new Set(filteredFlights.map(flight => flight.id));
+            return initialFlights.filter(flight => visible.has(flight.id));
+        }
 
         const pinnedFlight = isDefaultView ? featuredPick?.flight : undefined;
         const presentation = buildRecommendationPresentation(
@@ -2184,7 +2188,7 @@ export default function MobileRedesignPreview({
         const ordered = applyManualFlightOrder(automatic, manualPlacements, { sort, pinnedId: pinnedFlight?.id });
         return activeSharedContext && sort === 'recommended'
             ? prioritizeSharedPrice(ordered, activeSharedContext.price, effectivePrice) : ordered;
-    }, [activeSharedContext, departure, featuredPick, filteredFlights, isDefaultView, manualPlacements, query, recommendationScoreState, sharedFlightIds.length, sort]);
+    }, [activeSharedContext, departure, featuredPick, filteredFlights, initialFlights, initialListSyncing, isDefaultView, manualPlacements, query, recommendationScoreState, sharedFlightIds.length, sort]);
     const weeklyDiscoveryFlights = useMemo(() => flights
         .filter(flight => matchesDiscoveryFlight(flight) && effectivePrice(flight) > 0)
         .sort((a, b) => effectivePrice(a) - effectivePrice(b) || a.id.localeCompare(b.id)), [flights]);
@@ -2736,7 +2740,7 @@ export default function MobileRedesignPreview({
     const resultCount = initialSubsetActive && isDefaultView
         ? initialFlightCount
         : filteredFlights.length;
-    const listLoading = loading || initialListSyncing;
+    const listLoading = loading || (initialListSyncing && !isDefaultView);
 
     const openFreshRouteResults = useCallback((flight: Flight) => {
         if (!freshFlightsInsight) return;
@@ -4588,7 +4592,7 @@ export default function MobileRedesignPreview({
                             <p>좋은 표 하나가, 주말을 여행으로.</p>
                             <div>
                                 <a href="/drop">TIKIT DROP</a>
-                                <a href="/tips">가격 기록과 여행 팁</a>
+                                <a href="/tips/price-watch">항공권 가격 기록</a>
                                 <a href="/about">티키티킷 안내</a>
                             </div>
                         </section>

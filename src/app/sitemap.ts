@@ -4,14 +4,6 @@ import {
     loadActiveFlights, groupByCity, loadFlightCacheMeta, loadStaticRecommendationPriceHistory,
     MIN_INDEXABLE_CITY_FLIGHTS,
 } from '@/lib/flight-static';
-import currentDropJson from '../../data/marketing/current-drop.json';
-
-interface CurrentDropData {
-    deals?: Array<{ flightId?: string }>;
-    updatedAt?: string;
-    publishedAt?: string;
-}
-
 function safeDate(value: string | undefined): Date | undefined {
     if (!value) return undefined;
     const date = new Date(value);
@@ -20,12 +12,8 @@ function safeDate(value: string | undefined): Date | undefined {
 
 export default function sitemap(): MetadataRoute.Sitemap {
     const activeFlights = loadActiveFlights();
-    const activeFlightIds = new Set(activeFlights.map(flight => flight.id));
-    const currentDrop = currentDropJson as CurrentDropData;
-    const hasLiveDrop = currentDrop.deals?.some(deal => deal.flightId && activeFlightIds.has(deal.flightId)) ?? false;
     const cacheMeta = loadFlightCacheMeta();
     const cacheModified = safeDate(cacheMeta.timestamp || cacheMeta.lastUpdated);
-    const dropModified = safeDate(currentDrop.updatedAt || currentDrop.publishedAt);
     const priceHistoryLatest = Object.values(loadStaticRecommendationPriceHistory())
         .flat()
         .map(point => point.date)
@@ -49,12 +37,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
             changeFrequency: 'weekly' as const,
             priority: 0.8,
         },
-        ...(hasLiveDrop ? [{
-            url: `${SITE_URL}/drop`,
-            lastModified: dropModified,
-            changeFrequency: 'daily' as const,
-            priority: 0.9,
-        }] : []),
         {
             url: `${SITE_URL}/tips/price-watch`,
             lastModified: priceHistoryModified,

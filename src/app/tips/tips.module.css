@@ -390,3 +390,8 @@
     .dataSummary div { padding: 14px 16px; }
     .insightHeader { align-items: center; }
 }
+
+.comparisonNote { margin: 12px 0; color: #475569; font-size: .875rem; line-height: 1.6; }
+@media (max-width: 640px) {
+    .insightHeader { flex-wrap: wrap; gap: 10px; }
+}
