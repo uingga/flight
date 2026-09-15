@@ -1163,6 +1163,7 @@ export default function MobileRedesignPreview({
         if (!selectedFlight) setShowSharedWelcome(false);
     }, [selectedFlight]);
     const sharedEntryRef = useRef(false);
+    const sharedCollectionEntryResolvedRef = useRef(false);
     const resolvedSharedContextRef = useRef<SharedFlightContext | null>(null);
     const sharedViewedFlightsRef = useRef(new Set<string>());
     const shareFunnelRef = useRef<ReturnType<typeof createShareFunnel>>(null);
@@ -1676,6 +1677,18 @@ export default function MobileRedesignPreview({
         const readyTimer = window.setTimeout(() => { urlInitializedRef.current = true; }, 0);
         return () => window.clearTimeout(readyTimer);
     }, [openDealAlert]);
+
+    useEffect(() => {
+        if (loading || initialSubsetActive || sharedCollectionEntryResolvedRef.current) return;
+        sharedCollectionEntryResolvedRef.current = true;
+        if (initialSharedFlightIds.length === 0 || sharedFlightIds.length === 0 || sharedFlightIdRef.current) return;
+        // Decide once from the refreshed collection, never from filters or a stale SSR subset.
+        const candidates = flights.filter(flight => initialSharedFlightIds.includes(flight.id));
+        if (candidates.length !== 1) return;
+        sharedEntryRef.current = true;
+        sharedFlightIdRef.current = candidates[0].id;
+        sharedFlightScheduleRef.current = flightScheduleToken(candidates[0]);
+    }, [flights, initialSharedFlightIds, initialSubsetActive, loading, sharedFlightIds]);
 
     useEffect(() => {
         if (loading || !sharedFlightIdRef.current) return;
@@ -5152,6 +5165,7 @@ export default function MobileRedesignPreview({
                         </div>
                         {showSharedWelcome && (
                             <ShareDiscovery flights={flights} selected={selectedFlight} compare={compareRecommended}
+                                browseLabel={initialSharedFlightIds.length > 0 ? '안 살 거지만 더 보기' : undefined}
                                 onBrowse={browseNewFlightsFromShare}
                                 onOpen={(flight, entry) => {
                                     openFlight(flight, entry);
