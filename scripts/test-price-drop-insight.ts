@@ -26,3 +26,12 @@ assert.equal(matchPriceDrop(flight, 'key', [old], now)?.daysAgo, 3);
 assert.equal(matchPriceDrop(flight, 'key', [old, row], now)?.daysAgo, 1);
 assert.equal(matchPriceDrop(flight, 'key', [], now), null);
 console.log('PASS exact offer/schedule, KST 3-day boundary, real observation date, no decline, nearest comparison, precise amounts');
+
+for (const amount of [500, 9999]) {
+    const small = { ...row, listed_price: flight.price + amount };
+    assert.equal(matchPriceDrop(flight, 'key', [small], now), null);
+    assert.equal(matchPriceDrop(flight, 'key', [old, small], now), null, 'Do not skip a small recent decline to show a larger older decline');
+}
+assert.equal(matchPriceDrop(flight, 'key', [{ ...row, listed_price: flight.price + 10000 }], now)?.amount, 10000);
+assert.equal(matchPriceDrop(flight, 'key', [{ ...row, listed_price: flight.price + 10001 }], now)?.amount, 10001);
+console.log('PASS: declines below 10,000 KRW excluded; exact threshold included; no older-price fallback');

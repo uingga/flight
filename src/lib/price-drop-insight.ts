@@ -1,5 +1,7 @@
 import type { Flight } from '@/types/flight';
 
+export const MIN_PRICE_DROP_AMOUNT = 10000;
+
 export interface PriceDropRecord {
     key: string;
     currentPrice: number;
@@ -60,7 +62,7 @@ export function matchPriceDrop(flight: Flight, offerKey: string, rows: Historica
             && Number.isFinite(Number(row.listed_price)) && Number(row.listed_price) > flight.price;
     }).sort((a, b) => b.snapshot_date.localeCompare(a.snapshot_date));
     const previous = matches[0];
-    if (!previous) return null;
+    if (!previous || Number(previous.listed_price) - flight.price < MIN_PRICE_DROP_AMOUNT) return null;
     return { key: priceDropKey(flight), currentPrice: flight.price, previousPrice: Number(previous.listed_price),
         previousDate: previous.snapshot_date, daysAgo: (Date.parse(today) - Date.parse(previous.snapshot_date)) / 86400000,
         amount: Number(previous.listed_price) - flight.price };
