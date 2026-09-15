@@ -234,6 +234,10 @@
         background-position: center 55%;
     }
 
+    .hero[data-drop-hero-image="/images/cities/chengdu-hero-v2.png"] {
+        background-position: center 45%;
+    }
+
     /* PC는 가로가 넓으니 왼쪽만 눌러 오른쪽 사진을 살린다. */
     .scrim {
         background:

@@ -67,9 +67,12 @@ export default function DropHero({
     alternatives = [],
     onOpen,
 }: DropHeroProps) {
+    const cityImagePath = getCityImagePath(flight.arrival.city);
     const imagePath = flight.arrival.airport === 'SGN'
         ? '/images/cities/hochiminh-hero-v2.png'
-        : getCityImagePath(flight.arrival.city);
+        : cityImagePath === '/images/cities/chengdu.png'
+            ? '/images/cities/chengdu-hero-v2.png'
+            : cityImagePath;
     const heroStyle = imagePath
         ? ({ backgroundImage: `url("${imagePath}")` } satisfies CSSProperties)
         : undefined;
@@ -137,7 +140,7 @@ export default function DropHero({
                         <span aria-hidden="true">→</span>
                     </p>
                 )}
-                {flight.arrival.airport === 'SGN' && (
+                {(imagePath === '/images/cities/hochiminh-hero-v2.png' || imagePath === '/images/cities/chengdu-hero-v2.png') && (
                     <p className={styles.imageDisclosure}>AI 생성 이미지</p>
                 )}
             </div>

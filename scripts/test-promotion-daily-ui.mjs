@@ -15,12 +15,14 @@ try {
     for (const width of [1440,390,320]) {
         await page.setViewportSize({width,height:900}); await page.goto(`${base}/preview/promotion-daily`);
         assert.ok(await page.getByText('합성 예시 데이터 · 실시간 통계가 아닙니다.',{exact:true}).isVisible());
-        assert.ok(await page.getByText('TE31 · 일부 확인 · 최신 확인 필요',{exact:true}).isVisible());
-        assert.ok(await page.getByText('전날 대비 +2',{exact:true}).isVisible());
+        await page.getByLabel('성과 채널 선택').getByRole('button', {name:/TE31/}).click();
+        assert.ok(await page.getByText('일부 확인 · 최신 확인 필요',{exact:true}).isVisible());
+        assert.ok(await page.getByText('전날 대비 +2',{exact:true}).first().isVisible());
         assert.ok(await page.getByText('확인값 없음',{exact:true}).count()>0);
         assert.ok(await page.getByText('전날 비교 없음',{exact:true}).count()>0);
-        assert.ok(await page.getByText('3',{exact:true}).count()>0);
         assert.ok(await page.getByText('0',{exact:true}).count()>0);
+        await page.getByLabel('성과 채널 선택').getByRole('button', {name:/사이트 행동/}).click();
+        assert.ok(await page.getByText('3',{exact:true}).count()>0);
         assert.equal(await page.getByText('조회(수동)',{exact:true}).count(),0);
         assert.equal(await page.getByText('114',{exact:true}).count(),0);
         assert.equal(await page.getByText('TE31 반응은 수동 기록입니다.',{exact:true}).count(),0);
