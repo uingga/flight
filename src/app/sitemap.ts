@@ -1,8 +1,8 @@
 import { MetadataRoute } from 'next';
+import { isIndexableCity, featuredCityOrder } from '@/lib/city-search-policy';
 import { SITE_URL } from '@/lib/site';
 import {
-    loadActiveFlights, groupByCity, loadFlightCacheMeta, loadStaticRecommendationPriceHistory,
-    MIN_INDEXABLE_CITY_FLIGHTS,
+    loadActiveFlights, groupByCity, loadFlightCacheMeta,
 } from '@/lib/flight-static';
 function safeDate(value: string | undefined): Date | undefined {
     if (!value) return undefined;
@@ -14,16 +14,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     const activeFlights = loadActiveFlights();
     const cacheMeta = loadFlightCacheMeta();
     const cacheModified = safeDate(cacheMeta.timestamp || cacheMeta.lastUpdated);
-    const priceHistoryLatest = Object.values(loadStaticRecommendationPriceHistory())
-        .flat()
-        .map(point => point.date)
-        .filter(Boolean)
-        .sort()
-        .at(-1);
-    const priceHistoryModified = safeDate(priceHistoryLatest
-        ? `${priceHistoryLatest}T00:00:00+09:00`
-        : undefined);
-
     return [
         {
             url: SITE_URL,
@@ -37,15 +27,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
             changeFrequency: 'weekly' as const,
             priority: 0.8,
         },
-        {
-            url: `${SITE_URL}/tips/price-watch`,
-            lastModified: priceHistoryModified,
-            changeFrequency: 'daily' as const,
-            priority: 0.8,
-        },
-        // 1~2장뿐인 도시는 사용자 검색으로는 열어두되 대량 색인은 피한다.
+        // Only maintained featured destinations with enough current inventory enter search.
         ...groupByCity(activeFlights)
-            .filter(c => c.flights.length >= MIN_INDEXABLE_CITY_FLIGHTS)
+            .filter(c => isIndexableCity(c.city, c.flights.length))
+            .sort((a, b) => featuredCityOrder(a.city) - featuredCityOrder(b.city))
             .map(c => ({
             url: `${SITE_URL}/flights/${encodeURIComponent(c.city)}`,
             lastModified: cacheModified,

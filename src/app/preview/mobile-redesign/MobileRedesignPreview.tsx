@@ -1,4 +1,5 @@
 'use client';
+import { FEATURED_TRAVEL_CITIES } from '@/lib/city-search-policy';
 import { createShareFunnel } from '@/lib/share-funnel';
 import { flushSync } from 'react-dom';
 import DropHero from '@/components/DropHero';
@@ -4616,7 +4617,7 @@ export default function MobileRedesignPreview({
                         <section>
                             <strong>어디로 갈까요?</strong>
                             <div className={styles.siteFooterDestinations}>
-                                {['오사카', '도쿄', '후쿠오카', '다낭', '방콕', '세부', '괌', '타이베이'].map(city => (
+                                {FEATURED_TRAVEL_CITIES.map(city => (
                                     <a
                                         key={city}
                                         href={`/flights/${encodeURIComponent(city)}`}

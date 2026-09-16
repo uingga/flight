@@ -7,6 +7,7 @@ import { SITE_URL } from '@/lib/site';
 import styles from '../tips.module.css';
 
 export const metadata: Metadata = {
+    robots: { index: false, follow: true },
     title: '최근 가격이 내려간 주요 땡처리 항공권 노선',
     description: '티키티킷이 최근 2~3주 동안 실제로 수집한 주요 노선별 최저가 기록을 확인하세요.',
     alternates: { canonical: '/tips/price-watch' },

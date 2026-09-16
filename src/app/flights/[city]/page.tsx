@@ -1,16 +1,31 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { notFound, permanentRedirect, redirect } from 'next/navigation';
+import type { ReactNode } from 'react';
+import Logo from '@/components/Logo';
+import { notFound, permanentRedirect } from 'next/navigation';
+import { FEATURED_TRAVEL_CITIES, isIndexableCity, featuredCityOrder } from '@/lib/city-search-policy';
+import { KNOWN_FLIGHT_CITIES } from '@/lib/known-flight-cities';
 import { SITE_URL } from '@/lib/site';
 import {
     loadActiveFlights, groupByCity, effectivePrice, departureLabel, formatKoreanDate,
-    loadFlightCacheMeta, MIN_INDEXABLE_CITY_FLIGHTS, displayCity, decodeCitySlug, type CityDeals,
+    loadFlightCacheMeta, displayCity, decodeCitySlug, type CityDeals,
 } from '@/lib/flight-static';
 import { normalizeAirline } from '@/lib/utils/flight-helpers';
 import type { Flight } from '@/types/flight';
 
 const airlineName = (f: Flight) => normalizeAirline(f.airline || '') || (f.airline || '').trim();
 import styles from './city.module.css';
+
+function CityLayout({ children }: { children: ReactNode }) {
+    return <div className={styles.shell}>
+        <header className={styles.header}><div>
+            <Link href="/" aria-label="티키티킷 홈"><Logo size={0.84} /></Link>
+            <Link href="/" className={styles.homeLink}>전체 항공권 보기 →</Link>
+        </div></header>
+        <main className={styles.page}>{children}</main>
+        <footer className={styles.footer}><div><span>전국 여행사의 땡처리 항공권을 한눈에.</span><Link href="/">티키티킷 홈 →</Link></div></footer>
+    </div>;
+}
 
 // 캐시 커밋(하루 7회)마다 재빌드되는 정적 페이지
 export const dynamic = 'force-static';
@@ -29,17 +44,17 @@ function getCity(cityParam: string): CityDeals | undefined {
 }
 
 export function generateStaticParams() {
-    return groupByCity(loadActiveFlights()).map(c => ({ city: c.city }));
+    return Array.from(new Set([...KNOWN_FLIGHT_CITIES, ...FEATURED_TRAVEL_CITIES, ...groupByCity(loadActiveFlights()).map(c => c.city)])).map(city => ({city}));
 }
 
 export function generateMetadata({ params }: { params: { city: string } }): Metadata {
     const data = getCity(params.city);
-    if (!data) return { title: '항공권을 찾을 수 없습니다', robots: { index: false, follow: true } };
+    if (!data) return { title: `${displayCity(decodeCitySlug(params.city))} 항공권 안내`, robots: { index: false, follow: true } };
     // 레이아웃 템플릿이 "| 티키티킷"을 붙이므로 여기서는 넣지 않는다
-    const title = `${data.city} 땡처리 항공권 최저가 ${data.minPrice.toLocaleString('ko-KR')}원`;
+    const title = `${data.city} 땡처리 항공권`;
     const description = `${data.city}행 땡처리 항공권 ${data.flights.length}장 판매 중. 왕복 최저 ${data.minPrice.toLocaleString('ko-KR')}원, 출발일 ${formatKoreanDate(data.earliestDate)}~${formatKoreanDate(data.latestDate)}. 하루 여러 차례 갱신됩니다.`;
     const canonical = `/flights/${encodeURIComponent(data.city)}`;
-    const indexable = data.flights.length >= MIN_INDEXABLE_CITY_FLIGHTS;
+    const indexable = isIndexableCity(data.city, data.flights.length);
     return {
         title,
         description,
@@ -56,9 +71,24 @@ export default function CityFlightsPage({ params }: { params: { city: string } }
         permanentRedirect(`/flights/${encodeURIComponent(canonicalCity)}`);
     }
     const data = getCity(params.city);
-    if (!data) notFound();
-    if (data.flights.length < MIN_INDEXABLE_CITY_FLIGHTS) {
-        redirect(`/?q=${encodeURIComponent(data.city)}`);
+    if (!data) {
+        if (!(KNOWN_FLIGHT_CITIES as readonly string[]).includes(canonicalCity) && !(FEATURED_TRAVEL_CITIES as readonly string[]).includes(canonicalCity)) notFound();
+        const alternatives = groupByCity(loadActiveFlights()).filter(c => isIndexableCity(c.city, c.flights.length))
+            .sort((a, b) => featuredCityOrder(a.city) - featuredCityOrder(b.city)).slice(0, 8);
+        return <CityLayout>
+            <nav className={styles.breadcrumb}><Link href="/">항공권 목록</Link><span> › {canonicalCity}</span></nav>
+            <h1>{canonicalCity} 땡처리 항공권</h1>
+            <section className={styles.empty}>
+                <span className={styles.emptyBadge}>현재 판매 중인 표 0개</span>
+                <h2>지금은 {canonicalCity} 항공권이 없어요.</h2>
+                <p>새 표가 들어오면 이곳에 다시 표시됩니다.</p>
+                <Link href="/" className={styles.cta}>다른 항공권 둘러보기 →</Link>
+                <small>검색 결과에 남은 예전 가격과 일정은 현재 예약 가능한 표가 아닙니다.</small>
+            </section>
+            {alternatives.length > 0 && <section className={styles.others}><h2>지금 볼 수 있는 주요 여행지</h2><ul>
+                {alternatives.map(city => <li key={city.city}><Link href={`/flights/${encodeURIComponent(city.city)}`}>{city.city}</Link></li>)}
+            </ul></section>}
+        </CityLayout>;
     }
 
     const cacheMeta = loadFlightCacheMeta();
@@ -69,7 +99,8 @@ export default function CityFlightsPage({ params }: { params: { city: string } }
     }).format(checkedDate);
     const listed = data.flights.slice(0, MAX_LISTED);
     const others = groupByCity(loadActiveFlights())
-        .filter(c => c.city !== data.city && c.flights.length >= MIN_INDEXABLE_CITY_FLIGHTS)
+        .filter(c => c.city !== data.city && isIndexableCity(c.city, c.flights.length))
+        .sort((a, b) => featuredCityOrder(a.city) - featuredCityOrder(b.city))
         .slice(0, 8);
 
     const jsonLd = {
@@ -108,20 +139,14 @@ export default function CityFlightsPage({ params }: { params: { city: string } }
     };
 
     return (
-        <main className={styles.page}>
+        <CityLayout>
             <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
             <nav className={styles.breadcrumb}>
                 <Link href="/">항공권 목록</Link><span> › </span><span>{data.city}</span>
             </nav>
             <h1>{data.city} 땡처리 항공권</h1>
-            <p className={styles.answer}>
-                {checkedLabel} 기준 {data.city} 왕복 땡처리 항공권 최저가는{' '}
-                <strong>{data.minPrice.toLocaleString('ko-KR')}원</strong>입니다(왕복 1인).
-                지금 {data.flights.length}장이 판매 중이고, 출발일은{' '}
-                {formatKoreanDate(data.earliestDate)}부터 {formatKoreanDate(data.latestDate)} 사이입니다.
-                {data.departures.length > 0 && <> 출발지는 {data.departures.join('·')}이고, {data.airlines.slice(0, 4).join('·')} 편이 있습니다.</>}
-            </p>
-
+            <p className={styles.answer}>왕복 1인 최저 <strong>{data.minPrice.toLocaleString('ko-KR')}원</strong> · 현재 {data.flights.length}개</p>
+            <div className={styles.listHeading}><h2>지금 볼 수 있는 항공권</h2><span>{checkedLabel} 기준</span></div>
             <ul className={styles.dealList}>
                 {listed.map(f => (
                     <li key={f.id}>
@@ -136,9 +161,10 @@ export default function CityFlightsPage({ params }: { params: { city: string } }
                             <span className={styles.meta}>
                                 {airlineName(f)}{f.seats ? ` · ${f.seats}` : ''} · {SOURCE_NAMES[f.source] || f.source}
                             </span>
-                            <strong className={styles.price}>
+                            <strong className={styles.price}><small>왕복 1인</small>
                                 {effectivePrice(f).toLocaleString('ko-KR')}원
-                                {f.source === 'ttang' && <small> 발권수수료 포함</small>}
+                                {f.source === 'ttang' && <small>발권수수료 포함</small>}
+                                <span className={styles.detail}>상세 보기 →</span>
                             </strong>
                         </Link>
                     </li>
@@ -163,7 +189,7 @@ export default function CityFlightsPage({ params }: { params: { city: string } }
 
             {others.length > 0 && (
                 <section className={styles.others}>
-                    <h2>다른 도시 땡처리 항공권</h2>
+                    <h2>다른 주요 여행지 항공권</h2>
                     <ul>
                         {others.map(c => (
                             <li key={c.city}>
@@ -175,6 +201,6 @@ export default function CityFlightsPage({ params }: { params: { city: string } }
                     </ul>
                 </section>
             )}
-        </main>
+        </CityLayout>
     );
 }
