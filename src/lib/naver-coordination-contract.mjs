@@ -1,8 +1,9 @@
 import { createHash } from 'node:crypto';
 
-// Deliberately disabled until EVERY production integration has been implemented and verified.
-// An environment variable alone must never opt a partially integrated crawler in.
-const INTEGRATION_READY = false;
+// Host/configured HTTP integration verified on A Node24 and C Node22.23.2.
+// Operational activation still requires explicit mode, exact runner digest,
+// authenticated exclusive writer authority, ownership, and the persisted day boundary.
+const INTEGRATION_READY = true;
 export function assertMode(env = process.env) {
     const mode = env.NAVER_COORDINATION ?? '0';
     if (!['0', '1'].includes(mode)) throw Error('invalid coordination mode');

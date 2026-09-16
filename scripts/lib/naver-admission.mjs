@@ -4,6 +4,7 @@ import { resolve } from 'node:path';
 import { assertMode } from '../../src/lib/naver-coordination-contract.mjs';
 
 export const RUNNER_FILES = [
+    'scripts/run-ac-installed.mjs',
     'src/lib/writer-relay-handler.mjs','src/lib/writer-relay-supabase.mjs','src/lib/writer-relay-web.mjs','src/lib/writer-relay-wire.mjs',
     'src/app/api/writer/[...path]/route.ts','scripts/sql/writer-relay.sql',
     'src/lib/writer-relay.mjs','src/lib/writer-relay-agent.mjs','scripts/start-writer-relay.mjs','scripts/publish-code.mjs',
