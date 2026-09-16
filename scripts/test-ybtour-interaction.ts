@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import type { Page } from 'playwright';
-import { failYbtourInteraction, YbtourInteractionGuard, YbtourOverlayError } from '../src/lib/scrapers/ybtour-interaction';
+import { failYbtourInteraction, YbtourInteractionGuard, YbtourOverlayError, YbtourRecoverableActionError } from '../src/lib/scrapers/ybtour-interaction';
 import { IncompleteScrapeError } from '../src/lib/scrapers/scrape-errors';
 import { SourceResponseError } from '../src/lib/scrapers/source-response';
 import { classifySourceAccessRestriction, SOURCE_ADAPTER_VERSIONS } from '../src/lib/source-circuit';
@@ -120,7 +120,7 @@ test('collector wires all three clicks and propagates all three nested failures'
 });
 
 test('region recovery has one navigation budget and does not recover unknown failures or access restrictions', async () => {
-    for (const scenario of ['success', 'http403', 'captchaBefore', 'captchaAfter', 'ordinary'] as const) {
+    for (const scenario of ['success', 'networkFailed', 'http403', 'captchaBefore', 'captchaAfter', 'ordinary'] as const) {
         let navigations = 0; let regionClicks = 0;
         const page = {
             url: () => 'about:blank',
@@ -143,8 +143,9 @@ test('region recovery has one navigation budget and does not recover unknown fai
             },
         } as unknown as Page;
         const guard = new YbtourInteractionGuard(page);
-        const error = scenario === 'ordinary' ? new IncompleteScrapeError('unknown', []) : new YbtourOverlayError('dimBox', ['DAD']);
-        if (scenario === 'success') {
+        const error = scenario === 'ordinary' ? new IncompleteScrapeError('unknown', [])
+            : scenario === 'networkFailed' ? new YbtourRecoverableActionError('network_failed', ['DAD']) : new YbtourOverlayError('dimBox', ['DAD']);
+        if (scenario === 'success' || scenario === 'networkFailed') {
             assert.equal(await guard.recoverCity(error, 'bannerCode_A0/A3', 'DAD'), true);
             assert.equal(await guard.recoverCity(error, 'bannerCode_A0/A3', 'DAD'), false);
             assert.equal(navigations, 1); assert.equal(regionClicks, 0, 'already selected region must not be clicked again');

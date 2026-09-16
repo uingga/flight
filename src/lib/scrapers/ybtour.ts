@@ -1,4 +1,5 @@
 import { chromium } from 'playwright';
+import fs from 'node:fs';
 import { Flight } from '@/types/flight';
 import { getRegionByCity } from '@/lib/utils/region-mapper';
 // logCrawlResults moved to crawl-all.ts
@@ -137,6 +138,17 @@ export async function scrapeYbtour(prevFlights: any[] = []): Promise<Flight[]> {
 
     const flights: Flight[] = [];
     let totalFlights = 0;
+    const completedCities: string[] = [];
+    const saveProgress = (failedCity?: string) => {
+        const checkpoint = process.env.YBTOUR_CHECKPOINT_PATH;
+        if (!checkpoint) return;
+        const temporary = checkpoint + '.tmp';
+        fs.writeFileSync(temporary, JSON.stringify({ version: 1, updatedAt: new Date().toISOString(),
+            completedCities, failedCity, flights,
+            scheduleKeys: flights.map(f => getYbtourScheduleKey(f) || null),
+        }));
+        fs.renameSync(temporary, checkpoint);
+    };
 
     try {
         // 메인 페이지 접속
@@ -398,6 +410,8 @@ export async function scrapeYbtour(prevFlights: any[] = []): Promise<Flight[]> {
                         }
 
                         console.log(`${city.name}: ${totalFlights}건 수집`);
+                        completedCities.push(`${region.tabId}/${city.code}`);
+                        saveProgress();
 
                         await randomDelay(1, 3);
                         break;
@@ -405,6 +419,7 @@ export async function scrapeYbtour(prevFlights: any[] = []): Promise<Flight[]> {
                         // Roll back only this city's partial rows before replaying it; earlier cities survive.
                         flights.length = cityCheckpoint;
                         totalFlights = flights.length;
+                        saveProgress(`${region.tabId}/${city.code}`);
                         if (cityAttempt === 0 && await interaction.recoverCity(error, region.tabId, city.code)) continue;
                         failYbtourInteraction(`${region.name}/${city.name}(${city.code})`, error);
                     }

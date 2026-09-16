@@ -7,6 +7,8 @@ import { selectYbtourRegion } from './ybtour-region';
 export const YBTOUR_LIST_URL = 'https://fly.ybtour.co.kr/booking/findDiscountAir.lts?efcTpCode=INV&efcCode=INV';
 
 export class YbtourOverlayError extends IncompleteScrapeError {}
+/** Only emitted when no matching request is still in flight. */
+export class YbtourRecoverableActionError extends IncompleteScrapeError {}
 
 /** UI failures must not become a successful short list and trigger the count-drop circuit. */
 export function failYbtourInteraction(label: string, error: unknown): never {
@@ -64,7 +66,8 @@ export class YbtourInteractionGuard {
 
     /** Restore only the failed city's region; never replay completed cities or reset the budget. */
     async recoverCity(error: unknown, regionTabId: string, cityCode: string): Promise<boolean> {
-        if (!(error instanceof YbtourOverlayError) || this.reloadedForRecovery) return false;
+        if (!(error instanceof YbtourOverlayError || error instanceof YbtourRecoverableActionError)
+            || this.reloadedForRecovery) return false;
         await this.assertAccess(cityCode);
         this.reloadedForRecovery = true;
         console.log(`[RECOVER] 노랑풍선 ${cityCode}: 목록 재진입 후 해당 도시부터 재개 (회차당 1회)`);
