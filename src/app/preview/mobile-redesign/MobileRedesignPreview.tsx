@@ -4572,6 +4572,12 @@ export default function MobileRedesignPreview({
                         </button>
                     )}
 
+                    {!listLoading && !error && sharedContext && initialSharedFlightIds.length === 0 && (
+                        <button type="button" className={styles.moreButton} onClick={browseNewFlightsFromShare}>
+                            지금 나온 항공권 더 보기 <span aria-hidden="true">→</span>
+                        </button>
+                    )}
+
                     {!listLoading && !error && freshRouteResults?.dropFlightIds && (
                         <button type="button" className={styles.moreButton} onClick={closeFreshRouteResults}>
                             안 살 거지만 더 보기 <span aria-hidden="true">→</span>
