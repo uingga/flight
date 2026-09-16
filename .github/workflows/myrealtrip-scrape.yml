@@ -5,10 +5,9 @@ run-name: MyRealTrip Price Scraping · ${{ inputs.trigger_source || github.event
 on:
   schedule:
     # 오전 1회·오후 1회. GitHub Actions 정각 혼잡을 피하도록 분산한다.
-    # 매일 오전 6시 5분 KST (21:05 UTC 전날)
-    - cron: '5 21 * * *'
-    # 매일 오후 3시 3분 KST (06:03 UTC)
-    - cron: '3 6 * * *'
+    # 일반 여행사 반영보다 앞서 완료하도록 05:00 / 12:05 KST에 시작한다.
+    - cron: '0 20 * * *'
+    - cron: '5 3 * * *'
   workflow_dispatch:
     inputs:
       trigger_source:
@@ -56,6 +55,12 @@ jobs:
           TRIGGER_EVENT: ${{ github.event_name }}
           TRIGGER_SCHEDULE: ${{ github.event.schedule }}
 
+      - name: Refresh inputs after shared admission
+        if: steps.slot.outputs.should_run == 'true'
+        run: |
+          git fetch origin main
+          git checkout origin/main -- data/all-flights-cache.json data/interpark-prices.json data/crawl-log.json
+
       - name: Setup Node.js
         if: steps.slot.outputs.should_run == 'true'
         uses: actions/setup-node@v4
@@ -88,6 +93,7 @@ jobs:
 
       # 차단을 감지해 스크래퍼가 실패해도 항공권은 그대로 둔 채 24시간 회로는 반드시 저장한다.
       - name: Commit cache or circuit changes
+        id: publish
         env:
           WRITER_TOKEN: ${{ vars.NAVER_COORDINATION == '1' && secrets.TIKIT_WRITER_MYREALTRIP_TOKEN || '' }}
         if: always() && steps.slot.outputs.should_run == 'true' && (steps.scrape.outcome == 'success' || steps.scrape.outcome == 'failure')
@@ -124,6 +130,13 @@ jobs:
           else
             echo "ℹ️ 변경 없음"
           fi
+
+      - name: Release shared MyRealTrip admission
+        if: always() && steps.slot.outputs.should_run == 'true' && steps.publish.outcome == 'success'
+        run: node scripts/release-myrealtrip-slot.mjs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          MRT_COLLECTOR_OUTCOME: ${{ steps.scrape.outcome }}
 
       - name: Record MyRealTrip lifecycle changes
         if: success() && steps.scrape.outcome == 'success'

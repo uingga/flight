@@ -1,6 +1,7 @@
 import { chromium, Browser } from 'playwright';
 import fs from 'fs';
 import path from 'path';
+import { getCrawlDataDir } from '../src/lib/crawl-data-dir';
 import {
     isMyrealtripQuickDepartureSeed,
     matchesMyrealtripQuickDepartureRoute,
@@ -54,8 +55,10 @@ interface CachedFlight {
 
 const delay = (ms: number) => new Promise(r => setTimeout(r, ms));
 const randomDelay = () => delay(4000 + Math.random() * 4000); // 4~8초 랜덤
-const CACHE_PATH = path.resolve(process.cwd(), 'data/all-flights-cache.json');
-const INTERPARK_BENCHMARK_PATH = path.resolve(process.cwd(), 'data/interpark-prices.json');
+const CACHE_PATH = path.join(getCrawlDataDir(), 'all-flights-cache.json');
+const INTERPARK_BENCHMARK_PATH = path.join(getCrawlDataDir(), 'interpark-prices.json');
+const launchMrtBrowser = () => chromium.launch({headless:true,
+    ...(process.env.MRT_C_WORKER === '1' ? {channel:'chrome' as const} : {})});
 const BATCH_SIZE = 10;
 const batchRest = () => delay(30_000 + Math.random() * 30_000);
 function shuffle<T>(arr: T[]): T[] {
@@ -71,7 +74,7 @@ function shuffle<T>(arr: T[]): T[] {
 
 function loadGidMap(): Record<string, number> {
     try {
-        const raw = fs.readFileSync(path.resolve(process.cwd(), 'data/gid-map.json'), 'utf8');
+        const raw = fs.readFileSync(path.join(getCrawlDataDir(), 'gid-map.json'), 'utf8');
         const parsed = JSON.parse(raw);
         const map: Record<string, number> = {};
         for (const [code, val] of Object.entries(parsed)) {
@@ -342,7 +345,7 @@ async function main() {
     console.log(`직렬: ${WORKERS}개 워커 (${chunks[0].length}개)\n`);
 
     // 브라우저 실행
-    const browser = await chromium.launch({ headless: true });
+    const browser = await launchMrtBrowser();
 
     const results = new Map<string, FlightResult>();
 
@@ -361,7 +364,7 @@ async function main() {
     const isolatedRetryLimit = Math.min(MAX_ISOLATED_RETRIES, Math.ceil(tasks.length * 0.1));
     if (failedTasks.length > 0 && failedTasks.length <= isolatedRetryLimit) {
         console.log(`\n🔄 ${failedTasks.length}개 실패 노선 재시도 중...\n`);
-        const retryBrowser = await chromium.launch({ headless: true });
+        const retryBrowser = await launchMrtBrowser();
         const retryChunks: typeof tasks[] = Array.from({ length: WORKERS }, () => []);
         shuffle(failedTasks).forEach((task, i) => retryChunks[i % WORKERS].push(task));
         try {

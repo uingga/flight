@@ -1,6 +1,6 @@
 import { getScheduledAtForCron } from './crawl-schedule-health.mjs';
 
-export const MRT_CRONS = ['5 21 * * *', '3 6 * * *'];
+export const MRT_CRONS = ['0 20 * * *', '5 3 * * *'];
 export const MRT_WORKFLOW = 'myrealtrip-scrape.yml';
 export function latestMrtSlot(now = Date.now()) {
     const slots = MRT_CRONS.map(cron => ({ cron, at: getScheduledAtForCron(cron, now) }));
@@ -32,7 +32,7 @@ export function githubMrtClient(token, repository = 'uingga/flight', fetchImpl =
     return async (path, method = 'GET', body) => {
         const response = await fetchImpl(`https://api.github.com/repos/${repository}/${path}`, {
             method, cache: 'no-store', signal: AbortSignal.timeout(10000),
-            headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json',
+            headers: { Authorization: `Bearer ${typeof token === 'function' ? await token() : token}`, Accept: 'application/vnd.github+json',
                 'Content-Type': 'application/json', 'X-GitHub-Api-Version': '2022-11-28' },
             ...(body ? { body: JSON.stringify(body) } : {}),
         });

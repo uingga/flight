@@ -22,11 +22,11 @@ function fake({ runs = [], claimed = false, readStatus, createStatus = 201 } = {
 }
 test('latest slot honors UTC/KST and midnight', () => {
     assert.equal(resolveMrtSlot({ schedule: '3 7 * * *', createdAt: new Date(now).toISOString(), now }), null);
-    assert.equal(slot.expectedAt, '2026-09-08T06:03:00.000Z');
-    assert.equal(latestMrtSlot(Date.parse('2026-09-07T23:00:00Z')).expectedAt, '2026-09-07T21:05:00.000Z');
+    assert.equal(slot.expectedAt, '2026-09-08T03:05:00.000Z');
+    assert.equal(latestMrtSlot(Date.parse('2026-09-07T23:00:00Z')).expectedAt, '2026-09-07T20:00:00.000Z');
 });
 test('late schedule and watchdog resolve to the same slot; stale/future input rejected', () => {
-    assert.deepEqual(resolveMrtSlot({ schedule: '3 6 * * *', createdAt: '2026-09-08T09:00:00Z', now }), slot);
+    assert.deepEqual(resolveMrtSlot({ schedule: '5 3 * * *', createdAt: '2026-09-08T09:00:00Z', now }), slot);
     assert.deepEqual(resolveMrtSlot({ expectedAt: slot.expectedAt, now }), slot);
     assert.equal(resolveMrtSlot({ expectedAt: '2026-09-07T06:03:00.000Z', now }), null);
     assert.equal(resolveMrtSlot({ expectedAt: '2026-09-09T06:03:00.000Z', now }), null);
@@ -44,12 +44,12 @@ test('API errors fail closed; failed reservation does not permit scraping', asyn
     await assert.rejects(reserveMrtSlot(fake({ createStatus: 500 }).api, slot, 'sha', '1'));
 });
 test('pre-rollout completed scheduled run prevents re-collection', async () => {
-    const runs = [{ id: 9, event: 'schedule', status: 'completed', conclusion: 'success', created_at: '2026-09-08T07:00:00Z', display_title: 'MyRealTrip · 3 6 * * *' }];
+    const runs = [{ id: 9, event: 'schedule', status: 'completed', conclusion: 'success', created_at: '2026-09-08T07:00:00Z', display_title: 'MyRealTrip · 5 3 * * *' }];
     assert.equal(await reserveMrtSlot(fake({ runs }).api, slot, 'sha', '1'), false);
     assert.equal((await checkMrtWatchdog(fake({ runs }).api, now)).reason, 'slot_completed');
 });
 test('previous day success does not suppress today', async () => {
-    const runs = [{ event: 'schedule', status: 'completed', conclusion: 'success', created_at: '2026-09-07T07:00:00Z', display_title: '3 6 * * *' }];
+    const runs = [{ event: 'schedule', status: 'completed', conclusion: 'success', created_at: '2026-09-07T07:00:00Z', display_title: '5 3 * * *' }];
     assert.equal((await checkMrtWatchdog(fake({ runs }).api, now)).action, 'dispatched');
 });
 test('grace period makes zero GitHub requests', async () => {
@@ -69,7 +69,7 @@ test('dispatch carries exact slot and durable ref is deterministic', async () =>
     const { api, calls } = fake();
     assert.equal((await checkMrtWatchdog(api, now)).action, 'dispatched');
     assert.deepEqual(calls.at(-1).body.inputs, { trigger_source: 'watchdog', expected_at: slot.expectedAt });
-    assert.equal(mrtClaimRef(slot.expectedAt), 'tags/mrt-slot/20260908T060300000Z');
+    assert.equal(mrtClaimRef(slot.expectedAt), 'tags/mrt-slot/20260908T030500000Z');
 });
 test('workflow gates every live collection stage behind durable reservation', () => {
     const text = fs.readFileSync('.github/workflows/myrealtrip-scrape.yml', 'utf8');

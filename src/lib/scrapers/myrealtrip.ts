@@ -233,7 +233,7 @@ function loadGidMap(): Record<string, number> {
         'PEK': 3756210, 'TAO': 3539921, 'SYD': 3532825,
     };
     try {
-        const filePath = path.resolve(process.cwd(), 'data/gid-map.json');
+        const filePath = path.resolve(process.env.TIKITIKIT_DATA_DIR || path.join(process.cwd(), 'data'), 'gid-map.json');
         const raw = fs.readFileSync(filePath, 'utf8');
         const parsed = JSON.parse(raw);
         const map: Record<string, number> = {};
