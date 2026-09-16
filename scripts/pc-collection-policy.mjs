@@ -18,7 +18,7 @@ export function evaluatePcCollection({cache,now=new Date(),config=ONLINE_BROWSER
     const future=value=>value!=null && (!Number.isFinite(Date.parse(value)) || Date.parse(value)>ms);
     const tc=cache?.sourceCircuits?.ttang;
     const previousTtangSuccess=Date.parse(cache?.ttangPrimary?.lastSuccessAt || cache?.sourceUpdatedAt?.ttang || '');
-    if(ttangConfig.enabled && Number.isFinite(ms) && Number.isFinite(slot) && isTtangCrawlSlot(slot)
+    if(ttangConfig.enabled && Number.isFinite(ms) && Number.isFinite(slot) && (ttangConfig.slotsPerDay===4 || isTtangCrawlSlot(slot))
         && Date.parse(cache?.fullCrawlUpdatedAt)>=slot
         && !future(tc?.nextProbeAt) && !future(tc?.localFallback?.nextProbeAt)
         && !future(cache?.ttangPrimary?.nextProbeAt)

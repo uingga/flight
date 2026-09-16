@@ -6,16 +6,18 @@ import { createHash } from 'node:crypto';
 import { discoverDedicatedChromeEndpoint } from '../src/lib/onlinetour-dedicated-chrome';
 import { TTANG_PROTOCOL, TTANG_INPUT_FILES, assertTtangAllowed, validateTtangEvidence } from './ttang-primary-policy.mjs';
 import { readTtangPartialSummary } from './ttang-staging-validation.mjs';
+import { assertTtangWorker } from './ttang-worker-routing.mjs';
 
 async function main() {
     const manual=process.argv[2]==='--manual-once';
-    if (process.argv.length!==3 || (!manual && process.argv[2]!=='--scheduled') || os.hostname().toUpperCase()!=='DESKTOP-OFFICE') throw Error('invalid_worker_mode');
+    if (process.argv.length!==3 || (!manual && process.argv[2]!=='--scheduled')) throw Error('invalid_worker_mode');
     const chunks:Buffer[]=[]; let size=0;
     for await(const chunk of process.stdin){size+=chunk.length;if(size>12000000)throw Error('request_too_large');chunks.push(Buffer.from(chunk));}
     const r=JSON.parse(Buffer.concat(chunks).toString('utf8'));
     if(r.protocol!==TTANG_PROTOCOL || !/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/.test(r.id || '')
         || r.manual!==manual || Date.now()-Date.parse(r.createdAt)<0 || Date.now()-Date.parse(r.createdAt)>900000
         || !Number.isFinite(Date.parse(r.createdAt)) || !r.files || Object.keys(r.files).some(f=>!TTANG_INPUT_FILES.includes(f))) throw Error('invalid_worker_request');
+    assertTtangWorker(os.hostname(),r.expectedAt,manual,r.worker);
     const root=path.resolve(__dirname,'..'), input=r.files['all-flights-cache.json'];
     const base=path.join(os.homedir(),'AppData/Local/Tikitikit');
     const state=path.join(base,'ttang-browser'), shared=path.join(base,'onlinetour-validation');
