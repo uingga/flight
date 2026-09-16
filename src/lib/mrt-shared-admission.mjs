@@ -15,7 +15,7 @@ export async function acquireMrt(api,{slot,host,sha}) {
     const ticket={owner,slot,host};
     // Failed or unknown claim creation retains the lock, not an optimistic retry.
     const reserved=await api('git/refs','POST',{ref:'refs/'+claim(slot),sha:owner});
-    if(reserved.status===422){await releaseMrt(api,ticket);return null;}
+    if(reserved.status===422){await releaseMrt(api,ticket,{completed:false});return null;}
     if(reserved.status!==201)throw Error('slot reservation uncertain');
     return ticket;
 }
@@ -24,8 +24,17 @@ export async function assertMrtOwner(api,ticket) {
     if(r.status!==200||r.data.object?.sha!==ticket.owner)throw Error('MRT ownership lost');
 }
 // Only call after no requests were made, or after the result/circuit was durably published.
-export async function releaseMrt(api,ticket) {
+export async function releaseMrt(api,ticket,{completed=true}={}) {
     await assertMrtOwner(api,ticket);
+    if(completed){
+        const name='tags/mrt-done/'+ticket.slot.replace(/[-:.]/g,'');
+        const saved=await api('git/refs','POST',{ref:'refs/'+name,sha:ticket.owner});
+        if(saved.status!==201){
+            const prior=await api('git/ref/'+name);
+            if(saved.status!==422||prior.status!==200||prior.data.object?.sha!==ticket.owner)
+                throw Error('MRT completion receipt uncertain');
+        }
+    }
     const r=await api('git/refs/'+ACTIVE,'DELETE');
     if(r.status!==204)throw Error('MRT release uncertain');
 }

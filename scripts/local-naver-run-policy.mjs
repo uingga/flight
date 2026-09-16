@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { evaluateRoundContinuation } from '../src/lib/naver-round-handoff.mjs';
 
 const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
 const HOUR_MS = 60 * 60 * 1000;
@@ -121,6 +122,7 @@ export function evaluateLocalNaverRun({
     state = null,
     pcCollectionPending = false,
     approvedRecoverySources = [],
+    completedRound = null,
     totalNavigationBudget = TOTAL_NAVIGATION_BUDGET,
 }) {
     const current = now instanceof Date ? now : new Date(now);
@@ -135,6 +137,17 @@ export function evaluateLocalNaverRun({
     }
 
     const sameDayState = state?.kstDate === currentKstDate ? state : null;
+    if(sameDayState?.activeRound&&!sameDayState.roundPublished&&sameDayState.phase!=='running') {
+        return {shouldRun:false,shouldFinalize:false,reason:'previous_round_unpublished',kstDate:currentKstDate};
+    }
+    if(completedRound) {
+        if(pcCollectionPending)return {shouldRun:false,shouldFinalize:false,reason:'recovery_pc_pending',kstDate:currentKstDate};
+        const decision=evaluateRoundContinuation({now:currentTimestamp,cache,state:sameDayState,round:completedRound,totalBudget:totalNavigationBudget});
+        if(decision.shouldRun&&!sameDayState&&currentTimestamp<kstSlotTimestamp(current,RECOVERY_SLOT.hour,RECOVERY_SLOT.minute)) {
+            decision.navigationBudget=initialNavigationBudget(cache,decision.sources,decision.pendingSources,totalNavigationBudget);
+        }
+        return decision;
+    }
     // Explicit operator recovery never resets the circuit, consumed budget or completed sources.
     if (approvedRecoverySources.length > 0) {
         const completedSources = uniqueSources(sameDayState?.completedSources || []);
@@ -399,6 +412,7 @@ export function buildLocalNaverState(outcome, {
     pendingSources = [],
     runningSources = [],
     navigationIncrement = 0,
+    completedRound = null,
 } = {}) {
     const current = now instanceof Date ? now : new Date(now);
     const sameDayPrevious = previousState?.kstDate === kstDateKey(current) ? previousState : null;
@@ -414,7 +428,7 @@ export function buildLocalNaverState(outcome, {
     const normalizedPendingSources = uniqueSources(pendingSources)
         .filter(source => !mergedCompletedSources.includes(source));
     const normalizedRunningSources = outcome === 'running'
-        ? uniqueSources(runningSources).filter(source => !mergedCompletedSources.includes(source))
+        ? uniqueSources(runningSources).filter(source => completedRound || !mergedCompletedSources.includes(source))
         : [];
     const cooldownHours = outcome === 'degraded' || outcome === 'running' ? 12 : 0;
     const nextEligibleAt = outcome === 'partial_waiting'
@@ -433,6 +447,11 @@ export function buildLocalNaverState(outcome, {
         completedSources: mergedCompletedSources,
         pendingSources: normalizedPendingSources,
         runningSources: normalizedRunningSources,
+        ...(completedRound || sameDayPrevious?.activeRound ? {
+            activeRound:completedRound || sameDayPrevious.activeRound,
+            roundPublished:outcome==='running'?false:Boolean(sameDayPrevious?.roundPublished),
+            lastRoundAt:completedRound || sameDayPrevious.lastRoundAt,
+        } : {}),
         ...(reason ? { reason } : {}),
     };
 }
@@ -577,6 +596,7 @@ function runCli() {
         console.log(JSON.stringify(evaluateLocalNaverRun({ now, cache, state,
             pcCollectionPending: args.includes('--pc-collection-pending'),
             approvedRecoverySources: csvOption(args, '--approved-recovery-sources'),
+            completedRound: process.env.NAVER_COMPLETED_ROUND || null,
         })));
         return;
     }
@@ -601,12 +621,20 @@ function runCli() {
             pendingSources,
             runningSources,
             navigationIncrement,
+            completedRound: process.env.NAVER_COMPLETED_ROUND || null,
         });
         writeJsonAtomic(statePath, state);
         console.log(JSON.stringify(state));
         return;
     }
 
+    if(command==='round-published'){
+        const statePath=readOption(args,'--state'),round=readOption(args,'--round');
+        const state=readJson(statePath);
+        if(!statePath||!round||state?.activeRound!==round||!['success','partial_waiting'].includes(state.phase))throw Error('round publication state mismatch');
+        writeJsonAtomic(statePath,{...state,roundPublished:true});
+        console.log(JSON.stringify({roundPublished:true,round}));return;
+    }
     if (command === 'interrupted-plan') {
         const statePath = readOption(args, '--state');
         const requestsValue = readOption(args, '--requests-started');
