@@ -58,3 +58,12 @@
 }
 
 .shell .deal:hover { color: #222; }
+.comparison { margin: 0 0 32px; }
+.comparison h2 { font-size: 18px; font-weight: 700; margin: 0 0 10px; }
+.comparison > p { font-size: 13px; line-height: 1.7; color: #707070; word-break: keep-all; }
+.comparison ul { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 12px; }
+.comparison li { padding: 20px; background: #fff; border: 1px solid #ddd; border-radius: 12px; min-width: 0; }
+.comparison h3 { margin: 0 0 12px; font-size: 16px; font-weight: 700; }
+.comparison li p { margin: 6px 0; font-size: 14px; line-height: 1.7; color: #5f5f5f; overflow-wrap: anywhere; }
+.comparison strong { color: #222; font-weight: 700; }
+.comparison a { display: inline-block; margin-top: 12px; font-size: 13px; font-weight: 600; line-height: 1.7; color: #e00b41; overflow-wrap: anywhere; }

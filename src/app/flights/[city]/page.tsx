@@ -12,6 +12,7 @@ import {
 } from '@/lib/flight-static';
 import { normalizeAirline } from '@/lib/utils/flight-helpers';
 import type { Flight } from '@/types/flight';
+import { buildCityComparison, hasCityComparison, representativeCityFlights } from '@/lib/city-flight-comparison';
 
 const airlineName = (f: Flight) => normalizeAirline(f.airline || '') || (f.airline || '').trim();
 import styles from './city.module.css';
@@ -97,7 +98,9 @@ export default function CityFlightsPage({ params }: { params: { city: string } }
     const checkedLabel = new Intl.DateTimeFormat('ko-KR', {
         timeZone: 'Asia/Seoul', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: false,
     }).format(checkedDate);
-    const listed = data.flights.slice(0, MAX_LISTED);
+    const compare = hasCityComparison(data.city);
+    const comparison = compare ? buildCityComparison(data.flights) : [];
+    const listed = compare ? representativeCityFlights(data.flights, MAX_LISTED) : data.flights.slice(0, MAX_LISTED);
     const others = groupByCity(loadActiveFlights())
         .filter(c => c.city !== data.city && isIndexableCity(c.city, c.flights.length))
         .sort((a, b) => featuredCityOrder(a.city) - featuredCityOrder(b.city))
@@ -146,6 +149,24 @@ export default function CityFlightsPage({ params }: { params: { city: string } }
             </nav>
             <h1>{data.city} 땡처리 항공권</h1>
             <p className={styles.answer}>왕복 1인 최저 <strong>{data.minPrice.toLocaleString('ko-KR')}원</strong> · 현재 {data.flights.length}개</p>
+            {compare && <section className={styles.comparison} aria-labelledby="departure-comparison">
+                <h2 id="departure-comparison">출발지별 가격과 일정 비교</h2>
+                <p>현재 표시된 표를 출발지별로 비교했어요. 최저가는 일정마다 다르며, 서로 다른 날짜의 가격입니다.</p>
+                <ul>
+                    {comparison.map(row => <li key={row.departure}>
+                        <h3>{row.departure} → {data.city}</h3>
+                        <p><strong>왕복 1인 {row.minPrice.toLocaleString('ko-KR')}원부터</strong> · {row.count}개 표 / 출발일 {row.dateCount}개</p>
+                        <p>출발 범위 {formatKoreanDate(row.firstDate)}~{formatKoreanDate(row.lastDate)}</p>
+                        <p>{row.airlines.join(' · ') || '항공사 정보 확인 필요'}<br />{row.sources.map(source => SOURCE_NAMES[source] || source).join(' · ')}</p>
+                        {data.city === '타이베이' && row.airports.length > 0 && <p>도착 공항 {row.airports.join(' · ')} — 예약 전 공항도 확인하세요.</p>}
+                        <Link href={`/share/${encodeURIComponent(row.cheapest.id)}`}>
+                            최저가 일정: {formatKoreanDate(row.cheapest.departure.date)}{row.cheapest.departure.time ? ` ${row.cheapest.departure.time}` : ''} 출발
+                            {row.cheapest.arrival.date ? ` / ${formatKoreanDate(row.cheapest.arrival.date)} 귀국편` : ''} →
+                        </Link>
+                    </li>)}
+                </ul>
+                <p>위 가격은 현재 수집된 표끼리의 비교이며, 평소 시세나 다른 예약 사이트보다 저렴하다는 의미는 아닙니다.</p>
+            </section>}
             <div className={styles.listHeading}><h2>지금 볼 수 있는 항공권</h2><span>{checkedLabel} 기준</span></div>
             <ul className={styles.dealList}>
                 {listed.map(f => (

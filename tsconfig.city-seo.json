@@ -1,0 +1,6 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "incremental": false },
+  "include": ["next-env.d.ts", "src/app/flights/[city]/page.tsx", "src/app/sitemap.ts", "src/lib/city-flight-comparison.ts", "scripts/test-city-flight-comparison.ts", "scripts/test-city-search-policy.ts"],
+  "exclude": ["node_modules"]
+}
