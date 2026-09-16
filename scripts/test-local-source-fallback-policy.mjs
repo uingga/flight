@@ -97,7 +97,7 @@ test('alternates PC collection and rest from each source failure slot', () => {
     }
 });
 
-test('Ttang PC fallback runs only at 06:17 or 13:23 with at least five hours between successes', () => {
+test('Ttang PC fallback keeps allowed slots without the five-hour interval', () => {
     const active = circuit({
         openedAt: '2026-08-30T04:25:00.000Z',
         nextProbeAt: '2026-08-31T04:25:00.000Z',
@@ -147,8 +147,8 @@ test('Ttang PC fallback runs only at 06:17 or 13:23 with at least five hours bet
             },
         },
     });
-    assert.equal(delayedMorningRun.shouldRun, false);
-    assert.deepEqual(delayedMorningRun.scheduleThrottledSources, ['ttang']);
+    assert.equal(delayedMorningRun.shouldRun, true);
+    assert.deepEqual(delayedMorningRun.sources, ['ttang']);
 });
 
 test('anchors alternating PC slots independently for each failed source', () => {

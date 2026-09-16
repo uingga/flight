@@ -15,8 +15,6 @@ export function assertTtangAllowed(cache, { now = Date.now(), manual = false, co
         cache.sourceCircuits?.ttang?.localFallback?.nextProbeAt, cache.ttangPrimary?.nextProbeAt, cooldown?.nextProbeAt]) {
         if (value != null && (!Number.isFinite(Date.parse(value)) || Date.parse(value) > now)) throw Error('source_cooldown');
     }
-    const last = Date.parse(cache.ttangPrimary?.lastSuccessAt || cache.sourceUpdatedAt?.ttang || '');
-    if (Number.isFinite(last) && now-last < 5*3600000) throw Error('minimum_interval');
     // Manual primary collection is independent of the general crawl's age.
     // Scheduled runs still use their existing slot eligibility below.
     const policy = evaluatePcCollection({cache,now:new Date(now)});

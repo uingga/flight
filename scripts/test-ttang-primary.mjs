@@ -5,7 +5,7 @@ import { evaluatePcCollection } from './pc-collection-policy.mjs';
 import { ttangListPageEvidence } from '../src/lib/ttang-request-audit.mjs';
 import { crawlOrder, finiteListBudget } from '../src/lib/crawl-order.mjs';
 const off={enabled:false,slotsPerDay:4};
-test('Ttang primary runs only 06:17/13:23, after upstream and at least five hours since success',()=>{
+test('Ttang primary keeps slots and duplicate protection without a five-hour interval',()=>{
     for(const [time,due] of [['2026-09-06T23:00:00Z',true],['2026-09-07T02:00:00Z',false],['2026-09-07T05:00:00Z',true],['2026-09-07T08:00:00Z',false]]) {
         const cache={flights:[],fullCrawlUpdatedAt:time};
         const check=delta=>evaluatePcCollection({cache:{...cache,...delta},now:time,config:off,modeConfig:off}).sources;
@@ -16,14 +16,26 @@ test('Ttang primary runs only 06:17/13:23, after upstream and at least five hour
         assert.deepEqual(check({fullCrawlUpdatedAt:'2026-09-05T23:00:00Z'}),[]);
     }
 });
-test('manual primary is independent of upstream age but retains cooldown and five-hour interval',()=>{
+test('manual primary retains cooldown but not the five-hour success interval',()=>{
     const now=Date.parse('2026-09-07T09:00:00Z'),cache={flights:[],fullCrawlUpdatedAt:'2026-09-07T08:00:00Z'};
     assert.ok(assertTtangAllowed(cache,{now,manual:true}));
-    for(const delta of [{sourceCircuits:{ttang:{nextProbeAt:'bad'}}},{ttangPrimary:{nextProbeAt:'2026-09-08'}},
-        {sourceUpdatedAt:{ttang:'2026-09-07T07:00:00Z'}}])
+    assert.doesNotThrow(()=>assertTtangAllowed({...cache,sourceUpdatedAt:{ttang:'2026-09-07T07:00:00Z'}},{now,manual:true}));
+    for(const delta of [{sourceCircuits:{ttang:{nextProbeAt:'bad'}}},{ttangPrimary:{nextProbeAt:'2026-09-08'}}])
         assert.throws(()=>assertTtangAllowed({...cache,...delta},{now,manual:true}));
     for(const fullCrawlUpdatedAt of ['2026-09-06',undefined])
         assert.doesNotThrow(()=>assertTtangAllowed({...cache,fullCrawlUpdatedAt},{now,manual:true}));
+});
+
+test('next allowed slot accepts recent prior-slot success while all cooldowns still refuse',()=>{
+    const now=Date.parse('2026-09-07T04:30:00Z');
+    const cache={flights:[],fullCrawlUpdatedAt:'2026-09-07T04:25:00Z',
+        ttangPrimary:{lastAttemptAt:'2026-09-07T03:55:00Z',lastSuccessAt:'2026-09-07T03:55:00Z'}};
+    assert.doesNotThrow(()=>assertTtangAllowed(cache,{now}));
+    for(const nextProbeAt of ['2026-09-08T04:30:00Z','bad']){
+        for(const sourceCircuits of [{ttang:{nextProbeAt}},{ttang:{localFallback:{nextProbeAt}}}])
+            assert.throws(()=>assertTtangAllowed({...cache,sourceCircuits},{now}),/source_cooldown/);
+        assert.throws(()=>assertTtangAllowed(cache,{now,cooldown:{nextProbeAt}}),/source_cooldown/);
+    }
 });
 test('one-month KST plan clamps month end; no 60-day expansion',()=>{
     const a=ttangDatePlan(new Date('2026-09-07T09:00:00Z'));

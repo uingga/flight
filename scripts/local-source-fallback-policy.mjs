@@ -8,7 +8,6 @@ import {
 } from '../src/lib/crawl-schedule-health.mjs';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-const TTANG_PC_MIN_INTERVAL_MS = 5 * 60 * 60 * 1000;
 const SOURCE_KEYS = ['ybtour', 'hanatour', 'modetour', 'onlinetour', 'ttang'];
 
 function timestamp(value) {
@@ -117,15 +116,14 @@ export function evaluateLocalSourceFallback({
             continue;
         }
         // 땡처리닷컴은 정규 수집과 같은 06:17·13:23 KST 회차만 PC 대체를 허용한다.
-        // 오전 회차가 늦게 끝나 오후 회차와 가까워진 날에는 실제 성공 시각부터 5시간을 보장한다.
+        // 성공 후 시간 간격 제한은 없지만 이미 완료된 같은 회차는 반복하지 않는다.
         if (source === 'ttang') {
             const previousLocal = circuit?.localFallback;
             const previousSuccessAt = previousLocal?.status === 'success'
                 ? timestamp(previousLocal.lastAttemptAt)
                 : null;
-            const tooSoonAfterSuccess = previousSuccessAt !== null
-                && nowTimestamp - previousSuccessAt < TTANG_PC_MIN_INTERVAL_MS;
-            if (!isTtangCrawlSlot(expectedAt) || tooSoonAfterSuccess) {
+            const alreadyCompletedSlot = previousSuccessAt !== null && previousSuccessAt >= expectedAt;
+            if (!isTtangCrawlSlot(expectedAt) || alreadyCompletedSlot) {
                 scheduleThrottledSources.push(source);
                 continue;
             }

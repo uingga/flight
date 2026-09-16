@@ -23,7 +23,8 @@ export function evaluatePcCollection({cache,now=new Date(),config=ONLINE_BROWSER
         && !future(tc?.nextProbeAt) && !future(tc?.localFallback?.nextProbeAt)
         && !future(cache?.ttangPrimary?.nextProbeAt)
         && !(Date.parse(cache?.ttangPrimary?.lastAttemptAt)>=slot)
-        && (!Number.isFinite(previousTtangSuccess) || ms-previousTtangSuccess>=5*3600000)) sources.push('ttang');
+        // A completed result from this slot is still a duplicate, regardless of worker.
+        && !(previousTtangSuccess>=slot)) sources.push('ttang');
     const online=cache?.onlinePrimary?.circuit;
     const interval = onlineCollectionInterval(cache, now);
     const intervalDue = !config.randomDayInterval || interval.due;
