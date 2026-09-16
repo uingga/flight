@@ -1,6 +1,7 @@
 import { ImageResponse } from 'next/og';
 import { NextRequest } from 'next/server';
 import { FlightOgCard } from './FlightOgCard';
+import { BlogBrandOgCard } from './BlogBrandOgCard';
 import { SHARE_GROUPS } from '@/lib/share-groups';
 
 export const runtime = 'edge';
@@ -38,7 +39,7 @@ export async function GET(request: NextRequest) {
 
     return new ImageResponse(
         (
-            group?.title ? <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', background: '#ff385c', color: 'white', padding: '70px', fontFamily: 'Pretendard' }}>
+            blog && searchParams.get('brand') === '1' ? <BlogBrandOgCard /> : group?.title ? <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', background: '#ff385c', color: 'white', padding: '70px', fontFamily: 'Pretendard' }}>
                 <div style={{ display: 'flex', fontSize: 30, fontWeight: 600 }}>티키티킷 · 함께 보는 항공권</div>
                 <div style={{ display: 'flex', fontSize: 72, fontWeight: 800, marginTop: 32 }}>{group.title}</div>
                 <div style={{ display: 'flex', fontSize: 32, marginTop: 28 }}>{group.arrival}</div>

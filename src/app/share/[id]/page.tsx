@@ -146,7 +146,8 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
                 .join('–')
             : '';
         const fallbackDep = typeof sp.dep === 'string' ? sp.dep : snapshot?.dep || archivedFlight?.departure_city || '';
-        const fallbackArr = typeof sp.arr === 'string' ? sp.arr : snapshot?.arr || archivedFlight?.arrival_city || '';
+        const rawFallbackArr = typeof sp.arr === 'string' ? sp.arr : snapshot?.arr || archivedFlight?.arrival_city || '';
+        const fallbackArr = blog ? rawFallbackArr.replace(/\([^)]+\)/g, '').trim() : rawFallbackArr;
         const fallbackPrice = typeof sp.price === 'string' ? Number(sp.price) : snapshot?.price || archivedFlight?.listed_price || 0;
         const fallbackDate = typeof sp.date === 'string' ? sp.date : snapshot?.date || archivedDate;
         const fallbackAirline = typeof sp.airline === 'string' ? sp.airline : snapshot?.airline || archivedFlight?.airline || '';

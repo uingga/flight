@@ -8,7 +8,7 @@ type Props = {
 async function blogProps(props: Props): Promise<Props> {
     return {
         params: props.params,
-        searchParams: Promise.resolve({ ...(await props.searchParams), utm_source: 'naver_blog' }),
+        searchParams: Promise.resolve({ ...(await props.searchParams), utm_source: 'naver_blog', v: 'blog-balanced-20260916' }),
     };
 }
 

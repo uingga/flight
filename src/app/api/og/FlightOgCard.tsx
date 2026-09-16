@@ -9,8 +9,8 @@ type FlightOgCardProps = {
 
 export function FlightOgCard({ dep, arr, priceText, dateText = '', format = 'default', priceNote = '' }: FlightOgCardProps) {
     const blog = format === 'blog';
-    const ticketHeight = blog ? 660 : 520;
-    const upperHeight = blog ? 420 : 330;
+    const ticketHeight = blog ? 600 : 520;
+    const upperHeight = blog ? 360 : 330;
     const contentScale = 0.95;
     const routeLength = dep.length + arr.length;
     const routeFontSize = Math.round((routeLength >= 13 ? 68 : routeLength >= 9 ? 78 : 90) * contentScale);
