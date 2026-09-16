@@ -2,6 +2,7 @@
 import { DatabaseSync } from 'node:sqlite';
 import { timingSafeEqual, createHash } from 'node:crypto';
 import { existsSync } from 'node:fs';
+import {latestAgencyRound} from './naver-round-handoff.mjs';
 
 export const CONTRACT = 'naver-ac-v1';
 export const kstDay = ms => new Date(ms + 9 * 3600000).toISOString().slice(0, 10);
@@ -17,6 +18,8 @@ export class Coordinator {
         this.db = new DatabaseSync(path);
         if(!writerFencing&&this.db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='publication'").get()){this.db.close();throw Error('legacy opener refused for fenced DB');}
         this.db.exec('PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL; PRAGMA busy_timeout=5000; CREATE TABLE IF NOT EXISTS days(day TEXT PRIMARY KEY, value TEXT NOT NULL)');
+        this.activationDay=this.db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='activation'").get()
+            ?this.db.prepare('SELECT day FROM activation WHERE id=1').get()?.day:null;
         this.readOnlyView = this.snapshot();
         if(writerFencing)this.db.exec("CREATE TABLE IF NOT EXISTS publication(id INTEGER PRIMARY KEY CHECK(id=1), value TEXT NOT NULL); INSERT OR IGNORE INTO publication VALUES(1,'{\"epoch\":0,\"writer\":null,\"requests\":{}}')");
         if(writerFencing){this.db.exec('BEGIN IMMEDIATE');try{const f=JSON.parse(this.db.prepare('SELECT value FROM publication WHERE id=1').get().value);f.epoch++;this.db.prepare('UPDATE publication SET value=? WHERE id=1').run(JSON.stringify(f));this.db.exec('COMMIT');}catch(error){this.db.exec('ROLLBACK');throw error;}}
@@ -46,6 +49,7 @@ export class Coordinator {
         } catch (error) { this.db.exec('ROLLBACK'); throw error; }
     }
     validate(input) {
+        if(this.activationDay)requireValue(kstDay(this.clock())>=this.activationDay,'activation day not reached; legacy budget preserved');
         requireValue(input.contract === CONTRACT, 'contract mismatch; legacy runner refused');
         requireValue(['A', 'C'].includes(input.worker) && nonempty(input.run), 'invalid worker/run');
     }
@@ -55,6 +59,7 @@ export class Coordinator {
         if (this.requiredAttestation) requireValue(input.attestation === this.requiredAttestation, 'unattested runner');
         requireValue(!s.blocked, 'blocked day');
         requireValue(s.owner === input.worker && s.runs[input.worker] === input.run, 'owner mismatch');
+        if(s.round)requireValue(input.round===s.round,'round ownership mismatch');
         requireValue(s.phase === phase, 'phase mismatch');
     }
     checkObservation(s,f,input) {
@@ -75,6 +80,10 @@ export class Coordinator {
         });
     }
     confirmObservation(input) {return this.transaction((s,f)=>{this.owner(s,input);this.checkObservation(s,f,input);});}
+    validRound(round,day) {
+        const time=Date.parse(round);
+        requireValue(Number.isFinite(time)&&kstDay(time)===day&&time<=this.clock()&&latestAgencyRound(time)===round,'invalid agency round');
+    }
     begin(input) {
         this.validate(input);
         if (input.attestation) requireValue(Boolean(this.requiredAttestation), 'coordinator attestation not configured');
@@ -83,9 +92,15 @@ export class Coordinator {
             if(fence)requireValue(!fence.writer,'writer owns publication fence');
             this.checkObservation(s,fence,input);
             requireValue(!s.blocked, 'blocked day');
-            requireValue(s.owner === null && !s.runs[input.worker], 'owner/run already acquired');
-            requireValue(input.worker === 'A' ? s.phase === 'new' : s.phase === 'ready-C', 'phase not ready');
-            if (input.worker === 'C') { requireValue(s.handoffs === 0, 'duplicate handoff'); s.handoffs++; }
+            requireValue(s.owner === null, 'owner/run already acquired');
+            if(input.round)this.validRound(input.round,s.day);
+            const nextRound=input.worker==='A'&&s.phase==='done'&&input.round&&s.round&&Date.parse(input.round)>Date.parse(s.round);
+            const nextC=input.worker==='C'&&s.phase==='ready-C'&&input.round===s.round&&s.round&&s.handoffRound!==s.round;
+            requireValue(!s.runs[input.worker]||((nextRound||nextC)&&s.runs[input.worker]===input.run),'owner/run already acquired');
+            requireValue(input.worker === 'A' ? s.phase === 'new'||nextRound : s.phase === 'ready-C', 'phase not ready');
+            if(nextRound)requireValue(s.used.A+s.used.C<400&&!Object.values(s.attempts).some(a=>a.status==='pending'),'round budget exhausted or pending');
+            if(input.worker==='A'&&input.round)s.round=input.round;
+            if (input.worker === 'C') { requireValue(s.round ? input.round===s.round&&s.handoffRound!==s.round : s.handoffs === 0, 'duplicate handoff'); s.handoffs++;s.handoffRound=s.round||null; }
             s.owner = input.worker; s.runs[input.worker] = input.run; s.phase = 'running';
             return { day: s.day, worker: input.worker, run: input.run, contract: CONTRACT };
         });
@@ -139,8 +154,10 @@ export class Coordinator {
     }
     resume(input) {
         return this.transaction(s => {
-            this.owner(s, input, 'paused-A');
+            this.owner(s, {...input,round:s.round}, 'paused-A');
             requireValue(input.worker === 'A', 'only A can resume phases');
+            if(s.round)requireValue(nonempty(input.round),'resumed round required');
+            if(input.round){this.validRound(input.round,s.day);requireValue(!s.round||Date.parse(input.round)>Date.parse(s.round),'duplicate resumed round');s.round=input.round;}
             if (this.requiredAttestation) requireValue(input.attestation === this.requiredAttestation, 'unattested runner');
             s.phase = 'running';
             return { day: s.day, worker: input.worker, run: input.run, contract: CONTRACT };
@@ -255,7 +272,7 @@ export function createHandler(coordinator, secrets, {beforeControl}={}) {
             const state = coordinator.readonlySnapshot(); // No SQLite call: even SELECT can update SHM read marks.
             return Response.json({ ok: true, state: state ? { day: state.day, phase: state.phase, owner: state.owner,
                 blocked: state.blocked, used: state.used, pending: Object.values(state.attempts).filter(a => a.status === 'pending').length,
-                verifiedVersion: state.verifiedVersion || null } : null, snapshotSource: 'last-local-commit-or-startup' });
+                  verifiedVersion: state.verifiedVersion || null, round:state.round||null } : null, snapshotSource: 'last-local-commit-or-startup' });
         }
         if (pathname !== '/control') return new Response('not found', { status: 404 });
         if (request.method !== 'POST') return new Response('method refused', { status: 405 });

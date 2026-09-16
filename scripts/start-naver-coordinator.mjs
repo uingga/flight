@@ -36,6 +36,7 @@ export async function startConfiguredCoordinator(env=process.env,{fixtureRoot,pu
     if(!Number.isInteger(relayPollMs)||relayPollMs<1000||relayPollMs>60000)throw Error('invalid relay polling interval');
     const coordinator=new Coordinator(dbPath,Date.now,env.NAVER_COORDINATION_APPROVED_DIGEST,{initialize:Boolean(root),writerFencing:true});
     try {
+        if(!root&&!/^\d{4}-\d{2}-\d{2}$/.test(coordinator.activationDay||''))throw Error('explicit activation boundary missing');
         const approveCode=async input=>{
             if(root)return false;
             const value=JSON.parse(fs.readFileSync(resolveFile('TIKIT_WRITER_CODE_APPROVAL_FILE'),'utf8'));

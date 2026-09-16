@@ -7,6 +7,9 @@ import {installationTokenProvider} from '../src/lib/writer-app-token.mjs';
 import {githubMrtClient} from '../src/lib/myrealtrip-schedule.mjs';
 import {mrtRoundForGeneralSlot} from '../src/lib/mrt-round-readiness.mjs';
 import {latestAgencyRound,evaluateRoundContinuation} from '../src/lib/naver-round-handoff.mjs';
+import {createBrokerClient} from '../src/lib/writer-broker-client.mjs';
+import {requestHttp} from '../src/lib/naver-http-request.mjs';
+import {waitForCache} from './wait-for-flight-api-cache.mjs';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 export const roundBridgeEnabled=(now=Date.now())=>now>=Date.parse('2026-09-16T07:31:00Z');
 export function roundBarrier({round,cache,pc,mrtDone}){
@@ -32,16 +35,34 @@ async function main(){
  const logDir=path.join(os.homedir(),'AppData/Local/Tikitikit/state');fs.mkdirSync(logDir,{recursive:true});
  const log=(message)=>fs.appendFileSync(path.join(logDir,'naver-round-bridge.log'),new Date().toISOString()+' '+message+'\n');
  const receipt=()=>fs.existsSync(statePath)?JSON.parse(fs.readFileSync(statePath,'utf8')):null;
+ const coordinated=process.env.NAVER_COORDINATION==='1';
+ const coordinatorToken=coordinated?fs.readFileSync(process.env.NAVER_COORDINATION_A_TOKEN_FILE,'utf8').trim():null;
+ const coordinatorStatus=async()=>{
+  const r=await requestHttp(new URL('/status',process.env.NAVER_COORDINATION_URL),{loopbackOnly:true,headers:{authorization:'Bearer '+coordinatorToken}});
+  if(!r.ok)throw Error('coordinator status unavailable');const value=await r.json();if(value.ok!==true)throw Error('invalid coordinator status');return value.state;
+ };
+ const broker=coordinated?createBrokerClient({url:process.env.NAVER_COORDINATION_URL,token:coordinatorToken}):null;
  while(true){
   const now=Date.now(),kst=new Date(now+9*3600000);
   if(kst.getUTCHours()*60+kst.getUTCMinutes()>=18*60+30)return;
   const round=latestAgencyRound(now);if(!round)return;
   const state=receipt(),day=kst.toISOString().slice(0,10);
-  if(state?.kstDate===day&&(state.navigationsUsed>=200||['blocked','degraded','running'].includes(state.phase)
+  if(coordinated){
+   const shared=await coordinatorStatus();
+   if(shared?.day===day){
+    if(shared.blocked||shared.pending||(shared.owner&&shared.phase!=='paused-A'))throw Error('coordinator unsafe or already running');
+    if(shared.used.A+shared.used.C>=400)return;
+    if(shared.phase==='ready-C'){
+     const r=execute(ps,['-NoProfile','-NonInteractive','-File',path.join(root,'scripts/run-naver-crawl.ps1'),'-Scheduled'],{NAVER_COMPLETED_ROUND:shared.round||round});
+     if(r.status!==0)throw Error('pending C handoff refused');continue;
+    }
+   }
+  }
+  if(state?.kstDate===day&&((!coordinated&&state.navigationsUsed>=200)||['blocked','degraded','running'].includes(state.phase)
     ||(state.activeRound&&!state.roundPublished)||Date.parse(state.lastRoundAt)>=Date.parse(round)))return;
   // No stashing: unexpected code conflicts must be reviewed, never hidden by automation.
-  const sync=execute('git',['pull','--ff-only','origin','main']);if(sync.status!==0)throw Error('runtime refresh failed');
-  const cache=JSON.parse(fs.readFileSync(path.join(root,'data/all-flights-cache.json'),'utf8'));
+  if(!coordinated){const sync=execute('git',['pull','--ff-only','origin','main']);if(sync.status!==0)throw Error('runtime refresh failed');}
+  const cache=coordinated?(await broker('readInputs',{identity:{worker:'A',run:'round-read',contract:'naver-ac-v1'}})).cache:JSON.parse(fs.readFileSync(path.join(root,'data/all-flights-cache.json'),'utf8'));
   const inspection=execute(ps,['-NoProfile','-NonInteractive','-Command',
    "$t=Get-ScheduledTask -TaskName TikitikitBlockedSourceCrawl -ErrorAction Stop; $i=$t|Get-ScheduledTaskInfo -ErrorAction Stop; [pscustomobject]@{state=[string]$t.State;result=[long]$i.LastTaskResult;startedAt=$i.LastRunTime.ToUniversalTime().ToString('o')}|ConvertTo-Json -Compress"]);
   if(inspection.status!==0)throw Error('source task status unavailable');
@@ -50,9 +71,16 @@ async function main(){
   const done=await api('git/ref/tags/mrt-done/'+mrt.expectedAt.replace(/[-:.]/g,''));
   if(![200,404].includes(done.status))throw Error('MRT completion status unavailable');
   if(roundBarrier({round,cache,pc,mrtDone:done.status===200})){
-   const policy=evaluateRoundContinuation({now,cache,state,round});
+   const policy=evaluateRoundContinuation({now,cache,state,round,totalBudget:coordinated?400:200});
    if(policy.shouldRun){
     log('ready '+round+' remaining='+policy.navigationBudget);
+    if(coordinated){
+     await waitForCache({cache,exact:false,fetcher:(url,options)=>requestHttp(url,{headers:options.headers}),siteUrl:'https://www.tikitikit.kr'});
+     const r=execute(ps,['-NoProfile','-NonInteractive','-File',path.join(root,'scripts/run-naver-crawl.ps1'),'-Scheduled'],{NAVER_COMPLETED_ROUND:round});
+     if(r.status!==0)throw Error('coordinated round failed');
+     const published=receipt();if(published?.activeRound!==round||published.roundPublished!==true)throw Error('coordinated round not published');
+     log('coordinated published '+round);continue;
+    }
     await performRound({round,
      run:async()=>{
       // Existing API readback requires this local cache to have reached the serving API.

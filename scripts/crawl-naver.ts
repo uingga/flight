@@ -369,7 +369,9 @@ export async function runNaver(session: any = null, fixture: any = null) {
     }
 
     // 3. 브라우저 실행
+    if(process.env.NAVER_BROWSER_CHANNEL && process.env.NAVER_BROWSER_CHANNEL!=='chrome')throw Error('Unsupported Naver browser channel');
     const browser = await chromium.launch({
+        ...(process.env.NAVER_BROWSER_CHANNEL==='chrome'?{channel:'chrome'}:{}),
         headless: false,
         args: [
             '--no-sandbox',

@@ -11,6 +11,7 @@ export function collectorEnvironment(codeRoot:string,workRoot:string,policy:any,
  const budget=worker==='A'?policy.navigationBudget:200;
  if(!Number.isInteger(budget)||budget<0||budget>200)throw Error('invalid collector budget');
  Object.assign(env,{SOURCE_FILTER:(policy.sources||[]).join(',')||'all',MAX_FLIGHTS:String(budget),MAX_NAVIGATIONS:String(budget),NAVER_RUN_STATUS_FILE:path.join(workRoot,'run-status.json')});
+ if(worker==='C')env.NAVER_BROWSER_CHANNEL='chrome'; // Existing installed Chrome; no browser download on C.
  if(env.NAVER_LIVE_RUN!=='1'||env.STANDARD_REFRESH_DAYS!=='2')throw Error('invalid collector policy');
  return env;
 }

@@ -1,13 +1,15 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import {execFileSync} from 'node:child_process';
 import {createHttpClient,requestHttp} from '../../src/lib/naver-http.mjs';
 import {createGitHubPublisher,createExactReadback} from '../../src/lib/naver-publication.mjs';
 import {main as selectTodayPick} from '../select-today-pick.mjs';
 import {attestRunner,runnerDigest} from './naver-admission.mjs';
-import {createHash} from 'node:crypto';
+import {createHash,randomUUID} from 'node:crypto';
 import {collectorEnvironment} from './naver-collector-contract';
 import {assertMode,resultVersion} from '../../src/lib/naver-coordination-contract.mjs';
 import {brokerPublication,createBrokerClient} from '../../src/lib/writer-broker-client.mjs';
+import {waitForCache} from '../wait-for-flight-api-cache.mjs';
 let productionStarted=false;
 
 export async function prepareRuntimeInputs(publication: any, root: string, input?:any) {
@@ -28,7 +30,9 @@ export async function configuredRunnerOptions(env: NodeJS.ProcessEnv=process.env
     const root=process.cwd();
     const workParent=fs.realpathSync(need('NAVER_COORDINATION_WORK_ROOT'));
     const run=need('NAVER_COORDINATION_RUN_ID');
-    const workRoot=path.join(workParent,worker+'-'+createHash('sha256').update(run).digest('hex'));
+    // A resumed phase retains its ledger identity but receives fresh process-local inputs.
+    // No directory is created until ownership admission succeeds.
+    const workRoot=path.join(workParent,worker+'-'+createHash('sha256').update(run).digest('hex')+'-'+randomUUID());
     if(fixture && (!fixture.origin || !['127.0.0.1','[::1]'].includes(new URL(fixture.origin).hostname)))throw Error('fixture origin refused');
     attestRunner({digest:runnerDigest(root),approvedDigest:need('NAVER_COORDINATION_APPROVED_DIGEST'),externalLaunchersDisabled:env.NAVER_COORDINATION_EXTERNAL_ATTESTED==='1'});
     const read=(file:string)=>JSON.parse(fs.readFileSync(file,'utf8'));
@@ -48,13 +52,29 @@ export async function configuredRunnerOptions(env: NodeJS.ProcessEnv=process.env
             ||proof.appId!==Number(need('TIKIT_WRITER_APP_ID'))||proof.rulesetId!==Number(need('TIKIT_WRITER_RULESET_ID')))
             throw Error('coordinator authority scope mismatch');
     }
-    const identity={worker,run,contract:'naver-ac-v1'};
+    let round=env.NAVER_COMPLETED_ROUND;
+    if(worker==='C'){
+        const status=await requestHttp(new URL('/status',url),{headers:{authorization:`Bearer ${credential('NAVER_COORDINATION_C_TOKEN_FILE')}`},loopbackOnly:true});
+        if(!status.ok)throw Error('C round status unavailable');
+        round=(await status.json()).state?.round||undefined;
+    }
+    const identity={worker,run,contract:'naver-ac-v1',...(round?{round}:{})};
     const viaBroker=!fixture||fixture.broker===true;
     const publication:any=viaBroker
         ? brokerPublication(createBrokerClient({url,token:credential(`NAVER_COORDINATION_${worker}_TOKEN_FILE`)}),identity)
         : createGitHubPublisher({repository:need('NAVER_COORDINATION_REPOSITORY'),branch:need('NAVER_COORDINATION_BRANCH'),token:credential('NAVER_COORDINATION_GITHUB_TOKEN_FILE'),origin:fixture.origin,fixture:true});
     const readbackUrl=need('NAVER_COORDINATION_READBACK_URL');
     const selectionUrl=new URL(readbackUrl);selectionUrl.searchParams.delete('summaryOnly');
+    // Observe the fallback writer before reading its published cache, as the legacy PS1 does.
+    let pcCollectionPending=fixture?.pcCollectionPending===true;
+    if(worker==='A'&&!fixture){
+        pcCollectionPending=true;
+        try {
+            const powershell=path.join(process.env.SystemRoot||'C:/Windows','System32/WindowsPowerShell/v1.0/powershell.exe');
+            const pending=execFileSync(powershell,['-NoProfile','-NonInteractive','-File',path.join(root,'scripts/read-naver-pc-pending.ps1')],{encoding:'utf8',timeout:15000,windowsHide:true,stdio:['ignore','pipe','pipe']}).trim();
+            pcCollectionPending=pending!=='0';
+        } catch { /* Unknown status remains pending, never false. */ }
+    }
     const input=await publication.readInputs(true),{cache}=input;
     const statePath=worker==='A'?need('NAVER_COORDINATION_A_STATE_FILE'):null;
     const exact=createExactReadback({url:readbackUrl,fixture:!!fixture});
@@ -75,15 +95,20 @@ export async function configuredRunnerOptions(env: NodeJS.ProcessEnv=process.env
         }
     }
     let restore:(()=>void)|undefined;
+    // One immutable claim per configured process, not per daily run. A may publish
+    // multiple normal phases with the same daily budget identity; failed phases
+    // remain owned in the ledger and cannot obtain a new claim by restarting.
+    const publicationClaim=createHash('sha256').update(identity.run+':publication:'+randomUUID()).digest('hex');
     return {root,workRoot,identity,
         attestation:{approvedDigest:need('NAVER_COORDINATION_APPROVED_DIGEST'),externalLaunchersDisabled:env.NAVER_COORDINATION_EXTERNAL_ATTESTED==='1'},
         client,
         publisher:publicationClient,
         ...((viaBroker||fixture?.writerFencing)?{
-            acquirePublication:async(identity:any)=>{const lease=await publicationClient.writerAcquire({...identity,writer:'naver',claim:createHash('sha256').update(identity.run+':publication').digest('hex'),ttlMs:600000});publication.setLease?.({...identity,...lease});publication.attachFence(()=>publicationClient.writerCheck(lease));return lease;},
+            acquirePublication:async(identity:any)=>{const lease=await publicationClient.writerAcquire({...identity,writer:'naver',claim:publicationClaim,ttlMs:600000});publication.setLease?.({...identity,...lease});publication.attachFence(()=>publicationClient.writerCheck(lease));return lease;},
             recordPublication:async(identity:any,observed:string)=>publicationClient.writerObserved({...identity,observed}),
         }:{}),
-        policyInput:worker==='A'?{now:fixture?.now||new Date(),cache,state:fs.existsSync(statePath!)?read(statePath!):null}:undefined,
+        policyInput:worker==='A'?{now:fixture?.now||new Date(),cache,state:fs.existsSync(statePath!)?read(statePath!):null,
+            pcCollectionPending,completedRound:round||null,approvedRecoverySources:(env.NAVER_COORDINATION_APPROVED_RECOVERY_SOURCES||'').split(',').filter(Boolean)}:undefined,
         initialize:async(_identity:any,policy:any)=>{
             if(!fixture && (!assertMode()||productionStarted))throw Error('one configured collector per process required');
             await publication.assertInput(input.ref);
@@ -107,7 +132,11 @@ export async function configuredRunnerOptions(env: NodeJS.ProcessEnv=process.env
         resume:env.NAVER_COORDINATION_RESUME==='1',
         loadPrices:async()=>read(path.join(workRoot,'data/naver-prices.json')),
         publish:publication.publish,
-        readback:exact,
+        readback:fixture?exact:async(cache:any)=>{
+            await waitForCache({cache,exact:true,siteUrl:new URL(readbackUrl).origin,timeoutMs:480000,intervalMs:12000,
+                fetcher:async(target:any,settings:any)=>{await publication.assertPublished();const response=await requestHttp(target,{headers:settings.headers,timeoutMs:10000});await publication.assertPublished();return response;}});
+            return exact(cache);
+        },
         beforeRelease:async(cache:any)=>{await publication.assertPublished();await exact(cache);await publication.assertPublished();},
         selectTodayPick:async({sources}:any)=>{
             await selectTodayPick({sources,outputPath:path.join(workRoot,'data/today-pick.json'),fetcher:async()=>requestHttp(selectionUrl,{loopbackOnly:!!fixture})});
@@ -119,8 +148,14 @@ export async function configuredRunnerOptions(env: NodeJS.ProcessEnv=process.env
             if(!response.ok)throw Error('completion status refused');
             const status=await response.json();
             const state={kstDate:status.state.day,phase:policy.deferTodayPick?'partial_waiting':'success',navigationsUsed:status.state.used.A,
+                ...(round?{activeRound:round,lastRoundAt:round,roundPublished:false}:{}),
                 completedSources:[...new Set([...(policy.completedSources||[]),...(policy.sources||[])])],pendingSources:policy.pendingSources||[]};
             const temporary=statePath+'.coordinated-tmp';fs.writeFileSync(temporary,JSON.stringify(state));fs.renameSync(temporary,statePath!);
+        },
+        afterRelease:async()=>{
+            if(worker!=='A'||!round)return;
+            const state=read(statePath!);if(state.activeRound!==round)throw Error('completion round changed');
+            const temporary=statePath+'.coordinated-tmp';fs.writeFileSync(temporary,JSON.stringify({...state,roundPublished:true}));fs.renameSync(temporary,statePath!);
         },
     };
 }

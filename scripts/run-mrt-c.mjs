@@ -2,7 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import {spawn} from 'node:child_process';
-import {randomUUID} from 'node:crypto';
+import {randomUUID,createHash} from 'node:crypto';
+import {createBrokerClient} from '../src/lib/writer-broker-client.mjs';
 import {fileURLToPath} from 'node:url';
 import {installationTokenProvider} from '../src/lib/writer-app-token.mjs';
 import {githubMrtClient} from '../src/lib/myrealtrip-schedule.mjs';
@@ -27,7 +28,15 @@ export async function readMrtJson(api,file,ref){
  if(r.status!==200||typeof r.data.content!=='string'||!r.data.content)throw Error('input content unavailable');
  return JSON.parse(Buffer.from(r.data.content,'base64').toString());
 }
-export async function publishMrtResult(api,ticket,reply){
+export function configuredMrtWriter(env=process.env,broker){
+ const mode=env.NAVER_COORDINATION||'0';
+ if(!['0','1'].includes(mode))throw Error('invalid writer mode');
+ if(mode==='0'&&Object.entries(env).some(([k,v])=>v&&(k.startsWith('NAVER_COORDINATION_')||k.startsWith('TIKIT_WRITER_'))))throw Error('partial coordinated writer configuration');
+ return mode==='1'?(broker||createBrokerClient({url:env.TIKIT_WRITER_URL,
+  token:env.TIKIT_WRITER_TOKEN||fs.readFileSync(env.TIKIT_WRITER_TOKEN_FILE,'utf8').trim()})):null;
+}
+export async function publishMrtResult(api,ticket,reply,{env=process.env,broker}={}){
+ const invoke=configuredMrtWriter(env,broker);
  const required=async(p,m,b)=>{const r=await api(p,m,b);if(r.status<200||r.status>=300)throw Error('MRT publication failed');return r.data;};
  const read=(file,ref)=>readMrtJson(api,file,ref);
  for(let attempt=0;attempt<5;attempt++){
@@ -35,6 +44,16 @@ export async function publishMrtResult(api,ticket,reply){
   const base=(await required('git/ref/heads/main')).object.sha;
   const cache=mergeCacheSource(await read('all-flights-cache.json',base),reply.cache,'myrealtrip');
   const logs=mergeCrawlLogHistories(await read('crawl-log.json',base),reply.logs,['myrealtrip']).history;
+  if(invoke){
+   const entries=[['data/all-flights-cache.json',cache],['data/crawl-log.json',logs]];
+   const requestId=createHash('sha256').update(JSON.stringify({owner:ticket.owner,base,entries})).digest('hex');
+   await assertMrtOwner(api,ticket);
+   const result=await invoke('commit',{expectedBase:base,requestId,entries});
+   if(!/^[a-f0-9]{40}$/.test(result?.commitSha||''))throw Error('invalid broker result');
+   const observed=await read('all-flights-cache.json',result.commitSha);
+   if(JSON.stringify(observed)!==JSON.stringify(cache))throw Error('MRT publication readback mismatch');
+   return result.commitSha;
+  }
   const parent=await required('git/commits/'+base);
   const tree=await required('git/trees','POST',{base_tree:parent.tree.sha,tree:[
    {path:'data/all-flights-cache.json',mode:'100644',type:'blob',content:JSON.stringify(cache)},
@@ -54,6 +73,8 @@ export async function publishMrtResult(api,ticket,reply){
 async function main(){
  if(process.argv[2]!=='--scheduled')throw Error('scheduled mode required');
  const slot=cSlot();if(!slot){console.log('outside eligible slot; no requests');return;}
+ const broker=configuredMrtWriter();
+ if(broker)await broker('readInputs'); // Verify scoped authentication before admission or collection.
  const token=installationTokenProvider({appId:4952321,installationId:161894104,repository:'uingga/flight',
   privateKey:fs.readFileSync(path.join(os.homedir(),'AppData/Local/Tikitikit/publisher-auth/github-app.private-key.pem'),'utf8')});
  const api=githubMrtClient(token);
@@ -85,7 +106,7 @@ async function main(){
  });
  if(reply.protocol!=='mrt-c-v1'||reply.id!==id||reply.slot!==slot||![0,1].includes(reply.exitCode)||!reply.logs||!Array.isArray(reply.cache?.flights))throw Error('unverified worker result');
  fs.writeFileSync(path.join(dir,'reply.json'),JSON.stringify(reply));
- const commit=await publishMrtResult(api,ticket,reply);fs.writeFileSync(path.join(dir,'published.json'),JSON.stringify({commit}));
+ const commit=await publishMrtResult(api,ticket,reply,{broker});fs.writeFileSync(path.join(dir,'published.json'),JSON.stringify({commit}));
  // A fully published explicit circuit is shared by both hosts. Unknown failures retain ownership.
  if(reply.exitCode!==0 && !(Date.parse(reply.cache.sourceCircuits?.myrealtrip?.nextProbeAt)>Date.now()))
   throw Error('collector failed; result saved, shared admission retained');

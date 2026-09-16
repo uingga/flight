@@ -19,7 +19,17 @@ $ProjectDir = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Pat
 & node (Join-Path $ProjectDir 'scripts\naver-ac-preflight.mjs')
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 if ($env:NAVER_COORDINATION -eq '1') {
-    & npx.cmd --no-install tsx (Join-Path $ProjectDir 'scripts\run-naver-ac.ts')
+    Set-Location -LiteralPath $ProjectDir
+    if ($env:NAVER_COORDINATION_WORKER -eq 'A') {
+        if (-not $env:NAVER_COORDINATION_HOST_CONFIG) { throw 'Coordinated A host configuration required' }
+        if ($ApprovedRecoverySources) { $env:NAVER_COORDINATION_APPROVED_RECOVERY_SOURCES = $ApprovedRecoverySources }
+        & node (Join-Path $ProjectDir 'scripts\run-naver-host.mjs') --config $env:NAVER_COORDINATION_HOST_CONFIG
+        exit $LASTEXITCODE
+    }
+    $CoordinatedArgs = @('--no-install', 'tsx', (Join-Path $ProjectDir 'scripts\run-naver-ac.ts'))
+    if ($Scheduled) { $CoordinatedArgs += '--scheduled' }
+    if ($ApprovedRecoverySources) { $CoordinatedArgs += @('--approved-recovery-sources', $ApprovedRecoverySources) }
+    & npx.cmd @CoordinatedArgs
     exit $LASTEXITCODE
 }
 $LogFile = Join-Path $ProjectDir 'data\naver-crawl-local.log'

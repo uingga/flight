@@ -10,6 +10,8 @@ import { applyNaverFilter } from './filter-by-naver';
 import { main as selectTodayPick } from './select-today-pick.mjs';
 import { evaluateLocalNaverRun } from './local-naver-run-policy.mjs';
 import { configuredRunnerOptions } from './lib/naver-runtime-config';
+import { runScheduledNaver, scheduledArguments } from './lib/naver-scheduled-run.mjs';
+import {evaluateRoundContinuation} from '../src/lib/naver-round-handoff.mjs';
 
 export function loadCandidateSnapshot(root = process.cwd(), read = readFileSync) {
     const cache = JSON.parse(read(path.join(root, 'data/all-flights-cache.json'), 'utf8'));
@@ -24,7 +26,11 @@ export function loadCandidateSnapshot(root = process.cwd(), read = readFileSync)
 export async function runNaverAc(options: any) {
     const attestation = attestRunner({ ...options.attestation, digest: runnerDigest(options.root || process.cwd()) });
     if (options.identity.worker === 'A' && !options.policyInput) throw Error('legacy A policy input required');
-    const policy: any = options.identity.worker === 'A' ? evaluateLocalNaverRun(options.policyInput) : {};
+    let policy: any = options.identity.worker === 'A' ? evaluateLocalNaverRun(options.policyInput) : {};
+    if(options.identity.worker==='A'&&options.policyInput?.completedRound&&policy.reason==='daily_budget_exhausted'){
+        const refresh=evaluateRoundContinuation({now:new Date(options.policyInput.now||Date.now()).getTime(),cache:options.policyInput.cache,state:options.policyInput.state,round:options.policyInput.completedRound,totalBudget:400});
+        if(refresh.shouldRun)policy={...refresh,shouldRun:false,shouldFinalize:true,navigationBudget:0};
+    }
     if (options.identity.worker === 'A' && !policy.shouldRun && !policy.shouldFinalize) return { status: 'waiting', reason: policy.reason };
     const { client, publisher, publish, readback } = options;
     const loadSnapshot = options.loadSnapshot || (() => loadCandidateSnapshot(options.root));
@@ -79,16 +85,19 @@ export async function runNaverAc(options: any) {
     await options.recordPublication?.(identity,observed);
     await publisher.verifyAndRelease({ ...identity, expected: version, observed,
         defer: identity.worker === 'A' && policy.deferTodayPick === true });
+    await options.afterRelease?.();
     return { version, worker: identity.worker };
     } finally { await options.dispose?.(); }
 }
 
-export async function main(options?: any) {
+export async function main(options?: any, args=process.argv.slice(2)) {
     if (!assertMode()) throw Error('coordinated runner requires coordinated mode');
     if (options) return runNaverAc(options);
-    const configured = await configuredRunnerOptions();
-    process.chdir(configured.root);
-    return runNaverAc(configured);
+    const {scheduled,approvedRecoverySources}=scheduledArguments(args);
+    const env={...process.env,NAVER_COORDINATION_APPROVED_RECOVERY_SOURCES:approvedRecoverySources};
+    return runScheduledNaver({scheduled,
+        configure:()=>configuredRunnerOptions(env),
+        run:runNaverAc});
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
     main().catch(error => { console.error(error.message); process.exitCode = 1; });

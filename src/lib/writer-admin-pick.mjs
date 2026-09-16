@@ -2,7 +2,8 @@ import {createHash} from 'node:crypto';
 import {createBrokerClient} from './writer-broker-client.mjs';
 export async function publishAdminPick({flight,buildPick,env=process.env,invoke=undefined}) {
  if(env.NAVER_COORDINATION!=='1')throw Error('coordinated admin publication requires explicit mode');
- const call=invoke||createBrokerClient({url:env.TIKIT_WRITER_URL,token:env.TIKIT_WRITER_ADMIN_TOKEN});
+ const token=env.TIKIT_WRITER_ADMIN_TOKEN||JSON.parse(env.TIKIT_WRITER_RELAY_SECRETS_JSON||'{}').admin;
+ const call=invoke||createBrokerClient({url:env.TIKIT_WRITER_URL,token});
  const snapshot=await call('readInputs');
  if(!/^[a-f0-9]{40}$/.test(snapshot?.ref||'')||!Array.isArray(snapshot.cache?.flights))throw Error('invalid admin snapshot');
  const current=snapshot.cache.flights.find(item=>item.id===flight.id);

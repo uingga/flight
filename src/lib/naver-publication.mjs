@@ -83,7 +83,11 @@ export function createGitHubPublisher({ repository, branch, token, origin='https
             const head=await api('GET','/git/ref/heads/'+encodeURIComponent(branch));
             if(typeof head.object?.sha!=='string')throw Error('invalid input head');
             const read=async file=>{
-                const value=await api('GET','/contents/data/'+file+'?ref='+encodeURIComponent(head.object.sha));
+                  let value=await api('GET','/contents/data/'+file+'?ref='+encodeURIComponent(head.object.sha));
+                  if(value.encoding==='none'){
+                      if(!/^[a-f0-9]{40}$/.test(value.sha||''))throw Error('invalid input blob');
+                      value=await api('GET','/git/blobs/'+value.sha);
+                  }
                 if(value.encoding!=='base64'||typeof value.content!=='string')throw Error('invalid input content');
                 return JSON.parse(Buffer.from(value.content,'base64').toString('utf8'));
             };
