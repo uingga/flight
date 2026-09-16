@@ -1,0 +1,16 @@
+.list { border: 1px solid #e8e8e8; border-radius: 12px; overflow: hidden; }
+.heading, .row { display: grid; grid-template-columns: minmax(0,1fr) 155px 155px; align-items: center; gap: 16px; padding: 14px 18px; }
+.heading { background: #f7f7f7; font-size: 12px; color: #707070; }
+.row + .row { border-top: 1px solid #e8e8e8; }
+.row strong { font-size: 15px; font-weight: 700; }
+.row small { display: block; margin-top: 4px; color: #707070; font-size: 12px; line-height: 1.5; }
+.rank { display: inline-block; min-width: 24px; color: #707070; }
+.metric { font-size: 13px; }
+.metric span { display: none; }
+.note { color: #707070; font-size: 12px; line-height: 1.7; margin: 12px 0 0; }
+@media(max-width:640px) {
+ .heading { display: none; }
+ .row { grid-template-columns: 1fr 1fr; gap: 12px; padding: 16px; }
+ .row > div:first-child { grid-column: 1 / -1; }
+ .metric span { display: block; font-size: 11px; color: #707070; margin-bottom: 4px; }
+}
