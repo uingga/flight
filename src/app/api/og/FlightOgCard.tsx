@@ -9,8 +9,10 @@ type FlightOgCardProps = {
 
 export function FlightOgCard({ dep, arr, priceText, dateText = '', format = 'default', priceNote = '' }: FlightOgCardProps) {
     const blog = format === 'blog';
-    const ticketHeight = blog ? 600 : 520;
-    const upperHeight = blog ? 360 : 330;
+    // Naver's native mobile editor center-crops the 5:3 card to about 2.2:1.
+    // Keep the whole ticket within that shared safe area, without shrinking type.
+    const ticketHeight = blog ? 460 : 520;
+    const upperHeight = blog ? 270 : 330;
     const contentScale = 0.95;
     const routeLength = dep.length + arr.length;
     const routeFontSize = Math.round((routeLength >= 13 ? 68 : routeLength >= 9 ? 78 : 90) * contentScale);
@@ -62,7 +64,7 @@ export function FlightOgCard({ dep, arr, priceText, dateText = '', format = 'def
                     <div
                         style={{
                             position: 'absolute',
-                            top: '34px',
+                            top: blog ? '18px' : '34px',
                             right: '46px',
                             display: 'flex',
                             alignItems: 'center',
