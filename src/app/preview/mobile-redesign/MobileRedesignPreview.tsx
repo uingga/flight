@@ -5,7 +5,7 @@ import { flushSync } from 'react-dom';
 import DropHero from '@/components/DropHero';
 import { dropHeroAlternatives } from '@/lib/drop-hero-schedules';
 import { getCityImagePath } from '@/lib/city-image';
-import { priceDropKey, priceDropDay, priceDropLabel, priceDropAmountLabel, type PriceDropRecord } from '@/lib/price-drop-insight';
+import { groupPriceDropFlights, priceDropKey, priceDropDay, priceDropLabel, priceDropAmountLabel, type PriceDropRecord } from '@/lib/price-drop-insight';
 import { shareGroupDepartureFilter } from '@/lib/share-group-departure';
 
 import { Fragment, type FormEvent, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -141,6 +141,7 @@ interface FreshDesktopDragState {
 }
 
 interface FreshRouteResults {
+    priceDropKeys?: string[];
     dropFlightIds?: string[];
     dropPrice?: number;
     route: string;
@@ -2683,8 +2684,18 @@ export default function MobileRedesignPreview({
             .slice(0, 12);
     }, [displayedFlights, query, sort]);
 
+    const [priceDrops, setPriceDrops] = useState<Record<string, PriceDropRecord>>({});
     const freshRouteResultFlights = useMemo(() => {
         if (!freshRouteResults) return [];
+        if (freshRouteResults.priceDropKeys) {
+            const keys = new Set(freshRouteResults.priceDropKeys);
+            return groupPriceDropFlights(flights.filter(flight => keys.has(priceDropKey(flight))),
+                priceDrops, normalizedRoute, displayedFlightPrice)
+                .find(group => group.route === freshRouteResults.route)?.flights
+                .slice().sort((a, b) => sort === 'price'
+                    ? displayedFlightPrice(a) - displayedFlightPrice(b)
+                    : sort === 'date' ? a.departure.date.localeCompare(b.departure.date) : compareRecommended(a, b)) || [];
+        }
         if (freshRouteResults.dropFlightIds) {
             const ids = new Set(freshRouteResults.dropFlightIds);
             return flights.filter(flight => ids.has(flight.id) && displayedFlightPrice(flight) === freshRouteResults.dropPrice)
@@ -2705,11 +2716,10 @@ export default function MobileRedesignPreview({
             return compareRecommended(a, b)
                 || (parseDate(a.departure.date)?.getTime() || 0) - (parseDate(b.departure.date)?.getTime() || 0);
         });
-    }, [compareRecommended, flights, freshRouteResults, sort]);
+    }, [compareRecommended, flights, freshRouteResults, sort, priceDrops]);
     const feedFlights = freshRouteResults
         ? applyManualFlightOrder(freshRouteResultFlights, manualPlacements, { sort })
         : displayedFlights;
-    const [priceDrops, setPriceDrops] = useState<Record<string, PriceDropRecord>>({});
     useEffect(() => {
         const controller = new AbortController();
         void fetch('/api/price-drop-flights', { signal: controller.signal })
@@ -2721,16 +2731,10 @@ export default function MobileRedesignPreview({
             }).catch(() => { if (!controller.signal.aborted) setPriceDrops({}); });
         return () => controller.abort();
     }, [flights]);
-    const priceDropFlights = useMemo(() => {
-        const seen = new Set<string>();
-        return feedFlights.filter(flight => {
-            const key = priceDropKey(flight);
-            const drop = priceDrops[key];
-            if (!drop || drop.currentPrice !== displayedFlightPrice(flight) || seen.has(key)) return false;
-            seen.add(key);
-            return true;
-        }).sort((a, b) => priceDrops[priceDropKey(b)].amount - priceDrops[priceDropKey(a)].amount);
-    }, [feedFlights, priceDrops]);
+    const priceDropGroups = useMemo(() => groupPriceDropFlights(
+        displayedFlights, priceDrops, normalizedRoute, displayedFlightPrice,
+    ), [displayedFlights, priceDrops]);
+    const priceDropFlights = priceDropGroups.map(group => group.representative);
     const dropHeroPick = !freshRouteResults && isDefaultView && todayPickId
         && featuredPick && getCityImagePath(featuredPick.flight.arrival.city) ? featuredPick : null;
     const ordinaryFeedFlights = dropHeroPick ? feedFlights.filter(flight => flight.id !== dropHeroPick.flight.id) : feedFlights;
@@ -2804,13 +2808,13 @@ export default function MobileRedesignPreview({
     useEffect(() => {
         const syncDropResults = () => {
             const next = window.history.state?.tikitikitDropResults as FreshRouteResults | undefined;
-            const valid = next && Array.isArray(next.dropFlightIds) ? next : null;
+            const valid = next && (Array.isArray(next.dropFlightIds) || Array.isArray(next.priceDropKeys)) ? next : null;
             if (JSON.stringify(valid) === JSON.stringify(dropResultsTargetRef.current)) return;
             void transitionDropResults(valid, valid ? undefined : window.history.state?.tikitikitDropOriginY ?? freshRouteOriginScrollRef.current);
         };
         // Restore the list on refresh without replaying an entrance animation.
         const saved = window.history.state?.tikitikitDropResults as FreshRouteResults | undefined;
-        if (saved && Array.isArray(saved.dropFlightIds)) {
+        if (saved && (Array.isArray(saved.dropFlightIds) || Array.isArray(saved.priceDropKeys))) {
             dropResultsTargetRef.current = saved;
             setFreshRouteResults(saved);
         }
@@ -4086,7 +4090,9 @@ export default function MobileRedesignPreview({
                                 : freshRouteResults
                                     ? freshRouteResults.dropFlightIds
                                         ? `TIKIT DROP · 같은 가격의 일정 ${feedFlights.length.toLocaleString('ko-KR')}개`
-                                        : `${freshRouteResults.copyPrefix} 들어온 항공권 ${feedFlights.length.toLocaleString('ko-KR')}개`
+                                        : freshRouteResults.priceDropKeys
+                                            ? `가격이 내려간 항공권 ${feedFlights.length.toLocaleString('ko-KR')}개`
+                                            : `${freshRouteResults.copyPrefix} 들어온 항공권 ${feedFlights.length.toLocaleString('ko-KR')}개`
                                     : `${resultCount.toLocaleString('ko-KR')}개 · ${updatedLabel}`}</span>
                         </div>
                         <div className={styles.feedHeadingActions}>
@@ -4390,7 +4396,28 @@ export default function MobileRedesignPreview({
                                         </article>
                                     </div>
                                     {!freshRouteResults && isDefaultView && cardNumber === priceDropInsightCard && priceDropFlights.length > 0 && (
-                                        <WeekendFlightsInsight flights={priceDropFlights} priceDrops={priceDrops} onOpen={flight => openFlight(flight, 'insight_price_drop')} />
+                                        <WeekendFlightsInsight flights={priceDropFlights} priceDrops={priceDrops} onOpen={flight => {
+                                            const group = priceDropGroups.find(item => item.route === normalizedRoute(flight));
+                                            if (!group) return;
+                                            if (group.flights.length === 1) {
+                                                openFlight(group.representative, 'insight_price_drop');
+                                                return;
+                                            }
+                                            if (window.history.state?.tikitikitDropResults) return;
+                                            freshRouteOriginScrollRef.current = window.scrollY;
+                                            const results: FreshRouteResults = {
+                                                route: group.route, departure: departureName(flight),
+                                                arrival: stripAirport(flight.arrival.city), targetDate: seoulDateKey(),
+                                                copyPrefix: '가격 하락', priceDropKeys: group.flights.map(priceDropKey),
+                                            };
+                                            const originState = { ...window.history.state, tikitikitDropOriginY: window.scrollY };
+                                            window.history.replaceState(originState, '', window.location.href);
+                                            window.history.pushState({ ...originState, tikitikitDropResults: results }, '', window.location.href);
+                                            setVisibleCount(Math.max(36, group.flights.length));
+                                            gtag.event('insight_click', { insight_type: 'price_drop', insight_format: 'search_results',
+                                                destination: normalizeCity(flight.arrival.city), flight_id: flight.id });
+                                            void transitionDropResults(results);
+                                        }} />
                                     )}
                                     {!freshRouteResults && cardNumber === firstInsightCard && freshFlightsInsight && (
                                         <div className={styles.freshFlightsEntry}>

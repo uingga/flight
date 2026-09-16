@@ -16,6 +16,31 @@ export function priceDropKey(flight: Flight): string {
         flight.arrival.date, flight.arrival.time].join('|');
 }
 
+export function groupPriceDropFlights(
+    flights: Flight[], records: Record<string, PriceDropRecord>,
+    routeKey: (flight: Flight) => string, price: (flight: Flight) => number,
+): { route: string; flights: Flight[]; representative: Flight }[] {
+    const seen = new Set<string>();
+    const routes = new Map<string, Flight[]>();
+    for (const flight of flights) {
+        const key = priceDropKey(flight);
+        const record = records[key];
+        if (seen.has(key) || !record || record.currentPrice !== price(flight)) continue;
+        seen.add(key);
+        const route = routeKey(flight);
+        const schedules = routes.get(route) || [];
+        schedules.push(flight);
+        routes.set(route, schedules);
+    }
+    const compare = (a: Flight, b: Flight) => records[priceDropKey(b)].amount - records[priceDropKey(a)].amount
+        || price(a) - price(b) || a.departure.date.localeCompare(b.departure.date)
+        || priceDropKey(a).localeCompare(priceDropKey(b));
+    return Array.from(routes, ([route, schedules]) => {
+        schedules.sort(compare);
+        return { route, flights: schedules, representative: schedules[0] };
+    }).sort((a, b) => compare(a.representative, b.representative));
+}
+
 export function priceDropDay(date: number | string): string {
     return new Date(new Date(date).getTime() + 9 * 3600000).toISOString().slice(0, 10);
 }

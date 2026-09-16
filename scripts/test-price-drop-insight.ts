@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import type { Flight } from '../src/types/flight';
-import { matchPriceDrop, priceDropLabel, priceDropAmountLabel, type HistoricalFlightPrice } from '../src/lib/price-drop-insight';
+import { groupPriceDropFlights, priceDropKey, matchPriceDrop, priceDropLabel, priceDropAmountLabel, type HistoricalFlightPrice } from '../src/lib/price-drop-insight';
 const now = Date.parse('2026-09-14T01:00:00Z');
 const flight = { id: 'a', source: 'modetour', price: 210000, airline: 'air',
     departure: { airport: 'ICN', date: '2026-10-06', time: '00:10' },
@@ -35,3 +35,20 @@ for (const amount of [500, 9999]) {
 assert.equal(matchPriceDrop(flight, 'key', [{ ...row, listed_price: flight.price + 10000 }], now)?.amount, 10000);
 assert.equal(matchPriceDrop(flight, 'key', [{ ...row, listed_price: flight.price + 10001 }], now)?.amount, 10001);
 console.log('PASS: declines below 10,000 KRW excluded; exact threshold included; no older-price fallback');
+
+const second = { ...flight, departure: { ...flight.departure, date: '2026-10-07' } };
+const third = { ...flight, id: 'third', departure: { ...flight.departure, date: '2026-10-08' } };
+const busan = { ...flight, id: 'busan', departure: { ...flight.departure, airport: 'PUS' } };
+const noDrop = { ...flight, id: 'no-drop' };
+const changedPrice = { ...flight, id: 'changed', price: 220000 };
+const records = Object.fromEntries([flight, second, third, busan, changedPrice].map(item => [priceDropKey(item), {
+    ...result, key: priceDropKey(item), amount: item === second ? 40000 : 30000,
+}]));
+const route = (item: Flight) => `${item.departure.airport}|${item.arrival.airport}`;
+const groups = groupPriceDropFlights([flight, second, third, busan, noDrop, changedPrice, flight], records, route, item => item.price);
+assert.equal(groups.length, 2, 'Different departure airports stay separate');
+assert.equal(groups[0].representative, second, 'Largest verified decline represents the route');
+assert.deepEqual(new Set(groups[0].flights.map(priceDropKey)), new Set([flight, second, third].map(priceDropKey)));
+assert.equal(groups[1].flights.length, 1);
+assert.equal(groupPriceDropFlights([noDrop, changedPrice], records, route, item => item.price).length, 0);
+console.log('PASS: one representative per route; exact schedules retained; duplicates and unverified prices excluded');
