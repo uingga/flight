@@ -8,6 +8,7 @@ import {githubMrtClient} from '../src/lib/myrealtrip-schedule.mjs';
 import {mrtRoundForGeneralSlot} from '../src/lib/mrt-round-readiness.mjs';
 import {latestAgencyRound,evaluateRoundContinuation} from '../src/lib/naver-round-handoff.mjs';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
+export const roundBridgeEnabled=(now=Date.now())=>now>=Date.parse('2026-09-16T07:31:00Z');
 export function roundBarrier({round,cache,pc,mrtDone}){
  if(!round||!mrtDone||!pc||pc.state!=='Ready'||pc.result!==0||!(Date.parse(pc.startedAt)>=Date.parse(round)))return false;
  return Date.parse(cache?.fullCrawlUpdatedAt)>=Date.parse(round);
@@ -22,7 +23,7 @@ async function main(){
  if(process.argv[2]!=='--scheduled')throw Error('scheduled mode required');
  const execute=(command,args,env={})=>spawnSync(command,args,{cwd:root,env:{...process.env,...env},windowsHide:true,encoding:'utf8',timeout:12*3600000,maxBuffer:4000000});
  const ps=path.join(process.env.SystemRoot||'C:/Windows','System32/WindowsPowerShell/v1.0/powershell.exe');
- if(Date.now()<Date.parse('2026-09-16T21:17:00Z')){
+ if(!roundBridgeEnabled()){
   const r=execute(ps,['-NoProfile','-NonInteractive','-File',path.join(root,'scripts/run-naver-crawl.ps1'),'-Scheduled']);
   process.exitCode=r.status??1;return;
  }

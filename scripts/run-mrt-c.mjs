@@ -12,7 +12,7 @@ import {mergeCrawlLogHistories} from './merge-crawl-log.mjs';
 
 export function cSlot(now=Date.now()) {
  const k=new Date(now+9*3600000),day=k.toISOString().slice(0,10);
- if(day<'2026-09-17')return null; // Never replay today's old schedule during rollout.
+ if(now<Date.parse('2026-09-16T06:15:00Z'))return null; // First approved slot: Sep16 15:15 KST; no morning replay.
  for(const clock of ['08:55','15:15']){const time=Date.parse(day+'T'+clock+':00+09:00');
   if(now>=time&&now-time<15*60000)return new Date(time).toISOString();}
  return null;
