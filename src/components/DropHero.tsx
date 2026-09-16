@@ -92,6 +92,7 @@ export default function DropHero({
             className={imagePath ? styles.hero : `${styles.hero} ${styles.heroFallback}`}
             style={heroStyle}
             data-drop-hero
+            data-single-schedule={alternatives.length === 0 ? 'true' : undefined}
             data-drop-hero-flight-id={flight.id}
             data-drop-hero-image={imagePath || undefined}
             aria-labelledby="drop-hero-title"

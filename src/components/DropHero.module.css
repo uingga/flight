@@ -221,6 +221,10 @@
 }
 
 @media (min-width: 960px) {
+    .hero[data-single-schedule="true"] {
+        align-items: center;
+    }
+
     .hero {
         --hero-size-destination: 40px;
         min-height: 320px;
