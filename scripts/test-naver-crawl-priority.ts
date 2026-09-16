@@ -85,7 +85,8 @@ assert.deepEqual(selection.selected.map(row => row.key), [
     'standard-b',
 ]);
 assert.equal(selection.selected[0].group, 'deadline');
-assert.equal(selection.selected[1].group, 'changed_top');
+// The periodic candidate remains eligible, without a price-change promotion.
+assert.equal(selection.selected[1].group, 'top');
 assert.equal(selection.selected[2].group, 'top');
 assert.equal(selection.pending.at(-1)?.key, 'low');
 assert.equal(selection.pending.at(-1)?.group, 'low');

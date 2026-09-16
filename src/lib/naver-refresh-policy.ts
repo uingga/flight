@@ -122,7 +122,6 @@ export function evaluateNaverRefresh(
         ? config.priorityRefreshDays
         : config.standardRefreshDays;
     const sourceSignature = buildNaverSourceSignature(flight);
-    const sourcePrice = getNaverSourcePrice(flight);
 
     const hasSuccessfulPrice = Boolean(
         entry
@@ -163,7 +162,7 @@ export function evaluateNaverRefresh(
     }
 
     // 같은 KST 날짜에는 한 번 확인한 키를 다시 열지 않는다. 다음 날짜가 되면
-    // 정확히 24시간이 지나지 않았더라도 가격 변경·정기 갱신 후보가 될 수 있다.
+    // 정확히 24시간이 지나지 않았더라도 기존 정기 갱신 후보가 될 수 있다.
     const checkedAt = new Date(entry.crawledAt || '').getTime();
     if (
         Number.isFinite(checkedAt)
@@ -178,18 +177,9 @@ export function evaluateNaverRefresh(
         };
     }
 
-    if (entry.sourceSignature && entry.sourceSignature !== sourceSignature) {
-        const previousSourcePrice = Number(entry.sourcePrice);
-        const absoluteChange = Number.isFinite(previousSourcePrice)
-            ? Math.abs(sourcePrice - previousSourcePrice)
-            : Number.POSITIVE_INFINITY;
-        const relativeChange = Number.isFinite(previousSourcePrice) && previousSourcePrice > 0
-            ? absoluteChange / previousSourcePrice
-            : Number.POSITIVE_INFINITY;
-        if (absoluteChange >= config.priceChangeAmount || relativeChange >= config.priceChangeRatio) {
-            return { fresh: false, reason: 'source_changed', tier, refreshDays, sourceSignature };
-        }
-    }
+    // 여행사 판매가 변경은 네이버 운임 변경의 증거가 아니다. 같은 검색키는
+    // 저장된 비교가를 재사용하며 정기 재조회·실패 재시도 기준만 적용한다.
+    // 기존 서명/설정 필드는 저장 데이터 및 호출자 호환성을 위해 유지한다.
 
     const fresh = Number.isFinite(checkedAt)
         && kstDayNumber(now) - kstDayNumber(checkedAt) < refreshDays;

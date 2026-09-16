@@ -75,13 +75,13 @@ assert.equal(evaluateNaverRefresh({
     lastAttemptStatus: 'success',
     sourceSignature: signature,
     sourcePrice: 220_000,
-}, { ...baseline, price: 230_000 }, now, config).reason, 'source_changed');
+}, { ...baseline, price: 230_000 }, now, config).reason, 'standard_fresh');
 assert.equal(evaluateNaverRefresh({
     crawledAt: '2026-08-28T05:31:00Z',
     lastAttemptStatus: 'success',
     sourceSignature: signature,
     sourcePrice: 220_000,
-}, { ...baseline, price: 230_000 }, now, config).reason, 'source_changed');
+}, { ...baseline, price: 230_000 }, now, config).reason, 'standard_fresh');
 assert.equal(evaluateNaverRefresh({
     crawledAt: '2026-08-29T01:30:00Z',
     lastAttemptStatus: 'success',
@@ -110,4 +110,14 @@ assert.equal(evaluateNaverRefresh({
     sourcePrice: 220_000,
 }, { ...baseline, price: 230_000 }, now, config).reason, 'retry_due');
 
+for (const price of [219_000, 221_000, 100_000, 500_000]) {
+    const entry = {crawledAt:'2026-08-28T05:30:00Z',lastAttemptStatus:'success',
+        sourceSignature:signature,sourcePrice:220_000};
+    const before = JSON.stringify(entry);
+    assert.equal(evaluateNaverRefresh(entry,{...baseline,price},now,config).fresh,true);
+    assert.equal(JSON.stringify(entry),before);
+    assert.equal(evaluateNaverRefresh({...entry,crawledAt:'2026-08-24T05:30:00Z'},
+        {...baseline,price},now,config).reason,'standard_periodic');
+    assert.equal(evaluateNaverRefresh(undefined,{...baseline,price},now,config).reason,'new');
+}
 console.log('Naver refresh policy tests passed');
