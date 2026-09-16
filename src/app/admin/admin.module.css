@@ -6251,3 +6251,34 @@
     .crawlLogToolbar { padding: 13px 14px; }
     .crawlRunBreakdown { grid-template-columns: 1fr; }
 }
+
+/* Today overview: decisions first, independent metrics rather than a funnel. */
+.todayMetricSummary { display: grid; grid-template-columns: minmax(0,3fr) minmax(190px,1fr); gap: 16px; }
+.todayMetricGrid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 16px; }
+.todayMetricGrid .todayBehaviorStage { padding: 16px; border: 1px solid #e8e8e8; border-radius: 12px; }
+.todayMetricGrid .todayBehaviorStage::after { display: none; }
+.todayMeta { font-size: 12px; color: #707070; line-height: 1.7; margin: 12px 0 0; }
+.todayNotice { font-size: 12px; color: #805b17; background: #fff9ec; border-radius: 8px; padding: 10px 14px; line-height: 1.7; }
+.todayLowerGrid { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 16px; }
+.todayLowerGrid > section { min-width: 0; }
+.todayAcquisitionOnly { min-width: 0; }
+.todayHourlyCompact .hourlyChart { height: 174px; min-width: 560px; }
+.todayHourlyCompact .hourlyPanelHead { flex-wrap: wrap; gap: 12px; }
+.todaySecondaryGrid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 20px; }
+.todaySecondaryGrid article { display: flex; flex-direction: column; gap: 8px; }
+.todaySecondaryGrid span { font-size: 13px; color: #5f5f5f; }
+.todaySecondaryGrid strong { font-size: 20px; }
+.todaySecondaryGrid small { font-size: 12px; color: #707070; }
+@media(max-width:1000px) { .todayLowerGrid { grid-template-columns: 1fr; } }
+@media(max-width:640px) {
+ .todayMetricSummary { grid-template-columns: 1fr; }
+ .todayMetricGrid { gap: 6px; }
+ .todayMetricGrid .todayBehaviorStage { padding: 10px 8px; }
+ .todaySecondaryGrid { gap: 12px; }
+ .todayMetricSummary .todayBehaviorResult { flex-direction: row; flex-wrap: wrap; gap: 8px; }
+}
+
+.container > .todayLowerGrid { grid-column: 2; min-width: 0; }
+@media(max-width:760px) { .container > .todayLowerGrid { grid-column: 1 / -1; } }
+
+@media(max-width:980px) { .todayMetricSummary { grid-template-columns: 1fr; } }

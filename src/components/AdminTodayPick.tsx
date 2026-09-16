@@ -4,6 +4,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import OverlayDialog from '@/components/ui/OverlayDialog';
 import { dismissOverlayWithHistory, historyOverlay, showOverlayWithHistory } from '@/lib/ui/overlay-history';
 import styles from './AdminTodayPick.module.css';
+import type { FlightInterestPeriod } from '@/lib/flight-interest';
+import { todayActionCount } from '@/lib/admin-today';
 import type { TodayPickRecord } from '@/lib/manual-today-pick';
 
 interface TodayPickCandidate {
@@ -65,9 +67,10 @@ function naverComparisonLabel(candidate: TodayPickCandidate): string {
         : `네이버보다 ${difference} 비쌈`;
 }
 
-export default function AdminTodayPick({ adminKey, readOnly = false, onManage }: {
+export default function AdminTodayPick({ adminKey, readOnly = false, onManage, interest }: {
     adminKey: string;
     readOnly?: boolean;
+    interest?: FlightInterestPeriod;
     onManage?: () => void;
 }) {
     const [data, setData] = useState<TodayPickAdminData | null>(null);
@@ -209,7 +212,16 @@ export default function AdminTodayPick({ adminKey, readOnly = false, onManage }:
                             <p>오늘 선정된 항공권이 없습니다.</p>
                         )}
                     </div>
-                    <details className={styles.history}>
+                    {readOnly && data.current && <div className={styles.note}>
+                        <strong>현재 선정된 표</strong>
+                        {!interest?.available ? <p>오늘 반응을 아직 확인하지 못했습니다.</p> : (() => {
+                            const row = interest.rows.find(item => item.flightId === data.current!.id);
+                            return row ? <p>상세 조회 {todayActionCount(row.detailOpens,row.detailUsers)} · 예약 클릭 {todayActionCount(row.bookingClicks,row.bookingUsers)}</p>
+                                : <p>이 항공권 ID로 확인되는 오늘 행동 기록이 없습니다.</p>;
+                        })()}
+                        <small>이 표의 오늘 전체 행동입니다. TIKIT DROP 영역에서 누른 반응만을 뜻하지 않습니다.</small>
+                    </div>}
+                    {!readOnly && <details className={styles.history}>
                         <summary>지난 선정 내역 <span>{data.history?.length || 0}건</span></summary>
                         <p className={styles.note}>최신 선정일부터 표시합니다. 가격은 선정 당시 기록이며 현재 판매가와 다를 수 있습니다. 같은 날 변경한 표도 포함합니다.</p>
                         {(data.history?.length || 0) > 0 ? <>
@@ -230,7 +242,7 @@ export default function AdminTodayPick({ adminKey, readOnly = false, onManage }:
                                 <button type="button" className={styles.refreshButton} disabled={historyPage * 10 >= data.history!.length} onClick={() => setHistoryPage(historyPage + 1)}>다음</button>
                             </nav>}
                         </> : <p className={styles.empty}>저장된 선정 내역이 없습니다.</p>}
-                    </details>
+                    </details>}
                     {!data.available && <div className={styles.error} role="alert">{data.message}</div>}
                     {!panelOpen && message && <div className={styles.success} role="status">{message}</div>}
                     {!panelOpen && error && <div className={styles.error} role="alert">{error}</div>}

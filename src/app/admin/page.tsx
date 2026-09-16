@@ -1,4 +1,6 @@
 'use client';
+import TodayHourlySessions, { hourRangeLabel, HourlyTimeZoneBadge } from '@/components/AdminTodayHourly';
+import TodayBehaviorSummary from '@/components/AdminTodayMetrics';
 
 import { useState, useEffect } from 'react';
 import styles from './admin.module.css';
@@ -11,6 +13,8 @@ import AdminTodayPick from '@/components/AdminTodayPick';
 import AdminVisitComparison from '@/components/AdminVisitComparison';
 import AdminFlightOrder from '@/components/AdminFlightOrder';
 import AdminFlightInterest from '@/components/AdminFlightInterest';
+import AdminTodayFlights from '@/components/AdminTodayFlights';
+import { todayReportNotes } from '@/lib/admin-today';
 import AdminTrafficOverview from '@/components/AdminTrafficOverview';
 import AdminAcquisition from '@/components/AdminAcquisition';
 import type { DeviceTrafficData } from '@/lib/device-traffic';
@@ -1073,78 +1077,6 @@ function ExplorationDepth({ activity }: { activity: NonNullable<GaStatsData['act
     );
 }
 
-
-
-function hourRangeLabel(bucket: GaHourlyBucket) {
-    const hour = (value: number) => `${String(value).padStart(2, '0')}:00`;
-    return `${hour(bucket.startHour)}–${hour(bucket.endHour)}`;
-}
-
-function HourlyTimeZoneBadge({ data }: { data: GaHourlySessions }) {
-    const isKst = data.timeZone === 'Asia/Seoul';
-    const isFallback = data.timeZoneSource === 'kst_fallback';
-    const label = isFallback
-        ? '속성 시간대 미수신 · KST 임시 기준'
-        : isKst
-            ? 'GA4 속성 시간대 · KST (Asia/Seoul)'
-            : `GA4 속성 시간대 · ${data.timeZone} (KST 아님)`;
-
-    return (
-        <span className={isKst && !isFallback ? styles.hourlyTimeZone : `${styles.hourlyTimeZone} ${styles.hourlyTimeZoneWarn}`}>
-            {label}
-        </span>
-    );
-}
-
-function TodayHourlySessions({ data }: { data: GaHourlySessions }) {
-    const total = data.today.reduce((sum, bucket) => sum + bucket.sessions, 0);
-    const max = Math.max(...data.today.map(bucket => bucket.sessions), 1);
-    const peak = total > 0
-        ? data.today.reduce((best, bucket) => bucket.sessions > best.sessions ? bucket : best)
-        : null;
-
-    return (
-        <div className={styles.hourlyPanel}>
-            <div className={styles.hourlyPanelHead}>
-                <div className={styles.hourlyPeak}>
-                    <span>가장 붐빈 시간</span>
-                    <strong>{peak ? hourRangeLabel(peak) : '아직 없음'}</strong>
-                    <small>{peak ? `${peak.sessions.toLocaleString()}회 · 오늘 전체 ${total.toLocaleString()}회` : '오늘 시작된 접속이 아직 없습니다.'}</small>
-                </div>
-                <HourlyTimeZoneBadge data={data} />
-            </div>
-            <div className={styles.hourlyChartScroll}>
-                <div className={styles.hourlyChart} role="list" aria-label="오늘 1시간 단위 세션">
-                    {data.today.map(bucket => {
-                        const isPeak = peak?.startHour === bucket.startHour;
-                        return (
-                            <div
-                                key={bucket.startHour}
-                                className={isPeak ? `${styles.hourlyBarColumn} ${styles.hourlyBarColumnPeak}` : styles.hourlyBarColumn}
-                                role="listitem"
-                                aria-label={`${hourRangeLabel(bucket)}, 접속 ${bucket.sessions}회`}
-                                title={`${hourRangeLabel(bucket)} · ${bucket.sessions.toLocaleString()}회`}
-                            >
-                                <span className={styles.hourlyBarValue}>{bucket.sessions > 0 ? bucket.sessions.toLocaleString() : ''}</span>
-                                <span className={styles.hourlyBarTrack} aria-hidden="true">
-                                    <span
-                                        className={styles.hourlyBar}
-                                        style={{ height: bucket.sessions > 0 ? `${Math.max(6, (bucket.sessions / max) * 100)}%` : '0%' }}
-                                    />
-                                </span>
-                                <time className={styles.hourlyBarTime} dateTime={`${String(bucket.startHour).padStart(2, '0')}:00`}>
-                                    {bucket.startHour % 3 === 0 ? `${String(bucket.startHour).padStart(2, '0')}시` : ''}
-                                </time>
-                            </div>
-                        );
-                    })}
-                </div>
-            </div>
-            <p className={styles.hourlyFootnote}>세션은 해당 시간에 시작된 접속 횟수입니다. 아직 오지 않은 시간은 0으로 표시합니다.</p>
-        </div>
-    );
-}
-
 function HourlySessionsComparison({ data, days }: { data: GaHourlySessions; days: number }) {
     const recent7Total = data.recent7.reduce((sum, bucket) => sum + bucket.sessions, 0);
     const currentTotal = data.current.reduce((sum, bucket) => sum + bucket.sessions, 0);
@@ -1324,42 +1256,6 @@ function PromotionCampaignPerformance({
                     ))}
                 </div>
             )}
-        </div>
-    );
-}
-
-function TodayBehaviorSummary({
-    data,
-    sessions,
-}: {
-    data: NonNullable<GaStatsData['activityPeriods']>['today'];
-    sessions: number;
-}) {
-    const rate = (value: number | null) => value === null ? '—' : `${value}%`;
-
-    return (
-        <div className={styles.todayBehaviorSummary}>
-            <div className={styles.todayBehaviorFlow}>
-                <div className={styles.todayBehaviorStage}>
-                    <span>방문</span>
-                    <strong>{data.visitors.toLocaleString()}명</strong>
-                    <small>재방문 포함 총 {sessions.toLocaleString()}회 접속</small>
-                </div>
-                <div className={styles.todayBehaviorStage}>
-                    <span>상세 열람</span>
-                    <strong>{data.detailOpenUsers.toLocaleString()}명</strong>
-                    <small>방문 대비 {rate(data.detailOpenRate)}</small>
-                </div>
-                <div className={styles.todayBehaviorStage}>
-                    <span>예약 이동</span>
-                    <strong>{data.bookingClickUsers.toLocaleString()}명</strong>
-                    <small>상세 대비 {rate(data.detailToBookingRate)}</small>
-                </div>
-            </div>
-            <div className={styles.todayBehaviorResult}>
-                <span>방문 → 예약 페이지 이동</span>
-                <strong>{rate(data.bookingClickRate)}</strong>
-            </div>
         </div>
     );
 }
@@ -2211,13 +2107,14 @@ export default function AdminPage() {
             .filter(check => !check.success && check.outcome !== 'unavailable')
             .map(check => ({ ...check, date: entry.date, sourceStatus: source.status }));
     })).slice(-12).reverse();
-    const sourceIssueCount = allSources.filter(source => {
+    const sourceIssues = allSources.filter(source => {
         const updatedAt = effectiveSourceUpdatedAt(data, source);
         const ageHours = updatedAt ? (Date.now() - new Date(updatedAt).getTime()) / 3_600_000 : null;
         return (data.staleStreak?.[source] || 0) > 0
             || ageHours === null
             || ageHours > (STALE_AFTER_HOURS[source] ?? DEFAULT_STALE_AFTER_HOURS);
-    }).length;
+    });
+    const sourceIssueCount = sourceIssues.length;
     const naverNeedsAttention = !data.naverStatus
         || !data.naverStatus.lastCrawledAt
         || data.naverStatus.freshEntries === 0;
@@ -2412,7 +2309,7 @@ export default function AdminPage() {
                     {attentionItems.length === 0 ? (
                         <div className={styles.allClear}>
                             <span aria-hidden="true">✓</span>
-                            <div><strong>수집·예약 링크·신고·알림 후보 모두 정상이에요</strong><small>오늘 바로 처리할 운영 항목이 없습니다.</small></div>
+                            <div><strong>현재 확인된 처리 항목이 없습니다</strong><small>미확인 상태는 각 운영 탭에서 확인할 수 있습니다.</small></div>
                         </div>
                     ) : (
                         <div className={styles.actionGrid}>
@@ -2425,8 +2322,9 @@ export default function AdminPage() {
                                 >
                                     <span>{item.area}</span>
                                     <strong>{item.state}</strong>
-                                    <small><b>원인 후보</b> · {item.cause}</small>
-                                    <small className={styles.actionNext}><b>다음 행동</b> · {item.nextAction}</small>
+                                    {item.id === 'collection' && sourceIssues.map(source => <small key={source}>{SOURCE_NAMES[source] || source} · 마지막 정상 갱신 {effectiveSourceUpdatedAt(data, source) ? formatKST(effectiveSourceUpdatedAt(data, source)!) : '기록 없음'}</small>)}
+                                    <small>{item.cause}</small>
+                                    <small className={styles.actionNext}>{item.nextAction}</small>
                                 </button>
                             ))}
                         </div>
@@ -2436,8 +2334,8 @@ export default function AdminPage() {
                 <section className={styles.section} id="overview-performance">
                     <div className={styles.sectionHeading}>
                         <div>
-                            <h2>오늘 방문 흐름</h2>
-                            <p>오늘 들어온 사람이 예약 페이지까지 얼마나 이동했는지 봅니다.</p>
+                            <h2>오늘 핵심 지표</h2>
+                            <p>행동별 사람 수입니다. 실제 구매 완료나 순서가 확인된 전환 흐름은 아닙니다.</p>
                         </div>
                     </div>
                     {gaStatsError ? (
@@ -2445,21 +2343,46 @@ export default function AdminPage() {
                     ) : gaStats && !gaStats.available ? (
                         <div className={styles.dealReviewEmpty}>{gaStats.message || '방문 통계를 불러오지 못했습니다.'}</div>
                     ) : gaActivity ? (
-                        <TodayBehaviorSummary data={gaActivity.today} sessions={gaStats.periods.today.sessions} />
+                        <>
+                            <TodayBehaviorSummary data={gaActivity.today} sessions={gaStats.periods.today.sessions} />
+                            <p className={styles.todayMeta}>GA4 · {gaStats.generatedAt ? `${formatKST(gaStats.generatedAt)} 조회` : '조회 시각 미확인'} · 오늘 수치는 잠정치이며 실시간 통계가 아닙니다.</p>
+                            {gaStats.todayOverview && <p className={styles.todayMeta}>처음 온 사람 {gaStats.todayOverview.audience.newUsers}명 · 다시 온 사람 {gaStats.todayOverview.audience.returningUsers}명 · 전체 방문자와 단순 합산하지 않습니다.</p>}
+                            {todayReportNotes(gaStats.periods.today.sessions, gaStats.hourlySessions?.today).map(note => <p className={styles.todayNotice} key={note}>{note}</p>)}
+                        </>
                     ) : (
                         <div className={styles.dealReviewEmpty}>방문 통계를 불러오는 중입니다.</div>
                     )}
                 </section>
 
+                <section className={styles.section} id="overview-flights">
+                    <div className={styles.sectionHeading}><div><h2>오늘 반응이 좋은 항공권</h2><p>예약 클릭순 상위 5개 · 상세 조회·예약 클릭의 횟수와 인원</p></div><button type="button" className={styles.analyticsToggle} onClick={() => selectTab('visitors')}>전체 분석 보기</button></div>
+                    <AdminTodayFlights report={gaStats?.available ? gaStats.flightInterest?.today : undefined} />
+                </section>
                 <div className={styles.flightOrderPanel}>
-                    <AdminTodayPick adminKey={key} readOnly onManage={() => selectTab('flight-order')} />
+                    <AdminTodayPick adminKey={key} readOnly interest={gaStats?.available ? gaStats.flightInterest?.today : undefined} onManage={() => selectTab('flight-order')} />
                 </div>
 
-                <section className={styles.section} id="overview-hourly">
+                <div className={styles.todayLowerGrid}>
+                <section className={styles.section} id="overview-acquisition">
+                    <div className={styles.sectionHeading}>
+                        <div>
+                            <h2>오늘 유입 경로</h2>
+                            <p>유입처별 인원은 서로 겹칠 수 있어 합산하지 않습니다.</p>
+                        </div>
+                    </div>
+                    <div className={styles.todayAcquisitionOnly}>
+                        <article className={styles.todayInsightCard}>
+                            <header><strong>유입 유형과 출처</strong><small>방문 횟수 · 인원</small></header>
+                            <AdminAcquisition data={gaStats?.available && !gaStatsError ? gaStats.todayOverview?.acquisition : undefined} />
+                        </article>
+
+                    </div>
+                </section>
+                <section className={`${styles.section} ${styles.todayHourlyCompact}`} id="overview-hourly">
                     <div className={styles.sectionHeading}>
                         <div>
                             <h2>오늘 시간대별 접속</h2>
-                            <p>오늘 세션이 시작된 시간을 1시간 단위로 보여줍니다.</p>
+                            <p>시간대별 보고서 · 전체 방문 횟수와 별도로 집계됩니다.</p>
                         </div>
                     </div>
                     {gaStatsError ? (
@@ -2472,20 +2395,16 @@ export default function AdminPage() {
                         <div className={styles.dealReviewEmpty}>시간대별 접속을 아직 불러오지 못했습니다.</div>
                     )}
                 </section>
-
-                <AdminVisitComparison adminKey={key} ga={gaStats?.available && gaActivity ? {
-                    users:gaActivity.today.visitors, sessions:gaStats.periods.today.sessions,
-                    detailUsers:gaActivity.today.detailOpenUsers, bookingUsers:gaActivity.today.bookingClickUsers,
-                } : undefined} />
+                </div>
 
                 <section className={styles.section} id="overview-people">
                     <div className={styles.sectionHeading}>
                         <div>
-                            <h2>오늘 사람과 저장</h2>
+                            <h2>가입·저장·알림</h2>
                             <p>가입하거나 표를 저장하고 알림을 적용한 사람을 오늘 기준으로 봅니다.</p>
                         </div>
                     </div>
-                    <div className={styles.todaySignalGrid}>
+                    <div className={styles.todaySecondaryGrid}>
                         <article>
                             <span>가입한 사람</span>
                             <strong>{userStats?.available && userStats.summary.accountAvailable ? `${userStats.summary.accountsToday.toLocaleString()}명` : '—'}</strong>
@@ -2503,45 +2422,17 @@ export default function AdminPage() {
                             <strong>{userStats?.available ? `${userStats.summary.alertUsersToday.toLocaleString()}명` : '—'}</strong>
                             <small>{userStats?.available ? `새 알림 조건 ${userStats.summary.registrationsToday.toLocaleString()}개` : '알림 기록을 확인하는 중입니다.'}</small>
                         </article>
-                        <article>
-                            <span>처음 온 사람</span>
-                            <strong>{gaStats?.available && gaStats.todayOverview ? `${gaStats.todayOverview.audience.newUsers.toLocaleString()}명` : '—'}</strong>
-                            <small>오늘 첫 방문으로 분류된 사람</small>
-                        </article>
-                        <article>
-                            <span>다시 온 사람</span>
-                            <strong>{gaStats?.available && gaStats.todayOverview ? `${gaStats.todayOverview.audience.returningUsers.toLocaleString()}명` : '—'}</strong>
-                            <small>오늘 재방문으로 분류된 사람</small>
-                        </article>
                     </div>
                 </section>
+                <AdminVisitComparison adminKey={key} ga={gaStats?.available && gaActivity ? {
+                    users:gaActivity.today.visitors, sessions:gaStats.periods.today.sessions,
+                    detailUsers:gaActivity.today.detailOpenUsers, bookingUsers:gaActivity.today.bookingClickUsers,
+                } : undefined} />
 
-                <section className={styles.section} id="overview-acquisition">
-                    <div className={styles.sectionHeading}>
-                        <div>
-                            <h2>오늘 어디서 와서 무엇을 봤나</h2>
-                            <p>오늘 발생한 방문 경로와 항공권 상세 열람만 표시합니다.</p>
-                        </div>
-                    </div>
-                    <div className={styles.todayInsightGrid}>
-                        <article className={styles.todayInsightCard}>
-                            <header><strong>유입 유형과 출처</strong><small>방문 횟수 · 인원</small></header>
-                            <AdminAcquisition data={gaStats?.todayOverview?.acquisition} />
-                        </article>
-                        <article className={styles.todayInsightCard}>
-                            <header><strong>많이 누른 노선</strong><small>상세 열람 횟수</small></header>
-                            <RankList
-                                items={(gaStats?.todayOverview?.topRoutes || []).slice(0, 5).map(item => ({
-                                    label: item.label.replace('-', ' → '),
-                                    value: `${item.count.toLocaleString()}회`,
-                                }))}
-                                empty="오늘 아직 항공권 상세 열람이 없습니다."
-                            />
-                        </article>
-                    </div>
-                </section>
+            </>)}
 
-                <section className={styles.section} id="overview-crawl">
+            {tab === 'operations' && (<>
+                <section className={styles.section} id="operations-timeline">
                     <div className={styles.sectionHeading}>
                         <div>
                             <h2>최근 24시간 수집 기록</h2>
@@ -2591,10 +2482,6 @@ export default function AdminPage() {
                         </div>
                     )}
                 </section>
-
-            </>)}
-
-            {tab === 'operations' && (<>
                 <section className={`${styles.section} ${styles.operationsOrderCurrent}`} id="operations-current">
                     <div className={styles.sectionHeading}>
                         <div>
