@@ -151,9 +151,10 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
         const fallbackDate = typeof sp.date === 'string' ? sp.date : snapshot?.date || archivedDate;
         const fallbackAirline = typeof sp.airline === 'string' ? sp.airline : snapshot?.airline || archivedFlight?.airline || '';
         const fallbackSource = typeof sp.source === 'string' ? sp.source : snapshot?.source || archivedFlight?.source || '';
+        const fallbackSharedPrice = fallbackPrice + (blog && fallbackSource === 'ttang' && fallbackPrice > 0 ? 20_000 : 0);
 
         if (fallbackArr) {
-            const priceText = fallbackPrice > 0 ? formatPrice(fallbackPrice) : '';
+            const priceText = fallbackSharedPrice > 0 ? formatPrice(fallbackSharedPrice) : '';
             const sourceName = SOURCE_NAMES[fallbackSource] || fallbackSource;
             const routeText = `${fallbackDep || '서울'} → ${fallbackArr}`;
             const title = priceText
@@ -166,7 +167,8 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
             ].filter(Boolean).join(' · ');
             const ogParams = new URLSearchParams({ dep: fallbackDep || '서울', arr: fallbackArr });
             if (blog) ogParams.set('format', 'blog');
-            if (fallbackPrice > 0) ogParams.set('price', String(fallbackPrice));
+            if (fallbackSharedPrice > 0) ogParams.set('price', String(fallbackSharedPrice));
+            if (blog && fallbackSource === 'ttang' && fallbackPrice > 0) ogParams.set('fee', 'included');
             if (fallbackDate) ogParams.set('date', fallbackDate);
             if (typeof sp.v === 'string' && sp.v) ogParams.set('v', sp.v);
             const ogImageUrl = `${SITE_URL}/api/og?${ogParams.toString()}`;
@@ -179,7 +181,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
                 openGraph: {
                     title,
                     description,
-                    images: [{ url: ogImageUrl, width: 1200, height: blog ? 800 : 630 }],
+                    images: [{ url: ogImageUrl, width: 1200, height: blog ? 720 : 630 }],
                     type: 'website',
                     siteName: '티키티킷',
                 },
@@ -239,7 +241,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
         openGraph: {
             title,
             description,
-            images: [{ url: ogImageUrl, width: 1200, height: blog ? 800 : 630 }],
+            images: [{ url: ogImageUrl, width: 1200, height: blog ? 720 : 630 }],
             type: 'website',
             siteName: '티키티킷',
         },

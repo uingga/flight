@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
         ),
         {
             width: 1200,
-            height: blog ? 800 : 630,
+            height: blog ? 720 : 630,
             ...(fontData
                 ? {
                     fonts: [
