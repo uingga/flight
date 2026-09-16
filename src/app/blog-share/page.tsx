@@ -3,7 +3,7 @@ import { SITE_URL } from '@/lib/site';
 
 const title = '티키티킷';
 const description = '전국 여행사의 땡처리 항공권을 한눈에!';
-const image = `${SITE_URL}/api/og?format=blog&brand=1&v=blog-balanced-20260916`;
+const image = `${SITE_URL}/api/og?format=blog&brand=1&v=blog-mobile-safe-20260917`;
 export const metadata: Metadata = {
     title, description,
     robots: { index: false, follow: true },
