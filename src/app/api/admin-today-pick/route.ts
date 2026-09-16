@@ -112,6 +112,12 @@ async function commitTodayPick(
     token: string,
     flight: Flight,
 ): Promise<{ pick: ReturnType<typeof buildManualTodayPick>; commitSha: string | null; alreadySelected: boolean }> {
+    if (process.env.NAVER_COORDINATION === '1') {
+        const { publishAdminPick } = await import('../../../lib/writer-admin-pick.mjs');
+        return publishAdminPick({ flight, buildPick: buildManualTodayPick });
+    }
+    const {legacyWriterAdmission}=await import('../../../lib/naver-writer-safety.mjs');
+    legacyWriterAdmission();
     for (let attempt = 0; attempt < 2; attempt += 1) {
         const remote = await readRemoteTodayPick(token);
         const pick = buildManualTodayPick(remote.pick, flight);

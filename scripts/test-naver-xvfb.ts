@@ -1,4 +1,6 @@
 import { chromium } from 'playwright-extra';
+import { legacyAdmission } from './lib/naver-admission.mjs';
+legacyAdmission();
 import stealth from 'puppeteer-extra-plugin-stealth';
 chromium.use(stealth());
 

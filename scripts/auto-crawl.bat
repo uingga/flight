@@ -1,4 +1,6 @@
 @echo off
+node "%~dp0writer-preflight.mjs" daily
+if errorlevel 1 exit /b 1
 REM ============================================
 REM 🛫 항공권 자동 크롤링 + Vercel 배포 스크립트
 REM 하루 3회 실행 (오전 8시, 오후 2시, 저녁 8시)
@@ -26,7 +28,7 @@ echo [%date% %time%] ✅ 크롤링 완료, Git push 시작 >> "%LOG_FILE%"
 REM Git 커밋 & 푸시 (Vercel 자동 배포 트리거)
 git add data/all-flights-cache.json
 git commit -m "🔄 자동 크롤링 데이터 업데이트 (%date%)"
-git push origin main >> "%LOG_FILE%" 2>&1
+node "%~dp0writer-push.mjs" daily origin main >> "%LOG_FILE%" 2>&1
 
 IF %ERRORLEVEL% NEQ 0 (
     echo [%date% %time%] ❌ Git push 실패 >> "%LOG_FILE%"

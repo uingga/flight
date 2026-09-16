@@ -39,6 +39,8 @@ jobs:
         run: npm run check:booking-links
 
       - name: Commit daily link health
+        env:
+          WRITER_TOKEN: ${{ vars.NAVER_COORDINATION == '1' && secrets.TIKIT_WRITER_LINK_HEALTH_TOKEN || '' }}
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
@@ -53,7 +55,7 @@ jobs:
           fi
           git commit -m "chore(data): record booking link health"
           git pull --rebase origin main
-          git push origin main
+          NAVER_COORDINATION="${{ vars.NAVER_COORDINATION }}" TIKIT_WRITER_URL="${{ vars.NAVER_COORDINATION == '1' && vars.TIKIT_WRITER_URL || '' }}" TIKIT_WRITER_TOKEN="$WRITER_TOKEN" node scripts/writer-push.mjs link-health origin main
 
       - name: Alert on check failure
         if: failure()

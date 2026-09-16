@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { resultVersion, verifyResult } from '@/lib/naver-coordination-contract.mjs';
 import todayPick from '../../../../data/today-pick.json';
 import { Flight, FlightSearchParams } from '@/types/flight';
 import { getComparisonFreshness, getEffectivePrice, getPriceExclusionFreshness } from '@/lib/price-quality';
@@ -178,6 +179,8 @@ export async function GET(request: NextRequest) {
         // 통합 캐시 파일에서 모든 항공권 데이터 읽기
         let allFlights: Flight[] = [];
         let lastUpdated: string | null = null;
+        let result_version: string | null = null;
+        let coordinationCache: any = null;
         let sourceUpdatedAt: Record<string, string> = {};
         let freshnessUpdatedAt: Record<string, string> = {};
         const filterSummary: FlightFilterSummary = {
@@ -216,6 +219,7 @@ export async function GET(request: NextRequest) {
 
             if (fs.existsSync(cachePath)) {
                 const cacheData = JSON.parse(fs.readFileSync(cachePath, 'utf-8'));
+                coordinationCache = cacheData.naverCoordination ? structuredClone(cacheData) : null;
                 allFlights = cacheData.flights || [];
                 filterSummary.collected = allFlights.length;
                 allFlights = filterSeatAvailableFlights(allFlights);
@@ -299,6 +303,8 @@ export async function GET(request: NextRequest) {
             const naverPath = path4.join(process.cwd(), 'data', 'naver-prices.json');
             if (fs4.existsSync(naverPath)) {
                 const naverPrices = JSON.parse(fs4.readFileSync(naverPath, 'utf-8'));
+                const expectedVersion = resultVersion(coordinationCache);
+                result_version = verifyResult(coordinationCache, naverPrices, expectedVersion) ? expectedVersion : null;
                 const nearbyNaverIndex = buildNearbyNaverPriceIndex(naverPrices);
 
                 let matched = 0;
@@ -350,7 +356,7 @@ export async function GET(request: NextRequest) {
                 if (matched > 0) console.log(`네이버 최저가 매칭: ${matched}/${allFlights.length}건`);
                 if (removed > 0) console.log(`네이버보다 20% 이상 또는 10만원 이상 비싼 항공권 제거: ${removed}건`);
             }
-        } catch (e) { }
+        } catch (e) { result_version = null; }
 
         // 만료 항공권 제거 (출발일이 오늘 이전)
         const today = new Date();
@@ -426,6 +432,7 @@ export async function GET(request: NextRequest) {
                 count: allFlights.length,
                 filterSummary,
                 lastUpdated,
+                result_version,
             });
         }
 
@@ -537,6 +544,7 @@ export async function GET(request: NextRequest) {
             count: allFlights.length,
             flights: allFlights,
             interparkPrices,
+            result_version,
             interparkBenchmarkScope: {
                 originCities: ['SEL', 'PUS', 'CJJ', 'TAE', 'CJU', 'MWX'],
                 pairTtlDays: 14,

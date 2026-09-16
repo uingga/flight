@@ -6,7 +6,7 @@ const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
 const HOUR_MS = 60 * 60 * 1000;
 const GENERAL_SOURCES = ['ybtour', 'hanatour', 'modetour', 'onlinetour', 'ttang'];
 const TOTAL_NAVIGATION_BUDGET = 200;
-const INITIAL_SLOT = { hour: 10, minute: 12 };
+const INITIAL_SLOT = { hour: 6, minute: 17 };
 const RECOVERY_SLOT = { hour: 13, minute: 23 };
 const FINAL_SLOT = { hour: 16, minute: 31 };
 const TERMINAL_SAME_DAY_PHASES = new Set(['running', 'success', 'blocked', 'degraded']);
@@ -328,7 +328,12 @@ export function evaluateLocalNaverRun({
     }
 
     const freshGeneralSources = GENERAL_SOURCES.filter(source => sourceIsFreshAfter(cache, source, initialSlotAt));
-    const pendingSources = GENERAL_SOURCES.filter(source => !freshGeneralSources.includes(source));
+    // The first general crawl can finish before the morning MyRealTrip crawl.
+    // Reserve its share instead of silently marking the entire day complete.
+    const pendingSources = [
+        ...GENERAL_SOURCES.filter(source => !freshGeneralSources.includes(source)),
+        ...(!myrealtripReady ? ['myrealtrip'] : []),
+    ];
     const runSources = uniqueSources([...freshGeneralSources, ...(myrealtripReady ? ['myrealtrip'] : [])]);
     if (runSources.length === 0) {
         return {

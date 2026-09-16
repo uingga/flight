@@ -1,0 +1,25 @@
+import {execFileSync} from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
+import {pathToFileURL} from 'node:url';
+import {createBrokerClient} from '../src/lib/writer-broker-client.mjs';
+import {WRITER_FILES} from '../src/lib/writer-broker.mjs';
+export async function publishCommittedWriter({role,root=process.cwd(),env=process.env,git=(args)=>execFileSync('git',args,{cwd:root,encoding:'utf8',stdio:['ignore','pipe','pipe']})}){
+ if(!WRITER_FILES[role])throw Error('unknown writer');
+ if(env.NAVER_COORDINATION!=='1')throw Error('coordinated publication requires explicit mode');
+ if(git(['status','--porcelain','--untracked-files=no']).trim())throw Error('uncommitted writer changes refused');
+ const head=git(['rev-parse','HEAD']).trim(),base=git(['rev-parse','HEAD^']).trim();
+ if(!/^[a-f0-9]{40}$/.test(head)||!/^[a-f0-9]{40}$/.test(base))throw Error('invalid commit identity');
+ if(git(['rev-list','--parents','-n','1','HEAD']).trim().split(/\s+/).length!==2)throw Error('merge commit refused');
+ const names=git(['diff','--name-only',base,head,'--']).trim().split(/\r?\n/).filter(Boolean);
+ if(!names.length||names.some(f=>!WRITER_FILES[role].some(n=>f===`data/${n}.json`)))throw Error('commit contains disallowed files');
+ const rawEntries=names.map(file=>[file,git(['show',`${head}:${file}`])]);
+ const entries=rawEntries.map(([file,raw])=>[file,JSON.parse(raw)]);
+ const token=env.TIKIT_WRITER_TOKEN||fs.readFileSync(env.TIKIT_WRITER_TOKEN_FILE,'utf8').trim();
+ const result=await createBrokerClient({url:env.TIKIT_WRITER_URL,token})('commit',{expectedBase:base,requestId:head,entries,rawEntries});
+ if(!/^[a-f0-9]{40}$/.test(result?.commitSha||''))throw Error('invalid publication commit response');
+ return {...result,localCommit:head};
+}
+if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1])).href){
+ publishCommittedWriter({role:process.argv[2]}).then(result=>{console.log('coordinated writer published '+result.commitSha);if(process.env.GITHUB_OUTPUT)fs.appendFileSync(process.env.GITHUB_OUTPUT,`published_commit=${result.commitSha}\n`);}).catch(()=>{console.error('coordinated writer refused; no fallback push');process.exitCode=1;});
+}

@@ -10,6 +10,8 @@ param(
 
 $ErrorActionPreference = 'Continue'
 $ProjectDir = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
+& node (Join-Path $ProjectDir 'scripts/writer-preflight.mjs') source-fallback
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 $LogFile = Join-Path $ProjectDir 'data\source-fallback-local.log'
 $CachePath = 'data/all-flights-cache.json'
 $ManagedPaths = @($CachePath, 'data/crawl-log.json', 'data/interpark-prices.json')
@@ -201,13 +203,17 @@ for ($Attempt = 1; $Attempt -le 2; $Attempt++) {
         exit 1
     }
 
-    git push origin main 2>&1 | ForEach-Object { "$_" | Add-Content -Encoding utf8 $LogFile }
+    & node (Join-Path $ProjectDir 'scripts/writer-push.mjs') source-fallback origin main 2>&1 | ForEach-Object { "$_" | Add-Content -Encoding utf8 $LogFile }
     if ($LASTEXITCODE -eq 0) {
         Log "Fallback cache pushed (attempt $Attempt)"
         $Published = $true
         break
     }
 
+    if ($env:NAVER_COORDINATION -eq '1') {
+        Log 'Coordinated publication refused; preserve local result and do not retry or bypass the writer claim'
+        exit 1
+    }
     Log "Push failed (attempt $Attempt); refreshing remote data and retrying"
     if ($Attempt -lt 2) {
         git reset --soft HEAD~1 2>&1 | Add-Content -Encoding utf8 $LogFile

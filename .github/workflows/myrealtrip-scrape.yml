@@ -88,6 +88,8 @@ jobs:
 
       # 차단을 감지해 스크래퍼가 실패해도 항공권은 그대로 둔 채 24시간 회로는 반드시 저장한다.
       - name: Commit cache or circuit changes
+        env:
+          WRITER_TOKEN: ${{ vars.NAVER_COORDINATION == '1' && secrets.TIKIT_WRITER_MYREALTRIP_TOKEN || '' }}
         if: always() && steps.slot.outputs.should_run == 'true' && (steps.scrape.outcome == 'success' || steps.scrape.outcome == 'failure')
         run: |
           git config --global user.name 'github-actions[bot]'
@@ -114,7 +116,7 @@ jobs:
             if [[ -n $(git status --porcelain data/all-flights-cache.json data/crawl-log.json) ]]; then
               git add data/all-flights-cache.json data/crawl-log.json
               git commit -m "chore(data): update myrealtrip crawl"
-              git push
+              NAVER_COORDINATION="${{ vars.NAVER_COORDINATION }}" TIKIT_WRITER_URL="${{ vars.NAVER_COORDINATION == '1' && vars.TIKIT_WRITER_URL || '' }}" TIKIT_WRITER_TOKEN="$WRITER_TOKEN" node scripts/writer-push.mjs myrealtrip
               echo "✅ 마이리얼트립 가격·수집 기록 업데이트 완료"
             else
               echo "ℹ️ 병합 후 변경 없음"

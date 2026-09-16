@@ -3,6 +3,7 @@
 import fs from 'node:fs';
 import { collectTodayPickArchive } from '../src/lib/today-pick-history.mjs';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import {
     collectRecentPicks,
     destinationKey,
@@ -140,31 +141,32 @@ function recommendScore(flight, interparkPrices, now) {
     return score * freshnessMultiplier(flight.priceCheckedAt, now);
 }
 
-async function main() {
+export async function main({ storage = fs, fetcher = globalThis.fetch, clock = Date.now,
+    outputPath = OUTPUT_PATH, sources = sourceFilter, repair = repairOnly } = {}) {
     let storedPick = {};
     try {
-        storedPick = JSON.parse(fs.readFileSync(OUTPUT_PATH, 'utf8'));
+        storedPick = JSON.parse(storage.readFileSync(outputPath, 'utf8'));
     } catch { /* 첫 선정이면 이전 기록 없이 진행한다. */ }
 
-    const response = await fetch(`${SITE_URL}/api/flights`);
+    const response = await fetcher(`${SITE_URL}/api/flights`);
     if (!response.ok) throw new Error(`항공권 API 응답 실패: ${response.status}`);
     const data = await response.json();
     const allFlights = Array.isArray(data.flights) ? data.flights : [];
-    const flights = sourceFilter.size > 0
-        ? allFlights.filter(flight => sourceFilter.has(flight.source))
+    const flights = sources.size > 0
+        ? allFlights.filter(flight => sources.has(flight.source))
         : allFlights;
     if (flights.length === 0) throw new Error('선정할 항공권이 없습니다. 기존 오늘의 표를 유지합니다.');
-    if (sourceFilter.size > 0) {
-        console.log(`🔎 오늘의 표 최신 수집 여행사 제한: ${[...sourceFilter].join(', ')} (${flights.length}/${allFlights.length}개)`);
+    if (sources.size > 0) {
+        console.log(`🔎 오늘의 표 최신 수집 여행사 제한: ${[...sources].join(', ')} (${flights.length}/${allFlights.length}개)`);
     }
 
-    const now = Date.now();
+    const now = clock();
     const kstDate = new Date(now + KST_OFFSET).toISOString().slice(0, 10);
     if (storedPick?.date === kstDate && storedPick?.flightId) {
         console.log(`✅ 오늘의 표 유지: ${storedPick.flightId} (${kstDate} 하루 1회 선정)`);
         return;
     }
-    if (repairOnly && data.todayPickId && data.todayPickDate === kstDate) {
+    if (repair && data.todayPickId && data.todayPickDate === kstDate) {
         console.log(`✅ 오늘의 표 유지: ${data.todayPickId} (${kstDate})`);
         return;
     }
@@ -207,7 +209,7 @@ async function main() {
     const selected = exceptional[0] || ranked[0];
     if (!selected) throw new Error('최근 7일 목적지 중복 제외 후 유효한 오늘의 표 후보가 없습니다.');
 
-    const selectedAt = new Date().toISOString();
+    const selectedAt = new Date(now).toISOString();
     const output = {
         date: kstDate,
         selectedAt,
@@ -228,7 +230,7 @@ async function main() {
             dropAmount: selected.repeat.dropAmount,
         } : null,
     };
-    fs.writeFileSync(OUTPUT_PATH, `${JSON.stringify(output, null, 2)}\n`, 'utf8');
+    storage.writeFileSync(outputPath, `${JSON.stringify(output, null, 2)}\n`, 'utf8');
     console.log(`✅ 오늘의 표: ${selected.flight.departure?.city} → ${selected.flight.arrival?.city} · ${output.effectivePrice.toLocaleString()}원`);
     console.log(`   선정 기준: ${output.selectionMode}${output.referencePrice ? ` · 비교 기준 ${output.referencePrice.toLocaleString()}원` : ''}`);
     if (selected.repeat.priceDropped) {
@@ -237,7 +239,7 @@ async function main() {
     console.log(`   ${selected.flight.id}`);
 }
 
-main().catch((error) => {
+if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) main().catch((error) => {
     console.error('❌ 오늘의 표 선정 실패:', error);
     process.exitCode = 1;
 });

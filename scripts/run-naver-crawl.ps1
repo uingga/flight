@@ -1,9 +1,9 @@
 # Naver flight crawler - Windows Task Scheduler entry point
 #
 # Pull GitHub data first, then share one 200-navigation KST-day budget across
-# the fresh 10:12 sources, the 13:23 recovery pass, and a manual-only 16:31 pass.
+# the fresh 06:17 sources, the 13:23 recovery pass, and a manual-only 16:31 pass.
 #
-# Schedule: 10:12 initial pass, 13:23 recovery pass, 16:31 startup/manual-capture fallback
+# Schedule: 06:17 initial pass, 13:23 recovery pass, 16:31 startup/manual-capture fallback
 # Manual:   powershell -File scripts\run-naver-crawl.ps1
 
 [CmdletBinding()]
@@ -15,6 +15,13 @@ param(
 $ErrorActionPreference = 'Continue'
 
 $ProjectDir = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
+# Admission before ANY legacy state mutation, install, git operation or browser launch.
+& node (Join-Path $ProjectDir 'scripts\naver-ac-preflight.mjs')
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+if ($env:NAVER_COORDINATION -eq '1') {
+    & npx.cmd --no-install tsx (Join-Path $ProjectDir 'scripts\run-naver-ac.ts')
+    exit $LASTEXITCODE
+}
 $LogFile = Join-Path $ProjectDir 'data\naver-crawl-local.log'
 $StateFile = Join-Path $env:LOCALAPPDATA 'Tikitikit\state\naver-crawl.json'
 $SessionCopy = Join-Path $env:TEMP 'tikitikit-naver-session.json'
@@ -144,7 +151,7 @@ if ($WorktreeDiffExitCode -eq 1 -or $IndexDiffExitCode -eq 1) {
 }
 
 # Each trigger waits for its matching general-crawl commit. The first pass crawls
-# only sources refreshed after 10:12. Preserved sources wait for the 13:23 crawl
+# only sources refreshed after 06:17. Preserved sources wait for the 13:23 crawl
 # and share the original daily navigation budget. Polling never opens Naver.
 $UpstreamPollSeconds = 120
 $KstOffset = [TimeSpan]::FromHours(9)

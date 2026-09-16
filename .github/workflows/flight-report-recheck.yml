@@ -65,6 +65,8 @@ jobs:
           MYREALTRIP_API_KEY: ${{ secrets.MYREALTRIP_API_KEY }}
 
       - name: Publish verified flight changes
+        env:
+          WRITER_TOKEN: ${{ vars.NAVER_COORDINATION == '1' && secrets.TIKIT_WRITER_REPORT_TOKEN || '' }}
         id: publish
         shell: bash
         run: |
@@ -85,10 +87,11 @@ jobs:
 
             git add data/all-flights-cache.json
             git commit -m "chore(data): apply reported flight rechecks"
-            if git push origin main; then
-              echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+            if NAVER_COORDINATION="${{ vars.NAVER_COORDINATION }}" TIKIT_WRITER_URL="${{ vars.NAVER_COORDINATION == '1' && vars.TIKIT_WRITER_URL || '' }}" TIKIT_WRITER_TOKEN="$WRITER_TOKEN" node scripts/writer-push.mjs report origin main; then
               exit 0
             fi
+            # Coordinated failure may retain a durable writer claim: never retry or fall back.
+            if [[ "${{ vars.NAVER_COORDINATION }}" == "1" ]]; then exit 1; fi
             echo "Another data update was pushed first; retrying ($attempt/3)."
           done
 

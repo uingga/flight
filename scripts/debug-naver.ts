@@ -5,6 +5,8 @@
  * - DOM 구조 확인
  */
 import { chromium } from 'playwright-extra';
+import { legacyAdmission } from './lib/naver-admission.mjs';
+legacyAdmission();
 import stealth from 'puppeteer-extra-plugin-stealth';
 import * as fs from 'fs';
 import * as path from 'path';

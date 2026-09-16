@@ -6,11 +6,26 @@
  * 결과는 data/naver-prices.json에 저장됩니다.
  */
 
-import { chromium } from 'playwright-extra';
-import stealth from 'puppeteer-extra-plugin-stealth';
+import { pathToFileURL } from 'node:url';
+import { createNaverSelection } from './lib/naver-selection';
+import { gotoNaver } from './lib/naver-navigation.mjs';
+export { gotoNaver } from './lib/naver-navigation.mjs';
 import * as fs from 'fs';
+// Shared classification boundary used by the real general collection path.
+export async function classifyGeneralResult(page: any, snapshot: NaverPageSnapshot | null, price: number | null, session: any) {
+    await persistExplicitBlock(page, snapshot, session);
+    return price !== null ? 'success' : snapshot ? classifyNaverPageState(snapshot) : 'transient_error';
+}
+// Strip price evidence only for the coordinated block check; legacy classification is unchanged.
+async function persistExplicitBlock(page: any, snapshot: NaverPageSnapshot | null, session: any) {
+    if (session && snapshot && classifyNaverPageState({ ...snapshot, priceCount: 0 }) === 'blocked') {
+        await session.settle(page, 'blocked');
+        throw new Error('coordination halted: blocked');
+    }
+}
 import * as path from 'path';
 import { recordNaverCrawlHistory } from '../src/lib/utils/naver-crawl-history';
+import { assertMode } from '../src/lib/naver-coordination-contract.mjs';
 import {
     appendNaverSellerProbePage,
     createNaverSellerProbeSummary,
@@ -55,7 +70,7 @@ import {
     type NaverCrawlPriorityGroup,
 } from '../src/lib/naver-crawl-priority';
 
-chromium.use(stealth());
+
 
 // ─── 설정 ───
 const MAX_FLIGHTS = parseInt(process.env.MAX_FLIGHTS || '200', 10);
@@ -215,23 +230,7 @@ try {
     console.warn('⚠️ 인터파크 기준가를 읽지 못해 실결제가 중심으로 임시 추천순을 계산합니다.');
 }
 
-// ─── 메인 ───
-(async () => {
-    const runStartedAt = new Date().toISOString();
-    const runStartedMs = Date.now();
-    writeRunStatus('preparing', 0);
-    console.log('🔍 네이버 항공권 최저가 크롤러 시작...\n');
-
-    // 1. all-flights-cache.json에서 마이리얼트립 항공권 추출
-    if (!fs.existsSync(ALL_FLIGHTS_FILE)) {
-        console.error('❌ all-flights-cache.json 파일이 없습니다.');
-        process.exit(1);
-    }
-
-    const rawFile = JSON.parse(fs.readFileSync(ALL_FLIGHTS_FILE, 'utf-8'));
-    const sourceUpdatedAt: Record<string, string> = Array.isArray(rawFile) ? {} : (rawFile.sourceUpdatedAt || {});
-    const cacheUpdatedAt = Array.isArray(rawFile) ? undefined : (rawFile.lastUpdated || rawFile.timestamp);
-    let rawData: FlightData[] = Array.isArray(rawFile) ? rawFile : (rawFile.flights || Object.values(rawFile).flat());
+export function prepareFlightCandidates(rawData: FlightData[], sourceUpdatedAt: Record<string, string> = {}, cacheUpdatedAt?: string, sourceFilters = SOURCE_FILTERS) {
     rawData = rawData.map(flight => ({
         ...flight,
         priceCheckedAt: flight.priceCheckedAt || sourceUpdatedAt[flight.source] || cacheUpdatedAt,
@@ -251,9 +250,9 @@ try {
     if (airportFilled > 0) console.log(`🧩 도시명에서 공항 코드 보정: ${airportFilled}건`);
 
     // 소스 필터링 (기본: myrealtrip)
-    if (SOURCE_FILTERS.size > 0) {
+    if (sourceFilters.size > 0) {
         const before = rawData.length;
-        rawData = rawData.filter(f => SOURCE_FILTERS.has(f.source));
+        rawData = rawData.filter(f => sourceFilters.has(f.source));
         console.log(`🎯 소스 필터: ${SOURCE_FILTER_LABEL} (${rawData.length}/${before}건)`);
     }
 
@@ -267,6 +266,42 @@ try {
         return dep >= now && dep <= maxDepartureDate;
     });
     console.log(`📅 출발일 필터: 미래 ${MAX_DAYS_AHEAD}일 이내 (${rawData.length}/${beforeDate}건)`);
+
+
+ return rawData;
+}
+
+export function getNaverSelectionOptions() {
+ return { refreshConfig: REFRESH_CONFIG, topCandidateCount: TOP_CANDIDATE_COUNT,
+ lowCandidateRatio: LOW_CANDIDATE_RATIO, maxDeferDays: MAX_DEFER_DAYS, benchmark: interparkBenchmark };
+}
+
+// ─── 메인 ───
+export async function runNaver(session: any = null, fixture: any = null) {
+    // Partial/new-mode activation must stop before preparing data or launching Chrome.
+    if(fixture && (!fixture.chromium || !path.resolve(fixture.root).startsWith(path.join((await import('node:os')).tmpdir(), 'naver-collector-fixture-'))))throw Error('collector fixture refused');
+    const coordinated = fixture ? true : assertMode();
+    if (coordinated !== Boolean(session)) throw Error('runner/session mode mismatch');
+    const chromium = fixture?.chromium || (await import('playwright-extra')).chromium;
+    if(!fixture){const { default: stealth } = await import('puppeteer-extra-plugin-stealth');chromium.use(stealth());}
+    const ALL_FLIGHTS_FILE=path.join(fixture?.root||process.cwd(),'data/all-flights-cache.json');
+    const OUTPUT_FILE=path.join(fixture?.root||process.cwd(),'data/naver-prices.json');
+    const runStartedAt = new Date().toISOString();
+    const runStartedMs = Date.now();
+    writeRunStatus('preparing', 0);
+    console.log('🔍 네이버 항공권 최저가 크롤러 시작...\n');
+
+    // 1. all-flights-cache.json에서 마이리얼트립 항공권 추출
+    if (!fs.existsSync(ALL_FLIGHTS_FILE)) {
+        console.error('❌ all-flights-cache.json 파일이 없습니다.');
+        process.exit(1);
+    }
+
+    const rawFile = JSON.parse(fs.readFileSync(ALL_FLIGHTS_FILE, 'utf-8'));
+    const sourceUpdatedAt: Record<string, string> = Array.isArray(rawFile) ? {} : (rawFile.sourceUpdatedAt || {});
+    const cacheUpdatedAt = Array.isArray(rawFile) ? undefined : (rawFile.lastUpdated || rawFile.timestamp);
+    let rawData: FlightData[] = Array.isArray(rawFile) ? rawFile : (rawFile.flights || Object.values(rawFile).flat());
+    rawData = prepareFlightCandidates(rawData, sourceUpdatedAt, cacheUpdatedAt);
 
     const unverifiedRouteCount = rawData.filter(f => f.price > 0 && !flightKey(f)).length;
     if (unverifiedRouteCount > 0) {
@@ -326,7 +361,7 @@ try {
 
     writeRunStatus('data_ready', 0);
 
-    if (!['1', 'true'].includes(String(process.env.NAVER_LIVE_RUN || '').toLowerCase())) {
+    if (!['1', 'true'].includes(String((fixture?.environment||process.env).NAVER_LIVE_RUN || '').toLowerCase())) {
         throw new Error(
             '실제 네이버 요청은 안전 회로가 적용된 run-naver-crawl.ps1 또는 '
             + 'NAVER_LIVE_RUN=1을 명시한 진단 워크플로에서만 허용됩니다.',
@@ -344,6 +379,7 @@ try {
         ],
     });
 
+    try {
     const context = await browser.newContext({
         viewport: { width: 1280, height: 900 },
         locale: 'ko-KR',
@@ -408,12 +444,14 @@ try {
         return true;
     };
 
-    for (let i = 0; i < uniqueFlights.length; i++) {
+    for (let i = 0; session || i < uniqueFlights.length; i++) {
         if (navigationCount >= MAX_NAVIGATIONS) {
             console.log(`\n⏹️ 네이버 페이지 이동 상한 ${MAX_NAVIGATIONS}회에 도달해 정상 종료합니다.`);
             break;
         }
-        const flight = uniqueFlights[i];
+        // Only at a completed-work boundary; session reuses the same selector and ledger.
+        const flight = session ? await session.nextFlight(naverPrices, MAX_NAVIGATIONS - navigationCount) : uniqueFlights[i];
+        if (!flight) break;
         const depDate = normalizeDate(flight.departure.date);
         const retDate = normalizeDate(flight.arrival.date);
         const route = getExactRouteAirports(flight);
@@ -493,7 +531,8 @@ try {
 
             navigationCount++;
             writeRunStatus('naver_request_started', navigationCount, routeLabel);
-            const navigationResponse = await page.goto(naverUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
+            const navigationResponse = await gotoNaver(page, naverUrl, { waitUntil: 'domcontentloaded', timeout: 30000 }, session, { key, kind: 'search' });
+            await persistExplicitBlock(page, { httpStatus: navigationResponse?.status() }, session);
 
             // 네이버 항공권은 여러 GDS/항공사에서 결과가 순차적으로 도착한다.
             // 25초를 무조건 채우는 대신 최소 10초는 기다리고, 화면 로딩이 끝난 뒤
@@ -530,6 +569,8 @@ try {
                     graphqlProblemStatus,
                 });
 
+                await persistExplicitBlock(page, pageSnapshot, session);
+
                 const now = Date.now();
                 const elapsed = now - waitStartedAt;
                 if (elapsed < NAVER_MIN_WAIT_MS) continue;
@@ -562,7 +603,8 @@ try {
                 lowestPrice = null;
             }
 
-            if (lowestPrice !== null) {
+            const resultState = await classifyGeneralResult(page, pageSnapshot ? { ...pageSnapshot, graphqlProblemStatus } : { httpStatus: navigationResponse?.status(), graphqlProblemStatus }, lowestPrice, session);
+            if (resultState === 'success' && lowestPrice !== null) {
                 naverPrices[key] = {
                     ...(existingEntry || {}),
                     naverLowest: lowestPrice,
@@ -623,6 +665,7 @@ try {
                 }
             }
         } catch (err: any) {
+            if (session) throw err;
             console.log(`  ❌ 에러: ${err.message}`);
             const attemptedAt = new Date().toISOString();
             naverPrices[key] = {
@@ -645,6 +688,7 @@ try {
             consecutiveAmbiguousMisses++;
         } finally {
             if (responseHandler) page.off('response', responseHandler);
+            if (session) await session.settle(page, naverPrices[key]?.lastAttemptStatus || 'unknown');
         }
 
         if (explicitBlockDetected) {
@@ -696,7 +740,7 @@ try {
             healthCheckCount++;
             console.log(`\n🩺 애매한 실패 ${consecutiveAmbiguousMisses}건 — 정상 대조 노선으로 접속 상태를 확인합니다.`);
             writeRunStatus('naver_request_started', navigationCount + 1, 'availability_probe');
-            const probe = await probeNaverAvailability(context, remainingNavigationBudget);
+            const probe = await probeNaverAvailability(context, remainingNavigationBudget, session);
             navigationCount += probe.navigations;
             const availability = probe.availability;
             if (availability === 'available') {
@@ -759,6 +803,7 @@ try {
     }
 
     await browser.close();
+    if (session) session.assertComplete();
 
     // 4. 결과 저장
     fs.writeFileSync(OUTPUT_FILE, JSON.stringify(naverPrices, null, 2), 'utf-8');
@@ -835,157 +880,23 @@ try {
         // 명시적 차단 또는 성공 0건은 코드 3으로 남겨 가격 병합을 금지한다.
         process.exitCode = !explicitBlockDetected && successCount > 0 ? 2 : 3;
     }
-})();
+    return { normalExit: !abortedEarly, prices: naverPrices };
+    } finally {
+        await browser.close().catch(() => undefined);
+    }
+}
+if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
+    runNaver().catch(error => { console.error(error); process.exitCode = 1; });
+}
 
 // ─── 검색 키 ───
 function flightKey(f: FlightData): string {
     return buildNaverPriceKey(f, f.departure.date, f.arrival.date) || '';
 }
 
-/** 오래된 네이버 값을 제외하고 실제 추천순과 같은 방향으로 후보 가치를 계산한다. */
-function provisionalRecommendationScore(flight: FlightData): number {
-    const effectivePrice = getNaverSourcePrice(flight);
-    const route = getExactRouteAirports(flight);
-    const cityCode = resolveCityCode(
-        flight.arrival.city,
-        route?.outboundArrival || flight.arrival.airport,
-    );
-    const departureMonth = normalizeDate(flight.departure.date).substring(0, 7);
-    const cityData = isInterparkBenchmarkApplicable(flight) && cityCode
-        ? getInterparkRouteMonths(flight, interparkBenchmark) as Record<string, InterparkMonthPrice> | undefined
-        : undefined;
-    let benchmark = cityData?.[departureMonth];
-    if (!benchmark && cityData) {
-        const closestMonth = Object.keys(cityData).sort().reduce((best, candidateMonth) => {
-            const difference = Math.abs(candidateMonth.localeCompare(departureMonth));
-            const bestDifference = best ? Math.abs(best.localeCompare(departureMonth)) : Infinity;
-            return difference < bestDifference ? candidateMonth : best;
-        }, '');
-        if (closestMonth) benchmark = cityData[closestMonth];
-    }
-
-    let score = effectivePrice;
-    if (!benchmark) score *= 1.1;
-    else if (effectivePrice <= benchmark.lowest) score *= 1;
-    else if (effectivePrice <= benchmark.lowest * 1.2) score *= 1.15;
-    else if (effectivePrice < benchmark.avg) score *= 1.3;
-    else score *= 10;
-
-    score *= getRecommendationFreshness(flight.priceCheckedAt).multiplier;
-    return score;
-}
-
-/**
- * 노선 중복 제거(같은 노선+날짜는 최저가 1건) 후,
- * 오래된 네이버 값을 제외한 임시 추천순으로 하루 검색 대상을 정한다.
- *
- * 우선순위: 7일 마감 → 신규·가격 변경 추천 상위 → 추천 상위 → 보통 → 추천 하위.
- * 같은 그룹 안에서는 동일 노선이 최대 2건까지만 연속되게 분산한다.
- *
- * 차단으로 조기 철수하더라도 가치 있는 노선부터 커버되도록 하기 위함.
- */
-function selectFlightsByPriority(
-    flights: FlightData[],
-    naverPrices: Record<string, NaverPriceEntry>,
-    limit: number
-): {
-    selected: FlightData[];
-    pending: FlightData[];
-    skippedFresh: number;
-    seededSignatures: number;
-    reasonCounts: Record<NaverRefreshReason, number>;
-    groupCounts: Record<NaverCrawlPriorityGroup, number>;
-    selectedGroupCounts: Record<NaverCrawlPriorityGroup, number>;
-    priorityByKey: Map<string, NaverCrawlPriorityGroup>;
-    candidateCount: number;
-} {
-    const seen = new Set<string>();
-    const unique = [...flights]
-        .filter(f => f.price > 0 && Boolean(flightKey(f)))
-        .sort((a, b) => getNaverSourcePrice(a) - getNaverSourcePrice(b)) // 같은 노선+날짜 중복 시 실결제가 최저 유지
-        .filter(f => {
-            const key = flightKey(f);
-            if (seen.has(key)) return false;
-            seen.add(key);
-            return true;
-        });
-
-    const now = Date.now();
-    let seededSignatures = 0;
-
-    // 기존 기록에는 여행사 실결제가 기준값이 없으므로 현재 최저가 항공권을 기준선으로만
-    // 저장한다. crawledAt은 건드리지 않아 오래된 네이버 가격을 새것으로 가장하지 않는다.
-    for (const flight of unique) {
-        const key = flightKey(flight);
-        const entry = naverPrices[key];
-        if (entry && (!entry.sourceSignature || !Number.isFinite(Number(entry.sourcePrice)))) {
-            entry.sourceSignature = buildNaverSourceSignature(flight);
-            entry.sourcePrice = getNaverSourcePrice(flight);
-            seededSignatures++;
-        }
-    }
-
-    const selection = selectNaverCrawlCandidates(unique.map(flight => ({
-        key: flightKey(flight),
-        flight,
-        provisionalScore: provisionalRecommendationScore(flight),
-    })), naverPrices, {
-        limit,
-        now,
-        topCandidateCount: TOP_CANDIDATE_COUNT,
-        lowCandidateRatio: LOW_CANDIDATE_RATIO,
-        maxDeferDays: MAX_DEFER_DAYS,
-        refreshConfig: REFRESH_CONFIG,
-    });
-
-    const groupOrder: NaverCrawlPriorityGroup[] = ['deadline', 'changed_top', 'top', 'standard', 'low'];
-    const orderedRows = groupOrder.flatMap(group => {
-        const rows = selection.eligible.filter(row => row.group === group);
-        const rowByKey = new Map(rows.map(row => [row.key, row]));
-        return spreadRepeatedRoutes(rows.map(row => row.flight), 2)
-            .map(flight => rowByKey.get(flightKey(flight))!)
-            .filter(Boolean);
-    });
-    const selectedRows = orderedRows.slice(0, limit);
-    const selectedGroupCounts: Record<NaverCrawlPriorityGroup, number> = {
-        deadline: 0,
-        changed_top: 0,
-        top: 0,
-        standard: 0,
-        low: 0,
-    };
-    for (const row of selectedRows) selectedGroupCounts[row.group]++;
-    const priorityByKey = new Map(orderedRows.map(row => [row.key, row.group]));
-
-    // 아직 한 번도 조회하지 못한 키도 최초 대기 시각을 저장해 7일 마감 승격이 가능하게 한다.
-    const firstQueuedAt = new Date(now).toISOString();
-    for (const flight of unique) {
-        const key = flightKey(flight);
-        if (!naverPrices[key]) {
-            const route = getExactRouteAirports(flight);
-            naverPrices[key] = {
-                naverLowest: 0,
-                route: route ? formatNaverRoute(route) : undefined,
-                depDate: normalizeDate(flight.departure.date),
-                retDate: normalizeDate(flight.arrival.date),
-                sourceSignature: buildNaverSourceSignature(flight),
-                sourcePrice: getNaverSourcePrice(flight),
-                firstQueuedAt,
-            };
-        }
-    }
-
-    return {
-        selected: selectedRows.map(row => row.flight),
-        pending: orderedRows.map(row => row.flight),
-        skippedFresh: selection.skippedFresh,
-        seededSignatures,
-        reasonCounts: selection.reasonCounts,
-        groupCounts: selection.groupCounts,
-        selectedGroupCounts,
-        priorityByKey,
-        candidateCount: unique.length,
-    };
+function selectFlightsByPriority(flights: FlightData[], prices: Record<string, NaverPriceEntry>, limit: number) {
+    return createNaverSelection({ refreshConfig: REFRESH_CONFIG, topCandidateCount: TOP_CANDIDATE_COUNT,
+        lowCandidateRatio: LOW_CANDIDATE_RATIO, maxDeferDays: MAX_DEFER_DAYS, benchmark: interparkBenchmark })(flights, prices, limit);
 }
 
 function naverRefreshReasonLabel(reason: NaverRefreshReason): string {
@@ -999,36 +910,6 @@ function naverRefreshReasonLabel(reason: NaverRefreshReason): string {
         case 'standard_fresh': return '일반 항공권 최신';
         case 'standard_periodic': return '일반 항공권 정기 갱신';
     }
-}
-
-function routeIdentity(flight: FlightData): string {
-    const route = getExactRouteAirports(flight);
-    return route ? formatNaverRoute(route) : '';
-}
-
-function spreadRepeatedRoutes(flights: FlightData[], maxConsecutive: number): FlightData[] {
-    const remaining = [...flights];
-    const result: FlightData[] = [];
-    let previousRoute = '';
-    let consecutive = 0;
-
-    while (remaining.length > 0) {
-        let index = 0;
-        if (previousRoute && consecutive >= maxConsecutive) {
-            const differentIndex = remaining.findIndex(flight => routeIdentity(flight) !== previousRoute);
-            if (differentIndex >= 0) index = differentIndex;
-        }
-
-        const [next] = remaining.splice(index, 1);
-        const nextRoute = routeIdentity(next);
-        if (nextRoute && nextRoute === previousRoute) consecutive++;
-        else {
-            previousRoute = nextRoute;
-            consecutive = 1;
-        }
-        result.push(next);
-    }
-    return result;
 }
 
 // ─── GraphQL 응답에서 가격 추출 ───
@@ -1256,8 +1137,9 @@ interface NaverProbeRoute {
     retAfterDays: number;
 }
 
-async function probeNaverRoute(context: any, route: NaverProbeRoute): Promise<NaverAvailability> {
+export async function probeNaverRoute(context: any, route: NaverProbeRoute, session: any = null, inspect = inspectNaverPage, extract = extractPriceFromDOM): Promise<NaverAvailability> {
     const probePage = await context.newPage();
+    let outcome: NaverAvailability = 'unknown';
     let graphqlResponseCount = 0;
     let graphqlSuccessCount = 0;
     let graphqlErrorCount = 0;
@@ -1290,41 +1172,47 @@ async function probeNaverRoute(context: any, route: NaverProbeRoute): Promise<Na
         let response: any = null;
         let navigationFailed = false;
         try {
-            response = await probePage.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
+            response = await gotoNaver(probePage, url, { waitUntil: 'domcontentloaded', timeout: 30000 }, session, { key: `${route.outboundDeparture}-${route.outboundArrival}_${kstDateAfter(route.depAfterDays)}_${kstDateAfter(route.retAfterDays)}`, kind: 'probe' });
         } catch (error: any) {
+            if (session) throw error;
             navigationFailed = true;
             console.log(`   ${route.outboundDeparture}-${route.outboundArrival} 이동 실패: ${String(error?.message || error).slice(0, 120)}`);
         }
 
         const deadline = Date.now() + NAVER_HEALTH_WAIT_MS;
+        await persistExplicitBlock(probePage, { httpStatus: response?.status() }, session);
         let snapshot: NaverPageSnapshot | null = null;
         while (Date.now() < deadline) {
             await probePage.waitForTimeout(1_000);
-            const probePrice = await extractPriceFromDOM(probePage);
-            snapshot = await inspectNaverPage(probePage, response?.status(), {
+            const probePrice = await extract(probePage);
+            snapshot = await inspect(probePage, response?.status(), {
                 graphqlResponseCount,
                 graphqlSuccessCount,
                 graphqlErrorCount,
                 graphqlProblemStatus,
             });
 
+            await persistExplicitBlock(probePage, snapshot, session);
+
             if ((probePrice && probePrice >= MIN_VALID_PRICE) || (snapshot.priceCount || 0) > 0) {
                 console.log(
                     `   ${route.outboundDeparture}-${route.outboundArrival}: available`
                     + ` (HTTP ${snapshot.httpStatus || '없음'}, GraphQL 정상 ${graphqlSuccessCount}/${graphqlResponseCount}, 가격 확인)`,
                 );
-                return 'available';
+                outcome = 'available';
+                return outcome;
             }
             if (classifyNaverPageState(snapshot) === 'blocked') {
                 console.log(
                     `   ${route.outboundDeparture}-${route.outboundArrival}: blocked`
                     + ` (HTTP ${snapshot.httpStatus || '없음'}, GraphQL 정상 ${graphqlSuccessCount}/${graphqlResponseCount})`,
                 );
-                return 'blocked';
+                outcome = 'blocked';
+                return outcome;
             }
         }
 
-        snapshot = snapshot || await inspectNaverPage(probePage, response?.status(), {
+        snapshot = snapshot || await inspect(probePage, response?.status(), {
             graphqlResponseCount,
             graphqlSuccessCount,
             graphqlErrorCount,
@@ -1335,13 +1223,16 @@ async function probeNaverRoute(context: any, route: NaverProbeRoute): Promise<Na
             `   ${route.outboundDeparture}-${route.outboundArrival}: ${availability}`
             + ` (HTTP ${snapshot.httpStatus || '없음'}, GraphQL 정상 ${graphqlSuccessCount}/${graphqlResponseCount})`,
         );
-        return availability;
+        outcome = availability;
+        return outcome;
     } catch (error: any) {
+        if (session) throw error;
         console.log(`   대조 노선 확인 실패: ${String(error?.message || error).slice(0, 160)}`);
         return 'unavailable';
     } finally {
         probePage.off('response', responseHandler);
         await probePage.close().catch(() => undefined);
+        if (session) await session.settle(probePage, outcome);
     }
 }
 
@@ -1352,6 +1243,7 @@ async function probeNaverRoute(context: any, route: NaverProbeRoute): Promise<Na
 async function probeNaverAvailability(
     context: any,
     maxNavigations: number,
+    session: any = null,
 ): Promise<{ availability: NaverAvailability; navigations: number }> {
     const routes: NaverProbeRoute[] = [
         {
@@ -1374,7 +1266,7 @@ async function probeNaverAvailability(
     const results: NaverAvailability[] = [];
 
     for (const route of routes.slice(0, Math.max(0, maxNavigations))) {
-        const result = await probeNaverRoute(context, route);
+        const result = await probeNaverRoute(context, route, session);
         results.push(result);
         if (result === 'available' || result === 'blocked') {
             return { availability: result, navigations: results.length };

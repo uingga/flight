@@ -34,6 +34,8 @@ jobs:
         run: node scripts/select-today-pick.mjs
 
       - name: Commit and push selection
+        env:
+          WRITER_TOKEN: ${{ vars.NAVER_COORDINATION == '1' && secrets.TIKIT_WRITER_TODAY_PICK_TOKEN || '' }}
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
@@ -44,4 +46,4 @@ jobs:
           git add data/today-pick.json
           git commit -m "chore(data): select today pick"
           git pull --rebase origin main
-          git push origin main
+          NAVER_COORDINATION="${{ vars.NAVER_COORDINATION }}" TIKIT_WRITER_URL="${{ vars.NAVER_COORDINATION == '1' && vars.TIKIT_WRITER_URL || '' }}" TIKIT_WRITER_TOKEN="$WRITER_TOKEN" node scripts/writer-push.mjs today-pick origin main

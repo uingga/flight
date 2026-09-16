@@ -1,3 +1,4 @@
+import { pathToFileURL } from 'node:url';
 import fs from 'fs';
 import path from 'path';
 import { buildNaverPriceKey } from '../src/lib/naver-route';
@@ -14,16 +15,7 @@ import { isNaverPriceOverLimit } from '../src/lib/naver-price-filter';
  * 사용법: npx tsx scripts/filter-by-naver.ts
  */
 
-const cachePath = path.resolve(process.cwd(), 'data/all-flights-cache.json');
-const naverPath = path.resolve(process.cwd(), 'data/naver-prices.json');
-
-if (!fs.existsSync(naverPath)) {
-    console.error('❌ naver-prices.json이 없습니다. 먼저 네이버 크롤링을 실행하세요.');
-    process.exit(1);
-}
-
-const cache = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
-const naverPrices = JSON.parse(fs.readFileSync(naverPath, 'utf8'));
+export function applyNaverFilter(cache: any, naverPrices: any) {
 const lifecycleCandidates = [...cache.flights];
 const hiddenFlightKeys = new Set<string>();
 
@@ -89,6 +81,21 @@ for (const flight of cache.flights) {
 }
 cache.sources = visibleSourceCounts;
 cache.lastUpdated = new Date().toISOString();
+
+return { cache, lifecycleCandidates, hiddenFlightKeys, beforeCount, cheaper, filtered, noData };
+}
+function main() {
+const cachePath = path.resolve(process.cwd(), 'data/all-flights-cache.json');
+const naverPath = path.resolve(process.cwd(), 'data/naver-prices.json');
+
+if (!fs.existsSync(naverPath)) {
+    console.error('❌ naver-prices.json이 없습니다. 먼저 네이버 크롤링을 실행하세요.');
+    process.exit(1);
+}
+
+const cache = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
+const naverPrices = JSON.parse(fs.readFileSync(naverPath, 'utf8'));
+const { lifecycleCandidates, hiddenFlightKeys, beforeCount, cheaper, filtered, noData } = applyNaverFilter(cache, naverPrices);
 fs.writeFileSync(cachePath, JSON.stringify(cache));
 
 const lifecycleObservationPath = process.env.LIFECYCLE_OBSERVATION_PATH;
@@ -119,3 +126,5 @@ console.log(`✅ 여행사 가격이 네이버 이하: ${cheaper}건 (유지)`);
 console.log(`❌ 네이버보다 20% 이상 또는 10만원 이상 비쌈: ${filtered}건 (제거)`);
 console.log(`❓ 비교 데이터 없음: ${noData}건 (유지)`);
 console.log(`📊 ${beforeCount}건 → ${cache.flights.length}건`);
+}
+if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) main();
