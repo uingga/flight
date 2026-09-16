@@ -1,5 +1,6 @@
 const SHARE_PREFIXES = [
     ['modetour-ASIA-', 'm'],
+    ['modetour-CHI-', 'c'],
     ['hanatour-', 'h'],
     ['ybtour-', 'y'],
     ['online-', 'o'],

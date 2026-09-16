@@ -7,13 +7,12 @@ import styles from './ShareDiscovery.module.css';
 
 const dateLabel = (value: string) => value.slice(5, 10).replace('-', '.');
 
-export default function ShareDiscovery({ flights, selected, compare, onOpen, onBrowse, browseLabel = '지금 나온 항공권 더 보기' }: {
+export default function ShareDiscovery({ flights, selected, compare, onOpen }: {
     flights: Flight[]; selected: Flight; compare: (a: Flight, b: Flight) => number;
     onOpen: (flight: Flight, entry: string) => void;
-    onBrowse: () => void;
-    browseLabel?: string;
 }) {
     const groups = useMemo(() => selectShareDiscovery(flights, selected, compare), [flights, selected, compare]);
+    if (groups.sameDestination.length === 0) return null;
     return <section className={styles.discovery} aria-label="다른 항공권 둘러보기">
         {([
             { key: 'same_destination', title: `${sharedCity(selected.arrival.city)}, 다른 날짜는요?`, items: groups.sameDestination },
@@ -27,9 +26,5 @@ export default function ShareDiscovery({ flights, selected, compare, onOpen, onB
                 {flight.source === 'ttang' && <span className={styles.fee}>발권수수료 20,000원 별도</span>}
             </button>)}</div>
         </div>)}
-        <div className={styles.browse}>
-            <p>이번 항공권이 아니어도 괜찮아요.</p>
-            <button type="button" onClick={onBrowse}>{browseLabel} <span aria-hidden="true">›</span></button>
-        </div>
     </section>;
 }

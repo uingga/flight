@@ -4574,7 +4574,7 @@ export default function MobileRedesignPreview({
 
                     {!listLoading && !error && sharedContext && initialSharedFlightIds.length === 0 && (
                         <button type="button" className={styles.moreButton} onClick={browseNewFlightsFromShare}>
-                            지금 나온 항공권 더 보기 <span aria-hidden="true">→</span>
+                            안 살 거지만 더 보기 <span aria-hidden="true">→</span>
                         </button>
                     )}
 
@@ -5175,8 +5175,6 @@ export default function MobileRedesignPreview({
                         </div>
                         {showSharedWelcome && (
                             <ShareDiscovery flights={flights} selected={selectedFlight} compare={compareRecommended}
-                                browseLabel={initialSharedFlightIds.length > 0 ? '안 살 거지만 더 보기' : undefined}
-                                onBrowse={browseNewFlightsFromShare}
                                 onOpen={(flight, entry) => {
                                     openFlight(flight, entry);
                                     detailDialogRef.current?.scrollTo({ top: 0 });
