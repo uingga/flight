@@ -3,6 +3,7 @@
 import type { CSSProperties } from 'react';
 import type { Flight } from '@/types/flight';
 import { getCityImagePath } from '@/lib/city-image';
+import { cityDisplayName } from '@/lib/utils/city-display';
 import styles from './DropHero.module.css';
 
 const SOURCE_NAMES: Record<Flight['source'], string> = {
@@ -34,11 +35,11 @@ function departureName(flight: Flight) {
     if (flight.departure.airport === 'ICN') return '인천';
     if (flight.departure.airport === 'GMP') return '김포';
     if (flight.departure.airport === 'PUS') return '부산';
-    return flight.departure.city.replace(/\([^)]+\)/g, '').trim();
+    return cityDisplayName(flight.departure.city);
 }
 
 function destinationName(flight: Flight) {
-    return flight.arrival.city.replace(/\([^)]+\)/g, '').trim();
+    return cityDisplayName(flight.arrival.city);
 }
 
 export interface DropHeroProps {

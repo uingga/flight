@@ -3718,7 +3718,7 @@ export default function MobileRedesignPreview({
                                     </div>
                                     <div className={styles.desktopRecentList}>
                                         {recentSearches
-                                            .filter(item => !query.trim() || item.toLocaleLowerCase('ko-KR').includes(query.trim().toLocaleLowerCase('ko-KR')))
+                                            .filter(item => citySearchMatches(item, query))
                                             .map(item => (
                                                 <div className={styles.desktopRecentItem} key={item}>
                                                     <button

@@ -19,6 +19,7 @@ import {
     getNearbyNaverRecommendationAdjustment,
 } from '@/lib/naver-nearby-price';
 import { normalizeCity } from '@/lib/utils/flight-helpers';
+import { citySearchMatches } from '@/lib/utils/city-display';
 import { flightOrderKey } from '@/lib/server/flight-order-identity';
 import { readFlightOrder } from '@/lib/server/flight-order-store';
 import { emptyFlightOrder } from '@/lib/manual-flight-order';
@@ -444,7 +445,7 @@ export async function GET(request: NextRequest) {
         }
         if (params.arrivalCity) {
             allFlights = allFlights.filter(f =>
-                normalizeCity(f.arrival.city).includes(normalizeCity(params.arrivalCity!))
+                citySearchMatches(f.arrival.city, params.arrivalCity!)
             );
         }
         if (params.minPrice) {
