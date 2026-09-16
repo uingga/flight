@@ -1,22 +1,30 @@
 {
-  "date": "2026-09-15",
-  "selectedAt": "2026-09-15T05:53:02.735Z",
-  "flightId": "modetour-CHI-20081221",
+  "date": "2026-09-16",
+  "selectedAt": "2026-09-16T07:05:10.154Z",
+  "flightId": "modetour-CHI-20079724",
   "source": "modetour",
-  "arrivalCity": "성도",
-  "destinationKey": "TFU",
-  "effectivePrice": 190000,
+  "arrivalCity": "장가계",
+  "destinationKey": "DYG",
+  "effectivePrice": 145000,
   "selectionMode": "exceptional-price",
-  "referencePrice": 566800,
+  "referencePrice": 501200,
   "previousPick": {
-    "date": "2026-09-14",
-    "flightId": "modetour-ASIA-20136580",
+    "date": "2026-09-15",
+    "flightId": "modetour-CHI-20081221",
     "source": "modetour",
-    "arrivalCity": "호치민",
-    "destinationKey": "SGN",
-    "effectivePrice": 210000
+    "arrivalCity": "성도",
+    "destinationKey": "TFU",
+    "effectivePrice": 190000
   },
   "recentPicks": [
+    {
+      "date": "2026-09-15",
+      "flightId": "modetour-CHI-20081221",
+      "source": "modetour",
+      "arrivalCity": "성도",
+      "destinationKey": "TFU",
+      "effectivePrice": 190000
+    },
     {
       "date": "2026-09-14",
       "flightId": "modetour-ASIA-20136580",
@@ -64,17 +72,17 @@
       "arrivalCity": "광저우",
       "destinationKey": "CAN",
       "effectivePrice": 199000
-    },
-    {
-      "date": "2026-09-08",
-      "flightId": "modetour-ASIA-20136575",
-      "source": "modetour",
-      "arrivalCity": "호치민",
-      "destinationKey": "SGN",
-      "effectivePrice": 210000
     }
   ],
   "history": [
+    {
+      "date": "2026-09-15",
+      "flightId": "modetour-CHI-20081221",
+      "source": "modetour",
+      "arrivalCity": "성도",
+      "destinationKey": "TFU",
+      "effectivePrice": 190000
+    },
     {
       "date": "2026-09-14",
       "flightId": "modetour-ASIA-20136580",
@@ -172,5 +180,10 @@
       "effectivePrice": 230000
     }
   ],
-  "repeatOverride": null
+  "repeatOverride": {
+    "previousEffectivePrice": 165000,
+    "previousDate": "2026-09-10",
+    "currentEffectivePrice": 145000,
+    "dropAmount": 20000
+  }
 }
