@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { Fragment, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { isAgencySourceCode, type AcquisitionData, type AcquisitionSource } from '@/lib/acquisition';
 import { acquisitionRows, acquisitionSourceIssues } from '@/lib/acquisition-display';
 import OverlayDialog from '@/components/ui/OverlayDialog';
@@ -13,11 +13,15 @@ function SourceTable({ rows }: { rows: AcquisitionSource[] }) {
         <caption className={styles.srOnly}>출처별 방문 횟수와 인원, 방문 많은 순</caption>
         <colgroup><col /><col className={styles.numberColumn} /><col className={styles.numberColumn} /></colgroup>
         <thead><tr><th scope="col">출처</th><th scope="col">방문</th><th scope="col">인원</th></tr></thead>
-        <tbody>{rows.map(row => <tr key={row.source}>
+        <tbody>{rows.map(row => <Fragment key={row.source}><tr>
             <th scope="row" title={row.rawSources?.join(', ')}>{row.label}</th>
             <td>{row.sessions.toLocaleString()}회</td>
             <td>{row.users === null ? <span aria-label="인원 미확인">—</span> : `${row.users.toLocaleString()}명`}</td>
-        </tr>)}</tbody>
+        </tr>
+        {row.threadsEntries && (row.threadsEntries.available ? row.threadsEntries.rows.map(entry => <tr key={entry.key} className={styles.entryRow}>
+            <th scope="row">↳ {entry.label}</th><td>{entry.sessions.toLocaleString()}회</td><td>{entry.users.toLocaleString()}명</td>
+        </tr>) : <tr className={styles.entryRow}><td colSpan={3}>Threads 세부 경로를 불러오지 못했습니다.</td></tr>)}
+        </Fragment>)}</tbody>
     </table>;
 }
 
@@ -26,6 +30,7 @@ function Help() {
         <summary>집계 기준</summary>
         <p>방문은 세션 수, 인원은 GA4 전체 사용자 수입니다. 같은 사람이 여러 출처로 방문할 수 있으므로 인원은 합산하지 않습니다. 확인되지 않은 인원은 —로 표시합니다.</p>
         <p>같은 서비스의 주소는 한 줄로 묶고, 방문과 인원은 GA4에서 중복을 제거해 조회합니다.</p>
+        <p>Threads의 프로필은 link_in_bio, 게시글 링크는 share_ 추적 표시가 확인된 기록입니다. 나머지는 세부 경로 미확인으로 두며 과거 경로를 추정하지 않습니다. 경로별 인원은 서로 겹칠 수 있어 합산하지 않습니다. 0은 조회된 기록이 없다는 뜻이며 실제 방문이 전혀 없었다는 보장은 아닙니다.</p>
         <p>‘직접 방문’은 GA4가 직접 방문으로 분류한 기록입니다. 주소 입력·북마크뿐 아니라 출처가 전달되지 않은 앱·메신저 방문도 포함될 수 있어, 모두 주소를 직접 입력한 방문이라는 뜻은 아닙니다.</p>
         <p>‘출처 미확인’은 출처 값이 비어 있거나 미설정 등으로 전달돼 출처를 확인할 수 없는 기록입니다. ‘데이터 제공 불가’는 GA4가 출처 값으로 (data not available)을 반환한 기록입니다. 정확한 출처나 누락 사유는 추정하지 않습니다.</p>
         <p>여행사 코드의 ‘출처 확인 필요’는 해당 여행사에서 방문했다는 뜻이 아닙니다. 실제 유입 출처를 확인하기 전까지 원본 기록을 유지합니다.</p>

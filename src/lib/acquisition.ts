@@ -1,5 +1,6 @@
 import type { ReportResponse } from './ga4';
-export interface AcquisitionSource { source: string; label: string; sessions: number; users: number | null; rawSources?: string[] }
+export interface ThreadsEntryBreakdown { available: boolean; rows: Array<{ key: string; label: string; sessions: number; users: number }> }
+export interface AcquisitionSource { threadsEntries?: ThreadsEntryBreakdown; source: string; label: string; sessions: number; users: number | null; rawSources?: string[] }
 export interface AcquisitionGroup { label: string; sessions: number; users: number | null; sources: AcquisitionSource[] }
 export interface AcquisitionData { available: boolean; groups: AcquisitionGroup[]; sourceRows?: Array<AcquisitionSource & { categories: string[] }>; message?: string }
 const missing = (s: string) => ['', '(not set)', '(none)', '(other)', '(empty)'].includes(s.trim().toLowerCase());
@@ -27,6 +28,7 @@ export function classifyAcquisition(channel: string, source: string, medium: str
 /** Group known aliases only; never infer a source from an unrelated domain. */
 export function acquisitionSourceKey(source: string): string {
     const s = host(source);
+    if (isThreadsSource(source)) return 'threads';
     if (domain(s, 'keep.naver.com')) return 'keep.naver.com';
     if (s === 'naver_blog' || domain(s, 'blog.naver.com')) return 'naver_blog';
     if (s === 'naver' || domain(s, 'search.naver.com')) return 'naver';
@@ -35,11 +37,13 @@ export function acquisitionSourceKey(source: string): string {
     if (s === 'te31' || domain(s, 'te31.com')) return 'te31';
     return source;
 }
+export const isThreadsSource = (source: string) => { const s = host(source); return s === 'threads' || domain(s, 'threads.net') || domain(s, 'threads.com'); };
 export function acquisitionSourceLabel(source: string): string {
     const s = host(source);
     // Preserve historical counts and raw source; never assume these are agency visitors.
     if (isAgencySourceCode(source)) return source + ' (출처 확인 필요)';
     if (s === 'te31' || domain(s, 'te31.com')) return 'TE31';
+    if (isThreadsSource(source)) return 'Threads';
     if (s === 'user_share') return '항공권 공유 링크';
     if (domain(s, 'keep.naver.com')) return '네이버 Keep';
     if (domain(s, 'search.naver.com') || s === 'naver') return '네이버 검색';

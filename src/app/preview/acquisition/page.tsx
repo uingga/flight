@@ -11,6 +11,7 @@ export const metadata = { title: '유입 유형과 출처 미리보기', robots:
 export default function Preview({searchParams}:{searchParams:{state?:string}}) {
     if (!['localhost','127.0.0.1'].includes(headers().get('host')?.split(':')[0] || '') || process.env.VERCEL || flightOrderStorageMode()!=='preview' || !process.env.ADMIN_KEY) notFound();
     const data:AcquisitionData={available:true,groups:[
+        {label:'SNS',sessions:20,users:15,sources:[{source:'threads',label:'Threads',sessions:20,users:15,threadsEntries:searchParams.state==='threads-unavailable'?{available:false,rows:[]}:{available:true,rows:[{key:'profile',label:'프로필',sessions:5,users:4},{key:'post',label:'게시글 링크',sessions:12,users:10},{key:'unknown',label:'세부 경로 미확인',sessions:3,users:2}]}}]},
         {label:'커뮤니티',sessions:8,users:6,sources:[{source:'te31',label:'TE31',sessions:8,users:6}]},
         {label:'검색',sessions:5,users:3,sources:[{source:'naver',label:'네이버 검색',sessions:4,users:3,rawSources:['naver','m.search.naver.com']},{source:'google',label:'구글 검색',sessions:1,users:1}]},
         {label:'사용자 공유',sessions:2,users:2,sources:[{source:'user_share',label:'항공권 공유 링크',sessions:2,users:2}]},

@@ -1,3 +1,4 @@
+import { loadThreadsEntries } from './threads-entry-report';
 import { runReport, type Ga4Config, type ReportRequest, type ReportResponse } from '../ga4';
 import { classifyAcquisition, acquisitionSourceKey, acquisitionSourceLabel, completeAcquisitionReport, type AcquisitionData, type AcquisitionGroup, type AcquisitionSource } from '../acquisition';
 const dimensions = ['sessionDefaultChannelGroup', 'sessionSource', 'sessionMedium'];
@@ -63,6 +64,7 @@ export async function loadAcquisition(config: Ga4Config, dateRanges: ReportReque
         } catch { /* Never sum people across categories. */ }
         // Several GA source strings can describe one service. Query their exact union:
         // adding user counts (or sessions spanning source rows) would overcount.
+        const entryReports = new Map<string, ReturnType<typeof loadThreadsEntries>>();
         const mergedTotals = new Map<string, Promise<{sessions:number;users:number}>>();
         const normalize = async <T extends AcquisitionSource>(entries:T[], category?:string):Promise<T[]> => {
             const aliases = new Map<string,T[]>();
@@ -88,6 +90,18 @@ export async function loadAcquisition(config: Ga4Config, dateRanges: ReportReque
                         return {sessions,users};
                     })());
                     Object.assign(merged,await mergedTotals.get(identity));
+                }
+                if (key === 'threads') {
+                    const tuples = Array.from(buckets).filter(([label]) => !category || label === category).flatMap(([, rows]) => rows)
+                        .filter(row => rawSources.includes(row.tuple[1])).map(row => row.tuple);
+                    const identity = JSON.stringify(tuples);
+                    if (!entryReports.has(identity)) {
+                        const sourceFilter = { orGroup: { expressions: tuples.map(tuple => ({ andGroup: { expressions: tuple.map((value, i) => ({
+                            filter: { fieldName: dimensions[i], stringFilter: { value, matchType: 'EXACT', caseSensitive: true } },
+                        })) } })) } };
+                        entryReports.set(identity, tuples.length > 500 ? Promise.resolve({available: false, rows: []}) : loadThreadsEntries(config, dateRanges, sourceFilter, query));
+                    }
+                    merged.threadsEntries = await entryReports.get(identity);
                 }
                 result.push(merged);
             }
