@@ -1,0 +1,34 @@
+.root { display: grid; gap: 16px; min-width: 0; }
+.note { color: #697586; font-size: 13px; line-height: 1.6; margin: 0; }
+.run { border: 1px solid #e3e7ed; border-radius: 12px; background: #fff; overflow: hidden; min-width: 0; }
+.run header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 18px; background: #fafbfc; }
+.run h3 { font-size: 16px; font-weight: 700; margin: 0 0 5px; }
+.run time { color: #697586; font-size: 12px; }
+.ok, .warn { font-size: 12px; font-weight: 600; padding: 5px 9px; border-radius: 6px; white-space: nowrap; }
+.ok { color: #176c4b; background: #eaf7f0; }
+.warn { color: #8b5018; background: #fff3df; }
+.tableWrap { overflow-x: auto; }
+.run table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+.run th, .run td { padding: 12px 14px; text-align: right; border-bottom: 1px solid #edf0f4; white-space: nowrap; }
+.run thead th { font-size: 12px; font-weight: 600; color: #697586; }
+.run th:first-child { text-align: left; width: 40%; white-space: normal; min-width: 150px; }
+.run tbody th { font-weight: 600; }
+.run small { display: block; font-size: 12px; font-weight: 400; line-height: 1.5; color: #697586; margin-top: 3px; overflow-wrap: anywhere; }
+.sourceChanges { display: flex; gap: 12px; align-items: baseline; padding: 10px 18px; border-bottom: 1px solid #edf0f4; font-size: 13px; }
+.sourceChanges > strong { flex-shrink: 0; font-weight: 600; }
+.changes { font-size: 13px; line-height: 1.6; min-width: 0; }
+.changes summary { cursor: pointer; color: #37465b; font-weight: 600; }
+.changes p { color: #697586; overflow-wrap: anywhere; }
+.run > .changes, .run > .note { padding: 12px 18px; }
+.flightLists { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 20px; margin-top: 12px; }
+.flightLists h4 { margin: 0 0 8px; font-weight: 600; }
+.flightLists section > div { padding: 8px 0; border-top: 1px solid #edf0f4; }
+.flightLists strong, .flightLists span { display: block; overflow-wrap: anywhere; }
+.flightLists strong { font-weight: 600; }
+.flightLists span { color: #697586; }
+.naverMetrics { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; padding: 16px 18px; }
+.naverMetrics span { display: block; font-size: 12px; color: #697586; margin-bottom: 6px; }
+.naverMetrics strong { font-size: 18px; font-weight: 700; }
+.more { padding: 12px; border: 1px solid #dfe4eb; border-radius: 8px; background: #fff; font-weight: 600; cursor: pointer; }
+.empty { color: #697586; padding: 24px; text-align: center; }
+@media(max-width:600px) { .run header { padding: 12px; } .run th, .run td { padding: 10px 8px; font-size: 12px; } .run th:first-child { min-width: 110px; } .naverMetrics { grid-template-columns: repeat(2,1fr); } .sourceChanges { display: block; } .sourceChanges > strong { display: block; margin-bottom: 4px; } .flightLists { grid-template-columns: 1fr; } }
