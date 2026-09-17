@@ -2382,6 +2382,26 @@
 @keyframes filterPopoverIn {
     from { transform: translateY(-7px); opacity: .55; }
 }
+@keyframes filterPopoverOut {
+    to { transform: translateY(-7px); opacity: 0; }
+}
+@media (min-width: 960px) {
+    .desktopFilterPopover {
+        animation: filterPopoverIn 180ms cubic-bezier(.2, .8, .2, 1);
+    }
+    .desktopFilterPopover[data-closing="true"],
+    .filterOverlay .bottomSheet.filterClosing {
+        animation: filterPopoverOut 180ms cubic-bezier(.2, .8, .2, 1) forwards;
+        pointer-events: none;
+    }
+    .filterOverlay.filterClosing { pointer-events: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .desktopFilterPopover,
+    .desktopFilterPopover[data-closing="true"],
+    .filterOverlay .bottomSheet,
+    .filterOverlay .bottomSheet.filterClosing { animation: none; }
+}
 
 @keyframes desktopToastIn {
     from { transform: translateX(-50%) translateY(-8px); opacity: 0; }

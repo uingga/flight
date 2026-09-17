@@ -1,5 +1,6 @@
 'use client';
 import { FEATURED_TRAVEL_CITIES } from '@/lib/city-search-policy';
+import { useFilterPresence } from '@/lib/hooks/use-filter-presence';
 import { createShareFunnel } from '@/lib/share-funnel';
 import { flushSync } from 'react-dom';
 import DropHero from '@/components/DropHero';
@@ -1225,6 +1226,11 @@ export default function MobileRedesignPreview({
     const [detailHasScrolled, setDetailHasScrolled] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
     const [isDesktopViewport, setIsDesktopViewport] = useState(false);
+    const desktopFilterPresence = useFilterPresence(desktopFilterOpen, isDesktopViewport);
+    const advancedFilterPresence = useFilterPresence(filterOpen ? true : null, isDesktopViewport);
+    useEffect(() => {
+        if (filterDialogRef.current) filterDialogRef.current.inert = advancedFilterPresence.closing;
+    }, [advancedFilterPresence.closing]);
     const [filterBarPinned, setFilterBarPinned] = useState(false);
     const [filterBarExiting, setFilterBarExiting] = useState(false);
     const [filterBarReturning, setFilterBarReturning] = useState(false);
@@ -3823,8 +3829,8 @@ export default function MobileRedesignPreview({
                                     <strong>{departure === '전체' ? '전체' : departureFilterLabel}</strong>
                                     <span className={`${styles.desktopFilterChevron} ${desktopFilterOpen === 'departure' ? styles.desktopFilterChevronOpen : ''}`}><Icon name="chevron" /></span>
                                 </button>
-                                {desktopFilterOpen === 'departure' && (
-                                    <div className={styles.desktopFilterPopover}>
+                                {desktopFilterPresence.value === 'departure' && (
+                                    <div className={styles.desktopFilterPopover} data-closing={desktopFilterPresence.closing} ref={node => { if (node) node.inert = desktopFilterPresence.closing; }}>
                                         {DEPARTURE_OPTIONS.map(item => (
                                             <button
                                                 type="button"
@@ -3857,8 +3863,8 @@ export default function MobileRedesignPreview({
                                     <strong>{region}</strong>
                                     <span className={`${styles.desktopFilterChevron} ${desktopFilterOpen === 'region' ? styles.desktopFilterChevronOpen : ''}`}><Icon name="chevron" /></span>
                                 </button>
-                                {desktopFilterOpen === 'region' && (
-                                    <div className={`${styles.desktopFilterPopover} ${styles.desktopFilterPopoverWide}`}>
+                                {desktopFilterPresence.value === 'region' && (
+                                    <div className={`${styles.desktopFilterPopover} ${styles.desktopFilterPopoverWide}`} data-closing={desktopFilterPresence.closing} ref={node => { if (node) node.inert = desktopFilterPresence.closing; }}>
                                         {REGION_OPTIONS.map(item => (
                                             <button
                                                 type="button"
@@ -3892,8 +3898,8 @@ export default function MobileRedesignPreview({
                                     <strong>{dateFilterLabel === '날짜' ? '전체' : dateFilterLabel}</strong>
                                     <span className={`${styles.desktopFilterChevron} ${desktopFilterOpen === 'date' ? styles.desktopFilterChevronOpen : ''}`}><Icon name="chevron" /></span>
                                 </button>
-                                {desktopFilterOpen === 'date' && (
-                                    <div className={`${styles.desktopFilterPopover} ${styles.desktopFilterDatePopover}`}>
+                                {desktopFilterPresence.value === 'date' && (
+                                    <div className={`${styles.desktopFilterPopover} ${styles.desktopFilterDatePopover}`} data-closing={desktopFilterPresence.closing} ref={node => { if (node) node.inert = desktopFilterPresence.closing; }}>
                                         <div className={styles.desktopFilterDateOptions}>
                                             {DATE_PERIOD_OPTIONS.map(item => (
                                                 <button
@@ -3964,8 +3970,8 @@ export default function MobileRedesignPreview({
                                     <strong>{maxPrice ? PRICE_OPTIONS.find(item => item.value === maxPrice)?.label : '전체'}</strong>
                                     <span className={`${styles.desktopFilterChevron} ${desktopFilterOpen === 'price' ? styles.desktopFilterChevronOpen : ''}`}><Icon name="chevron" /></span>
                                 </button>
-                                {desktopFilterOpen === 'price' && (
-                                    <div className={styles.desktopFilterPopover}>
+                                {desktopFilterPresence.value === 'price' && (
+                                    <div className={styles.desktopFilterPopover} data-closing={desktopFilterPresence.closing} ref={node => { if (node) node.inert = desktopFilterPresence.closing; }}>
                                         {PRICE_OPTIONS.map(item => (
                                             <button
                                                 type="button"
@@ -4709,14 +4715,14 @@ export default function MobileRedesignPreview({
                 </div>
             )}
 
-            {filterOpen && (
+            {advancedFilterPresence.value && (
                 <OverlayDialog
-                    open={filterOpen}
-                    active={activeOverlay === 'filter'}
+                    open={Boolean(advancedFilterPresence.value)}
+                    active={filterOpen && activeOverlay === 'filter'}
                     dialogRef={filterDialogRef}
                     onClose={closeFilter}
-                    overlayClassName={`${styles.sheetOverlay} ${styles.filterOverlay}`}
-                    dialogClassName={`${styles.bottomSheet} ${styles.filterSheet}`}
+                    overlayClassName={`${styles.sheetOverlay} ${styles.filterOverlay} ${advancedFilterPresence.closing ? styles.filterClosing : ''}`}
+                    dialogClassName={`${styles.bottomSheet} ${styles.filterSheet} ${advancedFilterPresence.closing ? styles.filterClosing : ''}`}
                     ariaLabel="항공권 필터"
                     ariaLabelledBy="flight-filter-title"
                     dialogStyle={filterPopoverPosition && !isMobile ? {
