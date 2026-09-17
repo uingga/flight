@@ -11,7 +11,7 @@ export function createBrokerClient({url,token,timeoutMs=WRITER_BROKER_TIMEOUT_MS
   const id=input.requestId||randomUUID(),body=JSON.stringify({...input,action}),deadline=Date.now()+timeoutMs;
   do {
    const r=await requestHttp(new URL('publication',u),{method:'POST',headers:{authorization:`Bearer ${token}`,'content-type':'application/json','x-publication-id':id},body:web?encodeRelayWire(body):body,loopbackOnly:local,timeoutMs:Math.max(1,deadline-Date.now()),maxBytes:web?3*1024*1024:32*1024*1024});
-   if(r.status!==202){if(!r.ok)throw Error('broker publication refused');return (web?JSON.parse(decodeRelayWire(await r.text())):await r.json()).result;}
+   if(r.status!==202){if(!r.ok){const error=new Error('broker publication refused');error.httpStatus=r.status;throw error;}return (web?JSON.parse(decodeRelayWire(await r.text())):await r.json()).result;}
    await new Promise(resolve=>setTimeout(resolve,pollMs));
   }while(Date.now()<deadline);
   throw Error('publication outcome pending; reuse the same request identity, never fallback push');

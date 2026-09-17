@@ -5,6 +5,7 @@ import {pathToFileURL} from 'node:url';
 import {publishCommittedWriter} from './publish-writer.mjs';
 import {WRITER_FILES} from '../src/lib/writer-broker.mjs';
 import {reconcilePublication} from './lib/writer-reconcile.mjs';
+import {publicationFailure} from '../src/lib/mrt-publication-recovery.mjs';
 
 export async function pushWriter({role,args=[],env=process.env,root=process.cwd(),publish=publishCommittedWriter,exec=execFileSync}) {
  if(!WRITER_FILES[role])throw Error('unknown writer role');
@@ -25,5 +26,10 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1]
   if(!/^[a-f0-9]{40}$/.test(commitSha))throw Error('invalid published commit');
   if(process.env.GITHUB_OUTPUT)fs.appendFileSync(process.env.GITHUB_OUTPUT,`commit=${commitSha}\npublished_commit=${commitSha}\n`);
   console.log('writer publication confirmed');
- }).catch(()=>{console.error('writer publication refused; no alternate push');process.exitCode=1;});
+ }).catch(error=>{
+  if(process.argv[2]==='myrealtrip'&&process.env.RUNNER_TEMP){
+   try{fs.writeFileSync(path.join(process.env.RUNNER_TEMP,'mrt-publication-failure.json'),JSON.stringify({version:1,runId:process.env.GITHUB_RUN_ID,...publicationFailure(error),recordedAt:new Date().toISOString()}),{flag:'wx'});}catch{console.error('publication diagnosis could not be preserved');}
+  }
+  console.error('writer publication refused; no alternate push');process.exitCode=1;
+ });
 }

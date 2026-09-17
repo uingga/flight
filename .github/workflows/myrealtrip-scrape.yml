@@ -148,6 +148,15 @@ jobs:
             echo "ℹ️ 변경 없음"
           fi
 
+      - name: Preserve publication failure diagnosis
+        if: always() && steps.publish.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: mrt-publication-failure-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/mrt-publication-failure.json
+          if-no-files-found: warn
+          retention-days: 7
+
       - name: Release shared MyRealTrip admission
         if: always() && steps.slot.outputs.should_run == 'true' && (steps.publish.outcome == 'success' || (steps.scrape.outcome == 'success' && steps.publish.outcome == 'failure' && steps.recovery_artifact.outcome == 'success'))
         run: node scripts/release-myrealtrip-slot.mjs
