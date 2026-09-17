@@ -3,7 +3,7 @@ import { FEATURED_TRAVEL_CITIES } from '@/lib/city-search-policy';
 import { createShareFunnel } from '@/lib/share-funnel';
 import { flushSync } from 'react-dom';
 import DropHero from '@/components/DropHero';
-import { dropHeroAlternatives } from '@/lib/drop-hero-schedules';
+import { dropHeroAlternatives, dropSelectionKey } from '@/lib/drop-hero-schedules';
 import { getCityImagePath } from '@/lib/city-image';
 import { groupPriceDropFlights, priceDropKey, priceDropDay, priceDropLabel, priceDropAmountLabel, type PriceDropRecord } from '@/lib/price-drop-insight';
 import { shareGroupDepartureFilter } from '@/lib/share-group-departure';
@@ -83,6 +83,7 @@ interface FlightsResponse {
     flights: Flight[];
     lastUpdated?: string | null;
     todayPickId?: string | null;
+    todayPickFlightKeys?: string[] | null;
     todayPickDate?: string | null;
     todayPickRepeatOverride?: TodayPickRepeatOverride | null;
     priceHistory?: PriceHistory;
@@ -114,6 +115,7 @@ interface MobileRedesignPreviewProps {
     initialFlightCount?: number;
     initialLastUpdated?: string | null;
     initialTodayPickId?: string | null;
+    initialTodayPickFlightKeys?: string[] | null;
     initialSharedFlightIds?: string[];
     initialSharedDeparture?: string | null;
     initialSharedArrival?: string | null;
@@ -141,6 +143,7 @@ interface FreshDesktopDragState {
 }
 
 interface FreshRouteResults {
+    dropFlightKeys?: string[];
     priceDropKeys?: string[];
     dropFlightIds?: string[];
     dropPrice?: number;
@@ -1126,6 +1129,7 @@ export default function MobileRedesignPreview({
     initialFlightCount = 0,
     initialLastUpdated = null,
     initialTodayPickId = null,
+    initialTodayPickFlightKeys = null,
     initialSharedFlightIds = [],
     initialSharedDeparture = null,
     initialSharedArrival = null,
@@ -1141,6 +1145,7 @@ export default function MobileRedesignPreview({
     const [error, setError] = useState('');
     const [lastUpdated, setLastUpdated] = useState<string | null>(initialLastUpdated);
     const [todayPickId, setTodayPickId] = useState<string | null>(initialTodayPickId);
+    const [todayPickFlightKeys, setTodayPickFlightKeys] = useState<string[] | null>(initialTodayPickFlightKeys);
     const [todayPickRepeatOverride, setTodayPickRepeatOverride] = useState<TodayPickRepeatOverride | null>(null);
     const [priceHistory, setPriceHistory] = useState<PriceHistory>({});
     const [interparkPrices, setInterparkPrices] = useState<InterparkPrices>({});
@@ -1540,6 +1545,7 @@ export default function MobileRedesignPreview({
             const hasCurrentTodayPick = data.todayPickDate === seoulDateKey()
                 && typeof data.todayPickId === 'string';
             setTodayPickId(hasCurrentTodayPick ? data.todayPickId! : null);
+            setTodayPickFlightKeys(hasCurrentTodayPick ? data.todayPickFlightKeys || null : null);
             setTodayPickRepeatOverride(hasCurrentTodayPick ? data.todayPickRepeatOverride || null : null);
             setPriceHistory(data.priceHistory || {});
             setInterparkPrices(data.interparkPrices || {});
@@ -2150,7 +2156,8 @@ export default function MobileRedesignPreview({
         (() => {
             // API가 KST 날짜를 확인해 오늘 선정된 ID만 내려준다. 선정되지 않았거나
             // 자정이 지나 ID가 사라지면 임의의 항공권으로 DROP 자리를 채우지 않는다.
-            const fixedTodayPick = flights.find(item => item.id === todayPickId);
+            const fixedTodayPick = flights.find(item => item.id === todayPickId
+                && (!todayPickFlightKeys || dropSelectionKey(item) === todayPickFlightKeys[0]));
             if (!fixedTodayPick) return null;
             return {
                 flight: fixedTodayPick,
@@ -2165,7 +2172,7 @@ export default function MobileRedesignPreview({
                 }),
             };
         })()
-    ), [flights, interparkPrices, todayPickId, todayPickRepeatOverride]);
+    ), [flights, interparkPrices, todayPickId, todayPickRepeatOverride, todayPickFlightKeys]);
     const displayedFlights = useMemo(() => {
         if (sharedFlightIds.length > 0) return filteredFlights;
         // The server already ranked this snapshot. Keep its order while refreshing.
@@ -2698,7 +2705,9 @@ export default function MobileRedesignPreview({
         }
         if (freshRouteResults.dropFlightIds) {
             const ids = new Set(freshRouteResults.dropFlightIds);
-            return flights.filter(flight => ids.has(flight.id) && displayedFlightPrice(flight) === freshRouteResults.dropPrice)
+            return flights.filter(flight => ids.has(flight.id)
+                && (!freshRouteResults.dropFlightKeys || freshRouteResults.dropFlightKeys.includes(dropSelectionKey(flight)))
+                && displayedFlightPrice(flight) === freshRouteResults.dropPrice)
                 .sort((a, b) => a.departure.date.localeCompare(b.departure.date));
         }
         const result = flights.filter(flight => (
@@ -2738,7 +2747,7 @@ export default function MobileRedesignPreview({
     const dropHeroPick = !freshRouteResults && isDefaultView && todayPickId
         && featuredPick && getCityImagePath(featuredPick.flight.arrival.city) ? featuredPick : null;
     const ordinaryFeedFlights = dropHeroPick ? feedFlights.filter(flight => flight.id !== dropHeroPick.flight.id) : feedFlights;
-    const dropHeroSchedules = dropHeroPick ? dropHeroAlternatives(flights, dropHeroPick.flight, displayedFlightPrice)
+    const dropHeroSchedules = dropHeroPick ? dropHeroAlternatives(flights, dropHeroPick.flight, displayedFlightPrice, todayPickFlightKeys)
         .map(flight => ({ flight, duration: tripLength(flight) })) : [];
     const dropHeroRepresentative = dropHeroPick ? [dropHeroPick.flight, ...dropHeroSchedules.map(option => option.flight)]
         .sort((a, b) => b.departure.date.localeCompare(a.departure.date) || b.departure.time.localeCompare(a.departure.time))[0] : null;
@@ -3076,6 +3085,8 @@ export default function MobileRedesignPreview({
             selectedFlight.departure.airport,
         )
         : null;
+    const PassengerContainer = isDesktopViewport ? 'section' : 'details';
+    const PassengerHeading = isDesktopViewport ? 'div' : 'summary';
     const selectedBookingUrl = selectedFlight
         ? getFlightBookingUrl(selectedFlight, passengers, isMobile)
         : '';
@@ -4278,6 +4289,7 @@ export default function MobileRedesignPreview({
                                     targetDate: seoulDateKey(),
                                     copyPrefix: 'TIKIT DROP',
                                     dropFlightIds: [dropHeroPick.flight.id, ...dropHeroSchedules.map(option => option.flight.id)],
+                                    dropFlightKeys: [dropSelectionKey(dropHeroPick.flight), ...dropHeroSchedules.map(option => dropSelectionKey(option.flight))],
                                     dropPrice: displayedFlightPrice(dropHeroPick.flight),
                                 };
                                 const originState = { ...window.history.state, tikitikitDropOriginY: window.scrollY };
@@ -5013,17 +5025,18 @@ export default function MobileRedesignPreview({
                         {selectedFlight.source !== 'modetour'
                             && selectedFlight.source !== 'onlinetour'
                             && selectedFlight.source !== 'ttang' && (
-                            <details className={styles.passengerPicker} key={selectedFlight.id}>
-                                <summary>
+                            <PassengerContainer className={styles.passengerPicker} key={`${selectedFlight.id}-${isDesktopViewport}`}>
+                                <PassengerHeading className={styles.passengerHeading}>
                                     <span>탑승 인원</span>
-                                    <strong>
+                                    {!isDesktopViewport && <><strong>
                                         성인 {passengers.adult}명
                                         {passengers.child > 0 ? ` · 소아 ${passengers.child}명` : ''}
                                         {passengers.infant > 0 ? ` · 유아 ${passengers.infant}명` : ''}
                                         {' · 변경'}
                                     </strong>
                                     <Icon name="chevron" />
-                                </summary>
+                                    </>}
+                                </PassengerHeading>
                                 <div className={styles.passengerRows}>
                                     {([
                                         { key: 'adult', label: '성인', age: '만 12세 이상', min: 1, max: 9 },
@@ -5061,7 +5074,7 @@ export default function MobileRedesignPreview({
                                         <p>소아·유아 요금은 성인과 달라요. 정확한 금액은 예약 페이지에서 확인해주세요.</p>
                                     )}
                                 </div>
-                            </details>
+                            </PassengerContainer>
                         )}
                         {(selectedFlight.source === 'modetour'
                             || selectedFlight.source === 'onlinetour'

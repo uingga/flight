@@ -327,7 +327,7 @@
 .tier { font-size: 12px; }
 .success, .error, .empty { font-size: 14px; overflow-wrap: anywhere; }
 .note { font-size: 12px; color: var(--text-muted, #707070); }
-.pagination { display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; gap: 12px; padding: 12px 20px max(12px, env(safe-area-inset-bottom)); border-top: 1px solid var(--line, #ddd); }
+.pagination { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; flex-shrink: 0; gap: 12px; padding: 12px 20px max(12px, env(safe-area-inset-bottom)); border-top: 1px solid var(--line, #ddd); }
 .pagination span { font-size: 13px; color: var(--text-secondary, #5f5f5f); }
 .section button:focus-visible, .panel button:focus-visible, .toolbar input:focus-visible { outline: 2px solid var(--brand, #ff385c); outline-offset: 3px; }
 @media (min-width: 721px) {
@@ -351,7 +351,7 @@
     .route { grid-column: 1; }
     .route strong { font-size: 14px; }
     .price { grid-column: 1; text-align: left; }
-    .candidateList button { grid-column: 2; grid-row: 2 / 4; min-height: 44px; }
+    .candidateList button, .candidateList article > label { grid-column: 2; grid-row: 2 / 4; min-height: 44px; }
     .refreshButton, .candidateList button { font-size: 12px; }
 }
 

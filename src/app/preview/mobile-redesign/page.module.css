@@ -1270,6 +1270,8 @@
 .detailUtilityRow button:hover,
 .detailUtilityRow a:hover { color: var(--ink); text-decoration-color: #999999; }
 .passengerPicker { margin-top: 13px; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); }
+.passengerPicker > div.passengerHeading { min-height: 43px; padding: 0 12px; display: flex; align-items: center; }
+.passengerPicker > div.passengerHeading > span { color: var(--text-muted); font-size: var(--size-caption); font-weight: var(--weight-medium); }
 .passengerPicker summary { min-height: 43px; padding: 0 12px; display: grid; grid-template-columns: max-content minmax(0, 1fr) 16px; align-items: center; gap: 9px; cursor: pointer; list-style: none; }
 .passengerPicker summary::-webkit-details-marker { display: none; }
 .passengerPicker summary > span { color: var(--text-muted); font-size: var(--size-caption); font-weight: var(--weight-medium); }

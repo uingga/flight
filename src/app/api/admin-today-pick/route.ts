@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { NextRequest, NextResponse } from 'next/server';
 import type { Flight } from '@/types/flight';
+import { dropSelectionKey, dropSelectionGroup, resolveDropSelection } from '@/lib/drop-hero-schedules';
 import {
     effectivePrice,
     loadActiveFlights,
@@ -111,17 +112,27 @@ function isSelectableFlight(flight: Flight, today = kstDateKey()): boolean {
 async function commitTodayPick(
     token: string,
     flight: Flight,
+    selection?: { keys: string[]; group: string },
 ): Promise<{ pick: ReturnType<typeof buildManualTodayPick>; commitSha: string | null; alreadySelected: boolean }> {
+    const resolveSelection = (flights: Flight[]) => {
+        const selected = resolveDropSelection(flights, selection!.keys, effectivePrice, kstDateKey());
+        if (dropSelectionGroup(selected[0], effectivePrice(selected[0])) !== selection!.group) throw new Error('선정 중 가격이나 노선이 변경됐습니다. 다시 확인해주세요.');
+        return selected;
+    };
+    const buildPick = (stored: StoredTodayPick, current: Flight) => ({ ...buildManualTodayPick(stored, current),
+        ...(selection ? { selectedFlightKeys: selection.keys } : {}) });
     if (process.env.NAVER_COORDINATION === '1') {
         const { publishAdminPick } = await import('../../../lib/writer-admin-pick.mjs');
-        return publishAdminPick({ flight, buildPick: buildManualTodayPick });
+        return publishAdminPick({ flight, buildPick, ...(selection ? { resolveSelection } : {}) });
     }
     const {legacyWriterAdmission}=await import('../../../lib/naver-writer-safety.mjs');
     legacyWriterAdmission();
     for (let attempt = 0; attempt < 2; attempt += 1) {
         const remote = await readRemoteTodayPick(token);
-        const pick = buildManualTodayPick(remote.pick, flight);
-        if (remote.pick.date === pick.date && remote.pick.flightId === pick.flightId) {
+        const current = selection ? resolveSelection(await readRemoteFlights(token))[0] : flight;
+        const pick = buildPick(remote.pick, current);
+        if (remote.pick.date === pick.date && remote.pick.flightId === pick.flightId
+            && JSON.stringify(remote.pick.selectedFlightKeys || null) === JSON.stringify(pick.selectedFlightKeys || null)) {
             return { pick, commitSha: null, alreadySelected: true };
         }
 
@@ -174,6 +185,8 @@ function candidatePayload(flights: Flight[], currentPick: StoredTodayPick) {
         const price = effectivePrice(flight);
         return {
             id: flight.id,
+            selectionKey: dropSelectionKey(flight),
+            selectionGroup: dropSelectionGroup(flight, price),
             rank: index + 1,
             departureCity: flight.departure.city,
             arrivalCity: flight.arrival.city,
@@ -183,7 +196,8 @@ function candidatePayload(flights: Flight[], currentPick: StoredTodayPick) {
             naverLowest: naverUsable ? naverLowest : null,
             naverDifference: naverUsable ? price - naverLowest : null,
             recommendationTier: state.explanations.get(flight.id)?.topRecommendationTier ?? 3,
-            selected: currentPick.date === kstDateKey(now) && currentPick.flightId === flight.id,
+            selected: currentPick.date === kstDateKey(now) && (currentPick.selectedFlightKeys
+                ? currentPick.selectedFlightKeys.includes(dropSelectionKey(flight)) : currentPick.flightId === flight.id),
         };
     });
 }
@@ -202,6 +216,7 @@ export async function GET(request: NextRequest) {
         message: GITHUB_TOKEN ? null : 'GitHub 저장 키가 없어 수동 선정을 저장할 수 없습니다.',
         current: currentFlight ? {
             id: currentFlight.id,
+            scheduleCount: currentPick.selectedFlightKeys?.length || 1,
             departureCity: currentFlight.departure.city,
             arrivalCity: currentFlight.arrival.city,
             departureDate: currentFlight.departure.date,
@@ -220,7 +235,7 @@ export async function POST(request: NextRequest) {
         if (!sameSiteRequest(request)) {
             return NextResponse.json({ error: '허용되지 않은 요청입니다.' }, { status: 403 });
         }
-        const body = await request.json() as { key?: unknown; flightId?: unknown };
+        const body = await request.json() as { key?: unknown; flightId?: unknown; flightKeys?: unknown; selectionGroup?: unknown };
         if (!authorized(request, body.key)) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
@@ -228,26 +243,41 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'GitHub 저장 키가 설정되지 않았습니다.' }, { status: 503 });
         }
         const flightId = typeof body.flightId === 'string' ? body.flightId.trim() : '';
-        if (!flightId || flightId.length > 300) {
+        const keys = Array.isArray(body.flightKeys) && body.flightKeys.every(key => typeof key === 'string' && key.length <= 600)
+            ? body.flightKeys as string[] : null;
+        if (body.flightKeys !== undefined && (!keys || !keys.length || keys.length > 50 || typeof body.selectionGroup !== 'string')) {
+            return NextResponse.json({ error: '선정할 일정 정보가 올바르지 않습니다.' }, { status: 400 });
+        }
+        if (!keys && (!flightId || flightId.length > 300)) {
             return NextResponse.json({ error: '선정할 항공권이 올바르지 않습니다.' }, { status: 400 });
         }
 
         // 배포본보다 main의 크롤 데이터가 앞서 있을 수 있으므로 실제 커밋 직전에 원격 데이터를 다시 확인한다.
         const remoteFlights = await readRemoteFlights(GITHUB_TOKEN);
-        const flight = remoteFlights.find(candidate => candidate.id === flightId);
+        let selected: Flight[] = [];
+        if (keys) {
+            try {
+                selected = resolveDropSelection(remoteFlights, keys, effectivePrice, kstDateKey());
+                if (dropSelectionGroup(selected[0], effectivePrice(selected[0])) !== body.selectionGroup) throw new Error('가격이나 노선이 변경됐습니다. 목록을 새로고침해주세요.');
+            } catch (error) {
+                return NextResponse.json({ error: (error as Error).message }, { status: 409 });
+            }
+        }
+        const flight = selected[0] || remoteFlights.find(candidate => candidate.id === flightId);
         if (!flight || !isSelectableFlight(flight)) {
             return NextResponse.json({
                 error: '이 항공권은 최신 목록에서 사라졌거나 출발이 지나 선정할 수 없습니다. 목록을 새로고침해주세요.',
             }, { status: 409 });
         }
 
-        const result = await commitTodayPick(GITHUB_TOKEN, flight);
+        const result = await commitTodayPick(GITHUB_TOKEN, flight, keys ? { keys: selected.map(dropSelectionKey), group: body.selectionGroup as string } : undefined);
         return NextResponse.json({
             success: true,
             alreadySelected: result.alreadySelected,
             commitSha: result.commitSha,
             current: {
                 id: flight.id,
+                scheduleCount: result.pick.selectedFlightKeys?.length || 1,
                 departureCity: flight.departure.city,
                 arrivalCity: flight.arrival.city,
                 departureDate: flight.departure.date,

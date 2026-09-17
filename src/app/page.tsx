@@ -69,6 +69,7 @@ export default function Home() {
                 initialFlightCount={allFlights.length}
                 initialLastUpdated={cacheMeta.timestamp || cacheMeta.lastUpdated || null}
                 initialTodayPickId={initialTodayPickId}
+                initialTodayPickFlightKeys={initialTodayPickId ? (todayPickJson as { selectedFlightKeys?: string[] }).selectedFlightKeys || null : null}
             />
         </main>
     );

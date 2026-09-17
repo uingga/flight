@@ -15,6 +15,7 @@ export interface TodayPickRecord {
 }
 
 export interface StoredTodayPick extends Partial<TodayPickRecord> {
+    selectedFlightKeys?: string[];
     selectedAt?: string;
     selectionMode?: string;
     referencePrice?: number | null;
@@ -31,6 +32,7 @@ export interface StoredTodayPick extends Partial<TodayPickRecord> {
 }
 
 export interface ManualTodayPick extends TodayPickRecord {
+    selectedFlightKeys?: string[];
     selectedAt: string;
     selectionMode: 'manual';
     referencePrice: number | null;

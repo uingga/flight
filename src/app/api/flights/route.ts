@@ -562,6 +562,7 @@ export async function GET(request: NextRequest) {
             priceHistory,
             todayPickId,
             todayPickDate,
+            todayPickFlightKeys: todayPickId ? (todayPick as { selectedFlightKeys?: string[] }).selectedFlightKeys || null : null,
             todayPickRepeatOverride,
             manualFlightOrder,
             filterSummary,

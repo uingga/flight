@@ -9,6 +9,8 @@ import { todayActionCount } from '@/lib/admin-today';
 import type { TodayPickRecord } from '@/lib/manual-today-pick';
 
 interface TodayPickCandidate {
+    selectionKey: string;
+    selectionGroup: string;
     id: string;
     rank: number;
     departureCity: string;
@@ -23,6 +25,7 @@ interface TodayPickCandidate {
 }
 
 interface CurrentTodayPick {
+    scheduleCount?: number;
     id: string;
     departureCity: string;
     arrivalCity: string;
@@ -79,6 +82,8 @@ export default function AdminTodayPick({ adminKey, readOnly = false, onManage, i
     const [error, setError] = useState<string | null>(null);
     const [message, setMessage] = useState<string | null>(null);
     const [selectingId, setSelectingId] = useState<string | null>(null);
+    const [checkedKeys, setCheckedKeys] = useState<string[]>([]);
+    const checkedCandidates = (data?.candidates || []).filter(item => checkedKeys.includes(item.selectionKey));
     const [panelOpen, setPanelOpen] = useState(false);
     const [page, setPage] = useState(1);
     const [historyPage, setHistoryPage] = useState(1);
@@ -102,6 +107,7 @@ export default function AdminTodayPick({ adminKey, readOnly = false, onManage, i
             const json = await response.json();
             if (!response.ok) throw new Error(json.error || 'TIKIT DROP 후보를 불러오지 못했습니다.');
             setData(json);
+            setCheckedKeys((json.candidates || []).filter((item: TodayPickCandidate) => item.selected).map((item: TodayPickCandidate) => item.selectionKey));
         } catch (loadError) {
             setError(loadError instanceof Error ? loadError.message : 'TIKIT DROP 후보를 불러오지 못했습니다.');
         } finally {
@@ -146,12 +152,15 @@ export default function AdminTodayPick({ adminKey, readOnly = false, onManage, i
         listRef.current?.scrollTo({ top: 0 });
     }
 
-    async function selectCandidate(candidate: TodayPickCandidate) {
+    async function selectCandidate() {
+        const candidate = checkedCandidates[0];
+        if (!candidate) return;
         const confirmed = window.confirm([
             `${candidate.departureCity} → ${candidate.arrivalCity}`,
             `${shortDate(candidate.departureDate)}–${shortDate(candidate.returnDate)} · ${formatPrice(candidate.effectivePrice)}`,
             '',
-            '이 항공권을 오늘의 TIKIT DROP으로 선정할까요?',
+            ...checkedCandidates.map(item => `${shortDate(item.departureDate)}–${shortDate(item.returnDate)}`),
+            `선택한 ${checkedCandidates.length}개 일정을 하나의 TIKIT DROP으로 선정할까요?`,
         ].join('\n'));
         if (!confirmed) return;
 
@@ -162,7 +171,7 @@ export default function AdminTodayPick({ adminKey, readOnly = false, onManage, i
             const response = await fetch('/api/admin-today-pick', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ key: adminKey, flightId: candidate.id }),
+                body: JSON.stringify({ key: adminKey, flightKeys: checkedKeys, selectionGroup: candidate.selectionGroup }),
             });
             const json = await response.json();
             if (!response.ok) throw new Error(json.error || 'TIKIT DROP 선정을 저장하지 못했습니다.');
@@ -171,7 +180,7 @@ export default function AdminTodayPick({ adminKey, readOnly = false, onManage, i
                 current: json.current,
                 candidates: current.candidates.map(item => ({
                     ...item,
-                    selected: item.id === candidate.id,
+                    selected: checkedKeys.includes(item.selectionKey),
                 })),
             } : current);
             setMessage(json.message);
@@ -206,6 +215,7 @@ export default function AdminTodayPick({ adminKey, readOnly = false, onManage, i
                                 <small>
                                     {shortDate(data.current.departureDate)}–{shortDate(data.current.returnDate)}
                                     {' · '}{data.current.selectionMode === 'manual' ? '직접 선정' : '자동 선정'}
+                                    {' · '}{data.current.scheduleCount || 1}개 일정
                                 </small>
                             </div>
                         ) : (
@@ -280,7 +290,7 @@ export default function AdminTodayPick({ adminKey, readOnly = false, onManage, i
                         : !data ? null : visibleCandidates.length > 0 ? (
                         <div className={styles.candidateList}>
                             {visibleCandidates.map(candidate => (
-                                <article key={candidate.id} className={candidate.selected ? styles.selectedCandidate : undefined}>
+                                <article key={candidate.selectionKey} className={checkedKeys.includes(candidate.selectionKey) ? styles.selectedCandidate : undefined}>
                                     <div className={styles.rank}>추천 {candidate.rank}위</div>
                                     <div className={styles.route}>
                                         <strong>{candidate.departureCity} → {candidate.arrivalCity}</strong>
@@ -293,13 +303,10 @@ export default function AdminTodayPick({ adminKey, readOnly = false, onManage, i
                                             {TIER_LABELS[candidate.recommendationTier] || '확인 필요'}
                                         </span>
                                     </div>
-                                    <button
-                                        type="button"
-                                        onClick={() => selectCandidate(candidate)}
-                                        disabled={loading || !data.available || candidate.selected || Boolean(selectingId)}
-                                    >
-                                        {selectingId === candidate.id ? '저장 중' : candidate.selected ? '선정됨' : '선정'}
-                                    </button>
+                                    <label><input type="checkbox" aria-label={`${candidate.departureCity} ${candidate.arrivalCity} ${candidate.departureDate} 일정 선택`}
+                                        checked={checkedKeys.includes(candidate.selectionKey)}
+                                        disabled={loading || !data.available || Boolean(selectingId) || (!checkedKeys.includes(candidate.selectionKey) && checkedCandidates.length > 0 && checkedCandidates[0].selectionGroup !== candidate.selectionGroup)}
+                                        onChange={event => setCheckedKeys(current => event.target.checked ? [...current, candidate.selectionKey] : current.filter(key => key !== candidate.selectionKey))} /> 선택</label>
                                 </article>
                             ))}
                         </div>
@@ -307,11 +314,14 @@ export default function AdminTodayPick({ adminKey, readOnly = false, onManage, i
                         <div className={styles.empty} role="status">{search ? '검색 조건에 맞는 항공권이 없습니다.' : '현재 선정 가능한 항공권이 없습니다.'}</div>
                     )}
                     <p className={styles.note}>
+                        같은 노선·여행사·항공사·가격의 일정을 함께 선택할 수 있습니다. 대표는 가장 늦은 출발 일정입니다.
                         선정하면 메인에 반영되기까지 배포 시간이 걸립니다.
                         같은 날 자동 선정은 직접 고른 항공권을 덮어쓰지 않습니다.
                     </p>
                 </div>
                 <nav className={styles.pagination} aria-label="후보 페이지">
+                    <button type="button" className={styles.refreshButton} disabled={!checkedKeys.length || Boolean(selectingId)} onClick={() => setCheckedKeys([])}>선택 해제</button>
+                    <button type="button" className={styles.refreshButton} disabled={!checkedKeys.length || Boolean(selectingId) || !data?.available} onClick={selectCandidate}>{selectingId ? '저장 중' : `${checkedKeys.length}개 일정 선정`}</button>
                     <button type="button" className={styles.refreshButton} disabled={currentPage === 1} onClick={() => changePage(currentPage - 1)}>이전</button>
                     <span role="status">{currentPage} / {pageCount} 페이지</span>
                     <button type="button" className={styles.refreshButton} disabled={currentPage === pageCount} onClick={() => changePage(currentPage + 1)}>다음</button>
