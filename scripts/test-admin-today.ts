@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import { todayActionCount, todayFlightRows, todayReportNotes } from '../src/lib/admin-today';
+import type { FlightInterestPeriod } from '../src/lib/flight-interest';
+const report: FlightInterestPeriod = {available:true,unidentified:{detailOpens:12,bookingClicks:9},rows:Array.from({length:8},(_,i)=>({flightId:String(i),route:null,detailOpens:30-i,bookingClicks:i,detailUsers:null,bookingUsers:null}))};
+const before=JSON.stringify(report);
+assert.deepEqual(todayFlightRows(report).map(r=>r.flightId),['7','6','5','4','3']);
+assert.equal(JSON.stringify(report),before);
+assert.deepEqual(todayFlightRows({...report,available:false}),[]);
+assert.deepEqual(todayFlightRows({...report,rows:[]}),[]);
+assert.equal(todayActionCount(30,1),'30회 · 1명');
+assert.equal(todayActionCount(1,0),'1회 · 인원 미확인');
+assert.equal(todayActionCount(0,null),'0회 · 인원 미확인');
+assert.equal(todayActionCount(0,0),'0회 · 0명');
+assert.equal(todayReportNotes(16,[{sessions:17}]).length,1);
+assert.equal(todayReportNotes(16,[{sessions:16}]).length,0);
+assert.equal(todayReportNotes(0,undefined).length,1);
+console.log('Today overview: ranking, missing data, repeat clicks and report discrepancies passed.');
