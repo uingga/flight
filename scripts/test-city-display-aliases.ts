@@ -6,6 +6,7 @@ import { normalizeCity } from '../src/lib/utils/flight-helpers';
 const groups: Array<[string, string[]]> = [
     ['상하이', ['상해', '상하이', '상해(푸동)', '상해(푸동공항)', '상해(PVG)', '상하이(SHA)']],
     ['마쓰야마', ['마츠야마', '마쓰야마', '마쓰야마(MYJ)']],
+    ['미야코지마', ['미야코지마', '미야코지마(SHI)', '시모지시마', '시모지시마(SHI)', '미야코', '미야코지마(시모지시마공항)']],
     ['다카마쓰', ['다카마쓰', '다카마츠']],
     ['타이베이', ['대만(타이페이)', '타이페이', '타이베이', '타이페이(송산)']],
     ['성도', ['청두', '성도', '청두(TFU)', '청두(CTU)']],
@@ -32,7 +33,7 @@ assert.ok(!citySearchMatches('하노이', '(없는도시)'));
 assert.ok(citySearchMatches('상하이', '상'));
 assert.ok(citySearchMatches('상해(푸동)', '푸동'));
 assert.ok(citySearchMatches('상하이', ''));
-assert.notEqual(cityDisplayName('미야코지마'), cityDisplayName('시모지시마'));
+assert.equal(normalizeCity('시모지시마'), '시모지시마', 'Keep stored route and price-history keys unchanged');
 assert.equal(normalizeCity('청두'), '청두', 'No history key migration');
 assert.equal(normalizeCity('성도'), '성도', 'No history key migration');
 assert.equal(normalizeCity('도쿄(NRT)'), '도쿄(나리타)');

@@ -11,6 +11,8 @@ export function cityDisplayName(city: string): string {
         '청두': '성도',
         '장자제': '장가계',
         '연길': '옌지',
+        '시모지시마': '미야코지마',
+        '미야코': '미야코지마',
     };
     return labels[base] || base;
 }

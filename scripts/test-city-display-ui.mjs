@@ -6,6 +6,7 @@ assert.ok(['127.0.0.1', 'localhost'].includes(new URL(origin).hostname));
 const groups = [
     ['상하이', 'PVG', ['상해(푸동공항)', '상하이(푸동)'], ['상해', '상하이']],
     ['마쓰야마', 'MYJ', ['마츠야마', '마쓰야마(MYJ)'], ['마츠야마', '마쓰야마']],
+    ['미야코지마', 'SHI', ['미야코지마(SHI)', '시모지시마(SHI)'], ['미야코지마', '시모지시마']],
     ['다카마쓰', 'TAK', ['다카마츠', '다카마쓰'], ['다카마츠', '다카마쓰']],
     ['타이베이', 'TPE', ['타이페이', '타이베이'], ['타이페이', '타이베이']],
     ['성도', 'TFU', ['청두', '성도'], ['청두', '성도']],
@@ -51,7 +52,7 @@ try {
             }
         }
         assert.deepEqual(errors, []);
-        console.log(`PASS ${width}px: six city groups, both search spellings, cards, detail, unchanged airports/links`);
+        console.log(`PASS ${width}px: ${groups.length} city groups, both search spellings, cards, detail, unchanged airports/links`);
         await page.close();
     }
 } finally { await browser.close(); }
