@@ -26,6 +26,19 @@ export const THREADS_SHARE_GROUP_OVERRIDES: Record<string, string> = {
 };
 
 export const SHARE_GROUPS: Record<string, ShareGroup> = {
+    'sha-260917': {
+        departure: '청주',
+        arrival: '상하이',
+        price: 150100,
+        dateText: '10.3–10.8 · 10.10–10.15 · 10.17–10.22',
+        airline: '이스타항공',
+        source: '땡처리닷컴 · 발권수수료 20,000원 별도',
+        flightIds: [
+            'ttang-ZE0821CJJPVG-G17-2026-10-03',
+            'ttang-ZE0821CJJPVG-G17-2026-10-10',
+            'ttang-ZE0821CJJPVG-G17-2026-10-17',
+        ],
+    },
     'cts-260915': {
         departure: '인천',
         arrival: '삿포로',
