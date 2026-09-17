@@ -4644,7 +4644,7 @@ export default function MobileRedesignPreview({
                         <section>
                             <strong>어디로 갈까요?</strong>
                             <div className={styles.siteFooterDestinations}>
-                                {FEATURED_TRAVEL_CITIES.map(city => (
+                                {FEATURED_TRAVEL_CITIES.slice(0, 8).map(city => (
                                     <a
                                         key={city}
                                         href={`/flights/${encodeURIComponent(city)}`}
