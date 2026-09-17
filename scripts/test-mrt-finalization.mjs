@@ -1,0 +1,15 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {mrtFinalization} from '../src/lib/mrt-finalization.mjs';
+const slot='2026-09-17T03:05:00.000Z',now=Date.parse(slot)+3600000;
+const base={collector:'success',publisher:'failure',artifactId:'123',slot,now,cache:{sourceUpdatedAt:{myrealtrip:new Date(now).toISOString()}}};
+test('successful collection durably archived can release failed publication without marking success',()=>assert.deepEqual(mrtFinalization(base),{release:true,completed:false,reason:'successful_collection_archived_publication_failed'}));
+for(const artifactId of [undefined,'',0,'0','unknown'])test('missing artifact holds lock: '+artifactId,()=>assert.equal(mrtFinalization({...base,artifactId}).release,false));
+for(const collector of ['failure','cancelled','skipped',undefined])test('non-successful collector holds unpublished lock: '+collector,()=>assert.equal(mrtFinalization({...base,collector}).release,false));
+test('stale or missing source timestamp holds lock',()=>{for(const cache of [{},{sourceUpdatedAt:{myrealtrip:'2026-09-16T00:00:00Z'}}])assert.equal(mrtFinalization({...base,cache}).release,false);});
+test('unpublished circuit always holds lock',()=>{for(const nextProbeAt of ['invalid',new Date(now+86400000).toISOString()])assert.equal(mrtFinalization({...base,cache:{...base.cache,sourceCircuits:{myrealtrip:{nextProbeAt}}}}).release,false);});
+test('published success and published circuit release normally',()=>{assert.equal(mrtFinalization({...base,publisher:'success'}).completed,true);assert.equal(mrtFinalization({...base,collector:'failure',publisher:'success',cache:{sourceCircuits:{myrealtrip:{nextProbeAt:new Date(now+86400000).toISOString()}}}}).completed,true);});
+test('unknown publication state cannot release archived result',()=>assert.equal(mrtFinalization({...base,publisher:'cancelled'}).release,false));
+test('invalid published circuit is not evidence of safe collector termination',()=>assert.equal(mrtFinalization({...base,collector:'failure',publisher:'success',cache:{sourceCircuits:{myrealtrip:{nextProbeAt:'invalid'}}}}).release,false));
+test('workflow archives before publication and passes completion evidence',()=>{const y=fs.readFileSync(new URL('../.github/workflows/myrealtrip-scrape.yml',import.meta.url),'utf8');assert.ok(y.indexOf('uses: actions/upload-artifact@v4')<y.indexOf('name: Commit cache or circuit changes'));assert.match(y,/MRT_PUBLISHER_OUTCOME:/);assert.match(y,/MRT_RECOVERY_ARTIFACT_ID:/);});

@@ -91,6 +91,23 @@ jobs:
           CI: true
           LIFECYCLE_OBSERVATION_PATH: /tmp/tikitikit-mrt-lifecycle-observation.json
 
+      - name: Prepare MyRealTrip recovery snapshot
+        id: recovery_snapshot
+        if: always() && steps.slot.outputs.should_run == 'true' && (steps.scrape.outcome == 'success' || steps.scrape.outcome == 'failure')
+        run: node scripts/archive-mrt-recovery.mjs
+        env:
+          MRT_COLLECTOR_OUTCOME: ${{ steps.scrape.outcome }}
+
+      - name: Preserve MyRealTrip recovery snapshot
+        id: recovery_artifact
+        if: always() && steps.recovery_snapshot.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: mrt-recovery-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/mrt-recovery/
+          if-no-files-found: error
+          retention-days: 7
+
       # 차단을 감지해 스크래퍼가 실패해도 항공권은 그대로 둔 채 24시간 회로는 반드시 저장한다.
       - name: Commit cache or circuit changes
         id: publish
@@ -132,11 +149,13 @@ jobs:
           fi
 
       - name: Release shared MyRealTrip admission
-        if: always() && steps.slot.outputs.should_run == 'true' && steps.publish.outcome == 'success'
+        if: always() && steps.slot.outputs.should_run == 'true' && (steps.publish.outcome == 'success' || (steps.scrape.outcome == 'success' && steps.publish.outcome == 'failure' && steps.recovery_artifact.outcome == 'success'))
         run: node scripts/release-myrealtrip-slot.mjs
         env:
           GITHUB_TOKEN: ${{ github.token }}
           MRT_COLLECTOR_OUTCOME: ${{ steps.scrape.outcome }}
+          MRT_PUBLISHER_OUTCOME: ${{ steps.publish.outcome }}
+          MRT_RECOVERY_ARTIFACT_ID: ${{ steps.recovery_artifact.outputs.artifact-id }}
 
       - name: Record MyRealTrip lifecycle changes
         if: success() && steps.scrape.outcome == 'success'
