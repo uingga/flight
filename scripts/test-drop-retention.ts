@@ -11,7 +11,7 @@ assert.equal(activeTodayPickId(pick, [{ ...flight, price: 160100 }], '2026-09-18
 assert.equal(activeTodayPickId(pick, [flight], '2026-10-18'), null);
 assert.equal(activeTodayPickId(pick, [flight], '2026-09-16'), null);
 assert.equal(buildDropCardReason({ origin: '청주', destination: '상하이', price: 170100, displayPrice: 150100,
- departureDate: '2026-10-17', today: '2026-09-18' }), '청주에서 상하이, 왕복 150,100원이에요');
+ departureDate: '2026-10-17', today: '2026-09-18' }), '');
 assert.match(buildDropCardReason({ origin: '청주', destination: '상하이', price: 170100, displayPrice: 150100,
  departureDate: '2026-10-17', today: '2026-09-18',
  repeat: {previousDate:'2026-09-16',previousEffectivePrice:190100,currentEffectivePrice:170100,dropAmount:20000} }), /2만원 내렸어요/);

@@ -55,5 +55,6 @@ export function buildDropCardReason(input: {
     if (Number.isSafeInteger(input.seats) && input.seats! > 0) {
         return `지금 확인되는 좌석은 ${input.seats}석이에요`;
     }
-    return `${input.origin}에서 ${input.destination}, 왕복 ${exactWon(input.displayPrice ?? price)}이에요`;
+    // Leave the reason empty when there is no evidence beyond the displayed route and price.
+    return '';
 }
