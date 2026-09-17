@@ -5,7 +5,7 @@ import {spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {installationTokenProvider} from '../src/lib/writer-app-token.mjs';
 import {githubMrtClient} from '../src/lib/myrealtrip-schedule.mjs';
-import {mrtRoundForGeneralSlot} from '../src/lib/mrt-round-readiness.mjs';
+import {inspectNaverMrtCompletion} from '../src/lib/naver-mrt-completion.mjs';
 import {latestAgencyRound,evaluateRoundContinuation} from '../src/lib/naver-round-handoff.mjs';
 import {createBrokerClient} from '../src/lib/writer-broker-client.mjs';
 import {requestHttp} from '../src/lib/naver-http-request.mjs';
@@ -67,12 +67,11 @@ async function main(){
    "$t=Get-ScheduledTask -TaskName TikitikitBlockedSourceCrawl -ErrorAction Stop; $i=$t|Get-ScheduledTaskInfo -ErrorAction Stop; [pscustomobject]@{state=[string]$t.State;result=[long]$i.LastTaskResult;startedAt=$i.LastRunTime.ToUniversalTime().ToString('o')}|ConvertTo-Json -Compress"]);
   if(inspection.status!==0)throw Error('source task status unavailable');
   const pc=JSON.parse(inspection.stdout.trim());
-  const mrt=mrtRoundForGeneralSlot(round);
-  const done=await api('git/ref/tags/mrt-done/'+mrt.expectedAt.replace(/[-:.]/g,''));
-  if(![200,404].includes(done.status))throw Error('MRT completion status unavailable');
-  if(roundBarrier({round,cache,pc,mrtDone:done.status===200})){
+  const mrt=await inspectNaverMrtCompletion({api,round,cache,now});
+  if(roundBarrier({round,cache,pc,mrtDone:mrt.ready})){
    const policy=evaluateRoundContinuation({now,cache,state,round,totalBudget:coordinated?400:200});
    if(policy.shouldRun){
+    log('MRT readiness '+JSON.stringify(mrt));
     log('ready '+round+' remaining='+policy.navigationBudget);
     if(coordinated){
      await waitForCache({cache,exact:false,fetcher:(url,options)=>requestHttp(url,{headers:options.headers}),siteUrl:'https://www.tikitikit.kr'});
