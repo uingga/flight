@@ -493,11 +493,7 @@ export async function GET(request: NextRequest) {
         // 정적 import로 Vercel 서버 함수 번들에도 선정 파일을 확실히 포함한다.
         const todayPickDate = typeof todayPick.date === 'string' ? todayPick.date : null;
         const todayKstDate = new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
-        const todayPickId = todayPickDate === todayKstDate
-            && typeof todayPick.flightId === 'string'
-            && allFlights.some(f => f.id === todayPick.flightId)
-            ? todayPick.flightId
-            : null;
+        const todayPickId = activeTodayPickId(todayPick, allFlights, todayKstDate);
         const rawRepeatOverride = (todayPick as unknown as {
             repeatOverride?: Partial<TodayPickRepeatOverride> | null;
         }).repeatOverride;
@@ -575,3 +571,4 @@ export async function GET(request: NextRequest) {
         );
     }
 }
+import { activeTodayPickId } from '@/lib/active-today-pick';

@@ -134,6 +134,7 @@ export default function DropHero({
                     )}
                 </p>
                 <p className={styles.reason}>{reason}</p>
+                {flight.source === 'ttang' && <p className={styles.seller}>발권수수료 20,000원 별도</p>}
                 <div className={styles.journey}>
                     <span>{departureName(flight)} 출발</span>
                     {' · '}

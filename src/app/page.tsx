@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { activeTodayPickId } from '@/lib/active-today-pick';
 import RedesignDashboard from '@/components/RedesignDashboard';
 import todayPickJson from '../../data/today-pick.json';
 import { SITE_DESCRIPTION } from '@/lib/seo';
@@ -30,11 +31,7 @@ export default function Home() {
     const allFlights = loadActiveFlights();
     const cacheMeta = loadFlightCacheMeta();
     const todayKst = new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
-    const initialTodayPickId = todayPickJson.date === todayKst
-        && typeof todayPickJson.flightId === 'string'
-        && allFlights.some(flight => flight.id === todayPickJson.flightId)
-        ? todayPickJson.flightId
-        : null;
+    const initialTodayPickId = activeTodayPickId(todayPickJson, allFlights, todayKst);
     const recommendationNow = Date.now();
     const recommendationState = buildRecommendationScoreState(
         allFlights,
@@ -69,6 +66,7 @@ export default function Home() {
                 initialFlightCount={allFlights.length}
                 initialLastUpdated={cacheMeta.timestamp || cacheMeta.lastUpdated || null}
                 initialTodayPickId={initialTodayPickId}
+                initialTodayPickDate={initialTodayPickId ? todayPickJson.date : null}
                 initialTodayPickFlightKeys={initialTodayPickId ? (todayPickJson as { selectedFlightKeys?: string[] }).selectedFlightKeys || null : null}
             />
         </main>

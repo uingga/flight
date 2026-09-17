@@ -21,6 +21,7 @@ function calendarDay(value: string): number | null {
 /** Describe verified facts; never infer weekend availability or yesterday's price. */
 export function buildDropCardReason(input: {
     origin: string; destination: string; price: number;
+    displayPrice?: number;
     departureDate: string; today: string; seats?: number;
     averageDiscountRate?: number; repeat?: RepeatPrice | null;
 }): string {
@@ -54,5 +55,5 @@ export function buildDropCardReason(input: {
     if (Number.isSafeInteger(input.seats) && input.seats! > 0) {
         return `지금 확인되는 좌석은 ${input.seats}석이에요`;
     }
-    return `${input.origin}에서 ${input.destination}, 왕복 ${exactWon(price)}이에요`;
+    return `${input.origin}에서 ${input.destination}, 왕복 ${exactWon(input.displayPrice ?? price)}이에요`;
 }

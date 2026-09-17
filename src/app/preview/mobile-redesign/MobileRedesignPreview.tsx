@@ -116,6 +116,7 @@ interface MobileRedesignPreviewProps {
     initialFlightCount?: number;
     initialLastUpdated?: string | null;
     initialTodayPickId?: string | null;
+    initialTodayPickDate?: string | null;
     initialTodayPickFlightKeys?: string[] | null;
     initialSharedFlightIds?: string[];
     initialSharedDeparture?: string | null;
@@ -1130,6 +1131,7 @@ export default function MobileRedesignPreview({
     initialFlightCount = 0,
     initialLastUpdated = null,
     initialTodayPickId = null,
+    initialTodayPickDate = null,
     initialTodayPickFlightKeys = null,
     initialSharedFlightIds = [],
     initialSharedDeparture = null,
@@ -1146,6 +1148,7 @@ export default function MobileRedesignPreview({
     const [error, setError] = useState('');
     const [lastUpdated, setLastUpdated] = useState<string | null>(initialLastUpdated);
     const [todayPickId, setTodayPickId] = useState<string | null>(initialTodayPickId);
+    const [todayPickDate, setTodayPickDate] = useState<string | null>(initialTodayPickDate);
     const [todayPickFlightKeys, setTodayPickFlightKeys] = useState<string[] | null>(initialTodayPickFlightKeys);
     const [todayPickRepeatOverride, setTodayPickRepeatOverride] = useState<TodayPickRepeatOverride | null>(null);
     const [priceHistory, setPriceHistory] = useState<PriceHistory>({});
@@ -1548,9 +1551,10 @@ export default function MobileRedesignPreview({
             if (!data.success) throw new Error('항공권을 불러오지 못했습니다.');
             setLastUpdated(data.lastUpdated || null);
             setInsightDateKey(data.lastUpdated ? seoulDateKey(new Date(data.lastUpdated)) : seoulDateKey());
-            const hasCurrentTodayPick = data.todayPickDate === seoulDateKey()
+            const hasCurrentTodayPick = Boolean(data.todayPickDate && data.todayPickDate <= seoulDateKey())
                 && typeof data.todayPickId === 'string';
             setTodayPickId(hasCurrentTodayPick ? data.todayPickId! : null);
+            setTodayPickDate(hasCurrentTodayPick ? data.todayPickDate! : null);
             setTodayPickFlightKeys(hasCurrentTodayPick ? data.todayPickFlightKeys || null : null);
             setTodayPickRepeatOverride(hasCurrentTodayPick ? data.todayPickRepeatOverride || null : null);
             setPriceHistory(data.priceHistory || {});
@@ -2171,6 +2175,7 @@ export default function MobileRedesignPreview({
                     origin: stripAirport(fixedTodayPick.departure.city),
                     destination: stripAirport(fixedTodayPick.arrival.city),
                     price: effectivePrice(fixedTodayPick),
+                    displayPrice: displayedFlightPrice(fixedTodayPick),
                     departureDate: fixedTodayPick.departure.date, today: seoulDateKey(),
                     seats: resolveFlightSeats(fixedTodayPick).count,
                     averageDiscountRate: getAverageDiscountRate(fixedTodayPick, interparkPrices),
@@ -4274,7 +4279,7 @@ export default function MobileRedesignPreview({
                     {!listLoading && !error && dropHeroPick && dropHeroRepresentative && (
                         <DropHero
                             flight={dropHeroRepresentative}
-                            pickDate={seoulDateKey()}
+                            pickDate={todayPickDate || seoulDateKey()}
                             reason={dropHeroPick.reason}
                             price={displayedFlightPrice(dropHeroPick.flight)}
                             discountRate={todayPickRepeatOverride ? 0 : getAverageDiscountRate(dropHeroRepresentative, interparkPrices)}
