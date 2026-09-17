@@ -1,5 +1,3 @@
-import { buildAdminCrawlRounds } from './admin-crawl-rounds';
-import { recentSlotTimes } from './admin-source-slots';
 
 export interface CrawlTurnoverFlight {
     id: string;
@@ -11,6 +9,7 @@ export interface CrawlTurnoverFlight {
 }
 
 export interface CrawlHistoryEntry {
+    sessionId?: string;
     timestamp: string;
     runKind?: 'pc_fallback' | 'pc_primary' | 'github_fallback';
     sites: Record<string, { total: number; scraped?: number; partial?: boolean; detail?: string; preserved?: boolean; skipped?: boolean; skippedUntil?: string; skipReason?: 'schedule' | 'circuit' | 'not-requested'; manual?: boolean; localFallback?: boolean; added?: number; removed?: number; addedFlights?: CrawlTurnoverFlight[]; removedFlights?: CrawlTurnoverFlight[] }>;
@@ -86,21 +85,25 @@ export function collectionChange(stat: CollectionStat): number | null {
 }
 export function buildCollectionHistory(history: readonly CrawlHistoryEntry[], naver: readonly NaverCollectionEntry[], active?: ActiveCollectionRun | null): CollectionRun[] {
     const sources = Object.keys(COLLECTION_SOURCES).filter(source => source !== 'myrealtrip');
-    const runs: CollectionRun[] = buildAdminCrawlRounds(history, sources).map(round => ({
-        id: `general-${round.slotAt}`, timestamp: round.timestamp, slotAt: round.slotAt,
-        title: '일반 여행사 수집', sites: round.sites, alerts: round.alerts,
-    }));
-    for (const entry of history) {
+    const runs: CollectionRun[] = [];
+    for (let index = 0; index < history.length; index += 1) {
+        const entry = history[index];
+        const sites = Object.fromEntries(sources.filter(source => entry.sites[source]
+            && entry.sites[source].skipReason !== 'not-requested').map(source => [source, entry.sites[source]]));
+        if (Object.keys(sites).length) runs.push({
+            id: `general-${entry.sessionId || entry.timestamp}-${index}`, timestamp: entry.timestamp,
+            title: entry.runKind === 'pc_fallback' ? '일반 여행사 PC 대체 수집'
+                : entry.runKind === 'pc_primary' ? '일반 여행사 PC 수집' : '일반 여행사 수집',
+            sites, alerts: entry.alerts,
+        });
         const stat = entry.sites.myrealtrip;
         // Old general runs sometimes contain an unchanged MRT cache without an actual attempt.
         if (!stat || stat.skipReason === 'not-requested' || (stat.scraped === undefined && !stat.preserved && !stat.skipped && !stat.manual)) continue;
         runs.push({ id: `mrt-${entry.timestamp}`, timestamp: entry.timestamp, title: '마이리얼트립 수집', sites: { myrealtrip: stat }, alerts: entry.alerts });
     }
     if (active && Number.isFinite(Date.parse(active.startedAt))) {
-        const slot = new Date(recentSlotTimes(Date.parse(active.startedAt), 1)[0]).toISOString();
-        const matching = runs.find(run => run.slotAt === slot);
-        if (matching) { matching.active = active; matching.timestamp = active.startedAt; }
-        else runs.push({ id: `general-${slot}`, slotAt: slot, timestamp: active.startedAt, title: '일반 여행사 수집', sites: {}, alerts: [], active });
+        // A shared scheduled slot does not prove two events belong to the same execution.
+        runs.push({ id: `active-${active.id}`, timestamp: active.startedAt, title: '일반 여행사 수집', sites: {}, alerts: [], active });
     }
     for (const entry of naver) runs.push({ id: `naver-${entry.id}`, timestamp: entry.timestamp, title: '네이버 가격 확인', sites: {}, alerts: [], naver: entry });
     return runs.filter(run => Number.isFinite(Date.parse(run.timestamp))).sort((a, b) => Date.parse(b.timestamp) - Date.parse(a.timestamp));
