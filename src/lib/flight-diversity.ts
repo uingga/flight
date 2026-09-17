@@ -1,6 +1,6 @@
 import type { Flight } from '@/types/flight';
 import { getEffectivePrice } from '@/lib/price-quality';
-import { normalizeCity } from '@/lib/utils/flight-helpers';
+import { normalizeCity, CITY_TO_AIRPORT } from '@/lib/utils/flight-helpers';
 
 export interface FlightDiversityOptions {
     topWindow?: number;
@@ -8,6 +8,7 @@ export interface FlightDiversityOptions {
     maxConsecutiveDestinations?: number;
     leadingFlights?: Flight[];
     scoreOf?: (flight: Flight) => number;
+    recentChangeOf?: (flight: Flight) => number;
     tierOf?: (flight: Flight) => number;
     maxTierGap?: number;
     expensivePromotionEligibleOf?: (flight: Flight) => boolean;
@@ -68,7 +69,8 @@ function departureAreaKey(flight: Flight): string {
 /** 첫 9개에서 같은 출발권역·목적지를 한 선택지로 묶는 키다. */
 function firstNineRouteKey(flight: Flight): string | null {
     const origin = departureAreaKey(flight);
-    const destination = normalizeCity(flight.arrival.city);
+    const city = normalizeCity(flight.arrival.city);
+    const destination = CITY_TO_AIRPORT[city] || city;
     if (!origin || !destination) return null;
     return `${origin}|${destination}`;
 }
@@ -173,6 +175,7 @@ export function diversifyFlightDestinationsWithDecisions(
         maxConsecutiveDestinations = 2,
         leadingFlights = [],
         scoreOf,
+        recentChangeOf,
         tierOf,
         maxTierGap = tierOf ? 1 : Number.POSITIVE_INFINITY,
         expensivePromotionEligibleOf = () => false,
@@ -232,6 +235,11 @@ export function diversifyFlightDestinationsWithDecisions(
             expensivePriceBand(flight) === '500-plus'
         )).length;
         const anchorTier = tierOf ? tierOf(remaining[0]) : null;
+        const pendingRoutePrices = new Map<string | null, number>();
+        remaining.forEach(flight => {
+            const key = firstNineRouteKey(flight);
+            pendingRoutePrices.set(key, Math.min(pendingRoutePrices.get(key) ?? Infinity, getEffectivePrice(flight)));
+        });
 
         const findCandidate = (
             keepTopLimit: boolean,
@@ -245,6 +253,7 @@ export function diversifyFlightDestinationsWithDecisions(
                     const flight = remaining[index];
                     const destination = normalizeCity(flight.arrival.city);
                     const routeKey = firstNineRouteKey(flight);
+                    const cheaperOnRoute = (pendingRoutePrices.get(routeKey) ?? Infinity) < getEffectivePrice(flight);
                     const destinationStreak = trailingDestinationStreak(destinationSequence, destination);
                     const departsFromIncheonArea = isIncheonAreaDeparture(flight);
                     const priceBand = expensivePriceBand(flight);
@@ -261,7 +270,7 @@ export function diversifyFlightDestinationsWithDecisions(
                         && (priceBand !== '500-plus' || fiveHundredPlusCount < 1)
                         && (getEffectivePrice(flight) < 400_000 || over400Count < 1)
                     );
-                    return destinationStreak < maxConsecutiveDestinations
+                    return !cheaperOnRoute && destinationStreak < maxConsecutiveDestinations
                         && tierAllowed
                         && (!keepTopLimit || !insideTopWindow || (topDestinationCounts.get(destination) || 0) < maxPerDestination)
                         && (!keepFirstNineCap || sequence.length >= 9 || (topDestinationCounts.get(destination) || 0) < maxPerDestination)
@@ -283,7 +292,21 @@ export function diversifyFlightDestinationsWithDecisions(
                 : eligibleIndexes;
             const avoidedAlternatingPattern = candidateIndexes[0] !== eligibleIndexes[0];
 
-            const bestIndex = candidateIndexes[0];
+            let bestIndex = candidateIndexes[0];
+            if (recentChangeOf && scoreOf) {
+                const anchorScore = scoreOf(remaining[bestIndex]);
+                const anchorTier = tierOf?.(remaining[bestIndex]);
+                const comparable = candidateIndexes.filter(index => {
+                    const value = scoreOf(remaining[index]);
+                    const tier = tierOf?.(remaining[index]);
+                    return Number.isFinite(value) && value <= anchorScore * 1.15
+                        && (anchorTier === undefined || tier === undefined || tier <= anchorTier);
+                });
+                // Select within a fixed anchor window, never a non-transitive pairwise comparator.
+                for (const index of comparable) {
+                    if (recentChangeOf(remaining[index]) > recentChangeOf(remaining[bestIndex])) bestIndex = index;
+                }
+            }
             const bestScore = scoreOf?.(remaining[bestIndex]);
             if (!insideTopWindow || !Number.isFinite(bestScore)) {
                 return {
@@ -365,7 +388,15 @@ export function diversifyFlightDestinationsWithDecisions(
             }
         }
         // 남은 표가 모두 같은 목적지라면 목록을 유실시키지 않고 최종적으로만 제한을 푼다.
-        if (!selection) selection = { index: 0, preferenceRule: 'original-rank' };
+        if (!selection) {
+            const route = firstNineRouteKey(remaining[0]);
+            let index = 0;
+            remaining.forEach((flight, candidate) => {
+                if (firstNineRouteKey(flight) === route
+                    && getEffectivePrice(flight) < getEffectivePrice(remaining[index])) index = candidate;
+            });
+            selection = { index, preferenceRule: 'original-rank' };
+        }
 
         const [next] = remaining.splice(selection.index, 1);
         const destination = normalizeCity(next.arrival.city);

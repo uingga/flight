@@ -45,6 +45,7 @@ import {
 import { buildLifecycleIdentity } from './lib/flight-lifecycle';
 import { preserveCrawlCacheWithSafetyState } from '../src/lib/crawl-cache-safety';
 import fs from 'fs';
+import { recordRecommendationNews } from './lib/recommendation-news';
 import { ONLINE_BROWSER_PRIMARY, MODE_BROWSER_PRIMARY, TTANG_BROWSER_PRIMARY } from '../src/lib/browser-primary-config.mjs';
 import type { scrapeModetourRemote } from '../src/lib/scrapers/modetour-remote';
 import { assertOnlineGithubClaim } from './online-github-fallback-policy.mjs';
@@ -1084,6 +1085,13 @@ async function main() {
                 });
             }
 
+            // Attach event metadata only to sources actually observed successfully this round.
+            const newsCandidates = cacheData.flights.filter((flight: any) => attempted.has(flight.source)
+                && (!requestedSources || requestedSources.has(flight.source))
+                && !preservedSources.has(flight.source) && !modeResult?.retained.includes(flight));
+            const recordedNews = new Map(recordRecommendationNews(prevCache?.flights || [], newsCandidates, cacheUpdatedAt)
+                .map(flight => [flight.id, flight]));
+            cacheData.flights = cacheData.flights.map((flight: any) => recordedNews.get(flight.id) || flight);
             // 통합 캐시 파일 저장
             fs.writeFileSync(cachePath, JSON.stringify(cacheData, null, 2), 'utf-8');
 

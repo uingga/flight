@@ -1,4 +1,5 @@
 import type { Flight } from '../types/flight';
+import { recommendationNewsTimestamp } from './recommendation-news';
 import {
     diversifyRecommendationOrderWithDecisions,
     excludePinnedFlight,
@@ -567,8 +568,7 @@ export function buildRecommendationScoreState(
 }
 
 function firstSeenTimestamp(flight: Flight): number {
-    const timestamp = flight.firstSeen ? new Date(flight.firstSeen).getTime() : Number.NaN;
-    return Number.isFinite(timestamp) ? timestamp : Number.NEGATIVE_INFINITY;
+    return recommendationNewsTimestamp(flight);
 }
 
 /** Approved strong curve for fresh same-date premiums; no threshold discontinuity. */
@@ -681,6 +681,8 @@ export function buildRecommendationPresentation(
             maxPerDestination: 2,
             leadingFlights: pinnedFlight ? [pinnedFlight] : [],
             scoreOf: flight => scoreState.scores.get(flight.id) ?? Infinity,
+            recentChangeOf: flight => scoreState.explanations.get(flight.id)?.topRecommendationTier === 4
+                ? 0 : recommendationNewsTimestamp(flight),
             expensivePromotionEligibleOf: flight => Boolean(
                 scoreState.explanations.get(flight.id)?.expensivePromotionEligible
             ),

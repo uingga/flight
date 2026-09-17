@@ -1,5 +1,7 @@
 import { chromium, Browser } from 'playwright';
 import fs from 'fs';
+import { recordRecommendationNews } from './lib/recommendation-news';
+import type { Flight } from '../src/types/flight';
 import path from 'path';
 import { getCrawlDataDir } from '../src/lib/crawl-data-dir';
 import {
@@ -528,6 +530,10 @@ async function main() {
     cache.integrityAlerts = (cache.integrityAlerts || []).filter(
         (alert: unknown) => !/myrealtrip|마이리얼트립/i.test(String(alert)),
     );
+    const recordedNews = new Map(recordRecommendationNews(previousMrtFlights as Flight[], finalMrtFlights as Flight[], new Date().toISOString())
+        .map(flight => [flight.id, flight]));
+    cache.flights = cache.flights.map((flight: any) => flight.source !== 'myrealtrip' ? flight
+        : recordedNews.get(flight.id) || flight);
     fs.writeFileSync(CACHE_PATH, JSON.stringify(cache));
 
     const previousFlightByKey = new Map<string, CachedFlight>(previousMrtFlights.map((flight: CachedFlight) => [flightIdentity(flight), flight]));

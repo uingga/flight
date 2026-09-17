@@ -38,6 +38,7 @@ export interface Flight {
     priceCheckedAt?: string; // 해당 여행사 가격을 마지막으로 정상 확인한 시각
     detailCheckedAt?: string; // 시간·좌석 등 상세 정보를 마지막으로 정상 확인한 시각
     firstSeen?: string; // 이 항공권을 캐시에서 처음 발견한 날짜
+    recommendationNews?: import('../lib/recommendation-news').RecommendationNews;
     /** 땡처리닷컴에서 동일 노선·날짜의 서로 다른 실제 요금 상품을 구분한다. */
     ttangTimeProvenance?: { kind: 'legacy-cache' | 'product-cache'; sourceFlightId: string; checkedAt?: string };
     ttangProduct?: {

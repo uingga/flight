@@ -1,0 +1,6 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "incremental": false, "target": "ES2020" },
+  "include": ["src/lib/recommendation-news.ts", "src/lib/flight-recommendation.ts", "src/lib/flight-diversity.ts", "scripts/lib/recommendation-news.ts", "scripts/test-recommendation-news.ts"],
+  "exclude": []
+}
