@@ -2604,7 +2604,7 @@ export default function AdminPage() {
                 <section className={`${styles.section} ${styles.operationsOrderHistory}`} id="operations-history">
                     <div className={styles.sectionHeading}><div>
                         <h2>수집 실행 기록</h2>
-                        <p>일반 여행사·마이리얼트립·네이버 확인을 시간순으로 봅니다. 같은 일반 회차의 결과는 한곳에 모았습니다.</p>
+                        <p>일반 여행사·마이리얼트립·네이버 확인을 실제 실행별로 봅니다. 재실행과 PC 수집도 각각 시간순으로 표시합니다.</p>
                     </div></div>
                     <AdminCollectionHistory history={data.crawlHistory || []} naver={data.naverCrawlHistory || []} active={data.currentCrawlRun} />
                 </section>
