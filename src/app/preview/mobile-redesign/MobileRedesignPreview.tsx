@@ -1227,7 +1227,7 @@ export default function MobileRedesignPreview({
     const [isMobile, setIsMobile] = useState(false);
     const [isDesktopViewport, setIsDesktopViewport] = useState(false);
     const desktopFilterPresence = useFilterPresence(desktopFilterOpen, isDesktopViewport);
-    const advancedFilterPresence = useFilterPresence(filterOpen ? true : null, isDesktopViewport);
+    const advancedFilterPresence = useFilterPresence(filterOpen ? true : null, true, isDesktopViewport ? 180 : 220);
     useEffect(() => {
         if (filterDialogRef.current) filterDialogRef.current.inert = advancedFilterPresence.closing;
     }, [advancedFilterPresence.closing]);

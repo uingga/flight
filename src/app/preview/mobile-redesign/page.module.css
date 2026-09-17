@@ -2396,7 +2396,22 @@
     }
     .filterOverlay.filterClosing { pointer-events: none; }
 }
+@keyframes filterSheetOut {
+    to { transform: translateY(24px); opacity: 0; }
+}
+@keyframes filterScrimOut { to { opacity: 0; } }
+@media (max-width: 959px) {
+    .filterOverlay.filterClosing {
+        animation: filterScrimOut 220ms cubic-bezier(.2, .8, .2, 1) forwards;
+        pointer-events: none;
+    }
+    .filterOverlay .bottomSheet.filterClosing {
+        animation: filterSheetOut 220ms cubic-bezier(.2, .8, .2, 1) forwards;
+        pointer-events: none;
+    }
+}
 @media (prefers-reduced-motion: reduce) {
+    .filterOverlay.filterClosing,
     .desktopFilterPopover,
     .desktopFilterPopover[data-closing="true"],
     .filterOverlay .bottomSheet,

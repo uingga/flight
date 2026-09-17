@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 
 // Keep the last panel mounted for the existing 180ms filter motion.
-export function useFilterPresence<T>(value: T | null, enabled = true) {
+export function useFilterPresence<T>(value: T | null, enabled = true, duration = 180) {
     const [retained, setRetained] = useState<T | null>(value);
     useEffect(() => {
         if (value !== null) {
@@ -14,8 +14,8 @@ export function useFilterPresence<T>(value: T | null, enabled = true) {
             setRetained(null);
             return;
         }
-        const timer = window.setTimeout(() => setRetained(null), 180);
+        const timer = window.setTimeout(() => setRetained(null), duration);
         return () => window.clearTimeout(timer);
-    }, [value, enabled]);
+    }, [value, enabled, duration]);
     return { value: value ?? (enabled ? retained : null), closing: value === null };
 }
