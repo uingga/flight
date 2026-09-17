@@ -1,7 +1,8 @@
 import {requestHttp} from './naver-http-request.mjs';
 import {randomUUID} from 'node:crypto';
 import {encodeRelayWire,decodeRelayWire} from './writer-relay-wire.mjs';
-export function createBrokerClient({url,token,timeoutMs=8000,pollMs=250}){
+export const WRITER_BROKER_TIMEOUT_MS=60000;
+export function createBrokerClient({url,token,timeoutMs=WRITER_BROKER_TIMEOUT_MS,pollMs=250}){
  if(typeof token!=='string'||!token.trim())throw Error('broker authentication missing');
  const u=new URL(url),local=['127.0.0.1','[::1]'].includes(u.hostname);
  if(u.username||u.password||!['/','/api/writer/'].includes(u.pathname)||u.search||u.hash||(!local&&u.protocol!=='https:'))throw Error('broker origin refused');
