@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Flight } from '@/types/flight';
 import { applyManualFlightOrder, emptyFlightOrder, moveFlightPlacement, type FlightPlacement, type ManualFlightOrder } from '@/lib/manual-flight-order';
 import { getEffectivePrice } from '@/lib/price-quality';
+import { normalizeCity } from '@/lib/utils/flight-helpers';
 import { buildNaverSearchUrl, getExactRouteAirports } from '@/lib/naver-route';
 import styles from './AdminFlightOrder.module.css';
 
@@ -75,7 +76,7 @@ export default function AdminFlightOrder({ adminKey }: { adminKey: string }) {
     const dormant = draft.filter(item => keyCounts.get(item.key) !== 1 && item.key !== pinned?.manualOrderKey);
     const visible = ordered.map((flight, index) => ({ flight, index })).filter(({ flight }) => {
         const query = search.trim().toLowerCase();
-        return !query || [flight.departure.city, flight.arrival.city, flight.airline, agencies[flight.source], flight.departure.date, flight.arrival.date]
+        return !query || [flight.departure.city, flight.arrival.city, normalizeCity(flight.departure.city), normalizeCity(flight.arrival.city), flight.airline, agencies[flight.source], flight.departure.date, flight.arrival.date]
             .some(value => value.toLowerCase().includes(query));
     });
     const editingDisabled = loading || saving || preview;
@@ -133,7 +134,7 @@ export default function AdminFlightOrder({ adminKey }: { adminKey: string }) {
                 <div className={styles.rank}><span>{isDrop ? 'DROP' : index + 1}</span>{desktop && movable && !preview && <small aria-hidden="true">⠿</small>}</div>
                 <div className={styles.cardContent}>
                     <div className={styles.route}>
-                        <h3>{flight.departure.city} <span aria-hidden="true">→</span> {flight.arrival.city}</h3>
+                        <h3>{normalizeCity(flight.departure.city)} <span aria-hidden="true">→</span> {normalizeCity(flight.arrival.city)}</h3>
                         {(isDrop || manual) && <span className={styles.badge}>{isDrop ? '기존 고정 유지' : '직접 배치'}</span>}
                     </div>
                     <div className={styles.schedule}>
@@ -149,15 +150,15 @@ export default function AdminFlightOrder({ adminKey }: { adminKey: string }) {
                             </strong>
                             : <span className={styles.naverMissing}>가격 미확인</span>}
                         {naverUrl ? <a href={naverUrl} target="_blank" rel="noopener noreferrer" draggable={false}
-                            aria-label={`${flight.departure.city} → ${flight.arrival.city} ${dateLabel(flight.departure.date)}~${dateLabel(flight.arrival.date)} 네이버 비교 (새 탭)`}
+                            aria-label={`${normalizeCity(flight.departure.city)} → ${normalizeCity(flight.arrival.city)} ${dateLabel(flight.departure.date)}~${dateLabel(flight.arrival.date)} 네이버 비교 (새 탭)`}
                             onDragStart={event => event.stopPropagation()}>
                             네이버 비교 <span aria-hidden="true">↗</span>
                         </a> : <span title="정확한 왕복 공항을 확인하지 못해 비교 링크를 제공하지 않습니다.">공항 확인 필요</span>}
                     </div>
                     {!isDrop && !preview && <div className={styles.moves}>
-                        <button type="button" disabled={editingDisabled || !movable || index === 0} onClick={() => move(key, 0)} aria-label={`${flight.arrival.city} 맨 위로`}>맨 위로</button>
-                        <button type="button" disabled={editingDisabled || !movable || index === 0} onClick={() => move(key, index - 1)} aria-label={`${flight.arrival.city} 위로`}>위로 ↑</button>
-                        <button type="button" disabled={editingDisabled || !movable || index === ordered.length - 1} onClick={() => move(key, index + 1)} aria-label={`${flight.arrival.city} 아래로`}>아래로 ↓</button>
+                        <button type="button" disabled={editingDisabled || !movable || index === 0} onClick={() => move(key, 0)} aria-label={`${normalizeCity(flight.arrival.city)} 맨 위로`}>맨 위로</button>
+                        <button type="button" disabled={editingDisabled || !movable || index === 0} onClick={() => move(key, index - 1)} aria-label={`${normalizeCity(flight.arrival.city)} 위로`}>위로 ↑</button>
+                        <button type="button" disabled={editingDisabled || !movable || index === ordered.length - 1} onClick={() => move(key, index + 1)} aria-label={`${normalizeCity(flight.arrival.city)} 아래로`}>아래로 ↓</button>
                         {manual && <button type="button" className={styles.release} disabled={editingDisabled} onClick={() => { setDraft(current => current.filter(item => item.key !== key)); setMessage('자동 배치로 돌렸습니다. 확인 후 적용해 주세요.'); }}>자동 배치</button>}
                         {!movable && <small>같은 상품 식별이 겹쳐 직접 이동할 수 없습니다.</small>}
                     </div>}
