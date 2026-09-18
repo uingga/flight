@@ -26,6 +26,34 @@ export const THREADS_SHARE_GROUP_OVERRIDES: Record<string, string> = {
 };
 
 export const SHARE_GROUPS: Record<string, ShareGroup> = {
+    'china-260918': {
+        title: '장가계·옌타이·광저우·상하이 항공권',
+        departure: '대구·인천·부산·청주', arrival: '장가계·옌타이·광저우·상하이',
+        price: 135000, dateText: '9–10월 출발 · 노선별 일정 확인',
+        airline: '이스타항공·에어부산', source: '모두투어·땡처리닷컴',
+        flightIds: [
+            'modetour-CHI-20079724',
+            'ttang-ZE0819ICNYNT-G1-2026-10-11', 'ttang-ZE0817ICNYNT-G23-2026-10-11',
+            'ttang-ZE0819ICNYNT-G1-2026-10-12', 'ttang-ZE0817ICNYNT-G23-2026-10-12',
+            'ttang-ZE0819ICNYNT-G1-2026-10-13', 'ttang-ZE0817ICNYNT-G23-2026-10-13',
+            'ttang-ZE0819ICNYNT-G1-2026-10-14',
+            'ttang-ZE0819ICNYNT-G1-2026-10-18', 'ttang-ZE0817ICNYNT-G23-2026-10-18',
+            'modetour-CHI-20081239', 'modetour-CHI-20081238',
+            'ttang-ZE0821CJJPVG-G17-2026-10-03', 'ttang-ZE0821CJJPVG-G17-2026-10-10', 'ttang-ZE0821CJJPVG-G17-2026-10-17',
+        ],
+        routes: [
+            { label: '대구 → 장가계', flightIds: ['modetour-CHI-20079724'] },
+            { label: '인천 → 옌타이', flightIds: [
+                'ttang-ZE0819ICNYNT-G1-2026-10-11', 'ttang-ZE0817ICNYNT-G23-2026-10-11',
+                'ttang-ZE0819ICNYNT-G1-2026-10-12', 'ttang-ZE0817ICNYNT-G23-2026-10-12',
+                'ttang-ZE0819ICNYNT-G1-2026-10-13', 'ttang-ZE0817ICNYNT-G23-2026-10-13',
+                'ttang-ZE0819ICNYNT-G1-2026-10-14',
+                'ttang-ZE0819ICNYNT-G1-2026-10-18', 'ttang-ZE0817ICNYNT-G23-2026-10-18',
+            ] },
+            { label: '부산 → 광저우', flightIds: ['modetour-CHI-20081239', 'modetour-CHI-20081238'] },
+            { label: '청주 → 상하이', flightIds: ['ttang-ZE0821CJJPVG-G17-2026-10-03', 'ttang-ZE0821CJJPVG-G17-2026-10-10', 'ttang-ZE0821CJJPVG-G17-2026-10-17'] },
+        ],
+    },
     'sha-260917': {
         departure: '청주',
         arrival: '상하이',
