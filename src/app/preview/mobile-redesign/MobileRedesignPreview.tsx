@@ -2727,7 +2727,7 @@ export default function MobileRedesignPreview({
     ), [displayedFlights, priceDrops]);
     const priceDropFlights = priceDropGroups.map(group => group.representative);
     const dropHeroPick = !freshRouteResults && isDefaultView && todayPickId
-        && featuredPick && getCityImagePath(featuredPick.flight.arrival.city) ? featuredPick : null;
+        && featuredPick && (featuredPick.flight.arrival.airport === 'CAN' || getCityImagePath(featuredPick.flight.arrival.city)) ? featuredPick : null;
     const ordinaryFeedFlights = dropHeroPick ? feedFlights.filter(flight => flight.id !== dropHeroPick.flight.id) : feedFlights;
     const dropHeroSchedules = dropHeroPick ? dropHeroAlternatives(flights, dropHeroPick.flight, displayedFlightPrice, todayPickFlightKeys)
         .map(flight => ({ flight, duration: tripLength(flight) })) : [];
