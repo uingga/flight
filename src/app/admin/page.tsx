@@ -3995,7 +3995,7 @@ export default function AdminPage() {
                     <div className={styles.sectionHeading}>
                         <div>
                             <h2>글별 인사이트</h2>
-                            <p>게시한 <code>/s/</code> 링크를 글 본문에서 찾아 방문·예약 이동을 자동으로 연결합니다.</p>
+                            <p>본문·본인 댓글의 추적 링크와 확인해 등록한 링크로 방문·예약 이동을 연결합니다.</p>
                         </div>
                     </div>
                     {threadsInsights?.available && threadsInsights.posts.length > 0 ? (
@@ -4007,7 +4007,7 @@ export default function AdminPage() {
 
                 <section className={styles.section} id="threads-attribution">
                     <details><summary style={{ cursor: 'pointer', fontWeight: 600 }}>링크별 집계 자세히 보기</summary>
-                    <p className={styles.sectionHelp}>Threads 출처를 우선 사용하고, 출처가 사라진 클릭은 글 속 공유 링크 코드로 자동 보완합니다. 같은 링크를 다른 채널에도 보냈다면 일부가 함께 잡힐 수 있습니다.</p>
+                    <p className={styles.sectionHelp}>Threads 출처가 확인된 방문을 추적 링크별로 집계합니다. 같은 링크를 여러 글에 사용하면 글별로 분리할 수 없습니다.</p>
                     {threadsInsights?.available && threadsInsights.attribution.rows.length > 0 ? (
                         <div className={styles.cityDetail}>
                             <table className={styles.cityTable}>

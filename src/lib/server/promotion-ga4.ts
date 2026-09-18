@@ -38,7 +38,7 @@ export async function collectGa4(day: string, threads: PromotionPost[], reportCl
         const run = reportClient || await createDailyReportClient(deadline);
         // Date dimension preserves actual daily unique users; no rolling-window subtraction or sum across days.
         const scopes = [
-            { name: 'threads', dimensions: ['date', 'sessionManualAdContent'], filter: filter('sessionManualAdContent', 'share_', 'BEGINS_WITH', true) },
+            { name: 'threads', dimensions: ['date', 'sessionManualAdContent'], filter: filter('sessionSource', 'threads', 'CONTAINS') },
             { name: 'verified', dimensions: ['date', 'sessionManualAdContent'], filter: filter('sessionSource', 'threads', 'CONTAINS') },
             { name: 'te31', dimensions: ['date', 'sessionCampaignName'], filter: filter('sessionSource', 'te31') },
         ];

@@ -17,6 +17,8 @@ type SortKey = 'date' | 'views' | 'reactions' | 'rate' | 'users' | 'details' | '
 const reactions = (post: Post) => post.metrics.likes + post.metrics.replies + post.metrics.reposts + post.metrics.quotes + post.metrics.shares;
 const dateLabel = (value: string) => value && Number.isFinite(Date.parse(value)) ? new Intl.DateTimeFormat('ko-KR', { timeZone: 'Asia/Seoul', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(value)) : '게시 시각 없음';
 const REPLY_ISSUES: Record<string, string> = {
+    'replies-invalid-request': 'Threads가 댓글 조회 형식을 거부했습니다. 방문 기록과 별개로 댓글 연결을 점검해야 합니다.',
+    'replies-rate-limited': 'Threads 댓글 조회 한도에 도달해 자동 연결을 보류했습니다.',
     'replies-unavailable': 'Threads 댓글 링크를 확인하지 못했습니다. 댓글 조회 권한 또는 조회 상태를 확인해주세요.',
     'replies-permission-denied': 'Threads 댓글 조회가 거부됐습니다. 연결 토큰의 threads_read_replies 권한과 앱 접근 권한을 확인해주세요.',
     'replies-token-expired': 'Threads 댓글 조회 토큰이 만료됐거나 유효하지 않습니다. 연결 토큰을 확인해주세요.',
@@ -45,7 +47,7 @@ export default function AdminThreadsPosts({ posts, attributionAvailable, generat
     });
     const columns: Array<[SortKey, string]> = [['date', '글 · 게시일'], ['views', '조회'], ['reactions', '반응'], ['rate', '반응률'], ['users', '방문'], ['details', '상세'], ['bookings', '예약 이동']];
     const siteCell = (post: Post, users: 'users' | 'detailUsers' | 'bookingUsers', count: 'sessions' | 'detailOpens' | 'bookingClicks') => attributionAvailable && post.attribution
-        ? <><strong>{post.attribution[users].toLocaleString()}명</strong><small>{post.attribution[count].toLocaleString()}회</small></> : <span title={!attributionAvailable ? '사이트 통계 조회 불가' : post.trackingContent ? '확인되는 방문 기록 없음' : '글별 추적 링크 없음'}>—</span>;
+        ? <><strong>{post.attribution[users].toLocaleString()}명</strong><small>{post.attribution[count].toLocaleString()}회</small></> : <span title={!attributionAvailable ? '사이트 통계 조회 불가' : post.trackingContent ? '확인되는 방문 기록 없음' : replyIssueMessage(post.trackingIssue)}>—</span>;
     return <div className={styles.panel}>
         <AdminAnalyticsFreshness generatedAt={generatedAt} />
         <div className={styles.help}><span>{posts.length}개 글 · 열 제목을 누르면 정렬</span><span>Threads 누적 반응 / 사이트 최근 30일</span></div>

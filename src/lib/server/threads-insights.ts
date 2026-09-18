@@ -68,6 +68,7 @@ export class ThreadsApiError extends Error {
         message: string,
         public readonly status: number,
         public readonly code?: number,
+        public readonly unsupportedReplyAttachment = false,
     ) {
         super(message);
         this.name = 'ThreadsApiError';
@@ -88,13 +89,14 @@ async function threadsGet<T extends ThreadsApiErrorBody>(path: string, params: R
 
     const url = new URL(`${THREADS_API_BASE}/${path.replace(/^\/+/, '')}`);
     Object.entries(params).forEach(([name, value]) => url.searchParams.set(name, value));
-    url.searchParams.set('access_token', accessToken);
-
-    const response = await fetch(url, { cache: 'no-store' });
+    const response = await fetch(url, { cache: 'no-store',
+        headers: { Authorization: `Bearer ${accessToken}` }, signal: AbortSignal.timeout(15000) });
     const json = await response.json() as T;
     if (!response.ok || json.error) {
         const detail = json.error?.message || `Threads API request failed (${response.status})`;
-        throw new ThreadsApiError(detail, response.status, json.error?.code);
+        throw new ThreadsApiError(detail, response.status, json.error?.code,
+            json.error?.code === 100 && /nonexisting field|non.?existing field|unknown field/i.test(detail)
+                && /link_attachment_url/.test(detail));
     }
     return json;
 }
@@ -110,15 +112,25 @@ async function ownReplies(since?: string): Promise<{ replies: OwnReply[]; comple
     const replies: OwnReply[] = [];
     let after: string | undefined;
     const seenCursors = new Set<string>();
+    let includeAttachment = true;
     try {
         // Bounded, cached by the admin API; never fetch replies once per displayed post.
         for (let page = 0; page < 3; page++) {
-            const response = await threadsGet<ThreadsApiErrorBody & {
+            let response: ThreadsApiErrorBody & {
                 data?: OwnReply[]; paging?: { next?: string; cursors?: { after?: string } };
-            }>('me/replies', {
-                fields: 'id,text,link_attachment_url,is_reply_owned_by_me,root_post,replied_to',
+            };
+            try { response = await threadsGet('me/replies', {
+                fields: `id,text,${includeAttachment ? 'link_attachment_url,' : ''}is_reply_owned_by_me,root_post,replied_to`,
                 limit: '50', ...(since ? { since } : {}), ...(after ? { after } : {}),
-            });
+            }); } catch (error) {
+                // Only a confirmed optional-field rejection permits one compatibility request.
+                // It consumes the same three-request budget; auth/rate/network errors never retry.
+                if (includeAttachment && error instanceof ThreadsApiError && error.unsupportedReplyAttachment) {
+                    includeAttachment = false;
+                    continue;
+                }
+                throw error;
+            }
             if (!Array.isArray(response.data)) return { replies, complete: false, issue: 'replies-request-failed' };
             replies.push(...response.data);
             if (!response.paging?.next) return { replies, complete: true };
@@ -131,7 +143,13 @@ async function ownReplies(since?: string): Promise<{ replies: OwnReply[]; comple
         const issue = error instanceof ThreadsApiError && [190, 102].includes(error.code || 0)
             ? 'replies-token-expired'
             : error instanceof ThreadsApiError && ([10, 200].includes(error.code || 0) || error.status === 403)
-                ? 'replies-permission-denied' : 'replies-request-failed';
+                ? 'replies-permission-denied'
+                : error instanceof ThreadsApiError && (error.status === 429 || [4, 17, 32, 613].includes(error.code || 0))
+                    ? 'replies-rate-limited'
+                    : error instanceof ThreadsApiError && error.code === 100 ? 'replies-invalid-request' : 'replies-request-failed';
+        console.warn('Threads replies unavailable', { issue,
+            status: error instanceof ThreadsApiError ? error.status : undefined,
+            code: error instanceof ThreadsApiError ? error.code : undefined });
         return { replies, complete: false, issue };
     }
     return { replies, complete: false, issue: 'replies-incomplete' };

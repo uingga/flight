@@ -110,14 +110,14 @@ async function getAttribution(): Promise<AttributionReports> {
     };
 
     try {
-        const [threadsTraffic, threadsEvents, contentTraffic, contentEvents] = await Promise.all([
+        const [threadsTraffic, threadsEvents] = await Promise.all([
             runReport(config, {
                 dateRanges: [{ startDate: '29daysAgo', endDate: 'today' }],
                 dimensions: [{ name: 'sessionManualAdContent' }],
                 metrics: [{ name: 'sessions' }, { name: 'activeUsers' }],
                 dimensionFilter: threadsSourceFilter,
                 orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
-                limit: 100,
+                limit: 10000,
             }),
             runReport(config, {
                 dateRanges: [{ startDate: '29daysAgo', endDate: 'today' }],
@@ -131,32 +131,15 @@ async function getAttribution(): Promise<AttributionReports> {
                         ],
                     },
                 },
-                limit: 200,
-            }),
-            // Threads 앱이 referrer를 지워도 글 본문의 /s/ 코드와 같은 utm_content로 보완한다.
-            runReport(config, {
-                dateRanges: [{ startDate: '29daysAgo', endDate: 'today' }],
-                dimensions: [{ name: 'sessionManualAdContent' }],
-                metrics: [{ name: 'sessions' }, { name: 'activeUsers' }],
-                dimensionFilter: { andGroup: { expressions: [trackedContentFilter, threadsSourceFilter] } },
-                orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
-                limit: 300,
-            }),
-            runReport(config, {
-                dateRanges: [{ startDate: '29daysAgo', endDate: 'today' }],
-                dimensions: [{ name: 'sessionManualAdContent' }, { name: 'eventName' }],
-                metrics: [{ name: 'eventCount' }, { name: 'totalUsers' }],
-                dimensionFilter: {
-                    andGroup: { expressions: [trackedContentFilter, threadsSourceFilter, behaviorFilter] },
-                },
-                limit: 600,
+                limit: 10000,
             }),
         ]);
 
         return {
             available: true,
             threadsRows: parseAttribution(threadsTraffic, threadsEvents),
-            contentRows: parseAttribution(contentTraffic, contentEvents),
+            // Use every confirmed Threads content key, including custom campaign names.
+            contentRows: parseAttribution(threadsTraffic, threadsEvents),
         };
     } catch (error) {
         console.error('Threads attribution report failed:', error);

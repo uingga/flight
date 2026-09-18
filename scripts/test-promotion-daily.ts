@@ -71,9 +71,9 @@ test('TE31 access challenge stops source and preserves already observed partial'
         assert.equal(calls, 2); assert.equal(collected.outcome, 'partial'); assert.equal(collected.posts.length, 1);
     }
 });
-test('all six registry posts can complete from one synthetic listing', async () => {
+test('all registered posts can complete from one synthetic listing', async () => {
     const collected = await collectTe31('2026-09-11', { verified: true, fetcher: (async () => htmlResponse(listing(TE31_POSTS.map(post => row(String(post.id))).join('')))) as typeof fetch });
-    assert.equal(collected.outcome, 'success'); assert.equal(collected.posts.length, 6);
+    assert.equal(collected.outcome, 'success'); assert.equal(collected.posts.length, TE31_POSTS.length);
 });
 test('missing thread metrics never become zero; valid explicit zeros survive', () => {
     assert.equal(parseThreadMetrics([]).views, null);
@@ -114,15 +114,15 @@ test('delta unavailable on first day or gap; previous calendar day only', () => 
     assert.equal(dailyDelta(metric,'1','views','te31',[{day:'2026-09-09',source:'te31',payload:result('te31','2026-09-09')}]),null);
     assert.equal(dailyDelta(metric,'1','views','te31',[{day:'2026-09-10',source:'te31',payload:result()}]),2);
 });
-test('GA4 daily dates KST, corrections, exact source+campaign, share content without source exclusivity', async () => {
-    let calls = 0; const thread = result('threads').posts[0]; thread.trackingContent = 'share_fixture';
+test('GA4 daily dates KST, corrections, exact source+campaign, custom content restricted to Threads', async () => {
+    let calls = 0; const thread = result('threads').posts[0]; thread.trackingContent = 'custom_fixture';
     const collected = await collectGa4('2026-09-11',[thread],async request => {
         calls++; assert.deepEqual(request.dateRanges,[{startDate:'2026-09-08',endDate:'2026-09-10'}]);
         const filters = JSON.stringify(request.dimensionFilter); const te31 = request.dimensions![1].name === 'sessionCampaignName';
         if (te31) { assert.match(filters,/te31/); assert.match(filters,/EXACT/); }
-        else if (calls <= 2) { assert.match(filters,/share_/); assert.doesNotMatch(filters,/sessionSource/); }
+        else { assert.match(filters,/sessionSource/); assert.match(filters,/threads/); assert.doesNotMatch(filters,/share_/); }
         const events = request.dimensions!.length === 3;
-        const dims = ['20260910',te31 ? 'tikitikit_te31_pus-260908' : 'share_fixture',...events ? ['booking_click'] : []];
+        const dims = ['20260910',te31 ? 'tikitikit_te31_pus-260908' : 'custom_fixture',...events ? ['booking_click'] : []];
         return {rowCount:1,metadata:{timeZone:'Asia/Seoul'},rows:[{dimensionValues:dims.map(value => ({value})),metricValues:['0','0'].map(value => ({value}))}]};
     });
     assert.equal(calls,6); assert.equal(collected.outcome,'success');

@@ -11,10 +11,22 @@ export interface OwnReply {
 export function extractTracking(text: string): Tracking {
     for (const raw of text.match(/https?:\/\/[^\s]+/gi) || []) {
         try {
-            const url = new URL(raw.replace(/[.,!;)}\]]+$/, ''));
+            let url = new URL(raw.replace(/[.,!;)}\]]+$/, ''));
+            if (url.hostname === 'l.threads.com' && url.searchParams.has('u')) {
+                url = new URL(url.searchParams.get('u')!);
+            }
+            if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password) continue;
             if (!['tikitikit.kr', 'www.tikitikit.kr'].includes(url.hostname)) continue;
             const match = url.pathname.match(/^\/(?:s|t)\/([^/]+)\/?$/);
-            if (!match) continue;
+            if (!match) {
+                // Direct landing URLs only carry attribution when an explicit Threads UTM exists.
+                if (/^\/(?:share|share-group)\/[^/]+\/?$/.test(url.pathname)
+                    && url.searchParams.get('utm_source')?.toLowerCase() === 'threads'
+                    && url.searchParams.get('utm_content')) {
+                    return { shareCode: null, trackingContent: url.searchParams.get('utm_content') };
+                }
+                continue;
+            }
             const shareCode = decodeURIComponent(match[1]);
             // /t/g-* redirects use share_group_*, not share_g-*.
             const isGroup = url.pathname.startsWith('/t/') && shareCode.startsWith('g-');

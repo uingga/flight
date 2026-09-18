@@ -9,11 +9,18 @@ function load(file, mocks = {}, extras = {}, append = '') {
     vm.runInNewContext(code, { module, exports: module.exports, require: name => {
         if (name in mocks) return mocks[name];
         throw new Error(`Unexpected dependency ${name}`);
-    }, URL, URLSearchParams, console, process: { env: { THREADS_ACCESS_TOKEN: 'fixture-only' } }, ...extras }, { filename: file });
+    }, URL, URLSearchParams, AbortSignal, console, process: { env: { THREADS_ACCESS_TOKEN: 'fixture-only' } }, ...extras }, { filename: file });
     return module.exports;
 }
 const helper = load('src/lib/threads-tracking.ts');
-const verified = load('src/lib/threads-post-links.ts', { './threads-tracking': helper });
+assert.equal(helper.extractTracking('https://www.tikitikit.kr/share/group?utm_source=threads&utm_content=tae_dyg_20260916').trackingContent,'tae_dyg_20260916');
+assert.equal(helper.extractTracking('https://www.tikitikit.kr/share/group?utm_source=te31&utm_content=other').trackingContent,null);
+assert.equal(helper.extractTracking('https://www.tikitikit.kr/?utm_source=threads&utm_content=profile').trackingContent,null);
+assert.equal(helper.extractTracking('https://l.threads.com/?u='+encodeURIComponent('https://www.tikitikit.kr/t/g-sha-260917')).trackingContent,'share_group_sha-260917');
+assert.equal(helper.extractTracking('https://l.threads.com/?u='+encodeURIComponent('https://evil.test/t/code')).trackingContent,null);
+assert.equal(helper.extractTracking('https://secret@www.tikitikit.kr/t/code').trackingContent,null);
+
+const verified = load('src/lib/threads-post-links.ts', { './threads-tracking': helper, './threads-post-links.json': { default: require('../src/lib/threads-post-links.json') } });
 const root = { id: 'root', trackingContent: null, shareCode: null };
 const link = 'https://tikitikit.kr/s/xmodetour-CHI-20107439';
 const reply = { id: 'reply', text: link, root_post: { id: 'root' }, replied_to: { id: 'middle' }, is_reply_owned_by_me: true };
@@ -59,6 +66,9 @@ async function integration(mode) {
         if (mode === 'failed') throw new Error('https://secret-token.example');
         if (mode === 'partial-failed' && replyCalls === 2) throw new Error('private token in failure');
         if (mode === 'malformed') return { ok: true, json: async () => ({}) };
+        if (mode === 'optional-field' && replyCalls === 1) return { ok: false, status: 400, json: async () => ({ error: { code: 100, message: 'Tried accessing nonexisting field (link_attachment_url)' } }) };
+        if (mode === 'optional-field') assert.ok(!url.searchParams.get('fields').includes('link_attachment_url'));
+        if (mode === 'rate') return { ok: false, status: 429, json: async () => ({error:{code:4}}) };
         if (mode === 'invalid-field') return { ok: false, status: 400, json: async () => ({ error: { code: 100, message: 'Unsupported field' } }) };
         const next = ['capped','cursor-loop'].includes(mode) || replyCalls === 1;
         return { ok: true, json: async () => ({ data: replyCalls === 2 || mode === 'partial-failed' ? [reply] : [], ...(next ? { paging: { next: 'unused', cursors: { after: mode === 'cursor-loop' ? 'same-cursor' : `page${replyCalls}` } } } : {}) }) };
@@ -66,8 +76,8 @@ async function integration(mode) {
     const server = load('src/lib/server/threads-insights.ts', { 'server-only': {}, '@/lib/threads-tracking': helper, '@/lib/threads-post-links': verified }, { fetch });
     const posts = await server.getThreadsPostInsights();
     assert.equal(posts[0].metrics.views, 286);
-    if (mode === 'ok') { assert.equal(posts[0].trackingContent, connected.trackingContent); assert.equal(replyCalls, 2); }
-    else { assert.equal(posts[0].trackingContent, null); assert.equal(posts[0].trackingIssue, { denied: 'replies-permission-denied', token: 'replies-token-expired', failed: 'replies-request-failed', capped: 'replies-incomplete', 'cursor-loop': 'replies-incomplete', 'partial-failed': 'replies-request-failed', malformed: 'replies-request-failed', 'invalid-field': 'replies-request-failed' }[mode]); }
+    if (mode === 'ok' || mode === 'optional-field') { assert.equal(posts[0].trackingContent, connected.trackingContent); assert.equal(replyCalls, 2); }
+    else { assert.equal(posts[0].trackingContent, null); assert.equal(posts[0].trackingIssue, { rate: 'replies-rate-limited', denied: 'replies-permission-denied', token: 'replies-token-expired', failed: 'replies-request-failed', capped: 'replies-incomplete', 'cursor-loop': 'replies-incomplete', 'partial-failed': 'replies-request-failed', malformed: 'replies-request-failed', 'invalid-field': 'replies-invalid-request' }[mode]); }
     assert.ok(!JSON.stringify(posts).includes('secret'));
     if (mode === 'capped') assert.equal(replyCalls, 3);
     if (mode === 'cursor-loop' || mode === 'partial-failed') assert.equal(replyCalls, 2);
@@ -79,7 +89,7 @@ async function integration(mode) {
     await integration('capped');
     await integration('token');
     await integration('failed');
-    for (const mode of ['partial-failed','malformed','cursor-loop','invalid-field']) await integration(mode);
+    for (const mode of ['rate', 'optional-field', 'partial-failed','malformed','cursor-loop','invalid-field']) await integration(mode);
     const api = load('src/app/api/threads-insights/route.ts', {
         'next/server': {}, '@/lib/ga4': {}, '@/lib/server/threads-insights': {},
     }, {}, '\nexport { attachAttribution, visibleAttribution, sumAttribution };');

@@ -1,20 +1,13 @@
 import { extractTracking, type Tracking } from './threads-tracking';
 
 // Explicit, audited relationships only. Never infer a post from a city, price or traffic count.
-// Verified in the public root thread and its own reply on 2026-09-09.
-export const VERIFIED_THREADS_POST_LINKS = [{
-    postId: null,
-    postPath: '/@tikitikit.kr/post/DdQkTQYD99a',
-    replyUrl: undefined,
-    url: 'https://www.tikitikit.kr/t/m20136580',
-    verifiedOn: '2026-09-14',
-}, {
-    postId: '18338163979251867',
-    postPath: '/@tikitikit.kr/post/DdAzc1RD1sp',
-    replyUrl: 'https://www.threads.com/@tikitikit.kr/post/DdAzdN9j4m3',
-    url: 'https://tikitikit.kr/s/xmodetour-CHI-20107439',
-    verifiedOn: '2026-09-09',
-}] as const;
+// Each record includes its own verification date and, where available, reply permalink.
+import registry from './threads-post-links.json';
+
+export interface VerifiedThreadsLink {
+    postId: string | null; postPath: string; replyUrl?: string; url: string; verifiedOn: string;
+}
+export const VERIFIED_THREADS_POST_LINKS: readonly VerifiedThreadsLink[] = registry;
 
 export function connectVerifiedPostLinks<T extends Tracking & {
     id: string; permalink: string; trackingIssue?: string | null;
