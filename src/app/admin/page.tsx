@@ -8,6 +8,8 @@ import VisitorTrendChart from '@/components/VisitorTrendChart';
 import { isAnalyticsExcluded, setAnalyticsExcluded } from '@/lib/analytics';
 import { buildSourceSlotBars, type SlotStatus, type SourceSlotBar, type SourceSlotEvent } from '@/lib/admin-source-slots';
 import AdminCollectionHistory from '@/components/AdminCollectionHistory';
+import AdminSourceCurrentNote from '@/components/AdminSourceCurrentNote';
+import { currentSourceState, collectionDetail, type OnlineCollectionSchedule } from '@/lib/admin-source-current';
 import type { CrawlHistoryEntry } from '@/lib/admin-collection-history';
 import { buildAdminAttentionItems } from '@/lib/admin-attention';
 import AdminTodayPick from '@/components/AdminTodayPick';
@@ -82,6 +84,7 @@ interface BookingLinkHealthEntry {
 }
 
 interface AdminData {
+    onlineSchedule?: OnlineCollectionSchedule;
     timestamp: string;
     totalFlights: number;
     bySource: Record<string, number>;
@@ -752,6 +755,11 @@ function effectiveSourceUpdatedAt(data: AdminData, source: string): string | und
     return candidates.sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0];
 }
 
+function sourceCurrentState(data: AdminData, source: string, now: number) {
+    return currentSourceState({ source, now, onlineSchedule: data.onlineSchedule,
+        history: data.crawlHistory, active: data.currentCrawlRun, circuit: data.sourceCircuits?.[source] });
+}
+
 const DEAL_REJECTION_LABELS: Record<string, string> = {
     otherDeparture: '출발지가 다름',
     otherRegion: '지역이 다름',
@@ -809,6 +817,7 @@ function slotEventLabel(event: SourceSlotEvent): string {
     if (event.manual) return `수동 캡처 ${event.value.toLocaleString()}건`;
     if (event.skipped) return skippedUntilLabel(event.skippedUntil, event.skipReason);
     if (event.preserved) return event.localFallback ? 'PC 대체 실패' : '자동 수집 실패';
+    if (event.partial) return `일부 반영 · ${event.value.toLocaleString()}건`;
     if (event.localFallback) return `PC 대체 ${event.countKind === 'shown' ? '노출 ' : ''}${event.value.toLocaleString()}건`;
     return `자동 ${event.countKind === 'shown' ? '노출 ' : ''}${event.value.toLocaleString()}건`;
 }
@@ -826,13 +835,14 @@ function slotBarTooltip(bar: SourceSlotBar, sourceName: string, separateSchedule
     if (bar.final?.skipped) lines.push(skippedUntilLabel(bar.final.skippedUntil, bar.final.skipReason));
     if (bar.final && !bar.final.skipped) lines.push(`기록 시각 ${slotTimeLabel(bar.final.timestamp)}`);
     if (bar.status === 'failed') lines.push(bar.final?.reason || '실패 사유 기록 없음 · 이전 데이터 유지');
+    if (bar.final?.partial && !bar.final.preserved) lines.push(bar.final.reason || '일부 반영 · 미확인 구간 기존 데이터 유지');
     if (bar.status === 'running') lines.push(`${bar.runStage === 'preparing' ? '실행 준비 중' : bar.runStage === 'publishing' ? '결과 반영 중' : '자동 수집 중'} · 이 여행사 결과를 기다립니다`);
     if (bar.status === 'pending') lines.push('예약 시각 경과 · 실행 여부 또는 결과가 아직 확인되지 않았습니다');
     if (bar.status === 'missing') lines.push('회차가 끝났는데 이 여행사 기록이 없습니다');
     if (bar.events.length > 1) {
         lines.push(`흐름: ${bar.events.map(event => `${slotTimeLabel(event.timestamp).replace(/^\d+\. \d+\. /, '')} ${slotEventLabel(event)}`).join(' → ')}`);
     }
-    return { title: `${slotTimeLabel(bar.slotAt)} 회차 · ${sourceName} · ${SLOT_STATUS_LABELS[bar.status]}`, lines };
+    return { title: `${slotTimeLabel(bar.slotAt)} 회차 · ${sourceName} · ${bar.final?.partial && !bar.final.preserved ? '일부 반영 · 원본 일부 미확인' : SLOT_STATUS_LABELS[bar.status]}`, lines };
 }
 
 /** crawlHistory 항목을 막대 계산용 이벤트로 바꾼다. 수동 캡처 상태도 같은 형태로 합친다. */
@@ -848,13 +858,14 @@ function collectSourceSlotEvents(
             timestamp: entry.timestamp,
             value: entry.sites[source]?.scraped ?? entry.sites[source]?.total ?? 0,
             countKind: entry.sites[source]?.manual ? 'manual' : entry.sites[source]?.scraped !== undefined ? 'scraped' : 'shown',
-            reason: entry.sites[source]?.localFallback
+            partial: entry.sites[source]?.partial,
+            reason: collectionDetail(entry.sites[source]) || (entry.sites[source]?.localFallback
                 ? entry.sites[source]?.preserved && data.sourceCircuits?.[source]?.localFallback
                     && Math.abs(Date.parse(entry.timestamp) - Date.parse(data.sourceCircuits[source].localFallback!.lastAttemptAt)) < 5 * 60_000
                     ? data.sourceCircuits[source].localFallback!.detail : undefined
                 : entry.sites[source]?.preserved && data.sourceCircuits?.[source]
                 && Math.abs(Date.parse(entry.timestamp) - Date.parse(data.sourceCircuits[source].openedAt)) < 5 * 60_000
-                ? data.sourceCircuits[source].detail : undefined,
+                ? data.sourceCircuits[source].detail : undefined),
             preserved: Boolean(entry.sites[source]?.preserved),
             skipped: Boolean(entry.sites[source]?.skipped),
             skippedUntil: entry.sites[source]?.skippedUntil,
@@ -1869,6 +1880,9 @@ export default function AdminPage() {
             .map(check => ({ ...check, date: entry.date, sourceStatus: source.status }));
     })).slice(-12).reverse();
     const sourceIssues = allSources.filter(source => {
+        const state = sourceCurrentState(data, source, slotNow);
+        if (state?.kind === 'rest') return false;
+        if (state?.kind === 'partial') return true;
         const updatedAt = effectiveSourceUpdatedAt(data, source);
         const ageHours = updatedAt ? (Date.now() - new Date(updatedAt).getTime()) / 3_600_000 : null;
         return (data.staleStreak?.[source] || 0) > 0
@@ -2276,6 +2290,7 @@ export default function AdminPage() {
                     <div className={styles.sourceTrendGrid}>
                         {allSources.map(source => {
                             const updatedAt = effectiveSourceUpdatedAt(data, source);
+                            const currentState = sourceCurrentState(data, source, slotNow);
                             const ageHours = updatedAt ? (Date.now() - new Date(updatedAt).getTime()) / 3_600_000 : null;
                             const staleCount = data.staleStreak?.[source] || 0;
                             const circuit = data.sourceCircuits?.[source];
@@ -2288,6 +2303,7 @@ export default function AdminPage() {
                             const slotEvents = collectSourceSlotEvents(data, source, sourceHasHistoryEvent);
                             const slotBars = buildSourceSlotBars({
                                 source,
+                                scheduledRest: currentState?.rest,
                                 events: slotEvents,
                                 now: slotNow,
                                 currentRun: data.currentCrawlRun,
@@ -2324,9 +2340,9 @@ export default function AdminPage() {
                             const median = pastValues.length ? pastValues[Math.floor(pastValues.length / 2)] : 0;
                             const latestMeasured = [...history].reverse().find(entry => !entry.skipped) || null;
                             const slumped = Boolean(latestMeasured && !latestMeasured.preserved && !latestMeasured.manual && median >= 30 && latestMeasured.value < median * 0.6);
-                            const issue = circuitOpen || staleCount > 0 || late || slumped;
+                            const issue = currentState?.kind === 'rest' ? false : currentState?.kind === 'partial' || circuitOpen || staleCount > 0 || late || slumped;
                             const peak = Math.max(...slotBars.filter(bar => bar.status !== 'failed').map(bar => bar.value ?? 0), 1);
-                            const statusText = modetourManualApplied
+                            const statusText = currentState ? currentState.label : modetourManualApplied
                                 ? `${modetourFailureLabel} · 수동 ${manualCapture!.accepted}건 반영${manualCapture!.naverPending ? ' · 네이버 대기' : ''}`
                                 : modetourManualNeeded
                                 ? `${modetourFailureLabel} · 수동 캡처 필요`
@@ -2347,6 +2363,7 @@ export default function AdminPage() {
                                         <strong><span className={issue ? styles.sourceStateMarkWarn : styles.sourceStateMarkGood} />{SOURCE_NAMES[source]}</strong>
                                         <span className={issue ? styles.statusWarn : styles.statusGood}>{statusText}</span>
                                     </div>
+                                    <AdminSourceCurrentNote state={currentState} />
                                     <div className={styles.sourceTrendSummary}>
                                         <div><strong>{visibleCount.toLocaleString()}</strong><span>사이트 노출</span></div>
                                         <div><strong>{latestMeasured ? latestMeasured.value.toLocaleString() : '—'}</strong><span>최근 실제 수집</span></div>
@@ -3062,6 +3079,7 @@ export default function AdminPage() {
                 <div className={styles.sourceGrid}>
                     {allSources.map(source => {
                         const updatedAt = effectiveSourceUpdatedAt(data, source);
+                        const currentState = sourceCurrentState(data, source, slotNow);
                         const streak = data.staleStreak?.[source] || 0;
                         const circuit = data.sourceCircuits?.[source];
                         const circuitOpen = Boolean(
@@ -3075,6 +3093,7 @@ export default function AdminPage() {
                         const slotEvents = collectSourceSlotEvents(data, source, sourceHasHistoryEvent);
                         const slotBars = buildSourceSlotBars({
                             source,
+                            scheduledRest: currentState?.rest,
                             events: slotEvents,
                             now: slotNow,
                                 currentRun: data.currentCrawlRun,
@@ -3115,7 +3134,7 @@ export default function AdminPage() {
                             latestMeasured && !latestMeasured.preserved && !latestMeasured.manual && median >= 30 && latestMeasured.value < median * 0.6,
                         );
 
-                        const status = circuitOpen || streak > 0 || slumped ? 'broken' : stale ? 'stale' : 'ok';
+                        const status = currentState?.kind === 'rest' ? 'ok' : currentState?.kind === 'partial' ? 'stale' : circuitOpen || streak > 0 || slumped ? 'broken' : stale ? 'stale' : 'ok';
                         const peak = Math.max(...slotBars.filter(bar => bar.status !== 'failed').map(bar => bar.value ?? 0), 1);
                         const shown = flightFilterSummary?.visibleBySource?.[source] ?? 0;
 
@@ -3143,7 +3162,7 @@ export default function AdminPage() {
                                             status === 'stale' ? styles.statusBadgeStale : '',
                                         ].filter(Boolean).join(' ')}
                                     >
-                                        {modetourManualApplied
+                                        {currentState ? currentState.label : modetourManualApplied
                                             ? `GitHub ${modetourFailureLabel} · 수동 ${manualCapture!.accepted}건 반영${manualCapture!.naverPending ? ' · 네이버 대기' : ''}`
                                             : modetourManualNeeded
                                             ? `GitHub ${modetourFailureLabel} · 수동 캡처 필요`
@@ -3163,6 +3182,7 @@ export default function AdminPage() {
                                     </span>
                                 </div>
 
+                                <AdminSourceCurrentNote state={currentState} />
                                 <div className={styles.sourceCount}>
                                     {shown.toLocaleString()}
                                     <small>건 노출 중</small>
@@ -3175,7 +3195,7 @@ export default function AdminPage() {
                                     {latestMeasured && !latestMeasured.preserved && !latestMeasured.manual && (
                                         <span>최근 자동 수집 {latestMeasured.value.toLocaleString()}건 · 사이트 노출 {shown.toLocaleString()}건</span>
                                     )}
-                                    {modetourManualNeeded && (
+                                    {modetourManualNeeded && !currentState && (
                                         <span>PC 자동 접속 없음 · 일반 Chrome 결과 화면을 캡처해 전달</span>
                                     )}
                                     {source === 'modetour' && circuit && (

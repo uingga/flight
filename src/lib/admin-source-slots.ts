@@ -20,6 +20,7 @@ export type SourceSlotEvent = {
     value: number;
     countKind?: 'scraped' | 'shown' | 'manual';
     reason?: string;
+    partial?: boolean;
     preserved: boolean;
     skipped: boolean;
     skippedUntil?: string;
@@ -108,6 +109,8 @@ export function buildSourceSlotBars(input: {
      * 없으면 "진행 중"이 아니라 "기록 없음"으로 그린다.
      */
     completedThrough?: number | null;
+    /** Presentation only: a persisted online 2/3-day interval, not a new skip event. */
+    scheduledRest?: { from: string; until: string };
     currentRun?: { startedAt: string; status: string; stage: 'queued' | 'preparing' | 'crawling' | 'publishing'; plannedSources: string[]; skippedSources: string[] } | null;
 }): SourceSlotBar[] {
     const slots = recentSlotTimes(input.now, input.length ?? SLOT_AXIS_LENGTH);
@@ -131,10 +134,15 @@ export function buildSourceSlotBars(input: {
         const final = pickFinalEvent(events);
         // 일정상 미실행 기록만 있는 칸은 "예정 없음"과 같은 뜻이므로 자리표시로 그린다.
         const onlyScheduleSkip = final !== null && final.skipped && final.skipReason === 'schedule';
+        const restFrom = Date.parse(input.scheduledRest?.from || ''), restUntil = Date.parse(input.scheduledRest?.until || '');
+        const plannedRest = input.source === 'onlinetour' && Number.isFinite(restFrom) && Number.isFinite(restUntil)
+            && restUntil > restFrom && slotAt > restFrom && slotAt < restUntil
+            && !(slotAt === activeSlot && input.currentRun?.plannedSources.includes(input.source)
+                && !input.currentRun.skippedSources.includes(input.source));
 
         let status: SlotStatus;
         if (final && !onlyScheduleSkip) status = eventStatus(final);
-        else if (!scheduled || onlyScheduleSkip) status = 'unscheduled';
+        else if (!scheduled || onlyScheduleSkip || plannedRest) status = 'unscheduled';
         else if (slotAt === activeSlot && input.currentRun?.status === 'in_progress'
             && input.currentRun.stage !== 'queued' && input.currentRun.plannedSources.includes(input.source)
             && !input.currentRun.skippedSources.includes(input.source)) status = 'running';

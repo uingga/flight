@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { buildCollectionHistory, collectionChange, collectionStatus, COLLECTION_SOURCES, type CrawlHistoryEntry, type ActiveCollectionRun, type NaverCollectionEntry, type CollectionStat } from '@/lib/admin-collection-history';
 import styles from './AdminCollectionHistory.module.css';
+import { collectionDetail, isTaoyuanUnavailable } from '@/lib/admin-source-current';
 
 const number = (value?: number | null) => value == null ? '—' : value.toLocaleString();
 const signed = (value: number | null) => value === null ? '—' : `${value > 0 ? '+' : ''}${value.toLocaleString()}`;
@@ -49,7 +50,7 @@ export default function AdminCollectionHistory({ history, naver, active }: {
                         const stat = run.sites[source];
                         const change = stat ? collectionChange(stat) : null;
                         const valid = stat && !stat.preserved && !stat.skipped;
-                        return <tr key={source}><th scope="row">{COLLECTION_SOURCES[source] || source}<small>{stat ? collectionStatus(stat) : run.active?.skippedSources.includes(source) ? '일정상 휴식' : status}</small>{stat?.detail && <small>{stat.detail}</small>}</th><td>{number(stat?.scraped)}</td><td>{number(stat?.total)}</td><td>{signed(change)}</td><td>{valid ? number(stat.added) : '—'}</td><td>{valid ? number(stat.removed) : '—'}</td></tr>;
+                        return <tr key={source}><th scope="row">{COLLECTION_SOURCES[source] || source}<small>{isTaoyuanUnavailable(stat) ? '일부 반영 · 원본 조회 불가' : stat ? collectionStatus(stat) : run.active?.skippedSources.includes(source) ? '일정상 휴식' : status}</small>{stat?.detail && <small>{collectionDetail(stat)}</small>}</th><td>{number(stat?.scraped)}</td><td>{number(stat?.total)}</td><td>{signed(change)}</td><td>{valid ? number(stat.added) : '—'}</td><td>{valid ? number(stat.removed) : '—'}</td></tr>;
                     })}
                 </tbody></table></div>
                     {sources.map(source => { const stat = run.sites[source]; return stat && !stat.preserved && !stat.skipped && (stat.added || stat.removed) ? <div className={styles.sourceChanges} key={source}><strong>{COLLECTION_SOURCES[source] || source}</strong><FlightChanges stat={stat} /></div> : null; })}

@@ -8,6 +8,8 @@ import {
     type NaverCrawlHistoryEntry,
 } from '@/lib/utils/naver-crawl-history';
 import { getCrawlScheduleHealth, getFullCrawlUpdatedAt } from '@/lib/crawl-schedule-health.mjs';
+import { onlineCollectionInterval } from '../../../../scripts/online-collection-interval.mjs';
+import { ONLINE_BROWSER_PRIMARY } from '@/lib/browser-primary-config.mjs';
 
 const CACHE_FILE_PATH = path.join(process.cwd(), 'data', 'all-flights-cache.json');
 const GITHUB_REPOSITORY = 'uingga/flight';
@@ -368,6 +370,18 @@ export async function GET(request: NextRequest) {
         } catch { }
 
         const currentCrawlRun = await readCurrentGeneralCrawlRun();
+        const onlineInterval = onlineCollectionInterval(cache, new Date());
+        const onlineSchedule = ONLINE_BROWSER_PRIMARY.enabled && ONLINE_BROWSER_PRIMARY.randomDayInterval ? {
+            ...onlineInterval,
+            protectionUntil: cache.onlinePrimary?.circuit
+                ? [cache.onlinePrimary.circuit.nextProbeAt, cache.onlinePrimary.circuit.localFallback?.nextProbeAt]
+                    .filter(Boolean).sort((a, b) => Date.parse(b) - Date.parse(a))[0] || 'unknown' : null,
+            anchorAt: onlineInterval.nextCollectionAt && onlineInterval.intervalDays
+                ? new Date(Date.parse(onlineInterval.nextCollectionAt) - onlineInterval.intervalDays * 86400000).toISOString() : null,
+            previousFailure: cache.onlinePrimary?.status === 'failed'
+                && Number.isFinite(Date.parse(cache.onlinePrimary?.lastAttemptAt))
+                ? { at: cache.onlinePrimary.lastAttemptAt, detail: String(cache.onlinePrimary.detail || '실패 사유 기록 없음') } : null,
+        } : undefined;
 
         return NextResponse.json({
             timestamp,
@@ -375,6 +389,7 @@ export async function GET(request: NextRequest) {
             // 여행사별 마지막 성공 갱신 시각과 연속 실패 횟수. 무결성 가드가 새 결과를 폐기하면
             // sourceUpdatedAt이 멈추므로, 어느 여행사가 며칠째 굳어 있는지 여기서 드러난다.
             sourceUpdatedAt: (cache.sourceUpdatedAt || {}) as Record<string, string>,
+            onlineSchedule,
             staleStreak: (cache.staleStreak || {}) as Record<string, number>,
             sourceCircuits: (cache.sourceCircuits || {}) as Record<string, {
                 reason: 'blocked' | 'rate_limited';
