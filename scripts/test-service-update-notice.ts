@@ -1,21 +1,30 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { isServiceUpdateNoticeActive, SERVICE_UPDATE_NOTICE as notice, SERVICE_UPDATE_NOTICE_KEY, SERVICE_UPDATE_NOTICE_END as end } from '../src/lib/service-update-notice';
-import { watchAnnouncement } from '../src/lib/announcement-notice';
+import { isServiceUpdateNoticeActive, SERVICE_UPDATE_NOTICE as notice, SERVICE_UPDATE_NOTICE_KEY, SERVICE_UPDATE_NOTICE_END } from '../src/lib/service-update-notice';
+import { watchAnnouncement, isAnnouncementActive, type AnnouncementNotice } from '../src/lib/announcement-notice';
+const end = Date.parse('2026-09-20T00:00:00+09:00');
+const expiringNotice = { ...notice, endsAt: end };
 
-test('expiry boundary and existing key/content', () => {
+test('maintenance copy and separate identity without invented end time', () => {
+    assert.equal(SERVICE_UPDATE_NOTICE_END, null);
     assert.equal(isServiceUpdateNoticeActive(end - 1), true);
-    assert.equal(isServiceUpdateNoticeActive(Date.parse('2026-09-19T15:00:00Z')), false);
-    assert.equal(isServiceUpdateNoticeActive(end + 86400000), false);
-    assert.equal(SERVICE_UPDATE_NOTICE_KEY, 'tikitikit-service-update-20260901-fuel-surcharge-v2');
-    assert.match(notice.title, /9월 유류할증료가 올랐어요/);
-    assert.doesNotMatch(JSON.stringify(notice), /네이버/);
+    assert.equal(isServiceUpdateNoticeActive(end + 86400000), true);
+    assert.equal(SERVICE_UPDATE_NOTICE_KEY, 'tikitikit-service-update-20260919-modetour-maintenance-v1');
+    assert.equal(notice.title, '모두투어 점검 안내');
+    assert.match(notice.body, /접속 및 예약이 원활하지 않을 수/);
+    assert.doesNotMatch(JSON.stringify(notice), /차단|유류할증료|완료 예정/);
 });
-function fixture(stored: string | null = null, fails = false, initial = end - 1) {
+test('dated expiry boundary and invalid dates retain fail-closed behavior', () => {
+    assert.equal(isAnnouncementActive(expiringNotice, end - 1), true);
+    assert.equal(isAnnouncementActive(expiringNotice, end), false);
+    assert.equal(isAnnouncementActive({ endsAt: NaN }, end), false);
+    assert.equal(isAnnouncementActive(notice, NaN), false);
+});
+function fixture(stored: string | null = null, fails = false, initial = end - 1, testedNotice: AnnouncementNotice = expiringNotice) {
     let now = initial, open = false;
     let timer: (() => void) | undefined;
     let listener: (() => void) | undefined;
-    const stop = watchAnnouncement(notice, value => { open = value; }, {
+    const stop = watchAnnouncement(testedNotice, value => { open = value; }, {
         localStorage: { getItem: () => { if (fails) throw Error('blocked'); return stored; } },
         setTimeout: (callback: () => void) => { timer = callback; return 1; },
         clearTimeout: () => { timer = undefined; },
@@ -42,4 +51,20 @@ test('storage unavailable still allows notice and expiry', () => {
 test('expired visits register no timer or listener', () => {
     const f = fixture(null, false, end); assert.equal(f.open, false);
     assert.equal(f.timer, undefined); assert.equal(f.listener, undefined); f.stop();
+});
+test('undated notice needs no expiry timer and respects dismissal', () => {
+    const f = fixture(null, false, end, notice);
+    assert.equal(f.open, true); assert.equal(f.timer, undefined); assert.equal(f.listener, undefined); f.stop();
+    const dismissed = fixture('dismissed', false, end, notice);
+    assert.equal(dismissed.open, false); dismissed.stop();
+    const blockedStorage = fixture(null, true, end, notice);
+    assert.equal(blockedStorage.open, true); blockedStorage.stop();
+});
+test('old notice dismissal does not hide new maintenance notice', () => {
+    const stored = new Map([['tikitikit-service-update-20260901-fuel-surcharge-v2', 'dismissed']]);
+    let open = false;
+    const stop = watchAnnouncement(notice, value => { open = value; }, {
+        localStorage: { getItem: (key: string) => stored.get(key) ?? null },
+    } as unknown as Window, {} as Document, () => end);
+    assert.equal(open, true); stop();
 });

@@ -1,7 +1,8 @@
 export interface AnnouncementNotice {
     id: string;
     storageKey: string;
-    endsAt: number;
+    /** null keeps an undated notice active until explicitly withdrawn. */
+    endsAt: number | null;
     eyebrow: string;
     title: string;
     body: string;
@@ -10,7 +11,7 @@ export interface AnnouncementNotice {
 }
 
 export function isAnnouncementActive(notice: Pick<AnnouncementNotice, 'endsAt'>, now = Date.now()) {
-    return Number.isFinite(notice.endsAt) && now < notice.endsAt;
+    return Number.isFinite(now) && (notice.endsAt === null || (Number.isFinite(notice.endsAt) && now < notice.endsAt));
 }
 
 /** Browser dependencies are injectable so expiry and storage failure can be tested without a live clock. */
@@ -22,11 +23,13 @@ export function watchAnnouncement(notice: AnnouncementNotice, setOpen: (open: bo
     if (!isAnnouncementActive(notice, now())) return () => {};
     try { setOpen(browser.localStorage.getItem(notice.storageKey) !== 'dismissed'); }
     catch { setOpen(true); }
+    const endsAt = notice.endsAt;
+    if (endsAt === null) return () => {};
     let timer = 0;
     const checkExpiry = () => {
         browser.clearTimeout(timer);
         if (!isAnnouncementActive(notice, now())) { setOpen(false); return; }
-        timer = browser.setTimeout(checkExpiry, Math.min(notice.endsAt - now(), 86400000));
+        timer = browser.setTimeout(checkExpiry, Math.min(endsAt - now(), 86400000));
     };
     checkExpiry();
     visibility.addEventListener('visibilitychange', checkExpiry);

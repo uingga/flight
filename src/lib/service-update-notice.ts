@@ -1,18 +1,19 @@
 import { type AnnouncementNotice, isAnnouncementActive } from './announcement-notice';
 
-// Keep the key stable so existing dismissals are respected.
-export const SERVICE_UPDATE_NOTICE_KEY = 'tikitikit-service-update-20260901-fuel-surcharge-v2';
-export const SERVICE_UPDATE_NOTICE_END = Date.parse('2026-09-20T00:00:00+09:00');
+// New notice: dismissing the previous fuel notice must not hide this one.
+export const SERVICE_UPDATE_NOTICE_KEY = 'tikitikit-service-update-20260919-modetour-maintenance-v1';
+// No confirmed maintenance end time. Withdraw explicitly after resolution.
+export const SERVICE_UPDATE_NOTICE_END = null;
 
 export function isServiceUpdateNoticeActive(now = Date.now()): boolean {
     return isAnnouncementActive(SERVICE_UPDATE_NOTICE, now);
 }
 
 export const SERVICE_UPDATE_NOTICE: AnnouncementNotice = {
-    id: 'fuel-surcharge-20260901-v2',
+    id: 'modetour-maintenance-20260919-v1',
     storageKey: SERVICE_UPDATE_NOTICE_KEY,
     endsAt: SERVICE_UPDATE_NOTICE_END,
-    eyebrow: '9월 발권 안내',
-    title: '⛽ 9월 유류할증료가 올랐어요',
-    body: '항공유 가격 상승으로 국내선·국제선 모두 4개월 만에 인상됐어요. 9월 1일 이후 발권분에 적용되며, 항공사·노선별 금액은 예약 단계에서 확인해 주세요.',
+    eyebrow: '여행사 접속 안내',
+    title: '모두투어 점검 안내',
+    body: '모두투어 홈페이지 점검으로 접속 및 예약이 원활하지 않을 수 있어요. 모두투어 항공권 예약 페이지가 열리지 않으면 잠시 후 다시 이용해 주세요.',
 };
