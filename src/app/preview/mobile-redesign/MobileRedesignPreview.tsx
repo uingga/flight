@@ -1107,7 +1107,9 @@ function Icon({ name }: { name: 'sliders' | 'search' | 'star' | 'bookmark' | 'sh
     return <svg viewBox="0 0 24 24" aria-hidden="true">{paths[name]}</svg>;
 }
 
-const SERVICE_UPDATE_NOTICE_KEY = 'tikitikit-service-update-20260901-fuel-surcharge-v2';
+import { SERVICE_UPDATE_NOTICE } from '@/lib/service-update-notice';
+import { useAnnouncementNotice } from '@/lib/hooks/use-announcement-notice';
+import AnnouncementDialog from '@/components/ui/AnnouncementDialog';
 // Push alerts stay implemented while the public entry points remain hidden until
 // account-linked delivery history and device recovery are ready.
 const PUBLIC_DEAL_ALERTS_ENABLED = false;
@@ -1240,7 +1242,7 @@ export default function MobileRedesignPreview({
     const [filterBarLeaving, setFilterBarLeaving] = useState(false);
     const [showAccount, setShowAccount] = useState(false);
     const [showContact, setShowContact] = useState(false);
-    const [showServiceUpdate, setShowServiceUpdate] = useState(false);
+    const { open: showServiceUpdate, close: closeServiceUpdate, dismiss: dismissServiceUpdate } = useAnnouncementNotice(SERVICE_UPDATE_NOTICE, !previewMode);
     const [contactForm, setContactForm] = useState({ name: '', email: '', message: '' });
     const [contactStatus, setContactStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
     const [contactMessage, setContactMessage] = useState('');
@@ -1330,7 +1332,6 @@ export default function MobileRedesignPreview({
         animations?.forEach(animation => animation.cancel());
     }, []);
     const contactDialogRef = useRef<HTMLElement | null>(null);
-    const serviceUpdateDialogRef = useRef<HTMLElement | null>(null);
     const historyUiStateRef = useRef({
         selectedFlight,
         showDealAlert,
@@ -1353,16 +1354,6 @@ export default function MobileRedesignPreview({
                         : filterOpen ? 'filter'
                             : null;
 
-    const closeServiceUpdate = useCallback(() => {
-        setShowServiceUpdate(false);
-    }, []);
-
-    const dismissServiceUpdate = useCallback(() => {
-        closeServiceUpdate();
-        try {
-            window.localStorage.setItem(SERVICE_UPDATE_NOTICE_KEY, 'dismissed');
-        } catch { }
-    }, [closeServiceUpdate]);
 
     const openFilter = useCallback(() => {
         setMobileAdvancedOpen(false);
@@ -1530,11 +1521,6 @@ export default function MobileRedesignPreview({
             window.removeEventListener('resize', updateDetailScrollHint);
         };
     }, [selectedFlight]);
-    const serviceUpdateSwipe = useSwipeToDismiss({
-        open: showServiceUpdate,
-        sheetRef: serviceUpdateDialogRef,
-        onDismiss: closeServiceUpdate,
-    });
     const contactSwipe = useSwipeToDismiss({
         open: showContact,
         sheetRef: contactDialogRef,
@@ -1604,16 +1590,6 @@ export default function MobileRedesignPreview({
         return () => window.clearTimeout(midnightTimer);
     }, [loadFlights]);
 
-    useEffect(() => {
-        if (previewMode) return;
-        try {
-            if (window.localStorage.getItem(SERVICE_UPDATE_NOTICE_KEY) !== 'dismissed') {
-                setShowServiceUpdate(true);
-            }
-        } catch {
-            setShowServiceUpdate(true);
-        }
-    }, [previewMode]);
 
     useEffect(() => {
         try {
@@ -5244,34 +5220,8 @@ export default function MobileRedesignPreview({
                 );
             })()}
 
-            {showServiceUpdate && (
-                <OverlayDialog
-                    open={showServiceUpdate}
-                    active={activeOverlay === 'service-update'}
-                    dialogRef={serviceUpdateDialogRef}
-                    onClose={closeServiceUpdate}
-                    overlayClassName={`${styles.sheetOverlay} ${styles.serviceUpdateOverlay}`}
-                    dialogClassName={`${styles.bottomSheet} ${styles.serviceUpdateSheet}`}
-                    ariaLabelledBy="service-update-title"
-                >
-                        <div className={styles.sheetHandle} aria-hidden="true" {...serviceUpdateSwipe} />
-                        <p className={styles.serviceUpdateEyebrow}>9월 발권 안내</p>
-                        <div className={styles.serviceUpdateNotice}>
-                            <h2 id="service-update-title">⛽ 9월 유류할증료가 올랐어요</h2>
-                            <p>항공유 가격 상승으로 국내선·국제선 모두 4개월 만에 인상됐어요. 9월 1일 이후 발권분에 적용되며, 항공사·노선별 금액은 예약 단계에서 확인해 주세요.</p>
-                        </div>
-                        <div className={styles.serviceUpdateDivider} aria-hidden="true" />
-                        <div className={styles.serviceUpdateNotice}>
-                            <h2>네이버 비교 버튼 안내</h2>
-                            <p>서비스 운영 방침에 따라 네이버 가격 비교 버튼 제공을 종료했어요.</p>
-                            <p>버튼은 하나 줄었지만, 눌러볼 만한 항공권은 앞으로 더 늘려갈게요.</p>
-                        </div>
-                        <div className={styles.serviceUpdateActions}>
-                            <button type="button" className={styles.serviceUpdateClose} onClick={closeServiceUpdate}>닫기</button>
-                            <button type="button" className={styles.serviceUpdateConfirm} onClick={dismissServiceUpdate}>다시 보지 않기</button>
-                        </div>
-                </OverlayDialog>
-            )}
+            <AnnouncementDialog notice={SERVICE_UPDATE_NOTICE} open={showServiceUpdate}
+                active={activeOverlay === 'service-update'} onClose={closeServiceUpdate} onDismiss={dismissServiceUpdate} />
 
             {showContact && (
                 <OverlayDialog
