@@ -2,8 +2,8 @@ import { type AnnouncementNotice, isAnnouncementActive } from './announcement-no
 
 // New notice: dismissing the previous fuel notice must not hide this one.
 export const SERVICE_UPDATE_NOTICE_KEY = 'tikitikit-service-update-20260919-modetour-maintenance-v1';
-// No confirmed maintenance end time. Withdraw explicitly after resolution.
-export const SERVICE_UPDATE_NOTICE_END = null;
+// Display cutoff requested by the operator; not a confirmed maintenance end time.
+export const SERVICE_UPDATE_NOTICE_END = Date.parse('2026-09-19T06:00:00+09:00');
 
 export function isServiceUpdateNoticeActive(now = Date.now()): boolean {
     return isAnnouncementActive(SERVICE_UPDATE_NOTICE, now);

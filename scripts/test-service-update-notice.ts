@@ -2,13 +2,14 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { isServiceUpdateNoticeActive, SERVICE_UPDATE_NOTICE as notice, SERVICE_UPDATE_NOTICE_KEY, SERVICE_UPDATE_NOTICE_END } from '../src/lib/service-update-notice';
 import { watchAnnouncement, isAnnouncementActive, type AnnouncementNotice } from '../src/lib/announcement-notice';
-const end = Date.parse('2026-09-20T00:00:00+09:00');
+const end = Date.parse('2026-09-19T06:00:00+09:00');
 const expiringNotice = { ...notice, endsAt: end };
 
-test('maintenance copy and separate identity without invented end time', () => {
-    assert.equal(SERVICE_UPDATE_NOTICE_END, null);
+test('maintenance notice stops at the approved 06:00 KST cutoff', () => {
+    assert.equal(SERVICE_UPDATE_NOTICE_END, Date.parse('2026-09-18T21:00:00Z'));
     assert.equal(isServiceUpdateNoticeActive(end - 1), true);
-    assert.equal(isServiceUpdateNoticeActive(end + 86400000), true);
+    assert.equal(isServiceUpdateNoticeActive(end), false);
+    assert.equal(isServiceUpdateNoticeActive(end + 86400000), false);
     assert.equal(SERVICE_UPDATE_NOTICE_KEY, 'tikitikit-service-update-20260919-modetour-maintenance-v1');
     assert.equal(notice.title, '모두투어 점검 안내');
     assert.match(notice.body, /접속 및 예약이 원활하지 않을 수/);
@@ -53,11 +54,12 @@ test('expired visits register no timer or listener', () => {
     assert.equal(f.timer, undefined); assert.equal(f.listener, undefined); f.stop();
 });
 test('undated notice needs no expiry timer and respects dismissal', () => {
-    const f = fixture(null, false, end, notice);
+    const undatedNotice = { ...notice, endsAt: null };
+    const f = fixture(null, false, end, undatedNotice);
     assert.equal(f.open, true); assert.equal(f.timer, undefined); assert.equal(f.listener, undefined); f.stop();
-    const dismissed = fixture('dismissed', false, end, notice);
+    const dismissed = fixture('dismissed', false, end, undatedNotice);
     assert.equal(dismissed.open, false); dismissed.stop();
-    const blockedStorage = fixture(null, true, end, notice);
+    const blockedStorage = fixture(null, true, end, undatedNotice);
     assert.equal(blockedStorage.open, true); blockedStorage.stop();
 });
 test('old notice dismissal does not hide new maintenance notice', () => {
@@ -65,6 +67,11 @@ test('old notice dismissal does not hide new maintenance notice', () => {
     let open = false;
     const stop = watchAnnouncement(notice, value => { open = value; }, {
         localStorage: { getItem: (key: string) => stored.get(key) ?? null },
-    } as unknown as Window, {} as Document, () => end);
+        setTimeout: () => 1,
+        clearTimeout: () => {},
+    } as unknown as Window, {
+        addEventListener: () => {},
+        removeEventListener: () => {},
+    } as unknown as Document, () => end - 1);
     assert.equal(open, true); stop();
 });
