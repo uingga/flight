@@ -9,6 +9,7 @@ import DropHero from '@/components/DropHero';
 import { dropHeroAlternatives, dropSelectionKey } from '@/lib/drop-hero-schedules';
 import { getCityImagePath } from '@/lib/city-image';
 import { groupPriceDropFlights, priceDropKey, priceDropDay, priceDropLabel, priceDropAmountLabel, type PriceDropRecord } from '@/lib/price-drop-insight';
+import { isFirstDiscoveredOn } from '@/lib/fresh-flight-insight';
 import { shareGroupDepartureFilter } from '@/lib/share-group-departure';
 
 import { Fragment, type FormEvent, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -2598,21 +2599,10 @@ export default function MobileRedesignPreview({
     const freshFlightsInsight = useMemo(() => {
         if (sharedFlightIds.length > 0 || sort !== 'recommended' || query.trim()) return null;
 
-        const datedFlights = displayedFlights.filter(flight => flight.firstSeen && effectivePrice(flight) > 0);
+        const datedFlights = displayedFlights.filter(flight => effectivePrice(flight) > 0);
         const todayKey = seoulDateKey();
-        const latestSeen = datedFlights.reduce((latest, flight) => (
-            (flight.firstSeen || '') > latest ? flight.firstSeen || '' : latest
-        ), '');
-        let targetDate = todayKey;
-        let targetFlights = datedFlights.filter(flight => flight.firstSeen === targetDate);
-
-        const countRoutes = (items: Flight[]) => new Set(
-            items.map(flight => normalizedRoute(flight)),
-        ).size;
-        if (countRoutes(targetFlights) === 0) {
-            targetDate = latestSeen;
-            targetFlights = datedFlights.filter(flight => flight.firstSeen === targetDate);
-        }
+        const targetDate = todayKey;
+        const targetFlights = datedFlights.filter(flight => isFirstDiscoveredOn(flight, targetDate));
         if (!targetDate || targetFlights.length === 0) return null;
 
         const flightsByRoute = new Map<string, Flight[]>();
@@ -2655,7 +2645,7 @@ export default function MobileRedesignPreview({
             pairs,
             scheduleCountByFlightId,
         };
-    }, [displayedFlights, query, sharedFlightIds.length, sort]);
+    }, [displayedFlights, query, sharedFlightIds.length, sort, insightDateKey]);
 
     const weekendFlights = useMemo(() => {
         if (sort !== 'recommended' || query.trim()) return [];
@@ -2703,7 +2693,7 @@ export default function MobileRedesignPreview({
                 .sort((a, b) => a.departure.date.localeCompare(b.departure.date));
         }
         const result = flights.filter(flight => (
-            flight.firstSeen === freshRouteResults.targetDate
+            isFirstDiscoveredOn(flight, freshRouteResults.targetDate)
             && normalizedRoute(flight) === freshRouteResults.route
             && effectivePrice(flight) > 0
         ));

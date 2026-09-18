@@ -34,6 +34,8 @@ export function mergeFlightOfferRecord(a,b) {
     // A reversal to an already observed price is not a new price drop.
     if(news.drop && (news.drop.to>news.lowestPrice || (older.news.lowestPrice<=news.drop.to
         && timestamp(older.news.observedAt)<timestamp(news.drop.at) && older.news.drop?.at!==news.drop.at)))delete news.drop;
+    if(news.priceDrop && (news.priceDrop.to>news.lowestPrice || (older.news.lowestPrice<=news.priceDrop.to
+        && timestamp(older.news.observedAt)<timestamp(news.priceDrop.at) && older.news.priceDrop?.at!==news.priceDrop.at)))news.priceDrop=null;
     return {...newer,firstSeen:earliest(a.firstSeen,b.firstSeen),news};
 }
 export function mergeFlightOfferHistory(...histories) {
@@ -85,6 +87,17 @@ export function recordFlightOfferNews(previous, next, observedAt, retainedHistor
         const news = {
             firstSeenAt: first, observedAt, price, lowestPrice: Math.min(floor, price),
         };
+        // Keep the insight event separate: a 10,000 KRW decline need not earn ranking's 5% bonus.
+        news.priceDrop = null;
+        if (price === previousPrice) {
+            const retainedDrop = prior?.priceDrop === undefined ? prior?.drop : prior.priceDrop;
+            if (retainedDrop?.to === price) news.priceDrop = retainedDrop;
+        }
+        if (old && price < floor && previousPrice - price >= 10_000) {
+            news.priceDrop = { at: observedAt, from: previousPrice, to: price };
+            const priorTime = prior?.observedAt || old.priceCheckedAt;
+            if (timestamp(priorTime) && timestamp(priorTime) < observed) news.priceDrop.previousObservedAt = priorTime;
+        }
         if (prior?.drop && price === previousPrice && price === prior.drop.to) news.drop = prior.drop;
         // Require a new observed low to prevent an increase/reversal earning the same bonus again.
         if (old && price < floor && previousPrice - price >= 10_000

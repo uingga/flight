@@ -7,6 +7,8 @@ export interface RecommendationNews {
     price: number;
     lowestPrice: number;
     drop?: { at: string; from: number; to: number };
+    /** Insight event; null means observed with no eligible decline. Independent of ranking's 5% rule. */
+    priceDrop?: { at: string; from: number; to: number; previousObservedAt?: string } | null;
 }
 
 export function discoveryTimestamp(value?: string): number {

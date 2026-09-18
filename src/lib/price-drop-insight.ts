@@ -1,4 +1,5 @@
 import type { Flight } from '@/types/flight';
+import { getEffectivePrice } from './price-quality';
 
 export const MIN_PRICE_DROP_AMOUNT = 10000;
 
@@ -9,6 +10,7 @@ export interface PriceDropRecord {
     previousDate: string;
     daysAgo: number;
     amount: number;
+    comparison?: 'last-observed';
 }
 
 export function priceDropKey(flight: Flight): string {
@@ -46,6 +48,7 @@ export function priceDropDay(date: number | string): string {
 }
 
 export function priceDropLabel(record: PriceDropRecord): string {
+    if (record.comparison === 'last-observed') return '이전 확인가보다';
     return record.daysAgo === 1 ? '어제보다' : `${record.daysAgo}일 전보다`;
 }
 
@@ -84,11 +87,46 @@ export function matchPriceDrop(flight: Flight, offerKey: string, rows: Historica
             && row.outbound_time === flight.departure.time && row.return_time === flight.arrival.time
             && row.airline === flight.airline && Number.isInteger(days) && days >= 1 && days <= 3
             && Number.isFinite(checked) && priceDropDay(checked) === row.snapshot_date
-            && Number.isFinite(Number(row.listed_price)) && Number(row.listed_price) > flight.price;
+            && Number.isFinite(Number(row.listed_price)) && Number(row.listed_price) > 0;
     }).sort((a, b) => b.snapshot_date.localeCompare(a.snapshot_date));
     const previous = matches[0];
     if (!previous || Number(previous.listed_price) - flight.price < MIN_PRICE_DROP_AMOUNT) return null;
     return { key: priceDropKey(flight), currentPrice: flight.price, previousPrice: Number(previous.listed_price),
         previousDate: previous.snapshot_date, daysAgo: (Date.parse(today) - Date.parse(previous.snapshot_date)) / 86400000,
         amount: Number(previous.listed_price) - flight.price };
+}
+
+/** A stored observation survives a listing's absence. Refreshes do not renew this event. */
+export function matchRecordedPriceDrop(flight: Flight, now = Date.now()): PriceDropRecord | null {
+    const news = flight.recommendationNews;
+    const drop = news?.priceDrop === undefined ? news?.drop : news.priceDrop;
+    if (!drop || !news) return null;
+    const at = Date.parse(drop.at);
+    const observed = Date.parse(news.observedAt);
+    const today = priceDropDay(now);
+    const price = getEffectivePrice(flight);
+    if (!Number.isFinite(at) || !Number.isFinite(observed) || at > observed || observed > now
+        || at > now || now - at >= 3 * 86400000
+        || !flight.departure.date || flight.departure.date < today
+        || !Number.isFinite(price) || price <= 0 || price !== drop.to || news.price !== price
+        || news.lowestPrice !== price || !Number.isFinite(drop.from)
+        || drop.from - price < MIN_PRICE_DROP_AMOUNT) return null;
+    const previousObservedAt = 'previousObservedAt' in drop ? drop.previousObservedAt : undefined;
+    const before = Date.parse(typeof previousObservedAt === 'string' ? previousObservedAt : '');
+    const previousDate = Number.isFinite(before) && before < at ? priceDropDay(before) : '';
+    // Stored events use effective prices; the UI contract uses the card's listed price on both sides.
+    const fee = price - flight.price;
+    return { key: priceDropKey(flight), currentPrice: flight.price, previousPrice: drop.from - fee,
+        previousDate, daysAgo: previousDate ? (Date.parse(today) - Date.parse(previousDate)) / 86400000 : 0,
+        amount: drop.from - price, comparison: 'last-observed' };
+}
+
+export function resolvePriceDrop(flight: Flight, offerKey: string, rows: HistoricalFlightPrice[], now = Date.now()): PriceDropRecord | null {
+    const recorded = matchRecordedPriceDrop(flight, now);
+    if (recorded) return recorded;
+    // New collectors explicitly record null, a reversal, or an expired event. Do not revive it from older quotes.
+    const news = flight.recommendationNews;
+    if (news && (news.priceDrop !== undefined || news.drop !== undefined
+        || news.lowestPrice < getEffectivePrice(flight))) return null;
+    return matchPriceDrop(flight, offerKey, rows, now);
 }
