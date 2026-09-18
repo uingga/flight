@@ -1,3 +1,5 @@
+import {flightOfferHistory} from '../src/lib/flight-history';
+import {rememberFlightOffers} from '../src/lib/flight-offer-history.mjs';
 import { chromium, Browser } from 'playwright';
 import fs from 'fs';
 import { recordRecommendationNews } from './lib/recommendation-news';
@@ -273,6 +275,7 @@ async function main() {
 
     // 캐시 로드 & MRT 데이터 교체
     const previousMrtFlights = cache.flights.filter((f: any) => f.source === 'myrealtrip');
+    const offerHistory=rememberFlightOffers(flightOfferHistory(cache),cache.flights,new Date().toISOString());
     const prevMrtCount = previousMrtFlights.length;
 
     // 원래 0건인 출발지는 허용하되, 기존에 있던 출발지의 소실이나 전체 급감은
@@ -530,10 +533,11 @@ async function main() {
     cache.integrityAlerts = (cache.integrityAlerts || []).filter(
         (alert: unknown) => !/myrealtrip|마이리얼트립/i.test(String(alert)),
     );
-    const recordedNews = new Map(recordRecommendationNews(previousMrtFlights as Flight[], finalMrtFlights as Flight[], new Date().toISOString())
+    const recordedNews = new Map(recordRecommendationNews(previousMrtFlights as Flight[], finalMrtFlights as Flight[], cache.lastUpdated,offerHistory)
         .map(flight => [flight.id, flight]));
     cache.flights = cache.flights.map((flight: any) => flight.source !== 'myrealtrip' ? flight
         : recordedNews.get(flight.id) || flight);
+    cache.flightOfferHistory=rememberFlightOffers(offerHistory,cache.flights,cache.lastUpdated);
     fs.writeFileSync(CACHE_PATH, JSON.stringify(cache));
 
     const previousFlightByKey = new Map<string, CachedFlight>(previousMrtFlights.map((flight: CachedFlight) => [flightIdentity(flight), flight]));

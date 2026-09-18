@@ -1,4 +1,4 @@
-import {mergeModetourOfferHistory,rememberModetourOffers,restoreModetourOffers} from './modetour-offer-history.mjs';
+import {mergeFlightOfferHistory,rememberFlightOffers,restoreFlightOffers,recordFlightOfferNews,historyForSource} from './flight-offer-history.mjs';
 // Source-scoped merge rules; no I/O at import.
 export function mergeCacheSource(target, overlay, sourceKey, allowEmpty=false) {
 if(!Array.isArray(target.flights)||!Array.isArray(overlay.flights))throw Error('invalid cache');
@@ -17,11 +17,14 @@ if (replacedCount > 0 && overlayFlights.length === 0 && !allowEmpty) {
     throw Error('empty source replacement refused');
 }
 
-if(sourceKey==='modetour') {
-    const observed=overlay.sourceUpdatedAt?.modetour||overlay.timestamp;
-    const previous=rememberModetourOffers(target.modetourOfferHistory,target.flights,observed);
-    target.modetourOfferHistory=rememberModetourOffers(mergeModetourOfferHistory(previous,overlay.modetourOfferHistory),overlayFlights,observed);
-    const restored=restoreModetourOffers(overlayFlights,target.modetourOfferHistory);
+const observed=overlay.sourceUpdatedAt?.[sourceKey]||overlay.timestamp||target.timestamp;
+if(observed) {
+    const previous=rememberFlightOffers(mergeFlightOfferHistory(target.modetourOfferHistory,target.flightOfferHistory),target.flights,observed);
+    const retained=mergeFlightOfferHistory(previous,historyForSource(mergeFlightOfferHistory(overlay.modetourOfferHistory,overlay.flightOfferHistory),sourceKey));
+    const recorded=recordFlightOfferNews(target.flights.filter(f=>f.source===sourceKey),overlayFlights,observed,retained);
+    target.flightOfferHistory=rememberFlightOffers(retained,recorded,observed);
+    if(sourceKey==='modetour')target.modetourOfferHistory=historyForSource(target.flightOfferHistory,'modetour');
+    const restored=restoreFlightOffers(recorded,target.flightOfferHistory);
     overlayFlights.splice(0,overlayFlights.length,...restored);
 }
 

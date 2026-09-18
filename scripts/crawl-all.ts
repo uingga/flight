@@ -46,8 +46,8 @@ import { buildLifecycleIdentity } from './lib/flight-lifecycle';
 import { preserveCrawlCacheWithSafetyState } from '../src/lib/crawl-cache-safety';
 import fs from 'fs';
 import { recordRecommendationNews } from './lib/recommendation-news';
-import {modetourHistory} from '../src/lib/modetour-history';
-import {rememberModetourOffers} from '../src/lib/modetour-offer-history.mjs';
+import {flightOfferHistory} from '../src/lib/flight-history';
+import {rememberFlightOffers,historyForSource} from '../src/lib/flight-offer-history.mjs';
 import { ONLINE_BROWSER_PRIMARY, MODE_BROWSER_PRIMARY, TTANG_BROWSER_PRIMARY } from '../src/lib/browser-primary-config.mjs';
 import type { scrapeModetourRemote } from '../src/lib/scrapers/modetour-remote';
 import { assertOnlineGithubClaim } from './online-github-fallback-policy.mjs';
@@ -56,6 +56,7 @@ import path from 'path';
 
 interface CacheData {
     modetourOfferHistory?: Record<string, any>;
+    flightOfferHistory?: Record<string, any>;
     ttangPrimary?: Record<string, unknown>;
     modetourPrimary?: {status:'success'|'partial'|'failed';lastAttemptAt:string;capturedAt?:string;scopeCounts?:Record<string,number>;detail?:string};
     onlinePrimary?: {status:'success'|'failed';lastAttemptAt:string;failureOpenedAt?:string;circuit?:SourceCircuitState;githubAttemptAt?:string;githubClaim?:{runId:string;expectedAt:string};githubFallbackSafe?:boolean;detail?:string};
@@ -1092,11 +1093,12 @@ async function main() {
             const newsCandidates = cacheData.flights.filter((flight: any) => attempted.has(flight.source)
                 && (!requestedSources || requestedSources.has(flight.source))
                 && !preservedSources.has(flight.source) && !modeResult?.retained.includes(flight));
-            const offerHistory=rememberModetourOffers(modetourHistory(prevCache || {}),prevCache?.flights || [],cacheUpdatedAt);
+            const offerHistory=rememberFlightOffers(flightOfferHistory(prevCache || {}),prevCache?.flights || [],cacheUpdatedAt);
             const recordedNews = new Map(recordRecommendationNews(prevCache?.flights || [], newsCandidates, cacheUpdatedAt,offerHistory)
                 .map(flight => [flight.id, flight]));
             cacheData.flights = cacheData.flights.map((flight: any) => recordedNews.get(flight.id) || flight);
-            cacheData.modetourOfferHistory=rememberModetourOffers(offerHistory,cacheData.flights,cacheUpdatedAt);
+            cacheData.flightOfferHistory=rememberFlightOffers(offerHistory,cacheData.flights,cacheUpdatedAt);
+            cacheData.modetourOfferHistory=historyForSource(cacheData.flightOfferHistory,'modetour');
             // 통합 캐시 파일 저장
             fs.writeFileSync(cachePath, JSON.stringify(cacheData, null, 2), 'utf-8');
 
