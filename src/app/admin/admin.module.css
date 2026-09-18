@@ -4241,6 +4241,21 @@
     background: linear-gradient(to top, #f4f6f8, rgba(244, 246, 248, 0));
 }
 
+.sourceSeparateSchedule {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 10px 0 0;
+    color: #687381;
+    font-size: 0.72rem;
+    line-height: 1.5;
+}
+
+.sourceSeparateSchedule strong {
+    color: #202a38;
+    font-weight: 600;
+}
+
 .sourceTrendBar,
 .sourceTrendBarLatest,
 .sourceTrendBarPreserved,

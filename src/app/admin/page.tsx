@@ -818,8 +818,10 @@ function slotTimeLabel(iso: string): string {
     return formatKSTMinute(iso).replace(/^\d{4}\. /, '');
 }
 
-function slotBarTooltip(bar: SourceSlotBar, sourceName: string): { title: string; lines: string[] } {
+function slotBarTooltip(bar: SourceSlotBar, sourceName: string, separateSchedule = false): { title: string; lines: string[] } {
     const lines: string[] = [];
+    if (separateSchedule) lines.push('별도 일정으로 수집 · 막대는 실제 기록 시각이 속한 시간 구간입니다');
+    if (separateSchedule && bar.status === 'unscheduled') lines.push('일반 여행사 회차에 수집하지 않으며, 실패를 뜻하지 않습니다');
     if (bar.value !== null) lines.push(`${bar.final?.countKind === 'shown' ? bar.status === 'failed' ? '보존된 노출' : '필터 후 노출' : bar.status === 'manual' ? '수동 확인' : '수집'} ${bar.value.toLocaleString()}건`);
     if (bar.final?.skipped) lines.push(skippedUntilLabel(bar.final.skippedUntil, bar.final.skipReason));
     if (bar.final && !bar.final.skipped) lines.push(`기록 시각 ${slotTimeLabel(bar.final.timestamp)}`);
@@ -2349,9 +2351,17 @@ export default function AdminPage() {
                                         <div><strong>{visibleCount.toLocaleString()}</strong><span>사이트 노출</span></div>
                                         <div><strong>{latestMeasured ? latestMeasured.value.toLocaleString() : '—'}</strong><span>최근 실제 수집</span></div>
                                     </div>
+                                    {source === 'myrealtrip' && (
+                                        <p className={styles.sourceSeparateSchedule}>
+                                            <strong>{latestMeasured
+                                                ? `${slotTimeLabel(latestMeasured.timestamp)} ${latestMeasured.preserved ? '수집 실패 · 이전 표 유지' : '수집 완료'}`
+                                                : '실제 수집 기록 없음'}</strong>
+                                            <span>별도 일정 · 아래 막대는 일반 회차의 시간 구간으로 표시</span>
+                                        </p>
+                                    )}
                                     <div className={styles.sourceTrendBars} role="group" aria-label={`${SOURCE_NAMES[source]} 최근 ${slotBars.length}회차 자동·PC 대체·수동 수집 및 건너뜀 기록`}>
                                         {slotBars.map((bar, index) => {
-                                            const tooltip = slotBarTooltip(bar, SOURCE_NAMES[source] || source);
+                                            const tooltip = slotBarTooltip(bar, SOURCE_NAMES[source] || source, source === 'myrealtrip');
                                             const active = activeSlotBar?.source === `ops:${source}` && activeSlotBar.index === index;
                                             const className = bar.status === 'manual'
                                                 ? styles.sourceTrendBarManual
