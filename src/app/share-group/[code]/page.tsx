@@ -14,8 +14,9 @@ function getShareGroup(code: string): ShareGroup | null {
     return SHARE_GROUPS[code] || null;
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
     const { code } = await params;
+    const blog = (await searchParams).format === 'blog';
     const group = getShareGroup(decodeURIComponent(code));
 
     if (!group) {
@@ -35,9 +36,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         price: String(group.price),
         date: group.dateText,
         v: `group-${code}`,
+        ...(blog ? { format: 'blog' } : {}),
     });
     const ogImageUrl = `${SITE_URL}/api/og?${ogParams.toString()}`;
-    const groupOgImageUrl = group.title ? `${SITE_URL}/api/og?group=${encodeURIComponent(code)}` : ogImageUrl;
+    const groupOgImageUrl = group.title ? `${SITE_URL}/api/og?group=${encodeURIComponent(code)}${blog ? '&format=blog&v=blog-group-1' : ''}` : ogImageUrl;
 
     return {
         title: { absolute: title },
@@ -47,7 +49,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         openGraph: {
             title,
             description,
-            images: [{ url: groupOgImageUrl, width: 1200, height: 630 }],
+            images: [{ url: groupOgImageUrl, width: 1200, height: blog ? 720 : 630 }],
             type: 'website',
             siteName: '티키티킷',
         },
