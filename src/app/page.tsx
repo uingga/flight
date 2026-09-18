@@ -1,20 +1,11 @@
 import type { Metadata } from 'next';
-import { activeTodayPickId } from '@/lib/active-today-pick';
 import RedesignDashboard from '@/components/RedesignDashboard';
-import todayPickJson from '../../data/today-pick.json';
 import { SITE_DESCRIPTION } from '@/lib/seo';
 import { homeShareMetadata } from '@/lib/home-share-metadata';
-import {
-    loadActiveFlights,
-    loadFlightCacheMeta,
-    loadStaticInterparkPrices,
-    loadStaticRecommendationPriceHistory,
-} from '@/lib/flight-static';
-import {
-    buildRecommendationPresentation,
-    buildRecommendationScoreState,
-    compareRecommendedFlights,
-} from '@/lib/flight-recommendation';
+import { homeRecommendation } from '@/lib/home-recommendation';
+import { loadHomeFlightSnapshot } from '@/lib/server/home-flight-snapshot';
+
+export const revalidate = 60;
 
 const HOME_TITLE = '지금 나온 땡처리 항공권 | 티키티킷';
 
@@ -27,48 +18,17 @@ export function generateMetadata(): Metadata {
     };
 }
 
-export default function Home() {
-    const allFlights = loadActiveFlights();
-    const cacheMeta = loadFlightCacheMeta();
-    const todayKst = new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
-    const initialTodayPickId = activeTodayPickId(todayPickJson, allFlights, todayKst);
-    const recommendationNow = Date.now();
-    const recommendationState = buildRecommendationScoreState(
-        allFlights,
-        loadStaticInterparkPrices(allFlights),
-        recommendationNow,
-        loadStaticRecommendationPriceHistory(),
-    );
-    const rankedFlights = [...allFlights].sort((left, right) => compareRecommendedFlights(
-        left,
-        right,
-        recommendationState.scores,
-        recommendationNow,
-        recommendationState.explanations,
-    ));
-    const pickedFlight = initialTodayPickId
-        ? rankedFlights.find(flight => flight.id === initialTodayPickId)
-        : undefined;
-    const presentation = buildRecommendationPresentation(rankedFlights, recommendationState, {
-        pinnedFlight: pickedFlight,
-        balanceIncheon: true,
-        now: recommendationNow,
-    });
-    const initialFlights = [
-        ...(pickedFlight ? [pickedFlight] : []),
-        ...presentation.orderedFlights,
-    ].slice(0, 72);
-
-    return (
-        <main>
-            <RedesignDashboard
-                initialFlights={initialFlights}
-                initialFlightCount={allFlights.length}
-                initialLastUpdated={cacheMeta.timestamp || cacheMeta.lastUpdated || null}
-                initialTodayPickId={initialTodayPickId}
-                initialTodayPickDate={initialTodayPickId ? todayPickJson.date : null}
-                initialTodayPickFlightKeys={initialTodayPickId ? (todayPickJson as { selectedFlightKeys?: string[] }).selectedFlightKeys || null : null}
-            />
-        </main>
-    );
+export default async function Home() {
+    const data = await loadHomeFlightSnapshot();
+    const initialFlights = homeRecommendation(data.flights, data.interparkPrices, data.priceHistory, {
+        pinnedId: data.todayPickId, placements: data.manualFlightOrder?.placements,
+    }).slice(0,72);
+    return <main><RedesignDashboard
+        initialFlights={initialFlights}
+        initialFlightCount={data.flights.length}
+        initialLastUpdated={data.lastUpdated || null}
+        initialTodayPickId={data.todayPickId}
+        initialTodayPickDate={data.todayPickDate}
+        initialTodayPickFlightKeys={data.todayPickFlightKeys}
+    /></main>;
 }

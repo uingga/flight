@@ -1,4 +1,6 @@
 'use client';
+import { homeRecommendation } from '@/lib/home-recommendation';
+
 import { FEATURED_TRAVEL_CITIES } from '@/lib/city-search-policy';
 import { useFilterPresence } from '@/lib/hooks/use-filter-presence';
 import { createShareFunnel } from '@/lib/share-funnel';
@@ -2168,6 +2170,9 @@ export default function MobileRedesignPreview({
             return initialFlights.filter(flight => visible.has(flight.id));
         }
 
+        if (isDefaultView) return homeRecommendation(flights, interparkPrices, priceHistory, {
+            pinnedId: featuredPick?.flight.id, placements: manualPlacements,
+        });
         const pinnedFlight = isDefaultView ? featuredPick?.flight : undefined;
         const presentation = buildRecommendationPresentation(
             filteredFlights,
@@ -2184,7 +2189,7 @@ export default function MobileRedesignPreview({
         const ordered = applyManualFlightOrder(automatic, manualPlacements, { sort, pinnedId: pinnedFlight?.id });
         return activeSharedContext && sort === 'recommended'
             ? prioritizeSharedPrice(ordered, activeSharedContext.price, effectivePrice) : ordered;
-    }, [activeSharedContext, departure, featuredPick, filteredFlights, initialFlights, initialListSyncing, isDefaultView, manualPlacements, query, recommendationScoreState, sharedFlightIds.length, sort]);
+    }, [activeSharedContext, departure, featuredPick, filteredFlights, flights, interparkPrices, priceHistory, initialFlights, initialListSyncing, isDefaultView, manualPlacements, query, recommendationScoreState, sharedFlightIds.length, sort]);
     const weeklyDiscoveryFlights = useMemo(() => flights
         .filter(flight => matchesDiscoveryFlight(flight) && effectivePrice(flight) > 0)
         .sort((a, b) => effectivePrice(a) - effectivePrice(b) || a.id.localeCompare(b.id)), [flights]);
