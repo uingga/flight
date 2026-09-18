@@ -72,7 +72,8 @@ export default function TodayHourlySessions({ data }: { data: GaHourlySessions }
                                     />
                                 </span>
                                 <time className={styles.hourlyBarTime} dateTime={`${String(bucket.startHour).padStart(2, '0')}:00`}>
-                                    {bucket.startHour % 3 === 0 ? `${String(bucket.startHour).padStart(2, '0')}시` : ''}
+                                    <span className={styles.hourlyDesktopTime}>{bucket.startHour % 3 === 0 ? `${String(bucket.startHour).padStart(2, '0')}시` : ''}</span>
+                                    <span className={styles.hourlyMobileTime}>{String(bucket.startHour).padStart(2, '0')}</span>
                                 </time>
                             </div>
                         );
