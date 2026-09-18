@@ -39,7 +39,9 @@ async function getFlightById(id: string, schedule: string | null = null) {
     try {
         const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || SITE_URL;
         const res = await fetch(`${baseUrl}/api/flights`, {
-            next: { revalidate: 3600 } // 캐싱을 통해 불필요한 요청 방지
+            // Share metadata must use the current public feed after price changes.
+            // The feed owns caching; a second hour-long cache hides new flights.
+            cache: 'no-store'
         });
 
         if (res.ok) {

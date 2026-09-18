@@ -1,9 +1,20 @@
 import assert from 'node:assert/strict';
 import { NextRequest } from 'next/server';
 import { GET } from '../src/app/c/[code]/route';
+import { GET as getThreadsLink } from '../src/app/t/[code]/route';
 import { SHARE_GROUPS, resolveShareGroupFlights } from '../src/lib/share-groups';
 import type { Flight } from '../src/types/flight';
 async function main() {
+    const guangzhou = SHARE_GROUPS['can-260918'];
+    assert.equal(guangzhou.price, 99000);
+    assert.deepEqual(guangzhou.flightIds, ['modetour-CHI-20081239', 'modetour-CHI-20081230']);
+    const guangzhouFlights = guangzhou.flightIds.map(id => ({ id } as Flight));
+    assert.deepEqual(resolveShareGroupFlights(guangzhou, [...guangzhouFlights, { id: 'unrelated' } as Flight]), guangzhouFlights);
+    const threadsResponse = await getThreadsLink(new NextRequest('http://localhost/t/g-can-260918'), { params: Promise.resolve({ code: 'g-can-260918' }) });
+    const threadsTarget = new URL(threadsResponse.headers.get('location')!);
+    assert.equal(threadsTarget.pathname, '/share-group/can-260918');
+    assert.equal(threadsTarget.searchParams.get('utm_source'), 'threads');
+    assert.equal(threadsTarget.searchParams.get('utm_content'), 'share_group_can-260918');
     const china = SHARE_GROUPS['china-260918'];
     assert.deepEqual(china.routes?.map(route => route.flightIds.length), [1, 9, 2, 3]);
     assert.equal(new Set(china.flightIds).size, 15);

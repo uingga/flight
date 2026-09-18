@@ -26,6 +26,15 @@ export const THREADS_SHARE_GROUP_OVERRIDES: Record<string, string> = {
 };
 
 export const SHARE_GROUPS: Record<string, ShareGroup> = {
+    'can-260918': {
+        departure: '부산',
+        arrival: '광저우',
+        price: 99000,
+        dateText: '9.26–10.1 · 9.30–10.4',
+        airline: '에어부산',
+        source: '모두투어',
+        flightIds: ['modetour-CHI-20081239', 'modetour-CHI-20081230'],
+    },
     'china-260918': {
         title: '장가계·옌타이·광저우·상하이 항공권',
         departure: '대구·인천·부산·청주', arrival: '장가계·옌타이·광저우·상하이',
