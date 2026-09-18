@@ -2,23 +2,27 @@ import type { Flight } from '../../src/types/flight';
 import { getEffectivePrice } from '../../src/lib/price-quality';
 import { discoveryTimestamp, type RecommendationNews } from '../../src/lib/recommendation-news';
 import { buildLifecycleIdentity } from './flight-lifecycle';
+import {modetourHistory} from '../../src/lib/modetour-history';
+import {modetourOfferKey,restoreModetourOffers} from '../../src/lib/modetour-offer-history.mjs';
 
 /** Pure source-observation transform. No requests, scheduling or storage side effects. */
-export function recordRecommendationNews(previous: Flight[], next: Flight[], observedAt: string): Flight[] {
+export function recordRecommendationNews(previous: Flight[], next: Flight[], observedAt: string, retainedHistory?: object): Flight[] {
     const observed = Date.parse(observedAt);
     if (!Number.isFinite(observed)) throw new Error('Invalid recommendation observation time');
     const key = (f: Flight) => {
         const identity = buildLifecycleIdentity(f);
         return `${identity.offerKey}|${identity.itineraryKey}`;
     };
-    const before = new Map(previous.map(f => [key(f), f]));
+    const retained: any=retainedHistory ?? modetourHistory({});
+    const before = new Map(restoreModetourOffers(previous,retained).map((f: Flight) => [key(f), f]));
     return next.map(flight => {
-        const old = before.get(key(flight));
+        const saved=retained[modetourOfferKey(flight) || ''];
+        const old: Flight | undefined = before.get(key(flight)) || (saved ? {...flight,price:saved.news.price,firstSeen:saved.firstSeen,recommendationNews:saved.news} : undefined);
         const prior = old?.recommendationNews;
         const price = getEffectivePrice(flight);
         if (!Number.isFinite(price) || price <= 0) return flight;
         if (prior && observed <= Date.parse(prior.observedAt)) {
-            return { ...flight, recommendationNews: prior };
+            return { ...flight, firstSeen:old?.firstSeen || flight.firstSeen, recommendationNews: prior };
         }
         const previousPrice = old ? getEffectivePrice(old) : price;
         const floor = prior?.lowestPrice ?? previousPrice;
@@ -35,6 +39,6 @@ export function recordRecommendationNews(previous: Flight[], next: Flight[], obs
             && (previousPrice - price) / previousPrice >= 0.05) {
             news.drop = { at: observedAt, from: previousPrice, to: price };
         }
-        return { ...flight, recommendationNews: news };
+        return { ...flight, firstSeen:old?.firstSeen || flight.firstSeen, recommendationNews: news };
     });
 }

@@ -1,4 +1,5 @@
-// Extracted unchanged source-scoped merge rules; no I/O at import.
+import {mergeModetourOfferHistory,rememberModetourOffers,restoreModetourOffers} from './modetour-offer-history.mjs';
+// Source-scoped merge rules; no I/O at import.
 export function mergeCacheSource(target, overlay, sourceKey, allowEmpty=false) {
 if(!Array.isArray(target.flights)||!Array.isArray(overlay.flights))throw Error('invalid cache');
 const overlayFlights = overlay.flights.filter((f) => f?.source === sourceKey);
@@ -14,6 +15,14 @@ if (replacedCount > 0 && overlayFlights.length === 0 && !allowEmpty) {
         '의도적인 초기화라면 ALLOW_EMPTY_SOURCE=1을 지정하세요.'
     );
     throw Error('empty source replacement refused');
+}
+
+if(sourceKey==='modetour') {
+    const observed=overlay.sourceUpdatedAt?.modetour||overlay.timestamp;
+    const previous=rememberModetourOffers(target.modetourOfferHistory,target.flights,observed);
+    target.modetourOfferHistory=rememberModetourOffers(mergeModetourOfferHistory(previous,overlay.modetourOfferHistory),overlayFlights,observed);
+    const restored=restoreModetourOffers(overlayFlights,target.modetourOfferHistory);
+    overlayFlights.splice(0,overlayFlights.length,...restored);
 }
 
 target.flights = [...keptFlights, ...overlayFlights];

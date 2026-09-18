@@ -1,5 +1,7 @@
 import fs from 'node:fs';
 import { recordRecommendationNews } from './lib/recommendation-news';
+import {modetourHistory} from '../src/lib/modetour-history';
+import {rememberModetourOffers} from '../src/lib/modetour-offer-history.mjs';
 import path from 'node:path';
 import { Flight } from '../src/types/flight';
 import { getRegionByCity } from '../src/lib/utils/region-mapper';
@@ -273,7 +275,10 @@ export function importModetourManualCapture({
         retainedFlights.push({ ...flight });
     }
 
-    for (const [index, incoming] of recordRecommendationNews(cache.flights, incomingFlights, capturedAt.toISOString()).entries()) {
+    const offerHistory=rememberModetourOffers(modetourHistory(cache),cache.flights,capturedAt.toISOString());
+    const recordedIncoming=recordRecommendationNews(cache.flights, incomingFlights, capturedAt.toISOString(),offerHistory);
+    cache.modetourOfferHistory=rememberModetourOffers(offerHistory,recordedIncoming,capturedAt.toISOString());
+    for (const [index, incoming] of recordedIncoming.entries()) {
         const key = modetourManualMatchKey(incoming);
         const incomingRegion = acceptedRegionByKey.get(key) as ModetourContinentCode | undefined;
         // 완전 캡처 지역은 전체 교체분을 넣고, 그 외 지역은 기존 키가 없을 때만 추가한다.

@@ -5,6 +5,8 @@ import { buildNaverPriceKey } from '../src/lib/naver-route';
 import { getPriceExclusionNaverComparison } from '../src/lib/naver-comparison';
 import { getEffectivePrice } from '../src/lib/price-quality';
 import { isNaverPriceOverLimit } from '../src/lib/naver-price-filter';
+import {modetourHistory} from '../src/lib/modetour-history';
+import {rememberModetourOffers} from '../src/lib/modetour-offer-history.mjs';
 
 /**
  * 네이버 최저가 기준으로 전체 여행사 항공권 필터링
@@ -16,6 +18,7 @@ import { isNaverPriceOverLimit } from '../src/lib/naver-price-filter';
  */
 
 export function applyNaverFilter(cache: any, naverPrices: any) {
+cache.modetourOfferHistory=rememberModetourOffers(modetourHistory(cache),cache.flights,new Date().toISOString());
 const lifecycleCandidates = [...cache.flights];
 const hiddenFlightKeys = new Set<string>();
 

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import {restoreModetourHistory} from '@/lib/modetour-history';
 import { resultVersion, verifyResult } from '@/lib/naver-coordination-contract.mjs';
 import todayPick from '../../../../data/today-pick.json';
 import { Flight, FlightSearchParams } from '@/types/flight';
@@ -221,7 +222,7 @@ export async function GET(request: NextRequest) {
             if (fs.existsSync(cachePath)) {
                 const cacheData = JSON.parse(fs.readFileSync(cachePath, 'utf-8'));
                 coordinationCache = cacheData.naverCoordination ? structuredClone(cacheData) : null;
-                allFlights = cacheData.flights || [];
+                allFlights = restoreModetourHistory({...cacheData,flights:cacheData.flights || []});
                 filterSummary.collected = allFlights.length;
                 allFlights = filterSeatAvailableFlights(allFlights);
                 filterSummary.reasons.soldOut = filterSummary.collected - allFlights.length;

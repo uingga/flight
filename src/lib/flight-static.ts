@@ -6,6 +6,7 @@
  * 서버 렌더링되어, 크롤 커밋(하루 7회)마다 재빌드되며 최신 가격을 노출한다.
  */
 import fs from 'node:fs';
+import {restoreModetourHistory} from './modetour-history';
 import path from 'node:path';
 import type { Flight } from '@/types/flight';
 import { normalizeAirline, normalizeCity } from '@/lib/utils/flight-helpers';
@@ -106,7 +107,7 @@ function parseDate(value?: string): string {
 export function loadActiveFlights(): Flight[] {
     try {
         const raw = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'data', 'all-flights-cache.json'), 'utf8'));
-        const flights: Flight[] = Array.isArray(raw) ? raw : raw.flights || [];
+        const flights: Flight[] = restoreModetourHistory(Array.isArray(raw)?{flights:raw}:{...raw,flights:raw.flights || []});
         try {
             const benchmark = JSON.parse(fs.readFileSync(
                 path.join(process.cwd(), 'data', 'interpark-prices.json'),
