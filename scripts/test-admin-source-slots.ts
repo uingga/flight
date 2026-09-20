@@ -130,7 +130,7 @@ const fmt = (iso: string) => new Date(iso).toLocaleString('ko-KR', { timeZone: '
     assert.equal(buildSourceSlotBars({ source: 'ybtour', events: [], now, currentRun: { ...currentRun, status: 'completed' } }).at(-1)?.status, 'pending');
     assert.equal(latest('hanatour').status, 'pending');
     assert.equal(latest('ybtour', { ...currentRun, skippedSources: ['ybtour'] }).status, 'pending');
-    assert.equal(latest('myrealtrip').status, 'unscheduled');
+    assert.equal(buildSourceSlotBars({ source: 'myrealtrip', events: [], now, currentRun }).length, 0);
     const before = recentSlotTimes(kst('2026-09-05T13:22:59'));
     const after = recentSlotTimes(kst('2026-09-05T13:23:00'));
     assert.equal(before.at(-1), kst('2026-09-05T10:12:00'));
@@ -140,6 +140,29 @@ const fmt = (iso: string) => new Date(iso).toLocaleString('ko-KR', { timeZone: '
     assert.equal(future.at(-1)?.status, 'pending');
     const invalid = buildSourceSlotBars({ source: 'ybtour', now, events: [{ ...event('2026-09-05T13:23:00'), timestamp: 'invalid' }] });
     assert.equal(invalid.at(-1)?.value, null);
+}
+
+// Independent collection records must not be shifted to general-crawl slots or merged.
+{
+    const earlier = event('2026-09-19T13:11:16', { value: 145 });
+    const later = event('2026-09-19T16:17:37', { value: 155 });
+    const failed = event('2026-09-19T16:20:00', { preserved: true });
+    const skipped = event('2026-09-19T16:25:00', { skipped: true, skipReason: 'circuit' });
+    const bars = buildSourceSlotBars({ source: 'myrealtrip', now: kst('2026-09-19T20:00:00'), events: [
+        later, earlier, failed, skipped,
+        event('2026-09-19T16:31:00', { skipped: true, skipReason: 'not-requested' }),
+        event('2026-09-19T17:00:00', { skipped: true, skipReason: 'schedule' }),
+        event('2026-09-20T06:00:00'), { ...earlier, timestamp: 'invalid' },
+    ] });
+    assert.deepEqual(bars.map(bar => bar.slotAt), [earlier, later, failed, skipped].map(e => e.timestamp));
+    assert.deepEqual(bars.map(bar => bar.status), ['auto', 'auto', 'failed', 'skipped']);
+    assert.equal(bars[1].value, 155);
+    assert.equal(bars[3].value, null);
+    assert.equal(bars.filter(bar => bar.isLatest).length, 1);
+    assert.equal(bars[3].isLatest, true);
+    const limited = buildSourceSlotBars({ source: 'myrealtrip', now: kst('2026-09-19T20:00:00'), events: [earlier, later], length: 1 });
+    assert.equal(limited[0].slotAt, later.timestamp);
+    assert.equal(buildSourceSlotBars({ source: 'myrealtrip', now: kst('2026-09-19T20:00:00'), events: [earlier], length: 0 }).length, 0);
 }
 
 console.log('admin-source-slots: all assertions passed');

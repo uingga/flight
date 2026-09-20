@@ -829,8 +829,7 @@ function slotTimeLabel(iso: string): string {
 
 function slotBarTooltip(bar: SourceSlotBar, sourceName: string, separateSchedule = false): { title: string; lines: string[] } {
     const lines: string[] = [];
-    if (separateSchedule) lines.push('별도 일정으로 수집 · 막대는 실제 기록 시각이 속한 시간 구간입니다');
-    if (separateSchedule && bar.status === 'unscheduled') lines.push('일반 여행사 회차에 수집하지 않으며, 실패를 뜻하지 않습니다');
+    if (separateSchedule) lines.push('별도 수집 기록 기준 · 일반 여행사 예약 회차와 무관합니다');
     if (bar.value !== null) lines.push(`${bar.final?.countKind === 'shown' ? bar.status === 'failed' ? '보존된 노출' : '필터 후 노출' : bar.status === 'manual' ? '수동 확인' : '수집'} ${bar.value.toLocaleString()}건`);
     if (bar.final?.skipped) lines.push(skippedUntilLabel(bar.final.skippedUntil, bar.final.skipReason));
     if (bar.final && !bar.final.skipped) lines.push(`기록 시각 ${slotTimeLabel(bar.final.timestamp)}`);
@@ -842,7 +841,7 @@ function slotBarTooltip(bar: SourceSlotBar, sourceName: string, separateSchedule
     if (bar.events.length > 1) {
         lines.push(`흐름: ${bar.events.map(event => `${slotTimeLabel(event.timestamp).replace(/^\d+\. \d+\. /, '')} ${slotEventLabel(event)}`).join(' → ')}`);
     }
-    return { title: `${slotTimeLabel(bar.slotAt)} 회차 · ${sourceName} · ${bar.final?.partial && !bar.final.preserved ? '일부 반영 · 원본 일부 미확인' : SLOT_STATUS_LABELS[bar.status]}`, lines };
+    return { title: `${slotTimeLabel(bar.slotAt)} ${separateSchedule ? '기록' : '회차'} · ${sourceName} · ${bar.final?.partial && !bar.final.preserved ? '일부 반영 · 원본 일부 미확인' : SLOT_STATUS_LABELS[bar.status]}`, lines };
 }
 
 /** crawlHistory 항목을 막대 계산용 이벤트로 바꾼다. 수동 캡처 상태도 같은 형태로 합친다. */
@@ -2248,7 +2247,7 @@ export default function AdminPage() {
                     <div className={styles.sectionHeading}>
                         <div>
                             <h2>여행사별 수집 상태</h2>
-                            <p>최근 16회차를 같은 축으로 봅니다. 맨 오른쪽이 최신 예약 회차입니다. 막대에 마우스를 올리거나 탭하면 상세가 보입니다.</p>
+                            <p>일반 여행사는 최근 16개 예약 회차, 마이리얼트립은 최근 16개 실제 수집 기록을 봅니다. 맨 오른쪽이 최신입니다. 막대에 마우스를 올리거나 탭하면 상세가 보입니다.</p>
                         </div>
                     </div>
                     <div className={styles.sourceGraphLegend} aria-label="수집 그래프 범례">
@@ -2373,7 +2372,7 @@ export default function AdminPage() {
                                             <strong>{latestMeasured
                                                 ? `${slotTimeLabel(latestMeasured.timestamp)} ${latestMeasured.preserved ? '수집 실패 · 이전 표 유지' : '수집 완료'}`
                                                 : '실제 수집 기록 없음'}</strong>
-                                            <span>별도 일정 · 아래 막대는 일반 회차의 시간 구간으로 표시</span>
+                                            <span>별도 일정 · 실제 수집 기록순으로 표시</span>
                                         </p>
                                     )}
                                     <div className={styles.sourceTrendBars} role="group" aria-label={`${SOURCE_NAMES[source]} 최근 ${slotBars.length}회차 자동·PC 대체·수동 수집 및 건너뜀 기록`}>
@@ -2443,7 +2442,7 @@ export default function AdminPage() {
                                         })}
                                     </div>
                                     <div className={styles.sourceTrendFoot}>
-                                        <span>{slotBars.length > 0 ? `최근 ${slotBars.length}회차 · ${slotTimeLabel(slotBars[0].slotAt)}부터` : '수집 기록 없음'}</span>
+                                        <span>{slotBars.length > 0 ? `최근 ${slotBars.length}${source === 'myrealtrip' ? '개 수집 기록' : '회차'} · ${slotTimeLabel(slotBars[0].slotAt)}부터` : '수집 기록 없음'}</span>
                                         <span>{circuit
                                             ? `원인 ${compactCircuitCause(circuit)} · ${circuitOpen
                                                 ? `${formatKSTMinute(circuit.nextProbeAt)}까지 건너뜀`
@@ -3223,7 +3222,7 @@ export default function AdminPage() {
 
                                 <div className={styles.sparkBars} role="group" aria-label={`${SOURCE_NAMES[source]} 최근 ${slotBars.length}회차 자동·PC 대체·수동 수집 및 건너뜀 기록`}>
                                     {slotBars.map((bar, index) => {
-                                        const tooltip = slotBarTooltip(bar, SOURCE_NAMES[source] || source);
+                                        const tooltip = slotBarTooltip(bar, SOURCE_NAMES[source] || source, source === 'myrealtrip');
                                         const active = activeSlotBar?.source === `col:${source}` && activeSlotBar.index === index;
                                         const className = bar.status === 'manual'
                                             ? `${styles.sparkBar} ${styles.sparkBarManual}`

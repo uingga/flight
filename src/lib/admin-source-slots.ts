@@ -7,6 +7,7 @@
  * "그 회차 시각부터 다음 회차 시각 전까지" 창에 귀속시켜 회차당 막대 하나로 합친다.
  * 회차 시작 0~5분 랜덤 지연, 수집 소요 시간, PC 대체·수동 캡처의 늦은 반영은 모두 이 창 안에
  * 들어오므로 예약 시각으로 정규화된다.
+ * 별도 수집하는 마이리얼트립은 일반 회차에 끼워 넣지 않고 실제 기록별로 표시한다.
  */
 
 export const CRAWL_SLOT_MINUTES_KST = [6 * 60 + 17, 10 * 60 + 12, 13 * 60 + 23, 16 * 60 + 31] as const;
@@ -113,6 +114,25 @@ export function buildSourceSlotBars(input: {
     scheduledRest?: { from: string; until: string };
     currentRun?: { startedAt: string; status: string; stage: 'queued' | 'preparing' | 'crawling' | 'publishing'; plannedSources: string[]; skippedSources: string[] } | null;
 }): SourceSlotBar[] {
+    if (input.source === 'myrealtrip') {
+        // General-crawl cache preservation is not a MyRealTrip collection run.
+        const records = input.events.filter(event => {
+            const at = Date.parse(event.timestamp);
+            return Number.isFinite(at) && at <= input.now
+                && event.skipReason !== 'schedule' && event.skipReason !== 'not-requested';
+        }).sort((a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp));
+        const length = input.length ?? SLOT_AXIS_LENGTH;
+        const recent = length > 0 ? records.slice(-length) : [];
+        return recent.map((event, index) => ({
+            slotAt: event.timestamp,
+            status: eventStatus(event),
+            value: event.skipped ? null : event.value,
+            final: event,
+            events: [event],
+            scheduled: false,
+            isLatest: index === recent.length - 1,
+        }));
+    }
     const slots = recentSlotTimes(input.now, input.length ?? SLOT_AXIS_LENGTH);
     if (slots.length === 0) return [];
     const sorted = [...input.events]
