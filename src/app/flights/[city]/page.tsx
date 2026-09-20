@@ -33,7 +33,7 @@ export const dynamic = 'force-static';
 
 const SOURCE_NAMES: Record<string, string> = {
     ybtour: '노랑풍선', modetour: '모두투어', hanatour: '하나투어',
-    onlinetour: '온라인투어', ttang: '땡처리닷컴', myrealtrip: '마이리얼트립',
+    onlinetour: '온라인투어', ttang: '땡처리닷컴', myrealtrip: '마이리얼트립', lottetour: '롯데관광',
 };
 
 // 몇 장만 보여주고 나머지는 본 사이트(검색 필터 적용)로 유도한다

@@ -10,7 +10,7 @@ function legacyModetourKey(flight) {
         date(flight.departure?.date),date(flight.arrival?.date),text(flight.airline),
         text(flight.modetourDetail?.departureFlightNo||numbers[0]),text(flight.modetourDetail?.returnFlightNo||numbers[1])]);
 }
-export const OFFER_HISTORY_SOURCES=['ybtour','hanatour','modetour','onlinetour','ttang','myrealtrip'];
+export const OFFER_HISTORY_SOURCES=['ybtour','hanatour','modetour','onlinetour','ttang','myrealtrip','lottetour'];
 export const effectiveOfferPrice=f=>Number(f.price)+(f.source==='ttang'?20000:0);
 export function flightOfferKey(f) {
     if(!OFFER_HISTORY_SOURCES.includes(f?.source))return null;
@@ -19,7 +19,7 @@ export function flightOfferKey(f) {
     if(!dep||!arr||!airline||!/^\d{4}-\d{2}-\d{2}$/.test(out)||!/^\d{4}-\d{2}-\d{2}$/.test(back))return null;
     const numbers=String(f.flightNumber||'').split(/[\s,/|]+/).filter(Boolean);
     let product=null;
-    if(['onlinetour','ttang'].includes(f.source)){if(!f.id)return null;product=f.id;}
+    if(['onlinetour','ttang','lottetour'].includes(f.source)){if(!f.id)return null;product=f.id;}
     // Search-generated IDs and prices are not product identity for these sources.
     return JSON.stringify([f.source,product,dep,arr,out,back,airline,text(numbers[0]||f.departure?.time),text(numbers[1]||f.arrival?.time)]);
 }

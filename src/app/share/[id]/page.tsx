@@ -97,7 +97,7 @@ const SOURCE_NAMES: Record<string, string> = {
     ybtour: '노랑풍선',
     onlinetour: '온라인투어',
     ttang: '땡처리닷컴',
-    myrealtrip: '마이리얼트립',
+    myrealtrip: '마이리얼트립', lottetour: '롯데관광',
     interpark: '인터파크',
 };
 
@@ -194,7 +194,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
 
         return {
             title: '지금 나온 땡처리 항공권 | 티키티킷',
-            description: '6개 여행사의 땡처리 항공권 가격과 일정을 한곳에서 비교하세요.',
+            description: '7개 여행사의 땡처리 항공권 가격과 일정을 한곳에서 비교하세요.',
             robots: { index: false, follow: true },
         };
     }

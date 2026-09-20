@@ -13,6 +13,7 @@ const sourceUpdatedAt = {
     onlinetour: '2026-08-27T11:59:59.000Z',
     ybtour: '2026-08-29T10:00:00.000Z',
     hanatour: '2026-08-29T10:00:00.000Z',
+    lottetour: '2026-08-29T10:00:00.000Z',
     modetour: '2026-08-29T10:00:00.000Z',
 };
 

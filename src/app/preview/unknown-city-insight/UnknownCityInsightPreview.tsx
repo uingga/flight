@@ -41,7 +41,7 @@ const SOURCE_LABELS: Partial<Record<Flight['source'], string>> = {
     modetour: '모두투어',
     onlinetour: '온라인투어',
     ttang: '땡처리닷컴',
-    myrealtrip: '마이리얼트립',
+    myrealtrip: '마이리얼트립', lottetour: '롯데관광',
 };
 
 function formatFlightDate(date: string) {

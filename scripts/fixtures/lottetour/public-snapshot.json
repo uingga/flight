@@ -1,0 +1,15 @@
+{
+  "list": {
+    "result": true,
+    "disPriceList": "[{\"blockId\": 3469, \"blockDetlId\": 12977, \"evtCd\": \"D02J260923ZE005\", \"departAirApoNm\": \"부산김해공항\", \"destAirApoNm\": \"후쿠오카\", \"destCd\": \"FUK\", \"areaMcCd\": \"D\", \"carrerAbbr\": \"ZE\", \"carrerNm\": \"이스타항공\", \"priceAdt\": 380000, \"evtDtCnt\": 3, \"avlbSeatCnt\": 10, \"departDt\": \"20260923\", \"retnDt\": \"20260925\"}]"
+  },
+  "line": {
+    "result": true,
+    "disPriceLine": "[{\"blockId\": 3469, \"blockDetlId\": 12977, \"evtCd\": \"D02J260923ZE005\", \"priceAdt\": 380000, \"avlbSeatCnt\": 10, \"departDt\": \"2026.09.23\", \"retnDt\": \"2026.09.25\"}]"
+  },
+  "detail": {
+    "result": true,
+    "disPriceLow": "{\"blockId\": 3469, \"blockDetlId\": 12977, \"evtCd\": \"D02J260923ZE005\", \"priceAdt\": 380000, \"pricPdtAdt\": 170000, \"pricFueAdt\": 157000, \"pricTaxAdt\": 53000, \"pricChargeAdt\": 0, \"avlbSeatCnt\": 10, \"departDt\": \"20260923\", \"retnDt\": \"\"}",
+    "disSchedule": "[{\"carrerAbbr\": \"ZE\", \"carrerNm\": \"이스타항공\", \"fltNm\": \"ZE944\", \"arrvYn\": \"Y\", \"depApoNm\": \"후쿠오카\", \"arrApoNm\": \"부산\", \"dcDep\": \"2026-09-25\", \"dcArr\": \"2026-09-25\", \"depTm\": \"1655\", \"arrTm\": \"1805\"}, {\"carrerAbbr\": \"ZE\", \"carrerNm\": \"이스타항공\", \"fltNm\": \"ZE941\", \"arrvYn\": \"N\", \"depApoNm\": \"부산\", \"arrApoNm\": \"후쿠오카\", \"dcDep\": \"2026-09-23\", \"dcArr\": \"2026-09-23\", \"depTm\": \"0855\", \"arrTm\": \"0955\"}]"
+  }
+}

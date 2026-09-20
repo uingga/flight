@@ -4,7 +4,7 @@ export interface RecentFlight { flight: Flight; viewedAt: string }
 export const RECENT_FLIGHTS_KEY = 'tikitikit_recent_flights_v1';
 export const RECENT_FLIGHTS_LIMIT = 10;
 const RETENTION_MS = 30 * 86400000;
-const SOURCES = ['ybtour', 'hanatour', 'modetour', 'onlinetour', 'ttang', 'myrealtrip'];
+const SOURCES = ['ybtour', 'hanatour', 'modetour', 'onlinetour', 'ttang', 'myrealtrip', 'lottetour'];
 
 // Do not substitute another agency, itinerary or airport when reopening a viewed ticket.
 // MRT IDs can include price, so use its itinerary rather than a price-sensitive ID.

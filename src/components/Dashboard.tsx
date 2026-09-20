@@ -83,6 +83,7 @@ const getSourceName = (source: string) => {
         case 'onlinetour': return '온라인투어';
         case 'ttang': return '땡처리닷컴';
         case 'myrealtrip': return '마이리얼트립';
+        case 'lottetour': return '롯데관광';
         default: return source;
     }
 };
@@ -3435,6 +3436,7 @@ export default function Dashboard() {
                                     <option value="onlinetour">온라인투어</option>
                                     <option value="ttang">땡처리닷컴</option>
                                     <option value="myrealtrip">마이리얼트립</option>
+                                    <option value="lottetour">롯데관광</option>
                                 </select>
                                 <select
                                     value={airlineFilter}

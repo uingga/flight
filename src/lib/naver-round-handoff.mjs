@@ -15,7 +15,7 @@ export function evaluateRoundContinuation({now,cache,state,round,totalBudget=200
  const used=same?Number(same.navigationsUsed):0;
  if(!Number.isSafeInteger(used)||used<0||used>=totalBudget)return deny('daily_budget_exhausted');
  if(!(Date.parse(cache.fullCrawlUpdatedAt)>=time))return deny('recovery_upstream_pending');
- const sources=['ybtour','hanatour','modetour','onlinetour','ttang','myrealtrip'].filter(source=>{
+ const sources=['ybtour','hanatour','modetour','onlinetour','ttang','myrealtrip','lottetour'].filter(source=>{
   const circuit=cache.sourceCircuits?.[source];
   if(source==='myrealtrip'&&circuit&&(!Number.isFinite(Date.parse(circuit.nextProbeAt))||Date.parse(circuit.nextProbeAt)>now))return false;
   // MRT intentionally begins earlier than the ordinary agency round.
@@ -24,7 +24,7 @@ export function evaluateRoundContinuation({now,cache,state,round,totalBudget=200
   return Number.isFinite(stamp)&&stamp>=cutoff&&stamp<=now;
  });
  if(!sources.length)return deny('no_fresh_sources');
- const pending=['ybtour','hanatour','modetour','onlinetour','ttang','myrealtrip'].filter(s=>!sources.includes(s));
+ const pending=['ybtour','hanatour','modetour','onlinetour','ttang','myrealtrip','lottetour'].filter(s=>!sources.includes(s));
  const beforeRecovery=new Date(time+9*3600000).getUTCHours()<13;
  return {shouldRun:true,shouldFinalize:false,reason:'completed_agency_round',kstDate:date,runPhase:'round_refresh',
   sources,completedSources:same?.completedSources||[],pendingSources:pending,navigationBudget:totalBudget-used,

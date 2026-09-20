@@ -12,14 +12,14 @@ import type { Flight } from '@/types/flight';
 const CACHE_PATH = path.join(process.cwd(), 'data', 'all-flights-cache.json');
 const OUTPUT_PATH = process.env.BOOKING_LINK_HEALTH_PATH
     || path.join(process.cwd(), 'data', 'booking-link-health.json');
-const SOURCE_ORDER: Flight['source'][] = ['ybtour', 'hanatour', 'modetour', 'onlinetour', 'ttang', 'myrealtrip'];
+const SOURCE_ORDER: Flight['source'][] = ['ybtour', 'hanatour', 'modetour', 'onlinetour', 'ttang', 'myrealtrip', 'lottetour'];
 const SOURCE_NAMES: Record<Flight['source'], string> = {
     ybtour: '노랑풍선',
     hanatour: '하나투어',
     modetour: '모두투어',
     onlinetour: '온라인투어',
     ttang: '땡처리닷컴',
-    myrealtrip: '마이리얼트립',
+    myrealtrip: '마이리얼트립', lottetour: '롯데관광',
 };
 const EXPECTED_HOSTS: Record<Flight['source'], string[]> = {
     ybtour: ['mfly.ybtour.co.kr', 'fly.ybtour.co.kr'],
@@ -28,6 +28,7 @@ const EXPECTED_HOSTS: Record<Flight['source'], string[]> = {
     onlinetour: ['m.onlinetour.co.kr', 'www.onlinetour.co.kr'],
     ttang: ['mm.ttang.com', 'www.ttang.com', 'm.ttang.com'],
     myrealtrip: ['air-web.myrealtrip.com'],
+    lottetour: ['m.lottetour.com'],
 };
 
 type ProbeStage = 'initial' | 'retry' | 'confirmation';

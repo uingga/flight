@@ -101,6 +101,7 @@ const sourceAlertAliases = {
     onlinetour: ['onlinetour', '온라인투어'],
     ttang: ['ttang', '땡처리'],
     myrealtrip: ['myrealtrip', '마이리얼트립'],
+    lottetour: ['lottetour', '롯데관광'],
 };
 const alertAliases = sourceAlertAliases[sourceKey] || [sourceKey];
 const belongsToSource = (alert) => alertAliases.some(alias =>

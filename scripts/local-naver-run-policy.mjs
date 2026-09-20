@@ -5,7 +5,7 @@ import { evaluateRoundContinuation } from '../src/lib/naver-round-handoff.mjs';
 
 const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
 const HOUR_MS = 60 * 60 * 1000;
-const GENERAL_SOURCES = ['ybtour', 'hanatour', 'modetour', 'onlinetour', 'ttang'];
+const GENERAL_SOURCES = ['ybtour', 'hanatour', 'modetour', 'onlinetour', 'ttang', 'lottetour'];
 const TOTAL_NAVIGATION_BUDGET = 200;
 const INITIAL_SLOT = { hour: 6, minute: 17 };
 const RECOVERY_SLOT = { hour: 13, minute: 23 };

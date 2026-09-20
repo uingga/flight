@@ -15,6 +15,7 @@ export const SOURCE_ADAPTER_VERSIONS = {
     onlinetour: '2026-08-30.2',
     ttang: '2026-08-31.1',
     myrealtrip: '2026-08-30.2',
+    lottetour: '2026-09-21.1',
 } as const;
 
 export interface SourceCircuitState {

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import type { FlightInterestData, InterestPeriod } from '@/lib/flight-interest';
 import styles from './AdminFlightInterest.module.css';
 
-const agencyNames: Record<string, string> = { ybtour: '노랑풍선', hanatour: '하나투어', modetour: '모두투어', onlinetour: '온라인투어', ttang: '땡처리닷컴', myrealtrip: '마이리얼트립' };
+const agencyNames: Record<string, string> = { ybtour: '노랑풍선', hanatour: '하나투어', modetour: '모두투어', onlinetour: '온라인투어', ttang: '땡처리닷컴', myrealtrip: '마이리얼트립', lottetour: '롯데관광' };
 
 interface CityRow {
     city: string;

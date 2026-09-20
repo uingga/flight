@@ -8,7 +8,7 @@ import {
     readOption,
 } from './local-naver-run-policy.mjs';
 
-const generalSources = ['ybtour', 'hanatour', 'modetour', 'onlinetour', 'ttang'];
+const generalSources = ['ybtour', 'hanatour', 'modetour', 'onlinetour', 'ttang', 'lottetour'];
 const sourceUpdatedAt = Object.fromEntries(generalSources.map(source => [source, '2026-08-29T01:40:00.000Z']));
 const readyCache = {
     fullCrawlUpdatedAt: '2026-08-29T01:42:00.000Z', // 11:42 KST
@@ -156,7 +156,7 @@ test('repairs a legacy interrupted initial state that did not save running sourc
         state,
     });
     assert.equal(result.shouldRun, true);
-    assert.deepEqual(result.sources, ['ybtour', 'hanatour', 'modetour', 'onlinetour', 'myrealtrip']);
+    assert.deepEqual(result.sources, ['ybtour', 'hanatour', 'modetour', 'onlinetour', 'lottetour', 'myrealtrip']);
     assert.equal(result.navigationBudget, 180);
 });
 
@@ -189,7 +189,7 @@ test('starts fresh sources and reserves budget when one source was preserved', (
     assert.equal(result.sources.includes('modetour'), false);
     assert.deepEqual(result.pendingSources, ['modetour']);
     assert.equal(result.deferTodayPick, true);
-    assert.equal(result.navigationBudget, 160);
+    assert.equal(result.navigationBudget, 167);
 });
 
 test('waits for the 13:23 crawl after a partial first phase', () => {
@@ -291,7 +291,7 @@ test('does not use a late MyRealTrip-only fallback when the general crawl is mis
         now: '2026-08-29T10:30:00.000Z', // 20:30 KST
         cache: {
             ...readyCache,
-            fullCrawlUpdatedAt: '2026-08-28T23:11:00.000Z',
+            fullCrawlUpdatedAt: '2026-08-28T20:11:00.000Z', // Before the current 06:17 KST initial slot.
             sourceUpdatedAt: { myrealtrip: '2026-08-29T02:57:00.000Z' },
         },
     });

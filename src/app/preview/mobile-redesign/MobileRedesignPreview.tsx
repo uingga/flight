@@ -181,7 +181,7 @@ const SOURCE_NAMES: Record<Flight['source'], string> = {
     hanatour: '하나투어',
     onlinetour: '온라인투어',
     ttang: '땡처리닷컴',
-    myrealtrip: '마이리얼트립',
+    myrealtrip: '마이리얼트립', lottetour: '롯데관광',
 };
 const SOURCE_OPTIONS: Array<{ value: 'all' | Flight['source']; label: string }> = [
     { value: 'all', label: '전체' },
@@ -4940,7 +4940,7 @@ export default function MobileRedesignPreview({
                                 <strong>{priceText(selectedFlight.source === 'ttang' ? selectedFlight.price : effectivePrice(selectedFlight))}</strong>
                                 <span>(유류/제세공과금 포함)</span>
                                 {selectedFlight.minPax && selectedFlight.minPax > 1 && (
-                                    <small className={styles.detailAvailabilityText}>{selectedFlight.minPax}인부터 예약</small>
+                                    <small className={styles.detailAvailabilityText}>{selectedFlight.source === 'lottetour' ? '성인 ' : ''}{selectedFlight.minPax}인부터 예약</small>
                                 )}
                             </div>
                         </div>
@@ -5167,6 +5167,9 @@ export default function MobileRedesignPreview({
                                 {SOURCE_NAMES[selectedFlight.source]}에서 확인하기 <Icon name="arrow" />
                             </a>
                         </div>
+                        {selectedFlight.source === 'lottetour' && (
+                            <p className={styles.affiliateDisclosure}>롯데관광에서 노선·출발일을 다시 선택하고, 출발 확정 여부를 확인해주세요.</p>
+                        )}
                         {selectedFlight.source === 'myrealtrip' && (
                             <p className={styles.affiliateDisclosure}>제휴 링크를 통해 예약되면 티키티킷이 수수료를 받을 수 있어요.</p>
                         )}

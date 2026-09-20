@@ -4,6 +4,7 @@ import { hasSellableSeats } from '../src/lib/flight-seats';
 import { scrapeHanatour } from '../src/lib/scrapers/hanatour';
 import { scrapeModetour } from '../src/lib/scrapers/modetour';
 import { scrapeOnlineTour } from '../src/lib/scrapers/onlinetour';
+import { scrapeLottetour } from '../src/lib/scrapers/lottetour';
 import { scrapeTtang } from '../src/lib/scrapers/ttang';
 import { scrapeMyrealtrip } from '../src/lib/scrapers/myrealtrip';
 import {
@@ -61,7 +62,7 @@ interface CacheData {
     modetourPrimary?: {status:'success'|'partial'|'failed';lastAttemptAt:string;capturedAt?:string;scopeCounts?:Record<string,number>;detail?:string};
     onlinePrimary?: {status:'success'|'failed';lastAttemptAt:string;failureOpenedAt?:string;circuit?:SourceCircuitState;githubAttemptAt?:string;githubClaim?:{runId:string;expectedAt:string};githubFallbackSafe?:boolean;detail?:string};
     timestamp: string;
-    /** 일반 여행사 5곳을 모두 시도한 마지막 전체 크롤 완료 시각 */
+    /** 일반 여행사 6곳을 모두 시도한 마지막 전체 크롤 완료 시각 */
     fullCrawlUpdatedAt?: string;
     count: number;
     flights: any[];
@@ -95,10 +96,11 @@ interface CacheData {
         onlinetour: number;
         ttang: number;
         myrealtrip: number;
+        lottetour: number;
     };
 }
 
-const sourceNames = ['ybtour', 'hanatour', 'modetour', 'onlinetour', 'ttang', 'myrealtrip'] as const;
+const sourceNames = ['ybtour', 'hanatour', 'modetour', 'onlinetour', 'ttang', 'myrealtrip', 'lottetour'] as const;
 type SourceKey = typeof sourceNames[number];
 type CrawlableSourceKey = Exclude<SourceKey, 'myrealtrip'>;
 
@@ -168,7 +170,7 @@ async function main() {
     const scheduledSkippedSources = skipSourceArg
         ? new Set(skipSourceArg.slice('--skip-sources='.length).split(',').map(value => value.trim()).filter(Boolean))
         : new Set<string>();
-    const crawlableSources = new Set<CrawlableSourceKey>(['ybtour', 'hanatour', 'modetour', 'onlinetour', 'ttang']);
+    const crawlableSources = new Set<CrawlableSourceKey>(['ybtour', 'hanatour', 'modetour', 'onlinetour', 'ttang', 'lottetour']);
     if (process.env.ONLINETOUR_MANUAL_ONCE === '1' && (!localSourceFallback || onlineGithubFallback
         || requestedSources?.size !== 1 || !requestedSources.has('onlinetour'))) throw new Error('manual_online_source_only');
 
@@ -221,6 +223,7 @@ async function main() {
         onlinetour: 0,
         ttang: 0,
         myrealtrip: 0,
+        lottetour: 0,
     };
 
     // 이전 캐시 로드 (시간 데이터 이어받기 위해)
@@ -278,7 +281,7 @@ async function main() {
         // 전체 또는 선택한 사이트 병렬 크롤링
         const plannedSourceCount = requestedSources
             ? requestedSources.size
-            : 5 - scheduledSkippedSources.size;
+            : crawlableSources.size - scheduledSkippedSources.size;
         console.log(`🔄 ${plannedSourceCount}개 사이트 병렬 크롤링 시작...\n`);
 
         const scraperTasks = [
@@ -318,6 +321,7 @@ async function main() {
                 return onlineGithubFallback ? eligibleDepartures(flights,createDepartureWindow()) : flights;
             } },
             { name: '땡처리닷컴', key: 'ttang' as const, fn: () => scrapeTtang(prevFlights) },
+            { name: '롯데관광', key: 'lottetour' as const, fn: () => scrapeLottetour() },
             // 마이리얼트립은 별도 Playwright 워크플로우(myrealtrip-scrape.yml)에서 처리
             // Bulk API는 시간/가격 정보가 부정확하므로 여기서 실행하지 않음
         ];

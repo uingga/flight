@@ -31,6 +31,7 @@
     "crawl:modetour:browser:plan": "tsx scripts/crawl-modetour-browser.ts --plan",
     "test:modetour-browser": "tsx --test scripts/test-modetour-browser.ts && tsc -p tsconfig.modetour-browser.json",
     "crawl:onlinetour": "tsx scripts/crawl-onlinetour.ts",
+    "test:lottetour": "tsx --test scripts/test-lottetour.ts && tsc -p tsconfig.lottetour.json",
     "crawl:all": "tsx scripts/crawl-all.ts",
     "test:ybtour-schedule": "tsx scripts/test-ybtour-schedule.ts",
     "test:ybtour-time": "tsx scripts/test-ybtour-time-enrichment.ts",

@@ -3,7 +3,7 @@
 import fs from 'node:fs';
 
 const [, , targetPath, overlayPath, batchPath] = process.argv;
-const allowedSources = new Set(['ybtour', 'hanatour', 'modetour', 'onlinetour', 'ttang', 'myrealtrip']);
+const allowedSources = new Set(['ybtour', 'hanatour', 'modetour', 'onlinetour', 'ttang', 'myrealtrip', 'lottetour']);
 
 if (![targetPath, overlayPath, batchPath].every(file => file && fs.existsSync(file))) {
     console.error('target, overlay, 신고 처리 결과 파일이 모두 필요합니다.');

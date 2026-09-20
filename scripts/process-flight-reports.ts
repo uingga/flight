@@ -28,7 +28,7 @@ interface BatchReportResult {
     result: VerificationResult & { retryScheduled?: boolean };
 }
 
-const VALID_SOURCES = new Set(['ybtour', 'hanatour', 'modetour', 'onlinetour', 'ttang', 'myrealtrip']);
+const VALID_SOURCES = new Set(['ybtour', 'hanatour', 'modetour', 'onlinetour', 'ttang', 'myrealtrip', 'lottetour']);
 const MAX_REPORTS_PER_RUN = 10;
 const MAX_AUTOMATIC_ATTEMPTS = 3;
 

@@ -2,7 +2,7 @@ import type { FlightInterestPeriod } from '@/lib/flight-interest';
 import { todayActionCount, todayFlightRows } from '@/lib/admin-today';
 import styles from './AdminTodayFlights.module.css';
 
-const agencies: Record<string,string> = {ttang:'땡처리닷컴',myrealtrip:'마이리얼트립',modetour:'모두투어',hanatour:'하나투어',ybtour:'노랑풍선',onlinetour:'온라인투어'};
+const agencies: Record<string,string> = {ttang:'땡처리닷컴',myrealtrip:'마이리얼트립',lottetour:'롯데관광',modetour:'모두투어',hanatour:'하나투어',ybtour:'노랑풍선',onlinetour:'온라인투어'};
 export default function AdminTodayFlights({report}:{report?:FlightInterestPeriod}) {
     if (!report?.available) return <p role="status">{report?.message || '항공권별 기록을 아직 확인하지 못했습니다.'}</p>;
     const rows = todayFlightRows(report);

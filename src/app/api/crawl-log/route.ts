@@ -128,7 +128,7 @@ async function readCurrentGeneralCrawlRun() {
             startedAt: run.run_started_at || run.created_at,
             updatedAt: run.updated_at,
             url: run.html_url,
-            plannedSources: ['ybtour', 'hanatour', 'modetour', 'onlinetour', 'ttang'],
+            plannedSources: ['ybtour', 'hanatour', 'modetour', 'onlinetour', 'ttang', 'lottetour'],
             skippedSources: scheduledSkipSources(run),
         };
     } catch {

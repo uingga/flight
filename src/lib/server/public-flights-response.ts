@@ -553,6 +553,7 @@ export async function createPublicFlightsResponse(searchParams: URLSearchParams)
                 modetour: allFlights.filter(f => f.source === 'modetour').length,
                 onlinetour: allFlights.filter(f => f.source === 'onlinetour').length,
                 myrealtrip: allFlights.filter(f => f.source === 'myrealtrip').length,
+                lottetour: allFlights.filter(f => f.source === 'lottetour').length,
             },
             lastUpdated,
             priceHistory,

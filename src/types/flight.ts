@@ -2,7 +2,7 @@ export interface Flight {
     id: string;
     /** Server-derived lifecycle identity used only for manual recommendation placement. */
     manualOrderKey?: string;
-    source: 'ybtour' | 'modetour' | 'hanatour' | 'onlinetour' | 'ttang' | 'myrealtrip';
+    source: 'ybtour' | 'modetour' | 'hanatour' | 'onlinetour' | 'ttang' | 'myrealtrip' | 'lottetour';
     airline: string;
     departure: {
         city: string;

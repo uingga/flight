@@ -78,7 +78,7 @@ function sourceName(source: Flight['source']): string {
         hanatour: '하나투어',
         onlinetour: '온라인투어',
         ttang: '땡처리닷컴',
-        myrealtrip: '마이리얼트립',
+        myrealtrip: '마이리얼트립', lottetour: '롯데관광',
     };
     return names[source];
 }

@@ -87,6 +87,7 @@ export function getStaleSources(
         'onlinetour',
         'ttang',
         'myrealtrip',
+        'lottetour',
     ];
     return sources
         .map(source => getSourceFreshness(source, sourceUpdatedAt, nowMs))

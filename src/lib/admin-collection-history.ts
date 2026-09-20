@@ -64,7 +64,7 @@ export interface NaverCollectionEntry {
 
 export const COLLECTION_SOURCES: Record<string, string> = {
     ybtour: '노랑풍선', hanatour: '하나투어', modetour: '모두투어',
-    onlinetour: '온라인투어', ttang: '땡처리닷컴', myrealtrip: '마이리얼트립',
+    onlinetour: '온라인투어', ttang: '땡처리닷컴', myrealtrip: '마이리얼트립', lottetour: '롯데관광',
 };
 export type CollectionStat = CrawlHistoryEntry['sites'][string];
 export type CollectionRun = {

@@ -694,7 +694,7 @@ const SOURCE_NAMES: Record<string, string> = {
     ttang: '땡처리닷컴',
     ybtour: '노랑풍선',
     onlinetour: '온라인투어',
-    myrealtrip: '마이리얼트립',
+    myrealtrip: '마이리얼트립', lottetour: '롯데관광',
 };
 
 const SOURCE_COLORS: Record<string, string> = {
@@ -704,8 +704,9 @@ const SOURCE_COLORS: Record<string, string> = {
     ybtour: '#d97706',
     onlinetour: '#1e40af',
     myrealtrip: '#2563eb',
+    lottetour: '#b42332',
 };
-const SOURCE_ORDER = ['ybtour', 'hanatour', 'modetour', 'onlinetour', 'ttang', 'myrealtrip'] as const;
+const SOURCE_ORDER = ['ybtour', 'hanatour', 'modetour', 'onlinetour', 'ttang', 'myrealtrip', 'lottetour'] as const;
 const NAVER_PRIORITY_LABELS: Record<string, string> = {
     deadline: '7일 마감',
     changed_top: '신규·변경 상위',

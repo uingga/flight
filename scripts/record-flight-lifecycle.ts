@@ -100,7 +100,7 @@ const BATCH_SIZE = 250;
 const PAGE_SIZE = 1000;
 const PAUSE_AFTER_MISSES = 3;
 const END_AFTER_HOURS = 72;
-const SOURCES: Source[] = ['ybtour', 'hanatour', 'modetour', 'onlinetour', 'ttang', 'myrealtrip'];
+const SOURCES: Source[] = ['ybtour', 'hanatour', 'modetour', 'onlinetour', 'ttang', 'myrealtrip', 'lottetour'];
 
 function readJson<T>(filePath: string): T {
     return JSON.parse(fs.readFileSync(filePath, 'utf8')) as T;

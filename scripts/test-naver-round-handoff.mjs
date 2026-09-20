@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {evaluateLocalNaverRun,buildLocalNaverState} from './local-naver-run-policy.mjs';
 import {roundBarrier,performRound} from './run-naver-round-bridge.mjs';
 const round='2026-09-17T01:12:00.000Z',now=Date.parse('2026-09-17T01:40:00Z');
-const sources=['ybtour','hanatour','modetour','onlinetour','ttang','myrealtrip'];
+const sources=['ybtour','hanatour','modetour','onlinetour','ttang','myrealtrip','lottetour'];
 const cache={fullCrawlUpdatedAt:'2026-09-17T01:35:00Z',sourceUpdatedAt:Object.fromEntries(sources.map(s=>[s,'2026-09-17T01:30:00Z']))};
 const state={kstDate:'2026-09-17',phase:'success',navigationsUsed:71,completedSources:sources};
 const evaluate=(extra={})=>evaluateLocalNaverRun({now,cache,state,completedRound:round,...extra});
