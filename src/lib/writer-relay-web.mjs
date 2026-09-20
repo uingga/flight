@@ -7,7 +7,7 @@ export function createRelayWebHandler(options){
  return async request=>{
   try{
    const url=new URL(request.url),suffix=url.pathname.slice('/api/writer'.length);
-   if(!url.pathname.startsWith('/api/writer/')||!['/publication','/delivery/claim','/delivery/complete'].includes(suffix))return new Response('{}',{status:404});
+   if(!url.pathname.startsWith('/api/writer/')||!['/publication','/delivery/claim','/delivery/heartbeat','/delivery/complete'].includes(suffix))return new Response('{}',{status:404});
    if(!authenticateRelay(request,options.secrets,options.agentToken))return new Response('{}',{status:401});
    // Authenticate before decompression, then recheck before any DB transaction.
    const reader=request.body?.getReader();let length=0;const chunks=[];

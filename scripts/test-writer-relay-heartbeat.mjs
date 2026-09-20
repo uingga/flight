@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {setTimeout as delay} from 'node:timers/promises';
 import {deliverPublication} from '../src/lib/writer-relay-agent.mjs';
 import {createRelayHandler} from '../src/lib/writer-relay-handler.mjs';
+import {createRelayWebHandler} from '../src/lib/writer-relay-web.mjs';
 import {encodeRelayWire,decodeRelayWire} from '../src/lib/writer-relay-wire.mjs';
 
 const item={role:'daily',id:'fixture-request-0001',claim:'fixture-claim',body:'{"action":"commit"}'};
@@ -54,4 +55,16 @@ test('only the existing delivery-agent token can heartbeat',async()=>{
  }
  const result=await handler(new Request('http://localhost/delivery/heartbeat',{method:'POST',headers:{authorization:'Bearer fixture-agent'},body:'{}'}));
  assert.equal(result.status,200);assert.equal(beats,1);
+});
+
+test('web transport routes authenticated heartbeats through the same durable claim',async()=>{
+ let claims=0,beats=0,completes=0;const identity={role:item.role,id:item.id,claim:item.claim};
+ const handler=createRelayWebHandler({agentToken:'fixture-agent',secrets:{daily:'fixture-daily'},queue:{
+  claim:async()=>{claims++;return item;},heartbeat:async input=>{assert.deepEqual(input,identity);beats++;return true;},complete:async input=>{assert.equal(input.claim,item.claim);assert.equal(input.response.status,200);completes++;}
+ }});
+ for(const token of ['fixture-daily','invalid'])assert.equal((await handler(new Request('http://localhost/api/writer/delivery/heartbeat',{method:'POST',headers:{authorization:'Bearer '+token},body:encodeRelayWire(JSON.stringify(identity))}))).status,401);
+ await deliverPublication({relayUrl:'http://127.0.0.1/api/writer/',agentToken:'fixture-agent',secrets:{daily:'fixture-daily'},heartbeatMs:5,
+  publicationHandler:async()=>{await delay(25);return Response.json({result:{ref:'fixture-ref'}});},request:async(url,options)=>handler(new Request(url,options))});
+ assert.equal(claims,1);assert.ok(beats>=2);assert.equal(completes,1);
+ assert.equal((await handler(new Request('http://localhost/api/writer/delivery/unknown',{method:'POST',headers:{authorization:'Bearer fixture-agent'},body:encodeRelayWire('{}')}))).status,404);
 });
