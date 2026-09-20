@@ -1,5 +1,6 @@
 'use client';
 import { homeRecommendation } from '@/lib/home-recommendation';
+import { isKoreanCalendarRedDay, koreanHolidayName } from '@/lib/korean-calendar';
 
 import { FEATURED_TRAVEL_CITIES } from '@/lib/city-search-policy';
 import { useFilterPresence } from '@/lib/hooks/use-filter-presence';
@@ -3925,6 +3926,8 @@ export default function MobileRedesignPreview({
                                                     inline
                                                     minDate={new Date()}
                                                     calendarClassName={styles.dateCalendar}
+                                                    dayClassName={(date: Date) => isKoreanCalendarRedDay(date) ? styles.calendarRedDay : ''}
+                                                    renderDayContents={(day: number, date: Date) => <span title={koreanHolidayName(date)} aria-label={koreanHolidayName(date) ? `${day}일 ${koreanHolidayName(date)}` : undefined}>{day}</span>}
                                                 />
                                             </div>
                                         )}
@@ -4792,6 +4795,8 @@ export default function MobileRedesignPreview({
                                         inline
                                         minDate={new Date()}
                                         calendarClassName={styles.dateCalendar}
+                                        dayClassName={(date: Date) => isKoreanCalendarRedDay(date) ? styles.calendarRedDay : ''}
+                                        renderDayContents={(day: number, date: Date) => <span title={koreanHolidayName(date)} aria-label={koreanHolidayName(date) ? `${day}일 ${koreanHolidayName(date)}` : undefined}>{day}</span>}
                                     />
                                     <p>출발일 범위를 선택하세요.</p>
                                 </div>

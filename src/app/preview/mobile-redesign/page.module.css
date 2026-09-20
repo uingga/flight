@@ -1123,6 +1123,11 @@
 .dateCalendar :global(.react-datepicker__day--in-selecting-range):first-child { border-radius: 16px 0 0 16px; }
 .dateCalendar :global(.react-datepicker__day--in-range):last-child,
 .dateCalendar :global(.react-datepicker__day--in-selecting-range):last-child { border-radius: 0 16px 16px 0; }
+.dateCalendar :global(.react-datepicker__day-name:first-child),
+.dateCalendar :global(.react-datepicker__day).calendarRedDay { color: var(--brand-dark); }
+/* Keep selected endpoints white; disabled holidays remain visibly unavailable. */
+.dateCalendar :global(.react-datepicker__day).calendarRedDay:where(:global(.react-datepicker__day--range-start), :global(.react-datepicker__day--range-end), :global(.react-datepicker__day--selecting-range-start), :global(.react-datepicker__day--selecting-range-end)) { color: var(--on-brand); }
+.dateCalendar :global(.react-datepicker__day).calendarRedDay:where(:global(.react-datepicker__day--disabled)) { opacity: .4; }
 .dateCalendar :global(.react-datepicker__day--selecting-range-start),
 .dateCalendar :global(.react-datepicker__day--range-start),
 .dateCalendar :global(.react-datepicker__day--range-end),
