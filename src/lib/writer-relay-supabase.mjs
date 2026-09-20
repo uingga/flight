@@ -11,5 +11,5 @@ export function createSupabasePublicationQueue({url,serviceKey,fixture=false}){
   if(!response.ok)throw Error('queue transaction refused');
   return response.json();
  };
- return {submit:(role,id,body)=>rpc('submit',{role,id,body}),claim:()=>rpc('claim'),complete:input=>rpc('complete',input)};
+ return {submit:(role,id,body)=>rpc('submit',{role,id,body}),claim:()=>rpc('claim'),complete:input=>rpc('complete',input),heartbeat:input=>rpc('heartbeat',input)};
 }

@@ -1,5 +1,34 @@
 export const CRAWL_FALLBACK_COOLDOWN_MINUTES = 45;
 
+// Publishing an already collected batch needs reconciliation, not another crawl.
+// Job detail failures are unknown, never permission to send more site requests.
+export async function getCrawlPublicationBlocker(runs, expectedAt, { expectedCron, now = Date.now(), getJobs } = {}) {
+    const start = toTimestamp(expectedAt), end = toTimestamp(now);
+    if (start === null || end === null || typeof getJobs !== 'function') throw Error('invalid publication inspection');
+    const candidates = runs.filter(run => {
+        if (run.status !== 'completed' || !['failure', 'cancelled', 'timed_out'].includes(run.conclusion)) return false;
+        const created = toTimestamp(run.created_at), title = String(run.display_title || '');
+        if (created === null || created < start || created > end) return false;
+        return title.includes(expectedAt)
+            || (run.event === 'schedule' && expectedCron && title.includes(expectedCron));
+    }).sort((a,b) => toTimestamp(b.created_at) - toTimestamp(a.created_at));
+    for (const run of candidates.slice(0, 5)) {
+        let jobs;
+        try { jobs = await getJobs(run.id); if (!Array.isArray(jobs) || !jobs.length) throw Error('missing jobs'); }
+        catch { return { reason: 'publication_status_unknown', runId: run.id ?? null, runUrl: run.html_url ?? null }; }
+        for (const job of jobs) {
+            const steps = job.steps || [];
+            const crawl = steps.find(step => step.name === 'Run crawler');
+            const publish = steps.find(step => step.name === 'Commit and push changes');
+            if (crawl?.conclusion === 'success' && (!publish || publish.conclusion !== 'success')) {
+                return { reason: 'publication_recovery_required', runId: run.id ?? null, runUrl: run.html_url ?? null };
+            }
+        }
+    }
+    if (candidates.length > 5) return { reason: 'publication_status_unknown', runId: candidates[5].id ?? null, runUrl: candidates[5].html_url ?? null };
+    return null;
+}
+
 function toTimestamp(value) {
     const timestamp = value instanceof Date ? value.getTime() : new Date(value).getTime();
     return Number.isFinite(timestamp) ? timestamp : null;

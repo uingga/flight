@@ -24,6 +24,7 @@ export function createRelayHandler({queue,secrets,agentToken}){
    const raw=await request.text();if(Buffer.byteLength(raw)>24*1024*1024)throw Error('payload limit');
    const input=JSON.parse(raw||'{}');
    if(path==='/delivery/claim')return Response.json({result:await queue.claim()});
+   if(path==='/delivery/heartbeat')return Response.json({result:await queue.heartbeat(input)});
    if(path==='/delivery/complete'){
     if(!input.response||![200,409].includes(input.response.status)||typeof input.response.body!=='string'||Buffer.byteLength(input.response.body)>24*1024*1024)throw Error('invalid completion');
     await queue.complete(input);return Response.json({result:true});

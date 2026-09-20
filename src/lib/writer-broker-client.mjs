@@ -8,7 +8,7 @@ export function createBrokerClient({url,token,timeoutMs=WRITER_BROKER_TIMEOUT_MS
  if(u.username||u.password||!['/','/api/writer/'].includes(u.pathname)||u.search||u.hash||(!local&&u.protocol!=='https:'))throw Error('broker origin refused');
  const web=u.pathname==='/api/writer/';
  return async(action,input={})=>{
-  const id=input.requestId||randomUUID(),body=JSON.stringify({...input,action}),deadline=Date.now()+timeoutMs;
+  const id=input.requestId||randomUUID(),body=JSON.stringify({...input,action,...(web?{relayIssuedAt:input.relayIssuedAt||new Date().toISOString()}:{})}),deadline=Date.now()+timeoutMs;
   do {
    const r=await requestHttp(new URL('publication',u),{method:'POST',headers:{authorization:`Bearer ${token}`,'content-type':'application/json','x-publication-id':id},body:web?encodeRelayWire(body):body,loopbackOnly:local,timeoutMs:Math.max(1,deadline-Date.now()),maxBytes:web?3*1024*1024:32*1024*1024});
    if(r.status!==202){if(!r.ok){const error=new Error('broker publication refused');error.httpStatus=r.status;throw error;}return (web?JSON.parse(decodeRelayWire(await r.text())):await r.json()).result;}

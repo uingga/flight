@@ -2,7 +2,7 @@ import { timingSafeEqual } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { NextRequest, NextResponse } from 'next/server';
-import { getCrawlDispatchBlocker, type GitHubWorkflowRunSummary } from '@/lib/crawl-watchdog-dispatch.mjs';
+import { getCrawlDispatchBlocker, getCrawlPublicationBlocker, type GitHubWorkflowRunSummary } from '@/lib/crawl-watchdog-dispatch.mjs';
 import { getCrawlScheduleHealth, getFullCrawlUpdatedAt } from '@/lib/crawl-schedule-health.mjs';
 import { checkMrtWatchdog, githubMrtClient } from '@/lib/myrealtrip-schedule.mjs';
 
@@ -90,6 +90,21 @@ export async function GET(request: NextRequest) {
         if (blocker) {
             return json({ ok: true, action: 'skipped', blocker, ...result });
         }
+
+        const publicationBlocker = await getCrawlPublicationBlocker(runsPayload.workflow_runs || [], health.expectedAt, {
+            now: checkedAt,
+            expectedCron: health.expectedCron || undefined,
+            getJobs: async runId => {
+                const response = await fetch(`https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs/${runId}/jobs?per_page=100`, {
+                    headers: githubHeaders(token), cache: 'no-store', signal: AbortSignal.timeout(5000),
+                });
+                if (!response.ok) throw new Error('github_jobs_unavailable');
+                const payload = await response.json();
+                if (!Array.isArray(payload.jobs) || payload.total_count !== payload.jobs.length) throw new Error('incomplete_job_list');
+                return payload.jobs;
+            },
+        });
+        if (publicationBlocker) return json({ ok: false, action: 'recovery_required', blocker: publicationBlocker, ...result }, 503);
 
         const dispatchResponse = await fetch(
             `https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/workflows/${CRAWL_WORKFLOW}/dispatches`,

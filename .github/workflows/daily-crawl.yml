@@ -108,6 +108,7 @@ jobs:
           LIFECYCLE_OBSERVATION_PATH: /tmp/tikitikit-lifecycle-observation.json
 
       - name: Commit and push changes
+        id: publish
         if: steps.crawl.outcome == 'success'
         run: |
           git config --global user.name 'github-actions[bot]'
@@ -169,6 +170,19 @@ jobs:
         env:
           WRITER_TOKEN: ${{ vars.NAVER_COORDINATION == '1' && secrets.TIKIT_WRITER_DAILY_TOKEN || '' }}
 
+      - name: Preserve collected data after publication failure
+        if: failure() && steps.crawl.outcome == 'success' && steps.publish.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: daily-publication-recovery-${{ github.run_id }}-${{ github.run_attempt }}
+          retention-days: 7
+          if-no-files-found: error
+          path: |
+            data/all-flights-cache.json
+            data/price-history.json
+            data/crawl-log.json
+            data/interpark-prices.json
+
       - name: Archive long-term price history
         if: steps.crawl.outcome == 'success'
         continue-on-error: true
@@ -204,7 +218,7 @@ jobs:
               `- **잡 상태**: ${{ job.status }}`,
               `- **Run**: [${context.runId}](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})`,
               '',
-              '수동으로 확인해주세요: `npm run crawl:all`',
+              '수집 성공·게시 실패라면 보관 artifact와 writer 영수증을 확인하세요. 재수집 대신 게시 복구가 필요합니다.',
             ].join('\n');
 
             await github.rest.issues.create({

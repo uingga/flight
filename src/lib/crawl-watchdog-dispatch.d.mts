@@ -9,7 +9,7 @@ export interface GitHubWorkflowRunSummary {
 }
 
 export interface CrawlDispatchBlocker {
-    reason: 'active_run' | 'recent_fallback' | 'recent_scheduled_run';
+    reason: 'active_run' | 'recent_fallback' | 'recent_scheduled_run' | 'publication_recovery_required' | 'publication_status_unknown';
     runId: number | null;
     runUrl: string | null;
 }
@@ -21,6 +21,10 @@ export interface CrawlDispatchBlockerOptions {
 }
 
 export const CRAWL_FALLBACK_COOLDOWN_MINUTES: number;
+export function getCrawlPublicationBlocker(
+    runs: GitHubWorkflowRunSummary[], expectedAt: string,
+    options: { expectedCron?: string; now?: string | number | Date; getJobs: (runId: number | undefined) => Promise<Array<{ steps?: Array<{ name?: string; conclusion?: string | null }> }>> },
+): Promise<CrawlDispatchBlocker | null>;
 export function getCrawlDispatchBlocker(
     runs: GitHubWorkflowRunSummary[],
     expectedAt: string,
