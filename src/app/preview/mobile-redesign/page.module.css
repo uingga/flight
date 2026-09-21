@@ -946,14 +946,19 @@
     color: var(--text-secondary);
 }
 .siteFooterGrid { display: grid; gap: 24px; }
+.siteFooterSupport button { min-height: 44px; display: inline-flex; align-items: center; gap: 8px; padding: 0; color: var(--text-secondary); font-size: var(--size-caption); font-weight: var(--weight-medium); }
+.siteFooterSupport button:hover { color: var(--ink); }
+.siteFooterSupport button:focus-visible { outline: 2px solid var(--brand); outline-offset: 4px; }
 .siteFooterGrid > section > strong { display: block; margin-bottom: 10px; color: var(--ink); font-size: var(--size-caption); font-weight: var(--weight-bold); }
 .siteFooterBrand > p { margin-top: 8px; color: var(--text-secondary); font-size: var(--size-caption); line-height: 1.45; }
 .siteFooterBrand > div { margin-top: 13px; display: flex; flex-wrap: wrap; gap: 8px 14px; }
 .siteFooterBrand a,
+.siteFooterBrand button,
 .siteFooterLinks a,
 .siteFooterBottom a,
 .siteFooterBottom button { color: var(--text-secondary); font-size: var(--size-caption); line-height: 1.35; font-weight: var(--weight-medium); }
 .siteFooterBrand a:hover,
+.siteFooterBrand button:hover,
 .siteFooterLinks a:hover,
 .siteFooterBottom a:hover,
 .siteFooterBottom button:hover { color: var(--ink); }
@@ -992,6 +997,10 @@
     -webkit-backdrop-filter: blur(8px);
 }
 .scrollTopButton svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.8; }
+.contactImagePreview { display: block; max-width: 100%; max-height: 180px; object-fit: contain; margin-bottom: 8px; }
+.contactPrivacyNote { font-size: var(--size-micro); color: var(--text-secondary); line-height: 1.5; }
+.contactPrivacyNote a { text-decoration: underline; }
+.contactForm select { width: 100%; min-height: 44px; padding: 0 12px; border: 1px solid var(--line); border-radius: 11px; background: var(--paper); color: var(--ink); font: inherit; font-size: var(--size-meta); }
 
 .sheetOverlay {
     z-index: 100;
@@ -1281,6 +1290,10 @@
 
 .priceNotice { margin-top: 15px; padding: 11px 12px; border-radius: 10px; background: #faf5e9; color: #6f5d3c; font-size: var(--size-caption); line-height: 1.55; }
 .priceNotice strong { color: #5f4c29; font-weight: var(--weight-bold); }
+.ticketingFeeNotice { background: var(--brand-soft); color: var(--ink); }
+.ticketingFeeNotice strong { color: var(--brand-dark); white-space: nowrap; }
+.ticketingFeeNotice .reportTools { color: var(--text-secondary); }
+.ticketingFeeNotice .reportTools button { color: var(--text-secondary); }
 .reportTools { margin-left: 7px; display: inline-flex; align-items: center; color: #766c58; white-space: nowrap; }
 .reportTools button { min-height: 22px; padding: 0 2px; color: #6f6552; font-size: var(--size-micro); line-height: 1; font-weight: var(--weight-medium); text-decoration: underline; text-decoration-color: #a99e87; text-underline-offset: 2px; }
 .reportTools button:hover { color: #666666; text-decoration-color: #999999; }
@@ -2203,6 +2216,7 @@
         background: var(--paper);
     }
     .siteFooterGrid { grid-template-columns: 1.2fr 1fr 1fr; gap: 54px; }
+    .siteFooterSupport { grid-column: 3; grid-row: 1; }
     .siteFooterDisclaimer { max-width: 1144px; }
     .contactOverlay { align-items: center; padding: 24px; }
     .contactOverlay .contactSheet { width: min(480px, 100%); max-height: calc(100dvh - 48px); margin: 0; padding: 24px 28px 28px; border-bottom: 1px solid var(--line); border-radius: var(--radius-dialog); }

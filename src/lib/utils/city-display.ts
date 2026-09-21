@@ -24,7 +24,7 @@ export function cityDisplayName(city: string): string {
 
 export function cityDetailName(city: string, airport?: string): string {
     const label = cityDisplayName(city);
-    if (airport === 'KLO') return '보라카이(칼리보 공항)';
+    if (airport === 'KLO') return '보라카이(칼리보)';
     if (airport === 'SHI') return '미야코지마(시모지시마 공항)';
     if (label === '브루나이') return '브루나이(반다르세리베가완)';
     if (label === '하와이·호놀룰루') return '하와이·호놀룰루(오아후섬)';

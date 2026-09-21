@@ -31,7 +31,7 @@ for (const [label, aliases] of groups) {
     }
 }
 assert.equal(cityDisplayName('광주(KWJ)'), '광주');
-assert.equal(cityDetailName('보라카이', 'KLO'), '보라카이(칼리보 공항)');
+assert.equal(cityDetailName('보라카이', 'KLO'), '보라카이(칼리보)');
 assert.equal(cityDetailName('미야코지마', 'SHI'), '미야코지마(시모지시마 공항)');
 assert.equal(cityDetailName('미야코지마', 'MMY'), '미야코지마');
 assert.equal(cityDetailName('반다르세리베가완'), '브루나이(반다르세리베가완)');

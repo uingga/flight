@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
+import { randomUUID } from 'node:crypto';
+import { CONTACT_TYPES, isContactType, validContactImage, CONTACT_IMAGE_LIMIT } from '@/lib/contact';
 import {
     getRequestFingerprint,
     hashAuthValue,
@@ -8,19 +10,13 @@ import {
 } from '@/lib/server/account-auth';
 import { supabaseRest } from '@/lib/server/supabase-rest';
 
-const MAX_BODY_BYTES = 16_384;
+const MAX_BODY_BYTES = 1_450_000;
 
 function json(body: Record<string, unknown>, status = 200) {
     return NextResponse.json(body, {
         status,
         headers: { 'Cache-Control': 'no-store, private' },
     });
-}
-
-function escapeHtml(value: string) {
-    return value.replace(/[&<>"']/g, char => ({
-        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
-    }[char] || char));
 }
 
 function cleanSingleLine(value: unknown, maxLength: number) {
@@ -84,6 +80,16 @@ export async function POST(request: NextRequest) {
         const emailText = typeof rawEmail === 'string' ? rawEmail.trim() : '';
         const email = emailText ? normalizeEmail(emailText) : null;
         const message = typeof rawMessage === 'string' ? rawMessage.trim() : '';
+        const category = parsed.input.category ?? 'question';
+        const attachment = parsed.input.attachment || null;
+        if (!isContactType(category)) return json({ error: '문의 유형을 확인해주세요.' }, 400);
+        if (attachment) {
+            if (!validContactImage(attachment)) return json({ error: '1MB 이하 PNG 또는 JPG 이미지만 첨부할 수 있어요.' }, 400);
+            const bytes = Buffer.from(attachment.split(',')[1], 'base64');
+            const png = attachment.startsWith('data:image/png;') && bytes.subarray(0, 8).equals(Buffer.from([137,80,78,71,13,10,26,10]));
+            const jpeg = attachment.startsWith('data:image/jpeg;') && bytes[0] === 255 && bytes[1] === 216 && bytes[2] === 255;
+            if ((!png && !jpeg) || bytes.length > CONTACT_IMAGE_LIMIT) return json({ error: '이미지 파일을 확인해주세요.' }, 400);
+        }
 
         // 입력 검증
         if (!message) {
@@ -103,11 +109,6 @@ export async function POST(request: NextRequest) {
         const emailUser = process.env.GMAIL_USER || process.env.EMAIL_USER;
         const emailPass = (process.env.GMAIL_APP_PASS || process.env.EMAIL_PASS || '').replace(/\s/g, '');
 
-        if (!emailUser || !emailPass) {
-            console.error('이메일 환경변수가 설정되지 않았습니다.');
-            return json({ error: '서버 설정 오류입니다.' }, 500);
-        }
-
         const requestHash = getRequestFingerprint(request);
         const globalHash = hashAuthValue('contact-rate', 'global');
         const localRateChecks = await Promise.all([
@@ -122,6 +123,13 @@ export async function POST(request: NextRequest) {
             return json({ error: '문의 요청이 많습니다. 잠시 후 다시 시도해주세요.' }, 429);
         }
 
+        const id = randomUUID();
+        await supabaseRest('contact_inquiries', {
+            method: 'POST',
+            body: JSON.stringify({ id, category, name, email, message, attachment }),
+        });
+        // The inbox is authoritative. Notification failure must not prompt duplicate submissions.
+        if (!emailUser || !emailPass) return json({ success: true, id });
         const transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
@@ -130,29 +138,16 @@ export async function POST(request: NextRequest) {
             },
         });
 
-        const html = `
-            <h2>📬 티키티킷 문의</h2>
-            <table border="0" cellpadding="8" style="border-collapse: collapse; font-size: 14px;">
-                <tr><td><strong>이름:</strong></td><td>${escapeHtml(name || '미입력')}</td></tr>
-                <tr><td><strong>이메일:</strong></td><td>${escapeHtml(email || '미입력')}</td></tr>
-                <tr><td><strong>시간:</strong></td><td>${new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })}</td></tr>
-            </table>
-            <hr>
-            <h3>문의 내용</h3>
-            <p style="white-space: pre-wrap; background: #f9f9f9; padding: 16px; border-radius: 8px;">${escapeHtml(message)}</p>
-            <hr>
-            <p style="color: #999; font-size: 12px;">티키티킷 웹사이트에서 발송된 문의입니다.</p>
-        `;
-
-        await transporter.sendMail({
+        try { await transporter.sendMail({
             from: `"티키티킷 문의" <${emailUser}>`,
             to: 'uingga@gmail.com',
-            replyTo: email || undefined,
-            subject: `[티키티킷 문의] ${name || '익명'}: ${cleanSingleLine(message, 50)}`,
-            html,
-        });
+            subject: `[티키티킷 문의] ${CONTACT_TYPES[category]} · ${id.slice(0, 8)}`,
+            html: '<p>새 문의가 접수되었습니다. 티키티킷 어드민의 문의함에서 확인해주세요.</p>',
+        }); } catch {
+            console.error('Contact notification failed; inquiry is saved');
+        }
 
-        return json({ success: true });
+        return json({ success: true, id });
     } catch (error: unknown) {
         console.error('문의 이메일 발송 실패:', error instanceof Error ? error.message : 'unknown');
         return json({ error: '전송에 실패했습니다. 잠시 후 다시 시도해주세요.' }, 500);

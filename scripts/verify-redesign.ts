@@ -361,8 +361,8 @@ async function verifyViewport(width: number, height: number) {
             await page.keyboard.press('Escape');
         }
 
-        await page.getByRole('button', { name: '문의하기', exact: true }).scrollIntoViewIfNeeded();
-        await page.getByRole('button', { name: '문의하기', exact: true }).click();
+        await page.getByRole('button', { name: '문의·의견 보내기', exact: true }).scrollIntoViewIfNeeded();
+        await page.getByRole('button', { name: '문의·의견 보내기', exact: true }).click();
         const contactHeading = page.getByRole('heading', { name: '문의하기', exact: true });
         await contactHeading.waitFor();
         await page.goBack();

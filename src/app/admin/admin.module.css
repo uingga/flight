@@ -3470,6 +3470,7 @@
     height: 151px;
     min-width: 0;
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     grid-template-rows: 16px 112px 16px;
     align-items: end;
     gap: 3px;
@@ -3516,6 +3517,7 @@
 
 .hourlyBarTime {
     align-self: start;
+    justify-self: center;
     color: #707070;
     font-size: 0.56rem;
     font-variant-numeric: tabular-nums;
