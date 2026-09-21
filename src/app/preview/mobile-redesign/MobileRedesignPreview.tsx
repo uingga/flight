@@ -65,6 +65,30 @@ import MobileDealAlertSheet, { type AlertSearchCondition } from './MobileDealAle
 import RedesignAdSlot from './RedesignAdSlot';
 import styles from './page.module.css';
 
+function RegionChipRail({ children }: { children: ReactNode }) {
+    const ref = useRef<HTMLElement>(null);
+    const [edges, setEdges] = useState({ left: false, right: false });
+    useEffect(() => {
+        const rail = ref.current;
+        if (!rail) return;
+        const update = () => {
+            const left = rail.scrollLeft > 1;
+            const right = rail.scrollWidth - rail.clientWidth - rail.scrollLeft > 1;
+            setEdges(previous => previous.left === left && previous.right === right ? previous : { left, right });
+        };
+        const observer = new ResizeObserver(update);
+        observer.observe(rail);
+        Array.from(rail.children).forEach(child => observer.observe(child));
+        rail.addEventListener('scroll', update, { passive: true });
+        update();
+        return () => {
+            observer.disconnect();
+            rail.removeEventListener('scroll', update);
+        };
+    }, []);
+    return <nav ref={ref} className={`${styles.quickFilters} ${styles.regionChipRail}`} data-more-left={edges.left} data-more-right={edges.right} aria-label="도착 지역 빠른 선택">{children}</nav>;
+}
+
 type SortMode = 'recommended' | 'price' | 'date';
 type DatePeriod = 'all' | 'this-week' | 'next-week' | 'this-month' | 'next-month' | 'custom';
 type DesktopFilterKey = 'departure' | 'region' | 'date' | 'price';
@@ -192,8 +216,6 @@ const SOURCE_OPTIONS: Array<{ value: 'all' | Flight['source']; label: string }> 
 const TTANG_TICKETING_FEE = 20_000;
 
 const REGION_OPTIONS = ['전체', '일본', '동남아', '중화권', '남태평양', '유럽', '미주', '기타'];
-const QUICK_REGION_OPTIONS = REGION_OPTIONS.slice(0, 4);
-const MORE_REGION_OPTIONS = REGION_OPTIONS.slice(4);
 const DEPARTURE_OPTIONS = ['전체', '인천/김포', '부산/김해', '대구', '청주', '제주'];
 const DATE_PERIOD_OPTIONS: Array<{ label: string; value: Exclude<DatePeriod, 'custom'> }> = [
     { label: '전체', value: 'all' },
@@ -1212,7 +1234,6 @@ export default function MobileRedesignPreview({
     const [filterPopoverPosition, setFilterPopoverPosition] = useState<{ top: number; left: number; maxHeight: number } | null>(null);
     const [airlineMenuOpen, setAirlineMenuOpen] = useState(false);
     const [desktopFilterOpen, setDesktopFilterOpen] = useState<DesktopFilterKey | null>(null);
-    const [regionMoreOpen, setRegionMoreOpen] = useState(false);
     const [showDealAlert, setShowDealAlert] = useState(false);
     const [alertRouteTarget, setAlertRouteTarget] = useState<RouteAlertTarget | null>(null);
     const recentHistory = useRecentFlights(selectedFlight);
@@ -3038,6 +3059,7 @@ export default function MobileRedesignPreview({
         || maxPrice > 0
         || sourceFilter !== 'all'
         || airlineFilter !== 'all';
+    const mobileFilterCount = [departure !== '전체', datePeriod !== 'all', tripLengths.length > 0, maxPrice > 0, sourceFilter !== 'all', airlineFilter !== 'all', region !== '전체'].filter(Boolean).length;
     const updatedLabel = lastUpdated
         ? `${new Intl.DateTimeFormat('ko-KR', {
             timeZone: 'Asia/Seoul',
@@ -4011,54 +4033,30 @@ export default function MobileRedesignPreview({
                             </button>
                         </div>
                         <div className={styles.quickFilterRow}>
-                        <button type="button" className={`${styles.filterButton} ${hasAdvancedFilter ? styles.filterHasValue : ''}`} onClick={openFilter}>
+                        <button type="button" className={`${styles.filterButton} ${mobileFilterCount ? styles.filterHasValue : ''}`} onClick={openFilter} aria-label={mobileFilterCount ? `필터, ${mobileFilterCount}개 조건 선택됨` : '필터'}>
                             <Icon name="sliders" />
                             필터
+                            {mobileFilterCount > 0 && <span>{mobileFilterCount}</span>}
                         </button>
-                        <nav className={`${styles.quickFilters} ${styles.regionChipRail}`} aria-label="도착 지역 빠른 선택">
-                            {QUICK_REGION_OPTIONS.map(item => (
+                        <RegionChipRail>
+                            {REGION_OPTIONS.map(item => (
                                 <button
                                     type="button"
                                     key={item}
                                     className={region === item ? styles.activeFilter : ''}
                                     aria-label={`도착 지역 ${item}`}
                                     aria-pressed={region === item}
-                                    onClick={() => {
+                                    onClick={event => {
                                         selectRegionFilter(item);
-                                        setRegionMoreOpen(false);
+                                        const chip = event.currentTarget;
+                                        const rail = chip.parentElement;
+                                        if (rail) rail.scrollLeft = Math.max(0, chip.offsetLeft - rail.offsetLeft - (rail.clientWidth - chip.clientWidth) / 2);
                                     }}
                                 >
                                     {item}
                                 </button>
                             ))}
-                            <button
-                                type="button"
-                                className={`${styles.moreRegionButton} ${MORE_REGION_OPTIONS.includes(region) ? styles.activeFilter : ''}`}
-                                aria-label="다른 도착 지역 선택"
-                                aria-expanded={regionMoreOpen}
-                                onClick={() => setRegionMoreOpen(open => !open)}
-                            >
-                                {MORE_REGION_OPTIONS.includes(region) ? region : '···'}
-                            </button>
-                        </nav>
-                        {regionMoreOpen && (
-                            <nav className={styles.moreRegionInline} aria-label="추가 도착 지역">
-                                {MORE_REGION_OPTIONS.map(item => (
-                                    <button
-                                        type="button"
-                                        key={item}
-                                        className={region === item ? styles.moreRegionActive : ''}
-                                        aria-pressed={region === item}
-                                        onClick={() => {
-                                            selectRegionFilter(item);
-                                            setRegionMoreOpen(false);
-                                        }}
-                                    >
-                                        {item}
-                                    </button>
-                                ))}
-                            </nav>
-                        )}
+                        </RegionChipRail>
                         </div>
                         <nav
                             className={`${styles.conditionFilterBar} ${styles.conditionFilterBarPinned} ${filterBarPinned ? styles.conditionFilterBarVisible : ''}`}
