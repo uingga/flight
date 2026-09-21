@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { cityDisplayName, citySearchMatches } from '../src/lib/utils/city-display';
+import { cityDetailName, cityDisplayName, citySearchMatches } from '../src/lib/utils/city-display';
 import { normalizeCity } from '../src/lib/utils/flight-helpers';
 
 const groups: Array<[string, string[]]> = [
@@ -17,7 +17,11 @@ const groups: Array<[string, string[]]> = [
     ['푸켓', ['푸껫', '푸켓']],
     ['칭다오', ['청도', '칭다오']],
     ['광저우', ['광주(광저우)', '광저우 (CAN)', '광저우']],
-    ['보라카이', ['칼리보(보라카이)', '보라카이(KLO)', '보라카이(깔리보)']],
+    ['보라카이', ['칼리보', '깔리보', '칼리보(보라카이)', '보라카이(KLO)', '보라카이(깔리보)']],
+    ['브루나이', ['반다르세리베가완', '반다르세리베가완(브루나이)', '브루나이']],
+    ['하이난·싼야', ['싼야', '싼야(SYX)', '하이난·싼야']],
+    ['하와이·호놀룰루', ['호놀룰루', '호놀룰루(HNL)', '하와이·호놀룰루']],
+    ['야마구치·우베', ['우베', '우베(UBJ)', '야마구치·우베']],
 ];
 for (const [label, aliases] of groups) {
     assert.equal(new Set(aliases.map(cityDisplayName)).size, 1, label);
@@ -27,6 +31,15 @@ for (const [label, aliases] of groups) {
     }
 }
 assert.equal(cityDisplayName('광주(KWJ)'), '광주');
+assert.equal(cityDetailName('보라카이', 'KLO'), '보라카이(칼리보 공항)');
+assert.equal(cityDetailName('미야코지마', 'SHI'), '미야코지마(시모지시마 공항)');
+assert.equal(cityDetailName('미야코지마', 'MMY'), '미야코지마');
+assert.equal(cityDetailName('반다르세리베가완'), '브루나이(반다르세리베가완)');
+assert.equal(cityDetailName('호놀룰루', 'HNL'), '하와이·호놀룰루(오아후섬)');
+for (const city of ['싼야', '우베', '호놀룰루', '반다르세리베가완']) assert.equal(normalizeCity(city), city);
+assert.ok(citySearchMatches('싼야', '하이난'));
+assert.ok(citySearchMatches('호놀룰루', '하와이'));
+assert.ok(!citySearchMatches('하이커우', '싼야'));
 assert.ok(!citySearchMatches('광주(KWJ)', '광저우'));
 assert.ok(!citySearchMatches('하노이', '상해'));
 assert.ok(!citySearchMatches('하노이', '(없는도시)'));

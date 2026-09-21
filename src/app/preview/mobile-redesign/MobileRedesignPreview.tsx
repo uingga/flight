@@ -4959,7 +4959,7 @@ export default function MobileRedesignPreview({
 
                         <div className={styles.detailTitle}>
                             <div>
-                                <h2 id="flight-detail-title">{departureName(selectedFlight)} ↔ {cityDetailName(selectedFlight.arrival.city)}</h2>
+                        <h2 id="flight-detail-title">{departureName(selectedFlight)} ↔ {cityDetailName(selectedFlight.arrival.city, selectedFlight.arrival.airport)}</h2>
                             </div>
                             <div>
                                 <strong>{priceText(selectedFlight.source === 'ttang' ? selectedFlight.price : effectivePrice(selectedFlight))}</strong>

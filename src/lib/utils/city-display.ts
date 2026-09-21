@@ -13,12 +13,22 @@ export function cityDisplayName(city: string): string {
         '연길': '옌지',
         '시모지시마': '미야코지마',
         '미야코': '미야코지마',
+        '반다르세리베가완': '브루나이',
+        '싼야': '하이난·싼야',
+        '호놀룰루': '하와이·호놀룰루',
+        '우베': '야마구치·우베',
+        '깔리보': '보라카이',
     };
     return labels[base] || base;
 }
 
-export function cityDetailName(city: string): string {
-    return normalizeCity(city) === '구이린' ? '계림(구이린)' : cityDisplayName(city);
+export function cityDetailName(city: string, airport?: string): string {
+    const label = cityDisplayName(city);
+    if (airport === 'KLO') return '보라카이(칼리보 공항)';
+    if (airport === 'SHI') return '미야코지마(시모지시마 공항)';
+    if (label === '브루나이') return '브루나이(반다르세리베가완)';
+    if (label === '하와이·호놀룰루') return '하와이·호놀룰루(오아후섬)';
+    return normalizeCity(city) === '구이린' ? '계림(구이린)' : label;
 }
 
 export function citySearchMatches(city: string, query: string): boolean {
