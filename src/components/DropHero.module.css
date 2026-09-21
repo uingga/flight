@@ -21,6 +21,7 @@
     isolation: isolate;
 }
 
+.hero[data-drop-hero-image="/images/cities/saipan-hero-20260921.png"],
 .hero[data-drop-hero-image="/images/cities/guangzhou-hero-20260921.png"] {
     background-position: 62% center;
 }
@@ -164,6 +165,11 @@
     white-space: nowrap;
 }
 
+.holidayReason {
+    white-space: normal;
+    word-break: keep-all;
+}
+
 /* 4순위: 여정(출발지·날짜·기간), 판매(여행사·항공사). 카드와 같은 메타 12/13, 400. */
 .journey,
 .seller {
@@ -238,6 +244,7 @@
         background-position: center 65%;
     }
 
+    .hero[data-drop-hero-image="/images/cities/saipan-hero-20260921.png"],
     .hero[data-drop-hero-image="/images/cities/guangzhou-hero-20260921.png"] {
         background-position: center;
     }

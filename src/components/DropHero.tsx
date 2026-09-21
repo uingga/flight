@@ -69,7 +69,9 @@ export default function DropHero({
     onOpen,
 }: DropHeroProps) {
     const cityImagePath = getCityImagePath(flight.arrival.city);
-    const imagePath = flight.arrival.airport === 'CAN' || cityImagePath === '/images/cities/guangzhou.png'
+    const imagePath = flight.arrival.airport === 'SPN'
+        ? '/images/cities/saipan-hero-20260921.png'
+        : flight.arrival.airport === 'CAN' || cityImagePath === '/images/cities/guangzhou.png'
         ? '/images/cities/guangzhou-hero-20260921.png'
         : flight.arrival.airport === 'DYG' || cityImagePath === '/images/cities/zhangjiajie.png'
         ? '/images/cities/zhangjiajie-hero-v2.png'
@@ -84,6 +86,14 @@ export default function DropHero({
         ? ({ backgroundImage: `url("${imagePath}")` } satisfies CSSProperties)
         : undefined;
     const seats = flight.availableSeats || Number.parseInt(flight.seats || '', 10) || 0;
+    const saipanHolidayDates = new Set(['2026-10-02', '2026-10-03', '2026-10-06', '2026-10-07', '2026-10-08']);
+    const isSaipanHolidayPick = pickDate === '2026-09-21'
+        && [flight, ...alternatives.map(option => option.flight)].every(option =>
+            option.arrival.airport === 'SPN' && option.source === 'ttang'
+            && saipanHolidayDates.has(option.departure.date));
+    const displayedReason = isSaipanHolidayPick
+        ? '평소보다 비싸지만, 개천절 대체휴일·한글날 연휴에 떠날 수 있어 골랐어요.'
+        : reason;
     const showDiscount = discountRate >= 5;
     const journey = [
         `${scheduleDate(flight.departure.date)} ~ ${scheduleDate(flight.arrival.date)}`,
@@ -136,7 +146,7 @@ export default function DropHero({
                     )}
                 </p>
                 {flight.source === 'ttang' && <p className={styles.seller}>발권수수료 20,000원 별도</p>}
-                {reason && <p className={styles.reason}>{reason}</p>}
+                {displayedReason && <p className={`${styles.reason}${isSaipanHolidayPick ? ` ${styles.holidayReason}` : ''}`}>{displayedReason}</p>}
                 <div className={styles.journey}>
                     <span>{departureName(flight)} 출발</span>
                     {' · '}
@@ -149,7 +159,7 @@ export default function DropHero({
                         <span aria-hidden="true">→</span>
                     </p>
                 )}
-                {(imagePath === '/images/cities/guangzhou-hero-20260921.png' || imagePath === '/images/cities/shanghai-hero-v2.png' || imagePath === '/images/cities/hochiminh-hero-v2.png' || imagePath === '/images/cities/chengdu-hero-v2.png' || imagePath === '/images/cities/zhangjiajie-hero-v2.png') && (
+                {(imagePath === '/images/cities/saipan-hero-20260921.png' || imagePath === '/images/cities/guangzhou-hero-20260921.png' || imagePath === '/images/cities/shanghai-hero-v2.png' || imagePath === '/images/cities/hochiminh-hero-v2.png' || imagePath === '/images/cities/chengdu-hero-v2.png' || imagePath === '/images/cities/zhangjiajie-hero-v2.png') && (
                     <p className={styles.imageDisclosure}>AI 생성 이미지</p>
                 )}
             </div>
