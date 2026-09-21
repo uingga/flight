@@ -615,12 +615,12 @@ export function WeekendFlightsInsight({
                 data-weekend-route-count={mobileCount}
             >
                 <div className={styles.freshFlightsMobileTopline}>
-                    <span>{eyebrow}</span>
+                    <span>{onOpenCollection ? '' : eyebrow}</span>
                     {priceDrops ? <span>총 {mobileCount}개</span> : mobileCount > 1 && <span aria-hidden="true">{activeMobileIndex + 1} / {mobileCount}</span>}
                 </div>
                 <div className={`${styles.freshFlightsCopy} ${onOpenCollection ? styles.holidayCopyAction : ''}`}>
                     {onOpenCollection && <button type="button" className={styles.holidayCopyButton} onClick={onOpenCollection} aria-label="연휴 항공권 전체 보기" />}
-                    <span className={styles.freshFlightsDesktopEyebrow}>{eyebrow}</span>
+                    {!onOpenCollection && <span className={styles.freshFlightsDesktopEyebrow}>{eyebrow}</span>}
                     <strong id={`${insightId}-title`}>{copy?.title ?? (priceDrops ? '기다린 보람이 있네요' : '주말이 아까운 사람에게')}{onOpenCollection && <i className={discoveryStyles.mobileTitleArrow} aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6" /></svg></i>}</strong>
                     <p>{copy?.description ?? (priceDrops ? '최근 가격이 내려간 항공권을 모았어요.' : '토·일이 여행 일정에 들어간 항공권만 골랐어요.')}</p>
                 </div>
@@ -3069,8 +3069,9 @@ export default function MobileRedesignPreview({
     const holidayInsight = selectHolidayFlights(displayedFlights, seoulDateKey());
     const firstInsightCard = 9;
     const subsequentInsightInterval = 12;
-    const holidayInsightCard = firstInsightCard + subsequentInsightInterval;
-    const priceDropInsightCard = holidayInsightCard + (holidayInsight.flights.length ? subsequentInsightInterval : 0);
+    const holidayInsightCard = firstInsightCard;
+    const freshInsightCard = firstInsightCard + (holidayInsight.flights.length ? subsequentInsightInterval : 0);
+    const priceDropInsightCard = freshInsightCard + subsequentInsightInterval;
     const weeklyDiscoveryInsightCard = priceDropInsightCard + (priceDropFlights.length ? subsequentInsightInterval : 0);
     const weekendFlightsInsightCard = weeklyDiscoveryInsightCard + subsequentInsightInterval;
     const advancedSelectionCount = Number(sourceFilter !== 'all') + Number(airlineFilter !== 'all');
@@ -4475,7 +4476,7 @@ export default function MobileRedesignPreview({
                                             void transitionDropResults(results);
                                         }} />
                                     )}
-                                    {!freshRouteResults && cardNumber === firstInsightCard && freshFlightsInsight && (
+                                    {!freshRouteResults && cardNumber === freshInsightCard && freshFlightsInsight && (
                                         <div className={styles.freshFlightsEntry}>
                                             <section
                                                 className={styles.freshFlightsBar}

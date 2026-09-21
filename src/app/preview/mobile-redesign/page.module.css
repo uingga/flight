@@ -2003,6 +2003,14 @@
         font-weight: 700;
         letter-spacing: -0.05em;
     }
+    /* Match the destination row in the adjacent 164px ticket viewport. */
+    .freshFlightsCopy.holidayCopyAction {
+        align-self: center;
+        height: 164px;
+        justify-content: flex-start;
+        padding-top: 59px;
+    }
+    .holidayCopyAction > strong { line-height: 1.08; }
     .freshFlightsCopy > p {
         margin: 9px 0 0;
         color: #9299a3;
