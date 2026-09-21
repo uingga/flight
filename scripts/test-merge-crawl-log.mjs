@@ -10,6 +10,42 @@ const NOW = new Date('2026-08-31T12:00:00Z').getTime();
 
 const entry = (timestamp, sites, alerts = []) => ({ timestamp, sites, alerts });
 
+const dailyWorkflow = fs.readFileSync(new URL('../.github/workflows/daily-crawl.yml', import.meta.url), 'utf8');
+const dailyMergeSources = dailyWorkflow.match(/node scripts\/merge-crawl-log\.mjs data\/crawl-log\.json \/tmp\/crawl-log\.json ([\w,]+)/)?.[1].split(',') || [];
+
+test('daily workflow publishes history for every general crawler, including Lottetour', () => {
+    const crawler = fs.readFileSync(new URL('./crawl-all.ts', import.meta.url), 'utf8');
+    const declaration = crawler.match(/const sourceNames = \[([^\]]+)\] as const/);
+    assert.ok(declaration, 'general crawler source declaration must be checked');
+    const sources = [...declaration[1].matchAll(/'([^']+)'/g)]
+        .map(match => match[1]).filter(source => source !== 'myrealtrip');
+    assert.deepEqual([...dailyMergeSources].sort(), sources.sort(),
+        'adding a crawler must also add its publication-history scope');
+});
+
+test('actual daily workflow scope preserves Lottetour outcomes without changing other sessions', () => {
+    const remote = { entries: [entry('2026-08-31T09:00:00Z', {
+        myrealtrip: { total: 20, scraped: 30 },
+    })] };
+    for (const stat of [
+        { total: 1, scraped: 1, added: 1, removed: 0 },
+        { total: 1, scraped: 0, preserved: true },
+        { total: 1, skipped: true, skipReason: 'schedule' },
+    ]) {
+        const session = { entries: [entry('2026-08-31T10:00:00Z', {
+            ybtour: { total: 80, scraped: 240 }, lottetour: stat,
+            myrealtrip: { total: 19 },
+        })] };
+        const once = mergeCrawlLogHistories(remote, session, dailyMergeSources, NOW).history;
+        const twice = mergeCrawlLogHistories(once, session, dailyMergeSources, NOW).history;
+        assert.deepEqual(twice, once, 'publication must remain idempotent');
+        assert.deepEqual(twice.entries[0], remote.entries[0]);
+        assert.deepEqual(twice.entries[1].sites.lottetour, stat);
+        assert.equal(twice.entries[1].sites.myrealtrip, undefined);
+        assert.equal(twice.entries[1].sites.ybtour.scraped, 240);
+    }
+});
+
 test('MyRealTrip session is added without removing a newer regular crawl', () => {
     const remote = {
         entries: [

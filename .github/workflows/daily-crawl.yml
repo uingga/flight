@@ -154,7 +154,7 @@ jobs:
             # 이번 일반 회차에서 시도했거나 예약 정책상 명시적으로 건너뛴 여행사 기록만 합친다.
             # 이렇게 해야 동시에 끝난 마이리얼트립의 별도 회차 기록을 지우지 않는다.
             if [[ -f /tmp/crawl-log.json ]]; then
-              node scripts/merge-crawl-log.mjs data/crawl-log.json /tmp/crawl-log.json ybtour,hanatour,modetour,onlinetour,ttang
+              node scripts/merge-crawl-log.mjs data/crawl-log.json /tmp/crawl-log.json ybtour,hanatour,modetour,onlinetour,ttang,lottetour
             fi
 
             git add data/all-flights-cache.json
