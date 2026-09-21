@@ -2,7 +2,12 @@ export interface Flight {
     id: string;
     /** Server-derived lifecycle identity used only for manual recommendation placement. */
     manualOrderKey?: string;
-    source: 'ybtour' | 'modetour' | 'hanatour' | 'onlinetour' | 'ttang' | 'myrealtrip' | 'lottetour';
+    source: 'ybtour' | 'modetour' | 'hanatour' | 'onlinetour' | 'ttang' | 'myrealtrip' | 'lottetour' | 'tripcom';
+    tripcomDetail?: {
+        paymentCondition: { kind: 'bank_account' | 'unrestricted'; raw?: string; verified?: boolean };
+        paymentNotice: string | null;
+        paymentNoticePlacement: 'detail_only';
+    };
     airline: string;
     departure: {
         city: string;

@@ -914,6 +914,9 @@ async function main() {
             }
         }
 
+        // Trip.com is published independently. General crawls never refresh or
+        // remove its observations, including during a full agency round.
+        benchmarkedFlights.push(...(prevCache?.flights || []).filter((f: any) => f.source === 'tripcom'));
         if (requestedSources && untouchedFlights.length > 0) {
             benchmarkedFlights = [...benchmarkedFlights, ...untouchedFlights];
             console.log(`🔒 부분 크롤 미실행 여행사: 이전 최종 데이터 ${untouchedFlights.length}개 그대로 유지`);

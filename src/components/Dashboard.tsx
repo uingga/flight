@@ -84,6 +84,7 @@ const getSourceName = (source: string) => {
         case 'ttang': return '땡처리닷컴';
         case 'myrealtrip': return '마이리얼트립';
         case 'lottetour': return '롯데관광';
+        case 'tripcom': return '트립닷컴';
         default: return source;
     }
 };
@@ -3437,6 +3438,7 @@ export default function Dashboard() {
                                     <option value="ttang">땡처리닷컴</option>
                                     <option value="myrealtrip">마이리얼트립</option>
                                     <option value="lottetour">롯데관광</option>
+                                    <option value="tripcom">트립닷컴</option>
                                 </select>
                                 <select
                                     value={airlineFilter}
@@ -4330,6 +4332,13 @@ export default function Dashboard() {
                                     </div>
                                 )}
 
+                                {modetourGuide.source === 'tripcom' && (
+                                    <div className={styles.mdtDisclaimer}>
+                                        {modetourGuide.tripcomDetail?.paymentNotice}
+                                        {' · '}세금과 발권수수료를 포함한 성인 1인 왕복 가격입니다.
+                                        실제 예약은 트립닷컴에서 이루어지며 가격과 좌석은 변동될 수 있습니다.
+                                    </div>
+                                )}
                                 {/* 마이리얼트립: 예약 주체 안내 */}
                                 {modetourGuide.source === 'myrealtrip' && (
                                     <div className={styles.mdtDisclaimer}>

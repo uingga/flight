@@ -695,7 +695,7 @@ const SOURCE_NAMES: Record<string, string> = {
     ttang: '땡처리닷컴',
     ybtour: '노랑풍선',
     onlinetour: '온라인투어',
-    myrealtrip: '마이리얼트립', lottetour: '롯데관광',
+    myrealtrip: '마이리얼트립', lottetour: '롯데관광', tripcom: '트립닷컴',
 };
 
 const SOURCE_COLORS: Record<string, string> = {

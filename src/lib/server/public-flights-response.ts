@@ -554,6 +554,7 @@ export async function createPublicFlightsResponse(searchParams: URLSearchParams)
                 onlinetour: allFlights.filter(f => f.source === 'onlinetour').length,
                 myrealtrip: allFlights.filter(f => f.source === 'myrealtrip').length,
                 lottetour: allFlights.filter(f => f.source === 'lottetour').length,
+                tripcom: allFlights.filter(f => f.source === 'tripcom').length,
             },
             lastUpdated,
             priceHistory,
