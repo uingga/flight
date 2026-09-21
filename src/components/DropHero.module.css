@@ -21,6 +21,10 @@
     isolation: isolate;
 }
 
+.hero[data-drop-hero-image="/images/cities/guangzhou-hero-20260921.png"] {
+    background-position: 62% center;
+}
+
 .heroFallback {
     background: #29343d;
 }
@@ -234,8 +238,8 @@
         background-position: center 65%;
     }
 
-    .hero[data-drop-hero-image="/images/cities/guangzhou-hero-20260918.png"] {
-        background-position: center top;
+    .hero[data-drop-hero-image="/images/cities/guangzhou-hero-20260921.png"] {
+        background-position: center;
     }
 
     .hero[data-drop-hero-image="/images/cities/hochiminh-hero-v2.png"] {

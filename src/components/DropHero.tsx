@@ -70,7 +70,7 @@ export default function DropHero({
 }: DropHeroProps) {
     const cityImagePath = getCityImagePath(flight.arrival.city);
     const imagePath = flight.arrival.airport === 'CAN' || cityImagePath === '/images/cities/guangzhou.png'
-        ? '/images/cities/guangzhou-hero-20260918.png'
+        ? '/images/cities/guangzhou-hero-20260921.png'
         : flight.arrival.airport === 'DYG' || cityImagePath === '/images/cities/zhangjiajie.png'
         ? '/images/cities/zhangjiajie-hero-v2.png'
         : ['PVG', 'SHA'].includes(flight.arrival.airport) || cityImagePath === '/images/cities/shanghai.png'
@@ -149,7 +149,7 @@ export default function DropHero({
                         <span aria-hidden="true">→</span>
                     </p>
                 )}
-                {(imagePath === '/images/cities/guangzhou-hero-20260918.png' || imagePath === '/images/cities/shanghai-hero-v2.png' || imagePath === '/images/cities/hochiminh-hero-v2.png' || imagePath === '/images/cities/chengdu-hero-v2.png' || imagePath === '/images/cities/zhangjiajie-hero-v2.png') && (
+                {(imagePath === '/images/cities/guangzhou-hero-20260921.png' || imagePath === '/images/cities/shanghai-hero-v2.png' || imagePath === '/images/cities/hochiminh-hero-v2.png' || imagePath === '/images/cities/chengdu-hero-v2.png' || imagePath === '/images/cities/zhangjiajie-hero-v2.png') && (
                     <p className={styles.imageDisclosure}>AI 생성 이미지</p>
                 )}
             </div>
