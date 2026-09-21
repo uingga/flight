@@ -21,6 +21,7 @@
     isolation: isolate;
 }
 
+.hero[data-drop-hero-image="/images/cities/boracay-hero-20260921.png"],
 .hero[data-drop-hero-image="/images/cities/saipan-hero-20260921.png"],
 .hero[data-drop-hero-image="/images/cities/guangzhou-hero-20260921.png"] {
     background-position: 62% center;
@@ -249,6 +250,7 @@
         background-position: center 65%;
     }
 
+    .hero[data-drop-hero-image="/images/cities/boracay-hero-20260921.png"],
     .hero[data-drop-hero-image="/images/cities/saipan-hero-20260921.png"],
     .hero[data-drop-hero-image="/images/cities/guangzhou-hero-20260921.png"] {
         background-position: center;

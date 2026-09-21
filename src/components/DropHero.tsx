@@ -4,6 +4,7 @@ import type { CSSProperties } from 'react';
 import type { Flight } from '@/types/flight';
 import { getCityImagePath } from '@/lib/city-image';
 import { cityDisplayName } from '@/lib/utils/city-display';
+import { airlineDisplayName } from '@/lib/utils/airline-display';
 import styles from './DropHero.module.css';
 
 const SOURCE_NAMES: Record<Flight['source'], string> = {
@@ -69,7 +70,9 @@ export default function DropHero({
     onOpen,
 }: DropHeroProps) {
     const cityImagePath = getCityImagePath(flight.arrival.city);
-    const imagePath = flight.arrival.airport === 'SPN'
+    const imagePath = ['KLO', 'MPH'].includes(flight.arrival.airport)
+        ? '/images/cities/boracay-hero-20260921.png'
+        : flight.arrival.airport === 'SPN'
         ? '/images/cities/saipan-hero-20260921.png'
         : flight.arrival.airport === 'CAN' || cityImagePath === '/images/cities/guangzhou.png'
         ? '/images/cities/guangzhou-hero-20260921.png'
@@ -99,7 +102,7 @@ export default function DropHero({
         `${scheduleDate(flight.departure.date)} ~ ${scheduleDate(flight.arrival.date)}`,
         duration,
     ].filter(Boolean).join(' · ');
-    const seller = [SOURCE_NAMES[flight.source], flight.airline || '항공사 확인'].join(' · ');
+    const seller = [SOURCE_NAMES[flight.source], airlineDisplayName(flight.airline || '항공사 확인')].join(' · ');
 
     return (
         <section
@@ -159,7 +162,7 @@ export default function DropHero({
                         <span aria-hidden="true">→</span>
                     </p>
                 )}
-                {(imagePath === '/images/cities/saipan-hero-20260921.png' || imagePath === '/images/cities/guangzhou-hero-20260921.png' || imagePath === '/images/cities/shanghai-hero-v2.png' || imagePath === '/images/cities/hochiminh-hero-v2.png' || imagePath === '/images/cities/chengdu-hero-v2.png' || imagePath === '/images/cities/zhangjiajie-hero-v2.png') && (
+                {(imagePath === '/images/cities/boracay-hero-20260921.png' || imagePath === '/images/cities/saipan-hero-20260921.png' || imagePath === '/images/cities/guangzhou-hero-20260921.png' || imagePath === '/images/cities/shanghai-hero-v2.png' || imagePath === '/images/cities/hochiminh-hero-v2.png' || imagePath === '/images/cities/chengdu-hero-v2.png' || imagePath === '/images/cities/zhangjiajie-hero-v2.png') && (
                     <p className={styles.imageDisclosure}>AI 생성 이미지</p>
                 )}
             </div>

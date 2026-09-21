@@ -1,0 +1,12 @@
+.inbox { display: grid; gap: 16px; font-size: 14px; }
+.inbox h2 { font-size: 20px; font-weight: 700; }
+.inbox h3 { font-size: 16px; font-weight: 700; }
+.inbox p { color: #737373; line-height: 1.6; }
+.inbox button { min-height: 44px; padding: 8px 12px; border: 1px solid #e1e5eb; border-radius: 10px; background: white; color: #182230; font: inherit; cursor: pointer; }
+.inbox button:disabled { opacity: .5; cursor: default; }
+.heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.row { display: grid; grid-template-columns: 1fr auto; text-align: left; gap: 8px; }
+.row time { grid-column: 1 / -1; font-size: 12px; color: #737373; }
+.detail { border: 1px solid #e1e5eb; border-radius: 12px; padding: 16px; display: grid; gap: 16px; min-width: 0; }
+.message { white-space: pre-wrap; overflow-wrap: anywhere; }
+.detail img { max-width: 100%; max-height: 600px; object-fit: contain; }
