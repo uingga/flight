@@ -6,7 +6,7 @@ export async function loadReturningTrend(config: Ga4Config, dates: string[], que
     try {
         const report = await query(config, {
             dateRanges: [{startDate: dates[0], endDate: dates[dates.length - 1]}],
-            dimensions: [{name: 'date'}], metrics: [{name: 'activeUsers'}],
+            dimensions: [{name: 'date'}], metrics: [{name: 'totalUsers'}],
             dimensionFilter: {filter: {fieldName: 'newVsReturning', stringFilter: {matchType: 'EXACT', value: 'returning'}}},
             limit: dates.length, keepEmptyRows: true,
         });

@@ -129,6 +129,24 @@ export async function runReport(config: Ga4Config, request: ReportRequest): Prom
     });
 }
 
+/** Share the existing request/token queues with dashboard reports. */
+export async function runBatchReports(config: Ga4Config, requests: ReportRequest[]): Promise<ReportResponse[]> {
+    if (requests.length < 1 || requests.length > 5) throw new Error('Invalid GA4 batch size');
+    const identity = crypto.createHash('sha256').update(JSON.stringify(config)).digest('hex');
+    return reportQueue.run(identity + ':batch:' + JSON.stringify(requests), async () => {
+        const token = await tokenQueue.run(identity, () => accessToken(config));
+        const response = await fetch(`${DATA_API}/properties/${config.propertyId}:batchRunReports`, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ requests }), cache: 'no-store', signal: AbortSignal.timeout(15_000),
+        });
+        if (!response.ok) throw new Error(`GA4 retention report failed (${response.status})`);
+        const body = await response.json() as { reports?: ReportResponse[] };
+        if (body.reports?.length !== requests.length) throw new Error('Incomplete GA4 retention response');
+        return body.reports;
+    });
+}
+
 /** eventName == value 필터 */
 export const eventNameFilter = (eventName: string) => ({
     filter: { fieldName: 'eventName', stringFilter: { value: eventName, matchType: 'EXACT' } },

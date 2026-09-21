@@ -14,6 +14,7 @@ import type { CrawlHistoryEntry } from '@/lib/admin-collection-history';
 import { buildAdminAttentionItems } from '@/lib/admin-attention';
 import AdminTodayPick from '@/components/AdminTodayPick';
 import AdminVisitComparison from '@/components/AdminVisitComparison';
+import AdminRetention from '@/components/AdminRetention';
 import AdminFlightOrder from '@/components/AdminFlightOrder';
 import AdminFlightInterest from '@/components/AdminFlightInterest';
 import AdminTodayFlights from '@/components/AdminTodayFlights';
@@ -4063,15 +4064,11 @@ export default function AdminPage() {
                             </div>
                             <AdminTrafficOverview data={gaStats.acquisition} routes={gaStats.bookingByRoute} devices={gaStats.deviceTraffic} />
                             <details className={styles.openDisclosure}>
-                                <summary>여행사별 예약 이동 · 알림 등록 위치</summary>
+                                <summary>여행사별 예약 이동</summary>
                             <div className={styles.analysisGrid}>
                                 <div className={styles.analysisPanel}>
                                     <h3>예약 이동이 많은 여행사</h3>
                                     <RankList items={(gaStats.bookingByAgency || []).slice(0, 5).map(item => ({ label: SOURCE_NAMES[item.label] || item.label, value: `${item.count.toLocaleString()}회` }))} empty="아직 예약 이동이 없어요." />
-                                </div>
-                                <div className={styles.analysisPanel}>
-                                    <h3>알림 등록을 시작한 위치</h3>
-                                    <RankList items={(gaStats.alertByEntry || []).slice(0, 5).map(item => ({ label: item.label, value: `${item.count.toLocaleString()}회` }))} empty="알림 등록 위치가 아직 기록되지 않았어요." />
                                 </div>
 
                             </div>
@@ -4144,11 +4141,10 @@ export default function AdminPage() {
                                     <small>{comparisonText(gaStats.periods.current.users, gaStats.periods.previous.users)}</small>
                                 </div>
                                 <div className={styles.signalCard}>
-                                    <span>다시 온 사람 비율</span>
-                                    <strong>{gaStats.returning.current.rate !== null ? `${gaStats.returning.current.rate}%` : '—'}</strong>
+                                    <span>재방문한 사람</span>
+                                    <strong>{gaStats.returning.current.returningUsers.toLocaleString()}명</strong>
                                     <small>
-                                        최근 30일 {gaStats.returning.current.returningUsers.toLocaleString()}명
-                                        {gaStats.returning.previous.rate !== null ? ` · 직전 ${gaStats.returning.previous.rate}%` : ''}
+                                        최근 30일 · 아래 재방문율과 다른 기간 집계입니다.
                                     </small>
                                 </div>
                                 <div className={(gaStats.dateFilter.emptyRate || 0) >= 20 ? `${styles.signalCard} ${styles.signalCardWarn}` : styles.signalCard}>
@@ -4197,11 +4193,12 @@ export default function AdminPage() {
                             )}
                         </section>
 
+                        <AdminRetention adminKey={key} />
                         <section className={styles.section} id="visitor-segments">
                             <div className={styles.sectionHeading}>
                                 <div>
                                     <h2>처음 온 사람과 다시 온 사람</h2>
-                                    <p>최근 30일 동안 두 집단이 상세·예약·공유·알림 중 어디까지 갔는지 비교합니다.</p>
+                                    <p>최근 30일의 상세·예약 이동·공유를 같은 방문자 기준으로 비교합니다. 같은 사람이 기간 중 두 집단에 포함될 수 있어 두 집단의 인원은 합산하지 않습니다.</p>
                                 </div>
                             </div>
                             {gaStats.monitoring.behaviorAvailable ? (
@@ -4216,7 +4213,6 @@ export default function AdminPage() {
                                                 <div><dt>상세 열람</dt><dd>{segment.detailOpen.toLocaleString()}명 <small>{segment.detailOpenRate !== null ? `${segment.detailOpenRate}%` : '—'}</small></dd></div>
                                                 <div><dt>예약 이동</dt><dd>{segment.bookingClick.toLocaleString()}명 <small>{segment.bookingClickRate !== null ? `${segment.bookingClickRate}%` : '—'}</small></dd></div>
                                                 <div><dt>링크 복사</dt><dd>{segment.share.toLocaleString()}명 <small>{segment.shareRate !== null ? `${segment.shareRate}%` : '—'}</small></dd></div>
-                                                <div><dt>알림 등록</dt><dd>{segment.alertSetup.toLocaleString()}명</dd></div>
                                             </dl>
                                         </article>
                                     ))}
@@ -4275,8 +4271,8 @@ export default function AdminPage() {
                         )}
                         <div className={styles.userStatGrid}>
                             <div className={styles.userStat}>
-                                <span>다시 온 사람의 비율</span>
-                                <strong>{gaStats.returning.current.rate !== null ? `${gaStats.returning.current.rate}%` : '—'}</strong>
+                                <span>재방문한 사람</span>
+                                <strong>{gaStats.returning.current.returningUsers.toLocaleString()}명</strong>
                                 <small>최근 30일에 다시 방문한 사람 {gaStats.returning.current.returningUsers.toLocaleString()}명</small>
                             </div>
                             <div className={styles.userStat}>

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { generateKeyPairSync } from 'node:crypto';
-import { runReport } from '../src/lib/ga4';
+import { runReport, runBatchReports } from '../src/lib/ga4';
 import { Ga4RequestQueue } from '../src/lib/ga4-request-queue';
 async function main() {
  const config={propertyId:'test',clientEmail:'test@example.com',privateKey:generateKeyPairSync('rsa',{modulusLength:2048}).privateKey.export({type:'pkcs8',format:'pem'}).toString()};
@@ -11,6 +11,7 @@ async function main() {
   active++;peak=Math.max(peak,active);reports++;
   await new Promise(r=>setTimeout(r,5));active--;
   const request=JSON.parse(String(init?.body));
+  if (request.requests) return Response.json({ reports: request.requests.map(() => ({rows:[]})) });
   if(request.limit===999 && retries++===0)return Response.json({error:{message:'Exhausted concurrent requests quota'}},{status:429});
   if(request.limit===998)return Response.json({error:{message:'Exhausted daily tokens quota'}},{status:429});
   return Response.json({rowCount:request.limit,rows:[]});
@@ -19,6 +20,8 @@ async function main() {
  try {
   const rows=await Promise.all(Array.from({length:30},(_,i)=>runReport(config,req(i%15+1))));
   assert.equal(peak,2);assert.equal(reports,15);assert.equal(tokens,1);assert.equal(rows.length,30);
+  await Promise.all([runReport(config,req(100)),runBatchReports(config,[req(101)]),runBatchReports(config,[req(102)])]);
+  assert.equal(peak,2,'retention batches share the dashboard queue');
   assert.equal((await runReport(config,req(999))).rowCount,999);assert.equal(retries,2);
   const before=reports;await assert.rejects(runReport(config,req(998)),/통계 조회 요청/);assert.equal(reports,before+1);
   await runReport(config,req(1));assert.equal(reports,before+2);

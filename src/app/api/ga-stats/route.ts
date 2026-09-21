@@ -173,7 +173,7 @@ async function buildStats(config: Ga4Config, days: number) {
     const summaryRequest = (range: Array<{ startDate: string; endDate: string }>) => runReport(config, {
         dateRanges: range,
         metrics: [
-            { name: 'activeUsers' },
+            { name: 'totalUsers' },
             { name: 'screenPageViews' },
             { name: 'sessions' },
             { name: 'userEngagementDuration' },
@@ -203,7 +203,7 @@ async function buildStats(config: Ga4Config, days: number) {
     const returningRequest = (range: Array<{ startDate: string; endDate: string }>) => runReport(config, {
         dateRanges: range,
         dimensions: [{ name: 'newVsReturning' }],
-        metrics: [{ name: 'activeUsers' }],
+        metrics: [{ name: 'totalUsers' }],
     });
 
     const cityInterestRequest = (
@@ -243,7 +243,7 @@ async function buildStats(config: Ga4Config, days: number) {
         runReport(config, {
             dateRanges: trendDateRanges,
             dimensions: [{ name: 'date' }],
-            metrics: [{ name: 'activeUsers' }, { name: 'screenPageViews' }, { name: 'sessions' }],
+            metrics: [{ name: 'totalUsers' }, { name: 'screenPageViews' }, { name: 'sessions' }],
             orderBys: [{ dimension: { dimensionName: 'date' } }],
             metricAggregations: ['TOTAL'],
             keepEmptyRows: true,
@@ -518,11 +518,11 @@ async function buildStats(config: Ga4Config, days: number) {
         const returningUsers = rows.find(row => dim(row).toLowerCase() === 'returning');
         const newCount = num(newUsers, 0);
         const returningCount = num(returningUsers, 0);
-        const classified = newCount + returningCount;
         return {
             newUsers: newCount,
             returningUsers: returningCount,
-            rate: classified > 0 ? Number(((returningCount / classified) * 100).toFixed(1)) : null,
+            // Categories overlap; their sum is not a cohort denominator. See /api/ga-retention.
+            rate: null,
         };
     };
 

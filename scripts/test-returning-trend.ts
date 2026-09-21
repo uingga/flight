@@ -4,7 +4,7 @@ import type {Ga4Config, runReport, ReportResponse} from '../src/lib/ga4';
 async function main() {
 const config={} as Ga4Config, dates=['2026-09-10','2026-09-11'];
 const query=(report:ReportResponse) => (async (_config, request) => {
- assert.deepEqual(request.metrics,[{name:'activeUsers'}]);
+ assert.deepEqual(request.metrics,[{name:'totalUsers'}]);
  assert.deepEqual(request.dateRanges,[{startDate:dates[0],endDate:dates[1]}]);
  assert.equal((request.dimensionFilter as any).filter.stringFilter.value,'returning');
  return report;
