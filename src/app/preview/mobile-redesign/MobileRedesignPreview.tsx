@@ -1,4 +1,5 @@
 'use client';
+import { holidayInsightCopy, selectHolidayFlights } from '@/lib/holiday-insight';
 import { airlineDisplayName } from '@/lib/utils/airline-display';
 import { homeRecommendation } from '@/lib/home-recommendation';
 import { isKoreanCalendarRedDay, koreanHolidayName } from '@/lib/korean-calendar';
@@ -370,17 +371,21 @@ const tripSpansFullWeekend = (flight: Flight) => {
     return includesSaturday && includesSunday;
 };
 
-function WeekendFlightsInsight({
+export function WeekendFlightsInsight({
     flights,
     onOpen,
     priceDrops,
+    copy,
+    ticketLabels,
 }: {
     flights: Flight[];
     onOpen: (flight: Flight) => void;
     priceDrops?: Record<string, PriceDropRecord>;
+    copy?: { id: string; eyebrow: string; title: string; description: string };
+    ticketLabels?: Record<string, string>;
 }) {
-    const insightId = priceDrops ? 'price-drop-flights-insight' : 'weekend-flights-insight';
-    const eyebrow = priceDrops ? '가격 하락' : '주말 일정';
+    const insightId = copy?.id ?? (priceDrops ? 'price-drop-flights-insight' : 'weekend-flights-insight');
+    const eyebrow = copy?.eyebrow ?? (priceDrops ? '가격 하락' : '주말 일정');
     const mobileFlights = useMemo(() => flights, [flights]);
     const mobileCount = mobileFlights.length;
     const mobileLoop = useMemo(() => (
@@ -580,7 +585,7 @@ function WeekendFlightsInsight({
             >
                 <span className={isMobileTicket ? styles.freshFlightsMobileTicketMain : styles.freshFlightsTicketMain}>
                     <span className={isMobileTicket ? styles.freshFlightsMobilePlace : styles.freshFlightsPlace}>
-                        <small>{departureName(flight)} 출발</small>
+                        <small>{departureName(flight)} 출발{ticketLabels?.[flight.id] ? ` · ${ticketLabels[flight.id]}` : ''}</small>
                         <strong>{stripAirport(flight.arrival.city)}</strong>
                     </span>
                     <span className={isMobileTicket ? styles.freshFlightsMobilePrice : styles.freshFlightsPrice}>
@@ -611,8 +616,8 @@ function WeekendFlightsInsight({
                 </div>
                 <div className={styles.freshFlightsCopy}>
                     <span className={styles.freshFlightsDesktopEyebrow}>{eyebrow}</span>
-                    <strong id={`${insightId}-title`}>{priceDrops ? '기다린 보람이 있네요' : '주말이 아까운 사람에게'}</strong>
-                    <p>{priceDrops ? '최근 가격이 내려간 항공권을 모았어요.' : '토·일이 여행 일정에 들어간 항공권만 골랐어요.'}</p>
+                    <strong id={`${insightId}-title`}>{copy?.title ?? (priceDrops ? '기다린 보람이 있네요' : '주말이 아까운 사람에게')}</strong>
+                    <p>{copy?.description ?? (priceDrops ? '최근 가격이 내려간 항공권을 모았어요.' : '토·일이 여행 일정에 들어간 항공권만 골랐어요.')}</p>
                 </div>
                 <div
                     className={styles.freshFlightsMobileViewport}
@@ -3052,9 +3057,11 @@ export default function MobileRedesignPreview({
         : datePeriod === 'all'
             ? '날짜'
             : DATE_PERIOD_OPTIONS.find(item => item.value === datePeriod)?.label || '날짜';
+    const holidayInsight = selectHolidayFlights(displayedFlights, seoulDateKey());
     const firstInsightCard = 9;
     const subsequentInsightInterval = 12;
-    const priceDropInsightCard = firstInsightCard + subsequentInsightInterval;
+    const holidayInsightCard = firstInsightCard + subsequentInsightInterval;
+    const priceDropInsightCard = holidayInsightCard + (holidayInsight.flights.length ? subsequentInsightInterval : 0);
     const weeklyDiscoveryInsightCard = priceDropInsightCard + (priceDropFlights.length ? subsequentInsightInterval : 0);
     const weekendFlightsInsightCard = weeklyDiscoveryInsightCard + subsequentInsightInterval;
     const advancedSelectionCount = Number(sourceFilter !== 'all') + Number(airlineFilter !== 'all');
@@ -4422,6 +4429,9 @@ export default function MobileRedesignPreview({
                                             </button>
                                         </article>
                                     </div>
+                                    {!freshRouteResults && isDefaultView && cardNumber === holidayInsightCard && holidayInsight.flights.length > 0 && (
+                                        <WeekendFlightsInsight flights={holidayInsight.flights} copy={holidayInsightCopy} ticketLabels={holidayInsight.labels} onOpen={flight => openFlight(flight, 'insight_holiday_flights')} />
+                                    )}
                                     {!freshRouteResults && isDefaultView && cardNumber === priceDropInsightCard && priceDropFlights.length > 0 && (
                                         <WeekendFlightsInsight flights={priceDropFlights} priceDrops={priceDrops} onOpen={flight => {
                                             const group = priceDropGroups.find(item => item.route === normalizedRoute(flight));
