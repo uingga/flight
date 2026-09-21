@@ -19,6 +19,7 @@ import dynamic from 'next/dynamic';
 import { ko } from 'date-fns/locale';
 import 'react-datepicker/dist/react-datepicker.css';
 import Logo from '@/components/Logo';
+import { formatFlightTripLength, matchesTripLength, parseTripLengthFilters, TRIP_LENGTH_OPTIONS, type TripLengthFilter } from '@/lib/flight-trip-length';
 import { buildDropCardReason } from '@/lib/drop-card-reason';
 import { resolveFlightSeats } from '@/lib/flight-seats';
 import OverlayDialog from '@/components/ui/OverlayDialog';
@@ -68,7 +69,7 @@ type SortMode = 'recommended' | 'price' | 'date';
 type DatePeriod = 'all' | 'this-week' | 'next-week' | 'this-month' | 'next-month' | 'custom';
 type DesktopFilterKey = 'departure' | 'region' | 'date' | 'price';
 type FlightReportStatus = 'sending' | 'sent' | 'error';
-type EmptyFilterId = 'region' | 'departure' | 'date' | 'price' | 'source' | 'airline';
+type EmptyFilterId = 'region' | 'departure' | 'date' | 'duration' | 'price' | 'source' | 'airline';
 
 const RECENT_FLIGHT_REPORTS_KEY = 'tikitikit_recent_flight_reports';
 const RECENT_SEARCHES_KEY = 'tikitikit_recent_searches';
@@ -279,14 +280,7 @@ const cardDate = (value: string) => {
     return `${date.getMonth() + 1}.${date.getDate()}(${weekday})`;
 };
 
-const tripLength = (flight: Flight) => {
-    const departure = parseDate(flight.departure.date);
-    const arrival = parseDate(flight.arrival.date);
-    if (!departure || !arrival) return null;
-    const days = Math.round((arrival.getTime() - departure.getTime()) / 86_400_000) + 1;
-    if (days === 1) return '당일';
-    return days > 1 ? `${days - 1}박 ${days}일` : null;
-};
+const tripLength = formatFlightTripLength;
 
 const fallbackArrivalDayOffset = (departureTime?: string, arrivalTime?: string) => {
     const parseMinutes = (value?: string) => {
@@ -1168,6 +1162,7 @@ export default function MobileRedesignPreview({
     const [sourceFilter, setSourceFilter] = useState<'all' | Flight['source']>('all');
     const [airlineFilter, setAirlineFilter] = useState('all');
     const [datePeriod, setDatePeriod] = useState<DatePeriod>('all');
+    const [tripLengths, setTripLengths] = useState<TripLengthFilter[]>([]);
     const [customStartDate, setCustomStartDate] = useState<Date | null>(null);
     const [customEndDate, setCustomEndDate] = useState<Date | null>(null);
     const [calendarOpen, setCalendarOpen] = useState(false);
@@ -1645,6 +1640,7 @@ export default function MobileRedesignPreview({
         if (SOURCE_OPTIONS.some(option => option.value === sourceParam)) setSourceFilter(sourceParam as 'all' | Flight['source']);
         const airlineParam = params.get('airline');
         if (airlineParam) setAirlineFilter(airlineParam);
+        setTripLengths(parseTripLengthFilters(params.get('duration')));
         const sortParam = params.get('sort');
         if (sortParam === 'price' || sortParam === 'date' || sortParam === 'recommended') setSort(sortParam);
         const maxParam = Number(params.get('max'));
@@ -1787,6 +1783,7 @@ export default function MobileRedesignPreview({
         if (region !== '전체') next.set('region', region);
         if (sourceFilter !== 'all') next.set('source', sourceFilter);
         if (airlineFilter !== 'all') next.set('airline', airlineFilter);
+        if (tripLengths.length) next.set('duration', tripLengths.join(','));
         if (sort !== 'recommended') next.set('sort', sort);
         if (maxPrice > 0) next.set('max', String(maxPrice));
         if (datePeriod === 'custom' && customStartDate) {
@@ -1805,7 +1802,7 @@ export default function MobileRedesignPreview({
             '',
             `${window.location.pathname}${queryString ? `?${queryString}` : ''}`,
         );
-    }, [airlineFilter, customEndDate, customStartDate, datePeriod, departure, maxPrice, query, region, selectedFlight, sharedContext, sort, sourceFilter]);
+    }, [airlineFilter, customEndDate, customStartDate, datePeriod, departure, filterOpen, maxPrice, query, region, selectedFlight, sharedContext, sort, sourceFilter, tripLengths]);
 
     useEffect(() => {
         const syncDetailFromHistory = () => {
@@ -2006,11 +2003,11 @@ export default function MobileRedesignPreview({
     useEffect(() => {
         const weekendPreview = window.location.hash === '#weekend-flights-insight';
         setVisibleCount(weekendPreview || window.matchMedia('(min-width: 960px)').matches ? 36 : 18);
-    }, [airlineFilter, region, departure, datePeriod, customStartDate, customEndDate, maxPrice, sort, query, sourceFilter]);
+    }, [airlineFilter, region, departure, datePeriod, customStartDate, customEndDate, maxPrice, sort, query, sourceFilter, tripLengths]);
 
     useEffect(() => {
         setFreshRouteResults(null);
-    }, [airlineFilter, region, departure, datePeriod, customStartDate, customEndDate, maxPrice, query, sourceFilter]);
+    }, [airlineFilter, region, departure, datePeriod, customStartDate, customEndDate, maxPrice, query, sourceFilter, tripLengths]);
 
     useEffect(() => {
         if (!toast) return;
@@ -2123,6 +2120,7 @@ export default function MobileRedesignPreview({
                 && (sourceFilter === 'all' || flight.source === sourceFilter)
                 && (airlineFilter === 'all' || normalizeAirline(flight.airline) === airlineFilter)
                 && datePeriodMatches(flight, datePeriod, referenceDate, customStartDate, customEndDate)
+                && matchesTripLength(flight, tripLengths)
                 && (!maxPrice || effectivePrice(flight) <= maxPrice);
         });
 
@@ -2131,7 +2129,7 @@ export default function MobileRedesignPreview({
             if (sort === 'date') return (parseDate(a.departure.date)?.getTime() || 0) - (parseDate(b.departure.date)?.getTime() || 0);
             return compareRecommended(a, b);
         });
-    }, [activeSharedContext, airlineFilter, compareRecommended, customEndDate, customStartDate, datePeriod, departure, flights, maxPrice, query, region, sharedFlightIds, sort, sourceFilter]);
+    }, [activeSharedContext, airlineFilter, compareRecommended, customEndDate, customStartDate, datePeriod, departure, flights, maxPrice, query, region, sharedFlightIds, sort, sourceFilter, tripLengths]);
 
     const isDefaultView = sharedFlightIds.length === 0
         && region === '전체'
@@ -2139,6 +2137,7 @@ export default function MobileRedesignPreview({
         && sourceFilter === 'all'
         && airlineFilter === 'all'
         && datePeriod === 'all'
+        && tripLengths.length === 0
         && !maxPrice
         && !query.trim()
         && sort === 'recommended';
@@ -3035,6 +3034,7 @@ export default function MobileRedesignPreview({
     const advancedSelectionCount = Number(sourceFilter !== 'all') + Number(airlineFilter !== 'all');
     const hasAdvancedFilter = departure !== '전체'
         || datePeriod !== 'all'
+        || tripLengths.length > 0
         || maxPrice > 0
         || sourceFilter !== 'all'
         || airlineFilter !== 'all';
@@ -3138,11 +3138,13 @@ export default function MobileRedesignPreview({
         }
         if (sourceFilter !== 'all') activeFilters.push({ id: 'source', label: SOURCE_NAMES[sourceFilter] });
         if (airlineFilter !== 'all') activeFilters.push({ id: 'airline', label: airlineFilter });
+        if (tripLengths.length) activeFilters.push({ id: 'duration', label: `여행 기간 · ${TRIP_LENGTH_OPTIONS.filter(option => tripLengths.includes(option.value)).map(option => option.label).join(', ')}` });
 
         const matchesAllExcept = (flight: Flight, except: EmptyFilterId) => (
             (except === 'region' || regionMatches(flight, region))
             && (except === 'departure' || departureMatches(flight, departure))
             && (except === 'date' || datePeriodMatches(flight, datePeriod, referenceDate, customStartDate, customEndDate))
+            && (except === 'duration' || matchesTripLength(flight, tripLengths))
             && (except === 'price' || !maxPrice || effectivePrice(flight) <= maxPrice)
             && (except === 'source' || sourceFilter === 'all' || flight.source === sourceFilter)
             && (except === 'airline' || airlineFilter === 'all' || normalizeAirline(flight.airline) === airlineFilter)
@@ -3160,7 +3162,7 @@ export default function MobileRedesignPreview({
         };
     }, [
         airlineFilter, customEndDate, customStartDate, datePeriod, departure, error,
-        filteredFlights.length, flights, loading, maxPrice, query, region, sourceFilter,
+        filteredFlights.length, flights, loading, maxPrice, query, region, sourceFilter, tripLengths,
     ]);
     const guestFavoriteSnapshots = useMemo(
         () => flights.filter(flight => guestFavorites.has(flight.id)).map(toAccountSnapshot),
@@ -3223,10 +3225,19 @@ export default function MobileRedesignPreview({
         }
     };
 
+    const selectTripLength = (value: TripLengthFilter | 'all') => {
+        const next = value === 'all' ? [] : parseTripLengthFilters(
+            (tripLengths.includes(value) ? tripLengths.filter(item => item !== value) : [...tripLengths, value]).join(','),
+        );
+        setTripLengths(next);
+        gtag.trackFilterChange('trip_length', next.join(',') || 'all');
+    };
+
     const clearEmptyBlocker = (id: EmptyFilterId) => {
         if (id === 'region') selectRegionFilter('전체');
         else if (id === 'departure') selectDepartureFilter('전체');
         else if (id === 'date') selectDatePeriod('all');
+        else if (id === 'duration') selectTripLength('all');
         else if (id === 'price') selectPriceFilter(0);
         else if (id === 'source') selectSourceFilter('all');
         else selectAirlineFilter('all');
@@ -3436,6 +3447,7 @@ export default function MobileRedesignPreview({
     };
 
     const applyAccountSearch = (filters: AccountSearchFilters) => {
+        setTripLengths([]);
         setQuery(filters.searchTerm);
         setSort(filters.sortBy === 'price' ? 'price' : filters.sortBy === 'date' ? 'date' : 'recommended');
         setRegion(filters.regionFilter === 'all'
@@ -3524,7 +3536,8 @@ export default function MobileRedesignPreview({
     };
 
     const resetFilters = () => {
-        if (departure !== '전체' || region !== '전체' || datePeriod !== 'all' || maxPrice || sourceFilter !== 'all' || airlineFilter !== 'all') {
+        setTripLengths([]);
+        if (departure !== '전체' || region !== '전체' || datePeriod !== 'all' || tripLengths.length || maxPrice || sourceFilter !== 'all' || airlineFilter !== 'all') {
             gtag.trackFilterChange('reset', 'all');
         }
         setDeparture('전체');
@@ -4801,6 +4814,20 @@ export default function MobileRedesignPreview({
                                     <p>출발일 범위를 선택하세요.</p>
                                 </div>
                             )}
+                        </div>
+
+                        <div className={styles.filterGroup} role="group" aria-labelledby="trip-length-heading">
+                            <h3 id="trip-length-heading">여행 기간</h3>
+                            <div className={styles.optionGrid}>
+                                <button type="button" aria-pressed={tripLengths.length === 0}
+                                    className={tripLengths.length === 0 ? styles.optionActive : ''}
+                                    onClick={() => selectTripLength('all')}>전체</button>
+                                {TRIP_LENGTH_OPTIONS.map(option => (
+                                    <button type="button" key={option.value} aria-pressed={tripLengths.includes(option.value)}
+                                        className={tripLengths.includes(option.value) ? styles.optionActive : ''}
+                                        onClick={() => selectTripLength(option.value)}>{option.label}</button>
+                                ))}
+                            </div>
                         </div>
 
                         <div className={`${styles.filterGroup} ${styles.advancedFilterGroup}`}>
