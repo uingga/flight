@@ -206,7 +206,7 @@ const SOURCE_NAMES: Record<Flight['source'], string> = {
     hanatour: '하나투어',
     onlinetour: '온라인투어',
     ttang: '땡처리닷컴',
-    myrealtrip: '마이리얼트립', lottetour: '롯데관광',
+    myrealtrip: '마이리얼트립', lottetour: '롯데관광', tripcom: '트립닷컴',
 };
 const SOURCE_OPTIONS: Array<{ value: 'all' | Flight['source']; label: string }> = [
     { value: 'all', label: '전체' },
@@ -5192,6 +5192,14 @@ export default function MobileRedesignPreview({
                                 {SOURCE_NAMES[selectedFlight.source]}에서 확인하기 <Icon name="arrow" />
                             </a>
                         </div>
+                        {selectedFlight.source === 'tripcom' && (
+                            <p className={styles.affiliateDisclosure}>
+                                {selectedFlight.tripcomDetail?.paymentNotice}
+                                {' · '}세금과 발권수수료를 포함한 성인 1인 왕복 가격입니다.
+                                예약 시 가격과 좌석을 다시 확인해주세요.
+                                제휴 링크를 통해 예약되면 티키티킷이 수수료를 받을 수 있어요.
+                            </p>
+                        )}
                         {selectedFlight.source === 'lottetour' && (
                             <p className={styles.affiliateDisclosure}>롯데관광에서 노선·출발일을 다시 선택하고, 출발 확정 여부를 확인해주세요.</p>
                         )}

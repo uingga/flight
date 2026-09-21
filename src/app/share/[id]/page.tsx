@@ -97,7 +97,7 @@ const SOURCE_NAMES: Record<string, string> = {
     ybtour: '노랑풍선',
     onlinetour: '온라인투어',
     ttang: '땡처리닷컴',
-    myrealtrip: '마이리얼트립', lottetour: '롯데관광',
+    myrealtrip: '마이리얼트립', lottetour: '롯데관광', tripcom: '트립닷컴',
     interpark: '인터파크',
 };
 

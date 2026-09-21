@@ -19,7 +19,7 @@ const SOURCE_NAMES: Record<Flight['source'], string> = {
     modetour: '모두투어',
     onlinetour: '온라인투어',
     ttang: '땡처리닷컴',
-    myrealtrip: '마이리얼트립', lottetour: '롯데관광',
+    myrealtrip: '마이리얼트립', lottetour: '롯데관광', tripcom: '트립닷컴',
 };
 const EXPECTED_HOSTS: Record<Flight['source'], string[]> = {
     ybtour: ['mfly.ybtour.co.kr', 'fly.ybtour.co.kr'],
@@ -29,6 +29,7 @@ const EXPECTED_HOSTS: Record<Flight['source'], string[]> = {
     ttang: ['mm.ttang.com', 'www.ttang.com', 'm.ttang.com'],
     myrealtrip: ['air-web.myrealtrip.com'],
     lottetour: ['m.lottetour.com'],
+    tripcom: ['kr.trip.com'],
 };
 
 type ProbeStage = 'initial' | 'retry' | 'confirmation';

@@ -1,6 +1,8 @@
 import {timingSafeEqual,createHash} from 'node:crypto';
+import {assertTripcomWriterScope} from './tripcom-writer-scope.mjs';
 export const WRITER_FILES={
  daily:['all-flights-cache','price-history','crawl-log','interpark-prices'],
+ tripcom:['all-flights-cache'],
  myrealtrip:['all-flights-cache','crawl-log'],onlinetour:['all-flights-cache','crawl-log'],
  'source-fallback':['all-flights-cache','crawl-log','interpark-prices'],manual:['all-flights-cache'],
  report:['all-flights-cache'],'link-health':['booking-link-health'],'today-pick':['today-pick'],admin:['today-pick'],
@@ -45,6 +47,12 @@ export function createPublicationHandler({coordinator,secrets,publicationFactory
      if(input.action!=='commit'||typeof input.expectedBase!=='string'||!/^[a-f0-9]{40,64}$/.test(input.requestId||''))throw Error('invalid commit');
      if(!Array.isArray(input.entries)||input.entries.length<1||input.entries.length>allowed.length)throw Error('invalid entries');
      const seen=new Set();for(const entry of input.entries){if(!Array.isArray(entry)||entry.length!==2||!allowed.some(f=>entry[0]===`data/${f}.json`)||seen.has(entry[0])||!entry[1]||typeof entry[1]!=='object')throw Error('path or content refused');seen.add(entry[0]);}
+     if(role==='tripcom'){
+      if(input.rawEntries)throw Error('tripcom raw entries refused');
+      const current=await (await publicationFactory()).readInputs(true);
+      if(current.ref!==input.expectedBase)throw Error('stale tripcom input');
+      assertTripcomWriterScope(current.cache,input.entries[0][1]);
+     }
      const lease=coordinator.writerAcquire({writer:role,claim:createHash('sha256').update(role+':'+input.requestId).digest('hex'),ttlMs:600000});
      const p=await publicationFactory();p.attachFence(()=>coordinator.writerCheck({...lease,writer:role}));
      // Strict immutable input CAS: never reconstruct an old cache on a newer parent.

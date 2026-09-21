@@ -240,7 +240,7 @@ export default function AdminTodayPick({ adminKey, readOnly = false, onManage, i
                                     <article key={`${pick.date}|${pick.flightId}|${pick.effectivePrice}`}>
                                         <time dateTime={pick.date}>{pick.date}</time>
                                         <div><strong>{pick.arrivalCity || pick.destinationKey || '도착지 기록 없음'}</strong>
-                                            <small>{({ttang: '땡처리닷컴', modetour: '모두투어', ybtour: '노랑풍선', hanatour: '하나투어', onlinetour: '온라인투어', myrealtrip: '마이리얼트립', lottetour: '롯데관광'} as Record<string, string>)[pick.source || ''] || pick.source || '여행사 기록 없음'}</small>
+                                            <small>{({ttang: '땡처리닷컴', modetour: '모두투어', ybtour: '노랑풍선', hanatour: '하나투어', onlinetour: '온라인투어', myrealtrip: '마이리얼트립', lottetour: '롯데관광', tripcom: '트립닷컴'} as Record<string, string>)[pick.source || ''] || pick.source || '여행사 기록 없음'}</small>
                                         </div>
                                         <b>{formatPrice(pick.effectivePrice)}</b>
                                     </article>

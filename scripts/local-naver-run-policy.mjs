@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { evaluateRoundContinuation } from '../src/lib/naver-round-handoff.mjs';
+import { includePublishedTripcom } from '../src/lib/tripcom-naver-policy.mjs';
 
 const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
 const HOUR_MS = 60 * 60 * 1000;
@@ -116,7 +117,11 @@ function usedNavigationBudget(state, totalBudget) {
     return Number.isFinite(raw) && raw >= 0 ? raw : totalBudget;
 }
 
-export function evaluateLocalNaverRun({
+export function evaluateLocalNaverRun(options) {
+    return includePublishedTripcom(evaluateBaseNaverRun(options), options.cache, options.now ?? new Date());
+}
+
+function evaluateBaseNaverRun({
     now = new Date(),
     cache,
     state = null,

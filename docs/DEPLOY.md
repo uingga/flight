@@ -1,5 +1,25 @@
 # 배포와 되돌리기
 
+## 현재 운영 기준 — 2026-09-21 정정
+
+아래 과거 직접 push 설명보다 이 절차가 우선한다. 사용자의 배포 승인 후,
+최신 main의 직접 자식 커밋을 별도 작업공간에서 준비하고 테스트·빌드를 통과시킨다.
+기준 커밋에 안전 태그를 보존하고 코드 브랜치만 원격에 올린 뒤 다음 단일 경로를 사용한다.
+
+```powershell
+node C:/Users/ynal/Tikitikit/ac-control/naver-ac-runtime/scripts/run-code-deploy-installed.mjs BASE_SHA COMMIT_SHA
+```
+
+main 직접 push, 인증·잠금 우회, 커밋별 승인 파일 변경은 하지 않는다.
+공통 writer 확인과 Vercel Production Ready 및 운영 API 확인까지 마쳐야 배포 완료다.
+응답 불명확 시 동일 커밋의 원장·main·영수증부터 확인하며 새 ID로 중복 발행하지 않는다.
+2026-09-21 사용자 승인으로 main 보호 규칙의 RepositoryRole/pull_request 예외를 제거했고,
+전용 Integration/always 게시 앱만 예외로 두는 기존 정책을 복원했다.
+
+---
+
+## 과거 절차 (직접 main push에는 사용하지 않음)
+
 tikitikit.kr은 `main` 브랜치에 푸시하면 Vercel이 자동으로 재배포한다.
 배포한 코드에 문제가 생겼을 때 **되돌릴 수 있는 장치**를 마련해 두었다.
 

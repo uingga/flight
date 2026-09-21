@@ -7,6 +7,7 @@
  */
 
 import { pathToFileURL } from 'node:url';
+import { isFreshTripcomQuote } from '../src/lib/tripcom-naver-policy.mjs';
 import { createNaverSelection } from './lib/naver-selection';
 import { gotoNaver } from './lib/naver-navigation.mjs';
 export { gotoNaver } from './lib/naver-navigation.mjs';
@@ -231,6 +232,7 @@ try {
 }
 
 export function prepareFlightCandidates(rawData: FlightData[], sourceUpdatedAt: Record<string, string> = {}, cacheUpdatedAt?: string, sourceFilters = SOURCE_FILTERS) {
+    rawData = rawData.filter(flight => flight.source !== 'tripcom' || isFreshTripcomQuote(flight));
     rawData = rawData.map(flight => ({
         ...flight,
         priceCheckedAt: flight.priceCheckedAt || sourceUpdatedAt[flight.source] || cacheUpdatedAt,
