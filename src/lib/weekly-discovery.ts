@@ -1,4 +1,5 @@
 import type { Flight } from '@/types/flight';
+import { TAKAMATSU_DISCOVERY } from './takamatsu-discovery';
 
 export type Discovery = {
     headline?: string;
@@ -13,6 +14,7 @@ export type Discovery = {
     longitude: number;
     image: string;
     imageCaption?: string;
+    images?: { src: string; caption: string; credit: string; source: string; license: string; licenseUrl: string }[];
 };
 
 const DISCOVERIES: Discovery[] = [
@@ -51,10 +53,10 @@ export const IBARAKI_DISCOVERY: Discovery = {
 };
 
 // Switch the active destination here; retained entries share the same UI and map.
-export const WEEKLY_DISCOVERY = IBARAKI_DISCOVERY;
+export const WEEKLY_DISCOVERY = TAKAMATSU_DISCOVERY;
 
 export function matchesDiscoveryFlight(flight: Flight, item: Discovery = WEEKLY_DISCOVERY) {
-    return flight.arrival.city.replace(/\([^)]+\)/g, '').trim() === item.city
+    return flight.arrival.city.replace(/\([^)]+\)/g, '').trim().replace('다카마츠', '다카마쓰') === item.city
         && (!item.departureCity || flight.departure.city.includes(item.departureCity)
             || (!!item.departureAirport && flight.departure.airport === item.departureAirport));
 }

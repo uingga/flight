@@ -6,6 +6,7 @@ import Logo from '@/components/Logo';
 import OverlayDialog from '@/components/ui/OverlayDialog';
 import type { Flight } from '@/types/flight';
 import styles from './page.module.css';
+import DiscoveryGallery from './DiscoveryGallery';
 
 type FlightCard = {
     source: string;
@@ -338,12 +339,12 @@ export function DiscoveryDetail({ item, flight, flights = [flight], onClose }: {
             <div className={styles.detailScroll}>
                 <CityMap item={item} />
 
-                <figure className={styles.cityFigure}>
+                {item.images?.length ? <DiscoveryGallery images={item.images} /> : <figure className={styles.cityFigure}>
                     <div className={styles.cityImage}>
                         <Image src={item.image} alt={`${item.city} 여행지 풍경`} fill sizes="(max-width: 680px) 100vw, 520px" priority />
                     </div>
                     {item.imageCaption && <figcaption className={styles.imageCaption}>{item.imageCaption}</figcaption>}
-                </figure>
+                </figure>}
 
                 <section className={styles.cityStory}>
                     <h3>{item.city}, 이런 곳이에요</h3>
