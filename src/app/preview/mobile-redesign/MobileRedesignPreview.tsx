@@ -1,4 +1,5 @@
 'use client';
+import { airlineDisplayName } from '@/lib/utils/airline-display';
 import { homeRecommendation } from '@/lib/home-recommendation';
 import { isKoreanCalendarRedDay, koreanHolidayName } from '@/lib/korean-calendar';
 
@@ -64,6 +65,7 @@ import { matchesDiscoveryFlight } from '@/lib/weekly-discovery';
 import MobileDealAlertSheet, { type AlertSearchCondition } from './MobileDealAlertSheet';
 import RedesignAdSlot from './RedesignAdSlot';
 import styles from './page.module.css';
+import { CONTACT_TYPES, CONTACT_IMAGE_LIMIT, type ContactType } from '@/lib/contact';
 
 function RegionChipRail({ children }: { children: ReactNode }) {
     const ref = useRef<HTMLElement>(null);
@@ -1264,6 +1266,9 @@ export default function MobileRedesignPreview({
     const [showContact, setShowContact] = useState(false);
     const { open: showServiceUpdate, close: closeServiceUpdate, dismiss: dismissServiceUpdate } = useAnnouncementNotice(SERVICE_UPDATE_NOTICE, !previewMode);
     const [contactForm, setContactForm] = useState({ name: '', email: '', message: '' });
+    const [contactType, setContactType] = useState<ContactType>('question');
+    const [contactImage, setContactImage] = useState('');
+    const [contactImageBusy, setContactImageBusy] = useState(false);
     const [contactStatus, setContactStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
     const [contactMessage, setContactMessage] = useState('');
     const [insightDateKey, setInsightDateKey] = useState(() => seoulDateKey());
@@ -3673,7 +3678,7 @@ export default function MobileRedesignPreview({
 
     const submitContact = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        if (!contactForm.message.trim() || contactStatus === 'sending') return;
+        if (!contactForm.message.trim() || contactStatus === 'sending' || contactImageBusy) return;
         setContactStatus('sending');
         setContactMessage('');
         try {
@@ -3681,12 +3686,17 @@ export default function MobileRedesignPreview({
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'same-origin',
-                body: JSON.stringify(contactForm),
+                body: JSON.stringify({ ...contactForm, category: contactType, attachment: contactImage || null }),
             });
-            if (!response.ok) throw new Error('문의 전송에 실패했어요.');
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error || '문의 전송에 실패했어요.');
             setContactStatus('sent');
-            setContactMessage('문의가 전송됐어요. 확인 후 답변드릴게요.');
+            setContactMessage(contactForm.email.trim()
+                ? '문의가 전송됐어요. 남겨주신 이메일로 답변드릴게요.'
+                : '의견을 잘 받았어요. 이메일을 남기지 않아 개별 답변은 드릴 수 없지만, 보내주신 내용은 확인할게요.');
             setContactForm({ name: '', email: '', message: '' });
+            setContactImage('');
+            setContactType('question');
         } catch (cause) {
             setContactStatus('error');
             setContactMessage(cause instanceof Error ? cause.message : '문의 전송에 실패했어요.');
@@ -4333,7 +4343,7 @@ export default function MobileRedesignPreview({
                                                 <div className={styles.cardTopline}>
                                                     <div>
                                                         <span className={`${styles.sourceBadge} ${styles[flight.source]}`}>{SOURCE_NAMES[flight.source]}</span>
-                                                        <span className={styles.airline}>{flight.airline || '항공사 확인'}</span>
+                                                        <span className={styles.airline}>{airlineDisplayName(flight.airline || '항공사 확인')}</span>
                                                     </div>
                                                 </div>
 
@@ -4638,6 +4648,10 @@ export default function MobileRedesignPreview({
                                 <a href="/about">티키티킷 안내</a>
                             </div>
                         </section>
+                        <section className={styles.siteFooterSupport} id="contact-entry">
+                            <strong>고객지원</strong>
+                            <button type="button" onClick={openContact}>문의·의견 보내기 <span aria-hidden="true">→</span></button>
+                        </section>
                         <section>
                             <strong>여행사 바로가기</strong>
                             <div className={styles.siteFooterLinks}>
@@ -4647,25 +4661,6 @@ export default function MobileRedesignPreview({
                                 <a href="https://www.onlinetour.co.kr" target="_blank" rel="noopener noreferrer">온라인투어</a>
                                 <a href="https://www.ttang.com" target="_blank" rel="noopener noreferrer">땡처리닷컴</a>
                                 <a href="https://www.myrealtrip.com" target="_blank" rel="noopener noreferrer">마이리얼트립</a>
-                            </div>
-                        </section>
-                        <section>
-                            <strong>어디로 갈까요?</strong>
-                            <div className={styles.siteFooterDestinations}>
-                                {FEATURED_TRAVEL_CITIES.slice(0, 8).map(city => (
-                                    <a
-                                        key={city}
-                                        href={`/flights/${encodeURIComponent(city)}`}
-                                        onClick={(event) => {
-                                            if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-                                            event.preventDefault();
-                                            setQuery(city);
-                                            window.scrollTo({ top: 0, behavior: 'smooth' });
-                                        }}
-                                    >
-                                        {city}
-                                    </a>
-                                ))}
                             </div>
                         </section>
                     </div>
@@ -4679,7 +4674,6 @@ export default function MobileRedesignPreview({
                         <nav aria-label="서비스 안내">
                             <a href="/terms">이용약관</a>
                             <a href="/privacy">개인정보처리방침</a>
-                            <button type="button" onClick={openContact}>문의하기</button>
                         </nav>
                     </div>
                     {previewMode && (
@@ -4691,7 +4685,7 @@ export default function MobileRedesignPreview({
                 </footer>
             </div>
 
-            {showScrollTop && !filterOpen && !selectedFlight && (
+            {showScrollTop && !activeOverlay && (
                 <div className={styles.floatingActions}>
                     <button
                         type="button"
@@ -4940,7 +4934,7 @@ export default function MobileRedesignPreview({
                         <div className={styles.detailHeader}>
                             <div className={styles.detailAgencyLine}>
                                 <span className={`${styles.sourceBadge} ${styles[selectedFlight.source]}`}>{SOURCE_NAMES[selectedFlight.source]}</span>
-                                <span className={styles.detailAirline}>{selectedFlight.airline || '항공사 확인'}</span>
+                                <span className={styles.detailAirline}>{airlineDisplayName(selectedFlight.airline || '항공사 확인')}</span>
                                 {detailSeats > 0 && <span className={styles.detailSeatCount}>{detailSeats}석 남음</span>}
                             </div>
                             <div className={styles.detailHeaderActions}>
@@ -5097,12 +5091,12 @@ export default function MobileRedesignPreview({
                             </div>
                         )}
 
-                        <div className={styles.priceNotice}>
+                        <div className={`${styles.priceNotice}${selectedFlight.source === 'ttang' ? ` ${styles.ticketingFeeNotice}` : ''}`}>
                             <span>
                                 {selectedFlight.source === 'ttang' ? (
                                     <>
-                                        땡처리닷컴에서는 예약·결제 단계에서 발권수수료
-                                        <strong> {priceText(TTANG_TICKETING_FEE)}</strong>이 추가될 수 있어요.
+                                        땡처리닷컴에서는 예약·결제 시{' '}
+                                        <strong>발권수수료 {priceText(TTANG_TICKETING_FEE)}</strong>이 별도로 추가돼요.
                                     </>
                                 ) : (
                                     <>가격과 좌석은 바뀔 수 있어요. 예약 전에 여행사에서 한 번 더 확인해주세요.</>
@@ -5285,20 +5279,57 @@ export default function MobileRedesignPreview({
                             </div>
                         ) : (
                             <form className={styles.contactForm} onSubmit={submitContact}>
+                                <label><span>문의 유형</span>
+                                    <select value={contactType} onChange={event => setContactType(event.target.value as ContactType)}>
+                                        {Object.entries(CONTACT_TYPES).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                                    </select>
+                                </label>
                                 <label>
                                     <span>이름 <small>선택</small></span>
                                     <input value={contactForm.name} onChange={event => setContactForm(current => ({ ...current, name: event.target.value }))} autoComplete="name" />
                                 </label>
                                 <label>
                                     <span>답변받을 이메일 <small>선택</small></span>
-                                    <input type="email" value={contactForm.email} onChange={event => setContactForm(current => ({ ...current, email: event.target.value }))} autoComplete="email" />
+                                    <input type="email" value={contactForm.email} onChange={event => setContactForm(current => ({ ...current, email: event.target.value }))} autoComplete="email" aria-describedby="contact-email-help" />
+                                    <small id="contact-email-help">답변이 필요하면 이메일을 남겨주세요. 의견만 보내셔도 괜찮아요.</small>
                                 </label>
                                 <label>
                                     <span>문의 내용</span>
-                                    <textarea required rows={5} value={contactForm.message} onChange={event => setContactForm(current => ({ ...current, message: event.target.value }))} />
+                                    <textarea required rows={5} maxLength={2000} placeholder="불편한 점이나 궁금한 내용을 알려주세요. 예약·결제·취소·환불은 예약한 여행사에 문의해주세요." value={contactForm.message} onChange={event => setContactForm(current => ({ ...current, message: event.target.value }))} />
                                 </label>
                                 {contactMessage && <p className={styles.contactError} role="alert">{contactMessage}</p>}
-                                <button type="submit" className={styles.contactSubmit} disabled={!contactForm.message.trim() || contactStatus === 'sending'}>
+                                <label><span>화면 첨부 <small>선택 · PNG/JPG 한 장, 1MB 이하</small></span>
+                                    <input type="file" accept="image/png,image/jpeg" disabled={contactImageBusy || contactStatus === 'sending'} onChange={async event => {
+                                        const file = event.target.files?.[0];
+                                        event.target.value = '';
+                                        if (!file) return;
+                                        setContactMessage('');
+                                        if (!['image/png', 'image/jpeg'].includes(file.type) || file.size > CONTACT_IMAGE_LIMIT) {
+                                            setContactMessage('1MB 이하 PNG 또는 JPG 이미지를 선택해주세요.'); return;
+                                        }
+                                        setContactImageBusy(true);
+                                        let bitmap: ImageBitmap | undefined;
+                                        try {
+                                            bitmap = await createImageBitmap(file);
+                                            const scale = Math.min(1, 1600 / Math.max(bitmap.width, bitmap.height));
+                                            const canvas = document.createElement('canvas');
+                                            canvas.width = Math.max(1, Math.round(bitmap.width * scale)); canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+                                            const context = canvas.getContext('2d');
+                                            if (!context) throw Error();
+                                            context.fillStyle = '#fff'; context.fillRect(0, 0, canvas.width, canvas.height);
+                                            context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+                                            const image = canvas.toDataURL('image/jpeg', .85);
+                                            if (image.length > CONTACT_IMAGE_LIMIT * 4 / 3) throw Error();
+                                            setContactImage(image);
+                                        } catch { setContactMessage('이미지를 읽지 못했어요. 더 작은 PNG/JPG 파일로 다시 선택해주세요.'); }
+                                        finally { bitmap?.close(); setContactImageBusy(false); }
+                                    }} />
+                                    <small>이름·예약번호·결제정보 등 개인정보는 가려주세요. 첨부는 관리자만 확인합니다.</small>
+                                </label>
+                                {contactImageBusy && <p role="status">이미지를 준비하고 있어요…</p>}
+                                {contactImage && <div><img className={styles.contactImagePreview} src={contactImage} alt="첨부할 화면 미리보기" /><button type="button" disabled={contactStatus === 'sending'} onClick={() => setContactImage('')}>첨부 삭제</button></div>}
+                                <p className={styles.contactPrivacyNote}>입력한 정보와 첨부는 문의 처리에만 사용하고, 처리 완료 시 삭제합니다. <a href="/privacy" target="_blank" rel="noreferrer">개인정보처리방침</a></p>
+                                <button type="submit" className={styles.contactSubmit} disabled={!contactForm.message.trim() || contactStatus === 'sending' || contactImageBusy}>
                                     {contactStatus === 'sending' ? '보내는 중…' : '문의 보내기'}
                                 </button>
                             </form>

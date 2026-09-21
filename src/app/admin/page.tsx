@@ -1,6 +1,7 @@
 'use client';
 import TodayHourlySessions, { hourRangeLabel, HourlyTimeZoneBadge } from '@/components/AdminTodayHourly';
 import TodayBehaviorSummary from '@/components/AdminTodayMetrics';
+import AdminContacts from '@/components/AdminContacts';
 
 import { useState, useEffect } from 'react';
 import styles from './admin.module.css';
@@ -2639,6 +2640,7 @@ export default function AdminPage() {
             </>)}
 
             {tab === 'audience' && (<>
+                <section className={styles.section}><AdminContacts adminKey={key} /></section>
                 <section className={styles.section} id="audience-current">
                     <div className={styles.sectionHeading}>
                         <div>

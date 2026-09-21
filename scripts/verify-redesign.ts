@@ -46,7 +46,7 @@ async function waitForFlights(page: Page) {
 }
 
 async function selectSource(page: Page, sourceName: string) {
-    const filterButton = page.getByRole('button', { name: '필터', exact: true }).filter({ visible: true });
+    const filterButton = page.getByRole('button', { name: /^필터(?:, \d+개 조건 선택됨)?$/ }).filter({ visible: true });
     if (await filterButton.count()) await filterButton.first().click();
     else await page.getByRole('button', { name: '상세 조건', exact: true }).click();
     const filterDialog = page.locator('[role="dialog"][aria-label="항공권 필터"]');
@@ -361,8 +361,8 @@ async function verifyViewport(width: number, height: number) {
             await page.keyboard.press('Escape');
         }
 
-        await page.getByRole('button', { name: '문의하기', exact: true }).scrollIntoViewIfNeeded();
-        await page.getByRole('button', { name: '문의하기', exact: true }).click();
+        await page.getByRole('button', { name: '문의·의견 보내기', exact: true }).scrollIntoViewIfNeeded();
+        await page.getByRole('button', { name: '문의·의견 보내기', exact: true }).click();
         const contactHeading = page.getByRole('heading', { name: '문의하기', exact: true });
         await contactHeading.waitFor();
         await page.goBack();
