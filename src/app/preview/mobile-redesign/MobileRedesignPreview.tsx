@@ -1,5 +1,6 @@
 'use client';
 import { holidayInsightCopy, selectHolidayFlights } from '@/lib/holiday-insight';
+import discoveryStyles from '@/components/WeeklyDiscoveryInsight.module.css';
 import { airlineDisplayName } from '@/lib/utils/airline-display';
 import { homeRecommendation } from '@/lib/home-recommendation';
 import { isKoreanCalendarRedDay, koreanHolidayName } from '@/lib/korean-calendar';
@@ -177,6 +178,7 @@ interface FreshDesktopDragState {
 }
 
 interface FreshRouteResults {
+    holidayFlightIds?: string[];
     dropFlightKeys?: string[];
     priceDropKeys?: string[];
     dropFlightIds?: string[];
@@ -377,12 +379,14 @@ export function WeekendFlightsInsight({
     priceDrops,
     copy,
     ticketLabels,
+    onOpenCollection,
 }: {
     flights: Flight[];
     onOpen: (flight: Flight) => void;
     priceDrops?: Record<string, PriceDropRecord>;
     copy?: { id: string; eyebrow: string; title: string; description: string };
     ticketLabels?: Record<string, string>;
+    onOpenCollection?: () => void;
 }) {
     const insightId = copy?.id ?? (priceDrops ? 'price-drop-flights-insight' : 'weekend-flights-insight');
     const eyebrow = copy?.eyebrow ?? (priceDrops ? '가격 하락' : '주말 일정');
@@ -426,9 +430,9 @@ export function WeekendFlightsInsight({
     }, []);
 
     useEffect(() => {
-        if (window.location.hash !== '#weekend-flights-insight') return;
+        if (window.location.hash !== `#${insightId}`) return;
         const frame = window.requestAnimationFrame(() => {
-            document.getElementById('weekend-flights-insight')?.scrollIntoView({ block: 'center' });
+            document.getElementById(insightId)?.scrollIntoView({ block: 'center' });
         });
         return () => window.cancelAnimationFrame(frame);
     }, []);
@@ -614,9 +618,10 @@ export function WeekendFlightsInsight({
                     <span>{eyebrow}</span>
                     {priceDrops ? <span>총 {mobileCount}개</span> : mobileCount > 1 && <span aria-hidden="true">{activeMobileIndex + 1} / {mobileCount}</span>}
                 </div>
-                <div className={styles.freshFlightsCopy}>
+                <div className={`${styles.freshFlightsCopy} ${onOpenCollection ? styles.holidayCopyAction : ''}`}>
+                    {onOpenCollection && <button type="button" className={styles.holidayCopyButton} onClick={onOpenCollection} aria-label="연휴 항공권 전체 보기" />}
                     <span className={styles.freshFlightsDesktopEyebrow}>{eyebrow}</span>
-                    <strong id={`${insightId}-title`}>{copy?.title ?? (priceDrops ? '기다린 보람이 있네요' : '주말이 아까운 사람에게')}</strong>
+                    <strong id={`${insightId}-title`}>{copy?.title ?? (priceDrops ? '기다린 보람이 있네요' : '주말이 아까운 사람에게')}{onOpenCollection && <i className={discoveryStyles.mobileTitleArrow} aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6" /></svg></i>}</strong>
                     <p>{copy?.description ?? (priceDrops ? '최근 가격이 내려간 항공권을 모았어요.' : '토·일이 여행 일정에 들어간 항공권만 골랐어요.')}</p>
                 </div>
                 <div
@@ -2032,7 +2037,7 @@ export default function MobileRedesignPreview({
     }, []);
 
     useEffect(() => {
-        const weekendPreview = window.location.hash === '#weekend-flights-insight';
+        const weekendPreview = ['#weekend-flights-insight', '#holiday-insight'].includes(window.location.hash);
         setVisibleCount(weekendPreview || window.matchMedia('(min-width: 960px)').matches ? 36 : 18);
     }, [airlineFilter, region, departure, datePeriod, customStartDate, customEndDate, maxPrice, sort, query, sourceFilter, tripLengths]);
 
@@ -2707,6 +2712,10 @@ export default function MobileRedesignPreview({
     const [priceDrops, setPriceDrops] = useState<Record<string, PriceDropRecord>>({});
     const freshRouteResultFlights = useMemo(() => {
         if (!freshRouteResults) return [];
+        if (freshRouteResults.holidayFlightIds) {
+            const ids = new Set(freshRouteResults.holidayFlightIds);
+            return selectHolidayFlights(flights, seoulDateKey()).flights.filter(flight => ids.has(flight.id));
+        }
         if (freshRouteResults.priceDropKeys) {
             const keys = new Set(freshRouteResults.priceDropKeys);
             return groupPriceDropFlights(flights.filter(flight => keys.has(priceDropKey(flight))),
@@ -4107,12 +4116,12 @@ export default function MobileRedesignPreview({
                             <h2>{sharedFlightIds.length > 0
                                 ? initialSharedGroup?.title || `${initialSharedDeparture || '인천'} → ${initialSharedArrival || '공유 항공권'}`
                                 : freshRouteResults
-                                ? `${freshRouteResults.departure} → ${freshRouteResults.arrival}`
+                                ? freshRouteResults.holidayFlightIds ? holidayInsightCopy.title : `${freshRouteResults.departure} → ${freshRouteResults.arrival}`
                                 : query ? `'${query}' 검색 결과` : region === '전체' ? '전체 항공권' : `${region} 항공권`}</h2>
                             <span>{listLoading
                                 ? '항공권 불러오는 중'
                                 : freshRouteResults
-                                    ? freshRouteResults.dropFlightIds
+                                    ? freshRouteResults.holidayFlightIds ? `개천절·한글날 연휴 · 항공권 ${feedFlights.length}개` : freshRouteResults.dropFlightIds
                                         ? `TIKIT DROP · 같은 가격의 일정 ${feedFlights.length.toLocaleString('ko-KR')}개`
                                         : freshRouteResults.priceDropKeys
                                             ? `가격이 내려간 항공권 ${feedFlights.length.toLocaleString('ko-KR')}개`
@@ -4130,7 +4139,7 @@ export default function MobileRedesignPreview({
                                     <span aria-hidden="true">←</span> 전체 항공권
                                 </button>
                             )}
-                            {freshRouteResults && !freshRouteResults.dropFlightIds && (
+                            {freshRouteResults && !freshRouteResults.dropFlightIds && !freshRouteResults.holidayFlightIds && (
                                 <button type="button" className={styles.freshRouteResultBack} onClick={closeFreshRouteResults}>
                                     <span aria-hidden="true">←</span> 전체 항공권
                                 </button>
@@ -4351,6 +4360,7 @@ export default function MobileRedesignPreview({
                                                     <div>
                                                         <span className={`${styles.sourceBadge} ${styles[flight.source]}`}>{SOURCE_NAMES[flight.source]}</span>
                                                         <span className={styles.airline}>{airlineDisplayName(flight.airline || '항공사 확인')}</span>
+                                                        {freshRouteResults?.holidayFlightIds && <span className={styles.airline}>{holidayInsight.labels[flight.id]}</span>}
                                                     </div>
                                                 </div>
 
@@ -4430,7 +4440,16 @@ export default function MobileRedesignPreview({
                                         </article>
                                     </div>
                                     {!freshRouteResults && isDefaultView && cardNumber === holidayInsightCard && holidayInsight.flights.length > 0 && (
-                                        <WeekendFlightsInsight flights={holidayInsight.flights} copy={holidayInsightCopy} ticketLabels={holidayInsight.labels} onOpen={flight => openFlight(flight, 'insight_holiday_flights')} />
+                                        <WeekendFlightsInsight flights={holidayInsight.flights} copy={holidayInsightCopy} ticketLabels={holidayInsight.labels} onOpen={flight => openFlight(flight, 'insight_holiday_flights')} onOpenCollection={() => {
+                                            if (window.history.state?.tikitikitDropResults) return;
+                                            freshRouteOriginScrollRef.current = window.scrollY;
+                                            const results: FreshRouteResults = { route: 'october-holidays', departure: '', arrival: '', targetDate: seoulDateKey(), copyPrefix: '연휴', holidayFlightIds: holidayInsight.flights.map(flight => flight.id) };
+                                            const originState = { ...window.history.state, tikitikitDropOriginY: window.scrollY };
+                                            window.history.replaceState(originState, '', window.location.href);
+                                            window.history.pushState({ ...originState, tikitikitDropResults: results }, '', window.location.href);
+                                            setVisibleCount(Math.max(36, holidayInsight.flights.length));
+                                            void transitionDropResults(results);
+                                        }} />
                                     )}
                                     {!freshRouteResults && isDefaultView && cardNumber === priceDropInsightCard && priceDropFlights.length > 0 && (
                                         <WeekendFlightsInsight flights={priceDropFlights} priceDrops={priceDrops} onOpen={flight => {
@@ -4643,9 +4662,9 @@ export default function MobileRedesignPreview({
                         </button>
                     )}
 
-                    {!listLoading && !error && freshRouteResults?.dropFlightIds && (
+                    {!listLoading && !error && freshRouteResults && (
                         <button type="button" className={styles.moreButton} onClick={closeFreshRouteResults}>
-                            안 살 거지만 더 보기 <span aria-hidden="true">→</span>
+                            전체 항공권으로 돌아가기
                         </button>
                     )}
 
