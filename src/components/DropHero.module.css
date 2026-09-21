@@ -170,6 +170,11 @@
     word-break: keep-all;
 }
 
+.hero[data-drop-hero-image="/images/cities/saipan-hero-20260921.png"] .scheduleLink {
+    margin-top: 12px;
+    min-height: 32px;
+}
+
 /* 4순위: 여정(출발지·날짜·기간), 판매(여행사·항공사). 카드와 같은 메타 12/13, 400. */
 .journey,
 .seller {
@@ -303,6 +308,15 @@
     }
 
     .scheduleLink { margin-top: 22px; }
+
+    .hero[data-drop-hero-image="/images/cities/saipan-hero-20260921.png"] .content {
+        padding-top: 28px;
+        padding-bottom: 24px;
+    }
+
+    .hero[data-drop-hero-image="/images/cities/saipan-hero-20260921.png"] .scheduleLink {
+        min-height: 24px;
+    }
 }
 
 @media (min-width: 960px) and (hover: hover) and (pointer: fine) {

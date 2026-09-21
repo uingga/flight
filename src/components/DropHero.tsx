@@ -92,7 +92,7 @@ export default function DropHero({
             option.arrival.airport === 'SPN' && option.source === 'ttang'
             && saipanHolidayDates.has(option.departure.date));
     const displayedReason = isSaipanHolidayPick
-        ? '평소보다 비싸지만, 개천절 대체휴일·한글날 연휴에 떠날 수 있어 골랐어요.'
+        ? '개천절도, 한글날도. 이번 연휴는 사이판에서.'
         : reason;
     const showDiscount = discountRate >= 5;
     const journey = [
