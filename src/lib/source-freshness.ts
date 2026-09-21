@@ -98,14 +98,19 @@ export function getStaleSources(
  * 크롤 실패 때 이전 데이터를 보존하더라도, 확인 시각이 한도를 넘긴 여행사 표는
  * 운영 화면에서 자동으로 감춘다. 차단을 우회하지 않고도 오래된 가격의 오인을 막는다.
  */
-export function filterStaleSourceFlights<T extends Pick<Flight, 'source'>>(
+export function filterStaleSourceFlights<T extends Pick<Flight, 'source'> & { priceCheckedAt?: string }>(
     flights: T[],
     sourceUpdatedAt: Record<string, string> | undefined,
     nowMs = Date.now(),
 ): T[] {
     const staleSources = new Set(getStaleSources(sourceUpdatedAt, nowMs).map(result => result.source));
-    if (staleSources.size === 0) return flights;
-    return flights.filter(flight => !staleSources.has(flight.source));
+    return flights.filter(flight => {
+        // Partial city refreshes must not rejuvenate retained Trip.com quotes.
+        if (flight.source === 'tripcom') {
+            return getSourceFreshness('tripcom', { tripcom: flight.priceCheckedAt || '' }, nowMs).fresh;
+        }
+        return !staleSources.has(flight.source);
+    });
 }
 
 /** 기존 호출부 호환용. 새 화면은 filterStaleSourceFlights를 사용한다. */

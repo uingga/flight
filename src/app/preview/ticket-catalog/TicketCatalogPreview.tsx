@@ -19,7 +19,7 @@ const SOURCE_NAMES: Record<Flight['source'], string> = {
     hanatour: '하나투어',
     onlinetour: '온라인투어',
     ttang: '땡처리닷컴',
-    myrealtrip: '마이리얼트립', lottetour: '롯데관광',
+    myrealtrip: '마이리얼트립', lottetour: '롯데관광', tripcom: '트립닷컴',
 };
 
 const REGIONS = ['전체', '일본', '동남아', '중화권', '남태평양', '유럽', '미주', '기타'];

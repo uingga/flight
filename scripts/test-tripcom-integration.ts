@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import { filterStaleSourceFlights } from '../src/lib/source-freshness';
+import { includePublishedTripcom } from '../src/lib/tripcom-naver-policy.mjs';
+const now = Date.parse('2026-09-21T10:00:00Z');
+const fresh = { source: 'tripcom' as const, price: 154500, priceCheckedAt: '2026-09-21T09:00:00Z' };
+const old = { ...fresh, priceCheckedAt: '2026-09-18T09:00:00Z' };
+assert.deepEqual(filterStaleSourceFlights([fresh, old], {tripcom: fresh.priceCheckedAt}, now), [fresh]);
+const policy = { shouldRun: true, sources: ['ttang'], navigationBudget: 17, navigationsUsed: 383 };
+const result = includePublishedTripcom(policy, {flights:[fresh]}, now);
+assert.deepEqual(result.sources, ['ttang','tripcom']);
+assert.equal(result.navigationBudget, 17);
+assert.equal(result.navigationsUsed, 383);
+assert.deepEqual(policy.sources, ['ttang']);
+assert.equal(includePublishedTripcom(policy, {flights:[old]}, now), policy);
+const blocked = {...policy, shouldRun:false};
+assert.equal(includePublishedTripcom(blocked, {flights:[fresh]}, now), blocked);
+console.log('Trip.com freshness and Naver admission tests passed');

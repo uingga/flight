@@ -17,7 +17,7 @@ interface EditorData {
 }
 const agencies: Record<Flight['source'], string> = {
     ybtour: '노랑풍선', hanatour: '하나투어', modetour: '모두투어',
-    onlinetour: '온라인투어', ttang: '땡처리닷컴', myrealtrip: '마이리얼트립', lottetour: '롯데관광',
+    onlinetour: '온라인투어', ttang: '땡처리닷컴', myrealtrip: '마이리얼트립', lottetour: '롯데관광', tripcom: '트립닷컴',
 };
 const dateLabel = (value: string) => {
     const match = value.match(/^\d{4}[-.](\d{1,2})[-.](\d{1,2})/);

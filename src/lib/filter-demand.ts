@@ -8,7 +8,7 @@ export interface DemandGroup { available: boolean; items: DemandItem[]; cleared:
 export interface FilterDemandData { groups: Record<FilterKey, DemandGroup>; cities: DemandGroup; resetCount: number }
 const known = (value: string) => Boolean(value.trim()) && !['(not set)', '(other)', '(empty)'].includes(value);
 export const emptyDemandGroup = (available = false): DemandGroup => ({ available, items: [], cleared: 0, missing: 0 });
-const labels: Record<string, string> = { ybtour: '노랑풍선', hanatour: '하나투어', modetour: '모두투어', onlinetour: '온라인투어', ttang: '땡처리닷컴', myrealtrip: '마이리얼트립', lottetour: '롯데관광' };
+const labels: Record<string, string> = { ybtour: '노랑풍선', hanatour: '하나투어', modetour: '모두투어', onlinetour: '온라인투어', ttang: '땡처리닷컴', myrealtrip: '마이리얼트립', lottetour: '롯데관광', tripcom: '트립닷컴' };
 function labelFor(type: string, value: string) {
     if (type === 'max_price' && /^\d+$/.test(value) && Number(value) > 0) return `${Number(value).toLocaleString('ko-KR')}원 이하`;
     if (type === 'source') return labels[value] || value;
