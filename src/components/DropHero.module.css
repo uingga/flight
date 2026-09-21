@@ -115,17 +115,17 @@
 }
 
 .discount {
-    height: 20px;
-    padding: 0 6px;
+    height: 18px;
+    padding: 0 5px;
     display: inline-flex;
     align-items: center;
     align-self: center;
     border-radius: var(--radius-control, 10px);
     background: var(--paper, #fff);
     color: var(--brand-dark, #e00b41);
-    font-size: var(--size-meta, 12px);
+    font-size: var(--size-caption, 11px);
     line-height: 1;
-    font-weight: var(--weight-bold, 700);
+    font-weight: var(--weight-control, 600);
     letter-spacing: -.02em;
     font-variant-numeric: tabular-nums;
 }
@@ -294,7 +294,7 @@
     }
 
     .discount {
-        height: 22px;
+        height: 20px;
     }
 
     .reason {

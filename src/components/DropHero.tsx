@@ -88,7 +88,6 @@ export default function DropHero({
     const heroStyle = imagePath
         ? ({ backgroundImage: `url("${imagePath}")` } satisfies CSSProperties)
         : undefined;
-    const seats = flight.availableSeats || Number.parseInt(flight.seats || '', 10) || 0;
     const saipanHolidayDates = new Set(['2026-10-02', '2026-10-03', '2026-10-06', '2026-10-07', '2026-10-08']);
     const isSaipanHolidayPick = pickDate === '2026-09-21'
         && [flight, ...alternatives.map(option => option.flight)].every(option =>
@@ -140,11 +139,6 @@ export default function DropHero({
                             aria-label={`동일 목적지 월평균가보다 ${discountRate}% 낮은 가격`}
                         >
                             -{discountRate}%
-                        </span>
-                    )}
-                    {seats > 0 && alternatives.length === 0 && (
-                        <span className={`${styles.seats} ${seats <= 4 ? styles.seatsLow : ''}`}>
-                            {seats}석 남음
                         </span>
                     )}
                 </p>

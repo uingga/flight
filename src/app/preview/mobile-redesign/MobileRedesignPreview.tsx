@@ -35,7 +35,7 @@ import {
     buildRecommendationScoreState,
     compareRecommendedFlights,
 } from '@/lib/flight-recommendation';
-import { CITY_TO_AIRPORT, calcFlightTiming, formatAgencyFlightDuration, getNaverFlightUrl, normalizeAirline, normalizeCity } from '@/lib/utils/flight-helpers';
+import { CITY_TO_AIRPORT, calcFlightTiming, formatAgencyFlightDuration, getNaverFlightUrl, normalizeAirlineDisplay as normalizeAirline, normalizeCity } from '@/lib/utils/flight-helpers';
 import { cityDetailName, cityDisplayName, citySearchMatches } from '@/lib/utils/city-display';
 import { getTripcomHotelUrl, getTripcomTrackingId } from '@/lib/utils/tripcom-helpers';
 import { getFlightBookingUrl } from '@/lib/utils/booking-url';
@@ -756,7 +756,7 @@ const searchQueryMatches = (flight: Flight, query: string) => {
 
     const routeMatches = [flight.departure.city, flight.arrival.city]
         .some(value => citySearchMatches(value, normalizedQuery));
-    const providerMatches = [flight.airline, SOURCE_NAMES[flight.source]]
+    const providerMatches = [flight.airline, airlineDisplayName(flight.airline), ...(normalizeAirline(flight.airline) === '트리니티항공' ? ['티웨이항공', '티웨이 항공', '트리니티항공', '트리니티 항공', 'TW', "T'way"] : []), SOURCE_NAMES[flight.source]]
         .some(value => value.toLocaleLowerCase('ko-KR').startsWith(normalizedQuery));
 
     return routeMatches || providerMatches;
@@ -1665,7 +1665,7 @@ export default function MobileRedesignPreview({
         const sourceParam = params.get('source');
         if (SOURCE_OPTIONS.some(option => option.value === sourceParam)) setSourceFilter(sourceParam as 'all' | Flight['source']);
         const airlineParam = params.get('airline');
-        if (airlineParam) setAirlineFilter(airlineParam);
+        if (airlineParam) setAirlineFilter(normalizeAirline(airlineParam));
         setTripLengths(parseTripLengthFilters(params.get('duration')));
         const sortParam = params.get('sort');
         if (sortParam === 'price' || sortParam === 'date' || sortParam === 'recommended') setSort(sortParam);
@@ -3490,7 +3490,7 @@ export default function MobileRedesignPreview({
         setSourceFilter(SOURCE_OPTIONS.some(option => option.value === filters.sourceFilter)
             ? filters.sourceFilter as 'all' | Flight['source']
             : 'all');
-        setAirlineFilter(filters.airlineFilter || 'all');
+        setAirlineFilter(normalizeAirline(filters.airlineFilter || 'all'));
         if (filters.startDate) {
             setDatePeriod('custom');
             setCustomStartDate(parseDate(filters.startDate));
@@ -4400,6 +4400,15 @@ export default function MobileRedesignPreview({
                                                         </div>
                                                     </div>
                                                 </div>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className={`${styles.favoriteButton} ${styles.cardShareButton}`}
+                                                onClick={() => shareFlight(flight)}
+                                                aria-label={`${departureName(flight)} → ${stripAirport(flight.arrival.city)} 항공권 공유`}
+                                                title="항공권 링크 복사"
+                                            >
+                                                <Icon name="share" />
                                             </button>
                                             <button
                                                 type="button"

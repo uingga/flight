@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { airlineDisplayName } from '@/lib/utils/airline-display';
 import * as fs from 'fs';
 import * as path from 'path';
 import { getRecommendationComparisonFreshness } from '@/lib/price-quality';
@@ -160,7 +161,7 @@ const AIRLINE_NAME_MAP: Record<string, string> = {
 function normalizeAirline(name: string): string {
     if (!name) return name;
     const trimmed = name.trim();
-    return AIRLINE_NAME_MAP[trimmed] || trimmed;
+    return airlineDisplayName(AIRLINE_NAME_MAP[trimmed] || trimmed);
 }
 
 export async function GET(request: NextRequest) {

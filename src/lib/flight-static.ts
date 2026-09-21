@@ -9,7 +9,7 @@ import fs from 'node:fs';
 import {restoreFlightHistory} from './flight-history';
 import path from 'node:path';
 import type { Flight } from '@/types/flight';
-import { normalizeAirline, normalizeCity } from '@/lib/utils/flight-helpers';
+import { normalizeAirlineDisplay as normalizeAirline, normalizeCity } from '@/lib/utils/flight-helpers';
 import { filterStaleSourceFlights, getEffectiveSourceUpdatedAt } from '@/lib/source-freshness';
 import { deduplicateDisplayFlights } from '@/lib/flight-visibility';
 import { filterSeatAvailableFlights } from '@/lib/flight-seats';

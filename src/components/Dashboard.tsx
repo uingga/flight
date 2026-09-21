@@ -17,7 +17,7 @@ import AdCard from './AdCard';
 // 유틸리티 함수 (별도 파일로 분리)
 import {
     toDate, toStr, fmtDate, getDefaultStartDate, getDefaultEndDate,
-    normalizeCity, normalizeAirline,
+    normalizeCity, normalizeAirlineDisplay as normalizeAirline,
     CITY_TO_AIRPORT, getAirportCode, calcFlightDuration, formatAgencyFlightDuration,
     getNaverFlightUrl, getSkyscannerUrl,
 } from '@/lib/utils/flight-helpers';

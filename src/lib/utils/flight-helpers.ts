@@ -4,6 +4,7 @@
  */
 
 import { buildNaverSearchUrl, type ExactRouteAirports } from '../naver-route';
+import { airlineDisplayName } from './airline-display';
 
 /** 크롤 순서와 무관하게 항공권 내용만으로 같은 ID를 만든다. */
 export const buildStableFlightId = (prefix: string, parts: (string | number)[]): string => {
@@ -114,7 +115,7 @@ export const normalizeCity = (city: string): string => {
 
 // 항공사명 표기 통일 (슬로건, 괄호, 띄어쓰기, 영문코드 등)
 export const normalizeAirline = (airline: string): string => {
-    let name = airline.trim();
+    let name = airlineDisplayName(airline) === '트리니티항공' ? '티웨이항공' : airline.trim();
     
     // 괄호 제거: (대한항공) → 대한항공
     name = name.replace(/^\((.+)\)$/, '$1');
@@ -161,13 +162,12 @@ export const normalizeAirline = (airline: string): string => {
         '썬푸꾸옥 항공': '썬푸꾸옥항공', '썬푸꾸옥': '썬푸꾸옥항공',
         '타이에어아시아': '타이에어아시아',
         '파라타 항공': '파라타항공',
-        // 티웨이항공은 2026년 10월 트리니티항공으로 사명이 바뀐다. 여행사마다 옛 이름과
-        // 새 이름을 섞어 보내와 항공사 필터가 둘로 갈라지므로 하나로 합친다.
-        // 사명 변경이 실제로 적용되면 이 매핑의 방향을 뒤집으면 된다.
-        '트리니티항공': '티웨이항공', '트리니티 항공': '티웨이항공',
     };
     return nameMap[name] || name;
 };
+
+/** Display/filter identity; keep historical crawl keys stable in normalizeAirline. */
+export const normalizeAirlineDisplay = (airline: string): string => airlineDisplayName(normalizeAirline(airline));
 
 // 도시명 → IATA 공항/도시 코드 매핑
 export const CITY_TO_AIRPORT: Record<string, string> = {

@@ -12,6 +12,7 @@ const AIRLINE_CODE_MAP: Record<string, string> = {
     '제주항공': '7C',
     '진에어': 'LJ',
     '티웨이항공': 'TW',
+    '트리니티항공': 'TW',
     '에어부산': 'BX',
     '에어서울': 'RS',
     '이스타항공': 'ZE',

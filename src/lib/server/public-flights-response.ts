@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { airlineDisplayName } from '@/lib/utils/airline-display';
 import {restoreFlightHistory} from '@/lib/flight-history';
 import { resultVersion, verifyResult } from '@/lib/naver-coordination-contract.mjs';
 import todayPick from '../../../data/today-pick.json';
@@ -162,7 +163,7 @@ function normalizeAirline(name: string): string {
     if (invalidNames.has(trimmed) || trimmed.includes('항공권') || trimmed.includes('제공요금') || trimmed.length > 60) {
         return '항공사 미정';
     }
-    return AIRLINE_NAME_MAP[trimmed] || trimmed;
+    return airlineDisplayName(AIRLINE_NAME_MAP[trimmed] || trimmed);
 }
 
 export async function createPublicFlightsResponse(searchParams: URLSearchParams) {

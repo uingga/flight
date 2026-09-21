@@ -1,6 +1,6 @@
 import type { Flight } from '@/types/flight';
 import { departureLabel, displayCity, effectivePrice } from './flight-static';
-import { normalizeAirline } from './utils/flight-helpers';
+import { normalizeAirlineDisplay as normalizeAirline } from './utils/flight-helpers';
 
 export function hasCityComparison(city: string) {
     return ['다카마쓰', '마나도', '타이베이'].includes(displayCity(city));
