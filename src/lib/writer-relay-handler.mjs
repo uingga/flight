@@ -32,10 +32,15 @@ export function createRelayHandler({queue,secrets,agentToken}){
    if(path!=='/publication'||!['readInputs','commit','deploy'].includes(input.action)||((input.action==='deploy')!==(role==='deploy')))throw Error('relay action refused');
    const id=request.headers.get('x-publication-id');
    if(typeof id!=='string'||!/^[a-zA-Z0-9-]{16,80}$/.test(id)||(input.action!=='readInputs'&&input.requestId!==id))throw Error('request identity required');
-   const row=await queue.submit(role,id,raw);
+   let row;
+   try{row=await queue.submit(role,id,raw);}
+   catch{return Response.json({error:'RELAY_QUEUE_UNAVAILABLE'},{status:503,headers:{'x-publication-state':'unknown'}});}
    if(row.state!=='done')return Response.json({pending:true},{status:202});
-   const result=typeof row.response==='string'?JSON.parse(row.response):row.response;
-   return new Response(result.body,{status:result.status,headers:{'content-type':'application/json'}});
-  }catch{return new Response('{}',{status:409});}
+   try{
+    const result=typeof row.response==='string'?JSON.parse(row.response):row.response;
+    if(![200,409].includes(result?.status)||typeof result?.body!=='string')throw Error('invalid saved receipt');
+    return new Response(result.body,{status:result.status,headers:{'content-type':'application/json','x-publication-state':'completed'}});
+   }catch{return Response.json({error:'RELAY_RECEIPT_UNAVAILABLE'},{status:503,headers:{'x-publication-state':'unknown'}});}
+  }catch{return new Response('{}',{status:409,headers:{'x-publication-state':'rejected'}});}
  };
 }

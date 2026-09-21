@@ -14,8 +14,11 @@ export function createRelayWebHandler(options){
    if(reader)while(true){const part=await reader.read();if(part.done)break;length+=part.value.length;if(length>WIRE_LIMIT){await reader.cancel();throw Error('wire limit');}chunks.push(part.value);}
    const body=decodeRelayWire(Buffer.concat(chunks).toString('utf8'));
    const response=await handle(new Request('http://127.0.0.1'+suffix,{method:request.method,headers:request.headers,body}));
-   return new Response(encodeRelayWire(await response.text()),{status:response.status,headers:{'content-type':'application/json','cache-control':'no-store'}});
-  }catch{return new Response('{}',{status:409});}
+   const headers={'content-type':'application/json','cache-control':'no-store'};
+   if(response.headers.has('x-publication-state'))headers['x-publication-state']=response.headers.get('x-publication-state');
+   try{return new Response(encodeRelayWire(await response.text()),{status:response.status,headers});}
+   catch{return new Response('{}',{status:503,headers:{'x-publication-state':'unknown','cache-control':'no-store'}});}
+  }catch{return new Response('{}',{status:409,headers:{'x-publication-state':'rejected'}});}
  };
 }
 export async function configuredRelayWeb(request,env=process.env){

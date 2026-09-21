@@ -4,6 +4,7 @@ import path from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {createBrokerClient} from '../src/lib/writer-broker-client.mjs';
 import {WRITER_FILES} from '../src/lib/writer-broker.mjs';
+import {publicationDiagnostic,publicationFailureMessage} from '../src/lib/writer-publication-diagnostics.mjs';
 export const WRITER_GIT_MAX_BUFFER=32*1024*1024;
 export const readWriterGit=(root,args)=>execFileSync('git',args,{cwd:root,encoding:'utf8',maxBuffer:WRITER_GIT_MAX_BUFFER,stdio:['ignore','pipe','pipe']});
 export async function publishCommittedWriter({role,root=process.cwd(),env=process.env,git=(args)=>readWriterGit(root,args)}){
@@ -23,5 +24,5 @@ export async function publishCommittedWriter({role,root=process.cwd(),env=proces
  return {...result,localCommit:head};
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1])).href){
- publishCommittedWriter({role:process.argv[2]}).then(result=>{console.log('coordinated writer published '+result.commitSha);if(process.env.GITHUB_OUTPUT)fs.appendFileSync(process.env.GITHUB_OUTPUT,`published_commit=${result.commitSha}\n`);}).catch(()=>{console.error('coordinated writer refused; no fallback push');process.exitCode=1;});
+ publishCommittedWriter({role:process.argv[2]}).then(result=>{console.log('coordinated writer published '+result.commitSha);if(process.env.GITHUB_OUTPUT)fs.appendFileSync(process.env.GITHUB_OUTPUT,`published_commit=${result.commitSha}\n`);}).catch(error=>{console.error(JSON.stringify(publicationDiagnostic(error)));console.error(publicationFailureMessage(error));process.exitCode=1;});
 }
