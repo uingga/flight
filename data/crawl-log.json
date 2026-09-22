@@ -1,88 +1,6 @@
 {
   "entries": [
     {
-      "timestamp": "2026-08-22T02:28:07.090Z",
-      "sites": {
-        "ybtour": {
-          "total": 223,
-          "scraped": 335,
-          "added": 18,
-          "removed": 0
-        },
-        "hanatour": {
-          "total": 40,
-          "scraped": 90,
-          "added": 3,
-          "removed": 0
-        },
-        "modetour": {
-          "total": 113,
-          "scraped": 993,
-          "added": 6,
-          "removed": 0
-        },
-        "onlinetour": {
-          "total": 11,
-          "scraped": 68,
-          "added": 7,
-          "removed": 1
-        },
-        "ttang": {
-          "total": 212,
-          "scraped": 1906,
-          "added": 18,
-          "removed": 2
-        },
-        "myrealtrip": {
-          "total": 117,
-          "added": 0,
-          "removed": 0
-        }
-      },
-      "alerts": []
-    },
-    {
-      "timestamp": "2026-08-22T03:09:09.849Z",
-      "sites": {
-        "ybtour": {
-          "total": 222,
-          "scraped": 334,
-          "added": 18,
-          "removed": 19
-        },
-        "hanatour": {
-          "total": 40,
-          "scraped": 90,
-          "added": 0,
-          "removed": 0
-        },
-        "modetour": {
-          "total": 113,
-          "scraped": 992,
-          "added": 0,
-          "removed": 0
-        },
-        "onlinetour": {
-          "total": 11,
-          "scraped": 68,
-          "added": 0,
-          "removed": 0
-        },
-        "ttang": {
-          "total": 212,
-          "scraped": 1906,
-          "added": 0,
-          "removed": 0
-        },
-        "myrealtrip": {
-          "total": 117,
-          "added": 0,
-          "removed": 0
-        }
-      },
-      "alerts": []
-    },
-    {
       "timestamp": "2026-08-22T06:45:55.660Z",
       "sites": {
         "ybtour": {
@@ -66837,738 +66755,1817 @@
         }
       },
       "alerts": []
+    },
+    {
+      "sessionId": "7656d8ca-c442-4bb8-8c20-a3ea14f58c79",
+      "timestamp": "2026-09-22T04:18:14.028Z",
+      "sites": {
+        "myrealtrip": {
+          "total": 111,
+          "scraped": 161,
+          "added": 62,
+          "removed": 36,
+          "addedFlights": [
+            {
+              "id": "mrt-ICN-ARN-20261027-1211700",
+              "airline": "중국국제항공",
+              "route": "서울(인천) → 스톡홀름",
+              "departureDate": "2026-10-27",
+              "returnDate": "2026-10-31",
+              "price": 723000
+            },
+            {
+              "id": "mrt-ICN-ATH-20261013-1206500",
+              "airline": "중국국제항공",
+              "route": "서울(인천) → 아테네",
+              "departureDate": "2026-10-13",
+              "returnDate": "2026-10-16",
+              "price": 796900
+            },
+            {
+              "id": "mrt-ICN-AXT-20261029-917200",
+              "airline": "ANA항공",
+              "route": "서울(인천) → 아키타",
+              "departureDate": "2026-10-29",
+              "returnDate": "2026-11-03",
+              "price": 741800
+            },
+            {
+              "id": "mrt-ICN-BRU-20261015-1147200",
+              "airline": "중국국제항공",
+              "route": "서울(인천) → 브뤼셀",
+              "departureDate": "2026-10-15",
+              "returnDate": "2026-10-21",
+              "price": 850900
+            },
+            {
+              "id": "mrt-ICN-BUF-20261012-1228800",
+              "airline": "유나이티드항공",
+              "route": "서울(인천) → 버펄로",
+              "departureDate": "2026-10-12",
+              "returnDate": "2026-10-18",
+              "price": 1683100
+            },
+            {
+              "id": "mrt-ICN-CAN-20261013-407800",
+              "airline": "산동항공",
+              "route": "서울(인천) → 광저우",
+              "departureDate": "2026-10-13",
+              "returnDate": "2026-10-19",
+              "price": 303200
+            },
+            {
+              "id": "mrt-ICN-CDG-20261019-1395900",
+              "airline": "중국국제항공",
+              "route": "서울(인천) → 파리",
+              "departureDate": "2026-10-19",
+              "returnDate": "2026-10-21",
+              "price": 876500
+            },
+            {
+              "id": "mrt-ICN-CKG-20261121-274300",
+              "airline": "중국남방항공",
+              "route": "서울(인천) → 충칭",
+              "departureDate": "2026-11-21",
+              "returnDate": "2026-11-26",
+              "price": 283600
+            },
+            {
+              "id": "mrt-ICN-CPH-20261021-1327300",
+              "airline": "중국국제항공",
+              "route": "서울(인천) → 코펜하겐",
+              "departureDate": "2026-10-21",
+              "returnDate": "2026-10-26",
+              "price": 787000
+            },
+            {
+              "id": "mrt-ICN-CSX-20261023-313900",
+              "airline": "중국남방항공",
+              "route": "서울(인천) → 창사",
+              "departureDate": "2026-10-23",
+              "returnDate": "2026-10-26",
+              "price": 274100
+            },
+            {
+              "id": "mrt-ICN-CTA-20261121-1437500",
+              "airline": "루프트한자",
+              "route": "서울(인천) → 카타니아",
+              "departureDate": "2026-11-21",
+              "returnDate": "2026-11-26",
+              "price": 1324600
+            },
+            {
+              "id": "mrt-ICN-DSM-20261106-1479200",
+              "airline": "아메리칸항공",
+              "route": "서울(인천) → 디모인",
+              "departureDate": "2026-11-06",
+              "returnDate": "2026-11-08",
+              "price": 1866200
+            },
+            {
+              "id": "mrt-ICN-DXB-20261103-841400",
+              "airline": "필리핀항공",
+              "route": "서울(인천) → 두바이",
+              "departureDate": "2026-11-03",
+              "returnDate": "2026-11-07",
+              "price": 813600
+            },
+            {
+              "id": "mrt-ICN-DYG-20261003-474100",
+              "airline": "중국동방항공",
+              "route": "서울(인천) → 장자제",
+              "departureDate": "2026-10-03",
+              "returnDate": "2026-10-09",
+              "price": 477300
+            },
+            {
+              "id": "mrt-ICN-GDL-20261009-1471800",
+              "airline": "아메리칸항공",
+              "route": "서울(인천) → 과달라하라",
+              "departureDate": "2026-10-09",
+              "returnDate": "2026-10-13",
+              "price": 2027200
+            },
+            {
+              "id": "mrt-ICN-HAN-20261022-310500",
+              "airline": "비엣젯항공",
+              "route": "서울(인천) → 하노이",
+              "departureDate": "2026-10-22",
+              "returnDate": "2026-10-27",
+              "price": 247900
+            },
+            {
+              "id": "mrt-ICN-HUI-20261019-483400",
+              "airline": "비엣젯항공",
+              "route": "서울(인천) → 후에",
+              "departureDate": "2026-10-19",
+              "returnDate": "2026-10-21",
+              "price": 384500
+            },
+            {
+              "id": "mrt-ICN-IAH-20261012-1240100",
+              "airline": "델타항공",
+              "route": "서울(인천) → 휴스턴",
+              "departureDate": "2026-10-12",
+              "returnDate": "2026-10-18",
+              "price": 1628800
+            },
+            {
+              "id": "mrt-ICN-IST-20261022-1309300",
+              "airline": "중국국제항공",
+              "route": "서울(인천) → 이스탄불",
+              "departureDate": "2026-10-22",
+              "returnDate": "2026-10-26",
+              "price": 716300
+            },
+            {
+              "id": "mrt-ICN-JGN-20261015-841500",
+              "airline": "중국동방항공",
+              "route": "서울(인천) → 자이위관",
+              "departureDate": "2026-10-15",
+              "returnDate": "2026-10-18",
+              "price": 829100
+            },
+            {
+              "id": "mrt-ICN-JJN-20261012-373000",
+              "airline": "산동항공",
+              "route": "서울(인천) → 취안저우",
+              "departureDate": "2026-10-12",
+              "returnDate": "2026-10-15",
+              "price": 375200
+            },
+            {
+              "id": "mrt-ICN-JNB-20261119-1171300",
+              "airline": "에티하드항공",
+              "route": "서울(인천) → 요하네스버그",
+              "departureDate": "2026-11-19",
+              "returnDate": "2026-11-22",
+              "price": 1055200
+            },
+            {
+              "id": "mrt-ICN-KCH-20261121-458300",
+              "airline": "로열브루나이항공",
+              "route": "서울(인천) → 쿠칭",
+              "departureDate": "2026-11-21",
+              "returnDate": "2026-11-24",
+              "price": 494900
+            },
+            {
+              "id": "mrt-ICN-KHH-20260926-447100",
+              "airline": "트리니티항공",
+              "route": "서울(인천) → 가오슝",
+              "departureDate": "2026-09-26",
+              "returnDate": "2026-10-01",
+              "price": 259360
+            },
+            {
+              "id": "mrt-ICN-KIJ-20261029-582200",
+              "airline": "대한항공 & ANA항공",
+              "route": "서울(인천) → 니가타",
+              "departureDate": "2026-10-29",
+              "returnDate": "2026-11-03",
+              "price": 869300
+            },
+            {
+              "id": "mrt-ICN-KIX-20261030-337900",
+              "airline": "파라타항공",
+              "route": "서울(인천) → 오사카(간사이)",
+              "departureDate": "2026-10-30",
+              "returnDate": "2026-11-04",
+              "price": 253500
+            },
+            {
+              "id": "mrt-ICN-KTI-20261015-417100",
+              "airline": "베트남항공",
+              "route": "서울(인천) → 크라티에",
+              "departureDate": "2026-10-15",
+              "returnDate": "2026-10-19",
+              "price": 495500
+            },
+            {
+              "id": "mrt-ICN-KWL-20261011-346200",
+              "airline": "산동항공",
+              "route": "서울(인천) → 구이린",
+              "departureDate": "2026-10-11",
+              "returnDate": "2026-10-14",
+              "price": 312800
+            },
+            {
+              "id": "mrt-ICN-LCG-20261106-1466000",
+              "airline": "에어프랑스 & 네덜란드항공",
+              "route": "서울(인천) → 라코루냐",
+              "departureDate": "2026-11-06",
+              "returnDate": "2026-11-12",
+              "price": 1736400
+            },
+            {
+              "id": "mrt-ICN-LGW-20261009-1163100",
+              "airline": "중국동방항공",
+              "route": "서울(인천) → 런던",
+              "departureDate": "2026-10-09",
+              "returnDate": "2026-10-14",
+              "price": 1125000
+            },
+            {
+              "id": "mrt-ICN-MAD-20261018-1417000",
+              "airline": "중국국제항공",
+              "route": "서울(인천) → 마드리드",
+              "departureDate": "2026-10-18",
+              "returnDate": "2026-10-21",
+              "price": 943200
+            },
+            {
+              "id": "mrt-ICN-MBE-20261112-524100",
+              "airline": "ANA항공",
+              "route": "서울(인천) → 몬베츠",
+              "departureDate": "2026-11-12",
+              "returnDate": "2026-11-16",
+              "price": 635700
+            },
+            {
+              "id": "mrt-ICN-MCT-20261114-1120900",
+              "airline": "에티하드항공",
+              "route": "서울(인천) → 무스카트",
+              "departureDate": "2026-11-14",
+              "returnDate": "2026-11-18",
+              "price": 1238300
+            },
+            {
+              "id": "mrt-ICN-MFM-20260930-522700",
+              "airline": "제주항공",
+              "route": "서울(인천) → 마카오",
+              "departureDate": "2026-09-30",
+              "returnDate": "2026-10-06",
+              "price": 232900
+            },
+            {
+              "id": "mrt-ICN-MLE-20261015-1062600",
+              "airline": "중국동방항공",
+              "route": "서울(인천) → 몰디브",
+              "departureDate": "2026-10-15",
+              "returnDate": "2026-10-17",
+              "price": 1148300
+            },
+            {
+              "id": "mrt-ICN-MRY-20261022-1266300",
+              "airline": "유나이티드항공",
+              "route": "서울(인천) → 몬터레이",
+              "departureDate": "2026-10-22",
+              "returnDate": "2026-10-26",
+              "price": 1254600
+            },
+            {
+              "id": "mrt-ICN-NGB-20261018-329000",
+              "airline": "중국남방항공",
+              "route": "서울(인천) → 닝보",
+              "departureDate": "2026-10-18",
+              "returnDate": "2026-10-21",
+              "price": 348800
+            },
+            {
+              "id": "mrt-ICN-NGO-20260927-816800",
+              "airline": "제주항공",
+              "route": "서울(인천) → 나고야",
+              "departureDate": "2026-09-27",
+              "returnDate": "2026-10-01",
+              "price": 359700
+            },
+            {
+              "id": "mrt-ICN-NQZ-20261121-889400",
+              "airline": "에어아스타나",
+              "route": "서울(인천) → 아스타나",
+              "departureDate": "2026-11-21",
+              "returnDate": "2026-11-25",
+              "price": 1036000
+            },
+            {
+              "id": "mrt-ICN-PDX-20261121-1024000",
+              "airline": "에어캐나다",
+              "route": "서울(인천) → 포틀랜드",
+              "departureDate": "2026-11-21",
+              "returnDate": "2026-11-25",
+              "price": 1324200
+            },
+            {
+              "id": "mrt-ICN-PNQ-20260929-1220600",
+              "airline": "에어인디아",
+              "route": "서울(인천) → 푸네",
+              "departureDate": "2026-09-29",
+              "returnDate": "2026-10-03",
+              "price": 740600
+            },
+            {
+              "id": "mrt-ICN-RDM-20261026-1167200",
+              "airline": "유나이티드항공",
+              "route": "서울(인천) → 레드먼드",
+              "departureDate": "2026-10-26",
+              "returnDate": "2026-10-29",
+              "price": 1254600
+            },
+            {
+              "id": "mrt-ICN-SGN-20261009-333600",
+              "airline": "비엣젯항공",
+              "route": "서울(인천) → 호치민",
+              "departureDate": "2026-10-09",
+              "returnDate": "2026-10-15",
+              "price": 251400
+            },
+            {
+              "id": "mrt-ICN-SPN-20260925-1026600",
+              "airline": "제주항공",
+              "route": "서울(인천) → 사이판",
+              "departureDate": "2026-09-25",
+              "returnDate": "2026-09-30",
+              "price": 246000
+            },
+            {
+              "id": "mrt-ICN-SYD-20261103-881400",
+              "airline": "트리니티항공",
+              "route": "서울(인천) → 시드니",
+              "departureDate": "2026-11-03",
+              "returnDate": "2026-11-06",
+              "price": 994700
+            },
+            {
+              "id": "mrt-ICN-TAG-20260929-390400",
+              "airline": "진에어",
+              "route": "서울(인천) → 보홀",
+              "departureDate": "2026-09-29",
+              "returnDate": "2026-10-03",
+              "price": 291100
+            },
+            {
+              "id": "mrt-ICN-TAK-20261013-363300",
+              "airline": "진에어",
+              "route": "서울(인천) → 다카마쓰",
+              "departureDate": "2026-10-13",
+              "returnDate": "2026-10-15",
+              "price": 216300
+            },
+            {
+              "id": "mrt-ICN-TFU-20261120-250000",
+              "airline": "산동항공",
+              "route": "서울(인천) → 청두",
+              "departureDate": "2026-11-20",
+              "returnDate": "2026-11-24",
+              "price": 274400
+            },
+            {
+              "id": "mrt-ICN-TYN-20261015-521500",
+              "airline": "천진항공",
+              "route": "서울(인천) → 타이위안",
+              "departureDate": "2026-10-15",
+              "returnDate": "2026-10-18",
+              "price": 329900
+            },
+            {
+              "id": "mrt-ICN-TYO-20261025-460100",
+              "airline": "진에어",
+              "route": "서울(인천) → 도쿄",
+              "departureDate": "2026-10-25",
+              "returnDate": "2026-10-29",
+              "price": 275800
+            },
+            {
+              "id": "mrt-ICN-UBN-20261115-591900",
+              "airline": "제주항공",
+              "route": "서울(인천) → 울란바토르",
+              "departureDate": "2026-11-15",
+              "returnDate": "2026-11-17",
+              "price": 354500
+            },
+            {
+              "id": "mrt-ICN-URC-20261023-409900",
+              "airline": "산동항공",
+              "route": "서울(인천) → 우루무치",
+              "departureDate": "2026-10-23",
+              "returnDate": "2026-10-26",
+              "price": 433800
+            },
+            {
+              "id": "mrt-ICN-VCA-20261121-399900",
+              "airline": "베트남항공 & 비엣젯항공",
+              "route": "서울(인천) → 껀터",
+              "departureDate": "2026-11-21",
+              "returnDate": "2026-11-25",
+              "price": 436200
+            },
+            {
+              "id": "mrt-ICN-WAS-20261121-1034600",
+              "airline": "델타항공",
+              "route": "서울(인천) → 워싱턴 D.C.",
+              "departureDate": "2026-11-21",
+              "returnDate": "2026-11-25",
+              "price": 1627800
+            },
+            {
+              "id": "mrt-ICN-WNZ-20261026-336400",
+              "airline": "산동항공",
+              "route": "서울(인천) → 원저우",
+              "departureDate": "2026-10-26",
+              "returnDate": "2026-10-29",
+              "price": 281900
+            },
+            {
+              "id": "mrt-ICN-XIY-20261013-364700",
+              "airline": "산동항공",
+              "route": "서울(인천) → 시안",
+              "departureDate": "2026-10-13",
+              "returnDate": "2026-10-15",
+              "price": 322400
+            },
+            {
+              "id": "mrt-quick-ICN-DAD-20260929-20261004",
+              "airline": "제주항공 & 이스타항공",
+              "route": "서울(인천) → 다낭",
+              "departureDate": "2026-09-29",
+              "returnDate": "2026-10-04",
+              "price": 246600
+            },
+            {
+              "id": "mrt-quick-ICN-HKG-20260929-20261004",
+              "airline": "제주항공 & 이스타항공",
+              "route": "서울(인천) → 홍콩",
+              "departureDate": "2026-09-29",
+              "returnDate": "2026-10-04",
+              "price": 273400
+            },
+            {
+              "id": "mrt-quick-ICN-FUK-20261010-20261015",
+              "airline": "트리니티항공",
+              "route": "서울(인천) → 후쿠오카",
+              "departureDate": "2026-10-10",
+              "returnDate": "2026-10-15",
+              "price": 248530
+            },
+            {
+              "id": "mrt-quick-ICN-PQC-20261013-20261018",
+              "airline": "비엣젯항공",
+              "route": "서울(인천) → 푸꾸옥",
+              "departureDate": "2026-10-13",
+              "returnDate": "2026-10-18",
+              "price": 249400
+            },
+            {
+              "id": "mrt-quick-ICN-MNL-20261013-20261018",
+              "airline": "세부퍼시픽항공",
+              "route": "서울(인천) → 마닐라",
+              "departureDate": "2026-10-13",
+              "returnDate": "2026-10-18",
+              "price": 303700
+            },
+            {
+              "id": "mrt-quick-ICN-CXR-20261020-20261025",
+              "airline": "비엣젯항공",
+              "route": "서울(인천) → 나트랑",
+              "departureDate": "2026-10-20",
+              "returnDate": "2026-10-25",
+              "price": 263000
+            }
+          ],
+          "removedFlights": [
+            {
+              "id": "mrt-ICN-ANC-20261111-1269500",
+              "airline": "유나이티드항공",
+              "route": "서울(인천) → 앵커리지",
+              "departureDate": "2026-11-11",
+              "returnDate": "2026-11-15",
+              "price": 1541400
+            },
+            {
+              "id": "mrt-ICN-ARN-20261015-1187000",
+              "airline": "중국국제항공",
+              "route": "서울(인천) → 스톡홀름",
+              "departureDate": "2026-10-15",
+              "returnDate": "2026-10-18",
+              "price": 717400
+            },
+            {
+              "id": "mrt-ICN-CHA-20261019-1130500",
+              "airline": "유나이티드항공",
+              "route": "서울(인천) → 채터누가",
+              "departureDate": "2026-10-19",
+              "returnDate": "2026-10-22",
+              "price": 2105400
+            },
+            {
+              "id": "mrt-ICN-CMB-20260926-703000",
+              "airline": "비엣젯항공",
+              "route": "서울(인천) → 콜롬보",
+              "departureDate": "2026-09-26",
+              "returnDate": "2026-10-01",
+              "price": 599200
+            },
+            {
+              "id": "mrt-ICN-CNX-20260928-493900",
+              "airline": "제주항공 & 에어부산",
+              "route": "서울(인천) → 치앙마이",
+              "departureDate": "2026-09-28",
+              "returnDate": "2026-10-02",
+              "price": 379300
+            },
+            {
+              "id": "mrt-ICN-CSX-20261018-313900",
+              "airline": "산동항공",
+              "route": "서울(인천) → 창사",
+              "departureDate": "2026-10-18",
+              "returnDate": "2026-10-20",
+              "price": 274400
+            },
+            {
+              "id": "mrt-ICN-DNH-20261112-861000",
+              "airline": "중국동방항공",
+              "route": "서울(인천) → 둔황",
+              "departureDate": "2026-11-12",
+              "returnDate": "2026-11-15",
+              "price": 858300
+            },
+            {
+              "id": "mrt-ICN-DXB-20261018-1356300",
+              "airline": "필리핀항공",
+              "route": "서울(인천) → 두바이",
+              "departureDate": "2026-10-18",
+              "returnDate": "2026-10-21",
+              "price": 813600
+            },
+            {
+              "id": "mrt-ICN-FCO-20261028-1153100",
+              "airline": "중국국제항공",
+              "route": "서울(인천) → 로마",
+              "departureDate": "2026-10-28",
+              "returnDate": "2026-11-03",
+              "price": 708900
+            },
+            {
+              "id": "mrt-ICN-HAN-20261013-305400",
+              "airline": "비엣젯항공",
+              "route": "서울(인천) → 하노이",
+              "departureDate": "2026-10-13",
+              "returnDate": "2026-10-17",
+              "price": 247900
+            },
+            {
+              "id": "mrt-ICN-HNL-20260928-1025100",
+              "airline": "에어프레미아",
+              "route": "서울(인천) → 호놀룰루",
+              "departureDate": "2026-09-28",
+              "returnDate": "2026-09-30",
+              "price": 791800
+            },
+            {
+              "id": "mrt-ICN-HUI-20261113-456300",
+              "airline": "비엣젯항공",
+              "route": "서울(인천) → 후에",
+              "departureDate": "2026-11-13",
+              "returnDate": "2026-11-15",
+              "price": 420800
+            },
+            {
+              "id": "mrt-ICN-JJN-20261013-449900",
+              "airline": "산동항공",
+              "route": "서울(인천) → 취안저우",
+              "departureDate": "2026-10-13",
+              "returnDate": "2026-10-15",
+              "price": 375200
+            },
+            {
+              "id": "mrt-ICN-JNB-20261110-1337900",
+              "airline": "에티하드항공",
+              "route": "서울(인천) → 요하네스버그",
+              "departureDate": "2026-11-10",
+              "returnDate": "2026-11-12",
+              "price": 1065100
+            },
+            {
+              "id": "mrt-ICN-KHH-20260926-452830",
+              "airline": "제주항공 & 트리니티항공",
+              "route": "서울(인천) → 가오슝",
+              "departureDate": "2026-09-26",
+              "returnDate": "2026-10-01",
+              "price": 248500
+            },
+            {
+              "id": "mrt-ICN-KIX-20261030-281000",
+              "airline": "트리니티항공",
+              "route": "서울(인천) → 오사카(간사이)",
+              "departureDate": "2026-10-30",
+              "returnDate": "2026-11-04",
+              "price": 254730
+            },
+            {
+              "id": "mrt-ICN-KKJ-20260929-304800",
+              "airline": "진에어",
+              "route": "서울(인천) → 기타큐슈",
+              "departureDate": "2026-09-29",
+              "returnDate": "2026-10-02",
+              "price": 223800
+            },
+            {
+              "id": "mrt-ICN-KWL-20261011-331800",
+              "airline": "산동항공",
+              "route": "서울(인천) → 구이린",
+              "departureDate": "2026-10-11",
+              "returnDate": "2026-10-13",
+              "price": 312800
+            },
+            {
+              "id": "mrt-ICN-MFM-20261001-572500",
+              "airline": "제주항공",
+              "route": "서울(인천) → 마카오",
+              "departureDate": "2026-10-01",
+              "returnDate": "2026-10-03",
+              "price": 253800
+            },
+            {
+              "id": "mrt-ICN-MIL-20261024-1147700",
+              "airline": "중국동방항공",
+              "route": "서울(인천) → 밀라노",
+              "departureDate": "2026-10-24",
+              "returnDate": "2026-10-28",
+              "price": 592700
+            },
+            {
+              "id": "mrt-ICN-MRY-20261015-1438300",
+              "airline": "유나이티드항공",
+              "route": "서울(인천) → 몬터레이",
+              "departureDate": "2026-10-15",
+              "returnDate": "2026-10-19",
+              "price": 1254600
+            },
+            {
+              "id": "mrt-ICN-NGB-20261012-422300",
+              "airline": "산동항공",
+              "route": "서울(인천) → 닝보",
+              "departureDate": "2026-10-12",
+              "returnDate": "2026-10-14",
+              "price": 312800
+            },
+            {
+              "id": "mrt-ICN-RDM-20261026-1383000",
+              "airline": "유나이티드항공",
+              "route": "서울(인천) → 레드먼드",
+              "departureDate": "2026-10-26",
+              "returnDate": "2026-10-31",
+              "price": 1326600
+            },
+            {
+              "id": "mrt-ICN-SGN-20261012-350600",
+              "airline": "비엣젯항공",
+              "route": "서울(인천) → 호치민",
+              "departureDate": "2026-10-12",
+              "returnDate": "2026-10-14",
+              "price": 251400
+            },
+            {
+              "id": "mrt-ICN-SPN-20260927-1047900",
+              "airline": "제주항공",
+              "route": "서울(인천) → 사이판",
+              "departureDate": "2026-09-27",
+              "returnDate": "2026-09-30",
+              "price": 262000
+            },
+            {
+              "id": "mrt-ICN-TAK-20261020-272300",
+              "airline": "진에어",
+              "route": "서울(인천) → 다카마쓰",
+              "departureDate": "2026-10-20",
+              "returnDate": "2026-10-23",
+              "price": 216300
+            },
+            {
+              "id": "mrt-ICN-TPE-20260926-899600",
+              "airline": "진에어",
+              "route": "서울(인천) → 타이베이",
+              "departureDate": "2026-09-26",
+              "returnDate": "2026-10-02",
+              "price": 241700
+            },
+            {
+              "id": "mrt-ICN-TYN-20261022-387800",
+              "airline": "천진항공",
+              "route": "서울(인천) → 타이위안",
+              "departureDate": "2026-10-22",
+              "returnDate": "2026-10-27",
+              "price": 328900
+            },
+            {
+              "id": "mrt-ICN-TYO-20261010-682000",
+              "airline": "이스타항공",
+              "route": "서울(인천) → 도쿄",
+              "departureDate": "2026-10-10",
+              "returnDate": "2026-10-15",
+              "price": 254200
+            },
+            {
+              "id": "mrt-ICN-VCE-20261016-940400",
+              "airline": "중국동방항공",
+              "route": "서울(인천) → 베네치아",
+              "departureDate": "2026-10-16",
+              "returnDate": "2026-10-22",
+              "price": 600500
+            },
+            {
+              "id": "mrt-ICN-WNZ-20261026-297600",
+              "airline": "산동항공",
+              "route": "서울(인천) → 원저우",
+              "departureDate": "2026-10-26",
+              "returnDate": "2026-10-28",
+              "price": 281900
+            },
+            {
+              "id": "mrt-quick-ICN-HKG-20261001-20261006",
+              "airline": "제주항공 & 트리니티항공",
+              "route": "서울(인천) → 홍콩",
+              "departureDate": "2026-10-01",
+              "returnDate": "2026-10-06",
+              "price": 274500
+            },
+            {
+              "id": "mrt-quick-ICN-DAD-20261009-20261014",
+              "airline": "비엣젯항공 & 이스타항공",
+              "route": "서울(인천) → 다낭",
+              "departureDate": "2026-10-09",
+              "returnDate": "2026-10-14",
+              "price": 245400
+            },
+            {
+              "id": "mrt-quick-ICN-FUK-20261010-20261014",
+              "airline": "트리니티항공",
+              "route": "서울(인천) → 후쿠오카",
+              "departureDate": "2026-10-10",
+              "returnDate": "2026-10-14",
+              "price": 240730
+            },
+            {
+              "id": "mrt-quick-ICN-MNL-20261010-20261014",
+              "airline": "제주항공",
+              "route": "서울(인천) → 마닐라",
+              "departureDate": "2026-10-10",
+              "returnDate": "2026-10-14",
+              "price": 331300
+            },
+            {
+              "id": "mrt-quick-ICN-CXR-20261014-20261019",
+              "airline": "비엣젯항공 & 파라타항공",
+              "route": "서울(인천) → 나트랑",
+              "departureDate": "2026-10-14",
+              "returnDate": "2026-10-19",
+              "price": 267000
+            }
+          ],
+          "byCity": {
+            "알마티": 1,
+            "스톡홀름": 1,
+            "아테네": 1,
+            "아키타": 1,
+            "코타키나발루": 1,
+            "방콕": 1,
+            "브뤼셀": 1,
+            "버펄로": 1,
+            "광저우": 1,
+            "파리": 2,
+            "세부": 1,
+            "충칭": 1,
+            "코펜하겐": 1,
+            "클라크": 1,
+            "창사": 1,
+            "카타니아": 1,
+            "삿포로": 2,
+            "나트랑": 2,
+            "카우아얀": 1,
+            "다낭": 2,
+            "달리": 1,
+            "디폴로그": 1,
+            "디모인": 1,
+            "더블린": 1,
+            "두바이": 1,
+            "장자제": 1,
+            "후쿠에": 1,
+            "후쿠오카": 2,
+            "과달라하라": 1,
+            "제네럴산토스": 1,
+            "하노이": 1,
+            "후에": 1,
+            "휴스턴": 1,
+            "인촨": 1,
+            "이스탄불": 1,
+            "자이위관": 1,
+            "취안저우": 1,
+            "요하네스버그": 1,
+            "쿠칭": 1,
+            "가오슝": 1,
+            "난창": 1,
+            "니가타": 1,
+            "오사카(간사이)": 1,
+            "미야자키": 1,
+            "구마모토": 1,
+            "가고시마": 1,
+            "크라티에": 1,
+            "구시로": 1,
+            "쿠알라룸푸르": 1,
+            "야쿠시마": 1,
+            "구이린": 1,
+            "라코루냐": 1,
+            "런던": 2,
+            "라호르": 1,
+            "란저우": 1,
+            "마드리드": 1,
+            "몬베츠": 1,
+            "무스카트": 1,
+            "마카오": 1,
+            "몰디브": 1,
+            "몬터레이": 1,
+            "닝보": 1,
+            "나고야": 1,
+            "아스타나": 1,
+            "도쿄(나리타)": 1,
+            "오비히로": 1,
+            "오카야마": 1,
+            "오사카": 2,
+            "부쿠레슈티": 1,
+            "포틀랜드": 1,
+            "푸네": 1,
+            "상하이(푸동)": 1,
+            "레드먼드": 1,
+            "스테이트칼리지": 1,
+            "호치민": 1,
+            "싱가포르": 1,
+            "솔로": 1,
+            "사이판": 1,
+            "스마랑": 1,
+            "시드니": 1,
+            "보홀": 1,
+            "다카마쓰": 1,
+            "칭다오": 1,
+            "청두": 1,
+            "도쿠시마": 1,
+            "투게가라오": 1,
+            "타이위안": 1,
+            "도쿄": 1,
+            "우베": 1,
+            "울란바토르": 1,
+            "우루무치": 1,
+            "껀터": 1,
+            "비엔나": 1,
+            "워싱턴 D.C.": 1,
+            "웨이하이": 1,
+            "원저우": 1,
+            "시안": 1,
+            "시닝": 1,
+            "요나고": 1,
+            "이우": 1,
+            "자그레브": 1,
+            "홍콩": 1,
+            "푸꾸옥": 1,
+            "마닐라": 1
+          }
+        }
+      },
+      "alerts": []
     }
   ],
   "lastEntry": {
-    "runKind": "pc_primary",
-    "sessionId": "c66cbb9f-51da-4f0f-8a6a-7449095b29f9",
-    "timestamp": "2026-09-22T01:47:09.486Z",
+    "sessionId": "7656d8ca-c442-4bb8-8c20-a3ea14f58c79",
+    "timestamp": "2026-09-22T04:18:14.028Z",
     "sites": {
-      "ttang": {
-        "detail": "C PC Chrome 31일 목록 1466건 → 필터 후 155건; 상세 20/20건, 시간 확인 16건, 빈 운임 4건",
-        "total": 155,
-        "scraped": 1466,
-        "collectionMode": "pc_primary",
-        "added": 81,
-        "removed": 3,
+      "myrealtrip": {
+        "total": 111,
+        "scraped": 161,
+        "added": 62,
+        "removed": 36,
         "addedFlights": [
           {
-            "id": "ttang-7C1801ICNOKA-G3-2026-10-01",
-            "airline": "제주항공",
-            "route": "서울 → 오키나와",
-            "departureDate": "2026-10-01",
-            "returnDate": "2026-10-04",
-            "price": 399000
+            "id": "mrt-ICN-ARN-20261027-1211700",
+            "airline": "중국국제항공",
+            "route": "서울(인천) → 스톡홀름",
+            "departureDate": "2026-10-27",
+            "returnDate": "2026-10-31",
+            "price": 723000
           },
           {
-            "id": "ttang-PUS-TPE-RT-0-5-LJ-2026-10-22",
-            "airline": "진에어",
-            "route": "부산 → 타이페이",
-            "departureDate": "2026-10-22",
-            "returnDate": "2026-10-26",
-            "price": 298000
+            "id": "mrt-ICN-ATH-20261013-1206500",
+            "airline": "중국국제항공",
+            "route": "서울(인천) → 아테네",
+            "departureDate": "2026-10-13",
+            "returnDate": "2026-10-16",
+            "price": 796900
           },
           {
-            "id": "ttang-PUS-CXR-RT-0-5-TW-2026-10-22",
-            "airline": "트리니티 항공",
-            "route": "부산 → 나트랑(깜란)",
-            "departureDate": "2026-10-22",
-            "returnDate": "2026-10-26",
-            "price": 368000
+            "id": "mrt-ICN-AXT-20261029-917200",
+            "airline": "ANA항공",
+            "route": "서울(인천) → 아키타",
+            "departureDate": "2026-10-29",
+            "returnDate": "2026-11-03",
+            "price": 741800
           },
           {
-            "id": "ttang-CZ0370ICNPVG-G1-2026-10-22",
-            "airline": "중국남방항공",
-            "route": "서울 → 상해(푸동공항)",
-            "departureDate": "2026-10-22",
-            "returnDate": "2026-10-25",
-            "price": 370900
-          },
-          {
-            "id": "ttang-PUS-HAN-RT-0-5-VJ-2026-10-22",
-            "airline": "비엣젯항공",
-            "route": "부산 → 하노이",
-            "departureDate": "2026-10-22",
-            "returnDate": "2026-10-26",
-            "price": 420000
-          },
-          {
-            "id": "ttang-ICN-SIN-RT-0-4-TW-2026-10-22",
-            "airline": "트리니티 항공",
-            "route": "서울 → 싱가포르",
-            "departureDate": "2026-10-22",
-            "returnDate": "2026-10-25",
-            "price": 436000
-          },
-          {
-            "id": "ttang-ICN-CXR-RT-0-4-TW-2026-09-28",
-            "airline": "트리니티 항공",
-            "route": "서울 → 나트랑(깜란)",
-            "departureDate": "2026-09-28",
-            "returnDate": "2026-10-01",
-            "price": 269000
-          },
-          {
-            "id": "ttang-LJ0061PUSCEB-G10-2026-09-28",
-            "airline": "진에어",
-            "route": "부산 → 세부",
-            "departureDate": "2026-09-28",
-            "returnDate": "2026-10-02",
-            "price": 285000
-          },
-          {
-            "id": "ttang-7C3211ICNSPN-G2-2026-09-28",
-            "airline": "제주항공",
-            "route": "서울 → 사이판",
-            "departureDate": "2026-09-28",
-            "returnDate": "2026-10-02",
-            "price": 369000
-          },
-          {
-            "id": "ttang-ICN-BKI-RT-0-5-LJ-2026-09-30",
-            "airline": "진에어",
-            "route": "서울 → 코타키나발루",
-            "departureDate": "2026-09-30",
-            "returnDate": "2026-10-04",
-            "price": 304200
-          },
-          {
-            "id": "ttang-7C3211ICNSPN-G2-2026-09-30",
-            "airline": "제주항공",
-            "route": "서울 → 사이판",
-            "departureDate": "2026-09-30",
-            "returnDate": "2026-10-04",
-            "price": 369000
-          },
-          {
-            "id": "ttang-BX3115PUSCAN-G1-2026-09-30",
-            "airline": "에어부산",
-            "route": "부산 → 광주(광저우)",
-            "departureDate": "2026-09-30",
-            "returnDate": "2026-10-04",
-            "price": 410000
-          },
-          {
-            "id": "ttang-RS0741ICNTAK-G24-2026-09-24",
-            "airline": "에어서울",
-            "route": "서울 → 다카마츠",
-            "departureDate": "2026-09-24",
-            "returnDate": "2026-09-27",
-            "price": 299000
-          },
-          {
-            "id": "ttang-RS0101ICNGUM-G7-2026-10-17",
-            "airline": "에어서울",
-            "route": "서울 → 괌",
-            "departureDate": "2026-10-17",
-            "returnDate": "2026-10-21",
-            "price": 278900
-          },
-          {
-            "id": "ttang-TAE-BKK-RT-0-6-TW-2026-10-17",
-            "airline": "트리니티 항공",
-            "route": "대구 → 방콕",
-            "departureDate": "2026-10-17",
-            "returnDate": "2026-10-22",
-            "price": 371000
-          },
-          {
-            "id": "ttang-TAE-DAD-RT-0-6-TW-2026-10-17",
-            "airline": "트리니티 항공",
-            "route": "대구 → 다낭",
-            "departureDate": "2026-10-17",
-            "returnDate": "2026-10-22",
-            "price": 408000
-          },
-          {
-            "id": "ttang-ICN-CRK-RT-0-5-7C-2026-10-17",
-            "airline": "제주항공",
-            "route": "서울 → 클락(앙헬레스)",
-            "departureDate": "2026-10-17",
-            "returnDate": "2026-10-21",
-            "price": 446000
-          },
-          {
-            "id": "ttang-ICN-BKI-RT-0-5-LJ-2026-10-04",
-            "airline": "진에어",
-            "route": "서울 → 코타키나발루",
-            "departureDate": "2026-10-04",
-            "returnDate": "2026-10-08",
-            "price": 304200
-          },
-          {
-            "id": "ttang-RS0101ICNGUM-G7-2026-10-10",
-            "airline": "에어서울",
-            "route": "서울 → 괌",
-            "departureDate": "2026-10-10",
-            "returnDate": "2026-10-14",
-            "price": 278900
-          },
-          {
-            "id": "ttang-TAE-TPE-RT-0-5-TW-2026-10-10",
-            "airline": "트리니티 항공",
-            "route": "대구 → 타이페이",
-            "departureDate": "2026-10-10",
-            "returnDate": "2026-10-14",
-            "price": 290000
-          },
-          {
-            "id": "ttang-PUS-TPE-RT-0-5-LJ-2026-10-10",
-            "airline": "진에어",
-            "route": "부산 → 타이페이",
-            "departureDate": "2026-10-10",
-            "returnDate": "2026-10-14",
-            "price": 298000
-          },
-          {
-            "id": "ttang-7C3211ICNSPN-G2-2026-10-10",
-            "airline": "제주항공",
-            "route": "서울 → 사이판",
-            "departureDate": "2026-10-10",
-            "returnDate": "2026-10-15",
-            "price": 369000
-          },
-          {
-            "id": "ttang-TAE-DAD-RT-0-6-TW-2026-10-10",
-            "airline": "트리니티 항공",
-            "route": "대구 → 다낭",
-            "departureDate": "2026-10-10",
-            "returnDate": "2026-10-15",
-            "price": 408000
-          },
-          {
-            "id": "ttang-PUS-PQC-RT-0-5-VJ-2026-10-10",
-            "airline": "비엣젯항공",
-            "route": "부산 → 푸꾸옥",
-            "departureDate": "2026-10-10",
-            "returnDate": "2026-10-14",
-            "price": 420000
-          },
-          {
-            "id": "ttang-ICN-CNX-RT-0-6-BX-2026-10-10",
-            "airline": "에어부산",
-            "route": "서울 → 치앙마이",
-            "departureDate": "2026-10-10",
-            "returnDate": "2026-10-15",
-            "price": 434800
-          },
-          {
-            "id": "ttang-PUS-TPE-RT-0-5-LJ-2026-10-16",
-            "airline": "진에어",
-            "route": "부산 → 타이페이",
-            "departureDate": "2026-10-16",
-            "returnDate": "2026-10-20",
-            "price": 298000
-          },
-          {
-            "id": "ttang-CZ0370ICNPVG-G1-2026-10-16",
-            "airline": "중국남방항공",
-            "route": "서울 → 상해(푸동공항)",
-            "departureDate": "2026-10-16",
-            "returnDate": "2026-10-19",
-            "price": 370900
-          },
-          {
-            "id": "ttang-RF0352CJJCTS-G18-2026-10-16",
-            "airline": "에어로케이",
-            "route": "청주 → 삿포로(치토세)",
-            "departureDate": "2026-10-16",
-            "returnDate": "2026-10-19",
-            "price": 502300
-          },
-          {
-            "id": "ttang-JQ0048ICNSYD-G10-2026-10-16",
-            "airline": "젯스타",
-            "route": "서울 → 시드니",
-            "departureDate": "2026-10-16",
-            "returnDate": "2026-10-21",
-            "price": 980000
-          },
-          {
-            "id": "ttang-PUS-TPE-RT-0-5-LJ-2026-10-06",
-            "airline": "진에어",
-            "route": "부산 → 타이페이",
-            "departureDate": "2026-10-06",
-            "returnDate": "2026-10-10",
-            "price": 298000
-          },
-          {
-            "id": "ttang-RF0384CJJIBR-G10-2026-10-06",
-            "airline": "에어로케이",
-            "route": "청주 → 이바라키",
-            "departureDate": "2026-10-06",
-            "returnDate": "2026-10-08",
-            "price": 324200
-          },
-          {
-            "id": "ttang-BX9115PUSIBR-G1-2026-10-06",
-            "airline": "에어부산",
-            "route": "부산 → 이바라키",
-            "departureDate": "2026-10-06",
-            "returnDate": "2026-10-09",
-            "price": 349000
-          },
-          {
-            "id": "ttang-5J0131ICNCEB-G8-2026-10-06",
-            "airline": "세부퍼시픽에어",
-            "route": "서울 → 세부",
-            "departureDate": "2026-10-06",
-            "returnDate": "2026-10-09",
-            "price": 399900
-          },
-          {
-            "id": "ttang-PUS-TPE-RT-0-5-LJ-2026-10-15",
-            "airline": "진에어",
-            "route": "부산 → 타이페이",
+            "id": "mrt-ICN-BRU-20261015-1147200",
+            "airline": "중국국제항공",
+            "route": "서울(인천) → 브뤼셀",
             "departureDate": "2026-10-15",
-            "returnDate": "2026-10-19",
-            "price": 298000
+            "returnDate": "2026-10-21",
+            "price": 850900
           },
           {
-            "id": "ttang-CZ0370ICNPVG-G1-2026-10-15",
+            "id": "mrt-ICN-BUF-20261012-1228800",
+            "airline": "유나이티드항공",
+            "route": "서울(인천) → 버펄로",
+            "departureDate": "2026-10-12",
+            "returnDate": "2026-10-18",
+            "price": 1683100
+          },
+          {
+            "id": "mrt-ICN-CAN-20261013-407800",
+            "airline": "산동항공",
+            "route": "서울(인천) → 광저우",
+            "departureDate": "2026-10-13",
+            "returnDate": "2026-10-19",
+            "price": 303200
+          },
+          {
+            "id": "mrt-ICN-CDG-20261019-1395900",
+            "airline": "중국국제항공",
+            "route": "서울(인천) → 파리",
+            "departureDate": "2026-10-19",
+            "returnDate": "2026-10-21",
+            "price": 876500
+          },
+          {
+            "id": "mrt-ICN-CKG-20261121-274300",
             "airline": "중국남방항공",
-            "route": "서울 → 상해(푸동공항)",
+            "route": "서울(인천) → 충칭",
+            "departureDate": "2026-11-21",
+            "returnDate": "2026-11-26",
+            "price": 283600
+          },
+          {
+            "id": "mrt-ICN-CPH-20261021-1327300",
+            "airline": "중국국제항공",
+            "route": "서울(인천) → 코펜하겐",
+            "departureDate": "2026-10-21",
+            "returnDate": "2026-10-26",
+            "price": 787000
+          },
+          {
+            "id": "mrt-ICN-CSX-20261023-313900",
+            "airline": "중국남방항공",
+            "route": "서울(인천) → 창사",
+            "departureDate": "2026-10-23",
+            "returnDate": "2026-10-26",
+            "price": 274100
+          },
+          {
+            "id": "mrt-ICN-CTA-20261121-1437500",
+            "airline": "루프트한자",
+            "route": "서울(인천) → 카타니아",
+            "departureDate": "2026-11-21",
+            "returnDate": "2026-11-26",
+            "price": 1324600
+          },
+          {
+            "id": "mrt-ICN-DSM-20261106-1479200",
+            "airline": "아메리칸항공",
+            "route": "서울(인천) → 디모인",
+            "departureDate": "2026-11-06",
+            "returnDate": "2026-11-08",
+            "price": 1866200
+          },
+          {
+            "id": "mrt-ICN-DXB-20261103-841400",
+            "airline": "필리핀항공",
+            "route": "서울(인천) → 두바이",
+            "departureDate": "2026-11-03",
+            "returnDate": "2026-11-07",
+            "price": 813600
+          },
+          {
+            "id": "mrt-ICN-DYG-20261003-474100",
+            "airline": "중국동방항공",
+            "route": "서울(인천) → 장자제",
+            "departureDate": "2026-10-03",
+            "returnDate": "2026-10-09",
+            "price": 477300
+          },
+          {
+            "id": "mrt-ICN-GDL-20261009-1471800",
+            "airline": "아메리칸항공",
+            "route": "서울(인천) → 과달라하라",
+            "departureDate": "2026-10-09",
+            "returnDate": "2026-10-13",
+            "price": 2027200
+          },
+          {
+            "id": "mrt-ICN-HAN-20261022-310500",
+            "airline": "비엣젯항공",
+            "route": "서울(인천) → 하노이",
+            "departureDate": "2026-10-22",
+            "returnDate": "2026-10-27",
+            "price": 247900
+          },
+          {
+            "id": "mrt-ICN-HUI-20261019-483400",
+            "airline": "비엣젯항공",
+            "route": "서울(인천) → 후에",
+            "departureDate": "2026-10-19",
+            "returnDate": "2026-10-21",
+            "price": 384500
+          },
+          {
+            "id": "mrt-ICN-IAH-20261012-1240100",
+            "airline": "델타항공",
+            "route": "서울(인천) → 휴스턴",
+            "departureDate": "2026-10-12",
+            "returnDate": "2026-10-18",
+            "price": 1628800
+          },
+          {
+            "id": "mrt-ICN-IST-20261022-1309300",
+            "airline": "중국국제항공",
+            "route": "서울(인천) → 이스탄불",
+            "departureDate": "2026-10-22",
+            "returnDate": "2026-10-26",
+            "price": 716300
+          },
+          {
+            "id": "mrt-ICN-JGN-20261015-841500",
+            "airline": "중국동방항공",
+            "route": "서울(인천) → 자이위관",
             "departureDate": "2026-10-15",
             "returnDate": "2026-10-18",
-            "price": 370900
+            "price": 829100
           },
           {
-            "id": "ttang-RF0342CJJNGO-G17-2026-10-21",
-            "airline": "에어로케이",
-            "route": "청주 → 나고야",
-            "departureDate": "2026-10-21",
-            "returnDate": "2026-10-24",
-            "price": 333100
-          },
-          {
-            "id": "ttang-PUS-HAN-RT-0-5-VJ-2026-10-21",
-            "airline": "비엣젯항공",
-            "route": "부산 → 하노이",
-            "departureDate": "2026-10-21",
-            "returnDate": "2026-10-25",
-            "price": 420000
-          },
-          {
-            "id": "ttang-LJ0251PUSKIX-G21-2026-10-11",
-            "airline": "진에어",
-            "route": "부산 → 오사카(간사이)",
-            "departureDate": "2026-10-11",
-            "returnDate": "2026-10-14",
-            "price": 278000
-          },
-          {
-            "id": "ttang-PUS-TAG-RT-0-5-7C-2026-10-11",
-            "airline": "제주항공",
-            "route": "부산 → 보홀(필리핀)",
-            "departureDate": "2026-10-11",
-            "returnDate": "2026-10-15",
-            "price": 358000
-          },
-          {
-            "id": "ttang-7C3211ICNSPN-G2-2026-10-11",
-            "airline": "제주항공",
-            "route": "서울 → 사이판",
-            "departureDate": "2026-10-11",
-            "returnDate": "2026-10-16",
-            "price": 369000
-          },
-          {
-            "id": "ttang-ICN-BKK-RT-0-5-7C-2026-10-11",
-            "airline": "제주항공",
-            "route": "서울 → 방콕",
-            "departureDate": "2026-10-11",
-            "returnDate": "2026-10-15",
-            "price": 404400
-          },
-          {
-            "id": "ttang-TAE-DAD-RT-0-6-TW-2026-10-11",
-            "airline": "트리니티 항공",
-            "route": "대구 → 다낭",
-            "departureDate": "2026-10-11",
-            "returnDate": "2026-10-16",
-            "price": 408000
-          },
-          {
-            "id": "ttang-RF0394CJJOKA-G9-2026-10-11",
-            "airline": "에어로케이",
-            "route": "청주 → 오키나와",
-            "departureDate": "2026-10-11",
-            "returnDate": "2026-10-14",
-            "price": 480500
-          },
-          {
-            "id": "ttang-PUS-PQC-RT-0-5-VJ-2026-10-12",
-            "airline": "비엣젯항공",
-            "route": "부산 → 푸꾸옥",
-            "departureDate": "2026-10-12",
-            "returnDate": "2026-10-16",
-            "price": 420000
-          },
-          {
-            "id": "ttang-ICN-CRK-RT-0-5-7C-2026-10-12",
-            "airline": "제주항공",
-            "route": "서울 → 클락(앙헬레스)",
-            "departureDate": "2026-10-12",
-            "returnDate": "2026-10-16",
-            "price": 446000
-          },
-          {
-            "id": "ttang-RF0394CJJOKA-G9-2026-10-12",
-            "airline": "에어로케이",
-            "route": "청주 → 오키나와",
+            "id": "mrt-ICN-JJN-20261012-373000",
+            "airline": "산동항공",
+            "route": "서울(인천) → 취안저우",
             "departureDate": "2026-10-12",
             "returnDate": "2026-10-15",
-            "price": 480500
+            "price": 375200
           },
           {
-            "id": "ttang-RS0101ICNGUM-G7-2026-10-20",
-            "airline": "에어서울",
-            "route": "서울 → 괌",
-            "departureDate": "2026-10-20",
-            "returnDate": "2026-10-24",
-            "price": 278900
+            "id": "mrt-ICN-JNB-20261119-1171300",
+            "airline": "에티하드항공",
+            "route": "서울(인천) → 요하네스버그",
+            "departureDate": "2026-11-19",
+            "returnDate": "2026-11-22",
+            "price": 1055200
           },
           {
-            "id": "ttang-RF0384CJJIBR-G10-2026-10-20",
-            "airline": "에어로케이",
-            "route": "청주 → 이바라키",
-            "departureDate": "2026-10-20",
-            "returnDate": "2026-10-22",
-            "price": 324200
+            "id": "mrt-ICN-KCH-20261121-458300",
+            "airline": "로열브루나이항공",
+            "route": "서울(인천) → 쿠칭",
+            "departureDate": "2026-11-21",
+            "returnDate": "2026-11-24",
+            "price": 494900
           },
           {
-            "id": "ttang-RF0342CJJNGO-G17-2026-10-20",
-            "airline": "에어로케이",
-            "route": "청주 → 나고야",
-            "departureDate": "2026-10-20",
-            "returnDate": "2026-10-23",
-            "price": 333100
-          },
-          {
-            "id": "ttang-PUS-OKA-RT-0-3-ZE-2026-10-20",
-            "airline": "이스타항공",
-            "route": "부산 → 오키나와",
-            "departureDate": "2026-10-20",
-            "returnDate": "2026-10-22",
-            "price": 421000
-          },
-          {
-            "id": "ttang-RF0394CJJOKA-G9-2026-10-20",
-            "airline": "에어로케이",
-            "route": "청주 → 오키나와",
-            "departureDate": "2026-10-20",
-            "returnDate": "2026-10-23",
-            "price": 480500
-          },
-          {
-            "id": "ttang-JQ0048ICNSYD-G10-2026-10-20",
-            "airline": "젯스타",
-            "route": "서울 → 시드니",
-            "departureDate": "2026-10-20",
-            "returnDate": "2026-10-25",
-            "price": 980000
-          },
-          {
-            "id": "ttang-RS0101ICNGUM-G7-2026-10-18",
-            "airline": "에어서울",
-            "route": "서울 → 괌",
-            "departureDate": "2026-10-18",
-            "returnDate": "2026-10-22",
-            "price": 278900
-          },
-          {
-            "id": "ttang-PUS-DAD-RT-0-6-VJ-2026-10-18",
-            "airline": "비엣젯항공",
-            "route": "부산 → 다낭",
-            "departureDate": "2026-10-18",
-            "returnDate": "2026-10-23",
-            "price": 320000
-          },
-          {
-            "id": "ttang-TAE-BKK-RT-0-6-TW-2026-10-18",
-            "airline": "트리니티 항공",
-            "route": "대구 → 방콕",
-            "departureDate": "2026-10-18",
-            "returnDate": "2026-10-23",
-            "price": 371000
-          },
-          {
-            "id": "ttang-TAE-DAD-RT-0-6-TW-2026-10-18",
-            "airline": "트리니티 항공",
-            "route": "대구 → 다낭",
-            "departureDate": "2026-10-18",
-            "returnDate": "2026-10-23",
-            "price": 408000
-          },
-          {
-            "id": "ttang-ICN-CRK-RT-0-5-7C-2026-10-18",
-            "airline": "제주항공",
-            "route": "서울 → 클락(앙헬레스)",
-            "departureDate": "2026-10-18",
-            "returnDate": "2026-10-22",
-            "price": 446000
-          },
-          {
-            "id": "ttang-RF0394CJJOKA-G9-2026-10-18",
-            "airline": "에어로케이",
-            "route": "청주 → 오키나와",
-            "departureDate": "2026-10-18",
-            "returnDate": "2026-10-21",
-            "price": 480500
-          },
-          {
-            "id": "ttang-JQ0048ICNSYD-G10-2026-10-18",
-            "airline": "젯스타",
-            "route": "서울 → 시드니",
-            "departureDate": "2026-10-18",
-            "returnDate": "2026-10-23",
-            "price": 980000
-          },
-          {
-            "id": "ttang-RS0101ICNGUM-G7-2026-10-19",
-            "airline": "에어서울",
-            "route": "서울 → 괌",
-            "departureDate": "2026-10-19",
-            "returnDate": "2026-10-23",
-            "price": 278900
-          },
-          {
-            "id": "ttang-PUS-FSZ-RT-0-3-BX-2026-10-19",
-            "airline": "에어부산",
-            "route": "부산 → 시즈오카",
-            "departureDate": "2026-10-19",
-            "returnDate": "2026-10-21",
-            "price": 322000
-          },
-          {
-            "id": "ttang-PUS-PQC-RT-0-5-VJ-2026-10-19",
-            "airline": "비엣젯항공",
-            "route": "부산 → 푸꾸옥",
-            "departureDate": "2026-10-19",
-            "returnDate": "2026-10-23",
-            "price": 420000
-          },
-          {
-            "id": "ttang-ICN-CRK-RT-0-5-7C-2026-10-19",
-            "airline": "제주항공",
-            "route": "서울 → 클락(앙헬레스)",
-            "departureDate": "2026-10-19",
-            "returnDate": "2026-10-23",
-            "price": 446000
-          },
-          {
-            "id": "ttang-RF0394CJJOKA-G9-2026-10-19",
-            "airline": "에어로케이",
-            "route": "청주 → 오키나와",
-            "departureDate": "2026-10-19",
-            "returnDate": "2026-10-22",
-            "price": 480500
-          },
-          {
-            "id": "ttang-RS0101ICNGUM-G7-2026-10-13",
-            "airline": "에어서울",
-            "route": "서울 → 괌",
-            "departureDate": "2026-10-13",
-            "returnDate": "2026-10-17",
-            "price": 278900
-          },
-          {
-            "id": "ttang-WE0271ICNHAN-G2-2026-10-13",
-            "airline": "파라타항공",
-            "route": "서울 → 하노이",
-            "departureDate": "2026-10-13",
-            "returnDate": "2026-10-17",
-            "price": 300000
-          },
-          {
-            "id": "ttang-RF0384CJJIBR-G10-2026-10-13",
-            "airline": "에어로케이",
-            "route": "청주 → 이바라키",
-            "departureDate": "2026-10-13",
-            "returnDate": "2026-10-15",
-            "price": 324200
-          },
-          {
-            "id": "ttang-PUS-OKA-RT-0-3-ZE-2026-10-13",
-            "airline": "이스타항공",
-            "route": "부산 → 오키나와",
-            "departureDate": "2026-10-13",
-            "returnDate": "2026-10-15",
-            "price": 421000
-          },
-          {
-            "id": "ttang-ICN-CRK-RT-0-5-7C-2026-10-13",
-            "airline": "제주항공",
-            "route": "서울 → 클락(앙헬레스)",
-            "departureDate": "2026-10-13",
-            "returnDate": "2026-10-17",
-            "price": 446000
-          },
-          {
-            "id": "ttang-RF0394CJJOKA-G9-2026-10-13",
-            "airline": "에어로케이",
-            "route": "청주 → 오키나와",
-            "departureDate": "2026-10-13",
-            "returnDate": "2026-10-16",
-            "price": 480500
-          },
-          {
-            "id": "ttang-ICN-FCO-RT-0-8-TW-2026-10-13",
-            "airline": "트리니티 항공",
-            "route": "서울 → 로마 (FCO)",
-            "departureDate": "2026-10-13",
-            "returnDate": "2026-10-20",
-            "price": 1530000
-          },
-          {
-            "id": "ttang-TAE-TPE-RT-0-5-TW-2026-10-09",
-            "airline": "트리니티 항공",
-            "route": "대구 → 타이페이",
-            "departureDate": "2026-10-09",
-            "returnDate": "2026-10-13",
-            "price": 290000
-          },
-          {
-            "id": "ttang-PUS-SIN-RT-0-5-7C-2026-10-09",
-            "airline": "제주항공",
-            "route": "부산 → 싱가포르",
-            "departureDate": "2026-10-09",
-            "returnDate": "2026-10-13",
-            "price": 407000
-          },
-          {
-            "id": "ttang-LJ0061PUSCEB-G10-2026-09-27",
-            "airline": "진에어",
-            "route": "부산 → 세부",
-            "departureDate": "2026-09-27",
-            "returnDate": "2026-10-01",
-            "price": 285000
-          },
-          {
-            "id": "ttang-7C3211ICNSPN-G2-2026-09-27",
-            "airline": "제주항공",
-            "route": "서울 → 사이판",
-            "departureDate": "2026-09-27",
-            "returnDate": "2026-10-01",
-            "price": 369000
-          },
-          {
-            "id": "ttang-TW0125ICNKLO-G11-2026-10-05",
+            "id": "mrt-ICN-KHH-20260926-447100",
             "airline": "트리니티항공",
-            "route": "서울 → 보라카이(깔리보)",
-            "departureDate": "2026-10-05",
-            "returnDate": "2026-10-08",
-            "price": 299000
-          },
-          {
-            "id": "ttang-7C3211ICNSPN-G2-2026-09-26",
-            "airline": "제주항공",
-            "route": "서울 → 사이판",
+            "route": "서울(인천) → 가오슝",
             "departureDate": "2026-09-26",
-            "returnDate": "2026-09-30",
-            "price": 369000
+            "returnDate": "2026-10-01",
+            "price": 259360
           },
           {
-            "id": "ttang-ICN-CXR-RT-0-4-TW-2026-09-29",
-            "airline": "트리니티 항공",
-            "route": "서울 → 나트랑(깜란)",
-            "departureDate": "2026-09-29",
-            "returnDate": "2026-10-02",
-            "price": 269000
+            "id": "mrt-ICN-KIJ-20261029-582200",
+            "airline": "대한항공 & ANA항공",
+            "route": "서울(인천) → 니가타",
+            "departureDate": "2026-10-29",
+            "returnDate": "2026-11-03",
+            "price": 869300
           },
           {
-            "id": "ttang-LJ0061PUSCEB-G10-2026-09-29",
-            "airline": "진에어",
-            "route": "부산 → 세부",
-            "departureDate": "2026-09-29",
-            "returnDate": "2026-10-03",
-            "price": 285000
+            "id": "mrt-ICN-KIX-20261030-337900",
+            "airline": "파라타항공",
+            "route": "서울(인천) → 오사카(간사이)",
+            "departureDate": "2026-10-30",
+            "returnDate": "2026-11-04",
+            "price": 253500
           },
           {
-            "id": "ttang-ICN-BKI-RT-0-5-LJ-2026-09-29",
-            "airline": "진에어",
-            "route": "서울 → 코타키나발루",
-            "departureDate": "2026-09-29",
-            "returnDate": "2026-10-03",
-            "price": 304200
+            "id": "mrt-ICN-KTI-20261015-417100",
+            "airline": "베트남항공",
+            "route": "서울(인천) → 크라티에",
+            "departureDate": "2026-10-15",
+            "returnDate": "2026-10-19",
+            "price": 495500
           },
           {
-            "id": "ttang-7C3211ICNSPN-G2-2026-09-29",
+            "id": "mrt-ICN-KWL-20261011-346200",
+            "airline": "산동항공",
+            "route": "서울(인천) → 구이린",
+            "departureDate": "2026-10-11",
+            "returnDate": "2026-10-14",
+            "price": 312800
+          },
+          {
+            "id": "mrt-ICN-LCG-20261106-1466000",
+            "airline": "에어프랑스 & 네덜란드항공",
+            "route": "서울(인천) → 라코루냐",
+            "departureDate": "2026-11-06",
+            "returnDate": "2026-11-12",
+            "price": 1736400
+          },
+          {
+            "id": "mrt-ICN-LGW-20261009-1163100",
+            "airline": "중국동방항공",
+            "route": "서울(인천) → 런던",
+            "departureDate": "2026-10-09",
+            "returnDate": "2026-10-14",
+            "price": 1125000
+          },
+          {
+            "id": "mrt-ICN-MAD-20261018-1417000",
+            "airline": "중국국제항공",
+            "route": "서울(인천) → 마드리드",
+            "departureDate": "2026-10-18",
+            "returnDate": "2026-10-21",
+            "price": 943200
+          },
+          {
+            "id": "mrt-ICN-MBE-20261112-524100",
+            "airline": "ANA항공",
+            "route": "서울(인천) → 몬베츠",
+            "departureDate": "2026-11-12",
+            "returnDate": "2026-11-16",
+            "price": 635700
+          },
+          {
+            "id": "mrt-ICN-MCT-20261114-1120900",
+            "airline": "에티하드항공",
+            "route": "서울(인천) → 무스카트",
+            "departureDate": "2026-11-14",
+            "returnDate": "2026-11-18",
+            "price": 1238300
+          },
+          {
+            "id": "mrt-ICN-MFM-20260930-522700",
             "airline": "제주항공",
-            "route": "서울 → 사이판",
+            "route": "서울(인천) → 마카오",
+            "departureDate": "2026-09-30",
+            "returnDate": "2026-10-06",
+            "price": 232900
+          },
+          {
+            "id": "mrt-ICN-MLE-20261015-1062600",
+            "airline": "중국동방항공",
+            "route": "서울(인천) → 몰디브",
+            "departureDate": "2026-10-15",
+            "returnDate": "2026-10-17",
+            "price": 1148300
+          },
+          {
+            "id": "mrt-ICN-MRY-20261022-1266300",
+            "airline": "유나이티드항공",
+            "route": "서울(인천) → 몬터레이",
+            "departureDate": "2026-10-22",
+            "returnDate": "2026-10-26",
+            "price": 1254600
+          },
+          {
+            "id": "mrt-ICN-NGB-20261018-329000",
+            "airline": "중국남방항공",
+            "route": "서울(인천) → 닝보",
+            "departureDate": "2026-10-18",
+            "returnDate": "2026-10-21",
+            "price": 348800
+          },
+          {
+            "id": "mrt-ICN-NGO-20260927-816800",
+            "airline": "제주항공",
+            "route": "서울(인천) → 나고야",
+            "departureDate": "2026-09-27",
+            "returnDate": "2026-10-01",
+            "price": 359700
+          },
+          {
+            "id": "mrt-ICN-NQZ-20261121-889400",
+            "airline": "에어아스타나",
+            "route": "서울(인천) → 아스타나",
+            "departureDate": "2026-11-21",
+            "returnDate": "2026-11-25",
+            "price": 1036000
+          },
+          {
+            "id": "mrt-ICN-PDX-20261121-1024000",
+            "airline": "에어캐나다",
+            "route": "서울(인천) → 포틀랜드",
+            "departureDate": "2026-11-21",
+            "returnDate": "2026-11-25",
+            "price": 1324200
+          },
+          {
+            "id": "mrt-ICN-PNQ-20260929-1220600",
+            "airline": "에어인디아",
+            "route": "서울(인천) → 푸네",
             "departureDate": "2026-09-29",
             "returnDate": "2026-10-03",
-            "price": 369000
+            "price": 740600
+          },
+          {
+            "id": "mrt-ICN-RDM-20261026-1167200",
+            "airline": "유나이티드항공",
+            "route": "서울(인천) → 레드먼드",
+            "departureDate": "2026-10-26",
+            "returnDate": "2026-10-29",
+            "price": 1254600
+          },
+          {
+            "id": "mrt-ICN-SGN-20261009-333600",
+            "airline": "비엣젯항공",
+            "route": "서울(인천) → 호치민",
+            "departureDate": "2026-10-09",
+            "returnDate": "2026-10-15",
+            "price": 251400
+          },
+          {
+            "id": "mrt-ICN-SPN-20260925-1026600",
+            "airline": "제주항공",
+            "route": "서울(인천) → 사이판",
+            "departureDate": "2026-09-25",
+            "returnDate": "2026-09-30",
+            "price": 246000
+          },
+          {
+            "id": "mrt-ICN-SYD-20261103-881400",
+            "airline": "트리니티항공",
+            "route": "서울(인천) → 시드니",
+            "departureDate": "2026-11-03",
+            "returnDate": "2026-11-06",
+            "price": 994700
+          },
+          {
+            "id": "mrt-ICN-TAG-20260929-390400",
+            "airline": "진에어",
+            "route": "서울(인천) → 보홀",
+            "departureDate": "2026-09-29",
+            "returnDate": "2026-10-03",
+            "price": 291100
+          },
+          {
+            "id": "mrt-ICN-TAK-20261013-363300",
+            "airline": "진에어",
+            "route": "서울(인천) → 다카마쓰",
+            "departureDate": "2026-10-13",
+            "returnDate": "2026-10-15",
+            "price": 216300
+          },
+          {
+            "id": "mrt-ICN-TFU-20261120-250000",
+            "airline": "산동항공",
+            "route": "서울(인천) → 청두",
+            "departureDate": "2026-11-20",
+            "returnDate": "2026-11-24",
+            "price": 274400
+          },
+          {
+            "id": "mrt-ICN-TYN-20261015-521500",
+            "airline": "천진항공",
+            "route": "서울(인천) → 타이위안",
+            "departureDate": "2026-10-15",
+            "returnDate": "2026-10-18",
+            "price": 329900
+          },
+          {
+            "id": "mrt-ICN-TYO-20261025-460100",
+            "airline": "진에어",
+            "route": "서울(인천) → 도쿄",
+            "departureDate": "2026-10-25",
+            "returnDate": "2026-10-29",
+            "price": 275800
+          },
+          {
+            "id": "mrt-ICN-UBN-20261115-591900",
+            "airline": "제주항공",
+            "route": "서울(인천) → 울란바토르",
+            "departureDate": "2026-11-15",
+            "returnDate": "2026-11-17",
+            "price": 354500
+          },
+          {
+            "id": "mrt-ICN-URC-20261023-409900",
+            "airline": "산동항공",
+            "route": "서울(인천) → 우루무치",
+            "departureDate": "2026-10-23",
+            "returnDate": "2026-10-26",
+            "price": 433800
+          },
+          {
+            "id": "mrt-ICN-VCA-20261121-399900",
+            "airline": "베트남항공 & 비엣젯항공",
+            "route": "서울(인천) → 껀터",
+            "departureDate": "2026-11-21",
+            "returnDate": "2026-11-25",
+            "price": 436200
+          },
+          {
+            "id": "mrt-ICN-WAS-20261121-1034600",
+            "airline": "델타항공",
+            "route": "서울(인천) → 워싱턴 D.C.",
+            "departureDate": "2026-11-21",
+            "returnDate": "2026-11-25",
+            "price": 1627800
+          },
+          {
+            "id": "mrt-ICN-WNZ-20261026-336400",
+            "airline": "산동항공",
+            "route": "서울(인천) → 원저우",
+            "departureDate": "2026-10-26",
+            "returnDate": "2026-10-29",
+            "price": 281900
+          },
+          {
+            "id": "mrt-ICN-XIY-20261013-364700",
+            "airline": "산동항공",
+            "route": "서울(인천) → 시안",
+            "departureDate": "2026-10-13",
+            "returnDate": "2026-10-15",
+            "price": 322400
+          },
+          {
+            "id": "mrt-quick-ICN-DAD-20260929-20261004",
+            "airline": "제주항공 & 이스타항공",
+            "route": "서울(인천) → 다낭",
+            "departureDate": "2026-09-29",
+            "returnDate": "2026-10-04",
+            "price": 246600
+          },
+          {
+            "id": "mrt-quick-ICN-HKG-20260929-20261004",
+            "airline": "제주항공 & 이스타항공",
+            "route": "서울(인천) → 홍콩",
+            "departureDate": "2026-09-29",
+            "returnDate": "2026-10-04",
+            "price": 273400
+          },
+          {
+            "id": "mrt-quick-ICN-FUK-20261010-20261015",
+            "airline": "트리니티항공",
+            "route": "서울(인천) → 후쿠오카",
+            "departureDate": "2026-10-10",
+            "returnDate": "2026-10-15",
+            "price": 248530
+          },
+          {
+            "id": "mrt-quick-ICN-PQC-20261013-20261018",
+            "airline": "비엣젯항공",
+            "route": "서울(인천) → 푸꾸옥",
+            "departureDate": "2026-10-13",
+            "returnDate": "2026-10-18",
+            "price": 249400
+          },
+          {
+            "id": "mrt-quick-ICN-MNL-20261013-20261018",
+            "airline": "세부퍼시픽항공",
+            "route": "서울(인천) → 마닐라",
+            "departureDate": "2026-10-13",
+            "returnDate": "2026-10-18",
+            "price": 303700
+          },
+          {
+            "id": "mrt-quick-ICN-CXR-20261020-20261025",
+            "airline": "비엣젯항공",
+            "route": "서울(인천) → 나트랑",
+            "departureDate": "2026-10-20",
+            "returnDate": "2026-10-25",
+            "price": 263000
           }
         ],
         "removedFlights": [
           {
-            "id": "ttang-BX9115PUSIBR-G2-2026-10-06",
-            "airline": "에어부산",
-            "route": "부산 → 이바라키",
-            "departureDate": "2026-10-06",
-            "returnDate": "2026-10-09",
-            "price": 349000
+            "id": "mrt-ICN-ANC-20261111-1269500",
+            "airline": "유나이티드항공",
+            "route": "서울(인천) → 앵커리지",
+            "departureDate": "2026-11-11",
+            "returnDate": "2026-11-15",
+            "price": 1541400
           },
           {
-            "id": "ttang-RF0318CJJKIX-G21-2026-10-07",
-            "airline": "에어로케이",
-            "route": "청주 → 오사카(간사이)",
-            "departureDate": "2026-10-07",
-            "returnDate": "2026-10-10",
-            "price": 396900
+            "id": "mrt-ICN-ARN-20261015-1187000",
+            "airline": "중국국제항공",
+            "route": "서울(인천) → 스톡홀름",
+            "departureDate": "2026-10-15",
+            "returnDate": "2026-10-18",
+            "price": 717400
           },
           {
-            "id": "ttang-RF0318CJJKIX-G21-2026-10-10",
-            "airline": "에어로케이",
-            "route": "청주 → 오사카(간사이)",
-            "departureDate": "2026-10-10",
+            "id": "mrt-ICN-CHA-20261019-1130500",
+            "airline": "유나이티드항공",
+            "route": "서울(인천) → 채터누가",
+            "departureDate": "2026-10-19",
+            "returnDate": "2026-10-22",
+            "price": 2105400
+          },
+          {
+            "id": "mrt-ICN-CMB-20260926-703000",
+            "airline": "비엣젯항공",
+            "route": "서울(인천) → 콜롬보",
+            "departureDate": "2026-09-26",
+            "returnDate": "2026-10-01",
+            "price": 599200
+          },
+          {
+            "id": "mrt-ICN-CNX-20260928-493900",
+            "airline": "제주항공 & 에어부산",
+            "route": "서울(인천) → 치앙마이",
+            "departureDate": "2026-09-28",
+            "returnDate": "2026-10-02",
+            "price": 379300
+          },
+          {
+            "id": "mrt-ICN-CSX-20261018-313900",
+            "airline": "산동항공",
+            "route": "서울(인천) → 창사",
+            "departureDate": "2026-10-18",
+            "returnDate": "2026-10-20",
+            "price": 274400
+          },
+          {
+            "id": "mrt-ICN-DNH-20261112-861000",
+            "airline": "중국동방항공",
+            "route": "서울(인천) → 둔황",
+            "departureDate": "2026-11-12",
+            "returnDate": "2026-11-15",
+            "price": 858300
+          },
+          {
+            "id": "mrt-ICN-DXB-20261018-1356300",
+            "airline": "필리핀항공",
+            "route": "서울(인천) → 두바이",
+            "departureDate": "2026-10-18",
+            "returnDate": "2026-10-21",
+            "price": 813600
+          },
+          {
+            "id": "mrt-ICN-FCO-20261028-1153100",
+            "airline": "중국국제항공",
+            "route": "서울(인천) → 로마",
+            "departureDate": "2026-10-28",
+            "returnDate": "2026-11-03",
+            "price": 708900
+          },
+          {
+            "id": "mrt-ICN-HAN-20261013-305400",
+            "airline": "비엣젯항공",
+            "route": "서울(인천) → 하노이",
+            "departureDate": "2026-10-13",
+            "returnDate": "2026-10-17",
+            "price": 247900
+          },
+          {
+            "id": "mrt-ICN-HNL-20260928-1025100",
+            "airline": "에어프레미아",
+            "route": "서울(인천) → 호놀룰루",
+            "departureDate": "2026-09-28",
+            "returnDate": "2026-09-30",
+            "price": 791800
+          },
+          {
+            "id": "mrt-ICN-HUI-20261113-456300",
+            "airline": "비엣젯항공",
+            "route": "서울(인천) → 후에",
+            "departureDate": "2026-11-13",
+            "returnDate": "2026-11-15",
+            "price": 420800
+          },
+          {
+            "id": "mrt-ICN-JJN-20261013-449900",
+            "airline": "산동항공",
+            "route": "서울(인천) → 취안저우",
+            "departureDate": "2026-10-13",
+            "returnDate": "2026-10-15",
+            "price": 375200
+          },
+          {
+            "id": "mrt-ICN-JNB-20261110-1337900",
+            "airline": "에티하드항공",
+            "route": "서울(인천) → 요하네스버그",
+            "departureDate": "2026-11-10",
+            "returnDate": "2026-11-12",
+            "price": 1065100
+          },
+          {
+            "id": "mrt-ICN-KHH-20260926-452830",
+            "airline": "제주항공 & 트리니티항공",
+            "route": "서울(인천) → 가오슝",
+            "departureDate": "2026-09-26",
+            "returnDate": "2026-10-01",
+            "price": 248500
+          },
+          {
+            "id": "mrt-ICN-KIX-20261030-281000",
+            "airline": "트리니티항공",
+            "route": "서울(인천) → 오사카(간사이)",
+            "departureDate": "2026-10-30",
+            "returnDate": "2026-11-04",
+            "price": 254730
+          },
+          {
+            "id": "mrt-ICN-KKJ-20260929-304800",
+            "airline": "진에어",
+            "route": "서울(인천) → 기타큐슈",
+            "departureDate": "2026-09-29",
+            "returnDate": "2026-10-02",
+            "price": 223800
+          },
+          {
+            "id": "mrt-ICN-KWL-20261011-331800",
+            "airline": "산동항공",
+            "route": "서울(인천) → 구이린",
+            "departureDate": "2026-10-11",
             "returnDate": "2026-10-13",
-            "price": 396900
+            "price": 312800
+          },
+          {
+            "id": "mrt-ICN-MFM-20261001-572500",
+            "airline": "제주항공",
+            "route": "서울(인천) → 마카오",
+            "departureDate": "2026-10-01",
+            "returnDate": "2026-10-03",
+            "price": 253800
+          },
+          {
+            "id": "mrt-ICN-MIL-20261024-1147700",
+            "airline": "중국동방항공",
+            "route": "서울(인천) → 밀라노",
+            "departureDate": "2026-10-24",
+            "returnDate": "2026-10-28",
+            "price": 592700
+          },
+          {
+            "id": "mrt-ICN-MRY-20261015-1438300",
+            "airline": "유나이티드항공",
+            "route": "서울(인천) → 몬터레이",
+            "departureDate": "2026-10-15",
+            "returnDate": "2026-10-19",
+            "price": 1254600
+          },
+          {
+            "id": "mrt-ICN-NGB-20261012-422300",
+            "airline": "산동항공",
+            "route": "서울(인천) → 닝보",
+            "departureDate": "2026-10-12",
+            "returnDate": "2026-10-14",
+            "price": 312800
+          },
+          {
+            "id": "mrt-ICN-RDM-20261026-1383000",
+            "airline": "유나이티드항공",
+            "route": "서울(인천) → 레드먼드",
+            "departureDate": "2026-10-26",
+            "returnDate": "2026-10-31",
+            "price": 1326600
+          },
+          {
+            "id": "mrt-ICN-SGN-20261012-350600",
+            "airline": "비엣젯항공",
+            "route": "서울(인천) → 호치민",
+            "departureDate": "2026-10-12",
+            "returnDate": "2026-10-14",
+            "price": 251400
+          },
+          {
+            "id": "mrt-ICN-SPN-20260927-1047900",
+            "airline": "제주항공",
+            "route": "서울(인천) → 사이판",
+            "departureDate": "2026-09-27",
+            "returnDate": "2026-09-30",
+            "price": 262000
+          },
+          {
+            "id": "mrt-ICN-TAK-20261020-272300",
+            "airline": "진에어",
+            "route": "서울(인천) → 다카마쓰",
+            "departureDate": "2026-10-20",
+            "returnDate": "2026-10-23",
+            "price": 216300
+          },
+          {
+            "id": "mrt-ICN-TPE-20260926-899600",
+            "airline": "진에어",
+            "route": "서울(인천) → 타이베이",
+            "departureDate": "2026-09-26",
+            "returnDate": "2026-10-02",
+            "price": 241700
+          },
+          {
+            "id": "mrt-ICN-TYN-20261022-387800",
+            "airline": "천진항공",
+            "route": "서울(인천) → 타이위안",
+            "departureDate": "2026-10-22",
+            "returnDate": "2026-10-27",
+            "price": 328900
+          },
+          {
+            "id": "mrt-ICN-TYO-20261010-682000",
+            "airline": "이스타항공",
+            "route": "서울(인천) → 도쿄",
+            "departureDate": "2026-10-10",
+            "returnDate": "2026-10-15",
+            "price": 254200
+          },
+          {
+            "id": "mrt-ICN-VCE-20261016-940400",
+            "airline": "중국동방항공",
+            "route": "서울(인천) → 베네치아",
+            "departureDate": "2026-10-16",
+            "returnDate": "2026-10-22",
+            "price": 600500
+          },
+          {
+            "id": "mrt-ICN-WNZ-20261026-297600",
+            "airline": "산동항공",
+            "route": "서울(인천) → 원저우",
+            "departureDate": "2026-10-26",
+            "returnDate": "2026-10-28",
+            "price": 281900
+          },
+          {
+            "id": "mrt-quick-ICN-HKG-20261001-20261006",
+            "airline": "제주항공 & 트리니티항공",
+            "route": "서울(인천) → 홍콩",
+            "departureDate": "2026-10-01",
+            "returnDate": "2026-10-06",
+            "price": 274500
+          },
+          {
+            "id": "mrt-quick-ICN-DAD-20261009-20261014",
+            "airline": "비엣젯항공 & 이스타항공",
+            "route": "서울(인천) → 다낭",
+            "departureDate": "2026-10-09",
+            "returnDate": "2026-10-14",
+            "price": 245400
+          },
+          {
+            "id": "mrt-quick-ICN-FUK-20261010-20261014",
+            "airline": "트리니티항공",
+            "route": "서울(인천) → 후쿠오카",
+            "departureDate": "2026-10-10",
+            "returnDate": "2026-10-14",
+            "price": 240730
+          },
+          {
+            "id": "mrt-quick-ICN-MNL-20261010-20261014",
+            "airline": "제주항공",
+            "route": "서울(인천) → 마닐라",
+            "departureDate": "2026-10-10",
+            "returnDate": "2026-10-14",
+            "price": 331300
+          },
+          {
+            "id": "mrt-quick-ICN-CXR-20261014-20261019",
+            "airline": "비엣젯항공 & 파라타항공",
+            "route": "서울(인천) → 나트랑",
+            "departureDate": "2026-10-14",
+            "returnDate": "2026-10-19",
+            "price": 267000
           }
         ],
         "byCity": {
-          "계림(구이린)": 2,
-          "연길(옌지)": 4,
-          "이바라키": 6,
-          "사이판": 15,
-          "광주(광저우)": 2,
-          "타이페이": 11,
-          "오키나와": 11,
-          "상해(푸동공항)": 4,
-          "요나고": 1,
-          "나트랑(깜란)": 6,
-          "하노이": 3,
-          "싱가포르": 5,
-          "세부": 4,
-          "코타키나발루": 3,
-          "다카마츠": 2,
-          "괌": 9,
-          "방콕": 5,
-          "다낭": 6,
-          "클락(앙헬레스)": 6,
-          "고베": 1,
-          "청두(성도/톈푸 국제공항)": 2,
-          "보홀(필리핀)": 2,
-          "도야마": 4,
-          "푸꾸옥": 3,
-          "치앙마이": 2,
-          "마나도(인도네시아)": 6,
-          "도쿄(나리타공항)": 3,
-          "삿포로(치토세)": 3,
-          "시드니": 3,
-          "마츠야마": 2,
-          "보라카이(깔리보)": 2,
-          "장가계(다융)": 2,
-          "오사카(간사이)": 4,
-          "나고야": 2,
-          "타이페이(송산)": 2,
-          "시즈오카": 1,
+          "알마티": 1,
+          "스톡홀름": 1,
+          "아테네": 1,
+          "아키타": 1,
+          "코타키나발루": 1,
+          "방콕": 1,
+          "브뤼셀": 1,
+          "버펄로": 1,
+          "광저우": 1,
+          "파리": 2,
+          "세부": 1,
+          "충칭": 1,
+          "코펜하겐": 1,
+          "클라크": 1,
+          "창사": 1,
+          "카타니아": 1,
+          "삿포로": 2,
+          "나트랑": 2,
+          "카우아얀": 1,
+          "다낭": 2,
+          "달리": 1,
+          "디폴로그": 1,
+          "디모인": 1,
+          "더블린": 1,
+          "두바이": 1,
+          "장자제": 1,
+          "후쿠에": 1,
           "후쿠오카": 2,
-          "로마 (FCO)": 1,
-          "오이타": 1,
-          "이스탄불(IST)": 1,
-          "홍콩": 1
+          "과달라하라": 1,
+          "제네럴산토스": 1,
+          "하노이": 1,
+          "후에": 1,
+          "휴스턴": 1,
+          "인촨": 1,
+          "이스탄불": 1,
+          "자이위관": 1,
+          "취안저우": 1,
+          "요하네스버그": 1,
+          "쿠칭": 1,
+          "가오슝": 1,
+          "난창": 1,
+          "니가타": 1,
+          "오사카(간사이)": 1,
+          "미야자키": 1,
+          "구마모토": 1,
+          "가고시마": 1,
+          "크라티에": 1,
+          "구시로": 1,
+          "쿠알라룸푸르": 1,
+          "야쿠시마": 1,
+          "구이린": 1,
+          "라코루냐": 1,
+          "런던": 2,
+          "라호르": 1,
+          "란저우": 1,
+          "마드리드": 1,
+          "몬베츠": 1,
+          "무스카트": 1,
+          "마카오": 1,
+          "몰디브": 1,
+          "몬터레이": 1,
+          "닝보": 1,
+          "나고야": 1,
+          "아스타나": 1,
+          "도쿄(나리타)": 1,
+          "오비히로": 1,
+          "오카야마": 1,
+          "오사카": 2,
+          "부쿠레슈티": 1,
+          "포틀랜드": 1,
+          "푸네": 1,
+          "상하이(푸동)": 1,
+          "레드먼드": 1,
+          "스테이트칼리지": 1,
+          "호치민": 1,
+          "싱가포르": 1,
+          "솔로": 1,
+          "사이판": 1,
+          "스마랑": 1,
+          "시드니": 1,
+          "보홀": 1,
+          "다카마쓰": 1,
+          "칭다오": 1,
+          "청두": 1,
+          "도쿠시마": 1,
+          "투게가라오": 1,
+          "타이위안": 1,
+          "도쿄": 1,
+          "우베": 1,
+          "울란바토르": 1,
+          "우루무치": 1,
+          "껀터": 1,
+          "비엔나": 1,
+          "워싱턴 D.C.": 1,
+          "웨이하이": 1,
+          "원저우": 1,
+          "시안": 1,
+          "시닝": 1,
+          "요나고": 1,
+          "이우": 1,
+          "자그레브": 1,
+          "홍콩": 1,
+          "푸꾸옥": 1,
+          "마닐라": 1
         }
       }
     },
