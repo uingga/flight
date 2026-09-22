@@ -93,6 +93,26 @@ assert.equal(selection.pending.at(-1)?.group, 'low');
 assert.equal(selection.skippedFresh, 1);
 assert.equal(selection.eligible.length, selection.selected.length + selection.pending.length);
 
+// Brand-new candidate outside top rankings is prioritized as 'new' before top periodic candidates
+const withNewCandidates = [
+    ...candidates,
+    flight('brand-new-flight', 10),
+];
+const withNewEntries = { ...entries };
+const selectionWithNew = selectNaverCrawlCandidates(withNewCandidates, withNewEntries, {
+    limit: 5,
+    now,
+    topCandidateCount: 2,
+    lowCandidateRatio: 0.25,
+    maxDeferDays: 7,
+    refreshConfig,
+});
+assert.equal(selectionWithNew.selected[0].key, 'deadline');
+assert.equal(selectionWithNew.selected[0].group, 'deadline');
+assert.equal(selectionWithNew.selected[1].key, 'brand-new-flight');
+assert.equal(selectionWithNew.selected[1].group, 'new');
+assert.equal(selectionWithNew.selected[2].group, 'top');
+
 assert.equal(hasNaverCrawlAttempt(undefined), false);
 assert.equal(hasNaverCrawlAttempt({ firstQueuedAt: '2026-08-30T03:00:00Z' }), false);
 assert.equal(hasNaverCrawlAttempt({

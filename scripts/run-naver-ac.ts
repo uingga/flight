@@ -28,7 +28,7 @@ export async function runNaverAc(options: any) {
     if (options.identity.worker === 'A' && !options.policyInput) throw Error('legacy A policy input required');
     let policy: any = options.identity.worker === 'A' ? evaluateLocalNaverRun(options.policyInput) : {};
     if(options.identity.worker==='A'&&options.policyInput?.completedRound&&policy.reason==='daily_budget_exhausted'){
-        const refresh=evaluateRoundContinuation({now:new Date(options.policyInput.now||Date.now()).getTime(),cache:options.policyInput.cache,state:options.policyInput.state,round:options.policyInput.completedRound,totalBudget:400});
+        const refresh=evaluateRoundContinuation({now:new Date(options.policyInput.now||Date.now()).getTime(),cache:options.policyInput.cache,state:options.policyInput.state,round:options.policyInput.completedRound,totalBudget:450});
         if(refresh.shouldRun)policy={...refresh,shouldRun:false,shouldFinalize:true,navigationBudget:0};
     }
     if (options.identity.worker === 'A' && !policy.shouldRun && !policy.shouldFinalize) return { status: 'waiting', reason: policy.reason };
@@ -54,7 +54,8 @@ export async function runNaverAc(options: any) {
             latest.cache?.sourceUpdatedAt || latest.sourceUpdatedAt || {}, latest.cache?.lastUpdated || latest.cache?.timestamp,
             identity.worker === 'A' ? new Set(policy.sources || []) : new Set(phaseState.sourceScope));
         const currentState = await client.workState(identity);
-        const phaseRemaining = Math.max(0, (policy.navigationBudget ?? 200) - (currentState.used[identity.worker] - phaseState.used[identity.worker]));
+        const phaseBudget = identity.worker === 'C' ? 250 : (policy.navigationBudget ?? 200);
+        const phaseRemaining = Math.max(0, phaseBudget - (currentState.used[identity.worker] - phaseState.used[identity.worker]));
         const rows = await boundary.refresh({ ...latest, flights, contentSignature }, prices, Math.min(limit, phaseRemaining));
         return rows[0] || null;
     };

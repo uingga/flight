@@ -8,8 +8,8 @@ import {
 } from './naver-refresh-policy';
 
 export type NaverCrawlPriorityGroup =
+    | 'new'
     | 'deadline'
-    | 'changed_top'
     | 'top'
     | 'standard'
     | 'low';
@@ -69,7 +69,7 @@ const kstDayNumber = (timestamp: number): number =>
 
 const priorityOrder: Record<NaverCrawlPriorityGroup, number> = {
     deadline: 0,
-    changed_top: 1,
+    new: 1,
     top: 2,
     standard: 3,
     low: 4,
@@ -77,7 +77,7 @@ const priorityOrder: Record<NaverCrawlPriorityGroup, number> = {
 
 const emptyCounts = (): Record<NaverCrawlPriorityGroup, number> => ({
     deadline: 0,
-    changed_top: 0,
+    new: 0,
     top: 0,
     standard: 0,
     low: 0,
@@ -97,13 +97,11 @@ function queueAgeDays(entry: NaverCrawlPriorityEntry | undefined, now: number): 
 /**
  * 네이버 값을 제외한 임시 추천순을 받아 하루 검색 대상을 정한다.
  *
- * 1. 신규·의미 있는 여행사 가격 변경 + 추천 상위
- * 2. 나머지 추천 상위
- * 3. 추천 중간
- * 4. 추천 하위
- *
- * 단, 마지막 시도 또는 최초 대기 후 maxDeferDays가 된 항목은 deadline으로
- * 승격해 추천 하위 항목도 영구적으로 밀리지 않게 한다.
+ * 1. 7일 마감 임박 항목 (기아 방지)
+ * 2. 신규 노선·미조회 티켓 (전체 순위 무관 최우선)
+ * 3. 추천 상위 정기 갱신
+ * 4. 추천 중간
+ * 5. 추천 하위
  */
 export function selectNaverCrawlCandidates<T extends NaverRefreshFlight>(
     candidates: NaverCrawlPriorityCandidate<T>[],
@@ -150,11 +148,11 @@ export function selectNaverCrawlCandidates<T extends NaverRefreshFlight>(
         const provisionalRank = rankByKey.get(candidate.key) ?? Number.MAX_SAFE_INTEGER;
         const ageDays = queueAgeDays(entry, now);
         const isTop = provisionalRank <= topCandidateCount;
-        const isChanged = decision.reason === 'new' || decision.reason === 'source_changed';
+        const isNew = decision.reason === 'new' || decision.reason === 'retry_due';
         const group: NaverCrawlPriorityGroup = ageDays >= maxDeferDays
             ? 'deadline'
-            : isTop && isChanged
-                ? 'changed_top'
+            : isNew
+                ? 'new'
                 : isTop
                     ? 'top'
                     : provisionalRank >= lowStartRank
@@ -174,7 +172,7 @@ export function selectNaverCrawlCandidates<T extends NaverRefreshFlight>(
     eligible.sort((left, right) => {
         const groupDifference = priorityOrder[left.group] - priorityOrder[right.group];
         if (groupDifference !== 0) return groupDifference;
-        if (left.group === 'changed_top' || left.group === 'top') {
+        if (left.group === 'new' || left.group === 'top') {
             return left.provisionalRank - right.provisionalRank
                 || right.queueAgeDays - left.queueAgeDays;
         }
@@ -199,8 +197,8 @@ export function selectNaverCrawlCandidates<T extends NaverRefreshFlight>(
 
 export function naverCrawlPriorityGroupLabel(group: NaverCrawlPriorityGroup): string {
     switch (group) {
+        case 'new': return '신규 노선·티켓';
         case 'deadline': return '7일 마감 승격';
-        case 'changed_top': return '신규·가격 변경 추천 상위';
         case 'top': return '추천 상위';
         case 'standard': return '보통';
         case 'low': return '추천 하위';

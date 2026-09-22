@@ -59,7 +59,7 @@ cache.flights = cache.flights.filter((f: any) => {
     const effectivePrice = getEffectivePrice(f);
     const diff = effectivePrice - bestNaverPrice;
     const moreExpensiveRatio = diff / bestNaverPrice;
-    if (isNaverPriceOverLimit(effectivePrice, bestNaverPrice)) {
+    if (isNaverPriceOverLimit(effectivePrice, bestNaverPrice, f.source)) {
         console.log(`  ❌ ${f.arrival?.city} ${depDate} ${f.source} ${f.price.toLocaleString()}원 > 네이버 ${bestNaverPrice.toLocaleString()}원 (+${diff.toLocaleString()}원, +${Math.round(moreExpensiveRatio * 100)}%)`);
         filtered++;
         hiddenFlightKeys.add(`${f.source}|${f.id}`);

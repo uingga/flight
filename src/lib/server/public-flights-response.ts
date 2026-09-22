@@ -351,12 +351,12 @@ export async function createPublicFlightsResponse(searchParams: URLSearchParams)
                     // 표시와 동일하게 72시간까지 적용하고, 이후에는 오래된 비교가로 제거하지 않는다.
                     if (!getPriceExclusionFreshness(f.naverCheckedAt).usable) return true;
                     const effectivePrice = getEffectivePrice(f);
-                    return !isNaverPriceOverLimit(effectivePrice, f.naverLowest);
+                    return !isNaverPriceOverLimit(effectivePrice, f.naverLowest, f.source);
                 });
                 const removed = beforeNaverFilter - allFlights.length;
                 filterSummary.reasons.naverExpensive = removed;
                 if (matched > 0) console.log(`네이버 최저가 매칭: ${matched}/${allFlights.length}건`);
-                if (removed > 0) console.log(`네이버보다 20% 이상 또는 10만원 이상 비싼 항공권 제거: ${removed}건`);
+                if (removed > 0) console.log(`네이버보다 비싼 항공권 제거 (일반 20%/10만원, 마이리얼트립 5%/2.5만원): ${removed}건`);
             }
         } catch (e) { result_version = null; }
 

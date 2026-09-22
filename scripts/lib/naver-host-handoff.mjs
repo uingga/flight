@@ -14,7 +14,7 @@ export function hostAction({now=Date.now(),activateAt,state,legacy,completedRoun
   return 'A';
  }
  if(state.blocked||state.pending||(state.owner&&!(state.phase==='paused-A'&&state.owner==='A')))throw Error('unsafe or active coordinator state');
- if(!Number.isSafeInteger(state.used?.A)||!Number.isSafeInteger(state.used?.C)||state.used.A<0||state.used.C<0||state.used.A>200||state.used.C>200)throw Error('invalid budget state');
+ if(!Number.isSafeInteger(state.used?.A)||!Number.isSafeInteger(state.used?.C)||state.used.A<0||state.used.C<0||state.used.A>200||state.used.C>250)throw Error('invalid budget state');
  if(state.phase==='new'){
   if(state.used.A||state.used.C||legacy?.kstDate===day&&(legacy.navigationsUsed>0||legacy.phase==='running'))throw Error('unreconciled new ledger');
   return 'A';
@@ -27,7 +27,7 @@ export function hostAction({now=Date.now(),activateAt,state,legacy,completedRoun
   if(!state.verifiedVersion||(!state.round&&state.used.C))throw Error('unverified or repeated handoff');
   return 'C';
  }
- if(state.phase==='done')return completedRound&&state.round&&Date.parse(completedRound)>Date.parse(state.round)&&state.used.A+state.used.C<400?'A':'done';
+ if(state.phase==='done')return completedRound&&state.round&&Date.parse(completedRound)>Date.parse(state.round)&&state.used.A+state.used.C<450?'A':'done';
  throw Error('unknown coordinator phase');
 }
 

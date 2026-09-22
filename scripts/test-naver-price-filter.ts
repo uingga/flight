@@ -67,11 +67,27 @@ for (const [source, price, comparison, hours] of [
     assert.equal(isNaverPriceOverLimit(getEffectivePrice({ source, price }), entry.price), true);
 }
 
+// MyRealTrip Direction A threshold tests: 25,000 won OR 5%
+const mrtCases: Array<[number, number, boolean]> = [
+    [104_999, 100_000, false], // 4.999% and < 25,000 won -> false
+    [105_000, 100_000, true],  // 5% -> true
+    [105_001, 100_000, true],  // > 5% -> true
+    [124_999, 100_000, true],  // > 5% -> true
+    [1_024_999, 1_000_000, false], // 2.4999% and < 25,000 won -> false
+    [1_025_000, 1_000_000, true],  // 25,000 won -> true
+    [1_030_000, 1_000_000, true],  // 30,000 won -> true
+    [100_000, 100_000, false],     // same price -> false
+    [90_000, 100_000, false],      // cheaper -> false
+];
+for (const [price, comparison, excluded] of mrtCases) {
+    assert.equal(isNaverPriceOverLimit(price, comparison, 'myrealtrip'), excluded, `MRT ${price}/${comparison}`);
+}
+
 // All three exclusion entry points must use the same policy and retain freshness checks.
-for (const file of ['scripts/filter-by-naver.ts', 'src/app/api/flights/route.ts', 'src/lib/flight-static.ts']) {
+for (const file of ['scripts/filter-by-naver.ts', 'src/lib/server/public-flights-response.ts', 'src/lib/flight-static.ts']) {
     const source = readFileSync(file, 'utf8');
     assert.match(source, /isNaverPriceOverLimit\(/, file);
     assert.match(source, /getPriceExclusionNaverComparison\(|getPriceExclusionFreshness\(/, file);
     assert.doesNotMatch(source, /difference < 100_?000|diff >= 100000|10만원·20%/, file);
 }
-console.log('PASS: Naver 20% OR KRW 100,000 thresholds, fees, missing/stale comparisons, and three entry-point contracts');
+console.log('PASS: Naver thresholds (general 20%/100k + MRT 5%/25k), fees, missing/stale comparisons, and three entry-point contracts');

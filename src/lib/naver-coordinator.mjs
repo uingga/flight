@@ -98,7 +98,7 @@ export class Coordinator {
             const nextC=input.worker==='C'&&s.phase==='ready-C'&&input.round===s.round&&s.round&&s.handoffRound!==s.round;
             requireValue(!s.runs[input.worker]||((nextRound||nextC)&&s.runs[input.worker]===input.run),'owner/run already acquired');
             requireValue(input.worker === 'A' ? s.phase === 'new'||nextRound : s.phase === 'ready-C', 'phase not ready');
-            if(nextRound)requireValue(s.used.A+s.used.C<400&&!Object.values(s.attempts).some(a=>a.status==='pending'),'round budget exhausted or pending');
+            if(nextRound)requireValue(s.used.A+s.used.C<450&&!Object.values(s.attempts).some(a=>a.status==='pending'),'round budget exhausted or pending');
             if(input.worker==='A'&&input.round)s.round=input.round;
             if (input.worker === 'C') { requireValue(s.round ? input.round===s.round&&s.handoffRound!==s.round : s.handoffs === 0, 'duplicate handoff'); s.handoffs++;s.handoffRound=s.round||null; }
             s.owner = input.worker; s.runs[input.worker] = input.run; s.phase = 'running';
@@ -113,7 +113,7 @@ export class Coordinator {
             requireValue(nonempty(input.requestId) && nonempty(input.key), 'invalid attempt');
             requireValue(['search', 'probe'].includes(input.kind), 'invalid kind');
             requireValue(!s.attempts[input.requestId] && !s.keys[input.key], 'duplicate attempt/key');
-            requireValue(s.used[input.worker] < 200 && s.used.A + s.used.C < 400, 'budget exhausted');
+            requireValue(s.used[input.worker] < (input.worker === 'C' ? 250 : 200) && s.used.A + s.used.C < 450, 'budget exhausted');
             const permit = { ...input, ...(fence?{fence:fence.epoch}:{}), day: s.day, status: 'pending', reservedAt: this.clock() };
             s.used[input.worker]++;
             s.attempts[input.requestId] = permit;

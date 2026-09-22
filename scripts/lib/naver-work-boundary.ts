@@ -19,7 +19,8 @@ export class NaverWorkBoundary {
             return key && !Object.hasOwn(state.keys, key);
         });
         const select = createNaverSelection(d.selectionOptions);
-        const remaining = Math.max(0, Math.min(limit, 200 - (state.used[d.identity.worker] || 0), 400 - state.used.A - state.used.C));
+        const workerMax = d.identity.worker === 'C' ? 250 : 200;
+        const remaining = Math.max(0, Math.min(limit, workerMax - (state.used[d.identity.worker] || 0), 450 - state.used.A - state.used.C));
         const selected = select(unprocessed, prices, remaining);
         if (snapshot.generation > state.generation) await d.publisher.updateCandidates({ generation: snapshot.generation, snapshotSignature,
             candidates: selected.pending.map((flight: any) => {

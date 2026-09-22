@@ -166,7 +166,7 @@ function selectFlightsByPriority(
         refreshConfig: REFRESH_CONFIG,
     });
 
-    const groupOrder: NaverCrawlPriorityGroup[] = ['deadline', 'changed_top', 'top', 'standard', 'low'];
+    const groupOrder: NaverCrawlPriorityGroup[] = ['deadline', 'new', 'top', 'standard', 'low'];
     const orderedRows = groupOrder.flatMap(group => {
         const rows = selection.eligible.filter(row => row.group === group);
         const rowByKey = new Map(rows.map(row => [row.key, row]));
@@ -177,7 +177,7 @@ function selectFlightsByPriority(
     const selectedRows = orderedRows.slice(0, limit);
     const selectedGroupCounts: Record<NaverCrawlPriorityGroup, number> = {
         deadline: 0,
-        changed_top: 0,
+        new: 0,
         top: 0,
         standard: 0,
         low: 0,

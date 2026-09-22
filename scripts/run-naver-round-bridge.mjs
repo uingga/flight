@@ -51,7 +51,7 @@ async function main(){
    const shared=await coordinatorStatus();
    if(shared?.day===day){
     if(shared.blocked||shared.pending||(shared.owner&&shared.phase!=='paused-A'))throw Error('coordinator unsafe or already running');
-    if(shared.used.A+shared.used.C>=400)return;
+    if(shared.used.A+shared.used.C>=450)return;
     if(shared.phase==='ready-C'){
      const r=execute(ps,['-NoProfile','-NonInteractive','-File',path.join(root,'scripts/run-naver-crawl.ps1'),'-Scheduled'],{NAVER_COMPLETED_ROUND:shared.round||round});
      if(r.status!==0)throw Error('pending C handoff refused');continue;
@@ -69,7 +69,7 @@ async function main(){
   const pc=JSON.parse(inspection.stdout.trim());
   const mrt=await inspectNaverMrtCompletion({api,round,cache,now});
   if(roundBarrier({round,cache,pc,mrtDone:mrt.ready})){
-   const policy=evaluateRoundContinuation({now,cache,state,round,totalBudget:coordinated?400:200});
+   const policy=evaluateRoundContinuation({now,cache,state,round,totalBudget:coordinated?450:200});
    if(policy.shouldRun){
     log('MRT readiness '+JSON.stringify(mrt));
     log('ready '+round+' remaining='+policy.navigationBudget);
