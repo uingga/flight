@@ -356,7 +356,7 @@ export async function createPublicFlightsResponse(searchParams: URLSearchParams)
                 const removed = beforeNaverFilter - allFlights.length;
                 filterSummary.reasons.naverExpensive = removed;
                 if (matched > 0) console.log(`네이버 최저가 매칭: ${matched}/${allFlights.length}건`);
-                if (removed > 0) console.log(`네이버보다 비싼 항공권 제거 (일반 20%/10만원, 마이리얼트립 5%/2.5만원): ${removed}건`);
+                if (removed > 0) console.log(`네이버보다 비싼 항공권 제거 (일반 20%/10만원, 마이리얼트립·트립닷컴 5%/2.5만원): ${removed}건`);
             }
         } catch (e) { result_version = null; }
 

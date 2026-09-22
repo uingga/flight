@@ -7,8 +7,8 @@ export function isNaverPriceOverLimit(
     if (!Number.isFinite(effectivePrice) || !Number.isFinite(naverPrice) || naverPrice <= 0) return false;
     const difference = effectivePrice - naverPrice;
 
-    if (source === 'myrealtrip') {
-        // 마이리얼트립: 네이버보다 2.5만원 이상 비싸거나 5% 이상 비싸면 탈락
+    if (source === 'myrealtrip' || source === 'tripcom') {
+        // 마이리얼트립 / 트립닷컴: 네이버보다 2.5만원 이상 비싸거나 5% 이상 비싸면 탈락
         return difference >= 25_000 || difference * 20 >= naverPrice;
     }
 

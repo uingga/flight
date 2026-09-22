@@ -81,6 +81,7 @@ const mrtCases: Array<[number, number, boolean]> = [
 ];
 for (const [price, comparison, excluded] of mrtCases) {
     assert.equal(isNaverPriceOverLimit(price, comparison, 'myrealtrip'), excluded, `MRT ${price}/${comparison}`);
+    assert.equal(isNaverPriceOverLimit(price, comparison, 'tripcom'), excluded, `Trip.com ${price}/${comparison}`);
 }
 
 // All three exclusion entry points must use the same policy and retain freshness checks.
@@ -90,4 +91,4 @@ for (const file of ['scripts/filter-by-naver.ts', 'src/lib/server/public-flights
     assert.match(source, /getPriceExclusionNaverComparison\(|getPriceExclusionFreshness\(/, file);
     assert.doesNotMatch(source, /difference < 100_?000|diff >= 100000|10만원·20%/, file);
 }
-console.log('PASS: Naver thresholds (general 20%/100k + MRT 5%/25k), fees, missing/stale comparisons, and three entry-point contracts');
+console.log('PASS: Naver thresholds (general 20%/100k + MRT/Trip.com 5%/25k), fees, missing/stale comparisons, and three entry-point contracts');
