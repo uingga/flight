@@ -8,8 +8,8 @@ export function isNaverPriceOverLimit(
     const difference = effectivePrice - naverPrice;
 
     if (source === 'myrealtrip' || source === 'tripcom') {
-        // 마이리얼트립 / 트립닷컴: 네이버보다 2.5만원 이상 비싸거나 5% 이상 비싸면 탈락
-        return difference >= 25_000 || difference * 20 >= naverPrice;
+        // 마이리얼트립 / 트립닷컴: 네이버보다 1만원 이상 비싸거나 3% 이상 비싸면 탈락
+        return difference >= 10_000 || difference * 100 >= naverPrice * 3;
     }
 
     // 기본(기타 여행사): 10만원 이상 비싸거나 20% 이상 비싸면 탈락
