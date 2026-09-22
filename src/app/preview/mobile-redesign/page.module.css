@@ -602,10 +602,8 @@
 .freshFlightsBar:has(.holidayCopyButton) { transition: border-color .18s ease, box-shadow .18s ease; }
 .freshFlightsBar:has(.holidayCopyButton:hover) { border-color: #cfd2d7; box-shadow: var(--shadow-surface, 0 1px 2px rgba(34, 34, 34, .025)); }
 @media (max-width: 760px) {
-    .holidayCopyAction > strong { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
     .freshFlightsBar:has(.holidayCopyButton) { transition: border-color .18s ease, background-color .18s ease, transform .15s ease; }
     .freshFlightsBar:has(.holidayCopyButton:active) { background: #fcfcfd; transform: scale(.995); }
-    .holidayCopyAction:has(.holidayCopyButton:active) > strong > i { color: #4f5864; transform: translateX(2px); }
 }
 .freshFlightsCopy {
     min-width: 0;

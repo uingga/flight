@@ -1,6 +1,5 @@
 'use client';
 import { holidayInsightCopy, selectHolidayFlights } from '@/lib/holiday-insight';
-import discoveryStyles from '@/components/WeeklyDiscoveryInsight.module.css';
 import { airlineDisplayName } from '@/lib/utils/airline-display';
 import { homeRecommendation } from '@/lib/home-recommendation';
 import { isKoreanCalendarRedDay, koreanHolidayName } from '@/lib/korean-calendar';
@@ -621,7 +620,7 @@ export function WeekendFlightsInsight({
                 <div className={`${styles.freshFlightsCopy} ${onOpenCollection ? styles.holidayCopyAction : ''}`}>
                     {onOpenCollection && <button type="button" className={styles.holidayCopyButton} onClick={onOpenCollection} aria-label="연휴 항공권 전체 보기" />}
                     {!onOpenCollection && <span className={styles.freshFlightsDesktopEyebrow}>{eyebrow}</span>}
-                    <strong id={`${insightId}-title`}>{copy?.title ?? (priceDrops ? '기다린 보람이 있네요' : '주말이 아까운 사람에게')}{onOpenCollection && <i className={discoveryStyles.mobileTitleArrow} aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6" /></svg></i>}</strong>
+                    <strong id={`${insightId}-title`}>{onOpenCollection && <span aria-hidden="true">✈️ </span>}{copy?.title ?? (priceDrops ? '기다린 보람이 있네요' : '주말이 아까운 사람에게')}</strong>
                     <p>{copy?.description ?? (priceDrops ? '최근 가격이 내려간 항공권을 모았어요.' : '토·일이 여행 일정에 들어간 항공권만 골랐어요.')}</p>
                 </div>
                 <div
