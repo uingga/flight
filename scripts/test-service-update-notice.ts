@@ -5,15 +5,15 @@ import { watchAnnouncement, isAnnouncementActive, type AnnouncementNotice } from
 const end = Date.parse('2026-09-19T06:00:00+09:00');
 const expiringNotice = { ...notice, endsAt: end };
 
-test('maintenance notice stops at the approved 06:00 KST cutoff', () => {
-    assert.equal(SERVICE_UPDATE_NOTICE_END, Date.parse('2026-09-18T21:00:00Z'));
-    assert.equal(isServiceUpdateNoticeActive(end - 1), true);
-    assert.equal(isServiceUpdateNoticeActive(end), false);
-    assert.equal(isServiceUpdateNoticeActive(end + 86400000), false);
-    assert.equal(SERVICE_UPDATE_NOTICE_KEY, 'tikitikit-service-update-20260919-modetour-maintenance-v1');
-    assert.equal(notice.title, '모두투어 점검 안내');
-    assert.match(notice.body, /접속 및 예약이 원활하지 않을 수/);
-    assert.doesNotMatch(JSON.stringify(notice), /차단|유류할증료|완료 예정/);
+test('data recovery notice remains active until explicitly withdrawn', () => {
+    assert.equal(SERVICE_UPDATE_NOTICE_END, null);
+    assert.equal(isServiceUpdateNoticeActive(Date.parse('2026-09-23T00:00:00Z')), true);
+    assert.equal(isServiceUpdateNoticeActive(Date.parse('2027-01-01T00:00:00Z')), true);
+    assert.equal(SERVICE_UPDATE_NOTICE_KEY, 'tikitikit-service-update-20260923-flight-data-recovery-v1');
+    assert.equal(notice.title, '항공권 데이터 복구 중입니다');
+    assert.match(notice.body, /새 항공권 반영이 지연/);
+    assert.match(notice.body, /판매가 끝난 표/);
+    assert.match(notice.body, /최종 가격/);
 });
 test('dated expiry boundary and invalid dates retain fail-closed behavior', () => {
     assert.equal(isAnnouncementActive(expiringNotice, end - 1), true);
@@ -62,8 +62,8 @@ test('undated notice needs no expiry timer and respects dismissal', () => {
     const blockedStorage = fixture(null, true, end, undatedNotice);
     assert.equal(blockedStorage.open, true); blockedStorage.stop();
 });
-test('old notice dismissal does not hide new maintenance notice', () => {
-    const stored = new Map([['tikitikit-service-update-20260901-fuel-surcharge-v2', 'dismissed']]);
+test('old notice dismissal does not hide new recovery notice', () => {
+    const stored = new Map([['tikitikit-service-update-20260919-modetour-maintenance-v1', 'dismissed']]);
     let open = false;
     const stop = watchAnnouncement(notice, value => { open = value; }, {
         localStorage: { getItem: (key: string) => stored.get(key) ?? null },
@@ -72,6 +72,6 @@ test('old notice dismissal does not hide new maintenance notice', () => {
     } as unknown as Window, {
         addEventListener: () => {},
         removeEventListener: () => {},
-    } as unknown as Document, () => end - 1);
+    } as unknown as Document, () => Date.parse('2026-09-23T00:00:00Z'));
     assert.equal(open, true); stop();
 });
