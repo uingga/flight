@@ -84,7 +84,7 @@ export function collectionChange(stat: CollectionStat): number | null {
     return stat.added - stat.removed;
 }
 export function buildCollectionHistory(history: readonly CrawlHistoryEntry[], naver: readonly NaverCollectionEntry[], active?: ActiveCollectionRun | null): CollectionRun[] {
-    const sources = Object.keys(COLLECTION_SOURCES).filter(source => source !== 'myrealtrip');
+    const sources = Object.keys(COLLECTION_SOURCES).filter(source => source !== 'myrealtrip' && source !== 'tripcom');
     const runs: CollectionRun[] = [];
     for (let index = 0; index < history.length; index += 1) {
         const entry = history[index];
@@ -96,10 +96,15 @@ export function buildCollectionHistory(history: readonly CrawlHistoryEntry[], na
                 : entry.runKind === 'pc_primary' ? '일반 여행사 PC 수집' : '일반 여행사 수집',
             sites, alerts: entry.alerts,
         });
-        const stat = entry.sites.myrealtrip;
-        // Old general runs sometimes contain an unchanged MRT cache without an actual attempt.
-        if (!stat || stat.skipReason === 'not-requested' || (stat.scraped === undefined && !stat.preserved && !stat.skipped && !stat.manual)) continue;
-        runs.push({ id: `mrt-${entry.timestamp}`, timestamp: entry.timestamp, title: '마이리얼트립 수집', sites: { myrealtrip: stat }, alerts: entry.alerts });
+        for (const independentSource of ['myrealtrip', 'tripcom'] as const) {
+            const stat = entry.sites[independentSource];
+            // An unchanged cache copied into a general run is not an independent collection attempt.
+            if (!stat || stat.skipReason === 'not-requested' || (stat.scraped === undefined && !stat.preserved && !stat.skipped && !stat.manual)) continue;
+            runs.push({
+                id: `${independentSource}-${entry.timestamp}`, timestamp: entry.timestamp,
+                title: `${COLLECTION_SOURCES[independentSource]} 수집`, sites: { [independentSource]: stat }, alerts: entry.alerts,
+            });
+        }
     }
     if (active && Number.isFinite(Date.parse(active.startedAt))) {
         // A shared scheduled slot does not prove two events belong to the same execution.

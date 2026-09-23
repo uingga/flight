@@ -27,4 +27,13 @@ assert.equal(JSON.stringify(history), before, 'Presentation must not mutate stor
 assert.deepEqual(buildCollectionHistory([], []), []);
 const lateRuns: CrawlHistoryEntry[] = ['2026-09-17T21:43:00+09:00', '2026-09-18T00:30:00+09:00', '2026-09-18T00:37:00+09:00'].map(timestamp => ({timestamp, sites: {ttang:{total:10,scraped:20}}, alerts:[]}));
 assert.equal(buildCollectionHistory(lateRuns, []).length, 3, 'Evening and midnight executions are not merged');
+const tripcomRuns: CrawlHistoryEntry[] = [
+    { timestamp: '2026-09-22T06:20:00+09:00', sites: { ybtour: { total: 10, scraped: 30 }, tripcom: { total: 2 } }, alerts: [] },
+    { timestamp: '2026-09-22T10:20:00+09:00', sites: { tripcom: { total: 3, scraped: 4 } }, alerts: [] },
+];
+const tripcomRows = buildCollectionHistory(tripcomRuns, []);
+assert.equal(tripcomRows.length, 2, 'Carried Trip.com cache is not a collection run');
+assert.equal(tripcomRows[0].title, '트립닷컴 수집');
+assert.equal(tripcomRows[0].sites.tripcom.scraped, 4);
+assert.equal(tripcomRows[1].sites.tripcom, undefined);
 console.log('PASS separate executions, MRT carry exclusion, active isolation, immutable history');

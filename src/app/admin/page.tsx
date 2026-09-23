@@ -8,6 +8,7 @@ import styles from './admin.module.css';
 import VisitorTrendChart from '@/components/VisitorTrendChart';
 import { isAnalyticsExcluded, setAnalyticsExcluded } from '@/lib/analytics';
 import { buildSourceSlotBars, type SlotStatus, type SourceSlotBar, type SourceSlotEvent } from '@/lib/admin-source-slots';
+import type { TripcomAdminSnapshot } from '@/lib/admin-tripcom';
 import AdminCollectionHistory from '@/components/AdminCollectionHistory';
 import AdminSourceCurrentNote from '@/components/AdminSourceCurrentNote';
 import { currentSourceState, collectionDetail, type OnlineCollectionSchedule } from '@/lib/admin-source-current';
@@ -87,6 +88,7 @@ interface BookingLinkHealthEntry {
 
 interface AdminData {
     onlineSchedule?: OnlineCollectionSchedule;
+    tripcom?: TripcomAdminSnapshot;
     timestamp: string;
     totalFlights: number;
     bySource: Record<string, number>;
@@ -707,8 +709,9 @@ const SOURCE_COLORS: Record<string, string> = {
     onlinetour: '#1e40af',
     myrealtrip: '#2563eb',
     lottetour: '#b42332',
+    tripcom: '#2875c7',
 };
-const SOURCE_ORDER = ['ybtour', 'hanatour', 'modetour', 'onlinetour', 'ttang', 'myrealtrip', 'lottetour'] as const;
+const SOURCE_ORDER = ['ybtour', 'hanatour', 'modetour', 'onlinetour', 'ttang', 'myrealtrip', 'lottetour', 'tripcom'] as const;
 const NAVER_PRIORITY_LABELS: Record<string, string> = {
     deadline: '7일 마감',
     changed_top: '신규·변경 상위',
@@ -737,8 +740,8 @@ type TabId = VisibleTabId | LegacyTabId;
 
 const TAB_STORAGE = 'tikitikit_admin_tab';
 
-/** 마지막 갱신이 이 시간을 넘기면 지연으로 본다. 마이리얼트립은 별도 워크플로우가 하루 두 번만 돈다. */
-const STALE_AFTER_HOURS: Record<string, number> = { myrealtrip: 20 };
+/** 마지막 갱신이 이 시간을 넘기면 지연으로 본다. 마이리얼트립·트립닷컴은 별도 수집 주기다. */
+const STALE_AFTER_HOURS: Record<string, number> = { myrealtrip: 20, tripcom: 20 };
 const DEFAULT_STALE_AFTER_HOURS = 8;
 
 /**
@@ -1795,7 +1798,7 @@ export default function AdminPage() {
         if (!stat || stat.skipped || stat.manual) return false;
         // 2026-08-30 이전 일반 회차는 실행하지 않은 마이리얼트립 캐시를 성공처럼 기록했다.
         // 원본 수집량도 실패 표식도 없는 마이리얼트립은 과거 기록에서도 시도로 세지 않는다.
-        if (source === 'myrealtrip' && stat.scraped === undefined && !stat.preserved) return false;
+        if ((source === 'myrealtrip' || source === 'tripcom') && stat.scraped === undefined && !stat.preserved && !stat.manual) return false;
         return true;
     };
 
@@ -3092,6 +3095,7 @@ export default function AdminPage() {
                         const staleAfter = STALE_AFTER_HOURS[source] ?? DEFAULT_STALE_AFTER_HOURS;
                         const ageHours = updatedAt ? (Date.now() - new Date(updatedAt).getTime()) / 3600000 : null;
                         const stale = ageHours === null || ageHours > staleAfter;
+                        const tripcomWithoutOffers = source === 'tripcom' && !data.tripcom?.offers.length;
 
                         const slotEvents = collectSourceSlotEvents(data, source, sourceHasHistoryEvent);
                         const slotBars = buildSourceSlotBars({
@@ -3137,7 +3141,7 @@ export default function AdminPage() {
                             latestMeasured && !latestMeasured.preserved && !latestMeasured.manual && median >= 30 && latestMeasured.value < median * 0.6,
                         );
 
-                        const status = currentState?.kind === 'rest' ? 'ok' : currentState?.kind === 'partial' ? 'stale' : circuitOpen || streak > 0 || slumped ? 'broken' : stale ? 'stale' : 'ok';
+                        const status = tripcomWithoutOffers ? 'unknown' : currentState?.kind === 'rest' ? 'ok' : currentState?.kind === 'partial' ? 'stale' : circuitOpen || streak > 0 || slumped ? 'broken' : stale ? 'stale' : 'ok';
                         const peak = Math.max(...slotBars.filter(bar => bar.status !== 'failed').map(bar => bar.value ?? 0), 1);
                         const shown = flightFilterSummary?.visibleBySource?.[source] ?? 0;
 
@@ -3148,6 +3152,7 @@ export default function AdminPage() {
                                     styles.sourceCard,
                                     status === 'broken' ? styles.sourceCardBroken : '',
                                     status === 'stale' ? styles.sourceCardStale : '',
+                                    status === 'unknown' ? styles.sourceCardUnknown : '',
                                 ].filter(Boolean).join(' ')}
                             >
                                 <div className={styles.sourceCardHead}>
@@ -3163,9 +3168,10 @@ export default function AdminPage() {
                                             styles.statusBadge,
                                             status === 'broken' ? styles.statusBadgeBroken : '',
                                             status === 'stale' ? styles.statusBadgeStale : '',
+                                            status === 'unknown' ? styles.statusBadgeUnknown : '',
                                         ].filter(Boolean).join(' ')}
                                     >
-                                        {currentState ? currentState.label : modetourManualApplied
+                                        {tripcomWithoutOffers ? '현재 저장된 표 없음' : currentState ? currentState.label : modetourManualApplied
                                             ? `GitHub ${modetourFailureLabel} · 수동 ${manualCapture!.accepted}건 반영${manualCapture!.naverPending ? ' · 네이버 대기' : ''}`
                                             : modetourManualNeeded
                                             ? `GitHub ${modetourFailureLabel} · 수동 캡처 필요`
@@ -3181,7 +3187,7 @@ export default function AdminPage() {
                                                 ? `이전 데이터 사용 ${streak}회`
                                             : slumped
                                                     ? `평소보다 너무 적음 (${median.toLocaleString()}건 수준)`
-                                                    : status === 'stale' ? '예정 시간보다 늦음' : '정상'}
+                                                    : status === 'stale' ? source === 'tripcom' ? '가격 확인 오래됨' : '예정 시간보다 늦음' : '정상'}
                                     </span>
                                 </div>
 
@@ -3192,9 +3198,14 @@ export default function AdminPage() {
                                 </div>
 
                                 <div className={styles.sourceMeta}>
-                                    {updatedAt
+                                    {source === 'tripcom' ? (
+                                        <span>마지막 가격 확인 {data.tripcom?.lastPriceCheckedAt ? timeAgo(data.tripcom.lastPriceCheckedAt) : '기록 없음'} · 별도 PC 수집</span>
+                                    ) : updatedAt
                                         ? <span>마지막 갱신 {timeAgo(updatedAt)}</span>
                                         : <span>갱신 기록 없음</span>}
+                                    {source === 'tripcom' && data.tripcom?.lastRun && (
+                                        <span>마지막 저장 회차 {data.tripcom.lastRun.host || 'PC'} · {data.tripcom.lastRun.status === 'blocked_preserved' ? '접근 제한 · 이전 표 유지' : data.tripcom.lastRun.status === 'partial' ? '일부 확인' : '확인 완료'} · 검증 {data.tripcom.lastRun.verifiedCities ?? '—'}곳 · 미확인 {data.tripcom.lastRun.unconfirmedCities ?? '—'}곳</span>
+                                    )}
                                     {latestMeasured && !latestMeasured.preserved && !latestMeasured.manual && (
                                         <span>최근 자동 수집 {latestMeasured.value.toLocaleString()}건 · 사이트 노출 {shown.toLocaleString()}건</span>
                                     )}
@@ -3224,9 +3235,9 @@ export default function AdminPage() {
                                     )}
                                 </div>
 
-                                <div className={styles.sparkBars} role="group" aria-label={`${SOURCE_NAMES[source]} 최근 ${slotBars.length}회차 자동·PC 대체·수동 수집 및 건너뜀 기록`}>
+                                {source === 'tripcom' && slotBars.length === 0 ? <p className={styles.sourceMeta}>회차별 실행 기록은 아직 저장되지 않았습니다.</p> : <div className={styles.sparkBars} role="group" aria-label={`${SOURCE_NAMES[source]} 최근 ${slotBars.length}회차 자동·PC 대체·수동 수집 및 건너뜀 기록`}>
                                     {slotBars.map((bar, index) => {
-                                        const tooltip = slotBarTooltip(bar, SOURCE_NAMES[source] || source, source === 'myrealtrip');
+                                        const tooltip = slotBarTooltip(bar, SOURCE_NAMES[source] || source, source === 'myrealtrip' || source === 'tripcom');
                                         const active = activeSlotBar?.source === `col:${source}` && activeSlotBar.index === index;
                                         const className = bar.status === 'manual'
                                             ? `${styles.sparkBar} ${styles.sparkBarManual}`
@@ -3285,10 +3296,38 @@ export default function AdminPage() {
                                             </span>
                                         );
                                     })}
-                                </div>
+                                </div>}
                             </div>
                         );
                     })}
+                </div>
+                <div className={styles.tripcomCache}>
+                    <h3 className={styles.userSubTitle}>트립닷컴 저장 항공권</h3>
+                    <p className={styles.sectionHelp}>
+                        현재 운영 캐시에 남아 있는 확인된 표입니다. 수집 시도 전체나 실시간 예약 가능 수량을 뜻하지 않습니다.
+                    </p>
+                    {data.tripcom?.offers.length ? (
+                        <details className={`${styles.openDisclosure} ${styles.tripcomDisclosure}`}>
+                            <summary>저장된 표 {data.tripcom.offers.length.toLocaleString()}개 보기</summary>
+                            <div className={styles.tripcomTableWrap}>
+                                <table className={styles.cityTable}>
+                                    <thead><tr><th>노선</th><th>일정</th><th>항공사</th><th>확인 가격</th><th>가격 확인</th><th>좌석 표기</th></tr></thead>
+                                    <tbody>{data.tripcom.offers.map(offer => (
+                                        <tr key={offer.id}>
+                                            <td>{offer.departure} → {offer.arrival}</td>
+                                            <td>{offer.departureDate} ~ {offer.returnDate}</td>
+                                            <td>{offer.airline}</td>
+                                            <td>{formatPrice(offer.price)}</td>
+                                            <td>{offer.priceCheckedAt ? formatKSTMinute(offer.priceCheckedAt) : '기록 없음'}</td>
+                                            <td>{offer.seats || '미확인'}</td>
+                                        </tr>
+                                    ))}</tbody>
+                                </table>
+                            </div>
+                        </details>
+                    ) : (
+                        <div className={styles.dealReviewEmpty}>현재 저장된 트립닷컴 항공권이 없습니다. 과거 가격 확인 시각이 남아 있어도 현재 표가 있다는 뜻은 아닙니다.</div>
+                    )}
                 </div>
             </section>
 

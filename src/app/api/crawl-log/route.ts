@@ -11,6 +11,7 @@ import {
 import { getCrawlScheduleHealth, getFullCrawlUpdatedAt } from '@/lib/crawl-schedule-health.mjs';
 import { onlineCollectionInterval } from '../../../../scripts/online-collection-interval.mjs';
 import { ONLINE_BROWSER_PRIMARY } from '@/lib/browser-primary-config.mjs';
+import { buildTripcomAdminSnapshot } from '@/lib/admin-tripcom';
 
 const CACHE_FILE_PATH = path.join(process.cwd(), 'data', 'all-flights-cache.json');
 const GITHUB_REPOSITORY = 'uingga/flight';
@@ -180,6 +181,7 @@ export async function GET(request: NextRequest) {
         const cache = JSON.parse(raw);
         const flights: Flight[] = cache.flights || [];
         const timestamp = cache.timestamp || new Date().toISOString();
+        const tripcom = buildTripcomAdminSnapshot(cache);
 
         // 소스별 통계
         const bySource: Record<string, number> = {};
@@ -391,6 +393,7 @@ export async function GET(request: NextRequest) {
             // sourceUpdatedAt이 멈추므로, 어느 여행사가 며칠째 굳어 있는지 여기서 드러난다.
             sourceUpdatedAt: (cache.sourceUpdatedAt || {}) as Record<string, string>,
             onlineSchedule,
+            tripcom,
             staleStreak: (cache.staleStreak || {}) as Record<string, number>,
             sourceCircuits: (cache.sourceCircuits || {}) as Record<string, {
                 reason: 'blocked' | 'rate_limited';

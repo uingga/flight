@@ -1471,6 +1471,10 @@
     border-left-color: #f59e0b;
 }
 
+.sourceCardUnknown {
+    border-left-color: #9ca3af;
+}
+
 .sourceCardBroken {
     border-left-color: #ef4444;
     background: linear-gradient(135deg, #1e293b, #3f1d1d);
@@ -1513,6 +1517,31 @@
 .statusBadgeStale {
     background: rgba(245, 158, 11, 0.16);
     color: #fcd34d;
+}
+
+.statusBadgeUnknown {
+    background: rgba(148, 163, 184, 0.16);
+    color: #cbd5e1;
+}
+
+.tripcomCache {
+    margin-top: 18px;
+}
+
+.tripcomDisclosure > summary {
+    padding: 13px 15px;
+    cursor: pointer;
+    font-size: 0.82rem;
+    font-weight: 600;
+}
+
+.tripcomTableWrap {
+    overflow-x: auto;
+    padding: 0 15px 15px;
+}
+
+.tripcomTableWrap table {
+    min-width: 720px;
 }
 
 .statusBadgeBroken {

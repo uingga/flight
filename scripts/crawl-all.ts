@@ -56,6 +56,7 @@ import { createDepartureWindow, eligibleDepartures } from '../src/lib/onlinetour
 import path from 'path';
 
 interface CacheData {
+    tripcomPrimary?: Record<string, unknown>;
     modetourOfferHistory?: Record<string, any>;
     flightOfferHistory?: Record<string, any>;
     ttangPrimary?: Record<string, unknown>;
@@ -1042,6 +1043,7 @@ async function main() {
                 ttangPrimary: prevCache?.ttangPrimary,
                 modetourPrimary,
                 onlinePrimary,
+                tripcomPrimary: prevCache?.tripcomPrimary,
                 timestamp: cacheUpdatedAt,
                 // 부분 복구가 최신 캐시 timestamp를 바꿔도 다음 예약 전체 크롤을
                 // 완료된 것으로 오인하지 않도록 독립된 완료 표식을 유지한다.
