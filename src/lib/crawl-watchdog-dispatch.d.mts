@@ -30,3 +30,14 @@ export function getCrawlDispatchBlocker(
     expectedAt: string,
     options?: CrawlDispatchBlockerOptions,
 ): CrawlDispatchBlocker | null;
+export function planCrawlFallback(
+    runs: GitHubWorkflowRunSummary[],
+    lastCompletedAt: string | number | Date | null | undefined,
+    options: {now?: string | number | Date; getJobs: (runId: number | undefined) => Promise<Array<{ steps?: Array<{ name?: string; conclusion?: string | null }> }>>},
+): Promise<{
+    action: 'dispatch' | 'skipped' | 'recovery_required' | 'none';
+    health: CrawlScheduleHealth;
+    blocker?: CrawlDispatchBlocker;
+    skippedPublication: Array<{ expectedAt: string; blocker: CrawlDispatchBlocker }>;
+}>;
+import type {CrawlScheduleHealth} from './crawl-schedule-health.mjs';

@@ -1,3 +1,5 @@
+import {getCrawlScheduleHealth} from './crawl-schedule-health.mjs';
+
 export const CRAWL_FALLBACK_COOLDOWN_MINUTES = 45;
 
 // Publishing an already collected batch needs reconciliation, not another crawl.
@@ -95,4 +97,26 @@ export function getCrawlDispatchBlocker(runs, expectedAt, options = {}) {
     }
 
     return null;
+}
+
+// A collected slot with failed publication must not be crawled again. Advance
+// only the watchdog's candidate cursor so a later regular slot can still run.
+export async function planCrawlFallback(runs, lastCompletedAt, {now=Date.now(),getJobs}={}) {
+    let health=getCrawlScheduleHealth(lastCompletedAt,{now});
+    const skippedPublication=[];
+    let remaining=health.pendingSlots;
+    while(health.status==='overdue'&&health.expectedAt&&remaining-->0){
+        const publication=await getCrawlPublicationBlocker(runs,health.expectedAt,{now,expectedCron:health.expectedCron,getJobs});
+        if(publication){
+            if(publication.reason!=='publication_recovery_required')return {action:'recovery_required',health,blocker:publication,skippedPublication};
+            skippedPublication.push({expectedAt:health.expectedAt,blocker:publication});
+            health=getCrawlScheduleHealth(health.expectedAt,{now});
+            continue;
+        }
+        const blocker=getCrawlDispatchBlocker(runs,health.expectedAt,{now,expectedCron:health.expectedCron});
+        return blocker?{action:'skipped',health,blocker,skippedPublication}:{action:'dispatch',health,skippedPublication};
+    }
+    return skippedPublication.length
+        ? {action:'recovery_required',health,blocker:skippedPublication.at(-1).blocker,skippedPublication}
+        : {action:'none',health,skippedPublication};
 }

@@ -41,9 +41,7 @@ jobs:
         if: steps.health.outputs.should_dispatch == 'true'
         uses: actions/github-script@v7
         env:
-          EXPECTED_AT: ${{ steps.health.outputs.expected_at }}
-          EXPECTED_CRON: ${{ steps.health.outputs.expected_cron }}
-          DELAY_MINUTES: ${{ steps.health.outputs.delay_minutes }}
+          LAST_COMPLETED_AT: ${{ steps.health.outputs.last_completed_at }}
         with:
           script: |
             const workflowId = 'daily-crawl.yml';
@@ -56,27 +54,11 @@ jobs:
               per_page: 30,
             });
 
-            const active = data.workflow_runs.find(run => run.status !== 'completed');
-            if (active) {
-              core.notice(`Daily crawl is already ${active.status}: ${active.html_url}`);
-              return;
-            }
-
-            const recentFallback = data.workflow_runs.find(run =>
-              run.event === 'workflow_dispatch'
-              && (run.display_title || '').includes('watchdog')
-              && now - new Date(run.created_at).getTime() < 45 * 60 * 1000
-            );
-            if (recentFallback) {
-              core.notice(`A watchdog fallback was already requested recently: ${recentFallback.html_url}`);
-              return;
-            }
-
             const { pathToFileURL } = require('node:url');
             const { resolve } = require('node:path');
-            const { getCrawlPublicationBlocker } = await import(pathToFileURL(resolve('src/lib/crawl-watchdog-dispatch.mjs')).href);
-            const publicationBlocker = await getCrawlPublicationBlocker(data.workflow_runs, process.env.EXPECTED_AT, {
-              now, expectedCron: process.env.EXPECTED_CRON,
+            const { planCrawlFallback } = await import(pathToFileURL(resolve('src/lib/crawl-watchdog-dispatch.mjs')).href);
+            const plan = await planCrawlFallback(data.workflow_runs, process.env.LAST_COMPLETED_AT || null, {
+              now,
               getJobs: async runId => {
                 const response = await github.rest.actions.listJobsForWorkflowRun({
                   owner: context.repo.owner, repo: context.repo.repo, run_id: runId, per_page: 100,
@@ -85,8 +67,12 @@ jobs:
                 return response.data.jobs;
               },
             });
-            if (publicationBlocker) {
-              core.setFailed(`Collection must not be repeated: ${publicationBlocker.reason}, run ${publicationBlocker.runId}`);
+            if (plan.action === 'recovery_required') {
+              core.setFailed(`Collection must not be repeated: ${plan.blocker.reason}, run ${plan.blocker.runId}`);
+              return;
+            }
+            if (plan.action !== 'dispatch') {
+              core.notice(`No fallback dispatch: ${plan.action}${plan.blocker ? ` (${plan.blocker.reason})` : ''}`);
               return;
             }
 
@@ -97,7 +83,7 @@ jobs:
               ref: 'main',
               inputs: {
                 trigger_source: 'watchdog',
-                expected_at: process.env.EXPECTED_AT,
+                expected_at: plan.health.expectedAt,
               },
             });
-            core.warning(`Dispatched fallback for ${process.env.EXPECTED_AT} (${process.env.DELAY_MINUTES} minutes late).`);
+            core.warning(`Dispatched fallback for ${plan.health.expectedAt} (${plan.health.delayMinutes} minutes late).`);

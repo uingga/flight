@@ -2,7 +2,7 @@ import { timingSafeEqual } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { NextRequest, NextResponse } from 'next/server';
-import { getCrawlDispatchBlocker, getCrawlPublicationBlocker, type GitHubWorkflowRunSummary } from '@/lib/crawl-watchdog-dispatch.mjs';
+import { planCrawlFallback, type GitHubWorkflowRunSummary } from '@/lib/crawl-watchdog-dispatch.mjs';
 import { getCrawlScheduleHealth, getFullCrawlUpdatedAt } from '@/lib/crawl-schedule-health.mjs';
 import { checkMrtWatchdog, githubMrtClient } from '@/lib/myrealtrip-schedule.mjs';
 
@@ -57,7 +57,8 @@ export async function GET(request: NextRequest) {
             ? await checkMrtWatchdog(githubMrtClient(token), checkedAt.getTime())
                 .catch((error: Error) => ({ action: 'error', reason: error.message }))
             : { action: 'error', reason: 'github_dispatch_not_configured' };
-        const health = getCrawlScheduleHealth(readLastCompletedAt(), { now: checkedAt });
+        const lastCompletedAt = readLastCompletedAt();
+        const health = getCrawlScheduleHealth(lastCompletedAt, { now: checkedAt });
         const result = {
             checkedAt: checkedAt.toISOString(),
             health,
@@ -83,17 +84,8 @@ export async function GET(request: NextRequest) {
         }
 
         const runsPayload = await runsResponse.json() as { workflow_runs?: GitHubWorkflowRunSummary[] };
-        const blocker = getCrawlDispatchBlocker(runsPayload.workflow_runs || [], health.expectedAt, {
+        const plan = await planCrawlFallback(runsPayload.workflow_runs || [], lastCompletedAt, {
             now: checkedAt,
-            expectedCron: health.expectedCron || undefined,
-        });
-        if (blocker) {
-            return json({ ok: true, action: 'skipped', blocker, ...result });
-        }
-
-        const publicationBlocker = await getCrawlPublicationBlocker(runsPayload.workflow_runs || [], health.expectedAt, {
-            now: checkedAt,
-            expectedCron: health.expectedCron || undefined,
             getJobs: async runId => {
                 const response = await fetch(`https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs/${runId}/jobs?per_page=100`, {
                     headers: githubHeaders(token), cache: 'no-store', signal: AbortSignal.timeout(5000),
@@ -104,7 +96,12 @@ export async function GET(request: NextRequest) {
                 return payload.jobs;
             },
         });
-        if (publicationBlocker) return json({ ok: false, action: 'recovery_required', blocker: publicationBlocker, ...result }, 503);
+        if (plan.action === 'skipped' || plan.action === 'none') {
+            return json({ ok: true, action: plan.action, blocker: plan.blocker, selectedSlot: plan.health.expectedAt, ...result });
+        }
+        if (plan.action === 'recovery_required') {
+            return json({ ok: false, action: 'recovery_required', blocker: plan.blocker, ...result }, 503);
+        }
 
         const dispatchResponse = await fetch(
             `https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/workflows/${CRAWL_WORKFLOW}/dispatches`,
@@ -115,7 +112,7 @@ export async function GET(request: NextRequest) {
                     ref: 'main',
                     inputs: {
                         trigger_source: 'watchdog',
-                        expected_at: health.expectedAt,
+                        expected_at: plan.health.expectedAt,
                     },
                 }),
                 cache: 'no-store',
@@ -126,8 +123,8 @@ export async function GET(request: NextRequest) {
             return json({ ok: false, error: 'github_dispatch_failed', ...result }, 502);
         }
 
-        console.warn(`[crawl-watchdog] Dispatched fallback for ${health.expectedAt} (${health.delayMinutes} minutes late).`);
-        return json({ ok: true, action: 'dispatched', ...result }, 202);
+        console.warn(`[crawl-watchdog] Dispatched fallback for ${plan.health.expectedAt} (${plan.health.delayMinutes} minutes late).`);
+        return json({ ok: true, action: 'dispatched', selectedSlot: plan.health.expectedAt, ...result }, 202);
     } catch (error) {
         console.error('[crawl-watchdog] Check failed:', error);
         return json({ ok: false, error: 'watchdog_check_failed' }, 500);
