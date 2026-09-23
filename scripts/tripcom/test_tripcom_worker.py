@@ -1,4 +1,8 @@
 import unittest
+import json
+import tempfile
+from pathlib import Path
+from datetime import datetime, timedelta, timezone
 from tripcom_worker import execute_worker
 
 
@@ -35,3 +39,22 @@ class WorkerTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             self.run_fixture(fail='receive')
         self.assertEqual(self.calls.count('receive'),1)
+
+    def test_local_circuit_rejects_before_central_acquire(self):
+        with tempfile.TemporaryDirectory() as root:
+            future = (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat()
+            (Path(root) / 'circuit.json').write_text(json.dumps({'nextProbeAt': future}), encoding='utf-8')
+            calls = []
+            with self.assertRaisesRegex(RuntimeError, 'access_circuit_open'):
+                execute_worker(call=lambda *args, **kwargs: calls.append(args), slot='slot',
+                    host='B', state_root=root, browser_factory=None, close_browser=None)
+            self.assertEqual(calls, [])
+
+    def test_local_lock_rejects_before_central_acquire(self):
+        with tempfile.TemporaryDirectory() as root:
+            (Path(root) / 'active.lock').write_text('held', encoding='utf-8')
+            calls = []
+            with self.assertRaisesRegex(RuntimeError, 'local_run_active'):
+                execute_worker(call=lambda *args, **kwargs: calls.append(args), slot='slot',
+                    host='B', state_root=root, browser_factory=None, close_browser=None)
+            self.assertEqual(calls, [])
