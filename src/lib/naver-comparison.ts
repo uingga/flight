@@ -2,6 +2,7 @@ import {
     getComparisonFreshness,
     getRecommendationComparisonFreshness,
 } from './price-quality';
+import type { Flight } from '../types/flight';
 
 export interface NaverComparisonEntry {
     naverLowest?: unknown;
@@ -31,18 +32,19 @@ export function getUsableNaverComparison(
 }
 
 /**
- * 추천·표시 단계는 부분 수집 주기에 맞춰 72시간까지 가격을 전달한다.
- * 48시간 이후의 실제 감점은 추천 점수 계산기가 담당한다.
+ * 일반 여행사는 72시간, 마이리얼트립·트립닷컴은 24시간까지 가격을 전달한다.
+ * 정상 근거 기간 뒤의 감점은 추천 점수 계산기가 담당한다.
  */
 export function getRecommendationNaverComparison(
     entry: NaverComparisonEntry | null | undefined,
     now = Date.now(),
+    source?: Flight['source'],
 ): { price: number; checkedAt: string } | null {
     if (!entry) return null;
 
     const price = Number(entry.naverLowest);
     if (!Number.isFinite(price) || price <= 0 || !entry.crawledAt) return null;
-    if (!getRecommendationComparisonFreshness(entry.crawledAt, now).usable) return null;
+    if (!getRecommendationComparisonFreshness(entry.crawledAt, now, source).usable) return null;
 
     const status = entry.lastAttemptStatus;
     if (status === 'no_result' || status === 'route_error' || status === 'miss') return null;
@@ -50,5 +52,5 @@ export function getRecommendationNaverComparison(
     return { price, checkedAt: entry.crawledAt };
 }
 
-/** 제외 판단도 표시와 같은 72시간 및 실패 상태 검증을 적용한다. */
+/** 제외 판단도 표시와 같은 소스별 유효시간 및 실패 상태 검증을 적용한다. */
 export const getPriceExclusionNaverComparison = getRecommendationNaverComparison;

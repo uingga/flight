@@ -18,11 +18,14 @@ export function selectMyrealtripNaverComparison(
     now = Date.now(),
 ): Comparison | null {
     if (flight.source !== 'myrealtrip') return coordinated;
+    const currentComparison = coordinated
+        && getRecommendationComparisonFreshness(coordinated.checkedAt, now, flight.source).usable
+        ? coordinated : null;
     const record = verified.get(flight.id);
     if (!record || record.price !== flight.price
         || record.key !== buildNaverPriceKey(flight, flight.departure?.date, flight.arrival?.date)
-        || !getRecommendationComparisonFreshness(record.observedAt, now).usable) return coordinated;
-    if (coordinated && Date.parse(coordinated.checkedAt) > Date.parse(record.observedAt)) return coordinated;
+        || !getRecommendationComparisonFreshness(record.observedAt, now, flight.source).usable) return currentComparison;
+    if (currentComparison && Date.parse(currentComparison.checkedAt) > Date.parse(record.observedAt)) return currentComparison;
     return { price: record.naverPrice, checkedAt: record.observedAt };
 }
 
@@ -34,7 +37,7 @@ export function isVerifiedMyrealtripOffer(
     if (flight.source !== 'myrealtrip') return true;
     if (!buildNaverPriceKey(flight, flight.departure?.date, flight.arrival?.date)
         || !Number.isFinite(flight.naverLowest) || !flight.naverLowest
-        || flight.naverLowest <= 0 || !getRecommendationComparisonFreshness(flight.naverCheckedAt, now).usable) return false;
+        || flight.naverLowest <= 0 || !getRecommendationComparisonFreshness(flight.naverCheckedAt, now, flight.source).usable) return false;
     // A reported contradiction needs an independent review. Repeating the same
     // collector is not enough to clear the exact fare that the user disputed.
     const flagged = reported.get(flight.id);

@@ -122,7 +122,7 @@ export function buildManualTodayPick(
     const naverPrice = Number(flight.naverLowest);
     const usableNaverPrice = Number.isFinite(naverPrice)
         && naverPrice > 0
-        && getRecommendationComparisonFreshness(flight.naverCheckedAt, now).usable;
+        && getRecommendationComparisonFreshness(flight.naverCheckedAt, now, flight.source).usable;
 
     return {
         date,

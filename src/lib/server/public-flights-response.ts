@@ -330,11 +330,11 @@ export async function createPublicFlightsResponse(searchParams: URLSearchParams)
                     const exactKey = buildNaverPriceKey(f, f.departure?.date, f.arrival?.date);
                     if (exactKey) {
                         const matchedPrice = naverPrices[exactKey];
-                        // 추천·표시는 부분 재수집 간격을 고려해 72시간까지 전달한다.
-                        // 아래 제거 필터도 동일한 72시간 상한을 사용한다.
+                        // 일반 여행사는 72시간, 마이리얼트립·트립닷컴은 24시간까지 전달한다.
+                        // 아래 제거 필터에도 같은 소스별 상한을 적용한다.
                         const comparison = selectMyrealtripNaverComparison(
                             f,
-                            getRecommendationNaverComparison(matchedPrice),
+                            getRecommendationNaverComparison(matchedPrice, Date.now(), f.source),
                         );
                         const bestPrice: number | null = comparison?.price || null;
 
@@ -355,8 +355,8 @@ export async function createPublicFlightsResponse(searchParams: URLSearchParams)
                 const beforeNaverFilter = allFlights.length;
                 allFlights = allFlights.filter(f => {
                     if (!f.naverLowest || f.naverLowest <= 0) return true;
-                    // 표시와 동일하게 72시간까지 적용하고, 이후에는 오래된 비교가로 제거하지 않는다.
-                    if (!getPriceExclusionFreshness(f.naverCheckedAt).usable) return true;
+                    // 표시와 같은 소스별 유효시간을 넘긴 비교가로는 제거하지 않는다.
+                    if (!getPriceExclusionFreshness(f.naverCheckedAt, Date.now(), f.source).usable) return true;
                     const effectivePrice = getEffectivePrice(f);
                     return !isNaverPriceOverLimit(effectivePrice, f.naverLowest, f.source);
                 });

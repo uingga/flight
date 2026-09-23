@@ -181,7 +181,7 @@ function candidatePayload(flights: Flight[], currentPick: StoredTodayPick) {
         const naverLowest = Number(flight.naverLowest);
         const naverUsable = Number.isFinite(naverLowest)
             && naverLowest > 0
-            && getRecommendationComparisonFreshness(flight.naverCheckedAt, now).usable;
+            && getRecommendationComparisonFreshness(flight.naverCheckedAt, now, flight.source).usable;
         const price = effectivePrice(flight);
         return {
             id: flight.id,

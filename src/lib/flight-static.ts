@@ -128,7 +128,7 @@ export function loadActiveFlights(): Flight[] {
                 if (flight.price <= 0 || parseDate(flight.departure?.date) < today) return false;
                 if (parseDate(flight.departure?.date) === parseDate(flight.arrival?.date)) return false;
                 if (!flight.naverLowest || flight.naverLowest <= 0
-                    || !getPriceExclusionFreshness(flight.naverCheckedAt).usable) return true;
+                    || !getPriceExclusionFreshness(flight.naverCheckedAt, Date.now(), flight.source).usable) return true;
                 return !isNaverPriceOverLimit(effectivePrice(flight), flight.naverLowest, flight.source);
             });
         // 메인 API와 같은 중복 제거 규칙을 써 정적 도시 페이지의 장수·최저가가

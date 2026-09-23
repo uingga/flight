@@ -387,7 +387,7 @@ function scoreFlight(
         ? closestInterparkMonth(flight, interparkPrices)
         : { month: null, data: null };
     const { month, data: interparkMonth } = interparkContext;
-    const comparisonFreshness = getRecommendationComparisonFreshness(flight.naverCheckedAt, now);
+    const comparisonFreshness = getRecommendationComparisonFreshness(flight.naverCheckedAt, now, flight.source);
     const comparisonUsable = Boolean(
         flight.naverLowest
         && flight.naverLowest > 0
