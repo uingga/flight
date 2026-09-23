@@ -2,14 +2,14 @@ import {requestHttp} from './naver-http-request.mjs';
 import {WRITER_FILES} from './writer-broker.mjs';
 import {encodeRelayWire,decodeRelayWire} from './writer-relay-wire.mjs';
 // One outbound delivery. Transport loss leaves the durable relay claim unresolved.
-export async function deliverPublication({relayUrl,agentToken,publicationHandler,secrets,request=requestHttp,heartbeatMs=30000}){
+export async function deliverPublication({relayUrl,agentToken,publicationHandler,secrets,request=requestHttp,heartbeatMs=30000,completionRetryMs=900000,completionPollMs=5000,clock=Date.now,sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms))}){
  const url=new URL(relayUrl),local=['127.0.0.1','[::1]'].includes(url.hostname);
  if(url.username||url.password||!['/','/api/writer/'].includes(url.pathname)||url.search||url.hash||(!local&&url.protocol!=='https:'))throw Error('relay origin refused');
  const web=url.pathname==='/api/writer/';
  const call=async(path,body)=>{
   const raw=JSON.stringify(body);
   const response=await request(new URL(path.slice(1),url),{method:'POST',headers:{authorization:`Bearer ${agentToken}`,'content-type':'application/json'},body:web?encodeRelayWire(raw):raw,loopbackOnly:local,maxBytes:web?3*1024*1024:32*1024*1024});
-  if(!response.ok)throw Error('relay communication refused');return (web?JSON.parse(decodeRelayWire(await response.text())):await response.json()).result;
+  if(!response.ok)throw Object.assign(Error('relay communication refused'),{httpStatus:response.status});return (web?JSON.parse(decodeRelayWire(await response.text())):await response.json()).result;
  };
  const item=await call('/delivery/claim',{});if(!item)return false;
  if(![...Object.keys(WRITER_FILES),'deploy'].includes(item.role)||!secrets[item.role])throw Error('delivery role refused');
@@ -24,9 +24,20 @@ export async function deliverPublication({relayUrl,agentToken,publicationHandler
  timer?.unref?.();
  try{
   const response=await publicationHandler(new Request('http://127.0.0.1/publication',{method:'POST',headers:{authorization:`Bearer ${secrets[item.role]}`},body:item.body}));
-  if(timer)clearInterval(timer);
   if(web)await pulse();
-  await call('/delivery/complete',{...identity,response:{status:response.status===200?200:409,body:await response.text()}});
+  // Completion is idempotent for the same claim and response. Retry only its
+  // acknowledgement; never run the publication handler or claim another job.
+  const completion={...identity,response:{status:response.status===200?200:409,body:await response.text()}};
+  const deadline=clock()+completionRetryMs;
+  for(;;){
+   try{await call('/delivery/complete',completion);break;}
+   catch(error){
+    if(error.httpStatus&&![408,429,500,502,503,504].includes(error.httpStatus))throw error;
+    if(['HTTP_REDIRECT_REFUSED','HTTP_RESPONSE_TOO_LARGE'].includes(error.code))throw error;
+    const remaining=deadline-clock();if(remaining<=0)throw error;
+    await sleep(Math.min(completionPollMs,remaining));
+   }
+  }
   return true;
  }finally{
   if(timer)clearInterval(timer);

@@ -7,13 +7,13 @@ import {createRelayWebHandler} from '../src/lib/writer-relay-web.mjs';
 import {encodeRelayWire,decodeRelayWire} from '../src/lib/writer-relay-wire.mjs';
 
 const item={role:'daily',id:'fixture-request-0001',claim:'fixture-claim',body:'{"action":"commit"}'};
-function fixture({heartbeatResult=true,handlerError=false}={}){
- let inFlight=0,maxInFlight=0;
+function fixture({heartbeatResult=true,handlerError=false,completeStatuses=[]}={}){
+ let inFlight=0,maxInFlight=0,publications=0,completions=0;
  const calls=[];
  return {
-  calls,maxInFlight:()=>maxInFlight,
+  calls,maxInFlight:()=>maxInFlight,publications:()=>publications,
   options:{relayUrl:'http://127.0.0.1/api/writer/',agentToken:'fixture-agent',secrets:{daily:'fixture-daily'},heartbeatMs:5,
-   publicationHandler:async()=>{await delay(35);if(handlerError)throw Error('publication uncertain');return new Response('{"result":{}}');},
+   publicationHandler:async()=>{publications++;await delay(35);if(handlerError)throw Error('publication uncertain');return new Response('{"result":{}}');},
    request:async(url,options)=>{
     const input=JSON.parse(decodeRelayWire(options.body));
     calls.push(url.pathname);
@@ -22,6 +22,11 @@ function fixture({heartbeatResult=true,handlerError=false}={}){
     if(url.pathname.endsWith('/heartbeat')){
      assert.deepEqual(input,{role:item.role,id:item.id,claim:item.claim});
      maxInFlight=Math.max(maxInFlight,++inFlight);await delay(12);inFlight--;result=heartbeatResult;
+    }
+    if(url.pathname.endsWith('/complete')){
+     assert.equal(input.response.status,200);
+     const status=completeStatuses[completions++]??200;
+     if(status!==200)return new Response('{}',{status});
     }
     return new Response(encodeRelayWire(JSON.stringify({result})));
    }
@@ -35,6 +40,22 @@ test('active publication heartbeats without overlapping requests, then completes
  assert.equal(f.calls.filter(p=>p.endsWith('/claim')).length,1);
  assert.equal(f.calls.filter(p=>p.endsWith('/complete')).length,1);
  const count=f.calls.length;await delay(20);assert.equal(f.calls.length,count);
+});
+test('transient completion failure retries the same receipt without republishing',async()=>{
+ const f=fixture({completeStatuses:[503,503,200]});
+ f.options.completionPollMs=20;
+ assert.equal(await deliverPublication(f.options),true);
+ assert.equal(f.publications(),1);
+ assert.equal(f.calls.filter(p=>p.endsWith('/claim')).length,1);
+ assert.equal(f.calls.filter(p=>p.endsWith('/complete')).length,3);
+ const firstCompletion=f.calls.findIndex(p=>p.endsWith('/complete'));
+ assert.ok(f.calls.slice(firstCompletion+1).some(p=>p.endsWith('/heartbeat')));
+});
+test('definite completion rejection preserves the claim without retrying publication',async()=>{
+ const f=fixture({completeStatuses:[409]});
+ await assert.rejects(deliverPublication(f.options),error=>error.httpStatus===409);
+ assert.equal(f.publications(),1);
+ assert.equal(f.calls.filter(p=>p.endsWith('/complete')).length,1);
 });
 test('lost claim cannot be acknowledged or claimed a second time',async()=>{
  const f=fixture({heartbeatResult:false});await assert.rejects(deliverPublication(f.options),/no longer active/);

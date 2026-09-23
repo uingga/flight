@@ -19,7 +19,9 @@ export async function publishCommittedWriter({role,root=process.cwd(),env=proces
  const rawEntries=names.map(file=>[file,git(['show',`${head}:${file}`])]);
  const entries=rawEntries.map(([file,raw])=>[file,JSON.parse(raw)]);
  const token=env.TIKIT_WRITER_TOKEN||fs.readFileSync(env.TIKIT_WRITER_TOKEN_FILE,'utf8').trim();
- const result=await createBrokerClient({url:env.TIKIT_WRITER_URL,token})('commit',{expectedBase:base,requestId:head,entries,rawEntries});
+ // The A agent may finish the GitHub publication after the relay's initial 202.
+ // Keep checking the same durable receipt for as long as its completion retry window.
+ const result=await createBrokerClient({url:env.TIKIT_WRITER_URL,token,timeoutMs:900000})('commit',{expectedBase:base,requestId:head,entries,rawEntries});
  if(!/^[a-f0-9]{40}$/.test(result?.commitSha||''))throw Error('invalid publication commit response');
  return {...result,localCommit:head};
 }
