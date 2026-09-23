@@ -16,7 +16,8 @@ export class NaverWorkBoundary {
         }
         const unprocessed = snapshot.flights.filter((flight: any) => {
             const key = buildNaverPriceKey(flight, flight.departure.date, flight.arrival.date);
-            return key && !Object.hasOwn(state.keys, key);
+            return key && (!Object.hasOwn(state.keys, key)
+                || (state.recheckableKeys?.includes(key) && !Object.hasOwn(state.rechecks || {}, key)));
         });
         const select = createNaverSelection(d.selectionOptions);
         const workerMax = d.identity.worker === 'C' ? 250 : 200;
@@ -27,6 +28,9 @@ export class NaverWorkBoundary {
                 const key = buildNaverPriceKey(flight, flight.departure.date, flight.arrival.date)!;
                 return { key, flight, firstQueuedAt: prices[key]?.firstQueuedAt };
             }) });
-        return selected.selected;
+        return selected.selected.map((flight: any) => {
+            const key = buildNaverPriceKey(flight, flight.departure.date, flight.arrival.date);
+            return Object.hasOwn(state.keys, key) ? { ...flight, naverSameDayRecheck: true } : flight;
+        });
     }
 }

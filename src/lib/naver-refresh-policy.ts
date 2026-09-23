@@ -4,6 +4,7 @@ import { isInterparkBenchmarkApplicable } from './interpark-benchmark';
 export interface NaverRefreshFlight {
     source: string;
     price: number;
+    priceCheckedAt?: string;
     airline?: string;
     flightNumber?: string;
     discountRate?: number;
@@ -22,9 +23,11 @@ export interface NaverRefreshFlight {
 }
 
 export interface NaverRefreshEntry {
+    naverLowest?: number;
     crawledAt?: string;
     lastAttemptAt?: string;
     lastAttemptStatus?: string;
+    sameDayRecheckAt?: string;
     sourceSignature?: string;
     sourcePrice?: number;
 }
@@ -44,6 +47,7 @@ export type NaverRefreshReason =
     | 'source_changed'
     | 'retry_wait'
     | 'retry_due'
+    | 'same_day_recheck'
     | 'priority_fresh'
     | 'priority_periodic'
     | 'standard_fresh'
@@ -118,9 +122,9 @@ export function evaluateNaverRefresh(
     config: NaverRefreshConfig,
 ): NaverRefreshDecision {
     const tier = getNaverRefreshTier(flight, now, config);
-    const refreshDays = tier === 'priority'
-        ? config.priorityRefreshDays
-        : config.standardRefreshDays;
+    const shortComparisonWindow = flight.source === 'myrealtrip' || flight.source === 'tripcom';
+    const refreshDays = shortComparisonWindow ? 1 : tier === 'priority'
+        ? config.priorityRefreshDays : config.standardRefreshDays;
     const sourceSignature = buildNaverSourceSignature(flight);
 
     const hasSuccessfulPrice = Boolean(
@@ -161,13 +165,25 @@ export function evaluateNaverRefresh(
         };
     }
 
-    // 같은 KST 날짜에는 한 번 확인한 키를 다시 열지 않는다. 다음 날짜가 되면
-    // 정확히 24시간이 지나지 않았더라도 기존 정기 갱신 후보가 될 수 있다.
+    // A later verified fare or an older same-day comparison can justify one
+    // additional search for the two sources with a 24-hour comparison window.
+    // The coordinator independently enforces one extra search per key and day.
     const checkedAt = new Date(entry.crawledAt || '').getTime();
     if (
         Number.isFinite(checkedAt)
         && kstDayNumber(now) === kstDayNumber(checkedAt)
     ) {
+        const recheckedAt = new Date(entry.sameDayRecheckAt || '').getTime();
+        const sourceCheckedAt = new Date(flight.priceCheckedAt || '').getTime();
+        const worthComparing = Number(entry.naverLowest) > 0
+            && getNaverSourcePrice(flight) <= Number(entry.naverLowest);
+        const laterFare = Number.isFinite(sourceCheckedAt) && sourceCheckedAt > checkedAt;
+        const aged = now - checkedAt >= 6 * HOUR_MS;
+        if (shortComparisonWindow && worthComparing
+            && (!Number.isFinite(recheckedAt) || kstDayNumber(recheckedAt) !== kstDayNumber(now))
+            && (laterFare || aged)) {
+            return { fresh: false, reason: 'same_day_recheck', tier, refreshDays, sourceSignature };
+        }
         return {
             fresh: true,
             reason: tier === 'priority' ? 'priority_fresh' : 'standard_fresh',

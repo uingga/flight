@@ -42,7 +42,7 @@
     "test:crawl-schedule": "node --test scripts/test-crawl-schedule-health.mjs",
     "test:crawl-log-merge": "node --test scripts/test-merge-crawl-log.mjs",
     "test:naver-policy": "node --test scripts/test-local-naver-run-policy.mjs",
-    "test:naver-priority": "tsx scripts/test-naver-crawl-priority.ts && tsx scripts/test-naver-refresh-policy.ts",
+    "test:naver-priority": "tsx scripts/test-naver-crawl-priority.ts && tsx scripts/test-naver-refresh-policy.ts && tsx scripts/test-naver-same-day-boundary.ts && node scripts/test-naver-same-day-ledger.mjs",
     "test:naver-nearby": "tsx scripts/test-naver-nearby-price.ts",
     "test:naver-seller-probe": "tsx scripts/test-naver-seller-probe.ts",
     "test:source-fallback-policy": "node --test scripts/test-local-source-fallback-policy.mjs",

@@ -38,7 +38,7 @@ export class Coordinator {
             }
             const row = rows.find(r => r.day === day);
             const s = row ? JSON.parse(row.value) : { day, owner: null, phase: 'new', used: { A: 0, C: 0 },
-                runs: {}, attempts: {}, keys: {}, candidates: {}, generation: 0, blocked: false, handoffs: 0 };
+                runs: {}, attempts: {}, keys: {}, rechecks: {}, candidates: {}, generation: 0, blocked: false, handoffs: 0 };
             const fence=this.writerFencing?JSON.parse(this.db.prepare('SELECT value FROM publication WHERE id=1').get().value):null;
             const result = fn(s,fence);
             if(fence)this.db.prepare('UPDATE publication SET value=? WHERE id=1').run(JSON.stringify(fence));
@@ -112,12 +112,21 @@ export class Coordinator {
             this.checkObservation(s,fence,input);
             requireValue(nonempty(input.requestId) && nonempty(input.key), 'invalid attempt');
             requireValue(['search', 'probe'].includes(input.kind), 'invalid kind');
-            requireValue(!s.attempts[input.requestId] && !s.keys[input.key], 'duplicate attempt/key');
+            s.rechecks ||= {};
+            requireValue(!s.attempts[input.requestId], 'duplicate attempt');
+            const firstAttempt = s.keys[input.key] && s.attempts[s.keys[input.key]];
+            if (input.recheck === true) {
+                requireValue(['myrealtrip', 'tripcom'].includes(input.source)
+                    && input.kind === 'search' && firstAttempt?.kind === 'search'
+                    && firstAttempt.status === 'success' && !s.rechecks[input.key],
+                'same-day recheck refused');
+            } else requireValue(!s.keys[input.key], 'duplicate key');
             requireValue(s.used[input.worker] < (input.worker === 'C' ? 250 : 200) && s.used.A + s.used.C < 450, 'budget exhausted');
             const permit = { ...input, ...(fence?{fence:fence.epoch}:{}), day: s.day, status: 'pending', reservedAt: this.clock() };
             s.used[input.worker]++;
             s.attempts[input.requestId] = permit;
-            s.keys[input.key] = input.requestId;
+            if (input.recheck === true) s.rechecks[input.key] = input.requestId;
+            else s.keys[input.key] = input.requestId;
             return { ...permit };
         });
     }
@@ -212,8 +221,13 @@ export class Coordinator {
         return this.transaction(s => {
             this.owner(s, input);
             requireValue(!Object.values(s.attempts).some(a => a.status === 'pending'), 'pending work boundary');
+            const rechecks = s.rechecks || {};
+            const recheckableKeys = Object.keys(s.keys).filter(key =>
+                s.attempts[s.keys[key]]?.kind === 'search'
+                && s.attempts[s.keys[key]]?.status === 'success'
+                && !rechecks[key]);
             return structuredClone({ day: s.day, generation: s.generation, snapshotSignature: s.snapshotSignature, keys: s.keys,
-                candidates: s.candidates, used: s.used, sourceScope: s.sourceScope });
+                rechecks, recheckableKeys, candidates: s.candidates, used: s.used, sourceScope: s.sourceScope });
         });
     }
     setSourceScope(input) {

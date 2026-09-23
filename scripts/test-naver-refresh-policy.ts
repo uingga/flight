@@ -94,6 +94,22 @@ assert.equal(evaluateNaverRefresh({
     sourceSignature: signature,
     sourcePrice: 220_000,
 }, { ...baseline, price: 225_000 }, now, config).reason, 'standard_fresh');
+
+for (const source of ['myrealtrip', 'tripcom']) {
+    const shortWindowFlight = flight({ source, price: 220_000, priceCheckedAt: '2026-08-29T02:00:00Z' });
+    const sameDayEntry = {
+        naverLowest: 230_000,
+        crawledAt: '2026-08-29T01:30:00Z',
+        lastAttemptStatus: 'success',
+    };
+    assert.equal(evaluateNaverRefresh(sameDayEntry, shortWindowFlight, now, config).reason, 'same_day_recheck');
+    assert.equal(evaluateNaverRefresh({ ...sameDayEntry, sameDayRecheckAt: '2026-08-29T03:00:00Z' }, shortWindowFlight, now, config).fresh, true);
+    assert.equal(evaluateNaverRefresh({ ...sameDayEntry, lastAttemptAt: '2026-08-29T03:00:00Z', lastAttemptStatus: 'miss' }, shortWindowFlight, now, config).reason, 'retry_wait');
+    assert.equal(evaluateNaverRefresh({ ...sameDayEntry, naverLowest: 210_000 }, shortWindowFlight, now, config).fresh, true);
+    assert.equal(evaluateNaverRefresh({ ...sameDayEntry, crawledAt: '2026-08-28T05:30:00Z' }, shortWindowFlight, now, config).reason, 'standard_periodic');
+    assert.equal(evaluateNaverRefresh({ ...sameDayEntry, crawledAt: '2026-08-28T22:30:00Z' }, flight({ source, price: 220_000 }), now, config).reason, 'same_day_recheck');
+}
+assert.equal(evaluateNaverRefresh({ naverLowest: 230_000, crawledAt: '2026-08-29T00:00:00Z', lastAttemptStatus: 'success' }, baseline, now, config).reason, 'standard_fresh');
 assert.equal(evaluateNaverRefresh({
     crawledAt: '2026-08-25T05:30:00Z',
     lastAttemptAt: '2026-08-29T01:30:00Z',

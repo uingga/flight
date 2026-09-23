@@ -30,6 +30,7 @@ interface NaverPriceEntry {
     depDate?: string;
     retDate?: string;
     lastAttemptAt?: string;
+    sameDayRecheckAt?: string;
     lastAttemptStatus?: 'success' | 'miss' | Exclude<NaverCrawlPageState, 'results'>;
     lastAttemptDetail?: string;
     lastFinalUrl?: string;

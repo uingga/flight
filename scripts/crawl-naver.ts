@@ -178,6 +178,7 @@ interface FlightData {
     source: string;
     discountRate?: number;
     priceCheckedAt?: string;
+    naverSameDayRecheck?: boolean;
     firstSeen?: string;
     routeAirports?: {
         outboundDeparture: string;
@@ -194,6 +195,7 @@ interface NaverPriceEntry {
     depDate?: string;
     retDate?: string;
     lastAttemptAt?: string;
+    sameDayRecheckAt?: string;
     lastAttemptStatus?: 'success' | 'miss' | Exclude<NaverCrawlPageState, 'results'>;
     lastAttemptDetail?: string;
     lastFinalUrl?: string;
@@ -332,6 +334,7 @@ export async function runNaver(session: any = null, fixture: any = null) {
     } = selectFlightsByPriority(rawData, naverPrices, MAX_FLIGHTS);
     const newRouteCount = reasonCounts.new;
     const changedRouteCount = reasonCounts.source_changed;
+    const sameDayRouteCount = reasonCounts.same_day_recheck;
     const periodicRouteCount = reasonCounts.priority_periodic + reasonCounts.standard_periodic + reasonCounts.retry_due;
     const groupedCount = Object.values(groupCounts).reduce((sum, count) => sum + count, 0);
     if (groupedCount !== neededFlights.length || candidateCount !== skippedFresh + neededFlights.length) {
@@ -340,8 +343,8 @@ export async function runNaver(session: any = null, fixture: any = null) {
     if (seededSignatures > 0) {
         console.log(`🧾 기존 네이버 기록 ${seededSignatures}건에 현재 여행사 실결제가 기준선을 저장했습니다 (추가 네이버 요청 없음)`);
     }
-    console.log(`⏭️ 최근 확인·실패 스킵: ${skippedFresh}건 (같은 KST 날짜 재조회 없음 · 변경 없는 성공 키는 정기 ${Math.min(PRIORITY_REFRESH_DAYS, STANDARD_REFRESH_DAYS)}일)`);
-    console.log(`📋 확인 필요 ${neededFlights.length}건 · 이번 실행 ${uniqueFlights.length}건 · 신규 ${newRouteCount}건 · 여행사 변경 ${changedRouteCount}건 · 정기 ${periodicRouteCount}건 · 다음 회차 ${Math.max(0, neededFlights.length - uniqueFlights.length)}건\n`);
+    console.log(`⏭️ 최근 확인·실패 스킵: ${skippedFresh}건 (마이리얼트립·트립닷컴은 정기 1일·조건부 당일 1회, 그 외 정기 ${Math.min(PRIORITY_REFRESH_DAYS, STANDARD_REFRESH_DAYS)}일)`);
+    console.log(`📋 확인 필요 ${neededFlights.length}건 · 이번 실행 ${uniqueFlights.length}건 · 신규 ${newRouteCount}건 · 당일 재확인 ${sameDayRouteCount}건 · 여행사 변경 ${changedRouteCount}건 · 정기 ${periodicRouteCount}건 · 다음 회차 ${Math.max(0, neededFlights.length - uniqueFlights.length)}건\n`);
     console.log(`🎯 전체 우선순위: 7일 마감 ${groupCounts.deadline} · 신규·변경 상위 ${groupCounts.changed_top} · 상위 ${groupCounts.top} · 보통 ${groupCounts.standard} · 하위 ${groupCounts.low}`);
     console.log(`🚦 선택 ${MAX_FLIGHTS}건 기준: 7일 마감 ${selectedGroupCounts.deadline} · 신규·변경 상위 ${selectedGroupCounts.changed_top} · 상위 ${selectedGroupCounts.top} · 보통 ${selectedGroupCounts.standard} · 하위 ${selectedGroupCounts.low}\n`);
 
@@ -467,7 +470,8 @@ export async function runNaver(session: any = null, fixture: any = null) {
 
         // 신선한 데이터가 있으면 스킵 (선별 단계에서 걸러지지만 안전망으로 유지)
         const existingEntry = naverPrices[key];
-        if (evaluateNaverRefresh(existingEntry, flight, Date.now(), REFRESH_CONFIG).fresh) {
+        const refreshDecision = evaluateNaverRefresh(existingEntry, flight, Date.now(), REFRESH_CONFIG);
+        if (refreshDecision.fresh) {
             const freshnessHours = freshnessHoursFor(existingEntry, flight.source);
             const resultLabel = existingEntry.lastAttemptStatus && existingEntry.lastAttemptStatus !== 'success'
                 ? `최근 ${existingEntry.lastAttemptStatus === 'miss' ? '검색 결과 없음' : naverPageStateLabel(existingEntry.lastAttemptStatus)}`
@@ -475,6 +479,11 @@ export async function runNaver(session: any = null, fixture: any = null) {
             console.log(`  ⏭️ ${freshnessHours}시간 내 시도됨 (${resultLabel})\n`);
             continue;
         }
+        const sameDayRecheck = refreshDecision.reason === 'same_day_recheck';
+        if (session && flight.naverSameDayRecheck && !sameDayRecheck) {
+            throw new Error('coordinated same-day recheck decision changed before navigation');
+        }
+        const ledgerRecheck = session ? Boolean(flight.naverSameDayRecheck) : sameDayRecheck;
 
         attemptedCount++;
         segmentAttemptedCount++;
@@ -535,7 +544,7 @@ export async function runNaver(session: any = null, fixture: any = null) {
 
             navigationCount++;
             writeRunStatus('naver_request_started', navigationCount, routeLabel);
-            const navigationResponse = await gotoNaver(page, naverUrl, { waitUntil: 'domcontentloaded', timeout: 30000 }, session, { key, kind: 'search' });
+            const navigationResponse = await gotoNaver(page, naverUrl, { waitUntil: 'domcontentloaded', timeout: 30000 }, session, { key, kind: 'search', ...(ledgerRecheck ? { recheck: true, source: flight.source } : {}) });
             await persistExplicitBlock(page, { httpStatus: navigationResponse?.status() }, session);
 
             // 네이버 항공권은 여러 GDS/항공사에서 결과가 순차적으로 도착한다.
@@ -609,15 +618,17 @@ export async function runNaver(session: any = null, fixture: any = null) {
 
             const resultState = await classifyGeneralResult(page, pageSnapshot ? { ...pageSnapshot, graphqlProblemStatus } : { httpStatus: navigationResponse?.status(), graphqlProblemStatus }, lowestPrice, session);
             if (resultState === 'success' && lowestPrice !== null) {
+                const checkedAt = new Date().toISOString();
                 naverPrices[key] = {
                     ...(existingEntry || {}),
                     naverLowest: lowestPrice,
-                    crawledAt: new Date().toISOString(),
+                    crawledAt: checkedAt,
                     route: formatNaverRoute(route),
                     depDate,
                     retDate,
-                    lastAttemptAt: new Date().toISOString(),
+                    lastAttemptAt: checkedAt,
                     lastAttemptStatus: 'success',
+                    ...(sameDayRecheck ? { sameDayRecheckAt: checkedAt } : {}),
                     sourceSignature: buildNaverSourceSignature(flight),
                     sourcePrice: getNaverSourcePrice(flight),
                 };

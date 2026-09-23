@@ -128,6 +128,7 @@ export function selectNaverCrawlCandidates<T extends NaverRefreshFlight>(
         source_changed: 0,
         retry_wait: 0,
         retry_due: 0,
+        same_day_recheck: 0,
         priority_fresh: 0,
         priority_periodic: 0,
         standard_fresh: 0,
