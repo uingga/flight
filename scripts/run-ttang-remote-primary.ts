@@ -4,6 +4,7 @@ import { spawn, spawnSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import os from 'node:os';
 import {ttangWorkerForSlot,beginTtangDispatch} from './ttang-worker-routing.mjs';
+import {ttangWorkerSshArgs} from './ttang-worker-launch.mjs';
 import { getCrawlDataDir } from '../src/lib/crawl-data-dir';
 import { logCrawlResults } from '../src/lib/utils/crawl-logger';
 import { TTANG_PROTOCOL, TTANG_INPUT_FILES, assertTtangAllowed, validateTtangReceivedEvidence } from './ttang-primary-policy.mjs';
@@ -31,11 +32,8 @@ async function main() {
     let after=structuredClone(before), failed=false, detail='', scraped=0;
     try {
         const reply:any=reconcile?JSON.parse(fs.readFileSync(path.join(evidenceDir,'reply.json'),'utf8')):await new Promise((resolve,reject)=>{
-            const workerRoot=worker==='C'?'C:/Users/ynal/AppData/Local/Tikitikit/ac-staged-20260916':config.workerRoot;
-            const ssh=worker==='C'?['-F','NUL','-o','BatchMode=yes','-o','IdentitiesOnly=yes','-o','StrictHostKeyChecking=yes','-o','GlobalKnownHostsFile=NUL','-o','UserKnownHostsFile=C:/Users/ynal/AppData/Local/Temp/tikitikit-ssh-setup-20260915/known_hosts_c','-o','ConnectTimeout=15','-i','C:/Users/ynal/.ssh/tikitikit_a_to_c_ed25519','ynal@100.87.173.95','C:/Users/ynal/AppData/Local/hermes/node/node.exe']
-                :['-o','BatchMode=yes','-o','ConnectTimeout=15',config.host,'node'];
-            const child=spawn('ssh',[...ssh,workerRoot+'/node_modules/tsx/dist/cli.mjs','--tsconfig',workerRoot+'/tsconfig.json',
-                workerRoot+'/scripts/ttang-remote-worker.ts',manual?'--manual-once':'--scheduled'],{windowsHide:true});
+            const ssh=ttangWorkerSshArgs(worker,manual?'--manual-once':'--scheduled',config.host);
+            const child=spawn('ssh',ssh,{windowsHide:true});
             const chunks:Buffer[]=[];let size=0,done=false;
             const fail=()=>{if(done)return;done=true;clearTimeout(timer);child.kill();reject(Error('remote_transport_failed'));};
             const timer=setTimeout(fail,32*60000);
