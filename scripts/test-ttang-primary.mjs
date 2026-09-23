@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { ttangDatePlan, assertTtangAllowed, validateTtangEvidence, validateTtangReceivedEvidence, TTANG_PROTOCOL } from './ttang-primary-policy.mjs';
+import { ttangDatePlan, assertTtangAllowed, hasVerifiedTtangInventory, validateTtangEvidence, validateTtangReceivedEvidence, TTANG_PROTOCOL } from './ttang-primary-policy.mjs';
 import { evaluatePcCollection } from './pc-collection-policy.mjs';
 import { ttangListPageEvidence } from '../src/lib/ttang-request-audit.mjs';
 import { crawlOrder, finiteListBudget } from '../src/lib/crawl-order.mjs';
@@ -53,6 +53,19 @@ function fixture(){
         partial:{runId:'test',startedAt,status:'completed',adapterVersion:'v',successes:[],outcomes:[],
             counts:{selected:0,succeeded:0,empty:0,failed:0,unqueried:0,excludedLegacy:0,deferred:0}}};
 }
+test('a complete worker list may establish a lower inventory; partial or unowned lists may not',()=>{
+    const b=fixture(), ordered=crawlOrder(b.manifest.dates,b.id);
+    Object.assign(b.manifest,{orderSeed:b.id,plannedDates:ordered,dates:ordered,
+        plannedRequests:ordered.length,maxListRequests:finiteListBudget(ordered.length,2,64),
+        pages:ordered.map(d=>ttangListPageEvidence(d,20,1)),rawCount:607});
+    const check=manifest=>hasVerifiedTtangInventory(true,manifest,b.id,b.startedAt,607);
+    assert.equal(check(b.manifest),true);
+    assert.equal(hasVerifiedTtangInventory(false,b.manifest,b.id,b.startedAt,607),false);
+    for(const change of [c=>c.pages.pop(),c=>c.dates.pop(),c=>c.pages[0].coverage='unverified',
+        c=>c.rawCount=606,c=>c.attempts++,c=>c.orderSeed='different']){
+        const bad=structuredClone(b.manifest);change(bad);assert.equal(check(bad),false);
+    }
+});
 test('shuffled dates validate as a complete permutation; omitted/duplicate dates or a changed seed fail', () => {
     const b = fixture(), ordered = crawlOrder(b.manifest.dates, b.id);
     Object.assign(b.manifest, {orderSeed:b.id, plannedDates:ordered, dates:ordered,

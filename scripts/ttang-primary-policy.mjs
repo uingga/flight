@@ -33,11 +33,10 @@ export function ttangDatePlan(now = new Date()) {
     return dates;
 }
 
-export function validateTtangEvidence(bundle, id, now = Date.now()) {
-    const { startedAt, completedAt, cache, partial, manifest } = bundle || {};
-    const start=Date.parse(startedAt), finish=Date.parse(completedAt);
-    if (bundle?.protocol!==TTANG_PROTOCOL || bundle.id!==id || !Number.isFinite(start) || !Number.isFinite(finish)
-        || start>finish || finish>now || now-start>40*60000 || bundle.cleanupConfirmed!==true) throw Error('invalid_run_evidence');
+export function validateTtangListEvidence(manifest, id, startedAt, rawCount) {
+    const start=Date.parse(startedAt);
+    if (!Number.isFinite(start) || !id || !Number.isSafeInteger(rawCount) || rawCount<=0)
+        throw Error('invalid_list_evidence');
     const expected=ttangDatePlan(new Date(start));
     if (manifest?.orderSeed !== undefined && manifest.orderSeed !== id) throw Error('invalid_order_seed');
     const ordered = crawlOrder(expected, manifest?.orderSeed);
@@ -53,8 +52,25 @@ export function validateTtangEvidence(bundle, id, now = Date.now()) {
         || !Number.isSafeInteger(manifest.attempts)
         || manifest.attempts!==manifest.pages.reduce((n,p)=>n+p.attempt,0)) throw Error('incomplete_date_response_evidence');
     if (manifest?.status!=='completed' || JSON.stringify(manifest.dates)!==JSON.stringify(ordered)
-        || !Number.isSafeInteger(manifest.rawCount) || manifest.rawCount<=0
-        || cache?.scrapedCounts?.ttang!==manifest.rawCount || Date.parse(cache?.sourceUpdatedAt?.ttang)<start
+        || manifest.rawCount!==rawCount) throw Error('incomplete_list_evidence');
+    return expected;
+}
+
+// A full 31-day browser result can reflect a real inventory decline. Only the
+// dedicated worker with independently verifiable date evidence may use it.
+export function hasVerifiedTtangInventory(worker, manifest, id, startedAt, rawCount) {
+    if (!worker) return false;
+    try { validateTtangListEvidence(manifest,id,startedAt,rawCount); return true; }
+    catch { return false; }
+}
+
+export function validateTtangEvidence(bundle, id, now = Date.now()) {
+    const { startedAt, completedAt, cache, partial, manifest } = bundle || {};
+    const start=Date.parse(startedAt), finish=Date.parse(completedAt);
+    if (bundle?.protocol!==TTANG_PROTOCOL || bundle.id!==id || !Number.isFinite(start) || !Number.isFinite(finish)
+        || start>finish || finish>now || now-start>40*60000 || bundle.cleanupConfirmed!==true) throw Error('invalid_run_evidence');
+    const expected=validateTtangListEvidence(manifest,id,startedAt,cache?.scrapedCounts?.ttang);
+    if (Date.parse(cache?.sourceUpdatedAt?.ttang)<start
         || !Number.isFinite(Date.parse(cache?.sourceUpdatedAt?.ttang)) || cache.sourceUpdatedAt.ttang>completedAt
         || cache.staleStreak?.ttang!==0) throw Error('incomplete_list_evidence');
     const c=partial?.counts;

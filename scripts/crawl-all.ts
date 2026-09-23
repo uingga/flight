@@ -50,6 +50,7 @@ import { recordRecommendationNews } from './lib/recommendation-news';
 import {flightOfferHistory} from '../src/lib/flight-history';
 import {rememberFlightOffers,historyForSource} from '../src/lib/flight-offer-history.mjs';
 import { ONLINE_BROWSER_PRIMARY, MODE_BROWSER_PRIMARY, TTANG_BROWSER_PRIMARY } from '../src/lib/browser-primary-config.mjs';
+import { hasVerifiedTtangInventory } from './ttang-primary-policy.mjs';
 import type { scrapeModetourRemote } from '../src/lib/scrapers/modetour-remote';
 import { assertOnlineGithubClaim } from './online-github-fallback-policy.mjs';
 import { createDepartureWindow, eligibleDepartures } from '../src/lib/onlinetour-departure-window';
@@ -571,9 +572,25 @@ async function main() {
             // 비교는 원본 수집량끼리만 한다. 예전에는 이전 캐시(필터 후)와 이번 원본을
             // 맞비교해서, 땡처리 기준 발동선이 원본 137건이 되어 88% 붕괴도 통과했다.
             const prevScraped = prevCache?.scrapedCounts?.[src];
+            const ttangListEvidencePath = path.join(dataDir, 'ttang-list-evidence.json');
+            let ttangListEvidence: unknown = null;
+            if (src === 'ttang' && process.env.TTANG_BROWSER_WORKER === '1' && fs.existsSync(ttangListEvidencePath)) {
+                try { ttangListEvidence = JSON.parse(fs.readFileSync(ttangListEvidencePath, 'utf8')); }
+                catch { /* An invalid manifest cannot exempt the source from the drop guard. */ }
+            }
+            const verifiedTtangInventory = src === 'ttang'
+                && process.env.TTANG_BROWSER_WORKER === '1'
+                && hasVerifiedTtangInventory(
+                    true,
+                    ttangListEvidence,
+                    process.env.TTANG_STAGING_RUN_ID,
+                    process.env.TTANG_STAGING_STARTED_AT,
+                    freshCount,
+                );
             if (
                 freshCount > 0
                 && !(src === 'modetour' && modeResult)
+                && !verifiedTtangInventory
                 && prevScraped !== undefined
                 && prevScraped >= MIN_BASELINE
                 && freshCount < prevScraped * DROP_RATIO
@@ -604,6 +621,10 @@ async function main() {
                         : '24시간 자동 요청 중단'),
                 );
                 continue;
+            }
+
+            if (verifiedTtangInventory && prevScraped !== undefined && freshCount < prevScraped * DROP_RATIO) {
+                console.warn(`⚠️ ttang 원본 ${prevScraped}건 → ${freshCount}건: 31일 목록 완료 증거로 재고 감소 확인`);
             }
 
             // 비교할 원본 기준선이 아직 없으면(이 기능을 켠 직후) 이번 값을 기준선으로 삼는다.
