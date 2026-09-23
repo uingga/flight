@@ -27,6 +27,12 @@
     background-position: 62% center;
 }
 
+@media (max-width: 959px) {
+    .hero[data-drop-hero-image="/images/cities/qingdao-hero-20260923.png"] {
+        background-position: 30% center;
+    }
+}
+
 .heroFallback {
     background: #29343d;
 }
