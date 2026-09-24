@@ -1,7 +1,7 @@
 const day=t=>new Date(t+9*3600000).toISOString().slice(0,10);
 export function latestAgencyRound(now=Date.now()) {
  const kst=day(now);
- const times=['06:17','10:12','13:23','16:31'].map(t=>Date.parse(kst+'T'+t+':00+09:00'));
+ const times=['06:17','10:12','13:23','16:31','19:31'].map(t=>Date.parse(kst+'T'+t+':00+09:00'));
  const found=times.filter(t=>t<=now).at(-1);
  return found===undefined?null:new Date(found).toISOString();
 }

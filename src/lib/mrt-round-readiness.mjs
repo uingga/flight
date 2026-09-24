@@ -1,4 +1,4 @@
-// Proposed four-round contract. Not activated by importing this module.
+// Align every general agency round with the preceding MyRealTrip collection.
 const KST_OFFSET = 9 * 3600000;
 const MINUTE = 60000;
 export const MRT_ALIGNED_ROUNDS = Object.freeze([
@@ -6,6 +6,7 @@ export const MRT_ALIGNED_ROUNDS = Object.freeze([
     Object.freeze({generalMinute:10*60+12, startMinute:8*60+55, host:'C'}),
     Object.freeze({generalMinute:13*60+23, startMinute:12*60+5, host:'github'}),
     Object.freeze({generalMinute:16*60+31, startMinute:15*60+15, host:'C'}),
+    Object.freeze({generalMinute:19*60+31, startMinute:19*60+15, host:'B'}),
 ]);
 export function mrtRoundForGeneralSlot(generalSlot) {
     const time = typeof generalSlot === 'string' ? Date.parse(generalSlot) : NaN;

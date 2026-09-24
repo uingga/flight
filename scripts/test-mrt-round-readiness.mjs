@@ -3,12 +3,13 @@ import {test} from 'node:test';
 import {mrtRoundForGeneralSlot, evaluateMrtRoundReadiness} from '../src/lib/mrt-round-readiness.mjs';
 
 const generalSlot = '2026-09-16T07:31:00.000Z';
-test('four KST rounds assign alternating hosts and earlier starts', () => {
+test('five KST rounds assign the expected host and earlier start', () => {
     for (const [general, start, host] of [
         ['2026-09-15T21:17:00.000Z','2026-09-15T20:00:00.000Z','github'],
         ['2026-09-16T01:12:00.000Z','2026-09-15T23:55:00.000Z','C'],
         ['2026-09-16T04:23:00.000Z','2026-09-16T03:05:00.000Z','github'],
         [generalSlot,'2026-09-16T06:15:00.000Z','C'],
+        ['2026-09-16T10:31:00.000Z','2026-09-16T10:15:00.000Z','B'],
     ]) assert.deepEqual(mrtRoundForGeneralSlot(general), {generalSlot:general, expectedAt:start, host});
 });
 test('invalid and non-slot timestamps are refused', () => {

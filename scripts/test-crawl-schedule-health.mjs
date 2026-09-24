@@ -290,7 +290,7 @@ test('the Windows Naver task splits fresh and recovered sources under one daily 
     const installer = fs.readFileSync('scripts/install-naver-crawl-task.ps1', 'utf8');
     const crawler = fs.readFileSync('scripts/crawl-naver.ts', 'utf8');
 
-    for (const time of ['10:12', '13:23', '16:31']) {
+    for (const time of ['06:17', '10:12', '13:23', '16:31', '19:31']) {
         assert.match(installer, new RegExp(`New-ScheduledTaskTrigger -Daily -At '${time}'`));
     }
     assert.doesNotMatch(installer, /New-ScheduledTaskTrigger -Daily -At '20:30'/);

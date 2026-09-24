@@ -44,7 +44,8 @@ async function main(){
  const broker=coordinated?createBrokerClient({url:process.env.NAVER_COORDINATION_URL,token:coordinatorToken}):null;
  while(true){
   const now=Date.now(),kst=new Date(now+9*3600000);
-  if(kst.getUTCHours()*60+kst.getUTCMinutes()>=18*60+30)return;
+  const minutes=kst.getUTCHours()*60+kst.getUTCMinutes();
+  if(minutes>=23*60+50||(minutes>=18*60+30&&minutes<19*60+31))return;
   const round=latestAgencyRound(now);if(!round)return;
   const state=receipt(),day=kst.toISOString().slice(0,10);
   if(coordinated){

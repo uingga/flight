@@ -2,11 +2,19 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {evaluateLocalNaverRun,buildLocalNaverState} from './local-naver-run-policy.mjs';
 import {roundBarrier,performRound} from './run-naver-round-bridge.mjs';
+import {latestAgencyRound} from '../src/lib/naver-round-handoff.mjs';
 const round='2026-09-17T01:12:00.000Z',now=Date.parse('2026-09-17T01:40:00Z');
 const sources=['ybtour','hanatour','modetour','onlinetour','ttang','myrealtrip','lottetour'];
 const cache={fullCrawlUpdatedAt:'2026-09-17T01:35:00Z',sourceUpdatedAt:Object.fromEntries(sources.map(s=>[s,'2026-09-17T01:30:00Z']))};
 const state={kstDate:'2026-09-17',phase:'success',navigationsUsed:71,completedSources:sources};
 const evaluate=(extra={})=>evaluateLocalNaverRun({now,cache,state,completedRound:round,...extra});
+test('Naver follows all five general slots, including 19:31 instead of 20:30',()=>{
+ const on=(time)=>latestAgencyRound(Date.parse(`2026-09-24T${time}:00+09:00`));
+ assert.equal(on('06:17'),'2026-09-23T21:17:00.000Z');
+ assert.equal(on('19:30'),'2026-09-24T07:31:00.000Z');
+ assert.equal(on('19:31'),'2026-09-24T10:31:00.000Z');
+ assert.equal(on('20:30'),'2026-09-24T10:31:00.000Z');
+});
 test('actual existing policy continues a new round without resetting spent 71',()=>{
  const p=evaluate();assert.equal(p.shouldRun,true);assert.equal(p.navigationBudget,129);assert.equal(p.skipTodayPick,true);
  const running=buildLocalNaverState('running',{now,previousState:state,runningSources:p.sources,completedRound:round});

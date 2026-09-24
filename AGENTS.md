@@ -128,7 +128,7 @@ src/components/Dashboard.tsx (client component)
 - GitHub `naver-crawl.yml`은 운영 데이터를 쓰지 않는 수동 진단 전용이다. `myrealtrip` 최대 3건만
   확인하며 대조 조회도 같은 상한에 포함한다. 실제 진단 뒤 24시간 재실행을 막고 어떤 자동
   워크플로도 이를 호출하지 않는다.
-- Windows `TikitikitNaverCrawl`은 10:12/13:23/16:31 KST 예약과 완료된 일반 회차를
+- Windows `TikitikitNaverCrawl`은 일반 여행사와 같은 06:17/10:12/13:23/16:31/19:31 KST 예약과 완료된 일반 회차를
   기준으로 기동한다. A가 운영에 반영된 정상 수집 소스를 확정한 뒤 C에 같은 공동 원장의
   남은 작업을 넘긴다. 두 호스트는 키·차단 상태·페이지 이동량을 공유하며 A 200회, C 250회,
   합계 450회를 넘지 않는다. 403·429·CAPTCHA나 불확실한 요청 상태가 생기면 같은 날
