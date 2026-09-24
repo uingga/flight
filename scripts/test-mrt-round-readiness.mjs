@@ -5,12 +5,12 @@ import {mrtRoundForGeneralSlot, mrtPcTarget, evaluateMrtRoundReadiness} from '..
 const generalSlot = '2026-09-16T07:31:00.000Z';
 test('six KST rounds assign the expected host and aligned start', () => {
     for (const [general, start, host] of [
-        ['2026-09-15T21:17:00.000Z','2026-09-15T21:25:00.000Z','github'],
+        ['2026-09-15T21:17:00.000Z','2026-09-15T20:35:00.000Z','github'],
         ['2026-09-16T01:12:00.000Z','2026-09-16T00:35:00.000Z','C'],
         ['2026-09-16T04:23:00.000Z','2026-09-16T03:40:00.000Z','github'],
         [generalSlot,'2026-09-16T06:55:00.000Z','C'],
         ['2026-09-16T10:31:00.000Z','2026-09-16T09:55:00.000Z','B'],
-        ['2026-09-16T11:30:00.000Z','2026-09-16T12:00:00.000Z','github'],
+        ['2026-09-16T11:30:00.000Z','2026-09-16T11:15:00.000Z','github'],
     ]) assert.deepEqual(mrtRoundForGeneralSlot(general), {generalSlot:general, expectedAt:start, host});
 });
 test('PC dispatch owns only the exact two C slots and one B slot',()=>{

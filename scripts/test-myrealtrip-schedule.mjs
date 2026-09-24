@@ -23,7 +23,8 @@ function fake({ runs = [], claimed = false, readStatus, createStatus = 201 } = {
 test('latest slot honors UTC/KST and midnight', () => {
     assert.equal(resolveMrtSlot({ schedule: '3 7 * * *', createdAt: new Date(now).toISOString(), now }), null);
     assert.equal(slot.expectedAt, '2026-09-08T03:40:00.000Z');
-    assert.equal(latestMrtSlot(Date.parse('2026-09-07T23:00:00Z')).expectedAt, '2026-09-07T21:25:00.000Z');
+    assert.equal(latestMrtSlot(Date.parse('2026-09-07T23:00:00Z')).expectedAt, '2026-09-07T20:35:00.000Z');
+    assert.equal(latestMrtSlot(Date.parse('2026-09-08T11:20:00Z')).expectedAt, '2026-09-08T11:15:00.000Z');
 });
 test('late schedule and watchdog resolve to the same slot; stale/future input rejected', () => {
     assert.deepEqual(resolveMrtSlot({ schedule: '40 3 * * *', createdAt: '2026-09-08T09:00:00Z', now }), slot);

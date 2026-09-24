@@ -2,12 +2,12 @@
 const KST_OFFSET = 9 * 3600000;
 const MINUTE = 60000;
 export const MRT_ALIGNED_ROUNDS = Object.freeze([
-    Object.freeze({generalMinute:6*60+17, startMinute:6*60+25, host:'github'}),
+    Object.freeze({generalMinute:6*60+17, startMinute:5*60+35, host:'github'}),
     Object.freeze({generalMinute:10*60+12, startMinute:9*60+35, host:'C'}),
     Object.freeze({generalMinute:13*60+23, startMinute:12*60+40, host:'github'}),
     Object.freeze({generalMinute:16*60+31, startMinute:15*60+55, host:'C'}),
     Object.freeze({generalMinute:19*60+31, startMinute:18*60+55, host:'B'}),
-    Object.freeze({generalMinute:20*60+30, startMinute:21*60, host:'github'}),
+    Object.freeze({generalMinute:20*60+30, startMinute:20*60+15, host:'github'}),
 ]);
 export function mrtPcTarget(now=Date.now()) {
     if(!Number.isFinite(now))return null;
