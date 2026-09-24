@@ -3,8 +3,9 @@
  *
  * 예전에는 여행사마다 자기 기록만 모아 마지막 16개를 그려서, 카드마다 막대 축이 달랐다
  * (땡처리는 하루 2회, 진행 중 회차는 막대 없음, PC 대체가 끼면 막대 하나 더).
- * 여기서는 일반 예약 회차(06:17·10:12·13:23·16:31·19:31 KST)를 축으로 고정한다.
- * 온라인투어와 땡처리닷컴 PC 주 수집도 같은 다섯 시각을 사용한다. 각 여행사 이벤트를
+ * 일반 예약 회차(06:17·10:12·13:23·16:31·19:31 KST)를 기본 축으로 고정한다.
+ * 2026-09-25부터 노랑풍선·하나투어·모두투어·땡처리의 20:30 PC 정규 회차는 별도 칸이다.
+ * 각 여행사 이벤트를
  * "그 회차 시각부터 다음 회차 시각 전까지" 창에 귀속시켜 회차당 막대 하나로 합친다.
  * 회차 시작 0~5분 랜덤 지연, 수집 소요 시간, PC 대체·수동 캡처의 늦은 반영은 모두 이 창 안에
  * 들어오므로 예약 시각으로 정규화된다.
@@ -19,6 +20,9 @@ const KST_OFFSET_MS = 9 * 60 * 60_000;
 const DAY_MS = 86_400_000;
 const TTANG_PC_FOUR_FROM = Date.parse('2026-09-07T00:00:00+09:00');
 const TTANG_PC_FIVE_FROM = Date.parse('2026-09-24T19:31:00+09:00');
+const AGENCY_EVENING_FROM = Date.parse('2026-09-25T20:30:00+09:00');
+const AGENCY_EVENING_MINUTE_KST = 20 * 60 + 30;
+const AGENCY_EVENING_SOURCES = new Set(['ybtour', 'hanatour', 'modetour', 'ttang']);
 
 export type SourceSlotEvent = {
     timestamp: string;
@@ -78,11 +82,31 @@ function recentSlotTimesForSchedule(now: number, length: number, minutesOfDay: r
     return slots.slice(-length);
 }
 
+function recentSourceSlotTimes(now: number, length: number, source: string): number[] {
+    if (!AGENCY_EVENING_SOURCES.has(source) || now < AGENCY_EVENING_FROM)
+        return recentSlotTimesForSchedule(now, length, CRAWL_SLOT_MINUTES_KST);
+    const kstDayStart = Math.floor((now + KST_OFFSET_MS) / DAY_MS) * DAY_MS - KST_OFFSET_MS;
+    const slots: number[] = [];
+    const daysNeeded = Math.ceil(length / CRAWL_SLOT_MINUTES_KST.length) + 2;
+    for (let dayOffset = -daysNeeded; dayOffset <= 0; dayOffset += 1) {
+        const day = kstDayStart + dayOffset * DAY_MS;
+        for (const minutes of CRAWL_SLOT_MINUTES_KST) {
+            const at = day + minutes * 60_000;
+            if (at <= now) slots.push(at);
+        }
+        const eveningAt = day + AGENCY_EVENING_MINUTE_KST * 60_000;
+        if (eveningAt >= AGENCY_EVENING_FROM && eveningAt <= now) slots.push(eveningAt);
+    }
+    return slots.slice(-length);
+}
+
 /** 여행사가 이 회차에 원래 수집 예정인지. 땡처리의 과거 2·4회와 현재 5회를 구분한다. */
 export function isSourceScheduledAt(source: string, slotAt: number): boolean {
     if (source === 'myrealtrip' || source === 'tripcom') return false;
+    const kstMinutes = Math.floor(((slotAt + KST_OFFSET_MS) % DAY_MS) / 60_000);
+    if (kstMinutes === AGENCY_EVENING_MINUTE_KST)
+        return slotAt >= AGENCY_EVENING_FROM && AGENCY_EVENING_SOURCES.has(source);
     if (source === 'ttang') {
-        const kstMinutes = Math.floor(((slotAt + KST_OFFSET_MS) % DAY_MS) / 60_000);
         if (slotAt >= TTANG_PC_FIVE_FROM) return CRAWL_SLOT_MINUTES_KST.some(minutes => minutes === kstMinutes);
         if (slotAt >= TTANG_PC_FOUR_FROM) return CRAWL_SLOT_MINUTES_KST.slice(0, 4).some(minutes => minutes === kstMinutes);
         return kstMinutes === CRAWL_SLOT_MINUTES_KST[0] || kstMinutes === CRAWL_SLOT_MINUTES_KST[2];
@@ -145,7 +169,7 @@ export function buildSourceSlotBars(input: {
     }
     const slots = input.source === 'onlinetour'
         ? recentSlotTimesForSchedule(input.now, input.length ?? SLOT_AXIS_LENGTH, ONLINE_SLOT_MINUTES_KST)
-        : recentSlotTimes(input.now, input.length ?? SLOT_AXIS_LENGTH);
+        : recentSourceSlotTimes(input.now, input.length ?? SLOT_AXIS_LENGTH, input.source);
     if (slots.length === 0) return [];
     const sorted = [...input.events]
         .map(event => ({ event, at: new Date(event.timestamp).getTime() }))
@@ -156,7 +180,7 @@ export function buildSourceSlotBars(input: {
     const activeSlot = Number.isFinite(activeAt) && activeAt <= input.now
         ? input.source === 'onlinetour'
             ? recentSlotTimesForSchedule(activeAt, 1, ONLINE_SLOT_MINUTES_KST)[0]
-            : recentSlotTimes(activeAt, 1)[0]
+            : recentSourceSlotTimes(activeAt, 1, input.source)[0]
         : null;
 
     return slots.map((slotAt, index) => {

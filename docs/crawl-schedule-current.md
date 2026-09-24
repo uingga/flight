@@ -1,12 +1,13 @@
 # Current collection schedule
 
-Updated 2026-09-24. All times below are KST scheduled starts, not completion deadlines.
+Updated 2026-09-25. All times below are KST scheduled starts, not completion deadlines.
 
 | Work | Scheduled starts |
 | --- | --- |
 | General GitHub round; ModeTour, OnlineTour and Ttang PC primary after its completion | 06:17, 10:12, 13:23, 16:31, 19:31 |
 | Ttang GitHub collection | 06:17, 13:23 |
 | Ttang PC primary | 06:17, 10:12, 13:23, 16:31, 19:31 |
+| Coordinated PC agency regular round (B: YB/Hana; C: Mode/Ttang) | 20:30 |
 | MyRealTrip | 05:00, 08:55, 12:05, 15:15, 19:15 |
 | Naver PC collection (after each published general round) | 06:17, 10:12, 13:23, 16:31, 19:31 |
 
@@ -15,5 +16,6 @@ Ttang's PC primary now follows all five general slots. Its GitHub backup remains
 PC completion is awaited before freezing Naver recovery sources. A and C share a 450-navigation
 daily cap (A 200, C 250); each trigger waits for the corresponding published agency round.
 Ttang's duplicate-slot guard and source circuits remain active; consecutive successful slots have no five-hour minimum interval.
+The 20:30 PC round has its own source-scoped slot and waits for the 19:31 general result; it is not a GitHub fallback or a rerun of 19:31.
 No extra collection is requested solely to validate a schedule change. The regular watchdog
 may recover a newly due slot after deployment. Old cron events are rejected by preflight.
