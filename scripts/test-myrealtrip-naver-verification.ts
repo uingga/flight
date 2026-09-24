@@ -31,7 +31,16 @@ const manual = selectMyrealtripNaverComparison(original, {
 assert.deepEqual(manual, { price: 177_900, checkedAt: '2026-09-23T07:05:51.201Z' });
 assert.equal(isVerifiedMyrealtripOffer(flight({
     naverLowest: manual!.price, naverCheckedAt: manual!.checkedAt,
-}), now), false, 'any MRT fare above Naver must be hidden');
+}), now), true, 'a fresh 5,300 won difference must remain displayable');
+assert.equal(isVerifiedMyrealtripOffer(flight({
+    price: 109_999, naverLowest: 100_000, naverCheckedAt: '2026-09-23T08:00:00.000Z',
+}), now), true, 'less than 10,000 won qualifies even when above 3%');
+assert.equal(isVerifiedMyrealtripOffer(flight({
+    price: 1_020_000, naverLowest: 1_000_000, naverCheckedAt: '2026-09-23T08:00:00.000Z',
+}), now), true, 'less than 3% qualifies even when above 10,000 won');
+assert.equal(isVerifiedMyrealtripOffer(flight({
+    price: 110_000, naverLowest: 100_000, naverCheckedAt: '2026-09-23T08:00:00.000Z',
+}), now), false, 'both limits reached must be hidden');
 assert.deepEqual(selectMyrealtripNaverComparison(original, {
     price: 220_000, checkedAt: '2026-09-23T08:05:00.000Z',
 }, now), { price: 220_000, checkedAt: '2026-09-23T08:05:00.000Z' });

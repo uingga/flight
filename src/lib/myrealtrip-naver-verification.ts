@@ -1,6 +1,7 @@
 import type { Flight } from '../types/flight';
 import observations from './myrealtrip-naver-observations.json';
 import { buildNaverPriceKey } from './naver-route';
+import { isNaverPriceOverLimit } from './naver-price-filter';
 import { getRecommendationComparisonFreshness } from './price-quality';
 
 interface Comparison {
@@ -29,7 +30,7 @@ export function selectMyrealtripNaverComparison(
     return { price: record.naverPrice, checkedAt: record.observedAt };
 }
 
-/** An MRT offer is displayable only after a usable exact comparison proves it is no dearer. */
+/** An MRT offer needs a fresh exact comparison within the display price limit. */
 export function isVerifiedMyrealtripOffer(
     flight: Pick<Flight, 'id' | 'source' | 'price' | 'departure' | 'arrival' | 'routeAirports' | 'naverLowest' | 'naverCheckedAt'>,
     now = Date.now(),
@@ -42,5 +43,5 @@ export function isVerifiedMyrealtripOffer(
     // collector is not enough to clear the exact fare that the user disputed.
     const flagged = reported.get(flight.id);
     if (flagged && flagged.price === flight.price) return false;
-    return flight.price <= flight.naverLowest;
+    return !isNaverPriceOverLimit(flight.price, flight.naverLowest, flight.source);
 }
