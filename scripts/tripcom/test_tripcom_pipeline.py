@@ -54,6 +54,34 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(len(result["rejected"]), 2)
         self.assertTrue(all(r["status"] == "collector_error" for r in result["observations"]))
 
+    def test_three_missing_card_timeouts_stop_only_this_run(self):
+        self.destinations = [{"city_code": str(i)} for i in range(5)]
+        calls = []
+        def scan(dest, *args):
+            calls.append(dest["city_code"])
+            error = TimeoutError("browser page details must not be saved")
+            error.tripcom_stage = "outbound_cards_wait"
+            raise error
+        result = self.run_fixture(scan)
+        self.assertEqual(calls, ["0", "1", "2"])
+        self.assertEqual(result["status"], "inconclusive")
+        self.assertEqual(result["attemptedCities"], 3)
+        self.assertEqual(result["stopReason"], "repeated_outbound_cards_timeout")
+        self.assertFalse(Path(self.directory.name, "circuit.json").exists())
+        self.assertNotIn("browser page details", str(result))
+
+    def test_success_between_timeouts_resets_missing_card_streak(self):
+        self.destinations = [{"city_code": str(i)} for i in range(4)]
+        def scan(dest, *args):
+            if dest["city_code"] == "1":
+                return {**dest, "status": "no_matching_candidates"}
+            error = TimeoutError("fixture")
+            error.tripcom_stage = "outbound_cards_wait"
+            raise error
+        result = self.run_fixture(scan)
+        self.assertEqual(result["status"], "collected")
+        self.assertEqual(result["attemptedCities"], 4)
+
 
 if __name__ == "__main__":
     unittest.main()

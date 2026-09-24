@@ -6,6 +6,7 @@ remain unknown and cannot be repeated by a resume of the same run.
 import hashlib
 import json
 import os
+import time
 from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -21,7 +22,14 @@ def atomic_json(path, value):
         json.dump(value, handle, ensure_ascii=False, indent=2)
         handle.flush()
         os.fsync(handle.fileno())
-    os.replace(temporary, path)
+    for attempt in range(5):
+        try:
+            os.replace(temporary, path)
+            break
+        except PermissionError:
+            if attempt == 4:
+                raise
+            time.sleep(0.02)
 
 
 class RunState:
@@ -97,6 +105,15 @@ class RunState:
         atomic_json(self.root / "circuit.json", {"runId": self.run_id, "reason": reason,
             "observedAt": self.now().isoformat(), "nextProbeAt": (self.now() + timedelta(hours=24)).isoformat()})
         self.document["status"] = "blocked"
+        self.save()
+
+    def stop_inconclusive(self, reason):
+        if self.document["status"] != "running" or any(
+                entry["status"] == "inflight" for entry in self.document["entries"].values()):
+            raise RuntimeError("run_not_stoppable")
+        self.document["status"] = "inconclusive"
+        self.document["stopReason"] = reason
+        self.document["finishedAt"] = self.now().isoformat()
         self.save()
 
     def finish(self):
