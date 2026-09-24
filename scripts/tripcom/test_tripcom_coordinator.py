@@ -109,6 +109,21 @@ class CoordinatorTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, 'require_publication'):
             self.central.finish_without_publication(ticket, digest)
 
+    def test_inconclusive_empty_run_releases_slot_without_fake_publication(self):
+        ticket = self.central.acquire(self.slot, 'B')
+        artifact = {**self.artifact(ticket), 'status': 'inconclusive',
+            'expectedCities': 40, 'attemptedCities': 3,
+            'stopReason': 'repeated_outbound_cards_timeout',
+            'observations': [{'city_code': code, 'status': 'collector_error',
+                'reason': 'stage_timeout', 'stage': 'outbound_cards_wait'}
+                for code in ('fuk', 'osa', 'tyo')]}
+        digest = self.central.receive(ticket, artifact, True)
+        self.central.finish_without_publication(ticket, digest)
+        with self.central.transaction() as db:
+            self.assertEqual(db.execute('SELECT active_slot FROM control WHERE id=1').fetchone()[0], None)
+            self.assertEqual(db.execute('SELECT status FROM runs WHERE slot=?', (self.slot,)).fetchone()[0],
+                             'finished_no_quotes')
+
 
 if __name__ == "__main__":
     unittest.main()

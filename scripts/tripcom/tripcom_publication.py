@@ -8,10 +8,25 @@ from tripcom_flight_contract import to_flight
 def prepare_publication(previous_cache, artifact):
     if artifact.get("publication") != "not_submitted" or artifact.get("naverQueries") != 0:
         raise ValueError("invalid_worker_authority")
-    if artifact.get("status") not in ("collected", "collected_with_unknown", "blocked"):
+    if artifact.get("status") not in ("collected", "collected_with_unknown", "blocked", "inconclusive"):
         raise ValueError("invalid_collection_status")
     if not artifact.get("runId") or artifact.get("host") not in ("B", "C"):
         raise ValueError("invalid_artifact_identity")
+    if artifact["status"] == "inconclusive":
+        observations = artifact.get("observations")
+        expected = artifact.get("expectedCities")
+        attempted = artifact.get("attemptedCities")
+        if (artifact.get("stopReason") != "repeated_outbound_cards_timeout"
+                or not isinstance(observations, list)
+                or not isinstance(expected, int) or not 3 <= expected <= 40
+                or not isinstance(attempted, int) or not 3 <= attempted <= expected
+                or len(observations) < 3 or len(observations) > attempted
+                or any(not isinstance(item, dict)
+                    or item.get("status") != "collector_error"
+                    or item.get("reason") != "stage_timeout"
+                    or item.get("stage") != "outbound_cards_wait"
+                    for item in observations[-3:])):
+            raise ValueError("invalid_inconclusive_stop_evidence")
     # Re-convert observations centrally; never trust worker-supplied flights.
     verified, rejected = [], []
     for observation in artifact.get("observations", []):
@@ -42,8 +57,9 @@ def prepare_publication(previous_cache, artifact):
         if flight.get("source") != "tripcom" or flight.get("arrival", {}).get("city") not in cities] + verified
     next_cache["tripcomPrimary"] = {
         "runId": artifact["runId"], "host": artifact["host"],
-        "status": "blocked_preserved" if artifact["status"] == "blocked" else "partial" if rejected or artifact["status"] == "collected_with_unknown" else "collected",
-        "verifiedCities": len(verified), "unconfirmedCities": len(rejected),
+        "status": "blocked_preserved" if artifact["status"] == "blocked" else "partial" if rejected or artifact["status"] in ("collected_with_unknown", "inconclusive") else "collected",
+        "verifiedCities": len(verified),
+        "unconfirmedCities": max(len(rejected), artifact["expectedCities"] - len(verified)) if artifact["status"] == "inconclusive" else len(rejected),
         "publication": "pending",  # common writer must confirm separately
     }
     if verified:

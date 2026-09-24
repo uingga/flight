@@ -43,6 +43,26 @@ class PublicationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "one_flight_per_city"):
             prepare_publication(self.cache, self.artifact)
 
+    def test_inconclusive_stop_preserves_other_cities_and_publishes_verified_quote(self):
+        self.artifact.update(status="inconclusive", expectedCities=40, attemptedCities=4,
+            stopReason="repeated_outbound_cards_timeout")
+        self.artifact["observations"].extend({"city_code": code, "status": "collector_error",
+            "reason": "stage_timeout", "stage": "outbound_cards_wait"} for code in ("osa", "fuk", "tyo"))
+        prepared = prepare_publication(self.cache, self.artifact)
+        self.assertEqual(prepared["verifiedCount"], 1)
+        self.assertEqual(prepared["cache"]["tripcomPrimary"]["status"], "partial")
+        self.assertEqual(prepared["cache"]["tripcomPrimary"]["unconfirmedCities"], 39)
+        self.assertIn(self.cache["flights"][2], prepared["cache"]["flights"])
+
+    def test_inconclusive_requires_three_card_timeout_observations(self):
+        self.artifact.update(status="inconclusive", expectedCities=40, attemptedCities=3,
+            stopReason="repeated_outbound_cards_timeout",
+            observations=[{"city_code": code, "status": "collector_error",
+                "reason": "stage_timeout", "stage": "outbound_cards_wait"} for code in ("osa", "fuk", "tyo")])
+        self.artifact["observations"][-1]["stage"] = "calendar_wait"
+        with self.assertRaisesRegex(ValueError, "invalid_inconclusive_stop_evidence"):
+            prepare_publication(self.cache, self.artifact)
+
 
 if __name__ == "__main__":
     unittest.main()
