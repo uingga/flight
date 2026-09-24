@@ -14,7 +14,7 @@ assert.deepEqual(ONLINE_CRAWL_CRONS, DAILY_CRAWL_CRONS);
 assert.equal(isSourceScheduledAt('onlinetour',Date.parse('2026-09-10T19:31:00+09:00')),true);
 assert.equal(isSourceScheduledAt('hanatour',Date.parse('2026-09-10T19:31:00+09:00')),true);
 assert.deepEqual(TTANG_CRAWL_CRONS, ['17 21 * * *','23 4 * * *']);
-assert.deepEqual(MRT_CRONS, ['25 21 * * *','40 3 * * *','0 12 * * *']);
+assert.deepEqual(MRT_CRONS, ['35 20 * * *','40 3 * * *','15 11 * * *']);
 for(const [file, expected] of [['scripts/install-source-fallback-task.ps1',['06:17','10:12','13:23','16:31','19:31']],['scripts/install-naver-crawl-task.ps1',['06:17','10:12','13:23','16:31','19:31','20:30']]] as const) {
  const text=fs.readFileSync(file,'utf8');
  assert.deepEqual([...text.matchAll(/New-ScheduledTaskTrigger -Daily -At '([^']+)'/g)].map(m=>m[1]),expected);

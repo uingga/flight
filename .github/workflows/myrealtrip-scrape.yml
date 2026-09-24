@@ -4,11 +4,11 @@ run-name: MyRealTrip Price Scraping · ${{ inputs.trigger_source || github.event
 
 on:
   schedule:
-    # Six aligned rounds: GitHub owns 06:25, 12:40 and 21:00 KST.
+    # Six aligned rounds: GitHub owns 05:35, 12:40 and 20:15 KST.
     # The PC dispatcher owns 09:35, 15:55 and 18:55 KST.
-    - cron: '25 21 * * *'
+    - cron: '35 20 * * *'
     - cron: '40 3 * * *'
-    - cron: '0 12 * * *'
+    - cron: '15 11 * * *'
   workflow_dispatch:
     inputs:
       trigger_source:

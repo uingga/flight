@@ -1,7 +1,8 @@
 import { getScheduledAtForCron } from './crawl-schedule-health.mjs';
 
-export const MRT_CRONS = ['25 21 * * *', '40 3 * * *', '0 12 * * *'];
+export const MRT_CRONS = ['35 20 * * *', '40 3 * * *', '15 11 * * *'];
 export const MRT_WORKFLOW = 'myrealtrip-scrape.yml';
+const MRT_ALIGNED_SCHEDULE_FROM = Date.parse('2026-09-25T05:35:00+09:00');
 export function latestMrtSlot(now = Date.now()) {
     const slots = MRT_CRONS.map(cron => ({ cron, at: getScheduledAtForCron(cron, now) }));
     const slot = slots.sort((a, b) => b.at - a.at)[0];
@@ -67,6 +68,10 @@ export async function reserveMrtSlot(api, slot, sha, currentRunId) {
 export async function checkMrtWatchdog(api, now = Date.now()) {
     const slot = latestMrtSlot(now);
     const result = { ...slot, delayMinutes: Math.floor((now - Date.parse(slot.expectedAt)) / 60000) };
+    // New cron times did not exist yesterday; a deployment must not backfill them as missed collections.
+    if (slot.cron !== '40 3 * * *' && Date.parse(slot.expectedAt) < MRT_ALIGNED_SCHEDULE_FROM) {
+        return { ...result, action: 'none', reason: 'schedule_not_active' };
+    }
     if (result.delayMinutes < 5) return { ...result, action: 'none', reason: 'grace_period' };
     if (await readClaim(api, slot)) return { ...result, action: 'none', reason: 'slot_reserved' };
     const runs = await readRuns(api);

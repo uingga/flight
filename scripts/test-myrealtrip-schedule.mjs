@@ -23,7 +23,8 @@ function fake({ runs = [], claimed = false, readStatus, createStatus = 201 } = {
 test('latest slot honors UTC/KST and midnight', () => {
     assert.equal(resolveMrtSlot({ schedule: '3 7 * * *', createdAt: new Date(now).toISOString(), now }), null);
     assert.equal(slot.expectedAt, '2026-09-08T03:40:00.000Z');
-    assert.equal(latestMrtSlot(Date.parse('2026-09-07T23:00:00Z')).expectedAt, '2026-09-07T21:25:00.000Z');
+    assert.equal(latestMrtSlot(Date.parse('2026-09-07T23:00:00Z')).expectedAt, '2026-09-07T20:35:00.000Z');
+    assert.equal(latestMrtSlot(Date.parse('2026-09-08T11:20:00Z')).expectedAt, '2026-09-08T11:15:00.000Z');
 });
 test('late schedule and watchdog resolve to the same slot; stale/future input rejected', () => {
     assert.deepEqual(resolveMrtSlot({ schedule: '40 3 * * *', createdAt: '2026-09-08T09:00:00Z', now }), slot);
@@ -56,6 +57,21 @@ test('grace period makes zero GitHub requests', async () => {
     const { api, calls } = fake();
     assert.equal((await checkMrtWatchdog(api, Date.parse(slot.expectedAt) + 4 * 60000)).reason, 'grace_period');
     assert.equal(calls.length, 0);
+});
+test('new evening slot is not backfilled before schedule activation', async () => {
+    const { api, calls } = fake();
+    const result = await checkMrtWatchdog(api, Date.parse('2026-09-25T02:30:00+09:00'));
+    assert.equal(result.expectedAt, '2026-09-24T11:15:00.000Z');
+    assert.equal(result.action, 'none');
+    assert.equal(result.reason, 'schedule_not_active');
+    assert.equal(calls.length, 0);
+});
+test('first aligned morning slot becomes eligible after grace period', async () => {
+    const { api, calls } = fake();
+    const result = await checkMrtWatchdog(api, Date.parse('2026-09-25T05:41:00+09:00'));
+    assert.equal(result.expectedAt, '2026-09-24T20:35:00.000Z');
+    assert.equal(result.action, 'dispatched');
+    assert.equal(calls.at(-1).body.inputs.expected_at, result.expectedAt);
 });
 test('active job or failed-but-reserved slot never redispatches', async () => {
     assert.equal((await checkMrtWatchdog(fake({ runs: [{ status: 'queued' }] }).api, now)).reason, 'active_run');
