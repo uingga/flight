@@ -51,6 +51,12 @@ if (overlay.sourceUpdatedAt?.[sourceKey]) {
     };
 }
 if (sourceKey === 'onlinetour' && overlay.onlinePrimary) target.onlinePrimary = overlay.onlinePrimary;
+if (overlay.eveningPrimary?.[sourceKey]) {
+    target.eveningPrimary = {
+        ...(target.eveningPrimary || {}),
+        [sourceKey]: overlay.eveningPrimary[sourceKey],
+    };
+}
 if (sourceKey === 'ttang' && overlay.ttangPrimary) target.ttangPrimary = overlay.ttangPrimary;
 if (sourceKey === 'modetour' && overlay.modetourPrimary) {
     target.modetourPrimary = overlay.modetourPrimary;
