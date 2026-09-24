@@ -1,29 +1,18 @@
 # Current collection schedule
 
-Updated 2026-09-25. All times below are KST scheduled starts, not completion deadlines.
+Updated 2026-09-25 after synchronized installation. All times below are KST
+scheduled starts, not completion deadlines. The first full six-round day still
+needs normal-run verification; no extra crawl was launched for this change.
 
 | Work | Scheduled starts |
 | --- | --- |
 | General GitHub round; ModeTour, OnlineTour and Ttang PC primary after its completion | 06:17, 10:12, 13:23, 16:31, 19:31 |
 | Ttang GitHub collection | 06:17, 13:23 |
 | Ttang PC primary | 06:17, 10:12, 13:23, 16:31, 19:31 |
-| Coordinated PC agency regular round (B: YB/Hana; C: Mode/Ttang) | 20:30 |
-| MyRealTrip | 05:00, 08:55, 12:05, 15:15, 19:15 |
-| Naver PC collection (after each published general round) | 06:17, 10:12, 13:23, 16:31, 19:31 |
-
-## Pending synchronized schedule change
-
-The following starts are prepared in code but are **not operational** until the GitHub workflow,
-A coordinator, B/C worker releases and Windows task triggers have all been installed and checked.
-Times are KST; the MyRealTrip finish times are estimates, not deadlines.
-
-| Work | Planned starts / owner |
-| --- | --- |
-| General agency rounds | 06:17, 10:12, 13:23, 16:31, 19:31 (GitHub plus existing PC primary) |
-| Evening regular agency round | 20:30 (B: YB, Hana, Online; C: Mode, Ttang, Lotte) |
-| MyRealTrip, six rounds | 06:25 GitHub, 09:35 C, 12:40 GitHub, 15:55 C, 18:55 B, 21:00 GitHub |
-| Naver | 06:17, 10:12, 13:23, 16:31, 19:31, 20:30 A/C coordination; the last round uses only the remaining shared 450-navigation daily budget after agency and MRT publication |
-| Trip.com | 06:17, 08:14, 10:12, 11:48, 13:23, 14:57, 16:31, 18:01, 19:31, 20:30; B/C each attempt 10 cities per round. Adjacent rounds cover 40 cities only if both complete. |
+| Coordinated PC agency regular round (B: YB/Hana/Online; C: Mode/Ttang/Lotte) | 20:30 |
+| MyRealTrip (GitHub/C/GitHub/C/B/GitHub) | 06:25, 09:35, 12:40, 15:55, 18:55, 21:00 |
+| Naver A/C coordinated collection (after publication) | 06:17, 10:12, 13:23, 16:31, 19:31, 20:30; the last round uses only the remaining shared 450-navigation daily budget |
+| Trip.com B/C parallel, 10 cities per host per round | 06:17, 08:14, 10:12, 11:48, 13:23, 14:57, 16:31, 18:01, 19:31, 20:30; adjacent successful rounds cover 40 cities |
 
 The 20:30 Naver round is separate from the 19:31 GitHub round. It waits for the
 published 20:30 PC agency result and the exact sixth MyRealTrip completion. It does not
