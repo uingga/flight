@@ -30,16 +30,31 @@ const fmt = (iso: string) => new Date(iso).toLocaleString('ko-KR', { timeZone: '
     assert.equal(new Date(late[19]).toISOString(), new Date(kst('2026-09-05T19:31:00')).toISOString());
 }
 
-// 땡처리는 06:17·13:23만, 마이리얼트립은 축 밖
+// 땡처리는 9월 7일부터 PC 네 회차, 9월 24일 저녁부터 다섯 회차다.
 {
     assert.equal(isSourceScheduledAt('ttang', kst('2026-09-05T06:17:00')), true);
     assert.equal(isSourceScheduledAt('ttang', kst('2026-09-05T10:12:00')), false);
     assert.equal(isSourceScheduledAt('ttang', kst('2026-09-05T13:23:00')), true);
     assert.equal(isSourceScheduledAt('ttang', kst('2026-09-05T16:31:00')), false);
     assert.equal(isSourceScheduledAt('ttang', kst('2026-09-05T19:31:00')), false);
+    assert.equal(isSourceScheduledAt('ttang', kst('2026-09-10T10:12:00')), true);
+    assert.equal(isSourceScheduledAt('ttang', kst('2026-09-10T16:31:00')), true);
+    assert.equal(isSourceScheduledAt('ttang', kst('2026-09-10T19:31:00')), false);
+    assert.equal(isSourceScheduledAt('ttang', kst('2026-09-24T19:31:00')), true);
     assert.equal(isSourceScheduledAt('ybtour', kst('2026-09-05T16:31:00')), true);
     assert.equal(isSourceScheduledAt('ybtour', kst('2026-09-05T19:31:00')), true);
     assert.equal(isSourceScheduledAt('myrealtrip', kst('2026-09-05T06:17:00')), false);
+}
+
+// GitHub의 일정상 미실행은 PC 주 수집의 완료를 뜻하지 않는다.
+{
+    const now = kst('2026-09-24T19:45:00');
+    const githubSkip = event('2026-09-24T19:37:00', { skipped: true, skipReason: 'schedule', value: 0 });
+    const waiting = buildSourceSlotBars({ source: 'ttang', events: [githubSkip], now });
+    assert.equal(waiting.at(-1)?.status, 'pending');
+    const pc = event('2026-09-24T19:42:00', { localFallback: true, value: 600 });
+    const done = buildSourceSlotBars({ source: 'ttang', events: [githubSkip, pc], now });
+    assert.equal(done.at(-1)?.status, 'pc');
 }
 
 // 최종 결과 합치기: 자동 실패 → PC 성공 = PC, 건너뜀만 있으면 건너뜀

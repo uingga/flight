@@ -6,7 +6,7 @@ export function ttangWorkerForSlot(expectedAt,{manual=false}={}) {
     const t=Date.parse(expectedAt);if(!Number.isFinite(t))throw Error('invalid_slot');
     const d=new Date(t+9*3600000),key=d.getUTCHours()+':'+d.getUTCMinutes();
     if(['6:17','13:23'].includes(key))return 'B';
-    if(['10:12','16:31'].includes(key))return 'C';
+    if(['10:12','16:31','19:31'].includes(key))return 'C';
     throw Error('invalid_slot');
 }
 export function assertTtangWorker(host,expectedAt,manual=false,requestedWorker) {

@@ -4,7 +4,7 @@
  * 예전에는 여행사마다 자기 기록만 모아 마지막 16개를 그려서, 카드마다 막대 축이 달랐다
  * (땡처리는 하루 2회, 진행 중 회차는 막대 없음, PC 대체가 끼면 막대 하나 더).
  * 여기서는 일반 예약 회차(06:17·10:12·13:23·16:31·19:31 KST)를 축으로 고정한다.
- * 온라인투어도 같은 다섯 시각을 사용한다. 각 여행사 이벤트를
+ * 온라인투어와 땡처리닷컴 PC 주 수집도 같은 다섯 시각을 사용한다. 각 여행사 이벤트를
  * "그 회차 시각부터 다음 회차 시각 전까지" 창에 귀속시켜 회차당 막대 하나로 합친다.
  * 회차 시작 0~5분 랜덤 지연, 수집 소요 시간, PC 대체·수동 캡처의 늦은 반영은 모두 이 창 안에
  * 들어오므로 예약 시각으로 정규화된다.
@@ -17,6 +17,8 @@ export const SLOT_AXIS_LENGTH = 20;
 
 const KST_OFFSET_MS = 9 * 60 * 60_000;
 const DAY_MS = 86_400_000;
+const TTANG_PC_FOUR_FROM = Date.parse('2026-09-07T00:00:00+09:00');
+const TTANG_PC_FIVE_FROM = Date.parse('2026-09-24T19:31:00+09:00');
 
 export type SourceSlotEvent = {
     timestamp: string;
@@ -76,11 +78,13 @@ function recentSlotTimesForSchedule(now: number, length: number, minutesOfDay: r
     return slots.slice(-length);
 }
 
-/** 여행사가 이 회차에 원래 수집 예정인지. 땡처리는 06:17·13:23만, 마이리얼트립·트립닷컴은 별도 수집. */
+/** 여행사가 이 회차에 원래 수집 예정인지. 땡처리의 과거 2·4회와 현재 5회를 구분한다. */
 export function isSourceScheduledAt(source: string, slotAt: number): boolean {
     if (source === 'myrealtrip' || source === 'tripcom') return false;
-    const kstMinutes = Math.floor(((slotAt + KST_OFFSET_MS) % DAY_MS) / 60_000);
     if (source === 'ttang') {
+        const kstMinutes = Math.floor(((slotAt + KST_OFFSET_MS) % DAY_MS) / 60_000);
+        if (slotAt >= TTANG_PC_FIVE_FROM) return CRAWL_SLOT_MINUTES_KST.some(minutes => minutes === kstMinutes);
+        if (slotAt >= TTANG_PC_FOUR_FROM) return CRAWL_SLOT_MINUTES_KST.slice(0, 4).some(minutes => minutes === kstMinutes);
         return kstMinutes === CRAWL_SLOT_MINUTES_KST[0] || kstMinutes === CRAWL_SLOT_MINUTES_KST[2];
     }
     return true;
@@ -165,7 +169,10 @@ export function buildSourceSlotBars(input: {
         const isLatest = index === slots.length - 1;
         const final = pickFinalEvent(events);
         // 일정상 미실행 기록만 있는 칸은 "예정 없음"과 같은 뜻이므로 자리표시로 그린다.
-        const onlyScheduleSkip = final !== null && final.skipped && final.skipReason === 'schedule';
+        const scheduleSkip = final !== null && final.skipped && final.skipReason === 'schedule';
+        const pcScheduleSkip = scheduleSkip && input.source === 'ttang' && scheduled;
+        const onlyScheduleSkip = scheduleSkip && !pcScheduleSkip;
+        const statusFinal = pcScheduleSkip ? null : final;
         const restFrom = Date.parse(input.scheduledRest?.from || ''), restUntil = Date.parse(input.scheduledRest?.until || '');
         const plannedRest = input.source === 'onlinetour' && Number.isFinite(restFrom) && Number.isFinite(restUntil)
             && restUntil > restFrom && slotAt > restFrom && slotAt < restUntil
@@ -173,7 +180,7 @@ export function buildSourceSlotBars(input: {
                 && !input.currentRun.skippedSources.includes(input.source));
 
         let status: SlotStatus;
-        if (final && !onlyScheduleSkip) status = eventStatus(final);
+        if (statusFinal && !onlyScheduleSkip) status = eventStatus(statusFinal);
         else if (!scheduled || onlyScheduleSkip || plannedRest) status = 'unscheduled';
         else if (slotAt === activeSlot && input.currentRun?.status === 'in_progress'
             && input.currentRun.stage !== 'queued' && input.currentRun.plannedSources.includes(input.source)
@@ -184,8 +191,8 @@ export function buildSourceSlotBars(input: {
         return {
             slotAt: new Date(slotAt).toISOString(),
             status,
-            value: final && !final.skipped ? final.value : null,
-            final,
+            value: statusFinal && !statusFinal.skipped ? statusFinal.value : null,
+            final: statusFinal,
             events,
             scheduled,
             isLatest,

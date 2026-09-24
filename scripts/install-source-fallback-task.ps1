@@ -80,7 +80,7 @@ Register-ScheduledTask `
 
 Write-Output "Installed $TaskName"
 Write-Output "Automation checkout: $AutomationDir"
-Write-Output 'Schedule: 06:17, 10:12, 13:23, 16:31, 19:31 KST for regular sources and OnlineTour; Ttang PC primary retains its four earlier slots'
+Write-Output 'Schedule: 06:17, 10:12, 13:23, 16:31, 19:31 KST for regular sources and Ttang PC primary'
 
 if ($RunNow) {
     Start-ScheduledTask -TaskName $TaskName

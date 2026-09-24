@@ -5,8 +5,8 @@ import { evaluatePcCollection } from './pc-collection-policy.mjs';
 import { ttangListPageEvidence } from '../src/lib/ttang-request-audit.mjs';
 import { crawlOrder, finiteListBudget } from '../src/lib/crawl-order.mjs';
 const off={enabled:false,slotsPerDay:4};
-test('Ttang primary keeps slots and duplicate protection without a five-hour interval',()=>{
-    for(const [time,due] of [['2026-09-06T23:00:00Z',true],['2026-09-07T02:00:00Z',true],['2026-09-07T05:00:00Z',true],['2026-09-07T08:00:00Z',true]]) {
+test('Ttang primary keeps five slots and duplicate protection without a five-hour interval',()=>{
+    for(const [time,due] of [['2026-09-06T23:00:00Z',true],['2026-09-07T02:00:00Z',true],['2026-09-07T05:00:00Z',true],['2026-09-07T08:00:00Z',true],['2026-09-07T11:00:00Z',true]]) {
         const cache={flights:[],fullCrawlUpdatedAt:time};
         const check=delta=>evaluatePcCollection({cache:{...cache,...delta},now:time,config:off,modeConfig:off}).sources;
         assert.equal(check({}).includes('ttang'),due);

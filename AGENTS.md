@@ -14,7 +14,7 @@
 
 - **Stack**: Next.js 14 (App Router), TypeScript, CSS Modules, Playwright/Puppeteer
 - **Deploy**: Vercel (https://tikitikit.kr)
-- **Automation**: GitHub Actions — 일반 워크플로 하루 5회. 땡처리닷컴 GitHub 수집은 그중 06:17·13:23 KST 2회만 실행 (`daily-crawl.yml`)
+- **Automation**: GitHub Actions — 일반 워크플로 하루 5회. 땡처리닷컴 GitHub 보조 수집은 그중 06:17·13:23 KST 2회만 실행하고, PC 주 수집은 일반 회차 5회 모두 실행 (`daily-crawl.yml`)
 - **Package Manager**: npm
 
 ## Data Sources (6 Travel Agencies)
@@ -74,7 +74,7 @@ src/components/Dashboard.tsx (client component)
    요청은 20초 제한·일시 오류 최대 1회 재시도·0.8~1.6초 간격을 적용한다. 원래 비어 있는 개별
    출발지는 허용하지만 모든 출발지가 0건이거나 기존에 있던 출발지가 사라지면 이전 캐시를
    보존하며, 429·CAPTCHA·Calendar 응답 붕괴에는 다음 요청을 보내지 않는다. **이 단계의 가격에는 시간 정보가 없다.**
-2. **가격·시간 갱신 (자동, 하루 2회 KST 07:05/16:03)**: `.github/workflows/myrealtrip-scrape.yml` →
+2. **가격·시간 갱신 (자동, 하루 2회 KST 05:00/12:05)**: `.github/workflows/myrealtrip-scrape.yml` →
    `scripts/scrape-myrealtrip-prices.ts`가 Playwright로 실제 예약 페이지(offers.k1)를 열어
    실시간 가격과 가는편·오는편 출발/도착 시간을 수집. 조회 실패 노선은 캐시에서 삭제.
    각 정규 회차가 시작되면 먼저 인터파크의 `빠르게 떠나는 최저가 해외항공`을 한 번 새로 받고,
@@ -90,9 +90,9 @@ src/components/Dashboard.tsx (client component)
 
 ### 일반 여행사 차단 보호
 
-- 일반 워크플로는 06:17·10:12·13:23·16:31·19:31 KST 하루 5회 실행한다. 노랑풍선·하나투어·모두투어·온라인투어는 5회 모두,
-  땡처리닷컴 GitHub 수집은 06:17·13:23 KST 2회만 요청한다. 10:12·16:31·19:31의 땡처리 데이터는 이전 정상본을
-  보존하고 `일정상 미실행`으로 기록하며 실패 횟수에 넣지 않는다. 워크플로 시작 0~5분,
+- 일반 워크플로는 06:17·10:12·13:23·16:31·19:31 KST 하루 5회 실행한다. 노랑풍선·하나투어·모두투어·온라인투어와
+  땡처리닷컴 PC 주 수집은 5회 모두 실행한다. 땡처리닷컴 GitHub 보조 수집은 06:17·13:23 KST 2회만 요청한다.
+  10:12·16:31·19:31의 GitHub 땡처리 수집은 이전 정상본을 보존하고 `일정상 미실행`으로 기록하며 실패 횟수에 넣지 않는다. 워크플로 시작 0~5분,
   실제 소스 시작 최대 90초를 분산한다.
 - 401·403·429·CAPTCHA, 원본 0건, 직전 정상 원본의 60% 미만 급감은 소스별 차단으로 판정해
   이전 항공권을 유지하고 GitHub 요청을 24시간 중단한다.
