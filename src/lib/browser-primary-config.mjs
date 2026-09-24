@@ -2,4 +2,4 @@
 // Five shared general slots; protection circuits still apply.
 export const ONLINE_BROWSER_PRIMARY = Object.freeze({ enabled: true, slotsPerDay: 5, randomDayInterval: false });
 export const MODE_BROWSER_PRIMARY = Object.freeze({ enabled: true, slotsPerDay: 5 });
-export const TTANG_BROWSER_PRIMARY = Object.freeze({ enabled: true, slotsPerDay: 4 });
+export const TTANG_BROWSER_PRIMARY = Object.freeze({ enabled: true, slotsPerDay: 5 });

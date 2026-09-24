@@ -2,8 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';import os from 'node:os';import path from 'node:path';
 import {ttangWorkerForSlot,assertTtangWorker,beginTtangDispatch} from './ttang-worker-routing.mjs';
-test('four slots have exactly one worker; wrong host and manual C refused',()=>{
- for(const [time,worker] of [['06:17','B'],['10:12','C'],['13:23','B'],['16:31','C']]){
+test('five slots have exactly one worker; wrong host and manual C refused',()=>{
+ for(const [time,worker] of [['06:17','B'],['10:12','C'],['13:23','B'],['16:31','C'],['19:31','C']]){
   const slot='2026-09-16T'+time+':00+09:00';assert.equal(ttangWorkerForSlot(slot),worker);
   assert.equal(assertTtangWorker(worker==='B'?'DESKTOP-OFFICE':'DESKTOP-1PPFUR3',slot,false,worker),worker);
   assert.throws(()=>assertTtangWorker(worker==='C'?'DESKTOP-OFFICE':'DESKTOP-1PPFUR3',slot,false,worker));
