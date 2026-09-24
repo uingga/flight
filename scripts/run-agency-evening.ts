@@ -11,8 +11,9 @@ import { eveningPlan, eveningSlotFor } from './agency-evening-policy.mjs';
 import { AGENCY_EVENING_FILES, AGENCY_EVENING_PROTOCOL } from './agency-evening-worker.mjs';
 import { TTANG_PROTOCOL, validateTtangEvidence } from './ttang-primary-policy.mjs';
 import { MODE_REMOTE_PROTOCOL, validateModeBundle } from '../src/lib/modetour-operational';
+import { validateOperationalCatalogue } from '../src/lib/onlinetour-operational';
 
-const WORKER = 'C:/Users/ynal/AppData/Local/Tikitikit/agency-evening-v1/scripts/agency-evening-runtime.mjs';
+const WORKER = 'C:/Users/ynal/AppData/Local/Tikitikit/agency-evening-v2/scripts/agency-evening-runtime.mjs';
 
 function sshArgs(host: string): string[] {
     if (host === 'DESKTOP-OFFICE') return ['-o', 'BatchMode=yes', '-o', 'StrictHostKeyChecking=yes',
@@ -38,7 +39,7 @@ async function dispatch(host: string, request: any): Promise<any> {
             child.kill();
             reject(new Error(reason));
         };
-        const timer = setTimeout(() => fail('remote_evening_completion_unknown'), 95 * 60_000);
+        const timer = setTimeout(() => fail('remote_evening_completion_unknown'), 150 * 60_000);
         child.on('error', () => fail('remote_evening_transport_failed'));
         child.stdin.on('error', () => fail('remote_evening_transport_failed'));
         child.stderr.on('data', () => {});
@@ -88,6 +89,13 @@ export async function verifyReply(reply: any, request: any, initialCache: any): 
             startedAt: item?.startedAt, completedAt: item?.completedAt, cleanupConfirmed: true,
             cache: reply.cache, manifest: item?.manifest, partial: item?.partial }, request.id);
     }
+    if (reply.sources.includes('onlinetour') && reply.results.find((item: any) => item.source === 'onlinetour')?.status === 'success') {
+        const item = reply.evidence?.onlinetour;
+        const flights = validateOperationalCatalogue(item?.summary, item?.raw, item?.flights,
+            Date.now(), initialCache.scrapedCounts?.onlinetour);
+        const observed = reply.cache.flights.filter((flight: any) => flight.source === 'onlinetour');
+        if (flights.length === 0 && observed.length !== 0) throw new Error('unverified_online_empty');
+    }
 }
 
 async function main() {
@@ -127,6 +135,7 @@ async function main() {
         let merged = structuredClone(cache);
         let logs = structuredClone(files['crawl-log.json']);
         const sources: string[] = [];
+        const verifiedEmptySources: string[] = [];
         const failures: string[] = [];
         for (let i = 0; i < results.length; i++) {
             const item = results[i];
@@ -135,18 +144,23 @@ async function main() {
             try { await verifyReply(item.value, requests[i], cache); }
             catch { failures.push(groups[i].host); continue; }
             for (const source of item.value.sources) {
-                merged = mergeCacheSource(merged, item.value.cache, source);
+                const verifiedEmpty = source === 'onlinetour'
+                    && item.value.results.find((result: any) => result.source === source)?.status === 'success'
+                    && item.value.evidence?.onlinetour?.flights?.length === 0
+                    && item.value.cache.flights.every((flight: any) => flight.source !== source);
+                merged = mergeCacheSource(merged, item.value.cache, source, verifiedEmpty);
+                if (verifiedEmpty) verifiedEmptySources.push(source);
                 sources.push(source);
             }
             logs = mergeCrawlLogHistories(logs, item.value.logs, item.value.sources).history;
         }
-        fs.writeFileSync(path.join(runDir, 'outcome.json'), JSON.stringify({ slot, sources, failures }));
+        fs.writeFileSync(path.join(runDir, 'outcome.json'), JSON.stringify({ slot, sources, failures, verifiedEmptySources }));
         if (!sources.length) throw new Error('evening_no_verified_results');
         const cachePath = path.join(runDir, 'cache.json');
         const logPath = path.join(runDir, 'crawl-log.json');
         fs.writeFileSync(cachePath, JSON.stringify(merged));
         fs.writeFileSync(logPath, JSON.stringify(logs));
-        console.log(JSON.stringify({ status: failures.length ? 'partial' : 'verified', slot, sources,
+        console.log(JSON.stringify({ status: failures.length ? 'partial' : 'verified', slot, sources, verifiedEmptySources,
             failedHosts: failures, cachePath, logPath }));
     } finally { fs.closeSync(fd); fs.unlinkSync(lock); }
 }

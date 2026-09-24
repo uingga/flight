@@ -30,3 +30,12 @@ test('A rejects stale, reordered, or unproved results before merging', async () 
     failed.results = [{ source: 'ybtour', status: 'failed_preserved' }];
     await assert.rejects(verifyReply(failed, request, { flights: [] }), /failure/);
 });
+
+test('A refuses an online evening result without complete catalogue evidence', async () => {
+    const onlineRequest = { ...request, sources: ['onlinetour'] };
+    const reply = valid();
+    reply.sources = ['onlinetour'];
+    reply.results = [{ source: 'onlinetour', status: 'success' }];
+    reply.cache.sourceUpdatedAt = { onlinetour: '2026-09-18T11:45:00.000Z' };
+    await assert.rejects(verifyReply(reply, onlineRequest, { flights: [] }), /AssertionError|Cannot read|unverified|ERR_ASSERTION/);
+});

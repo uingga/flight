@@ -4,10 +4,11 @@ run-name: MyRealTrip Price Scraping · ${{ inputs.trigger_source || github.event
 
 on:
   schedule:
-    # 오전 1회·오후 1회. GitHub Actions 정각 혼잡을 피하도록 분산한다.
-    # 일반 여행사 반영보다 앞서 완료하도록 05:00 / 12:05 KST에 시작한다.
-    - cron: '0 20 * * *'
-    - cron: '5 3 * * *'
+    # Six aligned rounds: GitHub owns 06:25, 12:40 and 21:00 KST.
+    # The PC dispatcher owns 09:35, 15:55 and 18:55 KST.
+    - cron: '25 21 * * *'
+    - cron: '40 3 * * *'
+    - cron: '0 12 * * *'
   workflow_dispatch:
     inputs:
       trigger_source:

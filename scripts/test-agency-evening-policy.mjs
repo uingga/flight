@@ -25,10 +25,18 @@ test('the 19:31 result must be present without pretending there was a 20:30 GitH
     assert.equal(eveningAdmission({ slot, source: 'ttang', now, cache: cache() }).allowed, true);
 });
 
-test('B and C each own exactly two evening agencies', () => {
+test('an already admitted serial round can reach its third source without new slot admission', () => {
+    assert.equal(eveningAdmission({ slot, source: 'onlinetour', now: Date.parse(slot) + 125 * 60_000,
+        cache: cache(), windowMinutes: 150 }).allowed, true);
+    assert.equal(eveningAdmission({ slot, source: 'onlinetour', now: Date.parse(slot) + 150 * 60_000,
+        cache: cache(), windowMinutes: 150 }).reason, 'outside_evening_window');
+    assert.throws(() => assertEveningSlot(slot, Date.parse(slot) + 125 * 60_000), /outside_evening_window/);
+});
+
+test('B and C each own exactly three evening agencies', () => {
     assert.deepEqual(eveningPlan(slot, now, cache()), [
-        { host: 'DESKTOP-OFFICE', sources: ['ybtour', 'hanatour'] },
-        { host: 'DESKTOP-1PPFUR3', sources: ['modetour', 'ttang'] },
+        { host: 'DESKTOP-OFFICE', sources: ['ybtour', 'hanatour', 'onlinetour'] },
+        { host: 'DESKTOP-1PPFUR3', sources: ['modetour', 'ttang', 'lottetour'] },
     ]);
     assert.equal(assertEveningHost('ttang', 'DESKTOP-1PPFUR3'), 'DESKTOP-1PPFUR3');
     assert.throws(() => assertEveningHost('ttang', 'DESKTOP-OFFICE'), /host_mismatch/);

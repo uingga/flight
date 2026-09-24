@@ -231,10 +231,10 @@ test('the standalone today-pick workflow is manual-only', () => {
     assert.doesNotMatch(workflow, /^\s*- cron:/m);
 });
 
-test('MyRealTrip runs two scheduled crawls daily and manual runs need no force bypass', () => {
+test('MyRealTrip runs three scheduled GitHub crawls daily and manual runs need no force bypass', () => {
     const workflow = fs.readFileSync('.github/workflows/myrealtrip-scrape.yml', 'utf8');
     const workflowCrons = [...workflow.matchAll(/^\s*- cron: '([^']+)'/gm)].map(match => match[1]);
-    assert.deepEqual(workflowCrons.sort(), ['0 20 * * *', '5 3 * * *'].sort());
+    assert.deepEqual(workflowCrons.sort(), ['25 21 * * *', '40 3 * * *', '0 12 * * *'].sort());
     assert.doesNotMatch(workflow, /github\.event\.schedule\s*==/);
     assert.doesNotMatch(workflow, /FORCE_MYREALTRIP|inputs\.force/);
     assert.match(workflow, /cp data\/crawl-log\.json \/tmp\/mrt-session-crawl-log\.json/);
@@ -290,10 +290,9 @@ test('the Windows Naver task splits fresh and recovered sources under one daily 
     const installer = fs.readFileSync('scripts/install-naver-crawl-task.ps1', 'utf8');
     const crawler = fs.readFileSync('scripts/crawl-naver.ts', 'utf8');
 
-    for (const time of ['06:17', '10:12', '13:23', '16:31', '19:31']) {
+    for (const time of ['06:17', '10:12', '13:23', '16:31', '19:31', '20:30']) {
         assert.match(installer, new RegExp(`New-ScheduledTaskTrigger -Daily -At '${time}'`));
     }
-    assert.doesNotMatch(installer, /New-ScheduledTaskTrigger -Daily -At '20:30'/);
     assert.match(installer, /-Argument .* -Scheduled/);
     assert.match(installer, /System32\\WindowsPowerShell\\v1\.0\\powershell\.exe/);
     assert.doesNotMatch(installer, /-WorkingDirectory/);

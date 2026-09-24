@@ -3,8 +3,10 @@
 const HOSTS = Object.freeze({
     ybtour: 'DESKTOP-OFFICE',
     hanatour: 'DESKTOP-OFFICE',
+    onlinetour: 'DESKTOP-OFFICE',
     modetour: 'DESKTOP-1PPFUR3',
     ttang: 'DESKTOP-1PPFUR3',
+    lottetour: 'DESKTOP-1PPFUR3',
 });
 
 const SOURCES = Object.freeze(Object.keys(HOSTS));
@@ -19,7 +21,7 @@ export function eveningSlotFor(now = Date.now()) {
 export function assertEveningSlot(slot, now = Date.now(), windowMinutes = 15) {
     if (typeof slot !== 'string' || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:00\.000Z$/.test(slot)
         || !Number.isFinite(Date.parse(slot)) || new Date(slot).toISOString() !== slot
-        || !Number.isFinite(now) || !Number.isInteger(windowMinutes) || windowMinutes < 1 || windowMinutes > 90)
+        || !Number.isFinite(now) || !Number.isInteger(windowMinutes) || windowMinutes < 1 || windowMinutes > 180)
         throw new Error('invalid_evening_slot');
     if (slot !== eveningSlotFor(Date.parse(slot))) throw new Error('not_2030_kst_slot');
     const age = now - Date.parse(slot);
@@ -35,8 +37,8 @@ export function assertEveningHost(source, hostname) {
 
 const blockedUntil = (value, now) => value != null && (!Number.isFinite(Date.parse(value)) || Date.parse(value) > now);
 
-export function eveningAdmission({ slot, source, now = Date.now(), cache, localCooldown } = {}) {
-    try { assertEveningSlot(slot, now, 90); }
+export function eveningAdmission({ slot, source, now = Date.now(), cache, localCooldown, windowMinutes = 90 } = {}) {
+    try { assertEveningSlot(slot, now, windowMinutes); }
     catch { return { allowed: false, reason: 'outside_evening_window' }; }
     if (!SOURCES.includes(source)) return { allowed: false, reason: 'unknown_evening_source' };
     if (!Array.isArray(cache?.flights)) return { allowed: false, reason: 'invalid_cache' };
@@ -49,7 +51,8 @@ export function eveningAdmission({ slot, source, now = Date.now(), cache, localC
 
     const circuit = cache.sourceCircuits?.[source];
     const primary = source === 'modetour' ? cache.modetourPrimary
-        : source === 'ttang' ? cache.ttangPrimary : cache.eveningPrimary?.[source];
+        : source === 'ttang' ? cache.ttangPrimary
+        : source === 'onlinetour' ? cache.onlinePrimary : cache.eveningPrimary?.[source];
     if ([circuit?.nextProbeAt, circuit?.localFallback?.nextProbeAt, primary?.nextProbeAt,
         localCooldown?.nextProbeAt].some(value => blockedUntil(value, now)))
         return { allowed: false, reason: 'source_cooldown' };
@@ -62,8 +65,8 @@ export function eveningAdmission({ slot, source, now = Date.now(), cache, localC
 export function eveningPlan(slot, now = Date.now(), cache) {
     assertEveningSlot(slot, now);
     return [
-        { host: HOSTS.ybtour, sources: ['ybtour', 'hanatour'] },
-        { host: HOSTS.modetour, sources: ['modetour', 'ttang'] },
+        { host: HOSTS.ybtour, sources: ['ybtour', 'hanatour', 'onlinetour'] },
+        { host: HOSTS.modetour, sources: ['modetour', 'ttang', 'lottetour'] },
     ].map(group => ({ ...group, sources: group.sources.filter(source =>
         eveningAdmission({ slot, source, now, cache }).allowed) }));
 }

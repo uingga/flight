@@ -10,13 +10,11 @@ import {githubMrtClient} from '../src/lib/myrealtrip-schedule.mjs';
 import {acquireMrt,assertMrtOwner,releaseMrt} from '../src/lib/mrt-shared-admission.mjs';
 import {mergeCacheSource} from '../src/lib/merge-cache-source.mjs';
 import {mergeCrawlLogHistories} from './merge-crawl-log.mjs';
+import {mrtPcTarget} from '../src/lib/mrt-round-readiness.mjs';
 
 export function cSlot(now=Date.now()) {
- const k=new Date(now+9*3600000),day=k.toISOString().slice(0,10);
- if(now<Date.parse('2026-09-16T06:15:00Z'))return null; // First approved slot: Sep16 15:15 KST; no morning replay.
- for(const clock of ['08:55','15:15']){const time=Date.parse(day+'T'+clock+':00+09:00');
-  if(now>=time&&now-time<15*60000)return new Date(time).toISOString();}
- return null;
+ const target=mrtPcTarget(now);
+ return target?.host==='C'?target.slot:null;
 }
 export async function readMrtJson(api,file,ref){
  let r=await api('contents/data/'+file+'?ref='+ref);
@@ -72,14 +70,15 @@ export async function publishMrtResult(api,ticket,reply,{env=process.env,broker}
 }
 async function main(){
  if(process.argv[2]!=='--scheduled')throw Error('scheduled mode required');
- const slot=cSlot();if(!slot){console.log('outside eligible slot; no requests');return;}
+ const target=mrtPcTarget(),slot=target?.slot;
+ if(!target){console.log('outside eligible slot; no requests');return;}
  const broker=configuredMrtWriter();
  if(broker)await broker('readInputs'); // Verify scoped authentication before admission or collection.
  const token=installationTokenProvider({appId:4952321,installationId:161894104,repository:'uingga/flight',
   privateKey:fs.readFileSync(path.join(os.homedir(),'AppData/Local/Tikitikit/publisher-auth/github-app.private-key.pem'),'utf8')});
  const api=githubMrtClient(token);
  const head=await api('git/ref/heads/main');if(head.status!==200)throw Error('main unavailable');
- const ticket=await acquireMrt(api,{slot,host:'C',sha:head.data.object.sha});if(!ticket){console.log('shared admission busy or slot spent');return;}
+ const ticket=await acquireMrt(api,{slot,host:target.host,sha:head.data.object.sha});if(!ticket){console.log('shared admission busy or slot spent');return;}
  const id=randomUUID(),dir=path.join(os.homedir(),'AppData/Local/Tikitikit/mrt-dispatch',id);fs.mkdirSync(dir,{recursive:true});
  fs.writeFileSync(path.join(dir,'ticket.json'),JSON.stringify(ticket));
  const current=await api('git/ref/heads/main');if(current.status!==200)throw Error('inputs unavailable');
@@ -93,10 +92,11 @@ async function main(){
  await assertMrtOwner(api,ticket);
  const request={protocol:'mrt-c-v1',id,slot,createdAt:new Date().toISOString(),files};
  const reply=await new Promise((resolve,reject)=>{
-  const args=['-F','NUL','-o','BatchMode=yes','-o','IdentitiesOnly=yes','-o','StrictHostKeyChecking=yes','-o','GlobalKnownHostsFile=NUL',
+  const args=target.host==='B'?['-o','BatchMode=yes','-o','ConnectTimeout=15','-o','StrictHostKeyChecking=yes','tikitikit-pc-b',
+   'node C:/Users/ynal/AppData/Local/Tikitikit/agency-evening-v2/scripts/mrt-c-worker.mjs --scheduled']:['-F','NUL','-o','BatchMode=yes','-o','IdentitiesOnly=yes','-o','StrictHostKeyChecking=yes','-o','GlobalKnownHostsFile=NUL',
    '-o','UserKnownHostsFile=C:/Users/ynal/AppData/Local/Temp/tikitikit-ssh-setup-20260915/known_hosts_c',
    '-i','C:/Users/ynal/.ssh/tikitikit_a_to_c_ed25519','ynal@100.87.173.95',
-   'C:/Users/ynal/AppData/Local/hermes/node/node.exe C:/Users/ynal/AppData/Local/Tikitikit/ac-staged-20260916/scripts/mrt-c-worker.mjs --scheduled'];
+   'C:/Users/ynal/AppData/Local/hermes/node/node.exe C:/Users/ynal/AppData/Local/Tikitikit/agency-evening-v2/scripts/mrt-c-worker.mjs --scheduled'];
   const child=spawn('ssh.exe',args,{windowsHide:true,stdio:['pipe','pipe','pipe']});let bytes=0;const chunks=[];
   const timer=setTimeout(()=>{child.kill();reject(Error('remote completion unknown'));},185*60000);
   child.on('error',()=>{clearTimeout(timer);reject(Error('remote transport failed'));});child.stdin.on('error',()=>{});child.stderr.on('data',()=>{});

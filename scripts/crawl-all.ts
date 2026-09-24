@@ -309,9 +309,22 @@ async function main() {
                 },
             },
             { name: '온라인투어', key: 'onlinetour' as const, fn: async () => {
-                if (ONLINE_BROWSER_PRIMARY.enabled && !onlineGithubFallback && process.env.ONLINETOUR_BROWSER_REMOTE !== '1') {
+                if (ONLINE_BROWSER_PRIMARY.enabled && !onlineGithubFallback
+                    && process.env.ONLINETOUR_BROWSER_REMOTE !== '1' && !process.env.ONLINETOUR_SAVED_EVIDENCE) {
                     onlineGithubFallbackSafe = true; // Configuration failure, before contacting B.
                     throw new Error('온라인투어 B PC 연결 설정 없음 — 기존 데이터 보존');
+                }
+                if (process.env.ONLINETOUR_SAVED_EVIDENCE) {
+                    if (!localBrowserPilot || !onlinePcPrimary || requestedSources?.size !== 1
+                        || !requestedSources.has('onlinetour') || path.resolve(getCrawlDataDir()) === path.resolve('data'))
+                        throw new Error('online_saved_evidence_requires_private_pc_slot');
+                    const { validateOperationalCatalogue } = await import('../src/lib/onlinetour-operational');
+                    const evidence = JSON.parse(fs.readFileSync(process.env.ONLINETOUR_SAVED_EVIDENCE, 'utf8'));
+                    const flights = validateOperationalCatalogue(evidence.summary, evidence.raw, evidence.flights,
+                        Date.now(), prevCache?.scrapedCounts?.onlinetour);
+                    onlineVerifiedEmpty = flights.length === 0;
+                    onlineGithubFallbackSafe = true;
+                    return flights;
                 }
                 if (localSourceFallback && process.env.ONLINETOUR_BROWSER_REMOTE === '1') {
                     const { scrapeOnlineTourRemote } = await import('../src/lib/scrapers/onlinetour-remote');

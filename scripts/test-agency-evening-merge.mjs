@@ -16,3 +16,11 @@ test('an evening source merge preserves other agencies and the attempted-slot ma
     assert.equal(merged.eveningPrimary.hanatour.lastAttemptAt, '2026-09-24T11:30:00.000Z');
     assert.equal(merged.sourceUpdatedAt.ttang, '2026-09-25T10:00:00.000Z');
 });
+
+test('verified empty OnlineTour can clear only its own inventory with explicit proof', () => {
+    const target = { flights: [{ id: 'online', source: 'onlinetour' }, { id: 'yb', source: 'ybtour' }] };
+    const overlay = { flights: [], sourceUpdatedAt: { onlinetour: '2026-09-25T12:00:00.000Z' } };
+    assert.throws(() => mergeCacheSource(structuredClone(target), overlay, 'onlinetour'), /empty source/);
+    const merged = mergeCacheSource(structuredClone(target), overlay, 'onlinetour', true);
+    assert.deepEqual(merged.flights.map(flight => flight.id), ['yb']);
+});

@@ -67,8 +67,12 @@ try {
     $Pull | ForEach-Object { "$_" | Add-Content -Encoding utf8 $LogFile }
     if ($LASTEXITCODE -ne 0) { throw 'main_refresh_failed_after_evening_result_preserved' }
     foreach ($Source in $Sources) {
-        & node scripts/merge-cache-source.mjs $CachePath $OverlayCache $Source 2>&1 |
-            ForEach-Object { "$_" | Add-Content -Encoding utf8 $LogFile }
+        $PreviousAllowEmptySource = $env:ALLOW_EMPTY_SOURCE
+        try {
+            $env:ALLOW_EMPTY_SOURCE = if ($Source -eq 'onlinetour' -and @($Result.verifiedEmptySources) -contains $Source) { '1' } else { '0' }
+            & node scripts/merge-cache-source.mjs $CachePath $OverlayCache $Source 2>&1 |
+                ForEach-Object { "$_" | Add-Content -Encoding utf8 $LogFile }
+        } finally { $env:ALLOW_EMPTY_SOURCE = $PreviousAllowEmptySource }
         if ($LASTEXITCODE -ne 0) { throw "evening_source_merge_failed_$Source" }
     }
     & node scripts/merge-crawl-log.mjs $LogPath $OverlayLog ($Sources -join ',') 2>&1 |

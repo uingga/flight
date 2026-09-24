@@ -3,17 +3,20 @@ import os from 'node:os';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {spawnSync} from 'node:child_process';
+import {mrtPcTarget} from '../src/lib/mrt-round-readiness.mjs';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const allowed=['all-flights-cache.json','interpark-prices.json','crawl-log.json','gid-map.json'];
 async function main(){
- if(os.hostname().toUpperCase()!=='DESKTOP-1PPFUR3'||process.argv[2]!=='--scheduled')throw Error('wrong host or mode');
+ const host=os.hostname().toUpperCase();
+ if(!['DESKTOP-OFFICE','DESKTOP-1PPFUR3'].includes(host)||process.argv[2]!=='--scheduled')throw Error('wrong host or mode');
  let size=0;const chunks=[];for await(const c of process.stdin){size+=c.length;if(size>20000000)throw Error('input too large');chunks.push(c);}
  const input=JSON.parse(Buffer.concat(chunks).toString());
+ if(mrtPcTarget(Date.parse(input.slot))?.host!==(host==='DESKTOP-OFFICE'?'B':'C'))throw Error('wrong MRT host for slot');
  const reply=await executeMrtWorker(input);
  process.stdout.write(JSON.stringify(reply));
 }
 export async function executeMrtWorker(input,{state=path.join(os.homedir(),'AppData/Local/Tikitikit/mrt-worker'),collector=spawnSync}={}) {
- if(input.protocol!=='mrt-c-v1'||!/^\d{4}-\d{2}-\d{2}T(?:23:55|06:15):00\.000Z$/.test(input.slot)||!/^[a-f0-9-]{36}$/.test(input.id)||Math.abs(Date.now()-Date.parse(input.createdAt))>300000||!Number.isFinite(Date.parse(input.createdAt)))throw Error('invalid request');
+ if(input.protocol!=='mrt-c-v1'||!mrtPcTarget(Date.parse(input.slot))||!/^[a-f0-9-]{36}$/.test(input.id)||Math.abs(Date.now()-Date.parse(input.createdAt))>300000||!Number.isFinite(Date.parse(input.createdAt)))throw Error('invalid request');
  if(!input.files||!Array.isArray(input.files['all-flights-cache.json']?.flights)||Object.keys(input.files).some(x=>!allowed.includes(x)))throw Error('invalid inputs');
  fs.mkdirSync(state,{recursive:true});
  const lock=path.join(state,'active.lock'),fd=fs.openSync(lock,'wx');

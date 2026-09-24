@@ -2,18 +2,32 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {evaluateLocalNaverRun,buildLocalNaverState} from './local-naver-run-policy.mjs';
 import {roundBarrier,performRound} from './run-naver-round-bridge.mjs';
-import {latestAgencyRound} from '../src/lib/naver-round-handoff.mjs';
+import {latestAgencyRound,evaluateRoundContinuation} from '../src/lib/naver-round-handoff.mjs';
 const round='2026-09-17T01:12:00.000Z',now=Date.parse('2026-09-17T01:40:00Z');
 const sources=['ybtour','hanatour','modetour','onlinetour','ttang','myrealtrip','lottetour'];
 const cache={fullCrawlUpdatedAt:'2026-09-17T01:35:00Z',sourceUpdatedAt:Object.fromEntries(sources.map(s=>[s,'2026-09-17T01:30:00Z']))};
 const state={kstDate:'2026-09-17',phase:'success',navigationsUsed:71,completedSources:sources};
 const evaluate=(extra={})=>evaluateLocalNaverRun({now,cache,state,completedRound:round,...extra});
-test('Naver follows all five general slots, including 19:31 instead of 20:30',()=>{
+test('Naver follows five general slots and the separate 20:30 PC slot',()=>{
  const on=(time)=>latestAgencyRound(Date.parse(`2026-09-24T${time}:00+09:00`));
  assert.equal(on('06:17'),'2026-09-23T21:17:00.000Z');
  assert.equal(on('19:30'),'2026-09-24T07:31:00.000Z');
  assert.equal(on('19:31'),'2026-09-24T10:31:00.000Z');
- assert.equal(on('20:30'),'2026-09-24T10:31:00.000Z');
+ assert.equal(on('20:30'),'2026-09-24T11:30:00.000Z');
+});
+test('20:30 requires a published evening source and spends only the remaining budget',()=>{
+ const evening='2026-09-24T11:30:00.000Z';
+ const ready={...cache,fullCrawlUpdatedAt:'2026-09-24T10:00:00.000Z',
+  sourceUpdatedAt:{...cache.sourceUpdatedAt,ybtour:'2026-09-24T11:50:00.000Z'},
+  eveningPrimary:{ybtour:{status:'success',lastAttemptAt:'2026-09-24T11:31:00.000Z'}}};
+ const when=Date.parse('2026-09-24T12:30:00.000Z');
+ const spent={kstDate:'2026-09-24',phase:'success',navigationsUsed:440,completedSources:[]};
+ const decision=evaluateRoundContinuation({now:when,cache:ready,state:spent,round:evening,totalBudget:450});
+ assert.equal(decision.shouldRun,true);assert.equal(decision.navigationBudget,10);
+ assert.equal(evaluateRoundContinuation({now:when,cache:ready,state:{...spent,navigationsUsed:450},round:evening,totalBudget:450}).reason,'daily_budget_exhausted');
+ assert.equal(evaluateRoundContinuation({now:when,cache:{...ready,eveningPrimary:{}},state:spent,round:evening,totalBudget:450}).reason,'recovery_upstream_pending');
+ assert.equal(roundBarrier({round:evening,cache:ready,pc:{state:'Ready',result:0,startedAt:evening},mrtDone:true}),true);
+ assert.equal(roundBarrier({round:evening,cache:{...ready,eveningPrimary:{}},pc:{state:'Ready',result:0,startedAt:evening},mrtDone:true}),false);
 });
 test('actual existing policy continues a new round without resetting spent 71',()=>{
  const p=evaluate();assert.equal(p.shouldRun,true);assert.equal(p.navigationBudget,129);assert.equal(p.skipTodayPick,true);

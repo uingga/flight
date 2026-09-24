@@ -66,7 +66,8 @@ $Triggers = @(
     (New-ScheduledTaskTrigger -Daily -At '10:12'),
     (New-ScheduledTaskTrigger -Daily -At '13:23'),
     (New-ScheduledTaskTrigger -Daily -At '16:31'),
-    (New-ScheduledTaskTrigger -Daily -At '19:31')
+    (New-ScheduledTaskTrigger -Daily -At '19:31'),
+    (New-ScheduledTaskTrigger -Daily -At '20:30')
 )
 $Settings = New-ScheduledTaskSettingsSet `
     -StartWhenAvailable `
@@ -92,7 +93,7 @@ Register-ScheduledTask `
 
 Write-Output "Installed $TaskName"
 Write-Output "Automation checkout: $AutomationDir"
-Write-Output 'Schedule: 06:17, 10:12, 13:23, 16:31, 19:31 KST (after each published agency round)'
+Write-Output 'Schedule: 06:17, 10:12, 13:23, 16:31, 19:31, 20:30 KST (after each published agency round; remaining daily budget only)'
 
 if ($RunNow) {
     Start-ScheduledTask -TaskName $TaskName

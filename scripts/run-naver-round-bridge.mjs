@@ -6,7 +6,7 @@ import {fileURLToPath} from 'node:url';
 import {installationTokenProvider} from '../src/lib/writer-app-token.mjs';
 import {githubMrtClient} from '../src/lib/myrealtrip-schedule.mjs';
 import {inspectNaverMrtCompletion} from '../src/lib/naver-mrt-completion.mjs';
-import {latestAgencyRound,evaluateRoundContinuation} from '../src/lib/naver-round-handoff.mjs';
+import {latestAgencyRound,evaluateRoundContinuation,isEveningRound,hasPublishedEveningSource} from '../src/lib/naver-round-handoff.mjs';
 import {createBrokerClient} from '../src/lib/writer-broker-client.mjs';
 import {requestHttp} from '../src/lib/naver-http-request.mjs';
 import {waitForCache} from './wait-for-flight-api-cache.mjs';
@@ -14,7 +14,8 @@ const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 export const roundBridgeEnabled=(now=Date.now())=>now>=Date.parse('2026-09-16T07:31:00Z');
 export function roundBarrier({round,cache,pc,mrtDone}){
  if(!round||!mrtDone||!pc||pc.state!=='Ready'||pc.result!==0||!(Date.parse(pc.startedAt)>=Date.parse(round)))return false;
- return Date.parse(cache?.fullCrawlUpdatedAt)>=Date.parse(round);
+ return isEveningRound(round)?hasPublishedEveningSource(cache,round)
+  :Date.parse(cache?.fullCrawlUpdatedAt)>=Date.parse(round);
 }
 export async function performRound({round,run,verify,publishReceipt}){
  const exit=await run(round);
@@ -64,8 +65,9 @@ async function main(){
   // No stashing: unexpected code conflicts must be reviewed, never hidden by automation.
   if(!coordinated){const sync=execute('git',['pull','--ff-only','origin','main']);if(sync.status!==0)throw Error('runtime refresh failed');}
   const cache=coordinated?(await broker('readInputs',{identity:{worker:'A',run:'round-read',contract:'naver-ac-v1'}})).cache:JSON.parse(fs.readFileSync(path.join(root,'data/all-flights-cache.json'),'utf8'));
+  const sourceTask=isEveningRound(round)?'TikitikitAgencyEvening':'TikitikitBlockedSourceCrawl';
   const inspection=execute(ps,['-NoProfile','-NonInteractive','-Command',
-   "$t=Get-ScheduledTask -TaskName TikitikitBlockedSourceCrawl -ErrorAction Stop; $i=$t|Get-ScheduledTaskInfo -ErrorAction Stop; [pscustomobject]@{state=[string]$t.State;result=[long]$i.LastTaskResult;startedAt=$i.LastRunTime.ToUniversalTime().ToString('o')}|ConvertTo-Json -Compress"]);
+   `$t=Get-ScheduledTask -TaskName ${sourceTask} -ErrorAction Stop; $i=$t|Get-ScheduledTaskInfo -ErrorAction Stop; [pscustomobject]@{state=[string]$t.State;result=[long]$i.LastTaskResult;startedAt=$i.LastRunTime.ToUniversalTime().ToString('o')}|ConvertTo-Json -Compress`]);
   if(inspection.status!==0)throw Error('source task status unavailable');
   const pc=JSON.parse(inspection.stdout.trim());
   const mrt=await inspectNaverMrtCompletion({api,round,cache,now});

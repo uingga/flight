@@ -1,23 +1,29 @@
 import assert from 'node:assert/strict';
 import {test} from 'node:test';
-import {mrtRoundForGeneralSlot, evaluateMrtRoundReadiness} from '../src/lib/mrt-round-readiness.mjs';
+import {mrtRoundForGeneralSlot, mrtPcTarget, evaluateMrtRoundReadiness} from '../src/lib/mrt-round-readiness.mjs';
 
 const generalSlot = '2026-09-16T07:31:00.000Z';
-test('five KST rounds assign the expected host and earlier start', () => {
+test('six KST rounds assign the expected host and aligned start', () => {
     for (const [general, start, host] of [
-        ['2026-09-15T21:17:00.000Z','2026-09-15T20:00:00.000Z','github'],
-        ['2026-09-16T01:12:00.000Z','2026-09-15T23:55:00.000Z','C'],
-        ['2026-09-16T04:23:00.000Z','2026-09-16T03:05:00.000Z','github'],
-        [generalSlot,'2026-09-16T06:15:00.000Z','C'],
-        ['2026-09-16T10:31:00.000Z','2026-09-16T10:15:00.000Z','B'],
+        ['2026-09-15T21:17:00.000Z','2026-09-15T21:25:00.000Z','github'],
+        ['2026-09-16T01:12:00.000Z','2026-09-16T00:35:00.000Z','C'],
+        ['2026-09-16T04:23:00.000Z','2026-09-16T03:40:00.000Z','github'],
+        [generalSlot,'2026-09-16T06:55:00.000Z','C'],
+        ['2026-09-16T10:31:00.000Z','2026-09-16T09:55:00.000Z','B'],
+        ['2026-09-16T11:30:00.000Z','2026-09-16T12:00:00.000Z','github'],
     ]) assert.deepEqual(mrtRoundForGeneralSlot(general), {generalSlot:general, expectedAt:start, host});
+});
+test('PC dispatch owns only the exact two C slots and one B slot',()=>{
+ assert.deepEqual(mrtPcTarget(Date.parse('2026-09-16T00:35:00.000Z')),{host:'C',slot:'2026-09-16T00:35:00.000Z'});
+ assert.deepEqual(mrtPcTarget(Date.parse('2026-09-16T09:55:00.000Z')),{host:'B',slot:'2026-09-16T09:55:00.000Z'});
+ assert.equal(mrtPcTarget(Date.parse('2026-09-16T10:10:00.000Z')),null);
 });
 test('invalid and non-slot timestamps are refused', () => {
     for (const value of ['invalid','2026-09-16T07:32:00.000Z','2026-09-16T07:31:01.000Z',null]) {
         assert.throws(()=>mrtRoundForGeneralSlot(value));
     }
 });
-const record = {generalSlot, expectedAt:'2026-09-16T06:15:00.000Z',host:'C',status:'published',
+const record = {generalSlot, expectedAt:'2026-09-16T06:55:00.000Z',host:'C',status:'published',
     completedAt:'2026-09-16T07:28:00.000Z',publishedAt:'2026-09-16T07:30:00.000Z',resultVersion:'fixture-version'};
 const now = Date.parse('2026-09-16T07:35:00Z');
 const check = (changes={}, extra={}) => evaluateMrtRoundReadiness({generalSlot,record:{...record,...changes},

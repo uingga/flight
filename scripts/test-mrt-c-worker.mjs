@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import {randomUUID} from 'node:crypto';
 import {executeMrtWorker} from './mrt-c-worker.mjs';
-const input=()=>({protocol:'mrt-c-v1',id:randomUUID(),slot:'2026-09-17T06:15:00.000Z',createdAt:new Date().toISOString(),files:{'all-flights-cache.json':{flights:[]},'gid-map.json':{ICN:1},'crawl-log.json':{entries:[]},'interpark-prices.json':{}}});
+const input=()=>({protocol:'mrt-c-v1',id:randomUUID(),slot:'2026-09-17T06:55:00.000Z',createdAt:new Date().toISOString(),files:{'all-flights-cache.json':{flights:[]},'gid-map.json':{ICN:1},'crawl-log.json':{entries:[]},'interpark-prices.json':{}}});
 test('actual worker stages private inputs, launches correct collector and returns output',async()=>{
  const state=fs.mkdtempSync(path.join(os.tmpdir(),'mrt-worker-test-'));const r=input();let calls=0;
  const reply=await executeMrtWorker(r,{state,collector:(node,args,opts)=>{

@@ -28,7 +28,7 @@ test('exact boundary, failures, latest GitHub attempt and legacy migration', () 
     assert.equal(onlineCollectionInterval({onlinePrimary:{lastAttemptAt:'bad'}},anchor).due,false);
     assert.equal(onlineCollectionInterval(c,'bad').due,false);
 });
-test('OnlineTour and ModeTour share all five general slots while Ttang retains four PC slots', () => {
+test('OnlineTour, ModeTour and Ttang share the current five general slots', () => {
     const c=cache();
     for(const expectedAt of [
         '2026-09-09T07:31:00.000Z', '2026-09-09T10:31:00.000Z',
@@ -45,7 +45,7 @@ test('OnlineTour and ModeTour share all five general slots while Ttang retains f
         assert.equal(policy.eveningSlot,expectedAt==='2026-09-09T10:31:00.000Z');
         assert.equal(general,Date.parse(expectedAt));
         assert.equal(policy.sources.includes('modetour'),true);
-        if(policy.eveningSlot) assert.equal(policy.sources.includes('ttang'),false);
+        if(policy.eveningSlot) assert.equal(policy.sources.includes('ttang'),true);
         c.onlinePrimary.lastAttemptAt=now.toISOString();
         assert.equal(evaluatePcCollection({cache:c,now}).sources.includes('onlinetour'),false);
     }

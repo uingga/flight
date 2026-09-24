@@ -2,12 +2,25 @@
 const KST_OFFSET = 9 * 3600000;
 const MINUTE = 60000;
 export const MRT_ALIGNED_ROUNDS = Object.freeze([
-    Object.freeze({generalMinute:6*60+17, startMinute:5*60, host:'github'}),
-    Object.freeze({generalMinute:10*60+12, startMinute:8*60+55, host:'C'}),
-    Object.freeze({generalMinute:13*60+23, startMinute:12*60+5, host:'github'}),
-    Object.freeze({generalMinute:16*60+31, startMinute:15*60+15, host:'C'}),
-    Object.freeze({generalMinute:19*60+31, startMinute:19*60+15, host:'B'}),
+    Object.freeze({generalMinute:6*60+17, startMinute:6*60+25, host:'github'}),
+    Object.freeze({generalMinute:10*60+12, startMinute:9*60+35, host:'C'}),
+    Object.freeze({generalMinute:13*60+23, startMinute:12*60+40, host:'github'}),
+    Object.freeze({generalMinute:16*60+31, startMinute:15*60+55, host:'C'}),
+    Object.freeze({generalMinute:19*60+31, startMinute:18*60+55, host:'B'}),
+    Object.freeze({generalMinute:20*60+30, startMinute:21*60, host:'github'}),
 ]);
+export function mrtPcTarget(now=Date.now()) {
+    if(!Number.isFinite(now))return null;
+    const shifted=new Date(now+KST_OFFSET);
+    const day=shifted.toISOString().slice(0,10);
+    for(const round of MRT_ALIGNED_ROUNDS.filter(item=>item.host==='B'||item.host==='C')){
+        const hour=String(Math.floor(round.startMinute/60)).padStart(2,'0');
+        const minute=String(round.startMinute%60).padStart(2,'0');
+        const slot=Date.parse(`${day}T${hour}:${minute}:00+09:00`);
+        if(now>=slot&&now-slot<15*MINUTE)return {host:round.host,slot:new Date(slot).toISOString()};
+    }
+    return null;
+}
 export function mrtRoundForGeneralSlot(generalSlot) {
     const time = typeof generalSlot === 'string' ? Date.parse(generalSlot) : NaN;
     if (!Number.isFinite(time) || time % MINUTE !== 0) throw Error('invalid general slot');

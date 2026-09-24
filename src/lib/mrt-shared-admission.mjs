@@ -3,7 +3,7 @@ import {randomUUID} from 'node:crypto';
 const ACTIVE='tags/mrt-active-v1';
 const claim=slot=>'tags/mrt-slot/'+slot.replace(/[-:.]/g,'');
 export async function acquireMrt(api,{slot,host,sha}) {
-    if(!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:00\.000Z$/.test(slot)||!['github','C'].includes(host)||!/^[a-f0-9]{40}$/.test(sha))throw Error('invalid admission identity');
+    if(!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:00\.000Z$/.test(slot)||!['github','B','C'].includes(host)||!/^[a-f0-9]{40}$/.test(sha))throw Error('invalid admission identity');
     const parent=await api('git/commits/'+sha);
     if(parent.status!==200)throw Error('parent unavailable');
     const commit=await api('git/commits','POST',{message:JSON.stringify({kind:'mrt-owner-v1',slot,host,id:randomUUID()}),tree:parent.data.tree.sha,parents:[sha]});

@@ -3,26 +3,26 @@ import assert from 'node:assert/strict';
 import {inspectNaverMrtCompletion} from '../src/lib/naver-mrt-completion.mjs';
 const round='2026-09-17T04:23:00.000Z',now=Date.parse('2026-09-17T05:00:00Z');
 const prefix='git/ref/tags/',owner='a'.repeat(40);
-const exact=prefix+'mrt-done/20260917T030500000Z';
-const previous=prefix+'mrt-done/20260916T235500000Z';
+const exact=prefix+'mrt-done/20260917T034000000Z';
+const previous=prefix+'mrt-done/20260917T003500000Z';
 const cache={sourceUpdatedAt:{myrealtrip:'2026-09-17T04:10:28Z'},flights:[{source:'myrealtrip'}]};
 function fixture(){return {
  [previous]:{object:{sha:owner}},
- [prefix+'mrt-slot/20260916T235500000Z']:{object:{sha:owner}},
- ['git/commits/'+owner]:{message:JSON.stringify({kind:'mrt-owner-v1',slot:'2026-09-16T23:55:00.000Z',host:'C'}),committer:{date:'2026-09-17T02:54:00Z'}},
- 'actions/workflows/myrealtrip-scrape.yml/runs?branch=main&per_page=100':{workflow_runs:[{id:123,display_title:'watchdog 2026-09-17T03:05:00.000Z',status:'completed',conclusion:'success',created_at:'2026-09-17T03:10:00Z',updated_at:'2026-09-17T03:10:24Z'}]},
+ [prefix+'mrt-slot/20260917T003500000Z']:{object:{sha:owner}},
+ ['git/commits/'+owner]:{message:JSON.stringify({kind:'mrt-owner-v1',slot:'2026-09-17T00:35:00.000Z',host:'C'}),committer:{date:'2026-09-17T03:30:00Z'}},
+ 'actions/workflows/myrealtrip-scrape.yml/runs?branch=main&per_page=100':{workflow_runs:[{id:123,display_title:'watchdog 2026-09-17T03:40:00.000Z',status:'completed',conclusion:'success',created_at:'2026-09-17T03:45:00Z',updated_at:'2026-09-17T03:45:24Z'}]},
  'actions/runs/123/jobs?filter=latest&per_page=100':{total_count:1,jobs:[{conclusion:'success',steps:[{name:'Reserve MyRealTrip slot',conclusion:'success'},{name:'Run MyRealTrip price scraping',conclusion:'skipped'},{name:'Commit cache or circuit changes',conclusion:'skipped'}]}]},
 };}
 const check=(data=fixture(),extra={})=>inspectNaverMrtCompletion({round,now,cache,api:async(route,method)=>{assert.equal(method,undefined,'read only');return route in data?{status:200,data:data[route]}:{status:404};},...extra});
 test('exact receipt retains existing path',async()=>assert.equal((await check({[exact]:{}})).reason,'exact_round_done'));
-test('published older slot can cover skipped overlap without writing a done tag',async()=>{const r=await check();assert.equal(r.ready,true);assert.equal(r.skippedRunId,123);assert.equal(r.completedSlot,'2026-09-16T23:55:00.000Z');});
+test('published older slot can cover skipped overlap without writing a done tag',async()=>{const r=await check();assert.equal(r.ready,true);assert.equal(r.skippedRunId,123);assert.equal(r.completedSlot,'2026-09-17T00:35:00.000Z');});
 test('fresh cache alone never admits',async()=>assert.equal((await check({})).ready,false));
 for(const [name,modify] of [
  ['active collector',d=>d[prefix+'mrt-active-v1']={}],
- ['claimed expected slot',d=>d[prefix+'mrt-slot/20260917T030500000Z']={}],
+ ['claimed expected slot',d=>d[prefix+'mrt-slot/20260917T034000000Z']={}],
  ['missing completion',d=>delete d[previous]],
- ['wrong owner',d=>d[prefix+'mrt-slot/20260916T235500000Z'].object.sha='b'.repeat(40)],
- ['owner created after skipped run',d=>d['git/commits/'+owner].committer.date='2026-09-17T03:30:00Z'],
+ ['wrong owner',d=>d[prefix+'mrt-slot/20260917T003500000Z'].object.sha='b'.repeat(40)],
+ ['owner created after skipped run',d=>d['git/commits/'+owner].committer.date='2026-09-17T03:50:00Z'],
  ['invalid owner identity',d=>d['git/commits/'+owner].message='{}'],
  ['unfinished workflow',d=>d['actions/workflows/myrealtrip-scrape.yml/runs?branch=main&per_page=100'].workflow_runs[0].status='in_progress'],
  ['failed workflow',d=>d['actions/workflows/myrealtrip-scrape.yml/runs?branch=main&per_page=100'].workflow_runs[0].conclusion='failure'],

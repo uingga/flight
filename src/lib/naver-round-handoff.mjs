@@ -1,7 +1,17 @@
 const day=t=>new Date(t+9*3600000).toISOString().slice(0,10);
+const eveningSources=['ybtour','hanatour','modetour','onlinetour','ttang','lottetour'];
+export const isEveningRound=round=>Number.isFinite(Date.parse(round))
+ && new Date(Date.parse(round)+9*3600000).toISOString().slice(11,16)==='20:30';
+export function hasPublishedEveningSource(cache,round){
+ const time=Date.parse(round);
+ return isEveningRound(round)&&eveningSources.some(source=>
+  cache?.eveningPrimary?.[source]?.status==='success'
+  && Date.parse(cache.eveningPrimary[source].lastAttemptAt)>=time
+  && Date.parse(cache.sourceUpdatedAt?.[source])>=time);
+}
 export function latestAgencyRound(now=Date.now()) {
  const kst=day(now);
- const times=['06:17','10:12','13:23','16:31','19:31'].map(t=>Date.parse(kst+'T'+t+':00+09:00'));
+ const times=['06:17','10:12','13:23','16:31','19:31','20:30'].map(t=>Date.parse(kst+'T'+t+':00+09:00'));
  const found=times.filter(t=>t<=now).at(-1);
  return found===undefined?null:new Date(found).toISOString();
 }
@@ -14,7 +24,8 @@ export function evaluateRoundContinuation({now,cache,state,round,totalBudget=200
  if(same?.lastRoundAt&&Date.parse(same.lastRoundAt)>=time)return deny('round_already_handled');
  const used=same?Number(same.navigationsUsed):0;
  if(!Number.isSafeInteger(used)||used<0||used>=totalBudget)return deny('daily_budget_exhausted');
- if(!(Date.parse(cache.fullCrawlUpdatedAt)>=time))return deny('recovery_upstream_pending');
+ if(isEveningRound(round)?!hasPublishedEveningSource(cache,round)
+  :!(Date.parse(cache.fullCrawlUpdatedAt)>=time))return deny('recovery_upstream_pending');
  const sources=['ybtour','hanatour','modetour','onlinetour','ttang','myrealtrip','lottetour'].filter(source=>{
   const circuit=cache.sourceCircuits?.[source];
   if(source==='myrealtrip'&&circuit&&(!Number.isFinite(Date.parse(circuit.nextProbeAt))||Date.parse(circuit.nextProbeAt)>now))return false;

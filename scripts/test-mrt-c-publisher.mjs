@@ -7,14 +7,12 @@ test('cache above Contents API inline limit reads the exact immutable blob',asyn
   ?{status:200,data:{encoding:'none',sha}}:{status:200,data:{content:Buffer.from('{"fixture":true}').toString('base64')}};},'all-flights-cache.json','pinned-ref');
  assert.equal(result.fixture,true);assert.deepEqual(calls,['contents/data/all-flights-cache.json?ref=pinned-ref','git/blobs/'+sha]);
 });
-test('C starts from approved final rollout slot, never earlier or catchup',()=>{
- assert.equal(cSlot(Date.parse('2026-09-15T23:55:00Z')),null);
- assert.equal(cSlot(Date.parse('2026-09-16T06:14:59Z')),null);
- assert.equal(cSlot(Date.parse('2026-09-16T06:15:00Z')),'2026-09-16T06:15:00.000Z');
- assert.equal(cSlot(Date.parse('2026-09-16T06:30:00Z')),null);
- assert.equal(cSlot(Date.parse('2026-09-17T06:15:00Z')),'2026-09-17T06:15:00.000Z');
- assert.equal(cSlot(Date.parse('2026-09-16T23:55:00Z')),'2026-09-16T23:55:00.000Z');
- assert.equal(cSlot(Date.parse('2026-09-17T06:31:00Z')),null);
+test('C owns only its two newly aligned slots',()=>{
+ assert.equal(cSlot(Date.parse('2026-09-16T00:34:59Z')),null);
+ assert.equal(cSlot(Date.parse('2026-09-16T00:35:00Z')),'2026-09-16T00:35:00.000Z');
+ assert.equal(cSlot(Date.parse('2026-09-16T00:50:00Z')),null);
+ assert.equal(cSlot(Date.parse('2026-09-16T06:55:00Z')),'2026-09-16T06:55:00.000Z');
+ assert.equal(cSlot(Date.parse('2026-09-16T09:55:00Z')),null);
 });
 test('real source publication retries CAS with newest other-source data',async()=>{
  let head='base',n=0;const trees=new Map(),commits=new Map();

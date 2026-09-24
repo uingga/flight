@@ -172,11 +172,11 @@ const fmt = (iso: string) => new Date(iso).toLocaleString('ko-KR', { timeZone: '
     assert.equal(other.at(-1)?.scheduled, true);
 }
 
-// The coordinated 20:30 PC round is a regular, separate slot for its four sources.
+// The coordinated 20:30 PC round is a regular, separate slot for all six agencies.
 {
     const now = kst('2026-09-25T21:00:00');
     const events = [event('2026-09-25T19:52:00'), event('2026-09-25T20:38:00', { localFallback: true })];
-    for (const source of ['ybtour', 'hanatour', 'modetour', 'ttang']) {
+    for (const source of ['ybtour', 'hanatour', 'modetour', 'ttang', 'onlinetour', 'lottetour']) {
         const bars = buildSourceSlotBars({ source, events, now });
         assert.deepEqual(bars.slice(-2).map(bar => bar.slotAt), [
             new Date(kst('2026-09-25T19:31:00')).toISOString(),
@@ -184,11 +184,6 @@ const fmt = (iso: string) => new Date(iso).toLocaleString('ko-KR', { timeZone: '
         ]);
         assert.deepEqual(bars.slice(-2).map(bar => bar.events.length), [1, 1]);
         assert.equal(bars.at(-1)?.scheduled, true);
-    }
-    for (const source of ['onlinetour', 'lottetour']) {
-        const bars = buildSourceSlotBars({ source, events: [], now });
-        assert.equal(bars.at(-1)?.slotAt, new Date(kst('2026-09-25T19:31:00')).toISOString());
-        assert.equal(isSourceScheduledAt(source, kst('2026-09-25T20:30:00')), false);
     }
     assert.equal(isSourceScheduledAt('ttang', kst('2026-09-24T20:30:00')), false);
 }

@@ -8,7 +8,7 @@ async function main() {
     const dir = getCrawlDataDir();
     const runId = process.env.AGENCY_EVENING_ID;
     const startedAt = process.env.AGENCY_EVENING_STARTED_AT;
-    if (!['ybtour', 'hanatour', 'modetour', 'ttang'].includes(source)
+    if (!['ybtour', 'hanatour', 'modetour', 'ttang', 'onlinetour', 'lottetour'].includes(source)
         || !/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/.test(runId || '')
         || !Number.isFinite(Date.parse(startedAt || ''))
         || path.resolve(dir) === path.resolve('data')) throw new Error('private_evening_run_required');
@@ -16,8 +16,8 @@ async function main() {
     // Use installed Chrome without copying a personal profile or relaxing browser protections.
     const launch = chromium.launch.bind(chromium);
     chromium.launch = (options = {}) => launch({ ...options, channel: 'chrome' });
-    process.env.LOCAL_SOURCE_FALLBACK = source === 'modetour' ? '1' : '0';
-    process.env.LOCAL_BROWSER_PILOT = ['modetour', 'ttang'].includes(source) ? '1' : '0';
+    process.env.LOCAL_SOURCE_FALLBACK = ['modetour', 'onlinetour'].includes(source) ? '1' : '0';
+    process.env.LOCAL_BROWSER_PILOT = ['modetour', 'ttang', 'onlinetour'].includes(source) ? '1' : '0';
     process.env.CI = 'true';
     process.env.GITHUB_ACTIONS = '';
     process.env.SOURCE_START_JITTER_MAX_MS = '90000';
@@ -51,6 +51,23 @@ async function main() {
             process.env.MODETOUR_SAVED_EVIDENCE = evidence;
             process.env.MODETOUR_BROWSER_REMOTE = '1';
         } finally { await browser.close(); }
+    }
+    if (source === 'onlinetour') {
+        const { executeCatalogue, createLiveCatalogueBackend } = await import('./crawl-onlinetour-catalogue');
+        const { operationalPlan, validateOperationalCatalogue } = await import('../src/lib/onlinetour-operational');
+        const cache = JSON.parse(fs.readFileSync(path.join(dir, 'all-flights-cache.json'), 'utf8'));
+        const backend = await createLiveCatalogueBackend(true);
+        let summary;
+        try {
+            summary = await executeCatalogue(dir, operationalPlan('AS', Date.now(), runId), backend, false);
+        } finally { await backend.close?.(); }
+        const run = path.join(dir, '.local-crawler', 'staging', summary.runId);
+        const raw = JSON.parse(fs.readFileSync(path.join(run, 'raw-products.json'), 'utf8'));
+        const flights = JSON.parse(fs.readFileSync(path.join(run, 'flights.json'), 'utf8'));
+        validateOperationalCatalogue(summary, raw, flights, Date.now(), cache.scrapedCounts?.onlinetour);
+        const evidence = path.join(dir, 'online-evidence.json');
+        fs.writeFileSync(evidence, JSON.stringify({ summary, raw, flights }));
+        process.env.ONLINETOUR_SAVED_EVIDENCE = evidence;
     }
     process.argv = [process.argv[0], path.resolve('scripts/crawl-all.ts'), `--sources=${source}`];
     await import('./crawl-all');

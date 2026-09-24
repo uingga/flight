@@ -19,7 +19,7 @@ export function validateAgencyEveningRequest(request, { now = Date.now(), hostna
     if (request?.protocol !== AGENCY_EVENING_PROTOCOL || !validId(request.id)
         || !Number.isFinite(Date.parse(request.createdAt))
         || Math.abs(now - Date.parse(request.createdAt)) > 5 * 60_000
-        || !Array.isArray(request.sources) || request.sources.length < 1 || request.sources.length > 2
+        || !Array.isArray(request.sources) || request.sources.length < 1 || request.sources.length > 3
         || new Set(request.sources).size !== request.sources.length
         || !request.files || typeof request.files !== 'object'
         || Object.keys(request.files).some(name => !AGENCY_EVENING_FILES.includes(name))
@@ -34,8 +34,10 @@ export function validateAgencyEveningRequest(request, { now = Date.now(), hostna
 }
 
 function localCooldown(base, source) {
-    if (!['ttang', 'modetour'].includes(source)) return undefined;
-    const file = path.join(base, `${source}-browser`, 'cooldown.json');
+    if (!['ttang', 'modetour', 'onlinetour'].includes(source)) return undefined;
+    const file = source === 'onlinetour'
+        ? path.join(base, 'onlinetour-validation', 'cooldown.json')
+        : path.join(base, `${source}-browser`, 'cooldown.json');
     return fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : undefined;
 }
 
@@ -73,8 +75,10 @@ export async function executeAgencyEvening(request, {
             if (unknown?.nextProbeAt != null
                 && (!Number.isFinite(Date.parse(unknown.nextProbeAt)) || Date.parse(unknown.nextProbeAt) > now()))
                 throw new Error(`evening_${source}_unknown_cooldown`);
+            // The initial request is admitted within 15 minutes; subsequent sources may
+            // start later while this same claimed, host-locked round is still running.
             const decision = eveningAdmission({ slot: request.slot, source, now: now(), cache,
-                localCooldown: localCooldown(base, source) });
+                windowMinutes: 150, localCooldown: localCooldown(base, source) });
             if (!decision.allowed) throw new Error(`evening_${source}_${decision.reason}`);
 
             const startedAt = new Date(now()).toISOString();
@@ -116,6 +120,8 @@ export async function executeAgencyEvening(request, {
             }
             if (source === 'modetour' && fresh)
                 evidence.modetour = JSON.parse(fs.readFileSync(path.join(dir, 'mode-evidence.json'), 'utf8'));
+            if (source === 'onlinetour' && fresh)
+                evidence.onlinetour = JSON.parse(fs.readFileSync(path.join(dir, 'online-evidence.json'), 'utf8'));
 
             eveningMarkers[source] = { status: fresh ? 'success' : 'failed_preserved', lastAttemptAt: startedAt,
                 ...(fresh ? { lastSuccessAt: after.sourceUpdatedAt[source] } : {}) };
