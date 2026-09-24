@@ -1,5 +1,5 @@
 import { evaluateLocalSourceFallback, scheduledSlotDistance, surroundingSlots } from './local-source-fallback-policy.mjs';
-import { isTtangCrawlSlot } from '../src/lib/crawl-schedule-health.mjs';
+import { DAILY_CRAWL_CRONS, getScheduledAtForCron, isTtangCrawlSlot, ONLINE_CRAWL_CRONS, TTANG_CRAWL_CRONS } from '../src/lib/crawl-schedule-health.mjs';
 import { ONLINE_BROWSER_PRIMARY, MODE_BROWSER_PRIMARY, TTANG_BROWSER_PRIMARY } from '../src/lib/browser-primary-config.mjs';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -8,17 +8,29 @@ import { onlineCollectionInterval } from './online-collection-interval.mjs';
 
 /**
  * @param {{cache?: any, now?: Date|string, config?: {enabled:boolean,slotsPerDay:number,randomDayInterval?:boolean}, modeConfig?: {enabled:boolean,slotsPerDay:number}, ttangConfig?: {enabled:boolean,slotsPerDay:number}}} options
- * @returns {{sources:string[],shouldRun:boolean,reason:string,expectedAt:string|null,nextExpectedAt:string|null,githubFallbackDue?:boolean}}
+ * @returns {{sources:string[],shouldRun:boolean,reason:string,expectedAt:string|null,nextExpectedAt:string|null,
+ * onlineExpectedAt:string|null,eveningSlot:boolean,githubFallbackDue:boolean,
+ * onlineNextCollectionAt:string|null,onlineIntervalDays:number|null}}
  */
 export function evaluatePcCollection({cache,now=new Date(),config=ONLINE_BROWSER_PRIMARY,modeConfig=MODE_BROWSER_PRIMARY,ttangConfig=TTANG_BROWSER_PRIMARY}={}) {
     const base={expectedAt:null,nextExpectedAt:null,...evaluateLocalSourceFallback({cache,now})};
-    if(!config.enabled && !modeConfig.enabled && !ttangConfig.enabled)return base;
-    const sources=base.sources.filter(s=>s!=='onlinetour' && !(ttangConfig.enabled && s==='ttang'));
+    if(!config.enabled && !modeConfig.enabled && !ttangConfig.enabled)return {...base,
+        onlineExpectedAt:base.expectedAt,eveningSlot:false,githubFallbackDue:false,
+        onlineNextCollectionAt:null,onlineIntervalDays:null};
     const ms=new Date(now).getTime(), expectedAt='expectedAt' in base?base.expectedAt:null, slot=Date.parse(expectedAt || '');
+    const onlineCrons=config.slotsPerDay===5?ONLINE_CRAWL_CRONS:undefined;
+    const onlineExpectedAt=onlineCrons && Number.isFinite(ms)
+        ?new Date(surroundingSlots(ms,onlineCrons).expectedAt).toISOString():expectedAt;
+    const onlineSlot=Date.parse(onlineExpectedAt || '');
+    const eveningSlot=Number.isFinite(slot) && getScheduledAtForCron('31 10 * * *',slot)===slot;
+    const sources=base.sources.filter(s=>s!=='onlinetour' && !(ttangConfig.enabled && s==='ttang'));
+    const ttangPrimaryCrons=ttangConfig.slotsPerDay>=5?DAILY_CRAWL_CRONS
+        :ttangConfig.slotsPerDay>=4?DAILY_CRAWL_CRONS.slice(0,4):TTANG_CRAWL_CRONS;
+    const ttangPrimarySlot=Number.isFinite(slot) && ttangPrimaryCrons.some(cron=>getScheduledAtForCron(cron,slot)===slot);
     const future=value=>value!=null && (!Number.isFinite(Date.parse(value)) || Date.parse(value)>ms);
     const tc=cache?.sourceCircuits?.ttang;
     const previousTtangSuccess=Date.parse(cache?.ttangPrimary?.lastSuccessAt || cache?.sourceUpdatedAt?.ttang || '');
-    if(ttangConfig.enabled && Number.isFinite(ms) && Number.isFinite(slot) && (ttangConfig.slotsPerDay===4 || isTtangCrawlSlot(slot))
+    if(ttangConfig.enabled && Number.isFinite(ms) && ttangPrimarySlot
         && Date.parse(cache?.fullCrawlUpdatedAt)>=slot
         && !future(tc?.nextProbeAt) && !future(tc?.localFallback?.nextProbeAt)
         && !future(cache?.ttangPrimary?.nextProbeAt)
@@ -28,11 +40,12 @@ export function evaluatePcCollection({cache,now=new Date(),config=ONLINE_BROWSER
     const online=cache?.onlinePrimary?.circuit;
     const interval = onlineCollectionInterval(cache, now);
     const intervalDue = !config.randomDayInterval || interval.due;
-    const eligible=Number.isFinite(ms) && Number.isFinite(slot) && Date.parse(cache?.fullCrawlUpdatedAt)>=slot
+    const eligible=Number.isFinite(ms) && Number.isFinite(onlineSlot) && Number.isFinite(slot)
+        && Date.parse(cache?.fullCrawlUpdatedAt)>=slot
         && intervalDue
-        && (config.slotsPerDay===4 || isTtangCrawlSlot(slot))
+        && (config.slotsPerDay>=4 || isTtangCrawlSlot(onlineSlot))
         && !future(online?.nextProbeAt) && !future(online?.localFallback?.nextProbeAt)
-        && !(Date.parse(cache?.onlinePrimary?.lastAttemptAt)>=slot);
+        && !(Date.parse(cache?.onlinePrimary?.lastAttemptAt)>=onlineSlot);
     if(config.enabled && eligible)sources.push('onlinetour');
     const modeCircuit=cache?.sourceCircuits?.modetour;
     if(modeConfig.enabled && Number.isFinite(ms) && Number.isFinite(slot) && Date.parse(cache?.fullCrawlUpdatedAt)>=slot
@@ -40,16 +53,15 @@ export function evaluatePcCollection({cache,now=new Date(),config=ONLINE_BROWSER
         && !(Date.parse(cache?.modetourPrimary?.lastAttemptAt)>=slot)) sources.push('modetour');
     const failureAnchor=Date.parse(cache?.onlinePrimary?.failureOpenedAt);
     // Failures finish after the scheduled start. Anchor to that slot, not the finish time.
-    const distance=Number.isFinite(failureAnchor) && failureAnchor<=ms && Number.isFinite(slot)
-        ?scheduledSlotDistance(surroundingSlots(failureAnchor).expectedAt,slot):null;
+    const distance=Number.isFinite(failureAnchor) && failureAnchor<=ms && Number.isFinite(onlineSlot)
+        ?scheduledSlotDistance(surroundingSlots(failureAnchor,onlineCrons).expectedAt,onlineSlot,onlineCrons):null;
     const github=cache?.sourceCircuits?.onlinetour;
-    const pcFinished=Date.parse(cache?.onlinePrimary?.lastAttemptAt)>=slot || future(online?.nextProbeAt) || future(online?.localFallback?.nextProbeAt);
+    const pcFinished=Date.parse(cache?.onlinePrimary?.lastAttemptAt)>=onlineSlot || future(online?.nextProbeAt) || future(online?.localFallback?.nextProbeAt);
     const githubFallbackDue=cache?.onlinePrimary?.status==='failed' && cache?.onlinePrimary?.githubFallbackSafe===true
-        && intervalDue
-        && pcFinished && Number.isFinite(slot)
+        && intervalDue && pcFinished && Number.isFinite(onlineSlot) && Number.isFinite(slot)
         && distance!==null && distance%2===0 && Date.parse(cache?.fullCrawlUpdatedAt)>=slot
-        && !future(github?.nextProbeAt) && !(Date.parse(cache?.onlinePrimary?.githubAttemptAt)>=slot);
-    return {...base,expectedAt,sources,shouldRun:sources.length>0,githubFallbackDue,
+        && !future(github?.nextProbeAt) && !(Date.parse(cache?.onlinePrimary?.githubAttemptAt)>=onlineSlot);
+    return {...base,expectedAt,onlineExpectedAt,eveningSlot,sources,shouldRun:sources.length>0,githubFallbackDue,
         onlineNextCollectionAt:config.randomDayInterval?interval.nextCollectionAt:null,
         onlineIntervalDays:config.randomDayInterval?interval.intervalDays:null,
         manualCaptureSources:modeConfig.enabled?(base.manualCaptureSources || []).filter(s=>s!=='modetour'):base.manualCaptureSources,

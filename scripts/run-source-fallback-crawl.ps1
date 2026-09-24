@@ -82,7 +82,11 @@ while ($true) {
     }
 
     if ($Policy -and $Policy.nextExpectedAt) {
-        $Deadline = [DateTimeOffset]::Parse([string]$Policy.nextExpectedAt).AddMinutes(-1)
+        $Deadline = if ($Policy.eveningSlot -and $Policy.expectedAt) {
+            [DateTimeOffset]::Parse([string]$Policy.expectedAt).AddHours(1)
+        } else {
+            [DateTimeOffset]::Parse([string]$Policy.nextExpectedAt).AddMinutes(-1)
+        }
         $RemainingSeconds = [Math]::Floor(($Deadline - [DateTimeOffset]::UtcNow).TotalSeconds)
         if ($RemainingSeconds -le 0) {
             Log 'Matching GitHub crawl did not complete before the next slot; stopping without requests'

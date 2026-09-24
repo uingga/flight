@@ -63,9 +63,9 @@ test('alternates PC collection and rest from each source failure slot', () => {
         {
             now: '2026-08-30T21:25:00.000Z',
             fullCrawlUpdatedAt: '2026-08-30T21:23:00.000Z',
-            shouldRun: false,
-            sources: [],
-            throttled: ['ybtour', 'hanatour', 'onlinetour', 'ttang'],
+            shouldRun: true,
+            sources: ['ybtour', 'hanatour', 'onlinetour', 'ttang'],
+            throttled: [],
         },
     ]) {
         const result = evaluateLocalSourceFallback({

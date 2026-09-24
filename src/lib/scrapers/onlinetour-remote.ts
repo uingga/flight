@@ -20,7 +20,7 @@ export async function scrapeOnlineTourRemote() {
     const manualOnce=process.env.ONLINETOUR_MANUAL_ONCE==='1';
     if(!manualOnce && (!policy.shouldRun || !policy.sources.includes('onlinetour'))) throw Error('source_not_eligible');
     const id=randomUUID();
-    const payload={protocol:ONLINE_REMOTE_PROTOCOL,id,createdAt:new Date().toISOString(),expectedAt:policy.expectedAt,manualOnce,
+    const payload={protocol:ONLINE_REMOTE_PROTOCOL,id,createdAt:new Date().toISOString(),expectedAt:policy.onlineExpectedAt,manualOnce,
         cache:{fullCrawlUpdatedAt:cache.fullCrawlUpdatedAt,sourceCircuits:{onlinetour:cache.sourceCircuits?.onlinetour},
             scrapedCounts:{onlinetour:cache.scrapedCounts?.onlinetour},onlinePrimary:cache.onlinePrimary}};
     remoteStarted=true;

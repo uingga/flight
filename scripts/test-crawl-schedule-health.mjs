@@ -139,13 +139,34 @@ test('health schedule stays in sync with daily-crawl.yml', () => {
     const workflow = fs.readFileSync('.github/workflows/daily-crawl.yml', 'utf8');
     const workflowCrons = [...workflow.matchAll(/^\s*- cron: '([^']+)'/gm)].map(match => match[1]);
     assert.deepEqual([...DAILY_CRAWL_CRONS].sort(), [...workflowCrons].sort());
-    assert.equal(workflowCrons.length, 4);
+    assert.equal(workflowCrons.length, 5);
     assert.deepEqual(workflowCrons, [
         '17 21 * * *',
         '12 1 * * *',
         '23 4 * * *',
         '31 7 * * *',
+        '31 10 * * *',
     ]);
+});
+
+test('19:31 is a distinct recoverable general slot while Ttang stays skipped', () => {
+    const expectedAt = '2026-09-24T10:31:00.000Z';
+    const health = getCrawlScheduleHealth('2026-09-24T07:45:00.000Z', {
+        now: '2026-09-24T10:36:00.000Z',
+    });
+    assert.equal(health.status, 'overdue');
+    assert.equal(health.expectedAt, expectedAt);
+
+    withTempCache({ fullCrawlUpdatedAt: '2026-09-24T07:45:00.000Z' }, cachePath => {
+        const preflight = spawnSync(process.execPath, ['scripts/check-crawl-run.mjs'], {
+            encoding: 'utf8',
+            env: { ...process.env, TRIGGER_EVENT: 'schedule', TRIGGER_SCHEDULE: '31 10 * * *',
+                CHECK_CACHE: '1', CHECK_NOW: '2026-09-24T10:36:00.000Z', CRAWL_CACHE_PATH: cachePath },
+        });
+        assert.equal(preflight.status, 0, preflight.stderr);
+        assert.match(preflight.stdout, /\[preflight\] should_run=true/);
+        assert.match(preflight.stdout, /\[preflight\] skip_sources=ttang/);
+    });
 });
 
 test('Ttang is scheduled only for the 06:17 and 13:23 general slots', () => {
@@ -154,6 +175,7 @@ test('Ttang is scheduled only for the 06:17 and 13:23 general slots', () => {
     assert.equal(isTtangCrawlSlot('2026-08-28T04:23:00.000Z'), true);
     assert.equal(isTtangCrawlSlot('2026-08-28T01:12:00.000Z'), false);
     assert.equal(isTtangCrawlSlot('2026-08-28T07:31:00.000Z'), false);
+    assert.equal(isTtangCrawlSlot('2026-08-28T10:31:00.000Z'), false);
 
     const workflow = fs.readFileSync('.github/workflows/daily-crawl.yml', 'utf8');
     const crawler = fs.readFileSync('scripts/crawl-all.ts', 'utf8');
@@ -326,11 +348,11 @@ test('the Windows Naver task splits fresh and recovered sources under one daily 
     assert.match(crawler, /process\.exitCode = !explicitBlockDetected && successCount > 0 \? 2 : 3/);
 });
 
-test('the Windows blocked-source fallback uses the four general crawl slots', () => {
+test('the Windows blocked-source fallback includes the shared evening slot', () => {
     const installer = fs.readFileSync('scripts/install-source-fallback-task.ps1', 'utf8');
     const runner = fs.readFileSync('scripts/run-source-fallback-crawl.ps1', 'utf8');
 
-    for (const time of ['06:17', '10:12', '13:23', '16:31']) {
+    for (const time of ['06:17', '10:12', '13:23', '16:31', '19:31']) {
         assert.match(installer, new RegExp(`New-ScheduledTaskTrigger -Daily -At '${time}'`));
     }
     assert.match(installer, /TikitikitBlockedSourceCrawl/);

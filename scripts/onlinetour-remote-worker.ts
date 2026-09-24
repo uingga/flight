@@ -20,7 +20,7 @@ async function main() {
     const now=Date.now(), age=now-Date.parse(request.createdAt);
     if(request.protocol!==ONLINE_REMOTE_PROTOCOL || !/^[0-9a-f-]{36}$/.test(request.id || '') || !Number.isFinite(age) || age<0 || age>900000) throw Error('invalid_worker_request');
     const policy=evaluatePcCollection({cache:request.cache});
-    if(mode==='--scheduled' && (!policy.shouldRun || !policy.sources.includes('onlinetour') || policy.expectedAt!==request.expectedAt)) throw Error('source_not_eligible');
+    if(mode==='--scheduled' && (!policy.shouldRun || !policy.sources.includes('onlinetour') || policy.onlineExpectedAt!==request.expectedAt)) throw Error('source_not_eligible');
     if(mode==='--manual-once' && request.manualOnce!==true) throw Error('explicit_manual_request_required');
     const crawlAge=now-Date.parse(request.cache?.fullCrawlUpdatedAt);
     if(!Number.isFinite(crawlAge) || crawlAge<0 || crawlAge>6*3600000) throw Error('stale_source_state');

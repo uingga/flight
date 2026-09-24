@@ -7,9 +7,13 @@ export const DAILY_CRAWL_CRONS = Object.freeze([
     '12 1 * * *',
     '23 4 * * *',
     '31 7 * * *',
+    '31 10 * * *',
 ]);
 
-// 땡처리닷컴은 차단 위험을 낮추기 위해 일반 4개 회차 중 06:17·13:23 KST만 수집한다.
+// OnlineTour follows the same five general slots through its PC primary worker.
+export const ONLINE_CRAWL_CRONS = DAILY_CRAWL_CRONS;
+
+// 땡처리닷컴 GitHub 수집은 06:17·13:23 KST만 실행한다.
 export const TTANG_CRAWL_CRONS = Object.freeze([
     '17 21 * * *',
     '23 4 * * *',

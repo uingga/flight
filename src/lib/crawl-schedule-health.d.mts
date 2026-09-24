@@ -24,6 +24,7 @@ export interface CrawlCacheTimestamps {
 }
 
 export const DAILY_CRAWL_CRONS: readonly string[];
+export const ONLINE_CRAWL_CRONS: readonly string[];
 export const FULL_CRAWL_SOURCE_KEYS: readonly string[];
 export const CRAWL_WARNING_MINUTES: number;
 export const CRAWL_FALLBACK_MINUTES: number;

@@ -1,22 +1,24 @@
-# OnlineTour low-frequency collection
+# OnlineTour five daily collection slots
 
-OnlineTour alone uses a randomized 2–3 day interval. Existing general scheduler
-slots remain polling opportunities, not permission to contact OnlineTour daily.
-Collection resumes at the first eligible scheduled check after the interval.
+OnlineTour uses all five general crawl slots at 06:17, 10:12, 13:23, 16:31 and
+19:31 KST. The earlier randomized 2–3 day interval is disabled. The GitHub
+general crawl and its watchdog expect the same five daily slots.
 
-The most recent persisted PC attempt or GitHub claim/attempt is the anchor,
-including failures and verified empty inventory. A versioned SHA-256 hash of
-that timestamp chooses 2 or 3 days with equal probability. This pseudorandom
-choice is identical on A, B and GitHub and cannot change on polling or restart.
-Legacy caches use the last attempt, or source update timestamp if absent.
-Invalid timestamps fail closed; an entirely new source can perform its first run.
+At each slot, A waits for that general crawl's published data before asking B
+to collect OnlineTour. ModeTour and OnlineTour share Chrome and run serially.
+A's task waits at most one hour for missing 19:31 upstream data.
 
-The shared PC dispatch/worker policy and GitHub dispatch/claim/pre-request guard
-all apply this interval. A failed PC attempt therefore does not trigger immediate
-GitHub fallback during the rest period. Existing circuit and slot safety checks
-remain additional restrictions; recovery can be later than 3 days.
-Explicit operator-approved manual collection remains separate from scheduling.
+Each OnlineTour slot has a distinct immutable B execution marker. A and B both
+reject a duplicate attempt in the same slot. The existing PC lock, 24-hour
+access circuit, explicit 401/403/429/CAPTCHA handling, maximum 100 product
+requests, six regional navigations, complete coverage validation and zero
+automatic retries remain. A failed or uncertain run does not turn into another
+PC crawl of the same slot. The existing alternating GitHub fallback uses the
+five OnlineTour slots and its own durable claim before any site request.
 
-Other agencies, their cron times, and inventory are unchanged. Deployment must
-include the policy, config and new interval module on A, B and GitHub together.
-No live requests are required to test this scheduling change.
+The admin history uses the same five-slot axis for general agencies so the
+19:31 result is shown separately. An operator-approved manual collection is
+still a separate one-shot path with a daily marker.
+
+The previous 2–3 day interval remains in Git history for audit; it is no
+longer the active collection gate.

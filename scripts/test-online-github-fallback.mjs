@@ -17,9 +17,10 @@ test('late PC failure belongs to current slot and dispatches GitHub, not PC',()=
     assert.deepEqual(policy().sources,[]);
 });
 test('consecutive PC failure alternates collect/rest across midnight and days',()=>{
-    const slots=['2026-09-07T05:23:00Z','2026-09-07T08:31:00Z','2026-09-07T23:17:00Z','2026-09-08T02:12:00Z','2026-09-08T05:23:00Z'];
+    const slots=['2026-09-07T04:23:00Z','2026-09-07T07:31:00Z','2026-09-07T10:31:00Z',
+        '2026-09-07T21:17:00Z','2026-09-08T01:12:00Z','2026-09-08T04:23:00Z'];
     slots.forEach((slot,index)=>{
-        const time=new Date(Date.parse(slot)+40*60_000),cache=base();
+        const time=index===0?now:new Date(Date.parse(slot)+40*60_000),cache=base();
         cache.fullCrawlUpdatedAt=time.toISOString();cache.onlinePrimary.lastAttemptAt=time.toISOString();
         assert.equal(policy(cache,time).githubFallbackDue,index%2===0);
     });

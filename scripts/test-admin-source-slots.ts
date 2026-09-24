@@ -19,15 +19,15 @@ const event = (timestamp: string, patch: Partial<SourceSlotEvent> = {}): SourceS
 });
 const fmt = (iso: string) => new Date(iso).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', hour12: false });
 
-// 회차 축: 15:00 KST 기준으로 오늘 13:23이 마지막, 4일 전 13:23이 첫 칸 (16개 = 4일)
+// 회차 축: 15:00 KST 기준으로 오늘 13:23이 마지막, 최근 20개 = 4일
 {
     const slots = recentSlotTimes(kst('2026-09-05T15:00:00'));
-    assert.equal(slots.length, 16);
-    assert.equal(new Date(slots[15]).toISOString(), new Date(kst('2026-09-05T13:23:00')).toISOString());
+    assert.equal(slots.length, 20);
+    assert.equal(new Date(slots[19]).toISOString(), new Date(kst('2026-09-05T13:23:00')).toISOString());
     assert.equal(new Date(slots[0]).toISOString(), new Date(kst('2026-09-01T16:31:00')).toISOString());
-    // 자정 직후: 어제 16:31이 마지막
+    // 자정 직후: 어제 19:31이 마지막
     const late = recentSlotTimes(kst('2026-09-06T00:10:00'));
-    assert.equal(new Date(late[15]).toISOString(), new Date(kst('2026-09-05T16:31:00')).toISOString());
+    assert.equal(new Date(late[19]).toISOString(), new Date(kst('2026-09-05T19:31:00')).toISOString());
 }
 
 // 땡처리는 06:17·13:23만, 마이리얼트립은 축 밖
@@ -36,7 +36,9 @@ const fmt = (iso: string) => new Date(iso).toLocaleString('ko-KR', { timeZone: '
     assert.equal(isSourceScheduledAt('ttang', kst('2026-09-05T10:12:00')), false);
     assert.equal(isSourceScheduledAt('ttang', kst('2026-09-05T13:23:00')), true);
     assert.equal(isSourceScheduledAt('ttang', kst('2026-09-05T16:31:00')), false);
+    assert.equal(isSourceScheduledAt('ttang', kst('2026-09-05T19:31:00')), false);
     assert.equal(isSourceScheduledAt('ybtour', kst('2026-09-05T16:31:00')), true);
+    assert.equal(isSourceScheduledAt('ybtour', kst('2026-09-05T19:31:00')), true);
     assert.equal(isSourceScheduledAt('myrealtrip', kst('2026-09-05T06:17:00')), false);
 }
 
@@ -64,7 +66,7 @@ const fmt = (iso: string) => new Date(iso).toLocaleString('ko-KR', { timeZone: '
         event('2026-09-04T06:35:00', { skipped: true, preserved: true, skipReason: 'circuit', value: 0 }),
     ];
     const bars = buildSourceSlotBars({ source: 'ttang', events, now });
-    assert.equal(bars.length, 16);
+    assert.equal(bars.length, 20);
     const byKst = Object.fromEntries(bars.map(bar => [fmt(bar.slotAt), bar]));
     const at = (text: string) => byKst[fmt(new Date(kst(text)).toISOString())];
 
@@ -140,6 +142,19 @@ const fmt = (iso: string) => new Date(iso).toLocaleString('ko-KR', { timeZone: '
     assert.equal(future.at(-1)?.status, 'pending');
     const invalid = buildSourceSlotBars({ source: 'ybtour', now, events: [{ ...event('2026-09-05T13:23:00'), timestamp: 'invalid' }] });
     assert.equal(invalid.at(-1)?.value, null);
+}
+
+// The shared fifth slot has its own bar for every general agency.
+{
+    const now = kst('2026-09-05T20:00:00');
+    const online = buildSourceSlotBars({ source: 'onlinetour', now,
+        events: [event('2026-09-05T16:45:00'), event('2026-09-05T19:42:00')] });
+    const other = buildSourceSlotBars({ source: 'hanatour', now, events: [] });
+    assert.equal(online.at(-1)?.slotAt, new Date(kst('2026-09-05T19:31:00')).toISOString());
+    assert.equal(online.at(-1)?.scheduled, true);
+    assert.equal(online.at(-1)?.events.length, 1);
+    assert.equal(other.at(-1)?.slotAt, new Date(kst('2026-09-05T19:31:00')).toISOString());
+    assert.equal(other.at(-1)?.scheduled, true);
 }
 
 // Independent collection records must not be shifted to general-crawl slots or merged.

@@ -177,7 +177,7 @@ export function parseScheduleDetail(html: string, expectedDepDate: string): Sche
 const MAX_CONSECUTIVE_FAILURES = 8;
 // 같은 항공권을 한 회차에서 즉시 다시 묻지 않는다. 회차 간 재시도 시각은 후처리 상태가 관리한다.
 const MAX_ATTEMPTS_PER_SCHEDULE = 1;
-/** 하루 4회 기준 상세 POST를 최대 160회로 제한한다. */
+/** 회차당 최대 40회다. 일반 회차가 하루 5회면 이론상 하루 최대 200회다. */
 export const YBTOUR_SCHEDULE_REQUEST_LIMIT = 40;
 const MAX_REJECTED_RESPONSES = 20;
 const MIN_RATE_SAMPLE = 30;

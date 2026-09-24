@@ -3,7 +3,7 @@
 ## 2026-09-07 모두투어 주 수집 전환 (아래 과거 모두투어 설명보다 우선)
 
 - 모두투어는 B PC의 기존 로그인된 전용 Chrome으로 실제 결과 페이지를 열어 주 수집한다. GitHub 정규 API는 중복 방지를 위해 생략한다.
-- A의 기존 PC 실행기가 08:17·11:12·14:23·17:31 KST 일반 GitHub 회차를 기다린 뒤 B 워커를 호출한다. 온라인투어와 동일 Chrome을 쓰므로 PC 소스는 직렬 실행한다.
+- A의 기존 PC 실행기가 06:17·10:12·13:23·16:31·19:31 KST 일반 GitHub 회차를 기다린 뒤 B 워커를 호출한다. 온라인투어와 동일 Chrome을 쓰므로 PC 소스는 직렬 실행한다.
 - 기간은 화면 기본값인 내일부터 한 달. 5개 지역+중국 10개 도시, 목록 GET 최대 15회, 같은 회차 자동 재시도 없음.
 - 사용자가 확인한 타오위안(TPE) HTTP 500만 기존 TPE 데이터를 보존하고 나머지를 부분 반영한다. 차단·기타 구간 실패·급감·누락은 새 결과를 채택하지 않는다.
 - 운영 데이터는 A에서 기존 필터를 거쳐 합치며 `modetourPrimary`와 어드민 로그에 부분 성공·원인·처리를 남긴다. 자세한 기준은 `docs/modetour-browser-collector.md`.
@@ -14,7 +14,7 @@
 
 - **Stack**: Next.js 14 (App Router), TypeScript, CSS Modules, Playwright/Puppeteer
 - **Deploy**: Vercel (https://tikitikit.kr)
-- **Automation**: GitHub Actions — 일반 워크플로 하루 4회. 땡처리닷컴은 그중 08:17·14:23 KST 2회만 수집 (`daily-crawl.yml`)
+- **Automation**: GitHub Actions — 일반 워크플로 하루 5회. 땡처리닷컴 GitHub 수집은 그중 06:17·13:23 KST 2회만 실행 (`daily-crawl.yml`)
 - **Package Manager**: npm
 
 ## Data Sources (6 Travel Agencies)
@@ -90,8 +90,8 @@ src/components/Dashboard.tsx (client component)
 
 ### 일반 여행사 차단 보호
 
-- 일반 워크플로는 하루 4회 실행한다. 노랑풍선·하나투어·모두투어·온라인투어는 4회 모두,
-  땡처리닷컴은 08:17·14:23 KST 2회만 요청한다. 11:12·17:31의 땡처리 데이터는 이전 정상본을
+- 일반 워크플로는 06:17·10:12·13:23·16:31·19:31 KST 하루 5회 실행한다. 노랑풍선·하나투어·모두투어·온라인투어는 5회 모두,
+  땡처리닷컴 GitHub 수집은 06:17·13:23 KST 2회만 요청한다. 10:12·16:31·19:31의 땡처리 데이터는 이전 정상본을
   보존하고 `일정상 미실행`으로 기록하며 실패 횟수에 넣지 않는다. 워크플로 시작 0~5분,
   실제 소스 시작 최대 90초를 분산한다.
 - 401·403·429·CAPTCHA, 원본 0건, 직전 정상 원본의 60% 미만 급감은 소스별 차단으로 판정해
@@ -133,7 +133,7 @@ src/components/Dashboard.tsx (client component)
   남은 작업을 넘긴다. 두 호스트는 키·차단 상태·페이지 이동량을 공유하며 A 200회, C 250회,
   합계 450회를 넘지 않는다. 403·429·CAPTCHA나 불확실한 요청 상태가 생기면 같은 날
   추가 회차를 열지 않는다. 오늘의 표는 정상 게시된 네이버 결과 뒤 하루 한 번만 선정한다.
-- Windows `TikitikitBlockedSourceCrawl`은 일반 크롤과 같은 08:17/11:12/14:23/17:31 KST에
+- Windows `TikitikitBlockedSourceCrawl`은 일반 크롤과 같은 06:17/10:12/13:23/16:31/19:31 KST에
   시작해 해당 회차의 `main` 반영을 기다린다. GitHub 차단 회로가 열린 일반 여행사만 PC
   주거용 회선에서 부분 크롤하며, 성공해도 GitHub의 24시간 회로는 닫지 않는다. PC에서도
   차단 신호가 나오면 그 여행사의 PC 대체 수집도 24시간 중단한다. 모두투어는 이 작업의

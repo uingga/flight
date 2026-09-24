@@ -67,7 +67,7 @@ function githubHeaders(token?: string): Record<string, string> {
 
 function scheduledSkipSources(run: GitHubWorkflowRun): string[] {
     const title = run.display_title || '';
-    if (title.includes('12 1 * * *') || title.includes('31 7 * * *')) return ['ttang'];
+    if (title.includes('12 1 * * *') || title.includes('31 7 * * *') || title.includes('31 10 * * *')) return ['ttang'];
 
     const expectedAt = title.match(/(20\d{2}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z)/)?.[1];
     if (!expectedAt) return [];
@@ -79,7 +79,7 @@ function scheduledSkipSources(run: GitHubWorkflowRun): string[] {
     }).formatToParts(new Date(expectedAt));
     const hour = parts.find(part => part.type === 'hour')?.value;
     const minute = parts.find(part => part.type === 'minute')?.value;
-    return hour && minute && ['10:12', '16:31'].includes(`${hour}:${minute}`) ? ['ttang'] : [];
+    return hour && minute && ['10:12', '16:31', '19:31'].includes(`${hour}:${minute}`) ? ['ttang'] : [];
 }
 
 async function readCurrentGeneralCrawlRun() {
@@ -269,8 +269,8 @@ export async function GET(request: NextRequest) {
             const logPath = path.join(process.cwd(), 'data', 'crawl-log.json');
             if (fs.existsSync(logPath)) {
                 const logData = JSON.parse(fs.readFileSync(logPath, 'utf-8'));
-                // 하루 4회 기준 30일치를 넉넉히 담는다. 7일이 지난 기록은 로거가
-                // 도시·지역 상세를 제거하므로 장기 보관해도 파일이 크게 불어나지 않는다.
+                // 최근 200개 기록을 반환한다. 7일이 지난 기록은 로거가
+                // 도시·지역 상세를 제거하므로 파일이 크게 불어나지 않는다.
                 crawlHistory = (logData.entries || []).slice(-200);
             }
         } catch { }

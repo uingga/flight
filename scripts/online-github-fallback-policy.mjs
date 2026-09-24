@@ -7,7 +7,7 @@ export function assertOnlineGithubFallback({cache,expectedAt,now=new Date(),conf
     assert.equal(config.enabled,true,'primary_not_enabled');
     assert.equal(typeof expectedAt,'string','slot_required');
     const policy=evaluatePcCollection({cache,now,config});
-    assert.equal(policy.expectedAt,expectedAt,'stale_fallback_slot');
+    assert.equal(policy.onlineExpectedAt,expectedAt,'stale_fallback_slot');
     assert.equal(policy.githubFallbackDue,true,'github_fallback_not_due');
     return policy;
 }
