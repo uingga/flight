@@ -5,6 +5,7 @@ import { scrapeHanatour } from '../src/lib/scrapers/hanatour';
 import { scrapeModetour } from '../src/lib/scrapers/modetour';
 import { scrapeOnlineTour } from '../src/lib/scrapers/onlinetour';
 import { scrapeLottetour } from '../src/lib/scrapers/lottetour';
+import { decideLotteEmptyResponse, isSmallLotteZeroCircuit } from '../src/lib/lottetour-empty-policy';
 import { scrapeTtang } from '../src/lib/scrapers/ttang';
 import { scrapeMyrealtrip } from '../src/lib/scrapers/myrealtrip';
 import {
@@ -105,6 +106,8 @@ interface CacheData {
 const sourceNames = ['ybtour', 'hanatour', 'modetour', 'onlinetour', 'ttang', 'myrealtrip', 'lottetour'] as const;
 type SourceKey = typeof sourceNames[number];
 type CrawlableSourceKey = Exclude<SourceKey, 'myrealtrip'>;
+const DROP_RATIO = 0.6;       // 직전 원본의 60% 미만이면 의심
+const MIN_BASELINE = 30;      // 소량 소스의 자연 변동은 급감 판정에서 제외
 
 const parsedSourceStartJitter = Number.parseInt(process.env.SOURCE_START_JITTER_MAX_MS || '', 10);
 const sourceStartJitterMaxMs = Number.isFinite(parsedSourceStartJitter)
@@ -267,6 +270,10 @@ async function main() {
         prevCache?.sourceCircuits as Partial<Record<CrawlableSourceKey, SourceCircuitState>> | undefined,
         SOURCE_ADAPTER_VERSIONS,
     );
+    if (isSmallLotteZeroCircuit(sourceCircuits.lottetour, MIN_BASELINE)) {
+        delete sourceCircuits.lottetour;
+        console.log('ℹ️ lottetour 소량 재고 0건 오판 회로 해제');
+    }
     // Separate PC-primary and GitHub-backup circuits. Never clear one by succeeding on the other.
     if (onlinePcPrimary) {
         if (onlinePrimary?.circuit) sourceCircuits.onlinetour = onlinePrimary.circuit;
@@ -462,8 +469,6 @@ async function main() {
         // 의심스러운 값은 시간이 지나도 자동으로 받아들이지 않는다. 고장을 시간으로
         // 덮으면 여행사가 사이트를 바꿔 스크래퍼가 죽어도 그대로 굳어버리기 때문이다.
         // 대신 이전 데이터를 지키고, 몇 회 연속 문제인지까지 경고에 담아 사람이 고치게 한다.
-        const DROP_RATIO = 0.6;              // 직전의 60% 미만이면 의심
-        const MIN_BASELINE = 30;             // 원래 적은 소스는 흔들림이 커서 제외
         const integrityWarnings: string[] = [];
         const staleStreak: Record<string, number> = { ...(prevCache?.staleStreak || {}) };
         const manualCaptureStatus: Record<string, unknown> = { ...(prevCache?.manualCaptureStatus || {}) };
@@ -537,9 +542,18 @@ async function main() {
                 continue;
             }
 
-            // 0건은 명백한 실패 — 예전부터 이전 데이터를 지켜 왔다
-            if (freshCount === 0 && prevCount > 0 && !(src === 'onlinetour' && onlineVerifiedEmpty)) {
-                const restriction = classifySourceResponseDrop(freshCount, prevCount, {
+            // 롯데관광의 검증된 소량 목록은 마지막 출발편이 지나면 자연스럽게 0건이 된다.
+            // 아직 출발하지 않은 표가 사라졌다면 보존하고 다음 정규 회차에서 재확인한다.
+            const lotteEmptyDecision = src === 'lottetour' && freshCount === 0 && prevCount > 0
+                ? decideLotteEmptyResponse(srcPrevFlights, prevCache?.scrapedCounts?.lottetour, MIN_BASELINE)
+                : null;
+            if (lotteEmptyDecision === 'accept') {
+                console.log('ℹ️ lottetour 기존 항공권 출발 완료, 검증된 0건 목록 채택');
+            }
+            if (freshCount === 0 && prevCount > 0
+                && !(src === 'onlinetour' && onlineVerifiedEmpty)
+                && lotteEmptyDecision !== 'accept') {
+                const restriction = lotteEmptyDecision === 'preserve' ? null : classifySourceResponseDrop(freshCount, prevCount, {
                     dropRatio: DROP_RATIO,
                     minBaseline: MIN_BASELINE,
                 });
@@ -557,13 +571,21 @@ async function main() {
                             SOURCE_ADAPTER_VERSIONS[circuitSource],
                         );
                 }
-                keepPrevious(
-                    '0건 응답을 soft block으로 판정',
-                    `⛔ ${src} 0건 응답을 soft block으로 판정 — 이전 데이터 유지, `
-                    + (src === 'modetour'
-                        ? 'PC 자동 접속 없음, 수동 캡처 필요'
-                        : '24시간 자동 요청 중단'),
-                );
+                if (restriction) {
+                    keepPrevious(
+                        '0건 응답을 soft block으로 판정',
+                        `⛔ ${src} 0건 응답을 soft block으로 판정 — 이전 데이터 유지, `
+                        + (src === 'modetour'
+                            ? 'PC 자동 접속 없음, 수동 캡처 필요'
+                            : '24시간 자동 요청 중단'),
+                    );
+                } else {
+                    keepPrevious(
+                        '소량 목록 0건 응답 재확인 대기',
+                        `⚠️ ${src} 0건 응답 — 기존 활성 항공권을 보존하고 다음 정규 회차에서 재확인`,
+                        false,
+                    );
+                }
                 continue;
             }
 
@@ -651,7 +673,8 @@ async function main() {
             ) {
                 missingDetectionSafeSources.add(src);
             }
-            if (freshCount > 0 || (src === 'onlinetour' && onlineVerifiedEmpty)) sourceUpdatedAt[src] = new Date().toISOString();
+            if (freshCount > 0 || (src === 'onlinetour' && onlineVerifiedEmpty)
+                || (src === 'lottetour' && freshCount === 0)) sourceUpdatedAt[src] = new Date().toISOString();
             if (src === 'modetour' && modeResult) {
                 sourceUpdatedAt[src] = modeResult.capturedAt;
                 if (modeResult.partial) missingDetectionSafeSources.delete(src);

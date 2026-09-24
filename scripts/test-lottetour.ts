@@ -2,7 +2,8 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import fixture from './fixtures/lottetour/public-snapshot.json';
 import { lotteRows, parseLotteEnvelope, parseLotteFlight, scrapeLottetour } from '../src/lib/scrapers/lottetour';
-import { classifySourceAccessRestriction, classifySourceResponseDrop } from '../src/lib/source-circuit';
+import { classifySourceAccessRestriction } from '../src/lib/source-circuit';
+import { decideLotteEmptyResponse, isSmallLotteZeroCircuit } from '../src/lib/lottetour-empty-policy';
 import { getFlightBookingUrl } from '../src/lib/utils/booking-url';
 import { filterStaleSourceFlights } from '../src/lib/source-freshness';
 import { flightOfferKey, recordFlightOfferNews, rememberFlightOffers } from '../src/lib/flight-offer-history.mjs';
@@ -89,10 +90,18 @@ for (const status of [401, 403, 429, 500]) test(`HTTP ${status} stops immediatel
 test('CAPTCHA in HTTP 200 is a source restriction', () => {
     assert.throws(() => parseLotteEnvelope('<html>CAPTCHA</html>'), error => !!classifySourceAccessRestriction(error));
 });
-test('empty response remains subject to common old-cache preservation', async () => {
+test('verified empty response after the last flight departed is normal inventory', async () => {
     const run = replay([{ result: true, disPriceList: '[]' }]);
     assert.deepEqual(await run.promise, []);
-    assert.ok(classifySourceResponseDrop(0, 1));
+    assert.equal(decideLotteEmptyResponse([parse()], 1, 30, Date.parse('2026-09-23T21:37:35Z')), 'accept');
+    assert.equal(decideLotteEmptyResponse([parse()], 1, 30, Date.parse('2026-09-22T21:37:35Z')), 'preserve');
+    assert.equal(decideLotteEmptyResponse([parse()], 30, 30, Date.parse('2026-09-23T21:37:35Z')), 'standard');
+    assert.equal(decideLotteEmptyResponse([{ departure: { date: 'unknown' } }], 1, 30, Date.parse('2026-09-23T21:37:35Z')), 'preserve');
+    const falseCircuit = { reason: 'blocked', detail: 'soft block 의심: 응답 수량 1건에서 0건으로 감소' };
+    assert.equal(isSmallLotteZeroCircuit(falseCircuit, 30), true);
+    assert.equal(isSmallLotteZeroCircuit({ ...falseCircuit, status: 403 }, 30), false);
+    assert.equal(isSmallLotteZeroCircuit({ ...falseCircuit, detail: 'HTTP 403' }, 30), false);
+    assert.equal(isSmallLotteZeroCircuit({ ...falseCircuit, detail: 'soft block 의심: 응답 수량 30건에서 0건으로 감소' }, 30), false);
 });
 test('partial detail failure rejects the entire snapshot, no partial return', async () => {
     const two = { result: true, disPriceLine: JSON.stringify([line, { ...line, evtCd: 'SECOND', blockDetlId: 2 }]) };
