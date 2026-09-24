@@ -38,6 +38,17 @@ test('September empty checks October AND November without visible month buttons'
     assert.deepEqual(r.regions[0].checkedEmptyMonths,['202609','202610','202611']);
     assert.equal(r.productRequests,2);assert.equal(r.regionalNavigations,0);assert.equal(r.listDocumentRequests,2);
 });
+test('an owned first region with verified empty inventory checks later months',async()=>{
+    const f=fixture();
+    f.backend.openInitialRegion=async()=>{
+        const region=await f.backend.openRegion(1,1);
+        return {...region,enterFirstList:async()=>({snapshot:await region.inspect(),firstPage:null})};
+    };
+    const r=await collectOnlineTourCatalogue(plan,f.backend);
+    assert.equal(r.status,'review_ready');assert.equal(r.firstPageVerified,true);
+    assert.deepEqual(r.regions[0].checkedEmptyMonths,['202609','202610','202611']);
+    assert.deepEqual(f.requested,['202610','202611']);
+});
 test('October inventory after empty September enters city collection',async()=>{
     const f=fixture('october-city'),r=await collectOnlineTourCatalogue(plan,f.backend);
     assert.deepEqual(f.requested,['202610','city_collection']);

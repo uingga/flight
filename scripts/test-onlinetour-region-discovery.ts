@@ -149,6 +149,22 @@ test('one observed region click yields validated document and sanitized first-pa
     assert.ok(patterns.some((x: any) => x.resourceType === 'Document' && x.urlPattern === '*'));
     await assert.rejects(a.visitRegion('CH')); assert.equal(a.diagnostics.actions, 1); await a.close();
 });
+test('live count-only first page is accepted without inventing a product or a request', async () => {
+    const c = new Fake();
+    c.onClick = code => request(c, LIST + '?TabGubun=' + code + '&SelectedCityCd=', 'Document', '<html></html>', () => {
+        c.region = code;
+        request(c, api(code), 'Script', 'cb(' + JSON.stringify({ status: 200,
+            data: { list: [validRow('count-only')], count: 1, paging: null } }) + ');');
+    });
+    const a = await mod.createOnlineTourRegionDiscovery(c, { maxNavigations: 1, maxProductRequests: 1 });
+    const result = await a.visitRegion('CH');
+    assert.equal(result.firstPage?.totalCount, 1);
+    assert.equal(result.firstPage?.lastPage, 1);
+    assert.equal(result.firstPage?.nextPageAvailable, false);
+    assert.equal(result.firstPage?.rawProducts.length, 1);
+    assert.equal(a.diagnostics.permittedProductRequests, 1);
+    await a.close();
+});
 test('genuinely empty region succeeds without invented city or product request', async () => {
     const c = new Fake(); c.onClick = code => navigate(c, code, true);
     const a = await mod.createOnlineTourRegionDiscovery(c, { maxNavigations: 6, maxProductRequests: 6 });
@@ -156,7 +172,7 @@ test('genuinely empty region succeeds without invented city or product request',
     assert.equal(a.diagnostics.permittedProductRequests, 0); await a.close();
 });
 test('observed empty-city request requires empty API plus independently empty document', async () => {
-    for (const variant of ['valid','empty_with_more','rows','missing_document','hidden_city','restricted','wrong_month','missing_city']) {
+    for (const variant of ['valid','count_only_empty','empty_with_more','rows','missing_document','hidden_city','restricted','wrong_month','missing_city']) {
         const c=new Fake();
         c.onClick=code=>request(c,LIST+'?TabGubun='+code+'&SelectedCityCd=','Document','<html></html>',()=>{
             c.region=code;c.city='';c.elements=c.elements.filter(e=>e.tagName==='A');
@@ -166,11 +182,12 @@ test('observed empty-city request requires empty API plus independently empty do
             if(variant==='restricted')c.body='CAPTCHA';
             let url=api(code,{transportEndCity:'',eventStartMonth:variant==='wrong_month'?'202610':'202609'});
             if(variant==='missing_city'){const u=new URL(url);u.searchParams.delete('transportEndCity');url=u.toString();}
-            const empty='cb('+JSON.stringify({status:200,data:{list:[],paging:{curPage:1,totalLastPage:0,totalCount:0}}})+');';
+            const empty='cb('+JSON.stringify({status:200,data:variant==='count_only_empty'
+                ? {list:[],count:0,paging:null} : {list:[],paging:{curPage:1,totalLastPage:0,totalCount:0}}})+');';
             request(c,url,'Script',variant==='rows'?goodPayload:empty);
         });
         const a=await mod.createOnlineTourRegionDiscovery(c,{maxNavigations:1,maxProductRequests:1});
-        if(variant==='valid' || variant==='empty_with_more'){const r=await a.visitRegion('HN');assert.equal(r.firstPage,null);assert.equal(r.snapshot.emptyInventoryVerified,true);assert.equal(a.diagnostics.permittedProductRequests,1);}
+        if(['valid','count_only_empty','empty_with_more'].includes(variant)){const r=await a.visitRegion('HN');assert.equal(r.firstPage,null);assert.equal(r.snapshot.emptyInventoryVerified,true);assert.equal(a.diagnostics.permittedProductRequests,1);}
         else await assert.rejects(a.visitRegion('HN'));
         assert.ok(a.diagnostics.permittedProductRequests<=1);await a.close();
     }
@@ -181,6 +198,18 @@ test('malformed product rows fail rather than becoming successful evidence', asy
     };
     const a = await mod.createOnlineTourRegionDiscovery(c, { maxNavigations: 6, maxProductRequests: 6 });
     await assert.rejects(a.visitRegion('CH'), /invalid_product_rows/); await a.close();
+});
+test('explicit API access status remains a block, while an empty list is not', async () => {
+    for (const status of [401,403,429]) {
+        const c = new Fake(); c.onClick = code => request(c, LIST + '?TabGubun=' + code + '&SelectedCityCd=',
+            'Document', '<html></html>', () => {
+                c.region = code;
+                request(c, api(code), 'Script', 'cb(' + JSON.stringify({status,data:{list:[]}}) + ');');
+            });
+        const a = await mod.createOnlineTourRegionDiscovery(c, {maxNavigations:1,maxProductRequests:1});
+        await assert.rejects(a.visitRegion('CH'), /http_access_status/);
+        await a.close();
+    }
 });
 for (const [label, url] of [
     ['external', 'https://example.com/'], ['credentials', LIST.replace('www.', 'u:p@www.') + '?TabGubun=CH&SelectedCityCd='],

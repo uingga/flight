@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { validRow } from './test-onlinetour-browser-adapter';
 import { validatePilotResponse } from '../src/lib/onlinetour-browser-collector';
-import { operationalPlan,validateOperationalCatalogue,ONLINE_REGIONS,statusFixValidationSlot,STATUS_FIX_PARENT } from '../src/lib/onlinetour-operational';
+import { operationalPlan,validateOperationalCatalogue,isOnlineAccessFailure,ONLINE_REGIONS,statusFixValidationSlot,STATUS_FIX_PARENT } from '../src/lib/onlinetour-operational';
 import { evaluatePcCollection } from './pc-collection-policy.mjs';
 
 const now=Date.parse('2026-09-07T06:30:00Z');
@@ -47,6 +47,28 @@ test('zero is normal only when every region and every month is independently ver
         (s:any)=>{s.incompletePageCount=1;},
     ]) {const s=JSON.parse(base);change(s);assert.throws(()=>validateOperationalCatalogue(s,[],[],now,195));}
 });
+test('all city-month lists may be empty when each terminal zero page and coverage is verified',()=>{
+    const f=fixture();f.raw=[];f.flights=[];
+    Object.assign(f.summary,{uniqueCount:0,eligibleCount:0,outsideDepartureWindowCount:0});
+    Object.assign(f.summary.scopeResults[0],{rawCount:0,uniqueCount:0,duplicateCount:0});
+    for(const scope of f.summary.scopeResults[0].scopes) Object.assign(scope,{rawCount:0,uniqueCount:0,duplicateCount:0,
+        plannedLastPage:0,firstTotalCount:0,latestTotalCount:0,latestLastPage:0,metadataChanged:false});
+    assert.deepEqual(validateOperationalCatalogue(f.summary,[],[],now,195),[]);
+    const base=JSON.stringify(f.summary);
+    for(const change of [
+        (s:any)=>{s.scopeResults[0].scopes[0].rawCount=1;},
+        (s:any)=>{s.scopeResults[0].scopes[0].firstTotalCount=1;},
+        (s:any)=>{s.scopeResults[0].scopes[0].terminalVerified=false;},
+        (s:any)=>{s.scopeResults[0].scopes.pop();},
+        (s:any)=>{s.regions[0].cities.push({code:'BKK',firstDepartureDate:'20260907'});},
+    ]){const s=JSON.parse(base);change(s);assert.throws(()=>validateOperationalCatalogue(s,[],[],now,195));}
+});
+test('empty pages and schema failures do not open the access restriction cooldown',()=>{
+    for(const reason of ['empty_or_invalid_first_page','invalid_first_page','unverified_empty_first_page','empty_catalogue'])
+        assert.equal(isOnlineAccessFailure(reason),false);
+    for(const reason of ['access_restriction','http_access_status','access_body','restricted_dom'])
+        assert.equal(isOnlineAccessFailure(reason),true);
+});
 for(const [name,change] of Object.entries({
     sampled:(s:any)=>{s.plan.maxCitiesPerRegion=1;},excluded:(s:any)=>{s.plan.excludeCities=['PQC'];},
     failed:(s:any)=>{s.failure='validation';},cleanup:(s:any)=>{s.cleanupConfirmed=false;},
@@ -66,7 +88,7 @@ test('primary PC collects without a GitHub failure, only at chosen slots',()=>{
     const cache={fullCrawlUpdatedAt:'2026-09-07T05:40:00Z',sourceCircuits:{}};
     const config={enabled:true,slotsPerDay:2};
     assert.deepEqual(evaluatePcCollection({cache,now:new Date(now),config}).sources,['ttang','onlinetour','modetour']);
-    assert.deepEqual(evaluatePcCollection({cache:{...cache,fullCrawlUpdatedAt:'2026-09-07T08:40:00Z'},now:new Date('2026-09-07T08:50:00Z'),config}).sources,['modetour']);
+    assert.deepEqual(evaluatePcCollection({cache:{...cache,fullCrawlUpdatedAt:'2026-09-07T08:40:00Z'},now:new Date('2026-09-07T08:50:00Z'),config}).sources,['ttang','modetour']);
     assert.equal(evaluatePcCollection({cache:{...cache,fullCrawlUpdatedAt:'2026-09-07T08:40:00Z'},now:new Date('2026-09-07T08:50:00Z'),config:{...config,slotsPerDay:4}}).shouldRun,true);
 });
 test('primary PC waits upstream and honors both cooldowns and already attempted slot',()=>{

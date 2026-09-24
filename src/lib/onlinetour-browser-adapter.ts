@@ -13,6 +13,7 @@ import { ListReadError, type ListPage, type ListScope } from './onlinetour-list-
 import { parseOnlineTourJsonp } from './scrapers/source-response';
 import { followingMonth, nativeMonthUrl } from './onlinetour-month-navigation';
 import { isOnlineLowestOrder, validOnlineExtraQuery } from './onlinetour-query-contract';
+import { normalizeOnlineTourPaging } from './onlinetour-paging';
 
 export interface PartialPageEvidence {
     scope: ListScope; pageNo: number; attempt: number;
@@ -282,14 +283,11 @@ export async function createOnlineTourBrowserAdapter(client: CdpClient,
             if (Number((e as { status?: number }).status) >= 500) throw failure('transient', 'api_server_error');
             throw failure('validation', 'invalid_jsonp');
         }
-        const paging = payload.data.paging;
-        const totalCount = paging?.totalCount ?? payload.data.count;
-        const lastPage = paging?.totalLastPage;
-        if (paging?.curPage !== pageNo || !Number.isSafeInteger(totalCount) || totalCount! < 0
-            || !Number.isSafeInteger(lastPage) || lastPage! < 0 || payload.data.list.length > 20
+        const paging = normalizeOnlineTourPaging(payload.data, pageNo);
+        if (!paging
             || payload.data.list.some(row => !row || typeof row !== 'object' || Array.isArray(row)))
             throw failure('validation', 'invalid_paging');
-        return { pageNo, totalCount: totalCount!, lastPage: lastPage!, rawProducts: payload.data.list };
+        return { pageNo, ...paging, rawProducts: payload.data.list };
     }
     function requestMatches(url: string, method: string, a: Action): string {
         const q = new URL(url).searchParams;

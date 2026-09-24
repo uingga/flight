@@ -4,6 +4,7 @@ import { validatePilotResponse } from './onlinetour-browser-collector';
 import type { ListScope } from './onlinetour-list-traversal';
 import { nativeMonthUrl } from './onlinetour-month-navigation';
 import { isOnlineLowestOrder, ONLINE_EXTRA_QUERY_KEYS, validOnlineExtraQuery } from './onlinetour-query-contract';
+import { normalizeOnlineTourPaging } from './onlinetour-paging';
 
 export interface RegionSnapshot {
     region: string; cities: { code: string; firstDepartureDate: string }[];
@@ -194,10 +195,12 @@ export async function createOnlineTourRegionDiscovery(client: CdpClient, options
         const wrapper = /^\s*([A-Za-z_$][\w$]*)\s*\(([\s\S]*)\)\s*;?\s*$/.exec(text);
         if (!wrapper || wrapper[1] !== r.callback) throw new RegionDiscoveryError('invalid_jsonp');
         let p: any; try { p = JSON.parse(wrapper[2]); } catch { throw new RegionDiscoveryError('invalid_jsonp'); }
+        if ([401,403,429].includes(p.status)) throw new RegionDiscoveryError('http_access_status');
         if (p.status !== 200 || p.error || p.success === false) throw new RegionDiscoveryError('api_error');
-        const data = p.data, paging = data?.paging, count = paging?.totalCount ?? data?.count, last = paging?.totalLastPage;
-        if (!Array.isArray(data?.list) || data.list.length > 20 || paging?.curPage !== 1 || !Number.isSafeInteger(count) || count < 0 || !Number.isSafeInteger(last) || last < 0
-            || count < data.list.length || (count > 0 && last < 1) || data.list.some((x: any) => !x || typeof x !== 'object' || Array.isArray(x))) throw new RegionDiscoveryError('invalid_first_page');
+        const data = p.data, normalized = normalizeOnlineTourPaging(data, 1);
+        if (!normalized || data.list.some((x: any) => !x || typeof x !== 'object' || Array.isArray(x)))
+            throw new RegionDiscoveryError('invalid_first_page');
+        const { totalCount: count, lastPage: last } = normalized;
         if (r.scope?.city === '' && (data.list.length || count !== 0 || last > 1)) throw new RegionDiscoveryError('empty_inventory_mismatch');
         if (data.list.length && validatePilotResponse(text, r.callback!).status !== 'pilot_ready_for_review') throw new RegionDiscoveryError('invalid_product_rows');
         // Public product-field projection, not the response envelope. Validate the projection too

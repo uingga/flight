@@ -25,6 +25,15 @@ export function validateAdFrameRecheckEvidence(marker: any, prior: any, date: st
         throw new Error('ad_frame_recheck_evidence_required');
     return id;
 }
+export function verifiedEmptyFirstEntry(result: RegionDiscoveryResult | null): boolean {
+    if (!result || result.snapshot.restricted) return false;
+    const first = result.firstPage;
+    if (first) return first.rawProducts.length === 0 && first.totalCount === 0 && first.lastPage <= 1
+        && first.nextPageAvailable === false && !!result.snapshot.currentScope
+        && JSON.stringify(result.snapshot.currentScope) === JSON.stringify(first.scope);
+    return result.snapshot.emptyInventoryVerified === true && result.snapshot.cities.length === 0
+        && result.snapshot.currentScope === null;
+}
 
 // Explicitly authorized first-entry pilot or one fresh, user-approved ad-frame recheck.
 // Never scheduled; no automatic retry, deleted markers or operational merge.
@@ -82,8 +91,9 @@ async function main() {
         const firstPage = result?.firstPage || adapter?.partialEvidence[0] || null;
         const rawProducts = firstPage?.rawProducts || [];
         const validation = rawProducts.length ? validatePilotResponse('cb(' + JSON.stringify({ status: 200, data: { list: rawProducts } }) + ');', 'cb') : null;
-        if (!failure && (!result || !validation || validation.status !== 'pilot_ready_for_review')) failure = 'empty_or_invalid_first_page';
-        const summary = { runId: run.runId, status: failure ? 'failed' : 'pilot_ready_for_review', failure,
+        const verifiedEmpty = verifiedEmptyFirstEntry(result);
+        if (!failure && (!result || !verifiedEmpty && validation?.status !== 'pilot_ready_for_review')) failure = 'empty_or_invalid_first_page';
+        const summary = { runId: run.runId, status: failure ? 'failed' : verifiedEmpty ? 'pilot_verified_empty' : 'pilot_ready_for_review', failure,
             partialScope: true, productionReady: false, browserMode: 'persistent_dedicated_loopback',
             rawCount: rawProducts.length, mappedCount: validation?.flights.length || 0, scope: firstPage?.scope || null,
             snapshot: result?.snapshot || null, cleanupConfirmed, diagnostics: adapter?.diagnostics || null,
@@ -91,7 +101,7 @@ async function main() {
             mode: recheck ? 'user_approved_ad_frame_recheck' : 'first_entry', priorRunId,
             finishedAt: new Date().toISOString() };
         run.write('raw-products.json', rawProducts); run.write('flights.json', validation?.flights || []); run.write('summary.json', summary);
-        if (['http_access_status', 'access_body', 'restricted_dom', 'empty_or_invalid_first_page'].includes(failure || ''))
+        if (['http_access_status', 'access_body', 'restricted_dom'].includes(failure || ''))
             fs.writeFileSync(cooldown, JSON.stringify({ nextProbeAt: new Date(Date.now() + 86400_000).toISOString(), reason: failure }));
         console.log(JSON.stringify(summary));
         process.exitCode = failure ? 1 : 0;

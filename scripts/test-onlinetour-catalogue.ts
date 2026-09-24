@@ -53,7 +53,8 @@ test('window plan refuses mismatched month, duplicate exclusions and follow-up b
         {...p,reloadStart:true}, {...p,maxRetries:1}]) assert.throws(() => validateCombinedPlan(bad));
 });
 function fixture(options: { departure?: string; lateAccess?: boolean; regionFailure?: boolean; transient?: boolean; duplicate?: boolean;
-    extraCities?: boolean; extraCityCount?: number; emptyFirst?: boolean; gateLateAccess?: boolean } = {}) {
+    extraCities?: boolean; extraCityCount?: number; emptyFirst?: boolean; validEmptyFirst?: boolean;
+    validEmptyAll?: boolean; gateLateAccess?: boolean } = {}) {
     let region = 'AS', scope = { departure: options.departure || 'ICN', city: 'PQC', month: '202609' }, open = false, calls = 0;
     const requests: string[] = [], caps: number[] = [];
     const city = () => region === 'AS' ? 'PQC' : 'TAO';
@@ -62,8 +63,11 @@ function fixture(options: { departure?: string; lateAccess?: boolean; regionFail
             ...Array.from({length:options.extraCityCount || 0},(_,i)=>(region==='AS'?'XA':'YA')+String.fromCharCode(65+i))]
             .map(code => ({ code, firstDepartureDate: '20260907' })),
         monthCandidates: ['202609','202610'], availableRegions: ['AS','CH'] });
-    const page = () => ({ pageNo: 1, totalCount: 1, lastPage: 1, nextPageAvailable: false,
-        rawProducts: [validRow(options.duplicate ? 'duplicate' : region + scope.city + scope.month)] });
+    const page = () => {
+        const empty = options.validEmptyAll || (options.validEmptyFirst && region === 'AS' && scope.month === '202609');
+        return { pageNo: 1, totalCount: empty ? 0 : 1, lastPage: empty ? 0 : 1, nextPageAvailable: false,
+            rawProducts: empty ? [] : [validRow(options.duplicate ? 'duplicate' : region + scope.city + scope.month)] };
+    };
     const backend: CatalogueBackend = {
         wait: async () => {},
         async openRegion(navigationCap, productCap) {
@@ -180,6 +184,32 @@ test('combined gate transfers first page without another request then samples th
     assert.deepEqual(r.deferred, [{ region: 'AS', city: 'CEB', reason: 'outside_city_sample' }]);
     assert.deepEqual(f.requests, ['reload:AS','PQC:202610:1','DAD:202609:1','DAD:202610:1','BKK:202609:1','BKK:202610:1']);
     assert.equal(events[0].stage, 'first_page_verified'); assert.equal(f.caps[0], 19);
+});
+test('a verified empty first city page continues the remaining city and month scopes', async () => {
+    const f = fixture({ validEmptyFirst: true });
+    f.backend.openInitialRegion = async () => {
+        const region = await f.backend.openRegion(1,1);
+        return {...region, enterFirstList:()=>region.reloadExistingRegion!('AS')};
+    };
+    const r = await collectOnlineTourCatalogue(plan, f.backend);
+    assert.equal(r.status, 'review_ready', r.failure || undefined); assert.equal(r.firstPageVerified, true);
+    assert.equal(r.plannedCoverageCompleted, true); assert.equal(r.flights.length, 3);
+    assert.equal(r.traversals[0].scopes[0].rawCount, 0);
+    assert.equal(r.traversals[0].scopes[0].terminalVerified, true);
+    assert.equal(f.requests.filter(s => s === 'reload:AS').length, 1);
+    assert.equal(f.requests.filter(s => s === 'PQC:202609:1').length, 0);
+});
+test('every verified empty city page can complete the catalogue without a block signal', async () => {
+    const f = fixture({ validEmptyAll: true });
+    f.backend.openInitialRegion = async () => {
+        const region = await f.backend.openRegion(1,1);
+        return {...region, enterFirstList:()=>region.reloadExistingRegion!('AS')};
+    };
+    const r = await collectOnlineTourCatalogue(plan, f.backend);
+    assert.equal(r.status, 'review_ready', r.failure || undefined); assert.equal(r.failure, null);
+    assert.equal(r.plannedCoverageCompleted, true); assert.equal(r.flights.length, 0);
+    assert.equal(r.traversals.length, 4);
+    assert.ok(r.traversals.every(t => t.scopes[0].terminalVerified && t.scopes[0].rawCount === 0));
 });
 test('a failed, empty or late-restricted first gate never opens the city traversal adapter', async () => {
     for (const options of [{ regionFailure: true }, { emptyFirst: true }, { gateLateAccess: true }]) {

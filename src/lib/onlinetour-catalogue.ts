@@ -187,13 +187,25 @@ export async function collectOnlineTourCatalogue(input: CataloguePlan, backend: 
                 progress({ stage: 'verified_checkpoint_reused', rows: resume.initialEvidence.rawProducts.length, productRequests: result.productRequests });
             } else if (!started && (plan.reloadStart || ownedEntry)) {
                 const first = observed.firstPage;
-                if (!first?.rawProducts.length) throw new Error('empty_or_invalid_first_page');
-                const checked = validatePilotResponse('gate(' + JSON.stringify({ status: 200, data: { list: first.rawProducts } }) + ');', 'gate');
-                if (checked.status !== 'pilot_ready_for_review' || first.pageNo !== 1
-                    || typeof first.nextPageAvailable !== 'boolean') throw new Error('empty_or_invalid_first_page');
+                if (!first) {
+                    if (!observed.snapshot.emptyInventoryVerified || observed.snapshot.cities.length
+                        || observed.snapshot.currentScope || !monthOK(observed.snapshot.inventoryMonth))
+                        throw new Error('unverified_first_region');
+                } else {
+                    if (first.pageNo !== 1 || typeof first.nextPageAvailable !== 'boolean'
+                        || !observed.snapshot.currentScope || key(first.scope) !== key(observed.snapshot.currentScope))
+                        throw new Error('invalid_first_page');
+                    if (!first.rawProducts.length) {
+                        if (first.totalCount !== 0 || first.lastPage > 1 || first.nextPageAvailable)
+                            throw new Error('unverified_empty_first_page');
+                    } else {
+                        const checked = validatePilotResponse('gate(' + JSON.stringify({ status: 200, data: { list: first.rawProducts } }) + ');', 'gate');
+                        if (checked.status !== 'pilot_ready_for_review') throw new Error('invalid_first_page');
+                    }
+                }
                 // The old adapter has fully closed (including late restrictions) before the gate passes.
                 result.firstPageVerified = true;
-                progress({ stage: 'first_page_verified', scope: first.scope, rows: checked.flights.length,
+                progress({ stage: 'first_page_verified', scope: first?.scope || null, rows: first?.rawProducts.length || 0,
                     productRequests: result.productRequests });
             }
             started = true;
@@ -315,8 +327,10 @@ export async function collectOnlineTourCatalogue(input: CataloguePlan, backend: 
             }
             regionResult.completed = true;
         }
-        if (!result.flights.length && !(result.regions.length === plan.regions.length
-            && result.regions.every(r => r.completed && !r.cities.length && r.emptyInventoryVerified))) throw new Error('empty_catalogue');
+        if (!result.flights.length && !result.traversals.some(t => t.scopes.some(s => s.pagesRead > 0))
+            && !(result.regions.length === plan.regions.length
+                && result.regions.every(r => r.completed && !r.cities.length && r.emptyInventoryVerified)))
+            throw new Error('empty_catalogue');
         result.plannedCoverageCompleted = true;
         result.requestBudget.unknownRegions = 0;
         result.requestBudget.completeEstimate = true;

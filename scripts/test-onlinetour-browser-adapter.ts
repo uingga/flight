@@ -176,6 +176,29 @@ test('real more DOM click captures correlated JSONP and terminal screen state', 
     assert.ok(client.calls.some(c => c.method === 'Network.getResponseBody'));
     await adapter.close();
 });
+test('count-only list metadata uses the requested page and independent terminal screen', async () => {
+    const client = new FakeCdp();
+    const adapter = await authorizedAdapter(client);
+    const text = `offlineCallback(${JSON.stringify({ status: 200,
+        data: { list: [{ event_code: 'offline-only' }], count: 21, paging: null } })});`;
+    client.onAction = () => respond(client, 2, { next: false, text });
+    const result = await adapter.readPage(scope, 2, 1);
+    assert.deepEqual(result, { pageNo: 2, totalCount: 21, lastPage: 2,
+        rawProducts: [{ event_code: 'offline-only' }], nextPageAvailable: false });
+    assert.equal(adapter.diagnostics.permittedProductRequests, 1);
+    await adapter.close();
+});
+test('count-only empty list is distinct from malformed metadata', async () => {
+    const client = new FakeCdp();
+    const adapter = await authorizedAdapter(client);
+    const text = `offlineCallback(${JSON.stringify({ status: 200,
+        data: { list: [], count: 0, paging: null } })});`;
+    client.onAction = () => respond(client, 1, { document: true, next: false, text });
+    const result = await adapter.readPage(scope, 1, 1);
+    assert.deepEqual(result, { pageNo: 1, totalCount: 0, lastPage: 0,
+        rawProducts: [], nextPageAvailable: false });
+    await adapter.close();
+});
 
 async function expectKind(fn: () => Promise<unknown>, kind: string, reason?: string) {
     await assert.rejects(fn, (e: any) => e.kind === kind && (!reason || e.message === reason));

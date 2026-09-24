@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { validateAdFrameRecheckEvidence } from './probe-onlinetour-first-entry';
+import { validateAdFrameRecheckEvidence, verifiedEmptyFirstEntry } from './probe-onlinetour-first-entry';
 
 const id = '6054e2ad-40dc-4ac4-be77-6bab6ce09f62';
 const date = new Date(Date.now() + 9 * 3600_000).toISOString().slice(0, 10);
@@ -19,4 +19,16 @@ for (const patch of [
 ]) assert.throws(() => validateAdFrameRecheckEvidence({ runId: id }, { ...prior, ...patch }, date));
 assert.throws(() => validateAdFrameRecheckEvidence({ runId: '../../escape' }, prior, date));
 assert.throws(() => validateAdFrameRecheckEvidence({ runId: id }, null, date));
-console.log('12 offline recheck-evidence cases passed; site requests=0');
+const emptySnapshot:any={region:'AS',cities:[],currentScope:null,restricted:false,emptyInventoryVerified:true};
+assert.equal(verifiedEmptyFirstEntry({snapshot:emptySnapshot,firstPage:null}),true);
+const scope={departure:'ICN',city:'PQC',month:'202609'};
+const emptyCity:any={snapshot:{...emptySnapshot,cities:[{code:'PQC',firstDepartureDate:'20260907'}],currentScope:scope},
+    firstPage:{scope,pageNo:1,totalCount:0,lastPage:0,rawProducts:[],nextPageAvailable:false}};
+assert.equal(verifiedEmptyFirstEntry(emptyCity),true);
+for(const invalid of [
+    {...emptyCity,firstPage:{...emptyCity.firstPage,totalCount:1}},
+    {...emptyCity,firstPage:{...emptyCity.firstPage,nextPageAvailable:true}},
+    {...emptyCity,snapshot:{...emptyCity.snapshot,restricted:true}},
+    {...emptyCity,snapshot:{...emptyCity.snapshot,currentScope:null}},
+])assert.equal(verifiedEmptyFirstEntry(invalid),false);
+console.log('offline first-entry evidence cases passed; site requests=0');

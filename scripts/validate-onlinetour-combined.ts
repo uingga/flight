@@ -4,6 +4,7 @@ import { parseCataloguePlan, type CataloguePlan } from '../src/lib/onlinetour-ca
 import { checkValidationCooldown, createLiveCatalogueBackend, executeCatalogue } from './crawl-onlinetour-catalogue';
 import { inspectResumeCheckpoint } from '../src/lib/onlinetour-resume';
 import { createDepartureWindow } from '../src/lib/onlinetour-departure-window';
+import { isOnlineAccessFailure } from '../src/lib/onlinetour-operational';
 
 function readSmallJson(file: string) {
     const stat = fs.lstatSync(file);
@@ -109,9 +110,7 @@ async function main() {
         console.log(JSON.stringify({ stage: 'combined_validation_started', plan, productionReady: false }));
         const result = await executeCatalogue(root, plan, backend, false,
             event => console.log(JSON.stringify(event)), recovered?.resume);
-        const limited = ['access_restriction', 'http_access_status', 'access_body', 'restricted_dom',
-            'empty_or_invalid_first_page'].includes(result.failure || '')
-            || result.failure === 'empty_catalogue' && result.productRequests + result.regionalNavigations > 0;
+        const limited = isOnlineAccessFailure(result.failure);
         if (limited) fs.writeFileSync(cooldown, JSON.stringify({ nextProbeAt: new Date(Date.now() + 86400_000).toISOString(), reason: result.failure }));
         console.log(JSON.stringify({ stage: 'combined_validation_finished', runId: result.runId, status: result.status,
             failure: result.failure, firstPageVerified: result.firstPageVerified, productRequests: result.productRequests,

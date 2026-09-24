@@ -33,12 +33,11 @@ export function operationalPlan(currentRegion: string, now = Date.now(), orderSe
         ...(orderSeed ? {orderSeed} : {})};
 }
 export function isOnlineAccessFailure(reason: unknown): boolean {
-    return ['access_restriction','http_access_status','access_body','restricted_dom',
-        'empty_or_invalid_first_page','empty_catalogue'].includes(String(reason));
+    return ['access_restriction','http_access_status','access_body','restricted_dom'].includes(String(reason));
 }
 /** Full planned inventory only. A sampled/failed run can never become operational input. */
 export function validateOperationalCatalogue(summary: any, raw: any[], saved: Flight[], now = Date.now(), baseline?: number, validationLimit:20|30|40|100=100): Flight[] {
-    if (isOnlineAccessFailure(summary?.failure)) throw new SourceResponseError('soft-block','온라인투어 PC 접근 제한 또는 빈 응답');
+    if (isOnlineAccessFailure(summary?.failure)) throw new SourceResponseError('soft-block','온라인투어 PC 접근 제한');
     assert.ok(summary && summary.offlineOnly === false && ['review_ready','review_ready_with_changes'].includes(summary.status));
     assert.equal(summary.failure,null); assert.equal(summary.cleanupConfirmed,true); assert.equal(summary.plannedCoverageCompleted,true);
     const plan = summary.plan;
@@ -73,7 +72,14 @@ export function validateOperationalCatalogue(summary: any, raw: any[], saved: Fl
       }
     }
     assert.ok(Array.isArray(raw) && raw.length <= validationLimit*20);
-    const verifiedEmpty = raw.length === 0 && summary.regions.every((r:any) => r.cities.length === 0 && r.emptyInventoryVerified === true);
+    const verifiedEmpty = raw.length === 0 && (
+        summary.regions.every((r:any) => r.cities.length === 0 && r.emptyInventoryVerified === true)
+        || (scopes.length > 0 && summary.scopeResults.every((t:any) => t.rawCount === 0 && t.uniqueCount === 0
+            && t.duplicateCount === 0) && scopes.every((s:any) => s.terminalVerified === true && s.pagesRead === 1
+            && s.rawCount === 0 && s.uniqueCount === 0 && s.duplicateCount === 0
+            && s.firstTotalCount === 0 && s.latestTotalCount === 0
+            && [0,1].includes(s.plannedLastPage) && [0,1].includes(s.latestLastPage)
+            && s.metadataChanged === false)));
     assert.ok(raw.length > 0 || verifiedEmpty);
     assert.ok(summary.productRequests > 0 || verifiedEmpty);
     const mapped: Flight[] = [];
