@@ -1,107 +1,34 @@
-'use client';
-
-import { useEffect, useRef, useState } from 'react';
-import Script from 'next/script';
 import styles from './page.module.css';
 
-const ADSENSE_CLIENT = 'ca-pub-8329497855024061';
-const HOME_FOOTER_SLOT = '9981185347';
-
-type AdStatus = 'pending' | 'filled' | 'unfilled';
+const USIMSA_AFFILIATE_URL = 'https://usimsa.com/affiliate/3624';
 
 interface RedesignAdSlotProps {
     preview?: boolean;
 }
 
 export default function RedesignAdSlot({ preview = false }: RedesignAdSlotProps) {
-    const adRef = useRef<HTMLModElement>(null);
-    const requestedRef = useRef(false);
-    const resolvedRef = useRef(false);
-    const [status, setStatus] = useState<AdStatus>('pending');
-
-    useEffect(() => {
-        if (preview || !adRef.current) return;
-
-        const adElement = adRef.current;
-        const updateStatus = () => {
-            const adStatus = adElement.dataset.adStatus;
-            if (adStatus === 'filled') {
-                resolvedRef.current = true;
-                setStatus('filled');
-            } else if (adStatus === 'unfilled' || adStatus === 'unfill-optimized') {
-                resolvedRef.current = true;
-                setStatus('unfilled');
-            }
-        };
-
-        const observer = new MutationObserver(updateStatus);
-        observer.observe(adElement, {
-            attributes: true,
-            attributeFilter: ['data-ad-status'],
-        });
-        updateStatus();
-
-        if (!requestedRef.current) {
-            try {
-                const adsenseWindow = window as Window & {
-                    adsbygoogle?: Array<Record<string, unknown>>;
-                };
-                (adsenseWindow.adsbygoogle = adsenseWindow.adsbygoogle || []).push({});
-                requestedRef.current = true;
-            } catch {
-                resolvedRef.current = true;
-                setStatus('unfilled');
-            }
-        }
-
-        const timeout = window.setTimeout(() => {
-            if (!resolvedRef.current) setStatus('unfilled');
-        }, 8_000);
-
-        return () => {
-            observer.disconnect();
-            window.clearTimeout(timeout);
-        };
-    }, [preview]);
-
-    if (preview) {
-        return (
-            <aside className={styles.adPlacementPreview} aria-label="광고 위치 미리보기">
-                <span className={styles.adPlacementLabel}>광고</span>
-                <div className={styles.adPlacementCanvas}>
-                    <span className={styles.adPlacementMark} aria-hidden="true">AD</span>
-                    <span className={styles.adPlacementCopy}>
-                        <strong>실제 광고가 들어올 자리</strong>
-                        <small>미리보기에서만 영역을 표시하고 있어요.</small>
-                    </span>
-                </div>
-            </aside>
-        );
-    }
-
     return (
-        <>
-            <Script
-                id="tikitikit-home-adsense"
-                src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
-                strategy="afterInteractive"
-                crossOrigin="anonymous"
-            />
-            <aside
-                className={`${styles.homeAdSlot} ${status === 'pending' ? styles.homeAdSlotPending : ''} ${status === 'unfilled' ? styles.homeAdSlotUnfilled : ''}`}
-                aria-label="광고"
+        <aside className={styles.homeAdSlot} aria-label="유심사 여행용 eSIM 제휴 광고">
+            <span className={styles.homeAdLabel}>제휴 광고 · 구매 시 수수료를 받습니다</span>
+            <a
+                className={styles.homeEsimBanner}
+                href={preview ? undefined : USIMSA_AFFILIATE_URL}
+                target={preview ? undefined : '_blank'}
+                rel={preview ? undefined : 'sponsored nofollow noopener noreferrer'}
+                aria-disabled={preview || undefined}
+                aria-label={preview ? '유심사 여행용 eSIM 배너 미리보기' : '유심사 여행용 eSIM 보기 (새 창)'}
             >
-                <span className={styles.homeAdLabel}>광고</span>
-                <ins
-                    ref={adRef}
-                    className={`adsbygoogle ${styles.homeAdIns}`}
-                    style={{ display: 'block', width: '100%' }}
-                    data-ad-client={ADSENSE_CLIENT}
-                    data-ad-slot={HOME_FOOTER_SLOT}
-                    data-ad-format="horizontal"
-                    data-full-width-responsive="true"
-                />
-            </aside>
-        </>
+                <svg className={styles.homeEsimIcon} viewBox="0 0 32 32" fill="none" aria-hidden="true">
+                    <path d="M10 3h10l6 6v18a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V7a4 4 0 0 1 4-4Z" stroke="currentColor" strokeWidth="1.7" />
+                    <rect x="11" y="14" width="10" height="10" rx="2" stroke="currentColor" strokeWidth="1.5" />
+                    <path d="M16 14v10M11 19h10" stroke="currentColor" strokeWidth="1.3" />
+                </svg>
+                <span className={styles.homeEsimCopy}>
+                    <strong>해외 데이터, 출발 전에.</strong>
+                    <span>유심사 여행용 eSIM</span>
+                </span>
+                <span className={styles.homeEsimAction}>eSIM 보기 <span aria-hidden="true">→</span></span>
+            </a>
+        </aside>
     );
 }
