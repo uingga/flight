@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {publishCommittedWriter} from './publish-writer.mjs';
+import {publicationDiagnostic} from '../src/lib/writer-publication-diagnostics.mjs';
 
 const base='a'.repeat(40),head='b'.repeat(40),published='c'.repeat(40);
 const current={flights:[{id:'old-y',source:'ybtour'},{id:'tripcom-new',source:'tripcom'}],count:2,
@@ -30,6 +31,13 @@ test('committed daily writer preserves Trip.com from exact latest base',async()=
 test('base changed before merge refuses commit rather than publishing stale cache',async()=>{
  const calls=[];
  const brokerFactory=()=>async(action,payload)=>{calls.push(action);return {ref:published,cache:current};};
- await assert.rejects(publishCommittedWriter({role:'daily',env,git,brokerFactory}),/base changed/);
+ await assert.rejects(publishCommittedWriter({role:'daily',env,git,brokerFactory}),error=>{
+  assert.match(error.message,/base changed/);
+  assert.deepEqual(publicationDiagnostic(error),{
+   event:'writer-publication-error',outcome:'refused',code:'WRITER_PRECOMMIT_BASE_CHANGED',
+   httpStatus:null,lastCode:null,lastHttpStatus:null,requestId:head,receiptAccepted:false,newRequestAllowed:true,
+  });
+  return true;
+ });
  assert.deepEqual(calls,['readInputs']);
 });

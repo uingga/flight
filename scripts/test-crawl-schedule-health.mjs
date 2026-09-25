@@ -366,6 +366,10 @@ test('the Windows blocked-source fallback includes the shared evening slot', () 
     assert.match(runner, /data\/crawl-log\.json/);
     assert.match(runner, /--sources=/);
     assert.match(runner, /crawl-all\.ts \$SourceArgument/);
+    assert.match(runner, /git ls-files -u/);
+    assert.match(runner, /WRITER_PRECOMMIT_BASE_CHANGED/);
+    assert.match(runner, /refs\/tikitikit-publication\/\$LocalCommit/);
+    assert.match(runner, /re-merging saved result once without site requests/);
 });
 
 test('a successful Windows Naver filter selects today pick with conflict-safe push retries', () => {

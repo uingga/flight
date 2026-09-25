@@ -35,6 +35,23 @@ test('foreign writer cannot introduce Trip.com rows absent from current main',()
  assert.equal(result.entries[0][1].tripcomPrimary,undefined);
 });
 
+test('identical Trip.com data keeps the exact local cache bytes for reconciliation',()=>{
+ const alreadyCurrent={...current,flights:[current.flights[1],{id:'y-new',source:'ybtour'}]};
+ const entries=[['data/all-flights-cache.json',alreadyCurrent],['data/crawl-log.json',{latest:'fallback'}]];
+ const rawEntries=[['data/all-flights-cache.json',JSON.stringify(alreadyCurrent,null,2)+'\n'],['data/crawl-log.json','{"latest":"fallback"}\n']];
+ const result=preserveTripcomForForeignWriter(current,entries,rawEntries);
+ assert.equal(result.entries,entries);
+ assert.equal(result.rawEntries,rawEntries);
+ assert.equal(result.rawEntries[0][1],rawEntries[0][1]);
+});
+
+test('changed Trip.com field still uses the current main slice',()=>{
+ const stale={...current,sourceUpdatedAt:{tripcom:'old'}};
+ const result=preserveTripcomForForeignWriter(current,[['data/all-flights-cache.json',stale]]);
+ assert.equal(result.entries[0][1].sourceUpdatedAt.tripcom,current.sourceUpdatedAt.tripcom);
+ assert.notEqual(result.entries[0][1],stale);
+});
+
 test('non-cache publication remains unchanged',()=>{
  const entries=[['data/crawl-log.json',{latest:'daily'}]];
  const result=preserveTripcomForForeignWriter(current,entries);

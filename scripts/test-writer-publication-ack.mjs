@@ -130,6 +130,8 @@ test('diagnostic output excludes tokens, arbitrary errors, URLs and response bod
  assert.match(publicationFailureMessage(error),/outcome unknown/);
  assert.match(publicationFailureMessage({publicationOutcome:'refused'}),/refused/);
  assert.equal(publicationDiagnostic({code:'secret-token'}).code,null);
+ assert.equal(publicationDiagnostic({code:'WRITER_PRECOMMIT_BASE_CHANGED',publicationOutcome:'refused'}).newRequestAllowed,false);
+ assert.equal(publicationDiagnostic({code:'WRITER_PRECOMMIT_BASE_CHANGED',publicationOutcome:'unknown',beforeCommit:true}).newRequestAllowed,false);
 });
 
 test('HTTP diagnostic codes preserve timeout, redirect and response-size refusal',async()=>{

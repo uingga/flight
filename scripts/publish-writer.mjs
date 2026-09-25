@@ -26,7 +26,9 @@ export async function publishCommittedWriter({role,root=process.cwd(),env=proces
  let publication={entries,rawEntries};
  if(role!=='tripcom'&&names.includes('data/all-flights-cache.json')){
   const latest=await broker('readInputs');
-  if(latest.ref!==base)throw Error('writer base changed before Trip.com preservation');
+  if(latest.ref!==base)throw Object.assign(Error('writer base changed before Trip.com preservation'),{
+   code:'WRITER_PRECOMMIT_BASE_CHANGED',publicationOutcome:'refused',beforeCommit:true,requestId:head,
+  });
   publication=preserveTripcomForForeignWriter(latest.cache,entries,rawEntries);
  }
  const result=await broker('commit',{expectedBase:base,requestId:head,...publication});

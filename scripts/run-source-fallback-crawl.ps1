@@ -45,6 +45,13 @@ while ($true) {
     $PullExitCode = $LASTEXITCODE
     $PullOutput | Add-Content -Encoding utf8 $LogFile
     if ($PullExitCode -ne 0) {
+        # A merge conflict cannot heal by repeating pull. Leave the evidence intact,
+        # release this scheduled task, and never hold a later Naver round open.
+        $Unmerged = @(git ls-files -u)
+        if ($Unmerged.Count -gt 0) {
+            Log 'Git pull left unmerged files; stopping without site requests for review'
+            exit 1
+        }
         if (-not $Scheduled) {
             Log 'Git pull failed; stopping without requests'
             exit 1
@@ -207,14 +214,38 @@ for ($Attempt = 1; $Attempt -le 2; $Attempt++) {
         exit 1
     }
 
-    & node (Join-Path $ProjectDir 'scripts/writer-push.mjs') source-fallback origin main 2>&1 | ForEach-Object { "$_" | Add-Content -Encoding utf8 $LogFile }
-    if ($LASTEXITCODE -eq 0) {
+    $PushOutput = @(& node (Join-Path $ProjectDir 'scripts/writer-push.mjs') source-fallback origin main 2>&1)
+    $PushExitCode = $LASTEXITCODE
+    $PushOutput | ForEach-Object { "$_" | Add-Content -Encoding utf8 $LogFile }
+    if ($PushExitCode -eq 0) {
         Log "Fallback cache pushed (attempt $Attempt)"
         $Published = $true
         break
     }
 
     if ($env:NAVER_COORDINATION -eq '1') {
+        $Diagnostic = $null
+        foreach ($Line in $PushOutput) {
+            try {
+                $Candidate = "$Line" | ConvertFrom-Json -ErrorAction Stop
+                if ($Candidate.event -eq 'writer-publication-error') { $Diagnostic = $Candidate }
+            } catch { }
+        }
+        if ($Attempt -lt 2 -and $Diagnostic.code -eq 'WRITER_PRECOMMIT_BASE_CHANGED' -and
+            $Diagnostic.outcome -eq 'refused' -and $Diagnostic.newRequestAllowed -eq $true) {
+            # The writer has not submitted a commit request. Keep the exact result
+            # reachable, then re-merge the saved source copies onto the new main.
+            $LocalCommit = (& git rev-parse HEAD).Trim()
+            if ($LASTEXITCODE -ne 0 -or $LocalCommit -notmatch '^[a-f0-9]{40}$') { exit 1 }
+            & git update-ref "refs/tikitikit-publication/$LocalCommit" $LocalCommit 2>&1 | Add-Content -Encoding utf8 $LogFile
+            if ($LASTEXITCODE -ne 0) { exit 1 }
+            & git reset --soft HEAD~1 2>&1 | Add-Content -Encoding utf8 $LogFile
+            if ($LASTEXITCODE -ne 0) { exit 1 }
+            & git reset HEAD -- $CachePath 'data/crawl-log.json' 2>&1 | Add-Content -Encoding utf8 $LogFile
+            if ($LASTEXITCODE -ne 0) { exit 1 }
+            Log 'Writer base advanced before commit; re-merging saved result once without site requests'
+            continue
+        }
         Log 'Coordinated publication refused; preserve local result and do not retry or bypass the writer claim'
         exit 1
     }
