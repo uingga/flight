@@ -1,7 +1,8 @@
 // Deliberately omit messages, response bodies, URLs and credentials from diagnostics.
 const codes=new Set(['ECONNRESET','ECONNREFUSED','ETIMEDOUT','ENOTFOUND','EAI_AGAIN','EPIPE','ENOBUFS',
  'HTTP_TIMEOUT','HTTP_RESPONSE_TOO_LARGE','HTTP_REDIRECT_REFUSED','HTTP_RESPONSE_FAILED','HTTP_REQUEST_FAILED',
- 'WRITER_TRANSPORT_ERROR','WRITER_RESPONSE_INVALID','WRITER_PUBLICATION_REFUSED','WRITER_RELAY_UNAVAILABLE','WRITER_HTTP_REFUSED','WRITER_OUTCOME_UNKNOWN','WRITER_PRECOMMIT_BASE_CHANGED']);
+ 'WRITER_TRANSPORT_ERROR','WRITER_RESPONSE_INVALID','WRITER_PUBLICATION_REFUSED','WRITER_RELAY_UNAVAILABLE','WRITER_HTTP_REFUSED','WRITER_OUTCOME_UNKNOWN','WRITER_PRECOMMIT_BASE_CHANGED',
+ 'PUBLICATION_BUSY','PUBLICATION_WAIT_EXPIRED']);
 const status=value=>Number.isInteger(value)&&value>=100&&value<=599?value:null;
 export function publicationDiagnostic(error){
  return {event:'writer-publication-error',outcome:['unknown','refused'].includes(error?.publicationOutcome)?error.publicationOutcome:'unknown',

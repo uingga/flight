@@ -16,6 +16,16 @@ test('A accepts an identified verified source result', async () => {
     await verifyReply(valid(), request, { flights: [] });
 });
 
+test('A accepts a verified prefix but rejects a failure not bound to the next requested source', async () => {
+    const reply: any = { ...valid(), failure: { source: 'hanatour', attempted: true, reason: 'collector_unconfirmed' } };
+    await verifyReply(reply, request, { flights: [] });
+    reply.failure.source = 'ybtour';
+    await assert.rejects(verifyReply(reply, request, { flights: [] }), /partial_failure/);
+    reply.failure.source = 'hanatour';
+    reply.failure.reason = 'arbitrary';
+    await assert.rejects(verifyReply(reply, request, { flights: [] }), /partial_failure/);
+});
+
 test('A rejects stale, reordered, or unproved results before merging', async () => {
     const stale = valid();
     stale.cache.sourceUpdatedAt.ybtour = '2026-09-18T11:00:00.000Z';

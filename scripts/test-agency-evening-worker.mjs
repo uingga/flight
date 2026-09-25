@@ -49,14 +49,14 @@ test('B collects each assigned source once and preserves its slot claim', async 
         fs.writeFileSync(cachePath, JSON.stringify(cache));
         return { status: 0 };
     };
-    const reply = await executeAgencyEvening(value, { now: () => now, hostname: 'DESKTOP-OFFICE', base, collector });
+    const reply = await executeAgencyEvening(value, { now: () => now, hostname: 'DESKTOP-OFFICE', base, collectorRoot: base, collector });
     assert.deepEqual(calls, ['ybtour', 'hanatour']);
     assert.deepEqual(reply.sources, value.sources);
     assert.deepEqual(reply.results.map(item => item.status), ['success', 'success']);
     assert.equal(reply.cache.eveningPrimary.hanatour.lastAttemptAt, new Date(now).toISOString());
     assert.equal(reply.cache.eveningPrimary.ybtour.lastAttemptAt, new Date(now).toISOString());
     assert.equal(fs.existsSync(path.join(base, 'onlinetour-validation/run.lock')), false);
-    await assert.rejects(executeAgencyEvening(value, { now: () => now, hostname: 'DESKTOP-OFFICE', base, collector }));
+    await assert.rejects(executeAgencyEvening(value, { now: () => now, hostname: 'DESKTOP-OFFICE', base, collectorRoot: base, collector }));
     assert.deepEqual(calls, ['ybtour', 'hanatour']);
     assert.equal(fs.existsSync(path.join(base, 'onlinetour-validation/run.lock')), false);
 });
@@ -66,10 +66,65 @@ test('uncertain source result is not retried and only that source receives a coo
     const value = request();
     const calls = [];
     const collector = (_program, args) => { calls.push(args.at(-1)); return { status: 1 }; };
-    await assert.rejects(executeAgencyEvening(value, { now: () => now, hostname: 'DESKTOP-OFFICE', base, collector }),
+    await assert.rejects(executeAgencyEvening(value, { now: () => now, hostname: 'DESKTOP-OFFICE', base, collectorRoot: base, collector }),
         /evening_result_unverified/);
     assert.deepEqual(calls, ['ybtour']);
     const unknown = JSON.parse(fs.readFileSync(path.join(base, 'agency-evening-v1/ybtour-unknown.json'), 'utf8'));
     assert.equal(Date.parse(unknown.nextProbeAt), now + 86_400_000);
     assert.equal(fs.existsSync(path.join(base, 'onlinetour-validation/run.lock')), false);
+});
+
+test('a later failed child cannot erase or mutate an already verified source reply', async t => {
+    const base = testBase(t), value = request();
+    value.sources.push('onlinetour');
+    const calls = [], stages = [];
+    const collector = (_program, args, options) => {
+        const source = args.at(-1), dir = options.env.TIKITIKIT_DATA_DIR;
+        calls.push(source); stages.push(dir);
+        assert.equal(options.cwd, base);
+        assert.equal(path.relative(path.join(base, '.local-crawler/staging'), dir), `evening-${value.id}-${source}`);
+        const file = path.join(dir, 'all-flights-cache.json');
+        const cache = JSON.parse(fs.readFileSync(file, 'utf8'));
+        if (source === 'ybtour') {
+            cache.flights = [{ id: 'fixture-ybtour', source, price: 100000 }];
+            cache.sourceUpdatedAt = { ybtour: options.env.AGENCY_EVENING_STARTED_AT };
+            fs.writeFileSync(file, JSON.stringify(cache));
+            return { status: 0 };
+        }
+        cache.flights = []; // Simulate a partially written, invalid result after the first success.
+        cache.sourceUpdatedAt = { ybtour: '2099-01-01T00:00:00Z' };
+        fs.writeFileSync(file, JSON.stringify(cache));
+        return { status: 1 };
+    };
+    const reply = await executeAgencyEvening(value, { now: () => now, hostname: 'DESKTOP-OFFICE', base, collectorRoot: base, collector });
+    assert.deepEqual(calls, ['ybtour', 'hanatour']); // Unknown cleanup cannot authorize another source.
+    assert.equal(new Set(stages).size, 2);
+    assert.deepEqual(reply.sources, ['ybtour']);
+    assert.deepEqual(reply.failure, { source: 'hanatour', attempted: true, reason: 'collector_unconfirmed' });
+    assert.equal(reply.cache.flights[0].price, 100000);
+    assert.equal(reply.cache.sourceUpdatedAt.ybtour, new Date(now).toISOString());
+    assert.equal(fs.existsSync(path.join(base, 'agency-evening-v1', value.id, 'reply.json')), true);
+    assert.equal(fs.existsSync(path.join(base, 'onlinetour-validation/run.lock')), false);
+    await assert.rejects(executeAgencyEvening(value, { now: () => now, hostname: 'DESKTOP-OFFICE', base, collectorRoot: base, collector }));
+    assert.deepEqual(calls, ['ybtour', 'hanatour']);
+});
+
+test('a preflight refusal preserves the successful prefix without extending source cooldown', async t => {
+    const base = testBase(t), value = request();
+    fs.mkdirSync(path.join(base, 'agency-evening-v1'));
+    const unknownFile = path.join(base, 'agency-evening-v1/hanatour-unknown.json');
+    const existing = JSON.stringify({ reason: 'prior_unknown', nextProbeAt: new Date(now + 60000).toISOString() });
+    fs.writeFileSync(unknownFile, existing);
+    const collector = (_program, _args, options) => {
+        const file = path.join(options.env.TIKITIKIT_DATA_DIR, 'all-flights-cache.json');
+        const cache = JSON.parse(fs.readFileSync(file, 'utf8'));
+        cache.sourceUpdatedAt = { ybtour: options.env.AGENCY_EVENING_STARTED_AT };
+        fs.writeFileSync(file, JSON.stringify(cache));
+        return { status: 0 };
+    };
+    const reply = await executeAgencyEvening(value, { now: () => now, hostname: 'DESKTOP-OFFICE', base, collectorRoot: base, collector });
+    assert.equal(reply.failure.attempted, false);
+    assert.equal(reply.failure.reason, 'source_preflight_refused');
+    assert.equal(fs.readFileSync(unknownFile, 'utf8'), existing);
+    assert.deepEqual(reply.sources, ['ybtour']);
 });

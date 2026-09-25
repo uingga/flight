@@ -69,6 +69,10 @@ export async function verifyReply(reply: any, request: any, initialCache: any): 
         || !Array.isArray(reply.cache?.flights) || !Array.isArray(reply.logs?.entries)
         || !Number.isFinite(Date.parse(reply.completedAt)) || Date.parse(reply.completedAt) > Date.now())
         throw new Error('unverified_evening_reply');
+    if (reply.failure && (reply.failure.source !== request.sources[reply.sources.length]
+        || typeof reply.failure.attempted !== 'boolean'
+        || !['collector_unconfirmed', 'source_preflight_refused'].includes(reply.failure.reason)))
+        throw new Error('unverified_evening_partial_failure');
     for (let i = 0; i < reply.results.length; i++) {
         const item = reply.results[i];
         if (item.source !== reply.sources[i] || !['success', 'failed_preserved'].includes(item.status))
@@ -143,6 +147,7 @@ async function main() {
             fs.writeFileSync(path.join(runDir, groups[i].host + '-reply.json'), JSON.stringify(item.value));
             try { await verifyReply(item.value, requests[i], cache); }
             catch { failures.push(groups[i].host); continue; }
+            if (item.value.failure) failures.push(groups[i].host + ':' + item.value.failure.source);
             for (const source of item.value.sources) {
                 const verifiedEmpty = source === 'onlinetour'
                     && item.value.results.find((result: any) => result.source === source)?.status === 'success'

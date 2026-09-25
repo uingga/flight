@@ -1,0 +1,71 @@
+{
+  "format": 1,
+  "createdAt": "2026-09-25T16:45:31.367Z",
+  "purpose": "Draft only: exact installed Naver runtime overlay; no collection, installation or authorization reset",
+  "baseline": "C:/Users/ynal/Tikitikit/ac-control/naver-ac-runtime",
+  "patchSha256": "1e48d91346535cebcc58356e5ece7efc31bed975cc4310e880b769cf081e463e",
+  "files": [
+    {
+      "file": "src/lib/naver-parallel-partial.mjs",
+      "beforeSha256": null,
+      "afterSha256": "fa54918d8cb3e400868591d7c484b5946ad1d8e3b63da0afa03147ee57c4751d"
+    },
+    {
+      "file": "src/lib/naver-coordinator.mjs",
+      "beforeSha256": "7355d2749bff2db052cff3806138e73dccdf6a070f346f81aa49c9ef6c89c52c",
+      "afterSha256": "1c68faaaa3c42535bef4b9e9ff69757cf60e3534cd1bda76a96558cd974760e3"
+    },
+    {
+      "file": "scripts/lib/naver-navigation.mjs",
+      "beforeSha256": "f5e6735cc3434606d2fb5cd7e973bf9c34fa64856e6a63132a881d8b0bb7119f",
+      "afterSha256": "efec2caa132bedf47ad28a40da22cb95641573f027e2ab4c4d5fcc216b6ab58e"
+    },
+    {
+      "file": "scripts/crawl-naver.ts",
+      "beforeSha256": "e1ba9f56528598d2955f2031c98cf2ac19b316d48df7e99271b37972d1f9d073",
+      "afterSha256": "037e58e4bcfbffd41d5342779e468a17959dcb01cdd7bf3e4d3383ad694a4ef0"
+    },
+    {
+      "file": "scripts/run-naver-ac.ts",
+      "beforeSha256": "2f8ba081328b5b2566dc6e0e09076fcc3f2d1581bee818263c4b3182cd1ccff3",
+      "afterSha256": "00ab1ca295d480c9705c87beb3dabe56681859d6b57b5e6583ba3503e35c8f3c"
+    },
+    {
+      "file": "scripts/lib/naver-runtime-config.ts",
+      "beforeSha256": "80a0b2b6f8052e7b3e09e9a77f4b55a905e6eeeb1dce3d6af9491ee26db0fd2b",
+      "afterSha256": "f7ab4a3d8f7fda17afa903bd9b3c2bc82d4bd2ac4d62668905330f38f67867e3"
+    },
+    {
+      "file": "scripts/lib/naver-admission.mjs",
+      "beforeSha256": "987cc7ed41d1f3ce00dcba8d59add8e8825424c53455e276dbb15e0c09a1a3b5",
+      "afterSha256": "5c0b28d34065cc192ef1a915359ef97cf8ab74814f0eb57bbb4690446f33e92d"
+    },
+    {
+      "file": "scripts/publish-naver-parallel.ts",
+      "beforeSha256": "fa87eb8b18134d5cdd550ea6f195690b0c321dd6649e1deff777af406d651bc0",
+      "afterSha256": "fcca3269c42a78d865aa75e1c71872b38bfef61515531e93dfd502df360f34bd"
+    },
+    {
+      "file": "scripts/test-naver-parallel-partial.ts",
+      "beforeSha256": null,
+      "afterSha256": "92c5554bd4b2f4eef24f933ab297dfbdece331c1d33591eddd1ff78b10399ff8"
+    },
+    {
+      "file": "scripts/lib/naver-browser-profile.mjs",
+      "beforeSha256": "96a9da1e07e8a94aedcb37f64f2b4b58d1b98aeab4c1e7b7ef421f372a6d6498",
+      "afterSha256": "fcbff9c9794758f9a460db5235d5bf49ea1d28822da47ca514fca1a945da7a43"
+    },
+    {
+      "file": "scripts/lib/naver-work-boundary.ts",
+      "beforeSha256": "23483eb54ca32765b32e58a332183908dbbf976c14532cc51039dc1c856da0aa",
+      "afterSha256": "7691e9430a24aef15cb26ea7f26c5528c3286698b9c7576bafc9c03825a4f1cb"
+    },
+    {
+      "file": "src/lib/utils/naver-crawl-history.ts",
+      "beforeSha256": "7b22730e40f50bf7821f6675730f730035f3b6f7197fb86408254c06f14a44ab",
+      "afterSha256": "b57eeaa2ea2e4886bdb48dda05524d240bf737dd3a0d8d90686c63d53ee522d2"
+    }
+  ],
+  "lineEndings": "LF",
+  "updatedAt": "2026-09-25T16:59:42.871Z"
+}

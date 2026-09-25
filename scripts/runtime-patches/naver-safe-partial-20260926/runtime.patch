@@ -1,0 +1,616 @@
+diff --git a/src/lib/naver-parallel-partial.mjs b/src/lib/naver-parallel-partial.mjs
+new file mode 100644
+--- /dev/null
++++ b/src/lib/naver-parallel-partial.mjs
+@@ -0,0 +1,31 @@
++// Terminal evidence, not an error string, authorizes publication of an interrupted round.
++export function validateParallelPartial(state, resultHashes) {
++    const requireValue = (ok, message) => { if (!ok) throw Error(message); };
++    const parallel = state.parallel;
++    requireValue(state.blocked === true && state.phase === 'blocked' && state.owner === 'parallel'
++        && parallel?.phase === 'collecting' && !state.partialPublication, 'partial round not stopped');
++    requireValue(['A', 'C'].every(worker => ['collected', 'stopped'].includes(parallel.states[worker])
++        && parallel.results[worker]?.cleanupConfirmed === true
++        && Number.isFinite(parallel.results[worker]?.terminalAt)
++        && /^[a-f0-9]{64}$/.test(resultHashes?.[worker] || '')
++        && parallel.results[worker].hash === resultHashes[worker]), 'terminal worker evidence missing');
++    const attempts = Object.values(state.attempts);
++    requireValue(attempts.every(attempt => ['success', 'miss', 'route_error', 'unknown'].includes(attempt.status)),
++        'pending or restricted attempt');
++    requireValue(attempts.filter(attempt => attempt.status === 'unknown')
++        .every(attempt => ['transient_error', 'route_error'].includes(attempt.reason)), 'unclassified interruption');
++    requireValue(['A', 'C'].every(worker => Number.isSafeInteger(state.used[worker])
++        && state.used[worker] >= 0 && state.used[worker] <= (worker === 'C' ? 250 : 200)
++        && state.used[worker] === attempts.filter(attempt => attempt.worker === worker).length)
++        && Object.keys(state.keys).length + Object.keys(state.rechecks || {}).length === attempts.length
++        && attempts.every(attempt => (attempt.recheck ? state.rechecks?.[attempt.key] : state.keys[attempt.key]) === attempt.requestId),
++    'partial ledger mismatch');
++    const current = attempts.filter(attempt => attempt.run === state.runs[attempt.worker]);
++    requireValue(current.some(attempt => attempt.status === 'unknown')
++        && current.some(attempt => attempt.status === 'success' && attempt.kind === 'search'), 'no verified partial prices');
++    return {
++        basis: 'parallel-terminal-proof', terminalHashes: { ...resultHashes },
++        successKeys: current.filter(attempt => attempt.status === 'success').map(attempt => attempt.key),
++        missKeys: current.filter(attempt => attempt.status === 'miss').map(attempt => attempt.key),
++    };
++}
+diff --git a/src/lib/naver-coordinator.mjs b/src/lib/naver-coordinator.mjs
+--- a/src/lib/naver-coordinator.mjs
++++ b/src/lib/naver-coordinator.mjs
+@@ -6,8 +6,9 @@ import {validateCheckpointGrant} from './naver-checkpoint-resume.mjs';
+ import {unsupportedNaverDestinationKey} from './naver-destination-support.mjs';
+ import {publicationBusy} from './publication-wait.mjs';
+ import {validateParallelPlan,assertParallelIdle,closedHaltCanContinue} from './naver-parallel-plan.mjs';
+ import {latestAgencyRound} from './naver-round-handoff.mjs';
++import {validateParallelPartial} from './naver-parallel-partial.mjs';
+ 
+ export const CONTRACT = 'naver-ac-v1';
+ export const kstDay = ms => new Date(ms + 9 * 3600000).toISOString().slice(0, 10);
+ const requireValue = (ok, message) => { if (!ok) throw new Error(message); };
+@@ -80,8 +81,14 @@ export class Coordinator {
+             const p = s.partialPublication;
+             requireValue(input.worker === 'A' && input.run === p.run && input.round === s.round && s.blocked && s.phase === 'blocked', 'partial publication identity mismatch');
+             return; // Publication only. Navigation still takes the normal blocked-day guard.
+         }
++        if (phase === 'awaiting-readback' && s.parallel?.partial?.basis === 'parallel-terminal-proof') {
++            requireValue(s.blocked && s.owner === 'A' && s.phase === 'awaiting-readback'
++                && s.parallel.phase === 'publishing' && input.worker === 'A' && input.run === s.runs.A
++                && input.parallelId === s.parallel.id && input.round === s.round, 'partial preparation identity mismatch');
++            return; // Both collectors are terminal; this grants no new navigation.
++        }
+         requireValue(!s.blocked||(draining&&s.parallel), 'blocked day');
+         if(s.parallel?.phase==='collecting'){
+             requireValue(input.parallelId===s.parallel.id&&s.runs[input.worker]===input.run&&s.parallel.states[input.worker]==='active'&&input.round===s.round,'parallel owner mismatch');
+             requireValue(phase==='running'&&(s.phase==='running'||draining&&s.phase==='blocked'),'parallel phase mismatch');return;
+@@ -198,9 +205,16 @@ export class Coordinator {
+         return this.transaction((s,f)=>{
+             this.owner(s,input,'awaiting-readback');this.checkWriter(f,input);
+             requireValue(f.writer.writer==='naver'&&f.writer.run===input.run&&!f.writer.preparedVersion,'publication already prepared');
+             requireValue(nonempty(input.version),'missing prepared version');
+-            if(s.partialPublication?.status==='authorized')requireValue(input.version===s.partialPublication.version,'partial version mismatch');
++            if(s.parallel?.partial?.basis==='parallel-terminal-proof'&&!s.partialPublication){
++                requireValue(['version','pricesHash','cacheHash'].every(k=>/^[a-f0-9]{64}$/.test(input[k]))
++                    &&/^[a-f0-9]{40}$/.test(input.expectedBase),'invalid partial payload proof');
++                s.partialPublication={...s.parallel.partial,status:'authorized',run:input.run,version:input.version,
++                    expectedBase:input.expectedBase,pricesHash:input.pricesHash,cacheHash:input.cacheHash,authorizedAt:this.clock()};
++                s.version=input.version;s.phase='blocked';
++            }
++            else if(s.partialPublication?.status==='authorized')requireValue(input.version===s.partialPublication.version,'partial version mismatch');
+             else s.version=input.version;
+             f.writer.preparedVersion=input.version;
+         });
+     }
+@@ -211,14 +225,16 @@ export class Coordinator {
+                 this.checkWriter(fence,input);
+                 const p=s.partialPublication;
+                 requireValue(fence.writer.writer==='naver'&&fence.writer.run===input.run&&fence.writer.observed===p.version&&input.expected===p.version&&input.observed===p.version,'partial readback mismatch');
+                 p.status='published';p.publishedAt=this.clock();fence.writer=null;
+-                // The operator grant already attests stopped owners; exact readback
++                // The grant or authenticated terminal proofs attest stopped collectors; exact readback
+                 // now completes that publication. Retain the halt and every debit,
+                 // but do not strand the next regular round behind a dead owner.
+                 requireValue(!Object.values(s.attempts).some(a=>['pending','blocked'].includes(a.status)),'unsafe partial closure');
+                 s.haltClosure={at:this.clock(),expectedDigest:createHash('sha256').update(JSON.stringify(s)).digest('hex'),
+-                    evidenceHash:p.cacheHash,previousOwner:s.owner,noLiveOwners:{A:true,C:true},basis:'operator-granted-exact-readback'};
++                    evidenceHash:p.cacheHash,previousOwner:s.owner,noLiveOwners:{A:true,C:true},basis:p.basis||'operator-granted-exact-readback'};
++                s.verifiedVersion=p.version;
++                if(s.parallel?.partial)s.parallel.phase='partial-published';
+                 s.owner=null;s.phase='halted-closed';return;
+             }
+             if(fence){this.checkWriter(fence,input);requireValue(fence.writer.writer==='naver'&&fence.writer.run===input.run&&fence.writer.observed===input.observed,'unverified publication fence');fence.writer=null;}
+             requireValue(nonempty(input.observed) && input.expected === s.version && input.observed === s.version, 'readback mismatch');
+@@ -296,21 +312,31 @@ export class Coordinator {
+         requireValue(s.parallel.states[input.worker]==='ready','parallel run already started');if(f.writer&&f.writer.writer!=='deploy')throw publicationBusy();
+         s.parallel.states[input.worker]='active';return {day:s.day,worker:input.worker,run:input.run,contract:CONTRACT,resumePolicy:{...s.parallel.policy,navigationBudget:s.parallel.assignments[input.worker].length,shouldRun:true,shouldFinalize:false}};
+     });}
+     completeParallel(input){return this.transaction(s=>{
+-        this.owner(s,input);requireValue(!Object.values(s.attempts).some(a=>a.worker===input.worker&&a.status==='pending'),'pending worker query');
++        const stopped=input.stopped===true||s.blocked;
++        this.owner(s,input,'running',stopped);
++        if(stopped)requireValue(s.blocked&&s.phase==='blocked'&&input.cleanupConfirmed===true,'unverified stopped worker');
++        requireValue(!Object.values(s.attempts).some(a=>a.worker===input.worker&&a.status==='pending'),'pending worker query');
+         requireValue(/^[a-f0-9]{64}$/.test(input.resultHash),'result hash required');
+-        s.parallel.results[input.worker]={hash:input.resultHash,completedKeys:Object.values(s.attempts).filter(a=>a.worker===input.worker&&a.run===input.run).map(a=>a.key)};
+-        s.parallel.states[input.worker]='collected';return s.parallel.results[input.worker];
++        const attempts=Object.values(s.attempts).filter(a=>a.worker===input.worker&&a.run===input.run);
++        const searches=attempts.filter(a=>a.kind==='search');
++        s.parallel.results[input.worker]={hash:input.resultHash,cleanupConfirmed:input.cleanupConfirmed===true,terminalAt:this.clock(),
++            completedKeys:attempts.filter(a=>['success','miss'].includes(a.status)).map(a=>a.key),
++            navigations:attempts.length,healthChecks:attempts.length-searches.length,
++            attempted:searches.length,success:searches.filter(a=>a.status==='success').length,
++            misses:searches.filter(a=>a.status==='miss').length,unknown:searches.filter(a=>a.status==='unknown').length};
++        s.parallel.states[input.worker]=stopped?'stopped':'collected';return s.parallel.results[input.worker];
+     });}
+     parallelState(input){this.validate(input);return this.transaction(s=>{
+         if(this.requiredAttestation)requireValue(input.attestation===this.requiredAttestation,'unattested runner');
+         requireValue(s.parallel?.id===input.parallelId&&s.runs[input.worker]===input.run&&s.round===input.round,'parallel identity mismatch');return structuredClone(s.parallel);
+     });}
+     beginParallelPublication(input){return this.transaction(s=>{
+         this.validate(input);if(this.requiredAttestation)requireValue(input.attestation===this.requiredAttestation,'unattested runner');
+-        requireValue(input.worker==='A'&&s.runs.A===input.run&&input.parallelId===s.parallel?.id&&s.parallel.phase==='collecting'&&s.round===input.round&&!s.blocked,'parallel publication refused');
+-        requireValue(['A','C'].every(w=>s.parallel.states[w]==='collected')&&!Object.values(s.attempts).some(a=>a.status==='pending'),'collectors not complete');
++        requireValue(input.worker==='A'&&s.runs.A===input.run&&input.parallelId===s.parallel?.id&&s.parallel.phase==='collecting'&&s.round===input.round,'parallel publication refused');
++        if(s.blocked)s.parallel.partial=validateParallelPartial(s,input.resultHashes);
++        else requireValue(['A','C'].every(w=>s.parallel.states[w]==='collected')&&!Object.values(s.attempts).some(a=>a.status==='pending'),'collectors not complete');
+         requireValue(input.version&&['A','C'].every(w=>input.resultHashes?.[w]===s.parallel.results[w].hash),'result proof mismatch');
+         s.parallel.phase='publishing';s.owner='A';s.phase='awaiting-readback';s.version=input.version;return structuredClone(s.parallel);
+     });}
+     acceptCheckpointResume(input) {
+diff --git a/scripts/lib/naver-navigation.mjs b/scripts/lib/naver-navigation.mjs
+--- a/scripts/lib/naver-navigation.mjs
++++ b/scripts/lib/naver-navigation.mjs
+@@ -7,9 +7,10 @@ export async function gotoNaver(page, url, options, session, attempt) {
+     return page.goto(url, options);
+ }
+ 
+ export class NavigationSession {
+-    constructor(client, identity) { this.client = client; this.identity = identity; this.pending = new Map(); this.failed = false; this.busy = false; }
++    constructor(client, identity) { this.client = client; this.identity = identity; this.pending = new Map(); this.failed = false; this.busy = false; this.cleanupConfirmed = false; }
++    confirmCleanup() { this.cleanupConfirmed = true; }
+     async navigate(page, url, options, attempt) {
+         if (this.failed || this.busy || this.pending.size) throw Error('coordination halted or pending navigation');
+         this.busy = true;
+         try {
+diff --git a/scripts/crawl-naver.ts b/scripts/crawl-naver.ts
+--- a/scripts/crawl-naver.ts
++++ b/scripts/crawl-naver.ts
+@@ -902,9 +902,12 @@ export async function runNaver(session: any = null, fixture: any = null) {
+         process.exitCode = !explicitBlockDetected && successCount > 0 ? 2 : 3;
+     }
+     return { normalExit: !abortedEarly, prices: naverPrices };
+     } finally {
+-        await browser.close().catch(() => undefined);
++        try {
++            await browser.close();
++            session?.confirmCleanup?.();
++        } catch { /* No terminal receipt when browser cleanup is unconfirmed. */ }
+     }
+ }
+ if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
+     runNaver().catch(error => { console.error(error); process.exitCode = 1; });
+diff --git a/scripts/run-naver-ac.ts b/scripts/run-naver-ac.ts
+--- a/scripts/run-naver-ac.ts
++++ b/scripts/run-naver-ac.ts
+@@ -74,25 +74,36 @@ export async function runNaverAc(options: any) {
+             const selected=createNaverSelection(options.selectionOptions||getNaverSelectionOptions())
+                 (eligible,prices,Math.min(limit,phaseRemaining)).selected[0];
+             if(!selected)return null;
+             const key=buildNaverPriceKey(selected,selected.departure.date,selected.arrival.date);
++            if(!key)throw Error('selected parallel Naver key missing');
+             return currentState.assignedRecheckSources?.[key]
+                 ? {...selected,naverSameDayRecheck:true}:selected;
+         }
+         const rows = await boundary.refresh({ ...latest, flights, contentSignature }, prices, Math.min(limit, phaseRemaining), currentState);
+         return rows[0] || null;
+     };
+     let result;
++    let stopped = false;
++    try {
+     if (options.parallel && policy.navigationBudget===0) {
++        session.confirmCleanup(); // This worker opened no browser or navigation.
+         result={normalExit:true,prices:await options.loadPrices()};
+     } else if (identity.worker === 'A' && policy.shouldFinalize && !policy.shouldRun) {
+         const prices = await options.loadPrices();
+         await session.nextFlight(prices, 0);
+         result = { normalExit: true, prices };
+     } else result = await (options.collect || runNaver)(session);
+     session.assertComplete();
+     if (result?.normalExit !== true) throw Error('collection did not terminate normally');
+-    if(options.parallel){const resultHash=await options.saveParallelResult(result);await client.completeParallel({...identity,resultHash});return {worker:identity.worker,collected:true,resultHash};}
++    } catch(error) {
++        if(!options.parallel||!session.cleanupConfirmed||session.busy||session.pending.size)throw error;
++        // No retry and no new site request. The coordinator independently checks the
++        // stopped round, pending attempts, exact run and terminal result hashes.
++        result={prices:await options.loadPrices(),stopped:true};
++        stopped=true;
++    }
++    if(options.parallel){const resultHash=await options.saveParallelResult(result);await client.completeParallel({...identity,resultHash,stopped,cleanupConfirmed:session.cleanupConfirmed});return {worker:identity.worker,collected:!stopped,stopped,resultHash};}
+     const state = await client.workState(identity);
+     if (!latest || state.generation !== latest.generation) throw Error('missing or changed collection snapshot');
+     const filtered = applyNaverFilter(structuredClone(latest.cache || { flights: latest.flights }), result.prices).cache;
+     let cache = stampResult(filtered, result.prices, { run: identity.run, generation: state.generation });
+diff --git a/scripts/lib/naver-runtime-config.ts b/scripts/lib/naver-runtime-config.ts
+--- a/scripts/lib/naver-runtime-config.ts
++++ b/scripts/lib/naver-runtime-config.ts
+@@ -82,9 +82,9 @@ export async function configuredRunnerOptions(env: NodeJS.ProcessEnv=process.env
+             const pending=execFileSync(powershell,['-NoProfile','-NonInteractive','-File',path.join(root,'scripts/read-naver-pc-pending.ps1')],{encoding:'utf8',timeout:15000,windowsHide:true,stdio:['ignore','pipe','pipe']}).trim();
+             pcCollectionPending=pending!=='0';
+         } catch { /* Unknown status remains pending, never false. */ }
+     }
+-    const input=parallel?JSON.parse(parallelRaw):await publication.readInputs(true),{cache}=input;
++    const input=parallel?JSON.parse(parallelRaw!):await publication.readInputs(true),{cache}=input;
+     const statePath=worker==='A'?need('NAVER_COORDINATION_A_STATE_FILE'):null;
+     const exact=createExactReadback({url:readbackUrl,fixture:!!fixture});
+     const publicationClient=createHttpClient({url,token:credential('NAVER_COORDINATION_PUBLISHER_TOKEN_FILE')});
+     const verifyC=async(identity:any)=>{
+@@ -112,9 +112,9 @@ export async function configuredRunnerOptions(env: NodeJS.ProcessEnv=process.env
+     const publicationClaim=createHash('sha256').update(identity.run+':publication:'+randomUUID()).digest('hex');
+     return {root,workRoot,identity,
+         ...(parallel?{parallel,input,parallelResultFile:parallel.resultPath,
+             saveParallelResult:async(result:any)=>{const historyFile=path.join(workRoot,'data/naver-crawl-history.json');
+-                if(!fs.existsSync(historyFile)&&parallel.assignments[worker].length!==0)throw Error('Naver execution history missing');
++                if(!fs.existsSync(historyFile)&&parallel.assignments[worker].length!==0&&result.stopped!==true)throw Error('Naver execution history missing');
+                 const history=fs.existsSync(historyFile)?mergeNaverHistory({entries:[]},read(historyFile)):{entries:[]};
+                 const raw=JSON.stringify({format:'naver-result-with-history-v1',prices:result.prices,history});
+                 fs.writeFileSync(parallel.resultPath,raw);return checkpointDigest(raw);},
+         }:{}),
+diff --git a/scripts/lib/naver-admission.mjs b/scripts/lib/naver-admission.mjs
+--- a/scripts/lib/naver-admission.mjs
++++ b/scripts/lib/naver-admission.mjs
+@@ -3,8 +3,9 @@ import { readFileSync } from 'node:fs';
+ import { resolve } from 'node:path';
+ import { assertMode } from '../../src/lib/naver-coordination-contract.mjs';
+ 
+ export const RUNNER_FILES = [
++    'src/lib/naver-parallel-partial.mjs',
+     'src/lib/tripcom-naver-policy.mjs',
+     'src/lib/tripcom-writer-scope.mjs',
+     'scripts/lib/naver-checkpoint.mjs',
+     "src/lib/flight-offer-history.mjs",
+@@ -13,8 +14,9 @@ export const RUNNER_FILES = [
+     'scripts/run-naver-parallel-scheduled.ts','scripts/naver-parallel-host.mjs','scripts/lib/naver-parallel-launch.mjs',
+     'src/lib/modetour-offer-history.mjs','src/lib/modetour-history.ts','src/lib/modetour-history-bootstrap.json',
+     'src/lib/naver-destination-support.mjs',
+     'src/lib/naver-history-publication.mjs',
++    'src/lib/utils/naver-crawl-history.ts',
+     'scripts/lib/naver-browser-profile.mjs',
+     'src/lib/naver-parallel-plan.mjs','scripts/run-naver-parallel-worker.ts','scripts/publish-naver-parallel.ts',
+     'src/lib/code-deployment-authorization.mjs','scripts/run-code-deploy-installed.mjs',
+     'src/lib/naver-checkpoint-resume.mjs',
+diff --git a/scripts/publish-naver-parallel.ts b/scripts/publish-naver-parallel.ts
+--- a/scripts/publish-naver-parallel.ts
++++ b/scripts/publish-naver-parallel.ts
+@@ -8,29 +8,43 @@ import {applyNaverFilter} from './filter-by-naver';
+ import {mergeNaverHistory,parseParallelHistoryResult} from '../src/lib/naver-history-publication.mjs';
+ export async function publishParallel(options:any,artifacts:Record<string,string>){
+  const identity={...options.identity,attestation:attestRunner({...options.attestation,digest:runnerDigest(options.root)})};
+  const state=await options.client.parallelState(identity);if(state.phase!=='collecting')throw Error('parallel publication already started');
+- let collected=structuredClone(options.input.prices),history={entries:[]};const hashes:any={},keys=[...state.preservedKeys];
++ let collected=structuredClone(options.input.prices);let history:{entries:any[]}={entries:[]};
++ const hashes:any={},keys=[...state.preservedKeys],workersWithHistory=new Set<string>();
+  for(const worker of ['A','C']){
+   const raw=fs.readFileSync(artifacts[worker],'utf8');hashes[worker]=parallelHash(raw);
+-  if(state.states[worker]!=='collected'||hashes[worker]!==state.results[worker]?.hash)throw Error('unverified worker result');
++  if(!['collected','stopped'].includes(state.states[worker])||hashes[worker]!==state.results[worker]?.hash)throw Error('unverified worker result');
+   const artifact=parseParallelHistoryResult(JSON.parse(raw));
++  if(artifact.history.entries.length)workersWithHistory.add(worker);
+   collected=mergeCollectedPrices(collected,artifact.prices,state.results[worker].completedKeys);keys.push(...state.results[worker].completedKeys);
+   history=mergeNaverHistory(history,artifact.history);
+  }
+- await options.publisher.beginParallelPublication({...identity,version:'parallel-preparing',resultHashes:hashes});
++ const prepared=await options.publisher.beginParallelPublication({...identity,version:'parallel-preparing',resultHashes:hashes});
++ const partial=prepared.partial?.basis==='parallel-terminal-proof';
++ if(partial){
++  // Original ledger counters, never reconstructed from saved price rows.
++  history=mergeNaverHistory(history,{entries:['A','C'].filter(w=>state.states[w]==='stopped'&&!workersWithHistory.has(w)&&state.results[w].navigations>0).map(w=>{
++   const result=state.results[w];return {id:`parallel-stopped-${state.id}-${w}`,timestamp:new Date(result.terminalAt).toISOString(),
++    runner:'local',worker:w,sourceFilter:state.policy.sources.join(',')||'all',metricsScope:'ledger-only',
++    round:options.identity.round,attempted:result.attempted,success:result.success,misses:result.attempted-result.success,noResult:result.misses,
++    navigations:result.navigations,healthChecks:result.healthChecks,
++    unconfirmed:result.unknown,abortedEarly:true,abortReason:'중단 후 확인된 결과만 반영',partialResultsPublishable:true};
++  })});
++ }
+  Object.assign(identity,await options.acquirePublication(identity));
+  const fresh=await options.loadPublicationInputs(),prices=mergeCollectedPrices(fresh.prices,collected,keys);
+  const generation=Math.max(...[fresh.cache.fullCrawlUpdatedAt,fresh.cache.lastUpdated,fresh.cache.timestamp,...Object.values(fresh.cache.sourceUpdatedAt||{})].map(v=>Date.parse(v as string)).filter(Number.isFinite));
+  const cache=stampResult(applyNaverFilter(structuredClone(fresh.cache),prices).cache,prices,{run:identity.run,generation}),version=resultVersion(cache);
+- await options.publisher.preparePublication({...identity,version});
++ await options.publisher.preparePublication({...identity,version,...(partial?{expectedBase:fresh.ref,
++  pricesHash:parallelHash(prices),cacheHash:parallelHash(cache)}:{})});
+  fs.mkdirSync(path.join(options.workRoot,'data'),{recursive:true});
+  await options.checkpointPublication({cache,prices,history,version,expectedBase:fresh.ref,identity});
+  if(await options.publish({cache,prices,history,version,expectedBase:fresh.ref})!==version)throw Error('publication mismatch');
+  const observed=await options.readback(cache);if(observed!==version)throw Error('readback mismatch');
+- if(shouldSelectTodayPick({...state.policy,dataPublished:true}))await options.selectTodayPick({sources:new Set(state.policy.allowedTodayPickSources)});
+- await options.onComplete?.({version,worker:'A'},state.policy);await options.beforeRelease(cache);await options.recordPublication(identity,observed);
+- await options.publisher.verifyAndRelease({...identity,expected:version,observed});await options.afterRelease?.();return {version,completedKeys:keys.length};
++ if(!partial&&shouldSelectTodayPick({...state.policy,dataPublished:true}))await options.selectTodayPick({sources:new Set(state.policy.allowedTodayPickSources)});
++ await options.onComplete?.({version,worker:'A'},partial?{...state.policy,shouldFinalize:false,deferTodayPick:true}:state.policy);await options.beforeRelease(cache);await options.recordPublication(identity,observed);
++ await options.publisher.verifyAndRelease({...identity,expected:version,observed});await options.afterRelease?.();return {version,completedKeys:keys.length,partial};
+ }
+ if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1])).href){
+  if(process.argv.length!==5)throw Error('config and two result files required');
+  const config=JSON.parse(fs.readFileSync(process.argv[2],'utf8')),env={...process.env,...config.env};Object.assign(process.env,env);process.chdir(config.root);
+diff --git a/scripts/test-naver-parallel-partial.ts b/scripts/test-naver-parallel-partial.ts
+new file mode 100644
+--- /dev/null
++++ b/scripts/test-naver-parallel-partial.ts
+@@ -0,0 +1,232 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import fs from 'node:fs';
++import os from 'node:os';
++import path from 'node:path';
++import { Coordinator, createHandler } from '../src/lib/naver-coordinator.mjs';
++import { createClient } from '../src/lib/naver-ac-transport.mjs';
++import { parallelHash, closedHaltCanContinue } from '../src/lib/naver-parallel-plan.mjs';
++import { validateParallelPartial } from '../src/lib/naver-parallel-partial.mjs';
++import { runnerDigest } from './lib/naver-admission.mjs';
++import { runNaverAc } from './run-naver-ac';
++import { publishParallel } from './publish-naver-parallel';
++import { runNaver } from './crawl-naver';
++import { createPublicationHandler } from '../src/lib/writer-broker.mjs';
++import { stampResult, resultVersion } from '../src/lib/naver-coordination-contract.mjs';
++import { launchParallelRound } from './lib/naver-parallel-launch.mjs';
++import { normalizeNaverCrawlHistoryEntry } from '../src/lib/utils/naver-crawl-history';
++
++const round='2026-09-25T21:17:00.000Z', later='2026-09-26T01:12:00.000Z';
++const day='2026-09-26', id='a'.repeat(64), digest=runnerDigest(process.cwd());
++const now=Date.parse('2026-09-26T02:00:00.000Z');
++const good='ICN-FUK_2026-10-01_2026-10-03', unknown='ICN-KZO_2026-10-01_2026-10-03';
++function fixture(t:any){
++ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'naver-terminal-test-'));
++ const c=new Coordinator(path.join(dir,'state.sqlite'),()=>now,digest,{initialize:true,writerFencing:true});
++ t.after(()=>{c.close();if(path.dirname(dir)!==os.tmpdir()||!path.basename(dir).startsWith('naver-terminal-test-'))throw Error('unsafe cleanup');fs.rmSync(dir,{recursive:true});});
++ const identity=(worker:string)=>({worker,run:'run-'+worker,round,parallelId:id,contract:'naver-ac-v1',attestation:digest});
++ const policy={sources:['myrealtrip'],allowedTodayPickSources:['myrealtrip'],shouldFinalize:true,deferTodayPick:false};
++ c.transaction((s:any)=>Object.assign(s,{owner:'parallel',phase:'running',round,runs:{A:'run-A',C:'run-C'},sourceScope:['myrealtrip'],
++  generation:1,parallel:{id,inputHash:'f'.repeat(64),phase:'collecting',states:{A:'ready',C:'active'},results:{},
++   assignments:{A:[good,unknown],C:[]},preservedKeys:[],policy}}));
++ const handler=createHandler(c,{A:'fixture-A',C:'fixture-C',publisher:'fixture-p',operator:'fixture-o'});
++ const client=(role:string)=>createClient({token:'fixture-'+role,transport:handler});
++ const prices:any={[good]:{naverLowest:120000,crawledAt:new Date(now).toISOString(),lastAttemptStatus:'success'},
++  [unknown]:{naverLowest:0,lastAttemptStatus:'transient_error'}};
++ const files={A:path.join(dir,'a.json'),C:path.join(dir,'c.json')};
++ const save=(worker:'A'|'C',value:any)=>{
++  const raw=JSON.stringify({format:'naver-result-with-history-v1',prices:value.prices,history:value.history||{entries:[]}});
++  fs.writeFileSync(files[worker],raw);return parallelHash(raw);
++ };
++ const collect=async(session:any,cleanup=true)=>{
++  const page={goto:async()=>({status:()=>200})};
++  try {
++   await session.navigate(page,'https://fixture.invalid',{}, {key:good,kind:'search'});
++   await session.settle(page,'success');
++   await session.navigate(page,'https://fixture.invalid',{}, {key:unknown,kind:'search'});
++   await session.settle(page,'transient_error');
++  } finally {if(cleanup)session.confirmCleanup();}
++ };
++ const runner:any={root:process.cwd(),identity:identity('A'),parallel:{inputHash:'f'.repeat(64)},policyInput:{},
++  attestation:{approvedDigest:digest,externalLaunchersDisabled:true},client:client('A'),publisher:client('p'),
++  loadPrices:async()=>prices,saveParallelResult:async(result:any)=>save('A',result),collect};
++ const terminalC=()=>c.completeParallel({...identity('C'),resultHash:save('C',{prices:{}}),cleanupConfirmed:true,stopped:true});
++ const hashes=()=>Object.fromEntries(['A','C'].map(w=>[w,c.snapshot().parallel.results[w].hash]));
++ return {c,identity,client,handler,prices,files,save,collect,runner,terminalC,hashes,dir,policy};
++}
++async function stopped(f:any){await runNaverAc(f.runner);f.terminalC();}
++function publication(f:any){
++ const calls:any[]=[];
++ const opts:any={root:process.cwd(),workRoot:path.join(f.dir,'publication'),identity:f.identity('A'),
++  attestation:{approvedDigest:digest,externalLaunchersDisabled:true},client:f.client('A'),publisher:f.client('p'),
++  input:{prices:{}},acquirePublication:async(i:any)=>f.c.writerAcquire({...i,writer:'naver',claim:'fixture-claim',ttlMs:600000}),
++  loadPublicationInputs:async()=>({ref:'b'.repeat(40),cache:{flights:[],timestamp:new Date(now).toISOString()},prices:{unrelated:{naverLowest:222222},[unknown]:{naverLowest:333333}}}),
++  checkpointPublication:async(v:any)=>calls.push(['checkpoint',v]),publish:async(v:any)=>{calls.push(['publish',v]);return v.version;},
++  readback:async()=>calls.find(row=>row[0]==='publish')[1].version,selectTodayPick:async()=>calls.push(['pick']),
++  onComplete:async(v:any,p:any)=>calls.push(['complete',v,p]),beforeRelease:async()=>calls.push(['verified']),
++  recordPublication:async(i:any,observed:string)=>f.c.writerObserved({...i,writer:'naver',observed}),afterRelease:async()=>calls.push(['released'])};
++ return {opts,calls};
++}
++test('actual runner and publisher close a proven transient interruption only after exact publication readback',async t=>{
++ const f=fixture(t);await stopped(f);
++ const original=f.c.snapshot();assert.equal(original.phase,'blocked');assert.equal(original.used.A,2);
++ const p=publication(f),result=await publishParallel(p.opts,f.files);
++ assert.equal(result.partial,true);const state=f.c.snapshot();
++ assert.equal(state.phase,'halted-closed');assert.equal(state.blocked,true);assert.equal(state.owner,null);
++ assert.equal(state.partialPublication.status,'published');assert.equal(state.haltClosure.basis,'parallel-terminal-proof');
++ assert.deepEqual(state.attempts,original.attempts);assert.deepEqual(state.keys,original.keys);assert.deepEqual(state.used,original.used);
++ const payload=p.calls.find(row=>row[0]==='publish')[1];
++ assert.equal(payload.prices[good].naverLowest,120000);assert.equal(payload.prices[unknown].naverLowest,333333);
++ assert.equal(payload.prices.unrelated.naverLowest,222222);assert.equal(p.calls.some(row=>row[0]==='pick'),false);
++ assert.equal(p.calls.find(row=>row[0]==='complete')[2].deferTodayPick,true);
++ const partialHistory=payload.history.entries.find((row:any)=>row.worker==='A');
++ assert.equal(partialHistory.attempted,2);assert.equal(partialHistory.unconfirmed,1);
++ assert.equal(partialHistory.runner,'local');assert.equal(partialHistory.sourceFilter,'myrealtrip');
++ assert.equal(partialHistory.metricsScope,'ledger-only');
++ assert.equal(partialHistory.navigations,2);assert.equal(partialHistory.healthChecks,0);
++ assert.equal(payload.history.entries.length,1);
++ assert.equal(normalizeNaverCrawlHistoryEntry(partialHistory).deferredNeverChecked,undefined);
++ assert.equal(closedHaltCanContinue(state,round),false);assert.equal(closedHaltCanContinue(state,later),true);
++ const snapshot=f.c.scheduledParallelSnapshot({...f.identity('A'),round:later});assert.equal(snapshot.nextRoundEligible,true);
++ assert.throws(()=>f.c.reserve({...f.identity('A'),key:'new',requestId:'forbidden',kind:'search'}),/blocked/);
++ const nextCore={day,round:later,stateHash:parallelHash(state),inputHash:'c'.repeat(64),inputRef:'b'.repeat(40),generation:1,
++  snapshotSignature:'d'.repeat(64),runs:{A:day+'-A-next',C:day+'-C-next'},assignments:{A:['new-key'],C:[]},
++  policy:{sources:['myrealtrip'],allowedTodayPickSources:['myrealtrip'],skipTodayPick:false,deferTodayPick:false}};
++ const replayCore={...nextCore,assignments:{A:[unknown],C:[]}};
++ assert.throws(()=>f.c.beginScheduledParallel({...f.identity('A'),round:later,plan:{...replayCore,id:parallelHash(replayCore)}}),/queried or invalid assignment/);
++ const next={...nextCore,id:parallelHash(nextCore)};
++ f.c.beginScheduledParallel({...f.identity('A'),round:later,plan:next});
++ const resumed=f.c.snapshot();assert.equal(resumed.blocked,false);assert.equal(resumed.closedInterruptionHistory.length,1);
++ assert.deepEqual(resumed.used,original.used);assert.deepEqual(resumed.attempts,original.attempts);assert.deepEqual(resumed.keys,original.keys);
++});
++test('an existing per-run collector history is preserved without adding duplicate ledger counters',async t=>{
++ const f=fixture(t);
++ const original={id:'existing-run-history',timestamp:new Date(now).toISOString(),runner:'local',sourceFilter:'myrealtrip',attempted:2,success:1,misses:1,abortedEarly:true};
++ f.runner.saveParallelResult=async(result:any)=>f.save('A',{...result,history:{entries:[original]}});
++ await stopped(f);const p=publication(f);await publishParallel(p.opts,f.files);
++ assert.deepEqual(p.calls.find(row=>row[0]==='publish')[1].history.entries,[original]);
++});
++test('cleanup failure preserves interruption without a terminal result or automatic closure',async t=>{
++ const f=fixture(t);f.runner.collect=(session:any)=>f.collect(session,false);
++ await assert.rejects(runNaverAc(f.runner),/unconfirmed_response/);
++ assert.equal(f.c.snapshot().parallel.states.A,'active');assert.equal(fs.existsSync(f.files.A),false);
++});
++test('an in-flight peer cannot attest stopped or grant publication',async t=>{
++ const f=fixture(t);f.c.transaction((s:any)=>s.parallel.assignments.C.push('peer'));
++ const pending=f.c.reserve({...f.identity('C'),key:'peer',requestId:'peer',kind:'search'});
++ await runNaverAc(f.runner);assert.throws(()=>f.terminalC(),/pending/);
++ assert.throws(()=>f.c.beginParallelPublication({...f.identity('A'),version:'preparing',resultHashes:{}}),/terminal/);
++ assert.equal(f.c.snapshot().attempts[pending.requestId].status,'pending');
++});
++test('terminal completion is one-shot and cannot be moved to a different run',async t=>{
++ const f=fixture(t);await stopped(f);
++ assert.throws(()=>f.terminalC(),/owner/);
++ assert.throws(()=>f.c.completeParallel({...f.identity('A'),run:'different',stopped:true,cleanupConfirmed:true,resultHash:'d'.repeat(64)}),/owner/);
++ const response=await f.handler(new Request('http://fixture.invalid/control',{method:'POST',headers:{authorization:'Bearer fixture-A'},
++  body:JSON.stringify({action:'authorizePartialPublication',input:{}})}));assert.equal(response.status,409);
++ assert.equal(f.c.snapshot().partialPublication,undefined);
++});
++for(const [label,mutate] of [
++ ['pending',(s:any)=>{Object.values(s.attempts).forEach((a:any)=>{if(a.status==='unknown')a.status='pending';});}],
++ ['explicit block',(s:any)=>{Object.values(s.attempts).forEach((a:any)=>{if(a.status==='unknown'){a.status='blocked';a.reason='blocked';}});}],
++ ['unclassified',(s:any)=>{Object.values(s.attempts).forEach((a:any)=>{if(a.status==='unknown')a.reason='unknown';});}],
++ ['unavailable',(s:any)=>{Object.values(s.attempts).forEach((a:any)=>{if(a.status==='unknown')a.reason='unavailable';});}],
++ ['cleanup absent',(s:any)=>{s.parallel.results.C.cleanupConfirmed=false;}],
++ ['peer active',(s:any)=>{s.parallel.states.C='active';}],
++ ['wrong hash',(s:any)=>{s.parallel.results.C.hash='e'.repeat(64);}],
++ ['usage mismatch',(s:any)=>{s.used.A=1;}],
++ ['missing key',(s:any)=>{delete s.keys[good];}],
++ ['success zero',(s:any)=>{Object.values(s.attempts).forEach((a:any)=>{if(a.status==='success')a.status='miss';});}],
++ ['already authorized',(s:any)=>{s.partialPublication={status:'authorized'};}],
++] as const)test(`partial publication refuses ${label}`,async t=>{
++ const f=fixture(t);await stopped(f);const state=f.c.snapshot(),hashes=f.hashes();mutate(state);
++ assert.throws(()=>validateParallelPartial(state,hashes));
++});
++for(const stage of ['publish','readback'] as const)test(`${stage} failure retains ownership and blocks the next round`,async t=>{
++ const f=fixture(t);await stopped(f);const p=publication(f);
++ if(stage==='publish')p.opts.publish=async()=>{throw Error('fixture publication failed');};else p.opts.readback=async()=> 'wrong';
++ await assert.rejects(publishParallel(p.opts,f.files));
++ const state=f.c.snapshot();assert.equal(state.phase,'blocked');assert.equal(state.owner,'A');assert.equal(state.partialPublication.status,'authorized');
++ assert.equal(closedHaltCanContinue(state,later),false);assert.equal(p.calls.some(row=>row[0]==='released'),false);
++});
++test('changed checkpoint bytes never acquire a publication fence',async t=>{
++ const f=fixture(t);await stopped(f);fs.appendFileSync(f.files.A,' ');const p=publication(f);
++ await assert.rejects(publishParallel(p.opts,f.files),/unverified worker/);
++ assert.equal(f.c.snapshot().phase,'blocked');assert.equal(p.calls.length,0);
++});
++test('partial preparation requires exact payload hashes and base',async t=>{
++ const f=fixture(t);await stopped(f);
++ f.c.beginParallelPublication({...f.identity('A'),version:'preparing',resultHashes:f.hashes()});
++ const lease=f.c.writerAcquire({...f.identity('A'),writer:'naver',claim:'fixture',ttlMs:600000});
++ assert.throws(()=>f.c.preparePublication({...f.identity('A'),...lease,writer:'naver',version:'a'.repeat(64)}),/payload proof/);
++ assert.equal(f.c.snapshot().partialPublication,undefined);assert.equal(closedHaltCanContinue(f.c.snapshot(),later),false);
++});
++test('a normally finished peer also requires cleanup proof before another worker can partially publish',async t=>{
++ const f=fixture(t);f.c.transaction((s:any)=>{s.parallel.assignments.A=[good];s.parallel.assignments.C=[unknown];});
++ f.runner.collect=async(session:any)=>{
++  const page={goto:async()=>({status:()=>200})};
++  await session.navigate(page,'https://fixture.invalid',{}, {key:good,kind:'search'});await session.settle(page,'success');
++  session.confirmCleanup();return {normalExit:true,prices:f.prices};
++ };
++ await runNaverAc(f.runner);assert.equal(f.c.snapshot().parallel.states.A,'collected');
++ const permit=f.c.reserve({...f.identity('C'),key:unknown,requestId:'peer-failed',kind:'search'});
++ f.c.finish({...permit,outcome:'unknown',reason:'transient_error'});f.terminalC();
++ const p=publication(f);assert.equal((await publishParallel(p.opts,f.files)).partial,true);
++ assert.equal(f.c.snapshot().used.C,1);
++});
++test('a normal round still publishes once, selects normally, and closes as done',async t=>{
++ const f=fixture(t);f.runner.collect=async(session:any)=>{
++  const page={goto:async()=>({status:()=>200})};
++  await session.navigate(page,'https://fixture.invalid',{}, {key:good,kind:'search'});await session.settle(page,'success');
++  session.confirmCleanup();return {normalExit:true,prices:f.prices};
++ };
++ await runNaverAc(f.runner);f.c.completeParallel({...f.identity('C'),resultHash:f.save('C',{prices:{}}),cleanupConfirmed:true});
++ const p=publication(f);assert.equal((await publishParallel(p.opts,f.files)).partial,false);
++ assert.equal(f.c.snapshot().phase,'done');assert.equal(f.c.snapshot().blocked,false);
++ assert.equal(p.calls.filter(row=>row[0]==='publish').length,1);assert.equal(p.calls.filter(row=>row[0]==='pick').length,1);
++});
++test('stopped completion cannot turn an unrelated healthy error into an automatic grant',async t=>{
++ const f=fixture(t);f.c.acceptParallel({...f.identity('A'),inputHash:'f'.repeat(64)});
++ assert.throws(()=>f.c.completeParallel({...f.identity('A'),resultHash:'d'.repeat(64),stopped:true,cleanupConfirmed:true}),/unverified stopped/);
++ assert.equal(f.c.snapshot().parallel.states.A,'active');
++});
++for(const cleanupFails of [false,true])test(`actual crawler confirms cleanup only after browser close resolves (failure=${cleanupFails})`,async t=>{
++ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'naver-collector-fixture-'));
++ t.after(()=>{if(path.dirname(dir)!==os.tmpdir())throw Error('unsafe cleanup');fs.rmSync(dir,{recursive:true});});
++ fs.mkdirSync(path.join(dir,'data'));fs.writeFileSync(path.join(dir,'data/all-flights-cache.json'),JSON.stringify({flights:[]}));
++ let confirmed=0,closed=0;
++ const session={nextFlight:async()=>{throw Error('fixture stop');},confirmCleanup:()=>{confirmed++;}};
++ const chromium={launch:async()=>({newContext:async()=>({newPage:async()=>({})}),close:async()=>{closed++;if(cleanupFails)throw Error('fixture cleanup failure');}})};
++ await assert.rejects(runNaver(session,{root:dir,chromium,environment:{NAVER_LIVE_RUN:'1'}}),/fixture stop/);
++ assert.equal(closed,1);assert.equal(confirmed,cleanupFails?0:1);
++});
++test('real broker keeps exact partial payload and today-pick restrictions with existing credentials',async t=>{
++ const f=fixture(t);await stopped(f);
++ f.c.beginParallelPublication({...f.identity('A'),version:'preparing',resultHashes:f.hashes()});
++ const identity=f.identity('A'),lease={...identity,...f.c.writerAcquire({...identity,writer:'naver',claim:'broker-fixture',ttlMs:600000})};
++ const prices={[good]:f.prices[good]},cache=stampResult({flights:[]},prices,{run:identity.run,generation:1}),version=resultVersion(cache);
++ const expectedBase='b'.repeat(40);
++ f.c.preparePublication({...lease,writer:'naver',version,expectedBase,pricesHash:parallelHash(prices),cacheHash:parallelHash(cache)});
++ let writes=0;
++ const broker=createPublicationHandler({coordinator:f.c,secrets:{A:'fixture-A',C:'fixture-C'},publicationFactory:async()=>({
++  attachFence(){},async publish(v:any){writes++;return v.version;},async publishTodayPick(){throw Error('must not reach');}
++ })});
++ const call=(body:any)=>broker(new Request('http://fixture.invalid/publication',{method:'POST',headers:{authorization:'Bearer fixture-A'},
++  body:JSON.stringify({identity,lease,...body})}));
++ const input={action:'publish',cache,prices,version,expectedBase};
++ assert.equal((await call({...input,prices:{...prices,[good]:{naverLowest:1}}})).status,409);
++ assert.equal((await call({action:'publishTodayPick',pick:{}})).status,409);assert.equal(writes,0);
++ assert.equal((await call(input)).status,200);assert.equal(writes,1);
++ assert.equal((await call(input)).status,409);assert.equal(writes,1);
++});
++test('the launcher publishes only after both worker processes finish and never on transport rejection',async()=>{
++ const events:string[]=[];
++ await launchParallelRound({runA:async()=>{events.push('A-terminal');return {stopped:true};},
++  runC:async()=>{events.push('C-terminal');return {stopped:true};},wait:async()=>{},verifyDay:async()=>{},
++  copyResult:async()=>{assert.deepEqual(events,['A-terminal','C-terminal']);events.push('copied');},publish:async()=>{events.push('published');}});
++ assert.equal(events.at(-1),'published');
++ let published=false;
++ await assert.rejects(launchParallelRound({runA:async()=>{},runC:async()=>{throw Error('SSH exit unknown');},
++  wait:async()=>{},verifyDay:async()=>{},copyResult:async()=>{},publish:async()=>{published=true;}}),/incomplete/);
++ assert.equal(published,false);
++});
+diff --git a/scripts/lib/naver-browser-profile.mjs b/scripts/lib/naver-browser-profile.mjs
+--- a/scripts/lib/naver-browser-profile.mjs
++++ b/scripts/lib/naver-browser-profile.mjs
+@@ -9,9 +9,14 @@ export function persistentProfile(env, platform = process.platform, home = os.ho
+     // Fixed local directory, never a personal Chrome profile or a per-run work directory.
+     return path.join(home, 'Tikitikit', 'naver-browser-profiles', worker);
+ }
+ 
+-export async function openNaverBrowser(chromium, {profile = null, channel, hideWindow = false} = {}) {
++/**
++ * @param {*} chromium
++ * @param {{profile?: string | null, channel?: string, hideWindow?: boolean}} options
++ */
++export async function openNaverBrowser(chromium, options = {}) {
++    const {profile = null, channel, hideWindow = false} = options;
+     if (channel && channel !== 'chrome') throw Error('Unsupported Naver browser channel');
+     const options = {
+         headless: false,
+         args: ['--no-sandbox', '--disable-setuid-sandbox',
+diff --git a/scripts/lib/naver-work-boundary.ts b/scripts/lib/naver-work-boundary.ts
+--- a/scripts/lib/naver-work-boundary.ts
++++ b/scripts/lib/naver-work-boundary.ts
+@@ -28,8 +28,9 @@ export class NaverWorkBoundary {
+                 return { key, firstQueuedAt: prices[key]?.firstQueuedAt };
+             }) });
+         return selected.selected.map((flight: any) => {
+             const key = buildNaverPriceKey(flight, flight.departure.date, flight.arrival.date);
++            if (!key) throw Error('selected Naver key missing');
+             return Object.hasOwn(state.keys, key) ? { ...flight, naverSameDayRecheck: true } : flight;
+         });
+     }
+ }
+diff --git a/src/lib/utils/naver-crawl-history.ts b/src/lib/utils/naver-crawl-history.ts
+--- a/src/lib/utils/naver-crawl-history.ts
++++ b/src/lib/utils/naver-crawl-history.ts
+@@ -8,8 +8,9 @@ export interface NaverCrawlHistoryEntry {
+     startedAt?: string;
+     durationSeconds?: number;
+     runner: 'local' | 'github' | 'manual';
+     sourceFilter: string;
++    metricsScope?: 'ledger-only';
+     maxFlights: number;
+     navigationLimit?: number;
+     needed: number;
+     attempted: number;
+@@ -28,8 +29,9 @@ export interface NaverCrawlHistoryEntry {
+     success: number;
+     misses: number;
+     noResult?: number;
+     routeErrors?: number;
++    unsupportedDestinations?: number;
+     transientErrors?: number;
+     blocked?: number;
+     healthChecks?: number;
+     transientResumes?: number;
+@@ -63,8 +65,10 @@ export function getEffectiveDeferredNeverChecked(
+ 
+ export function normalizeNaverCrawlHistoryEntry(
+     entry: NaverCrawlHistoryEntry,
+ ): NaverCrawlHistoryEntry {
++    // Interrupted-round receipts contain only observed ledger counts, not queue totals.
++    if (entry.metricsScope === 'ledger-only') return { ...entry };
+     return {
+         ...entry,
+         deferredNeverChecked: getEffectiveDeferredNeverChecked(entry),
+     };

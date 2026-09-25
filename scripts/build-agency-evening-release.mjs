@@ -17,7 +17,8 @@ function main() {
         'package.json', 'package-lock.json', 'tsconfig.json'], { cwd: root })
         .toString('utf8').split('\0').filter(Boolean).map(name => name.replaceAll('\\', '/'));
     if (!names.includes('scripts/agency-evening-runtime.mjs') || !names.includes('scripts/agency-evening-worker.mjs')
-        || !names.includes('scripts/agency-evening-collect.ts')) throw new Error('release_code_not_committed');
+        || !names.includes('scripts/agency-evening-collect.ts') || !names.includes('scripts/agency-evening-staging.mjs'))
+        throw new Error('release_code_not_committed');
     const files = names.map(file => {
         const source = path.join(root, file);
         if (fs.lstatSync(source).isSymbolicLink()) throw new Error('linked_release_source');

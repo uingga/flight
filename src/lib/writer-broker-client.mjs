@@ -3,13 +3,15 @@ import {randomUUID} from 'node:crypto';
 import {encodeRelayWire,decodeRelayWire} from './writer-relay-wire.mjs';
 import {publicationDiagnostic} from './writer-publication-diagnostics.mjs';
 export const WRITER_BROKER_TIMEOUT_MS=60000;
-export function createBrokerClient({url,token,timeoutMs=WRITER_BROKER_TIMEOUT_MS,pollMs=2000,request=requestHttp,clock=Date.now,sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms)),onDiagnostic=value=>console.error(JSON.stringify(value))}){
+export function createBrokerClient({url,token,timeoutMs=WRITER_BROKER_TIMEOUT_MS,busyTimeoutMs=600000,pollMs=2000,request=requestHttp,clock=Date.now,sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms)),onDiagnostic=value=>console.error(JSON.stringify(value))}){
  if(typeof token!=='string'||!token.trim())throw Error('broker authentication missing');
  const u=new URL(url),local=['127.0.0.1','[::1]'].includes(u.hostname);
  if(u.username||u.password||!['/','/api/writer/'].includes(u.pathname)||u.search||u.hash||(!local&&u.protocol!=='https:'))throw Error('broker origin refused');
  const web=u.pathname==='/api/writer/';
  return async(action,input={})=>{
-  const id=input.requestId||randomUUID(),body=JSON.stringify({...input,action,...(web?{relayIssuedAt:input.relayIssuedAt||new Date().toISOString()}:{})}),deadline=clock()+timeoutMs;
+  const id=input.requestId||randomUUID(),body=JSON.stringify({...input,action,...(web?{relayIssuedAt:input.relayIssuedAt||new Date().toISOString()}:{})});
+  const busyDeadline=clock()+busyTimeoutMs;
+  let deadline=clock()+timeoutMs;
   // Freeze both identity and wire bytes. Repeating submit reads the existing durable
   // receipt; it must never create a new request or refresh relayIssuedAt on error.
   const wire=web?encodeRelayWire(body):body;
@@ -34,19 +36,27 @@ export function createBrokerClient({url,token,timeoutMs=WRITER_BROKER_TIMEOUT_MS
     }else{
      const completed=r.headers.get('x-publication-state')==='completed';
      const rejected=r.headers.get('x-publication-state')==='rejected';
+     let busy=false;
+     if(local&&!web&&!accepted&&!completed&&!rejected&&r.status===409){
+      // Only this authenticated, typed response guarantees refusal before mutation.
+      // Opaque 409s, network failures and durable terminal receipts are not replayed.
+      try{busy=(await r.json())?.code==='PUBLICATION_BUSY';}catch{}
+     }
      // Old relay versions returned an untyped 409 for DB/transport errors too.
      // Never label those as definite rejection. Retry only the identical receipt.
      const transient=web&&!completed&&!rejected&&(r.status===409||r.status===408||[500,502,503,504].includes(r.status));
-     lastCode=completed?'WRITER_PUBLICATION_REFUSED':transient?'WRITER_RELAY_UNAVAILABLE':'WRITER_HTTP_REFUSED';
-     if(!transient)throw failure(lastCode,r.status,completed||!accepted?'refused':'unknown');
+     lastCode=busy?'PUBLICATION_BUSY':completed?'WRITER_PUBLICATION_REFUSED':transient?'WRITER_RELAY_UNAVAILABLE':'WRITER_HTTP_REFUSED';
+     if(busy)deadline=busyDeadline;
+     else if(!transient)throw failure(lastCode,r.status,completed||!accepted?'refused':'unknown');
     }
    }
    if(!r||r.status!==202){
-    try{onDiagnostic({...publicationDiagnostic(failure(lastCode,lastStatus,'unknown')),event:'writer-publication-recheck',attempt});}catch{/* Diagnostics must not change the publication outcome. */}
+    try{onDiagnostic({...publicationDiagnostic(failure(lastCode,lastStatus,lastCode==='PUBLICATION_BUSY'?'refused':'unknown')),event:'writer-publication-recheck',attempt});}catch{/* Diagnostics must not change the publication outcome. */}
    }
    const remaining=deadline-clock();
    if(remaining>0)await sleep(Math.min(pollMs,remaining));
   }while(clock()<deadline);
+  if(lastCode==='PUBLICATION_BUSY'&&!accepted)throw failure('PUBLICATION_WAIT_EXPIRED',lastStatus,'refused');
   throw failure('WRITER_OUTCOME_UNKNOWN',lastStatus,'unknown');
  };
 }

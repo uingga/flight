@@ -9,6 +9,7 @@ export interface NaverCrawlHistoryEntry {
     durationSeconds?: number;
     runner: 'local' | 'github' | 'manual';
     sourceFilter: string;
+    metricsScope?: 'ledger-only';
     maxFlights: number;
     navigationLimit?: number;
     needed: number;
@@ -64,6 +65,8 @@ export function getEffectiveDeferredNeverChecked(
 export function normalizeNaverCrawlHistoryEntry(
     entry: NaverCrawlHistoryEntry,
 ): NaverCrawlHistoryEntry {
+    // Interrupted-round receipts contain only observed ledger counts, not queue totals.
+    if (entry.metricsScope === 'ledger-only') return { ...entry };
     return {
         ...entry,
         deferredNeverChecked: getEffectiveDeferredNeverChecked(entry),
