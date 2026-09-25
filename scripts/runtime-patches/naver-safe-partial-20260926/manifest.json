@@ -1,9 +1,9 @@
 {
   "format": 1,
   "createdAt": "2026-09-25T16:45:31.367Z",
-  "purpose": "Draft only: exact installed Naver runtime overlay; no collection, installation or authorization reset",
+  "purpose": "Exact Naver runtime overlay against the preserved pre-installation baseline; approved A/C rollout recorded in docs/crawl-reliability-repair-20260926.md; no live collection or authorization reset",
   "baseline": "C:/Users/ynal/Tikitikit/ac-control/naver-ac-runtime",
-  "patchSha256": "1e48d91346535cebcc58356e5ece7efc31bed975cc4310e880b769cf081e463e",
+  "patchSha256": "7505db66d7da8372c0dece52e7a16b56f2f10abc931895c0975d11b3eed990eb",
   "files": [
     {
       "file": "src/lib/naver-parallel-partial.mjs",
@@ -53,7 +53,7 @@
     {
       "file": "scripts/lib/naver-browser-profile.mjs",
       "beforeSha256": "96a9da1e07e8a94aedcb37f64f2b4b58d1b98aeab4c1e7b7ef421f372a6d6498",
-      "afterSha256": "fcbff9c9794758f9a460db5235d5bf49ea1d28822da47ca514fca1a945da7a43"
+      "afterSha256": "e6dfba694e40c73ccac2260b4d73a74f358508832fbc67ca73d9f8443d0cc0d5"
     },
     {
       "file": "scripts/lib/naver-work-boundary.ts",
@@ -67,5 +67,5 @@
     }
   ],
   "lineEndings": "LF",
-  "updatedAt": "2026-09-25T16:59:42.871Z"
+  "updatedAt": "2026-09-25T17:42:10.171Z"
 }

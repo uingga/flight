@@ -1,6 +1,11 @@
-# Naver interrupted-round publication candidate — 2026-09-26
+# Naver interrupted-round publication overlay — 2026-09-26
 
-Status: **offline-tested draft; NOT installed, deployed, or activated**.
+Status: **approved and installed on A/C on 2026-09-26**. No additional live
+collection was started. Final installed runner digest:
+`373597065c963ca206a76ebd238cfae0e865ec03ea14809795dab620f69fe59e`.
+See `docs/crawl-reliability-repair-20260926.md` for the coordinated rollout.
+The manifest's before-hashes describe the preserved pre-installation baseline;
+do not reapply this patch to the already updated live files.
 
 The installed A/C runtime contains parallel scheduling and previously approved
 maintenance fixes absent from the current repository `main`. Do not replace it
@@ -48,14 +53,24 @@ broker payload restrictions, exact readback, and admission of the next round.
 `git apply --check` passed against a private copy of the matching baseline.
 Applying the patch and normalizing ONLY its listed files to LF reproduced all
 twelve expected output hashes. Scoped strict TypeScript checking of the runner,
-publisher and runtime configuration also passed. The live runtime was not changed.
+publisher and runtime configuration also passed. After approved installation,
+A ran all 41 tests successfully. C ran the 14 existing checks plus the same 27
+new integration checks successfully; the latter were run as a direct test script
+because Node 22's test child-process transport failed to deserialize its output.
+This changed only test execution isolation, not assertions or production behavior.
+
+The final overlay also corrects a duplicate browser-options binding caught by
+installed-source syntax validation before any live collection. Every changed MJS
+file must pass `node --check` before installation; TypeScript `allowJs` inspection
+alone is not sufficient. All twelve final after-hashes were reconstructed from
+the preserved original backup and match the installed files.
 
 An additional pre-existing `test-writer-broker.mjs` fixture fails in both the
 unchanged installed runtime and the candidate: its fake Git uses `initial`/`sN`
 instead of 40-character Git object IDs required by the current commit guard.
 That legacy fixture was not modified or counted among the 41 passing tests.
 
-## Future approved installation
+## Installation and rollback precautions
 
 1. Obtain explicit operational deployment/installation approval. Confirm all
    affected collection and publication processes are idle, including B/C.

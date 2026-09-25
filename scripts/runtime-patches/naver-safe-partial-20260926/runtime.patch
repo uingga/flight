@@ -559,10 +559,10 @@ diff --git a/scripts/lib/naver-browser-profile.mjs b/scripts/lib/naver-browser-p
 -export async function openNaverBrowser(chromium, {profile = null, channel, hideWindow = false} = {}) {
 +/**
 + * @param {*} chromium
-+ * @param {{profile?: string | null, channel?: string, hideWindow?: boolean}} options
++ * @param {{profile?: string | null, channel?: string, hideWindow?: boolean}} browserSettings
 + */
-+export async function openNaverBrowser(chromium, options = {}) {
-+    const {profile = null, channel, hideWindow = false} = options;
++export async function openNaverBrowser(chromium, browserSettings = {}) {
++    const {profile = null, channel, hideWindow = false} = browserSettings;
      if (channel && channel !== 'chrome') throw Error('Unsupported Naver browser channel');
      const options = {
          headless: false,
