@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {evaluateLocalNaverRun,buildLocalNaverState} from './local-naver-run-policy.mjs';
-import {roundBarrier,performRound} from './run-naver-round-bridge.mjs';
+import {roundBarrier,performRound,bridgeFailureCode} from './run-naver-round-bridge.mjs';
 import {latestAgencyRound,evaluateRoundContinuation} from '../src/lib/naver-round-handoff.mjs';
 const round='2026-09-17T01:12:00.000Z',now=Date.parse('2026-09-17T01:40:00Z');
 const sources=['ybtour','hanatour','modetour','onlinetour','ttang','myrealtrip','lottetour'];
@@ -27,6 +27,7 @@ test('20:30 requires a published evening source and spends only the remaining bu
  assert.equal(evaluateRoundContinuation({now:when,cache:ready,state:{...spent,navigationsUsed:450},round:evening,totalBudget:450}).reason,'daily_budget_exhausted');
  assert.equal(evaluateRoundContinuation({now:when,cache:{...ready,eveningPrimary:{}},state:spent,round:evening,totalBudget:450}).reason,'recovery_upstream_pending');
  assert.equal(roundBarrier({round:evening,cache:ready,pc:{state:'Ready',result:0,startedAt:evening},mrtDone:true}),true);
+ assert.equal(roundBarrier({round:evening,cache:ready,pc:{state:'Ready',result:1,startedAt:evening},mrtDone:true}),true);
  assert.equal(roundBarrier({round:evening,cache:{...ready,eveningPrimary:{}},pc:{state:'Ready',result:0,startedAt:evening},mrtDone:true}),false);
 });
 test('actual existing policy continues a new round without resetting spent 71',()=>{
@@ -42,11 +43,17 @@ test('running blocked degraded unknown usage and exhausted days cannot continue'
  for(const used of [undefined,200,201,NaN])assert.equal(evaluate({state:{...state,navigationsUsed:used}}).shouldRun,false);
  assert.equal(evaluate({pcCollectionPending:true}).shouldRun,false);
 });
-test('actual barrier requires exact MRT completion and successful PC publication round',()=>{
+test('actual barrier requires MRT completion and published agency evidence, not optional PC exit zero',()=>{
  const pc={state:'Ready',result:0,startedAt:round};assert.equal(roundBarrier({round,cache,pc,mrtDone:true}),true);
- for(const item of [{mrtDone:false},{pc:{...pc,state:'Running'}},{pc:{...pc,result:1}},
+ assert.equal(roundBarrier({round,cache,pc:{...pc,result:1},mrtDone:true}),true);
+ for(const item of [{mrtDone:false},{pc:{...pc,state:'Running'}},
   {pc:{...pc,startedAt:'2026-09-16T21:17:00Z'}},{cache:{...cache,fullCrawlUpdatedAt:'2026-09-16T21:30:00Z'}}])
   assert.equal(roundBarrier({round,cache,pc,mrtDone:true,...item}),false);
+});
+test('bridge error reporting uses safe codes',()=>{
+ assert.equal(bridgeFailureCode(Error('source task status unavailable')),'source_task_status_unavailable');
+ assert.equal(bridgeFailureCode(Object.assign(Error('MRT evidence unavailable'),{httpStatus:429})),'http_429');
+ assert.equal(bridgeFailureCode(Error('unexpected secret-bearing text')),'unclassified_failure');
 });
 test('performRound records completion only after actual runner and readback succeed',async()=>{
  const calls=[];await performRound({round,run:async()=>{calls.push('run');return 0;},verify:async()=>{calls.push('verify');},publishReceipt:async()=>{calls.push('receipt');}});

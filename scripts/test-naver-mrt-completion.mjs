@@ -31,5 +31,8 @@ for(const [name,modify] of [
 ])test(name+' holds',async()=>{const d=fixture();modify(d);assert.equal((await check(d)).ready,false);});
 for(const value of ['2026-09-17T02:00:00Z','2026-09-17T03:10:01Z','2026-09-17T06:00:00Z',undefined])test('invalid/stale publication '+value,async()=>assert.equal((await check(fixture(),{cache:{...cache,sourceUpdatedAt:{myrealtrip:value}}})).ready,false));
 test('empty source and open circuit hold',async()=>{for(const c of [{...cache,flights:[]},{...cache,sourceCircuits:{myrealtrip:{nextProbeAt:'2026-09-18T00:00:00Z'}}}])assert.equal((await check(fixture(),{cache:c})).ready,false);});
-test('API uncertainty fails closed',async()=>assert.rejects(check(fixture(),{api:async()=>({status:403})})));
+test('API uncertainty fails closed with access status for non-retry policy',async()=>assert.rejects(
+ check(fixture(),{api:async()=>({status:403})}),
+ error=>error.message==='MRT evidence unavailable'&&error.httpStatus===403,
+));
 test('new active collector during inspection holds',async()=>{let activeReads=0;const d=fixture();const r=await check(d,{api:async route=>{if(route===prefix+'mrt-active-v1'&&++activeReads===2)return {status:200,data:{}};return route in d?{status:200,data:d[route]}:{status:404};}});assert.equal(r.ready,false);});

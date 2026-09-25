@@ -13,9 +13,25 @@ import {waitForCache} from './wait-for-flight-api-cache.mjs';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 export const roundBridgeEnabled=(now=Date.now())=>now>=Date.parse('2026-09-16T07:31:00Z');
 export function roundBarrier({round,cache,pc,mrtDone}){
- if(!round||!mrtDone||!pc||pc.state!=='Ready'||pc.result!==0||!(Date.parse(pc.startedAt)>=Date.parse(round)))return false;
+ // PC fallback is optional. Its exit code can be 1 after a writer acknowledgement
+ // is lost even when the independently published cache proves this round finished.
+ if(!round||!mrtDone||!pc||pc.state!=='Ready'||!(Date.parse(pc.startedAt)>=Date.parse(round)))return false;
  return isEveningRound(round)?hasPublishedEveningSource(cache,round)
   :Date.parse(cache?.fullCrawlUpdatedAt)>=Date.parse(round);
+}
+export function bridgeFailureCode(error){
+ const message=String(error?.message||'').toLowerCase();
+ if(Number.isInteger(error?.httpStatus))return `http_${error.httpStatus}`;
+ for(const [phrase,code] of [
+  ['coordinator status unavailable','coordinator_status_unavailable'],
+  ['invalid coordinator status','coordinator_status_invalid'],
+  ['broker publication refused','broker_read_refused'],
+  ['source task status unavailable','source_task_status_unavailable'],
+  ['mrt evidence unavailable','mrt_evidence_unavailable'],
+  ['coordinator unsafe or already running','coordinator_unsafe'],
+  ['coordinated round failed','collector_failed'],
+ ])if(message.includes(phrase))return code;
+ return error?.code==='ENOENT'?'required_file_missing':'unclassified_failure';
 }
 export async function performRound({round,run,verify,publishReceipt}){
  const exit=await run(round);
@@ -43,6 +59,15 @@ async function main(){
   if(!r.ok)throw Error('coordinator status unavailable');const value=await r.json();if(value.ok!==true)throw Error('invalid coordinator status');return value.state;
  };
  const broker=coordinated?createBrokerClient({url:process.env.NAVER_COORDINATION_URL,token:coordinatorToken}):null;
+ const pause=()=>new Promise(resolve=>setTimeout(resolve,120000));
+ let observationFailures=0;
+ const observe=async(label,read)=>{
+  try{return await read();}catch(error){
+   if([401,403,429].includes(error?.httpStatus)||++observationFailures>=3)throw error;
+   log('readiness deferred '+label+' code='+bridgeFailureCode(error));
+   return null;
+  }
+ };
  while(true){
   const now=Date.now(),kst=new Date(now+9*3600000);
   const minutes=kst.getUTCHours()*60+kst.getUTCMinutes();
@@ -50,7 +75,8 @@ async function main(){
   const round=latestAgencyRound(now);if(!round)return;
   const state=receipt(),day=kst.toISOString().slice(0,10);
   if(coordinated){
-   const shared=await coordinatorStatus();
+   const shared=await observe('coordinator',coordinatorStatus);
+   if(!shared){await pause();continue;}
    if(shared?.day===day){
     if(shared.blocked||shared.pending||(shared.owner&&shared.phase!=='paused-A'))throw Error('coordinator unsafe or already running');
     if(shared.used.A+shared.used.C>=450)return;
@@ -64,13 +90,20 @@ async function main(){
     ||(state.activeRound&&!state.roundPublished)||Date.parse(state.lastRoundAt)>=Date.parse(round)))return;
   // No stashing: unexpected code conflicts must be reviewed, never hidden by automation.
   if(!coordinated){const sync=execute('git',['pull','--ff-only','origin','main']);if(sync.status!==0)throw Error('runtime refresh failed');}
-  const cache=coordinated?(await broker('readInputs',{identity:{worker:'A',run:'round-read',contract:'naver-ac-v1'}})).cache:JSON.parse(fs.readFileSync(path.join(root,'data/all-flights-cache.json'),'utf8'));
+  const inputs=coordinated?await observe('published-cache',()=>broker('readInputs',{identity:{worker:'A',run:'round-read',contract:'naver-ac-v1'}})):null;
+  if(coordinated&&!inputs){await pause();continue;}
+  const cache=coordinated?inputs.cache:JSON.parse(fs.readFileSync(path.join(root,'data/all-flights-cache.json'),'utf8'));
   const sourceTask=isEveningRound(round)?'TikitikitAgencyEvening':'TikitikitBlockedSourceCrawl';
-  const inspection=execute(ps,['-NoProfile','-NonInteractive','-Command',
+  const pc=await observe('source-task',()=>{const result=execute(ps,['-NoProfile','-NonInteractive','-Command',
    `$t=Get-ScheduledTask -TaskName ${sourceTask} -ErrorAction Stop; $i=$t|Get-ScheduledTaskInfo -ErrorAction Stop; [pscustomobject]@{state=[string]$t.State;result=[long]$i.LastTaskResult;startedAt=$i.LastRunTime.ToUniversalTime().ToString('o')}|ConvertTo-Json -Compress`]);
-  if(inspection.status!==0)throw Error('source task status unavailable');
-  const pc=JSON.parse(inspection.stdout.trim());
-  const mrt=await inspectNaverMrtCompletion({api,round,cache,now});
+   if(result.status!==0)throw Error('source task status unavailable');
+   let value;try{value=JSON.parse(result.stdout.trim());}catch{throw Error('source task status unavailable');}
+   if(!value||typeof value.state!=='string'||!Number.isFinite(Date.parse(value.startedAt)))throw Error('source task status unavailable');
+   return value;});
+  if(!pc){await pause();continue;}
+  const mrt=await observe('mrt-evidence',()=>inspectNaverMrtCompletion({api,round,cache,now}));
+  if(!mrt){await pause();continue;}
+  observationFailures=0;
   if(roundBarrier({round,cache,pc,mrtDone:mrt.ready})){
    const policy=evaluateRoundContinuation({now,cache,state,round,totalBudget:coordinated?450:200});
    if(policy.shouldRun){
@@ -99,7 +132,7 @@ async function main(){
    }
    if(!['recovery_upstream_pending','no_fresh_sources'].includes(policy.reason))return;
   }
-  await new Promise(resolve=>setTimeout(resolve,120000));
+  await pause();
  }
 }
-if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url))main().catch(()=>{console.error('Naver round bridge stopped safely; inspect state and logs');process.exitCode=1;});
+if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url))main().catch(error=>{console.error('Naver round bridge stopped safely; code='+bridgeFailureCode(error));process.exitCode=1;});

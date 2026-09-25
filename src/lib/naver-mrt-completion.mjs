@@ -6,7 +6,7 @@ const sha=value=>typeof value==='string'&&/^[a-f0-9]{40}$/.test(value);
 // Read-only recovery of a skipped GitHub slot. Never writes a synthetic done tag.
 export async function inspectNaverMrtCompletion({api,round,cache,now=Date.now()}) {
  const expected=mrtRoundForGeneralSlot(round);
- const read=async route=>{const r=await api(route);if(![200,404].includes(r.status))throw Error('MRT evidence unavailable');return r;};
+ const read=async route=>{const r=await api(route);if(![200,404].includes(r.status)){const error=Error('MRT evidence unavailable');error.httpStatus=r.status;throw error;}return r;};
  const exact=await read('git/ref/tags/mrt-done/'+suffix(expected.expectedAt));
  if(exact.status===200)return {ready:true,reason:'exact_round_done'};
  const hold=reason=>({ready:false,reason});
