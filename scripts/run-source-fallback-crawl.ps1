@@ -200,10 +200,14 @@ if ($WaitForGeneral) {
             exit 1
         }
         try {
-            $LatestCache = Get-Content -LiteralPath $CachePath -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+            # Scheduled tasks use Windows PowerShell 5.1, whose default file
+            # encoding is the system code page. Cache JSON is always UTF-8.
+            $LatestCache = Get-Content -LiteralPath $CachePath -Raw -Encoding UTF8 -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
             $CurrentGeneralAt = [DateTimeOffset]::Parse([string]$LatestCache.fullCrawlUpdatedAt)
         } catch {
-            Log 'Unable to verify general-round publication; result copy preserved'
+            # Do not log Exception.Message: ConvertFrom-Json can include the
+            # entire input. Retain exact recovery paths and a bounded error ID.
+            Log "Unable to verify general-round publication ($($_.FullyQualifiedErrorId)); result copies preserved at $SessionCopy and $LogSessionCopy"
             exit 1
         }
         if ($CurrentGeneralAt -ge $ExpectedGeneralAt) {
