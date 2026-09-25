@@ -5,10 +5,12 @@ import { watchAnnouncement, isAnnouncementActive, type AnnouncementNotice } from
 const end = Date.parse('2026-09-19T06:00:00+09:00');
 const expiringNotice = { ...notice, endsAt: end };
 
-test('data recovery notice remains active until explicitly withdrawn', () => {
-    assert.equal(SERVICE_UPDATE_NOTICE_END, null);
+test('data recovery notice is withdrawn from September 25 KST', () => {
+    assert.equal(SERVICE_UPDATE_NOTICE_END, Date.parse('2026-09-25T00:00:00+09:00'));
     assert.equal(isServiceUpdateNoticeActive(Date.parse('2026-09-23T00:00:00Z')), true);
-    assert.equal(isServiceUpdateNoticeActive(Date.parse('2027-01-01T00:00:00Z')), true);
+    assert.equal(isServiceUpdateNoticeActive(SERVICE_UPDATE_NOTICE_END - 1), true);
+    assert.equal(isServiceUpdateNoticeActive(SERVICE_UPDATE_NOTICE_END), false);
+    assert.equal(isServiceUpdateNoticeActive(Date.parse('2027-01-01T00:00:00Z')), false);
     assert.equal(SERVICE_UPDATE_NOTICE_KEY, 'tikitikit-service-update-20260923-flight-data-recovery-v1');
     assert.equal(notice.title, '항공권 데이터 복구 중입니다');
     assert.match(notice.body, /새 항공권 반영이 지연/);

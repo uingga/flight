@@ -1,8 +1,8 @@
 import { type AnnouncementNotice, isAnnouncementActive } from './announcement-notice';
 
-// This notice stays active until collection and expired-flight cleanup recover.
+// Withdraw the recovery notice without changing the reusable announcement dialog.
 export const SERVICE_UPDATE_NOTICE_KEY = 'tikitikit-service-update-20260923-flight-data-recovery-v1';
-export const SERVICE_UPDATE_NOTICE_END = null;
+export const SERVICE_UPDATE_NOTICE_END = Date.parse('2026-09-25T00:00:00+09:00');
 
 export function isServiceUpdateNoticeActive(now = Date.now()): boolean {
     return isAnnouncementActive(SERVICE_UPDATE_NOTICE, now);
