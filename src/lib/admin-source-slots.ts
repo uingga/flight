@@ -27,7 +27,8 @@ const AGENCY_EVENING_SOURCES = new Set(['ybtour', 'hanatour', 'modetour', 'ttang
 export type SourceSlotEvent = {
     timestamp: string;
     value: number;
-    countKind?: 'scraped' | 'shown' | 'manual';
+    countKind?: 'scraped' | 'shown' | 'manual' | 'verified';
+    host?: 'B' | 'C' | 'BC';
     reason?: string;
     partial?: boolean;
     preserved: boolean;
@@ -62,6 +63,36 @@ export type SourceSlotBar = {
     isLatest: boolean;
     runStage?: 'preparing' | 'crawling' | 'publishing';
 };
+
+export type TripcomComparisonGroup = {
+    slotAt: string;
+    until: string;
+    runs: SourceSlotBar[];
+};
+
+/** Same 20 scheduled time windows as the ordinary agencies, retaining every recorded Trip.com run in each. */
+export function groupTripcomBarsByAgencyWindow(input: {
+    events: SourceSlotEvent[];
+    now: number;
+    length?: number;
+}): TripcomComparisonGroup[] {
+    const slots = recentSourceSlotTimes(input.now, input.length ?? SLOT_AXIS_LENGTH, 'ybtour');
+    if (slots.length === 0) return [];
+    const runs = buildSourceSlotBars({
+        source: 'tripcom', events: input.events, now: input.now, length: input.events.length,
+    });
+    return slots.map((slotAt, index) => {
+        const until = slots[index + 1] ?? input.now;
+        return {
+            slotAt: new Date(slotAt).toISOString(),
+            until: new Date(until).toISOString(),
+            runs: runs.filter(run => {
+                const at = Date.parse(run.slotAt);
+                return (at >= slotAt && at < until) || (index === slots.length - 1 && at === until);
+            }),
+        };
+    });
+}
 
 /** 최근 회차 축. `now` 이전(포함)의 예약 회차를 오래된 순으로 `length`개 돌려준다. */
 export function recentSlotTimes(now: number, length = SLOT_AXIS_LENGTH): number[] {

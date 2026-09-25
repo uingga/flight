@@ -4274,6 +4274,79 @@
     background: linear-gradient(to top, #f4f6f8, rgba(244, 246, 248, 0));
 }
 
+.tripcomComparisonChart {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(20, minmax(0, 1fr));
+    align-items: end;
+    gap: 3px;
+}
+
+.tripcomComparisonTrend {
+    height: 62px;
+    margin-top: 12px;
+    padding: 8px 8px 0;
+    border-bottom: 1px solid #dfe3e8;
+    border-radius: 8px 8px 0 0;
+    background: linear-gradient(to top, #f4f6f8, rgba(244, 246, 248, 0));
+}
+
+.tripcomComparisonSpark {
+    height: 34px;
+    margin-top: 2px;
+}
+
+.tripcomRunGroup {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 1px;
+    min-width: 0;
+    height: 100%;
+    outline: none;
+}
+
+.tripcomRunGroup[role='button'] { cursor: pointer; }
+
+.tripcomRunBar {
+    flex: 1 1 0;
+    max-width: 10px;
+    min-width: 2px;
+    border-radius: 2px 2px 0 0;
+    background: #a9d1ba;
+}
+
+.tripcomRunBarLatest { background: #3e8d63; }
+.tripcomRunBarPreserved { background: #e7a93c; }
+
+.tripcomEmptyTick {
+    width: 1px;
+    height: 5px;
+    background: #dfe3e8;
+}
+
+.tripcomRunGroup:hover > .tripcomRunBar,
+.tripcomRunGroup:focus-visible > .tripcomRunBar,
+.tripcomRunGroupActive > .tripcomRunBar {
+    filter: brightness(1.08);
+    box-shadow: 0 0 0 1px rgba(23, 32, 51, 0.16);
+}
+
+.tripcomRunGroupActive .sourceSlotTooltip { display: flex; }
+
+@media (max-width: 640px) {
+    .tripcomComparisonChart {
+        grid-template-columns: repeat(10, minmax(0, 1fr));
+        grid-template-rows: repeat(2, 38px);
+        gap: 10px 4px;
+        height: auto;
+        align-items: stretch;
+    }
+
+    .tripcomComparisonTrend { padding: 8px 8px 0; }
+    .tripcomComparisonSpark { padding: 0; }
+}
+
 .sourceSeparateSchedule {
     display: flex;
     flex-direction: column;
@@ -4487,6 +4560,16 @@
 
 .sourceTrendFoot {
     margin-top: 7px;
+}
+
+@media (max-width: 640px) {
+    .tripcomTrendFoot {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 3px;
+    }
+
+    .tripcomTrendFoot > span { word-break: keep-all; }
 }
 
 .statusGood,

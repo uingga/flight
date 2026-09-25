@@ -5,7 +5,8 @@ import {preserveTripcomForForeignWriter} from '../src/lib/tripcom-writer-preserv
 const current={
  flights:[{id:'y-old',source:'ybtour'},{id:'t-new',source:'tripcom',price:180000}],count:2,
  sources:{ybtour:1,tripcom:1},sourceUpdatedAt:{tripcom:'2026-09-24T06:34:00+09:00'},
- tripcomPrimary:{runId:'2026-09-24T06:17:00+09:00',verifiedCities:1},
+ tripcomPrimary:{runId:'2026-09-24T06:17:00+09:00',verifiedCities:1,
+  history:[{runId:'2026-09-23T16:31:00+09:00',host:'C',status:'collected',verifiedCities:1,unconfirmedCities:0}]},
 };
 const proposed={
  flights:[{id:'y-new',source:'ybtour'},{id:'t-stale',source:'tripcom',price:220000}],count:2,

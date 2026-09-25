@@ -7,8 +7,8 @@ import { useState, useEffect } from 'react';
 import styles from './admin.module.css';
 import VisitorTrendChart from '@/components/VisitorTrendChart';
 import { isAnalyticsExcluded, setAnalyticsExcluded } from '@/lib/analytics';
-import { buildSourceSlotBars, type SlotStatus, type SourceSlotBar, type SourceSlotEvent } from '@/lib/admin-source-slots';
-import type { TripcomAdminSnapshot } from '@/lib/admin-tripcom';
+import { buildSourceSlotBars, groupTripcomBarsByAgencyWindow, type SlotStatus, type SourceSlotBar, type SourceSlotEvent, type TripcomComparisonGroup } from '@/lib/admin-source-slots';
+import { tripcomRunSlotEvents, type TripcomAdminSnapshot } from '@/lib/admin-tripcom';
 import AdminCollectionHistory from '@/components/AdminCollectionHistory';
 import AdminSourceCurrentNote from '@/components/AdminSourceCurrentNote';
 import { currentSourceState, collectionDetail, type OnlineCollectionSchedule } from '@/lib/admin-source-current';
@@ -822,7 +822,8 @@ const SLOT_STATUS_LABELS: Record<SlotStatus, string> = {
 function slotEventLabel(event: SourceSlotEvent): string {
     if (event.manual) return `수동 캡처 ${event.value.toLocaleString()}건`;
     if (event.skipped) return skippedUntilLabel(event.skippedUntil, event.skipReason);
-    if (event.preserved) return event.localFallback ? 'PC 대체 실패' : '자동 수집 실패';
+    if (event.preserved) return event.countKind === 'verified' ? 'PC 가격 확인 실패' : event.localFallback ? 'PC 대체 실패' : '자동 수집 실패';
+    if (event.countKind === 'verified') return `PC 가격 확인 ${event.value.toLocaleString()}곳`;
     if (event.partial) return `일부 반영 · ${event.value.toLocaleString()}건`;
     if (event.localFallback) return `PC 대체 ${event.countKind === 'shown' ? '노출 ' : ''}${event.value.toLocaleString()}건`;
     return `자동 ${event.countKind === 'shown' ? '노출 ' : ''}${event.value.toLocaleString()}건`;
@@ -836,7 +837,10 @@ function slotTimeLabel(iso: string): string {
 function slotBarTooltip(bar: SourceSlotBar, sourceName: string, separateSchedule = false): { title: string; lines: string[] } {
     const lines: string[] = [];
     if (separateSchedule) lines.push('별도 수집 기록 기준 · 일반 여행사 예약 회차와 무관합니다');
-    if (bar.value !== null) lines.push(`${bar.final?.countKind === 'shown' ? bar.status === 'failed' ? '보존된 노출' : '필터 후 노출' : bar.status === 'manual' ? '수동 확인' : '수집'} ${bar.value.toLocaleString()}건`);
+    if (bar.value !== null) lines.push(bar.final?.countKind === 'verified'
+        ? `가격 검증 ${bar.value.toLocaleString()}곳`
+        : `${bar.final?.countKind === 'shown' ? bar.status === 'failed' ? '보존된 노출' : '필터 후 노출' : bar.status === 'manual' ? '수동 확인' : '수집'} ${bar.value.toLocaleString()}건`);
+    if (bar.final?.host) lines.push(`수집 PC ${bar.final.host === 'BC' ? 'B·C' : bar.final.host}`);
     if (bar.final?.skipped) lines.push(skippedUntilLabel(bar.final.skippedUntil, bar.final.skipReason));
     if (bar.final && !bar.final.skipped) lines.push(`기록 시각 ${slotTimeLabel(bar.final.timestamp)}`);
     if (bar.status === 'failed') lines.push(bar.final?.reason || '실패 사유 기록 없음 · 이전 데이터 유지');
@@ -847,7 +851,76 @@ function slotBarTooltip(bar: SourceSlotBar, sourceName: string, separateSchedule
     if (bar.events.length > 1) {
         lines.push(`흐름: ${bar.events.map(event => `${slotTimeLabel(event.timestamp).replace(/^\d+\. \d+\. /, '')} ${slotEventLabel(event)}`).join(' → ')}`);
     }
-    return { title: `${slotTimeLabel(bar.slotAt)} ${separateSchedule ? '기록' : '회차'} · ${sourceName} · ${bar.final?.partial && !bar.final.preserved ? '일부 반영 · 원본 일부 미확인' : SLOT_STATUS_LABELS[bar.status]}`, lines };
+    const statusLabel = sourceName === '트립닷컴' && bar.final?.countKind === 'verified'
+        ? bar.status === 'failed' ? '접근 제한 · 이전 표 유지' : bar.final.partial ? '일부 가격 확인' : 'PC 가격 확인 완료'
+        : bar.final?.partial && !bar.final.preserved ? '일부 반영 · 원본 일부 미확인' : SLOT_STATUS_LABELS[bar.status];
+    return { title: `${slotTimeLabel(bar.slotAt)} ${separateSchedule ? '기록' : '회차'} · ${sourceName} · ${statusLabel}`, lines };
+}
+
+function TripcomGroupedBars({ groups, variant }: { groups: TripcomComparisonGroup[]; variant: 'trend' | 'spark' }) {
+    const [activeGroup, setActiveGroup] = useState<number | null>(null);
+    const runs = groups.flatMap(group => group.runs);
+    const peak = Math.max(...runs.filter(run => run.status !== 'failed').map(run => run.value ?? 0), 1);
+    const latestAt = runs.length ? runs[runs.length - 1].slotAt : null;
+    return (
+        <div
+            className={`${styles.tripcomComparisonChart} ${variant === 'trend' ? styles.tripcomComparisonTrend : styles.tripcomComparisonSpark}`}
+            role="group"
+            aria-label={`트립닷컴 동일 기간 ${groups.length}개 시간대 · 저장된 가격 확인 ${runs.length}회`}
+        >
+            {groups.map((group, index) => {
+                const active = activeGroup === index;
+                const hasRuns = group.runs.length > 0;
+                const title = `${slotTimeLabel(group.slotAt)}부터 ${slotTimeLabel(group.until)}까지 · 가격 확인 ${group.runs.length}회`;
+                const lines = group.runs.map(run => {
+                    const event = run.final;
+                    const host = event?.host === 'BC' ? 'B·C' : event?.host ? `PC ${event.host}` : 'PC';
+                    const status = run.status === 'failed' ? '접근 제한 · 이전 표 유지' : event?.partial ? '일부 확인' : '확인 완료';
+                    return `${slotTimeLabel(run.slotAt)} · ${host} · ${status} · 검증 ${run.value?.toLocaleString() ?? '—'}곳${event?.reason ? ` · ${event.reason}` : ''}`;
+                });
+                return (
+                    <span
+                        key={group.slotAt}
+                        data-tripcom-group=""
+                        data-tripcom-run-count={group.runs.length}
+                        className={`${styles.tripcomRunGroup} ${active ? styles.tripcomRunGroupActive : ''}`}
+                        role={hasRuns ? 'button' : undefined}
+                        tabIndex={hasRuns ? 0 : undefined}
+                        aria-label={hasRuns ? `${title} · ${lines.join(' · ')}` : undefined}
+                        aria-expanded={hasRuns ? active : undefined}
+                        aria-hidden={!hasRuns}
+                        onClick={() => { if (hasRuns) setActiveGroup(active ? null : index); }}
+                        onPointerEnter={event => { if (hasRuns && event.pointerType === 'mouse') setActiveGroup(index); }}
+                        onPointerLeave={event => { if (event.pointerType === 'mouse') setActiveGroup(null); }}
+                        onFocus={event => { if (hasRuns && event.currentTarget.matches(':focus-visible')) setActiveGroup(index); }}
+                        onBlur={() => setActiveGroup(null)}
+                        onKeyDown={event => {
+                            if (!hasRuns) return;
+                            if (event.key === 'Enter' || event.key === ' ') {
+                                event.preventDefault();
+                                setActiveGroup(active ? null : index);
+                            }
+                            if (event.key === 'Escape') setActiveGroup(null);
+                        }}
+                    >
+                        {hasRuns ? group.runs.map(run => (
+                            <i
+                                key={`${run.slotAt}|${run.final?.host || ''}`}
+                                data-tripcom-run=""
+                                className={`${styles.tripcomRunBar} ${run.slotAt === latestAt ? styles.tripcomRunBarLatest : ''} ${run.status === 'failed' ? styles.tripcomRunBarPreserved : ''}`}
+                                style={{ height: run.status === 'failed' ? '8px' : `${Math.max(5, Math.round(((run.value || 0) / peak) * 100))}%` }}
+                                aria-hidden="true"
+                            />
+                        )) : <i className={styles.tripcomEmptyTick} aria-hidden="true" />}
+                        {hasRuns && <span className={styles.sourceSlotTooltip} role="tooltip">
+                            <strong>{title}</strong>
+                            {lines.map(line => <span key={line}>{line}</span>)}
+                        </span>}
+                    </span>
+                );
+            })}
+        </div>
+    );
 }
 
 /** crawlHistory 항목을 막대 계산용 이벤트로 바꾼다. 수동 캡처 상태도 같은 형태로 합친다. */
@@ -856,6 +929,8 @@ function collectSourceSlotEvents(
     source: string,
     hasHistoryEvent: (entry: CrawlHistoryEntry, source: string) => boolean,
 ): SourceSlotEvent[] {
+    const tripcomRuns = source === 'tripcom' ? tripcomRunSlotEvents(data.tripcom) : [];
+    if (tripcomRuns.length > 0) return tripcomRuns;
     const manualCapture = data.manualCaptureStatus?.[source];
     const logged: SourceSlotEvent[] = (data.crawlHistory || [])
         .filter(entry => hasHistoryEvent(entry, source))
@@ -2253,7 +2328,7 @@ export default function AdminPage() {
                     <div className={styles.sectionHeading}>
                         <div>
                             <h2>여행사별 수집 상태</h2>
-                            <p>일반 여행사는 최근 16개 예약 회차, 마이리얼트립은 최근 16개 실제 수집 기록을 봅니다. 맨 오른쪽이 최신입니다. 막대에 마우스를 올리거나 탭하면 상세가 보입니다.</p>
+                            <p>일반 여행사는 최근 예약 회차를, 트립닷컴은 같은 기간의 가격 확인 기록을 시간대별로 봅니다. 마이리얼트립은 별도 실제 수집 기록순입니다. 막대에 마우스를 올리거나 탭하면 상세가 보입니다.</p>
                         </div>
                     </div>
                     <div className={styles.sourceGraphLegend} aria-label="수집 그래프 범례">
@@ -2316,7 +2391,10 @@ export default function AdminPage() {
                                     ? new Date(crawlScheduleHealth.lastCompletedAt).getTime()
                                     : null,
                             });
-                            // 상태 문구·중앙값 계산은 예전처럼 최근 이벤트 16개를 본다. 막대만 회차 축을 쓴다.
+                            const tripcomGroups = source === 'tripcom'
+                                ? groupTripcomBarsByAgencyWindow({ events: slotEvents, now: slotNow }) : null;
+                            const tripcomRunCount = tripcomGroups?.reduce((count, group) => count + group.runs.length, 0) ?? 0;
+                            // 상태 문구·중앙값 계산은 최근 이벤트 16개를 본다. 막대만 회차 축을 쓴다.
                             const history = [...slotEvents]
                                 .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
                                 .slice(-16);
@@ -2371,17 +2449,21 @@ export default function AdminPage() {
                                     <AdminSourceCurrentNote state={currentState} />
                                     <div className={styles.sourceTrendSummary}>
                                         <div><strong>{visibleCount.toLocaleString()}</strong><span>사이트 노출</span></div>
-                                        <div><strong>{latestMeasured ? latestMeasured.value.toLocaleString() : '—'}</strong><span>최근 실제 수집</span></div>
+                                        <div><strong>{latestMeasured ? latestMeasured.value.toLocaleString() : '—'}</strong><span>{source === 'tripcom' ? '최근 가격 검증 도시' : '최근 실제 수집'}</span></div>
                                     </div>
-                                    {source === 'myrealtrip' && (
+                                    {(source === 'myrealtrip' || source === 'tripcom') && (
                                         <p className={styles.sourceSeparateSchedule}>
                                             <strong>{latestMeasured
-                                                ? `${slotTimeLabel(latestMeasured.timestamp)} ${latestMeasured.preserved ? '수집 실패 · 이전 표 유지' : '수집 완료'}`
+                                                ? `${slotTimeLabel(latestMeasured.timestamp)} ${latestMeasured.preserved ? '수집 실패 · 이전 표 유지' : source === 'tripcom' ? latestMeasured.partial ? '일부 가격 확인' : '가격 확인 완료' : '수집 완료'}`
                                                 : '실제 수집 기록 없음'}</strong>
-                                            <span>별도 일정 · 실제 수집 기록순으로 표시</span>
+                                            <span>{source === 'tripcom' ? '별도 수집 · 일반 여행사와 같은 기간의 시간대별 표시' : '별도 일정 · 저장된 실제 수집 기록순으로 표시'}</span>
                                         </p>
                                     )}
-                                    <div className={styles.sourceTrendBars} role="group" aria-label={`${SOURCE_NAMES[source]} 최근 ${slotBars.length}회차 자동·PC 대체·수동 수집 및 건너뜀 기록`}>
+                                    {source === 'tripcom'
+                                        ? tripcomRunCount > 0 && tripcomGroups
+                                            ? <TripcomGroupedBars groups={tripcomGroups} variant="trend" />
+                                            : <p className={styles.sourceMeta}>저장된 가격 확인 기록 없음</p>
+                                        : <div className={styles.sourceTrendBars} role="group" aria-label={`${SOURCE_NAMES[source]} 최근 ${slotBars.length}회차 자동·PC 대체·수동 수집 및 건너뜀 기록`}>
                                         {slotBars.map((bar, index) => {
                                             const tooltip = slotBarTooltip(bar, SOURCE_NAMES[source] || source, source === 'myrealtrip');
                                             const active = activeSlotBar?.source === `ops:${source}` && activeSlotBar.index === index;
@@ -2446,9 +2528,13 @@ export default function AdminPage() {
                                                 </span>
                                             );
                                         })}
-                                    </div>
-                                    <div className={styles.sourceTrendFoot}>
-                                        <span>{slotBars.length > 0 ? `최근 ${slotBars.length}${source === 'myrealtrip' ? '개 수집 기록' : '회차'} · ${slotTimeLabel(slotBars[0].slotAt)}부터` : '수집 기록 없음'}</span>
+                                    </div>}
+                                    <div className={`${styles.sourceTrendFoot} ${source === 'tripcom' ? styles.tripcomTrendFoot : ''}`}>
+                                        <span>{source === 'tripcom'
+                                            ? tripcomRunCount > 0 && tripcomGroups
+                                                ? `같은 기간 ${tripcomGroups.length}칸 · 가격 확인 ${tripcomRunCount}회 · 빈 칸은 기록 없음`
+                                                : '가격 확인 기록 없음'
+                                            : slotBars.length > 0 ? `최근 ${slotBars.length}${source === 'myrealtrip' ? '개 수집 기록' : '회차'} · ${slotTimeLabel(slotBars[0].slotAt)}부터` : '수집 기록 없음'}</span>
                                         <span>{circuit
                                             ? `원인 ${compactCircuitCause(circuit)} · ${circuitOpen
                                                 ? `${formatKSTMinute(circuit.nextProbeAt)}까지 건너뜀`
@@ -3108,6 +3194,9 @@ export default function AdminPage() {
                                 ? new Date(crawlScheduleHealth.lastCompletedAt).getTime()
                                 : null,
                         });
+                        const tripcomGroups = source === 'tripcom'
+                            ? groupTripcomBarsByAgencyWindow({ events: slotEvents, now: slotNow }) : null;
+                        const tripcomRunCount = tripcomGroups?.reduce((count, group) => count + group.runs.length, 0) ?? 0;
                         const history = [...slotEvents]
                             .map(event => ({ ...event, ts: event.timestamp }))
                             .sort((a, b) => new Date(a.ts).getTime() - new Date(b.ts).getTime())
@@ -3204,10 +3293,10 @@ export default function AdminPage() {
                                         ? <span>마지막 갱신 {timeAgo(updatedAt)}</span>
                                         : <span>갱신 기록 없음</span>}
                                     {source === 'tripcom' && data.tripcom?.lastRun && (
-                                        <span>마지막 저장 회차 {data.tripcom.lastRun.host || 'PC'} · {data.tripcom.lastRun.status === 'blocked_preserved' ? '접근 제한 · 이전 표 유지' : data.tripcom.lastRun.status === 'partial' ? '일부 확인' : '확인 완료'} · 검증 {data.tripcom.lastRun.verifiedCities ?? '—'}곳 · 미확인 {data.tripcom.lastRun.unconfirmedCities ?? '—'}곳</span>
+                                        <span>마지막 저장 회차 {data.tripcom.lastRun.host === 'BC' ? 'B·C' : data.tripcom.lastRun.host || 'PC'} · {data.tripcom.lastRun.status === 'blocked_preserved' ? '접근 제한 · 이전 표 유지' : data.tripcom.lastRun.status === 'partial' ? '일부 확인' : '확인 완료'} · 검증 {data.tripcom.lastRun.verifiedCities ?? '—'}곳 · 미확인 {data.tripcom.lastRun.unconfirmedCities ?? '—'}곳</span>
                                     )}
                                     {latestMeasured && !latestMeasured.preserved && !latestMeasured.manual && (
-                                        <span>최근 자동 수집 {latestMeasured.value.toLocaleString()}건 · 사이트 노출 {shown.toLocaleString()}건</span>
+                                        <span>{source === 'tripcom' ? `최근 가격 검증 ${latestMeasured.value.toLocaleString()}곳` : `최근 자동 수집 ${latestMeasured.value.toLocaleString()}건`} · 사이트 노출 {shown.toLocaleString()}건</span>
                                     )}
                                     {modetourManualNeeded && !currentState && (
                                         <span>PC 자동 접속 없음 · 일반 Chrome 결과 화면을 캡처해 전달</span>
@@ -3235,9 +3324,16 @@ export default function AdminPage() {
                                     )}
                                 </div>
 
-                                {source === 'tripcom' && slotBars.length === 0 ? <p className={styles.sourceMeta}>회차별 실행 기록은 아직 저장되지 않았습니다.</p> : <div className={styles.sparkBars} role="group" aria-label={`${SOURCE_NAMES[source]} 최근 ${slotBars.length}회차 자동·PC 대체·수동 수집 및 건너뜀 기록`}>
+                                {source === 'tripcom'
+                                    ? tripcomRunCount > 0 && tripcomGroups
+                                        ? <>
+                                            <TripcomGroupedBars groups={tripcomGroups} variant="spark" />
+                                            <span className={styles.sourceMeta}>같은 기간 {tripcomGroups.length}칸 · 가격 확인 {tripcomRunCount}회 · 빈 칸은 기록 없음</span>
+                                        </>
+                                        : <p className={styles.sourceMeta}>저장된 가격 확인 기록 없음</p>
+                                    : <div className={styles.sparkBars} role="group" aria-label={`${SOURCE_NAMES[source]} 최근 ${slotBars.length}회차 자동·PC 대체·수동 수집 및 건너뜀 기록`}>
                                     {slotBars.map((bar, index) => {
-                                        const tooltip = slotBarTooltip(bar, SOURCE_NAMES[source] || source, source === 'myrealtrip' || source === 'tripcom');
+                                        const tooltip = slotBarTooltip(bar, SOURCE_NAMES[source] || source, source === 'myrealtrip');
                                         const active = activeSlotBar?.source === `col:${source}` && activeSlotBar.index === index;
                                         const className = bar.status === 'manual'
                                             ? `${styles.sparkBar} ${styles.sparkBarManual}`
