@@ -2,7 +2,7 @@ import type { Flight } from '@/types/flight';
 
 export const holidayInsightCopy = {
     id: 'holiday-insight',
-    eyebrow: '개천절·한글날 연휴',
+    eyebrow: '10월 여행 타이밍',
     title: '개천절·한글날 연휴',
     description: '각 연휴 3일을 모두 포함한 항공권',
 };

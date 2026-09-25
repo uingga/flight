@@ -617,12 +617,12 @@ export function WeekendFlightsInsight({
                 data-weekend-route-count={mobileCount}
             >
                 <div className={styles.freshFlightsMobileTopline}>
-                    <span>{onOpenCollection ? '' : eyebrow}</span>
+                    <span>{eyebrow}</span>
                     {priceDrops ? <span>총 {mobileCount}개</span> : mobileCount > 1 && <span aria-hidden="true">{activeMobileIndex + 1} / {mobileCount}</span>}
                 </div>
                 <div className={`${styles.freshFlightsCopy} ${onOpenCollection ? styles.holidayCopyAction : ''}`}>
                     {onOpenCollection && <button type="button" className={styles.holidayCopyButton} onClick={onOpenCollection} aria-label="연휴 항공권 전체 보기" />}
-                    {!onOpenCollection && <span className={styles.freshFlightsDesktopEyebrow}>{eyebrow}</span>}
+                    <span className={styles.freshFlightsDesktopEyebrow}>{eyebrow}</span>
                     <strong id={`${insightId}-title`}>{onOpenCollection && <span aria-hidden="true">✈️ </span>}{copy?.title ?? (priceDrops ? '기다린 보람이 있네요' : '주말이 아까운 사람에게')}</strong>
                     <p>{copy?.description ?? (priceDrops ? '최근 가격이 내려간 항공권을 모았어요.' : '토·일이 여행 일정에 들어간 항공권만 골랐어요.')}</p>
                 </div>
