@@ -75,7 +75,7 @@ async function main(){
  const broker=configuredMrtWriter();
  if(broker)await broker('readInputs'); // Verify scoped authentication before admission or collection.
  const token=installationTokenProvider({appId:4952321,installationId:161894104,repository:'uingga/flight',
-  privateKey:fs.readFileSync(path.join(os.homedir(),'AppData/Local/Tikitikit/publisher-auth/github-app.private-key.pem'),'utf8')});
+  privateKey:fs.readFileSync(process.env.TIKIT_WRITER_APP_KEY_FILE||path.join(os.homedir(),'AppData/Local/Tikitikit/publisher-auth/github-app.private-key.pem'),'utf8')});
  const api=githubMrtClient(token);
  const head=await api('git/ref/heads/main');if(head.status!==200)throw Error('main unavailable');
  const ticket=await acquireMrt(api,{slot,host:target.host,sha:head.data.object.sha});if(!ticket){console.log('shared admission busy or slot spent');return;}
@@ -113,4 +113,4 @@ async function main(){
  await releaseMrt(api,ticket);console.log(JSON.stringify({status:'published',slot,commit}));
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url))
- main().catch(()=>{console.error('MRT C run stopped; inspect persisted evidence before any retry');process.exitCode=1;});
+ main().catch(error=>{console.error(JSON.stringify({event:'mrt-dispatch-stopped',at:new Date().toISOString(),code:error.code||'MRT_RUN_FAILED',message:error.message}));process.exitCode=1;});
