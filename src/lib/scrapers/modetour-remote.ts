@@ -7,6 +7,7 @@ import { evaluatePcCollection } from '../../../scripts/pc-collection-policy.mjs'
 import { getCrawlDataDir } from '../crawl-data-dir';
 import { SourceResponseError } from './source-response';
 import { ttangWorkerForSlot } from '../../../scripts/ttang-worker-routing.mjs';
+import { assertModeReplyIdentity } from '../modetour-remote-contract';
 
 export async function scrapeModetourRemote(cache: any) {
     // Explicit offline import feeds the identical filters; never permit this switch on production data/.
@@ -42,11 +43,11 @@ export async function scrapeModetourRemote(cache: any) {
         child.on('close',()=>{if(finished)return;finished=true;clearTimeout(timer);try{resolve(JSON.parse(Buffer.concat(output).toString('utf8')));}catch{reject(new Error('invalid_remote_reply'));}});
         child.stdin.end(JSON.stringify(request));
     });
-    if (reply.protocol !== MODE_REMOTE_PROTOCOL || reply.id !== id) throw new Error('remote_identity_mismatch');
+    assertModeReplyIdentity(reply, id);
     if (reply.status !== 'verified') {
-        if (reply.restricted) throw new SourceResponseError('soft-block','모두투어 B PC 접근 제한 — 이전 데이터 보존');
+        if (reply.restricted) throw new SourceResponseError('soft-block',`모두투어 ${worker} PC 접근 제한 — 이전 데이터 보존`);
         const reason = typeof reply.reason === 'string' && /^[a-z_]+$/.test(reply.reason) ? reply.reason : 'unknown_failure';
-        throw new Error(`모두투어 B PC 수집 실패 (${reason}) — 이전 데이터 보존`);
+        throw new Error(`모두투어 ${worker} PC 수집 실패 (${reason}) — 이전 데이터 보존`);
     }
     return validateModeBundle(reply.bundle, cache?.flights || [], cache?.modetourPrimary?.scopeCounts);
 }

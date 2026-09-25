@@ -2,24 +2,23 @@ import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import { createHash } from 'node:crypto';
-import { evaluatePcCollection, isRecentPrimarySnapshot } from './pc-collection-policy.mjs';
+import { fileURLToPath } from 'node:url';
+import { modeWorkerFailure, validateModeWorkerRequest } from '../src/lib/modetour-remote-contract';
 import { checkModeCooldown } from './crawl-modetour-browser';
 import { collectModeBrowser, modeBrowserPlan, modeScopeKey } from '../src/lib/modetour-browser';
 import { openModeBrowser } from '../src/lib/modetour-browser-adapter';
 import { MODE_REMOTE_PROTOCOL, validateModeBundle } from '../src/lib/modetour-operational';
 
+let request: any;
+let phase = 'preflight';
 async function main() {
-    if (process.argv.length !== 3 || process.argv[2] !== '--scheduled' || os.hostname().toUpperCase() !== 'DESKTOP-OFFICE')
+    if (process.argv.length !== 3 || process.argv[2] !== '--scheduled')
         throw new Error('explicit_scheduled_worker_required');
     const chunks: Buffer[] = []; let bytes = 0;
     for await (const chunk of process.stdin) { bytes += chunk.length; if (bytes > 50000) throw new Error('request_too_large'); chunks.push(Buffer.from(chunk)); }
-    const request = JSON.parse(Buffer.concat(chunks).toString('utf8'));
-    const now = Date.now(), age = now - Date.parse(request.createdAt);
-    if (request.protocol !== MODE_REMOTE_PROTOCOL || !/^[0-9a-f-]{36}$/.test(request.id || '') || !Number.isFinite(age) || age < 0 || age > 900000)
-        throw new Error('invalid_worker_request');
-    const policy = evaluatePcCollection({ cache: request.cache });
-    if (!policy.shouldRun || !policy.sources.includes('modetour') || policy.expectedAt !== request.expectedAt) throw new Error('source_not_eligible');
-    if (!isRecentPrimarySnapshot(request.cache, now)) throw new Error('stale_source_state');
+    request = JSON.parse(Buffer.concat(chunks).toString('utf8'));
+    const now = Date.now();
+    validateModeWorkerRequest(request, { now, hostname: os.hostname() });
     const base = path.join(os.homedir(), 'AppData/Local/Tikitikit');
     const state = path.join(base, 'modetour-browser'), shared = path.join(base, 'onlinetour-validation');
     fs.mkdirSync(state, { recursive: true }); fs.mkdirSync(shared, { recursive: true });
@@ -35,6 +34,7 @@ async function main() {
         const slot = createHash('sha256').update(request.expectedAt).digest('hex');
         fs.writeFileSync(path.join(state, `scheduled-${slot}.json`), JSON.stringify({ id: request.id, expectedAt: request.expectedAt }), { flag: 'wx' });
         fs.mkdirSync(output, { recursive: true });
+        phase = 'collection';
         const plan = modeBrowserPlan(new Date(now), request.id), raw: Record<string, unknown[]> = {};
         fs.writeFileSync(path.join(output,'plan.json'), JSON.stringify(plan));
         browser = await openModeBrowser(plan.maxListRequests);
@@ -46,14 +46,22 @@ async function main() {
         await validateModeBundle(bundle, [], request.cache.modetourPrimary?.scopeCounts);
         fs.writeFileSync(path.join(output,'bundle.json'), JSON.stringify(bundle));
         await browser.close(); browser = undefined;
-        process.stdout.write(JSON.stringify({ protocol: MODE_REMOTE_PROTOCOL, id: request.id, status: 'verified', bundle }));
+        return { protocol: MODE_REMOTE_PROTOCOL, id: request.id, status: 'verified', bundle };
     } catch (error) {
-        const reason = /^[a-z_]+$/.test((error as Error).message) ? (error as Error).message : 'worker_failed';
-        const restricted = reason === 'access_restriction';
+        const reply = modeWorkerFailure(request, error, phase);
+        const { reason, restricted } = reply;
         if (restricted) fs.writeFileSync(cooldown, JSON.stringify({ reason, nextProbeAt: new Date(Date.now()+86400000).toISOString() }));
         if (fs.existsSync(output)) fs.writeFileSync(path.join(output,'failure.json'), JSON.stringify({reason, diagnostics:browser?.diagnostics()}));
-        process.stdout.write(JSON.stringify({ protocol: MODE_REMOTE_PROTOCOL, id: request.id, status: 'failed', reason, restricted }));
-        process.exitCode = 1;
-    } finally { try { await browser?.close(); } finally { fs.closeSync(fd); fs.unlinkSync(lock); } }
+        return reply;
+    } finally { phase = 'cleanup'; try { await browser?.close(); } finally { fs.closeSync(fd); fs.unlinkSync(lock); } }
 }
-void main().catch(() => { process.stdout.write(JSON.stringify({status:'failed',reason:'worker_preflight_failed'})); process.exitCode=1; });
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+    void main().then(reply => {
+        process.stdout.write(JSON.stringify(reply));
+        if (reply.status !== 'verified') process.exitCode = 1;
+    }).catch(error => {
+        // Preserve the validated request identity even when admission fails before a browser exists.
+        process.stdout.write(JSON.stringify(modeWorkerFailure(request, error, phase)));
+        process.exitCode = 1;
+    });
+}
