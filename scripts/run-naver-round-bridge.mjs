@@ -47,7 +47,7 @@ async function main(){
   const r=execute(ps,['-NoProfile','-NonInteractive','-File',path.join(root,'scripts/run-naver-crawl.ps1'),'-Scheduled']);
   process.exitCode=r.status??1;return;
  }
- const token=installationTokenProvider({appId:4952321,installationId:161894104,repository:'uingga/flight',privateKey:fs.readFileSync(path.join(os.homedir(),'AppData/Local/Tikitikit/publisher-auth/github-app.private-key.pem'),'utf8')});
+ const token=installationTokenProvider({appId:4952321,installationId:161894104,repository:'uingga/flight',privateKey:fs.readFileSync(process.env.TIKIT_WRITER_APP_KEY_FILE||path.join(os.homedir(),'AppData/Local/Tikitikit/publisher-auth/github-app.private-key.pem'),'utf8')});
  const api=githubMrtClient(token),statePath=path.join(os.homedir(),'AppData/Local/Tikitikit/state/naver-crawl.json');
  const logDir=path.join(os.homedir(),'AppData/Local/Tikitikit/state');fs.mkdirSync(logDir,{recursive:true});
  const log=(message)=>fs.appendFileSync(path.join(logDir,'naver-round-bridge.log'),new Date().toISOString()+' '+message+'\n');
