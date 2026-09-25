@@ -1,7 +1,5 @@
-# PC fallback for travel-agency sources paused on GitHub.
-# It waits for the matching general crawl, then runs only sources with an active
-# GitHub circuit. A successful PC crawl refreshes data without closing GitHub's
-# 24-hour circuit.
+# PC-primary sources may collect beside the matching GitHub round. Publication
+# waits for that round; GitHub-failure fallback sources are evaluated afterward.
 
 [CmdletBinding()]
 param(
@@ -17,6 +15,8 @@ $CachePath = 'data/all-flights-cache.json'
 $ManagedPaths = @($CachePath, 'data/crawl-log.json', 'data/interpark-prices.json')
 $SessionCopy = Join-Path $env:TEMP "tikitikit-source-fallback-$PID.json"
 $LogSessionCopy = Join-Path $env:TEMP "tikitikit-source-fallback-log-$PID.json"
+$LateSessionCopy = Join-Path $env:TEMP "tikitikit-source-fallback-late-$PID.json"
+$LateLogSessionCopy = Join-Path $env:TEMP "tikitikit-source-fallback-late-log-$PID.json"
 
 Set-Location $ProjectDir
 
@@ -165,7 +165,95 @@ try {
     Log "Unable to preserve fallback result: $($_.Exception.Message)"
     exit 1
 }
+$EarlySources = @($Sources)
 
+# PC-primary browsers may collect alongside GitHub, but GitHub must publish
+# its general snapshot before this source-scoped result is merged and written.
+# The preserved session copies let us refresh main without repeating site requests.
+try {
+    $ExpectedGeneralAt = [DateTimeOffset]::Parse([string]$Policy.expectedAt)
+    $ObservedGeneralAt = [DateTimeOffset]::Parse([string]$Policy.fullCrawlUpdatedAt)
+    $WaitForGeneral = $ObservedGeneralAt -lt $ExpectedGeneralAt
+    $GeneralDeadline = if ($Policy.eveningSlot) {
+        $ExpectedGeneralAt.AddHours(1)
+    } else {
+        [DateTimeOffset]::Parse([string]$Policy.nextExpectedAt).AddMinutes(-1)
+    }
+} catch {
+    Log 'Unable to establish the general-round publication boundary; saved result retained'
+    exit 1
+}
+
+# The legacy GitHub-failure fallbacks still depend on the current general result.
+# Re-evaluate them after that result lands; an early PC-primary start must not
+# silently drop a new Yellow Balloon or HanaTour fallback from this same slot.
+$LateSources = @()
+$LateCollectionFailed = $false
+if ($WaitForGeneral) {
+    git checkout -- $ManagedPaths 2>$null
+    while ($true) {
+        $PullOutput = & git pull --rebase --autostash origin main 2>&1
+        $PullExitCode = $LASTEXITCODE
+        $PullOutput | Add-Content -Encoding utf8 $LogFile
+        if ($PullExitCode -ne 0) {
+            Log 'Remote refresh failed while awaiting general publication; result copy preserved'
+            exit 1
+        }
+        try {
+            $LatestCache = Get-Content -LiteralPath $CachePath -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+            $CurrentGeneralAt = [DateTimeOffset]::Parse([string]$LatestCache.fullCrawlUpdatedAt)
+        } catch {
+            Log 'Unable to verify general-round publication; result copy preserved'
+            exit 1
+        }
+        if ($CurrentGeneralAt -ge $ExpectedGeneralAt) {
+            Log 'Matching general round published; checking newly eligible PC fallbacks'
+            break
+        }
+        $RemainingSeconds = [Math]::Floor(($GeneralDeadline - [DateTimeOffset]::UtcNow).TotalSeconds)
+        if ($RemainingSeconds -le 0) {
+            Log "Matching general round missed the publication deadline; result copies preserved at $SessionCopy and $LogSessionCopy"
+            exit 1
+        }
+        $SleepSeconds = [Math]::Min($PollSeconds, $RemainingSeconds)
+        Log "PC-primary result saved; waiting $SleepSeconds seconds for matching general publication without site requests"
+        Start-Sleep -Seconds $SleepSeconds
+    }
+
+    $AfterPolicyOutput = & node scripts/pc-collection-policy.mjs check --cache $CachePath 2>&1
+    if ($LASTEXITCODE -ne 0) { Log 'Unable to re-evaluate PC fallbacks; early result copy preserved'; exit 1 }
+    try { $AfterPolicy = ($AfterPolicyOutput | Out-String).Trim() | ConvertFrom-Json -ErrorAction Stop }
+    catch { Log 'Invalid post-GitHub fallback policy; early result copy preserved'; exit 1 }
+    if ($AfterPolicy.expectedAt -ne $Policy.expectedAt) {
+        Log 'PC fallback slot advanced during collection; early result copy preserved without another site request'
+        exit 1
+    }
+    $LateSources = @($AfterPolicy.fallbackSources | Where-Object { $EarlySources -notcontains $_ })
+    if ($LateSources.Count -gt 0) {
+        Log "New GitHub-failure PC fallbacks for the same slot: $($LateSources -join ', ')"
+        $LateArgument = "--sources=$($LateSources -join ',')"
+        & npx.cmd --no-install tsx scripts/crawl-all.ts $LateArgument 2>&1 |
+            ForEach-Object { "$_" | Add-Content -Encoding utf8 $LogFile }
+        if ($LASTEXITCODE -ne 0) {
+            Log 'Post-GitHub fallback collection failed; publishing the saved PC-primary result only'
+            $LateCollectionFailed = $true
+        } else {
+            try {
+                Copy-Item -LiteralPath $CachePath -Destination $LateSessionCopy -Force -ErrorAction Stop
+                Copy-Item -LiteralPath 'data/crawl-log.json' -Destination $LateLogSessionCopy -Force -ErrorAction Stop
+            } catch {
+                Log 'Unable to preserve post-GitHub fallback result; publishing the saved PC-primary result only'
+                $LateCollectionFailed = $true
+            }
+        }
+        if ($LateCollectionFailed) {
+            git checkout -- $ManagedPaths 2>$null
+            $LateSources = @()
+        }
+    }
+}
+
+$Sources = @($EarlySources) + @($LateSources)
 $Published = $false
 for ($Attempt = 1; $Attempt -le 2; $Attempt++) {
     git checkout -- $ManagedPaths 2>$null
@@ -173,11 +261,11 @@ for ($Attempt = 1; $Attempt -le 2; $Attempt++) {
     $PullExitCode = $LASTEXITCODE
     $PullOutput | Add-Content -Encoding utf8 $LogFile
     if ($PullExitCode -ne 0) {
-        Log "Remote refresh failed (attempt $Attempt); result copy preserved"
+        Log "Remote refresh failed (attempt $Attempt); result copies preserved"
         exit 1
     }
 
-    foreach ($Source in $Sources) {
+    foreach ($Source in $EarlySources) {
         & node scripts/merge-cache-source.mjs $CachePath $SessionCopy $Source 2>&1 |
             ForEach-Object { "$_" | Add-Content -Encoding utf8 $LogFile }
         if ($LASTEXITCODE -ne 0) {
@@ -186,13 +274,31 @@ for ($Attempt = 1; $Attempt -le 2; $Attempt++) {
             exit 1
         }
     }
+    foreach ($Source in $LateSources) {
+        & node scripts/merge-cache-source.mjs $CachePath $LateSessionCopy $Source 2>&1 |
+            ForEach-Object { "$_" | Add-Content -Encoding utf8 $LogFile }
+        if ($LASTEXITCODE -ne 0) {
+            git checkout -- $ManagedPaths 2>$null
+            Log "Post-GitHub source merge failed for $Source"
+            exit 1
+        }
+    }
 
-    & node scripts/merge-crawl-log.mjs 'data/crawl-log.json' $LogSessionCopy ($Sources -join ',') 2>&1 |
+    & node scripts/merge-crawl-log.mjs 'data/crawl-log.json' $LogSessionCopy ($EarlySources -join ',') 2>&1 |
         ForEach-Object { "$_" | Add-Content -Encoding utf8 $LogFile }
     if ($LASTEXITCODE -ne 0) {
         git checkout -- $ManagedPaths 2>$null
         Log 'PC fallback crawl-log merge failed'
         exit 1
+    }
+    if ($LateSources.Count -gt 0) {
+        & node scripts/merge-crawl-log.mjs 'data/crawl-log.json' $LateLogSessionCopy ($LateSources -join ',') 2>&1 |
+            ForEach-Object { "$_" | Add-Content -Encoding utf8 $LogFile }
+        if ($LASTEXITCODE -ne 0) {
+            git checkout -- $ManagedPaths 2>$null
+            Log 'Post-GitHub fallback crawl-log merge failed'
+            exit 1
+        }
     }
 
     $Dirty = git status --porcelain -- $CachePath 'data/crawl-log.json'
@@ -258,14 +364,21 @@ for ($Attempt = 1; $Attempt -le 2; $Attempt++) {
     }
 }
 
-Remove-Item -LiteralPath $SessionCopy -Force -ErrorAction SilentlyContinue
-Remove-Item -LiteralPath $LogSessionCopy -Force -ErrorAction SilentlyContinue
 if (-not $Published) {
     Log 'Fallback result could not be published'
     exit 1
 }
-
+Remove-Item -LiteralPath $SessionCopy -Force -ErrorAction SilentlyContinue
+Remove-Item -LiteralPath $LogSessionCopy -Force -ErrorAction SilentlyContinue
+if ($LateSources.Count -gt 0) {
+    Remove-Item -LiteralPath $LateSessionCopy -Force -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath $LateLogSessionCopy -Force -ErrorAction SilentlyContinue
+}
 & node scripts/dispatch-online-github-fallback.mjs 2>&1 | ForEach-Object { "$_" | Add-Content -Encoding utf8 $LogFile }
 if ($LASTEXITCODE -ne 0) { Log 'GitHub fallback dispatch failed after PC outcome publication'; exit 1 }
+if ($LateCollectionFailed) {
+    Log 'PC-primary result published; post-GitHub fallback requires separate review without automatic retry'
+    exit 1
+}
 Log '=== Local PC collection completed ==='
 '' | Add-Content $LogFile

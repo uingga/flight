@@ -84,7 +84,7 @@ export function evaluateLocalSourceFallback({
     }
 
     const fullCrawlAt = timestamp(cache.fullCrawlUpdatedAt);
-    if (expectedAt === null || fullCrawlAt === null || fullCrawlAt < expectedAt) {
+    if (expectedAt === null || fullCrawlAt === null || fullCrawlAt < expectedAt || fullCrawlAt > nowTimestamp) {
         return {
             shouldRun: false,
             reason: 'upstream_pending',

@@ -31,7 +31,7 @@ test('operational bundle revalidates raw rows, retains only TPE and rejects miss
     assert.equal(reduced.scopeCounts['JPN/'], 1);
     assert.equal(reduced.flights.length, 1);
 });
-test('PC primary waits for upstream, runs four slots once and never overrides a cooldown',()=>{
+test('PC primary accepts the preceding general snapshot, runs once and respects cooldown',()=>{
     const onlineOff={enabled:false,slotsPerDay:4};
     for(const hour of ['2026-09-07T00:00:00Z','2026-09-07T03:00:00Z','2026-09-07T06:00:00Z','2026-09-07T09:00:00Z']) {
         const cache:any={fullCrawlUpdatedAt:hour,sourceCircuits:{}};

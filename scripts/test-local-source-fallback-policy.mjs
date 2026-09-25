@@ -33,6 +33,22 @@ test('waits until the matching GitHub crawl slot is complete', () => {
     assert.equal(result.nextExpectedAt, '2026-08-30T04:23:00.000Z');
 });
 
+test('a future general marker cannot release legacy PC fallbacks', () => {
+    const result = evaluateLocalSourceFallback({
+        now: '2026-08-30T01:20:00.000Z',
+        cache: {
+            fullCrawlUpdatedAt: '2026-08-30T01:21:00.000Z',
+            sourceCircuits: { ybtour: circuit({
+                openedAt: '2026-08-30T01:18:00.000Z',
+                nextProbeAt: '2026-08-31T01:18:00.000Z',
+            }) },
+        },
+    });
+    assert.equal(result.shouldRun, false);
+    assert.equal(result.reason, 'upstream_pending');
+    assert.deepEqual(result.sources, []);
+});
+
 test('alternates PC collection and rest from each source failure slot', () => {
     const activeCircuit = circuit({
         openedAt: '2026-08-30T01:18:00.000Z', // 10:12 KST failure slot

@@ -50,12 +50,14 @@ test('OnlineTour, ModeTour and Ttang share the current five general slots', () =
         assert.equal(evaluatePcCollection({cache:c,now}).sources.includes('onlinetour'),false);
     }
 });
-test('evening slot waits for its own general crawl and respects access cooldown', () => {
+test('PC primary starts after the preceding general slot and still respects access cooldown', () => {
     const c=cache(), now=new Date('2026-09-09T10:32:00.000Z');
     c.fullCrawlUpdatedAt='2026-09-09T07:30:00.000Z';
     assert.equal(evaluatePcCollection({cache:c,now}).sources.includes('onlinetour'),false);
     c.fullCrawlUpdatedAt='2026-09-09T07:32:00.000Z';
-    assert.equal(evaluatePcCollection({cache:c,now}).sources.includes('onlinetour'),false);
+    const early=evaluatePcCollection({cache:c,now});
+    assert.equal(early.sources.includes('onlinetour'),true);
+    assert.equal(early.githubFallbackDue,false);
     c.fullCrawlUpdatedAt='2026-09-09T10:31:30.000Z';
     assert.equal(evaluatePcCollection({cache:c,now}).sources.includes('onlinetour'),true);
     c.onlinePrimary.circuit={nextProbeAt:'2026-09-10T00:00:00.000Z'};

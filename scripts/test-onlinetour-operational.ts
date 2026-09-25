@@ -91,10 +91,12 @@ test('primary PC collects without a GitHub failure, only at chosen slots',()=>{
     assert.deepEqual(evaluatePcCollection({cache:{...cache,fullCrawlUpdatedAt:'2026-09-07T08:40:00Z'},now:new Date('2026-09-07T08:50:00Z'),config}).sources,['ttang','modetour']);
     assert.equal(evaluatePcCollection({cache:{...cache,fullCrawlUpdatedAt:'2026-09-07T08:40:00Z'},now:new Date('2026-09-07T08:50:00Z'),config:{...config,slotsPerDay:4}}).shouldRun,true);
 });
-test('primary PC waits upstream and honors both cooldowns and already attempted slot',()=>{
+test('primary PC uses the preceding general snapshot and honors cooldowns and attempts',()=>{
     const config={enabled:true,slotsPerDay:2};
+    assert.equal(evaluatePcCollection({cache:{fullCrawlUpdatedAt:'2026-09-07T04:00:00Z'},
+        now:new Date(now),config}).sources.includes('onlinetour'),true);
     for(const cache of [
-        {fullCrawlUpdatedAt:'2026-09-07T04:00:00Z'},
+        {fullCrawlUpdatedAt:'2026-09-07T01:11:00Z'},
         {fullCrawlUpdatedAt:'2026-09-07T05:40:00Z',onlinePrimary:{lastAttemptAt:'2026-09-07T06:00:00Z'}},
         ...[{nextProbeAt:'2026-09-08T00:00:00Z'},{localFallback:{nextProbeAt:'2026-09-08T00:00:00Z'}},{nextProbeAt:'bad'}]
             .map(circuit=>({fullCrawlUpdatedAt:'2026-09-07T05:40:00Z',onlinePrimary:{circuit}})),

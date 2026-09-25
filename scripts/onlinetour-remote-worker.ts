@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import { createHash } from 'node:crypto';
-import { evaluatePcCollection } from './pc-collection-policy.mjs';
+import { evaluatePcCollection, isRecentPrimarySnapshot } from './pc-collection-policy.mjs';
 import { executeCatalogue,createLiveCatalogueBackend,checkValidationCooldown } from './crawl-onlinetour-catalogue';
 import { operationalPlan,validateOperationalCatalogue,ONLINE_REMOTE_PROTOCOL,isOnlineAccessFailure,statusFixValidationSlot,STATUS_FIX_PARENT } from '../src/lib/onlinetour-operational';
 import { classifySourceAccessRestriction } from '../src/lib/source-circuit';
@@ -22,8 +22,7 @@ async function main() {
     const policy=evaluatePcCollection({cache:request.cache});
     if(mode==='--scheduled' && (!policy.shouldRun || !policy.sources.includes('onlinetour') || policy.onlineExpectedAt!==request.expectedAt)) throw Error('source_not_eligible');
     if(mode==='--manual-once' && request.manualOnce!==true) throw Error('explicit_manual_request_required');
-    const crawlAge=now-Date.parse(request.cache?.fullCrawlUpdatedAt);
-    if(!Number.isFinite(crawlAge) || crawlAge<0 || crawlAge>6*3600000) throw Error('stale_source_state');
+    if(!isRecentPrimarySnapshot(request.cache,now)) throw Error('stale_source_state');
     const root=path.resolve(__dirname,'..'),state=path.join(process.env.LOCALAPPDATA,'Tikitikit','onlinetour-validation');
     fs.mkdirSync(state,{recursive:true});
     if(fs.lstatSync(state).isSymbolicLink())throw Error('unsafe_state_directory');

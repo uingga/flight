@@ -1,10 +1,31 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { ttangDatePlan, assertTtangAllowed, hasVerifiedTtangInventory, validateTtangEvidence, validateTtangReceivedEvidence, TTANG_PROTOCOL } from './ttang-primary-policy.mjs';
-import { evaluatePcCollection } from './pc-collection-policy.mjs';
+import { evaluatePcCollection, isRecentPrimarySnapshot } from './pc-collection-policy.mjs';
 import { ttangListPageEvidence } from '../src/lib/ttang-request-audit.mjs';
 import { crawlOrder, finiteListBudget } from '../src/lib/crawl-order.mjs';
 const off={enabled:false,slotsPerDay:4};
+test('PC primary may collect before this GitHub round, but not from stale state',()=>{
+    const now=new Date('2026-09-25T04:24:00Z');
+    const cache={flights:[],fullCrawlUpdatedAt:'2026-09-25T01:45:00Z',sourceCircuits:{
+        ybtour:{openedAt:'2026-09-25T04:23:00Z',nextProbeAt:'2026-09-26T01:20:00Z'}}};
+    const early=evaluatePcCollection({cache,now});
+    assert.equal(early.fullCrawlUpdatedAt,'2026-09-25T01:45:00.000Z');
+    assert.deepEqual(early.sources,['ttang','onlinetour','modetour']);
+    assert.deepEqual(early.fallbackSources,[]);
+    assert.equal(early.githubFallbackDue,false);
+    assert.equal(assertTtangAllowed(cache,{now:now.getTime()}),early.expectedAt);
+    const after=evaluatePcCollection({cache:{...cache,fullCrawlUpdatedAt:'2026-09-25T04:23:30Z'},now});
+    assert.deepEqual(after.fallbackSources,['ybtour']);
+    for(const marker of ['2026-09-25T01:11:00Z','2026-09-24T01:45:00Z','2026-09-25T04:25:00Z','bad']){
+        assert.equal(isRecentPrimarySnapshot({...cache,fullCrawlUpdatedAt:marker},now),false);
+        assert.deepEqual(evaluatePcCollection({cache:{...cache,fullCrawlUpdatedAt:marker},now}).sources,[]);
+    }
+    assert.deepEqual(evaluatePcCollection({cache:{...cache,ttangPrimary:{lastAttemptAt:now.toISOString()}},now}).sources,
+        ['onlinetour','modetour']);
+    assert.deepEqual(evaluatePcCollection({cache:{...cache,sourceCircuits:{...cache.sourceCircuits,
+        ttang:{nextProbeAt:'2026-09-26T00:00:00Z'}}},now}).sources,['onlinetour','modetour']);
+});
 test('Ttang primary keeps five slots and duplicate protection without a five-hour interval',()=>{
     for(const [time,due] of [['2026-09-06T23:00:00Z',true],['2026-09-07T02:00:00Z',true],['2026-09-07T05:00:00Z',true],['2026-09-07T08:00:00Z',true],['2026-09-07T11:00:00Z',true]]) {
         const cache={flights:[],fullCrawlUpdatedAt:time};

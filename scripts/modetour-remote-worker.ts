@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import { createHash } from 'node:crypto';
-import { evaluatePcCollection } from './pc-collection-policy.mjs';
+import { evaluatePcCollection, isRecentPrimarySnapshot } from './pc-collection-policy.mjs';
 import { checkModeCooldown } from './crawl-modetour-browser';
 import { collectModeBrowser, modeBrowserPlan, modeScopeKey } from '../src/lib/modetour-browser';
 import { openModeBrowser } from '../src/lib/modetour-browser-adapter';
@@ -19,8 +19,7 @@ async function main() {
         throw new Error('invalid_worker_request');
     const policy = evaluatePcCollection({ cache: request.cache });
     if (!policy.shouldRun || !policy.sources.includes('modetour') || policy.expectedAt !== request.expectedAt) throw new Error('source_not_eligible');
-    const crawlAge = now - Date.parse(request.cache.fullCrawlUpdatedAt);
-    if (!Number.isFinite(crawlAge) || crawlAge < 0 || crawlAge > 6*3600000) throw new Error('stale_source_state');
+    if (!isRecentPrimarySnapshot(request.cache, now)) throw new Error('stale_source_state');
     const base = path.join(os.homedir(), 'AppData/Local/Tikitikit');
     const state = path.join(base, 'modetour-browser'), shared = path.join(base, 'onlinetour-validation');
     fs.mkdirSync(state, { recursive: true }); fs.mkdirSync(shared, { recursive: true });
