@@ -1,0 +1,44 @@
+diff --git a/tripcom_dom.py b/tripcom_dom.py
+index 5e89419c..46d8a988 100644
+--- a/tripcom_dom.py
++++ b/tripcom_dom.py
+@@ -3,0 +4 @@ from tripcom_connections import connection_details, endpoint_airports
++from tripcom_result_selection import flight_label_selector, identity_failure_evidence
+@@ -146,2 +147,3 @@ def select_leg(page, leg, expected_date=None):
+-    # Fare text is mutable; retain the full flight description as the selector.
+-    # An ambiguous identity fails closed rather than choosing a positional card.
++    # The complete observed label (including price) identifies the chosen fare.
++    # CSS escaping preserves newlines; truncating them aliases distinct fares.
++    # An actual duplicate still fails closed; never pick an arbitrary first card.
+@@ -149,9 +151 @@ def select_leg(page, leg, expected_date=None):
+-        prefix, separator, _ = leg['cardLabel'].partition('왕복 요금:')
+-        if not separator or not prefix.strip():
+-            raise ValueError('selected_identity_unconfirmed')
+-        if '\n' in (prefix + separator):
+-            target_prefix = (prefix + separator).split('\n')[0].strip()
+-            info = page.locator('.flight-info[aria-label*=' + json.dumps(target_prefix, ensure_ascii=False) + ']')
+-        else:
+-            target_prefix = prefix + separator
+-            info = page.locator('.flight-info[aria-label^=' + json.dumps(target_prefix, ensure_ascii=False) + ']')
++        info = page.locator(flight_label_selector(leg['cardLabel']))
+@@ -161 +155,3 @@ def select_leg(page, leg, expected_date=None):
+-            raise ValueError('selected_identity_missing' if count == 0 else 'selected_identity_ambiguous')
++            error = ValueError('selected_identity_missing' if count == 0 else 'selected_identity_ambiguous')
++            error.tripcom_evidence = identity_failure_evidence(leg['cardLabel'], count)
++            raise error
+diff --git a/crawl_tripcom_40destinations.py b/crawl_tripcom_40destinations.py
+index 9d098e71..34c3b401 100644
+--- a/crawl_tripcom_40destinations.py
++++ b/crawl_tripcom_40destinations.py
+@@ -24,0 +25 @@ from datetime import datetime, timedelta
++from tripcom_calendar_seed import calendar_seed_dates, calendar_rejection_summary
+@@ -141,2 +142 @@ def scan_destination(page, dest, idx, total_count, *, collect_roundtrip_list=Fal
+-    init_d = (TODAY + timedelta(days=7)).strftime("%Y-%m-%d")
+-    init_r = (TODAY + timedelta(days=10)).strftime("%Y-%m-%d")
++    init_d, init_r, initial_nights = calendar_seed_dates(TODAY, allowed_nights)
+@@ -255 +255,4 @@ def scan_destination(page, dest, idx, total_count, *, collect_roundtrip_list=Fal
+-                            "calendarClickFailed": calendar_click_failed},
++                            "calendarClickFailed": calendar_click_failed,
++                            "initialNights": initial_nights,
++                            "allowedNights": sorted(allowed_nights),
++                            **calendar_rejection_summary(items, TODAY, MAX_DEP_DATE, allowed_nights)},
