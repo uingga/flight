@@ -1,6 +1,4 @@
 import { ImageResponse } from 'next/og';
-import flightCacheJson from '../../data/all-flights-cache.json';
-import todayPickJson from '../../data/today-pick.json';
 import { FlightOgCard } from './api/og/FlightOgCard';
 import type { Flight } from '@/types/flight';
 import { filterListingEligibleFlights } from '@/lib/flight-visibility';
@@ -47,11 +45,12 @@ async function getFontData() {
 }
 
 export default async function Image() {
-    const cache = flightCacheJson as unknown as { flights: Flight[] };
-    const todayPick = todayPickJson as { date?: string; flightId?: string };
-    const todayKst = new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
-    const currentPickId = todayPick.date === todayKst ? todayPick.flightId : null;
-    const availableFlights = filterListingEligibleFlights(cache.flights);
+    // Use the same public gate without bundling the full comparison cache in Edge.
+    const baseUrl = (process.env.NEXT_PUBLIC_BASE_URL || 'https://www.tikitikit.kr').replace(/\/$/, '');
+    const feed = await fetch(`${baseUrl}/api/flights`, { cache: 'no-store' })
+        .then(response => response.ok ? response.json() : null).catch(() => null);
+    const currentPickId = feed?.todayPickId || null;
+    const availableFlights = filterListingEligibleFlights<Flight>(feed?.flights || []);
     const selectedFlight =
         availableFlights.find((flight) => flight.id === currentPickId)
         || availableFlights.filter((flight) => flight.price > 0).sort((a, b) => a.price - b.price)[0];

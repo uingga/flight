@@ -387,6 +387,8 @@ interface FlightFilterSummary {
         reported: number;
         duplicate: number;
         naverExpensive: number;
+        naverMrtGate?: number;
+        naverTripcomGate?: number;
         expired: number;
         oneWay: number;
         confirmedConnection?: number;
@@ -1833,7 +1835,9 @@ export default function AdminPage() {
     const exclusionReasons = flightFilterSummary ? [
         { label: '경유가 확인된 항공권', count: flightFilterSummary.reasons.confirmedConnection || 0 },
         { label: '같은 정확한 일정 중 더 싼 표만 남김', count: flightFilterSummary.reasons.duplicate },
-        { label: '네이버보다 20% 이상 또는 10만원 이상 비쌈', count: flightFilterSummary.reasons.naverExpensive },
+        { label: '네이버 비교 가격 기준 초과', count: flightFilterSummary.reasons.naverExpensive },
+        { label: '마이리얼트립 네이버 비교 미확인·만료', count: flightFilterSummary.reasons.naverMrtGate || 0 },
+        { label: '트립닷컴 네이버 비교 미확인·만료', count: flightFilterSummary.reasons.naverTripcomGate || 0 },
         { label: '신고가 3건 이상 쌓여 임시 숨김', count: flightFilterSummary.reasons.reported },
         { label: '마이리얼트립 가격 확인이 하루 넘게 멈춤', count: flightFilterSummary.reasons.staleMyrealtrip },
         { label: '일반 여행사 가격 확인이 이틀 넘게 멈춤', count: flightFilterSummary.reasons.staleOtherSources },

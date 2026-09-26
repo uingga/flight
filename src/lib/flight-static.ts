@@ -14,6 +14,7 @@ import { filterStaleSourceFlights, getEffectiveSourceUpdatedAt } from '@/lib/sou
 import { deduplicateDisplayFlights, filterListingEligibleFlights } from '@/lib/flight-visibility';
 import { getPriceExclusionFreshness } from '@/lib/price-quality';
 import { isNaverPriceOverLimit } from '@/lib/naver-price-filter';
+import { filterNaverVerifiedOffers } from '@/lib/naver-offer-visibility';
 import {
     clearUnsupportedInterparkDiscount,
     getInterparkRouteMonths,
@@ -122,7 +123,11 @@ export function loadActiveFlights(): Flight[] {
         const today = new Intl.DateTimeFormat('en-CA', {
             timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit',
         }).format(new Date());
-        const visible = filterStaleSourceFlights(flights, sourceUpdatedAt)
+        let naverPrices: unknown = null;
+        try {
+            naverPrices = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'data', 'naver-prices.json'), 'utf8'));
+        } catch { /* Unavailable comparisons keep MRT/Trip.com hidden, not deleted. */ }
+        const visible = filterNaverVerifiedOffers(filterStaleSourceFlights(flights, sourceUpdatedAt), naverPrices)
             .filter(flight => {
                 if (flight.price <= 0 || parseDate(flight.departure?.date) < today) return false;
                 if (parseDate(flight.departure?.date) === parseDate(flight.arrival?.date)) return false;

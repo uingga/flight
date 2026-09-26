@@ -73,13 +73,17 @@ test('public API, SSR and current account snapshots apply the same policy; no ne
         { ...fixture('legacy'), tripcomDetail: undefined }, { ...fixture('sold-out'), seats: '0석' }];
     const original = JSON.stringify(rows);
     const cache = JSON.stringify({ flights: rows, sourceUpdatedAt: { tripcom: new Date().toISOString() } });
+    const comparisons = JSON.stringify({ 'ICN-DYG_2099-10-10_2099-10-13': {
+        naverLowest: 200000, crawledAt: new Date().toISOString(),
+    } });
     const originalRead = fs.readFileSync;
     const originalFetch = globalThis.fetch;
     const env = { url: process.env.SUPABASE_URL, key: process.env.SUPABASE_SERVICE_ROLE_KEY };
     delete process.env.SUPABASE_URL;
     delete process.env.SUPABASE_SERVICE_ROLE_KEY;
     fs.readFileSync = ((file: any, ...args: any[]) => String(file).endsWith('all-flights-cache.json')
-        ? cache : (originalRead as any)(file, ...args)) as typeof fs.readFileSync;
+        ? cache : String(file).endsWith('naver-prices.json') ? comparisons
+            : (originalRead as any)(file, ...args)) as typeof fs.readFileSync;
     globalThis.fetch = async () => { throw new Error('Network forbidden in connection regression'); };
     try {
         const Module = require('node:module');

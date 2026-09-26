@@ -7,7 +7,8 @@ import { Flight, FlightSearchParams } from '@/types/flight';
 import { getComparisonFreshness, getEffectivePrice, getPriceExclusionFreshness } from '@/lib/price-quality';
 import { isNaverPriceOverLimit } from '@/lib/naver-price-filter';
 import { getRecommendationNaverComparison } from '@/lib/naver-comparison';
-import { isVerifiedMyrealtripOffer, selectMyrealtripNaverComparison } from '@/lib/myrealtrip-naver-verification';
+import { selectMyrealtripNaverComparison } from '@/lib/myrealtrip-naver-verification';
+import { filterNaverVerifiedOffers } from '@/lib/naver-offer-visibility';
 import {
     filterStaleSourceFlights,
     getEffectiveSourceUpdatedAt,
@@ -49,6 +50,7 @@ interface FlightFilterSummary {
         duplicate: number;
         naverExpensive: number;
         naverMrtGate: number;
+        naverTripcomGate: number;
         expired: number;
         oneWay: number;
         soldOut: number;
@@ -200,6 +202,7 @@ export async function createPublicFlightsResponse(searchParams: URLSearchParams)
                 duplicate: 0,
                 naverExpensive: 0,
                 naverMrtGate: 0,
+                naverTripcomGate: 0,
                 expired: 0,
                 oneWay: 0,
                 soldOut: 0,
@@ -297,18 +300,8 @@ export async function createPublicFlightsResponse(searchParams: URLSearchParams)
                 : f.link,
         }));
 
-        // 중복 항공편 합치기: 같은 노선+출국일시+귀국일시+항공사 → 1개만 유지
-        // - 도시명 정규화 적용 (서울=인천, 타이중(대중)=타이중(대만)=타이중 등)
-        // - 땡처리닷컴은 발권수수료 2만원을 더한 실질 가격으로 비교
-        const beforeDedup = allFlights.length;
-        allFlights = deduplicateDisplayFlights(allFlights);
-        filterSummary.reasons.duplicate = beforeDedup - allFlights.length;
-        if (beforeDedup > allFlights.length) {
-            console.log(`중복 항공편 ${beforeDedup - allFlights.length}개 제거 (${beforeDedup} → ${allFlights.length})`);
-        }
-
         // 네이버 최저가 매칭 (가는편·오는편의 실제 공항 네 개와 날짜가 모두 같은 결과만 사용)
-        let naverPricesLoaded = false;
+        let loadedNaverPrices: unknown = null;
         try {
             const fs4 = require('fs');
             const path4 = require('path');
@@ -368,18 +361,27 @@ export async function createPublicFlightsResponse(searchParams: URLSearchParams)
                 });
                 const removed = beforeNaverFilter - allFlights.length;
                 filterSummary.reasons.naverExpensive = removed;
-                naverPricesLoaded = true;
+                loadedNaverPrices = naverPrices;
                 if (matched > 0) console.log(`네이버 최저가 매칭: ${matched}/${allFlights.length}건`);
                 if (removed > 0) console.log(`네이버보다 비싼 항공권 제거 (일반 20%/10만원, 마이리얼트립·트립닷컴 3%/1만원): ${removed}건`);
             }
         } catch (e) { result_version = null; }
 
-        // A newly collected MRT fare must wait for a usable same-route Naver
-        // comparison. Do not let it appear as a bargain merely because lookup failed.
-        const beforeMrtGate = allFlights.length;
-        allFlights = allFlights.filter(flight => flight.source !== 'myrealtrip'
-            || (naverPricesLoaded && isVerifiedMyrealtripOffer(flight)));
-        filterSummary.reasons.naverMrtGate = beforeMrtGate - allFlights.length;
+        // MRT and Trip.com wait for a fresh exact-itinerary comparison. Missing
+        // or unreadable comparison data must not make either source public.
+        const beforeMrtGate = allFlights.filter(flight => flight.source === 'myrealtrip').length;
+        const beforeTripcomGate = allFlights.filter(flight => flight.source === 'tripcom').length;
+        allFlights = filterNaverVerifiedOffers(allFlights, loadedNaverPrices);
+        filterSummary.reasons.naverMrtGate = beforeMrtGate
+            - allFlights.filter(flight => flight.source === 'myrealtrip').length;
+        filterSummary.reasons.naverTripcomGate = beforeTripcomGate
+            - allFlights.filter(flight => flight.source === 'tripcom').length;
+
+        // Deduplicate only eligible offers: an unverified cheap fare must not
+        // suppress another agency's displayable offer for the same itinerary.
+        const beforeDedup = allFlights.length;
+        allFlights = deduplicateDisplayFlights(allFlights);
+        filterSummary.reasons.duplicate = beforeDedup - allFlights.length;
 
         // 만료 항공권 제거 (출발일이 오늘 이전)
         const today = new Date();

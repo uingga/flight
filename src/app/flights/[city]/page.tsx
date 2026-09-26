@@ -28,8 +28,9 @@ function CityLayout({ children }: { children: ReactNode }) {
     </div>;
 }
 
-// 캐시 커밋(하루 7회)마다 재빌드되는 정적 페이지
+// Recheck display eligibility even when no new crawl commit arrives.
 export const dynamic = 'force-static';
+export const revalidate = 60;
 
 const SOURCE_NAMES: Record<string, string> = {
     ybtour: '노랑풍선', modetour: '모두투어', hanatour: '하나투어',

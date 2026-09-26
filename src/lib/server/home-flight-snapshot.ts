@@ -8,4 +8,4 @@ export const loadHomeFlightSnapshot = unstable_cache(async () => {
     const data = await response.json();
     if (!response.ok || !data.success) throw new Error('Home flight snapshot unavailable');
     return data;
-}, ['home-flight-snapshot-v1'], { revalidate: 60 });
+}, ['home-flight-snapshot-v2-naver-offer-gate'], { revalidate: 60 });

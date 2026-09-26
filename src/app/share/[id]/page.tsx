@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import { SITE_URL } from '@/lib/site';
 import { findSharedFlight } from '@/lib/shared-flight-context';
 import { filterSeatAvailableFlights } from '@/lib/flight-seats';
+import { requiresNaverOfferVerification } from '@/lib/naver-offer-visibility';
 import type { Flight } from '@/types/flight';
 import shareSnapshots from '../../../../data/share-snapshots.json';
 
@@ -142,6 +143,15 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
 
     if (!flight) {
         const snapshot = getShareSnapshot(decodeURIComponent(id));
+        // An old share URL or archived price cannot bypass the public Naver gate.
+        if (/^(tripcom-|mrt-)/.test(decodedId)
+            || requiresNaverOfferVerification(snapshot?.source || archivedFlight?.source || '')) {
+            return {
+                title: '현재 확인 가능한 항공권을 찾아보세요 | 티키티킷',
+                description: '이 항공권은 현재 공개 목록에 없습니다. 최신 항공권을 확인해 주세요.',
+                robots: { index: false, follow: true },
+            };
+        }
         const archivedDate = archivedFlight
             ? [ogShortDate(archivedFlight.departure_date || ''), ogShortDate(archivedFlight.return_date || '')]
                 .filter(Boolean)
