@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 import type { Flight } from '@/types/flight';
+import { flightConnectionSummary } from '@/lib/flight-connections';
 import { findRecentFlight, recentFlightKey, type RecentFlight } from '@/lib/recent-flights';
 import { dismissOverlayWithHistory, historyOverlay, showOverlayWithHistory } from '@/lib/ui/overlay-history';
 import OverlayDialog from '@/components/ui/OverlayDialog';
@@ -111,6 +112,7 @@ export default function RecentFlights({ records, flights, loading, storageUnavai
                         }}>
                             <strong className={styles.route}>{display.departure.city} → {display.arrival.city}</strong>
                             <span className={styles.schedule}>{shortDate(display.departure.date)} — {shortDate(display.arrival.date)} · {SOURCE_NAMES[display.source]} · {display.airline}</span>
+                            {flightConnectionSummary(display) && <span className={styles.schedule}>{flightConnectionSummary(display)}</span>}
                             <strong className={styles.price}>{display.price.toLocaleString('ko-KR')}원</strong>
                             <span className={styles.status}>{current ? '현재 목록의 가격 · 상세 보기 ↗' : loading ? '현재 목록 확인 중 · 마지막으로 본 정보' : '현재 목록에서 내려간 표 · 마지막으로 본 정보'}</span>
                         </button>

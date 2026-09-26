@@ -1,6 +1,7 @@
 'use client';
 import { holidayFlightKey, holidayInsightCopy, selectHolidayFlights } from '@/lib/holiday-insight';
 import { airlineDisplayName } from '@/lib/utils/airline-display';
+import { connectionDuration, flightConnectionSummary, tripcomLegSummary } from '@/lib/flight-connections';
 import { homeRecommendation } from '@/lib/home-recommendation';
 import { isKoreanCalendarRedDay, koreanHolidayName } from '@/lib/korean-calendar';
 
@@ -706,6 +707,7 @@ const airportLabel = (city: string, airport?: string) => (
 
 const legDetails = (flight: Flight, leg: 'outbound' | 'return') => {
     const detail = flight.modetourDetail;
+    const tripcomLeg = flight.tripcomDetail?.legs?.[leg === 'outbound' ? 'outbound' : 'inbound'];
     const routeAirports = flight.routeAirports;
     const departureCity = departureName(flight);
     const arrivalCity = stripAirport(flight.arrival.city);
@@ -720,8 +722,11 @@ const legDetails = (flight: Flight, leg: 'outbound' | 'return') => {
             departureTime: flight.departure.time || '시간 확인',
             arrivalTime: arrivalTime || '시간 확인',
             departureDate: shortDate(flight.departure.date),
-            arrivalDate: shortDateWithOffset(flight.departure.date, timing?.arrivalDayOffset ?? fallbackDayOffset),
-            duration: timing?.duration || formatAgencyFlightDuration(detail?.flyingTime),
+            arrivalDate: flight.source === 'tripcom'
+                ? (tripcomLeg?.arrivalDate ? shortDate(tripcomLeg.arrivalDate) : '도착일 확인 필요')
+                : shortDateWithOffset(flight.departure.date, timing?.arrivalDayOffset ?? fallbackDayOffset),
+            duration: flight.source === 'tripcom' ? connectionDuration(tripcomLeg)
+                : timing?.duration || formatAgencyFlightDuration(detail?.flyingTime),
         };
     }
 
@@ -735,8 +740,10 @@ const legDetails = (flight: Flight, leg: 'outbound' | 'return') => {
         departureTime: departureTime || '시간 확인',
         arrivalTime: arrivalTime || '시간 확인',
         departureDate: shortDate(flight.arrival.date),
-        arrivalDate: shortDateWithOffset(flight.arrival.date, timing?.arrivalDayOffset ?? fallbackDayOffset),
-        duration: timing?.duration
+        arrivalDate: flight.source === 'tripcom'
+            ? (tripcomLeg?.arrivalDate ? shortDate(tripcomLeg.arrivalDate) : '도착일 확인 필요')
+            : shortDateWithOffset(flight.arrival.date, timing?.arrivalDayOffset ?? fallbackDayOffset),
+        duration: flight.source === 'tripcom' ? connectionDuration(tripcomLeg) : timing?.duration
             || formatAgencyFlightDuration(detail?.returnFlyingTime)
             || (flight.id.startsWith('modetour-manual-') && detail?.isReturnDirect
                 ? (() => {
@@ -4330,6 +4337,7 @@ export default function MobileRedesignPreview({
                             const seats = flight.availableSeats || Number.parseInt(flight.seats || '', 10) || 0;
                             const duration = tripLength(flight);
                             const destination = stripAirport(flight.arrival.city);
+                            const connection = flightConnectionSummary(flight);
                             const price = effectivePrice(flight);
                             const averageDiscountRate = getAverageDiscountRate(flight, interparkPrices);
                             const isTodayPick = !freshRouteResults && isDefaultView && featuredPick?.flight.id === flight.id;
@@ -4367,6 +4375,7 @@ export default function MobileRedesignPreview({
                                                     </div>
                                                 </div>
 
+                                                {connection && <p className={styles.connectionSummary}>{connection}</p>}
                                                 <div className={styles.routeGrid}>
                                                     <div className={styles.routeEndpoint}>
                                                         <strong>{departureName(flight)}</strong>
@@ -4952,6 +4961,12 @@ export default function MobileRedesignPreview({
             {selectedFlight && (() => {
                 const outbound = legDetails(selectedFlight, 'outbound');
                 const inbound = legDetails(selectedFlight, 'return');
+                const outboundSummary = selectedFlight.source === 'tripcom'
+                    ? tripcomLegSummary(selectedFlight, 'outbound')
+                    : outbound.duration ? `비행시간 ${outbound.duration}` : '비행시간 확인 필요';
+                const inboundSummary = selectedFlight.source === 'tripcom'
+                    ? tripcomLegSummary(selectedFlight, 'inbound')
+                    : inbound.duration ? `비행시간 ${inbound.duration}` : '비행시간 확인 필요';
                 const stay = tripLength(selectedFlight);
                 const detailSeats = selectedFlight.availableSeats || Number.parseInt(selectedFlight.seats || '', 10) || 0;
                 const reportPending = flightReport?.flightId === selectedFlight.id && flightReport.status === 'sending';
@@ -5011,7 +5026,7 @@ export default function MobileRedesignPreview({
                                     <div>
                                         <strong>가는 항공편</strong>
                                     </div>
-                                    <small>{outbound.duration ? `비행시간 ${outbound.duration}` : '비행시간 확인 필요'}</small>
+                                    {outboundSummary && <small>{outboundSummary}</small>}
                                 </header>
                                 <div className={styles.detailVerticalRoute}>
                                     <div className={styles.detailRouteStop}>
@@ -5042,7 +5057,7 @@ export default function MobileRedesignPreview({
                                     <div>
                                         <strong>오는 항공편</strong>
                                     </div>
-                                    <small>{inbound.duration ? `비행시간 ${inbound.duration}` : '비행시간 확인 필요'}</small>
+                                    {inboundSummary && <small>{inboundSummary}</small>}
                                 </header>
                                 <div className={styles.detailVerticalRoute}>
                                     <div className={styles.detailRouteStop}>

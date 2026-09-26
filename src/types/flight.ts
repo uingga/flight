@@ -1,12 +1,21 @@
+export interface FlightLegConnection {
+    status: 'direct' | 'connecting' | 'unknown';
+    stopCount: number | null;
+    durationMinutes?: number;
+    arrivalDate?: string;
+}
+
 export interface Flight {
     id: string;
     /** Server-derived lifecycle identity used only for manual recommendation placement. */
     manualOrderKey?: string;
     source: 'ybtour' | 'modetour' | 'hanatour' | 'onlinetour' | 'ttang' | 'myrealtrip' | 'lottetour' | 'tripcom';
     tripcomDetail?: {
-        paymentCondition: { kind: 'bank_account' | 'unrestricted'; raw?: string; verified?: boolean };
+        paymentCondition: { kind: 'bank_account' | 'unrestricted' | 'unverified'; raw?: string; verified?: boolean };
         paymentNotice: string | null;
         paymentNoticePlacement: 'detail_only';
+        priceBasis?: 'return_list_displayed_roundtrip_total';
+        legs?: { outbound: FlightLegConnection; inbound: FlightLegConnection };
     };
     airline: string;
     departure: {

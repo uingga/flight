@@ -1,5 +1,6 @@
 """DOM-only roundtrip quote verification. Never enters booking/payment forms."""
 import re
+from tripcom_connections import connection_details, endpoint_airports
 from datetime import datetime, timedelta, timezone
 
 KST = timezone(timedelta(hours=9))
@@ -31,15 +32,13 @@ def parse_card(card):
     dates = re.findall(r"(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}):\d{2}", label)
     amount = re.search(r"왕복 요금:\s*([\d,]+)원", label)
     lines = [line.strip() for line in text.splitlines() if line.strip()]
-    airports = [line for line in lines if re.fullmatch(r"[A-Z]{3}", line)]
-    if len(dates) != 2 or not amount or len(airports) != 2 or not lines:
+    if len(dates) != 2 or not amount or not lines:
         raise ValueError("unrecognized_flight_card")
-    if "직항편" not in label:
-        raise ValueError("connecting_leg_not_verified")
+    airports = endpoint_airports(text, dates[0][1], dates[1][1])
     return {"index": card["index"], "date": dates[0][0], "arrivalDate": dates[1][0],
         "departureTime": dates[0][1], "arrivalTime": dates[1][1],
         "departureAirport": airports[0], "arrivalAirport": airports[1],
-        "airline": lines[0], "direct": True, "price": int(amount[1].replace(",", ""))}
+        "airline": lines[0], **connection_details(label, text), "price": int(amount[1].replace(",", ""))}
 
 
 def cheapest_card(cards):

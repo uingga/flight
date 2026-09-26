@@ -24,6 +24,12 @@ export function flightTripDays(flight: Flight): number | null {
     const returning = dateNumber(flight.arrival.date);
     const homeAirport = flight.routeAirports?.returnArrival || flight.modetourDetail?.returnArrivalAirport || flight.departure.airport;
     if (start === null || returning === null || returning < start || !KOREAN_AIRPORTS.has(homeAirport)) return null;
+    if (flight.source === 'tripcom') {
+        // A connection may cross multiple dates; clock-only modulo 24h is wrong.
+        const arrival = dateNumber(flight.tripcomDetail?.legs?.inbound.arrivalDate || '');
+        return arrival !== null && arrival >= returning && arrival - returning <= 7 * DAY
+            ? (arrival - start) / DAY + 1 : null;
+    }
     const detail = flight.modetourDetail;
     const depTime = detail?.returnDepartureTime || flight.arrival.time;
     const arrTime = detail?.returnArrivalTime || flight.arrival.arrivalTime;

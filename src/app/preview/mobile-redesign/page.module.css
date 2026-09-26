@@ -503,6 +503,7 @@
 .tripcom { color: #1769a7; }
 .airline { min-width: 0; height: 20px; overflow: hidden; display: inline-flex; align-items: center; color: var(--text-secondary); font-size: var(--size-meta); line-height: 1; font-weight: var(--weight-medium); text-overflow: ellipsis; white-space: nowrap; }
 .cardTopline .airline { opacity: 0.78; }
+.connectionSummary { margin: 7px 16px 0; color: var(--text-secondary); font-size: var(--size-meta); font-weight: var(--weight-medium); line-height: 1.45; overflow-wrap: anywhere; }
 
 .favoriteButton {
     position: absolute;
@@ -1282,7 +1283,7 @@
 .detailLegHeader { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
 .detailLegHeader > div { display: flex; align-items: baseline; gap: 8px; }
 .detailLegHeader strong { color: #2d2d2d; font-size: var(--size-body); line-height: 1.25; font-weight: var(--weight-bold); }
-.detailLegHeader small { color: var(--text-muted); font-size: var(--size-caption); line-height: 1.2; white-space: nowrap; }
+.detailLegHeader small { color: var(--text-muted); font-size: var(--size-caption); line-height: 1.4; text-align: right; }
 .detailVerticalRoute { position: relative; display: grid; gap: 17px; }
 .detailRouteStop { position: relative; display: grid; grid-template-columns: 8px minmax(0, 1fr); align-items: start; gap: 11px; }
 .detailRouteStop:first-child::after { content: ''; position: absolute; z-index: 0; top: 9px; left: 3.5px; width: 1px; height: calc(100% + 17px); background: #d5d5d5; }

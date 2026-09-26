@@ -5,6 +5,7 @@ import type { Flight } from '@/types/flight';
 import { getCityImagePath } from '@/lib/city-image';
 import { cityDisplayName } from '@/lib/utils/city-display';
 import { airlineDisplayName } from '@/lib/utils/airline-display';
+import { flightConnectionSummary } from '@/lib/flight-connections';
 import styles from './DropHero.module.css';
 
 const SOURCE_NAMES: Record<Flight['source'], string> = {
@@ -152,6 +153,7 @@ export default function DropHero({
                     <span>{journey}</span>
                 </div>
                 <p className={styles.seller}>{seller}</p>
+                {flightConnectionSummary(flight) && <p className={styles.seller}>{flightConnectionSummary(flight)}</p>}
                 {alternatives.length > 0 && (
                     <p className={styles.scheduleLink}>
                         이 가격의 다른 일정 {alternatives.length}개

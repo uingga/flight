@@ -1,6 +1,7 @@
 'use client';
 import { useMemo } from 'react';
 import type { Flight } from '@/types/flight';
+import { flightConnectionSummary } from '@/lib/flight-connections';
 import { selectShareDiscovery } from '@/lib/share-discovery';
 import { sharedCity } from '@/lib/shared-flight-context';
 import styles from './ShareDiscovery.module.css';
@@ -22,6 +23,7 @@ export default function ShareDiscovery({ flights, selected, compare, onOpen }: {
                 type="button" className={styles.card} onClick={() => onOpen(flight, `share_discovery_${group.key}`)}>
                 <span className={styles.route}>{sharedCity(flight.departure.city)} · {sharedCity(flight.arrival.city)}</span>
                 <span className={styles.dates}>{dateLabel(flight.departure.date)}–{dateLabel(flight.arrival.date)} · {flight.airline}</span>
+                {flightConnectionSummary(flight) && <span className={styles.dates}>{flightConnectionSummary(flight)}</span>}
                 <span className={styles.price}>왕복 <strong>{flight.price.toLocaleString('ko-KR')}</strong>원 <span aria-hidden="true">›</span></span>
                 {flight.source === 'ttang' && <span className={styles.fee}>발권수수료 20,000원 별도</span>}
             </button>)}</div>

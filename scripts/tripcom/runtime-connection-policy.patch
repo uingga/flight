@@ -1,0 +1,127 @@
+diff --git a/tripcom_dom.py b/tripcom_dom.py
+index 449e6e0b..5e89419c 100644
+--- a/tripcom_dom.py
++++ b/tripcom_dom.py
+@@ -1,5 +1,6 @@
+ """DOM-only roundtrip quote verification. Never enters booking/payment forms."""
+ import re
++from tripcom_connections import connection_details, endpoint_airports
+ import json
+ import time
+ import random
+@@ -54,31 +55,30 @@ def parse_card(card, expected_date=None):
+     dates = re.findall(r"(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}):\d{2}", label)
+     price = card_price(card)
+     lines = [line.strip() for line in text.splitlines() if line.strip()]
+-    airports = [line for line in lines if re.fullmatch(r"[A-Z]{3}", line)]
+-    if len(dates) == 2 and price and len(airports) == 2 and lines:
+-        if "직항편" not in label:
+-            raise ValueError("connecting_leg_not_verified")
++    if len(dates) == 2 and price and lines:
++        airports = endpoint_airports(text, dates[0][1], dates[1][1])
+         return {"index": card["index"], "cardLabel": label, "text": text,
+             "date": dates[0][0], "arrivalDate": dates[1][0],
+             "departureTime": dates[0][1], "arrivalTime": dates[1][1],
+             "departureAirport": airports[0], "arrivalAirport": airports[1],
+-            "airline": lines[0], "direct": True, "price": price}
++            "airline": lines[0], **connection_details(label, text), "price": price}
+     # The visible flight result can omit its aria-label. Accept it only when
+-    # time, actual airports, direct status, airline and roundtrip amount exist.
+-    if label or not expected_date or not price or "직항" not in text:
++    # time, actual airports, airline and roundtrip amount exist. Unknown stops
++    # remain explicitly unknown; calendar data never proves a direct flight.
++    if label or not expected_date or not price:
+         raise ValueError("unrecognized_flight_card")
+     date.fromisoformat(expected_date)
+     times = re.findall(r"(?<!\d)(?:[01]\d|2[0-3]):[0-5]\d(?!\d)", text)
+-    airports = re.findall(r"(?<![A-Z])[A-Z]{3}(?![A-Z])", text)
+-    if len(times) < 2 or len(airports) < 2:
++    if len(times) != 2:
+         raise ValueError("unrecognized_flight_card")
++    airports = endpoint_airports(text, times[0], times[1])
+     hints = [str(value).strip() for value in card.get("airlineHints", [])]
+     airline = next((value for value in hints if 2 <= len(value) <= 60
+                     and not re.search(r"\d|선택|왕복|아이콘|로고|logo|image|trip\.com|저비용", value, re.I)
+                     and value.casefold() not in ('항공사', 'airline')), None)
+     if not airline:
+         airline = next((line for line in lines if 2 <= len(line) <= 60
+-            and not re.search(r"\d|직항|선택|왕복|저비용|항공편", line)
++            and not re.search(r"\d|직항|경유|환승|선택|왕복|저비용|항공편", line)
+             and not re.fullmatch(r"[A-Z]{3}", line)
+             and re.search(r"항공|에어|air|peach|scoot|jet|cathay|ana|jal", line, re.I)), None)
+     if not airline:
+@@ -87,12 +87,13 @@ def parse_card(card, expected_date=None):
+                                   "logoKeys": [str(key)[:50] for key in card.get("logoKeys", [])[:8]]}
+         raise error
+     arrival_tail = text[text.find(times[1]) + len(times[1]):][:8]
+-    arrival_date = date.fromisoformat(expected_date) + timedelta(days=1 if "+1" in arrival_tail else 0)
++    day_offset = re.search(r"\+(\d+)", arrival_tail)
++    arrival_date = date.fromisoformat(expected_date) + timedelta(days=int(day_offset[1]) if day_offset else 0)
+     return {"index": card["index"], "cardLabel": "", "text": text,
+         "date": expected_date, "arrivalDate": arrival_date.isoformat(),
+         "departureTime": times[0], "arrivalTime": times[1],
+         "departureAirport": airports[0], "arrivalAirport": airports[1],
+-        "airline": airline, "direct": True, "price": price}
++        "airline": airline, **connection_details(label, text), "price": price}
+
+
+ def cheapest_card(cards, expected_date=None):
+@@ -174,7 +175,7 @@ def select_leg(page, leg, expected_date=None):
+         if card.count() != 1 or not card.is_visible():
+             raise ValueError('selected_identity_missing')
+     identity_fields = ('date', 'arrivalDate', 'departureTime', 'arrivalTime',
+-                       'departureAirport', 'arrivalAirport', 'airline', 'direct', 'price')
++                       'departureAirport', 'arrivalAirport', 'airline', 'direct', 'stopCount', 'durationMinutes', 'price')
+     if any(current[key] != leg[key] for key in identity_fields):
+         raise ValueError('selected_identity_changed')
+     pattern = re.compile(r'^(?:(?:이\s*운임\s*)?선택(?:\s*(?:[1-9]\s*석\s*미만\s*남음|\d+\s*석\s*남음))?|(?:\s*(?:[1-9]\s*석\s*미만\s*남음|\d+\s*석\s*남음)\s*)?(?:이\s*운임\s*)?선택)$')
+diff --git a/tripcom_flight_contract.py b/tripcom_flight_contract.py
+index 305284de..dcb02ff4 100644
+--- a/tripcom_flight_contract.py
++++ b/tripcom_flight_contract.py
+@@ -3,6 +3,7 @@ import hashlib
+ import re
+ from datetime import date, datetime
+ from urllib.parse import urlparse, parse_qs
++from tripcom_connections import public_leg_details
+ from crawl_tripcom_40destinations import allowed_nights_for_destination, TOP_40_DESTINATIONS
+
+ CITY_CODES = {"SEL", "TYO", "OSA", "BJS", "SPK", "NHA"}
+@@ -50,8 +51,9 @@ def to_flight(quote):
+         for key in ("departureTime", "arrivalTime"):
+             if not re.fullmatch(r"(?:[01]\d|2[0-3]):[0-5]\d", leg.get(key, "")):
+                 raise ValueError("flight_times_required")
+-        if not leg.get("airline") or type(leg.get("direct")) is not bool:
++        if not leg.get("airline"):
+             raise ValueError("leg_details_required")
++        public_leg_details(leg)
+     nights = (date.fromisoformat(inbound["date"]) - date.fromisoformat(outbound["date"])).days
+     stay_destination = quote
+     if not quote.get("country"):
+@@ -89,6 +91,7 @@ def to_flight(quote):
+     if seats is not None:
+         result.update(availableSeats=seats, seats=f"{seats}석")
+     result["tripcomDetail"] = {
++        "legs": {"outbound": public_leg_details(outbound), "inbound": public_leg_details(inbound)},
+         "paymentCondition": dict(payment),
+         "paymentNotice": "내통장결제 기준" if payment["kind"] == "bank_account" else None,
+         "paymentNoticePlacement": "detail_only",
+diff --git a/test_tripcom_dom.py b/test_tripcom_dom.py
+index 8b406b31..2ccf7bf1 100644
+--- a/test_tripcom_dom.py
++++ b/test_tripcom_dom.py
+@@ -23,8 +23,12 @@ class DomTests(unittest.TestCase):
+         with self.assertRaisesRegex(ValueError, "airline_unconfirmed") as missing:
+             parse_card({**card, "airlineHints": [], "logoKeys": ["TW", "ignored"]}, "2026-09-28")
+         self.assertEqual(missing.exception.tripcom_evidence["logoKeys"], ["TW", "ignored"])
+-        with self.assertRaisesRegex(ValueError, "unrecognized_flight_card"):
+-            parse_card({**card, "text": card["text"].replace("직항", "경유")}, "2026-09-28")
++        connected = parse_card({**card, "text": card["text"].replace("직항", "경유")}, "2026-09-28")
++        self.assertIs(connected['direct'], False)
++        unknown = parse_card({**card, "text": card["text"].replace("직항", "")}, "2026-09-28")
++        self.assertIsNone(unknown['direct'])
++        overnight = parse_card({**card, "text": card["text"].replace('+1', '+2')}, "2026-09-28")
++        self.assertEqual(overnight['arrivalDate'], '2026-09-30')
+
+     def test_unlabelled_selection_rechecks_identity_and_uses_card_button(self):
+         card = {"index": 0, "label": "", "visible": True,

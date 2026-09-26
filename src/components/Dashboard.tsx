@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Flight } from '@/types/flight';
+import { connectionDuration, connectionLabel, flightConnectionSummary } from '@/lib/flight-connections';
 import Logo from './Logo';
 import Sparkline from './Sparkline';
 import dynamic from 'next/dynamic';
@@ -3928,9 +3929,13 @@ export default function Dashboard() {
                 // 비행시간
                 // 여행사가 준 비행시간이 있으면 그대로, 없으면 현지 시각 차이에 시차를 보정해 계산한다.
                 // 같은 화면에 두 출처가 나란히 놓이므로 표기는 계산값 형식으로 맞춘다 ("05:40" → "5시간 40분")
-                const flyTime = calcFlightDuration(depCity, depTime, depDate, arrCity, depArrTime)
+                const flyTime = modetourGuide.source === 'tripcom'
+                    ? connectionDuration(modetourGuide.tripcomDetail?.legs?.outbound) || ''
+                    : calcFlightDuration(depCity, depTime, depDate, arrCity, depArrTime)
                     || formatAgencyFlightDuration(mdt?.flyingTime) || '';
-                const retFlyTime = calcFlightDuration(arrCity, retDepTime, arrDate, depCity, retArrTime)
+                const retFlyTime = modetourGuide.source === 'tripcom'
+                    ? connectionDuration(modetourGuide.tripcomDetail?.legs?.inbound) || ''
+                    : calcFlightDuration(arrCity, retDepTime, arrDate, depCity, retArrTime)
                     || formatAgencyFlightDuration(mdt?.returnFlyingTime)
                     || (modetourGuide.id.startsWith('modetour-manual-') && mdt?.isReturnDirect
                         ? (() => {
@@ -3951,8 +3956,11 @@ export default function Dashboard() {
                 const stayDuration = stayNights ? `${stayNights}박 ${stayNights + 1}일` : '';
                 const destinationContext = getDestinationContext(arrCity);
                 // 직항
-                const isDirect = mdt?.isDirect ?? true;
-                const isRetDirect = mdt?.isReturnDirect ?? isDirect;
+                const isDirect = modetourGuide.source !== 'tripcom' && (mdt?.isDirect ?? true);
+                const isRetDirect = modetourGuide.source !== 'tripcom' && (mdt?.isReturnDirect ?? isDirect);
+                const tripcomConnection = flightConnectionSummary(modetourGuide);
+                const outboundConnection = connectionLabel(modetourGuide.tripcomDetail?.legs?.outbound);
+                const inboundConnection = connectionLabel(modetourGuide.tripcomDetail?.legs?.inbound);
                 // 편명
                 const depFlightNo = mdt?.departureFlightNo || modetourGuide.flightNumber?.split('/')[0]?.trim() || '';
                 const retFlightNo = mdt?.returnFlightNo || modetourGuide.flightNumber?.split('/')[1]?.trim() || '';
@@ -4084,7 +4092,9 @@ export default function Dashboard() {
                                 </div>
                                 <div className={styles.mdtTimeConnector}>
                                     {stayDuration && <span className={styles.mdtDuration}>{stayDuration}</span>}
-                                    {isDirect && <span className={styles.mdtDirectBadgeSm}>직항</span>}
+                                    {modetourGuide.source === 'tripcom'
+                                        ? tripcomConnection && <span className={styles.mdtDirectBadgeSm}>{tripcomConnection}</span>
+                                        : isDirect && <span className={styles.mdtDirectBadgeSm}>직항</span>}
                                     <div className={styles.mdtLine} />
                                 </div>
                                 <div className={styles.mdtTimePoint}>
@@ -4143,7 +4153,9 @@ export default function Dashboard() {
                                     <div className={styles.mdtSectionHeader}>
                                         <div className={styles.mdtSectionTitle}>
                                             <span>가는 항공편</span>
-                                            {isDirect && <span className={styles.mdtDirectBadge}>직항</span>}
+                                            {modetourGuide.source === 'tripcom'
+                                                ? outboundConnection && <span className={styles.mdtDirectBadge}>{outboundConnection}</span>
+                                                : isDirect && <span className={styles.mdtDirectBadge}>직항</span>}
                                         </div>
                                         {flyTime && <span className={styles.mdtFlyTime}>비행시간: {flyTime}</span>}
                                     </div>
@@ -4183,7 +4195,9 @@ export default function Dashboard() {
                                     <div className={styles.mdtSectionHeader}>
                                         <div className={styles.mdtSectionTitle}>
                                             <span>오는 항공편</span>
-                                            {isRetDirect && <span className={styles.mdtDirectBadge}>직항</span>}
+                                            {modetourGuide.source === 'tripcom'
+                                                ? inboundConnection && <span className={styles.mdtDirectBadge}>{inboundConnection}</span>
+                                                : isRetDirect && <span className={styles.mdtDirectBadge}>직항</span>}
                                         </div>
                                         {retFlyTime && <span className={styles.mdtFlyTime}>비행시간: {retFlyTime}</span>}
                                     </div>

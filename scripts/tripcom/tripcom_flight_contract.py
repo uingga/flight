@@ -3,6 +3,7 @@ import hashlib
 import re
 from datetime import date, datetime
 from urllib.parse import urlparse, parse_qs
+from tripcom_connections import public_leg_details
 
 CITY_CODES = {"SEL", "TYO", "OSA", "BJS", "SPK", "NHA"}
 
@@ -38,8 +39,9 @@ def to_flight(quote):
         for key in ("departureTime", "arrivalTime"):
             if not re.fullmatch(r"(?:[01]\d|2[0-3]):[0-5]\d", leg.get(key, "")):
                 raise ValueError("flight_times_required")
-        if not leg.get("airline") or type(leg.get("direct")) is not bool:
+        if not leg.get("airline"):
             raise ValueError("leg_details_required")
+        public_leg_details(leg)
     nights = (date.fromisoformat(inbound["date"]) - date.fromisoformat(outbound["date"])).days
     if not 2 <= nights <= 7:
         raise ValueError("invalid_trip_length")
@@ -71,6 +73,7 @@ def to_flight(quote):
     if seats is not None:
         result.update(availableSeats=seats, seats=f"{seats}석")
     result["tripcomDetail"] = {
+        "legs": {"outbound": public_leg_details(outbound), "inbound": public_leg_details(inbound)},
         "paymentCondition": dict(payment),
         "paymentNotice": "내통장결제 기준" if payment["kind"] == "bank_account" else None,
         "paymentNoticePlacement": "detail_only",
