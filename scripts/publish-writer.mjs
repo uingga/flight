@@ -25,7 +25,14 @@ export async function publishCommittedWriter({role,root=process.cwd(),env=proces
  const broker=brokerFactory({url:env.TIKIT_WRITER_URL,token,timeoutMs:900000});
  let publication={entries,rawEntries};
  if(role!=='tripcom'&&names.includes('data/all-flights-cache.json')){
-  const latest=await broker('readInputs');
+  let latest;
+  try{latest=await broker('readInputs');}
+  catch(error){
+   // This awaited branch runs before the only commit call below. Preserve the
+   // phase as evidence, without authorizing a new/automatic publication retry.
+   error.publicationPhase='read_inputs';
+   throw error;
+  }
   if(latest.ref!==base)throw Object.assign(Error('writer base changed before Trip.com preservation'),{
    code:'WRITER_PRECOMMIT_BASE_CHANGED',publicationOutcome:'refused',beforeCommit:true,requestId:head,
   });

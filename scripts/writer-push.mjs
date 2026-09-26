@@ -29,7 +29,7 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1]
   console.log('writer publication confirmed');
  }).catch(error=>{
   if(process.argv[2]==='myrealtrip'&&process.env.RUNNER_TEMP){
-   try{fs.writeFileSync(path.join(process.env.RUNNER_TEMP,'mrt-publication-failure.json'),JSON.stringify({version:1,runId:process.env.GITHUB_RUN_ID,...publicationFailure(error),recordedAt:new Date().toISOString()}),{flag:'wx'});}catch{console.error('publication diagnosis could not be preserved');}
+   try{fs.writeFileSync(path.join(process.env.RUNNER_TEMP,'mrt-publication-failure.json'),JSON.stringify({version:1,runId:process.env.GITHUB_RUN_ID,...publicationFailure(error),diagnostic:publicationDiagnostic(error),phase:error.publicationPhase==='read_inputs'?'read_inputs':'unconfirmed',recordedAt:new Date().toISOString()}),{flag:'wx'});}catch{console.error('publication diagnosis could not be preserved');}
   }
   const diagnostic=publicationDiagnostic(error);
   console.error(JSON.stringify(diagnostic));

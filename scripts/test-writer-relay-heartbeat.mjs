@@ -1,10 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {setTimeout as delay} from 'node:timers/promises';
-import {deliverPublication} from '../src/lib/writer-relay-agent.mjs';
+import {deliverPublication,relayFailureDiagnostic} from '../src/lib/writer-relay-agent.mjs';
 import {createRelayHandler} from '../src/lib/writer-relay-handler.mjs';
 import {createRelayWebHandler} from '../src/lib/writer-relay-web.mjs';
 import {encodeRelayWire,decodeRelayWire} from '../src/lib/writer-relay-wire.mjs';
+import {listenRelay} from './start-writer-relay.mjs';
 
 const item={role:'daily',id:'fixture-request-0001',claim:'fixture-claim',body:'{"action":"commit"}'};
 function fixture({heartbeatResult=true,handlerError=false,completeStatuses=[]}={}){
@@ -51,9 +52,30 @@ test('transient completion failure retries the same receipt without republishing
  const firstCompletion=f.calls.findIndex(p=>p.endsWith('/complete'));
  assert.ok(f.calls.slice(firstCompletion+1).some(p=>p.endsWith('/heartbeat')));
 });
+
+for(const failure of ['HTTP_TIMEOUT',503])test(`final heartbeat ${failure} retries acknowledgement, not publication`,async()=>{
+ const f=fixture();let failed=false;
+ const request=f.options.request;
+ f.options.heartbeatMs=60000;
+ f.options.completionPollMs=1;
+ f.options.request=async(url,options)=>{
+  if(url.pathname.endsWith('/heartbeat')&&!failed){
+   failed=true;
+   if(typeof failure==='number')return new Response('{}',{status:failure});
+   throw Object.assign(Error('synthetic timeout'),{code:failure});
+  }
+  return request(url,options);
+ };
+ assert.equal(await deliverPublication(f.options),true);
+ assert.equal(f.publications(),1);
+ assert.equal(f.calls.filter(p=>p.endsWith('/claim')).length,1);
+ assert.equal(f.calls.filter(p=>p.endsWith('/complete')).length,1);
+});
 test('definite completion rejection preserves the claim without retrying publication',async()=>{
  const f=fixture({completeStatuses:[409]});
- await assert.rejects(deliverPublication(f.options),error=>error.httpStatus===409);
+ await assert.rejects(deliverPublication(f.options),error=>{
+  assert.deepEqual(relayFailureDiagnostic(error),{event:'relay-delivery-failed',stage:'complete',role:'daily',requestId:item.id,code:null,httpStatus:409,claimedRequestReplayed:false});return true;
+ });
  assert.equal(f.publications(),1);
  assert.equal(f.calls.filter(p=>p.endsWith('/complete')).length,1);
 });
@@ -88,4 +110,21 @@ test('web transport routes authenticated heartbeats through the same durable cla
   publicationHandler:async()=>{await delay(25);return Response.json({result:{ref:'fixture-ref'}});},request:async(url,options)=>handler(new Request(url,options))});
  assert.equal(claims,1);assert.ok(beats>=2);assert.equal(completes,1);
  assert.equal((await handler(new Request('http://localhost/api/writer/delivery/unknown',{method:'POST',headers:{authorization:'Bearer fixture-agent'},body:encodeRelayWire('{}')}))).status,404);
+});
+
+test('failure diagnostic never includes private error messages, bodies or arbitrary codes',()=>{
+ const result=relayFailureDiagnostic({message:'private',body:'private',stack:'private',code:'private',relayRole:'private',relayStage:'private',relayRequestId:'private',httpStatus:999});
+ assert.equal(JSON.stringify(result).includes('private'),false);assert.equal(result.stage,'unknown');
+});
+
+for(const stage of ['heartbeat','complete'])test(`real HTTP ${stage} DB timeout preserves the response and finishes once`,async()=>{
+ let attempts=0,publications=0,claims=0,completed=0;
+ const queue={claim:async()=>{claims++;return item;},heartbeat:async()=>true,complete:async()=>{completed++;}};
+ const success=queue[stage];queue[stage]=async input=>{if(++attempts===1)throw Error('synthetic private database timeout');return success(input);};
+ const server=await listenRelay({handler:createRelayWebHandler({agentToken:'fixture-agent',secrets:{daily:'fixture-daily'},queue})});
+ try{
+  await deliverPublication({relayUrl:server.url+'/api/writer/',agentToken:'fixture-agent',secrets:{daily:'fixture-daily'},heartbeatMs:60000,completionPollMs:1,completionRetryMs:1000,
+   publicationHandler:async()=>{publications++;return Response.json({result:{commitSha:'a'.repeat(40)}});}});
+  assert.equal(attempts,2);assert.equal(publications,1);assert.equal(claims,1);assert.equal(completed,1);
+ }finally{await server.close();}
 });

@@ -8,7 +8,7 @@ import {startCoordinatorServer,startLoopbackFixtureServer} from '../src/lib/nave
 import {requireExternalWriterControl} from '../src/lib/naver-writer-safety.mjs';
 import {configuredPublicationRuntime} from '../src/lib/writer-service.mjs';
 import {createPublicationHandler,WRITER_FILES} from '../src/lib/writer-broker.mjs';
-import {deliverPublication} from '../src/lib/writer-relay-agent.mjs';
+import {deliverPublication,relayFailureDiagnostic} from '../src/lib/writer-relay-agent.mjs';
 
 export async function startConfiguredCoordinator(env=process.env,{fixtureRoot,publicationFixture}={}) {
     if(publicationFixture&&!fixtureRoot)throw Error('publication fixture requires fixture root');
@@ -56,7 +56,7 @@ export async function startConfiguredCoordinator(env=process.env,{fixtureRoot,pu
         const delivery=relayToken?(async()=>{
             while(!stopped){
                 try{await deliverPublication({relayUrl:env.TIKIT_WRITER_RELAY_URL,agentToken:relayToken,publicationHandler,secrets});}
-                catch{stopped=true;break;} // Unknown outcomes remain claimed; no automatic restart/replay.
+                catch(error){console.error(JSON.stringify(relayFailureDiagnostic(error)));stopped=true;break;} // Unknown outcomes remain claimed; no automatic restart/replay.
                 if(!stopped)await new Promise(r=>{const timer=setTimeout(r,relayPollMs);wake=()=>{clearTimeout(timer);r();};});
             }
         })():Promise.resolve();

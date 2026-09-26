@@ -29,6 +29,21 @@ try{
  sql('CREATE ROLE anon; CREATE ROLE authenticated; CREATE ROLE service_role BYPASSRLS; CREATE DATABASE tikit_writer_fixture_relay;');
  env.PGDATABASE='tikit_writer_fixture_relay';
  sql(fs.readFileSync('scripts/sql/writer-relay.sql','utf8'));results.push('migration');
+ // A receipt is an immutable request plus a monotonic result. Polling it must
+ // not wait behind another delivery's global admission transaction.
+ sql(`SELECT public.tikit_writer_queue('submit','{"role":"daily","id":"receipt-contention-0001","body":"{}"}');`);
+ const holder=spawn(path.join(bin,'psql.exe'),['-X','-v','ON_ERROR_STOP=1','-t','-A'],{env,windowsHide:true,stdio:['pipe','pipe','pipe']});
+ holder.stderr.resume();
+ const held=new Promise((resolve,reject)=>{holder.stdout.on('data',chunk=>{if(String(chunk).includes('fixture-lock-held'))resolve();});holder.on('error',reject);holder.on('exit',code=>{if(code!==0)reject(Error('fixture lock holder failed'));});});
+ const holderDone=new Promise(resolve=>holder.on('exit',resolve));
+ holder.stdin.end("BEGIN; SELECT pg_advisory_xact_lock(74152,190915); SELECT 'fixture-lock-held'; SELECT pg_sleep(2); COMMIT;");
+ await held;
+ try{
+  const replay=sql(`SET statement_timeout='500ms'; SELECT public.tikit_writer_queue('submit','{"role":"daily","id":"receipt-contention-0001","body":"{}"}');`);
+  if(!replay.includes('pending'))throw Error('receipt replay not returned');
+  results.push('receipt-read-does-not-wait-for-global-writer-lock');
+ }finally{await holderDone;}
+ sql("DELETE FROM tikit_writer_private.deliveries WHERE id='receipt-contention-0001';"); // Synthetic cluster only.
  sql(fs.readFileSync('scripts/sql/test-writer-relay.sql','utf8'));results.push('lifecycle-and-role-denial');
  sql(fs.readFileSync('scripts/sql/test-writer-relay-capacity.sql','utf8'));results.push('history-over-256MiB-active-byte-row-limits-replay-no-reclaim');
  sql(fs.readFileSync('scripts/sql/test-writer-relay-retention.sql','utf8'));results.push('retention-rollout-dates-expiry-heartbeats-purge-supersession-permissions');

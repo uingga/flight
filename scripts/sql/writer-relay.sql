@@ -41,7 +41,29 @@ DECLARE
   issued_at timestamptz;
   retention_enabled boolean;
 BEGIN
-  -- All state transitions and capacity checks share a transaction-scoped lock.
+  -- Existing receipts are immutable requests with monotonic result states. Read
+  -- them without the global admission lock: polling must not starve heartbeat,
+  -- completion or other producers. A stale pending snapshot is safe to poll again.
+  -- The locked path below rechecks a missing row before creating any new work.
+  IF p_action = 'submit' THEN
+    IF NOT (p_input->>'role' = ANY(ARRAY['daily','myrealtrip','onlinetour','source-fallback','manual','report','link-health','today-pick','admin','deploy']))
+      OR coalesce(p_input->>'id','') !~ '^[a-zA-Z0-9-]{16,80}$'
+      OR jsonb_typeof(p_input->'body') IS DISTINCT FROM 'string' THEN
+      RAISE EXCEPTION 'invalid queue request';
+    END IF;
+    request_body := p_input->>'body';
+    IF octet_length(request_body)>25165824 THEN RAISE EXCEPTION 'queue payload limit'; END IF;
+    SELECT * INTO r FROM tikit_writer_private.deliveries WHERE role=p_input->>'role' AND id=p_input->>'id';
+    IF FOUND THEN
+      -- Clients freeze wire bytes. Do not parse multi-MiB JSON twice per poll.
+      -- Keep semantic compatibility for legacy date-only/envelope differences.
+      IF r.body IS DISTINCT FROM request_body THEN
+        IF (r.body::jsonb - 'relayIssuedAt') IS DISTINCT FROM (request_body::jsonb - 'relayIssuedAt') THEN RAISE EXCEPTION 'request identity collision'; END IF;
+      END IF;
+      RETURN jsonb_build_object('state',r.state,'response',r.response);
+    END IF;
+  END IF;
+  -- All state transitions and capacity checks still share one transaction lock.
   -- Never reclaim or replay a claimed job. Expiry is terminal, not a retry.
   PERFORM pg_catalog.pg_advisory_xact_lock(74152,190915);
   SELECT enabled INTO retention_enabled FROM tikit_writer_private.retention_policy WHERE singleton;
@@ -55,7 +77,9 @@ BEGIN
     IF octet_length(request_body)>25165824 THEN RAISE EXCEPTION 'queue payload limit'; END IF;
     SELECT * INTO r FROM tikit_writer_private.deliveries WHERE role=p_input->>'role' AND id=p_input->>'id' FOR UPDATE;
     IF FOUND THEN
-      IF (r.body::jsonb - 'relayIssuedAt') IS DISTINCT FROM (request_body::jsonb - 'relayIssuedAt') THEN RAISE EXCEPTION 'request identity collision'; END IF;
+      IF r.body IS DISTINCT FROM request_body THEN
+        IF (r.body::jsonb - 'relayIssuedAt') IS DISTINCT FROM (request_body::jsonb - 'relayIssuedAt') THEN RAISE EXCEPTION 'request identity collision'; END IF;
+      END IF;
       RETURN jsonb_build_object('state',r.state,'response',r.response);
     END IF;
     -- After a receipt is purged, its original dated request cannot become new work.

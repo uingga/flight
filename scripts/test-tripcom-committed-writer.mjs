@@ -41,3 +41,12 @@ test('base changed before merge refuses commit rather than publishing stale cach
  });
  assert.deepEqual(calls,['readInputs']);
 });
+
+test('read-input outage is identified before any commit without granting retry',async()=>{
+ const calls=[];
+ const error=Object.assign(Error('outage'),{code:'WRITER_OUTCOME_UNKNOWN',publicationOutcome:'unknown'});
+ await assert.rejects(publishCommittedWriter({role:'myrealtrip',env,git,brokerFactory:()=>async action=>{
+  calls.push(action);throw error;
+ }}),e=>e===error&&e.publicationPhase==='read_inputs'&&!publicationDiagnostic(e).newRequestAllowed);
+ assert.deepEqual(calls,['readInputs']);
+});
