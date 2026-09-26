@@ -9,11 +9,12 @@ import { operationalPlan,validateOperationalCatalogue,ONLINE_REMOTE_PROTOCOL,isO
 import { classifySourceAccessRestriction } from '../src/lib/source-circuit';
 import { CONTINUATION_PARENT,continuationPlan,combineContinuation } from '../src/lib/onlinetour-validation-continuation';
 import { createStagingRun } from '../src/lib/onlinetour-browser-collector';
+import { collectionHostname, collectionStateBase, collectionExecutionMetadata } from '../src/lib/temporary-b-replacement.mjs';
 
 async function main() {
     const mode=process.argv[2];
     if(process.argv.length!==3 || !['--scheduled','--manual-once','--validate','--validate-status-fix','--continue-validation-30','--validate-month-fix'].includes(mode)) throw Error('explicit_worker_mode_required');
-    if(os.hostname().toUpperCase()!=='DESKTOP-OFFICE' || !process.env.LOCALAPPDATA) throw Error('wrong_worker_host');
+    if(collectionHostname().toUpperCase()!=='DESKTOP-OFFICE' || !process.env.LOCALAPPDATA) throw Error('wrong_worker_host');
     const chunks:Buffer[]=[]; let size=0;
     for await(const chunk of process.stdin) {size+=chunk.length;if(size>20000)throw Error('request_too_large');chunks.push(Buffer.from(chunk));}
     const request=JSON.parse(Buffer.concat(chunks).toString('utf8'));
@@ -23,7 +24,7 @@ async function main() {
     if(mode==='--scheduled' && (!policy.shouldRun || !policy.sources.includes('onlinetour') || policy.onlineExpectedAt!==request.expectedAt)) throw Error('source_not_eligible');
     if(mode==='--manual-once' && request.manualOnce!==true) throw Error('explicit_manual_request_required');
     if(!isRecentPrimarySnapshot(request.cache,now)) throw Error('stale_source_state');
-    const root=path.resolve(__dirname,'..'),state=path.join(process.env.LOCALAPPDATA,'Tikitikit','onlinetour-validation');
+    const root=path.resolve(__dirname,'..'),state=path.join(collectionStateBase(),'onlinetour-validation');
     fs.mkdirSync(state,{recursive:true});
     if(fs.lstatSync(state).isSymbolicLink())throw Error('unsafe_state_directory');
     const cooldown=path.join(state,'cooldown.json');
@@ -75,10 +76,10 @@ async function main() {
             const combined=combineContinuation(parent.summary,parent.raw,parent.flights,summary,raw,flights,Date.now(),request.cache.scrapedCounts?.onlinetour);
             const proof=createStagingRun(root);combined.summary.runId=proof.runId;
             proof.write('summary.json',combined.summary);proof.write('raw-products.json',combined.raw);proof.write('flights.json',combined.flights);
-            process.stdout.write(JSON.stringify({protocol:ONLINE_REMOTE_PROTOCOL,id:request.id,status:'verified',...combined}));
+            process.stdout.write(JSON.stringify({protocol:ONLINE_REMOTE_PROTOCOL,id:request.id,status:'verified',...combined,...collectionExecutionMetadata()}));
         }else{
             validateOperationalCatalogue(summary,raw,flights,Date.now(),request.cache.scrapedCounts?.onlinetour);
-            process.stdout.write(JSON.stringify({protocol:ONLINE_REMOTE_PROTOCOL,id:request.id,status:'verified',summary,raw,flights}));
+            process.stdout.write(JSON.stringify({protocol:ONLINE_REMOTE_PROTOCOL,id:request.id,status:'verified',summary,raw,flights,...collectionExecutionMetadata()}));
         }
     } catch(error) {
         if(backend?.close) {

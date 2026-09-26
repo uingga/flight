@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { spawn, spawnSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import os from 'node:os';
 import {ttangWorkerForSlot,beginTtangDispatch} from './ttang-worker-routing.mjs';
@@ -8,6 +8,9 @@ import {ttangWorkerSshArgs} from './ttang-worker-launch.mjs';
 import { getCrawlDataDir } from '../src/lib/crawl-data-dir';
 import { logCrawlResults } from '../src/lib/utils/crawl-logger';
 import { TTANG_PROTOCOL, TTANG_INPUT_FILES, assertTtangAllowed, validateTtangReceivedEvidence } from './ttang-primary-policy.mjs';
+import { isTtangPreflightFailure } from './ttang-failure-policy.mjs';
+import { requestRemoteWorker } from '../src/lib/remote-worker-transport';
+import { replacementLaunch } from '../src/lib/temporary-b-replacement.mjs';
 
 async function main() {
     const manual=process.argv[2]==='--manual-once';
@@ -29,22 +32,18 @@ async function main() {
     const dispatch=reconcile?null:beginTtangDispatch(path.join(os.homedir(),'AppData/Local/Tikitikit/ttang-dispatch'),manual?'manual-'+new Date(Date.now()+9*3600000).toISOString().slice(0,10):expectedAt,id);
     const evidenceDir=path.resolve('.local-crawler/ttang-results',id);fs.mkdirSync(evidenceDir,{recursive:true});
     if(!reconcile)fs.writeFileSync(path.join(evidenceDir,'request.json'),JSON.stringify({id,createdAt:request.createdAt,expectedAt,manual}));
-    let after=structuredClone(before), failed=false, detail='', scraped=0;
+    let after=structuredClone(before), failed=false, detail='', scraped=0, failureReply:any;
     try {
-        const reply:any=reconcile?JSON.parse(fs.readFileSync(path.join(evidenceDir,'reply.json'),'utf8')):await new Promise((resolve,reject)=>{
+        const reply:any=reconcile?JSON.parse(fs.readFileSync(path.join(evidenceDir,'reply.json'),'utf8')):await (async()=>{
+            const replacement=worker==='B'?replacementLaunch('ttang',expectedAt,{manual}):null;
             const ssh=ttangWorkerSshArgs(worker,manual?'--manual-once':'--scheduled',config.host);
-            const child=spawn('ssh',ssh,{windowsHide:true});
-            const chunks:Buffer[]=[];let size=0,done=false;
-            const fail=()=>{if(done)return;done=true;clearTimeout(timer);child.kill();reject(Error('remote_transport_failed'));};
-            const timer=setTimeout(fail,32*60000);
-            child.on('error',fail);child.stdin.on('error',fail);child.stderr.on('data',()=>{});
-            child.stdout.on('data',chunk=>{size+=chunk.length;if(size>15000000){fail();return;}chunks.push(Buffer.from(chunk));});
-            child.on('close',()=>{if(done)return;done=true;clearTimeout(timer);try{resolve(JSON.parse(Buffer.concat(chunks).toString('utf8')));}catch{reject(Error('invalid_remote_reply'));}});
-            child.stdin.end(JSON.stringify(request));
-        });
+            return requestRemoteWorker({file:replacement?.file,cwd:replacement?.cwd,args:replacement?.args || ssh,request,timeoutMs:32*60000,maxBytes:15000000,
+                trace:record=>console.error(JSON.stringify({event:'ttang_remote_transport',id,worker,expectedAt,...record}))});
+        })();
         if(!reconcile)fs.writeFileSync(path.join(evidenceDir,'reply.json'),JSON.stringify(reply));
         if(reply.protocol!==TTANG_PROTOCOL || reply.id!==id)throw Error('remote_identity_mismatch');
         if(reply.status!=='verified') {
+            failureReply=reply;
             if(Number.isSafeInteger(reply.observedCount) && reply.observedCount>=0)scraped=reply.observedCount;
             if(reply.cooldown?.nextProbeAt)after.ttangPrimary={...after.ttangPrimary,nextProbeAt:reply.cooldown.nextProbeAt};
             throw Error(reply.reason || 'worker_failed');
@@ -58,17 +57,22 @@ async function main() {
         const merged=spawnSync(process.execPath,['scripts/merge-cache-source.mjs',candidate,overlay,'ttang'],{encoding:'utf8',windowsHide:true});
         if(merged.status!==0)throw Error('source_merge_failed');
         after=JSON.parse(fs.readFileSync(candidate,'utf8'));
-        detail=`${worker} PC Chrome ${verified.dates}일 목록 ${scraped}건 → 필터 후 ${verified.flights.length}건; 상세 ${verified.detailCounts.selected}/20건, 시간 확인 ${verified.timeVerified}건, 빈 운임 ${verified.detailCounts.empty}건`;
+        detail=`${reply.executionHost==='A'?'A PC(B 임시 대체)':worker+' PC'} Chrome ${verified.dates}일 목록 ${scraped}건 → 필터 후 ${verified.flights.length}건; 상세 ${verified.detailCounts.selected}/20건, 시간 확인 ${verified.timeVerified}건, 빈 운임 ${verified.detailCounts.empty}건`;
         if(reconcile)detail+=' — 시계 차이로 보류됐던 동일 결과 재검증, 추가 요청 없음';
         after.ttangPrimary={status:'success',lastAttemptAt:new Date().toISOString(),lastSuccessAt:reply.bundle.completedAt,runId:id,detail};
     } catch(e) {
         failed=true;detail=`${worker} PC Chrome 수집 실패 (${(e as Error).message}) — 기존 항공권 보존`;
-        after.ttangPrimary={...after.ttangPrimary,status:'failed',lastAttemptAt:new Date().toISOString(),runId:id,detail};
-        // Transport/unknown failures may have started requests on B: no automatic same-day replay.
-        if(!after.ttangPrimary.nextProbeAt)after.ttangPrimary.nextProbeAt=new Date(Date.now()+86400000).toISOString();
+        const preflight=isTtangPreflightFailure(failureReply,id);
+        if(preflight)detail+='; 외부 요청 전 준비 단계 실패';
+        after.ttangPrimary={...after.ttangPrimary,status:'failed',lastAttemptAt:new Date().toISOString(),runId:id,detail,
+            failureKind:preflight?'preflight':'protected_failure'};
+        // Only proved zero-request failures omit a NEW cooldown. Never remove an
+        // existing one; transport/unknown/blocked failures retain full protection.
+        if(!preflight)after.ttangPrimary.nextProbeAt=new Date(Math.max(Date.now()+86400000,
+            Date.parse(after.ttangPrimary.nextProbeAt)||0)).toISOString();
         after.staleStreak={...after.staleStreak,ttang:Number(before.staleStreak?.ttang || 0)+1};
     }
-    if(failed)dispatch?.finish(true,after.ttangPrimary?.nextProbeAt);
+    if(failed)dispatch?.finish(true,after.ttangPrimary?.nextProbeAt,failureReply);
     if(JSON.stringify(JSON.parse(fs.readFileSync(cachePath,'utf8')))!==JSON.stringify(before))throw Error('input_changed_result_saved_not_merged');
     const temp=cachePath+'.ttang-'+id+'.tmp';fs.writeFileSync(temp,JSON.stringify(after,null,2));fs.renameSync(temp,cachePath);
     if(!failed)dispatch?.finish(false);

@@ -7,6 +7,7 @@ import { discoverDedicatedChromeEndpoint } from '../src/lib/onlinetour-dedicated
 import { TTANG_PROTOCOL, TTANG_INPUT_FILES, assertTtangAllowed, validateTtangEvidence } from './ttang-primary-policy.mjs';
 import { readTtangPartialSummary } from './ttang-staging-validation.mjs';
 import { assertTtangWorker } from './ttang-worker-routing.mjs';
+import { collectionStateBase, collectionChromeSettings, collectionExecutionMetadata } from '../src/lib/temporary-b-replacement.mjs';
 
 async function main() {
     const manual=process.argv[2]==='--manual-once';
@@ -19,7 +20,7 @@ async function main() {
         || !Number.isFinite(Date.parse(r.createdAt)) || !r.files || Object.keys(r.files).some(f=>!TTANG_INPUT_FILES.includes(f))) throw Error('invalid_worker_request');
     assertTtangWorker(os.hostname(),r.expectedAt,manual,r.worker);
     const root=path.resolve(__dirname,'..'), input=r.files['all-flights-cache.json'];
-    const base=path.join(os.homedir(),'AppData/Local/Tikitikit');
+    const base=collectionStateBase();
     const state=path.join(base,'ttang-browser'), shared=path.join(base,'onlinetour-validation');
     fs.mkdirSync(state,{recursive:true});fs.mkdirSync(shared,{recursive:true});
     if([state,shared].some(p=>fs.lstatSync(p).isSymbolicLink()))throw Error('unsafe_state_directory');
@@ -28,6 +29,7 @@ async function main() {
     if(check()!==r.expectedAt)throw Error('slot_mismatch');
     const lock=path.join(shared,'run.lock'), fd=fs.openSync(lock,'wx');
     let uncertain=false;
+    let phase='browser_preflight', siteRequestsStarted=false, reply:any;
     const dir=path.join(root,'.local-crawler/staging','ttang-'+r.id);
     try {
         check();
@@ -40,11 +42,13 @@ async function main() {
         const startedAt=new Date().toISOString();
         const log=fs.openSync(path.join(dir,'worker.log'),'wx');
         let result;
+        // From here on a child may contact the site, even if no results arrive.
+        phase='collection';siteRequestsStarted=true;
         try { result=spawnSync(process.execPath,[path.join(root,'node_modules/tsx/dist/cli.mjs'),'scripts/crawl-all.ts','--sources=ttang'],{
             cwd:root,stdio:['ignore',log,log],timeout:30*60000,windowsHide:true,
             env:{...process.env,LOCAL_SOURCE_FALLBACK:'0',LOCAL_BROWSER_PILOT:'1',TTANG_BROWSER_WORKER:'1',
                 TIKITIKIT_DATA_DIR:dir,TTANG_DETAIL_CHECKPOINT:'1',TTANG_STAGING_RUN_ID:r.id,TTANG_STAGING_STARTED_AT:startedAt,
-                TTANG_BROWSER_CDP_URL:'http://127.0.0.1:9222',SOURCE_START_JITTER_MAX_MS:'0'}
+                TTANG_BROWSER_CDP_URL:`http://127.0.0.1:${collectionChromeSettings().port}`,SOURCE_START_JITTER_MAX_MS:'0'}
         }); } finally {fs.closeSync(log);}
         if(result.error || result.signal){uncertain=true;throw Error('worker_interrupted');}
         const cache=JSON.parse(fs.readFileSync(path.join(dir,'all-flights-cache.json'),'utf8'));
@@ -59,7 +63,7 @@ async function main() {
         const bundle={protocol:TTANG_PROTOCOL,id:r.id,startedAt,completedAt:new Date().toISOString(),cleanupConfirmed:true,cache,partial,manifest};
         validateTtangEvidence(bundle,r.id);
         fs.writeFileSync(path.join(dir,'bundle.json'),JSON.stringify(bundle));
-        process.stdout.write(JSON.stringify({protocol:TTANG_PROTOCOL,id:r.id,status:'verified',bundle}));
+        reply={protocol:TTANG_PROTOCOL,id:r.id,status:'verified',bundle};
     } catch(e) {
         const reason=/^[a-z_]+$/.test((e as Error).message)?(e as Error).message:'worker_preflight_failed';
         // An uncertain child exit never permits another crawler to reuse this browser automatically.
@@ -67,10 +71,14 @@ async function main() {
         if(fs.existsSync(dir))fs.writeFileSync(path.join(dir,'failure.json'),JSON.stringify({reason,uncertain}));
         let observedCount=0;
         try { observedCount=JSON.parse(fs.readFileSync(path.join(dir,'ttang-list-evidence.json'),'utf8')).rawCount; } catch {}
-        process.stdout.write(JSON.stringify({protocol:TTANG_PROTOCOL,id:r.id,status:'failed',reason,uncertain,
+        reply={protocol:TTANG_PROTOCOL,id:r.id,status:'failed',reason,uncertain,phase,siteRequestsStarted,
+            restricted:reason==='source_cooldown',
             observedCount,
-            cooldown:fs.existsSync(cooldown)?JSON.parse(fs.readFileSync(cooldown,'utf8')):undefined}));
+            cooldown:fs.existsSync(cooldown)?JSON.parse(fs.readFileSync(cooldown,'utf8')):undefined};
         process.exitCode=1;
     } finally {fs.closeSync(fd);if(!uncertain)fs.unlinkSync(lock);}
+    // Never claim cleanup before finally succeeds; never emit two JSON replies.
+    if(reply.status==='failed')reply.cleanupConfirmed=!uncertain;
+    process.stdout.write(JSON.stringify({...reply,...collectionExecutionMetadata()}));
 }
 void main().catch(()=>{process.stdout.write(JSON.stringify({status:'failed',reason:'worker_preflight_failed'}));process.exitCode=1;});

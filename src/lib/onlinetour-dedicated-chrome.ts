@@ -2,6 +2,8 @@ import { execFile } from 'node:child_process';
 import http from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { collectionChromeSettings } from './temporary-b-replacement.mjs';
 
 // Same persistent, headed Chrome/profile as start-ttang-debug-chrome.mjs.
 // Never discover personal Chrome, launch a browser, copy a profile or retry here.
@@ -16,10 +18,11 @@ interface ListenerOwner {
     address: string; port: number; pid: number; name: string;
     commandLine: string; createdAt: string;
 }
-export function validateDedicatedChromeOwner(value: unknown, profileDir: string): string {
+export function validateDedicatedChromeOwner(value: unknown, profileDir: string, port = 9222): string {
+    if (![9222,9223].includes(port)) throw new Error('dedicated_chrome_owner_unverified');
     if (!Array.isArray(value) || value.length !== 1) throw new Error('dedicated_chrome_owner_unverified');
     const row = value[0] as ListenerOwner | null;
-    if (!row || row.address !== '127.0.0.1' || row.port !== 9222 || row.name !== 'chrome.exe'
+    if (!row || row.address !== '127.0.0.1' || row.port !== port || row.name !== 'chrome.exe'
         || !Number.isSafeInteger(row.pid) || row.pid < 1 || typeof row.createdAt !== 'string' || !row.createdAt
         || typeof row.commandLine !== 'string' || row.commandLine.length > 16_384
         || !path.win32.isAbsolute(profileDir)) throw new Error('dedicated_chrome_owner_unverified');
@@ -33,7 +36,7 @@ export function validateDedicatedChromeOwner(value: unknown, profileDir: string)
         return hits.length === 1 && typeof hits[0] === 'string' ? hits[0] : null;
     };
     const actual = flag('--user-data-dir');
-    if (flag('--remote-debugging-port') !== '9222' || flag('--remote-debugging-address') !== '127.0.0.1'
+    if (flag('--remote-debugging-port') !== String(port) || flag('--remote-debugging-address') !== '127.0.0.1'
         || !actual || !path.win32.isAbsolute(actual)
         || path.win32.normalize(actual).toLowerCase() !== path.win32.normalize(profileDir).toLowerCase()
         || args.some(arg => /^--(?:headless|incognito|guest|type)(?:=|$)/.test(arg)))
@@ -41,41 +44,56 @@ export function validateDedicatedChromeOwner(value: unknown, profileDir: string)
     return `${row.pid}|${row.createdAt}`;
 }
 
-export function parseDedicatedChromeVersion(value: unknown): string {
+export function parseDedicatedChromeVersion(value: unknown, port = 9222): string {
     const v = value as { Browser?: unknown; webSocketDebuggerUrl?: unknown } | null;
-    if (!v || typeof v.Browser !== 'string' || !/^Chrome\/\d+(?:\.\d+){3}$/.test(v.Browser)
+    if (![9222,9223].includes(port) || !v || typeof v.Browser !== 'string' || !/^Chrome\/\d+(?:\.\d+){3}$/.test(v.Browser)
         || typeof v.webSocketDebuggerUrl !== 'string'
-        || !/^ws:\/\/127\.0\.0\.1:9222\/devtools\/browser\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v.webSocketDebuggerUrl))
+        || !new RegExp(`^ws://127\\.0\\.0\\.1:${port}/devtools/browser/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`,'i').test(v.webSocketDebuggerUrl))
         throw new Error('dedicated_chrome_endpoint_invalid');
     return v.webSocketDebuggerUrl;
 }
 
-const OWNER_QUERY = String.raw`
-$ErrorActionPreference = 'Stop'
-[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
-$rows = @(Get-NetTCPConnection -LocalPort 9222 -State Listen -ErrorAction SilentlyContinue | ForEach-Object {
-    $process = Get-CimInstance Win32_Process -Filter ('ProcessId=' + $_.OwningProcess)
-    [pscustomobject]@{ address=$_.LocalAddress; port=[int]$_.LocalPort; pid=[int]$_.OwningProcess;
-        name=$process.Name; commandLine=$process.CommandLine; createdAt=$process.CreationDate.ToUniversalTime().ToString('o') }
-})
-ConvertTo-Json -InputObject $rows -Compress
-`;
-async function readOwner(): Promise<unknown> {
-    const windowsRoot = process.env.SystemRoot;
-    if (!windowsRoot || !path.win32.isAbsolute(windowsRoot)) throw new Error('dedicated_chrome_owner_unverified');
-    return new Promise((resolve, reject) => {
-        execFile(path.join(windowsRoot, 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe'),
-            ['-NoProfile', '-NonInteractive', '-Command', OWNER_QUERY],
-            { windowsHide: true, timeout: 10_000, maxBuffer: 32_768, encoding: 'utf8' }, (error, stdout) => {
-                if (error) { reject(new Error('dedicated_chrome_owner_unverified')); return; }
-                try { resolve(JSON.parse(stdout.replace(/^\uFEFF/, ''))); }
-                catch { reject(new Error('dedicated_chrome_owner_unverified')); }
-            });
+export function parseDedicatedChromeListeners(stdout: string, port = 9222): Array<{address: string; port: number; pid: number}> {
+    if (![9222,9223].includes(port)) throw new Error('dedicated_chrome_owner_unverified');
+    const rows: Array<{address: string; port: number; pid: number}> = [];
+    for (const line of stdout.split(/\r?\n/)) {
+        const parts = line.trim().split(/\s+/);
+        if (parts[0] !== 'TCP' || !parts[1]?.endsWith(':'+port)) continue;
+        // Other connections can have the same local port; only listeners own it.
+        if (parts[3] !== 'LISTENING') continue;
+        if (parts.length !== 5 || !/^[1-9]\d*$/.test(parts[4])) throw new Error('dedicated_chrome_owner_unverified');
+        rows.push({ address: parts[1].slice(0, -5), port, pid: Number(parts[4]) });
+    }
+    if (rows.length !== 1 || rows[0].address !== '127.0.0.1' || !Number.isSafeInteger(rows[0].pid))
+        throw new Error('dedicated_chrome_owner_unverified');
+    return rows;
+}
+
+type OwnerCommand = (file: string, args: string[], timeout: number) => Promise<string>;
+const ownerCommand: OwnerCommand = (file, args, timeout) => new Promise((resolve, reject) => {
+    execFile(file, args, { windowsHide: true, timeout, maxBuffer: 262144, encoding: 'utf8' }, (error, stdout) => {
+        if (error) { reject(new Error(error.killed ? 'dedicated_chrome_owner_query_timeout' : 'dedicated_chrome_owner_query_failed')); return; }
+        resolve(stdout.replace(/^\uFEFF/, ''));
     });
+});
+// Built-in netstat and limited-information native process reads do not depend on
+// the WMI service. Preserve the exact same profile/flags/owner checks above.
+export async function readDedicatedChromeOwner(run: OwnerCommand = ownerCommand, windowsRoot = process.env.SystemRoot, port = 9222): Promise<unknown> {
+    if (!windowsRoot || !path.win32.isAbsolute(windowsRoot)) throw new Error('dedicated_chrome_owner_unverified');
+    const system = path.win32.join(windowsRoot, 'System32');
+    const [listener] = parseDedicatedChromeListeners(await run(path.win32.join(system, 'netstat.exe'), ['-ano', '-p', 'TCP'], 3000),port);
+    const script = fileURLToPath(new URL('../../scripts/read-dedicated-chrome-process.ps1', import.meta.url));
+    const stdout = await run(path.win32.join(system, 'WindowsPowerShell/v1.0/powershell.exe'),
+        ['-NoProfile', '-NonInteractive', '-File', script, '-ProcessId', String(listener.pid)], 6000);
+    let processInfo;
+    try { processInfo = JSON.parse(stdout); } catch { throw new Error('dedicated_chrome_owner_query_failed'); }
+    if (!processInfo || processInfo.pid !== listener.pid) throw new Error('dedicated_chrome_owner_unverified');
+    return [{ ...processInfo, ...listener }];
 }
 
 /** Fixed loopback request only, no redirects/proxy/credentials and a bounded response. */
-async function readVersion(): Promise<unknown> {
+async function readVersion(port = 9222): Promise<unknown> {
+    if (![9222,9223].includes(port)) throw new Error('dedicated_chrome_endpoint_invalid');
     return new Promise((resolve, reject) => {
         const chunks: Buffer[] = []; let size = 0, done = false;
         const finish = (error?: Error, value?: unknown) => {
@@ -83,7 +101,7 @@ async function readVersion(): Promise<unknown> {
             if (error) reject(error); else resolve(value);
         };
         const fail = () => finish(new Error('dedicated_chrome_unavailable'));
-        const request = http.get(ONLINE_CHROME_ORIGIN + '/json/version', { agent: false }, response => {
+        const request = http.get(`http://127.0.0.1:${port}/json/version`, { agent: false }, response => {
             if (response.statusCode !== 200 || !/^application\/json(?:;|$)/i.test(response.headers['content-type'] || '')) {
                 fail(); response.destroy(); request.destroy(); return;
             }
@@ -102,13 +120,17 @@ async function readVersion(): Promise<unknown> {
 }
 
 // Dependency injection is for offline tests, never a CLI endpoint/profile override.
-export async function discoverDedicatedChromeEndpoint(deps = {
-    platform: process.platform, profileDir: path.join(os.homedir(), 'tmp', 'chrome-debug'), readOwner, readVersion,
-}): Promise<string> {
+interface DiscoveryDependencies {platform:string;profileDir:string;port?:number;readOwner:()=>Promise<unknown>;readVersion:()=>Promise<unknown>}
+function installedDependencies(): DiscoveryDependencies {
+    const {port,profileDir}=collectionChromeSettings();
+    return {platform:process.platform,profileDir,port,readOwner:()=>readDedicatedChromeOwner(undefined,undefined,port),readVersion:()=>readVersion(port)};
+}
+export async function discoverDedicatedChromeEndpoint(deps: DiscoveryDependencies = installedDependencies()): Promise<string> {
     if (deps.platform !== 'win32') throw new Error('dedicated_chrome_requires_windows');
-    const owner = validateDedicatedChromeOwner(await deps.readOwner(), deps.profileDir);
-    const endpoint = parseDedicatedChromeVersion(await deps.readVersion());
-    if (validateDedicatedChromeOwner(await deps.readOwner(), deps.profileDir) !== owner)
+    const port=deps.port ?? 9222;
+    const owner = validateDedicatedChromeOwner(await deps.readOwner(), deps.profileDir,port);
+    const endpoint = parseDedicatedChromeVersion(await deps.readVersion(),port);
+    if (validateDedicatedChromeOwner(await deps.readOwner(), deps.profileDir,port) !== owner)
         throw new Error('dedicated_chrome_owner_changed');
     return endpoint;
 }

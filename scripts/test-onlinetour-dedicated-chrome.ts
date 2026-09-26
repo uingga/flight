@@ -3,13 +3,64 @@ import test from 'node:test';
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { discoverDedicatedChromeEndpoint, parseDedicatedChromeVersion, validateDedicatedChromeOwner } from '../src/lib/onlinetour-dedicated-chrome';
+import { discoverDedicatedChromeEndpoint, parseDedicatedChromeVersion, validateDedicatedChromeOwner,
+    parseDedicatedChromeListeners, readDedicatedChromeOwner } from '../src/lib/onlinetour-dedicated-chrome';
 
 const profile = 'C:\\Users\\Test User\\tmp\\chrome-debug';
 const command = '"C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe" --remote-debugging-port=9222 --remote-debugging-address=127.0.0.1 --user-data-dir="' + profile + '"';
 const owner = { address: '127.0.0.1', port: 9222, pid: 42, name: 'chrome.exe', createdAt: '2026-09-07T01:00:00Z', commandLine: command };
 const endpoint = 'ws://127.0.0.1:9222/devtools/browser/12345678-1234-4abc-8abc-123456789abc';
 const version = { Browser: 'Chrome/152.0.7977.76', webSocketDebuggerUrl: endpoint };
+
+test('temporary port 9223 still requires the exact dedicated profile and matching endpoint', async()=>{
+    const replacementOwner={...owner,port:9223,commandLine:command.replace('port=9222','port=9223')};
+    const replacementVersion={...version,webSocketDebuggerUrl:endpoint.replace(':9222',':9223')};
+    assert.equal(await discoverDedicatedChromeEndpoint({platform:'win32',port:9223,profileDir:profile,
+        readOwner:async()=>[replacementOwner],readVersion:async()=>replacementVersion}),replacementVersion.webSocketDebuggerUrl);
+    await assert.rejects(discoverDedicatedChromeEndpoint({platform:'win32',port:9223,profileDir:profile,
+        readOwner:async()=>[owner],readVersion:async()=>replacementVersion}));
+    await assert.rejects(discoverDedicatedChromeEndpoint({platform:'win32',port:9223,profileDir:profile,
+        readOwner:async()=>[replacementOwner],readVersion:async()=>version}));
+});
+
+test('native discovery requires one fixed loopback listener, not an established connection', () => {
+    const row = '  TCP  127.0.0.1:9222  0.0.0.0:0  LISTENING  42';
+    assert.deepEqual(parseDedicatedChromeListeners('Active Connections\r\n' + row + '\r\nTCP 127.0.0.1:9222 127.0.0.1:5000 ESTABLISHED 42'),
+        [{address:'127.0.0.1',port:9222,pid:42}]);
+    for (const value of ['', row+'\n'+row, row.replace('127.0.0.1:', '0.0.0.0:'),
+        row.replace('127.0.0.1:', '[::1]:'), row.replace('42', '0'), row.replace('42','no_pid'),
+        row.replace('9222','19222'), row.replace('LISTENING','ESTABLISHED')])
+        assert.throws(() => parseDedicatedChromeListeners(value));
+});
+
+test('owner discovery uses bounded native reads without WMI and preserves exact ownership checks', async () => {
+    const calls: any[] = [];
+    const run = async (file: string, args: string[], timeout: number) => {
+        calls.push({file,args,timeout});
+        return file.endsWith('netstat.exe') ? 'TCP 127.0.0.1:9222 0.0.0.0:0 LISTENING 42' : JSON.stringify(owner);
+    };
+    assert.equal(validateDedicatedChromeOwner(await readDedicatedChromeOwner(run, 'C:\\Windows'), profile), '42|'+owner.createdAt);
+    assert.equal(calls.length, 2);
+    assert.equal(calls[0].timeout, 3000); assert.equal(calls[1].timeout, 6000);
+    assert.deepEqual(calls[1].args.slice(-2), ['-ProcessId', '42']);
+    assert.doesNotMatch(JSON.stringify(calls), /Get-CimInstance|Get-NetTCPConnection|ExecutionPolicy/);
+    await assert.rejects(readDedicatedChromeOwner(async () => { throw Error('dedicated_chrome_owner_query_timeout'); }, 'C:\\Windows'), /query_timeout/);
+    await assert.rejects(readDedicatedChromeOwner(async file => file.endsWith('netstat.exe')
+        ? 'TCP 127.0.0.1:9222 0.0.0.0:0 LISTENING 42' : JSON.stringify({...owner,pid:43}), 'C:\\Windows'), /owner_unverified/);
+    await assert.rejects(readDedicatedChromeOwner(run, 'relative'), /owner_unverified/);
+    const helper = fs.readFileSync(path.join(__dirname, 'read-dedicated-chrome-process.ps1'), 'utf8');
+    assert.doesNotMatch(helper, /Get-CimInstance|Get-WmiObject|ReadProcessMemory|AdjustTokenPrivileges|Start-Process/);
+    assert.match(helper, /OpenProcess\(0x1000, false, pid\)/);
+});
+
+test('native owner query errors never trigger a Chrome endpoint request or fallback', async () => {
+    for (const reason of ['dedicated_chrome_owner_query_timeout','dedicated_chrome_owner_query_failed']) {
+        let requests=0;
+        await assert.rejects(discoverDedicatedChromeEndpoint({platform:'win32',profileDir:profile,
+            readOwner:async()=>{throw Error(reason);},readVersion:async()=>{requests++;return version;}}),new RegExp(reason));
+        assert.equal(requests,0);
+    }
+});
 
 test('fixed dedicated profile/owner accepts quoted paths and separate flag values', () => {
     assert.equal(validateDedicatedChromeOwner([owner], profile), '42|' + owner.createdAt);

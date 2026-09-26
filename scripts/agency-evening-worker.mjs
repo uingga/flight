@@ -8,6 +8,7 @@ import { assertEveningHost, eveningAdmission } from './agency-evening-policy.mjs
 import { createEveningStaging } from './agency-evening-staging.mjs';
 import { mergeCacheSource } from '../src/lib/merge-cache-source.mjs';
 import { mergeCrawlLogHistories } from './merge-crawl-log.mjs';
+import { collectionHostname, collectionStateBase, collectionExecutionMetadata } from '../src/lib/temporary-b-replacement.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const AGENCY_EVENING_PROTOCOL = 'agency-evening-v1';
@@ -18,7 +19,7 @@ export const AGENCY_EVENING_FILES = Object.freeze([
 const validId = value => typeof value === 'string'
     && /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/.test(value);
 
-export function validateAgencyEveningRequest(request, { now = Date.now(), hostname = os.hostname() } = {}) {
+export function validateAgencyEveningRequest(request, { now = Date.now(), hostname = collectionHostname() } = {}) {
     if (request?.protocol !== AGENCY_EVENING_PROTOCOL || !validId(request.id)
         || !Number.isFinite(Date.parse(request.createdAt))
         || Math.abs(now - Date.parse(request.createdAt)) > 5 * 60_000
@@ -45,8 +46,8 @@ function localCooldown(base, source) {
 }
 
 export async function executeAgencyEvening(request, {
-    now = Date.now, hostname = os.hostname(),
-    base = path.join(os.homedir(), 'AppData/Local/Tikitikit'), collector = spawnSync, collectorRoot = root,
+    now = Date.now, hostname = collectionHostname(),
+    base = collectionStateBase(), collector = spawnSync, collectorRoot = root,
 } = {}) {
     validateAgencyEveningRequest(request, { now: now(), hostname });
     const state = path.join(base, 'agency-evening-v1');
@@ -65,7 +66,7 @@ export async function executeAgencyEvening(request, {
     const results = [];
     const evidence = {};
     const saveReply = failure => {
-        const reply = { protocol: AGENCY_EVENING_PROTOCOL, id: request.id, slot: request.slot,
+        const reply = { protocol: AGENCY_EVENING_PROTOCOL, id: request.id, slot: request.slot, ...collectionExecutionMetadata(),
             sources: results.map(item => item.source), results,
             evidence: Object.fromEntries(Object.entries(evidence).filter(([source]) => results.some(item => item.source === source))),
             cache: verifiedCache, logs: verifiedLogs, completedAt: new Date(now()).toISOString(),

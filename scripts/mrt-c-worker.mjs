@@ -4,10 +4,11 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {spawnSync} from 'node:child_process';
 import {mrtPcTarget} from '../src/lib/mrt-round-readiness.mjs';
+import {collectionHostname,collectionStateBase,collectionExecutionMetadata} from '../src/lib/temporary-b-replacement.mjs';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const allowed=['all-flights-cache.json','interpark-prices.json','crawl-log.json','gid-map.json'];
 async function main(){
- const host=os.hostname().toUpperCase();
+ const host=collectionHostname().toUpperCase();
  if(!['DESKTOP-OFFICE','DESKTOP-1PPFUR3'].includes(host)||process.argv[2]!=='--scheduled')throw Error('wrong host or mode');
  let size=0;const chunks=[];for await(const c of process.stdin){size+=c.length;if(size>20000000)throw Error('input too large');chunks.push(c);}
  const input=JSON.parse(Buffer.concat(chunks).toString());
@@ -15,7 +16,7 @@ async function main(){
  const reply=await executeMrtWorker(input);
  process.stdout.write(JSON.stringify(reply));
 }
-export async function executeMrtWorker(input,{state=path.join(os.homedir(),'AppData/Local/Tikitikit/mrt-worker'),collector=spawnSync}={}) {
+export async function executeMrtWorker(input,{state=path.join(collectionStateBase(),'mrt-worker'),collector=spawnSync}={}) {
  if(input.protocol!=='mrt-c-v1'||!mrtPcTarget(Date.parse(input.slot))||!/^[a-f0-9-]{36}$/.test(input.id)||Math.abs(Date.now()-Date.parse(input.createdAt))>300000||!Number.isFinite(Date.parse(input.createdAt)))throw Error('invalid request');
  if(!input.files||!Array.isArray(input.files['all-flights-cache.json']?.flights)||Object.keys(input.files).some(x=>!allowed.includes(x)))throw Error('invalid inputs');
  fs.mkdirSync(state,{recursive:true});
@@ -34,7 +35,7 @@ export async function executeMrtWorker(input,{state=path.join(os.homedir(),'AppD
   const logs=fs.existsSync(path.join(dir,'crawl-log.json'))?JSON.parse(fs.readFileSync(path.join(dir,'crawl-log.json'),'utf8')):input.files['crawl-log.json'];
   // Completed failure may contain a persisted source circuit; return it for publication.
   finished=true;
-  return {protocol:'mrt-c-v1',id:input.id,slot:input.slot,exitCode:result.status,cache,logs};
+  return {protocol:'mrt-c-v1',id:input.id,slot:input.slot,exitCode:result.status,cache,logs,...collectionExecutionMetadata()};
  }finally{fs.closeSync(fd);if(finished)fs.unlinkSync(lock);}
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url))

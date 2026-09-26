@@ -48,12 +48,14 @@ function findChromeExecutable() {
 export async function ensureTtangDebugChrome({
     profileDir = DEFAULT_PROFILE_DIR,
     port = DEFAULT_PORT,
+    blank = false,
+    log = console.log,
 } = {}) {
     if (!Number.isInteger(port) || port < 1 || port > 65_535) {
         throw new Error(`올바르지 않은 디버그 포트입니다: ${port}`);
     }
     if (await isCdpReady(port)) {
-        console.log(`Chrome debug port ${port} is already ready.`);
+        log(`Chrome debug port ${port} is already ready.`);
         return;
     }
 
@@ -76,6 +78,7 @@ export async function ensureTtangDebugChrome({
         '--no-first-run',
         '--no-default-browser-check',
         `--user-data-dir=${resolvedProfile}`,
+        ...(blank ? ['about:blank'] : []),
     ];
     const chrome = spawn(chromeExecutable, chromeArgs, {
         detached: true,
@@ -87,7 +90,7 @@ export async function ensureTtangDebugChrome({
     for (let attempt = 0; attempt < 30; attempt += 1) {
         await sleep(500);
         if (await isCdpReady(port)) {
-            console.log(`Chrome debug port ${port} is ready with profile: ${resolvedProfile}`);
+            log(`Chrome debug port ${port} is ready with profile: ${resolvedProfile}`);
             return;
         }
     }

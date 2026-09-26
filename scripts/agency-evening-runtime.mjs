@@ -16,9 +16,17 @@ async function main() {
     const request = JSON.parse(Buffer.concat(chunks).toString());
     const manifest = JSON.parse(fs.readFileSync(path.join(root, 'release-manifest.json'), 'utf8'));
     // The existing host-owned collector verifier runs before loading any crawler module.
-    const verifier = pathToFileURL(path.join(root, '..', 'collector', 'collector-release.mjs')).href;
-    const { verifyRelease } = await import(verifier);
-    verifyRelease(root, manifest, request.version);
+    const {replacementWorkerContext} = await import('../src/lib/temporary-b-replacement.mjs');
+    const replacement=replacementWorkerContext();
+    if(replacement){
+        const {verifyAgencyEveningRelease}=await import('./agency-evening-release.mjs');
+        verifyAgencyEveningRelease(root,manifest,replacement.releaseVersion);
+        if(request.version!==replacement.releaseVersion)throw Error('temporary_evening_version_mismatch');
+    } else {
+        const verifier = pathToFileURL(path.join(root, '..', 'collector', 'collector-release.mjs')).href;
+        const { verifyRelease } = await import(verifier);
+        verifyRelease(root, manifest, request.version);
+    }
     const { executeAgencyEvening } = await import('./agency-evening-worker.mjs');
     process.stdout.write(JSON.stringify(await executeAgencyEvening(request)));
 }

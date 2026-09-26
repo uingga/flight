@@ -8,6 +8,7 @@ import { checkModeCooldown } from './crawl-modetour-browser';
 import { collectModeBrowser, modeBrowserPlan, modeScopeKey } from '../src/lib/modetour-browser';
 import { openModeBrowser } from '../src/lib/modetour-browser-adapter';
 import { MODE_REMOTE_PROTOCOL, validateModeBundle } from '../src/lib/modetour-operational';
+import { collectionStateBase, collectionExecutionMetadata } from '../src/lib/temporary-b-replacement.mjs';
 
 let request: any;
 let phase = 'preflight';
@@ -19,7 +20,7 @@ async function main() {
     request = JSON.parse(Buffer.concat(chunks).toString('utf8'));
     const now = Date.now();
     validateModeWorkerRequest(request, { now, hostname: os.hostname() });
-    const base = path.join(os.homedir(), 'AppData/Local/Tikitikit');
+    const base = collectionStateBase();
     const state = path.join(base, 'modetour-browser'), shared = path.join(base, 'onlinetour-validation');
     fs.mkdirSync(state, { recursive: true }); fs.mkdirSync(shared, { recursive: true });
     if ([state,shared].some(p => fs.lstatSync(p).isSymbolicLink())) throw new Error('unsafe_state_directory');
@@ -46,7 +47,7 @@ async function main() {
         await validateModeBundle(bundle, [], request.cache.modetourPrimary?.scopeCounts);
         fs.writeFileSync(path.join(output,'bundle.json'), JSON.stringify(bundle));
         await browser.close(); browser = undefined;
-        return { protocol: MODE_REMOTE_PROTOCOL, id: request.id, status: 'verified', bundle };
+        return { protocol: MODE_REMOTE_PROTOCOL, id: request.id, status: 'verified', bundle, ...collectionExecutionMetadata() };
     } catch (error) {
         const reply = modeWorkerFailure(request, error, phase);
         const { reason, restricted } = reply;

@@ -11,6 +11,7 @@ import {acquireMrt,assertMrtOwner,releaseMrt} from '../src/lib/mrt-shared-admiss
 import {mergeCacheSource} from '../src/lib/merge-cache-source.mjs';
 import {mergeCrawlLogHistories} from './merge-crawl-log.mjs';
 import {mrtPcTarget} from '../src/lib/mrt-round-readiness.mjs';
+import {replacementLaunch} from '../src/lib/temporary-b-replacement.mjs';
 
 export function cSlot(now=Date.now()) {
  const target=mrtPcTarget(now);
@@ -92,12 +93,13 @@ async function main(){
  await assertMrtOwner(api,ticket);
  const request={protocol:'mrt-c-v1',id,slot,createdAt:new Date().toISOString(),files};
  const reply=await new Promise((resolve,reject)=>{
+  const replacement=target.host==='B'?replacementLaunch('myrealtrip',slot):null;
   const args=target.host==='B'?['-o','BatchMode=yes','-o','ConnectTimeout=15','-o','StrictHostKeyChecking=yes','tikitikit-pc-b',
    'node C:/Users/ynal/AppData/Local/Tikitikit/agency-evening-v2/scripts/mrt-c-worker.mjs --scheduled']:['-F','NUL','-o','BatchMode=yes','-o','IdentitiesOnly=yes','-o','StrictHostKeyChecking=yes','-o','GlobalKnownHostsFile=NUL',
    '-o','UserKnownHostsFile=C:/Users/ynal/AppData/Local/Temp/tikitikit-ssh-setup-20260915/known_hosts_c',
    '-i','C:/Users/ynal/.ssh/tikitikit_a_to_c_ed25519','ynal@100.87.173.95',
    'C:/Users/ynal/AppData/Local/hermes/node/node.exe C:/Users/ynal/AppData/Local/Tikitikit/agency-evening-v2/scripts/mrt-c-worker.mjs --scheduled'];
-  const child=spawn('ssh.exe',args,{windowsHide:true,stdio:['pipe','pipe','pipe']});let bytes=0;const chunks=[];
+  const child=spawn(replacement?.file || 'ssh.exe',replacement?.args || args,{windowsHide:true,stdio:['pipe','pipe','pipe']});let bytes=0;const chunks=[];
   const timer=setTimeout(()=>{child.kill();reject(Error('remote completion unknown'));},185*60000);
   child.on('error',()=>{clearTimeout(timer);reject(Error('remote transport failed'));});child.stdin.on('error',()=>{});child.stderr.on('data',()=>{});
   child.stdout.on('data',c=>{bytes+=c.length;if(bytes>20000000){child.kill();return;}chunks.push(c);});

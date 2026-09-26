@@ -6,6 +6,7 @@ import { getCrawlDataDir } from '../crawl-data-dir';
 import { ONLINE_REMOTE_PROTOCOL,validateOperationalCatalogue } from '../onlinetour-operational';
 import { SourceResponseError } from './source-response';
 import { evaluatePcCollection } from '../../../scripts/pc-collection-policy.mjs';
+import { replacementLaunch } from '../temporary-b-replacement.mjs';
 
 export async function scrapeOnlineTourRemote() {
     let remoteStarted=false, remoteStopped=false;
@@ -25,7 +26,8 @@ export async function scrapeOnlineTourRemote() {
             scrapedCounts:{onlinetour:cache.scrapedCounts?.onlinetour},onlinePrimary:cache.onlinePrimary}};
     remoteStarted=true;
     const reply:any=await new Promise((resolve,reject)=> {
-        const child=spawn('ssh',['-o','BatchMode=yes','-o','ConnectTimeout=15',config.host,'node',
+        const replacement=replacementLaunch('onlinetour',payload.expectedAt,{manual:manualOnce});
+        const child=spawn(replacement?.file || 'ssh',replacement?.args || ['-o','BatchMode=yes','-o','ConnectTimeout=15',config.host,'node',
             config.workerRoot+'/node_modules/tsx/dist/cli.mjs','--tsconfig',config.workerRoot+'/tsconfig.json',config.workerRoot+'/scripts/onlinetour-remote-worker.ts',manualOnce?'--manual-once':'--scheduled'],{windowsHide:true});
         const output:Buffer[]=[]; let size=0,finished=false;
         const fail=()=>{if(!finished){finished=true;clearTimeout(timer);child.kill();reject(Error('remote_worker_transport_failed'));}};

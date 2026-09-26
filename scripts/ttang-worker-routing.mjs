@@ -1,6 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {createHash} from 'node:crypto';
+import {collectionHostname} from '../src/lib/temporary-b-replacement.mjs';
+import {isTtangPreflightFailure} from './ttang-failure-policy.mjs';
 export function ttangWorkerForSlot(expectedAt,{manual=false}={}) {
     if(manual)return 'B';
     const t=Date.parse(expectedAt);if(!Number.isFinite(t))throw Error('invalid_slot');
@@ -10,6 +12,7 @@ export function ttangWorkerForSlot(expectedAt,{manual=false}={}) {
     throw Error('invalid_slot');
 }
 export function assertTtangWorker(host,expectedAt,manual=false,requestedWorker) {
+    host=collectionHostname(host);
     const role=host.toUpperCase()==='DESKTOP-OFFICE'?'B':host.toUpperCase()==='DESKTOP-1PPFUR3'?'C':null;
     if(!role||role!==ttangWorkerForSlot(expectedAt,{manual})||(requestedWorker&&requestedWorker!==role))throw Error('wrong_worker');
     return role;
@@ -26,9 +29,14 @@ export function beginTtangDispatch(root,slot,id,now=Date.now()) {
     try {checkCooldown();fs.writeFileSync(path.join(root,createHash('sha256').update(slot).digest('hex')+'.json'),JSON.stringify({slot,id,startedAt:new Date(now).toISOString()}),{flag:'wx'});}
     catch(e){fs.closeSync(fd);fs.unlinkSync(lock);throw e;}
     let closed=false;
-    return {finish(failed,nextProbeAt){
+    return {finish(failed,nextProbeAt,failureReply){
         if(closed)throw Error('duplicate_finish');
-        if(failed){const until=Math.max(now+86400000,Date.parse(nextProbeAt)||0);fs.writeFileSync(cooldown,JSON.stringify({nextProbeAt:new Date(until).toISOString(),id}));}
+        // Keep the spent-slot claim. Only a proven, fully cleaned-up failure
+        // before any site request may try again in a DIFFERENT regular slot.
+        if(failed && !isTtangPreflightFailure(failureReply,id)){
+            const until=Math.max(now+86400000,Date.parse(nextProbeAt)||0);
+            fs.writeFileSync(cooldown,JSON.stringify({nextProbeAt:new Date(until).toISOString(),id}));
+        }
         closed=true;fs.closeSync(fd);fs.unlinkSync(lock);
     }};
 }

@@ -12,6 +12,7 @@ import { AGENCY_EVENING_FILES, AGENCY_EVENING_PROTOCOL } from './agency-evening-
 import { TTANG_PROTOCOL, validateTtangEvidence } from './ttang-primary-policy.mjs';
 import { MODE_REMOTE_PROTOCOL, validateModeBundle } from '../src/lib/modetour-operational';
 import { validateOperationalCatalogue } from '../src/lib/onlinetour-operational';
+import { replacementLaunch } from '../src/lib/temporary-b-replacement.mjs';
 
 const WORKER = 'C:/Users/ynal/AppData/Local/Tikitikit/agency-evening-v2/scripts/agency-evening-runtime.mjs';
 
@@ -28,7 +29,10 @@ function sshArgs(host: string): string[] {
 
 async function dispatch(host: string, request: any): Promise<any> {
     return await new Promise((resolve, reject) => {
-        const child = spawn('ssh.exe', sshArgs(host), { windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] });
+        const replacement=host==='DESKTOP-OFFICE'?replacementLaunch(request.sources[0],request.slot):null;
+        const args=replacement?[replacement.args[0],'evening','--scheduled']:sshArgs(host);
+        const payload=replacement?{...request,version:replacement.version}:request;
+        const child = spawn(replacement?.file || 'ssh.exe', args, { windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] });
         const chunks: Buffer[] = [];
         let size = 0;
         let done = false;
@@ -57,7 +61,7 @@ async function dispatch(host: string, request: any): Promise<any> {
                 resolve(JSON.parse(Buffer.concat(chunks).toString('utf8')));
             } catch { reject(new Error('remote_evening_result_unknown')); }
         });
-        child.stdin.end(JSON.stringify(request));
+        child.stdin.end(JSON.stringify(payload));
     });
 }
 
