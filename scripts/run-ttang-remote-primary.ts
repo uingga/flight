@@ -11,9 +11,12 @@ import { TTANG_PROTOCOL, TTANG_INPUT_FILES, assertTtangAllowed, validateTtangRec
 import { isTtangPreflightFailure } from './ttang-failure-policy.mjs';
 import { requestRemoteWorker } from '../src/lib/remote-worker-transport';
 import { replacementLaunch } from '../src/lib/temporary-b-replacement.mjs';
+import { isManualRunId } from '../src/lib/temporary-ttang-manual-grant.mjs';
 
 async function main() {
-    const manual=process.argv[2]==='--manual-once';
+    const manualId=process.argv[2]?.startsWith('--manual-once=')?process.argv[2].slice('--manual-once='.length):null;
+    if(manualId!==null&&!isManualRunId(manualId))throw Error('invalid_manual_run_id');
+    const manual=process.argv[2]==='--manual-once'||manualId!==null;
     const reconcile=process.argv[2]?.startsWith('--reconcile-saved=')?process.argv[2].slice('--reconcile-saved='.length):null;
     if(process.argv.length!==3 || (!manual && process.argv[2]!=='--scheduled' && !reconcile))throw Error('explicit_run_mode_required');
     const config=JSON.parse(fs.readFileSync('.local-crawler/ttang-remote.json','utf8'));
@@ -26,8 +29,11 @@ async function main() {
     if(reconcile && (!/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/.test(reconcile)
         || before.ttangPrimary?.runId!==reconcile || before.ttangPrimary?.status!=='failed'
         || !before.ttangPrimary?.detail?.includes('(invalid_run_evidence)')))throw Error('reconciliation_not_eligible');
-    const expectedAt=reconcile?null:assertTtangAllowed(before,{manual}), id=reconcile || randomUUID();
+    const expectedAt=reconcile?null:assertTtangAllowed(before,{manual}), id=reconcile || manualId || randomUUID();
     const worker=ttangWorkerForSlot(expectedAt,{manual:manual||Boolean(reconcile)});
+    // Refuse missing/expired manual approval before claiming a slot or recording
+    // a source failure. Configuration rejection is not a travel-site block.
+    const replacement=!reconcile&&worker==='B'?replacementLaunch('ttang',expectedAt,{manual,id}):null;
     const request={protocol:TTANG_PROTOCOL,id,createdAt:new Date().toISOString(),expectedAt,manual,files,worker};
     const dispatch=reconcile?null:beginTtangDispatch(path.join(os.homedir(),'AppData/Local/Tikitikit/ttang-dispatch'),manual?'manual-'+new Date(Date.now()+9*3600000).toISOString().slice(0,10):expectedAt,id);
     const evidenceDir=path.resolve('.local-crawler/ttang-results',id);fs.mkdirSync(evidenceDir,{recursive:true});
@@ -35,7 +41,6 @@ async function main() {
     let after=structuredClone(before), failed=false, detail='', scraped=0, failureReply:any;
     try {
         const reply:any=reconcile?JSON.parse(fs.readFileSync(path.join(evidenceDir,'reply.json'),'utf8')):await (async()=>{
-            const replacement=worker==='B'?replacementLaunch('ttang',expectedAt,{manual}):null;
             const ssh=ttangWorkerSshArgs(worker,manual?'--manual-once':'--scheduled',config.host);
             return requestRemoteWorker({file:replacement?.file,cwd:replacement?.cwd,args:replacement?.args || ssh,request,timeoutMs:32*60000,maxBytes:15000000,
                 trace:record=>console.error(JSON.stringify({event:'ttang_remote_transport',id,worker,expectedAt,...record}))});

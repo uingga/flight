@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { readTtangManualGrant } from './temporary-ttang-manual-grant.mjs';
 
 export const REPLACEMENT_ROOT = 'C:/Users/ynal/Tikitikit/ac-control/b-on-a-20260926';
 export const REPLACEMENT_CONFIG = REPLACEMENT_ROOT + '/activation.json';
@@ -29,14 +30,18 @@ export function readReplacement({ file = REPLACEMENT_CONFIG, hostname = os.hostn
     return validateReplacement(JSON.parse(fs.readFileSync(file, 'utf8')), { hostname, now });
 }
 
-export function replacementFor(source, slot, { manual = false, read = readReplacement } = {}) {
+export function replacementFor(source, slot, { manual = false, id, read = readReplacement, readGrant = readTtangManualGrant } = {}) {
     const value = read();
     if (!value) return null;
     // Once fenced, a paused/invalid replacement must not fall back to B.
     if (value.status !== 'active') throw Error('temporary_replacement_not_active');
-    if (!REPLACEMENT_SOURCES.includes(source) || manual
-        || !Number.isFinite(Date.parse(slot)) || Date.parse(slot) < Date.parse(value.notBefore))
+    if (!REPLACEMENT_SOURCES.includes(source) || !Number.isFinite(Date.parse(slot))
+        || (!manual && Date.parse(slot) < Date.parse(value.notBefore)))
         throw Error('temporary_replacement_slot_not_allowed');
+    if (manual) {
+        if (source !== 'ttang') throw Error('temporary_replacement_slot_not_allowed');
+        readGrant(value, id);
+    }
     return value;
 }
 
@@ -72,7 +77,7 @@ export function replacementLaunch(source, slot, options) {
     const value = replacementFor(source, slot, options);
     if (!value) return null;
     return { file: process.execPath,
-        args: [path.join(value.root, 'release/scripts/run-temporary-b-worker.mjs'), source, '--scheduled'],
+        args: [path.join(value.root, 'release/scripts/run-temporary-b-worker.mjs'), source, options?.manual ? '--manual-once' : '--scheduled'],
         cwd: path.join(value.root, 'release'), version: value.releaseVersion,
         executionHost: 'A', assignedHost: 'B', replacementId: value.id };
 }

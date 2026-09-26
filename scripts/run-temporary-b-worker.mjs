@@ -6,6 +6,7 @@ import { verifyAgencyEveningRelease } from './agency-evening-release.mjs';
 import { verifyDependencies } from './lib/collector-dependencies.mjs';
 import { readReplacement, replacementFor } from '../src/lib/temporary-b-replacement.mjs';
 import {ensureTtangDebugChrome} from './start-ttang-debug-chrome.mjs';
+import {claimTtangManualGrant} from '../src/lib/temporary-ttang-manual-grant.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const TEMPORARY_ENTRIES = Object.freeze({
@@ -16,7 +17,8 @@ export const TEMPORARY_ENTRIES = Object.freeze({
 });
 export async function main() {
     const [source, mode] = process.argv.slice(2);
-    if (process.argv.length !== 4 || mode !== '--scheduled' || !TEMPORARY_ENTRIES[source])
+    const manual = mode === '--manual-once';
+    if (process.argv.length !== 4 || (mode !== '--scheduled' && !(manual && source === 'ttang')) || !TEMPORARY_ENTRIES[source])
         throw Error('temporary_scheduled_entry_required');
     const config = readReplacement();
     if (!config || config.status !== 'active' || path.resolve(config.root, 'release') !== root)
@@ -28,7 +30,9 @@ export async function main() {
     for await (const chunk of process.stdin) { size+=chunk.length; if(size>30000000)throw Error('temporary_input_too_large');chunks.push(chunk); }
     const input=Buffer.concat(chunks), request=JSON.parse(input.toString('utf8'));
     const slot=request.expectedAt || request.slot;
-    for (const item of source==='evening'?request.sources:[source]) replacementFor(item,slot);
+    if (manual && request.manual !== true) throw Error('temporary_manual_request_mismatch');
+    const options = {manual, id:request.id};
+    for (const item of source==='evening'?request.sources:[source]) replacementFor(item,slot,options);
     const script=path.join(root,TEMPORARY_ENTRIES[source]);
     const args=script.endsWith('.ts')?[path.join(root,'node_modules/tsx/dist/cli.mjs'),'--tsconfig',path.join(root,'tsconfig.json'),script,mode]:[script,mode];
     // Only the three shared dedicated-Chrome collectors queue here. Each
@@ -50,7 +54,8 @@ export async function main() {
         fs.writeFileSync(descriptor,JSON.stringify({pid:process.pid,source,slot,at:new Date().toISOString()}));
     }
     try{
-        replacementFor(source==='evening'?request.sources[0]:source,slot);
+        replacementFor(source==='evening'?request.sources[0]:source,slot,options);
+        if (manual) claimTtangManualGrant(config,request.id);
         if(shared||source==='evening')await ensureTtangDebugChrome({port:9223,
             profileDir:'C:/Users/ynal/tmp/chrome-debug',blank:true,
             log:line=>process.stderr.write(line+'\n')});

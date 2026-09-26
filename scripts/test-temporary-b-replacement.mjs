@@ -19,7 +19,7 @@ test('never fall back to B after maintenance fencing',()=>{
 });
 test('reject past slots, manual requests and non-B sources',()=>{
     for(const [source,slot,manual] of [['ttang','2026-09-25T21:17:00Z',false],['ttang','2026-09-26T04:23:00Z',true],['naver','2026-09-26T04:23:00Z',false],['lottetour','2026-09-26T04:23:00Z',false]])
-        assert.throws(()=>replacementFor(source,slot,{manual,read:config}),/slot_not_allowed/);
+        assert.throws(()=>replacementFor(source,slot,{manual,read:config}),/slot_not_allowed|manual_grant_required/);
 });
 test('host, fence, state and exact release proofs are mandatory',()=>{
     for(const patch of [{from:'C'},{to:'B'},{bFenced:false},{stateSha:''},{root:'C:/other'},{notBefore:'invalid'},{regularOnly:false}])
