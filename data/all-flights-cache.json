@@ -35,7 +35,7 @@
     "githubFallbackSafe": true,
     "detail": "온라인투어 B PC 수집 실패: empty_inventory_month_unverified",
     "failureOpenedAt": "2026-09-12T21:33:55.747Z",
-    "githubAttemptAt": "2026-09-26T07:52:40.729Z",
+    "githubAttemptAt": "2026-09-26T07:56:22.714Z",
     "githubClaim": {
       "runId": "36228096375",
       "expectedAt": "2026-09-26T07:31:00.000Z"
@@ -114,7 +114,7 @@
       }
     ]
   },
-  "timestamp": "2026-09-26T07:50:51.499Z",
+  "timestamp": "2026-09-26T07:56:22.723Z",
   "fullCrawlUpdatedAt": "2026-09-26T07:50:51.499Z",
   "count": 502,
   "flights": [
@@ -20929,7 +20929,7 @@
     "ybtour": 0,
     "hanatour": 0,
     "modetour": 0,
-    "onlinetour": 2,
+    "onlinetour": 0,
     "ttang": 0,
     "myrealtrip": 0,
     "lottetour": 0
@@ -20942,9 +20942,7 @@
     "onlinetour": 0,
     "lottetour": 0
   },
-  "integrityAlerts": [
-    "🚨 onlinetour 수집 실패 (복구할 이전 데이터 없음): 온라인투어 B PC 수집 실패: empty_inventory_month_unverified — 2회 연속"
-  ],
+  "integrityAlerts": [],
   "sourceCircuits": {},
   "manualCaptureStatus": {},
   "ttangTimeEnrichment": {
