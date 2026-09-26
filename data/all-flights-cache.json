@@ -36,7 +36,7 @@
     "githubFallbackSafe": true,
     "detail": "온라인투어 B PC 수집 실패: dedicated_chrome_discovery_failed",
     "failureOpenedAt": "2026-09-12T21:33:55.747Z",
-    "githubAttemptAt": "2026-09-26T01:33:07.544Z",
+    "githubAttemptAt": "2026-09-26T01:37:40.643Z",
     "githubClaim": {
       "runId": "36208791866",
       "expectedAt": "2026-09-26T01:12:00.000Z"
@@ -80,7 +80,7 @@
       }
     ]
   },
-  "timestamp": "2026-09-26T01:30:05.504Z",
+  "timestamp": "2026-09-26T01:37:40.650Z",
   "fullCrawlUpdatedAt": "2026-09-26T01:29:30.475Z",
   "count": 461,
   "flights": [
@@ -18990,7 +18990,7 @@
     "ybtour": 0,
     "hanatour": 0,
     "modetour": 0,
-    "onlinetour": 2,
+    "onlinetour": 0,
     "ttang": 1,
     "myrealtrip": 0,
     "lottetour": 0
@@ -19003,9 +19003,7 @@
     "onlinetour": 0,
     "lottetour": 0
   },
-  "integrityAlerts": [
-    "🚨 onlinetour 수집 실패 (복구할 이전 데이터 없음): 온라인투어 B PC 수집 실패: dedicated_chrome_discovery_failed — 2회 연속"
-  ],
+  "integrityAlerts": [],
   "sourceCircuits": {},
   "manualCaptureStatus": {},
   "ttangTimeEnrichment": {
@@ -39837,6 +39835,78 @@
         "observedAt": "2026-09-26T01:30:05.504Z",
         "price": 1320000,
         "lowestPrice": 1320000,
+        "priceDrop": null
+      }
+    },
+    "[\"modetour-JPN-19646216\",\"PUS\",\"OKA\",\"2026-10-27\",\"2026-10-29\",\"이스타항공\",\"ZE963\",\"ZE964\"]": {
+      "source": "modetour",
+      "firstSeen": "2026-09-26",
+      "departureDate": "2026-10-27",
+      "news": {
+        "firstSeenAt": "2026-09-26T01:30:05.504Z",
+        "observedAt": "2026-09-26T01:30:05.504Z",
+        "price": 340000,
+        "lowestPrice": 340000,
+        "priceDrop": null
+      }
+    },
+    "[\"modetour-JPN-20009177\",\"PUS\",\"FUK\",\"2026-10-27\",\"2026-10-30\",\"이스타항공\",\"ZE943\",\"ZE942\"]": {
+      "source": "modetour",
+      "firstSeen": "2026-09-26",
+      "departureDate": "2026-10-27",
+      "news": {
+        "firstSeenAt": "2026-09-26T01:30:05.504Z",
+        "observedAt": "2026-09-26T01:30:05.504Z",
+        "price": 245000,
+        "lowestPrice": 245000,
+        "priceDrop": null
+      }
+    },
+    "[\"modetour-JPN-20166519\",\"TAE\",\"TOY\",\"2026-10-27\",\"2026-10-30\",\"트리니티항공\",\"TW351\",\"TW352\"]": {
+      "source": "modetour",
+      "firstSeen": "2026-09-26",
+      "departureDate": "2026-10-27",
+      "news": {
+        "firstSeenAt": "2026-09-26T01:30:05.504Z",
+        "observedAt": "2026-09-26T01:30:05.504Z",
+        "price": 395000,
+        "lowestPrice": 395000,
+        "priceDrop": null
+      }
+    },
+    "[\"modetour-CHI-20192947\",\"PUS\",\"HKG\",\"2026-10-27\",\"2026-10-31\",\"이스타항공\",\"ZE921\",\"ZE922\"]": {
+      "source": "modetour",
+      "firstSeen": "2026-09-26",
+      "departureDate": "2026-10-27",
+      "news": {
+        "firstSeenAt": "2026-09-26T01:30:05.504Z",
+        "observedAt": "2026-09-26T01:30:05.504Z",
+        "price": 363000,
+        "lowestPrice": 363000,
+        "priceDrop": null
+      }
+    },
+    "[\"modetour-CHI-19721221\",\"CJJ\",\"TPE\",\"2026-10-27\",\"2026-10-31\",\"이스타항공\",\"ZE781\",\"ZE782\"]": {
+      "source": "modetour",
+      "firstSeen": "2026-09-26",
+      "departureDate": "2026-10-27",
+      "news": {
+        "firstSeenAt": "2026-09-26T01:30:05.504Z",
+        "observedAt": "2026-09-26T01:30:05.504Z",
+        "price": 316000,
+        "lowestPrice": 316000,
+        "priceDrop": null
+      }
+    },
+    "[\"modetour-ASIA-19731333\",\"PUS\",\"HAN\",\"2026-10-27\",\"2026-10-31\",\"비엣젯항공\",\"VJ981\",\"VJ982\"]": {
+      "source": "modetour",
+      "firstSeen": "2026-09-26",
+      "departureDate": "2026-10-27",
+      "news": {
+        "firstSeenAt": "2026-09-26T01:30:05.504Z",
+        "observedAt": "2026-09-26T01:30:05.504Z",
+        "price": 400000,
+        "lowestPrice": 400000,
         "priceDrop": null
       }
     },
@@ -62872,78 +62942,6 @@
         "observedAt": "2026-09-25T21:51:47.382Z",
         "price": 762300,
         "lowestPrice": 762300,
-        "priceDrop": null
-      }
-    },
-    "[\"modetour-JPN-19646216\",\"PUS\",\"OKA\",\"2026-10-27\",\"2026-10-29\",\"이스타항공\",\"ZE963\",\"ZE964\"]": {
-      "source": "modetour",
-      "firstSeen": "2026-09-26",
-      "departureDate": "2026-10-27",
-      "news": {
-        "firstSeenAt": "2026-09-26T01:30:05.504Z",
-        "observedAt": "2026-09-26T01:30:05.504Z",
-        "price": 340000,
-        "lowestPrice": 340000,
-        "priceDrop": null
-      }
-    },
-    "[\"modetour-JPN-20009177\",\"PUS\",\"FUK\",\"2026-10-27\",\"2026-10-30\",\"이스타항공\",\"ZE943\",\"ZE942\"]": {
-      "source": "modetour",
-      "firstSeen": "2026-09-26",
-      "departureDate": "2026-10-27",
-      "news": {
-        "firstSeenAt": "2026-09-26T01:30:05.504Z",
-        "observedAt": "2026-09-26T01:30:05.504Z",
-        "price": 245000,
-        "lowestPrice": 245000,
-        "priceDrop": null
-      }
-    },
-    "[\"modetour-JPN-20166519\",\"TAE\",\"TOY\",\"2026-10-27\",\"2026-10-30\",\"트리니티항공\",\"TW351\",\"TW352\"]": {
-      "source": "modetour",
-      "firstSeen": "2026-09-26",
-      "departureDate": "2026-10-27",
-      "news": {
-        "firstSeenAt": "2026-09-26T01:30:05.504Z",
-        "observedAt": "2026-09-26T01:30:05.504Z",
-        "price": 395000,
-        "lowestPrice": 395000,
-        "priceDrop": null
-      }
-    },
-    "[\"modetour-CHI-20192947\",\"PUS\",\"HKG\",\"2026-10-27\",\"2026-10-31\",\"이스타항공\",\"ZE921\",\"ZE922\"]": {
-      "source": "modetour",
-      "firstSeen": "2026-09-26",
-      "departureDate": "2026-10-27",
-      "news": {
-        "firstSeenAt": "2026-09-26T01:30:05.504Z",
-        "observedAt": "2026-09-26T01:30:05.504Z",
-        "price": 363000,
-        "lowestPrice": 363000,
-        "priceDrop": null
-      }
-    },
-    "[\"modetour-CHI-19721221\",\"CJJ\",\"TPE\",\"2026-10-27\",\"2026-10-31\",\"이스타항공\",\"ZE781\",\"ZE782\"]": {
-      "source": "modetour",
-      "firstSeen": "2026-09-26",
-      "departureDate": "2026-10-27",
-      "news": {
-        "firstSeenAt": "2026-09-26T01:30:05.504Z",
-        "observedAt": "2026-09-26T01:30:05.504Z",
-        "price": 316000,
-        "lowestPrice": 316000,
-        "priceDrop": null
-      }
-    },
-    "[\"modetour-ASIA-19731333\",\"PUS\",\"HAN\",\"2026-10-27\",\"2026-10-31\",\"비엣젯항공\",\"VJ981\",\"VJ982\"]": {
-      "source": "modetour",
-      "firstSeen": "2026-09-26",
-      "departureDate": "2026-10-27",
-      "news": {
-        "firstSeenAt": "2026-09-26T01:30:05.504Z",
-        "observedAt": "2026-09-26T01:30:05.504Z",
-        "price": 400000,
-        "lowestPrice": 400000,
         "priceDrop": null
       }
     }

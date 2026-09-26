@@ -64510,257 +64510,40 @@
         }
       },
       "alerts": []
+    },
+    {
+      "runKind": "github_fallback",
+      "sessionId": "7f912e81-48d3-4849-a478-a694b2d5cc35",
+      "timestamp": "2026-09-26T01:37:40.813Z",
+      "sites": {
+        "onlinetour": {
+          "total": 0,
+          "scraped": 0,
+          "collectionMode": "github_fallback",
+          "added": 0,
+          "removed": 0,
+          "addedFlights": [],
+          "removedFlights": [],
+          "byCity": {}
+        }
+      },
+      "alerts": []
     }
   ],
   "lastEntry": {
-    "runKind": "pc_primary",
-    "sessionId": "0844b0e2-97de-4713-9de0-e66e283ff166",
-    "timestamp": "2026-09-26T01:30:05.596Z",
+    "runKind": "github_fallback",
+    "sessionId": "7f912e81-48d3-4849-a478-a694b2d5cc35",
+    "timestamp": "2026-09-26T01:37:40.813Z",
     "sites": {
       "onlinetour": {
-        "detail": "온라인투어 B PC 수집 실패: dedicated_chrome_discovery_failed",
         "total": 0,
         "scraped": 0,
-        "preserved": true,
-        "collectionMode": "pc_primary",
+        "collectionMode": "github_fallback",
         "added": 0,
         "removed": 0,
         "addedFlights": [],
         "removedFlights": [],
         "byCity": {}
-      },
-      "modetour": {
-        "detail": "15구간 수집 완료",
-        "total": 82,
-        "scraped": 847,
-        "collectionMode": "pc_primary",
-        "added": 23,
-        "removed": 1,
-        "addedFlights": [
-          {
-            "id": "modetour-JPN-19646216",
-            "airline": "이스타항공",
-            "route": "부산 → 오키나와",
-            "departureDate": "2026-10-27",
-            "returnDate": "2026-10-29",
-            "price": 340000
-          },
-          {
-            "id": "modetour-JPN-20009177",
-            "airline": "이스타항공",
-            "route": "부산 → 후쿠오카",
-            "departureDate": "2026-10-27",
-            "returnDate": "2026-10-30",
-            "price": 245000
-          },
-          {
-            "id": "modetour-JPN-20166519",
-            "airline": "트리니티 항공",
-            "route": "대구 → 도야마",
-            "departureDate": "2026-10-27",
-            "returnDate": "2026-10-30",
-            "price": 395000
-          },
-          {
-            "id": "modetour-CHI-20192947",
-            "airline": "이스타항공",
-            "route": "부산 → 홍콩",
-            "departureDate": "2026-10-27",
-            "returnDate": "2026-10-31",
-            "price": 363000
-          },
-          {
-            "id": "modetour-CHI-19721221",
-            "airline": "이스타항공",
-            "route": "청주 → 타이베이",
-            "departureDate": "2026-10-27",
-            "returnDate": "2026-10-31",
-            "price": 316000
-          },
-          {
-            "id": "modetour-ASIA-19773373",
-            "airline": "진에어",
-            "route": "인천 → 코타키나발루",
-            "departureDate": "2026-10-06",
-            "returnDate": "2026-10-10",
-            "price": 324200
-          },
-          {
-            "id": "modetour-ASIA-20139334",
-            "airline": "썬푸꾸옥항공",
-            "route": "인천 → 푸꾸옥",
-            "departureDate": "2026-10-15",
-            "returnDate": "2026-10-18",
-            "price": 310000
-          },
-          {
-            "id": "modetour-ASIA-20139255",
-            "airline": "썬푸꾸옥항공",
-            "route": "인천 → 푸꾸옥",
-            "departureDate": "2026-10-16",
-            "returnDate": "2026-10-19",
-            "price": 310000
-          },
-          {
-            "id": "modetour-ASIA-20139276",
-            "airline": "썬푸꾸옥항공",
-            "route": "인천 → 푸꾸옥",
-            "departureDate": "2026-10-17",
-            "returnDate": "2026-10-20",
-            "price": 310000
-          },
-          {
-            "id": "modetour-ASIA-20027988",
-            "airline": "트리니티 항공",
-            "route": "대구 → 방콕",
-            "departureDate": "2026-10-18",
-            "returnDate": "2026-10-23",
-            "price": 380000
-          },
-          {
-            "id": "modetour-ASIA-20139298",
-            "airline": "썬푸꾸옥항공",
-            "route": "인천 → 푸꾸옥",
-            "departureDate": "2026-10-18",
-            "returnDate": "2026-10-21",
-            "price": 310000
-          },
-          {
-            "id": "modetour-ASIA-19942652",
-            "airline": "비엣젯항공",
-            "route": "부산 → 푸꾸옥",
-            "departureDate": "2026-10-19",
-            "returnDate": "2026-10-23",
-            "price": 420000
-          },
-          {
-            "id": "modetour-ASIA-20139323",
-            "airline": "썬푸꾸옥항공",
-            "route": "인천 → 푸꾸옥",
-            "departureDate": "2026-10-19",
-            "returnDate": "2026-10-22",
-            "price": 310000
-          },
-          {
-            "id": "modetour-ASIA-20139335",
-            "airline": "썬푸꾸옥항공",
-            "route": "인천 → 푸꾸옥",
-            "departureDate": "2026-10-20",
-            "returnDate": "2026-10-23",
-            "price": 310000
-          },
-          {
-            "id": "modetour-ASIA-20030211",
-            "airline": "에어로케이",
-            "route": "청주 → 다낭",
-            "departureDate": "2026-10-21",
-            "returnDate": "2026-10-25",
-            "price": 468100
-          },
-          {
-            "id": "modetour-ASIA-19396810",
-            "airline": "트리니티 항공",
-            "route": "인천 → 싱가포르",
-            "departureDate": "2026-10-22",
-            "returnDate": "2026-10-25",
-            "price": 436000
-          },
-          {
-            "id": "modetour-ASIA-19396811",
-            "airline": "트리니티 항공",
-            "route": "인천 → 싱가포르",
-            "departureDate": "2026-10-23",
-            "returnDate": "2026-10-26",
-            "price": 436000
-          },
-          {
-            "id": "modetour-ASIA-19936696",
-            "airline": "파라타항공",
-            "route": "인천 → 나트랑",
-            "departureDate": "2026-10-24",
-            "returnDate": "2026-10-29",
-            "price": 233600
-          },
-          {
-            "id": "modetour-ASIA-19961302",
-            "airline": "트리니티 항공",
-            "route": "부산 → 나트랑",
-            "departureDate": "2026-10-24",
-            "returnDate": "2026-10-29",
-            "price": 328000
-          },
-          {
-            "id": "modetour-ASIA-20120865",
-            "airline": "트리니티 항공",
-            "route": "대구 → 방콕",
-            "departureDate": "2026-10-24",
-            "returnDate": "2026-10-29",
-            "price": 380000
-          },
-          {
-            "id": "modetour-ASIA-20180764",
-            "airline": "에어서울",
-            "route": "인천 → 다낭",
-            "departureDate": "2026-10-24",
-            "returnDate": "2026-10-29",
-            "price": 268600
-          },
-          {
-            "id": "modetour-ASIA-20112632",
-            "airline": "트리니티 항공",
-            "route": "대구 → 방콕",
-            "departureDate": "2026-10-25",
-            "returnDate": "2026-10-30",
-            "price": 380000
-          },
-          {
-            "id": "modetour-ASIA-19731333",
-            "airline": "비엣젯항공",
-            "route": "부산 → 하노이",
-            "departureDate": "2026-10-27",
-            "returnDate": "2026-10-31",
-            "price": 400000
-          }
-        ],
-        "removedFlights": [
-          {
-            "id": "modetour-JPN-20100744",
-            "airline": "이스타항공",
-            "route": "부산 → 오키나와",
-            "departureDate": "2026-10-26",
-            "returnDate": "2026-10-29",
-            "price": 370000
-          }
-        ],
-        "byCity": {
-          "광저우": 1,
-          "삿포로": 3,
-          "다카마츠": 1,
-          "도쿄": 2,
-          "도야마": 4,
-          "오사카": 3,
-          "미야코지마": 1,
-          "시즈오카": 1,
-          "오키나와": 1,
-          "후쿠오카": 1,
-          "홍콩": 3,
-          "타이베이": 5,
-          "성도": 1,
-          "장가계": 1,
-          "괌": 1,
-          "코타키나발루": 1,
-          "싱가포르": 5,
-          "푸꾸옥": 9,
-          "다낭": 5,
-          "보홀": 7,
-          "세부": 5,
-          "클락": 6,
-          "방콕": 4,
-          "나트랑": 4,
-          "마나도": 2,
-          "하노이": 3,
-          "트라브존": 2
-        }
       }
     },
     "alerts": []
