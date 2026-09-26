@@ -11,8 +11,7 @@ import path from 'node:path';
 import type { Flight } from '@/types/flight';
 import { normalizeAirlineDisplay as normalizeAirline, normalizeCity } from '@/lib/utils/flight-helpers';
 import { filterStaleSourceFlights, getEffectiveSourceUpdatedAt } from '@/lib/source-freshness';
-import { deduplicateDisplayFlights } from '@/lib/flight-visibility';
-import { filterSeatAvailableFlights } from '@/lib/flight-seats';
+import { deduplicateDisplayFlights, filterListingEligibleFlights } from '@/lib/flight-visibility';
 import { getPriceExclusionFreshness } from '@/lib/price-quality';
 import { isNaverPriceOverLimit } from '@/lib/naver-price-filter';
 import {
@@ -171,7 +170,7 @@ export function loadStaticRecommendationPriceHistory(): StaticRecommendationPric
 
 export function groupByCity(flights: Flight[]): CityDeals[] {
     const groups = new Map<string, Flight[]>();
-    for (const f of filterSeatAvailableFlights(flights)) {
+    for (const f of filterListingEligibleFlights(flights)) {
         const city = displayCity(f.arrival?.city || '');
         if (!city) continue;
         if (!groups.has(city)) groups.set(city, []);

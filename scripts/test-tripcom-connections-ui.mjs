@@ -16,8 +16,8 @@ const make = (id, outbound, inbound) => ({
 });
 const unknown = { status: 'unknown', stopCount: null };
 const flights = [make('tripcom-connected', connection, direct), make('tripcom-direct', direct, direct),
-    make('tripcom-unknown', unknown, unknown)];
-await mkdir('output/connection-ui', { recursive: true });
+    make('tripcom-return-connected', direct, connection), make('tripcom-unknown', unknown, unknown)];
+await mkdir('output/connection-visibility-ui', { recursive: true });
 const browser = await chromium.launch({ headless: true });
 try {
     for (const width of [390, 1440]) {
@@ -30,16 +30,16 @@ try {
             json: { success: true, flights, count: flights.length, lastUpdated: new Date().toISOString() },
         }));
         await page.goto(`${base}/preview/mobile-redesign`, { waitUntil: 'domcontentloaded' });
-        const card = page.locator('article[data-flight-id="tripcom-connected"]');
+        const card = page.locator('article[data-flight-id="tripcom-direct"]');
         await card.waitFor({ timeout: 60000 });
-        assert.match(await card.innerText(), /가는편 경유 1회/);
-        assert.doesNotMatch(await card.innerText(), /직항|확인 필요/);
+        assert.equal(await page.locator('article[data-flight-id="tripcom-connected"]').count(), 0);
+        assert.equal(await page.locator('article[data-flight-id="tripcom-return-connected"]').count(), 0);
         for (const id of ['tripcom-unknown', 'tripcom-direct']) {
             const quietCard = page.locator(`article[data-flight-id="${id}"]`);
             assert.doesNotMatch(await quietCard.innerText(), /경유|직항|확인 필요/);
             assert.equal(await quietCard.locator('[class*="connectionSummary"]').count(), 0);
         }
-        await card.screenshot({ path: `output/connection-ui/card-${width}.png` });
+        await card.screenshot({ path: `output/connection-visibility-ui/card-${width}.png` });
         await card.locator('button').first().click();
         const detail = page.locator('[role="dialog"][aria-labelledby="flight-detail-title"]');
         await detail.waitFor();
@@ -47,17 +47,17 @@ try {
             const panel = document.querySelector('[role="dialog"][aria-labelledby="flight-detail-title"]');
             return panel && getComputedStyle(panel).opacity === '1';
         });
-        assert.match(await detail.innerText(), /경유 1회 · 총 28시간 10분/);
-        assert.match(await detail.innerText(), /10[./]\s*9/);
+        assert.doesNotMatch(await detail.innerText(), /경유|직항|확인 필요/);
+        assert.match(await detail.innerText(), /총 2시간 5분/);
         const overflow = await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1);
         assert.equal(overflow, false, 'No horizontal page overflow');
-        await page.screenshot({ path: `output/connection-ui/detail-${width}.png`, animations: 'disabled' });
+        await page.screenshot({ path: `output/connection-visibility-ui/detail-${width}.png`, animations: 'disabled' });
         await detail.getByRole('button', { name: '닫기', exact: true }).click();
         await page.locator('article[data-flight-id="tripcom-unknown"] button').first().click();
         await detail.waitFor();
         assert.doesNotMatch(await detail.innerText(), /경유|직항|소요시간 확인 필요/);
         assert.deepEqual(errors, []);
-        console.log(`Connection labels, duration, date and layout passed at ${width}px`);
+        console.log(`Confirmed connections hidden; direct/unknown preserved at ${width}px`);
         await page.close();
     }
 } finally {

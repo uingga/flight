@@ -2,6 +2,7 @@ import type { Flight } from '../types/flight';
 import { normalizeCity } from './utils/flight-helpers';
 import { getComparisonFreshness } from './price-quality';
 import { hasSellableSeats } from './flight-seats';
+import { hasConfirmedConnection } from './flight-connections';
 
 export const DEAL_ALERT_PREFIX = '@deal:';
 export const DEAL_ALERT_SCORE_THRESHOLD = 65;
@@ -273,7 +274,7 @@ export function evaluateDealAlert(
     const today = new Date(now.toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' }) + 'T00:00:00+09:00');
 
     for (const flight of flights) {
-        if (!hasSellableSeats(flight)) continue;
+        if (!hasSellableSeats(flight) || hasConfirmedConnection(flight)) continue;
         if (normalizeCity(flight.departure.city) !== normalizeCity(condition.departureCity)) {
             rejectionCounts.otherDeparture++;
             continue;

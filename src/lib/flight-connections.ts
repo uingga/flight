@@ -1,7 +1,19 @@
 import type { Flight, FlightLegConnection } from '@/types/flight';
 
+export function isConfirmedConnection(leg?: FlightLegConnection): boolean {
+    return leg?.status === 'connecting'
+        || (Number.isInteger(leg?.stopCount) && Number(leg?.stopCount) > 0);
+}
+
+/** Only explicit leg evidence qualifies; missing direct-flight evidence is not a connection. */
+export function hasConfirmedConnection(flight: Flight): boolean {
+    if (flight.source !== 'tripcom') return false;
+    const legs = flight.tripcomDetail?.legs;
+    return isConfirmedConnection(legs?.outbound) || isConfirmedConnection(legs?.inbound);
+}
+
 export function connectionLabel(leg?: FlightLegConnection): string | null {
-    if (leg?.status === 'connecting' || (Number.isInteger(leg?.stopCount) && Number(leg?.stopCount) > 0)) {
+    if (isConfirmedConnection(leg)) {
         return Number.isInteger(leg?.stopCount) && Number(leg?.stopCount) > 0
             ? `경유 ${leg!.stopCount}회` : '경유';
     }

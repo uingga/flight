@@ -15,6 +15,7 @@ import {
 } from '@/lib/source-freshness';
 import { deduplicateDisplayFlights } from '@/lib/flight-visibility';
 import { filterSeatAvailableFlights } from '@/lib/flight-seats';
+import { hasConfirmedConnection } from '@/lib/flight-connections';
 import { buildNaverPriceKey } from '@/lib/naver-route';
 import {
     buildNearbyNaverPriceIndex,
@@ -51,6 +52,7 @@ interface FlightFilterSummary {
         expired: number;
         oneWay: number;
         soldOut: number;
+        confirmedConnection: number;
     };
     visibleBySource: Record<string, number>;
     visibleByRegion: Record<string, number>;
@@ -201,6 +203,7 @@ export async function createPublicFlightsResponse(searchParams: URLSearchParams)
                 expired: 0,
                 oneWay: 0,
                 soldOut: 0,
+                confirmedConnection: 0,
             },
             visibleBySource: {},
             visibleByRegion: {},
@@ -229,6 +232,9 @@ export async function createPublicFlightsResponse(searchParams: URLSearchParams)
                 filterSummary.collected = allFlights.length;
                 allFlights = filterSeatAvailableFlights(allFlights);
                 filterSummary.reasons.soldOut = filterSummary.collected - allFlights.length;
+                const beforeConnectionFilter = allFlights.length;
+                allFlights = allFlights.filter(flight => !hasConfirmedConnection(flight));
+                filterSummary.reasons.confirmedConnection = beforeConnectionFilter - allFlights.length;
                 lastUpdated = cacheData.lastUpdated || cacheData.timestamp || null;
                 sourceUpdatedAt = cacheData.sourceUpdatedAt || {};
                 freshnessUpdatedAt = getEffectiveSourceUpdatedAt(

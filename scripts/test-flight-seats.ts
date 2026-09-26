@@ -78,15 +78,21 @@ test('public API and SSR exclude legacy zero and conflicts, retain unknown; fixt
         { ...example, id: `${source}-zero`, source, airline: `${index}-zero` },
         { ...example, id: `${source}-conflict`, source, airline: `${index}-conflict`, availableSeats: 9 },
         { ...example, id: `${source}-unknown`, source, airline: `${index}-unknown`, seats: undefined },
-    ]).map(f => ({ ...f, departure: { ...f.departure, date: '2099-09-20' }, arrival: { ...f.arrival, date: '2099-09-22' } }));
+    ]).map(f => ({ ...f, departure: { ...f.departure, date: '2099-09-20' }, arrival: { ...f.arrival, date: '2099-09-22' },
+        routeAirports: { outboundDeparture: 'PUS', outboundArrival: 'FUK', returnDeparture: 'FUK', returnArrival: 'PUS' } }));
     const cache = JSON.stringify({ flights, sourceUpdatedAt: Object.fromEntries(sources.map(s => [s, new Date().toISOString()])) });
+    // Isolate seat policy from MRT's separate requirement for a fresh exact comparison.
+    const comparisons = JSON.stringify({ 'PUS-FUK_2099-09-20_2099-09-22': {
+        naverLowest: 300000, crawledAt: new Date().toISOString(),
+    } });
     const originalRead = fs.readFileSync;
     const originalFetch = globalThis.fetch;
     const env = { url: process.env.SUPABASE_URL, key: process.env.SUPABASE_SERVICE_ROLE_KEY };
     delete process.env.SUPABASE_URL;
     delete process.env.SUPABASE_SERVICE_ROLE_KEY;
     fs.readFileSync = ((file: any, ...args: any[]) => String(file).endsWith('all-flights-cache.json')
-        ? cache : (originalRead as any)(file, ...args)) as typeof fs.readFileSync;
+        ? cache : String(file).endsWith('naver-prices.json') ? comparisons
+            : (originalRead as any)(file, ...args)) as typeof fs.readFileSync;
     globalThis.fetch = async () => { throw new Error('Network forbidden in seat regression'); };
     try {
         // The latest API imports server-only order storage. Stub only its boundary marker.

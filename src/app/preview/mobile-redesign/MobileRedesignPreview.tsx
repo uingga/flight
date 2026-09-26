@@ -2,6 +2,7 @@
 import { holidayFlightKey, holidayInsightCopy, selectHolidayFlights } from '@/lib/holiday-insight';
 import { airlineDisplayName } from '@/lib/utils/airline-display';
 import { connectionDuration, flightConnectionSummary, tripcomLegSummary } from '@/lib/flight-connections';
+import { filterListingEligibleFlights } from '@/lib/flight-visibility';
 import { homeRecommendation } from '@/lib/home-recommendation';
 import { isKoreanCalendarRedDay, koreanHolidayName } from '@/lib/korean-calendar';
 
@@ -1185,7 +1186,7 @@ export default function MobileRedesignPreview({
     const hasAdminAccess = useAdminAccess();
     const [manualPlacements, setManualPlacements] = useState<FlightPlacement[]>([]);
     const hasInitialFlights = initialFlights.length > 0;
-    const [flights, setFlights] = useState<Flight[]>(initialFlights);
+    const [flights, setFlights] = useState<Flight[]>(() => filterListingEligibleFlights(initialFlights));
     const [loading, setLoading] = useState(!hasInitialFlights);
     const [initialListSyncing, setInitialListSyncing] = useState(hasInitialFlights);
     const [error, setError] = useState('');
@@ -1592,7 +1593,7 @@ export default function MobileRedesignPreview({
             setManualPlacements(data.manualFlightOrder?.placements || []);
             // 추천·DROP 판단에 필요한 기준가를 먼저 넣은 뒤 목록을 연다. 상태 반영이
             // 나뉘는 브라우저에서도 첫 카드가 잠깐 다른 표로 보이지 않게 한다.
-            setFlights(data.flights || []);
+            setFlights(filterListingEligibleFlights(data.flights || []));
             setInitialSubsetActive(false);
             setError('');
             lastFetchAtRef.current = Date.now();

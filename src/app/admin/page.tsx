@@ -389,6 +389,7 @@ interface FlightFilterSummary {
         naverExpensive: number;
         expired: number;
         oneWay: number;
+        confirmedConnection?: number;
     };
     visibleBySource: Record<string, number>;
     visibleByRegion: Record<string, number>;
@@ -1830,6 +1831,7 @@ export default function AdminPage() {
     const sortedAirlines = Object.entries(flightFilterSummary?.visibleByAirline || data.byAirline).sort((a, b) => b[1] - a[1]);
     const sortedDepCities = Object.entries(flightFilterSummary?.visibleByDepartureCity || data.byDepartureCity).sort((a, b) => b[1] - a[1]);
     const exclusionReasons = flightFilterSummary ? [
+        { label: '경유가 확인된 항공권', count: flightFilterSummary.reasons.confirmedConnection || 0 },
         { label: '같은 정확한 일정 중 더 싼 표만 남김', count: flightFilterSummary.reasons.duplicate },
         { label: '네이버보다 20% 이상 또는 10만원 이상 비쌈', count: flightFilterSummary.reasons.naverExpensive },
         { label: '신고가 3건 이상 쌓여 임시 숨김', count: flightFilterSummary.reasons.reported },
