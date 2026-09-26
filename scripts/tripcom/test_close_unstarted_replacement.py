@@ -69,6 +69,31 @@ class ClosureTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, 'circuit_open'):
             self.close()
 
+    def test_proven_A_preflight_failure_is_not_reported_as_website_collection(self):
+        self.evidence['replacementPreflight'] = dict(executionHost='A', slot=self.slot,
+            workerExitCode=1, failure='loopback_ssh_endpoint_required', beforeAdmission=True,
+            taskRunning=False, processRunning=False, localLock=False,
+            localSlotPresent=False, logSha='c'*64)
+        self.close()
+        with self.coordinator.transaction() as db:
+            row = db.execute("SELECT artifact FROM parallel_workers WHERE host='B'").fetchone()
+            artifact = json.loads(row[0])
+            self.assertEqual(artifact['stopReason'], 'replacement_transport_preflight_failed')
+            self.assertEqual(artifact['status'], 'inconclusive')
+            self.assertEqual(artifact['attemptedCities'], 0)
+
+    def test_ambiguous_A_failure_does_not_close_missing_assignment(self):
+        valid = dict(executionHost='A', slot=self.slot, workerExitCode=1,
+            failure='loopback_ssh_endpoint_required', beforeAdmission=True,
+            taskRunning=False, processRunning=False, localLock=False,
+            localSlotPresent=False, logSha='c'*64)
+        for patch in ({'slot':'other'}, {'workerExitCode':0}, {'beforeAdmission':False},
+                      {'taskRunning':True}, {'processRunning':True}, {'localLock':True},
+                      {'localSlotPresent':True}, {'failure':'unknown'}, {'logSha':''}):
+            self.evidence['replacementPreflight'] = {**valid, **patch}
+            with self.assertRaisesRegex(RuntimeError, 'preflight_exit_evidence'):
+                self.close()
+
 
 if __name__ == '__main__':
     unittest.main()

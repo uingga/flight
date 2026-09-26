@@ -6,6 +6,8 @@ import {fileURLToPath} from 'node:url';
 import {readReplacement,replacementFor,REPLACEMENT_ROOT} from '../src/lib/temporary-b-replacement.mjs';
 
 const sha=bytes=>createHash('sha256').update(bytes).digest('hex');
+export const TRIPCOM_COORDINATOR_URL='http://127.0.0.1:47832/tripcom';
+const TRIPCOM_PYTHON='C:/Users/ynal/AppData/Local/Programs/Python/Python314/python.exe';
 export const TRIPCOM_TIMES=Object.freeze(['06:17','08:14','10:12','11:48','13:23','14:57','16:31','18:01','19:31','20:30']);
 export function dueTripcomSlot(now=Date.now()){
     const kst=new Date(now+9*3600000).toISOString();
@@ -17,7 +19,7 @@ export function verifyTripcomInstallation(config,manifest,read=fs.readFileSync){
     if(config?.host!=='B'||config.hostname!=='OFFICE-OMEN'||config.enabled!==true||config.parallelMode!==true
         ||config.profile!=='C:/Users/ynal/tmp/chrome-tripcom'
         ||config.stateRoot!==REPLACEMENT_ROOT+'/tripcom-state'
-        ||config.coordinatorUrl!=='http://127.0.0.1:47832'
+        ||config.coordinatorUrl!==TRIPCOM_COORDINATOR_URL
         ||config.workerTokenFile!=='C:/Users/ynal/Tikitikit/ac-control/tripcom/secrets/B.txt'
         ||config.physicalHost!=='A'||config.replacementId!=='b-on-a-20260926'
         ||manifest?.format!==1||!Array.isArray(manifest.files)||manifest.files.length<10)
@@ -31,6 +33,19 @@ export function verifyTripcomInstallation(config,manifest,read=fs.readFileSync){
     if(sha(JSON.stringify(files))!==manifest.version||manifest.version!==config.version)
         throw Error('tripcom_release_mismatch');
 }
+// Exercise the actual installed Python transport without reading credentials,
+// acquiring a slot, opening a browser, or sending any request.
+export function verifyTripcomTransport(config,{run=spawnSync}={}){
+    if(config?.coordinatorUrl!==TRIPCOM_COORDINATOR_URL)throw Error('invalid_tripcom_coordinator_url');
+    const result=run(TRIPCOM_PYTHON,['-B','-c',
+        'import sys; from tripcom_transport import Client; Client(sys.argv[1], "offline-contract-only-" + "x" * 32); print("transport_contract_valid")',
+        config.coordinatorUrl],{cwd:path.join(REPLACEMENT_ROOT,'tripcom-release'),
+        windowsHide:true,encoding:'utf8',timeout:15000,stdio:['ignore','pipe','pipe'],
+        env:{...process.env,PYTHONIOENCODING:'utf-8',PYTHONUTF8:'1'}});
+    if(result.error||result.status!==0||result.stdout?.trim()!=='transport_contract_valid')
+        throw Error('tripcom_transport_contract_failed');
+    return {transportContract:true,networkRequests:0};
+}
 export function main(){
     if(process.argv.length!==3||process.argv[2]!=='--scheduled')throw Error('scheduled_replacement_only');
     const activation=readReplacement();
@@ -41,12 +56,12 @@ export function main(){
     const config=JSON.parse(fs.readFileSync(configFile,'utf8'));
     const manifest=JSON.parse(fs.readFileSync(path.join(REPLACEMENT_ROOT,'tripcom-release/manifest.json'),'utf8'));
     verifyTripcomInstallation(config,manifest);
-    const python='C:/Users/ynal/AppData/Local/Programs/Python/Python314/python.exe';
+    verifyTripcomTransport(config);
     const logs=path.join(REPLACEMENT_ROOT,'logs');fs.mkdirSync(logs,{recursive:true});
     const log=fs.openSync(path.join(logs,'tripcom.log'),'a');
     try{
         fs.writeSync(log,JSON.stringify({event:'scheduled',slot,executionHost:'A',assignedHost:'B',version:config.version,at:new Date().toISOString()})+'\n');
-        const result=spawnSync(python,[path.join(REPLACEMENT_ROOT,'tripcom-release/tripcom_entry.py'),'--config',configFile],
+        const result=spawnSync(TRIPCOM_PYTHON,[path.join(REPLACEMENT_ROOT,'tripcom-release/tripcom_entry.py'),'--config',configFile],
             {cwd:path.join(REPLACEMENT_ROOT,'tripcom-release'),windowsHide:true,stdio:['ignore',log,log],
                 env:{...process.env,PYTHONIOENCODING:'utf-8',PYTHONUTF8:'1'}});
         if(result.error||result.signal||!Number.isInteger(result.status))throw Error('temporary_tripcom_completion_unknown');

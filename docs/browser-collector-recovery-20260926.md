@@ -110,3 +110,28 @@ Required activation work, subject to the project's operational code approval:
 
 No past slot was replayed. The earlier Ttang cooldown ending 2026-09-27
 06:57:39 KST remains preserved; host replacement does not remove it.
+
+## 11:48 replacement startup correction
+
+The first regular A replacement startup exited before admission because its
+loopback URL omitted the required `/tripcom` path. This was a configuration
+contract defect, not evidence of a Trip.com restriction. Correct both preparation
+and runtime validation to `http://127.0.0.1:47832/tripcom` without weakening the
+Python transport's loopback, path, credential, proxy, or redirect checks.
+
+Preparation and every scheduled launch now instantiate the actual installed
+Python `Client` using a dummy credential, without calling it. This offline startup
+contract catches cross-language configuration errors before a browser or slot
+is opened. Nine launcher/fencing tests and seven maintenance-closure tests pass;
+the installed Python contract passes with zero network requests.
+
+At 11:57:43 KST the five reviewed files and the URL were installed on idle A,
+with backups and a new verified release manifest. No worker, coordinator, C task,
+profile, dependency, circuit, state, quota, or processed key was reset. A's next
+regular Trip.com task remains 13:23; the failed 11:48 slot is not replayed.
+
+C's completed 11:48 artifact contains ten attempted cities and nine observed
+fares. An evidenced A pre-admission failure is finalized explicitly as zero
+requests/inconclusive so the original common writer can publish the successful
+C results. This closure refuses running/unknown A state, any admitted logical B
+worker, an open shared circuit, or an existing publication needing reconciliation.

@@ -6,7 +6,7 @@ import {createHash} from 'node:crypto';
 import {fileURLToPath} from 'node:url';
 import {REPLACEMENT_ROOT,validateReplacement} from '../src/lib/temporary-b-replacement.mjs';
 import {verifyDependencies} from './lib/collector-dependencies.mjs';
-import {verifyTripcomInstallation} from './run-temporary-tripcom-b.mjs';
+import {verifyTripcomInstallation,verifyTripcomTransport,TRIPCOM_COORDINATOR_URL} from './run-temporary-tripcom-b.mjs';
 import {agencyEveningManifest,verifyAgencyEveningRelease} from './agency-evening-release.mjs';
 
 const project=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
@@ -87,9 +87,10 @@ function main(){
     write(REPLACEMENT_ROOT+'/tripcom-release/manifest.json',tripManifest);
     const config={host:'B',physicalHost:'A',hostname:'OFFICE-OMEN',enabled:true,parallelMode:true,
         replacementId:'b-on-a-20260926',profile:'C:/Users/ynal/tmp/chrome-tripcom',
-        stateRoot:REPLACEMENT_ROOT+'/tripcom-state',coordinatorUrl:'http://127.0.0.1:47832',
+        stateRoot:REPLACEMENT_ROOT+'/tripcom-state',coordinatorUrl:TRIPCOM_COORDINATOR_URL,
         workerTokenFile:'C:/Users/ynal/Tikitikit/ac-control/tripcom/secrets/B.txt',version:tripManifest.version};
     verifyTripcomInstallation(config,tripManifest);
+    verifyTripcomTransport(config);
     write(REPLACEMENT_ROOT+'/tripcom-config.json',config);
     const activation={format:1,id:'b-on-a-20260926',from:'B',to:'A',hostname:'OFFICE-OMEN',status:'prepared',
         notBefore:new Date().toISOString(),bFenced:true,fenceSha:fence.fenceSha,stateSha:state.stateSha,

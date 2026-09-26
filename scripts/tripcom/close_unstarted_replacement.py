@@ -24,6 +24,21 @@ def close_unstarted_b(coordinator, root, slot, evidence, now):
                    or any(char not in '0123456789abcdef' for char in evidence[key])
                    for key in ('fenceSha', 'stateSha'))):
         raise RuntimeError('unstarted_B_evidence_required')
+    replacement = evidence.get('replacementPreflight')
+    if replacement is not None:
+        if (replacement.get('executionHost') != 'A'
+                or replacement.get('slot') != slot
+                or replacement.get('workerExitCode') != 1
+                or replacement.get('failure') != 'loopback_ssh_endpoint_required'
+                or replacement.get('beforeAdmission') is not True
+                or replacement.get('taskRunning') is not False
+                or replacement.get('processRunning') is not False
+                or replacement.get('localLock') is not False
+                or replacement.get('localSlotPresent') is not False
+                or not isinstance(replacement.get('logSha'), str)
+                or len(replacement['logSha']) != 64
+                or any(char not in '0123456789abcdef' for char in replacement['logSha'])):
+            raise RuntimeError('replacement_preflight_exit_evidence_required')
     scheduled = datetime.fromisoformat(slot)
     if scheduled.tzinfo is None or scheduled.date() != now.astimezone(scheduled.tzinfo).date() or scheduled >= now:
         raise RuntimeError('past_same_day_slot_required')
@@ -58,7 +73,8 @@ def close_unstarted_b(coordinator, root, slot, evidence, now):
         artifact = {'runId': slot, 'host': 'B', 'status': 'inconclusive',
                     'expectedCities': 10, 'attemptedCities': 0, 'observations': [],
                     'publication': 'not_submitted', 'naverQueries': 0,
-                    'stopReason': 'physical_B_unavailable_before_admission',
+                    'stopReason': 'replacement_transport_preflight_failed' if replacement is not None
+                                  else 'physical_B_unavailable_before_admission',
                     'closedAt': now.isoformat(), 'closureEvidence': evidence}
         raw = json.dumps(artifact, sort_keys=True, ensure_ascii=False, separators=(',', ':'))
         digest = coordinator.digest(raw)
